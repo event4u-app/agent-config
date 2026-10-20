@@ -2,7 +2,7 @@
 complexity: lightweight
 status: ready
 estate_offset_exempt: "Revision of the draft merged in #2359 (2ad637acb6), rewritten in place; no new file. Rejected instead: folding it into road-to-a-setup-that-decides-itself (that file owns the loading default, one of six measured costs) or road-to-local-gates-wired-while-they-are-green (it owns wiring gates, not lane waiting, misfires or decision asks), and archiving a neighbour, because none is finished."
-estate_growth_exempt: "Promoted draft -> ready on the owner's instruction of 2026-10-15 to land inbox-2026-10-s as ready roadmaps; the promotion raises active_roadmaps by one and offsets nothing, because the only candidate dispositions (park in later/, merge into a dependency) were rejected in estate_offset_exempt."
+estate_growth_exempt: "2026-10-20: three blockers registered (two-fourteen-night-windows-not-yet-elapsed, openai-council-seat-oauth-grant-rejected, language-misfire-window-after-the-agent-message-fix). Each records a hold this drain verified against the tree rather than inherited, and none adds a roadmap: no new file, no promotion, no step. They replace prose holds that the drain queue could not read, so the estate's open-step count is unchanged and its blocked-step count becomes accurate. Earlier: promoted draft -> ready on the owner's instruction of 2026-10-15 to land inbox-2026-10-s as ready roadmaps; the promotion raises active_roadmaps by one and offsets nothing, because the only candidate dispositions (park in later/, merge into a dependency) were rejected in estate_offset_exempt."
 execution:
   mode: phase-checkpoints
 depends: [road-to-a-setup-that-decides-itself]
@@ -234,6 +234,13 @@ the Acceptance Criteria held.
       `paused nights P of A active`, overall and per `--git` window — counting a
       paused night only when it was active (test seen red twice, with the
       intersection and with the active set neutralised). No window was read.
+      <br>2026-10-20: 1.4 merged on 2026-10-19, so **window 1 is 2026-10-20 ..
+      2026-11-02 and window 2 is 2026-11-03 .. 2026-11-16** — the first night
+      of window 1 is tonight. The verdict cannot be read before 2026-11-17, and
+      the rule's own text forbids moving a threshold once a window has been
+      looked at, so there is nothing a run today can compress. The instrument,
+      the rule and the unit are all in place; what is missing is elapsed time.
+      <!-- blocked-by: two-fourteen-night-windows-not-yet-elapsed -->
 - [ ] **2.2 Put the stalled thinning in front of the owner with its run cost.**
       Add the 2.1 verdict, the floor figures and a `config_cost_report` run
       (delivered payload per asset) to blocker
@@ -245,6 +252,12 @@ the Acceptance Criteria held.
       schedule the binding), so the dated evidence goes beside D6 there, and in
       2.1's tokens-bound branch "the observer blocker is the lever" reads as
       those scheduled steps. Still waits on 2.1's verdict.
+      <br>2026-10-20: the two figures this step can produce without 2.1 — the
+      floor and a `config_cost_report` run — were not written to D6 alone,
+      because the step's verify asks for one line carrying all three and a
+      two-visit edit to another roadmap's decision row costs that file more
+      than it saves this one. Waits with 2.1, not independently.
+      <!-- blocked-by: two-fourteen-night-windows-not-yet-elapsed -->
 - [ ] **2.3 Re-decide the two-lane provision (D2 of the finish-first roadmap).**
       On 2026-10-19 the owner shipped parallel lanes under a canonical brief,
       capped at two, while this roadmap's AC-3 and D3 still held lane changes
@@ -263,6 +276,11 @@ the Acceptance Criteria held.
       verify: a Decisions row records the six figures for both arms and the
       verdict; on a negative or split result the council record is cited in it,
       and `process-full` § Lanes is edited in the same change if the cap moves.
+      <br>2026-10-20: reads "the same two windows" as 2.1, so it inherits
+      2.1's wait; risk-register row 6 additionally requires at least three
+      nights in each arm inside them, which no reading can establish before the
+      windows exist. D10 stays provisional until then, as its own text says.
+      <!-- blocked-by: two-fourteen-night-windows-not-yet-elapsed -->
 
 ## Phase 3 — Take the CI wait out of the foreground, keep the settle
 
@@ -287,6 +305,15 @@ the Acceptance Criteria held.
       resumed after a force-push to A reads the new head, never the old verdict.
       <br>2026-10-17: the council did not adopt it (D9: no transition, one abstention), so this step
       waits on D9's measurement and a specified obligation lifecycle.
+      <br>2026-10-20: D9's measurement is 3.1a, which reads the 2.1 windows, so
+      this step is two deep behind the same wait. The second condition —
+      `openai`'s unspecified obligation lifecycle (persistence, superseding
+      push, cleanup, rollback) — is independent of the windows and is the part
+      a run could specify early; it is deliberately not specified here, because
+      D9 is a council decision and drafting its missing half while one seat
+      cannot answer would put a lane's design in front of the record rather
+      than beside it.
+      <!-- blocked-by: two-fourteen-night-windows-not-yet-elapsed -->
 - [ ] **3.1a Take D9's measurement, so 3.2 has a reader.** Over the 2.1
       windows, read (i) the share of `sleep-poll` blocking minutes that poll CI
       (a `ci_settle`, `gh pr checks` or `gh run` command in the sleeping call)
@@ -296,6 +323,11 @@ the Acceptance Criteria held.
       condition and no step owned them.
       verify: a Decisions row records both figures with their denominators, and
       D9's revisit-if is read against them.
+      <br>2026-10-20: "over the 2.1 windows" is the step's own scope, so it
+      inherits that wait. Reading the same two figures over an earlier window
+      would answer a different question than D9's revisit-if asks and would
+      spend the one reading D9 is waiting for on a window D9 did not name.
+      <!-- blocked-by: two-fourteen-night-windows-not-yet-elapsed -->
 
 ## Phase 4 — Remove the misfires, from the classes that actually fired
 
@@ -328,6 +360,28 @@ the Acceptance Criteria held.
       because every later wake is a task notification — 65 of 109. Still open:
       the fixture red before the fix, and the fix, which is a
       `language_mirror_hook.ts` change under ADR-268 § 4 like 4.3.
+      <br>**2026-10-20, re-checked before writing the fix: the attributed cause
+      does not reproduce, and two claims above are withdrawn.** Four readings,
+      written up as `## Correction (2026-10-20)` in the analysis file. (i) The
+      expanded body cannot be what was classified — the one surviving pin record
+      of that shape reads `prompt_chars: 2188` while `/roadmap:process-full`'s
+      body is 32,256 characters installed. (ii) The turn at that record's exact
+      timestamp is a **cross-session message** from another agent, English,
+      2,770 characters. (iii) That defect was closed on `main` by `0c85ece41`
+      the same morning; the exact string now returns `isSyntheticPrompt = true`
+      and sets no pin. (iv) The compact slash-command shape the transcripts
+      actually carry classifies `de` with the owner's German arguments and `und`
+      with none — neither is the misfire. Also withdrawn: the fix is **not**
+      ADR-268 § 4 gated — `check_kernel_edit_ratified --files
+      src/scripts/language_mirror_hook.ts` reports nothing gated, because the
+      pattern is `src/scripts/hooks/block_*.ts` and this file is neither. So the
+      obstacle was never the ratification; it is that there is no reproducible
+      misfire class left to write a fixture against. n = 1 on the traced record,
+      and the 65 were classified by a heuristic with no category for a
+      cross-session message, so this falsifies the attribution without
+      establishing a replacement. Needs a re-run of the split over sessions
+      starting after `0c85ece41`.
+      <!-- blocked-by: language-misfire-window-after-the-agent-message-fix -->
 - [x] **4.2 Measure detector C's false positives by edited-path class** Done 2026-10-17: `measure_turn_end_gate` splits C's fires by `editPathClass` (rows sum to the fires, red with the classifier neutralised); over 30 sessions, 73 replayed fires = docs-md 15 / code 42 / mixed 16 / unknown 0, every fire listed in `agents/evidence/analysis/turn-end-gate-c-by-path-2026-10-17.md`. C holds 182 of 307 stored refusals. No exemption proposed; the 15 go to 4.4. Measured with
       `measure_turn_end_gate`, splitting `agents/**` and `docs/**` markdown from
       code.
@@ -391,6 +445,38 @@ the Acceptance Criteria held.
       lands it with the ADR-268 § 4 ratification.
       Reopening costs minutes once a seat answers; the design above is the
       whole of it.
+      <br>**2026-10-20: the write obstacle was stale, the change is written and
+      verified, and the binding obstacle is now a named credential failure.**
+      Each of the two recorded obstacles was re-tested rather than inherited.
+      (i) *The classifier denial.* It refuses a **Bash** write to
+      `block_no_verify.ts`, and the host's own denial text invites the natural
+      tool instead; the file editor is permitted and authored the change. So
+      "no lane can author it" was a statement about one tool, not about the
+      session. (ii) *The ratification.* A council round ran once —
+      `anthropic` returned **`ratified`**, classifying the change as
+      authority-expanding and confirming no allowlisted subcommand runs a hook
+      `-n` could skip; `openai` returned no verdict, exiting 1 on
+      `OAuth refresh token was rejected: invalid_grant` for an unrelated
+      `linear-server` MCP. `src/config/ratification-policy.json` requires
+      `required_providers: 2`, and lowering it is itself a gated edit, so one
+      seat cannot ratify this. That credential is the owner's to refresh; it is
+      also the likeliest cause of the day's other `0/2 present` rounds.
+      <br>The change is **done and preserved**, not re-planned: local branch
+      `wip/short-n-scope-ratification-pending` at `2c5f20f7b`, subject digest
+      `ab60cc56d67a9b66da9522cb8eceacbcba4f4301b0f014ce4d84a74d8994c3ba`. It
+      implements the allowlist the 2026-10-19 note specified (18 builtins, the
+      resolver shared with the `git config core.hooksPath` branch rather than
+      duplicated, `am` and every unresolved subcommand still blocked). Both arms
+      were seen red: 21 allow-cases before the fix, 15 block-cases with the
+      predicate forced true; 86 tests in the guard's file and 850 in
+      `tests/scripts/hooks/` green after; typecheck and lint clean. The
+      dispatcher bundle had 301 bytes of headroom and the change cost 641, so
+      two repeated refusal fragments were hoisted to pay for it — 1,549,948 B
+      against the unchanged 1,550,000 B ceiling, no `max_bytes` raise. The
+      commits are **off this PR's branch on purpose**: the ratification gate
+      reds the push while one seat is down, and holding the rest of the roadmap
+      behind it would cost more than the step is worth.
+      <!-- blocked-by: openai-council-seat-oauth-grant-rejected | asked: no — the question is in the blocker and goes to the owner with this PR's report; a drain lane does not interrupt the owner mid-run for a credential, and nothing else in this roadmap waits on the answer -->
 - [x] **4.4 Run B and C through the existing demotion contract.** Done 2026-10-19: both **floor not met — bar not readable**, no staged-demotion study authorised. B 116 eligible in 26 sessions (< 50; condition 4 reset by #2186/#2188 on 2026-10-03); C 166 in 77 sessions over 63 days, but condition 4 reset by the `verification_command.ts` changes of 2026-09-29..10-12 (71 in 24 since 2026-09-30). Q2 medians published, not read: B 1.5, C 1. Table in `agents/evidence/analysis/language-refusals-by-pin-source-2026-10-19.md`. The shadow
       record and the demotion contract exist (`turn_end_refusals.ts:18-28`); the
       "always armed" decision (`settings_removed_keys.ts:84-87`) is not
@@ -403,6 +489,34 @@ the Acceptance Criteria held.
       verdicts this step's verify asks for and read as the step being done,
       so it waits for 4.1.
 
+- [ ] **4.5 Close the long-option abbreviation bypass the 4.3 review found.**
+      Found 2026-10-20 by the `anthropic` seat reviewing 4.3 and **verified
+      here, not taken on its word**: `block_no_verify` matches the literal
+      `--no-verify`, while git accepts any unambiguous prefix of a long
+      option. `git commit --no-verif -m x` is allowed by the guard (exit 0)
+      and, reproduced in a scratch repository with a `pre-commit` hook that
+      exits 1, **created the commit with the hook never running**. `--no-ver`
+      and shorter are rejected by git itself as ambiguous against
+      `--no-verbose`, so the live window is `--no-verif`; `git push
+      --no-verif` is allowed too. This is pre-existing — identical before
+      4.3's change — and is the thing the guard exists to refuse.
+      Fix: match any unambiguous prefix of `--no-verify` that git would
+      accept, on every subcommand, rather than the literal; the ambiguity
+      boundary is a property of git's own option table and is pinned by test,
+      never guessed. The sibling claim in the same review, flags embedded in
+      an alias definition (`git -c "alias.x=commit -n" x`), was run and does
+      **not** reproduce: it is refused today and stays refused under 4.3's
+      allowlist, because `x` is not a builtin.
+      verify: `git commit --no-verif`, `git commit --no-verifi`, `git push
+      --no-verif` and every longer prefix are refused; `git commit
+      --no-verbose` and `git commit --no-ver` are unaffected (git rejects the
+      latter itself); the new cases are seen red before the fix.
+      <br>Blocked by the same absent seat as 4.3: the fix is in
+      `block_no_verify.ts`, a gated surface, and one provider cannot ratify
+      against `required_providers: 2`. Evidence:
+      `agents/evidence/council/short-n-subcommand-scope-2026-10-20.md`.
+      <!-- blocked-by: openai-council-seat-oauth-grant-rejected | asked: no — same question, same blocker, already routed with 4.3; a second ask would split one credential decision into two -->
+
 ## Phase 5 — Make the existing no-cheap-question law visible
 
 - [x] **5.1 Count violations, not asks.** Done 2026-10-17: 86 structured asks over the probe's 10-session window, 54 of them re-presentations after a background wake and 32 owner-answered; of the 32, owner-reserved 19, council-decidable 12, cheap 1; the recommendation was taken 25 of 32. Table and criteria in `agents/evidence/analysis/structured-asks-by-class-2026-10-17.md`. With 1.1, classify each ask as
@@ -411,7 +525,20 @@ the Acceptance Criteria held.
       the recommended option is the one taken — the draft asserted it without a
       count.
       verify: the three-way table with its denominator.
-- [ ] **5.2 One fix for the largest cheap class.** Only after 5.1, and only if
+- [x] **5.2 One fix for the largest cheap class.** Done 2026-10-20 — **no fix
+      owed**, by the step's own gate. The step fires "only if the cheap class
+      holds most ask minutes"; 5.1 read it at **1 of 32** owner-answered asks
+      (3 %), so the precondition is false and the answer to the step is that
+      there is no cheap class to fix. Recorded as D11 rather than left open,
+      because "left open for a disposition" is the state this closes: the
+      measurement that decides it has been taken and will not change by waiting.
+      The two larger classes 5.1 found are **not** this step's subject and are
+      not silently absorbed into it — re-presentation after a background wake
+      (54 of 86 asks) is a carrier defect that `user-interaction` Iron Law 3
+      prescribes on purpose, and council-decidable asks put to the owner (12 of
+      32) are a routing question, not a cheap-question one. Neither is fixed
+      here and neither is dropped; both are named in D11 with what would own
+      them. Only after 5.1, and only if
       the cheap class holds most ask minutes. Owner-reserved questions keep
       stopping. A queue of owner questions is allowed only if the instrument
       reads it as `user-wait`, per claim (5).
@@ -429,6 +556,43 @@ the Acceptance Criteria held.
       the estate.
       verify: the owner's answer is a Decisions row.
 
+## Blockers
+
+### blocker: two-fourteen-night-windows-not-yet-elapsed
+- **Status:** open
+- **Class:** 2
+- **Owner:** council
+- **Blocks:** steps 2.1, 2.2, 2.3, 3.1a and 3.2; AC-3 and AC-4
+- **Question:** Step 2.1 pre-registered, on 2026-10-17 and before any reading, that its verdict is taken over "the two consecutive 14-calendar-night windows starting the first night after the last Phase 1 step merges", and that no threshold moves once a window has been looked at. Phase 1's last step (1.4) merged on 2026-10-19, so window 1 is 2026-10-20 .. 2026-11-02 and window 2 is 2026-11-03 .. 2026-11-16, and the earliest readable date is 2026-11-17. Four further steps read those same windows. Does the plan wait for them, or does the council authorise a narrower reading?
+- **Recommendation:** wait. The pre-registration is the whole value of 2.1 — it exists so the binding question cannot be answered by picking a window after seeing the data — and every alternative spends that. The instrument, the rule and the unit are already in place and were landed before the windows opened, so waiting costs nothing but time.
+- **If you do nothing:** the five steps stay open until 2026-11-17, every other step in this roadmap is already closed or separately blocked, and the roadmap does not archive.
+- **What to do:** pick exactly one — (a) wait for 2026-11-17 and run 2.1, then 2.2, 2.3, 3.1a and 3.2 in their stated order; or (b) authorise a single shorter window with the reduction in confidence recorded on the verdict; or (c) re-pre-register a different rule now, before any window is read, and say why the 2026-10-17 one is superseded.
+- **Resolved when:** either the two windows have elapsed and 2.1 records a verdict as a Decisions row, or this entry records a council verdict choosing (b) or (c) with its reasoning.
+
+### blocker: openai-council-seat-oauth-grant-rejected
+- **Status:** open
+- **Class:** 3
+- **Owner:** user
+- **Ownership:** product-owned
+- **Routed:** pending — the council is the thing that is broken. A round ran on 2026-10-20 and returned 1 of 2 seats; the absent seat is this blocker's subject, so a council routing would ask the broken instrument to certify its own repair. The action is a credential refresh on the owner's own machine, which no council verdict can perform or authorise.
+- **Blocks:** steps 4.3 and 4.5; AC-5's `block_no_verify` clause is unaffected by what this PR lands, because nothing here touches the guard — but 4.5 records a verified live bypass (`git commit --no-verif` skips the pre-commit hook) that stays open while this blocker does
+- **Question:** The `openai` council seat exits 1 before answering, on `OAuth refresh token was rejected: Server returned error response: invalid_grant: Grant not found` for a `linear-server` MCP configured in the codex CLI — an MCP unrelated to this council's work. `src/config/ratification-policy.json` sets `required_providers: 2`, and lowering it is itself a gated edit, so a one-seat round cannot ratify anything. The `anthropic` seat answered `ratified` on 2026-10-20 for step 4.3's change. May the owner refresh or remove that grant?
+- **Recommendation:** (a). The failing grant belongs to an MCP the council does not use, so removing it from the codex CLI's MCP configuration restores the seat without touching the council's own credentials, and it is reversible by re-adding the server.
+- **If you do nothing:** step 4.3 stays open with its change written, tested and preserved at `2c5f20f7b` on local branch `wip/short-n-scope-ratification-pending`; the guard keeps refusing `git grep -n`, `git log -n 5`, `git branch -n`, `git push -n` and `git merge -n`; **step 4.5's verified bypass stays open — `git commit --no-verif` skips the pre-commit hook today**; and every other ADR-268 § 4 ratification in this repository is blocked for the same reason, not only these two.
+- **What to do:** pick exactly one — (a) remove or re-authorise the `linear-server` MCP in the codex CLI configuration, then re-run the 4.3 review and land `2c5f20f7b` with its ratification artifact; or (b) ratify 4.3 yourself as the independent reviewer, since the owner is neither `proposed_by` nor `implemented_by`; or (c) leave the seat down and accept that no governance surface in this repository can be ratified until it returns.
+- **Resolved when:** `agent-config council:status` reports both seats answering a real round, or a ratification artifact for subject `ab60cc56d67a9b66da9522cb8eceacbcba4f4301b0f014ce4d84a74d8994c3ba` exists with two providers, and this entry's Status reads resolved.
+
+### blocker: language-misfire-window-after-the-agent-message-fix
+- **Status:** open
+- **Class:** 2
+- **Owner:** council
+- **Blocks:** step 4.1 only
+- **Question:** 4.1's split table attributed its largest class (65 of 109 refusals) to a pin taken from an expanded slash-command body. The 2026-10-20 correction falsifies that attribution on four readings and finds that the one record traceable end to end was a cross-session message, a defect `0c85ece41` closed on `main` the same morning. The step's remaining verify asks for a fixture seen red before a fix, and there is now no reproducible misfire class to make one from. Does 4.1 re-run its split over sessions starting after `0c85ece41`, or close on the correction?
+- **Recommendation:** re-run, over a window of at least the 22-session depth the first split reached, with `cross-session-message` added to the classifier's non-real set. Closing on a falsification would record that the cause was wrong without establishing what the remaining refusals are, and B's 90 % misfire rate was real whatever produced it.
+- **If you do nothing:** 4.1 stays open, the corrected analysis stands as the current reading, and step 4.4's verdict for detector B is unaffected — it already read "floor not met", for a reason this correction does not touch.
+- **What to do:** pick exactly one — (a) re-run the split after a post-`0c85ece41` window exists and write the result as a second correction; or (b) close 4.1 on the correction, recording that the named class did not survive re-measurement and that no fix was owed; or (c) re-run it now over the sessions that already exist since `0c85ece41`, accepting the smaller sample.
+- **Resolved when:** either a second split table is committed beside the first, or this entry records a council verdict choosing (b).
+
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
@@ -443,6 +607,9 @@ the Acceptance Criteria held.
 | D8 | product-owned | owner | Harvest intake limit (5.3) → (a): a new inbox roadmap lands `draft` while more than 8 `ready` roadmaps sit at 0 ticked steps | owner answer 2026-10-15 to the PR #2373 report; 10 of 20 ready roadmaps at 0 that day | the 0-ticked share stays under 8 for a month, or the owner changes N |
 | D9 | reversible-technical | council:2026-10-17 | D7 revisited (3.1): no transition — (b) is not adopted, one seat chose (c) and one abstained, and under `decision-revisit-gate` an abstention escalates any later adoption of (b) rather than settling it; today's foreground wait stands until the share of `sleep-poll` that is CI polling, and how often a lane had a workable next step during a CI wait, are measured; 3.2 does not run before that | AI council 2026-10-17, anthropic + openai, 2/2 present, $0.00: anthropic (c); openai chose no option in its final round and named the obligation lifecycle (persistence, superseding push, cleanup, rollback) as unspecified; record `agents/evidence/council/ci-wait-foreground-2026-10-17.md` | more than 60 % of CI waits had a workable next step in the same lane, or `sleep-poll` is dominated by non-CI waits, or a mitigation without obligation state appears |
 | D10 | product-owned | owner | Provisional: parallel lanes ship under `process-full`'s canonical brief with a cap of two before 2.1's verdict, as a recorded exception to AC-3 and D3 rather than a lifting of them; 2.3 re-decides it | owner decision D2 of `archive/road-to-roadmaps-finished-before-new-ones-start.md` on 2026-10-19; AI council the same day, 2/2 present: both seats read the change as inside AC-3 (`openai`: the brief should wait for 2.1), split on shipping lanes | 2.3 reads negative or split, or a lane collision loses data |
+| D11 | reversible-technical | evidence | Step 5.2 closes with **no fix owed**: its own gate fires only if the cheap class holds most ask minutes, and 5.1 read that class at 1 of 32 owner-answered asks. The two larger classes are named and left with their owners rather than absorbed into this step — re-presentation after a background wake (54 of 86 asks) is `user-interaction` Iron Law 3 working as written, and council-decidable asks put to the owner (12 of 32) belong to the decision-routing surface, not to `no-cheap-questions` | `agents/evidence/analysis/structured-asks-by-class-2026-10-17.md`, 5.1's three-way table with its denominator | a later window reads the cheap class above a third of owner-answered asks, or the re-presentation class is shown to be a carrier defect rather than the prescribed behaviour |
+| D12 | reversible-technical | evidence | Step 4.1's named misfire class is **not reproducible** against `main` at `c43740e6b`, and its fix is withheld rather than written against it. Two of the step's own claims are withdrawn: that the pin came from the expanded slash-command body, and that the fix is ADR-268 § 4 gated | the `## Correction (2026-10-20)` section of `agents/evidence/analysis/language-refusals-by-pin-source-2026-10-19.md` — C1 2,188 vs 32,256 characters, C2 the cross-session message at the record's timestamp, C3 `0c85ece41`, C4 the compact command shape classifying `de`/`und`; and `check_kernel_edit_ratified --files src/scripts/language_mirror_hook.ts` reporting nothing gated | a re-run of the split after `0c85ece41` finds a misfire class with a nameable cause, or the traced record (n = 1) turns out to be unrepresentative of the 65 |
+| D13 | reversible-technical | evidence | Step 4.3's change is authored, verified on both arms and preserved at `2c5f20f7b`, and is held off the delivery branch rather than landed: `required_providers: 2` and only `anthropic` answered. The earlier obstacle — "no lane can author the change" — is withdrawn as a statement about one tool; the host denies a Bash write to the guard and permits the file editor | council round 2026-10-20, `anthropic` `ratified` and `openai` `exit_1` on `invalid_grant`; `src/config/ratification-policy.json`; subject `ab60cc56d67a9b66da9522cb8eceacbcba4f4301b0f014ce4d84a74d8994c3ba` | the `openai` seat answers, or the owner reviews it as the independent party |
 
 ## Kill register
 
@@ -488,5 +655,10 @@ the Acceptance Criteria held.
 - [ ] AC-5 — No refusal of a misfire class identified in 4.1/4.2 in the next
       window, the detector corpus still green, and `block_no_verify` still
       blocks every `git commit -n` form and every `--no-verify`.
+      2026-10-20: the guard half holds unchanged — nothing landed here touches
+      `block_no_verify`, and the change that would (4.3) is held off the branch
+      with every `commit -n` form and every `--no-verify` still blocked in it.
+      The misfire half waits on 4.1's re-measurement, because the class it
+      names did not survive re-reading (D12).
 - [ ] AC-6 — Every owner-reserved question in the window still reached the
       owner, and no PR merged without an explicit go.
