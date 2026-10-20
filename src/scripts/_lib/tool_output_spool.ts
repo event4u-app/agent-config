@@ -116,6 +116,15 @@ function mac(key: Buffer, addr: string, expiry: number, session: string): string
     return createHmac('sha256', key).update(`v2:${addr}:${String(expiry)}:${session}`).digest('hex').slice(0, 32);
 }
 
+/** Write every byte or throw: a single `writeSync` may write fewer than asked. */
+export function writeAll(fd: number, bytes: Buffer, write: (fd: number, b: Buffer, off: number, len: number) => number = fs.writeSync): void {
+    for (let off = 0; off < bytes.length; ) {
+        const n = write(fd, bytes, off, bytes.length - off);
+        if (!(n > 0)) throw new Error('short write');
+        off += n;
+    }
+}
+
 /** Store `bytes` for `session` and mint a handle bound to it that expires with the retention age. */
 export function storeBytes(root: string, bytes: Buffer, session: string, now: number = Date.now()): StoredEntry {
     if (!SESSION.test(session)) throw new Error('bad session');
@@ -125,11 +134,14 @@ export function storeBytes(root: string, bytes: Buffer, session: string, now: nu
     const tmp = `${target}.${String(process.pid)}.${randomBytes(6).toString('hex')}.tmp`;
     const fd = fs.openSync(tmp, 'wx', 0o600);
     try {
-        fs.writeSync(fd, bytes);
+        writeAll(fd, bytes);
         fs.fsyncSync(fd);
-    } finally {
+    } catch (exc) {
         fs.closeSync(fd);
+        fs.rmSync(tmp, { force: true });
+        throw exc;
     }
+    fs.closeSync(fd);
     // An existing entry has the same bytes by construction; the rename refreshes its age.
     fs.renameSync(tmp, target);
     const expiry = Math.floor((now + SPOOL_RETENTION_MS) / 1000);
@@ -156,7 +168,7 @@ export function readHandle(
     const expected = Buffer.from(mac(key, addr, Number(exp), session), 'hex');
     if (!timingSafeEqual(expected, Buffer.from(tag, 'hex'))) return { state: 'invalid' };
     if (now >= Number(exp) * 1000) return { state: 'expired' };
-    // Only a handle that passed every check above may cause filesystem work.
+    // Only a handle that passed every check above reaches cleanup or an entry; the key read above is the one file a failing handle touches.
     try {
         cleanupSpool(root, now);
     } catch {
@@ -185,18 +197,8 @@ export function readHandle(
 export function cleanupSpool(root: string, now: number = Date.now(), maxBytes: number = SPOOL_MAX_BYTES): { removed: number } {
     const dir = spoolDir(root);
     if (!fs.existsSync(dir)) return { removed: 0 };
-    const lock = path.join(dir, LOCK_FILE);
-    try {
-        fs.writeFileSync(lock, String(process.pid), { flag: 'wx' });
-    } catch {
-        try {
-            if (now - fs.statSync(lock).mtimeMs < STALE_LOCK_MS) return { removed: 0 };
-            fs.rmSync(lock, { force: true });
-            fs.writeFileSync(lock, String(process.pid), { flag: 'wx' });
-        } catch {
-            return { removed: 0 };
-        }
-    }
+    const token = acquireCleanupLock(dir, now);
+    if (token === null) return { removed: 0 };
     let removed = 0;
     try {
         const live: { file: string; mtime: number; size: number }[] = [];
@@ -210,8 +212,7 @@ export function cleanupSpool(root: string, now: number = Date.now(), maxBytes: n
             }
             const old = now - st.mtimeMs;
             if (name.endsWith('.tmp') ? old > STALE_TMP_MS : ADDRESS.test(name) && old >= SPOOL_RETENTION_MS) {
-                fs.rmSync(file, { force: true });
-                removed += 1;
+                if (removeIfUnchanged(file, st)) removed += 1;
             } else if (ADDRESS.test(name)) {
                 live.push({ file, mtime: st.mtimeMs, size: st.size });
             }
@@ -220,14 +221,61 @@ export function cleanupSpool(root: string, now: number = Date.now(), maxBytes: n
         let total = live.reduce((n, e) => n + e.size, 0);
         for (const e of live) {
             if (total <= maxBytes) break;
-            fs.rmSync(e.file, { force: true });
             total -= e.size;
-            removed += 1;
+            if (removeIfUnchanged(e.file, e)) removed += 1;
         }
     } finally {
-        fs.rmSync(lock, { force: true });
+        releaseCleanupLock(dir, token);
     }
     return { removed };
+}
+
+/**
+ * Take the cleanup lock, or null when a live cleaner holds it. The lock holds a
+ * random token; a stale lock is taken over by RENAMING it aside, which only one
+ * taker can do, then creating a fresh one.
+ */
+export function acquireCleanupLock(dir: string, now: number = Date.now()): string | null {
+    const lock = path.join(dir, LOCK_FILE);
+    const token = randomBytes(16).toString('hex');
+    for (let attempt = 0; attempt < 2; attempt++) {
+        try {
+            fs.writeFileSync(lock, token, { flag: 'wx' });
+            return token;
+        } catch {
+            try {
+                if (attempt > 0 || now - fs.statSync(lock).mtimeMs < STALE_LOCK_MS) return null;
+                const aside = `${lock}.${token}.stale`;
+                fs.renameSync(lock, aside);
+                fs.rmSync(aside, { force: true });
+            } catch {
+                return null;
+            }
+        }
+    }
+    return null;
+}
+
+/** Release the lock only when it still holds this cleaner's token. */
+export function releaseCleanupLock(dir: string, token: string): void {
+    const lock = path.join(dir, LOCK_FILE);
+    try {
+        if (fs.readFileSync(lock, 'utf8') === token) fs.rmSync(lock, { force: true });
+    } catch {
+        // already released or taken over
+    }
+}
+
+/** Delete `file` only if a writer has not replaced it since it was measured. */
+export function removeIfUnchanged(file: string, seen: { mtimeMs?: number; mtime?: number; size: number }): boolean {
+    try {
+        const now = fs.statSync(file);
+        if (now.mtimeMs !== (seen.mtimeMs ?? seen.mtime) || now.size !== seen.size) return false;
+        fs.rmSync(file, { force: true });
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 /** The stage's view of one dispatch, as much of it as the store reads. */

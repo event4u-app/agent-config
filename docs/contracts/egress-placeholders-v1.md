@@ -300,18 +300,23 @@ first ratification round refused them argued as one:
 | The store's CODE is the shipped code | the chunk's sha256 sidecar, checked by `tool_output_spool_loader.ts` before load; a mismatch or a foreign schema loads nothing | anything about the data the code writes |
 | The store's DATA is reachable only by its session, only until expiry, only in range | the MAC over address, expiry and session; the address `HMAC(key, session, sha256)` so equal content is not linkable without the key; a 0700 directory, 0600 files and a 0600 key under a gitignored path; retention enforced on every store and read | a local process running as the same user, which can read the key and the files directly. Session binding is a scope boundary between sessions, not a defence against the machine's own user |
 
-**What can turn the store on.** Every path is a gated hook-plumbing surface by
-name in `check_kernel_edit_ratified.ts`, not by its place in the dispatcher's
-import closure: the selection, the store, its loader, the classifier, the
-engine, the stage, the engine loader and the chunk table — and any source file
-that newly imports a store module. No setting, environment variable or
-config file populates the selection.
-A store under another name is gated the moment it can run: as a module newly
-reachable from the dispatcher (the gate's closure-arrival rule) or as a new
-concern (a manifest entry). **Not gated:** a store written into the body of a
-concern that is already bound, because concern bodies sit outside the
-ratification fence by that gate's own design. Closing that would put every
-concern edit behind a council round; it is recorded as a residual, not claimed.
+**What can turn the store on, and what the gate does and does not see.** This
+is a set of layers, not a proven boundary:
+
+- *By name* (`check_kernel_edit_ratified.ts`): the selection, the store, its
+  loader, the classifier, the engine, the stage, the engine loader and the chunk
+  table are gated hook-plumbing surfaces whatever the import closure looks like.
+- *By literal import*: a source file importing a store module through a literal
+  specifier is gated. A computed specifier, an alias or a wrapper is not seen.
+- *By arrival*: any module newly reachable from the dispatcher is gated, and a
+  new concern needs a gated manifest entry — this is what catches a store under
+  another name.
+- **Not gated:** a store written into the body of a concern that is already
+  bound, or a store reached only through a dynamic specifier from such a body.
+  Concern bodies sit outside the ratification fence by that gate's design;
+  closing it would put every concern edit behind a council round.
+
+No setting, environment variable or config file populates the selection.
 
 **Storage guarantees, kept apart.**
 
@@ -327,7 +332,16 @@ concern edit behind a council round; it is recorded as a residual, not claimed.
   not reserve space, so concurrent writes can exceed the cap until the next
   cleanup; the overshoot is bounded by the writes in flight. Cleanup runs only
   for a store or for a read whose handle passed every check — a malformed,
-  forged or foreign-session handle causes no filesystem work.
+  forged or foreign-session handle reaches no cleanup and no entry; a
+  syntactically valid one still reads the key file to check its MAC.
+- *Complete writes* — every byte is written (short writes are looped) and
+  fsynced before the rename; a failed write removes its temp file.
+- *Cleanup exclusivity* — the lock holds a random token; a stale lock (10 min)
+  is taken over by renaming it aside, which one taker wins, and a cleaner
+  releases the lock only while it still holds its own token. An entry is
+  deleted only if its mtime and size are unchanged since cleanup measured it,
+  so a concurrent rewrite survives; the stat-then-delete window is two
+  syscalls and its worst case is a refreshed entry reading `missing`.
 
 **A concern reply cannot rewrite.** The dispatcher reads a fixed set of keys
 from a concern reply (`decision`, `reason`, `additional_context`, `context` and

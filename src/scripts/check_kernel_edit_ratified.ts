@@ -294,12 +294,14 @@ const STORE_ACTIVATION_RE =
 
 /** A source line that loads a store module — import, re-export, require or dynamic import. */
 const STORE_IMPORT_RE =
-    /(?:\bfrom\s*|\brequire\s*\(\s*|\bimport\s*\(\s*)['"][^'"]*\btool_output_(?:selection|spool|spool_loader)\.js['"]/;
+    /(?:\bfrom\s*|\brequire\s*\(\s*|\bimport\s*\(\s*)['"][^'"]*\btool_output_(?:selection|spool|spool_loader)(?:\.(?:js|ts|mjs|cjs))?['"]/;
 
 /**
- * Source files that load a store module. A NEW caller is a new activation path,
- * and it is gated because it is in this list on the diff that adds it — the
- * "alternate imports" half of the same condition.
+ * Source files that load a store module by a literal specifier. A NEW caller
+ * written that way is gated on the diff that adds it. A computed specifier, an
+ * alias or a wrapper is not seen here; such a caller is gated only if it is
+ * newly reachable from the dispatcher (closure arrival) or ships as a new
+ * concern (manifest). This is a heuristic layer over those two, not a boundary.
  */
 export function storeImporters(root: string = REPO): string[] {
     const out: string[] = [];

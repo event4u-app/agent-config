@@ -16,8 +16,11 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    acquireCleanupLock,
     cleanupSpool,
     readHandle,
+    releaseCleanupLock,
+    removeIfUnchanged,
     SPOOL_DIR,
     SPOOL_OBSERVATION_FILE,
     SPOOL_RETENTION_MS,
@@ -25,6 +28,7 @@ import {
     spoolResult,
     type SpoolStageView,
     storeBytes,
+    writeAll,
 } from '../../src/scripts/_lib/tool_output_spool.js';
 import { spoolLoadAttempts } from '../../src/scripts/_lib/tool_output_spool_loader.js';
 import { loadEgressEngine } from '../../src/scripts/hooks/egress_engine_loader.js';
@@ -305,8 +309,70 @@ describe('hostile session ids fail closed', () => {
     });
 });
 
+describe('complete writes', () => {
+    it('writes every byte through short writes', () => {
+        const file = path.join(tmp, 'w');
+        const fd = fs.openSync(file, 'w');
+        const bytes = Buffer.from('0123456789abcdefghij');
+        writeAll(fd, bytes, (f, b, off, len) => fs.writeSync(f, b, off, Math.min(3, len)));
+        fs.closeSync(fd);
+        expect(fs.readFileSync(file).equals(bytes)).toBe(true);
+    });
+
+    it('throws instead of looping or publishing when a write makes no progress', () => {
+        expect(() => writeAll(0, Buffer.from('abc'), () => 0)).toThrow(/short write/);
+    });
+});
+
+describe('the cleanup lock is owned', () => {
+    it('a displaced cleaner cannot release its successor’s lock', () => {
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.mkdirSync(dir, { recursive: true });
+        const lock = path.join(dir, '.cleanup.lock');
+        const a = acquireCleanupLock(dir);
+        expect(a).not.toBeNull();
+        const stale = new Date(Date.now() - 11 * 60 * 1000);
+        fs.utimesSync(lock, stale, stale);
+        const b = acquireCleanupLock(dir);
+        expect(b).not.toBeNull();
+        expect(b).not.toBe(a);
+        releaseCleanupLock(dir, a as string);
+        expect(fs.readFileSync(lock, 'utf8')).toBe(b);
+        releaseCleanupLock(dir, b as string);
+        expect(fs.existsSync(lock)).toBe(false);
+    });
+
+    it('a live lock is never taken, and of two takers of a stale lock at most one wins', () => {
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.mkdirSync(dir, { recursive: true });
+        const a = acquireCleanupLock(dir);
+        expect(acquireCleanupLock(dir)).toBeNull();
+        const stale = new Date(Date.now() - 11 * 60 * 1000);
+        fs.utimesSync(path.join(dir, '.cleanup.lock'), stale, stale);
+        const winners = [acquireCleanupLock(dir), acquireCleanupLock(dir)].filter((t) => t !== null);
+        expect(winners).toHaveLength(1);
+        expect(winners[0]).not.toBe(a);
+    });
+
+    it('an entry rewritten after cleanup measured it is not deleted', () => {
+        const file = path.join(tmp, 'entry');
+        fs.writeFileSync(file, 'first');
+        const seen = fs.statSync(file);
+        const later = new Date(seen.mtimeMs + 5000);
+        fs.writeFileSync(file, 'second!');
+        fs.utimesSync(file, later, later);
+        expect(removeIfUnchanged(file, seen)).toBe(false);
+        expect(fs.existsSync(file)).toBe(true);
+        expect(removeIfUnchanged(file, fs.statSync(file))).toBe(true);
+        expect(fs.existsSync(file)).toBe(false);
+    });
+});
+
 describe('concurrent writers, readers and cleanup', () => {
-    it('never serves a partial or corrupted entry, and the cap holds once writers stop', async () => {
+    it.each([
+        ['a cap that fits every write', 10_000_000],
+        ['a cap smaller than the writes', 60_000],
+    ])('%s: no read is partial or corrupted, the cap holds, and nothing survivable is lost', async (_label, cap) => {
         const tsx = path.resolve(__dirname, '../../node_modules/.bin/tsx');
         const mod = path.resolve(__dirname, '../../src/scripts/_lib/tool_output_spool.ts');
         const child = (id: number): Promise<string[]> =>
@@ -322,20 +388,24 @@ for (let i = 0; i < 40; i++) console.log(storeBytes(${JSON.stringify(tmp)}, Buff
         const writers = [0, 1, 2, 3].map(child);
         let cleanups = 0;
         const sweep = setInterval(() => {
-            cleanupSpool(tmp, Date.now(), 60_000);
+            cleanupSpool(tmp, Date.now(), cap);
             cleanups += 1;
         }, 5);
         const handles = (await Promise.all(writers)).flat();
         clearInterval(sweep);
         expect(cleanups).toBeGreaterThan(0);
-        for (const line of handles) {
+        const states = handles.map((line) => {
             const [session, handle] = line.split(' ') as [string, string];
-            expect(['ok', 'missing']).toContain(readHandle(tmp, handle, session).state);
-        }
-        cleanupSpool(tmp, Date.now(), 60_000);
+            return readHandle(tmp, handle, session).state;
+        });
+        expect(states.every((st) => st === 'ok' || st === 'missing')).toBe(true);
+        // With room for everything, a concurrent cleanup must not delete a single entry.
+        if (cap === 10_000_000) expect(states.filter((st) => st === 'ok')).toHaveLength(handles.length);
+        else expect(states.filter((st) => st === 'ok').length).toBeGreaterThan(0);
+        cleanupSpool(tmp, Date.now(), cap);
         const dir = path.join(tmp, SPOOL_DIR);
         const total = fs.readdirSync(dir).filter((n) => /^[0-9a-f]{64}$/.test(n)).reduce((n, f) => n + fs.statSync(path.join(dir, f)).size, 0);
-        expect(total).toBeLessThanOrEqual(60_000);
+        expect(total).toBeLessThanOrEqual(cap);
         expect(fs.readdirSync(dir).filter((n) => n.endsWith('.tmp'))).toEqual([]);
     }, 60_000);
 });
