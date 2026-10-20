@@ -328,12 +328,17 @@ No setting, environment variable or config file populates the selection.
 - *Crash durability* — **not promised.** The directory is not fsynced, so a
   crash can lose an entry whose rename had completed. The store is a cache of
   bytes the model already received; a lost entry reads `missing`.
-- *Capacity and age* — enforced by a cleanup at every store and at every read
-  whose handle passed every check, oldest first. Writers do not reserve space,
-  so concurrent writes can exceed the cap until the next cleanup; the overshoot is bounded by the writes in flight. Cleanup runs only
-  for a store or for a read whose handle passed every check — a malformed,
-  forged or foreign-session handle reaches no cleanup and no entry; a
-  syntactically valid one still reads the key file to check its MAC.
+- *Capacity and age* — a store first refuses an entry larger than the cap
+  (`too-large`), then writes, then runs cleanup, which never evicts the entry
+  that triggered it. A sequential store therefore completes within the cap.
+  Two limits, stated: cleanup is *attempted* at every store, and if another
+  cleaner holds the lock this one returns without cleaning, so under
+  contention a completed store can leave the store over the cap until the next
+  cleanup; writers do not reserve space. A cleanup that fails removes the
+  write it followed and answers `store-error`. A read whose handle passed
+  every check also runs cleanup; a malformed, forged or foreign-session handle
+  reaches no cleanup and no entry, though a syntactically valid one still
+  reads the key file to check its MAC.
 - *Complete writes* — every byte is written (short writes are looped) and
   fsynced before the rename; a failed write removes its temp file.
 - *Deletion is a claim* — cleanup renames an entry to a name only it uses and

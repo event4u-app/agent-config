@@ -81,8 +81,9 @@ export function spoolResult(
     root: string,
     selected: typeof SPOOL_SELECTED_CLASSES = SPOOL_SELECTED_CLASSES,
     now: number = Date.now(),
+    limits: Spool.SpoolLimits = {},
 ): Spool.SpoolOutcome {
     if (selected.size === 0) return { action: 'skip', reason: 'unselected' };
     const store = loadSpool();
-    return store === null ? { action: 'skip', reason: 'store-unavailable' } : store.spoolResult(envelope, view, resultKeys, root, selected, now);
+    return store === null ? { action: 'skip', reason: 'store-unavailable' } : store.spoolResult(envelope, view, resultKeys, root, selected, now, limits);
 }

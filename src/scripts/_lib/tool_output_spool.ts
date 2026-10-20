@@ -133,6 +133,7 @@ export function writeAll(fd: number, bytes: Buffer, write: (fd: number, b: Buffe
 /** Store `bytes` for `session` and mint a handle bound to it that expires with the retention age. */
 export function storeBytes(root: string, bytes: Buffer, session: string, now: number = Date.now()): StoredEntry {
     if (!SESSION.test(session)) throw new Error('bad session');
+    ensureSpoolDir(root);
     const key = spoolKey(root, true) as Buffer;
     const addr = address(key, session, sha256(bytes));
     const target = path.join(spoolDir(root), addr);
@@ -194,9 +195,16 @@ export function readHandle(
     return { state: 'ok', bytes: bytes.subarray(start, end) };
 }
 
-/** Test seams: run code inside the two windows a concurrent writer or cleaner can use. */
+/** Test seams and the one entry a cleanup must leave: the store that just triggered it. */
 export interface CleanupHooks {
     readonly beforeClaim?: (file: string) => void;
+    readonly keep?: string;
+}
+
+/** The cap and the cleanup seams a store runs with; production passes neither. */
+export interface SpoolLimits {
+    readonly maxBytes?: number;
+    readonly hooks?: CleanupHooks;
 }
 
 /**
@@ -218,8 +226,8 @@ export function cleanupSpool(
 ): { removed: number } {
     const dir = spoolDir(root);
     if (!fs.existsSync(dir)) return { removed: 0 };
-    const token = acquireCleanupLock(dir, now);
-    if (token === null) return { removed: 0 };
+    const owner = acquireCleanupLock(dir, now);
+    if (owner === null) return { removed: 0 };
     let removed = 0;
     try {
         const live: { name: string; seen: fs.Stats }[] = [];
@@ -233,24 +241,33 @@ export function cleanupSpool(
             const old = now - st.mtimeMs;
             const expired = name.endsWith('.tmp') || name.endsWith('.claimed') ? old > STALE_TMP_MS : ADDRESS.test(name) && old >= SPOOL_RETENTION_MS;
             if (expired) {
-                if (claimAndDelete(dir, name, st, token, hooks)) removed += 1;
-            } else if (ADDRESS.test(name)) {
+                if (claimAndDelete(dir, name, st, owner, hooks)) removed += 1;
+            } else if (ADDRESS.test(name) && name !== hooks.keep) {
                 live.push({ name, seen: st });
             }
         }
         live.sort((a, b) => a.seen.mtimeMs - b.seen.mtimeMs);
-        let total = live.reduce((n, e) => n + e.seen.size, 0);
+        let total = live.reduce((n, e) => n + e.seen.size, 0) + keptSize(dir, hooks.keep);
         for (const e of live) {
             if (total <= maxBytes) break;
-            if (claimAndDelete(dir, e.name, e.seen, token, hooks)) {
+            if (claimAndDelete(dir, e.name, e.seen, owner, hooks)) {
                 total -= e.seen.size;
                 removed += 1;
             }
         }
     } finally {
-        releaseCleanupLock(dir, token);
+        releaseCleanupLock(dir, owner);
     }
     return { removed };
+}
+
+function keptSize(dir: string, keep: string | undefined): number {
+    if (keep === undefined) return 0;
+    try {
+        return fs.statSync(path.join(dir, keep)).size;
+    } catch {
+        return 0;
+    }
 }
 
 /**
@@ -260,9 +277,9 @@ export function cleanupSpool(
  * means a writer replaced it; it is linked back unless a newer copy already
  * sits at the name. While claimed, a read of that entry answers `missing`.
  */
-export function claimAndDelete(dir: string, name: string, seen: fs.Stats, token: string, hooks: CleanupHooks = {}): boolean {
+export function claimAndDelete(dir: string, name: string, seen: fs.Stats, owner: string, hooks: CleanupHooks = {}): boolean {
     const file = path.join(dir, name);
-    const claimed = path.join(dir, `.${name}.${token}.claimed`);
+    const claimed = path.join(dir, `.${name}.${owner}.claimed`);
     hooks.beforeClaim?.(file);
     try {
         fs.renameSync(file, claimed);
@@ -292,15 +309,15 @@ export function claimAndDelete(dir: string, name: string, seen: fs.Stats, token:
  */
 export function acquireCleanupLock(dir: string, now: number = Date.now()): string | null {
     const lock = path.join(dir, LOCK_FILE);
-    const token = randomBytes(16).toString('hex');
+    const owner = randomBytes(16).toString('hex');
     for (let attempt = 0; attempt < 2; attempt++) {
         try {
-            fs.writeFileSync(lock, token, { flag: 'wx' });
-            return token;
+            fs.writeFileSync(lock, owner, { flag: 'wx' });
+            return owner;
         } catch {
             try {
                 if (attempt > 0 || now - fs.statSync(lock).mtimeMs < STALE_LOCK_MS) return null;
-                const aside = `${lock}.${token}.stale`;
+                const aside = `${lock}.${owner}.stale`;
                 fs.renameSync(lock, aside);
                 fs.rmSync(aside, { force: true });
             } catch {
@@ -316,10 +333,10 @@ export function acquireCleanupLock(dir: string, now: number = Date.now()): strin
  * replaced it between the read and the removal can lose its lock; that admits a
  * second cleaner, which `claimAndDelete` makes harmless.
  */
-export function releaseCleanupLock(dir: string, token: string): void {
+export function releaseCleanupLock(dir: string, owner: string): void {
     const lock = path.join(dir, LOCK_FILE);
     try {
-        if (fs.readFileSync(lock, 'utf8') === token) fs.rmSync(lock, { force: true });
+        if (fs.readFileSync(lock, 'utf8') === owner) fs.rmSync(lock, { force: true });
     } catch {
         // already released or taken over
     }
@@ -334,7 +351,7 @@ export interface SpoolStageView {
 }
 
 export type SpoolOutcome =
-    | { readonly action: 'skip'; readonly reason: 'unselected' | 'no-result' | 'image' | 'credential' | 'view-differs' | 'mode' | 'replay' | 'no-session' | 'store-error' | 'store-unavailable' }
+    | { readonly action: 'skip'; readonly reason: 'unselected' | 'no-result' | 'image' | 'credential' | 'view-differs' | 'mode' | 'replay' | 'no-session' | 'too-large' | 'store-error' | 'store-unavailable' }
     | { readonly action: 'observed'; readonly class: ContentClass; readonly bytes: number; readonly digest: string }
     | ({ readonly action: 'stored'; readonly class: ContentClass } & StoredEntry);
 
@@ -372,6 +389,7 @@ export function spoolResult(
     root: string,
     selected: ReadonlySet<ContentClass> = SPOOL_SELECTED_CLASSES,
     now: number = Date.now(),
+    limits: SpoolLimits = {},
 ): SpoolOutcome {
     try {
         if (view.mode !== 'observe' && view.mode !== 'protect' && view.mode !== 'strict') return { action: 'skip', reason: 'mode' };
@@ -397,9 +415,18 @@ export function spoolResult(
         if (shown === undefined || serialize(shown) !== raw.toString('utf8')) return { action: 'skip', reason: 'view-differs' };
         const session = String(payload['session_id'] ?? envelope['session_id'] ?? '').trim();
         if (!SESSION.test(session)) return { action: 'skip', reason: 'no-session' };
-        ensureSpoolDir(root);
-        cleanupSpool(root, now);
-        return { action: 'stored', class: cls, ...storeBytes(root, raw, session, now) };
+        const cap = limits.maxBytes ?? SPOOL_MAX_BYTES;
+        // Admission: an entry the cap could never hold is not written at all.
+        if (raw.length > cap) return { action: 'skip', reason: 'too-large' };
+        const entry = storeBytes(root, raw, session, now);
+        try {
+            cleanupSpool(root, now, cap, { ...limits.hooks, keep: entry.address });
+        } catch {
+            // A store that cannot enforce its bounds does not keep the write.
+            fs.rmSync(path.join(spoolDir(root), entry.address), { force: true });
+            return { action: 'skip', reason: 'store-error' };
+        }
+        return { action: 'stored', class: cls, ...entry };
     } catch {
         return { action: 'skip', reason: 'store-error' };
     }

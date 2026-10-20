@@ -282,7 +282,20 @@ describe('retention, partial writes and cleanup failure', () => {
             }),
         ).toThrow(/disk gone/);
         expect(fs.existsSync(path.join(dir, '.cleanup.lock'))).toBe(false);
-        // spoolResult runs cleanup inside its own try, so such a failure answers store-error.
+    });
+
+    it('through the store path, a cleanup failure answers store-error and leaves the new result unstored', () => {
+        const now = Date.now();
+        const old = storeBytes(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.utimesSync(path.join(dir, old.address), new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
+        const before = new Set(spoolFiles());
+        const env = readEnvelope('the new result');
+        const view: SpoolStageView = { mode: 'protect', placeholder: env, counts: [], refused: [] };
+        const failing = { hooks: { beforeClaim: (): void => { throw new Error('disk gone'); } } };
+        expect(spoolResult(env, view, ['tool_response'], tmp, READ_TEXT, now, failing)).toEqual({ action: 'skip', reason: 'store-error' });
+        expect(new Set(spoolFiles())).toEqual(before);
+        expect(fs.existsSync(path.join(dir, '.cleanup.lock'))).toBe(false);
     });
 
     it('an existing store directory is tightened to 0700 by a store', () => {
@@ -294,7 +307,7 @@ describe('retention, partial writes and cleanup failure', () => {
         expect(fs.statSync(dir).mode & 0o777).toBe(0o700);
     });
 
-    it('every store enforces retention and the cap, in one long session', () => {
+    it('every store enforces retention, in one long session', () => {
         const now = Date.now();
         const old = storeBytes(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
         const oldFile = path.join(tmp, SPOOL_DIR, old.address);
@@ -368,6 +381,57 @@ describe('complete writes', () => {
 
     it('throws instead of looping or publishing when a write makes no progress', () => {
         expect(() => writeAll(0, Buffer.from('abc'), () => 0)).toThrow(/short write/);
+    });
+});
+
+describe('the cap, through the store path', () => {
+    const view = (env: JsonObject): SpoolStageView => ({ mode: 'protect', placeholder: env, counts: [], refused: [] });
+    const size = (body: string): number => Buffer.byteLength(JSON.stringify({ type: 'text', file: { content: body } }));
+    const store = (body: string, maxBytes: number, now: number): unknown =>
+        spoolResult(readEnvelope(body), view(readEnvelope(body)), ['tool_response'], tmp, READ_TEXT, now, { maxBytes });
+    const total = (): number => spoolFiles().reduce((n, f) => n + fs.statSync(path.join(tmp, SPOOL_DIR, f)).size, 0);
+
+    it('two entries exactly at the cap are both kept', () => {
+        const a = 'a'.repeat(100);
+        const b = 'b'.repeat(100);
+        const cap = size(a) + size(b);
+        const now = Date.now();
+        expect(store(a, cap, now)).toMatchObject({ action: 'stored' });
+        expect(store(b, cap, now)).toMatchObject({ action: 'stored' });
+        expect(spoolFiles()).toHaveLength(2);
+        expect(total()).toBe(cap);
+    });
+
+    it('one byte over the cap evicts the oldest and keeps the store that triggered it', () => {
+        const a = 'a'.repeat(100);
+        const b = 'b'.repeat(100);
+        const cap = size(a) + size(b) - 1;
+        const now = Date.now();
+        store(a, cap, now);
+        const dir = path.join(tmp, SPOOL_DIR);
+        for (const f of spoolFiles()) fs.utimesSync(path.join(dir, f), new Date(now - 5000), new Date(now - 5000));
+        const second = store(b, cap, now) as { action: string; handle: string };
+        expect(second.action).toBe('stored');
+        expect(spoolFiles()).toHaveLength(1);
+        expect(readHandle(tmp, second.handle, S, undefined, now).state).toBe('ok');
+        expect(total()).toBeLessThanOrEqual(cap);
+    });
+
+    it('the store that triggered cleanup survives even when it ties with older entries on mtime', () => {
+        const a = 'a'.repeat(100);
+        const b = 'b'.repeat(100);
+        const cap = size(b);
+        const now = Date.now();
+        store(a, cap, now);
+        const second = store(b, cap, now) as { action: string; handle: string };
+        expect(readHandle(tmp, second.handle, S, undefined, now).state).toBe('ok');
+        expect(total()).toBeLessThanOrEqual(cap);
+    });
+
+    it('an entry larger than the cap is refused before anything is written', () => {
+        const big = 'x'.repeat(500);
+        expect(store(big, size(big) - 1, Date.now())).toEqual({ action: 'skip', reason: 'too-large' });
+        expect(spoolFiles()).toEqual([]);
     });
 });
 
