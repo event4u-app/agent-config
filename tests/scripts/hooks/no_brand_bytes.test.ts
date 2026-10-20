@@ -15,7 +15,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { CONCERN_REGISTRY } from '../../../src/scripts/hooks/concern_registry.js';
+import { resolveConcernMain } from '../../../src/scripts/hooks/concern_registry.js';
 import { _load_yaml, _resolve_concerns } from '../../../src/scripts/hooks/dispatch_hook.js';
 import { clearHookStdinOverride, setHookStdinOverride } from '../../../src/scripts/hooks/hook_stdin.js';
 
@@ -28,8 +28,11 @@ const VOICE_PHRASE = 'luminous-not-loud';
 const MARKERS = [BRAND_NAME, BRAND_HEX, BRAND_HEX.toLowerCase(), VOICE_PHRASE, 'brand-voice', 'tokens.json'];
 
 function runConcern(script: string, args: readonly string[], envelope: Record<string, unknown>): string {
-    const main = CONCERN_REGISTRY[script];
-    if (main === undefined) throw new Error(`${script} is not in CONCERN_REGISTRY`);
+    // The dispatcher's own resolver: inlined concerns AND the ones that live
+    // in a conditional chunk. A direct table lookup here would miss the second
+    // kind and read as "not a concern".
+    const main = resolveConcernMain(script);
+    if (main === null) throw new Error(`${script} resolves to no in-process concern`);
     let out = '';
     const prevWrite = process.stdout.write;
     const prevErr = process.stderr.write;

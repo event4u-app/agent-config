@@ -13,7 +13,8 @@ import { parse as parseYaml } from 'yaml';
 
 import { describe, expect, it } from 'vitest';
 
-import { CONCERN_REGISTRY } from '../../src/scripts/hooks/concern_registry.js';
+import { CONCERN_REGISTRY, isInProcessConcern } from '../../src/scripts/hooks/concern_registry.js';
+import { LAZY_CONCERNS } from '../../src/scripts/hooks/lazy_concern.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
@@ -26,11 +27,28 @@ describe('concern registry parity', () => {
     it('every manifest concern has an in-process registry entry', () => {
         const missing: string[] = [];
         for (const [name, def] of Object.entries(manifest.concerns)) {
-            if (CONCERN_REGISTRY[def.script] === undefined) {
+            if (!isInProcessConcern(def.script)) {
                 missing.push(`${name} (${def.script})`);
             }
         }
         expect(missing, `add these to src/scripts/hooks/concern_registry.ts: ${missing.join(', ')}`).toEqual([]);
+    });
+
+    it('every lazy concern names a chunk hook_chunks.mjs builds', async () => {
+        const { HOOK_CHUNKS } = (await import('../../src/scripts/hook_chunks.mjs')) as {
+            HOOK_CHUNKS: ReadonlyArray<{ entry: string; outfile: string }>;
+        };
+        for (const [script, entry] of Object.entries(LAZY_CONCERNS)) {
+            const built = HOOK_CHUNKS.find((c) => c.entry === script);
+            expect(built, `${script} is lazy but hook_chunks.mjs builds no chunk for it`).toBeDefined();
+            expect(path.basename(built!.outfile)).toBe(entry.chunk);
+        }
+    });
+
+    it('a lazy concern is not also statically inlined', () => {
+        for (const script of Object.keys(LAZY_CONCERNS)) {
+            expect(CONCERN_REGISTRY[script], `${script} is in both tables`).toBeUndefined();
+        }
     });
 
     it('every registry entry is callable', () => {
@@ -40,7 +58,7 @@ describe('concern registry parity', () => {
     });
 
     it('registry has no stale entries for scripts absent from disk', () => {
-        for (const script of Object.keys(CONCERN_REGISTRY)) {
+        for (const script of [...Object.keys(CONCERN_REGISTRY), ...Object.keys(LAZY_CONCERNS)]) {
             expect(fs.existsSync(path.join(REPO_ROOT, script)), `${script} missing on disk`).toBe(true);
         }
     });

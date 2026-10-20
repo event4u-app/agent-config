@@ -24,7 +24,6 @@
  *              fail-closed reduction unchanged)
  */
 
-import { main as chatHistoryMain } from '../chat_history.js';
 import { main as hotContextMain } from '../hot_context_hook.js';
 import { main as handoffContextMain } from '../handoff_context_hook.js';
 import { main as roadmapProgressMain } from '../roadmap_progress_hook.js';
@@ -87,12 +86,13 @@ import { main as interruptionLedgerMain } from './interruption_ledger_hook.js';
 import { main as journalRecordMain } from './journal_record_hook.js';
 import { main as obligationSettleMain } from './obligation_settle_hook.js';
 
-/** A concern `main` — argv-taking or not; both shapes exist. */
-export type ConcernMain = (argv?: string[]) => number | undefined | void;
+import { LAZY_CONCERNS, loadLazyConcern } from './lazy_concern.js';
+import type { ConcernMain } from './concern_registry_types.js';
+
+export type { ConcernMain };
 
 /** Keyed by the manifest's `script:` value (repo-relative path). */
 export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
-    'src/scripts/chat_history.ts': chatHistoryMain as ConcernMain,
     'src/scripts/hot_context_hook.ts': hotContextMain as ConcernMain,
     'src/scripts/handoff_context_hook.ts': handoffContextMain as ConcernMain,
     'src/scripts/roadmap_progress_hook.ts': roadmapProgressMain as ConcernMain,
@@ -155,3 +155,26 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/interruption_ledger_hook.ts': interruptionLedgerMain as ConcernMain,
     'src/scripts/hooks/journal_record_hook.ts': journalRecordMain as ConcernMain,
 };
+
+/**
+ * Every concern the dispatcher can run in-process: inlined in the table above,
+ * or loadable from a conditional chunk. The parity test asserts against THIS,
+ * not against `CONCERN_REGISTRY` alone — a lazy concern is still in-process on
+ * the fast path, and a parity check that could not see one would push the next
+ * extraction back into the bundle.
+ */
+export function isInProcessConcern(script: string): boolean {
+    return CONCERN_REGISTRY[script] !== undefined || LAZY_CONCERNS[script] !== undefined;
+}
+
+/**
+ * The concern's `main`, inlined or loaded from its chunk, or `null` when the
+ * dispatcher must fall back to the spawn path.
+ *
+ * The one resolver. The dispatcher and every test that drives a concern
+ * in-process go through it, so a concern moved into a chunk does not have to be
+ * found again at each call site.
+ */
+export function resolveConcernMain(script: string): ConcernMain | null {
+    return CONCERN_REGISTRY[script] ?? loadLazyConcern(script);
+}
