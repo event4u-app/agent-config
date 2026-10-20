@@ -62,6 +62,10 @@ const _GIT_GLOBAL_OPTS_WITH_VALUE: ReadonlySet<string> = new Set([
     '--exec-path',
     '--super-prefix',
 ]);
+/** Refusal fragments shared by the three hook-bypass branches, stored once. */
+const _BYPASSES = ' bypasses git hooks (git-history-discipline).';
+const _REMEDY =
+    ' Let the hooks run and fix what they report; that is the only path this guard leaves open.';
 /**
  * Builtins where `git <sub> -h` verified short `-n` cannot bypass a hook.
  * An ALLOWLIST, not a denylist of `commit`/`am`: with `ci = commit` aliased,
@@ -69,10 +73,6 @@ const _GIT_GLOBAL_OPTS_WITH_VALUE: ReadonlySet<string> = new Set([
  * an alias shadow a builtin, so aliases stay blocked. `am` is absent on
  * purpose — unverified is not safe, and it carries `--no-verify`.
  */
-/** Refusal fragments shared by the three hook-bypass branches, stored once. */
-const _BYPASSES = ' bypasses git hooks (git-history-discipline).';
-const _REMEDY =
-    ' Let the hooks run and fix what they report; that is the only path this guard leaves open.';
 const _SHORT_N_UNRELATED =
     /^(add|branch|cherry-pick|clean|fetch|grep|log|merge|mv|pull|push|rebase|revert|rev-list|rm|shortlog|show|tag)$/;
 const _CONFIG_READ_OR_RESTORE: ReadonlySet<string> = new Set([
@@ -272,17 +272,6 @@ function _git_base(tokens: string[]): string[] | null {
 }
 
 /**
- * `git config … core.hooksPath <value>` — the subcommand form of the hooksPath
- * override, distinct from the `-c` / `--config` global-option form handled in
- * `_is_blocked`.
- *
- * Closed by road-to-governance-invariants Phase 1 after the S0.2 spike measured
- * it: `git-history-discipline` already claimed `core.hooksPath` overrides were
- * "deterministically blocked", and only the inline `-c` form was. That made
- * `git config core.hooksPath /dev/null` → `git commit` a two-step sequence
- * whose every step this gate allowed and whose composition is exactly the
- * outcome the gate exists to prevent.
- *
  * Index of the subcommand inside `git`'s arguments: the first token that is
  * neither a global option nor the VALUE of one, so `git -C /repo config …`
  * resolves to `config` and not to `/repo`. -1 when there is none.
@@ -301,6 +290,17 @@ function _git_subcommand_index(rest: string[]): number {
 }
 
 /**
+ * `git config … core.hooksPath <value>` — the subcommand form of the hooksPath
+ * override, distinct from the `-c` / `--config` global-option form handled in
+ * `_is_blocked`.
+ *
+ * Closed by road-to-governance-invariants Phase 1 after the S0.2 spike measured
+ * it: `git-history-discipline` already claimed `core.hooksPath` overrides were
+ * "deterministically blocked", and only the inline `-c` form was. That made
+ * `git config core.hooksPath /dev/null` → `git commit` a two-step sequence
+ * whose every step this gate allowed and whose composition is exactly the
+ * outcome the gate exists to prevent.
+ *
  * Deliberately narrow, per the 2026-08-02 council cut (option ii — widen only
  * the exact shapes with no plausible legitimate use):
  *   - a READ (`--get`, `--list`, or the key with no value) is allowed;
