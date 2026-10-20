@@ -283,12 +283,29 @@ Phase 2). After its views exist it hands the dispatch to the engine's
 class in `_lib/tool_output_selection.ts` (empty until that roadmap's D14), only
 when the placeholder view of the result equals the bytes the model receives,
 and never when the result carries a credential detection or a refusal; in
-`observe` it records class, length and digest and stores no body. The store is
-a third conditional chunk, `tool_output_spool.chunk.cjs`, loaded by the engine
-only when a class is selected; a handle names the digest, an expiry and a MAC,
-so an expired handle answers `expired` after its entry is gone, and
+`observe` it records class, length and a keyed digest and stores no body. The
+store is a third conditional chunk, `tool_output_spool.chunk.cjs`, loaded by
+the engine only when a class is selected. A handle names a keyed address, an
+expiry and a MAC over both and the session that stored it, so an expired handle
+answers `expired` after its entry is gone, and
 `report_reducible_classes --read-handle <handle> [--range start:end]` returns
-the stored bytes or the state that stops them.
+the stored bytes — inside the storing session only, read from the host's
+session id, never a flag — or the state that stops them.
+
+**Two claims, two threat models.** They are separate on purpose, because the
+first ratification round refused them argued as one:
+
+| Claim | What protects it | What it does NOT cover |
+|---|---|---|
+| The store's CODE is the shipped code | the chunk's sha256 sidecar, checked by `tool_output_spool_loader.ts` before load; a mismatch or a foreign schema loads nothing | anything about the data the code writes |
+| The store's DATA is reachable only by its session, only until expiry, only in range | the MAC over address, expiry and session; the address `HMAC(key, session, sha256)` so equal content is not linkable without the key; a 0700 directory, 0600 files and a 0600 key under a gitignored path; retention enforced on every store and read | a local process running as the same user, which can read the key and the files directly. Session binding is a scope boundary between sessions, not a defence against the machine's own user |
+
+**What can turn the store on.** Every path is a gated hook-plumbing surface by
+name in `check_kernel_edit_ratified.ts`, not by its place in the dispatcher's
+import closure: the selection, the store, its loader, the classifier, the
+engine, the stage, the engine loader and the chunk table — and any source file
+that newly imports a store module. No setting, environment variable or
+config file populates the selection.
 
 **A concern reply cannot rewrite.** The dispatcher reads a fixed set of keys
 from a concern reply (`decision`, `reason`, `additional_context`, `context` and
