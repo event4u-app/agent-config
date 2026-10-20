@@ -11,6 +11,8 @@ import { beforeEach, afterEach, describe, expect, it } from 'vitest';
 
 import { parse as parseYaml } from 'yaml';
 
+import { parseUpstreamBody, renderUpstreamBody } from '../../src/scripts/_lib/self_repair_outgoing.js';
+
 import {
     chooseEgress,
     CREATION_WINDOW_MS,
@@ -25,7 +27,6 @@ import {
     fingerprint,
     mergeRecord,
     NEW_RECORDS_PER_SOURCE_PER_WINDOW,
-    parseReport,
     renderReport,
     runDetectors,
     sanitizeEvidence,
@@ -750,33 +751,43 @@ describe('self-repair — structured upstream intake (issue form)', () => {
         };
     }
 
-    it('renderReport round-trips through the form fields — single occurrence', () => {
+    it('the released body round-trips through the form fields — single occurrence', () => {
         const rec = mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW);
-        const parsed = parseReport(renderReport(rec, 'issue'));
+        const parsed = parseUpstreamBody(renderUpstreamBody(rec, 'issue'));
         expect(parsed).toEqual({
             defect_class: rec.defect_class,
+            source: rec.source,
             fingerprint: rec.fingerprint,
             occurrences: 1,
-            evidence: rec.evidence,
-            suggested_surface: rec.suggested_surface,
+            targets: 'none identified',
+            principle: 'not stated',
         });
     });
 
-    it('renderReport round-trips through the form fields — repeated occurrences', () => {
-        const first = mergeRecord(null, detectUserReport('du hast das falsch gemacht')!, NOW);
-        const rec = mergeRecord(first, detectUserReport('du hast das falsch gemacht')!, LATER);
-        const parsed = parseReport(renderReport(rec, 'pull-request'));
+    it('the released body round-trips through the form fields — repeated occurrences, targets and principle', () => {
+        const finding = { ...detectUserReport('du hast das falsch gemacht')!, principle: 'drain/baseline-drift' };
+        const first = mergeRecord(null, finding, NOW);
+        const rec = { ...mergeRecord(first, finding, LATER), target: ['rule:a', 'skill:b'] };
+        const parsed = parseUpstreamBody(renderUpstreamBody(rec, 'pull-request'));
         expect(parsed?.occurrences).toBe(2);
         expect(parsed?.fingerprint).toBe(rec.fingerprint);
+        expect(parsed?.targets).toBe('rule:a, skill:b');
+        expect(parsed?.principle).toBe('drain/baseline-drift');
     });
 
-    it('the form collects exactly the parsed-report fields', () => {
+    it('the form collects exactly the released-body fields', () => {
         const ids = loadForm()
             .body.filter((e) => e.type !== 'markdown')
             .map((e) => e.id);
         const rec = mergeRecord(null, detectUserReport('x you ignored the rule')!, NOW);
-        const parsed = parseReport(renderReport(rec, 'issue'))!;
+        const parsed = parseUpstreamBody(renderUpstreamBody(rec, 'issue'))!;
         expect(ids.sort()).toEqual(Object.keys(parsed).sort());
+    });
+
+    it('the source dropdown mirrors the DefectSource union', () => {
+        const dropdown = loadForm().body.find((e) => e.id === 'source');
+        const sources: DefectSource[] = ['user-reported', 'self-detected', 'model-noticed'];
+        expect(dropdown?.attributes?.options).toEqual(sources);
     });
 
     it('the dropdown options mirror the DefectClass union', () => {
@@ -788,8 +799,8 @@ describe('self-repair — structured upstream intake (issue form)', () => {
         expect(loadForm().labels).toContain('self-repair');
     });
 
-    it('parseReport refuses a body that is not a self-repair report', () => {
-        expect(parseReport('## Some other issue\n\nfree text')).toBeNull();
+    it('parseUpstreamBody refuses a body that is not a self-repair report', () => {
+        expect(parseUpstreamBody('## Some other issue\n\nfree text')).toBeNull();
     });
 });
 

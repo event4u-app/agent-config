@@ -30,6 +30,10 @@ role:                      # optional — unordered list of role labels (may be 
   - engineer
 style:
   pace: "pragmatic"        # pragmatic | thorough | rapid
+  avoid:                   # optional — the user's own "never say X" list
+    - pattern: "circle back"
+      match: word          # word | substring
+      note: "say when"     # optional
 voice_sample: |            # optional — one paste of the user's typical writing
   Mach das einfach. Wenn unklar, frag im Council.
 last_updated: "2026-05-15" # YYYY-MM-DD — bumped on every accepted change
@@ -57,6 +61,7 @@ enforced by `/agents user accept` and `/agents user update`.
 | `language` | yes | Primary language; the agent mirrors per [`language-and-tone`](../../dist/agent-src/rules/language-and-tone.md). |
 | `role` | no | Unordered list of role labels (may be empty). Drives reviewer-voice selection and persona pairing when populated. Seeded enum mirrors `SEED_PROFILE_IDS`; additional free-form entries accepted; each present entry must be non-empty. The setup wizard never blocks a save on it. |
 | `style.pace` | yes | `pragmatic` (default), `thorough` (more verification), or `rapid` (shorter replies). |
+| `style.avoid` | no | Up to 32 `{ pattern, match, note? }` entries — `pattern` a 1-64-char literal (never a regex), `match` `word` or `substring`. Absent means `[]`. Read by `check_voice_lexicon --user` and flagged at `warning` in `/post-as:me` drafts; nothing else reads it. |
 | `voice_sample` | no | Optional representative paste — sharpens mirror-back and tone calibration when present; may be empty. The setup wizard never blocks a save on it. |
 | `last_updated` | yes | ISO date, bumped on every accept. |
 
