@@ -36,9 +36,9 @@ strictly below each major); the absence of a `4.0.0` tag locally and on the
 remote; every `Consumer impact` cell against `BREAKING_CHANGES.md`, including
 the two-row 6.0.0 case resolving to `action` by rank; all 7 out-of-sample
 surface and bump rows; all 7 in-sample rows as the classifier currently
-computes them; the 162 and the single `src/config/budget-routing.json`
+computes them; the 162 and the single `src/config/budget-routing.json` <!-- ref-ignore -->
 deletion; the four zero-installer controls; and F3's claim that 15.0.0 removed
-`src/domains/meta/chat-history/command.md` and its projection while the
+`src/domains/meta/chat-history/command.md` and its projection while the <!-- ref-ignore -->
 surface clause correctly stayed silent.
 
 The pre-registration claim holds and is the strongest part of this change.
