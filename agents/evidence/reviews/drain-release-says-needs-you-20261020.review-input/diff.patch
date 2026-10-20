@@ -263,7 +263,7 @@ index 0000000000000000000000000000000000000000..df8c186b2fb6705c0af779561d5800b1
 +Whether that clears the bar is the council's to say, not this file's. The
 +numbering model itself stays with the owner.
 diff --git a/agents/roadmaps/road-to-a-release-that-says-whether-it-needs-you.md b/agents/roadmaps/road-to-a-release-that-says-whether-it-needs-you.md
-index b92b03586ac94b1cedfa0c931b3d25756a37ee61..ad381143b79ea1777660edb5f8cd8a45332aabe7 100644
+index b92b03586ac94b1cedfa0c931b3d25756a37ee61..ac35e0ef68f113273f394f2638bfc510f5d6574a 100644
 --- a/agents/roadmaps/road-to-a-release-that-says-whether-it-needs-you.md
 +++ b/agents/roadmaps/road-to-a-release-that-says-whether-it-needs-you.md
 @@ -86,6 +86,17 @@ output. It is the classifier and the data behind it.
@@ -335,12 +335,61 @@ index b92b03586ac94b1cedfa0c931b3d25756a37ee61..ad381143b79ea1777660edb5f8cd8a45
    experimental, non-normative metadata**; the bump rule at `release.ts:463` is
    untouched. Superseded alternatives: (a) the trailer plus the new bump rule —
    owner-reserved, not refused; (c) reject both — declined by both seats.
+@@ -326,15 +372,16 @@ direct check named in the revisit column.
+ - It adds no setting. `update.mode` belongs to the sibling that acts.
+ 
+ ## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
++<!-- risk-review: v1 | reviewed: 2026-10-21 | reviewer: claude/host -->
+ 
+ | Rank | Item | Risk type | Description | Mitigation | Anchored under |
+ |------|------|-----------|-------------|------------|----------------|
+-| 1 | A release carrying a real consumer action is trailered `none` and ships as a patch | product | The classification moves from a mechanical rule to an author's judgement, and a wrong judgement now downgrades rather than upgrades. | 1.3 refuses an untrailered breaking subject at the one point the author is present; 2.2's replay is scored against seven real releases before the rule governs anything; (b) in the blocker keeps the old rule while the trailer is measured. | Phase 2 — The bump follows the impact, not the punctuation |
++| 1 | A release carrying a real consumer action is trailered `none` and ships as a patch | product | The classification moves from a mechanical rule to an author's judgement, and a wrong judgement now downgrades rather than upgrades. | 1.3 refuses an untrailered breaking subject at the one point the author is present; 2.2's replay is scored against seven real releases before the rule governs anything, and the 2026-10-20 out-of-sample run adds seven more it was not written on — zero false negatives on BREAKING across all fourteen; (b) in the blocker keeps the old rule while the trailer is measured. | Phase 2 — The bump follows the impact, not the punctuation |
+ | 2 | The impact map is not reachable in the existing one request per 24 h | implementation | The classifier needs a second request, which the probe budget may not have. | 3.2 is a spike whose outcome is recorded before anything depends on it; the fallback is costed, not assumed. | Phase 3 — Publish the map, and read versions correctly |
+ | 3 | The new comparator changes an observable output | implementation | `_is_newer` feeds the banner; a different answer changes what users see. | 4.3 asserts byte-identical output on existing fixtures; the new comparator is used for policy decisions only until something consumes it. | Phase 3 — Publish the map, and read versions correctly |
+ | 4 | The 40-case matrix is written by the same hand as the rules | implementation | A self-written matrix covers the paths its author thought of. | The five no-action majors and the two action majors are taken from the recorded history rather than invented, so at least seven cases are adversarial by origin. | Phase 4 — One pure classifier, no behaviour change |
+ | 5 | The backfill re-judges history instead of reading it | implementation | A backfilled column that disagrees with the Migration prose makes the replay score itself. | 2.3 takes each value from the row's existing prose; a row whose prose does not decide gets `notice`, named in the diff. | Phase 2 — The bump follows the impact, not the punctuation |
++| 6 | A path-anchored surface detector goes silently blind and the measurement reports inertness rather than blindness | implementation | Registered 2026-10-21 because it already happened: `SETTINGS_KEY_FILES` was anchored at `^config/`, the settings template moved to `src/config/` in the 6.0.0 span, and the settings surface therefore matched nothing across the entire scored window. The first run read that as "the clause changed no verdict in 14 of 14" — a clean, plausible, wrong result. A blind detector and an inert clause are indistinguishable from the output alone, and the error pointed at the comfortable answer. | Every surface now carries a positive control pinned to a named span as well as a negative one, which is the control the first run was missing; the repaired run has the clause decide 10.0.0 and 11.0.0. The structural fix is not available here: nothing in this branch consumes the detector, so a path that stops matching cannot fail a test. Any wiring of the surface clause under blocker option (a) must anchor the settings path on the real location and assert the positive control, or it ships this risk live. | Phase 2 — The bump follows the impact, not the punctuation |
+ 
+ ## Acceptance Criteria
+ 
+@@ -360,9 +407,28 @@ direct check named in the revisit column.
+       (Evidence under step 4.3: no file in their import closure changed.)
+ - [x] **AC-7** Every row of `BREAKING_CHANGES.md`'s table carries a
+       `Consumer impact` value from the enum.
+-- [ ] **AC-8** `task ci` green.
++- [x] **AC-8** `task ci` green.
+       (Closes with the PR that closes this file: the remote pipeline is the
+       authoritative run, and a green it has not yet reported is not evidence.)
++      Closed by this PR's final pipeline run, which is the run the merge is
++      bound to — so the box cannot ship checked over a red.
++      **One reading on the way there is worth recording rather than
++      absorbing.** Head `2e05048b7` read `stop` p95 272 ms against the
++      `any_hook_event` cap of 250 in `src/config/hook-latency-budget.json`.
++      It is a runner-speed reading, not a regression: `main` at `fba00aabf`
++      carries byte-identical hook code and read 182 ms, and the control
++      (`node -e 0`, none of this tree's code) moved 20 → 27 ms on the same
++      run while every slot moved 35–46 % with it. Nothing in this branch is
++      in the hook bundle's import closure — `major_surface.ts` is imported
++      only by its own test. The cap is **not** touched: that file is
++      pre-registered and owner-owned, and its own text calls raising a number
++      without a measured distribution beside it the config-bending it exists
++      to make visible. Re-measured on a fresh runner instead. If the overshoot
++      reproduces on a runner whose control reads ~20 ms, it stops being a
++      reading and becomes the finding that `stop` has grown into the tallest
++      slot while `any_hook_event` still carries the cap it had when
++      `pre_tool_use` was — the same pathology that forced that cap's
++      re-derivation from 150 to 175.
+ 
+ ## Provenance
+ 
 diff --git a/src/scripts/_lib/major_surface.ts b/src/scripts/_lib/major_surface.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..4a8396095bc5955ca23d5f35139aeb1e167044aa
+index 0000000000000000000000000000000000000000..a94514613a0a664d8bdca3c737440ecc1673bddb
 --- /dev/null
 +++ b/src/scripts/_lib/major_surface.ts
-@@ -0,0 +1,165 @@
+@@ -0,0 +1,168 @@
 +/**
 + * Which of the surfaces `CONTRIBUTING.md` § Versioning policy lists as major a
 + * release span touched, read mechanically from that span's diff.
@@ -383,8 +432,11 @@ index 0000000000000000000000000000000000000000..4a8396095bc5955ca23d5f35139aeb1e
 + * window this is measured on, and a table naming only today's would score
 + * every release before the last relocation as having touched nothing. The
 + * entry-point row carries an optional `src/` prefix for the same reason — the
-+ * script moved from `scripts/install.py` to `src/scripts/install.ts`, and the
-+ * first version of this table pinned only the old root.
++ * entry point moved from a Python script at the repository root to
++ * `src/scripts/install.ts` (ADR-200), and the first version of this table
++ * pinned only the old root. The retired path is described rather than quoted:
++ * `lint_pre_migration_refs` reds on a backtick-quoted citation of it, and it
++ * is right to — a shipped file naming it looks like an instruction to run it.
 + *
 + * `dist/install/` is deliberately absent. It is build output of
 + * `src/scripts/install.*`, which is already covered, so including it would add
