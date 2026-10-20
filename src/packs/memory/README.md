@@ -18,4 +18,4 @@ Cross-session memory and chat-history capabilities for the maintainer workspace.
 - **`memory-mine-session`** — Mine a session (cross-host chat-history log) for memory signals and/or rule/skill proposal seeds via --mode=[signals|proposals|both]. Preview-default, opt-in. Folds in /chat-history learn.
 - **`memory-promote`** — Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate.
 - **`memory-propose`** — Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry.
-- **`retro`** — Retro after merged work — examine a merged PR or a finished session, draw at most one durable learning, route it to exactly one target; `status` shows the queue and the last sweep
+- **`retro`** — Examine a merged PR or finished session and keep at most one durable learning

@@ -9,7 +9,7 @@ replaces: []
 visibility: advanced
 cluster: retro
 skills: [learning-to-rule-or-skill, memory-consolidation]
-description: Retro after merged work — examine a merged PR or a finished session, draw at most one durable learning, route it to exactly one target; `status` shows the queue and the last sweep
+description: Examine a merged PR or finished session and keep at most one durable learning
 suggestion:
   eligible: true
   trigger_description: "run a retro on a merged PR or yesterday's sessions, see what the retro queue holds"
