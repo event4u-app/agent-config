@@ -245,7 +245,7 @@ Nothing is sent without the person's word in that turn.
       `payload-has-only-closed-fields` cases were watched red (3 of 4) before
       the renderer existed; the degraded-issue scan case now reaches the body
       through `principle`, the free field that still leaves.
-- [~] **3.2 A mechanism fingerprint.** Deferred 2026-10-19 by D10: the
+- [~] **3.2 A mechanism fingerprint.** Deferred 2026-10-19 by D10: the <!-- deferred-resolution: carried-to=road-to-one-upstream-that-checks-what-leaves-carried -->
       fingerprint stays on the evidence hash until a corpus of records carrying
       `principle` shows one subject per mechanism; re-opens when that corpus
       exists. Changing the key earlier changes a cross-installation contract
@@ -370,7 +370,7 @@ Nothing is sent without the person's word in that turn.
 > *(Re-measured 2026-10-19: retro 4.4 and 2.5 are both still open, 2.5 for an
 > owner-reserved reason — it is a new consumer command. Unchanged.)*
 
-- [~] **5.1 At most one offer per run.** A retro run whose package record passes
+- [~] **5.1 At most one offer per run.** A retro run whose package record passes <!-- deferred-resolution: carried-to=road-to-one-upstream-that-checks-what-leaves-carried -->
       the canonical threshold appends one release offer to its output; sending
       still needs the person's word in that turn.
       verify: `npx vitest run tests/scripts/retro.test.ts -t at-most-one-upstream-offer --reporter=verbose` -> /✓.*at-most-one-upstream-offer/
@@ -385,7 +385,7 @@ Nothing is sent without the person's word in that turn.
       `road-to-a-retro-the-merge-runs` step 4.4 closes; the drain queue has
       no class for a wait on another roadmap's open step, so a `[ ]` here
       reads as runnable work and sends a lane to a step it cannot build.
-- [~] **5.2 A leak stops the offers.** Any egress or authorisation leak found
+- [~] **5.2 A leak stops the offers.** Any egress or authorisation leak found <!-- deferred-resolution: carried-to=road-to-one-upstream-that-checks-what-leaves-carried -->
       after release turns offers off until the owner decides, and `/retro status`
       says so.
       verify: `npx vitest run tests/scripts/retro.test.ts -t leak-turns-offers-off --reporter=verbose` -> /✓.*leak-turns-offers-off/
@@ -481,7 +481,7 @@ Nothing is sent without the person's word in that turn.
       file that does not exist.
 - [x] **AC-2** A release whose branch, identity, message or diff carries a
       consumer identifier is refused, with the finding named.
-- [~] **AC-3** The same mechanism from two projects produces one fingerprint.
+- [~] **AC-3** The same mechanism from two projects produces one fingerprint. <!-- deferred-resolution: carried-to=road-to-one-upstream-that-checks-what-leaves-carried -->
       Deferred with 3.2 (D10).
 - [x] **AC-4** Every upstream pull request is a draft with a noreply identity,
       and changing one byte after approval voids the approval.
