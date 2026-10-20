@@ -25,7 +25,7 @@ evidence:
   discovery: complete
   basis:
     - agents/evidence/council/analysis-family-naming.md
-    - agents/roadmaps/road-to-an-analysis-family-that-deepens-itself.md
+    - agents/roadmaps/archive/road-to-an-analysis-family-that-deepens-itself.md
     - src/domains/analysis-workbench/analyze/inbox/command.md:47
     - src/domains/meta/optimize/deep/command.md:115
     - src/scripts/ai_council/cli_agency_bounds.ts:4
@@ -214,7 +214,7 @@ context file `src/agent-src/contexts/execution/analysis-loop.md`
 
 - `agents/evidence/council/analysis-family-naming.md` — the naming verdict, both
   seats, with the prompt committed beside it.
-- `agents/roadmaps/road-to-an-analysis-family-that-deepens-itself.md` § Context —
+- `agents/roadmaps/archive/road-to-an-analysis-family-that-deepens-itself.md` § Context —
   F1–F18 with their anchors; § Blockers — the two owner answers of D7 and D8.
 - `src/domains/analysis-workbench/analyze/inbox/command.md:47` — the branch and
   PR ban D5 lifts.
@@ -257,7 +257,7 @@ context file `src/agent-src/contexts/execution/analysis-loop.md`
 
 ## References
 
-- `agents/roadmaps/road-to-an-analysis-family-that-deepens-itself.md`
+- `agents/roadmaps/archive/road-to-an-analysis-family-that-deepens-itself.md`
 - `agents/roadmaps/later/road-to-first-reference-analysis-observation.md`
 - `docs/decisions/ADR-118-loop-engineering-boundaries.md`
 - `src/agent-src/contexts/execution/analysis-loop.md`
