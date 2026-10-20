@@ -69,6 +69,7 @@ import {
     ttl_seconds_for,
     write_record,
 } from './_lib/session_register.js';
+import { pr_watch_block } from './_lib/session_pr_watch.js';
 import { pruneAgedRefusalState, readSessionCounts } from './_lib/turn_end_refusals.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 
@@ -910,6 +911,18 @@ export function main(): number {
                     pruneAgedRefusalState(root, { now: new Date() });
                 } catch {
                     /* an unprunable directory keeps its files; it is not an error */
+                }
+            }
+            if (event === 'user_prompt_submit') {
+                // The live state of PRs this session opened. `warn` is the one
+                // decision whose context reaches the model on this slot; the
+                // dispatcher turns it into a host-facing exit 0, so it never blocks.
+                const prs = pr_watch_block(root, session_id, new Date());
+                if (prs !== null) {
+                    process.stdout.write(
+                        JSON.stringify({ decision: 'warn', reason: 'session PR state', additional_context: prs }) + '\n',
+                    );
+                    return 2;
                 }
             }
             if (event === 'session_start') {
