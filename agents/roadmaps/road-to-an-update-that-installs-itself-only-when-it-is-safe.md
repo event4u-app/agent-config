@@ -190,28 +190,32 @@ None of this is rebuilt here.
       `probe_throttle.ts:50`, a 1 s budget, fail-open, effect `notification`,
       addressed to the **user**.
       verify: p95 hook latency stays inside the Phase 1.3 baseline.
-      Landed 2026-10-20 as `update-notice`
-      (`src/scripts/update_notice_hook.ts`), bound on `session_start` on the
-      seven hosts that carry the slot and on no other event, asserted from the
-      manifest. File reads only — the cached registry probe, the installed
+      Written and tested 2026-10-20 as `update-notice`
+      (`src/scripts/update_notice_hook.ts`), and **not registered**: the
+      manifest binds it on no event of any host, and its test asserts exactly
+      that, so the commit that registers it turns the test red and has to carry
+      the new council verdict. File reads only — the cached registry probe, the installed
       `package.json` and `CHANGELOG.md`, the session register — so it opens no
       socket; measured p95 over 20 in-process runs is asserted under 100 ms
       against the 1.3 `session_start` baseline of 160 ms for the WHOLE
-      dispatch. **It needed room first:** the bundle stood 39 bytes under its
-      ceiling, so `chat_history` moved into a conditional chunk under decision
-      D9's mechanism (1,549,961 → 1,429,414 B before this concern, 1,451,197 B
-      after it and 4.3's).
+      dispatch. **Registering it will need room first.** The conditional chunk
+      that made room for it (D10) was split out of this change on 2026-10-20:
+      it touches four ratification-watched files, the round that would ratify
+      it alone could not run on exhausted council quota, and without the two
+      concerns it buys nothing. Without it the bundle stands at 1,549,984 of
+      1,550,000 B, so the next round has to bring the room back with the
+      registration.
 - [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.2 Stage and verify only; activate at a boundary.** The concern never
       swaps files mid-session; activation happens at the next `session_start`
       before the dispatcher reads anything.
       verify: a fixture session observes no file change between its first and
       last hook invocation.
-      Landed 2026-10-20. Staging is a property of the data, not a promise:
-      `updateNotice` returns `activate` only when the candidate EQUALS the one
-      a previous session staged, so a first sighting can never install, and
-      only when `any_live_session` reports no FOREIGN session — the register
-      step 1.4 built, queried with this session's own id excluded. The fixture
-      asserts a byte-identical install tree across five invocations.
+      Written 2026-10-20, then narrowed by review (D13): `updateNotice` STAGES
+      and reports and returns `activate: null` on every path, so the concern
+      installs nothing at all — activation stays with `upgrade --unattended`,
+      which refuses while `any_live_session` reports a foreign session. The
+      fixture asserts a byte-identical install tree across five invocations.
+      Open with 3.1, because a concern nobody registers delivers nothing.
 - [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.3 One line from the shipped curated head.** After an update, the
       line comes from `release_highlights.ts:35-41` in the **installed**
       package, plus any `notice` entry from the impact map. Fetched release
@@ -240,11 +244,11 @@ None of this is rebuilt here.
 - [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.5 Hosts with no session slot keep the CLI banner.**
       verify: a fixture in which `agent-config hooks:status` reports no
       `session_start` binding still yields the banner path.
-      Landed 2026-10-20 by construction and asserted from the manifest:
-      `copilot` is the one host with no `session_start` slot, it binds
-      `update-notice` on no event at all, and `_dispatch.bash` still calls
-      `check_update_banner`. Nothing about the banner path changed, which is
-      the claim.
+      True by construction today, because no host binds `update-notice` and
+      `_dispatch.bash` still calls `check_update_banner`. The claim this step
+      makes — `copilot`, the one host with no `session_start` slot, keeps the
+      banner once the concern is bound elsewhere — is only checkable after 3.1
+      registers it.
 
 ## Phase 4 — Consent and rollout, nothing flipped silently
 
@@ -294,6 +298,10 @@ None of this is rebuilt here.
       The question reaches the user through the warn path, in the host's
       declared `ask:` shape (native tool where a host offers one, the numbered
       text block otherwise).
+      **Narrowed 2026-10-20 to the council's (d):** the invitation now needs
+      `update.mode: ask` — a class-C value only a human can write — before it
+      reads the ring-0 record, which stays as a second kill switch. An absent
+      key and `notify` ask nothing, asserted. Not registered, like 3.1.
 - [x] **4.4 A pin advisor for teams.** `update --check` in a pinned project
       lists what lies between the pin and latest, read from the impact map.
       It proposes; it never moves the pin.
@@ -328,15 +336,17 @@ None of this is rebuilt here.
   the question is what they asked for, not who owns it.
 - **Owner:** council
 - **Blocks:** 3.1, 3.2, 3.3, 3.4, 3.5 and 4.3 — every item whose delivery was
-  `update-notice` or `update-auto-invite`. Nothing else: the lazy-concern
-  chunk, the session register, the provenance tie and Phase 4's settings key
-  stand on their own and stay closed.
+  `update-notice` or `update-auto-invite`. Nothing else: the session register,
+  the provenance tie and Phase 4's settings key stand on their own and stay
+  closed. The lazy-concern chunk does not stand here any more — it was split
+  out of this change and returns with the registration.
 - **Question:** On what terms do a `session_start` concern that may initiate
   `upgrade --unattended`, and a `stop` concern that may open a question with
   the user, return?
 - **What to do:** the seats converged 2/2 and asked for four things
   (`agents/evidence/council/lazy-concern-authority-expansion-20261020.md`) —
-  (a) split both concerns out of the chunk change, which this commit did;
+  (a) split both concerns out of the chunk change — done, and since
+  2026-10-20 the chunk is out of this change too;
   (b) declare them as authority expansions rather than as advisory
   notifications, because `fail_closed: false` and `severity: advisory`
   describe failure and classification, never side effects;
@@ -345,6 +355,15 @@ None of this is rebuilt here.
   (d) gate `update-auto-invite` on a user-owned setting, with the ring-0
   record kept only as an additional kill switch, because a rollout switch is
   not consent.
+- **State at 2026-10-20, so the next round starts from the tree:** (c) holds —
+  `updateNotice` returns `activate: null` on every path (D13). (d) holds —
+  `autoInviteDecision` refuses without `update.mode: ask` before it reads the
+  ring-0 record (D14). What is left is (b) and the registration itself, both
+  in `hook_manifest.yaml`, which is ratification-watched; that round could
+  not run on 2026-10-20 because both council seats were quota-exhausted. Its
+  prompt package for the chunk alone exists as an unrun draft in the
+  originating lane and was not committed, because a prompt with no response
+  is not evidence of a round.
 - **Recommendation:** take (c) and (d) as written rather than arguing the
   classification. Both are smaller than the capability they replace — a
   concern that stages and reports needs no authority argument at all — and
@@ -524,10 +543,11 @@ None of this is rebuilt here.
 | D7 | product-owned | council:agents/evidence/council/node-floor-raise-20261018.md | Blocker `node-floor-raise` → (a): `engines.node` `>=22` as a semver-major, the first `action` release, `engines` and every Node-20 CI site in one change, migration notes naming the last Node-20-compatible version with no backports (ADR-290) | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen") | consumer-usage evidence shows a material share of installs stranded on Node 20 |
 | D8 | product-owned | council:agents/evidence/council/auto-default-existing-installs-20261018.md | Blocker `auto-default-for-existing-installs` → (a): `auto` may default for new installs; an existing install is asked once with a binding "never", only after the ring-0 exit and step 1.4, never under CI, headless, non-TTY, `--json` or a subagent run (ADR-291) | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen") | an unattended release rolls back or breaks a live session |
 | D9 | reversible-technical | council:agents/evidence/council/hook-bundle-ceiling-20261018.md | The hook-bundle ceiling (`src/config/hook-bundle-budget.json`, 1,547,451 of 1,550,000 B at `f55e5a760`) is not raised for 3.1 and 3.3–3.5: room is made first — a per-module byte ranking from the metafile, then the largest narrow-event module moved behind a conditional import, proven inside `hook-latency-budget.json`; a raise only as the evidence-backed fallback, sized from all blocked work | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen") | no extraction frees meaningful room within the latency and reliability budgets |
-| D10 | reversible-technical | agent | Make room for 3.1 by moving `chat_history` — the largest narrow-event module in the metafile ranking — into a conditional chunk, rather than raising the dispatch ceiling | D9 settled the mechanism on 2026-10-18 and ordered it: extraction first, a raise only where no extraction frees meaningful room. 121,219 bytes of exclusive closure for a concern bound on one event is meaningful room, so the raise's own precondition does not hold. Measured 1,549,961 -> 1,429,414 B before the new concerns | an extraction stops freeing room and a raise becomes the evidence-backed fallback D9 describes |
-| D11 | critical-technical | evidence | The per-concern stdin override lives on `globalThis`, not in a module-local binding | a chunk is a second module graph in one process, so the dispatcher set its own copy and the lazily loaded concern read another, fell through to an already-consumed fd 0, and wrote nothing at exit 0. Measured on `chat-history`; pinned by `tests/scripts/hooks/hook_stdin_cross_graph.test.ts`, which goes red in both directions when the binding is made local again | a chunk boundary stops existing, i.e. every concern is inlined again |
+| D10 | reversible-technical | agent | Make room for 3.1 by moving `chat_history` — the largest narrow-event module in the metafile ranking — into a conditional chunk, rather than raising the dispatch ceiling | D9 settled the mechanism on 2026-10-18 and ordered it: extraction first, a raise only where no extraction frees meaningful room. 121,219 bytes of exclusive closure for a concern bound on one event is meaningful room, so the raise's own precondition does not hold. Measured 1,549,961 -> 1,429,414 B before the new concerns | an extraction stops freeing room and a raise becomes the evidence-backed fallback D9 describes. **Withdrawn from this change 2026-10-20** (D14): the chunk returns with the concerns' registration |
+| D11 | critical-technical | evidence | The per-concern stdin override lives on `globalThis`, not in a module-local binding | a chunk is a second module graph in one process, so the dispatcher set its own copy and the lazily loaded concern read another, fell through to an already-consumed fd 0, and wrote nothing at exit 0. Measured on `chat-history`; pinned by `tests/scripts/hooks/hook_stdin_cross_graph.test.ts`, which goes red in both directions when the binding is made local again | a chunk boundary stops existing, i.e. every concern is inlined again. **Withdrawn with D10 on 2026-10-20** — the revisit condition fired: with the chunk out, every concern is inlined again, and the override is module-local as on `main` |
 | D12 | critical-technical | agent | Close the half of 2.1's provenance signature that needs no dependency, and register the trust root as a blocker instead of asserting it | the DSSE signature against the bundle's own certificate and that certificate's SAN are checkable with `node:crypto` alone and stop an edited payload, a borrowed signature and a mismatched identity. A Fulcio issuer check and a Rekor proof are not, and the three ways to get them trade bytes, bandwidth and coverage with no measurement in this tree to separate them — so the choice is the council's, recorded as `dsse-trust-root` | the blocker resolves, or a measurement of the pack-budget cost of a sigstore dependency appears |
 | D13 | critical-technical | evidence | `update-notice` stages and reports; it never installs. The activation seam it first shipped was removed rather than the `effect:` vocabulary widened | an independent provider review (openai, 2026-10-20, direct CLI, `refused`) held that `effect: notification` means "tells the human something and changes nothing else" and that `fail_closed`/`severity` describe failure handling rather than permitted effects. Widening a closed vocabulary to fit one concern is how the vocabulary stops meaning anything | a future step genuinely needs a hook-triggered install, in which case it needs its own effect value and its own review |
+| D14 | reversible-technical | agent | Split the lazy-concern chunk out of this change, and gate `update-auto-invite` on `update.mode: ask` | the chunk touches four ratification-watched files (`hook_manifest.{yaml,json}`, `dispatch_hook.ts`, `hook-bundle-budget.json`) and only made room for two concerns the council refused; the round to ratify it alone could not run, both seats being quota-exhausted. Without it the rest fits the unchanged ceiling — 1,549,984 of 1,550,000 B, base 1,549,699 B. The `ask` gate is the council's (d) taken literally: a value only a human can write stands in front of the rollout switch | the next council round reads ADR-291's "an existing install is asked once" as requiring the question without an opt-in, in which case the gate moves back behind ring-0 |
 
 D6 closes a deferral, not a design: what was decided is that the register
 question is settled by the Phase 1.1 probe's error count rather than by
@@ -587,8 +607,8 @@ had already happened.
       comparison, which is the stronger reading available: `updateNotice` under
       an unset mode and under `notify` return `toStrictEqual` outcomes, so the
       two are the same decision rather than two decisions that happen to look
-      alike. `ask` is equal too until a prompt ships, and only `auto` reaches
-      the activation seam.
+      alike. `ask` is equal too, because the notice has no prompt of its own,
+      and no mode reaches an activation seam since D13 removed it.
 - [x] **AC-7** The ring-0 exit record is committed before step 4.3 lands.
       `agents/evidence/analysis/ring-0-unattended-record-2026-10-20.md` is in
       this change, and 4.3's gate reads its `ring-0-exit:` line rather than a
