@@ -79,11 +79,11 @@ describe('the one-window read of the removed projection keys', () => {
 });
 
 describe('the removed keys carry tombstones (step 4.2)', () => {
-    it('both keys are in REMOVED_KEYS, and each reason names what decides instead', () => {
-        for (const key of ['lean_projection.mode', 'lean_projection.hosts']) {
+    it('every key Phase 4 removed is in REMOVED_KEYS, and each reason names what decides instead', () => {
+        for (const key of ['lean_projection.mode', 'lean_projection.hosts', 'projection.rule_workspaces']) {
             const reason = REMOVED_KEYS.get(key);
             expect(reason, `${key} has no tombstone`).toBeTypeOf('string');
-            expect(reason).toMatch(/layer_form_decision|THINNABLE_HOSTS|host-injection-effect/);
+            expect(reason).toMatch(/layer_form_decision|THINNABLE_HOSTS|host-injection-effect|consumerRuleWorkspaces/);
         }
     });
 

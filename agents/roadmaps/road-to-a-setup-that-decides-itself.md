@@ -408,8 +408,24 @@ with that file.
 - [ ] AC-1 — No projection key in template, schema, wizard or docs except
   `projection.mode` pending the skills completeness question; each removal has a
   tombstone; `doctor` names leftovers.
+  Open 2026-10-20, with the tombstone half MET: `lean_projection.mode`,
+  `lean_projection.hosts` and `projection.rule_workspaces` each carry a
+  `REMOVED_KEYS` entry naming what decides instead, and the loader warns once
+  per key per process. Two keys remain. `projection.mode` is the one this
+  criterion already excepts, held by blocker
+  `projection-mode-removal-waits-on-second-host-reach`. **`projection.rule_packs`
+  is the one nobody planned for**: it is a projection key, this criterion
+  forbids it, and no Phase 4 step covers it — 4.6 names only
+  `rule_workspaces`. It is not an oversight to fix silently here: `rule_packs`
+  has a reachable `auto` value that derives from the active-pack set, so
+  retiring it is a different question from deriving a fixed list, and it needs
+  its own step rather than being folded into one that did not ask about it.
 - [x] AC-2 — 3.1 returns `full` whenever any of its conditions fails, and for
   every consequence-class and safety-floor rule under every input.
 - [ ] AC-3 — 5.2 reads non-inferior under D2, or consumers stay full and the
   record says why.
 - [ ] AC-4 — `check_host_tree_parity` green at every step.
+  Held at every step this lane landed (0.2, 4.1-4.6, 4.8), re-run after each:
+  2 non-delivery host trees byte-identical to `eager-all`, delivery hosts
+  `[claude-code]`. Left open because the criterion is about EVERY step and four
+  are not taken — a tick here would claim a reading for steps nobody has run.
