@@ -1,4 +1,3 @@
-<!-- evidence-type: ratification -->
 ---
 proposed_by: claude-opus-5 session 42c8753e (drain run, 2026-10-20)
 implemented_by: claude-opus-5 session 42c8753e and its lane agents
@@ -10,6 +9,8 @@ seats:
   openai: confirmed-non-expanding
 effective_after: merge
 ---
+
+<!-- evidence-type: ratification -->
 
 # The lazy-concern chunk — confirmed non-expanding, 2/2
 
