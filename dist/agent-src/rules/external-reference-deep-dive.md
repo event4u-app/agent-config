@@ -28,7 +28,7 @@ Triggered when the user points to an external artifact (repo URL, `owner/repo`, 
 
 ## Mandatory before drawing any conclusion
 
-1. **Use `/analyze:reference`** (the canonical flow) when the artifact is a repo. Its Steps 2–5 are not optional shortcuts — they are the deep-dive contract: fetch listings (not just README), inspect key directories (`skills/`, `rules/`, `commands/`, `scripts/`, `.github/workflows/`, install configs, frontmatter samples), classify each axis adopt/adapt/reject/already.
+1. **Use `/analyze:reference`** when the artifact is a repo. Steps 2–5 are not optional shortcuts but the deep-dive contract: fetch listings (not just README), inspect key directories (`skills/`, `rules/`, `commands/`, `scripts/`, `.github/workflows/`, install configs, frontmatter samples), classify each axis adopt/adapt/reject/already.
 2. **For single files / websites** — fetch the actual content, not a summary. PDFs/DOCX/XLSX → `markitdown` first.
 3. **Cite verbatim** — every finding lands with a file path, line range, or URL fragment. "The README says X" is **not** a finding about implementation; it's a finding about marketing copy.
 4. **Surface what was inspected** — list the files / directories actually fetched, so the user can audit coverage.
