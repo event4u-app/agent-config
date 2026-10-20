@@ -234,9 +234,10 @@ the Acceptance Criteria held.
       `paused nights P of A active`, overall and per `--git` window — counting a
       paused night only when it was active (test seen red twice, with the
       intersection and with the active set neutralised). No window was read.
-      <br>2026-10-20: 1.4 merged on 2026-10-19, so **window 1 is 2026-10-20 ..
-      2026-11-02 and window 2 is 2026-11-03 .. 2026-11-16** — the first night
-      of window 1 is tonight. The verdict cannot be read before 2026-11-17, and
+      <br>2026-10-20: 1.4 merged in `80809d5a0` (#2516) at 2026-10-20 00:14
+      +0200, which falls **inside** the night of 2026-10-19, so the first night
+      after it is 2026-10-20 and **window 1 is 2026-10-20 .. 2026-11-02, window
+      2 is 2026-11-03 .. 2026-11-16** — the first night of window 1 is tonight. The verdict cannot be read before 2026-11-17, and
       the rule's own text forbids moving a threshold once a window has been
       looked at, so there is nothing a run today can compress. The instrument,
       the rule and the unit are all in place; what is missing is elapsed time.
@@ -563,7 +564,7 @@ the Acceptance Criteria held.
 - **Class:** 2
 - **Owner:** council
 - **Blocks:** steps 2.1, 2.2, 2.3, 3.1a and 3.2; AC-3 and AC-4
-- **Question:** Step 2.1 pre-registered, on 2026-10-17 and before any reading, that its verdict is taken over "the two consecutive 14-calendar-night windows starting the first night after the last Phase 1 step merges", and that no threshold moves once a window has been looked at. Phase 1's last step (1.4) merged on 2026-10-19, so window 1 is 2026-10-20 .. 2026-11-02 and window 2 is 2026-11-03 .. 2026-11-16, and the earliest readable date is 2026-11-17. Four further steps read those same windows. Does the plan wait for them, or does the council authorise a narrower reading?
+- **Question:** Step 2.1 pre-registered, on 2026-10-17 and before any reading, that its verdict is taken over "the two consecutive 14-calendar-night windows starting the first night after the last Phase 1 step merges", and that no threshold moves once a window has been looked at. Phase 1's last step (1.4) merged in `80809d5a0` (#2516) at 2026-10-20 00:14 +0200, inside the night of 2026-10-19, so the first night after it is 2026-10-20: window 1 is 2026-10-20 .. 2026-11-02, window 2 is 2026-11-03 .. 2026-11-16, and the earliest readable date is 2026-11-17. Four further steps read those same windows. Does the plan wait for them, or does the council authorise a narrower reading?
 - **Recommendation:** wait. The pre-registration is the whole value of 2.1 — it exists so the binding question cannot be answered by picking a window after seeing the data — and every alternative spends that. The instrument, the rule and the unit are already in place and were landed before the windows opened, so waiting costs nothing but time.
 - **If you do nothing:** the five steps stay open until 2026-11-17, every other step in this roadmap is already closed or separately blocked, and the roadmap does not archive.
 - **What to do:** pick exactly one — (a) wait for 2026-11-17 and run 2.1, then 2.2, 2.3, 3.1a and 3.2 in their stated order; or (b) authorise a single shorter window with the reduction in confidence recorded on the verdict; or (c) re-pre-register a different rule now, before any window is read, and say why the 2026-10-17 one is superseded.
