@@ -3,13 +3,12 @@ complexity: structural
 status: ready
 execution:
   mode: phase-checkpoints
-depends: [road-to-a-hook-carrier-that-is-never-silent]
 estate_offset_exempt: "Round inbox-2026-10-n carries the owner's directive of 2026-10-12 — remove the lean settings and make loading default and dynamic, but only if the package gets no worse and stays as reliable as today. road-to-an-installed-layer-that-is-thinned plans the opposite form (its step 3.1 keeps the rollback as one setting) and is blocked on an instrument no scheduled file owns; folding six phases into it would turn a three-phase opt-in file into the largest active roadmap and bury its own owner answer. Archiving or parking it is wrong because its opt-in phases stay valid; this file replaces only its 3.1 form."
 estate_growth_exempt: "+1 open_blockers for `instruction-load-observer-has-no-scheduled-owner`, the question this round raises for the seventh time: the observer stub records six earlier arrivals, and its binding was moved into that stub by owner answer D10 on 2026-10-06. The entry asks the owner to schedule it here; it closes no box and changes no behaviour."
 relates:
   - slug: road-to-a-hook-carrier-that-is-never-silent
-    relation: depends
-    note: "Added in the same change. No machine is promoted to a thinned form before that file's Phase 3 has merged; the decision function reads its probe (2.2) and demotion state (3.3)."
+    relation: extends
+    note: "Archived 2026-10-20, every step closed, so the dependency is met. No machine is promoted to a thinned form before that file's Phase 3 has merged; the decision function reads its probe (2.2) and demotion state (3.3)."
   - slug: road-to-a-release-that-reads-its-settings-delta
     relation: extends
     note: "Archived. It landed the removed-key tombstone mechanism and its `what-a-minor-may-remove` blocker; Phase 4 here removes keys through that shipped mechanism. An archived file lands nothing further, so this is `extends`, not `depends`."
