@@ -1,0 +1,512 @@
+diff --git a/agents/evidence/analysis/impact-bump-out-of-sample-20261020.md b/agents/evidence/analysis/impact-bump-out-of-sample-20261020.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..7e5c94337041aa738470cba8655966aa47f3b9fd
+--- /dev/null
++++ b/agents/evidence/analysis/impact-bump-out-of-sample-20261020.md
+@@ -0,0 +1,225 @@
++<!-- evidence-type: analysis -->
++
++# The impact bump rule, scored on the window it was not written on
++
++**Date:** 2026-10-20 · **Tree:** `fba00aabf` · **Subject:** `impact_bump`
++(`src/scripts/_lib/impact_bump.ts`), frozen as it stands on `main`.
++
++This discharges the precondition the AI council attached to the
++`impact-numbering-model` blocker on 2026-10-19: *"(a) returns to the owner only
++after the frozen classifier is scored on a pre-registered window it was not
++written on, on both axes, with zero false negatives on BREAKING. No owner
++question is put until that measurement exists."* Record of that verdict:
++`agents/evidence/council/resolve-blockers-batch-20261019.md`.
++
++It decides nothing. The numbering model stays the owner's.
++
++## Part 1 — Pre-registration
++
++Written and committed before any span was diffed. The surface-axis result did
++not exist when this half was fixed; the git history of this file is the check.
++
++### The window is forced, not chosen
++
++Step 2.2 scored the seven majors 10.0.0 → 16.0.0. Everything else in
++`BREAKING_CHANGES.md`'s by-major table is therefore out-of-sample, and that is
++the whole of it: **2.0.0 → 9.0.0**, eight majors. 1.0.0 is excluded as
++degenerate — it is the initial public release and its own row reads "no prior
++consumer-facing break". There is no second candidate window, so there is no
++window-shopping to disclose.
++
++**4.0.0 is excluded in advance, for a reason that has nothing to do with its
++result.** `git ls-remote --tags origin` carries no `4.0.0`; the span has no
++lower bound and cannot be read. Seven majors remain scoreable: 2.0.0, 3.0.0,
++5.0.0, 6.0.0, 7.0.0, 8.0.0, 9.0.0.
++
++### The span of a major
++
++The greatest tag strictly below it in version order, to the major's own tag —
++the same rule `release.ts`'s `latest_tag()` applies at cut time. Resolved:
++
++| Major | Span |
++|---|---|
++| 2.0.0 | `1.41.2..2.0.0` |
++| 3.0.0 | `2.26.0..3.0.0` |
++| 5.0.0 | `4.9.0..5.0.0` |
++| 6.0.0 | `5.10.1..6.0.0` |
++| 7.0.0 | `6.1.0..7.0.0` |
++| 8.0.0 | `7.5.0..8.0.0` |
++| 9.0.0 | `8.13.0..9.0.0` |
++
++### Axis 1 — impact
++
++The row's `Consumer impact` cell, read by `parse_impact_rows`. Where a version
++carries two rows, the strongest by `IMPACT_RANK`, which is what `replay_majors`
++already does.
++
++### Axis 2 — surface
++
++`classify_surfaces(parse_name_status(git diff --name-status <span>), removed_keys)`
++from `src/scripts/_lib/major_surface.ts`, added in the same commit as this
++pre-registration. Three of `CONTRIBUTING.md:331`'s four triggers are decided:
++`installer-layout` (an `A` or `D` under the installer tree, its templates, or
++its entry points), `rule-or-skill-removal` (a `D` under `src/rules/`,
++`src/skills/` or either projection), `settings-keys` (a removed `key:` line in
++the settings template or its schema, within the span).
++
++The fourth, "breaking changes to the condensed content format", is declared
++**underivable** and is reported as a gap. It is a property of the emitted
++content; the only mechanical proxy available is the condenser's filename, which
++fires on every wording fix to that script. A surface that cannot be decided is
++not a surface that did not fire, and scoring it as the latter would overstate
++what the rule covers.
++
++A rename counts as neither a creation nor a removal. That under-reports, and
++under-reporting this axis cannot hide a consumer-visible break: the surface
++clause only ever **adds** a major, so a false negative on BREAKING can only come
++from the impact axis.
++
++### What is measured, and the one threshold that was ever stated
++
++Per major: the recorded impact, the surfaces fired, the bump `impact_bump`
++returns, and whether that bump is a **false negative on BREAKING** — a row whose
++recorded impact is `action` scored as anything but major.
++
++- **Hard requirement, registered:** zero false negatives on `action`. This is
++  the blocker's own bar, in its own words: *"a missed breaking change is the one
++  error consumers cannot recover trust from."*
++- **No threshold is registered for the surface axis.** None was ever stated.
++  Its fire rate is reported as a number and read, not graded against a bar
++  invented after the fact.
++
++### Two disclosures, made before the result
++
++1. **The impact axis is a consistency check in this window exactly as it was in
++   the last one.** Its input (the backfilled column) and its ground truth (each
++   row's Migration prose) are the same text, because step 2.3 derived the column
++   from that prose. A different window does not make that circle wider. What the
++   new window adds is a different **base rate**, which is the only thing
++   10.0.0 → 16.0.0 could not supply.
++2. **The column was read before the window was fixed**, so the impact half is
++   not blind. It could not have been: the window is forced by what 2.2 already
++   scored, and nothing about it was selected. The surface half is genuinely
++   unseen at the time of writing, and that is the half that carries new
++   information.
++
++### Reproduction
++
++For each span above, with tags fetched (`git fetch origin --tags`):
++
++```
++git diff --name-status <prev>..<tag>
++git diff -U0 <prev>..<tag> -- <SETTINGS_KEY_FILES> | grep -E '^-[[:space:]]*[A-Za-z_][A-Za-z0-9_]*:'
++```
++
++fed to `parse_name_status` and `classify_surfaces`, with the impact cell from
++`parse_impact_rows(BREAKING_CHANGES.md)` and the bump from `impact_bump`.
++
++## Part 2 — Result
++
++Run 2026-10-20 at `fba00aabf` with tags fetched. Every span was re-read a
++second time under `-c diff.renameLimit=20000`, because the first pass printed
++`exhaustive rename detection was skipped` on the 6.0.0 span; the two passes
++returned identical surfaces, so no row below depends on a truncated rename
++search.
++
++### The out-of-sample window, both axes
++
++| Major | Span | Recorded impact | Surfaces fired | Bump | FN on BREAKING |
++|---|---|---|---|---|---|
++| 2.0.0 | `1.41.2..2.0.0` | action | installer-layout | major | no |
++| 3.0.0 | `2.26.0..3.0.0` | action | installer-layout | major | no |
++| 5.0.0 | `4.9.0..5.0.0` | action | none | major | no |
++| 6.0.0 | `5.10.1..6.0.0` | action | installer-layout, rule-or-skill-removal | major | no |
++| 7.0.0 | `6.1.0..7.0.0` | action | rule-or-skill-removal | major | no |
++| 8.0.0 | `7.5.0..8.0.0` | action | installer-layout | major | no |
++| 9.0.0 | `8.13.0..9.0.0` | notice | none | minor | no |
++
++**False negatives on BREAKING: 0 of 7.** The hard requirement holds on the
++window the rule was not written on.
++
++### The in-sample window, scored on the surface axis for the first time
++
++Step 2.2 could not supply `touches_major_surface` and set it `false` for every
++row. With the axis supplied, the same seven rows:
++
++| Major | Span | Recorded impact | Surfaces fired | Bump |
++|---|---|---|---|---|
++| 10.0.0 | `9.36.0..10.0.0` | automatic | none | minor |
++| 11.0.0 | `10.4.0..11.0.0` | automatic | none | minor |
++| 12.0.0 | `11.0.0..12.0.0` | action | none | major |
++| 13.0.0 | `12.1.0..13.0.0` | none | none | minor |
++| 14.0.0 | `13.0.0..14.0.0` | none | none | minor |
++| 15.0.0 | `14.23.0..15.0.0` | action | none | major |
++| 16.0.0 | `15.0.0..16.0.0` | none | none | minor |
++
++**2.2's headline survives the clause it could not test.** 13.0.0, 14.0.0 and
++16.0.0 are still minor with the surface axis live; the clause does not rescue
++them. That is the first obvious objection to 2.2 and it is now answered with a
++reading rather than an argument.
++
++### Four findings
++
++**F1 — the rule is not a blanket demoter, which the in-sample run could not
++show.** Out-of-sample it keeps **6 of 7** majors; in-sample it keeps **2 of 7**.
++The difference is the recorded impact, not the rule: 6 of 7 early rows read
++`action` and 2 of 7 recent ones do. A rule that demoted indiscriminately would
++have demoted the early window too, and the hypothesis that 2.2's 5-of-7 was an
++artefact of the rule rather than of the history is refuted by a number.
++
++**F2 — the surface clause changed no verdict, in 14 of 14 cases.** It fires on
++5 majors, all of them before 10.0.0, and every one of those was already major
++on its impact alone. On this corpus the clause is inert: it adds a safety net
++that never had to catch anything. That is an argument for keeping it (it costs
++nothing and covers a case the trailer could miss), and it is **not** evidence
++that it works, because it has never been the deciding clause.
++
++**F3 — `CONTRIBUTING.md:331`'s major list omits commands, and that omission is
++load-bearing.** 15.0.0's break was the removal of `/chat-history` and
++`/chat-history import` — `src/domains/meta/chat-history/command.md` and its
++projection. The written list names rules and skills, so the surface clause
++correctly did not fire. The impact axis caught it. The two axes are
++complements here, not redundancy, and the list needs a fourth entry if the
++surface clause is ever to be the one that catches a removal of this shape.
++
++**F4 — the fourth trigger has no mechanical form at all.** "Breaking changes to
++the condensed content format" is reported as a gap, never as a surface that did
++not fire. Any rule wired on the strength of this measurement is wired with
++three of four triggers decidable.
++
++### Controls — the zeros were checked before they were reported
++
++A zero from a detector is worth nothing until the detector is shown to be
++looking. Each one below was read directly from git, not from the classifier:
++
++- `15.0.0..16.0.0` contains **0 deletions of any kind**, so
++  `rule-or-skill-removal` could not have fired.
++- `12.1.0..13.0.0` contains exactly **one** deletion in the whole span,
++  `src/config/budget-routing.json` — not a rule, not a skill.
++- `9.36.0..10.0.0`, `11.0.0..12.0.0`, `14.23.0..15.0.0` and `15.0.0..16.0.0`
++  contain **0** creations or removals under the installer tree, its templates
++  or its entry points.
++- `5.10.1..6.0.0` contains **162** creations or removals under the rule and
++  skill paths and 45 deletions, which is the positive control: the detector
++  fires where the tree really moved.
++
++### What this discharges, and what it does not
++
++**Discharged:** the measurement the council asked for exists, on a
++pre-registered window the rule was not written on, on both axes, with zero
++false negatives on BREAKING.
++
++**Not discharged, and the honest reading of each:**
++
++1. The impact axis remains a consistency check. Its input and its ground truth
++   are the same prose in both windows, and no reachable corpus separates them —
++   a trailer written by a commit author at the time does not exist for any
++   historical release. Only future releases can produce that evidence.
++2. The surface axis is measured but **unexercised**: 14 of 14 verdicts are
++   identical with the clause switched off. Its fire rate is real; its accuracy
++   as a decider is untested, because nothing on this corpus tested it.
++3. Fourteen majors is the entire population, not a sample. No confidence
++   interval is quoted, because none would mean anything at this size.
++
++Whether that clears the bar is the council's to say, not this file's. The
++numbering model itself stays with the owner.
+diff --git a/agents/roadmaps/road-to-a-release-that-says-whether-it-needs-you.md b/agents/roadmaps/road-to-a-release-that-says-whether-it-needs-you.md
+index b92b03586ac94b1cedfa0c931b3d25756a37ee61..61b58e392a397d9f3845f94f56be2aab23e6f656 100644
+--- a/agents/roadmaps/road-to-a-release-that-says-whether-it-needs-you.md
++++ b/agents/roadmaps/road-to-a-release-that-says-whether-it-needs-you.md
+@@ -86,6 +86,17 @@ output. It is the classifier and the data behind it.
+       option (a). The rule exists as the pure, uncalled `impact_bump` in
+       `src/scripts/_lib/impact_bump.ts` so 2.2 could score it; wiring it into
+       `infer_bump` is the owner-reserved part.
++      Still open (2026-10-20), and the reason has changed. The council's
++      evidence precondition is discharged — see the blocker — so the step is
++      no longer waiting on a measurement. It waits on the owner alone: binding
++      the trailer to the version number changes a public compatibility
++      commitment, which `decision-revisit-gate`'s reserved set routes to the
++      owner whoever holds the pen. The second half of the step also acquired a
++      specification gap the measurement found: `CONTRIBUTING.md:331`'s major
++      list names rules and skills and omits **commands**, and 15.0.0's break
++      was a command removal. Wiring the surface clause as written would leave
++      that shape uncovered, so the list is edited in the same change as the
++      wiring or the clause ships with a known hole.
+ - [x] **2.2 Replay the real history.** Score 10.0.0 → 16.0.0 through the new
+       rule against the recorded rows.
+       verify: 13.0.0, 14.0.0 and 16.0.0 come out **minor**; 12.0.0 and 15.0.0
+@@ -248,6 +259,27 @@ output. It is the classifier and the data behind it.
+   only after the frozen classifier is scored on a pre-registered window it was
+   not written on, on both axes, with zero false negatives on BREAKING. No owner
+   question is put until that measurement exists.
++  **2026-10-20, the precondition is discharged.**
++  `agents/evidence/analysis/impact-bump-out-of-sample-20261020.md` carries a
++  pre-registered protocol committed before any span was read, and the result
++  in the commit after it. Window: the seven majors 2.0.0 → 9.0.0 the rule was
++  not written on (4.0.0 excluded in advance — the remote carries no `4.0.0`
++  tag, so its span has no lower bound). Both axes: the recorded impact, and a
++  new `classify_surfaces` (`src/scripts/_lib/major_surface.ts`) that reads the
++  surface axis mechanically from each span's diff, which 2.2 could not supply.
++  **Zero false negatives on BREAKING, 0 of 7 out-of-sample and 0 of 14 over
++  both windows.** The rule keeps 6 of 7 early majors and 2 of 7 recent ones,
++  which refutes the live reading of 2.2 — that its 5-of-7 demotion was the
++  rule's bias rather than the history's. With the surface axis switched on,
++  13.0.0, 14.0.0 and 16.0.0 are still minor.
++  Three limits are recorded rather than argued away: the impact axis stays a
++  consistency check in both windows because no historical release carries an
++  author-written trailer; the surface clause changed **no** verdict in 14 of 14
++  cases, so its fire rate is measured and its accuracy as a decider is not; and
++  `CONTRIBUTING.md:331` omits commands, which is what 15.0.0 removed. Whether
++  that clears the bar the council set is the council's reading, not this
++  roadmap's. The owner question on (a) is now unblocked on evidence and
++  unasked.
+ - **Owner:** repository owner, **for (a) alone.**
+ - **Blocks:** step 2.1 and the parts of Phase 2 downstream of it. **Corrected
+   2026-10-16:** this used to read "Phase 2 and everything downstream". Steps 2.2
+diff --git a/src/scripts/_lib/major_surface.ts b/src/scripts/_lib/major_surface.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..166cd357f83ab6d6b13a4cd3d974c0cbd32b6c72
+--- /dev/null
++++ b/src/scripts/_lib/major_surface.ts
+@@ -0,0 +1,115 @@
++/**
++ * Which of the surfaces `CONTRIBUTING.md` § Versioning policy lists as major a
++ * release span touched, read mechanically from that span's diff.
++ *
++ * `impact_bump` takes `touches_major_surface` and nothing in the tree supplied
++ * it: step 2.2 scored the impact half alone and recorded the surface half as
++ * unscored, because "the record has no surface column, and inferring one would
++ * re-judge history". A diff is not the record — it is the change itself — so
++ * this module reads the axis from the change rather than from prose about it.
++ *
++ * Nothing in `release.ts` calls this, for the same reason nothing calls
++ * `impact_bump`: how releases are numbered is the owner decision the
++ * `impact-numbering-model` blocker holds open. This is measurement apparatus.
++ */
++
++/** The three triggers at `CONTRIBUTING.md:331` that a diff can decide. */
++export const MAJOR_SURFACES = ['installer-layout', 'settings-keys', 'rule-or-skill-removal'] as const;
++export type MajorSurface = (typeof MAJOR_SURFACES)[number];
++
++/**
++ * The fourth trigger, "breaking changes to the condensed content format", is
++ * deliberately absent and is reported as a gap rather than scored as a
++ * non-firing surface. A format break is a property of the emitted content; no
++ * reading of statuses and paths decides it, and the obvious proxy — the
++ * condenser's own filename — fires on every wording fix to that script. A
++ * surface that cannot be decided is not the same as a surface that did not
++ * fire, and scoring it as the latter would overstate the rule's coverage.
++ */
++export const UNDERIVABLE_SURFACES = ['condensed-format'] as const;
++
++/** One `git diff --name-status` record. `status` is the raw letter: A, D, M, R, T, C. */
++export interface DiffEntry {
++    readonly status: string;
++    readonly path: string;
++}
++
++/**
++ * Paths whose creation or removal is an installer-layout change. The list is
++ * historical on purpose: the installer has lived at three roots over the
++ * window this is measured on, and a table naming only today's would score
++ * every release before the last relocation as having touched nothing.
++ */
++const INSTALLER_LAYOUT_PATHS: readonly RegExp[] = [
++    /^src\/install\//,
++    /^packages\/core\/installer\//,
++    /^templates\//,
++    /^bin\//,
++    /^scripts\/install\.(py|sh|ts|mjs)$/,
++];
++
++/** Paths whose deletion removes a rule or a skill, in source or in either projection. */
++const RULE_OR_SKILL_PATHS: readonly RegExp[] = [
++    /^src\/(rules|skills)\//,
++    /^\.agent-src\/(rules|skills)\//,
++    /^dist\/agent-src\/(rules|skills)\//,
++];
++
++/** Files whose removed `key:` lines are settings keys. Read by the caller, not here. */
++export const SETTINGS_KEY_FILES: readonly RegExp[] = [
++    /^config\/agent-settings\.template\.yml$/,
++    /^templates\/\.agent-settings\.yml/,
++    /^src\/scripts\/schemas\/.*settings/,
++    /^src\/install\/.*settings/,
++];
++
++function matches(path: string, patterns: readonly RegExp[]): boolean {
++    return patterns.some((p) => p.test(path));
++}
++
++/** True for a status letter that creates or destroys a path, which is what the two file surfaces turn on. */
++function is_create_or_delete(status: string): boolean {
++    return status === 'A' || status === 'D';
++}
++
++/**
++ * The surfaces a span touched.
++ *
++ * A rename (`R`) counts as neither a creation nor a removal. That is the
++ * conservative reading and it can only under-report: a renamed rule still
++ * exists, and treating every move as a removal would fire this surface on
++ * every span in a tree that reorganises as often as this one. Under-reporting
++ * the surface axis cannot produce a false negative on a consumer-visible
++ * break, because the impact axis decides those on its own — the surface clause
++ * only ever adds a major.
++ *
++ * `removed_setting_keys` is supplied by the caller because deciding it needs
++ * the patch text, not the name-status list; passing it in keeps this pure.
++ */
++export function classify_surfaces(
++    entries: readonly DiffEntry[],
++    removed_setting_keys: readonly string[] = [],
++): Set<MajorSurface> {
++    const out = new Set<MajorSurface>();
++    for (const entry of entries) {
++        if (!is_create_or_delete(entry.status)) continue;
++        if (matches(entry.path, INSTALLER_LAYOUT_PATHS)) out.add('installer-layout');
++        if (entry.status === 'D' && matches(entry.path, RULE_OR_SKILL_PATHS)) out.add('rule-or-skill-removal');
++    }
++    if (removed_setting_keys.length > 0) out.add('settings-keys');
++    return out;
++}
++
++/** `git diff --name-status` output into entries; a rename record keeps its new path. */
++export function parse_name_status(raw: string): DiffEntry[] {
++    const out: DiffEntry[] = [];
++    for (const line of raw.split('\n')) {
++        if (line.trim() === '') continue;
++        const parts = line.split('\t');
++        if (parts.length < 2) continue;
++        const status = (parts[0] as string).charAt(0);
++        const path = parts[parts.length - 1] as string;
++        out.push({ status, path });
++    }
++    return out;
++}
+diff --git a/tests/lib/major_surface.test.ts b/tests/lib/major_surface.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..9ca507e703a2f8d0e46466719ac23c9a702b18dd
+--- /dev/null
++++ b/tests/lib/major_surface.test.ts
+@@ -0,0 +1,104 @@
++import { describe, expect, it } from 'vitest';
++
++import {
++    MAJOR_SURFACES,
++    UNDERIVABLE_SURFACES,
++    classify_surfaces,
++    parse_name_status,
++} from '../../src/scripts/_lib/major_surface.js';
++
++describe('parse_name_status', () => {
++    it('reads a status letter and a path per record', () => {
++        expect(parse_name_status('M\tREADME.md\nD\tsrc/rules/gone.md\n')).toEqual([
++            { status: 'M', path: 'README.md' },
++            { status: 'D', path: 'src/rules/gone.md' },
++        ]);
++    });
++
++    it('keeps the new path of a rename and drops its similarity score', () => {
++        expect(parse_name_status('R096\tsrc/rules/old.md\tsrc/rules/new.md\n')).toEqual([
++            { status: 'R', path: 'src/rules/new.md' },
++        ]);
++    });
++
++    it('ignores blank lines and malformed records', () => {
++        expect(parse_name_status('\nnotarecord\n\n')).toEqual([]);
++    });
++});
++
++describe('classify_surfaces — the three triggers a diff can decide', () => {
++    it('fires installer-layout when the installer tree gains or loses a file', () => {
++        for (const path of [
++            'src/install/wizard-plan.ts',
++            'packages/core/installer/index.ts',
++            'templates/AGENTS.md',
++            'bin/agent-config',
++            'scripts/install.py',
++        ]) {
++            expect([...classify_surfaces([{ status: 'A', path }])]).toEqual(['installer-layout']);
++            expect([...classify_surfaces([{ status: 'D', path }])]).toEqual(['installer-layout']);
++        }
++    });
++
++    it('fires rule-or-skill-removal only on a deletion, in source or either projection', () => {
++        for (const path of [
++            'src/rules/gone.md',
++            'src/skills/gone/SKILL.md',
++            '.agent-src/rules/gone.md',
++            'dist/agent-src/skills/gone/SKILL.md',
++        ]) {
++            expect([...classify_surfaces([{ status: 'D', path }])]).toEqual(['rule-or-skill-removal']);
++            expect([...classify_surfaces([{ status: 'A', path }])]).toEqual([]);
++        }
++    });
++
++    it('fires settings-keys from the caller-supplied removed keys, never from a path alone', () => {
++        expect([...classify_surfaces([{ status: 'M', path: 'config/agent-settings.template.yml' }])]).toEqual([]);
++        expect([...classify_surfaces([], ['worktrees.mode'])]).toEqual(['settings-keys']);
++    });
++
++    it('scores a rename as neither a creation nor a removal', () => {
++        expect([...classify_surfaces([{ status: 'R', path: 'src/rules/new.md' }])]).toEqual([]);
++        expect([...classify_surfaces([{ status: 'R', path: 'src/install/moved.ts' }])]).toEqual([]);
++    });
++
++    it('ignores a modification anywhere', () => {
++        expect([...classify_surfaces([{ status: 'M', path: 'src/install/wizard-plan.ts' }])]).toEqual([]);
++        expect([...classify_surfaces([{ status: 'M', path: 'src/rules/kept.md' }])]).toEqual([]);
++    });
++
++    it('ignores a path outside every table', () => {
++        expect([...classify_surfaces([{ status: 'D', path: 'docs/guidelines/whatever.md' }])]).toEqual([]);
++        expect([...classify_surfaces([{ status: 'A', path: 'src/scripts/_lib/thing.ts' }])]).toEqual([]);
++    });
++
++    it('collects every surface a span touched', () => {
++        const surfaces = classify_surfaces(
++            [
++                { status: 'A', path: 'templates/AGENTS.md' },
++                { status: 'D', path: 'src/skills/gone/SKILL.md' },
++            ],
++            ['memory.cadence'],
++        );
++        expect([...surfaces].sort()).toEqual([...MAJOR_SURFACES].sort());
++    });
++
++    it('returns nothing for an empty span', () => {
++        expect([...classify_surfaces([])]).toEqual([]);
++    });
++});
++
++describe('the condensed-format trigger is declared underivable, not scored as absent', () => {
++    it('is named in UNDERIVABLE_SURFACES and in no MAJOR_SURFACES value', () => {
++        expect([...UNDERIVABLE_SURFACES]).toEqual(['condensed-format']);
++        expect(MAJOR_SURFACES as readonly string[]).not.toContain('condensed-format');
++    });
++
++    it('never appears in a classification, whatever the condenser did', () => {
++        const surfaces = classify_surfaces([
++            { status: 'M', path: 'src/scripts/condense.ts' },
++            { status: 'A', path: 'src/scripts/condense.sh' },
++        ]);
++        expect([...surfaces]).toEqual([]);
++    });
++});
