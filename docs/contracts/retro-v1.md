@@ -224,5 +224,5 @@ reopens nothing — `missing` is not `false`.
 | v1 | 2026-10-16 | Initial contract, written before any implementation. |
 | v1 | 2026-10-17 | Who does the model work: delegated or after the first task, never before it. |
 | v1 | 2026-10-17 | Held or recurred: three verdicts read from record status, never from the occurrence count; a measured revert reopens. |
-| v1 | 2026-10-20 | The switch (ADR-292) and where the state lives; the three paths wired; `/retro` and its forms. |
-| v1 | 2026-10-20 | After a 2/2 council refusal: the queue line grants no delegation, the probe has one total budget and one claim per day, a stale backlog expires, and the network read is disclosed. |
+| v1 | 2026-10-20 | The switch (ADR-292) and where the state lives; path A wired into `/pr:merge`; the push-time marker and the session pointer written by their hooks; `/retro` and its forms. |
+| v1 | 2026-10-20 | After council review: the queue line grants no delegation, the sweep holds one owner-tokened claim per day with a lease, a stale backlog expires, pointers stay bounded by the window, and the network read is disclosed. The session-start call of the daily probe is not wired yet; the sweep runs by hand through `retro sweep`. |

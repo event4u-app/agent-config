@@ -71,11 +71,6 @@ import {
 } from './_lib/session_register.js';
 import { pruneAgedRefusalState, readSessionCounts } from './_lib/turn_end_refusals.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
-import { probeRanToday, stampProbeRun } from './hooks/probe_throttle.js';
-import { retroDailyProbe } from './retro_sweep.js';
-
-/** The `probe_throttle` stamp name for the retro's daily probe. */
-const RETRO_PROBE = 'retro-sweep';
 
 /** Replay-fixture runs must never mutate state (same contract as chat_history). */
 const REPLAY_ENV_VAR = 'AGENT_CONFIG_REPLAY';
@@ -919,27 +914,12 @@ export function main(): number {
             }
             if (event === 'session_start') {
                 const block = foreign_sessions_block(root, session_id, new Date());
-                // The retro's daily probe rides this slot for the reason the
-                // refusal-state prune above does: it fires once per session and
-                // the concern count is ratcheted, so a new concern would cost a
-                // spawn this one already pays. Throttled to the first session
-                // of a local day; silent on zero candidates and on any failure.
-                const retroLine = retroDailyProbe(root, {
-                    ranToday: (r) => probeRanToday(r, RETRO_PROBE),
-                    stamp: (r) => stampProbeRun(r, RETRO_PROBE),
-                });
-                const context = [block, retroLine].filter((s): s is string => s !== null).join('\n\n');
-                if (context !== '') {
+                if (block !== null) {
                     process.stdout.write(
                         JSON.stringify({
                             decision: 'allow',
-                            reason: [
-                                block !== null ? 'live foreign sessions on this repository' : null,
-                                retroLine !== null ? 'finished work is waiting for a retro' : null,
-                            ]
-                                .filter((s) => s !== null)
-                                .join('; '),
-                            context,
+                            reason: 'live foreign sessions on this repository',
+                            context: block,
                         }) + '\n',
                     );
                 }

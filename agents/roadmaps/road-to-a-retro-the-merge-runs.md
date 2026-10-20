@@ -247,12 +247,12 @@ pre-registration in place, settings lint green with the new key.*
       `/pr:merge all` once, after the queue ends — never between two merges of a
       drain. `/roadmap:process-full --merge` inherits it.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t drain-of-three-enqueues-once --reporter=verbose` -> /✓.*drain-of-three-enqueues-once/
-- [x] **3.3 Path B — forge merges.** `push-settle` writes a marker with the PR
+- [ ] **3.3 Path B — forge merges.** `push-settle` writes a marker with the PR
       number at push time; the daily probe checks each open marker through the
       forge reader for `MERGED` / `CLOSED`. A merge through the web UI, by
       automerge or by someone else is picked up; `unread` keeps the marker.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t web-merge-is-picked-up --reporter=verbose` -> /✓.*web-merge-is-picked-up/
-- [x] **3.4 Path C — the daily sweep.** A probe throttled by `probe_throttle` to
+- [ ] **3.4 Path C — the daily sweep.** A probe throttled by `probe_throttle` to
       the first session of a new local day counts the sessions since the last
       high-water mark from the session state, checks open merge markers, triages
       deterministically and writes one `<retro-queue>` line — no model, no spawn
@@ -277,18 +277,29 @@ pre-registration in place, settings lint green with the new key.*
       upgrade; CLI, hook and GUI resolve it through one resolver; an agent cannot
       set it.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t disabled-globally-means-no-probe --reporter=verbose` -> /✓.*disabled-globally-means-no-probe/
-      *Done 2026-10-20. 3.2: `/pr:merge` § 9 calls `retro enqueue-merged` once
-      after the last merge; it reads and writes no merge setting. 3.3: the
-      push-settle concern writes `retro-markers/pr-<N>.json` when it resolved a
-      PR; the probe resolves markers with `gh pr view` under a 3 s total budget,
-      and a marker it could not read stays. 3.4: `retroDailyProbe`
-      (`src/scripts/retro_sweep.ts`) rides the session-register concern on
-      `session_start`, throttled by `probe_throttle` per workspace and by the
-      sweep state per repository; it imports no forge client, so the hook
-      bundle stays under its ceiling. 3.7: `retroEnabled` is the one resolver
-      every path calls, fail-closed on a malformed layer. The owner's directive
-      of 2026-10-12 asks for these automatic paths by default, so the earlier
-      "owner-reserved" reading is not carried forward.*
+      *2026-10-20. 3.2 and 3.7 done: `/pr:merge` § 9 calls
+      `retro enqueue-merged` once after the last merge and reads or writes no
+      merge setting; `retroEnabled` is the one resolver every path calls,
+      fail-closed on a malformed layer. The owner's directive of 2026-10-12 asks
+      for the automatic paths by default, so the earlier "owner-reserved"
+      reading is not carried forward.*
+      *3.3 and 3.4 open. Built: the push-settle concern writes
+      `retro-markers/pr-<N>.json` when it resolved a PR; `resolveMarkers` and
+      `runDailySweep` / `retroDailyProbe` (`src/scripts/retro_sweep.ts`) resolve
+      markers, sweep, claim the day and run by hand through `retro sweep`. Not
+      wired: the session-start call of the probe. A neutral council review
+      (anthropic + openai, three rounds on 2026-10-20, each 2/2 refused) found
+      no authority expansion from round 2 on, and refused the session-start
+      probe on concurrency and bounding grounds that the rounds narrowed but did
+      not close — in round 3: a takeover of a stale day-claim was not atomic and
+      a superseded sweep could release its successor's claim, discovery ran
+      before the claim, and the probe's deadline cannot interrupt a fact read
+      already in flight. The first two are fixed since (a claim token, an
+      owner-checked release, discovery that skips disposed sessions, expiry
+      counted, pruning before the pause) without a fourth round, and the
+      session-start wiring was removed rather than shipped refused. What closes
+      3.3 and 3.4: a session-start call whose claim is taken before any
+      discovery, re-reviewed by the council to a non-refusing verdict.*
 
 ## Phase 4 — Local effect without automatic promotion
 
@@ -368,7 +379,10 @@ pre-registration in place, settings lint green with the new key.*
       *Done 2026-10-20: more than 15 `deferred` dispositions pause the sweep
       (`BACKLOG_PAUSE_AT`, pre-registered § 4) while `planManualRetro` still
       triages; the sweep records per-unit triage time and `/retro status`
-      reports a p50 above `TRIAGE_P50_LIMIT_MS`.*
+      reports a p50 above `TRIAGE_P50_LIMIT_MS`. A deferral older than the
+      window expires, so the pause ends by itself. The figures come from the
+      sweep the probe calls; until the probe is wired (3.4) they come from
+      `retro sweep`.*
 
 ## Blockers
 
@@ -430,9 +444,9 @@ pre-registration in place, settings lint green with the new key.*
 
 ## Acceptance Criteria
 
-- [x] **AC-1** A merged PR — by `/pr:merge`, in the web UI or by automerge —
+- [ ] **AC-1** A merged PR — by `/pr:merge`, in the web UI or by automerge —
       yields exactly one queue unit, and a drain of three yields one retro run.
-- [x] **AC-2** The first session of a new local day sweeps the previous days'
+- [ ] **AC-2** The first session of a new local day sweeps the previous days'
       sessions up to the window, including worktree-only sessions, and writes
       nothing when there are no candidates.
 - [x] **AC-3** A short session without a friction signal is `skip:low-signal`,

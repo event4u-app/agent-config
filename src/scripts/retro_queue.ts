@@ -517,13 +517,14 @@ export const SWEEP_CLAIM_LEASE_MS = 60_000;
  * whose sweep state was never written, is taken over. Claims of earlier days are
  * pruned.
  */
-export function claimSweepDay(workspaceRoot: string, day: string, nowMs: number = Date.now()): boolean {
+export function claimSweepDay(workspaceRoot: string, day: string, nowMs: number = Date.now()): string | null {
     const dir = commonSub(workspaceRoot, 'retro-sweep');
-    if (dir === null) return false;
+    if (dir === null) return null;
     fs.mkdirSync(dir, { recursive: true });
     const file = path.join(dir, `claim-${day}`);
+    const token = `${process.pid}-${createHash('sha256').update(`${nowMs}\0${Math.random()}`).digest('hex').slice(0, 16)}`;
     try {
-        fs.writeFileSync(file, `${process.pid}\n`, { flag: 'wx' });
+        fs.writeFileSync(file, `${token}\n`, { flag: 'wx' });
     } catch (err) {
         if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
         const finished = readSweepState(workspaceRoot).last_sweep?.day === day;
@@ -531,22 +532,41 @@ export function claimSweepDay(workspaceRoot: string, day: string, nowMs: number 
         try {
             age = nowMs - fs.statSync(file).mtimeMs;
         } catch {
-            return false;
+            return null;
         }
-        if (finished || age < SWEEP_CLAIM_LEASE_MS) return false;
-        fs.writeFileSync(file, `${process.pid}\n`);
+        if (finished || age < SWEEP_CLAIM_LEASE_MS) return null;
+        // Takeover: write our token over the stale claim, then read it back — of
+        // two processes taking over at once, only the one whose token stands
+        // proceeds. The rename makes each write whole, never interleaved.
+        const tmp = `${file}.${token}.tmp`;
+        fs.writeFileSync(tmp, `${token}\n`);
+        fs.renameSync(tmp, file);
+        if (claimToken(file) !== token) return null;
     }
     for (const n of fs.readdirSync(dir)) {
         if (n.startsWith('claim-') && n !== `claim-${day}`) fs.rmSync(path.join(dir, n), { force: true });
     }
-    return true;
+    return token;
 }
 
-/** Give a claim back, so a sweep that failed is retried by the next session start. */
-export function releaseSweepDay(workspaceRoot: string, day: string): void {
+function claimToken(file: string): string | null {
+    try {
+        return fs.readFileSync(file, 'utf-8').trim();
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Give a claim back, so a sweep that failed is retried by the next session
+ * start. Only the holder's own token releases it: a sweep whose claim was taken
+ * over after the lease never deletes its successor's.
+ */
+export function releaseSweepDay(workspaceRoot: string, day: string, token: string): void {
     const dir = commonSub(workspaceRoot, 'retro-sweep');
     if (dir === null) return;
-    fs.rmSync(path.join(dir, `claim-${day}`), { force: true });
+    const file = path.join(dir, `claim-${day}`);
+    if (claimToken(file) === token) fs.rmSync(file, { force: true });
 }
 
 /**

@@ -116,17 +116,19 @@ export function runDailySweep(root: string, input: SweepInput): SweepResult {
     // One sweep per repository and day, even when two worktrees start sessions at
     // the same moment. A sweep that throws gives the claim back; one that crashes
     // leaves it to expire after the lease.
-    if (!claimSweepDay(root, today)) return { status: 'already-swept', line: null, counts };
+    const token = claimSweepDay(root, today);
+    if (token === null) return { status: 'already-swept', line: null, counts };
     try {
         return sweepClaimed(root, input, today, state, counts);
     } catch (err) {
-        releaseSweepDay(root, today);
+        releaseSweepDay(root, today, token);
         throw err;
     }
 }
 
 function sweepClaimed(root: string, input: SweepInput, today: string, state: SweepState, counts: SweepCounts): SweepResult {
-    expireStaleDeferred(root, today, input.timeZone, input.now);
+    counts.expired += expireStaleDeferred(root, today, input.timeZone, input.now);
+    pruneStalePointers(root, today, input.timeZone);
     if (deferredBacklog(root) > BACKLOG_PAUSE_AT) {
         writeSweepState(root, {
             high_water: state.high_water,
@@ -186,7 +188,6 @@ function sweepClaimed(root: string, input: SweepInput, today: string, state: Swe
         }
     });
 
-    pruneStalePointers(root, today, input.timeZone);
     writeSweepState(root, {
         high_water: today,
         last_sweep: { day: today, at: input.now, counts, paused: false, triage_ms: triageMs, markers },
@@ -267,6 +268,13 @@ export function discoverSessions(
         return memo.get(k)!;
     };
     const today = opts.today ?? localDay(new Date(now()).toISOString(), timeZone);
+    // A session already queued or durably disposed is skipped by the sweep, so
+    // its facts are not read and it takes none of the read cap.
+    const disposed = new Set<string>();
+    for (const d of readDispositions(root).values()) {
+        const tag = /#session@([^/]+)\//.exec(d.unit_key)?.[1];
+        if (tag !== undefined && d.class !== 'deferred') disposed.add(tag);
+    }
     let read = 0;
     return listSessionPointers(root)
         .sort((a, b) => (a.ended_at < b.ended_at ? 1 : a.ended_at > b.ended_at ? -1 : 0))
@@ -275,7 +283,9 @@ export function discoverSessions(
             const inWindow =
                 day < today && classifyUnit({ day, today, covered: false, retroSession: false }) === 'in-window';
             const canRead =
-                inWindow && read < MAX_SESSIONS_PER_SWEEP && (opts.deadlineAt === undefined || now() < opts.deadlineAt);
+                inWindow &&
+                !disposed.has(p.tag) &&
+                read < MAX_SESSIONS_PER_SWEEP && (opts.deadlineAt === undefined || now() < opts.deadlineAt);
             if (canRead) read += 1;
             return {
                 tag: p.tag,

@@ -31,6 +31,7 @@ import {
     queueLine,
     readSweepState,
     recordDisposition,
+    releaseSweepDay,
     resolveMarkers,
     retroEnabled,
     sweepDays,
@@ -382,12 +383,12 @@ describe('retro_queue — path C, the daily sweep', () => {
 
     it('two session starts racing for one day: exactly one sweeps', () => {
         const { main, wt } = repoWithWorktree();
-        expect(claimSweepDay(main, '2026-10-21')).toBe(true);
-        expect(claimSweepDay(wt, '2026-10-21')).toBe(false);
+        expect(claimSweepDay(main, '2026-10-21')).not.toBeNull();
+        expect(claimSweepDay(wt, '2026-10-21')).toBeNull();
         // The loser of the claim reports already-swept even before any state was written.
         expect(runDailySweep(wt, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [] }).status).toBe('already-swept');
         // A new day is a new claim, and the old one is pruned.
-        expect(claimSweepDay(wt, '2026-10-22')).toBe(true);
+        expect(claimSweepDay(wt, '2026-10-22')).not.toBeNull();
     });
 
     it('a sweep that throws after its claim gives the claim back, and the next start sweeps', () => {
@@ -408,9 +409,31 @@ describe('retro_queue — path C, the daily sweep', () => {
         const { main } = repoWithWorktree();
         // The lease is measured against the claim file's real mtime.
         const t0 = Date.now();
-        expect(claimSweepDay(main, '2026-10-21', t0)).toBe(true);
-        expect(claimSweepDay(main, '2026-10-21', t0 + SWEEP_CLAIM_LEASE_MS / 2)).toBe(false);
-        expect(claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1)).toBe(true);
+        expect(claimSweepDay(main, '2026-10-21', t0)).not.toBeNull();
+        expect(claimSweepDay(main, '2026-10-21', t0 + SWEEP_CLAIM_LEASE_MS / 2)).toBeNull();
+        expect(claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1)).not.toBeNull();
+    });
+
+    it('a sweep whose claim was taken over cannot release its successor', () => {
+        const { main } = repoWithWorktree();
+        const first = claimSweepDay(main, '2026-10-21', Date.now())!;
+        const second = claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1)!;
+        expect(second).not.toBe(first);
+        releaseSweepDay(main, '2026-10-21', first);
+        // The successor still holds the day.
+        expect(claimSweepDay(main, '2026-10-21', Date.now())).toBeNull();
+        releaseSweepDay(main, '2026-10-21', second);
+        expect(claimSweepDay(main, '2026-10-21', Date.now())).not.toBeNull();
+    });
+
+    it('expirations are counted, and a disposed session takes no fact read', () => {
+        const { main } = repoWithWorktree();
+        recordDisposition(main, 'retro:acme/widget#session@gone/p1', 'deferred', '2026-10-01T07:00:00Z');
+        const r = runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [] });
+        expect(r.counts.expired).toBe(1);
+        writeSessionPointer(main, { eol_key: 'd'.repeat(64), tag: 'gone', branch: null, workspace: main, ended_at: '2026-10-20T10:00:00Z' }, { enabled: true });
+        const [s] = discoverSessions(main, BERLIN, { git: () => null, today: '2026-10-21' });
+        expect(s!.facts).toBeNull();
     });
 
     it('an expired deferral drops the session pointer with it', () => {
