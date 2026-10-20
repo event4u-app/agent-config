@@ -1,4 +1,4 @@
-<!-- evidence-type: council-question -->
+<!-- evidence-type: analysis -->
 
 # Review: moving a hook concern out of the dispatch bundle into a conditional chunk
 

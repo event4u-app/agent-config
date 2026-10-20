@@ -1,4 +1,4 @@
-<!-- evidence-type: council-question -->
+<!-- evidence-type: analysis -->
 
 # Ratification review — a hook concern moved into a conditional chunk
 
