@@ -96,8 +96,17 @@ describe('release_locks', () => {
 
 describe('readClaims — a lock is visible the moment it is written', () => {
     it('reports a fresh lock as a live claim before any register record exists', () => {
-        acquire_lock(root, lock({ lane: true }), NONE, { now: new Date() });
-        const claims = readClaims(root);
+        // Both clocks are NOW, and that is the point of the case rather than
+        // tidiness. `acquire_lock` writes the lock VERBATIM — the `now` option
+        // only ages an EXISTING holder — so the stored `written_at` is the
+        // fixture's frozen NOW whatever is passed here. Reading with the wall
+        // clock therefore measured `Date.now() - 2026-10-20T12:00:00Z` against
+        // `UNRECORDED_HOLDER_MS`, which is a 6-hour window that EXPIRED at
+        // 18:00Z on 2026-10-20 and never reopens: the case was green on the
+        // merge that introduced it and permanently red from the next run on.
+        // Found red on CI at 18:25Z, reproduced locally at 18:15Z.
+        acquire_lock(root, lock({ lane: true }), NONE, { now: NOW });
+        const claims = readClaims(root, NOW);
         expect(claims.live).toEqual([
             { session_id: 's1', roadmap_slug: 'road-to-a', lane: true, worktree: '/wt/one', branch: 'drain/a' },
         ]);
