@@ -298,7 +298,7 @@ first ratification round refused them argued as one:
 | Claim | What protects it | What it does NOT cover |
 |---|---|---|
 | The store's CODE is the shipped code | the chunk's sha256 sidecar, checked by `tool_output_spool_loader.ts` before load; a mismatch or a foreign schema loads nothing | anything about the data the code writes |
-| The store's DATA is reachable only by its session, only until expiry, only in range | the MAC over address, expiry and session; the address `HMAC(key, session, sha256)` so equal content is not linkable without the key; a 0700 directory, 0600 files and a 0600 key under a gitignored path, the directory re-tightened to 0700 on every store; retention enforced on every store and read | a local process running as the same user, which can read the key and the files directly. Session binding is a scope boundary between sessions, not a defence against the machine's own user |
+| The store's DATA is reachable only by its session, only until expiry, only in range | the MAC over address, expiry and session; the address `HMAC(key, session, sha256)` so equal content is not linkable without the key; a 0700 directory and 0600 files under a gitignored path, the directory re-tightened to 0700 on every store; the key outside the workspace under the user-global root, where the repository cannot plant it; retention enforced on every store and read | a local process running as the same user, which can read the key and the files directly. Session binding is a scope boundary between sessions, not a defence against the machine's own user |
 
 **What can turn the store on, and what the gate does and does not see.** This
 is a set of layers, not a proven boundary:
@@ -340,10 +340,25 @@ No setting, environment variable or config file populates the selection.
   check also runs cleanup; a malformed, forged or foreign-session handle reaches
   no cleanup and no entry, though a syntactically valid one still reads the
   key file to check its MAC.
+- *The key is not in the workspace* — it lives under the user-global root
+  (`runtime/spool-keys/`, one file per workspace named by a digest of the
+  workspace's real path, 0600 in a 0700 directory). Anything under the
+  workspace is something a repository can plant, so a key read from there
+  would be a key the repository chose; a planted file at the old place is
+  ignored. A key path that is not a regular file is refused.
 - *Paths the repository could plant* — every existing component of the spool
-  directory, the key, an entry and the observation file is checked with
-  `lstat`; a symlink anywhere on those paths refuses the store or the read, so
-  writes, chmod and deletions cannot be redirected out of the workspace.
+  directory, an entry and the observation file is checked with `lstat`; a
+  symlink anywhere on those paths refuses the store or the read, so writes,
+  chmod and deletions cannot be redirected out of the workspace. Cleanup and
+  the cap count enumerate with `lstat` and only regular files: a link or
+  directory under an address-shaped name is neither counted, followed nor
+  deleted.
+- *Threat model, stated* — in scope: the repository's static contents (files
+  and links checked in or written before the session). Out of scope: a
+  concurrently running hostile process of the same user, which can swap path
+  components between the `lstat` checks and the operations that follow and
+  can read the key directly. Hardening against it would need descriptor-
+  relative filesystem operations; this store does not claim it.
 - *Complete writes* — every byte is written (short writes are looped) and
   fsynced before the rename; a failed write removes its temp file. The key is
   published the same way, by link, so a concurrent first store reads a whole

@@ -37,7 +37,8 @@
  * - Integrity of the CHUNK (its sha256 sidecar, `tool_output_spool_loader.ts`)
  *   says this code is the shipped code. It says nothing about the STORED DATA,
  *   whose protections are the ones above plus a 0700 directory and 0600 files
- *   under a gitignored path. Two threat models, two claims.
+ *   under a gitignored path, and a key kept outside the workspace where the
+ *   repository cannot plant it. Two threat models, two claims.
  * - Ranges are zero-based, half-open byte ranges; out of bounds is refused,
  *   never clamped. A read verifies the digest over the bytes it serves.
  * - Writes publish by an exclusive temp file and an atomic rename; cleanup runs
@@ -48,6 +49,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { classifyResult, type ContentClass } from './content_class.js';
+import { event4u_root } from './user_global_paths.js';
 import { SPOOL_SELECTED_CLASSES } from './tool_output_selection.js';
 
 export { SPOOL_SELECTED_CLASSES };
@@ -60,7 +62,6 @@ export const SPOOL_OBSERVATION_FILE = path.join('agents', 'runtime', 'state', 's
 export const SPOOL_RETENTION_MS = 7 * 24 * 3600 * 1000;
 export const SPOOL_MAX_BYTES = 500 * 1024 * 1024;
 
-const KEY_FILE = '.key';
 const LOCK_FILE = '.cleanup.lock';
 const STALE_LOCK_MS = 10 * 60 * 1000;
 const STALE_TMP_MS = 60 * 60 * 1000;
@@ -119,11 +120,26 @@ function ensureSpoolDir(root: string): void {
     fs.chmodSync(spoolDir(root), 0o700);
 }
 
+/**
+ * Where this workspace's key lives: under the user-global root, never in the
+ * workspace. A repository can plant any file under its own tree, so a key read
+ * from there would be a key the repository chose.
+ */
+export function spoolKeyPath(root: string): string {
+    let real = root;
+    try {
+        real = fs.realpathSync(root);
+    } catch {
+        // an unresolvable root keys by its spelling
+    }
+    return path.join(event4u_root(), 'runtime', 'spool-keys', `${sha256(Buffer.from(real))}.key`);
+}
+
 function spoolKey(root: string, create: boolean): Buffer | null {
-    const file = path.join(spoolDir(root), KEY_FILE);
+    const file = spoolKeyPath(root);
     const read = (): Buffer | null => {
         try {
-            assertNoLinks(root, path.join(SPOOL_DIR, KEY_FILE));
+            if (!fs.lstatSync(file).isFile()) return null;
             const k = fs.readFileSync(file);
             return k.length === 32 ? k : null;
         } catch {
@@ -132,7 +148,8 @@ function spoolKey(root: string, create: boolean): Buffer | null {
     };
     const found = read();
     if (found !== null || !create) return found;
-    ensureSpoolDir(root);
+    fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+    fs.chmodSync(path.dirname(file), 0o700);
     // Published by link, so the key appears whole or not at all: concurrent first
     // writers either win the link or read the winner's complete key.
     const tmp = `${file}.${String(process.pid)}.${randomBytes(6).toString('hex')}.tmp`;
@@ -271,10 +288,12 @@ export function cleanupSpool(
         for (const name of fs.readdirSync(dir)) {
             let st: fs.Stats;
             try {
-                st = fs.statSync(path.join(dir, name));
+                st = fs.lstatSync(path.join(dir, name));
             } catch {
                 continue;
             }
+            // A link or directory planted under an address-shaped name is neither counted nor followed.
+            if (!st.isFile()) continue;
             const old = now - st.mtimeMs;
             const expired = name.endsWith('.tmp') || name.endsWith('.claimed') ? old > STALE_TMP_MS : ADDRESS.test(name) && old >= SPOOL_RETENTION_MS;
             if (expired) {
@@ -315,7 +334,7 @@ export function claimAndDelete(dir: string, name: string, seen: fs.Stats, owner:
         return false;
     }
     try {
-        const got = fs.statSync(claimed);
+        const got = fs.lstatSync(claimed);
         if (got.ino === seen.ino && got.mtimeMs === seen.mtimeMs && got.size === seen.size) return true;
         try {
             fs.linkSync(claimed, file);
@@ -337,7 +356,8 @@ function spoolBytes(root: string): number {
     for (const name of fs.readdirSync(dir)) {
         if (!ADDRESS.test(name)) continue;
         try {
-            n += fs.statSync(path.join(dir, name)).size;
+            const st = fs.lstatSync(path.join(dir, name));
+            if (st.isFile()) n += st.size;
         } catch {
             // removed meanwhile
         }
@@ -359,7 +379,7 @@ export function acquireCleanupLock(dir: string, now: number = Date.now()): strin
             return owner;
         } catch {
             try {
-                if (attempt > 0 || now - fs.statSync(lock).mtimeMs < STALE_LOCK_MS) return null;
+                if (attempt > 0 || now - fs.lstatSync(lock).mtimeMs < STALE_LOCK_MS) return null;
                 const aside = `${lock}.${owner}.stale`;
                 fs.renameSync(lock, aside);
                 fs.rmSync(aside, { force: true });

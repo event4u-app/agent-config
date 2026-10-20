@@ -26,6 +26,7 @@ import {
     SPOOL_OBSERVATION_FILE,
     SPOOL_RETENTION_MS,
     SPOOL_SELECTED_CLASSES,
+    spoolKeyPath,
     spoolResult,
     type SpoolStageView,
     storeBytes,
@@ -44,10 +45,16 @@ const READ_TEXT = new Set(['Read:text'] as const);
 const S = 's1';
 
 let tmp: string;
+let home: string | undefined;
 beforeEach(() => {
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'tool-output-spool-'));
+    // The key lives under the user-global root; keep every test's key out of the real one.
+    home = process.env['EVENT4U_CONFIG_HOME'];
+    process.env['EVENT4U_CONFIG_HOME'] = path.join(tmp, '.user-global');
 });
 afterEach(() => {
+    if (home === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+    else process.env['EVENT4U_CONFIG_HOME'] = home;
     fs.rmSync(tmp, { recursive: true, force: true });
 });
 
@@ -516,11 +523,25 @@ describe('the repository is not trusted for spool paths', () => {
         expect(fs.statSync(outside).mode & 0o777).toBe(0o755);
     });
 
-    it('a symlinked key file is never used', () => {
+    it('the key is kept outside the workspace, so a key the repository plants is never used', () => {
+        const keyPath = spoolKeyPath(tmp);
+        expect(path.relative(tmp, keyPath).startsWith('.user-global')).toBe(true);
+        const planted = Buffer.alloc(32, 0x42);
         const dir = path.join(tmp, SPOOL_DIR);
         fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, ['', 'key'].join('.')), planted);
+        const env = readEnvelope('signed with whose key?');
+        expect(spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT)).toMatchObject({ action: 'stored' });
+        expect(fs.readFileSync(keyPath).equals(planted)).toBe(false);
+        expect(fs.statSync(keyPath).mode & 0o777).toBe(0o600);
+        expect(fs.statSync(path.dirname(keyPath)).mode & 0o777).toBe(0o700);
+    });
+
+    it('a symlinked key file is never used', () => {
+        const keyPath = spoolKeyPath(tmp);
+        fs.mkdirSync(path.dirname(keyPath), { recursive: true });
         fs.writeFileSync(path.join(outside, 'k'), Buffer.alloc(32, 9));
-        fs.symlinkSync(path.join(outside, 'k'), path.join(dir, '.key'));
+        fs.symlinkSync(path.join(outside, 'k'), keyPath);
         const env = readEnvelope('signed with a planted key?');
         expect(spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT)).toEqual({ action: 'skip', reason: 'store-error' });
         expect(spoolFiles()).toEqual([]);
@@ -542,6 +563,21 @@ describe('the repository is not trusted for spool paths', () => {
         const env = readEnvelope('observed');
         spoolResult(env, { ...view(env), mode: 'observe' }, ['tool_response'], tmp, READ_TEXT);
         expect(fs.readFileSync(path.join(outside, 'log'), 'utf8')).toBe('');
+    });
+
+    it('an address-shaped symlink is neither counted, followed nor deleted by cleanup or admission', () => {
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.mkdirSync(dir, { recursive: true });
+        const target = path.join(outside, 'big');
+        fs.writeFileSync(target, Buffer.alloc(5000, 1));
+        fs.symlinkSync(target, path.join(dir, 'a'.repeat(64)));
+        // A cap of 1 byte: a counted link (its own size is its target's path) would be evicted.
+        expect(cleanupSpool(tmp, Date.now(), 1)).toEqual({ removed: 0, ran: true });
+        expect(fs.lstatSync(path.join(dir, 'a'.repeat(64))).isSymbolicLink()).toBe(true);
+        expect(fs.existsSync(target)).toBe(true);
+        const env = readEnvelope('fits beside the link');
+        expect(spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT, Date.now(), { maxBytes: 1000 })).toMatchObject({ action: 'stored' });
+        expect(fs.statSync(target).size).toBe(5000);
     });
 
     it('assertNoLinks passes a plain path and a missing one', () => {
@@ -643,9 +679,9 @@ describe('the key is created whole', () => {
     }, 120_000);
 
     it('a truncated key left by an older version refuses the store instead of signing with it', () => {
-        const dir = path.join(tmp, SPOOL_DIR);
-        fs.mkdirSync(dir, { recursive: true });
-        fs.writeFileSync(path.join(dir, '.key'), Buffer.alloc(7, 1), { mode: 0o600 });
+        const keyPath = spoolKeyPath(tmp);
+        fs.mkdirSync(path.dirname(keyPath), { recursive: true });
+        fs.writeFileSync(keyPath, Buffer.alloc(7, 1), { mode: 0o600 });
         const env = readEnvelope('signed with what?');
         expect(spoolResult(env, { mode: 'protect', placeholder: env, counts: [], refused: [] }, ['tool_response'], tmp, READ_TEXT)).toEqual({
             action: 'skip',
