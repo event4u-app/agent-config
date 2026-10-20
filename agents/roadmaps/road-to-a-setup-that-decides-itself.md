@@ -285,29 +285,22 @@ with that file.
   never project to a consumer; derived from frontmatter, same rule set as today.
   verify: consumer install fixture equals 0.1's rule set.
   Landed 2026-10-20. `consumerRuleWorkspaces()` derives the set from `src/config/discovery/packs.yml` — every workspace id minus `agent-config-maintainer` — and `ruleScopeFromSettings` uses it in place of the key, including when a settings file carries no `projection` block at all: a rule is not a setting, so a file that omits a section cannot switch one off. The derived set is the nine ids the template shipped as its default, pinned literally in `tests/scripts/consumer_rule_workspaces.test.ts` so a drift in either direction is visible; the sensitive case asserts `agent-config-maintainer` IS in the vocabulary and is NOT in the result, so its absence is a subtraction that happened rather than a vocabulary that never had it. `check_consumer_scope_flip` reproduces the same lever on the derived scope: 15 rules excluded, 120 -> 106, −10,004 tok. An unreadable vocabulary yields the inactive axis — more ships, never less. The MAINTAINER projection stays unscoped by construction (`condense._read_rule_workspaces` is now a documented constant `null`), because the derivation's subtraction is exactly wrong for this repository's own tree. Five install-suite cases changed contract with it, each rewritten to the inverse rather than relaxed: a hand-written `rule_workspaces` is now ignored, a settings doc cannot produce a wider install, and the reap test moved to the pack axis — the axis that is still a setting and the same code path.
-- [ ] **4.6b The doctor's rule-scope check lost its workspace axis.** Found
+- [x] **4.6b The doctor's rule-scope check lost its workspace axis.** Found
   2026-10-20 while clearing this branch's CI, and NOT by the step that caused
-  it. `_check_rule_scope_drift` at `src/scripts/_cli/cmd_doctor.ts:1535` calls
-  `ruleScopeFromSettings(raw)` with no package root. Since 4.6 that axis is
-  DERIVED from the pack vocabulary, and `ruleScopeFromSettings` degrades it to
-  INACTIVE without a root — correct for a caller that has no package, wrong
-  for the doctor, which always has one. Effect: the check stops reporting
-  maintainer-only rules as out of scope, silently.
-  Measured, both directions: with no root the check reads
-  `expected 5 rules, found 6 — 1 unexpected`; passing `_package_root()` it
-  reads `2 unexpected (out of scope): kernel-rule-edits.md, source-of-truth.md`.
-  `tests/scripts/_cli/cmd_doctor_rule_scope_drift.test.ts` is red on `main`
-  from 4.6 either way — its `expected 3 rules, found 6` describes the
-  pre-4.6 behaviour.
-  **Why this is a step and not a fix in that PR:** the one-line fix needs a
-  test seam, and the fixture cannot take one as written. With a hermetic
-  package root the scan still reports `found 3` of the 6 rules it writes and
-  omits `preservation-guard.md` entirely, so the discovery path reads
-  something beyond the rule files themselves. Four probes did not settle what;
-  guessing further would be the loop the fix-loop ladder exists to stop.
-  verify: the check is called with a package root, the fixture supplies a
-  hermetic one, and both the active and the degraded axis are asserted — the
-  degraded one so the "ships more, never less" intent stays pinned.
+  it. `_check_rule_scope_drift` called `ruleScopeFromSettings(raw)` with no
+  package root. Since 4.6 that axis is DERIVED from the pack vocabulary, and
+  the resolver degrades it to INACTIVE without a root — correct for a caller
+  that has no package, wrong for the doctor, which always has one. Effect: the
+  check stopped reporting maintainer-only rules as out of scope, silently.
+  Fixed by passing the root, with a defaulted `package_root` parameter as the
+  test seam. Both directions asserted: the drift case now reads
+  `3 unexpected`, and the legacy-all case was STRENGTHENED from
+  `1 unexpected` to `2 unexpected` — it used to expect a maintainer-only rule
+  to ship when the settings block was absent, which is exactly what 4.6
+  abolished. "A rule is not a setting", asserted rather than stated.
+  verify: `npx vitest run tests/scripts/_cli/cmd_doctor_rule_scope_drift.test.ts`
+  — 4 passed, red before the fix on the drift case and red before the
+  strengthening on the legacy-all case.
 <!-- blocked-by: projection-mode-removal-waits-on-second-host-reach -->
 - [ ] **4.7 `projection.mode` last.** Removed only after the skills roadmap's
   completeness question is answered; on hosts with a listing lever, scoping moves
