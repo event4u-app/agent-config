@@ -9,11 +9,35 @@ keep-beta-until: 2027-01-14
 > for `road-to-a-retro-the-merge-runs` step 0.3 and **before** any retro code
 > exists, so the code is written against this file and not the other way round.
 >
-> Not yet implemented. The switch `retro.enabled` and the verb `retro` do not
-> exist until the ADR of that roadmap's step 0.2 lands; until then nothing in
-> this file is a setting, a command or a public surface. Start values for the
-> triage scores, the daily budget and the catch-up window are pre-registered in
-> step 0.5 and calibrated in step 5.3, never tuned silently in code.
+> The switch `retro.enabled` and the verb `retro` exist since ADR-292. Start
+> values for the triage scores, the daily budget and the catch-up window are
+> pre-registered in step 0.5 and calibrated in step 5.3, never tuned silently in
+> code.
+
+## The switch
+
+`retro.enabled` — class C, default `true`, cascading from the user-global file.
+`false` in the project or the user-global file stops every automatic path: the
+merge enqueue, the push-time merge marker, the session pointer and the daily
+probe. It never stops an explicit `/retro`, and a manual run never turns an
+automatic path back on. CLI, hooks and GUI resolve it through one resolver
+(`retroEnabled` in `src/scripts/retro_queue.ts`), which fails closed: a settings
+layer the user broke disarms the automatic paths rather than letting the shipped
+default speak for it.
+
+## Where the state lives
+
+Everything is local and lives under `<git common dir>/agent-config/`, so every
+worktree of a repository shares it and a removed worktree loses nothing:
+
+| Directory | Written by | What it holds |
+|---|---|---|
+| `retro-queue/` | paths A, B, C | one file per unit; the first enqueue time stands |
+| `retro-markers/` | the push-settle hook | one marker per pushed PR until the forge reports it merged or closed |
+| `retro-sessions/` | the session-end hook | one pointer per session: state key, tag, branch, workspace, end time |
+| `retro-dispositions/` | the sweep, `/retro record` | the triage class of every unit, `analysed` once examined |
+| `retro-sweep/` | the sweep | the high-water day, the last sweep's counts, triage timings |
+| `retro-ran/` | `/retro record` | the sessions a retro ran in, so no retro examines itself (K5) |
 
 ## The three paths
 
@@ -190,3 +214,4 @@ reopens nothing — `missing` is not `false`.
 | v1 | 2026-10-16 | Initial contract, written before any implementation. |
 | v1 | 2026-10-17 | Who does the model work: delegated or after the first task, never before it. |
 | v1 | 2026-10-17 | Held or recurred: three verdicts read from record status, never from the occurrence count; a measured revert reopens. |
+| v1 | 2026-10-20 | The switch (ADR-292) and where the state lives; the three paths wired; `/retro` and its forms. |
