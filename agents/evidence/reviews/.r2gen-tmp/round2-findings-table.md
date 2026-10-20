@@ -1,3 +1,13 @@
+<!-- evidence-type: analysis -->
+
+# R2 round 2 — findings table
+
+The ten findings round 2 raised, with each row's disposition. Typed on
+2026-10-21: `lint_evidence_artifacts` refused the push for an untyped
+artefact, and this is a real record rather than the scratch its
+`.r2gen-tmp/` path suggests — deleting it would have thrown away ten
+reviewed findings to satisfy a linter.
+
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
 | 1 | high | agents/evidence/analysis/impact-bump-out-of-sample-20261020.md:173 | F2 — "both times it fires alone it overrides an `automatic` migration ... each row's own prose records the migration as automatic" — holds for 11.0.0 only. Verified: `BREAKING_CHANGES.md`'s 11.0.0 row documents exactly `worktrees.mode`, which is what the detector reports, so that pairing is clean. The 10.0.0 row's recorded break is the council transport keys (`defaults.mode`, per-member `mode:`) which live in `.ai-council.yml`, a path no `SETTINGS_KEY_FILES` row matches, so the detector never saw them; what it did see is the removal of `turn_end_gate` and children from `src/config/agent-settings.template.yml`, which the record does not mention at all (`grep -c turn_end_gate BREAKING_CHANGES.md` = 0). The `automatic` grade and the firing surface therefore describe different removals, so the policy inference "a settings key removed with an automatic migration is a major" rests on one decided case, not two — and the roadmap blocker paragraph repeats the two-case claim verbatim. | open | |
