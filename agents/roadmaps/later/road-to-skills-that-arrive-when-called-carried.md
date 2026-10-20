@@ -10,7 +10,7 @@ entry_condition:
   who: owner
 review_by: 2026-12-31
 estate_offset_exempt: "Carried 2026-10-20 from road-to-skills-that-arrive-when-called, which is archived in the same change, so this file is its one-in-one-out pair. Its only content is the owner question fork-widening-is-owner-owned, which blocks nothing and kept the finished parent from archiving. An AI council (2/2, 2026-10-20) chose to carry it unanswered rather than record `held` on the owner's behalf or leave the parent unarchived; merging it into another roadmap was not available because no other file owns the fork pilot."
-estate_growth_exempt: "Carry of road-to-skills-that-arrive-when-called: the parent is archived in the same change and its last open blocker, fork-widening-is-owner-owned, moves here unanswered, so open_blockers is unchanged and the parked count gains this one file."
+estate_growth_exempt: "Carry of road-to-skills-that-arrive-when-called: the parent is archived in the same change and its last open blocker, fork-widening-is-owner-owned, moves here unanswered. Measured by check_estate_count at the merge with origin/main: later_roadmaps 106 → 107 (this file), open_blockers 72 → 71 (the parent's other blocker resolved; this one is counted here instead of there)."
 ---
 # Road to skills that arrive when called — carried
 
