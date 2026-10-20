@@ -167,10 +167,12 @@ export const POLICY_PATH = 'src/config/ratification-policy.json';
  *
  * The list is on the watch list so that a change cannot drop a member in order
  * to edit the rule it names, nor add one without a record. The schema that
- * states the criterion is deliberately NOT: this gate never reads it, so a
- * schema edit changes no membership until the list changes, and the list is
- * what is gated. Watching the schema would price every unrelated schema edit
- * as a governance event while gating nothing the list does not already gate.
+ * states the criterion (`CONSEQUENCE_CRITERION_PATH`) is watched too, although
+ * this gate never reads it: the criterion is what a person or an agent applies
+ * when deciding membership, so an unratified edit to it would weaken the class
+ * at its definition while every list edit stayed recorded. The schema is shared
+ * by every rule, so any edit to it needs a record — measured at 1 edit in the
+ * 30 days to 2026-10-20.
  *
  * Membership is read FROM GIT OBJECTS at both the base and the head commit and
  * the union is gated (see `gateInputsFor`), so dropping a member is caught by
@@ -191,6 +193,9 @@ export const POLICY_PATH = 'src/config/ratification-policy.json';
  * nothing passes ungated by it; members are gated from the next merge on.
  */
 export const CONSEQUENCE_CLASS_PATH = 'src/config/rule-consequence-class.json';
+
+/** The schema whose `consequence_class` property states the class criterion. */
+export const CONSEQUENCE_CRITERION_PATH = 'src/scripts/schemas/rule.schema.json';
 
 /**
  * The workflow that invokes this gate.
@@ -481,6 +486,7 @@ export function isMechanismPath(p: string): boolean {
         p === POLICY_PATH ||
         p === WORKFLOW_PATH ||
         p === CONSEQUENCE_CLASS_PATH ||
+        p === CONSEQUENCE_CRITERION_PATH ||
         ANCHOR_PATHS.includes(p) ||
         MECHANISM_IMPORT_PATHS.includes(p)
     );
@@ -841,8 +847,8 @@ export function evaluate(
         ...gated.plumbing.map((p) => `hook-plumbing source ${p}`),
         ...(gated.self
             ? [
-                  'the ratification mechanism itself (gate, its imports, policy, workflow or ' +
-                      'the high-consequence rule list)',
+                  'the ratification mechanism itself (gate, its imports, policy, workflow, or ' +
+                      'the high-consequence rule list or its criterion)',
               ]
             : []),
     ];
