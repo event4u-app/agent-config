@@ -340,7 +340,12 @@ No setting, environment variable or config file populates the selection.
   reaches no cleanup and no entry, though a syntactically valid one still
   reads the key file to check its MAC.
 - *Complete writes* — every byte is written (short writes are looped) and
-  fsynced before the rename; a failed write removes its temp file.
+  fsynced before the rename; a failed write removes its temp file. The key is
+  published the same way, by link, so a concurrent first store reads a whole
+  key or none; a key file of the wrong length refuses every store
+  (`store-error`) rather than signing with it.
+- *Rollback* — a store whose cleanup fails removes its entry only if it created
+  it; an entry it merely refreshed keeps the bytes earlier handles point at.
 - *Deletion is a claim* — cleanup renames an entry to a name only it uses and
   inspects what it took (inode, mtime, size). A file a writer replaced after
   cleanup measured it is linked back, unless an even newer copy already holds

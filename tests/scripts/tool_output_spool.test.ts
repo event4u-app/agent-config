@@ -284,6 +284,21 @@ describe('retention, partial writes and cleanup failure', () => {
         expect(fs.existsSync(path.join(dir, '.cleanup.lock'))).toBe(false);
     });
 
+    it('a cleanup failure on a repeat store keeps the entry that already existed, and its earlier handle', () => {
+        const now = Date.now();
+        const env = readEnvelope('stored twice in one session');
+        const view: SpoolStageView = { mode: 'protect', placeholder: env, counts: [], refused: [] };
+        const first = spoolResult(env, view, ['tool_response'], tmp, READ_TEXT, now) as { action: string; handle: string };
+        expect(first.action).toBe('stored');
+        const old = storeBytes(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.utimesSync(path.join(dir, old.address), new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
+        const failing = { hooks: { beforeClaim: (): void => { throw new Error('disk gone'); } } };
+        expect(spoolResult(env, view, ['tool_response'], tmp, READ_TEXT, now, failing)).toEqual({ action: 'skip', reason: 'store-error' });
+        expect(readHandle(tmp, first.handle, S, undefined, now).state).toBe('ok');
+        expect(fs.readdirSync(dir).filter((n) => n.endsWith('.tmp') || n.endsWith('.claimed'))).toEqual([]);
+    });
+
     it('through the store path, a cleanup failure answers store-error and leaves the new result unstored', () => {
         const now = Date.now();
         const old = storeBytes(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
@@ -499,6 +514,46 @@ describe('the cleanup lock is owned', () => {
     });
 });
 
+describe('the key is created whole', () => {
+    it('eight processes storing at once into an empty store all mint readable handles', async () => {
+        const tsx = path.resolve(__dirname, '../../node_modules/.bin/tsx');
+        const mod = path.resolve(__dirname, '../../src/scripts/_lib/tool_output_spool.ts');
+        // The race is probabilistic: against the old key code one run in four failed.
+        for (let round = 0; round < 6; round++) {
+            const root = fs.mkdtempSync(path.join(os.tmpdir(), 'spool-key-race-'));
+            try {
+                const code = (i: number): string =>
+                    `import { storeBytes } from ${JSON.stringify(mod)}; console.log(storeBytes(${JSON.stringify(root)}, Buffer.from('entry ${String(i)}'), 'k${String(i)}').handle);`;
+                const runs = Array.from({ length: 8 }, (_, i) =>
+                    new Promise<string>((resolve, reject) => {
+                        const p = spawn(tsx, ['--eval', code(i)], { stdio: ['ignore', 'pipe', 'pipe'] });
+                        let out = '';
+                        p.stdout.on('data', (d: Buffer) => (out += d.toString()));
+                        p.on('error', reject);
+                        p.on('close', (c) => (c === 0 ? resolve(out.trim()) : reject(new Error(`exit ${String(c)}`))));
+                    }),
+                );
+                const handles = await Promise.all(runs);
+                expect(handles.map((h, i) => readHandle(root, h, `k${String(i)}`).state)).toEqual(Array(8).fill('ok'));
+            } finally {
+                fs.rmSync(root, { recursive: true, force: true });
+            }
+        }
+    }, 120_000);
+
+    it('a truncated key left by an older version refuses the store instead of signing with it', () => {
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, '.key'), Buffer.alloc(7, 1), { mode: 0o600 });
+        const env = readEnvelope('signed with what?');
+        expect(spoolResult(env, { mode: 'protect', placeholder: env, counts: [], refused: [] }, ['tool_response'], tmp, READ_TEXT)).toEqual({
+            action: 'skip',
+            reason: 'store-error',
+        });
+        expect(spoolFiles()).toEqual([]);
+    });
+});
+
 describe('concurrent writers, readers and cleanup', () => {
     it.each([
         ['a cap that fits every write', 10_000_000],
@@ -524,14 +579,16 @@ for (let i = 0; i < 40; i++) console.log(storeBytes(${JSON.stringify(tmp)}, Buff
         }, 5);
         const handles = (await Promise.all(writers)).flat();
         clearInterval(sweep);
-        expect(cleanups).toBeGreaterThan(0);
+        const listing = fs.readdirSync(path.join(tmp, SPOOL_DIR)).sort().join(' ');
+        expect(cleanups, 'no cleanup ran while writers wrote').toBeGreaterThan(0);
         const states = handles.map((line) => {
             const [session, handle] = line.split(' ') as [string, string];
             return readHandle(tmp, handle, session).state;
         });
-        expect(states.every((st) => st === 'ok' || st === 'missing')).toBe(true);
+        const tally = JSON.stringify(states.reduce<Record<string, number>>((m, st) => ({ ...m, [st]: (m[st] ?? 0) + 1 }), {}));
+        expect(states.every((st) => st === 'ok' || st === 'missing'), tally).toBe(true);
         // With room for everything, a concurrent cleanup must not delete a single entry.
-        if (cap === 10_000_000) expect(states.filter((st) => st === 'ok')).toHaveLength(handles.length);
+        if (cap === 10_000_000) expect(states.filter((st) => st === 'ok').length, `${tally} | ${listing}`).toBe(handles.length);
         else expect(states.filter((st) => st === 'ok').length).toBeGreaterThan(0);
         cleanupSpool(tmp, Date.now(), cap);
         const dir = path.join(tmp, SPOOL_DIR);

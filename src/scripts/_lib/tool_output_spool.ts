@@ -81,6 +81,8 @@ export interface StoredEntry {
     readonly address: string;
     readonly handle: string;
     readonly bytes: number;
+    /** False when an entry with these bytes already existed and this store only refreshed it. */
+    readonly created: boolean;
 }
 
 function spoolDir(root: string): string {
@@ -99,18 +101,31 @@ function ensureSpoolDir(root: string): void {
 
 function spoolKey(root: string, create: boolean): Buffer | null {
     const file = path.join(spoolDir(root), KEY_FILE);
-    try {
-        return fs.readFileSync(file);
-    } catch {
-        if (!create) return null;
-    }
+    const read = (): Buffer | null => {
+        try {
+            const k = fs.readFileSync(file);
+            return k.length === 32 ? k : null;
+        } catch {
+            return null;
+        }
+    };
+    const found = read();
+    if (found !== null || !create) return found;
     ensureSpoolDir(root);
+    // Published by link, so the key appears whole or not at all: concurrent first
+    // writers either win the link or read the winner's complete key.
+    const tmp = `${file}.${String(process.pid)}.${randomBytes(6).toString('hex')}.tmp`;
+    fs.writeFileSync(tmp, randomBytes(32), { flag: 'wx', mode: 0o600 });
     try {
-        fs.writeFileSync(file, randomBytes(32), { flag: 'wx', mode: 0o600 });
+        fs.linkSync(tmp, file);
     } catch (exc) {
         if ((exc as NodeJS.ErrnoException).code !== 'EEXIST') throw exc;
+    } finally {
+        fs.rmSync(tmp, { force: true });
     }
-    return fs.readFileSync(file);
+    const k = read();
+    if (k === null) throw new Error('spool key unreadable');
+    return k;
 }
 
 function address(key: Buffer, session: string, digest: string): string {
@@ -149,9 +164,10 @@ export function storeBytes(root: string, bytes: Buffer, session: string, now: nu
     }
     fs.closeSync(fd);
     // An existing entry has the same bytes by construction; the rename refreshes its age.
+    const created = !fs.existsSync(target);
     fs.renameSync(tmp, target);
     const expiry = Math.floor((now + SPOOL_RETENTION_MS) / 1000);
-    return { address: addr, handle: `${addr}.${String(expiry)}.${mac(key, addr, expiry, session)}`, bytes: bytes.length };
+    return { address: addr, handle: `${addr}.${String(expiry)}.${mac(key, addr, expiry, session)}`, bytes: bytes.length, created };
 }
 
 /**
@@ -231,6 +247,7 @@ export function cleanupSpool(
     let removed = 0;
     try {
         const live: { name: string; seen: fs.Stats }[] = [];
+        let kept = 0;
         for (const name of fs.readdirSync(dir)) {
             let st: fs.Stats;
             try {
@@ -242,12 +259,14 @@ export function cleanupSpool(
             const expired = name.endsWith('.tmp') || name.endsWith('.claimed') ? old > STALE_TMP_MS : ADDRESS.test(name) && old >= SPOOL_RETENTION_MS;
             if (expired) {
                 if (claimAndDelete(dir, name, st, owner, hooks)) removed += 1;
-            } else if (ADDRESS.test(name) && name !== hooks.keep) {
+            } else if (name === hooks.keep) {
+                kept = st.size;
+            } else if (ADDRESS.test(name)) {
                 live.push({ name, seen: st });
             }
         }
         live.sort((a, b) => a.seen.mtimeMs - b.seen.mtimeMs);
-        let total = live.reduce((n, e) => n + e.seen.size, 0) + keptSize(dir, hooks.keep);
+        let total = live.reduce((n, e) => n + e.seen.size, kept);
         for (const e of live) {
             if (total <= maxBytes) break;
             if (claimAndDelete(dir, e.name, e.seen, owner, hooks)) {
@@ -259,15 +278,6 @@ export function cleanupSpool(
         releaseCleanupLock(dir, owner);
     }
     return { removed };
-}
-
-function keptSize(dir: string, keep: string | undefined): number {
-    if (keep === undefined) return 0;
-    try {
-        return fs.statSync(path.join(dir, keep)).size;
-    } catch {
-        return 0;
-    }
 }
 
 /**
@@ -422,8 +432,9 @@ export function spoolResult(
         try {
             cleanupSpool(root, now, cap, { ...limits.hooks, keep: entry.address });
         } catch {
-            // A store that cannot enforce its bounds does not keep the write.
-            fs.rmSync(path.join(spoolDir(root), entry.address), { force: true });
+            // A store that cannot enforce its bounds does not keep a write it created.
+            // An entry that already existed holds the same bytes and earlier handles; it stays.
+            if (entry.created) fs.rmSync(path.join(spoolDir(root), entry.address), { force: true });
             return { action: 'skip', reason: 'store-error' };
         }
         return { action: 'stored', class: cls, ...entry };
