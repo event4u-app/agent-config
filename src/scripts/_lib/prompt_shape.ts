@@ -95,9 +95,20 @@ export function isSyntheticPrompt(prompt: string): boolean {
     head.startsWith("<local-command-caveat>") ||
     head.startsWith("<agent-message") ||
     head.startsWith("Your claude.ai usage limit has reset") ||
-    /^\[SYSTEM NOTIFICATION\b/.test(head)
+    /^\[SYSTEM NOTIFICATION\b/.test(head) ||
+    AGENT_MESSAGE_FRAME.test(head)
   );
 }
+
+/**
+ * How Claude Code actually delivers a subagent hand-back or a cross-session
+ * message to `user_prompt_submit`: one fixed host sentence, then the wrapper
+ * tag. The bare `<agent-message` case above never matched this frame, and a
+ * German session's pin was rewritten to `en` 149 ms after one (2026-10-20).
+ * Both halves are required so a human quoting the sentence keeps their turn.
+ */
+const AGENT_MESSAGE_FRAME =
+  /^Another Claude session sent a message:\s*\n\s*<(?:agent-message|cross-session-message)\b/;
 
 /**
  * A line that starts pasted DOCUMENT content rather than typed instruction.
