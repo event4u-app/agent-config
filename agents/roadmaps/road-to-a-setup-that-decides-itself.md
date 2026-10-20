@@ -394,7 +394,7 @@ with that file.
 | D9 | reversible-technical | agent | 0.1's fixture is taken from a scratch-`HOME` global install, the only consumer scope (ADR-020). It excludes the install receipt, lock and log (each carries an install time), the scratch root (recorded as `<HOME>`) and the host's own version (a machine property, not a commit property) | Two full runs at `89e094819` compared byte-equal; at `d760ecbde` the same reader reproduces the step's 106 / 369,415 claude-code row | a field outside the exclusion set is found to vary between runs at one commit |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-20 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -402,6 +402,7 @@ with that file.
 | 2 | Users who set a key on purpose | product | Removing a key could silently override a deliberate choice. | 4.3 reads and reports every prior value; 3.5 keeps the intent without a setting. | Phase 4 — Remove the keys through the release, loudly |
 | 3 | Launch contexts differ | implementation | A layer promoted under one launch is read under another where the carrier is dead. | 3.1 requires the carrier probe; 3.3 promotes only on a matching record; the carrier roadmap's visible line covers the rest. | Phase 3 — The package decides; no key does |
 | 4 | Host contracts move | implementation | A host version changes load semantics. | Rows expire per host version; 3.4's brake forces full for a host version. | Phase 3 — The package decides; no key does |
+| 5 | A shipped record outlives its evidence | implementation | `project-tree-form.json` carries the project tree's form while the decision function can only answer `delivery-unobserved`. A record meant as a stand-in can become a permanent bypass of the function it stands in for — the one risk the reviewing seat named against it. | The precedence rule is in the reader, not in prose: an observed verdict wins in both directions, including an observed `full` over a record saying `delivery`, and `project_tree_form.test.ts` pins that direction. The record also refuses a row with no `measured` block, so it cannot become a place to write a form someone merely wants. | Phase 3 — The package decides; no key does |
 
 ## Acceptance Criteria
 
