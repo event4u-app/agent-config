@@ -19,8 +19,8 @@ AFTER this file was committed with its hash, against this text unchanged.
 The first host documents `context: fork` on a skill: the body runs in a forked
 context instead of entering the invoking conversation. This package could not
 use the key until step 1.1 renamed the package key that was squatting on it.
-D2 limits the pilot to `report` skills — a forked run sees no conversation, so
-for a `standing` skill a fork is not a saving, it is amnesia.
+D2 limits the pilot to skills of the REPORT output shape — a forked run sees no
+conversation, so for a STANDING skill a fork is not a saving, it is amnesia.
 
 **Set under test**, from `src/config/skill-fork-pilot.json`, five of the six
 skills that carried the retired `context: large` key, all classified `report`:

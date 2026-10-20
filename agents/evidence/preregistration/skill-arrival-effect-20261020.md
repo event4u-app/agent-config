@@ -32,7 +32,7 @@ description as a block and drops whole entries from the alphabetical tail,
 behind a warning (0.3, `observed-true`, codex-cli 0.148.0).
 
 **Phase 4 (4.1).** Every owned skill outside a computed resident set carries
-`agents/openai.yaml` with `policy.allow_implicit_invocation: false`, which 0.3
+an `openai.yaml` policy file with `policy.allow_implicit_invocation: false`, which 0.3
 measured as leaving the listing AND freeing budget.
 
 Readings, each falsifiable:

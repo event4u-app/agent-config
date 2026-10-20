@@ -11557,6 +11557,85 @@ function ensure_managed_hooks(settings_path, matrix) {
   });
 }
 
+// src/scripts/_lib/skill_listing_overrides.ts
+import * as fs21 from "node:fs";
+import * as path20 from "node:path";
+
+// src/scripts/_lib/host_listing_model.ts
+var CLAUDE_CODE_LISTING_DEFAULTS = {
+  fraction: 0.01,
+  perEntryCapChars: 1536,
+  charsPerToken: 4,
+  perEntryOverheadChars: 0
+};
+var ASSUMPTIONS = [
+  {
+    id: "budget-unit-is-chars",
+    provenance: "upstream-prose",
+    why: 'The docs give the budget as a fraction of the context window (tokens); the 2026-08-22 read illustrated it as "\u22488,000 characters on 200k" (gone by 2026-10-14), which only reconciles at 4 chars per token. That ratio is inferred, never stated.'
+  },
+  {
+    id: "fill-order-is-invocation-frequency",
+    provenance: "upstream-prose",
+    why: "Upstream says the budget fills by invocation frequency, but does not say what orders entries when no invocation history exists. This model falls back to alphabetical, which is this repo's choice and not upstream behaviour."
+  },
+  {
+    id: "names-are-never-dropped",
+    provenance: "upstream-prose",
+    why: "Claude Code lists every name and budgets only descriptions. Another host (codex) drops whole entries instead, so this is a per-host property and is not transferable to a second host without its own model."
+  },
+  {
+    id: "stop-at-first-overflow",
+    provenance: "upstream-prose",
+    why: "The docs describe filling a budget, not packing one. A shorter later entry might in principle still fit after a longer one has overflowed; this model stops at the first entry that does not fit rather than skipping past it."
+  },
+  {
+    id: "wrapper-overhead-unmodelled",
+    provenance: "upstream-prose",
+    why: "Each delivered entry also costs its name, separators and newlines. Upstream quantifies none of that, so the default overhead here is 0 and the budget is therefore an upper bound on how many descriptions survive."
+  }
+];
+function modelListingBudget(catalogue, input) {
+  const fraction = input.fraction ?? CLAUDE_CODE_LISTING_DEFAULTS.fraction;
+  const perEntryCap = input.perEntryCapChars ?? CLAUDE_CODE_LISTING_DEFAULTS.perEntryCapChars;
+  const charsPerToken = input.charsPerToken ?? CLAUDE_CODE_LISTING_DEFAULTS.charsPerToken;
+  const overhead = input.perEntryOverheadChars ?? CLAUDE_CODE_LISTING_DEFAULTS.perEntryOverheadChars;
+  const usageOrder = input.usageOrder ?? [];
+  const budgetChars = Math.floor(input.contextWindowTokens * fraction * charsPerToken);
+  const fillOrder = usageOrder.length > 0 ? "usage" : "alphabetical-fallback";
+  const byName = new Map(catalogue.map((e) => [e.name, e]));
+  const ordered = [];
+  const seen = /* @__PURE__ */ new Set();
+  for (const name of usageOrder) {
+    const e = byName.get(name);
+    if (e && !seen.has(name)) {
+      ordered.push(e);
+      seen.add(name);
+    }
+  }
+  const rest = catalogue.filter((e) => !seen.has(e.name)).slice().sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+  ordered.push(...rest);
+  const surviving = [];
+  const bare = [];
+  let spentChars = 0;
+  let overflowed = false;
+  for (const e of ordered) {
+    if (overflowed) {
+      bare.push(e.name);
+      continue;
+    }
+    const cost = Math.min(e.descriptionChars, perEntryCap) + overhead;
+    if (spentChars + cost <= budgetChars) {
+      surviving.push(e.name);
+      spentChars += cost;
+    } else {
+      overflowed = true;
+      bare.push(e.name);
+    }
+  }
+  return { budgetChars, fillOrder, surviving, bare, spentChars, assumptions: ASSUMPTIONS };
+}
+
 // src/scripts/_lib/codex_resident_set.ts
 import { createHash as createHash6 } from "node:crypto";
 import * as fs20 from "node:fs";
@@ -11565,7 +11644,7 @@ var RECORD_DIRNAME = "codex-resident-set";
 var POLICY_REL = path19.join("agents", "openai.yaml");
 var CODEX_BUDGET_CHARS = 8e3;
 var POLICY_BODY = "policy:\n  allow_implicit_invocation: false\n";
-var ASSUMPTIONS = [
+var ASSUMPTIONS2 = [
   {
     id: "entry-cost-is-name-plus-description",
     provenance: "upstream-prose",
@@ -11601,7 +11680,7 @@ function computeCodexResidentSet(catalogue, opts) {
     resident.push(e.name);
     listingChars += cost;
   }
-  return { budgetChars, resident, nonResident, listingChars, assumptions: ASSUMPTIONS };
+  return { budgetChars, resident, nonResident, listingChars, assumptions: ASSUMPTIONS2 };
 }
 function recordPath(anchor, env) {
   const key = createHash6("sha256").update(path19.resolve(anchor)).digest("hex").slice(0, 16);
@@ -11734,85 +11813,6 @@ function applyCodexResidentSet(home, report) {
   } catch (e) {
     report(`codex: resident set skipped \u2014 ${String(e)}`);
   }
-}
-
-// src/scripts/_lib/skill_listing_overrides.ts
-import * as fs21 from "node:fs";
-import * as path20 from "node:path";
-
-// src/scripts/_lib/host_listing_model.ts
-var CLAUDE_CODE_LISTING_DEFAULTS = {
-  fraction: 0.01,
-  perEntryCapChars: 1536,
-  charsPerToken: 4,
-  perEntryOverheadChars: 0
-};
-var ASSUMPTIONS2 = [
-  {
-    id: "budget-unit-is-chars",
-    provenance: "upstream-prose",
-    why: 'The docs give the budget as a fraction of the context window (tokens); the 2026-08-22 read illustrated it as "\u22488,000 characters on 200k" (gone by 2026-10-14), which only reconciles at 4 chars per token. That ratio is inferred, never stated.'
-  },
-  {
-    id: "fill-order-is-invocation-frequency",
-    provenance: "upstream-prose",
-    why: "Upstream says the budget fills by invocation frequency, but does not say what orders entries when no invocation history exists. This model falls back to alphabetical, which is this repo's choice and not upstream behaviour."
-  },
-  {
-    id: "names-are-never-dropped",
-    provenance: "upstream-prose",
-    why: "Claude Code lists every name and budgets only descriptions. Another host (codex) drops whole entries instead, so this is a per-host property and is not transferable to a second host without its own model."
-  },
-  {
-    id: "stop-at-first-overflow",
-    provenance: "upstream-prose",
-    why: "The docs describe filling a budget, not packing one. A shorter later entry might in principle still fit after a longer one has overflowed; this model stops at the first entry that does not fit rather than skipping past it."
-  },
-  {
-    id: "wrapper-overhead-unmodelled",
-    provenance: "upstream-prose",
-    why: "Each delivered entry also costs its name, separators and newlines. Upstream quantifies none of that, so the default overhead here is 0 and the budget is therefore an upper bound on how many descriptions survive."
-  }
-];
-function modelListingBudget(catalogue, input) {
-  const fraction = input.fraction ?? CLAUDE_CODE_LISTING_DEFAULTS.fraction;
-  const perEntryCap = input.perEntryCapChars ?? CLAUDE_CODE_LISTING_DEFAULTS.perEntryCapChars;
-  const charsPerToken = input.charsPerToken ?? CLAUDE_CODE_LISTING_DEFAULTS.charsPerToken;
-  const overhead = input.perEntryOverheadChars ?? CLAUDE_CODE_LISTING_DEFAULTS.perEntryOverheadChars;
-  const usageOrder = input.usageOrder ?? [];
-  const budgetChars = Math.floor(input.contextWindowTokens * fraction * charsPerToken);
-  const fillOrder = usageOrder.length > 0 ? "usage" : "alphabetical-fallback";
-  const byName = new Map(catalogue.map((e) => [e.name, e]));
-  const ordered = [];
-  const seen = /* @__PURE__ */ new Set();
-  for (const name of usageOrder) {
-    const e = byName.get(name);
-    if (e && !seen.has(name)) {
-      ordered.push(e);
-      seen.add(name);
-    }
-  }
-  const rest = catalogue.filter((e) => !seen.has(e.name)).slice().sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
-  ordered.push(...rest);
-  const surviving = [];
-  const bare = [];
-  let spentChars = 0;
-  let overflowed = false;
-  for (const e of ordered) {
-    if (overflowed) {
-      bare.push(e.name);
-      continue;
-    }
-    const cost = Math.min(e.descriptionChars, perEntryCap) + overhead;
-    if (spentChars + cost <= budgetChars) {
-      surviving.push(e.name);
-      spentChars += cost;
-    } else {
-      overflowed = true;
-      bare.push(e.name);
-    }
-  }
-  return { budgetChars, fillOrder, surviving, bare, spentChars, assumptions: ASSUMPTIONS2 };
 }
 
 // src/scripts/_lib/skill_listing_overrides.ts
@@ -11952,6 +11952,10 @@ function applyListingOverrides(anchor, report) {
   } catch (e) {
     report(`claude-code: listing override skipped \u2014 ${String(e)}`);
   }
+}
+function applyHostListingPolicies(deployed, home, claudeAnchor, report) {
+  if (deployed.claudeCode) applyListingOverrides(claudeAnchor, report);
+  if (deployed.codex) applyCodexResidentSet(home, report);
 }
 
 // src/scripts/hooks/host_lowering.ts
@@ -23692,8 +23696,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
       warn(`Scoped-projection prune failed \u2014 restoring full tree (${String(e)}).`);
     }
   }
-  if (deploy_results["claude-code"]?.[2] === "deployed") applyListingOverrides(expanduser8(USER_SCOPE_PATHS["claude-code"]), state.QUIET ? () => void 0 : info);
-  if (deploy_results["codex"]?.[2] === "deployed") applyCodexResidentSet(os13.homedir(), state.QUIET ? () => void 0 : info);
+  applyHostListingPolicies({ claudeCode: deploy_results["claude-code"]?.[2] === "deployed", codex: deploy_results["codex"]?.[2] === "deployed" }, os13.homedir(), expanduser8(USER_SCOPE_PATHS["claude-code"]), state.QUIET ? () => void 0 : info);
   const failed_tools = new Set(
     Object.keys(deploy_results).filter(
       (tool_id) => deploy_results[tool_id][2] === "deploy_failed"

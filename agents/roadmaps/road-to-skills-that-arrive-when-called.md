@@ -340,7 +340,7 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
   Done 2026-10-20: `src/scripts/_lib/codex_resident_set.ts`, called from the
   installer one line after `applyListingOverrides` — after every prune, so the
   split is computed over the skills still on disk. The lever is 0.3's own
-  observation, not a guess: a skill carrying `agents/openai.yaml` with
+  observation, not a guess: a skill carrying an `openai.yaml` policy file with <!-- ref-ignore -->
   `policy.allow_implicit_invocation: false` leaves the model-visible list AND
   stops occupying the budget (omitted fell 554 → 481 when 60 of 120 were
   disabled). So the resident set is enforceable from the package side with no
