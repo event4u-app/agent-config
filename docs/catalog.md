@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **749 public artefacts** shipped by
+Consumer-facing catalog of all **750 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -454,7 +454,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (207)
+## Commands (208)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -610,6 +610,7 @@ are excluded.
 | command | [`research`](../dist/agent-src/commands/research.md) | cluster: research | Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans. |
 | command | [`research-deep`](../dist/agent-src/commands/research/deep.md) | cluster: research | Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths. |
 | command | [`research-report`](../dist/agent-src/commands/research/report.md) | cluster: research | Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime. |
+| command | [`retro`](../dist/agent-src/commands/retro.md) | cluster: retro | Retro after merged work — examine a merged PR or a finished session, draw at most one durable learning, route it to exactly one target; `status` shows the queue and the last sweep |
 | command | [`review`](../dist/agent-src/commands/review.md) | cluster: review | Review orchestrator — routes to changes (seven-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns) |
 | command | [`review-changes`](../dist/agent-src/commands/review/changes.md) | cluster: review | Self-review local changes before creating a PR — dispatches to seven specialized judges (bug, security, tests, quality, architecture, spec, overbuild) and consolidates verdicts |
 | command | [`review-routing`](../dist/agent-src/commands/review/routing.md) | cluster: review | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
