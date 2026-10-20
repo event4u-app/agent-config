@@ -547,13 +547,7 @@ export const settingsSchema = z.object({
         mode: z.enum(['off', 'notify', 'ask', 'auto']).default('notify').describe(
             'What the agent may do about a newer release. notify tells you and installs nothing (the default, and what an absent key resolves to); ask behaves as notify until the ring-0 exit ships a prompt; auto installs a staged release at a session start when every gate passes and no other session is live; off says nothing at all. Read from the user-global layer only — a repository cannot set how your global install updates itself.',
         ),
-        // `.default({})` because step 4.1's own verify clause is that a settings
-        // file with no `update:` block behaves byte-identically to the release
-        // before this key existed. Without it the block is REQUIRED, and every
-        // file written before 4.1 — which is every file in the field — fails to
-        // parse. Caught by tests/server/git_keys_write_route.test.ts, whose
-        // fixture is deliberately a pre-key file.
-    }).default({}),
+    }).default({ mode: 'notify' }),
     legal_review_prep: z.object({
         acknowledged: z.boolean().default(false).describe(
             'I understand the legal-review-prep pack provides templates and general information ONLY — it is NOT legal advice, creates no attorney-client relationship, and never replaces a licensed lawyer. Individual cases require an attorney. The pack stays inactive until this is checked.',

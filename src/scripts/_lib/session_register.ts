@@ -79,9 +79,6 @@ import { type EnvMap, event4u_root } from './user_global_paths.js';
  *  directories inside `.git` by construction. */
 export const REGISTER_DIRNAME = 'agent-sessions';
 
-/** Path under the user-global event4u root holding the machine-wide register. */
-export const GLOBAL_REGISTER_REL = path.join('runtime', 'sessions');
-
 /**
  * Per-host TTL in seconds — how long a record may go without a heartbeat before
  * a reader treats the session as gone.
@@ -299,7 +296,7 @@ export function register_dir(workspace_root: string): string | null {
  * writers do.
  */
 export function global_register_dir(env?: EnvMap | null): string {
-    return path.join(event4u_root(env), GLOBAL_REGISTER_REL);
+    return path.join(event4u_root(env), 'runtime', 'sessions');
 }
 
 /** ISO-8601 UTC at seconds precision, matching the chat-history stamp format. */

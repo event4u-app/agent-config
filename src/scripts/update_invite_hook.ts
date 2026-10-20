@@ -9,18 +9,13 @@
  * after a turn that ended on a verified success, which is the one point in a
  * session where an unrelated question is not an interruption of something.
  *
- * **It is closed today, by a signed record rather than by a flag.** A ring-0
- * exit record carries a single `ring-0-exit:` line, written by a human after
- * reading the record's own table, and while it reads `no` this concern returns
- * before it has read anything else. That is deliberate: the gate on asking an
- * existing install to change how it updates itself should be something
- * somebody signed, not a boolean in code the next change can flip.
- *
- * **Not registered in the hook manifest.** An AI council refused this concern
- * 2/2 on 2026-10-20: a stop concern that may open a question with the user
- * expands what a lifecycle hook may decide, and a rollout switch is not
- * consent. The implementation stays so the ratified change is cheap to make;
- * nothing loads it until a manifest entry returns under that ratification.
+ * **It is closed today, by a file rather than by a flag.**
+ * The ring-0 record (`RING_ZERO_PREFIX`) carries a single
+ * `ring-0-exit:` line, written by a human after reading the record's own table,
+ * and while it reads `no` this concern returns before it has read anything
+ * else. That is deliberate: the gate on asking an existing install to change
+ * how it updates itself should be a record somebody signed, not a boolean in
+ * code the next change can flip.
  *
  * **It never writes `update.mode`.** That key is class C — only a hand-edit or
  * the GUI's write route may set it. The invitation says how; the "never" it
