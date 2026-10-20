@@ -39,6 +39,10 @@ worktree of a repository shares it and a removed worktree loses nothing:
 | `retro-sweep/` | the sweep | the high-water day, the last sweep's counts, triage timings |
 | `retro-ran/` | `/retro record` | the sessions a retro ran in, so no retro examines itself (K5) |
 
+Switching the retro off leaves these files where they are; they are inert
+without the automatic paths, and `rm -rf "$(git rev-parse --git-common-dir)"/agent-config/retro-*`
+removes them.
+
 ## The three paths
 
 | Path | Trigger | What it does |
@@ -55,11 +59,17 @@ a permission — nothing here reads or writes a merge setting.
 ## Who does the model work
 
 The queue line is work for the agent, read the way the self-repair queue line
-is read — not a notification. Where the host can spawn a subagent, the agent
-delegates the retro to one and carries on with the user's task. Where it cannot,
-the retro runs after the first user task of the session is finished. **The first
-user task is never deferred for a retro**: a probe that delays the user's own
-work has spent the one moment this package is not allowed to spend.
+is read — not a notification. The retro runs after the first user task of the
+session is finished. The queue line itself grants nothing: whether the agent may
+hand the retro to a subagent is decided by the delegation policy that already
+governs every dispatch, never by the line. **The first user task is never
+deferred for a retro**: a probe that delays the user's own work has spent the one
+moment this package is not allowed to spend.
+
+**What leaves the machine.** Nothing a retro writes. The one network read is the
+probe's: for each open merge marker it asks GitHub, through the user's own `gh`
+login, whether that PR merged — the repository and the PR number, nothing more —
+inside a three-second budget for the whole probe. `retro.enabled: false` stops it.
 
 ## The unit key
 
@@ -215,3 +225,4 @@ reopens nothing — `missing` is not `false`.
 | v1 | 2026-10-17 | Who does the model work: delegated or after the first task, never before it. |
 | v1 | 2026-10-17 | Held or recurred: three verdicts read from record status, never from the occurrence count; a measured revert reopens. |
 | v1 | 2026-10-20 | The switch (ADR-292) and where the state lives; the three paths wired; `/retro` and its forms. |
+| v1 | 2026-10-20 | After a 2/2 council refusal: the queue line grants no delegation, the probe has one total budget and one claim per day, a stale backlog expires, and the network read is disclosed. |

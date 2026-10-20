@@ -11,15 +11,17 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { readSessionFacts, type GitRun, type SessionFacts } from './retro_session_facts.js';
+import { liveGit, readSessionFacts, type GitRun, type SessionFacts } from './retro_session_facts.js';
 import { triageSession, unitKey } from './retro_triage.js';
 import {
     BACKLOG_PAUSE_AT,
     DAILY_RETRO_BUDGET,
     DURABLE_DISPOSITIONS,
     TRIAGE_P50_LIMIT_MS,
+    claimSweepDay,
     classifyUnit,
     enqueue,
+    expireStaleDeferred,
     listQueue,
     listSessionPointers,
     localDay,
@@ -29,6 +31,7 @@ import {
     readDispositions,
     readSweepState,
     recordDisposition,
+    removeSessionPointer,
     resolveMarkers,
     retroEnabled,
     retroSessionTags,
@@ -51,7 +54,14 @@ export interface SweepSession {
     /** Local day the session ended. */
     day: string;
     branch: string | null;
-    facts: SessionFacts;
+    /**
+     * `null` when the probe did not read them: the session is out of the window
+     * (and needs none), or the probe's deadline passed first (and it is left,
+     * undisposed, for the next sweep).
+     */
+    facts: SessionFacts | null;
+    /** The pointer's state key, so a durably disposed session's pointer can be dropped. */
+    eol_key?: string;
 }
 
 export interface SweepInput {
@@ -102,7 +112,11 @@ export function runDailySweep(root: string, input: SweepInput): SweepResult {
     const today = localDay(input.now, input.timeZone);
     const state = readSweepState(root);
     if (state.last_sweep?.day === today) return { status: 'already-swept', line: null, counts };
+    // Exactly one sweep per repository and day, even when two worktrees start
+    // sessions at the same moment.
+    if (!claimSweepDay(root, today)) return { status: 'already-swept', line: null, counts };
 
+    expireStaleDeferred(root, today, input.timeZone, input.now);
     if (deferredBacklog(root) > BACKLOG_PAUSE_AT) {
         writeSweepState(root, {
             high_water: state.high_water,
@@ -132,14 +146,17 @@ export function runDailySweep(root: string, input: SweepInput): SweepResult {
         if (window !== 'in-window') {
             counts[window] += 1;
             recordDisposition(root, key, window, input.now);
+            if (s.eol_key !== undefined) removeSessionPointer(root, s.eol_key);
             continue;
         }
+        if (s.facts === null) continue;
         const t0 = clock();
         const t = triageSession(s.facts);
         triageMs.push(Math.max(0, clock() - t0));
         if (t.class !== 'analyse') {
             counts['skip:low-signal'] += 1;
             recordDisposition(root, key, 'skip:low-signal', input.now);
+            if (s.eol_key !== undefined) removeSessionPointer(root, s.eol_key);
             continue;
         }
         candidates.push({ key, tag: s.tag, day: s.day, score: t.score });
@@ -213,18 +230,52 @@ export function forgePrState(api: ForgeApi, slug: string): (pr: number) => PrSta
     };
 }
 
-/** The sweep's input: every session that left a pointer, with its facts. */
-export function discoverSessions(root: string, timeZone: string, git?: GitRun): SweepSession[] {
-    return listSessionPointers(root).map((p) => ({
-        tag: p.tag,
-        day: localDay(p.ended_at, timeZone),
-        branch: p.branch,
-        facts: readSessionFacts({ tag: p.tag, root, ...(git !== undefined ? { git } : {}) }),
-    }));
+/** The most pointers one sweep reads facts for, newest first. */
+export const MAX_SESSIONS_PER_SWEEP = 50;
+
+/**
+ * The sweep's input: every session that left a pointer, newest first. Facts are
+ * read only for sessions inside the window, at most {@link MAX_SESSIONS_PER_SWEEP},
+ * and only until `deadlineAt` (epoch ms) — a session not read stays undisposed
+ * for the next sweep. `git worktree list` runs once for the whole sweep, not
+ * once per session.
+ */
+export function discoverSessions(
+    root: string,
+    timeZone: string,
+    opts: { git?: GitRun; today?: string; deadlineAt?: number; now?: () => number } = {},
+): SweepSession[] {
+    const now = opts.now ?? Date.now;
+    const live = opts.git ?? liveGit(root);
+    const memo = new Map<string, string | null>();
+    const git: GitRun = (args) => {
+        const k = args.join('\0');
+        if (!memo.has(k)) memo.set(k, live(args));
+        return memo.get(k)!;
+    };
+    const today = opts.today ?? localDay(new Date(now()).toISOString(), timeZone);
+    let read = 0;
+    return listSessionPointers(root)
+        .sort((a, b) => (a.ended_at < b.ended_at ? 1 : a.ended_at > b.ended_at ? -1 : 0))
+        .map((p) => {
+            const day = localDay(p.ended_at, timeZone);
+            const inWindow =
+                day < today && classifyUnit({ day, today, covered: false, retroSession: false }) === 'in-window';
+            const canRead =
+                inWindow && read < MAX_SESSIONS_PER_SWEEP && (opts.deadlineAt === undefined || now() < opts.deadlineAt);
+            if (canRead) read += 1;
+            return {
+                tag: p.tag,
+                day,
+                branch: p.branch,
+                eol_key: p.eol_key,
+                facts: canRead ? readSessionFacts({ tag: p.tag, root, git }) : null,
+            };
+        });
 }
 
-/** Ceiling on the forge reads one probe may spend on merge markers. */
-export const PROBE_FORGE_BUDGET_MS = 3000;
+/** Ceiling on everything one session-start probe may spend, discovery and forge reads together. */
+export const PROBE_BUDGET_MS = 3000;
 
 /**
  * The first-session-of-the-day probe (path C, K1/K7): no model, no spawn. It is
@@ -240,18 +291,21 @@ export function retroDailyProbe(
     try {
         if (!retroEnabled(root)) return null;
         if (deps.ranToday?.(root) === true) return null;
-        deps.stamp?.(root);
+        const deadlineAt = Date.now() + PROBE_BUDGET_MS;
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const slug = originSlug(root);
-        const now = (deps.now ?? new Date()).toISOString();
+        const nowIso = (deps.now ?? new Date()).toISOString();
+        const sessions = discoverSessions(root, tz, { today: localDay(nowIso, tz), deadlineAt });
         const r = runDailySweep(root, {
-            now,
+            now: nowIso,
             timeZone: tz,
             repo: slug ?? path.basename(root),
-            sessions: discoverSessions(root, tz),
-            enabled: true,
-            ...(slug !== null ? { readPr: budgetedGhPrState(root, PROBE_FORGE_BUDGET_MS) } : {}),
+            sessions,
+            ...(slug !== null ? { readPr: budgetedGhPrState(root, Math.max(0, deadlineAt - Date.now())) } : {}),
         });
+        // Stamped only after a sweep that ran to an answer: a probe that threw is
+        // retried by the next session rather than lost for the day.
+        deps.stamp?.(root);
         return r.line;
     } catch {
         return null;

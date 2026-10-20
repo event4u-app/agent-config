@@ -273,8 +273,8 @@ export function queueLine(pending: readonly StoredEntry[]): string | null {
     const prs = pending.filter((e) => e.kind === 'pr').length;
     return (
         `<retro-queue pending="${pending.length}" prs="${prs}" sessions="${pending.length - prs}">` +
-        'Finished work is waiting for a retro. Run `/retro` after the first user task, or delegate it to a ' +
-        "subagent; never defer the user's task for it.</retro-queue>"
+        "Finished work is waiting for a retro. Run `/retro` after the user's first task is done; never defer " +
+        'that task for it.</retro-queue>'
     );
 }
 
@@ -449,6 +449,13 @@ export function writeSessionPointer(
     return true;
 }
 
+/** Drop a pointer whose unit reached a durable disposition, so later sweeps stop reading it. */
+export function removeSessionPointer(workspaceRoot: string, eolKey: string): void {
+    const dir = commonSub(workspaceRoot, 'retro-sessions');
+    if (dir === null) return;
+    fs.rmSync(path.join(dir, `${eolKey.slice(0, 32)}.json`), { force: true });
+}
+
 export function listSessionPointers(workspaceRoot: string): SessionPointer[] {
     return readJsonDir<SessionPointer>(commonSub(workspaceRoot, 'retro-sessions')).filter(
         (p) => typeof p.eol_key === 'string' && typeof p.tag === 'string',
@@ -497,6 +504,43 @@ export function readSweepState(workspaceRoot: string): SweepState {
     const dir = commonSub(workspaceRoot, 'retro-sweep');
     const v = dir === null ? null : readJson<SweepState>(path.join(dir, 'state.json'));
     return v ?? { high_water: null, last_sweep: null };
+}
+
+/**
+ * Claim one local day's sweep for the whole repository. The claim file is
+ * created exclusively, so of two session starts racing in two worktrees exactly
+ * one sweeps; the other sees `false`. Claims of earlier days are pruned.
+ */
+export function claimSweepDay(workspaceRoot: string, day: string): boolean {
+    const dir = commonSub(workspaceRoot, 'retro-sweep');
+    if (dir === null) return false;
+    fs.mkdirSync(dir, { recursive: true });
+    try {
+        fs.writeFileSync(path.join(dir, `claim-${day}`), `${process.pid}\n`, { flag: 'wx' });
+    } catch (err) {
+        if ((err as NodeJS.ErrnoException).code === 'EEXIST') return false;
+        throw err;
+    }
+    for (const n of fs.readdirSync(dir)) {
+        if (n.startsWith('claim-') && n !== `claim-${day}`) fs.rmSync(path.join(dir, n), { force: true });
+    }
+    return true;
+}
+
+/**
+ * `deferred` units whose deferral is older than the catch-up window become
+ * `expired`, so a backlog drains by itself and a paused sweep cannot stay
+ * paused forever. Returns how many expired.
+ */
+export function expireStaleDeferred(workspaceRoot: string, today: string, timeZone: string, nowIso: string): number {
+    let n = 0;
+    for (const d of readDispositions(workspaceRoot).values()) {
+        if (d.class !== 'deferred') continue;
+        if (classifyUnit({ day: localDay(d.at, timeZone), today, covered: false, retroSession: false }) !== 'expired') continue;
+        recordDisposition(workspaceRoot, d.unit_key, 'expired', nowIso);
+        n += 1;
+    }
+    return n;
 }
 
 export function writeSweepState(workspaceRoot: string, state: SweepState): void {

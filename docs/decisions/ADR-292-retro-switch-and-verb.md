@@ -63,7 +63,15 @@ ADR-041 § 5 requires an ADR for a new one.
    marker, the daily sweep and its probe. It does not stop an explicit `/retro`:
    a person asking for one retro has asked, and a manual run never re-enables an
    automatic path.
-4. **The verb `retro` is approved** for the visible command `/retro`
+4. **The automatic paths stay local but for one read.** Everything the retro
+   writes lives in the git common directory. The one network access is the
+   daily probe asking GitHub, through the user's own `gh` login, whether a PR a
+   push recorded has merged — repository and PR number, inside one
+   three-second budget for the whole probe. `false` stops it with the rest.
+   The queue line the probe emits asks for the retro after the user's first
+   task and grants no delegation; whether a subagent may run it is the
+   delegation policy's question, not this switch's.
+5. **The verb `retro` is approved** for the visible command `/retro`
    (ADR-041 § 5). It names the activity the owner asked for; no existing verb
    (`review`, `audit`, `memory`) carries "examine finished work and draw at most
    one learning" without overloading a cluster that means something else.

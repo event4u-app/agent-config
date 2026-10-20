@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { SessionFacts } from '../../src/scripts/retro_facts.js';
 import { planManualRetro, retroStatus, runDailySweep, type SweepSession } from '../../src/scripts/retro.js';
-import { retroDailyProbe } from '../../src/scripts/retro_sweep.js';
+import { discoverSessions, retroDailyProbe } from '../../src/scripts/retro_sweep.js';
 import { recordMergeMarker } from '../../src/scripts/hooks/push_settle_hook.js';
 import { writeRetroPointer } from '../../src/scripts/hooks/session_eol_hook.js';
 import { derive_session_tag } from '../../src/scripts/_lib/session_tag.js';
@@ -16,6 +16,7 @@ import {
     CATCH_UP_WINDOW_DAYS,
     DAILY_RETRO_BUDGET,
     TRIAGE_P50_LIMIT_MS,
+    claimSweepDay,
     classifyUnit,
     enqueue,
     enqueueMerged,
@@ -375,6 +376,48 @@ describe('retro_queue — path C, the daily sweep', () => {
         expect(p!.branch).toBe('side');
         expect(p!.tag).toBe(derive_session_tag('sid-1'));
         expect(fs.realpathSync(p!.workspace)).toBe(fs.realpathSync(wt));
+    });
+
+    it('two session starts racing for one day: exactly one sweeps', () => {
+        const { main, wt } = repoWithWorktree();
+        expect(claimSweepDay(main, '2026-10-21')).toBe(true);
+        expect(claimSweepDay(wt, '2026-10-21')).toBe(false);
+        // The loser of the claim reports already-swept even before any state was written.
+        expect(runDailySweep(wt, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [] }).status).toBe('already-swept');
+        // A new day is a new claim, and the old one is pruned.
+        expect(claimSweepDay(wt, '2026-10-22')).toBe(true);
+    });
+
+    it('backlog-pauses-sweep-not-manual: a stale backlog expires, so the pause ends by itself', () => {
+        const { main } = repoWithWorktree();
+        for (let i = 0; i <= BACKLOG_PAUSE_AT; i++) recordDisposition(main, `retro:acme/widget#session@d${i}/p1`, 'deferred', '2026-10-01T07:00:00Z');
+        const r = runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [] });
+        expect(r.status).toBe('ran');
+        expect(retroStatus(main).deferred_backlog).toBe(0);
+    });
+
+    it('a probe past its deadline reads no facts and leaves the sessions for the next sweep', () => {
+        const { main } = repoWithWorktree();
+        writeSessionPointer(main, { eol_key: 'a'.repeat(64), tag: 'late', branch: null, workspace: main, ended_at: '2026-10-20T10:00:00Z' }, { enabled: true });
+        const sessions = discoverSessions(main, BERLIN, { git: () => null, today: '2026-10-21', deadlineAt: 0 });
+        expect(sessions).toHaveLength(1);
+        expect(sessions[0]!.facts).toBeNull();
+        const r = runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions });
+        expect(r.counts).toEqual({ analyse: 0, 'skip:low-signal': 0, covered: 0, deferred: 0, expired: 0 });
+        expect(listSessionPointers(main)).toHaveLength(1);
+        // An out-of-window session needs no facts, is expired, and its pointer is dropped.
+        const { main: old } = repoWithWorktree();
+        writeSessionPointer(old, { eol_key: 'b'.repeat(64), tag: 'old', branch: null, workspace: old, ended_at: '2026-10-01T10:00:00Z' }, { enabled: true });
+        const oldSessions = discoverSessions(old, BERLIN, { git: () => null, today: '2026-10-21' });
+        expect(oldSessions[0]!.facts).toBeNull();
+        expect(runDailySweep(old, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: oldSessions }).counts.expired).toBe(1);
+        expect(listSessionPointers(old)).toEqual([]);
+    });
+
+    it('the queue line asks for the retro after the first task and grants nothing else', () => {
+        const line = queueLine([{ unit_key: 'k', kind: 'pr', pr: 1, enqueued_at: NOW }])!;
+        expect(line).toContain("after the user's first task");
+        expect(line).not.toMatch(/subagent|delegate|spawn/i);
     });
 
     it('a slow triage is reported by status, not hidden', () => {

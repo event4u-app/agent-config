@@ -106,7 +106,7 @@ earlier learnings on the same asset. Then stop — promotion stays human, throug
 - **At most one durable learning per unit.** No learning is written into an
   always-loaded file, a rule or a skill.
 - **The user's first task is never deferred for a retro.** A `<retro-queue>` line
-  is worked after it, or delegated to a subagent.
+  is worked after it; the line grants no delegation of its own.
 - **No retro of a retro session.** The sweep skips sessions a retro ran in.
 - **The merge is an event, never a permission.** Nothing here reads or writes a
   merge setting.
