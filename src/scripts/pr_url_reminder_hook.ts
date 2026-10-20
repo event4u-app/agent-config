@@ -29,6 +29,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { readHookStdin } from "./hooks/hook_stdin.js";
+import { record_pr } from "./_lib/session_pr_watch.js";
 
 const EXIT_ALLOW = 0;
 const EXIT_WARN = 2;
@@ -149,6 +150,15 @@ export function main(): number {
     return EXIT_ALLOW; // create attempted but no URL produced (failed / dry-run) — do not nag
   }
   const url = match[0];
+
+  // Remember it for this session, so later prompts carry its live state
+  // (`_lib/session_pr_watch.ts`) instead of the state seen here.
+  try {
+    const root = String(envelope["workspace_root"] ?? inner["cwd"] ?? process.cwd());
+    record_pr(root, String(envelope["session_id"] ?? inner["session_id"] ?? "").trim(), url);
+  } catch {
+    /* a reminder that cannot record still reminds */
+  }
 
   // `reason` (≤ 200 chars) goes to stderr; `additional_context` is what
   // surfaces back to the model on platforms that support it — so the
