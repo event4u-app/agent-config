@@ -37,8 +37,9 @@
  * 2. **A directory that already exists.** Blocking every later write into an
  *    already-created speaking directory would wedge a session mid-round without
  *    removing the name — the fix there is a rename, which the deny message of
- *    the creating call already asked for. This is the one filesystem read the
- *    guard performs.
+ *    the creating call already asked for. A relative path is probed against
+ *    the tool's own `cwd` and nothing else; a shell command that changes
+ *    directory first gets no probe for its relative tokens.
  * 3. **An opaque round identifier** — `isOpaqueRoundId` in
  *    `_lib/source_shape.ts` is the single authority, shared with the gate, so
  *    the guard and the CI check can never disagree about what "opaque" means.
@@ -104,6 +105,14 @@ const _READ_ONLY_TOOLS: ReadonlySet<string> = new Set([
     'codebase-retrieval', 'codebase_retrieval', 'file_search', 'grep_search',
     'read_file', 'list_dir', 'semantic_search',
 ]);
+
+function _isRegularFile(p: string): boolean {
+    try {
+        return fs.lstatSync(p).isFile();
+    } catch {
+        return false;
+    }
+}
 
 function _isObject(v: JsonValue | undefined): v is JsonObject {
     return v !== null && v !== undefined && typeof v === 'object' && !Array.isArray(v);
@@ -198,6 +207,57 @@ function _redirectTargets(segment: string): string[] {
         m = re.exec(segment);
     }
     return out;
+}
+
+/**
+ * The remediation {@link denyMessage} prescribes, spelled exactly as printed.
+ *
+ * Its plaintext IS the real source, which names the directory being renamed,
+ * so after the rename the guard refused the command it had just asked for.
+ * One single-quoted literal (no expansion), `./` so `PATH` is never consulted,
+ * and no second segment, redirect, substitution or newline. Matched on the
+ * whole command, not by classifying verbs — that axis was removed, see
+ * {@link isGlobOverAcceptableInboxDir}.
+ */
+const ENCRYPT_REMEDIATION_RE =
+    /^\s*printf '%s' '[^'\n]*' \| \.\/scripts-run src\/scripts\/_lib\/link_crypto encrypt\s*$/;
+const ENCRYPT_REMEDIATION_EMPTY = "printf '%s' '' | ./scripts-run src/scripts/_lib/link_crypto encrypt";
+
+/**
+ * The command with the remediation's plaintext emptied, when — and only
+ * when — `./scripts-run` resolves to a regular file in the tool's own `cwd`
+ * beside `link_crypto.ts`. A bare name, a symlink, or no known `cwd` is not
+ * that executable, and the command is returned unchanged.
+ *
+ * Only the literal is suppressed: the rest of the command still goes through
+ * {@link creatableTokens}, so nothing but the quoted plaintext stops being read.
+ */
+export function withoutRemediationPlaintext(
+    command: string,
+    cwd: string,
+    isRegularFile: (p: string) => boolean,
+): string {
+    if (cwd === '' || !ENCRYPT_REMEDIATION_RE.test(command)) {
+        return command;
+    }
+    const anchored =
+        isRegularFile(path.join(cwd, 'scripts-run')) &&
+        isRegularFile(path.join(cwd, 'src', 'scripts', '_lib', 'link_crypto.ts'));
+    return anchored ? ENCRYPT_REMEDIATION_EMPTY : command;
+}
+
+/**
+ * Whether a shell command moves off the `cwd` it was handed before a relative
+ * path in it resolves: a `cd`/`pushd`/`popd` segment, or a directory flag
+ * (`-C`, `--directory`, `--git-dir`, `--work-tree`, `--chdir`). Then no field
+ * names the base, so the already-exists carve-out is not offered to a
+ * relative token. Errs toward refusing, and only for a speaking name.
+ */
+export function changesDirectory(command: string): boolean {
+    return (
+        /(?:^|[\s;&|(`{])(?:cd|pushd|popd)(?=$|[\s;&|)])/.test(command) ||
+        /(?:^|\s)(?:-C|--directory|--git-dir|--work-tree|--chdir)(?=$|[\s=])/.test(command)
+    );
 }
 
 /**
@@ -395,7 +455,16 @@ export function main(): number {
         if (ti === null) {
             return 0;
         }
-        const repoRoot = typeof envelope['project_dir'] === 'string' ? envelope['project_dir'] : '';
+        // The base a relative path resolves against is the tool's own working
+        // directory: the native payload's `cwd`, which is where Bash runs and
+        // where a relative file path lands. `project_dir` (no producer sets it)
+        // and the dispatcher's `workspace_root` (the hook's cwd, the parent
+        // checkout in a worktree session) name other trees, and a field that
+        // can outrank the real base lets `mkdir` create in one tree what the
+        // probe found in another — so neither is read. No `cwd` → '' → the
+        // hook process cwd, the behaviour before this field was read.
+        const rawCwd = payload['cwd'];
+        const cwd = typeof rawCwd === 'string' && path.isAbsolute(rawCwd) ? rawCwd : '';
         const rawTool = payload['tool_name'] ?? envelope['tool_name'];
         const toolName = typeof rawTool === 'string' ? rawTool.trim().toLowerCase() : '';
         const candidates: string[] = [];
@@ -417,13 +486,26 @@ export function main(): number {
         // decision logic is shared rather than duplicated — see
         // `creatableTokens` for why "every whitespace token" was too many.
         const cmd = ti['command'] ?? (_isObject(envelope['payload']) ? (envelope['payload'] as JsonObject)['command'] : undefined);
+        const baseless: string[] = [];
         if (typeof cmd === 'string' && cmd) {
-            candidates.push(...creatableTokens(cmd));
+            const tokens = creatableTokens(withoutRemediationPlaintext(cmd, cwd, _isRegularFile));
+            (changesDirectory(cmd) ? baseless : candidates).push(...tokens);
         }
-        for (const v of candidates) {
-            const verdict = verdictFor(v, (p) => fs.existsSync(p), repoRoot);
+        const judge = (v: string, exists: (p: string) => boolean): boolean => {
+            const verdict = verdictFor(v, exists, cwd);
             if (verdict.block && verdict.dir !== null) {
                 process.stderr.write(denyMessage(verdict.dir));
+                return true;
+            }
+            return false;
+        };
+        for (const v of baseless) {
+            if (judge(v, (p) => path.isAbsolute(v) && fs.existsSync(p))) {
+                return 1;
+            }
+        }
+        for (const v of candidates) {
+            if (judge(v, (p) => fs.existsSync(p))) {
                 return 1;
             }
         }
