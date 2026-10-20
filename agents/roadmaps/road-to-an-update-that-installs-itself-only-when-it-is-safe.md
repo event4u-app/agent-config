@@ -185,7 +185,7 @@ None of this is rebuilt here.
 
 ## Phase 3 — Delivery into the session, without entering the model
 
-- [x] **3.1 A `session_start` concern beside `wrapper-freshness`.**
+- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.1 A `session_start` concern beside `wrapper-freshness`.**
       Registered in `src/scripts/hook_manifest.yaml`, day-throttled through
       `probe_throttle.ts:50`, a 1 s budget, fail-open, effect `notification`,
       addressed to the **user**.
@@ -201,7 +201,7 @@ None of this is rebuilt here.
       ceiling, so `chat_history` moved into a conditional chunk under decision
       D9's mechanism (1,549,961 → 1,429,414 B before this concern, 1,451,197 B
       after it and 4.3's).
-- [x] **3.2 Stage and verify only; activate at a boundary.** The concern never
+- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.2 Stage and verify only; activate at a boundary.** The concern never
       swaps files mid-session; activation happens at the next `session_start`
       before the dispatcher reads anything.
       verify: a fixture session observes no file change between its first and
@@ -212,7 +212,7 @@ None of this is rebuilt here.
       only when `any_live_session` reports no FOREIGN session — the register
       step 1.4 built, queried with this session's own id excluded. The fixture
       asserts a byte-identical install tree across five invocations.
-- [x] **3.3 One line from the shipped curated head.** After an update, the
+- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.3 One line from the shipped curated head.** After an update, the
       line comes from `release_highlights.ts:35-41` in the **installed**
       package, plus any `notice` entry from the impact map. Fetched release
       notes are remote untrusted text and never enter model context.
@@ -228,7 +228,7 @@ None of this is rebuilt here.
       sentences written in `_lib/update_notice.ts`; a cached version string
       that does not parse produces no line at all. The concern exits 0 and
       writes to stderr, so nothing it emits is model context on any host.
-- [x] **3.4 A security release is loud in every mode but `off`.** The notice
+- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.4 A security release is loud in every mode but `off`.** The notice
       names the latest-only policy at `SECURITY.md:21`.
       verify: a fixture with `Security: yes` in range produces the notice
       under `notify` and under `ask`.
@@ -237,7 +237,7 @@ None of this is rebuilt here.
       on the fixture alone because the probe now caches the impact block beside
       the version (`fetch_latest_document`) — one fetch, two readers; without
       that the security branch could never have fired in production.
-- [x] **3.5 Hosts with no session slot keep the CLI banner.**
+- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.5 Hosts with no session slot keep the CLI banner.**
       verify: a fixture in which `agent-config hooks:status` reports no
       `session_start` binding still yields the banner path.
       Landed 2026-10-20 by construction and asserted from the manifest:
@@ -275,7 +275,7 @@ None of this is rebuilt here.
       a change. The record carries one machine-readable line,
       `ring-0-exit: no`, written by a human after reading the table and
       recomputed by nothing, and that line is what 4.3's gate reads.
-- [x] **4.3 Ask once, at a moment that earned it.** After the ring-0 exit, one
+- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **4.3 Ask once, at a moment that earned it.** After the ring-0 exit, one
       host-native question in the `stop` slot, after a turn that ended on a
       verified success. It carries a permanent "never". Existing installs are
       **asked**, never flipped.
@@ -319,6 +319,54 @@ None of this is rebuilt here.
       not the consent path, because no prompt ships until the ring-0 exit.
 
 ## Blockers
+
+### blocker: concerns-refused-as-authority-expansion
+
+- **Status:** open — raised 2026-10-20 by a council verdict, not by a missing
+  decision. The work exists, is tested and is reverted out of the manifest.
+- **Class:** 2 — council. The seats named what the next round has to carry, so
+  the question is what they asked for, not who owns it.
+- **Owner:** council
+- **Blocks:** 3.1, 3.2, 3.3, 3.4, 3.5 and 4.3 — every item whose delivery was
+  `update-notice` or `update-auto-invite`. Nothing else: the lazy-concern
+  chunk, the session register, the provenance tie and Phase 4's settings key
+  stand on their own and stay closed.
+- **Question:** On what terms do a `session_start` concern that may initiate
+  `upgrade --unattended`, and a `stop` concern that may open a question with
+  the user, return?
+- **What to do:** the seats converged 2/2 and asked for four things
+  (`agents/evidence/council/lazy-concern-authority-expansion-20261020.md`) —
+  (a) split both concerns out of the chunk change, which this commit did;
+  (b) declare them as authority expansions rather than as advisory
+  notifications, because `fail_closed: false` and `severity: advisory`
+  describe failure and classification, never side effects;
+  (c) keep `update-notice` read-only — notify or stage, then require an
+  explicit user command or a recorded opt-in before anything activates;
+  (d) gate `update-auto-invite` on a user-owned setting, with the ring-0
+  record kept only as an additional kill switch, because a rollout switch is
+  not consent.
+- **Recommendation:** take (c) and (d) as written rather than arguing the
+  classification. Both are smaller than the capability they replace — a
+  concern that stages and reports needs no authority argument at all — and
+  they turn the ratification question from "may a hook decide this" into
+  "does this hook still decide anything", which is the version a reviewer can
+  settle from the diff.
+- **If you do nothing:** the chunk and the register ship without the surface
+  they were built for, so a user who never opens a terminal still learns
+  about an update from nowhere — the gap Phase 3 opened against. The six
+  items stay open with their implementation already written and reverted,
+  which is the state most likely to be rediscovered as "why is this not
+  wired" six months from now.
+- **Resolved when:** a council round records a verdict on a change that
+  carries (b), (c) and (d), and the two concerns are registered again under
+  it.
+- **The argument that lost, recorded because it is the one a later reader
+  will make again:** neither concern introduces a new primitive — `upgrade`
+  already owns the mutation, notifications already exist, and the invoked
+  command re-runs every one of its own gates. Both seats answered that the
+  gates constrain **how** an install happens and never **who may start one**,
+  so moving that decision into a lifecycle hook is the expansion, whatever
+  the primitives already allow.
 
 ### blocker: dsse-trust-root
 
