@@ -239,8 +239,10 @@ of one envelope through the payload-shape planner:
   gets the placeholder view. A concern cannot request the grant;
   `lint_hook_manifest` refuses a `payload_view: execution` declaration off the
   list, a blocking concern missing from it, a listed concern that is not
-  blocking, and a listed name bound to another script. Until a session table exists there are no tokens to resolve, so the
-  execution view is the received envelope unchanged.
+  blocking, and a listed name bound to another script. When the stage restores
+  tokens in a tool input (§ Restoration), the execution view carries the
+  restored input, so a guard decides on what will run; otherwise it is the
+  received envelope unchanged.
 - the **placeholder view** — every detected value replaced by its token. It goes
   to every other concern, so a local store written by a recording concern
   (chat history, journals, ledgers) inherits tokens without a scrubber of its
@@ -283,10 +285,11 @@ rewrite field in a reply reaches no host; a test drives a concern that returns
 one through the dispatcher and asserts the emission carries none. The lint rule
 `rewrite-concern-refused` is the authoring-time half and reads source text only.
 
-The token scope is one dispatch: a token in a local store cannot be resolved
-later. The `identifier-table-at-rest` decision (option (b), council 2026-10-16)
-says how a scope may outlive a process, and its table exists as a module the
-stage does not call yet (`src/scripts/_lib/egress_session_table.ts`): one table
+The token scope is one dispatch, except for a file tool's result (`Read`,
+`Write`, `Edit`, `MultiEdit`): there the stage mints its tokens into the session
+table under the file's origin, so a later tool input can restore them. The
+`identifier-table-at-rest` decision (option (b), council 2026-10-16) says how a
+scope may outlive a process (`src/scripts/_lib/egress_session_table.ts`): one table
 per session under the user-global root (`runtime/egress-sessions/`, outside the
 workspace, `0600`, named by a digest of the session id), removed after seven
 idle days. It holds a per-session key and, per token, a keyed digest of the
@@ -309,6 +312,343 @@ transcript file reads it from disk, raw; an operator-armed raw capture
 (`AGENT_HOOK_CAPTURE_DIR`) writes the received payload before the stage runs;
 and a guard's own refusal text, built from the execution view, is passed on as
 it is. Each is a residue of the view, not a covered surface.
+
+## Tool results (Phase 3)
+
+In `protect` or `strict`, a `post_tool_use` result that carried a listed value
+goes back to the host as `updatedToolOutput` (`updatedMCPToolOutput` for an MCP
+tool): the original object with its string leaves replaced and nothing else.
+The decision lives in the engine chunk (`src/scripts/_lib/egress_emission.ts`)
+and is taken only on a `RewriteCapability` for the host's `output` channel,
+which `rewrite_capability.ts` alone issues after checking the lowering row and
+the probe record it cites. The host drops a mismatched replacement in silence
+(probe of 2026-10-20), so before emitting the stage checks keys and types
+against the input, rescans the replaced value, and holds a deadline; a mismatch,
+a residual hit, an unprovable extent, a missing capability, a deadline breach or
+an internal error emits no rewrite, raises a user-visible `systemMessage`, and
+appends a `withheld` line to `agents/runtime/state/egress-rewrites.jsonl`. Those
+lines are the dropped-replacement count. A block outranks a rewrite. The first
+rewrite of a session carries one line of context telling the model what a token
+is. Output spilled to a file reaches the hook only as its prefix; the spill file
+keeps the original until it is read through a hooked tool.
+
+## Restoration (Phase 4)
+
+A token in a `pre_tool_use` input is the one place a value comes back (K4):
+
+| Token | Destination | Decision |
+|---|---|---|
+| credential | the file it was read from | restored, re-derived from that file by its keyed digest |
+| credential | anything else | denied, naming the alternative (reference the variable) |
+| identifier | its origin, a local file write, or a call `category_a.ts` ranks consequence-free | restored |
+| identifier | anything else | `ask`, the restored input shown (D4); a host with no `ask` denies |
+| any | an input bound for another model context (`Agent`, `Task`) | left as a token |
+| unknown, foreign, mangled, or its origin changed | — | denied; one tolerant match on spacing, never a guess |
+
+A restore never travels with an `allow` (K2). A host whose row grants no
+`input` capability cannot carry a restore, so a call that needed one is denied.
+Each restore writes one fixed-field line to `agents/runtime/state/egress-restores.jsonl`
+— session digest, class, type, number, tool, sink, decision, no free text — and
+more than eight in a minute turn the next into an `ask`. A tool call that names
+the session table's directory is denied. Tables idle past the retention age are
+pruned before a process mints.
+
+## The prompt gate (Phase 5)
+
+A host that cannot replace a prompt can refuse one. In `protect` or `strict` a
+prompt carrying a credential (an identifier too, in `strict`) is refused through
+the `prompt` channel's `gate` capability, the original text suppressed from the
+message, with a redacted copy to resend and a residue line: the text was typed
+into the host and may sit in its transcript and history, so a typed credential
+is rotated. A host that cannot refuse gets the same text as a warning and its
+prompt channel stays `uncovered`. The whole hook process must answer well
+inside the host's timeout, because a timed-out `UserPromptSubmit` hook lets the
+prompt through (probe 0.2.5).
+
+## Coverage
+
+<!-- BEGIN egress-coverage (generated) -->
+> Generated by `egress_sender_census` from `host_lowering.yaml`, the probe records it
+> cites and the sender census above. Do not edit between the markers; regenerate with
+> `./scripts-run src/scripts/egress_sender_census --write`. `agent-config hooks:status` prints it.
+
+| channel | host | auth mode | launch mode | state | basis |
+|---|---|---|---|---|---|
+| tool result | claude | subscription | direct | **replaced** | replace on post_tool_use (agents/evidence/analysis/host-output-rewrite-probe-2026-10-20.md, 2.1.304) |
+| tool result | claude | api-key | direct | **uncovered** | not probed for api-key |
+| tool result | claude | cloud-provider | direct | **uncovered** | not probed for cloud-provider |
+| tool input (restore) | claude | subscription | direct | **replaced** | replace on pre_tool_use (agents/evidence/analysis/host-input-rewrite-probe-2026-10-20.md, 2.1.304) |
+| tool input (restore) | claude | api-key | direct | **uncovered** | not probed for api-key |
+| tool input (restore) | claude | cloud-provider | direct | **uncovered** | not probed for cloud-provider |
+| typed prompt | claude | subscription | direct | **gated** | gate on user_prompt_submit |
+| typed prompt | claude | api-key | direct | **uncovered** | not probed for api-key |
+| typed prompt | claude | cloud-provider | direct | **uncovered** | not probed for cloud-provider |
+| @file mention | claude | subscription | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | claude | api-key | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | claude | cloud-provider | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| instruction files | claude | subscription | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | claude | api-key | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | claude | cloud-provider | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| compaction request | claude | subscription | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | claude | api-key | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | claude | cloud-provider | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| images and other non-text parts | claude | subscription | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | claude | api-key | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | claude | cloud-provider | direct | **uncovered** | never scanned (K6) |
+| spilled tool output | claude | subscription | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | claude | api-key | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | claude | cloud-provider | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| host telemetry export | claude | subscription | direct | **uncovered** | `CLAUDE_CODE_ENABLE_TELEMETRY=1` with `OTEL_LOG_USER_PROMPTS=1` exports prompt text and assistant text; tool output was not exported (probe 0.1.7) |
+| host telemetry export | claude | api-key | direct | **uncovered** | `CLAUDE_CODE_ENABLE_TELEMETRY=1` with `OTEL_LOG_USER_PROMPTS=1` exports prompt text and assistant text; tool output was not exported (probe 0.1.7) |
+| host telemetry export | claude | cloud-provider | direct | **uncovered** | `CLAUDE_CODE_ENABLE_TELEMETRY=1` with `OTEL_LOG_USER_PROMPTS=1` exports prompt text and assistant text; tool output was not exported (probe 0.1.7) |
+| slot pre_compact | claude | subscription | direct | **unclassified** | carries session content; no rewrite answer governs it |
+| slot pre_compact | claude | api-key | direct | **unclassified** | carries session content; no rewrite answer governs it |
+| slot pre_compact | claude | cloud-provider | direct | **unclassified** | carries session content; no rewrite answer governs it |
+| slot subagent_start | claude | subscription | direct | **unclassified** | carries session content; no rewrite answer governs it |
+| slot subagent_start | claude | api-key | direct | **unclassified** | carries session content; no rewrite answer governs it |
+| slot subagent_start | claude | cloud-provider | direct | **unclassified** | carries session content; no rewrite answer governs it |
+| tool result | augment | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | augment | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | augment | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | augment | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | augment | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | augment | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | augment | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | augment | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | augment | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| @file mention | augment | subscription | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | augment | api-key | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | augment | cloud-provider | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| instruction files | augment | subscription | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | augment | api-key | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | augment | cloud-provider | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| compaction request | augment | subscription | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | augment | api-key | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | augment | cloud-provider | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| images and other non-text parts | augment | subscription | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | augment | api-key | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | augment | cloud-provider | direct | **uncovered** | never scanned (K6) |
+| spilled tool output | augment | subscription | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | augment | api-key | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | augment | cloud-provider | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| host telemetry export | augment | subscription | direct | **uncovered** | not examined for this host |
+| host telemetry export | augment | api-key | direct | **uncovered** | not examined for this host |
+| host telemetry export | augment | cloud-provider | direct | **uncovered** | not examined for this host |
+| tool result | cursor | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | cursor | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | cursor | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | cursor | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | cursor | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | cursor | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | cursor | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | cursor | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | cursor | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| @file mention | cursor | subscription | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | cursor | api-key | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | cursor | cloud-provider | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| instruction files | cursor | subscription | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | cursor | api-key | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | cursor | cloud-provider | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| compaction request | cursor | subscription | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | cursor | api-key | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | cursor | cloud-provider | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| images and other non-text parts | cursor | subscription | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | cursor | api-key | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | cursor | cloud-provider | direct | **uncovered** | never scanned (K6) |
+| spilled tool output | cursor | subscription | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | cursor | api-key | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | cursor | cloud-provider | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| host telemetry export | cursor | subscription | direct | **uncovered** | not examined for this host |
+| host telemetry export | cursor | api-key | direct | **uncovered** | not examined for this host |
+| host telemetry export | cursor | cloud-provider | direct | **uncovered** | not examined for this host |
+| tool result | cline | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | cline | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | cline | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | cline | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | cline | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | cline | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | cline | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | cline | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | cline | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| @file mention | cline | subscription | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | cline | api-key | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | cline | cloud-provider | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| instruction files | cline | subscription | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | cline | api-key | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | cline | cloud-provider | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| compaction request | cline | subscription | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | cline | api-key | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | cline | cloud-provider | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| images and other non-text parts | cline | subscription | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | cline | api-key | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | cline | cloud-provider | direct | **uncovered** | never scanned (K6) |
+| spilled tool output | cline | subscription | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | cline | api-key | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | cline | cloud-provider | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| host telemetry export | cline | subscription | direct | **uncovered** | not examined for this host |
+| host telemetry export | cline | api-key | direct | **uncovered** | not examined for this host |
+| host telemetry export | cline | cloud-provider | direct | **uncovered** | not examined for this host |
+| tool result | windsurf | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | windsurf | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | windsurf | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | windsurf | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | windsurf | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | windsurf | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | windsurf | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | windsurf | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | windsurf | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| @file mention | windsurf | subscription | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | windsurf | api-key | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | windsurf | cloud-provider | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| instruction files | windsurf | subscription | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | windsurf | api-key | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | windsurf | cloud-provider | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| compaction request | windsurf | subscription | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | windsurf | api-key | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | windsurf | cloud-provider | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| images and other non-text parts | windsurf | subscription | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | windsurf | api-key | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | windsurf | cloud-provider | direct | **uncovered** | never scanned (K6) |
+| spilled tool output | windsurf | subscription | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | windsurf | api-key | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | windsurf | cloud-provider | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| host telemetry export | windsurf | subscription | direct | **uncovered** | not examined for this host |
+| host telemetry export | windsurf | api-key | direct | **uncovered** | not examined for this host |
+| host telemetry export | windsurf | cloud-provider | direct | **uncovered** | not examined for this host |
+| tool result | gemini | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | gemini | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | gemini | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | gemini | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | gemini | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | gemini | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | gemini | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | gemini | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | gemini | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| @file mention | gemini | subscription | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | gemini | api-key | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | gemini | cloud-provider | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| instruction files | gemini | subscription | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | gemini | api-key | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | gemini | cloud-provider | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| compaction request | gemini | subscription | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | gemini | api-key | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | gemini | cloud-provider | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| images and other non-text parts | gemini | subscription | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | gemini | api-key | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | gemini | cloud-provider | direct | **uncovered** | never scanned (K6) |
+| spilled tool output | gemini | subscription | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | gemini | api-key | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | gemini | cloud-provider | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| host telemetry export | gemini | subscription | direct | **uncovered** | not examined for this host |
+| host telemetry export | gemini | api-key | direct | **uncovered** | not examined for this host |
+| host telemetry export | gemini | cloud-provider | direct | **uncovered** | not examined for this host |
+| tool result | cowork | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | cowork | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | cowork | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | cowork | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | cowork | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | cowork | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | cowork | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | cowork | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | cowork | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| @file mention | cowork | subscription | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | cowork | api-key | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | cowork | cloud-provider | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| instruction files | cowork | subscription | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | cowork | api-key | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | cowork | cloud-provider | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| compaction request | cowork | subscription | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | cowork | api-key | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | cowork | cloud-provider | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| images and other non-text parts | cowork | subscription | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | cowork | api-key | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | cowork | cloud-provider | direct | **uncovered** | never scanned (K6) |
+| spilled tool output | cowork | subscription | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | cowork | api-key | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | cowork | cloud-provider | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| host telemetry export | cowork | subscription | direct | **uncovered** | not examined for this host |
+| host telemetry export | cowork | api-key | direct | **uncovered** | not examined for this host |
+| host telemetry export | cowork | cloud-provider | direct | **uncovered** | not examined for this host |
+| tool result | copilot | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | copilot | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | copilot | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | copilot | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | copilot | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | copilot | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | copilot | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | copilot | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | copilot | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| @file mention | copilot | subscription | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | copilot | api-key | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | copilot | cloud-provider | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| instruction files | copilot | subscription | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | copilot | api-key | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | copilot | cloud-provider | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| compaction request | copilot | subscription | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | copilot | api-key | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | copilot | cloud-provider | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| images and other non-text parts | copilot | subscription | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | copilot | api-key | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | copilot | cloud-provider | direct | **uncovered** | never scanned (K6) |
+| spilled tool output | copilot | subscription | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | copilot | api-key | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | copilot | cloud-provider | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| host telemetry export | copilot | subscription | direct | **uncovered** | not examined for this host |
+| host telemetry export | copilot | api-key | direct | **uncovered** | not examined for this host |
+| host telemetry export | copilot | cloud-provider | direct | **uncovered** | not examined for this host |
+| tool result | codex | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | codex | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool result | codex | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | codex | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | codex | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| tool input (restore) | codex | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | codex | subscription | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | codex | api-key | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| typed prompt | codex | cloud-provider | direct | **uncovered** | the answer is unstated, which authorizes nothing |
+| @file mention | codex | subscription | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | codex | api-key | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| @file mention | codex | cloud-provider | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
+| instruction files | codex | subscription | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | codex | api-key | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| instruction files | codex | cloud-provider | direct | **uncovered** | loaded by the host before any hook runs (K6) |
+| compaction request | codex | subscription | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | codex | api-key | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| compaction request | codex | cloud-provider | direct | **uncovered** | built by the host; no hook carries its body (K6) |
+| images and other non-text parts | codex | subscription | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | codex | api-key | direct | **uncovered** | never scanned (K6) |
+| images and other non-text parts | codex | cloud-provider | direct | **uncovered** | never scanned (K6) |
+| spilled tool output | codex | subscription | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | codex | api-key | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| spilled tool output | codex | cloud-provider | direct | **uncovered** | the hook sees only the prefix; the spill file keeps the original until it is read (probe 0.1.5) |
+| host telemetry export | codex | subscription | direct | **uncovered** | not examined for this host |
+| host telemetry export | codex | api-key | direct | **uncovered** | not examined for this host |
+| host telemetry export | codex | cloud-provider | direct | **uncovered** | not examined for this host |
+| package sender `src/scripts/_lib/llm_proposer_transport.ts` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/_lib/trigger_routers.ts` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/ai-image/adapters/flux.sh` | this package | any | direct | **unclassified** | sender census: unclassified, engine no |
+| package sender `src/scripts/ai-image/adapters/gemini-image.sh` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/ai-image/adapters/ideogram.sh` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/ai-image/adapters/recraft.sh` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/ai-video/adapters/comfyui.sh` | this package | any | direct | **uncovered** | local endpoint |
+| package sender `src/scripts/ai-video/adapters/fal.sh` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/ai-video/adapters/gemini-veo.sh` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/ai-video/adapters/higgsfield.sh` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/ai-video/adapters/kling.sh` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/ai-video/adapters/musetalk.sh` | this package | any | direct | **unclassified** | sender census: unclassified, engine no |
+| package sender `src/scripts/ai-video/adapters/openai-images.sh` | this package | any | direct | **unclassified** | sender census: unclassified, engine no |
+| package sender `src/scripts/ai-video/adapters/replicate.sh` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/ai-video/adapters/sora.sh` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/ai-video/adapters/syncso.sh` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/ai_council/airgap.ts` | this package | any | direct | **unclassified** | sender census: unclassified, engine no |
+| package sender `src/scripts/ai_council/api_transport.ts` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/ai_council/clients.ts` | this package | any | direct | **unclassified** | sender census: unclassified, engine no |
+| package sender `src/scripts/rdp_gate_classify.ts` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/rdp_quality_eval.ts` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/second_brain_retrieval.ts` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+| package sender `src/scripts/second_brain_run.ts` | this package | any | direct | **uncovered** | sender census: sender, engine no |
+
+Rows: 272 — asserted 0, replaced 2, gated 1, uncovered 258, unclassified 11. A state other than `uncovered` holds only while `egress.placeholders.mode` is `protect` or `strict` and the kill switch is not thrown.
+<!-- END egress-coverage -->
 
 ## Prevention tiers
 
@@ -340,12 +680,10 @@ read that fails, is `protect` — never a silent `off`.
 |---|---|---|---|
 | `off` | no | no | no |
 | `observe` | yes | no — every concern sees exactly what it saw without the stage | no |
-| `protect` | yes | yes, to every concern off the grant list | no, until the host rewrite is built |
-| `strict` | yes | as `protect` | no, until the host rewrite is built |
+| `protect` | yes | yes, to every concern off the grant list | tool results replaced, credential prompts refused, tokens restored — each where the host's capability allows |
+| `strict` | yes | as `protect` | as `protect`, and a prompt carrying an identifier is refused too |
 
-`strict` differs from `protect` only once the host rewrite and the prompt gate
-exist; until then the two behave identically, and that is stated rather than
-implied by the name. `observe` never changes a view.
+`observe` never changes a view and never asks the host for anything.
 
 A thrown kill switch (`AGENT_CONFIG_NO_EGRESS_STAGE`) turns the stage off
 whatever the settings say, and `publishedEgressState` then reports every channel

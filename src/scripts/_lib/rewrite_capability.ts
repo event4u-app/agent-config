@@ -41,6 +41,30 @@ export interface ProbeRecord {
   readonly host_version: string | null;
   readonly channel: string | null;
   readonly result: string | null;
+  readonly auth_mode: string | null;
+}
+
+/**
+ * The probe records' structured lines, shipped where the records are not: the
+ * evidence directory stays in the repository, and a consumer install resolves a
+ * capability from this projection. `lint_hook_manifest` holds it equal to the
+ * records, so it is evidence copied, never evidence asserted.
+ */
+export const PROBE_ATTESTATIONS_REL = "src/config/rewrite-probe-attestations.json";
+
+function attestations(root: string): ProbeRecord[] {
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(root, PROBE_ATTESTATIONS_REL), "utf-8")) as { records?: unknown };
+    return Array.isArray(raw.records) ? (raw.records as ProbeRecord[]).filter((r) => typeof r?.path === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+/** The attestation file's body for the records in the tree; what the lint compares and the writer writes. */
+export function renderProbeAttestations(root: string): string {
+  const records = recordsOnDisk(root);
+  return `${JSON.stringify({ _comment: "Generated from agents/evidence/analysis/host-*-probe-*.md by lint_hook_manifest --write-probe-attestations; do not edit.", records }, null, 2)}\n`;
 }
 
 export interface CapabilityContext {
@@ -61,7 +85,7 @@ function lineValue(lines: readonly string[], key: string): string | null {
   return hit === undefined ? null : hit.slice(key.length + 2).trim();
 }
 
-/** One record, or `null` when the path is not a probe record or cannot be read. */
+/** One record, or `null` when the path is not a probe record or neither it nor its attestation can be read. */
 export function readProbeRecord(root: string, rel: string): ProbeRecord | null {
   const m = REWRITE_PROBE_PATH.exec(rel);
   if (m === null) return null;
@@ -69,7 +93,7 @@ export function readProbeRecord(root: string, rel: string): ProbeRecord | null {
   try {
     text = fs.readFileSync(path.join(root, rel), "utf-8");
   } catch {
-    return null;
+    return attestations(root).find((a) => a.path === rel) ?? null;
   }
   const lines = text.split(/\r?\n/).map((l) => l.trim());
   return {
@@ -79,11 +103,17 @@ export function readProbeRecord(root: string, rel: string): ProbeRecord | null {
     host_version: lineValue(lines, "host_version"),
     channel: lineValue(lines, "channel"),
     result: lineValue(lines, "result"),
+    auth_mode: lineValue(lines, "auth_mode"),
   };
 }
 
-/** Every probe record in the evidence directory; an unreadable directory is an empty list. */
+/** Every probe record the tree carries: the evidence directory's, else the shipped attestations. */
 export function listProbeRecords(root: string): ProbeRecord[] {
+  const disk = recordsOnDisk(root);
+  return disk.length > 0 ? disk : attestations(root);
+}
+
+function recordsOnDisk(root: string): ProbeRecord[] {
   const dir = path.join(root, "agents", "evidence", "analysis");
   let names: string[];
   try {

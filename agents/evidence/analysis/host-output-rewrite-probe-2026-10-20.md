@@ -8,6 +8,7 @@ host: claude
 host_version: 2.1.304
 channel: output
 result: delivered
+auth_mode: subscription
 
 - **Host:** Claude Code `2.1.304` (`claude --version`), model for probe sessions `claude-haiku-5-5` (`--model haiku`).
 - **Date:** 2026-10-20.

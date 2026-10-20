@@ -36,7 +36,7 @@ import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
 import { asOf } from "./_lib/as_of.js";
 import { parseHostLowering, type HostLowering } from "./hooks/host_lowering.js";
 import { parseRewriteAxis, REWRITE_CHANNELS, REWRITE_MODES, type RewriteChannel } from "./_lib/rewrite_axis.js";
-import { listProbeRecords, rewriteCapabilityGaps } from "./_lib/rewrite_capability.js";
+import { listProbeRecords, PROBE_ATTESTATIONS_REL, renderProbeAttestations, rewriteCapabilityGaps } from "./_lib/rewrite_capability.js";
 import { RE_ARM_EVENTS } from "./_lib/prefix_stable_surfaces.js";
 import { EXECUTION_VIEW_GRANTS } from "./hooks/egress_stage.js";
 
@@ -793,6 +793,20 @@ function _isCalendarDate(d: string): boolean {
  */
 export function _check_rewrite_axis(table: HostLowering, errors: string[], today: string, root: string = REPO_ROOT): void {
   const probes = listProbeRecords(root);
+  if (root === REPO_ROOT) {
+    let shipped = "";
+    try {
+      shipped = fs.readFileSync(path.join(root, PROBE_ATTESTATIONS_REL), "utf-8");
+    } catch {
+      // absent reads as drift below
+    }
+    if (shipped !== renderProbeAttestations(root)) {
+      errors.push(
+        `${PROBE_ATTESTATIONS_REL}: rewrite-probe-attestation-drift — the shipped copy differs from the probe records; ` +
+          "run ./scripts-run src/scripts/lint_hook_manifest --write-probe-attestations.",
+      );
+    }
+  }
   for (const [host, surfaces] of table) {
     for (const [surface, row] of surfaces) {
       const axis = parseRewriteAxis(`host_lowering.yaml: ${host}/${surface}`, row.rewrite_raw);
@@ -1069,6 +1083,10 @@ export function main(argv: string[]): number {
       i += 1;
     } else if (a === "--strict") {
       strict = true;
+    } else if (a === "--write-probe-attestations") {
+      fs.writeFileSync(path.join(REPO_ROOT, PROBE_ATTESTATIONS_REL), renderProbeAttestations(REPO_ROOT), "utf-8");
+      process.stdout.write(`lint_hook_manifest: wrote ${PROBE_ATTESTATIONS_REL}\n`);
+      return 0;
     }
   }
   return lint(manifest, strict, hostLowering);

@@ -239,6 +239,10 @@ export function promptResidueLine(types: readonly string[], count: number): stri
   );
 }
 
+/** Where the refusal sends a reader who asks what else is and is not covered. */
+export const COVERAGE_POINTER =
+  "What each channel is covered by: docs/contracts/egress-placeholders-v1.md § Coverage (agent-config hooks:status --coverage).";
+
 /** `refuse` blocks the prompt; `warn` is all a host that cannot refuse allows, and its channel stays `uncovered`. */
 export type PromptGate = { readonly outcome: "refuse" | "warn"; readonly message: string };
 
@@ -286,7 +290,7 @@ export function planPromptGate(
     refused || overran || copy === null
       ? "The value could not be bounded in time, so no redacted copy is offered; retype the prompt without it."
       : `Resend this redacted copy instead:\n\n${copy}`;
-  return { outcome, message: `${head}\n${body}\n\n${promptResidueLine(types, count)}` };
+  return { outcome, message: `${head}\n${body}\n\n${COVERAGE_POINTER}\n${promptResidueLine(types, count)}` };
 }
 
 export type EgressEmission = ToolOutputRewrite | PromptGate | RestorePlan;

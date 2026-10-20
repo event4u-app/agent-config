@@ -10,6 +10,7 @@ host: claude
 host_version: 2.1.304
 channel: input
 result: delivered
+auth_mode: subscription
 
 What `delivered` rests on, from that record's 0.2 table: a PreToolUse hook that
 returned `updatedInput` alone, with no `permissionDecision`, made the Bash call
