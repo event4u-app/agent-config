@@ -26,6 +26,11 @@ import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import process from 'node:process';
 
+import {
+    EXPECTED_WORKFLOW_REF,
+    attestation_workflow_ref,
+    provenance_matches_publish,
+} from '../_lib/provenance_verify.js';
 import { read_candidate, unattended_decision, type RegistryCandidate } from '../_lib/unattended_gates.js';
 import type { InstallOrigin } from '../_lib/classify_update.js';
 import * as installed_lock from '../_lib/installed_lock.js';
@@ -93,6 +98,8 @@ export type Packument = { readonly ok: true; readonly doc: unknown } | { readonl
 
 export interface UnattendedDeps {
     readonly fetchPackument: () => Promise<Packument>;
+    /** Refusal reason when the attestation does not tie to this package's publish workflow, else `null`. */
+    readonly verifyProvenance: (candidate: RegistryCandidate) => Promise<string | null>;
     readonly run: (cmd: string[]) => StepResult;
     /** The version recorded in `installed.lock`; `''` when unknown. */
     readonly readInstalled: () => string;
@@ -283,7 +290,58 @@ async function decide(installed: string, deps: UnattendedDeps): Promise<{ candid
         skipped: read_skips(deps.skipPath),
         env: { ...deps.env, now: deps.now().toISOString() },
     });
-    return decision.install ? { candidate } : { refused: [...decision.reasons] };
+    if (!decision.install) return { refused: [...decision.reasons] };
+    // 2.1's open half. `decision` accepted an attestation that EXISTS and
+    // carries an SLSA predicate; that document is producible by any workflow
+    // in any repository with `id-token: write`, so it is checked here against
+    // the one workflow this package publishes from before anything installs.
+    const provenance = await deps.verifyProvenance(candidate);
+    if (provenance !== null) return { refused: [provenance] };
+    return { candidate };
+}
+
+/**
+ * Fetch the attestation bundle and require it to name this package's publish
+ * workflow. Returns a refusal reason, or `null` when the tie holds.
+ *
+ * Unverified by itself: the DSSE payload is decoded, never signature-checked
+ * (`provenance_verify`'s own note says so). The signature half is
+ * `npm audit signatures` in the install step, against npm's trusted keys.
+ * Neither is sufficient alone — this one stops a wrong-workflow build, that
+ * one stops a forged document — and the pair is the gate 2.1 asked for.
+ *
+ * A bundle that cannot be fetched REFUSES rather than passing. Unlike the live
+ * session register, there is no second independent gate behind this one: an
+ * unreachable attestation is exactly what an attacker serving a tarball
+ * without one produces, so failing open here would hand back the property the
+ * check exists to establish.
+ */
+export async function verify_provenance_default(
+    candidate: RegistryCandidate,
+    fetch_impl: typeof fetch = fetch,
+    timeoutMs = 10_000,
+): Promise<string | null> {
+    if (candidate.attestationsUrl === null) {
+        return `${candidate.version} carries no attestation bundle to verify`;
+    }
+    let doc: unknown;
+    try {
+        const resp = await fetch_impl(candidate.attestationsUrl, {
+            signal: AbortSignal.timeout(timeoutMs),
+            headers: { accept: 'application/json' },
+        });
+        if (!resp.ok) return `attestation fetch failed: HTTP ${resp.status}`;
+        doc = await resp.json();
+    } catch (err) {
+        return `attestation fetch failed: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (!provenance_matches_publish(doc)) {
+        const named = attestation_workflow_ref(doc);
+        return named === null
+            ? `${candidate.version} has no readable provenance workflow in its attestation`
+            : `${candidate.version} was built by ${named}, not ${EXPECTED_WORKFLOW_REF}`;
+    }
+    return null;
 }
 
 /** Contexts where even the registry fetch and the lock file are side effects nobody asked for. */
@@ -446,6 +504,7 @@ function run_unattended_wired(
         },
         interrupted,
         fetchPackument: () => fetch_packument(),
+        verifyProvenance: (c) => verify_provenance_default(c),
         run: (cmd) => default_run(cmd, options.err),
         readInstalled: () => {
             const v = installed_lock.read_lockfile()?.agent_config_version;

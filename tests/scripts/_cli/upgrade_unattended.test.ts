@@ -68,6 +68,10 @@ function deps(world: World, over: Partial<UnattendedDeps> & { doc?: unknown; fet
     const fetched: Packument = over.fetched ?? { ok: true, doc: over.doc ?? packument() };
     return {
         fetchPackument: async () => fetched,
+        // These cases exercise the other gates; provenance passes unless a
+        // case overrides it. Its own refusing direction is asserted in
+        // upgrade_unattended_provenance.test.ts rather than here.
+        verifyProvenance: async () => null,
         run: world.run,
         readInstalled: () => world.lock,
         readBinary: () => world.binary,
