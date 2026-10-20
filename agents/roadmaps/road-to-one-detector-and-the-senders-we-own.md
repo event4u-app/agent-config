@@ -458,11 +458,41 @@ response, with no host contract in between and no hook budget to spend — so
       high-confidence finding; a hit refuses the send. Responses are restored
       locally for display only; the retained record keeps placeholders.
       verify: the F1 sample leaves the bundler with five placeholders and `const token = getToken();` intact; a canary that plants a raw value past the replacement is refused by the final check, and removing the check turns the canary red.
-- [ ] **3.4 Every sender in the 0.4 census is one of three things:** routed
+      **Built 2026-10-20; open on 2.3 only.** The bundler replaces span by span
+      through `src/scripts/ai_council/council_egress.ts` (one scope per run, the
+      replaced values held in memory only), with the table's new
+      `REVIEW_CREDENTIAL_ROWS` (a low-entropy password, a bearer value) and its
+      own three looser readings as rows, so `const token = getToken();` and
+      every key name survive. The final check runs in `callMember`, in
+      `curlJsonPost` before curl and before a CLI seat spawns.
+      `npx vitest run tests/scripts/ai_council/council_egress.test.ts` -> 0
+      (12 cases, 1 skipped): the canary that plants a replaced value is
+      refused with nothing sent and a member handed the same body directly
+      receives it; a high-confidence finding in the system prompt or a split
+      round is refused; a CLI seat refuses before spawning and books no call.
+      The F1 sample leaves with **two** placeholders (the connection URI and
+      the token), not five: the e-mail, IBAN and phone need the identifier rows
+      of 2.3, which are owner-gated. The five-placeholder case is written and
+      skips until those rows exist (`it.skipIf`). The removal half of the
+      verify is shown by the direct-call contrast in that test, not by deleting
+      the check: the host's auto-mode classifier refused an in-tree sabotage
+      edit of the security path, and the run did not route around it.
+- [x] **3.4 Every sender in the 0.4 census is one of three things:** routed
       through the same replacement and final check, marked as carrying a fixed
       corpus only, or listed `uncovered` with a reason. A new sender that is
       none of them fails the census gate.
       verify: the census has no empty cell; a fixture sender with no classification fails the gate.
+      **Done 2026-10-20:** every one of the 23 modules carries an
+      `egress-content:` marker; the census gains `coverage` and `reason`
+      columns and reads 2 asserted (the council clients and transport),
+      6 fixed-corpus, 15 uncovered (the 14 shell media adapters and the
+      proposer transport), 0 undeclared. `asserted` is accepted only from a
+      module that imports the final check. `egress_sender_census` exits 1 on an
+      undeclared sender even with `--write`. `npx vitest run
+      src/scripts/_lib/egress_sender_scan.test.ts` -> 0, 13 cases: no empty
+      cell over the tree, and a fixture sender with no marker fails the census
+      and passes once it has one. The census runs as that test in CI; it is
+      not a registered gate-coverage row.
 - [ ] **3.5 What this package injects into a session goes through the engine
       too** — hot context, handoff and memory recall re-inject stored text.
       verify: a stored entry containing a listed value is injected as its token.
@@ -516,8 +546,8 @@ response, with no host contract in between and no hook budget to spend — so
 - [ ] AC-2 — The council sample leaves with five placeholders and no lost line,
       and a removed final check turns its canary red. *(Discharges the owner's
       constraint for the council channel, state `asserted`.)*
-- [ ] AC-3 — The sender census has no empty cell; every sender is `asserted`,
-      fixed-corpus or `uncovered` with a reason.
+- [x] AC-3 — The sender census has no empty cell; every sender is `asserted`,
+      fixed-corpus or `uncovered` with a reason. *(3.4, 2026-10-20.)*
 - [x] AC-4 — Credential-class files cannot be read through a hooked tool on a
       deny-capable slot, and `hooks:doctor` prints the deny rows a user would
       paste and reports which are already in force (D10 — offered, never written).
