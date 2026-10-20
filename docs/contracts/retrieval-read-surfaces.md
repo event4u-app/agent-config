@@ -66,6 +66,7 @@ reason `unclassified` exists and the reason this paragraph does.
 | `_cli/cmd_update.ts` | `network-fetch` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `_lib/llm_proposer_transport.ts` | `network-fetch` | `exported-api` | **covered** | imports the sanitize floor |
 | `_lib/reddit_thread_parse.ts` | `stdin-markup-parse` | `stdout-write` | **covered** | imports the sanitize floor |
+| `_lib/session_pr_watch.ts` | `remote-subprocess` | `exported-api` | **covered** | imports the sanitize floor |
 | `_lib/trigger_routers.ts` | `indirect-fetch` | `exported-api` | **unclassified** | network access through a callee the scanner cannot resolve — read the module |
 | `_lib/turnaround_throughput.ts` | `remote-subprocess` | `exported-api` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `adoption_status.ts` | `remote-subprocess` | `stdout-write` | **covered** | imports the sanitize floor |
@@ -96,7 +97,7 @@ reason `unclassified` exists and the reason this paragraph does.
 | `tools/jira_adapter.ts` | `remote-subprocess` | `undecided` | **unclassified** | inbound bytes with no recognised emit — the onward path is undecided |
 | `update_prices.ts` | `node-http-request` | `file-write` | **covered** | imports the sanitize floor |
 
-32 read surface(s): 10 covered, 19 uncovered, 3 unclassified.
+33 read surface(s): 11 covered, 19 uncovered, 3 unclassified.
 <!-- END read-surface-table -->
 ## The second layer — structural hiding in fetched markup
 

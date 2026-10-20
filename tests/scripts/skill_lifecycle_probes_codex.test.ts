@@ -25,6 +25,14 @@ describe('skill-lifecycle-probes-codex.json (road-to-skills-that-arrive-when-cal
             'omission-order-and-warning',
             'implicit-disabled-counts-against-budget',
             'double-listing',
+            // Added 2026-10-20 by 5.2's arm S3: what a policy-disabled skill
+            // loses. 0.3 measured that disabling frees the budget; it did not
+            // ask what the model can still reach, and 4.1 shipped on the
+            // generous reading until this row was taken.
+            'unlisted-skill-not-in-model-list',
+            // Added 2026-10-20 for remedy (a) of the blocker that row raised:
+            // the same skill, reached through the installer-written finder.
+            'unlisted-skill-reached-through-finder',
         ]);
         for (const [, row] of rows) {
             expect(row.host).toBe('codex');

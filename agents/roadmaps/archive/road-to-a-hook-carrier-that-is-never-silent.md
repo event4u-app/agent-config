@@ -174,7 +174,7 @@ routed rule body with nothing in the session saying so.
 
 ## Phase 4 — Say what changes for machines that were silent
 
-- [ ] **4.1 Declare the behaviour change.** On machines where the carrier was
+- [x] **4.1 Declare the behaviour change.** On machines where the carrier was
   absent, Phases 1–2 make every hook concern — the `fail_closed` guards included —
   run for the first time. The release that ships 2.1 names those concerns in its
   changelog as a fix that changes behaviour, and `doctor` prints the carrier
@@ -245,6 +245,19 @@ routed rule body with nothing in the session saying so.
   reads, and that the revisit condition D10 already carries — a full 2/2 round
   returning anything other than B1 — is the thing that settles it.
 
+  **Closed 2026-10-20 by a mechanism, not by a release run (D11).** The gap the
+  notes above name — no surface an earlier change could write that the release
+  head reads — is closed in `src/scripts/_lib/release_highlights.ts`:
+  `derive_head_prefill` now appends every `What changes` cell under
+  `BREAKING_CHANGES.md` § Pending to the head's `Default changes + migration`
+  line, the same way it already appends an assurance-override limitation. The
+  #2455 row is Pending and names all three guards, so the release that ships 2.1
+  generates a changelog head naming them without anyone copying a line.
+  `tests/scripts/release_head_prefill.test.ts` renders the head from the real
+  index and asserts `block-no-verify`, `block-kernel-rule-writes` and
+  `block-plumbing-writes` with no publication blocker; it was seen red before
+  the function existed.
+
 ## Phase 5 — The plugin channel says what it carries
 
 Arrived from round `inbox-2026-10-q` (handoff H1 of
@@ -308,13 +321,14 @@ plugin ships no dispatcher of its own (D4).
 | D8 | reversible-technical | agent | The install thins only on a carrier the stripped-environment probe reached | A layer thinned onto a dead carrier would print 3.1's line and restore at the next session — a thin that is undone before it is used; refusing it up front is the same outcome without the round trip | the probe reports not-reached on a machine whose real launcher does reach the dispatcher |
 | D9 | reversible-technical | agent | On Windows the install and doctor do not probe, and thinning keeps its earlier behaviour | There is no `/bin/sh` to run the probe with; recording "not reached" would be a measurement that was never taken | a Windows host is found to run the hook commands through a shell the probe can use |
 | D10 | contested-technical | council:hook-carrier-release-note-class-20261019 | The #2455 behaviour change is released as breaking: a `BREAKING_CHANGES.md` Pending row naming the three `fail_closed` guards, moved into the per-major table and a `### Breaking` entry by the release that carries it | Second round 2026-10-19: `anthropic` moved B2 → B1 on the new input (#2479 fixed the trailer loss; ADR-290 makes the next release a major anyway); `openai` chose B1 in round one and could not answer round two (codex exit 1). Both seats' latest answers are B1; the round itself was degraded 1/2 | a full 2/2 round returns anything other than B1, or the release carrying the row is cut as a minor |
+| D11 | reversible-technical | agent | 4.1's changelog half closes through the release-head prefill reading `BREAKING_CHANGES.md` § Pending, not by waiting for a release run | A release run is a Hard-Floor action no drain lane holds; the Pending row is human-written, already names the three guards, and is shipped by whatever release next leaves `main`, so carrying it into the generated head makes the changelog naming hold by construction | a release moves the Pending row out before `task release` generates the head, or the head cap forces the line out |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-14 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-20 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Guards start refusing on machines that never saw them | product | A consumer whose carrier was silent meets a `fail_closed` refusal for the first time after upgrade. | 4.1 names the concerns in the changelog; doctor prints the carrier state. | Phase 4 — Say what changes for machines that were silent |
+| 1 | Guards start refusing on machines that never saw them | product | A consumer whose carrier was silent meets a `fail_closed` refusal for the first time after upgrade. | 4.1 carries the `BREAKING_CHANGES.md` Pending row naming the concerns into the generated changelog head (D11); doctor prints the carrier state. | Phase 4 — Say what changes for machines that were silent |
 | 2 | Launch environments differ on one machine | implementation | A session launched where the carrier is dead meets a layer another session left thinned. | 2.1 removes the `PATH` dependency; 3.1 covers the remainder; 3.3 keeps demotion sticky. | Phase 2 — Absolute paths ahead of `PATH` |
 | 3 | Restore writes into a directory other sessions read | implementation | A full-layer restore lands while a second session is live. | 3.2 only adds owned files; probe 0.2 (c) measures pickup first. | Phase 3 — Silence only where it is free |
 | 4 | Plugin-only sessions start printing a line on every event | product | 5.1 makes a previously silent branch talk; a line per hook event would be noise on every tool call. | 5.1 prints on stderr only, and the context line fires once at session start; the test in 5.2 pins the shape. | Phase 5 — The plugin channel says what it carries |

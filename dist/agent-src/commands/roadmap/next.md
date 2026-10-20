@@ -187,7 +187,10 @@ than empty in the record.
 Immediately after the pick, before any branch or commit. This writes the slug
 into `agents/runtime/state/roadmap-claim-<session>.json`; the next heartbeat lifts
 it into this session's register record, so another session's step 1 excludes it
-**within one turn** and long before a PR exists.
+**within one turn** and long before a PR exists. The same call takes a per-slug
+lock in the git common dir, which every worktree sees **at once** and which
+refuses a second live holder — so `REFUSED` here means pick something else,
+not retry with `--force`.
 
 The file is keyed on the host session id, not on the worktree, and that
 distinction was a measured defect rather than a nicety: with one shared file per

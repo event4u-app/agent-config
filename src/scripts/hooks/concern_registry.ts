@@ -24,7 +24,6 @@
  *              fail-closed reduction unchanged)
  */
 
-import { main as chatHistoryMain } from '../chat_history.js';
 import { main as hotContextMain } from '../hot_context_hook.js';
 import { main as handoffContextMain } from '../handoff_context_hook.js';
 import { main as roadmapProgressMain } from '../roadmap_progress_hook.js';
@@ -39,6 +38,8 @@ import { main as firstRunGateMain } from '../first_run_gate_hook.js';
 import { main as profileStalenessMain } from '../profile_staleness_hook.js';
 import { main as wrapperFreshnessMain } from '../wrapper_freshness_hook.js';
 import { main as surfaceProbeMain } from '../surface_probe_hook.js';
+import { main as updateNoticeMain } from '../update_notice_hook.js';
+import { main as updateAutoInviteMain } from '../update_invite_hook.js';
 import { main as teamReviewGateMain } from '../team_review_gate_hook.js';
 import { main as prUrlReminderMain } from '../pr_url_reminder_hook.js';
 import { main as pushSettleMain } from './push_settle_hook.js';
@@ -87,12 +88,13 @@ import { main as interruptionLedgerMain } from './interruption_ledger_hook.js';
 import { main as journalRecordMain } from './journal_record_hook.js';
 import { main as obligationSettleMain } from './obligation_settle_hook.js';
 
-/** A concern `main` — argv-taking or not; both shapes exist. */
-export type ConcernMain = (argv?: string[]) => number | undefined | void;
+import { LAZY_CONCERNS, loadLazyConcern } from './lazy_concern.js';
+import type { ConcernMain } from './concern_registry_types.js';
+
+export type { ConcernMain };
 
 /** Keyed by the manifest's `script:` value (repo-relative path). */
 export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
-    'src/scripts/chat_history.ts': chatHistoryMain as ConcernMain,
     'src/scripts/hot_context_hook.ts': hotContextMain as ConcernMain,
     'src/scripts/handoff_context_hook.ts': handoffContextMain as ConcernMain,
     'src/scripts/roadmap_progress_hook.ts': roadmapProgressMain as ConcernMain,
@@ -107,6 +109,8 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/profile_staleness_hook.ts': profileStalenessMain as ConcernMain,
     'src/scripts/wrapper_freshness_hook.ts': wrapperFreshnessMain as ConcernMain,
     'src/scripts/surface_probe_hook.ts': surfaceProbeMain as ConcernMain,
+    'src/scripts/update_notice_hook.ts': updateNoticeMain as ConcernMain,
+    'src/scripts/update_invite_hook.ts': updateAutoInviteMain as ConcernMain,
     'src/scripts/team_review_gate_hook.ts': teamReviewGateMain as ConcernMain,
     'src/scripts/pr_url_reminder_hook.ts': prUrlReminderMain as ConcernMain,
     'src/scripts/hooks/push_settle_hook.ts': pushSettleMain as ConcernMain,
@@ -155,3 +159,26 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/interruption_ledger_hook.ts': interruptionLedgerMain as ConcernMain,
     'src/scripts/hooks/journal_record_hook.ts': journalRecordMain as ConcernMain,
 };
+
+/**
+ * Every concern the dispatcher can run in-process: inlined in the table above,
+ * or loadable from a conditional chunk. The parity test asserts against THIS,
+ * not against `CONCERN_REGISTRY` alone — a lazy concern is still in-process on
+ * the fast path, and a parity check that could not see one would push the next
+ * extraction back into the bundle.
+ */
+export function isInProcessConcern(script: string): boolean {
+    return CONCERN_REGISTRY[script] !== undefined || LAZY_CONCERNS[script] !== undefined;
+}
+
+/**
+ * The concern's `main`, inlined or loaded from its chunk, or `null` when the
+ * dispatcher must fall back to the spawn path.
+ *
+ * The one resolver. The dispatcher and every test that drives a concern
+ * in-process go through it, so a concern moved into a chunk does not have to be
+ * found again at each call site.
+ */
+export function resolveConcernMain(script: string): ConcernMain | null {
+    return CONCERN_REGISTRY[script] ?? loadLazyConcern(script);
+}

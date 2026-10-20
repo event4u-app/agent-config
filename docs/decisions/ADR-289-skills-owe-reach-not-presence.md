@@ -21,7 +21,9 @@ evidence:
     - agents/evidence/council/completeness-skills-owe-20261018.question.md
     - agents/evidence/council/owner-blocker-routing-20261016.md
     - agents/evidence/council/skills-arrive-reach-shape-20261018.md
-    - agents/roadmaps/road-to-skills-that-arrive-when-called.md
+    - agents/roadmaps/archive/road-to-skills-that-arrive-when-called.md
+    - agents/evidence/council/second-host-unlisted-reachability-20261020.md
+    - agents/evidence/analysis/second-host-finder-probe-20261020.md
 review_trigger: >-
   Reopened if a supported host cannot supply any deterministic retrieval path
   for a packaged skill and the package cannot install it there either — then
@@ -70,6 +72,21 @@ install, and Codex CLI omits skills over its budget.
    the contract as achieved.
 4. `projection.mode` is not removed before the reach mechanism and its tests
    exist.
+
+## Amendment — 2026-10-20 · what "one deterministic operation" is on a host that does not list a skill
+
+Decided by the AI council (2/2, `anthropic` + `openai`, remedy (a) of the
+blocker `second-host-unlisted-reachability`). Codex CLI lists skills within a
+fixed budget, so the package keeps a resident set listed and the rest installed
+but unlisted — and a model does not reach for a skill it cannot see (probe row
+`unlisted-skill-not-in-model-list`). On such a host the one deterministic
+operation is **one model-visible invocation of a package-written listed entry,
+followed by a read of the target's SKILL.md at a path that entry names**: an
+exact name is looked up in the entry's own index, never in a ranker, and a name
+the index does not hold fails explicitly. The entry is not an authored skill;
+the installer writes it, counts it inside the host's listing budget, and
+removes it on uninstall. This defines the operation for that host; it does not
+by itself publish point 3 as met.
 
 ## Consequences
 

@@ -249,8 +249,10 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 9 |
 | B — consent | 3 |
-| C — guarded | 101 |
-| **Total** | **113** |
+| C — guarded | 102 |
+| **Total** | **114** |
+
+It rose to 114 on 2026-10-20 when `road-to-an-update-that-installs-itself-only-when-it-is-safe` step 4.1 added `update.mode` — one C, `consent`: it is a standing authorisation to replace the user's global install, and `auto` is an action they cannot un-see, so no agent write path may reach it. An absent key resolves to `notify`, which installs nothing.
 
 It rose to 113 on 2026-10-15 when `road-to-placeholders-on-the-wire` step 1.4 added `egress.placeholders.mode` — one C, `policy`: it decides whether conversation content is replaced before it reaches local stores, and the default for consumers is an owner decision no agent may take by writing the key.
 
@@ -397,9 +399,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 37 |
 | un-inferrable | 10 |
-| consent | 48 |
+| consent | 49 |
 | policy | 18 |
-| **Total** | **113** |
+| **Total** | **114** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -606,6 +608,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `decision_engine.on_block` | C | `stop` | `warn` advances past a gate that fired | derivable — the non-interactive probe decides ask-versus-stop, and the fired gate's own action decides the rest |
 | `decision_engine.ask_timeout_seconds` | C | `30` | how long a fired gate waits before falling back | derivable — the same non-interactive probe: where nobody can answer there is nothing to wait for |
 | `update_check.enabled` | C | `true` | a background safety check; disabling it pins the user to known-vulnerable code | consent |
+| `update.mode` | C | `notify` | a standing authorisation to replace the user's global install; `auto` is something they cannot un-see happening | consent |
 | `legal_review_prep.acknowledged` | C | `false` | the consent gate; the safety floor requires the wizard checkbox | consent |
 | `legal_review_prep.require_council` | C | `true` | a fail-closed defence-in-depth gate | consent |
 
