@@ -741,7 +741,7 @@ beyond its name.
 - [ ] AC-1 — Every skill is reachable on every host with native skills; `doctor`'s
   installed / described / name-only / reachable-not-installed / degraded counts sum
   to the authored count.
-  <!-- blocked-by: second-host-unlisted-reachability | asked: 2026-10-20 -->
+  <!-- blocked-by: second-host-unlisted-reachability -->
   Half met 2026-10-20: `doctor --check skill-reach` reports a row per host with
   native skills, not one for the first host only, and each row sums —
   claude-code 300 installed + 1 reachable-not-installed of 301, codex the same
@@ -758,7 +758,7 @@ beyond its name.
   run; result `skill-fork-pilot-result-20261020.md`, labelled, closing HARM.
 - [ ] AC-4 — On the second host a fresh session shows no omission warning and every
   non-resident skill is reachable by 4.2's triggers.
-  <!-- blocked-by: second-host-unlisted-reachability | asked: 2026-10-20 -->
+  <!-- blocked-by: second-host-unlisted-reachability -->
   First half met 2026-10-20, live and with a positive control: no omission
   warning with the resident set across both roots, against a control on the
   same scratch home printing `406 additional skills were not included`. Second
