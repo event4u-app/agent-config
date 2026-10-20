@@ -101,9 +101,12 @@ describe('global install plan — legacy-all default', () => {
 });
 
 describe('global install plan — scoped', () => {
-    const scope = ruleScopeFromSettings({
-        projection: { rule_workspaces: ['engineering'] },
-    });
+    // ADR-292 step 4.6: the workspace axis is derived from the pack vocabulary,
+    // so the scope comes from the package root and a hand-written
+    // `rule_workspaces` is ignored. The literal below is kept exactly because
+    // it IS ignored — a plan that narrowed to `[engineering]` would mean the
+    // key had come back.
+    const scope = ruleScopeFromSettings({ projection: { rule_workspaces: ['engineering'] } }, REPO);
 
     it('ships ZERO exclusively-maintainer rules', () => {
         const names = new Set(planRuleBasenames(scope));

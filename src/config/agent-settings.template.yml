@@ -59,30 +59,16 @@ profile:
 # project the full set.
 projection:
   mode: scoped
-  # --- Consumer-scoped RULE projection (road-to-request-scoped-rule-load P1,
-  #     opt-in) ---
-  # Workspace scope for the RULE layer only (independent of `mode` above,
-  # which covers skills/commands). Absent or empty = legacy-all: every rule
-  # projects, exactly as today. Non-empty = only rules whose `workspaces:`
-  # frontmatter intersects this list project into .claude/rules,
-  # .cursor/rules, .windsurf/rules, .clinerules and .windsurfrules. Kernel
-  # rules ALWAYS project (unconditional by definition); untagged rules fail
-  # safe and ship. Example consumer scope:
-  #   rule_workspaces: [engineering]
-  # DEFAULT FLIPPED 2026-07-13 (the Phase-1 human gate, maintainer-approved,
-  # evidence-gated): the default below lists EVERY consumer workspace, so
-  # exactly the exclusively-maintainer specification rules drop from consumer
-  # installs (the audited 16-rule lever — see
-  # agents/settings/contexts/consumer-scoping-audit-2026-07-07.md) while all
-  # domain safety floors and domain rules keep shipping. Narrowing further
-  # (e.g. [engineering] only) stays a per-install user choice.
-  # An EMPTY list is inactive (= legacy-all); only a non-empty list scopes.
-  rule_workspaces: [engineering, product, finance, founder, gtm, ops, small-business, construction, legal-review-prep]
+  # Rule scope is DERIVED, not configured, since ADR-292 step 4.6: a consumer
+  # install scopes rules to every workspace `src/config/discovery/packs.yml`
+  # declares except `agent-config-maintainer`, so maintainer-only rules never
+  # project to a consumer and a new pack reaches consumers the day it lands.
+  # The `projection.rule_workspaces` key that carried this list is removed.
   #
   # Optional second axis, same semantics per pack ids (packs.yml). When set,
   # a non-kernel rule also needs a `packs:` intersection to project — e.g.
   # deselecting `frontend-design` removes ui-audit-gate + design-fidelity.
-  # Empty = inactive, same as rule_workspaces.
+  # Empty = inactive.
   #
   # `rule_packs: auto` derives the id list from the ACTIVE-PACK set — the same
   # set the skill/command prune uses — instead of hand-typing ids that would

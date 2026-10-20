@@ -941,10 +941,11 @@ export { _HRR_BANNER_MARKER };
 
 // ── Consumer-scoped rule projection (road-to-request-scoped-rule-load P1) ──
 //
-// Opt-in via `projection.rule_workspaces: [<workspace-id>, …]` in
-// `.agent-settings.yml`. Absent / empty = legacy-all (every rule projects —
-// today's behaviour, non-breaking). When set, a non-kernel rule projects
-// only if its `workspaces:` frontmatter intersects the configured set.
+// Scope came from `projection.rule_workspaces` until ADR-292 step 4.6 removed
+// the key; the CONSUMER scope is derived from the pack vocabulary now
+// (`consumerRuleWorkspaces`), and the MAINTAINER projection below is
+// unscoped by construction. A non-kernel rule projects into a scoped tree
+// only if its `workspaces:` frontmatter intersects that set.
 // Kernel rules (`type: always` / `alwaysApply: true`) ALWAYS project —
 // the kernel is unconditional and workspace-independent by definition
 // (rule-router contract § Schema v2). Untagged rules fail safe: they ship.
@@ -958,16 +959,21 @@ function _read_projection_raw(key: string): unknown {
         : null;
 }
 
-function _read_projection_list(key: string): string[] | null {
-    const value = _read_projection_raw(key);
-    if (Array.isArray(value) && value.length > 0) {
-        return value.map((v) => String(v));
-    }
-    return null;
-}
-
+/**
+ * The MAINTAINER projection is never workspace-scoped, and since ADR-292 step
+ * 4.6 that is a constant rather than a settings read.
+ *
+ * `projection.rule_workspaces` is gone. Its replacement derives the CONSUMER
+ * workspace set from the pack vocabulary — every id minus
+ * `agent-config-maintainer` — and this is the one tree where that subtraction
+ * would be wrong: the repository's own `.claude/rules` must carry the
+ * maintainer-only rules, which is exactly what a derived consumer scope drops.
+ * So the maintainer projection stays on the inactive axis: every rule projects,
+ * which is what an absent key always meant here and what this repository's own
+ * (keyless) settings already resolved to.
+ */
 function _read_rule_workspaces(): string[] | null {
-    return _read_projection_list('rule_workspaces');
+    return null;
 }
 
 /** `runtime.active_packs` overlay, empty when unset (fresh-install default). */

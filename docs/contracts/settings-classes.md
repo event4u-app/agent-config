@@ -249,8 +249,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 9 |
 | B — consent | 3 |
-| C — guarded | 99 |
-| **Total** | **111** |
+| C — guarded | 98 |
+| **Total** | **110** |
 
 It rose to 113 on 2026-10-15 when `road-to-placeholders-on-the-wire` step 1.4 added `egress.placeholders.mode` — one C, `policy`: it decides whether conversation content is replaced before it reaches local stores, and the default for consumers is an owner decision no agent may take by writing the key.
 
@@ -395,11 +395,11 @@ the template, which is the drift this contract exists to prevent.
 
 | Disposition | Keys |
 |---|---|
-| derivable | 36 |
+| derivable | 35 |
 | un-inferrable | 10 |
 | consent | 48 |
 | policy | 17 |
-| **Total** | **111** |
+| **Total** | **110** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -498,7 +498,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `agent_config_version` | C | `""` | installer-owned pin selecting which package code executes | derivable — the installed package's own `package.json` version; `check_template_pin_drift` already enforces pin == package.json |
 | `profile.id` | C | `developer` | master axis selecting the projected skill and command surface | un-inferrable |
 | `projection.mode` | C | `scoped` | governs which artefacts reach the host trees at all | derivable — the resolved active-profile + `runtime.active_packs` set `_resolve_scoped_projection` already computes |
-| `projection.rule_workspaces` | C | 9 workspaces | allowlist deciding which rules reach the agent | derivable — the rule's own `workspaces:` frontmatter intersected with the active profile/pack set, as `rule_scope.ts` already performs for `rule_packs: auto` |
 | `projection.rule_packs` | C | `[]` | second allowlist axis on rule projection | derivable — the `auto` derivation already implemented in `src/install/rule_scope.ts` |
 | `discipline_profile` | C | `__DISCIPLINE_PROFILE__` | master switch for the discipline rule tier | derivable — its own `auto` resolution against `src/config/host-capabilities.yml` |
 | `rule_loading_tier` | C | `__RULE_LOADING_TIER__` | legacy master switch for rule loading | derivable — `discipline_profile` supersedes it with a documented mapping (minimal→off, balanced→essential, full→full) |

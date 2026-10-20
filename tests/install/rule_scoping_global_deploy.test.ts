@@ -27,6 +27,7 @@ import {
 } from '../../src/scripts/install.js';
 import { expandWizardSources, RULE_SOURCE_REL } from '../../src/install/wizard-plan.js';
 import { buildInstallPlan, type ConflictPolicy } from '../../src/install/plan.js';
+import { consumerRuleWorkspaces } from '../../src/scripts/_lib/scoped_projection.js';
 import {
     COMPAT_ALWAYS_EXCLUDED,
     LEGACY_ALL,
@@ -145,7 +146,7 @@ describe('CLI global deploy — rule set equals the wizard plan', () => {
         runDeploy();
 
         const deployed = deployedRuleBasenames();
-        const planned = plannedRuleBasenames(ruleScopeFromSettings(SCOPED_SETTINGS));
+        const planned = plannedRuleBasenames(ruleScopeFromSettings(SCOPED_SETTINGS, REPO));
 
         expect(deployed.length).toBeGreaterThan(0);
         // The equality IS the contract. Pre-fix this failed because the deploy
@@ -177,10 +178,15 @@ describe('CLI global deploy — rule set equals the wizard plan', () => {
         }
     });
 
-    it('ships strictly fewer rules scoped than unscoped', () => {
+    it('ships the derived scope whatever the settings say, and it is strictly smaller', () => {
+        // ADR-292 step 4.6: the workspace axis is DERIVED from the pack
+        // vocabulary, so "unscoped" is no longer a state a settings doc can
+        // ask for. Both docs therefore deploy the same set — which is the
+        // assertion, and the sensitive one: a difference here would mean a
+        // settings value had regained control of what a consumer receives.
         writeGlobalSettings({ projection: {} });
         runDeploy();
-        const unscoped = deployedRuleBasenames();
+        const empty = deployedRuleBasenames();
 
         fs.rmSync(path.join(tmp, TOOL_ANCHOR_REL), { recursive: true, force: true });
         writeGlobalSettings(SCOPED_SETTINGS);
@@ -188,40 +194,44 @@ describe('CLI global deploy — rule set equals the wizard plan', () => {
         const scoped = deployedRuleBasenames();
 
         expect(scoped.length).toBeGreaterThan(0);
-        expect(scoped.length).toBeLessThan(unscoped.length);
-        // Scoping only ever removes — it must never introduce a rule.
-        expect(scoped.every((n) => unscoped.includes(n))).toBe(true);
+        expect(scoped).toEqual(empty);
+        // And the derived scope still REMOVES: it is strictly smaller than the
+        // rule set the package ships, or the derivation is doing nothing.
+        const everyRule = plannedRuleBasenames({ workspaces: null, packs: null });
+        expect(scoped.length).toBeLessThan(everyRule.length);
+        expect(scoped.every((n) => everyRule.includes(n))).toBe(true);
     });
 });
 
 describe('CLI global deploy — upgrade reaps newly-excluded rules', () => {
-    it('deletes maintainer-only rules on an unscoped → scoped re-install', () => {
-        // 1. Unscoped install: everything except the compat exclusion arrives.
-        writeGlobalSettings({ projection: {} });
-        runDeploy();
-        const unscoped = deployedRuleBasenames();
-        expect(unscoped.length).toBeGreaterThan(0);
-
-        // 2. Re-install with a scoped doc, against the SAME anchor — no manual
-        //    cleanup. This is the upgrade path.
+    it('deletes rules a narrower re-install newly excludes', () => {
+        // The upgrade path. ADR-292 step 4.6 took the WORKSPACE axis out of
+        // settings, so the two states are produced on the PACK axis instead —
+        // the axis that is still a setting, and the same reap code path. The
+        // point is unchanged: the newly-excluded rules are GONE from disk, not
+        // merely un-refreshed. Filtering the copy without filtering the
+        // inventory would leave every one behind, which is worse than shipping
+        // them — the user would carry them forever with no way to notice.
         writeGlobalSettings(SCOPED_SETTINGS);
         runDeploy();
-        const scoped = deployedRuleBasenames();
+        const wider = deployedRuleBasenames();
+        expect(wider.length).toBeGreaterThan(0);
 
-        const nowExcluded = unscoped.filter((n) => !scoped.includes(n));
+        writeGlobalSettings({ projection: { rule_packs: ['engineering-base'] } });
+        runDeploy();
+        const narrower = deployedRuleBasenames();
+
+        const nowExcluded = wider.filter((n) => !narrower.includes(n));
         expect(nowExcluded.length).toBeGreaterThan(0);
-
-        // The point of the test: GONE from disk, not merely un-refreshed.
-        // Filtering the copy without filtering the inventory would leave every
-        // one of these behind, which is worse than shipping them in the first
-        // place — the user would carry them forever with no way to notice.
         for (const name of nowExcluded) {
             expect(
                 fs.existsSync(path.join(tmp, DEPLOYED_RULES_SUB, name)),
-                `${name} survived the scoped re-install`,
+                `${name} survived the narrower re-install`,
             ).toBe(false);
         }
-        expect(scoped).toEqual(plannedRuleBasenames(ruleScopeFromSettings(SCOPED_SETTINGS)));
+        expect(narrower).toEqual(
+            plannedRuleBasenames(ruleScopeFromSettings({ projection: { rule_packs: ['engineering-base'] } }, REPO)),
+        );
     });
 
     it('is idempotent — a second scoped install changes nothing', () => {
@@ -281,17 +291,22 @@ describe('scope resolution fails safe', () => {
         expect(warnings.join('')).not.toContain('legacy-all');
     });
 
-    it('treats a settings doc without a projection block as legacy-all', () => {
+    it('derives the workspace axis even with no projection block, and leaves packs inactive', () => {
+        // Before ADR-292 step 4.6 this read `workspaces: null`. A rule is not a
+        // setting, so a settings file that happens to omit a section cannot
+        // switch the workspace scope off; the pack axis is still a setting and
+        // stays inactive, which is the half that did not change.
         writeGlobalSettings({ personal: { autonomy: 'on' } });
-        expect(_resolve_global_rule_scope(REPO)).toEqual(
-            expect.objectContaining({ workspaces: null, packs: null }),
-        );
+        const scope = _resolve_global_rule_scope(REPO);
+        expect(scope.packs).toBeNull();
+        expect(scope.workspaces).toEqual(consumerRuleWorkspaces(REPO));
+        expect(scope.workspaces?.length).toBeGreaterThan(0);
     });
 
     it('reads the same keys ruleScopeFromSettings reads', () => {
         writeGlobalSettings(SCOPED_SETTINGS);
         expect(_resolve_global_rule_scope(REPO)).toEqual(
-            ruleScopeFromSettings(SCOPED_SETTINGS),
+            ruleScopeFromSettings(SCOPED_SETTINGS, REPO),
         );
     });
 });
