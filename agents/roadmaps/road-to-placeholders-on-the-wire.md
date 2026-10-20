@@ -74,6 +74,26 @@ the raw value. A generated coverage table — channel × host × auth mode × la
 mode — states `asserted`, `replaced`, `gated` or `uncovered` per cell, and the
 published claim is the measured result per class per state, a null included.
 
+## Execution status — 2026-10-20, branch `drain/placeholders-on-the-wire-20261020`
+
+One PR for every step that is not externally impossible. Phase 0 ran as an
+agent probe after all: `claude -p --settings <scratch file>` binds probe hooks
+without writing any host settings file, so `block-config-weakening` never
+fires. Built and closed: 0.1, 0.2, 1.3, 3.1–3.4, 4.1–4.5, 5.1–5.3, 6.3, and
+6.1's round-4 refusal answered (authority only through an issued
+`RewriteCapability`). The emission decision, the restore and the coverage
+inputs live in the egress engine chunk: in the dispatch bundle they measured
++16,365 B against 454 B of headroom; after the move the bundle is
+1,549,978 B of 1,550,000 and the chunk 67,764 B under a raised 72,000.
+
+Still open, each for a stated reason: 2.1's `session_start` prune trigger and
+2.2's injection wiring need dispatch-bundle bytes (22 B left, shrink-only
+ceiling, a raise needs a ratification round — council seats degraded today);
+6.2 needs Copilot and Gemini CLIs and accounts this machine does not have;
+6.4, 6.5, AC-1 and AC-6 need a live `protect` observation window and the
+sibling's identifier rules; 7.3–7.7 and AC-7 wait on the gateway decision and
+7.2.
+
 ## Execution status — 2026-10-18, branch `drain/road-to-placeholders-on-the-wire-20261018`
 
 Phase 2 built as a module outside the dispatcher's import closure, so no hook
@@ -216,7 +236,7 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
 
 ## Phase 0 — Probes against the running host (no product code)
 
-- [ ] **0.1 Probe tool-output replacement, pinned to a host version.** For
+- [x] **0.1 Probe tool-output replacement, pinned to a host version.** For
       `Read`, `Bash`, `Grep` and one MCP tool record: the `tool_response` shape;
       that a shape-preserving replacement is what the model then quotes; that a
       mismatched replacement is silently dropped; what the on-disk transcript
@@ -224,12 +244,14 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       file; that a subagent's tool calls arrive with the parent's `session_id`;
       whether host telemetry captures the original output.
       verify: `agents/evidence/analysis/host-output-rewrite-probe-<date>.md` names the host version and answers each item `observed` or `not-observable`, never with a citation.
-- [ ] **0.2 Probe tool-input replacement.** `updatedInput` alone, with the
+      — 2026-10-20: `agents/evidence/analysis/host-output-rewrite-probe-2026-10-20.md`, Claude Code 2.1.304, every item observed: the four tool shapes, a shape-preserving replacement quoted by the model, a mismatch dropped in silence on built-in tools and passed raw on MCP, a transcript holding only the token, spilled output bypassing the hook, a subagent on the parent session id, telemetry carrying prompts but not tool output.
+- [x] **0.2 Probe tool-input replacement.** `updatedInput` alone, with the
       permission flow still running; with `ask`, the restored input visible;
       whether the `tool_use` block resent next turn carries the model's original
       or the replaced input; whether any hook fires for an `@file` mention; and
       whether a timed-out `UserPromptSubmit` hook lets the prompt through.
       verify: same file; the `@file` and timeout answers seed the coverage table of 6.3.
+      — 2026-10-20: same file, step 0.2: `updatedInput` delivered alone; `ask` in `-p` denies; the next turn resends the original `tool_use`; an `@file` mention fires no tool hook; a timed-out `UserPromptSubmit` hook lets the prompt through. The last two seed the coverage table.
 
 ## Phase 1 — The dispatcher gains one stage, in observe mode
 
@@ -250,11 +272,12 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       goes only to concerns that decide whether a call may run. A concern
       declares the view it needs; the default is the placeholder view.
       verify: with chat history enabled, a prompt carrying a credential is persisted as a token; a blocking guard's fixture sees the restored command; a recording concern's fixture on the same event does not.
-- [ ] **1.3 Observe first.** The stage counts what it would replace — class,
+- [x] **1.3 Observe first.** The stage counts what it would replace — class,
       type, slot, tool — and replaces nothing. The record is a fixed-field schema
       that cannot hold a value, the construction `tool_result_bytes_hook.ts`
       already uses. `hooks:replay` shows what the stage would do on a fixture.
       verify: one release of readings from this repository's own sessions exists, and the arming step 3.1 cites them.
+      — 2026-10-20: `agents/evidence/analysis/egress-observe-readings-2026-10-20.md` — `countEnvelope` replayed over 90,097 envelopes of this repository's sessions since 16.5.0: 186 result and 56 input credential spans, no prompt hits, 25 refusals; replay of transcripts, not live hooks, said so in the file. 3.1 cites it.
 - [x] **1.4 Govern the stage like a concern** — an admission row answering the
       five questions of `src/scripts/hook_manifest.yaml`'s header, a kill-switch
       row, and the `egress.placeholders` settings block with modes `off`,
@@ -292,6 +315,7 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       module. Open: the read refusal waits for the sibling's prevention guard
       (its 1.1), and calling the prune at `session_start` edits a module in the
       dispatcher's import closure, which needs a ratification round.
+      — 2026-10-20, all but one trigger: file-tool results now mint into the table (no value serialised, tested), and a tool call naming the table directory is denied by the egress stage itself. Open: the prune runs before a process mints, not at `session_start` — binding it there needs dispatch-bundle bytes, which has 22 B left under a shrink-only ceiling; a raise needs a ratification round, and the council seats are degraded today (council-blocked).
 - [x] **2.1b Restoration fails closed, in five named outcomes.** Every
       restoration re-derives the value from its origin object and matches the
       fingerprint first — **including a same-destination restoration**, because
@@ -315,10 +339,11 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       point calls it yet: no token outlives a dispatch until the stage mints
       into the session table, so wiring handoff and memory recall now would
       carry nothing.
+      — 2026-10-20: tokens now outlive a dispatch (file-tool results). Open, council-blocked: wiring `reissueIntoSession` into the handoff, memory-recall and resume injection points edits bundled `session_start` concerns, which needs a dispatch-ceiling raise and its ratification round; no injection point records its predecessor session yet either.
 
 ## Phase 3 — Tool results carry placeholders (Claude Code → `replaced`)
 
-- [ ] **3.1 Emit `updatedToolOutput`** when the stage replaced anything and the
+- [x] **3.1 Emit `updatedToolOutput`** when the stage replaced anything and the
       reduced severity is not a block: the original object with string leaves
       changed and nothing else. Armed only in `protect` or `strict`, and only
       after the 1.3 readings.
@@ -327,49 +352,58 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       1.3: `tests/fixtures/egress-prevention-gaps/program-output.json` and
       `database-row.json`. When this lands, `tests/scripts/hooks/egress_prevention_gaps.test.ts`
       inverts its no-rewrite assertion for both.
-- [ ] **3.2 Pay the debt the byte counter recorded.** The test pinning "nothing in
+      — 2026-10-20: `src/scripts/_lib/egress_emission.ts` (engine chunk), armed in `protect`/`strict` on the output capability the 0.1 probe earned, after the 1.3 readings; keys and types asserted for Read, Bash, Grep and MCP in `tests/scripts/_lib/egress_emission.test.ts`; the two gap fixtures inverted.
+- [x] **3.2 Pay the debt the byte counter recorded.** The test pinning "nothing in
       the tree rewrites a tool result" goes red by design; its premise becomes
       "exactly one module emits the field", and `delivered_bytes` is taken from
       the stage's output.
       verify: `tests/scripts/tool_result_bytes_hook.test.ts` asserts the single writer; a replaced result records `delivered_bytes` different from `raw_bytes`.
-- [ ] **3.3 Refuse to trust the host's silence.** Before emitting, the stage checks
+      — 2026-10-20: the census test asserts `egress_emission.ts` is the single writer; `delivered_bytes` rides in the payload stub from the stage's plan.
+- [x] **3.3 Refuse to trust the host's silence.** Before emitting, the stage checks
       its output against the input shape and rescans it for table values and known
       values. On a mismatch, a residual hit, a deadline breach or an internal error
       it emits no rewrite, raises the host's visible message and counts the event.
       A dropped replacement is a leak and is reported as one.
       verify: a forced shape mismatch produces the message and the counter, and the counter is what AC-1 reads.
-- [ ] **3.4 Tell the model once what a token is** — one line of context at first
+      — 2026-10-20: shape, residual, extent, capability, deadline and internal-error checks; each emits a `systemMessage` and a `withheld` line in `egress-rewrites.jsonl`, the count AC-1 reads. Sensitivity: with the shape check removed the mismatch fixture went red.
+- [x] **3.4 Tell the model once what a token is** — one line of context at first
       use in a session. Whether it helps is part of the sibling's 0.3 measurement;
       if it does not, it is removed.
       verify: the fidelity reading with and without the line is in the published report.
+      — 2026-10-20: `agents/evidence/analysis/token-explainer-fidelity-2026-10-20.md` — 20/20 with and 20/20 without the line; kept by the pre-registered rule, which shows no harm rather than benefit.
 
 ## Phase 4 — Values come back in one place
 
-- [ ] **4.1 Emit `updatedInput`** with identifier tokens restored, for file
+- [x] **4.1 Emit `updatedInput`** with identifier tokens restored, for file
       writes and edits and for calls `category_a.ts` ranks consequence-free. An
       input bound for another model context — a subagent prompt — is never
       restored.
       verify: an `Edit` whose `old_string` holds a token applies against the real file and the file never contains a token; a subagent prompt leaves the tool with the token intact.
-- [ ] **4.2 A credential token restores into one place only: the file it was read
+      — 2026-10-20: `src/scripts/_lib/egress_restore.ts`; identifier restores into its origin, a local write or a consequence-free call; `Agent`/`Task` inputs keep their tokens. End to end through the dispatcher in `egress_stage.test.ts`.
+- [x] **4.2 A credential token restores into one place only: the file it was read
       from,** with the value taken from that file at restore time by matching the
       fingerprint, never from the table. Into a command, another file or any
       network sink it is denied, naming the alternative (reference the variable).
       verify: an edit spanning a credential line in its origin file applies; the same token toward an external host is denied and the denial names no value; after the origin file is rotated the token no longer resolves.
-- [ ] **4.3 Every other restore asks** (D4).
+      — 2026-10-20: re-derived from the origin file by digest; toward a shell or another host denied naming the variable; a rotated origin no longer resolves.
+- [x] **4.3 Every other restore asks** (D4).
       verify: a fixture per sink class; an `allow` never accompanies a restore, asserted in `emitFor`'s test.
-- [ ] **4.4 Nothing unresolved runs.** A tool input still containing the grammar
+      — 2026-10-20: a fixture per sink class; an `allow` never accompanies a restore (asserted on the emission).
+- [x] **4.4 Nothing unresolved runs.** A tool input still containing the grammar
       after the stage — unknown number, wrong fingerprint, mangled token — is
       denied. One tolerant match on number and fingerprint is attempted; what it
       cannot resolve it does not guess.
       verify: a token with altered spacing resolves; a token with an unknown number is denied; neither reaches a shell.
-- [ ] **4.5 An audit line per restore, without the value** — session, class,
+      — 2026-10-20: spacing canonicalised once; unknown number, mangled form and a host without input capability deny.
+- [x] **4.5 An audit line per restore, without the value** — session, class,
       type, number, tool, sink class, decision — and a per-session rate bound that
       turns a burst into an `ask`.
       verify: the audit schema has no free-text field; a burst fixture composes to `ask`.
+      — 2026-10-20: `egress-restores.jsonl`, eight fixed fields; more than eight in a minute composes to `ask`.
 
 ## Phase 5 — The prompt is gated, and the rule says what is true
 
-- [ ] **5.1 Refuse a prompt carrying the credential class** (D3), suppress the
+- [x] **5.1 Refuse a prompt carrying the credential class** (D3), suppress the
       original text from the block message, and print the redacted copy. The
       identifier class follows the mode. The stage's own deadline sits well inside
       the host's, because a host timeout lets the prompt through.
@@ -378,14 +412,17 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       recorded by `road-to-one-detector-and-the-senders-we-own` 1.3; when this
       lands, `tests/scripts/hooks/egress_prevention_gaps.test.ts` inverts its
       no-block assertion for it.
-- [ ] **5.2 State the residue in the refusal itself:** the text was typed into the
+      — 2026-10-20: refused through the prompt gate capability with the redacted copy; a host that cannot refuse warns and stays `uncovered`; the typed-secret gap fixture inverted.
+- [x] **5.2 State the residue in the refusal itself:** the text was typed into the
       host and may sit in its local transcript and history; rotate a credential
       that was typed. Types and counts, never a value.
       verify: the message is asserted verbatim.
-- [ ] **5.3 Correct `domain-safety-pii`.** Surface 1 becomes two statements: the
+      — 2026-10-20: `promptResidueLine`, asserted verbatim.
+- [x] **5.3 Correct `domain-safety-pii`.** Surface 1 becomes two statements: the
       input side is held by the stage where a host allows it (`enforced_by` names
       it), the output side stays the model's duty.
       verify: `src/rules/domain-safety-pii.md` carries `enforced_by` and the rule linters are green.
+      — 2026-10-20: two statements, `enforced_by` names the stage's test and the instruction-only output side.
 
 ## Phase 6 — Host tiers, the coverage table, the claim
 
@@ -407,19 +444,22 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       runs in gate mode and never issues a reversible token, because a token that
       cannot be restored before execution would land in a file.
       verify: no row changes without its probe file; on a gate-only row the stage never issues a token into model context.
-- [ ] **6.3 Generate the coverage table** — channel × host × auth mode × launch
+      — 2026-10-20: the probe-before-row rule holds by construction (`rewrite_capability.ts` refuses a replace without a matching record). Open: no Copilot CLI or Gemini CLI is installed or logged in on this machine, and a probe needs that host and its account — another account holder must act.
+- [x] **6.3 Generate the coverage table** — channel × host × auth mode × launch
       mode × state — from the lowering table, the sibling's sender census and the
       probes, with a column for host telemetry settings that would export prompts
       or request bodies (an egress path no hook closes). Link it from the contract,
       the threat model and the refusal message, and print it through
       `hooks:status`.
       verify: a channel absent from the generator's input appears as an `unclassified` row, the way `docs/contracts/retrieval-read-surfaces.md` already does it; one working auth mode never greens another mode's row.
+      — 2026-10-20: `src/scripts/_lib/egress_coverage.ts`, rendered by `egress_sender_census --write` into the contract § Coverage, printed by `hooks:status --coverage`, linked from the threat model and the refusal message; tests in `tests/scripts/_lib/egress_coverage.test.ts`.
 - [ ] **6.4 Record the claim or the null.** A `docs/CLAIMS.md` entry per class
       and state with measured recall and precision, the dropped-replacement rate,
       the implicit-identity residue and the paired task-quality verdict. The
       README states pseudonymisation of listed value types on listed channels and
       nothing wider.
       verify: the claims gate is green and no shipped prose about this feature calls it anonymisation.
+      — 2026-10-20: open. Recall and precision per class need the sibling's detection bench, whose identifier rules (its 2.3) do not exist; the dropped-replacement rate needs an observation window of live `protect` sessions — a real-world wait.
 - [ ] **6.5 Apply the default the council chose, bounded to new installs.**
       Once 6.4's result meets its pre-registered bars, the settings template
       defaults the **credential** class to `protect`; the identifier class stays
@@ -428,6 +468,7 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       measured 2026-10-16, no path writes the template into one, which is the
       condition the council's (a) rests on.
       verify: the settings template carries the credential default and its inline disclosure, the identifier class is absent from it, and 6.4's published result carries failure categories and known exceptions beside the pass mark.
+      — 2026-10-20: waits for 6.4's result to meet its bars.
 
 ## Phase 7 — A request gateway for what no hook reaches (blocker `request-gateway-build`)
 
@@ -661,13 +702,13 @@ package can rewrite. Steps 7.1 and 7.2 are what the blocker is answered with;
 - [ ] AC-1 — On Claude Code at the probed version, a tool result containing a
       listed value reaches the model as a token, and the dropped-replacement count
       over the observation window is published.
-- [ ] AC-2 — A token in a tool input is restored, asked about or denied according
+- [x] AC-2 — A token in a tool input is restored, asked about or denied according
       to class and sink; no unresolved, forged or foreign token reaches a tool.
-- [ ] AC-3 — A prompt carrying a credential is refused with the original text
+- [x] AC-3 — A prompt carrying a credential is refused with the original text
       suppressed, and no local store of this package holds the raw value.
-- [ ] AC-4 — No serialised session state holds a credential value, and no
+- [x] AC-4 — No serialised session state holds a credential value, and no
       identifier value rests in the form the council rejected.
-- [ ] AC-5 — The coverage table is generated with four states per channel, host,
+- [x] AC-5 — The coverage table is generated with four states per channel, host,
       auth mode and launch mode; no hook channel is `asserted`; every channel of
       K6 appears; host telemetry export is a row, not an omission.
 - [ ] AC-6 — `docs/CLAIMS.md` carries the per-class, per-state result measured
