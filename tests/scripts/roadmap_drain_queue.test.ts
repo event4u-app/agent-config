@@ -110,6 +110,131 @@ describe('screenRoadmap — one class per open step', () => {
     });
 });
 
+describe('screenRoadmap — acceptance criteria are not steps', () => {
+    it('counts AC items apart, under the heading and by label', () => {
+        const text = [
+            roadmap({ done: 1, open: ['- [ ] **2.1 Work.**', '- [ ] **AC-9** labelled outside the section.'] }),
+            '## Acceptance Criteria',
+            '',
+            '- [ ] **AC-1** first.',
+            '- [x] **AC-2** second.',
+            '- [ ] AC-3 — third.',
+            '',
+            '## Notes',
+            '',
+            '- [ ] **3.1 After the AC section.**',
+        ].join('\n');
+        const s = screen('road-to-ac', text);
+        expect(s.open).toBe(2);
+        expect(s.counts.runnable).toBe(2);
+        expect(s.acceptance_open).toBe(3);
+    });
+
+    it('screens the recorded case — 4 held steps and 10 ACs — as nothing runnable', () => {
+        const held = Array.from(
+            { length: 4 },
+            (_, i) => `- [ ] **4.${i + 1} Step.** Runs the probe.\n      *Held open, 2026-10-16: the council split.*`,
+        );
+        const acs = Array.from({ length: 10 }, (_, i) => `- [ ] **AC-${i + 1}** criterion.`);
+        const text = [roadmap({ done: 3, open: held }), '## Acceptance Criteria', '', ...acs].join('\n');
+        const s = screen('road-to-recorded', text);
+        expect(s.counts.runnable).toBe(0);
+        expect(s.counts.held).toBe(4);
+        expect(buildQueue([s], NO_CLAIMS, TODAY).queue[0]?.bucket).toBe('decide');
+    });
+
+    it('lists a roadmap with only ACs open as close, ahead of continue', () => {
+        const closing = screen(
+            'road-to-closing',
+            [roadmap({ done: 5, open: [] }), '## Acceptance Criteria', '', '- [ ] **AC-1** ci green.'].join('\n'),
+        );
+        const going = screen('road-to-going', roadmap({ done: 1, open: ['- [ ] **1.1 Work.**'] }));
+        const q = buildQueue([going, closing], NO_CLAIMS, TODAY);
+        expect(q.queue.map((e) => [e.slug, e.bucket])).toEqual([
+            ['road-to-closing', 'close'],
+            ['road-to-going', 'continue'],
+        ]);
+        expect(q.next?.slug).toBe('road-to-closing');
+    });
+});
+
+describe('screenRoadmap — holds written in prose', () => {
+    it.each([
+        '*Held open, 2026-10-16: the council split 1:1.*',
+        'Still waits on 2.1\'s verdict.',
+        'This step waits on that file producing it.',
+        'Put on hold against the tree.',
+    ])('holds a step whose continuation says: %s', (note) => {
+        const s = screen('road-to-p', roadmap({ done: 1, open: [`- [ ] **2.1 Work.**\n      ${note}`] }));
+        expect(s.steps[0]?.cls).toBe('held');
+    });
+
+    it.each([
+        '- [ ] **2.5 Skipping ships on only when both hold:** the reading and the flip.',
+        '- [ ] **4.5 The guard waits on nothing.** It reads the window.',
+    ])('never reads a hold from the title line: %s', (step) => {
+        expect(screen('road-to-t', roadmap({ done: 1, open: [step] })).steps[0]?.cls).toBe('runnable');
+    });
+
+    it('does not read "condition holds" as on hold', () => {
+        const s = screen('road-to-h', roadmap({ done: 1, open: ['- [ ] **2.1 Work.**\n      The bound holds on both arms.'] }));
+        expect(s.steps[0]?.cls).toBe('runnable');
+    });
+
+    it('holds every step of a phase opened by a hold blockquote, and only that phase', () => {
+        const text = [
+            '---',
+            'status: ready',
+            '---',
+            '## Phase 4 — Free',
+            '- [x] **4.1 Done.**',
+            '- [ ] **4.2 Free.**',
+            '## Phase 5 — Waiting',
+            '> **Screened 2026-10-18 — waits on accrued data.**',
+            '- [ ] **5.1 A.**',
+            '- [ ] **5.2 B.**',
+        ].join('\n');
+        expect(screen('road-to-ph', text).steps.map((x) => x.cls)).toEqual(['runnable', 'held', 'held']);
+    });
+
+    it('drops a prose hold whose named blocker has resolved', () => {
+        const text = roadmap({
+            done: 1,
+            open: ['- [ ] **2.1 Work.**\n      Open (2026-10-17): still held by blocker `settled`.'],
+            blockers: '### blocker: settled\n- **Status:** resolved — 2026-10-18\n- **Owner:** owner',
+        });
+        expect(screen('road-to-r', text).steps[0]?.cls).toBe('runnable');
+    });
+});
+
+describe('buildQueue — lanes of one session', () => {
+    const a = screen('road-to-a', roadmap({ done: 1, open: ['- [ ] **1.1 Work.**'] }));
+    const b = screen('road-to-b', roadmap({ done: 1, open: ['- [ ] **1.1 Work.**', '- [ ] **1.2 Work.**'] }));
+
+    it('never dispatches the orchestrator onto a roadmap one of its own lanes holds', () => {
+        const claims: ClaimView = {
+            live: [{ session_id: 's1', roadmap_slug: 'road-to-a', lane: true, worktree: '/wt/a', branch: 'drain/a' }],
+            dead: [],
+        };
+        const q = buildQueue([a, b], claims, TODAY, 's1');
+        expect(q.next?.slug).toBe('road-to-b');
+        const held = q.queue.find((e) => e.slug === 'road-to-a');
+        expect(held?.bucket).toBe('claimed');
+        expect(held?.lane).toEqual({ worktree: '/wt/a', branch: 'drain/a' });
+    });
+
+    it('keeps two lanes of one session on two roadmaps at once', () => {
+        const claims: ClaimView = {
+            live: [
+                { session_id: 's1', roadmap_slug: 'road-to-a', lane: true },
+                { session_id: 's1', roadmap_slug: 'road-to-b', lane: true },
+            ],
+            dead: [],
+        };
+        expect(buildQueue([a, b], claims, TODAY, 's2').next).toBeNull();
+    });
+});
+
 describe('isTimeGated', () => {
     it('needs both a wait word and a date after today', () => {
         expect(isTimeGated('the window opens 2026-11-13', TODAY)).toBe(true);
