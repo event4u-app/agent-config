@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# egress-content: session-content uncovered — the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach
 # comfyui.sh — local ComfyUI multiplexer adapter: the local-free render
 # path for GPU users (Wan2.2 TI2V-5B default template, LTX-2 for
 # audio-sync). Sandbox model locked by ADR-060 — read it before touching

@@ -1,3 +1,4 @@
+// egress-content: session-content asserted — every body passes councilEgress().check in curlJsonPost before curl is spawned; the council bundle is replaced through the engine first
 /**
  * The council's synchronous HTTP transport, and the per-provider shims that
  * turn it into the SDK-shaped callables `clients.ts::ask()` reads.

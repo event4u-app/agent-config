@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+// egress-content: fixed-corpus — sends the labelled classification corpus named by --corpus, never session content
 /**
  * RDP gate-time classification validation (road-to-rdp-frontier-polish Phase 1).
  *

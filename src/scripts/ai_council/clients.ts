@@ -1,3 +1,4 @@
+// egress-content: session-content asserted — API seats post through api_transport.curlJsonPost and CLI seats pass councilEgress().check before the spawn; council rounds are replaced through the engine first
 // External-AI clients for the council — ported from the retired Python
 // `src/scripts/ai_council/clients.py` (ADR-200).
 //
