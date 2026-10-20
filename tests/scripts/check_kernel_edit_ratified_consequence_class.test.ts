@@ -149,6 +149,13 @@ describe('classification', () => {
         expect(gate.requiresRatification(gate.classifyPaths([ALPHA], [], cls))).toBe(true);
     });
 
+    it('the class decides a diff exactly when it holds a non-kernel rule path', () => {
+        expect(gate.classDecidesAny(['docs/note.md', LIST, 'src/scripts/x.ts'])).toBe(false);
+        expect(gate.classDecidesAny(['src/rules/commit-policy.md'])).toBe(false);
+        expect(gate.classDecidesAny([BETA])).toBe(true);
+        expect(gate.classDecidesAny(['dist/agent-src/rules/beta.md'])).toBe(true);
+    });
+
     it('a rule outside the class is not gated', () => {
         const g = gate.classifyPaths([BETA], [], cls);
         expect(g.consequenceRules).toEqual([]);
@@ -198,45 +205,67 @@ describe('dealbreaker 1 — the list fails CLOSED', () => {
         expect(unreadable(files as Record<string, string>)).toContain(detail);
     });
 
-    it('the gate refuses a diff whose head list is unreadable, even one gating nothing else', () => {
+    it('a rule edit over an unreadable HEAD list is refused, even for a rule outside the class', () => {
         const base = commitAll(root);
         write(LIST, '{ broken');
-        write('docs/note.md', 'prose\n');
+        write(BETA, 'beta law, edited\n');
         commitAll(root);
-        const r = gate.evaluate([LIST, 'docs/note.md'], root, 2, 'HEAD', base);
+        const r = gate.evaluate([LIST, BETA], root, 2, 'HEAD', base);
         expect(r.exitCode).toBe(1);
         expect(r.lines.join('\n')).toContain('cannot be read');
     });
 
-    it('the gate refuses a head commit that has NO list at all', () => {
+    it('a rule edit over a head with NO list at all is refused', () => {
         const base = commitAll(root);
         fs.rmSync(path.join(root, LIST));
-        write('docs/note.md', 'prose\n');
+        write(BETA, 'beta law, edited\n');
         commitAll(root);
-        const r = gate.evaluate([LIST, 'docs/note.md'], root, 2, 'HEAD', base);
+        const r = gate.evaluate([LIST, BETA], root, 2, 'HEAD', base);
         expect(r.exitCode).toBe(1);
         expect(r.lines.join('\n')).toContain('the file is absent');
     });
 
-    it('the gate refuses a base commit that has NO list at all', () => {
+    it('a rule edit over a base with NO list at all is refused, naming the base', () => {
         fs.rmSync(path.join(root, LIST));
         const base = commitAll(root, 'base without a list');
         write(LIST, listOf('alpha'));
+        write(BETA, 'beta law, edited\n');
         commitAll(root);
-        const r = gate.evaluate([LIST], root, 2, 'HEAD', base);
+        const r = gate.evaluate([LIST, BETA], root, 2, 'HEAD', base);
         expect(r.exitCode).toBe(1);
         expect(r.lines.join('\n')).toContain(`commit ${base}`);
         expect(r.lines.join('\n')).toContain('the file is absent');
     });
 
-    it('the gate refuses when the BASE list is unreadable', () => {
+    it('a broken BASE list blocks no diff it cannot affect', () => {
+        // No rule path in the diff: every membership classifies it the same,
+        // so the list is not read and a docs change is not held hostage.
+        write(LIST, 'not json');
+        const base = commitAll(root);
+        write('docs/note.md', 'prose\n');
+        commitAll(root);
+        const r = gate.evaluate(['docs/note.md'], root, 2, 'HEAD', base);
+        expect(r.exitCode, r.lines.join('\n')).toBe(0);
+        expect(r.lines.join('\n')).toContain('nothing to ratify');
+    });
+
+    it('recovery drill: a broken base is repaired through this gate, with a record and no bypass', () => {
         write(LIST, 'not json');
         const base = commitAll(root);
         write(LIST, listOf('alpha'));
         commitAll(root);
-        const r = gate.evaluate(['docs/none.md'], root, 2, 'HEAD', base);
-        expect(r.exitCode).toBe(1);
-        expect(r.lines.join('\n')).toContain(`commit ${base}`);
+        // The repair touches only the list: a mechanism path, so a record is
+        // owed — and the class is not needed to judge it, so the broken base
+        // does not stand in the way.
+        const unrecorded = gate.evaluate([LIST], root, 2, 'HEAD', base);
+        expect(unrecorded.exitCode).toBe(1);
+        expect(unrecorded.lines.join('\n')).toContain('no ratification artifact');
+        expect(unrecorded.lines.join('\n')).not.toContain('cannot be read');
+
+        const rel = record('repair.md', gate.expectedSubjectFor([LIST], root, 'HEAD', base).digest);
+        commitAll(root);
+        const repaired = gate.evaluate([LIST, rel], root, 2, 'HEAD', base);
+        expect(repaired.exitCode, repaired.lines.join('\n')).toBe(0);
     });
 
     it('polarity: a readable list and an ungated diff pass with nothing to ratify', () => {
