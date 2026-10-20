@@ -24,8 +24,13 @@ export interface EgressRule {
      * refuses the whole text rather than replace part of it.
      */
     readonly replacement: 'detection' | { readonly through: (text: string, span: SpanBounds) => number | null };
-    /** Capture group holding the value; the whole match when absent. A rule that sets it MUST carry the d flag. */
-    readonly valueGroup?: number;
+    /**
+     * Capture group holding the value; the whole match when absent. A rule that
+     * sets it MUST carry the d flag. A list names alternatives of one value
+     * shape — the first group that participated in the match is the value — so
+     * a shape whose delimiter decides its extent stays one row.
+     */
+    readonly valueGroup?: number | readonly number[];
     readonly validator?: (value: string) => boolean;
     /** The rule fires only when `words` matches within `window` chars of the value. */
     readonly context?: { readonly words: RegExp; readonly window: number };
@@ -360,6 +365,29 @@ const TYPE_WORD =
     /^(?:string|number|boolean|bigint|unknown|any|never|void|undefined|null|true|false|none|nil|new|typeof|keyof|await|async|function|const|let|var|return|this|self|class|import|require|readonly|export|default|yield|password|passwd|pwd|secret|token|bearer|api[_-]?key|apikey)$/i;
 
 /**
+ * A credential keyword is a key, not a suffix: `mytoken=` and `notsecret=` are
+ * other words that happen to end in one. A separator is not a letter, so
+ * `client_secret` and `api-key` still read as the keyword they contain.
+ */
+const KEY_START = '(?<![A-Za-z0-9])';
+
+/**
+ * One value, whichever delimiter bounds it, as four alternatives read in order
+ * by `valueGroup: [2, 3, 4, 5]`. The shape it replaces — an optional quote
+ * around a capture that forbade whitespace — matched `"correct` of
+ * `password = "correct horse battery staple"` and left the rest of the
+ * credential in the outbound body (council, 2026-10-21, both seats).
+ *
+ * A complete quoted value is captured without its quotes, so the validator
+ * still reads `password: 'password'` as the type word it is. An UNTERMINATED
+ * quote takes the rest of the line: its extent is unprovable, and the house
+ * rule for an unprovable extent is to cover too much rather than leave the
+ * value behind (`pemMaskEnd`). Each alternative is anchored at the same
+ * position and none can backtrack into another, so the shape stays linear.
+ */
+const QUOTED_OR_BARE_VALUE = `(?:"([^"\\n]*)"|'([^'\\n]*)'|["']([^\\n]+)|([^\\s'"]+))`;
+
+/**
  * Credential shapes at a reviewer's threshold, for a surface that REPLACES a
  * value it would otherwise have masked with its whole line (the council
  * bundle, step 3.3). Not in EGRESS_RULES: a refusing surface or the commit
@@ -377,13 +405,14 @@ export const REVIEW_CREDENTIAL_ROWS: readonly EgressRule[] = [
         pattern: assignmentPattern(
             {
                 keywords: ['apiKey', 'secret', 'token', 'password'],
+                before: KEY_START,
                 capture: true,
                 gap: '[ \\t]*',
-                value: `['"]?([^'"\\s]+)['"]?`,
+                value: QUOTED_OR_BARE_VALUE,
             },
             'dgi',
         ),
-        valueGroup: 2,
+        valueGroup: [2, 3, 4, 5],
         validator: (v) => !CODE_EXPR.test(v) && !TYPE_WORD.test(v),
     },
     {
@@ -518,14 +547,28 @@ function testWholeValue(re: RegExp, value: string): boolean {
  * engine's capture offsets, exclusions, the context window and the validator.
  * The single place both readers of the table evaluate a candidate.
  */
+/**
+ * The capture group this match put the value in. `'whole-match'` is a rule that
+ * declares none. `null` is a rule that declares alternatives and matched none
+ * of them — the match is then discarded, never silently read as the whole
+ * match, which would hand a replacer the keyword along with the value.
+ */
+function valueGroupOf(r: EgressRule, m: RegExpExecArray): number | 'whole-match' | null {
+    if (r.valueGroup === undefined) return 'whole-match';
+    if (typeof r.valueGroup === 'number') return r.valueGroup;
+    return r.valueGroup.find((g) => m[g] !== undefined) ?? null;
+}
+
 export function evaluateMatch(
     r: EgressRule,
     text: string,
     m: RegExpExecArray,
 ): { start: number; end: number; validated: boolean } | null {
-    const value = r.valueGroup !== undefined ? m[r.valueGroup] : m[0];
+    const group = valueGroupOf(r, m);
+    if (group === null) return null;
+    const value = group === 'whole-match' ? m[0] : m[group];
     if (value === undefined || value.length === 0) return null;
-    const start = r.valueGroup !== undefined ? (m.indices?.[r.valueGroup]?.[0] ?? -1) : m.index;
+    const start = group === 'whole-match' ? m.index : (m.indices?.[group]?.[0] ?? -1);
     if (start < 0) {
         throw new Error(`egress rule ${r.rule}: a valueGroup rule needs the d flag for capture offsets`);
     }

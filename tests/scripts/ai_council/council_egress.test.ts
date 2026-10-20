@@ -208,3 +208,79 @@ describe('the transports check what they are about to write (3.3)', () => {
         expect(fs.existsSync(callsPath)).toBe(false);
     });
 });
+
+/**
+ * Council review of this branch, 2026-10-21, round A1: both seats REQUEST_CHANGES
+ * on one confidentiality defect. The review-assignment value shape opened and
+ * closed with an OPTIONAL quote around a capture that forbade whitespace, so a
+ * quoted credential containing a space was replaced only up to that space and
+ * its remainder stayed in the outbound body. Both seats asked for the assertion
+ * to be made over the whole body rather than over the detector's span, which is
+ * what these cases do.
+ */
+describe('a quoted credential leaves whole, never by its prefix (council A1)', () => {
+    beforeEach(() => {
+        resetCouncilEgress({ identifiers: false });
+    });
+
+    const WORDS = ['correct', 'horse', 'battery', 'staple'].join(' ');
+
+    it('a double-quoted value containing spaces leaves no byte of itself behind', () => {
+        const out = redact(`password = "${WORDS}"`);
+        expect(out).not.toContain(WORDS);
+        for (const word of WORDS.split(' ')) expect(out).not.toContain(word);
+        expect(parseTokens(out).map((t) => t.type)).toContain('SECRET');
+    });
+
+    it('a single-quoted value containing spaces leaves no byte of itself behind', () => {
+        const out = redact(`apiKey: '${WORDS}'`);
+        for (const word of WORDS.split(' ')) expect(out).not.toContain(word);
+    });
+
+    it('an unterminated quote is over-redacted to the line end, never matched by its prefix', () => {
+        const out = redact(`password = "${WORDS}`);
+        for (const word of WORDS.split(' ')) expect(out).not.toContain(word);
+    });
+
+    it('an unquoted value is still replaced, and the key name stays readable', () => {
+        const value = `pw${run(14, 7)}`;
+        const out = redact(`password=${value}`);
+        expect(out).not.toContain(value);
+        expect(out).toMatch(/^password=__SECRET_1_/);
+    });
+
+    it('the whole quoted value is absent from the body a member would receive', () => {
+        const client = new FakeClient();
+        const r = call(client, bundle_prompt(`password = "${WORDS}"`).text);
+        expect(r.error).toBeNull();
+        expect(client.sent).toHaveLength(1);
+        expect(client.sent[0]).not.toContain(WORDS);
+        for (const word of WORDS.split(' ')) expect(client.sent[0]).not.toContain(word);
+    });
+});
+
+/**
+ * Council review of this branch, 2026-10-21, round A1, both seats: the
+ * review-assignment shape declared no boundary before its keyword group, so a
+ * key that merely ENDS in a credential word was replaced. Over-redaction here
+ * is not free — shadow dispatch drops a query that needed a placeholder.
+ */
+describe('a credential keyword is a key, not a suffix (council A1)', () => {
+    beforeEach(() => {
+        resetCouncilEgress({ identifiers: false });
+    });
+
+    it('a key that merely ends in a credential word is left alone', () => {
+        for (const line of ['mytoken = ordinary', 'notsecret = ordinary', 'xapiKey = ordinary']) {
+            expect(redact(line)).toBe(line);
+        }
+    });
+
+    it('a compound key separated from the keyword is still a credential', () => {
+        const value = `pw${run(12, 3)}`;
+        for (const key of ['client_secret', 'MY_TOKEN', 'api-key']) {
+            const out = redact(`${key}=${value}`);
+            expect(out).not.toContain(value);
+        }
+    });
+});
