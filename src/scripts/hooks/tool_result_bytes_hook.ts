@@ -55,13 +55,12 @@
  * Bash 1.44x; Read within 0.1 %). The payload the model received is a separate
  * metric, `tool-result-payload-bytes`, read from transcripts. `raw_bytes` is
  * the hook envelope the host handed the dispatcher; `delivered_bytes` is the
- * hook envelope after any rewrite a concern could apply on its way back.
- * Today they are EQUAL BY CONSTRUCTION, and the construction is
- * checkable: nothing under `src/` or `docs/` emits the host's result-rewrite
- * field, so no concern can rewrite a tool result on its way past. That
- * absence is a grep, and the grep lives in this concern's test rather than
- * in this sentence - a claim in a comment is not falsifiable, and naming the
- * field here would put a match in the very tree the grep sweeps.
+ * hook envelope the egress stage hands back in its place. Exactly one module
+ * emits the host's result-rewrite field, the egress stage's (ADR-285), and
+ * the dispatcher carries the rewritten length in this body's stub; with no
+ * rewrite the two are equal. That single writer is a grep, and the grep lives
+ * in this concern's test rather than in this sentence - naming the field here
+ * would put a match in the very tree the grep sweeps.
  *
  * Recording both NOW is what makes a later reduction measurable instead of
  * asserted. With one field, a future release that starts trimming results
@@ -106,7 +105,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
-import { stubbedBytes } from './payload_stub.js';
+import { isPayloadStub, stubbedBytes } from './payload_stub.js';
 import { EXIT_ALLOW } from './exit_codes.js';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
@@ -175,6 +174,9 @@ export function _resultBytes(payload: JsonObject): number | null {
     return null;
 }
 
+/** The rewritten result's length the dispatcher put in the stub, or `undefined` when nothing was rewritten. */
+const stubbedDelivered = (v: unknown): number | undefined => (isPayloadStub(v) ? v.delivered_bytes : undefined);
+
 /** The tool's name, read from the same positions the sibling hook reads. */
 export function _toolName(payload: JsonObject, envelope: JsonObject): string | null {
     const candidates = [
@@ -209,9 +211,8 @@ export interface CensusLine {
      * UTF-8 bytes of the hook envelope after any rewrite — NOT what reached
      * the model (see the header; that figure is `tool-result-payload-bytes`).
      *
-     * Equal to {@link CensusLine.raw_bytes} by construction today — nothing in
-     * this tree rewrites a tool result. It is recorded anyway so that a later
-     * reduction is a measured delta rather than a claim. See the header.
+     * Taken from the egress stage's output: the rewritten body's length when it
+     * replaced the result, {@link CensusLine.raw_bytes} otherwise. See the header.
      */
     delivered_bytes: number | null;
     /** `false` ⇒ the payload carried no readable result. See the header. */
@@ -281,11 +282,7 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string): numb
             ts: new Date().toISOString(),
             tool: _toolName(payload, envelope),
             raw_bytes: bytes,
-            // Equal BY CONSTRUCTION, not by copy-as-convenience: no concern
-            // can rewrite a result between the host and the model, because
-            // nothing under src/ or docs/ emits the host's rewrite field. The
-            // test pins that as a grep; naming the field here would match it.
-            delivered_bytes: bytes,
+            delivered_bytes: stubbedDelivered(payload['tool_response']) ?? bytes,
             measurable: bytes !== null,
         });
     } catch {

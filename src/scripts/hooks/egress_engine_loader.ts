@@ -34,7 +34,7 @@ import { verifyBundle } from './bundle_integrity.js';
 export type EgressEngine = typeof Engine;
 
 /** The schema this loader accepts. Must equal `ENGINE_SCHEMA` in the engine. */
-export const EXPECTED_ENGINE_SCHEMA = 1;
+export const EXPECTED_ENGINE_SCHEMA = 2;
 
 export const ENGINE_CHUNK_BASENAME = 'egress_engine.chunk.cjs';
 

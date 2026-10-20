@@ -101,6 +101,19 @@ hosts:
           probe_at: 2026-09-06
           host_version: 2.1.263
           expires: 2027-09-06
+        # What this package may do to each channel. A `replace` rests on a live
+        # probe record whose structured lines this table is checked against
+        # (rewrite_capability.ts), and authorizes nothing by itself: a stage
+        # acts only on a capability that check issues. The 2026-10-20 probe of
+        # Claude Code 2.1.304 observed a shape-preserving `updatedToolOutput`
+        # delivered for Read, Bash, Grep and an MCP tool, a mismatched one
+        # dropped in silence, and `updatedInput` delivered. `prompt` is a
+        # refusal, because UserPromptSubmit can block a prompt and cannot
+        # replace it. A row with no `rewrite:` states nothing (`unstated`).
+        rewrite:
+          output: { mode: replace, answered_at: 2026-10-20, host_version: 2.1.304, probe: agents/evidence/analysis/host-output-rewrite-probe-2026-10-20.md }
+          input:  { mode: replace, answered_at: 2026-10-20, host_version: 2.1.304, probe: agents/evidence/analysis/host-input-rewrite-probe-2026-10-20.md }
+          prompt: { mode: gate,    answered_at: 2026-09-29, docs_url: https://code.claude.com/docs/en/hooks.md }
         slots:
           session_start:      { native: SessionStart,      block_exit: null, answered_at: 2026-09-29 }
           session_end:        { native: SessionEnd,        block_exit: null, answered_at: 2026-09-29 }

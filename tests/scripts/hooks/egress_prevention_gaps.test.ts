@@ -7,11 +7,11 @@
  * tests/fixtures/egress-prevention-gaps/, and each names in `closed_by` the step
  * of the host-carrier roadmap that closes it.
  *
- * These assertions describe the gap as it stands, so they PASS while the gap is
- * open: the stage detects the credential, and the dispatcher, even in `strict`,
- * hands the host nothing that changes what goes to the provider. The closing step
- * inverts the second assertion for its fixture. Values are built at runtime and
- * every assertion is a boolean or a count.
+ * A closing step inverts the second assertion for its fixtures: placeholders
+ * 3.1 makes the dispatcher hand the host a replaced tool result for the two
+ * result fixtures. The typed prompt stays open until 5.1 lands, so for it the
+ * assertion still describes the gap. Values are built at runtime and every
+ * assertion is a boolean or a count.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -90,21 +90,24 @@ function writeManifest(target: string): void {
     );
 }
 
-function dispatch(fixture: GapFixture): { status: number | null; stdout: string; ws: string } {
+function dispatch(fixture: GapFixture): { status: number | null; stdout: string; stderr: string; ws: string } {
     const ws = path.join(tmp, 'ws');
     fs.mkdirSync(ws, { recursive: true });
     fs.writeFileSync(path.join(ws, '.agent-settings.yml'), 'egress:\n  placeholders:\n    mode: strict\n');
     const manifest = path.join(tmp, 'manifest.yaml');
     writeManifest(manifest);
+    // Claude Code stamps its version on every transcript line; the stage reads it to rule out drift.
+    const transcript = path.join(tmp, 'transcript.jsonl');
+    fs.writeFileSync(transcript, `${JSON.stringify({ version: '2.1.304' })}\n`);
     const env: NodeJS.ProcessEnv = { ...process.env };
     delete env['AGENT_CONFIG_REPLAY'];
     delete env['AGENT_CONFIG_NO_EGRESS_STAGE'];
     const r = spawnSync(
         TSX_BIN,
         [TS_SCRIPT, '--platform', 'claude', '--event', fixture.event, '--native-event', fixture.native_event, '--manifest', manifest],
-        { cwd: ws, input: JSON.stringify(fixture.payload), encoding: 'utf8', env },
+        { cwd: ws, input: JSON.stringify({ ...fixture.payload, transcript_path: transcript }), encoding: 'utf8', env },
     );
-    return { status: r.status, stdout: r.stdout, ws };
+    return { status: r.status, stdout: r.stdout, stderr: r.stderr, ws };
 }
 
 const NAMES = Object.keys(VALUES);
@@ -185,10 +188,10 @@ describe('egress prevention gaps', () => {
             expect(credentials).toBeGreaterThan(0);
         });
 
-        it(`${name}: today nothing the dispatcher returns changes what reaches the provider`, () => {
+        it(`${name}: the dispatcher closes the channel its fixture names, or the gap stands until its step lands`, () => {
             const f = load(name);
-            const { status, stdout, ws } = dispatch(f);
-            expect(status).toBe(0);
+            const { status, stdout, stderr, ws } = dispatch(f);
+            const value = VALUES[name] as string;
             // The concern ran under the stage: without this the assertions below
             // would also pass for a dispatcher that exited before the concern loop.
             const sid = String(f.payload['session_id']);
@@ -203,11 +206,23 @@ describe('egress prevention gaps', () => {
             expect(line?.mode).toBe('strict');
             const counted = (line?.counts ?? []).filter((c) => c.class === 'credential').reduce((n, c) => n + c.count, 0);
             expect(counted).toBeGreaterThan(0);
-            // What the host reads: no rewrite field anywhere, and no block.
+            expect(stdout.includes(value) || stderr.includes(value)).toBe(false);
+            if (f.event === 'user_prompt_submit') {
+                // Still open until 5.1 lands: no rewrite field anywhere, and no block.
+                expect(status).toBe(0);
+                const keys = keysDeep(hostOutput(stdout));
+                for (const field of REWRITE_FIELDS) expect(keys.has(field)).toBe(false);
+                expect(hostOutput(stdout)['decision']).not.toBe('block');
+                return;
+            }
+            // 3.1: exactly one rewrite field, carrying the original object's keys.
+            expect(status).toBe(0);
             const out = hostOutput(stdout);
-            const keys = keysDeep(out);
-            for (const field of REWRITE_FIELDS) expect(keys.has(field)).toBe(false);
-            expect(out['decision']).not.toBe('block');
+            const hso = out['hookSpecificOutput'] as JsonObject;
+            const field = String(f.payload['tool_name']).startsWith('mcp__') ? 'updatedMCPToolOutput' : 'updatedToolOutput';
+            const emitted = REWRITE_FIELDS.concat(['updatedMCPToolOutput']).filter((k) => keysDeep(out).has(k));
+            expect(emitted).toEqual([field]);
+            expect(Object.keys(hso[field] as JsonObject)).toEqual(Object.keys(f.payload['tool_response'] as JsonObject));
         });
     }
 });

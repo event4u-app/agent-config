@@ -29,6 +29,7 @@ import {
   type JsonValue,
   _load_yaml,
 } from "./hooks/dispatch_hook.js";
+import { coverageFromTree } from "./_lib/egress_coverage.js";
 import { loadHostLowering } from "./hooks/host_lowering.js";
 import { type SlotReading, readSlots } from "./report_enforcement_drift.js";
 
@@ -342,6 +343,8 @@ interface ParsedArgs {
   project_root: string;
   manifest: string;
   strict: boolean;
+  /** Print the egress coverage table (placeholders 6.3) instead of the hook matrix. */
+  coverage: boolean;
 }
 
 function parse_args(argv: string[]): ParsedArgs {
@@ -349,6 +352,7 @@ function parse_args(argv: string[]): ParsedArgs {
   let project_root = ".";
   let manifest = MANIFEST_PATH;
   let strict = false;
+  let coverage = false;
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "--format") {
@@ -363,9 +367,11 @@ function parse_args(argv: string[]): ParsedArgs {
       i += 1;
     } else if (arg === "--strict") {
       strict = true;
+    } else if (arg === "--coverage") {
+      coverage = true;
     }
   }
-  return { format, project_root, manifest, strict };
+  return { format, project_root, manifest, strict, coverage };
 }
 
 // Python json.dumps(payload, indent=2, sort_keys=True) byte-for-byte.
@@ -397,6 +403,11 @@ function _py_json_dumps_sorted(value: JsonValue, indent = 2): string {
 
 export function main(argv?: string[]): number {
   const args = parse_args(argv ?? process.argv.slice(2));
+  if (args.coverage) {
+    // The package's own tree: the lowering table, its probe records and its senders.
+    process.stdout.write(`${coverageFromTree(REPO_ROOT)}\n`);
+    return 0;
+  }
 
   const manifest_path = args.manifest;
   if (!fs.existsSync(manifest_path)) {
