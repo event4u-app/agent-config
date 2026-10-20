@@ -1099,6 +1099,30 @@ gaps again; the binding closes replay, and nothing else.
       classification branch fails 1 of 8, dropping the watch-list entry fails 2
       of 8, and the digest limb was red before the fix above.
 
+      **Rebuilt alone 2026-10-20 against both dealbreakers; five rounds, not
+      passed — still open.** Record:
+      `agents/evidence/ratifications/drain-self-modification-4-2-20261020.md`;
+      every prompt and seat text beside it under `agents/evidence/council/`. The
+      list now fails CLOSED (absent, unparseable, non-slug key, a clause outside
+      the schema's three, or a member with no rule file are refusals), and
+      membership is the union of the lists at the base and head commits, read
+      from Git objects. Neither 2026-10-19 dealbreaker was raised again.
+      anthropic ratified rounds 1 to 4 and timed out in round 5; openai refused
+      all five, each time on a new defect that the next version fixed: merge
+      routing read the checkout's list (both merge triggers now read the
+      union); no recovery path (the class is read only for a diff holding a
+      non-kernel rule path, so a broken base is repaired THROUGH the gate,
+      pinned by a recovery-drill test); the shared fixture seeded the list
+      silently (each suite now seeds it explicitly); the schema stating the
+      criterion was ungoverned (it joined the watch list). Round 5's
+      dealbreaker — membership never checked from the rule's own
+      `consequence_class` back to the list — is already enforced in CI by
+      `tests/scripts/rule_consequence_class.test.ts`, which the bundle did not
+      carry. The code was reverted (empty net diff per file) and is reachable
+      at `5ecf60b10`. A sixth round was not run: on an unchanged diff it would
+      be verdict shopping, and a passing record would still be advisory until
+      the owner binds to its digest (ADR-281 § Amendment).
+
       **Built 2026-10-12, reopened 2026-10-13 — taken off the branch that
       carried it, on the reviewers’ own reasoning.** The modification review
       refused that branch 2/2 on `smaller-change`, and the code of this step is
