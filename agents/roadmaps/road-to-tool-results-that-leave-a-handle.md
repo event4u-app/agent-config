@@ -67,12 +67,13 @@ placeholders 1.3 is open on its one release of readings, so D8's wait holds as
 recorded. 1.3 and 1.4 here are dated on or after 2026-10-29; a run before then
 is labelled PEEK and counts for nothing.
 
-**Unblock events, unchanged in kind:** 1.2 is buildable now (a report, not a
-store). 1.3 and 1.4 wait on the window. Phase 2 waits on placeholders 1.1's ADR and
-its 1.2/1.3 (D8). Open contracts before 2.1 is built: whether 2.4's range is in
-lines or bytes; which detector confidence refuses storage in 2.2; how an expired
-handle is told from an unknown one without keeping sensitive metadata past
-retention; concurrent write, read and cleanup.
+**Run 2026-10-20 (`main@220f8af88`): Phase 2 built.** D8's revisit-if fired
+(ADR-285 accepted, the stage exists), the council reopened it and chose to build
+the store now behind an empty selection (D16), and settled the four open
+contracts (D17). 2.1–2.4 are closed: the stage calls the store, which stores
+nothing until D14 names a class. Still waiting, each on a date or a reading:
+1.3 and 1.4 on the D11 window (closes 2026-10-29); 1.5, 3.1–3.4 on 1.3's
+selection; 3.5 and 4.2 on a release of readings; 4.1 on D15.
 
 ## Context — read at `main@9a943f30c`, F6 at `main@085ec41ff`
 
@@ -140,7 +141,10 @@ retention; concurrent write, read and cleanup.
 
 ## Phase 2 — A local store the stand-in can point into
 
-- [ ] **2.1 Store the delivered bytes under their hash.** In the placeholders
+- [x] **2.1 Store the delivered bytes under their hash.** *Done 2026-10-20:
+      `_lib/tool_output_spool.ts`, its own conditional chunk, called by
+      `egress_stage.ts` through the engine's `spoolResult`; the selection is
+      `_lib/tool_output_selection.ts`, empty until D14 (D16).* In the placeholders
       stage, from `protect` upward, a result of a selected class is written to
       `agents/runtime/spool/<sha256>` — gitignored, workspace-local, never
       `agents/tmp/` — before anything is shortened; the hash is over the bytes the
@@ -149,7 +153,7 @@ retention; concurrent write, read and cleanup.
       (D9 of the placeholders roadmap). Writing is idempotent on the hash. Case
       `spool-write-is-content-addressed` asserts equal outputs share one file.
       verify: `npx vitest run tests/scripts/tool_output_spool.test.ts -t spool-write-is-content-addressed --reporter=verbose` -> /✓.*spool-write-is-content-addressed/
-- [ ] **2.2 No credential rests in the store, and the store holds what the model
+- [x] **2.2 No credential rests in the store, and the store holds what the model
       saw.** The spool receives the placeholder view of the envelope, never the
       execution view, so a value the placeholders stage replaces is a token on disk
       too. When the stored bytes would differ from the bytes delivered to the model,
@@ -157,12 +161,16 @@ retention; concurrent write, read and cleanup.
       stage off, a result carrying a credential-class match is not stored and is
       delivered unreduced.
       verify: `npx vitest run tests/scripts/tool_output_spool.test.ts -t credential-match-is-never-spooled --reporter=verbose` -> /✓.*credential-match-is-never-spooled/
-- [ ] **2.3 The store expires.** Entries older than the retention age (D2) are
+- [x] **2.3 The store expires.** *Done 2026-10-20: cleanup runs at the first
+      store of each session, under an exclusive lock (D17); a handle carries
+      its expiry and a MAC, so `expired` survives its entry's removal.* Entries older than the retention age (D2) are
       removed at `session_start`; the store has a byte cap past which the oldest
       go first. A handle to an expired entry answers "expired", never an empty
       body.
       verify: `npx vitest run tests/scripts/tool_output_spool.test.ts -t expired-handle-says-expired --reporter=verbose` -> /✓.*expired-handle-says-expired/
-- [ ] **2.4 A handle returns the stored bytes.** One existing read path — not a new
+- [x] **2.4 A handle returns the stored bytes.** *Done 2026-10-20:
+      `report_reducible_classes --read-handle <handle> [--range start:end]`,
+      byte ranges, half-open (D17).* One existing read path — not a new
       CLI verb — returns a stored result by hash, whole or by range. It never
       re-reads the file from disk; a missing, an expired and a corrupted entry
       (digest mismatch) each answer their own state (D13).
@@ -243,6 +251,8 @@ retention; concurrent write, read and cleanup.
 | D11 | reversible-technical | agent | Content-profile selection is pre-registered in `internal/bench/tool-results-content-profile-PREREG.md`: three classes fixed by what the body is a function of (`Read:text`, `Bash:file-print`, `Bash:vcs-content`); a class is selected when its p95 exceeds D1's 8,192 B over at least 200 results in a 14-day window that starts after that file's commit; no class selected closes the roadmap with no third criterion | committed alone before any reading of the window; the honest-limit section of that file names the D6 reading the class definitions were informed by | never edited; a change is a new registration with its own window |
 | D12 | reversible-technical | council:tool-results-content-delivery-2026-10-15 (2/2 present, split) | The content delivery form is not chosen. One seat: shorten only byte-identical repeats, and only after their share is measured. The other: the measured problem is large first reads, so a constrained shortened first read, failing open for types without reliable structure. Neither seat chose (c), head plus outline (K8). Both asked for the repeat share (1.4); 3.2 reopens this row once with it | `agents/evidence/council/tool-results-content-delivery-2026-10-15.md`, prompt verbatim beside it | 1.3 and 1.4 are recorded (step 3.2) |
 | D13 | reversible-technical | council:tool-results-content-delivery-2026-10-15 (2/2 present, both seats agreed) | A handle returns the bytes stored at delivery, addressed by the sha256 of the bytes the model received — never a re-read of the file by path and range. A result is stored and replaced only when the stored bytes equal the delivered bytes; a missing, an expired and a corrupted entry each answer their own state. Settles the "opaque hash or path" contract D8 listed | the same record: a disk re-read is a time-of-check/time-of-use mismatch that can return content no longer matching the digest; a privacy view that differs from the delivered view cannot recover what was delivered | the placeholders stage delivers a view other than the one it hands to a local store |
+| D16 | reversible-technical | council:tool-results-d8-reopen-2026-10-20 (2/2 present, both seats chose this) | D8 reopened on its own revisit-if (ADR-285 accepted, `egress_stage.ts` built) and replaced: Phase 2 is built now inside the existing stage, with the selected-class set an empty constant (`_lib/tool_output_selection.ts`) that only D14 fills, so production stores nothing before a class is selected and tests inject a selection. The store is its own conditional chunk, loaded by the engine only when that set is non-empty | `agents/evidence/council/tool-results-d8-reopen-2026-10-20.md`, prompt verbatim beside it | D14 selects no class — then the store, its chunk and its door are removed with the roadmap's close |
+| D17 | reversible-technical | council:tool-results-d8-reopen-2026-10-20 (2/2 on (i), (ii), (iv); split on (iii), openai's taken on the requirement) | Contracts: (i) a range is zero-based, half-open, in bytes, refused when out of bounds, never clamped; (ii) any credential detection in the result at any confidence, or any refusal the stage recorded for it, refuses storage; (iii) a handle is `<sha256>.<expiry seconds>.<mac>` keyed by a workspace-local secret, so expired is told from unknown with no metadata kept past retention; (iv) writes publish through an exclusive temp file and an atomic rename, a read hashes the bytes it serves, cleanup runs under an exclusive lock taken over when stale. Cleanup runs at the first store of each session, not on the `session_start` event (implementer: the stage runs only on events with a body, and a session-start concern would cost a manifest entry and bundle bytes for an empty store). The read path is `report_reducible_classes --read-handle` | the same record; the anthropic (iii) answers `unknown` once cleanup removes an expired entry, which 2.3 forbids | a handle is followed after expiry in the 4.2 readings, or the first selected class needs line ranges |
 
 ## What this roadmap deliberately does not do
 
