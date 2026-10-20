@@ -34,11 +34,14 @@ export interface CoverageRow {
   readonly basis: string;
 }
 
-/** Hook channels a rewrite answer governs. */
-const HOOK_CHANNELS: ReadonlyArray<{ channel: string; axis: RewriteChannel }> = [
-  { channel: "tool result", axis: "output" },
-  { channel: "tool input (restore)", axis: "input" },
-  { channel: "typed prompt", axis: "prompt" },
+/**
+ * Hook channels a rewrite answer governs. `built` names the step that makes the
+ * stage act on the capability; until it lands the host's capability earns no state.
+ */
+const HOOK_CHANNELS: ReadonlyArray<{ channel: string; axis: RewriteChannel; built: string | null }> = [
+  { channel: "tool result", axis: "output", built: null },
+  { channel: "tool input (restore)", axis: "input", built: "placeholders Phase 4" },
+  { channel: "typed prompt", axis: "prompt", built: "placeholders 5.1" },
 ];
 
 /** Channels the 2026-10-20 probe showed, or K6 names, that no hook reaches on any host. */
@@ -66,8 +69,14 @@ export function coverageRows(table: HostLowering, senders: readonly SenderRow[],
     const row = surfaces.get("any") ?? [...surfaces.values()][0];
     if (row === undefined) continue;
     const axis = parseRewriteAxis(host, row.rewrite_raw);
-    for (const { channel, axis: ch } of HOOK_CHANNELS) {
+    for (const { channel, axis: ch, built } of HOOK_CHANNELS) {
       const cap = resolveRewriteCapability(host, row, ch, { today, root });
+      if (cap.ok && built !== null) {
+        for (const auth of AUTH_MODES) {
+          rows.push({ channel, host, auth, launch: "direct", state: "uncovered", basis: `the host allows ${cap.capability.mode}; the stage does not act on it until ${built} lands` });
+        }
+        continue;
+      }
       const answer = axis.ok ? axis.answers.get(ch) : undefined;
       const probed = answer?.probe ? readProbeRecord(root, answer.probe) : null;
       // A gate rests on a refusal code, a replace on a probe that names its auth mode; neither speaks for another mode.

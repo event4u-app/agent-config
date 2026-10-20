@@ -1,7 +1,7 @@
 /**
  * The egress engine as one loadable unit: the rule table, the token grammar,
  * the commit scanner's reading of the table, and what the stage asks the host
- * to do with an event — a replaced tool result or a refused prompt.
+ * to do with a tool result.
  *
  * The dispatcher does not import this statically. `build:hook-chunks` emits it
  * as `dist/hooks/egress_engine.chunk.cjs` beside the dispatch bundle, and
@@ -23,7 +23,6 @@ export { scanText } from './secret_detector.js';
 export {
     deliveredBodyBytes,
     emitEgress,
-    planEgressEmission,
     planStage,
     STAGE_WITHHELD_MARKER,
 } from './egress_emission.js';

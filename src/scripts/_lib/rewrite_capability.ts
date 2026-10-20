@@ -70,8 +70,14 @@ export function renderProbeAttestations(root: string): string {
 export interface CapabilityContext {
   readonly today: string;
   readonly root: string;
-  /** The running host's version when the event carries one; a different minor revokes a `replace`. */
+  /**
+   * The running host's version. A different minor revokes a `replace`, and so
+   * does `null` — a runtime caller that could not observe the version. Absent
+   * (`undefined`) is the lint, which judges the table rather than a running host.
+   */
   readonly observedHostVersion?: string | null;
+  /** Channels a runtime check has revoked on this workspace since the probe; any match revokes. */
+  readonly revoked?: ReadonlyArray<{ readonly host: string; readonly channel: string; readonly reason: string; readonly at: string }>;
   /** Every probe record in the tree; read from disk when absent. */
   readonly probes?: readonly ProbeRecord[];
 }
@@ -201,9 +207,12 @@ export function rewriteCapabilityGaps(
   );
   if (later !== undefined) why.push(`a later probe ${later.path} records \`result: ${later.result ?? "nothing"}\``);
   const seen = ctx.observedHostVersion;
-  if (seen && answer.host_version !== null && minorOf(seen) !== minorOf(answer.host_version)) {
+  if (seen === null) why.push("the running host's version is not observable, so drift from the probed version cannot be ruled out");
+  else if (seen && answer.host_version !== null && minorOf(seen) !== minorOf(answer.host_version)) {
     why.push(`the running host is ${seen} and the probe observed ${answer.host_version}`);
   }
+  const revoked = ctx.revoked?.find((r) => r.host === host && r.channel === channel);
+  if (revoked) why.push(`revoked on this workspace at ${revoked.at} after a ${revoked.reason}`);
   return why;
 }
 

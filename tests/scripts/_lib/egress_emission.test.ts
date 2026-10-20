@@ -12,11 +12,11 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   emitEgress,
-  planPromptGate,
-  STAGE_WITHHELD_MARKER,
-  promptResidueLine,
-  PROMPT_DEADLINE_MS,
+  observedHostVersion,
   planToolOutputRewrite,
+  readRevocations,
+  REVOCATION_FILE,
+  STAGE_WITHHELD_MARKER,
   REWRITE_DEADLINE_MS,
   REWRITE_FILE,
   rewriteWithheldNotice,
@@ -72,14 +72,14 @@ const replaceCap = (() => ({ ok: true, capability: { mode: "replace" } })) as un
 const noCap = (() => ({ ok: false, gaps: ["none"] })) as unknown as typeof resolveRewriteCapability;
 const deps = (over: Partial<RewriteDeps> = {}): RewriteDeps => ({ packageRoot: REPO_ROOT, row: surfaceRow("claude"), capability: replaceCap, ...over });
 const stage = (env: JsonObject, mode: EgressMode) => runEgressStage(env, () => mode);
-const NATIVE: Record<string, string> = { post_tool_use: "PostToolUse", user_prompt_submit: "UserPromptSubmit" };
+const NATIVE: Record<string, string> = { post_tool_use: "PostToolUse" };
 /** The host emission as the dispatcher would write it on Claude Code. */
 function emitFor(_platform: string, event: string, severity: string, reasons: string[], _rc: number, _perm: null, e: Parameters<typeof emitEgress>[0] | undefined) {
-  const r = emitEgress(e ?? null, { event, severity, reason: reasons.join(" · "), blockExit: event === "user_prompt_submit" ? 2 : null, hookEventName: NATIVE[event] ?? event });
+  const r = emitEgress(e ?? null, { event, severity, reason: reasons.join(" · "), hookEventName: NATIVE[event] ?? event });
   return r ?? { exit: 0, stdout: "{}", stderr: "" };
 }
 /** The real resolver against the committed table, the way the stage glue calls it. */
-const real = (platform = "claude"): RewriteDeps => ({ packageRoot: REPO_ROOT, row: surfaceRow(platform) });
+const real = (platform = "claude"): RewriteDeps => ({ packageRoot: REPO_ROOT, row: surfaceRow(platform), observedHostVersion: "2.1.304" });
 
 function keysAndTypes(v: JsonValue): JsonValue {
   if (Array.isArray(v)) return v.map(keysAndTypes);
@@ -189,65 +189,6 @@ describe("3.3 — the stage refuses to trust the host's silence", () => {
   });
 });
 
-describe("5.1 and 5.2 — a prompt carrying a credential is refused with a redacted copy and its residue", () => {
-  const TYPED = ["sk", "ant", "api03", ALNUM + ALNUM.slice(0, 10)].join("-");
-  function prompt(platform = "claude"): JsonObject {
-    return {
-      schema_version: 1,
-      platform,
-      event: "user_prompt_submit",
-      workspace_root: tmp,
-      payload: { session_id: "s", prompt: `call the API with ${TYPED} please` },
-      settings: {},
-    };
-  }
-
-  it("Claude Code refuses through the committed prompt gate and prints the redacted copy, never the value", () => {
-    const env = prompt();
-    const g = planPromptGate(env, stage(env, "protect"), real());
-    expect(g?.outcome).toBe("refuse");
-    expect(g?.message).not.toContain(TYPED);
-    expect(g?.message).toMatch(/Resend this redacted copy instead:\n\ncall the API with __APIKEY_1_[0-9a-f]{6}__ please/);
-    const out = emitFor("claude", "user_prompt_submit", "allow", ["a concern quoting " + TYPED], 0, null, g);
-    expect(out.exit).toBe(2);
-    expect(out.stderr).not.toContain(TYPED);
-  });
-
-  it("5.2: the refusal states the residue verbatim, types and counts only", () => {
-    const env = prompt();
-    const g = planPromptGate(env, stage(env, "protect"), real());
-    expect(g?.message.endsWith(
-      "It held 1 listed value(s) of type APIKEY. The text was typed into the host and may still sit in its local transcript and prompt history; rotate any credential it carried.",
-    )).toBe(true);
-    expect(promptResidueLine([], 0)).toBe(
-      "It held 0 listed value(s) of type unknown. The text was typed into the host and may still sit in its local transcript and prompt history; rotate any credential it carried.",
-    );
-  });
-
-  it("a host that cannot refuse gets a warn, and its prompt channel has no gate capability", () => {
-    const env = prompt("cursor");
-    const g = planPromptGate(env, stage(env, "protect"), { ...real("cursor"), capability: noCap });
-    expect(g?.outcome).toBe("warn");
-    expect(g?.message).not.toContain(TYPED);
-  });
-
-  it("observe and off refuse nothing; a clean prompt is not gated", () => {
-    const env = prompt();
-    expect(planPromptGate(env, stage(env, "observe"), real())).toBeNull();
-    expect(planPromptGate(env, stage(env, "off"), real())).toBeNull();
-    const clean = { ...env, payload: { session_id: "s", prompt: "hello" } };
-    expect(planPromptGate(clean, stage(clean, "protect"), real())).toBeNull();
-  });
-
-  it("a scan that overran its deadline refuses with no copy, because a host timeout would send the prompt", () => {
-    const env = prompt();
-    const g = planPromptGate(env, stage(env, "protect"), { ...real(), elapsed: () => PROMPT_DEADLINE_MS + 1 });
-    expect(g?.outcome).toBe("refuse");
-    expect(g?.message).toMatch(/no redacted copy is offered/);
-    expect(g?.message).not.toContain(TYPED);
-  });
-});
-
 describe("3.4 — the model is told once per session what a token is", () => {
   it("the first replaced result of a session carries the line, the next one does not", () => {
     const env = postToolUse("Bash", SHAPES.Bash());
@@ -266,4 +207,33 @@ describe("3.4 — the model is told once per session what a token is", () => {
 
 it("the chunk's withheld marker is the stage's", () => {
   expect(STAGE_WITHHELD_MARKER).toBe(WITHHELD_MARKER);
+});
+
+describe("round 5 — the running host's version and a runtime revocation decide too", () => {
+  it("an unobserved running version, or another minor, grants no output capability", () => {
+    const env = postToolUse("Bash", SHAPES.Bash());
+    expect(planToolOutputRewrite(env, stage(env, "protect"), { ...real(), observedHostVersion: null })).toMatchObject({ reason: "no-capability" });
+    expect(planToolOutputRewrite(env, stage(env, "protect"), { ...real(), observedHostVersion: "2.2.0" })).toMatchObject({ reason: "no-capability" });
+    expect(planToolOutputRewrite(env, stage(env, "protect"), { ...real(), observedHostVersion: "2.1.311" })?.outcome).toBe("emitted");
+  });
+
+  it("the version is read from the tail of the transcript the envelope names", () => {
+    const t = path.join(tmp, "s.jsonl");
+    fs.writeFileSync(t, `${JSON.stringify({ version: "2.1.300" })}\n${JSON.stringify({ type: "x", version: "2.1.304" })}\n`);
+    expect(observedHostVersion(t)).toBe("2.1.304");
+    expect(observedHostVersion(path.join(tmp, "missing.jsonl"))).toBeNull();
+    expect(observedHostVersion(undefined)).toBeNull();
+  });
+
+  it("a withheld result for a revoking reason revokes the channel on the workspace until a person clears it", () => {
+    const env = postToolUse("Bash", SHAPES.Bash());
+    const s = stage(env, "protect");
+    const placeholder = s.placeholder as JsonObject;
+    const forced = { ...s, placeholder: { ...placeholder, payload: { ...(placeholder["payload"] as JsonObject), tool_response: "flattened" } } };
+    expect(planToolOutputRewrite(env, forced, real())).toMatchObject({ reason: "shape-mismatch" });
+    expect(readRevocations(tmp)).toMatchObject([{ host: "claude", channel: "output", reason: "shape-mismatch" }]);
+    expect(planToolOutputRewrite(env, stage(env, "protect"), real())).toMatchObject({ outcome: "withheld", reason: "no-capability" });
+    fs.rmSync(path.join(tmp, REVOCATION_FILE));
+    expect(planToolOutputRewrite(env, stage(env, "protect"), real())?.outcome).toBe("emitted");
+  });
 });

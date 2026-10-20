@@ -96,13 +96,11 @@ export interface EgressStageResult {
   readonly refused: readonly EgressRefusal[];
   /**
    * What the stage asks the host to do with this event — a replaced tool result
-   * or a refused prompt — decided in the engine chunk before any concern runs.
+   * — decided in the engine chunk before any concern runs.
    * Absent outside `protect` and `strict`, without a package root, and when the
    * engine could not load (every body is then withheld and the miss recorded).
    */
   readonly plan?: StagePlan;
-  /** The envelope the call-deciding concerns receive when the plan restored its input. */
-  readonly execution?: JsonObject;
 }
 
 function isObject(v: unknown): v is JsonObject {

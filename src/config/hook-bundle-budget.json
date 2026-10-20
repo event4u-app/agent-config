@@ -22,9 +22,9 @@
             "date": "2026-10-20",
             "chunk": "src/scripts/_lib/egress_engine.ts",
             "from": 28000,
-            "to": 72000,
+            "to": 44000,
             "by": "agent, road-to-placeholders-on-the-wire Phases 3 and 5",
-            "what_was_added": "The egress stage's decisions about an event, moved here from the dispatch bundle: a tool result going back to the host replaced (placeholders 3.1-3.4), a prompt carrying a credential refused (5.1-5.2), a token in a tool input restored, asked about or denied (Phase 4) with the session table it re-derives from and the consequence-free classifier it consults, the rewrite capability check over host_lowering's rewrite axis and its probe records, and the host emission for all three. Measured 66,207 bytes with them against 20,005 before. The ceiling is that reading plus the identifier-rule growth the engine's own entry already queued, rounded up.",
+            "what_was_added": "The egress stage's decision about a tool result, moved here from the dispatch bundle: whether it goes back to the host replaced (placeholders 3.1-3.4), the rewrite capability check over host_lowering's rewrite axis, its probe records, the running host's version and the workspace's revocations, and the host emission. Measured 39,126 bytes with them against 20,005 before. The ceiling is that reading plus the identifier-rule growth the engine's own entry already queued, rounded up.",
             "why_it_could_not_be_avoided": "The same code first landed in the dispatch bundle and measured +16,365 bytes against 454 bytes of headroom there. Moving it into this chunk is the shape the 2026-10-18 council chose for the engine itself: it is loaded only when the stage's mode is protect or strict, so a default install, whose mode is off, never pays it. What stayed in the dispatch bundle is the call into the chunk and the payload stub's delivered length, which fit under the unchanged dispatch ceiling.",
             "what_would_have_caught_it": "Nothing was missed: the composition gate reported both readings before any push. Recorded so the next reader sees that this raise is the relocated cost of a feature, not new weight in the path every hook event loads."
         }
@@ -38,7 +38,7 @@
         },
         {
             "entry": "src/scripts/_lib/egress_engine.ts",
-            "max_bytes": 72000,
+            "max_bytes": 44000,
             "registered_at": "2026-10-18",
             "derivation": "Measured 18,478 bytes on 2026-10-18 (the rule table, the token grammar and the commit scanner, with the per-rule linearity prose moved to a test-only module). The ceiling is that reading plus the queued engine work of road-to-one-detector-and-the-senders-we-own (validated identifier rules about 4.3 KB, known values, the invisible-character rescan and the variant suffix about 1-2 KB each), rounded up. An AI council of two providers chose on 2026-10-18 to move the engine out of the dispatch bundle into this conditional chunk rather than raise the dispatch ceiling, and asked that the chunk carry a measured budget of its own so the move does not just relocate uncontrolled growth. A raise follows the same rule as max_bytes: a raise_log entry naming the chunk (`chunk`: this entry) and what was added."
         }

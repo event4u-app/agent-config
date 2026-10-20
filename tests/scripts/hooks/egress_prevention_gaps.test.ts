@@ -7,10 +7,10 @@
  * tests/fixtures/egress-prevention-gaps/, and each names in `closed_by` the step
  * of the host-carrier roadmap that closes it.
  *
- * Each closing step inverted the second assertion for its fixtures: placeholders
+ * A closing step inverts the second assertion for its fixtures: placeholders
  * 3.1 makes the dispatcher hand the host a replaced tool result for the two
- * result fixtures, and 5.1 makes it refuse the typed prompt. The stage still
- * detects the credential in all three. Values are built at runtime and every
+ * result fixtures. The typed prompt stays open until 5.1 lands, so for it the
+ * assertion still describes the gap. Values are built at runtime and every
  * assertion is a boolean or a count.
  */
 import { spawnSync } from 'node:child_process';
@@ -96,13 +96,16 @@ function dispatch(fixture: GapFixture): { status: number | null; stdout: string;
     fs.writeFileSync(path.join(ws, '.agent-settings.yml'), 'egress:\n  placeholders:\n    mode: strict\n');
     const manifest = path.join(tmp, 'manifest.yaml');
     writeManifest(manifest);
+    // Claude Code stamps its version on every transcript line; the stage reads it to rule out drift.
+    const transcript = path.join(tmp, 'transcript.jsonl');
+    fs.writeFileSync(transcript, `${JSON.stringify({ version: '2.1.304' })}\n`);
     const env: NodeJS.ProcessEnv = { ...process.env };
     delete env['AGENT_CONFIG_REPLAY'];
     delete env['AGENT_CONFIG_NO_EGRESS_STAGE'];
     const r = spawnSync(
         TSX_BIN,
         [TS_SCRIPT, '--platform', 'claude', '--event', fixture.event, '--native-event', fixture.native_event, '--manifest', manifest],
-        { cwd: ws, input: JSON.stringify(fixture.payload), encoding: 'utf8', env },
+        { cwd: ws, input: JSON.stringify({ ...fixture.payload, transcript_path: transcript }), encoding: 'utf8', env },
     );
     return { status: r.status, stdout: r.stdout, stderr: r.stderr, ws };
 }
@@ -185,7 +188,7 @@ describe('egress prevention gaps', () => {
             expect(credentials).toBeGreaterThan(0);
         });
 
-        it(`${name}: the dispatcher closes the channel the fixture names`, () => {
+        it(`${name}: the dispatcher closes the channel its fixture names, or the gap stands until its step lands`, () => {
             const f = load(name);
             const { status, stdout, stderr, ws } = dispatch(f);
             const value = VALUES[name] as string;
@@ -205,9 +208,11 @@ describe('egress prevention gaps', () => {
             expect(counted).toBeGreaterThan(0);
             expect(stdout.includes(value) || stderr.includes(value)).toBe(false);
             if (f.event === 'user_prompt_submit') {
-                // 5.1: refused with the host's block code, the original text suppressed.
-                expect(status).toBe(2);
-                expect(stderr).toMatch(/Resend this redacted copy instead/);
+                // Still open until 5.1 lands: no rewrite field anywhere, and no block.
+                expect(status).toBe(0);
+                const keys = keysDeep(hostOutput(stdout));
+                for (const field of REWRITE_FIELDS) expect(keys.has(field)).toBe(false);
+                expect(hostOutput(stdout)['decision']).not.toBe('block');
                 return;
             }
             // 3.1: exactly one rewrite field, carrying the original object's keys.

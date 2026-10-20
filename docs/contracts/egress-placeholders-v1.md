@@ -239,10 +239,8 @@ of one envelope through the payload-shape planner:
   gets the placeholder view. A concern cannot request the grant;
   `lint_hook_manifest` refuses a `payload_view: execution` declaration off the
   list, a blocking concern missing from it, a listed concern that is not
-  blocking, and a listed name bound to another script. When the stage restores
-  tokens in a tool input (§ Restoration), the execution view carries the
-  restored input, so a guard decides on what will run; otherwise it is the
-  received envelope unchanged.
+  blocking, and a listed name bound to another script. Until a restore exists
+  the execution view is the received envelope unchanged.
 - the **placeholder view** — every detected value replaced by its token. It goes
   to every other concern, so a local store written by a recording concern
   (chat history, journals, ledgers) inherits tokens without a scrubber of its
@@ -285,11 +283,10 @@ rewrite field in a reply reaches no host; a test drives a concern that returns
 one through the dispatcher and asserts the emission carries none. The lint rule
 `rewrite-concern-refused` is the authoring-time half and reads source text only.
 
-The token scope is one dispatch, except for a file tool's result (`Read`,
-`Write`, `Edit`, `MultiEdit`): there the stage mints its tokens into the session
-table under the file's origin, so a later tool input can restore them. The
-`identifier-table-at-rest` decision (option (b), council 2026-10-16) says how a
-scope may outlive a process (`src/scripts/_lib/egress_session_table.ts`): one table
+The token scope is one dispatch: a token in a local store cannot be resolved
+later. The `identifier-table-at-rest` decision (option (b), council 2026-10-16)
+says how a scope may outlive a process, and its table exists as a module the
+stage does not call yet (`src/scripts/_lib/egress_session_table.ts`): one table
 per session under the user-global root (`runtime/egress-sessions/`, outside the
 workspace, `0600`, named by a digest of the session id), removed after seven
 idle days. It holds a per-session key and, per token, a keyed digest of the
@@ -320,50 +317,31 @@ goes back to the host as `updatedToolOutput` (`updatedMCPToolOutput` for an MCP
 tool): the original object with its string leaves replaced and nothing else.
 The decision lives in the engine chunk (`src/scripts/_lib/egress_emission.ts`)
 and is taken only on a `RewriteCapability` for the host's `output` channel,
-which `rewrite_capability.ts` alone issues after checking the lowering row and
-the probe record it cites. The host drops a mismatched replacement in silence
+which `rewrite_capability.ts` alone issues after checking the lowering row, the
+probe record it cites, the running host's version (read from the tail of the
+session transcript; an unobserved or different minor version revokes) and the
+workspace's revocations. The host drops a mismatched replacement in silence
 (probe of 2026-10-20), so before emitting the stage checks keys and types
 against the input, rescans the replaced value, and holds a deadline; a mismatch,
 a residual hit, an unprovable extent, a missing capability, a deadline breach or
 an internal error emits no rewrite, raises a user-visible `systemMessage`, and
 appends a `withheld` line to `agents/runtime/state/egress-rewrites.jsonl`. Those
-lines are the dropped-replacement count. A block outranks a rewrite. The first
+lines are the dropped-replacement count. A shape mismatch, residual hit, deadline
+breach or internal error also revokes the channel on that workspace
+(`agents/runtime/state/egress-revoked.json`) until a person deletes the record:
+one silent failure is reason enough to stop claiming the channel. A block outranks a rewrite. The first
 rewrite of a session carries one line of context telling the model what a token
 is. Output spilled to a file reaches the hook only as its prefix; the spill file
 keeps the original until it is read through a hooked tool.
 
-## Restoration (Phase 4)
+## Not built yet: restoration and the prompt gate
 
-A token in a `pre_tool_use` input is the one place a value comes back (K4):
-
-| Token | Destination | Decision |
-|---|---|---|
-| credential | the file it was read from | restored, re-derived from that file by its keyed digest |
-| credential | anything else | denied, naming the alternative (reference the variable) |
-| identifier | its origin, a local file write, or a call `category_a.ts` ranks consequence-free | restored |
-| identifier | anything else | `ask`, the restored input shown (D4); a host with no `ask` denies |
-| any | an input bound for another model context (`Agent`, `Task`) | left as a token |
-| unknown, foreign, mangled, or its origin changed | — | denied; one tolerant match on spacing, never a guess |
-
-A restore never travels with an `allow` (K2). A host whose row grants no
-`input` capability cannot carry a restore, so a call that needed one is denied.
-Each restore writes one fixed-field line to `agents/runtime/state/egress-restores.jsonl`
-— session digest, class, type, number, tool, sink, decision, no free text — and
-more than eight in a minute turn the next into an `ask`. A tool call that names
-the session table's directory is denied. Tables idle past the retention age are
-pruned before a process mints.
-
-## The prompt gate (Phase 5)
-
-A host that cannot replace a prompt can refuse one. In `protect` or `strict` a
-prompt carrying a credential (an identifier too, in `strict`) is refused through
-the `prompt` channel's `gate` capability, the original text suppressed from the
-message, with a redacted copy to resend and a residue line: the text was typed
-into the host and may sit in its transcript and history, so a typed credential
-is rotated. A host that cannot refuse gets the same text as a warning and its
-prompt channel stays `uncovered`. The whole hook process must answer well
-inside the host's timeout, because a timed-out `UserPromptSubmit` hook lets the
-prompt through (probe 0.2.5).
+The host allows both on Claude Code — `updatedInput` was observed delivered and
+`UserPromptSubmit` can refuse — but the stage does not act on either yet: a
+round-5 review (2026-10-20) asked for tool-result replacement to land alone
+first. Until Phase 4 and step 5.1 land, a token in a tool input reaches the tool
+as written, a typed credential is not refused, and the coverage table publishes
+both channels `uncovered`.
 
 ## Coverage
 
@@ -377,12 +355,12 @@ prompt through (probe 0.2.5).
 | tool result | claude | subscription | direct | **replaced** | replace on post_tool_use (agents/evidence/analysis/host-output-rewrite-probe-2026-10-20.md, 2.1.304) |
 | tool result | claude | api-key | direct | **uncovered** | not probed for api-key |
 | tool result | claude | cloud-provider | direct | **uncovered** | not probed for cloud-provider |
-| tool input (restore) | claude | subscription | direct | **replaced** | replace on pre_tool_use (agents/evidence/analysis/host-input-rewrite-probe-2026-10-20.md, 2.1.304) |
-| tool input (restore) | claude | api-key | direct | **uncovered** | not probed for api-key |
-| tool input (restore) | claude | cloud-provider | direct | **uncovered** | not probed for cloud-provider |
-| typed prompt | claude | subscription | direct | **gated** | gate on user_prompt_submit |
-| typed prompt | claude | api-key | direct | **uncovered** | not probed for api-key |
-| typed prompt | claude | cloud-provider | direct | **uncovered** | not probed for cloud-provider |
+| tool input (restore) | claude | subscription | direct | **uncovered** | the host allows replace; the stage does not act on it until placeholders Phase 4 lands |
+| tool input (restore) | claude | api-key | direct | **uncovered** | the host allows replace; the stage does not act on it until placeholders Phase 4 lands |
+| tool input (restore) | claude | cloud-provider | direct | **uncovered** | the host allows replace; the stage does not act on it until placeholders Phase 4 lands |
+| typed prompt | claude | subscription | direct | **uncovered** | the host allows gate; the stage does not act on it until placeholders 5.1 lands |
+| typed prompt | claude | api-key | direct | **uncovered** | the host allows gate; the stage does not act on it until placeholders 5.1 lands |
+| typed prompt | claude | cloud-provider | direct | **uncovered** | the host allows gate; the stage does not act on it until placeholders 5.1 lands |
 | @file mention | claude | subscription | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
 | @file mention | claude | api-key | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
 | @file mention | claude | cloud-provider | direct | **uncovered** | no tool hook fires; the file arrives as a synthetic Read result (probe 0.2.4) |
@@ -647,7 +625,7 @@ prompt through (probe 0.2.5).
 | package sender `src/scripts/second_brain_retrieval.ts` | this package | any | direct | **uncovered** | sender census: sender, engine no |
 | package sender `src/scripts/second_brain_run.ts` | this package | any | direct | **uncovered** | sender census: sender, engine no |
 
-Rows: 272 — asserted 0, replaced 2, gated 1, uncovered 258, unclassified 11. A state other than `uncovered` holds only while `egress.placeholders.mode` is `protect` or `strict` and the kill switch is not thrown.
+Rows: 272 — asserted 0, replaced 1, gated 0, uncovered 260, unclassified 11. A state other than `uncovered` holds only while `egress.placeholders.mode` is `protect` or `strict` and the kill switch is not thrown.
 <!-- END egress-coverage -->
 
 ## Prevention tiers
@@ -680,8 +658,8 @@ read that fails, is `protect` — never a silent `off`.
 |---|---|---|---|
 | `off` | no | no | no |
 | `observe` | yes | no — every concern sees exactly what it saw without the stage | no |
-| `protect` | yes | yes, to every concern off the grant list | tool results replaced, credential prompts refused, tokens restored — each where the host's capability allows |
-| `strict` | yes | as `protect` | as `protect`, and a prompt carrying an identifier is refused too |
+| `protect` | yes | yes, to every concern off the grant list | tool results replaced where the host's capability allows |
+| `strict` | yes | as `protect` | as `protect` until the prompt gate lands |
 
 `observe` never changes a view and never asks the host for anything.
 

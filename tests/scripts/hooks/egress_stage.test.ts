@@ -294,21 +294,20 @@ describe("end to end through the dispatcher", () => {
       "platforms:",
       "  claude:",
       "    pre_tool_use: [block-no-verify, recorder, rewriter]",
-      "    post_tool_use: [recorder]",
       "    user_prompt_submit: [chat-history, block-no-verify, recorder]",
       "",
     ];
     fs.writeFileSync(target, lines.join("\n"), "utf8");
   }
 
-  function dispatch(ws: string, mode: EgressMode, event: string, native: string, payload: JsonObject, status = 0, extraEnv: NodeJS.ProcessEnv = {}): string {
+  function dispatch(ws: string, mode: EgressMode, event: string, native: string, payload: JsonObject): string {
     fs.writeFileSync(
       path.join(ws, ".agent-settings.yml"),
       `egress:\n  placeholders:\n    mode: ${mode}\nchat_history:\n  enabled: true\n  frequency: per_turn\n`,
     );
     const manifest = path.join(tmp, "manifest.yaml");
     writeManifest(manifest);
-    const env: NodeJS.ProcessEnv = { ...process.env, EGRESS_TEST_PLANTED: PLANTED, ...extraEnv };
+    const env: NodeJS.ProcessEnv = { ...process.env, EGRESS_TEST_PLANTED: PLANTED };
     delete env["AGENT_CONFIG_REPLAY"];
     delete env["AGENT_CHAT_HISTORY_FILE"];
     const r = spawnSync(
@@ -316,7 +315,7 @@ describe("end to end through the dispatcher", () => {
       [TS_SCRIPT, "--platform", "claude", "--event", event, "--native-event", native, "--manifest", manifest],
       { cwd: ws, input: JSON.stringify(payload), encoding: "utf8", env },
     );
-    expect(r.status).toBe(status);
+    expect(r.status).toBe(0);
     return r.stdout;
   }
 
@@ -329,12 +328,10 @@ describe("end to end through the dispatcher", () => {
   it("protect: the recorder, chat history and a script borrowing a guard's name see only a token", () => {
     const ws = path.join(tmp, "ws");
     fs.mkdirSync(ws, { recursive: true });
-    // The prompt is refused (placeholders 5.1: exit 2) and the concerns still run
-    // on the placeholder view, so no local store keeps the raw value either way.
     dispatch(ws, "protect", "user_prompt_submit", "UserPromptSubmit", {
       session_id: "egress-e2e",
       prompt: `deploy with ${PLANTED} please`,
-    }, 2);
+    });
     // The manifest binds `block-no-verify` to the reporting fixture, not to the
     // guard's own script, so the grant does not apply. The real pair is covered
     // by the planner test above; no shipped guard reports what it was served.
@@ -343,34 +340,6 @@ describe("end to end through the dispatcher", () => {
     const history = fs.readFileSync(path.join(ws, "agents", "runtime", ".agent-chat-history"), "utf8");
     expect(history.includes(PLANTED)).toBe(false);
     expect(parseTokens(history).length).toBeGreaterThan(0);
-  });
-
-  it("protect: a token read from a file comes back into an Edit of that file, and the guard sees the value (Phase 4)", () => {
-    const ws = path.join(tmp, "ws-restore");
-    fs.mkdirSync(ws, { recursive: true });
-    const home = { EVENT4U_CONFIG_HOME: path.join(tmp, "home") };
-    const file = path.join(ws, "app.env.local");
-    fs.writeFileSync(file, `TOKEN=${PLANTED}\n`);
-    const read = dispatch(ws, "protect", "post_tool_use", "PostToolUse", {
-      session_id: "egress-restore",
-      tool_name: "Read",
-      tool_input: { file_path: file },
-      tool_response: { type: "text", file: { filePath: file, content: `TOKEN=${PLANTED}\n`, numLines: 1, startLine: 1, totalLines: 1 } },
-    }, 0, home);
-    const out = JSON.parse(read) as { hookSpecificOutput: { updatedToolOutput: { file: { content: string } } } };
-    const content = out.hookSpecificOutput.updatedToolOutput.file.content;
-    expect(content.includes(PLANTED)).toBe(false);
-    const token = content.slice(content.indexOf("__"), content.lastIndexOf("__") + 2);
-    expect(parseTokens(token).length).toBe(1);
-    const edit = dispatch(ws, "protect", "pre_tool_use", "PreToolUse", {
-      session_id: "egress-restore",
-      tool_name: "Edit",
-      tool_input: { file_path: file, old_string: token, new_string: "TOKEN=rotated" },
-    }, 0, home);
-    const hso = (JSON.parse(edit) as { hookSpecificOutput: Record<string, unknown> }).hookSpecificOutput;
-    expect(JSON.stringify(hso["updatedInput"]).includes(PLANTED)).toBe(true);
-    expect(hso["permissionDecision"]).toBeUndefined();
-    expect(saw(ws, "egress-restore", "block-no-verify")).toStrictEqual({ sawPlanted: false, sawToken: true });
   });
 
   it("observe: every concern sees what it would have seen without the stage", () => {

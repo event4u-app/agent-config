@@ -71,8 +71,8 @@ Two statements, because two parties hold them:
 
 - **Input side — held by the egress stage where the host allows it.** With
   `egress.placeholders.mode` at `protect` or `strict`, a listed value in a tool
-  result reaches the model as a token and a prompt carrying a credential is
-  refused, on hosts whose rewrite axis grants it (`docs/contracts/egress-placeholders-v1.md`).
+  result reaches the model as a token on hosts whose rewrite axis grants it
+  (`docs/contracts/egress-placeholders-v1.md`). A typed prompt is not covered yet.
 - **Output side — the model's duty, always, and `instruction-only`:** nothing
   sees a draft before the model writes it. Replace any pasted PII with
   placeholders **before** drafting. Sector matrix:
