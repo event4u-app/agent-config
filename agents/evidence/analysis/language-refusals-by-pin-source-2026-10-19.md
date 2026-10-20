@@ -152,3 +152,28 @@ pattern is `src/scripts/hooks/block_*.ts`, and this file is neither under
 and the sentence above saying it does is withdrawn. 4.3's does, because
 `block_no_verify.ts` matches.
 
+### One live observation from the run that wrote this correction
+
+Recorded because the blocker
+`language-misfire-window-after-the-agent-message-fix` asks for observations
+after `0c85ece41`, and this is one — with its limits stated, which is the
+whole point of the correction above.
+
+During this drain run the injected pin changed **twice**. It first delivered
+`Reply language for this turn: English`, and later in the same run
+`Reply language for this turn: German (Deutsch)`. **No German text exists
+anywhere in the run**: the only user-authored input was an English task
+brief, and every later wake was a task notification or a tool result.
+
+What this establishes: a pin change in a subagent run with no German user
+turn to source it, after `0c85ece41`. What it does **not** establish: the
+mechanism. Two candidates are open and this observation does not separate
+them — the subagent inheriting the parent session's pin (the owner writes
+German, so a German pin there would be correct at its own source), or a
+re-pin from injected run content. `statePathFor` keys on the session id, and
+whether a subagent shares the parent's key was not read here.
+
+It is deliberately not counted into any class above. n = 1, self-observed,
+mechanism unknown; adding it to a table would repeat the error this section
+corrects.
+
