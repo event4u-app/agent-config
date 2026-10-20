@@ -44,5 +44,14 @@
     "date": "2026-10-20",
     "expiry": "2027-01-18",
     "reason": "Two-armed, taken for 5.2's arm S3 and then for the blocker `second-host-unlisted-reachability`. Under a scratch `HOME` and `CODEX_HOME` carrying the resident set of 4.1, asked which of two names are in its skills list, the session answered `RESIDENT=YES` for a resident skill and `NONRESIDENT=NO` for `docker`, which is installed on disk and carries `agents/openai.yaml` with `policy.allow_implicit_invocation: false`. Asked to INVOKE the non-resident one it answered `UNAVAILABLE` and made no tool call; asked to invoke the resident one it did not use the skill mechanism either, it `sed`-read the file it knew the path to. So what is established is narrower than `the host refuses an invocation` and wider than `nothing changed`: a policy-disabled skill is NOT in the model-visible skills list, and a model that cannot see it does not reach for it. Its body stays readable by a caller that already knows the path, which is a filesystem read and not the skill mechanism. Consequence: `unlisted` remains the factually correct bucket (installed, not listed) and must not be read as `reachable`."
+  },
+  "unlisted-skill-reached-through-finder": {
+    "host": "codex",
+    "state": "observed-true",
+    "host_version": "0.148.0",
+    "transcript": "scratch CODEX_HOME rollouts for sessions 01a15902-c78d-7aa3-a5cf-8af3541c2c52 (named), 01a15909-e404-7620-a795-25a15790880f (search-read), 01a1590a-35ac-7772-acc6-a015728db02e (unknown name), with 01a15902-2356-7a70-bc4f-86c28634249b (listing) and 01a15909-9e93-7181-8cc0-2450cb989e82 (unprompted)",
+    "date": "2026-10-20",
+    "expiry": "2027-01-18",
+    "reason": "Remedy (a) of `second-host-unlisted-reachability`. With the resident set of 4.1 plus the installer-written `agent-config-skill-finder` entry, the finder is in the model-visible list and `docker` is not, with no omission warning. Asked to use `docker` by name, the session read the finder and then `cat` the non-resident SKILL.md and followed an instruction on its last line; asked to find and follow the fitting package skill for a task, it ran `agent-config route:explain --skills`, read `sql-writing` whole and followed its last-line instruction; an unknown name was refused with the nearest real names. A first named run that did a ranged read missed the last line, which is why the finder now prescribes a whole-file read. Not observed: a model given an ordinary task with nothing pointing at skills consulted no skill at all, finder included — the `model-suggested` path 4.2 does not count. Full record: agents/evidence/analysis/second-host-finder-probe-20261020.md."
   }
 }

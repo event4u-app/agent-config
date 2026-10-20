@@ -27,10 +27,11 @@
  * with no tool call when asked to invoke it. Its body stays readable by a
  * caller that already knows the path, which is a filesystem read.
  *
- * That is a real cost and it is why AC-1 and AC-4 do not close. The remedy is
- * the open blocker `second-host-unlisted-reachability` — the leading option is
- * to point the existing shell search at the unlisted set, which already labels
- * uninstalled rows.
+ * That is a real cost, and the remedy ships with the set: `codex_skill_finder`
+ * writes one listed entry that indexes every non-resident name and routes to it
+ * by exact name or through the shell ranker (`second-host-unlisted-reachability`,
+ * remedy (a), AI council 2026-10-20). Its listing entry is paid for out of the
+ * same budget before the split.
  *
  * What the trade is NOT is a reduction in reach. Without this, the host drops
  * 406 entries and strips every description, by alphabet, behind a warning
@@ -55,6 +56,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { atomicWriteFile } from '../../install/atomic.js';
+import { ensureCodexFinder, FINDER_NAME, finderDescription, removeCodexFinder } from './codex_skill_finder.js';
+import type { FinderOutcome } from './codex_skill_finder.js';
 import * as user_global_paths from './user_global_paths.js';
 
 /** Sidecar directory, beside `skill-overrides.json`: one record per host root. */
@@ -199,6 +202,11 @@ export function recordPath(anchor: string, env?: user_global_paths.EnvMap | null
     return path.join(user_global_paths.write_target(RECORD_DIRNAME, { env: env ?? null }), `${key}.json`);
 }
 
+/** The finder's ownership record for one host root, beside the policy record. */
+export function finderRecordPath(anchor: string, env?: user_global_paths.EnvMap | null): string {
+    return recordPath(anchor, env).replace(/\.json$/, '.finder.json');
+}
+
 /**
  * Every user skills root this host reads that this package writes, in listing
  * precedence order — the first that holds a name is where its description is
@@ -330,11 +338,14 @@ export interface RemoveResidentSetResult {
     changed: boolean;
     removed: string[];
     kept_user: string[];
+    /** What happened to the finder entry in this root, when there was one. */
+    finder: FinderOutcome;
 }
 
 /** Remove exactly the recorded policy files whose body is still ours. */
 export function removeCodexResidentSet(anchor: string, recordFile: string): RemoveResidentSetResult {
-    const result: RemoveResidentSetResult = { changed: false, removed: [], kept_user: [] };
+    const finder = removeCodexFinder(anchor, recordFile.replace(/\.json$/, '.finder.json'));
+    const result: RemoveResidentSetResult = { changed: finder === 'removed', removed: [], kept_user: [], finder };
     if (!fs.existsSync(recordFile)) return result;
     const rec = loadRecord(recordFile, anchor);
     for (const rel of rec.written) {
@@ -348,7 +359,7 @@ export function removeCodexResidentSet(anchor: string, recordFile: string): Remo
         result.removed.push(rel);
     }
     fs.rmSync(recordFile, { force: true });
-    result.changed = result.removed.length > 0;
+    result.changed = result.changed || result.removed.length > 0;
     result.removed.sort();
     result.kept_user.sort();
     return result;
@@ -383,7 +394,7 @@ export function applyCodexResidentSet(home: string, report: (msg: string) => voi
             const skillsDir = path.join(anchor, 'skills');
             const owned = fs
                 .readdirSync(skillsDir, { withFileTypes: true })
-                .filter((d) => d.isDirectory() && fs.existsSync(path.join(skillsDir, d.name, 'SKILL.md')))
+                .filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs.existsSync(path.join(skillsDir, d.name, 'SKILL.md')))
                 .map((d) => d.name);
             for (const e of ownedCatalogue(skillsDir, owned)) {
                 if (firstRootOf.has(e.name)) continue;
@@ -391,7 +402,14 @@ export function applyCodexResidentSet(home: string, report: (msg: string) => voi
                 catalogue.push(e);
             }
         }
-        const split = computeCodexResidentSet(catalogue);
+        // The finder is listed too, so its entry is paid for before the split
+        // rather than squeezed in after it. Its description is sized for the
+        // whole catalogue being unlisted, an upper bound on the real count.
+        const finderCost = FINDER_NAME.length + finderDescription(catalogue.length).length + DEFAULT_PER_ENTRY_OVERHEAD_CHARS;
+        let split = computeCodexResidentSet(catalogue);
+        if (split.nonResident.length > 0) {
+            split = computeCodexResidentSet(catalogue, { budgetChars: CODEX_BUDGET_CHARS - finderCost });
+        }
         const resident = new Set(split.resident);
 
         let disabled = 0;
@@ -401,7 +419,7 @@ export function applyCodexResidentSet(home: string, report: (msg: string) => voi
             const skillsDir = path.join(anchor, 'skills');
             const here = fs
                 .readdirSync(skillsDir, { withFileTypes: true })
-                .filter((d) => d.isDirectory() && fs.existsSync(path.join(skillsDir, d.name, 'SKILL.md')))
+                .filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs.existsSync(path.join(skillsDir, d.name, 'SKILL.md')))
                 .map((d) => d.name);
             // Disabled here when it is not resident at all, OR when it is
             // resident but some earlier root already carries its description.
@@ -411,11 +429,20 @@ export function applyCodexResidentSet(home: string, report: (msg: string) => voi
             reenabled += res.reenabled.length;
             foreign += res.skipped_foreign.length;
         }
+        // 5.2's S3: an unlisted skill is not reached unless something listed
+        // routes to it. The finder lives in the first root and indexes every
+        // non-resident name at the root whose copy the host would have used.
+        const finder = ensureCodexFinder(
+            roots[0]!,
+            finderRecordPath(roots[0]!),
+            split.nonResident.map((name) => ({ name, skillsDir: path.join(firstRootOf.get(name)!, 'skills') })),
+        );
         report(
             `codex: resident set across ${roots.length} root(s) — ${split.resident.length} listed ` +
                 `(${split.listingChars} of ${split.budgetChars} chars), ` +
                 `${disabled} newly unlisted, ${reenabled} relisted` +
-                (foreign > 0 ? `, ${foreign} existing policy file(s) untouched` : ''),
+                (foreign > 0 ? `, ${foreign} existing policy file(s) untouched` : '') +
+                `, finder ${finder}`,
         );
     } catch (e) {
         report(`codex: resident set skipped — ${String(e)}`);

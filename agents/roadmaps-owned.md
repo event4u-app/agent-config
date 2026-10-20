@@ -26,7 +26,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-one-detector-and-the-senders-we-own | active | ready | On every request this package writes to a model provider itself, no value of a listed type leaves in plaintext, … |
 | road-to-placeholders-on-the-wire | active | ready | On Claude Code at a probed version, a tool result carrying a listed value reaches the model as a token … |
 | road-to-self-modification-that-a-council-must-pass | active | ready | A change the package makes to what governs it lands on a council's verdict about that exact change. |
-| road-to-skills-that-arrive-when-called | active | ready | Every skill the package authors is reachable in the session that needs it, with the semantics its frontmatter declares; a … |
 | road-to-svg-witness-provenance | active | draft | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |
 | road-to-tool-results-that-leave-a-handle | active | ready | A large tool result can reach the model shorter than the host produced it without losing anything: the bytes the … |
 | road-to-typed-grants-that-persist | active | draft | One grant object — ADR-260's `{op, target, scope, granted_by, span, expires}` — governs every irreversible operation, is honoured for the … |
@@ -120,6 +119,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-skill-ecosystem-executable-payloads | later | later | Road to executable skill payloads — a skill that only describes work cannot be measured doing it |
 | road-to-skill-ecosystem-security-and-conformance | later | later | Road to security and conformance surface — make three unenforced rules detectable |
 | road-to-skill-menu-economy | later | later | The preloaded skills catalog costs no more than the skills a model can actually route to: every skill that is … |
+| road-to-skills-that-arrive-when-called-carried | later | later | The owner's answer to whether the fork pilot widens, holds or retires is recorded, and the pilot config says which. |
 | road-to-source-silence-cutover | later | later | Every item the predecessor could not close is closed, and each is here because of a named capability gap rather … |
 | road-to-sparring-critic-spike | later | blocked-for-later | Road to sparring-critic spike — one falsification run decides whether the critic exists |
 | road-to-stacks-beyond-php | later | later | A Python, TypeScript or Go repository gets the discipline this tree gives a Laravel one, without a language-named copy of … |
