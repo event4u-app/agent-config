@@ -12295,7 +12295,8 @@ var REMOVED_KEYS = /* @__PURE__ */ new Map([
   ["ai_team.suppress_setup_hint", "nothing: the one-line team-mode setup hint is always shown"],
   // 2026-10-20 — the projection keys (ADR-292, road-to-a-setup-that-decides-itself Phase 4)
   ["lean_projection.mode", "the computed layer-form decision (_lib/layer_form_decision.ts), plus `install --full` and src/config/layer-form-brakes.json as the two brakes. The installer no longer reads this key at all; the in-repo projector honours a hand-written PROJECT value until step 3.6 of road-to-a-setup-that-decides-itself lands"],
-  ["lean_projection.hosts", "THINNABLE_HOSTS in _lib/lean_projection_mode.ts and the per-host row in src/config/host-injection-effect.json; same reader boundary as the mode above"]
+  ["lean_projection.hosts", "THINNABLE_HOSTS in _lib/lean_projection_mode.ts and the per-host row in src/config/host-injection-effect.json; same reader boundary as the mode above"],
+  ["projection.rule_workspaces", "consumerRuleWorkspaces() in _lib/scoped_projection.ts, which derives the consumer workspace set from src/config/discovery/packs.yml \u2014 every id minus `agent-config-maintainer` \u2014 so a new pack reaches consumers without a settings edit"]
 ]);
 var _warnedRemovedKeys = /* @__PURE__ */ new Set();
 function _readDotted(root, dotted) {
