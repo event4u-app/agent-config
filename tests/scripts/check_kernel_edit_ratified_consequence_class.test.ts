@@ -113,7 +113,11 @@ describe('the list path and the watch list', () => {
             .stdout.split('\u0000')
             .filter((p) => p.endsWith('.md') && members.has(path.posix.basename(p, '.md')))
             .filter((p) => !/^(?:agents|docs|tests)\//u.test(p));
-        expect(tracked.length).toBeGreaterThanOrEqual(members.size);
+        // Each member has its source and its packaged projection tracked here.
+        for (const slug of members) {
+            expect(tracked, slug).toContain(`src/rules/${slug}.md`);
+            expect(tracked, slug).toContain(`dist/agent-src/rules/${slug}.md`);
+        }
         const kernel = new Set(gate.classifyPaths(tracked, []).kernelRules);
         const unclassified = tracked.filter(
             (p) => !kernel.has(p) && !gate.classifyPaths([p], []).consequenceRules.includes(p),
@@ -216,7 +220,7 @@ describe('dealbreaker 1 — the list fails CLOSED', () => {
 
     it('the gate refuses a base commit that has NO list at all', () => {
         fs.rmSync(path.join(root, LIST));
-        const base = commitAll(root, 'base without a list', { seedConsequenceClass: false });
+        const base = commitAll(root, 'base without a list');
         write(LIST, listOf('alpha'));
         commitAll(root);
         const r = gate.evaluate([LIST], root, 2, 'HEAD', base);

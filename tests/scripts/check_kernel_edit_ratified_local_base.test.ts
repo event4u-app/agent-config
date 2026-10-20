@@ -20,7 +20,7 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { RATIFICATION_DIR } from '../../src/scripts/_lib/ratification_artifact.js';
-import { commitAll } from './ratification_git_fixture.js';
+import { commitAll, writeEmptyConsequenceClass } from './ratification_git_fixture.js';
 
 const REPO = process.cwd();
 const TSX = path.join(REPO, 'node_modules', '.bin', 'tsx');
@@ -69,6 +69,7 @@ function gated(out: string): string[] {
 beforeEach(() => {
     // Real path: the scripts' entry guard compares against the resolved URL.
     root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'ker-local-base-')));
+    writeEmptyConsequenceClass(root); // the gate refuses a commit without the class list
     baseDir = `${root}-base`;
 });
 

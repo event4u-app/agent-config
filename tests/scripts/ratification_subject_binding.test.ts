@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as gate from '../../src/scripts/check_kernel_edit_ratified.js';
 import { RATIFICATION_DIR } from '../../src/scripts/_lib/ratification_artifact.js';
 import { gatedFilesOf } from '../../src/scripts/_lib/ratification_subject.js';
-import { commitAll } from './ratification_git_fixture.js';
+import { commitAll, writeEmptyConsequenceClass } from './ratification_git_fixture.js';
 
 /**
  * The gate reads content and record at HEAD from Git objects, so the fixture
@@ -83,6 +83,7 @@ function record(name: string, gated: readonly string[], verdict = 'ratified'): s
 
 beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), 'subj-'));
+    writeEmptyConsequenceClass(root); // the gate refuses a commit without the class list
 });
 
 afterEach(() => {

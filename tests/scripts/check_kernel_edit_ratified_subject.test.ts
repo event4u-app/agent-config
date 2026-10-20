@@ -9,7 +9,7 @@ import {
     RATIFICATION_DIR,
     readRatification,
 } from '../../src/scripts/_lib/ratification_artifact.js';
-import { commitAll } from './ratification_git_fixture.js';
+import { commitAll, writeEmptyConsequenceClass } from './ratification_git_fixture.js';
 
 /**
  * The gate reads the gated content AND the record at HEAD, from Git objects,
@@ -84,6 +84,7 @@ function record(name: string, subject: string, verdict = 'ratified'): string {
 
 beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), 'kersub-'));
+    writeEmptyConsequenceClass(root); // the gate refuses a commit without the class list
     write(KERNEL, 'the content under review\n');
     write(OTHER_KERNEL, 'a different rule entirely\n');
 });

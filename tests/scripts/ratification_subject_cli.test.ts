@@ -4,7 +4,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { main } from '../../src/scripts/ratification_subject.js';
-import { commitAll } from './ratification_git_fixture.js';
+import { commitAll, writeEmptyConsequenceClass } from './ratification_git_fixture.js';
 
 /**
  * The CLI's refusal path, invoked directly. Step 2.4, round 3 of the
@@ -15,6 +15,7 @@ import { commitAll } from './ratification_git_fixture.js';
 const KERNEL = 'src/rules/commit-policy.md';
 function tmpKernel(body: string): string {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'subj-cli-'));
+    writeEmptyConsequenceClass(root); // the gate refuses a commit without the class list
     fs.mkdirSync(path.join(root, 'src/rules'), { recursive: true });
     fs.writeFileSync(path.join(root, KERNEL), body);
     commitAll(root);

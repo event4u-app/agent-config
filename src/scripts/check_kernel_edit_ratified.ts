@@ -177,12 +177,17 @@ export const POLICY_PATH = 'src/config/ratification-policy.json';
  * the base side and adding one by the head side, and the digest covers both.
  * It FAILS CLOSED: a list that cannot be read at either commit is a refusal.
  * A head that breaks the list blocks only the change that broke it; a base
- * whose list does not read can only be reached by a ratified merge. Recovery
- * from such a base is the route ADR-281 § 5 already names for anything this
- * gate cannot pass — the owner's own recorded forge bypass — and the repair
- * itself is judged by a base whose list reads again. No repository flag
- * switches the class off, because a switch the candidate can set is a switch
- * the candidate controls.
+ * whose list does not read can only be reached by a ratified merge. The repair
+ * of such a base is NOT passed by this gate — every run against that base
+ * refuses — so it lands through the route ADR-281 § 5 names for anything the
+ * gate cannot pass: the owner's own recorded forge bypass, outside this
+ * repository. Only the changes after the repair are judged by a base whose
+ * list reads again. No repository flag switches the class off, because a
+ * switch the candidate can set is a switch the candidate controls.
+ *
+ * Rollout: the merge that introduces this class is judged by the base's copy
+ * of the gate, which does not know the class. That merge edits no member, so
+ * nothing passes ungated by it; members are gated from the next merge on.
  */
 export const CONSEQUENCE_CLASS_PATH = 'src/config/rule-consequence-class.json';
 

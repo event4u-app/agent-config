@@ -20,7 +20,7 @@ import {
     subjectOf,
 } from '../../src/scripts/_lib/ratification_subject.js';
 import { main as subjectCli } from '../../src/scripts/ratification_subject.js';
-import { commitAll } from './ratification_git_fixture.js';
+import { commitAll, writeEmptyConsequenceClass } from './ratification_git_fixture.js';
 
 /**
  * Step 2.6 — the subject is read from Git objects at a named revision.
@@ -70,6 +70,7 @@ function recordText(subject: string, verdict: string): string {
 
 beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), 'subj-rev-'));
+    writeEmptyConsequenceClass(root); // the gate refuses a commit without the class list
 });
 
 afterEach(() => {
