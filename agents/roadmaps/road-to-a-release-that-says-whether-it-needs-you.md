@@ -86,6 +86,17 @@ output. It is the classifier and the data behind it.
       option (a). The rule exists as the pure, uncalled `impact_bump` in
       `src/scripts/_lib/impact_bump.ts` so 2.2 could score it; wiring it into
       `infer_bump` is the owner-reserved part.
+      Still open (2026-10-20), and the reason has changed. The council's
+      evidence precondition is discharged — see the blocker — so the step is
+      no longer waiting on a measurement. It waits on the owner alone: binding
+      the trailer to the version number changes a public compatibility
+      commitment, which `decision-revisit-gate`'s reserved set routes to the
+      owner whoever holds the pen. The second half of the step also acquired a
+      specification gap the measurement found: `CONTRIBUTING.md:331`'s major
+      list names rules and skills and omits **commands**, and 15.0.0's break
+      was a command removal. Wiring the surface clause as written would leave
+      that shape uncovered, so the list is edited in the same change as the
+      wiring or the clause ships with a known hole.
 - [x] **2.2 Replay the real history.** Score 10.0.0 → 16.0.0 through the new
       rule against the recorded rows.
       verify: 13.0.0, 14.0.0 and 16.0.0 come out **minor**; 12.0.0 and 15.0.0
@@ -248,6 +259,27 @@ output. It is the classifier and the data behind it.
   only after the frozen classifier is scored on a pre-registered window it was
   not written on, on both axes, with zero false negatives on BREAKING. No owner
   question is put until that measurement exists.
+  **2026-10-20, the precondition is discharged.**
+  `agents/evidence/analysis/impact-bump-out-of-sample-20261020.md` carries a
+  pre-registered protocol committed before any span was read, and the result
+  in the commit after it. Window: the seven majors 2.0.0 → 9.0.0 the rule was
+  not written on (4.0.0 excluded in advance — the remote carries no `4.0.0`
+  tag, so its span has no lower bound). Both axes: the recorded impact, and a
+  new `classify_surfaces` (`src/scripts/_lib/major_surface.ts`) that reads the
+  surface axis mechanically from each span's diff, which 2.2 could not supply.
+  **Zero false negatives on BREAKING, 0 of 7 out-of-sample and 0 of 14 over
+  both windows.** The rule keeps 6 of 7 early majors and 2 of 7 recent ones,
+  which refutes the live reading of 2.2 — that its 5-of-7 demotion was the
+  rule's bias rather than the history's. With the surface axis switched on,
+  13.0.0, 14.0.0 and 16.0.0 are still minor.
+  Three limits are recorded rather than argued away: the impact axis stays a
+  consistency check in both windows because no historical release carries an
+  author-written trailer; the surface clause changed **no** verdict in 14 of 14
+  cases, so its fire rate is measured and its accuracy as a decider is not; and
+  `CONTRIBUTING.md:331` omits commands, which is what 15.0.0 removed. Whether
+  that clears the bar the council set is the council's reading, not this
+  roadmap's. The owner question on (a) is now unblocked on evidence and
+  unasked.
 - **Owner:** repository owner, **for (a) alone.**
 - **Blocks:** step 2.1 and the parts of Phase 2 downstream of it. **Corrected
   2026-10-16:** this used to read "Phase 2 and everything downstream". Steps 2.2
