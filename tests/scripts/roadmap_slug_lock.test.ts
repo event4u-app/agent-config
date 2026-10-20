@@ -109,7 +109,7 @@ describe('sessions:claim — two sessions in two worktrees, one roadmap, one tur
     const TSX = path.resolve(__dirname, '../../node_modules/.bin/tsx');
 
     function claim(cwd: string, sid: string, ...args: string[]): { status: number | null; err: string } {
-        const env = { ...process.env, AGENT_CONFIG_SESSION_ID: sid };
+        const env: NodeJS.ProcessEnv = { ...process.env, AGENT_CONFIG_SESSION_ID: sid };
         delete env['CLAUDE_CODE_SESSION_ID'];
         const r = spawnSync(TSX, [CLI, 'claim', ...args], { cwd, env, encoding: 'utf-8' });
         return { status: r.status, err: r.stderr };
