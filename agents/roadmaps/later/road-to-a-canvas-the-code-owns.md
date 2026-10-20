@@ -1,6 +1,11 @@
 ---
 complexity: structural
-status: ready
+status: later
+review_by: 2027-01-20
+entry_condition:
+  what: "tests/fixtures/design-sync/host-observed/ exists — the maintainer ran the host's /design-sync once on tests/fixtures/design-sync/react-package/ with a canvas account and committed the listing (option (a) of the host-sync-layout-at-current-host blocker); or the owner takes option (b) and cancels 5.2"
+  when: "whenever the maintainer has a canvas account session and network; no date is promised"
+  who: "maintainer (canvas account + network, which no agent run may use); the owner only for option (b)"
 execution:
   mode: phase-checkpoints
 relates:
@@ -22,6 +27,8 @@ relates:
 estate_offset_exempt: "Adds one active roadmap with nothing to offset: no active, parked or stub roadmap owns the host's design-sync surface, the handover-predicate drift, the reserved-name gap or the Consistency Lock carrier (an overlap grep for each returns nothing under agents/roadmaps/), and the four neighbours it extends are archived."
 ---
 # Road to a canvas the code owns
+
+Resume when: `tests/fixtures/design-sync/host-observed/` exists — the maintainer's one canvas-account run of option (a) under § Blockers; that unblocks 3.2b, 5.2 and 8.5 together.
 
 > **Source:** `agents/tmp.old/inbox-2026-10-m/` — a maintainer transcript asking for
 > one command and workflow that connects the host's design canvas with the existing
@@ -397,7 +404,7 @@ deleted or left as a silent twin without a row the user has seen.
 ## Blockers
 
 ### blocker: host-sync-layout-at-current-host
-- **Status:** open — waits only on the maintainer-run fixture of option (a); no decision is pending. Re-checked 2026-10-18: `tests/fixtures/design-sync/` does not exist (`ls` → No such file or directory). The council's second round (D12, 2/2) declined (b), because dropping 5.2 cancels a step, and split 3.2 so its snapshot input is no longer held here. Raised 2026-10-12 from inbox round `inbox-2026-10-m`; the bundle layout came from an extract of an older host version, and an offline read of host 2.1.296 finds only part of it.
+- **Status:** open — waits only on the maintainer-run fixture of option (a); no decision is pending. Re-checked 2026-10-20 by the `--all` drain: `ls tests/fixtures/design-sync/` → No such file or directory, so the three steps it blocks are still externally impossible for an agent (no canvas credential exists for one to use). Parked in `later/` the same day with this blocker as its `entry_condition`, per the roadmap-progress-sync later-disposition law; every open box, the `[~]` on 8.5 included, travels unchanged. Re-checked 2026-10-18: `tests/fixtures/design-sync/` does not exist (`ls` → No such file or directory). The council's second round (D12, 2/2) declined (b), because dropping 5.2 cancels a step, and split 3.2 so its snapshot input is no longer held here. Raised 2026-10-12 from inbox round `inbox-2026-10-m`; the bundle layout came from an extract of an older host version, and an offline read of host 2.1.296 finds only part of it.
 - **Owner:** maintainer — answering it needs a canvas account and network, which no agent run may use.
 - **Blocks:** steps 3.2b, 5.2 and 8.5 (3.2 was split by D12 and no longer waits here). Drain of 2026-10-18: every other step landed, so these three are the roadmap's whole open remainder; `tests/fixtures/design-sync/host-observed/` still does not exist.
 - **What to do:** pick exactly one — (a) run `/design-sync` once on `tests/fixtures/design-sync/react-package/` with a canvas account and commit the resulting listing of `.design-sync/` and of the local build output into `tests/fixtures/design-sync/host-observed/`; or (b) narrow 3.2 to a user-exported snapshot directory only and drop 5.2, keeping to the names the 2.1.296 binary carries (`.design-sync/config.json`, `previews/`, `.render-check.json`).
