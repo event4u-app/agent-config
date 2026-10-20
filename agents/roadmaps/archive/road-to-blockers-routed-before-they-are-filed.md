@@ -35,8 +35,8 @@ of the three is checkable by a command, below.
       2,188 chars, 68 English markers). The fix accepts that fixed host prefix
       only when the wrapper tag follows it, so a human quoting the sentence is
       still read as a human.
-      verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts` -> 0,
-      with the new cases seen red before the fix.
+      The new cases were seen red before the fix.
+      verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts` -> 0
 
 ## Phase 2 — Route before filing
 
@@ -49,14 +49,16 @@ of the three is checkable by a command, below.
       it crosses, or `pending` with the reason the council could not be reached
       (fail-open: an unreachable council never turns a council question into an
       owner question). A `DECIDE` is not a blocker; it is a `## Decisions` row.
-      verify: `grep -n 'Routed:' src/agent-src/templates/roadmaps.md` -> a hit
-      inside rule 20; `roadmap-writing` points at it.
+      `roadmap-writing` is unchanged: its body sits at its recorded ceiling, and
+      it already links rule 20 from the same paragraph.
+      verify: `grep -c 'Route before you file' src/agent-src/templates/roadmaps.md` -> /^[1-9]/
 - [x] **2.2 A ratchet keeps new human-owned blockers from skipping the route.**
       `lint_roadmap_blockers:routing` counts open human-owned blockers with no
       `Routed:` field against a baseline registered at today's count, so the
       existing backlog is grandfathered and every new one must carry the field.
-      verify: `npx vitest run tests/scripts/lint_roadmap_blockers.test.ts` -> 0,
-      with the ratchet case seen red; `./scripts-run src/scripts/lint_roadmap_blockers` -> 0.
+      The ratchet cases were seen red with the check neutralised.
+      verify: `npx vitest run tests/scripts/lint_roadmap_blockers.test.ts` -> 0
+      verify: `./scripts-run src/scripts/lint_roadmap_blockers` -> 0
 
 ## Phase 3 — Close what the tree already settled
 
@@ -70,8 +72,8 @@ of the three is checkable by a command, below.
       slot conditions differ in kind: they bound how many family roadmaps run
       at once, and none does. Both parked roadmaps keep their own `Resume
       when`, which this step does not claim.
-      verify: `ls agents/roadmaps/road-to-skill-ecosystem-*.md` -> no match, and
-      both entries read `Status: resolved` with the measurement recorded.
+      Both entries read `Status: resolved` with the measurement recorded.
+      verify: `find agents/roadmaps -maxdepth 1 -name 'road-to-skill-ecosystem-*.md'` -> /^$/
 
 ## Decisions
 
