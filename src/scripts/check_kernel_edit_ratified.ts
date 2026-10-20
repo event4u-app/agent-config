@@ -176,6 +176,13 @@ export const POLICY_PATH = 'src/config/ratification-policy.json';
  * the union is gated (see `gateInputsFor`), so dropping a member is caught by
  * the base side and adding one by the head side, and the digest covers both.
  * It FAILS CLOSED: a list that cannot be read at either commit is a refusal.
+ * A head that breaks the list blocks only the change that broke it; a base
+ * whose list does not read can only be reached by a ratified merge. Recovery
+ * from such a base is the route ADR-281 § 5 already names for anything this
+ * gate cannot pass — the owner's own recorded forge bypass — and the repair
+ * itself is judged by a base whose list reads again. No repository flag
+ * switches the class off, because a switch the candidate can set is a switch
+ * the candidate controls.
  */
 export const CONSEQUENCE_CLASS_PATH = 'src/config/rule-consequence-class.json';
 
@@ -377,6 +384,17 @@ export interface GatedPaths {
 const RULE_SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /**
+ * The three clauses of the criterion, as `rule.schema.json` enumerates them.
+ * Restated rather than imported so that the gate's import closure does not
+ * grow; a test pins it equal to `_lib/rule_consequence_class.ts`'s `CLAUSES`.
+ */
+export const CONSEQUENCE_CLAUSES: readonly string[] = [
+    'irreversible-external',
+    'security-boundary',
+    'authority-bypass',
+];
+
+/**
  * The high-consequence rule slugs a list states, validated against the tree
  * it was read from.
  *
@@ -417,12 +435,10 @@ export function consequenceRuleSlugsIn(
         if (!RULE_SLUG_RE.test(slug)) {
             refuse(`member \`${slug}\` is not a rule slug`);
         }
-        if (
-            entry === null ||
-            typeof entry !== 'object' ||
-            typeof (entry as { clause?: unknown }).clause !== 'string'
-        ) {
-            refuse(`member \`${slug}\` carries no string \`clause\``);
+        const clause =
+            entry !== null && typeof entry === 'object' ? (entry as { clause?: unknown }).clause : undefined;
+        if (typeof clause !== 'string' || !CONSEQUENCE_CLAUSES.includes(clause)) {
+            refuse(`member \`${slug}\` carries no \`clause\` of the criterion (${CONSEQUENCE_CLAUSES.join(', ')})`);
         }
         if (read(`src/rules/${slug}.md`) === null) {
             refuse(`member \`${slug}\` names no rule file \`src/rules/${slug}.md\``);

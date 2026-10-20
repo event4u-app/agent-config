@@ -1,11 +1,14 @@
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as gate from '../../src/scripts/check_kernel_edit_ratified.js';
-import { CLASS_CONFIG_REL } from '../../src/scripts/_lib/rule_consequence_class.js';
+import { classifyTarget } from '../../src/scripts/classify_merge_risk.js';
+import { CLASS_CONFIG_REL, CLAUSES } from '../../src/scripts/_lib/rule_consequence_class.js';
 import { ConsequenceClassUnreadable } from '../../src/scripts/_lib/ratification_subject.js';
 import { RATIFICATION_DIR } from '../../src/scripts/_lib/ratification_artifact.js';
 import { commitAll } from './ratification_git_fixture.js';
@@ -20,6 +23,7 @@ import { commitAll } from './ratification_git_fixture.js';
  * rule's bytes outside the digest its record carried.
  */
 
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const LIST = gate.CONSEQUENCE_CLASS_PATH;
 const ALPHA = 'src/rules/alpha.md';
 const BETA = 'src/rules/beta.md';
@@ -93,8 +97,28 @@ afterEach(() => {
 });
 
 describe('the list path and the watch list', () => {
-    it('names the same file the class library reads', () => {
+    it('names the same file and the same three clauses the class library reads', () => {
         expect(LIST).toBe(CLASS_CONFIG_REL);
+        expect([...gate.CONSEQUENCE_CLAUSES].sort()).toEqual([...CLAUSES].sort());
+    });
+
+    it('every tracked copy of a member rule in this repository is classified as one', () => {
+        // Inventory-backed: the class read from this checkout, against every
+        // tracked file named for a member. A projection that placed a member
+        // outside a `rules/` directory would show up here as unclassified.
+        const members = gate.consequenceRuleSlugsOfCheckout();
+        const env = { ...process.env };
+        for (const k of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR']) delete env[k];
+        const tracked = spawnSync('git', ['-C', REPO, 'ls-files', '-z'], { encoding: 'utf8', env })
+            .stdout.split('\u0000')
+            .filter((p) => p.endsWith('.md') && members.has(path.posix.basename(p, '.md')))
+            .filter((p) => !/^(?:agents|docs|tests)\//u.test(p));
+        expect(tracked.length).toBeGreaterThanOrEqual(members.size);
+        const kernel = new Set(gate.classifyPaths(tracked, []).kernelRules);
+        const unclassified = tracked.filter(
+            (p) => !kernel.has(p) && !gate.classifyPaths([p], []).consequenceRules.includes(p),
+        );
+        expect(unclassified).toEqual([]);
     });
 
     it('the list is a mechanism path; the schema that states the criterion is not', () => {
@@ -159,7 +183,12 @@ describe('dealbreaker 1 — the list fails CLOSED', () => {
         ['members an array', { [LIST]: '{"members": ["alpha"]}' }, '`members`'],
         ['a key that is not a slug', { ...rules, [LIST]: '{"members": {"Alpha_1": {"clause": "x"}}}' }, 'not a rule slug'],
         ['a __proto__ key', { ...rules, [LIST]: '{"members": {"__proto__": {"clause": "x"}}}' }, 'not a rule slug'],
-        ['an entry with no clause', { ...rules, [LIST]: '{"members": {"alpha": {}}}' }, 'no string `clause`'],
+        ['an entry with no clause', { ...rules, [LIST]: '{"members": {"alpha": {}}}' }, 'no `clause` of the criterion'],
+        [
+            'a clause outside the criterion',
+            { ...rules, [LIST]: '{"members": {"alpha": {"clause": "important"}}}' },
+            'no `clause` of the criterion',
+        ],
         ['a member with no rule file', { [LIST]: listOf('ghost') }, 'names no rule file'],
     ])('%s is a refusal, never an empty class', (_name, files, detail) => {
         expect(unreadable(files as Record<string, string>)).toContain(detail);
@@ -242,6 +271,26 @@ describe('dealbreaker 2 — membership is read at both commits the subject binds
         commitAll(root);
         const s = gate.expectedSubjectFor([LIST, ALPHA], root, 'HEAD', base);
         expect(s.gatedFiles).toEqual([LIST, ALPHA]);
+    });
+
+    it('the merge classifier entry point routes a member dropped while edited to the owner', () => {
+        // Through `classifyTarget`, the function the merge command runs, over
+        // real commits: nothing is injected, so this proves the entry point
+        // itself computes the base-and-head union and hands it to owner routing.
+        const base = commitAll(root);
+        write(LIST, listOf());
+        write(ALPHA, 'alpha law, edited once it left the class\n');
+        const head = commitAll(root);
+        const r = classifyTarget(root, { range: `${base}..${head}` });
+        expect(r.verdict).toBe('needs-owner');
+        const governance = r.triggers.find((t) => t.id === 'governance-surface');
+        expect(governance?.paths).toContain(ALPHA);
+
+        // Polarity: a rule in neither side's list is not routed for governance.
+        write(BETA, 'beta law, edited, never a member\n');
+        const later = commitAll(root);
+        const quiet = classifyTarget(root, { range: `${head}..${later}` });
+        expect(quiet.triggers.map((t) => t.id)).not.toContain('governance-surface');
     });
 
     it('a record bound to that digest passes, and one edit after it turns red', () => {
