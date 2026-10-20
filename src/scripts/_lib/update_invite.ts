@@ -8,6 +8,16 @@
  * module is that policy as a function, so the thing a reviewer checks is a
  * table of conditions rather than a hook's control flow.
  *
+ * **Narrower than ADR-291 reads, on purpose.** A council round of 2026-10-20
+ * refused the ring-0 record as the gate — a rollout switch opens the question
+ * for every install at once, which is not consent — and asked for a user-owned
+ * opt-in. The opt-in is `update.mode: ask`, a class-C value only a human can
+ * set, and ring-0 stays as an additional kill switch. An install that never
+ * chose `ask` is therefore never asked, which is ADR-291's dismissal outcome
+ * (`notify`) reached without the question. Whether that is the reading the
+ * next round accepts is for that round; this module only stops the rollout
+ * switch from standing in for consent.
+ *
  * **Every condition is a reason to stay silent.** The function returns the
  * question only when all of them clear, and returns WHY otherwise, because a
  * prompt that appears in CI, in a pipe, in a headless run, under `--json` or
@@ -73,13 +83,15 @@ export function autoInviteDecision(input: InviteInput): InviteDecision {
     if (input.env.subagent) return { ask: false, reason: 'subagent run' };
     if (input.env.headless) return { ask: false, reason: 'headless' };
     if (!input.env.interactive) return { ask: false, reason: 'non-TTY' };
+    // A user-owned opt-in before the rollout switch: the council round of
+    // 2026-10-20 refused a ring-0 record as consent, because once it flips it
+    // opens the question for every install at once. `ask` is the only value
+    // that says "ask me", and only a human can write it.
+    if (input.mode !== 'ask') return { ask: false, reason: 'no user opt-in: update.mode is not ask' };
     if (!input.ringZeroExited) return { ask: false, reason: 'ring-0 has not exited' };
     if (!input.registerAvailable) return { ask: false, reason: 'no machine-wide session register' };
     if (input.neverAsked) return { ask: false, reason: 'the user said never' };
     if (input.alreadyInvited) return { ask: false, reason: 'already invited once' };
-    if (input.mode === 'auto') return { ask: false, reason: 'already auto' };
-    if (input.mode === 'off') return { ask: false, reason: 'update.mode off' };
-    if (input.mode === 'ask') return { ask: false, reason: 'update.mode ask' };
     if (!input.turnEndedOnVerifiedSuccess) return { ask: false, reason: 'the turn did not end on a verified success' };
     return {
         ask: true,

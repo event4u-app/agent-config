@@ -37,7 +37,7 @@ afterEach(() => {
 
 /** Every condition cleared — the one input shape that produces a question. */
 const OPEN: InviteInput = {
-    mode: undefined,
+    mode: 'ask',
     ringZeroExited: true,
     registerAvailable: true,
     neverAsked: false,
@@ -73,7 +73,27 @@ describe('4.3 — zero prompts in the five contexts the step names', () => {
     }
 });
 
-describe('4.3 / AC-7 — the ring-0 record is the gate', () => {
+// The council round of 2026-10-20 (lazy-concern-authority-expansion-20261020.md)
+// asked for this: "a rollout switch is not consent". The invitation now needs a
+// value only a human can set — `update.mode` is class C, hand-edit or GUI only —
+// and ring-0 stays as a second, independent kill switch.
+describe('4.3 — the invitation needs a user-owned opt-in, not a rollout switch', () => {
+    it('an absent update.mode asks nothing, even with ring-0 exited', () => {
+        const d = autoInviteDecision({ ...OPEN, mode: undefined });
+        expect(d).toEqual({ ask: false, reason: 'no user opt-in: update.mode is not ask' });
+    });
+
+    it('notify asks nothing — being told is not asking to be asked', () => {
+        expect(autoInviteDecision({ ...OPEN, mode: 'notify' }).ask).toBe(false);
+    });
+
+    it('ask opens it, and only together with the ring-0 exit', () => {
+        expect(autoInviteDecision({ ...OPEN, mode: 'ask' }).ask).toBe(true);
+        expect(autoInviteDecision({ ...OPEN, mode: 'ask', ringZeroExited: false }).ask).toBe(false);
+    });
+});
+
+describe('4.3 / AC-7 — the ring-0 record is the kill switch', () => {
     it('a record that has not exited closes it', () => {
         expect(autoInviteDecision({ ...OPEN, ringZeroExited: false }).ask).toBe(false);
     });
@@ -104,7 +124,7 @@ describe('4.3 — a once, with a binding never', () => {
     });
 
     it('a mode the user already chose closes it', () => {
-        for (const mode of ['auto', 'off', 'ask'] as const) {
+        for (const mode of ['auto', 'off'] as const) {
             expect(autoInviteDecision({ ...OPEN, mode }).ask, mode).toBe(false);
         }
     });

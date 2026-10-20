@@ -20,7 +20,6 @@ import { CONCERN, readNoticeState, readUpdateMode, runNotice, type NoticeDeps } 
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
-const SCRIPT = 'src/scripts/update_notice_hook.ts';
 
 // A generous hook timeout, because these fixtures are `mkdtempSync` and
 // nothing else: measured on a machine running several parallel lanes, the
