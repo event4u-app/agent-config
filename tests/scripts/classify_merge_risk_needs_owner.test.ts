@@ -80,8 +80,12 @@ describe('the near-misses stay where they were', () => {
         expect(verdict('.github/workflows/tests.yml')).toBe('needs-council');
     });
 
-    it('a consequence-class rule alone is needs-council, not needs-owner', () => {
-        expect(verdict('src/rules/tool-safety.md')).toBe('needs-council');
+    it('a consequence-class rule alone is needs-owner, a rule outside the class is not', () => {
+        // Step 4.2 of the self-modification roadmap puts the class on the
+        // ratification gate's surface, and ADR-281 § Amendment makes a council
+        // verdict on that surface advisory until the owner binds to its digest.
+        expect(verdict('src/rules/tool-safety.md')).toBe('needs-owner');
+        expect(verdict('src/rules/markdown-safe-codeblocks.md')).not.toBe('needs-owner');
     });
 
     it('a merge-rule carrier alone is needs-council', () => {

@@ -394,10 +394,17 @@ export function classifyChanges(entries: readonly ChangeEntry[], opts: ClassifyO
 
     const gated = classifyPaths(all);
     if (requiresRatification(gated)) {
-        const gatedPaths = [...gated.kernelRules, ...gated.governanceHooks, ...gated.plumbing];
+        // The high-consequence class is listed: without it a PR touching only
+        // such a rule would carry this reason with no path named under it.
+        const gatedPaths = [
+            ...gated.kernelRules,
+            ...gated.consequenceRules,
+            ...gated.governanceHooks,
+            ...gated.plumbing,
+        ];
         add(
             'governance-surface',
-            'check_kernel_edit_ratified — kernel rule, governance hook, hook plumbing or the ratification mechanism',
+            'check_kernel_edit_ratified — kernel rule, high-consequence rule, governance hook, hook plumbing or the ratification mechanism',
             gatedPaths.length > 0 ? gatedPaths : all.filter((p) => classifyPaths([p]).self),
         );
     }

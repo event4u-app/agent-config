@@ -177,8 +177,12 @@ describe('the gate sees what governs — one case per trigger, each with its nea
     });
 
     it('a rule in the consequence class fires, as source and as projection; one outside does not', () => {
-        expect(governs([mod('src/rules/tool-safety.md')])).toEqual(['consequence-class-rule']);
-        expect(governs([mod('dist/agent-src/rules/tool-safety.md')])).toEqual(['consequence-class-rule']);
+        // Also `governance-surface`: the ratification gate gates the class.
+        expect(governs([mod('src/rules/tool-safety.md')])).toEqual(['governance-surface', 'consequence-class-rule']);
+        expect(governs([mod('dist/agent-src/rules/tool-safety.md')])).toEqual([
+            'governance-surface',
+            'consequence-class-rule',
+        ]);
         expect(governs([mod('src/rules/markdown-safe-codeblocks.md')])).toEqual([]);
     });
 
