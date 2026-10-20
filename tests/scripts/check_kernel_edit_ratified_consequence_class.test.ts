@@ -110,9 +110,14 @@ describe('classification', () => {
 
     it('a member outside the kernel is a high-consequence rule, as source and as projection', () => {
         expect(gate.classifyPaths([ALPHA], [], cls).consequenceRules).toEqual([ALPHA]);
-        expect(gate.classifyPaths(['.claude/rules/alpha.md'], [], cls).consequenceRules).toEqual([
+        for (const projection of [
             '.claude/rules/alpha.md',
-        ]);
+            '.augment/rules/alpha.md',
+            'dist/agent-src/rules/alpha.md',
+            '.cursor/rules/alpha.md',
+        ]) {
+            expect(gate.classifyPaths([projection], [], cls).consequenceRules, projection).toEqual([projection]);
+        }
         expect(gate.requiresRatification(gate.classifyPaths([ALPHA], [], cls))).toBe(true);
     });
 
@@ -168,6 +173,27 @@ describe('dealbreaker 1 — the list fails CLOSED', () => {
         const r = gate.evaluate([LIST, 'docs/note.md'], root, 2, 'HEAD', base);
         expect(r.exitCode).toBe(1);
         expect(r.lines.join('\n')).toContain('cannot be read');
+    });
+
+    it('the gate refuses a head commit that has NO list at all', () => {
+        const base = commitAll(root);
+        fs.rmSync(path.join(root, LIST));
+        write('docs/note.md', 'prose\n');
+        commitAll(root);
+        const r = gate.evaluate([LIST, 'docs/note.md'], root, 2, 'HEAD', base);
+        expect(r.exitCode).toBe(1);
+        expect(r.lines.join('\n')).toContain('the file is absent');
+    });
+
+    it('the gate refuses a base commit that has NO list at all', () => {
+        fs.rmSync(path.join(root, LIST));
+        const base = commitAll(root, 'base without a list', { seedConsequenceClass: false });
+        write(LIST, listOf('alpha'));
+        commitAll(root);
+        const r = gate.evaluate([LIST], root, 2, 'HEAD', base);
+        expect(r.exitCode).toBe(1);
+        expect(r.lines.join('\n')).toContain(`commit ${base}`);
+        expect(r.lines.join('\n')).toContain('the file is absent');
     });
 
     it('the gate refuses when the BASE list is unreadable', () => {

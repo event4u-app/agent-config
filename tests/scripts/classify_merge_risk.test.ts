@@ -186,10 +186,28 @@ describe('the gate sees what governs — one case per trigger, each with its nea
         expect(governs([mod('src/rules/markdown-safe-codeblocks.md')])).toEqual([]);
     });
 
-    it('an unreadable consequence-class list counts every rule file', () => {
+    it('an unreadable consequence-class list counts every rule file, for owner routing too', () => {
         expect(governs([mod('src/rules/markdown-safe-codeblocks.md')], { consequenceMembers: null })).toEqual([
+            'governance-surface',
             'consequence-class-rule',
         ]);
+    });
+
+    it('owner routing reads the base-and-head union, so a member dropped while edited stays governance', () => {
+        // The base names the rule, the head's list no longer does: the union
+        // keeps it, and `governance-surface` is decided from that union rather
+        // than from whatever list the checkout running the classifier carries.
+        const base = JSON.stringify({ members: { 'markdown-safe-codeblocks': { clause: 'authority-bypass' } } });
+        const head = JSON.stringify({ members: {} });
+        const union = unionMembers([base, head]);
+        expect(governs([mod('src/rules/markdown-safe-codeblocks.md')], { consequenceMembers: union })).toEqual([
+            'governance-surface',
+            'consequence-class-rule',
+        ]);
+        // Polarity: a rule in neither side's list is not governance.
+        expect(governs([mod('src/rules/markdown-safe-codeblocks.md')], { consequenceMembers: unionMembers([head]) })).toEqual(
+            [],
+        );
     });
 
     it('the ratification contract fires; a neighbouring contract does not', () => {
