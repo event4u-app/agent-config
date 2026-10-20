@@ -123,14 +123,14 @@ export interface DefectFinding {
      * writes its `Candidate.subject` here; two syntheses that agree on the
      * claim spell it identically, which is what lets two installations meet.
      *
-     * Neither the key nor any outgoing body reads it: whether it may identify
-     * a record across installations, and whether it may leave the machine,
-     * are undecided, so it is carried and validated only.
+     * The upstream body carries it (`renderUpstreamBody`, D10); the key does
+     * not — whether it may identify a record across installations waits on a
+     * corpus showing one subject per mechanism.
      */
     principle?: string;
-    /** One bounded line naming how the defect happens. No producer field yet. */
+    /** One bounded line naming how the defect happens. No producer field yet. Free text, so it never leaves. */
     mechanism?: string;
-    /** One bounded line naming what would refute the claim; a retro's `Candidate.falsifier`. */
+    /** One bounded line naming what would refute the claim; a retro's `Candidate.falsifier`. Never leaves. */
     falsifier?: string;
 }
 
@@ -898,7 +898,11 @@ export function chooseEgress(cap: EgressCapability): EgressChoice {
     return { route: 'local-only', pushVia: null };
 }
 
-/** The PR / issue body. Deterministic — same record, same bytes. */
+/**
+ * The full local report, free-text fields included. Deterministic — same
+ * record, same bytes. Used for a local-only record and the Class-B case; what
+ * leaves the machine is `renderUpstreamBody` in `self_repair_outgoing.ts`.
+ */
 export function renderReport(record: DefectRecord, route: EgressRoute): string {
     const seen =
         record.occurrences === 1
@@ -932,41 +936,4 @@ export function renderReport(record: DefectRecord, route: EgressRoute): string {
         'machine. No project paths, prompts, or file contents are included by',
         'construction — the record type has no field that can carry them.',
     ].join('\n');
-}
-
-/** The structured fields the upstream intake form collects. */
-export interface ParsedReport {
-    defect_class: string;
-    fingerprint: string;
-    occurrences: number;
-    evidence: string;
-    suggested_surface: string;
-}
-
-/**
- * Inverse of `renderReport` for the structured fields — the round-trip that
- * pins the rendered body to the upstream issue form: every field the form
- * collects is recoverable from a rendered report, so a `release` body and a
- * manually-filed form carry the same clustering keys (fingerprint above all).
- */
-export function parseReport(body: string): ParsedReport | null {
-    const cls = /^## Self-repair report — `([^`]+)`$/m.exec(body)?.[1];
-    const fp = /^- \*\*Fingerprint:\*\* `([^`]+)`$/m.exec(body)?.[1];
-    const seen = /^- \*\*Seen:\*\* (.+)$/m.exec(body)?.[1];
-    const evidence = /^### Evidence\n\n> (.*)$/m.exec(body)?.[1];
-    const surface = /### What the fix should address\n\n([\s\S]*?)\n\n---/.exec(body)?.[1];
-    if (!cls || !fp || !seen || evidence === undefined || !surface) {
-        return null;
-    }
-    const occurrences = seen.startsWith('once') ? 1 : Number(/^(\d+)×/.exec(seen)?.[1] ?? Number.NaN);
-    if (!Number.isFinite(occurrences)) {
-        return null;
-    }
-    return {
-        defect_class: cls,
-        fingerprint: fp,
-        occurrences,
-        evidence,
-        suggested_surface: surface.trim(),
-    };
 }

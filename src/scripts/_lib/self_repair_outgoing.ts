@@ -17,12 +17,81 @@
  * The commit date is not part of the digest. It is the moment of the release,
  * stated in UTC so the local timezone offset does not leave with it.
  */
-import { type DefectRecord } from './self_repair.js';
+import { type DefectRecord, type EgressRoute } from './self_repair.js';
 import { approve, caseDigest } from './self_repair_class_b.js';
 
 /** A neutral branch: the fingerprint, never the author's branch name. */
 export function retroBranch(fingerprint: string): string {
     return `retro/${fingerprint.slice(0, 8)}`;
+}
+
+/**
+ * The body of the pull request and the issue, built from closed fields only:
+ * the defect class, the intake source, the fingerprint, the occurrence count,
+ * the resolved targets and the principle slug — all shape-validated, none of
+ * them prose. The evidence span, the suggested surface, the mechanism and the
+ * falsifier are free text whatever their field name, so they stay on the
+ * machine (D10 of road-to-one-upstream-that-checks-what-leaves); `renderReport`
+ * still carries them for the local and Class-B case. No dates either: when a
+ * defect was seen is activity on the reporting machine, not part of the claim.
+ */
+export function renderUpstreamBody(record: DefectRecord, route: EgressRoute): string {
+    const targets = record.target !== undefined && record.target.length > 0 ? record.target.map((t) => `\`${t}\``).join(', ') : 'none identified';
+    const principle = record.principle !== undefined ? `\`${record.principle}\`` : 'not stated';
+    return [
+        `## Self-repair report — \`${record.defect_class}\``,
+        '',
+        `- **Source:** \`${record.source}\``,
+        `- **Fingerprint:** \`${record.fingerprint}\``,
+        `- **Occurrences:** ${record.occurrences}`,
+        `- **Route:** ${route}`,
+        `- **Targets:** ${targets}`,
+        `- **Principle:** ${principle}`,
+        '',
+        '### Package fixture',
+        '',
+        `Reproduce against this package's own \`${record.defect_class}\` detector in`,
+        '`src/scripts/_lib/self_repair.ts` and the targets named above.',
+        '',
+        '---',
+        '',
+        'Filed by the agent-config self-repair loop from closed fields only. The',
+        'evidence span, the suggested surface, the mechanism and the falsifier stayed',
+        'on the reporting machine; the person approved these exact bytes.',
+    ].join('\n');
+}
+
+/** The structured fields the upstream intake form collects. */
+export interface ParsedUpstreamBody {
+    defect_class: string;
+    source: string;
+    fingerprint: string;
+    occurrences: number;
+    targets: string;
+    principle: string;
+}
+
+/**
+ * Inverse of {@link renderUpstreamBody} — the round-trip that pins the body to
+ * the upstream issue form, so a released body and a hand-filed form carry the
+ * same clustering keys. `targets` and `principle` come back as rendered.
+ */
+export function parseUpstreamBody(body: string): ParsedUpstreamBody | null {
+    const field = (label: string): string | undefined => new RegExp(`^- \\*\\*${label}:\\*\\* (.+)$`, 'm').exec(body)?.[1];
+    const unquote = (v: string): string => v.replace(/`/g, '');
+    const cls = /^## Self-repair report — `([^`]+)`$/m.exec(body)?.[1];
+    const [source, fp, occ, targets, principle] = ['Source', 'Fingerprint', 'Occurrences', 'Targets', 'Principle'].map(field);
+    if (!cls || !source || !fp || !occ || !targets || !principle || !/^\d+$/.test(occ)) {
+        return null;
+    }
+    return {
+        defect_class: cls,
+        source: unquote(source),
+        fingerprint: unquote(fp),
+        occurrences: Number(occ),
+        targets: unquote(targets),
+        principle: unquote(principle),
+    };
 }
 
 export interface CommitIdentity {

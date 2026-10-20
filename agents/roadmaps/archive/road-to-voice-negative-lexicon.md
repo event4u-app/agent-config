@@ -6,7 +6,7 @@ status: archived
 # Road to a voice negative lexicon — make "never say X" checkable instead of hoped
 
 > **Absorbed and archived 2026-10-17.** Its design ships as
-> [`road-to-a-brand-the-tree-can-check.md`](../road-to-a-brand-the-tree-can-check.md)
+> [`road-to-a-brand-the-tree-can-check.md`](road-to-a-brand-the-tree-can-check.md)
 > Phase 5: `check_voice_lexicon` (5.1) is the literal checker designed below,
 > generalised to the brand slot and ghostwriter taboos, and this file's Phase 0
 > spike ran as that roadmap's step 5.0 — verdict *schema field only*

@@ -118,8 +118,9 @@ A `package-record` carries the candidate's claim in the record's optional claim
 fields: `subject` → `principle` (a lowercase slug of at most 80 characters),
 `falsifier` → `falsifier` (one line of at most 160). `mechanism` has no
 candidate field and stays unset. The record validates these shapes on write and
-the privacy floor scans them; neither the record key nor any outgoing body reads
-them yet.
+the privacy floor scans them. The upstream body carries `principle` beside
+`target` and the defect class; `mechanism` and `falsifier` are free text and
+never leave. The record key reads none of them.
 
 ## Caps
 
