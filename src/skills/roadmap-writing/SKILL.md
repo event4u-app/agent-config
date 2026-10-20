@@ -189,8 +189,7 @@ window — is recorded as a `## Blockers` entry (`### blocker: <id>` with the
 seven fields of rule 20), never a stray "blocked on X" sentence. Write it so
 the owner can decide in one sitting: one option named and why, what the delay
 costs, a command or path per option rather than prose, and an offer to walk
-them through it. A human `Owner:` is filed only after the council escalates it
-(`Routed:`). Ratcheted by `lint_roadmap_blockers`. Full shape:
+them through it. Ratcheted by `lint_roadmap_blockers`. Full shape:
 [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md).
 Omit it entirely when there is no such gate; run the § 4c gate-test first. A **hold** is the publication-side twin — a blocker stops execution, a hold stops publication; ask once whether an intermediate tree state must stay unpublished (default **no**; roadmap incompleteness never is one), walk `re-sequence → guard → hold`, and record the avoided outcome as well as the taken one, per [`templates/roadmaps.md` rule 28](../../agent-src/templates/roadmaps.md) and the § 5c self-check in [`/roadmap:create`](../../domains/product-basic/roadmap/create/command.md).
 
