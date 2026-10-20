@@ -51,27 +51,23 @@ function git(root: string, args: readonly string[]): string {
 }
 
 /**
- * The high-consequence rule list the gate reads at every commit it judges and
- * refuses without. A fixture that does not write its own gets an EMPTY class
- * at its first commit, so the gate it exercises judges the fixture's diff
- * rather than refusing the fixture for lacking a list. A suite that tests the
- * refusal itself opts out with `seedConsequenceClass: false`.
+ * Write an EMPTY high-consequence rule list into a fixture tree.
+ *
+ * The gate reads that list at every commit it judges and refuses a commit
+ * without one. A suite whose cases are about something else calls this
+ * EXPLICITLY when it builds its tree, so the fixture states the input rather
+ * than having it appear behind the suite's back; `commitAll` never adds it.
  */
-const CONSEQUENCE_LIST_REL = 'src/config/rule-consequence-class.json';
+export function writeEmptyConsequenceClass(root: string): void {
+    const list = path.join(root, 'src/config/rule-consequence-class.json');
+    fs.mkdirSync(path.dirname(list), { recursive: true });
+    fs.writeFileSync(list, '{"members": {}}\n');
+}
 
 /** Stage everything under `root` and commit it; returns the new commit id. */
-export function commitAll(
-    root: string,
-    message = 'fixture',
-    opts: { seedConsequenceClass?: boolean } = {},
-): string {
+export function commitAll(root: string, message = 'fixture'): string {
     if (!fs.existsSync(path.join(root, '.git'))) {
         git(root, ['init', '-q']);
-        const list = path.join(root, CONSEQUENCE_LIST_REL);
-        if (opts.seedConsequenceClass !== false && !fs.existsSync(list)) {
-            fs.mkdirSync(path.dirname(list), { recursive: true });
-            fs.writeFileSync(list, '{"members": {}}\n');
-        }
     }
     git(root, ['add', '-A']);
     git(root, ['commit', '-q', '--allow-empty', '-m', message]);
