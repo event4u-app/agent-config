@@ -394,6 +394,22 @@ read cannot leak through any later bug.
       changing class precedence, logging a raw value or letting a credential
       token restore anywhere turns a named test red.
       verify: each listed mutation, applied to a scratch copy, fails at least one test; the recipes are `canary:` entries in `src/config/gate-coverage.yml`.
+      **Built 2026-10-20 for three of the four mutations; open on 2.3.** The
+      gate `check_egress_mutations` copies the three engine modules into a
+      scratch directory per recipe (never editing them in place) and requires
+      the named invariant to hold on the unmutated copy and fail on the mutated
+      one. Recipes live in `src/config/egress-mutations/`: class precedence
+      swapped, a credential token that restores, a raw value in the count
+      record — each killed. The canary contract is create-only, so a recipe
+      cannot itself be a `canary:` entry: the gate's row in
+      `src/config/gate-coverage.yml` carries one `canary:` that plants a
+      recipe changing nothing, which survives and turns the gate red. Wired in
+      `task ci` and `rule-backstops.yml`; `--self-test` 4/4 (a surviving, a
+      stale and an unknown recipe rejected); `check_gate_coverage` and
+      `check_ci_local_parity` green; `npx vitest run
+      tests/scripts/check_egress_mutations.test.ts` -> 0. **Still open:** the
+      IBAN-checksum mutation, which needs the IBAN row of 2.3 (owner-gated);
+      its recipe joins when that row lands.
 - [x] **2.7 The shapes with no vendor literal read the table too** — the
       keyword-assignment variants (`password =`, `api_key:`) the council bundler,
       `workspace_secrets` and the low-impact redactor read at their own
