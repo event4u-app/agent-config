@@ -92,6 +92,8 @@ export interface EgressStageResult {
   readonly counts: readonly EgressCount[];
   /** Fields whose secret had no provable extent; withheld from the placeholder view. */
   readonly refused: readonly EgressRefusal[];
+  /** Wall time the stage spent detecting and replacing; absent when it did neither. */
+  readonly elapsedMs?: number;
 }
 
 function isObject(v: unknown): v is JsonObject {
@@ -367,6 +369,7 @@ export function runEgressStage(
     mode = "protect";
   }
   if (mode === "off") return none;
+  const started = Date.now();
   let result: EgressStageResult;
   try {
     const engine = requireEngine(loadEngine);
@@ -387,6 +390,7 @@ export function runEgressStage(
       result = { ...none, mode, scanned, refused, placeholder: { ...envelope, payload: withheld } };
     }
   }
+  result = { ...result, elapsedMs: Date.now() - started };
   recordObservation(workspaceRoot, observationLine(envelope, result));
   return result;
 }
