@@ -8,6 +8,13 @@
  * record carries what the members were sent, so it keeps the placeholders; a
  * restore is for a display in this process only, and resolves identifiers —
  * a credential token resolves to nothing (D5).
+ *
+ * Credentials are replaced whatever the settings say: the bundle masked every
+ * credential line before this module existed, so replacing the value instead of
+ * the line changes how much is lost, not whether. Identifiers are replaced — and
+ * checked — only when `egress.placeholders.mode` is `protect` or `strict`;
+ * whether any identifier is replaced by default for consumers is the owner's
+ * decision D8, which this module does not take.
  */
 
 import {
@@ -24,6 +31,7 @@ import {
     REVIEW_CREDENTIAL_ROWS,
 } from '../_lib/egress_rules.js';
 import { parseTokens, TokenScope } from '../_lib/egress_token.js';
+import { readEgressMode } from '../hooks/egress_stage.js';
 
 /**
  * The bundler's own looser readings, kept so moving it from whole-line masks to
@@ -72,12 +80,17 @@ export class CouncilEgress {
     readonly scope = new TokenScope();
     private readonly replaced = new Set<string>();
 
+    /** `identifiers`: replace and check the identifier class too (mode `protect` or `strict`). */
+    constructor(private readonly opts: { readonly identifiers: boolean } = { identifiers: false }) {}
+
     /**
      * Every detected value becomes a token; a key block whose end cannot be
      * proven is replaced through the nearest END marker, as the line masks did.
      */
     replace(text: string): string {
-        const spans = resolveOverlaps(findSpans(text, BUNDLE_RULES)).map((s) => ({ ...s, end: maskingEnd(text, s) }));
+        const spans = resolveOverlaps(findSpans(text, BUNDLE_RULES))
+            .filter((s) => s.class === 'credential' || this.opts.identifiers)
+            .map((s) => ({ ...s, end: maskingEnd(text, s) }));
         spans.sort((a, b) => a.start - b.start);
         const merged: EgressSpan[] = [];
         for (const s of spans) {
@@ -103,7 +116,7 @@ export class CouncilEgress {
             if (body.includes(value)) return { reason: 'replaced-value-present', what: 'value replaced in this run' };
         }
         for (const s of detect(body)) {
-            const high = s.class === 'credential' ? s.rule !== 'generic-assignment' : s.validated;
+            const high = s.class === 'credential' ? s.rule !== 'generic-assignment' : s.validated && this.opts.identifiers;
             if (high) return { reason: 'high-confidence-finding', what: s.rule };
         }
         return null;
@@ -122,14 +135,24 @@ export class CouncilEgress {
 
 let current: CouncilEgress | null = null;
 
+function fromSettings(): CouncilEgress {
+    let mode: string;
+    try {
+        mode = readEgressMode(process.cwd());
+    } catch {
+        mode = 'protect';
+    }
+    return new CouncilEgress({ identifiers: mode === 'protect' || mode === 'strict' });
+}
+
 /** The run's egress state; one council run is one process. */
 export function councilEgress(): CouncilEgress {
-    current ??= new CouncilEgress();
+    current ??= fromSettings();
     return current;
 }
 
-/** A fresh scope, for a test or a second run in one process. */
-export function resetCouncilEgress(): CouncilEgress {
-    current = new CouncilEgress();
+/** A fresh scope, for a test or a second run in one process; the settings are read again unless `opts` is given. */
+export function resetCouncilEgress(opts?: { readonly identifiers: boolean }): CouncilEgress {
+    current = opts === undefined ? fromSettings() : new CouncilEgress(opts);
     return current;
 }

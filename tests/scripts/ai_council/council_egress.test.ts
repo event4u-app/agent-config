@@ -65,7 +65,7 @@ const hasIdentifierRows = ['EMAIL', 'IBAN', 'PHONE'].every((t) => IDENTIFIER_TYP
 
 describe('council bundle: span replacement through the engine (3.3)', () => {
     beforeEach(() => {
-        resetCouncilEgress();
+        resetCouncilEgress({ identifiers: false });
     });
 
     it('replaces the credentials of the F1 sample and keeps the code line', () => {
@@ -81,11 +81,18 @@ describe('council bundle: span replacement through the engine (3.3)', () => {
         expect(out).toMatch(/^export GITHUB=__TOKEN_1_/m);
     });
 
-    it.skipIf(!hasIdentifierRows)('the F1 sample leaves with five placeholders', () => {
-        const out = redact(F1);
+    it.skipIf(!hasIdentifierRows)('the F1 sample leaves with five placeholders in protect', () => {
+        const out = redact(F1, new CouncilEgress({ identifiers: true }));
         expect(parseTokens(out)).toHaveLength(5);
         for (const v of [EMAIL, IBAN, PHONE, DB_PASSWORD, PAT]) expect(out).not.toContain(v);
         expect(out.split('\n')).toContain(CODE_LINE);
+    });
+
+    it.skipIf(!hasIdentifierRows)('identifiers are left, and not refused, under the shipped default (D8)', () => {
+        const egress = new CouncilEgress({ identifiers: false });
+        const out = redact(F1, egress);
+        expect(out).toContain(EMAIL);
+        expect(egress.check(out)).toBeNull();
     });
 
     it('a low-entropy password and a bearer value lose the value, not the line', () => {
@@ -110,7 +117,7 @@ describe('council bundle: span replacement through the engine (3.3)', () => {
 
 describe('council member call: the final check (3.3)', () => {
     beforeEach(() => {
-        resetCouncilEgress();
+        resetCouncilEgress({ identifiers: false });
     });
 
     it('sends a bundled body', () => {
@@ -157,7 +164,7 @@ describe('council member call: the final check (3.3)', () => {
 
 describe('the transports check what they are about to write (3.3)', () => {
     beforeEach(() => {
-        resetCouncilEgress();
+        resetCouncilEgress({ identifiers: false });
     });
 
     it('the API post refuses a body carrying a high-confidence finding before curl is spawned', () => {
