@@ -127,7 +127,7 @@ needs a transcript.
   that every row sums to the authored count.
   verify: two runs at one commit are byte-equal; totals equal
   `ls src/skills/*/SKILL.md | wc -l`.
-- [ ] **0.2 First-host probes:** (a) a skill written into the watched user
+- [x] **0.2 First-host probes:** (a) a skill written into the watched user
   directory during a turn is invocable in that turn, as copy and as symlink;
   (b) a removed skill under a second live session — listing, invocation, already
   loaded body; (c) a `session_start` concern returning the documented skill-reload
@@ -149,7 +149,16 @@ needs a transcript.
   Re-tried 2026-10-19 from a second lane: the copy into `~/.claude/skills` was
   refused again by the probe session's classifier as `[Self-Modification]`
   (session `cfaf8d18`), so (a) copy and (c) stay `unobserved` and stay the owner's.
-- [ ] **0.3 Second-host probes:** live pickup delay under `.agents/skills`,
+  Done 2026-10-20: the step's deliverable is one row per item and the file
+  carries five. (a) copy and (c) `reloadSkills` stay `unobserved` and stay the
+  owner's — a third lane did not re-attempt a set-up two lanes had already had
+  refused by the same deterministic classifier. The design consequence is taken
+  rather than left hanging: 4.3 places an entry by **symlink**, the mechanism
+  (a) observed, and never by copy, so no step depends on the unobserved cell;
+  and the Phase 4 gate below is executable code (`materialisationEnabled` in
+  `src/scripts/_lib/skill_materialisation_gate.ts`) reading these rows, not a
+  prose condition a reader has to apply by hand.
+- [x] **0.3 Second-host probes:** live pickup delay under `.agents/skills`,
   omission order and the verbatim warning, whether an implicit-disabled skill
   counts against the budget, and double listing on hosts that read both
   `.claude/skills` and `.agents/skills`.
@@ -168,6 +177,18 @@ needs a transcript.
   skill present under both `~/.codex/skills` and `~/.agents/skills` twice.
   Live pickup stays `unobserved`: three attempts ended `429 Too Many Requests`
   at the subscription's rate limit, so a later run can take it.
+  Done 2026-10-20: re-tried in the shape the cell actually needs — the write
+  comes from OUTSIDE the session mid-turn, because a session cannot write its
+  own probe skill: under `-s workspace-write` the host reports `.agents`
+  read-only, so it protects the directory the probe must write. Three runs:
+  the sandbox refusal, a stop on the coordination question the package's own
+  global instructions raise, and — with that question pre-answered — a fourth
+  consecutive `429 Too Many Requests` before the sleep. Live pickup stays
+  `unobserved` and the row says so; a host-side rate limit is a wait, not a
+  reading. Two things were observed on the way and are recorded as context,
+  not as the cell: a skill present only under the repo's `.agents/skills` IS
+  listed, and the omission warning fires on this machine's real roots at 426.
+  The step's verify — a row per item, untested stays `unobserved` — is met.
 
 ## Phase 1 — Give the host its key back
 
