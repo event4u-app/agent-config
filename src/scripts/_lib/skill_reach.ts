@@ -251,14 +251,21 @@ export function checkSkillReach(
                 // that takes it out of the listing. `off` is the bucket's own
                 // vocabulary — installed and not listed.
                 //
-                // `unlisted` is the GENEROUS reading here and it is not
-                // settled: 5.2's S3 asked a session to invoke a non-resident
-                // skill by name and got `UNAVAILABLE` with no tool call, and
-                // the control that would separate "the host refuses" from "the
-                // model never saw it and did not try" was lost to a rate limit.
-                // Open as `second-host-unlisted-reachability`. Counting these
-                // `unreachable` on a one-armed reading would be over-claiming
-                // in the other direction, so the bucket stays and says so.
+                // `unlisted` is installed-and-not-listed. It is NOT a claim
+                // of reach, and on this host that distinction is measured:
+                // probe row `unlisted-skill-not-in-model-list` (two-armed) has
+                // the model answering `NONRESIDENT=NO` for a policy-disabled
+                // skill against `RESIDENT=YES` for a resident one, and
+                // answering `UNAVAILABLE` without a tool call when asked to
+                // invoke it. Its body is still readable by a caller that knows
+                // the path, which is a filesystem read.
+                //
+                // The bucket stays `unlisted` because that is what is true —
+                // calling it `unreachable` would assert the host refuses an
+                // invocation, which no run established. Which remedy the
+                // package takes is the open blocker
+                // `second-host-unlisted-reachability`; AC-1 does not close on
+                // this bucket alone.
                 overrideOf: (name) =>
                     fs.existsSync(path.join(codexRoot, name, 'agents', 'openai.yaml')) ? 'off' : undefined,
             }),

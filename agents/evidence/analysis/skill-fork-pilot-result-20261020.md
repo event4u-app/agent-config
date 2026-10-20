@@ -1,9 +1,15 @@
+<!-- evidence-type: analysis -->
+
 # Result — the skill fork pilot
 
 **Roadmap step:** `road-to-skills-that-arrive-when-called` 3.2.
 **Pre-registration:** `agents/evidence/preregistration/skill-fork-pilot-20261020.md`,
 sha256 `e8e4fe1e51445ae4c76df5e5797646368f994d06a6ea268f5e067df14a0dab3b`,
-committed before this run in `7ee747481`.
+committed before this run in `7ee747481`. That hash is of the file **as
+committed there** — a later commit prepended the `evidence-type` marker this
+tree's evidence lint requires, so the working copy hashes differently and
+`git show 7ee747481:agents/evidence/preregistration/skill-fork-pilot-20261020.md | shasum -a 256`
+reproduces the value quoted here.
 **Honesty label:** first-party observation of one host build on one machine.
 Not a general claim about the host, and not a claim about any other build.
 

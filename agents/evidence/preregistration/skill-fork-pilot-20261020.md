@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Pre-registration — the skill fork pilot
 
 **Roadmap step:** `road-to-skills-that-arrive-when-called` 3.2.

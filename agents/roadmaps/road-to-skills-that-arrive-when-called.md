@@ -361,9 +361,10 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
   holds it, and the duplicate is disabled in the rest. Live after that: 37
   listed at 7,769 characters, 729 unlisted, **no omission warning**, against a
   control on the same scratch home that printed one at 406 omitted.
-  A non-resident skill loses its listing entry; whether it loses more is
-  **measured and open** — 5.2's S3 got `UNAVAILABLE` for one, one-armed, and
-  it is the blocker `second-host-unlisted-reachability`. What the trade is NOT
+  A non-resident skill loses its listing entry, and 5.2's S3 measured that
+  this is a real loss: two-armed, a policy-disabled skill is not in the
+  model-visible skills list and the model does not reach for it. The remedy is
+  the open blocker `second-host-unlisted-reachability`. What the trade is NOT
   is less reach: the control shows the host already dropping 406 entries by
   alphabet, so this replaces an arbitrary cut with a recorded one. The deploy row is untouched, so the `agents-md`
   projection is byte-equal by construction and the test asserts the row.
@@ -515,10 +516,11 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
   S1 **met** offline (7,769 of 8,000 across both roots). S2 **met** live with
   its control: no warning treated, `406 additional skills were not included` on
   the control — and the first treated run is what found the second root, which
-  changed 4.1 the same day. S3 **FALSIFIED and one-armed**: asked to invoke a
-  non-resident skill by name, a session answered `UNAVAILABLE` with no tool
-  call, and the control that would separate "the host refuses" from "the model
-  never saw it listed" was lost to `429 Too Many Requests`. First host: nothing
+  changed 4.1 the same day. S3 **FALSIFIED, two-armed**: a policy-disabled
+  skill is not in the model-visible skills list (`NONRESIDENT=NO` against
+  `RESIDENT=YES`) and the model answers `UNAVAILABLE` without a tool call when
+  asked to invoke it; its body stays readable only by a caller that knows the
+  path. Recorded as the probe row `unlisted-skill-not-in-model-list`. First host: nothing
   shipped, asserted by a test that greps `src/`.
   G1 0 · G2 0, reported with its weakness — no entry was materialised in these
   runs, so it is a zero over zero opportunities; the guard is actually held by
@@ -646,13 +648,13 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 
 <!-- asked: 2026-10-20 | record: agents/evidence/analysis/skill-arrival-effect-result-20261020.md -->
 
-- **Status:** open — raised 2026-10-20 by step 5.2's arm S3
+- **Status:** open — raised 2026-10-20 by step 5.2's arm S3; its measurement was completed the same day (probe row `unlisted-skill-not-in-model-list`), so what is open is the remedy, not the reading
 - **Owner:** council — a host-behaviour question answerable by one probe, with reversible internal remedies. It reaches the owner only if the answer turns out to weaken what ADR-289 (b) published.
 - **Class:** 2
 - **Blocks:** AC-1 and AC-4. No step: 4.1 ships, and 5.2's control says why — without it the host already drops 406 entries by alphabet behind a warning, so the resident set does not reduce reach, it stops reach being decided by spelling.
-- **What to do:** take the one probe this lane could not. Ask a `codex exec` session under a scratch `CODEX_HOME` to invoke a RESIDENT skill by name, as the positive control for S3. A tool call there, against S3's `UNAVAILABLE` with no tool call, separates "the host refuses an unlisted skill" from "the model never saw it listed and did not try". Then: if the host refuses, `skill_reach` must count a policy-disabled skill `unreachable` rather than `unlisted`, and 4.1's resident set needs a second retrieval path before AC-1 can close; if only the listing is missing, `unlisted` is correct and AC-1 and AC-4 close on the evidence already taken.
-- **Resolved when:** the control row is recorded in `src/config/skill-lifecycle-probes-codex.json`, and `skill_reach`'s bucket for a policy-disabled skill either stays `unlisted` citing that row or becomes `unreachable`.
-- **Recommendation:** take the probe. Everything else here is downstream of one reading, and the reading is cheap on a day the subscription is not rate-limited — four separate cells were lost to `429` today.
+- **What to do:** pick exactly one remedy. The measurement is done — probe row `unlisted-skill-not-in-model-list`, two-armed: a policy-disabled skill is NOT in the model-visible skills list (`NONRESIDENT=NO` against `RESIDENT=YES`), and a model that cannot see it does not reach for it. Its body stays readable by a caller that knows the path, which is a filesystem read and not reach as a skill. So: (a) give the second host a retrieval path for a non-resident skill — the shell search `route:explain --skills` already ranks the projection and 2.1 made it name uninstalled rows, so pointing it at the unlisted set is the smallest version; (b) accept listing-scoped reach on this host and amend what ADR-289 (b) promises, which makes it an owner question rather than a council one; or (c) drop the resident set on this host and accept the host's own alphabetical truncation plus its warning, which 5.2's control measured at 406 omitted.
+- **Resolved when:** a remedy is recorded here, and `skill_reach`'s treatment of a policy-disabled skill matches it — today it counts `unlisted` and says in its own comment that this is installed-and-not-listed, never a claim of reach.
+- **Recommendation:** (a). It is the only option that keeps ADR-289 (b) true as published, the mechanism it needs already exists and already labels uninstalled rows, and it leaves the budget win intact. (c) is the honest fallback if (a) turns out not to work on this host, and it is strictly worse than today only in that it also loses the knowability of which skills survive.
 - **If you do nothing:** 4.1 keeps the second host's listing inside its budget, AC-1 and AC-4 stay open, and `skill_reach` keeps the generous bucket with the caveat stated in its own comment.
 
 ### blocker: fork-widening-is-owner-owned

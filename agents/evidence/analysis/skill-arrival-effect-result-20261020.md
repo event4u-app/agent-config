@@ -1,9 +1,16 @@
+<!-- evidence-type: analysis -->
+
 # Result — the effect of the arrival work
 
 **Roadmap step:** `road-to-skills-that-arrive-when-called` 5.2.
 **Pre-registration:** `agents/evidence/preregistration/skill-arrival-effect-20261020.md`,
 sha256 `0a771eeb06e101b53e178bdd9d7796a34d58c604b5aa91394abc83597c030c81`,
-committed in `edde62bff` before the readings below were taken.
+committed in `edde62bff` before the readings below were taken. That hash is of
+the file **as committed there** — a later commit prepended the `evidence-type`
+marker this tree's evidence lint requires, so the working copy hashes
+differently and
+`git show edde62bff:agents/evidence/preregistration/skill-arrival-effect-20261020.md | shasum -a 256`
+reproduces the value quoted here.
 **Honesty label:** live readings are first-party observations of codex-cli
 0.148.0 on one machine. Offline readings are deterministic over the committed
 tree. One arm is reported as **falsified**, one as **one-armed**, and the
@@ -48,22 +55,35 @@ to half the problem. 4.1 now computes ONE set across every root the host reads
 that the package writes, keeps a resident name's description in the first root
 that holds it and disables the duplicate in the rest.
 
-### S3 — a non-resident skill stays invocable. **FALSIFIED, and the reading is one-armed.**
+### S3 — a non-resident skill stays invocable. **FALSIFIED, two-armed.**
 
-Asked to invoke `docker`, a skill present on disk with
-`policy.allow_implicit_invocation: false`, the session answered `UNAVAILABLE`
-and **made no tool call**. The transcript shows no attempt.
+Three runs, after two earlier attempts at the control were lost to `429`:
 
-The paired positive control — the same question about a RESIDENT skill, which
-would separate "the host refuses the invocation" from "the model never saw it
-listed and did not try" — **could not be taken: `429 Too Many Requests`**, the
-subscription's rate limit, which also stopped 0.3's live-pickup cell four times
-today. So the reading is one-armed and it is reported as one-armed.
+| run | ask | answer |
+|---|---|---|
+| `01a1573b` | invoke `docker` (non-resident) | `UNAVAILABLE`, **no tool call** |
+| `01a15755` | invoke `accessibility-auditor` (resident) | the first line of its body — by `sed`-reading the file, **not** through the skill mechanism |
+| `01a15751` | which of the two are in your skills list | `RESIDENT=YES` · `NONRESIDENT=NO` |
 
-What it establishes either way: **on this host a skill outside the resident set
-is not reached by a model-side invocation.** What it does not establish: whether
-anything else could reach it. That gap is registered as the blocker
-`second-host-unlisted-reachability` and it is why AC-1 and AC-4 do not close.
+The third run is what makes the pair conclusive, and the second is why it was
+needed: the "positive control" did not exercise the skill mechanism either, it
+read a path it already knew. So the clean statement is the listing one.
+
+**Established:** a skill carrying `policy.allow_implicit_invocation: false` is
+**not in the model-visible skills list**, and a model that cannot see it does
+not reach for it. **Not established:** that the host would refuse an invocation
+if something named it anyway — neither run got that far. **Also true and easy
+to over-read:** its body stays readable by a caller that already knows the
+path, which is a filesystem read, not reach as a skill.
+
+Consequence for the buckets: `unlisted` stays factually correct — installed,
+not listed — and must not be read as *reachable*. `skill_reach` keeps it, with
+that caveat written into its own comment rather than left for a reader to
+infer. Recorded as the probe row `unlisted-skill-not-in-model-list` in
+`src/config/skill-lifecycle-probes-codex.json`.
+
+This is why AC-1 and AC-4 do not close, and the open part is no longer the
+measurement — it is the remedy. Blocker: `second-host-unlisted-reachability`.
 
 **It does not make 4.1 wrong, and the control says why.** Without the resident
 set this host drops 406 entries and strips every description, by alphabet,
@@ -95,6 +115,6 @@ authored SKILL.md carries a `context:` key. Both are asserted by
 ## What follows
 
 AC-2, AC-3 and AC-5 close. AC-1 and AC-4 are held by
-`second-host-unlisted-reachability`, which needs one probe this lane could not
-take: the resident-skill positive control, on a day the second host's
-subscription is not rate-limited.
+`second-host-unlisted-reachability`. The probe it was waiting for has now been
+taken and is recorded; what is left is a decision about the remedy, which is
+the blocker's content.

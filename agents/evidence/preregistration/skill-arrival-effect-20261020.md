@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Pre-registration — reading the effect of the arrival work
 
 **Roadmap step:** `road-to-skills-that-arrive-when-called` 5.1.

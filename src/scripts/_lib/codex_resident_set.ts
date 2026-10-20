@@ -19,16 +19,18 @@
  * consumer configuration: keep the resident skills as they are, and write that
  * one file into every other OWNED skill directory.
  *
- * WHAT A NON-RESIDENT SKILL LOSES — AND THE PART THAT IS NOT SETTLED. Its
- * listing entry goes; the directory, the body and the name are untouched, so it
- * is still installed. Whether it is still REACHABLE is measured and not
- * answered: asked to invoke a non-resident skill by name, a session answered
- * `UNAVAILABLE` and made no tool call (5.2, S3), and the positive control that
- * would separate "the host refuses" from "the model never saw it listed and did
- * not try" was lost to a rate limit. Open as the blocker
- * `second-host-unlisted-reachability`; `skill_reach` still counts these
- * `unlisted` rather than `unreachable`, which is the generous reading and is
- * flagged there.
+ * WHAT A NON-RESIDENT SKILL LOSES, MEASURED. Its listing entry; the directory,
+ * the body and the name are untouched, so it stays installed. It is NOT still
+ * reachable as a skill: probe row `unlisted-skill-not-in-model-list`,
+ * two-armed, has the model answering `NONRESIDENT=NO` for a policy-disabled
+ * skill against `RESIDENT=YES` for a resident one, and answering `UNAVAILABLE`
+ * with no tool call when asked to invoke it. Its body stays readable by a
+ * caller that already knows the path, which is a filesystem read.
+ *
+ * That is a real cost and it is why AC-1 and AC-4 do not close. The remedy is
+ * the open blocker `second-host-unlisted-reachability` — the leading option is
+ * to point the existing shell search at the unlisted set, which already labels
+ * uninstalled rows.
  *
  * What the trade is NOT is a reduction in reach. Without this, the host drops
  * 406 entries and strips every description, by alphabet, behind a warning
