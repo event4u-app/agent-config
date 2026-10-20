@@ -16,6 +16,7 @@ import * as path from 'node:path';
 
 import {
     CODEX_BUDGET_CHARS,
+    codexSkillRoots,
     POLICY_BODY,
     POLICY_REL,
     computeCodexResidentSet,
@@ -156,6 +157,17 @@ describe('codex resident set — the effect on disk', () => {
         expect(fs.existsSync(path.join(skills, 'ours', POLICY_REL))).toBe(false);
         expect(fs.existsSync(path.join(skills, 'theirs', POLICY_REL))).toBe(true);
         expect(fs.existsSync(record)).toBe(false);
+    });
+
+    it('lists only the roots that actually hold a skills directory', () => {
+        const home = scratch();
+        expect(codexSkillRoots(home)).toEqual([]);
+        fs.mkdirSync(path.join(home, '.agents', 'skills'), { recursive: true });
+        expect(codexSkillRoots(home)).toEqual([path.join(home, '.agents')]);
+        fs.mkdirSync(path.join(home, '.codex', 'skills'), { recursive: true });
+        // Precedence: the root the package deploys for this host comes first,
+        // so a duplicate is disabled in the OTHER one.
+        expect(codexSkillRoots(home)).toEqual([path.join(home, '.codex'), path.join(home, '.agents')]);
     });
 
     it('is a no-op without a record', () => {

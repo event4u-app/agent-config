@@ -3443,7 +3443,7 @@ function install_global(
     // Same reason, second host: the resident set is computed over the skills a
     // prune left on disk, and this host drops whole entries rather than
     // descriptions when the listing does not fit.
-    if (deploy_results['codex']?.[2] === 'deployed') applyCodexResidentSet(expanduser(USER_SCOPE_PATHS['codex']!), state.QUIET ? () => undefined : info);
+    if (deploy_results['codex']?.[2] === 'deployed') applyCodexResidentSet(os.homedir(), state.QUIET ? () => undefined : info);
 
     const failed_tools = new Set<string>(
         Object.keys(deploy_results).filter(

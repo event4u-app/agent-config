@@ -70,6 +70,7 @@ import {
     removeListingOverrides,
 } from '../_lib/skill_listing_overrides.js';
 import {
+    codexSkillRoots,
     recordPath as codexResidentRecordPath,
     removeCodexResidentSet,
 } from '../_lib/codex_resident_set.js';
@@ -923,12 +924,18 @@ function _uninstall_global(opts: Options): number {
     // in a directory the uninstall emptied.
     if (tools.includes('codex') && !opts.dry_run) {
         try {
-            const res = removeCodexResidentSet(path.join(os.homedir(), '.codex'), codexResidentRecordPath());
-            if (res.changed || res.kept_user.length > 0) {
+            let removed = 0;
+            let kept = 0;
+            for (const anchor of codexSkillRoots(os.homedir())) {
+                const res = removeCodexResidentSet(anchor, codexResidentRecordPath(anchor));
+                removed += res.removed.length;
+                kept += res.kept_user.length;
+            }
+            if (removed > 0 || kept > 0) {
                 _print(
                     _stdout,
-                    `  · codex: removed ${res.removed.length} resident-set policy file(s), ` +
-                        `kept ${res.kept_user.length} the user changed`,
+                    `  · codex: removed ${removed} resident-set policy file(s), ` +
+                        `kept ${kept} the user changed`,
                 );
             }
         } catch (e) {

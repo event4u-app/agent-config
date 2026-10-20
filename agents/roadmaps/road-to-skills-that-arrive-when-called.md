@@ -5,7 +5,7 @@ execution:
   mode: phase-checkpoints
 depends: [road-to-a-hook-carrier-that-is-never-silent]
 estate_offset_exempt: "Round inbox-2026-10-n asks whether the package can install a minimal skill set, bring others in per need and drop them again. Verified at d760ecbde: a default install writes 229 of 300 authored skills, the package's own metadata occupies the host's reserved `context` key on 6 skills so no skill can run forked, and Codex CLI receives no native skills. road-to-skill-menu-economy owns only the listing axis and is parked on a condition this file does not meet; un-parking it to carry a lifecycle it never owned would re-open its four parked conditions, and no other file owns this axis."
-estate_growth_exempt: "+1 open_blocker on 2026-10-20: `fork-widening-is-owner-owned`, posed by step 3.3 on 3.2's HARM close. It blocks nothing — the pilot set stays at five and the render ships unwired — and it closes no box; it exists because 3.3's whole content is to pose a question rather than answer it, so the question has to be somewhere a reader finds it. Earlier, +2 open_blockers: `which-completeness-skills-owe`, a product question the round raises against the public statement that an install writes the active pack only, and `listing-override-write-is-owner-owned`, the fourth arrival of the question road-to-skill-menu-economy already poses. Neither closes a box or changes behaviour."
+estate_growth_exempt: "+2 open_blockers on 2026-10-20. `second-host-unlisted-reachability`, raised by step 5.2's own arm S3 — the run measured that a non-resident skill answered `UNAVAILABLE`, and the control that would say why was lost to a rate limit; it blocks AC-1 and AC-4 and no step, and it exists because the alternative is closing two acceptance criteria on a one-armed reading. And `fork-widening-is-owner-owned`, posed by step 3.3 on 3.2's HARM close. `fork-widening-is-owner-owned`, posed by step 3.3 on 3.2's HARM close. It blocks nothing — the pilot set stays at five and the render ships unwired — and 3.3's whole content is to pose a question rather than answer it, so the question has to be somewhere a reader finds it. Earlier, +2 open_blockers: `which-completeness-skills-owe`, a product question the round raises against the public statement that an install writes the active pack only, and `listing-override-write-is-owner-owned`, the fourth arrival of the question road-to-skill-menu-economy already poses. Neither closes a box or changes behaviour."
 relates:
   - slug: road-to-a-search-answer-a-model-can-choose-from
     relation: extends
@@ -346,13 +346,26 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
   stops occupying the budget (omitted fell 554 → 481 when 60 of 120 were
   disabled). So the resident set is enforceable from the package side with no
   host setting and no consumer key. Measured on this projection: the whole
-  catalogue of 301 bills 59,584 characters against a documented 8,000, and the
-  split keeps 40 (7,930 characters, through `command-writing`) and writes the
-  policy file for 261. Fill order is alphabetical because that is the order the
+  catalogue of 301 bills 59,584 characters against a documented 8,000.
+  Fill order is alphabetical because that is the order the
   host itself drops by, so the resident set is the host's own survivors made
-  explicit rather than a second, conflicting order. A non-resident skill loses
-  its listing entry and nothing else — `described` → `unlisted` in 2.2's
-  buckets, never `unreachable`. The deploy row is untouched, so the `agents-md`
+  explicit rather than a second, conflicting order.
+  **Corrected the same day by 5.2's S2.** The first version covered only
+  `~/.codex/skills`, where this package deploys for this host, and the warning
+  still fired at 153 omitted where the control read 406. The host also reads
+  `$HOME/.agents/skills` — its OWN documented root, which this package writes
+  under the antigravity deploy row and which held 459 entries on this machine,
+  and 0.3 had observed a name present in both roots listed TWICE without
+  merging. One set is now computed across every root the host reads that the
+  package writes: a resident name keeps its description in the first root that
+  holds it, and the duplicate is disabled in the rest. Live after that: 37
+  listed at 7,769 characters, 729 unlisted, **no omission warning**, against a
+  control on the same scratch home that printed one at 406 omitted.
+  A non-resident skill loses its listing entry; whether it loses more is
+  **measured and open** — 5.2's S3 got `UNAVAILABLE` for one, one-armed, and
+  it is the blocker `second-host-unlisted-reachability`. What the trade is NOT
+  is less reach: the control shows the host already dropping 406 entries by
+  alphabet, so this replaces an arbitrary cut with a recorded one. The deploy row is untouched, so the `agents-md`
   projection is byte-equal by construction and the test asserts the row.
   `tests/install/codex_resident_set.test.ts`: with the overflow branch and the
   foreign-file guard neutralised, 5 of 13 failed.
@@ -476,13 +489,42 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 
 ## Phase 5 — Read the effect once
 
-- [ ] **5.1 Pre-register.** Arms per host: today vs Phase 4 on the second host;
+- [x] **5.1 Pre-register.** Arms per host: today vs Phase 4 on the second host;
   today vs 3.2 on the first. Primary: skills reached with declared semantics per
   positive host-graded case. Guards: skill-not-found at invocation; any removal
   under a live lease (target 0); omission warnings on the second host (target 0).
   verify: pre-registration hashed before the first run.
-- [ ] **5.2 Run under the existing spend and independence rules.**
+  Done 2026-10-20: `agents/evidence/preregistration/skill-arrival-effect-20261020.md`,
+  sha256 `0a771eeb06e101b53e178bdd9d7796a34d58c604b5aa91394abc83597c030c81`,
+  committed in `edde62bff` before the reported readings.
+  **The primary is declared unmeasurable up front, not found absent
+  afterwards.** No artefact named "host-graded cases" exists in this tree —
+  `road-to-a-setup-that-decides-itself` recorded exactly that on 2026-10-16 —
+  so it is named absent with its reopening condition rather than quietly
+  swapped for whatever happened to be measurable. The second-host arm is
+  pre-registered WITH a positive control, because a reading of "no omission
+  warning" is worthless unless the same scratch home without the resident set
+  prints one.
+- [x] **5.2 Run under the existing spend and independence rules.**
   verify: the result is labelled for the claims gate.
+  Done 2026-10-20: `agents/evidence/analysis/skill-arrival-effect-result-20261020.md`,
+  labelled — live readings are first-party observations of codex-cli 0.148.0 on
+  one machine, offline readings deterministic over the committed tree. Probes
+  ran under a scratch `HOME` and `CODEX_HOME` carrying copies of both skill
+  roots, so nothing of the maintainer's was written.
+  S1 **met** offline (7,769 of 8,000 across both roots). S2 **met** live with
+  its control: no warning treated, `406 additional skills were not included` on
+  the control — and the first treated run is what found the second root, which
+  changed 4.1 the same day. S3 **FALSIFIED and one-armed**: asked to invoke a
+  non-resident skill by name, a session answered `UNAVAILABLE` with no tool
+  call, and the control that would separate "the host refuses" from "the model
+  never saw it listed" was lost to `429 Too Many Requests`. First host: nothing
+  shipped, asserted by a test that greps `src/`.
+  G1 0 · G2 0, reported with its weakness — no entry was materialised in these
+  runs, so it is a zero over zero opportunities; the guard is actually held by
+  the two-session fixture · G3 0 treated, 1 control.
+  S3 is the blocker `second-host-unlisted-reachability`, and is why AC-1 and
+  AC-4 stay open.
 
 ## Phase 6 — Small items to existing carriers
 
@@ -600,6 +642,19 @@ Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
   keep, whatever it writes down.
 - **If you do nothing:** Phases 0–3, 2.x and the second host proceed; the first host keeps its full install indefinitely and `projection.mode` stays the last setting the setup roadmap cannot remove.
 
+### blocker: second-host-unlisted-reachability
+
+<!-- asked: 2026-10-20 | record: agents/evidence/analysis/skill-arrival-effect-result-20261020.md -->
+
+- **Status:** open — raised 2026-10-20 by step 5.2's arm S3
+- **Owner:** council — a host-behaviour question answerable by one probe, with reversible internal remedies. It reaches the owner only if the answer turns out to weaken what ADR-289 (b) published.
+- **Class:** 2
+- **Blocks:** AC-1 and AC-4. No step: 4.1 ships, and 5.2's control says why — without it the host already drops 406 entries by alphabet behind a warning, so the resident set does not reduce reach, it stops reach being decided by spelling.
+- **What to do:** take the one probe this lane could not. Ask a `codex exec` session under a scratch `CODEX_HOME` to invoke a RESIDENT skill by name, as the positive control for S3. A tool call there, against S3's `UNAVAILABLE` with no tool call, separates "the host refuses an unlisted skill" from "the model never saw it listed and did not try". Then: if the host refuses, `skill_reach` must count a policy-disabled skill `unreachable` rather than `unlisted`, and 4.1's resident set needs a second retrieval path before AC-1 can close; if only the listing is missing, `unlisted` is correct and AC-1 and AC-4 close on the evidence already taken.
+- **Resolved when:** the control row is recorded in `src/config/skill-lifecycle-probes-codex.json`, and `skill_reach`'s bucket for a policy-disabled skill either stays `unlisted` citing that row or becomes `unreachable`.
+- **Recommendation:** take the probe. Everything else here is downstream of one reading, and the reading is cheap on a day the subscription is not rate-limited — four separate cells were lost to `429` today.
+- **If you do nothing:** 4.1 keeps the second host's listing inside its budget, AC-1 and AC-4 stay open, and `skill_reach` keeps the generous bucket with the caveat stated in its own comment.
+
 ### blocker: fork-widening-is-owner-owned
 
 <!-- asked: 2026-10-20 | record: agents/evidence/analysis/skill-fork-pilot-result-20261020.md -->
@@ -686,10 +741,33 @@ beyond its name.
 - [ ] AC-1 — Every skill is reachable on every host with native skills; `doctor`'s
   installed / described / name-only / reachable-not-installed / degraded counts sum
   to the authored count.
+  <!-- blocked-by: second-host-unlisted-reachability | asked: 2026-10-20 -->
+  Half met 2026-10-20: `doctor --check skill-reach` reports a row per host with
+  native skills, not one for the first host only, and each row sums —
+  claude-code 300 installed + 1 reachable-not-installed of 301, codex the same
+  on this machine, 0 unreachable on both. The check now WARNS on a non-zero
+  `unreachable`, so the criterion is a verdict rather than a number a reader
+  has to notice. The reachability half is held: 5.2's S3 falsified "a
+  non-resident skill stays invocable" on the second host, one-armed.
 - [x] AC-2 — No package-owned skill frontmatter key equals a host-documented key.
   Verified 2026-10-18: `validate_frontmatter` (which carries 1.2's
   `host-key-collision` row) read 456 artefacts, 0 failing.
-- [ ] AC-3 — The fork pilot has a pre-registered, labelled result.
+- [x] AC-3 — The fork pilot has a pre-registered, labelled result.
+  Verified 2026-10-20: pre-registration `skill-fork-pilot-20261020.md`
+  (sha256 `e8e4fe1e…4a0dab3b`) committed in `7ee747481` before the reported
+  run; result `skill-fork-pilot-result-20261020.md`, labelled, closing HARM.
 - [ ] AC-4 — On the second host a fresh session shows no omission warning and every
   non-resident skill is reachable by 4.2's triggers.
-- [ ] AC-5 — No removal is observed under a live lease in the 5.1 run.
+  <!-- blocked-by: second-host-unlisted-reachability | asked: 2026-10-20 -->
+  First half met 2026-10-20, live and with a positive control: no omission
+  warning with the resident set across both roots, against a control on the
+  same scratch home printing `406 additional skills were not included`. Second
+  half held by the same blocker as AC-1.
+- [x] AC-5 — No removal is observed under a live lease in the 5.1 run.
+  Verified 2026-10-20: G2 reads 0, reported with its weakness rather than as a
+  clean pass. No entry was materialised during the 5.2 runs, so it is a zero
+  over zero opportunities and proves nothing on its own. What holds the
+  criterion is the two-session fixture in
+  `tests/install/skill_materialisation.test.ts`, which places an entry under a
+  live lease, collects, and asserts it survives — and which fails when the TTL
+  check is neutralised.

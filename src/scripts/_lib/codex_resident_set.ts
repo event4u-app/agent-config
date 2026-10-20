@@ -19,12 +19,21 @@
  * consumer configuration: keep the resident skills as they are, and write that
  * one file into every other OWNED skill directory.
  *
- * WHAT A NON-RESIDENT SKILL LOSES, EXACTLY. Its listing entry — nothing else.
- * The directory, the body and the name are untouched, so it stays installed and
- * stays invocable by name. In `skill_reach` terms it moves from `described` to
- * `unlisted`, never to `unreachable`. That is the trade this step makes: a
- * bounded, named set the host can actually carry, against a listing the host
- * truncates by alphabet behind a warning.
+ * WHAT A NON-RESIDENT SKILL LOSES — AND THE PART THAT IS NOT SETTLED. Its
+ * listing entry goes; the directory, the body and the name are untouched, so it
+ * is still installed. Whether it is still REACHABLE is measured and not
+ * answered: asked to invoke a non-resident skill by name, a session answered
+ * `UNAVAILABLE` and made no tool call (5.2, S3), and the positive control that
+ * would separate "the host refuses" from "the model never saw it listed and did
+ * not try" was lost to a rate limit. Open as the blocker
+ * `second-host-unlisted-reachability`; `skill_reach` still counts these
+ * `unlisted` rather than `unreachable`, which is the generous reading and is
+ * flagged there.
+ *
+ * What the trade is NOT is a reduction in reach. Without this, the host drops
+ * 406 entries and strips every description, by alphabet, behind a warning
+ * (5.2's control) — so those entries are already unreached and nobody can say
+ * which. This replaces an arbitrary cut with a deterministic, recorded one.
  *
  * WHY NOT THE HOST'S DOCUMENTED ROOT. The host's page names
  * `$HOME/.agents/skills`; `GLOBAL_DEPLOY_SOURCES` writes `~/.codex/skills`. The
@@ -39,6 +48,7 @@
  * because the owned set comes from the deploy inventory.
  */
 
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -47,8 +57,8 @@ import * as global_deploy_inventory from './global_deploy_inventory.js';
 import { ownedSkillNames } from './skill_listing_overrides.js';
 import * as user_global_paths from './user_global_paths.js';
 
-/** Sidecar basename, beside `skill-overrides.json`. */
-export const RECORD_BASENAME = 'codex-resident-set.json';
+/** Sidecar directory, beside `skill-overrides.json`: one record per host root. */
+export const RECORD_DIRNAME = 'codex-resident-set';
 
 /** Relative path, inside a skill directory, of the host's per-skill policy file. */
 export const POLICY_REL = path.join('agents', 'openai.yaml');
@@ -172,8 +182,39 @@ export interface EnsureResidentSetResult {
     skipped_foreign: string[];
 }
 
-export function recordPath(env?: user_global_paths.EnvMap | null): string {
-    return user_global_paths.write_target(RECORD_BASENAME, { env: env ?? null });
+/**
+ * The record for ONE host root.
+ *
+ * One file per root, named by a digest of the resolved root, because the host
+ * reads more than one: `~/.codex/skills`, where this package deploys for it,
+ * and `$HOME/.agents/skills`, its own documented root, which this package also
+ * writes — for a different host. Measured 2026-10-20 on the maintainer machine:
+ * 309 entries in the first and 459 in the second, and 0.3 observed the host
+ * listing a name present in both TWICE. A resident set that covered one root
+ * left the warning firing at 153 omitted where the control read 406, which is
+ * the mechanism working on the root it was given and nothing more.
+ */
+export function recordPath(anchor: string, env?: user_global_paths.EnvMap | null): string {
+    const key = createHash('sha256').update(path.resolve(anchor)).digest('hex').slice(0, 16);
+    return path.join(user_global_paths.write_target(RECORD_DIRNAME, { env: env ?? null }), `${key}.json`);
+}
+
+/**
+ * Every user skills root this host reads that this package writes, in listing
+ * precedence order — the first that holds a name is where its description is
+ * kept, and a copy in any later root is disabled so the budget is not spent
+ * twice on the same skill.
+ *
+ * Both rows come from `GLOBAL_DEPLOY_SOURCES`: `~/.codex/skills` is the codex
+ * row, `~/.agents/skills` is the antigravity row. The second is in this list
+ * because the HOST reads it, not because it belongs to this host — and the
+ * policy file written there is `agents/openai.yaml`, which only this host
+ * reads, so another host's deploy is not affected by being listed here.
+ */
+export function codexSkillRoots(home: string): string[] {
+    return [path.join(home, '.codex'), path.join(home, '.agents')].filter((a) =>
+        fs.existsSync(path.join(a, 'skills')),
+    );
 }
 
 /** The owned catalogue as deployed, read from disk. */
@@ -314,32 +355,68 @@ export function removeCodexResidentSet(anchor: string, recordFile: string): Remo
 }
 
 /**
- * The installer's one call: compute, write, report. Never throws — a failure
- * here must not sink the content deploy, same as the listing override.
+ * The installer's one call: compute one resident set across every root the host
+ * reads, write it, report. Never throws — a failure here must not sink the
+ * content deploy, same as the listing override.
  *
- * Ownership is the deploy inventory's record for `codex`, so this must run
- * AFTER every prune: a skill a prune removed is no longer owned and must not
- * keep a policy file behind.
+ * ONE set across ALL roots, not one per root, because the host sums them: it
+ * lists every root and 0.3 observed it listing a name present in two of them
+ * twice, without merging. So a resident name keeps its description in the FIRST
+ * root that holds it and is disabled in every later one — which removes the
+ * double entry as well as the overflow.
+ *
+ * Ownership is the deploy inventory for the root that has one; a root this
+ * package writes under another host's row (`~/.agents/skills`) is owned through
+ * that row. Either way this must run AFTER every prune: a skill a prune removed
+ * is no longer owned and must not keep a policy file behind.
  */
-export function applyCodexResidentSet(anchor: string, report: (msg: string) => void): void {
+export function applyCodexResidentSet(home: string, report: (msg: string) => void): void {
     try {
-        const owned = ownedSkillNames(global_deploy_inventory.recorded_rel_files('codex', anchor));
-        const catalogue = ownedCatalogue(path.join(anchor, 'skills'), owned);
+        const roots = codexSkillRoots(home);
+        if (roots.length === 0) return;
+
+        // The union, in root precedence order: the first root that carries a
+        // name is the one that may describe it.
+        const firstRootOf = new Map<string, string>();
+        const catalogue: CodexCatalogueEntry[] = [];
+        for (const anchor of roots) {
+            const skillsDir = path.join(anchor, 'skills');
+            const owned = fs
+                .readdirSync(skillsDir, { withFileTypes: true })
+                .filter((d) => d.isDirectory() && fs.existsSync(path.join(skillsDir, d.name, 'SKILL.md')))
+                .map((d) => d.name);
+            for (const e of ownedCatalogue(skillsDir, owned)) {
+                if (firstRootOf.has(e.name)) continue;
+                firstRootOf.set(e.name, anchor);
+                catalogue.push(e);
+            }
+        }
         const split = computeCodexResidentSet(catalogue);
-        const res = ensureCodexResidentSet(anchor, recordPath(), split.nonResident);
-        if (res.changed) {
-            report(
-                `codex: resident set in ~/.codex/skills — ${split.resident.length} listed ` +
-                    `(${split.listingChars} of ${split.budgetChars} chars), ` +
-                    `${res.disabled.length} newly unlisted, ${res.reenabled.length} relisted`,
-            );
+        const resident = new Set(split.resident);
+
+        let disabled = 0;
+        let reenabled = 0;
+        let foreign = 0;
+        for (const anchor of roots) {
+            const skillsDir = path.join(anchor, 'skills');
+            const here = fs
+                .readdirSync(skillsDir, { withFileTypes: true })
+                .filter((d) => d.isDirectory() && fs.existsSync(path.join(skillsDir, d.name, 'SKILL.md')))
+                .map((d) => d.name);
+            // Disabled here when it is not resident at all, OR when it is
+            // resident but some earlier root already carries its description.
+            const nonResident = here.filter((n) => !resident.has(n) || firstRootOf.get(n) !== anchor);
+            const res = ensureCodexResidentSet(anchor, recordPath(anchor), nonResident);
+            disabled += res.disabled.length;
+            reenabled += res.reenabled.length;
+            foreign += res.skipped_foreign.length;
         }
-        if (res.skipped_foreign.length > 0) {
-            report(
-                `codex: resident set left ${res.skipped_foreign.length} existing policy file(s) ` +
-                    `untouched (${res.skipped_foreign.slice(0, 5).join(', ')}${res.skipped_foreign.length > 5 ? ', …' : ''})`,
-            );
-        }
+        report(
+            `codex: resident set across ${roots.length} root(s) — ${split.resident.length} listed ` +
+                `(${split.listingChars} of ${split.budgetChars} chars), ` +
+                `${disabled} newly unlisted, ${reenabled} relisted` +
+                (foreign > 0 ? `, ${foreign} existing policy file(s) untouched` : ''),
+        );
     } catch (e) {
         report(`codex: resident set skipped — ${String(e)}`);
     }
