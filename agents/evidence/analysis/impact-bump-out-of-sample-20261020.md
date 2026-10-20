@@ -29,8 +29,13 @@ consumer-facing break". There is no second candidate window, so there is no
 window-shopping to disclose.
 
 **4.0.0 is excluded in advance, for a reason that has nothing to do with its
-result.** `git ls-remote --tags origin` carries no `4.0.0`; the span has no
-lower bound and cannot be read. Seven majors remain scoreable: 2.0.0, 3.0.0,
+result.** `git ls-remote --tags origin` carries no `4.0.0`, so the span has no
+**upper** bound and cannot be read. (Corrected 2026-10-21: this read "no lower
+bound", which is backwards — `3.3.0` exists and supplies the lower bound; the
+missing tag is the endpoint itself. The exclusion is unchanged and still
+pre-registered, but this sentence is the pre-registration's defence against
+window-shopping, so a wrong reason in it is worth correcting even though the
+decision it defends is right.) Seven majors remain scoreable: 2.0.0, 3.0.0,
 5.0.0, 6.0.0, 7.0.0, 8.0.0, 9.0.0.
 
 ### The span of a major
@@ -110,17 +115,35 @@ For each span above, with tags fetched (`git fetch origin --tags`):
 ```
 entries = parse_name_status(git diff --name-status <prev>..<tag>)
 paths   = settings_key_paths(entries)
-keys    = removed_setting_keys(git diff -U0 <prev>..<tag> -- <paths>)
+keys    = paths.length === 0
+            ? []                                   // NOT a bare `git diff --`
+            : removed_setting_keys(git diff -U0 <prev>..<tag> -- <paths>)
 classify_surfaces(entries, keys)
 ```
 
 with the impact cell from `parse_impact_rows(BREAKING_CHANGES.md)` and the bump
 from `impact_bump`. `settings_key_paths` and `removed_setting_keys` are exported
-from `major_surface.ts` and covered by tests, so every step above is runnable.
-**Corrected 2026-10-20 after review:** the first form of this block passed
-`SETTINGS_KEY_FILES`, an array of regular expressions, as a `git diff --`
-pathspec. It was not executable, which is part of why the error in Part 2
-survived to be committed.
+from `major_surface.ts` and covered by tests.
+
+**Corrected twice, and the second correction is the one that mattered.** The
+first form passed `SETTINGS_KEY_FILES`, an array of regular expressions, as a
+`git diff --` pathspec; it was not executable, which is part of why the error
+in Part 2 survived to be committed. The second form was executable and still
+did not reproduce the table, which is worse, and round 2 of the review caught
+it: `paths` is **empty** for three of the fourteen spans (`4.9.0..5.0.0`,
+`13.0.0..14.0.0`, `15.0.0..16.0.0`), and `git diff -U0 <span> --` with an
+empty pathspec is not an empty diff — it is the whole span. Run literally, it
+read 9, 3 and 12 key-shaped removals in those three spans, fired
+`settings-keys` on all three and flipped 14.0.0 and 16.0.0 to major,
+contradicting the table above and the headline under F3.
+
+The defect is in the written reproduction, not in the result. The same round-2
+reviewer re-ran all three detectors independently, from the module's own
+regexes rather than from this block, and reports the committed surfaces and
+removed-key sets reproducing row for row — so the table stands and the
+instructions for re-deriving it did not. That is still the one failure a
+reproduction section exists to prevent: a reader who followed it got different
+numbers from the author and had no way to tell which was wrong.
 
 ## Part 2 — Result
 
@@ -170,15 +193,40 @@ is the recorded impact, not the rule: 6 of 7 early rows read `action` and 2 of
 7 recent ones do. The hypothesis that 2.2's demotion rate was the rule's bias
 rather than the history's is refuted by a number.
 
-**F2 — the surface clause is live, and both times it fires alone it overrides
-an `automatic` migration.** It decides 10.0.0 and 11.0.0, where the removed
-keys are real (`turn_end_gate` and its four children; `worktrees`/`mode`) and
-each row's own prose records the migration as **automatic — a leftover key is
-accepted and ignored.** So `CONTRIBUTING.md:331` as written says: *a settings
-key removed with an automatic migration is a major.* That is a policy question
-the owner has to answer under option (a), not an implementation detail, and it
-is the single most decision-relevant line in this file. It was invisible until
-the detector was repaired.
+**F2 — the surface clause is live and decides two rows; the claim built on
+top of it holds for ONE of them.** Narrowed 2026-10-21 after round 2 of the
+review, and the narrowing is the honest part: this finding previously read
+"both times it fires alone it overrides an `automatic` migration", which was
+checked against the fired surface and not against what each release record
+actually documents.
+
+- **11.0.0 — the pairing is clean.** The detector reports `worktrees`/`mode`
+  removed from the settings template, and the 11.0.0 row of
+  `BREAKING_CHANGES.md` documents exactly `worktrees.mode`, with its migration
+  recorded as **automatic — a leftover key is accepted and ignored**. Here the
+  claim stands: `CONTRIBUTING.md:331` as written says *a settings key removed
+  with an automatic migration is a major*, and that is a policy question for
+  the owner under option (a) rather than an implementation detail.
+- **10.0.0 — the pairing is wrong, and the two halves describe different
+  removals.** The 10.0.0 row's recorded break is the council transport keys
+  (`defaults.mode` and the per-member `mode:`), which live in `.ai-council.yml`
+  — a path **no** `SETTINGS_KEY_FILES` row matches, so the detector never saw
+  them. What it did see is the removal of the `turn_end_gate` block from the
+  settings template, which `BREAKING_CHANGES.md` does not mention anywhere
+  (`grep -c turn_end_gate` over that file returns 0). So the surface fires
+  legitimately and the `automatic` note belongs to a different change; reading
+  them as one claim was the error.
+
+Two further limits on the key lists themselves, from the same round. The
+reported removed-key sets include `enabled` for 10.0.0 and `mode` for 11.0.0,
+and neither is gone: the 10.0.0 template still carries 11 `enabled:` keys and
+the 11.0.0 template still carries 2 `mode:` keys. `removed_setting_keys` reads
+the patch alone, so a key name that survives unchanged elsewhere in the same
+file has no `+` line and is counted as removed — see the corrected docblock in
+`major_surface.ts`. **No verdict moves on any of this:** both rows fire on a
+removal that is real (`turn_end_gate` and its children; `worktrees`), so the
+surface decides the same two rows either way. What shrinks is the claim the
+owner was asked to act on, from two cases to one.
 
 **F3 — 2.2's headline survives the clause it could not test.** 13.0.0, 14.0.0
 and 16.0.0 are still minor with the surface axis live. No key is removed in
@@ -211,6 +259,28 @@ no key — so the zeros there are a reading, not a blind spot. In
 `12.1.0..13.0.0`, `13.0.0..14.0.0` and `15.0.0..16.0.0` the template is absent
 from the diff entirely.
 
+**The out-of-sample half of this surface has no control at all, and one of its
+zeros is a blind spot.** Added 2026-10-21 after round 2 of the review; every
+span named above is 9.36.0 or later, i.e. in-sample. Two consequences, neither
+of which the section admitted before:
+
+- Across the seven out-of-sample majors the settings surface fires nowhere and
+  nothing establishes that it was looking. The zeros there are unverified.
+- `5.10.1..6.0.0` is worse than unverified, it is blind by construction: that
+  is the span where the template was renamed (`git diff --name-status` reports
+  `R093 config/agent-settings.template.yml -> src/config/…`), and
+  `settings_key_paths` keeps only the new path, so a diff restricted to that
+  pathspec loses the rename pairing and reports `new file mode` with zero
+  removed key lines whatever the file actually did. Ground truth, checked at
+  both tags, is that no key was in fact dropped — so the row is right and its
+  zero is still not evidence.
+
+This is a second, unregistered variant of risk 6 in the roadmap's register
+(a path-anchored detector going blind while the measurement reports
+inertness), reached through the pathspec rather than through a stale anchor.
+Recorded here because the first variant was caught by review and not by these
+controls, and the controls are what was supposed to catch it.
+
 **rule-or-skill-removal.** Positive: `5.10.1..6.0.0` carries **158 additions
 and 4 deletions** under the rule and skill paths. *(The first version of this
 line said "162 … and 45 deletions": 162 was A+D combined and 45 was the span's
@@ -218,13 +288,28 @@ total deletions anywhere — neither is the positive control for a
 deletion-only trigger, which is the 4.)* Negative: `15.0.0..16.0.0` contains
 **0** deletions of any kind; `12.1.0..13.0.0` contains exactly one in the whole
 span, `src/config/budget-routing.json`, which is neither a rule nor a skill.
+*(Both negatives are stated **with rename detection on**, which is how they
+reproduce as 0 and 1; under `--no-renames` the same spans read 3 and 6,
+because a rename becomes a delete plus an add. Noted 2026-10-21 after round 2
+pointed out that the next paragraph claims rename insensitivity, so a reader
+cannot tell which mode these two numbers are in. The verdicts are unaffected —
+all 14 spans were re-run both ways and every fired-surface set is identical —
+but a control whose value depends on an unstated flag is weaker than it looks.)*
 
 **installer-layout.** Positive: `6.1.0..7.0.0` carries
 `D src/scripts/install.py` and `A src/scripts/install.ts` — the entry-point
 relocation, which the first detector also missed and which the repaired table
 now catches. Negative: `9.36.0..10.0.0`, `11.0.0..12.0.0`, `14.23.0..15.0.0`
 and `15.0.0..16.0.0` carry **0** creations or removals under the installer
-tree, its templates or its entry points.
+tree, its templates or its entry points. *(This control was partly unbacked
+when written: the templates row of `INSTALLER_LAYOUT_PATHS` was anchored at
+`^templates/` while the tree moved to `src/templates/` inside the scored
+window, so "or its templates" named a path the detector could not see from
+6.0.0 onward — the same stale-anchor class as the settings defect, found by
+round 2 and repaired in the same change. The row now accepts both roots, and
+the control is true rather than merely stated: a sweep of all 14 spans finds
+zero creations or removals under `src/templates/`, so the repair moves no
+row.)*
 
 **Rename insensitivity.** All 14 spans were re-run under `--no-renames`. Every
 row is identical, so no verdict here depends on git's rename heuristic or on

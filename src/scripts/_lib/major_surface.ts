@@ -53,7 +53,7 @@ export interface DiffEntry {
 const INSTALLER_LAYOUT_PATHS: readonly RegExp[] = [
     /^src\/install\//,
     /^packages\/core\/installer\//,
-    /^templates\//,
+    /^(src\/)?templates\//,
     /^bin\//,
     /^(src\/)?scripts\/install\.(py|sh|ts|mjs)$/,
 ];
@@ -83,7 +83,30 @@ export const SETTINGS_KEY_FILES: readonly RegExp[] = [
     /(^|\/)install\/.*settings/,
 ];
 
-/** The diff's paths that are settings-key files, for the caller's `git diff -- <paths>`. */
+/**
+ * The diff's paths that are settings-key files, for the caller's `git diff -- <paths>`.
+ *
+ * KNOWN OVER-MATCH, recorded 2026-10-21 rather than silently narrowed. The last
+ * two rows above match on a directory plus the word `settings` and take no
+ * extension, so they also select non-YAML files whose contents
+ * `removed_setting_keys` then reads with a YAML key regex: in the scored window
+ * that is `src/server/schemas/settings.ts` (seven spans) and
+ * `tests/install/settings_surface_snapshot.test.ts` (one). A deleted property in
+ * either would be counted as a dropped settings key.
+ *
+ * Measured impact in that window: NONE. All 14 spans were re-run with the paths
+ * filtered to `.yml`/`.yaml`; every span's fire/no-fire outcome and every
+ * removed-key set is byte-identical either way, so no row of the out-of-sample
+ * measurement depends on the over-match.
+ *
+ * Not narrowed here on purpose. The obvious guard — require a YAML extension —
+ * is a change to this exported function's contract, and a committed test
+ * deliberately asserts that a `…schemas/agent-settings.schema.json` path IS
+ * selected. Rewriting that contract on a latent finding, in the change that
+ * merely measured it, is wider than the finding warrants. Whoever wires the
+ * surface clause under blocker option (a) should apply the guard and move that
+ * test with it.
+ */
 export function settings_key_paths(entries: readonly DiffEntry[]): string[] {
     const seen = new Set<string>();
     for (const entry of entries) {
@@ -103,6 +126,22 @@ const YAML_KEY = /^([-+])([ \t]*)([A-Za-z_][A-Za-z0-9_]*):/;
  * when no `+` line in the same patch declares it. Indentation is ignored on
  * purpose — a key that moved under a different parent still exists, and this
  * function is asked whether the key is gone, not where it lives.
+ *
+ * WHAT IT CANNOT SEE, corrected 2026-10-21 after the R2 round-2 review read
+ * the paragraph above as a promise the code does not keep. This reads the
+ * PATCH, so "no `+` line declares it" is a statement about the diff, not about
+ * the file: a key name that survives unchanged elsewhere in the same file
+ * produces no `+` line at all and is therefore reported as removed. Measured
+ * in the scored window — the 10.0.0 span reports `enabled` removed while that
+ * template still carries 11 `enabled:` keys, and 11.0.0 reports `mode` while
+ * two remain. Deciding it properly needs the file at both ends, not the patch,
+ * which is a different function with a different cost; the name list is
+ * therefore an UPPER BOUND on what was removed.
+ *
+ * It does not bias the surface: `classify_surfaces` asks only whether the list
+ * is non-empty, and in both spans above the list is non-empty for a removal
+ * that is real anyway. A caller that reports the names themselves — as the
+ * out-of-sample measurement does — must say they are an upper bound.
  */
 export function removed_setting_keys(patch: string): string[] {
     const removed = new Set<string>();
@@ -141,7 +180,7 @@ function is_create_or_delete(status: string): boolean {
  */
 export function classify_surfaces(
     entries: readonly DiffEntry[],
-    removed_setting_keys: readonly string[] = [],
+    removed_keys: readonly string[] = [],
 ): Set<MajorSurface> {
     const out = new Set<MajorSurface>();
     for (const entry of entries) {
@@ -149,7 +188,7 @@ export function classify_surfaces(
         if (matches(entry.path, INSTALLER_LAYOUT_PATHS)) out.add('installer-layout');
         if (entry.status === 'D' && matches(entry.path, RULE_OR_SKILL_PATHS)) out.add('rule-or-skill-removal');
     }
-    if (removed_setting_keys.length > 0) out.add('settings-keys');
+    if (removed_keys.length > 0) out.add('settings-keys');
     return out;
 }
 

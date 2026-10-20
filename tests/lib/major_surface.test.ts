@@ -132,6 +132,19 @@ describe('the paths that moved, pinned so the tables cannot go blind again', () 
         expect([...classify_surfaces([{ status: 'A', path: 'dist/install/install.mjs' }])]).toEqual([]);
     });
 
+    // The templates tree moved `templates/` -> `src/templates/` inside the
+    // scored window, and the row stayed anchored at the old root until round 2
+    // of the review found it — the same stale-anchor class as the settings
+    // defect, in the same table, missed because the regression test above
+    // pinned only the entry point. Latent when found (no span creates or
+    // removes under `src/templates/`), which is exactly why nothing caught it.
+    it('fires installer-layout for the templates tree at BOTH roots it has lived at', () => {
+        for (const path of ['templates/AGENTS.md', 'src/templates/AGENTS.md']) {
+            expect([...classify_surfaces([{ status: 'A', path }])]).toEqual(['installer-layout']);
+            expect([...classify_surfaces([{ status: 'D', path }])]).toEqual(['installer-layout']);
+        }
+    });
+
     it('matches the schema directory wherever it sits', () => {
         expect(settings_key_paths([{ status: 'M', path: 'src/scripts/schemas/agent-settings.schema.json' }])).toEqual([
             'src/scripts/schemas/agent-settings.schema.json',

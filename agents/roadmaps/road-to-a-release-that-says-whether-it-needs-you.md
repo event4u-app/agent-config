@@ -407,13 +407,19 @@ direct check named in the revisit column.
       (Evidence under step 4.3: no file in their import closure changed.)
 - [x] **AC-7** Every row of `BREAKING_CHANGES.md`'s table carries a
       `Consumer impact` value from the enum.
-- [x] **AC-8** `task ci` green.
+- [ ] **AC-8** `task ci` green.
       (Closes with the PR that closes this file: the remote pipeline is the
       authoritative run, and a green it has not yet reported is not evidence.)
-      Closed by this PR's final pipeline run, which is the run the merge is
-      bound to — so the box cannot ship checked over a red.
-      **One reading on the way there is worth recording rather than
-      absorbing.** Head `2e05048b7` read `stop` p95 272 ms against the
+      **Ticked and un-ticked again on 2026-10-21, and the reason is worth more
+      than the box.** This session checked it against "this PR's final
+      pipeline run", i.e. against a run that did not exist — while the only
+      number the bullet recorded was a **red**. The R2 round-2 reviewer caught
+      it (finding 6) and is right: the bullet's own standard is that a green
+      the pipeline has not reported is not evidence, and a promise is not a
+      run. It stays `[ ]` until a green exists, and whoever ticks it names the
+      head that run observed.
+      **The reading on the way there is recorded rather than absorbed.**
+      Head `2e05048b7` read `stop` p95 272 ms against the
       `any_hook_event` cap of 250 in `src/config/hook-latency-budget.json`.
       It is a runner-speed reading, not a regression: `main` at `fba00aabf`
       carries byte-identical hook code and read 182 ms, and the control
@@ -423,12 +429,24 @@ direct check named in the revisit column.
       only by its own test. The cap is **not** touched: that file is
       pre-registered and owner-owned, and its own text calls raising a number
       without a measured distribution beside it the config-bending it exists
-      to make visible. Re-measured on a fresh runner instead. If the overshoot
-      reproduces on a runner whose control reads ~20 ms, it stops being a
-      reading and becomes the finding that `stop` has grown into the tallest
-      slot while `any_hook_event` still carries the cap it had when
-      `pre_tool_use` was — the same pathology that forced that cap's
-      re-derivation from 150 to 175.
+      to make visible.
+      **Re-measured, and the re-measurement is the finding.** Head
+      `e3a3b0ef9` passed at `stop` p95 **249 ms against the 250 ms cap** — a
+      one-millisecond margin, with the control at 29 ms. Three readings of
+      byte-identical hook code now exist: 182 ms on `main`'s runner (control
+      21), 249 ms (control 29) and 272 ms (control 31). The slot tracks the
+      control, so the gate's verdict is decided by which runner the job draws
+      and the pass was as close to the cap as the failure was far from it.
+      That is no longer "one reading on a slow runner": it is the shape
+      `pre_tool_use_cap_derivation` names as a false-positive generator by
+      construction — a threshold sitting **inside** the legitimate
+      distribution — reached by `stop` growing into the tallest slot while
+      `any_hook_event` still carries the cap set when `pre_tool_use` was.
+      It is left for the owner rather than acted on, because that block also
+      says raising the number without a measured distribution beside it is
+      the config-bending it exists to make visible. These three readings are
+      the start of that distribution and are recorded here for whoever
+      derives it.
 
 ## Provenance
 
