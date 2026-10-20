@@ -179,7 +179,7 @@ Nothing is sent without the person's word in that turn.
 
 ## Phase 3 — Synthesised, clustered, drafted
 
-- [ ] **3.1 Synthesised, not redacted.** The upstream payload is built from
+- [x] **3.1 Synthesised, not redacted.** The upstream payload is built from
       closed fields only — `target`, `defect_class`, `principle`, a synthetic
       package fixture — with no transcript text, no local key, no free-text
       project context, and neither `mechanism` nor `falsifier` (D10: both are
@@ -230,7 +230,22 @@ Nothing is sent without the person's word in that turn.
       the narrowed proposal — 2/2 (a), both seats calling it not owner-reserved.
       The landed half is pinned by the four claim-field cases in
       `tests/scripts/self_repair.test.ts`, each watched red.
-- [~] **3.2 A mechanism fingerprint.** Deferred 2026-10-19 by D10: the
+      **Done 2026-10-20 (D11):** `renderUpstreamBody` in
+      `src/scripts/_lib/self_repair_outgoing.ts` renders the pull-request body
+      and the issue it degrades to from the defect class, the intake source,
+      the fingerprint, the occurrence count, the resolved targets and the
+      `principle` slug — no evidence span, no suggested surface, no mechanism,
+      no falsifier, no dates. The "synthetic package fixture" is a fixed
+      pointer at this package's own detector for the class, written by the
+      package, never by the consumer. `planRelease` keeps `renderReport` only
+      for a local-only plan; Class B keeps it too. The issue form
+      (`.github/ISSUE_TEMPLATE/self_repair_report.yml`) now mirrors the
+      released body field for field, pinned by a round-trip through
+      `parseUpstreamBody`, which replaces the old `parseReport`. Four
+      `payload-has-only-closed-fields` cases were watched red (3 of 4) before
+      the renderer existed; the degraded-issue scan case now reaches the body
+      through `principle`, the free field that still leaves.
+- [~] **3.2 A mechanism fingerprint.** Deferred 2026-10-19 by D10: the <!-- deferred-resolution: carried-to=road-to-one-upstream-that-checks-what-leaves-carried -->
       fingerprint stays on the evidence hash until a corpus of records carrying
       `principle` shows one subject per mechanism; re-opens when that corpus
       exists. Changing the key earlier changes a cross-installation contract
@@ -355,7 +370,7 @@ Nothing is sent without the person's word in that turn.
 > *(Re-measured 2026-10-19: retro 4.4 and 2.5 are both still open, 2.5 for an
 > owner-reserved reason — it is a new consumer command. Unchanged.)*
 
-- [~] **5.1 At most one offer per run.** A retro run whose package record passes
+- [~] **5.1 At most one offer per run.** A retro run whose package record passes <!-- deferred-resolution: carried-to=road-to-one-upstream-that-checks-what-leaves-carried -->
       the canonical threshold appends one release offer to its output; sending
       still needs the person's word in that turn.
       verify: `npx vitest run tests/scripts/retro.test.ts -t at-most-one-upstream-offer --reporter=verbose` -> /✓.*at-most-one-upstream-offer/
@@ -370,7 +385,7 @@ Nothing is sent without the person's word in that turn.
       `road-to-a-retro-the-merge-runs` step 4.4 closes; the drain queue has
       no class for a wait on another roadmap's open step, so a `[ ]` here
       reads as runnable work and sends a lane to a step it cannot build.
-- [~] **5.2 A leak stops the offers.** Any egress or authorisation leak found
+- [~] **5.2 A leak stops the offers.** Any egress or authorisation leak found <!-- deferred-resolution: carried-to=road-to-one-upstream-that-checks-what-leaves-carried -->
       after release turns offers off until the owner decides, and `/retro status`
       says so.
       verify: `npx vitest run tests/scripts/retro.test.ts -t leak-turns-offers-off --reporter=verbose` -> /✓.*leak-turns-offers-off/
@@ -439,6 +454,7 @@ Nothing is sent without the person's word in that turn.
 | D8 | reversible-technical | agent | Risk review 2026-10-19: AC-5 is reworded as D5 instructed ("corrected at the next risk review") and closed against `consumer-reaches-the-issue-step` in `tests/scripts/self_repair_release.test.ts`, watched red with the checkout condition removed from `chooseEgress`. AC-1 closed on the three Phase 1 documents plus the pipeline document and the privacy-floor rule — every backticked path resolves, or is a short-form mention of a file that exists, or is the seed path the rule names as deliberately absent — and on `check_references` (2,931 scanned, 0 broken). Rows 1–3 of the risk register re-read and kept; row 4 added | `npx vitest run tests/scripts/self_repair_release.test.ts` 30/30 · `./scripts-run src/scripts/check_references` exit 0 | the owner decides D7 — AC-5's wording then moves with it |
 | D9 | critical-technical | council:2026-10-19-upstream-closed-fields | Optional `principle` / `mechanism` / `falsifier` added to the self-repair record (shape-validated, privacy-floor-scanned, read by neither key nor body) and the retro mapping documented — council-decidable and convergent (anthropic, openai). The upstream body change (3.1) and the mechanism key (3.2) are NOT adopted: openai named a privacy boundary and a public contract as owner-reserved, and the seats split on sending `mechanism` / `falsifier` and on keeping the legacy body; a split with an owner-reserved dimension is owner residue (D7). For 3.2 openai also objected that a claim is not a mechanism identity | 2/2 present, 1 round, $0; `tests/scripts/self_repair.test.ts` claim-field cases, each watched red | the owner decides 3.1, or a corpus shows one subject per mechanism (3.2) |
 | D10 | reversible-technical | council:resolve-blockers-batch-20261019 | Upstream body from `target`, `defect_class` and `principle` only; `mechanism` and `falsifier` stay local; fingerprint stays on the evidence hash, so 3.2 and AC-3 are deferred to a corpus | 2/2 seats chose (a) and called it not owner-reserved; openai: sending free-text fields (c) is clauses 2 and 5, changing the key is clause 5 on its own | a reviewed corpus shows minimal reports are unactionable, or one subject per mechanism holds across installations |
+| D11 | reversible-technical | agent | 3.1 built as D10 chose: the upstream body is closed fields only, the issue form mirrors it, `parseReport` retired with the form it pinned. Occurrence count kept, first/last-seen dates dropped as reporter activity | `npx vitest run tests/scripts/self_repair_release.test.ts` 34/34 · `tests/scripts/self_repair.test.ts` 86/86 | a maintainer reports that closed-field bodies are unactionable (D10's revisit) |
 
 ## What this roadmap deliberately does not do
 
@@ -450,14 +466,14 @@ Nothing is sent without the person's word in that turn.
 - **K5** No scanner of its own; the detector table is the dependency.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-20 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Company jargon without a literal identifier slips through | product | A term that names nothing but identifies the employer leaves in a principle field. | Closed fields only, the person sees every byte in the dry run, digest-bound approval. | Phase 3 — Synthesised, clustered, drafted |
 | 2 | Upstream pull requests flood the maintainer | product | Many installations open the same finding. | Mechanism fingerprint clusters them; the existing creation cap of 20 per 24 h; one offer per run. | Phase 5 — The retro may offer, never send |
 | 3 | The ephemeral checkout fails on a locked-down machine | implementation | No network or no git leaves the consumer without a route. | The ladder still degrades to an issue, which is today's behaviour. | Phase 4 — Approval of exact bytes, and a route from consumers |
-| 4 | Producer and consumer each wait on the other's record shape | implementation | Retro 4.4 waits on the record shape this file reads, and 3.1 / 3.2 here wait on a field the retro has not named, so neither side moves. | Broken on this side 2026-10-19 (D9): the record now has the fields and the mapping is in the retro contract, so retro 4.4 has a shape to write. What remains is an owner decision on what leaves, not a wait. | Phase 3 — Synthesised, clustered, drafted |
+| 4 | Producer and consumer each wait on the other's record shape | implementation | Retro 4.4 waits on the record shape this file reads, and 3.1 / 3.2 here wait on a field the retro has not named, so neither side moves. | Broken on this side 2026-10-19 (D9): the record now has the fields and the mapping is in the retro contract, so retro 4.4 has a shape to write. What leaves was decided by D10 and built in 3.1 (D11); 3.2 now waits on a corpus, not on a shape. | Phase 3 — Synthesised, clustered, drafted |
 
 ## Acceptance Criteria
 
@@ -465,7 +481,7 @@ Nothing is sent without the person's word in that turn.
       file that does not exist.
 - [x] **AC-2** A release whose branch, identity, message or diff carries a
       consumer identifier is refused, with the finding named.
-- [~] **AC-3** The same mechanism from two projects produces one fingerprint.
+- [~] **AC-3** The same mechanism from two projects produces one fingerprint. <!-- deferred-resolution: carried-to=road-to-one-upstream-that-checks-what-leaves-carried -->
       Deferred with 3.2 (D10).
 - [x] **AC-4** Every upstream pull request is a draft with a noreply identity,
       and changing one byte after approval voids the approval.

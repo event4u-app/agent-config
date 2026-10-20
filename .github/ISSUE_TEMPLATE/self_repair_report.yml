@@ -10,10 +10,11 @@ body:
   - type: markdown
     attributes:
       value: >-
-        The fields below mirror the self-repair defect record one-to-one, so a
-        report rendered by `agent-config self-repair:release` round-trips
-        through this form without rewriting. The evidence span must already be
-        capture-time sanitized — no project paths, prompts, or file contents.
+        The fields below mirror the body `agent-config self-repair:release`
+        sends, so a released report round-trips through this form without
+        rewriting. Closed fields only: the evidence span, the suggested surface,
+        the mechanism and the falsifier stay on the reporting machine — no
+        transcript text, project paths, prompts, or file contents.
   - type: dropdown
     id: defect_class
     attributes:
@@ -23,6 +24,17 @@ body:
         - user-reported
         - council-availability-claim
         - language-mirror
+        - model-noticed
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: Source
+      description: How the defect was found (`DefectSource` in `src/scripts/_lib/self_repair.ts`).
+      options:
+        - user-reported
+        - self-detected
         - model-noticed
     validations:
       required: true
@@ -44,21 +56,23 @@ body:
       placeholder: '3'
     validations:
       required: true
-  - type: textarea
-    id: evidence
+  - type: input
+    id: targets
     attributes:
-      label: Evidence span
+      label: Targets
       description: >-
-        The short sanitized span from the record — never raw transcript text.
-      render: text
+        The resolved `<kind>:<id>` targets from the record (rule, skill,
+        command, hook), comma-separated — or `none identified`.
+      placeholder: rule:verify-before-complete
     validations:
       required: true
-  - type: textarea
-    id: suggested_surface
+  - type: input
+    id: principle
     attributes:
-      label: What the fix should address
+      label: Principle
       description: >-
-        One line naming the rule, skill, or gate whose absence allowed the
-        behaviour.
+        The canonical claim as a lowercase slug (`drain/baseline-drift`), or
+        `not stated` when the record carries none.
+      placeholder: not stated
     validations:
       required: true

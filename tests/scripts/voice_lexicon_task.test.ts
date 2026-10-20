@@ -84,6 +84,7 @@ function project(opts: {
     prBody?: string | null;
     commitMessage: string;
     slot?: boolean;
+    userMd?: string;
 }): { dir: string; env: NodeJS.ProcessEnv } {
     const dir = fs.mkdtempSync(path.join(scratch, 'proj-'));
     const bin = path.join(dir, 'bin');
@@ -105,6 +106,7 @@ function project(opts: {
         fs.mkdirSync(path.join(dir, path.dirname(SLOT_REL)), { recursive: true });
         fs.writeFileSync(path.join(dir, SLOT_REL), SLOT);
     }
+    if (opts.userMd !== undefined) fs.writeFileSync(path.join(dir, '.agent-user.md'), opts.userMd);
 
     const git = (args: string) =>
         spawnSync('bash', ['-c', `git ${args}`], {
@@ -186,6 +188,32 @@ describe('persisted-prose', () => {
         const r = sh(targetScript(), dir, env);
         expect(r.out).toMatch(/lexicon: SKIPPED/);
         expect(r.out).not.toMatch(/avoid "game-changer"/);
+    });
+
+    it('reads the user file style.avoid when .agent-user.md is present (5.5)', () => {
+        const userMd = [
+            '---',
+            'version: 1',
+            'identity:',
+            '  name: "Sam"',
+            'language: "en"',
+            'style:',
+            '  pace: "pragmatic"',
+            '  avoid:',
+            '    - { pattern: "circle back", match: word }',
+            'last_updated: "2026-10-20"',
+            '---',
+            '',
+        ].join('\n');
+        const { dir, env } = project({
+            prBody: null,
+            commitMessage: 'chore: circle back on the importer later\n',
+            slot: false,
+            userMd,
+        });
+        const r = sh(targetScript(), dir, env);
+        expect(r.out).toMatch(/warning avoid "circle back"/);
+        expect(r.status).toBe(0);
     });
 
     it('says there is nothing to check when the branch carries no persisted prose', () => {
