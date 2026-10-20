@@ -9,7 +9,9 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { classifyPaths, storeImporters } from '../../src/scripts/check_kernel_edit_ratified.js';
+import * as gate from '../../src/scripts/check_kernel_edit_ratified.js';
+import { classifyPaths, closureArrivals, storeImporters } from '../../src/scripts/check_kernel_edit_ratified.js';
+import { commitAll } from './ratification_git_fixture.js';
 
 const NO_CLOSURE: readonly string[] = [];
 
@@ -66,5 +68,47 @@ describe('storeImporters', () => {
         const found = storeImporters();
         expect(found).toContain('src/scripts/_lib/egress_engine.ts');
         expect(found).toContain('src/scripts/report_reducible_classes.ts');
+    });
+});
+
+/**
+ * The round-2 ask: a store under a NEW name, with its own activation source,
+ * must not land unreviewed. It can run only as a dispatcher import or as a
+ * concern, and both arrivals are gated without naming it anywhere.
+ */
+describe('an independently named replacement store cannot arrive unreviewed', () => {
+    let root = '';
+    beforeEach(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), 'replacement-store-'));
+    });
+    afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
+
+    function tree(files: Record<string, string>): void {
+        for (const [rel, body] of Object.entries(files)) {
+            fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+            fs.writeFileSync(path.join(root, rel), body);
+        }
+    }
+
+    it('a renamed store and a settings-driven activation source reachable from the dispatcher are both gated', () => {
+        tree({
+            'src/scripts/hooks/dispatch_hook.ts': "import { persist } from '../_lib/result_cache.js';\nexport const run = persist;\n",
+            'src/scripts/_lib/result_cache.ts':
+                "import * as fs from 'node:fs';\nimport { enabledClasses } from './result_cache_policy.js';\n" +
+                "export function persist(b: string): void { if (enabledClasses().size > 0) fs.writeFileSync('/tmp/x', b); }\n",
+            'src/scripts/_lib/result_cache_policy.ts':
+                "export function enabledClasses(): Set<string> { return new Set(String(process.env['X'] ?? '').split(',')); }\n",
+        });
+        const arrived = closureArrivals(root);
+        expect(arrived).toContain('src/scripts/_lib/result_cache.ts');
+        expect(arrived).toContain('src/scripts/_lib/result_cache_policy.ts');
+        commitAll(root);
+        for (const f of ['src/scripts/_lib/result_cache.ts', 'src/scripts/_lib/result_cache_policy.ts']) {
+            expect(gate.evaluate([f], root, 2).exitCode, f).toBe(1);
+        }
+    });
+
+    it('a replacement store shipped as a new concern needs a manifest entry, and the manifest is gated', () => {
+        expect(classifyPaths(['src/scripts/hook_manifest.yaml'], [], []).plumbing).toEqual(['src/scripts/hook_manifest.yaml']);
     });
 });

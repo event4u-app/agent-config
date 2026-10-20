@@ -306,6 +306,28 @@ import closure: the selection, the store, its loader, the classifier, the
 engine, the stage, the engine loader and the chunk table — and any source file
 that newly imports a store module. No setting, environment variable or
 config file populates the selection.
+A store under another name is gated the moment it can run: as a module newly
+reachable from the dispatcher (the gate's closure-arrival rule) or as a new
+concern (a manifest entry). **Not gated:** a store written into the body of a
+concern that is already bound, because concern bodies sit outside the
+ratification fence by that gate's own design. Closing that would put every
+concern edit behind a council round; it is recorded as a residual, not claimed.
+
+**Storage guarantees, kept apart.**
+
+- *Atomic visibility* — an entry appears whole or not at all (exclusive temp
+  file, fsync of the file, rename). A temp file is never served and is removed
+  after an hour.
+- *Corruption detection* — a read recomputes the address from the sha256 of
+  the bytes on disk and answers `corrupted` on a mismatch.
+- *Crash durability* — **not promised.** The directory is not fsynced, so a
+  crash can lose an entry whose rename had completed. The store is a cache of
+  bytes the model already received; a lost entry reads `missing`.
+- *Capacity* — the 500 MB cap is enforced at cleanup, oldest first. Writers do
+  not reserve space, so concurrent writes can exceed the cap until the next
+  cleanup; the overshoot is bounded by the writes in flight. Cleanup runs only
+  for a store or for a read whose handle passed every check — a malformed,
+  forged or foreign-session handle causes no filesystem work.
 
 **A concern reply cannot rewrite.** The dispatcher reads a fixed set of keys
 from a concern reply (`decision`, `reason`, `additional_context`, `context` and

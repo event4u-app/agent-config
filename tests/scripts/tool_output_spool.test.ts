@@ -7,6 +7,7 @@
  * handle says so after its entry is gone; a handle returns exactly the bytes it
  * names, and every other state answers as itself.
  */
+import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -271,6 +272,72 @@ describe('retention, partial writes and cleanup failure', () => {
         expect(spoolResult(env, view, ['tool_response'], tmp, READ_TEXT)).toEqual({ action: 'skip', reason: 'store-error' });
         expect(spoolFiles()).toHaveLength(0);
     });
+});
+
+describe('a handle that fails a check causes no filesystem work', () => {
+    it.each([
+        ['malformed', 'not-a-handle'],
+        ['forged MAC', null],
+        ['wrong session', 'other-session'],
+    ])('%s: an entry past its age survives, and no cleanup lock is taken', (_label, variant) => {
+        const now = Date.now();
+        const old = storeBytes(tmp, Buffer.from('old entry'), S, now - SPOOL_RETENTION_MS - 5000);
+        const oldFile = path.join(tmp, SPOOL_DIR, old.address);
+        fs.utimesSync(oldFile, new Date(now - SPOOL_RETENTION_MS - 5000), new Date(now - SPOOL_RETENTION_MS - 5000));
+        const fresh = storeBytes(tmp, Buffer.from('fresh'), S, now);
+        const [a, e] = fresh.handle.split('.') as [string, string];
+        const handle = variant === null ? `${a}.${e}.${'f'.repeat(32)}` : variant === 'other-session' ? fresh.handle : variant;
+        const session = variant === 'other-session' ? 'other-session' : S;
+        expect(readHandle(tmp, handle, session, undefined, now).state).toBe('invalid');
+        expect(fs.existsSync(oldFile)).toBe(true);
+        expect(fs.existsSync(path.join(tmp, SPOOL_DIR, '.cleanup.lock'))).toBe(false);
+    });
+});
+
+describe('hostile session ids fail closed', () => {
+    it.each(['', '../escape', 'a:b', 'tab\there', 'x'.repeat(129)])('%j is refused for store and read', (bad) => {
+        expect(() => storeBytes(tmp, Buffer.from('x'), bad)).toThrow(/session/);
+        const { handle } = storeBytes(tmp, Buffer.from('y'), S);
+        expect(readHandle(tmp, handle, bad)).toEqual({ state: 'invalid' });
+        const env = readEnvelope('z', bad);
+        const view: SpoolStageView = { mode: 'protect', placeholder: env, counts: [], refused: [] };
+        expect(spoolResult(env, view, ['tool_response'], tmp, READ_TEXT)).toEqual({ action: 'skip', reason: 'no-session' });
+    });
+});
+
+describe('concurrent writers, readers and cleanup', () => {
+    it('never serves a partial or corrupted entry, and the cap holds once writers stop', async () => {
+        const tsx = path.resolve(__dirname, '../../node_modules/.bin/tsx');
+        const mod = path.resolve(__dirname, '../../src/scripts/_lib/tool_output_spool.ts');
+        const child = (id: number): Promise<string[]> =>
+            new Promise((resolve, reject) => {
+                const code = `import { storeBytes } from ${JSON.stringify(mod)};
+for (let i = 0; i < 40; i++) console.log(storeBytes(${JSON.stringify(tmp)}, Buffer.alloc(2000 + i, ${id} * 40 + i), 'w${id}').handle);`;
+                const p = spawn(tsx, ['--eval', code], { stdio: ['ignore', 'pipe', 'pipe'] });
+                let out = '';
+                p.stdout.on('data', (d: Buffer) => (out += d.toString()));
+                p.on('error', reject);
+                p.on('close', (c) => (c === 0 ? resolve(out.trim().split('\n').map((l) => `w${id} ${l}`)) : reject(new Error(`writer ${id} exited ${String(c)}`))));
+            });
+        const writers = [0, 1, 2, 3].map(child);
+        let cleanups = 0;
+        const sweep = setInterval(() => {
+            cleanupSpool(tmp, Date.now(), 60_000);
+            cleanups += 1;
+        }, 5);
+        const handles = (await Promise.all(writers)).flat();
+        clearInterval(sweep);
+        expect(cleanups).toBeGreaterThan(0);
+        for (const line of handles) {
+            const [session, handle] = line.split(' ') as [string, string];
+            expect(['ok', 'missing']).toContain(readHandle(tmp, handle, session).state);
+        }
+        cleanupSpool(tmp, Date.now(), 60_000);
+        const dir = path.join(tmp, SPOOL_DIR);
+        const total = fs.readdirSync(dir).filter((n) => /^[0-9a-f]{64}$/.test(n)).reduce((n, f) => n + fs.statSync(path.join(dir, f)).size, 0);
+        expect(total).toBeLessThanOrEqual(60_000);
+        expect(fs.readdirSync(dir).filter((n) => n.endsWith('.tmp'))).toEqual([]);
+    }, 60_000);
 });
 
 describe('handle-reads-a-range', () => {

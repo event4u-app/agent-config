@@ -66,6 +66,8 @@ const SESSION_FILE = '.last-cleanup-session';
 const STALE_LOCK_MS = 10 * 60 * 1000;
 const STALE_TMP_MS = 60 * 60 * 1000;
 const ADDRESS = /^[0-9a-f]{64}$/;
+/** A session id this store binds to: host ids are UUID-like, and anything else is refused. */
+const SESSION = /^[A-Za-z0-9._-]{1,128}$/;
 const HANDLE = /^([0-9a-f]{64})\.(\d{1,12})\.([0-9a-f]{32})$/;
 
 export type HandleState = 'ok' | 'expired' | 'missing' | 'corrupted' | 'invalid' | 'range';
@@ -116,7 +118,7 @@ function mac(key: Buffer, addr: string, expiry: number, session: string): string
 
 /** Store `bytes` for `session` and mint a handle bound to it that expires with the retention age. */
 export function storeBytes(root: string, bytes: Buffer, session: string, now: number = Date.now()): StoredEntry {
-    if (session === '') throw new Error('no session');
+    if (!SESSION.test(session)) throw new Error('bad session');
     const key = spoolKey(root, true) as Buffer;
     const addr = address(key, session, sha256(bytes));
     const target = path.join(spoolDir(root), addr);
@@ -147,18 +149,19 @@ export function readHandle(
     now: number = Date.now(),
 ): HandleRead {
     const m = HANDLE.exec(handle.trim());
+    if (m === null || !SESSION.test(session)) return { state: 'invalid' };
     const key = spoolKey(root, false);
-    // No handle is ever minted for an empty session, so an empty one fails the MAC below.
-    if (m === null || key === null) return { state: 'invalid' };
+    if (key === null) return { state: 'invalid' };
     const [, addr, exp, tag] = m as unknown as [string, string, string, string];
     const expected = Buffer.from(mac(key, addr, Number(exp), session), 'hex');
     if (!timingSafeEqual(expected, Buffer.from(tag, 'hex'))) return { state: 'invalid' };
+    if (now >= Number(exp) * 1000) return { state: 'expired' };
+    // Only a handle that passed every check above may cause filesystem work.
     try {
         cleanupSpool(root, now);
     } catch {
-        // a failed cleanup does not change what this read may serve: the expiry below still holds
+        // a failed cleanup does not change what this read may serve
     }
-    if (now >= Number(exp) * 1000) return { state: 'expired' };
     let bytes: Buffer;
     try {
         bytes = fs.readFileSync(path.join(spoolDir(root), addr));
@@ -310,7 +313,7 @@ export function spoolResult(
         const shown = payloadOf(view.placeholder?.['payload'])?.[key];
         if (shown === undefined || serialize(shown) !== raw.toString('utf8')) return { action: 'skip', reason: 'view-differs' };
         const session = String(payload['session_id'] ?? envelope['session_id'] ?? '').trim();
-        if (session === '') return { action: 'skip', reason: 'no-session' };
+        if (!SESSION.test(session)) return { action: 'skip', reason: 'no-session' };
         cleanupOncePerSession(root, session, now);
         return { action: 'stored', class: cls, ...storeBytes(root, raw, session, now) };
     } catch {
