@@ -392,28 +392,13 @@ export function classifyChanges(entries: readonly ChangeEntry[], opts: ClassifyO
     );
     add('security-surface', 'security-sensitive-stop — auth, authz, tenancy, billing, secrets, uploads, webhooks, routes', all.filter(isSecurity));
 
-    // ONE membership for both governance triggers: the class this classifier
-    // already reads across base and head (`unionMembers`), never the
-    // ratification gate's checkout default, which would let a head that drops
-    // a member while editing it fall out of owner routing. An unreadable class
-    // counts every rule file in the diff, as the consequence trigger does.
-    const members = opts.consequenceMembers === undefined ? localConsequenceMembers() : opts.consequenceMembers;
-    const gateClass: ReadonlySet<string> =
-        members ?? new Set(all.flatMap((p) => RULE_FILE_RE.exec(p)?.[1] ?? []));
-    const gated = classifyPaths(all, undefined, gateClass);
+    const gated = classifyPaths(all);
     if (requiresRatification(gated)) {
-        // The high-consequence class is listed: without it a PR touching only
-        // such a rule would carry this reason with no path named under it.
-        const gatedPaths = [
-            ...gated.kernelRules,
-            ...gated.consequenceRules,
-            ...gated.governanceHooks,
-            ...gated.plumbing,
-        ];
+        const gatedPaths = [...gated.kernelRules, ...gated.governanceHooks, ...gated.plumbing];
         add(
             'governance-surface',
-            'check_kernel_edit_ratified — kernel rule, high-consequence rule, governance hook, hook plumbing or the ratification mechanism',
-            gatedPaths.length > 0 ? gatedPaths : all.filter((p) => classifyPaths([p], undefined, gateClass).self),
+            'check_kernel_edit_ratified — kernel rule, governance hook, hook plumbing or the ratification mechanism',
+            gatedPaths.length > 0 ? gatedPaths : all.filter((p) => classifyPaths([p]).self),
         );
     }
     add('merge-authority-surface', 'ADR-282 — the danger gate and the commands that call it', all.filter((p) => SELF_SURFACE_RE.test(p)));
@@ -435,6 +420,7 @@ export function classifyChanges(entries: readonly ChangeEntry[], opts: ClassifyO
         'decision-revisit-gate — an ADR declaring reopen_policy: owner at base or head, or with unreadable frontmatter',
         all.filter((p) => DECISION_RECORD_RE.test(p) && policyOf(p) !== 'other'),
     );
+    const members = opts.consequenceMembers === undefined ? localConsequenceMembers() : opts.consequenceMembers;
     add(
         'consequence-class-rule',
         'rule-consequence-class.json — a rule in the high-consequence class; an unreadable list counts every rule',

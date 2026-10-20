@@ -21,7 +21,7 @@ import {
 } from '../../src/scripts/check_kernel_edit_ratified.js';
 import * as gate from '../../src/scripts/check_kernel_edit_ratified.js';
 import { RATIFICATION_DIR } from '../../src/scripts/_lib/ratification_artifact.js';
-import { commitAll, writeEmptyConsequenceClass } from './ratification_git_fixture.js';
+import { commitAll } from './ratification_git_fixture.js';
 
 /**
  * The gate reads the gated content and the record at HEAD from Git objects,
@@ -77,7 +77,6 @@ function writeRecord(): string {
 
 beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), 'ker-closure-'));
-    writeEmptyConsequenceClass(root); // the gate refuses a commit without the class list
 });
 
 afterEach(() => {

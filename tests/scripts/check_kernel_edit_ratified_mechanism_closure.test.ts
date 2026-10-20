@@ -15,7 +15,7 @@ import {
     SELF_PATH,
 } from '../../src/scripts/check_kernel_edit_ratified.js';
 import { gatedFilesOf } from '../../src/scripts/_lib/ratification_subject.js';
-import { commitAll, writeEmptyConsequenceClass } from './ratification_git_fixture.js';
+import { commitAll } from './ratification_git_fixture.js';
 
 /**
  * The gate's verdict runs through the modules it imports: the record parser,
@@ -101,7 +101,6 @@ let root: string;
 
 beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), 'ker-mech-'));
-    writeEmptyConsequenceClass(root); // the gate refuses a commit without the class list
 });
 
 afterEach(() => {

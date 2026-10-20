@@ -50,20 +50,6 @@ function git(root: string, args: readonly string[]): string {
     return res.stdout.trim();
 }
 
-/**
- * Write an EMPTY high-consequence rule list into a fixture tree.
- *
- * The gate reads that list at every commit it judges and refuses a commit
- * without one. A suite whose cases are about something else calls this
- * EXPLICITLY when it builds its tree, so the fixture states the input rather
- * than having it appear behind the suite's back; `commitAll` never adds it.
- */
-export function writeEmptyConsequenceClass(root: string): void {
-    const list = path.join(root, 'src/config/rule-consequence-class.json');
-    fs.mkdirSync(path.dirname(list), { recursive: true });
-    fs.writeFileSync(list, '{"members": {}}\n');
-}
-
 /** Stage everything under `root` and commit it; returns the new commit id. */
 export function commitAll(root: string, message = 'fixture'): string {
     if (!fs.existsSync(path.join(root, '.git'))) {

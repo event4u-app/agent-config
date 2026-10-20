@@ -169,30 +169,6 @@ export class GitReadFailed extends GatedSubjectRefusal {
 }
 
 /**
- * Raised when the high-consequence rule list cannot be read as a list at a
- * revision: absent, unparseable, the wrong shape, a member that is not a rule
- * slug, or a member naming no rule file in that same tree.
- *
- * FAILS CLOSED. The list decides which rules beyond the kernel need a record,
- * so an unreadable list does not cost only a widening — it removes the
- * protection from every member at once, and a gate that exits 0 over that is a
- * control that passes when it cannot measure. Declared here rather than beside
- * the reader in the gate because the two modules import each other: a subclass
- * defined at the gate's module scope would be evaluated before this base class
- * when this module is the entry point.
- */
-export class ConsequenceClassUnreadable extends GatedSubjectRefusal {
-    constructor(rel: string, where: string, detail: string) {
-        super(
-            rel,
-            `the high-consequence rule list \`${rel}\` cannot be read at ${where} (${detail}) — ` +
-                'the gate refuses rather than judging those rules as if the class were empty',
-        );
-        this.name = 'ConsequenceClassUnreadable';
-    }
-}
-
-/**
  * `..` as a whole segment, under either separator. The CLI and the gate
  * normalise `\` to `/` before classifying, but this bound is checked on the
  * string it is given so that it holds for any caller.
@@ -486,20 +462,10 @@ export function treeAtRevision(root: string, commit: string): { read(rel: string
 export function gatedFilesOf(
     files: readonly string[],
     derived?: readonly string[],
-    consequence?: ReadonlySet<string>,
 ): readonly string[] {
     const normalized = files.map((f) => f.replace(/\\/g, '/').trim()).filter((f) => f !== '');
-    // An `undefined` argument takes the gate's own default, so a caller that
-    // passes neither classifies exactly as `classifyPaths(normalized)` would.
-    const g = classifyPaths(normalized, derived, consequence);
-    // Both limbs or neither: a high-consequence rule the gate refuses and the
-    // digest did not cover would be gated by the refusal and bound by no record.
-    const out = new Set<string>([
-        ...g.kernelRules,
-        ...g.consequenceRules,
-        ...g.governanceHooks,
-        ...g.plumbing,
-    ]);
+    const g = derived === undefined ? classifyPaths(normalized) : classifyPaths(normalized, derived);
+    const out = new Set<string>([...g.kernelRules, ...g.governanceHooks, ...g.plumbing]);
     for (const f of normalized) {
         if (isMechanismPath(f)) out.add(f);
     }
@@ -536,9 +502,8 @@ export interface SubjectReading {
  * a rename moves the digest; the mode is hashed so that a change of the
  * executable bit is a change.
  *
- * `derived` is the plumbing closure and `consequence` the high-consequence rule
- * slugs the caller already computed, both passed through to
- * {@link gatedFilesOf} unchanged: a digest that classified without them would
+ * `derived` is the plumbing closure the caller already computed, passed through
+ * to {@link gatedFilesOf} unchanged: a digest that classified without it would
  * cover fewer files than the gate gated.
  *
  * THROWS a {@link GatedSubjectRefusal} for every revision it declines to
@@ -549,9 +514,8 @@ export function subjectOf(
     files: readonly string[],
     derived?: readonly string[],
     revision: string = DEFAULT_REVISION,
-    consequence?: ReadonlySet<string>,
 ): SubjectReading {
-    const gatedFiles = gatedFilesOf(files, derived, consequence);
+    const gatedFiles = gatedFilesOf(files, derived);
     const h = createHash('sha256');
     if (gatedFiles.length === 0) {
         return { digest: h.digest('hex'), gatedFiles, revision: null };
@@ -583,7 +547,6 @@ export function subjectDigest(
     files: readonly string[],
     derived?: readonly string[],
     revision: string = DEFAULT_REVISION,
-    consequence?: ReadonlySet<string>,
 ): string {
-    return subjectOf(root, files, derived, revision, consequence).digest;
+    return subjectOf(root, files, derived, revision).digest;
 }
