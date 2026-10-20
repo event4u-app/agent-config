@@ -45,7 +45,7 @@ changes what either gate is for.
 
 ## Phase 1 — The lineage gate parses what is declared
 
-- [ ] **1.1 Red first: pin the two inputs no test covers.** Add to
+- [x] **1.1 Red first: pin the two inputs no test covers.** Add to
       `tests/scripts/lint_consolidation_lineage.test.ts`:
       `normalizeParent('"road-to-x" — note')` must equal `road-to-x`, and a
       `consolidates:` block list whose entries are quoted YAML scalars must
@@ -65,6 +65,9 @@ changes what either gate is for.
       moved verbatim: an embedded apostrophe survives. The red-first case
       gains `normalizeParent("road-to-it's-x")` → `road-to-it's-x`, and all
       six call sites carry a regression case.
+      Landed 2026-10-20 (D6): observed red at `418a09379` — 4 cases, incl.
+      the block-list branch turning `road-to-it's-a` into `road-to-its-a`;
+      green after, 47/47.
 - [x] **1.2 Strip quotes in the block-list branch.** `:177` gains
       `.replace(/["']/g, '')`, matching its sibling at `:168`.
       verify: 1.1 green; re-running the gate over the round's own folder
@@ -109,6 +112,13 @@ changes what either gate is for.
 
 ## Phase 3 — The guard judges a write, not a mention
 
+> **Landed 2026-10-20 (D7, D8).** Council rounds 1 and 2 refused 2/2; round 3
+> returned `confirmed-non-expanding` 2/2. Record:
+> `agents/evidence/ratifications/drain-gates-read-written-20261020.md`. What
+> landed is narrower than 3.2 and 3.3 were written: a shell token gets the
+> exists-probe only when absolute (D7), and no command shape is exempt (D8).
+> The history below is the record of how it got there.
+>
 > **Held, 2026-10-16 drain; built and refused 2/2, 2026-10-19.** Every step edits
 > `src/scripts/hooks/block_speaking_inbox_dir.ts`, a `pre_tool_use` deny guard
 > of the same class as `block_no_verify` and `block_config_weakening`, so the
@@ -135,7 +145,7 @@ changes what either gate is for.
 > regressions. The red observations below stay valid; the landed notes on
 > 3.1 and 3.3 describe the refused build, not the tree.
 
-- [ ] **3.1 Red first: the two commands this round was refused.** Pin both as
+- [x] **3.1 Red first: the two commands this round was refused.** Pin both as
       polarity cases on `creatableTokens` and on the envelope path — a
       read-only `ls` of an existing inbox directory, and a `printf` whose
       single-quoted literal names one. Both must be **allowed**; a `mkdir -p`
@@ -148,7 +158,12 @@ changes what either gate is for.
       against an envelope `cwd`, against `workspace_root`, against a wrapped
       payload; the remediation naming a renamed directory; the literal deny
       message line), every block-case green.
-- [ ] **3.2 Reach the already-exists carve-out from the Bash path.** A token
+      Re-observed 2026-10-20 against the base guard for the suite that
+      landed: 4 red — a relative Write under native `cwd`, the message
+      wording, and two cases where `project_dir` naming another tree made the
+      base ALLOW (a `mkdir -p`, a Write). Per D7 the allow-cases are written
+      with absolute paths; the relative `ls` is a block-case.
+- [x] **3.2 Reach the already-exists carve-out from the Bash path.** A token
       naming a directory that exists on disk takes the same
       `directory already exists — rename, do not re-refuse` branch the
       `_PATH_KEYS` path already takes (`:338-341`). This alone clears M6 and
@@ -156,7 +171,12 @@ changes what either gate is for.
       the fix.
       verify: the `ls` case from 3.1 passes; `mkdir -p` into a **new**
       speaking directory is still refused.
-- [ ] **3.3 Do not judge a token inside a quoted literal as a target.**
+      Landed per D7: a path-keyed tool's relative path is probed against the
+      native payload `cwd` (never `project_dir`, `workspace_root` or a
+      wrapper-level `cwd`); a shell token is probed only when absolute. The
+      `ls` passes by absolute path; a relative one, and a helper that `cd`s
+      before creating its relative argument, are refused.
+- [x] **3.3 Do not judge a token inside a quoted literal as a target.**
       `creatableTokens` splits on `'` and `"` among other characters, so a
       path inside a single-quoted string becomes a bare token. Keep the
       conservative scan, and exclude only the case M7 names: a token whose
@@ -171,11 +191,29 @@ changes what either gate is for.
       D2 forbids a verb classifier; eight bypass shapes (a second segment,
       `;`, `&&`, a newline, a redirect, `$(…)`, `| sh`, `decrypt`) are
       block-cases in the same suite.
-- [ ] **3.4 Make the remediation reachable as written.** The command in the
+      Closed per D8, not as written: that exemption was refused three times
+      (2026-10-19; rounds 1 and 2 on 2026-10-20) because nothing inside the
+      hook can establish the identity of `./scripts-run`. No command shape is
+      exempt; the deny message asks for the source itself, never an
+      `agents/tmp` path, so the prescribed command carries no inbox token.
+- [x] **3.4 Make the remediation reachable as written.** The command in the
       guard's error text must execute unchanged in a tree where the speaking
       directory exists.
       verify: a test runs the literal command from the message against a
       fixture and asserts it is not blocked.
+      Landed 2026-10-20: the line is lifted from `denyMessage`, the
+      placeholder filled with a source URL, and run with and without a `cwd`.
+- [ ] **3.5 Word the absolute-path hint as guard recognition.** Both round-3
+      seats (low): "a shell command reaches it only by its absolute path"
+      describes shell resolution; `cd /tree && ls agents/tmp/<x>` reaches it
+      relatively. Replace with the seats' wording — "this guard recognizes it
+      in shell commands only when referenced by absolute path; relative
+      arguments may resolve elsewhere and are judged as new" — and pin it.
+      Built at `1418c8c8a`; the confirming round did not reach quorum (seat
+      `exit_1`, then both) with the round cap spent, so the gated file was
+      restored to the ratified bytes.
+      verify: a ratification record over the reworded file, and an assertion
+      on the new line in `tests/hooks/block_speaking_inbox_dir.test.ts`.
 
 ## Decisions
 
@@ -186,6 +224,8 @@ changes what either gate is for.
 | D3 | critical-technical | agent | The already-exists carve-out is a policy no-op for the Bash path | the `_PATH_KEYS` path already takes it; reaching it from the other path makes two entry points agree rather than loosening either | the carve-out is removed from the `_PATH_KEYS` path |
 | D4 | deterministic | evidence | A prose-named parent is a distinct finding, not a missing one | the round's one genuine finding is exactly this shape, and reporting it as `missing-parent` sends the reader looking for a file | — |
 | D5 | reversible-technical | agent | Both gates are fixed in one roadmap | they are the same failure — a parser reporting what its input does not say — and one of them blocks the documented remediation for the other | either fix grows past a few lines |
+| D7 | critical-technical | council:speaking-inbox-guard-mention-review-20261020-r3 | A shell token gets the exists-probe only when absolute; a path-keyed tool's base is the native payload `cwd` alone; supersedes D3 for the Bash path | rounds 1-2 refused a cwd-probed relative shell token 2/2 (`helper agents/tmp/<name>` that `cd`s first: refused at the base, allowed by the probe); round 3 `confirmed-non-expanding` 2/2 on the absolute-only form | a host supplies the effective cwd of every child process |
+| D8 | critical-technical | council:speaking-inbox-guard-mention-review-20261020-r2 | No command shape is exempt from the token scan; the deny message asks for the source, not a path; supersedes 3.3's quoted-literal exemption | refused three times: a spelling, then a regular-file check, cannot establish the identity of a workspace-writable `./scripts-run` | an executable identity outside the tool workspace exists |
 | D6 | reversible-technical | council:resolve-blockers-batch-20261019 | Reopen D1: `normalizeParent` strips one matching pair of wrapping quotes and the three caller strips go; supersedes D1 | D1's own revisit-if fired — 6 call sites, not 4, three duplicating `.replace(/["']/g, '')`; 2/2 seats chose (a), both bounding it to wrapping quotes so embedded apostrophes survive | a call site needs a quote-bearing token preserved |
 
 ## Blockers
@@ -244,18 +284,18 @@ changes what either gate is for.
 - It does not add a command classifier to the guard. D2 records why.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-20 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Narrowing the guard reopens the bypass its docstring records | implementation | A quoted-literal exemption is an exemption, and a creation can be written as one. | **Unbuilt as of 2026-10-19 — this mitigation is planned, not in place.** A first attempt was put to the council and **refused 2/2** (`agents/evidence/ratifications/drain-road-to-gates-that-read-what-was-written-20261019z.md`) and reverted; Phase 3 carries no closed step. When rebuilt, 3.3 must exclude only a quoted literal passed to a command that writes nothing, with the heredoc-`makedirs` case — the exact input the raw scan exists for — asserted as a block-case in the same test, both polarities. | Phase 3 — The guard judges a write, not a mention |
+| 1 | Narrowing the guard reopens the bypass its docstring records | implementation | A quoted-literal exemption is an exemption, and a creation can be written as one. | **No exemption was built (D8).** Three attempts at one were refused; what landed exempts no command shape, so the bypass the docstring records stays closed. The shell probe was narrowed instead (D7: absolute tokens only), and the heredoc-`makedirs`, redirect, substitution and helper-script cases are asserted as block-cases in the same suite. Record: `agents/evidence/ratifications/drain-gates-read-written-20261020.md`. | Phase 3 — The guard judges a write, not a mention |
 | 2 | The already-exists carve-out lets a rename be skipped | product | A speaking directory that exists keeps working, so nobody renames it. | That is already the behaviour on the `_PATH_KEYS` path, and the carve-out's own comment states the reason: refusing every later write wedges the round without removing the name. The rename obligation is the naming rule's, not the guard's. | Phase 3 — The guard judges a write, not a mention |
 | 3 | The lineage fix hides a real missing parent | implementation | Stripping quotes makes more strings resolve, so a genuinely absent parent could start resolving to something. | A stripped quote changes only the token boundary, never the slug; 1.1 asserts the resolved value exactly, and 2.3 pins the whole output over a real folder. | Phase 1 — The lineage gate parses what is declared |
 | 4 | The succession check mis-reads a legitimate omission as a succession | implementation | A file that declares `supersedes_proposals:` loosely gets a free pass. | 2.1 asserts the inverse pair still reports; the exemption is keyed on an explicit declaration, not on a date or an inference. | Phase 2 — The lineage gate can express direction |
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** `normalizeParent('"road-to-x" — note')` returns `road-to-x`,
+- [x] **AC-1** `normalizeParent('"road-to-x" — note')` returns `road-to-x`,
       an embedded apostrophe survives the helper, all six call sites keep their
       regression case (D6), and a quoted block-list `consolidates:` entry resolves; the cases were
       observed **red** first and the observation is in the PR.
@@ -266,16 +306,18 @@ changes what either gate is for.
       produces no `omitted-sibling` finding; the inverse pair still does.
 - [x] **AC-4** A prose-named parent reports as `unresolvable-parent`, not
       `missing-parent`.
-- [ ] **AC-5** A read-only `ls` of an **existing** inbox directory and a
-      `printf` naming one inside a quoted literal are both allowed; a
+- [x] **AC-5** A read-only `ls` of an **existing** inbox directory and a
+      `printf` naming one inside a quoted literal are both allowed — by
+      absolute path, per D7; a relative one is refused; a
       `mkdir -p`, a `>` redirect and a heredoc `makedirs` into a **new**
       speaking directory are all still refused. All five asserted in one
       polarity suite.
-- [ ] **AC-6** The remediation command printed in the guard's own error text
+- [x] **AC-6** The remediation command printed in the guard's own error text
       executes unblocked against a fixture.
 - [x] **AC-7** The defect-pattern sweep for `normalizeParent` without a quote
       strip is reported with its count and file list.
-- [ ] **AC-8** `task ci` green.
+- [x] **AC-8** `task ci` green. CI on PR #2540 settled green, 39 checks on
+      `5d35bc727` (2026-10-20).
 
 ## Notes — how this file was derived
 

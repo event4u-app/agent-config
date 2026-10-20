@@ -37,8 +37,9 @@
  * 2. **A directory that already exists.** Blocking every later write into an
  *    already-created speaking directory would wedge a session mid-round without
  *    removing the name — the fix there is a rename, which the deny message of
- *    the creating call already asked for. This is the one filesystem read the
- *    guard performs.
+ *    the creating call already asked for. A path-keyed tool's relative path
+ *    is probed against the tool's own `cwd` and nothing else; a shell
+ *    command's token is probed only when absolute.
  * 3. **An opaque round identifier** — `isOpaqueRoundId` in
  *    `_lib/source_shape.ts` is the single authority, shared with the gate, so
  *    the guard and the CI check can never disagree about what "opaque" means.
@@ -363,8 +364,12 @@ export function denyMessage(dir: string): string {
         '  round-a91f3c         content-free hex (also set-, src-set-, source-set-)\n' +
         '  S17                  a set number\n' +
         '\n' +
-        'Record the true source ONCE, encrypted, in the round\'s intake note:\n' +
+        'Record the true source ONCE, encrypted, in the round\'s intake note — the source\n' +
+        'itself (its URL or name), never an agents/tmp path, which this guard judges:\n' +
         "  printf '%s' '<the real source>' | ./scripts-run src/scripts/_lib/link_crypto encrypt\n" +
+        '\n' +
+        'Already created? Rename it. Until then a shell command reaches it only by its\n' +
+        'absolute path: a relative one may land anywhere, so it is judged as new.\n' +
         '\n' +
         'Naming rule: /analyze:inbox Phase 1. Rule: src/rules/source-confidentiality.md.\n' +
         `Maintainer kill switch: ${KILL_SWITCH}=1.\n`
@@ -395,7 +400,16 @@ export function main(): number {
         if (ti === null) {
             return 0;
         }
-        const repoRoot = typeof envelope['project_dir'] === 'string' ? envelope['project_dir'] : '';
+        // The base a relative path resolves against is the tool's own working
+        // directory: the native payload's `cwd`, where a path-keyed tool's
+        // relative path lands. `project_dir` (no producer sets it)
+        // and the dispatcher's `workspace_root` (the hook's cwd, the parent
+        // checkout in a worktree session) name other trees, and a field that
+        // can outrank the real base lets `mkdir` create in one tree what the
+        // probe found in another — so neither is read. No `cwd` → '' → the
+        // hook process cwd, the behaviour before this field was read.
+        const rawCwd = payload['cwd'];
+        const cwd = typeof rawCwd === 'string' && path.isAbsolute(rawCwd) ? rawCwd : '';
         const rawTool = payload['tool_name'] ?? envelope['tool_name'];
         const toolName = typeof rawTool === 'string' ? rawTool.trim().toLowerCase() : '';
         const candidates: string[] = [];
@@ -417,13 +431,29 @@ export function main(): number {
         // decision logic is shared rather than duplicated — see
         // `creatableTokens` for why "every whitespace token" was too many.
         const cmd = ti['command'] ?? (_isObject(envelope['payload']) ? (envelope['payload'] as JsonObject)['command'] : undefined);
+        // A shell command's relative token gets no exists-probe: whatever it
+        // invokes may change directory first (a script, a function, an alias),
+        // so its existence under `cwd` says nothing about where it lands. An
+        // absolute token names its own base and is probed.
+        const shellTokens: string[] = [];
         if (typeof cmd === 'string' && cmd) {
-            candidates.push(...creatableTokens(cmd));
+            shellTokens.push(...creatableTokens(cmd));
         }
-        for (const v of candidates) {
-            const verdict = verdictFor(v, (p) => fs.existsSync(p), repoRoot);
+        const judge = (v: string, exists: (p: string) => boolean): boolean => {
+            const verdict = verdictFor(v, exists, cwd);
             if (verdict.block && verdict.dir !== null) {
                 process.stderr.write(denyMessage(verdict.dir));
+                return true;
+            }
+            return false;
+        };
+        for (const v of shellTokens) {
+            if (judge(v, (p) => path.isAbsolute(v) && fs.existsSync(p))) {
+                return 1;
+            }
+        }
+        for (const v of candidates) {
+            if (judge(v, (p) => fs.existsSync(p))) {
                 return 1;
             }
         }
