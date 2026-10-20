@@ -124,8 +124,8 @@ export const REWRITE_CHANNEL_SLOT: Readonly<Record<RewriteChannel, string>> = {
 };
 /**
  * `offered`: the host documents a rewrite field and no live probe has shown a
- * substitution delivered, so it authorizes nothing. `replace` requires such a
- * probe, cited by a file in this tree.
+ * substitution delivered. No mode authorizes anything by itself: authority is a
+ * capability only `resolveRewriteCapability` (rewrite_capability.ts) issues.
  */
 export const REWRITE_MODES = ['replace', 'offered', 'gate', 'none'] as const;
 export type RewriteMode = (typeof REWRITE_MODES)[number];
@@ -162,11 +162,6 @@ export function rewriteModeFor(row: SurfaceRow, channel: RewriteChannel): Rewrit
     return (REWRITE_MODES as readonly string[]).includes(mode ?? '') ? (mode as RewriteMode) : 'unstated';
 }
 
-/** Only `replace` lets a stage substitute; only `gate` lets it refuse. Everything else does neither. */
-export function rewriteAuthorizes(row: SurfaceRow, channel: RewriteChannel): 'replace' | 'gate' | null {
-    const mode = rewriteModeFor(row, channel);
-    return mode === 'replace' || mode === 'gate' ? mode : null;
-}
 
 export type HostLowering = Map<string, Map<string, SurfaceRow>>;
 
