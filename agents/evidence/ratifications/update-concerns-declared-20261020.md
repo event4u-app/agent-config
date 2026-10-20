@@ -8,7 +8,7 @@ seats:
   anthropic: ratified
   openai: ratified
 effective_after: merge
-subject: f82701e129e7a77889e579bf4467a05957127419c81ac1348dee4005616febff
+subject: c4aff03aebce260c2d832ee88a491633687351393ffda0bf7ad93974b4855e63
 ---
 
 <!-- evidence-type: ratification -->
