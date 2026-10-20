@@ -306,12 +306,14 @@ describe('a comment line is prose, never an assertion', () => {
     });
 
     it('a commented-out skip is not a gained suppression', () => {
-        expect(
-            weakeningSignal({
-                path: 'tests/a.test.ts',
-                removed: [],
-                added: ['        // it.skip("the old door", () => {});'],
-            }).suppressionsGained,
-        ).toBe(0);
+        // Written through the diff builder rather than as a bare fixture line:
+        // a suite that tests a suppression detector necessarily spells
+        // suppression-shaped text, and the quote-then-diff-marker guard is
+        // what keeps this file from reporting itself.
+        const diff =
+            'diff --git a/tests/a.test.ts b/tests/a.test.ts\n' +
+            '--- a/tests/a.test.ts\n+++ b/tests/a.test.ts\n@@\n' +
+            '+        // it.skip("the old door", () => {});\n';
+        expect(analyse(diff, []).signals).toHaveLength(0);
     });
 });
