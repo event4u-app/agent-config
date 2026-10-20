@@ -120,19 +120,21 @@ with that file.
 
 ## Phase 0 — One baseline, recorded before anything moves
 
-- [ ] **0.1 Today as fixtures.** Per host: projected and installed rule layer
+- [x] **0.1 Today as fixtures.** Per host: projected and installed rule layer
   (file set, byte totals, which rules are full), the hook commands written, the
   resolved form. These are the "today" arm of Phase 5.
   verify: two runs at one commit are byte-equal; every row names its commit;
   run at `d760ecbde` the installed row reads 106 files / 369,415 bytes.
   Re-screened 2026-10-18, still open: a scratch-`HOME` install is the reproducible path (the carrier roadmap's 0.1 census already stages one per install path), but a byte-equal fixture also has to exclude the install-date and machine-path fields the receipt writes, and naming that exclusion set is the decision this step still lacks. Not forced: nothing on disk moves before 5.3.
   Open 2026-10-16: the instrument exists (`src/scripts/installed_layer_report.ts`), the per-host fixture set does not. The 106 / 369,415 row is a reading of one maintainer machine's `~/.claude/rules`, not of a scratch-`HOME` install at that commit, so the step needs a decision on which install path the fixture is taken from before it can be byte-reproducible.
+  Landed 2026-10-20: `./scripts-run src/scripts/layer_baseline_report` runs a real `--global --tools=<host>` install into a scratch `HOME` for each of the five hosts with a rule directory (the only scope a consumer gets, ADR-020) and records the installed file set, bytes, full/stub per file, the hook commands written and the resolved form; it adds the package's five projected rule directories. The fixture is `agents/evidence/analysis/setup-layer-baseline.md`, measured at `89e094819`, and names that commit. The exclusion set is D9. Two full runs at that commit compared byte-equal with `cmp`, and `tests/scripts/layer_baseline_report.test.ts` asserts the same for claude-code. The same reader pointed at a checkout of `d760ecbde` (`--package-root`) reads the claude-code installed row as 106 files / 369,415 bytes. So the maintainer-machine figure was also a scratch-`HOME` figure, and the open note above did not need a different install path. Today all five installed layers are 106 full files and every host resolves `full`. claude-code and the two other thinnable hosts read `delivery-unobserved`; augment and windsurf read `host-not-thinnable`.
 - [ ] **0.2 Corpus by reuse.** The comparison set is the routing matrix, the
   train slice of the trigger corpus, the host-graded cases and the conformance
   cases, plus one added class: obligation cases — a safety-floor or
   consequence-class rule must fire — drawn from rule frontmatter.
   verify: a test asserts no sealed holdout file is opened.
   Open 2026-10-16: no artefact named "host-graded cases" exists in the tree (the only other mention is the skills roadmap's own plan), and `tests/conformance/` holds a retrieval set only. Building the manifest now would name two of its four sources by guess. The train slice is already holdout-sealed by `loadTrainCases` in `src/scripts/_lib/routing_corpus.ts`.
+  Open 2026-10-20, re-screened: the host-graded case set is still absent. It is the case set `road-to-skills-that-arrive-when-called` pre-registers (its Phase 5 outcome reads it), so this step waits on that file producing it. `tests/conformance/` still holds a retrieval set only. A manifest built now would carry one of its four named sources as a guess, and that is the form this step forbids.
 - [x] **0.3 Fix the stale anchors** of D4.
   verify: the three cites resolve to the type.
   Landed 2026-10-16: the cites (and a fourth in `tests/scripts/activation_ladder.test.ts`) now name `LeanProjectionMode` by symbol, not by line, so they cannot go stale on the next edit to that file.
@@ -201,6 +203,7 @@ with that file.
   carrier does.
   verify: fresh-`HOME` fixture — session 1 full, session 2 thinned, only with
   the record present; a record missing a standing law yields `demoted`.
+  Open 2026-10-20: 0.1 has landed, but it records no latency figure (the step names none), so the budget source is the shipped `src/config/hook-latency-budget.json`, which binds this concern either way. Stop (2) is the one that holds this step open: no room in the bundle and no council record to make some, see 1.1.
   Open 2026-10-18, screened: two independent stops. (1) Its latency budget is "fixed from 0.1's measurement", and 0.1 is open. (2) The promotion runs in the `session_start` concern, inside the dispatcher bundle, whose ceiling 1.1's binding alone already exhausts (1,549,991 B of 1,550,000 with it in, see 1.1). A thin pass in that concern needs either a raised `max_bytes` (a ratchet move recorded in `hook-bundle-budget.json`'s `raise_log`, an owner decision) or bytes removed elsewhere first. Nothing promotes before 5.3 in any case, so leaving it open costs no behaviour.
   Stop (2) is now governed by D8: room is made before any raise.
 - [x] **3.4 A release brake the maintainer owns.** A shipped table row forces
@@ -337,6 +340,7 @@ with that file.
 | D6 | product-owned | owner | Blocker `instruction-load-observer-has-no-scheduled-owner` → (a): this file schedules the `InstructionsLoaded` binding as steps 1.1–2.2, absorbing stub step 3.0 with its kill switch | owner answer 2026-10-15 to the PR #2373 report, the subject's eighth arrival | the kill switch fires, or the host drops the event |
 | D7 | reversible-technical | agent | The arrival record is a set per session: reordered events are not `unknown`, lost start-up events are | The host documents `InstructionsLoaded` as asynchronous; parallel hooks reach disk in scheduler order; council openai seat, 2026-10-18 round 1, refused the order-sensitive form | the host starts delivering the event synchronously with a sequence number |
 | D8 | reversible-technical | council:agents/evidence/council/hook-bundle-ceiling-20261018.md | The hook-bundle ceiling is not raised for 1.1 or 3.3: room is made first (per-module byte ranking, then the largest narrow-event module behind a conditional import, latency proven inside `hook-latency-budget.json`); a raise only as the evidence-backed fallback, sized from all blocked work | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); no sibling roadmap schedules a move out of the bundle | no extraction frees meaningful room within the latency and reliability budgets |
+| D9 | reversible-technical | agent | 0.1's fixture is taken from a scratch-`HOME` global install, the only consumer scope (ADR-020). It excludes the install receipt, lock and log (each carries an install time), the scratch root (recorded as `<HOME>`) and the host's own version (a machine property, not a commit property) | Two full runs at `89e094819` compared byte-equal; at `d760ecbde` the same reader reproduces the step's 106 / 369,415 claude-code row | a field outside the exclusion set is found to vary between runs at one commit |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude/host -->
