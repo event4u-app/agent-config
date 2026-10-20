@@ -15,7 +15,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-retro-the-merge-runs | active | ready | After every merged pull request, and on the first session of every new day, the package examines finished work that … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-agent-throughput-recovery | active | ready | A night run carries more finished, merged work, and the reason it stopped is visible in one reading. |
-| road-to-an-analysis-family-that-deepens-itself | active | ready | One engine behind four commands. |
 | road-to-an-installed-layer-that-is-thinned | active | ready | The layer a Claude install writes under `~/.claude/rules` is the thinned one, first as an opt-in and then as the … |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
 | road-to-authority-routing-mechanism | active | ready | A passing authorisation record always means the authority that produced it was the authority entitled to produce it: three authorities … |
