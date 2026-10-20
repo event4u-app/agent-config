@@ -18,6 +18,9 @@ import type { SurfaceRow } from "../hooks/host_lowering.js";
 import { BODY_KEYS, type JsonObject, type JsonValue } from "../hooks/payload_stub.js";
 import { is_replay_mode } from "../hooks/state_io.js";
 import { detect } from "./egress_rules.js";
+import { planRestore, type RestoreDeps, type RestorePlan } from "./egress_restore.js";
+import { fileOrigin, pruneSessionTables, sessionTableDir, withSessionScope } from "./egress_session_table.js";
+import { EgressRefusedError, replaceValues, type TokenScope } from "./egress_token.js";
 import { resolveRewriteCapability } from "./rewrite_capability.js";
 
 /**
@@ -140,6 +143,8 @@ export function firstTokenUse(workspaceRoot: string, sessionId: unknown, replay 
 }
 
 export interface RewriteDeps {
+  /** The session table directory; the user-global one when absent. */
+  readonly sessionDir?: string;
   readonly packageRoot: string;
   readonly today?: string;
   readonly now?: () => number;
@@ -284,7 +289,7 @@ export function planPromptGate(
   return { outcome, message: `${head}\n${body}\n\n${promptResidueLine(types, count)}` };
 }
 
-export type EgressEmission = ToolOutputRewrite | PromptGate;
+export type EgressEmission = ToolOutputRewrite | PromptGate | RestorePlan;
 
 /** The one decision the dispatcher hands to `emitFor` for this event. */
 export function planEgressEmission(
@@ -292,9 +297,30 @@ export function planEgressEmission(
   stage: EgressStageResult,
   deps: RewriteDeps,
 ): EgressEmission | null {
-  return envelope["event"] === "user_prompt_submit"
-    ? planPromptGate(envelope, stage, deps)
-    : planToolOutputRewrite(envelope, stage, deps);
+  if (envelope["event"] === "user_prompt_submit") return planPromptGate(envelope, stage, deps);
+  if (envelope["event"] === "pre_tool_use") return planInputRestore(envelope, deps);
+  return planToolOutputRewrite(envelope, stage, deps);
+}
+
+/**
+ * The restore for a `pre_tool_use` input (Phase 4). Where the host's row grants
+ * no `input` capability, a restore cannot be delivered, so a call that needed
+ * one is denied instead: an unrestored token must not reach a tool (4.4).
+ */
+export function planInputRestore(envelope: JsonObject, deps: RewriteDeps, restore: RestoreDeps = {}): RestorePlan | null {
+  const plan = planRestore(envelope, {
+    ...restore,
+    ...(deps.sessionDir !== undefined ? { sessionDir: deps.sessionDir } : {}),
+    ...(deps.replay !== undefined ? { replay: deps.replay } : {}),
+  });
+  if (plan === null || plan.input === null) return plan;
+  const platform = String(envelope["platform"] ?? "");
+  const cap = (deps.capability ?? resolveRewriteCapability)(platform, deps.row, "input", {
+    today: deps.today ?? new Date().toISOString().slice(0, 10),
+    root: deps.packageRoot,
+  });
+  if (cap.ok && cap.capability.mode === "replace") return plan;
+  return { outcome: "restore", input: null, decision: "deny", reason: "agent-config egress: this host cannot restore a placeholder into a tool input, so the call was not run." };
 }
 
 /**
@@ -348,6 +374,18 @@ export function emitEgress(e: EgressEmission | null, ctx: EmitContext): EgressHo
     if (context) hso["additionalContext"] = context;
     return { exit: 0, stdout: `${JSON.stringify(out)}\n`, stderr: "" };
   }
+  if (ctx.event === "pre_tool_use" && e.outcome === "restore") {
+    // A concern's block outranks a restore and keeps the host's own refusal path.
+    if (ctx.severity === "block") return null;
+    const hso: Record<string, unknown> = { hookEventName: ctx.hookEventName };
+    if (e.input !== null) hso["updatedInput"] = e.input;
+    // Never an `allow` beside a restored input (K2): no decision leaves the host's own permission flow in charge.
+    if (e.decision !== null) {
+      hso["permissionDecision"] = e.decision;
+      hso["permissionDecisionReason"] = [e.reason, ctx.reason].filter(Boolean).join("\n\n");
+    } else if (ctx.reason) hso["additionalContext"] = ctx.reason;
+    return { exit: 0, stdout: `${JSON.stringify({ hookSpecificOutput: hso })}\n`, stderr: "" };
+  }
   if (ctx.event !== "user_prompt_submit") return null;
   if (e.outcome === "refuse" && ctx.blockExit !== null) return { exit: ctx.blockExit, stdout: "", stderr: `${e.message}\n` };
   if ((e.outcome === "warn" || e.outcome === "refuse") && ctx.severity !== "block") {
@@ -371,14 +409,20 @@ export interface StagePlan {
  * lowering row: whether the row emits natively (verified, with a native
  * envelope), its refusal code and its own event name for the slot.
  */
-export function planStage(envelope: JsonObject, stage: EgressStageResult, deps: RewriteDeps): StagePlan {
-  const decision = planEgressEmission(envelope, stage, deps);
+export function planStage(
+  envelope: JsonObject,
+  stage: EgressStageResult,
+  deps: RewriteDeps,
+): { plan: StagePlan; placeholder?: JsonObject; execution?: JsonObject } {
+  const minted = mintIntoSession(envelope, stage, deps);
+  const decided = minted === null ? stage : { ...stage, placeholder: minted };
+  const decision = planEgressEmission(envelope, decided, deps);
   const event = String(envelope["event"] ?? "");
   const row = deps.row ?? null;
   const today = deps.today ?? new Date().toISOString().slice(0, 10);
   const native = row !== null && row.json_shape !== "none" && row.verified !== null && row.verified.expires >= today;
   const slot = row?.slots.get(event);
-  return {
+  const plan: StagePlan = {
     decision,
     delivered: deliveredBodyBytes(envelope, decision),
     emit(severity, reasons) {
@@ -388,4 +432,67 @@ export function planStage(envelope: JsonObject, stage: EgressStageResult, deps: 
       return emitEgress(decision, { event, severity, reason, blockExit: slot.block_exit, hookEventName });
     },
   };
+  const out: { plan: StagePlan; placeholder?: JsonObject; execution?: JsonObject } = { plan };
+  if (minted !== null) out.placeholder = minted;
+  // The guards decide on what will run: the restored input, never the token.
+  if (decision?.outcome === "restore" && decision.input !== null && isObject(envelope["payload"])) {
+    out.execution = { ...envelope, payload: { ...envelope["payload"], tool_input: decision.input } };
+  }
+  return out;
+}
+
+let pruned = false;
+
+/** Tables idle past the retention age go before this process mints into one. */
+function pruneOncePerProcess(dir: string): void {
+  if (pruned) return;
+  pruned = true;
+  pruneSessionTables(dir);
+}
+
+/** Tools whose result is a file this package can re-read: a token minted from it can be restored. */
+const FILE_RESULT_TOOLS: ReadonlySet<string> = new Set(["Read", "Write", "Edit", "MultiEdit"]);
+
+function replaceDeepIn(v: JsonValue, scope: TokenScope): JsonValue {
+  if (typeof v === "string") return replaceValues(v, scope);
+  if (Array.isArray(v)) return v.map((x) => replaceDeepIn(x, scope));
+  if (isObject(v)) return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, replaceDeepIn(x as JsonValue, scope)]));
+  return v;
+}
+
+/**
+ * The placeholder view of a file tool's result with its tokens minted into the
+ * session table under the file's origin, so a later input can restore them.
+ * `null` — keep the stage's own per-dispatch view — for any other event, tool,
+ * a missing session id or file, or a failure to write the table.
+ */
+export function mintIntoSession(envelope: JsonObject, stage: EgressStageResult, deps: RewriteDeps): JsonObject | null {
+  if (envelope["event"] !== "post_tool_use" || stage.placeholder === undefined) return null;
+  const payload = isObject(envelope["payload"]) ? envelope["payload"] : null;
+  const input = payload !== null && isObject(payload["tool_input"]) ? payload["tool_input"] : null;
+  const tool = payload?.["tool_name"];
+  const file = input?.["file_path"];
+  const sessionId = payload?.["session_id"];
+  if (payload === null || typeof tool !== "string" || !FILE_RESULT_TOOLS.has(tool)) return null;
+  if (typeof file !== "string" || typeof sessionId !== "string" || sessionId === "") return null;
+  const key = resultKey(payload);
+  if (key === null || !stage.counts.some((c) => c.field === "result")) return null;
+  try {
+    const workspaceRoot = String(envelope["workspace_root"] || process.cwd());
+    pruneOncePerProcess(deps.sessionDir ?? sessionTableDir());
+    const origin = fileOrigin(path.resolve(workspaceRoot, file), { tool, field: key, operation: "read" });
+    const target = { dir: deps.sessionDir ?? sessionTableDir(), sessionId, workspaceRoot, origin };
+    const value = withSessionScope(target, (scope) => {
+      try {
+        return replaceDeepIn(payload[key] as JsonValue, scope);
+      } catch (exc) {
+        if (exc instanceof EgressRefusedError) return { [STAGE_WITHHELD_MARKER]: true, rule: exc.rule };
+        throw exc;
+      }
+    });
+    const base = stage.placeholder["payload"];
+    return { ...stage.placeholder, payload: { ...(isObject(base) ? base : payload), [key]: value } };
+  } catch {
+    return null;
+  }
 }

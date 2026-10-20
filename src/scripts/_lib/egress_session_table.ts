@@ -278,6 +278,15 @@ class SessionScope extends TokenScope {
     }
 }
 
+/**
+ * Runs `fn` with a scope whose tokens are minted into the session table under
+ * one origin, all inside one locked read-modify-write — for an object with many
+ * string leaves, where `replaceIntoSession` would take the lock once per leaf.
+ */
+export function withSessionScope<T>(t: TableTarget & { readonly origin: OriginDescriptor }, fn: (scope: TokenScope) => T): T {
+    return updateTable(t, (table) => fn(new SessionScope(table, t.origin)));
+}
+
 /** replaceValues under the session table: tokens survive the process that minted them. */
 export function replaceIntoSession(text: string, t: TableTarget & { readonly origin: OriginDescriptor }): string {
     return updateTable(t, (table) => replaceValues(text, new SessionScope(table, t.origin)));
@@ -329,14 +338,28 @@ export const RESTORE_OUTCOMES: ReadonlyArray<{
 ];
 
 export type RestoreResult =
-    | { readonly ok: true; readonly value: string }
-    | { readonly ok: false; readonly outcome: RestoreOutcome; readonly message: string; readonly recovery: 'confirm-with-value-shown' }
+    | { readonly ok: true; readonly value: string; readonly class: EgressClass; readonly type: string; readonly number: number }
+    | {
+          readonly ok: false;
+          readonly outcome: RestoreOutcome;
+          readonly message: string;
+          readonly recovery: 'confirm-with-value-shown';
+          /** The token's class when its entry was found, so a refused credential is told apart. */
+          readonly class?: EgressClass;
+      }
     | { readonly ok: false; readonly outcome: 'UNRESOLVED'; readonly message: string; readonly recovery: 'none' };
 
-function refuse(outcome: RestoreOutcome): RestoreResult {
+function refuse(outcome: RestoreOutcome): Extract<RestoreResult, { recovery: 'confirm-with-value-shown' }> {
     const o = RESTORE_OUTCOMES.find((x) => x.outcome === outcome) as (typeof RESTORE_OUTCOMES)[number];
     return { ok: false, outcome, message: o.message, recovery: o.recovery };
 }
+
+/**
+ * A destination that matches the token's first origin. Only for a restore that
+ * will be shown to a human before it runs: the value is re-derived and the
+ * digest still decides, but no sink binding is checked.
+ */
+export const ANY_DESTINATION = '*';
 
 export interface RestoreRequest {
     readonly dir: string;
@@ -397,10 +420,13 @@ export function restoreToken(token: string, req: RestoreRequest): RestoreResult 
         return { ok: false, outcome: 'UNRESOLVED', message: 'This placeholder was not issued in this session.', recovery: 'none' };
     }
     if (!macValid(table, entry)) return refuse('ORIGIN_UNAVAILABLE');
-    const origin = entry.origins.find((o) => originKey(o) === req.destination);
-    if (origin === undefined) return refuse('DESTINATION_MISMATCH');
+    const origin =
+        req.destination === ANY_DESTINATION ? entry.origins[0] : entry.origins.find((o) => originKey(o) === req.destination);
+    if (origin === undefined) return { ...refuse('DESTINATION_MISMATCH'), class: entry.class };
     const got = rederive(table, entry, origin, req);
-    return typeof got === 'string' ? refuse(got) : { ok: true, value: got.value };
+    return typeof got === 'string'
+        ? { ...refuse(got), class: entry.class }
+        : { ok: true, value: got.value, class: entry.class, type: entry.type, number: entry.number };
 }
 
 /** What a token becomes when nothing can stand behind it any more; the recogniser never parses it. */

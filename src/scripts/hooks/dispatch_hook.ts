@@ -1289,7 +1289,7 @@ export function main(argv?: string[]): number {
     (c) => [c, _concern_body_classes(c)] as const,
   );
   const shapes = planPayloadShapes(
-    envelope,
+    egress.execution ?? envelope,
     keep_by_concern.map(([, keep]) => keep),
     egress.placeholder,
     egress.plan?.delivered,

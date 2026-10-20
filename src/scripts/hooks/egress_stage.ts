@@ -101,6 +101,8 @@ export interface EgressStageResult {
    * engine could not load (every body is then withheld and the miss recorded).
    */
   readonly plan?: StagePlan;
+  /** The envelope the call-deciding concerns receive when the plan restored its input. */
+  readonly execution?: JsonObject;
 }
 
 function isObject(v: unknown): v is JsonObject {
@@ -384,7 +386,7 @@ export function runEgressStage(
     const placeholder = mode === "observe" ? undefined : buildPlaceholderEnvelope(envelope, engine);
     result = { mode, placeholder, ...counted };
     if (placeholder && packageRoot) {
-      result = { ...result, plan: engine.planStage(envelope, result, { packageRoot, row: surfaceRow(String(envelope["platform"])) }) };
+      result = { ...result, ...engine.planStage(envelope, result, { packageRoot, row: surfaceRow(String(envelope["platform"])) }) };
     }
   } catch (exc) {
     const rule = exc instanceof EngineUnavailableError ? ENGINE_UNAVAILABLE : "stage-error";
