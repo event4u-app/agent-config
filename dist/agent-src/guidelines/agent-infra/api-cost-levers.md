@@ -127,9 +127,10 @@ version 2.1.220 (2026-07-30), re-check on drift:**
 - A **fork** inherits the parent's system prompt, tools, and conversation
   history exactly, so its first request **reads the parent's cache** instead
   of writing a fresh one — the only documented mechanism that shares a cache
-  across a dispatch boundary. Forking forces background mode, which changes
-  the tool set and therefore invalidates the very prefix that motivated the
-  fork; weigh that cost before reaching for it — see the fork-vs-subagent
+  across a dispatch boundary. Forking forces background mode; on a host
+  whose row says `fork_shares_cache: true` (Claude Code 2.1.302, observed) the
+  fork still reads the parent's prefix and keeps its tool pool, elsewhere that
+  is unobserved; weigh the tool-fit cost before reaching for it — see the fork-vs-subagent
   ordering rule in See also.
 - Either way, the **cold-start preamble is re-written on every spawn** — the
   always-loaded rule set, the tool definitions, and the dispatch prompt are

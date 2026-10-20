@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { MAX_ATTEMPTS_PER_TARGET, MAX_CONSECUTIVE_TYPE_FAILURES, breachedGuardrails, budgetHalt, isLayerDisabled, escalateOnVerifyFail, escalationPromotionCandidates, readOrchestrationMetrics, readTierRoutingMetrics, sliceDispatchAllowed, verifyPassDrift, typeStop } from '../../src/scripts/_lib/subagent_steering.js';
+import { MAX_ATTEMPTS_PER_TARGET, MAX_CONSECUTIVE_TYPE_FAILURES, breachedGuardrails, budgetHalt, isLayerDisabled, escalateOnVerifyFail, escalationPromotionCandidates, readOrchestrationMetrics, readTierRoutingMetrics, sliceDispatchAllowed, transientFailureAction, verifyPassDrift, typeStop, classifyTransientFailure, type EscalationTier, type RawTransientFailure, type SlotState, type TransientErrorClass, type WellFormedTransientDecision } from '../../src/scripts/_lib/subagent_steering.js';
 
 describe('isLayerDisabled — kill-switch', () => {
     it('emergency halt on → disabled', () => {
@@ -305,5 +305,363 @@ describe('escalateOnVerifyFail — downshift cascade (M3)', () => {
     it('inherit slices still halt on the N=3 budget', () => {
         const d = escalateOnVerifyFail({ failed_tier: 'medium', tier_source: 'inherit', consecutive_failures: 3 });
         expect(d.action).toBe('slice-failed');
+    });
+});
+
+// The transient branch split by error class: a rate limit is the one class a
+// same-turn retry one tier lower makes worse, since it sends a fresh cold
+// start into a limiter that is already saturated.
+/** A proxy whose every operation throws, `Array.isArray` included. */
+function revoked(): object {
+    const r = Proxy.revocable({}, {});
+    r.revoke();
+    return r.proxy;
+}
+
+describe('transientFailureAction — split by error class', () => {
+    const tiers = ['lite', 'medium', 'high'] as const;
+    const fresh = (tier: EscalationTier): SlotState => ({
+        original_tier: tier,
+        current_tier: tier,
+        downshifts_used: 0,
+        parks: 0,
+        attempts_consumed: 0,
+    });
+    const decide = (
+        slot: SlotState,
+        error_class: TransientErrorClass,
+        retry_after_ms: number | null = null,
+        over: { retry_safe?: boolean; run_remaining_ms?: number | null } = {},
+    ) =>
+        transientFailureAction({
+            error_class,
+            retry_after_ms,
+            slot,
+            retry_safe: over.retry_safe ?? true,
+            run_remaining_ms: over.run_remaining_ms === undefined ? 600_000 : over.run_remaining_ms,
+        });
+    // A well-formed fixture that comes back malformed is itself a failure.
+    const step = (...args: Parameters<typeof decide>): WellFormedTransientDecision => {
+        const d = decide(...args);
+        if (d.malformed) throw new Error(`well-formed fixture decided as malformed: ${d.reason}`);
+        return d;
+    };
+
+    it('rate-limit-never-redispatches-same-turn', () => {
+        for (const tier of tiers) {
+            for (const downshifts_used of [0, 1] as const) {
+                const d = step({ ...fresh(tier), downshifts_used }, 'rate_limit');
+                expect(d.action).toBe('park');
+                expect(d.redispatch_same_turn).toBe(false);
+                // Never a smaller model: the post-recovery dispatch keeps the tier.
+                expect(d.next_tier).toBe(tier);
+                expect(d.rerun_reuse_decision).toBe(true);
+                // A park is not a failed attempt, and it is recorded on the slot.
+                expect(d.attempt_consumed).toBe(false);
+                expect(d.next_state.parks).toBe(1);
+            }
+        }
+    });
+
+    it('a second park on the same slot consumes an attempt instead of parking again', () => {
+        const parked = step(fresh('high'), 'rate_limit').next_state;
+        const d = step(parked, 'rate_limit');
+        expect(d.action).toBe('count-failure');
+        expect(d.attempt_consumed).toBe(true);
+        expect(d.next_state.attempts_consumed).toBe(1);
+        expect(d.redispatch_same_turn).toBe(false);
+    });
+
+    it('repeated rate limits reach the N=3 budget instead of looping', () => {
+        let slot = step(fresh('high'), 'rate_limit').next_state;
+        let last = step(slot, 'rate_limit');
+        for (let i = 0; i < 2; i++) {
+            slot = last.next_state;
+            last = step(slot, 'rate_limit');
+        }
+        expect(last.next_state.attempts_consumed).toBe(MAX_ATTEMPTS_PER_TARGET);
+        expect(last.budget_exhausted).toBe(true);
+    });
+
+    it('overloaded then rate-limited: the park keeps the downshifted tier, no second downshift', () => {
+        const first = step(fresh('high'), 'overloaded');
+        expect(first).toMatchObject({ action: 'downshift', next_tier: 'medium', attempt_consumed: false });
+        expect(first.next_state).toMatchObject({ current_tier: 'medium', downshifts_used: 1 });
+        const second = step(first.next_state, 'rate_limit');
+        expect(second).toMatchObject({ action: 'park', next_tier: 'medium' });
+        const third = step(second.next_state, 'timeout');
+        expect(third.action).toBe('count-failure');
+    });
+
+    it('overloaded, 5xx and timeout keep the single same-turn downshift', () => {
+        for (const error_class of ['overloaded', 'server_error', 'timeout'] as const) {
+            const d = step(fresh('high'), error_class);
+            expect(d.action).toBe('downshift');
+            expect(d.redispatch_same_turn).toBe(true);
+            expect(d.next_tier).toBe('medium');
+            expect(d.rerun_reuse_decision).toBe(false);
+        }
+    });
+
+    it('after a consumed attempt the next one starts at the original tier with no downshift left', () => {
+        const down = step(fresh('high'), 'server_error').next_state;
+        const failed = step(down, 'server_error');
+        expect(failed).toMatchObject({ action: 'count-failure', next_tier: 'high' });
+        expect(failed.next_state).toMatchObject({ current_tier: 'high', downshifts_used: 1, attempts_consumed: 1 });
+        expect(step(failed.next_state, 'overloaded').action).toBe('count-failure');
+        expect(step(fresh('lite'), 'overloaded')).toMatchObject({ action: 'count-failure', next_tier: 'lite' });
+    });
+
+    it('a valid Retry-After delays any re-dispatch, whatever the class', () => {
+        expect(step(fresh('high'), 'server_error', 30_000).wait_ms).toBe(30_000);
+        expect(step(fresh('high'), 'rate_limit', 60_000).wait_ms).toBe(60_000);
+        expect(step(fresh('high'), 'overloaded', Number.NaN).wait_ms).toBeNull();
+        expect(step(fresh('high'), 'overloaded', -1).wait_ms).toBeNull();
+    });
+
+    it('a timed-out call may still return: its late result is discarded', () => {
+        expect(step(fresh('high'), 'timeout').discard_late_result).toBe(true);
+        expect(step(fresh('high'), 'server_error').discard_late_result).toBe(false);
+    });
+
+    // Round-3 finding: a retried subagent may duplicate work its first run
+    // already did. Only a slice declared read-only or idempotent is re-dispatched.
+    it('a slice that is not retry-safe is never re-dispatched, whatever the class', () => {
+        for (const error_class of ['rate_limit', 'overloaded', 'server_error', 'timeout'] as const) {
+            const d = step(fresh('high'), error_class, null, { retry_safe: false });
+            expect(d.action).toBe('escalate');
+            expect(d.redispatch_same_turn).toBe(false);
+            expect(d.attempt_consumed).toBe(false);
+            expect(d.next_state).toEqual(fresh('high'));
+        }
+    });
+
+    // Round-3 finding: a Retry-After the run cannot wait out conflicts with a
+    // same-turn re-dispatch.
+    it('a Retry-After longer than the run parks instead of downshifting in the same turn', () => {
+        for (const error_class of ['overloaded', 'server_error', 'timeout'] as const) {
+            const d = step(fresh('high'), error_class, 120_000, { run_remaining_ms: 60_000 });
+            expect(d).toMatchObject({ action: 'park', redispatch_same_turn: false, next_tier: 'high', wait_ms: 120_000 });
+            expect(d.next_state).toMatchObject({ downshifts_used: 0, parks: 1 });
+        }
+        // An unknown remaining run cannot be shown to cover the wait.
+        expect(step(fresh('high'), 'overloaded', 1_000, { run_remaining_ms: null }).action).toBe('park');
+        // A wait that fits keeps the downshift.
+        expect(step(fresh('high'), 'overloaded', 1_000, { run_remaining_ms: 60_000 }).action).toBe('downshift');
+    });
+
+    // Round-3 finding: the function accepted a slot whose budget was already spent.
+    it('an exhausted slot is refused, not decided again', () => {
+        const spent: SlotState = { ...fresh('high'), attempts_consumed: MAX_ATTEMPTS_PER_TARGET };
+        for (const error_class of ['rate_limit', 'overloaded', 'server_error', 'timeout'] as const) {
+            const d = step(spent, error_class);
+            expect(d).toMatchObject({ action: 'refuse', redispatch_same_turn: false, attempt_consumed: false, budget_exhausted: true });
+            expect(d.next_state).toEqual(spent);
+        }
+    });
+
+    // Round-4 finding 2: the counters and the time left are caller-supplied and
+    // were trusted unchecked. Every malformed input fails closed — escalate,
+    // never re-dispatch, never move a counter.
+    it('malformed slot counters or time left escalate unretried and move no counter', () => {
+        const bad: Array<[string, SlotState, number | null]> = [
+            ['downshifts above one', { ...fresh('high'), downshifts_used: 2 as 0 | 1 }, 600_000],
+            ['negative parks', { ...fresh('high'), parks: -1 }, 600_000],
+            ['fractional parks', { ...fresh('high'), parks: 0.5 }, 600_000],
+            ['NaN attempts', { ...fresh('high'), attempts_consumed: Number.NaN }, 600_000],
+            ['negative attempts', { ...fresh('high'), attempts_consumed: -1 }, 600_000],
+            ['unknown tier', { ...fresh('high'), current_tier: 'giant' as EscalationTier }, 600_000],
+            ['current tier above original', { ...fresh('lite'), current_tier: 'high' }, 600_000],
+            ['two tiers below with one downshift', { ...fresh('high'), current_tier: 'lite', downshifts_used: 1 }, 600_000],
+            ['NaN time left', fresh('high'), Number.NaN],
+            ['negative time left', fresh('high'), -1],
+            ['infinite time left', fresh('high'), Number.POSITIVE_INFINITY],
+            // Round-7 finding: an `in` check admitted inherited property names.
+            ['inherited name as current tier', { ...fresh('high'), current_tier: 'toString' as EscalationTier }, 600_000],
+            ['inherited name as original tier', { ...fresh('high'), original_tier: 'constructor' as EscalationTier }, 600_000],
+            ['__proto__ as tier', { ...fresh('high'), current_tier: '__proto__' as EscalationTier }, 600_000],
+            ['hasOwnProperty as tier', { ...fresh('high'), original_tier: 'hasOwnProperty' as EscalationTier, current_tier: 'hasOwnProperty' as EscalationTier }, 600_000],
+        ];
+        for (const [label, slot, run_remaining_ms] of bad) {
+            for (const error_class of ['rate_limit', 'overloaded', 'server_error', 'timeout'] as const) {
+                const d = decide(slot, error_class, null, { run_remaining_ms });
+                expect(d.action, label).toBe('escalate');
+                expect(d.redispatch_same_turn, label).toBe(false);
+                expect(d.attempt_consumed, label).toBe(false);
+                // Round-6 finding: the malformed decision carries no state it
+                // cannot vouch for — `null`, never the input cast to a slot.
+                expect(d.malformed, label).toBe(true);
+                expect(d.next_state, label).toBeNull();
+                expect(d.next_tier, label).toBeNull();
+                expect(d.reason, label).toMatch(/malformed/);
+            }
+        }
+    });
+
+    // Round-5 finding: a missing slot reached the escalate helper, which read
+    // its fields and threw — the fail-closed path crashed on the very input it
+    // existed for. A missing input, a missing field and an unknown class are
+    // all refused without a throw.
+    it('a missing slot, a missing field or an unknown class escalates without throwing', () => {
+        const valid = { error_class: 'overloaded', retry_after_ms: null, slot: fresh('high'), retry_safe: true, run_remaining_ms: 600_000 };
+        const { parks: _parks, ...noParks } = fresh('high');
+        void _parks;
+        const cases: Array<[string, unknown]> = [
+            ['null input', null],
+            ['undefined input', undefined],
+            ['null slot', { ...valid, slot: null }],
+            ['undefined slot', { ...valid, slot: undefined }],
+            ['slot that is an array', { ...valid, slot: [] }],
+            ['slot missing parks', { ...valid, slot: noParks }],
+            ['unknown error class', { ...valid, error_class: 'teapot' }],
+            ['missing error class', { ...valid, error_class: undefined }],
+            ['Retry-After that is not a number', { ...valid, retry_after_ms: '30000' }],
+            // Round-8 finding: fields were read through ordinary property access,
+            // so inherited values passed and accessors could throw or change.
+            ['slot whose fields are inherited', { ...valid, slot: Object.create(fresh('high')) }],
+            ['input whose fields are inherited', Object.create(valid)],
+            ['slot field behind a getter', { ...valid, slot: Object.defineProperty({ ...fresh('high') }, 'parks', { get: () => 0, enumerable: true }) }],
+            ['input field behind a throwing getter', Object.defineProperty({ ...valid }, 'retry_safe', { get: () => { throw new Error('boom'); }, enumerable: true })],
+            ['proxy input that throws on every trap', new Proxy({}, { getOwnPropertyDescriptor: () => { throw new Error('trap'); }, get: () => { throw new Error('trap'); }, has: () => { throw new Error('trap'); } })],
+            ['proxy slot that throws on every trap', { ...valid, slot: new Proxy({}, { getOwnPropertyDescriptor: () => { throw new Error('trap'); }, get: () => { throw new Error('trap'); } }) }],
+            // Round-9 finding: `Array.isArray` on a revoked proxy throws, and it
+            // ran before the `try`.
+            ['revoked proxy input', revoked()],
+            ['revoked proxy slot', { ...valid, slot: revoked() }],
+        ];
+        for (const [label, inp] of cases) {
+            let d: ReturnType<typeof transientFailureAction> | undefined;
+            expect(() => {
+                d = transientFailureAction(inp as Parameters<typeof transientFailureAction>[0]);
+            }, label).not.toThrow();
+            expect(d?.action, label).toBe('escalate');
+            expect(d?.redispatch_same_turn, label).toBe(false);
+            expect(d?.attempt_consumed, label).toBe(false);
+            expect(d?.malformed, label).toBe(true);
+            expect(d?.next_state, label).toBeNull();
+            expect(d?.reason, label).toMatch(/malformed/);
+        }
+    });
+
+    // Round-6 finding: a missing `retry_safe` read as an ordinary unsafe slice,
+    // while the contract calls a missing field malformed.
+    it('a retry_safe that is not a boolean is malformed; false is an unsafe slice', () => {
+        for (const retry_safe of ['true', 1, null, undefined] as unknown[]) {
+            const d = transientFailureAction({
+                error_class: 'overloaded',
+                retry_after_ms: null,
+                slot: fresh('high'),
+                retry_safe: retry_safe as boolean,
+                run_remaining_ms: 600_000,
+            });
+            expect(d.action).toBe('escalate');
+            expect(d.redispatch_same_turn).toBe(false);
+            expect(d.malformed).toBe(true);
+        }
+        const unsafe = step(fresh('high'), 'overloaded', null, { retry_safe: false });
+        expect(unsafe).toMatchObject({ action: 'escalate', malformed: false });
+        expect(unsafe.next_state).toEqual(fresh('high'));
+    });
+
+    it('a well-formed decision is never marked malformed', () => {
+        for (const error_class of ['rate_limit', 'overloaded', 'server_error', 'timeout'] as const) {
+            const d = step(fresh('high'), error_class);
+            expect(d.malformed).toBe(false);
+            expect(d.next_state).not.toBeNull();
+            expect(d.next_tier).not.toBeNull();
+        }
+    });
+});
+
+describe('classifyTransientFailure — precedence', () => {
+    const raw = (over: Partial<RawTransientFailure>): RawTransientFailure => ({
+        http_status: null,
+        error_type: null,
+        client_deadline: false,
+        response_started: false,
+        connect_failed: false,
+        ...over,
+    });
+
+    it('429 or a rate-limit type is rate_limit, ahead of everything else', () => {
+        expect(classifyTransientFailure(raw({ http_status: 429 }))).toBe('rate_limit');
+        expect(classifyTransientFailure(raw({ http_status: 503, error_type: 'rate_limit_error' }))).toBe('rate_limit');
+    });
+
+    it('529 or an overloaded type is overloaded; any other 5xx is server_error', () => {
+        expect(classifyTransientFailure(raw({ http_status: 529 }))).toBe('overloaded');
+        expect(classifyTransientFailure(raw({ http_status: 503, error_type: 'overloaded_error' }))).toBe('overloaded');
+        expect(classifyTransientFailure(raw({ http_status: 503 }))).toBe('server_error');
+        expect(classifyTransientFailure(raw({ http_status: 500 }))).toBe('server_error');
+    });
+
+    it('a client deadline before any byte is timeout; a connection that never opened is server_error', () => {
+        expect(classifyTransientFailure(raw({ client_deadline: true }))).toBe('timeout');
+        expect(classifyTransientFailure(raw({ connect_failed: true }))).toBe('server_error');
+    });
+
+    // Round-3 findings: a timeout after a partial response may already have run,
+    // and an absent status with no bytes proves no transport failure.
+    it('a timeout after a partial response is not transient', () => {
+        expect(classifyTransientFailure(raw({ client_deadline: true, response_started: true }))).toBeNull();
+    });
+
+    it('no status, no bytes and no observed connect failure is not transient', () => {
+        expect(classifyTransientFailure(raw({}))).toBeNull();
+    });
+
+    it('a failure after a partial response, or a non-5xx status, is not transient', () => {
+        expect(classifyTransientFailure(raw({ response_started: true }))).toBeNull();
+        expect(classifyTransientFailure(raw({ http_status: 400 }))).toBeNull();
+        expect(classifyTransientFailure(raw({ http_status: 200, response_started: true }))).toBeNull();
+        expect(classifyTransientFailure(raw({ connect_failed: true, response_started: true }))).toBeNull();
+    });
+
+    // Round-4 finding 1: the status branches ran before `response_started`, so a
+    // 5xx — or a rate-limit or overload error event — arriving mid-stream was
+    // still transient, contradicting "once any response byte arrived nothing
+    // below applies".
+    it('any status or error type after a partial response is not transient', () => {
+        for (const over of [
+            { http_status: 500 },
+            { http_status: 503 },
+            { http_status: 529 },
+            { http_status: 429 },
+            { error_type: 'rate_limit_error' },
+            { error_type: 'overloaded_error' },
+        ] as Array<Partial<RawTransientFailure>>) {
+            expect(classifyTransientFailure(raw({ ...over, response_started: true })), JSON.stringify(over)).toBeNull();
+        }
+    });
+
+    // Round-6 finding: the classifier read its fields unchecked, so an untyped
+    // caller could make it throw or read a string status as a rate limit.
+    it('a malformed raw failure is not transient and never throws', () => {
+        const cases: unknown[] = [
+            null,
+            undefined,
+            'HTTP 429',
+            [],
+            { ...raw({}), http_status: '429' },
+            { ...raw({}), http_status: 429.5 },
+            { ...raw({}), error_type: 7 },
+            { ...raw({}), http_status: 503, response_started: undefined },
+            { ...raw({}), client_deadline: 'yes' },
+            { ...raw({}), connect_failed: 1 },
+            { http_status: 429 },
+            Object.create(raw({ http_status: 429 })),
+            Object.defineProperty(raw({}), 'http_status', { get: () => 429, enumerable: true }),
+            Object.defineProperty(raw({}), 'response_started', { get: () => { throw new Error('boom'); }, enumerable: true }),
+            new Proxy(raw({ http_status: 429 }), { getOwnPropertyDescriptor: () => { throw new Error('trap'); }, get: () => { throw new Error('trap'); } }),
+            revoked(),
+        ];
+        // Labelled by index: a fixture with a throwing getter cannot be stringified.
+        cases.forEach((f, idx) => {
+            let c: ReturnType<typeof classifyTransientFailure> | 'unset' = 'unset';
+            expect(() => {
+                c = classifyTransientFailure(f as RawTransientFailure);
+            }, `case ${idx}`).not.toThrow();
+            expect(c, `case ${idx}`).toBeNull();
+        });
     });
 });
