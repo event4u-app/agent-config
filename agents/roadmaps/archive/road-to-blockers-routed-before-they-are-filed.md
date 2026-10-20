@@ -40,7 +40,7 @@ of the three is checkable by a command, below.
 
 ## Phase 2 — Route before filing
 
-- [ ] **2.1 The authoring contract routes a human-owned blocker through the
+- [x] **2.1 The authoring contract routes a human-owned blocker through the
       council first.** Template rule 20 offered only `user | maintainer |
       external` as `Owner:` values although the linter already treats
       `council` and `implementer` as non-human owners. Rule 20 now lists them,
@@ -51,7 +51,7 @@ of the three is checkable by a command, below.
       owner question). A `DECIDE` is not a blocker; it is a `## Decisions` row.
       verify: `grep -n 'Routed:' src/agent-src/templates/roadmaps.md` -> a hit
       inside rule 20; `roadmap-writing` points at it.
-- [ ] **2.2 A ratchet keeps new human-owned blockers from skipping the route.**
+- [x] **2.2 A ratchet keeps new human-owned blockers from skipping the route.**
       `lint_roadmap_blockers:routing` counts open human-owned blockers with no
       `Routed:` field against a baseline registered at today's count, so the
       existing backlog is grandfathered and every new one must carry the field.
@@ -60,7 +60,7 @@ of the three is checkable by a command, below.
 
 ## Phase 3 — Close what the tree already settled
 
-- [ ] **3.1 Execute the `Resolved when` of the blockers measured as satisfied.**
+- [x] **3.1 Execute the `Resolved when` of the blockers measured as satisfied.**
       `capacity-slot` (`later/road-to-skill-ecosystem-capability-queue.md`) and
       `verification-slot` (`later/road-to-skill-ecosystem-security-and-conformance.md`)
       both resolve when fewer than two `road-to-skill-ecosystem-*` roadmaps sit
@@ -89,9 +89,9 @@ of the three is checkable by a command, below.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A host-wrapped agent message leaves the language pin unchanged,
+- [x] AC-1 — A host-wrapped agent message leaves the language pin unchanged,
       proven by a test that is red without the fix.
-- [ ] AC-2 — No new open human-owned blocker can land without `Routed:`; the
+- [x] AC-2 — No new open human-owned blocker can land without `Routed:`; the
       existing ones are counted, not exempted silently.
-- [ ] AC-3 — The two blockers whose condition the tree satisfies read
+- [x] AC-3 — The two blockers whose condition the tree satisfies read
       `resolved`, and `first-corpora-named` stays open with the reason.

@@ -290,7 +290,7 @@ Recorded so they are not re-proposed, with the reason:
 ## Blockers
 
 ### blocker: capacity-slot
-- **Status:** open
+- **Status:** resolved — 2026-10-20, condition executed: `ls agents/roadmaps/road-to-skill-ecosystem-*.md` matches nothing; all three family files sit in `later/`, so both slots are free. Promoting one queue entry is the next step, not part of this gate.
 - **Owner:** maintainer
 - **Blocks:** the whole queue
 - **What to do:**

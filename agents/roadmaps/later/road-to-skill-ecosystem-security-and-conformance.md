@@ -148,7 +148,7 @@ corpus is documentation-heavy. That is exactly this package's situation.
 ## Blockers
 
 ### blocker: verification-slot
-- **Status:** open
+- **Status:** resolved — 2026-10-20, condition executed: `ls agents/roadmaps/road-to-skill-ecosystem-*.md` matches nothing; all three family files sit in `later/`, so a slot is free.
 - **Owner:** maintainer
 - **Blocks:** Phase 1 — Agentic CI, audited and confined
 - **What to do:**
