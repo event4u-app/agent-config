@@ -153,6 +153,35 @@ the reading a safety floor cannot survive.
   have avoided recorded in that verdict rather than dismissed — if a critical fix
   must ship before the major, the release is cut from a commit before Phase 4.
 
+## Evidence
+
+`strength: E1`, and the grade is a measurement of what this record rests on,
+never a permission it grants.
+
+- **Two council rounds, 2/2 each**, recorded in
+  `agents/evidence/council/setup-key-removal-release-class-20261018.md` (the
+  release class) and `.../-20261020.md` (the timing, and the authorisation of
+  an agent lane to execute it). Provider-diverse, both seats present.
+- **The owner's directive of 2026-10-12**, quoted verbatim in § Status, which
+  is what the rounds were scoped against rather than a paraphrase of it. Its
+  conditional half — *only if the package does not get worse* — is the clause
+  the computed default is built to satisfy.
+- **The computed decision itself**, readable rather than asserted:
+  `src/scripts/_lib/layer_form_decision.ts` returns the form,
+  `_lib/layer_form_evidence.ts` carries what it reads, and
+  `_lib/settings_removed_keys.ts` registers the removals as tombstones so a
+  consumer's absent key classifies as `carried_removals` rather than as an
+  untombstoned removal.
+- **`ADR-290`** for the Node floor this rides, and
+  `agents/roadmaps/road-to-a-setup-that-decides-itself.md` for the step-level
+  record of what was removed and in which order.
+
+**What the evidence does NOT establish**, stated because the grade invites the
+opposite reading: nobody has measured a consumer install on a machine that
+cannot re-run `install`, which is exactly the case `review_trigger` names. E1
+is an honest two rounds plus a readable implementation, not a field
+measurement.
+
 ## References
 
 - `agents/evidence/council/setup-key-removal-release-class-20261020{,.question}.md`
