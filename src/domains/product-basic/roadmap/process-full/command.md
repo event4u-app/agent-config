@@ -39,6 +39,11 @@ Run the canonical loop in
 [`contexts/execution/roadmap-process-loop`](../../contexts/execution/roadmap-process-loop.md)
 with the **scope delta below**.
 
+**Claim before the first edit, every mode:** `agent-config sessions:claim <slug>`.
+`REFUSED` stops the run for this roadmap and names who holds it — never
+`--force` to get past a live peer. A lane brief already carries its lane claim
+(§ Lanes), so a lane does not claim again.
+
 ## Scope delta
 
 - **Execution mode:** read `execution.mode` from frontmatter. Under
@@ -121,9 +126,18 @@ command already does.
    first, so a later session's queue lists it as `claimed` and takes the next
    started roadmap instead of this one or a new one; branch from the updated
    default, run this command's normal single-roadmap loop, deliver per
-   § Delivery, `sessions:claim --release`, then re-run the queue against the
-   default **as it stands at that moment** — re-fetched, never assumed. One
+   § Delivery, `sessions:claim --release <slug>`, then re-run the queue against
+   the default **as it stands at that moment** — re-fetched, never assumed. One
    roadmap = one branch = one PR, the existing invariant iterated, not a new one.
+
+   **A refused claim is a stop for that roadmap, never a `--force`.** Every
+   claim takes a per-slug lock in the git common dir, which a session in any
+   worktree sees the moment it is written and which refuses a second live
+   holder. `REFUSED` means a peer is building it: take the next queue entry.
+   The single-roadmap path claims the same way before its first edit, so a
+   plain `/roadmap:process-full <slug>` in a second session refuses instead of
+   duplicating — the #2533 / #2534 failure, two sessions, one roadmap, ten
+   conflicting files.
 
 ### Lanes — at most two, each on the canonical brief
 
@@ -133,6 +147,20 @@ run's first line and not obeyed — one run on record started fourteen, saturate
 CI and lost every lane to the spend limit together. A lane holds its roadmap
 until it reports `complete` or a halt; it never receives a second roadmap, and
 no lane is dispatched onto a `start` entry while a `continue` entry has no lane.
+
+**Each lane is claimed for itself, before it spawns:**
+`agent-config sessions:claim <slug> --lane --worktree <lane worktree>`. One
+session holds one lock per lane, so the second lane no longer overwrites the
+first lane's claim, and the queue lists every lane's roadmap as `claimed`.
+
+**A lane that dies keeps its work.** A spend limit, a rate limit or a watchdog
+stops the lane, not its worktree: the commits and the uncommitted edits stay on
+disk. Before re-dispatching, read the queue — the lane's entry carries
+`salvage: N commit(s) ahead, M uncommitted file(s)` — and send a FRESH lane
+into the SAME worktree with the same brief; a resumed agent loses its isolated
+worktree, a fresh one does not. The same holds when the orchestrator session
+itself dies: its lane locks expire with its register record and the next
+session's queue lists each roadmap as `resume` in the lane's worktree.
 
 **The orchestrator sends this brief, filling only the two parameters, and adds
 nothing that changes its finish line:**
@@ -149,6 +177,8 @@ a reason: return it as `gated: <step> — <blocker id> — <the question>` and k
 working the other steps. The orchestrator decides it and resumes you.
 Never cut finished work out of the diff to avoid a gate; a gated part waits for
 its decision inside this branch.
+If the worktree already holds commits or uncommitted edits for this roadmap, a
+previous lane was stopped: continue from them, never start over.
 Report, every time: steps finished, steps gated, classifier_refusals (a list,
 empty when none).
 ```
