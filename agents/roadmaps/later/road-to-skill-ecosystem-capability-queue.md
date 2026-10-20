@@ -290,7 +290,7 @@ Recorded so they are not re-proposed, with the reason:
 ## Blockers
 
 ### blocker: capacity-slot
-- **Status:** resolved — 2026-10-20, condition executed: `ls agents/roadmaps/road-to-skill-ecosystem-*.md` matches nothing; all three family files sit in `later/`, so both slots are free. Promoting one queue entry is the next step, not part of this gate.
+- **Status:** resolved — 2026-10-20, condition executed: `ls agents/roadmaps/road-to-skill-ecosystem-*.md` matches nothing; all three family files sit in `later/`, so both slots are free. Promoting one queue entry is the next step, not part of this gate. The roadmap stays parked under its own `Resume when` (a maintainer picks an entry); the "Both slots are currently held" line in `What to do` was true when written and is superseded by this measurement.
 - **Owner:** maintainer
 - **Blocks:** the whole queue
 - **What to do:**

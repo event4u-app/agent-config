@@ -331,7 +331,7 @@ that was never a judgement call.
 
     ### blocker: <kebab-id>
     - **Status:** open            <!-- open | resolved -->
-    - **Owner:** user             <!-- user | maintainer | external | council | implementer -->
+    - **Owner:** user             <!-- user | maintainer | owner | external | council | implementer -->
     - **Routed:** council 2026-10-20 ESCALATE — {reserved row}   <!-- human Owner only; or: pending — {why the council was unreachable} -->
     - **Blocks:** Phase N — {phase name}
     - **Question:** {optional — the one line saying what is being decided.}
