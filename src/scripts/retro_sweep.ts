@@ -16,7 +16,6 @@ import { triageSession, unitKey } from './retro_triage.js';
 import {
     BACKLOG_PAUSE_AT,
     DAILY_RETRO_BUDGET,
-    DURABLE_DISPOSITIONS,
     TRIAGE_P50_LIMIT_MS,
     claimSweepDay,
     classifyUnit,
@@ -30,7 +29,9 @@ import {
     queueLine,
     readDispositions,
     readSweepState,
+    pruneStalePointers,
     recordDisposition,
+    releaseSweepDay,
     removeSessionPointer,
     resolveMarkers,
     retroEnabled,
@@ -112,10 +113,19 @@ export function runDailySweep(root: string, input: SweepInput): SweepResult {
     const today = localDay(input.now, input.timeZone);
     const state = readSweepState(root);
     if (state.last_sweep?.day === today) return { status: 'already-swept', line: null, counts };
-    // Exactly one sweep per repository and day, even when two worktrees start
-    // sessions at the same moment.
+    // One sweep per repository and day, even when two worktrees start sessions at
+    // the same moment. A sweep that throws gives the claim back; one that crashes
+    // leaves it to expire after the lease.
     if (!claimSweepDay(root, today)) return { status: 'already-swept', line: null, counts };
+    try {
+        return sweepClaimed(root, input, today, state, counts);
+    } catch (err) {
+        releaseSweepDay(root, today);
+        throw err;
+    }
+}
 
+function sweepClaimed(root: string, input: SweepInput, today: string, state: SweepState, counts: SweepCounts): SweepResult {
     expireStaleDeferred(root, today, input.timeZone, input.now);
     if (deferredBacklog(root) > BACKLOG_PAUSE_AT) {
         writeSweepState(root, {
@@ -136,7 +146,9 @@ export function runDailySweep(root: string, input: SweepInput): SweepResult {
         if (s.day >= today) continue;
         const key = unitKey({ repo: input.repo, session: s.tag });
         const prev = disp.get(key);
-        if (prev !== undefined && DURABLE_DISPOSITIONS.includes(prev.class)) continue;
+        // Only a deferred unit competes again; a queued (`analyse`) or durably
+        // disposed one is not triaged twice.
+        if (prev !== undefined && prev.class !== 'deferred') continue;
         const window = classifyUnit({
             day: s.day,
             today,
@@ -174,6 +186,7 @@ export function runDailySweep(root: string, input: SweepInput): SweepResult {
         }
     });
 
+    pruneStalePointers(root, today, input.timeZone);
     writeSweepState(root, {
         high_water: today,
         last_sweep: { day: today, at: input.now, counts, paused: false, triage_ms: triageMs, markers },
@@ -274,7 +287,12 @@ export function discoverSessions(
         });
 }
 
-/** Ceiling on everything one session-start probe may spend, discovery and forge reads together. */
+/**
+ * The probe's deadline, shared by discovery and forge reads. It is checked
+ * between units: a `gh` call gets only the time left, and no session's facts are
+ * read once it has passed, but one synchronous fact read already started runs to
+ * its end. The pointer directory it lists stays bounded by the catch-up window.
+ */
 export const PROBE_BUDGET_MS = 3000;
 
 /**
@@ -282,7 +300,10 @@ export const PROBE_BUDGET_MS = 3000;
  * throttled per workspace by `probe_throttle` and per repository by the sweep
  * state, reads the forge for open markers inside a fixed budget — an unread
  * marker is kept, never dropped — and returns the `<retro-queue>` line or
- * `null`. Every failure is silence: a session start never pays for a retro.
+ * `null`. A failure returns `null` and is not stamped, so the next session start
+ * tries again (after the claim lease when the sweep itself crashed). The cost a
+ * session start can pay is bounded by {@link PROBE_BUDGET_MS} plus at most one
+ * fact read in flight.
  */
 export function retroDailyProbe(
     root: string,
@@ -295,7 +316,13 @@ export function retroDailyProbe(
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const slug = originSlug(root);
         const nowIso = (deps.now ?? new Date()).toISOString();
-        const sessions = discoverSessions(root, tz, { today: localDay(nowIso, tz), deadlineAt });
+        const today = localDay(nowIso, tz);
+        // Another worktree already swept today: no discovery work at all.
+        if (readSweepState(root).last_sweep?.day === today) {
+            deps.stamp?.(root);
+            return null;
+        }
+        const sessions = discoverSessions(root, tz, { today, deadlineAt });
         const r = runDailySweep(root, {
             now: nowIso,
             timeZone: tz,
@@ -303,8 +330,7 @@ export function retroDailyProbe(
             sessions,
             ...(slug !== null ? { readPr: budgetedGhPrState(root, Math.max(0, deadlineAt - Date.now())) } : {}),
         });
-        // Stamped only after a sweep that ran to an answer: a probe that threw is
-        // retried by the next session rather than lost for the day.
+        // Stamped only after the sweep returned; a throw skips the stamp.
         deps.stamp?.(root);
         return r.line;
     } catch {

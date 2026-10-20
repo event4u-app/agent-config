@@ -243,9 +243,6 @@ export interface DispositionRecord {
     at: string;
 }
 
-/** `deferred` and `analyse` are NOT durable: a later sweep may reconsider them. */
-export const DURABLE_DISPOSITIONS: readonly Disposition[] = ['skip:low-signal', 'covered', 'expired', 'analysed'];
-
 export function recordDisposition(workspaceRoot: string, unitKey: string, cls: Disposition, nowIso: string): boolean {
     const dir = commonSub(workspaceRoot, 'retro-dispositions');
     if (dir === null) return false;
@@ -507,24 +504,49 @@ export function readSweepState(workspaceRoot: string): SweepState {
 }
 
 /**
- * Claim one local day's sweep for the whole repository. The claim file is
- * created exclusively, so of two session starts racing in two worktrees exactly
- * one sweeps; the other sees `false`. Claims of earlier days are pruned.
+ * How long a claim holds without a finished sweep behind it. A sweep that
+ * crashed leaves its claim; after this lease the next session start takes it
+ * over instead of the day being lost.
  */
-export function claimSweepDay(workspaceRoot: string, day: string): boolean {
+export const SWEEP_CLAIM_LEASE_MS = 60_000;
+
+/**
+ * Claim one local day's sweep for the whole repository. The claim file is
+ * created exclusively, so of two session starts racing in two worktrees one
+ * sweeps and the other sees `false`. A claim older than the lease, for a day
+ * whose sweep state was never written, is taken over. Claims of earlier days are
+ * pruned.
+ */
+export function claimSweepDay(workspaceRoot: string, day: string, nowMs: number = Date.now()): boolean {
     const dir = commonSub(workspaceRoot, 'retro-sweep');
     if (dir === null) return false;
     fs.mkdirSync(dir, { recursive: true });
+    const file = path.join(dir, `claim-${day}`);
     try {
-        fs.writeFileSync(path.join(dir, `claim-${day}`), `${process.pid}\n`, { flag: 'wx' });
+        fs.writeFileSync(file, `${process.pid}\n`, { flag: 'wx' });
     } catch (err) {
-        if ((err as NodeJS.ErrnoException).code === 'EEXIST') return false;
-        throw err;
+        if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
+        const finished = readSweepState(workspaceRoot).last_sweep?.day === day;
+        let age = 0;
+        try {
+            age = nowMs - fs.statSync(file).mtimeMs;
+        } catch {
+            return false;
+        }
+        if (finished || age < SWEEP_CLAIM_LEASE_MS) return false;
+        fs.writeFileSync(file, `${process.pid}\n`);
     }
     for (const n of fs.readdirSync(dir)) {
         if (n.startsWith('claim-') && n !== `claim-${day}`) fs.rmSync(path.join(dir, n), { force: true });
     }
     return true;
+}
+
+/** Give a claim back, so a sweep that failed is retried by the next session start. */
+export function releaseSweepDay(workspaceRoot: string, day: string): void {
+    const dir = commonSub(workspaceRoot, 'retro-sweep');
+    if (dir === null) return;
+    fs.rmSync(path.join(dir, `claim-${day}`), { force: true });
 }
 
 /**
@@ -534,10 +556,33 @@ export function claimSweepDay(workspaceRoot: string, day: string): boolean {
  */
 export function expireStaleDeferred(workspaceRoot: string, today: string, timeZone: string, nowIso: string): number {
     let n = 0;
+    const expiredTags = new Set<string>();
     for (const d of readDispositions(workspaceRoot).values()) {
         if (d.class !== 'deferred') continue;
         if (classifyUnit({ day: localDay(d.at, timeZone), today, covered: false, retroSession: false }) !== 'expired') continue;
         recordDisposition(workspaceRoot, d.unit_key, 'expired', nowIso);
+        const tag = /#session@([^/]+)\//.exec(d.unit_key)?.[1];
+        if (tag !== undefined) expiredTags.add(tag);
+        n += 1;
+    }
+    // The disposition carries the tag, the pointer is keyed by state hash: join
+    // on the tag, so an expired session stops being read by every later sweep.
+    for (const p of listSessionPointers(workspaceRoot)) {
+        if (expiredTags.has(p.tag)) removeSessionPointer(workspaceRoot, p.eol_key);
+    }
+    return n;
+}
+
+/**
+ * Drop pointers whose session ended before the catch-up window — they can only
+ * ever be `expired`, so reading them again is pure cost. Keeps the pointer
+ * directory bounded by the window rather than by the age of the install.
+ */
+export function pruneStalePointers(workspaceRoot: string, today: string, timeZone: string): number {
+    let n = 0;
+    for (const p of listSessionPointers(workspaceRoot)) {
+        if (classifyUnit({ day: localDay(p.ended_at, timeZone), today, covered: false, retroSession: false }) !== 'expired') continue;
+        removeSessionPointer(workspaceRoot, p.eol_key);
         n += 1;
     }
     return n;

@@ -933,10 +933,12 @@ export function main(): number {
                     process.stdout.write(
                         JSON.stringify({
                             decision: 'allow',
-                            reason:
-                                block !== null
-                                    ? 'live foreign sessions on this repository'
-                                    : 'finished work is waiting for a retro',
+                            reason: [
+                                block !== null ? 'live foreign sessions on this repository' : null,
+                                retroLine !== null ? 'finished work is waiting for a retro' : null,
+                            ]
+                                .filter((s) => s !== null)
+                                .join('; '),
                             context,
                         }) + '\n',
                     );

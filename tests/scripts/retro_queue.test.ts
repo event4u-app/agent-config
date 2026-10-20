@@ -15,11 +15,13 @@ import {
     BACKLOG_PAUSE_AT,
     CATCH_UP_WINDOW_DAYS,
     DAILY_RETRO_BUDGET,
+    SWEEP_CLAIM_LEASE_MS,
     TRIAGE_P50_LIMIT_MS,
     claimSweepDay,
     classifyUnit,
     enqueue,
     enqueueMerged,
+    expireStaleDeferred,
     listMarkers,
     listQueue,
     localDay,
@@ -386,6 +388,45 @@ describe('retro_queue — path C, the daily sweep', () => {
         expect(runDailySweep(wt, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [] }).status).toBe('already-swept');
         // A new day is a new claim, and the old one is pruned.
         expect(claimSweepDay(wt, '2026-10-22')).toBe(true);
+    });
+
+    it('a sweep that throws after its claim gives the claim back, and the next start sweeps', () => {
+        const { main, wt } = repoWithWorktree();
+        const busy = session('boom', '2026-10-20', { self_repair_in_window: m(1) });
+        const failing = () => {
+            throw new Error('clock failed');
+        };
+        expect(() =>
+            runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [busy], clock: failing }),
+        ).toThrow(/clock failed/);
+        const retry = runDailySweep(wt, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [busy] });
+        expect(retry.status).toBe('ran');
+        expect(retry.counts.analyse).toBe(1);
+    });
+
+    it('a crashed sweep leaves a claim that is taken over after the lease, never before', () => {
+        const { main } = repoWithWorktree();
+        // The lease is measured against the claim file's real mtime.
+        const t0 = Date.now();
+        expect(claimSweepDay(main, '2026-10-21', t0)).toBe(true);
+        expect(claimSweepDay(main, '2026-10-21', t0 + SWEEP_CLAIM_LEASE_MS / 2)).toBe(false);
+        expect(claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1)).toBe(true);
+    });
+
+    it('an expired deferral drops the session pointer with it', () => {
+        const { main } = repoWithWorktree();
+        writeSessionPointer(main, { eol_key: 'c'.repeat(64), tag: 'slow', branch: null, workspace: main, ended_at: '2026-10-20T10:00:00Z' }, { enabled: true });
+        recordDisposition(main, 'retro:acme/widget#session@slow/p1', 'deferred', '2026-10-01T07:00:00Z');
+        expect(expireStaleDeferred(main, '2026-10-21', BERLIN, NOW)).toBe(1);
+        expect(listSessionPointers(main)).toEqual([]);
+    });
+
+    it('a queued session is not triaged again by the next sweep', () => {
+        const { main } = repoWithWorktree();
+        const s = session('q', '2026-10-20', { self_repair_in_window: m(1) });
+        expect(runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [s] }).counts.analyse).toBe(1);
+        const next = runDailySweep(main, { now: '2026-10-22T07:00:00Z', timeZone: BERLIN, repo: 'acme/widget', sessions: [s] });
+        expect(next.counts.analyse).toBe(0);
     });
 
     it('backlog-pauses-sweep-not-manual: a stale backlog expires, so the pause ends by itself', () => {
