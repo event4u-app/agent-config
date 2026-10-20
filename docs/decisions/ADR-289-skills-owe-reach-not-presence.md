@@ -21,7 +21,7 @@ evidence:
     - agents/evidence/council/completeness-skills-owe-20261018.question.md
     - agents/evidence/council/owner-blocker-routing-20261016.md
     - agents/evidence/council/skills-arrive-reach-shape-20261018.md
-    - agents/roadmaps/road-to-skills-that-arrive-when-called.md
+    - agents/roadmaps/archive/road-to-skills-that-arrive-when-called.md
     - agents/evidence/council/second-host-unlisted-reachability-20261020.md
     - agents/evidence/analysis/second-host-finder-probe-20261020.md
 review_trigger: >-
