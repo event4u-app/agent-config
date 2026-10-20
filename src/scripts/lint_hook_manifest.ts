@@ -34,14 +34,9 @@ import { parse as parseYaml } from "yaml";
 
 import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
 import { asOf } from "./_lib/as_of.js";
-import {
-  parseHostLowering,
-  REWRITE_CHANNELS,
-  REWRITE_MODES,
-  type HostLowering,
-  type RewriteChannel,
-} from "./hooks/host_lowering.js";
-import { listProbeRecords, rewriteCapabilityGaps } from "./hooks/rewrite_capability.js";
+import { parseHostLowering, type HostLowering } from "./hooks/host_lowering.js";
+import { parseRewriteAxis, REWRITE_CHANNELS, REWRITE_MODES, type RewriteChannel } from "./_lib/rewrite_axis.js";
+import { listProbeRecords, rewriteCapabilityGaps } from "./_lib/rewrite_capability.js";
 import { RE_ARM_EVENTS } from "./_lib/prefix_stable_surfaces.js";
 import { EXECUTION_VIEW_GRANTS } from "./hooks/egress_stage.js";
 
@@ -800,7 +795,12 @@ export function _check_rewrite_axis(table: HostLowering, errors: string[], today
   const probes = listProbeRecords(root);
   for (const [host, surfaces] of table) {
     for (const [surface, row] of surfaces) {
-      for (const [channel, answer] of row.rewrite) {
+      const axis = parseRewriteAxis(`host_lowering.yaml: ${host}/${surface}`, row.rewrite_raw);
+      if (!axis.ok) {
+        errors.push(`${axis.error}.`);
+        continue;
+      }
+      for (const [channel, answer] of axis.answers) {
         const where = `host_lowering ${host}/${surface}/${channel}`;
         if (!(REWRITE_CHANNELS as readonly string[]).includes(channel)) {
           errors.push(`${where}: rewrite-axis-malformed — unknown channel; the axis has ${REWRITE_CHANNELS.join(", ")}.`);

@@ -13,12 +13,18 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
+import type { EgressStageResult } from "../hooks/egress_stage.js";
+import type { SurfaceRow } from "../hooks/host_lowering.js";
+import { BODY_KEYS, type JsonObject, type JsonValue } from "../hooks/payload_stub.js";
+import { is_replay_mode } from "../hooks/state_io.js";
+import { detect } from "./egress_rules.js";
 import { resolveRewriteCapability } from "./rewrite_capability.js";
-import { surfaceRow } from "./host_lowering.js";
-import { type EgressEngine } from "./egress_engine_loader.js";
-import { WITHHELD_MARKER, type EgressStageResult, requireEngine } from "./egress_stage.js";
-import { BODY_KEYS, type JsonObject, type JsonValue } from "./payload_stub.js";
-import { is_replay_mode } from "./state_io.js";
+
+/**
+ * Equal to `WITHHELD_MARKER` in the stage, which this chunk cannot import
+ * without carrying the stage's settings reader; a test holds the two equal.
+ */
+export const STAGE_WITHHELD_MARKER = "_agent_config_egress_withheld";
 
 /** Well inside the host's own hook timeout: a host timeout shows the original. */
 export const REWRITE_DEADLINE_MS = 500;
@@ -69,14 +75,14 @@ export function sameShape(a: JsonValue, b: JsonValue): boolean {
 
 function hasWithheld(v: JsonValue): boolean {
   if (Array.isArray(v)) return v.some(hasWithheld);
-  if (isObject(v)) return WITHHELD_MARKER in v || Object.values(v).some((x) => hasWithheld(x as JsonValue));
+  if (isObject(v)) return STAGE_WITHHELD_MARKER in v || Object.values(v).some((x) => hasWithheld(x as JsonValue));
   return false;
 }
 
-function residual(v: JsonValue, engine: EgressEngine): boolean {
-  if (typeof v === "string") return engine.detect(v).length > 0;
-  if (Array.isArray(v)) return v.some((x) => residual(x, engine));
-  if (isObject(v)) return Object.values(v).some((x) => residual(x as JsonValue, engine));
+function residual(v: JsonValue): boolean {
+  if (typeof v === "string") return detect(v).length > 0;
+  if (Array.isArray(v)) return v.some((x) => residual(x));
+  if (isObject(v)) return Object.values(v).some((x) => residual(x as JsonValue));
   return false;
 }
 
@@ -88,8 +94,8 @@ function resultKey(payload: JsonObject): string | null {
 export const REWRITE_FILE = path.join("agents", "runtime", "state", "egress-rewrites.jsonl");
 const TOOL_NAME = /^[A-Za-z0-9_.:-]{1,128}$/;
 
-export function recordRewrite(workspaceRoot: string, envelope: JsonObject, r: ToolOutputRewrite): void {
-  if (is_replay_mode()) return;
+export function recordRewrite(workspaceRoot: string, envelope: JsonObject, r: ToolOutputRewrite, replay = false): void {
+  if (replay) return;
   const tool = isObject(envelope["payload"]) ? envelope["payload"]["tool_name"] : undefined;
   const line = {
     ts: new Date().toISOString(),
@@ -120,9 +126,9 @@ const EXPLAINED_DIR = path.join("agents", "runtime", "state", "egress-token-expl
 const SESSION_ID = /^[A-Za-z0-9_-]{1,128}$/;
 
 /** True the first time a session asks; a session id that is not id-shaped is always told. */
-export function firstTokenUse(workspaceRoot: string, sessionId: unknown): boolean {
+export function firstTokenUse(workspaceRoot: string, sessionId: unknown, replay = false): boolean {
   if (typeof sessionId !== "string" || !SESSION_ID.test(sessionId)) return true;
-  if (is_replay_mode()) return true;
+  if (replay) return true;
   const flag = path.join(workspaceRoot, EXPLAINED_DIR, sessionId);
   try {
     fs.mkdirSync(path.dirname(flag), { recursive: true });
@@ -137,7 +143,12 @@ export interface RewriteDeps {
   readonly packageRoot: string;
   readonly today?: string;
   readonly now?: () => number;
-  readonly engine?: () => EgressEngine;
+  /** The host's lowering row; absent means no capability on any channel. */
+  readonly row?: SurfaceRow | null;
+  /** A replay run writes no record and no per-session flag; read from the environment when absent. */
+  readonly replay?: boolean;
+  /** Milliseconds this hook process has run, against the prompt deadline; `performance.now()` when absent. */
+  readonly elapsed?: () => number;
   readonly capability?: typeof resolveRewriteCapability;
 }
 
@@ -152,7 +163,7 @@ export function planToolOutputRewrite(
   deps: RewriteDeps,
 ): ToolOutputRewrite | null {
   const r = decide(envelope, stage, deps);
-  if (r !== null) recordRewrite(String(envelope["workspace_root"] || process.cwd()), envelope, r);
+  if (r !== null) recordRewrite(String(envelope["workspace_root"] || process.cwd()), envelope, r, deps.replay ?? is_replay_mode());
   return r;
 }
 
@@ -167,7 +178,7 @@ function decide(envelope: JsonObject, stage: EgressStageResult, deps: RewriteDep
   try {
     if (refusedResult) return { outcome: "withheld", reason: "extent-unproven", replaced };
     const platform = String(envelope["platform"] ?? "");
-    const cap = (deps.capability ?? resolveRewriteCapability)(platform, surfaceRow(platform), "output", {
+    const cap = (deps.capability ?? resolveRewriteCapability)(platform, deps.row, "output", {
       today: deps.today ?? new Date().toISOString().slice(0, 10),
       root: deps.packageRoot,
     });
@@ -181,11 +192,11 @@ function decide(envelope: JsonObject, stage: EgressStageResult, deps: RewriteDep
     const before = original[key] as JsonValue;
     const after = placeholder[key] as JsonValue;
     if (hasWithheld(after) || !sameShape(before, after)) return { outcome: "withheld", reason: "shape-mismatch", replaced };
-    if (residual(after, (deps.engine ?? requireEngine)())) return { outcome: "withheld", reason: "residual-hit", replaced };
+    if (residual(after)) return { outcome: "withheld", reason: "residual-hit", replaced };
     if (now() - started > REWRITE_DEADLINE_MS) return { outcome: "withheld", reason: "deadline", replaced };
     const tool = original["tool_name"];
     const field: RewriteField = typeof tool === "string" && tool.startsWith("mcp__") ? "updatedMCPToolOutput" : "updatedToolOutput";
-    const told = !firstTokenUse(String(envelope["workspace_root"] || process.cwd()), original["session_id"]);
+    const told = !firstTokenUse(String(envelope["workspace_root"] || process.cwd()), original["session_id"], deps.replay ?? is_replay_mode());
     return told
       ? { outcome: "emitted", field, value: after, replaced }
       : { outcome: "emitted", field, value: after, replaced, explain: TOKEN_EXPLAINER };
@@ -206,7 +217,10 @@ export function rewriteWithheldNotice(r: ToolOutputRewrite): string | null {
   );
 }
 
-/** Scanning the prompt must finish well before the host's timeout, because a host timeout sends the prompt. */
+/**
+ * The whole hook process — start-up, bundle load and scan — must answer well
+ * before the host's timeout, because a host timeout sends the prompt.
+ */
 export const PROMPT_DEADLINE_MS = 1500;
 
 /**
@@ -242,14 +256,14 @@ export function planPromptGate(
     (c) => c.field === "prompt" && (c.class === "credential" || stage.mode === "strict"),
   );
   const refused = stage.refused.some((r) => r.field === "prompt");
-  const overran = (stage.elapsedMs ?? 0) > PROMPT_DEADLINE_MS;
+  const overran = (deps.elapsed ?? (() => performance.now()))() > PROMPT_DEADLINE_MS;
   if (counts.length === 0 && !refused) return null;
   const count = counts.reduce((n, c) => n + c.count, 0);
   const types = [...new Set(counts.map((c) => c.type))].sort();
   let outcome: PromptGate["outcome"] = "warn";
   try {
     const platform = String(envelope["platform"] ?? "");
-    const cap = (deps.capability ?? resolveRewriteCapability)(platform, surfaceRow(platform), "prompt", {
+    const cap = (deps.capability ?? resolveRewriteCapability)(platform, deps.row, "prompt", {
       today: deps.today ?? new Date().toISOString().slice(0, 10),
       root: deps.packageRoot,
     });
@@ -294,4 +308,84 @@ export function deliveredBodyBytes(envelope: JsonObject, e: EgressEmission | nul
   const key = resultKey(envelope["payload"]);
   if (key !== null) out.set(key, Buffer.byteLength(typeof e.value === "string" ? e.value : JSON.stringify(e.value), "utf8"));
   return out;
+}
+
+/** What the host receives for an event the stage decided; the dispatcher writes it instead of `emitFor`'s. */
+export interface EgressHostEmission {
+  readonly exit: number;
+  readonly stdout: string;
+  readonly stderr: string;
+}
+
+export interface EmitContext {
+  readonly event: string;
+  /** `allow`, `warn` or `block`: the concerns' reduced verdict, which a block lets outrank a rewrite. */
+  readonly severity: string;
+  /** The concerns' deciding reasons, joined. */
+  readonly reason: string;
+  /** The host's refusal code on this slot, `null` where it cannot refuse. */
+  readonly blockExit: number | null;
+  /** The host's own name for the event, e.g. `PostToolUse`. */
+  readonly hookEventName: string;
+}
+
+/**
+ * The emission for a decided event, or `null` to leave `emitFor` in charge.
+ * A block outranks a rewrite (ADR-285): it emits no replaced value, and the
+ * result counts as unreplaced. A refused prompt's message replaces every
+ * concern reason, because a concern's text may quote the prompt it refuses.
+ */
+export function emitEgress(e: EgressEmission | null, ctx: EmitContext): EgressHostEmission | null {
+  if (e === null) return null;
+  if (ctx.event === "post_tool_use" && (e.outcome === "emitted" || e.outcome === "withheld")) {
+    const hso: Record<string, unknown> = { hookEventName: ctx.hookEventName };
+    const out: Record<string, unknown> = { hookSpecificOutput: hso };
+    const emitted = e.outcome === "emitted" && ctx.severity !== "block";
+    if (emitted) hso[e.field] = e.value;
+    else out["systemMessage"] = rewriteWithheldNotice(e.outcome === "emitted" ? { outcome: "withheld", reason: "stage-error", replaced: e.replaced } : e);
+    const label = ctx.severity === "block" ? ctx.reason || "agent-config hook reported a blocking finding" : ctx.reason;
+    const context = [emitted && e.outcome === "emitted" ? e.explain : undefined, label].filter(Boolean).join("\n\n");
+    if (context) hso["additionalContext"] = context;
+    return { exit: 0, stdout: `${JSON.stringify(out)}\n`, stderr: "" };
+  }
+  if (ctx.event !== "user_prompt_submit") return null;
+  if (e.outcome === "refuse" && ctx.blockExit !== null) return { exit: ctx.blockExit, stdout: "", stderr: `${e.message}\n` };
+  if ((e.outcome === "warn" || e.outcome === "refuse") && ctx.severity !== "block") {
+    const text = [ctx.reason, e.message].filter(Boolean).join("\n\n");
+    return { exit: 0, stdout: `${JSON.stringify({ hookSpecificOutput: { hookEventName: ctx.hookEventName, additionalContext: text } })}\n`, stderr: "" };
+  }
+  return null;
+}
+
+/** The stage's decision for one event, as the dispatcher consumes it. */
+export interface StagePlan {
+  readonly decision: EgressEmission | null;
+  /** The rewritten body's byte length per payload key, for the payload stub; empty with no rewrite. */
+  readonly delivered: ReadonlyMap<string, number>;
+  /** The host emission once the concerns have reduced to a severity, or `null` to leave `emitFor` in charge. */
+  emit(severity: string, reasons: readonly string[]): EgressHostEmission | null;
+}
+
+/**
+ * Decides the event and binds everything the emission needs from the host's
+ * lowering row: whether the row emits natively (verified, with a native
+ * envelope), its refusal code and its own event name for the slot.
+ */
+export function planStage(envelope: JsonObject, stage: EgressStageResult, deps: RewriteDeps): StagePlan {
+  const decision = planEgressEmission(envelope, stage, deps);
+  const event = String(envelope["event"] ?? "");
+  const row = deps.row ?? null;
+  const today = deps.today ?? new Date().toISOString().slice(0, 10);
+  const native = row !== null && row.json_shape !== "none" && row.verified !== null && row.verified.expires >= today;
+  const slot = row?.slots.get(event);
+  return {
+    decision,
+    delivered: deliveredBodyBytes(envelope, decision),
+    emit(severity, reasons) {
+      if (!native || slot === undefined) return null;
+      const reason = reasons.map((r) => r.trim()).filter((r) => r.length > 0).join(" · ");
+      const hookEventName = slot.native.find((n) => n !== "" && n !== "null") ?? event;
+      return emitEgress(decision, { event, severity, reason, blockExit: slot.block_exit, hookEventName });
+    },
+  };
 }

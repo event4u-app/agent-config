@@ -35,7 +35,6 @@
  */
 
 import { blockExitFor, DEFAULT_SURFACE, loadHostLowering, surfaceRow, verifiedPlatforms } from "./host_lowering.js";
-import { rewriteWithheldNotice, type EgressEmission, type ToolOutputRewrite } from "./egress_rewrite.js";
 
 /** Internal severity, mirroring dispatch_hook's EXIT_ALLOW / BLOCK / WARN. */
 export type Severity = "allow" | "warn" | "block";
@@ -220,30 +219,6 @@ export function emissionCarriesReasons(platform: string, severity: Severity): bo
     return severity !== "allow";
 }
 
-/**
- * A `post_tool_use` emission that carries the egress stage's decision. A block
- * outranks a rewrite (ADR-285), so a block emits no replaced value and the
- * result counts as unreplaced. The user-visible `systemMessage` is how a
- * withheld replacement stops being silent.
- */
-function _emitRewrite(event: string, severity: Severity, reason: string, rewrite: ToolOutputRewrite): Emission {
-    const hookEventName = nativeEventName("claude", event);
-    const out: Record<string, unknown> = { hookSpecificOutput: { hookEventName } };
-    const hso = out["hookSpecificOutput"] as Record<string, unknown>;
-    if (rewrite.outcome === "emitted" && severity !== "block") {
-        hso[rewrite.field] = rewrite.value;
-    } else {
-        const withheld: ToolOutputRewrite =
-            rewrite.outcome === "emitted" ? { outcome: "withheld", reason: "stage-error", replaced: rewrite.replaced } : rewrite;
-        out["systemMessage"] = rewriteWithheldNotice(withheld);
-    }
-    const label = severity === "block" ? reason || "agent-config hook reported a blocking finding" : reason;
-    const explain = rewrite.outcome === "emitted" && severity !== "block" ? rewrite.explain : undefined;
-    const context = [explain, label].filter(Boolean).join("\n\n");
-    if (context) hso["additionalContext"] = context;
-    return { exit: 0, stdout: `${JSON.stringify(out)}\n`, stderr: "" };
-}
-
 /** An explicit permission verdict the dispatcher wants the host to receive. */
 export interface PermissionEmission {
     decision: PermissionDecision;
@@ -271,23 +246,11 @@ export function emitFor(
     reasons: readonly string[],
     legacyExit: number,
     permission?: PermissionEmission | null,
-    egress?: EgressEmission | null,
 ): Emission {
     if (!usesNativeEmission(platform)) {
         return { exit: legacyExit, stdout: "", stderr: "" };
     }
     const reason = _joinReasons(reasons);
-    if (egress && event === "post_tool_use" && (egress.outcome === "emitted" || egress.outcome === "withheld")) {
-        return _emitRewrite(event, severity, reason, egress);
-    }
-    if (egress?.outcome === "refuse" && event === "user_prompt_submit") {
-        // The stage's message replaces every reason: a concern's text may quote the prompt it refuses.
-        const blockExit = blockExitFor(platform, event);
-        if (blockExit !== null) return { exit: blockExit, stdout: "", stderr: `${egress.message}\n` };
-    }
-    if (egress?.outcome === "warn" && event === "user_prompt_submit" && severity !== "block") {
-        return { exit: 0, stdout: claudeAdditionalContext(event, [reason, egress.message].filter(Boolean).join("\n\n")), stderr: "" };
-    }
 
     if (severity === "allow") {
         if (permission && event === "pre_tool_use") {

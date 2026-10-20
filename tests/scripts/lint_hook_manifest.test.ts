@@ -8,8 +8,9 @@ import * as path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { _check_rewrite_axis, CONCERN_EFFECTS, lint } from "../../src/scripts/lint_hook_manifest.js";
-import { parseHostLowering, REWRITE_CHANNELS, rewriteModeFor } from "../../src/scripts/hooks/host_lowering.js";
-import { isRewriteCapability, resolveRewriteCapability } from "../../src/scripts/hooks/rewrite_capability.js";
+import { parseHostLowering } from "../../src/scripts/hooks/host_lowering.js";
+import { REWRITE_CHANNELS, rewriteModeFor } from "../../src/scripts/_lib/rewrite_axis.js";
+import { isRewriteCapability, resolveRewriteCapability } from "../../src/scripts/_lib/rewrite_capability.js";
 import { CONCERN_REGISTRY } from "../../src/scripts/hooks/concern_registry.js";
 import { _load_yaml } from "../../src/scripts/hooks/dispatch_hook.js";
 

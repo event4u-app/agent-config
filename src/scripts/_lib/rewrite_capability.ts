@@ -11,7 +11,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { REWRITE_CHANNEL_SLOT, type RewriteChannel, type SurfaceRow } from "./host_lowering.js";
+import type { SurfaceRow } from "../hooks/host_lowering.js";
+import { parseRewriteAxis, REWRITE_CHANNEL_SLOT, type RewriteChannel } from "./rewrite_axis.js";
 
 /** Where a live rewrite probe record lives, and the one name shape it may have. */
 export const REWRITE_PROBE_PATH = /^agents\/evidence\/analysis\/host-[a-z0-9-]+-probe-(\d{4}-\d{2}-\d{2})\.md$/;
@@ -116,7 +117,9 @@ export function rewriteCapabilityGaps(
   channel: RewriteChannel,
   ctx: CapabilityContext,
 ): string[] {
-  const answer = row.rewrite.get(channel);
+  const parsed = parseRewriteAxis(host, row.rewrite_raw);
+  if (!parsed.ok) return [parsed.error];
+  const answer = parsed.answers.get(channel);
   const mode = answer?.mode;
   if (answer === undefined || (mode !== "replace" && mode !== "gate")) {
     return [`the answer is ${mode === undefined ? "unstated" : `'${mode}'`}, which authorizes nothing`];
@@ -184,7 +187,8 @@ export function resolveRewriteCapability(
   if (row === null || row === undefined) return { ok: false, gaps: [`no lowering row for ${host}`] };
   const gaps = rewriteCapabilityGaps(host, row, channel, ctx);
   if (gaps.length > 0) return { ok: false, gaps };
-  const answer = row.rewrite.get(channel);
+  const parsed = parseRewriteAxis(host, row.rewrite_raw);
+  const answer = parsed.ok ? parsed.answers.get(channel) : undefined;
   const capability: RewriteCapability = Object.freeze({
     host,
     channel,

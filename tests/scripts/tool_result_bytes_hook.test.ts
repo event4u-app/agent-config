@@ -223,7 +223,7 @@ describe('delivered_bytes comes from the one writer of a result rewrite', () => 
             .trim()
             .split('\n')
             .filter((f) => !f.endsWith('.test.ts'));
-        expect(hits).toEqual(['src/scripts/hooks/egress_rewrite.ts']);
+        expect(hits).toEqual(['src/scripts/_lib/egress_emission.ts']);
     });
 
     it('a replaced result records delivered_bytes from the stage, different from raw_bytes', () => {

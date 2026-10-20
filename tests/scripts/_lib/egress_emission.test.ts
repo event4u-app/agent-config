@@ -11,7 +11,9 @@ import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  emitEgress,
   planPromptGate,
+  STAGE_WITHHELD_MARKER,
   promptResidueLine,
   PROMPT_DEADLINE_MS,
   planToolOutputRewrite,
@@ -21,11 +23,11 @@ import {
   sameShape,
   TOKEN_EXPLAINER,
   type RewriteDeps,
-} from "../../../src/scripts/hooks/egress_rewrite.js";
-import { EGRESS_STAGE_KILL_SWITCH, runEgressStage, type EgressMode } from "../../../src/scripts/hooks/egress_stage.js";
-import { emitFor } from "../../../src/scripts/hooks/host_semantics.js";
+} from "../../../src/scripts/_lib/egress_emission.js";
+import { EGRESS_STAGE_KILL_SWITCH, runEgressStage, WITHHELD_MARKER, type EgressMode } from "../../../src/scripts/hooks/egress_stage.js";
+import { surfaceRow } from "../../../src/scripts/hooks/host_lowering.js";
 import type { JsonObject, JsonValue } from "../../../src/scripts/hooks/payload_stub.js";
-import type { resolveRewriteCapability } from "../../../src/scripts/hooks/rewrite_capability.js";
+import type { resolveRewriteCapability } from "../../../src/scripts/_lib/rewrite_capability.js";
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), "..", "..", "..", "..");
 const ALNUM = "Ab3Cd5Ef7Gh9Jk2Lm4Np6Qr8St1Uv3Wx5Yz7";
@@ -45,7 +47,7 @@ afterEach(() => {
 });
 
 /** The tool_response shapes the 0.1 probe and the 1.3 readings recorded, each carrying the planted value. */
-const SHAPES: Record<string, () => JsonValue> = {
+const SHAPES = {
   Bash: () => ({ stdout: `export TOKEN=${PLANTED}\n`, stderr: "", interrupted: false, isImage: false, noOutputExpected: false }),
   Read: () => ({
     type: "text",
@@ -53,7 +55,7 @@ const SHAPES: Record<string, () => JsonValue> = {
   }),
   Grep: () => ({ mode: "content", numFiles: 1, filenames: [], content: `cfg.txt:1:token ${PLANTED}`, numLines: 1 }),
   mcp__probe__echo: () => [{ type: "text", text: `value ${PLANTED}` }],
-};
+} satisfies Record<string, () => JsonValue>;
 
 function postToolUse(tool: string, response: JsonValue): JsonObject {
   return {
@@ -68,8 +70,16 @@ function postToolUse(tool: string, response: JsonValue): JsonObject {
 
 const replaceCap = (() => ({ ok: true, capability: { mode: "replace" } })) as unknown as typeof resolveRewriteCapability;
 const noCap = (() => ({ ok: false, gaps: ["none"] })) as unknown as typeof resolveRewriteCapability;
-const deps = (over: Partial<RewriteDeps> = {}): RewriteDeps => ({ packageRoot: REPO_ROOT, capability: replaceCap, ...over });
+const deps = (over: Partial<RewriteDeps> = {}): RewriteDeps => ({ packageRoot: REPO_ROOT, row: surfaceRow("claude"), capability: replaceCap, ...over });
 const stage = (env: JsonObject, mode: EgressMode) => runEgressStage(env, () => mode);
+const NATIVE: Record<string, string> = { post_tool_use: "PostToolUse", user_prompt_submit: "UserPromptSubmit" };
+/** The host emission as the dispatcher would write it on Claude Code. */
+function emitFor(_platform: string, event: string, severity: string, reasons: string[], _rc: number, _perm: null, e: Parameters<typeof emitEgress>[0] | undefined) {
+  const r = emitEgress(e ?? null, { event, severity, reason: reasons.join(" · "), blockExit: event === "user_prompt_submit" ? 2 : null, hookEventName: NATIVE[event] ?? event });
+  return r ?? { exit: 0, stdout: "{}", stderr: "" };
+}
+/** The real resolver against the committed table, the way the stage glue calls it. */
+const real = (platform = "claude"): RewriteDeps => ({ packageRoot: REPO_ROOT, row: surfaceRow(platform) });
 
 function keysAndTypes(v: JsonValue): JsonValue {
   if (Array.isArray(v)) return v.map(keysAndTypes);
@@ -106,9 +116,9 @@ describe("3.1 — updatedToolOutput carries the original object with string leav
 
   it("the committed lowering table grants output on claude from its probe record, and nothing on a host with none", () => {
     const env = postToolUse("Bash", SHAPES.Bash());
-    expect(planToolOutputRewrite(env, stage(env, "protect"), { packageRoot: REPO_ROOT })?.outcome).toBe("emitted");
+    expect(planToolOutputRewrite(env, stage(env, "protect"), real())?.outcome).toBe("emitted");
     const cursor = { ...env, platform: "cursor" };
-    expect(planToolOutputRewrite(cursor, stage(cursor, "protect"), { packageRoot: REPO_ROOT })).toMatchObject({
+    expect(planToolOutputRewrite(cursor, stage(cursor, "protect"), real("cursor"))).toMatchObject({
       outcome: "withheld",
       reason: "no-capability",
     });
@@ -194,7 +204,7 @@ describe("5.1 and 5.2 — a prompt carrying a credential is refused with a redac
 
   it("Claude Code refuses through the committed prompt gate and prints the redacted copy, never the value", () => {
     const env = prompt();
-    const g = planPromptGate(env, stage(env, "protect"), { packageRoot: REPO_ROOT });
+    const g = planPromptGate(env, stage(env, "protect"), real());
     expect(g?.outcome).toBe("refuse");
     expect(g?.message).not.toContain(TYPED);
     expect(g?.message).toMatch(/Resend this redacted copy instead:\n\ncall the API with __APIKEY_1_[0-9a-f]{6}__ please/);
@@ -205,7 +215,7 @@ describe("5.1 and 5.2 — a prompt carrying a credential is refused with a redac
 
   it("5.2: the refusal states the residue verbatim, types and counts only", () => {
     const env = prompt();
-    const g = planPromptGate(env, stage(env, "protect"), { packageRoot: REPO_ROOT });
+    const g = planPromptGate(env, stage(env, "protect"), real());
     expect(g?.message.endsWith(
       "It held 1 listed value(s) of type APIKEY. The text was typed into the host and may still sit in its local transcript and prompt history; rotate any credential it carried.",
     )).toBe(true);
@@ -216,23 +226,22 @@ describe("5.1 and 5.2 — a prompt carrying a credential is refused with a redac
 
   it("a host that cannot refuse gets a warn, and its prompt channel has no gate capability", () => {
     const env = prompt("cursor");
-    const g = planPromptGate(env, stage(env, "protect"), { packageRoot: REPO_ROOT, capability: noCap });
+    const g = planPromptGate(env, stage(env, "protect"), { ...real("cursor"), capability: noCap });
     expect(g?.outcome).toBe("warn");
     expect(g?.message).not.toContain(TYPED);
   });
 
   it("observe and off refuse nothing; a clean prompt is not gated", () => {
     const env = prompt();
-    expect(planPromptGate(env, stage(env, "observe"), { packageRoot: REPO_ROOT })).toBeNull();
-    expect(planPromptGate(env, stage(env, "off"), { packageRoot: REPO_ROOT })).toBeNull();
+    expect(planPromptGate(env, stage(env, "observe"), real())).toBeNull();
+    expect(planPromptGate(env, stage(env, "off"), real())).toBeNull();
     const clean = { ...env, payload: { session_id: "s", prompt: "hello" } };
-    expect(planPromptGate(clean, stage(clean, "protect"), { packageRoot: REPO_ROOT })).toBeNull();
+    expect(planPromptGate(clean, stage(clean, "protect"), real())).toBeNull();
   });
 
   it("a scan that overran its deadline refuses with no copy, because a host timeout would send the prompt", () => {
     const env = prompt();
-    const s = { ...stage(env, "protect"), elapsedMs: PROMPT_DEADLINE_MS + 1 };
-    const g = planPromptGate(env, s, { packageRoot: REPO_ROOT });
+    const g = planPromptGate(env, stage(env, "protect"), { ...real(), elapsed: () => PROMPT_DEADLINE_MS + 1 });
     expect(g?.outcome).toBe("refuse");
     expect(g?.message).toMatch(/no redacted copy is offered/);
     expect(g?.message).not.toContain(TYPED);
@@ -253,4 +262,8 @@ describe("3.4 — the model is told once per session what a token is", () => {
     const third = planToolOutputRewrite(other, stage(other, "protect"), deps());
     expect(third?.outcome === "emitted" && third.explain).toBe(TOKEN_EXPLAINER);
   });
+});
+
+it("the chunk's withheld marker is the stage's", () => {
+  expect(STAGE_WITHHELD_MARKER).toBe(WITHHELD_MARKER);
 });

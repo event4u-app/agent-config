@@ -300,7 +300,7 @@ describe("end to end through the dispatcher", () => {
     fs.writeFileSync(target, lines.join("\n"), "utf8");
   }
 
-  function dispatch(ws: string, mode: EgressMode, event: string, native: string, payload: JsonObject): string {
+  function dispatch(ws: string, mode: EgressMode, event: string, native: string, payload: JsonObject, status = 0): string {
     fs.writeFileSync(
       path.join(ws, ".agent-settings.yml"),
       `egress:\n  placeholders:\n    mode: ${mode}\nchat_history:\n  enabled: true\n  frequency: per_turn\n`,
@@ -315,7 +315,7 @@ describe("end to end through the dispatcher", () => {
       [TS_SCRIPT, "--platform", "claude", "--event", event, "--native-event", native, "--manifest", manifest],
       { cwd: ws, input: JSON.stringify(payload), encoding: "utf8", env },
     );
-    expect(r.status).toBe(0);
+    expect(r.status).toBe(status);
     return r.stdout;
   }
 
@@ -328,10 +328,12 @@ describe("end to end through the dispatcher", () => {
   it("protect: the recorder, chat history and a script borrowing a guard's name see only a token", () => {
     const ws = path.join(tmp, "ws");
     fs.mkdirSync(ws, { recursive: true });
+    // The prompt is refused (placeholders 5.1: exit 2) and the concerns still run
+    // on the placeholder view, so no local store keeps the raw value either way.
     dispatch(ws, "protect", "user_prompt_submit", "UserPromptSubmit", {
       session_id: "egress-e2e",
       prompt: `deploy with ${PLANTED} please`,
-    });
+    }, 2);
     // The manifest binds `block-no-verify` to the reporting fixture, not to the
     // guard's own script, so the grant does not apply. The real pair is covered
     // by the planner test above; no shipped guard reports what it was served.

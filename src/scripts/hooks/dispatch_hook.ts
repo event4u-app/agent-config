@@ -57,7 +57,6 @@ import { _concern_permission_verdict, _payload_tool_name, _permission_for } from
 export { _concern_permission_verdict, _payload_tool_input, _payload_tool_name, _permission_for, _working_tree_root } from "./permission_gate.js";
 import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
 import { egressViewFor, runEgressStage } from "./egress_stage.js";
-import { deliveredBodyBytes, planEgressEmission } from "./egress_rewrite.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js';
 export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
@@ -1280,8 +1279,7 @@ export function main(argv?: string[]): number {
   const tool_name = _payload_tool_name(envelope);
   // The egress stage (ADR-285) builds the placeholder view and decides any rewrite
   // before a concern runs; `egressViewFor` decides which concern gets which view.
-  const egress = runEgressStage(envelope);
-  const egress_emission = planEgressEmission(envelope, egress, { packageRoot: REPO_ROOT });
+  const egress = runEgressStage(envelope, undefined, undefined, REPO_ROOT);
   // Payload opt-in (step 2.1). One planner owns the whole decision — which
   // classes are present, which any concern loses, the single measurement pass,
   // and the at-most-four envelope shapes — so the loop below reads a shape
@@ -1294,7 +1292,7 @@ export function main(argv?: string[]): number {
     envelope,
     keep_by_concern.map(([, keep]) => keep),
     egress.placeholder,
-    deliveredBodyBytes(envelope, egress_emission),
+    egress.plan?.delivered,
   );
   for (const [concern, keep_classes] of keep_by_concern) {
     if (!_concern_matches_tool(concern, tool_name)) {
@@ -1420,14 +1418,13 @@ export function main(argv?: string[]): number {
     concern_messages,
     final_rc,
   );
-  const emission = emitFor(
+  const emission = egress.plan?.emit(_severity_for(final_rc), decidingReasons) ?? emitFor(
     args.platform,
     args.event,
     _severity_for(final_rc) as Severity,
     decidingReasons,
     final_rc,
     _permission_for(args.event, envelope, final_rc, permission_verdicts),
-    egress_emission,
   );
   if (emission.stdout) process.stdout.write(emission.stdout);
   if (emission.stderr) process.stderr.write(emission.stderr);

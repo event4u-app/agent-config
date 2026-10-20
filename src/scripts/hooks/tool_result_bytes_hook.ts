@@ -105,7 +105,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
-import { stubbedBytes, stubbedDeliveredBytes } from './payload_stub.js';
+import { isPayloadStub, stubbedBytes } from './payload_stub.js';
 import { EXIT_ALLOW } from './exit_codes.js';
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
@@ -176,11 +176,8 @@ export function _resultBytes(payload: JsonObject): number | null {
 
 /** The rewritten result's length the dispatcher put in the stub, or `undefined` when nothing was rewritten. */
 export function _deliveredBytes(payload: JsonObject): number | undefined {
-    for (const key of RESULT_KEYS) {
-        const out = stubbedDeliveredBytes(payload[key]);
-        if (out !== undefined) return out;
-    }
-    return undefined;
+    const v = payload['tool_response'];
+    return isPayloadStub(v) ? v.delivered_bytes : undefined;
 }
 
 /** The tool's name, read from the same positions the sibling hook reads. */
