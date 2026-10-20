@@ -117,6 +117,60 @@ describe('lint_consolidation_lineage — normalization', () => {
     });
 });
 
+// road-to-gates-that-read-what-was-written 1.1 / D6: the helper strips one
+// matching pair of wrapping quotes — around the whole input and around the
+// selected token — so no caller has to. An embedded apostrophe is content.
+describe('normalizeParent strips one wrapping quote pair (D6)', () => {
+    it('a quoted token followed by prose resolves to the bare slug', () => {
+        expect(normalizeParent('"road-to-x" — note')).toBe('road-to-x');
+        expect(normalizeParent("'road-to-y.md'")).toBe('road-to-y');
+        expect(normalizeParent('"road-to-x — note"')).toBe('road-to-x');
+        expect(normalizeParent('"road-to-x" — "note"')).toBe('road-to-x');
+    });
+    it('an embedded apostrophe survives, quoted or not', () => {
+        expect(normalizeParent("road-to-it's-x")).toBe("road-to-it's-x");
+        expect(normalizeParent("'road-to-it's-x'")).toBe("road-to-it's-x");
+    });
+    it('an unmatched quote is not a wrapping pair', () => {
+        expect(normalizeParent('"road-to-x\'')).toBe('"road-to-x\'');
+    });
+
+    // One regression case per call site of normalizeParent.
+    it('inline `[…]` list (frontmatterList inline branch)', () => {
+        expect(parseDeclaration('---\nconsolidates: ["road-to-a", \'road-to-b\']\n---\n# m\n').parents).toEqual([
+            'road-to-a',
+            'road-to-b',
+        ]);
+    });
+    it('block list with an apostrophe inside the slug (frontmatterList block branch)', () => {
+        expect(parseDeclaration("---\nconsolidates:\n  - \"road-to-it's-a\"  # c\n---\n# m\n").parents).toEqual([
+            "road-to-it's-a",
+        ]);
+    });
+    it('`relates:` slug and relation, both quoted (downstreamRelates)', () => {
+        expect(downstreamOf('---\nrelates:\n  - slug: "road-to-a"\n    relation: \'extends\'\n---\n')).toEqual([
+            'road-to-a',
+        ]);
+    });
+    it('prose bullet list with quoted entries (proseList)', () => {
+        expect(
+            parseDeclaration('# m\n\n**Inputs consolidated:**\n- "road-to-a"\n- \'road-to-b.md\'\n').parents,
+        ).toEqual(['road-to-a', 'road-to-b']);
+    });
+    it('Master-Konsolidierung table (konsolidierungTable)', () => {
+        expect(
+            parseDeclaration('# m\n\nMaster-Konsolidierung\n\n| a | b |\n|---|---|\n| `road-to-a` | `road-to-b.md` |\n')
+                .parents,
+        ).toEqual(['road-to-a', 'road-to-b']);
+    });
+    it('prose supersession (proseSupersession)', () => {
+        expect(parseDeclaration('# m\n\nThis supersedes `road-to-a` and `road-to-b`.\n').parents).toEqual([
+            'road-to-a',
+            'road-to-b',
+        ]);
+    });
+});
+
 describe('lint_consolidation_lineage — the census reproduces from committed fixtures', () => {
     // AC-1. Counts are the measured row from
     // agents/evidence/analysis/consolidation-lineage-census-2026-08-26.md.
