@@ -1,3 +1,7 @@
+<!-- evidence-type: analysis -->
+
+<!-- The prompt given to the council on 2026-10-20, committed verbatim below this header. -->
+
 # Reopen D8 of road-to-tool-results-that-leave-a-handle: build the result store now, or keep waiting?
 
 ## The recorded decision (D8, council 2026-10-14, 2/2)
