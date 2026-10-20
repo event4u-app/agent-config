@@ -298,7 +298,7 @@ with that file.
   `1 unexpected` to `2 unexpected` — it used to expect a maintainer-only rule
   to ship when the settings block was absent, which is exactly what 4.6
   abolished. "A rule is not a setting", asserted rather than stated.
-  verify: `npx vitest run tests/scripts/_cli/cmd_doctor_rule_scope_drift.test.ts`
+  verify: `npx vitest run tests/scripts/_cli/cmd_doctor_rule_scope_drift.test.ts` -> 0
   — 4 passed, red before the fix on the drift case and red before the
   strengthening on the legacy-all case.
 - [ ] <!-- blocked-by: surface-snapshot-waits-on-the-release-cut --> **4.6c The settings-surface snapshot waits on the cut.**
