@@ -1176,7 +1176,7 @@ retro:
   # On by default by the owner's directive of 2026-10-12. A merged pull request
   # and the first session of a new local day enqueue finished work; a
   # deterministic triage picks what is worth one learning, and nothing that
-  # changes behaviour is applied without a person. The one network read is the
+  # changes behavior is applied without a person. The one network read is the
   # daily probe asking GitHub, through your own gh login, whether a pushed PR
   # merged (repository and PR number only, three-second budget).
   #   true  = (default) the automatic paths run.

@@ -80,7 +80,7 @@ ADR-041 § 5 requires an ADR for a new one.
 
 The key exists before any automatic path reads it, so the first path that lands
 lands switchable. Existing installs carry no value and resolve to the default,
-which is the behaviour the owner asked for. The verb lands in the same change as
+which is the behavior the owner asked for. The verb lands in the same change as
 the key rather than in a PR of its own: the roadmap bundles both into one record
 because neither is useful without the other.
 
