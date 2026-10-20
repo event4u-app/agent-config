@@ -106,6 +106,13 @@ deferral is the only outcome the rule refuses.
 
 - **Status:** open
 - **Owner:** maintainer
+- **Routed:** pending — no council could be reached. Eight rounds on 2026-10-20
+  returned `0/2 present` (DEGRADED, which is not a verdict); the one that
+  concluded was spent on an unrelated question. The routing is owed and
+  unperformed, recorded as such rather than asserted: this is a spend
+  authorisation above a delegated threshold, which the owner-reserved table
+  routes to the owner on its face, but the gate asks for the round and the
+  round has not happened.
 - **Blocks:** promotion only. §§ 1-3 are complete and need nothing external —
   the gap is read out of this tree and the proposal and the rejected alternative
   are written. What is blocked is the § 4 bench, and therefore any decision to

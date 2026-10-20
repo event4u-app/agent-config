@@ -80,6 +80,32 @@ export async function fetch_latest_from_npm(
         fetch_impl?: typeof fetch;
     } = {},
 ): Promise<string | null> {
+    return (await fetch_latest_document(options))?.version ?? null;
+}
+
+/** The version, and the impact block worth caching beside it. */
+export interface LatestDocument {
+    readonly version: string;
+    /** The registry's `agentConfig.impact` block, UNVALIDATED — see {@link _cacheable_impact}. */
+    readonly impact: unknown;
+}
+
+/**
+ * The registry's `latest` document, reduced to what a cached decision needs.
+ *
+ * One fetch, two consumers: the banner wants the version, and the
+ * `update-notice` session concern wants to know whether a security fix lies in
+ * range — a question the version alone cannot answer and that a hook has no
+ * business opening a socket for. Adding a second network call for the second
+ * reader would make a once-a-day probe a twice-a-day one.
+ */
+export async function fetch_latest_document(
+    options: {
+        timeout?: number;
+        url?: string;
+        fetch_impl?: typeof fetch;
+    } = {},
+): Promise<LatestDocument | null> {
     const timeout = options.timeout ?? FETCH_TIMEOUT_S;
     const url = options.url ?? NPM_REGISTRY_URL;
     const fetch_impl = options.fetch_impl ?? fetch;
@@ -93,15 +119,42 @@ export async function fetch_latest_from_npm(
         });
         const payload: unknown = await resp.json();
         if (payload !== null && typeof payload === 'object' && !Array.isArray(payload)) {
-            const version = (payload as Record<string, unknown>).version;
+            const doc = payload as Record<string, unknown>;
+            const version = doc['version'];
             if (typeof version === 'string' && version.trim()) {
-                return version.trim();
+                const cfg = doc['agentConfig'];
+                const impact = cfg !== null && typeof cfg === 'object' && !Array.isArray(cfg) ? (cfg as Record<string, unknown>)['impact'] : null;
+                return { version: version.trim(), impact: impact ?? null };
             }
         }
     } catch {
         return null;
     }
     return null;
+}
+
+/**
+ * The impact block reduced to what may be written into the state file.
+ *
+ * The cache is the SANITISING BOUNDARY, deliberately: everything downstream
+ * reads this file rather than the registry, so a hostile description, version
+ * label or nested object is dropped here once instead of being re-checked by
+ * every reader. Keys must parse as versions and values must carry an impact
+ * from the published enum; a `security` flag survives only as a boolean.
+ * Anything else is simply absent, which every reader already handles as an
+ * unknown — and an unknown never resolves to `auto`.
+ */
+export function _cacheable_impact(impact: unknown): Record<string, { impact: string; security: boolean }> | null {
+    if (impact === null || typeof impact !== 'object' || Array.isArray(impact)) return null;
+    const out: Record<string, { impact: string; security: boolean }> = {};
+    for (const [version, entry] of Object.entries(impact as Record<string, unknown>)) {
+        if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version)) continue;
+        if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) continue;
+        const value = (entry as Record<string, unknown>)['impact'];
+        if (!['none', 'automatic', 'notice', 'action'].includes(String(value))) continue;
+        out[version] = { impact: String(value), security: (entry as Record<string, unknown>)['security'] === true };
+    }
+    return Object.keys(out).length > 0 ? out : null;
 }
 
 function _read_state(state_path: string): Record<string, unknown> {
@@ -335,8 +388,17 @@ export async function check_for_update(
         return null;
     }
 
-    const fetcher = options.fetcher ?? (() => fetch_latest_from_npm());
-    const latest = await fetcher();
+    // An injected fetcher yields a version only, so no impact is cached on that
+    // path — a caller that pins the network pins what reaches the state file too.
+    let impact: unknown = null;
+    let latest: string | null;
+    if (options.fetcher === undefined) {
+        const doc = await fetch_latest_document();
+        latest = doc?.version ?? null;
+        impact = doc?.impact ?? null;
+    } else {
+        latest = await options.fetcher();
+    }
     const fallback_seen = Object.prototype.hasOwnProperty.call(state, 'last_seen_version')
         ? state.last_seen_version
         : '';
@@ -346,6 +408,9 @@ export async function check_for_update(
         last_seen_version: latest ? latest : fallback_seen,
         installed_version,
     };
+    const cacheable = _cacheable_impact(impact);
+    if (cacheable !== null) payload['last_seen_impact'] = cacheable;
+    else if (state['last_seen_impact'] !== undefined && !latest) payload['last_seen_impact'] = state['last_seen_impact'];
     try {
         _write_state(write_path, payload);
     } catch (err) {

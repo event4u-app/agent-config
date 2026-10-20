@@ -52,7 +52,9 @@
  *    millisecond. Nothing here provides exclusion, and no later feature may be
  *    built on it as if it did. `sessions:claim` refusing to WRITE a claim a peer
  *    holds is a consistency check on its own write, not exclusion: it protects
- *    the record from being false, never the peer from being duplicated.
+ *    the record from being false, never the peer from being duplicated. The
+ *    exclusion lives beside the register, not in it: `_lib/roadmap_slug_lock.ts`
+ *    creates one file per slug with `wx`, which `sessions:claim` takes first.
  * 3. **The claim is per SESSION, and the bridge file has to be too.** The
  *    paragraph above rules `agents/runtime/state/` out for the register and the
  *    same argument applies to the claim that feeds it: one shared file per
@@ -73,6 +75,7 @@ import path from 'node:path';
 
 import { write_atomic } from './fs_atomic.js';
 import { git_common_dir } from './git_common_dir.js';
+import { type EnvMap, event4u_root } from './user_global_paths.js';
 
 /** Directory name under the common git dir. Never tracked; git ignores unknown
  *  directories inside `.git` by construction. */
@@ -278,6 +281,26 @@ export function register_dir(workspace_root: string): string | null {
     return common === null ? null : path.join(common, REGISTER_DIRNAME);
 }
 
+/**
+ * The MACHINE-wide register directory, under the user-global event4u root.
+ *
+ * `register_dir` above is anchored to a git common dir, so it answers "is a
+ * session live on this repository" and cannot answer anything else. The
+ * unattended upgrade needs the other question: swapping the global binary
+ * breaks the hooks of **every** running session, not only the ones in the tree
+ * the swap happens to run from, so the register that gates it has to be
+ * machine-scoped.
+ *
+ * Unlike `register_dir` this never returns `null`: the global root always
+ * resolves (an env override, else `~/.event4u/agent-config`), and a missing
+ * directory is a legitimate "nothing registered" that `any_live_session`
+ * reports as false rather than as an error. Does **not** create the directory —
+ * writers do.
+ */
+export function global_register_dir(env?: EnvMap | null): string {
+    return path.join(event4u_root(env), 'runtime', 'sessions');
+}
+
 /** ISO-8601 UTC at seconds precision, matching the chat-history stamp format. */
 export function iso_now(now: Date = new Date()): string {
     return now.toISOString().replace(/\.\d{3}Z$/, '+00:00');
@@ -433,6 +456,33 @@ export function foreign_live_records(
 ): SessionRecord[] {
     const own = safe_stem(session_id);
     return read_live_records(dir, options).filter((r) => safe_stem(r.session_id) !== own);
+}
+
+/**
+ * Is any session live in `dir`, excluding `session_id` when one is given?
+ *
+ * The question `upgrade --unattended` asks before it swaps the global install.
+ * Deliberately a boolean: the caller refuses or proceeds, and the identity of
+ * the peer does not change that answer — reporting it would invite a reader to
+ * decide which peers are safe to break, which is the judgement this gate
+ * exists to remove.
+ *
+ * Fails CLOSED on an unreadable record: `read_live_records` drops a record it
+ * cannot parse, so a corrupt file reads as no session rather than as a live
+ * one. That is the safe direction here only because the swap is also gated on
+ * the lock and the age checks; on its own it would be the wrong one, and the
+ * caller states which gate it is relying on.
+ */
+export function any_live_session(
+    dir: string,
+    session_id?: string | null,
+    now: Date = new Date(),
+): boolean {
+    const records =
+        session_id === undefined || session_id === null
+            ? read_live_records(dir, { now })
+            : foreign_live_records(dir, session_id, { now });
+    return records.length > 0;
 }
 
 // ---------------------------------------------------------------------------

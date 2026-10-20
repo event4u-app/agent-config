@@ -17,6 +17,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import type { InstallOrigin } from '../_lib/classify_update.js';
+import { classify_install_origin } from '../_lib/update_check.js';
+
 function isFile(p: string): boolean {
     try {
         return fs.statSync(p).isFile();
@@ -61,4 +64,25 @@ export function _is_global_only_consumer(project_root: string): boolean {
         isFile(path.join(project_root, INSTALL_MODE_MARKER_RELATIVE)) ||
         isDir(path.join(project_root, 'agents', 'overrides'))
     );
+}
+
+/**
+ * The install origin of a package root, as the unattended gates and the
+ * `update-notice` session concern read it.
+ *
+ * Lives beside {@link isSourceCheckoutPackage} rather than in
+ * `upgrade_unattended.ts`, where it started, because two surfaces now ask the
+ * question and the second one is a hook: importing the unattended runner to
+ * reach one predicate would pull the registry fetch, the provenance verifier
+ * and the install lock into the bundle every hook event loads.
+ *
+ * Exported rather than inlined because `running_origin` resolves its own root
+ * from `import.meta.url` and so cannot be pointed at a fixture: in this
+ * repository the answer is legitimately `source-checkout`, and a test calling
+ * it here would pass for the wrong reason. The distinguishing input is a tree
+ * that carries the shipped `dist/agent-src/` and no `.git`.
+ */
+export function originForPackageRoot(root: string): InstallOrigin {
+    if (isSourceCheckoutPackage(root)) return 'source-checkout';
+    return classify_install_origin({ package_root: root, project_pin: null, latest: null, is_global_consumer: false });
 }

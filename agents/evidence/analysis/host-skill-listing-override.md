@@ -159,7 +159,7 @@ did. The closing condition "a host build whose login survives the redirect"
 was executed against the current build and returned **false**. The only
 route left to column five is still the owner-reserved write-then-restore,
 tracked as the open blocker `listing-override-write-is-owner-owned` in
-`agents/roadmaps/road-to-skills-that-arrive-when-called.md`.
+`agents/roadmaps/archive/road-to-skills-that-arrive-when-called.md`.
 
 ## The fifth column, observed 2026-10-14 — a project value beats a user value
 

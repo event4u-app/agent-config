@@ -746,6 +746,7 @@ before 8.3 gates anything.*
 
 - **Status:** open — re-checked 2026-10-18, still unmet: `agent-config doctor --online --json` reports `authority_surface_external_approval: unsatisfied — no covering ruleset requires an approving review`, and ruleset `17749383` still reads `required_approving_review_count: 0`, `require_code_owner_review: false`, `required_reviewers: []`. Owner-reserved by D11/D16/D20 (the council has already ruled; this needs a forge setting and a qualified second principal only the owner can supply). Opened 2026-10-10 by the step 1.1 council verdict (D11). The hold that verdict selected is a forge-side approval outside the candidate branch; the agent may prepare everything around it and may not turn it on
 - **Owner:** owner — D3 reserves bootstrap approval to the owner, and both seats required the protection configuration itself to stay subject to that same higher approval. A protection an agent can add is one an agent can remove, which is not a boundary
+- **Routed:** council 2026-10-10 ESCALATE — creates an external, undelegated commitment: the hold is a forge-side approval by a second principal, which only the owner can supply. Recorded here 2026-10-20 from the verdict this blocker already cites (D11, with D16 and D20 narrowing it); the routing is not new, only the field is
 - **Class:** 3
 - **Ownership:** destructive-owned
 - **Blocks:** step 1.2, and through it every Phase 2 and Phase 3 step — 2.3 is the first commit the hold must precede

@@ -12,6 +12,9 @@
  * generator output through the real gate over a span shaped like a normal
  * release of this repo, and asserts zero contradictions.
  */
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -21,6 +24,7 @@ import {
     HEAD_NONE,
     type SpanCommit,
     derive_category_hits,
+    pendingBreakingLine,
     publication_blockers,
     render_derived_head_values,
     stale_draft_labels,
@@ -194,5 +198,50 @@ describe('stale_draft_labels', () => {
             }).join('\n'),
         )!;
         expect(stale_draft_labels(curated)).toEqual([]);
+    });
+});
+
+describe('pending breaking-changes rows reach the curated head', () => {
+    const index = [
+        '# Breaking',
+        '',
+        '## Pending — landed on `main`, not yet in a released major',
+        '',
+        '| Landed | What changes | Migration |',
+        '|---|---|---|',
+        '| 2026-10-18 | **Guard A runs.** It refuses X. | Nothing. |',
+        '| 2026-10-17 | **Guard B runs.** | Run Y. |',
+        '',
+        '## Breaking changes by major',
+        '',
+        '| Version | Date | What broke | Migration | Consumer impact |',
+        '|---|---|---|---|---|',
+        '| 16.0.0 | 2026-10-01 | **Released row.** | z | z |',
+    ].join('\n');
+
+    it('carries every Pending What-changes cell and no released row', () => {
+        const line = pendingBreakingLine(index);
+        expect(line).toContain('**Guard A runs.** It refuses X.');
+        expect(line).toContain('**Guard B runs.**');
+        expect(line).not.toContain('Released row');
+        expect(line).not.toContain('What changes');
+    });
+
+    it('is null when the Pending table is empty or absent', () => {
+        expect(pendingBreakingLine(index.replace(/^\| 2026-10-1[78].*$/gmu, ''))).toBeNull();
+        expect(pendingBreakingLine('# Breaking\n')).toBeNull();
+    });
+
+    it('names the three fail_closed guards in the head rendered from the real index', () => {
+        const real = fs.readFileSync(path.join(import.meta.dirname, '..', '..', 'BREAKING_CHANGES.md'), 'utf-8');
+        const line = pendingBreakingLine(real);
+        // Only meaningful while the #2455 row is still pending; once a release
+        // moves it into the by-major table that release has already named it.
+        if (line === null || !line.includes('fail_closed')) return;
+        const head = render_release_head({ 'Default changes + migration': line }).join('\n');
+        for (const guard of ['block-no-verify', 'block-kernel-rule-writes', 'block-plumbing-writes']) {
+            expect(head).toContain(guard);
+        }
+        expect(publication_blockers(head, '17.0.0')).toEqual([]);
     });
 });

@@ -65,9 +65,18 @@ function _is_replay_mode(): boolean {
 }
 
 const _WS_RE = /\s+/g;
-export const SESSION_ID_LEN = 16;
-export const SESSION_ID_UNKNOWN = '<unknown>';
-export const SESSION_ID_LEGACY = '<legacy>';
+// The session tag and its sentinels live in `_lib/session_tag.ts` and are
+// re-exported here so this module's public API is unchanged. They moved out
+// so `hooks/interruption_ledger_hook.ts` can import five lines without
+// pulling this module's ~121 KB closure into the hook dispatch bundle.
+import {
+    SESSION_ID_LEGACY,
+    SESSION_ID_LEN,
+    SESSION_ID_UNKNOWN,
+    derive_session_tag,
+    fingerprint,
+} from './_lib/session_tag.js';
+export { SESSION_ID_LEGACY, SESSION_ID_LEN, SESSION_ID_UNKNOWN, derive_session_tag, fingerprint };
 // Sentinel for entries without an `agent` field — legacy rows or
 // direct `append` calls that bypassed the platform-hook surface.
 export const AGENT_UNKNOWN = '<unknown>';
@@ -316,18 +325,6 @@ export function file_path(): string {
 function _now(): string {
     // Python: datetime.now(utc).isoformat(timespec="seconds") → "...+00:00".
     return new Date().toISOString().replace(/\.\d{3}Z$/, '+00:00');
-}
-
-export function fingerprint(value: string): string {
-    const normalized = _strip((value || '').replace(_WS_RE, ' '));
-    return createHash('sha256').update(normalized, 'utf-8').digest('hex');
-}
-
-export function derive_session_tag(session_id: string): string {
-    if (!session_id) {
-        return SESSION_ID_UNKNOWN;
-    }
-    return fingerprint(session_id).slice(0, SESSION_ID_LEN);
 }
 
 function _isFile(p: string): boolean {

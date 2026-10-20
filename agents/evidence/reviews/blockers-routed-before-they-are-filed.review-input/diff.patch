@@ -1,0 +1,580 @@
+diff --git a/agents/evidence/analysis/blocker-causes-2026-10-20.md b/agents/evidence/analysis/blocker-causes-2026-10-20.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..8ed5025a2762f4098ec985d0cdfddcbdd168677c
+--- /dev/null
++++ b/agents/evidence/analysis/blocker-causes-2026-10-20.md
+@@ -0,0 +1,75 @@
++<!-- evidence-type: analysis -->
++# Why work stops on blockers — 2026-10-20
++
++Owner question: why does work so often stop on blockers, and which of them are
++avoidable? Two read-only passes over the tree and the host transcripts, then a
++two-seat council pass. Aggregates only: no prompt text or session id beyond the
++one reproduction named in Phase 1 of
++`agents/roadmaps/road-to-blockers-routed-before-they-are-filed.md`. Counts
++marked ≈ are regex-classified (±10 %) or hand-classified; the rest are counted.
++
++## A — Sessions (top-level transcripts, 2026-09-21..10-20)
++
++71 transcripts exist (the request said 100); 11 one-turn harness probes and 4
++sessions unrelated to the repository were dropped, leaving 56 sessions, 399 owner
++turns and ≈327 points where the agent stopped and the owner had to reply.
++
++| Class | Count | Sessions | Avoidable? |
++|---|---:|---:|---|
++| Owner questions / hand-backs | ≈166 | 35 | mostly — ≈60 roadmap or policy decisions the council could take; 16 commit/push/PR asks after "PR + merge" was already said; 14 merge-authority asks; 15 routed to the owner because the council was unavailable; ≈6 genuine paid-measurement decisions |
++| Platform interruptions (usage limit, logged out, network) | 39 | ≈20 | no — external |
++| turn-end-gate refusals | 184 | 38 | language 110 (103 false positives), verification 73 (unclassified), pending-decision 6 |
++| Host auto-mode classifier denials | 45 | 19 | mixed |
++| Repo guard denials (`block-no-verify` 19, inbox-dir guard 14) | 34 | ≈14 | mostly false positives |
++| Premature turn ends (promissory close, ending while CI or lanes run) | 47 | ≈25 | yes |
++
++- When the agent offered numbered options with a recommendation, the owner took
++  the recommendation **86 of 91** times, 66 with a bare digit.
++- 58 bare continuations ("mach weiter"): 39 after platform failures, 19 after the
++  agent stopped although a standing order already answered the question.
++
++## B — Roadmap blockers (131 files: 26 active, 105 in `later/`)
++
++- 148 entries: **82 open**, 66 resolved (kept as history).
++- **65 of 82** open entries sit in `later/`, which no routine sweep re-reads.
++- **74 of 82** carry a human `Owner:` (maintainer 47, user 16, owner 11). The
++  template offered only `user | maintainer | external`; the linter already
++  treats `council` and `implementer` as non-human owners.
++- Last two days: 10 blockers resolved, **all by the council** (2/2, $0.00),
++  including all 7 labelled owner or maintainer; the owner resolved none.
++- Sample of 15 open owner-labelled entries: 3 satisfied by the letter of their
++  own `Resolved when` (2 genuinely — closed by Phase 3 — and 1 only because the
++  file was parked), 7 council-decidable, 1 agent work, 2 genuinely the owner's,
++  1 a calendar wait, 1 mixed.
++- Hand estimate of the 82 by kind: waiting for data 21 · genuine owner decision
++  19 · council-decidable but owner-labelled 16 · another roadmap 7 · a human
++  must act 5 · CI/infra 4 · calendar 4 · already true 3 · plain agent work 3.
++
++## C — One language-pin mechanism, reproduced
++
++A subagent hand-back or cross-session message reaches `user_prompt_submit` as
++`Another Claude session sent a message:` followed by the wrapper tag. The
++synthetic-prompt filter anchored the tag at character zero, so the wrapper was
++read as the owner's words: in the reproduced session the English pin (2,188
++chars, 68 English markers) was written 149 ms after such a message, and the
++German owner's replies were refused as wrong-language for the rest of the run.
++This is in addition to the command-body class
++`language-refusals-by-pin-source-2026-10-19.md` measured; the two overlap only
++where a command-opened run also dispatched subagents.
++
++## Council, 2026-10-20 (anthropic claude-sonnet-4-5 + openai codex-default, 2 rounds, $0.00)
++
++Seven levers were put to it neutrally, with the owner-reserved table attached.
++
++- **Agreed (2/2):** fix the language-pin mechanism first; fix the short `-n`
++  guard misfire while keeping `commit -n` blocked; route human-owned blockers
++  through the council at authoring time, fail-open when the council is down;
++  run the backlog drain as a separate, auditable operation; do not add the
++  sub-findings' percentages — the units (refusals, entries, stops) overlap.
++- **Owner-reserved (openai; anthropic dissenting on the second):** letting a
++  council "cancel" verdict execute `[-]`, and treating "create and merge the PR"
++  as covering follow-up CI-fix commits. The second edits a kernel rule.
++- **Deferred:** scheduling the drain (no measured rate to set a cadence from).
++- **Missing levers named:** a reason code on every hand-back; classifying the
++  73 verification refusals before changing that detector; workflow kinds
++  (`waiting-data`, `calendar`, `dependency`) separate from decisions.
+diff --git a/agents/roadmaps/archive/road-to-blockers-routed-before-they-are-filed.md b/agents/roadmaps/archive/road-to-blockers-routed-before-they-are-filed.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..cf90ba73a66ff177ee27f9d3bdb3c75c5d0f0598
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-blockers-routed-before-they-are-filed.md
+@@ -0,0 +1,97 @@
++---
++complexity: lightweight
++status: ready
++execution:
++  mode: phase-checkpoints
++relates:
++  - slug: road-to-agent-throughput-recovery
++    relation: extends
++    note: "That roadmap owns the turn-end-gate misfire classes (4.1 language, 4.3 short -n) and the cheap-question class (5.2). Phase 1 here fixes ONE language misfire mechanism it had not isolated — host-wrapped agent messages — and leaves its 4.1 command-body class and 4.3 open."
++---
++# Road to blockers routed before they are filed
++
++> **Source:** owner request 2026-10-20 ("warum kommt es so oft zu blockern?"),
++> answered by `agents/evidence/analysis/blocker-causes-2026-10-20.md` — 56
++> sessions and 148 roadmap blocker entries — and a two-seat council pass the
++> same day (anthropic + openai, 2/2, $0.00, subscription transport).
++
++## Goal
++
++A blocker addressed to a human is written only after the council has read it
++against the owner-reserved table and escalated it, and the record says so; a
++subagent or cross-session message never sets the reply-language pin; and the
++blockers whose own `Resolved when` the tree already satisfies are closed. Each
++of the three is checkable by a command, below.
++
++## Phase 1 — An agent message is not the owner's turn
++
++- [x] **1.1 Recognise the host's agent-message wrapper as synthetic.** The host
++      delivers a subagent hand-back or a cross-session message to
++      `user_prompt_submit` as `Another Claude session sent a message:` followed
++      by `<agent-message …>` or `<cross-session-message …>`. `isSyntheticPrompt`
++      anchors `<agent-message` at character zero, so the real payload passed as
++      the owner's words and re-pinned the reply language to English
++      (reproduced: session `5a3f6210`, pin written 149 ms after such a message,
++      2,188 chars, 68 English markers). The fix accepts that fixed host prefix
++      only when the wrapper tag follows it, so a human quoting the sentence is
++      still read as a human.
++      verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts` -> 0,
++      with the new cases seen red before the fix.
++
++## Phase 2 — Route before filing
++
++- [x] **2.1 The authoring contract routes a human-owned blocker through the
++      council first.** Template rule 20 offered only `user | maintainer |
++      external` as `Owner:` values although the linter already treats
++      `council` and `implementer` as non-human owners. Rule 20 now lists them,
++      and a blocker whose `Owner:` is the user, the maintainer or the owner
++      carries `- **Routed:**` — the council's `ESCALATE` with the reserved row
++      it crosses, or `pending` with the reason the council could not be reached
++      (fail-open: an unreachable council never turns a council question into an
++      owner question). A `DECIDE` is not a blocker; it is a `## Decisions` row.
++      verify: `grep -n 'Routed:' src/agent-src/templates/roadmaps.md` -> a hit
++      inside rule 20; `roadmap-writing` points at it.
++- [x] **2.2 A ratchet keeps new human-owned blockers from skipping the route.**
++      `lint_roadmap_blockers:routing` counts open human-owned blockers with no
++      `Routed:` field against a baseline registered at today's count, so the
++      existing backlog is grandfathered and every new one must carry the field.
++      verify: `npx vitest run tests/scripts/lint_roadmap_blockers.test.ts` -> 0,
++      with the ratchet case seen red; `./scripts-run src/scripts/lint_roadmap_blockers` -> 0.
++
++## Phase 3 — Close what the tree already settled
++
++- [x] **3.1 Execute the `Resolved when` of the blockers measured as satisfied.**
++      `capacity-slot` (`later/road-to-skill-ecosystem-capability-queue.md`) and
++      `verification-slot` (`later/road-to-skill-ecosystem-security-and-conformance.md`)
++      both resolve when fewer than two `road-to-skill-ecosystem-*` roadmaps sit
++      outside `archive/` and `later/`; there are none. `first-corpora-named`
++      is NOT closed: its condition is satisfied only by the letter (the file was
++      parked, not decided), which is the gaming this phase must not do.
++      verify: `ls agents/roadmaps/road-to-skill-ecosystem-*.md` -> no match, and
++      both entries read `Status: resolved` with the measurement recorded.
++
++## Decisions
++
++| # | Decision | Alternatives | Reason | Revisit if |
++|---|---|---|---|---|
++| D1 | Ship the authoring-time route, the agent-message pin fix and the two settled closures in one PR; run the full backlog drain separately | bundle the 82-blocker drain here | both council seats: historical churn would bury the implementation review | the drain finds the 7-of-15 council-decidable sample does not hold |
++| D2 | Leave council-executed cancellation (`[-]` on a council "cancel") and end-state merge authorisation out of scope | change `roadmap-progress-sync` / `commit-policy` here | openai seat: both are governance self-amendment (owner-reserved); `commit-policy` is a kernel rule no agent may write; the anthropic seat dissented on end-state authorisation only | the owner rules on either |
++| D3 | Do not schedule `/roadmap:resolve-blockers` yet | nightly or per-merge run | no measured arrival rate to set a cadence from (openai seat) | stop-reason telemetry gives a rate |
++| D4 | `Routed: pending` is a valid value | require a council verdict before the blocker may exist | an unreachable council must not become an owner question (both seats) | `pending` entries outlive a reachable council by a week |
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-10-20 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | The prefix match swallows a real owner turn | implementation | An owner who pastes a hand-back to ask about it would lose the pin update for that turn | Match the fixed host sentence only at character zero AND only when the wrapper tag follows; a test pins the human-quoting direction | Phase 1 — An agent message is not the owner's turn |
++| 2 | `Routed:` becomes a box ticked without a council run | implementation | The field is prose, so a gate can see its presence and value shape, never that the run happened | The value names the verdict word and the reserved row; `pending` names a reason; the ratchet stops growth, review catches fabrication | Phase 2 — Route before filing |
++
++## Acceptance Criteria
++
++- [x] AC-1 — A host-wrapped agent message leaves the language pin unchanged,
++      proven by a test that is red without the fix.
++- [x] AC-2 — No new open human-owned blocker can land without `Routed:`; the
++      existing ones are counted, not exempted silently.
++- [x] AC-3 — The two blockers whose condition the tree satisfies read
++      `resolved`, and `first-corpora-named` stays open with the reason.
+diff --git a/agents/roadmaps/later/road-to-skill-ecosystem-capability-queue.md b/agents/roadmaps/later/road-to-skill-ecosystem-capability-queue.md
+index 985a776b641ce82c05494fe9877bd2b35add7dbc..e08c48996aea1d669ea23947c7989a89c5638081 100644
+--- a/agents/roadmaps/later/road-to-skill-ecosystem-capability-queue.md
++++ b/agents/roadmaps/later/road-to-skill-ecosystem-capability-queue.md
+@@ -290,7 +290,7 @@ Recorded so they are not re-proposed, with the reason:
+ ## Blockers
+ 
+ ### blocker: capacity-slot
+-- **Status:** open
++- **Status:** resolved — 2026-10-20, condition executed: `ls agents/roadmaps/road-to-skill-ecosystem-*.md` matches nothing; all three family files sit in `later/`, so both slots are free. Promoting one queue entry is the next step, not part of this gate.
+ - **Owner:** maintainer
+ - **Blocks:** the whole queue
+ - **What to do:**
+diff --git a/agents/roadmaps/later/road-to-skill-ecosystem-security-and-conformance.md b/agents/roadmaps/later/road-to-skill-ecosystem-security-and-conformance.md
+index f4cefd05e654ebd472961720e03501b41680737f..2d992ca5264e45bc6c1587e6c53f57d5b54e4332 100644
+--- a/agents/roadmaps/later/road-to-skill-ecosystem-security-and-conformance.md
++++ b/agents/roadmaps/later/road-to-skill-ecosystem-security-and-conformance.md
+@@ -148,7 +148,7 @@ corpus is documentation-heavy. That is exactly this package's situation.
+ ## Blockers
+ 
+ ### blocker: verification-slot
+-- **Status:** open
++- **Status:** resolved — 2026-10-20, condition executed: `ls agents/roadmaps/road-to-skill-ecosystem-*.md` matches nothing; all three family files sit in `later/`, so a slot is free.
+ - **Owner:** maintainer
+ - **Blocks:** Phase 1 — Agentic CI, audited and confined
+ - **What to do:**
+diff --git a/dist/agent-src/skills/roadmap-writing/SKILL.md b/dist/agent-src/skills/roadmap-writing/SKILL.md
+index 640a63e922840228393c77d148bdf13a9df7aa18..df4e5b8a8fbd655ae7513c1655ce8f6f57fe1e9b 100644
+--- a/dist/agent-src/skills/roadmap-writing/SKILL.md
++++ b/dist/agent-src/skills/roadmap-writing/SKILL.md
+@@ -189,7 +189,8 @@ window — is recorded as a `## Blockers` entry (`### blocker: <id>` with the
+ seven fields of rule 20), never a stray "blocked on X" sentence. Write it so
+ the owner can decide in one sitting: one option named and why, what the delay
+ costs, a command or path per option rather than prose, and an offer to walk
+-them through it. Ratcheted by `lint_roadmap_blockers`. Full shape:
++them through it. A human `Owner:` is filed only after the council escalates it
++(`Routed:`). Ratcheted by `lint_roadmap_blockers`. Full shape:
+ [`templates/roadmaps.md` rule 20](../../templates/roadmaps.md).
+ Omit it entirely when there is no such gate; run the § 4c gate-test first. A **hold** is the publication-side twin — a blocker stops execution, a hold stops publication; ask once whether an intermediate tree state must stay unpublished (default **no**; roadmap incompleteness never is one), walk `re-sequence → guard → hold`, and record the avoided outcome as well as the taken one, per [`templates/roadmaps.md` rule 28](../../templates/roadmaps.md) and the § 5c self-check in [`/roadmap:create`](../../domains/product-basic/roadmap/create/command.md).
+ 
+diff --git a/dist/agent-src/templates/roadmaps.md b/dist/agent-src/templates/roadmaps.md
+index e75f0280d8a4199751519857d9e47f985c333654..faf0f758cfd4b3739a72ef01f073af762a48ee47 100644
+--- a/dist/agent-src/templates/roadmaps.md
++++ b/dist/agent-src/templates/roadmaps.md
+@@ -331,7 +331,8 @@ that was never a judgement call.
+ 
+     ### blocker: <kebab-id>
+     - **Status:** open            <!-- open | resolved -->
+-    - **Owner:** user             <!-- user | maintainer | external -->
++    - **Owner:** user             <!-- user | maintainer | external | council | implementer -->
++    - **Routed:** council 2026-10-20 ESCALATE — {reserved row}   <!-- human Owner only; or: pending — {why the council was unreachable} -->
+     - **Blocks:** Phase N — {phase name}
+     - **Question:** {optional — the one line saying what is being decided.}
+     <!-- Class is optional and absent means 3. Add Run: ONLY with Class 0 or 1,
+@@ -363,6 +364,19 @@ that was never a judgement call.
+     must name an OPEN blocker — once it resolves, remove the marker — and
+     `lint_roadmap_blockers` reads it on a continuation line too.
+ 
++    **Route before you file.** A human `Owner:` (user, maintainer, owner)
++    is a routing verdict, not a first impression: put the transition to the
++    council with the owner-reserved table of
++    [`decision-revisit-gate`](../rules/decision-revisit-gate.md) attached,
++    and file it here only on `ESCALATE`, recording the verdict and the
++    reserved row it crosses in `Routed:`. A `DECIDE` is a `## Decisions`
++    row, not a blocker. An unreachable council writes `Routed: pending —
++    <reason>` and the entry goes to the next council pass, never to the
++    owner by default. Measured 2026-10-20: the council resolved all ten
++    blockers closed in two days, including all seven labelled owner or
++    maintainer. `lint_roadmap_blockers:routing` ratchets entries without
++    the field.
++
+     **A blocker stops execution; a hold stops publication.** The two are not
+     interchangeable and never substitute for one another. A blocker says the work
+     cannot proceed and is cleared by a person; a release hold (rule 28) says the
+diff --git a/src/agent-src/templates/roadmaps.md b/src/agent-src/templates/roadmaps.md
+index c03c2eaa13e884d22ddc511e5175c0bc0775a185..12a354b9535fe2f40557056b858458f5b695881b 100644
+--- a/src/agent-src/templates/roadmaps.md
++++ b/src/agent-src/templates/roadmaps.md
+@@ -331,7 +331,8 @@ that was never a judgement call.
+ 
+     ### blocker: <kebab-id>
+     - **Status:** open            <!-- open | resolved -->
+-    - **Owner:** user             <!-- user | maintainer | external -->
++    - **Owner:** user             <!-- user | maintainer | external | council | implementer -->
++    - **Routed:** council 2026-10-20 ESCALATE — {reserved row}   <!-- human Owner only; or: pending — {why the council was unreachable} -->
+     - **Blocks:** Phase N — {phase name}
+     - **Question:** {optional — the one line saying what is being decided.}
+     <!-- Class is optional and absent means 3. Add Run: ONLY with Class 0 or 1,
+@@ -363,6 +364,19 @@ that was never a judgement call.
+     must name an OPEN blocker — once it resolves, remove the marker — and
+     `lint_roadmap_blockers` reads it on a continuation line too.
+ 
++    **Route before you file.** A human `Owner:` (user, maintainer, owner)
++    is a routing verdict, not a first impression: put the transition to the
++    council with the owner-reserved table of
++    [`decision-revisit-gate`](../rules/decision-revisit-gate.md) attached,
++    and file it here only on `ESCALATE`, recording the verdict and the
++    reserved row it crosses in `Routed:`. A `DECIDE` is a `## Decisions`
++    row, not a blocker. An unreachable council writes `Routed: pending —
++    <reason>` and the entry goes to the next council pass, never to the
++    owner by default. Measured 2026-10-20: the council resolved all ten
++    blockers closed in two days, including all seven labelled owner or
++    maintainer. `lint_roadmap_blockers:routing` ratchets entries without
++    the field.
++
+     **A blocker stops execution; a hold stops publication.** The two are not
+     interchangeable and never substitute for one another. A blocker says the work
+     cannot proceed and is cleared by a person; a release hold (rule 28) says the
+diff --git a/src/config/gate-violation-baselines.json b/src/config/gate-violation-baselines.json
+index 2560c85e5c63bc8f72356ef62dae97fe571e8ada..54095b1c18caede0e7169767d8c9b0c801ad8c4c 100644
+--- a/src/config/gate-violation-baselines.json
++++ b/src/config/gate-violation-baselines.json
+@@ -113,6 +113,12 @@
+       "falsifier": "./scripts-run src/scripts/lint_roadmap_later_disposition  # the ratchet line names the current count; it fails when the count RISES above this entry",
+       "note": "Parked roadmaps under agents/roadmaps/later/ carrying no `review_by:` in their frontmatter. NOT a dead-scan-root repair — the obligation is NEW (road-to-observed-learning-signal step 3.4), so every pre-existing parked roadmap lacks it by construction and 68 of 82 is the count at introduction rather than revealed debt. A hard-zero gate was refused on this repository's own recorded ground: a gate that fails its own tree on 68 files the landing change did not cause is reverted rather than adopted. Shrink-only from here, which is the property that matters: a NEWLY parked roadmap must carry `review_by` or this reds immediately. Clearing an entry is one roadmap at a time — read what the park is waiting on, pick a date a human would actually honour, and lower the count. The figure is the gate's own output on this branch (`--json`, class `review-by`), and the same 68 was measured independently over a tree that had grown by one file since the roadmap's own pin, which is why the roadmap's stated floor and this entry agree."
+     },
++    "lint_roadmap_blockers:routing": {
++      "count": 23,
++      "landed": "2026-10-20",
++      "falsifier": "./scripts-run src/scripts/lint_roadmap_blockers  # the routing ratchet line names the current count; it fails when the count RISES above this entry",
++      "note": "Open blockers whose Owner is the user, the maintainer or the owner and that carry no `Routed:` field. NOT a scan-root repair: the obligation is NEW (templates/roadmaps.md rule 20 'Route before you file', road-to-blockers-routed-before-they-are-filed step 2.2), so every pre-existing human-owned entry is debt by construction and is counted rather than exempted. Why the field exists: in the two days before it landed the council resolved all ten blockers that closed, including all seven labelled owner or maintainer, so an Owner label recorded the author's first impression rather than a routing verdict (agents/evidence/analysis/blocker-causes-2026-10-20.md). Drains as /roadmap:resolve-blockers puts each entry to the council: a DECIDE removes the blocker, an ESCALATE records the verdict and the reserved row."
++    },
+     "lint_roadmap_later_disposition:wake-condition": {
+       "count": 17,
+       "landed": "2026-10-09",
+diff --git a/src/scripts/_lib/prompt_shape.ts b/src/scripts/_lib/prompt_shape.ts
+index 5abe0632d778c68380ed1e6203054694e6fee6da..ce3cbf45ac62b197a0aca574dc45c5bee5cdec0d 100644
+--- a/src/scripts/_lib/prompt_shape.ts
++++ b/src/scripts/_lib/prompt_shape.ts
+@@ -95,10 +95,21 @@ export function isSyntheticPrompt(prompt: string): boolean {
+     head.startsWith("<local-command-caveat>") ||
+     head.startsWith("<agent-message") ||
+     head.startsWith("Your claude.ai usage limit has reset") ||
+-    /^\[SYSTEM NOTIFICATION\b/.test(head)
++    /^\[SYSTEM NOTIFICATION\b/.test(head) ||
++    AGENT_MESSAGE_FRAME.test(head)
+   );
+ }
+ 
++/**
++ * How Claude Code actually delivers a subagent hand-back or a cross-session
++ * message to `user_prompt_submit`: one fixed host sentence, then the wrapper
++ * tag. The bare `<agent-message` case above never matched this frame, and a
++ * German session's pin was rewritten to `en` 149 ms after one (2026-10-20).
++ * Both halves are required so a human quoting the sentence keeps their turn.
++ */
++const AGENT_MESSAGE_FRAME =
++  /^Another Claude session sent a message:\s*\n\s*<(?:agent-message|cross-session-message)\b/;
++
+ /**
+  * A line that starts pasted DOCUMENT content rather than typed instruction.
+  *
+diff --git a/src/scripts/lint_roadmap_blockers.ts b/src/scripts/lint_roadmap_blockers.ts
+index 6596edd5d7e9189e82d311138bd915f734aa70ae..6994d4d60360c1207b77cbe219be90db98a4bf6d 100644
+--- a/src/scripts/lint_roadmap_blockers.ts
++++ b/src/scripts/lint_roadmap_blockers.ts
+@@ -201,6 +201,18 @@ interface TargetIndex {
+  */
+ const USER_DECISION_OWNER_RE = /^-[ \t]*\*\*Owner:\*\*[ \t]*(maintainer|user|owner)\b/im;
+ 
++/**
++ * Template rule 20 "Route before you file": a human-owned blocker records the
++ * council verdict that sent it to a human, or why no council could be asked.
++ * Measured 2026-10-20: the council closed all seven owner-labelled blockers
++ * resolved in two days, so the label alone was the author's guess. Absent is
++ * ratcheted (the backlog predates the field); present-but-malformed is hard,
++ * since no entry carried the field on the day it shipped.
++ */
++const ROUTED_FIELD_RE = /^-[ \t]*\*\*Routed:\*\*[ \t]*(.*)$/im;
++const ROUTED_VALUE_RE =
++    /^(?:council[ \t]+\d{4}-\d{2}-\d{2}[ \t]+ESCALATE[ \t]+—[ \t]*\S|pending[ \t]+—[ \t]*\S)/;
++
+ const REQUIRED_FIELDS: ReadonlyArray<readonly [string, RegExp]> = [
+     ['Status', /^-[ \t]*\*\*Status:\*\*/im],
+     ['Owner', /^-[ \t]*\*\*Owner:\*\*/im],
+@@ -327,6 +339,8 @@ interface ScanResult {
+     hard: Violation[];
+     /** Open entries that are not yet decidable — counted against the ratchet. */
+     decidability: Violation[];
++    /** Open human-owned entries with no `Routed:` field — counted against its own ratchet. */
++    routing: Violation[];
+ }
+ 
+ /** What a scan needs to resolve a qualified reference: who it is, and where it may point. */
+@@ -339,6 +353,7 @@ interface ScanContext {
+ function _scanBoth(rawText: string, ctx: ScanContext = {}): ScanResult {
+     const violations: Violation[] = [];
+     const decidability: Violation[] = [];
++    const routing: Violation[] = [];
+     const text = _stripFencedCode(rawText);
+     const declaredIds = new Set<string>();
+     const userDecisionIds = new Set<string>();
+@@ -452,6 +467,24 @@ function _scanBoth(rawText: string, ctx: ScanContext = {}): ScanResult {
+                         });
+                     }
+                 }
++                if (USER_DECISION_OWNER_RE.test(body)) {
++                    const routed = ROUTED_FIELD_RE.exec(body);
++                    const at = _lineAt(text, sectionStart + cur.start);
++                    if (routed === null) {
++                        routing.push({
++                            line: at,
++                            message: `blocker '${cur.id}' has a human Owner but no **Routed:** field`,
++                        });
++                    } else if (!ROUTED_VALUE_RE.test((routed[1] as string).trim())) {
++                        violations.push({
++                            line: at,
++                            message:
++                                `blocker '${cur.id}' declares **Routed:** '${(routed[1] as string).trim()}' — ` +
++                                "expected 'council YYYY-MM-DD ESCALATE — <reserved row>' or " +
++                                "'pending — <why the council was unreachable>' (templates/roadmaps.md rule 20)",
++                        });
++                    }
++                }
+                 const gaps = DECIDABILITY_FIELDS.filter(([, re]) => !re.test(body)).map(
+                     ([name]) => name,
+                 );
+@@ -518,7 +551,8 @@ function _scanBoth(rawText: string, ctx: ScanContext = {}): ScanResult {
+     }
+     violations.sort((a, b) => a.line - b.line);
+     decidability.sort((a, b) => a.line - b.line);
+-    return { hard: violations, decidability };
++    routing.sort((a, b) => a.line - b.line);
++    return { hard: violations, decidability, routing };
+ }
+ 
+ interface LocalBlockers {
+@@ -885,13 +919,20 @@ function main(): number {
+     const index = _targetIndex();
+     let failed = 0;
+     const undecidable: Array<{ rel: string; v: Violation }> = [];
++    const unrouted: Array<{ rel: string; v: Violation }> = [];
+     for (const roadmap of roadmaps) {
+         const rel = _relPosix(roadmap, REPO_ROOT);
+         const text = fs.readFileSync(roadmap, 'utf-8');
+-        const { hard, decidability } = _scanBoth(text, { selfStem: path.basename(roadmap, '.md'), index });
++        const { hard, decidability, routing } = _scanBoth(text, {
++            selfStem: path.basename(roadmap, '.md'),
++            index,
++        });
+         for (const v of decidability) {
+             undecidable.push({ rel, v });
+         }
++        for (const v of routing) {
++            unrouted.push({ rel, v });
++        }
+         if (hard.length) {
+             failed += 1;
+             process.stderr.write(`❌  ${rel}\n`);
+@@ -964,8 +1005,27 @@ function main(): number {
+         );
+         return 1;
+     }
++    const routingVerdict = checkRatchet({
++        gate: 'lint_roadmap_blockers:routing',
++        actual: unrouted.length,
++        repoRoot: REPO_ROOT,
++    });
++    if (!routingVerdict.ok) {
++        process.stderr.write(`❌  ${routingVerdict.message}\n`);
++        for (const { rel, v } of unrouted) {
++            process.stderr.write(`    ${rel}:${v.line}: ${v.message}\n`);
++        }
++        process.stderr.write(
++            '\n    Route a human-owned blocker through the council before filing it, and record\n' +
++                "    **Routed:** council YYYY-MM-DD ESCALATE — <reserved row>, or 'pending — <reason>'\n" +
++                '    when no council could be reached. A DECIDE is a ## Decisions row, not a blocker.\n' +
++                '    See templates/roadmaps.md rule 20 "Route before you file".\n',
++        );
++        return 1;
++    }
+     if (!QUIET) {
+         process.stdout.write(`\n✅  ${roadmaps.length} roadmap(s) blocker-contract-clean\n`);
++        process.stdout.write(`✅  ${routingVerdict.message}\n`);
+         process.stdout.write(
+             `✅  0 blocker id(s) open in both an active and an archived roadmap ` +
+                 `(${_globArchivedRoadmaps().length} archived file(s) read)\n`,
+diff --git a/src/skills/roadmap-writing/SKILL.md b/src/skills/roadmap-writing/SKILL.md
+index 0ab5d60e24d4039acbb6f57e3ac19e175eec628f..5b0a1c40da13191718999f8182c71d2c70a97038 100644
+--- a/src/skills/roadmap-writing/SKILL.md
++++ b/src/skills/roadmap-writing/SKILL.md
+@@ -189,7 +189,8 @@ window — is recorded as a `## Blockers` entry (`### blocker: <id>` with the
+ seven fields of rule 20), never a stray "blocked on X" sentence. Write it so
+ the owner can decide in one sitting: one option named and why, what the delay
+ costs, a command or path per option rather than prose, and an offer to walk
+-them through it. Ratcheted by `lint_roadmap_blockers`. Full shape:
++them through it. A human `Owner:` is filed only after the council escalates it
++(`Routed:`). Ratcheted by `lint_roadmap_blockers`. Full shape:
+ [`templates/roadmaps.md` rule 20](../../agent-src/templates/roadmaps.md).
+ Omit it entirely when there is no such gate; run the § 4c gate-test first. A **hold** is the publication-side twin — a blocker stops execution, a hold stops publication; ask once whether an intermediate tree state must stay unpublished (default **no**; roadmap incompleteness never is one), walk `re-sequence → guard → hold`, and record the avoided outcome as well as the taken one, per [`templates/roadmaps.md` rule 28](../../agent-src/templates/roadmaps.md) and the § 5c self-check in [`/roadmap:create`](../../domains/product-basic/roadmap/create/command.md).
+ 
+diff --git a/tests/scripts/language_mirror_hook.test.ts b/tests/scripts/language_mirror_hook.test.ts
+index e14cf4fd068cc8be4e8b4f59258807b802a1f9c8..764eda833e5b12de0c267fe19075f8af57987679 100644
+--- a/tests/scripts/language_mirror_hook.test.ts
++++ b/tests/scripts/language_mirror_hook.test.ts
+@@ -108,6 +108,33 @@ describe("isSyntheticPrompt", () => {
+         "Your claude.ai usage limit has reset. Continue the task you were working on when the limit was reached; do not repeat work that is already complete.",
+       ),
+     ).toBe(true);
++    // The same hand-back as the host actually delivers it on Claude Code: one
++    // sentence BEFORE the tag. Reproduced 2026-10-20 — a German session's pin
++    // was rewritten to `en` (prompt_chars 2188, en_markers 68) 149 ms after a
++    // cross-session message in this exact frame.
++    expect(
++      isSyntheticPrompt(
++        'Another Claude session sent a message:\n<agent-message from="ae05428258cf41348">\n  [Subagent hand-back] The text below is the final report.',
++      ),
++    ).toBe(true);
++    expect(
++      isSyntheticPrompt(
++        'Another Claude session sent a message:\n<cross-session-message from="uds:/tmp/cc-socks/86623.sock" from-name="lane-3">\nDefect confirmed, and one correction.',
++      ),
++    ).toBe(true);
++  });
++
++  it("reads the host's agent-message sentence as human unless the wrapper tag follows it", () => {
++    expect(
++      isSyntheticPrompt(
++        "Another Claude session sent a message: warum hat das meinen Pin gesetzt?",
++      ),
++    ).toBe(false);
++    expect(
++      isSyntheticPrompt(
++        'warum steht hier Another Claude session sent a message:\n<agent-message from="x">?',
++      ),
++    ).toBe(false);
+   });
+ 
+   it("does not fire on a human prompt, including one that quotes a notification", () => {
+diff --git a/tests/scripts/lint_roadmap_blockers.test.ts b/tests/scripts/lint_roadmap_blockers.test.ts
+index 303beac1d17aa663e1668cf34ffd12675d0bf7c4..dde11722a2c461327e4f4c0451ee26ba150fa49c 100644
+--- a/tests/scripts/lint_roadmap_blockers.test.ts
++++ b/tests/scripts/lint_roadmap_blockers.test.ts
+@@ -117,6 +117,62 @@ describe('lint_roadmap_blockers — the decidability half', () => {
+     });
+ });
+ 
++describe('lint_roadmap_blockers — the routing half (rule 20 "Route before you file")', () => {
++    const humanOwned = [
++        '## Blockers',
++        '',
++        '### blocker: pick-a-reading',
++        '- **Status:** open',
++        '- **Owner:** maintainer',
++        '- **Blocks:** acceptance criterion 3',
++        '- **Recommendation:** (a) — it is the only one backed by a measurement.',
++        '- **If you do nothing:** the roadmap stays open; nothing else breaks.',
++        '- **What to do:**',
++        '  1. (a) Edit `agents/roadmaps/x.md` and tick the criterion.',
++        '  2. (b) Re-cut the criterion, then run `agent-config roadmap:progress`.',
++        '- **Resolved when:** the criterion is ticked',
++        '',
++    ].join('\n');
++    const withRouted = (value: string): string =>
++        humanOwned.replace('- **Blocks:**', `- **Routed:** ${value}\n- **Blocks:**`);
++
++    it('counts an open human-owned blocker with no Routed field', () => {
++        const { routing, hard } = _scanBoth(humanOwned);
++        expect(routing).toHaveLength(1);
++        expect(routing[0]!.message).toContain('pick-a-reading');
++        expect(hard).toEqual([]);
++    });
++
++    it.each(['user', 'owner'])('counts Owner: %s the same way', (owner) => {
++        expect(_scanBoth(humanOwned.replace('Owner:** maintainer', `Owner:** ${owner}`)).routing).toHaveLength(1);
++    });
++
++    it('accepts a council ESCALATE with its reserved row, and a pending route with a reason', () => {
++        for (const value of [
++            'council 2026-10-20 ESCALATE — spend above a delegated threshold',
++            'pending — both seats unavailable on 2026-10-20',
++        ]) {
++            const scan = _scanBoth(withRouted(value));
++            expect(scan.routing).toEqual([]);
++            expect(scan.hard).toEqual([]);
++        }
++    });
++
++    it('rejects a Routed value that names no verdict, or a DECIDE that should have been a Decisions row', () => {
++        for (const value of ['yes', 'council 2026-10-20 DECIDE — (a)', 'pending']) {
++            const scan = _scanBoth(withRouted(value));
++            expect(scan.hard).toHaveLength(1);
++            expect(scan.hard[0]!.message).toContain('Routed');
++        }
++    });
++
++    it('leaves non-human owners and resolved entries alone', () => {
++        expect(_scanBoth(humanOwned.replace('Owner:** maintainer', 'Owner:** council')).routing).toEqual([]);
++        expect(_scanBoth(humanOwned.replace('Owner:** maintainer', 'Owner:** implementer')).routing).toEqual([]);
++        expect(_scanBoth(humanOwned.replace('Status:** open', 'Status:** resolved')).routing).toEqual([]);
++    });
++});
++
+ describe('lint_roadmap_blockers — the gate-class contract', () => {
+     /** A decidable class-0 entry: it declares the command it is cleared by. */
+     const classified = (extra: readonly string[]): string =>

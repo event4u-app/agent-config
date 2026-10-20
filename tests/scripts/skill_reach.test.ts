@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { applyCodexResidentSet } from '../../src/scripts/_lib/codex_resident_set.js';
+import { FINDER_NAME } from '../../src/scripts/_lib/codex_skill_finder.js';
 import {
     checkSkillReach,
     classifySkillReach,
@@ -130,5 +132,68 @@ describe('degraded is never called reach (2.3)', () => {
         expect(classifySkillReach({ keys: ['name'], installed: false }, { shell: false, mcp: false }, HOST_KEYS)).toBe(
             'unreachable',
         );
+    });
+});
+
+describe('second host: an unlisted skill is reached only through the finder (second-host-unlisted-reachability)', () => {
+    const paths = { shell: true, mcp: false };
+    const SPEC_KEYS = loadHostKeys(REPO_ROOT, 'agent-skills-spec');
+
+    it('unlisted with no route stays unlisted; routed, it is classified by the path rule', () => {
+        const base = { keys: ['name', 'description'], installed: true, override: 'off' };
+        expect(classifySkillReach(base, paths, SPEC_KEYS)).toBe('unlisted');
+        expect(classifySkillReach({ ...base, routed: true }, paths, SPEC_KEYS)).toBe('reachable-not-installed');
+        expect(classifySkillReach({ ...base, keys: ['name', 'allowed-tools'], routed: true }, paths, SPEC_KEYS)).toBe(
+            'degraded',
+        );
+    });
+
+    it('a routed skill whose declared dependency is missing is degraded, never reach', () => {
+        expect(
+            classifySkillReach(
+                { keys: ['name'], installed: true, override: 'off', routed: true, missingDeps: true },
+                paths,
+                SPEC_KEYS,
+            ),
+        ).toBe('degraded');
+    });
+
+    it('the doctor row counts zero unlisted when the finder routes every one, and warns when it does not', () => {
+        const base = scratch();
+        const pkg = path.join(base, 'pkg');
+        const projection = path.join(pkg, 'dist', 'agent-src', 'skills');
+        const home = path.join(base, 'home');
+        const codex = path.join(home, '.codex', 'skills');
+        fs.mkdirSync(path.join(pkg, 'src', 'config'), { recursive: true });
+        fs.copyFileSync(
+            path.join(REPO_ROOT, 'src', 'config', 'host-skill-frontmatter-keys.json'),
+            path.join(pkg, 'src', 'config', 'host-skill-frontmatter-keys.json'),
+        );
+        for (let i = 0; i < 80; i++) {
+            const n = `s-${String(i).padStart(3, '0')}`;
+            for (const root of [projection, codex]) {
+                fs.mkdirSync(path.join(root, n), { recursive: true });
+                fs.writeFileSync(
+                    path.join(root, n, 'SKILL.md'),
+                    `---\nname: ${n}\ndescription: ${'d'.repeat(150)}\n---\n\nbody\n`,
+                );
+            }
+        }
+        const saved = process.env['EVENT4U_CONFIG_HOME'];
+        process.env['EVENT4U_CONFIG_HOME'] = path.join(home, '.event4u', 'agent-config');
+        try {
+            applyCodexResidentSet(home, () => undefined);
+            const ok = checkSkillReach({ home, packageRoot: pkg });
+            expect(ok.message).toMatch(/codex \(~\/\.codex\/skills\): installed \d+ \(described \d+ · name-only 0 · unlisted 0\)/);
+            expect(ok.status).toBe('ok');
+
+            fs.rmSync(path.join(codex, FINDER_NAME), { recursive: true, force: true });
+            const bad = checkSkillReach({ home, packageRoot: pkg });
+            expect(bad.status).toBe('warn');
+            expect(bad.message).toContain('unreachable skills on codex');
+        } finally {
+            if (saved === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+            else process.env['EVENT4U_CONFIG_HOME'] = saved;
+        }
     });
 });

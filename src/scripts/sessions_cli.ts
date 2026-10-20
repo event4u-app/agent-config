@@ -26,7 +26,16 @@
  * - `claim <slug>` — record that THIS SESSION has taken a roadmap. Writes the
  *   bridge file the next heartbeat lifts into the register, keyed on the host
  *   session id where one exists.
- * - `claim --release` — clear the claim.
+ * - `claim <slug> --lane [--worktree P] [--branch B]` — take a roadmap for a
+ *   subagent lane of this session. Takes the per-slug lock only, so the
+ *   session's own claim is untouched and each lane keeps its roadmap.
+ * - `claim --release [<slug>]` — clear the claim and this session's locks, or
+ *   one slug's lock.
+ *
+ * Every claim also takes the per-slug lock (`_lib/roadmap_slug_lock.ts`): an
+ * exclusive create in the git common dir that a peer in any worktree sees at
+ * once, and that refuses a second live holder. The lock records the worktree
+ * and branch, so a holder killed mid-run leaves the place its work sits.
  *
  * ## Why two axes and not one
  *
@@ -44,6 +53,14 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { write_atomic } from './_lib/fs_atomic.js';
+import { current_branch } from './_lib/git_common_dir.js';
+import {
+    acquire_lock,
+    holder_is_live,
+    read_holders,
+    read_locks,
+    release_locks,
+} from './_lib/roadmap_slug_lock.js';
 import {
     classify_collisions,
     iso_now,
@@ -66,7 +83,9 @@ function usage(): number {
             '                                           that axis to the JSON form)',
             '  agent-config sessions:claim <slug> [--paths <a,b,…>]       claim a roadmap for this session',
             '  agent-config sessions:claim <slug> --force   claim it even though a peer holds it',
-            '  agent-config sessions:claim --release    drop this session\'s roadmap claim',
+            '  agent-config sessions:claim <slug> --lane [--worktree P] [--branch B]',
+            '                                           claim a roadmap for a subagent lane of this session',
+            '  agent-config sessions:claim --release [<slug>]   drop this session\'s claim and locks, or one slug',
             '',
         ].join('\n'),
     );
@@ -422,6 +441,18 @@ export function claim_conflicts(
             }
         }
     }
+    // The lock is written at claim time, so it is the half of a peer's claim that
+    // a same-turn screen can see; the register record above arrives a heartbeat late.
+    const holders = read_holders(root);
+    for (const l of read_locks(root)) {
+        if (l.slug !== slug || !holder_is_live(l, holders)) continue;
+        if (sid !== null && l.session_id !== null && safe_stem(l.session_id) === safe_stem(sid)) continue;
+        if (sid === null && l.session_id === null && _same_path(l.worktree, root)) continue;
+        out.push({
+            kind: 'session',
+            detail: `${l.lane ? 'lane of a ' : ''}session on branch \`${l.branch ?? 'detached'}\` in ${l.worktree}`,
+        });
+    }
     for (const b of branch_name_hits(root, slug)) {
         out.push({ kind: 'branch', detail: `branch \`${b.branch}\` in ${b.worktree}` });
     }
@@ -450,6 +481,29 @@ function cmd_claim(argv: string[], root: string): number {
     // `claim_dir` in session_register_hook.ts for the full account.
     const target = claim_file(root, sid);
     if (argv.includes('--release')) {
+        const one = argv.find((a) => !a.startsWith('-')) ?? null;
+        const released = release_locks(root, sid, one);
+        if (one !== null) {
+            // One slug: the session's own claim file goes only if it names that slug.
+            const own = claim_read_paths(root, sid).find((p) => {
+                try {
+                    return (JSON.parse(fs.readFileSync(p, 'utf-8')) as { slug?: string }).slug === one;
+                } catch {
+                    return false;
+                }
+            });
+            if (own !== undefined && path.basename(own) === path.basename(target)) {
+                try {
+                    fs.unlinkSync(own);
+                } catch {
+                    /* already gone */
+                }
+            }
+            process.stdout.write(
+                released.length > 0 ? `Released "${one}".\n` : `No lock of this session on "${one}".\n`,
+            );
+            return 0;
+        }
         // Release only what this session could have written. An identified session
         // never writes the legacy file, so unlinking it would delete a PEER's claim
         // in a mixed-host checkout and leave that peer reporting nothing, with no
@@ -475,13 +529,17 @@ function cmd_claim(argv: string[], root: string): number {
     }
     const paths_idx = argv.indexOf('--paths');
     const paths_arg = paths_idx >= 0 ? (argv[paths_idx + 1] ?? '') : '';
+    const wt_idx = argv.indexOf('--worktree');
+    const br_idx = argv.indexOf('--branch');
+    const lane = argv.includes('--lane');
     const owned_paths = paths_arg
         .split(',')
         .map((x) => x.trim())
         .filter((x) => x !== '');
     // The slug is the first bare token that is not the VALUE of --paths; without
     // this the comma list would be read as the slug on `claim --paths a,b road-to-x`.
-    const slug = argv.find((a, i) => !a.startsWith('-') && i !== paths_idx + 1);
+    const value_at = new Set([paths_idx, wt_idx, br_idx].filter((i) => i >= 0).map((i) => i + 1));
+    const slug = argv.find((a, i) => !a.startsWith('-') && !value_at.has(i));
     if (slug === undefined || slug.trim() === '') {
         return usage();
     }
@@ -522,6 +580,40 @@ function cmd_claim(argv: string[], root: string): number {
         return 1;
     }
 
+    const worktree = wt_idx >= 0 ? path.resolve(argv[wt_idx + 1] ?? root) : root;
+    const branch = br_idx >= 0 ? (argv[br_idx + 1] ?? null) : current_branch(worktree);
+    let took_over_from: string | null = null;
+    try {
+        const got = acquire_lock(
+            root,
+            { slug: slug.trim(), session_id: sid, lane, worktree, branch, written_at: iso_now() },
+            read_holders(root),
+            { force: forced },
+        );
+        if (!got.ok) {
+            process.stderr.write(
+                `sessions:claim: REFUSED — "${slug.trim()}" is locked by a live ${got.holder.lane ? 'lane' : 'session'}\n` +
+                    `  on branch \`${got.holder.branch ?? 'detached'}\` in ${got.holder.worktree}.\n` +
+                    'Pick another roadmap, or coordinate with that session first.\n',
+            );
+            return 1;
+        }
+        if (got.took_over !== null) {
+            took_over_from = `${got.took_over.worktree} (${got.took_over.branch ?? 'no branch'})`;
+        }
+    } catch (exc) {
+        process.stderr.write(`sessions:claim: could not take the lock — ${String(exc)}\n`);
+        return 1;
+    }
+    if (lane) {
+        process.stdout.write(
+            `Locked "${slug.trim()}" for a lane in ${worktree} (${branch ?? 'no branch'}).\n` +
+                (took_over_from !== null
+                    ? `Its previous holder is dead; its work sits in ${took_over_from} — continue there.\n`
+                    : ''),
+        );
+        return 0;
+    }
     try {
         write_atomic(
             target,
@@ -544,11 +636,14 @@ function cmd_claim(argv: string[], root: string): number {
         return 1; // the claim is the whole point of this verb; a silent no-op would lie
     }
     process.stdout.write(
-        `Claimed "${slug.trim()}" for this session. It becomes visible to other\n` +
+        (took_over_from !== null
+            ? `Its previous holder is dead; its work sits in ${took_over_from} — continue there.\n`
+            : '') +
+            `Claimed "${slug.trim()}" for this session. The lock is visible to every\n` +
+            'session at once; the register record follows on the next heartbeat.\n' +
             (owned_paths.length > 0
                 ? `Declared ${owned_paths.length} owned path(s); peers sharing one are labelled PATH OVERLAP.\n`
                 : '') +
-            'sessions on the next turn, when the heartbeat lifts it into the register.\n' +
             (sid === null
                 ? 'NOTE: this host exports no session id, so the claim is scoped to this\n' +
                   'WORKTREE — a second session in the same checkout will overwrite it.\n'
