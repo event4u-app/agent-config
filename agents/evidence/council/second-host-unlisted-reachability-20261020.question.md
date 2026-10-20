@@ -3,7 +3,8 @@
 <!-- The prompt given to the council on 2026-10-20, committed verbatim so the
      verdict beside it can be checked against what was actually asked
      (evaluator-independence: a recorded verdict whose prompt is not
-     recoverable is not evidence). Not edited after the run. -->
+     recoverable is not evidence). Not edited after the run, except a
+     reference-checker ignore marker on the policy-file path line. -->
 
 # Council question — remedy for `second-host-unlisted-reachability`
 
@@ -11,7 +12,7 @@ Context. A skills package installs ~300 skills for a coding-agent host ("the
 second host", codex-cli 0.148.0). That host lists skills within an 8,000-character
 budget; over budget it strips every description and drops entries from the
 alphabetical tail behind a warning (measured: 406 dropped). To stop that, the
-installer writes a per-skill policy file (`agents/openai.yaml`,
+installer writes a per-skill policy file (`agents/openai.yaml`, <!-- ref-ignore -->
 `policy.allow_implicit_invocation: false`) into every skill outside a computed
 "resident set" (37 entries, 7,769 chars), so the listing fits and no warning prints.
 

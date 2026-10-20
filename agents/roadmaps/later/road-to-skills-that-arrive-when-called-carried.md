@@ -27,6 +27,18 @@ estate_growth_exempt: "Carry of road-to-skills-that-arrive-when-called: the pare
 The owner's answer to whether the fork pilot widens, holds or retires is
 recorded, and the pilot config says which.
 
+## Context — a module the parent shipped with no caller
+
+`src/scripts/_lib/skill_materialisation.ts` (the parent's 4.3–4.5: placement
+from the staged payload, the lock, lease-guarded removal) has tests and no
+production caller, on purpose. On the first host `firstHostMaterialisation`
+still answers WAIT, because the parent's Phase 5 primary was declared
+unmeasurable rather than read as no harm. On the second host every skill is
+already installed — the resident set unlists, it does not remove — so the
+finder reaches them without placing anything. The module is wired when the
+first-host gate says yes; until then this paragraph is where it is accounted
+for, not a step, because no condition in the tree can make the gate say yes.
+
 ## Phase 1 — The owner question carried from road-to-skills-that-arrive-when-called
 
 - [ ] **1.1 Record the owner's answer on fork widening.** <!-- blocked-by: fork-widening-is-owner-owned | asked: yes — posed 2026-10-20 by the parent step 3.3 on its 3.2 record -->
