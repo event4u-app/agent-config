@@ -11,6 +11,8 @@ effective_after: merge
 subject: 3247328fc3c189f74fea240a6d2e17fade06a01b889b3242ac3a5e3fb8ffabad
 ---
 
+<!-- evidence-type: ratification -->
+
 # Tool-output store — REFUSED 2/2, and what the refusal actually says
 
 `check_kernel_edit_ratified` gates five hook-plumbing surfaces on
