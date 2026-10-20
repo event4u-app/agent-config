@@ -132,8 +132,8 @@ the settings template was renamed to `src/config/agent-settings.template.yml`
 in the 6.0.0 span, and so the settings surface matched nothing from 6.0.0
 onward — the whole window the rule is scored on. An independent R2 reviewer
 found it; the record is
-`agents/evidence/reviews/drain-release-says-needs-you-20261020.findings.md`,
-committed before the repair. The wrong reading went in because the Controls
+`agents/evidence/reviews/drain-release-says-needs-you-20261020.round1-review.md`,
+committed before the repair as finding 1 of 7. The wrong reading went in because the Controls
 section below controlled two surfaces of three and not the one that was wrong.
 
 Run 2026-10-20 at `fba00aabf` with tags fetched, against the repaired detector.
