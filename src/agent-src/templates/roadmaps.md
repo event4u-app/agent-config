@@ -331,7 +331,8 @@ that was never a judgement call.
 
     ### blocker: <kebab-id>
     - **Status:** open            <!-- open | resolved -->
-    - **Owner:** user             <!-- user | maintainer | external -->
+    - **Owner:** user             <!-- user | maintainer | external | council | implementer -->
+    - **Routed:** council 2026-10-20 ESCALATE — {reserved row}   <!-- human Owner only; or: pending — {why the council was unreachable} -->
     - **Blocks:** Phase N — {phase name}
     - **Question:** {optional — the one line saying what is being decided.}
     <!-- Class is optional and absent means 3. Add Run: ONLY with Class 0 or 1,
@@ -362,6 +363,19 @@ that was never a judgement call.
     only in `later/`, `archive/` or `skipped/` is not resolvable. The marker
     must name an OPEN blocker — once it resolves, remove the marker — and
     `lint_roadmap_blockers` reads it on a continuation line too.
+
+    **Route before you file.** A human `Owner:` (user, maintainer, owner)
+    is a routing verdict, not a first impression: put the transition to the
+    council with the owner-reserved table of
+    [`decision-revisit-gate`](../rules/decision-revisit-gate.md) attached,
+    and file it here only on `ESCALATE`, recording the verdict and the
+    reserved row it crosses in `Routed:`. A `DECIDE` is a `## Decisions`
+    row, not a blocker. An unreachable council writes `Routed: pending —
+    <reason>` and the entry goes to the next council pass, never to the
+    owner by default. Measured 2026-10-20: the council resolved all ten
+    blockers closed in two days, including all seven labelled owner or
+    maintainer. `lint_roadmap_blockers:routing` ratchets entries without
+    the field.
 
     **A blocker stops execution; a hold stops publication.** The two are not
     interchangeable and never substitute for one another. A blocker says the work
