@@ -381,7 +381,10 @@ A split multiplies links. The gate that checks them comes first.
 The three-arm design and its decision rules are own analysis of the parallel
 plans this round carried; no external source is cited for them.
 
-*Status 2026-10-19 — 6.1, 6.3 and 6.4 written; no run has started. 6.2's
+*Status 2026-10-20 — closed without a run (D19, owner): the measurement is
+declined, 6.2, 6.5 and AC-7 are cancelled, and the cursor stays opt-in and
+undocumented (D3). 6.1, 6.3 and 6.4 stay as the frozen design a later run would use.*
+*Status 2026-10-19 (superseded by the line above) — 6.1, 6.3 and 6.4 written; no run has started. 6.2's
 calibration and 6.5 wait on one owner action, blocker `phase-6-spend-ceiling`.*
 *Status 2026-10-18 (superseded by the line above) — not runnable in this pass; nothing below is started.*
 The instrument exists: `claude plugin eval` (Claude Code 2.1.302) takes
@@ -411,7 +414,7 @@ script or reads an exit code, so a `check:<id>` exit is graded from the trace
       precondition runs under the same authorisation as calibration. The corpus
       frame, admission rule and candidate pool are frozen; the admitted list is
       appended after calibration, below a line nothing above it may change.
-- [ ] **6.2 Corpus.** Exactly ten tasks per pilot (30 in all) on which arm A
+- [-] **6.2 Corpus.** Exactly ten tasks per pilot (30 in all) on which arm A
       demonstrably fails today — the same condition the skill-DAG lock sets for
       its own reopen, so both decisions speak one language. A fixed count, not a
       floor: the workload is the spend ceiling's input (D13).
@@ -428,6 +431,9 @@ script or reads an exit code, so a `check:<id>` exit is graded from the trace
       and arm builder `src/scripts/bench_procedure_cursor.ts`. Admission needs
       the 90 calibration runs of arm A, which are spend the council could not
       authorise (D18).
+      *Cancelled 2026-10-20 (D19, owner):* the calibration spend is declined.
+      The candidate pool, scorer and arm builder stay committed, so a later run
+      starts from them.
 - [x] **6.3 Metrics.** Primary: exits met and task success. Secondary: API
       rounds against `src/config/turnaround-budget.json`, tokens, wall time,
       steps skipped without a reason (target 0 in arm C) and the cursor entry
@@ -453,16 +459,18 @@ script or reads an exit code, so a `check:<id>` exit is graded from the trace
       is council-decidable while `cost.budgets` resolves to zero, so the
       authorisation is the owner's — nothing has run.
       verify: `grep -cE '^(runs_per_case: 3|model_pin:|retry_policy:|max_tokens:|max_cost_usd:|aggregation:)' agents/evidence/preregistration/procedure-cursor.md` -> /^6$/
-- [ ] **6.5 Decide by the pre-registered rule.** B beats A by the bar and C ≈ B →
+- [-] **6.5 Decide by the pre-registered rule.** B beats A by the bar and C ≈ B →
       ship the split, cursor stays opt-in. C beats B by the bar → the cursor
       default for procedure skills is put to the council with the result. Neither
       → honest null; a pilot split stays only where its head shrank.
       verify: `grep -cE 'verdict: (split|cursor|null)' agents/evidence/preregistration/procedure-cursor*.md` -> /^1$/
+      *Cancelled 2026-10-20 (D19, owner):* no run, so no verdict; nothing is
+      default-on, which is the state the rule would have required before a result.
 
 ## Blockers
 
 ### blocker: phase-6-spend-ceiling
-- **Status:** open — raised 2026-10-19 after D18. The pre-registration, the candidate pool, the scorer and the arm builder exist; no run has started. **Council 2026-10-19 (2/2, $0.00, record `agents/evidence/council/resolve-blockers-batch-20261019.md`):** (a) and (b) are clause 4, owner-reserved; openai chose (c) as disproportionate to an opt-in, undocumented feature; anthropic agreed (c) is defensible and put a fourth option to the owner — the 96-run calibration with a pre-registered stop after 32 runs. (c) cancels steps, so it reaches the owner either way.
+- **Status:** resolved 2026-10-20 — option (c), measurement declined: 6.2, 6.5 and AC-7 `[-]`, cursor stays opt-in (owner, after council 2026-10-19 anthropic + openai 2/2, $0.00; D19). Earlier: raised 2026-10-19 after D18. The pre-registration, the candidate pool, the scorer and the arm builder exist; no run has started. **Council 2026-10-19 (2/2, $0.00, record `agents/evidence/council/resolve-blockers-batch-20261019.md`):** (a) and (b) are clause 4, owner-reserved; openai chose (c) as disproportionate to an opt-in, undocumented feature; anthropic agreed (c) is defensible and put a fourth option to the owner — the 96-run calibration with a pre-registered stop after 32 runs. (c) cancels steps, so it reaches the owner either way.
 - **Owner:** owner — spend above a delegated threshold is owner-reserved, and `cost.budgets` resolves to zero on every layer.
 - **Blocks:** 6.2 (admission needs the calibration runs), 6.5 and AC-7.
 - **What to do:** pick exactly one — (a) authorise the precondition and calibration slice, $921.60 at list price (96 runs), recorded as a positive `cost.budgets` value in the user-global `~/.event4u/agent-config/settings/.agent-settings.yml` or as a written authorisation in `agents/evidence/owner-directives/`, and say whether the organisation's extra usage beyond the team plan may be consumed; (b) authorise the whole programme, $2,649.60 (276 runs), the same way; (c) decline the measurement, which leaves the cursor opt-in and undocumented (D3) and closes 6.2, 6.5 and AC-7 as cancelled.
@@ -512,6 +520,7 @@ script or reads an exit code, so a `check:<id>` exit is graded from the trace
 | D16 | reversible-technical | council:steps-4-0-pilots | Pilots are `existing-ui-audit` and `project-analyzer`. `design-review` is dropped, not kept as a control: verified and sequenced exits are reported separately inside each pilot instead. `design-system-capture` was admitted only if a later step depends on an earlier artefact, an exit corroborates it against the repository, and its prerequisite run of another skill is resolved; its step 2 needs `existing-ui-audit` first (a skill-to-skill chain, K1) and a hard dependency means rewriting the procedure (K5), so the set is two | AI council 2026-10-18, anthropic + openai, 2/2, $0.00, both name the same two and condition the third identically (local council session `steps-4-0-pilots`); record `agents/evidence/analysis/procedure-pilot-selection.md` | a third skill meets P1–P3 without a content change |
 | D17 | spend-exhaustion | council:agents/evidence/council/procedure-cursor-spend-d13-20261018.md | D13 revisited under the delegation: Phase 6 spend is **not** authorised yet. 6.1–6.4 are written first with the pinned model and settings, the exact invocation path and transport, retry policy, aggregation, and a token estimate translated to a worst-case USD figure; the authorisation is then put to the council with that figure before any measured run. A subscription-only authorisation was refused because the eval workload's transport is not established | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); `cost.budgets` is unset on every layer, so no delegated spend threshold is recorded | the pre-registration states its computed maximum |
 | D18 | spend-exhaustion | council:agents/evidence/council/procedure-cursor-spend-authorisation-20261019.md | With the computed maximum in hand (D17's condition), the council does **not** authorise Phase 6 spend: no positive maximum is council-decidable while no delegated threshold is recorded, and the run instruction's "within configured cost.budgets" covers $0. The authorisation is the owner's; zero-spend preparation proceeds meanwhile | AI council 2026-10-19, `anthropic` + `openai`, prompt mode, one round, 2/2 (c) across two attempts — one seat timed out in the first and answered in the second, disclosed in the record; $0.00 | the owner records a positive `cost.budgets` threshold or authorises a stated maximum |
+| D19 | spend-exhaustion | owner | The Phase 6 measurement is declined (option c): 6.2, 6.5 and AC-7 are cancelled, the cursor stays opt-in and out of the public command reference (D3). Council 2026-10-19 (anthropic, openai, 2/2, $0.00): (a) and (b) clause 4; openai chose (c), anthropic held (c) defensible and offered a 32-run stop. | owner answer 2026-10-20 (option 1); `cost.budgets` resolves to zero | the cursor is proposed default-on or documented publicly, or a measurement budget is allotted (run the frozen 6.1 design) |
 | D9 | reversible-technical | evidence | The stale `existing-ui-audit` link is deleted, not "fixed" by moving sections out | `skill_linter.ts:98`; `b3cc0ada6` | the linter stops requiring `Output format` or `Gotcha` in the body |
 | D10 | reversible-technical | evidence | The canon contradiction named in Context is this file's work, not an open question | Phase 2.1 replaces `skill-writing:104` and `:126-129` with one statement; the closure scan's `contradictory` hit is that finding | — |
 | D11 | reversible-technical | evidence | Closure-scan `typed-op` hits on the word "merge" are slug text, not an operation | Both hits are the slug `road-to-a-retro-the-merge-runs`; this file merges nothing | — |
@@ -548,7 +557,7 @@ script or reads an exit code, so a `check:<id>` exit is graded from the trace
   names.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-20 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -586,9 +595,11 @@ script or reads an exit code, so a `check:<id>` exit is graded from the trace
       the other 1,019 tests in the directory pass untouched.
 - [x] **AC-6** No string from a skill file is executed by the cursor or the
       lint.
-- [ ] **AC-7** A pre-registered three-arm result is published, the verdict
+- [-] **AC-7** A pre-registered three-arm result is published, the verdict
       follows the frozen rule, and nothing is default-on before it — an honest
       null included.
+      *Cancelled 2026-10-20 (D19, owner):* the measurement was declined; its
+      surviving half — nothing default-on — holds, since the cursor stays opt-in.
 - [x] **AC-8** `skill_count` and `concern_count` are unchanged by this roadmap.
 
 ## Notes — how this file was derived
