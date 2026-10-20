@@ -312,6 +312,20 @@ beside the digests, so the table is data minimisation, not a defence against a
 reader running as the same user. Byte lengths in a payload stub are
 measured on the received envelope whichever view the stub is cut from.
 
+**What this package injects goes through the engine too.** Every concern's
+reply that the dispatcher hands back to the session — a `context` block at
+session start (hot context, a handoff) and the `reason` plus
+`additional_context` of every other reply (memory recall among them) — passes
+`egressInjection` in `src/scripts/hooks/egress_stage.ts`. In `protect` and
+`strict` each listed value becomes its token under one scope per dispatch, so
+one value is one token across replies; text whose secret has no provable
+extent, or that no engine can read, is withheld whole as
+`[egress: injected text withheld (<rule>)]`. `off` and `observe` inject the
+text unchanged. The mode is read once per dispatch, and only when a reply
+carries text. The per-text work lives in the engine chunk
+(`src/scripts/_lib/egress_text.ts`, schema 2), so the dispatch bundle carries
+only the field walk.
+
 **What the placeholder view does not reach.** A concern that opens the host's
 transcript file reads it from disk, raw; an operator-armed raw capture
 (`AGENT_HOOK_CAPTURE_DIR`) writes the received payload before the stage runs;
