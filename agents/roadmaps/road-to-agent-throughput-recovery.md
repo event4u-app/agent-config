@@ -446,17 +446,18 @@ the Acceptance Criteria held.
 - [ ] **4.5 Close the long-option abbreviation bypass the 4.3 review found.**
       Found 2026-10-20 by the `anthropic` seat reviewing 4.3 and **verified
       here, not taken on its word**: the guard matches the literal
-      `--no-verify`, git accepts any unambiguous prefix, and `git commit
-      --no-verif` passes the guard and skips the `pre-commit` hook — proven in
-      a scratch repository. Pre-existing, identical before 4.3's change.
+      `--no-verify`, git accepts any unambiguous prefix, and the abbreviation
+      `--no-verif` on `commit` passes the guard and skips the `pre-commit`
+      hook — proven in a scratch repository. Pre-existing, identical before 4.3's change.
       Reproduction, the live window, and the sibling claim that does **not**
       reproduce: `agents/evidence/analysis/short-n-change-held-2026-10-20.md`.
       Fix: match any unambiguous prefix of `--no-verify` that git would accept,
       on every subcommand, rather than the literal; the ambiguity boundary is a
       property of git's own option table and is pinned by test, never guessed.
-      verify: `git commit --no-verif`, `git commit --no-verifi`, `git push
-      --no-verif` and every longer prefix are refused; `git commit
-      --no-verbose` is unaffected; the new cases are seen red before the fix.
+      The cases to add, each seen red first: every unambiguous prefix from
+      `--no-verif` upward refused on `commit`, `am` and `push`, and
+      `--no-verbose` on `commit` left untouched.
+      verify: `npx vitest run tests/scripts/hooks/block_no_verify.test.ts` -> 0
       <br>Blocked by the same absent seat as 4.3 — the fix is in
       `block_no_verify.ts`, a gated surface.
       <!-- blocked-by: openai-council-seat-oauth-grant-rejected | asked: no — same question, same blocker, already routed with 4.3; a second ask would split one credential decision into two -->
@@ -512,10 +513,10 @@ the Acceptance Criteria held.
 - **Owner:** user
 - **Ownership:** product-owned
 - **Routed:** pending — the council is the thing that is broken. A round ran on 2026-10-20 and returned 1 of 2 seats; the absent seat is this blocker's subject, so a council routing would ask the broken instrument to certify its own repair. The action is a credential refresh on the owner's own machine, which no council verdict can perform or authorise.
-- **Blocks:** steps 4.3 and 4.5; AC-5's `block_no_verify` clause is unaffected by what this PR lands, because nothing here touches the guard — but 4.5 records a verified live bypass (`git commit --no-verif` skips the pre-commit hook) that stays open while this blocker does
+- **Blocks:** steps 4.3 and 4.5; AC-5's `block_no_verify` clause is unaffected by what this PR lands, because nothing here touches the guard — but 4.5 records a verified live bypass (the abbreviation `--no-verif` on `commit` skips the pre-commit hook) that stays open while this blocker does
 - **Question:** The `openai` council seat exits 1 before answering, on `OAuth refresh token was rejected: Server returned error response: invalid_grant: Grant not found` for a `linear-server` MCP configured in the codex CLI — an MCP unrelated to this council's work. `src/config/ratification-policy.json` sets `required_providers: 2`, and lowering it is itself a gated edit, so a one-seat round cannot ratify anything. The `anthropic` seat answered `ratified` on 2026-10-20 for step 4.3's change. May the owner refresh or remove that grant?
 - **Recommendation:** (a). The failing grant belongs to an MCP the council does not use, so removing it from the codex CLI's MCP configuration restores the seat without touching the council's own credentials, and it is reversible by re-adding the server.
-- **If you do nothing:** step 4.3 stays open with its change written, tested and preserved at `2c5f20f7b` on local branch `wip/short-n-scope-ratification-pending`; the guard keeps refusing `git grep -n`, `git log -n 5`, `git branch -n`, `git push -n` and `git merge -n`; **step 4.5's verified bypass stays open — `git commit --no-verif` skips the pre-commit hook today**; and every other ADR-268 § 4 ratification in this repository is blocked for the same reason, not only these two.
+- **If you do nothing:** step 4.3 stays open with its change written, tested and preserved at `2c5f20f7b` on local branch `wip/short-n-scope-ratification-pending`; the guard keeps refusing `git grep -n`, `git log -n 5`, `git branch -n`, `git push -n` and `git merge -n`; **step 4.5's verified bypass stays open — the abbreviation `--no-verif` on `commit` skips the pre-commit hook today**; and every other ADR-268 § 4 ratification in this repository is blocked for the same reason, not only these two.
 - **What to do:** pick exactly one — (a) remove or re-authorise the `linear-server` MCP in the codex CLI configuration, then re-run the 4.3 review and land `2c5f20f7b` with its ratification artifact; or (b) ratify 4.3 yourself as the independent reviewer, since the owner is neither `proposed_by` nor `implemented_by`; or (c) leave the seat down and accept that no governance surface in this repository can be ratified until it returns.
 - **Resolved when:** `agent-config council:status` reports both seats answering a real round, or a ratification artifact for subject `ab60cc56d67a9b66da9522cb8eceacbcba4f4301b0f014ce4d84a74d8994c3ba` exists with two providers, and this entry's Status reads resolved.
 
