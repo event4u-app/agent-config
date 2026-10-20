@@ -1,17 +1,26 @@
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { SIDECAR_NAME, aggregate, readSignals } from '../../src/scripts/learning_sidecar.js';
 import { VALID_TYPES } from '../../src/scripts/memory_signal.js';
-import type { PrFacts } from '../../src/scripts/retro_facts.js';
+import type { PrFacts, SessionFacts } from '../../src/scripts/retro_facts.js';
+import { listQueue, retroEnabled } from '../../src/scripts/retro_queue.js';
+import { renderReport } from '../../src/scripts/_lib/self_repair.js';
 import {
     aggregateSidecar,
     composeRetro,
     intakeSignals,
+    listRetroLearnings,
+    planManualRetro,
     readRecurrence,
+    recordRetro,
+    renderStatus,
+    retroStatus,
+    runDailySweep,
     reopenOnRevert,
     triagePr,
     triageSession,
@@ -225,6 +234,7 @@ describe('retro — composition', () => {
             self_repair_in_window: m(1),
             roadmap: miss,
             branch: miss,
+            pr: miss,
         });
         expect(t.class).toBe('skip:low-signal');
     });
@@ -370,3 +380,143 @@ describe('retro — held or recurred', () => {
         expect(r.verdict).toBe('held');
     });
 });
+
+// ---------------------------------------------------------------------------
+// /retro by hand, status, proposals and package records
+// ---------------------------------------------------------------------------
+
+function gitRepo(): string {
+    const root = tmp();
+    const r = spawnSync('git', ['init', '-q', '-b', 'main'], { cwd: root, encoding: 'utf8' });
+    if (r.status !== 0) throw new Error(r.stderr);
+    return root;
+}
+
+function sessionFacts(tag: string, over: Partial<SessionFacts> = {}): SessionFacts {
+    return {
+        unit: 'session',
+        tag,
+        workspaces: m(['/w']),
+        found_in: m('/w'),
+        turns: m(4),
+        assistant_records: m(4),
+        tool_calls: m(2),
+        compactions: m(0),
+        final_context_tokens: m(1000),
+        interruptions: m({ ask: 0, handback: 0, none: 1 }),
+        self_repair_in_window: m(0),
+        roadmap: miss,
+        branch: miss,
+        pr: miss,
+        ...over,
+    };
+}
+
+describe('retro — by hand', () => {
+    let savedHome: string | undefined;
+    beforeEach(() => {
+        savedHome = process.env['EVENT4U_CONFIG_HOME'];
+        process.env['EVENT4U_CONFIG_HOME'] = tmp();
+    });
+    afterEach(() => {
+        if (savedHome === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+        else process.env['EVENT4U_CONFIG_HOME'] = savedHome;
+    });
+
+    it('manual-run-does-not-reenable', () => {
+        const root = gitRepo();
+        fs.writeFileSync(path.join(root, '.agent-settings.yml'), 'retro:\n  enabled: false\n');
+        const before = fs.readFileSync(path.join(root, '.agent-settings.yml'), 'utf-8');
+
+        const planned = planManualRetro(root, {
+            repo: 'acme/widget',
+            facts: [prFacts({ pr: 5, red_heads: m(2) }), sessionFacts('s1')],
+        });
+        expect(planned.map((p) => p.triage.class)).toEqual(['analyse', 'skip:low-signal']);
+        expect(planned[0]!.unit_key).toBe(unitKey({ repo: 'acme/widget', pr: 5, merge_sha: 'a'.repeat(40) }));
+
+        // A manual run wrote nothing an automatic path would read, and the switch is untouched.
+        expect(retroEnabled(root)).toBe(false);
+        expect(listQueue(root)).toEqual([]);
+        expect(fs.readFileSync(path.join(root, '.agent-settings.yml'), 'utf-8')).toBe(before);
+        expect(runDailySweep(root, { now: '2026-10-21T07:00:00Z', timeZone: 'UTC', repo: 'acme/widget', sessions: [] }).status).toBe(
+            'disabled',
+        );
+    });
+
+    it('status-shows-skip-reasons', () => {
+        const root = gitRepo();
+        const now = '2026-10-21T07:00:00Z';
+        const day = '2026-10-20';
+        runDailySweep(root, {
+            now,
+            timeZone: 'UTC',
+            repo: 'acme/widget',
+            sessions: [
+                { tag: 'quiet', day, branch: null, facts: sessionFacts('quiet') },
+                { tag: 'old', day: '2026-10-01', branch: null, facts: sessionFacts('old') },
+                { tag: 'busy', day, branch: null, facts: sessionFacts('busy', { self_repair_in_window: m(1) }) },
+            ],
+        });
+        const s = retroStatus(root);
+        expect(s.last_sweep!.counts).toEqual({ analyse: 1, 'skip:low-signal': 1, covered: 0, deferred: 0, expired: 1 });
+        const text = renderStatus(s);
+        expect(text).toContain('skipped (low-signal): 1');
+        expect(text).toContain('expired: 1');
+        expect(text).toContain('analysed: 1');
+        expect(text).toContain('queue: 1 unit(s) waiting');
+        // A unit a retro examined leaves the queue line.
+        const key = unitKey({ repo: 'acme/widget', session: 'busy' });
+        const out = composeRetro({ key, facts: sessionFacts('busy', { self_repair_in_window: m(1) }), candidate: null, root });
+        recordRetro(root, out, null, now);
+        expect(retroStatus(root).pending).toEqual([]);
+    });
+});
+
+describe('retro — proposals and package records', () => {
+    const NOW = '2026-10-21T07:00:00.000Z';
+
+    it('override-is-a-proposal-file', () => {
+        const root = gitRepo();
+        const key = unitKey({ repo: 'acme/widget', pr: 3, merge_sha: 'b'.repeat(40) });
+        const cand: Candidate = { ...learning, target: 'override-proposal', asset_target: 'rule:scope-control' };
+        const out = composeRetro({ key, facts: prFacts({ red_heads: m(2) }), candidate: cand, root });
+        const res = recordRetro(root, out, cand, NOW);
+        expect(res.written).toMatch(/^agents\/proposals\/retro-drain-baseline-drift-[0-9a-f]{8}\.md$/);
+        const text = fs.readFileSync(path.join(root, res.written!), 'utf-8');
+        expect(text).toContain('stage: captured');
+        expect(text).toContain('type: rule');
+        expect(text).toContain(`retro_unit_key: ${JSON.stringify(key)}`);
+        // Nothing was applied: no override, no rule, no always-loaded file.
+        expect(fs.existsSync(path.join(root, 'agents', 'overrides'))).toBe(false);
+        expect(fs.existsSync(path.join(root, 'AGENTS.md'))).toBe(false);
+        // `/memory:propose` lists it with its unit key.
+        expect(listRetroLearnings(root)).toEqual([
+            { kind: 'proposal', unit: key, subject: 'drain/baseline-drift', where: res.written },
+        ]);
+    });
+
+    it('package-finding-is-a-record', () => {
+        const root = gitRepo();
+        const treeRoot = path.resolve(__dirname, '..', '..');
+        const key = unitKey({ repo: 'acme/widget', pr: 4, merge_sha: 'c'.repeat(40) });
+        const cand: Candidate = { ...learning, target: 'package-record', asset_target: 'rule:scope-control' };
+        const out = composeRetro({ key, facts: prFacts({ red_heads: m(2) }), candidate: cand, root });
+        const res = recordRetro(root, out, cand, NOW, { treeRoot });
+        const rec = readRecord(root, res.written!)!;
+        expect(rec.target).toEqual(['rule:scope-control']);
+        expect(rec.principle).toBe('drain/baseline-drift');
+        expect(rec.falsifier).toBe(learning.falsifier);
+        expect(rec.unit_keys).toEqual([key]);
+        // A second unit naming the same claim joins the record, it does not replace the first.
+        const key2 = unitKey({ repo: 'acme/widget', pr: 5, merge_sha: 'd'.repeat(40) });
+        const out2 = composeRetro({ key: key2, facts: prFacts({ red_heads: m(2) }), candidate: cand, root });
+        recordRetro(root, out2, cand, NOW, { treeRoot });
+        expect(readRecord(root, res.written!)!.unit_keys).toEqual([key, key2]);
+        // The unit key never reaches what can leave the machine.
+        expect(renderReport(readRecord(root, res.written!)!, 'issue')).not.toContain('acme/widget#pr');
+        // At most one package record per run.
+        expect(() => recordRetro(root, out2, cand, NOW, { treeRoot, packageRecordsThisRun: 1 })).toThrow(/one package record/);
+    });
+});
+
