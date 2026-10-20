@@ -926,15 +926,17 @@ function _uninstall_global(opts: Options): number {
         try {
             let removed = 0;
             let kept = 0;
+            let finder = 0;
             for (const anchor of codexSkillRoots(os.homedir())) {
                 const res = removeCodexResidentSet(anchor, codexResidentRecordPath(anchor));
                 removed += res.removed.length;
                 kept += res.kept_user.length;
+                if (res.finder === 'removed') finder += 1;
             }
-            if (removed > 0 || kept > 0) {
+            if (removed > 0 || kept > 0 || finder > 0) {
                 _print(
                     _stdout,
-                    `  · codex: removed ${removed} resident-set policy file(s), ` +
+                    `  · codex: removed ${removed} resident-set policy file(s) and ${finder} finder entr(ies), ` +
                         `kept ${kept} the user changed`,
                 );
             }
