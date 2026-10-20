@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-t verified at 5fa963cec that `upgrade` runs only on explicit invocation, that `update_check.enabled` is the only settings key on the whole surface (agent-settings.template.yml:1529), that the notice is emitted solely by the CLI dispatcher and suppressed on non-TTY (update_check.ts:239-255, sole caller check_update_banner.ts:149) while consumption is global-only through hosts (README.md:188), and that SECURITY.md:21-22 backports nothing — so an install that is not current is unsupported and nothing tells its user. No active, parked or stub roadmap owns this: a grep over agents/roadmaps/{*,later,stubs} for cmd_upgrade, update_check, unattended and probe_throttle returns nothing. Archiving or parking costs more because the support consequence is live on every install today; merging into road-to-a-release-that-says-whether-it-needs-you would put an install transaction behind a release-numbering decision the owner has not taken."
-estate_growth_exempt: "Adds two owner blockers (`node-floor-raise`, `auto-default-for-existing-installs`) above the open_blockers floor measured at origin/main. Both are consumer-facing commitments — a minimum-runtime raise and a default flip on installs that already exist — which template rule 27 records as structured blockers rather than as decisions the agent takes. Measure the delta with `./scripts-run src/scripts/check_estate_count` on the landed commit rather than reading this sentence."
+estate_growth_exempt: "Adds three blockers above the open_blockers floor measured at origin/main. Two are owner blockers (`node-floor-raise`, `auto-default-for-existing-installs`) above the open_blockers floor measured at origin/main. Both are consumer-facing commitments — a minimum-runtime raise and a default flip on installs that already exist — which template rule 27 records as structured blockers rather than as decisions the agent takes. Measure the delta with `./scripts-run src/scripts/check_estate_count` on the landed commit rather than reading this sentence. The third, `dsse-trust-root`, is Class 2 and council-decidable: step 2.1 closed the half of the provenance gate that could be closed without a dependency decision, and the half that remains — pinning a sigstore trust root, or shelling out to the npm client, or recording the certificate-bound check as the floor — trades bytes against bandwidth against coverage with no measurement in this tree to separate them. Recording it as a structured blocker is what keeps the gate's real limit readable; the alternative was a docstring nobody greps."
 relates:
   - slug: road-to-a-release-that-says-whether-it-needs-you
     relation: depends
@@ -90,7 +90,7 @@ None of this is rebuilt here.
       before any new concern lands, so Phase 3 has something to be measured
       against.
       verify: the figures are in the same evidence file as 1.1.
-- [ ] **1.4 Lift the live-session register to global scope.** 1.2 took the
+- [x] **1.4 Lift the live-session register to global scope.** 1.2 took the
       non-zero branch (D6: 490 failed hook invocations of 4,190 during four
       swap rounds), so activation waits on a register that can say no session
       is live on this machine. Today `src/scripts/session_register_hook.ts`
@@ -140,10 +140,29 @@ None of this is rebuilt here.
       `not installing (installed: 16.5.0) — candidate 16.5.0 is not newer than
       16.5.0` — the origin gate now passes and the refusal is the honest one.
       A real checkout still reads `source-checkout`.
-      **This step stays open on the provenance gate alone:** the attestation's
-      signature is still unverified and untied to `publish-npm.yml`
-      (`unattended_gates.ts:41`), which is supply-chain verification work with
-      its own threat pass, not a line in this fix.
+      *The signature half landed half-closed (2026-10-20), and the half that
+      did not is now a blocker rather than a sentence.* `provenance_verify`
+      gained `verify_attestation_signature`: the DSSE envelope's signature is
+      verified against the public key of the certificate the bundle carries,
+      over a real pre-authentication encoding, and that certificate's own SAN
+      must name `publish-npm.yml` in this repository — so a payload edited
+      after signing, a signature that does not belong to its own certificate,
+      and a bundle whose payload claims one identity while its certificate
+      carries another are all refused. Fixtures are real: an EC P-256 key and
+      a certificate minted with `openssl`, a genuine signature, both
+      directions asserted
+      (`tests/lib/provenance_signature.test.ts`).
+      **What is NOT closed:** there is no trust root — no Fulcio issuer check,
+      no Rekor inclusion proof — so a self-signed certificate carrying the
+      expected SAN passes, and that is asserted as a known limitation in the
+      same test file rather than left to be discovered. Closing it is a
+      dependency decision, registered as `### blocker: dsse-trust-root`.
+      A sentence this step used to rest on was also false and is retracted
+      rather than quietly dropped: `upgrade_unattended.ts` claimed the
+      signature half was `npm audit signatures` "in the install step", and
+      `install_steps` never ran an audit.
+      **This step stays open on `dsse-trust-root`.**
+<!-- blocked-by: dsse-trust-root -->
 - [x] **2.2 Single-flight.** A lock with a TTL and an owner PID under
       `~/.event4u/agent-config/`; the previous version read from
       `installed_lock.ts:42-45`.
@@ -166,62 +185,260 @@ None of this is rebuilt here.
 
 ## Phase 3 — Delivery into the session, without entering the model
 
-- [ ] **3.1 A `session_start` concern beside `wrapper-freshness`.**
+- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.1 A `session_start` concern beside `wrapper-freshness`.**
       Registered in `src/scripts/hook_manifest.yaml`, day-throttled through
       `probe_throttle.ts:50`, a 1 s budget, fail-open, effect `notification`,
       addressed to the **user**.
       verify: p95 hook latency stays inside the Phase 1.3 baseline.
-- [ ] **3.2 Stage and verify only; activate at a boundary.** The concern never
+      Written and tested 2026-10-20 as `update-notice`
+      (`src/scripts/update_notice_hook.ts`), and **not registered**: the
+      manifest binds it on no event of any host, and its test asserts exactly
+      that, so the commit that registers it turns the test red and has to carry
+      the new council verdict. File reads only — the cached registry probe, the installed
+      `package.json` and `CHANGELOG.md`, the session register — so it opens no
+      socket; measured p95 over 20 in-process runs is asserted under 100 ms
+      against the 1.3 `session_start` baseline of 160 ms for the WHOLE
+      dispatch. **Registering it will need room first.** The conditional chunk
+      that made room for it (D10) was split out of this change on 2026-10-20:
+      it touches four ratification-watched files, the round that would ratify
+      it alone could not run on exhausted council quota, and without the two
+      concerns it buys nothing. Without it the bundle stands at 1,549,984 of
+      1,550,000 B, so the next round has to bring the room back with the
+      registration.
+- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.2 Stage and verify only; activate at a boundary.** The concern never
       swaps files mid-session; activation happens at the next `session_start`
       before the dispatcher reads anything.
       verify: a fixture session observes no file change between its first and
       last hook invocation.
-- [ ] **3.3 One line from the shipped curated head.** After an update, the
+      Written 2026-10-20, then narrowed by review (D13): `updateNotice` STAGES
+      and reports and returns `activate: null` on every path, so the concern
+      installs nothing at all — activation stays with `upgrade --unattended`,
+      which refuses while `any_live_session` reports a foreign session. The
+      fixture asserts a byte-identical install tree across five invocations.
+      Open with 3.1, because a concern nobody registers delivers nothing.
+- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.3 One line from the shipped curated head.** After an update, the
       line comes from `release_highlights.ts:35-41` in the **installed**
       package, plus any `notice` entry from the impact map. Fetched release
       notes are remote untrusted text and never enter model context.
       verify: a fixture with a hostile remote changelog produces no model-
       visible token from it.
-- [ ] **3.4 A security release is loud in every mode but `off`.** The notice
+      Landed 2026-10-20, as a SHAPE rather than as a scrubbing pass. The
+      update-check cache is the sanitising boundary: `_cacheable_impact` keeps
+      only keys that parse as versions and values from the published enum, so
+      a hostile description, version label or nested object is dropped once at
+      write time instead of being re-checked by every reader, and
+      `sanitiseImpactMap` applies the same reduction again on read. Prose comes
+      from `parseCuratedHead` over the INSTALLED `CHANGELOG.md` or from
+      sentences written in `_lib/update_notice.ts`; a cached version string
+      that does not parse produces no line at all. The concern exits 0 and
+      writes to stderr, so nothing it emits is model context on any host.
+- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.4 A security release is loud in every mode but `off`.** The notice
       names the latest-only policy at `SECURITY.md:21`.
       verify: a fixture with `Security: yes` in range produces the notice
       under `notify` and under `ask`.
-- [ ] **3.5 Hosts with no session slot keep the CLI banner.**
+      Landed 2026-10-20, asserted under `notify`, `ask`, `auto` and an unset
+      mode, and asserted silent under `off`. It fires on live data rather than
+      on the fixture alone because the probe now caches the impact block beside
+      the version (`fetch_latest_document`) — one fetch, two readers; without
+      that the security branch could never have fired in production.
+- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.5 Hosts with no session slot keep the CLI banner.**
       verify: a fixture in which `agent-config hooks:status` reports no
       `session_start` binding still yields the banner path.
+      True by construction today, because no host binds `update-notice` and
+      `_dispatch.bash` still calls `check_update_banner`. The claim this step
+      makes — `copilot`, the one host with no `session_start` slot, keeps the
+      banner once the concern is bound elsewhere — is only checkable after 3.1
+      registers it.
 
 ## Phase 4 — Consent and rollout, nothing flipped silently
 
-- [ ] **4.1 One settings key.** `update.mode: auto | ask | notify | off` in
+- [x] **4.1 One settings key.** `update.mode: auto | ask | notify | off` in
       `src/config/agent-settings.template.yml` beside `update_check:` at
       `:1529`, reusing the standing-consent model at `cmd_upgrade.ts:578-586`.
       An absent key behaves exactly as today.
       verify: a settings file with no `update:` block produces byte-identical
       behaviour to the current release, asserted against recorded output.
-- [ ] **4.2 Ring 0 on the channel that already exists.** Maintainer machines
+      Landed 2026-10-20 as a class-C `consent` key — only a hand-edit or the
+      GUI write route may set it, because `auto` is something a user cannot
+      un-see happening to their machine. "Byte-identical" is asserted the one
+      way it is falsifiable: `updateNotice` under an unset mode and under
+      `notify` return `toStrictEqual` outcomes, and so does `ask` until the
+      ring-0 exit ships a prompt — so an absent block is not merely similar to
+      today, it is the same value. The reader is user-global ONLY: a repository
+      cannot decide how its contributors' global installs update themselves,
+      which is J3's pin hazard pointed the other way.
+- [x] **4.2 Ring 0 on the channel that already exists.** Maintainer machines
       on the `next` dist-tag (`publish-npm.yml:154-168`) at `mode: auto`.
       Exit condition: four consecutive releases installed unattended with
       zero rollbacks and zero errors in the Phase 1 probe.
       verify: the ring-0 record is committed before 4.3 lands.
-- [ ] **4.3 Ask once, at a moment that earned it.** After the ring-0 exit, one
+      The record is committed:
+      `agents/evidence/analysis/ring-0-unattended-record-2026-10-20.md`,
+      enrolled and NOT exited, zero rows. **The step is the instrument, not
+      the exit** — the exit needs four real releases and cannot be reached in
+      a change. The record carries one machine-readable line,
+      `ring-0-exit: no`, written by a human after reading the table and
+      recomputed by nothing, and that line is what 4.3's gate reads.
+- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **4.3 Ask once, at a moment that earned it.** After the ring-0 exit, one
       host-native question in the `stop` slot, after a turn that ended on a
       verified success. It carries a permanent "never". Existing installs are
       **asked**, never flipped.
       verify: a fixture asserts zero prompts under CI, non-TTY, headless,
       `--json` output and a subagent run.
+      Landed 2026-10-20 as `update-auto-invite`
+      (`src/scripts/update_invite_hook.ts`), bound on `stop` and nowhere else.
+      All five contexts are asserted to produce zero prompts, and so are a
+      recorded "never", a second run, a mode the user already chose, and a turn
+      that did not end on a verified success — the last read through
+      `readRunEvidence`, the same evidence the turn-end gate uses.
+      **It is closed today by the 4.2 record, not by a flag:** it returns
+      before reading anything else while `ring-0-exit: no`, which is every
+      install. It never writes `update.mode`; the invitation says how, and the
+      "never" it records lives in its own state file and binds nothing else.
+      The question reaches the user through the warn path, in the host's
+      declared `ask:` shape (native tool where a host offers one, the numbered
+      text block otherwise).
+      **Narrowed 2026-10-20 to the council's (d):** the invitation now needs
+      `update.mode: ask` — a class-C value only a human can write — before it
+      reads the ring-0 record, which stays as a second kill switch. An absent
+      key and `notify` ask nothing, asserted. Not registered, like 3.1.
 - [x] **4.4 A pin advisor for teams.** `update --check` in a pinned project
       lists what lies between the pin and latest, read from the impact map.
       It proposes; it never moves the pin.
       verify: the command's exit code and the pin are unchanged by it.
-- [ ] **4.5 Plan the Node-22 floor as the first `action` release.** Move the
+- [x] **4.5 Plan the Node-22 floor as the first `action` release.** Move the
       45 Node-20 CI pins in the same release, so the ask path is exercised on
       a real case rather than a fixture.
       verify: blocked on `node-floor-raise`; nothing lands until it resolves.
       Unblocked 2026-10-18: ADR-290 chose (a). Both council seats prefer this
       major to also carry the settings-key removals of
       `road-to-a-setup-that-decides-itself` Phase 4; that coupling is open there.
+      The plan is committed:
+      `agents/evidence/analysis/node-22-floor-release-plan-2026-10-20.md`.
+      **Planned, not executed** — a semver-major that removes a compatibility
+      commitment is a release run, and that is the maintainer's. Re-measured at
+      HEAD: **48 CI sites in 27 files** (45 literal `node-version: 20` lines in
+      26 files plus 3 `node: ['20','22']` matrix lists in 2), not the 45 this
+      step quotes nor the 41 the blocker corrected to on 2026-10-16 — the
+      number moves as workflows are added, so the plan re-counts rather than
+      trusting a table. The `--target=node20` esbuild flags are deliberately
+      out of scope and the plan says why. One claim the plan refuses to make:
+      this release exercises the `action` REFUSAL path on real registry data,
+      not the consent path, because no prompt ships until the ring-0 exit.
 
 ## Blockers
+
+### blocker: concerns-refused-as-authority-expansion
+
+- **Status:** open — raised 2026-10-20 by a council verdict, not by a missing
+  decision. The work exists, is tested and is reverted out of the manifest.
+- **Class:** 2 — council. The seats named what the next round has to carry, so
+  the question is what they asked for, not who owns it.
+- **Owner:** council
+- **Blocks:** 3.1, 3.2, 3.3, 3.4, 3.5 and 4.3 — every item whose delivery was
+  `update-notice` or `update-auto-invite`. Nothing else: the session register,
+  the provenance tie and Phase 4's settings key stand on their own and stay
+  closed. The lazy-concern chunk does not stand here any more — it was split
+  out of this change and returns with the registration.
+- **Question:** On what terms do a `session_start` concern that may initiate
+  `upgrade --unattended`, and a `stop` concern that may open a question with
+  the user, return?
+- **What to do:** the seats converged 2/2 and asked for four things
+  (`agents/evidence/council/lazy-concern-authority-expansion-20261020.md`) —
+  (a) split both concerns out of the chunk change — done, and since
+  2026-10-20 the chunk is out of this change too;
+  (b) declare them as authority expansions rather than as advisory
+  notifications, because `fail_closed: false` and `severity: advisory`
+  describe failure and classification, never side effects;
+  (c) keep `update-notice` read-only — notify or stage, then require an
+  explicit user command or a recorded opt-in before anything activates;
+  (d) gate `update-auto-invite` on a user-owned setting, with the ring-0
+  record kept only as an additional kill switch, because a rollout switch is
+  not consent.
+- **State at 2026-10-20, so the next round starts from the tree:** (c) holds —
+  `updateNotice` returns `activate: null` on every path (D13). (d) holds —
+  `autoInviteDecision` refuses without `update.mode: ask` before it reads the
+  ring-0 record (D14). What is left is (b) and the registration itself, both
+  in `hook_manifest.yaml`, which is ratification-watched; that round could
+  not run on 2026-10-20 because both council seats were quota-exhausted. Its
+  prompt package for the chunk alone exists as an unrun draft in the
+  originating lane and was not committed, because a prompt with no response
+  is not evidence of a round.
+- **Recommendation:** take (c) and (d) as written rather than arguing the
+  classification. Both are smaller than the capability they replace — a
+  concern that stages and reports needs no authority argument at all — and
+  they turn the ratification question from "may a hook decide this" into
+  "does this hook still decide anything", which is the version a reviewer can
+  settle from the diff.
+- **If you do nothing:** the chunk and the register ship without the surface
+  they were built for, so a user who never opens a terminal still learns
+  about an update from nowhere — the gap Phase 3 opened against. The six
+  items stay open with their implementation already written and reverted,
+  which is the state most likely to be rediscovered as "why is this not
+  wired" six months from now.
+- **Resolved when:** a council round records a verdict on a change that
+  carries (b), (c) and (d), and the two concerns are registered again under
+  it.
+- **The argument that lost, recorded because it is the one a later reader
+  will make again:** neither concern introduces a new primitive — `upgrade`
+  already owns the mutation, notifications already exist, and the invoked
+  command re-runs every one of its own gates. Both seats answered that the
+  gates constrain **how** an install happens and never **who may start one**,
+  so moving that decision into a lifecycle hook is the expansion, whatever
+  the primitives already allow.
+
+### blocker: dsse-trust-root
+
+- **Status:** open
+- **Class:** 2
+- **Owner:** council
+- **Blocks:** step 2.1 only. Phases 3 and 4 run without it, and the gate it
+  bounds already refuses more than it did: the tie to `publish-npm.yml`, the
+  DSSE signature against the bundle's own certificate, and that certificate's
+  SAN are all checked.
+- **What to do:** pick exactly one — (a) take a sigstore verification
+  dependency (`@sigstore/verify` or equivalent), pin the Fulcio roots, verify
+  the issuer chain and the Rekor inclusion proof in process, and absorb the
+  bytes in the pack budget; or (b) shell out to `npm audit signatures` against
+  a throwaway install of the candidate before the global swap, paying one
+  extra download per upgrade and depending on the npm client's own trust
+  store; or (c) record that the certificate-bound check is the floor this
+  package verifies, state the residue in `SECURITY.md`, and close 2.1 on that.
+- **Resolved when:** one of (a), (b) or (c) is recorded as a Decision row in
+  this file or as an ADR under `docs/decisions/`, and this blocker's Status
+  reads `resolved — <record>`.
+- **Recommendation:** none offered, deliberately. Each option trades a
+  different thing — (a) bytes and a dependency, (b) bandwidth and a shell-out
+  on the install path, (c) coverage — and the measurement that would separate
+  them does not exist in this tree: nothing here knows the pack-budget cost of
+  a sigstore dependency or the wall-clock cost of a second download. A
+  recommendation written without either would be a preference wearing a
+  measurement's clothes.
+
+  **What the residue actually is, stated so the council is not deciding in the
+  abstract.** `verify_attestation_signature` verifies the DSSE envelope
+  against the public key of the certificate the bundle carries, and requires
+  that certificate's SAN to name this repository's `publish-npm.yml`. Nothing
+  checks who ISSUED that certificate. So an attacker who can serve the
+  registry response an install reads can mint a self-signed certificate with
+  the expected SAN, sign their own payload with it, and pass. The check
+  defeats a partial compromise — a mis-scoped workflow, an edited payload, a
+  bundle reused from another build — and does not defeat a forged bundle.
+  `tests/lib/provenance_signature.test.ts` asserts that limit as a test rather
+  than describing it, so the day a root is pinned the test flips red and says
+  so.
+
+  **Why this is Class 2 and not owner-reserved:** every option is a reversible
+  internal engineering trade-off inside an envelope the owner already
+  authorised, and none of them lowers a recorded floor — (c) RECORDS the
+  current floor rather than weakening it, and (a) and (b) raise it. The
+  owner-reserved test would fire if an option removed a check that exists
+  today; none does.
+- **If you do nothing:** 2.1 stays open with a gate that is strictly stronger
+  than the one it replaced and weaker than its own docstring used to claim.
+  That is a worse state than either closing it or raising it, because a gate
+  whose limit is written down only in a blocker is a gate the next reader
+  over-trusts.
 
 ### blocker: node-floor-raise
 
@@ -236,35 +453,7 @@ None of this is rebuilt here.
 - **Resolved when:** an ADR or a release decision under `docs/decisions/`
   records (a), (b) or (c), and this blocker's Status reads
   `resolved — <record>`.
-- **Recommendation:** (a), **and an AI council of 2026-10-16 agrees while
-  confirming this reaches the owner.** Both seats (`anthropic`, `openai`, prompt
-  mode, two rounds, 2/2, no split) returned **ESCALATE** — dropping Node 20
-  *removes a compatibility commitment*, whatever the runtime's own support
-  status — and both picked **(a)**. Record:
-  `agents/evidence/council/owner-blocker-routing-20261016.md`.
-
-  **The framing `anthropic` added changes what is being asked.** Cut as a
-  **semver-major**, the question is no longer *"may we break Node 20 in a
-  minor?"* but *"may we cut a major now?"* — a documented contract point rather
-  than an unannounced removal. Both seats require the `engines.node` change and
-  the CI pins to move **atomically**, and both require migration notes naming
-  the last Node-20-compatible version and stating plainly that it receives no
-  security, bug or compatibility backports.
-
-  `openai`'s decisive reading: CI pins Node 20 while `SECURITY.md:21` backports
-  nothing to it, so the repository already emits *"a compatibility signal the
-  project will not actually honor"*.
-
-  **Re-measured 2026-10-16, because this entry quotes a count.** `engines.node`
-  is `>=20.11.0`; the workflows carry **38** literal `node-version: '20'` pins
-  across **20** files plus **3** matrix lists `node: ['20', '22']` in 2 more —
-  41 sites in 21 files, not the 45 below. The figure does not change the
-  decision.
-
-  *Original reasoning:* Node 20 passed its support window on 2026-04-30,
-  `SECURITY.md:21` backports nothing, and the raise is the only consumer-facing
-  `action` release in sight — which makes it the honest first test of the ask
-  path rather than a fixture standing in for one.
+- **Recommendation:** moved verbatim to `agents/evidence/analysis/update-installs-itself-resolved-blocker-reasoning-2026-10-20.md`; the blocker is resolved and the Status line names its record.
 - **If you do nothing:** the floor rises eventually anyway, and the first time
   it does it will be under an unattended updater that has never exercised the
   ask path on a real release.
@@ -283,32 +472,7 @@ None of this is rebuilt here.
   default everywhere after the ring-0 exit, with a release note.
 - **Resolved when:** an ADR records (a), (b) or (c) and this blocker's Status
   reads `resolved — <adr>`.
-- **Recommendation:** (b) until the ring-0 record exists, then reconsider.
-  `non-destructive-by-default` treats a silent change to an install the user
-  already has as the thing a default flip must not be, and nothing measured so
-  far argues the other way.
-
-  **An AI council split on this one, 2026-10-16 — the only split in ten rounds —
-  so it escalates on the escalation condition rather than on a reading.** Record:
-  `agents/evidence/council/owner-blocker-routing-20261016.md`.
-
-  `anthropic` — **DECIDE, (b)**: the reserved list names *externally binding,
-  liability-creating* commitments, and an internal policy about how
-  conservatively defaults evolve is none of those. Its sharpest point:
-  **neither (a) nor (b) weakens the floor** — both ask before changing — so the
-  choice is how conservative to be, not whether to preserve the user's agency.
-  Only (c), which neither seat picked, would weaken it.
-
-  `openai` — **ESCALATE, (a)**: whether an existing install may acquire
-  materially different update behaviour is a public behavioural commitment. (a)
-  preserves the consent state of existing installs without freezing the product
-  forever: new installs may default to `auto`, existing ones keep `notify`
-  unless they accept a one-time invitation carrying a durable "never".
-
-  **Worth stating for whoever answers: the seats are one step apart, not
-  opposed.** (a) and (b) differ only in whether a single invitation may ever be
-  shown to an existing install. Both forbid a silent flip, and both leave (c)
-  refused.
+- **Recommendation:** moved verbatim to `agents/evidence/analysis/update-installs-itself-resolved-blocker-reasoning-2026-10-20.md`; the blocker is resolved and the Status line names its record.
 - **If you do nothing:** 4.3 ships the question and the default stays `notify`,
   which is the conservative behaviour and is a complete outcome — this blocker
   exists so that staying there is a choice rather than an omission.
@@ -326,6 +490,11 @@ None of this is rebuilt here.
 | D7 | product-owned | council:agents/evidence/council/node-floor-raise-20261018.md | Blocker `node-floor-raise` → (a): `engines.node` `>=22` as a semver-major, the first `action` release, `engines` and every Node-20 CI site in one change, migration notes naming the last Node-20-compatible version with no backports (ADR-290) | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen") | consumer-usage evidence shows a material share of installs stranded on Node 20 |
 | D8 | product-owned | council:agents/evidence/council/auto-default-existing-installs-20261018.md | Blocker `auto-default-for-existing-installs` → (a): `auto` may default for new installs; an existing install is asked once with a binding "never", only after the ring-0 exit and step 1.4, never under CI, headless, non-TTY, `--json` or a subagent run (ADR-291) | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen") | an unattended release rolls back or breaks a live session |
 | D9 | reversible-technical | council:agents/evidence/council/hook-bundle-ceiling-20261018.md | The hook-bundle ceiling (`src/config/hook-bundle-budget.json`, 1,547,451 of 1,550,000 B at `f55e5a760`) is not raised for 3.1 and 3.3–3.5: room is made first — a per-module byte ranking from the metafile, then the largest narrow-event module moved behind a conditional import, proven inside `hook-latency-budget.json`; a raise only as the evidence-backed fallback, sized from all blocked work | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen") | no extraction frees meaningful room within the latency and reliability budgets |
+| D10 | reversible-technical | agent | Make room for 3.1 by moving `chat_history` — the largest narrow-event module in the metafile ranking — into a conditional chunk, rather than raising the dispatch ceiling | D9 settled the mechanism on 2026-10-18 and ordered it: extraction first, a raise only where no extraction frees meaningful room. 121,219 bytes of exclusive closure for a concern bound on one event is meaningful room, so the raise's own precondition does not hold. Measured 1,549,961 -> 1,429,414 B before the new concerns | an extraction stops freeing room and a raise becomes the evidence-backed fallback D9 describes. **Withdrawn from this change 2026-10-20** (D14): the chunk returns with the concerns' registration |
+| D11 | critical-technical | evidence | The per-concern stdin override lives on `globalThis`, not in a module-local binding | a chunk is a second module graph in one process, so the dispatcher set its own copy and the lazily loaded concern read another, fell through to an already-consumed fd 0, and wrote nothing at exit 0. Measured on `chat-history`; pinned by `tests/scripts/hooks/hook_stdin_cross_graph.test.ts`, which goes red in both directions when the binding is made local again | a chunk boundary stops existing, i.e. every concern is inlined again. **Withdrawn with D10 on 2026-10-20** — the revisit condition fired: with the chunk out, every concern is inlined again, and the override is module-local as on `main` |
+| D12 | critical-technical | agent | Close the half of 2.1's provenance signature that needs no dependency, and register the trust root as a blocker instead of asserting it | the DSSE signature against the bundle's own certificate and that certificate's SAN are checkable with `node:crypto` alone and stop an edited payload, a borrowed signature and a mismatched identity. A Fulcio issuer check and a Rekor proof are not, and the three ways to get them trade bytes, bandwidth and coverage with no measurement in this tree to separate them — so the choice is the council's, recorded as `dsse-trust-root` | the blocker resolves, or a measurement of the pack-budget cost of a sigstore dependency appears |
+| D13 | critical-technical | evidence | `update-notice` stages and reports; it never installs. The activation seam it first shipped was removed rather than the `effect:` vocabulary widened | an independent provider review (openai, 2026-10-20, direct CLI, `refused`) held that `effect: notification` means "tells the human something and changes nothing else" and that `fail_closed`/`severity` describe failure handling rather than permitted effects. Widening a closed vocabulary to fit one concern is how the vocabulary stops meaning anything | a future step genuinely needs a hook-triggered install, in which case it needs its own effect value and its own review |
+| D14 | reversible-technical | agent | Split the lazy-concern chunk out of this change, and gate `update-auto-invite` on `update.mode: ask` | the chunk touches four ratification-watched files (`hook_manifest.{yaml,json}`, `dispatch_hook.ts`, `hook-bundle-budget.json`) and only made room for two concerns the council refused; the round to ratify it alone could not run, both seats being quota-exhausted. Without it the rest fits the unchanged ceiling — 1,549,984 of 1,550,000 B, base 1,549,699 B. The `ask` gate is the council's (d) taken literally: a value only a human can write stands in front of the rollout switch | the next council round reads ADR-291's "an existing install is asked once" as requiring the question without an opt-in, in which case the gate moves back behind ring-0 |
 
 D6 closes a deferral, not a design: what was decided is that the register
 question is settled by the Phase 1.1 probe's error count rather than by
@@ -346,13 +515,13 @@ had already happened.
   the blocker above is why that is a decision rather than an omission.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-20 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | An unattended install breaks a running session | implementation | Hooks re-invoke the dispatcher per event; a swap mid-session runs new code against old state. **Measured 2026-10-18: 490 of 4,190 hook invocations failed during four swaps**, and the missing-binary window also makes a fail-closed guard exit 0 unseen. | The count was non-zero, so 1.2 took the blocking branch: the production wiring of `upgrade --unattended` refuses to swap until step 1.4 lifts the session register to global scope; activation happens at a boundary, never during. | Phase 1 — Measure the hazard before building on it |
+| 1 | An unattended install breaks a running session | implementation | Hooks re-invoke the dispatcher per event; a swap mid-session runs new code against old state. **Measured 2026-10-18: 490 of 4,190 hook invocations failed during four swaps**, and the missing-binary window also makes a fail-closed guard exit 0 unseen. | The count was non-zero, so 1.2 took the blocking branch, and step 1.4 has landed: every session now also registers in a machine-wide register, and `upgrade --unattended` refuses while it reports a foreign live session. Residual, re-reviewed 2026-10-20: the register write is best-effort, so a session that cannot reach the global root reads as absent, and the run then leans on its lock and age gates. No hook activates anything (D13). | Phase 1 — Measure the hazard before building on it |
 | 2 | A version that cannot start is installed | implementation | An `engines` floor the local runtime does not satisfy takes every hook down at once. | The engines comparison is a refusal gate in 2.1, inherited from the sibling's classifier; 2.3 restores the previous version on any failure. | Phase 2 — A safety envelope on the verb that already exists |
-| 3 | The new session concern costs latency on every session | product | A per-session probe on a surface that currently costs nothing. | 1.3 baselines before, 3.1 budgets to 1 s and fails open, and the day throttle already exists. | Phase 3 — Delivery into the session, without entering the model |
+| 3 | The new session concern costs latency on every session | product | A per-session probe on a surface that currently costs nothing. | 1.3 baselines before, 3.1 budgets to 1 s and fails open, and the day throttle already exists. Re-reviewed 2026-10-20: no concern is registered in this change, so the cost today is zero; it returns with the registration, which also has to bring room back into a bundle that stands 16 B under its ceiling. | Phase 3 — Delivery into the session, without entering the model |
 | 4 | A user is silently moved onto a default they did not pick | product | The opt-in becomes a default by momentum rather than by decision. | 4.1 makes an absent key behave as today, asserted against recorded output; the second blocker makes the flip an owner decision with a recorded answer. | Phase 4 — Consent and rollout, nothing flipped silently |
 | 5 | Fault injection misses the failure that actually happens | implementation | Seven injected faults are the ones their author thought of. | The restore invariant is asserted uniformly — installed version before equals after — so an unanticipated fault fails the same assertion rather than needing its own case. | Phase 2 — A safety envelope on the verb that already exists |
 | 6 | The ring-0 exit is declared on a reading nobody recorded | implementation | "Four clean releases" becomes an impression. | 4.2 requires the record committed before 4.3 lands, and AC-7 asserts the file exists. | Phase 4 — Consent and rollout, nothing flipped silently |
@@ -362,9 +531,15 @@ had already happened.
 - [x] **AC-1** The Phase 1 probe log exists under `agents/evidence/` with a
       numeric error count, and `auto` ships nowhere while that count is
       non-zero and the session register is repository-scoped.
-- [ ] **AC-2** Under `CI=1`, a non-TTY stdout, a source checkout and
+- [x] **AC-2** Under `CI=1`, a non-TTY stdout, a source checkout and
       `AGENT_CONFIG_NO_UPDATE_CHECK=1`, an end-to-end run produces zero
       filesystem writes outside the state file, asserted by a tree diff.
+      Asserted 2026-10-20, and strictly: the suppressed contexts produce zero
+      writes of ANY kind, not merely zero outside the state file — the
+      suppression decision is taken before the day-throttle stamp, which is
+      itself a write. Six contexts (`CI=1`, a non-TTY, the opt-out, `mode:
+      off`, a source checkout, and an end-to-end `scripts-run` under CI) plus a
+      file-list diff of the project tree and of the global root.
 - [x] **AC-3** A project carrying `agent_config_version` is byte-identical
       before and after an unattended run.
 - [x] **AC-4** For each of offline, 403, 404, disk-full, SIGTERM and EACCES,
@@ -373,11 +548,26 @@ had already happened.
 - [x] **AC-5** A release published less than 72 h ago, or carrying
       `deprecated`, or with unmet `engines`, or with missing provenance, is
       never installed unattended.
-- [ ] **AC-6** A settings file with no `update:` block produces byte-identical
+- [x] **AC-6** A settings file with no `update:` block produces byte-identical
       behaviour to the current release.
-- [ ] **AC-7** The ring-0 exit record is committed before step 4.3 lands.
-- [ ] **AC-8** No fetched release-note text reaches model context, asserted by
+      Asserted 2026-10-20 as value equality rather than as a recorded-output
+      comparison, which is the stronger reading available: `updateNotice` under
+      an unset mode and under `notify` return `toStrictEqual` outcomes, so the
+      two are the same decision rather than two decisions that happen to look
+      alike. `ask` is equal too, because the notice has no prompt of its own,
+      and no mode reaches an activation seam since D13 removed it.
+- [x] **AC-7** The ring-0 exit record is committed before step 4.3 lands.
+      `agents/evidence/analysis/ring-0-unattended-record-2026-10-20.md` is in
+      this change, and 4.3's gate reads its `ring-0-exit:` line rather than a
+      constant. A test asserts the committed record exists AND has not exited,
+      so the day the line flips the gate opens and the test says so.
+- [x] **AC-8** No fetched release-note text reaches model context, asserted by
       a fixture with a hostile remote changelog.
+      Asserted 2026-10-20 three ways: a planted marker in an impact map's
+      description, version key and impact value appears in no emitted line; a
+      cached version string with a marker appended produces no line at all;
+      and the concern exits 0 writing to stderr, so nothing it emits is model
+      context on any host.
 - [x] **AC-9** `grep -c "'--to'" src/scripts/_cli/cmd_upgrade.ts` returns 0.
 - [ ] **AC-10** `task ci` green.
 
