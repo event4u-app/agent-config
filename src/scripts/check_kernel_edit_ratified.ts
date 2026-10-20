@@ -175,15 +175,16 @@ export const POLICY_PATH = 'src/config/ratification-policy.json';
  * Membership is read FROM GIT OBJECTS at both the base and the head commit and
  * the union is gated (see `gateInputsFor`), so dropping a member is caught by
  * the base side and adding one by the head side, and the digest covers both.
- * It FAILS CLOSED: a list that cannot be read at either commit is a refusal.
- * A head that breaks the list blocks only the change that broke it; a base
- * whose list does not read can only be reached by a ratified merge. The repair
- * of such a base is NOT passed by this gate — every run against that base
- * refuses — so it lands through the route ADR-281 § 5 names for anything the
- * gate cannot pass: the owner's own recorded forge bypass, outside this
- * repository. Only the changes after the repair are judged by a base whose
- * list reads again. No repository flag switches the class off, because a
- * switch the candidate can set is a switch the candidate controls.
+ * It FAILS CLOSED WHERE IT DECIDES: a diff holding a rule path outside the
+ * kernel is refused when the list cannot be read at either commit. A diff
+ * holding no such path is classified identically under every membership, so
+ * the list is not read for it (`classDecidesAny`). That bounds what a broken
+ * list can block, and it is what makes a broken base repairable through this
+ * gate: the repair touches the list, which is a mechanism path and needs a
+ * ratified record whatever the list says, and no rule file, so it is judged
+ * like any other mechanism edit. A repair that must also edit a rule ships in
+ * two changes, list first. No repository flag switches the class off, because
+ * a switch the candidate can set is a switch the candidate controls.
  *
  * Rollout: the merge that introduces this class is judged by the base's copy
  * of the gate, which does not know the class. That merge edits no member, so
@@ -485,12 +486,35 @@ export function isMechanismPath(p: string): boolean {
     );
 }
 
-/** Partition a changed-file list into the surfaces this gate watches. */
+/**
+ * True when classifying `files` depends on the high-consequence class at all:
+ * some path is a rule file (source or projection) outside the kernel. For any
+ * other diff every membership yields the same classification, so the class is
+ * not read — and a list that does not read cannot block a diff it cannot
+ * affect, the list's own repair included (the list is a mechanism path and is
+ * gated by that, whatever it says).
+ */
+export function classDecidesAny(files: readonly string[]): boolean {
+    return files.some((raw) => {
+        const m = KERNEL_RULE_PATH_RE.exec(raw.replace(/\\/g, '/').trim());
+        return m !== null && !is_kernel_rule(m[1] ?? '');
+    });
+}
+
+/**
+ * Partition a changed-file list into the surfaces this gate watches.
+ *
+ * `consequence` omitted reads this checkout's class, and only when a path
+ * needs it ({@link classDecidesAny}); that read fails closed.
+ */
 export function classifyPaths(
     files: readonly string[],
     derived: readonly string[] = derivedPlumbing(),
-    consequence: ReadonlySet<string> = consequenceRuleSlugsOfCheckout(),
+    consequence?: ReadonlySet<string>,
 ): GatedPaths {
+    if (consequence === undefined) {
+        consequence = classDecidesAny(files) ? consequenceRuleSlugsOfCheckout() : new Set<string>();
+    }
     const derivedSet = new Set(derived);
     const kernelRules: string[] = [];
     const governanceHooks: string[] = [];
@@ -600,30 +624,38 @@ function resolveBaseRef(explicit: string | null, root: string): string {
  * bytes would sit outside the digest the record carries. The head side alone
  * would let a change drop a member in order to edit it. In the residue case the
  * base side is this checkout's working-tree list, as the plumbing base is.
+ * Both sides are read only when `files` holds a rule path the class could
+ * decide ({@link classDecidesAny}); otherwise the class is empty, which for
+ * such a diff is exact rather than permissive.
  *
  * THROWS a {@link GatedSubjectRefusal} when the base does not resolve, the
- * object store cannot be read, or the class list cannot be read on either side.
+ * object store cannot be read, or a needed class list cannot be read on
+ * either side.
  */
 function gateInputsFor(
     root: string,
     baseRef: string | null,
     headCommit: string,
+    files: readonly string[],
 ): { derived: readonly string[]; consequence: ReadonlySet<string> } {
     const verdictsOf = (tree: ClosureTree): string[] =>
         dispatchImportClosure(tree)
             .filter((e) => e.class === 'verdict')
             .map((e) => e.path);
+    const needed = classDecidesAny(files);
+    const classAt = (tree: { read(rel: string): string | null }, commit: string): ReadonlySet<string> =>
+        needed ? consequenceRuleSlugsIn((rel) => tree.read(rel), `commit ${commit}`) : new Set<string>();
     const head = treeAtRevision(root, headCommit);
-    const headClass = consequenceRuleSlugsIn((rel) => head.read(rel), `commit ${headCommit}`);
+    const headClass = classAt(head, headCommit);
     if (baseRef === null && path.resolve(root) !== REPO) {
         return {
             derived: [...new Set([...derivedPlumbing(), ...verdictsOf(head), ...closureArrivals(head)])],
-            consequence: new Set([...consequenceRuleSlugsOfCheckout(), ...headClass]),
+            consequence: new Set([...(needed ? consequenceRuleSlugsOfCheckout() : []), ...headClass]),
         };
     }
     const baseCommit = resolveRevision(root, resolveBaseRef(baseRef, root));
     const base = treeAtRevision(root, baseCommit);
-    const baseClass = consequenceRuleSlugsIn((rel) => base.read(rel), `commit ${baseCommit}`);
+    const baseClass = classAt(base, baseCommit);
     return {
         derived: [...new Set([...verdictsOf(base), ...verdictsOf(head), ...closureArrivals(head, base)])],
         consequence: new Set([...baseClass, ...headClass]),
@@ -661,7 +693,7 @@ export function expectedSubjectFor(
     baseRef: string | null = null,
 ): SubjectReading {
     const commit = resolveRevision(root, revision);
-    const { derived, consequence } = gateInputsFor(root, baseRef, commit);
+    const { derived, consequence } = gateInputsFor(root, baseRef, commit, files);
     return subjectOf(root, files, derived, commit, consequence);
 }
 
@@ -696,7 +728,7 @@ export function evaluate(
     let headCommit: string;
     try {
         headCommit = resolveRevision(root, revision);
-        ({ derived, consequence } = gateInputsFor(root, baseRef, headCommit));
+        ({ derived, consequence } = gateInputsFor(root, baseRef, headCommit, files));
     } catch (err) {
         if (!(err instanceof GatedSubjectRefusal)) {
             throw err;
