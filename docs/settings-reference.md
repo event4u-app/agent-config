@@ -276,6 +276,12 @@ explanation lives now that the file no longer carries it as comments.
 |---|---|---|---|---|---|
 | `reasoning.enabled` | C | boolean | `true` |  | Master switch for the Reasoning Discipline Protocol (RDP). false = the whole layer is inert (zero overhead). |
 
+## retro
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `retro.enabled` | C | boolean | `true` |  | Automatic retro after merged work (ADR-292, docs/contracts/retro-v1.md). true (default, owner directive 2026-10-12) = a merged PR and the first session of a new local day enqueue finished work; a deterministic triage picks what is worth one learning, and nothing behaviour-changing is applied without a person. false = no automatic path runs — no merge enqueue, no forge-merge marker, no daily probe; an explicit /retro still runs on request. Class C: an agent cannot set it; it cascades from the user-global file. |
+
 ## roadmap
 
 | Key | Class | Type | Default | Allowed values | What it does |

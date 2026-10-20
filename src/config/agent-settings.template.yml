@@ -1171,6 +1171,17 @@ continuity:
   #   off = no checkpoint; every other session-end handler is unaffected.
   run_checkpoints: "on"
 
+# Automatic retro after merged work (ADR-292, docs/contracts/retro-v1.md).
+retro:
+  # On by default by the owner's directive of 2026-10-12. A merged pull request
+  # and the first session of a new local day enqueue finished work; a
+  # deterministic triage picks what is worth one learning, and nothing that
+  # changes behaviour is applied without a person.
+  #   true  = (default) the automatic paths run.
+  #   false = no automatic path runs; an explicit /retro still runs on request.
+  # Set it in the user-global settings file to switch it off everywhere.
+  enabled: true
+
 # --- Memory ---
 #
 # Engineering memory consolidation behaviour. Memory is entirely

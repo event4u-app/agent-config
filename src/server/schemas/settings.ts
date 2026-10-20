@@ -435,6 +435,11 @@ export const settingsSchema = z.object({
             'Deterministic run-checkpoint production at session end (road-to-continuity-writer-activation Phase 1.4). on (default) = a session above the recycle threshold and inside a running roadmap contract leaves agents/runtime/state/checkpoints/<run>.json, so a killed run resumes from a derived checkpoint rather than from bookkeeping. off = no checkpoint; continuity writing, the recycle advisory and the context-fill surface are unaffected. Default ON because it is the behavior the tree already had — the switch exists to make the three session-end handlers independently disableable, not to change what ships.',
         ),
     }),
+    retro: z.object({
+        enabled: z.boolean().default(true).describe(
+            'Automatic retro after merged work (ADR-292, docs/contracts/retro-v1.md). true (default, owner directive 2026-10-12) = a merged PR and the first session of a new local day enqueue finished work; a deterministic triage picks what is worth one learning, and nothing behaviour-changing is applied without a person. false = no automatic path runs — no merge enqueue, no forge-merge marker, no daily probe; an explicit /retro still runs on request. Class C: an agent cannot set it; it cascades from the user-global file.',
+        ),
+    }),
     memory: z.object({
         redact_patterns: z.array(z.string()).default([]).describe(
             'Regex patterns (one per line) that scrub matches from chat-history transcripts and memory before they hit disk. Use for secrets, customer names, internal URLs. Patterns are anchored and case-insensitive.',
