@@ -16,13 +16,11 @@ import {
 
 
     _tier_b_advisory,
-    type DeployResult,
 } from '../../src/scripts/install.js';
 // The feature itself lives in `_lib/mcp_bridge.ts`; `install.ts` forwards the
 // names above. Both surfaces are exercised: the forwarded ones here, and
 // `applyTieredPrune` — the branch install.ts actually calls — below.
 
-import { migrationEligibility } from '../../src/scripts/_lib/skill_catalogue.js';
 import { computeTiers } from '../../src/scripts/compute_skill_tiers.js';
 import { loadContentTree } from '../../src/cli/mcp/content.js';
 import { dispatch } from '../../src/cli/mcp/dispatch.js';
@@ -122,13 +120,6 @@ describe('_tier_b_advisory — Phase 2.3, a recommendation and never a write', (
 });
 
 describe('migrationEligibility — a tiered install is already narrowed', () => {
-    // Found by `task typecheck-ts`, not by `tsc -p tsconfig.json`, which does not
-    // apply the repo's `exactOptionalPropertyTypes` / strict settings: widening
-    // the projection union to three members left this call site narrowing to two.
-    // `tiered` gets its OWN reason rather than reusing `already-scoped` — the two
-    // narrow on different axes (packs vs the host's listing budget) and a caller
-    // reading the reason should be able to tell which one the install is on.
-    const limits = new Map();
 
     // REMOVED 2026-10-20: `already-tiered` is no longer a verdict
     // `migrationEligibility` can return. skill_catalogue.ts says so in its
