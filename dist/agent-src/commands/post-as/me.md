@@ -103,13 +103,13 @@ disk; the checker scans inside a single wrapping fence:
 
 ```bash
 npx tsx node_modules/@event4u/agent-config/src/scripts/check_voice_lexicon.ts --draft - \
-  [--slot agents/context-spine/brand-voice.md]
+  --user .agent-user.md [--slot agents/context-spine/brand-voice.md]
 ```
 
 Pass `--slot` only when `agent-config brand:status --json` reports the
-`brand-voice` slot valid. Claim phrases are checked either way; the
-user's own `style.avoid` is not read (`.agent-user.md` v1 has no such
-field). Findings flag without blocking: print each after the fenced
+`brand-voice` slot valid. Claim phrases are checked either way; `--user`
+reads the user's own optional `style.avoid` (absent → no user terms).
+Findings flag without blocking: print each after the fenced
 block with its line and its note or the missing proof. Exit 2 is a broken
 invocation: say so and never present the draft as checked. No runtime → say
 so in one line.

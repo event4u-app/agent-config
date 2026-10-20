@@ -450,11 +450,12 @@ irreversible-external-action row of `non-destructive-by-default`).
       verify: `rg -l 'check_voice_lexicon' src/domains/gtm-marketing/ghostwriter/write/command.md src/skills/humanizer/SKILL.md src/domains/brand/brand/review/command.md` -> 3 files
       Open 2026-10-17: the checker exists (5.1); wiring it into `/ghostwriter:write`, `/post-as:*`, `humanizer` and `/brand:review` changes what those consumer-facing commands do on every draft, which this drain lane treats as owner-reserved. The `enforced_by` change waits with it.
       Done 2026-10-19: the step is this roadmap's own, and what it changes is the step's stated design — flags, never blocks, except the taboo abort `/ghostwriter:write` already documented — so it lands under the run's authority. The checker gained `--draft -` (stdin), because both drafting commands print only and may not write the draft to disk. `/ghostwriter:write` step 5b runs it with `--ghostwriter` (exit 1 aborts with no draft and no footer) and `--slot` when `brand:status` reports the slot valid; `/post-as:ghostwriter` is its alias; `/post-as:me` step 5b runs it with the slot only, since `.agent-user.md` v1 has no `style.avoid` (5.5); `humanizer` step 5 runs it after the tell detector and reports `unbacked-claim` instead of rewording it away; `/brand:review` runs it and the 3.3 palette reading before any model judgement. `brand-source-of-truth` now reads `instruction-only: check_voice_lexicon runs only when a command calls it` — a model still invokes it, so no `validator:` claim; the preamble budget reads zero net growth. `draft-surfaces` in `check_voice_lexicon.test.ts` (seen red) pins stdin and all four surfaces; `command-clusters.md` no longer calls `brand-consistency` a gate.
-- [ ] **5.5 User schema v2** — only if 5.0 says build.
+- [x] **5.5 User schema v2** — only if 5.0 says build.
       verify: `rg -n 'avoid' src/shared/userMd/schema.ts` -> /avoid/
       Open 2026-10-17: 5.0 read *schema field only*, not build, so the condition as written does not fire; whether the middle branch still justifies a bare `style.avoid` field is a consumer-visible schema decision left for the owner.
       Still open 2026-10-19, unchanged: the step's own condition is false, and closing it either way — `[-]` because the condition never fired, or a bare field because the middle branch reads "schema field only" — is the owner's call, not a run's.
-      <!-- blocked-by: user-negative-lexicon-schema | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
+      Decided 2026-10-20 (E16, owner): build the narrow field — optional `style.avoid` in `src/shared/userMd/schema.ts`, max 32 entries of `{ pattern (1-64 chars), match: word|substring, note? }`, no regex (NG-6), default `[]`; wire the `user` branch `check_voice_lexicon.ts` already types (`SEVERITY_BY_SOURCE.user = 'warning'`), add a user-source case to `check_voice_lexicon.test.ts`, and add the field to the `/agents:user` templates. Additive and optional; `voice_samples[]` (option b) is not taken. Unblocked, not started.
+      Done 2026-10-20 (E16): `style.avoid` is an optional `userStyleAvoidSchema` in `src/shared/userMd/schema.ts` — max 32 `{ pattern 1-64, match word|substring, note? }`, no regex — read through `userStyleAvoid()`, whose default is `[]`. It is `.optional()` rather than `.default([])` so a file without it parses and saves byte-for-byte as before; `mergeIdentity` keeps a valid list through the wizard round-trip instead of erasing it. `check_voice_lexicon --user <file>` reads it from `.agent-user.md` (or a bare `.agent-user.yml`) at `warning`; an invalid list is exit 2, an absent one adds no terms. `/post-as:me` step 5b and the opt-in `task voice-lexicon` (5.6) pass `--user` when the file exists; the `/agents:user` templates, `/agents:user:init` and `agent-user-schema.md` carry the field. Seen red first: `user-source` in `check_voice_lexicon.test.ts`, `style.avoid` in `schema.test.ts`, the round-trip case in `formAdapter.test.ts`, and the user case in `voice_lexicon_task.test.ts`.
 - [x] **5.6 Persisted prose, opt-in.** A Taskfile target over PR title/body and
       branch commits; not in default CI.
       verify: `rg -n 'voice-lexicon' Taskfile.yml taskfiles/` -> /voice-lexicon/
@@ -534,21 +535,21 @@ irreversible-external-action row of `non-destructive-by-default`).
       path — the third is the one a skill could fail while passing the first.
       A sabotage probe (renaming the resolver call in `canvas-design`) turned
       the first case red, so the matcher is sensitive and not a tautology.
-- [ ] **6.3 Is a declared slot read?** Pre-registered N and bar (E8): fixture
+- [-] **6.3 Is a declared slot read?** Pre-registered N and bar (E8): fixture
       prompts routed to the 6.1 readers with the slot present; read rate from the
       audit log's Read events on the slot path. At or above the bar → no carrier,
       honest null recorded.
       verify: `test -f agents/evidence/analysis/spine-slot-read-rate.md` -> 0
       Open 2026-10-19: the prompt set E8 left open is now pre-registered and committed before any run — `tests/fixtures/brand-voice-read-rate/prompts.json`, 30 reader prompts (five per 6.1 reader), 10 unrelated prompts, and the read-event and routing protocol. The run itself is not taken here: it is 40 fresh paid host sessions in a scratch consumer project under a clean HOME (an in-repo `claude -p` measures this package's own rules, not the host), which is the operator's spend call. No reading exists, so 6.4, AC-7 and AC-9 wait on it.
       Still open 2026-10-19: the drain run re-checked the premise instead of repeating the note. Nothing changed — the fixture is pre-registered and frozen, and what remains is 40 fresh paid host sessions under a clean HOME, an undelegated spend decision. Recorded as a blocker so the dashboard and `open_blockers` see it rather than a prose note.
-      <!-- blocked-by: slot-read-rate-measurement-spend | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
-- [ ] **6.4 Carrier, only if 6.3 fails.** Context-spine § 4 amended by ADR;
+      Cancelled 2026-10-20 (E15, owner): honest null — not measured, no carrier. The paid run was not authorized; the pre-registered fixture stays committed, so a later reading starts from it without re-registering. This closes non-disclosure only, never discoverability: nothing here shows a reader skill finds the slot.
+- [-] **6.4 Carrier, only if 6.3 fails.** Context-spine § 4 amended by ADR;
       concern `brand-voice-card` registered in `src/config/hook-token-budget.json`
       at the measured card size (three attributes, `avoid` terms, one sample);
       emitted only when a routed reader skill runs and the slot is valid; shaped
       by `injection_budget.ts`; Claude Code first. 0.6 stays green.
       verify: `npx vitest run tests/scripts/hooks -t "brand-voice-card|no-brand-bytes" --reporter=verbose` -> /✓.*brand-voice-card[\s\S]*✓.*no-brand-bytes/
-      <!-- blocked-by: slot-read-rate-measurement-spend | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
+      Cancelled 2026-10-20 (E15, owner): conditional on 6.3 missing its bar, and 6.3 was not run. No carrier is built; NG-8 and risk row 5 stand.
 
 ## Phase 7 — Intake and proof
 
@@ -643,14 +644,14 @@ Carried from the supplied plans' kill register; each was judged and not taken.
 - [x] AC-6 — A planted banned term or unbacked claim in a finished draft from
       ghostwriter, post-as, humanizer or brand review produces a located finding;
       a quoted one does not.
-- [ ] AC-7 — A non-brand task in a fully branded project carries zero brand
+- [x] AC-7 — A non-brand task in a fully branded project carries zero brand
       bytes, before and after any carrier.
-      <!-- blocked-by: slot-read-rate-measurement-spend | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
+      Closed 2026-10-20 (E15): no carrier exists, so "after" equals "before"; 0.6's `no_brand_bytes.test.ts` is green (3/3).
 - [x] AC-8 — `brand-source-of-truth` names its checker in `enforced_by`, or says
       `instruction-only`, and no file calls `brand-consistency` a gate.
-- [ ] AC-9 — A runtime carrier exists only if the recorded read-rate
+- [x] AC-9 — A runtime carrier exists only if the recorded read-rate
       measurement missed its pre-registered bar.
-      <!-- blocked-by: slot-read-rate-measurement-spend | asked: no — raised as a blocker by a drain lane, which has no channel to the owner; the entry is the decision packet -->
+      Closed 2026-10-20 (E15): no measurement, no carrier — the condition holds vacuously.
 
 ## Decisions
 
@@ -670,11 +671,13 @@ Carried from the supplied plans' kill register; each was judged and not taken.
 | E12 | reversible-technical | evidence | The starter drops `$schema` rather than guessing a replacement URL: no offline check can confirm a published schema location, and no reader consumes the key. | `design-tokens-starter.json:2`; no `$schema` read in `tokens.ts` | the specification publishes a schema URL a validator here would read |
 | E13 | reversible-technical | evidence | AC-6 and AC-8 closed 2026-10-19 with 5.4. AC-6: the four surfaces run `check_voice_lexicon` on the finished draft; the checker's located findings and quoted-text exemption are tested. AC-8: `enforced_by` names the checker under `instruction-only`; the one remaining "validation gate" wording is ADR-210's decision table, a historical record left verbatim by the same convention 1.2 applies to ADR-061. | `draft-surfaces`, `lexicon`, `control` cases in `check_voice_lexicon.test.ts`; `rg -n 'brand-consistency' src docs` | the checker becomes a CI sweep (then `validator:`), or ADR-210 is amended |
 | E14 | reversible-technical | evidence | AC-1..AC-5 closed 2026-10-19 on fresh runs: AC-1 — `brand:status` computes per call and the 7.2 "exploration without lock" leg shows no file is added; AC-2 — `token-name-parity` green and `BRAND_TOKEN_PATHS` exported once (`src/shared/brandTokenPaths.ts`); AC-3 — the managed block covers both paths, `lint_ghostwriter_source` scans both, 0 tracked profiles, and this repository's own `.gitignore` now carries the same four lines, which it lacked (its managed block predates 1.1); AC-4 — `state-fixtures`, `shadowed`, `invalid`; AC-5 — `dtcg-2025`. AC-7 and AC-9 stay open on 6.3: neither can be judged before the read-rate reading decides whether a carrier exists. | `vitest run` over `brand_status`, `brand_scenarios`, `lint_ghostwriter_source`, `skills_design_tokens_tokens` (80 + 16 pass); `git check-ignore --no-index` | a carrier lands (re-check AC-7) |
+| E16 | business-owned | owner | Step 5.5 builds the narrow optional `style.avoid` field (option a): additive, default `[]`, no regex, max 32 entries; the `voice_samples[]` rename (b) is not taken. Council 2026-10-19 (anthropic, openai, 2/2 present, $0.00) split: both called (a) clause 5; openai chose (c) because 5.5's condition did not fire, anthropic recommended (a) reading the spike's *schema field only*. | owner answer 2026-10-20 (option 1); `TermSource` already includes `user` in `check_voice_lexicon.ts` | a consumer needs regex or stemming in `avoid`, or the field has to be renamed or removed after consumers write it |
+| E15 | business-owned | owner | 6.3 and 6.4 cancelled as an honest null — not measured, no carrier; AC-7 closed on 0.6's guard, AC-9 closed vacuously. Council 2026-10-19 (anthropic, openai, 2/2, $0.00) chose (c) and routed it to the owner because it cancels steps; (a) was clause 4. The closure claims non-disclosure only, never discoverability. | owner answer 2026-10-20 (option 1); `no_brand_bytes.test.ts` 3/3; fixture `tests/fixtures/brand-voice-read-rate/prompts.json` kept | a reader skill is reported not to find the slot, or paid measurement time is allotted (run the frozen fixture) |
 
 ## Blockers
 
 ### blocker: user-negative-lexicon-schema
-- **Status:** open — **council 2026-10-19 split (2/2 present, $0.00, record `agents/evidence/council/resolve-blockers-batch-20261019.md`):** both seats call (a) clause 5; openai chose (c), the step's condition did not fire; anthropic routed (a) to the owner, reading the spike's *schema field only* as a build directive. Raised 2026-10-19 by the drain run that closed 5.6. Not a new finding: step 5.5 carried the same question as a prose `Open` note on 2026-10-17 and again on 2026-10-19, where no gate and no dashboard could see it. The note is the reason this entry exists, not evidence that the question moved.
+- **Status:** resolved 2026-10-20 — option (a), narrow optional `style.avoid` field; step 5.5 unblocked, implementation not started (owner, after council 2026-10-19 anthropic + openai split, $0.00; E16). Earlier reading — **council 2026-10-19 split (2/2 present, $0.00, record `agents/evidence/council/resolve-blockers-batch-20261019.md`):** both seats call (a) clause 5; openai chose (c), the step's condition did not fire; anthropic routed (a) to the owner, reading the spike's *schema field only* as a build directive. Raised 2026-10-19 by the drain run that closed 5.6. Not a new finding: step 5.5 carried the same question as a prose `Open` note on 2026-10-17 and again on 2026-10-19, where no gate and no dashboard could see it. The note is the reason this entry exists, not evidence that the question moved.
 - **Owner:** maintainer — `.agent-user.md` is a consumer-written file, so a field added to its schema is a forward compatibility commitment the package must keep honouring once a consumer writes it. That is the owner-reserved "public or compatibility commitment" row, not a reversible-internal change, which is why it is not taken to the council.
 - **Blocks:** step 5.5. Step 5.6 no longer waits here — the opt-in target ships with the lexicon sources that exist and gains the user source when this is decided. Nothing else in the roadmap depends on it.
 - **What to do:** pick exactly one — (a) add `avoid` to the `style` object in `src/shared/userMd/schema.ts:39-43` as an optional array of `{ pattern (1-64 chars), match: word|substring, note? }`, max 32, no regex (NG-6), defaulting to `[]`, then wire the `user` branch `src/scripts/check_voice_lexicon.ts` already types (`TermSource = 'brand' | 'ghostwriter' | 'user'`, `SEVERITY_BY_SOURCE.user = 'warning'`) and add the field to the `/agents:user` templates; or (b) take the parked design's full Phase 1 — (a) plus `voice_samples: string[]` (max 3 × 1,200 chars) replacing the single `voice_sample`, with a v1-accepting reader, which also reopens the 100-line cap of `/agents user accept` the parked design flags as an explicit contract decision; or (c) mark 5.5 `[-]` cancelled, because the step's own condition ("only if 5.0 says build") did not fire and the spike's verdict was *schema field only, validator YAGNI*.
@@ -683,7 +686,7 @@ Carried from the supplied plans' kill register; each was judged and not taken.
 - **If you do nothing:** 5.6's target keeps checking the brand slot and the claim registry and reports `SKIPPED` wherever no lexicon is reachable; nothing regresses, and the personal half of "never say X" stays unbuilt.
 
 ### blocker: slot-read-rate-measurement-spend
-- **Status:** open — **council 2026-10-19 (2/2, $0.00, record `agents/evidence/council/resolve-blockers-batch-20261019.md`):** (a) is clause 4; both seats chose (c), with the caveat that a closure claims non-disclosure only, never discoverability. (c) cancels steps, so it reaches the owner. Raised 2026-10-19 by the drain run; the measurement's inputs are complete and frozen (`tests/fixtures/brand-voice-read-rate/prompts.json`, pre-registered before any run, 30 reader prompts and 10 unrelated), so what is missing is authorization to spend, not design.
+- **Status:** resolved 2026-10-20 — option (c), honest null: 6.3 and 6.4 `[-]`, AC-7 and AC-9 closed, no carrier (owner, after council 2026-10-19 anthropic + openai 2/2 chose (c), $0.00; E15). Earlier reading — **council 2026-10-19 (2/2, $0.00, record `agents/evidence/council/resolve-blockers-batch-20261019.md`):** (a) is clause 4; both seats chose (c), with the caveat that a closure claims non-disclosure only, never discoverability. (c) cancels steps, so it reaches the owner. Raised 2026-10-19 by the drain run; the measurement's inputs are complete and frozen (`tests/fixtures/brand-voice-read-rate/prompts.json`, pre-registered before any run, 30 reader prompts and 10 unrelated), so what is missing is authorization to spend, not design.
 - **Owner:** maintainer — the protocol is 40 fresh paid host sessions (`claude -p`, one per prompt) in a scratch consumer project under a clean HOME. That is undelegated spend above any threshold a drain run holds, and an in-repo probe cannot substitute: it would measure this package's own rules rather than a consumer install.
 - **Blocks:** steps 6.3 and 6.4, and acceptance criteria AC-7 and AC-9. 6.4 is conditional on the reading ("only if 6.3 fails"), so neither it nor the two criteria can be judged either way before the run.
 - **What to do:** pick exactly one — (a) authorize the run and execute the protocol in `tests/fixtures/brand-voice-read-rate/prompts.json` verbatim, recording the result in `agents/evidence/analysis/spine-slot-read-rate.md` with per-run activated skill and read events, after which 6.4 is decided by the bar (E8: ≥ 95 % reader reads, 0 unrelated reads); or (b) narrow 6.3 to a cheaper reading the operator names, re-pre-registering N and the bar before it runs, since E8 forbids tuning after the first run; or (c) record an honest null — "not measured, no carrier" — mark 6.3 and 6.4 `[-]`, and close AC-9 on the absence of a carrier while AC-7 rests on 0.6's standing guard.
@@ -692,7 +695,7 @@ Carried from the supplied plans' kill register; each was judged and not taken.
 - **If you do nothing:** Phases 0-5 and 7 stay closed and the roadmap stays active on four items, none of which changes behaviour in the tree.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude-opus -->
+<!-- risk-review: v1 | reviewed: 2026-10-20 | reviewer: claude-opus -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|

@@ -90,6 +90,7 @@ import {
     type OutgoingPullRequest,
     outgoingDigest,
     renderOutgoing,
+    renderUpstreamBody,
     retroBranch,
 } from './_lib/self_repair_outgoing.js';
 import { _detect_project_identifiers } from './check_portability.js';
@@ -337,7 +338,8 @@ export function planRelease(
         blocked,
         patch_denied,
         title: titleFor(record),
-        body: renderReport(record, choice.route),
+        // Only a local-only plan keeps the free-text report: nothing leaves.
+        body: choice.route === 'local-only' ? renderReport(record, choice.route) : renderUpstreamBody(record, choice.route),
     };
 }
 
@@ -418,7 +420,7 @@ export function collectOutgoing(
     }
     // Re-rendered for the issue rung: a plan that degrades from pull-request
     // must not file an issue whose body claims `Route: pull-request`.
-    const issue = { title: plan.title, body: plan.route === 'issue' ? plan.body : renderReport(record, 'issue') };
+    const issue = { title: plan.title, body: plan.route === 'issue' ? plan.body : renderUpstreamBody(record, 'issue') };
     // Where the bytes go is part of what is approved: the same text sent to
     // another repository, from another account, is another act.
     const account = resolveAccount(runner);

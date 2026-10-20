@@ -23,7 +23,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { gitEnv } from '../../src/scripts/_lib/git_env.js';
 import { chooseEgress, type DefectRecord } from '../../src/scripts/_lib/self_repair.js';
-import { noreplyIdentity, outgoingDigest } from '../../src/scripts/_lib/self_repair_outgoing.js';
+import { noreplyIdentity, outgoingDigest, renderOutgoing } from '../../src/scripts/_lib/self_repair_outgoing.js';
 import type { Probe, ReleaseDeps, ReleasePlan, RunResult, Runner } from '../../src/scripts/self_repair_cli.js';
 import {
     capabilityOf,
@@ -31,6 +31,7 @@ import {
     consumerDenyList,
     executeRelease,
     findAgentConfigCheckout,
+    planRelease,
     renderDryRun,
     runCommand,
 } from '../../src/scripts/self_repair_cli.js';
@@ -443,6 +444,65 @@ describe('the person approves the exact bytes', () => {
     });
 });
 
+describe('the upstream body is synthesised from closed fields (D10)', () => {
+    // Every field that is free text stays on the machine, whatever its name:
+    // the evidence span, the suggested surface, the mechanism and the
+    // falsifier. Only the class, the targets, the principle slug and the
+    // counters leave — in the pull request body and in the issue it degrades to.
+    const LOCAL = ['EVIDENCE-SPAN', 'SURFACE-LINE', 'MECHANISM-LINE', 'FALSIFIER-LINE'];
+    function claimRecord(): DefectRecord {
+        return {
+            ...record(),
+            evidence: 'EVIDENCE-SPAN quoted from a transcript',
+            suggested_surface: 'SURFACE-LINE in a company term',
+            target: ['rule:verify-before-complete'],
+            principle: 'drain/baseline-drift',
+            mechanism: 'MECHANISM-LINE in a company term',
+            falsifier: 'FALSIFIER-LINE in a company term',
+        };
+    }
+
+    it('payload-has-only-closed-fields — pull request body and fallback issue carry the closed fields and nothing else', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'a neutral sentence\n');
+        const f = forge();
+        const rec = claimRecord();
+        const p = planRelease(rec, probe(r), r.checkout);
+        expect(p.route).toBe('pull-request');
+        const text = renderOutgoing(collectOutgoing(rec, p, probe(r), f.runner, 'o/r').outgoing);
+
+        expect(text).toMatch(/=== pull request ===/);
+        expect(text).toMatch(/=== issue, if the pull request fails ===/);
+        for (const v of ['user-reported', 'rule:verify-before-complete', 'drain/baseline-drift', rec.fingerprint]) {
+            expect(text).toContain(v);
+        }
+        for (const v of LOCAL) expect(text).not.toContain(v);
+    });
+
+    it('payload-has-only-closed-fields — the issue route sends the same closed body', () => {
+        const rec = claimRecord();
+        const p = planRelease(rec, { agentConfigCheckout: null, ghAuthenticated: true, canPushUpstream: false, canFork: false }, os.tmpdir());
+        expect(p.route).toBe('issue');
+        expect(p.body).toContain('drain/baseline-drift');
+        for (const v of LOCAL) expect(p.body).not.toContain(v);
+    });
+
+    it('payload-has-only-closed-fields — a record with no principle says so instead of falling back to free text', () => {
+        const { principle: _p, target: _t, ...rec } = claimRecord();
+        const p = planRelease(rec, { agentConfigCheckout: null, ghAuthenticated: true, canPushUpstream: false, canFork: false }, os.tmpdir());
+        expect(p.body).toMatch(/Principle:.*not stated/);
+        expect(p.body).toMatch(/Targets:.*none/);
+        for (const v of LOCAL) expect(p.body).not.toContain(v);
+    });
+
+    it('payload-has-only-closed-fields — a local-only plan keeps the full local report', () => {
+        const rec = claimRecord();
+        const p = planRelease(rec, { agentConfigCheckout: null, ghAuthenticated: false, canPushUpstream: false, canFork: false }, os.tmpdir());
+        expect(p.route).toBe('local-only');
+        expect(p.body).toContain('EVIDENCE-SPAN');
+    });
+});
+
 describe('a refused title or body does not leave through the issue either', () => {
     it('consumer-identifier-in-diff-refuses — an identifier in the body refuses the issue fallback too', () => {
         const r = repo();
@@ -462,7 +522,9 @@ describe('a refused title or body does not leave through the issue either', () =
         const r = repo();
         r.commit('src/rules/x.md', 'see the acmewidgets billing service\n');
         const f = forge();
-        const rec = { ...record(), evidence: 'seen in the acmewidgets checkout' };
+        // The evidence span no longer leaves (D10); the principle slug does, so
+        // it is the field an identifier can still reach the issue body through.
+        const rec = { ...record(), principle: 'acmewidgets/billing' };
         const out = executeRelease(rec, plan('upstream'), probe(r), 'o/r', approved(r, f, plan('upstream'), ['acmewidgets'], rec));
 
         expect(f.issues).toHaveLength(0);

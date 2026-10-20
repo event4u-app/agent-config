@@ -8,6 +8,10 @@ role:
 style:
     formality: "informal"
     pace: "pragmatic"
+    # avoid:                        # optional — your own "never say X" list, max 32
+    #     - pattern: "circle back"  # 1-64 chars, a literal, never a regex
+    #       match: word             # word | substring
+    #       note: "say when"        # optional
 voice_sample: |
     Replace this block with one to three sentences in your own
     writing style. The agent uses it as a tone anchor — paste the

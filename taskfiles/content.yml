@@ -578,6 +578,7 @@ tasks:
         base="${BASE:-origin/main}"
         slot="agents/context-spine/brand-voice.md"
         if [ -f "$slot" ]; then slot_arg="--slot $slot"; else slot_arg=""; fi
+        if [ -f .agent-user.md ]; then user_arg="--user .agent-user.md"; else user_arg=""; fi
         prose=$({ if command -v gh >/dev/null 2>&1; then
             gh pr view --json title,body --jq '"# " + .title + "\n\n" + .body' 2>/dev/null || true
           fi
@@ -590,4 +591,4 @@ tasks:
           echo "no persisted prose on this branch yet (no PR text, no commits vs $base) — nothing to check"
           exit 0
         fi
-        printf '%s\n' "$prose" | ./scripts-run src/scripts/check_voice_lexicon --draft - $slot_arg
+        printf '%s\n' "$prose" | ./scripts-run src/scripts/check_voice_lexicon --draft - $slot_arg $user_arg

@@ -9,7 +9,6 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
-| road-to-a-brand-the-tree-can-check | active | ready | One resolver answers "what brand does this project have" — tokens, voice, design system — with a state, content hashes … |
 | road-to-a-canvas-the-code-owns | active | ready | The repository is the only store of the design system. |
 | road-to-a-cold-start-paid-once | active | ready | On a host where a re-task is observed to be cheaper than a fresh spawn, the orchestrator re-tasks a warm … |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | active | ready | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
@@ -27,11 +26,9 @@ and keep the full search — this file only adds candidates to it.
 | road-to-decision-closure | active | draft | Every roadmap enters execution as an execution contract: every foreseeable decision closed, the closing done council-first, the owner reached only … |
 | road-to-gates-that-read-what-was-written | active | ready | Two gates stop reporting a finding the thing in front of them does not support. |
 | road-to-one-detector-and-the-senders-we-own | active | ready | On every request this package writes to a model provider itself, no value of a listed type leaves in plaintext, … |
-| road-to-one-upstream-that-checks-what-leaves | active | ready | There is one way for a finding to leave a machine and become a pull request or issue against this … |
 | road-to-placeholders-on-the-wire | active | ready | On Claude Code at a probed version, a tool result carrying a listed value reaches the model as a token … |
 | road-to-self-modification-that-a-council-must-pass | active | ready | A change the package makes to what governs it lands on a council's verdict about that exact change. |
 | road-to-skills-that-arrive-when-called | active | ready | Every skill the package authors is reachable in the session that needs it, with the semantics its frontmatter declares; a … |
-| road-to-steps-the-skill-cannot-skip | active | ready | A skill whose procedure has grown past what an agent follows reliably can be split into step files without losing … |
 | road-to-svg-witness-provenance | active | draft | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |
 | road-to-tool-results-that-leave-a-handle | active | ready | A large tool result can reach the model shorter than the host produced it without losing anything: the bytes the … |
 | road-to-typed-grants-that-persist | active | draft | One grant object — ADR-260's `{op, target, scope, granted_by, span, expires}` — governs every irreversible operation, is honoured for the … |
@@ -98,6 +95,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-merge-surface-zero | later | later | A correct PR cannot go red or conflicted because someone else merged first. |
 | road-to-mission-catalogue | later | later | Mission catalogue — content + catalogue expansion (mission-mode follow-up) |
 | road-to-mixed-trigger-activation-cost | later | later | Road to mixed-trigger activation cost — the 12.0→12.1 behaviour regression, found and priced |
+| road-to-one-upstream-that-checks-what-leaves-carried | later | later | Every step road-to-one-upstream-that-checks-what-leaves deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-opencode-runtime-probe | later | later | the opencode runtime probe |
 | road-to-originality-gate-and-contributor-funnel | later | later | Every PR that adds or edits skills runs `lint_originality --changed` as a blocking CI gate, contributors can pre-check locally and … |
 | road-to-per-workspace-license-policy | later | blocked-for-later | Road to per-workspace license policy — heterogeneous monorepos derive per workspace, not per root |
