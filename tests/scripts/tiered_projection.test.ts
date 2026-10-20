@@ -119,11 +119,13 @@ describe('_tier_b_advisory — Phase 2.3, a recommendation and never a write', (
     });
 });
 
-describe('migrationEligibility — a tiered install is already narrowed', () => {
-
-    // REMOVED 2026-10-20: `already-tiered` is no longer a verdict
-    // `migrationEligibility` can return. skill_catalogue.ts says so in its
-    // own comment — "There were three modes until 2026-10-20" — so this
-    // asserted a value the function cannot produce, not a behaviour that
-    // went unasserted. The sibling `already-scoped` case stays.
-});
+// REMOVED 2026-10-20: the `migrationEligibility — a tiered install is
+// already narrowed` suite. `already-tiered` is no longer a verdict
+// `migrationEligibility` can return. skill_catalogue.ts says so in its
+// own comment — "There were three modes until 2026-10-20" — so it
+// asserted a value the function cannot produce, not a behaviour that
+// went unasserted. The sibling `already-scoped` case stays.
+//
+// The whole `describe` goes rather than only its body: vitest FAILS a
+// suite that registers no test ("No test found in suite ..."), so an
+// emptied shell is a red, not a tidy placeholder for the note above.

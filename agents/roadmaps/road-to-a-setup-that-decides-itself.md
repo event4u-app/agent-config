@@ -302,9 +302,14 @@ with that file.
   — 4 passed, red before the fix on the drift case and red before the
   strengthening on the legacy-all case.
 - [ ] <!-- blocked-by: surface-snapshot-waits-on-the-release-cut --> **4.6c The settings-surface snapshot waits on the cut.**
-  `tests/scripts/consumer_matrix_settings_delta.test.ts > an identical pair
-  produces no delta` is red on this branch and green on `main`, and the cause
-  is the phase title rather than a defect. The case compares the committed
+  `tests/scripts/consumer_matrix_settings_delta.test.ts` is red on this branch
+  and green on `main`, and the cause is the phase title rather than a defect.
+  TWO cases, not one — corrected 2026-10-20 after reading the CI output rather
+  than the earlier note: `an identical pair produces no delta and no
+  disagreement` and `the leg itself throws on a disagreement, and returns on
+  agreement`. They are one cause, because the second asserts that
+  `assertUpgradeDelta` THROWS exactly when the first finds a disagreement, so a
+  real delta reds both by construction. The cases compare the committed
   snapshot of the LAST released surface against a surface flattened from the
   LIVE schema; removing three keys makes those two genuinely different, so the
   comparison correctly reports a delta the installer fixture does not carry.
@@ -373,8 +378,8 @@ with that file.
 - **Blocks:** step 4.6c only. Nothing else in this roadmap, and no code path: the removals are registered tombstones and classify as `carried_removals`, the allowed class.
 - **Question:** none. This records WHY a green CI is unreachable on this branch, so the next reader does not re-derive it or bend the test.
 - **What to do:** cut a release. `release.ts` rewrites `tests/fixtures/settings_surface_released.json` inside the cut and is its only writer; `check_release_pr_shape` allows the file on a release PR and nowhere else.
-- **Recommendation:** merge this PR with the one case red rather than refreshing the snapshot here. The alternative is to write the released-surface file outside a cut, which is exactly the silent surface change Phase 4 is named against.
-- **If you do nothing:** the case stays red on this branch and on any later branch that touches the settings surface before a cut. It is one test of 68 checks, and it reports a true fact.
+- **Recommendation:** merge this PR with the two cases red rather than refreshing the snapshot here. The alternative is to write the released-surface file outside a cut, which is exactly the silent surface change Phase 4 is named against. (Was "the one case" until 2026-10-20: the count came from the note rather than from the run, and the run names two. The recommendation is unchanged — the second case is the first one's assertion that the throw fires, not a separate fact.)
+- **If you do nothing:** the cases stay red on this branch and on any later branch that touches the settings surface before a cut. They are two cases inside one of 68 checks, and they report a true fact.
 - **Resolved when:** a release lands and the snapshot carries the three removed keys.
 
 ### blocker: instruction-load-observer-has-no-scheduled-owner
