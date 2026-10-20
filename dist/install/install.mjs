@@ -12034,6 +12034,7 @@ function _structure(raw) {
         slots.set(slot, row);
       }
       surfaces.set(surface, {
+        rewrite_raw: s["rewrite"],
         entry_shape: String(s["entry_shape"] ?? "none"),
         json_shape: String(s["json_shape"] ?? "none"),
         fail_policy: String(s["fail_policy"] ?? "discard"),
