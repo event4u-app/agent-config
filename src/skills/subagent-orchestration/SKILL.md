@@ -116,13 +116,9 @@ Rules:
   continues the parent's task under identical tools and constraints (it then
   reads the parent's cache on its first request); a named subagent is
   preferred the moment isolation, a different tool set, or nested dispatch is
-  needed — a fork cannot nest. Forking forces background mode, and that does
-  NOT cost the prefix where the host row says `fork_shares_cache: true`: on
-  Claude Code 2.1.302 a background fork read 99.8 % of its first call from the
-  parent's cache and kept the parent's tool pool
-  (`agents/evidence/investigations/host-continuation-observations-2026-10.md`).
-  On a host whose row leaves it `false`, the inheritance is unobserved, not
-  disproved. `do-in-parallel`-shaped fan-out from one parent has this shape by
+  needed — a fork cannot nest. Where the host row says `fork_shares_cache:
+  true` a background fork keeps the parent's prefix and tools; elsewhere it
+  is unseen. `do-in-parallel`-shaped fan-out from one parent has this shape by
   construction (a known, unfixable upstream cost — see
   [`prompts/README.md`](prompts/README.md) § Prompt-cache discipline). NEVER
   encode "always fork" — that was proposed and cut (council 2026-07-30):
