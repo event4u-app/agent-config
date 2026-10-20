@@ -30,6 +30,9 @@ describe('skill-lifecycle-probes-codex.json (road-to-skills-that-arrive-when-cal
             // ask what the model can still reach, and 4.1 shipped on the
             // generous reading until this row was taken.
             'unlisted-skill-not-in-model-list',
+            // Added 2026-10-20 for remedy (a) of the blocker that row raised:
+            // the same skill, reached through the installer-written finder.
+            'unlisted-skill-reached-through-finder',
         ]);
         for (const [, row] of rows) {
             expect(row.host).toBe('codex');
