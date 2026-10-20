@@ -108,118 +108,151 @@ recorded impact is `action` scored as anything but major.
 For each span above, with tags fetched (`git fetch origin --tags`):
 
 ```
-git diff --name-status <prev>..<tag>
-git diff -U0 <prev>..<tag> -- <SETTINGS_KEY_FILES> | grep -E '^-[[:space:]]*[A-Za-z_][A-Za-z0-9_]*:'
+entries = parse_name_status(git diff --name-status <prev>..<tag>)
+paths   = settings_key_paths(entries)
+keys    = removed_setting_keys(git diff -U0 <prev>..<tag> -- <paths>)
+classify_surfaces(entries, keys)
 ```
 
-fed to `parse_name_status` and `classify_surfaces`, with the impact cell from
-`parse_impact_rows(BREAKING_CHANGES.md)` and the bump from `impact_bump`.
+with the impact cell from `parse_impact_rows(BREAKING_CHANGES.md)` and the bump
+from `impact_bump`. `settings_key_paths` and `removed_setting_keys` are exported
+from `major_surface.ts` and covered by tests, so every step above is runnable.
+**Corrected 2026-10-20 after review:** the first form of this block passed
+`SETTINGS_KEY_FILES`, an array of regular expressions, as a `git diff --`
+pathspec. It was not executable, which is part of why the error in Part 2
+survived to be committed.
 
 ## Part 2 — Result
 
-Run 2026-10-20 at `fba00aabf` with tags fetched. Every span was re-read a
-second time under `-c diff.renameLimit=20000`, because the first pass printed
-`exhaustive rename detection was skipped` on the 6.0.0 span; the two passes
-returned identical surfaces, so no row below depends on a truncated rename
-search.
+**This section was committed wrong on 2026-10-20 and is corrected here, in
+place, with the error named.** The first run reported that the surface clause
+changed no verdict in 14 of 14 cases. It changes two. The cause was a blind
+detector, not a wrong reading: `SETTINGS_KEY_FILES` was anchored at `^config/`,
+the settings template was renamed to `src/config/agent-settings.template.yml`
+in the 6.0.0 span, and so the settings surface matched nothing from 6.0.0
+onward — the whole window the rule is scored on. An independent R2 reviewer
+found it; the record is
+`agents/evidence/reviews/drain-release-says-needs-you-20261020.findings.md`,
+committed before the repair. The wrong reading went in because the Controls
+section below controlled two surfaces of three and not the one that was wrong.
 
-### The out-of-sample window, both axes
+Run 2026-10-20 at `fba00aabf` with tags fetched, against the repaired detector.
 
-| Major | Span | Recorded impact | Surfaces fired | Bump | FN on BREAKING |
-|---|---|---|---|---|---|
-| 2.0.0 | `1.41.2..2.0.0` | action | installer-layout | major | no |
-| 3.0.0 | `2.26.0..3.0.0` | action | installer-layout | major | no |
-| 5.0.0 | `4.9.0..5.0.0` | action | none | major | no |
-| 6.0.0 | `5.10.1..6.0.0` | action | installer-layout, rule-or-skill-removal | major | no |
-| 7.0.0 | `6.1.0..7.0.0` | action | rule-or-skill-removal | major | no |
-| 8.0.0 | `7.5.0..8.0.0` | action | installer-layout | major | no |
-| 9.0.0 | `8.13.0..9.0.0` | notice | none | minor | no |
+### Both windows, both axes
 
-**False negatives on BREAKING: 0 of 7.** The hard requirement holds on the
-window the rule was not written on.
+| Major | Span | Recorded impact | Surfaces fired | Keys removed | Bump | Impact alone | FN |
+|---|---|---|---|---|---|---|---|
+| 2.0.0 | `1.41.2..2.0.0` | action | installer-layout | — | major | major | no |
+| 3.0.0 | `2.26.0..3.0.0` | action | installer-layout | — | major | major | no |
+| 5.0.0 | `4.9.0..5.0.0` | action | none | — | major | major | no |
+| 6.0.0 | `5.10.1..6.0.0` | action | installer-layout, rule-or-skill-removal | — | major | major | no |
+| 7.0.0 | `6.1.0..7.0.0` | action | installer-layout, rule-or-skill-removal | — | major | major | no |
+| 8.0.0 | `7.5.0..8.0.0` | action | installer-layout | — | major | major | no |
+| 9.0.0 | `8.13.0..9.0.0` | notice | none | — | minor | minor | no |
+| 10.0.0 | `9.36.0..10.0.0` | automatic | **settings-keys** | `turn_end_gate`, `enabled`, `promissory`, `language`, `verification` | **major** | minor | no |
+| 11.0.0 | `10.4.0..11.0.0` | automatic | **settings-keys** | `worktrees`, `mode` | **major** | minor | no |
+| 12.0.0 | `11.0.0..12.0.0` | action | none | — | major | major | no |
+| 13.0.0 | `12.1.0..13.0.0` | none | none | — | minor | minor | no |
+| 14.0.0 | `13.0.0..14.0.0` | none | none | — | minor | minor | no |
+| 15.0.0 | `14.23.0..15.0.0` | action | none | — | major | major | no |
+| 16.0.0 | `15.0.0..16.0.0` | none | none | — | minor | minor | no |
 
-### The in-sample window, scored on the surface axis for the first time
+Out-of-sample (2.0.0 → 9.0.0): **6 of 7** majors kept. In-sample
+(10.0.0 → 16.0.0): **4 of 7**. Surface clause fired on **7 of 14** and was the
+deciding clause on **2 of 14**. **False negatives on BREAKING: 0 of 7
+out-of-sample, 0 of 14 overall.**
 
-Step 2.2 could not supply `touches_major_surface` and set it `false` for every
-row. With the axis supplied, the same seven rows:
-
-| Major | Span | Recorded impact | Surfaces fired | Bump |
-|---|---|---|---|---|
-| 10.0.0 | `9.36.0..10.0.0` | automatic | none | minor |
-| 11.0.0 | `10.4.0..11.0.0` | automatic | none | minor |
-| 12.0.0 | `11.0.0..12.0.0` | action | none | major |
-| 13.0.0 | `12.1.0..13.0.0` | none | none | minor |
-| 14.0.0 | `13.0.0..14.0.0` | none | none | minor |
-| 15.0.0 | `14.23.0..15.0.0` | action | none | major |
-| 16.0.0 | `15.0.0..16.0.0` | none | none | minor |
-
-**2.2's headline survives the clause it could not test.** 13.0.0, 14.0.0 and
-16.0.0 are still minor with the surface axis live; the clause does not rescue
-them. That is the first obvious objection to 2.2 and it is now answered with a
-reading rather than an argument.
-
-### Four findings
+### Five findings
 
 **F1 — the rule is not a blanket demoter, which the in-sample run could not
-show.** Out-of-sample it keeps **6 of 7** majors; in-sample it keeps **2 of 7**.
-The difference is the recorded impact, not the rule: 6 of 7 early rows read
-`action` and 2 of 7 recent ones do. A rule that demoted indiscriminately would
-have demoted the early window too, and the hypothesis that 2.2's 5-of-7 was an
-artefact of the rule rather than of the history is refuted by a number.
+show.** Out-of-sample it keeps 6 of 7 majors; in-sample 4 of 7. The difference
+is the recorded impact, not the rule: 6 of 7 early rows read `action` and 2 of
+7 recent ones do. The hypothesis that 2.2's demotion rate was the rule's bias
+rather than the history's is refuted by a number.
 
-**F2 — the surface clause changed no verdict, in 14 of 14 cases.** It fires on
-5 majors, all of them before 10.0.0, and every one of those was already major
-on its impact alone. On this corpus the clause is inert: it adds a safety net
-that never had to catch anything. That is an argument for keeping it (it costs
-nothing and covers a case the trailer could miss), and it is **not** evidence
-that it works, because it has never been the deciding clause.
+**F2 — the surface clause is live, and both times it fires alone it overrides
+an `automatic` migration.** It decides 10.0.0 and 11.0.0, where the removed
+keys are real (`turn_end_gate` and its four children; `worktrees`/`mode`) and
+each row's own prose records the migration as **automatic — a leftover key is
+accepted and ignored.** So `CONTRIBUTING.md:331` as written says: *a settings
+key removed with an automatic migration is a major.* That is a policy question
+the owner has to answer under option (a), not an implementation detail, and it
+is the single most decision-relevant line in this file. It was invisible until
+the detector was repaired.
 
-**F3 — `CONTRIBUTING.md:331`'s major list omits commands, and that omission is
-load-bearing.** 15.0.0's break was the removal of `/chat-history` and
-`/chat-history import` — `src/domains/meta/chat-history/command.md` and its
-projection. The written list names rules and skills, so the surface clause
-correctly did not fire. The impact axis caught it. The two axes are
-complements here, not redundancy, and the list needs a fourth entry if the
-surface clause is ever to be the one that catches a removal of this shape.
+**F3 — 2.2's headline survives the clause it could not test.** 13.0.0, 14.0.0
+and 16.0.0 are still minor with the surface axis live. No key is removed in
+those spans and the template is not in two of the three diffs at all.
 
-**F4 — the fourth trigger has no mechanical form at all.** "Breaking changes to
+**F4 — `CONTRIBUTING.md:331`'s major list omits commands.** 15.0.0's break was
+the removal of `/chat-history` and `/chat-history import`
+(`src/domains/meta/chat-history/command.md` and its projection). The written
+list names rules and skills, so the surface clause correctly did not fire; the
+impact axis caught it. The list needs a fourth entry if the clause is ever to
+catch a removal of this shape.
+
+**F5 — the fourth trigger has no mechanical form at all.** "Breaking changes to
 the condensed content format" is reported as a gap, never as a surface that did
 not fire. Any rule wired on the strength of this measurement is wired with
 three of four triggers decidable.
 
-### Controls — the zeros were checked before they were reported
+### Controls — including the one whose absence caused the error
 
 A zero from a detector is worth nothing until the detector is shown to be
-looking. Each one below was read directly from git, not from the classifier:
+looking. The first version of this section proved that by omitting the
+settings surface. All three are controlled now, read from git rather than from
+the classifier:
 
-- `15.0.0..16.0.0` contains **0 deletions of any kind**, so
-  `rule-or-skill-removal` could not have fired.
-- `12.1.0..13.0.0` contains exactly **one** deletion in the whole span,
-  `src/config/budget-routing.json` — not a rule, not a skill.
-- `9.36.0..10.0.0`, `11.0.0..12.0.0`, `14.23.0..15.0.0` and `15.0.0..16.0.0`
-  contain **0** creations or removals under the installer tree, its templates
-  or its entry points.
-- `5.10.1..6.0.0` contains **162** creations or removals under the rule and
-  skill paths and 45 deletions, which is the positive control: the detector
-  fires where the tree really moved.
+**settings-keys.** Positive: `9.36.0..10.0.0` removes the `turn_end_gate` block
+and `10.4.0..11.0.0` removes `worktrees: mode:`, both with no re-adding `+`
+line. Negative-with-the-file-present, which is the control that matters:
+`11.0.0..12.0.0` and `14.23.0..15.0.0` both **change** the template and remove
+no key — so the zeros there are a reading, not a blind spot. In
+`12.1.0..13.0.0`, `13.0.0..14.0.0` and `15.0.0..16.0.0` the template is absent
+from the diff entirely.
+
+**rule-or-skill-removal.** Positive: `5.10.1..6.0.0` carries **158 additions
+and 4 deletions** under the rule and skill paths. *(The first version of this
+line said "162 … and 45 deletions": 162 was A+D combined and 45 was the span's
+total deletions anywhere — neither is the positive control for a
+deletion-only trigger, which is the 4.)* Negative: `15.0.0..16.0.0` contains
+**0** deletions of any kind; `12.1.0..13.0.0` contains exactly one in the whole
+span, `src/config/budget-routing.json`, which is neither a rule nor a skill.
+
+**installer-layout.** Positive: `6.1.0..7.0.0` carries
+`D src/scripts/install.py` and `A src/scripts/install.ts` — the entry-point
+relocation, which the first detector also missed and which the repaired table
+now catches. Negative: `9.36.0..10.0.0`, `11.0.0..12.0.0`, `14.23.0..15.0.0`
+and `15.0.0..16.0.0` carry **0** creations or removals under the installer
+tree, its templates or its entry points.
+
+**Rename insensitivity.** All 14 spans were re-run under `--no-renames`. Every
+row is identical, so no verdict here depends on git's rename heuristic or on
+its similarity threshold.
 
 ### What this discharges, and what it does not
 
-**Discharged:** the measurement the council asked for exists, on a
-pre-registered window the rule was not written on, on both axes, with zero
-false negatives on BREAKING.
+**Discharged:** the measurement exists, on a pre-registered window the rule was
+not written on, on both axes, with zero false negatives on BREAKING.
 
 **Not discharged, and the honest reading of each:**
 
 1. The impact axis remains a consistency check. Its input and its ground truth
    are the same prose in both windows, and no reachable corpus separates them —
-   a trailer written by a commit author at the time does not exist for any
-   historical release. Only future releases can produce that evidence.
-2. The surface axis is measured but **unexercised**: 14 of 14 verdicts are
-   identical with the clause switched off. Its fire rate is real; its accuracy
-   as a decider is untested, because nothing on this corpus tested it.
+   no historical release carries an author-written trailer. Only future
+   releases can produce that evidence.
+2. The surface clause now has two decided cases, which is two more than the
+   first run reported and still too few to call it accurate. What those two
+   show is a **disagreement** between the written surface list and the recorded
+   impact, in both cases resolved by the surface list toward the stricter
+   answer. Whether that is the wanted behaviour is F2's question.
 3. Fourteen majors is the entire population, not a sample. No confidence
    interval is quoted, because none would mean anything at this size.
+4. **This file was wrong once.** It was caught by an independent review and not
+   by its own controls, which is evidence about the controls. The repaired
+   detector carries regression tests pinning both relocated paths, and the
+   `SETTINGS_KEY_FILES` table now fails a test if any row is root-anchored
+   again.
 
 Whether that clears the bar is the council's to say, not this file's. The
 numbering model itself stays with the owner.

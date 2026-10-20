@@ -38,14 +38,21 @@ export interface DiffEntry {
  * Paths whose creation or removal is an installer-layout change. The list is
  * historical on purpose: the installer has lived at three roots over the
  * window this is measured on, and a table naming only today's would score
- * every release before the last relocation as having touched nothing.
+ * every release before the last relocation as having touched nothing. The
+ * entry-point row carries an optional `src/` prefix for the same reason — the
+ * script moved from `scripts/install.py` to `src/scripts/install.ts`, and the
+ * first version of this table pinned only the old root.
+ *
+ * `dist/install/` is deliberately absent. It is build output of
+ * `src/scripts/install.*`, which is already covered, so including it would add
+ * no signal and would fire the surface on a regenerated artifact.
  */
 const INSTALLER_LAYOUT_PATHS: readonly RegExp[] = [
     /^src\/install\//,
     /^packages\/core\/installer\//,
     /^templates\//,
     /^bin\//,
-    /^scripts\/install\.(py|sh|ts|mjs)$/,
+    /^(src\/)?scripts\/install\.(py|sh|ts|mjs)$/,
 ];
 
 /** Paths whose deletion removes a rule or a skill, in source or in either projection. */
@@ -55,13 +62,56 @@ const RULE_OR_SKILL_PATHS: readonly RegExp[] = [
     /^dist\/agent-src\/(rules|skills)\//,
 ];
 
-/** Files whose removed `key:` lines are settings keys. Read by the caller, not here. */
+/**
+ * Files whose removed `key:` lines are settings keys.
+ *
+ * Every row tolerates a leading directory because this table was wrong in its
+ * first form and the measurement reported the resulting blindness as a
+ * finding: the template was renamed `config/agent-settings.template.yml` ->
+ * `src/config/agent-settings.template.yml` in the 6.0.0 span, and a row
+ * anchored at `^config/` matched nothing from 6.0.0 onward — the whole window
+ * the rule is scored on. An anchor that silently stops matching is the shape
+ * this list now refuses.
+ */
 export const SETTINGS_KEY_FILES: readonly RegExp[] = [
-    /^config\/agent-settings\.template\.yml$/,
-    /^templates\/\.agent-settings\.yml/,
-    /^src\/scripts\/schemas\/.*settings/,
-    /^src\/install\/.*settings/,
+    /(^|\/)config\/agent-settings\.template\.yml$/,
+    /(^|\/)\.agent-settings\.yml/,
+    /(^|\/)schemas\/.*settings/,
+    /(^|\/)install\/.*settings/,
 ];
+
+/** The diff's paths that are settings-key files, for the caller's `git diff -- <paths>`. */
+export function settings_key_paths(entries: readonly DiffEntry[]): string[] {
+    const seen = new Set<string>();
+    for (const entry of entries) {
+        if (matches(entry.path, SETTINGS_KEY_FILES)) seen.add(entry.path);
+    }
+    return [...seen];
+}
+
+const YAML_KEY = /^([-+])([ \t]*)([A-Za-z_][A-Za-z0-9_]*):/;
+
+/**
+ * Keys a unified patch removes and does not put back.
+ *
+ * A `-` line alone is not a removal: a reindent, a reorder or a move between
+ * files deletes the line and adds it again, and counting that as a dropped
+ * settings key would fire the surface on every reformat. A key is removed only
+ * when no `+` line in the same patch declares it. Indentation is ignored on
+ * purpose — a key that moved under a different parent still exists, and this
+ * function is asked whether the key is gone, not where it lives.
+ */
+export function removed_setting_keys(patch: string): string[] {
+    const removed = new Set<string>();
+    const added = new Set<string>();
+    for (const line of patch.split('\n')) {
+        if (line.startsWith('---') || line.startsWith('+++')) continue;
+        const m = YAML_KEY.exec(line);
+        if (m === null) continue;
+        (m[1] === '-' ? removed : added).add(m[3] as string);
+    }
+    return [...removed].filter((k) => !added.has(k)).sort();
+}
 
 function matches(path: string, patterns: readonly RegExp[]): boolean {
     return patterns.some((p) => p.test(path));

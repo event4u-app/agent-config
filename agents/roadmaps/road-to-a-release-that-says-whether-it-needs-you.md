@@ -268,25 +268,39 @@ output. It is the classifier and the data behind it.
   new `classify_surfaces` (`src/scripts/_lib/major_surface.ts`) that reads the
   surface axis mechanically from each span's diff, which 2.2 could not supply.
   **Zero false negatives on BREAKING, 0 of 7 out-of-sample and 0 of 14 over
-  both windows.** The rule keeps 6 of 7 early majors and 2 of 7 recent ones,
+  both windows.** The rule keeps 6 of 7 early majors and 4 of 7 recent ones,
   which refutes the live reading of 2.2 — that its 5-of-7 demotion was the
-  rule's bias rather than the history's. With the surface axis switched on,
-  13.0.0, 14.0.0 and 16.0.0 are still minor.
-  Three limits are recorded rather than argued away: the impact axis stays a
-  consistency check in both windows because no historical release carries an
-  author-written trailer; the surface clause changed **no** verdict in 14 of 14
-  cases, so its fire rate is measured and its accuracy as a decider is not; and
-  `CONTRIBUTING.md:331` omits commands, which is what 15.0.0 removed. Whether
-  that clears the bar the council set is the council's reading, not this
-  roadmap's. The owner question on (a) is now unblocked on evidence and
-  unasked.
+  rule's bias rather than the history's. 13.0.0, 14.0.0 and 16.0.0 are still
+  minor with the surface axis live, so 2.2's headline survives the clause it
+  could not test.
+  **One figure in this paragraph was wrong when first committed and the
+  correction is the most decision-relevant line here.** The first run reported
+  the surface clause as inert in 14 of 14 cases; an independent R2 review found
+  the detector blind (its settings-template path was anchored at a root the
+  file left in 6.0.0), and the repaired run has the clause **decide** 10.0.0
+  and 11.0.0. In both, the removed keys are real and each row's own prose
+  records the migration as **automatic**. So `CONTRIBUTING.md:331` as written
+  says a settings key removed with an automatic migration is a major — a
+  question for the owner under (a), not an implementation detail.
+  Limits recorded rather than argued away: the impact axis stays a consistency
+  check in both windows, because no historical release carries an
+  author-written trailer; two decided cases are too few to call the surface
+  clause accurate; `CONTRIBUTING.md:331` omits commands, which is what 15.0.0
+  removed; and this measurement was caught wrong by review rather than by its
+  own controls, which is evidence about the controls. Whether it clears the bar
+  the council set is the council's reading, not this roadmap's. The owner
+  question on (a) is now unblocked on evidence and unasked.
 - **Owner:** repository owner, **for (a) alone.**
 - **Blocks:** step 2.1 and the parts of Phase 2 downstream of it. **Corrected
   2026-10-16:** this used to read "Phase 2 and everything downstream". Steps 2.2
   and 2.3 are not blocked — see the contradiction resolved under
   `What to do` — and Phases 1, 3 and 4 were already additive.
-- **What to do:** **(b) now, decided by council; (a) is the owner's and waits on
-  2.2's result.** The trailer is recorded and published as **explicitly
+- **What to do:** **(b) now, decided by council; (a) is the owner's.**
+  **Superseded 2026-10-20:** this field used to end "and waits on 2.2's
+  result", which was already stale on 2026-10-19 (the council replaced that
+  precondition with an out-of-sample score) and is stale again now that the
+  score exists. (a) waits on nothing but the owner. The trailer is recorded
+  and published as **explicitly
   experimental, non-normative metadata**; the bump rule at `release.ts:463` is
   untouched. Superseded alternatives: (a) the trailer plus the new bump rule —
   owner-reserved, not refused; (c) reject both — declined by both seats.
