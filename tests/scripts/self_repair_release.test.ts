@@ -488,7 +488,7 @@ describe('the upstream body is synthesised from closed fields (D10)', () => {
     });
 
     it('payload-has-only-closed-fields — a record with no principle says so instead of falling back to free text', () => {
-        const rec: DefectRecord = { ...claimRecord(), principle: undefined, target: undefined };
+        const { principle: _p, target: _t, ...rec } = claimRecord();
         const p = planRelease(rec, { agentConfigCheckout: null, ghAuthenticated: true, canPushUpstream: false, canFork: false }, os.tmpdir());
         expect(p.body).toMatch(/Principle:.*not stated/);
         expect(p.body).toMatch(/Targets:.*none/);
