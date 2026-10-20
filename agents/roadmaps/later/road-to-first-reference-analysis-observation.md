@@ -1053,7 +1053,10 @@ not touch it.
 
 - **Pin:** commit `835660b0d`, blob
   `d6921d4cdaa4de52acf91d48fbc723e514d81d9f` of
-  `src/domains/analysis-workbench/analyze/repo/command.md`.
+  `src/domains/analysis-workbench/analyze/repo/command.md`. <!-- ref-ignore -->
+  (The path as it stood at the pin. It moved to `analyze/reference/` on
+  2026-10-20 — see § Post-pin known deltas; the pin line is left unedited
+  because it records where the blob was, not where the file is.)
 - **Known deltas between registration and the pin** — five commits, not the
   three the analysis-family roadmap named (`git log --since=2026-08-12` on the
   file, read at the pin):
@@ -1077,6 +1080,52 @@ changed is that they are no longer what a reader should act on: the frontmatter'
 three-part `entry_condition:` is, because it names the two blockers, their two
 distinct trust boundaries and the actor for each — which the three conditions
 above predate and do not cover.
+
+### Post-pin known deltas — opened 2026-10-20
+
+Additive. Nothing above is rewritten: the pin stays commit `835660b0d`, blob
+`d6921d4cdaa4de52acf91d48fbc723e514d81d9f`, and the registration-to-pin table
+above is untouched. This subsection exists because the pin's stated purpose is
+to make later drift **checkable**, and a drift that moves the file's path
+breaks the one-command check unless the move is recorded next to the pin.
+
+| Delta | Date | What moved | Inside a claimed section |
+|---|---|---|---|
+| `analyze/repo/command.md` → `analyze/reference/command.md` | 2026-10-20 | path only — ADR-288 D1's decided name lands (step 6.2b of `road-to-an-analysis-family-that-deepens-itself`). The door's `name:` becomes `analyze-reference` and the four retired spellings move into `replaces:`. No line of the five mechanisms' sections changed. | no |
+
+**Why this does not disturb the measurement.** The claim
+`reference-loop-upgrade-value` is about what the five mechanisms *produce* —
+an anchor table before the fetch, the bound-claim collision gate, the interop
+probe, verdict convergence and the bounded `--deep` tier. A rename moves no
+line inside any of them, so the upgraded arm an observation run would execute
+is byte-identical to the pinned one in every section the bar reads. The claim's
+own text already names the door `/analyze:reference-repo`, a spelling the tree
+has not carried since `8488bf078`; this move takes the tree toward the published
+claim rather than away from it.
+
+**The check, after the move.** Both forms survive the rename, and either is
+sufficient:
+
+```bash
+# follows the rename
+git log --follow --oneline 835660b0d..HEAD \
+  -- src/domains/analysis-workbench/analyze/reference/command.md
+
+# both paths named, rename detection on
+git diff -M 835660b0d..HEAD \
+  -- src/domains/analysis-workbench/analyze/repo/command.md \
+     src/domains/analysis-workbench/analyze/reference/command.md
+```
+
+The bare `git diff 835660b0d..HEAD -- <old path>` recorded above the table is
+the form that stops working; it is left in place as the record of what was
+written on 2026-10-17 rather than edited, and this paragraph is the correction.
+
+**Authority.** Recorded by a drain lane under ADR-237 (capability before role)
+executing ADR-288 D1, which already decided the name. The lane is *not* editing
+the pinned record, the three conditions of the authorizing seat, the shadow pin,
+or any frozen counting rule — all of those remain exactly as the council left
+them. It is adding one row to a drift ledger whose purpose is to receive rows.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-07 | reviewer: claude/host -->

@@ -29,8 +29,8 @@ Artefacts that maintain this package (agent-config itself).
 - **`analyze-conformance`** — Audit recent local sessions for rule violations — deterministic scan plus subagent passes over the transcripts, root-cause each class, and emit a roadmap that mechanises what is mechanisable.
 - **`analyze-inbox`** — Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each.
 - **`analyze-pr`** — Run the analysis family's loops and councils on an existing pull request — a read-only verdict by default, `--optimize` to push tested fixes to a writable PR branch.
-- **`analyze-repo`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
-- **`analyze-roadmap-repos`** — Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-repo, one subagent at a time, without producing one roadmap per repository.
+- **`analyze-reference`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
+- **`analyze-roadmap-repos`** — Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-reference, one subagent at a time, without producing one roadmap per repository.
 - **`bug`** — Bug orchestrator — routes to investigate (root cause) and fix (plan + implement)
 - **`bug-fix`** — Plan and implement a bug fix — based on investigation, with quality checks and test verification
 - **`bug-investigate`** — Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause

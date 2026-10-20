@@ -281,7 +281,7 @@ today's analysis-only behaviour.
       (`git diff <claim-pin>..HEAD`) named no pin, and a pin from registration
       would already fail.
       verify: `git diff <recorded-pin>..HEAD --
-      src/domains/analysis-workbench/analyze/repo/command.md` shows no hunk
+      src/domains/analysis-workbench/analyze/repo/command.md` <!-- ref-ignore --> shows no hunk
       inside § 1b, § 2b, the interop probe, the convergence verdict or the
       bound-claim gate, and the observation roadmap names the three commits. Done 2026-10-17: pin `835660b0d` recorded in the observation roadmap. `corrected-from-reproduction`: the file moved in five commits since registration, not three — `8488bf078` and `386266422` are listed too.
 - [x] **4.2 Local source adapters.** Local path (read in place, digest per
@@ -385,7 +385,7 @@ file; `council:pr` is unchanged.
       verify: `./scripts-run src/scripts/check_references` -> 0 — and
       `grep -rn 'optimize:deep' src docs | grep -v replaces` returns only alias
       lines. Done 2026-10-19; record § 6.2.
-- [ ] **6.2b The foreign-source door takes its decided name.** ADR-288 D1 names
+- [x] **6.2b The foreign-source door takes its decided name.** ADR-288 D1 names
       it `analyze:reference`; it still ships as `analyze-repo` (the skills and
       the `external-reference-deep-dive` rule name it correctly today). Moving
       `analyze/repo/command.md` moves the file whose five mechanisms carry the
@@ -395,7 +395,17 @@ file; `council:pr` is unchanged.
       verify: `analyze/reference/command.md` exists with `replaces:` carrying
       `analyze-repo`, `analyze:repo`, `analyze-reference-repo` and
       `analyze:reference-repo`, and the observation roadmap names the move. *Council 2026-10-19 split 1:1 (D19): owner decision.*
-      <!-- blocked-by: source-door-rename-waits-on-the-claim-pin | asked: no — a drain lane holds no channel to the owner; the batch belongs to the next owner round -->
+      Done 2026-10-20 by a drain lane under ADR-237 (capability before role: a
+      `git mv` is not a blocker because a maintainer usually does it). Order of
+      operations was the blocker's own recommendation (a): the observation
+      roadmap's § Post-pin known deltas was written FIRST, recording the move as
+      a path-only delta outside every claimed section and giving the two
+      rename-surviving forms of the pin check, and only then did the file move.
+      The pin line, the registration-to-pin table, the shadow pin and the frozen
+      counting rules are untouched. Door `name:` is `analyze-reference`, `sub:`
+      is `reference`, and all four retired spellings are in `replaces:`, pinned
+      by `tests/scripts/analysis_family_aliases.test.ts` — seen red (ENOENT on
+      `analyze/reference.md`) before the move, green after.
 - [x] **6.3 Run record.** `run.json` per round: per stage, analyst, loop and
       exchange — top-tier items added / changed / killed, `already-fixed` rate,
       gain estimate, seats used and failed, roadmaps emitted, recurrence hits,
@@ -477,7 +487,7 @@ file; `council:pr` is unchanged.
 - **Resolved when:** a replay run exists with its lineage table and `run.json`, or the step names a committed target, or the owner cancels it.
 
 ### blocker: source-door-rename-waits-on-the-claim-pin
-- **Status:** open — registered 2026-10-19; step 6.2b stated the hold in prose, which the drain queue cannot read.
+- **Status:** resolved — option (a) executed 2026-10-20 by a drain lane under ADR-237 (capability before role). The post-pin known delta was recorded FIRST in `agents/roadmaps/later/road-to-first-reference-analysis-observation.md` § Post-pin known deltas, and the rename landed after it. That section is additive: the pin line, the registration-to-pin table, the shadow pin and the three frozen counting rules are unedited. The pin stays checkable because both `git log --follow` and a two-path `git diff -M` cross the rename, and both forms are written into that section. The move is path-only — no line inside any of the five claimed mechanisms changed. Step 6.2b, the only step this blocked, closed in the same change.
 - **Owner:** user
 - **Ownership:** product-owned
 - **Blocks:** step 6.2b only; every other registry row of Phase 6 landed with the door under its current name
@@ -593,3 +603,11 @@ Per-criterion evidence moved verbatim to `agents/evidence/analysis/analysis-fami
       `replaces:` aliases in the projected tree, and `analyze:repo` still resolves
       as the door's own live name until 6.2b renames it — the colon spelling is the
       invocation form of `analyze-repo`, not a separate entry. Met 2026-10-19.
+      **Re-read 2026-10-20, still met, by the other limb.** 6.2b landed, so the
+      second clause's "until" fired: `analyze:repo` is no longer the live name
+      and now resolves as one of the four `replaces:` aliases of
+      `analyze-reference`, alongside `analyze-repo`, `analyze-reference-repo`
+      and `analyze:reference-repo`. The criterion asks that the retired names
+      still resolve, not that any particular one stays live, and
+      `tests/scripts/analysis_family_aliases.test.ts` pins all four plus the
+      new `name:` against the projected tree.
