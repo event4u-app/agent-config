@@ -9,6 +9,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { CONCERN_EFFECTS, lint } from "../../src/scripts/lint_hook_manifest.js";
 import { CONCERN_REGISTRY } from "../../src/scripts/hooks/concern_registry.js";
+import { LAZY_CONCERNS } from "../../src/scripts/hooks/lazy_concern.js";
 import { _load_yaml } from "../../src/scripts/hooks/dispatch_hook.js";
 
 const REPO_ROOT = path.resolve(__dirname, "..", "..");
@@ -241,13 +242,39 @@ describe("lint_hook_manifest — the shipped manifest", () => {
     const missing = [...bound]
       .filter((name) => {
         const spec = manifest.concerns[name];
-        return !spec || !(spec.script in CONCERN_REGISTRY);
+        if (!spec) return true;
+        // Two in-process routes, not one. A concern is either inlined in the
+        // bundle (CONCERN_REGISTRY) or loaded from a sibling chunk
+        // (LAZY_CONCERNS) — both stay in-process, so neither falls back to the
+        // ~1.6 s tsx spawn, which is what this assertion is about. Widened
+        // when `chat_history` moved into a chunk; a concern in NEITHER map is
+        // still a failure, which is the direction the next case proves.
+        return !(spec.script in CONCERN_REGISTRY) && !(spec.script in LAZY_CONCERNS);
       })
       .sort();
     expect(
       missing,
-      `bound concerns without an in-process registry entry (would fall back to the ~1.6s tsx spawn path): ${missing.join(", ")}`,
+      `bound concerns with neither an in-process registry entry nor a lazy chunk (would fall back to the ~1.6s tsx spawn path): ${missing.join(", ")}`,
     ).toEqual([]);
+  });
+
+  it("DENIAL — a bound concern in neither map is still reported", () => {
+    // Without this the widened filter above would pass a manifest that binds
+    // anything at all, which is the failure mode of relaxing an invariant to
+    // accommodate a new mechanism.
+    const manifest = _load_yaml(REAL_MANIFEST) as {
+      concerns: Record<string, { script: string }>;
+      platforms: Record<string, Record<string, unknown>>;
+    };
+    const invented = "src/scripts/a_concern_that_is_in_neither_map.ts";
+    expect(invented in CONCERN_REGISTRY).toBe(false);
+    expect(invented in LAZY_CONCERNS).toBe(false);
+    const spec = { script: invented };
+    const reported = !(spec.script in CONCERN_REGISTRY) && !(spec.script in LAZY_CONCERNS);
+    expect(reported).toBe(true);
+    // And the real manifest does not already contain such a concern, so the
+    // case above is not passing by accident of the tree.
+    expect(Object.values(manifest.concerns).some((c) => c.script === invented)).toBe(false);
   });
 });
 
