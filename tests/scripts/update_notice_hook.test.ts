@@ -92,7 +92,7 @@ describe('3.1 — a session_start concern beside wrapper-freshness', () => {
     // refusal stands", and their own comment said they would go red on the
     // commit that registers it — "which is exactly the commit that must carry
     // the new verdict". That commit carries it: round 2 returned `ratified`
-    // 2/2 (agents/evidence/ratifications/update-concerns-declared-20261020.md).
+    // 2/2.
     //
     // They are turned around rather than deleted, because the thing worth
     // pinning did not go away — it inverted. What must not drift now is the

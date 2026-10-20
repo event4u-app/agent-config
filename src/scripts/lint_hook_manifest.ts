@@ -74,9 +74,8 @@ const DEFAULT_HOST_LOWERING = path.join(HOOKS_DIR, "host_lowering.yaml");
  * - `interaction`  solicits user input from a lifecycle hook, without
  *                  deciding or executing the action it proposes
  *
- * The last two were added on 2026-10-20 by an AI council ratification, 2/2
- * (agents/evidence/ratifications/update-concerns-declared-20261020.md). They
- * exist because `notification` is defined as changing NOTHING ELSE, and two
+ * The last two were added on 2026-10-20 by an AI council ratification, 2/2.
+ * They exist because `notification` is defined as changing NOTHING ELSE, and two
  * concerns that stage state and that open a question were being registered
  * under it — which under-declares an observable effect. The boundary the
  * council asked for is a CAPABILITY one (state mutation, interaction,

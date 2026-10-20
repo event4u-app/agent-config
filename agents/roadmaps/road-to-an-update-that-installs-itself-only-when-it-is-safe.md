@@ -123,23 +123,12 @@ None of this is rebuilt here.
       signature or tie it to `publish-npm.yml`. That verification is what
       keeps this step open. Harmless today: the production wiring swaps
       nothing until 1.4.
-      *The `running_origin` half is fixed (2026-10-19).* `_is_source_repo`
-      answers "am I standing in an agent-config tree", and **both** of its
-      positive signals — a `dist/agent-src/` directory and a `package.json`
-      named `@event4u/agent-config` — are in every published tarball, so every
-      installed package read as a source checkout and `quiet_context`
-      suppressed the unattended run on all of them. The `.git`-at-package-root
-      test is now the one shared definition
-      (`doctor_install_mode.isSourceCheckoutPackage`), used by
-      `running_origin` and by `doctor_update_verdict` so the two cannot drift;
-      `_is_source_repo` itself is unchanged, because its three remaining
-      callers ask the question it actually answers. Measured on a real packaged
-      install (`npm pack` → `npm install --omit=dev --ignore-scripts` into an
-      empty directory outside the repo → `upgrade --unattended --dry-run`):
-      **before** `not installing — suppressed: source checkout`, **after**
-      `not installing (installed: 16.5.0) — candidate 16.5.0 is not newer than
-      16.5.0` — the origin gate now passes and the refusal is the honest one.
-      A real checkout still reads `source-checkout`.
+      *The `running_origin` half is fixed (2026-10-19).* Both of
+      `_is_source_repo`'s positive signals ship in every tarball, so every
+      installed package read as a source checkout; the `.git`-at-package-root
+      test is now the one shared definition. Measured on a real packaged
+      install, before and after:
+      `agents/evidence/analysis/running-origin-source-checkout-2026-10-19.md`.
       *The signature half landed half-closed (2026-10-20), and the half that
       did not is now a blocker rather than a sentence.* `provenance_verify`
       gained `verify_attestation_signature`: the DSSE envelope's signature is

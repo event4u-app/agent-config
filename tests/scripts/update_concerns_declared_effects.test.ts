@@ -1,7 +1,6 @@
 /**
  * The six conditions the AI council attached to ratifying `update-notice` and
- * `update-auto-invite` as DECLARED authority expansions (2/2, 2026-10-20,
- * `agents/evidence/ratifications/update-concerns-declared-20261020.md`).
+ * `update-auto-invite` as DECLARED authority expansions (2/2, 2026-10-20).
  *
  * Conditions 2-5 are testable and are tested here. Condition 1 (ratify the
  * vocabulary before registering) is discharged by the artifact covering both
