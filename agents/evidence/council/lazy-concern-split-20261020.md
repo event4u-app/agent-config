@@ -84,3 +84,30 @@ is sufficient. If it does, name the specific line.
 A refusal is a useful answer. Do not approve it to be agreeable, and do not
 treat the earlier refusal as something this diff has to overcome — judge the
 diff in front of you.
+
+## Added 2026-10-20, after #2533 merged — the justification changed and is stronger
+
+The original reason for the chunk was headroom for the two concerns you
+refused. That reason expired when they were withdrawn, and I nearly closed
+this change as pointless. Then I measured.
+
+A parallel session landed the same roadmap's Phase 1/2 and 4 work as #2533.
+On `main` **after** that merge, with no chunk and no new concerns:
+
+```
+hook bundle: 1,549,984 B / 1,550,000 B ceiling
+```
+
+**Sixteen bytes.** Any future change touching a module the dispatcher imports
+reds the budget gate. This is not hypothetical — in this one session the gate
+fired twice on my own work, once 27 bytes over and once 585.
+
+With the chunk the same bundle measures **1,450,501 B**.
+
+So the question is no longer "does the chunk pay for two concerns". It is
+whether the repository keeps a 16-byte margin on a gate that every hook change
+has to pass. I think that makes the case stronger rather than weaker, and I am
+telling you the original case collapsed rather than letting it stand.
+
+Unchanged and still outstanding: the latency effect is unmeasured, and the
+`globalThis` stdin slot is not `AsyncLocalStorage`.
