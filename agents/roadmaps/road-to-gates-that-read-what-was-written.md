@@ -316,7 +316,8 @@ changes what either gate is for.
       executes unblocked against a fixture.
 - [x] **AC-7** The defect-pattern sweep for `normalizeParent` without a quote
       strip is reported with its count and file list.
-- [ ] **AC-8** `task ci` green.
+- [x] **AC-8** `task ci` green. CI on PR #2540 settled green, 39 checks on
+      `5d35bc727` (2026-10-20).
 
 ## Notes — how this file was derived
 
