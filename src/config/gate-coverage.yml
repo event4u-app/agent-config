@@ -3383,6 +3383,8 @@ gates:
         export const RE = /ghp_[A-Za-z0-9]{36}/;
     note: >-
       road-to-one-detector-and-the-senders-we-own 2.2. The rule table is the only
-      place a raw-key prefix is spelled; this gate fails a second spelling. It
-      does not see a prefix spelled through a character class or a keyword
-      assignment, which carry no vendor literal.
+      place a raw-key prefix is spelled; this gate fails a second spelling. Since
+      step 2.7 it also fails a prefix spelled through a character class or an
+      alternation, and a keyword-assignment shape (a table keyword beside the
+      `[:=]` operator class on one line); a shape assembled across lines is not
+      seen.

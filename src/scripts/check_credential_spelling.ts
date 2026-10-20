@@ -12,11 +12,14 @@
  * consumer and passed unchanged by the next.
  *
  * What it sees: a prefix written as a literal, in a string or a regex, with
- * backslash escapes removed first so `ya29\.` counts. What it does not see: a
- * prefix spelled through a character class (`gh[pousr]_`) or a keyword
- * assignment (`password =`), which carry no vendor literal. A line that names a
- * prefix in prose or as an inert fake value carries
- * `not-a-credential-pattern: <reason>`; a bare marker does not mute.
+ * backslash escapes removed first so `ya29\.` counts; a prefix spelled through a
+ * character class or an alternation (`gh[pousr]_`, `(sk|pk)-`) that expands to
+ * one of the table's prefixes; and a keyword-assignment shape — a credential
+ * keyword of the table's vocabulary and the `[:=]` operator class on one line
+ * (step 2.7). What it does not see: a shape assembled across lines, or a keyword
+ * spelled through a variable. A line that names a prefix in prose or as an inert
+ * fake value carries `not-a-credential-pattern: <reason>`; a bare marker does
+ * not mute.
  *
  * Exit: 0 one spelling · 1 a second spelling found.
  */
@@ -27,7 +30,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { CREDENTIAL_PREFIXES as PROJECTED } from './_lib/egress_prefixes.js';
-import { CREDENTIAL_PREFIXES, EGRESS_RULES } from './_lib/egress_rules.js';
+import { ASSIGNMENT_KEYWORDS, CREDENTIAL_PREFIXES, EGRESS_RULES } from './_lib/egress_rules.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
@@ -69,7 +72,50 @@ const RULE_ID = new RegExp(
     'g',
 );
 
-/** 1-based lines that spell a prefix; comment lines and reasoned markers excluded. */
+// One alternative of a class spelling: a stem with at most one character class.
+const CLASS_ALT = /^([a-z_]{1,16})(?:\[([a-z]{1,16})\])?$/;
+// What follows a class spelling: one separator, or a class of separators.
+const SEPARATOR = /^(?:\[[-_]{1,2}\]|[-_])/;
+const CLASS_GROUP = /\(([a-z_|[\]]{1,80})\)/g;
+const BARE_CLASS = /(?<![A-Za-z0-9_(|])([a-z]{1,16})\[([a-z]{1,16})\]/g;
+
+function expandAlt(alt: string): string[] {
+    const m = CLASS_ALT.exec(alt);
+    if (m === null) return [];
+    const stem = m[1] as string;
+    return m[2] === undefined ? [stem] : [...(m[2] as string)].map((c) => stem + c);
+}
+
+/** The table prefixes a class or alternation spelling on this line expands to. */
+export function classSpelledHits(code: string, prefixes: readonly string[] = CREDENTIAL_PREFIXES): string[] {
+    const hits = new Set<string>();
+    const judge = (stems: readonly string[], after: string): void => {
+        const sep = SEPARATOR.exec(after)?.[0];
+        if (sep === undefined) return;
+        const seps = sep.length === 1 ? [sep] : [...sep.slice(1, -1)];
+        for (const stem of stems) for (const c of seps) if (prefixes.includes(stem + c)) hits.add(stem + c);
+    };
+    for (const m of code.matchAll(CLASS_GROUP)) {
+        judge(
+            (m[1] as string).split('|').flatMap(expandAlt),
+            code.slice((m.index ?? 0) + m[0].length),
+        );
+    }
+    for (const m of code.matchAll(BARE_CLASS)) {
+        judge(expandAlt(`${m[1] as string}[${m[2] as string}]`), code.slice((m.index ?? 0) + m[0].length));
+    }
+    return [...hits];
+}
+
+const KEYWORD = new RegExp(Object.values(ASSIGNMENT_KEYWORDS).map(escapeRe).join('|'), 'i');
+const ASSIGNMENT_OPERATOR = /\[:=\]/;
+
+/** A keyword-assignment shape spelled on one line: a table keyword beside the `[:=]` operator class. */
+export function spellsAssignmentShape(code: string): boolean {
+    return ASSIGNMENT_OPERATOR.test(code) && KEYWORD.test(code);
+}
+
+/** 1-based lines that spell a prefix or a shape; comment lines and reasoned markers excluded. */
 export function offendingLines(text: string, prefixes: readonly string[] = CREDENTIAL_PREFIXES): number[] {
     const re = prefixSpelling(prefixes);
     const out: number[] = [];
@@ -77,7 +123,14 @@ export function offendingLines(text: string, prefixes: readonly string[] = CREDE
         const code = line.trim();
         if (code.startsWith('//') || code.startsWith('*') || code.startsWith('/*')) return;
         if (NOT_A_PATTERN.test(code)) return;
-        if (re.test(code.replace(RULE_ID, '').replace(/\\/g, ''))) out.push(i + 1);
+        const bare = code.replace(RULE_ID, '');
+        if (
+            re.test(bare.replace(/\\/g, '')) ||
+            classSpelledHits(bare, prefixes).length > 0 ||
+            spellsAssignmentShape(bare)
+        ) {
+            out.push(i + 1);
+        }
     });
     return out;
 }
@@ -140,8 +193,8 @@ function selfTest(): number {
     try {
         return runSelfTest({
             gate: GATE,
-            minCases: 5,
-            minRejectCases: 3,
+            minCases: 8,
+            minRejectCases: 5,
             cases: [
                 {
                     name: 'a prefix spelled in a regex under src/scripts is rejected',
@@ -163,6 +216,28 @@ function selfTest(): number {
                     expect: 'accept',
                     run: () =>
                         run(fixture('marked', 'src/scripts/d.ts', `const k = '${prefix}x'; // not-a-credential-pattern: fake\n`)),
+                },
+                {
+                    name: 'a prefix family spelled as a character class is rejected',
+                    expect: 'reject',
+                    run: () => run(fixture('class', 'src/scripts/e.ts', 'const RE = /\\b(gh[pousr]|x)[-_][A-Za-z0-9]{8,}/g;\n')), // not-a-credential-pattern: self-test fixture
+                },
+                {
+                    name: 'a keyword-assignment shape spelled outside the table is rejected',
+                    expect: 'reject',
+                    run: () => run(fixture('assign', 'src/cli/f.ts', 'const RE = /(?:password|api[_-]?key)\\s*[:=]\\s*\\S{8,}/i;\n')), // not-a-credential-pattern: self-test fixture
+                },
+                {
+                    name: 'a shape read from the table passes',
+                    expect: 'accept',
+                    run: () =>
+                        run(
+                            fixture(
+                                'reads',
+                                'src/scripts/g.ts',
+                                "const RE = assignmentPattern({ keywords: ['password'], value: '\\\\S{8,}' }, 'i');\n",
+                            ),
+                        ),
                 },
                 {
                     name: 'a spelling inside the table itself passes',

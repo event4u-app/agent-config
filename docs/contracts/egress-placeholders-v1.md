@@ -56,11 +56,19 @@ looser than the row (an OpenAI key glued to a word, a GitHub token past 36
 characters, a key block whose END label differs) keeps that reading over the
 table's prefixes. `rawKeyPrefixPattern` holds a prefix to a token start only
 where its own row is anchored. `check_credential_spelling` fails a second
-spelling of a declared prefix under `src/scripts` and `src/cli`. Not yet moved: the keyword-assignment
-variants (`password =`, `api_key:`) that several consumers read at their own,
-looser threshold, and one prefix spelled through a character class in
-`check_reach_channels.ts`; neither carries a vendor literal, so the
-single-spelling test cannot see them.
+spelling of a declared prefix under `src/scripts` and `src/cli`.
+
+The shapes that carry no vendor literal are the table's too: the
+keyword-assignment vocabulary (`ASSIGNMENT_KEYWORDS`, built by
+`assignmentPattern`), the `Authorization` header name and two raw-key prefix
+families spelled as a class (`CLASS_SPELLED_PREFIXES`). Each consumer picks the
+keywords it always read, in its own order, and keeps its own threshold for the
+value; the rebuilt regexes are the pre-move spellings byte for byte. A
+consumer the dispatch bundle carries reads the one keyword it needs through
+`egress_prefixes.ts`. `check_credential_spelling` also fails a class or
+alternation spelling that expands to a declared prefix and a keyword-assignment
+shape — a table keyword beside the `[:=]` operator class on one line — outside
+the table; it does not see a shape assembled across lines.
 
 ## Detection span and replacement span
 
