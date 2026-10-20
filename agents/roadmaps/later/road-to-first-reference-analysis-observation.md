@@ -1127,6 +1127,61 @@ the pinned record, the three conditions of the authorizing seat, the shadow pin,
 or any frozen counting rule — all of those remain exactly as the council left
 them. It is adding one row to a drift ledger whose purpose is to receive rows.
 
+## Observation-slot offer — recorded 2026-10-20
+
+Step 6.5 of
+[`road-to-an-analysis-family-that-deepens-itself`](../road-to-an-analysis-family-that-deepens-itself.md)
+reads: *offer the first two source-door runs on this repository as the
+observation runs of `reference-loop-upgrade-value`, with the shadow arm its
+protocol requires — or decline, recorded.* This section is that record.
+
+**The offer:** made. The analysis family's source door is built and its first
+two runs are available to be spent as observation 1/2 and 2/2 of the claim.
+
+**The answer: declined for now.** Both slots stay unspent.
+
+**Why.** The comparator an observation run would be measured against is
+recorded in this file's own § Blockers → `shadow-pin-is-post-upgrade` as
+**known-invalid and un-ratified**. The claim's pre-registered falsification
+criteria fix the comparison as "against a shadow run of the pre-upgrade command
+text on the same reference" — the exact text this file records as not validly
+pinned. Accepting the offer against that comparator would spend a slot on a
+comparison this roadmap already calls inadmissible, and § Risk Register rank 1
+names that outcome precisely: *a flawed shadow reconstruction … produces a false
+data point that cannot be withdrawn from a pre-registered measurement, forcing a
+null and its bound reversions.* An invalid pair is the one failure mode that
+costs more than not running at all.
+
+**What this decline does NOT claim.** It does not say the runs are unwanted, it
+does not say the mechanisms are unmeasurable, and it does not retire the claim.
+It says the comparator is not yet admissible, which is a statement about
+`shadow-pin-is-post-upgrade` and nothing else.
+
+**The cost, named rather than hidden.** The claim carries a 180-day bound from
+registration (2026-08-12), and `docs/CLAIMS.md` fixes expiry as *the bar not
+cleared* — on expiry the interop-probe, convergence and `--deep` mechanisms
+revert and the null is published, while the anchor-table and bound-claim-gate
+mechanisms stay regardless. Declining therefore trades a false data point for a
+real risk that the window closes unspent (§ Risk Register rank 2). That trade is
+taken deliberately: a published null from an expired window is an honest result
+the claim pre-committed to, and a null forced by an inadmissible comparator is
+not.
+
+**Reversible, and how it reopens.** Nothing is spent, so this costs nothing to
+undo. The offer stands open and is accepted the moment
+`shadow-pin-is-post-upgrade` is ratified — by a full-strength AI council
+convened on the comparator question, or by the repository maintainer, the two
+actors the frontmatter's `entry_condition:` already names. No new gate is
+created here.
+
+**Authority.** Recorded by a drain lane under ADR-237 (capability before role).
+The decline is the reversible half of the step's own either/or: it preserves
+both slots and creates no commitment. **Accepting** the offer would spend a
+pre-registered slot irreversibly and stays owner-reserved — this lane did not
+take, and may not take, that half. The council of 2026-10-19 split 1:1 on the
+step (D19); on the preservation test a split routes the *preserving* disposition
+to the lane and the *spending* one to the owner, which is the line drawn here.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-07 | reviewer: claude/host -->
 

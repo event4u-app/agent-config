@@ -421,12 +421,24 @@ file; `council:pr` is unchanged.
       verify: `grep -c 'analysis-run' agents/roadmaps/road-to-a-retro-the-merge-runs.md` -> /[1-9]/
       ≥ 1 and the added step names `run.json`. Done 2026-10-18: the retro carries it
       as step 1.5 with an `Arrivals:` line; its fact reader is that file's to build.
-- [ ] **6.5 Observation slots.** Offer the first two source-door runs on this
+- [x] **6.5 Observation slots.** Offer the first two source-door runs on this
       repository as the observation runs of `reference-loop-upgrade-value`, with
       the shadow arm its protocol requires — or decline, recorded.
       verify: `agents/roadmaps/later/road-to-first-reference-analysis-observation.md`
       records the offer and its answer. *Council 2026-10-19 split 1:1 (D19): owner decision.*
-      <!-- blocked-by: observation-slots-are-the-claim-owners-to-spend | asked: no — a drain lane holds no channel to the owner; the batch belongs to the next owner round -->
+      Done 2026-10-20: the offer was made and **declined for now**, recorded in
+      that file's new § Observation-slot offer. Both slots stay unspent. The
+      reason is that file's own `shadow-pin-is-post-upgrade`, which records the
+      comparator an observation run would be measured against as known-invalid
+      and un-ratified — and its § Risk Register rank 1 prices an invalid pair as
+      the one outcome that cannot be withdrawn. The cost of declining is named
+      rather than hidden: the claim's 180-day window may close unspent (rank 2),
+      which `docs/CLAIMS.md` fixes as the bar not cleared. Taken by a drain lane
+      under ADR-237 on the preservation test — declining preserves both slots and
+      creates no commitment, so it is the lane's half of the step's either/or;
+      **accepting** would spend a pre-registered slot irreversibly and stays
+      owner-reserved. The offer reopens automatically when the comparator is
+      ratified by the two actors that file's `entry_condition:` already names.
 - [ ] **6.6 Calibrate.** After ten runs, re-read analyst count, loop count, gain
       rule and slicing size from `run.json` under 1.4's falsification rule (one
       vs three analysts, one vs three loops, with and without the exchange);
@@ -498,7 +510,7 @@ file; `council:pr` is unchanged.
 - **Resolved when:** the observation roadmap names the move, or the observation runs are recorded, or ADR-288 D1 is amended.
 
 ### blocker: observation-slots-are-the-claim-owners-to-spend
-- **Status:** open — registered 2026-10-19; step 6.5 stated the hold in a screen note, which the drain queue cannot read.
+- **Status:** resolved — option (b) taken 2026-10-20 by a drain lane under ADR-237: **declined for now, recorded** in `agents/roadmaps/later/road-to-first-reference-analysis-observation.md` § Observation-slot offer, which is exactly what this blocker's own Recommendation names. Both slots stay unspent, so nothing is consumed and the decision costs nothing to undo. The routing line, which is the part worth keeping: on the preservation test a 1:1 council split hands the *preserving* disposition to the lane and the *spending* one to the owner — declining preserves, accepting spends irreversibly from a pre-registered measurement and was therefore not available to this lane and was not taken. The decline reverses itself when `shadow-pin-is-post-upgrade` is ratified; no new gate was created to hold it.
 - **Owner:** user
 - **Ownership:** product-owned
 - **Blocks:** step 6.5 only
