@@ -24,6 +24,8 @@
  * `_none_` was never that failure; it was noise standing in front of it.
  */
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 
 import { assuranceOverrideLimitation } from './release_findings_ingest.js';
 import { CURATED_HEAD_INSTRUCTION } from './release_material.js';
@@ -788,7 +790,50 @@ export function derive_head_prefill(
         const existing = out[KNOWN_LIMITATIONS_LABEL];
         out[KNOWN_LIMITATIONS_LABEL] = existing ? `${existing} ${override}` : override;
     }
+    // Same shape for the breaking-changes index: a Pending row has landed, so
+    // whatever this release is, it ships it — and no commit subject carries the
+    // row's wording, so the span classifier above cannot derive it.
+    const pending = pendingBreakingLine(readIndex(cwd));
+    if (pending !== null) {
+        const existing = out[MIGRATION_LABEL];
+        out[MIGRATION_LABEL] = existing ? `${existing} ${pending}` : pending;
+    }
     return out;
+}
+
+const MIGRATION_LABEL = 'Default changes + migration';
+
+function readIndex(cwd: string): string {
+    try {
+        return fs.readFileSync(path.join(cwd, 'BREAKING_CHANGES.md'), 'utf-8');
+    } catch {
+        return '';
+    }
+}
+
+/**
+ * The `What changes` cell of every row under `BREAKING_CHANGES.md`'s
+ * `## Pending` heading, as one head value; null when there is none.
+ *
+ * Without this a breaking change whose wording lives only in the index — the
+ * hook-carrier guards of #2455, named in an inner bullet of a squash body —
+ * reaches no released changelog unless an operator copies it by hand.
+ */
+export function pendingBreakingLine(index: string): string | null {
+    const cells: string[] = [];
+    let inPending = false;
+    for (const line of index.split('\n')) {
+        if (line.startsWith('## ')) {
+            inPending = line.startsWith('## Pending');
+            continue;
+        }
+        if (!inPending || !line.startsWith('|')) continue;
+        const cell = (line.split('|')[2] ?? '').trim();
+        if (cell === '' || cell === 'What changes' || /^-+$/u.test(cell)) continue;
+        cells.push(cell);
+    }
+    if (cells.length === 0) return null;
+    return `Breaking, pending in \`BREAKING_CHANGES.md\` and shipped by this release: ${cells.join(' ')}`;
 }
 
 /** Latest reachable release tag before `ref`, or null when there is none. */
