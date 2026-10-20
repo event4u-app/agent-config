@@ -19,6 +19,20 @@ export const USER_IDENTITY_NOTES_MAX_CHARS = 8_000;
 /** Hard cap on the `voice_sample` block — one to three sentences in practice. */
 export const USER_IDENTITY_VOICE_SAMPLE_MAX_CHARS = 2_000;
 
+/** Cap on `style.avoid` entries (brand-checkability E16). */
+export const USER_IDENTITY_STYLE_AVOID_MAX_ENTRIES = 32;
+
+/** One "never say X" term, matched as an escaped literal — never a regex (NG-6). */
+export const userStyleAvoidEntrySchema = z.object({
+    pattern: z.string().trim().min(1, 'style.avoid pattern is required').max(64, 'style.avoid pattern exceeds 64 chars'),
+    match: z.enum(['word', 'substring']),
+    note: z.string().trim().min(1).optional(),
+});
+
+export const userStyleAvoidSchema = z
+    .array(userStyleAvoidEntrySchema)
+    .max(USER_IDENTITY_STYLE_AVOID_MAX_ENTRIES, `style.avoid exceeds ${USER_IDENTITY_STYLE_AVOID_MAX_ENTRIES} entries`);
+
 /** ISO-8601 date (`YYYY-MM-DD`) — `last_updated` is a date, not a timestamp. */
 const isoDate = z
     .string()
@@ -40,6 +54,9 @@ export const userIdentitySchema = z.object({
         // Formality is not configurable — the agent always addresses the user
         // informally ("Du"). Only `pace` remains tunable.
         pace: z.enum(['rapid', 'pragmatic', 'thorough']),
+        // Optional rather than `.default([])` so a file without it round-trips
+        // unchanged; read it through `userStyleAvoid`, whose default is `[]`.
+        avoid: userStyleAvoidSchema.optional(),
     }),
     // Optional — a writing sample sharpens tone mirroring but is not
     // required to save an identity (the setup wizard must not block on it).
@@ -57,3 +74,8 @@ export const userIdentitySchema = z.object({
 });
 
 export type UserIdentity = z.infer<typeof userIdentitySchema>;
+export type UserStyleAvoidEntry = z.infer<typeof userStyleAvoidEntrySchema>;
+
+export function userStyleAvoid(identity: Pick<UserIdentity, 'style'>): UserStyleAvoidEntry[] {
+    return identity.style.avoid ?? [];
+}

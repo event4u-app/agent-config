@@ -11,8 +11,10 @@
 import { describe, expect, it } from 'vitest';
 import {
     USER_IDENTITY_NOTES_MAX_CHARS,
+    USER_IDENTITY_STYLE_AVOID_MAX_ENTRIES,
     USER_IDENTITY_VOICE_SAMPLE_MAX_CHARS,
     userIdentitySchema,
+    userStyleAvoid,
 } from '@shared/userMd/schema.js';
 
 /** Fully-populated identity object — every required field present. */
@@ -21,7 +23,7 @@ function validIdentity(over: Partial<{
     identity: { name: string };
     language: string;
     role: string[];
-    style: { pace: 'rapid' | 'pragmatic' | 'thorough' };
+    style: { pace: 'rapid' | 'pragmatic' | 'thorough'; avoid?: unknown };
     voice_sample: string;
     last_updated: string;
     notes: string;
@@ -164,5 +166,41 @@ describe('userIdentitySchema — required-field enforcement', () => {
             const messages = result.error.issues.map((i) => i.message).join(' | ');
             expect(messages).toMatch(/last_updated/);
         }
+    });
+});
+
+describe('userIdentitySchema — style.avoid (brand-checkability 5.5)', () => {
+    it('absent style.avoid parses exactly as before and adds no key', () => {
+        const result = userIdentitySchema.safeParse(validIdentity());
+        expect(result.success).toBe(true);
+        if (result.success) {
+            expect(result.data.style).toEqual({ pace: 'pragmatic' });
+            expect(userStyleAvoid(result.data)).toEqual([]);
+        }
+    });
+
+    it('accepts word and substring entries with an optional note', () => {
+        const avoid = [
+            { pattern: 'synergy', match: 'word', note: 'say what combines' },
+            { pattern: 'leverag', match: 'substring' },
+        ];
+        const result = userIdentitySchema.safeParse(validIdentity({ style: { pace: 'rapid', avoid } }));
+        expect(result.success).toBe(true);
+        if (result.success) expect(userStyleAvoid(result.data)).toEqual(avoid);
+    });
+
+    it('rejects a pattern outside 1-64 chars, an unknown match mode, and more than the cap', () => {
+        const bad = [
+            [{ pattern: '', match: 'word' }],
+            [{ pattern: 'x'.repeat(65), match: 'word' }],
+            [{ pattern: 'synergy', match: 'regex' }],
+            Array.from({ length: USER_IDENTITY_STYLE_AVOID_MAX_ENTRIES + 1 }, (_, i) => ({ pattern: `t${i}`, match: 'word' })),
+        ];
+        for (const avoid of bad) {
+            const result = userIdentitySchema.safeParse(validIdentity({ style: { pace: 'rapid', avoid } }));
+            expect(result.success, JSON.stringify(avoid).slice(0, 60)).toBe(false);
+            if (!result.success) expect(result.error.issues.some((i) => i.path.join('.').startsWith('style.avoid'))).toBe(true);
+        }
+        expect(USER_IDENTITY_STYLE_AVOID_MAX_ENTRIES).toBe(32);
     });
 });
