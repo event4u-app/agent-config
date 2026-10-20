@@ -493,9 +493,25 @@ response, with no host contract in between and no hook budget to spend — so
       cell over the tree, and a fixture sender with no marker fails the census
       and passes once it has one. The census runs as that test in CI; it is
       not a registered gate-coverage row.
-- [ ] **3.5 What this package injects into a session goes through the engine
+- [x] **3.5 What this package injects into a session goes through the engine
       too** — hot context, handoff and memory recall re-inject stored text.
       verify: a stored entry containing a listed value is injected as its token.
+      **Done 2026-10-20:** one choke point, not three: the dispatcher passes
+      every concern reply it hands back to the session — the `context` block at
+      session start (hot context, handoff) and every `reason` plus
+      `additional_context` (memory recall) — through `egressInjection`
+      (`hooks/egress_stage.ts`). In `protect` and `strict` each listed value
+      becomes its token under one scope per dispatch; an unproven key block or
+      an unavailable engine withholds the text; `off` and `observe` change
+      nothing. The per-text work (`tallyText`, `injectText`, `replaceJson`)
+      moved into the engine chunk as `_lib/egress_text.ts`, schema 2, which is
+      what pays for it: the dispatch bundle reads 1,549,728 B of 1,550,000 B
+      and the chunk 22,969 B of 28,000 B, with no ceiling raised. `npx vitest
+      run tests/scripts/hooks/egress_injection.test.ts` -> 0, 7 cases: through
+      the real dispatcher, a stored entry injected at session start and a
+      recalled one on a prompt arrive as their token in `protect`, and the same
+      entry arrives unchanged under `mode: off`. The hooks and egress suites
+      stay green (93 files).
 
 ## Blockers
 
