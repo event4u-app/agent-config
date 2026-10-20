@@ -175,10 +175,7 @@ export function _resultBytes(payload: JsonObject): number | null {
 }
 
 /** The rewritten result's length the dispatcher put in the stub, or `undefined` when nothing was rewritten. */
-export function _deliveredBytes(payload: JsonObject): number | undefined {
-    const v = payload['tool_response'];
-    return isPayloadStub(v) ? v.delivered_bytes : undefined;
-}
+const stubbedDelivered = (v: unknown): number | undefined => (isPayloadStub(v) ? v.delivered_bytes : undefined);
 
 /** The tool's name, read from the same positions the sibling hook reads. */
 export function _toolName(payload: JsonObject, envelope: JsonObject): string | null {
@@ -280,13 +277,12 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string): numb
 
         const payload = unwrapPayload(envelope);
         const bytes = _resultBytes(payload);
-        const delivered = _deliveredBytes(payload);
 
         _appendCensusLine(consumerRoot, {
             ts: new Date().toISOString(),
             tool: _toolName(payload, envelope),
             raw_bytes: bytes,
-            delivered_bytes: delivered ?? bytes,
+            delivered_bytes: stubbedDelivered(payload['tool_response']) ?? bytes,
             measurable: bytes !== null,
         });
     } catch {

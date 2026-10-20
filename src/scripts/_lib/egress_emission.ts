@@ -328,7 +328,7 @@ export function planInputRestore(envelope: JsonObject, deps: RewriteDeps, restor
 }
 
 /**
- * The byte length of each body the emission replaces, keyed by payload key, for
+ * The byte length of each body the emission replaces, keyed `<payload key>#`, for
  * the payload stub to carry beside the received length. Empty unless a result
  * rewrite is emitted.
  */
@@ -336,7 +336,7 @@ export function deliveredBodyBytes(envelope: JsonObject, e: EgressEmission | nul
   const out = new Map<string, number>();
   if (e?.outcome !== "emitted" || !isObject(envelope["payload"])) return out;
   const key = resultKey(envelope["payload"]);
-  if (key !== null) out.set(key, Buffer.byteLength(typeof e.value === "string" ? e.value : JSON.stringify(e.value), "utf8"));
+  if (key !== null) out.set(`${key}#`, Buffer.byteLength(typeof e.value === "string" ? e.value : JSON.stringify(e.value), "utf8"));
   return out;
 }
 
@@ -417,7 +417,9 @@ export function planStage(
   envelope: JsonObject,
   stage: EgressStageResult,
   deps: RewriteDeps,
-): { plan: StagePlan; placeholder?: JsonObject; execution?: JsonObject } {
+): { plan?: StagePlan; placeholder?: JsonObject; execution?: JsonObject } {
+  // `observe` builds no placeholder view and asks the host for nothing.
+  if (stage.placeholder === undefined) return {};
   const minted = mintIntoSession(envelope, stage, deps);
   const decided = minted === null ? stage : { ...stage, placeholder: minted };
   const decision = planEgressEmission(envelope, decided, deps);

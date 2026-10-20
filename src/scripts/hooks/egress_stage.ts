@@ -385,9 +385,7 @@ export function runEgressStage(
     const counted = countEnvelope(envelope, engine);
     const placeholder = mode === "observe" ? undefined : buildPlaceholderEnvelope(envelope, engine);
     result = { mode, placeholder, ...counted };
-    if (placeholder && packageRoot) {
-      result = { ...result, ...engine.planStage(envelope, result, { packageRoot, row: surfaceRow(String(envelope["platform"])) }) };
-    }
+    if (packageRoot) result = { ...result, ...engine.planStage(envelope, result, { packageRoot, row: surfaceRow(envelope["platform"] as string) }) };
   } catch (exc) {
     const rule = exc instanceof EngineUnavailableError ? ENGINE_UNAVAILABLE : "stage-error";
     const scanned = FIELDS.filter((f) => presentKeys(payload, f).length > 0);

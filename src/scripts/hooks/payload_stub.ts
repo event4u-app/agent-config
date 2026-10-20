@@ -234,7 +234,7 @@ export function makePayloadStub(
   if (isObject(value)) {
     stub.key_count = Object.keys(value).length;
   }
-  const out = measured.get(`${key}#out`);
+  const out = measured.get(`${key}#`);
   if (out != null) stub.delivered_bytes = out;
   return stub;
 }
@@ -437,6 +437,7 @@ export function planPayloadShapes(
   envelope: JsonObject,
   keepSets: Iterable<ReadonlySet<BodyClass>>,
   placeholder?: JsonObject,
+  /** A rewritten body's length per `<key>#` (no body key holds a `#`), carried into that body's stub. */
   delivered?: ReadonlyMap<string, number>,
 ): PayloadShapePlan {
   const present = presentBodyClasses(envelope);
@@ -450,8 +451,7 @@ export function planPayloadShapes(
     stubbedSomewhere.size > 0
       ? measureBodies(envelope, stubbedSomewhere)
       : new Map<string, number | null>();
-  // A rewritten body's length rides in the measured map under `<key>#out`; no body key holds a `#`.
-  for (const [k, v] of delivered ?? []) measured.set(`${k}#out`, v);
+  for (const e of delivered ?? []) measured.set(...e);
   const shaped = new Map<string, JsonObject>();
   const cacheKey = (keep: ReadonlySet<BodyClass>): string =>
     [...keep].sort().join(",");
