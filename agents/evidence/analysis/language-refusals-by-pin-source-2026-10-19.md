@@ -91,3 +91,64 @@ read against the bars: B 1.5, C 1. No staged-demotion study is authorised for
 either detector. B's cost is real (90 % misfires above), and the contract is
 explicit that friction alone never demotes — the remedy for B is the misfire fix
 in 4.1, not a demotion.
+
+## Correction (2026-10-20) — the attributed cause does not reproduce
+
+Step 4.1's fix was about to be written against the largest class above — "the
+session **opened by a command**, pinned `en` from the expanded slash-command
+body". Four readings against `main` at `c43740e6b` contradict that attribution,
+and the fix is withheld rather than written against a cause that does not
+reproduce.
+
+**C1 — the expanded body is not what the hook saw.** The one surviving pin
+record of that shape (`agents/state/language-mirror/18dea663….json`, session
+`5a3f6210`, 2026-10-19T05:51:13.693Z) reads `language: en`, `source: prompt`,
+`prompt_chars: 2188`, `de_markers: 1`, `en_markers: 68`. The command that
+opened the session was `/roadmap:process-full`, whose body is **32,256**
+characters in the installed copy and 36,774 in `src/`. 2,188 is neither, so the
+expanded body is not the text that was classified.
+
+**C2 — what actually set that pin was a cross-session message.** The user turn
+at that exact timestamp in the session's transcript is 2,770 characters and
+opens `Another Claude session sent a message:` followed by
+`<cross-session-message from="uds:…" from-name="agent-config-d3" …>` — an
+English message written by another agent, not by the owner.
+
+**C3 — that defect is fixed, on `main`, since this analysis was written.**
+Commit `0c85ece41` (2026-10-20, "a host-wrapped agent message never sets the
+pin") added `cross-session-message` to `AGENT_MESSAGE_FRAME` in
+`src/scripts/_lib/prompt_shape.ts`. Re-run against the current tree, the exact
+string above returns `isSyntheticPrompt = true`, so it no longer sets a pin.
+
+**C4 — the compact slash-command shape classifies correctly today.** The form
+the transcripts actually carry is
+`<command-message>…</command-message>\n<command-name>/…</command-name>\n<command-args>…</command-args>`.
+Run through `classify`: with the owner's German arguments it returns `de`
+(de 4 / en 0); with empty arguments it returns `und` (de 0 / en 0), which leaves
+any previous pin untouched and writes none on a first turn, because this
+machine's `LANG=C.UTF-8` maps to `und`. Neither outcome is the misfire.
+
+**What this does and does not establish.** It establishes that the stated cause
+is not reproducible and that one real defect in the same population was closed
+on 2026-10-20. It does **not** establish that the 65 refusals had that single
+cause: this traced one pin record end to end (n = 1, the only surviving `en` /
+`source: prompt` record of that shape — the store keeps 7 days), while the 65
+were classified from transcripts by a heuristic whose "last real turn" rule
+recognised task notifications, slash-command expansions and local-command echoes
+as non-real and had **no category for a cross-session message**, which is prose
+and would have been read as a real English turn or as no real turn at all.
+
+**What 4.1 needs next.** A re-run of the split over sessions that start after
+`0c85ece41`, with `cross-session-message` added to the classifier's non-real
+set. Until that window exists there is no misfire class to write a fixture
+against, which is why no fixture and no hook change ship here.
+
+**One further correction, to the section above.** `language_mirror_hook.ts` is
+**not** a gated surface. `check_kernel_edit_ratified --files
+src/scripts/language_mirror_hook.ts` on a clean tree reports "no kernel rule,
+governance hook, hook-plumbing source or self edit in the diff"; the governance
+pattern is `src/scripts/hooks/block_*.ts`, and this file is neither under
+`hooks/` nor named `block_*`. So 4.1's fix does not carry an ADR-268 § 4 review,
+and the sentence above saying it does is withdrawn. 4.3's does, because
+`block_no_verify.ts` matches.
+
