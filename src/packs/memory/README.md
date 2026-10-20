@@ -7,9 +7,9 @@ Cross-session memory and chat-history capabilities for the maintainer workspace.
 - **id**: `memory`
 - **owner**: agent-config-maintainer
 - **requires**: meta
-- **artefacts**: 7
+- **artefacts**: 8
 
-## Commands (7)
+## Commands (8)
 
 - **`memory`** — Memory orchestrator — routes to add, load, mine-session, promote, propose
 - **`memory-add`** — Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, product-rules, ownership, historical-patterns)
@@ -18,3 +18,4 @@ Cross-session memory and chat-history capabilities for the maintainer workspace.
 - **`memory-mine-session`** — Mine a session (cross-host chat-history log) for memory signals and/or rule/skill proposal seeds via --mode=[signals|proposals|both]. Preview-default, opt-in. Folds in /chat-history learn.
 - **`memory-promote`** — Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate.
 - **`memory-propose`** — Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry.
+- **`retro`** — Retro after merged work — examine a merged PR or a finished session, draw at most one durable learning, route it to exactly one target; `status` shows the queue and the last sweep
