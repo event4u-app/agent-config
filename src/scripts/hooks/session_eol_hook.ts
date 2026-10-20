@@ -76,6 +76,9 @@ import {
     run_checkpoints_enabled,
 } from '../_lib/continuity_writer.js';
 import { publishContinuityRecord } from '../_lib/continuity_slot.js';
+import { current_branch } from '../_lib/git_common_dir.js';
+import { derive_session_tag } from '../_lib/session_tag.js';
+import { writeSessionPointer } from '../retro_queue.js';
 import { read_claimed_slug } from '../session_register_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -408,6 +411,7 @@ export function main(): number {
     }
 
     writeContinuityRecord(workspaceRoot, rawSessionId, counters, threshold, tokens);
+    writeRetroPointer(workspaceRoot, sessionKey, rawSessionId, now);
 
     // No warn path. Both emitters this hook used to carry were the recycle
     // advisory and its counter-check, and both are retired (step 3.2). The hook
@@ -440,6 +444,35 @@ export function main(): number {
  * Best-effort throughout, like the checkpoint above it: a continuity record is
  * a recovery aid, and a recovery aid that can fail a Stop is a liability.
  */
+/**
+ * The retro's session pointer (`docs/contracts/retro-v1.md`, path C): one small
+ * file per session in the git common directory, refreshed on every Stop. It is
+ * what lets the next day's sweep find a session that ran only in a worktree,
+ * after the worktree is gone, and what records the session's branch. A fourth
+ * handler inside this concern for the reason the continuity record is one: the
+ * concern count is ratcheted. Off with `retro.enabled: false`; never blocks.
+ */
+export function writeRetroPointer(
+    workspaceRoot: string,
+    eolKey: string,
+    rawSessionId: string | null,
+    now: string,
+): boolean {
+    const sessionId = String(rawSessionId ?? '').trim();
+    if (sessionId === '') return false;
+    try {
+        return writeSessionPointer(workspaceRoot, {
+            eol_key: eolKey,
+            tag: derive_session_tag(sessionId),
+            branch: current_branch(workspaceRoot),
+            workspace: workspaceRoot,
+            ended_at: now,
+        });
+    } catch {
+        return false;
+    }
+}
+
 function writeContinuityRecord(
     workspaceRoot: string,
     rawSessionId: string | null,
