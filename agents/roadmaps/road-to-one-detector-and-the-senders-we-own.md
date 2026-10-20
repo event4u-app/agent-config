@@ -84,7 +84,15 @@ is open.
   remainders without a vendor literal became 2.7.
 - **2026-10-18:** the engine became a conditional chunk (2.2b, D9), which is what
   2.3 to 2.5 and 3.2 needed: their bytes now land in the chunk, under its own ceiling.
-- **Next in order:** 1.1, 2.3, 3.2, 3.3.
+- **2026-10-19/20:** 1.2 (deny rows offered by `hooks:doctor`), 2.4 (known
+  values) and 3.2 (variant suffix) landed. 2.3 (identifier rows) and 2.5
+  (normalised detection, whose homoglyph fixture needs the e-mail row) were built
+  and are held back: see 2.3.
+- **Next in order:** 2.3's fourth ratification round, then 2.5, 2.7, 3.3, 3.4,
+  2.6, 3.5. 2.7 goes before 3.3 because 3.3 turns the bundler's whole-line masks
+  into spans: until the keyword-assignment and `Authorization:` shapes are table
+  rows, a span replacer would pass a low-entropy password or a bearer value the
+  line mask catches today.
 
 ## What this roadmap deliberately does not do
 
@@ -187,7 +195,7 @@ read cannot leak through any later bug.
       1,550,000), stated beside a `null` SLA row in `src/config/hook-latency-budget.json`
       until both machine classes are measured. A program that opens the file
       itself is not caught; that residue is the fixture set of 1.3.
-- [ ] **1.2 Offer the same list as the host's own primitives — never write them.**
+- [x] **1.2 Offer the same list as the host's own primitives — never write them.**
       Option 2 of `native-deny-is-a-host-setting-write` (D10): on Claude Code,
       `hooks:doctor` reports the deny tier in force and prints the
       `permissions.deny Read(…)` rows for the credential classes, idempotent and
@@ -196,6 +204,19 @@ read cannot leak through any later bug.
       exception. The stronger sandbox and environment-scrub tiers are documented
       as user-enabled, never written into a project.
       verify: on a project without the rows, `hooks:doctor` prints every row and reports the tier; with the rows pasted it reports them present and prints none; `~/.claude/settings.json` is byte-identical before and after install and uninstall.
+      **Done 2026-10-19:** `src/scripts/_lib/credential_deny_rows.ts` holds 56 rows
+      (`Read(…)` per class of `credential_files.ts`, plus `Bash(env)` and
+      `Bash(printenv)`); `hooks:doctor` reads `permissions.deny` across the three
+      Claude Code settings layers and reports tier `none`/`partial`/`complete`,
+      printing only the missing rows. `npx vitest run
+      src/scripts/_lib/credential_deny_rows.test.ts` -> 0: every row's sample is a
+      path the guard refuses under that class, and a real doctor run prints every
+      row, then none once pasted, with the settings bytes unchanged (seen red with
+      one sample and the tier test sabotaged). The installer half is
+      `tests/install/uninstall_shared_host_config_real_install.test.ts`, which now
+      also asserts install writes no `permissions` key. Residue: `.env.*` is not
+      offered, because a host row cannot except `.env.example`; the guard covers
+      the other suffixes. The tiers are in the contract's § Prevention tiers.
 - [x] **1.3 Record what prevention cannot see** — a value printed by a program, a
       row returned by a database tool, a secret typed by the user — as fixtures
       that fail today and are referenced by the host-carrier roadmap's phases
@@ -322,12 +343,42 @@ read cannot leak through any later bug.
       That choice touches the hook bundle's shape and its budget, so it is left
       to the maintainer. Still open beyond it: replacing the two F3 copies, the
       pinned census test, the 0.3 bar readings and the keyed-digest allowlist.
-- [ ] **2.4 Known values (D7).** An exact-match set built per invocation from
+      **Built 2026-10-19, not landed — ratification incomplete.** Eight validated
+      identifier rows (IBAN, card, e-mail with a keyed-digest allowlist, three
+      phone shapes, German tax ID, US SSN) in the engine chunk (25,773 of
+      28,000 B), the two F3 copies replaced by a recall-first store redactor, a
+      pinned census over `src/` and `docs/`, and the PREREG (a)/(b) reading
+      (100% recall per type on a seeded corpus, 20 of 14,274 tracked files with a
+      hit, 0 of 400 negatives). The table is hook-plumbing source, so it needs a
+      ratification record. Council (anthropic + openai, CLI, $0): round 1 both
+      REQUEST_CHANGES (stores lost recall without context words; `.md` treated as
+      a file name; unbalanced phone parentheses; census skipped unreadable files;
+      SSN validator shape), round 2 both REQUEST_CHANGES (North American shapes
+      missed), round 3 both REQUEST_CHANGES on one test gap only, with the gated
+      pattern judged correct; the gap was fixed. Round 4 did not run: the
+      council's necessity filter skipped the prompt as bug-fix shaped at agent
+      invocation, and its only override is `--invocation user_explicit`, which an
+      agent may not claim. The work is on local branch
+      `drain/road-to-one-detector-identifier-rows-20261019z` in the
+      `agent-config-lane-detector` worktree, with the four committed prompts.
+      **Closing it needs:** a fourth round asked by the owner (or a prompt the
+      filter admits), then the ratification record and that branch's commits.
+- [x] **2.4 Known values (D7).** An exact-match set built per invocation from
       environment variables whose names mark them as credentials and from local
       `.env*` files, matched also in base64, URL-encoded and JSON-escaped form
       through at most two decoding layers with a size and a time bound. Held in
       memory; never written.
       verify: a password with no recognisable shape, present in a fixture `.env` and printed by a command, is detected in all four encodings; a nested encoding past the bound is a counted miss, not a hang.
+      **Done 2026-10-19:** `src/scripts/_lib/egress_known_values.ts` builds the set
+      from credential-named variables and value-holding `.env*` files (templates
+      skipped, values under 8 characters dropped) and finds a value plain or behind
+      two layers of base64, percent-encoding and JSON escapes, decoding the text,
+      never encoding the needles. `npx vitest run
+      src/scripts/_lib/egress_known_values.test.ts` -> 0: the planted password,
+      printed by `cat`, is found in all four forms and through base64-of-URL; a
+      triple base64 is a counted `pastLayerBound` miss; the size and time bounds
+      count too (a third layer and the JSON decoder each seen red). Not yet read
+      by a sender — 3.3 wires it.
 - [ ] **2.5 Invisible characters do not hide a value.** Reuse the strip-then-
       rescan step and its fixtures (`src/scripts/_lib/knowledge_global_redaction.ts`,
       `tests/fixtures/global-knowledge-redaction/`).
@@ -335,6 +386,10 @@ read cannot leak through any later bug.
       wrapping, code fences, Markdown links, a value repeated or overlapping
       another — reports each miss as a counted miss.
       verify: the zero-width and homoglyph fixtures are detected by the table, and the evasion corpus prints its miss count per mutation.
+      **Built 2026-10-19 on the 2.3 branch, held with it:** `_lib/egress_normalize.ts`
+      (hidden set defined once, confusables folded through a new `LATIN_TWIN`,
+      spans mapped back) with the evasion corpus pinned; its homoglyph fixture is
+      an e-mail, so it lands after 2.3.
 - [ ] **2.6 A mutation suite kills the invariants.** Disabling the IBAN checksum,
       changing class precedence, logging a raw value or letting a credential
       token restore anywhere turns a named test red.
@@ -371,9 +426,16 @@ response, with no host contract in between and no hook budget to spend — so
       under a neutralised implementation. The one-spelling check is a test that scans
       `src/`, not a registered gate. Replacement is in memory only; the variant
       suffix is 3.2's.
-- [ ] **3.2 Two spellings of one entity share number and fingerprint and carry
+- [x] **3.2 Two spellings of one entity share number and fingerprint and carry
       a variant suffix**, so a restore reproduces each spelling byte for byte.
       verify: a spaced and a compact IBAN share a number, differ in suffix, and both restore to their original bytes.
+      **Done 2026-10-19:** `__TYPE_n_fp_vK__` (K from 2 to 99, none for the first
+      spelling); number and fingerprint come from a per-type canonical form
+      (`IBAN`, `CARD`, `PHONE`), and the scope keeps a keyed digest per spelling,
+      never a credential's. `npx vitest run src/scripts/_lib/egress_token.test.ts`
+      -> 0, the variant cases seen red with the canonical form and the suffix each
+      neutralised. Residue in the contract: the host carrier's session table mints
+      by spelling and issues no variant yet.
 - [ ] **3.3 The council bundle goes through the engine, and the transport checks
       what it is about to send.** The six line patterns of `bundler.ts:81-88`
       become span replacement, so a finding no longer costs the reviewer the
@@ -442,7 +504,7 @@ response, with no host contract in between and no hook budget to spend — so
       constraint for the council channel, state `asserted`.)*
 - [ ] AC-3 — The sender census has no empty cell; every sender is `asserted`,
       fixed-corpus or `uncovered` with a reason.
-- [ ] AC-4 — Credential-class files cannot be read through a hooked tool on a
+- [x] AC-4 — Credential-class files cannot be read through a hooked tool on a
       deny-capable slot, and `hooks:doctor` prints the deny rows a user would
       paste and reports which are already in force (D10 — offered, never written).
 - [ ] AC-5 — The contract and threat-model row j exist; no shipped prose about

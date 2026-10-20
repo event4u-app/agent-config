@@ -52,6 +52,11 @@ import {
   renderFloorPosture,
   type FloorPosture,
 } from "./_lib/floor_posture.js";
+import {
+  readCredentialDenyTier,
+  renderCredentialDenyTier,
+  type CredentialDenyReport,
+} from "./_lib/credential_deny_rows.js";
 
 // src/scripts/hooks_doctor.ts → parents[2] (../../..) is the repo root,
 // mirroring the Python `Path(__file__).resolve().parents[2]`.
@@ -217,6 +222,12 @@ export interface DoctorPayload {
    * Report only — it never changes the exit code and never writes a setting.
    */
   floor_posture: FloorPosture;
+  /**
+   * The host's own deny rows for the credential classes the read guard refuses:
+   * which are in force, and which the user would paste. Offered, never written:
+   * a written row would break the published no-host-setting-write commitment.
+   */
+  credential_deny: CredentialDenyReport;
 }
 
 /** What the doctor can say about the ledger without interpreting a single row. */
@@ -329,6 +340,7 @@ export function collect(
     obligation_ledger: collectLedgerStats(project_root),
     install_boundary: readInstallBoundary(),
     floor_posture: readFloorPosture(defaultFloorPostureDeps(project_root)),
+    credential_deny: readCredentialDenyTier(defaultFloorPostureDeps(project_root)),
   };
 }
 
@@ -517,6 +529,8 @@ export function _render_table(payload: DoctorPayload): string {
   lines.push("Floor posture");
   lines.push("-".repeat(60));
   lines.push(...renderFloorPosture(payload.floor_posture));
+  lines.push("");
+  lines.push(...renderCredentialDenyTier(payload.credential_deny));
   // Dispatch-issues detail — last 20 grouped by concern.
   if (payload.dispatch_issues.length > 0) {
     lines.push("");

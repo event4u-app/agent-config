@@ -9,11 +9,16 @@ import { detect, EGRESS_RULES, type EgressClass, type EgressSpan, replaceSpans }
 
 export const TOKEN_FP_LENGTH = 6;
 
-/** `__TYPE_n_fingerprint__` — type upper-case, number from 1, fingerprint lower hex. */
-export const TOKEN_PATTERN = /__([A-Z][A-Z0-9]{1,15})_([1-9][0-9]{0,5})_([0-9a-f]{6})__/g;
+/**
+ * `__TYPE_n_fingerprint__`, or `__TYPE_n_fingerprint_vK__` for the K-th spelling
+ * of one entity — type upper-case, number from 1, fingerprint lower hex, K from 2.
+ */
+export const TOKEN_PATTERN = /__([A-Z][A-Z0-9]{1,15})_([1-9][0-9]{0,5})_([0-9a-f]{6})(?:_v([2-9]|[1-9][0-9]))?__/g;
 
 const TOKEN_TYPE = /^[A-Z][A-Z0-9]{1,15}$/;
 const MAX_TOKEN_NUMBER = 999_999;
+/** Spellings one entity may carry in a scope; the recogniser parses up to two digits. */
+export const MAX_TOKEN_VARIANT = 99;
 /**
  * Unknown tokens a scope answers before it stops resolving anything. With a
  * 24-bit fingerprint this bounds the chance that guessing ever resolves a value
@@ -25,6 +30,8 @@ export interface TokenParts {
     readonly type: string;
     readonly number: number;
     readonly fingerprint: string;
+    /** Which spelling of the entity, from 1; 1 carries no suffix. */
+    readonly variant?: number;
 }
 
 export interface ParsedToken extends TokenParts {
@@ -41,11 +48,14 @@ export function formatToken(p: TokenParts): string {
         !Number.isInteger(p.number) ||
         p.number < 1 ||
         p.number > MAX_TOKEN_NUMBER ||
-        !TOKEN_FP.test(p.fingerprint)
+        !TOKEN_FP.test(p.fingerprint) ||
+        (p.variant !== undefined &&
+            (!Number.isInteger(p.variant) || p.variant < 1 || p.variant > MAX_TOKEN_VARIANT))
     ) {
         throw new Error('formatToken: parts outside the token grammar');
     }
-    return `__${p.type}_${p.number}_${p.fingerprint}__`;
+    const suffix = p.variant === undefined || p.variant === 1 ? '' : `_v${p.variant}`;
+    return `__${p.type}_${p.number}_${p.fingerprint}${suffix}__`;
 }
 
 export function parseTokens(text: string): ParsedToken[] {
@@ -57,6 +67,7 @@ export function parseTokens(text: string): ParsedToken[] {
             type: m[1] as string,
             number: Number(m[2]),
             fingerprint: m[3] as string,
+            variant: m[4] === undefined ? 1 : Number(m[4]),
             start: m.index,
             end: m.index + m[0].length,
         });
@@ -69,8 +80,32 @@ interface Entry {
     readonly class: EgressClass;
     readonly number: number;
     readonly fingerprint: string;
-    /** Held in memory for identifiers only; a credential value is never kept. */
+    /**
+     * Keyed digests of each spelling seen, in order; its index + 1 is the
+     * spelling's variant. A digest, so a credential's spelling is never kept.
+     */
+    readonly spellings: string[];
+}
+
+interface Issued {
+    readonly entry: Entry;
+    /** The spelling this token restores to — identifiers only; a credential value is never kept. */
     readonly value: string | null;
+}
+
+/**
+ * The form two spellings of one entity share. Only types whose spelling varies
+ * without changing the value are listed; every other type is its own canonical
+ * form, so two spellings of it are two entities.
+ */
+const CANONICAL_FORMS: Readonly<Record<string, (raw: string) => string>> = {
+    IBAN: (raw) => raw.replace(/\s+/g, '').toUpperCase(),
+    CARD: (raw) => raw.replace(/[\s-]+/g, ''),
+    PHONE: (raw) => raw.replace(/[\s().\-/]+/g, ''),
+};
+
+export function canonicalValue(type: string, raw: string): string {
+    return CANONICAL_FORMS[type]?.(raw) ?? raw;
 }
 
 /**
@@ -80,7 +115,7 @@ interface Entry {
 export class TokenScope {
     private readonly key: Uint8Array;
     private readonly byDigest = new Map<string, Entry>();
-    private readonly byToken = new Map<string, Entry>();
+    private readonly byToken = new Map<string, Issued>();
     private readonly counters = new Map<string, number>();
     private failedResolutions = 0;
     /** Keyed digest of the canonical value alone → its class, whatever type it was minted under. */
@@ -90,7 +125,13 @@ export class TokenScope {
         this.key = randomBytes(32);
     }
 
-    mint(type: string, cls: EgressClass, canonical: string): string {
+    /**
+     * The token for one spelling. Spellings with one canonical form share number
+     * and fingerprint and differ in the variant suffix, so each restores to its
+     * own bytes.
+     */
+    mint(type: string, cls: EgressClass, spelling: string): string {
+        const canonical = canonicalValue(type, spelling);
         if (!TOKEN_TYPE.test(type)) {
             throw new Error(`TokenScope: type ${JSON.stringify(type)} is outside the token grammar`);
         }
@@ -100,9 +141,16 @@ export class TokenScope {
             throw new Error(`TokenScope: this value was minted under class ${seenClass}, refusing class ${cls}`);
         }
         const digest = createHmac('sha256', this.key).update(`${type}\u0000${canonical}`).digest('hex');
+        const spellingDigest = createHmac('sha256', this.key).update(`spelling\u0000${type}\u0000${spelling}`).digest('hex');
         const known = this.byDigest.get(digest);
         if (known !== undefined) {
-            return formatToken(known);
+            const at = known.spellings.indexOf(spellingDigest);
+            if (at !== -1) return formatToken({ ...known, variant: at + 1 });
+            if (known.spellings.length >= MAX_TOKEN_VARIANT) {
+                throw new Error(`TokenScope: this ${type} has used every variant the grammar can carry`);
+            }
+            known.spellings.push(spellingDigest);
+            return this.issue(known, known.spellings.length, cls, spelling);
         }
         const number = (this.counters.get(type) ?? 0) + 1;
         if (number > MAX_TOKEN_NUMBER) {
@@ -114,12 +162,17 @@ export class TokenScope {
             class: cls,
             number,
             fingerprint: digest.slice(0, TOKEN_FP_LENGTH),
-            value: cls === 'identifier' ? canonical : null,
+            spellings: [spellingDigest],
         };
         this.classByValue.set(valueDigest, cls);
         this.byDigest.set(digest, entry);
-        this.byToken.set(formatToken(entry), entry);
-        return formatToken(entry);
+        return this.issue(entry, 1, cls, spelling);
+    }
+
+    private issue(entry: Entry, variant: number, cls: EgressClass, spelling: string): string {
+        const token = formatToken({ ...entry, variant });
+        this.byToken.set(token, { entry, value: cls === 'identifier' ? spelling : null });
+        return token;
     }
 
     /** True only for a token this scope minted; token syntax alone proves nothing. */
@@ -130,17 +183,17 @@ export class TokenScope {
     /** The identifier value a token stands for, or null: unknown, forged, foreign or credential. */
     resolve(token: string): string | null {
         if (this.failedResolutions >= MAX_FAILED_RESOLUTIONS) return null;
-        const entry = this.byToken.get(token);
-        if (entry === undefined) {
+        const issued = this.byToken.get(token);
+        if (issued === undefined) {
             this.failedResolutions += 1;
             return null;
         }
-        return entry.value;
+        return issued.value;
     }
 
-    /** What the scope holds, without any value. */
-    snapshot(): Array<Omit<Entry, 'value'>> {
-        return [...this.byDigest.values()].map(({ value: _value, ...rest }) => rest);
+    /** What the scope holds, without any value or spelling digest. */
+    snapshot(): Array<Omit<Entry, 'spellings'> & { variants: number }> {
+        return [...this.byDigest.values()].map(({ spellings, ...rest }) => ({ ...rest, variants: spellings.length }));
     }
 }
 

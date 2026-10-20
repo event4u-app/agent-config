@@ -12,8 +12,10 @@ import { describe, expect, it } from 'vitest';
 
 import { detect, findSpans } from './egress_rules.js';
 import {
+    canonicalValue,
     formatToken,
     MAX_FAILED_RESOLUTIONS,
+    MAX_TOKEN_VARIANT,
     parseTokens,
     replaceValues,
     TOKEN_FP_LENGTH,
@@ -311,9 +313,82 @@ describe('replaceValues', () => {
     });
 });
 
+describe('variants — two spellings of one entity', () => {
+    // An IBAN-shaped value assembled at runtime; the token module is fed directly,
+    // because no identifier rule exists in the table to detect it.
+    const compact = ['DE', '89', '3704', '0044', '0532', '0130', '00'].join('');
+    const spaced = compact.replace(/(.{4})/g, '$1 ').trim();
+
+    it('a spaced and a compact IBAN share number and fingerprint, differ in suffix, and each restores to its bytes', () => {
+        const scope = new TokenScope();
+        const a = scope.mint('IBAN', 'identifier', compact);
+        const b = scope.mint('IBAN', 'identifier', spaced);
+        const [pa, pb] = [parseTokens(a)[0], parseTokens(b)[0]];
+        expect(pa?.number === pb?.number && pa?.fingerprint === pb?.fingerprint).toBe(true);
+        expect(a === b).toBe(false);
+        expect([pa?.variant, pb?.variant]).toEqual([1, 2]);
+        expect(scope.resolve(a) === compact).toBe(true);
+        expect(scope.resolve(b) === spaced).toBe(true);
+        expect(scope.mint('IBAN', 'identifier', spaced) === b).toBe(true);
+    });
+
+    it('replaceValues numbers the entity once whichever spelling comes first, and replacing twice is idempotent', () => {
+        const scope = new TokenScope();
+        const one = scope.mint('IBAN', 'identifier', spaced);
+        const two = scope.mint('IBAN', 'identifier', compact.toLowerCase());
+        expect(parseTokens(two)[0]?.number).toBe(parseTokens(one)[0]?.number);
+        const text = `pay ${one} or ${two}`;
+        expect(replaceValues(text, scope) === text).toBe(true);
+    });
+
+    it('a variant token from another scope does not resolve', () => {
+        const mine = new TokenScope();
+        const theirs = new TokenScope();
+        theirs.mint('IBAN', 'identifier', compact);
+        const foreign = theirs.mint('IBAN', 'identifier', spaced);
+        mine.mint('IBAN', 'identifier', compact);
+        mine.mint('IBAN', 'identifier', spaced);
+        expect(mine.resolve(foreign)).toBeNull();
+    });
+
+    it('a credential variant shares the entity and restores to nothing', () => {
+        const scope = new TokenScope();
+        scope.mint('IBAN', 'credential', compact);
+        const v = scope.mint('IBAN', 'credential', spaced);
+        expect(parseTokens(v)[0]?.variant).toBe(2);
+        expect(scope.resolve(v)).toBeNull();
+    });
+
+    it('a type with no canonical form keeps two spellings as two entities', () => {
+        expect(canonicalValue('EMAIL', 'A@x.test') === 'A@x.test').toBe(true);
+        const scope = new TokenScope();
+        const a = scope.mint('EMAIL', 'identifier', 'A@x.test');
+        const b = scope.mint('EMAIL', 'identifier', 'a@x.test');
+        expect(parseTokens(a)[0]?.number === parseTokens(b)[0]?.number).toBe(false);
+    });
+
+    it('the grammar refuses a variant past what the recogniser parses, and no rule matches a variant token', () => {
+        expect(() => formatToken({ type: 'IBAN', number: 1, fingerprint: 'abcdef', variant: MAX_TOKEN_VARIANT + 1 })).toThrow(/grammar/);
+        expect(() => formatToken({ type: 'IBAN', number: 1, fingerprint: 'abcdef', variant: 0 })).toThrow(/grammar/);
+        const top = formatToken({ type: 'IBAN', number: 1, fingerprint: 'abcdef', variant: MAX_TOKEN_VARIANT });
+        expect(parseTokens(top)[0]?.variant).toBe(MAX_TOKEN_VARIANT);
+        expect(formatToken({ type: 'IBAN', number: 1, fingerprint: 'abcdef', variant: 1 })).toBe('__IBAN_1_abcdef__');
+        expect(detect(top)).toEqual([]);
+    });
+
+    it('the snapshot carries a variant count and no spelling', () => {
+        const scope = new TokenScope();
+        scope.mint('IBAN', 'identifier', compact);
+        scope.mint('IBAN', 'identifier', spaced);
+        const snap = scope.snapshot();
+        expect(snap[0]?.variants).toBe(2);
+        expect(JSON.stringify(snap).includes(compact)).toBe(false);
+    });
+});
+
 describe('one spelling under src/', () => {
     it('no file outside egress_token.ts writes a token-shaped literal', () => {
-        const SHAPES = [/⟦[A-Z]{2,16}_\d{1,6}\.[0-9a-f]{6}⟧/, /__(?:AC_)?[A-Z]{2,16}_\d{1,6}_[0-9a-f]{6}__/];
+        const SHAPES = [/⟦[A-Z]{2,16}_\d{1,6}\.[0-9a-f]{6}⟧/, /__(?:AC_)?[A-Z]{2,16}_\d{1,6}_[0-9a-f]{6}(?:_v\d{1,2})?__/];
         const offenders: string[] = [];
         const walk = (dir: string): void => {
             for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
