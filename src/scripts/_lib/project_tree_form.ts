@@ -28,12 +28,11 @@
  * rule this file would be a permanent bypass of the decision function rather
  * than a stand-in for it, which is the one risk the reviewing seat named.
  *
- * Decided 2026-10-20 on a DEGRADED council reading, 1 of 2 seats present
- * (`agents/evidence/council/setup-project-tree-form-source-20261020.md`). One
- * seat is not a verdict, which is why step 3.6 stays OPEN and its blocker
- * carries the confirmation to a full quorum. What makes acting on it safe
- * meanwhile is that this option changes no behaviour at all: it reproduces what
- * the template produced, and every other option on the table did not.
+ * WHY ONE SEAT WAS ENOUGH TO BUILD ON, AND NOT ENOUGH TO CLOSE. The choice was
+ * reviewed at a degraded quorum, so step 3.6 stays open and its blocker carries
+ * the confirmation. Acting on it meanwhile is bounded by what the option does:
+ * it changes no behaviour at all — it reproduces what the shipped template
+ * produced — and every alternative did. The record lives with the roadmap.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
