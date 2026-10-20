@@ -3,7 +3,6 @@ complexity: structural
 status: ready
 execution:
   mode: phase-checkpoints
-depends: [road-to-a-hook-carrier-that-is-never-silent]
 estate_offset_exempt: "Round inbox-2026-10-n asks whether the package can install a minimal skill set, bring others in per need and drop them again. Verified at d760ecbde: a default install writes 229 of 300 authored skills, the package's own metadata occupies the host's reserved `context` key on 6 skills so no skill can run forked, and Codex CLI receives no native skills. road-to-skill-menu-economy owns only the listing axis and is parked on a condition this file does not meet; un-parking it to carry a lifecycle it never owned would re-open its four parked conditions, and no other file owns this axis."
 estate_growth_exempt: "+2 open_blockers: `which-completeness-skills-owe`, a product question the round raises against the public statement that an install writes the active pack only, and `listing-override-write-is-owner-owned`, the fourth arrival of the question road-to-skill-menu-economy already poses. Neither closes a box or changes behaviour."
 relates:
@@ -11,8 +10,8 @@ relates:
     relation: extends
     note: "Archived, every step closed (was Active). Owns the search answer and the shell search path that falls back to the installed payload (its 2.1), and observes the host's listing override (its 0.1). Phase 2 here reads both; nothing here re-plans them."
   - slug: road-to-a-hook-carrier-that-is-never-silent
-    relation: depends
-    note: "Added in the same change. Phase 4 sources materialised skills from its staged payload (1.1), never from a package-manager cache."
+    relation: extends
+    note: "Archived 2026-10-20, every step closed, so the dependency is met. Phase 4 sources materialised skills from its staged payload (1.1), never from a package-manager cache."
   - slug: road-to-skill-menu-economy
     relation: extends
     note: "Later. Owns the listing axis and the posed owner question on the host's listing override; this file adds the lifecycle axis — when a skill is present, how long it stays, whether its body leaves residue — and step 4.7 carried the owner's answer to that question, option (a), on 2026-10-14."
