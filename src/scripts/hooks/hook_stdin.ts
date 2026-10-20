@@ -24,38 +24,14 @@ import * as tty from 'node:tty';
 
 import { readStdinText } from '../_lib/stdin.js';
 
-/**
- * The override lives on `globalThis`, not in a module-local binding, and that
- * is load-bearing rather than stylistic.
- *
- * A concern loaded from a conditional chunk (`hooks/lazy_concern.ts`) is a
- * SECOND module graph in the same process: it carries its own copy of this
- * file. A module-local `_override` set by the dispatcher is then invisible to
- * the concern, which falls through to fd 0 — already consumed — and reads an
- * empty envelope. Measured 2026-10-20: the lazily loaded `chat-history` concern
- * wrote no history line at all, silently and with exit code 0.
- *
- * The seam is a property of the PROCESS — "the per-concern envelope currently
- * being delivered" — so it belongs where every graph in the process can see it.
- * The symbol is registered in the global symbol registry so two copies of this
- * module resolve the same key.
- */
-const OVERRIDE_KEY = Symbol.for('agent-config.hookStdinOverride');
-
-interface OverrideHost {
-    [OVERRIDE_KEY]?: string | null;
-}
-
-function host(): OverrideHost {
-    return globalThis as unknown as OverrideHost;
-}
+let _override: string | null = null;
 
 export function setHookStdinOverride(raw: string): void {
-    host()[OVERRIDE_KEY] = raw;
+    _override = raw;
 }
 
 export function clearHookStdinOverride(): void {
-    host()[OVERRIDE_KEY] = null;
+    _override = null;
 }
 
 /**
@@ -162,8 +138,7 @@ export function readFd0ToEnd(): string {
  * large-payload truncation both halves prevent.
  */
 export function readHookStdin(): string {
-    const override = host()[OVERRIDE_KEY];
-    if (override !== null && override !== undefined) return override;
+    if (_override !== null) return _override;
     try {
         if (tty.isatty(0)) return '';
         return readFd0ToEnd();

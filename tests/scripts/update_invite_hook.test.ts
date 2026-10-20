@@ -145,18 +145,17 @@ describe('4.3 — the manifest binding', () => {
         platforms: Record<string, Record<string, string[]>>;
     };
 
-    it('is a fail-open advisory notification on the stop slot only', () => {
-        const def = manifest.concerns[CONCERN];
-        expect(def).toBeDefined();
-        expect(def!['fail_closed']).toBe(false);
-        expect(def!['severity']).toBe('advisory');
+    // Refused 2/2 with update-notice on 2026-10-20; see the matching block in
+    // update_notice_hook.test.ts. Re-registering it is the commit that must
+    // carry the new council verdict, and that commit turns this red.
+    it('is neither defined nor bound while the council refusal stands', () => {
+        expect(manifest.concerns[CONCERN]).toBeUndefined();
         const bound: string[] = [];
         for (const [host, events] of Object.entries(manifest.platforms)) {
             for (const [event, concerns] of Object.entries(events)) {
                 if (Array.isArray(concerns) && concerns.includes(CONCERN)) bound.push(`${host}:${event}`);
             }
         }
-        expect(bound.length).toBeGreaterThan(0);
-        expect(bound.filter((b) => !b.endsWith(':stop'))).toEqual([]);
+        expect(bound).toEqual([]);
     });
 });

@@ -606,17 +606,17 @@ export function touch(
     // repositories, while `upgrade --unattended` has to know whether ANY
     // session is live before it swaps a binary every session's hooks run.
     //
-    // Best-effort by construction: the global write never decides this
-    // function's return value, so a read-only or absent global root leaves
-    // session registration working exactly as it did. The cost of that choice
-    // is stated where it matters — `any_live_session` fails closed to "no
+    // Best-effort by construction: `write_record` creates its directory and
+    // swallows every write error, and its result never decides this function's
+    // return value, so a read-only or absent global root leaves session
+    // registration working exactly as it did. The try covers the one call that
+    // can still throw — resolving the home directory. The cost of best-effort is
+    // stated where it matters: `any_live_session` reads a missing record as "no
     // session", so the unattended run leans on its lock and age gates too.
-    // Inlined rather than a helper: the hook bundle is byte-budgeted and a
-    // second function declaration was measured 27 bytes over the ceiling.
+    // Written as compactly as it is because the hook bundle is byte-budgeted:
+    // the first version (a separate mkdir and a second try) put the bundle over.
     try {
-        const gdir = global_register_dir();
-        fs.mkdirSync(gdir, { recursive: true });
-        write_record(gdir, rec);
+        write_record(global_register_dir(), rec);
     } catch {
         /* a session that cannot reach the global root still starts */
     }

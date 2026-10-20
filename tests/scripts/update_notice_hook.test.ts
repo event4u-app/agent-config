@@ -88,24 +88,25 @@ describe('3.1 — a session_start concern beside wrapper-freshness', () => {
         platforms: Record<string, Record<string, string[]>>;
     };
 
-    it('is declared fail-open, advisory, and as a notification', () => {
-        const def = manifest.concerns[CONCERN];
-        expect(def, `${CONCERN} is missing from hook_manifest.yaml`).toBeDefined();
-        expect(def!['script']).toBe(SCRIPT);
-        expect(def!['fail_closed']).toBe(false);
-        expect(def!['severity']).toBe('advisory');
-        expect(def!['effect']).toBe('notification');
+    // The council refused both update concerns 2/2 on 2026-10-20
+    // (agents/evidence/council/lazy-concern-authority-expansion-20261020.md):
+    // a lifecycle hook that may start an install is an authority expansion,
+    // whatever its `severity` says. Until a round on blocker
+    // `concerns-refused-as-authority-expansion` re-registers it, the manifest
+    // must NOT bind it — this flips red on the commit that registers it, which
+    // is exactly the commit that must carry the new verdict.
+    it('is not registered in hook_manifest.yaml while the council refusal stands', () => {
+        expect(manifest.concerns[CONCERN]).toBeUndefined();
     });
 
-    it('is bound on session_start and on no other event', () => {
+    it('is bound on no event of any host while the council refusal stands', () => {
         const bound: string[] = [];
         for (const [host, events] of Object.entries(manifest.platforms)) {
             for (const [event, concerns] of Object.entries(events)) {
                 if (Array.isArray(concerns) && concerns.includes(CONCERN)) bound.push(`${host}:${event}`);
             }
         }
-        expect(bound.length).toBeGreaterThan(0);
-        expect(bound.filter((b) => !b.endsWith(':session_start'))).toEqual([]);
+        expect(bound).toEqual([]);
     });
 
     it('costs file reads only — p95 over 20 runs stays far inside the 160 ms session_start baseline', () => {

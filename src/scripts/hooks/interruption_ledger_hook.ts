@@ -56,7 +56,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { derive_session_tag } from '../_lib/session_tag.js';
+import { derive_session_tag } from '../chat_history.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
 import { HANDBACK, finalParagraph, readTranscriptTail } from './turn_end_gate_hook.js';
