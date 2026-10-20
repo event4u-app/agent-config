@@ -90,7 +90,7 @@ None of this is rebuilt here.
       before any new concern lands, so Phase 3 has something to be measured
       against.
       verify: the figures are in the same evidence file as 1.1.
-- [ ] **1.4 Lift the live-session register to global scope.** 1.2 took the
+- [x] **1.4 Lift the live-session register to global scope.** 1.2 took the
       non-zero branch (D6: 490 failed hook invocations of 4,190 during four
       swap rounds), so activation waits on a register that can say no session
       is live on this machine. Today `src/scripts/session_register_hook.ts`

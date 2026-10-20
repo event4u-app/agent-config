@@ -103,7 +103,10 @@ describe('upgrade --unattended — the happy path', () => {
         expect(await run_unattended(deps(w, { activationBlocked: ACTIVATION_BLOCKED }))).toBe(EXIT_REFUSED);
         expect(w.cmds).toEqual([]);
         expect(out).toContain('every gate passed for 16.6.0, but not installing');
-        expect(ACTIVATION_BLOCKED).toMatch(/live-session register/);
+        // Was `/live-session register/` until 1.4 built that register. The
+        // message no longer explains an absent mechanism; it reports what the
+        // mechanism measured, so the assertion follows it to the live session.
+        expect(ACTIVATION_BLOCKED).toMatch(/live on this machine/);
     });
 
     it('a dry run passes the gates and installs nothing', async () => {

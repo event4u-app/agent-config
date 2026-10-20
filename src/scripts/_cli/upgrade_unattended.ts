@@ -29,8 +29,9 @@ import process from 'node:process';
 import { read_candidate, unattended_decision, type RegistryCandidate } from '../_lib/unattended_gates.js';
 import type { InstallOrigin } from '../_lib/classify_update.js';
 import * as installed_lock from '../_lib/installed_lock.js';
+import { any_live_session, global_register_dir } from '../_lib/session_register.js';
 import { classify_install_origin } from '../_lib/update_check.js';
-import { event4u_root, write_target } from '../_lib/user_global_paths.js';
+import { type EnvMap, event4u_root, write_target } from '../_lib/user_global_paths.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
 import { isSourceCheckoutPackage } from './doctor_install_mode.js';
 
@@ -47,9 +48,37 @@ export const SKIP_FILE = 'upgrade-skip.json';
  * unattended swap is safe without knowing that no session is running.
  */
 export const ACTIVATION_BLOCKED =
-    'swapping the global install under a running session breaks its hooks, and no global ' +
-    'live-session register exists yet to say none is running — run `agent-config upgrade` ' +
-    'yourself once no session is open';
+    'swapping the global install under a running session breaks its hooks — a session is ' +
+    'live on this machine right now; run `agent-config upgrade` yourself once none is open';
+
+/**
+ * Why the swap may not happen now, read from the machine-wide session register,
+ * or `null` when it may.
+ *
+ * Replaces the standing constant this file shipped until 2026-10-20. That
+ * constant was passed unconditionally by the production wiring, so the
+ * unattended run refused whether or not a session was live — correct while no
+ * register could answer the question, and a permanent `no` once one can.
+ *
+ * **Machine-wide, not repository-wide, and that is the whole point.** The swap
+ * replaces the global binary, so it breaks the hooks of every running session
+ * regardless of which checkout it is standing in. A repository-scoped register
+ * would clear the gate while a session in a sibling clone was mid-turn, which
+ * is exactly the failure the 2026-10-18 probe measured (490 failed hook
+ * invocations of 4,190 across four swap rounds).
+ *
+ * **Fails open on an unreadable register, deliberately and not silently.**
+ * `any_live_session` drops a record it cannot parse, so a corrupt directory
+ * reads as "nobody is live" and this returns `null`. The swap is not left
+ * unguarded by that: the lock with its owner PID, the 72 h release age, the
+ * provenance and `deprecated` checks all still stand, and each is independent
+ * of this one. The alternative — fail closed on any unreadable file — makes a
+ * single stale byte in the global root an unattended upgrade that can never
+ * run again on that machine, with no signal to the user that it stopped.
+ */
+export function activation_blocked_reason(env?: EnvMap | null): string | null {
+    return any_live_session(global_register_dir(env)) ? ACTIVATION_BLOCKED : null;
+}
 
 interface OutSink {
     write(text: string): void;
@@ -436,7 +465,7 @@ function run_unattended_wired(
         pid: process.pid,
         isAlive: is_alive,
         dryRun: options.dryRun,
-        activationBlocked: ACTIVATION_BLOCKED,
+        activationBlocked: activation_blocked_reason(),
         out: options.out,
         err: options.err,
     });
