@@ -255,3 +255,63 @@ describe('check_test_weakening — NET counts, which is the whole gate', () => {
         ).toBe(1);
     });
 });
+
+describe('a comment line is prose, never an assertion', () => {
+    // Found on road-to-an-analysis-family-that-deepens-itself 6.2b: a rename
+    // rewrote a doc comment whose old wording said "assertion failures" and
+    // "this expectation moves into the list", and the new wording said neither.
+    // Both old lines matched ASSERTION, so a file whose real assertions GREW
+    // was reported as having net-removed two of them. A line the language
+    // never executes cannot assert anything.
+    it('a doc-comment line mentioning assertions does not count as one', () => {
+        expect(
+            weakeningSignal({
+                path: 'tests/a.test.ts',
+                removed: [' * assertion failures; the rename moves the paths', ' * expectation into the list'],
+                added: [],
+            }).assertionsLost,
+        ).toBe(0);
+    });
+
+    it('a `//` comment mentioning an expectation does not count as one', () => {
+        expect(
+            weakeningSignal({
+                path: 'tests/a.test.ts',
+                removed: ['        // and when it lands this expectation moves into the list above.'],
+                added: [],
+            }).assertionsLost,
+        ).toBe(0);
+    });
+
+    it('commenting an assertion OUT is still a weakening', () => {
+        // The precision fix must not buy a hole: the executed line is gone and
+        // only prose is left, so the net loss is real and still reported.
+        expect(
+            weakeningSignal({
+                path: 'tests/a.test.ts',
+                removed: ['        expect(a).toBe(1);'],
+                added: ['        // expect(a).toBe(1);'],
+            }).assertionsLost,
+        ).toBe(1);
+    });
+
+    it('a real assertion with a trailing comment still counts', () => {
+        expect(
+            weakeningSignal({
+                path: 'tests/a.test.ts',
+                removed: ['        expect(a).toBe(1); // the door keeps its name'],
+                added: [],
+            }).assertionsLost,
+        ).toBe(1);
+    });
+
+    it('a commented-out skip is not a gained suppression', () => {
+        expect(
+            weakeningSignal({
+                path: 'tests/a.test.ts',
+                removed: [],
+                added: ['        // it.skip("the old door", () => {});'],
+            }).suppressionsGained,
+        ).toBe(0);
+    });
+});
