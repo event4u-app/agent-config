@@ -74,6 +74,36 @@ the raw value. A generated coverage table — channel × host × auth mode × la
 mode — states `asserted`, `replaced`, `gated` or `uncovered` per cell, and the
 published claim is the measured result per class per state, a null included.
 
+## Execution status — 2026-10-20
+
+This PR carries what can land without a ratification: the Phase 0 probes and the
+1.3 readings, closed. Everything that touches hook plumbing was built and is not
+pushed, because `check_kernel_edit_ratified` refuses a push without a passing
+council verdict and none could be had today:
+
+- **Round 5** (2026-10-20, anthropic + openai, 2/2 present) reviewed 6.1 plus
+  tool-result replacement, the prompt gate and tool-input restoration, and both
+  seats refused, asking for output replacement to land alone and naming an
+  unwired host-version check, automatic revocation and capability ordering.
+- **Round 6**, over 6.1 and Phase 3 alone with those findings fixed, got no
+  answer from either seat: `cli_quota_exhausted`. The counter read anthropic
+  49/50 and openai 46/50; it is not reset, so the round waits for it.
+
+The built work, on local branches of this lane: `drain/placeholders-on-the-wire-20261020`
+— 6.1 (authority only through an issued `RewriteCapability`, the running host's
+version read from the transcript, workspace revocation on any silent failure),
+3.1–3.4 (`updatedToolOutput` on Claude Code, shape/residual/deadline checks, a
+dropped-replacement counter, the token explainer with its paired fidelity
+reading `agents/evidence/analysis/token-explainer-fidelity-2026-10-20.md`,
+20/20 both arms), 5.3 and the 6.3 coverage table, with its round-6 prompt and a
+`non-convergent` ratification record; `wip/placeholders-restore-and-prompt-gate-20261020`
+— Phase 4, 5.1, 5.2 and the session-table wiring of 2.1 as round 5 saw them.
+
+Open for other reasons: 6.2 needs Copilot and Gemini CLIs and accounts this
+machine does not have; 6.4, 6.5, AC-1 and AC-6 need a live `protect`
+observation window and the sibling's identifier rules; 7.3–7.7 and AC-7 wait on
+the gateway decision and 7.2.
+
 ## Execution status — 2026-10-18, branch `drain/road-to-placeholders-on-the-wire-20261018`
 
 Phase 2 built as a module outside the dispatcher's import closure, so no hook
@@ -216,7 +246,7 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
 
 ## Phase 0 — Probes against the running host (no product code)
 
-- [ ] **0.1 Probe tool-output replacement, pinned to a host version.** For
+- [x] **0.1 Probe tool-output replacement, pinned to a host version.** For
       `Read`, `Bash`, `Grep` and one MCP tool record: the `tool_response` shape;
       that a shape-preserving replacement is what the model then quotes; that a
       mismatched replacement is silently dropped; what the on-disk transcript
@@ -224,12 +254,14 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       file; that a subagent's tool calls arrive with the parent's `session_id`;
       whether host telemetry captures the original output.
       verify: `agents/evidence/analysis/host-output-rewrite-probe-<date>.md` names the host version and answers each item `observed` or `not-observable`, never with a citation.
-- [ ] **0.2 Probe tool-input replacement.** `updatedInput` alone, with the
+      — 2026-10-20: `agents/evidence/analysis/host-output-rewrite-probe-2026-10-20.md`, Claude Code 2.1.304, every item observed: the four tool shapes, a shape-preserving replacement quoted by the model, a mismatch dropped in silence on built-in tools and passed raw on MCP, a transcript holding only the token, spilled output bypassing the hook, a subagent on the parent's session id, telemetry exporting prompts but not tool output. Run as an agent probe: `claude -p --settings <scratch file> --setting-sources ""` binds the probe hooks without writing any host settings file.
+- [x] **0.2 Probe tool-input replacement.** `updatedInput` alone, with the
       permission flow still running; with `ask`, the restored input visible;
       whether the `tool_use` block resent next turn carries the model's original
       or the replaced input; whether any hook fires for an `@file` mention; and
       whether a timed-out `UserPromptSubmit` hook lets the prompt through.
       verify: same file; the `@file` and timeout answers seed the coverage table of 6.3.
+      — 2026-10-20: same file, step 0.2: `updatedInput` delivered alone; `ask` in `-p` denies; the next turn resends the original `tool_use`; an `@file` mention fires no tool hook; a timed-out `UserPromptSubmit` hook lets the prompt through.
 
 ## Phase 1 — The dispatcher gains one stage, in observe mode
 
@@ -250,11 +282,12 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       goes only to concerns that decide whether a call may run. A concern
       declares the view it needs; the default is the placeholder view.
       verify: with chat history enabled, a prompt carrying a credential is persisted as a token; a blocking guard's fixture sees the restored command; a recording concern's fixture on the same event does not.
-- [ ] **1.3 Observe first.** The stage counts what it would replace — class,
+- [x] **1.3 Observe first.** The stage counts what it would replace — class,
       type, slot, tool — and replaces nothing. The record is a fixed-field schema
       that cannot hold a value, the construction `tool_result_bytes_hook.ts`
       already uses. `hooks:replay` shows what the stage would do on a fixture.
       verify: one release of readings from this repository's own sessions exists, and the arming step 3.1 cites them.
+      — 2026-10-20: `agents/evidence/analysis/egress-observe-readings-2026-10-20.md` — `countEnvelope` replayed over 90,097 envelopes of this repository's sessions since 16.5.0: 186 result and 56 input credential spans, no prompt hits, 25 refusals; a replay of transcripts, not live hooks, and the file says so. 3.1 cites it.
 - [x] **1.4 Govern the stage like a concern** — an admission row answering the
       five questions of `src/scripts/hook_manifest.yaml`'s header, a kill-switch
       row, and the `egress.placeholders` settings block with modes `off`,
@@ -327,6 +360,7 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       1.3: `tests/fixtures/egress-prevention-gaps/program-output.json` and
       `database-row.json`. When this lands, `tests/scripts/hooks/egress_prevention_gaps.test.ts`
       inverts its no-rewrite assertion for both.
+      — 2026-10-20: built and not landed — see the 2026-10-20 status. Its arming rests on the 1.3 readings (`agents/evidence/analysis/egress-observe-readings-2026-10-20.md`).
 - [ ] **3.2 Pay the debt the byte counter recorded.** The test pinning "nothing in
       the tree rewrites a tool result" goes red by design; its premise becomes
       "exactly one module emits the field", and `delivered_bytes` is taken from
