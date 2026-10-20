@@ -47,7 +47,7 @@ import {
 } from "./state_io.js";
 import { log_dispatch_issue, fix_hint } from "./dispatch_issues.js";
 import { shapeAndRecord, type ConcernMessage } from "./injection_budget.js";
-import { CONCERN_REGISTRY, type ConcernMain } from "./concern_registry.js";
+import { resolveConcernMain, type ConcernMain } from "./concern_registry.js";
 import {
   setHookStdinOverride,
   clearHookStdinOverride,
@@ -679,8 +679,8 @@ function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
   // In-process fast path — the default whenever the concern is in the
   // static registry (all manifest concerns; parity is CI-enforced).
   if (process.env["AGENT_CONFIG_HOOKS_ISOLATED"] !== "1") {
-    const inproc = CONCERN_REGISTRY[String(concern["script"])];
-    if (inproc !== undefined) {
+    const inproc = resolveConcernMain(String(concern["script"]));
+    if (inproc !== null) {
       return _run_concern_inproc(inproc, concern, envelope);
     }
   }
