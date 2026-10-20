@@ -106,14 +106,6 @@ const _READ_ONLY_TOOLS: ReadonlySet<string> = new Set([
     'read_file', 'list_dir', 'semantic_search',
 ]);
 
-function _isRegularFile(p: string): boolean {
-    try {
-        return fs.lstatSync(p).isFile();
-    } catch {
-        return false;
-    }
-}
-
 function _isObject(v: JsonValue | undefined): v is JsonObject {
     return v !== null && v !== undefined && typeof v === 'object' && !Array.isArray(v);
 }
@@ -210,52 +202,19 @@ function _redirectTargets(segment: string): string[] {
 }
 
 /**
- * The remediation {@link denyMessage} prescribes, spelled exactly as printed.
+ * Whether a shell command visibly moves off the `cwd` it was handed: a
+ * `cd`/`pushd`/`popd`/`source`/`.` word, or a directory flag (`-C`,
+ * `--directory`, `--git-dir`, `--work-tree`, `--chdir`). Then the
+ * already-exists carve-out is not offered to a relative token.
  *
- * Its plaintext IS the real source, which names the directory being renamed,
- * so after the rename the guard refused the command it had just asked for.
- * One single-quoted literal (no expansion), `./` so `PATH` is never consulted,
- * and no second segment, redirect, substitution or newline. Matched on the
- * whole command, not by classifying verbs — that axis was removed, see
- * {@link isGlobOverAcceptableInboxDir}.
- */
-const ENCRYPT_REMEDIATION_RE =
-    /^\s*printf '%s' '[^'\n]*' \| \.\/scripts-run src\/scripts\/_lib\/link_crypto encrypt\s*$/;
-const ENCRYPT_REMEDIATION_EMPTY = "printf '%s' '' | ./scripts-run src/scripts/_lib/link_crypto encrypt";
-
-/**
- * The command with the remediation's plaintext emptied, when — and only
- * when — `./scripts-run` resolves to a regular file in the tool's own `cwd`
- * beside `link_crypto.ts`. A bare name, a symlink, or no known `cwd` is not
- * that executable, and the command is returned unchanged.
- *
- * Only the literal is suppressed: the rest of the command still goes through
- * {@link creatableTokens}, so nothing but the quoted plaintext stops being read.
- */
-export function withoutRemediationPlaintext(
-    command: string,
-    cwd: string,
-    isRegularFile: (p: string) => boolean,
-): string {
-    if (cwd === '' || !ENCRYPT_REMEDIATION_RE.test(command)) {
-        return command;
-    }
-    const anchored =
-        isRegularFile(path.join(cwd, 'scripts-run')) &&
-        isRegularFile(path.join(cwd, 'src', 'scripts', '_lib', 'link_crypto.ts'));
-    return anchored ? ENCRYPT_REMEDIATION_EMPTY : command;
-}
-
-/**
- * Whether a shell command moves off the `cwd` it was handed before a relative
- * path in it resolves: a `cd`/`pushd`/`popd` segment, or a directory flag
- * (`-C`, `--directory`, `--git-dir`, `--work-tree`, `--chdir`). Then no field
- * names the base, so the already-exists carve-out is not offered to a
- * relative token. Errs toward refusing, and only for a speaking name.
+ * A narrowing, not a proof: a script or function can change directory without
+ * any of these appearing. The base offered the carve-out to every token of
+ * every command, so that residual is the base's, not new — and it can only
+ * re-create a name that already exists in the tool's `cwd`.
  */
 export function changesDirectory(command: string): boolean {
     return (
-        /(?:^|[\s;&|(`{])(?:cd|pushd|popd)(?=$|[\s;&|)])/.test(command) ||
+        /(?:^|[\s;&|(`{])(?:cd|pushd|popd|source|\.)(?=$|[\s;&|)])/.test(command) ||
         /(?:^|\s)(?:-C|--directory|--git-dir|--work-tree|--chdir)(?=$|[\s=])/.test(command)
     );
 }
@@ -423,7 +382,8 @@ export function denyMessage(dir: string): string {
         '  round-a91f3c         content-free hex (also set-, src-set-, source-set-)\n' +
         '  S17                  a set number\n' +
         '\n' +
-        'Record the true source ONCE, encrypted, in the round\'s intake note:\n' +
+        'Record the true source ONCE, encrypted, in the round\'s intake note — the source\n' +
+        'itself (its URL or name), never an agents/tmp path, which this guard judges:\n' +
         "  printf '%s' '<the real source>' | ./scripts-run src/scripts/_lib/link_crypto encrypt\n" +
         '\n' +
         'Naming rule: /analyze:inbox Phase 1. Rule: src/rules/source-confidentiality.md.\n' +
@@ -488,7 +448,7 @@ export function main(): number {
         const cmd = ti['command'] ?? (_isObject(envelope['payload']) ? (envelope['payload'] as JsonObject)['command'] : undefined);
         const baseless: string[] = [];
         if (typeof cmd === 'string' && cmd) {
-            const tokens = creatableTokens(withoutRemediationPlaintext(cmd, cwd, _isRegularFile));
+            const tokens = creatableTokens(cmd);
             (changesDirectory(cmd) ? baseless : candidates).push(...tokens);
         }
         const judge = (v: string, exists: (p: string) => boolean): boolean => {
