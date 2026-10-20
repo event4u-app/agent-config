@@ -20,13 +20,20 @@ import { CONCERN, RING_ZERO_PREFIX, readRingZeroRecord, runInvite } from '../../
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
 
+// A generous hook timeout, because these fixtures are `mkdtempSync` and
+// nothing else: measured on a machine running several parallel lanes, the
+// default 30 s hook budget expired inside `beforeEach` itself while every one
+// of these tests passed in isolation. The number is about the host's load, not
+// about the work, so raising it removes a flake rather than hiding a slow test.
+const HOOK_TIMEOUT_MS = 120_000;
+
 let tmp: string;
 beforeEach(() => {
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'update-invite-'));
-});
+}, HOOK_TIMEOUT_MS);
 afterEach(() => {
     fs.rmSync(tmp, { recursive: true, force: true });
-});
+}, HOOK_TIMEOUT_MS);
 
 /** Every condition cleared — the one input shape that produces a question. */
 const OPEN: InviteInput = {

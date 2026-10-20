@@ -29,6 +29,13 @@ import {
 const IDENTITY = `${EXPECTED_REPOSITORY}/${EXPECTED_WORKFLOW_REF}@refs/heads/main`;
 const PAYLOAD_TYPE = 'application/vnd.in-toto+json';
 
+// A generous hook timeout, because these fixtures are `mkdtempSync` and
+// nothing else: measured on a machine running several parallel lanes, the
+// default 30 s hook budget expired inside `beforeEach` itself while every one
+// of these tests passed in isolation. The number is about the host's load, not
+// about the work, so raising it removes a flake rather than hiding a slow test.
+const HOOK_TIMEOUT_MS = 120_000;
+
 let tmp: string;
 let haveOpenssl = true;
 
@@ -76,10 +83,10 @@ function signed(payloadText: string, identity = IDENTITY, name = 'good'): unknow
 beforeAll(() => {
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dsse-'));
     haveOpenssl = spawnSync('openssl', ['version'], { encoding: 'utf-8' }).status === 0;
-});
+}, HOOK_TIMEOUT_MS);
 afterAll(() => {
     fs.rmSync(tmp, { recursive: true, force: true });
-});
+}, HOOK_TIMEOUT_MS);
 
 describe('dssePae', () => {
     it('is the DSSEv1 encoding, with BYTE lengths', () => {
