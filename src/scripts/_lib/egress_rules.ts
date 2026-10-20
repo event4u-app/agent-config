@@ -123,14 +123,17 @@ export interface AssignmentShape {
     readonly capture?: boolean;
     /** What follows `\s*[:=]\s*`; absent, the shape ends at the operator. */
     readonly value?: string;
+    /** The whitespace around the operator; `\s*` when absent, `[ \t]*` to stay on one line. */
+    readonly gap?: string;
 }
 
 /** Source of a keyword-assignment shape: keyword group, operator, then the consumer's value. */
 export function assignmentSource(shape: AssignmentShape): string {
     const alt = shape.keywords.map((k) => ASSIGNMENT_KEYWORDS[k]).join('|');
     const group = shape.capture === true ? `(${alt})` : `(?:${alt})`;
-    const head = `${shape.before ?? ''}${group}${shape.after ?? ''}\\s*[:=]`;
-    return shape.value === undefined ? head : `${head}\\s*${shape.value}`;
+    const gap = shape.gap ?? '\\s*';
+    const head = `${shape.before ?? ''}${group}${shape.after ?? ''}${gap}[:=]`;
+    return shape.value === undefined ? head : `${head}${gap}${shape.value}`;
 }
 
 export function assignmentPattern(shape: AssignmentShape, flags: string): RegExp {
@@ -348,6 +351,46 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         ),
         valueGroup: 1,
         validator: looksLikeSecretValue,
+    },
+];
+
+// A value that is a type word or a literal is not a secret, whatever its key.
+const TYPE_WORD = /^(?:string|number|boolean|bigint|unknown|any|never|void|undefined|null|true|false|none|nil)$/i;
+
+/**
+ * Credential shapes at a reviewer's threshold, for a surface that REPLACES a
+ * value it would otherwise have masked with its whole line (the council
+ * bundle, step 3.3). Not in EGRESS_RULES: a refusing surface or the commit
+ * scanner would refuse ordinary code on them. Any value after a credential
+ * keyword that is not a code expression or a type word, on the same line, and
+ * every byte after the colon of a line that opens with an `Authorization`
+ * header.
+ */
+export const REVIEW_CREDENTIAL_ROWS: readonly EgressRule[] = [
+    {
+        rule: 'review-assignment',
+        type: 'SECRET',
+        class: 'credential',
+        replacement: 'detection',
+        pattern: assignmentPattern(
+            {
+                keywords: ['apiKey', 'secret', 'token', 'password'],
+                capture: true,
+                gap: '[ \\t]*',
+                value: `['"]?([^'"\\s]+)['"]?`,
+            },
+            'dgi',
+        ),
+        valueGroup: 2,
+        validator: (v) => !CODE_EXPR.test(v) && !TYPE_WORD.test(v),
+    },
+    {
+        rule: 'review-authorization-header',
+        type: 'TOKEN',
+        class: 'credential',
+        replacement: 'detection',
+        pattern: new RegExp(`^[ \\t]*${AUTHORIZATION_HEADER}:[ \\t]*(\\S[^\\n]*)`, 'dgim'),
+        valueGroup: 1,
     },
 ];
 
