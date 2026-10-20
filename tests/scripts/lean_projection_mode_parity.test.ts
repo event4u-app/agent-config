@@ -22,8 +22,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { _reset_template_defaults_cache } from '../../src/scripts/_lib/agent_settings.js';
 import { leanProjectionModeRaw } from '../../src/scripts/_lib/hook_settings.js';
 import {
-    leanProjectionModeChosen,
-    rawExplicitLeanProjectionMode,
     resolveLeanProjection,
     type ResolvedLeanProjection,
 } from '../../src/scripts/_lib/lean_projection_mode.js';
