@@ -61,6 +61,7 @@ import {
     foreign_live_records,
     iso_now,
     read_own_record,
+    global_register_dir,
     register_dir,
     safe_stem,
     stop_means_session_end,
@@ -597,7 +598,29 @@ export function touch(
     // Preserve the original started_at across beats; first beat sets it.
     const existing = read_own_record(dir, session_id);
     const started_at = existing?.started_at ?? iso_now(now);
-    return write_record(dir, build_record(workspace_root, session_id, platform, started_at, now));
+    const rec = build_record(workspace_root, session_id, platform, started_at, now);
+    // road-to-an-update-that-installs-itself-only-when-it-is-safe 1.4 — the
+    // same record, a second time, in the MACHINE-wide register. Two writes
+    // rather than one register because the two answer different questions: the
+    // repo register drives the collision block, which is meaningless across
+    // repositories, while `upgrade --unattended` has to know whether ANY
+    // session is live before it swaps a binary every session's hooks run.
+    //
+    // Best-effort by construction: `write_record` creates its directory and
+    // swallows every write error, and its result never decides this function's
+    // return value, so a read-only or absent global root leaves session
+    // registration working exactly as it did. The try covers the one call that
+    // can still throw — resolving the home directory. The cost of best-effort is
+    // stated where it matters: `any_live_session` reads a missing record as "no
+    // session", so the unattended run leans on its lock and age gates too.
+    // Written as compactly as it is because the hook bundle is byte-budgeted:
+    // the first version (a separate mkdir and a second try) put the bundle over.
+    try {
+        write_record(global_register_dir(), rec);
+    } catch {
+        /* a session that cannot reach the global root still starts */
+    }
+    return write_record(dir, rec);
 }
 
 /**
@@ -821,6 +844,15 @@ export function main(): number {
         if (event === 'session_end' || (event === 'stop' && stop_means_session_end(platform))) {
             const dir = register_dir(root);
             if (dir !== null) delete_record(dir, session_id);
+            // 1.4 — the global mirror dies with the session on the same beat.
+            // Without this the machine-wide register would only ever shrink by
+            // TTL expiry, so a clean exit would still block an unattended
+            // upgrade for the whole TTL window of its platform.
+            try {
+                delete_record(global_register_dir(), session_id);
+            } catch {
+                /* unreachable global root is not a reason to fail session end */
+            }
             // The claim file dies with the session too. Keyed on a session id it is
             // never read again once that session ends, so leaving it behind grows one
             // file per session forever — the same unbounded-growth defect the register

@@ -23,6 +23,16 @@ export interface RegistryCandidate {
     readonly engines: unknown;
     readonly provenance: boolean | null;
     readonly impactMap: unknown;
+    /**
+     * Where npm serves the attestation bundle for this version, or `null`.
+     *
+     * `provenance` above is a PRESENCE reading and says nothing about which
+     * workflow produced the document. Tying it to this package's publish
+     * workflow needs the bundle itself, which the packument only points at —
+     * so the pointer travels with the candidate and the caller fetches it
+     * (`provenance_verify.provenance_matches_publish`).
+     */
+    readonly attestationsUrl: string | null;
 }
 
 function asRecord(v: unknown): Record<string, unknown> | null {
@@ -47,6 +57,7 @@ export function read_candidate(packument: unknown): RegistryCandidate | null {
         engines: manifest['engines'],
         provenance: typeof predicate === 'string' && predicate.startsWith('https://slsa.dev/provenance/'),
         impactMap: asRecord(manifest['agentConfig'])?.['impact'] ?? null,
+        attestationsUrl: typeof attestations?.['url'] === 'string' ? (attestations['url'] as string) : null,
     };
 }
 

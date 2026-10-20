@@ -299,6 +299,12 @@ explanation lives now that the file no longer carries it as comments.
 | `subagents.model_map.medium` | C | string | `""` |  | Model alias for medium-tier sub-tasks. Empty = the tier runtime default. |
 | `subagents.quota_arbitrage` | C | boolean | `true` |  | Prefer a separate quota-pool model for delegable sub-tasks where the host manifest reports one. Optional bonus only — identical behaviour (minus the quota win) where unsupported. Never load-bearing. |
 
+## update
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `update.mode` | C | string | `"notify"` | `off` · `notify` · `ask` · `auto` | What the agent may do about a newer release. notify tells you and installs nothing (the default, and what an absent key resolves to); ask behaves as notify until the ring-0 exit ships a prompt; auto installs a staged release at a session start when every gate passes and no other session is live; off says nothing at all. Read from the user-global layer only — a repository cannot set how your global install updates itself. |
+
 ## update_check
 
 | Key | Class | Type | Default | Allowed values | What it does |

@@ -68,6 +68,10 @@ function deps(world: World, over: Partial<UnattendedDeps> & { doc?: unknown; fet
     const fetched: Packument = over.fetched ?? { ok: true, doc: over.doc ?? packument() };
     return {
         fetchPackument: async () => fetched,
+        // These cases exercise the other gates; provenance passes unless a
+        // case overrides it. Its own refusing direction is asserted in
+        // upgrade_unattended_provenance.test.ts rather than here.
+        verifyProvenance: async () => null,
         run: world.run,
         readInstalled: () => world.lock,
         readBinary: () => world.binary,
@@ -103,7 +107,10 @@ describe('upgrade --unattended — the happy path', () => {
         expect(await run_unattended(deps(w, { activationBlocked: ACTIVATION_BLOCKED }))).toBe(EXIT_REFUSED);
         expect(w.cmds).toEqual([]);
         expect(out).toContain('every gate passed for 16.6.0, but not installing');
-        expect(ACTIVATION_BLOCKED).toMatch(/live-session register/);
+        // Was `/live-session register/` until 1.4 built that register. The
+        // message no longer explains an absent mechanism; it reports what the
+        // mechanism measured, so the assertion follows it to the live session.
+        expect(ACTIVATION_BLOCKED).toMatch(/live on this machine/);
     });
 
     it('a dry run passes the gates and installs nothing', async () => {

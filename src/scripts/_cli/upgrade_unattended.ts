@@ -26,13 +26,19 @@ import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import process from 'node:process';
 
+import {
+    EXPECTED_WORKFLOW_REF,
+    attestation_workflow_ref,
+    provenance_matches_publish,
+    verify_attestation_signature,
+} from '../_lib/provenance_verify.js';
 import { read_candidate, unattended_decision, type RegistryCandidate } from '../_lib/unattended_gates.js';
 import type { InstallOrigin } from '../_lib/classify_update.js';
 import * as installed_lock from '../_lib/installed_lock.js';
-import { classify_install_origin } from '../_lib/update_check.js';
-import { event4u_root, write_target } from '../_lib/user_global_paths.js';
+import { any_live_session, global_register_dir } from '../_lib/session_register.js';
+import { type EnvMap, event4u_root, write_target } from '../_lib/user_global_paths.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
-import { isSourceCheckoutPackage } from './doctor_install_mode.js';
+import { originForPackageRoot } from './doctor_install_mode.js';
 
 export const PACKAGE_NAME = '@event4u/agent-config';
 export const PACKUMENT_URL = `https://registry.npmjs.org/${PACKAGE_NAME}`;
@@ -47,9 +53,37 @@ export const SKIP_FILE = 'upgrade-skip.json';
  * unattended swap is safe without knowing that no session is running.
  */
 export const ACTIVATION_BLOCKED =
-    'swapping the global install under a running session breaks its hooks, and no global ' +
-    'live-session register exists yet to say none is running — run `agent-config upgrade` ' +
-    'yourself once no session is open';
+    'swapping the global install under a running session breaks its hooks — a session is ' +
+    'live on this machine right now; run `agent-config upgrade` yourself once none is open';
+
+/**
+ * Why the swap may not happen now, read from the machine-wide session register,
+ * or `null` when it may.
+ *
+ * Replaces the standing constant this file shipped until 2026-10-20. That
+ * constant was passed unconditionally by the production wiring, so the
+ * unattended run refused whether or not a session was live — correct while no
+ * register could answer the question, and a permanent `no` once one can.
+ *
+ * **Machine-wide, not repository-wide, and that is the whole point.** The swap
+ * replaces the global binary, so it breaks the hooks of every running session
+ * regardless of which checkout it is standing in. A repository-scoped register
+ * would clear the gate while a session in a sibling clone was mid-turn, which
+ * is exactly the failure the 2026-10-18 probe measured (490 failed hook
+ * invocations of 4,190 across four swap rounds).
+ *
+ * **Fails open on an unreadable register, deliberately and not silently.**
+ * `any_live_session` drops a record it cannot parse, so a corrupt directory
+ * reads as "nobody is live" and this returns `null`. The swap is not left
+ * unguarded by that: the lock with its owner PID, the 72 h release age, the
+ * provenance and `deprecated` checks all still stand, and each is independent
+ * of this one. The alternative — fail closed on any unreadable file — makes a
+ * single stale byte in the global root an unattended upgrade that can never
+ * run again on that machine, with no signal to the user that it stopped.
+ */
+export function activation_blocked_reason(env?: EnvMap | null): string | null {
+    return any_live_session(global_register_dir(env)) ? ACTIVATION_BLOCKED : null;
+}
 
 interface OutSink {
     write(text: string): void;
@@ -64,6 +98,8 @@ export type Packument = { readonly ok: true; readonly doc: unknown } | { readonl
 
 export interface UnattendedDeps {
     readonly fetchPackument: () => Promise<Packument>;
+    /** Refusal reason when the attestation does not tie to this package's publish workflow, else `null`. */
+    readonly verifyProvenance: (candidate: RegistryCandidate) => Promise<string | null>;
     readonly run: (cmd: string[]) => StepResult;
     /** The version recorded in `installed.lock`; `''` when unknown. */
     readonly readInstalled: () => string;
@@ -254,7 +290,74 @@ async function decide(installed: string, deps: UnattendedDeps): Promise<{ candid
         skipped: read_skips(deps.skipPath),
         env: { ...deps.env, now: deps.now().toISOString() },
     });
-    return decision.install ? { candidate } : { refused: [...decision.reasons] };
+    if (!decision.install) return { refused: [...decision.reasons] };
+    // 2.1's open half. `decision` accepted an attestation that EXISTS and
+    // carries an SLSA predicate; that document is producible by any workflow
+    // in any repository with `id-token: write`, so it is checked here against
+    // the one workflow this package publishes from before anything installs.
+    const provenance = await deps.verifyProvenance(candidate);
+    if (provenance !== null) return { refused: [provenance] };
+    return { candidate };
+}
+
+/**
+ * Fetch the attestation bundle, require it to name this package's publish
+ * workflow, and require its DSSE signature to verify. Returns a refusal
+ * reason, or `null` when both hold.
+ *
+ * **This used to say the signature half was `npm audit signatures` "in the
+ * install step". It was not, and never had been** — `install_steps` runs
+ * `npm install -g`, `agent-config global` and `settings:sync`, and no audit.
+ * The sentence described a composition nobody wrote, which is the worst shape
+ * a security note can have, so it is replaced by what the code does rather
+ * than corrected in place.
+ *
+ * What runs now: the payload is tied to the workflow, the envelope's signature
+ * is verified against the certificate the bundle carries, and that
+ * certificate's SAN is required to name the same workflow. What does NOT run:
+ * any check of who ISSUED that certificate. The residue is the
+ * `dsse-trust-root` blocker on the roadmap, and
+ * `verify_attestation_signature`'s header states it in full.
+ *
+ * A bundle that cannot be fetched REFUSES rather than passing. Unlike the live
+ * session register, there is no second independent gate behind this one: an
+ * unreachable attestation is exactly what an attacker serving a tarball
+ * without one produces, so failing open here would hand back the property the
+ * check exists to establish.
+ */
+export async function verify_provenance_default(
+    candidate: RegistryCandidate,
+    fetch_impl: typeof fetch = fetch,
+    timeoutMs = 10_000,
+): Promise<string | null> {
+    if (candidate.attestationsUrl === null) {
+        return `${candidate.version} carries no attestation bundle to verify`;
+    }
+    let doc: unknown;
+    try {
+        const resp = await fetch_impl(candidate.attestationsUrl, {
+            signal: AbortSignal.timeout(timeoutMs),
+            headers: { accept: 'application/json' },
+        });
+        if (!resp.ok) return `attestation fetch failed: HTTP ${resp.status}`;
+        doc = await resp.json();
+    } catch (err) {
+        return `attestation fetch failed: ${err instanceof Error ? err.message : String(err)}`;
+    }
+    if (!provenance_matches_publish(doc)) {
+        const named = attestation_workflow_ref(doc);
+        return named === null
+            ? `${candidate.version} has no readable provenance workflow in its attestation`
+            : `${candidate.version} was built by ${named}, not ${EXPECTED_WORKFLOW_REF}`;
+    }
+    // The payload says the right thing; this asks whether the payload is the
+    // one that was signed, and whether the certificate that signed it carries
+    // the same identity. It does NOT establish who issued that certificate —
+    // see `verify_attestation_signature`'s own note and the `dsse-trust-root`
+    // blocker, which is where the trust root is decided.
+    const signature = await verify_attestation_signature(doc);
+    if (signature !== null) return `${candidate.version}: ${signature}`;
+    return null;
 }
 
 /** Contexts where even the registry fetch and the lock file are side effects nobody asked for. */
@@ -355,19 +458,7 @@ export function is_alive(pid: number): boolean {
     }
 }
 
-/**
- * The install origin of a package root, as the unattended gates read it.
- *
- * Exported because `running_origin` resolves its own root from `import.meta.url`
- * and so cannot be pointed at a fixture: in this repository the answer is
- * legitimately `source-checkout`, and a test calling it here would pass for the
- * wrong reason. The distinguishing input is a tree that carries the shipped
- * `dist/agent-src/` and no `.git`.
- */
-export function originForPackageRoot(root: string): InstallOrigin {
-    if (isSourceCheckoutPackage(root)) return 'source-checkout';
-    return classify_install_origin({ package_root: root, project_pin: null, latest: null, is_global_consumer: false });
-}
+export { originForPackageRoot } from './doctor_install_mode.js';
 
 function running_origin(): InstallOrigin {
     return originForPackageRoot(resolvePackageRoot(import.meta.url));
@@ -417,6 +508,7 @@ function run_unattended_wired(
         },
         interrupted,
         fetchPackument: () => fetch_packument(),
+        verifyProvenance: (c) => verify_provenance_default(c),
         run: (cmd) => default_run(cmd, options.err),
         readInstalled: () => {
             const v = installed_lock.read_lockfile()?.agent_config_version;
@@ -436,7 +528,7 @@ function run_unattended_wired(
         pid: process.pid,
         isAlive: is_alive,
         dryRun: options.dryRun,
-        activationBlocked: ACTIVATION_BLOCKED,
+        activationBlocked: activation_blocked_reason(),
         out: options.out,
         err: options.err,
     });
