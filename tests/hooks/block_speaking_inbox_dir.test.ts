@@ -579,7 +579,6 @@ describe('a mention is not a creation — the commands a real round was refused'
         });
         it('the deny message tells the operator to encrypt the source, not a path', () => {
             expect(denyMessage(speaking)).toContain('never an agents/tmp path');
-            expect(denyMessage(speaking)).toContain('this guard recognizes it in shell commands');
         });
     });
 

@@ -368,9 +368,8 @@ export function denyMessage(dir: string): string {
         'itself (its URL or name), never an agents/tmp path, which this guard judges:\n' +
         "  printf '%s' '<the real source>' | ./scripts-run src/scripts/_lib/link_crypto encrypt\n" +
         '\n' +
-        'Already created? Rename it. Until then, this guard recognizes it in shell commands\n' +
-        'only when referenced by absolute path; relative arguments may resolve elsewhere\n' +
-        'and are judged as new.\n' +
+        'Already created? Rename it. Until then a shell command reaches it only by its\n' +
+        'absolute path: a relative one may land anywhere, so it is judged as new.\n' +
         '\n' +
         'Naming rule: /analyze:inbox Phase 1. Rule: src/rules/source-confidentiality.md.\n' +
         `Maintainer kill switch: ${KILL_SWITCH}=1.\n`
