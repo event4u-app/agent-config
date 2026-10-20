@@ -48,6 +48,7 @@ import * as path from 'node:path';
 import { vendorPrefix } from '../_lib/egress_rules.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { boundFor } from './cli_agency_bounds.js';
+import { councilEgress } from './council_egress.js';
 import {
     curlJsonPost as _curlJsonPost,
     geminiRestClient,
@@ -1489,6 +1490,20 @@ export abstract class CliClient extends ExternalAIClient {
         // 2. build command + spawn.
         const cmd = this._build_command(system_prompt, user_prompt, max_tokens);
         const stdinPayload = this._stdin_payload(system_prompt, user_prompt);
+        // The final egress check, immediately before the request is written
+        // (road-to-one-detector-and-the-senders-we-own 3.3): nothing is spawned
+        // and nothing counts against the daily cap when it refuses.
+        const refusal = councilEgress().check(`${cmd.join('\n')}\n${stdinPayload ?? ''}`);
+        if (refusal !== null) {
+            return new CouncilResponse({
+                provider: this.name,
+                model: this.model,
+                text: '',
+                latency_ms: _elapsedMs(t0),
+                error: 'egress_refused',
+                metadata: { cli: true, egress_reason: refusal.reason, egress_rule: refusal.what },
+            });
+        }
         let proc: SubprocessResult;
         try {
             proc = this._runSubprocess(cmd, stdinPayload);
