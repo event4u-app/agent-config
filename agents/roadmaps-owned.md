@@ -31,7 +31,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-placeholders-on-the-wire | active | ready | On Claude Code at a probed version, a tool result carrying a listed value reaches the model as a token … |
 | road-to-self-modification-that-a-council-must-pass | active | ready | A change the package makes to what governs it lands on a council's verdict about that exact change. |
 | road-to-skills-that-arrive-when-called | active | ready | Every skill the package authors is reachable in the session that needs it, with the semantics its frontmatter declares; a … |
-| road-to-steps-the-skill-cannot-skip | active | ready | A skill whose procedure has grown past what an agent follows reliably can be split into step files without losing … |
 | road-to-svg-witness-provenance | active | draft | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |
 | road-to-tool-results-that-leave-a-handle | active | ready | A large tool result can reach the model shorter than the host produced it without losing anything: the bytes the … |
 | road-to-typed-grants-that-persist | active | draft | One grant object — ADR-260's `{op, target, scope, granted_by, span, expires}` — governs every irreversible operation, is honoured for the … |
