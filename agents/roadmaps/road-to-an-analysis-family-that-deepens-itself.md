@@ -466,7 +466,7 @@ file; `council:pr` is unchanged.
 - **Resolved when:** the ADR of step 1.2 records the option.
 
 ### blocker: replay-round-is-maintainer-local
-- **Status:** open — registered 2026-10-19 from prose that read runnable to the drain queue.
+- **Status:** resolved — option (a) happened: the maintainer ran the replay in its own interactive session on 2026-10-19 (`validated`, zero remote calls, 17-file lineage table, `run.json` validating under `analysis_run_record`), and 3.5 and AC-5 closed on it; record `agents/evidence/analysis/analysis-family-replay-inbox-2026-10-s.md`. Closed 2026-10-20 by a drain lane that executed the `Resolved when` against that record — the line still read "open" after the step it blocked had closed.
 - **Owner:** user
 - **Ownership:** product-owned
 - **Blocks:** step 3.5 and AC-5 only; every other step and criterion of this file is closed or held elsewhere
