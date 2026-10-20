@@ -13,7 +13,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-canvas-the-code-owns | active | ready | The repository is the only store of the design system. |
 | road-to-a-cold-start-paid-once | active | ready | On a host where a re-task is observed to be cheaper than a fresh spawn, the orchestrator re-tasks a warm … |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | active | ready | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
-| road-to-a-hook-carrier-that-is-never-silent | active | ready | Every hook command the installer writes either reaches the package's dispatcher in the host's own launch environment, or — where … |
 | road-to-a-release-that-says-whether-it-needs-you | active | ready | This package's version number carries consumer impact, so "install it when it is safe, ask when it matters" is a … |
 | road-to-a-retro-the-merge-runs | active | ready | After every merged pull request, and on the first session of every new day, the package examines finished work that … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
