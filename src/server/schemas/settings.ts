@@ -439,7 +439,7 @@ export const settingsSchema = z.object({
         enabled: z.boolean().default(true).describe(
             'Automatic retro after merged work (ADR-292, docs/contracts/retro-v1.md). true (default, owner directive 2026-10-12) = a merged PR and the first session of a new local day enqueue finished work; a deterministic triage picks what is worth one learning, and nothing behaviour-changing is applied without a person. The one network read is the daily probe asking GitHub, through your own gh login, whether a pushed PR merged (repository and PR number only, three-second budget). false = no automatic path runs — no merge enqueue, no forge-merge marker, no daily probe and no network read; an explicit /retro still runs on request. Class C: an agent cannot set it; it cascades from the user-global file.',
         ),
-    }),
+    }).default({}),
     memory: z.object({
         redact_patterns: z.array(z.string()).default([]).describe(
             'Regex patterns (one per line) that scrub matches from chat-history transcripts and memory before they hit disk. Use for secrets, customer names, internal URLs. Patterns are anchored and case-insensitive.',

@@ -1,0 +1,12 @@
+{
+  "command": "retro",
+  "intent": "Examine finished work — a merged PR or a session — and draw at most one durable learning, routed to exactly one target",
+  "cases": [
+    { "prompt": "run a retro on PR 2537", "expected": "retro" },
+    { "prompt": "what did we learn from yesterday's sessions?", "expected": "retro" },
+    { "prompt": "a retro-queue line came in — work through it", "expected": "retro" },
+    { "prompt": "show me what the retro queue holds and what the last sweep skipped", "expected": "retro" },
+    { "prompt": "remember this finding as a signal for later", "expected": "memory-propose" },
+    { "prompt": "write a blameless post-mortem for last night's outage", "expected": "analyze-postmortem" }
+  ]
+}

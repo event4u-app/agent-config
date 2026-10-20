@@ -101,6 +101,15 @@ One line per unit: unit, triage, target, and the held / recurred reading of
 earlier learnings on the same asset. Then stop — promotion stays human, through
 `/memory:propose`, which lists retro learnings with their unit keys.
 
+## Examples
+
+```
+/retro 2537
+/retro --since 2026-10-19 --dry-run
+```
+
+**Why it works:** measurable-target — each names the exact unit to examine (one merged PR, or every session since one day), not a vague "look at recent work".
+
 ## Rules
 
 - **At most one durable learning per unit.** No learning is written into an
