@@ -55,8 +55,6 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { atomicWriteFile } from '../../install/atomic.js';
-import * as global_deploy_inventory from './global_deploy_inventory.js';
-import { ownedSkillNames } from './skill_listing_overrides.js';
 import * as user_global_paths from './user_global_paths.js';
 
 /** Sidecar directory, beside `skill-overrides.json`: one record per host root. */
