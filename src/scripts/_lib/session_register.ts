@@ -52,7 +52,9 @@
  *    millisecond. Nothing here provides exclusion, and no later feature may be
  *    built on it as if it did. `sessions:claim` refusing to WRITE a claim a peer
  *    holds is a consistency check on its own write, not exclusion: it protects
- *    the record from being false, never the peer from being duplicated.
+ *    the record from being false, never the peer from being duplicated. The
+ *    exclusion lives beside the register, not in it: `_lib/roadmap_slug_lock.ts`
+ *    creates one file per slug with `wx`, which `sessions:claim` takes first.
  * 3. **The claim is per SESSION, and the bridge file has to be too.** The
  *    paragraph above rules `agents/runtime/state/` out for the register and the
  *    same argument applies to the claim that feeds it: one shared file per
