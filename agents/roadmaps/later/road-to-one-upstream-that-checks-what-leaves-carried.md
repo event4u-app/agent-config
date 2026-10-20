@@ -9,6 +9,7 @@ entry_condition:
   when: after retro 4.4 lands and records accumulate
   who: whoever closes retro 4.4; the corpus reading is any session's
 review_by: 2027-01-20
+estate_growth_exempt: "later_roadmaps 104 -> 105 with active_roadmaps 20 -> 19, measured by check_estate_count at this change: the parent closed every runnable step and archived, and the archival sweep carried its four deferred items here so archiving buried none of them. Parking it in later/ instead of leaving it active is the move that keeps a drain lane from picking up steps that wait on retro step 4.4 or on a corpus; the total estate is unchanged."
 ---
 # Road to one upstream that checks what leaves — carried
 
