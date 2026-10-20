@@ -4,15 +4,19 @@
  * docs/contracts/egress-placeholders-v1.md from the tree, or report that the
  * committed copy has drifted from it.
  *
- *   ./scripts-run src/scripts/egress_sender_census           # exit 1 on drift
+ *   ./scripts-run src/scripts/egress_sender_census           # exit 1 on drift or an undeclared sender
  *   ./scripts-run src/scripts/egress_sender_census --write   # rewrite the region
+ *
+ * Every sender must be `asserted`, `fixed-corpus` or `uncovered` with a reason
+ * (step 3.4); a module with no answer fails the census whether or not the
+ * committed table is current.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { renderTable, SCAN_ROOTS, scanSenders } from './_lib/egress_sender_scan.js';
+import { renderTable, SCAN_ROOTS, scanSenders, undeclared } from './_lib/egress_sender_scan.js';
 
 const HERE = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(HERE), '..', '..');
@@ -32,6 +36,8 @@ export function renderRegion(repoRoot: string): string {
         '`unclassified` exists. `content` stays `undeclared` until the module carries an',
         '`egress-content:` marker, and `engine` counts a direct import of a function that detects or replaces',
         '(`detect`, `findSpans`, `replaceSpans`, `replaceValues`); importing a table constant does not count.',
+        '`coverage` is what the module\'s marker claims (`asserted` only for a module that imports the final',
+        'check, `council_egress.ts`); `undeclared` fails the census.',
         '',
         renderTable(scanSenders(repoRoot)),
     ].join('\n');
@@ -57,10 +63,16 @@ export function main(argv: readonly string[] = process.argv.slice(2), repoRoot: 
     const docPath = path.join(repoRoot, DOC_REL);
     const doc = fs.readFileSync(docPath, 'utf-8');
     const region = renderRegion(repoRoot);
+    const missing = undeclared(scanSenders(repoRoot));
+    if (missing.length > 0) {
+        process.stderr.write('egress_sender_census: a sender has no coverage — mark it `egress-content:` with a reason:\n');
+        for (const r of missing) process.stderr.write(`  · ${r.module}: ${r.reason}\n`);
+        if (!argv.includes('--write')) return 1;
+    }
     if (argv.includes('--write')) {
         fs.writeFileSync(docPath, spliceRegion(doc, region));
         process.stdout.write(`egress_sender_census: wrote ${DOC_REL}\n`);
-        return 0;
+        return missing.length > 0 ? 1 : 0;
     }
     const committed = extractRegion(doc);
     if (committed !== region.trim()) {

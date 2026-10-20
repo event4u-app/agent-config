@@ -17,8 +17,17 @@ import * as path from 'node:path';
 
 export type SenderStatus = 'sender' | 'local' | 'unclassified';
 
-/** `undeclared` until the module carries an `egress-content:` marker (step 3.4 declares them). */
+/** `undeclared` until the module carries an `egress-content:` marker. */
 export type SenderContent = 'session-content' | 'fixed-corpus' | 'undeclared';
+
+/**
+ * What the contract may publish for the module (step 3.4): `asserted` — its
+ * requests pass the replacement and the final check; `fixed-corpus` — it sends
+ * a corpus this package fixed, never session content; `uncovered` — it may send
+ * session content unchecked, for the stated reason. `undeclared` is no answer
+ * and fails the census.
+ */
+export type SenderCoverage = 'asserted' | 'fixed-corpus' | 'uncovered' | 'undeclared';
 
 export interface SenderRow {
     /** Repo-relative, POSIX separators. */
@@ -30,6 +39,9 @@ export interface SenderRow {
     readonly engine: boolean;
     readonly status: SenderStatus;
     readonly evidence: string;
+    readonly coverage: SenderCoverage;
+    /** Why the module has that coverage, as its marker states it; for `undeclared`, what is missing. */
+    readonly reason: string;
 }
 
 export const SCAN_ROOTS: readonly string[] = ['src/scripts', 'src/cli', 'src/install', 'src/shared'];
@@ -90,7 +102,12 @@ const SEND_SHAPES: readonly RegExp[] = [
 ];
 
 const URL_HOST = /https?:\/\/([a-z0-9-]+(?:\.[a-z0-9-]+)+|localhost)(?=[:/'"`\s)]|$)/gi;
-const CONTENT_MARKER = /(?:\/\/|#)\s*egress-content:\s*(session-content|fixed-corpus)\b/;
+// `egress-content: fixed-corpus — <reason>`, or `egress-content: session-content
+// asserted|uncovered — <reason>`. The reason is the claim a reviewer checks.
+const CONTENT_MARKER =
+    /(?:\/\/|#)\s*egress-content:\s*(session-content|fixed-corpus)\b(?:[ \t]+(asserted|uncovered)\b)?(?:[ \t]*(?:—|--)[ \t]*(\S[^\n]*))?/;
+// `asserted` is a claim about the final check, so the module must reach it.
+const FINAL_CHECK_IMPORT = /import\s*\{[^}]*\bcouncilEgress\b[^}]*\}\s*from\s+['"][^'"]*council_egress(?:\.js)?['"]/;
 // Passing the engine means importing a function that detects or replaces; a
 // module that reads only a table constant (a vendor key prefix) does not.
 const ENGINE_IMPORT =
@@ -139,6 +156,27 @@ function walk(abs: string, repoRoot: string, out: string[]): void {
     }
 }
 
+function coverageOf(
+    marker: RegExpExecArray | null,
+    reachesFinalCheck: boolean,
+): { coverage: SenderCoverage; reason: string } {
+    if (marker === null) return { coverage: 'undeclared', reason: 'no `egress-content:` marker' };
+    const reason = (marker[3] ?? '').trim();
+    if (reason === '') return { coverage: 'undeclared', reason: 'the marker states no reason' };
+    if (marker[1] === 'fixed-corpus') {
+        return marker[2] === undefined
+            ? { coverage: 'fixed-corpus', reason }
+            : { coverage: 'undeclared', reason: 'a fixed corpus takes no coverage word' };
+    }
+    if (marker[2] === 'uncovered') return { coverage: 'uncovered', reason };
+    if (marker[2] === 'asserted') {
+        return reachesFinalCheck
+            ? { coverage: 'asserted', reason }
+            : { coverage: 'undeclared', reason: 'claims `asserted` but does not import the final check' };
+    }
+    return { coverage: 'undeclared', reason: 'session content without `asserted` or `uncovered`' };
+}
+
 export function classifyModule(rel: string, src: string): SenderRow | null {
     if (SELF_MODULES.has(rel)) return null;
     const providers = new Set<string>();
@@ -153,8 +191,10 @@ export function classifyModule(rel: string, src: string): SenderRow | null {
     }
     const adapter = ADAPTER_DIR.test(rel);
     const sends = adapter || SEND_SHAPES.some((re) => re.test(src));
-    const content = (CONTENT_MARKER.exec(src)?.[1] as SenderContent | undefined) ?? 'undeclared';
+    const marker = CONTENT_MARKER.exec(src);
+    const content = (marker?.[1] as SenderContent | undefined) ?? 'undeclared';
     const engine = ENGINE_IMPORT.test(src);
+    const { coverage, reason } = coverageOf(marker, FINAL_CHECK_IMPORT.test(src));
     const row = (endpoints: Set<string>, status: SenderStatus, evidence: string): SenderRow => ({
         module: rel,
         endpoints: endpoints.size === 0 ? ['configured'] : [...endpoints].sort(),
@@ -162,6 +202,8 @@ export function classifyModule(rel: string, src: string): SenderRow | null {
         engine,
         status,
         evidence,
+        coverage,
+        reason,
     });
 
     if (providers.size > 0) {
@@ -195,6 +237,11 @@ export function scanSenders(repoRoot: string): SenderRow[] {
     return rows;
 }
 
+/** Rows the census refuses: a sender with no answer. */
+export function undeclared(rows: readonly SenderRow[]): SenderRow[] {
+    return rows.filter((r) => r.coverage === 'undeclared');
+}
+
 export function tally(rows: readonly SenderRow[]): Record<SenderStatus, number> {
     const out: Record<SenderStatus, number> = { sender: 0, local: 0, unclassified: 0 };
     for (const r of rows) out[r.status] += 1;
@@ -203,20 +250,25 @@ export function tally(rows: readonly SenderRow[]): Record<SenderStatus, number> 
 
 export function renderTable(rows: readonly SenderRow[]): string {
     const lines = [
-        '| module | endpoint | content | engine | status | evidence |',
-        '|---|---|---|---|---|---|',
+        '| module | endpoint | content | engine | status | evidence | coverage | reason |',
+        '|---|---|---|---|---|---|---|---|',
     ];
     for (const r of rows) {
         const endpoints = r.endpoints.map((e) => `\`${e}\``).join(', ');
         lines.push(
-            `| \`${r.module}\` | ${endpoints} | ${r.content} | ${r.engine ? 'yes' : 'no'} | **${r.status}** | ${r.evidence} |`,
+            `| \`${r.module}\` | ${endpoints} | ${r.content} | ${r.engine ? 'yes' : 'no'} | **${r.status}** | ${r.evidence} | ` +
+                `**${r.coverage}** | ${r.reason.replace(/\|/g, '\\|')} |`,
         );
     }
     const t = tally(rows);
     lines.push('');
+    const c = { asserted: 0, 'fixed-corpus': 0, uncovered: 0, undeclared: 0 };
+    for (const r of rows) c[r.coverage] += 1;
     lines.push(
         `${String(rows.length)} module(s): ${String(t.sender)} sender, ${String(t.local)} local, ` +
-            `${String(t.unclassified)} unclassified.`,
+            `${String(t.unclassified)} unclassified; coverage ${String(c.asserted)} asserted, ` +
+            `${String(c['fixed-corpus'])} fixed-corpus, ${String(c.uncovered)} uncovered, ` +
+            `${String(c.undeclared)} undeclared.`,
     );
     return lines.join('\n');
 }
