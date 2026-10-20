@@ -107,7 +107,7 @@ export function provenance_matches_publish(doc: unknown): boolean {
 // --- the signature half -------------------------------------------------------
 
 /**
- * ## What the clauses below do and do not establish
+ * What the clauses below do and do not establish.
  *
  * The header above says the signature half is not closed here. It is now
  * HALF-closed, and the half that is missing is stated first so nothing below

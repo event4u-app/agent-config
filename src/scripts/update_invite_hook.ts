@@ -10,7 +10,7 @@
  * session where an unrelated question is not an interruption of something.
  *
  * **It is closed today, by a file rather than by a flag.**
- * `agents/evidence/analysis/ring-0-unattended-record-*.md` carries a single
+ * The ring-0 record (`RING_ZERO_PREFIX`) carries a single
  * `ring-0-exit:` line, written by a human after reading the record's own table,
  * and while it reads `no` this concern returns before it has read anything
  * else. That is deliberate: the gate on asking an existing install to change

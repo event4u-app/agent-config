@@ -73,8 +73,7 @@ describe('4.3 — zero prompts in the five contexts the step names', () => {
     }
 });
 
-// The council round of 2026-10-20 (lazy-concern-authority-expansion-20261020.md)
-// asked for this: "a rollout switch is not consent". The invitation now needs a
+// A rollout switch is not consent. The invitation now needs a
 // value only a human can set — `update.mode` is class C, hand-edit or GUI only —
 // and ring-0 stays as a second, independent kill switch.
 describe('4.3 — the invitation needs a user-owned opt-in, not a rollout switch', () => {

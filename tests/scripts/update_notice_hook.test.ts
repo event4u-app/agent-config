@@ -87,9 +87,7 @@ describe('3.1 — a session_start concern beside wrapper-freshness', () => {
         platforms: Record<string, Record<string, string[]>>;
     };
 
-    // The council refused both update concerns 2/2 on 2026-10-20
-    // (agents/evidence/council/lazy-concern-authority-expansion-20261020.md):
-    // a lifecycle hook that may start an install is an authority expansion,
+    // A lifecycle hook that may start an install is an authority expansion,
     // whatever its `severity` says. Until a round on blocker
     // `concerns-refused-as-authority-expansion` re-registers it, the manifest
     // must NOT bind it — this flips red on the commit that registers it, which
