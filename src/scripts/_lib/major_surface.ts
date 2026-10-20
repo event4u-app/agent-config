@@ -40,8 +40,11 @@ export interface DiffEntry {
  * window this is measured on, and a table naming only today's would score
  * every release before the last relocation as having touched nothing. The
  * entry-point row carries an optional `src/` prefix for the same reason — the
- * script moved from `scripts/install.py` to `src/scripts/install.ts`, and the
- * first version of this table pinned only the old root.
+ * entry point moved from a Python script at the repository root to
+ * `src/scripts/install.ts` (ADR-200), and the first version of this table
+ * pinned only the old root. The retired path is described rather than quoted:
+ * `lint_pre_migration_refs` reds on a backtick-quoted citation of it, and it
+ * is right to — a shipped file naming it looks like an instruction to run it.
  *
  * `dist/install/` is deliberately absent. It is build output of
  * `src/scripts/install.*`, which is already covered, so including it would add
