@@ -79,8 +79,7 @@
  * slot (the git-authorization ledger, the suggestion latch) while this one
  * guards the language pin. As of this change both know `<task-notification>`,
  * `<system-reminder>` and `<agent-message`; only this one knows
- * `[SYSTEM NOTIFICATION`, `<local-command-caveat>` and the host's framed
- * agent-message delivery (`AGENT_MESSAGE_FRAME`). That asymmetry is NOT
+ * `[SYSTEM NOTIFICATION` and `<local-command-caveat>`. That asymmetry is NOT
  * obviously a defect and was deliberately left: mistaking a real turn for a
  * machine one costs a mis-pinned reply here and a RETAINED AUTHORIZATION
  * there, so the two sides do not want the same error budget — and
@@ -104,8 +103,9 @@ export function isSyntheticPrompt(prompt: string): boolean {
 /**
  * How Claude Code actually delivers a subagent hand-back or a cross-session
  * message to `user_prompt_submit`: one fixed host sentence, then the wrapper
- * tag, which the bare `<agent-message` case above never matched. Both halves
- * are required so a human quoting the sentence keeps their turn.
+ * tag. The bare `<agent-message` case above never matched this frame, and a
+ * German session's pin was rewritten to `en` 149 ms after one (2026-10-20).
+ * Both halves are required so a human quoting the sentence keeps their turn.
  */
 const AGENT_MESSAGE_FRAME =
   /^Another Claude session sent a message:\s*\n\s*<(?:agent-message|cross-session-message)\b/;

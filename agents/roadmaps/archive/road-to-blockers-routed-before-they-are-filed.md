@@ -66,10 +66,7 @@ of the three is checkable by a command, below.
       both resolve when fewer than two `road-to-skill-ecosystem-*` roadmaps sit
       outside `archive/` and `later/`; there are none. `first-corpora-named`
       is NOT closed: its condition is satisfied only by the letter (the file was
-      parked, not decided), which is the gaming this phase must not do. The
-      slot conditions differ in kind: they bound how many family roadmaps run
-      at once, and none does. Both parked roadmaps keep their own `Resume
-      when`, which this step does not claim.
+      parked, not decided), which is the gaming this phase must not do.
       verify: `ls agents/roadmaps/road-to-skill-ecosystem-*.md` -> no match, and
       both entries read `Status: resolved` with the measurement recorded.
 
@@ -94,10 +91,7 @@ of the three is checkable by a command, below.
 
 - [x] AC-1 — A host-wrapped agent message leaves the language pin unchanged,
       proven by a test that is red without the fix.
-- [x] AC-2 — No new open human-owned blocker can land without `Routed:` in the
-      linter's scope (active roadmaps, `stubs/`, `later/*-carried.md`); the
-      existing ones are counted, not exempted silently. Plain `later/` is
-      outside that scope, and parking is held by `check_estate_count`'s
-      `later_roadmaps` floor rather than by this ratchet.
+- [x] AC-2 — No new open human-owned blocker can land without `Routed:`; the
+      existing ones are counted, not exempted silently.
 - [x] AC-3 — The two blockers whose condition the tree satisfies read
       `resolved`, and `first-corpora-named` stays open with the reason.

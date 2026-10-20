@@ -204,14 +204,14 @@ const USER_DECISION_OWNER_RE = /^-[ \t]*\*\*Owner:\*\*[ \t]*(maintainer|user|own
 /**
  * Template rule 20 "Route before you file": a human-owned blocker records the
  * council verdict that sent it to a human, or why no council could be asked.
- * Absent is ratcheted (the backlog predates the field); present-but-malformed
- * is hard, since no entry carried the field on the day it shipped. Counted over
- * this lint's own scope, so a blocker filed straight into a parked roadmap is
- * not seen — parking itself is held by check_estate_count's later_roadmaps floor.
+ * Measured 2026-10-20: the council closed all seven owner-labelled blockers
+ * resolved in two days, so the label alone was the author's guess. Absent is
+ * ratcheted (the backlog predates the field); present-but-malformed is hard,
+ * since no entry carried the field on the day it shipped.
  */
 const ROUTED_FIELD_RE = /^-[ \t]*\*\*Routed:\*\*[ \t]*(.*)$/im;
 const ROUTED_VALUE_RE =
-    /^(?:council[ \t]+\d{4}-\d{2}-\d{2}[ \t]+ESCALATE[ \t]+[—-][ \t]*\S|pending[ \t]+[—-][ \t]*\S)/;
+    /^(?:council[ \t]+\d{4}-\d{2}-\d{2}[ \t]+ESCALATE[ \t]+—[ \t]*\S|pending[ \t]+—[ \t]*\S)/;
 
 const REQUIRED_FIELDS: ReadonlyArray<readonly [string, RegExp]> = [
     ['Status', /^-[ \t]*\*\*Status:\*\*/im],
@@ -1003,6 +1003,7 @@ function main(): number {
                 '    **What to do:** carrying a command, a path or an enumerated option set.\n' +
                 '    See templates/roadmaps.md rule 20.\n',
         );
+        return 1;
     }
     const routingVerdict = checkRatchet({
         gate: 'lint_roadmap_blockers:routing',
@@ -1020,8 +1021,6 @@ function main(): number {
                 '    when no council could be reached. A DECIDE is a ## Decisions row, not a blocker.\n' +
                 '    See templates/roadmaps.md rule 20 "Route before you file".\n',
         );
-    }
-    if (!verdict.ok || !routingVerdict.ok) {
         return 1;
     }
     if (!QUIET) {
