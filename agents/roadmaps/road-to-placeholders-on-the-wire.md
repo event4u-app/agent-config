@@ -79,20 +79,24 @@ published claim is the measured result per class per state, a null included.
 One PR for every step that is not externally impossible. Phase 0 ran as an
 agent probe after all: `claude -p --settings <scratch file>` binds probe hooks
 without writing any host settings file, so `block-config-weakening` never
-fires. Built and closed: 0.1, 0.2, 1.3, 3.1–3.4, 4.1–4.5, 5.1–5.3, 6.3, and
-6.1's round-4 refusal answered (authority only through an issued
-`RewriteCapability`). The emission decision, the restore and the coverage
-inputs live in the egress engine chunk: in the dispatch bundle they measured
-+16,365 B against 454 B of headroom; after the move the bundle is
-1,549,978 B of 1,550,000 and the chunk 67,764 B under a raised 72,000.
+fires. Closed here: 0.1, 0.2, 1.3, 3.1–3.4, 5.3, 6.3, and 6.1's round-4
+refusal answered (authority only through an issued `RewriteCapability`, the
+running host's version read from the transcript, a workspace revocation on any
+silent failure).
 
-Still open, each for a stated reason: 2.1's `session_start` prune trigger and
-2.2's injection wiring need dispatch-bundle bytes (22 B left, shrink-only
-ceiling, a raise needs a ratification round — council seats degraded today);
-6.2 needs Copilot and Gemini CLIs and accounts this machine does not have;
-6.4, 6.5, AC-1 and AC-6 need a live `protect` observation window and the
-sibling's identifier rules; 7.3–7.7 and AC-7 wait on the gateway decision and
-7.2.
+Phase 4, 5.1, 5.2 and the session-table wiring of 2.1 were built too, and the
+round-5 review (2026-10-20, anthropic + openai, 2/2 present, both `refused`)
+asked for tool-result replacement to land alone first, naming the unwired
+version check, capability ordering before side effects, automatic revocation
+and the omitted files. Those findings are fixed for the output path in this PR;
+the rest waits on local branch `wip/placeholders-restore-and-prompt-gate-20261020`
+for its own round, which today's council quota does not allow.
+
+Still open, each for a stated reason: 2.1, 2.2, 4.1–4.5, 5.1, 5.2, AC-2 and AC-3
+(council-staged, above); 6.2 needs Copilot and Gemini CLIs and accounts this
+machine does not have; 6.4, 6.5, AC-1 and AC-6 need a live `protect` observation
+window and the sibling's identifier rules; 7.3–7.7 and AC-7 wait on the
+gateway decision and 7.2.
 
 ## Execution status — 2026-10-18, branch `drain/road-to-placeholders-on-the-wire-20261018`
 
@@ -339,7 +343,7 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       point calls it yet: no token outlives a dispatch until the stage mints
       into the session table, so wiring handoff and memory recall now would
       carry nothing.
-      — 2026-10-20: tokens now outlive a dispatch (file-tool results). Open, council-blocked: wiring `reissueIntoSession` into the handoff, memory-recall and resume injection points edits bundled `session_start` concerns, which needs a dispatch-ceiling raise and its ratification round; no injection point records its predecessor session yet either.
+      — 2026-10-20: open: no token outlives a dispatch in this PR; the minting that would make continuity matter is council-staged: the round-5 review of 2026-10-20 (anthropic + openai, 2/2, both `refused`) asked for tool-result replacement to land alone first; the built version waits on local branch `wip/placeholders-restore-and-prompt-gate-20261020`, and a further council round today is not possible without resetting the council's quota counter, which is not done.
 
 ## Phase 3 — Tool results carry placeholders (Claude Code → `replaced`)
 
@@ -374,36 +378,36 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
 
 ## Phase 4 — Values come back in one place
 
-- [x] **4.1 Emit `updatedInput`** with identifier tokens restored, for file
+- [ ] **4.1 Emit `updatedInput`** with identifier tokens restored, for file
       writes and edits and for calls `category_a.ts` ranks consequence-free. An
       input bound for another model context — a subagent prompt — is never
       restored.
       verify: an `Edit` whose `old_string` holds a token applies against the real file and the file never contains a token; a subagent prompt leaves the tool with the token intact.
-      — 2026-10-20: `src/scripts/_lib/egress_restore.ts`; identifier restores into its origin, a local write or a consequence-free call; `Agent`/`Task` inputs keep their tokens. End to end through the dispatcher in `egress_stage.test.ts`.
-- [x] **4.2 A credential token restores into one place only: the file it was read
+      — 2026-10-20: open, council-staged: the round-5 review of 2026-10-20 (anthropic + openai, 2/2, both `refused`) asked for tool-result replacement to land alone first; the built version waits on local branch `wip/placeholders-restore-and-prompt-gate-20261020`, and a further council round today is not possible without resetting the council's quota counter, which is not done.
+- [ ] **4.2 A credential token restores into one place only: the file it was read
       from,** with the value taken from that file at restore time by matching the
       fingerprint, never from the table. Into a command, another file or any
       network sink it is denied, naming the alternative (reference the variable).
       verify: an edit spanning a credential line in its origin file applies; the same token toward an external host is denied and the denial names no value; after the origin file is rotated the token no longer resolves.
-      — 2026-10-20: re-derived from the origin file by digest; toward a shell or another host denied naming the variable; a rotated origin no longer resolves.
-- [x] **4.3 Every other restore asks** (D4).
+      — 2026-10-20: open, council-staged: the round-5 review of 2026-10-20 (anthropic + openai, 2/2, both `refused`) asked for tool-result replacement to land alone first; the built version waits on local branch `wip/placeholders-restore-and-prompt-gate-20261020`, and a further council round today is not possible without resetting the council's quota counter, which is not done.
+- [ ] **4.3 Every other restore asks** (D4).
       verify: a fixture per sink class; an `allow` never accompanies a restore, asserted in `emitFor`'s test.
-      — 2026-10-20: a fixture per sink class; an `allow` never accompanies a restore (asserted on the emission).
-- [x] **4.4 Nothing unresolved runs.** A tool input still containing the grammar
+      — 2026-10-20: open, council-staged: the round-5 review of 2026-10-20 (anthropic + openai, 2/2, both `refused`) asked for tool-result replacement to land alone first; the built version waits on local branch `wip/placeholders-restore-and-prompt-gate-20261020`, and a further council round today is not possible without resetting the council's quota counter, which is not done.
+- [ ] **4.4 Nothing unresolved runs.** A tool input still containing the grammar
       after the stage — unknown number, wrong fingerprint, mangled token — is
       denied. One tolerant match on number and fingerprint is attempted; what it
       cannot resolve it does not guess.
       verify: a token with altered spacing resolves; a token with an unknown number is denied; neither reaches a shell.
-      — 2026-10-20: spacing canonicalised once; unknown number, mangled form and a host without input capability deny.
-- [x] **4.5 An audit line per restore, without the value** — session, class,
+      — 2026-10-20: open, council-staged: the round-5 review of 2026-10-20 (anthropic + openai, 2/2, both `refused`) asked for tool-result replacement to land alone first; the built version waits on local branch `wip/placeholders-restore-and-prompt-gate-20261020`, and a further council round today is not possible without resetting the council's quota counter, which is not done.
+- [ ] **4.5 An audit line per restore, without the value** — session, class,
       type, number, tool, sink class, decision — and a per-session rate bound that
       turns a burst into an `ask`.
       verify: the audit schema has no free-text field; a burst fixture composes to `ask`.
-      — 2026-10-20: `egress-restores.jsonl`, eight fixed fields; more than eight in a minute composes to `ask`.
+      — 2026-10-20: open, council-staged: the round-5 review of 2026-10-20 (anthropic + openai, 2/2, both `refused`) asked for tool-result replacement to land alone first; the built version waits on local branch `wip/placeholders-restore-and-prompt-gate-20261020`, and a further council round today is not possible without resetting the council's quota counter, which is not done.
 
 ## Phase 5 — The prompt is gated, and the rule says what is true
 
-- [x] **5.1 Refuse a prompt carrying the credential class** (D3), suppress the
+- [ ] **5.1 Refuse a prompt carrying the credential class** (D3), suppress the
       original text from the block message, and print the redacted copy. The
       identifier class follows the mode. The stage's own deadline sits well inside
       the host's, because a host timeout lets the prompt through.
@@ -412,12 +416,12 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       recorded by `road-to-one-detector-and-the-senders-we-own` 1.3; when this
       lands, `tests/scripts/hooks/egress_prevention_gaps.test.ts` inverts its
       no-block assertion for it.
-      — 2026-10-20: refused through the prompt gate capability with the redacted copy; a host that cannot refuse warns and stays `uncovered`; the typed-secret gap fixture inverted.
-- [x] **5.2 State the residue in the refusal itself:** the text was typed into the
+      — 2026-10-20: open, council-staged: the round-5 review of 2026-10-20 (anthropic + openai, 2/2, both `refused`) asked for tool-result replacement to land alone first; the built version waits on local branch `wip/placeholders-restore-and-prompt-gate-20261020`, and a further council round today is not possible without resetting the council's quota counter, which is not done; the typed-secret gap fixture still asserts the gap.
+- [ ] **5.2 State the residue in the refusal itself:** the text was typed into the
       host and may sit in its local transcript and history; rotate a credential
       that was typed. Types and counts, never a value.
       verify: the message is asserted verbatim.
-      — 2026-10-20: `promptResidueLine`, asserted verbatim.
+      — 2026-10-20: open with 5.1, on the same branch.
 - [x] **5.3 Correct `domain-safety-pii`.** Surface 1 becomes two statements: the
       input side is held by the stage where a host allows it (`enforced_by` names
       it), the output side stays the model's duty.
@@ -702,9 +706,9 @@ package can rewrite. Steps 7.1 and 7.2 are what the blocker is answered with;
 - [ ] AC-1 — On Claude Code at the probed version, a tool result containing a
       listed value reaches the model as a token, and the dropped-replacement count
       over the observation window is published.
-- [x] AC-2 — A token in a tool input is restored, asked about or denied according
+- [ ] AC-2 — A token in a tool input is restored, asked about or denied according
       to class and sink; no unresolved, forged or foreign token reaches a tool.
-- [x] AC-3 — A prompt carrying a credential is refused with the original text
+- [ ] AC-3 — A prompt carrying a credential is refused with the original text
       suppressed, and no local store of this package holds the raw value.
 - [x] AC-4 — No serialised session state holds a credential value, and no
       identifier value rests in the form the council rejected.
