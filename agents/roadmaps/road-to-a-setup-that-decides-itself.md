@@ -249,12 +249,13 @@ with that file.
 > removes the hold option's main uncertainty. Record:
 > `agents/evidence/council/setup-key-removal-release-class-20261018.md`.
 
-- [ ] **4.1 One ADR.** It records the key removal and the computed decision, and
+- [x] **4.1 One ADR.** It records the key removal and the computed decision, and
   supersedes ADR-267 decision 3 (rollback is one setting), ADR-278 (the
   user-global layer carries the thinning opt-in) and the installed-layer
   roadmap's D3 (the template value is not consent), which no longer has a key to
   apply to.
   verify: the ADR exists and the three superseded records name it.
+  Landed 2026-10-20: **ADR-292 — the package decides its own rule-layer form.** It records the four-key defect set, the computed decision, the two non-settings brakes, the tombstone and one-window migration, and the release class. The three superseded records name it: ADR-267 `superseded_by: ADR-292 (decision 3 only)`, ADR-278 `superseded_by: ADR-292` with `status: superseded`, and D3 of `road-to-an-installed-layer-that-is-thinned` carries `superseded — ADR-292` in its revisit column. ADR-267's other decisions stand, its absent-key-resolves-to-full reading included, which is the default the computed function keeps.
 - [ ] **4.2 Tombstones, not deletions.** Every removed key gets a tombstone in
   the settings-delta mechanism of `road-to-a-release-that-reads-its-settings-delta`,
   and ships in the release its blocker `what-a-minor-may-remove` allows — a major
