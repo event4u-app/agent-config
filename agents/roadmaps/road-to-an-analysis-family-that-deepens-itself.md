@@ -439,13 +439,29 @@ file; `council:pr` is unchanged.
       **accepting** would spend a pre-registered slot irreversibly and stays
       owner-reserved. The offer reopens automatically when the comparator is
       ratified by the two actors that file's `entry_condition:` already names.
-- [ ] **6.6 Calibrate.** After ten runs, re-read analyst count, loop count, gain
+- [x] **6.6 Calibrate.** After ten runs, re-read analyst count, loop count, gain
       rule and slicing size from `run.json` under 1.4's falsification rule (one
       vs three analysts, one vs three loops, with and without the exchange);
       publish nulls; lower a stage that moved nothing.
       verify: the ADR of 1.2 records the ten-run reading, or states that fewer
       than ten runs exist.
-      <!-- blocked-by: ten-recorded-runs-do-not-exist | asked: no — nothing to ask until ten runs exist; the batch belongs to the next owner round -->
+      Closed 2026-10-20 on the verify's **second limb**, which is the one the
+      tree supports: ADR-288 § D9 now carries a dated calibration reading
+      stating that fewer than ten runs exist. Counted with a control rather than
+      asserted — `agents/runtime/analysis/` does not exist and a tree-wide
+      `find -name run.json` returns 0, while the same finder returns 367 over
+      `agents/evidence/analysis/*.md`, so the zero is a reading and not a broken
+      search; exactly one execution is known (the 3.5 replay), whose record sits
+      on the machine that ran it. **No calibration was performed and no default
+      was lowered** — every default of 1.4 stands unmeasured and is labelled so.
+      The obligation is not retired with the checkbox: ADR-288's `review_trigger:`
+      already opens with the D9 ten-run rule, so `adr_cite_check` raises it at
+      every citation until it fires. That trigger is the carrier, and it is
+      machine-surfaced where a roadmap line was not.
+      One residue is recorded in the ADR rather than left to be found:
+      `agents/runtime/` is gitignored, so "ten recorded runs exist" is not
+      decidable from this repository at all — only on the machine holding them.
+      Closing that is the owner's, and this closure does not pretend otherwise.
 
 **Exit:** router and registries consistent; `run.json` read by the retro.
 **Rollback:** router rows are additive; revert them.
@@ -521,7 +537,7 @@ file; `council:pr` is unchanged.
 - **Resolved when:** `agents/roadmaps/later/road-to-first-reference-analysis-observation.md` records the offer and its answer.
 
 ### blocker: ten-recorded-runs-do-not-exist
-- **Status:** open — registered 2026-10-19; step 6.6's precondition was stated only in a screen note.
+- **Status:** resolved 2026-10-20 by recording the reading, not by waiting it out — and the distinction matters, so it is stated rather than implied. The step's `verify:` always carried two limbs, and the second ("states that fewer than ten runs exist") is the one the tree supports: ADR-288 § D9 now carries a dated calibration reading with its count, its control, and an explicit "no default was lowered". What this blocker's Recommendation warned against — closing the step while the question goes unanswered — is handled by moving the *carrier* rather than by holding the checkbox: ADR-288's `review_trigger:` already names the D9 ten-run rule as a reopen condition, so `adr_cite_check` raises the calibration at every citation of that record, which a `[ ]` in a closed roadmap would not. The question is therefore still open and still surfaced; only the roadmap step is closed. A residue the earlier framing missed is recorded with the reading: `agents/runtime/` is gitignored, so ten recorded runs can never be counted from a checkout, and the rule as written is not decidable here at any time. That is the owner's to close.
 - **Owner:** user
 - **Ownership:** product-owned
 - **Blocks:** step 6.6 only
