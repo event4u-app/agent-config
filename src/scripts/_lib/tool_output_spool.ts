@@ -41,7 +41,7 @@
  * - Ranges are zero-based, half-open byte ranges; out of bounds is refused,
  *   never clamped. A read verifies the digest over the bytes it serves.
  * - Writes publish by an exclusive temp file and an atomic rename; cleanup runs
- *   under an exclusive lock, at the first store of each session.
+ *   at every store (D18 amends D17's once-per-session), each deletion a rename claim.
  */
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -62,7 +62,6 @@ export const SPOOL_MAX_BYTES = 500 * 1024 * 1024;
 
 const KEY_FILE = '.key';
 const LOCK_FILE = '.cleanup.lock';
-const SESSION_FILE = '.last-cleanup-session';
 const STALE_LOCK_MS = 10 * 60 * 1000;
 const STALE_TMP_MS = 60 * 60 * 1000;
 const ADDRESS = /^[0-9a-f]{64}$/;
@@ -92,6 +91,12 @@ function sha256(bytes: Buffer): string {
     return createHash('sha256').update(bytes).digest('hex');
 }
 
+/** Create the store's directory, or tighten an existing one, to 0700. */
+function ensureSpoolDir(root: string): void {
+    fs.mkdirSync(spoolDir(root), { recursive: true, mode: 0o700 });
+    fs.chmodSync(spoolDir(root), 0o700);
+}
+
 function spoolKey(root: string, create: boolean): Buffer | null {
     const file = path.join(spoolDir(root), KEY_FILE);
     try {
@@ -99,7 +104,7 @@ function spoolKey(root: string, create: boolean): Buffer | null {
     } catch {
         if (!create) return null;
     }
-    fs.mkdirSync(spoolDir(root), { recursive: true, mode: 0o700 });
+    ensureSpoolDir(root);
     try {
         fs.writeFileSync(file, randomBytes(32), { flag: 'wx', mode: 0o600 });
     } catch (exc) {
@@ -189,40 +194,58 @@ export function readHandle(
     return { state: 'ok', bytes: bytes.subarray(start, end) };
 }
 
+/** Test seams: run code inside the two windows a concurrent writer or cleaner can use. */
+export interface CleanupHooks {
+    readonly beforeClaim?: (file: string) => void;
+}
+
 /**
  * Remove entries past the retention age, then the oldest until the store fits
- * its cap, and abandoned temp files. Runs under an exclusive lock; a held lock
- * younger than ten minutes means another process is cleaning, and this one skips.
+ * its cap, and abandoned temp files.
+ *
+ * Correctness does not rest on the lock. Every deletion goes through
+ * `claimAndDelete`, which renames the entry to a name only this cleaner uses and
+ * inspects what it took: two cleaners cannot both delete one entry, and an entry
+ * a writer replaced after it was measured is put back. The lock only stops two
+ * cleaners doing the same work; if one is displaced (it held the lock past ten
+ * minutes), the cost is redundant eviction, never a deleted fresh entry.
  */
-export function cleanupSpool(root: string, now: number = Date.now(), maxBytes: number = SPOOL_MAX_BYTES): { removed: number } {
+export function cleanupSpool(
+    root: string,
+    now: number = Date.now(),
+    maxBytes: number = SPOOL_MAX_BYTES,
+    hooks: CleanupHooks = {},
+): { removed: number } {
     const dir = spoolDir(root);
     if (!fs.existsSync(dir)) return { removed: 0 };
     const token = acquireCleanupLock(dir, now);
     if (token === null) return { removed: 0 };
     let removed = 0;
     try {
-        const live: { file: string; mtime: number; size: number }[] = [];
+        const live: { name: string; seen: fs.Stats }[] = [];
         for (const name of fs.readdirSync(dir)) {
-            const file = path.join(dir, name);
             let st: fs.Stats;
             try {
-                st = fs.statSync(file);
+                st = fs.statSync(path.join(dir, name));
             } catch {
                 continue;
             }
             const old = now - st.mtimeMs;
-            if (name.endsWith('.tmp') ? old > STALE_TMP_MS : ADDRESS.test(name) && old >= SPOOL_RETENTION_MS) {
-                if (removeIfUnchanged(file, st)) removed += 1;
+            const expired = name.endsWith('.tmp') || name.endsWith('.claimed') ? old > STALE_TMP_MS : ADDRESS.test(name) && old >= SPOOL_RETENTION_MS;
+            if (expired) {
+                if (claimAndDelete(dir, name, st, token, hooks)) removed += 1;
             } else if (ADDRESS.test(name)) {
-                live.push({ file, mtime: st.mtimeMs, size: st.size });
+                live.push({ name, seen: st });
             }
         }
-        live.sort((a, b) => a.mtime - b.mtime);
-        let total = live.reduce((n, e) => n + e.size, 0);
+        live.sort((a, b) => a.seen.mtimeMs - b.seen.mtimeMs);
+        let total = live.reduce((n, e) => n + e.seen.size, 0);
         for (const e of live) {
             if (total <= maxBytes) break;
-            total -= e.size;
-            if (removeIfUnchanged(e.file, e)) removed += 1;
+            if (claimAndDelete(dir, e.name, e.seen, token, hooks)) {
+                total -= e.seen.size;
+                removed += 1;
+            }
         }
     } finally {
         releaseCleanupLock(dir, token);
@@ -231,8 +254,40 @@ export function cleanupSpool(root: string, now: number = Date.now(), maxBytes: n
 }
 
 /**
+ * Delete `name` only if it is still the file cleanup measured. The rename is the
+ * claim: whatever it moved is this cleaner's to inspect, and no other process
+ * can reach it under the claimed name. A different file (inode, mtime or size)
+ * means a writer replaced it; it is linked back unless a newer copy already
+ * sits at the name. While claimed, a read of that entry answers `missing`.
+ */
+export function claimAndDelete(dir: string, name: string, seen: fs.Stats, token: string, hooks: CleanupHooks = {}): boolean {
+    const file = path.join(dir, name);
+    const claimed = path.join(dir, `.${name}.${token}.claimed`);
+    hooks.beforeClaim?.(file);
+    try {
+        fs.renameSync(file, claimed);
+    } catch {
+        return false;
+    }
+    try {
+        const got = fs.statSync(claimed);
+        if (got.ino === seen.ino && got.mtimeMs === seen.mtimeMs && got.size === seen.size) return true;
+        try {
+            fs.linkSync(claimed, file);
+        } catch {
+            // a newer copy took the name; it wins
+        }
+        return false;
+    } catch {
+        return false;
+    } finally {
+        fs.rmSync(claimed, { force: true });
+    }
+}
+
+/**
  * Take the cleanup lock, or null when a live cleaner holds it. The lock holds a
- * random token; a stale lock is taken over by RENAMING it aside, which only one
+ * random token; a stale lock is taken over by renaming it aside, which only one
  * taker can do, then creating a fresh one.
  */
 export function acquireCleanupLock(dir: string, now: number = Date.now()): string | null {
@@ -256,25 +311,17 @@ export function acquireCleanupLock(dir: string, now: number = Date.now()): strin
     return null;
 }
 
-/** Release the lock only when it still holds this cleaner's token. */
+/**
+ * Release the lock if it still holds this cleaner's token. A successor that
+ * replaced it between the read and the removal can lose its lock; that admits a
+ * second cleaner, which `claimAndDelete` makes harmless.
+ */
 export function releaseCleanupLock(dir: string, token: string): void {
     const lock = path.join(dir, LOCK_FILE);
     try {
         if (fs.readFileSync(lock, 'utf8') === token) fs.rmSync(lock, { force: true });
     } catch {
         // already released or taken over
-    }
-}
-
-/** Delete `file` only if a writer has not replaced it since it was measured. */
-export function removeIfUnchanged(file: string, seen: { mtimeMs?: number; mtime?: number; size: number }): boolean {
-    try {
-        const now = fs.statSync(file);
-        if (now.mtimeMs !== (seen.mtimeMs ?? seen.mtime) || now.size !== seen.size) return false;
-        fs.rmSync(file, { force: true });
-        return true;
-    } catch {
-        return false;
     }
 }
 
@@ -314,18 +361,6 @@ function observe(root: string, line: Record<string, unknown>): void {
     }
 }
 
-function cleanupOncePerSession(root: string, session: string, now: number): void {
-    const marker = path.join(spoolDir(root), SESSION_FILE);
-    try {
-        if (fs.readFileSync(marker, 'utf8') === session) return;
-    } catch {
-        // first cleanup in this workspace
-    }
-    cleanupSpool(root, now);
-    fs.mkdirSync(spoolDir(root), { recursive: true, mode: 0o700 });
-    fs.writeFileSync(marker, session, 'utf8');
-}
-
 /**
  * One dispatch's result into the store. Called by the egress stage after its
  * views exist; never throws, because a store failure must not withhold a body.
@@ -362,7 +397,8 @@ export function spoolResult(
         if (shown === undefined || serialize(shown) !== raw.toString('utf8')) return { action: 'skip', reason: 'view-differs' };
         const session = String(payload['session_id'] ?? envelope['session_id'] ?? '').trim();
         if (!SESSION.test(session)) return { action: 'skip', reason: 'no-session' };
-        cleanupOncePerSession(root, session, now);
+        ensureSpoolDir(root);
+        cleanupSpool(root, now);
         return { action: 'stored', class: cls, ...storeBytes(root, raw, session, now) };
     } catch {
         return { action: 'skip', reason: 'store-error' };

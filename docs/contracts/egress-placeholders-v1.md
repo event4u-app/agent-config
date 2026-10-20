@@ -298,7 +298,7 @@ first ratification round refused them argued as one:
 | Claim | What protects it | What it does NOT cover |
 |---|---|---|
 | The store's CODE is the shipped code | the chunk's sha256 sidecar, checked by `tool_output_spool_loader.ts` before load; a mismatch or a foreign schema loads nothing | anything about the data the code writes |
-| The store's DATA is reachable only by its session, only until expiry, only in range | the MAC over address, expiry and session; the address `HMAC(key, session, sha256)` so equal content is not linkable without the key; a 0700 directory, 0600 files and a 0600 key under a gitignored path; retention enforced on every store and read | a local process running as the same user, which can read the key and the files directly. Session binding is a scope boundary between sessions, not a defence against the machine's own user |
+| The store's DATA is reachable only by its session, only until expiry, only in range | the MAC over address, expiry and session; the address `HMAC(key, session, sha256)` so equal content is not linkable without the key; a 0700 directory, 0600 files and a 0600 key under a gitignored path, the directory re-tightened to 0700 on every store; retention enforced on every store and read | a local process running as the same user, which can read the key and the files directly. Session binding is a scope boundary between sessions, not a defence against the machine's own user |
 
 **What can turn the store on, and what the gate does and does not see.** This
 is a set of layers, not a proven boundary:
@@ -328,20 +328,24 @@ No setting, environment variable or config file populates the selection.
 - *Crash durability* — **not promised.** The directory is not fsynced, so a
   crash can lose an entry whose rename had completed. The store is a cache of
   bytes the model already received; a lost entry reads `missing`.
-- *Capacity* — the 500 MB cap is enforced at cleanup, oldest first. Writers do
-  not reserve space, so concurrent writes can exceed the cap until the next
-  cleanup; the overshoot is bounded by the writes in flight. Cleanup runs only
+- *Capacity and age* — enforced by a cleanup at every store and at every read
+  whose handle passed every check, oldest first. Writers do not reserve space,
+  so concurrent writes can exceed the cap until the next cleanup; the overshoot is bounded by the writes in flight. Cleanup runs only
   for a store or for a read whose handle passed every check — a malformed,
   forged or foreign-session handle reaches no cleanup and no entry; a
   syntactically valid one still reads the key file to check its MAC.
 - *Complete writes* — every byte is written (short writes are looped) and
   fsynced before the rename; a failed write removes its temp file.
-- *Cleanup exclusivity* — the lock holds a random token; a stale lock (10 min)
-  is taken over by renaming it aside, which one taker wins, and a cleaner
-  releases the lock only while it still holds its own token. An entry is
-  deleted only if its mtime and size are unchanged since cleanup measured it,
-  so a concurrent rewrite survives; the stat-then-delete window is two
-  syscalls and its worst case is a refreshed entry reading `missing`.
+- *Deletion is a claim* — cleanup renames an entry to a name only it uses and
+  inspects what it took (inode, mtime, size). A file a writer replaced after
+  cleanup measured it is linked back, unless an even newer copy already holds
+  the name; while claimed, that entry reads `missing`. Two cleaners cannot both
+  delete one entry, and capacity is subtracted only for a confirmed deletion.
+- *The lock is efficiency, not correctness* — it holds a random token, a stale
+  one (10 min) is taken over by renaming it aside, and release compares the
+  token. A successor's lock can still be lost between that read and the
+  removal; the cost is two cleaners at once, which the claim makes harmless
+  except for evicting more than needed.
 
 **A concern reply cannot rewrite.** The dispatcher reads a fixed set of keys
 from a concern reply (`decision`, `reason`, `additional_context`, `context` and

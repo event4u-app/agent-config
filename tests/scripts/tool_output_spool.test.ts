@@ -19,8 +19,8 @@ import {
     acquireCleanupLock,
     cleanupSpool,
     readHandle,
+    claimAndDelete,
     releaseCleanupLock,
-    removeIfUnchanged,
     SPOOL_DIR,
     SPOOL_OBSERVATION_FILE,
     SPOOL_RETENTION_MS,
@@ -269,12 +269,59 @@ describe('retention, partial writes and cleanup failure', () => {
         expect(fs.existsSync(partial)).toBe(false);
     });
 
-    it('a cleanup step that fails refuses the store rather than writing past it', () => {
-        const env = readEnvelope('would be stored');
-        const view: SpoolStageView = { mode: 'protect', placeholder: env, counts: [], refused: [] };
-        fs.mkdirSync(path.join(tmp, SPOOL_DIR, '.last-cleanup-session'), { recursive: true });
-        expect(spoolResult(env, view, ['tool_response'], tmp, READ_TEXT)).toEqual({ action: 'skip', reason: 'store-error' });
-        expect(spoolFiles()).toHaveLength(0);
+    it('a cleanup that fails propagates (so the store refuses) and releases its lock', () => {
+        const now = Date.now();
+        const old = storeBytes(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.utimesSync(path.join(dir, old.address), new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
+        expect(() =>
+            cleanupSpool(tmp, now, 10_000, {
+                beforeClaim: () => {
+                    throw new Error('disk gone');
+                },
+            }),
+        ).toThrow(/disk gone/);
+        expect(fs.existsSync(path.join(dir, '.cleanup.lock'))).toBe(false);
+        // spoolResult runs cleanup inside its own try, so such a failure answers store-error.
+    });
+
+    it('an existing store directory is tightened to 0700 by a store', () => {
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.mkdirSync(dir, { recursive: true, mode: 0o755 });
+        fs.chmodSync(dir, 0o755);
+        const env = readEnvelope('tighten me');
+        spoolResult(env, { mode: 'protect', placeholder: env, counts: [], refused: [] }, ['tool_response'], tmp, READ_TEXT);
+        expect(fs.statSync(dir).mode & 0o777).toBe(0o700);
+    });
+
+    it('every store enforces retention and the cap, in one long session', () => {
+        const now = Date.now();
+        const old = storeBytes(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
+        const oldFile = path.join(tmp, SPOOL_DIR, old.address);
+        fs.utimesSync(oldFile, new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
+        for (const body of ['one', 'two', 'three']) {
+            const env = readEnvelope(body);
+            spoolResult(env, { mode: 'protect', placeholder: env, counts: [], refused: [] }, ['tool_response'], tmp, READ_TEXT, now);
+        }
+        expect(fs.existsSync(oldFile)).toBe(false);
+        expect(spoolFiles()).toHaveLength(3);
+    });
+
+    it('the cap and the age are exact boundaries', () => {
+        const now = Date.now();
+        const dir = path.join(tmp, SPOOL_DIR);
+        const a = storeBytes(tmp, Buffer.alloc(100, 1), S, now);
+        const b = storeBytes(tmp, Buffer.alloc(100, 2), S, now);
+        fs.utimesSync(path.join(dir, a.address), new Date(now - 5000), new Date(now - 5000));
+        expect(cleanupSpool(tmp, now, 200).removed).toBe(0);
+        expect(cleanupSpool(tmp, now, 199).removed).toBe(1);
+        expect(fs.existsSync(path.join(dir, b.address))).toBe(true);
+        const edge = new Date(now - SPOOL_RETENTION_MS + 1000);
+        fs.utimesSync(path.join(dir, b.address), edge, edge);
+        expect(cleanupSpool(tmp, now, 10_000).removed).toBe(0);
+        const past = new Date(now - SPOOL_RETENTION_MS);
+        fs.utimesSync(path.join(dir, b.address), past, past);
+        expect(cleanupSpool(tmp, now, 10_000).removed).toBe(1);
     });
 });
 
@@ -354,17 +401,37 @@ describe('the cleanup lock is owned', () => {
         expect(winners[0]).not.toBe(a);
     });
 
-    it('an entry rewritten after cleanup measured it is not deleted', () => {
-        const file = path.join(tmp, 'entry');
-        fs.writeFileSync(file, 'first');
-        const seen = fs.statSync(file);
-        const later = new Date(seen.mtimeMs + 5000);
-        fs.writeFileSync(file, 'second!');
-        fs.utimesSync(file, later, later);
-        expect(removeIfUnchanged(file, seen)).toBe(false);
-        expect(fs.existsSync(file)).toBe(true);
-        expect(removeIfUnchanged(file, fs.statSync(file))).toBe(true);
-        expect(fs.existsSync(file)).toBe(false);
+    it('an entry a writer replaces between measurement and claim survives; the cap then takes the next oldest', () => {
+        const now = Date.now();
+        const a = storeBytes(tmp, Buffer.alloc(100, 1), S, now);
+        const b = storeBytes(tmp, Buffer.alloc(100, 2), S, now);
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.utimesSync(path.join(dir, a.address), new Date(now - 5000), new Date(now - 5000));
+        const removed = cleanupSpool(tmp, now, 150, {
+            beforeClaim: (file) => {
+                if (file.endsWith(a.address)) storeBytes(tmp, Buffer.alloc(100, 1), S, now);
+            },
+        }).removed;
+        // The replaced entry is put back; the cap is still over, so the next oldest goes.
+        expect(removed).toBe(1);
+        expect(readHandle(tmp, a.handle, S, undefined, now).state).toBe('ok');
+        expect(readHandle(tmp, b.handle, S, undefined, now).state).toBe('missing');
+        expect(fs.readdirSync(dir).filter((n) => n.endsWith('.claimed'))).toEqual([]);
+    });
+
+    it('overlapping cleaners are harmless: only one claims an entry, so it is counted once', () => {
+        const now = Date.now();
+        const a = storeBytes(tmp, Buffer.alloc(100, 1), S, now);
+        const dir = path.join(tmp, SPOOL_DIR);
+        const seen = fs.statSync(path.join(dir, a.address));
+        let inner = false;
+        const first = claimAndDelete(dir, a.address, seen, 'tokA', {
+            beforeClaim: () => {
+                inner = claimAndDelete(dir, a.address, seen, 'tokB');
+            },
+        });
+        expect([inner, first]).toEqual([true, false]);
+        expect(fs.readdirSync(dir).filter((n) => n.endsWith('.claimed'))).toEqual([]);
     });
 });
 
