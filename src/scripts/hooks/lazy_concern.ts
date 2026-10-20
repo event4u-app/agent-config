@@ -3,11 +3,28 @@
  *
  * WHY. Every concern in `concern_registry.ts` is statically imported, so
  * esbuild folds its whole transitive closure into `dist/hooks/dispatch.js` —
- * the one bundle every hook event loads. A concern bound on ONE event is then
- * paid for on every other one. Measured 2026-10-20 from the bundle's own
- * metafile: `src/scripts/chat_history.ts` and the modules reachable only
- * through it were 121,219 bytes of a 1,549,961-byte bundle, and `chat-history`
- * is bound on `session_start` alone.
+ * the one bundle every hook event loads. Measured 2026-10-20 from the bundle's
+ * own metafile: `src/scripts/chat_history.ts` and the modules reachable only
+ * through it were 121,219 bytes of a 1,549,961-byte bundle.
+ *
+ * This paragraph used to end "and `chat-history` is bound on `session_start`
+ * alone", and an independent review caught that it is false. The manifest
+ * binds it on FIVE events — `session_start`, `session_end`, `stop`,
+ * `post_tool_use` and `user_prompt_submit` — which makes it close to the
+ * widest-bound concern in the tree, not a narrow one. The claim was read off
+ * the `session_start:` rows without checking the others, and it reached the
+ * budget file, a roadmap, a commit message and a council prompt before anyone
+ * tested it.
+ *
+ * What survives the correction is the SIZE argument, which never depended on
+ * the binding: 121 KB that every event pays is 121 KB whether the concern runs
+ * on one event or five, because the cost is the inlining, not the invocation.
+ * What does NOT survive is "this is the cheapest possible candidate" — the
+ * genuinely narrow ones are `turn-end-gate` (71,928 B, `stop` alone),
+ * `injection-scan` (46,660 B, `post_tool_use` alone), `skill-route`
+ * (31,183 B), `git-authorization` (30,761 B), `session-eol` (27,708 B) and
+ * `handoff-context` (25,220 B). The latency effect of moving THIS one is
+ * unmeasured, and the 2026-10-18 council asked for exactly that measurement.
  *
  * An AI council of two providers chose this mechanism on 2026-10-18 for the
  * egress engine — move the module out into a conditional chunk rather than
