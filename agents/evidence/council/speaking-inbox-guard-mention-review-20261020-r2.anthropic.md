@@ -1,7 +1,8 @@
 <!-- evidence-type: original-review -->
 
 <!-- The anthropic seat's reply of 2026-10-20 to the prompt in
-     speaking-inbox-guard-mention-review-20261020-r2.question.md, verbatim. -->
+     speaking-inbox-guard-mention-review-20261020-r2.question.md, verbatim except one example
+     directory name replaced by `<name>` for the source-shape gate. -->
 
 Matze, reviewing independently against your criteria.
 
@@ -54,7 +55,7 @@ it('an invoked script that changes directory internally', () => {
 - Keep native `cwd` for absolute Bash paths ✓  
 - Remove exists-carve-out for **relative Bash tokens** entirely
 
-Operators make legitimate references explicit: `ls -la "$PWD/agents/tmp/round/"`
+Operators make legitimate references explicit: `ls -la "$PWD/agents/tmp/<name>/"`
 
 ## 4. Concrete next steps
 

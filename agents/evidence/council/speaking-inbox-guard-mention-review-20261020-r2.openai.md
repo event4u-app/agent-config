@@ -1,7 +1,8 @@
 <!-- evidence-type: original-review -->
 
 <!-- The openai seat's reply of 2026-10-20 to the prompt in
-     speaking-inbox-guard-mention-review-20261020-r2.question.md, verbatim. -->
+     speaking-inbox-guard-mention-review-20261020-r2.question.md, verbatim except one example
+     directory name replaced by `<name>` for the source-shape gate. -->
 
 Matze, my assessment is **disagree**: the `cwd` correction is valid, but applying the existing-directory carve-out to arbitrary relative Bash tokens remains an authority-expanding security defect.
 
@@ -65,7 +66,7 @@ Keep the good portions of the branch:
 Change Bash handling so the existing-directory carve-out applies only to absolute speaking paths. Relative Bash tokens should be judged without an existence probe. Legitimate commands can use an explicit absolute path, for example:
 
 ```sh
-ls -la "$PWD/agents/tmp/a-speaking-round/"
+ls -la "$PWD/agents/tmp/<name>/"
 ```
 
 Add a regression test where a helper changes directory internally and creates its relative argument. Arrange for the path to exist under native `cwd` but not under the helper’s target directory, and prove:
