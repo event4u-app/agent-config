@@ -394,7 +394,7 @@ read cannot leak through any later bug.
       changing class precedence, logging a raw value or letting a credential
       token restore anywhere turns a named test red.
       verify: each listed mutation, applied to a scratch copy, fails at least one test; the recipes are `canary:` entries in `src/config/gate-coverage.yml`.
-- [ ] **2.7 The shapes with no vendor literal read the table too** — the
+- [x] **2.7 The shapes with no vendor literal read the table too** — the
       keyword-assignment variants (`password =`, `api_key:`) the council bundler,
       `workspace_secrets` and the low-impact redactor read at their own
       threshold, and the class-spelled prefixes in `check_reach_channels.ts`.
@@ -402,6 +402,20 @@ read cannot leak through any later bug.
       threshold and placeholder; the legacy-superset suite gains their frozen
       patterns before the move.
       verify: `npx vitest run src/scripts/_lib/egress_legacy_superset.test.ts` -> 0 with those patterns frozen, and `check_credential_spelling` fails a keyword-assignment or class-spelled shape outside the table (self-test case).
+      **Done 2026-10-20:** the table carries `ASSIGNMENT_KEYWORDS` with the
+      `assignmentPattern` builder, `AUTHORIZATION_HEADER` and
+      `CLASS_SPELLED_PREFIXES`. Seven sites read them, not three: the bundler,
+      `workspace_secrets`, the low-impact redactor, the explain scrubber,
+      `check_memory`, `lint_example_fences` and the table's own
+      `generic-assignment` row, plus both shapes in `check_reach_channels.ts`.
+      Every rebuilt regex is the frozen spelling byte for byte where the
+      consumer exposes it, and the frozen behaviour where it does not
+      (`egress_legacy_superset.test.ts` -> 0, 15 cases). The low-impact
+      redactor rides in the dispatch bundle (388 B of headroom), so it reads
+      the one keyword through `egress_prefixes.ts`, equality-tested against the
+      table. `check_credential_spelling --self-test` -> 8/8, with a class
+      spelling and an assignment shape rejected; run over the `origin/main`
+      copies of the seven files, its new checks flag all eight pre-move lines.
 
 ## Phase 3 — The grammar, and the requests this package writes (F1, F8)
 
