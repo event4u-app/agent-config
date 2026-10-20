@@ -1,0 +1,17 @@
+{
+  "_comment": "The fork pilot's skill set, road-to-skills-that-arrive-when-called 3.2. `context: fork` is the FIRST host's own frontmatter key, so this is a projection-time render for that host only and never a package-owned key on an authored skill — 1.2 forbids the second thing, and the whole reason the package key was renamed to `context_window` in 1.1 was to give this key back. Every name here must be `report` in skill-output-shape.json (D2: only a report skill may fork, because a forked run sees no conversation and leaves nothing for later turns), and `tests/install/skill_fork_pilot.test.ts` fails if one is not. The cap of five is the step's own: a pilot large enough to read and small enough that a harm finding costs five skills, not three hundred.",
+  "status": "pilot",
+  "max_names": 5,
+  "names": [
+    "deep-reading-analyst",
+    "project-analysis-core",
+    "project-analysis-hypothesis-driven",
+    "project-analyzer",
+    "repomix-packer"
+  ],
+  "why_these": "The five of the six D2 skills that carried the retired `context: large` key. They are the population the defect was found in, they are all `report`, and they are the heaviest bodies in the catalogue — so if a fork saves main-conversation tokens anywhere, it is here. `universal-project-analysis` is the sixth and is deliberately left out to keep the pilot at five and leave one untouched sibling to compare against.",
+  "hosts": [
+    "claude-code"
+  ],
+  "widening_is_posed_not_taken": "Step 3.3. Extending this set is an owner question recorded beside 3.2's result, never an agent decision."
+}
