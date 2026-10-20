@@ -24682,16 +24682,15 @@ function _propose_modules_config(project_root, is_first_run) {
     "Re-run anytime via `./scripts-run src/scripts/propose_modules_config` (installed under <package>/src/scripts/)."
   );
 }
+var _ABSENT_LAYER = ["project-settings", "template"].map((n) => path37.join(path37.sep, "dev", "null", `agent-config-absent-${n}.yml`));
 function _legacy_projection_pin() {
   let data = null;
   try {
-    data = load_agent_settings({ project_path: _NO_PROJECT_SETTINGS, template_path: _NO_TEMPLATE_LAYER });
+    data = load_agent_settings({ project_path: _ABSENT_LAYER[0], template_path: _ABSENT_LAYER[1] });
   } catch {
   }
   return legacyProjectionPin(data, (line) => warn(line));
 }
-var _NO_PROJECT_SETTINGS = path37.join(path37.sep, "dev", "null", "agent-config-absent-project-settings.yml");
-var _NO_TEMPLATE_LAYER = path37.join(path37.sep, "dev", "null", "agent-config-absent-template.yml");
 function _read_consumer_auto_switch(project_root) {
   let data;
   try {

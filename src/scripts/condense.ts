@@ -464,12 +464,10 @@ function _read_projection_scope_dedup(): boolean {
 
 function _lean_projection_settings(): { mode: LeanProjectionMode; hosts: LeanProjectionHosts } {
     // Step 1.2 of `road-to-a-rule-carrier-that-works-outside-the-repo` made this
-    // the shared resolver rather than one of three private readers, and ADR-292
-    // changed what the resolver reads: the settings key is gone, so the INPUT is
-    // now `PROJECT_ROOT`, where the package-owned form record lives. The
-    // projector and the hook still share one reader, which is what risk 2 of
-    // that roadmap's register ("making the hook agree with the projector could
-    // also move the projector") is discharged by.
+    // the ONE shared resolver; ADR-292 changed what it reads — the settings key
+    // is gone, so the input is `PROJECT_ROOT`, where the form record lives.
+    // Projector and hook still share one reader, which is how risk 2 of that
+    // roadmap's register is discharged by construction.
     return resolveLeanProjection({ packageRoot: MODULE_STATE.PROJECT_ROOT });
 }
 
@@ -942,10 +940,9 @@ export { _HRR_BANNER_MARKER };
 // ── Consumer-scoped rule projection (road-to-request-scoped-rule-load P1) ──
 //
 // Scope came from `projection.rule_workspaces` until ADR-292 step 4.6 removed
-// the key; the CONSUMER scope is derived from the pack vocabulary now
-// (`consumerRuleWorkspaces`), and the MAINTAINER projection below is
-// unscoped by construction. A non-kernel rule projects into a scoped tree
-// only if its `workspaces:` frontmatter intersects that set.
+// the key; `consumerRuleWorkspaces` derives the CONSUMER scope now and the
+// MAINTAINER projection below is unscoped by construction. A non-kernel rule
+// projects into a scoped tree only if its `workspaces:` frontmatter intersects.
 // Kernel rules (`type: always` / `alwaysApply: true`) ALWAYS project —
 // the kernel is unconditional and workspace-independent by definition
 // (rule-router contract § Schema v2). Untagged rules fail safe: they ship.
@@ -960,17 +957,12 @@ function _read_projection_raw(key: string): unknown {
 }
 
 /**
- * The MAINTAINER projection is never workspace-scoped, and since ADR-292 step
- * 4.6 that is a constant rather than a settings read.
- *
- * `projection.rule_workspaces` is gone. Its replacement derives the CONSUMER
- * workspace set from the pack vocabulary — every id minus
- * `agent-config-maintainer` — and this is the one tree where that subtraction
- * would be wrong: the repository's own `.claude/rules` must carry the
- * maintainer-only rules, which is exactly what a derived consumer scope drops.
- * So the maintainer projection stays on the inactive axis: every rule projects,
- * which is what an absent key always meant here and what this repository's own
- * (keyless) settings already resolved to.
+ * The MAINTAINER projection is never workspace-scoped — a constant since
+ * ADR-292 step 4.6, not a settings read. `consumerRuleWorkspaces` subtracts
+ * `agent-config-maintainer`, and this is the one tree where that subtraction
+ * would be wrong: the repository's own `.claude/rules` must carry exactly the
+ * rules it drops. So this stays the inactive axis, which is what an absent key
+ * always meant here.
  */
 function _read_rule_workspaces(): string[] | null {
     return null;

@@ -4706,29 +4706,20 @@ function _propose_modules_config(project_root: string, is_first_run: boolean): v
 }
 
 /**
- * ADR-292's one-window read of the removed projection keys: an explicitly
- * written `eager-all` / `legacy-all` asked for the full rule layer, so it
- * becomes the receipt pin; any other leftover value is ignored and said so.
- * Machine-global layers only — the pin governs `~/.claude/rules`, which no
- * per-checkout value may decide (the scope `installerThinsHost` already used).
- * The TEMPLATE layer is isolated too, and that is the load-bearing half: the
- * shipped template carried `delivery` and ADR-278 / D3 both record that a
- * template value is not a consumer's consent. Reading it here would print a
- * drop line on every install for a value nobody wrote.
+ * ADR-292's one-window read of the removed projection keys — rules in
+ * `_lib/projection_key_migration.ts`. MACHINE-global layers only, with the
+ * TEMPLATE isolated (ADR-278 / D3: a template value is not consent, and the
+ * shipped template carried `delivery`), and a layer nothing can read states no
+ * preference. `_ABSENT_LAYER` is [project, template]; no tree contains either.
  */
+const _ABSENT_LAYER: readonly [string, string] = ['project-settings', 'template'].map((n) => path.join(path.sep, 'dev', 'null', `agent-config-absent-${n}.yml`)) as unknown as readonly [string, string];
 function _legacy_projection_pin(): boolean {
     let data: Record<string, unknown> | null = null;
     try {
-        data = load_agent_settings({ project_path: _NO_PROJECT_SETTINGS, template_path: _NO_TEMPLATE_LAYER });
-    } catch {
-        /* a layer nothing can read states no preference */
-    }
+        data = load_agent_settings({ project_path: _ABSENT_LAYER[0], template_path: _ABSENT_LAYER[1] });
+    } catch { /* empty */ }
     return legacyProjectionPin(data, (line) => warn(line));
 }
-
-/** Paths no tree contains, so the PROJECT and TEMPLATE layers contribute nothing. */
-const _NO_PROJECT_SETTINGS = path.join(path.sep, 'dev', 'null', 'agent-config-absent-project-settings.yml');
-const _NO_TEMPLATE_LAYER = path.join(path.sep, 'dev', 'null', 'agent-config-absent-template.yml');
 
 function _read_consumer_auto_switch(project_root: string): string {
     let data: Record<string, unknown>;
