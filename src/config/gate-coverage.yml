@@ -3388,3 +3388,26 @@ gates:
       alternation, and a keyword-assignment shape (a table keyword beside the
       `[:=]` operator class on one line); a shape assembled across lines is not
       seen.
+
+  - id: check_egress_mutations
+    argv: []
+    min_scanned: 3
+    corpus: "every mutation recipe under `src/config/egress-mutations/` — 3 on 2026-10-20 (class precedence, a credential token that restores, a raw value in the count record). The floor is the three; the IBAN-checksum recipe joins when road-to-one-detector-and-the-senders-we-own 2.3 lands identifier rows."
+    status: enforced
+    ci_invocation: .github/workflows/rule-backstops.yml
+    canary:
+      class: contract-violation
+      path: src/config/egress-mutations/zz-canary-survivor.json
+      content: |
+        {
+            "mutation": "canary-survivor",
+            "module": "src/scripts/_lib/egress_token.ts",
+            "find": "export const MAX_TOKEN_VARIANT = 99;",
+            "replace": "export const MAX_TOKEN_VARIANT = 99;",
+            "killed_by": "credential-token-never-restores"
+        }
+    note: >-
+      road-to-one-detector-and-the-senders-we-own 2.6. Each recipe is applied to
+      a scratch copy of the three engine modules, never in place; the invariant
+      it names must hold on the unmutated copy and fail on the mutated one. The
+      canary plants a recipe that changes nothing, which survives.

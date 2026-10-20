@@ -826,6 +826,11 @@ tasks:
     desc: "Fail when a raw-key prefix is spelled outside the one rule table (src/scripts/_lib/egress_rules.ts) under src/scripts or src/cli — a second spelling is how the private copies drifted apart (road-to-one-detector-and-the-senders-we-own 2.2)"
     cmd: ./scripts-run src/scripts/check_credential_spelling
 
+  check-egress-mutations:
+    silent: true
+    desc: "Fail when a listed mutation of the egress engine (class precedence, a credential token that restores, a raw value in the count record) survives its invariant — each recipe runs on a scratch copy (road-to-one-detector-and-the-senders-we-own 2.6)"
+    cmd: ./scripts-run src/scripts/check_egress_mutations
+
   check-secret-leak-pack:
     silent: true
     desc: "Fail on a high-confidence secret in what actually SHIPS — the npm pack payload, including shipped-but-gitignored paths (dist/cli/**) that every git-backed mode of the sibling gate cannot reach by construction. An additive mode nothing calls is indistinguishable from no mode at all, which is why this task exists rather than only the flag (road-to-publish-boundary-evidence Phase 2)"

@@ -116,6 +116,7 @@ tasks:
       - task: check-no-conflict-markers
       - task: check-secret-leak
       - task: check-credential-spelling
+      - task: check-egress-mutations
       - task: check-claims
       - task: check-adr-frontmatter
       - task: check-adr-citations
