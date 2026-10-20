@@ -7,7 +7,7 @@
  * case-insensitive, never a regex — NG-6):
  *   - the brand-voice slot's `avoid`        → `warning` (flags, never blocks)
  *   - a ghostwriter profile's `taboos`      → `error`   (the draft aborts, as documented)
- *   - the user file's `style.avoid`         — not wired until its schema carries it (5.5)
+ *   - the user file's `style.avoid`         → `warning` (5.5; absent means none)
  *
  * Plus the static claim-phrase registry (`_lib/claim_phrases.ts`): a phrase hit
  * whose sentence carries no live slot `claims[]` text is an `unbacked-claim`
@@ -29,6 +29,7 @@
  * Usage:
  *   ./scripts-run src/scripts/check_voice_lexicon --draft <file | ->
  *     [--slot agents/context-spine/brand-voice.md] [--ghostwriter <profile.md>]
+ *     [--user .agent-user.md]
  *     [--json] [--now YYYY-MM-DD]
  */
 import * as fs from 'node:fs';
@@ -37,6 +38,9 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
+
+import { userStyleAvoidSchema } from '../shared/userMd/schema.js';
+import { parseLegacyUserMd, parseUserIdentity } from '../shared/userMd/utils.js';
 
 import { ALL_TELL_RULES } from './ai_tells_rules.js';
 import { analyzeText, MAX_SCAN_CHARS, type RuleHit } from './detect_ai_tells.js';
@@ -299,10 +303,43 @@ export function lexiconFromGhostwriter(profileText: string): LexiconTerm[] {
         .map((t) => ({ term: t.trim(), match: 'word' as const, source: 'ghostwriter' as const }));
 }
 
+/** The raw `style.avoid` of a user file — fenced `.agent-user.md` or bare `.agent-user.yml`. */
+function rawUserAvoid(profileText: string): unknown {
+    let data: Record<string, unknown>;
+    try {
+        data = /^---\r?\n/.test(profileText) ? parseLegacyUserMd(profileText) : parseUserIdentity(profileText);
+    } catch {
+        return undefined;
+    }
+    const style = data['style'];
+    return typeof style === 'object' && style !== null ? (style as Record<string, unknown>)['avoid'] : undefined;
+}
+
+/** Schema issues in the user file's `style.avoid`; empty when it is valid or absent. */
+export function validateUserAvoid(profileText: string): string[] {
+    const raw = rawUserAvoid(profileText);
+    if (raw === undefined) return [];
+    const parsed = userStyleAvoidSchema.safeParse(raw);
+    return parsed.success ? [] : parsed.error.issues.map((i) => `style.avoid${i.path.map((p) => `[${String(p)}]`).join('')}: ${i.message}`);
+}
+
+/** The user file's `style.avoid` as user terms. An absent or invalid list loads none. */
+export function lexiconFromUserProfile(profileText: string): LexiconTerm[] {
+    const parsed = userStyleAvoidSchema.safeParse(rawUserAvoid(profileText) ?? []);
+    if (!parsed.success) return [];
+    return parsed.data.map((a) => ({
+        term: a.pattern,
+        match: a.match,
+        source: 'user' as const,
+        ...(a.note !== undefined ? { note: a.note } : {}),
+    }));
+}
+
 interface Args {
     draft: string;
     slot: string | null;
     ghostwriter: string | null;
+    user: string | null;
     json: boolean;
     now: Date;
 }
@@ -311,6 +348,7 @@ function parseArgs(argv: readonly string[]): Args | string {
     let draft: string | null = null;
     let slot: string | null = null;
     let ghostwriter: string | null = null;
+    let user: string | null = null;
     let json = false;
     let now = new Date();
     for (let i = 0; i < argv.length; i += 1) {
@@ -320,14 +358,15 @@ function parseArgs(argv: readonly string[]): Args | string {
         else if (a === '--draft') draft = value();
         else if (a === '--slot') slot = value();
         else if (a === '--ghostwriter') ghostwriter = value();
+        else if (a === '--user') user = value();
         else if (a === '--now') {
             const v = value();
             if (v === null || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return '--now takes a YYYY-MM-DD day';
             now = new Date(`${v}T12:00:00Z`);
         } else return `unknown argument: ${a}`;
     }
-    if (draft === null) return 'usage: check_voice_lexicon --draft <file> [--slot <file>] [--ghostwriter <file>] [--json] [--now YYYY-MM-DD]';
-    return { draft, slot, ghostwriter, json, now };
+    if (draft === null) return 'usage: check_voice_lexicon --draft <file> [--slot <file>] [--ghostwriter <file>] [--user <file>] [--json] [--now YYYY-MM-DD]';
+    return { draft, slot, ghostwriter, user, json, now };
 }
 
 /**
@@ -431,6 +470,21 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         }
         terms.push(...lexiconFromGhostwriter(profile));
         sources.push(args.ghostwriter);
+    }
+    if (args.user !== null) {
+        const userText = readOrNull(args.user);
+        if (userText === null) {
+            process.stderr.write(`user file not readable: ${args.user}\n`);
+            return 2;
+        }
+        const issues = validateUserAvoid(userText);
+        if (issues.length > 0) {
+            process.stderr.write(`invalid user file ${args.user}:\n`);
+            for (const i of issues) process.stderr.write(`  - ${i}\n`);
+            return 2;
+        }
+        terms.push(...lexiconFromUserProfile(userText));
+        sources.push(args.user);
     }
     let lexicon: { status: 'scanned'; terms: number } | { status: 'skipped'; reason: string };
     try {
