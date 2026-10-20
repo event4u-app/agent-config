@@ -3,7 +3,9 @@ adr: 292
 status: accepted
 date: 2026-10-20
 decision: the-package-decides-its-own-rule-layer-form
-supersedes: ADR-267 (decision 3 only — the rollback is one setting) · ADR-278
+supersedes: ADR-267, ADR-278
+supersedes_scope: >-
+  ADR-267 decision 3 only — the rollback is one setting. ADR-278 in full.
 superseded_by: —
 phase: road-to-a-setup-that-decides-itself · Phase 4
 type: structural
