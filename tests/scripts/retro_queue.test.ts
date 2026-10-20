@@ -436,6 +436,16 @@ describe('retro_queue — path C, the daily sweep', () => {
         expect(s!.facts).toBeNull();
     });
 
+    it('the session-end hook prunes stale pointers and markers once a day, so the stores stay bounded without a sweep', () => {
+        const { main, wt } = repoWithWorktree();
+        writeSessionPointer(main, { eol_key: 'e'.repeat(64), tag: 'ancient', branch: null, workspace: main, ended_at: '2026-09-01T10:00:00Z' }, { enabled: true });
+        writeMergeMarker(main, { pr: 77, branch: 'b77' }, '2026-08-01T10:00:00Z', { enabled: true });
+        writeMergeMarker(main, { pr: 78, branch: 'b78' }, '2026-10-19T10:00:00Z', { enabled: true });
+        expect(writeRetroPointer(wt, 'f'.repeat(64), 'sid-2', NOW)).toBe(true);
+        expect(listSessionPointers(main).map((p) => p.tag)).toEqual([derive_session_tag('sid-2')]);
+        expect(listMarkers(main).map((mk) => mk.pr)).toEqual([78]);
+    });
+
     it('an expired deferral drops the session pointer with it', () => {
         const { main } = repoWithWorktree();
         writeSessionPointer(main, { eol_key: 'c'.repeat(64), tag: 'slow', branch: null, workspace: main, ended_at: '2026-10-20T10:00:00Z' }, { enabled: true });

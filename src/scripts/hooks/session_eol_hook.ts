@@ -78,7 +78,8 @@ import {
 import { publishContinuityRecord } from '../_lib/continuity_slot.js';
 import { current_branch } from '../_lib/git_common_dir.js';
 import { derive_session_tag } from '../_lib/session_tag.js';
-import { writeSessionPointer } from '../retro_queue.js';
+import { localDay, pruneStaleMarkers, pruneStalePointers, writeSessionPointer } from '../retro_queue.js';
+import { probeRanToday, stampProbeRun } from './probe_throttle.js';
 import { read_claimed_slug } from '../session_register_hook.js';
 import { unwrap, type JsonObject, type JsonValue } from './envelope.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -461,17 +462,29 @@ export function writeRetroPointer(
     const sessionId = String(rawSessionId ?? '').trim();
     if (sessionId === '') return false;
     try {
-        return writeSessionPointer(workspaceRoot, {
+        const written = writeSessionPointer(workspaceRoot, {
             eol_key: eolKey,
             tag: derive_session_tag(sessionId),
             branch: current_branch(workspaceRoot),
             workspace: workspaceRoot,
             ended_at: now,
         });
+        // Once a day, drop pointers and markers nothing can still use, so the
+        // stores stay bounded even while no sweep runs.
+        if (written && !probeRanToday(workspaceRoot, RETRO_PRUNE_STAMP)) {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            pruneStalePointers(workspaceRoot, localDay(now, tz), tz);
+            pruneStaleMarkers(workspaceRoot, Date.parse(now));
+            stampProbeRun(workspaceRoot, RETRO_PRUNE_STAMP);
+        }
+        return written;
     } catch {
         return false;
     }
 }
+
+/** The `probe_throttle` stamp for the once-a-day retro store prune. */
+const RETRO_PRUNE_STAMP = 'retro-prune';
 
 function writeContinuityRecord(
     workspaceRoot: string,

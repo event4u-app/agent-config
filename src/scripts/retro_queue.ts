@@ -348,6 +348,23 @@ export function listMarkers(workspaceRoot: string): MergeMarker[] {
     );
 }
 
+/** A marker no sweep resolved within this many days is dropped; the PR is long settled. */
+export const MARKER_MAX_AGE_DAYS = 30;
+
+/** Drop markers older than {@link MARKER_MAX_AGE_DAYS}, so unresolved markers cannot pile up. */
+export function pruneStaleMarkers(workspaceRoot: string, nowMs: number): number {
+    const dir = commonSub(workspaceRoot, 'retro-markers');
+    if (dir === null) return 0;
+    let n = 0;
+    for (const m of listMarkers(workspaceRoot)) {
+        const at = Date.parse(m.written_at);
+        if (!Number.isFinite(at) || nowMs - at <= MARKER_MAX_AGE_DAYS * 86_400_000) continue;
+        fs.rmSync(path.join(dir, `pr-${m.pr}.json`), { force: true });
+        n += 1;
+    }
+    return n;
+}
+
 /**
  * The PR a branch was pushed for: an open marker, or the queue entry a resolved
  * marker became. `null` when no push of that branch was recorded.
