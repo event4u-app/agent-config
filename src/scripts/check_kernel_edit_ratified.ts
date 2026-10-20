@@ -36,7 +36,9 @@
  * kernel-rule list `_lib/kernel_rules.ts`, a `*-dispatcher.sh`, the token,
  * latency and bundle budget files (see `PLUMBING_SOURCE_RE`), and every module
  * the dispatcher imports that decides an exit code (derived at run time, see
- * `derivedPlumbing`) — or this gate itself, so it cannot
+ * `derivedPlumbing`) — a rule of the high-consequence class beyond the kernel
+ * (the members of `rule-consequence-class.json`, see `CONSEQUENCE_CLASS_PATH`)
+ * — or this gate itself, so it cannot
  * be weakened without its own record. Such a diff must carry a ratification
  * artifact under the ratifications directory with `verdict: ratified`, valid
  * per the ratification-artifact contract.
@@ -101,6 +103,7 @@ import {
     type RatificationProblem,
 } from './_lib/ratification_artifact.js';
 import {
+    ConsequenceClassUnreadable,
     DEFAULT_REVISION,
     GatedSubjectRefusal,
     changedFilesBetween,
@@ -155,6 +158,26 @@ export const MECHANISM_IMPORT_PATHS: readonly string[] = [
 
 /** The in-repo quorum policy. Present on every runner; absent means refuse. */
 export const POLICY_PATH = 'src/config/ratification-policy.json';
+
+/**
+ * The high-consequence rule class: every rule whose violation would leave the
+ * repository irreversibly, cross a security boundary or bypass an authority
+ * (the criterion is stated in `rule.schema.json#/properties/consequence_class`).
+ * Its members beyond the nine kernel rules are gated like kernel rules.
+ *
+ * The list is on the watch list so that a change cannot drop a member in order
+ * to edit the rule it names, nor add one without a record. The schema that
+ * states the criterion is deliberately NOT: this gate never reads it, so a
+ * schema edit changes no membership until the list changes, and the list is
+ * what is gated. Watching the schema would price every unrelated schema edit
+ * as a governance event while gating nothing the list does not already gate.
+ *
+ * Membership is read FROM GIT OBJECTS at both the base and the head commit and
+ * the union is gated (see `gateInputsFor`), so dropping a member is caught by
+ * the base side and adding one by the head side, and the digest covers both.
+ * It FAILS CLOSED: a list that cannot be read at either commit is a refusal.
+ */
+export const CONSEQUENCE_CLASS_PATH = 'src/config/rule-consequence-class.json';
 
 /**
  * The workflow that invokes this gate.
@@ -342,7 +365,86 @@ export interface GatedPaths {
     governanceHooks: string[];
     /** Hook-plumbing sources — manifest, host lowering, dispatchers, budgets. */
     plumbing: string[];
+    /**
+     * Rules of the high-consequence class that are NOT among the nine kernel
+     * rules, in the source tree or in any projection — the kernel reach.
+     */
+    consequenceRules: string[];
     self: boolean;
+}
+
+/** A rule slug as a rule filename spells it, and nothing else. */
+const RULE_SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/**
+ * The high-consequence rule slugs a list states, validated against the tree
+ * it was read from.
+ *
+ * `read` answers a repo-relative path with that tree's text or `null`; `where`
+ * names the tree in a refusal. Every way the list fails to be a list THROWS
+ * {@link ConsequenceClassUnreadable} — absent, unparseable, `members` not a
+ * plain object, a key that is not a rule slug (which also rules out
+ * `__proto__`), an entry without a string `clause`, or a member with no
+ * `src/rules/<slug>.md` in the same tree. An empty `members` is legal: it is
+ * a statement the list makes, reachable only by an edit of the gated list.
+ */
+export function consequenceRuleSlugsIn(
+    read: (rel: string) => string | null,
+    where: string,
+): ReadonlySet<string> {
+    const refuse = (detail: string): never => {
+        throw new ConsequenceClassUnreadable(CONSEQUENCE_CLASS_PATH, where, detail);
+    };
+    const raw = read(CONSEQUENCE_CLASS_PATH);
+    if (raw === null) {
+        refuse('the file is absent');
+    }
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(raw as string);
+    } catch (err) {
+        refuse(`not JSON: ${(err as Error).message}`);
+    }
+    if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        refuse('the top level is not an object');
+    }
+    const members = (parsed as { members?: unknown }).members;
+    if (members === null || typeof members !== 'object' || Array.isArray(members)) {
+        refuse('`members` is not an object');
+    }
+    const slugs = new Set<string>();
+    for (const [slug, entry] of Object.entries(members as Record<string, unknown>)) {
+        if (!RULE_SLUG_RE.test(slug)) {
+            refuse(`member \`${slug}\` is not a rule slug`);
+        }
+        if (
+            entry === null ||
+            typeof entry !== 'object' ||
+            typeof (entry as { clause?: unknown }).clause !== 'string'
+        ) {
+            refuse(`member \`${slug}\` carries no string \`clause\``);
+        }
+        if (read(`src/rules/${slug}.md`) === null) {
+            refuse(`member \`${slug}\` names no rule file \`src/rules/${slug}.md\``);
+        }
+        slugs.add(slug);
+    }
+    return slugs;
+}
+
+/**
+ * The class as this checkout's working tree states it. The default for a
+ * caller that classifies without naming commits; read on every call and never
+ * cached, so a list changed during a run is never answered from a stale copy.
+ */
+export function consequenceRuleSlugsOfCheckout(root: string = REPO): ReadonlySet<string> {
+    return consequenceRuleSlugsIn((rel) => {
+        try {
+            return fs.readFileSync(path.join(root, rel), 'utf8');
+        } catch {
+            return null;
+        }
+    }, `the checkout \`${root}\``);
 }
 
 /**
@@ -356,6 +458,7 @@ export function isMechanismPath(p: string): boolean {
         p === CLOSURE_READER_PATH ||
         p === POLICY_PATH ||
         p === WORKFLOW_PATH ||
+        p === CONSEQUENCE_CLASS_PATH ||
         ANCHOR_PATHS.includes(p) ||
         MECHANISM_IMPORT_PATHS.includes(p)
     );
@@ -365,11 +468,13 @@ export function isMechanismPath(p: string): boolean {
 export function classifyPaths(
     files: readonly string[],
     derived: readonly string[] = derivedPlumbing(),
+    consequence: ReadonlySet<string> = consequenceRuleSlugsOfCheckout(),
 ): GatedPaths {
     const derivedSet = new Set(derived);
     const kernelRules: string[] = [];
     const governanceHooks: string[] = [];
     const plumbing: string[] = [];
+    const consequenceRules: string[] = [];
     let self = false;
     for (const raw of files) {
         const p = raw.replace(/\\/g, '/').trim();
@@ -385,6 +490,10 @@ export function classifyPaths(
             kernelRules.push(p);
             continue;
         }
+        if (m !== null && consequence.has(m[1] ?? '')) {
+            consequenceRules.push(p);
+            continue;
+        }
         if (GOVERNANCE_HOOK_RE.test(p)) {
             governanceHooks.push(p);
             continue;
@@ -393,13 +502,14 @@ export function classifyPaths(
             plumbing.push(p);
         }
     }
-    return { kernelRules, governanceHooks, plumbing, self };
+    return { kernelRules, governanceHooks, plumbing, consequenceRules, self };
 }
 
 /** True when anything in the diff requires a ratification artifact. */
 export function requiresRatification(gated: GatedPaths): boolean {
     return (
         gated.kernelRules.length > 0 ||
+        gated.consequenceRules.length > 0 ||
         gated.governanceHooks.length > 0 ||
         gated.plumbing.length > 0 ||
         gated.self
@@ -463,20 +573,40 @@ function resolveBaseRef(explicit: string | null, root: string): string {
  *
  * `headCommit` is already a commit id; the base ref is resolved here.
  *
- * THROWS a {@link GatedSubjectRefusal} when the base does not resolve or the
- * object store cannot be read.
+ * THE HIGH-CONSEQUENCE CLASS IS READ FROM THE SAME TWO COMMITS, and its union
+ * is gated. The base side alone would miss a member the change ADDS while
+ * editing that rule — the head's list names it, the base's does not, and its
+ * bytes would sit outside the digest the record carries. The head side alone
+ * would let a change drop a member in order to edit it. In the residue case the
+ * base side is this checkout's working-tree list, as the plumbing base is.
+ *
+ * THROWS a {@link GatedSubjectRefusal} when the base does not resolve, the
+ * object store cannot be read, or the class list cannot be read on either side.
  */
-function derivedFor(root: string, baseRef: string | null, headCommit: string): readonly string[] {
+function gateInputsFor(
+    root: string,
+    baseRef: string | null,
+    headCommit: string,
+): { derived: readonly string[]; consequence: ReadonlySet<string> } {
     const verdictsOf = (tree: ClosureTree): string[] =>
         dispatchImportClosure(tree)
             .filter((e) => e.class === 'verdict')
             .map((e) => e.path);
     const head = treeAtRevision(root, headCommit);
+    const headClass = consequenceRuleSlugsIn((rel) => head.read(rel), `commit ${headCommit}`);
     if (baseRef === null && path.resolve(root) !== REPO) {
-        return [...new Set([...derivedPlumbing(), ...verdictsOf(head), ...closureArrivals(head)])];
+        return {
+            derived: [...new Set([...derivedPlumbing(), ...verdictsOf(head), ...closureArrivals(head)])],
+            consequence: new Set([...consequenceRuleSlugsOfCheckout(), ...headClass]),
+        };
     }
-    const base = treeAtRevision(root, resolveRevision(root, resolveBaseRef(baseRef, root)));
-    return [...new Set([...verdictsOf(base), ...verdictsOf(head), ...closureArrivals(head, base)])];
+    const baseCommit = resolveRevision(root, resolveBaseRef(baseRef, root));
+    const base = treeAtRevision(root, baseCommit);
+    const baseClass = consequenceRuleSlugsIn((rel) => base.read(rel), `commit ${baseCommit}`);
+    return {
+        derived: [...new Set([...verdictsOf(base), ...verdictsOf(head), ...closureArrivals(head, base)])],
+        consequence: new Set([...baseClass, ...headClass]),
+    };
 }
 
 /**
@@ -510,7 +640,8 @@ export function expectedSubjectFor(
     baseRef: string | null = null,
 ): SubjectReading {
     const commit = resolveRevision(root, revision);
-    return subjectOf(root, files, derivedFor(root, baseRef, commit), commit);
+    const { derived, consequence } = gateInputsFor(root, baseRef, commit);
+    return subjectOf(root, files, derived, commit, consequence);
 }
 
 export interface GateResult {
@@ -540,25 +671,30 @@ export function evaluate(
     // are handed to the digest below, so the classification and the digest
     // read one head commit and one base.
     let derived: readonly string[];
+    let consequence: ReadonlySet<string>;
     let headCommit: string;
     try {
         headCommit = resolveRevision(root, revision);
-        derived = derivedFor(root, baseRef, headCommit);
+        ({ derived, consequence } = gateInputsFor(root, baseRef, headCommit));
     } catch (err) {
         if (!(err instanceof GatedSubjectRefusal)) {
             throw err;
         }
         lines.push(`❌  ${err.message}`);
         for (const target of ledger.unaccountedTargets()) {
-            ledger.fail(target, 'the dispatcher closure could not be read at the named commits');
+            ledger.fail(
+                target,
+                'the dispatcher closure or the high-consequence class could not be read at the named commits',
+            );
         }
         const tally = ledger.finalize();
         lines.push('', `ledger: planned ${tally.planned} · completed 0 · failed ${tally.failed} · out_of_scope 0`);
         return { exitCode: 1, lines, scanned };
     }
-    const gated = classifyPaths(files, derived);
+    const gated = classifyPaths(files, derived, consequence);
     const gatedSet = new Set<string>([
         ...gated.kernelRules,
+        ...gated.consequenceRules,
         ...gated.governanceHooks,
         ...gated.plumbing,
         ...files.map((f) => f.replace(/\\/g, '/').trim()).filter(isMechanismPath),
@@ -607,7 +743,13 @@ export function evaluate(
     let expectedSubject: string;
     let commit: string | null;
     try {
-        ({ digest: expectedSubject, revision: commit } = subjectOf(root, files, derived, headCommit));
+        ({ digest: expectedSubject, revision: commit } = subjectOf(
+            root,
+            files,
+            derived,
+            headCommit,
+            consequence,
+        ));
     } catch (err) {
         // ONE boundary for EVERY failure of the subject computation: each is
         // a subclass of `GatedSubjectRefusal`, so a gate that advertises a
@@ -632,8 +774,8 @@ export function evaluate(
 
     if (!requiresRatification(gated)) {
         lines.push(
-            '✅  no kernel rule, governance hook, hook-plumbing source or self edit in the ' +
-                'diff — nothing to ratify',
+            '✅  no kernel rule, high-consequence rule, governance hook, hook-plumbing source ' +
+                'or self edit in the diff — nothing to ratify',
         );
         close(true);
         return { exitCode: 0, lines, scanned };
@@ -641,9 +783,15 @@ export function evaluate(
 
     const touched = [
         ...gated.kernelRules.map((p) => `kernel rule ${p}`),
+        ...gated.consequenceRules.map((p) => `high-consequence rule ${p}`),
         ...gated.governanceHooks.map((p) => `governance hook ${p}`),
         ...gated.plumbing.map((p) => `hook-plumbing source ${p}`),
-        ...(gated.self ? ['the ratification mechanism itself (gate, its imports, policy or workflow)'] : []),
+        ...(gated.self
+            ? [
+                  'the ratification mechanism itself (gate, its imports, policy, workflow or ' +
+                      'the high-consequence rule list)',
+              ]
+            : []),
     ];
     lines.push(`Gated surfaces in this diff (${touched.length}):`);
     for (const t of touched) {
