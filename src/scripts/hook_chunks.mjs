@@ -25,6 +25,7 @@ import { buildSync } from 'esbuild';
 export const HOOK_CHUNKS = Object.freeze([
     Object.freeze({ entry: 'src/scripts/_lib/svg_rules.ts', outfile: 'dist/hooks/svg_rules.chunk.cjs' }),
     Object.freeze({ entry: 'src/scripts/_lib/egress_engine.ts', outfile: 'dist/hooks/egress_engine.chunk.cjs' }),
+    Object.freeze({ entry: 'src/scripts/_lib/tool_output_spool.ts', outfile: 'dist/hooks/tool_output_spool.chunk.cjs' }),
 ]);
 
 /** The esbuild options every chunk is built with. */

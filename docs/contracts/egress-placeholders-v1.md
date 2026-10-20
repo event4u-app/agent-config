@@ -276,6 +276,20 @@ raw-key prefix list (`ai_council/config.ts`) reads `_lib/egress_prefixes.ts`, a
 generated projection of the table that a test and `check_credential_spelling`
 both hold equal to it.
 
+**The stage is also the only writer of the tool-result store**
+(`_lib/tool_output_spool.ts`, `road-to-tool-results-that-leave-a-handle`
+Phase 2). After its views exist it hands the dispatch to the engine's
+`spoolResult`, which stores a result only from `protect` upward, only for a
+class in `_lib/tool_output_selection.ts` (empty until that roadmap's D14), only
+when the placeholder view of the result equals the bytes the model receives,
+and never when the result carries a credential detection or a refusal; in
+`observe` it records class, length and digest and stores no body. The store is
+a third conditional chunk, `tool_output_spool.chunk.cjs`, loaded by the engine
+only when a class is selected; a handle names the digest, an expiry and a MAC,
+so an expired handle answers `expired` after its entry is gone, and
+`report_reducible_classes --read-handle <handle> [--range start:end]` returns
+the stored bytes or the state that stops them.
+
 **A concern reply cannot rewrite.** The dispatcher reads a fixed set of keys
 from a concern reply (`decision`, `reason`, `additional_context`, `context` and
 the permission verdict) and builds the host emission from those alone, so a

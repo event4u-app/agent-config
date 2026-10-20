@@ -17,6 +17,7 @@
  *   report_reducible_classes --profile content    # PREREG classes over the D11 window
  *   report_reducible_classes --json
  *   report_reducible_classes --threshold 8192 --project-prefix <slug> --census <path>
+ *   report_reducible_classes --read-handle <handle> [--range start:end]   # step 2.4
  * ```
  *
  * Machine-local by construction: it reads this machine's Claude Code
@@ -28,6 +29,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { DEFAULT_PROJECTS_ROOT, projectStoreSlug, scanToolResultRecords, scanToolResults, type ToolResultRecord } from './_lib/cc_transcript.js';
 import { classifyResult, CONTENT_CLASSES } from './_lib/content_class.js';
+import { readHandle } from './_lib/tool_output_spool.js';
 import { readCensusLine } from './_lib/tool_result_census.js';
 
 export { classifyResult, CONTENT_CLASSES, type ContentClass, pipelineStages } from './_lib/content_class.js';
@@ -301,7 +303,30 @@ function mainContent(argv: readonly string[], threshold: number, prefix: string,
     return 0;
 }
 
+/**
+ * Step 2.4: the stored bytes behind a handle, whole or a `start:end` byte range,
+ * written raw to stdout. Any other state exits 1 and names itself on stderr.
+ */
+function mainReadHandle(argv: readonly string[], handle: string, now: Date): number {
+    const spec = flag(argv, '--range');
+    const m = spec === null ? null : /^(\d+):(\d+)$/.exec(spec);
+    if (spec !== null && m === null) {
+        process.stderr.write(`--range wants start:end in bytes, got ${spec}\n`);
+        return 2;
+    }
+    const range = m === null ? undefined : ([Number(m[1]), Number(m[2])] as const);
+    const read = readHandle(flag(argv, '--workspace') ?? REPO, handle, range, now.getTime());
+    if (read.state !== 'ok' || read.bytes === undefined) {
+        process.stderr.write(`handle: ${read.state}\n`);
+        return 1;
+    }
+    process.stdout.write(read.bytes);
+    return 0;
+}
+
 export function main(argv: readonly string[] = process.argv.slice(2), now: Date = new Date()): number {
+    const handle = flag(argv, '--read-handle');
+    if (handle !== null) return mainReadHandle(argv, handle, now);
     const threshold = Number(flag(argv, '--threshold') ?? D1_THRESHOLD_BYTES);
     const prefix = flag(argv, '--project-prefix') ?? projectStoreSlug(REPO);
     const profile = flag(argv, '--profile') ?? 'execution';

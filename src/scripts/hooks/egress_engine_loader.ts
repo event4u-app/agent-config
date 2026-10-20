@@ -98,7 +98,7 @@ export function loadEgressEngineUncached(selfUrl: string = import.meta.url, bund
             return { ok: false, reason: 'invalid' };
         }
         if (mod['ENGINE_SCHEMA'] !== EXPECTED_ENGINE_SCHEMA) return { ok: false, reason: 'schema' };
-        for (const name of ['detect', 'replaceValues', 'scanText', 'TokenScope', 'EgressRefusedError']) {
+        for (const name of ['detect', 'replaceValues', 'scanText', 'spoolResult', 'TokenScope', 'EgressRefusedError']) {
             if (typeof mod[name] !== 'function') return { ok: false, reason: 'invalid' };
         }
         if (!Array.isArray(mod['EGRESS_RULES'])) return { ok: false, reason: 'invalid' };

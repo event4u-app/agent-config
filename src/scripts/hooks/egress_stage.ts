@@ -373,6 +373,7 @@ export function runEgressStage(
     const counted = countEnvelope(envelope, engine);
     const placeholder = mode === "observe" ? undefined : buildPlaceholderEnvelope(envelope, engine);
     result = { mode, placeholder, ...counted };
+    engine.spoolResult(envelope, result, presentKeys(payload, "result"), workspaceRoot);
   } catch (exc) {
     const rule = exc instanceof EngineUnavailableError ? ENGINE_UNAVAILABLE : "stage-error";
     const scanned = FIELDS.filter((f) => presentKeys(payload, f).length > 0);
