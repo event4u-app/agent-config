@@ -20,6 +20,9 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import type * as Rules from './_lib/egress_rules.js';
+import type * as Text from './_lib/egress_text.js';
+import type * as Token from './_lib/egress_token.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
@@ -41,9 +44,9 @@ export interface Recipe {
 }
 
 interface EngineMods {
-    readonly rules: typeof import('./_lib/egress_rules.js');
-    readonly token: typeof import('./_lib/egress_token.js');
-    readonly text: typeof import('./_lib/egress_text.js');
+    readonly rules: typeof Rules;
+    readonly token: typeof Token;
+    readonly text: typeof Text;
 }
 
 // Built at runtime so no credential literal sits in this file.
