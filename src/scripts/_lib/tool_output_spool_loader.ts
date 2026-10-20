@@ -18,9 +18,15 @@ import type * as Spool from './tool_output_spool.js';
 import { SPOOL_SELECTED_CLASSES } from './tool_output_selection.js';
 
 export const SPOOL_CHUNK_BASENAME = 'tool_output_spool.chunk.cjs';
-export const EXPECTED_SPOOL_SCHEMA = 1;
+export const EXPECTED_SPOOL_SCHEMA = 2;
 
 let cached: typeof Spool | null | undefined;
+let attempts = 0;
+
+/** How often this process tried to load the store — zero while no class is selected. */
+export function spoolLoadAttempts(): number {
+    return attempts;
+}
 
 /**
  * The chunk against its `shasum` sidecar, the check `hooks/bundle_integrity.ts`
@@ -43,6 +49,7 @@ function selfPath(): string {
 /** The store module, or null when it is missing, tampered with, or of another schema. Cached per process. */
 export function loadSpool(self: string = selfPath()): typeof Spool | null {
     if (cached !== undefined) return cached;
+    attempts += 1;
     cached = null;
     try {
         const req = createRequire(self);

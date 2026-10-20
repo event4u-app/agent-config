@@ -25,6 +25,7 @@ import {
     type SpoolStageView,
     storeBytes,
 } from '../../src/scripts/_lib/tool_output_spool.js';
+import { spoolLoadAttempts } from '../../src/scripts/_lib/tool_output_spool_loader.js';
 import { loadEgressEngine } from '../../src/scripts/hooks/egress_engine_loader.js';
 import { type EgressMode, runEgressStage } from '../../src/scripts/hooks/egress_stage.js';
 import type { JsonObject } from '../../src/scripts/hooks/payload_stub.js';
@@ -34,6 +35,7 @@ const ALNUM = 'Ab3Cd5Ef7Gh9Jk2Lm4Np6Qr8St1Uv3Wx5Yz7';
 /** A GitHub-PAT-shaped credential, assembled so no credential literal sits in this file. */
 const PLANTED = ['ghp', ALNUM.slice(0, 36)].join('_');
 const READ_TEXT = new Set(['Read:text'] as const);
+const S = 's1';
 
 let tmp: string;
 beforeEach(() => {
@@ -70,19 +72,35 @@ function engineSelecting(): ReturnType<typeof loadEgressEngine> {
 }
 
 describe('spool-write-is-content-addressed', () => {
-    it('spool-write-is-content-addressed: equal outputs share one file named by their sha256', () => {
+    it('spool-write-is-content-addressed: equal outputs in one session share one entry, under a keyed address', () => {
         const body = 'line one\nline two\n'.repeat(400);
         const r1 = runEgressStage(readEnvelope(body), fixed('protect'), engineSelecting);
-        const r2 = runEgressStage(readEnvelope(body, 's2'), fixed('protect'), engineSelecting);
+        const r2 = runEgressStage(readEnvelope(body), fixed('protect'), engineSelecting);
         expect(r1.mode).toBe('protect');
         expect(r2.mode).toBe('protect');
         const files = spoolFiles();
         expect(files).toHaveLength(1);
         const stored = fs.readFileSync(path.join(tmp, SPOOL_DIR, files[0] as string));
-        expect(createHash('sha256').update(stored).digest('hex')).toBe(files[0]);
+        // The name is not the content digest: a file name says nothing about what it holds.
+        expect(createHash('sha256').update(stored).digest('hex')).not.toBe(files[0]);
         expect(JSON.parse(stored.toString('utf8'))).toEqual({ type: 'text', file: { content: body } });
         runEgressStage(readEnvelope(`${body}changed`), fixed('protect'), engineSelecting);
         expect(spoolFiles()).toHaveLength(2);
+    });
+
+    it('equal outputs in two sessions are two entries, so equality does not link sessions', () => {
+        const body = 'shared secret-free content\n'.repeat(100);
+        runEgressStage(readEnvelope(body, 's1'), fixed('protect'), engineSelecting);
+        runEgressStage(readEnvelope(body, 's2'), fixed('protect'), engineSelecting);
+        expect(spoolFiles()).toHaveLength(2);
+    });
+
+    it('a result with no session id is not stored, because its handle would bind to nobody', () => {
+        const env = readEnvelope('no session here');
+        delete (env['payload'] as JsonObject)['session_id'];
+        const view: SpoolStageView = { mode: 'protect', placeholder: env, counts: [], refused: [] };
+        expect(spoolResult(env, view, ['tool_response'], tmp, READ_TEXT)).toEqual({ action: 'skip', reason: 'no-session' });
+        expect(spoolFiles()).toHaveLength(0);
     });
 
     it('observe writes no body and records class, length and digest only', () => {
@@ -95,12 +113,34 @@ describe('spool-write-is-content-addressed', () => {
         expect(Object.keys(line).sort()).toEqual(['bytes', 'class', 'digest', 'tool', 'ts']);
         expect(line['class']).toBe('Read:text');
         expect(JSON.stringify(line)).not.toContain('observed content');
+        // The recorded digest is keyed: equal to no public hash of the body.
+        expect(line['digest']).not.toBe(createHash('sha256').update(JSON.stringify({ type: 'text', file: { content: body } })).digest('hex'));
     });
 
     it('the shipped selection is empty, so the stage stores nothing in any mode', () => {
         expect(SPOOL_SELECTED_CLASSES.size).toBe(0);
         for (const m of ['observe', 'protect', 'strict'] as const) runEgressStage(readEnvelope('x'.repeat(9000)), fixed(m));
         expect(spoolFiles()).toHaveLength(0);
+        expect(fs.existsSync(path.join(tmp, SPOOL_OBSERVATION_FILE))).toBe(false);
+    });
+
+    it('with the shipped selection the store is never loaded, nothing is written, and the stage result is unchanged', () => {
+        const before = spoolLoadAttempts();
+        const real = loadEgressEngine();
+        if (!real.ok) throw new Error(real.reason);
+        const without = (): ReturnType<typeof loadEgressEngine> => ({
+            ok: true,
+            engine: { ...real.engine, spoolResult: () => ({ action: 'skip', reason: 'unselected' }) },
+        });
+        for (const m of ['off', 'observe', 'protect', 'strict'] as const) {
+            const body = `${m} body\n`.repeat(2000);
+            const a = runEgressStage(readEnvelope(body), fixed(m));
+            const b = runEgressStage(readEnvelope(body), fixed(m), without);
+            expect(a).toEqual(b);
+        }
+        expect(spoolLoadAttempts()).toBe(before);
+        // The only two paths the store writes; the stage's own counters are not the store's.
+        expect(fs.existsSync(path.join(tmp, SPOOL_DIR))).toBe(false);
         expect(fs.existsSync(path.join(tmp, SPOOL_OBSERVATION_FILE))).toBe(false);
     });
 
@@ -155,31 +195,31 @@ describe('credential-match-is-never-spooled', () => {
 describe('expired-handle-says-expired', () => {
     it('expired-handle-says-expired: past the retention age a handle answers expired, before and after cleanup', () => {
         const t0 = Date.UTC(2026, 9, 20);
-        const { handle, digest } = storeBytes(tmp, Buffer.from('kept for a week'), t0);
-        expect(readHandle(tmp, handle, undefined, t0 + 1000).state).toBe('ok');
+        const { handle, address } = storeBytes(tmp, Buffer.from('kept for a week'), S, t0);
+        expect(readHandle(tmp, handle, S, undefined, t0 + 1000).state).toBe('ok');
         const later = t0 + SPOOL_RETENTION_MS + 1000;
-        expect(readHandle(tmp, handle, undefined, later)).toEqual({ state: 'expired' });
-        const file = path.join(tmp, SPOOL_DIR, digest);
+        expect(readHandle(tmp, handle, S, undefined, later)).toEqual({ state: 'expired' });
+        const file = path.join(tmp, SPOOL_DIR, address);
         fs.utimesSync(file, new Date(t0), new Date(t0));
         expect(cleanupSpool(tmp, later).removed).toBe(1);
         expect(fs.existsSync(file)).toBe(false);
-        expect(readHandle(tmp, handle, undefined, later)).toEqual({ state: 'expired' });
+        expect(readHandle(tmp, handle, S, undefined, later)).toEqual({ state: 'expired' });
     });
 
     it('past the byte cap the oldest entries go first, and a valid handle to one says missing', () => {
         const now = Date.now();
-        const a = storeBytes(tmp, Buffer.alloc(100, 1), now);
-        const b = storeBytes(tmp, Buffer.alloc(100, 2), now);
-        fs.utimesSync(path.join(tmp, SPOOL_DIR, a.digest), new Date(now - 5000), new Date(now - 5000));
+        const a = storeBytes(tmp, Buffer.alloc(100, 1), S, now);
+        const b = storeBytes(tmp, Buffer.alloc(100, 2), S, now);
+        fs.utimesSync(path.join(tmp, SPOOL_DIR, a.address), new Date(now - 5000), new Date(now - 5000));
         expect(cleanupSpool(tmp, now, 150).removed).toBe(1);
-        expect(readHandle(tmp, a.handle, undefined, now)).toEqual({ state: 'missing' });
-        expect(readHandle(tmp, b.handle, undefined, now).state).toBe('ok');
+        expect(readHandle(tmp, a.handle, S, undefined, now)).toEqual({ state: 'missing' });
+        expect(readHandle(tmp, b.handle, S, undefined, now).state).toBe('ok');
     });
 
     it('a cleanup lock held by another process skips; a stale one is taken over', () => {
         const now = Date.now();
-        const old = storeBytes(tmp, Buffer.from('old'), now - SPOOL_RETENTION_MS - 5000);
-        fs.utimesSync(path.join(tmp, SPOOL_DIR, old.digest), new Date(now - SPOOL_RETENTION_MS - 5000), new Date(now - SPOOL_RETENTION_MS - 5000));
+        const old = storeBytes(tmp, Buffer.from('old'), S, now - SPOOL_RETENTION_MS - 5000);
+        fs.utimesSync(path.join(tmp, SPOOL_DIR, old.address), new Date(now - SPOOL_RETENTION_MS - 5000), new Date(now - SPOOL_RETENTION_MS - 5000));
         const lock = path.join(tmp, SPOOL_DIR, '.cleanup.lock');
         fs.writeFileSync(lock, '1');
         expect(cleanupSpool(tmp, now).removed).toBe(0);
@@ -189,44 +229,90 @@ describe('expired-handle-says-expired', () => {
     });
 });
 
+describe('handles are scoped to their session', () => {
+    it('a handle read from another session, or with no session, answers invalid', () => {
+        const { handle } = storeBytes(tmp, Buffer.from('session one only'), S);
+        expect(readHandle(tmp, handle, S).state).toBe('ok');
+        expect(readHandle(tmp, handle, 's2')).toEqual({ state: 'invalid' });
+        expect(readHandle(tmp, handle, '')).toEqual({ state: 'invalid' });
+    });
+
+    it('a store without a session is refused outright', () => {
+        expect(() => storeBytes(tmp, Buffer.from('x'), '')).toThrow(/session/);
+    });
+});
+
+describe('retention, partial writes and cleanup failure', () => {
+    it('a read cleans the store: an entry past its age is gone after any read, not only after a store', () => {
+        const now = Date.now();
+        const old = storeBytes(tmp, Buffer.from('old entry'), S, now - SPOOL_RETENTION_MS - 5000);
+        const oldFile = path.join(tmp, SPOOL_DIR, old.address);
+        fs.utimesSync(oldFile, new Date(now - SPOOL_RETENTION_MS - 5000), new Date(now - SPOOL_RETENTION_MS - 5000));
+        const fresh = storeBytes(tmp, Buffer.from('fresh entry'), S, now);
+        expect(readHandle(tmp, fresh.handle, S, undefined, now).state).toBe('ok');
+        expect(fs.existsSync(oldFile)).toBe(false);
+    });
+
+    it('a write that died before its rename is never served and is removed once stale', () => {
+        const now = Date.now();
+        const { handle, address } = storeBytes(tmp, Buffer.from('complete'), S, now);
+        const partial = path.join(tmp, SPOOL_DIR, `${address}.999.abcdef.tmp`);
+        fs.writeFileSync(partial, 'comp');
+        expect(readHandle(tmp, handle, S, undefined, now)).toEqual({ state: 'ok', bytes: Buffer.from('complete') });
+        fs.utimesSync(partial, new Date(now - 2 * 3600 * 1000), new Date(now - 2 * 3600 * 1000));
+        cleanupSpool(tmp, now);
+        expect(fs.existsSync(partial)).toBe(false);
+    });
+
+    it('a cleanup step that fails refuses the store rather than writing past it', () => {
+        const env = readEnvelope('would be stored');
+        const view: SpoolStageView = { mode: 'protect', placeholder: env, counts: [], refused: [] };
+        fs.mkdirSync(path.join(tmp, SPOOL_DIR, '.last-cleanup-session'), { recursive: true });
+        expect(spoolResult(env, view, ['tool_response'], tmp, READ_TEXT)).toEqual({ action: 'skip', reason: 'store-error' });
+        expect(spoolFiles()).toHaveLength(0);
+    });
+});
+
 describe('handle-reads-a-range', () => {
     it('handle-reads-a-range: a byte range returns exactly those stored bytes', () => {
         const bytes = Buffer.from('0123456789abcdef');
-        const { handle } = storeBytes(tmp, bytes);
-        expect(readHandle(tmp, handle, [4, 10])).toEqual({ state: 'ok', bytes: Buffer.from('456789') });
-        expect(readHandle(tmp, handle, [0, 16]).bytes?.equals(bytes)).toBe(true);
-        expect(readHandle(tmp, handle, [16, 16]).bytes?.length).toBe(0);
-        expect(readHandle(tmp, handle).bytes?.equals(bytes)).toBe(true);
+        const { handle } = storeBytes(tmp, bytes, S);
+        expect(readHandle(tmp, handle, S, [4, 10])).toEqual({ state: 'ok', bytes: Buffer.from('456789') });
+        expect(readHandle(tmp, handle, S, [0, 16]).bytes?.equals(bytes)).toBe(true);
+        expect(readHandle(tmp, handle, S, [16, 16]).bytes?.length).toBe(0);
+        expect(readHandle(tmp, handle, S).bytes?.equals(bytes)).toBe(true);
     });
 
     it('out-of-bounds and malformed ranges are refused, never clamped', () => {
-        const { handle } = storeBytes(tmp, Buffer.from('short'));
-        for (const r of [[0, 6], [-1, 2], [3, 2], [1.5, 3]] as const) expect(readHandle(tmp, handle, r)).toEqual({ state: 'range' });
+        const { handle } = storeBytes(tmp, Buffer.from('short'), S);
+        for (const r of [[0, 6], [-1, 2], [3, 2], [1.5, 3]] as const) expect(readHandle(tmp, handle, S, r)).toEqual({ state: 'range' });
     });
 
     it('missing, corrupted and forged handles each answer their own state; the file on disk is never the source', () => {
-        const { handle, digest } = storeBytes(tmp, Buffer.from('original bytes'));
-        const file = path.join(tmp, SPOOL_DIR, digest);
+        const { handle, address } = storeBytes(tmp, Buffer.from('original bytes'), S);
+        const file = path.join(tmp, SPOOL_DIR, address);
         fs.writeFileSync(file, 'tampered bytes');
-        expect(readHandle(tmp, handle)).toEqual({ state: 'corrupted' });
+        expect(readHandle(tmp, handle, S)).toEqual({ state: 'corrupted' });
         fs.rmSync(file);
-        expect(readHandle(tmp, handle)).toEqual({ state: 'missing' });
+        expect(readHandle(tmp, handle, S)).toEqual({ state: 'missing' });
         const [d, exp] = handle.split('.') as [string, string];
-        expect(readHandle(tmp, `${d}.${String(Number(exp) + 1)}.${'0'.repeat(32)}`)).toEqual({ state: 'invalid' });
-        expect(readHandle(tmp, '../../etc/passwd')).toEqual({ state: 'invalid' });
+        expect(readHandle(tmp, `${d}.${String(Number(exp) + 1)}.${'0'.repeat(32)}`, S)).toEqual({ state: 'invalid' });
+        expect(readHandle(tmp, '../../etc/passwd', S)).toEqual({ state: 'invalid' });
         const other = path.join(tmp, 'other-workspace');
         fs.mkdirSync(other);
-        expect(readHandle(other, handle)).toEqual({ state: 'invalid' });
+        expect(readHandle(other, handle, S)).toEqual({ state: 'invalid' });
     });
 
     it('the existing report entry point reads a handle by range and names any other state', () => {
-        const { handle } = storeBytes(tmp, Buffer.from('0123456789'));
+        const { handle } = storeBytes(tmp, Buffer.from('0123456789'), S);
         const out: (string | Uint8Array)[] = [];
         const err: string[] = [];
         const w = process.stdout.write.bind(process.stdout);
         const e = process.stderr.write.bind(process.stderr);
         process.stdout.write = ((c: string | Uint8Array) => (out.push(c), true)) as typeof process.stdout.write;
         process.stderr.write = ((c: string) => (err.push(String(c)), true)) as typeof process.stderr.write;
+        const prev = process.env['AGENT_CONFIG_SESSION_ID'];
+        process.env['AGENT_CONFIG_SESSION_ID'] = S;
         try {
             expect(reportMain(['--read-handle', handle, '--range', '2:5', '--workspace', tmp])).toBe(0);
             expect(reportMain(['--read-handle', handle, '--range', '2:50', '--workspace', tmp])).toBe(1);
@@ -234,6 +320,8 @@ describe('handle-reads-a-range', () => {
         } finally {
             process.stdout.write = w;
             process.stderr.write = e;
+            if (prev === undefined) delete process.env['AGENT_CONFIG_SESSION_ID'];
+            else process.env['AGENT_CONFIG_SESSION_ID'] = prev;
         }
         expect(Buffer.from(out[0] as Uint8Array).toString('utf8')).toBe('234');
         expect(err[0]).toBe('handle: range\n');

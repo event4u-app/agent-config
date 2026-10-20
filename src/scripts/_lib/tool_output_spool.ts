@@ -16,10 +16,28 @@
  *   any replaced or withheld value means nothing is stored.
  * - Any credential-class detection in the result, at any confidence, refuses
  *   storage; so does a refusal the stage recorded for the result.
- * - `observe` stores no body; it records class, length and digest.
- * - A handle is `<sha256>.<expiry seconds>.<mac>`, the MAC keyed by a
+ * - `observe` stores no body; it records class, length and a keyed digest.
+ * - A handle is `<address>.<expiry seconds>.<mac>`, both keyed by a
  *   workspace-local secret, so an expired handle is told from an unknown one
  *   after its entry is gone without keeping any metadata past retention.
+ *
+ * Added after the council refused ratification on 2026-10-20 (conditions 3, 4):
+ * - The handle is bound to the session that stored it: the MAC covers the
+ *   session id and a read must name the same session. Possession alone grants
+ *   nothing outside that session, and nothing after the expiry.
+ * - The address is `HMAC(key, session, sha256(bytes))`, not the bare digest, so
+ *   equal outputs are not linkable across sessions or by anyone without the
+ *   key, and a file name says nothing about its content. Within one session
+ *   equal outputs still share one entry. The sha256 of the delivered bytes is
+ *   still what a read verifies (D13): the address is recomputed from it.
+ * - Retention is enforced on every use of the store — a store, and a read —
+ *   so an entry past its age is deleted the next time the workspace touches
+ *   the store, and a read never serves one even before that (the expiry is in
+ *   the MAC). An untouched store is not cleaned; its entries are unreadable.
+ * - Integrity of the CHUNK (its sha256 sidecar, `tool_output_spool_loader.ts`)
+ *   says this code is the shipped code. It says nothing about the STORED DATA,
+ *   whose protections are the ones above plus a 0700 directory and 0600 files
+ *   under a gitignored path. Two threat models, two claims.
  * - Ranges are zero-based, half-open byte ranges; out of bounds is refused,
  *   never clamped. A read verifies the digest over the bytes it serves.
  * - Writes publish by an exclusive temp file and an atomic rename; cleanup runs
@@ -34,7 +52,7 @@ import { SPOOL_SELECTED_CLASSES } from './tool_output_selection.js';
 
 export { SPOOL_SELECTED_CLASSES };
 /** The handshake with `tool_output_spool_loader.ts`; bump it whenever an export below changes shape. */
-export const SPOOL_SCHEMA = 1;
+export const SPOOL_SCHEMA = 2;
 
 export const SPOOL_DIR = path.join('agents', 'runtime', 'spool');
 export const SPOOL_OBSERVATION_FILE = path.join('agents', 'runtime', 'state', 'spool-observations.jsonl');
@@ -47,7 +65,7 @@ const LOCK_FILE = '.cleanup.lock';
 const SESSION_FILE = '.last-cleanup-session';
 const STALE_LOCK_MS = 10 * 60 * 1000;
 const STALE_TMP_MS = 60 * 60 * 1000;
-const DIGEST = /^[0-9a-f]{64}$/;
+const ADDRESS = /^[0-9a-f]{64}$/;
 const HANDLE = /^([0-9a-f]{64})\.(\d{1,12})\.([0-9a-f]{32})$/;
 
 export type HandleState = 'ok' | 'expired' | 'missing' | 'corrupted' | 'invalid' | 'range';
@@ -58,7 +76,8 @@ export interface HandleRead {
 }
 
 export interface StoredEntry {
-    readonly digest: string;
+    /** The keyed address the entry is filed under — not the content digest. */
+    readonly address: string;
     readonly handle: string;
     readonly bytes: number;
 }
@@ -87,15 +106,20 @@ function spoolKey(root: string, create: boolean): Buffer | null {
     return fs.readFileSync(file);
 }
 
-function mac(key: Buffer, digest: string, expiry: number): string {
-    return createHmac('sha256', key).update(`v1:${digest}:${String(expiry)}`).digest('hex').slice(0, 32);
+function address(key: Buffer, session: string, digest: string): string {
+    return createHmac('sha256', key).update(`addr:v2:${session}:${digest}`).digest('hex');
 }
 
-/** Store `bytes` under their digest and mint a handle that expires with the retention age. */
-export function storeBytes(root: string, bytes: Buffer, now: number = Date.now()): StoredEntry {
+function mac(key: Buffer, addr: string, expiry: number, session: string): string {
+    return createHmac('sha256', key).update(`v2:${addr}:${String(expiry)}:${session}`).digest('hex').slice(0, 32);
+}
+
+/** Store `bytes` for `session` and mint a handle bound to it that expires with the retention age. */
+export function storeBytes(root: string, bytes: Buffer, session: string, now: number = Date.now()): StoredEntry {
+    if (session === '') throw new Error('no session');
     const key = spoolKey(root, true) as Buffer;
-    const digest = sha256(bytes);
-    const target = path.join(spoolDir(root), digest);
+    const addr = address(key, session, sha256(bytes));
+    const target = path.join(spoolDir(root), addr);
     const tmp = `${target}.${String(process.pid)}.${randomBytes(6).toString('hex')}.tmp`;
     const fd = fs.openSync(tmp, 'wx', 0o600);
     try {
@@ -107,25 +131,41 @@ export function storeBytes(root: string, bytes: Buffer, now: number = Date.now()
     // An existing entry has the same bytes by construction; the rename refreshes its age.
     fs.renameSync(tmp, target);
     const expiry = Math.floor((now + SPOOL_RETENTION_MS) / 1000);
-    return { digest, handle: `${digest}.${String(expiry)}.${mac(key, digest, expiry)}`, bytes: bytes.length };
+    return { address: addr, handle: `${addr}.${String(expiry)}.${mac(key, addr, expiry, session)}`, bytes: bytes.length };
 }
 
-/** The stored bytes behind a handle, whole or `[start, end)`, or the state that stops them. */
-export function readHandle(root: string, handle: string, range?: readonly [number, number], now: number = Date.now()): HandleRead {
+/**
+ * The stored bytes behind a handle, whole or `[start, end)`, or the state that
+ * stops them. `session` must be the session the handle was minted for; any
+ * other session — or none — reads `invalid`, the same answer as a forgery.
+ */
+export function readHandle(
+    root: string,
+    handle: string,
+    session: string,
+    range?: readonly [number, number],
+    now: number = Date.now(),
+): HandleRead {
     const m = HANDLE.exec(handle.trim());
     const key = spoolKey(root, false);
+    // No handle is ever minted for an empty session, so an empty one fails the MAC below.
     if (m === null || key === null) return { state: 'invalid' };
-    const [, digest, exp, tag] = m as unknown as [string, string, string, string];
-    const expected = Buffer.from(mac(key, digest, Number(exp)), 'hex');
+    const [, addr, exp, tag] = m as unknown as [string, string, string, string];
+    const expected = Buffer.from(mac(key, addr, Number(exp), session), 'hex');
     if (!timingSafeEqual(expected, Buffer.from(tag, 'hex'))) return { state: 'invalid' };
+    try {
+        cleanupSpool(root, now);
+    } catch {
+        // a failed cleanup does not change what this read may serve: the expiry below still holds
+    }
     if (now >= Number(exp) * 1000) return { state: 'expired' };
     let bytes: Buffer;
     try {
-        bytes = fs.readFileSync(path.join(spoolDir(root), digest));
+        bytes = fs.readFileSync(path.join(spoolDir(root), addr));
     } catch {
         return { state: 'missing' };
     }
-    if (sha256(bytes) !== digest) return { state: 'corrupted' };
+    if (address(key, session, sha256(bytes)) !== addr) return { state: 'corrupted' };
     if (range === undefined) return { state: 'ok', bytes };
     const [start, end] = range;
     if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < start || end > bytes.length) {
@@ -166,10 +206,10 @@ export function cleanupSpool(root: string, now: number = Date.now(), maxBytes: n
                 continue;
             }
             const old = now - st.mtimeMs;
-            if (name.endsWith('.tmp') ? old > STALE_TMP_MS : DIGEST.test(name) && old >= SPOOL_RETENTION_MS) {
+            if (name.endsWith('.tmp') ? old > STALE_TMP_MS : ADDRESS.test(name) && old >= SPOOL_RETENTION_MS) {
                 fs.rmSync(file, { force: true });
                 removed += 1;
-            } else if (DIGEST.test(name)) {
+            } else if (ADDRESS.test(name)) {
                 live.push({ file, mtime: st.mtimeMs, size: st.size });
             }
         }
@@ -196,7 +236,7 @@ export interface SpoolStageView {
 }
 
 export type SpoolOutcome =
-    | { readonly action: 'skip'; readonly reason: 'unselected' | 'no-result' | 'image' | 'credential' | 'view-differs' | 'mode' | 'replay' | 'store-error' | 'store-unavailable' }
+    | { readonly action: 'skip'; readonly reason: 'unselected' | 'no-result' | 'image' | 'credential' | 'view-differs' | 'mode' | 'replay' | 'no-session' | 'store-error' | 'store-unavailable' }
     | { readonly action: 'observed'; readonly class: ContentClass; readonly bytes: number; readonly digest: string }
     | ({ readonly action: 'stored'; readonly class: ContentClass } & StoredEntry);
 
@@ -262,14 +302,17 @@ export function spoolResult(
         if (credential || view.refused.some((r) => r.field === 'result')) return { action: 'skip', reason: 'credential' };
         const raw = Buffer.from(serialize(payload[key]), 'utf8');
         if (view.mode === 'observe') {
-            const digest = sha256(raw);
+            // Keyed under the empty session no stored entry uses: a repeat stays countable, equal content is not linkable without the key.
+            const digest = address(spoolKey(root, true) as Buffer, '', sha256(raw));
             observe(root, { ts: new Date(now).toISOString(), tool, class: cls, bytes: raw.length, digest });
             return { action: 'observed', class: cls, bytes: raw.length, digest };
         }
         const shown = payloadOf(view.placeholder?.['payload'])?.[key];
         if (shown === undefined || serialize(shown) !== raw.toString('utf8')) return { action: 'skip', reason: 'view-differs' };
-        cleanupOncePerSession(root, String(payload['session_id'] ?? envelope['session_id'] ?? ''), now);
-        return { action: 'stored', class: cls, ...storeBytes(root, raw, now) };
+        const session = String(payload['session_id'] ?? envelope['session_id'] ?? '').trim();
+        if (session === '') return { action: 'skip', reason: 'no-session' };
+        cleanupOncePerSession(root, session, now);
+        return { action: 'stored', class: cls, ...storeBytes(root, raw, session, now) };
     } catch {
         return { action: 'skip', reason: 'store-error' };
     }

@@ -34,9 +34,9 @@
         },
         {
             "entry": "src/scripts/_lib/tool_output_spool.ts",
-            "max_bytes": 14000,
+            "max_bytes": 14700,
             "registered_at": "2026-10-20",
-            "derivation": "Measured 13,349 bytes on 2026-10-20: the tool-result store of road-to-tool-results-that-leave-a-handle Phase 2 (content-addressed writes, authenticated handles, byte ranges, retention and cap cleanup) and the PREREG content classifier it shares with report_reducible_classes. Its own chunk rather than part of the egress engine, so the engine keeps the headroom its derivation reserves for road-to-one-detector-and-the-senders-we-own; the engine carries only the door (tool_output_spool_loader.ts, about 2.7 KB), which loads this chunk when a class is selected, and the shipped selection is empty. The ceiling is that reading plus about 5 %, rounded, with no growth queued for it."
+            "derivation": "Measured 14,024 bytes on 2026-10-20, after the controls the council's refusal of that day asked for (session-bound handles, a keyed address in place of the bare digest, cleanup on read, a keyed observe digest); first read 13,349 bytes before them: the tool-result store of road-to-tool-results-that-leave-a-handle Phase 2 (content-addressed writes, authenticated handles, byte ranges, retention and cap cleanup) and the PREREG content classifier it shares with report_reducible_classes. Its own chunk rather than part of the egress engine, so the engine keeps the headroom its derivation reserves for road-to-one-detector-and-the-senders-we-own; the engine carries only the door (tool_output_spool_loader.ts, about 2.7 KB), which loads this chunk when a class is selected, and the shipped selection is empty. The ceiling is that reading plus about 5 %, rounded, with no growth queued for it."
         },
         {
             "entry": "src/scripts/chat_history.ts",

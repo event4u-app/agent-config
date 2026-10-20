@@ -306,6 +306,7 @@ function mainContent(argv: readonly string[], threshold: number, prefix: string,
 /**
  * Step 2.4: the stored bytes behind a handle, whole or a `start:end` byte range,
  * written raw to stdout. Any other state exits 1 and names itself on stderr.
+ * A handle from another session, or a read with no session, answers `invalid`.
  */
 function mainReadHandle(argv: readonly string[], handle: string, now: Date): number {
     const spec = flag(argv, '--range');
@@ -315,7 +316,10 @@ function mainReadHandle(argv: readonly string[], handle: string, now: Date): num
         return 2;
     }
     const range = m === null ? undefined : ([Number(m[1]), Number(m[2])] as const);
-    const read = readHandle(flag(argv, '--workspace') ?? REPO, handle, range, now.getTime());
+    // The session is the reader's own, from the host environment, never a flag: a
+    // handle is readable only inside the session that stored it.
+    const session = (process.env['AGENT_CONFIG_SESSION_ID'] ?? process.env['CLAUDE_CODE_SESSION_ID'] ?? '').trim();
+    const read = readHandle(flag(argv, '--workspace') ?? REPO, handle, session, range, now.getTime());
     if (read.state !== 'ok' || read.bytes === undefined) {
         process.stderr.write(`handle: ${read.state}\n`);
         return 1;
