@@ -18898,6 +18898,11 @@ var settingsSchema = external_exports.object({
       "Once per day the agent checks the npm registry for a newer agent-config release and surfaces a one-line banner if one exists. Turn off in air-gapped environments or to silence the banner."
     )
   }),
+  update: external_exports.object({
+    mode: external_exports.enum(["off", "notify", "ask", "auto"]).default("notify").describe(
+      "What the agent may do about a newer release. notify tells you and installs nothing (the default, and what an absent key resolves to); ask behaves as notify until the ring-0 exit ships a prompt; auto installs a staged release at a session start when every gate passes and no other session is live; off says nothing at all. Read from the user-global layer only \u2014 a repository cannot set how your global install updates itself."
+    )
+  }),
   legal_review_prep: external_exports.object({
     acknowledged: external_exports.boolean().default(false).describe(
       "I understand the legal-review-prep pack provides templates and general information ONLY \u2014 it is NOT legal advice, creates no attorney-client relationship, and never replaces a licensed lawyer. Individual cases require an attorney. The pack stays inactive until this is checked."
