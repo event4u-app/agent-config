@@ -125,11 +125,20 @@ describe('the list path and the watch list', () => {
         expect(unclassified).toEqual([]);
     });
 
-    it('the list is a mechanism path; the schema that states the criterion is not', () => {
+    it('the list and the schema that states its criterion are mechanism paths; a neighbouring schema is not', () => {
         expect(gate.isMechanismPath(LIST)).toBe(true);
         expect(gate.classifyPaths([LIST], [], new Set()).self).toBe(true);
-        // The gate never reads the schema, so it changes no membership.
-        expect(gate.isMechanismPath('src/scripts/schemas/rule.schema.json')).toBe(false);
+        expect(gate.CONSEQUENCE_CRITERION_PATH).toBe('src/scripts/schemas/rule.schema.json');
+        expect(gate.isMechanismPath(gate.CONSEQUENCE_CRITERION_PATH)).toBe(true);
+        expect(gate.classifyPaths([gate.CONSEQUENCE_CRITERION_PATH], [], new Set()).self).toBe(true);
+        expect(gate.isMechanismPath('src/scripts/schemas/skill.schema.json')).toBe(false);
+    });
+
+    it('the criterion the gate pins is the one the schema states', () => {
+        const schema = JSON.parse(fs.readFileSync(path.join(REPO, gate.CONSEQUENCE_CRITERION_PATH), 'utf8')) as {
+            properties: { consequence_class: { enum: string[] } };
+        };
+        expect([...schema.properties.consequence_class.enum].sort()).toEqual([...gate.CONSEQUENCE_CLAUSES].sort());
     });
 });
 
