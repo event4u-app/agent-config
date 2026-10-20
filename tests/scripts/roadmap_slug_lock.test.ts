@@ -96,11 +96,11 @@ describe('release_locks', () => {
 
 describe('readClaims — a lock is visible the moment it is written', () => {
     it('reports a fresh lock as a live claim before any register record exists', () => {
-        // The lock is written now: the fixed NOW the other cases share would make
-        // this case expire once the wall clock passes NOW + UNRECORDED_HOLDER_MS.
+        // The lock's own `written_at` decides liveness, and the fixture's is the
+        // fixed NOW: stamping it with the wall clock keeps this off the calendar.
         const now = new Date();
         acquire_lock(root, lock({ lane: true, written_at: now.toISOString() }), NONE, { now });
-        const claims = readClaims(root, now);
+        const claims = readClaims(root);
         expect(claims.live).toEqual([
             { session_id: 's1', roadmap_slug: 'road-to-a', lane: true, worktree: '/wt/one', branch: 'drain/a' },
         ]);

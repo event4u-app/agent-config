@@ -143,16 +143,23 @@ export interface Finding {
  * with or without `.md`, with a download-collision `(1)` suffix, and followed by
  * arbitrary prose (`road-to-gated-self-evolution` v3 (Claude-Session) — P0–P7).
  * Everything after the first token is commentary.
+ *
+ * A YAML scalar may also arrive quoted. One matching pair of wrapping quotes is
+ * removed — around the whole input and around the selected token — and nothing
+ * else, so an apostrophe inside a slug survives (D6 of
+ * road-to-gates-that-read-what-was-written). Callers pass the raw value.
  */
 export function normalizeParent(raw: string): string {
     let s = raw.trim();
     s = s.replace(/^[-*]\s+/, '');
+    s = unwrapQuotes(s, true);
     const tick = /`([^`]+)`/.exec(s);
     if (tick) {
         s = tick[1] as string;
     } else {
         s = (s.split(/[\s—–,;|]/)[0] ?? '').trim();
     }
+    s = unwrapQuotes(s, false);
     s = s.replace(/^.*\//, '');
     s = s.replace(/\.md$/i, '');
     s = s.replace(/\(\d+\)$/, '');
@@ -161,6 +168,19 @@ export function normalizeParent(raw: string): string {
     // `road-to-*.md` is talking ABOUT roadmaps, not declaring a parent.
     if (/[*?\[\]]/.test(s)) return '';
     return s;
+}
+
+/**
+ * Remove one matching pair of wrapping quotes. With `whole`, the pair must be
+ * the only occurrence of that quote character: `"a" — "b"` is two quoted
+ * strings, not one, and unwrapping it would glue a quote onto the first token.
+ */
+function unwrapQuotes(s: string, whole: boolean): string {
+    const q = s[0];
+    if (s.length < 2 || (q !== '"' && q !== "'") || s[s.length - 1] !== q) return s;
+    const inner = s.slice(1, -1);
+    if (whole && inner.includes(q)) return s;
+    return inner.trim();
 }
 
 function frontmatterList(fm: string, key: string): string[] | null {
@@ -174,7 +194,7 @@ function frontmatterList(fm: string, key: string): string[] | null {
             return inline
                 .slice(1, inline.lastIndexOf(']') === -1 ? undefined : inline.lastIndexOf(']'))
                 .split(',')
-                .map((x) => normalizeParent(x.replace(/["']/g, '')))
+                .map((x) => normalizeParent(x))
                 .filter(Boolean);
         }
         const out: string[] = [];
@@ -183,7 +203,7 @@ function frontmatterList(fm: string, key: string): string[] | null {
             if (/^\s*#/.test(line)) continue;
             const item = /^\s+-\s+(.*)$/.exec(line);
             if (item) {
-                out.push(normalizeParent((item[1] as string).replace(/#.*$/, '').replace(/["']/g, '')));
+                out.push(normalizeParent((item[1] as string).replace(/#.*$/, '')));
                 continue;
             }
             if (line.trim() === '') continue;
@@ -229,7 +249,7 @@ function downstreamRelates(fm: string): string[] {
         }
         const kv = /^(slug|relation):\s*(.*)$/.exec(body);
         if (!kv) continue;
-        const value = (kv[2] as string).replace(/#.*$/, '').replace(/["']/g, '').trim();
+        const value = unwrapQuotes((kv[2] as string).replace(/#.*$/, '').trim(), false);
         if (kv[1] === 'slug') slug = value;
         else relation = value;
     }
