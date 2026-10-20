@@ -354,8 +354,10 @@ export const EGRESS_RULES: readonly EgressRule[] = [
     },
 ];
 
-// A value that is a type word or a literal is not a secret, whatever its key.
-const TYPE_WORD = /^(?:string|number|boolean|bigint|unknown|any|never|void|undefined|null|true|false|none|nil)$/i;
+// A value that is a type word, a literal, a language keyword or a credential
+// keyword itself (`password: 'password'`) is code, not a secret, whatever its key.
+const TYPE_WORD =
+    /^(?:string|number|boolean|bigint|unknown|any|never|void|undefined|null|true|false|none|nil|new|typeof|keyof|await|async|function|const|let|var|return|this|self|class|import|require|readonly|export|default|yield|password|passwd|pwd|secret|token|bearer|api[_-]?key|apikey)$/i;
 
 /**
  * Credential shapes at a reviewer's threshold, for a surface that REPLACES a

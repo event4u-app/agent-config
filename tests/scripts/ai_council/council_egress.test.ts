@@ -102,6 +102,16 @@ describe('council bundle: span replacement through the engine (3.3)', () => {
         expect(out[2]).toBe('token: string;');
     });
 
+    it('code after a credential keyword is not a secret (found by bundling this branch)', () => {
+        const code = [
+            "    password: 'password',",
+            "    readonly token: typeof import('./x.js');",
+            '    apiKey: new RegExp(source),',
+            '    secret: await load(),',
+        ].join('\n');
+        expect(redact(code)).toBe(code);
+    });
+
     it('replacing twice yields the same bytes as replacing once', () => {
         const egress = new CouncilEgress();
         const once = redact(F1, egress);
