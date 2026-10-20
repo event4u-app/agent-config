@@ -506,12 +506,13 @@ describe('main() — the envelope surface', () => {
 });
 
 /**
- * A mention is not a creation. Two builds of this were refused for trusting a
- * command's spelling, a mutable file's shape, and a base field the shell does
- * not run in. What is pinned here: the base is the tool's own `cwd` and no
- * other field can outrank it; a command that visibly changes directory gets no
- * exists-probe for a relative token; and no command shape is exempt from the
- * token scan — the remediation passes because it names the source, not a path.
+ * A mention is not a creation. Three builds of this were refused for trusting a
+ * command's spelling, a mutable file's shape, a base field the shell does not
+ * run in, and a relative shell token whose landing place no text can show.
+ * What is pinned here: a path-keyed tool's base is its own `cwd` and no other
+ * field can outrank it; a shell command's token is probed only when absolute;
+ * and no command shape is exempt from the token scan — the remediation passes
+ * because it names the source, not a path.
  *
  * Every name is invented and assembled at runtime.
  */
@@ -526,6 +527,7 @@ describe('a mention is not a creation — the commands a real round was refused'
     const tree = mk('tree');
     fs.mkdirSync(path.join(tree, inbox, speaking), { recursive: true });
     const other = mk('other');
+    const absRound = path.join(tree, inbox, speaking);
 
     const run = (envelope: unknown): number => {
         setHookStdinOverride(JSON.stringify(envelope));
@@ -542,23 +544,26 @@ describe('a mention is not a creation — the commands a real round was refused'
     });
     const remediation = (source: string, exe = './scripts-run'): string =>
         `printf '%s' '${source}' | ${exe} src/scripts/_lib/link_crypto encrypt`;
-    const lsRound = `ls -la ${inbox}/${speaking}/`;
     const mkRound = `mkdir -p ${inbox}/${speaking}`;
 
     describe('allowed', () => {
-        it('a read-only ls of an EXISTING inbox directory, resolved against the tool cwd', () => {
-            expect(run(bash(lsRound))).toBe(0);
+        it('a read-only ls of an EXISTING inbox directory named by its absolute path', () => {
+            expect(run(bash(`ls -la ${absRound}/`))).toBe(0);
+            expect(run(bash(`cd ${other} && ls -la ${absRound}/`))).toBe(0);
         });
         it('the same when the dispatcher wraps the native payload', () => {
             expect(
-                run({ workspace_root: other, payload: { tool_name: 'Bash', cwd: tree, tool_input: { command: lsRound } } }),
+                run({
+                    workspace_root: other,
+                    payload: { tool_name: 'Bash', cwd: other, tool_input: { command: `ls -la ${absRound}/` } },
+                }),
             ).toBe(0);
         });
         it('a relative Write into the existing round resolves against the tool cwd', () => {
             expect(run({ tool_name: 'Write', cwd: tree, tool_input: { file_path: `${inbox}/${speaking}/x.md` } })).toBe(0);
         });
-        it('a printf naming an EXISTING inbox directory inside a quoted literal', () => {
-            expect(run(bash(remediation(`renamed from ${inbox}/${speaking}/`)))).toBe(0);
+        it('a printf naming an EXISTING inbox directory by absolute path inside a quoted literal', () => {
+            expect(run(bash(remediation(`renamed from ${absRound}/`)))).toBe(0);
         });
         it('the remediation printed in the deny message executes unblocked as written', () => {
             const line = denyMessage(speaking)
@@ -574,48 +579,51 @@ describe('a mention is not a creation — the commands a real round was refused'
         });
     });
 
-    describe('conflicting base fields — only the tool cwd decides', () => {
+    describe('conflicting base fields — only the tool cwd decides a path-keyed probe', () => {
         it('project_dir naming the tree that holds the round does not outrank cwd', () => {
-            expect(run(bash(mkRound, { cwd: other, project_dir: tree }))).toBe(1);
+            expect(
+                run({ tool_name: 'Write', cwd: other, project_dir: tree, tool_input: { file_path: `${inbox}/${speaking}/x.md` } }),
+            ).toBe(1);
         });
         it('workspace_root naming the tree that holds the round does not outrank cwd', () => {
-            expect(run(bash(mkRound, { cwd: other, workspace_root: tree }))).toBe(1);
             expect(
-                run({ workspace_root: tree, payload: { tool_name: 'Bash', cwd: other, tool_input: { command: mkRound } } }),
+                run({ tool_name: 'Write', cwd: other, workspace_root: tree, tool_input: { file_path: `${inbox}/${speaking}/x` } }),
+            ).toBe(1);
+            expect(
+                run({
+                    workspace_root: tree,
+                    payload: { tool_name: 'Write', cwd: other, tool_input: { file_path: `${inbox}/${speaking}/x` } },
+                }),
             ).toBe(1);
         });
         it('an envelope-level cwd does not outrank the wrapped native cwd', () => {
-            expect(run({ cwd: tree, payload: { tool_name: 'Bash', cwd: other, tool_input: { command: mkRound } } })).toBe(1);
+            expect(
+                run({ cwd: tree, payload: { tool_name: 'Write', cwd: other, tool_input: { file_path: `${inbox}/${speaking}/x` } } }),
+            ).toBe(1);
         });
         it('a relative cwd is not a base', () => {
-            expect(run(bash(mkRound, { cwd: path.relative(process.cwd(), tree) }))).toBe(1);
-        });
-        it('a relative Write resolves from cwd, not from project_dir or workspace_root', () => {
             expect(
                 run({
                     tool_name: 'Write',
-                    cwd: other,
-                    project_dir: tree,
-                    workspace_root: tree,
+                    cwd: path.relative(process.cwd(), tree),
                     tool_input: { file_path: `${inbox}/${speaking}/x.md` },
                 }),
             ).toBe(1);
         });
-        it('a command that visibly changes directory first gets no probe for a relative token', () => {
-            for (const command of [
-                `cd ${other} && ${mkRound}`,
-                `(cd ${other}; ${mkRound})`,
-                `pushd ${other} && ${mkRound}`,
-                `. ./elsewhere.sh && ${mkRound}`,
-                `source ./elsewhere.sh && ${mkRound}`,
-                `git -C ${other} mv x ${inbox}/${speaking}`,
-                `make --directory=${other} ${inbox}/${speaking}`,
-            ]) {
-                expect(run(bash(command)), command).toBe(1);
-            }
+    });
+
+    describe('a shell command: a relative token is never probed', () => {
+        it('a relative mention of a round that exists under cwd is still refused', () => {
+            expect(run(bash(`ls -la ${inbox}/${speaking}/`))).toBe(1);
+            expect(run(bash(mkRound, { cwd: tree, project_dir: tree, workspace_root: tree }))).toBe(1);
         });
-        it('an absolute token is still probed under a directory change', () => {
-            expect(run(bash(`cd ${other} && ls ${path.join(tree, inbox, speaking)}/`))).toBe(0);
+        it('a helper that changes directory before creating its relative argument', () => {
+            const helper = path.join(tree, 'helper.sh');
+            fs.writeFileSync(helper, `#!/bin/sh\ncd ${other} && mkdir -p "$1"\n`, { mode: 0o755 });
+            expect(run(bash(`./helper.sh ${inbox}/${speaking}`))).toBe(1);
+        });
+        it('an absolute token naming a NEW speaking directory is refused', () => {
+            expect(run(bash(`mkdir -p ${path.join(other, inbox, fresh)}`))).toBe(1);
         });
     });
 

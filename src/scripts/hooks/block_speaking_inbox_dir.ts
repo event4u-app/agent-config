@@ -37,9 +37,9 @@
  * 2. **A directory that already exists.** Blocking every later write into an
  *    already-created speaking directory would wedge a session mid-round without
  *    removing the name — the fix there is a rename, which the deny message of
- *    the creating call already asked for. A relative path is probed against
- *    the tool's own `cwd` and nothing else; a shell command that changes
- *    directory first gets no probe for its relative tokens.
+ *    the creating call already asked for. A path-keyed tool's relative path
+ *    is probed against the tool's own `cwd` and nothing else; a shell
+ *    command's token is probed only when absolute.
  * 3. **An opaque round identifier** — `isOpaqueRoundId` in
  *    `_lib/source_shape.ts` is the single authority, shared with the gate, so
  *    the guard and the CI check can never disagree about what "opaque" means.
@@ -199,24 +199,6 @@ function _redirectTargets(segment: string): string[] {
         m = re.exec(segment);
     }
     return out;
-}
-
-/**
- * Whether a shell command visibly moves off the `cwd` it was handed: a
- * `cd`/`pushd`/`popd`/`source`/`.` word, or a directory flag (`-C`,
- * `--directory`, `--git-dir`, `--work-tree`, `--chdir`). Then the
- * already-exists carve-out is not offered to a relative token.
- *
- * A narrowing, not a proof: a script or function can change directory without
- * any of these appearing. The base offered the carve-out to every token of
- * every command, so that residual is the base's, not new — and it can only
- * re-create a name that already exists in the tool's `cwd`.
- */
-export function changesDirectory(command: string): boolean {
-    return (
-        /(?:^|[\s;&|(`{])(?:cd|pushd|popd|source|\.)(?=$|[\s;&|)])/.test(command) ||
-        /(?:^|\s)(?:-C|--directory|--git-dir|--work-tree|--chdir)(?=$|[\s=])/.test(command)
-    );
 }
 
 /**
@@ -386,6 +368,9 @@ export function denyMessage(dir: string): string {
         'itself (its URL or name), never an agents/tmp path, which this guard judges:\n' +
         "  printf '%s' '<the real source>' | ./scripts-run src/scripts/_lib/link_crypto encrypt\n" +
         '\n' +
+        'Already created? Rename it. Until then a shell command reaches it only by its\n' +
+        'absolute path: a relative one may land anywhere, so it is judged as new.\n' +
+        '\n' +
         'Naming rule: /analyze:inbox Phase 1. Rule: src/rules/source-confidentiality.md.\n' +
         `Maintainer kill switch: ${KILL_SWITCH}=1.\n`
     );
@@ -416,8 +401,8 @@ export function main(): number {
             return 0;
         }
         // The base a relative path resolves against is the tool's own working
-        // directory: the native payload's `cwd`, which is where Bash runs and
-        // where a relative file path lands. `project_dir` (no producer sets it)
+        // directory: the native payload's `cwd`, where a path-keyed tool's
+        // relative path lands. `project_dir` (no producer sets it)
         // and the dispatcher's `workspace_root` (the hook's cwd, the parent
         // checkout in a worktree session) name other trees, and a field that
         // can outrank the real base lets `mkdir` create in one tree what the
@@ -446,10 +431,13 @@ export function main(): number {
         // decision logic is shared rather than duplicated — see
         // `creatableTokens` for why "every whitespace token" was too many.
         const cmd = ti['command'] ?? (_isObject(envelope['payload']) ? (envelope['payload'] as JsonObject)['command'] : undefined);
-        const baseless: string[] = [];
+        // A shell command's relative token gets no exists-probe: whatever it
+        // invokes may change directory first (a script, a function, an alias),
+        // so its existence under `cwd` says nothing about where it lands. An
+        // absolute token names its own base and is probed.
+        const shellTokens: string[] = [];
         if (typeof cmd === 'string' && cmd) {
-            const tokens = creatableTokens(cmd);
-            (changesDirectory(cmd) ? baseless : candidates).push(...tokens);
+            shellTokens.push(...creatableTokens(cmd));
         }
         const judge = (v: string, exists: (p: string) => boolean): boolean => {
             const verdict = verdictFor(v, exists, cwd);
@@ -459,7 +447,7 @@ export function main(): number {
             }
             return false;
         };
-        for (const v of baseless) {
+        for (const v of shellTokens) {
             if (judge(v, (p) => path.isAbsolute(v) && fs.existsSync(p))) {
                 return 1;
             }
