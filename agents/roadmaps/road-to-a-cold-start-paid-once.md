@@ -219,11 +219,12 @@ Phase 5 edits the council modules, an owner-gated surface for a lane. 2.5 and
       user's constraints verbatim (`subagent-spawn-contract.md:154-156`). Either
       missing, it ships off with the reading attached.
       verify: `npx vitest run tests/scripts/_lib_subagent_spawn.test.ts -t skipping-worker-carries-kernel-and-constraints --reporter=verbose` -> /✓.*skipping-worker-carries-kernel-and-constraints/
-- [ ] **2.6 Correct the fork premise** in `SKILL.md:119-121` from the 1.6 row —
+- [x] **2.6 Correct the fork premise** in `SKILL.md:119-121` from the 1.6 row —
       the premise only; the ordering and the council's cut of "always fork"
       (`SKILL.md:123-125`) stay.
       verify: `grep -c 'fork_shares_cache' src/skills/subagent-orchestration/SKILL.md` -> /^[1-9][0-9]*$/
       Open 2026-10-17, unblocked by 1.6 but reverted from the drain PR: editing this skill brings it into `check_routing_coverage`'s touched-skill scope, so it needs its first `evals/triggers.json`. Adding one moves the routing-coverage seed, the delivery-set and routing-signal published records, the trigger-eval presence ratchet and the sealed holdout pin (`trigger_corpus_holdout_pin`). Re-pinning a sealed holdout belongs in its own change, not in a premise correction.
+      Done 2026-10-20: the skill gained its `evals/triggers.json` in #2482, so the routing-coverage obstacle is gone (`check_routing_coverage`: 1 touched skill, 0 without a corpus). The premise now reads from the 1.6 row — a background fork keeps the prefix and tool pool where the host row says `fork_shares_cache: true` — in `SKILL.md`, and the same premise was corrected at its three other sites (`prompts/README.md`, `auto-dispatch-classification.md`, `api-cost-levers.md`). The ordering and the cut of "always fork" are unchanged.
 
 ## Phase 3 — One decision function, recorded in shadow
 
@@ -295,7 +296,7 @@ Phase 5 edits the council modules, an owner-gated surface for a lane. 2.5 and
       writer, widened from council-only to host-sourced. Still record-only, per
       `quota_parked.ts:25-31`.
       verify: `npx vitest run tests/scripts/quota_parked.test.ts -t host-stop-failure-writes-marker --reporter=verbose` -> /✓.*host-stop-failure-writes-marker/
-- [ ] **4.4 Split the transient branch by error class** in
+- [x] **4.4 Split the transient branch by error class** in
       `subagent-steering.md:34-40`: `rate_limit` causes no same-turn
       re-dispatch, the slice parks until a recovery signal, then re-runs the
       3.1 decision (a wait past the TTL fails (b) and retires the worker with its
@@ -303,7 +304,8 @@ Phase 5 edits the council modules, an owner-gated surface for a lane. 2.5 and
       subscription `rate_limit` never downshifts. The rule was council-decided,
       so the change lands with its council ratification artefact.
       verify: `npx vitest run tests/scripts/_lib_subagent_steering.test.ts -t rate-limit-never-redispatches-same-turn --reporter=verbose` -> /✓.*rate-limit-never-redispatches-same-turn/
-      Open 2026-10-18, council-refused three rounds (anthropic + openai seats, 2026-10-18), not shipped. The split itself was not contested; every round refused the state machine around it. Rounds 1–2 closed a double downshift via the post-recovery path, billing class as discriminator, an undefined recovery signal, unbounded parking, N=3 accounting, turn boundaries, a missing classifier and a helper that returned no next state. Round 3 left four open: a timeout after a partial response is still retried (discarding the late result does not stop the original run, so non-idempotent work can duplicate); "no status and no bytes" is not proof of a transport failure; a `Retry-After` longer than the run conflicts with the overloaded branch's same-turn redispatch; and the function does not refuse an already-exhausted slot. Residue for the next attempt, which starts from those four and needs an explicit idempotency or read-only precondition for a retried subagent.
+      Open 2026-10-18, council-refused three rounds (anthropic + openai seats, 2026-10-18), not shipped. The split itself was not contested; every round refused the state machine around it. Rounds 1–2 closed a double downshift via the post-recovery path, billing class as discriminator, an undefined recovery signal, unbounded parking, N=3 accounting, turn boundaries, a missing classifier and a helper that returned no next state. Round 3 left four open: a timeout after a partial response is still retried (discarding the late result does not stop the original run, so non-idempotent work can duplicate); "no status and no bytes" is not proof of a transport failure; a `Retry-After` longer than the run conflicts with the overloaded branch's same-turn redispatch; and the function does not refuse an already-exhausted slot. Residue for the next attempt, which starts from those four and needs an explicit idempotency or read-only precondition for a retried subagent. Round 4 (2026-10-18) reviewed a branch that closed those four and added a `retry_safe` precondition test-first (prompt `agents/evidence/council/cold-start-steering-review-r4-20261018.question.md`) and refused 2/2: `response_started` was checked after the status branches, the counters and the time left were not validated at runtime, and the provenance of `retry_safe` was unstated.
+      Done 2026-10-20: rounds 5–10 (anthropic + openai seats, CLI, $0), each fixing the previous round's finding test-first — the three round-4 findings (5); a null slot that threw (6); a cast decision state, a non-boolean `retry_safe` and an unchecked classifier, now a discriminated union (7); inherited tier names (8); inherited values, getters and proxy traps, now an own-data snapshot (9); a revoked proxy outside the `try` (10). Round 10 ratified 2/2; artefact `agents/evidence/ratifications/cold-start-rate-limit-steering-20261020.md`, prompts beside the round-4 one, `agents/evidence/council/cold-start-steering-review-r10-20261020.question.md` the last. Non-blocking conditions carried there: no caller, no operational kill criterion beyond `emergency.orchestration_halt`.
 - [ ] **4.5 The same guard reads the window.** While a recent host-sourced
       `quota_parked` marker exists, the shadow verdict for a new `Agent` call is
       `would_wait`, and after 3.6 a denial whose reason says "resume or run
@@ -467,7 +469,7 @@ Phase 5 edits the council modules, an owner-gated surface for a lane. 2.5 and
 - [ ] **AC-4** No agent id is written to disk; workers are addressed by name.
 - [ ] **AC-5** A definition declared `reuse: never` is never resumed or forked
       from an implementer (fixture).
-- [ ] **AC-6** A `rate_limit` failure causes zero same-turn re-dispatches
+- [x] **AC-6** A `rate_limit` failure causes zero same-turn re-dispatches
       (fixture).
 - [ ] **AC-7** Documentation and telemetry distinguish the guard's open-dispatch
       count, the host's spawn cap and whether resumes are inside it — no claim

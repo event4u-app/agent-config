@@ -93,9 +93,10 @@ child continues the parent's task under identical tools and constraints (a
 fork inherits the parent's system prompt, tools, and conversation history
 exactly, so its first request reads the parent's cache). Prefer a **named
 subagent** when the child needs isolation, a different tool set, or nested
-dispatch — a fork cannot nest, and forking forces background mode, which
-changes the tool set and therefore invalidates the very prefix that
-motivated the fork in the first place. Never default to "always fork": that
+dispatch — a fork cannot nest. Forking forces background mode, which does
+not cost the prefix where the host row says `fork_shares_cache: true` (on
+Claude Code 2.1.302 a background fork read 99.8 % of its first call from the
+parent's cache and kept the parent's tool pool); elsewhere it is unobserved. Never default to "always fork": that
 option was considered and cut ([`../SKILL.md`](../SKILL.md) § Form gate)
 precisely because the cache-sharing benefit cannot be predicted before the
 fork happens, and background mode can erase it outright.
