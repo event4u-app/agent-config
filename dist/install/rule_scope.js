@@ -30,7 +30,7 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { resolve_rule_pack_scope } from '../scripts/_lib/scoped_projection.js';
+import { consumerRuleWorkspaces, resolve_rule_pack_scope } from '../scripts/_lib/scoped_projection.js';
 import { rule_in_scope } from './ruleInScope.js';
 /**
  * Rules excluded from EVERY consumer install path regardless of scope —
@@ -51,9 +51,15 @@ function _list(value) {
  * `_read_projection_list` — absent / empty = legacy-all).
  */
 export function ruleScopeFromSettings(settings, packageRoot) {
+    // The WORKSPACE axis is derived from the pack vocabulary since ADR-292 step
+    // 4.6, so it no longer depends on a `projection` block existing at all — a
+    // rule is not a setting, and a settings file that happens to omit a section
+    // cannot switch one off. The pack and role axes are still read, so a
+    // missing block leaves them inactive exactly as before.
+    const derivedWorkspaces = packageRoot === undefined ? null : consumerRuleWorkspaces(packageRoot);
     const proj = settings['projection'];
     if (typeof proj !== 'object' || proj === null || Array.isArray(proj)) {
-        return LEGACY_ALL;
+        return { ...LEGACY_ALL, workspaces: derivedWorkspaces };
     }
     const p = proj;
     // `rule_packs: auto` derives the active-pack set — the SAME set the
@@ -65,7 +71,18 @@ export function ruleScopeFromSettings(settings, packageRoot) {
         ? _list(p['rule_packs'])
         : resolve_rule_pack_scope(p['rule_packs'], packageRoot, _list(_runtimeActivePacks(settings)) ?? []);
     return {
-        workspaces: _list(p['rule_workspaces']),
+        // DERIVED since ADR-292 step 4.6, not read. `projection.rule_workspaces`
+        // carried this list as a settings default — the nine consumer workspace
+        // ids, re-typed into the template and needing a re-type whenever a pack
+        // arrived with a new one. What it encoded is a RULE: maintainer-only
+        // rules never project to a consumer. `consumerRuleWorkspaces` derives
+        // exactly that from the pack vocabulary, and the derived set equals the
+        // old default (asserted in `consumer_rule_workspaces.test.ts`).
+        // Without a package root there is no vocabulary to read, so the axis is
+        // INACTIVE rather than empty — the same degradation `rule_packs` makes
+        // above, and the same reason: a package that cannot read its own pack
+        // list must ship more than it should, never less.
+        workspaces: derivedWorkspaces,
         packs,
         roles: _list(p['rule_roles']),
     };
