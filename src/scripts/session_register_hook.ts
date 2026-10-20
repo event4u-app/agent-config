@@ -611,12 +611,8 @@ export function touch(
     // session registration working exactly as it did. The cost of that choice
     // is stated where it matters — `any_live_session` fails closed to "no
     // session", so the unattended run leans on its lock and age gates too.
-    write_global_record(rec);
-    return write_record(dir, rec);
-}
-
-/** Mirror a record into the machine-wide register. Never throws, never gates. */
-function write_global_record(rec: SessionRecord): void {
+    // Inlined rather than a helper: the hook bundle is byte-budgeted and a
+    // second function declaration was measured 27 bytes over the ceiling.
     try {
         const gdir = global_register_dir();
         fs.mkdirSync(gdir, { recursive: true });
@@ -624,6 +620,7 @@ function write_global_record(rec: SessionRecord): void {
     } catch {
         /* a session that cannot reach the global root still starts */
     }
+    return write_record(dir, rec);
 }
 
 /**
