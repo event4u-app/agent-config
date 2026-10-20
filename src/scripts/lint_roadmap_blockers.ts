@@ -201,6 +201,18 @@ interface TargetIndex {
  */
 const USER_DECISION_OWNER_RE = /^-[ \t]*\*\*Owner:\*\*[ \t]*(maintainer|user|owner)\b/im;
 
+/**
+ * Template rule 20 "Route before you file": a human-owned blocker records the
+ * council verdict that sent it to a human, or why no council could be asked.
+ * Absent is ratcheted (the backlog predates the field); present-but-malformed
+ * is hard, since no entry carried the field on the day it shipped. Counted over
+ * this lint's own scope, so a blocker filed straight into a parked roadmap is
+ * not seen — parking itself is held by check_estate_count's later_roadmaps floor.
+ */
+const ROUTED_FIELD_RE = /^-[ \t]*\*\*Routed:\*\*[ \t]*(.*)$/im;
+const ROUTED_VALUE_RE =
+    /^(?:council[ \t]+\d{4}-\d{2}-\d{2}[ \t]+ESCALATE[ \t]+[—-][ \t]*\S|pending[ \t]+[—-][ \t]*\S)/;
+
 const REQUIRED_FIELDS: ReadonlyArray<readonly [string, RegExp]> = [
     ['Status', /^-[ \t]*\*\*Status:\*\*/im],
     ['Owner', /^-[ \t]*\*\*Owner:\*\*/im],
@@ -327,6 +339,8 @@ interface ScanResult {
     hard: Violation[];
     /** Open entries that are not yet decidable — counted against the ratchet. */
     decidability: Violation[];
+    /** Open human-owned entries with no `Routed:` field — counted against its own ratchet. */
+    routing: Violation[];
 }
 
 /** What a scan needs to resolve a qualified reference: who it is, and where it may point. */
@@ -339,6 +353,7 @@ interface ScanContext {
 function _scanBoth(rawText: string, ctx: ScanContext = {}): ScanResult {
     const violations: Violation[] = [];
     const decidability: Violation[] = [];
+    const routing: Violation[] = [];
     const text = _stripFencedCode(rawText);
     const declaredIds = new Set<string>();
     const userDecisionIds = new Set<string>();
@@ -452,6 +467,24 @@ function _scanBoth(rawText: string, ctx: ScanContext = {}): ScanResult {
                         });
                     }
                 }
+                if (USER_DECISION_OWNER_RE.test(body)) {
+                    const routed = ROUTED_FIELD_RE.exec(body);
+                    const at = _lineAt(text, sectionStart + cur.start);
+                    if (routed === null) {
+                        routing.push({
+                            line: at,
+                            message: `blocker '${cur.id}' has a human Owner but no **Routed:** field`,
+                        });
+                    } else if (!ROUTED_VALUE_RE.test((routed[1] as string).trim())) {
+                        violations.push({
+                            line: at,
+                            message:
+                                `blocker '${cur.id}' declares **Routed:** '${(routed[1] as string).trim()}' — ` +
+                                "expected 'council YYYY-MM-DD ESCALATE — <reserved row>' or " +
+                                "'pending — <why the council was unreachable>' (templates/roadmaps.md rule 20)",
+                        });
+                    }
+                }
                 const gaps = DECIDABILITY_FIELDS.filter(([, re]) => !re.test(body)).map(
                     ([name]) => name,
                 );
@@ -518,7 +551,8 @@ function _scanBoth(rawText: string, ctx: ScanContext = {}): ScanResult {
     }
     violations.sort((a, b) => a.line - b.line);
     decidability.sort((a, b) => a.line - b.line);
-    return { hard: violations, decidability };
+    routing.sort((a, b) => a.line - b.line);
+    return { hard: violations, decidability, routing };
 }
 
 interface LocalBlockers {
@@ -885,12 +919,19 @@ function main(): number {
     const index = _targetIndex();
     let failed = 0;
     const undecidable: Array<{ rel: string; v: Violation }> = [];
+    const unrouted: Array<{ rel: string; v: Violation }> = [];
     for (const roadmap of roadmaps) {
         const rel = _relPosix(roadmap, REPO_ROOT);
         const text = fs.readFileSync(roadmap, 'utf-8');
-        const { hard, decidability } = _scanBoth(text, { selfStem: path.basename(roadmap, '.md'), index });
+        const { hard, decidability, routing } = _scanBoth(text, {
+            selfStem: path.basename(roadmap, '.md'),
+            index,
+        });
         for (const v of decidability) {
             undecidable.push({ rel, v });
+        }
+        for (const v of routing) {
+            unrouted.push({ rel, v });
         }
         if (hard.length) {
             failed += 1;
@@ -962,10 +1003,30 @@ function main(): number {
                 '    **What to do:** carrying a command, a path or an enumerated option set.\n' +
                 '    See templates/roadmaps.md rule 20.\n',
         );
+    }
+    const routingVerdict = checkRatchet({
+        gate: 'lint_roadmap_blockers:routing',
+        actual: unrouted.length,
+        repoRoot: REPO_ROOT,
+    });
+    if (!routingVerdict.ok) {
+        process.stderr.write(`❌  ${routingVerdict.message}\n`);
+        for (const { rel, v } of unrouted) {
+            process.stderr.write(`    ${rel}:${v.line}: ${v.message}\n`);
+        }
+        process.stderr.write(
+            '\n    Route a human-owned blocker through the council before filing it, and record\n' +
+                "    **Routed:** council YYYY-MM-DD ESCALATE — <reserved row>, or 'pending — <reason>'\n" +
+                '    when no council could be reached. A DECIDE is a ## Decisions row, not a blocker.\n' +
+                '    See templates/roadmaps.md rule 20 "Route before you file".\n',
+        );
+    }
+    if (!verdict.ok || !routingVerdict.ok) {
         return 1;
     }
     if (!QUIET) {
         process.stdout.write(`\n✅  ${roadmaps.length} roadmap(s) blocker-contract-clean\n`);
+        process.stdout.write(`✅  ${routingVerdict.message}\n`);
         process.stdout.write(
             `✅  0 blocker id(s) open in both an active and an archived roadmap ` +
                 `(${_globArchivedRoadmaps().length} archived file(s) read)\n`,

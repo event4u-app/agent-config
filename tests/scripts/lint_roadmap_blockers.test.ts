@@ -117,6 +117,62 @@ describe('lint_roadmap_blockers — the decidability half', () => {
     });
 });
 
+describe('lint_roadmap_blockers — the routing half (rule 20 "Route before you file")', () => {
+    const humanOwned = [
+        '## Blockers',
+        '',
+        '### blocker: pick-a-reading',
+        '- **Status:** open',
+        '- **Owner:** maintainer',
+        '- **Blocks:** acceptance criterion 3',
+        '- **Recommendation:** (a) — it is the only one backed by a measurement.',
+        '- **If you do nothing:** the roadmap stays open; nothing else breaks.',
+        '- **What to do:**',
+        '  1. (a) Edit `agents/roadmaps/x.md` and tick the criterion.',
+        '  2. (b) Re-cut the criterion, then run `agent-config roadmap:progress`.',
+        '- **Resolved when:** the criterion is ticked',
+        '',
+    ].join('\n');
+    const withRouted = (value: string): string =>
+        humanOwned.replace('- **Blocks:**', `- **Routed:** ${value}\n- **Blocks:**`);
+
+    it('counts an open human-owned blocker with no Routed field', () => {
+        const { routing, hard } = _scanBoth(humanOwned);
+        expect(routing).toHaveLength(1);
+        expect(routing[0]!.message).toContain('pick-a-reading');
+        expect(hard).toEqual([]);
+    });
+
+    it.each(['user', 'owner'])('counts Owner: %s the same way', (owner) => {
+        expect(_scanBoth(humanOwned.replace('Owner:** maintainer', `Owner:** ${owner}`)).routing).toHaveLength(1);
+    });
+
+    it('accepts a council ESCALATE with its reserved row, and a pending route with a reason', () => {
+        for (const value of [
+            'council 2026-10-20 ESCALATE — spend above a delegated threshold',
+            'pending — both seats unavailable on 2026-10-20',
+        ]) {
+            const scan = _scanBoth(withRouted(value));
+            expect(scan.routing).toEqual([]);
+            expect(scan.hard).toEqual([]);
+        }
+    });
+
+    it('rejects a Routed value that names no verdict, or a DECIDE that should have been a Decisions row', () => {
+        for (const value of ['yes', 'council 2026-10-20 DECIDE — (a)', 'pending']) {
+            const scan = _scanBoth(withRouted(value));
+            expect(scan.hard).toHaveLength(1);
+            expect(scan.hard[0]!.message).toContain('Routed');
+        }
+    });
+
+    it('leaves non-human owners and resolved entries alone', () => {
+        expect(_scanBoth(humanOwned.replace('Owner:** maintainer', 'Owner:** council')).routing).toEqual([]);
+        expect(_scanBoth(humanOwned.replace('Owner:** maintainer', 'Owner:** implementer')).routing).toEqual([]);
+        expect(_scanBoth(humanOwned.replace('Status:** open', 'Status:** resolved')).routing).toEqual([]);
+    });
+});
+
 describe('lint_roadmap_blockers — the gate-class contract', () => {
     /** A decidable class-0 entry: it declares the command it is cleared by. */
     const classified = (extra: readonly string[]): string =>

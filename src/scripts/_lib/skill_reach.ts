@@ -165,16 +165,26 @@ export function reachCensus(opts: {
     settingsPath: string;
     hostKeys: ReadonlySet<string>;
     mcp: boolean;
+    /**
+     * The host's listing override for one name, when the host does not keep it
+     * in a settings file.
+     *
+     * The first host writes `skillOverrides` into its settings; the second host
+     * has no such setting and a skill leaves its listing by carrying a policy
+     * file instead (4.1). Same bucket, different place to look — so the LOOKUP
+     * is the seam, not a second census.
+     */
+    overrideOf?: (name: string) => string | undefined;
 }): ReachCensus {
     const authoredNames = skillNames(opts.projectionRoot);
     const installed = new Set(skillNames(opts.hostRoot));
-    const overrides = readOverrides(opts.settingsPath);
+    const overrides = opts.overrideOf ? {} : readOverrides(opts.settingsPath);
     const paths: ReachPaths = { shell: authoredNames.length > 0, mcp: opts.mcp };
     const counts = Object.fromEntries(REACH_BUCKETS.map((b) => [b, 0])) as Record<ReachBucket, number>;
     for (const name of authoredNames) {
         const text = fs.readFileSync(path.join(opts.projectionRoot, name, 'SKILL.md'), 'utf-8');
         const input: SkillReachInput = { keys: frontmatterKeys(text), installed: installed.has(name) };
-        const ov = overrides[name];
+        const ov = opts.overrideOf ? opts.overrideOf(name) : overrides[name];
         if (ov !== undefined) input.override = ov;
         counts[classifySkillReach(input, paths, opts.hostKeys)] += 1;
     }
@@ -187,9 +197,9 @@ export function reachCensus(opts: {
     };
 }
 
-export function renderReach(c: ReachCensus, hostRootLabel: string): string {
+export function renderReach(c: ReachCensus, hostRootLabel: string, host = 'claude-code'): string {
     return (
-        `claude-code (${hostRootLabel}): installed ${c.installed} (described ${c.counts.described} · ` +
+        `${host} (${hostRootLabel}): installed ${c.installed} (described ${c.counts.described} · ` +
         `name-only ${c.counts['name-only']} · unlisted ${c.counts.unlisted}) · ` +
         `reachable-not-installed ${c.counts['reachable-not-installed']} · degraded ${c.counts.degraded} · ` +
         `unreachable ${c.counts.unreachable} — of ${c.authored} authored`
@@ -207,24 +217,89 @@ export function checkSkillReach(
     if (skillNames(projectionRoot).length === 0) {
         return { id, status: 'skipped', message: `no skill projection at ${projectionRoot}`, remedy: '' };
     }
-    const c = reachCensus({
-        projectionRoot,
-        hostRoot: path.join(home, '.claude', 'skills'),
-        settingsPath: path.join(home, '.claude', 'settings.json'),
-        hostKeys: loadHostKeys(packageRoot),
-        mcp: opts.mcp ?? false,
+    const hostKeys = loadHostKeys(packageRoot);
+    const mcp = opts.mcp ?? false;
+
+    // AC-1 reads "every host with native skills", so the check reports a row
+    // per such host rather than one row for the first one. The second host
+    // appears only once something is installed there: a row of zeros for a host
+    // nobody installed would read as a finding.
+    const rows: Array<{ host: string; label: string; c: ReachCensus }> = [];
+    rows.push({
+        host: 'claude-code',
+        label: '~/.claude/skills',
+        c: reachCensus({
+            projectionRoot,
+            hostRoot: path.join(home, '.claude', 'skills'),
+            settingsPath: path.join(home, '.claude', 'settings.json'),
+            hostKeys,
+            mcp,
+        }),
     });
-    const message = renderReach(c, '~/.claude/skills');
-    if (!c.sums) {
-        return { id, status: 'warn', message: `${message} — the buckets do not sum`, remedy: 'report this as a defect' };
+    const codexRoot = path.join(home, '.codex', 'skills');
+    if (skillNames(codexRoot).length > 0) {
+        rows.push({
+            host: 'codex',
+            label: '~/.codex/skills',
+            c: reachCensus({
+                projectionRoot,
+                hostRoot: codexRoot,
+                settingsPath: '',
+                hostKeys,
+                mcp,
+                // 4.1: a skill outside the resident set carries a policy file
+                // that takes it out of the listing. `off` is the bucket's own
+                // vocabulary — installed and not listed.
+                //
+                // `unlisted` is installed-and-not-listed. It is NOT a claim
+                // of reach, and on this host that distinction is measured:
+                // probe row `unlisted-skill-not-in-model-list` (two-armed) has
+                // the model answering `NONRESIDENT=NO` for a policy-disabled
+                // skill against `RESIDENT=YES` for a resident one, and
+                // answering `UNAVAILABLE` without a tool call when asked to
+                // invoke it. Its body is still readable by a caller that knows
+                // the path, which is a filesystem read.
+                //
+                // The bucket stays `unlisted` because that is what is true —
+                // calling it `unreachable` would assert the host refuses an
+                // invocation, which no run established. Which remedy the
+                // package takes is the open blocker
+                // `second-host-unlisted-reachability`; AC-1 does not close on
+                // this bucket alone.
+                overrideOf: (name) =>
+                    fs.existsSync(path.join(codexRoot, name, 'agents', 'openai.yaml')) ? 'off' : undefined,
+            }),
+        });
+    }
+
+    const message = rows.map((r) => renderReach(r.c, r.label, r.host)).join('; ');
+    const notSumming = rows.filter((r) => !r.c.sums).map((r) => r.host);
+    if (notSumming.length > 0) {
+        return {
+            id,
+            status: 'warn',
+            message: `${message} — the buckets do not sum for ${notSumming.join(', ')}`,
+            remedy: 'report this as a defect',
+        };
+    }
+    // AC-1's own condition, as a verdict rather than as a number a reader has
+    // to notice: a skill no path reaches on a host that has native skills is
+    // the defect this whole roadmap is about.
+    const unreachable = rows.filter((r) => r.c.counts.unreachable > 0).map((r) => r.host);
+    if (unreachable.length > 0) {
+        return {
+            id,
+            status: 'warn',
+            message: `${message} — unreachable skills on ${unreachable.join(', ')}`,
+            remedy: 'install the skill, or give the host a retrieval path that carries its declared keys',
+        };
     }
     return {
         id,
         status: 'ok',
         message,
-        remedy:
-            c.counts.degraded > 0
-                ? 'a degraded skill is reachable as text only; the host keys it declares are not applied'
-                : '',
+        remedy: rows.some((r) => r.c.counts.degraded > 0)
+            ? 'a degraded skill is reachable as text only; the host keys it declares are not applied'
+            : '',
     };
 }

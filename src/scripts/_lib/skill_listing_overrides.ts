@@ -36,6 +36,10 @@ import * as global_deploy_inventory from './global_deploy_inventory.js';
 import { type CatalogueEntry, modelListingBudget } from './host_listing_model.js';
 import * as user_global_paths from './user_global_paths.js';
 
+// Imported for the one wrapper at the bottom; see its comment for why the
+// branch lives here rather than in the installer.
+import { applyCodexResidentSet } from './codex_resident_set.js';
+
 export const OVERRIDE_KEY = 'skillOverrides';
 export const NAME_ONLY = 'name-only';
 export const RECORD_BASENAME = 'skill-overrides.json';
@@ -264,4 +268,27 @@ export function applyListingOverrides(anchor: string, report: (msg: string) => v
     } catch (e) {
         report(`claude-code: listing override skipped — ${String(e)}`);
     }
+}
+
+/**
+ * Both hosts' listing policies behind one call, which is the whole reason this
+ * wrapper exists.
+ *
+ * `install.ts` is 5,104 lines against a 1,500-line growth ratchet, so every
+ * line added there is a violation the ratchet counts — and a second import plus
+ * a second call site would have been five of them. The branch belongs with the
+ * code it branches on anyway: which host got a listing policy is this module's
+ * subject, not the installer's.
+ */
+export function applyHostListingPolicies(
+    deployed: { claudeCode: boolean; codex: boolean },
+    home: string,
+    claudeAnchor: string,
+    report: (msg: string) => void,
+): void {
+    if (deployed.claudeCode) applyListingOverrides(claudeAnchor, report);
+    // Second host: it drops whole entries rather than descriptions when the
+    // listing does not fit, and it reads more than one root — so its policy
+    // takes the home, not one anchor.
+    if (deployed.codex) applyCodexResidentSet(home, report);
 }

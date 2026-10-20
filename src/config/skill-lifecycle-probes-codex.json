@@ -7,7 +7,7 @@
     "transcript": null,
     "date": null,
     "expiry": "2027-01-17",
-    "reason": "Probe: a session writes a skill under the repo's `.agents/skills` mid-turn and is asked whether its system-supplied listing now carries it. Four attempts on 2026-10-19 under codex-cli 0.148.0 did not reach an answer: the first stopped on a coordination question the package's own global instructions raised, the next three ended `429 Too Many Requests` after the session start — the subscription's rate limit, so a later run can take it. The host page says changes are detected automatically and to restart if one does not appear; that is documentation, not an observation."
+    "reason": "Probe: a session writes a skill under the repo's `.agents/skills` mid-turn and is asked whether its system-supplied listing now carries it. Four attempts on 2026-10-19 under codex-cli 0.148.0 did not reach an answer: the first stopped on a coordination question the package's own global instructions raised, the next three ended `429 Too Many Requests` after the session start — the subscription's rate limit, so a later run can take it. The host page says changes are detected automatically and to restart if one does not appear; that is documentation, not an observation. Re-tried 2026-10-20 under codex-cli 0.148.0 with the probe reshaped so the write comes from OUTSIDE the session mid-turn (the session sleeps, a second process writes `.agents/skills/zz-late-probe`), because a probe that writes its own skill cannot run: the sandbox reports `.agents` read-only under `-s workspace-write` (session 01a156f2-4cee-74e1-ae05-c3ff3d558dd6), so the host protects the very directory the probe must write. That run stopped on the same coordination question the package's own global instructions raise; a third run with the question pre-answered (session 01a156f2-e055-7161-aebb-94ba36ab63fb) ended `429 Too Many Requests` at the subscription's rate limit before the sleep, the second rate-limited day in a row. Two things were observed on the way and are not the cell: a skill present only under the repo's `.agents/skills` IS listed (`BEFORE: zz-early-probe`), and the omission warning fired at 426 omitted skills on this machine's real user roots. The cell stays `unobserved`: a host-side rate limit is a wait, not a reading."
   },
   "omission-order-and-warning": {
     "host": "codex",
@@ -35,5 +35,14 @@
     "date": "2026-10-19",
     "expiry": "2027-01-17",
     "reason": "The host does not read `.claude/skills`: a probe skill placed only there in the repo was reported not available. It does read `~/.codex/skills` beside the documented `~/.agents/skills`, and a skill present under both is listed twice (every user-scope entry in both sessions appears once per root, 111 and 145 pairs) — the host never merges same-name skills, so a package that writes both roots spends the budget twice."
+  },
+  "unlisted-skill-not-in-model-list": {
+    "host": "codex",
+    "state": "observed-true",
+    "host_version": "0.148.0",
+    "transcript": "~/.codex/sessions/2026/10/20/ rollout for session 01a15751-db98-7523-a93d-c9fc3605aead; paired with 01a1573b-c7bb-7450-afca-6091f998cbe4 and 01a15755-42d0-7752-9404-8d3f27447275",
+    "date": "2026-10-20",
+    "expiry": "2027-01-18",
+    "reason": "Two-armed, taken for 5.2's arm S3 and then for the blocker `second-host-unlisted-reachability`. Under a scratch `HOME` and `CODEX_HOME` carrying the resident set of 4.1, asked which of two names are in its skills list, the session answered `RESIDENT=YES` for a resident skill and `NONRESIDENT=NO` for `docker`, which is installed on disk and carries `agents/openai.yaml` with `policy.allow_implicit_invocation: false`. Asked to INVOKE the non-resident one it answered `UNAVAILABLE` and made no tool call; asked to invoke the resident one it did not use the skill mechanism either, it `sed`-read the file it knew the path to. So what is established is narrower than `the host refuses an invocation` and wider than `nothing changed`: a policy-disabled skill is NOT in the model-visible skills list, and a model that cannot see it does not reach for it. Its body stays readable by a caller that already knows the path, which is a filesystem read and not the skill mechanism. Consequence: `unlisted` remains the factually correct bucket (installed, not listed) and must not be read as `reachable`."
   }
 }

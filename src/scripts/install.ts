@@ -106,7 +106,7 @@ import * as catalogue from './_lib/skill_catalogue.js';
 import { isInteractiveSession, type SessionProbe } from '../shared/interactiveContext.js';
 import * as claude_desktop_bundler from './_lib/claude_desktop_bundler.js';
 import * as claude_settings_hooks from './_lib/claude_settings_hooks.js';
-import { applyListingOverrides } from './_lib/skill_listing_overrides.js';
+import { applyHostListingPolicies } from './_lib/skill_listing_overrides.js';
 import { hostBindings } from './hooks/host_lowering.js';
 import { find_project_root_with_anchor, load_agent_settings } from './_lib/agent_settings.js';
 import { ruleFileArrives, type RuleScope } from '../install/rule_scope.js';
@@ -3438,7 +3438,7 @@ function install_global(
         }
     }
     // After every prune, so only skills still on disk are computed into the listing override.
-    if (deploy_results['claude-code']?.[2] === 'deployed') applyListingOverrides(expanduser(USER_SCOPE_PATHS['claude-code']!), state.QUIET ? () => undefined : info);
+    applyHostListingPolicies({ claudeCode: deploy_results['claude-code']?.[2] === 'deployed', codex: deploy_results['codex']?.[2] === 'deployed' }, os.homedir(), expanduser(USER_SCOPE_PATHS['claude-code']!), state.QUIET ? () => undefined : info);
 
     const failed_tools = new Set<string>(
         Object.keys(deploy_results).filter(
