@@ -1,3 +1,5 @@
+<!-- evidence-type: original-review -->
+
 # Council — the lazy-concern chunk bundled with two new concerns, refused 2/2
 
 > **Type:** council-record. Round of 2026-10-20, both seats present before and after
