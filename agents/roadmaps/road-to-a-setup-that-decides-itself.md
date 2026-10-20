@@ -307,6 +307,8 @@ with that file.
 > sessions under the binding landed in 1.1 and an observed effect row in
 > `host-injection-effect.json` (owned by `road-to-delivery-on-hook-hosts`); the
 > today arm needs 0.1's fixtures. Neither exists on the day the observer ships.
+>
+> **Re-screened 2026-10-20, unchanged in substance and narrower in what is missing.** 0.1 and 0.2 have both landed, so the *today* arm and the corpus exist. What the *computed* arm still needs is a machine on which the decision function can return anything but `delivery-unobserved`, and that needs the 1.1 binding plus an observed effect row — neither of which a lane produces by working harder. 5.1 could be drafted today; it could not be FROZEN, because its own verify requires a council review and the `anthropic` seat's quota was exhausted on the day. So Phase 5 is left untouched rather than half-written: a pre-registration that cannot be frozen is a document that invites being edited after the first reading, which is the one thing a pre-registration exists to prevent.
 
 - [ ] **5.1 Pre-register.** Arms per host: today (0.1) vs computed (Phase 3).
   Primary: host-graded and conformance cases with D2's margin fixed before the
