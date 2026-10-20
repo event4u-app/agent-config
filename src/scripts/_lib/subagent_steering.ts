@@ -389,3 +389,319 @@ export function escalateOnVerifyFail(inp: VerifyFailInputs): VerifyFailDecision 
         reason: `verify-fail on ${inp.failed_tier} → re-dispatch one tier up (${above}); consumes the N=3 budget`,
     };
 }
+
+/**
+ * Transient-failure handling, split by error class — the transient-failure
+ * retry rule of the `subagent-steering` contract, as two pure steps: classify
+ * the raw failure, then decide the transition and the slot's next state.
+ *
+ * Neither dispatches anything. The contract text is what a dispatching model
+ * reads; these are its tested reference, and a caller carries `next_state`
+ * forward so a sequence of failures is decided over the same counters.
+ *
+ * Only a slice declared read-only or idempotent is re-dispatched: a subagent's
+ * first run may have acted before it failed, and discarding its late result
+ * does not stop it. Any other slice escalates unretried. A slot whose N=3
+ * budget is already spent is refused. Slot counters persist across every
+ * attempt of the slot. A rate limit is never answered with a smaller model: the
+ * limiter's scope (model, account or organisation) is not known. A park is not
+ * a failed attempt; the dispatch after recovery is the same attempt at the same
+ * tier. A slot parks once — a rate limit, or a `Retry-After` the run cannot be
+ * shown to wait out — and the next park consumes an attempt, so repeated limits
+ * reach the N=3 budget. A consumed attempt is a spawn failure, never a
+ * verification failure. After a consumed attempt the next one starts at the
+ * slot's original tier, with no downshift left once one was taken.
+ */
+export type TransientErrorClass = 'rate_limit' | 'overloaded' | 'server_error' | 'timeout';
+
+export interface RawTransientFailure {
+    http_status: number | null;
+    /** Provider error type, when the response carries one. */
+    error_type: string | null;
+    /** The client deadline fired before the response completed. */
+    client_deadline: boolean;
+    /**
+     * Bytes of the model's response arrived before the failure. An error status
+     * line and its error body are not response bytes; an error event inside a
+     * stream that had already produced output is.
+     */
+    response_started: boolean;
+    /** The connection was never established (DNS failure, connection refused). */
+    connect_failed: boolean;
+}
+
+/**
+ * `null` means not transient: the failure escalates to the orchestrator
+ * unretried. Once a response byte arrived the request may have been acted on,
+ * so nothing is transient after that — no status, no error type, no deadline,
+ * which is why that check runs first. A missing status with no bytes is
+ * transient only when the connection was observed never to open — the absence
+ * alone proves nothing.
+ */
+export function classifyTransientFailure(raw: RawTransientFailure): TransientErrorClass | null {
+    const f = rawSnapshot(raw);
+    if (f === null) return null;
+    if (f.response_started) return null;
+    if (f.http_status === 429 || f.error_type === 'rate_limit_error') return 'rate_limit';
+    if (f.http_status === 529 || f.error_type === 'overloaded_error') return 'overloaded';
+    if (f.http_status !== null && f.http_status >= 500 && f.http_status <= 599) return 'server_error';
+    if (f.client_deadline) return 'timeout';
+    if (f.http_status === null && f.connect_failed) return 'server_error';
+    return null;
+}
+
+/**
+ * A plain copy of `keys`, each an own DATA property of `v`, or `null`. An
+ * inherited value, an accessor, an array or a proxy trap that throws is
+ * refused, and the copy is what gets decided over, so nothing read afterwards
+ * can change or throw. A caller may be untyped.
+ */
+function ownData(v: unknown, keys: readonly string[]): Record<string, unknown> | null {
+    if (v === null || typeof v !== 'object') return null;
+    // Inside the `try`: `Array.isArray` throws on a revoked proxy.
+    try {
+        if (Array.isArray(v)) return null;
+        const out: Record<string, unknown> = {};
+        for (const k of keys) {
+            const d = Object.getOwnPropertyDescriptor(v, k);
+            if (d === undefined || !('value' in d)) return null;
+            out[k] = d.value;
+        }
+        return out;
+    } catch {
+        return null;
+    }
+}
+
+const RAW_KEYS = ['http_status', 'error_type', 'client_deadline', 'response_started', 'connect_failed'] as const;
+
+/** The raw failure as own data with its declared types, or `null`. */
+function rawSnapshot(f: unknown): RawTransientFailure | null {
+    const o = ownData(f, RAW_KEYS);
+    if (o === null) return null;
+    const status = o['http_status'];
+    if (status !== null && !(typeof status === 'number' && Number.isInteger(status))) return null;
+    const type = o['error_type'];
+    if (type !== null && typeof type !== 'string') return null;
+    if (!['client_deadline', 'response_started', 'connect_failed'].every((k) => typeof o[k] === 'boolean')) return null;
+    return o as unknown as RawTransientFailure;
+}
+
+export interface SlotState {
+    original_tier: EscalationTier;
+    current_tier: EscalationTier;
+    /** The cap is one per slot, across every class and attempt. */
+    downshifts_used: 0 | 1;
+    /** Parks taken, of any cause; one per slot. */
+    parks: number;
+    attempts_consumed: number;
+}
+
+export interface TransientFailureInputs {
+    error_class: TransientErrorClass;
+    /** A valid `Retry-After`, in milliseconds; `null` when absent or unparseable. */
+    retry_after_ms: number | null;
+    slot: SlotState;
+    /**
+     * The slice is declared read-only or idempotent, so a re-run cannot
+     * duplicate an effect. Only the literal `true` counts. Its provenance is the
+     * dispatcher's own record from before the dispatch — the slice spec it
+     * wrote, or a definition whose tool grant holds no write tool — never the
+     * subagent's output, status envelope or self-description.
+     */
+    retry_safe: boolean;
+    /** Time left in the run, from the dispatcher's own clock; `null` when unknown. */
+    run_remaining_ms: number | null;
+}
+
+const TIER_RANK: Readonly<Record<EscalationTier, number>> = { lite: 0, medium: 1, high: 2 };
+
+/** Own keys only: `in` would admit `toString`, `constructor` and `__proto__`. */
+function isEscalationTier(t: unknown): t is EscalationTier {
+    return typeof t === 'string' && Object.hasOwn(TIER_RANK, t);
+}
+
+function isCount(n: unknown): boolean {
+    return typeof n === 'number' && Number.isInteger(n) && n >= 0;
+}
+
+/**
+ * Why the caller-supplied slot or clock cannot be decided over, or `null`. The
+ * counters are carried by the caller between calls, so this function never
+ * assumes they are well-formed: a tier outside the ladder, a downshift that did
+ * not lower the tier, or a non-integer count is refused rather than decided.
+ */
+const ERROR_CLASSES: ReadonlySet<unknown> = new Set<TransientErrorClass>(['rate_limit', 'overloaded', 'server_error', 'timeout']);
+
+const INPUT_KEYS = ['error_class', 'retry_after_ms', 'slot', 'retry_safe', 'run_remaining_ms'] as const;
+const SLOT_KEYS = ['original_tier', 'current_tier', 'downshifts_used', 'parks', 'attempts_consumed'] as const;
+
+/**
+ * The input as own data, validated, or the name of what is malformed. The
+ * returned copy — slot included — is what the decision reads, so the caller's
+ * objects are never read twice.
+ */
+function snapshotInput(inp: unknown): { ok: TransientFailureInputs } | { malformed: string } {
+    const i = ownData(inp, INPUT_KEYS);
+    if (i === null) return { malformed: 'input' };
+    if (!ERROR_CLASSES.has(i['error_class'])) return { malformed: 'error_class' };
+    if (i['retry_after_ms'] !== null && typeof i['retry_after_ms'] !== 'number') return { malformed: 'retry_after_ms' };
+    if (typeof i['retry_safe'] !== 'boolean') return { malformed: 'retry_safe' };
+    const s = ownData(i['slot'], SLOT_KEYS);
+    if (s === null) return { malformed: 'slot' };
+    const o = s['original_tier'];
+    const c = s['current_tier'];
+    if (!isEscalationTier(o)) return { malformed: 'original_tier' };
+    if (!isEscalationTier(c)) return { malformed: 'current_tier' };
+    const used = s['downshifts_used'];
+    if (used !== 0 && used !== 1) return { malformed: 'downshifts_used' };
+    const drop = TIER_RANK[o] - TIER_RANK[c];
+    // After a consumed attempt the slot is back at its original tier with its
+    // downshift still spent, so the tier sits at most one downshift below.
+    if (drop < 0 || drop > used) return { malformed: 'current_tier against downshifts_used' };
+    if (!isCount(s['parks'])) return { malformed: 'parks' };
+    if (!isCount(s['attempts_consumed'])) return { malformed: 'attempts_consumed' };
+    const r = i['run_remaining_ms'];
+    if (r !== null && !(typeof r === 'number' && Number.isFinite(r) && r >= 0)) return { malformed: 'run_remaining_ms' };
+    return { ok: { ...(i as unknown as TransientFailureInputs), slot: s as unknown as SlotState } };
+}
+
+interface TransientDecisionBase {
+    redispatch_same_turn: boolean;
+    /** Minimum wait before the next dispatch; binding over any other signal. */
+    wait_ms: number | null;
+    /** Re-run `decideWorkerReuse` before the next dispatch. */
+    rerun_reuse_decision: boolean;
+    /** One N=3 attempt and one `spawn_failure_rate` failure. */
+    attempt_consumed: boolean;
+    /** The N=3 budget is spent; the slice fails and the orchestrator replans. */
+    budget_exhausted: boolean;
+    /** A timed-out call may still return; its output is discarded unread. */
+    discard_late_result: boolean;
+    reason: string;
+}
+
+/** A decision over a well-formed input: the slot's next tier and counters. */
+export interface WellFormedTransientDecision extends TransientDecisionBase {
+    malformed: false;
+    action: 'park' | 'downshift' | 'count-failure' | 'escalate' | 'refuse';
+    /** Tier of the next dispatch of this slot. */
+    next_tier: EscalationTier;
+    next_state: SlotState;
+}
+
+/**
+ * The input could not be decided over. It carries no tier and no state: the
+ * caller's own slot is the only record, and nothing here vouches for it.
+ */
+export interface MalformedTransientDecision extends TransientDecisionBase {
+    malformed: true;
+    action: 'escalate';
+    next_tier: null;
+    next_state: null;
+}
+
+export type TransientFailureDecision = WellFormedTransientDecision | MalformedTransientDecision;
+
+const TIER_BELOW: Readonly<Record<EscalationTier, EscalationTier | null>> = {
+    lite: null,
+    medium: 'lite',
+    high: 'medium',
+};
+
+export function transientFailureAction(input: TransientFailureInputs): TransientFailureDecision {
+    // Snapshotted and validated before anything reads a field: the escalation
+    // below must not throw on the input it exists to refuse.
+    const snap = snapshotInput(input);
+    if ('malformed' in snap) {
+        const malformed = snap.malformed;
+        return {
+            malformed: true,
+            action: 'escalate',
+            redispatch_same_turn: false,
+            wait_ms: null,
+            next_tier: null,
+            rerun_reuse_decision: false,
+            attempt_consumed: false,
+            budget_exhausted: false,
+            discard_late_result: false,
+            next_state: null,
+            reason: `malformed ${malformed} — escalate unretried, no counter moved`,
+        };
+    }
+    const inp = snap.ok;
+    const s = inp.slot;
+    const wait_ms = inp.retry_after_ms !== null && Number.isFinite(inp.retry_after_ms) && inp.retry_after_ms >= 0
+        ? inp.retry_after_ms
+        : null;
+    const discard_late_result = inp.error_class === 'timeout';
+    const halt = (action: 'escalate' | 'refuse', reason: string): WellFormedTransientDecision => ({
+        malformed: false,
+        action,
+        redispatch_same_turn: false,
+        wait_ms,
+        next_tier: s.current_tier,
+        rerun_reuse_decision: false,
+        attempt_consumed: false,
+        budget_exhausted: budgetHalt(s.attempts_consumed),
+        discard_late_result,
+        next_state: s,
+        reason,
+    });
+    const consume = (reason: string): WellFormedTransientDecision => {
+        const attempts_consumed = s.attempts_consumed + 1;
+        return {
+            malformed: false,
+            action: 'count-failure',
+            redispatch_same_turn: false,
+            wait_ms,
+            next_tier: s.original_tier,
+            rerun_reuse_decision: true,
+            attempt_consumed: true,
+            budget_exhausted: budgetHalt(attempts_consumed),
+            discard_late_result,
+            next_state: { ...s, current_tier: s.original_tier, attempts_consumed },
+            reason,
+        };
+    };
+    const park = (reason: string): WellFormedTransientDecision => {
+        if (s.parks >= 1) return consume(`${inp.error_class} on a slot that already parked — one attempt consumed, no second park`);
+        return {
+            malformed: false,
+            action: 'park',
+            redispatch_same_turn: false,
+            wait_ms,
+            next_tier: s.current_tier,
+            rerun_reuse_decision: true,
+            attempt_consumed: false,
+            budget_exhausted: false,
+            discard_late_result,
+            next_state: { ...s, parks: s.parks + 1 },
+            reason,
+        };
+    };
+
+    if (budgetHalt(s.attempts_consumed)) return halt('refuse', 'the N=3 budget of this slot is already spent — no further dispatch');
+    if (inp.retry_safe !== true) return halt('escalate', `${inp.error_class} on a slice not declared read-only or idempotent — escalate unretried`);
+    if (inp.error_class === 'rate_limit') {
+        return park('rate_limit — park until a recovery signal, then re-run the reuse decision at the same tier');
+    }
+    if (wait_ms !== null && (inp.run_remaining_ms === null || wait_ms > inp.run_remaining_ms)) {
+        return park(`${inp.error_class} with a Retry-After the run cannot be shown to wait out — park, no same-turn re-dispatch`);
+    }
+    const below = TIER_BELOW[s.current_tier];
+    if (s.downshifts_used >= 1 || below === null) return consume(`${inp.error_class} with no downshift left — one attempt consumed`);
+    return {
+        malformed: false,
+        action: 'downshift',
+        redispatch_same_turn: true,
+        wait_ms,
+        next_tier: below,
+        rerun_reuse_decision: false,
+        attempt_consumed: false,
+        budget_exhausted: false,
+        discard_late_result,
+        next_state: { ...s, current_tier: below, downshifts_used: 1 },
+        reason: `${inp.error_class} — retry once at ${below}`,
+    };
+}

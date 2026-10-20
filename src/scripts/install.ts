@@ -3281,19 +3281,8 @@ function _rule_filter_for_source(
         ruleFileArrives(srcFile, scope) && !isExclusivelyPackageOnly(srcFile);
 }
 
-/**
- * Prune every skill/command artefact whose `packs:` frontmatter is
- * non-empty AND has no intersection with `active_ids`. Untagged artefacts
- * (empty `packs:` frontmatter) are core/shared and always kept.
- */
-function _prune_scoped_modules(
-    deploy_results: Record<string, DeployResult>,
-    active_ids: ReadonlySet<string>,
-): [number, Record<string, DeployResult>] {
-    return _prune_modules_by(deploy_results, (p) =>
-        scoped_projection.is_pruned_under_scoped(p, active_ids),
-    );
-}
+/** Pack prune that keeps every skill a surviving artefact declares (ADR-289). */
+const _prune_scoped_modules = scoped_projection.prune_scoped_modules;
 
 function install_global(
     tools: Set<string>,

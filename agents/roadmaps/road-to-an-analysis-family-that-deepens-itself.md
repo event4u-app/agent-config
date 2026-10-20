@@ -18,7 +18,7 @@ relates:
     note: "Once its step engine ships, analyze:inbox (1,215 lines of instruction-only prose) is a candidate to split onto it. Not planned here."
   - slug: road-to-agent-throughput-recovery
     relation: disjoint
-    note: "A pending revision of that file proposes that a new inbox roadmap lands `draft` above N ready-at-0-done roadmaps (its E3, owner-reserved, undecided). The owner's directive of 2026-10-15 (always `ready`) binds here; D4 records the collision and the owner-first landing that caps growth instead."
+    note: "A pending revision of that file proposes that a new inbox roadmap lands `draft` above N ready-at-0-done roadmaps (its E3; decided 2026-10-15 as that file's D8, N = 8). The owner's directive of 2026-10-15 (always `ready`) yields to it above the limit (D18); D4 records the collision and the owner-first landing that caps growth instead."
   - slug: road-to-first-reference-analysis-observation
     relation: extends
     note: "later/. Step 6.5 offers the first two source-door runs as that file's observation runs; blocker `source-fetch-authorization` restates the fetch question its entry condition already waits on, it does not answer it."
@@ -249,7 +249,7 @@ two new scripts and the context file are additive; deleting them restores today.
       src/domains/analysis-workbench/analyze/inbox/command.md` is 0 (1 today);
       `analyze/inbox/evals/triggers.json` holds a `--no-pr` case; the final
       loop's ledger row names every directive it checked. Done 2026-10-19; record § 3.4.
-- [ ] **3.5 First slice: a read-only replay.** Before 3.3 is enabled, replay
+- [x] **3.5 First slice: a read-only replay.** Before 3.3 is enabled, replay
       `agents/tmp.old/inbox-2026-10-s/` (three topic folders, one of them seven
       files) with `--no-pr`, no network and `subagent` analysts — the first slice
       both council seats converged on. `corrected-from-reproduction`: the plans
@@ -260,8 +260,9 @@ two new scripts and the context file are additive; deleting them restores today.
       inbox reads a round union (3.4), but the replay is a model-driven run —
       three `subagent` analysts with seed, three lenses and an exchange over a
       452 KB round that lives only in the maintainer's local `agents/tmp.old/`
-      — and needs its own session, not a drain lane.*
-      <!-- blocked-by: replay-round-is-maintainer-local | asked: no — a drain lane holds no channel to the owner; the batch belongs to the next owner round -->
+      — and needs its own session, not a drain lane.* Done 2026-10-19 in its
+      own session: `validated`, 0 remote calls, 17-file lineage, 0 roadmaps per
+      topic (15 owned arrivals); record: `agents/evidence/analysis/analysis-family-replay-inbox-2026-10-s.md`.
 
 **Exit:** a replayed round lands validated `ready` roadmaps locally; 3.3 green on
 a fixture remote. **Rollback:** revert 3.4's command edit; the inbox returns to
@@ -393,7 +394,7 @@ file; `council:pr` is unchanged.
       or the rename lands after the observation runs.
       verify: `analyze/reference/command.md` exists with `replaces:` carrying
       `analyze-repo`, `analyze:repo`, `analyze-reference-repo` and
-      `analyze:reference-repo`, and the observation roadmap names the move.
+      `analyze:reference-repo`, and the observation roadmap names the move. *Council 2026-10-19 split 1:1 (D19): owner decision.*
       <!-- blocked-by: source-door-rename-waits-on-the-claim-pin | asked: no — a drain lane holds no channel to the owner; the batch belongs to the next owner round -->
 - [x] **6.3 Run record.** `run.json` per round: per stage, analyst, loop and
       exchange — top-tier items added / changed / killed, `already-fixed` rate,
@@ -414,7 +415,7 @@ file; `council:pr` is unchanged.
       repository as the observation runs of `reference-loop-upgrade-value`, with
       the shadow arm its protocol requires — or decline, recorded.
       verify: `agents/roadmaps/later/road-to-first-reference-analysis-observation.md`
-      records the offer and its answer.
+      records the offer and its answer. *Council 2026-10-19 split 1:1 (D19): owner decision.*
       <!-- blocked-by: observation-slots-are-the-claim-owners-to-spend | asked: no — a drain lane holds no channel to the owner; the batch belongs to the next owner round -->
 - [ ] **6.6 Calibrate.** After ten runs, re-read analyst count, loop count, gain
       rule and slicing size from `run.json` under 1.4's falsification rule (one
@@ -438,6 +439,7 @@ file; `council:pr` is unchanged.
 > runnable 0 · decide`. *Not taken:* the `later/` disposition — the gates are owner questions,
 > not external triggers, and moving the file would repath its slug in ADR-288,
 > three roadmaps and six evidence files for no change in what runs.
+> **Screen 2026-10-19c.** 3.5 replayed in its own session and validated; AC-5 closed with it. Open: 6.2b and 6.5 (owner, D19 — the council split), 6.6 (ten runs; one exists).
 
 ## Blockers
 
@@ -529,6 +531,7 @@ file; `council:pr` is unchanged.
 | D16 | deterministic | evidence | The other 23 closure-scan hits are lexical, not open decisions: `merge`/`publish` inside a slug, a kill row or a calibration step; `contradicts` inside a rule clause (2.3, 3.4); `improve` inside the owner's quoted directives and evidence rows; each AC names its command or observable state | `./scripts-run src/scripts/closure_scan` on this file, 2026-10-15 | the scan's grammar changes and a hit survives a re-read |
 | D17 | product-owned | owner | Both owner blockers → (a): naming a source in the invocation authorises read-only fetches of it and the research step for that run (`source-fetch-authorization`); cross-family CLI analysts run under a separate read-only analyst profile, seat doctrine unchanged (`analyst-cli-agency`) | owner answers 2026-10-15 to the PR #2373 report | a fetch reaches private or authenticated content, or a probed binary writes outside its profile |
 | D18 | product-owned | owner | Step 3.1 encodes it, and AC-5's always-`ready` landing yields to the harvest intake limit decided in `road-to-agent-throughput-recovery` D8: while more than 8 `ready` roadmaps sit at 0 ticked steps, a new inbox roadmap lands `draft` | owner answered both on 2026-10-15; the later, explicit limit narrows the transcript's standing preference | the owner lifts or changes N |
+| D19 | product-owned | council:analysis-family-rename-and-observation-slots-20261019 | 6.2b (rename now vs wait) and 6.5 (accept the slots conditionally vs decline) split 1:1, so both escalate to the owner and stay open; both seats agree a run before the shadow pin is resolved consumes no slot | `agents/evidence/council/analysis-family-rename-and-observation-slots.md` | the owner answers either question |
 ## Source disposition
 
 Lineage, kill register K1–K14 and the dropped-item discharges moved verbatim to `agents/evidence/analysis/analysis-family-context-and-sources-085ec41ff.md`.
@@ -568,11 +571,12 @@ Per-criterion evidence moved verbatim to `agents/evidence/analysis/analysis-fami
       contract level: the gate is executed by its suite, the showing and
       recorded-decision obligations are read in the shared context — no exchange was
       run, for the reason AC-9 states.
-- [ ] AC-5 — `analyze:inbox` on a replayed round lands only `status: ready`
+- [x] AC-5 — `analyze:inbox` on a replayed round lands only `status: ready`
       roadmaps and, unless `--no-pr`, a PR whose `isDraft` is `false`, without an
       owner prompt for the PR and with at most one batched post-action question
-      block. Held 2026-10-19.
-      <!-- blocked-by: replay-round-is-maintainer-local | asked: no — a drain lane holds no channel to the owner; the batch belongs to the next owner round -->
+      block. Done 2026-10-19 under `--no-pr`: every finding of the replayed round
+      was owned, so it landed arrivals and no roadmap (D18 governs a landing above
+      the intake limit); record: `agents/evidence/analysis/analysis-family-replay-inbox-2026-10-s.md`.
 - [x] AC-6 — A source-door run in a consumer fixture without `docs/CLAIMS.md`
       produces a typed anchor table or states feature mode, and never presents an
       opportunity as a defect. Met 2026-10-19.
