@@ -20,7 +20,14 @@ import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { detect, maskingEnd, prefixesOf, rawKeyPrefixPattern } from '../_lib/egress_rules.js';
+import {
+    assignmentPattern,
+    AUTHORIZATION_HEADER,
+    detect,
+    maskingEnd,
+    prefixesOf,
+    rawKeyPrefixPattern,
+} from '../_lib/egress_rules.js';
 
 export const MAX_BUNDLE_BYTES = 50 * 1024; // 50 KB hard ceiling; user must narrow scope on hit.
 
@@ -86,8 +93,11 @@ function _splitlines(s: string): string[] {
 const _REDACTION_LINE_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
     [/~?\/?\.event4u\/agent-config\/[^/\s]+\.key/u, '[redacted: agent-config key path]'],
     [/~?\/?\.config\/agent-config\/[^/\s]+\.key/u, '[redacted: agent-config key path]'],
-    [/^\s*Authorization:\s/iu, '[redacted: Authorization header]'],
-    [/(api[_-]?key|secret|token|password)\s*[:=]/iu, '[redacted: secret-like assignment]'],
+    [new RegExp(`^\\s*${AUTHORIZATION_HEADER}:\\s`, 'iu'), '[redacted: Authorization header]'],
+    [
+        assignmentPattern({ keywords: ['apiKey', 'secret', 'token', 'password'], capture: true }, 'iu'),
+        '[redacted: secret-like assignment]',
+    ],
     [rawKeyPrefixPattern(8, prefixesOf('anthropic-api-key')), '[redacted: anthropic-key-like token]'],
     [
         rawKeyPrefixPattern(20, [...prefixesOf('openai-api-key'), ...prefixesOf('anthropic-project-key')], {

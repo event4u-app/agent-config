@@ -92,6 +92,68 @@ export function looksLikeSecretValue(value: string): boolean {
     return shannonEntropy(value) >= GENERIC_MIN_ENTROPY;
 }
 
+/**
+ * The keyword names a credential assignment is spelled with (`password =`,
+ * `api_key:`). They carry no vendor literal, so each consumer reads the ones it
+ * always read, in its own order, and keeps its own threshold for the value.
+ */
+export const ASSIGNMENT_KEYWORDS = {
+    password: 'password',
+    passwd: 'passwd',
+    pwd: 'pwd',
+    secret: 'secret',
+    apiKey: 'api[_-]?key',
+    apikey: 'apikey',
+    accessToken: 'access[_-]?token',
+    authToken: 'auth[_-]?token',
+    clientSecret: 'client[_-]?secret',
+    privateKey: 'private[_-]?key',
+    token: 'token',
+    bearer: 'bearer',
+} as const;
+
+export type AssignmentKeyword = keyof typeof ASSIGNMENT_KEYWORDS;
+
+export interface AssignmentShape {
+    readonly keywords: readonly AssignmentKeyword[];
+    /** Spelled around the keyword group, e.g. `\b` or a Unicode non-word lookaround. */
+    readonly before?: string;
+    readonly after?: string;
+    /** The keyword group captures instead of `(?:…)`. */
+    readonly capture?: boolean;
+    /** What follows `\s*[:=]\s*`; absent, the shape ends at the operator. */
+    readonly value?: string;
+}
+
+/** Source of a keyword-assignment shape: keyword group, operator, then the consumer's value. */
+export function assignmentSource(shape: AssignmentShape): string {
+    const alt = shape.keywords.map((k) => ASSIGNMENT_KEYWORDS[k]).join('|');
+    const group = shape.capture === true ? `(${alt})` : `(?:${alt})`;
+    const head = `${shape.before ?? ''}${group}${shape.after ?? ''}\\s*[:=]`;
+    return shape.value === undefined ? head : `${head}\\s*${shape.value}`;
+}
+
+export function assignmentPattern(shape: AssignmentShape, flags: string): RegExp {
+    return new RegExp(assignmentSource(shape), flags);
+}
+
+/** An HTTP `Authorization` header name; everything after its colon is the credential. */
+export const AUTHORIZATION_HEADER = 'authorization';
+
+/**
+ * Raw-key prefix families spelled as a class, for a surface that keeps the
+ * prefix and drops the value: group 1 is the prefix stem. Wider than the rows on
+ * purpose (`pk-`, `rk-`); a test checks each family still covers the table
+ * prefixes it claims.
+ */
+export const CLASS_SPELLED_PREFIXES = {
+    dashKeys: { family: '(sk|pk|rk)-', covers: ['sk-'] },
+    tokens: {
+        family: '(gh[pousr]|github_pat|xox[baprs])[-_]',
+        covers: ['ghp_', 'gho_', 'ghu_', 'ghs_', 'ghr_', 'github_pat_', 'xoxb-', 'xoxp-', 'xoxa-', 'xoxr-', 'xoxs-'],
+    },
+} as const satisfies Readonly<Record<string, { readonly family: string; readonly covers: readonly string[] }>>;
+
 // The nearest key marker after the header decides: an END carrying the same
 // label as the header ends the block; another BEGIN, an END with a different
 // label, or no marker at all means the extent is unproven. One sticky scan from
@@ -277,8 +339,13 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         type: 'SECRET',
         class: 'credential',
         replacement: 'detection',
-        pattern:
-            /(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*['"]?([^'"\s]{8,})['"]?/dgi,
+        pattern: assignmentPattern(
+            {
+                keywords: ['password', 'passwd', 'pwd', 'secret', 'apiKey', 'accessToken', 'authToken'],
+                value: `['"]?([^'"\\s]{8,})['"]?`,
+            },
+            'dgi',
+        ),
         valueGroup: 1,
         validator: looksLikeSecretValue,
     },
