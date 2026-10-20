@@ -56,6 +56,19 @@
 #   memory        reads or writes the memory layer
 #   notification  tells the human something and changes nothing else
 #   formatting    reshapes a command or a generated file
+#   state_change  writes operational state WITHOUT activating or executing the
+#                 action that state represents
+#   interaction   solicits user input from a lifecycle hook, without deciding
+#                 or executing the action it proposes
+#
+# The last two arrived on 2026-10-20 by council ratification, 2/2, as DECLARED
+# authority expansions — `agents/evidence/ratifications/`
+# `update-concerns-declared-20261020.md`. The reason they were needed rather
+# than convenient: `notification` says "changes nothing else", and a concern
+# that stages state or opens a question changes something else. Registering
+# those under `notification` under-declares an observable effect, which is the
+# failure the first round of this review refused. The boundary is a CAPABILITY
+# one — state mutation, interaction, execution — never a feature's intent.
 #
 schema_version: 1
 
@@ -644,8 +657,30 @@ concerns:
   # true and beside the point: the gates constrain HOW an install happens,
   # never WHO may start one. The ring-0 record is a rollout switch, not
   # consent, so it postpones the expansion rather than bounding it.
-  # They return in their own change, declared as authority expansions and
-  # ratified on their own merits.
+  # They RETURNED on 2026-10-20, declared and ratified 2/2 on their own merits
+  # (agents/evidence/ratifications/update-concerns-declared-20261020.md).
+  # What changed between the refusal and the ratification is not the argument
+  # but the code: `updateNotice` now returns `activate: null` on ALL THREE of
+  # its paths, so the initiation the first round refused does not exist to
+  # authorise; and `autoInviteDecision` refuses on `mode !== 'ask'` BEFORE it
+  # reads the ring-0 record, so a human opt-in precedes the rollout switch and
+  # the switch can only ever subtract. Both were re-read in the tree for the
+  # second round rather than carried over from the note.
+  # They are registered under two effect terms the same ratification added,
+  # because squeezing them into `notification` is exactly the under-declaration
+  # that was refused.
+  update-notice:
+    script: src/scripts/update_notice_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    effect: state_change
+  update-auto-invite:
+    script: src/scripts/update_invite_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    effect: interaction
   # road-to-install-path-convergence Phase 4 — duplicate-surface probe.
   # Reads src/config/surface-matrix.yml, existence-checks declared duplicate
   # classes, nudges ONCE per day (state: agents/runtime/state/
@@ -1561,15 +1596,15 @@ platforms:
   # assumption a contract makes on every host's behalf.
   augment:
     ask:              text
-    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, update-notice, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
-    stop:             [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
+    stop:             [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop, update-auto-invite]
     pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-plumbing-writes, block-config-weakening, block-speaking-inbox-dir, block-credential-reads, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, memory-recall]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, design-pass]
 
   claude:
     ask:              native
-    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, review-baseline, journal-record, rule-inject]
+    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, update-notice, surface-probe, session-register, review-baseline, journal-record, rule-inject]
     # `rule-inject` is bound here for ONE source: `compact`
     # (road-to-a-rule-carrier-that-works-outside-the-repo step 1.6). The concern
     # returns before reading anything on `startup`, `resume`, `clear` and
@@ -1581,7 +1616,7 @@ platforms:
     # concern's own header used to end at: a rule whose trigger does not recur
     # was not restored at all.
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush, journal-record]
-    stop:             [chat-history, verify-before-complete, team-review-gate, end-review-nudge, obligation-settle, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, journal-record]
+    stop:             [chat-history, verify-before-complete, team-review-gate, end-review-nudge, obligation-settle, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, journal-record, update-auto-invite]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record]
     # `rule-inject` was bound here and is not any more
     # (road-to-delivery-for-every-host 3.2, owner ruling E2). E2's strategy is
@@ -1639,7 +1674,7 @@ platforms:
   # agents/settings/contexts/chat-history-platform-hooks.md § Cowork.
   cowork:
     ask:              text
-    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, update-notice, surface-probe, session-register]
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
     # end-review-nudge and delegation-nudge are DELIBERATELY NOT bound on
     # this platform (F10, review) — cowork-dispatcher.sh's own header states
@@ -1651,7 +1686,7 @@ platforms:
     # is later verified to forward it. Binding them here would be dead
     # weight: the concern still runs (git diff, transcript scan, classifier),
     # still costs the dispatch, and its entire output is thrown away.
-    stop:             [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
+    stop:             [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop, update-auto-invite]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
     pre_tool_use:     [block-no-verify, evidence-independence, block-kernel-rule-writes, block-plumbing-writes, block-config-weakening, block-speaking-inbox-dir, block-credential-reads, rtk-wrap, design-slop, ui-route-nudge, code-graph-context, chain-nudge, ship-diff-volume, reread-guard, spawn-guard-shadow, source-first-gate, memory-recall]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, design-pass]
@@ -1675,9 +1710,9 @@ platforms:
   # agents/settings/contexts/chat-history-platform-hooks.md § Cursor.
   cursor:
     ask:              text
-    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, update-notice, surface-probe, session-register]
     session_end:        [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
-    stop:               [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
+    stop:               [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop, update-auto-invite]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, design-pass]
 
@@ -1691,9 +1726,9 @@ platforms:
   # session is interrupted with partial state (mirrors Augment Stop).
   cline:
     ask:              text
-    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, update-notice, surface-probe, session-register]
     session_end:        [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
-    stop:               [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
+    stop:               [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop, update-auto-invite]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, design-pass]
 
@@ -1711,8 +1746,8 @@ platforms:
   # minimal-safe-diff is omitted entirely on Windsurf for the same reason.
   windsurf:
     ask:              text
-    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, profile-staleness, wrapper-freshness, surface-probe, session-register]
-    stop:               [chat-history, verify-before-complete, self-repair, session-register, design-pass-stop]
+    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, profile-staleness, wrapper-freshness, update-notice, surface-probe, session-register]
+    stop:               [chat-history, verify-before-complete, self-repair, session-register, design-pass-stop, update-auto-invite]
     # language-mirror IS bound here: unlike minimal-safe-diff it needs only the
     # user_prompt_submit slot, which Windsurf has.
     user_prompt_submit: [chat-history, verify-before-complete, language-mirror, git-authorization, session-canary, self-repair, session-register]
@@ -1729,9 +1764,9 @@ platforms:
   # — this is our `stop` slot.
   gemini:
     ask:              text
-    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register]
+    session_start:      [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, update-notice, surface-probe, session-register]
     session_end:        [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush]
-    stop:               [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop]
+    stop:               [chat-history, verify-before-complete, self-repair, session-register, roadmap-progress, design-pass-stop, update-auto-invite]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, git-authorization, session-canary, self-repair, session-register]
     post_tool_use:      [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff, injection-scan, pr-url-reminder, push-settle, orchestration-record, telemetry-usage, mcp-usage-observation, tool-result-bytes, edit-shape, comment-discipline, design-pass]
 

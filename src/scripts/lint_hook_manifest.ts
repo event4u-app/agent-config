@@ -69,6 +69,18 @@ const DEFAULT_HOST_LOWERING = path.join(HOOKS_DIR, "host_lowering.yaml");
  * - `memory`       reads or writes the memory layer
  * - `notification` tells the human something and changes nothing else
  * - `formatting`   reshapes a command or a generated file
+ * - `state_change` writes operational state WITHOUT activating or executing
+ *                  the action that state represents
+ * - `interaction`  solicits user input from a lifecycle hook, without
+ *                  deciding or executing the action it proposes
+ *
+ * The last two were added on 2026-10-20 by an AI council ratification, 2/2
+ * (agents/evidence/ratifications/update-concerns-declared-20261020.md). They
+ * exist because `notification` is defined as changing NOTHING ELSE, and two
+ * concerns that stage state and that open a question were being registered
+ * under it — which under-declares an observable effect. The boundary the
+ * council asked for is a CAPABILITY one (state mutation, interaction,
+ * execution), never a feature-specific intent.
  */
 export const CONCERN_EFFECTS: ReadonlySet<string> = new Set([
   "permission",
@@ -78,6 +90,8 @@ export const CONCERN_EFFECTS: ReadonlySet<string> = new Set([
   "memory",
   "notification",
   "formatting",
+  "state_change",
+  "interaction",
 ]);
 
 // Canonical event vocabulary — keep in lock-step with

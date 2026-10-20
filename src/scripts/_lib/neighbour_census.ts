@@ -86,6 +86,8 @@ export type Effect =
     | 'memory'
     | 'notification'
     | 'formatting'
+    | 'state_change'
+    | 'interaction'
     | 'unknown';
 
 export interface NeighbourEntry {
