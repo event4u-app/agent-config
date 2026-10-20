@@ -152,19 +152,19 @@ export type ByteSource =
 export const HOST_SURFACES: readonly HostSurface[] = [
     {
         host: 'augment', surface: '.augment/rules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:2478',
+        writer: 'src/scripts/condense.ts:2476',
         anchor: '\'.augment/rules\',',
         note: 'copies by default; symlinks under `augment.rules_use_symlinks`',
     },
     {
         host: 'claude-code', surface: '.claude/rules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:1182',
+        writer: 'src/scripts/condense.ts:1180',
         anchor: '_emit_claude_rule(',
         note: '`_emit_claude_rule` rewrites frontmatter to the host\'s own `paths:` key',
     },
     {
         host: 'cline', surface: '.clinerules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:1184',
+        writer: 'src/scripts/condense.ts:1182',
         anchor: 'fs.symlinkSync(',
         note: 'symlink per rule into the projection',
     },
@@ -192,13 +192,13 @@ export const HOST_SURFACES: readonly HostSurface[] = [
     },
     {
         host: 'cursor', surface: '.cursor/rules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:1184',
+        writer: 'src/scripts/condense.ts:1182',
         anchor: 'fs.symlinkSync(',
         note: 'symlink per rule, plus `.mdc` companions at `condense.ts:1406`',
     },
     {
         host: 'gemini', surface: 'GEMINI.md', perRuleTree: false,
-        writer: 'src/scripts/condense.ts:1482',
+        writer: 'src/scripts/condense.ts:1480',
         anchor: '\'GEMINI.md\'',
         note: 'single file — a symlink to the tracked `AGENTS.md`, so the bytes are that file\'s',
         bytes: {
@@ -213,7 +213,7 @@ export const HOST_SURFACES: readonly HostSurface[] = [
     },
     {
         host: 'windsurf', surface: '.windsurfrules', perRuleTree: false,
-        writer: 'src/scripts/condense.ts:1226',
+        writer: 'src/scripts/condense.ts:1224',
         anchor: '\'.windsurfrules\'',
         note: 'single concatenated file, rendered here by `condense.render_windsurfrules` rather than read off disk',
         bytes: {
@@ -229,7 +229,7 @@ export const HOST_SURFACES: readonly HostSurface[] = [
     },
     {
         host: 'codex', surface: '.codex/agent-config.md', perRuleTree: false,
-        writer: 'src/scripts/install.ts:1382',
+        writer: 'src/scripts/install.ts:1377',
         // Scoped to `.codex` rather than the bare filename: nine other lines in
         // `install.ts` write an `agent-config.md` for some other host, so the
         // unscoped anchor would have accepted a drift onto any of them — the

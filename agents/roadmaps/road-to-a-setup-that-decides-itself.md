@@ -301,6 +301,22 @@ with that file.
   verify: `npx vitest run tests/scripts/_cli/cmd_doctor_rule_scope_drift.test.ts`
   — 4 passed, red before the fix on the drift case and red before the
   strengthening on the legacy-all case.
+- [ ] <!-- blocked-by: surface-snapshot-waits-on-the-release-cut --> **4.6c The settings-surface snapshot waits on the cut.**
+  `tests/scripts/consumer_matrix_settings_delta.test.ts > an identical pair
+  produces no delta` is red on this branch and green on `main`, and the cause
+  is the phase title rather than a defect. The case compares the committed
+  snapshot of the LAST released surface against a surface flattened from the
+  LIVE schema; removing three keys makes those two genuinely different, so the
+  comparison correctly reports a delta the installer fixture does not carry.
+  Checked rather than assumed: all three keys ARE registered in
+  `_lib/settings_removed_keys.ts:157-159`, so they classify as
+  `carried_removals` — the ALLOWED class — not as `untombstoned_removals`,
+  which is the one that refuses. A release cut would accept them.
+  The snapshot may not be refreshed here: its own contract says `release.ts`
+  "rewrites it inside the cut, which is its only writer", and
+  `check_release_pr_shape` allows the file only on a release PR. Editing it on
+  this branch would be the silent surface change Phase 4 exists to prevent.
+  verify: after the next cut, the case is green with no change to the test.
 <!-- blocked-by: projection-mode-removal-waits-on-second-host-reach -->
 - [ ] **4.7 `projection.mode` last.** Removed only after the skills roadmap's
   completeness question is answered; on hosts with a listing lever, scoping moves
@@ -347,6 +363,19 @@ with that file.
   verify: the enabling commit cites 5.2's result file.
 
 ## Blockers
+
+### blocker: surface-snapshot-waits-on-the-release-cut
+
+- **Status:** open — raised 2026-10-20, and open by design rather than by omission.
+- **Class:** 1 — the condition is mechanical and resolves itself at the next cut; no decision is owed by anyone.
+- **Run:** `task release` — the cut is the command, and it is the only writer of the snapshot this blocker waits on.
+- **Owner:** release
+- **Blocks:** step 4.6c only. Nothing else in this roadmap, and no code path: the removals are registered tombstones and classify as `carried_removals`, the allowed class.
+- **Question:** none. This records WHY a green CI is unreachable on this branch, so the next reader does not re-derive it or bend the test.
+- **What to do:** cut a release. `release.ts` rewrites `tests/fixtures/settings_surface_released.json` inside the cut and is its only writer; `check_release_pr_shape` allows the file on a release PR and nowhere else.
+- **Recommendation:** merge this PR with the one case red rather than refreshing the snapshot here. The alternative is to write the released-surface file outside a cut, which is exactly the silent surface change Phase 4 is named against.
+- **If you do nothing:** the case stays red on this branch and on any later branch that touches the settings surface before a cut. It is one test of 68 checks, and it reports a true fact.
+- **Resolved when:** a release lands and the snapshot carries the three removed keys.
 
 ### blocker: instruction-load-observer-has-no-scheduled-owner
 
