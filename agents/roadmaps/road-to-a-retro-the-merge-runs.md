@@ -93,18 +93,24 @@ a learning held is read from the recurrence count that already exists. With
       their date, under `agents/evidence/owner-directives/`.
       verify: `ls agents/evidence/owner-directives/` -> /2026-10-12-retro/
       *Done 2026-10-16: `2026-10-12-retro-inbox-2026-10-o.md`.*
-- [x] **0.2 One ADR for the setting and the verb (D1, D2, D3).** It adds
+- [ ] **0.2 One ADR for the setting and the verb (D1, D2, D3).** It adds
       `retro.enabled` as class C with default `true` to
       `docs/contracts/settings-classes.md` after the `continuity.auto_record`
       pattern, adds it to `MERGEABLE_KEYS` so a user-global `false` holds
       (F6), and adds `retro` to `command-verbs.yml` as the ADR-041 § 5 addendum.
       The governance diff carries its council ratification artefact.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> /0 finding/
-      *Done 2026-10-20: ADR-292; the key in template, schema, class table and
-      `MERGEABLE_KEYS`; the verb in `command-verbs.yml`. The verify's pattern
-      cannot match a green run — the lint prints `115 settings key(s) classified`
-      and names findings only when there are some — so the evidence is its exit
-      0 with that line.*
+      *2026-10-20, open on one clause: ADR-292 landed, with the key in
+      template, schema, class table and `MERGEABLE_KEYS` and the verb in
+      `command-verbs.yml`. The ratification artefact the step names does not
+      exist: the three council rounds reviewed this diff together with the
+      session-start probe, rounds 2 and 3 found no authority expansion, and every
+      round still ended `refused` on the probe — a verdict that cannot be filed
+      as a ratification of this half. What closes it: a council round on the
+      settings-and-verb diff alone, filed under `agents/evidence/ratifications/`.
+      The verify's pattern cannot match a green run — the lint prints
+      `115 settings key(s) classified` and names findings only when there are
+      some — so its evidence is exit 0 with that line.*
 - [x] **0.3 The contract.** `docs/contracts/retro-v1.md`: the three paths, one
       local-only unit key `{repo, pr|session, merge_sha|tag, policy}`, the closed
       target vocabulary (`intake-signal`, `override-proposal`,
