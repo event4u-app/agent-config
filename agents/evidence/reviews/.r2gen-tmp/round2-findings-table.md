@@ -1,21 +1,3 @@
-# Findings: drain-release-says-needs-you-20261020
-<!-- completion-review: v1 | reviewed: 2026-10-21 | scope: cf237a38c9de2ad15211fd2fc536d44bb23ebba249ee42656f5db34bbe8b54b9 | diff: e3a3b0ef94f5700ac91b13393c4f52ec89247dcd | reviewer: r2-fresh-subagent-drain-release-says-needs-you-20261020 | prompt_hash: 83be02240d85d57045388829e184b0a0d2762063f5bc9e695e8ee0314b06a0ec -->
-<!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-release-says-needs-you-20261020"]}} -->
-<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-21 -->
-
-<!-- context-manifest: v1
-inputs:
-  diff_sha: e3a3b0ef94f5700ac91b13393c4f52ec89247dcd
-  scope_hash: cf237a38c9de2ad15211fd2fc536d44bb23ebba249ee42656f5db34bbe8b54b9
-  roadmap: agents/roadmaps/road-to-a-release-that-says-whether-it-needs-you.md
-  roadmap_hash: 2cb0fa9f21331256b85cd7ecb5c3234e65f95efe687f39e3230604423d28e717
-  ac_hash: b0230dbf5f97b83e072a2098d12c79260f1c2b92506145cd9b4963dd3ed26b9e
-excluded: [session-history, agents/runtime, implementation-context]
-tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-10-20T22:08:36Z
--->
-
-
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
 | 1 | high | agents/evidence/analysis/impact-bump-out-of-sample-20261020.md:173 | F2 — "both times it fires alone it overrides an `automatic` migration ... each row's own prose records the migration as automatic" — holds for 11.0.0 only. Verified: `BREAKING_CHANGES.md`'s 11.0.0 row documents exactly `worktrees.mode`, which is what the detector reports, so that pairing is clean. The 10.0.0 row's recorded break is the council transport keys (`defaults.mode`, per-member `mode:`) which live in `.ai-council.yml`, a path no `SETTINGS_KEY_FILES` row matches, so the detector never saw them; what it did see is the removal of `turn_end_gate` and children from `src/config/agent-settings.template.yml`, which the record does not mention at all (`grep -c turn_end_gate BREAKING_CHANGES.md` = 0). The `automatic` grade and the firing surface therefore describe different removals, so the policy inference "a settings key removed with an automatic migration is a major" rests on one decided case, not two — and the roadmap blocker paragraph repeats the two-case claim verbatim. | open | |
