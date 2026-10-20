@@ -300,12 +300,31 @@ needs a transcript.
 
 Gated on 0.2 (a)–(b) and 0.3 being `observed-true` for the host in question.
 
-- [ ] **4.1 A resident set for the second host**, under its user skills root,
+- [x] **4.1 A resident set for the second host**, under its user skills root,
   sized to its budget; implicit invocation stays enabled for the resident set
   only. Its `agents-md` projection stays exactly as today.
   verify: projected listing characters ≤ the modelled budget; a fresh session
   shows no omission warning; the host's AGENTS.md projection is byte-equal to
   before.
+  Done 2026-10-20: `src/scripts/_lib/codex_resident_set.ts`, called from the
+  installer one line after `applyListingOverrides` — after every prune, so the
+  split is computed over the skills still on disk. The lever is 0.3's own
+  observation, not a guess: a skill carrying `agents/openai.yaml` with
+  `policy.allow_implicit_invocation: false` leaves the model-visible list AND
+  stops occupying the budget (omitted fell 554 → 481 when 60 of 120 were
+  disabled). So the resident set is enforceable from the package side with no
+  host setting and no consumer key. Measured on this projection: the whole
+  catalogue of 301 bills 59,584 characters against a documented 8,000, and the
+  split keeps 40 (7,930 characters, through `command-writing`) and writes the
+  policy file for 261. Fill order is alphabetical because that is the order the
+  host itself drops by, so the resident set is the host's own survivors made
+  explicit rather than a second, conflicting order. A non-resident skill loses
+  its listing entry and nothing else — `described` → `unlisted` in 2.2's
+  buckets, never `unreachable`. The deploy row is untouched, so the `agents-md`
+  projection is byte-equal by construction and the test asserts the row.
+  `tests/install/codex_resident_set.test.ts`: with the overflow branch and the
+  foreign-file guard neutralised, 5 of 13 failed.
+  verify: `npx vitest run tests/install/codex_resident_set.test.ts` -> 0
 - [ ] **4.2 Triggers are the package's own.** A skill is materialised when a
   command or flow naming it is expanded (edge data from
   `report_skill_menu_census`), when search returns it and it is read, or when it

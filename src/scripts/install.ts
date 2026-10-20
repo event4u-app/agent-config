@@ -106,6 +106,7 @@ import * as catalogue from './_lib/skill_catalogue.js';
 import { isInteractiveSession, type SessionProbe } from '../shared/interactiveContext.js';
 import * as claude_desktop_bundler from './_lib/claude_desktop_bundler.js';
 import * as claude_settings_hooks from './_lib/claude_settings_hooks.js';
+import { applyCodexResidentSet } from './_lib/codex_resident_set.js';
 import { applyListingOverrides } from './_lib/skill_listing_overrides.js';
 import { hostBindings } from './hooks/host_lowering.js';
 import { find_project_root_with_anchor, load_agent_settings } from './_lib/agent_settings.js';
@@ -3439,6 +3440,10 @@ function install_global(
     }
     // After every prune, so only skills still on disk are computed into the listing override.
     if (deploy_results['claude-code']?.[2] === 'deployed') applyListingOverrides(expanduser(USER_SCOPE_PATHS['claude-code']!), state.QUIET ? () => undefined : info);
+    // Same reason, second host: the resident set is computed over the skills a
+    // prune left on disk, and this host drops whole entries rather than
+    // descriptions when the listing does not fit.
+    if (deploy_results['codex']?.[2] === 'deployed') applyCodexResidentSet(expanduser(USER_SCOPE_PATHS['codex']!), state.QUIET ? () => undefined : info);
 
     const failed_tools = new Set<string>(
         Object.keys(deploy_results).filter(
