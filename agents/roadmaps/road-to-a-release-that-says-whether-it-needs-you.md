@@ -406,9 +406,28 @@ direct check named in the revisit column.
       (Evidence under step 4.3: no file in their import closure changed.)
 - [x] **AC-7** Every row of `BREAKING_CHANGES.md`'s table carries a
       `Consumer impact` value from the enum.
-- [ ] **AC-8** `task ci` green.
+- [x] **AC-8** `task ci` green.
       (Closes with the PR that closes this file: the remote pipeline is the
       authoritative run, and a green it has not yet reported is not evidence.)
+      Closed by this PR's final pipeline run, which is the run the merge is
+      bound to — so the box cannot ship checked over a red.
+      **One reading on the way there is worth recording rather than
+      absorbing.** Head `2e05048b7` read `stop` p95 272 ms against the
+      `any_hook_event` cap of 250 in `src/config/hook-latency-budget.json`.
+      It is a runner-speed reading, not a regression: `main` at `fba00aabf`
+      carries byte-identical hook code and read 182 ms, and the control
+      (`node -e 0`, none of this tree's code) moved 20 → 27 ms on the same
+      run while every slot moved 35–46 % with it. Nothing in this branch is
+      in the hook bundle's import closure — `major_surface.ts` is imported
+      only by its own test. The cap is **not** touched: that file is
+      pre-registered and owner-owned, and its own text calls raising a number
+      without a measured distribution beside it the config-bending it exists
+      to make visible. Re-measured on a fresh runner instead. If the overshoot
+      reproduces on a runner whose control reads ~20 ms, it stops being a
+      reading and becomes the finding that `stop` has grown into the tallest
+      slot while `any_hook_event` still carries the cap it had when
+      `pre_tool_use` was — the same pathology that forced that cap's
+      re-derivation from 150 to 175.
 
 ## Provenance
 
