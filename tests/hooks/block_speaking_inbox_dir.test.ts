@@ -19,7 +19,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 
 import {
     creatableTokens,
@@ -528,6 +528,9 @@ describe('a mention is not a creation — the commands a real round was refused'
     fs.mkdirSync(path.join(tree, inbox, speaking), { recursive: true });
     const other = mk('other');
     const absRound = path.join(tree, inbox, speaking);
+    afterAll(() => {
+        for (const dir of [tree, other]) fs.rmSync(dir, { recursive: true, force: true });
+    });
 
     const run = (envelope: unknown): number => {
         setHookStdinOverride(JSON.stringify(envelope));
@@ -576,6 +579,7 @@ describe('a mention is not a creation — the commands a real round was refused'
         });
         it('the deny message tells the operator to encrypt the source, not a path', () => {
             expect(denyMessage(speaking)).toContain('never an agents/tmp path');
+            expect(denyMessage(speaking)).toContain('this guard recognizes it in shell commands');
         });
     });
 
