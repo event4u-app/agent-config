@@ -62,6 +62,19 @@ const _GIT_GLOBAL_OPTS_WITH_VALUE: ReadonlySet<string> = new Set([
     '--exec-path',
     '--super-prefix',
 ]);
+/**
+ * Builtins where `git <sub> -h` verified short `-n` cannot bypass a hook.
+ * An ALLOWLIST, not a denylist of `commit`/`am`: with `ci = commit` aliased,
+ * `git ci -n` resolves to `ci`, which a denylist would miss. Git never lets
+ * an alias shadow a builtin, so aliases stay blocked. `am` is absent on
+ * purpose — unverified is not safe, and it carries `--no-verify`.
+ */
+/** Refusal fragments shared by the three hook-bypass branches, stored once. */
+const _BYPASSES = ' bypasses git hooks (git-history-discipline).';
+const _REMEDY =
+    ' Let the hooks run and fix what they report; that is the only path this guard leaves open.';
+const _SHORT_N_UNRELATED =
+    /^(add|branch|cherry-pick|clean|fetch|grep|log|merge|mv|pull|push|rebase|revert|rev-list|rm|shortlog|show|tag)$/;
 const _CONFIG_READ_OR_RESTORE: ReadonlySet<string> = new Set([
     '--get',
     '--get-all',
@@ -270,6 +283,24 @@ function _git_base(tokens: string[]): string[] | null {
  * whose every step this gate allowed and whose composition is exactly the
  * outcome the gate exists to prevent.
  *
+ * Index of the subcommand inside `git`'s arguments: the first token that is
+ * neither a global option nor the VALUE of one, so `git -C /repo config …`
+ * resolves to `config` and not to `/repo`. -1 when there is none.
+ */
+function _git_subcommand_index(rest: string[]): number {
+    for (let k = 0; k < rest.length; k += 1) {
+        const tok = rest[k] as string;
+        if (!tok.startsWith('-')) {
+            return k;
+        }
+        if (_GIT_GLOBAL_OPTS_WITH_VALUE.has(tok)) {
+            k += 1; // consume its value
+        }
+    }
+    return -1;
+}
+
+/**
  * Deliberately narrow, per the 2026-08-02 council cut (option ii — widen only
  * the exact shapes with no plausible legitimate use):
  *   - a READ (`--get`, `--list`, or the key with no value) is allowed;
@@ -281,20 +312,7 @@ function _git_base(tokens: string[]): string[] | null {
  */
 function _is_config_hookspath_write(git_tokens: string[]): [boolean, string] {
     const rest = git_tokens.slice(1);
-    // The subcommand is the first token that is neither a global option nor
-    // the VALUE of one — `git -C /repo config …` must still resolve to
-    // `config`, not to `/repo`.
-    let subIdx = -1;
-    for (let k = 0; k < rest.length; k += 1) {
-        const tok = rest[k] as string;
-        if (!tok.startsWith('-')) {
-            subIdx = k;
-            break;
-        }
-        if (_GIT_GLOBAL_OPTS_WITH_VALUE.has(tok)) {
-            k += 1; // consume its value
-        }
-    }
+    const subIdx = _git_subcommand_index(rest);
     if (subIdx === -1 || rest[subIdx] !== 'config') {
         return [false, ''];
     }
@@ -332,26 +350,30 @@ function _is_blocked(git_tokens: string[]): [boolean, string] {
     if (cfgBlocked) {
         return [cfgBlocked, cfgReason];
     }
+    // The long `--no-verify` stays unscoped below; only the SHORT forms are
+    // read against the subcommand, because only there does `-n` mean
+    // something else. An unresolved subcommand (`git -n`) is not in the set,
+    // so it stays blocked: unresolved is not safe.
+    const rest = git_tokens.slice(1);
+    const subIdx = _git_subcommand_index(rest);
+    const shortNIsUnrelated = subIdx !== -1 && _SHORT_N_UNRELATED.test(rest[subIdx] as string);
     let i = 1; // skip 'git'
     while (i < git_tokens.length) {
         const tok = git_tokens[i] as string;
         if (_NO_VERIFY_FLAGS.has(tok)) {
-            return [true, `'${tok}' bypasses git hooks (git-history-discipline).`
-                    + ' Let the hooks run and fix what they report; that is the only path this guard leaves open.'];
+            return [true, `'${tok}'` + _BYPASSES + _REMEDY];
         }
-        if (_NO_VERIFY_SHORT.has(tok)) {
+        if (!shortNIsUnrelated && _NO_VERIFY_SHORT.has(tok)) {
             return [
                 true,
-                `'${tok}' is short for --no-verify and bypasses git hooks (git-history-discipline).`
-                    + ' Let the hooks run and fix what they report; that is the only path this guard leaves open.',
+                `'${tok}' is short for --no-verify and` + _BYPASSES + _REMEDY,
             ];
         }
         // Short flag bundles containing 'n': -nm, -mn, etc.
-        if (/^-[a-zA-Z]*n[a-zA-Z]*$/.test(tok) && !tok.startsWith('--')) {
+        if (!shortNIsUnrelated && /^-[a-zA-Z]*n[a-zA-Z]*$/.test(tok) && !tok.startsWith('--')) {
             return [
                 true,
-                `'${tok}' contains -n (--no-verify) and bypasses git hooks (git-history-discipline).`
-                    + ' Let the hooks run and fix what they report; that is the only path this guard leaves open.',
+                `'${tok}' contains -n (--no-verify) and` + _BYPASSES + _REMEDY,
             ];
         }
         if (tok === '-c') {
