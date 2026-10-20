@@ -30,15 +30,15 @@ import {
     EXPECTED_WORKFLOW_REF,
     attestation_workflow_ref,
     provenance_matches_publish,
+    verify_attestation_signature,
 } from '../_lib/provenance_verify.js';
 import { read_candidate, unattended_decision, type RegistryCandidate } from '../_lib/unattended_gates.js';
 import type { InstallOrigin } from '../_lib/classify_update.js';
 import * as installed_lock from '../_lib/installed_lock.js';
 import { any_live_session, global_register_dir } from '../_lib/session_register.js';
-import { classify_install_origin } from '../_lib/update_check.js';
 import { type EnvMap, event4u_root, write_target } from '../_lib/user_global_paths.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
-import { isSourceCheckoutPackage } from './doctor_install_mode.js';
+import { originForPackageRoot } from './doctor_install_mode.js';
 
 export const PACKAGE_NAME = '@event4u/agent-config';
 export const PACKUMENT_URL = `https://registry.npmjs.org/${PACKAGE_NAME}`;
@@ -301,14 +301,23 @@ async function decide(installed: string, deps: UnattendedDeps): Promise<{ candid
 }
 
 /**
- * Fetch the attestation bundle and require it to name this package's publish
- * workflow. Returns a refusal reason, or `null` when the tie holds.
+ * Fetch the attestation bundle, require it to name this package's publish
+ * workflow, and require its DSSE signature to verify. Returns a refusal
+ * reason, or `null` when both hold.
  *
- * Unverified by itself: the DSSE payload is decoded, never signature-checked
- * (`provenance_verify`'s own note says so). The signature half is
- * `npm audit signatures` in the install step, against npm's trusted keys.
- * Neither is sufficient alone — this one stops a wrong-workflow build, that
- * one stops a forged document — and the pair is the gate 2.1 asked for.
+ * **This used to say the signature half was `npm audit signatures` "in the
+ * install step". It was not, and never had been** — `install_steps` runs
+ * `npm install -g`, `agent-config global` and `settings:sync`, and no audit.
+ * The sentence described a composition nobody wrote, which is the worst shape
+ * a security note can have, so it is replaced by what the code does rather
+ * than corrected in place.
+ *
+ * What runs now: the payload is tied to the workflow, the envelope's signature
+ * is verified against the certificate the bundle carries, and that
+ * certificate's SAN is required to name the same workflow. What does NOT run:
+ * any check of who ISSUED that certificate. The residue is the
+ * `dsse-trust-root` blocker on the roadmap, and
+ * `verify_attestation_signature`'s header states it in full.
  *
  * A bundle that cannot be fetched REFUSES rather than passing. Unlike the live
  * session register, there is no second independent gate behind this one: an
@@ -341,6 +350,13 @@ export async function verify_provenance_default(
             ? `${candidate.version} has no readable provenance workflow in its attestation`
             : `${candidate.version} was built by ${named}, not ${EXPECTED_WORKFLOW_REF}`;
     }
+    // The payload says the right thing; this asks whether the payload is the
+    // one that was signed, and whether the certificate that signed it carries
+    // the same identity. It does NOT establish who issued that certificate —
+    // see `verify_attestation_signature`'s own note and the `dsse-trust-root`
+    // blocker, which is where the trust root is decided.
+    const signature = await verify_attestation_signature(doc);
+    if (signature !== null) return `${candidate.version}: ${signature}`;
     return null;
 }
 
@@ -442,19 +458,7 @@ export function is_alive(pid: number): boolean {
     }
 }
 
-/**
- * The install origin of a package root, as the unattended gates read it.
- *
- * Exported because `running_origin` resolves its own root from `import.meta.url`
- * and so cannot be pointed at a fixture: in this repository the answer is
- * legitimately `source-checkout`, and a test calling it here would pass for the
- * wrong reason. The distinguishing input is a tree that carries the shipped
- * `dist/agent-src/` and no `.git`.
- */
-export function originForPackageRoot(root: string): InstallOrigin {
-    if (isSourceCheckoutPackage(root)) return 'source-checkout';
-    return classify_install_origin({ package_root: root, project_pin: null, latest: null, is_global_consumer: false });
-}
+export { originForPackageRoot } from './doctor_install_mode.js';
 
 function running_origin(): InstallOrigin {
     return originForPackageRoot(resolvePackageRoot(import.meta.url));

@@ -103,3 +103,141 @@ export function provenance_matches_publish(doc: unknown): boolean {
     if (repo === null) return false;
     return repo.replace(/\.git$/, '').replace(/\/$/, '') === EXPECTED_REPOSITORY;
 }
+
+// --- the signature half -------------------------------------------------------
+
+/**
+ * ## What the clauses below do and do not establish
+ *
+ * The header above says the signature half is not closed here. It is now
+ * HALF-closed, and the half that is missing is stated first so nothing below
+ * reads as more than it is.
+ *
+ * **Closed:** the DSSE envelope's signature is verified against the public key
+ * of the certificate the bundle itself carries, over the DSSE
+ * pre-authentication encoding — so a payload edited after signing is caught,
+ * and a bundle whose signature does not belong to its own certificate is
+ * caught. And the certificate's own SAN is required to name the expected
+ * workflow, so a bundle whose PAYLOAD claims `publish-npm.yml` while its
+ * certificate was issued to some other identity is caught. Before this, both
+ * were a base64 decode and a string compare.
+ *
+ * **Not closed, and this is the residue:** there is no trust root. Nothing
+ * here checks that the certificate was issued by Fulcio, and nothing checks a
+ * Rekor inclusion proof. An attacker who can serve a registry response can mint
+ * a self-signed certificate carrying the expected SAN, sign their own payload
+ * with it, and pass every check in this file. Closing that needs a sigstore
+ * verification path with pinned roots — a dependency decision, not a line in
+ * this function, and it is registered as the `dsse-trust-root` blocker on
+ * `road-to-an-update-that-installs-itself-only-when-it-is-safe`.
+ *
+ * So the honest statement of what the provenance gate is worth today: it
+ * defeats a partial compromise — a mis-scoped workflow, an edited payload, a
+ * bundle reused from another build — and it does not defeat a forged bundle
+ * from someone who already controls what the install reads.
+ */
+
+/** Why the signature does not verify, or `null` when it does. */
+export type SignatureVerdict = string | null;
+
+/** The SAN extension OID the Fulcio leaf carries the workflow identity in. */
+const SAN_WORKFLOW_MARKER = `${EXPECTED_REPOSITORY}/${EXPECTED_WORKFLOW_REF}`;
+
+/**
+ * The DSSE pre-authentication encoding — the exact bytes a DSSE signature is
+ * taken over.
+ *
+ * `DSSEv1 SP len(payloadType) SP payloadType SP len(payload) SP payload`, with
+ * both lengths in BYTES rather than characters. Built as a Buffer throughout
+ * because the payload is arbitrary bytes and a string round-trip would mangle
+ * any that are not valid UTF-8.
+ */
+export function dssePae(payloadType: string, payload: Buffer): Buffer {
+    const type = Buffer.from(payloadType, 'utf8');
+    return Buffer.concat([
+        Buffer.from(`DSSEv1 ${String(type.length)} `, 'utf8'),
+        type,
+        Buffer.from(` ${String(payload.length)} `, 'utf8'),
+        payload,
+    ]);
+}
+
+interface Envelope {
+    readonly payloadType: string;
+    readonly payload: Buffer;
+    readonly sig: Buffer;
+    readonly certDer: Buffer;
+}
+
+function readEnvelope(entry: unknown): Envelope | null {
+    const bundle = asRecord(asRecord(entry)?.['bundle']);
+    const dsse = asRecord(bundle?.['dsseEnvelope']);
+    if (dsse === null) return null;
+    const payloadB64 = dsse['payload'];
+    const payloadType = dsse['payloadType'];
+    const sigs = dsse['signatures'];
+    if (typeof payloadB64 !== 'string' || typeof payloadType !== 'string' || !Array.isArray(sigs) || sigs.length === 0) return null;
+    const sigB64 = asRecord(sigs[0])?.['sig'];
+    if (typeof sigB64 !== 'string' || sigB64 === '') return null;
+
+    const material = asRecord(bundle?.['verificationMaterial']);
+    // Both shapes sigstore has used: a single certificate, and a chain.
+    const single = asRecord(material?.['certificate'])?.['rawBytes'];
+    const chain = asRecord(material?.['x509CertificateChain'])?.['certificates'];
+    const first = Array.isArray(chain) ? asRecord(chain[0])?.['rawBytes'] : undefined;
+    const certB64 = typeof single === 'string' ? single : typeof first === 'string' ? first : null;
+    if (certB64 === null || certB64 === '') return null;
+
+    return {
+        payloadType,
+        payload: Buffer.from(payloadB64, 'base64'),
+        sig: Buffer.from(sigB64, 'base64'),
+        certDer: Buffer.from(certB64, 'base64'),
+    };
+}
+
+/**
+ * Verify the first readable attestation's DSSE signature against its own
+ * certificate, and require that certificate to name this package's workflow.
+ *
+ * Returns a reason on every failure rather than a boolean, because the caller
+ * prints it: a refusal a user cannot act on is a refusal they route around.
+ * `crypto` is imported lazily so a caller that never verifies a signature does
+ * not pay for the module — this runs on an install path, never in a hook.
+ */
+export async function verify_attestation_signature(doc: unknown): Promise<SignatureVerdict> {
+    const list = asRecord(doc)?.['attestations'];
+    if (!Array.isArray(list) || list.length === 0) return 'the attestation bundle carries no attestations';
+    const crypto = await import('node:crypto');
+
+    let lastReason = 'no attestation carried a readable DSSE envelope';
+    for (const entry of list) {
+        const env = readEnvelope(entry);
+        if (env === null) continue;
+        let cert: InstanceType<typeof crypto.X509Certificate>;
+        try {
+            cert = new crypto.X509Certificate(env.certDer);
+        } catch {
+            lastReason = 'the signing certificate could not be parsed';
+            continue;
+        }
+        // The certificate's own identity, not the payload's claim about it.
+        const san = cert.subjectAltName ?? '';
+        if (!san.includes(SAN_WORKFLOW_MARKER)) {
+            lastReason = `the signing certificate names ${san === '' ? 'no identity' : san}, not ${SAN_WORKFLOW_MARKER}`;
+            continue;
+        }
+        let ok = false;
+        try {
+            ok = crypto.verify(null, dssePae(env.payloadType, env.payload), cert.publicKey, env.sig);
+        } catch {
+            ok = false;
+        }
+        if (!ok) {
+            lastReason = 'the DSSE signature does not verify against the certificate in the bundle';
+            continue;
+        }
+        return null;
+    }
+    return lastReason;
+}

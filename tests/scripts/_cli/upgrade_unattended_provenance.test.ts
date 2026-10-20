@@ -8,6 +8,8 @@
  * suite stubs provenance to always pass so the other gates can be exercised,
  * so without this file the refusal path would be asserted nowhere.
  */
+import { spawnSync } from 'node:child_process';
+import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -19,7 +21,7 @@ import {
     run_unattended,
     verify_provenance_default,
 } from '../../../src/scripts/_cli/upgrade_unattended.js';
-import { EXPECTED_WORKFLOW_REF } from '../../../src/scripts/_lib/provenance_verify.js';
+import { EXPECTED_REPOSITORY, EXPECTED_WORKFLOW_REF, dssePae } from '../../../src/scripts/_lib/provenance_verify.js';
 import type { RegistryCandidate } from '../../../src/scripts/_lib/unattended_gates.js';
 
 let tmp: string;
@@ -100,28 +102,72 @@ function candidate(url: string | null): RegistryCandidate {
     };
 }
 
+/**
+ * An attestation bundle whose DSSE envelope is genuinely signed.
+ *
+ * It did not used to be: the payload was base64 and the envelope carried no
+ * signature at all, which was enough while the gate only decoded it. Since the
+ * signature half of step 2.1 landed, an unsigned bundle is refused — correctly
+ * — so the fixture has to carry a real EC P-256 key, a real certificate with
+ * the expected SAN, and a real signature over the DSSE pre-authentication
+ * encoding. Signature-specific cases, including the self-signed limitation,
+ * live in `tests/lib/provenance_signature.test.ts`; these tests are about the
+ * WORKFLOW tie, so the signature here is only ever the valid one.
+ */
 function bundle(workflowPath: string, repository = 'https://github.com/event4u-app/agent-config') {
+    const payload = Buffer.from(
+        JSON.stringify({
+            predicate: {
+                buildDefinition: {
+                    externalParameters: {
+                        workflow: { path: workflowPath, repository },
+                    },
+                },
+            },
+        }),
+    );
+    const signed = signPayload(payload);
     return {
         attestations: [
             {
                 bundle: {
+                    verificationMaterial: { certificate: { rawBytes: signed.certDer.toString('base64') } },
                     dsseEnvelope: {
-                        payload: Buffer.from(
-                            JSON.stringify({
-                                predicate: {
-                                    buildDefinition: {
-                                        externalParameters: {
-                                            workflow: { path: workflowPath, repository },
-                                        },
-                                    },
-                                },
-                            }),
-                        ).toString('base64'),
+                        payloadType: PAYLOAD_TYPE,
+                        payload: payload.toString('base64'),
+                        signatures: [{ sig: signed.sig.toString('base64'), keyid: '' }],
                     },
                 },
             },
         ],
     };
+}
+
+const PAYLOAD_TYPE = 'application/vnd.in-toto+json';
+const SAN = `${EXPECTED_REPOSITORY}/${EXPECTED_WORKFLOW_REF}@refs/heads/main`;
+let _signer: { keyPem: string; certDer: Buffer } | null = null;
+
+/** One key and certificate for the whole file — minting is the slow part. */
+function signer(): { keyPem: string; certDer: Buffer } {
+    if (_signer !== null) return _signer;
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'prov-fixture-'));
+    const cnf = path.join(dir, 'c.cnf');
+    fs.writeFileSync(cnf, `[req]\ndistinguished_name=dn\nx509_extensions=v3\nprompt=no\n[dn]\nCN=fixture\n[v3]\nsubjectAltName=URI:${SAN}\n`);
+    const key = path.join(dir, 'k.pem');
+    const cert = path.join(dir, 'c.der');
+    const r = spawnSync(
+        'openssl',
+        ['req', '-x509', '-newkey', 'ec', '-pkeyopt', 'ec_paramgen_curve:prime256v1', '-nodes', '-keyout', key, '-out', cert, '-outform', 'DER', '-days', '1', '-config', cnf],
+        { encoding: 'utf-8' },
+    );
+    if (r.status !== 0) throw new Error(`openssl could not mint the fixture certificate: ${r.stderr}`);
+    _signer = { keyPem: fs.readFileSync(key, 'utf-8'), certDer: fs.readFileSync(cert) };
+    return _signer;
+}
+
+function signPayload(payload: Buffer): { sig: Buffer; certDer: Buffer } {
+    const s = signer();
+    return { sig: crypto.sign(null, dssePae(PAYLOAD_TYPE, payload), crypto.createPrivateKey(s.keyPem)), certDer: s.certDer };
 }
 
 function fetcher(body: unknown, ok = true, status = 200): typeof fetch {

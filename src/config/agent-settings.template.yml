@@ -1531,6 +1531,32 @@ decision_engine:
 update_check:
   enabled: true
 
+# --- Update install mode ---
+#
+# What the agent may DO about a newer release, as opposed to whether it
+# notices one (that is `update_check.enabled` above).
+#
+#   notify  tell me; never install        (the default, and what an absent
+#                                          key resolves to)
+#   ask     tell me and offer to install  (behaves as `notify` until the
+#                                          ring-0 exit of
+#                                          road-to-an-update-that-installs-itself-only-when-it-is-safe
+#                                          step 4.2; no prompt ships yet)
+#   auto    install a staged release at a session start, when every gate
+#           passes and no other session is live on this machine
+#   off     say nothing at all
+#
+# `auto` never moves a project's `agent_config_version` pin, never writes into
+# a repository, and never swaps the install while a session is running: a
+# candidate is staged on one session start and installed at a LATER one. A
+# release that needs consumer action is never installed unattended whatever
+# this says.
+#
+# Read from the USER-GLOBAL layer only. A repository cannot set it — the thing
+# being updated is your global install, not that project's.
+update:
+  mode: notify
+
 # ─── legal-review-prep consent gate ──────────────────────────────────────────
 # The legal-review-prep pack is high-risk (EU/DE legal review-prep, NOT legal
 # advice). It stays inactive until you acknowledge it is not legal advice — set
