@@ -115,6 +115,9 @@ language: "..."
 role: "..."
 style:
   pace: "...""
+  # avoid:                 # optional — the user's own "never say X" list, max 32
+  #   - pattern: "..."     # 1-64 chars, a literal, never a regex
+  #     match: word        # word | substring
 voice_sample: |
   ...
 last_updated: "YYYY-MM-DD"

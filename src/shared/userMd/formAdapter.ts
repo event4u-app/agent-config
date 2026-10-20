@@ -17,7 +17,7 @@
  * save via `userIdentitySchema`.
  */
 
-import type { UserIdentity } from './schema.js';
+import { userStyleAvoidSchema, type UserIdentity } from './schema.js';
 
 /**
  * Defaults for a fresh form. Matches `src/templates/agent-user.yml`:
@@ -55,6 +55,12 @@ function pickRoles(value: unknown): string[] {
     return value.filter((v): v is string => typeof v === 'string' && v.trim() !== '');
 }
 
+function pickAvoid(value: unknown): UserIdentity['style']['avoid'] {
+    if (value === undefined) return undefined;
+    const parsed = userStyleAvoidSchema.safeParse(value);
+    return parsed.success ? parsed.data : undefined;
+}
+
 function pickNotes(value: unknown): string | undefined {
     if (typeof value !== 'string') return undefined;
     return value === '' ? undefined : value;
@@ -81,6 +87,8 @@ export function mergeIdentity(parsed: Record<string, unknown>): UserIdentity {
         voice_sample: pickString(parsed.voice_sample, def.voice_sample),
         last_updated: pickString(parsed.last_updated, def.last_updated),
     };
+    const avoid = pickAvoid(styleRaw.avoid);
+    if (avoid !== undefined) out.style.avoid = avoid;
     if (notes !== undefined) out.notes = notes;
     return out;
 }

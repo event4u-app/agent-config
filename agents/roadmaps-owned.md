@@ -9,7 +9,6 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
-| road-to-a-brand-the-tree-can-check | active | ready | One resolver answers "what brand does this project have" — tokens, voice, design system — with a state, content hashes … |
 | road-to-a-canvas-the-code-owns | active | ready | The repository is the only store of the design system. |
 | road-to-a-cold-start-paid-once | active | ready | On a host where a re-task is observed to be cheaper than a fresh spawn, the orchestrator re-tasks a warm … |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | active | ready | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |

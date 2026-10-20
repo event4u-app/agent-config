@@ -19,6 +19,7 @@ import {
     checkDraft,
     lexiconFromGhostwriter,
     lexiconFromSlot,
+    lexiconFromUserProfile,
     scanClaims,
     scanLexicon,
     unknownTellIds,
@@ -325,5 +326,69 @@ describe('check_voice_lexicon — draft-surfaces', () => {
             const body = fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
             expect(body, rel).toContain('check_voice_lexicon.ts --draft -');
         }
+    });
+});
+
+describe('check_voice_lexicon — user-source', () => {
+    // 5.5 (E16): the user's own `style.avoid` from `.agent-user.md` is the third
+    // lexicon source, at `warning`. Absent, the file contributes nothing.
+    const USER_MD = [
+        '---',
+        'version: 1',
+        'identity:',
+        '  name: "Sam"',
+        'language: "en"',
+        'style:',
+        '  pace: "pragmatic"',
+        '  avoid:',
+        '    - { pattern: "circle back", match: word, note: "say when" }',
+        '    - { pattern: "synerg", match: substring }',
+        'last_updated: "2026-10-20"',
+        '---',
+        '# Notes',
+        '',
+    ].join('\n');
+
+    it('user-source: style.avoid loads as user terms; an absent field loads none', () => {
+        expect(lexiconFromUserProfile(USER_MD)).toEqual([
+            { term: 'circle back', match: 'word', source: 'user', note: 'say when' },
+            { term: 'synerg', match: 'substring', source: 'user' },
+        ]);
+        expect(lexiconFromUserProfile(USER_MD.replace(/ {2}avoid:\n(?: {4}- .*\n)+/u, ''))).toEqual([]);
+    });
+
+    it('user-source: --user flags a hit at warning with source user and exits 0', () => {
+        const user = write('.agent-user.md', USER_MD);
+        const draft = write('d.md', 'We will circle back on the synergies.\n');
+        const r = run(['--draft', draft, '--user', user, '--json']);
+        expect(r.status, r.stderr).toBe(0);
+        const out = JSON.parse(r.stdout) as { lexicon: { status: string }; findings: Array<Record<string, unknown>> };
+        expect(out.lexicon.status).toBe('scanned');
+        expect(out.findings).toEqual([
+            expect.objectContaining({ kind: 'avoid', severity: 'warning', source: 'user', text: 'circle back', note: 'say when' }),
+            expect.objectContaining({ kind: 'avoid', severity: 'warning', source: 'user', text: 'synerg' }),
+        ]);
+    });
+
+    it('user-source: a user file without style.avoid behaves as no user file — SKIPPED, exit 0', () => {
+        const user = write('.agent-user.md', USER_MD.replace(/ {2}avoid:\n(?: {4}- .*\n)+/u, ''));
+        const draft = write('d.md', 'We will circle back.\n');
+        const r = run(['--draft', draft, '--user', user, '--json']);
+        expect(r.status, r.stderr).toBe(0);
+        expect((JSON.parse(r.stdout) as { lexicon: { status: string } }).lexicon.status).toBe('skipped');
+    });
+
+    it('user-source: an invalid style.avoid is exit 2, never a silent skip', () => {
+        const user = write('.agent-user.md', USER_MD.replace('match: substring', 'match: regex'));
+        const draft = write('d.md', 'Plain.\n');
+        const r = run(['--draft', draft, '--user', user]);
+        expect(r.status).toBe(2);
+        expect(r.stderr).toMatch(/style\.avoid/);
+    });
+
+    it('user-source: /post-as:me passes the user file to the checker', () => {
+        const body = fs.readFileSync(path.join(REPO_ROOT, 'src/domains/gtm-marketing/post-as/me/command.md'), 'utf8');
+        expect(body).toContain('--user .agent-user.md');
+        expect(body).not.toMatch(/has no such\s+field/u);
     });
 });
