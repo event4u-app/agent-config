@@ -1,14 +1,14 @@
 # Findings: blockers-routed-before-they-are-filed
-<!-- completion-review: v1 | reviewed: 2026-10-20 | scope: c7cb064b653e66bf51ac13cc9037a9f20cbcff4a93515fce40e1c984a3cd05aa | diff: 4c1cc5822f3c31f91459a80f171d83af05c02071 | reviewer: r2-fresh-subagent-blockers-routed-before-they-are-filed | prompt_hash: 0c69df03e17c8035a29fba7a7ff77af8dc2f30373a610514845a57d99f1c82fe -->
+<!-- completion-review: v1 | reviewed: 2026-10-20 | scope: 8273bf2e424c964284df9c7b9cf23927f071103be5c4108145e5d061f3559c18 | diff: 6267d594d39fd22b0adb108cf84286fdb6569fba | reviewer: r2-fresh-subagent-blockers-routed-before-they-are-filed | prompt_hash: 0c69df03e17c8035a29fba7a7ff77af8dc2f30373a610514845a57d99f1c82fe -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-blockers-routed-before-they-are-filed"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-20 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 4c1cc5822f3c31f91459a80f171d83af05c02071
-  scope_hash: c7cb064b653e66bf51ac13cc9037a9f20cbcff4a93515fce40e1c984a3cd05aa
+  diff_sha: 6267d594d39fd22b0adb108cf84286fdb6569fba
+  scope_hash: 8273bf2e424c964284df9c7b9cf23927f071103be5c4108145e5d061f3559c18
   roadmap: agents/roadmaps/archive/road-to-blockers-routed-before-they-are-filed.md
-  roadmap_hash: ae2195cc34aa8eec3ec353cc989cf95df562796c3ccac887dd6af1732cd7068f
+  roadmap_hash: 242ecd667dd05027c7f769dfbe7e290fbb545406b16345ef2d4ff41f76f015c2
   ac_hash: e192b4e66eb256a9ce7197bdc6b365837c6cdeb57f22ed7fd0ffcd0328c92619
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
