@@ -36,6 +36,29 @@ let tmp: string;
 let saved: ReturnType<typeof _getStateForTest>;
 let savedHome: string | undefined;
 
+/**
+ * A project root with a two-rule projection and the given form record.
+ *
+ * ADR-292 removed the settings key these cases used to write, so the driver is
+ * now the package-owned record `src/config/project-tree-form.json` — the same
+ * input the shipped projector reads. `form` is the mode and `hosts` is implicit
+ * in the record (claude-code), so a case that needs another host writes its own
+ * row. A `null` record means "no record", which is the full form.
+ */
+function seedForm(root: string, hosts: Record<string, string> | null): void {
+    const dir = path.join(root, 'src', 'config');
+    fs.mkdirSync(dir, { recursive: true });
+    if (hosts === null) {
+        fs.rmSync(path.join(dir, 'project-tree-form.json'), { force: true });
+        return;
+    }
+    const rows: Record<string, unknown> = {};
+    for (const [host, form] of Object.entries(hosts)) {
+        rows[host] = { form, basis: 'test fixture', measured: { fixture: true } };
+    }
+    fs.writeFileSync(path.join(dir, 'project-tree-form.json'), JSON.stringify({ schema_version: 1, hosts: rows }));
+}
+
 /** A project root with a two-rule projection and the given `lean_projection` block. */
 function seed(root: string, leanBlock: string): void {
     const dist = path.join(root, 'dist', 'agent-src', 'rules');
@@ -73,9 +96,10 @@ interface HostTrees {
 }
 
 /** Seed a fresh root, run the generator once, and return every host tree it wrote. */
-function generateInto(leanBlock: string, label: string): HostTrees {
+function generateInto(hosts: Record<string, string> | null, label: string): HostTrees {
     const root = path.join(tmp, label);
-    seed(root, leanBlock);
+    seed(root, 'personal:\n  autonomy: auto\n');
+    seedForm(root, hosts);
     _resetStateForTest(root);
     generate_rule_symlinks();
     return {
@@ -104,13 +128,10 @@ afterEach(() => {
     fs.rmSync(tmp, { recursive: true, force: true });
 });
 
-describe('1.2 — delivery with hosts: [claude-code]', () => {
+describe('1.2 — delivery scoped to claude-code by the shipped form record', () => {
     it('stubs Claude and leaves Cursor and Cline byte-identical to eager-all', () => {
-        const eager = generateInto('lean_projection:\n  mode: eager-all\n', 'eager');
-        const scoped = generateInto(
-            'lean_projection:\n  mode: delivery\n  hosts: [claude-code]\n',
-            'scoped',
-        );
+        const eager = generateInto(null, 'eager');
+        const scoped = generateInto({ 'claude-code': 'delivery' }, 'scoped');
 
         // The fixture is only meaningful if the eager run actually wrote the
         // trees being compared. An empty-vs-empty comparison is the classic
@@ -133,41 +154,32 @@ describe('1.2 — delivery with hosts: [claude-code]', () => {
     });
 
     it('naming cursor thins cursor and still leaves cline untouched', () => {
-        const eager = generateInto('lean_projection:\n  mode: eager-all\n', 'eager2');
-        const scoped = generateInto(
-            'lean_projection:\n  mode: delivery\n  hosts: [cursor]\n',
-            'scoped2',
-        );
+        const eager = generateInto(null, 'eager2');
+        const scoped = generateInto({ cursor: 'delivery' }, 'scoped2');
         expect(scoped.cline).toEqual(eager.cline);
         expect(scoped.claude).toEqual(eager.claude);
         expect(scoped.cursor).not.toEqual(eager.cursor);
     });
 
-    it('an absent hosts key thins Claude only — the default is not "all"', () => {
-        const eager = generateInto('lean_projection:\n  mode: eager-all\n', 'eager3');
-        const scoped = generateInto('lean_projection:\n  mode: delivery\n', 'scoped3');
+    it('a record naming only claude-code thins Claude only — the default is not "all"', () => {
+        const eager = generateInto(null, 'eager3');
+        const scoped = generateInto({ 'claude-code': 'delivery' }, 'scoped3');
         expect(scoped.cursor).toEqual(eager.cursor);
         expect(scoped.cline).toEqual(eager.cline);
         expect(scoped.claude).not.toEqual(eager.claude);
     });
 
-    it('a typo in hosts thins NO host, and never falls back to Claude', () => {
-        const eager = generateInto('lean_projection:\n  mode: eager-all\n', 'eager4');
-        const scoped = generateInto(
-            'lean_projection:\n  mode: delivery\n  hosts: [claud-code]\n',
-            'scoped4',
-        );
+    it('a typo in a record host thins NO host, and never falls back to Claude', () => {
+        const eager = generateInto(null, 'eager4');
+        const scoped = generateInto({ 'claud-code': 'delivery' }, 'scoped4');
         expect(scoped.claude).toEqual(eager.claude);
         expect(scoped.cursor).toEqual(eager.cursor);
         expect(scoped.cline).toEqual(eager.cline);
     });
 
-    it('mode eager-all with a hosts list left behind thins nothing', () => {
-        const eager = generateInto('lean_projection:\n  mode: eager-all\n', 'eager5');
-        const stale = generateInto(
-            'lean_projection:\n  mode: eager-all\n  hosts: [claude-code, cursor, cline]\n',
-            'stale',
-        );
+    it('a record whose every row is eager-all thins nothing', () => {
+        const eager = generateInto(null, 'eager5');
+        const stale = generateInto({ 'claude-code': 'eager-all', cursor: 'eager-all', cline: 'eager-all' }, 'stale');
         expect(stale).toEqual(eager);
     });
 });
@@ -254,11 +266,12 @@ describe('1.4 — byte-identity parity for every non-delivery host', () => {
      * a passing configuration has unknown sensitivity.
      */
     it('reds when a thinning mode reaches a host outside the delivery set', () => {
-        const eager = generateInto('lean_projection:\n  mode: eager-all\n', 'p-eager');
+        const eager = generateInto(null, 'p-eager');
         void eager;
         const eagerRoot = path.join(tmp, 'p-eager');
         const testRoot = path.join(tmp, 'p-test');
-        seed(testRoot, 'lean_projection:\n  mode: delivery\n  hosts: [claude-code, cursor, cline]\n');
+        seed(testRoot, 'personal:\n  autonomy: auto\n');
+        seedForm(testRoot, { 'claude-code': 'delivery', cursor: 'delivery', cline: 'delivery' });
         _resetStateForTest(testRoot);
         generate_rule_symlinks();
 
@@ -279,7 +292,8 @@ describe('1.4 — byte-identity parity for every non-delivery host', () => {
         const testRoot = path.join(tmp, 'b-test');
         for (const [root, label] of [[eagerRoot, 'b-eager'], [testRoot, 'b-test']] as const) {
             void label;
-            seed(root, 'lean_projection:\n  mode: eager-all\n');
+            seed(root, 'personal:\n  autonomy: auto\n');
+            seedForm(root, null);
             _resetStateForTest(root);
             generate_rule_symlinks();
         }
@@ -314,7 +328,7 @@ describe('1.4 — byte-identity parity for every non-delivery host', () => {
     });
 });
 
-describe('4.5 — rollback is one setting', () => {
+describe('4.5 — rollback is removing the shipped form record, not a setting', () => {
     /**
      * flip → `eager-all` → the tree equals a NEVER-flipped tree.
      *
@@ -327,23 +341,23 @@ describe('4.5 — rollback is one setting', () => {
      */
     it('a flipped-then-rolled-back tree is byte-identical to one that never flipped', () => {
         const virgin = path.join(tmp, 'r-virgin');
-        seed(virgin, 'lean_projection:\n  mode: eager-all\n');
+        seed(virgin, 'personal:\n  autonomy: auto\n');
+        seedForm(virgin, null);
         _resetStateForTest(virgin);
         generate_rule_symlinks();
 
         const rolled = path.join(tmp, 'r-rolled');
-        seed(rolled, 'lean_projection:\n  mode: delivery\n  hosts: [claude-code]\n');
+        seed(rolled, 'personal:\n  autonomy: auto\n');
+        seedForm(rolled, { 'claude-code': 'delivery' });
         _resetStateForTest(rolled);
         generate_rule_symlinks();
         const flipped = treeContentsLocal(rolled, path.join('.claude', 'rules'));
         expect(Object.values(flipped).some((t) => is_thin_entry(t))).toBe(true);
 
-        // The rollback: one setting, then regenerate into the SAME root.
-        fs.writeFileSync(
-            path.join(rolled, '.agent-settings.yml'),
-            'lean_projection:\n  mode: eager-all\n',
-            'utf-8',
-        );
+        // The rollback, after ADR-292: remove the package-owned record — one
+        // file the maintainer owns rather than one setting a consumer writes —
+        // then regenerate into the SAME root.
+        seedForm(rolled, null);
         _resetStateForTest(rolled);
         generate_rule_symlinks();
 

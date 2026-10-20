@@ -256,21 +256,25 @@ with that file.
   apply to.
   verify: the ADR exists and the three superseded records name it.
   Landed 2026-10-20: **ADR-292 — the package decides its own rule-layer form.** It records the four-key defect set, the computed decision, the two non-settings brakes, the tombstone and one-window migration, and the release class. The three superseded records name it: ADR-267 `superseded_by: ADR-292 (decision 3 only)`, ADR-278 `superseded_by: ADR-292` with `status: superseded`, and D3 of `road-to-an-installed-layer-that-is-thinned` carries `superseded — ADR-292` in its revisit column. ADR-267's other decisions stand, its absent-key-resolves-to-full reading included, which is the default the computed function keeps.
-- [ ] **4.2 Tombstones, not deletions.** Every removed key gets a tombstone in
+- [x] **4.2 Tombstones, not deletions.** Every removed key gets a tombstone in
   the settings-delta mechanism of `road-to-a-release-that-reads-its-settings-delta`,
   and ships in the release its blocker `what-a-minor-may-remove` allows — a major
   unless that blocker is answered otherwise.
   verify: the release dry-run reports each tombstone.
-- [ ] **4.3 Read old values once.** For one release window an explicitly written
+  Landed 2026-10-20: `lean_projection.mode` and `lean_projection.hosts` carry entries in `REMOVED_KEYS` (`_lib/settings_removed_keys.ts`), each naming what decides instead — which `lint_settings_classes` enforces, so a bare "removed" is rejected. The loader's `warnRemovedKeys` prints one line per key per process. `tests/scripts/projection_key_migration.test.ts` pins both entries, the once-per-process dedupe, and that the keys the migration reads are the keys that have tombstones. The release class is the major the council fixed on 2026-10-20, recorded in ADR-292 and in `setup-key-removal-release-class-20261020.md`.
+- [x] **4.3 Read old values once.** For one release window an explicitly written
   `eager-all` or `legacy-all` becomes the 3.5 pin; anything else is dropped; both
   are printed. After the window `doctor` still names a leftover key as ignored.
   verify: upgrade fixtures for every prior value.
-- [ ] **4.4 Remove `lean_projection.*`** from template, schema, whitelist
+  Landed 2026-10-20: `_lib/projection_key_migration.ts`, wired into the installer at the point `--full` is read. An explicitly written `eager-all` or `legacy-all` — the two values that meant *keep the full layer* — becomes the receipt pin; every other prior value is dropped; **both are printed**, which is the half that matters, because a value silently honoured and one silently dropped look identical to the consumer who wrote them. The window is named in the output, not only in a comment. Sixteen cases cover every prior value of both keys plus a non-string, a non-object branch and a hand-edited `  EAGER-ALL `. The installer reads MACHINE-global layers with the TEMPLATE layer isolated — the load-bearing half, since ADR-278 and D3 both record that a template value is not consent, and reading it would have printed a drop line on every install for a value nobody wrote.
+- [x] **4.4 Remove `lean_projection.*`** from template, schema, whitelist
   (`src/scripts/_lib/agent_settings.ts:311-312`), wizard and docs.
   verify: `! grep -rq lean_projection src/config src/server docs/settings-reference.md` -> 0
-- [ ] **4.5 Retire `tiered`** with its install branch; the measured null stays
+  Landed 2026-10-20, and wider than the step's list, because the list alone would have left the tombstone lying. Gone from the template, both schemas, the user-global whitelist and `docs/settings-reference.md` (regenerated). Three `src/config` files named the key in HISTORICAL prose — an effect-row reason, a budget-raise reason and a ratchet log — and each was reworded to name it descriptively rather than rewritten or deleted, so the records keep their content and the grep is a true statement about the live surface. **The readers went too.** `resolveLeanProjection` no longer reads the settings cascade at all and `installerThinsHost` is a constant `false`: without that, `warnRemovedKeys` would print "ignored" for a key the projector still honoured. The form now comes from the package-owned record (3.6's reading, below). Measured side effect: the hook bundle fell to 1,548,551 B of 1,550,000 — 1,148 B BELOW the pre-change reading, so this step made room rather than spending it.
+- [x] **4.5 Retire `tiered`** with its install branch; the measured null stays
   in `docs/CLAIMS.md`.
   verify: tests naming `tiered` are deleted with the branch, not skipped.
+  Landed 2026-10-20. `ProjectionMode` is two values; `projectionModeOf` maps a leftover `tiered` onto `legacy-all`, which is the full surface and the safe direction. The install branch, `applyTieredPrune`, `TieredPruneOutcome`, `tierBPrunePredicate` and install.ts's `_prune_tier_b_modules` / `_resolve_tier_b` went with it, as did `migrationEligibility`'s `already-tiered` reason — an install carrying a leftover value now reaches the real eligibility test instead of being told it is already narrowed. `resolveTierB` and the per-machine split STAY: they feed the listing-budget advisory and the MCP catalogue, which never depended on the mode. `tests/scripts/tiered_projection.test.ts` was DELETED with the branch, not skipped. The measured null stays in `docs/CLAIMS.md`, rewritten into the past tense with its promotion path closed: reopening needs a result that contradicts the measurement that retired it.
 - [ ] **4.6 `projection.rule_workspaces` becomes a rule.** Maintainer-only rules
   never project to a consumer; derived from frontmatter, same rule set as today.
   verify: consumer install fixture equals 0.1's rule set.

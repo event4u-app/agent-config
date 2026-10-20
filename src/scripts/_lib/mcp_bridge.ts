@@ -292,27 +292,28 @@ export function migrateMcpBridge(
 }
 
 /**
- * The three projection modes.
+ * The two projection modes.
  *
  * `legacy-all` ships everything and stays the default. `scoped` narrows to the
- * active packs. `tiered` narrows to the skills predicted to reach the model WITH
- * their description, on the theory that a skill the host lists bare is better
- * served by the MCP recovery tool than by a catalogue entry nobody can read.
+ * active packs.
  *
- * `tiered` is OPT-IN and stays opt-in until the roadmap's Phase 4.4 decides on
- * evidence — which it did, at `measured-null`. The reason is stated rather than
- * implied: the split usually comes from an ALPHABETICAL fallback order
- * (`agents/runtime/metrics/skill-usage.jsonl` is absent on most machines), and
- * the one real host observation this repo has disagrees with that fallback on
- * four of eight sampled entries. Defaulting to `tiered` would hide skills on a
- * prediction the tree itself can show to be wrong — strictly worse than the
- * bare-but-listed defect it fixes (roadmap risk 4).
+ * `tiered` was a third, and it was RETIRED on 2026-10-20 (ADR-292, step 4.5)
+ * with the install branch that acted on it. It narrowed the catalogue to the
+ * skills predicted to reach the model WITH their description, and its own
+ * roadmap closed it at `measured-null`: the split usually came from an
+ * ALPHABETICAL fallback order (`agents/runtime/metrics/skill-usage.jsonl` is
+ * absent on most machines), and the one real host observation this repo has
+ * disagreed with that fallback on four of eight sampled entries. A value that
+ * hides skills on a prediction the tree can show to be wrong is strictly worse
+ * than the bare-but-listed defect it was meant to fix. The measured null stays
+ * in `docs/CLAIMS.md`; a leftover `tiered` now resolves to `legacy-all`, which
+ * is the full surface and the safe direction.
  */
-export type ProjectionMode = 'scoped' | 'legacy-all' | 'tiered';
+export type ProjectionMode = 'scoped' | 'legacy-all';
 
 /** Resolve a raw `projection.mode` value. Anything unrecognised is `legacy-all`. */
 export function projectionModeOf(raw: unknown): ProjectionMode {
-    return raw === 'scoped' ? 'scoped' : raw === 'tiered' ? 'tiered' : 'legacy-all';
+    return raw === 'scoped' ? 'scoped' : 'legacy-all';
 }
 
 /**
@@ -335,12 +336,6 @@ export function resolveTierB(packageRoot: string): ReadonlySet<string> | null {
     }
 }
 
-/** Predicate for `_prune_modules_by`: is this SKILL.md a Tier B skill? */
-export function tierBPrunePredicate(
-    tierB: ReadonlySet<string>,
-): (mdPath: string) => boolean {
-    return (mdPath) => tierB.has(path.basename(path.dirname(mdPath)));
-}
 
 /**
  * The consumer-side alternative to tiering, surfaced as a recommendation only.
@@ -370,52 +365,8 @@ export function tierBAdvisory(packageRoot: string): string | null {
         '   • raise `skillListingBudgetFraction` in your Claude Code settings — ' +
         'restores descriptions at a token cost (100% delivery of this catalogue ' +
         'measures ~13,003 tok)\n' +
-        '   • or set `projection.mode: tiered` to withhold them from the catalogue ' +
-        'and reach them via the MCP server instead (opt-in, still unproven — see ' +
-        'docs/mcp-server.md)'
+        '   • or reach them through the MCP server, which serves every skill by ' +
+        'name regardless of what the host catalogue carries (docs/mcp-server.md)'
     );
 }
 
-export interface TieredPruneOutcome {
-    deployResults: Record<string, DeployTuple>;
-    /** One line for the caller to print, or `null` when QUIET. */
-    message: string | null;
-    /** `warn` when no split exists, `info` when a prune happened. */
-    level: 'warn' | 'info';
-}
-
-/**
- * Apply the Tier-B prune to a completed deploy.
- *
- * Takes `pruneBy` rather than importing it, so the prune mechanics stay in one
- * place and this module does not become a second implementation of them.
- */
-export function applyTieredPrune(
-    deployResults: Record<string, DeployTuple>,
-    packageRoot: string,
-    pruneBy: (
-        dr: Record<string, DeployTuple>,
-        isPruned: (mdPath: string) => boolean,
-    ) => [number, Record<string, DeployTuple>],
-): TieredPruneOutcome {
-    const tierB = resolveTierB(packageRoot);
-    if (tierB === null || tierB.size === 0) {
-        return {
-            deployResults,
-            level: 'warn',
-            message:
-                'projection.mode: tiered but no skill-tier split exists ' +
-                '(agents/runtime/state/skill-tiers.json) — shipping the full surface. ' +
-                'Compute one with `./scripts-run src/scripts/compute_skill_tiers` first.',
-        };
-    }
-    const [pruned, adjusted] = pruneBy(deployResults, tierBPrunePredicate(tierB));
-    return {
-        deployResults: adjusted,
-        level: 'info',
-        message:
-            `🧹 Tiered install: pruned ${pruned} Tier-B skill artefact(s) — still ` +
-            "reachable via the MCP server's suggest_skill_for_task / read_skill. " +
-            'Set projection.mode: legacy-all to restore the full surface.',
-    };
-}

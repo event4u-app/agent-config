@@ -996,20 +996,20 @@ is the named exception in the claim itself.
      every session, and the lite surface's 600-token cap is untouched. -->
 
 ### claim: skill-tiering-h1-unmeasured
-- claim: Whether serving low-priority skills over MCP instead of listing them natively improves skill selection (H1) is NOT established, and `projection.mode: tiered` therefore stays opt-in.
+- claim: Whether serving low-priority skills over MCP instead of listing them natively improves skill selection (H1) is NOT established. The `projection.mode: tiered` value it gated was RETIRED on 2026-10-20 (ADR-292, step 4.5) rather than promoted; the null is the reason, and it is kept here because a retired experiment with no recorded result is indistinguishable from one nobody ran.
 - kind: quant
 - evidence: agents/evidence/analysis/skill-tiering-matrix-arm.md#The question this arm cannot answer
 - status: backed
 - last_verified: 2026-08-23
 
 ### claim: skill-tiering-h2-costs-more-by-default
-- claim: On a default Claude Code install `projection.mode: tiered` costs MORE standing context than `legacy-all` — 2,259 tokens against 1,956 — because the host already caps description delivery at roughly the Tier A set; the 82% saving exists only against a 100%-delivery counterfactual.
+- claim: On a default Claude Code install the retired `projection.mode: tiered` cost MORE standing context than `legacy-all` — 2,259 tokens against 1,956 — because the host already caps description delivery at roughly the Tier A set; the 82% saving existed only against a 100%-delivery counterfactual. Past tense since 2026-10-20: the value and its install branch were removed (ADR-292, step 4.5), so this is the measurement that retired it, not a live comparison.
 - kind: quant
 - evidence: agents/evidence/analysis/skill-tiering-matrix-arm.md#H2
 - status: measured-in-repo
 - measured_on: maintainer checkout, matrix arm H2 over the projected skill descriptions at the Claude Code delivery cap, 2026-08-23
-- promotion_evidence: a tests/install/ case that installs under projection.mode tiered and legacy-all into two throwaway HOMEs and counts the standing description tokens each delivers
-- last_verified: 2026-08-23
+- promotion_evidence: none — the arm this would have promoted was retired instead (ADR-292). Reopening needs the mode back, which needs a result that contradicts the measurement above.
+- last_verified: 2026-10-20
 ### claim: enforcement-undeclared-denominator
 - claim: Exactly one enforcement denominator is quotable, it names the frame that produced it, and no published doc restates it by hand.
 - kind: quant

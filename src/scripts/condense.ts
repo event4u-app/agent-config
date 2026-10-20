@@ -463,14 +463,14 @@ function _read_projection_scope_dedup(): boolean {
 
 
 function _lean_projection_settings(): { mode: LeanProjectionMode; hosts: LeanProjectionHosts } {
-    // Step 1.2 of `road-to-a-rule-carrier-that-works-outside-the-repo`: this is
-    // now the shared resolver rather than one of three private readers. The
-    // INPUT is unchanged — `MODULE_STATE.SETTINGS_FILE` is still the file, so
-    // the projector's answer is the answer it always gave — and only the code
-    // that interprets it is shared. That is risk 2 of the roadmap's register
-    // ("making the hook agree with the projector could also move the
-    // projector") discharged by construction instead of by a test alone.
-    return resolveLeanProjection({ settingsPath: MODULE_STATE.SETTINGS_FILE });
+    // Step 1.2 of `road-to-a-rule-carrier-that-works-outside-the-repo` made this
+    // the shared resolver rather than one of three private readers, and ADR-292
+    // changed what the resolver reads: the settings key is gone, so the INPUT is
+    // now `PROJECT_ROOT`, where the package-owned form record lives. The
+    // projector and the hook still share one reader, which is what risk 2 of
+    // that roadmap's register ("making the hook agree with the projector could
+    // also move the projector") is discharged by.
+    return resolveLeanProjection({ packageRoot: MODULE_STATE.PROJECT_ROOT });
 }
 
 // --- hashing -----------------------------------------------------------------

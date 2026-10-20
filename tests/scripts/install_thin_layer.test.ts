@@ -268,15 +268,26 @@ describe('the installer applies the projector predicate when asked', () => {
     });
 });
 
-describe('template-is-not-consent — the gate the owner decision sits behind', () => {
+// ADR-292 removed `lean_projection.*`. The gate below used to answer "did a
+// human ask, and is this host in scope"; the keys that carried the asking are
+// gone, and the user-global layer that was the ONLY one able to carry them on
+// an ADR-020 global-only install is no longer whitelisted. So every case here
+// now asserts the same thing from a different direction — the installer cannot
+// be made to thin by a settings value — which is what makes the key's tombstone
+// line ("ignored") true for this reader rather than only for the docs.
+describe('after ADR-292 no settings value can make the installer thin', () => {
     it('does NOT thin when the only layer carrying the mode is the shipped template', () => {
         writeUserGlobalSettings(null);
         expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
     });
 
-    it('thins when a user-controlled layer sets delivery', () => {
+    it('does NOT thin when a user-controlled layer still carries delivery', () => {
+        // The pre-ADR-292 opt-in, written exactly as a consumer would have
+        // written it. It is filtered out of the merge now, so it reaches
+        // nothing: this is the assertion that reds if the whitelist row ever
+        // comes back.
         writeUserGlobalSettings('lean_projection:\n  mode: delivery\n');
-        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(true);
+        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
     });
 
     it('does NOT thin a consumer who explicitly chose eager-all', () => {
@@ -284,19 +295,20 @@ describe('template-is-not-consent — the gate the owner decision sits behind', 
         expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
     });
 
-    it('does NOT thin a host the chosen hosts list leaves out', () => {
+    it('does NOT thin any host a leftover hosts list names', () => {
         writeUserGlobalSettings('lean_projection:\n  mode: delivery\n  hosts:\n    - cursor\n');
         expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
-        expect(installerThinsHost('cursor', { packageRoot: pkg })).toBe(true);
+        // `cursor` was the host this leftover opted IN. It is the sensitive
+        // direction: before ADR-292 this read `true`.
+        expect(installerThinsHost('cursor', { packageRoot: pkg })).toBe(false);
     });
 
-    it('ignores a PROJECT layer in both directions — the layer it thins is the machine\'s', () => {
+    it('ignores a PROJECT layer, which it always did, and now the machine layer too', () => {
         // The gate decides whether to rewrite `~/.claude/rules`, which every
         // checkout on this machine reads. A per-project value deciding that
-        // would thin for everyone from one repo, or suppress a user-global
-        // opt-in from another — and the project cascade merges LAST, so it
-        // would win. Both directions are asserted because only one of them
-        // looks like a bug from the inside.
+        // would thin for everyone from one repo — that exclusion is unchanged.
+        // What changed is the other side: the machine layer no longer opts in
+        // either, so both directions now read `false`.
         const project = path.join(tmp, 'a-checkout');
         fs.mkdirSync(project, { recursive: true });
 
@@ -314,7 +326,7 @@ describe('template-is-not-consent — the gate the owner decision sits behind', 
             'lean_projection:\n  mode: eager-all\n',
             'utf-8',
         );
-        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(true);
+        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
     });
 
     it('holds for the shape install.ts actually calls — packageRoot only, from a cwd that disagrees', () => {
@@ -338,7 +350,7 @@ describe('template-is-not-consent — the gate the owner decision sits behind', 
             expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
 
             writeUserGlobalSettings('lean_projection:\n  mode: delivery\n');
-            expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(true);
+            expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
 
             writeUserGlobalSettings('lean_projection:\n  mode: eager-all\n');
             expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
@@ -347,12 +359,15 @@ describe('template-is-not-consent — the gate the owner decision sits behind', 
         }
     });
 
-    it('still honours an explicit settingsPath — a caller may pin one', () => {
+    it('accepts an explicit settingsPath and is unmoved by it — no caller has to change', () => {
+        // A pinned file was the last way to reach this gate, and it was the one
+        // the tests themselves used. It is kept, with its answer inverted, so a
+        // regression that restores ANY settings read reds here first.
         const pinned = path.join(tmp, 'pinned.yml');
         fs.writeFileSync(pinned, 'lean_projection:\n  mode: delivery\n', 'utf-8');
         writeUserGlobalSettings(null);
         expect(installerThinsHost('claude-code', { packageRoot: pkg, settingsPath: pinned })).toBe(
-            true,
+            false,
         );
     });
 });
