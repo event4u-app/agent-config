@@ -187,6 +187,23 @@ about evidence, not intent.
 A channel moves out of `uncovered` only with its proof committed. A measured null
 or a regression is published in the same table, not withheld.
 
+### Published, per channel (2026-10-20)
+
+| Channel | Who writes the request | Credential class | Identifier class | Evidence |
+|---|---|---|---|---|
+| Council requests (bundle and every member call) | this package | `asserted` | `uncovered` — no identifier row exists; replaced only in `protect`/`strict` once one does (D8) | `tests/scripts/ai_council/council_egress.test.ts` |
+| Every other sender of this package | this package | per the census below: `fixed-corpus`, or `uncovered` with its reason | `uncovered` | § This package's own senders |
+| Context this package injects into a session (hot context, handoff, memory recall) | the host, carrying text this package wrote | `uncovered` — replaced at injection in `protect`/`strict`, but no host drop rate is measured, which `replaced` requires | `uncovered` | `tests/scripts/hooks/egress_injection.test.ts` |
+| The typed prompt | the host | `uncovered` | `uncovered` | `road-to-placeholders-on-the-wire` |
+| Tool results | the host | `uncovered` | `uncovered` | `road-to-placeholders-on-the-wire` |
+| Tool inputs | the host | `uncovered` | `uncovered` | `road-to-placeholders-on-the-wire` |
+| Host telemetry that can export prompts or bodies (threat j2) | the host | `uncovered` | `uncovered` | `road-to-placeholders-on-the-wire` |
+| A request gateway (threat j4) | the host or a gateway | `uncovered` | `uncovered` | `road-to-placeholders-on-the-wire` |
+| Arguments to an external tool — an MCP server, a web fetch (threat j5) | the host | `uncovered` | `uncovered` | `road-to-placeholders-on-the-wire` |
+
+Every channel this package does not write is `uncovered` until the host-carrier
+roadmap commits its proof; this table changes only with that proof.
+
 ## Logging
 
 Anything written about a finding — a log line, a record, a report, a hook
@@ -412,7 +429,11 @@ body handed to a member directly carries it
 what was sent, so it keeps the placeholders; `restoreForDisplay` resolves
 identifiers for an in-process display, and the council run has no such display
 today. The channel carries no identifier claim until identifier rows exist: an
-e-mail, an IBAN or a phone number still leaves it unchanged. A caller of the
+e-mail, an IBAN or a phone number still leaves it unchanged. When they exist,
+the bundle replaces and the final check refuses identifiers only in `protect`
+and `strict` — credentials are replaced whatever the mode, because the bundle
+masked every credential line before; whether identifiers are replaced by
+default for consumers is the owner's decision D8. A caller of the
 client classes outside a council round (team review, the low-impact fast path,
 `ask_transport`, the benches) gets the final check but no replacement, so a
 credential in its prompt is refused rather than replaced.
