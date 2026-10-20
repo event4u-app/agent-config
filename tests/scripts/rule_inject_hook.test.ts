@@ -63,12 +63,24 @@ function makeRoot(opts: { delivery: boolean; hosts?: string }): string {
     for (const [id, text] of Object.entries(BODIES)) {
         fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', `${id}.md`), text, 'utf-8');
     }
+    // ADR-292 removed `lean_projection.*`; the form the projector and this
+    // gate read is the package-owned record. The fixture writes THAT, so what
+    // drives the gate here is what drives it in a real tree.
+    const hostList =
+        opts.hosts === undefined
+            ? ['claude-code']
+            : opts.hosts.replace(/[[\]]/g, '').split(',').map((h) => h.trim()).filter((h) => h !== '');
+    const rows: Record<string, unknown> = {};
+    for (const host of hostList) {
+        rows[host] = { form: opts.delivery ? 'delivery' : 'thin', basis: 'test fixture', measured: { fixture: true } };
+    }
+    fs.mkdirSync(path.join(root, 'src', 'config'), { recursive: true });
     fs.writeFileSync(
-        path.join(root, '.agent-settings.yml'),
-        `lean_projection:\n  mode: ${opts.delivery ? 'delivery' : 'thin'}\n`
-            + (opts.hosts === undefined ? '' : `  hosts: ${opts.hosts}\n`),
+        path.join(root, 'src', 'config', 'project-tree-form.json'),
+        JSON.stringify({ schema_version: 1, hosts: rows }),
         'utf-8',
     );
+    fs.writeFileSync(path.join(root, '.agent-settings.yml'), 'personal:\n  autonomy: auto\n', 'utf-8');
     return root;
 }
 
@@ -155,8 +167,8 @@ describe('rule-inject — default OFF means zero bytes', () => {
 
     it('gateOpen is false for a thin tree invoked as a non-CLI concern', () => {
         const root = makeRoot({ delivery: false });
-        expect(gateOpen(root, false)).toBe(false);
-        expect(gateOpen(root, true)).toBe(true); // a direct CLI invocation is a probe
+        expect(gateOpen(root, false, root)).toBe(false);
+        expect(gateOpen(root, true, root)).toBe(true); // a direct CLI invocation is a probe
         fs.rmSync(root, { recursive: true, force: true });
     });
 
@@ -167,7 +179,7 @@ describe('rule-inject — default OFF means zero bytes', () => {
     // rule delivered twice, standing plus injected.
     it('gateOpen is false when hosts does not carry claude-code', () => {
         const root = makeRoot({ delivery: true, hosts: '[cursor]' });
-        expect(gateOpen(root, false)).toBe(false);
+        expect(gateOpen(root, false, root)).toBe(false);
         fs.rmSync(root, { recursive: true, force: true });
     });
 
@@ -176,19 +188,19 @@ describe('rule-inject — default OFF means zero bytes', () => {
         // produces (`resolveLeanProjectionHosts` never falls back to the
         // default from a non-empty list).
         const root = makeRoot({ delivery: true, hosts: '[clod-code]' });
-        expect(gateOpen(root, false)).toBe(false);
+        expect(gateOpen(root, false, root)).toBe(false);
         fs.rmSync(root, { recursive: true, force: true });
     });
 
     it('gateOpen is true when hosts explicitly carries claude-code', () => {
         const root = makeRoot({ delivery: true, hosts: '[claude-code]' });
-        expect(gateOpen(root, false)).toBe(true);
+        expect(gateOpen(root, false, root)).toBe(true);
         fs.rmSync(root, { recursive: true, force: true });
     });
 
     it('gateOpen is true for an absent hosts key — absent resolves to [claude-code]', () => {
         const root = makeRoot({ delivery: true });
-        expect(gateOpen(root, false)).toBe(true);
+        expect(gateOpen(root, false, root)).toBe(true);
         fs.rmSync(root, { recursive: true, force: true });
     });
 
@@ -196,7 +208,7 @@ describe('rule-inject — default OFF means zero bytes', () => {
         // `thin` writes the same stubs and binds NO delivery concern; only
         // `delivery` may inject. `thinsHost` alone is true for both.
         const root = makeRoot({ delivery: false, hosts: '[claude-code]' });
-        expect(gateOpen(root, false)).toBe(false);
+        expect(gateOpen(root, false, root)).toBe(false);
         fs.rmSync(root, { recursive: true, force: true });
     });
 });
@@ -339,9 +351,16 @@ describe('rule-inject — never blocks (1.5)', () => {
 
     it('a tree with no router reports the gap rather than throwing', () => {
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-norouter-'));
+        // A tree whose FORM says delivery and whose corpus is missing. Since
+        // ADR-292 the form is the package-owned record, so that is what the
+        // fixture writes; the point of the case is unchanged.
+        fs.mkdirSync(path.join(root, 'src', 'config'), { recursive: true });
         fs.writeFileSync(
-            path.join(root, '.agent-settings.yml'),
-            'lean_projection:\n  mode: delivery\n',
+            path.join(root, 'src', 'config', 'project-tree-form.json'),
+            JSON.stringify({
+                schema_version: 1,
+                hosts: { 'claude-code': { form: 'delivery', basis: 'test fixture', measured: { fixture: true } } },
+            }),
             'utf-8',
         );
         const { rc, out } = run({
@@ -544,6 +563,18 @@ function makePackageRoot(): string {
     for (const [id, text] of Object.entries(BODIES)) {
         fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', `${id}.md`), text, 'utf-8');
     }
+    // ADR-292: the gate's form comes from the PACKAGE's own record, which is
+    // the whole point of the foreign-project cases — the consumer tree carries
+    // no such file and must not need one.
+    fs.mkdirSync(path.join(root, 'src', 'config'), { recursive: true });
+    fs.writeFileSync(
+        path.join(root, 'src', 'config', 'project-tree-form.json'),
+        JSON.stringify({
+            schema_version: 1,
+            hosts: { 'claude-code': { form: 'delivery', basis: 'test fixture', measured: { fixture: true } } },
+        }),
+        'utf-8',
+    );
     return root;
 }
 
@@ -571,7 +602,12 @@ function runWithPackage(
     }
 }
 
-const DELIVERY_SETTINGS = 'lean_projection:\n  mode: delivery\n  hosts: [claude-code]\n';
+/**
+ * A consumer settings file. It no longer carries a projection key — ADR-292
+ * removed it — and the constant is kept so the cases still exercise "a project
+ * that HAS a settings file", which is a different path from one that has none.
+ */
+const DELIVERY_SETTINGS = 'personal:\n  autonomy: auto\n';
 
 describe('rule-inject — foreign-project resolution (1.1)', () => {
     it('delivers a matched body in a project that carries no corpus of its own', () => {
@@ -607,7 +643,27 @@ describe('rule-inject — foreign-project resolution (1.1)', () => {
         expect(out).not.toContain('PROMPT RULE BODY');
     });
 
-    it('no package root resolves — one diagnostic reason, and no rule body', () => {
+    // ADR-292 MOVED THE FORM, AND THESE TWO CASES CHANGED WITH IT — stated
+    // rather than deleted, because the capability they covered is genuinely
+    // different now and a silent rewrite would hide that.
+    //
+    // They used to assert a diagnostic: a consumer whose SETTINGS said
+    // `delivery` while the package was unreachable got a `reason` naming the
+    // missing root. The settings statement is gone, and the form it carried now
+    // lives IN the package — so when the package is unreachable, the thing that
+    // would have said "deliver" is unreachable with it, and the gate cannot
+    // know it was meant to open.
+    //
+    // That is not the silence the carrier roadmap forbids. Its obligation is
+    // "a dead carrier is never silent on a THINNED layer", and after ADR-292
+    // the installer never thins: `installerThinsHost` is a constant false and a
+    // fresh install writes the full layer. A consumer in this state has every
+    // body in its rule files already, so there is nothing withheld to warn
+    // about. If step 3.3 ever promotes a machine to a thinned layer, the
+    // promotion writes its own state on that machine and the warning path comes
+    // back with it — which is where it belongs, because that is the first
+    // moment the condition can be true.
+    it('an unresolvable package root yields no delivery and no claim of one', () => {
         const project = makeForeignProject({ settings: DELIVERY_SETTINGS });
         const { rc, out } = runWithPackage(null, {
             event: 'user_prompt_submit',
@@ -615,18 +671,14 @@ describe('rule-inject — foreign-project resolution (1.1)', () => {
             session_id: 'foreign-2',
             payload: { prompt: 'plan the migration' },
         });
-        // A warn carrying a `reason` and no body. The dispatcher turns that
-        // into `additionalContext` at exit 0 on this host — asserted end to end
-        // in `rule_inject_foreign_matrix.test.ts`, which is the only place that
-        // can see the translation.
-        expect(rc).toBe(2);
-        const reply = JSON.parse(out) as Record<string, unknown>;
-        expect(reply['reason']).toContain('AGENT_CONFIG_PACKAGE_ROOT');
-        expect(reply['additional_context']).toBeUndefined();
-        expect(out).not.toContain('<rule id=');
+        expect(rc).toBe(0);
+        expect(out).toBe('');
     });
 
-    it('a package root moved after install names both trees it looked in', () => {
+    it('a package root moved after install is the same answer, not a different one', () => {
+        // Set-but-gone was a DIFFERENT operator action from unset and produced
+        // different wording. Both now produce the same nothing, for the same
+        // reason: the form went with the package.
         const project = makeForeignProject({ settings: DELIVERY_SETTINGS });
         const pkg = makePackageRoot();
         fs.rmSync(pkg, { recursive: true, force: true });
@@ -636,13 +688,8 @@ describe('rule-inject — foreign-project resolution (1.1)', () => {
             session_id: 'foreign-3',
             payload: { prompt: 'plan the migration' },
         });
-        expect(rc).toBe(2);
-        const reason = (JSON.parse(out) as { reason: string }).reason;
-        // A set-but-gone root is a DIFFERENT operator action from an unset one,
-        // so it must not produce the unset wording. It names both trees.
-        expect(reason).toContain(project);
-        expect(reason).toContain(pkg);
-        expect(reason).not.toContain('unset');
+        expect(rc).toBe(0);
+        expect(out).toBe('');
     });
 
     it('the maintainer checkout still answers from its own tree', () => {

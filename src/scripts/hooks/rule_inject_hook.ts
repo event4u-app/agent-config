@@ -970,7 +970,14 @@ export function gateOpen(root: string, cliEntry: boolean, packageRoot?: string |
     // found; inside the bundle nothing else can locate it.
     const { mode, hosts } = resolveLeanProjection({
         projectRoot: root,
-        packageRoot: packageRoot ?? null,
+        // FALLS BACK TO `root`, and the fallback is what makes this work in a
+        // source checkout. Since ADR-292 the form comes from the package-owned
+        // record under `<packageRoot>/src/config/`, and `packageRoot` here is
+        // `AGENT_CONFIG_PACKAGE_ROOT` — unset outside an install, where the
+        // project root IS the package root. A consumer project has no such
+        // record, so the fallback reads nothing there and the full form stands,
+        // which is the same answer it gave before.
+        packageRoot: packageRoot ?? root,
     });
     if (deliversBodies(mode) && hosts.hosts.includes(DELIVERY_HOST)) return true;
     if (hookSectionEnabled(root, 'rule_inject')) return true;

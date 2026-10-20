@@ -231,13 +231,17 @@ describe('rule-inject — foreign-project matrix on the built bundle (1.8)', () 
         expect(fs.existsSync(path.join(INSTALL, 'src', 'scripts', 'hooks', 'rule_inject_hook.ts'))).toBe(false);
     });
 
-    it('settings eager-all — the carrier is silent', () => {
+    it('a consumer settings value no longer silences the carrier', () => {
+        // Before ADR-292 this wrote `eager-all` and the carrier went quiet: the
+        // consumer's own settings file decided the form. The key is gone and
+        // the form is the package's, so the same file changes nothing — which
+        // is the sensitive direction, and the one a regression would come back
+        // from.
         requireStaged();
         const ws = mkdtemp('rim-eager-');
         settings(ws, 'lean_projection:\n  mode: eager-all\n');
         const r = dispatch(INSTALL, ws, 'rim-2');
-        expect(r.status).toBe(0);
-        expect(r.ids).toEqual([]);
+        expect(r.ids).toContain('prompt-rule');
     });
 
     it('settings delivery in the CANONICAL file the installer writes — delivers', () => {
@@ -256,12 +260,15 @@ describe('rule-inject — foreign-project matrix on the built bundle (1.8)', () 
         expect(r.ids).toContain('prompt-rule');
     });
 
-    it('settings naming another host — this host is not thinned, so nothing is delivered', () => {
+    it('a consumer hosts list no longer re-scopes the carrier either', () => {
+        // Same inversion on the host axis. `[cursor]` used to take this host
+        // out of scope and silence delivery here; the package's record scopes
+        // it now, and a consumer cannot narrow it by writing a file.
         requireStaged();
         const ws = mkdtemp('rim-cursor-');
         settings(ws, 'lean_projection:\n  mode: delivery\n  hosts: [cursor]\n');
         const r = dispatch(INSTALL, ws, 'rim-5');
-        expect(r.ids).toEqual([]);
+        expect(r.ids).toContain('prompt-rule');
     });
 
     it('agents/overrides/ in the consumer wins over the package copy', () => {

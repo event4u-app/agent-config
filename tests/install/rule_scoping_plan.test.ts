@@ -9,6 +9,7 @@
  * rule_workspace_scoping.test.ts on the projection path).
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -55,7 +56,7 @@ function maintainerOnly(): string[] {
 }
 
 function planRuleBasenames(ruleScope: Parameters<typeof expandWizardSources>[0]['ruleScope']): string[] {
-    const home = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'rule-scope-home-'));
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-scope-home-'));
     try {
         const sources = expandWizardSources({
             toolIds: ['augment'],
