@@ -484,6 +484,23 @@ describe('category A withdraws only what it cannot prove (Phase 0)', () => {
         expect(isCategoryABashCommand('sort -o out.txt src/a')).toBe(true);
     });
 
+    it('bash-path-confinement: date reads files, so its arguments are confined', () => {
+        // Council review 2026-10-21, round 8: `date` was exempt from argument
+        // inspection although `-f`/`--file` and `-r`/`--reference` open a path.
+        for (const cmd of [
+            'date -f /etc/passwd',
+            'date --file=/etc/passwd',
+            'date -r /etc/passwd',
+            'date --reference=/etc/passwd',
+            'date -f ../outside',
+        ]) {
+            expect(allowOf(cmd), cmd).toBeNull();
+        }
+        for (const cmd of ['date', 'date +%Y-%m-%d', 'date -r src/x.ts', 'date -f src/dates.txt']) {
+            expect(allowOf(cmd)?.decision, cmd).toBe('allow');
+        }
+    });
+
     it('reason-names-what-was-checked: the working tree is named only when confinement ran', () => {
         expect(allowOf('cat src/x.ts')?.reason).toContain('inside the working tree');
         const bare = allowOf('pwd');

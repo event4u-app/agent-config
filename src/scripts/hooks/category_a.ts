@@ -275,9 +275,10 @@ function _gitBranchOnlyObserves(argv: readonly string[], index: number): boolean
 
 /**
  * Heads that never open their arguments, so a path-shaped argument is a string
- * and confining it would only put a prompt on `echo /tmp`.
+ * and confining it would only put a prompt on `echo /tmp`. Not `date`: its
+ * `-f`/`--file` and `-r`/`--reference` open a path.
  */
-const NON_OPENING_HEADS = /^(pwd|echo|basename|dirname|date|which)$/;
+const NON_OPENING_HEADS = /^(pwd|echo|basename|dirname|which)$/;
 
 /**
  * Output-writing flags (0.3). Their target is a path like any other, and the
