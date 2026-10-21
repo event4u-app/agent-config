@@ -63,7 +63,6 @@ export const SPOOL_RETENTION_MS = 7 * 24 * 3600 * 1000;
 export const SPOOL_MAX_BYTES = 500 * 1024 * 1024;
 
 const LOCK_FILE = '.cleanup.lock';
-const STALE_LOCK_MS = 10 * 60 * 1000;
 const STALE_TMP_MS = 60 * 60 * 1000;
 const ADDRESS = /^[0-9a-f]{64}$/;
 /** A session id this store binds to: host ids are UUID-like, and anything else is refused. */
@@ -285,7 +284,7 @@ export function cleanupSpool(
     const dir = spoolDir(root);
     assertNoLinks(root, SPOOL_DIR);
     if (!fs.existsSync(dir)) return { removed: 0, ran: true };
-    const owner = acquireCleanupLock(dir, now);
+    const owner = acquireCleanupLock(dir);
     if (owner === null) return { removed: 0, ran: false };
     try {
         return { removed: sweepLocked(dir, now, maxBytes, owner, hooks), ran: true };
@@ -380,31 +379,41 @@ function processAlive(pid: number): boolean {
  * the holder's pid and a random token. It is taken over ONLY when that pid is no
  * longer running — never for age — so a slow but live holder is never displaced
  * and two holders never overlap between making room and publishing. A dead holder
- * cannot publish anything; it is moved aside, which one taker wins. A lock in a
- * format this version did not write falls back to the age rule.
+ * cannot publish anything; one taker at a time replaces it, under a takeover guard. A lock in a
+ * format this version did not write is never taken: stores skip until it is removed.
  */
-export function acquireCleanupLock(dir: string, now: number = Date.now()): string | null {
+export function acquireCleanupLock(dir: string, seams: { readonly afterRead?: () => void } = {}): string | null {
     const lock = path.join(dir, LOCK_FILE);
     const owner = `${String(process.pid)}:${randomBytes(16).toString('hex')}`;
-    for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-            fs.writeFileSync(lock, owner, { flag: 'wx' });
-            return owner;
-        } catch {
-            try {
-                if (attempt > 0) return null;
-                const holder = lockHolder(fs.readFileSync(lock, 'utf8'));
-                const stale = holder === null ? now - fs.lstatSync(lock).mtimeMs >= STALE_LOCK_MS : !processAlive(holder);
-                if (!stale) return null;
-                const aside = `${lock}.${owner.slice(-32)}.stale`;
-                fs.renameSync(lock, aside);
-                fs.rmSync(aside, { force: true });
-            } catch {
-                return null;
-            }
-        }
+    try {
+        fs.writeFileSync(lock, owner, { flag: 'wx' });
+        return owner;
+    } catch {
+        // held, or left by a dead holder
     }
-    return null;
+    // Takeover runs under its own mutex: two takers that both read the dead holder
+    // must not both replace it, or the second would remove the first's fresh lock.
+    // A guard left by a crashed taker blocks takeover — stores skip, the safe side.
+    const guard = `${lock}.takeover`;
+    try {
+        fs.mkdirSync(guard);
+    } catch {
+        return null;
+    }
+    try {
+        // A lock this version cannot read names no holder it can check, so it is
+        // treated as held: an age rule would displace a live holder of another version.
+        const holder = lockHolder(fs.readFileSync(lock, 'utf8'));
+        if (holder === null || processAlive(holder)) return null;
+        seams.afterRead?.();
+        fs.rmSync(lock, { force: true });
+        fs.writeFileSync(lock, owner, { flag: 'wx' });
+        return owner;
+    } catch {
+        return null;
+    } finally {
+        fs.rmSync(guard, { recursive: true, force: true });
+    }
 }
 
 /**
@@ -505,7 +514,7 @@ export function spoolResult(
         // One lock spans making room and publishing, so two stores cannot each make room
         // for themselves and then publish together past the cap. A held lock skips the
         // store instead of waiting: this is a cache, and a hook must not block.
-        const owner = acquireCleanupLock(dir, now);
+        const owner = acquireCleanupLock(dir);
         if (owner === null) return { action: 'skip', reason: 'cap-busy' };
         try {
             // Room for the full size, never crediting an entry already at this address: that

@@ -401,13 +401,15 @@ No setting, environment variable or config file populates the selection.
 - *The lock* — it records the holder's pid and a random token. It is taken
   over only when that pid is no longer running, never for its age, so a slow
   but live holder is never displaced and no two processes overlap between
-  making room and publishing; a dead holder cannot publish, and of two takers
-  one wins the rename aside. A holder releases only its own token, and since no
-  live holder is ever displaced, no successor can appear between that check and
-  the removal. Limits, stated: the lock is per host; a pid reused by an
-  unrelated process keeps the lock held, so stores skip as `cap-busy` until it
-  is removed — the safe direction. A lock in a format older versions wrote
-  falls back to the ten-minute age rule.
+  making room and publishing; a dead holder cannot publish. Taking over a dead
+  holder's lock runs under its own guard (an atomic `mkdir`), so of any number
+  of takers exactly one replaces it. A holder releases only its own token, and
+  since no live holder is ever displaced, no successor can appear between that
+  check and the removal. A lock in a format this version did not write names
+  no holder it can check and is never taken, whatever its age. Limits, stated:
+  the lock is per host; a reused pid, an unreadable lock, or a takeover guard
+  left by a crash keeps the lock held, so stores skip as `cap-busy` until it is
+  removed — the safe direction in every case.
 
 **A concern reply cannot rewrite.** The dispatcher reads a fixed set of keys
 from a concern reply (`decision`, `reason`, `additional_context`, `context` and

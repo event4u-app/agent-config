@@ -229,14 +229,15 @@ describe('expired-handle-says-expired', () => {
         expect(readHandle(tmp, b.handle, S, undefined, now).state).toBe('ok');
     });
 
-    it('a cleanup lock held by another process skips; a stale one is taken over', () => {
+    it('a cleanup lock held by a live process skips; a dead holder\'s lock is taken over', () => {
         const now = Date.now();
         const old = storeBytesUnchecked(tmp, Buffer.from('old'), S, now - SPOOL_RETENTION_MS - 5000);
         fs.utimesSync(path.join(tmp, SPOOL_DIR, old.address), new Date(now - SPOOL_RETENTION_MS - 5000), new Date(now - SPOOL_RETENTION_MS - 5000));
         const lock = path.join(tmp, SPOOL_DIR, '.cleanup.lock');
-        fs.writeFileSync(lock, '1');
+        fs.writeFileSync(lock, `${String(process.pid)}:${'cd'.repeat(16)}`);
         expect(cleanupSpool(tmp, now).removed).toBe(0);
-        fs.utimesSync(lock, new Date(now - 11 * 60 * 1000), new Date(now - 11 * 60 * 1000));
+        const dead = spawnSync(process.execPath, ['-e', '0']).pid as number;
+        fs.writeFileSync(lock, `${String(dead)}:${'cd'.repeat(16)}`);
         expect(cleanupSpool(tmp, now).removed).toBe(1);
         expect(fs.existsSync(lock)).toBe(false);
     });
@@ -486,7 +487,7 @@ describe('a held lock and a concurrent identical store', () => {
         const now = Date.now();
         spoolResult(readEnvelope(a), view(readEnvelope(a)), ['tool_response'], tmp, READ_TEXT, now, { maxBytes: 10_000 });
         const dir = path.join(tmp, SPOOL_DIR);
-        const held = acquireCleanupLock(dir, now);
+        const held = acquireCleanupLock(dir);
         expect(held).not.toBeNull();
         for (const cap of [size(a) + size(b) - 1, 10_000]) {
             expect(spoolResult(readEnvelope(b), view(readEnvelope(b)), ['tool_response'], tmp, READ_TEXT, now, { maxBytes: cap })).toEqual({
@@ -654,14 +655,67 @@ describe('the cleanup lock is owned', () => {
         expect(fs.existsSync(lock)).toBe(false);
     });
 
-    it('a lock whose holder has died is taken over, by exactly one of two takers', () => {
+    it('a lock whose holder has died is taken over', () => {
         const dir = path.join(tmp, SPOOL_DIR);
         fs.mkdirSync(dir, { recursive: true });
         const lock = path.join(dir, '.cleanup.lock');
         fs.writeFileSync(lock, lockOf(deadPid()));
-        const winners = [acquireCleanupLock(dir), acquireCleanupLock(dir)].filter((t) => t !== null);
+        const taken = acquireCleanupLock(dir);
+        expect(taken).not.toBeNull();
+        expect(fs.readFileSync(lock, 'utf8')).toBe(taken);
+    });
+
+    it('a second taker arriving after the first read the dead lock cannot also take it', () => {
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.mkdirSync(dir, { recursive: true });
+        const lock = path.join(dir, '.cleanup.lock');
+        fs.writeFileSync(lock, lockOf(deadPid()));
+        let second: string | null = 'not run';
+        const first = acquireCleanupLock(dir, { afterRead: () => { second = acquireCleanupLock(dir); } });
+        expect(second).toBeNull();
+        expect(first).not.toBeNull();
+        expect(fs.readFileSync(lock, 'utf8')).toBe(first);
+    });
+
+    it('six processes racing to take a dead holder\'s lock: exactly one wins', async () => {
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.mkdirSync(dir, { recursive: true });
+        const lock = path.join(dir, '.cleanup.lock');
+        fs.writeFileSync(lock, lockOf(deadPid()));
+        const tsx = path.resolve(__dirname, '../../node_modules/.bin/tsx');
+        const mod = path.resolve(__dirname, '../../src/scripts/_lib/tool_output_spool.ts');
+        const code = `import { acquireCleanupLock } from ${JSON.stringify(mod)}; console.log(acquireCleanupLock(${JSON.stringify(dir)}) ?? 'none');`;
+        const results = await Promise.all(
+            Array.from({ length: 6 }, () =>
+                new Promise<string>((resolve, reject) => {
+                    const p = spawn(tsx, ['--eval', code], { stdio: ['ignore', 'pipe', 'pipe'] });
+                    let out = '';
+                    p.stdout.on('data', (d: Buffer) => (out += d.toString()));
+                    p.on('error', reject);
+                    p.on('close', () => resolve(out.trim()));
+                }),
+            ),
+        );
+        const winners = results.filter((r) => r !== 'none');
         expect(winners).toHaveLength(1);
         expect(fs.readFileSync(lock, 'utf8')).toBe(winners[0]);
+    }, 60_000);
+
+    it('a lock in a format this version did not write is never taken, however old: the store skips', () => {
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.mkdirSync(dir, { recursive: true });
+        const lock = path.join(dir, '.cleanup.lock');
+        fs.writeFileSync(lock, 'f'.repeat(32));
+        const ancient = new Date(Date.now() - 24 * 3600 * 1000);
+        fs.utimesSync(lock, ancient, ancient);
+        expect(acquireCleanupLock(dir)).toBeNull();
+        const env = readEnvelope('must not overlap an older holder');
+        expect(spoolResult(env, { mode: 'protect', placeholder: env, counts: [], refused: [] }, ['tool_response'], tmp, READ_TEXT)).toEqual({
+            action: 'skip',
+            reason: 'cap-busy',
+        });
+        expect(spoolFiles()).toEqual([]);
+        expect(fs.readFileSync(lock, 'utf8')).toBe('f'.repeat(32));
     });
 
     it('a holder releases only its own lock', () => {
