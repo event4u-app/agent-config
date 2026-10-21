@@ -7,7 +7,7 @@
  * handle says so after its entry is gone; a handle returns exactly the bytes it
  * names, and every other state answers as itself.
  */
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -451,6 +451,24 @@ describe('the cap, through the store path', () => {
         expect(total()).toBeLessThanOrEqual(cap);
     });
 
+    it.each([
+        ['expired', true],
+        ['evicted as the oldest', false],
+    ])('a re-store whose same-address entry is %s by its own sweep still ends within the cap', (_label, expired) => {
+        const e = 'e'.repeat(100);
+        const l = 'l'.repeat(100);
+        const cap = size(e) + size(l) - 1;
+        const now = Date.now();
+        const dir = path.join(tmp, SPOOL_DIR);
+        store(e, 10_000_000, now);
+        const [eFile] = spoolFiles();
+        const aged = expired ? now - SPOOL_RETENTION_MS - 1000 : now - 5000;
+        fs.utimesSync(path.join(dir, eFile as string), new Date(aged), new Date(aged));
+        store(l, 10_000_000, now);
+        expect(store(e, cap, now)).toMatchObject({ action: 'stored' });
+        expect(total()).toBeLessThanOrEqual(cap);
+    });
+
     it('an entry larger than the cap is refused before anything is written', () => {
         const big = 'x'.repeat(500);
         expect(store(big, size(big) - 1, Date.now())).toEqual({ action: 'skip', reason: 'too-large' });
@@ -615,33 +633,66 @@ describe('the repository is not trusted for spool paths', () => {
 });
 
 describe('the cleanup lock is owned', () => {
-    it('a displaced cleaner cannot release its successor’s lock', () => {
+    /** A pid that has just exited: the holder of a lock left behind by a crash. */
+    function deadPid(): number {
+        const r = spawnSync(process.execPath, ['-e', '0']);
+        return r.pid as number;
+    }
+    const lockOf = (pid: number): string => `${String(pid)}:${'ab'.repeat(16)}`;
+
+    it('a lock held by a live process is never taken, however old it is', () => {
         const dir = path.join(tmp, SPOOL_DIR);
         fs.mkdirSync(dir, { recursive: true });
         const lock = path.join(dir, '.cleanup.lock');
         const a = acquireCleanupLock(dir);
         expect(a).not.toBeNull();
-        const stale = new Date(Date.now() - 11 * 60 * 1000);
-        fs.utimesSync(lock, stale, stale);
-        const b = acquireCleanupLock(dir);
-        expect(b).not.toBeNull();
-        expect(b).not.toBe(a);
+        const ancient = new Date(Date.now() - 24 * 3600 * 1000);
+        fs.utimesSync(lock, ancient, ancient);
+        expect(acquireCleanupLock(dir)).toBeNull();
+        expect(fs.readFileSync(lock, 'utf8')).toBe(a);
         releaseCleanupLock(dir, a as string);
-        expect(fs.readFileSync(lock, 'utf8')).toBe(b);
-        releaseCleanupLock(dir, b as string);
         expect(fs.existsSync(lock)).toBe(false);
     });
 
-    it('a live lock is never taken, and of two takers of a stale lock at most one wins', () => {
+    it('a lock whose holder has died is taken over, by exactly one of two takers', () => {
         const dir = path.join(tmp, SPOOL_DIR);
         fs.mkdirSync(dir, { recursive: true });
-        const a = acquireCleanupLock(dir);
-        expect(acquireCleanupLock(dir)).toBeNull();
-        const stale = new Date(Date.now() - 11 * 60 * 1000);
-        fs.utimesSync(path.join(dir, '.cleanup.lock'), stale, stale);
+        const lock = path.join(dir, '.cleanup.lock');
+        fs.writeFileSync(lock, lockOf(deadPid()));
         const winners = [acquireCleanupLock(dir), acquireCleanupLock(dir)].filter((t) => t !== null);
         expect(winners).toHaveLength(1);
-        expect(winners[0]).not.toBe(a);
+        expect(fs.readFileSync(lock, 'utf8')).toBe(winners[0]);
+    });
+
+    it('a holder releases only its own lock', () => {
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.mkdirSync(dir, { recursive: true });
+        const lock = path.join(dir, '.cleanup.lock');
+        const mine = acquireCleanupLock(dir) as string;
+        releaseCleanupLock(dir, lockOf(process.pid));
+        expect(fs.readFileSync(lock, 'utf8')).toBe(mine);
+        releaseCleanupLock(dir, mine);
+        expect(fs.existsSync(lock)).toBe(false);
+    });
+
+    it('a store never runs while a live process holds the lock, so it cannot overlap a slow holder', () => {
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.mkdirSync(dir, { recursive: true });
+        const slow = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 20000)']);
+        try {
+            const lock = path.join(dir, '.cleanup.lock');
+            fs.writeFileSync(lock, lockOf(slow.pid as number));
+            const ancient = new Date(Date.now() - 24 * 3600 * 1000);
+            fs.utimesSync(lock, ancient, ancient);
+            const env = readEnvelope('would overlap a slow holder');
+            expect(spoolResult(env, { mode: 'protect', placeholder: env, counts: [], refused: [] }, ['tool_response'], tmp, READ_TEXT)).toEqual({
+                action: 'skip',
+                reason: 'cap-busy',
+            });
+            expect(spoolFiles()).toEqual([]);
+        } finally {
+            slow.kill();
+        }
     });
 
     it('an entry a writer replaces between measurement and claim survives; the cap then takes the next oldest', () => {

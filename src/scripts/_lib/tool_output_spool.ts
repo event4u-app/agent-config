@@ -272,9 +272,9 @@ export interface SpoolLimits {
  * Correctness does not rest on the lock. Every deletion goes through
  * `claimAndDelete`, which renames the entry to a name only this cleaner uses and
  * inspects what it took: two cleaners cannot both delete one entry, and an entry
- * a writer replaced after it was measured is put back. The lock only stops two
- * cleaners doing the same work; if one is displaced (it held the lock past ten
- * minutes), the cost is redundant eviction, never a deleted fresh entry.
+ * a writer replaced after it was measured is put back. The lock serialises
+ * cleanups with each other and with a store's make-room-then-publish, and it is
+ * never taken from a live holder.
  */
 export function cleanupSpool(
     root: string,
@@ -359,32 +359,44 @@ export function claimAndDelete(dir: string, name: string, seen: fs.Stats, owner:
     }
 }
 
-/** Size of the entry at `name`, or 0; a same-address store replaces it rather than adding. */
-function entrySize(dir: string, name: string): number {
+/** The pid recorded in a lock, or null for a lock this version did not write. */
+function lockHolder(text: string): number | null {
+    const m = /^(\d+):[0-9a-f]{32}$/.exec(text);
+    return m === null ? null : Number(m[1]);
+}
+
+function processAlive(pid: number): boolean {
     try {
-        const st = fs.lstatSync(path.join(dir, name));
-        return st.isFile() ? st.size : 0;
-    } catch {
-        return 0;
+        process.kill(pid, 0);
+        return true;
+    } catch (exc) {
+        // EPERM: the process exists but belongs to someone else — alive.
+        return (exc as NodeJS.ErrnoException).code === 'EPERM';
     }
 }
 
 /**
- * Take the cleanup lock, or null when a live cleaner holds it. The lock holds a
- * random token; a stale lock is taken over by renaming it aside, which only one
- * taker can do, then creating a fresh one.
+ * Take the cleanup lock, or null when a live process holds it. The lock records
+ * the holder's pid and a random token. It is taken over ONLY when that pid is no
+ * longer running — never for age — so a slow but live holder is never displaced
+ * and two holders never overlap between making room and publishing. A dead holder
+ * cannot publish anything; it is moved aside, which one taker wins. A lock in a
+ * format this version did not write falls back to the age rule.
  */
 export function acquireCleanupLock(dir: string, now: number = Date.now()): string | null {
     const lock = path.join(dir, LOCK_FILE);
-    const owner = randomBytes(16).toString('hex');
+    const owner = `${String(process.pid)}:${randomBytes(16).toString('hex')}`;
     for (let attempt = 0; attempt < 2; attempt++) {
         try {
             fs.writeFileSync(lock, owner, { flag: 'wx' });
             return owner;
         } catch {
             try {
-                if (attempt > 0 || now - fs.lstatSync(lock).mtimeMs < STALE_LOCK_MS) return null;
-                const aside = `${lock}.${owner}.stale`;
+                if (attempt > 0) return null;
+                const holder = lockHolder(fs.readFileSync(lock, 'utf8'));
+                const stale = holder === null ? now - fs.lstatSync(lock).mtimeMs >= STALE_LOCK_MS : !processAlive(holder);
+                if (!stale) return null;
+                const aside = `${lock}.${owner.slice(-32)}.stale`;
                 fs.renameSync(lock, aside);
                 fs.rmSync(aside, { force: true });
             } catch {
@@ -396,16 +408,16 @@ export function acquireCleanupLock(dir: string, now: number = Date.now()): strin
 }
 
 /**
- * Release the lock if it still holds this cleaner's token. A successor that
- * replaced it between the read and the removal can lose its lock; that admits a
- * second cleaner, which `claimAndDelete` makes harmless.
+ * Release the lock if it still holds this holder's token. Only a dead holder's
+ * lock is ever taken over, and a holder releasing is alive, so no successor can
+ * appear between this read and the removal.
  */
 export function releaseCleanupLock(dir: string, owner: string): void {
     const lock = path.join(dir, LOCK_FILE);
     try {
         if (fs.readFileSync(lock, 'utf8') === owner) fs.rmSync(lock, { force: true });
     } catch {
-        // already released or taken over
+        // already released
     }
 }
 
@@ -496,8 +508,10 @@ export function spoolResult(
         const owner = acquireCleanupLock(dir, now);
         if (owner === null) return { action: 'skip', reason: 'cap-busy' };
         try {
-            const existing = entrySize(dir, address(spoolKey(root, true) as Buffer, session, sha256(raw)));
-            sweepLocked(dir, now, cap - raw.length + existing, owner, limits.hooks ?? {});
+            // Room for the full size, never crediting an entry already at this address: that
+            // entry may itself be expired or evicted by this sweep. Whether it survives or
+            // not, the total after publishing stays within the cap.
+            sweepLocked(dir, now, cap - raw.length, owner, limits.hooks ?? {});
             limits.hooks?.beforePublish?.();
             return { action: 'stored', class: cls, ...storeBytesUnchecked(root, raw, session, now) };
         } finally {

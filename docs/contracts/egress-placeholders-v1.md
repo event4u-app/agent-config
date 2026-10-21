@@ -355,7 +355,8 @@ No setting, environment variable or config file populates the selection.
   bytes the model already received; a lost entry reads `missing`.
 - *Capacity and age* — a store refuses an entry larger than the cap
   (`too-large`). It then takes the cleanup lock and holds it across making room
-  for its bytes (net of any entry already at its address, which it replaces)
+  for its full size — never crediting an entry already at its address, which
+  this very sweep may expire or evict —
   and publishing, so no two stores can each make room and then publish together
   past the cap. If another process holds the lock, the store is not written at
   all (`cap-busy`): a hook must not wait, and a skipped store is a cache miss.
@@ -397,11 +398,16 @@ No setting, environment variable or config file populates the selection.
   cleanup measured it is linked back, unless an even newer copy already holds
   the name; while claimed, that entry reads `missing`. Two cleaners cannot both
   delete one entry, and capacity is subtracted only for a confirmed deletion.
-- *The lock is efficiency, not correctness* — it holds a random token, a stale
-  one (10 min) is taken over by renaming it aside, and release compares the
-  token. A successor's lock can still be lost between that read and the
-  removal; the cost is two cleaners at once, which the claim makes harmless
-  except for evicting more than needed.
+- *The lock* — it records the holder's pid and a random token. It is taken
+  over only when that pid is no longer running, never for its age, so a slow
+  but live holder is never displaced and no two processes overlap between
+  making room and publishing; a dead holder cannot publish, and of two takers
+  one wins the rename aside. A holder releases only its own token, and since no
+  live holder is ever displaced, no successor can appear between that check and
+  the removal. Limits, stated: the lock is per host; a pid reused by an
+  unrelated process keeps the lock held, so stores skip as `cap-busy` until it
+  is removed — the safe direction. A lock in a format older versions wrote
+  falls back to the ten-minute age rule.
 
 **A concern reply cannot rewrite.** The dispatcher reads a fixed set of keys
 from a concern reply (`decision`, `reason`, `additional_context`, `context` and
