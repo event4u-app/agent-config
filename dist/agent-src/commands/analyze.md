@@ -2,10 +2,10 @@
 model_tier: medium
 name: analyze
 disable-model-invocation: true
-argument-hint: "[postmortem|premortem|decision|near-miss|incident|repo|roadmap-repos|inbox|conformance|and-optimize|pr] [subject]"
+argument-hint: "[postmortem|premortem|decision|near-miss|incident|reference|roadmap-repos|inbox|conformance|and-optimize|pr] [subject]"
 pack: analysis-workbench
 intent: "Analysis dispatcher — classify input by keywords, propose a weighted framework path, let the user pick"
-routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-repo, analyze-roadmap-repos, analyze-inbox, analyze-conformance, analyze-and-optimize, analyze-pr]
+routes_to: [analyze-postmortem, analyze-premortem, analyze-decision, analyze-near-miss, analyze-incident, analyze-reference, analyze-roadmap-repos, analyze-inbox, analyze-conformance, analyze-and-optimize, analyze-pr]
 replaces: []
 visibility: advanced
 description: Analysis orchestrator — confidence-weighted suggester routing to postmortem, premortem, decision, near-miss, incident, reference repo, roadmap repos, inbox, conformance, this project or a PR.
@@ -37,8 +37,8 @@ to the chosen sub-command. Never auto-selects silently.
 | `/analyze:decision` | `analyze/decision/command.md` | Audit a past architectural decision (did it hold?) |
 | `/analyze:near-miss` | `analyze/near-miss/command.md` | Post-mortem for a near-miss (same flow, lighter severity framing) |
 | `/analyze:incident` | `analyze/incident/command.md` | Full incident flow: commander → RCA → post-mortem → memory candidate |
-| `/analyze:repo` | `analyze/repo/command.md` | Deep-dive an external reference repo (competitor, inspiration, peer) → structured comparison + adoption plan |
-| `/analyze:roadmap-repos` | `analyze/roadmap-repos/command.md` | Walk the estate's encrypted reference tokens and feed each unique repo through `repo`, one subagent at a time |
+| `/analyze:reference` | `analyze/reference/command.md` | Deep-dive an external reference repo (competitor, inspiration, peer) → structured comparison + adoption plan |
+| `/analyze:roadmap-repos` | `analyze/roadmap-repos/command.md` | Walk the estate's encrypted reference tokens and feed each unique repo through `reference`, one subagent at a time |
 | `/analyze:inbox` | `analyze/inbox/command.md` | Deep-dive a LOCAL artifact dropped in `agents/tmp/` (review, prompt, spec, transcript) → claim verification + step reproduction against the current tree + artefact mapping + roadmap |
 | `/analyze:conformance` | `analyze/conformance/command.md` | Audit recent local sessions for rule violations → deterministic scan + subagent passes, root-caused per class, and a roadmap for what is mechanisable |
 | `/analyze:and-optimize` | `analyze/and-optimize/command.md` | Analyse this project, repository or module and improve it → analysts, exchange, council, ready roadmaps, PR (alias: `/optimize:deep`) |
@@ -66,7 +66,7 @@ match:
 | "pre-mortem", "what could go wrong", "imagine failure", "vor dem Start" | `premortem` |
 | "decision review", "ADR", "did this hold up", "rückblick Architektur" | `decision` |
 | "production is down", "active incident", "Vorfall", "Prod ist down" | `incident` |
-| external repo URL / `owner/repo`, "how does X do this", "compare with that repo", "competitor", "learn from that project" | `repo` |
+| external repo URL / `owner/repo`, "how does X do this", "compare with that repo", "competitor", "learn from that project" | `reference` |
 | "every reference repo in the roadmaps", "harvest the encrypted reference tokens", "all referenced repos" | `roadmap-repos` |
 | "agents/tmp", "the inbox", "dropped file", "transcript", "review someone dropped" | `inbox` |
 | "rule violations", "did the sessions follow the rules", "conformance", "Regelverstöße" | `conformance` |
@@ -89,7 +89,7 @@ escape:
 > 3. [low] Pre-mortem (`/analyze:premortem`) — imagined-failure analysis before committing
 > 4. [low] Decision review (`/analyze:decision`) — did a past architectural decision hold up?
 > 5. [low] Incident (`/analyze:incident`) — full live-incident coordination + RCA + post-mortem
-> 6. [low] Reference repo (`/analyze:repo`) — deep-dive an external repo → comparison + adoption plan
+> 6. [low] Reference repo (`/analyze:reference`) — deep-dive an external repo → comparison + adoption plan
 > 7. [low] Reference repos of the estate (`/analyze:roadmap-repos`) — every repo the roadmaps reference, one at a time
 > 8. [low] Inbox (`/analyze:inbox`) — a dropped file in `agents/tmp/` → verified claims + roadmaps
 > 9. [low] Conformance (`/analyze:conformance`) — recent sessions against the rules
@@ -128,11 +128,11 @@ and ask which one was intended. One question, no guessing.
 - **Do NOT commit, push, or open a PR** unless a sub-command
   explicitly authorizes it.
 - **Do NOT chain sub-commands.** One `/analyze <sub>` per turn. **Exactly one
-  exception:** `roadmap-repos` invokes `repo` once per repository, each in its
+  exception:** `roadmap-repos` invokes `reference` once per repository, each in its
   own subagent, sequentially — never in the orchestrator's own turn and never as
   a fan-out. It is the only sub-command permitted to invoke another, and it may
-  invoke only `repo`. **Second exception (ADR-288):** an analysis door
-  (`repo`, `and-optimize`, `pr`, `inbox`) invokes the engine's *stages* —
+  invoke only `reference`. **Second exception (ADR-288):** an analysis door
+  (`reference`, `and-optimize`, `pr`, `inbox`) invokes the engine's *stages* —
   scope, analysts, exchange, gate, emit, validate, publish — never another
   door.
 - **Memory loop applies** — every sub-command that produces an

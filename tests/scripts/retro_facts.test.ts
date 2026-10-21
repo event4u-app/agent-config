@@ -17,6 +17,7 @@ import {
     type Fact,
     type GitRun,
 } from '../../src/scripts/retro_facts.js';
+import { listSessionPointers, resolveMarkers, writeMergeMarker, writeSessionPointer } from '../../src/scripts/retro_queue.js';
 
 const tmpDirs: string[] = [];
 function tmp(): string {
@@ -329,6 +330,57 @@ describe('retro_facts — session', () => {
         expect(measured(facts.turns)).toBe(9);
         expect(fs.realpathSync(measured(facts.found_in))).toBe(fs.realpathSync(wt));
         expect(measured(facts.workspaces).length).toBe(2);
+    });
+
+    it('worktree-session-is-seen-from-main: the pointer a session leaves outlives its worktree listing', () => {
+        const main = tmp();
+        const run = (cwd: string, args: string[]) => {
+            const r = spawnSync('git', args, { cwd, encoding: 'utf8' });
+            if (r.status !== 0) throw new Error(`git ${args.join(' ')}: ${r.stderr}`);
+        };
+        run(main, ['init', '-q', '-b', 'main']);
+        run(main, ['-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'init']);
+        const wt = path.join(tmp(), 'wt');
+        run(main, ['worktree', 'add', '-q', '-b', 'side', wt]);
+
+        const id = 'pointer-session';
+        writeEol(wt, id, { turns: 7, assistant_records: 3, tool_calls: 2 });
+        expect(
+            writeSessionPointer(
+                wt,
+                { eol_key: eolSessionKey(id), tag: derive_session_tag(id), branch: 'side', workspace: wt, ended_at: '2026-10-20T10:00:00Z' },
+                { enabled: true },
+            ),
+        ).toBe(true);
+        // Seen from the main checkout with git unable to list worktrees: only the pointer leads there.
+        const facts = readSessionFacts({ tag: derive_session_tag(id), root: main, git: deadGit });
+        expect(measured(facts.turns)).toBe(7);
+        expect(fs.realpathSync(measured(facts.found_in))).toBe(fs.realpathSync(wt));
+        expect(listSessionPointers(main)).toHaveLength(1);
+    });
+
+    it('session-facts-join-on-tag: the pointer records the branch and the push marker the PR', () => {
+        const root = tmp();
+        spawnSync('git', ['init', '-q', '-b', 'main'], { cwd: root });
+        const id = 'joined-session';
+        writeEol(root, id, { turns: 3, assistant_records: 3, tool_calls: 1 });
+        const pointer = { eol_key: eolSessionKey(id), tag: derive_session_tag(id), branch: 'feat/x', workspace: root, ended_at: '2026-10-20T10:00:00Z' };
+
+        const before = readSessionFacts({ tag: pointer.tag, root, git: deadGit });
+        expect(before.branch.status).toBe('missing');
+        expect(before.turns.status).toBe('missing');
+
+        writeSessionPointer(root, pointer, { enabled: true });
+        const noPr = readSessionFacts({ tag: pointer.tag, root, git: deadGit });
+        expect(measured(noPr.branch)).toBe('feat/x');
+        expect(measured(noPr.turns)).toBe(3);
+        expect(noPr.pr.status).toBe('missing');
+
+        writeMergeMarker(root, { pr: 42, branch: 'feat/x' }, '2026-10-20T09:00:00Z', { enabled: true });
+        expect(measured(readSessionFacts({ tag: pointer.tag, root, git: deadGit }).pr)).toBe(42);
+        // The join survives the marker turning into a queue entry on merge.
+        resolveMarkers(root, 'acme/widget', () => ({ state: 'MERGED', merge_sha: 'e'.repeat(40) }), '2026-10-21T07:00:00Z');
+        expect(measured(readSessionFacts({ sessionId: id, root, git: deadGit }).pr)).toBe(42);
     });
 });
 

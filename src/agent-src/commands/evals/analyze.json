@@ -48,7 +48,7 @@
     },
     {
       "prompt": "compare our installer with github.com/acme/tool and tell me what to adopt",
-      "expected": "analyze-repo"
+      "expected": "analyze-reference"
     },
     {
       "prompt": "analyse every reference repo the roadmaps point at, one by one",

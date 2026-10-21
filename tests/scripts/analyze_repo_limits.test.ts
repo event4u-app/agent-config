@@ -1,5 +1,5 @@
 /**
- * Pins the `limits:` block of `analyze/repo/command.md` against its flow text,
+ * Pins the `limits:` block of `analyze/reference/command.md` against its flow text,
  * and the eval fixtures against both.
  *
  * Sibling of `tests/scripts/optimize_deep_limits.test.ts`, written because that
@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const COMMAND = path.join(REPO, 'src/domains/analysis-workbench/analyze/repo/command.md');
+const COMMAND = path.join(REPO, 'src/domains/analysis-workbench/analyze/reference/command.md');
 const HARVESTER = path.join(REPO, 'src/domains/analysis-workbench/analyze/roadmap-repos/command.md');
 const FIXTURES = path.join(REPO, 'tests/analyze-repo/eval-fixtures.md');
 
@@ -155,7 +155,7 @@ describe('Phase 3 — the output stops naming its source', () => {
 });
 
 describe('the harvester carries no analysis instruction', () => {
-    it('says so, and routes every analysis reference at analyze-repo', () => {
+    it('says so, and routes every analysis reference at analyze-reference', () => {
         expect(harvesterText).toContain('contains no analysis instruction and never will');
         expect(harvesterText).not.toContain('analyze-reference-repo');
     });
@@ -176,13 +176,13 @@ describe('the cluster head permits exactly one chain exception', () => {
         expect(head).toContain('**Do NOT chain sub-commands.**');
     });
 
-    it('names roadmap-repos as the only exception, invoking only repo', () => {
-        expect(head).toMatch(/\*\*Exactly one\n {2}exception:\*\* `roadmap-repos` invokes `repo`/u);
-        expect(head).toMatch(/it may\n {2}invoke only `repo`/u);
+    it('names roadmap-repos as the only exception, invoking only reference', () => {
+        expect(head).toMatch(/\*\*Exactly one\n {2}exception:\*\* `roadmap-repos` invokes `reference`/u);
+        expect(head).toMatch(/it may\n {2}invoke only `reference`/u);
     });
 
     it('routes to both commands', () => {
-        expect(head).toMatch(/routes_to:.*analyze-repo,\s*analyze-roadmap-repos/u);
+        expect(head).toMatch(/routes_to:.*analyze-reference,\s*analyze-roadmap-repos/u);
     });
 });
 

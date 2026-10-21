@@ -100,6 +100,17 @@ a learning held is read from the recurrence count that already exists. With
       (F6), and adds `retro` to `command-verbs.yml` as the ADR-041 § 5 addendum.
       The governance diff carries its council ratification artefact.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> /0 finding/
+      *2026-10-20, open on one clause: ADR-292 landed, with the key in
+      template, schema, class table and `MERGEABLE_KEYS` and the verb in
+      `command-verbs.yml`. The ratification artefact the step names does not
+      exist: the three council rounds reviewed this diff together with the
+      session-start probe, rounds 2 and 3 found no authority expansion, and every
+      round still ended `refused` on the probe — a verdict that cannot be filed
+      as a ratification of this half. What closes it: a council round on the
+      settings-and-verb diff alone, filed under `agents/evidence/ratifications/`.
+      The verify's pattern cannot match a green run — the lint prints
+      `115 settings key(s) classified` and names findings only when there are
+      some — so its evidence is exit 0 with that line.*
 - [x] **0.3 The contract.** `docs/contracts/retro-v1.md`: the three paths, one
       local-only unit key `{repo, pr|session, merge_sha|tag, policy}`, the closed
       target vocabulary (`intake-signal`, `override-proposal`,
@@ -141,26 +152,30 @@ pre-registration in place, settings lint green with the new key.*
       *Done 2026-10-17: `src/scripts/retro_facts.ts --pr <N>`. A later revert
       matches the merge SHA only; in-PR reverts count separately. More runs than
       one page read as `missing`, not as a short count.*
-- [ ] **1.2 Facts for a session.** The same for a session tag: end-of-life
+- [x] **1.2 Facts for a session.** The same for a session tag: end-of-life
       counters, interruptions, self-repair records in its time window, its
       branch and PR when known.
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t session-facts-join-on-tag --reporter=verbose` -> /✓.*session-facts-join-on-tag/
-      *Reopened 2026-10-17 after the lane's neutral review held that "when known" is unmet while branch and PR are never recorded; the implementer flipped it against that review, which an implementer may not settle. Built so far: `--session <id>` or `--tag <tag>`. End-of-life state is
-      keyed by a hash of the id, so a tag alone reports it `missing`. Branch
-      stays `missing`: nothing in the tree records a session's branch; the PR is
-      not joined either until a queue pointer (1.3) carries it. Self-repair
-      records count by time window, not by session: a parallel session's record
-      in the same window counts too, until records carry a session tag.*
-- [ ] **1.3 Worktree sessions are not lost (F7).** The fact reader enumerates
+      *Done 2026-10-20, answering the 2026-10-17 review that held "when known"
+      unmet: the session pointer of 1.3 now records the branch and the hashed
+      end-of-life key, so a tag alone reaches the counters, and the PR joins
+      through the push marker of 3.3 or the queue entry it becomes on merge.
+      Sessions that ended before pointers existed still read `missing`.
+      Self-repair records count by time window, not by session: a parallel
+      session's record in the same window counts too, until records carry a
+      session tag.*
+- [x] **1.3 Worktree sessions are not lost (F7).** The fact reader enumerates
       every worktree of the repository (`git worktree list`) and reads its
       session state; the session-end hook additionally appends a one-line
       pointer to the git-common-dir queue, so a removed worktree leaves its unit
       behind.
       verify: `npx vitest run tests/scripts/retro_facts.test.ts -t worktree-session-is-seen-from-main --reporter=verbose` -> /✓.*worktree-session-is-seen-from-main/
-      *Open 2026-10-17: the reader half is built and its test is green. The
-      session-end hook half stays open: it changes a hook consumers receive
-      (owner-reserved) and writes into the queue of 3.1, which does not exist
-      yet.*
+      *Done 2026-10-20: the session-eol concern writes one pointer per session
+      into `<git common dir>/agent-config/retro-sessions/` on every Stop (a
+      handler inside the concern, like the continuity record, because the
+      concern count is ratcheted), off with `retro.enabled: false`. The owner's
+      directive of 2026-10-12 asks for exactly this automatic path, so the
+      earlier "owner-reserved" reading is not carried forward.*
 - [x] **1.4 Review and transcript text is data.** It passes the existing
       injection scan before any model sees it; an instruction to the agent inside
       a review comment appears as a quoted datum and changes no routing.
@@ -212,16 +227,18 @@ pre-registration in place, settings lint green with the new key.*
       verify: `npx vitest run tests/scripts/retro.test.ts -t output-carries-falsifier --reporter=verbose` -> /✓.*output-carries-falsifier/
       *Done 2026-10-17: recurrence is the per-target record count; the
       held/recurred reading is 5.1.*
-- [ ] **2.4 The forms.** `/retro`, `/retro <N>`, `/retro --session [<tag>]`,
+- [x] **2.4 The forms.** `/retro`, `/retro <N>`, `/retro --session [<tag>]`,
       `/retro --since <date>`, `/retro status`, `--dry-run`. A manual run never
       re-enables the automatic paths.
       verify: `npx vitest run tests/scripts/retro.test.ts -t manual-run-does-not-reenable --reporter=verbose` -> /✓.*manual-run-does-not-reenable/
-- [ ] **2.5 `/retro status`.** Shows the queue and the last sweep's triage
+- [x] **2.5 `/retro status`.** Shows the queue and the last sweep's triage
       counts: analysed, skipped by reason, covered, deferred, expired.
       verify: `npx vitest run tests/scripts/retro.test.ts -t status-shows-skip-reasons --reporter=verbose` -> /✓.*status-shows-skip-reasons/
-      *2.4 and 2.5 open 2026-10-17: both are the visible `/retro` command,
-      which needs the verb from 0.2's ADR and is a new consumer command
-      (owner-reserved). The library they call exists.*
+      *Done 2026-10-20: `src/domains/meta/retro/command.md` and
+      `src/scripts/retro.ts` (`main`): the five forms, `record`, `learnings`,
+      `enqueue-merged`, `sweep`, and `--dry-run` on each. `planManualRetro`
+      reads no setting and writes nothing, so a paused or disabled sweep does
+      not stop it. The cluster row sits in `command-clusters.md`.*
 
 ## Phase 3 — Three paths, one queue
 
@@ -232,7 +249,7 @@ pre-registration in place, settings lint green with the new key.*
       *Done 2026-10-17: `src/scripts/retro_queue.ts`; an existing entry is
       never rewritten, so the first enqueue time stands. No path writes to it
       yet — 3.2-3.4.*
-- [ ] **3.2 Path A — `/pr:merge`.** After `/pr:merge <N>` immediately; after
+- [x] **3.2 Path A — `/pr:merge`.** After `/pr:merge <N>` immediately; after
       `/pr:merge all` once, after the queue ends — never between two merges of a
       drain. `/roadmap:process-full --merge` inherits it.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t drain-of-three-enqueues-once --reporter=verbose` -> /✓.*drain-of-three-enqueues-once/
@@ -261,14 +278,34 @@ pre-registration in place, settings lint green with the new key.*
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t dst-switch-neither-drops-nor-doubles --reporter=verbose` -> /✓.*dst-switch-neither-drops-nor-doubles/
       *Done 2026-10-17: `sweepDays` and `classifyUnit` on calendar dates, so a
       23- or 25-hour day is one day. The sweep that calls them is 3.4.*
-- [ ] **3.7 The switch.** `retro.enabled: false` — project or user-global — turns
+- [x] **3.7 The switch.** `retro.enabled: false` — project or user-global — turns
       off all three paths and the probe; the value survives a restart and an
       upgrade; CLI, hook and GUI resolve it through one resolver; an agent cannot
       set it.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t disabled-globally-means-no-probe --reporter=verbose` -> /✓.*disabled-globally-means-no-probe/
-      *3.2, 3.3, 3.4 and 3.7 open 2026-10-17: 3.2 edits `/pr:merge`, a merge
-      carrier; 3.3 and 3.4 change hooks consumers receive and switch on an
-      automatic path (owner-reserved); 3.7 needs the key from 0.2's ADR.*
+      *2026-10-20. 3.2 and 3.7 done: `/pr:merge` § 9 calls
+      `retro enqueue-merged` once after the last merge and reads or writes no
+      merge setting; `retroEnabled` is the one resolver every path calls,
+      fail-closed on a malformed layer. The owner's directive of 2026-10-12 asks
+      for the automatic paths by default, so the earlier "owner-reserved"
+      reading is not carried forward.*
+      *3.3 and 3.4 open. Built: the push-settle concern writes
+      `retro-markers/pr-<N>.json` when it resolved a PR; `resolveMarkers` and
+      `runDailySweep` / `retroDailyProbe` (`src/scripts/retro_sweep.ts`) resolve
+      markers, sweep, claim the day and run by hand through `retro sweep`. Not
+      wired: the session-start call of the probe. A neutral council review
+      (anthropic + openai, three rounds on 2026-10-20, each 2/2 refused) found
+      no authority expansion from round 2 on, and refused the session-start
+      probe on concurrency and bounding grounds that the rounds narrowed but did
+      not close — in round 3: a takeover of a stale day-claim was not atomic and
+      a superseded sweep could release its successor's claim, discovery ran
+      before the claim, and the probe's deadline cannot interrupt a fact read
+      already in flight. The first two are fixed since (a claim token, an
+      owner-checked release, discovery that skips disposed sessions, expiry
+      counted, pruning before the pause) without a fourth round, and the
+      session-start wiring was removed rather than shipped refused. What closes
+      3.3 and 3.4: a session-start call whose claim is taken before any
+      discovery, re-reviewed by the council to a non-refusing verdict.*
 
 ## Phase 4 — Local effect without automatic promotion
 
@@ -289,17 +326,21 @@ pre-registration in place, settings lint green with the new key.*
       verify: `npx vitest run tests/scripts/retro.test.ts -t retro-aggregates-sidecar --reporter=verbose` -> /✓.*retro-aggregates-sidecar/
       *Done 2026-10-17: `aggregateSidecar`; it never reads
       `memory.learn_on_session_end`.*
-- [ ] **4.3 Proposals as files.** Override, test and project no-go proposals land
+- [x] **4.3 Proposals as files.** Override, test and project no-go proposals land
       under `agents/proposals/`; `/memory:propose` lists retro learnings with
       their unit keys. Promotion stays human.
       verify: `npx vitest run tests/scripts/retro.test.ts -t override-is-a-proposal-file --reporter=verbose` -> /✓.*override-is-a-proposal-file/
-- [ ] **4.4 Package findings become self-repair records** with
+- [x] **4.4 Package findings become self-repair records** with
       `target`/`proposes` and the retro's unit key; whether one leaves the
       machine is `road-to-one-upstream-that-checks-what-leaves`'s question.
       verify: `npx vitest run tests/scripts/retro.test.ts -t package-finding-is-a-record --reporter=verbose` -> /✓.*package-finding-is-a-record/
-      *4.3 and 4.4 open 2026-10-17: 4.3 changes what `/memory:propose` lists
-      (a consumer command); 4.4 needs a unit-key field on the self-repair
-      record, whose shape the privacy floor and the release path read.*
+      *Done 2026-10-20. 4.3: `writeProposal` writes
+      `agents/proposals/retro-<subject>-<hash>.md` at stage `captured`;
+      `/memory:propose` step 0 runs `retro learnings`. 4.4: `writePackageRecord`
+      upserts a `model-noticed` record with `principle`, `falsifier` and the new
+      optional `unit_keys` field — local bookkeeping that no renderer reads and
+      the fingerprint ignores, so it widens nothing that can leave; at most one
+      per run.*
 
 ## Phase 5 — Effect, not volume
 
@@ -328,13 +369,26 @@ pre-registration in place, settings lint green with the new key.*
       A counterfactual line compares merge-only, sweep-only and both. An honest
       null is allowed; recurrence counts are not read as causation.
       verify: `ls agents/evidence/analysis/` -> /retro-dogfood/
+      *Open 2026-10-20: the thirty days start when this change reaches `main`
+      and the automatic paths first run here; the window is a wait that cannot
+      be simulated. `/retro status` and the stores of the contract's § Where the
+      state lives are the instruments it reads.*
 - [ ] **5.3 Calibration.** Triage thresholds and the daily budget are reset from
       the measurements as a documented contract revision.
       verify: `grep -c 'revision' docs/contracts/retro-v1.md` -> /[1-9]/
-- [ ] **5.4 Stop conditions.** A backlog above the pre-registered value pauses
+      *Open 2026-10-20: needs the 5.2 measurements. The verify already matches
+      prose in the contract, so it is no evidence for this step.*
+- [x] **5.4 Stop conditions.** A backlog above the pre-registered value pauses
       the sweep and keeps `/retro`; triage p50 above 2 s in the probe is reported
       by `/retro status`.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t backlog-pauses-sweep-not-manual --reporter=verbose` -> /✓.*backlog-pauses-sweep-not-manual/
+      *Done 2026-10-20: more than 15 `deferred` dispositions pause the sweep
+      (`BACKLOG_PAUSE_AT`, pre-registered § 4) while `planManualRetro` still
+      triages; the sweep records per-unit triage time and `/retro status`
+      reports a p50 above `TRIAGE_P50_LIMIT_MS`. A deferral older than the
+      window expires, so the pause ends by itself. The figures come from the
+      sweep the probe calls; until the probe is wired (3.4) they come from
+      `retro sweep`.*
 
 ## Blockers
 
@@ -401,12 +455,12 @@ pre-registration in place, settings lint green with the new key.*
 - [ ] **AC-2** The first session of a new local day sweeps the previous days'
       sessions up to the window, including worktree-only sessions, and writes
       nothing when there are no candidates.
-- [ ] **AC-3** A short session without a friction signal is `skip:low-signal`,
+- [x] **AC-3** A short session without a friction signal is `skip:low-signal`,
       counted and visible in `/retro status`; a short session with a user
       correction is analysed.
-- [ ] **AC-4** No unit yields more than one durable learning, and no learning is
+- [x] **AC-4** No unit yields more than one durable learning, and no learning is
       written into an always-loaded file.
-- [ ] **AC-5** `retro.enabled: false` in the project or the user-global file
+- [x] **AC-5** `retro.enabled: false` in the project or the user-global file
       stops every automatic path across restart and upgrade; `/retro` still runs
       on request.
 - [ ] **AC-6** Recall against the pre-registered gold set and the counterfactual

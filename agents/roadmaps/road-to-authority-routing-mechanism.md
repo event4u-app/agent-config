@@ -517,6 +517,27 @@ what the gate attests."*
       schema file lands. Record:
       `agents/evidence/council/gate-classification-taxonomy-20261019.md` and
       its `.question.md`.
+      **Drafted 2026-10-21 on `a2aa408ab`: D24's first owed item, the truth
+      table, plus its second item, rollback and activation boundaries. Put to
+      the council twice, and both rounds returned 0/2 present. The step stays
+      open.** The draft was written against behaviour the code already has,
+      read first. `checkRatchet` already has five states, and `improved`
+      passes today. A missing baseline throws against a target ref, but in the
+      working tree it falls back to an empty ratchet. And one finding reaches
+      past the table. **An exit code cannot carry an aspect result.**
+      `check_composite_arming` exits 1 both for a violation and for a missing
+      evidence store. `check_trigger_evals` exits 1 both for a stale stamp and
+      for an invalid set. So whatever evaluates the table needs structured
+      per-aspect output, and exit codes will not do. Each of the two undecided
+      cells carries a proposal and an alternative. Neither is a decision.
+      Round attempt 1: anthropic `exit_1`, openai timed out. Attempt 2: both
+      timed out. That is no verdict in either direction, and it was not tried
+      a third time against the same outage. The unchanged question file is
+      owed to the next round. Draft:
+      `agents/evidence/analysis/gate-aggregation-truth-table-20261021.md`.
+      No-quorum record and prompt:
+      `agents/evidence/council/gate-aggregation-truth-table-20261021.md` and
+      its `.question.md`.
       currently pinned red on the trunk: invariant (must always hold),
       snapshot (a point-in-time reading, refreshable), tolerance (a bounded
       range with an accepted-risk waiver, per `ratification-artifact.md`'s
@@ -731,7 +752,7 @@ before 8.3 gates anything.*
 | D24 | contested-technical | council:2026-10-19 design, 2/2 present, blind peer review — convergent on Q1/Q2, **schema WITHHELD** | 7.1's taxonomy and vocabulary. (Q1) The classification registry uses **aspect-level rows**: one row per (check, aspect), one class per aspect, **no fifth class**. Missing evidence is an evaluation state that a run reports, never a registry field. A freshness window is an invariant with a time qualifier (clock source, window, grace). (Q2) *Derive mechanically* is **retired**. Fields are **computed** (`effective_gate`, never stored as authoritative), **governed assertions** (`required_gate`, `refresh_authority`, class), or **observed** runtime state. Provenance text is necessary and not sufficient, because approval must be enforced by repository controls. (Q3) **No schema now.** D22's order is reversed: aggregation truth table → rollback and activation boundaries → three fixtures (`check_gate_completeness`, `check_composite_arming`, `check_trigger_evals`) → a versioned report-only draft → all 16 registered, with the schema revised from what that shows → report-only consistency checks → separate approval before any class changes enforcement. | AI council 2026-10-19, anthropic/claude-sonnet-4-5 + openai/codex-default, 2 rounds, blind peer review, 2/2, $0.00. Record and verbatim prompt: `agents/evidence/council/gate-classification-taxonomy-20261019.md` and its `.question.md`. The seats split on strength. openai would approve a non-authoritative report-only prototype; anthropic approves only semantic definitions and provenance requirements. The stricter reading was taken, so no schema file landed. Two truth-table cells are undecided: *snapshot below baseline* and *snapshot unavailable*. | a drafted aggregation truth table with those two cells proposed, plus a rollback policy, is put to the council. Or fixtures show every composite check has the same provenance, authority and evaluation behaviour across its aspects, which would rescue a single row per check |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-21 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -744,7 +765,7 @@ before 8.3 gates anything.*
 
 ### blocker: external-bootstrap-boundary-for-phases-2-3
 
-- **Status:** open — re-checked 2026-10-18, still unmet: `agent-config doctor --online --json` reports `authority_surface_external_approval: unsatisfied — no covering ruleset requires an approving review`, and ruleset `17749383` still reads `required_approving_review_count: 0`, `require_code_owner_review: false`, `required_reviewers: []`. Owner-reserved by D11/D16/D20 (the council has already ruled; this needs a forge setting and a qualified second principal only the owner can supply). Opened 2026-10-10 by the step 1.1 council verdict (D11). The hold that verdict selected is a forge-side approval outside the candidate branch; the agent may prepare everything around it and may not turn it on
+- **Status:** open — re-checked 2026-10-21 on `a2aa408ab`, still unmet (same two readings as 2026-10-18): `agent-config doctor --online --json` reports `authority_surface_external_approval: unsatisfied — no covering ruleset requires an approving review`, and ruleset `17749383` still reads `required_approving_review_count: 0`, `require_code_owner_review: false`, `required_reviewers: []`. Owner-reserved by D11/D16/D20 (the council has already ruled; this needs a forge setting and a qualified second principal only the owner can supply). Opened 2026-10-10 by the step 1.1 council verdict (D11). The hold that verdict selected is a forge-side approval outside the candidate branch; the agent may prepare everything around it and may not turn it on
 - **Owner:** owner — D3 reserves bootstrap approval to the owner, and both seats required the protection configuration itself to stay subject to that same higher approval. A protection an agent can add is one an agent can remove, which is not a boundary
 - **Routed:** council 2026-10-10 ESCALATE — creates an external, undelegated commitment: the hold is a forge-side approval by a second principal, which only the owner can supply. Recorded here 2026-10-20 from the verdict this blocker already cites (D11, with D16 and D20 narrowing it); the routing is not new, only the field is
 - **Class:** 3

@@ -6,7 +6,7 @@ const NEW_A: Finding = {
     id: 'f-scope',
     title: 'Doors print their scope',
     claim: 'No door resolves its scope before reading.',
-    anchor: 'src/domains/analysis-workbench/analyze/repo/command.md:81',
+    anchor: 'src/domains/analysis-workbench/analyze/reference/command.md:81',
     tier: 'read',
     steps: [{ text: 'Print the scope line first', verify: '`npx vitest run tests/scripts/scope_line.test.ts` -> 0' }],
 };
