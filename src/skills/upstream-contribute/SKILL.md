@@ -208,6 +208,16 @@ run the Stage-4 gate first:
 Surface the findings to the user, ask them to fix the proposal (add evidence,
 remove TODO markers, complete required sections), then rerun.
 
+**Second hard refusal: the proposal must be `stage: gated`.** Read its
+frontmatter and STOP on any other stage — `captured`, `classified` and
+`proposed` are unfinished, `upstream` is already left. For `scope: package`,
+`proposal:check` also requires `changed_files:`, a passing
+`ratification_record:` and an `owner_authorization:`, both bound to the digest
+of those files: **the council's record is the review, the owner's authorization
+is the approval** (ADR-281 as amended). Nothing proves the owner wrote the
+authorization — his route is a forge act no script can authenticate; the
+binding only stops one change's approval carrying another's diff.
+
 When no proposal doc exists (small fix, typo, pure bug-fix), skip this step and
 record the rationale in the finding.
 
