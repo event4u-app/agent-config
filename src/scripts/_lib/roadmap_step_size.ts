@@ -38,7 +38,13 @@ export function oversizedSteps(file: string, text: string): OversizedStep[] {
         const m = STEP_LINE.exec(lines[i] as string);
         if (m === null) continue;
         const body = [lines[i] as string];
-        for (let j = i + 1; j < lines.length && /^\s{2,}\S/.test(lines[j] as string); j++) body.push(lines[j] as string);
+        // A blank line ends the step only when no indented line follows it: a
+        // continuation may hold several paragraphs, and each still counts.
+        for (let j = i + 1; j < lines.length; j++) {
+            const line = lines[j] as string;
+            if (/^\s{2,}\S/.test(line)) body.push(line);
+            else if (line.trim() !== '' || !/^\s{2,}\S/.test(lines.slice(j + 1).find((l) => l.trim() !== '') ?? '')) break;
+        }
         const words = countWords(body.join(' '));
         if (words > STEP_WORD_CAP) out.push({ key: `${file}#${m[1]!}`, words });
     }
@@ -53,6 +59,12 @@ export function stepSizeProblems(file: string, text: string, baseline: ReadonlyS
                 `step ${s.key.split('#')[1]!} is ${String(s.words)} words (cap ${String(STEP_WORD_CAP)}) — ` +
                 'split it, or move evidence to the commit and, for R2/R3, the artefact',
         );
+}
+
+/** Held keys of this file whose step now fits under the cap, or no longer exists. */
+export function staleHeld(file: string, text: string, baseline: ReadonlySet<string>): string[] {
+    const over = new Set(oversizedSteps(file, text).map((s) => s.key));
+    return [...baseline].filter((k) => k.startsWith(`${file}#`) && !over.has(k)).sort();
 }
 
 export function loadStepSizeBaseline(root: string): Set<string> {

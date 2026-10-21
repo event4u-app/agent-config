@@ -25,7 +25,7 @@ import { asOf } from './_lib/as_of.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { granularity_problems } from './_lib/roadmap_granularity.js';
-import { loadStepSizeBaseline, stepSizeProblems } from './_lib/roadmap_step_size.js';
+import { loadStepSizeBaseline, staleHeld, stepSizeProblems } from './_lib/roadmap_step_size.js';
 import { screenRoadmap } from './roadmap_drain_queue.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
@@ -232,6 +232,11 @@ function lint_roadmap(
     // carries the reason.
     problems.push(...granularity_problems(text));
     problems.push(...stepSizeProblems(path.basename(p), text, _stepSizeBaseline()));
+    if (warnings) {
+        for (const key of staleHeld(path.basename(p), text, _stepSizeBaseline())) {
+            warnings.push(`${key} fits under the step cap now — delete it from src/config/roadmap-step-size-baseline.json`);
+        }
+    }
     if (horizon_weeks <= 0) {
         _check_no_plate(text, problems);
     }

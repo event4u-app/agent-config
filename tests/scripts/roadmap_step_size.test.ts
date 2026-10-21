@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { oversizedSteps, stepSizeProblems, STEP_WORD_CAP } from '../../src/scripts/_lib/roadmap_step_size.js';
+import { oversizedSteps, staleHeld, stepSizeProblems, STEP_WORD_CAP } from '../../src/scripts/_lib/roadmap_step_size.js';
 
 const words = (n: number): string => Array.from({ length: n }, (_, i) => `w${String(i)}`).join(' ');
 
@@ -32,5 +32,16 @@ describe('roadmap step size', () => {
 
     it('a step held by the baseline passes, so today\'s tree is grandfathered', () => {
         expect(stepSizeProblems('road-to-x.md', roadmap(400), new Set(['road-to-x.md#1.2']))).toEqual([]);
+    });
+
+    it('a blank line inside the indented continuation does not end the step', () => {
+        const text = ['- [ ] **3.1 Split.** ' + words(20), '', `      ${words(200)}`, '', '- [ ] **3.2 Next.** x'].join('\n');
+        expect(oversizedSteps('road-to-y.md', text).map((s) => s.key)).toEqual(['road-to-y.md#3.1']);
+    });
+
+    it('reports a held key whose step now fits, so the baseline shrinks', () => {
+        const held = new Set(['road-to-x.md#1.2', 'road-to-x.md#1.1', 'road-to-other.md#9.9']);
+        expect(staleHeld('road-to-x.md', roadmap(100), held)).toEqual(['road-to-x.md#1.1', 'road-to-x.md#1.2']);
+        expect(staleHeld('road-to-x.md', roadmap(400), held)).toEqual(['road-to-x.md#1.1']);
     });
 });
