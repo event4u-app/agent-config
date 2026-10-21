@@ -186,6 +186,30 @@ describe('block_no_verify — _is_blocked', () => {
     });
 });
 
+// git resolves any unambiguous prefix of a long option, so `--no-verif` is
+// `--no-verify` to git (17.0.0 self-review finding bc83fb66c55d).
+describe('block_no_verify — abbreviations of --no-verify', () => {
+    const prefixes = ['--no-v', '--no-ve', '--no-ver', '--no-veri', '--no-verif'];
+
+    it.each(prefixes)('blocks git commit %s', (flag) => {
+        expect(_is_blocked(['git', 'commit', flag, '-m', 'x'])[0]).toBe(true);
+    });
+
+    it.each(prefixes)('blocks git push %s', (flag) => {
+        expect(_is_blocked(['git', 'push', flag])[0]).toBe(true);
+    });
+
+    it('blocks the abbreviation end to end, after a separator', () => {
+        expect(_check_command('echo hi && git commit --no-verif -m x')[0]).toBe(true);
+    });
+
+    it('leaves options that only share the --no- stem alone', () => {
+        for (const flag of ['--no-', '--no-verbose', '--no-edit', '--no-verify-signatures']) {
+            expect(_is_blocked(['git', 'commit', flag])[0], flag).toBe(false);
+        }
+    });
+});
+
 // --- _check_command (fail-closed) -------------------------------------------
 
 describe('block_no_verify — _check_command', () => {
@@ -301,6 +325,83 @@ describe('separator-attached tokens do not leak a later -n into the git scan', (
     for (const [label, cmd] of BLOCKED) {
         it(`still blocks (${label}): ${cmd}`, () => {
             expect(_check_command(cmd)[0]).toBe(true);
+        });
+    }
+});
+
+// Step 4.3 of road-to-agent-throughput-recovery. Short `-n` was read as
+// `--no-verify` on EVERY subcommand, so `git grep -n`, `git log -n 5`,
+// `git branch -n` and `git push -n` were refused. Verified against this git's
+// own `git <sub> -h` on 2026-10-20: `commit` is the only builtin where `-n`
+// means `--no-verify`.
+//
+// The narrowing is an ALLOWLIST, not a denylist of commit/am: a denylist lets
+// `git ci -n` through when `ci = commit` is aliased, because the alias name is
+// not the builtin name. Git never lets an alias shadow a builtin, so an
+// allowlist of builtin names keeps every alias blocked.
+describe('short -n is scoped to the subcommands where it can bypass a hook', () => {
+    // Each entry carries what `git <sub> -h` documents, so a future reader can
+    // re-run the check rather than trust the list.
+    const ALLOWED: readonly [string, string][] = [
+        ['git grep -n needle src', '-n, --line-number'],
+        ['git grep -nE "a|b" src', 'bundle on an allowlisted subcommand'],
+        ['git log -n 5', 'revision-limit shorthand; log runs no hook'],
+        ['git branch -n', 'branch runs no hook'],
+        ['git push -n', '-n, --dry-run — transfers nothing'],
+        ['git merge -n', '-n, --no-stat'],
+        ['git rebase -n', '-n, --no-stat'],
+        ['git revert -n', "-n, --no-commit"],
+        ['git cherry-pick -n', "-n, --no-commit"],
+        ['git add -n .', '-n, --dry-run'],
+        ['git clean -n', '-n, --dry-run'],
+        ['git fetch -n', '-n (--no-tags)'],
+        ['git mv -n a b', '-n, --dry-run'],
+        ['git rm -n f', '-n, --dry-run'],
+        ['git pull -n', '-n, --no-stat'],
+        ['git shortlog -n', '-n, --numbered'],
+        ['git show -n', 'show runs no hook'],
+        ['git tag -n', 'tag runs no hook'],
+        ['git rev-list -n 5 HEAD', 'rev-list runs no hook'],
+        ['git -C /repo grep -n needle', 'global -C consumes its value, not the subcommand'],
+    ];
+    for (const [cmd, why] of ALLOWED) {
+        it(`allows ${cmd} (${why})`, () => {
+            expect(_check_command(cmd)[0]).toBe(false);
+        });
+    }
+
+    // The other arm. Narrowing must not reach any form that skips a hook.
+    const STILL_BLOCKED: readonly [string, string][] = [
+        ['git commit -n', 'the one builtin where -n IS --no-verify'],
+        ['git commit -nm x', 'bundle on commit'],
+        ['git commit -mn x', 'bundle on commit, reversed'],
+        ['git am -n', 'kept blocked: this git documents no -n for am, and unverified is not safe'],
+        ['git ci -n', 'an alias for commit resolves to its own name, not a builtin'],
+        ['git -n', 'no subcommand — unresolved is not safe'],
+        ['git push --no-verify', 'the long form stays unscoped'],
+        ['git merge --no-verify', 'the long form stays unscoped'],
+        ['git am --no-verify', 'the long form stays unscoped'],
+        ['git grep --no-verify', 'the long form stays unscoped even where -n is fine'],
+        ['git -C /repo commit -n -m x', 'global opts do not hide the subcommand'],
+    ];
+    for (const [cmd, why] of STILL_BLOCKED) {
+        it(`still blocks ${cmd} (${why})`, () => {
+            expect(_check_command(cmd)[0]).toBe(true);
+        });
+    }
+
+    // Subcommand resolution is asserted through the public entry rather than a
+    // unit on the resolver: the resolver is not exported, because each export
+    // the dispatcher bundle carries is paid on every hook event and this file
+    // sits 52 bytes under the bundle ceiling.
+    const RESOLUTION: readonly [string, boolean][] = [
+        ['git -c a.b=c commit -n', true],
+        ['git --git-dir /d/.git log -n 1', false],
+        ['git -C /repo -c a.b=c grep -n x', false],
+    ];
+    for (const [cmd, blocked] of RESOLUTION) {
+        it(`resolves past global options: ${cmd}`, () => {
+            expect(_check_command(cmd)[0]).toBe(blocked);
         });
     }
 });

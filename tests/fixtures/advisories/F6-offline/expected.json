@@ -1,0 +1,20 @@
+{
+  "now": "2026-10-21T12:00:00Z",
+  "findings": [
+    {
+      "id": "UNKNOWN-osv",
+      "verdict": "unknown",
+      "tier": "T2"
+    },
+    {
+      "id": "UNKNOWN-lifecycle",
+      "verdict": "unknown",
+      "tier": "T2"
+    },
+    {
+      "id": "UNKNOWN-vendor-node",
+      "verdict": "unknown",
+      "tier": "T2"
+    }
+  ]
+}

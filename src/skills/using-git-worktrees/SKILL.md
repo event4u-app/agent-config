@@ -137,6 +137,7 @@ passes. For the global location, skip — path is outside the repo.
 
 ```bash
 git worktree add ".worktrees/<branch-name>" -b "<branch-name>"
+agent-config worktree:cleanup register ".worktrees/<branch-name>" --purpose="<why>"
 ```
 
 **Then address the worktree by flag, not by `cd`.** Every tool that matters

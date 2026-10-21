@@ -1,0 +1,12 @@
+{
+  "POST https://api.osv.dev/v1/querybatch": {
+    "status": 200,
+    "body": {
+      "results": [
+        {
+          "vulns": []
+        }
+      ]
+    }
+  }
+}

@@ -86,13 +86,14 @@ project.
 
 ## Phase 0 — Pre-register the promise and the replay corpus
 
-- [ ] **0.1 TTN bar**, written before any Phase 1 code: P50 ≤ 24 h, P90 ≤ 36 h
+- [x] **0.1 TTN bar**, written before any Phase 1 code: P50 ≤ 24 h, P90 ≤ 36 h
       for a project with ≥ 1 session per working day; T0 ≤ 4 h where the
       opt-in out-of-band runner (5.3) is enabled. An honest null is a
       complete result.
       verify: a claim row for TTN in `docs/CLAIMS.md` with status `unbacked`
       and a reproduce command, committed with `build_proof` in the same change.
-- [ ] **0.2 Replay corpus, this package's own incident first.** F1 the A8
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **0.2 Replay corpus, this package's own incident first.** F1 the A8
       advisory pair; F2 a runtime security release pre-announced a day ahead
       with no patched version named; F3 a package-manager-binary CVE; F4
       malware with no advisory record; F5 a runtime branch reaching end of
@@ -102,14 +103,15 @@ project.
       five concurrent sessions on one machine.
       verify: each fixture is a directory under `tests/fixtures/advisories/`
       with an expected-verdict file.
-- [ ] **0.3 Noise budget**: ≤ 3 interrupting notices per project per week;
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **0.3 Noise budget**: ≤ 3 interrupting notices per project per week;
       the rest go to the digest.
       verify: the budget is a constant read by 3.1, asserted by a test that
       feeds ten T1 findings and counts three interrupts.
-
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
 ## Phase 1 — Know what the project actually runs
 
-- [ ] **1.1 One deterministic inventory reader**: packages from lockfiles
+- [x] **1.1 One deterministic inventory reader**: packages from lockfiles
       (incl. GitHub Actions pins); runtimes from declarations, Dockerfile
       `FROM`, compose and CI images; the package-manager version. Each entry
       carries `file:line` and a provenance of `lockfile | declared | image |
@@ -117,70 +119,85 @@ project.
       as the runtime that is deployed.
       verify: a fixture with `require.php: ^8.3` and a Dockerfile on 8.4
       yields two entries with different provenance, never one.
-- [ ] **1.2 Recompute on change only**: a hash over the files read; unchanged
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **1.2 Recompute on change only**: a hash over the files read; unchanged
       → reuse.
       verify: a second run over an unchanged fixture reads no lockfile body.
-- [ ] **1.3 Private names never leave**: `path`, `vcs` and private-registry
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **1.3 Private names never leave**: `path`, `vcs` and private-registry
       packages are excluded from every outbound query (F7).
       verify: F7 with a recording transport sends zero requests naming it.
-- [ ] **1.4 Fix the rotted shipped facts (A6)**: the docker skill's pinned
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **1.4 Fix the rotted shipped facts (A6)**: the docker skill's pinned
       Node major, and an audit/advisories/abandoned section on
       `composer-packages`.
       verify: `grep -c "node:18" src/skills/docker/SKILL.md` -> /^0$/
-
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
 ## Phase 2 — Ask the authorities, carry nothing
 
-- [ ] **2.1 Source adapters in a fixed precedence**, each reporting `ok |
-      unavailable | error`: platform alerts (where the user's `gh` login
-      reaches them) → native audit → cross-ecosystem batch query for public
+- [x] **2.1 Source adapters in a fixed precedence**, each reporting `ok |
+      unavailable | error`: native audit → cross-ecosystem batch query for public
       packages → runtime release and lifecycle adapters → malware records.
       Hosts on a fixed allowlist; no URL is built from fetched content.
       verify: an adapter test with each transport outcome yields the matching
       status and never `ok` on a timeout.
-- [ ] **2.2 Closed verdict vocabulary**: `affected`, `fix-available`,
+      *Changed by the council round of 2026-10-21 (D7): no authenticated GitHub access in v1; platform alerts stay a later adapter. A native audit runs only for a lockfile that names no private package.*
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **2.2 Closed verdict vocabulary**: `affected`, `fix-available`,
       `fix-fresh` (fixed version younger than the cooldown), `no-fix`,
       `malware`, `eol`, `eol-soon`, `pre-announced`, `unknown`, `accepted`.
       `pre-announced` carries no fixed version by construction (F2).
       verify: F2 yields `pre-announced` with `fixed_version: null`; F6 yields
       `unknown`, never an empty list.
-- [ ] **2.3 Sanitising cache boundary** copied from `update_check.ts`: IDs,
+      *`fix-fresh` is in the vocabulary and is assigned by the fix path's cooldown check (`road-to-security-fixes-carried-to-the-merge` 1.3); no v1 source carries a release date for the fixing version.*
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **2.3 Sanitising cache boundary** copied from `update_check.ts`: IDs,
       versions, enums and numbers only; no advisory prose; links rebuilt from
       IDs.
       verify: a fixture advisory whose summary carries an instruction string
       produces a cache file in which that string does not occur.
-- [ ] **2.4 Dedupe by alias, join platform state**: CVE / GHSA / OSV aliases
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **2.4 Dedupe by alias, join platform state**: CVE / GHSA / OSV aliases
       merge into one finding; an open platform alert or bot PR is named on the
       finding, never duplicated.
       verify: a fixture with one CVE under three aliases and an open bot PR
       yields one finding naming the PR.
-- [ ] **2.5 Vendor backports and corrections**: a distro-patched version is
+      *The alias merge is done here. Joining an open bot PR moved to `road-to-security-fixes-carried-to-the-merge` 2.1 (G7), where the session reads it through the user's own `gh` — the council kept authenticated GitHub out of the refresh (D7).*
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **2.5 Vendor backports and corrections**: a distro-patched version is
       not escalated on its upstream number (F8); a corrected advisory
       re-evaluates and records the transition (F9).
       verify: F8 yields no `affected`; F9 yields one recorded transition.
-
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
 ## Phase 3 — Say it in proportion
 
-- [ ] **3.1 Deterministic tiers T0–T3.** T0 interrupt: `malware`, known-
+- [x] **3.1 Deterministic tiers T0–T3.** T0 interrupt: `malware`, known-
       exploited (KEV) in a runtime scope, `pre-announced` critical runtime,
       CVSS ≥ 9.0 runtime-direct with a fix. T1 today. T2 digest. T3 ledger.
       EPSS and KEV raise a tier; neither lowers one.
+      *Changed by the council round of 2026-10-21 (D9): KEV raises a tier and is read; EPSS is withdrawn, not deferred.*
       verify: a tier table test over the F-corpus with the expected tier per
       fixture.
-- [ ] **3.2 Delta ledger**: only new findings and escalations are announced.
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **3.2 Delta ledger**: only new findings and escalations are announced.
       verify: running twice over F1 announces once.
-- [ ] **3.3 Accept with reason and expiry**; a grep-negative is never a reason.
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **3.3 Accept with reason and expiry**; a grep-negative is never a reason.
       verify: an acceptance without an expiry is refused by the writer.
-- [ ] **3.4 Non-security "outdated" stays in the weekly digest.**
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **3.4 Non-security "outdated" stays in the weekly digest.**
       verify: a minor-release fixture never reaches T0–T1.
-
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
 ## Phase 4 — Check daily, speak at the session, never block the start
 
-- [ ] **4.1 Refresh off the critical path**: detached, budgeted, outside the
+- [x] **4.1 Refresh off the critical path**: detached, budgeted, outside the
       hook bundle; daily; one refresh per machine per window however many
       sessions start (F10). `session_start` reads files only.
       verify: F10 issues one refresh; a test asserts zero sockets in the hook
       process.
-- [ ] **4.2 One read-only notice, declared**, riding the existing
+      *Changed by the council round of 2026-10-21 (D8): the refresh runs from the CLI (`agent-config audit:deps refresh`) and the opt-in CI schedule, never from a session start; a session start reads the cache, and a cache older than 24 h makes the notice say so. F10 holds through the refresh window and a machine-wide lock.*
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **4.2 One read-only notice, declared**, riding the existing
       `session_start` block in the same council round as the update notice
       (D1). Each T0/T1 line ends in the offer "fix now — here / in a separate
       worktree / later", whose routing is owned by
@@ -188,44 +205,56 @@ project.
       verify: the notice is registered under the verdict that resolves
       `concerns-refused-as-authority-expansion`, and its fixture prints the
       offer line.
-- [ ] **4.3 Settings with disclosed egress**: `advisories.mode: notify | off`
+      *Ratified by the council round 2 of 2026-10-21 (2/2) as a declared authority expansion, ADR-296; every printed field passes a single-line grammar, and the notice module reaches no network code.*
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **4.3 Settings with disclosed egress**: `advisories.mode: notify | off`
       and `advisories.egress: query | none`, each disclosed in plain words in
       the template. New installs `notify`; existing installs asked once.
       verify: an install with no `advisories` block behaves as today until
       asked, asserted in a test.
-- [ ] **4.4 Silence is reported**: three days of `unknown` on any source is
+      *An existing install changes nothing until a refresh runs in that project, because the notice needs a cache.*
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **4.4 Silence is reported**: three days of `unknown` on any source is
       itself a notice line.
       verify: F6 produces the silence line on day 3.
-- [ ] **4.5 Hosts without a session slot** keep the CLI banner path.
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **4.5 Hosts without a session slot** keep the CLI banner path.
       verify: a host fixture with no `session_start` binding prints the
       banner after a CLI subcommand.
-
+      *`check_update_banner` prints the same notice after a CLI subcommand; the once-a-day stamp keeps a host with both surfaces from seeing it twice.*
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
 ## Phase 5 — Native first, a visible command, more projects
 
-- [ ] **5.1 `/audit deps`** under the approved `audit` verb (C5): inventory,
+- [x] **5.1 `/audit deps`** under the approved `audit` verb (C5): inventory,
       findings by tier, the evidence per finding, and source health.
       verify: the command file exists under `src/domains/` with `visibility:
-      visible` and `./scripts-run src/scripts/lint_command_verbs` passes.
-- [ ] **5.2 Gap report over what the project already runs**: platform alerts
+      advanced` and `./scripts-run src/scripts/lint_command_verbs` passes.
+      *One command under the approved verb, `deps` its argument — a sub-command `deps` would be a new verb under ADR-041. Shipped `advanced`, not `visible` as first written: the session notice and `/audit deps fix` are how a user meets it, and a new visible command joins the consumer's top-level menu, which this change has no reason to grow (corrected 2026-10-21 by an R2 review finding).*
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **5.2 Gap report over what the project already runs**: platform alerts
       on, security updates ungrouped, a cooldown configured, Composer
       `config.policy`, frozen-lockfile CI, a CI audit step
       (`grade_target_readiness.ts:431`). Offer the config; never write it
       unasked.
       verify: a fixture with Dependabot grouping security updates yields one
       gap line naming the key.
-- [ ] **5.3 Out-of-band runner, opt-in**: a CI-schedule template that runs
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **5.3 Out-of-band runner, opt-in**: a CI-schedule template that runs
       Phases 1–3 on days without a session and opens an issue for T0. Never a
       daemon, never a merge.
       verify: the template file exists and a dry-run over F2 writes the issue
       body to stdout.
-- [ ] **5.4 Many projects, one machine**: a user-global index of recently used
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **5.4 Many projects, one machine**: a user-global index of recently used
       project roots, roots and hashes only, behind `advisories.mode != off`.
       verify: two fixture projects sharing a vulnerable package yield one
       fetch and two findings.
-- [ ] **5.5 Publish measured TTN** after 30 days on the 0.1 bar; flip the claim
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [~] **5.5 Publish measured TTN** after 30 days on the 0.1 bar; flip the claim
       only on that bar.
       verify: the claim row's status matches the committed measurement.
-
+      <!-- deferred-resolution: carried-to=road-to-advisory-latency-measured -->
+      *Carried 2026-10-21 to `later/road-to-advisory-latency-measured`, created in the same change: the step waits only for 30 days of data, which no run can shorten. Route: council-decidable carry (roadmap-progress-sync § preservation test); the criterion is preserved there as 1.1 and 1.3.*
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
@@ -236,6 +265,9 @@ project.
 | D4 | critical-technical | evidence | Public package names only leave the machine; private names never | 1.3, F7 | never |
 | D5 | reversible-technical | agent | First runtime adapters: PHP and Node | the two runtimes this package's own skills target; the source incident is PHP | a third runtime appears in the F-corpus |
 | D6 | reversible-technical | agent | Scheduling is a daily stamp plus an opt-in CI schedule, never an OS daemon | a daemon contradicts the no-runtime install model; the stamp already exists | a measured TTN P90 miss on projects without daily sessions |
+| D7 | critical-technical | council:agents/evidence/council/advisories-worktree-run-design-20261021.md | v1 sources: native audits (only where no private package is in the lockfile), OSV for public packages, endoflife.date, the PHP and Node release feeds; no authenticated GitHub access | council 2026-10-21 Q4, 2/2; one seat conditioned it on stating what a native audit transmits, which is why a lockfile naming a private package skips it | an adapter for platform alerts is proposed with its own privacy statement |
+| D8 | critical-technical | council:agents/evidence/council/advisories-worktree-run-design-20261021.md | Refresh from the CLI and the opt-in CI schedule only; a session start reads the cache; the notice is a declared, read-only authority expansion (ADR-296) | council 2026-10-21 Q3 (2/2) and round 2 (2/2, ratified with conditions) | the notice is found to carry fetched text, or a session start is measured past its baseline because of it |
+| D9 | critical-technical | council:agents/evidence/council/advisory-kev-epss-sources-20261021.md | KEV is read (the CISA catalog, downloaded whole and matched locally, behind `advisories.kev`); EPSS is not — 3.1's "EPSS raises a tier" is withdrawn | council 2026-10-21 round 3, 2/2: a project's CVE set is its vulnerability profile and needs its own opt-in; a predicted score in T0 would make T0 mean two things | an EPSS proposal arrives with its own opt-in key, display-only first, and a backtest that names the acceptable false-escalation rate |
 
 ## What this roadmap deliberately does not do
 
@@ -259,16 +291,18 @@ project.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** F2 on a fixture declaring PHP 8.3 in a Dockerfile yields a T0
+- [x] **AC-1** F2 on a fixture declaring PHP 8.3 in a Dockerfile yields a T0
       `pre-announced` finding with no fixed version, and after the release
       fixture a `fix-available` one.
-- [ ] **AC-2** F1 yields one finding on the day of publication with the
+- [x] **AC-2** F1 yields one finding on the day of publication with the
       evidence of its source.
-- [ ] **AC-3** F4 yields `malware` without a CVE; F6 never yields "no
+- [x] **AC-3** F4 yields `malware` without a CVE; F6 never yields "no
       findings"; F7 sends no private name; F10 issues one refresh.
-- [ ] **AC-4** `session_start` latency stays inside the baseline recorded in
+- [x] **AC-4** `session_start` latency stays inside the baseline recorded in
       the sibling roadmap, with zero sockets in the hook process.
-- [ ] **AC-5** `task ci` green.
+      *Measured 2026-10-21 on a freshly built bundle: `session_start` p95 126 ms, n=50 (`bench_hook_latency`); the notice reads one file. The worktree pass on the same slot runs only on the first session of a day: classification under a three-second deadline, the retro's own terms, and under `auto` up to three removals after it with their own timeouts (ADR-295).*
+- [x] **AC-5** `task ci` green.
+      *Settled green 2026-10-21: all 52 checks of PR #2568 on `fd9cc4bac` (`ci_settle`).*
 
 ## Provenance
 

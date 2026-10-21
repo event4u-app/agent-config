@@ -1,0 +1,49 @@
+{
+  "POST https://api.osv.dev/v1/querybatch": {
+    "status": 200,
+    "body": {
+      "results": [
+        {
+          "vulns": [
+            {
+              "id": "GHSA-f9dd-f9dd-f9dd",
+              "modified": "2026-10-20T00:00:00Z"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "GET https://api.osv.dev/v1/vulns/GHSA-f9dd-f9dd-f9dd": {
+    "status": 200,
+    "body": {
+      "id": "GHSA-f9dd-f9dd-f9dd",
+      "aliases": [],
+      "modified": "2026-10-20T00:00:00Z",
+      "database_specific": {
+        "severity": "MODERATE"
+      },
+      "affected": [
+        {
+          "package": {
+            "name": "hono",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "4.13.7"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

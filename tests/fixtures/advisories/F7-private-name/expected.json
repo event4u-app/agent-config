@@ -1,0 +1,10 @@
+{
+  "now": "2026-10-21T12:00:00Z",
+  "findings": [],
+  "never_sent": [
+    "@acme/internal-billing"
+  ],
+  "reports": {
+    "native-npm": "unavailable"
+  }
+}

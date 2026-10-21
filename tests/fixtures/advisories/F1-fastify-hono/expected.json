@@ -1,0 +1,19 @@
+{
+  "now": "2026-10-21T12:00:00Z",
+  "findings": [
+    {
+      "id": "CVE-2026-0001",
+      "package": "fastify",
+      "verdict": "fix-available",
+      "tier": "T1",
+      "fixed": "5.12.5"
+    },
+    {
+      "id": "CVE-2026-0002",
+      "package": "hono",
+      "verdict": "fix-available",
+      "tier": "T1",
+      "fixed": "4.13.7"
+    }
+  ]
+}

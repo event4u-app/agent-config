@@ -357,6 +357,12 @@ export const settingsSchema = z.object({
     // `worktrees.mode` was DELETED (ADR-229). Worktree creation is
     // instruction-only and hardcoded; there is nothing left to configure. A
     // leftover key is ignored with one deprecation line via REMOVED_KEYS.
+    // `worktrees.cleanup` governs REMOVAL, a separate question (ADR-295).
+    worktrees: z.object({
+        cleanup: z.enum(['off', 'notify', 'auto']).default('notify').describe(
+            'What the agent may do about a worktree whose work is provably on the trunk (merged by merge commit, rebase or squash), that is clean, holds no ignored file a rebuild would not restore, and has no live session. notify (default, and what an absent key resolves to) says once a day how many exist and removes nothing; auto removes them right after /pr:merge and once a day on the first session start, without force, keeping local branches; off says nothing. The daily pass reads merged pull requests through your gh login (branch name and head commit only).',
+        ),
+    }).default({ cleanup: 'notify' }),
     ai_team: z.object({
         model: z.string().default('auto').describe(
             "Model handed to the codex CLI. 'auto' (default) = pass no --model flag so the CLI's own default applies — tracks the subscription's current strongest model instead of pinning a stale ID. Any other value passes through verbatim as `--model <value>`.",
@@ -528,6 +534,17 @@ export const settingsSchema = z.object({
             'Once per day the agent checks the npm registry for a newer agent-config release and surfaces a one-line banner if one exists. Turn off in air-gapped environments or to silence the banner.',
         ),
     }),
+    advisories: z.object({
+        mode: z.enum(['off', 'notify']).default('notify').describe(
+            'Whether the first session start of a day prints the advisory findings that need action today. notify (default) reads the local cache only — a session start never touches the network; off prints nothing, and agent-config audit:deps show still works.',
+        ),
+        egress: z.enum(['none', 'query']).default('query').describe(
+            'What leaves the machine when agent-config audit:deps refresh runs. query (default) sends names and versions of public packages to api.osv.dev and reads endoflife.date and the PHP and Node release feeds; a private package name is never sent, and a native npm or composer audit, which sends the lockfile package list to the registry that tool is configured for, runs only for a lockfile with no private package. none sends nothing, and findings read unknown rather than clear.',
+        ),
+        kev: z.enum(['off', 'on']).default('on').describe(
+            'Whether a refresh reads the CISA known-exploited catalog. on (default) downloads the whole catalog and matches it locally, so nothing about the project is sent, and a finding in it is raised one tier in a runtime scope; off leaves tiers to the other sources. Runs only where egress is query.',
+        ),
+    }).default({ mode: 'notify', egress: 'query', kev: 'on' }),
     update: z.object({
         mode: z.enum(['off', 'notify', 'ask', 'auto']).default('notify').describe(
             'What the agent may do about a newer release. notify tells you and installs nothing (the default, and what an absent key resolves to); ask behaves as notify until the ring-0 exit ships a prompt; auto installs a staged release at a session start when every gate passes and no other session is live; off says nothing at all. Read from the user-global layer only — a repository cannot set how your global install updates itself.',

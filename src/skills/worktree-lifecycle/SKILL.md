@@ -106,7 +106,7 @@ HEAD, branch without remote, tag-only reachability, deleted remote
 branch, untracked files, paths with spaces):
 
 ```bash
-npx tsx node_modules/@event4u/agent-config/src/scripts/worktree_cleanup_check.ts check <worktree-path>
+agent-config worktree:cleanup check <worktree-path>
 ```
 
 Exit `0` → removal allowed; exit `1` → refuse, gates in order:
@@ -128,13 +128,14 @@ step (`scope-control`); never force-delete (`-D`) as part of cleanup.
 Cross-worktree scope-lock overlaps are scanned via
 `worktree_cleanup_check scope-overlap` (surfaced by `/worktree status`).
 
-**Whole-checkout sweeps.** Worktrees accumulate one per branch and are never
-removed on merge; `git worktree prune` only clears registrations whose
+**Whole-checkout sweeps.** Under `worktrees.cleanup: auto` the proven set leaves
+at `/pr:merge` and daily (ADR-295). `git worktree prune` only clears registrations whose
 directory is already gone, so it does nothing for the live ones. Classify the
 whole set in one pass rather than gate-checking by hand:
 
 ```bash
-npx tsx node_modules/@event4u/agent-config/src/scripts/worktree_cleanup_check.ts inventory [repo] [--json|--plan]
+agent-config worktree:cleanup inventory [repo] [--json|--plan]
+agent-config worktree:cleanup apply [repo]   # removes the safe set only
 ```
 
 `safe` requires all of: on a branch, merged into the trunk, clean, inside a

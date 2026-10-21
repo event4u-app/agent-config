@@ -1,0 +1,93 @@
+{
+  "POST https://api.osv.dev/v1/querybatch": {
+    "status": 200,
+    "body": {
+      "results": [
+        {
+          "vulns": [
+            {
+              "id": "GHSA-f1aa-f1aa-f1aa",
+              "modified": "2026-10-01T00:00:00Z"
+            }
+          ]
+        },
+        {
+          "vulns": [
+            {
+              "id": "GHSA-f1bb-f1bb-f1bb",
+              "modified": "2026-10-01T00:00:00Z"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "GET https://api.osv.dev/v1/vulns/GHSA-f1aa-f1aa-f1aa": {
+    "status": 200,
+    "body": {
+      "id": "GHSA-f1aa-f1aa-f1aa",
+      "aliases": [
+        "CVE-2026-0001"
+      ],
+      "modified": "2026-10-01T00:00:00Z",
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "affected": [
+        {
+          "package": {
+            "name": "fastify",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "5.12.5"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "GET https://api.osv.dev/v1/vulns/GHSA-f1bb-f1bb-f1bb": {
+    "status": 200,
+    "body": {
+      "id": "GHSA-f1bb-f1bb-f1bb",
+      "aliases": [
+        "CVE-2026-0002"
+      ],
+      "modified": "2026-10-01T00:00:00Z",
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "affected": [
+        {
+          "package": {
+            "name": "hono",
+            "ecosystem": "npm"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "4.13.7"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

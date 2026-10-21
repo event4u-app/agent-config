@@ -82,6 +82,13 @@ TS-shell native (run via the installed `agent-config` binary):
                              .tokens.json, which nothing reads.
   ci:settle <pr>             Wait for a PR's checks to settle; the last line is the
                              verdict (exit 0 green · 1 red · 2 no verdict).
+  audit:deps <mode>          Security advisories for this project's packages, runtimes
+                             and toolchain: refresh · show · accept · fix · verify ·
+                             pr-body · mitigate · track · notice · gaps · issue-body.
+                             Only `refresh` touches the network.
+  worktree:cleanup <mode>    Worktree inventory and removal: inventory · apply · check
+                             <path> · register <path>. `apply` removes only the proven
+                             set (merged incl. squash, clean, unused), never with force.
   packs:active               Which packs are active HERE, and from which file.
                              Names the degraded case (settings file without a
                              profile.id → zero packs) that nothing else reports.
@@ -847,6 +854,19 @@ cmd_ci_settle() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_ci_settle.ts" "$@"
 }
 
+# `audit:deps <mode>` — advisories heard the same day. The network lives here,
+# never in a hook: a session start only reads the cache this writes.
+cmd_audit_deps() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/advisories.ts" "$@"
+}
+
+# `worktree:cleanup <mode>` — the worktree safety gate and the removal of the
+# proven set, through the package's own executable so a consumer with a global
+# install reaches it without a node_modules path (ADR-295).
+cmd_worktree_cleanup() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/worktree_cleanup_check.ts" "$@"
+}
+
 # `--archive`: a completed roadmap is archived here rather than reported as a
 # warning the caller has to act on. `roadmap:progress-check` never passes it —
 # a CI gate must not mutate the tree it is checking. Pass `--no-archive` to get
@@ -1608,6 +1628,8 @@ main() {
     mcp:available)           cmd_mcp_available "$@" ;;
     brand:status)            cmd_brand_status "$@" ;;
     ci:settle)               cmd_ci_settle "$@" ;;
+    audit:deps)              cmd_audit_deps "$@" ;;
+    worktree:cleanup)        cmd_worktree_cleanup "$@" ;;
     roadmap:context)         cmd_roadmap_context "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
@@ -1759,20 +1781,21 @@ run_update_check_banner() {
   esac
   # Best-effort: bundle first, then a dev-tree tsx. No `npx tsx` last resort —
   # same reason as maybe_pin_reexec: npx runs against the CONSUMER's npm config.
-  local runner=""
-  local target=""
+  local -a run=()
   local aux
   aux="$(delegate_aux_bundle 'check_update_banner.js')"
   if [[ -n "$aux" ]]; then
-    runner="node"
-    target="$aux"
-  elif [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" && -f "$PACKAGE_ROOT/src/scripts/check_update_banner.ts" ]]; then
-    runner="$PACKAGE_ROOT/node_modules/.bin/tsx"
-    target="$PACKAGE_ROOT/src/scripts/check_update_banner.ts"
+    run=(node "$aux")
+  elif [[ -f "$PACKAGE_ROOT/node_modules/tsx/dist/loader.mjs" && -f "$PACKAGE_ROOT/src/scripts/check_update_banner.ts" ]]; then
+    # The loader, not the tsx CLI: the CLI runs the script in a child whose
+    # fd 3 is its IPC channel, and fd 3 is where the notice goes.
+    run=(node --import "file://$PACKAGE_ROOT/node_modules/tsx/dist/loader.mjs" "$PACKAGE_ROOT/src/scripts/check_update_banner.ts")
   else
     return 0
   fi
-  "$runner" "$target" --cwd "$CONSUMER_ROOT" 2>/dev/null || true
+  # fd 3 is the real stderr: the advisory notice is written there and stamped
+  # only on success; everything else the banner process prints stays discarded.
+  "${run[@]}" --cwd "$CONSUMER_ROOT" 3>&2 2>/dev/null || true
 }
 
 # Global `--root <path>` / `--root=<path>` parsing (Step 8 A3).

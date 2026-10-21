@@ -1,0 +1,51 @@
+{
+  "POST https://api.osv.dev/v1/querybatch": {
+    "status": 200,
+    "body": {
+      "results": [
+        {
+          "vulns": [
+            {
+              "id": "GHSA-f3cc-f3cc-f3cc",
+              "modified": "2026-06-01T00:00:00Z"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "GET https://api.osv.dev/v1/vulns/GHSA-f3cc-f3cc-f3cc": {
+    "status": 200,
+    "body": {
+      "id": "GHSA-f3cc-f3cc-f3cc",
+      "aliases": [
+        "CVE-2026-59948"
+      ],
+      "modified": "2026-10-01T00:00:00Z",
+      "database_specific": {
+        "severity": "HIGH"
+      },
+      "affected": [
+        {
+          "package": {
+            "name": "composer/composer",
+            "ecosystem": "Packagist"
+          },
+          "ranges": [
+            {
+              "type": "SEMVER",
+              "events": [
+                {
+                  "introduced": "0"
+                },
+                {
+                  "fixed": "2.10.2"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

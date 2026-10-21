@@ -1,7 +1,7 @@
 {
   "owner": "maintainer",
   "review_by": "2027-04-12",
-  "_comment": "Per-skill byte ceiling for src/skills/<name>/SKILL.md, measured at the commit that landed road-to-surfaces-no-gate-reads Phase 3 (2026-10-12: 300 bodies, median 8,164 bytes, max 24,902). Monotone down \u2014 check_skill_body_budget --update tightens a ceiling after a shrink and never loosens one after a growth unless `raised` carries an entry for it with a reason. The check moves no ceiling by itself. review_by is six months out: the figure to re-read then is whether the distribution has fallen, since a ceiling set at a bloated baseline is a ceiling that permits the bloat. COMPACTION TAIL (road-to-skills-that-arrive-when-called 3.4, 2026-10-16): after compaction the first host re-attaches only the first 5,000 tokens of each invoked skill, 25,000 in total, so a body past that point loses its tail in a long session, and the ceilings here permit that size. Shrink candidates, every SKILL.md at or above 20,193 characters on 2026-10-16: existing-ui-audit, ai-council, memory-consolidation, roadmap-writing, git-workflow, conventional-commits-writing. Recorded, not gated.",
+  "_comment": "Per-skill byte ceiling for src/skills/<name>/SKILL.md, measured at the commit that landed road-to-surfaces-no-gate-reads Phase 3 (2026-10-12: 300 bodies, median 8,164 bytes, max 24,902). Monotone down — check_skill_body_budget --update tightens a ceiling after a shrink and never loosens one after a growth unless `raised` carries an entry for it with a reason. The check moves no ceiling by itself. review_by is six months out: the figure to re-read then is whether the distribution has fallen, since a ceiling set at a bloated baseline is a ceiling that permits the bloat. COMPACTION TAIL (road-to-skills-that-arrive-when-called 3.4, 2026-10-16): after compaction the first host re-attaches only the first 5,000 tokens of each invoked skill, 25,000 in total, so a body past that point loses its tail in a long session, and the ceilings here permit that size. Shrink candidates, every SKILL.md at or above 20,193 characters on 2026-10-16: existing-ui-audit, ai-council, memory-consolidation, roadmap-writing, git-workflow, conventional-commits-writing. Recorded, not gated.",
   "ceilings": {
     "accessibility-auditor": 11064,
     "activation-design": 8513,
@@ -47,8 +47,8 @@
     "competitive-moat-analysis": 10450,
     "competitive-positioning": 6315,
     "complexity-first-planning": 6243,
-    "composer-packages": 4858,
-    "condense-memory": 11220,
+    "composer-packages": 5874,
+    "condense-memory": 11203,
     "content-funnel-design": 9057,
     "context-authoring": 9194,
     "context-document": 9921,
@@ -69,12 +69,12 @@
     "decision-review": 19391,
     "deep-reading-analyst": 13546,
     "defense-in-depth": 6205,
-    "dependency-upgrade": 13371,
-    "description-assist": 7721,
+    "dependency-upgrade": 17218,
+    "description-assist": 7718,
     "design-intelligence": 11085,
     "design-review": 19912,
     "design-system-capture": 14880,
-    "design-tokens": 8816,
+    "design-tokens": 8815,
     "design-variations": 6907,
     "devcontainer": 4553,
     "developer-like-execution": 11443,
@@ -107,7 +107,7 @@
     "fe-design": 16747,
     "feature-planning": 14676,
     "file-editor": 7026,
-    "finishing-a-development-branch": 9320,
+    "finishing-a-development-branch": 9409,
     "flux": 5632,
     "forecast-accuracy": 8187,
     "forecasting": 8626,
@@ -136,7 +136,7 @@
     "jira-integration": 5375,
     "jobs-events": 2756,
     "js-library-packaging": 9295,
-    "judge-artifact-completeness": 7206,
+    "judge-artifact-completeness": 7199,
     "judge-bug-hunter": 8560,
     "judge-code-quality": 7722,
     "judge-injection-defense": 6079,
@@ -185,7 +185,7 @@
     "module-detect-on-the-fly": 8738,
     "module-management": 8219,
     "monorepo-workspace": 8228,
-    "motion-choreographer": 8220,
+    "motion-choreographer": 8214,
     "multi-tenancy": 5787,
     "nda-triage": 6984,
     "nextjs-patterns": 10113,
@@ -265,7 +265,7 @@
     "root-cause-frameworks": 5754,
     "rtk-output-filtering": 8665,
     "rule-refactor": 5370,
-    "rule-writing": 16663,
+    "rule-writing": 16621,
     "runway-cognition": 10795,
     "scenario-modeling": 10059,
     "scene-expander": 6559,
@@ -281,8 +281,8 @@
     "server-hardening": 6711,
     "skill-improvement-pipeline": 10599,
     "skill-management": 5347,
-    "skill-reviewer": 9177,
-    "skill-writing": 12413,
+    "skill-reviewer": 9286,
+    "skill-writing": 13374,
     "song-to-script": 14514,
     "source-discovery": 10395,
     "spreadsheet-authoring": 5556,
@@ -290,7 +290,7 @@
     "stakeholder-tradeoff": 9443,
     "standards-from-config": 7565,
     "storybook-workshop": 13536,
-    "subagent-orchestration": 19742,
+    "subagent-orchestration": 19741,
     "supply-chain-intake": 10137,
     "svg-authoring": 17970,
     "symfony-workflow": 10329,
@@ -308,14 +308,14 @@
     "throughput-vs-morale-tradeoff": 13242,
     "token-optimizer": 6275,
     "traefik": 9138,
-    "type-design": 9886,
+    "type-design": 9883,
     "typography-system": 11967,
     "ui-apply-generic": 8283,
     "ui-component-architect": 13328,
     "unit-economics-modeling": 9297,
     "universal-project-analysis": 5547,
-    "upstream-contribute": 12158,
-    "using-git-worktrees": 11762,
+    "upstream-contribute": 12151,
+    "using-git-worktrees": 11846,
     "validate-feature-fit": 4252,
     "verify-completion-evidence": 9612,
     "verify-repair-loop": 15727,
@@ -325,7 +325,7 @@
     "voice-and-tone-design": 12228,
     "wireframe": 6196,
     "workspace-link": 5931,
-    "worktree-lifecycle": 9515
+    "worktree-lifecycle": 9508
   },
   "raised": [
     {
@@ -446,7 +446,7 @@
       "skill": "test-case-discovery",
       "old": 12325,
       "new": 12862,
-      "reason": "The equivalence case on the Security-surface dimension: on an identity path, a known and an unknown identity produce the same status, body category, redirect and cookies \u2014 not merely the same sentence. Named like a test, beside the three negative tests already on that bullet. 3.3."
+      "reason": "The equivalence case on the Security-surface dimension: on an identity path, a known and an unknown identity produce the same status, body category, redirect and cookies — not merely the same sentence. Named like a test, beside the three negative tests already on that bullet. 3.3."
     },
     {
       "skill": "security",
@@ -645,6 +645,30 @@
       "old": 5417,
       "new": 5427,
       "reason": "The analyze-repo door took its decided name analyze-reference, and every route line to it is four to ten bytes longer. road-to-an-analysis-family-that-deepens-itself."
+    },
+    {
+      "skill": "composer-packages",
+      "old": 4858,
+      "new": 5874,
+      "reason": "Gains the audit / config.audit / abandoned-package section road-to-advisories-heard-the-same-day step 1.4 requires; the skill had zero lines on advisories (finding A6)."
+    },
+    {
+      "skill": "dependency-upgrade",
+      "old": 13371,
+      "new": 17218,
+      "reason": "Gains the security-fix procedure (route, smallest fix, proof by the reporting source, PR evidence, release draft, follow to deployed) of road-to-security-fixes-carried-to-the-merge and the release-age / agent-config-path step of the post-update audit; the procedure is the skill-side half the council kept in the session (Q5)."
+    },
+    {
+      "skill": "finishing-a-development-branch",
+      "old": 9320,
+      "new": 9409,
+      "reason": "The \"PR opened\" end state now names its scheduled removal and the security end state (road-to-worktrees-that-leave-after-the-merge 3.5, road-to-security-fixes-carried-to-the-merge 3.4), trimmed to two lines."
+    },
+    {
+      "skill": "using-git-worktrees",
+      "old": 11762,
+      "new": 11846,
+      "reason": "Creation gains the one `agent-config worktree:cleanup register` line that lets the merge-time removal reach a tree outside the standard roots (ADR-295)."
     }
   ]
 }

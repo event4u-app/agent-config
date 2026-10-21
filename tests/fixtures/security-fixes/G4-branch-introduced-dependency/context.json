@@ -1,0 +1,10 @@
+{
+  "onTrunk": false,
+  "clean": true,
+  "branchTouchesFile": true,
+  "branchIntroducedDependency": true,
+  "userWantsCurrent": false,
+  "openBotPr": null,
+  "isLibrary": false,
+  "isRuntime": false
+}

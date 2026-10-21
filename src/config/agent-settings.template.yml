@@ -921,6 +921,27 @@ subagents:
 #
 # The Iron-Law gates on creation (ignore-safety check, clean baseline) are
 # unchanged and still run on every explicitly-requested worktree.
+#
+# Removal is a different question, and it has a setting. What the agent may do
+# about a worktree whose work is provably on the trunk — merged (merge commit,
+# rebase or squash), clean, holding no ignored file a rebuild would not restore,
+# and with no live session in it:
+#
+#   notify  say once a day how many such worktrees exist; remove nothing
+#           (the default, and what an absent key resolves to)
+#   auto    remove them: right after `/pr:merge`, and once a day on the first
+#           session start (classification within three seconds, then at
+#           most three removals, each re-checked within three seconds and
+#           given up to 30 s; `git worktree remove` without force, local
+#           branches always kept, one journal line per removal)
+#   off     say nothing, remove nothing
+#
+# The daily pass asks GitHub, through your own gh login, which pull requests
+# merged (branch name and head commit only) — that is how a squash merge is
+# recognised. `auto` deletes directories; that is why it is yours to turn on
+# (ADR-295).
+worktrees:
+  cleanup: notify
 
 # --- AI Council (external second-opinion network) ---
 #
@@ -1496,6 +1517,36 @@ decision_engine:
 # matrix and the road-to-portable-runtime-and-update-check roadmap (P2).
 update_check:
   enabled: true
+
+# --- Security advisories ---
+#
+# Advisories, malware reports, end-of-support dates and pre-announced security
+# releases for what THIS project runs (lockfiles, runtimes, images, CI actions).
+#
+# mode:
+#   notify  (default) the first session start of a day prints one line per
+#           finding that needs action today, read from the local cache only —
+#           a session start never touches the network
+#   off     print nothing; `agent-config audit:deps show` still works
+#
+# egress — what leaves the machine when `agent-config audit:deps refresh` runs:
+#   query   (default) names and versions of PUBLIC packages go to api.osv.dev;
+#           runtime lifecycle data comes from endoflife.date; the PHP and Node
+#           release feeds are read. A private package name is never sent, and a
+#           native `npm audit` / `composer audit` — which sends the lockfile's
+#           package list to the registry that tool is configured for — runs only
+#           for a lockfile with no private package in it
+#   none    nothing is sent; findings read `unknown`, never "clear"
+#
+# kev — the CISA catalog of known-exploited vulnerabilities, downloaded whole on
+# a refresh and matched locally, so nothing about this project is sent:
+#   on      (default) a finding in the catalog is "known exploited" and is
+#           raised one tier in a runtime scope (a high one to T0)
+#   off     the catalog is not read; tiers come from the other sources alone
+advisories:
+  mode: notify
+  egress: query
+  kev: on
 
 # --- Update install mode ---
 #

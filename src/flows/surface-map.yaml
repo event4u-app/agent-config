@@ -100,6 +100,7 @@ commands:
     - fix/quality
     - review
     - review/changes
+    - audit
     - security-audit-config
     - threat-model
 
