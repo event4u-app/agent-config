@@ -57,20 +57,25 @@ describe('hooks:status is untouched by the surface field', () => {
         // concern, what that host's slot can actually carry. It is derived from
         // `host_lowering.yaml` and is NOT a surface claim — adding it here is
         // the pin doing its job, not a hole in it.
+        //
+        // `claude_scope` is the third, and it is on the CLAUDE row only: Claude
+        // Code merges `~/.claude/settings.json` with the project file, so that
+        // host's status needs both scopes and the runtime the hooks reach. It is
+        // a reading of the settings files, not a surface claim.
+        const base = [
+            'ask',
+            'bindings',
+            'blocking_enforcement',
+            'bridge_path',
+            'fallback_only',
+            'hint',
+            'platform',
+            'status',
+        ];
         const matrix = collect(process.cwd(), { platforms: {} });
         for (const row of matrix.platforms) {
-            expect(Object.keys(row).sort()).toEqual(
-                [
-                    'ask',
-                    'bindings',
-                    'blocking_enforcement',
-                    'bridge_path',
-                    'fallback_only',
-                    'hint',
-                    'platform',
-                    'status',
-                ].sort(),
-            );
+            const expected = row.platform === 'claude' ? [...base, 'claude_scope'] : base;
+            expect(Object.keys(row).sort()).toEqual([...expected].sort());
             expect(Object.keys(row)).not.toContain('surface');
         }
     });

@@ -1,6 +1,8 @@
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { clearHookStdinOverride, setHookStdinOverride } from '../../src/scripts/hooks/hook_stdin.js';
 import {
@@ -312,21 +314,42 @@ describe('skill-route — the production envelope wiring', () => {
     };
 
     it('reads the host from `platform` and suppresses against the live log', () => {
-        const bare = knownBareForHost(process.cwd(), 'claude');
+        // The catalogue roots are resolved from the workspace AND from HOME, so
+        // on a maintainer machine the gitignored `.claude/skills` and a global
+        // `~/.claude/skills` re-rank the prompt and can push every bare name out
+        // of the pointer window — red locally, green in CI. Pin the CI shape: the
+        // committed skills and the committed log, nothing else.
+        const ws = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-route-ws-'));
+        fs.mkdirSync(path.join(ws, 'src'));
+        fs.symlinkSync(path.join(process.cwd(), 'src', 'skills'), path.join(ws, 'src', 'skills'), 'dir');
+        fs.mkdirSync(path.dirname(path.join(ws, OBSERVATION_LOG)), { recursive: true });
+        fs.copyFileSync(path.join(process.cwd(), OBSERVATION_LOG), path.join(ws, OBSERVATION_LOG));
+        fs.mkdirSync(path.join(ws, 'home'));
+        vi.stubEnv('HOME', path.join(ws, 'home'));
+        try {
+            assertSuppressesIn(ws);
+        } finally {
+            vi.unstubAllEnvs();
+            fs.rmSync(ws, { recursive: true, force: true });
+        }
+    });
+
+    function assertSuppressesIn(ws: string): void {
+        const bare = knownBareForHost(ws, 'claude');
         if (bare === null || bare.size === 0) {
             // Phase 2 AC-2 succeeded — nothing to suppress. Assert the no-op.
-            const { rc } = runMain({ ...base, platform: 'claude' });
+            const { rc } = runMain({ ...base, workspace_root: ws, platform: 'claude' });
             expect([0, 2]).toContain(rc);
             return;
         }
-        const { rc, out } = runMain({ ...base, platform: 'claude' });
+        const { rc, out } = runMain({ ...base, workspace_root: ws, platform: 'claude' });
         // exit 2 IS the warn delivery path; `emitFor` reduces it to a real 0.
         expect(rc).toBe(2);
         const emitted = JSON.parse(out.trim()) as { reason: string; additional_context: string };
         // The KEY is what this pins: `platform`, not `host`, not `native_platform`.
         expect(emitted.reason).toMatch(/suppressed as host-bare/);
         for (const name of bare) expect(emitted.additional_context).not.toContain(`${name} (`);
-    });
+    }
 
     it('does not filter when the envelope carries no platform', () => {
         const { rc, out } = runMain(base);
