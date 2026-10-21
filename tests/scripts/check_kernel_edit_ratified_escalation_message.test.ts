@@ -79,7 +79,7 @@ function writeRecord(
 }
 
 function text(r: gate.GateResult): string {
-    return r.lines.join('\n');
+    return [...r.lines, ...(r.escalation ?? [])].join('\n');
 }
 
 const BOTH_RATIFIED = { anthropic: 'ratified', openai: 'ratified' };
@@ -142,12 +142,25 @@ describe('escalationMessage — the shape of the one question', () => {
         }));
         const paths = Array.from({ length: gate.ESCALATION_ITEM_MAX }, (_, i) => `p/${i}.md`);
         const out = escalationMessage({ triggers: ['refused'], records, gatedPaths: paths });
-        const total = records.length * (1 + gate.ESCALATION_ITEM_MAX) + 1 + paths.length;
-        // heading block (blank, heading, advisory, one trigger) + budget + the count line + the ask
-        expect(out.length).toBe(4 + gate.ESCALATION_ITEM_MAX + 2);
+        const total = paths.length + records.length * (1 + gate.ESCALATION_ITEM_MAX);
+        // heading block (blank, heading, advisory, one trigger) + the change line + budget + count + ask
+        expect(out.length).toBe(4 + 1 + gate.ESCALATION_ITEM_MAX + 2);
         expect(out.join('\n')).toContain(`… ${total - gate.ESCALATION_ITEM_MAX} more item(s) not listed`);
         expect(out[1]).toBe(ESCALATION_HEADING);
         expect(out.at(-1)).toContain('this gate does not know');
+    });
+
+    it('lists the gated paths before any record, so records cannot crowd the change out', () => {
+        const records = Array.from({ length: gate.ESCALATION_ITEM_MAX * 2 }, (_, i) => ({
+            path: `r${i}.md`,
+            verdict: 'refused',
+            seats: { openai: 'refused' },
+        }));
+        const out = escalationMessage({ triggers: ['refused'], records, gatedPaths: [SELF_PATH, KERNEL] });
+        const joined = out.join('\n');
+        expect(joined).toContain('the exact change (2 gated path(s)):');
+        expect(joined.indexOf(SELF_PATH)).toBeLessThan(joined.indexOf('record r0.md'));
+        expect(joined).toContain(KERNEL);
     });
 
     it('clips a field to its first code points before escaping it, and says how much', () => {
@@ -368,21 +381,24 @@ describe('the /pr:merge classifier routes every mechanism path needs-owner', () 
     });
 });
 
-describe('main — the question reaches the log that decides', () => {
+describe('main — the question reaches the log whatever the flags', () => {
     /**
-     * The GitHub workflow runs this gate WITHOUT `--quiet`, so that is the log
-     * the question must reach, and these cases read what `main` WROTE rather
-     * than what `evaluate` returned. `--quiet` keeps its contract — a passing
-     * run prints no report — for the local `task` pipeline and any other
-     * caller that relies on it.
+     * The question is written to stderr on every run, so a workflow that adds
+     * `--quiet` cannot keep it out of the log, while `--quiet` keeps its stdout
+     * contract — a passing run prints no report. These cases read what `main`
+     * WROTE rather than what `evaluate` returned.
      */
-    function runMain(files: readonly string[], quiet: boolean): { code: number; out: string } {
+    function runMain(files: readonly string[], quiet: boolean): { code: number; out: string; err: string } {
         const writes: string[] = [];
+        const errors: string[] = [];
         const spy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
             writes.push(String(chunk));
             return true;
         });
-        const errSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        const errSpy = vi.spyOn(process.stderr, 'write').mockImplementation((chunk: unknown) => {
+            errors.push(String(chunk));
+            return true;
+        });
         try {
             const head = commitAll(root, 'change');
             const code = gate.main([
@@ -396,7 +412,7 @@ describe('main — the question reaches the log that decides', () => {
                 '--files',
                 ...files,
             ]);
-            return { code, out: writes.join('') };
+            return { code, out: writes.join(''), err: errors.join('') };
         } finally {
             spy.mockRestore();
             errSpy.mockRestore();
@@ -408,27 +424,29 @@ describe('main — the question reaches the log that decides', () => {
         commitAll(root, 'base');
     });
 
-    it('a passing record over the mechanism prints the question, exit 0, as the workflow runs it', () => {
+    it('a passing record over the mechanism writes the question to stderr, exit 0', () => {
         const rel = writeRecord('q.md', GOOD, BOTH_RATIFIED, [SELF_PATH]);
         const r = runMain([SELF_PATH, rel], false);
         expect(r.code).toBe(0);
-        expect(r.out).toContain(ESCALATION_HEADING);
-        expect(r.out).toContain('the reviewer itself');
+        expect(r.err).toContain(ESCALATION_HEADING);
+        expect(r.err).toContain('the reviewer itself');
+        expect(r.out).toContain('ratified by');
     });
 
-    it('--quiet keeps its contract: a passing run prints no report, the question included', () => {
+    it('--quiet keeps its stdout contract and cannot keep the question out of the log', () => {
         const rel = writeRecord('qq.md', GOOD, BOTH_RATIFIED, [SELF_PATH]);
         const r = runMain([SELF_PATH, rel], true);
         expect(r.code).toBe(0);
-        expect(r.out).not.toContain(ESCALATION_HEADING);
         expect(r.out).not.toContain('ratified by');
+        expect(r.out).not.toContain(ESCALATION_HEADING);
+        expect(r.err).toContain(ESCALATION_HEADING);
     });
 
-    it('polarity: a passing record over an ordinary gated surface prints no question', () => {
+    it('polarity: a passing record over an ordinary gated surface writes no question anywhere', () => {
         const rel = writeRecord('qk.md', GOOD, BOTH_RATIFIED);
         const r = runMain([KERNEL, rel], false);
         expect(r.code).toBe(0);
         expect(r.out).toContain('ratified by');
-        expect(r.out).not.toContain(ESCALATION_HEADING);
+        expect(r.out + r.err).not.toContain(ESCALATION_HEADING);
     });
 });

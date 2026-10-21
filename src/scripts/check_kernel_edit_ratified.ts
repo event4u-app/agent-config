@@ -629,6 +629,13 @@ export function escalationMessage(input: {
             unlisted += 1;
         }
     };
+    // The gated paths come first: they are the exact change, the paths are the
+    // gate's own classification, and listing them before the candidate's
+    // records means no number of records or seats can crowd them out.
+    out.push(`  the exact change (${input.gatedPaths.length} gated path(s)):`);
+    for (const p of input.gatedPaths) {
+        item(`    · ${field(p)}`);
+    }
     for (const r of input.records) {
         item(`  record ${field(r.path)} — verdict: ${field(r.verdict ?? 'unreadable')}`);
         const dissent = Object.entries(r.seats).filter(
@@ -640,10 +647,6 @@ export function escalationMessage(input: {
         for (const [p, v] of dissent) {
             item(`    dissent: ${field(`${p}: ${v}`)}`);
         }
-    }
-    item('  the exact change (gated paths):');
-    for (const p of input.gatedPaths) {
-        item(`    · ${field(p)}`);
     }
     if (unlisted > 0) {
         out.push(`  … ${unlisted} more item(s) not listed here; the records and the diff carry them in full`);
@@ -661,6 +664,12 @@ export interface GateResult {
     lines: string[];
     /** Number of changed paths inspected — the honest `scanned:` count. */
     scanned: number;
+    /**
+     * The user's question, kept apart from `lines` so `main` can write it to
+     * stderr on every run: `--quiet` governs the report on stdout, and the
+     * question must not depend on which flags the invoking workflow passes.
+     */
+    escalation?: string[];
 }
 
 export function evaluate(
@@ -899,9 +908,8 @@ export function evaluate(
         for (const f of failures) {
             lines.push(`  · ${f}`);
         }
-        lines.push(...escalation);
         close(false);
-        return { exitCode: 1, lines, scanned };
+        return { exitCode: 1, lines, scanned, escalation };
     }
 
     if (failures.length > 0) {
@@ -911,9 +919,8 @@ export function evaluate(
             lines.push(`  · ${f}`);
         }
     }
-    lines.push(...escalation);
     close(true);
-    return { exitCode: 0, lines, scanned };
+    return { exitCode: 0, lines, scanned, escalation };
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
@@ -1016,13 +1023,16 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             'real state, and there is then no kernel rule, governance hook, plumbing source or ' +
             'mechanism file to ratify — the gate has read everything there was.',
     });
-    // `--quiet` keeps its contract — a passing run prints no report — so a
-    // caller that relies on it is unchanged. The question reaches the log that
-    // decides: the GitHub workflow runs this gate without `--quiet`.
+    // `--quiet` keeps its contract on stdout — a passing run prints no report.
+    // The question goes to stderr on EVERY run, so no invocation flag a
+    // candidate's workflow passes can keep it out of the log.
     if (!quiet || result.exitCode !== 0) {
         for (const l of result.lines) {
             process.stdout.write(`${l}\n`);
         }
+    }
+    for (const l of result.escalation ?? []) {
+        process.stderr.write(`${l}\n`);
     }
     return result.exitCode;
 }
