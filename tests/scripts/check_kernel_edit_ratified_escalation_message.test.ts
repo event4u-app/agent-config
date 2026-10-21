@@ -352,9 +352,9 @@ describe('the /pr:merge classifier routes every mechanism path needs-owner', () 
     });
 });
 
-describe('main --quiet — the question reaches the CI log', () => {
+describe('main --quiet — the question reaches the log of a quiet run', () => {
     /**
-     * CI runs this gate with `--quiet`, which keeps a passing run to nothing.
+     * The local `task` pipeline runs this gate with `--quiet`, which keeps a passing run to nothing.
      * A passing change to the mechanism exits 0 and is the case the question
      * is for, so the block has to be printed through the CLI, not only placed
      * in `GateResult.lines`. The assertions read what `main` WROTE.

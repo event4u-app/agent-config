@@ -664,8 +664,9 @@ export interface GateResult {
     scanned: number;
     /**
      * True when `lines` carries the user's question. `--quiet` hides a passing
-     * run's lines, and CI passes `--quiet`, so without this a passing change to
-     * the mechanism — the case the question exists for — would print nothing.
+     * run's lines, and the local `task` pipeline passes `--quiet`
+     * (`taskfiles/ci-fast.yml`, `QUIET_FLAG`), so without this a passing change
+     * to the mechanism — the case the question exists for — printed nothing there.
      */
     escalated?: boolean;
 }
