@@ -1,14 +1,14 @@
 # Findings: review-cap-and-step-depth
-<!-- completion-review: v1 | reviewed: 2026-10-21 | scope: d897c6d4e8a63beb91237e6db59425468d1ed0ae5281ffa86f0d8818330461e3 | diff: f932d13730129f453e19792b02c57eea758f996c | reviewer: r2-fresh-subagent-review-cap-and-step-depth | prompt_hash: b951b7ab57e4236e468fe9e0cadf8e02abf9cdeafb6dc68e3022ee795f6cc9dc | round: 2 -->
+<!-- completion-review: v1 | reviewed: 2026-10-21 | scope: 38942c4fccd484a1c58d73bbdac59c29abeded020b8b94ee49b0f84c8ae9b11e | diff: b6d5d70f77d073c75e39d8e0eabe7b0620d9746c | reviewer: r2-fresh-subagent-review-cap-and-step-depth | prompt_hash: b951b7ab57e4236e468fe9e0cadf8e02abf9cdeafb6dc68e3022ee795f6cc9dc | round: 2 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-review-cap-and-step-depth"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-21 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: f932d13730129f453e19792b02c57eea758f996c
-  scope_hash: d897c6d4e8a63beb91237e6db59425468d1ed0ae5281ffa86f0d8818330461e3
+  diff_sha: b6d5d70f77d073c75e39d8e0eabe7b0620d9746c
+  scope_hash: 38942c4fccd484a1c58d73bbdac59c29abeded020b8b94ee49b0f84c8ae9b11e
   roadmap: agents/roadmaps/road-to-a-step-that-costs-what-it-changes.md
-  roadmap_hash: b6e6c215fcb2bde8aa72e9ffbf945b2c8b36b8f7918dea577c48931a7a3bb700
+  roadmap_hash: 169b0bae8aeee344e920e07bad8a427ec5c3c2f5bc5b7928720885ff8ec50300
   ac_hash: e998dde28f1d294e3b507995613ecc415bdac7b2e6be0ba26f798eb1e8a1a5fa
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
