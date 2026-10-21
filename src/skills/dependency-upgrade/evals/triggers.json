@@ -1,0 +1,63 @@
+{
+    "skill": "dependency-upgrade",
+    "last_eval": "2026-10-21",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-21 when road-to-security-fixes-carried-to-the-merge added the security-fix procedure and the post-update audit step to this skill, which brought it into check_routing_coverage's touched-skill scope. Exemplars cover framework and runtime upgrades, a batch of package bumps, and carrying one advisory to a fix, including a German phrasing. Near-misses: listing which advisories affect the project (the /audit command), releasing a Composer library we maintain (composer-packages), and a container problem (docker). Counterexamples guard 'upgrade' in a billing and a hardware sense.",
+    "queries": [
+        {
+            "q": "upgrade Laravel from 10 to 11 and tell me what breaks",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "bump our Node runtime to 22 everywhere it is pinned",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "update the outdated npm packages and check the changelogs for breaking changes",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "carry the fastify advisory to a fix PR",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "aktualisier die Abhängigkeiten und prüf, ob die Tests noch grün sind",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "which security advisories affect this project right now?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "listing findings → the /audit command; this skill carries one to a fix"
+        },
+        {
+            "q": "tag a new release of our own Composer library",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "publishing a package we maintain → composer-packages"
+        },
+        {
+            "q": "the container won't start after I changed the Dockerfile",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a container problem → docker"
+        },
+        {
+            "q": "upgrade my subscription to the team plan",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a billing upgrade"
+        },
+        {
+            "q": "should I upgrade my laptop to more RAM?",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a hardware question"
+        }
+    ]
+}

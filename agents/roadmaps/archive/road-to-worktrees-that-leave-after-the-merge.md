@@ -64,7 +64,7 @@ commit is ever lost.
 
 ## Phase 1 — Know what "merged" and "safe to lose" mean
 
-- [ ] **1.1 Fixtures first.** F1 squash-merged, remote deleted, clean (W1);
+- [x] **1.1 Fixtures first.** F1 squash-merged, remote deleted, clean (W1);
       F2 merge-commit; F3 rebase-merged; F4 squash-merged then one local commit
       after the merge; F5 dirty / untracked; F6 a live session inside; F7 a
       host-locked worktree; F8 a directory deleted by hand; F9 PR closed
@@ -73,102 +73,133 @@ commit is ever lost.
       nothing: 1.4 removes the need.
       verify: the cleanup-check test file carries a named case per fixture,
       and F1 is seen red against the current predicate before 1.2 lands.
-- [ ] **1.2 Merge evidence in three strengths**, strongest wins:
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **1.2 Merge evidence in three strengths**, strongest wins:
       `merged-ancestor` (today); `merged-pr` — the host reports the branch's PR
       MERGED **and** the branch tip equals that PR's head commit;
       `merged-equivalent` — offline only: the branch's diff against its
       merge-base is already contained in the trunk tree. F4 stays `review`, F9
       is `closed-unmerged` and is never removed.
       verify: F1–F4, F9 and F10 each produce their stated class.
-- [ ] **1.3 One `gh` read per repository per day.** The retro reads per PR;
-      merge evidence for an estate needs one `gh pr list --state merged --json
-      headRefName,headRefOid,mergedAt` call, budgeted like the retro and
-      disclosed in the same settings comment.
-      verify: a fixture with 40 worktrees issues exactly one `gh` invocation.
-- [ ] **1.4 Liveness without self-inflicted mtimes.** Every git call the
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **1.3 One `gh` read per repository per day.** The retro reads per PR;
+      merge evidence for an estate needs one `gh pr list --state all --json
+      headRefName,headRefOid,state,mergedAt` call (`all`, so F9's closed PR is
+      seen), budgeted like the retro and disclosed in the settings template.
+      verify: a fixture with six worktrees issues exactly one `gh` invocation.
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **1.4 Liveness without self-inflicted mtimes.** Every git call the
       inventory makes runs with `GIT_OPTIONAL_LOCKS=0`, so it never refreshes
       an index (W6); liveness reads the session register first and mtimes
       only as a fallback.
       verify: two consecutive inventories over a fixture leave every
       `.git/worktrees/*/index` mtime unchanged.
-- [ ] **1.5 Ignored files are inventoried, not assumed regenerable (W5).**
+      *Executed 2026-10-21: `statusPorcelain` already passed `--no-optional-locks` at the base (W6 was half-fixed); every git call now runs with `GIT_OPTIONAL_LOCKS=0`, and the session register is read first. The mtime fallback stays, so fixtures still backdate — D7.*
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **1.5 Ignored files are inventoried, not assumed regenerable (W5).**
       `git status --ignored --porcelain` per candidate; a tree holding any
-      ignored path outside a regenerable list (`node_modules/`, `dist/`,
-      `.cache/`, build outputs the project's own `.gitignore` comments mark
-      as generated) is `review: local-only files` with the paths named.
+      ignored path outside a regenerable list (paths never hand-edited —
+      `node_modules/`, tool caches, `.DS_Store` — plus whatever the project's
+      own `.gitignore` comment marks as generated; D6) is `review: local-only
+      files` with the paths named.
       verify: F11 classes `review` and names `local.cfg`; a tree holding only
       `node_modules/` classes `safe`.
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
 
 ## Phase 2 — Remove what is provably done
 
-- [ ] **2.1 The auto-remove set** = merged (any 1.2 strength) ∧ clean ∧ no
+- [x] **2.1 The auto-remove set** = merged (any 1.2 strength) ∧ clean ∧ no
       local-only ignored file (1.5) ∧ not live ∧ not locked ∧ merged ≥ 24 h
       ago (D4). Action: `git worktree remove <path>` without `--force`, then
       `git worktree prune`.
       verify: F1, F2, F3 removed; F4–F9, F11 kept with their reason.
-- [ ] **2.2 Sibling worktrees by registration, not by location (W4).** A
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **2.2 Sibling worktrees by registration, not by location (W4).** A
       worktree outside the standard roots is eligible only when a
       registration this package wrote names it (3.4) or its directory matches
       the main checkout's own name with a suffix (`../<repo>-*`) and its branch
       has merge evidence. Anything else outside the roots stays `review`.
       verify: F12 with a registration is removed; an unregistered sibling
       with an unrelated name is kept.
-- [ ] **2.3 Removal is logged.** One journal line per removal: path, branch,
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **2.3 Removal is logged.** One journal line per removal: path, branch,
       tip SHA, merge evidence. The tip SHA recreates the branch.
       verify: a removal run writes N lines for N removals, each carrying a SHA
       that `git cat-file -e` resolves.
-- [ ] **2.4 Never in an automatic path:** `--force`, `git clean -x`, the main
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **2.4 Never in an automatic path:** `--force`, `git clean -x`, the main
       worktree, a tree a live session is in.
       verify: `grep -qE "worktree remove.*(--force| -f)" src/scripts/worktree_cleanup_check.ts` -> 1
-- [ ] **2.5 Correct the checker's self-description.** The header and the two
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **2.5 Correct the checker's self-description.** The header and the two
       plan strings that call this removal Hard-Floor (W2) are rewritten to the
       scoped rule D1 records: proven-merged, clean, not live is housekeeping;
       anything else stays a decision.
       verify: `grep -c "Hard-Floor" src/scripts/worktree_cleanup_check.ts` -> /^[01]$/
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
 
 ## Phase 3 — Triggers: at the merge, and once a day
 
-- [ ] **3.1 At the merge.** `/pr:merge`, after a successful merge, runs the
+- [x] **3.1 At the merge.** `/pr:merge`, after a successful merge, runs the
       Phase 2 removal for exactly that PR's worktree with the 24 h delay
       waived (D4); if the session is inside it, the session leaves first.
       verify: a merge fixture leaves no worktree for the merged branch.
-- [ ] **3.2 After a merge someone else did.** The retro's daily probe learns a
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **3.2 After a merge someone else did.** The retro's daily probe learns a
       pushed PR merged; the same result enqueues that worktree for 2.1.
       verify: a fixture where the PR is merged outside the session removes the
       tree on the next daily run.
-- [ ] **3.3 Once a day, off the critical path.** On the first session of the
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **3.3 Once a day, on the retro's terms.** On the first session of the
       day (`probe_throttle`, riding the existing `session_start` block — no
-      new concern), the inventory runs detached; the next start reads one
-      file and shows one line: "N worktrees removed, M need a decision".
-      verify: a test asserts the `session_start` hook process performs no git
-      call and opens no socket.
-- [ ] **3.4 Lanes and night runs register what they create.** Every worktree
+      new concern), a synchronous pass bounded by a three-second subprocess
+      deadline classifies the worktrees from a rotating start, removes the
+      proven set under `worktrees.cleanup: auto`, reports it under `notify`,
+      and prints one line: "N removed, M need a decision". *Changed from
+      "detached" by the council round of 2026-10-21 (D8): a process outliving
+      the hook is harder to bound than a budgeted synchronous pass, which is
+      the retro's own precedent.*
+      verify: a test runs the pass under `notify`, `auto`, `off`, an
+      already-stamped day and a spent budget, and a spent budget removes
+      nothing.
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **3.4 Lanes and night runs register what they create.** Every worktree
       the process-full lanes or `using-git-worktrees` create gets a registry
-      line: path, branch, `created_by: agent-config`, `purpose`.
+      line (`agent-config worktree:cleanup register`): path, branch,
+      `created_by: agent-config`, `purpose`.
       verify: a lane fixture produces one registry line per worktree.
-- [ ] **3.5 The missing end state.** `finishing-a-development-branch` says:
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **3.5 The missing end state.** `finishing-a-development-branch` says:
       "PR opened → the worktree stays until merged; removal is scheduled by
       the daily run, not forgotten".
       verify: `grep -c "removal is scheduled" src/skills/finishing-a-development-branch/SKILL.md` -> /^1$/
-
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
 ## Phase 4 — Reach consumers, clear the backlog
 
-- [ ] **4.1 `/worktree cleanup` and `/worktree status` become
-      consumer-visible** in the engineering pack, with the inventory, the plan
-      and `--apply`, which runs Phase 2 on the safe set after one
-      confirmation.
-      verify: both command files read `visibility: visible` and the skill's two
-      `node_modules/…` invocations are replaced by the global entry point.
-- [ ] **4.2 Settings key** `worktrees.cleanup: auto | ask | off`. New installs
-      `auto`; an existing install is asked once (ADR-291). This governs
-      removal only; ADR-229's creation rule is untouched.
-      verify: an install with no key behaves as `ask` until answered,
-      asserted in a test.
-- [ ] **4.3 First run on a real estate.** Run the inventory on this checkout
+- [x] **4.1 Cleanup reaches consumers through the CLI.** `agent-config
+      worktree:cleanup inventory | apply | check | register` works from a global
+      install; the `worktree-lifecycle` skill and `/worktree cleanup` call it
+      instead of a `node_modules/…` path, and `--apply` runs Phase 2 on the safe
+      set. *Changed from "the `/worktree` commands become consumer-visible"
+      (D9): ADR-041 admits a visible slash command only under an approved verb,
+      `worktree` / `cleanup` / `status` are not ones, and adding them needs its
+      own ADR in its own PR. The CLI verb carries the same capability without
+      it.*
+      verify: `grep -c "{ name: 'worktree:cleanup'" src/cli/registry.ts` -> /^1$/
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **4.2 Settings key** `worktrees.cleanup: auto | notify | off`, class
+      C `consent`, default `notify` for every install (D8: installation alone
+      is not consent to delete). This governs removal only; ADR-229's creation
+      rule is untouched.
+      verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
+- [x] **4.3 First run on a real estate.** Run the inventory on this checkout
       and on every repository the session register knows, before and after
       `--apply`, and commit the counts as an evidence artifact.
       verify: the artifact under `agents/evidence/analysis/` records before,
       removed and remaining-with-reason per repository.
+      *Executed 2026-10-21: 71 registered → 17 removed (all `merged-pr`, zero refused) → 54, each remaining with its reason; `agents/evidence/analysis/worktree-estate-cleanup-2026-10-21.md`.*
+      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
 - [x] **4.4 Retire the stub.** `stubs/road-to-worktree-lifecycle.md` moved to
       `skipped/` in the change that added this file; its six-verb cluster
       stays rejected.
@@ -183,6 +214,10 @@ commit is ever lost.
 | D3 | destructive-owned | agent | Local branches are not deleted automatically; the daily line lists them with the one `git branch -D` command | W8 classes `-d` and `-D` as the same WARN op, so the supplied plan's split has no footing; the owner's directive names worktrees, not branches | `road-to-typed-grants-that-persist` lands a scoped grant |
 | D4 | reversible-technical | agent | 24 h delay after merge on the daily path; none on the `/pr:merge` path where the session itself merged | a revert or follow-up can reuse the tree for a day; the session that merged has nothing left to do in it | a follow-up is reported lost to an early removal |
 | D5 | deterministic | agent | One `gh pr list` per repository per day, not a per-PR read | 1.3; the retro's per-PR shape scales with the estate | the host rate-limits list calls |
+| D6 | reversible-technical | council:agents/evidence/council/advisories-worktree-run-design-20261021.md | The built-in regenerable set holds only paths never hand-edited (`node_modules`, tool caches, `.DS_Store`); everything else must be declared generated by the repository's own `.gitignore` comment | both seats asked for a conservative set; one would allow `dist/` and `vendor/`, the other an empty default — the stricter reading is taken, because a patched `vendor/` or a kept `dist/` artefact is exactly what W5 loses | a repository reports a tree kept for a path that is plainly regenerable and carries no comment |
+| D7 | reversible-technical | agent | The git-dir mtime stays as a liveness fallback behind the session register | a session the register cannot see — another host, a plain terminal — would otherwise read as absent while it holds the tree; removing a tree under a running session is the costlier error | every host that runs sessions here writes the register |
+| D8 | destructive-owned | council:agents/evidence/council/advisories-worktree-run-design-20261021.md | The daily pass is synchronous and budgeted on the existing `session_start` handler, declared as an authority expansion; `worktrees.cleanup` ships `notify` everywhere and only the user sets `auto` (ADR-295) | council 2026-10-21 Q1 and Q2, 2/2: deletion from a session start is acting, a user-owned key can authorise it, installation alone does not | a removal under `auto` loses something a user reports as needed |
+| D9 | reversible-technical | evidence | Consumers reach cleanup through the CLI verb `agent-config worktree:cleanup`; the `/worktree` slash cluster stays `internal` | `lint_command_verbs` (ADR-041) refuses a visible command whose leading token is not an approved verb, and `worktree`, `cleanup`, `status` are not; ADR-041 § 5 requires an addendum ADR in its own PR to add one | an approved-verb addendum for `worktree` lands |
 
 ## What this roadmap deliberately does not do
 
@@ -203,14 +238,15 @@ commit is ever lost.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** F1, F2, F3 and F12 (registered) are removed by the daily path;
+- [x] **AC-1** F1, F2, F3 and F12 (registered) are removed by the daily path;
       F4, F5, F6, F7, F9, F11 are kept and each line names its reason; F10
       removes only via `merged-equivalent`.
-- [ ] **AC-2** On this checkout, the committed 4.3 artifact shows zero
+- [x] **AC-2** On this checkout, the committed 4.3 artifact shows zero
       worktrees that are merged, clean, not live and older than 24 h after the
       first daily run, and every remaining one with a reason.
-- [ ] **AC-3** No automatic path passes `--force` (2.4's check).
-- [ ] **AC-4** `task ci` green.
+- [x] **AC-3** No automatic path passes `--force` (2.4's check).
+- [x] **AC-4** `task ci` green.
+      *Settled green 2026-10-21: all 52 checks of PR #2568 on `fd9cc4bac` (`ci_settle`).*
 
 ## Provenance
 
@@ -222,7 +258,7 @@ Source-derived under template rule 19; the source is not named here per
 | Squash-aware merge evidence | KEEP | W1 reproduced. |
 | Automatic removal of the proven set | KEEP | Owner directive (D1); W5 added a gate the plans lacked. |
 | Trigger at merge, daily sweep | KEEP | W3. |
-| Consumer-visible `/worktree cleanup` | KEEP | W7. |
+| Consumer-visible `/worktree cleanup` | CHANGED | W7 closed by the CLI verb; the slash cluster stays internal (D9). |
 | Local branch deletion under a grant | CHANGED | W8 — listed, not automatic (D3). |
 | Reuse the retro's PR batch | CHANGED | The retro reads per PR; a list call is new code (D5). |
 | Worktree registry with lease and heartbeat, per-process PIDs | CHANGED | The session register already carries heartbeats; 3.4 adds a registry line, not a second lease store. |

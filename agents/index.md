@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **751 artefacts** in this package.
+Maintainer-facing index of all **752 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -439,7 +439,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (208)
+## Commands (209)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -472,6 +472,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`analyze-premortem`](../src/domains/analysis-workbench/analyze/premortem/command.md) | cluster: analyze | Forward-looking imagined-failure analysis before committing to a heavy or irreversible plan — enumerate failure stories, score each mode, derive early-warning signals and guardrails. |
 | command | [`analyze-reference`](../src/domains/analysis-workbench/analyze/reference/command.md) | cluster: analyze | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`analyze-roadmap-repos`](../src/domains/analysis-workbench/analyze/roadmap-repos/command.md) | cluster: analyze | Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-reference, one subagent at a time, without producing one roadmap per repository. |
+| command | [`audit`](../src/domains/engineering-base/audit/command.md) | cluster: audit | Security advisories for this project |
 | command | [`brand`](../src/domains/brand/brand/command.md) | cluster: brand | Brand-as-UX orchestrator — strategy, identity, tokens, review, voice. Routes to the brand-grounding skills that constrain the design layer. |
 | command | [`brand-identity`](../src/domains/brand/brand/identity/command.md) | cluster: brand | Define the brand identity — logo direction, colour story, type story, imagery direction — and the token constraints downstream generation consumes. |
 | command | [`brand-review`](../src/domains/brand/brand/review/command.md) | cluster: brand | Audit emitted UI, copy, and assets against the active brand tokens and voice profile — flag any value not traceable to a brand token or voice rule. |

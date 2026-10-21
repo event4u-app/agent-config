@@ -7,7 +7,7 @@
 
 > Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
 
-**208 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
+**209 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
 
 ## User-work flows
 
@@ -92,6 +92,7 @@ _Check it. Self-review, judge, fix/quality, and threat-model a change before it 
 
 **Default path:** `review/changes` → `judge` → `fix/quality` → `threat-model`
 
+- `audit` — Security advisories for this project
 - `fix-ci` — Fetch CI errors from GitHub Actions and fix them
 - `fix-quality` — Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 - `fix-route` — Classify a vaguely-described problem and dispatch to the right fix sub-command (or name the specialist skil…

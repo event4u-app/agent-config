@@ -820,7 +820,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  09e7606ea6f180f1e57844f1a9ad5a6b3bc3d24a57e52fafe57801733d23c013
+SET-SHA256  0952f55b36d7ccc582431de456d0e85546d5c484ed148e526bf3e20f91f2a981
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1218,6 +1218,7 @@ open and which this file does not settle.
 | `command-routing` | `8fdb24b80711a22212c9c31913630e2b06a5fade150f9de87b3ecdde6f23d0d4` |
 | `competitive-moat-analysis` | `e149d75967c3d407ba74512527934b77fb3ede128c1bbcdecdd88e3c51448b67` |
 | `complexity-first-planning` | `7377795a8aca39c574ed4a1bc2074f7da451bf1ce7095bdb0ccdc50e60b9757b` |
+| `composer-packages` | `355be75e10e1ff5daf7852250ef360582efa17936dccd48283b5d6552796c2c9` |
 | `content-funnel-design` | `ff3ef395d13b32818a54bffd7eefa3eb4258c2f97c578c649c5a673f039171b1` |
 | `context-authoring` | `0c3412f197fb3b5210496e39bfe5dc286b1348651fa132c4ade4cb43617f05b7` |
 | `contract-review` | `9b5e4a70563ed2e07e463d59a1f179b79f44d37f38323b23013227bbd5aec73b` |
@@ -1225,12 +1226,14 @@ open and which this file does not settle.
 | `customer-research` | `be1760092dfc0e70006ac1313709d8acdd48a62b1e3b81f354590df95e23fbc6` |
 | `data-flow-mapper` | `535e42defa307b3a40d68cdcd6eeeef101c120d5c5c1b9740330199a5acc2203` |
 | `database` | `07b320a1bcde1f8565aa1cae12d383b765fd1a9d0289703fccfa79f7486b5688` |
+| `dependency-upgrade` | `1ed820d9d1b49e83332dc456704b5466db1b53f4a1b5be1e632e5e6c6b3e1053` |
 | `description-assist` | `529c0051f8a8fb9d125b4c977e1fe8e7731e28d885c486d297070261ec7a85ab` |
 | `design-intelligence` | `81361d4cd038b77ae78ddc988e3fdc247b93112f217ed455ce9437ac3576ac21` |
 | `design-system-capture` | `afdefd4e0141ef85eb7277def08c84abf1bf4b9f30d7cbed32a4bc39039b23f6` |
 | `design-tokens` | `a39661a7b95f92c7f649d4a82b33c07be346053d4529ae7a6a9626609b30be40` |
 | `design-variations` | `ab58c78688a1f4f41cbbdd9c6302c3eea975bc2c25a565b67fcfb961cea9d590` |
 | `doc-coauthoring` | `025530a4b9bb40834cd9054c40e8c9518c55e55d2adcead638b1a8919d856f1b` |
+| `docker` | `00dccf8052a97378ada2597e9aac6187bc02a2f215990530001c2da7b7f0fcdc` |
 | `docx-authoring` | `75b784449debd2009b332b91edd75116ceccd8ae18866405dd689c48b2e8fb67` |
 | `dpa-review` | `e0ded718f20941ad84a7ce87cb69aa3e1059d68234ca312c4846f5fb601d1279` |
 | `eloquent` | `d61c6ada4b28e29f5e7a97aca87917cf6942e5da7f39741d9f4ef0b7ade27185` |
@@ -1658,3 +1661,38 @@ McNemar p **0.4017**. `delivery-set-measurement-2026-08-31.json`: precision@5
 **80.60 %**, recall loss **38.56 pp** — the ceiling stays **BREACHED** — context
 cost **230.3** tokens against the 500 target, still **MET**. Neither verdict
 changes in kind.
+
+## Growth — 2026-10-21, three train corpora; the seal does not move
+
+```
+THREE NEW ROWS, ALL TRAIN-SIDE. NO HOLDOUT FILE WAS ADDED OR EDITED.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN IN THE SAME CHANGE.
+```
+
+**Why.** `road-to-security-fixes-carried-to-the-merge` and
+`road-to-advisories-heard-the-same-day` edited three skills — a Composer audit
+section in `composer-packages`, the security-fix procedure in
+`dependency-upgrade`, an example image pin in `docker` — and
+`check_routing_coverage` requires every touched skill to carry a corpus.
+
+| Row | Partition | `sha256(name)[0:2]` |
+|---|---|---|
+| `composer-packages` | train | `0x53` = 83 ≥ 51 |
+| `dependency-upgrade` | train | `0x5a` = 90 ≥ 51 |
+| `docker` | train | `0xd5` = 213 ≥ 51 |
+
+The set is now 172 files, 37 of them sealed, which is unchanged. `SET-SHA256` moves
+because it is computed over every row: `09e7606e…` → `0952f55b…`.
+
+**Both train-side measurements were re-taken on this tree.**
+`routing-body-signal-verdict.json`: still `harmful` on the false-activation guard
+(**+5.77 pp** against +2.0 pp), delta-recall **+3.16 pp**, below the 5.0 pp bar,
+McNemar p **0.1582**. `delivery-set-measurement-2026-08-31.json`: precision@5
+**80.85 %**, recall loss **39.61 pp** — the ceiling stays **BREACHED** — context
+cost **230.9** tokens against the 500 target, still **MET**. Neither verdict
+changes in kind.
+
+**The standing repair was followed.** `trigger_corpus_holdout_pin.test.ts` and
+`routing_signal_measurement.test.ts` § 5.1 were both run after the rows were
+placed — the second is what proves they sit on the train side of the seal.
+

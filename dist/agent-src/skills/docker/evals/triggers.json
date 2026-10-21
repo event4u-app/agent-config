@@ -1,0 +1,63 @@
+{
+    "skill": "docker",
+    "last_eval": "2026-10-21",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-21 when road-to-advisories-heard-the-same-day corrected this skill's example image pin, which brought it into check_routing_coverage's touched-skill scope. Exemplars cover Dockerfile edits, compose services, a container that will not start, the Xdebug container, and a German phrasing. Near-misses: the CI pipeline itself (github-ci), cloud infrastructure (terraform / aws-infrastructure), and a base-image advisory (the /audit command). Counterexamples guard 'container' in a CSS-layout and a freight sense.",
+    "queries": [
+        {
+            "q": "my container won't start after the last pull",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "add a redis service to docker-compose and wire it into the app container",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "make the Dockerfile build faster with a multi-stage build",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "run phpunit inside the Xdebug container so I can step through it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "der PHP-Container findet die Extension nicht — schau dir das Dockerfile an",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "the GitHub Actions workflow fails on the build step",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the CI pipeline → github-ci"
+        },
+        {
+            "q": "write the terraform for an ECS service",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "cloud infrastructure → terraform / aws-infrastructure"
+        },
+        {
+            "q": "is our node:22 base image affected by any advisory?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "an advisory question → the /audit command"
+        },
+        {
+            "q": "center the content inside the flex container",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a CSS layout container"
+        },
+        {
+            "q": "how many shipping containers fit on the truck?",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a freight container"
+        }
+    ]
+}

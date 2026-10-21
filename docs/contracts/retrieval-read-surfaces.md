@@ -64,6 +64,7 @@ reason `unclassified` exists and the reason this paragraph does.
 | module (under `src/scripts/`) | inbound shape | emit shape | coverage | evidence |
 |---|---|---|---|---|
 | `_cli/cmd_update.ts` | `network-fetch` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
+| `_lib/advisory_sources.ts` | `network-fetch` | `exported-api` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `_lib/llm_proposer_transport.ts` | `network-fetch` | `exported-api` | **covered** | imports the sanitize floor |
 | `_lib/reddit_thread_parse.ts` | `stdin-markup-parse` | `stdout-write` | **covered** | imports the sanitize floor |
 | `_lib/session_pr_watch.ts` | `remote-subprocess` | `exported-api` | **covered** | imports the sanitize floor |
@@ -98,8 +99,9 @@ reason `unclassified` exists and the reason this paragraph does.
 | `tools/github_adapter.ts` | `remote-subprocess` | `undecided` | **unclassified** | inbound bytes with no recognised emit — the onward path is undecided |
 | `tools/jira_adapter.ts` | `remote-subprocess` | `undecided` | **unclassified** | inbound bytes with no recognised emit — the onward path is undecided |
 | `update_prices.ts` | `node-http-request` | `file-write` | **covered** | imports the sanitize floor |
+| `worktree_cleanup_check.ts` | `remote-subprocess` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 
-35 read surface(s): 11 covered, 21 uncovered, 3 unclassified.
+37 read surface(s): 11 covered, 23 uncovered, 3 unclassified.
 <!-- END read-surface-table -->
 ## The second layer — structural hiding in fetched markup
 

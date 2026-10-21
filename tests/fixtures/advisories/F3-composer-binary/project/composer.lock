@@ -1,0 +1,10 @@
+{
+  "packages": [
+    {
+      "name": "composer/composer",
+      "version": "2.10.1",
+      "notification-url": "https://packagist.org/downloads/"
+    }
+  ],
+  "packages-dev": []
+}

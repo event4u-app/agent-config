@@ -205,6 +205,23 @@ majority is not a tie to break — it is a stop:** report it and let the operato
 name the method. Inventing one is what the next sentence forbids, and a wrong
 merge shape is not revertible by this command (§ 8).
 
+## The PR's worktree, after its merge
+
+After each merge this run performed, the worktree that held the PR's head
+branch goes — if the user armed it (`worktrees.cleanup: auto`, ADR-295). Leave
+it first if the session is inside it (the host's `ExitWorktree`, or the main
+checkout), then:
+
+```bash
+agent-config worktree:cleanup apply --branch=<head-branch> --no-delay --respect-setting
+```
+
+It removes only a tree that is proven merged, clean, holds no local-only ignored
+file and has no other live session, re-checks all of that immediately before
+removing, never passes force and never deletes the branch. Under `notify` it
+prints one line and removes nothing; a refusal is reported, never retried with
+force.
+
 ## Drain summary
 
 On queue empty or terminal-only, `all` writes

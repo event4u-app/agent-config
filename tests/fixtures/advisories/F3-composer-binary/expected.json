@@ -1,0 +1,12 @@
+{
+  "now": "2026-10-21T12:00:00Z",
+  "findings": [
+    {
+      "id": "CVE-2026-59948",
+      "package": "composer/composer",
+      "verdict": "fix-available",
+      "tier": "T1",
+      "fixed": "2.10.2"
+    }
+  ]
+}

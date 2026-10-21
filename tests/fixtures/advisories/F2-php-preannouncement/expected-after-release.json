@@ -1,0 +1,12 @@
+{
+  "now": "2026-10-21T15:00:00Z",
+  "findings": [
+    {
+      "id": "REL-php-8.3.27",
+      "package": "php",
+      "verdict": "fix-available",
+      "tier": "T0",
+      "fixed": "8.3.27"
+    }
+  ]
+}

@@ -18,11 +18,13 @@
  */
 
 import * as fs from 'node:fs';
+import * as tty from 'node:tty';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { _is_global_only_consumer } from './_cli/doctor_install_mode.js';
 import * as agent_settings from './_lib/agent_settings.js';
+import { sessionNotice } from './_lib/advisory_notice.js';
 import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 import * as update_check from './_lib/update_check.js';
 
@@ -125,6 +127,29 @@ async function main(argv: readonly string[] = process.argv.slice(2)): Promise<nu
     if (args.help) {
         process.stdout.write(DOC + '\n');
         return 0;
+    }
+
+    // The advisory notice for hosts with no session slot (advisories roadmap
+    // 4.5). Read-only and shown once a day across every surface: whichever of
+    // the session start or a CLI subcommand runs first prints it, the stamp
+    // silences the other. Independent of the update check and its opt-out.
+    // The dispatcher discards this process's stderr and hands the terminal's
+    // over as fd 3; the notice is stamped only when that write succeeded, so a
+    // caller with no fd 3 never consumes the day's notice unseen.
+    try {
+        sessionNotice(path.resolve(args.cwd), undefined, (text) => {
+            // Delivered means a person can see it: a terminal. A redirect, a log
+            // or /dev/null would consume the day's notice unread.
+            if (!tty.isatty(3)) return false;
+            try {
+                fs.writeSync(3, `${text}\n`);
+                return true;
+            } catch {
+                return false;
+            }
+        });
+    } catch {
+        /* best-effort, like the banner itself */
     }
 
     if (!args.installed_version) {

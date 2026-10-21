@@ -111,6 +111,24 @@ Use **wide version ranges** for library packages to maximize compatibility:
 
 **Libraries** should use `||` ranges. **Applications** should use `^` (caret).
 
+## Advisories, abandoned packages, audit
+
+- **`composer audit --locked`** checks the lockfile against the Packagist
+  advisory database; CI should run it so a known advisory is a red check, not a
+  surprise. It exits non-zero when it finds something — that is the answer, not
+  an error.
+- **`config.audit`** in `composer.json` (`abandoned: fail`, `ignore` with a
+  reason per advisory ID) makes Composer itself refuse on install; an `ignore`
+  without a reason is a silenced finding, not an accepted one.
+- **Abandoned packages** show in `composer outdated --direct` and in
+  `composer audit`; pick the suggested replacement before the abandonment
+  becomes an unpatched advisory.
+- **The Composer binary is a dependency too** — it has had its own advisories;
+  keep it on a supported release (`composer self-update --stable`).
+- Ongoing monitoring between changes: `agent-config audit:deps refresh` reads the
+  lockfile, the declared PHP version and the PHP release feed, and names what
+  needs action today.
+
 ## Local development
 
 ### Path repositories
