@@ -1,0 +1,27 @@
+{
+  "GET https://endoflife.date/api/php.json": {
+    "status": 200,
+    "body": [
+      {
+        "cycle": "8.4",
+        "eol": "2028-12-31"
+      },
+      {
+        "cycle": "8.3",
+        "eol": "2027-12-31"
+      },
+      {
+        "cycle": "8.2",
+        "eol": "2026-12-31"
+      },
+      {
+        "cycle": "8.1",
+        "eol": "2025-12-31"
+      }
+    ]
+  },
+  "GET https://www.php.net/feed.atom": {
+    "status": 200,
+    "text": "<?xml version=\"1.0\" encoding=\"utf-8\"?><feed xmlns=\"http://www.w3.org/2005/Atom\"><title>PHP.net news</title><entry><title>Upcoming Critical PHP Security Release</title><published>2026-10-20T09:00:00+00:00</published><content type=\"html\">Two vulnerabilities rated CVSS 9.2. Releases will be published on 2026-10-21 14:00 UTC.</content></entry></feed>"
+  }
+}

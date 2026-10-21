@@ -1,0 +1,14 @@
+{
+  "now": "2026-10-21T12:00:00Z",
+  "findings": [
+    {
+      "id": "GHSA-f9dd-f9dd-f9dd",
+      "verdict": "fix-available",
+      "tier": "T1"
+    }
+  ],
+  "after_correction": {
+    "tier": "T2",
+    "transitions": 1
+  }
+}

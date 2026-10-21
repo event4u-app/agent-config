@@ -57,6 +57,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'packs:active', disposition: 'delegate', synopsis: 'Which packs are active here, from which file — names the degraded zero-pack case.' },
     { name: 'brand:status', disposition: 'delegate', synopsis: 'Whether a consumer brand tokens file is present, where, and dot-prefixed near-misses.' },
     { name: 'ci:settle', disposition: 'delegate', synopsis: "Wait for a PR's checks to settle; the last output line is the verdict." },
+    { name: 'audit:deps', disposition: 'delegate', synopsis: "Security advisories for this project's packages, runtimes and toolchain; only `refresh` touches the network." },
     { name: 'worktree:cleanup', disposition: 'delegate', synopsis: 'Worktree inventory and removal of the proven-merged, clean, unused set; never with force.' },
     { name: 'commands', disposition: 'native', synopsis: 'List/explain the command surface from the discovery manifest (ls / explain subcommands); ls --candidates reports surface-reduction signals.' },
     { name: 'help', disposition: 'native', synopsis: 'Show TS-shell help; delegates --tier=N to Bash.' },

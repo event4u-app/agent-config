@@ -1,0 +1,8 @@
+{
+  "now": "2026-10-21T12:00:00Z",
+  "findings": [],
+  "never_verdict": [
+    "affected",
+    "fix-available"
+  ]
+}

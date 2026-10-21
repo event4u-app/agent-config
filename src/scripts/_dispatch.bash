@@ -82,6 +82,9 @@ TS-shell native (run via the installed `agent-config` binary):
                              .tokens.json, which nothing reads.
   ci:settle <pr>             Wait for a PR's checks to settle; the last line is the
                              verdict (exit 0 green · 1 red · 2 no verdict).
+  audit:deps <mode>          Security advisories for this project's packages, runtimes
+                             and toolchain: refresh · show · accept · notice · gaps ·
+                             issue-body. Only `refresh` touches the network.
   worktree:cleanup <mode>    Worktree inventory and removal: inventory · apply · check
                              <path> · register <path>. `apply` removes only the proven
                              set (merged incl. squash, clean, unused), never with force.
@@ -848,6 +851,12 @@ cmd_brand_status() {
 # shipped command never names a node_modules path or fetches a TS runner.
 cmd_ci_settle() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_ci_settle.ts" "$@"
+}
+
+# `audit:deps <mode>` — advisories heard the same day. The network lives here,
+# never in a hook: a session start only reads the cache this writes.
+cmd_audit_deps() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/advisories.ts" "$@"
 }
 
 # `worktree:cleanup <mode>` — the worktree safety gate and the removal of the
@@ -1618,6 +1627,7 @@ main() {
     mcp:available)           cmd_mcp_available "$@" ;;
     brand:status)            cmd_brand_status "$@" ;;
     ci:settle)               cmd_ci_settle "$@" ;;
+    audit:deps)              cmd_audit_deps "$@" ;;
     worktree:cleanup)        cmd_worktree_cleanup "$@" ;;
     roadmap:context)         cmd_roadmap_context "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
