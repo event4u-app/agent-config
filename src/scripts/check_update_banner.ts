@@ -136,7 +136,7 @@ async function main(argv: readonly string[] = process.argv.slice(2)): Promise<nu
     // over as fd 3; the notice is stamped only when that write succeeded, so a
     // caller with no fd 3 never consumes the day's notice unseen.
     try {
-        sessionNotice(path.resolve(args.cwd), new Date(), (text) => {
+        sessionNotice(path.resolve(args.cwd), undefined, (text) => {
             try {
                 fs.writeSync(3, `${text}\n`);
                 return true;
