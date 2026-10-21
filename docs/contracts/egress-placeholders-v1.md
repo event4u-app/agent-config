@@ -380,10 +380,15 @@ No setting, environment variable or config file populates the selection.
   ancestor of these paths, so there is nothing to check. A key path or an
   entry that is not a regular file is refused; cleanup and the cap count
   enumerate with `lstat` and only regular files.
-- *Threat model, stated* — in scope: anything the repository can put in or do
-  to its own tree, statically or from a process it starts. Out of scope: a
-  hostile process of the same user acting on the user-global root itself,
-  which can read the key and the entries directly.
+- *Threat model, stated* — in scope: whatever reaches the store through the
+  workspace tree, whether the repository put it there statically or a process
+  it starts does it while the store runs; none of it can redirect the store,
+  because the store has no path under that tree. Out of scope: any process
+  running as the same user that acts on the user-global root directly —
+  including one a repository starts, such as a git hook or a build step. Such a
+  process can read the key and the entries, replace files and plant links
+  there; this store does not defend against it. Keeping repository code away
+  from the user's own files is a sandbox's job, not the store's.
 - *Complete writes* — every byte is written (short writes are looped) and
   fsynced before the rename; a failed write removes its temp file. The key is
   published the same way, by link, so a concurrent first store reads a whole

@@ -129,6 +129,19 @@ describe('spool-write-is-content-addressed', () => {
         expect(line['digest']).not.toBe(createHash('sha256').update(JSON.stringify({ type: 'text', file: { content: body } })).digest('hex'));
     });
 
+    it('the observe log is created private (0700 directory, 0600 file) and tightened if it already exists', () => {
+        const file = spoolObservationPath(tmp);
+        fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o755 });
+        fs.chmodSync(path.dirname(file), 0o755);
+        runEgressStage(readEnvelope('observed privately\n'.repeat(20)), fixed('observe'), engineSelecting);
+        expect(fs.statSync(path.dirname(file)).mode & 0o777).toBe(0o700);
+        expect(fs.statSync(file).mode & 0o777).toBe(0o600);
+        fs.chmodSync(file, 0o644);
+        runEgressStage(readEnvelope('observed again\n'.repeat(20)), fixed('observe'), engineSelecting);
+        expect(fs.statSync(file).mode & 0o777).toBe(0o600);
+        expect(fs.readFileSync(file, 'utf8').trim().split('\n')).toHaveLength(2);
+    });
+
     it('the shipped selection is empty, so the stage stores nothing in any mode', () => {
         expect(SPOOL_SELECTED_CLASSES.size).toBe(0);
         for (const m of ['observe', 'protect', 'strict'] as const) runEgressStage(readEnvelope('x'.repeat(9000)), fixed(m));

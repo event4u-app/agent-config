@@ -455,8 +455,15 @@ function isImage(v: unknown): boolean {
 function observe(root: string, line: Record<string, unknown>): void {
     try {
         const file = spoolObservationPath(root);
-        fs.mkdirSync(path.dirname(file), { recursive: true });
-        fs.appendFileSync(file, `${JSON.stringify(line)}\n`, 'utf8');
+        fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+        fs.chmodSync(path.dirname(file), 0o700);
+        const fd = fs.openSync(file, 'a', 0o600);
+        try {
+            fs.fchmodSync(fd, 0o600);
+            fs.writeSync(fd, `${JSON.stringify(line)}\n`);
+        } finally {
+            fs.closeSync(fd);
+        }
     } catch {
         // observability never breaks the hook
     }
