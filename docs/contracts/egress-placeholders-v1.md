@@ -453,6 +453,7 @@ check, `council_egress.ts`); `undeclared` fails the census.
 
 | module | endpoint | content | engine | status | evidence | coverage | reason |
 |---|---|---|---|---|---|---|---|
+| `src/scripts/_lib/advisory_sources.ts` | `api.osv.dev`, `endoflife.date`, `nodejs.org`, `www.php.net` | fixed-corpus | no | **unclassified** | send shape aimed at a host on neither list — read the module | **fixed-corpus** | sends public package names and versions read from the project's lockfiles to api.osv.dev, and plain GETs to endoflife.date and the PHP/Node feeds; never session content, never a private package name |
 | `src/scripts/_lib/llm_proposer_transport.ts` | `api.anthropic.com` | session-content | no | **sender** | names a provider endpoint and carries a send shape | **uncovered** | the prompt is assembled from repository evidence at run time and is not passed through the engine; the module has made no live call |
 | `src/scripts/_lib/trigger_routers.ts` | `api.anthropic.com`, `api.openai.com`, `generativelanguage.googleapis.com` | fixed-corpus | no | **sender** | names a provider endpoint and carries a send shape | **fixed-corpus** | sends the trigger-eval corpus (skill descriptions and the eval's own prompts), never session content |
 | `src/scripts/ai-image/adapters/flux.sh` | `configured` | session-content | no | **unclassified** | media adapter whose endpoint is configured, not written down | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
@@ -477,7 +478,7 @@ check, `council_egress.ts`); `undeclared` fails the census.
 | `src/scripts/second_brain_retrieval.ts` | `api.anthropic.com` | fixed-corpus | no | **sender** | names a provider endpoint and carries a send shape | **fixed-corpus** | sends the seeded retrieval corpus (retrieval-corpus.yml) and entries retrieved from it, never session content |
 | `src/scripts/second_brain_run.ts` | `api.anthropic.com` | fixed-corpus | no | **sender** | names a provider endpoint and carries a send shape | **fixed-corpus** | sends the deterministic recall corpus of Phase 1, never session content |
 
-23 module(s): 17 sender, 1 local, 5 unclassified; coverage 2 asserted, 6 fixed-corpus, 15 uncovered, 0 undeclared. <!-- enforcement-count-ok: egress coverage census of sender modules, not a rule-enforcement figure -->
+24 module(s): 17 sender, 1 local, 6 unclassified; coverage 2 asserted, 7 fixed-corpus, 15 uncovered, 0 undeclared. <!-- enforcement-count-ok: egress coverage census of sender modules, not a rule-enforcement figure -->
 <!-- END egress-sender-census -->
 
 ## See also

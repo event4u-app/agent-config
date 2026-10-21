@@ -140,11 +140,6 @@ git worktree add ".worktrees/<branch-name>" -b "<branch-name>"
 agent-config worktree:cleanup register ".worktrees/<branch-name>" --purpose="<why>"
 ```
 
-The `register` line records that this package created the worktree, so the
-daily cleanup pass can remove it once its work is merged even when it sits
-outside the two conventional roots (ADR-295). It writes one line into the
-repository's common git directory and nothing into the tree.
-
 **Then address the worktree by flag, not by `cd`.** Every tool that matters
 takes a directory flag, and the flag survives where a `cd` does not:
 

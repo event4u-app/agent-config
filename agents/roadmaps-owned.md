@@ -46,6 +46,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-trunk-whose-own-gates-are-green-carried | later | later | Every step road-to-a-trunk-whose-own-gates-are-green deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-ac-deep-capabilities | later | draft | Three deep capabilities are either proven to earn their cost on the default path, or closed with a recorded terminal … |
 | road-to-adversarial-verification-and-long-runs | later | later | Ask the owner stops being the quality and control loop. |
+| road-to-advisory-latency-measured | later | later | The two pre-registered latency claims — time-to-notice and time-to-remediation — carry a status that a measurement set, never a sentence: … |
 | road-to-agent-config-next | later | draft | When this roadmap is resumed, the reader can tell — from measurements that already exist rather than from this document's … |
 | road-to-an-intake-the-queue-can-carry | later | later | A finding that already has an owner lands as a step and an `Arrivals:` line on that owner instead of … |
 | road-to-an-obligation-row-that-names-its-writer-carried | later | later | Every step road-to-an-obligation-row-that-names-its-writer deferred is either done here or explicitly disposed of — a step that still cannot run is … |

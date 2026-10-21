@@ -2,6 +2,9 @@
 model_tier: medium
 name: audit
 pack: engineering-base
+intent: "Check what this project uses for security advisories and carry a finding to a fix"
+routes_to: [dependency-upgrade]
+replaces: []
 visibility: advanced
 skills: [dependency-upgrade, finishing-a-development-branch, using-git-worktrees]
 description: Security advisories for the project's packages, runtimes and toolchain — by tier, with evidence; `deps fix <id>` carries one finding to a verified PR
@@ -22,6 +25,25 @@ packs:
 `/audit deps` is the one audit today: advisories, malware, end-of-support and
 pre-announced security releases for what the project **uses** — distinct from
 `/security-audit-config`, which audits the agent configuration itself.
+
+## Examples
+
+```text
+/audit deps                       # refresh if stale, then the findings by tier
+/audit deps fix CVE-2026-59948    # carry one finding to a verified PR
+/audit deps gaps                  # what the project's own bots and CI could already cover
+```
+
+**Why it works:** (`self-check-loop`) only `refresh` touches the network, and every finding names the
+file and line it came from, so each line is checkable before anything changes.
+
+## Flags
+
+| Flag | Mode | Meaning |
+|---|---|---|
+| `--force` | `refresh` | refresh although the cache is younger than 20 hours |
+| `--reason` | `accept` | why the vulnerable path is unreachable here — a sentence, never "grep found nothing" |
+| `--expires` | `accept` | the day the acceptance lapses (YYYY-MM-DD) |
 
 ### 1. Know where the data comes from
 
@@ -65,7 +87,7 @@ unasked**; show the change and let the user take it.
 
 ### 4. `fix <id>` — carry one finding to a PR
 
-Follow [`dependency-upgrade` § Security fix](../../../skills/dependency-upgrade/SKILL.md#security-fix--one-finding-carried-to-a-verified-pr)
+Follow the "Security fix" section of [`dependency-upgrade`](../../../skills/dependency-upgrade/SKILL.md)
 end to end. In short: the smallest fixing change, the route the routing table
 picks (this branch, or a separate worktree, branch and PR), proof by the same
 source that reported it, the project's tests, a PR that carries the evidence,

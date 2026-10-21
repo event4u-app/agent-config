@@ -128,10 +128,8 @@ step (`scope-control`); never force-delete (`-D`) as part of cleanup.
 Cross-worktree scope-lock overlaps are scanned via
 `worktree_cleanup_check scope-overlap` (surfaced by `/worktree status`).
 
-**Whole-checkout sweeps.** Worktrees used to accumulate one per branch because
-nothing removed them on merge and a squash merge never classed as merged; under
-`worktrees.cleanup: auto` the proven set now leaves at `/pr:merge` and on the
-first session start of a day (ADR-295). `git worktree prune` only clears registrations whose
+**Whole-checkout sweeps.** Under `worktrees.cleanup: auto` the proven set leaves
+at `/pr:merge` and daily (ADR-295). `git worktree prune` only clears registrations whose
 directory is already gone, so it does nothing for the live ones. Classify the
 whole set in one pass rather than gate-checking by hand:
 

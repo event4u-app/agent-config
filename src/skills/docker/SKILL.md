@@ -164,7 +164,7 @@ When creating or reviewing Dockerfiles:
 - [ ] **No secrets in layers** — never `ENV` or `COPY` secrets. Use `--mount=type=secret` (BuildKit) or runtime secrets.
 - [ ] **Minimal packages** — only install what's needed. Remove package manager cache in the same `RUN` layer.
 - [ ] **Read-only root filesystem** — use `--read-only` flag where possible, mount writable dirs explicitly.
-- [ ] **No `latest` tag** — pin a base image version that is still in security support (`node:22.11-alpine`, not `node:latest`); a pin past its end of life is a pinned vulnerability — `agent-config audit:deps refresh` reports one.
+- [ ] **No `latest` tag** — pin a supported version (`node:22.11-alpine`, not `node:latest`).
 - [ ] **Scan images** — use `docker scout quickview` or Trivy for vulnerability scanning.
 
 ```dockerfile

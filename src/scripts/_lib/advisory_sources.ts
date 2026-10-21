@@ -14,6 +14,8 @@
  * against fixtures in tests.
  */
 
+// egress-content: fixed-corpus — sends public package names and versions read from the project's lockfiles to api.osv.dev, and plain GETs to endoflife.date and the PHP/Node feeds; never session content, never a private package name
+
 import { execFileSync } from 'node:child_process';
 import * as path from 'node:path';
 

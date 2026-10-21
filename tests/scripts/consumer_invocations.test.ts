@@ -51,7 +51,6 @@ const BASELINE: Record<string, number> = {
     'src/skills/source-discovery/SKILL.md': 5,
     'src/skills/svg-authoring/SKILL.md': 2,
     'src/skills/systematic-debugging/SKILL.md': 2,
-    'src/skills/worktree-lifecycle/SKILL.md': 2,
     'src/subagents/production-validator.md': 1,
 };
 
