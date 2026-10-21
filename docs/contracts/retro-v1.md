@@ -56,6 +56,17 @@ on one day produce one sweep and one queue. Hooks and probes only write markers,
 count and enqueue; no model ever runs inside a hook. A merge is an event, never
 a permission — nothing here reads or writes a merge setting.
 
+**Where paths B and C run.** The daily probe rides the `session_start` slot of
+the `session-register` concern, throttled once per workspace and day. It takes
+the repository's day claim **before** it lists or reads a single session: a
+claim is a file `claim-<day>.<generation>` created exclusively, a stale claim is
+taken over by creating the next generation exclusively, and a sweep that no
+longer holds the newest generation records nothing. A session start that loses
+the claim does no discovery and is not stamped, so it retries once a crashed
+sweep's lease runs out. Every `gh` and `git` call gets only the time left of the
+probe's three seconds, and a session read the deadline cut short is discarded,
+never triaged.
+
 ## Who does the model work
 
 The queue line is work for the agent, read the way the self-repair queue line
@@ -226,3 +237,4 @@ reopens nothing — `missing` is not `false`.
 | v1 | 2026-10-17 | Held or recurred: three verdicts read from record status, never from the occurrence count; a measured revert reopens. |
 | v1 | 2026-10-20 | The switch (ADR-292) and where the state lives; path A wired into `/pr:merge`; the push-time marker and the session pointer written by their hooks; `/retro` and its forms. |
 | v1 | 2026-10-20 | After council review: the queue line grants no delegation, the sweep holds one owner-tokened claim per day with a lease, a stale backlog expires, pointers stay bounded by the window, and the network read is disclosed. The session-start call of the daily probe is not wired yet; the sweep runs by hand through `retro sweep`. |
+| v1 | 2026-10-21 | The session-start call wired through `session-register`: the day claim is taken before discovery, a takeover creates the next claim generation exclusively, a superseded sweep records nothing, and the deadline bounds every process call and discards a cut-short read. |

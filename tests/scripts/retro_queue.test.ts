@@ -22,6 +22,7 @@ import {
     enqueue,
     enqueueMerged,
     expireStaleDeferred,
+    holdsSweepDay,
     listMarkers,
     listQueue,
     localDay,
@@ -424,6 +425,75 @@ describe('retro_queue — path C, the daily sweep', () => {
         expect(claimSweepDay(main, '2026-10-21', Date.now())).toBeNull();
         releaseSweepDay(main, '2026-10-21', second);
         expect(claimSweepDay(main, '2026-10-21', Date.now())).not.toBeNull();
+    });
+
+    it('a takeover creates the next claim generation exclusively and never overwrites one', () => {
+        const { main, wt } = repoWithWorktree();
+        const first = claimSweepDay(main, '2026-10-21', Date.now())!;
+        const taker = claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1)!;
+        expect(first.startsWith('0:')).toBe(true);
+        expect(taker.startsWith('1:')).toBe(true);
+        expect(holdsSweepDay(main, '2026-10-21', taker)).toBe(true);
+        expect(holdsSweepDay(main, '2026-10-21', first)).toBe(false);
+        // A fresh claim is not taken over from another worktree.
+        expect(claimSweepDay(wt, '2026-10-21', Date.now())).toBeNull();
+        // The generation a racing taker would create already exists, so its exclusive create fails.
+        const dir = path.join(path.dirname(queueDir(main)), 'retro-sweep');
+        expect(fs.existsSync(path.join(dir, 'claim-2026-10-21.1'))).toBe(true);
+        expect(fs.existsSync(path.join(dir, 'claim-2026-10-21.0'))).toBe(false);
+    });
+
+    it('a sweep whose claim was taken over records nothing', () => {
+        const { main } = repoWithWorktree();
+        const first = claimSweepDay(main, '2026-10-21', Date.now())!;
+        claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1);
+        const busy = session('late', '2026-10-20', { self_repair_in_window: m(1) });
+        const r = runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [busy], claim: first });
+        expect(r.status).toBe('superseded');
+        expect(listQueue(main)).toEqual([]);
+        expect(readSweepState(main).last_sweep).toBeNull();
+    });
+
+    it('the probe claims before it discovers: a session start that loses the claim reads nothing and is not stamped', () => {
+        const { main, wt } = repoWithWorktree();
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        expect(claimSweepDay(wt, localDay(NOW, tz))).not.toBeNull();
+        writeSessionPointer(main, { eol_key: 'p'.repeat(64), tag: 'mine', branch: null, workspace: main, ended_at: '2026-10-19T10:00:00Z' }, { enabled: true });
+        let stamped = 0;
+        expect(retroDailyProbe(main, { ranToday: () => false, stamp: () => void (stamped += 1), now: new Date(NOW) })).toBeNull();
+        expect(stamped).toBe(0);
+        expect(readSweepState(main).last_sweep).toBeNull();
+        expect(listSessionPointers(main)).toHaveLength(1);
+    });
+
+    it('the session-start slot runs the probe: session-register sweeps the day once and stamps the throttle', () => {
+        const { main } = repoWithWorktree();
+        const envelope = JSON.stringify({
+            event: 'session_start',
+            workspace_root: main,
+            session_id: 'retro-wiring-1',
+            platform: 'claude',
+            payload: { cwd: main },
+        });
+        const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_') && k !== 'AGENT_CONFIG_REPLAY'));
+        const r = spawnSync('npx', ['tsx', path.resolve('src/scripts/session_register_hook.ts')], {
+            input: envelope,
+            encoding: 'utf8',
+            env,
+            timeout: 60_000,
+        });
+        expect(r.status).toBe(0);
+        expect(readSweepState(main).last_sweep).not.toBeNull();
+        expect(fs.existsSync(path.join(main, 'agents', 'runtime', 'state', 'probe-throttle', 'retro-sweep.stamp'))).toBe(true);
+    }, 90_000);
+
+    it('a fact read the deadline cut short is discarded, never triaged as low-signal', () => {
+        const { main } = repoWithWorktree();
+        writeSessionPointer(main, { eol_key: 'q'.repeat(64), tag: 'cut', branch: null, workspace: main, ended_at: '2026-10-20T10:00:00Z' }, { enabled: true });
+        let t = 0;
+        // Before the deadline when the read starts, past it once the read has run.
+        const sessions = discoverSessions(main, BERLIN, { git: () => null, today: '2026-10-21', deadlineAt: 10, now: () => (t += 6) });
+        expect(sessions[0]!.facts).toBeNull();
     });
 
     it('expirations are counted, and a disposed session takes no fact read', () => {

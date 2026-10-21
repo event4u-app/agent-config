@@ -528,42 +528,56 @@ export function readSweepState(workspaceRoot: string): SweepState {
 export const SWEEP_CLAIM_LEASE_MS = 60_000;
 
 /**
- * Claim one local day's sweep for the whole repository. The claim file is
- * created exclusively, so of two session starts racing in two worktrees one
- * sweeps and the other sees `false`. A claim older than the lease, for a day
- * whose sweep state was never written, is taken over. Claims of earlier days are
- * pruned.
+ * Claim one local day's sweep for the whole repository. A claim is a file
+ * `claim-<day>.<generation>` created exclusively, so of two session starts
+ * racing in two worktrees one sweeps and the other sees `null`. A claim older
+ * than the lease, for a day whose sweep state was never written, is taken over
+ * by creating the NEXT generation exclusively: of two processes taking over at
+ * once exactly one creation succeeds, and nothing is ever overwritten. Claims of
+ * earlier days and superseded generations are pruned.
  */
 export function claimSweepDay(workspaceRoot: string, day: string, nowMs: number = Date.now()): string | null {
     const dir = commonSub(workspaceRoot, 'retro-sweep');
     if (dir === null) return null;
     fs.mkdirSync(dir, { recursive: true });
-    const file = path.join(dir, `claim-${day}`);
-    const token = `${process.pid}-${createHash('sha256').update(`${nowMs}\0${Math.random()}`).digest('hex').slice(0, 16)}`;
-    try {
-        fs.writeFileSync(file, `${token}\n`, { flag: 'wx' });
-    } catch (err) {
-        if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
-        const finished = readSweepState(workspaceRoot).last_sweep?.day === day;
-        let age = 0;
+    const current = currentClaim(dir, day);
+    let gen = 0;
+    if (current !== null) {
+        if (readSweepState(workspaceRoot).last_sweep?.day === day) return null;
+        let age: number;
         try {
-            age = nowMs - fs.statSync(file).mtimeMs;
+            age = nowMs - fs.statSync(path.join(dir, current.name)).mtimeMs;
         } catch {
             return null;
         }
-        if (finished || age < SWEEP_CLAIM_LEASE_MS) return null;
-        // Takeover: write our token over the stale claim, then read it back — of
-        // two processes taking over at once, only the one whose token stands
-        // proceeds. The rename makes each write whole, never interleaved.
-        const tmp = `${file}.${token}.tmp`;
-        fs.writeFileSync(tmp, `${token}\n`);
-        fs.renameSync(tmp, file);
-        if (claimToken(file) !== token) return null;
+        if (age < SWEEP_CLAIM_LEASE_MS) return null;
+        gen = current.gen + 1;
+    }
+    const token = `${gen}:${process.pid}-${createHash('sha256').update(`${nowMs}\0${Math.random()}`).digest('hex').slice(0, 16)}`;
+    try {
+        fs.writeFileSync(path.join(dir, `claim-${day}.${gen}`), `${token}\n`, { flag: 'wx' });
+    } catch (err) {
+        if ((err as NodeJS.ErrnoException).code === 'EEXIST') return null;
+        throw err;
     }
     for (const n of fs.readdirSync(dir)) {
-        if (n.startsWith('claim-') && n !== `claim-${day}`) fs.rmSync(path.join(dir, n), { force: true });
+        if (!n.startsWith('claim-')) continue;
+        const m = /^claim-(.+)\.(\d+)$/.exec(n);
+        if (m === null || m[1] !== day || Number(m[2]) < gen) fs.rmSync(path.join(dir, n), { force: true });
     }
     return token;
+}
+
+/** The highest claim generation for `day`, or `null` when the day is unclaimed. */
+function currentClaim(dir: string, day: string): { name: string; gen: number } | null {
+    let best: { name: string; gen: number } | null = null;
+    for (const n of fs.readdirSync(dir)) {
+        const m = /^claim-(.+)\.(\d+)$/.exec(n);
+        if (m === null || m[1] !== day) continue;
+        const gen = Number(m[2]);
+        if (best === null || gen > best.gen) best = { name: n, gen };
+    }
+    return best;
 }
 
 function claimToken(file: string): string | null {
@@ -575,6 +589,18 @@ function claimToken(file: string): string | null {
 }
 
 /**
+ * True while `token` is still the day's newest claim. A sweep checks it before
+ * it records anything, so one whose lease ran out and was taken over stops
+ * instead of writing beside its successor.
+ */
+export function holdsSweepDay(workspaceRoot: string, day: string, token: string): boolean {
+    const dir = commonSub(workspaceRoot, 'retro-sweep');
+    if (dir === null) return false;
+    const current = currentClaim(dir, day);
+    return current !== null && claimToken(path.join(dir, current.name)) === token;
+}
+
+/**
  * Give a claim back, so a sweep that failed is retried by the next session
  * start. Only the holder's own token releases it: a sweep whose claim was taken
  * over after the lease never deletes its successor's.
@@ -582,7 +608,9 @@ function claimToken(file: string): string | null {
 export function releaseSweepDay(workspaceRoot: string, day: string, token: string): void {
     const dir = commonSub(workspaceRoot, 'retro-sweep');
     if (dir === null) return;
-    const file = path.join(dir, `claim-${day}`);
+    const gen = /^(\d+):/.exec(token)?.[1];
+    if (gen === undefined) return;
+    const file = path.join(dir, `claim-${day}.${gen}`);
     if (claimToken(file) === token) fs.rmSync(file, { force: true });
 }
 
