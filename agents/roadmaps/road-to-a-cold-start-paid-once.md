@@ -268,6 +268,7 @@ waits:
       user's constraints verbatim (`subagent-spawn-contract.md:154-156`). Either
       missing, it ships off with the reading attached.
       verify: `npx vitest run tests/scripts/_lib_subagent_spawn.test.ts -t skipping-worker-carries-kernel-and-constraints --reporter=verbose` -> /✓.*skipping-worker-carries-kernel-and-constraints/
+      Partial 2026-10-21, left open: both conditions now hold. The 1.7 net delta is about 58 % against the 10 % bar. `composeSpawnBrief` carries the safety floor and the user's constraints verbatim for a skipping worker, and it refuses a skip that has no floor to carry; it went red before green in `_lib_subagent_spawn.test.ts`. The ship-on edit itself — `omit_project_instructions: true` on `ac-worker` / `ac-researcher` — is not made. 1.7 observed the flag only in the `--agents` JSON spelling, and the definition files project it through frontmatter as `omitClaudeMd`, a path never observed. Switching it on through that path would read an unobserved capability.
 - [x] **2.6 Correct the fork premise** in `SKILL.md:119-121` from the 1.6 row —
       the premise only; the ordering and the council's cut of "always fork"
       (`SKILL.md:123-125`) stay.

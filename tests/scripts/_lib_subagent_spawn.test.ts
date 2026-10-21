@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { MAX_KNOWLEDGE_REFS, MAX_PERSONAS, composeSpawnBrief } from '../../src/scripts/_lib/subagent_spawn.js';
+import { KERNEL_RULE_IDS } from '../../src/scripts/_lib/kernel_rules.js';
+import {
+    MAX_KNOWLEDGE_REFS,
+    MAX_PERSONAS,
+    composeSpawnBrief,
+    serializeSpawnPayload,
+} from '../../src/scripts/_lib/subagent_spawn.js';
+import { render_floor } from '../../src/scripts/generate_subagent_floor.js';
 
 describe('composeSpawnBrief — composition', () => {
     it('composes role-mode + profile + persona + knowledge refs into a brief', () => {
@@ -51,5 +58,66 @@ describe('composeSpawnBrief — minimal-slice invariant (lethal-trifecta-guard)'
     it('defaults are null/empty when nothing selected', () => {
         const b = composeSpawnBrief({ task: 't' });
         expect(b).toMatchObject({ role_mode: null, profile: null, personas: [], knowledge_refs: [] });
+    });
+});
+
+describe('composeSpawnBrief — a worker that skips project instructions', () => {
+    const FLOOR = render_floor();
+    const CONSTRAINTS = [
+        'Do not touch files under src/rules/.',
+        'Keep the public API of `foo()` unchanged — callers in two repos depend on it.',
+    ];
+
+    it('skipping-worker-carries-kernel-and-constraints', () => {
+        const b = composeSpawnBrief({
+            task: 'refactor foo',
+            omit_project_instructions: true,
+            safety_floor: FLOOR,
+            user_constraints: CONSTRAINTS,
+        });
+        expect(b.omit_project_instructions).toBe(true);
+        expect(b.warnings).toHaveLength(0);
+
+        const [prefix, tail] = serializeSpawnPayload(b).split('\n');
+        const head = JSON.parse(prefix!) as { safety_floor: string };
+        const rest = JSON.parse(tail!) as { user_constraints: string[] };
+        // The floor rides byte for byte, and with it every kernel rule id it names.
+        expect(head.safety_floor).toBe(FLOOR);
+        for (const id of KERNEL_RULE_IDS) expect(head.safety_floor).toContain(id);
+        // Each user constraint rides byte for byte, in the order given.
+        expect(rest.user_constraints).toEqual(CONSTRAINTS);
+    });
+
+    it('refuses to skip when there is no floor to carry, and says so', () => {
+        for (const floor of [undefined, null, '', '   ']) {
+            const b = composeSpawnBrief({ task: 't', omit_project_instructions: true, safety_floor: floor });
+            expect(b.omit_project_instructions).toBe(false);
+            expect(b.safety_floor).toBeNull();
+            expect(b.warnings.join()).toMatch(/skip refused/);
+        }
+    });
+
+    it('a worker that loads project instructions carries no floor copy, constraints still verbatim', () => {
+        const b = composeSpawnBrief({ task: 't', safety_floor: FLOOR, user_constraints: CONSTRAINTS });
+        expect(b.omit_project_instructions).toBe(false);
+        expect(b.safety_floor).toBeNull();
+        expect(b.user_constraints).toEqual(CONSTRAINTS);
+    });
+
+    it('constraints are never trimmed, deduplicated or capped', () => {
+        const odd = ['  leading and trailing  ', 'same', 'same', 'line one\nline two'];
+        const b = composeSpawnBrief({ task: 't', user_constraints: odd });
+        expect(b.user_constraints).toEqual(odd);
+    });
+
+    it('the floor sits in the cache-stable prefix, the constraints in the variable tail', () => {
+        const brief = (task: string, c: string) =>
+            serializeSpawnPayload(
+                composeSpawnBrief({ task, omit_project_instructions: true, safety_floor: FLOOR, user_constraints: [c] }),
+            );
+        const a = brief('a', 'x');
+        const c = brief('c', 'y');
+        expect(a.split('\n')[0]).toBe(c.split('\n')[0]);
+        expect(a.split('\n')[0]).toContain('SAFETY FLOOR');
     });
 });
