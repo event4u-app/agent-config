@@ -90,7 +90,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Node deps
@@ -224,7 +224,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Node deps
@@ -258,7 +258,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Node deps
@@ -290,7 +290,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Node deps (yaml parser)
@@ -384,7 +384,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Node deps
@@ -413,7 +413,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          node-version: '20'
+          node-version: '22'
 
       # Standing audit gate (road-to-credible-install Phase 0): same floor
       # status as ci-green on every release PR. Lockfile-driven — no npm ci
@@ -496,7 +496,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Node deps
@@ -526,7 +526,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install Node deps

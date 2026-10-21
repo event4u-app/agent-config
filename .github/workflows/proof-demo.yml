@@ -48,7 +48,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
       # The demo mirrors the proof page, which runs `task check-…`; the runner
       # needs the go-task binary (same composite action the other workflows use).
