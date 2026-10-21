@@ -118,6 +118,16 @@ describe('a fresh source worktree with no node_modules', () => {
         expect(res.stderr).not.toContain('ERR_MODULE_NOT_FOUND');
     });
 
+    it('a denying guard still denies through the PATH fallback a fresh worktree now takes', () => {
+        // The route changed, so the property that matters most is re-checked on
+        // it: a fail_closed concern exits 2 to refuse, and the hook command must
+        // pass that 2 through rather than degrade it to "the hook ran".
+        write(path.join(globalBin, 'agent-config'), '#!/bin/sh\necho "blocked by guard" >&2\nexit 2\n', 0o755);
+        const res = run('PreToolUse');
+        expect(res.status).toBe(2);
+        expect(res.stderr).toContain('blocked by guard');
+    });
+
     it('still uses the local wrapper once the checkout HAS its node_modules', () => {
         // The source runtime is not banned, only gated on its prerequisite — a
         // maintainer who ran `npm ci` in the worktree gets the local version.
