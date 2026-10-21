@@ -43,6 +43,27 @@ This is the measured reason the roadmap's cap is two rounds, not one.
 - "Other severity" is six round-1 rows whose severity cell is neither of the
   four values (for example `info`).
 
+## Per exact round, with denominators
+
+Asked for by both council seats on 2026-10-21, because "3+" hides whether
+round 3 itself still pays. An artefact is one round of one review; a review is
+one slug.
+
+| round | artefacts | findings | high+critical | high+critical per artefact | reviews ending here |
+|---|---|---|---|---|---|
+| 1 | 286 | 1757 | 234 | 0.82 | 266 |
+| 2 | 23 | 194 | 34 | 1.48 | 9 |
+| 3 | 14 | 101 | 10 | 0.71 | 4 |
+| 4 | 11 | 76 | 11 | 1.00 | 2 |
+| 5 | 9 | 54 | 8 | 0.89 | 0 |
+| 6-10 | 25 | 137 | 11 | 0.44 | 10 |
+| 11+ | 26 | 136 | 4 | 0.15 | 2 |
+
+293 reviews; 18 (6 %) ran past round 2. Rounds 3-5 still yield 0.7-1.0
+high/critical rows per round, close to round 1; the yield falls only from
+round 6 on. A two-round cap would therefore cut rounds that still pay. Same
+parse as above, plus the slug taken as the file name before its round suffix.
+
 ## What round 3+ high/critical rows were (step 0.2)
 
 Each of the 44 high/critical rows of round ≥ 3 was classified by a fresh
