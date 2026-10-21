@@ -2,7 +2,8 @@
 
 <!-- evidence-type: analysis -->
 
-> Phase 1 rows for `road-to-a-cold-start-paid-once` (steps 1.4 and 1.6), filed
+> Phase 1 rows for `road-to-a-cold-start-paid-once` (steps 1.4 and 1.6; step 1.9 and a 1.4
+> follow-up in the 2026-10-21 addendum at the end), filed
 > under the observation protocol in
 > `src/agent-src/contexts/execution/host-capability-manifest.md` § Observation
 > protocol: host, host version, transcript or artifact reference, date. Taken
@@ -112,3 +113,62 @@ counts against the host's concurrency cap), 1.7 (the instruction-skip flag),
 a project-scope agent definition, an environment flag set before the session
 starts, or a hook binding this leg cannot add. They stay open; this file does
 not stand in for them.
+
+## Addendum 2026-10-21 — rate surfaces (step 1.9) and the spawn surface on 2.1.305
+
+Taken **2026-10-21** on **Claude Code 2.1.305** (`claude --version`), tree at
+`origin/main` @ `a2aa408ab`. The observer was a dispatched drain leg; it ran
+two child `claude -p --output-format stream-json --verbose` sessions, each in an
+empty scratch project holding a one-line `CLAUDE.md`, so this package's rules
+could not shape the reply. Both children report `apiKeySource: none` in their
+`init` event, i.e. a subscription login rather than an API key. Transcript
+references are the children's host session ids: `3c30c4d3-7219-4688-82d7-ac67637fdc79`
+(probe A, no extra settings) and `f5be7cd5-3297-47d3-8492-e81a5811e5d3`
+(probe B, one `StopFailure` hook bound through `--settings`).
+
+### Step 1.9 — the four rate surfaces
+
+| Surface | Verdict | Host version | Date | What was seen |
+|---|---|---|---|---|
+| status-line `rate_limits` after the first response | **not reached** | 2.1.305 | 2026-10-21 | Both probes ran in print mode, which runs no status line. No interactive session was opened, so the field was neither seen nor ruled out. |
+| `StopFailure` with matcher `rate_limit` | **not reached** | 2.1.305 | 2026-10-21 | Probe B bound it through `--settings`; the session printed nothing on stderr and finished `result:success`, and the hook's log file was never created. No limit was hit, so the event had nothing to fire on. Whether the settings loader would reject an unknown event name was not established: the control probe with a made-up event name was refused by the host's permission classifier and not retried. |
+| `api_retry` in a print-mode stream | **not reached** | 2.1.305 | 2026-10-21 | Neither stream carried one. The event types were `system:init`, `system:hook_started`, `system:hook_response`, `system:thinking_tokens`, `assistant`, `rate_limit_event` and `result:success`. No request was retried, so its absence says nothing about whether the type exists. |
+| `quota_auto_resume_*` notifications | **not reached** | 2.1.305 | 2026-10-21 | No quota was exhausted in either session. |
+
+**One rate surface that was present, though the step did not name it.** Each
+print-mode stream carried exactly one `rate_limit_event`, after the assistant
+messages and before the `result` event. Probe B's, copied field for field:
+
+```
+{"type":"rate_limit_event","rate_limit_info":{"status":"allowed","rateLimitType":"five_hour",
+ "overageStatus":"rejected","isUsingOverage":false,
+ "unifiedWindows":{"five_hour":{"utilization":0.67},"seven_day":{"utilization":0.5}}}}
+```
+
+(the reset timestamps and the event's own ids are dropped above). Probe A, a
+few minutes earlier in the same window, read `five_hour.utilization` 0.63 and
+`seven_day` 0.49. So on 2.1.305 a subscription session's five-hour and
+seven-day window utilisation is machine-readable in the print-mode stream — a
+`claude -p` worker's stdout, not a hook payload. It is not a status-line field
+and not a hook event, so no hook-carried guard here can read it as it stands.
+
+### Step 1.4 — the spawn surface still offers no name
+
+Probe A was asked, with no tool call, to list its subagent tool's parameters. On
+2.1.305 it reported `description, effort, isolation, model, prompt,
+run_in_background, subagent_type`, and reported `SendMessage` as present but
+deferred; its `init` event lists the subagent tool as `Task`. There is no name
+parameter, so a durable, operator-chosen address at spawn time is still not
+offered on this version. This is the parameter list as the child described it,
+not a schema dump. The by-name half of step 1.4 stays unobserved, as on
+2026-10-17.
+
+### Step 1.5 — attempted, refused, not retried
+
+A third child session was prepared to settle step 1.5: a `PreToolUse` hook bound
+through `--settings` to `SendMessage`, which only logs its payload (and, in a
+second arm, returns a deny), and a prompt telling the child to spawn one `haiku`
+subagent and then re-task it with `SendMessage`. The host's auto-mode
+permission classifier refused to run it before it started. It was not
+re-attempted in another form. Step 1.5 is therefore still unobserved; what it
+needs is a session in which the operator binds that hook themselves.
