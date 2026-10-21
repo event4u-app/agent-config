@@ -705,6 +705,12 @@ For each open step in the working set (scope-bound — see wrapper):
    [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md).
    A loop iteration that lands work without flipping its box is a
    rule violation. Do not save flips for the archive commit.
+   The flipped line ends with the step's receipt —
+   `./scripts-run src/scripts/step_receipt --range <the step's first commit>^..HEAD`
+   prints it: the change class, raise-only via `--raise`, and what
+   `src/config/step-depth-table.json` would skip for it. The table is in
+   `shadow` mode, so the receipt changes no ceremony; it is the measurement
+   the owner's depth decision is taken on.
 
 ### 5a-residue. Mid-run residue — the same ownership table, inline
 

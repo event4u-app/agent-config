@@ -742,6 +742,11 @@ model — the retro itself is worked from the queue line afterwards
 `/roadmap:process-full --merge` inherits this step, because it merges through
 this command.
 
+Depth row: `retro` in `src/config/step-depth-table.json`. The table is in
+`shadow` mode, so the retro runs per merge as above; the row records that an
+R0/R1 merge would batch it per drain. The § 9a danger gate has no row — it is
+not ceremony and no class lowers it.
+
 ### Held for you — one block, at the end of the run
 
 A run that handed anything over ends with exactly one block headed **Held for

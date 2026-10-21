@@ -1,0 +1,45 @@
+{
+    "_comment": "Ceremony depth per change class — the one table road-to-a-step-that-costs-what-it-changes 2.2 names. SHADOW: `mode` is `shadow`, so no procedure lowers anything from it; `step_receipt` reads it to report what a lowered depth WOULD skip. Lowering depth is the owner's decision (blocker class-depth-flip-reopens-the-risk-null); flipping `mode` is that decision, not a tuning knob. The class comes from src/scripts/classify_change_risk.ts, raise-only.",
+    "schema_version": 1,
+    "registered_at": "2026-10-21",
+    "owner": "maintainer",
+    "review_by": "2027-04-21",
+    "mode": "shadow",
+    "full": {
+        "review": "rounds until the completion review passes (plan-review-gates § 2.5)",
+        "council": "on any open question the run cannot settle from the tree (roadmap-process-loop § 5 step 4)",
+        "evidence": "an analysis or review artefact under agents/evidence/",
+        "retro": "per merge",
+        "revalidation": "council on a stale or drifted plan"
+    },
+    "classes": {
+        "R0": {
+            "review": "deterministic gates only",
+            "council": "owner-reserved questions only",
+            "evidence": "commit message and PR body",
+            "retro": "batched per drain",
+            "revalidation": "deterministic stale check"
+        },
+        "R1": {
+            "review": "one round",
+            "council": "owner-reserved questions only",
+            "evidence": "commit message and PR body",
+            "retro": "batched per drain",
+            "revalidation": "deterministic stale check"
+        },
+        "R2": {
+            "review": "full, under road-to-a-review-that-ends' round cap once it lands",
+            "council": "full",
+            "evidence": "full",
+            "retro": "full",
+            "revalidation": "deterministic stale check; council only on detected drift"
+        },
+        "R3": {
+            "review": "full, plus a parallel independent seat",
+            "council": "full",
+            "evidence": "full",
+            "retro": "full",
+            "revalidation": "full"
+        }
+    }
+}

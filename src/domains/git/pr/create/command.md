@@ -266,6 +266,10 @@ hash** per
   pre-push + CI is the enforcing layer (CI authoritative; advisory mode
   during the Stage-A baseline window). `planning.completion_review:
   false` is the settings escape hatch.
+- Depth row: `review` and, for the findings and PR body, `evidence` in
+  `src/config/step-depth-table.json`. The table is in `shadow` mode — run
+  the review at full depth; `step_receipt` records what the change class
+  would have skipped.
 
 ### 2. Generate PR content
 

@@ -329,6 +329,20 @@ mergeable against base
 SHA `M` says nothing about its state once PR *n−1* advances the base to `M1`.
 Report "mergeable against base `<SHA>`", never "the queue is mergeable".
 
+### Ceremony depth — the row each ceremony here reads
+
+`src/config/step-depth-table.json` holds one depth per change class
+(`classify_change_risk`, raise-only). Its `mode` is `shadow`: every ceremony
+below runs at full depth, and `step_receipt` records what the class's row
+would have skipped. Lowering depth is the owner's call, never this run's.
+
+| Ceremony in this run | Table row |
+|---|---|
+| completion review before the PR | `review` |
+| council on an open question (loop § 5 step 4) | `council` |
+| evidence artefacts and the PR body | `evidence` |
+| context refresh / re-validation of the plan (loop § 5e) | `revalidation` |
+
 ### `--worktree` — isolate the workspace
 
 Route workspace creation through [`/worktree:create`](../../../engineering-base/worktree/create/command.md)
