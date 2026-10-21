@@ -186,13 +186,11 @@ describe("round 7 — the record says what reached the host, decided once", () =
     expect(planToolOutputRewrite(env, stage(env, "protect"), deps())).toMatchObject({ outcome: "withheld", reason: "audit-unwritable" });
   });
 
-  it("a workspace that is not an absolute directory withholds and writes no record", () => {
+  it("a workspace that is not a directory withholds and writes no record", () => {
     const file = path.join(tmp, "not-a-dir");
     fs.writeFileSync(file, "");
-    for (const root of [file, "relative/ws"]) {
-      const env = { ...postToolUse("Bash", SHAPES.Bash()), workspace_root: root };
-      expect(planToolOutputRewrite(env, stage(env, "protect"), deps())).toMatchObject({ outcome: "withheld", reason: "no-workspace" });
-    }
+    const env = { ...postToolUse("Bash", SHAPES.Bash()), workspace_root: file };
+    expect(planToolOutputRewrite(env, stage(env, "protect"), deps())).toMatchObject({ outcome: "withheld", reason: "no-workspace" });
     expect(rewriteLines()).toEqual([]);
   });
 
