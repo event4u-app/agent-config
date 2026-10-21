@@ -582,7 +582,7 @@ describe('ledgerOutcomeFor — inspected vs not inspected', () => {
     // that was never read; and `unavailable` was mapped to a credential reason
     // when the only gate it applies to is unavailable for an unbuilt artefact.
     it('never counts an unread target as inspected', () => {
-        for (const v of ['crashed', 'estate_invalid', 'pending', 'unavailable'] as const) {
+        for (const v of ['crashed', 'estate_invalid', 'pending', 'unavailable', 'delegated'] as const) {
             const outcome = ledgerOutcomeFor(v);
             expect(outcome, `${v} must be a skip`).not.toBe('complete');
             expect(outcome, `${v} must be a skip`).not.toBe('fail');

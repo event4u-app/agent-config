@@ -751,7 +751,16 @@ jobs:
         # `ci_only` in `src/config/ci-local-parity.yml` with that reason and
         # reachable on demand. The test count is deliberately not written here —
         # it moves with the suite and the gate prints the live figure.
-        run: ./scripts-run src/scripts/check_static_parity --quiet
+        #
+        # The floor src/config/gate-coverage.yml declares for this gate is
+        # asserted HERE, from the output this step already produced, so the
+        # required Consistency job does not run both suites a second time
+        # (`floor_asserted_in` on the row). `shell: bash` gives pipefail, so
+        # the gate's own exit code still decides the step.
+        shell: bash
+        run: |
+          ./scripts-run src/scripts/check_static_parity --quiet | tee "$RUNNER_TEMP/static-parity.out"
+          ./scripts-run src/scripts/check_gate_coverage --from-output "$RUNNER_TEMP/static-parity.out" --only check_static_parity
 
   workspace-tests:
     # The workspace cluster: tests/server/workspace.test.ts + the cli/python
