@@ -279,6 +279,22 @@ describe('retention, partial writes and cleanup failure', () => {
         expect(fs.existsSync(oldFile)).toBe(false);
     });
 
+    it('an authenticated read of an expired handle deletes its entry while answering expired', () => {
+        const t0 = Date.now() - SPOOL_RETENTION_MS - 5000;
+        const { handle, address } = storeBytesUnchecked(tmp, Buffer.from('past its week'), S, t0);
+        const file = path.join(spoolDirOf(tmp), address);
+        fs.utimesSync(file, new Date(t0), new Date(t0));
+        expect(readHandle(tmp, handle, S)).toEqual({ state: 'expired' });
+        expect(fs.existsSync(file)).toBe(false);
+    });
+
+    it('an existing key with loose permissions is tightened to 0600 when read', () => {
+        const { handle } = storeBytesUnchecked(tmp, Buffer.from('k'), S);
+        fs.chmodSync(spoolKeyPath(tmp), 0o644);
+        expect(readHandle(tmp, handle, S).state).toBe('ok');
+        expect(fs.statSync(spoolKeyPath(tmp)).mode & 0o777).toBe(0o600);
+    });
+
     it('a write that died before its rename is never served and is removed once stale', () => {
         const now = Date.now();
         const { handle, address } = storeBytesUnchecked(tmp, Buffer.from('complete'), S, now);

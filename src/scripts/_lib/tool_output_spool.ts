@@ -134,7 +134,9 @@ function spoolKey(root: string, create: boolean): Buffer | null {
     const file = spoolKeyPath(root);
     const read = (): Buffer | null => {
         try {
-            if (!fs.lstatSync(file).isFile()) return null;
+            const st = fs.lstatSync(file);
+            if (!st.isFile()) return null;
+            if ((st.mode & 0o777) !== 0o600) fs.chmodSync(file, 0o600);
             const k = fs.readFileSync(file);
             return k.length === 32 ? k : null;
         } catch {
@@ -225,13 +227,15 @@ export function readHandle(
     const [, addr, exp, tag] = m as unknown as [string, string, string, string];
     const expected = Buffer.from(mac(key, addr, Number(exp), session), 'hex');
     if (!timingSafeEqual(expected, Buffer.from(tag, 'hex'))) return { state: 'invalid' };
-    if (now >= Number(exp) * 1000) return { state: 'expired' };
-    // Only a handle that passed every check above reaches cleanup or an entry; the key read above is the one file a failing handle touches.
+    // Any authenticated handle, expired or not, reaches cleanup: an expired read is
+    // exactly the moment its entry should be gone. A failing handle reaches neither
+    // cleanup nor an entry; the key read above is the one file it touches.
     try {
         cleanupSpool(root, now);
     } catch {
         // a failed cleanup does not change what this read may serve
     }
+    if (now >= Number(exp) * 1000) return { state: 'expired' };
     let bytes: Buffer;
     try {
         const entry = path.join(spoolDir(root), addr);
@@ -460,7 +464,7 @@ function observe(root: string, line: Record<string, unknown>): void {
         const fd = fs.openSync(file, 'a', 0o600);
         try {
             fs.fchmodSync(fd, 0o600);
-            fs.writeSync(fd, `${JSON.stringify(line)}\n`);
+            writeAll(fd, Buffer.from(`${JSON.stringify(line)}\n`, 'utf8'));
         } finally {
             fs.closeSync(fd);
         }
