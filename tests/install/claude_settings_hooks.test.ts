@@ -37,7 +37,7 @@ function expectedCommand(acEvent: string, native: string): string {
         `exec "$N" "$S/dist/hooks/dispatch.js" ${args}; fi; ` +
         // Only an absolute agent-config outside the opened project is trusted
         // (17.0.0 finding feaebdef733b); nothing in the project tree runs.
-        'BIN=$(command -v agent-config 2>/dev/null); [ "${BIN#/}" = "$BIN" ] && BIN=""; ' +
+        'BIN=$(command -v agent-config); [ "${BIN#/}" = "$BIN" ] && BIN=""; ' +
         '[ -n "$CLAUDE_PROJECT_DIR" ] && [ "${BIN#"$CLAUDE_PROJECT_DIR"/}" != "$BIN" ] && BIN=""; ' +
         `[ -n "$BIN" ] || { [ -n "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_STDERR}' >&2;${
             native === 'SessionStart' ? ` echo '${NO_DISPATCHER_CONTEXT}';` : ''

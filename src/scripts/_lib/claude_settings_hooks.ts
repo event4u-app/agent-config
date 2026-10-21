@@ -140,7 +140,7 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
             'if [ -n "$N" ] && [ -x "$N" ] && [ -f "$S/dist/hooks/dispatch.js" ]; then ' +
             `${native === 'PreToolUse' ? '' : 'exec '}"$N" "$S/dist/hooks/dispatch.js" ${dispatchArgs}; ` +
             `${native === 'PreToolUse' ? 'else ' : 'fi; '}` +
-            'BIN=$(command -v agent-config 2>/dev/null); [ "${BIN#/}" = "$BIN" ] && BIN=""; ' +
+            'BIN=$(command -v agent-config); [ "${BIN#/}" = "$BIN" ] && BIN=""; ' +
             '[ -n "$CLAUDE_PROJECT_DIR" ] && [ "${BIN#"$CLAUDE_PROJECT_DIR"/}" != "$BIN" ] && BIN=""; ' +
             `[ -n "$BIN" ] || { ${_no_dispatcher_notice(native)}${_thinned_dead_carrier(native)}${_no_dispatcher_exit(native)} }; ` +
             `"$BIN" dispatch:hook ${dispatchArgs}` +
