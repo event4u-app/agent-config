@@ -135,7 +135,7 @@ would have skipped. Lowering depth is the owner's call, never this run's.
 |---|---|
 | completion review before the PR | `review` |
 | council on an open question (loop § 5 step 4) | `council` |
-| evidence artefacts and the PR body | `evidence` |
+| evidence artifacts and the PR body | `evidence` |
 | context refresh / re-validation of the plan (loop § 5e) | `revalidation` |
 
 **`--worktree`** — read [`process-full-all`](../../contexts/execution/process-full-all.md#--worktree--isolate-the-workspace).
