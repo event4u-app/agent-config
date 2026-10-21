@@ -11471,7 +11471,7 @@ function build_claude_hook_matrix(manifest_path2) {
     const concerns = claude_events[ac_event];
     if (!concerns || Array.isArray(concerns) && concerns.length === 0) continue;
     const dispatchArgs = `--platform claude --event ${ac_event} --native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
-    matrix[native] = `R="\${EVENT4U_CONFIG_HOME:-$HOME/.event4u/agent-config}/runtime"; S="$R/current"; N=""; [ -f "$S/node" ] && read -r N < "$S/node"; B=""; [ -f "$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js" ] && B="$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js"; [ -z "$B" ] && [ -f "$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js" ] && [ -f "$CLAUDE_PROJECT_DIR/src/scripts/hook_manifest.yaml" ] && B="$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js"; if [ -n "$B" ] && command -v node >/dev/null 2>&1; then exec node "$B" ${dispatchArgs}; fi; if [ -n "$N" ] && [ -x "$N" ] && [ -f "$S/dist/hooks/dispatch.js" ]; then exec "$N" "$S/dist/hooks/dispatch.js" ${dispatchArgs}; fi; BIN=agent-config; [ -x "$CLAUDE_PROJECT_DIR/agent-config" ] && [ -d "$CLAUDE_PROJECT_DIR/node_modules" ] && BIN="$CLAUDE_PROJECT_DIR/agent-config"; command -v "$BIN" >/dev/null 2>&1 || { ${_no_dispatcher_notice(native)}${_thinned_dead_carrier(native)}exit 0; }; "$BIN" dispatch:hook ${dispatchArgs}`;
+    matrix[native] = `R="\${EVENT4U_CONFIG_HOME:-$HOME/.event4u/agent-config}/runtime"; S="$R/current"; N=""; [ -f "$S/node" ] && read -r N < "$S/node"; if [ -n "$N" ] && [ -x "$N" ] && [ -f "$S/dist/hooks/dispatch.js" ]; then exec "$N" "$S/dist/hooks/dispatch.js" ${dispatchArgs}; fi; BIN=$(command -v agent-config 2>/dev/null); [ "\${BIN#/}" = "$BIN" ] && BIN=""; [ -n "$CLAUDE_PROJECT_DIR" ] && [ "\${BIN#"$CLAUDE_PROJECT_DIR"/}" != "$BIN" ] && BIN=""; [ -n "$BIN" ] || { ${_no_dispatcher_notice(native)}${_thinned_dead_carrier(native)}${_no_dispatcher_exit(native)} }; "$BIN" dispatch:hook ${dispatchArgs}`;
   }
   return matrix;
 }
@@ -11480,6 +11480,11 @@ var NO_DISPATCHER_CONTEXT = "agent-config hooks are NOT running in this session:
 function _no_dispatcher_notice(native) {
   const context = native === "SessionStart" ? ` echo '${NO_DISPATCHER_CONTEXT}';` : "";
   return `[ -n "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_STDERR}' >&2;${context} }; `;
+}
+var NO_DISPATCHER_REFUSAL = "agent-config: no hook dispatcher reachable, so this tool call is refused: the fail_closed guards block-no-verify, block-kernel-rule-writes and block-plumbing-writes cannot run. Repair in a terminal: npm i -g @event4u/agent-config then npx -y @event4u/agent-config init. To drop the hooks instead: agent-config uninstall, or delete the agent-config entries from ~/.claude/settings.json.";
+function _no_dispatcher_exit(native) {
+  if (native !== "PreToolUse") return "exit 0;";
+  return `[ -z "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_REFUSAL}' >&2; exit 2; }; exit 0;`;
 }
 var THINNED_DEAD_CARRIER_LINE = "agent-config: no hook dispatcher was reached and the rule layer on disk is thinned, so routed rule bodies will not arrive in this session. Open a rule body from the absolute Body path in its stub. The full rule layer is restored for the next session.";
 function _thinned_dead_carrier(native) {

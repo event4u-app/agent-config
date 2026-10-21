@@ -110,36 +110,23 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
         const ac_event = String(ac_raw);
         const concerns = claude_events[ac_event];
         if (!concerns || (Array.isArray(concerns) && concerns.length === 0)) continue;
-        // Bundle fast path (road-to-hook-latency-repair Phase 2): invoke the
-        // precompiled dispatcher bundle directly — no bash shim, no CLI boot
-        // (measured ~450-500 ms CLI vs ~110 ms bundle per event on a 1-vCPU
-        // container; bench_hook_latency --via-cli pins it). Candidates:
-        //   1. project npm install (node_modules/@event4u/agent-config/…)
-        //   2. a source checkout — guarded by hook_manifest.yaml existing
-        //      next to it, so an UNRELATED consumer file that happens to sit
-        //      at dist/hooks/dispatch.js can never be executed as a hook
-        //      (council 2026-08-03).
-        // `exec node` replaces the shell; stdin/exit codes flow through
-        // unchanged (a fail_closed concern still denies). Global installs
-        // have no project-relative bundle path and take the CLI fallback
-        // below, which boots the same bundle in-process via the launcher
-        // fast path (src/cli/agent-config.ts).
+        // Only package-owned dispatchers are trusted (17.0.0 finding
+        // feaebdef733b, owner decision of 2026-10-21): the staged runtime,
+        // then an `agent-config` on PATH whose resolved path is absolute and
+        // outside the opened project. Nothing inside $CLAUDE_PROJECT_DIR runs
+        // — not a project npm install, not a source checkout's dist/, not a
+        // local wrapper — because a cloned repository can commit any of them
+        // and would then run as the user's global hook, ahead of the guards.
+        // `exec` replaces the shell; stdin and exit codes flow through, so a
+        // fail_closed concern still denies.
         //
-        // Hook-resilience fallback (road-to-opt-subagent-harvest P1.4):
-        // local binary → PATH fallback → exit 0 when neither exists (a hook
-        // must never error-spam the loop on an uninstalled repo).
-        // The local wrapper is taken only when the checkout has `node_modules`.
-        // `[ -x ]` alone is true in a fresh git worktree of a source checkout,
-        // where the wrapper is tracked but its dependencies are not: every
-        // event then died on ERR_MODULE_NOT_FOUND while a working global CLI
-        // sat on PATH. A wrapper that cannot resolve its deps is not a runtime,
-        // so the PATH fallback is the correct next candidate. Silent on
-        // the settings carrier; the plugin carrier says so (see
-        // _no_dispatcher_notice).
-        // The dispatcher's own exit code PROPAGATES when it runs — a
-        // fail_closed concern (e.g. block-no-verify) still denies; only the
-        // missing-binary case degrades open, which is the honest degrade
-        // (an absent dispatcher cannot evaluate anything).
+        // With no dispatcher, PreToolUse refuses (exit 2) on the settings
+        // carrier (finding bb6ab0f5f37d): every fail_closed guard would
+        // otherwise pass silently, which an upgrade swap was measured doing
+        // 487 times in 4,190 invocations. The plugin carrier keeps the warning
+        // and exit 0 — a plugin-only install has no package to enforce with,
+        // and the session-start context line names the guards that are off
+        // (council 2026-10-21). Every other event stays exit 0.
         // NOTE: the CLI fallback carries MANAGED_SIGNATURE — keep it, or
         // previously installed managed entries orphan on refresh.
         const dispatchArgs =
@@ -148,19 +135,11 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
         matrix[native] =
             'R="${EVENT4U_CONFIG_HOME:-$HOME/.event4u/agent-config}/runtime"; S="$R/current"; N=""; ' +
             '[ -f "$S/node" ] && read -r N < "$S/node"; ' +
-            'B=""; ' +
-            '[ -f "$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js" ] && ' +
-            'B="$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js"; ' +
-            '[ -z "$B" ] && [ -f "$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js" ] && ' +
-            '[ -f "$CLAUDE_PROJECT_DIR/src/scripts/hook_manifest.yaml" ] && ' +
-            'B="$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js"; ' +
-            'if [ -n "$B" ] && command -v node >/dev/null 2>&1; then ' +
-            `exec node "$B" ${dispatchArgs}; fi; ` +
             'if [ -n "$N" ] && [ -x "$N" ] && [ -f "$S/dist/hooks/dispatch.js" ]; then ' +
             `exec "$N" "$S/dist/hooks/dispatch.js" ${dispatchArgs}; fi; ` +
-            'BIN=agent-config; [ -x "$CLAUDE_PROJECT_DIR/agent-config" ] && ' +
-            '[ -d "$CLAUDE_PROJECT_DIR/node_modules" ] && BIN="$CLAUDE_PROJECT_DIR/agent-config"; ' +
-            `command -v "$BIN" >/dev/null 2>&1 || { ${_no_dispatcher_notice(native)}${_thinned_dead_carrier(native)}exit 0; }; ` +
+            'BIN=$(command -v agent-config 2>/dev/null); [ "${BIN#/}" = "$BIN" ] && BIN=""; ' +
+            '[ -n "$CLAUDE_PROJECT_DIR" ] && [ "${BIN#"$CLAUDE_PROJECT_DIR"/}" != "$BIN" ] && BIN=""; ' +
+            `[ -n "$BIN" ] || { ${_no_dispatcher_notice(native)}${_thinned_dead_carrier(native)}${_no_dispatcher_exit(native)} }; ` +
             `"$BIN" dispatch:hook ${dispatchArgs}`;
     }
     return matrix;
@@ -189,6 +168,22 @@ export const NO_DISPATCHER_CONTEXT =
 function _no_dispatcher_notice(native: string): string {
     const context = native === 'SessionStart' ? ` echo '${NO_DISPATCHER_CONTEXT}';` : '';
     return `[ -n "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_STDERR}' >&2;${context} }; `;
+}
+
+export const NO_DISPATCHER_REFUSAL =
+    'agent-config: no hook dispatcher reachable, so this tool call is refused: the fail_closed guards ' +
+    'block-no-verify, block-kernel-rule-writes and block-plumbing-writes cannot run. Repair in a terminal: ' +
+    'npm i -g @event4u/agent-config then npx -y @event4u/agent-config init. To drop the hooks instead: ' +
+    'agent-config uninstall, or delete the agent-config entries from ~/.claude/settings.json.';
+
+/**
+ * How the no-dispatcher branch ends. PreToolUse on the settings carrier
+ * refuses; the plugin carrier and every other event exit 0. Single-quoted
+ * literal like the notices: no `'`, no `;`.
+ */
+function _no_dispatcher_exit(native: string): string {
+    if (native !== 'PreToolUse') return 'exit 0;';
+    return `[ -z "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_REFUSAL}' >&2; exit 2; }; exit 0;`;
 }
 
 export const THINNED_DEAD_CARRIER_LINE =

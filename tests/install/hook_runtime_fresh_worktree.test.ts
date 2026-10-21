@@ -128,27 +128,29 @@ describe('a fresh source worktree with no node_modules', () => {
         expect(res.stderr).toContain('blocked by guard');
     });
 
-    it('two worktrees side by side each take their own route, from one shared runtime', () => {
+    it('two worktrees side by side take the same package-owned route, from one shared runtime', () => {
         // The hook command reads only CLAUDE_PROJECT_DIR and the shared,
         // read-only machine runtime, so parallel worktrees cannot pick each
-        // other's wrapper. One has its deps and runs locally; the other has none
-        // and falls through to the global CLI.
+        // other's wrapper — and since 17.0.0 neither picks its own either.
         const withDeps = path.join(tmp, 'worktree-with-deps');
         write(path.join(withDeps, 'agent-config'), '#!/bin/sh\necho "LOCAL-A $*"\n', 0o755);
         mkdirSync(path.join(withDeps, 'node_modules'), { recursive: true });
         const a = run('SessionStart', withDeps);
         const b = run('SessionStart', worktree);
-        expect(a.stdout).toContain('LOCAL-A dispatch:hook');
+        expect(a.stdout).toContain('GLOBAL-CLI dispatch:hook');
+        expect(a.stdout).not.toContain('LOCAL-A');
         expect(b.stdout).toContain('GLOBAL-CLI dispatch:hook');
         expect(b.stderr).not.toContain('ERR_MODULE_NOT_FOUND');
     });
 
-    it('still uses the local wrapper once the checkout HAS its node_modules', () => {
-        // The source runtime is not banned, only gated on its prerequisite — a
-        // maintainer who ran `npm ci` in the worktree gets the local version.
+    it('never uses the local wrapper, even once the checkout HAS its node_modules', () => {
+        // 17.0.0 finding feaebdef733b: a project-tree wrapper is code the
+        // repository controls, so it never runs as the user's hook. A maintainer
+        // testing hook changes reinstalls to stage them (owner decision 2026-10-21).
         mkdirSync(path.join(worktree, 'node_modules'), { recursive: true });
         write(path.join(worktree, 'agent-config'), "#!/bin/sh\necho \"LOCAL-WRAPPER $*\"\n", 0o755);
         const res = run('SessionStart');
-        expect(res.stdout).toContain('LOCAL-WRAPPER dispatch:hook');
+        expect(res.stdout).not.toContain('LOCAL-WRAPPER');
+        expect(res.stdout).toContain('GLOBAL-CLI dispatch:hook');
     });
 });

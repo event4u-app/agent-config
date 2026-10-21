@@ -29,7 +29,7 @@ type Group = { matcher?: string; hooks: Array<{ type: string; command: string }>
 /** Ten managed events, each command hand-patched with the hard-coded dispatcher. */
 function handPatched(native: string): Group {
     const original = MATRIX[native] as string;
-    return { hooks: [{ type: 'command', command: original.replace('B=""; ', `B=""; [ -f "${HARD_CODED}" ] && B="${HARD_CODED}"; `) }] };
+    return { hooks: [{ type: 'command', command: original.replace('N=""; ', `N=""; B="${HARD_CODED}"; `) }] };
 }
 
 /** Eleven foreign entries, some on events we also bind, some on events we do not. */

@@ -33,21 +33,13 @@ function expectedCommand(acEvent: string, native: string): string {
     return (
         'R="${EVENT4U_CONFIG_HOME:-$HOME/.event4u/agent-config}/runtime"; S="$R/current"; N=""; ' +
         '[ -f "$S/node" ] && read -r N < "$S/node"; ' +
-        'B=""; ' +
-        '[ -f "$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js" ] && ' +
-        'B="$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js"; ' +
-        '[ -z "$B" ] && [ -f "$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js" ] && ' +
-        '[ -f "$CLAUDE_PROJECT_DIR/src/scripts/hook_manifest.yaml" ] && ' +
-        'B="$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js"; ' +
-        'if [ -n "$B" ] && command -v node >/dev/null 2>&1; then ' +
-        `exec node "$B" ${args}; fi; ` +
         'if [ -n "$N" ] && [ -x "$N" ] && [ -f "$S/dist/hooks/dispatch.js" ]; then ' +
         `exec "$N" "$S/dist/hooks/dispatch.js" ${args}; fi; ` +
-        // The local wrapper is taken only when the checkout has node_modules: a
-        // fresh worktree's wrapper is tracked but cannot run (hook_runtime_fresh_worktree).
-        'BIN=agent-config; [ -x "$CLAUDE_PROJECT_DIR/agent-config" ] && ' +
-        '[ -d "$CLAUDE_PROJECT_DIR/node_modules" ] && BIN="$CLAUDE_PROJECT_DIR/agent-config"; ' +
-        `command -v "$BIN" >/dev/null 2>&1 || { [ -n "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_STDERR}' >&2;${
+        // Only an absolute agent-config outside the opened project is trusted
+        // (17.0.0 finding feaebdef733b); nothing in the project tree runs.
+        'BIN=$(command -v agent-config 2>/dev/null); [ "${BIN#/}" = "$BIN" ] && BIN=""; ' +
+        '[ -n "$CLAUDE_PROJECT_DIR" ] && [ "${BIN#"$CLAUDE_PROJECT_DIR"/}" != "$BIN" ] && BIN=""; ' +
+        `[ -n "$BIN" ] || { [ -n "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_STDERR}' >&2;${
             native === 'SessionStart' ? ` echo '${NO_DISPATCHER_CONTEXT}';` : ''
         } }; ${thinned}exit 0; }; ` +
         `"$BIN" dispatch:hook ${args}`
@@ -213,11 +205,17 @@ describe('claude_settings_hooks', () => {
 // unrelated consumer file that happens to sit at dist/hooks/dispatch.js
 // (the hook_manifest.yaml guard — council 2026-08-03). These run the real
 // generated bash line against staged workspaces.
-describe('generated hook command — bundle fast path + CLI fallback', () => {
+describe('generated hook command — package-owned dispatchers only', () => {
     let ws: string;
+    let project: string;
+    let globalBin: string;
 
     beforeEach(() => {
         ws = mkdtempSync(join(tmpdir(), 'hookcmd-'));
+        project = join(ws, 'project');
+        globalBin = join(ws, 'global-bin');
+        mkdirSync(project, { recursive: true });
+        mkdirSync(globalBin, { recursive: true });
     });
     afterEach(() => {
         rmSync(ws, { recursive: true, force: true });
@@ -227,22 +225,18 @@ describe('generated hook command — bundle fast path + CLI fallback', () => {
         const res = spawnSync('bash', ['-c', MATRIX.SessionStart], {
             input: '{}',
             encoding: 'utf-8',
-            env: { ...process.env, CLAUDE_PROJECT_DIR: ws },
+            // A controlled machine: no staged runtime, and PATH holds only the
+            // fixture CLI and the system dirs, so the real install never answers.
+            env: { PATH: `${globalBin}:/usr/bin:/bin`, HOME: ws, EVENT4U_CONFIG_HOME: join(ws, 'machine'), CLAUDE_PROJECT_DIR: project },
             timeout: 30000,
         });
         expect(res.error).toBeUndefined();
     }
 
-    function stageCliStub(): string {
-        const log = join(ws, 'cli-invoked.log');
-        writeFileSync(join(ws, 'agent-config'), `#!/usr/bin/env bash\necho "$@" > "${log}"\n`, {
-            mode: 0o755,
-        });
-        // A RUNNABLE local CLI: the hook command takes `./agent-config` only when
-        // the checkout has node_modules, because a fresh worktree's wrapper is
-        // tracked but cannot resolve its deps (hook_runtime_fresh_worktree). The
-        // assertions below are about the fallback's contract, unchanged.
-        mkdirSync(join(ws, 'node_modules'), { recursive: true });
+    function stageCliStub(dir: string, name: string): string {
+        const log = join(ws, `${name}.log`);
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, 'agent-config'), `#!/usr/bin/env bash\necho "$@" > "${log}"\n`, { mode: 0o755 });
         return log;
     }
 
@@ -256,8 +250,8 @@ describe('generated hook command — bundle fast path + CLI fallback', () => {
         return log;
     }
 
-    it('bundle absent → CLI fallback fires with the dispatch:hook contract', () => {
-        const cliLog = stageCliStub();
+    it('no staged runtime → the CLI on PATH fires with the dispatch:hook contract', () => {
+        const cliLog = stageCliStub(globalBin, 'global-cli');
         runCommand();
         expect(existsSync(cliLog)).toBe(true);
         const argv = readFileSync(cliLog, 'utf8');
@@ -266,31 +260,16 @@ describe('generated hook command — bundle fast path + CLI fallback', () => {
         expect(argv).toContain('--event session_start');
     });
 
-    it('project-install bundle present → exec node bundle, CLI never invoked', () => {
-        const cliLog = stageCliStub();
-        const bundleLog = stageBundleStub(
-            join(ws, 'node_modules', '@event4u', 'agent-config', 'dist', 'hooks'),
-        );
+    it('a project npm install, a source-checkout dist/ and a local wrapper never run (17.0.0 finding feaebdef733b)', () => {
+        const cliLog = stageCliStub(globalBin, 'global-cli');
+        const nmLog = stageBundleStub(join(project, 'node_modules', '@event4u', 'agent-config', 'dist', 'hooks'));
+        stageBundleStub(join(project, 'dist', 'hooks'));
+        mkdirSync(join(project, 'src', 'scripts'), { recursive: true });
+        writeFileSync(join(project, 'src', 'scripts', 'hook_manifest.yaml'), 'schema_version: 1\n');
+        const wrapperLog = stageCliStub(project, 'local-wrapper');
         runCommand();
-        expect(existsSync(bundleLog)).toBe(true);
-        expect(readFileSync(bundleLog, 'utf8')).toContain('--event session_start');
-        expect(existsSync(cliLog)).toBe(false);
-    });
-
-    it('source-checkout bundle needs the hook_manifest.yaml guard — an unrelated dist/hooks/dispatch.js is NOT executed', () => {
-        const cliLog = stageCliStub();
-        const bundleLog = stageBundleStub(join(ws, 'dist', 'hooks'));
-        runCommand();
-        // No src/scripts/hook_manifest.yaml next to it → guard refuses.
-        expect(existsSync(bundleLog)).toBe(false);
+        expect(existsSync(nmLog)).toBe(false);
+        expect(existsSync(wrapperLog)).toBe(false);
         expect(existsSync(cliLog)).toBe(true);
-
-        // With the guard satisfied (a real source checkout), the bundle runs.
-        rmSync(cliLog, { force: true });
-        mkdirSync(join(ws, 'src', 'scripts'), { recursive: true });
-        writeFileSync(join(ws, 'src', 'scripts', 'hook_manifest.yaml'), 'schema_version: 1\n');
-        runCommand();
-        expect(existsSync(bundleLog)).toBe(true);
-        expect(existsSync(cliLog)).toBe(false);
     });
 });
