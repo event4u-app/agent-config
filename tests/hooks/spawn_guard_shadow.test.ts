@@ -14,6 +14,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     CANDIDATES,
+    STOP_SCAN_BYTES,
+    classifySend,
     evaluateCandidates,
     processEnvelope,
 } from '../../src/scripts/hooks/spawn_guard_shadow_hook.js';
@@ -49,13 +51,15 @@ function plantOpen(ref: string, depth: number): void {
 }
 
 /** A finished leg as the ledger records it: a subagent_stop line for its ref. */
-function plantStopped(ref: string): void {
+const SESSION = 'sess-current';
+
+function plantStopped(ref: string, sessionId: string | null = SESSION, at: Date = new Date()): void {
     const dir = path.join(root, LEDGER_DIR);
     fs.mkdirSync(dir, { recursive: true });
-    const ts = new Date().toISOString();
+    const ts = at.toISOString();
     fs.appendFileSync(
         path.join(dir, `${ts.slice(0, 7)}.jsonl`),
-        `${JSON.stringify({ event: 'subagent_stop', ts, ref, session_id: null, agent_type: 'general-purpose' })}\n`,
+        `${JSON.stringify({ event: 'subagent_stop', ts, ref, session_id: sessionId, agent_type: 'general-purpose' })}\n`,
         'utf8',
     );
 }
@@ -112,12 +116,16 @@ function agentCall(subagentType: string): Record<string, unknown> {
     };
 }
 
-function sendMessageCall(to: string): Record<string, unknown> {
+function sendMessageCall(to: unknown, sessionId: string | null = SESSION): Record<string, unknown> {
     return {
         schema_version: 1,
         platform: 'claude',
         event: 'pre_tool_use',
-        payload: { tool_name: 'SendMessage', tool_input: { to, message: 'SECRET-MESSAGE-BODY' } },
+        payload: {
+            tool_name: 'SendMessage',
+            ...(sessionId === null ? {} : { session_id: sessionId }),
+            tool_input: { to, message: 'SECRET-MESSAGE-BODY' },
+        },
     };
 }
 
@@ -220,6 +228,60 @@ describe('spawn-guard-shadow — reuse verdict and resumes (cold-start 3.3)', ()
         expect(other!.resume_admission).toBe('unobserved');
     });
 
+    it('a stop recorded in another session never makes a send a resume', () => {
+        const id = 'a7dda5d30ffee4bb4';
+        plantStopped(refFor(id), 'sess-other');
+        plantStopped(refFor(id), null);
+        processEnvelope(sendMessageCall(id), root);
+        expect(shadowLines()[0]!.dispatch_kind).toBe('message_or_resume');
+    });
+
+    it('without a session id on the payload, nothing is called a resume', () => {
+        const id = 'a7dda5d30ffee4bb4';
+        plantStopped(refFor(id));
+        processEnvelope(sendMessageCall(id, null), root);
+        expect(shadowLines()[0]!.dispatch_kind).toBe('message_or_resume');
+    });
+
+    it('finds a same-session stop recorded in the previous month', () => {
+        const now = new Date('2026-11-01T00:00:05.000Z');
+        const id = 'a7dda5d30ffee4bb4';
+        plantStopped(refFor(id), SESSION, new Date('2026-10-31T23:59:50.000Z'));
+        expect(classifySend(root, id, SESSION, now)).toBe('resume');
+        // Two months back is outside the window and stays unplaced.
+        const old = 'abcdef0123456789a';
+        plantStopped(refFor(old), SESSION, new Date('2026-09-15T00:00:00.000Z'));
+        expect(classifySend(root, old, SESSION, now)).toBe('message_or_resume');
+    });
+
+    it('an open record wins over a matching stop', () => {
+        const id = 'a7dda5d30ffee4bb4';
+        plantStopped(refFor(id));
+        plantOpen(refFor(id), 1);
+        expect(classifySend(root, id, SESSION)).toBe('message_running');
+    });
+
+    it('reads only a bounded tail of each ledger file', () => {
+        const id = 'a7dda5d30ffee4bb4';
+        plantStopped(refFor(id));
+        // Bury the stop under more than the scan window of unrelated lines.
+        const dir = path.join(root, LEDGER_DIR);
+        const file = path.join(dir, `${new Date().toISOString().slice(0, 7)}.jsonl`);
+        const filler = `${JSON.stringify({ event: 'subagent_start', ref: 'x'.repeat(12), pad: 'p'.repeat(200) })}\n`;
+        fs.appendFileSync(file, filler.repeat(Math.ceil((STOP_SCAN_BYTES + 1024) / filler.length)), 'utf8');
+        expect(classifySend(root, id, SESSION)).toBe('message_or_resume');
+    });
+
+    it('malformed send input is recorded as unplaced and never throws', () => {
+        for (const to of [undefined, null, 42, '', { id: 'x' }]) {
+            expect(processEnvelope(sendMessageCall(to), root)).toBe(0);
+        }
+        expect(
+            processEnvelope({ schema_version: 1, platform: 'claude', event: 'pre_tool_use', payload: { tool_name: 'SendMessage', tool_input: 'nope' } }, root),
+        ).toBe(0);
+        expect(shadowLines().map((l) => l.dispatch_kind)).toEqual(Array(6).fill('message_or_resume'));
+    });
+
     it('keeps tool input off disk: no prompt, no message, no recipient — the register name is the only name', () => {
         const id = 'a7dda5d30ffee4bb4';
         plantStopped(refFor(id));
@@ -234,6 +296,7 @@ describe('spawn-guard-shadow — reuse verdict and resumes (cold-start 3.3)', ()
         expect(raw).not.toContain('recipient-name-xyz');
         expect(raw).not.toContain(id);
         expect(raw).not.toContain(refFor(id));
+        expect(raw).not.toContain(refFor('recipient-name-xyz'));
     });
 });
 

@@ -89,42 +89,74 @@ export const DISPATCH_TOOL_NAMES: ReadonlySet<string> = new Set(['Agent', 'Task'
 export const RESUME_TOOL_NAMES: ReadonlySet<string> = new Set(['SendMessage']);
 
 /**
- * `resume` — the recipient hashes to a ledger ref that has stopped and is not
- * open: a finished leg is re-entered, which starts a run.
+ * `resume` — the recipient hashes to a ledger ref that is not open and whose
+ * stop this same session recorded: a finished leg of this session is
+ * re-entered, which starts a run.
  * `message_running` — the ref is open: the message starts no run.
- * `message_or_resume` — the ledger cannot place the recipient (a name, a
- * teammate, an id from another estate). Recorded, never called a resume.
+ * `message_or_resume` — the ledger cannot place the recipient in this session
+ * (a name, a teammate, the lead, another session's leg, no session id, a stop
+ * older than the scan window). Recorded, never called a resume.
+ *
+ * The verdict describes the attempted send at `pre_tool_use`; whether the host
+ * then accepts it is not visible here.
  */
 export type SendKind = 'resume' | 'message_running' | 'message_or_resume';
 
-function stoppedInLedger(root: string, ref: string, now: Date): boolean {
-    const months = [now.toISOString().slice(0, 7)];
+/** Bytes read from the end of each monthly ledger file when looking for a stop. */
+export const STOP_SCAN_BYTES = 1024 * 1024;
+
+function tailOf(file: string): string {
+    let fd: number;
+    try {
+        fd = fs.openSync(file, 'r');
+    } catch {
+        return '';
+    }
+    try {
+        const size = fs.fstatSync(fd).size;
+        const length = Math.min(size, STOP_SCAN_BYTES);
+        const buf = Buffer.alloc(length);
+        fs.readSync(fd, buf, 0, length, size - length);
+        return buf.toString('utf8');
+    } finally {
+        fs.closeSync(fd);
+    }
+}
+
+function stoppedInSession(root: string, ref: string, sessionId: string, now: Date): boolean {
     const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
-    months.push(prev.toISOString().slice(0, 7));
-    const needle = `"ref":"${ref}"`;
-    for (const month of months) {
-        let text: string;
-        try {
-            text = fs.readFileSync(path.join(root, LEDGER_DIR, `${month}.jsonl`), 'utf8');
-        } catch {
-            continue;
-        }
-        for (const line of text.split('\n')) {
-            if (line.includes(needle) && line.includes('"event":"subagent_stop"')) return true;
+    for (const month of [now.toISOString().slice(0, 7), prev.toISOString().slice(0, 7)]) {
+        for (const line of tailOf(path.join(root, LEDGER_DIR, `${month}.jsonl`)).split('\n')) {
+            if (!line.includes(ref)) continue;
+            try {
+                const rec = JSON.parse(line) as Record<string, unknown>;
+                if (rec['event'] === 'subagent_stop' && rec['ref'] === ref && rec['session_id'] === sessionId) {
+                    return true;
+                }
+            } catch {
+                // The first line of a tail is usually cut; a torn line is no evidence.
+            }
         }
     }
     return false;
 }
 
 /**
- * Classify one send from its recipient alone. The recipient is hashed with the
- * ledger's own `refFor` and compared; neither it nor its ref is written.
+ * Classify one send from its recipient and the sending session. The recipient
+ * is hashed with the ledger's own `refFor` and compared; neither it nor its ref
+ * is written.
  */
-export function classifySend(root: string, recipient: unknown, now: Date = new Date()): SendKind {
+export function classifySend(
+    root: string,
+    recipient: unknown,
+    sessionId: string | null,
+    now: Date = new Date(),
+): SendKind {
     if (typeof recipient !== 'string' || recipient === '') return 'message_or_resume';
     const ref = refFor(recipient);
     if (readOpenRecords(root).has(ref)) return 'message_running';
-    return stoppedInLedger(root, ref, now) ? 'resume' : 'message_or_resume';
+    if (sessionId === null || sessionId === '') return 'message_or_resume';
+    return stoppedInSession(root, ref, sessionId, now) ? 'resume' : 'message_or_resume';
 }
 
 /**
@@ -223,7 +255,9 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string, deps:
         if (!isResume && !DISPATCH_TOOL_NAMES.has(toolName)) return EXIT_ALLOW;
         const platform = typeof envelope['platform'] === 'string' ? envelope['platform'] : null;
         const toolInput = isObject(payload['tool_input']) ? payload['tool_input'] : {};
-        const sendKind: SendKind | null = isResume ? classifySend(consumerRoot, toolInput['to']) : null;
+        const sessionRaw = payload['session_id'] ?? envelope['session_id'];
+        const sessionId = typeof sessionRaw === 'string' ? sessionRaw : null;
+        const sendKind: SendKind | null = isResume ? classifySend(consumerRoot, toolInput['to'], sessionId) : null;
         // Only the verdict's label and reason codes reach disk — never the tool input.
         const reuse = isResume
             ? null
