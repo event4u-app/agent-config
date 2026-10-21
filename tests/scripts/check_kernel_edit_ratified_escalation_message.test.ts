@@ -131,18 +131,34 @@ describe('escalationMessage — the shape of the one question', () => {
         expect(msg).toContain('needs-owner');
     });
 
-    it('bounds what candidate-controlled text can print, and says what it left out', () => {
-        const many = Array.from({ length: gate.ESCALATION_LIST_MAX + 10 }, (_, i) => `p/${i}.md`);
-        const long = 'v'.repeat(gate.ESCALATION_FIELD_MAX * 5);
+    it('holds records, seats and paths to ONE item budget, counting what it does not list', () => {
+        const seats = Object.fromEntries(
+            Array.from({ length: gate.ESCALATION_ITEM_MAX }, (_, i) => [`s${i}`, 'refused']),
+        );
+        const records = Array.from({ length: gate.ESCALATION_ITEM_MAX }, (_, i) => ({
+            path: `r${i}.md`,
+            verdict: 'refused',
+            seats,
+        }));
+        const paths = Array.from({ length: gate.ESCALATION_ITEM_MAX }, (_, i) => `p/${i}.md`);
+        const out = escalationMessage({ triggers: ['refused'], records, gatedPaths: paths });
+        const total = records.length * (1 + gate.ESCALATION_ITEM_MAX) + 1 + paths.length;
+        // heading block (blank, heading, advisory, one trigger) + budget + the count line + the ask
+        expect(out.length).toBe(4 + gate.ESCALATION_ITEM_MAX + 2);
+        expect(out.join('\n')).toContain(`… ${total - gate.ESCALATION_ITEM_MAX} more item(s) not listed`);
+        expect(out[1]).toBe(ESCALATION_HEADING);
+        expect(out.at(-1)).toContain('this gate does not know');
+    });
+
+    it('clips a field to its first code points before escaping it, and says how much', () => {
+        const long = '\u0007'.repeat(gate.ESCALATION_FIELD_MAX * 5);
         const out = escalationMessage({
             triggers: ['refused'],
             records: [{ path: 'r.md', verdict: long, seats: { openai: 'refused' } }],
-            gatedPaths: many,
+            gatedPaths: [KERNEL],
         });
-        expect(out.filter((l) => l.startsWith('    · ')).length).toBe(gate.ESCALATION_LIST_MAX);
-        expect(out.join('\n')).toContain('… and 10 more path(s)');
         const verdictLine = out.find((l) => l.includes('verdict:')) ?? '';
-        expect(verdictLine.length).toBeLessThan(gate.ESCALATION_FIELD_MAX + 100);
+        expect(verdictLine.split('\\u{7}').length - 1).toBe(gate.ESCALATION_FIELD_MAX);
         expect(verdictLine).toContain(`${gate.ESCALATION_FIELD_MAX * 4} more characters`);
     });
 
@@ -352,14 +368,15 @@ describe('the /pr:merge classifier routes every mechanism path needs-owner', () 
     });
 });
 
-describe('main --quiet — the question reaches the log of a quiet run', () => {
+describe('main — the question reaches the log that decides', () => {
     /**
-     * The local `task` pipeline runs this gate with `--quiet`, which keeps a passing run to nothing.
-     * A passing change to the mechanism exits 0 and is the case the question
-     * is for, so the block has to be printed through the CLI, not only placed
-     * in `GateResult.lines`. The assertions read what `main` WROTE.
+     * The GitHub workflow runs this gate WITHOUT `--quiet`, so that is the log
+     * the question must reach, and these cases read what `main` WROTE rather
+     * than what `evaluate` returned. `--quiet` keeps its contract — a passing
+     * run prints no report — for the local `task` pipeline and any other
+     * caller that relies on it.
      */
-    function runMain(files: readonly string[]): { code: number; out: string } {
+    function runMain(files: readonly string[], quiet: boolean): { code: number; out: string } {
         const writes: string[] = [];
         const spy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
             writes.push(String(chunk));
@@ -369,7 +386,7 @@ describe('main --quiet — the question reaches the log of a quiet run', () => {
         try {
             const head = commitAll(root, 'change');
             const code = gate.main([
-                '--quiet',
+                ...(quiet ? ['--quiet'] : []),
                 '--root',
                 root,
                 '--rev',
@@ -391,19 +408,27 @@ describe('main --quiet — the question reaches the log of a quiet run', () => {
         commitAll(root, 'base');
     });
 
-    it('a passing record over the mechanism prints the question under --quiet, exit 0', () => {
+    it('a passing record over the mechanism prints the question, exit 0, as the workflow runs it', () => {
         const rel = writeRecord('q.md', GOOD, BOTH_RATIFIED, [SELF_PATH]);
-        const r = runMain([SELF_PATH, rel]);
+        const r = runMain([SELF_PATH, rel], false);
         expect(r.code).toBe(0);
         expect(r.out).toContain(ESCALATION_HEADING);
         expect(r.out).toContain('the reviewer itself');
     });
 
-    it('polarity: a passing record over an ordinary gated surface stays quiet', () => {
-        const rel = writeRecord('qk.md', GOOD, BOTH_RATIFIED);
-        const r = runMain([KERNEL, rel]);
+    it('--quiet keeps its contract: a passing run prints no report, the question included', () => {
+        const rel = writeRecord('qq.md', GOOD, BOTH_RATIFIED, [SELF_PATH]);
+        const r = runMain([SELF_PATH, rel], true);
         expect(r.code).toBe(0);
         expect(r.out).not.toContain(ESCALATION_HEADING);
         expect(r.out).not.toContain('ratified by');
+    });
+
+    it('polarity: a passing record over an ordinary gated surface prints no question', () => {
+        const rel = writeRecord('qk.md', GOOD, BOTH_RATIFIED);
+        const r = runMain([KERNEL, rel], false);
+        expect(r.code).toBe(0);
+        expect(r.out).toContain('ratified by');
+        expect(r.out).not.toContain(ESCALATION_HEADING);
     });
 });

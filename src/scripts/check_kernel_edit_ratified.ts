@@ -541,24 +541,22 @@ const ESCALATION_ADVISORY =
     '  advisory: this exit code does not carry the decision, and no CI check enforces it — ' +
     'the merge is the owner\'s (ADR-281 § 5); /pr:merge routes these paths needs-owner.';
 
-/** Output bounds: record text is candidate-controlled, and a flooded log hides the question. */
+/**
+ * Output bounds. Record text is candidate-controlled and a flooded log hides the
+ * question, so each field is clipped to its first code points BEFORE it is
+ * escaped, and records, dissenting seats and gated paths share ONE item budget
+ * for the whole block — nested caps would multiply. Whatever is not listed is
+ * counted in the output and stays in full in the record and the diff.
+ */
 export const ESCALATION_FIELD_MAX = 200;
-export const ESCALATION_LIST_MAX = 50;
+export const ESCALATION_ITEM_MAX = 50;
 
-/** A field as printed: escaped, then clipped, with the clip said rather than hidden. */
+/** A field as printed: clipped, then escaped, with the clip said rather than hidden. */
 function field(s: string): string {
-    const out = printable(s);
-    return out.length > ESCALATION_FIELD_MAX
-        ? `${out.slice(0, ESCALATION_FIELD_MAX)}… (${out.length - ESCALATION_FIELD_MAX} more characters)`
-        : out;
-}
-
-/** The first `ESCALATION_LIST_MAX` items, and a count of the rest. */
-function bounded<T>(items: readonly T[]): { shown: readonly T[]; omitted: number } {
-    return {
-        shown: items.slice(0, ESCALATION_LIST_MAX),
-        omitted: Math.max(0, items.length - ESCALATION_LIST_MAX),
-    };
+    const points = Array.from(s);
+    const head = printable(points.slice(0, ESCALATION_FIELD_MAX).join(''));
+    const rest = points.length - ESCALATION_FIELD_MAX;
+    return rest > 0 ? `${head}… (${rest} more characters)` : head;
 }
 
 /**
@@ -621,35 +619,36 @@ export function escalationMessage(input: {
     for (const t of input.triggers) {
         out.push(`  · ${TRIGGER_TEXT[t]}`);
     }
-    const records = bounded(input.records);
-    for (const r of records.shown) {
-        const verdict = field(r.verdict ?? 'unreadable');
-        out.push(`  record ${field(r.path)} — verdict: ${verdict}`);
-        const dissent = bounded(
-            Object.entries(r.seats).filter(([, v]) => v !== 'ratified' && v !== 'confirmed-non-expanding'),
+    let budget = ESCALATION_ITEM_MAX;
+    let unlisted = 0;
+    const item = (line: string): void => {
+        if (budget > 0) {
+            out.push(line);
+            budget -= 1;
+        } else {
+            unlisted += 1;
+        }
+    };
+    for (const r of input.records) {
+        item(`  record ${field(r.path)} — verdict: ${field(r.verdict ?? 'unreadable')}`);
+        const dissent = Object.entries(r.seats).filter(
+            ([, v]) => v !== 'ratified' && v !== 'confirmed-non-expanding',
         );
-        out.push(
-            dissent.shown.length === 0
-                ? '    dissent: none recorded'
-                : `    dissent: ${dissent.shown.map(([p, v]) => field(`${p}: ${v}`)).join(', ')}` +
-                      (dissent.omitted > 0 ? ` … and ${dissent.omitted} more` : ''),
-        );
+        if (dissent.length === 0) {
+            item('    dissent: none recorded');
+        }
+        for (const [p, v] of dissent) {
+            item(`    dissent: ${field(`${p}: ${v}`)}`);
+        }
     }
-    if (records.omitted > 0) {
-        out.push(`  … and ${records.omitted} more record(s)`);
+    item('  the exact change (gated paths):');
+    for (const p of input.gatedPaths) {
+        item(`    · ${field(p)}`);
     }
-    out.push('  the exact change (gated paths):');
-    const paths = bounded(input.gatedPaths);
-    for (const p of paths.shown) {
-        out.push(`    · ${field(p)}`);
+    if (unlisted > 0) {
+        out.push(`  … ${unlisted} more item(s) not listed here; the records and the diff carry them in full`);
     }
-    if (paths.omitted > 0) {
-        out.push(`    … and ${paths.omitted} more path(s)`);
-    }
-    const where =
-        records.shown.length > 0
-            ? records.shown.map((r) => field(r.path)).join(', ')
-            : 'the record';
+    const where = input.records.length === 1 ? field(input.records[0]?.path ?? '') : 'the records';
     out.push(
         `  this gate does not know the expected gain, the risk, or the rollback — ` +
             `state each in ${where} and the pull request, then ask the user once.`,
@@ -662,13 +661,6 @@ export interface GateResult {
     lines: string[];
     /** Number of changed paths inspected — the honest `scanned:` count. */
     scanned: number;
-    /**
-     * True when `lines` carries the user's question. `--quiet` hides a passing
-     * run's lines, and the local `task` pipeline passes `--quiet`
-     * (`taskfiles/ci-fast.yml`, `QUIET_FLAG`), so without this a passing change
-     * to the mechanism — the case the question exists for — printed nothing there.
-     */
-    escalated?: boolean;
 }
 
 export function evaluate(
@@ -909,7 +901,7 @@ export function evaluate(
         }
         lines.push(...escalation);
         close(false);
-        return { exitCode: 1, lines, scanned, escalated: escalation.length > 0 };
+        return { exitCode: 1, lines, scanned };
     }
 
     if (failures.length > 0) {
@@ -921,7 +913,7 @@ export function evaluate(
     }
     lines.push(...escalation);
     close(true);
-    return { exitCode: 0, lines, scanned, escalated: escalation.length > 0 };
+    return { exitCode: 0, lines, scanned };
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
@@ -1024,10 +1016,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             'real state, and there is then no kernel rule, governance hook, plumbing source or ' +
             'mechanism file to ratify — the gate has read everything there was.',
     });
-    // `--quiet` keeps a passing run to its verdict line, except when the run
-    // carries the user's question: a passing change to the mechanism exits 0
-    // and is exactly the case that question is for.
-    if (!quiet || result.exitCode !== 0 || result.escalated === true) {
+    // `--quiet` keeps its contract — a passing run prints no report — so a
+    // caller that relies on it is unchanged. The question reaches the log that
+    // decides: the GitHub workflow runs this gate without `--quiet`.
+    if (!quiet || result.exitCode !== 0) {
         for (const l of result.lines) {
             process.stdout.write(`${l}\n`);
         }
