@@ -141,7 +141,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       core path ≤ 15 KB; branches (conflicts, council, red CI, archive) move to
       references loaded on that branch.
       verify: core sizes in a ratchet; the run-loop fixtures pass unchanged.
-- [ ] **3.2 Steps ≤ 150 words, Done is one line.** Evidence goes to the commit
+- [x] **3.2 Steps ≤ 150 words, Done is one line.** Done 2026-10-21: folded into `lint_roadmap_complexity` via `_lib/roadmap_step_size.ts`; 93 of today's steps held in `roadmap-step-size-baseline.json` (shrink-only); template rule 29; a planted 400-word step fails, today's tree passes, raising the cap reds 2 tests. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/roadmap-step-size-baseline.json --> Evidence goes to the commit
       and, for R2/R3, the artefact. A lint ratchet holds today's oversized steps
       and refuses new ones.
       verify: the lint fails a planted 400-word step and passes today's tree.
