@@ -330,6 +330,9 @@ describe('MERGEABLE_KEYS', () => {
             // ADR-271: `design-fidelity.md` tells the reader to resolve this
             // key through the cascade, and the cascade then filtered it out.
             'design.fidelity_mode',
+            // ADR-292: the retro's one switch ships `true`, so `false` is the only
+            // value worth writing, and it must hold from the user-global file.
+            'retro.enabled',
         ]);
     });
 

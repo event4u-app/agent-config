@@ -14,7 +14,7 @@
  * concerns and reduces exit codes, this module reads the result and decides
  * what the host is told about permission.
  */
-import { isCategoryA, type ToolInput } from "./category_a.js";
+import { categoryAVerdict, type ToolInput } from "./category_a.js";
 import {
   composePermissionDecision,
   type PermissionDecision,
@@ -104,13 +104,13 @@ export function _permission_for(
   if (final_rc !== EXIT_ALLOW) return null;
   if (composePermissionDecision(verdicts) !== "allow") return null;
   const tool_name = _payload_tool_name(envelope);
-  if (!isCategoryA(tool_name, _payload_tool_input(envelope), _working_tree_root(envelope))) {
-    return null;
-  }
+  const verdict = categoryAVerdict(tool_name, _payload_tool_input(envelope), _working_tree_root(envelope));
+  if (!verdict.categoryA) return null;
+  // The reason may only name a check that ran for this call: a bare `pwd`
+  // had no path argument to confine, so it must not claim it was confined.
+  const where = verdict.confined ? " inside the working tree" : ", no path argument to confine";
   return {
     decision: "allow",
-    reason:
-      `agent-config: category-A ${tool_name} inside the working tree — ` +
-      `no concern gates it and none asked to.`,
+    reason: `agent-config: category-A ${tool_name}${where} — no concern gates it and none asked to.`,
   };
 }

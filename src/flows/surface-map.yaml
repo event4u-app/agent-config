@@ -35,7 +35,7 @@ platform_surfaces: [product, agent-admin, session, media, marketing, fun]
 commands:
   discovery:
     - analyze
-    - analyze/repo
+    - analyze/reference
     - analyze/roadmap-repos
     - analyze/inbox
     - analyze/conformance
@@ -191,6 +191,7 @@ commands:
     - memory/mine-session
     - memory/promote
     - memory/propose
+    - retro
     - module
     - module/explore
     - optimize

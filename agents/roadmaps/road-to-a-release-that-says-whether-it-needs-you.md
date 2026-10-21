@@ -86,6 +86,17 @@ output. It is the classifier and the data behind it.
       option (a). The rule exists as the pure, uncalled `impact_bump` in
       `src/scripts/_lib/impact_bump.ts` so 2.2 could score it; wiring it into
       `infer_bump` is the owner-reserved part.
+      Still open (2026-10-20), and the reason has changed. The council's
+      evidence precondition is discharged — see the blocker — so the step is
+      no longer waiting on a measurement. It waits on the owner alone: binding
+      the trailer to the version number changes a public compatibility
+      commitment, which `decision-revisit-gate`'s reserved set routes to the
+      owner whoever holds the pen. The second half of the step also acquired a
+      specification gap the measurement found: `CONTRIBUTING.md:331`'s major
+      list names rules and skills and omits **commands**, and 15.0.0's break
+      was a command removal. Wiring the surface clause as written would leave
+      that shape uncovered, so the list is edited in the same change as the
+      wiring or the clause ships with a known hole.
 - [x] **2.2 Replay the real history.** Score 10.0.0 → 16.0.0 through the new
       rule against the recorded rows.
       verify: 13.0.0, 14.0.0 and 16.0.0 come out **minor**; 12.0.0 and 15.0.0
@@ -248,13 +259,48 @@ output. It is the classifier and the data behind it.
   only after the frozen classifier is scored on a pre-registered window it was
   not written on, on both axes, with zero false negatives on BREAKING. No owner
   question is put until that measurement exists.
+  **2026-10-20, the precondition is discharged.**
+  `agents/evidence/analysis/impact-bump-out-of-sample-20261020.md` carries a
+  pre-registered protocol committed before any span was read, and the result
+  in the commit after it. Window: the seven majors 2.0.0 → 9.0.0 the rule was
+  not written on (4.0.0 excluded in advance — the remote carries no `4.0.0`
+  tag, so its span has no lower bound). Both axes: the recorded impact, and a
+  new `classify_surfaces` (`src/scripts/_lib/major_surface.ts`) that reads the
+  surface axis mechanically from each span's diff, which 2.2 could not supply.
+  **Zero false negatives on BREAKING, 0 of 7 out-of-sample and 0 of 14 over
+  both windows.** The rule keeps 6 of 7 early majors and 4 of 7 recent ones,
+  which refutes the live reading of 2.2 — that its 5-of-7 demotion was the
+  rule's bias rather than the history's. 13.0.0, 14.0.0 and 16.0.0 are still
+  minor with the surface axis live, so 2.2's headline survives the clause it
+  could not test.
+  **One figure in this paragraph was wrong when first committed and the
+  correction is the most decision-relevant line here.** The first run reported
+  the surface clause as inert in 14 of 14 cases; an independent R2 review found
+  the detector blind (its settings-template path was anchored at a root the
+  file left in 6.0.0), and the repaired run has the clause **decide** 10.0.0
+  and 11.0.0. In both, the removed keys are real and each row's own prose
+  records the migration as **automatic**. So `CONTRIBUTING.md:331` as written
+  says a settings key removed with an automatic migration is a major — a
+  question for the owner under (a), not an implementation detail.
+  Limits recorded rather than argued away: the impact axis stays a consistency
+  check in both windows, because no historical release carries an
+  author-written trailer; two decided cases are too few to call the surface
+  clause accurate; `CONTRIBUTING.md:331` omits commands, which is what 15.0.0
+  removed; and this measurement was caught wrong by review rather than by its
+  own controls, which is evidence about the controls. Whether it clears the bar
+  the council set is the council's reading, not this roadmap's. The owner
+  question on (a) is now unblocked on evidence and unasked.
 - **Owner:** repository owner, **for (a) alone.**
 - **Blocks:** step 2.1 and the parts of Phase 2 downstream of it. **Corrected
   2026-10-16:** this used to read "Phase 2 and everything downstream". Steps 2.2
   and 2.3 are not blocked — see the contradiction resolved under
   `What to do` — and Phases 1, 3 and 4 were already additive.
-- **What to do:** **(b) now, decided by council; (a) is the owner's and waits on
-  2.2's result.** The trailer is recorded and published as **explicitly
+- **What to do:** **(b) now, decided by council; (a) is the owner's.**
+  **Superseded 2026-10-20:** this field used to end "and waits on 2.2's
+  result", which was already stale on 2026-10-19 (the council replaced that
+  precondition with an out-of-sample score) and is stale again now that the
+  score exists. (a) waits on nothing but the owner. The trailer is recorded
+  and published as **explicitly
   experimental, non-normative metadata**; the bump rule at `release.ts:463` is
   untouched. Superseded alternatives: (a) the trailer plus the new bump rule —
   owner-reserved, not refused; (c) reject both — declined by both seats.
@@ -326,15 +372,16 @@ direct check named in the revisit column.
 - It adds no setting. `update.mode` belongs to the sibling that acts.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-18 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-21 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A release carrying a real consumer action is trailered `none` and ships as a patch | product | The classification moves from a mechanical rule to an author's judgement, and a wrong judgement now downgrades rather than upgrades. | 1.3 refuses an untrailered breaking subject at the one point the author is present; 2.2's replay is scored against seven real releases before the rule governs anything; (b) in the blocker keeps the old rule while the trailer is measured. | Phase 2 — The bump follows the impact, not the punctuation |
+| 1 | A release carrying a real consumer action is trailered `none` and ships as a patch | product | The classification moves from a mechanical rule to an author's judgement, and a wrong judgement now downgrades rather than upgrades. | 1.3 refuses an untrailered breaking subject at the one point the author is present; 2.2's replay is scored against seven real releases before the rule governs anything, and the 2026-10-20 out-of-sample run adds seven more it was not written on — zero false negatives on BREAKING across all fourteen; (b) in the blocker keeps the old rule while the trailer is measured. | Phase 2 — The bump follows the impact, not the punctuation |
 | 2 | The impact map is not reachable in the existing one request per 24 h | implementation | The classifier needs a second request, which the probe budget may not have. | 3.2 is a spike whose outcome is recorded before anything depends on it; the fallback is costed, not assumed. | Phase 3 — Publish the map, and read versions correctly |
 | 3 | The new comparator changes an observable output | implementation | `_is_newer` feeds the banner; a different answer changes what users see. | 4.3 asserts byte-identical output on existing fixtures; the new comparator is used for policy decisions only until something consumes it. | Phase 3 — Publish the map, and read versions correctly |
 | 4 | The 40-case matrix is written by the same hand as the rules | implementation | A self-written matrix covers the paths its author thought of. | The five no-action majors and the two action majors are taken from the recorded history rather than invented, so at least seven cases are adversarial by origin. | Phase 4 — One pure classifier, no behaviour change |
 | 5 | The backfill re-judges history instead of reading it | implementation | A backfilled column that disagrees with the Migration prose makes the replay score itself. | 2.3 takes each value from the row's existing prose; a row whose prose does not decide gets `notice`, named in the diff. | Phase 2 — The bump follows the impact, not the punctuation |
+| 6 | A path-anchored surface detector goes silently blind and the measurement reports inertness rather than blindness | implementation | Registered 2026-10-21 because it already happened: `SETTINGS_KEY_FILES` was anchored at `^config/`, the settings template moved to `src/config/` in the 6.0.0 span, and the settings surface therefore matched nothing across the entire scored window. The first run read that as "the clause changed no verdict in 14 of 14" — a clean, plausible, wrong result. A blind detector and an inert clause are indistinguishable from the output alone, and the error pointed at the comfortable answer. | Every surface now carries a positive control pinned to a named span as well as a negative one, which is the control the first run was missing; the repaired run has the clause decide 10.0.0 and 11.0.0. The structural fix is not available here: nothing in this branch consumes the detector, so a path that stops matching cannot fail a test. Any wiring of the surface clause under blocker option (a) must anchor the settings path on the real location and assert the positive control, or it ships this risk live. | Phase 2 — The bump follows the impact, not the punctuation |
 
 ## Acceptance Criteria
 
@@ -363,6 +410,43 @@ direct check named in the revisit column.
 - [ ] **AC-8** `task ci` green.
       (Closes with the PR that closes this file: the remote pipeline is the
       authoritative run, and a green it has not yet reported is not evidence.)
+      **Ticked and un-ticked again on 2026-10-21, and the reason is worth more
+      than the box.** This session checked it against "this PR's final
+      pipeline run", i.e. against a run that did not exist — while the only
+      number the bullet recorded was a **red**. The R2 round-2 reviewer caught
+      it (finding 6) and is right: the bullet's own standard is that a green
+      the pipeline has not reported is not evidence, and a promise is not a
+      run. It stays `[ ]` until a green exists, and whoever ticks it names the
+      head that run observed.
+      **The reading on the way there is recorded rather than absorbed.**
+      Head `2e05048b7` read `stop` p95 272 ms against the
+      `any_hook_event` cap of 250 in `src/config/hook-latency-budget.json`.
+      It is a runner-speed reading, not a regression: `main` at `fba00aabf`
+      carries byte-identical hook code and read 182 ms, and the control
+      (`node -e 0`, none of this tree's code) moved 20 → 27 ms on the same
+      run while every slot moved 35–46 % with it. Nothing in this branch is
+      in the hook bundle's import closure — `major_surface.ts` is imported
+      only by its own test. The cap is **not** touched: that file is
+      pre-registered and owner-owned, and its own text calls raising a number
+      without a measured distribution beside it the config-bending it exists
+      to make visible.
+      **Re-measured, and the re-measurement is the finding.** Head
+      `e3a3b0ef9` passed at `stop` p95 **249 ms against the 250 ms cap** — a
+      one-millisecond margin, with the control at 29 ms. Three readings of
+      byte-identical hook code now exist: 182 ms on `main`'s runner (control
+      21), 249 ms (control 29) and 272 ms (control 31). The slot tracks the
+      control, so the gate's verdict is decided by which runner the job draws
+      and the pass was as close to the cap as the failure was far from it.
+      That is no longer "one reading on a slow runner": it is the shape
+      `pre_tool_use_cap_derivation` names as a false-positive generator by
+      construction — a threshold sitting **inside** the legitimate
+      distribution — reached by `stop` growing into the tallest slot while
+      `any_hook_event` still carries the cap set when `pre_tool_use` was.
+      It is left for the owner rather than acted on, because that block also
+      says raising the number without a measured distribution beside it is
+      the config-bending it exists to make visible. These three readings are
+      the start of that distribution and are recorded here for whoever
+      derives it.
 
 ## Provenance
 

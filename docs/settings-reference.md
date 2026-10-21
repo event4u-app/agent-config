@@ -268,6 +268,12 @@ explanation lives now that the file no longer carries it as comments.
 |---|---|---|---|---|---|
 | `reasoning.enabled` | C | boolean | `true` |  | Master switch for the Reasoning Discipline Protocol (RDP). false = the whole layer is inert (zero overhead). |
 
+## retro
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `retro.enabled` | C | boolean | `true` |  | Automatic retro after merged work (ADR-292, docs/contracts/retro-v1.md). true (default, owner directive 2026-10-12) = a merged PR and the first session of a new local day enqueue finished work; a deterministic triage picks what is worth one learning, and nothing behavior-changing is applied without a person. The one network read is the daily probe asking GitHub, through your own gh login, whether a pushed PR merged (repository and PR number only, three-second budget). false = no automatic path runs — no merge enqueue, no forge-merge marker, no daily probe and no network read; an explicit /retro still runs on request. Class C: an agent cannot set it; it cascades from the user-global file. |
+
 ## roadmap
 
 | Key | Class | Type | Default | Allowed values | What it does |
@@ -292,7 +298,7 @@ explanation lives now that the file no longer carries it as comments.
 | `subagents.adversarial_council` | C | string | `"off"` | `off` · `ask` · `on` | Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only — a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed. |
 | `subagents.implementer_model` | C | string | `""` |  | Override the model the orchestrator dispatches to subagents that write code (e.g. claude-sonnet-4, gpt-5). Empty (default) = inherit the session's primary model — cheapest and usually right. |
 | `subagents.judge_model` | C | string | `""` |  | Override the model used for review / judge subagents that critique implementer output. Empty (default) = one tier above the implementer model — picks up nuance the implementer missed. |
-| `subagents.max_parallel` | C | integer | `3` |  | Limit on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. On Claude Code the installer also writes it into CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS, the host cap on concurrent new spawns; whether that cap also bounds a resumed worker is unobserved. Raise for faster fan-out, lower if you hit rate limits or want lower token spend. |
+| `subagents.max_parallel` | C | integer | `3` |  | Limit on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. On Claude Code the installer also writes it into CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS, the host cap on concurrent new spawns. That cap does not bound a resumed worker: on Claude Code 2.1.306 a resume was admitted past a cap of 1, so a resume is neither bounded by the host nor counted by any package code yet. Raise for faster fan-out, lower if you hit rate limits or want lower token spend. |
 | `subagents.model_ceiling` | C | string | `""` |  | Session-wide model CEILING for subagents (spend cap). Empty (default) = no ceiling. When set, suite-owned CLI spawn wrappers export CLAUDE_CODE_SUBAGENT_MODEL to the sessions they launch. Class C: a human sets it; the agent never writes or infers one. |
 | `subagents.model_map.high` | C | string | `""` |  | Model alias for high-tier sub-tasks. Empty = the tier runtime default. |
 | `subagents.model_map.lite` | C | string | `""` |  | Model alias for lite-tier sub-tasks. Empty = the tier runtime default. |

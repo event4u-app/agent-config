@@ -13,9 +13,10 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-hard-floor-the-shell-cannot-talk-past | active | ready | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
 | road-to-a-release-that-says-whether-it-needs-you | active | ready | This package's version number carries consumer impact, so "install it when it is safe, ask when it matters" is a … |
 | road-to-a-retro-the-merge-runs | active | ready | After every merged pull request, and on the first session of every new day, the package examines finished work that … |
+| road-to-a-review-that-ends | active | ready | A completion review runs at most two rounds — round 1 over the scope, round 2 over the fix delta … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
+| road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
 | road-to-agent-throughput-recovery | active | ready | A night run carries more finished, merged work, and the reason it stopped is visible in one reading. |
-| road-to-an-analysis-family-that-deepens-itself | active | ready | One engine behind four commands. |
 | road-to-an-installed-layer-that-is-thinned | active | ready | The layer a Claude install writes under `~/.claude/rules` is the thinned one, first as an opt-in and then as the … |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
 | road-to-authority-routing-mechanism | active | ready | A passing authorisation record always means the authority that produced it was the authority entitled to produce it: three authorities … |

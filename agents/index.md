@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **750 artefacts** in this package.
+Maintainer-facing index of all **751 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -439,7 +439,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (207)
+## Commands (208)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -470,8 +470,8 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`analyze-postmortem`](../src/domains/analysis-workbench/analyze/postmortem/command.md) | cluster: analyze | Blame-free post-mortem after a resolved incident — consume the incident-commander skeleton, derive root cause, write corrective actions, draft an incident-learnings memory candidate. |
 | command | [`analyze-pr`](../src/domains/analysis-workbench/analyze/pr/command.md) | cluster: analyze | Run the analysis family's loops and councils on an existing pull request — a read-only verdict by default, `--optimize` to push tested fixes to a writable PR branch. |
 | command | [`analyze-premortem`](../src/domains/analysis-workbench/analyze/premortem/command.md) | cluster: analyze | Forward-looking imagined-failure analysis before committing to a heavy or irreversible plan — enumerate failure stories, score each mode, derive early-warning signals and guardrails. |
-| command | [`analyze-repo`](../src/domains/analysis-workbench/analyze/repo/command.md) | cluster: analyze | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
-| command | [`analyze-roadmap-repos`](../src/domains/analysis-workbench/analyze/roadmap-repos/command.md) | cluster: analyze | Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-repo, one subagent at a time, without producing one roadmap per repository. |
+| command | [`analyze-reference`](../src/domains/analysis-workbench/analyze/reference/command.md) | cluster: analyze | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
+| command | [`analyze-roadmap-repos`](../src/domains/analysis-workbench/analyze/roadmap-repos/command.md) | cluster: analyze | Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-reference, one subagent at a time, without producing one roadmap per repository. |
 | command | [`brand`](../src/domains/brand/brand/command.md) | cluster: brand | Brand-as-UX orchestrator — strategy, identity, tokens, review, voice. Routes to the brand-grounding skills that constrain the design layer. |
 | command | [`brand-identity`](../src/domains/brand/brand/identity/command.md) | cluster: brand | Define the brand identity — logo direction, colour story, type story, imagery direction — and the token constraints downstream generation consumes. |
 | command | [`brand-review`](../src/domains/brand/brand/review/command.md) | cluster: brand | Audit emitted UI, copy, and assets against the active brand tokens and voice profile — flag any value not traceable to a brand token or voice rule. |
@@ -595,6 +595,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`research`](../src/domains/product-discovery/research/command.md) | cluster: research | Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans. |
 | command | [`research-deep`](../src/domains/product-discovery/research/deep/command.md) | cluster: research | Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths. |
 | command | [`research-report`](../src/domains/product-discovery/research/report/command.md) | cluster: research | Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime. |
+| command | [`retro`](../src/domains/meta/retro/command.md) | cluster: retro | Examine a merged PR or finished session and keep at most one durable learning |
 | command | [`review`](../src/domains/engineering-base/review/command.md) | cluster: review | Review orchestrator — routes to changes (seven-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns) |
 | command | [`review-changes`](../src/domains/engineering-base/review/changes/command.md) | cluster: review | Self-review local changes before creating a PR — dispatches to seven specialized judges (bug, security, tests, quality, architecture, spec, overbuild) and consolidates verdicts |
 | command | [`review-routing`](../src/domains/engineering-base/review/routing/command.md) | cluster: review | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |

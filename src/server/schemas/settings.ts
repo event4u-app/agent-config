@@ -348,7 +348,7 @@ export const settingsSchema = z.object({
             'Session-wide model CEILING for subagents (spend cap). Empty (default) = no ceiling. When set, suite-owned CLI spawn wrappers export CLAUDE_CODE_SUBAGENT_MODEL to the sessions they launch. Class C: a human sets it; the agent never writes or infers one.',
         ),
         max_parallel: z.number().int().min(1).max(64).default(3).describe(
-            'Limit on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. On Claude Code the installer also writes it into CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS, the host cap on concurrent new spawns; whether that cap also bounds a resumed worker is unobserved. Raise for faster fan-out, lower if you hit rate limits or want lower token spend.',
+            'Limit on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. On Claude Code the installer also writes it into CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS, the host cap on concurrent new spawns. That cap does not bound a resumed worker: on Claude Code 2.1.306 a resume was admitted past a cap of 1, so a resume is neither bounded by the host nor counted by any package code yet. Raise for faster fan-out, lower if you hit rate limits or want lower token spend.',
         ),
         adversarial_council: z.enum(['off', 'ask', 'on']).default('off').describe(
             'Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only — a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed.',
@@ -415,6 +415,11 @@ export const settingsSchema = z.object({
             'Deterministic run-checkpoint production at session end (road-to-continuity-writer-activation Phase 1.4). on (default) = a session above the recycle threshold and inside a running roadmap contract leaves agents/runtime/state/checkpoints/<run>.json, so a killed run resumes from a derived checkpoint rather than from bookkeeping. off = no checkpoint; continuity writing, the recycle advisory and the context-fill surface are unaffected. Default ON because it is the behavior the tree already had — the switch exists to make the three session-end handlers independently disableable, not to change what ships.',
         ),
     }),
+    retro: z.object({
+        enabled: z.boolean().default(true).describe(
+            'Automatic retro after merged work (ADR-292, docs/contracts/retro-v1.md). true (default, owner directive 2026-10-12) = a merged PR and the first session of a new local day enqueue finished work; a deterministic triage picks what is worth one learning, and nothing behavior-changing is applied without a person. The one network read is the daily probe asking GitHub, through your own gh login, whether a pushed PR merged (repository and PR number only, three-second budget). false = no automatic path runs — no merge enqueue, no forge-merge marker, no daily probe and no network read; an explicit /retro still runs on request. Class C: an agent cannot set it; it cascades from the user-global file.',
+        ),
+    }).default({}),
     memory: z.object({
         redact_patterns: z.array(z.string()).default([]).describe(
             'Regex patterns (one per line) that scrub matches from chat-history transcripts and memory before they hit disk. Use for secrets, customer names, internal URLs. Patterns are anchored and case-insensitive.',

@@ -8,7 +8,7 @@
  * so an invocation there printed no scope at all. This is the per-door half.
  *
  * The first version of this file accepted a bare `first` anywhere in a
- * ±200-char window, which `analyze/repo`'s pre-existing "before the first
+ * ±200-char window, which `analyze/reference`'s pre-existing "before the first
  * fetch" already satisfied — the new clause could be deleted and the case
  * stayed green (R2 review 2026-10-19, finding 7). The contract below is the
  * sentence instead of the neighbourhood: the door must say, in one clause,
@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const DOORS = ['repo', 'and-optimize', 'pr', 'inbox'] as const;
+const DOORS = ['reference', 'and-optimize', 'pr', 'inbox'] as const;
 
 /**
  * One clause that both PRINTS the line and orders it first.
@@ -52,7 +52,7 @@ describe('the four doors resolve and print one scope', () => {
 
     it('the source door names the resolver and the module semantics AC-1 asks for', () => {
         // The door that had neither, and the two properties the criterion names.
-        const text = door('repo');
+        const text = door('reference');
         expect(text).toContain('analysis_target.ts');
         expect(text).toMatch(/with or without a marker/u);
         expect(text).toMatch(/outer project stays `project_root`/u);

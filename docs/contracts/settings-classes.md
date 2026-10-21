@@ -249,8 +249,12 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 9 |
 | B — consent | 3 |
-| C — guarded | 99 |
-| **Total** | **111** |
+| C — guarded | 100 |
+| **Total** | **112** |
+
+It fell to 112 on 2026-10-20 when `road-to-a-setup-that-decides-itself` removed the three projection keys the package now decides itself — `lean_projection.mode`, `lean_projection.hosts` and `projection.rule_workspaces` (two `derivable`, one `policy`, all C). Each carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged.
+
+It rose to 115 on 2026-10-20 when `road-to-a-retro-the-merge-runs` step 0.2 added `retro.enabled` (ADR-292) — one C, `consent`: it arms automatic producers on the merge, push and first-session paths, and it ships `true` by the owner's directive of 2026-10-12, which is the documented-decision shape `continuity.auto_record` already has. A class-B key could not carry that default; the class C fence keeps an agent from switching it either way, and `MERGEABLE_KEYS` lets a user-global `false` hold.
 
 It rose to 114 on 2026-10-20 when `road-to-an-update-that-installs-itself-only-when-it-is-safe` step 4.1 added `update.mode` — one C, `consent`: it is a standing authorisation to replace the user's global install, and `auto` is an action they cannot un-see, so no agent write path may reach it. An absent key resolves to `notify`, which installs nothing.
 
@@ -399,9 +403,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 35 |
 | un-inferrable | 10 |
-| consent | 49 |
+| consent | 50 |
 | policy | 17 |
-| **Total** | **111** |
+| **Total** | **112** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -583,6 +587,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `commands.create_pr.screenshots` | C | `false` | puts captured screenshots into a published PR body | consent |
 | `continuity.auto_record` | C | `"on"` | arms an automatic producer on the normal session-end path | consent |
 | `continuity.run_checkpoints` | C | `"on"` | disabling it removes a recovery artifact a killed run resumes from | consent |
+| `retro.enabled` | C | `true` | arms automatic producers on the merge, push and first-session paths (ADR-292) | consent |
 | `memory.redact_patterns` | C | `[]` | deny-list of secret and PII regexes | policy |
 | `memory.session_index` | A | `"off"` | injects a compact index at session start | derivable — the row cap and index cost the mechanism already computes; the flag only holds an unproven ship-criterion open |
 | `memory.learn_on_session_end` | B | `false` | turns on automatic memory writes at session end | consent |

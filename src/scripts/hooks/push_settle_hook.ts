@@ -55,6 +55,7 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { readHookStdin } from "./hook_stdin.js";
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
+import { writeMergeMarker } from "../retro_queue.js";
 
 type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue };
 type JsonObject = { [k: string]: JsonValue };
@@ -213,6 +214,24 @@ export function buildReminder(branch: string, pr: number | null): { reason: stri
   return { reason, additional_context };
 }
 
+/**
+ * Path B of the retro (`docs/contracts/retro-v1.md`): a push that resolved a
+ * PR leaves a marker, so a later merge through the web UI, by automerge or by
+ * someone else is found by the daily probe even though no session existed at
+ * merge time. Off with `retro.enabled: false`; best effort, never a block.
+ */
+export function recordMergeMarker(envelope: JsonObject, pr: number | null, branch: string): void {
+  if (pr === null) return;
+  const root = typeof envelope["workspace_root"] === "string" && envelope["workspace_root"] !== ""
+    ? envelope["workspace_root"]
+    : process.cwd();
+  try {
+    writeMergeMarker(root, { pr, branch }, new Date().toISOString());
+  } catch {
+    // a marker that cannot be written costs one retro, never the push reminder
+  }
+}
+
 export function main(): number {
   let envelope: JsonValue;
   try {
@@ -233,7 +252,9 @@ export function main(): number {
   const branch = pushedBranch(toolOutput(inner));
   if (branch === null) return EXIT_ALLOW; // up-to-date, rejected, delete — nothing advanced
 
-  const { reason, additional_context } = buildReminder(branch, resolvePr(branch));
+  const pr = resolvePr(branch);
+  recordMergeMarker(envelope, pr, branch);
+  const { reason, additional_context } = buildReminder(branch, pr);
   process.stdout.write(`${JSON.stringify({ decision: "warn", reason, additional_context })}\n`);
   return EXIT_WARN;
 }

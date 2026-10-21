@@ -299,6 +299,11 @@ export const MERGEABLE_KEYS: readonly string[] = [
     // GUI; whitelisting decides only whether the value SURVIVES the merge
     // (ADR-271, road-to-design-intent-conformance 2.3).
     'design.fidelity_mode',
+    // `retro.enabled` is the one switch over the automatic retro (ADR-292). It
+    // ships `true`, so the only value worth writing is `false`, and a user who
+    // writes it once in the user-global file expects every checkout to honour
+    // it — without this row the off switch would be discarded silently.
+    'retro.enabled',
 ];
 
 /** The shipped template, relative to the package root. */

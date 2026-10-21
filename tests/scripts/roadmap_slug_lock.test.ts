@@ -96,17 +96,22 @@ describe('release_locks', () => {
 
 describe('readClaims — a lock is visible the moment it is written', () => {
     it('reports a fresh lock as a live claim before any register record exists', () => {
-        // Both clocks are NOW, and that is the point of the case rather than
-        // tidiness. `acquire_lock` writes the lock VERBATIM — the `now` option
-        // only ages an EXISTING holder — so the stored `written_at` is the
-        // fixture's frozen NOW whatever is passed here. Reading with the wall
-        // clock therefore measured `Date.now() - 2026-10-20T12:00:00Z` against
-        // `UNRECORDED_HOLDER_MS`, which is a 6-hour window that EXPIRED at
-        // 18:00Z on 2026-10-20 and never reopens: the case was green on the
-        // merge that introduced it and permanently red from the next run on.
-        // Found red on CI at 18:25Z, reproduced locally at 18:15Z.
-        acquire_lock(root, lock({ lane: true }), NONE, { now: NOW });
-        const claims = readClaims(root, NOW);
+        // RESOLVED 2026-10-20 in favour of origin/main. Two sessions fixed the
+        // same defect independently and both fixes are correct: the time bomb
+        // was that `acquire_lock` writes the lock VERBATIM, so the stored
+        // `written_at` stayed at the fixture's frozen 2026-10-20T12:00:00Z
+        // while `readClaims` read the WALL CLOCK — a 6-hour
+        // `UNRECORDED_HOLDER_MS` window that closed at 18:00Z and never
+        // reopens. The other branch pinned BOTH clocks to the frozen NOW; this
+        // one stamps a real fresh lock. Main's is kept because it is already
+        // the incumbent and because it is closer to what the case NAME claims
+        // to test — a lock that is actually fresh, rather than two clocks
+        // agreeing on a past instant.
+        // The lock's own `written_at` decides liveness, and the fixture's is the
+        // fixed NOW: stamping it with the wall clock keeps this off the calendar.
+        const now = new Date();
+        acquire_lock(root, lock({ lane: true, written_at: now.toISOString() }), NONE, { now });
+        const claims = readClaims(root);
         expect(claims.live).toEqual([
             { session_id: 's1', roadmap_slug: 'road-to-a', lane: true, worktree: '/wt/one', branch: 'drain/a' },
         ]);

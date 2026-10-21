@@ -14,10 +14,11 @@
  * on a stale projection, which looks like a dropped alias and is not (R2
  * finding 13). Run `task sync` before believing a red here.
  *
- * Both paths below hard-code `analyze/repo`, which step 6.2b renames to
- * `analyze/reference`. After that rename these read as ENOENT rather than as
- * assertion failures; the rename moves the paths AND the third case's
- * expectation into the `replaces:` list (R2 finding 14).
+ * The source-door paths below read `analyze/reference`, the name ADR-288 D1
+ * decided and step 6.2b landed on 2026-10-20. The four retired spellings —
+ * both `reference-repo` forms and both `repo` forms — are the `replaces:`
+ * list this file pins; `analyze:repo` moved from being the live name into
+ * that list in the same change (R2 finding 14).
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -39,8 +40,10 @@ function projected(rel: string): Record<string, unknown> {
 }
 
 describe('the retired analysis-family names still resolve', () => {
-    it('the source door keeps both reference-repo spellings', () => {
-        expect(projected('repo.md')['replaces']).toEqual([
+    it('the source door keeps all four retired spellings', () => {
+        expect(projected('reference.md')['replaces']).toEqual([
+            'analyze-repo',
+            'analyze:repo',
             'analyze-reference-repo',
             'analyze:reference-repo',
         ]);
@@ -50,9 +53,11 @@ describe('the retired analysis-family names still resolve', () => {
         expect(projected('and-optimize.md')['replaces']).toEqual(['optimize-deep', 'optimize:deep']);
     });
 
-    it('`analyze:repo` resolves as the door itself until the 6.2b rename lands', () => {
-        // Not an alias today: it is the live name. The rename is step 6.2b,
-        // and when it lands this expectation moves into the list above.
-        expect(projected('repo.md')['name']).toBe('analyze-repo');
+    it('the source door ships under its decided name, with `analyze:repo` demoted to an alias', () => {
+        // Until 2026-10-20 `analyze-repo` was the live name and this case
+        // asserted it. Step 6.2b landed ADR-288 D1: the name is now
+        // `analyze-reference` and both `repo` spellings are aliases, pinned
+        // by the first case above.
+        expect(projected('reference.md')['name']).toBe('analyze-reference');
     });
 });
