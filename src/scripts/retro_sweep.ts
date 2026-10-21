@@ -16,6 +16,7 @@ import { triageSession, unitKey } from './retro_triage.js';
 import {
     BACKLOG_PAUSE_AT,
     DAILY_RETRO_BUDGET,
+    SWEEP_CLAIM_LEASE_MS,
     TRIAGE_P50_LIMIT_MS,
     claimSweepDay,
     classifyUnit,
@@ -37,6 +38,7 @@ import {
     resolveMarkers,
     retroEnabled,
     retroSessionTags,
+    sweepClaimHolder,
     writeSweepState,
     type MarkerResolution,
     type PrState,
@@ -242,6 +244,8 @@ export interface RetroStatus {
     paused: boolean;
     triage_p50_ms: number | null;
     latency_over_budget: boolean;
+    /** The sweep claim when it has been held past the lease, else `null`. */
+    stuck_claim: { pid: number | null; held_ms: number } | null;
 }
 
 export function retroStatus(root: string): RetroStatus {
@@ -249,6 +253,7 @@ export function retroStatus(root: string): RetroStatus {
     const ms = [...(state.last_sweep?.triage_ms ?? [])].sort((a, b) => a - b);
     const p50 = ms.length === 0 ? null : ms[Math.floor((ms.length - 1) / 2)]!;
     const backlog = deferredBacklog(root);
+    const stuck = sweepClaimHolder(root);
     return {
         enabled: retroEnabled(root),
         pending: pendingUnits(root),
@@ -257,6 +262,7 @@ export function retroStatus(root: string): RetroStatus {
         paused: backlog > BACKLOG_PAUSE_AT,
         triage_p50_ms: p50,
         latency_over_budget: p50 !== null && p50 > TRIAGE_P50_LIMIT_MS,
+        stuck_claim: stuck !== null && stuck.held_ms >= SWEEP_CLAIM_LEASE_MS ? stuck : null,
     };
 }
 
@@ -471,6 +477,12 @@ export function renderStatus(s: RetroStatus): string {
     }
     lines.push(`deferred backlog: ${s.deferred_backlog} (sweep pauses above ${BACKLOG_PAUSE_AT})`);
     if (s.paused) lines.push('the daily sweep is PAUSED by the backlog; /retro by hand still runs');
+    if (s.stuck_claim !== null) {
+        lines.push(
+            `the daily sweep claim is held by pid ${s.stuck_claim.pid ?? 'unknown'} for ${Math.round(s.stuck_claim.held_ms / 60_000)} min; ` +
+                'a holder whose process exists is never taken over, so if that pid is not a retro sweep, end it or remove the newest claim.<n> file in the retro-sweep store',
+        );
+    }
     if (s.triage_p50_ms !== null) {
         lines.push(
             `triage p50: ${Math.round(s.triage_p50_ms)} ms${s.latency_over_budget ? ` — over the ${TRIAGE_P50_LIMIT_MS} ms budget` : ''}`,

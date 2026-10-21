@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { SessionFacts } from '../../src/scripts/retro_facts.js';
 import { planManualRetro, retroStatus, runDailySweep, type SweepSession } from '../../src/scripts/retro.js';
-import { discoverSessions, retroDailyProbe } from '../../src/scripts/retro_sweep.js';
+import { discoverSessions, renderStatus, retroDailyProbe } from '../../src/scripts/retro_sweep.js';
 import { recordMergeMarker } from '../../src/scripts/hooks/push_settle_hook.js';
 import { writeRetroPointer } from '../../src/scripts/hooks/session_eol_hook.js';
 import { derive_session_tag } from '../../src/scripts/_lib/session_tag.js';
@@ -16,7 +16,6 @@ import {
     CATCH_UP_WINDOW_DAYS,
     DAILY_RETRO_BUDGET,
     SWEEP_CLAIM_LEASE_MS,
-    SWEEP_CLAIM_MAX_HOLD_MS,
     TRIAGE_P50_LIMIT_MS,
     claimSweepDay,
     classifyUnit,
@@ -454,8 +453,35 @@ describe('retro_queue — path C, the daily sweep', () => {
         // A live holder of an earlier day blocks the next day's sweep too.
         expect(claimSweepDay(wt, '2026-10-22', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, alive)).toBeNull();
         expect(holdsSweepDay(main, '2026-10-21', held)).toBe(true);
-        // Past the maximum hold the pid is presumed reused, so a crash cannot block forever.
-        expect(claimSweepDay(wt, '2026-10-21', Date.now() + SWEEP_CLAIM_MAX_HOLD_MS + 1, alive)).not.toBeNull();
+        // Not after a day, not after a month: age alone never revokes a live writer.
+        const month = 30 * 24 * 60 * 60 * 1000;
+        expect(claimSweepDay(wt, '2026-10-21', Date.now() + month, alive)).toBeNull();
+        expect(holdsSweepDay(main, '2026-10-21', held)).toBe(true);
+        // `/retro status` names a claim held past the lease, so a reused pid is visible.
+        const status = renderStatus(retroStatus(main));
+        expect(status).not.toContain('claim is held by pid');
+        const dir = path.join(path.dirname(queueDir(main)!), 'retro-sweep');
+        const old = new Date(Date.now() - SWEEP_CLAIM_LEASE_MS - 1000);
+        fs.utimesSync(path.join(dir, 'claim.0'), old, old);
+        expect(renderStatus(retroStatus(main))).toContain(`claim is held by pid ${process.pid}`);
+    });
+
+    it('takeover-during-write: a rival trying to take the claim mid-sweep, at any age, is refused and the sweep completes', () => {
+        const { main, wt } = repoWithWorktree();
+        const month = 30 * 24 * 60 * 60 * 1000;
+        const rivals: (string | null)[] = [];
+        // The clock is read inside the triage loop, i.e. after the sweep's first
+        // ownership check and before its writes; the rival runs there.
+        const clock = (): number => {
+            rivals.push(claimSweepDay(wt, '2026-10-21', Date.now() + month));
+            return 0;
+        };
+        const busy = session('w', '2026-10-20', { self_repair_in_window: m(1) });
+        const r = runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [busy], clock });
+        expect(rivals.length).toBeGreaterThan(0);
+        expect(rivals.every((t) => t === null)).toBe(true);
+        expect(r.status).toBe('ran');
+        expect(listQueue(main).map((e) => e.session)).toEqual(['w']);
     });
 
     it('two claimants for different days, interleaved after their read: exactly one holds and can mutate', () => {

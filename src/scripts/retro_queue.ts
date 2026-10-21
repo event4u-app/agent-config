@@ -527,13 +527,6 @@ export function readSweepState(workspaceRoot: string): SweepState {
  */
 export const SWEEP_CLAIM_LEASE_MS = 60_000;
 
-/**
- * The longest a claim whose holder process still answers is honoured. Past it
- * the pid is presumed reused by an unrelated process, so a claim left by a
- * crash cannot block every later sweep.
- */
-export const SWEEP_CLAIM_MAX_HOLD_MS = 24 * 60 * 60 * 1000;
-
 /** Whether a process with this pid exists on this machine. */
 export function pidAlive(pid: number): boolean {
     try {
@@ -553,12 +546,13 @@ export function pidAlive(pid: number): boolean {
  * they are claiming. No file is ever overwritten, and the newest is never
  * deleted.
  *
- * The newest generation is free when it was released, or when its holder may no
- * longer write: older than the lease AND its process gone, or older than
- * {@link SWEEP_CLAIM_MAX_HOLD_MS} (the pid presumed reused, so a crash cannot
- * block every later sweep). A live holder — even a suspended one — is never
- * superseded inside that bound, so one process at a time mutates the retro
- * stores. Older generations are pruned.
+ * The newest generation is free when it was released, or when its holder can
+ * no longer write: older than the lease AND its process gone. A holder whose
+ * process still exists is never superseded, at any age — even a suspended one —
+ * so one process at a time mutates the retro stores. The price is that a claim
+ * whose pid was reused by an unrelated process blocks the daily sweep until that
+ * process exits; `/retro status` names such a claim, and `/retro` by hand is
+ * unaffected. Older generations are pruned.
  */
 export function claimSweepDay(
     workspaceRoot: string,
@@ -580,10 +574,10 @@ export function claimSweepDay(
             // Pruned under us: a newer generation exists, so this read is stale.
             return null;
         }
-        const pid = Number(/^\d+:(\d+)-/.exec(newest.content ?? '')?.[1] ?? NaN);
-        // An unreadable holder is treated as alive: the cost is a skipped day.
-        const holderMayWrite =
-            age < SWEEP_CLAIM_LEASE_MS || (age < SWEEP_CLAIM_MAX_HOLD_MS && (!Number.isFinite(pid) || isAlive(pid)));
+        const pid = holderPid(newest.content);
+        // Past the lease, a claim naming no pid was left by a create that never
+        // finished its few-byte write, so no process is shown to hold it.
+        const holderMayWrite = age < SWEEP_CLAIM_LEASE_MS || (pid !== null && isAlive(pid));
         if (holderMayWrite) return null;
     }
     const gen = newest === null ? 0 : newest.gen + 1;
@@ -598,6 +592,27 @@ export function claimSweepDay(
         if (m === null || Number(m[1]) < gen) fs.rmSync(path.join(dir, n), { force: true });
     }
     return token;
+}
+
+function holderPid(content: string | null): number | null {
+    const pid = Number(/^\d+:(\d+)-/.exec(content ?? '')?.[1] ?? NaN);
+    return Number.isInteger(pid) && pid > 0 ? pid : null;
+}
+
+/**
+ * The newest claim when it is held — its holder pid and how long it has been
+ * held — or `null` when the sweep is free. Read by `/retro status`.
+ */
+export function sweepClaimHolder(workspaceRoot: string, nowMs: number = Date.now()): { pid: number | null; held_ms: number } | null {
+    const dir = commonSub(workspaceRoot, 'retro-sweep');
+    if (dir === null || !fs.existsSync(dir)) return null;
+    const newest = newestClaim(dir);
+    if (newest === null || newest.content === FREE) return null;
+    try {
+        return { pid: holderPid(newest.content), held_ms: nowMs - fs.statSync(path.join(dir, newest.name)).mtimeMs };
+    } catch {
+        return null;
+    }
 }
 
 /** The content a release writes as the next generation. */
