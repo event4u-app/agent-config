@@ -74,7 +74,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 
 ## Phase 0 — Read a step before cutting it
 
-- [ ] **0.1 Step anatomy in `probe_turnaround`.** Per closed step: `model`,
+- [x] **0.1 Step anatomy in `probe_turnaround`.** Done 2026-10-21: `probe_turnaround --steps [--json]` over `src/scripts/_lib/step_anatomy.ts`; `--store` takes a comma list (drains write to worktree stores); classes sum per step (exit 1 if not); `unknown` fell from 53 % to 0 % once metadata rows stopped anchoring gaps; 7 tests, a sabotage of the ceremony branch reds 3 of them. Per closed step: `model`,
       `change` (edits/tests on the step's own paths), `verify`, `ceremony`
       (roadmap, evidence, review, council, PR text, archive), `wait` (CI, push,
       user, sleep), `refusal`; joined on the roadmap checkbox flip. Rows sum to
