@@ -45,20 +45,7 @@ Do NOT use when:
 5. NEVER treat tests as an afterthought — write the failing test first.
 6. NEVER overfit an assertion — assert the general rule, derive expected values from inputs/seeded data, cover boundary + error cases.
 7. NEVER game the green — a failing test is a finding, not an obstacle; fix the code, never skip/weaken/delete the test or rewrite `expected` to the buggy output.
-8. NEVER stop at the function when the claim is about delivery — behaviour promised at an entry point (a CLI flag, an output stream, a hook) is tested by driving the narrowest faithful invocation of it in an isolated fixture and asserting the promised observable.
 ```
-
-Law 8 exists because a suite can be complete and still miss it: every case
-calls the pure function, every case is green, and the flag or the caller that
-decides whether the result reaches anyone is in no test at all. "Narrowest
-faithful" means in-process `main(argv)` when argument handling and output are
-the claim, and the executable as a subprocess only when parsing, packaging or
-the exit status of the process is. The fixture carries no network, no
-credentials and no real hooks, without exception: a behaviour that needs them
-is an integration test, which this law does not authorise. "The promised observable" means
-what was promised — the stdout or stderr line, the exit code, the written
-artefact — never only that the call returned. Whether a workflow actually calls
-the entry point is a separate claim, checked against the workflow file.
 
 ## Procedure: Run the gate before each anti-pattern
 
@@ -275,7 +262,6 @@ return **0** occurrences, and `hardcoded` returns **6**.
 - Long mock setups (> 50% of the test) are a signal that integration tests would be simpler — consider it before piling on more mocks.
 - **Diagnose, do not brute-force.** If a test fails after a mock change, **never guess** at another mock tweak — drop a debugger / Xdebug breakpoint at the seam, observe the real call shape, then mock minimally. Two retries without a root-cause hypothesis = STOP and rethink.
 - An assertion that derives from seeded data but only checks the happy path is still overfit — a code mutation survives it. Require ≥1 boundary/error/abuse case per behavior, not just line coverage.
-- **A green suite over a builder function says nothing about what `main` prints.** The failure shape: every case asserts on the value a function returns, and a flag in `main` decides that the value is never written. The cases that close it call `main(argv)` once per flag combination the callers use, capture stdout and stderr, and assert on the line that was promised.
 
 ## Do NOT
 
