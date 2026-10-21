@@ -268,7 +268,9 @@ export function renderTable(rows: readonly SenderRow[]): string {
         `${String(rows.length)} module(s): ${String(t.sender)} sender, ${String(t.local)} local, ` +
             `${String(t.unclassified)} unclassified; coverage ${String(c.asserted)} asserted, ` +
             `${String(c['fixed-corpus'])} fixed-corpus, ${String(c.uncovered)} uncovered, ` +
-            `${String(c.undeclared)} undeclared.`,
+            `${String(c.undeclared)} undeclared. ` +
+            // check_enforcement_denominator reads `N undeclared` beside the word as a rule-enforcement figure.
+            '<!-- enforcement-count-ok: egress coverage census of sender modules, not a rule-enforcement figure -->',
     );
     return lines.join('\n');
 }

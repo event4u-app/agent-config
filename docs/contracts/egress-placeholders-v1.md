@@ -477,7 +477,7 @@ check, `council_egress.ts`); `undeclared` fails the census.
 | `src/scripts/second_brain_retrieval.ts` | `api.anthropic.com` | fixed-corpus | no | **sender** | names a provider endpoint and carries a send shape | **fixed-corpus** | sends the seeded retrieval corpus (retrieval-corpus.yml) and entries retrieved from it, never session content |
 | `src/scripts/second_brain_run.ts` | `api.anthropic.com` | fixed-corpus | no | **sender** | names a provider endpoint and carries a send shape | **fixed-corpus** | sends the deterministic recall corpus of Phase 1, never session content |
 
-23 module(s): 17 sender, 1 local, 5 unclassified; coverage 2 asserted, 6 fixed-corpus, 15 uncovered, 0 undeclared.
+23 module(s): 17 sender, 1 local, 5 unclassified; coverage 2 asserted, 6 fixed-corpus, 15 uncovered, 0 undeclared. <!-- enforcement-count-ok: egress coverage census of sender modules, not a rule-enforcement figure -->
 <!-- END egress-sender-census -->
 
 ## See also
