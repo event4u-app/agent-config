@@ -98,3 +98,32 @@ The branch does not land in this form. The five conditions are Phase 2 work on
 into this branch is resolved and committed locally; it cannot be pushed, because
 the pre-push ratification gate reads the whole governed diff and a `refused`
 verdict does not clear it.
+
+## Rounds 2–10 (2026-10-20 / 2026-10-21) — still refused, and what each round found
+
+The verdict above stands: no round returned `ratified` from both seats. This
+section exists so the next round starts where these ended, not at round 1.
+Questions and responses are under `agents/runtime/council/` (gitignored); what
+matters from them is kept here.
+
+| Round | Seats | Finding that refused it | Changed in response |
+|---|---|---|---|
+| 2 | 2/2 refused | a summary instead of the diff; renamed replacement store; cleanup on invalid handles; hostile session ids | activation paths gated by name and by literal import; cleanup only after a fully checked handle; session-id grammar |
+| 3 | 2/2 refused | short writes ignored; a displaced cleaner released its successor's lock; claims stronger than the code | `writeAll`; token-owned lock; narrowed contract |
+| 4 | openai refused, anthropic timed out | check-then-delete windows | deletion as a rename claim checked by inode, mtime and size |
+| 5 | 2/2 refused, "acceptable in principle" | cleanup ran before the write; no production-path cap test | admission before publication; `limits` seam; cap tests |
+| 6 | anthropic refused, openai did not start (codex MCP OAuth) | rollback could delete a refreshed shared entry | rollback only of a created entry |
+| 7 | 2/2 refused | concurrent identical stores; lock contention read as success; repository-planted symlinks | room made before publication, no rollback; `cap-busy`; `lstat` on every path component |
+| 8 | 2/2 refused | the key lived in the workspace, where a repository can plant it | key under the user-global root; `lstat`-only enumeration; threat model stated |
+| 9 | 2/2 refused (one seat ratified in its first pass) | making room and publishing not under one lock | one lock across both; `storeBytesUnchecked`; expiry rounds up |
+| 10 | 2/2 refused | (a) a same-address entry credited before cleanup can itself be deleted; (b) the lock needs fencing of a displaced owner now that it protects the cap | — the fix loop stopped at its bound of 10 |
+
+Found by the submitter between rounds, not by a seat: concurrent first stores
+could sign with a partially written key (one run in ~40); the key is now
+published by link.
+
+**What a round 11 needs.** (a) Stop crediting the same-address entry, or exempt
+it from that sweep and verify it survived. (b) Mutual exclusion that holds
+through slow operations — an OS-level lock, or a fencing generation checked
+immediately before publication — with a deterministic stale-takeover test. Ask
+for `ratified`.
