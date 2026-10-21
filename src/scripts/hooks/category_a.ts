@@ -158,6 +158,8 @@ function _real(p: string): string {
     } catch (e) {
         const code = (e as NodeJS.ErrnoException).code;
         if (code !== "ENOENT" && code !== "ENOTDIR") return "";
+        // A dangling link is not a missing suffix: its target is unknowable.
+        if (code === "ENOENT" && fs.lstatSync(p, { throwIfNoEntry: false })?.isSymbolicLink()) return "";
         const parent = path.dirname(p);
         if (parent === p) return p;
         const up = _real(parent);
@@ -170,8 +172,8 @@ function _real(p: string): string {
  *
  * The one place the classifier reads the filesystem, and it can only withhold:
  * an in-tree symlink to `~/.ssh` is lexically inside and really outside. A
- * missing suffix keeps its lexical answer; any other resolution failure
- * (`EACCES`, `ELOOP`) resolves to `""`, which is never inside. The check runs
+ * missing suffix keeps its lexical answer; a dangling link and any other
+ * resolution failure (`EACCES`, `ELOOP`) resolve to `""`, which is never inside. The check runs
  * before the command does, so a link swapped in between is not seen — the
  * OS sandbox is the boundary, this is a guardrail.
  */

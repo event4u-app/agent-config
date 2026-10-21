@@ -579,4 +579,29 @@ describe('category A withdraws only what it cannot prove (Phase 0)', () => {
             fs.rmSync(tree, { recursive: true, force: true });
         }
     });
+
+    it('bash-path-confinement: a dangling in-tree symlink is not a missing suffix', () => {
+        // Council review 2026-10-18, round 5: a link to an absent outside
+        // target makes realpath report ENOENT, which must not be read as a
+        // path that simply does not exist yet.
+        const base = fs.mkdtempSync(path.join(os.tmpdir(), 'cat-a-'));
+        try {
+            const tree = path.join(base, 'tree');
+            fs.mkdirSync(path.join(tree, 'src'), { recursive: true });
+            fs.writeFileSync(path.join(tree, 'src', 'input'), 'x');
+            fs.symlinkSync(path.join(base, 'absent', 'out'), path.join(tree, 'out'));
+            fs.symlinkSync(path.join(base, 'absent'), path.join(tree, 'gone'));
+            const call = (command: string) =>
+                _permission_for('pre_tool_use', { payload: { tool_name: 'Bash', tool_input: { command }, cwd: tree }, workspace_root: tree }, 0, ['allow']);
+            for (const cmd of ['sort -o out src/input', 'cat out', 'cat gone/x', 'sort -o gone/new src/input']) {
+                expect(call(cmd), cmd).toBeNull();
+            }
+            expect(isCategoryA('Read', { file_path: path.join(tree, 'out') }, tree)).toBe(false);
+            for (const cmd of ['sort -o src/new.txt src/input', 'cat src/missing/new.txt', 'cat src/input/x']) {
+                expect(call(cmd)?.decision, cmd).toBe('allow');
+            }
+        } finally {
+            fs.rmSync(base, { recursive: true, force: true });
+        }
+    });
 });
