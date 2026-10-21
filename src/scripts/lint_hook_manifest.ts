@@ -35,8 +35,6 @@ import { parse as parseYaml } from "yaml";
 import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
 import { asOf } from "./_lib/as_of.js";
 import { parseHostLowering, type HostLowering } from "./hooks/host_lowering.js";
-import { parseRewriteAxis, REWRITE_CHANNELS, REWRITE_MODES, type RewriteChannel } from "./_lib/rewrite_axis.js";
-import { listProbeRecords, PROBE_ATTESTATIONS_REL, renderProbeAttestations, rewriteCapabilityGaps } from "./_lib/rewrite_capability.js";
 import { RE_ARM_EVENTS } from "./_lib/prefix_stable_surfaces.js";
 import { EXECUTION_VIEW_GRANTS } from "./hooks/egress_stage.js";
 
@@ -773,79 +771,6 @@ export function _check_host_lowering(
     }
   }
   _check_slot_answers(table, errors);
-  _check_rewrite_axis(table, errors, today);
-}
-
-function _isCalendarDate(d: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return false;
-  const t = new Date(`${d}T00:00:00Z`);
-  return !Number.isNaN(t.getTime()) && t.toISOString().slice(0, 10) === d;
-}
-
-/**
- * The rewrite axis says what this package may do to a channel on a host. Only
- * `replace` and `gate` can authorize anything, and each is checked by
- * `rewriteCapabilityGaps` — the same function that alone issues a capability, so
- * the lint and the stage cannot disagree. `offered` — a documented field no probe
- * has shown delivered — authorizes nothing and needs a date and a citation on the
- * answer itself. An
- * answer dated after today, or on no calendar day, is not an answer.
- */
-export function _check_rewrite_axis(table: HostLowering, errors: string[], today: string, root: string = REPO_ROOT): void {
-  const probes = listProbeRecords(root);
-  if (root === REPO_ROOT) {
-    let shipped = "";
-    try {
-      shipped = fs.readFileSync(path.join(root, PROBE_ATTESTATIONS_REL), "utf-8");
-    } catch {
-      // absent reads as drift below
-    }
-    if (shipped !== renderProbeAttestations(root)) {
-      errors.push(
-        `${PROBE_ATTESTATIONS_REL}: rewrite-probe-attestation-drift — the shipped copy differs from the probe records; ` +
-          "run ./scripts-run src/scripts/lint_hook_manifest --write-probe-attestations.",
-      );
-    }
-  }
-  for (const [host, surfaces] of table) {
-    for (const [surface, row] of surfaces) {
-      const axis = parseRewriteAxis(`host_lowering.yaml: ${host}/${surface}`, row.rewrite_raw);
-      if (!axis.ok) {
-        errors.push(`${axis.error}.`);
-        continue;
-      }
-      for (const [channel, answer] of axis.answers) {
-        const where = `host_lowering ${host}/${surface}/${channel}`;
-        if (!(REWRITE_CHANNELS as readonly string[]).includes(channel)) {
-          errors.push(`${where}: rewrite-axis-malformed — unknown channel; the axis has ${REWRITE_CHANNELS.join(", ")}.`);
-          continue;
-        }
-        if (!(REWRITE_MODES as readonly string[]).includes(answer.mode)) {
-          errors.push(`${where}: rewrite-axis-malformed — unknown mode '${answer.mode}'; one of ${REWRITE_MODES.join(", ")}.`);
-          continue;
-        }
-        if (answer.answered_at === null || !_isCalendarDate(answer.answered_at)) {
-          errors.push(`${where}: rewrite-axis-malformed — no \`answered_at\` calendar date; the axis is dated like every column.`);
-          continue;
-        }
-        if (answer.answered_at > today) {
-          errors.push(`${where}: rewrite-axis-malformed — \`answered_at: ${answer.answered_at}\` is after ${today}.`);
-          continue;
-        }
-        if (answer.mode === "none") continue;
-        if (answer.docs_url === null && answer.probe === null) {
-          errors.push(`${where}: rewrite-axis-malformed — '${answer.mode}' cites nothing on the answer itself; a row's docs_url says nothing about rewriting.`);
-        }
-        if (answer.mode === "offered") continue;
-        const mode = answer.mode as "replace" | "gate";
-        const why = rewriteCapabilityGaps(host, row, channel as RewriteChannel, { today, root, probes });
-        if (why.length > 0) {
-          const id = mode === "replace" ? "rewrite-toward-non-replace-host-refused" : "rewrite-gate-without-refusal";
-          errors.push(`${where}: ${id} — ${why.join("; ")}.`);
-        }
-      }
-    }
-  }
 }
 
 /**
@@ -1083,10 +1008,6 @@ export function main(argv: string[]): number {
       i += 1;
     } else if (a === "--strict") {
       strict = true;
-    } else if (a === "--write-probe-attestations") {
-      fs.writeFileSync(path.join(REPO_ROOT, PROBE_ATTESTATIONS_REL), renderProbeAttestations(REPO_ROOT), "utf-8");
-      process.stdout.write(`lint_hook_manifest: wrote ${PROBE_ATTESTATIONS_REL}\n`);
-      return 0;
     }
   }
   return lint(manifest, strict, hostLowering);

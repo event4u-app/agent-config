@@ -1,7 +1,7 @@
 <!-- evidence-type: analysis -->
 # Host input-rewrite probe — Claude Code 2.1.304
 
-The structured record `rewrite_capability.ts` reads for the `input` channel. The
+The structured record a rewrite capability check reads for the `input` channel. The
 probe itself, its commands, hook scripts and every observation, is step 0.2 of
 `host-output-rewrite-probe-2026-10-20.md`, run in the same session on the same
 host; this file exists because a capability record names one channel.

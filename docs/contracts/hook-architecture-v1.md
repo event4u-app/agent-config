@@ -741,29 +741,6 @@ such field. Re-probed 2026-08-23 against **Claude Code 2.1.241**, that assertion
 | `claude` | **offered** (2.1.241) | binary strings document `` `updatedInput` - Modified tool input (PreToolUse only) ``, the shape `{behavior: 'allow', updatedInput?: object}`, **schema validation** on the value, and a fallback when it is absent or empty |
 | every other host | **unprobed** | no observation exists; absence of a claim, not a claim of absence |
 
-**The table carries this as a dated column.** `host_lowering.yaml` rows may hold
-a `rewrite:` map — `output` (post-tool), `input` (pre-tool), `prompt` — each
-`replace`, `offered`, `gate` or `none` with an `answered_at` date; a channel with
-no answer is `unstated`, an absence of a claim rather than a dated `none`. Only
-`replace` authorizes a substitution and only `gate` a refusal; `offered` records
-a documented field no live probe has shown delivered, and authorizes nothing.
-Today only `claude` states it: `output: replace` and `input: replace` from the
-live probe of 2026-10-20 (Claude Code 2.1.304), `prompt: gate`. **Nothing acts
-on the axis yet** — no stage emits a rewrite field; the axis and the capability
-check (`rewrite_capability.ts`) land first and are read by the lint alone. A
-capability is issued only for the exact probed host version: a running host on
-any other version, a patch release included, gets none, so a later stage must
-re-probe before it can act. `lint_hook_manifest` runs one validator for
-both authorizing modes: the row must have a propagating trampoline, a current
-`verified` block and a bound native slot for the channel. A `gate` also needs a
-`block_exit` on that slot (`rewrite-gate-without-refusal`). A `replace` also
-needs a native envelope, a probed `host_version` and a probe record at
-`agents/evidence/analysis/host-<what>-probe-<date>.md` whose lines state
-`host: <host>`, `host_version: <the same version>`, `channel: <channel>` and
-`result: delivered` (`rewrite-toward-non-replace-host-refused`); a file that
-merely exists is not evidence. An undated, non-calendar, future-dated or unknown
-answer is `rewrite-axis-malformed`.
-
 **This dispatcher does not emit `updatedInput`, and that is the load-bearing
 distinction.** `src/scripts/hooks/host_semantics.ts` builds the
 `hookSpecificOutput: { hookEventName, additionalContext }` envelope and no

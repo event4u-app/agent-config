@@ -1,7 +1,7 @@
 <!-- evidence-type: analysis -->
 # Host output- and input-rewrite probe — Claude Code 2.1.304
 
-The four lines below are the structured record `rewrite_capability.ts` reads
+The four lines below are the structured record a rewrite capability check reads
 for the `output` channel; the narrative after them is the evidence they rest on.
 
 host: claude

@@ -123,12 +123,6 @@ export interface SurfaceRow {
     verified: VerifiedBlock | null;
     /** Insertion-ordered: bridge entries are written in this order. */
     slots: Map<string, SlotRow>;
-    /**
-     * The row's `rewrite:` value exactly as written. Parsed and checked only by
-     * `_lib/rewrite_axis.ts`, which the dispatch bundle does not carry: the axis
-     * is read where a rewrite is decided, in the egress engine chunk, and by the lint.
-     */
-    rewrite_raw: unknown;
 }
 
 export type HostLowering = Map<string, Map<string, SurfaceRow>>;
@@ -201,7 +195,6 @@ function _structure(raw: Record<string, unknown> | null): HostLowering {
                 slots.set(slot, row);
             }
             surfaces.set(surface, {
-                rewrite_raw: s['rewrite'],
                 entry_shape: String(s['entry_shape'] ?? 'none'),
                 json_shape: String(s['json_shape'] ?? 'none'),
                 fail_policy: String(s['fail_policy'] ?? 'discard'),
