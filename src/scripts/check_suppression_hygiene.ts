@@ -272,7 +272,8 @@ export const SUPPRESSION_INVENTORY: readonly SuppressionSpec[] = [
         file: 'src/config/roadmap-step-size-baseline.json',
         listKey: 'held',
         tier: 'string_list',
-        newInThisChange: true,
+        // `newInThisChange` removed: the baseline resolves at the base ref since
+        // 324969e7e, and the scan reported the stale flag as designed.
         what: 'roadmap steps over the 150-word cap when the cap landed, exempt until split or archived',
     },
 ];
