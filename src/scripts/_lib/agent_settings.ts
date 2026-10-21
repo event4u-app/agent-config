@@ -310,6 +310,11 @@ export const MERGEABLE_KEYS: readonly string[] = [
     // nothing, and `installerThinsHost` still refuses a template-only value.
     'lean_projection.mode',
     'lean_projection.hosts',
+    // `retro.enabled` is the one switch over the automatic retro (ADR-292). It
+    // ships `true`, so the only value worth writing is `false`, and a user who
+    // writes it once in the user-global file expects every checkout to honour
+    // it — without this row the off switch would be discarded silently.
+    'retro.enabled',
 ];
 
 /** The shipped template, relative to the package root. */

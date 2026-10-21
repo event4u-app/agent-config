@@ -16,6 +16,7 @@
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
     LESSONS_NAME,
@@ -26,120 +27,39 @@ import {
     type Signal,
 } from './learning_sidecar.js';
 import { _assert_project_writable } from './memory_signal.js';
-import type { Fact, PrFacts, SessionFacts } from './retro_facts.js';
-import { ACTIVE_STATUSES } from './_lib/self_repair.js';
-import { listRecords, setStatus, targetCounts } from './_lib/self_repair_store.js';
+import { derive_session_tag } from './_lib/session_tag.js';
+import { liveGit, readPrFacts, readSessionFacts, type PrFacts, type SessionFacts } from './retro_facts.js';
+import { liveForgeApi, originUrl, resolveForgeRepo, type ForgeApi } from './_lib/forge_reader.js';
+import {
+    enqueueMerged,
+    listSessionPointers,
+    localDay,
+    markRetroSession,
+    pendingUnits,
+    recordDisposition,
+} from './retro_queue.js';
+import { discoverSessions, forgePrState, renderStatus, retroStatus, runDailySweep } from './retro_sweep.js';
+import {
+    MAX_INTAKE_SIGNALS_PER_UNIT,
+    TARGETS,
+    triagePr,
+    triageSession,
+    unitKey,
+    unitOrigin,
+    type Target,
+    type Triage,
+} from './retro_triage.js';
 
-/** The triage policy version; part of every unit key. */
-export const TRIAGE_POLICY = 1;
-
-export const TARGETS = [
-    'intake-signal',
-    'override-proposal',
-    'contract-no-go-proposal',
-    'package-record',
-    'none',
-] as const;
-export type Target = (typeof TARGETS)[number];
-
-export type TriageClass = 'analyse' | 'skip:low-signal' | 'covered' | 'expired' | 'deferred';
-
-export interface Triage {
-    class: TriageClass;
-    score: number;
-    signals: string[];
-}
-
-/** Score at or above which a unit is worth a model retro. */
-export const ANALYSE_AT = 3;
-
-/** Caps from the contract. */
-export const MAX_INTAKE_SIGNALS_PER_UNIT = 3;
-
-export interface UnitKeyInput {
-    repo: string;
-    pr?: number;
-    merge_sha?: string;
-    session?: string;
-    policy?: number;
-}
-
-/**
- * `{repo, pr|session, merge_sha|tag, policy}` as one string — the queue and
- * disposition key. Corroboration uses {@link unitOrigin}, never this string.
- */
-export function unitKey(k: UnitKeyInput): string {
-    const policy = k.policy ?? TRIAGE_POLICY;
-    if (k.pr !== undefined) return `retro:${k.repo}#pr${k.pr}@${k.merge_sha ?? 'unmerged'}/p${policy}`;
-    if (k.session !== undefined) return `retro:${k.repo}#session@${k.session}/p${policy}`;
-    throw new Error('unitKey: a unit is a PR or a session');
-}
-
-/**
- * The intake origin of a unit: `{repo, pr|session}` only. A failed merge-sha
- * lookup or a policy bump re-keys a disposition, but must never let one PR
- * corroborate itself. The slash is replaced so the provenance gate does not
- * read the origin as a filesystem path.
- */
-export function unitOrigin(key: string): string {
-    const m = /^retro:([^#]+)#(pr\d+|session)(?:@([^/]+))?\/p\d+$/.exec(key);
-    if (m === null) throw new Error(`unitOrigin: not a unit key: ${key}`);
-    const unit = m[2] === 'session' ? `session:${m[3] ?? ''}` : m[2];
-    return `retro:${m[1]!.replace(/\//g, ':')}#${unit}`;
-}
-
-const val = (f: Fact<number>): number | null => (f.status === 'measured' ? f.value : null);
-
-/** Drain-summary conflict cells that say there was none, in the shapes real summaries use. */
-const NO_CONFLICT_RE = /^(none|—|–|-+|0(\s|$)|clean|no (content )?conflicts?)/i;
-
-export function triagePr(f: PrFacts): Triage {
-    let score = 0;
-    const signals: string[] = [];
-    const add = (points: number, why: string): void => {
-        score += points;
-        signals.push(`${why} +${points}`);
-    };
-    const red = val(f.red_heads);
-    if (red !== null && red > 0) add(2 * Math.min(red, 3), `${red} red head(s)`);
-    const heads = val(f.ci_heads);
-    if (heads !== null && heads >= 3) add(1, `${heads} CI heads`);
-    const reverts = val(f.in_pr_reverts);
-    if (reverts !== null && reverts > 0) add(3, 'a revert inside the PR');
-    if (f.later_revert.status === 'measured' && f.later_revert.value) add(5, 'merge commit reverted later');
-    const threads = val(f.review_threads);
-    if (threads !== null && threads > 0) add(Math.min(threads, 3), `${threads} review thread(s)`);
-    if (f.drain_row.status === 'measured') {
-        const row = Object.entries(f.drain_row.value);
-        const conflicts = row.find(([h]) => /conflict/i.test(h))?.[1] ?? '';
-        if (conflicts !== '' && !NO_CONFLICT_RE.test(conflicts)) add(1, 'a drain conflict class');
-        if (row.some(([h, v]) => /disposition/i.test(h) && /twice-exhausted/.test(v))) add(3, 'twice-exhausted');
-    }
-    return { class: score >= ANALYSE_AT ? 'analyse' : 'skip:low-signal', score, signals };
-}
-
-export function triageSession(f: SessionFacts): Triage {
-    let score = 0;
-    const signals: string[] = [];
-    if (f.assistant_records.status === 'measured' && f.assistant_records.value === 0) {
-        return { class: 'skip:low-signal', score: 0, signals: ['no assistant record'] };
-    }
-    const add = (points: number, why: string): void => {
-        score += points;
-        signals.push(`${why} +${points}`);
-    };
-    const repairs = val(f.self_repair_in_window);
-    if (repairs !== null && repairs > 0) add(4, 'a self-repair record in the window');
-    const compactions = val(f.compactions);
-    if (compactions !== null && compactions > 0) add(Math.min(compactions, 2), `${compactions} compaction(s)`);
-    if (f.interruptions.status === 'measured') {
-        const { ask, handback } = f.interruptions.value;
-        if (ask + handback >= 2) add(1, `${ask + handback} interruption(s)`);
-    }
-    const turns = val(f.turns);
-    if (turns !== null && turns >= 20) add(1, `${turns} turns`);
-    return { class: score >= ANALYSE_AT ? 'analyse' : 'skip:low-signal', score, signals };
-}
+export * from './retro_triage.js';
+export * from './retro_sweep.js';
+import {
+    ACTIVE_STATUSES,
+    PRINCIPLE_RE,
+    sanitizeEvidence,
+    type DefectFinding,
+    type DefectRecord,
+} from './_lib/self_repair.js';
+import { listRecords, setStatus, targetCounts, upsertFinding } from './_lib/self_repair_store.js';
 
 /** What the synthesis step proposes for one unit. */
 export interface Candidate {
@@ -383,4 +303,439 @@ export function aggregateSidecar(root: string, nowIso: string): Sidecar {
     fs.writeFileSync(path.join(out, SIDECAR_NAME), `${JSON.stringify(sidecar, null, 2)}\n`);
     fs.writeFileSync(path.join(out, LESSONS_NAME), renderLessonsMd(sidecar));
     return sidecar;
+}
+
+// ---------------------------------------------------------------------------
+// Proposals and package records — the two targets that are not intake signals
+// ---------------------------------------------------------------------------
+
+export const PROPOSALS_REL = path.join('agents', 'proposals');
+
+/** File-name prefix of every retro proposal, so `/memory:propose` can list them. */
+export const RETRO_PROPOSAL_PREFIX = 'retro-';
+
+function proposalType(assetTarget: string | undefined): string {
+    const kind = assetTarget?.split(':')[0];
+    return kind === 'rule' || kind === 'skill' || kind === 'command' ? kind : 'guideline';
+}
+
+const slug = (s: string): string =>
+    s
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 48) || 'learning';
+
+/**
+ * Write an `override-proposal` or `contract-no-go-proposal` as a proposal file
+ * at stage `captured`. Nothing is applied: promotion through the proposal gate
+ * stays a person's act. Returns the repository-relative path, or `null` when
+ * the output is not one of the two proposal targets.
+ */
+export function writeProposal(root: string, out: RetroOutput, candidate: Candidate, nowIso: string): string | null {
+    if (out.target !== 'override-proposal' && out.target !== 'contract-no-go-proposal') return null;
+    if (out.learning === null || out.subject === null) return null;
+    const hash = createHash('sha256').update(`${out.unit_key}\0${out.subject}`).digest('hex').slice(0, 8);
+    const id = `${RETRO_PROPOSAL_PREFIX}${slug(out.subject)}-${hash}`;
+    const rel = path.join(PROPOSALS_REL, `${id}.md`);
+    const day = nowIso.slice(0, 10);
+    const body = [
+        '---',
+        `proposal_id: ${id}`,
+        `type: ${proposalType(candidate.asset_target)}`,
+        'scope: project',
+        'stage: captured',
+        `source_learning: ${JSON.stringify(out.unit_key)}`,
+        `target_artifact: ${JSON.stringify(candidate.asset_target ?? '')}`,
+        'author: retro',
+        `created: ${day}`,
+        `last_updated: ${day}`,
+        `retro_target: ${out.target}`,
+        `retro_unit_key: ${JSON.stringify(out.unit_key)}`,
+        '---',
+        '',
+        `# Proposal: ${out.subject}`,
+        '',
+        '## 1. Learning',
+        '',
+        out.learning,
+        '',
+        '## Counter-hypothesis',
+        '',
+        out.counter_hypothesis ?? '—',
+        '',
+        '## Falsifier',
+        '',
+        out.falsifier ?? '—',
+        '',
+        '## Status',
+        '',
+        `Captured by a retro on \`${out.unit_key}\`. A single retro is evidence #1, never a mandate:`,
+        'nothing here is applied until a person promotes it through the proposal gate.',
+        '',
+    ].join('\n');
+    const file = path.join(root, rel);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    if (!fs.existsSync(file)) fs.writeFileSync(file, body);
+    return rel;
+}
+
+/** At most one package record per run (contract § Caps). */
+export const MAX_PACKAGE_RECORDS_PER_RUN = 1;
+
+const oneLine = (s: string, max: number): string => {
+    const flat = s.replace(/\s+/g, ' ').trim();
+    return flat.length <= max ? flat : `${flat.slice(0, max - 1)}…`;
+};
+
+/**
+ * Write a `package-record` as a self-repair record carrying the claim and the
+ * unit key. Whether it ever leaves the machine is not decided here: the record
+ * passes the same privacy floor and release path as every other one.
+ */
+export function writePackageRecord(
+    root: string,
+    out: RetroOutput,
+    candidate: Candidate,
+    nowIso: string,
+    opts: { treeRoot?: string } = {},
+): DefectRecord | null {
+    if (out.target !== 'package-record' || out.learning === null || out.subject === null) return null;
+    const finding: DefectFinding = {
+        defect_class: 'model-noticed',
+        source: 'model-noticed',
+        evidence: sanitizeEvidence(`retro claim: ${out.subject}`),
+        suggested_surface: sanitizeEvidence(out.learning),
+        ...(candidate.asset_target !== undefined ? { target: [candidate.asset_target] } : {}),
+        ...(PRINCIPLE_RE.test(out.subject) ? { principle: out.subject } : {}),
+        ...(out.falsifier !== null && out.falsifier.trim() !== '' ? { falsifier: oneLine(out.falsifier, 160) } : {}),
+        unit_keys: [out.unit_key],
+    };
+    return upsertFinding(root, finding, nowIso, opts);
+}
+
+/**
+ * Everything one composed retro writes, routed by its single target, then the
+ * unit's disposition and the sidecar. `dryRun` writes nothing.
+ */
+export interface RecordResult {
+    target: Target;
+    written: string | null;
+}
+
+export function recordRetro(
+    root: string,
+    out: RetroOutput,
+    candidate: Candidate | null,
+    nowIso: string,
+    opts: { dryRun?: boolean; packageRecordsThisRun?: number; sessionTag?: string; treeRoot?: string } = {},
+): RecordResult {
+    if (opts.dryRun === true) return { target: out.target, written: null };
+    let written: string | null = null;
+    if (candidate !== null) {
+        if (out.target === 'intake-signal') {
+            written = `${writeIntakeSignals(root, intakeSignals(out, nowIso))} intake signal(s)`;
+        } else if (out.target === 'override-proposal' || out.target === 'contract-no-go-proposal') {
+            written = writeProposal(root, out, candidate, nowIso);
+        } else if (out.target === 'package-record') {
+            if ((opts.packageRecordsThisRun ?? 0) >= MAX_PACKAGE_RECORDS_PER_RUN) {
+                throw new Error('recordRetro: at most one package record per run');
+            }
+            written = writePackageRecord(root, out, candidate, nowIso, opts.treeRoot !== undefined ? { treeRoot: opts.treeRoot } : {})
+                ?.fingerprint ?? null;
+        }
+    }
+    recordDisposition(root, out.unit_key, 'analysed', nowIso);
+    if (opts.sessionTag !== undefined) markRetroSession(root, opts.sessionTag, nowIso);
+    aggregateSidecar(root, nowIso);
+    return { target: out.target, written };
+}
+
+/** Retro learnings for `/memory:propose`: proposal files and retro intake signals, with their unit keys. */
+export interface RetroLearning {
+    kind: 'proposal' | 'intake-signal';
+    unit: string;
+    subject: string;
+    where: string;
+}
+
+export function listRetroLearnings(root: string): RetroLearning[] {
+    const out: RetroLearning[] = [];
+    const dir = path.join(root, PROPOSALS_REL);
+    let names: string[] = [];
+    try {
+        names = fs.readdirSync(dir).sort();
+    } catch {
+        names = [];
+    }
+    for (const n of names) {
+        if (!n.startsWith(RETRO_PROPOSAL_PREFIX) || !n.endsWith('.md')) continue;
+        const text = fs.readFileSync(path.join(dir, n), 'utf-8');
+        const unit = /^retro_unit_key:\s*"?([^"\n]+)"?$/m.exec(text)?.[1] ?? '';
+        const subject = /^# Proposal:\s*(.+)$/m.exec(text)?.[1] ?? n;
+        out.push({ kind: 'proposal', unit, subject, where: path.join(PROPOSALS_REL, n) });
+    }
+    const intake = path.join(root, INTAKE_REL);
+    let files: string[] = [];
+    try {
+        files = fs.readdirSync(intake).filter((f) => f.endsWith('.jsonl')).sort();
+    } catch {
+        files = [];
+    }
+    for (const f of files) {
+        for (const line of fs.readFileSync(path.join(intake, f), 'utf-8').split('\n')) {
+            let r: Record<string, unknown>;
+            try {
+                r = JSON.parse(line) as Record<string, unknown>;
+            } catch {
+                continue;
+            }
+            if (r['source'] !== 'retro') continue;
+            out.push({
+                kind: 'intake-signal',
+                unit: String(r['origin'] ?? ''),
+                subject: String(r['path'] ?? ''),
+                where: path.join(INTAKE_REL, f),
+            });
+        }
+    }
+    return out;
+}
+
+// ---------------------------------------------------------------------------
+// Manual retro — `/retro` by hand never reads or writes the switch
+// ---------------------------------------------------------------------------
+
+export interface PlannedUnit {
+    unit_key: string;
+    facts: PrFacts | SessionFacts;
+    triage: Triage;
+}
+
+/**
+ * Triage the units a person asked for. Reads no setting and writes nothing, so
+ * a manual run neither depends on `retro.enabled` nor re-enables an automatic
+ * path; a paused sweep does not pause it.
+ */
+export function planManualRetro(
+    _root: string,
+    input: { repo: string; facts: ReadonlyArray<PrFacts | SessionFacts> },
+): PlannedUnit[] {
+    return input.facts.map((f) => ({
+        unit_key:
+            f.unit === 'pr'
+                ? unitKey({
+                      repo: input.repo,
+                      pr: f.pr,
+                      ...(f.merge_sha.status === 'measured' ? { merge_sha: f.merge_sha.value } : {}),
+                  })
+                : unitKey({ repo: input.repo, session: f.tag }),
+        facts: f,
+        triage: f.unit === 'pr' ? triagePr(f) : triageSession(f),
+    }));
+}
+
+// ---------------------------------------------------------------------------
+// CLI — the `/retro` forms (`docs/contracts/retro-v1.md`)
+// ---------------------------------------------------------------------------
+
+function argValue(argv: readonly string[], flag: string): string | null {
+    const i = argv.indexOf(flag);
+    return i === -1 ? null : (argv[i + 1] ?? null);
+}
+
+function argValues(argv: readonly string[], flag: string): string[] {
+    const out: string[] = [];
+    argv.forEach((a, i) => {
+        if (a === flag && argv[i + 1] !== undefined) out.push(argv[i + 1]!);
+    });
+    return out;
+}
+
+interface Forge {
+    slug: string;
+    api: ForgeApi;
+}
+
+function liveForge(root: string): Forge | null {
+    const target = resolveForgeRepo(originUrl(root));
+    if (target === null) return null;
+    return { slug: target.slug, api: liveForgeApi(undefined, undefined, { host: target.host, cwd: root }) };
+}
+
+/** `retro:<repo>#pr<N>@…` or `retro:<repo>#session@<tag>/p…` back into what reads its facts. */
+export function parseUnitKey(key: string): { repo: string; pr?: number; session?: string } | null {
+    const m = /^retro:([^#]+)#(?:pr(\d+)@[^/]+|session@([^/]+))\/p\d+$/.exec(key);
+    if (m === null) return null;
+    return m[2] !== undefined ? { repo: m[1]!, pr: Number(m[2]) } : { repo: m[1]!, session: m[3]! };
+}
+
+const USAGE = [
+    'usage: retro                         examine the queued units (facts + triage)',
+    '       retro <N>                     one merged PR',
+    '       retro --session [<tag>]       this session, or the session with that tag',
+    '       retro --since <YYYY-MM-DD>    every session that ended on or after the day',
+    '       retro status                  queue, last sweep, skip reasons, backlog, triage p50',
+    '       retro learnings               retro proposals and intake signals, with their unit keys',
+    '       retro record --unit <key> --candidate <file.json>',
+    '       retro enqueue-merged --pr <N> [--pr <M> …]   path A, once after /pr:merge',
+    '       retro sweep                   path C by hand (respects retro.enabled)',
+    '       --dry-run on any form writes nothing',
+].join('\n');
+
+export function main(
+    argv: readonly string[] = process.argv.slice(2),
+    out = (s: string): void => {
+        process.stdout.write(`${s}\n`);
+    },
+    root: string = process.cwd(),
+): number {
+    const dryRun = argv.includes('--dry-run');
+    const args = argv.filter((a) => a !== '--dry-run');
+    const now = new Date().toISOString();
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const verb = args[0];
+
+    if (verb === 'status') {
+        out(renderStatus(retroStatus(root)));
+        return 0;
+    }
+    if (verb === 'learnings') {
+        const rows = listRetroLearnings(root);
+        out(rows.length === 0 ? 'no retro learnings' : rows.map((r) => `${r.kind}\t${r.unit}\t${r.subject}\t${r.where}`).join('\n'));
+        return 0;
+    }
+    if (verb === '--help' || verb === '-h') {
+        out(USAGE);
+        return 0;
+    }
+
+    const forge = liveForge(root);
+    const repo = forge?.slug ?? path.basename(root);
+    const prFacts = (pr: number): PrFacts | null =>
+        forge === null ? null : readPrFacts({ pr, slug: forge.slug, api: forge.api, git: liveGit(root), root });
+
+    if (verb === 'enqueue-merged') {
+        const prs = argValues(args, '--pr').map(Number).filter((n) => Number.isInteger(n) && n > 0);
+        if (prs.length === 0) {
+            out('retro enqueue-merged: --pr <N> at least once');
+            return 2;
+        }
+        if (dryRun) {
+            out(`would enqueue ${prs.length} PR(s) when retro.enabled is on`);
+            return 0;
+        }
+        const read = forge === null ? null : forgePrState(forge.api, forge.slug);
+        const r = enqueueMerged(
+            root,
+            {
+                repo,
+                prs: prs.map((pr) => {
+                    const s = read?.(pr);
+                    return { pr, merge_sha: s?.state === 'MERGED' ? s.merge_sha : null };
+                }),
+            },
+            now,
+        );
+        out(r.status === 'enqueued' ? `retro: ${r.units.length} unit(s) enqueued` : `retro: ${r.status} — nothing enqueued`);
+        return 0;
+    }
+
+    if (verb === 'sweep') {
+        const r = runDailySweep(root, {
+            now,
+            timeZone: tz,
+            repo,
+            sessions: discoverSessions(root, tz),
+            ...(forge !== null ? { readPr: forgePrState(forge.api, forge.slug) } : {}),
+            ...(dryRun ? { enabled: false } : {}),
+        });
+        out(r.line ?? `retro sweep: ${dryRun ? 'dry run — nothing written' : r.status}`);
+        return 0;
+    }
+
+    if (verb === 'record') {
+        const key = argValue(args, '--unit');
+        const candFile = argValue(args, '--candidate');
+        const unit = key === null ? null : parseUnitKey(key);
+        if (key === null || unit === null || candFile === null) {
+            out('retro record: --unit <unit key> and --candidate <file.json> are required');
+            return 2;
+        }
+        const candidate = JSON.parse(fs.readFileSync(candFile, 'utf-8')) as Candidate | null;
+        const facts = unit.pr !== undefined ? prFacts(unit.pr) : readSessionFacts({ tag: unit.session!, root });
+        if (facts === null) {
+            out('retro record: origin is not a GitHub repository; PR facts cannot be read');
+            return 2;
+        }
+        const composed = composeRetro({ key, facts, candidate, root });
+        const sessionId = process.env['CLAUDE_CODE_SESSION_ID'];
+        const res = recordRetro(root, composed, candidate, now, {
+            dryRun,
+            ...(sessionId !== undefined && sessionId !== '' ? { sessionTag: derive_session_tag(sessionId) } : {}),
+        });
+        out(JSON.stringify({ ...res, reason: composed.reason, recurrence: composed.recurrence }, null, 2));
+        return 0;
+    }
+
+    // Examination forms: facts + triage, written nowhere.
+    const facts: Array<PrFacts | SessionFacts> = [];
+    if (verb !== undefined && /^\d+$/.test(verb)) {
+        const f = prFacts(Number(verb));
+        if (f === null) {
+            out('retro: origin is not a GitHub repository; PR facts cannot be read');
+            return 2;
+        }
+        facts.push(f);
+    } else if (verb === '--session') {
+        const tag = args[1] ?? '';
+        const id = process.env['CLAUDE_CODE_SESSION_ID'] ?? '';
+        if (tag !== '') facts.push(readSessionFacts({ tag, root }));
+        else if (id !== '') facts.push(readSessionFacts({ sessionId: id, root }));
+        else {
+            out('retro --session: no tag given and no session id in the environment');
+            return 2;
+        }
+    } else if (verb === '--since') {
+        const since = args[1] ?? '';
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(since)) {
+            out('retro --since: a day as YYYY-MM-DD');
+            return 2;
+        }
+        for (const p of listSessionPointers(root)) {
+            if (localDay(p.ended_at, tz) >= since) facts.push(readSessionFacts({ tag: p.tag, root }));
+        }
+    } else if (verb === undefined) {
+        for (const e of pendingUnits(root)) {
+            if (e.kind === 'pr' && e.pr !== undefined) {
+                const f = prFacts(e.pr);
+                if (f !== null) facts.push(f);
+            } else if (e.session !== undefined) {
+                facts.push(readSessionFacts({ tag: e.session, root }));
+            }
+        }
+    } else {
+        out(USAGE);
+        return 2;
+    }
+    out(JSON.stringify(planManualRetro(root, { repo, facts }), null, 2));
+    return 0;
+}
+
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where every
+// module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+function isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) return false;
+    if (process.argv[1] === undefined) return false;
+    if (import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) return true;
+    try {
+        return fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(path.resolve(process.argv[1]));
+    } catch {
+        return false;
+    }
+}
+
+if (isCliEntry()) {
+    process.exit(main());
 }

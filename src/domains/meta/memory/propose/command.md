@@ -43,6 +43,18 @@ Do NOT use when:
 
 ## Steps
 
+### 0. Show what a retro already captured
+
+```bash
+./scripts-run src/scripts/retro learnings
+```
+
+Lists every retro learning still waiting for a person — proposal files under
+`agents/proposals/retro-*.md` and intake signals with `source: retro` — each with
+the unit key of the finished work it came from. Show the list when it is not
+empty: a finding the user is about to propose may already be one of them, and
+promoting a retro learning is this person's act, never the retro's.
+
 ### 1. Pick the memory type
 
 ```

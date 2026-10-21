@@ -338,6 +338,9 @@ describe('MERGEABLE_KEYS', () => {
             // and it was the one layer being filtered.
             'lean_projection.mode',
             'lean_projection.hosts',
+            // ADR-292: the retro's one switch ships `true`, so `false` is the only
+            // value worth writing, and it must hold from the user-global file.
+            'retro.enabled',
         ]);
     });
 

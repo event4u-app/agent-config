@@ -191,6 +191,7 @@ commands:
     - memory/mine-session
     - memory/promote
     - memory/propose
+    - retro
     - module
     - module/explore
     - optimize

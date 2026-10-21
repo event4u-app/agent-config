@@ -7,7 +7,7 @@
 
 > Every command is classified in `src/flows/surface-map.yaml` (coverage enforced by `scripts/lint_command_flow_coverage.py`). The four user-work flows carry rich definitions in `src/flows/<flow>.yaml`.
 
-**207 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
+**208 commands** across **10 surfaces** (4 user-work flows + 6 platform/domain surfaces).
 
 ## User-work flows
 
@@ -223,6 +223,7 @@ _The system/admin surface (NOT a flow): memory · analytics · governance · con
 - `profile-activate` — Activate a session profile — surface only the named profile/pack closure plus core artefacts, no persistence
 - `profile-deactivate` — Deactivate the session profile — clear the overlay (or drop named packs) so the full surface returns
 - `profile-show` — Show the active session profile — active packs and surfaced/hidden command+skill counts (observability surf…
+- `retro` — Examine a merged PR or finished session and keep at most one durable learning
 - `review-routing` — Compute reviewer roles and matched historical bug patterns for the current diff, using project-local owners…
 - `rule-compliance-audit` — Audit rule trigger quality, simulate activation, detect overlaps, find never-activating rules, and replay t…
 - `skill` — Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it.
