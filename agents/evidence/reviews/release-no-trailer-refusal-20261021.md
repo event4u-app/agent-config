@@ -1,4 +1,4 @@
-<!-- evidence-type: review -->
+<!-- evidence-type: analysis -->
 
 # Removing the Consumer-Impact span refusal — the verdict behind the weaker test
 
