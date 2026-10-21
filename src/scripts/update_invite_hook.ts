@@ -78,12 +78,17 @@ export function readInviteState(statePath: string): InviteState {
  *
  * `O_CREAT | O_EXCL` makes the claim, not the read before it, so of two
  * sessions that both decided to ask, exactly one creates the record and only
- * that one prints. It also refuses a symlink at the path. A claim that cannot be
- * made for any other reason asks nothing: a question that cannot be recorded
- * could repeat. A reader racing the content write sees an unreadable record,
- * which counts as invited.
+ * that one prints. It also refuses a symlink at the path. Nothing here throws:
+ * a claim that cannot be made asks nothing, because a question that cannot be
+ * recorded could repeat; a record created but not fully written is removed
+ * again, so a failed write cannot silence the invitation forever. A reader
+ * racing the content write sees an unreadable record, which counts as invited.
  */
-export function claimInvite(statePath: string, invitedAt: string): boolean {
+export function claimInvite(
+    statePath: string,
+    invitedAt: string,
+    writeRecord: (fd: number, text: string) => void = (fd, text) => fs.writeFileSync(fd, text),
+): boolean {
     let fd: number;
     try {
         fs.mkdirSync(path.dirname(statePath), { recursive: true });
@@ -91,12 +96,26 @@ export function claimInvite(statePath: string, invitedAt: string): boolean {
     } catch {
         return false;
     }
+    let written = false;
     try {
-        fs.writeSync(fd, `${JSON.stringify({ invited_at: invitedAt } satisfies InviteState, null, 2)}\n`);
-    } finally {
-        fs.closeSync(fd);
+        writeRecord(fd, `${JSON.stringify({ invited_at: invitedAt } satisfies InviteState, null, 2)}\n`);
+        written = true;
+    } catch {
+        /* handled below: the half-written claim is withdrawn */
     }
-    return true;
+    try {
+        fs.closeSync(fd);
+    } catch {
+        written = false;
+    }
+    if (!written) {
+        try {
+            fs.unlinkSync(statePath);
+        } catch {
+            /* an unremovable half-record reads as invited, the direction that cannot repeat */
+        }
+    }
+    return written;
 }
 
 /**
