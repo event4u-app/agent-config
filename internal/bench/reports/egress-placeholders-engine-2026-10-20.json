@@ -1,0 +1,149 @@
+{
+  "seed": 20261020,
+  "per_type": 100,
+  "falsification": {
+    "recall_without_github_pat": 0,
+    "growing_replacer_mismatches": 10
+  },
+  "recall": {
+    "anthropic-api-key": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "anthropic-project-key": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "aws-access-key": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "google-api-key": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "github-pat": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "github-fine-grained-pat": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "openai-api-key": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "google-oauth-token": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "github-app-token": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "xai-api-key": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "perplexity-api-key": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "groq-api-key": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "jwt": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "stripe-secret-key": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "slack-token": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "pem-private-key": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "db-connection-uri": {
+      "hit": 100,
+      "n": 100,
+      "rate": 1
+    },
+    "generic-assignment": {
+      "hit": 75,
+      "n": 100,
+      "rate": 0.75
+    }
+  },
+  "idempotence_mismatches": 0,
+  "precision_credential": {
+    "files": 11628,
+    "flagged": 34,
+    "rate": 0.0029239766081871343,
+    "flagged_files": [
+      "agents/evidence/analysis/inbox-2026-09-e-verification.md",
+      "agents/evidence/council/one-detector-shared-detection-review-20261018-r2.question.md",
+      "agents/evidence/council/pr2366-egress-review-r2-20261015.question.md",
+      "agents/evidence/council/pr2366-egress-review-r3-20261015.question.md",
+      "agents/evidence/council/pr2366-egress-review-r5-20261015.question.md",
+      "src/config/gate-coverage.yml",
+      "src/scripts/_lib/egress_legacy_superset.test.ts",
+      "src/scripts/_lib/egress_rules_parity.test.ts",
+      "src/scripts/_lib/egress_token.test.ts",
+      "src/scripts/_lib/fixtures/secret-detector/negatives.txt",
+      "src/scripts/_lib/fixtures/secret-detector/positives.txt",
+      "src/scripts/_lib/secret_detector.test.ts",
+      "src/scripts/check_secret_leak.test.ts",
+      "tests/fixtures/cross-repo/sibling-a/src/api_contract.ts",
+      "tests/fixtures/egress-prevention-gaps/program-output.json",
+      "tests/fixtures/knowledge-corpus/with-secrets/leaked.md",
+      "tests/lib/user_global_observations.test.ts",
+      "tests/lib/user_global_observations_project_attribution.test.ts",
+      "tests/scripts/_lib_checkpoint_schema.test.ts",
+      "tests/scripts/ai_council/council_egress.test.ts",
+      "tests/scripts/cli/python/workspace_documents.test.ts",
+      "tests/scripts/cli/python/workspace_secrets.test.ts",
+      "tests/scripts/cli/python/workspace_sessions.test.ts",
+      "tests/scripts/envelope_grounding.test.ts",
+      "tests/scripts/fetched_bytes_sanitized.test.ts",
+      "tests/scripts/hooks/egress_injection.test.ts",
+      "tests/scripts/merge_impact_closed_vocabulary.test.ts",
+      "tests/scripts/neighbour_census.test.ts",
+      "tests/scripts/network_sources.test.ts",
+      "tests/scripts/reach_doctor.test.ts",
+      "tests/scripts/self_repair_release.test.ts",
+      "tests/scripts/validate_reach_prescriptions.test.ts",
+      "tests/scripts/work_engine/scoring_memory_visibility_redaction.test.ts",
+      "tests/test_release_install_e2e.sh"
+    ]
+  },
+  "latency_ms": {
+    "p50": 7.849583,
+    "p95": 8.784625,
+    "bytes": 65536
+  },
+  "node": "v26.7.0",
+  "platform": "darwin-arm64"
+}

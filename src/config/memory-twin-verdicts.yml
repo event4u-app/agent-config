@@ -63,9 +63,15 @@ twins:
 
   - file: check_memory.ts
     mode: bounded
-    max_changed_lines: 18
+    max_changed_lines: 30
     verdict: dev-side-correct
     reason: >-
+      Raised 18 -> 30 on 2026-10-21 for case (a) a third time: the dev side builds
+      its inline-credential pattern with `assignmentPattern` from
+      `_lib/egress_rules.js` (one detector, road-to-one-detector-and-the-senders-we-own),
+      and the template keeps the literal it cannot import. The generated source and
+      flags are byte-identical to the literal; the 12 lines are the import and the
+      call shape. The portable half, `export const REDACTION_PATTERNS`, was ported.
       Reconciled 195 -> 18 on 2026-08-26. The template was a stale snapshot
       missing SEVEN validations the dev side had grown: the `priority` enum, the
       critical-stale SLA, the one-fact length limit, relative-date discipline,

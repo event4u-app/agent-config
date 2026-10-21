@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# egress-content: session-content uncovered — the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach
 # openai-images.sh — image generation adapter (DALL-E / gpt-image-1).
 #
 # Capability: audio=none (still images only — motion handled by a

@@ -16,8 +16,8 @@ re-defines a term below.
 
 **Stability: experimental.** The rule table, the token grammar, an in-memory
 replacement and the dispatcher's egress stage (local views and counts only)
-exist; identifier rules, the senders' final check and every host rewrite do
-not. A
+exist, and the council channel's replacement and final check; identifier
+rules, a final check on every other sender and every host rewrite do not. A
 section below that names an open decision is not a promise of its outcome.
 
 ## What this is not
@@ -56,11 +56,19 @@ looser than the row (an OpenAI key glued to a word, a GitHub token past 36
 characters, a key block whose END label differs) keeps that reading over the
 table's prefixes. `rawKeyPrefixPattern` holds a prefix to a token start only
 where its own row is anchored. `check_credential_spelling` fails a second
-spelling of a declared prefix under `src/scripts` and `src/cli`. Not yet moved: the keyword-assignment
-variants (`password =`, `api_key:`) that several consumers read at their own,
-looser threshold, and one prefix spelled through a character class in
-`check_reach_channels.ts`; neither carries a vendor literal, so the
-single-spelling test cannot see them.
+spelling of a declared prefix under `src/scripts` and `src/cli`.
+
+The shapes that carry no vendor literal are the table's too: the
+keyword-assignment vocabulary (`ASSIGNMENT_KEYWORDS`, built by
+`assignmentPattern`), the `Authorization` header name and two raw-key prefix
+families spelled as a class (`CLASS_SPELLED_PREFIXES`). Each consumer picks the
+keywords it always read, in its own order, and keeps its own threshold for the
+value; the rebuilt regexes are the pre-move spellings byte for byte. A
+consumer the dispatch bundle carries reads the one keyword it needs through
+`egress_prefixes.ts`. `check_credential_spelling` also fails a class or
+alternation spelling that expands to a declared prefix and a keyword-assignment
+shape — a table keyword beside the `[:=]` operator class on one line — outside
+the table; it does not see a shape assembled across lines.
 
 ## Detection span and replacement span
 
@@ -178,6 +186,23 @@ about evidence, not intent.
 
 A channel moves out of `uncovered` only with its proof committed. A measured null
 or a regression is published in the same table, not withheld.
+
+### Published, per channel (2026-10-20)
+
+| Channel | Who writes the request | Credential class | Identifier class | Evidence |
+|---|---|---|---|---|
+| Council requests (bundle and every member call) | this package | `asserted` | `uncovered` — no identifier row exists; replaced only in `protect`/`strict` once one does (D8) | `tests/scripts/ai_council/council_egress.test.ts` |
+| Every other sender of this package | this package | per the census below: `fixed-corpus`, or `uncovered` with its reason | `uncovered` | § This package's own senders |
+| Context this package injects into a session (hot context, handoff, memory recall) | the host, carrying text this package wrote | `uncovered` — replaced at injection in `protect`/`strict`, but no host drop rate is measured, which `replaced` requires | `uncovered` | `tests/scripts/hooks/egress_injection.test.ts` |
+| The typed prompt | the host | `uncovered` | `uncovered` | `road-to-placeholders-on-the-wire` |
+| Tool results | the host | `uncovered` | `uncovered` | `road-to-placeholders-on-the-wire` |
+| Tool inputs | the host | `uncovered` | `uncovered` | `road-to-placeholders-on-the-wire` |
+| Host telemetry that can export prompts or bodies (threat j2) | the host | `uncovered` | `uncovered` | `road-to-placeholders-on-the-wire` |
+| A request gateway (threat j4) | the host or a gateway | `uncovered` | `uncovered` | `road-to-placeholders-on-the-wire` |
+| Arguments to an external tool — an MCP server, a web fetch (threat j5) | the host | `uncovered` | `uncovered` | `road-to-placeholders-on-the-wire` |
+
+Every channel this package does not write is `uncovered` until the host-carrier
+roadmap commits its proof; this table changes only with that proof.
 
 ## Logging
 
@@ -406,6 +431,20 @@ beside the digests, so the table is data minimisation, not a defence against a
 reader running as the same user. Byte lengths in a payload stub are
 measured on the received envelope whichever view the stub is cut from.
 
+**What this package injects goes through the engine too.** Every concern's
+reply that the dispatcher hands back to the session — a `context` block at
+session start (hot context, a handoff) and the `reason` plus
+`additional_context` of every other reply (memory recall among them) — passes
+`egressInjection` in `src/scripts/hooks/egress_stage.ts`. In `protect` and
+`strict` each listed value becomes its token under one scope per dispatch, so
+one value is one token across replies; text whose secret has no provable
+extent, or that no engine can read, is withheld whole as
+`[egress: injected text withheld (<rule>)]`. `off` and `observe` inject the
+text unchanged. The mode is read once per dispatch, and only when a reply
+carries text. The per-text work lives in the engine chunk
+(`src/scripts/_lib/egress_text.ts`, schema 2), so the dispatch bundle carries
+only the field walk.
+
 **What the placeholder view does not reach.** A concern that opens the host's
 transcript file reads it from disk, raw; an operator-armed raw capture
 (`AGENT_HOOK_CAPTURE_DIR`) writes the received payload before the stage runs;
@@ -469,9 +508,37 @@ Every module of this package that posts to a model or media provider, one row
 each, derived from the source rather than listed by hand. A row is a claim about
 source text: `sender` means the module names a provider endpoint and carries a
 recognised send shape, `local` that its only endpoint is loopback, and
-`unclassified` that the scanner could not settle it — never that it is safe. No
-row here is `asserted` until its request passes the egress engine and the final
-check of § The four published states.
+`unclassified` that the scanner could not settle it — never that it is safe.
+Each module also carries an `egress-content:` marker, and its **coverage** is
+what the contract may publish for it: `asserted` (its requests pass the
+replacement and the final check of § The four published states — accepted only
+from a module that imports that check), `fixed-corpus` (it sends a corpus this
+package fixed, never session content) or `uncovered` with the reason. A sender
+with no answer is `undeclared`, and `egress_sender_census` — run by
+`egress_sender_scan.test.ts` in CI, not a registered gate — fails on it whether
+or not the committed table is current.
+
+**The council channel is `asserted` for credentials.** The bundle replaces every
+value the table detects with a placeholder, span by span, under one scope per
+run (`src/scripts/ai_council/council_egress.ts`); the final check runs in
+`callMember`, in `curlJsonPost` before curl is spawned and before a CLI seat is
+spawned, over every value that scope replaced and every high-confidence finding
+(a credential row other than the keyword-entropy one, or a validated
+identifier), and a hit refuses the send with a reason that names no value. A
+canary that plants a replaced value past the bundle is refused, and the same
+body handed to a member directly carries it
+(`tests/scripts/ai_council/council_egress.test.ts`). The retained record holds
+what was sent, so it keeps the placeholders; `restoreForDisplay` resolves
+identifiers for an in-process display, and the council run has no such display
+today. The channel carries no identifier claim until identifier rows exist: an
+e-mail, an IBAN or a phone number still leaves it unchanged. When they exist,
+the bundle replaces and the final check refuses identifiers only in `protect`
+and `strict` — credentials are replaced whatever the mode, because the bundle
+masked every credential line before; whether identifiers are replaced by
+default for consumers is the owner's decision D8. A caller of the
+client classes outside a council round (team review, the low-impact fast path,
+`ask_transport`, the benches) gets the final check but no replacement, so a
+credential in its prompt is refused rather than replaced.
 
 <!-- BEGIN egress-sender-census (generated) -->
 > Generated by `egress_sender_census`. Do not edit between the markers;
@@ -483,34 +550,36 @@ scanner does not recognise is absent from this table; that residual is why
 `unclassified` exists. `content` stays `undeclared` until the module carries an
 `egress-content:` marker, and `engine` counts a direct import of a function that detects or replaces
 (`detect`, `findSpans`, `replaceSpans`, `replaceValues`); importing a table constant does not count.
+`coverage` is what the module's marker claims (`asserted` only for a module that imports the final
+check, `council_egress.ts`); `undeclared` fails the census.
 
-| module | endpoint | content | engine | status | evidence |
-|---|---|---|---|---|---|
-| `src/scripts/_lib/llm_proposer_transport.ts` | `api.anthropic.com` | undeclared | no | **sender** | names a provider endpoint and carries a send shape |
-| `src/scripts/_lib/trigger_routers.ts` | `api.anthropic.com`, `api.openai.com`, `generativelanguage.googleapis.com` | undeclared | no | **sender** | names a provider endpoint and carries a send shape |
-| `src/scripts/ai-image/adapters/flux.sh` | `configured` | undeclared | no | **unclassified** | media adapter whose endpoint is configured, not written down |
-| `src/scripts/ai-image/adapters/gemini-image.sh` | `generativelanguage.googleapis.com` | undeclared | no | **sender** | media adapter naming a provider endpoint |
-| `src/scripts/ai-image/adapters/ideogram.sh` | `api.ideogram.ai` | undeclared | no | **sender** | media adapter naming a provider endpoint |
-| `src/scripts/ai-image/adapters/recraft.sh` | `external.api.recraft.ai` | undeclared | no | **sender** | media adapter naming a provider endpoint |
-| `src/scripts/ai-video/adapters/comfyui.sh` | `127.0.0.1`, `localhost` | undeclared | no | **local** | media adapter whose only endpoint is loopback |
-| `src/scripts/ai-video/adapters/fal.sh` | `queue.fal.run` | undeclared | no | **sender** | media adapter naming a provider endpoint |
-| `src/scripts/ai-video/adapters/gemini-veo.sh` | `generativelanguage.googleapis.com` | undeclared | no | **sender** | media adapter naming a provider endpoint |
-| `src/scripts/ai-video/adapters/higgsfield.sh` | `platform.higgsfield.ai` | undeclared | no | **sender** | media adapter naming a provider endpoint |
-| `src/scripts/ai-video/adapters/kling.sh` | `api.klingai.com` | undeclared | no | **sender** | media adapter naming a provider endpoint |
-| `src/scripts/ai-video/adapters/musetalk.sh` | `configured` | undeclared | no | **unclassified** | media adapter whose endpoint is configured, not written down |
-| `src/scripts/ai-video/adapters/openai-images.sh` | `configured` | undeclared | no | **unclassified** | media adapter whose endpoint is configured, not written down |
-| `src/scripts/ai-video/adapters/replicate.sh` | `api.replicate.com` | undeclared | no | **sender** | media adapter naming a provider endpoint |
-| `src/scripts/ai-video/adapters/sora.sh` | `api.openai.com` | undeclared | no | **sender** | media adapter naming a provider endpoint |
-| `src/scripts/ai-video/adapters/syncso.sh` | `api.sync.so` | undeclared | no | **sender** | media adapter naming a provider endpoint |
-| `src/scripts/ai_council/airgap.ts` | `api.anthropic.com`, `api.openai.com`, `generativelanguage.googleapis.com` | undeclared | no | **unclassified** | names a provider endpoint with no recognised send shape — read the module |
-| `src/scripts/ai_council/api_transport.ts` | `generativelanguage.googleapis.com` | undeclared | no | **sender** | names a provider endpoint and carries a send shape |
-| `src/scripts/ai_council/clients.ts` | `api.anthropic.com`, `api.openai.com`, `api.perplexity.ai`, `api.x.ai` | undeclared | no | **unclassified** | names a provider endpoint with no recognised send shape — read the module |
-| `src/scripts/rdp_gate_classify.ts` | `api.anthropic.com` | undeclared | no | **sender** | names a provider endpoint and carries a send shape |
-| `src/scripts/rdp_quality_eval.ts` | `api.anthropic.com` | undeclared | no | **sender** | names a provider endpoint and carries a send shape |
-| `src/scripts/second_brain_retrieval.ts` | `api.anthropic.com` | undeclared | no | **sender** | names a provider endpoint and carries a send shape |
-| `src/scripts/second_brain_run.ts` | `api.anthropic.com` | undeclared | no | **sender** | names a provider endpoint and carries a send shape |
+| module | endpoint | content | engine | status | evidence | coverage | reason |
+|---|---|---|---|---|---|---|---|
+| `src/scripts/_lib/llm_proposer_transport.ts` | `api.anthropic.com` | session-content | no | **sender** | names a provider endpoint and carries a send shape | **uncovered** | the prompt is assembled from repository evidence at run time and is not passed through the engine; the module has made no live call |
+| `src/scripts/_lib/trigger_routers.ts` | `api.anthropic.com`, `api.openai.com`, `generativelanguage.googleapis.com` | fixed-corpus | no | **sender** | names a provider endpoint and carries a send shape | **fixed-corpus** | sends the trigger-eval corpus (skill descriptions and the eval's own prompts), never session content |
+| `src/scripts/ai-image/adapters/flux.sh` | `configured` | session-content | no | **unclassified** | media adapter whose endpoint is configured, not written down | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
+| `src/scripts/ai-image/adapters/gemini-image.sh` | `generativelanguage.googleapis.com` | session-content | no | **sender** | media adapter naming a provider endpoint | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
+| `src/scripts/ai-image/adapters/ideogram.sh` | `api.ideogram.ai` | session-content | no | **sender** | media adapter naming a provider endpoint | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
+| `src/scripts/ai-image/adapters/recraft.sh` | `external.api.recraft.ai` | session-content | no | **sender** | media adapter naming a provider endpoint | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
+| `src/scripts/ai-video/adapters/comfyui.sh` | `127.0.0.1`, `localhost` | session-content | no | **local** | media adapter whose only endpoint is loopback | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
+| `src/scripts/ai-video/adapters/fal.sh` | `queue.fal.run` | session-content | no | **sender** | media adapter naming a provider endpoint | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
+| `src/scripts/ai-video/adapters/gemini-veo.sh` | `generativelanguage.googleapis.com` | session-content | no | **sender** | media adapter naming a provider endpoint | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
+| `src/scripts/ai-video/adapters/higgsfield.sh` | `platform.higgsfield.ai` | session-content | no | **sender** | media adapter naming a provider endpoint | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
+| `src/scripts/ai-video/adapters/kling.sh` | `api.klingai.com` | session-content | no | **sender** | media adapter naming a provider endpoint | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
+| `src/scripts/ai-video/adapters/musetalk.sh` | `configured` | session-content | no | **unclassified** | media adapter whose endpoint is configured, not written down | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
+| `src/scripts/ai-video/adapters/openai-images.sh` | `configured` | session-content | no | **unclassified** | media adapter whose endpoint is configured, not written down | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
+| `src/scripts/ai-video/adapters/replicate.sh` | `api.replicate.com` | session-content | no | **sender** | media adapter naming a provider endpoint | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
+| `src/scripts/ai-video/adapters/sora.sh` | `api.openai.com` | session-content | no | **sender** | media adapter naming a provider endpoint | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
+| `src/scripts/ai-video/adapters/syncso.sh` | `api.sync.so` | session-content | no | **sender** | media adapter naming a provider endpoint | **uncovered** | the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach |
+| `src/scripts/ai_council/airgap.ts` | `api.anthropic.com`, `api.openai.com`, `generativelanguage.googleapis.com` | fixed-corpus | no | **unclassified** | names a provider endpoint with no recognised send shape — read the module | **fixed-corpus** | a DNS lookup of the provider hosts; no request body exists |
+| `src/scripts/ai_council/api_transport.ts` | `generativelanguage.googleapis.com` | session-content | no | **sender** | names a provider endpoint and carries a send shape | **asserted** | every body passes councilEgress().check in curlJsonPost before curl is spawned; the council bundle is replaced through the engine first |
+| `src/scripts/ai_council/clients.ts` | `api.anthropic.com`, `api.openai.com`, `api.perplexity.ai`, `api.x.ai` | session-content | no | **unclassified** | names a provider endpoint with no recognised send shape — read the module | **asserted** | API seats post through api_transport.curlJsonPost and CLI seats pass councilEgress().check before the spawn; council rounds are replaced through the engine first |
+| `src/scripts/rdp_gate_classify.ts` | `api.anthropic.com` | fixed-corpus | no | **sender** | names a provider endpoint and carries a send shape | **fixed-corpus** | sends the labelled classification corpus named by --corpus, never session content |
+| `src/scripts/rdp_quality_eval.ts` | `api.anthropic.com` | fixed-corpus | no | **sender** | names a provider endpoint and carries a send shape | **fixed-corpus** | sends the RDP quality corpus (corpus-prompts.json or --corpus), never session content |
+| `src/scripts/second_brain_retrieval.ts` | `api.anthropic.com` | fixed-corpus | no | **sender** | names a provider endpoint and carries a send shape | **fixed-corpus** | sends the seeded retrieval corpus (retrieval-corpus.yml) and entries retrieved from it, never session content |
+| `src/scripts/second_brain_run.ts` | `api.anthropic.com` | fixed-corpus | no | **sender** | names a provider endpoint and carries a send shape | **fixed-corpus** | sends the deterministic recall corpus of Phase 1, never session content |
 
-23 module(s): 17 sender, 1 local, 5 unclassified.
+23 module(s): 17 sender, 1 local, 5 unclassified; coverage 2 asserted, 6 fixed-corpus, 15 uncovered, 0 undeclared. <!-- enforcement-count-ok: egress coverage census of sender modules, not a rule-enforcement figure -->
 <!-- END egress-sender-census -->
 
 ## See also

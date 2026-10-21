@@ -9,6 +9,7 @@
  */
 
 import { CouncilResponse, type ExternalAIClient } from './clients.js';
+import { councilEgress } from './council_egress.js';
 import { _metaGet } from './py_parity.js';
 
 /**
@@ -74,10 +75,13 @@ export function renderResponseMeta(r: CouncilResponse, deps: MetaRenderDeps): st
 }
 
 
-/** Error-tagged member call — the split/ask branch is one shape, not three. */
 /**
  * One member call, error-tagged rather than throwing — the split/ask branch
- * appeared three times before this and is one shape, not three.
+ * appeared three times before this and is one shape, not three. It is also the
+ * council channel's final egress check: immediately before the request is
+ * written, the whole body is rescanned for every value this run replaced and
+ * every high-confidence finding, and a hit refuses the send — the member is
+ * never called and the response carries only the reason.
  */
 export function callMember(
     client: ExternalAIClient,
@@ -87,14 +91,25 @@ export function callMember(
     excTag: (e: unknown) => string,
 ): CouncilResponse {
     try {
+        const system = systemFor(client);
+        const body = opts.split ? `${system}\n${opts.split.stable}${opts.split.suffix}` : `${system}\n${question.user_prompt}`;
+        const refusal = councilEgress().check(body);
+        if (refusal !== null) {
+            return new CouncilResponse({
+                provider: client.name,
+                model: client.model,
+                text: '',
+                error: `egress refused: ${refusal.reason} (${refusal.what}); nothing was sent`,
+            });
+        }
         return opts.split
             ? client.ask_split(
-                  systemFor(client),
+                  system,
                   opts.split.stable,
                   opts.split.suffix,
                   question.max_tokens,
               )
-            : client.ask(systemFor(client), question.user_prompt, question.max_tokens);
+            : client.ask(system, question.user_prompt, question.max_tokens);
     } catch (exc) {
         return new CouncilResponse({
             provider: client.name,

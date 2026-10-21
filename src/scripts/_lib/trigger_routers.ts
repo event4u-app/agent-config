@@ -1,3 +1,4 @@
+// egress-content: fixed-corpus — sends the trigger-eval corpus (skill descriptions and the eval's own prompts), never session content
 // fetch-based TriggerRouter implementations for the cross-model eval smoke
 // (roadmap T-004). These mirror the SDK-based AnthropicRouter in
 // skill_trigger_eval.ts but talk plain HTTP via an injectable `fetch`, so the

@@ -52,6 +52,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { gitEnv } from './_lib/git_env.js';
 import { splitMarkdownRow } from './_lib/md_table.js';
 import { completionReviewDisabled } from './_lib/planning_settings.js';
+import { REVIEW_ROUND_CAP, checkReviewRound, countReviewPasses, type RecordedPasses } from './_lib/review_round.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
 import {
     computeReviewScope,
@@ -61,6 +62,8 @@ import {
     sanitizeSlug,
     type ParsedManifest,
 } from './dispatch_r2_reviewer.js';
+
+export { REVIEW_ROUND_CAP };
 
 // ---------------------------------------------------------------------------
 // Types
@@ -107,6 +110,17 @@ export interface Marker {
      * an attributable record instead of an absent one.
      */
     promptHash?: string;
+    /**
+     * OPTIONAL — the review round this artefact records (≥ 1): the number of
+     * review passes its path records, this one included.
+     *
+     * A fix pass re-binds the same artefact in place (§ 2.5), so before this
+     * field the number of rounds was agent-carried convention and nothing could
+     * count it. Absent reads as round 1, so every committed v1 artefact is valid
+     * unchanged; once any version carries it, the header must match the derived
+     * count (`round-miscounted`), and the cap applies (`round-cap-exceeded`).
+     */
+    round?: number;
 }
 
 export interface HonestNull {
@@ -325,7 +339,7 @@ export function isCodePath(p: string): boolean {
  * `| author: …` follow it without being swallowed.
  */
 const MARKER_RE =
-    /^<!--\s*completion-review:\s*v1\s*\|\s*reviewed:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*scope:\s*([0-9a-fA-F]{64})\s*\|\s*diff:\s*([0-9a-fA-F]{7,40})\s*\|\s*reviewer:\s*(\S(?:[^|>]*[^|>\s])?)(?:\s*\|\s*author:\s*(\S(?:[^|>]*[^|>\s])?))?(?:\s*\|\s*prompt_hash:\s*([0-9a-fA-F]{64}))?\s*-->$/;
+    /^<!--\s*completion-review:\s*v1\s*\|\s*reviewed:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*scope:\s*([0-9a-fA-F]{64})\s*\|\s*diff:\s*([0-9a-fA-F]{7,40})\s*\|\s*reviewer:\s*(\S(?:[^|>]*[^|>\s])?)(?:\s*\|\s*author:\s*(\S(?:[^|>]*[^|>\s])?))?(?:\s*\|\s*prompt_hash:\s*([0-9a-fA-F]{64}))?(?:\s*\|\s*round:\s*([1-9]\d*))?\s*-->$/;
 
 export function parseMarkerLine(line: string): Marker | null {
     const m = MARKER_RE.exec(line.trim());
@@ -343,6 +357,9 @@ export function parseMarkerLine(line: string): Marker | null {
     }
     if (m[6] !== undefined) {
         marker.promptHash = m[6].toLowerCase();
+    }
+    if (m[7] !== undefined) {
+        marker.round = Number(m[7]);
     }
     return marker;
 }
@@ -995,6 +1012,10 @@ function evaluate(input: EvalInput): Violation[] {
                 detail: 'artifact has neither a findings table nor an honest-null / skip declaration line',
             });
         }
+        if (art.marker !== null) {
+            const rel = path.relative(repo, file).split(path.sep).join('/');
+            violations.push(...checkReviewRound(repo, file, art.marker, art.rows, recordedReviewPasses(repo, rel)));
+        }
     }
 
     if (relevant.length === 0) {
@@ -1028,6 +1049,18 @@ function evaluate(input: EvalInput): Violation[] {
     }
 
     return violations;
+}
+
+/** Every review-artefact version committed at `rel`, read for {@link countReviewPasses}. */
+export function recordedReviewPasses(repo: string, rel: string): RecordedPasses {
+    const log = gitTry(repo, ['log', '--format=%H', '--', rel]);
+    const shas = log.stdout.split('\n').map((l) => l.trim()).filter(Boolean);
+    return countReviewPasses(
+        shas.map((sha) => {
+            const shown = gitTry(repo, ['show', `${sha}:${rel}`]);
+            return shown.ok ? parseArtifact(shown.stdout).marker : null;
+        }),
+    );
 }
 
 /** Contract §2.5 — the artifact's FIRST-add commit must precede every fix commit. */

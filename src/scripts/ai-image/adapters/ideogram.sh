@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# egress-content: session-content uncovered — the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach
 # ideogram.sh — Ideogram text-in-image adapter (logos / banners / typographic art).
 #
 # Capability: audio=none (still image). Ideogram is the text-in-image default

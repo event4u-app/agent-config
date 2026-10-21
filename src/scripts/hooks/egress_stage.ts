@@ -17,7 +17,7 @@ import * as path from "node:path";
 import { parse as parseYaml } from "yaml";
 
 import { _resolve_cascade_paths, load_agent_settings } from "../_lib/agent_settings.js";
-import type { EgressClass, EgressRule } from "../_lib/egress_rules.js";
+import type { EgressClass } from "../_lib/egress_rules.js";
 import type { TokenScope } from "../_lib/egress_token.js";
 import { isEnvKillSwitchActive } from "../_lib/env_kill_switch.js";
 import { type EgressEngine, loadEgressEngine } from "./egress_engine_loader.js";
@@ -222,7 +222,6 @@ export function countEnvelope(
   envelope: JsonObject,
   engine: EgressEngine = requireEngine(),
 ): Pick<EgressStageResult, "scanned" | "counts" | "refused"> {
-  const ruleById = new Map<string, EgressRule>(engine.EGRESS_RULES.map((r) => [r.rule, r]));
   const payload = payloadOf(envelope);
   const scanned: EgressField[] = [];
   const counts = new Map<string, EgressCount>();
@@ -235,33 +234,15 @@ export function countEnvelope(
     const texts: string[] = [];
     for (const k of keys) collectStrings(payload[k] as JsonValue, texts);
     for (const text of texts) {
-      for (const span of engine.detect(text)) {
-        const policy = ruleById.get(span.rule)?.replacement;
-        if (policy !== undefined && policy !== "detection") {
-          const end = policy.through(text, span);
-          if (end === null || end < span.end) {
-            refused.push({ field, rule: span.rule });
-            continue;
-          }
-        }
-        const key = `${field}\u0000${span.class}\u0000${span.type}`;
-        const prev = counts.get(key);
-        counts.set(key, { field, class: span.class, type: span.type, count: (prev?.count ?? 0) + 1 });
+      const tally = engine.tallyText(text);
+      for (const rule of tally.refused) refused.push({ field, rule });
+      for (const f of tally.found) {
+        const key = `${field}\u0000${f.class}\u0000${f.type}`;
+        counts.set(key, { field, class: f.class, type: f.type, count: (counts.get(key)?.count ?? 0) + 1 });
       }
     }
   }
   return { scanned, counts: [...counts.values()], refused };
-}
-
-function replaceDeep(v: JsonValue, scope: TokenScope, engine: EgressEngine): JsonValue {
-  if (typeof v === "string") return engine.replaceValues(v, scope);
-  if (Array.isArray(v)) return v.map((x) => replaceDeep(x, scope, engine));
-  if (isObject(v)) {
-    const out: JsonObject = {};
-    for (const [k, x] of Object.entries(v)) out[k] = replaceDeep(x, scope, engine);
-    return out;
-  }
-  return v;
 }
 
 /**
@@ -282,7 +263,7 @@ export function buildPlaceholderEnvelope(
   for (const field of FIELDS) {
     for (const k of presentKeys(payload, field)) {
       try {
-        next[k] = replaceDeep(payload[k] as JsonValue, scope, engine);
+        next[k] = engine.replaceJson(payload[k] as JsonValue, scope);
       } catch (exc) {
         // Anything but a refusal is a defect, and withholds every body upstream.
         if (!(exc instanceof engine.EgressRefusedError)) throw exc;
@@ -390,6 +371,42 @@ export function runEgressStage(
   }
   recordObservation(workspaceRoot, observationLine(envelope, result));
   return result;
+}
+
+/**
+ * Text this package injects into a session — hot context and a handoff at
+ * session start, memory recall and every other concern's reply — passes the
+ * engine too (road-to-one-detector-and-the-senders-we-own 3.5). In `protect`
+ * and `strict` each listed value becomes its token under one scope per
+ * dispatch; text whose secret has no provable extent, or that no engine can
+ * read, is withheld whole. `off` and `observe` change nothing. Returns a
+ * function so the mode is read once per dispatch, and only when there is text.
+ */
+export function egressInjection(
+  workspaceRoot: string,
+  readMode: (workspaceRoot: string) => EgressMode = readEgressMode,
+  loadEngine: () => ReturnType<typeof loadEgressEngine> = loadEgressEngine,
+): (text: string) => string {
+  let inject: ((text: string) => string) | undefined;
+  return (text) => (inject ??= injector(workspaceRoot, readMode, loadEngine))(text);
+}
+
+function injector(
+  workspaceRoot: string,
+  readMode: (workspaceRoot: string) => EgressMode,
+  loadEngine: () => ReturnType<typeof loadEgressEngine>,
+): (text: string) => string {
+  let mode: EgressMode;
+  try {
+    mode = readMode(workspaceRoot);
+  } catch {
+    mode = "protect";
+  }
+  if (mode !== "protect" && mode !== "strict") return (t) => t;
+  const load = loadEngine();
+  if (!load.ok) return () => `[egress: injected text withheld (${ENGINE_UNAVAILABLE})]`;
+  const scope = new load.engine.TokenScope();
+  return (t) => load.engine.injectText(t, scope);
 }
 
 export type PublishedState = "asserted" | "replaced" | "gated" | "uncovered";

@@ -18,7 +18,9 @@
 import * as fs from 'node:fs';
 
 import type { PyRandom } from '../_lib/py_random.js';
+import { parseTokens } from '../_lib/egress_token.js';
 import { redact } from './bundler.js';
+import { CouncilEgress } from './council_egress.js';
 import { createHash } from 'node:crypto';
 
 export const SHADOW_LOG_PATH = 'agents/runtime/council/shadow-log.jsonl';
@@ -67,8 +69,14 @@ const _defaultRandom: RandomLike = {
     },
 };
 
+// Shadow rows are this module's own record, not a council request: a scope of
+// their own keeps them out of the run's final-check state.
+function _redact(query: string): string {
+    return redact(query, new CouncilEgress());
+}
+
 function _hashQuery(query: string): string {
-    const redacted = redact(query);
+    const redacted = _redact(query);
     return createHash('sha256').update(Buffer.from(redacted, 'utf-8')).digest('hex').slice(0, 16);
 }
 
@@ -77,7 +85,9 @@ function _privacyDropped(redacted: string): boolean {
     if (!stripped) {
         return true;
     }
-    return stripped.startsWith('[redacted');
+    // Any replaced value drops the row: a placeholder in a shadow query means the
+    // query carried something the bundler would not send.
+    return parseTokens(redacted).length > 0;
 }
 
 export interface RecordShadowDecisionOptions {
@@ -106,7 +116,7 @@ export function record_shadow_decision(
     const escalated = opts.escalated ?? false;
     const escalationReason = opts.escalationReason ?? 'ok';
 
-    const redactedQ = redact(query);
+    const redactedQ = _redact(query);
     if (_privacyDropped(redactedQ)) {
         return null;
     }

@@ -183,7 +183,11 @@ describe('governed non-JSON budgets — explicit list, never a widened glob', ()
         // landed, this assertion went red at 18-against-17 alongside the
         // GREEN case, and the number moved after the file was confirmed to
         // carry the two fields rather than before.
-        expect(budgetFiles(CONFIG_DIR)).toHaveLength(18);
+        // 18 -> 19 on 2026-10-21, by `procedure-core-budget.json`
+        // (road-to-a-step-that-costs-what-it-changes 3.1), the per-file byte
+        // ceiling on the five split procedure cores. It carries `owner` and
+        // `review_by`; CI named the count first, at 19-against-18.
+        expect(budgetFiles(CONFIG_DIR)).toHaveLength(19);
     });
 
     it('an UNLISTED *budget*.yml is not silently included', () => {

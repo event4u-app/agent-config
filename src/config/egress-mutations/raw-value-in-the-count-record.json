@@ -1,0 +1,7 @@
+{
+    "mutation": "raw-value-in-the-count-record",
+    "module": "src/scripts/_lib/egress_text.ts",
+    "find": "found.push({ class: span.class, type: span.type });",
+    "replace": "found.push({ class: span.class, type: span.type, value: text.slice(span.start, span.end) } as never);",
+    "killed_by": "tally-carries-no-value"
+}

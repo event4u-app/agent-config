@@ -1,0 +1,7 @@
+{
+    "mutation": "class-precedence-swapped",
+    "module": "src/scripts/_lib/egress_rules.ts",
+    "find": "const CLASS_RANK: Readonly<Record<EgressClass, number>> = {\n    credential: 1,\n    identifier: 0,\n};",
+    "replace": "const CLASS_RANK: Readonly<Record<EgressClass, number>> = {\n    credential: 0,\n    identifier: 1,\n};",
+    "killed_by": "credential-outranks-identifier"
+}

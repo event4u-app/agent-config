@@ -95,7 +95,7 @@ const CASES: Readonly<Record<string, string>> = {
 
 type Span = readonly [number, number];
 
-function matches(regex: RegExp, valueGroup: number | undefined, text: string): Span[] {
+function matches(regex: RegExp, valueGroup: number | readonly number[] | undefined, text: string): Span[] {
     const re = new RegExp(regex.source, regex.flags.includes('d') ? regex.flags : `${regex.flags}d`);
     const out: Span[] = [];
     let m: RegExpExecArray | null;
@@ -104,9 +104,19 @@ function matches(regex: RegExp, valueGroup: number | undefined, text: string): S
             re.lastIndex += 1;
             continue;
         }
-        const v = valueGroup !== undefined ? m[valueGroup] : m[0];
+        // Mirrors `valueGroupOf` in egress_rules.ts: an array names alternative
+        // groups and the FIRST that participated holds the value; when none did
+        // the match is discarded, never read as the whole match. Resolving it
+        // any other way here would make this a parity test against a rule the
+        // engine does not apply.
+        const group =
+            valueGroup === undefined || typeof valueGroup === 'number'
+                ? valueGroup
+                : valueGroup.find((g) => m?.[g] !== undefined);
+        if (Array.isArray(valueGroup) && group === undefined) continue;
+        const v = group !== undefined ? m[group] : m[0];
         if (v === undefined) continue;
-        const start = valueGroup !== undefined ? (m.indices?.[valueGroup]?.[0] ?? m.index) : m.index;
+        const start = group !== undefined ? (m.indices?.[group]?.[0] ?? m.index) : m.index;
         out.push([start, start + v.length]);
     }
     return out;

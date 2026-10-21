@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# egress-content: session-content uncovered — the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach
 # sora.sh — OpenAI Sora structural-prompt video adapter.
 #
 # Capability: audio=native. Sora-class models produce muxed MP4 with

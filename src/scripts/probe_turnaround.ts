@@ -38,6 +38,8 @@
  *   ./scripts-run src/scripts/probe_turnaround [--store PATH] [--limit N]
  *   ./scripts-run src/scripts/probe_turnaround --json
  *   ./scripts-run src/scripts/probe_turnaround --against-baseline
+ *   ./scripts-run src/scripts/probe_turnaround --steps [--json]   (per closed roadmap step: model ·
+ *       change · verify · ceremony · wait · refusal · unknown, and minutes per change class)
  *   ./scripts-run src/scripts/probe_turnaround --workspace PATH --git 2026-09-28..2026-10-13 [--ref main]
  *   ./scripts-run src/scripts/probe_turnaround --store PATH --against-baseline --queue-root CHECKOUT
  *
@@ -76,6 +78,7 @@ import {
 } from './_lib/turnaround_throughput.js';
 import { defaultStore, isInjectedBody, userText } from './conformance_scan.js';
 import { upsertFinding } from './_lib/self_repair_store.js';
+import { readSteps, STEP_CLASSES, storeTranscripts, summariseSteps } from './_lib/step_anatomy.js';
 
 const _FILE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_FILE), '..', '..');
@@ -701,13 +704,47 @@ export function queueRegression(root: string, verdict: string, now: Date): void 
     }
 }
 
+/**
+ * `--steps`: where each closed roadmap step's wall-clock went. A report, never a
+ * gate; exit 1 only when a step's classes do not sum to its total, because then
+ * the split itself is wrong and no row of it can be read.
+ */
+function reportSteps(files: readonly string[], store: string, json: boolean): number {
+    const readings = files.flatMap((f) => readSteps(f, classifyBlockingCall));
+    const s = summariseSteps(readings);
+    if (json) {
+        process.stdout.write(`${JSON.stringify({ store, sessions: files.length, ...s }, null, 2)}\n`);
+    } else {
+        const lines = [
+            `probe:turnaround --steps · ${String(s.steps)} closed step(s) over ${String(files.length)} transcript(s) in ${store}`,
+            `  per step: p50 ${String(s.p50Min)} min · p90 ${String(s.p90Min)} min · roadmap read p50 ${String(s.roadmapReadP50Kb)} KB · p90 ${String(s.roadmapReadP90Kb)} KB`,
+            '  class      p50 s   p90 s   share',
+            ...STEP_CLASSES.map((c) => {
+                const r = s.byClass[c];
+                return `  ${c.padEnd(9)} ${String(r.p50).padStart(6)}  ${String(r.p90).padStart(6)}  ${(r.share * 100).toFixed(1).padStart(5)} %`;
+            }),
+            '  change class   steps   p50 min   p90 min   mean batch',
+            ...(['R0', 'R1', 'R2', 'R3'] as const).map((k) => {
+                const r = s.byRisk[k];
+                return `  ${k.padEnd(13)} ${String(r.steps).padStart(6)}  ${String(r.p50Min).padStart(8)}  ${String(r.p90Min).padStart(8)}  ${String(r.meanBatch).padStart(11)}`;
+            }),
+        ];
+        process.stdout.write(`${lines.join('\n')}\n`);
+    }
+    if (s.sumErrors.length > 0) {
+        for (const err of s.sumErrors) process.stderr.write(`❌  probe_turnaround: ${err}\n`);
+        return 1;
+    }
+    return 0;
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
     const arg = (flag: string, dflt: string): string => {
         const i = argv.indexOf(flag);
         return i >= 0 && argv[i + 1] !== undefined ? (argv[i + 1] as string) : dflt;
     };
     for (const a of argv) {
-        if (a.startsWith('-') && !['--store', '--limit', '--json', '--against-baseline', '--include-current', '--workspace', '--git', '--ref', '--rules-dir', '--ci', '--queue-root', '-h', '--help'].includes(a)) {
+        if (a.startsWith('-') && !['--store', '--limit', '--json', '--against-baseline', '--include-current', '--workspace', '--git', '--ref', '--rules-dir', '--ci', '--queue-root', '--steps', '-h', '--help'].includes(a)) {
             if (!argv.includes('--store') && !argv.includes('--limit')) {
                 process.stderr.write(`probe_turnaround: unrecognized argument: ${a}\n`);
                 return 2;
@@ -718,7 +755,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stdout.write(
             'usage: probe_turnaround [--store PATH] [--limit N] [--json] [--against-baseline] [--include-current]\n' +
                 '                        [--workspace PATH] [--git FROM..TO[,…]] [--ref REF] [--rules-dir PATH] [--ci FROM..TO[,…]]\n' +
-                '                        [--queue-root CHECKOUT]\n',
+                '                        [--queue-root CHECKOUT] [--steps]\n',
         );
         return 0;
     }
@@ -742,6 +779,22 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     if (gitWindows === null || ciWindows === null) {
         process.stderr.write('probe_turnaround: --git and --ci need FROM..TO[,FROM..TO…] as YYYY-MM-DD..YYYY-MM-DD\n');
         return 2;
+    }
+    if (argv.includes('--steps')) {
+        // A drain runs in a worktree, and the host files a worktree's transcripts
+        // under a project directory of its own, so one store holds a fraction of
+        // the steps. `--steps` reads a comma-separated list of stores as one corpus.
+        const sid = process.env['CLAUDE_CODE_SESSION_ID'];
+        const measuring = argv.includes('--include-current') || sid === undefined || sid === '' ? null : `${sid}.jsonl`;
+        const stepFiles = store
+            .split(',')
+            .flatMap((s) => storeTranscripts(s))
+            .filter((f) => path.basename(f) !== measuring)
+            .map((f) => ({ f, m: fs.statSync(f).mtimeMs }))
+            .sort((a, b) => b.m - a.m)
+            .slice(0, limit)
+            .map(({ f }) => f);
+        return reportSteps(stepFiles, store, argv.includes('--json'));
     }
     const files = recentSessions(store, limit, argv.includes('--include-current'));
     const detailed = files.length === 0 ? null : measureDetailed(files);
