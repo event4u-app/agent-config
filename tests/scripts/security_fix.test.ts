@@ -299,3 +299,18 @@ describe('R2 round 2 fixes (2026-10-21)', () => {
         expect(botPrFixes('Bump fastify to 5.12.5', 'fastify', null)).toBe(false);
     });
 });
+
+describe('R2 round 3 fixes (2026-10-21)', () => {
+    it('#3 — the same advisory under a new canonical ID is not fixed', () => {
+        const still = finding({ key: 'CVE-2026-0001|fastify|5.12.4', id: 'CVE-2026-0001', aliases: ['GHSA-f1aa-f1aa-f1aa'], sources: ['native-npm', 'osv'] });
+        expect(proveFixed('GHSA-f1aa-f1aa-f1aa|fastify|5.12.4', ['native-npm'], { findings: [still], okSources: ['native-npm', 'osv'] }, ['GHSA-f1aa-f1aa-f1aa'])).toBe('fix-failed');
+    });
+
+    it('#14 — a finding that returns after it was deployed opens a new fix', () => {
+        const all = {};
+        const { remediation: r } = claimRemediation(all, 'K', 's1');
+        advance(r, 'fixed-in-trunk');
+        advance(r, 'fixed-deployed');
+        expect(claimRemediation(all, 'K', 's2').joined).toBe(false);
+    });
+});

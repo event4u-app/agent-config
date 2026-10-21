@@ -951,3 +951,13 @@ describe('R2 round 2 fixes (2026-10-21)', () => {
         expect(lines[at - 1]!.startsWith('#')).toBe(true);
     });
 });
+
+describe('R2 round 3 fixes (2026-10-21)', () => {
+    it('#13 — a short `origin/main` trunk still matches the PR base `main`', () => {
+        const wt = addStandardWorktree('short', 'feat/short');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        const head = git(repo, ['rev-parse', 'refs/heads/feat/short']).trim();
+        const idx: PrIndex = new Map([['feat/short', [{ state: 'MERGED', headOid: head, mergedAt: '2020-01-01T00:00:00Z', base: 'main' }]]]);
+        expect(mergeEvidence(wt, 'feat/short', 'origin/main', idx).evidence).toBe('merged-pr');
+    });
+});

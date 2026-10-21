@@ -35,7 +35,9 @@ import {
     describe,
     noticeLines,
     readAdvisorySettings,
+    readRemediations,
     readState,
+    remediationsPath,
     sessionNotice,
     statePath,
 } from './_lib/advisory_notice.js';
@@ -73,6 +75,7 @@ import {
     prTitle,
     releaseDraft,
     reopenMitigations,
+    type Remediations,
     routeSecurityFix,
     suspiciousPaths,
     track,
@@ -83,6 +86,11 @@ import { defaultExec, readRoutingContext } from './_lib/security_fix_context.js'
 export const REFRESH_WINDOW_HOURS = 20;
 function machineDir(): string {
     return path.join(event4u_root(), 'runtime', 'advisories');
+}
+
+function writeRemediations(root: string, rems: Remediations): void {
+    const p = remediationsPath(root);
+    if (p !== null) writeJson(p, rems);
 }
 
 function writeJson(file: string, value: unknown): void {
@@ -237,7 +245,7 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
         }
         for (const p of inventories) {
             const acceptances = p.prev?.acceptances ?? [];
-            const remediations = { ...(p.prev?.remediations ?? {}) };
+            const remediations = readRemediations(p.root);
             const findings = carryForward(
                 buildFindings(raw.get(p.root)!, p.inv.entries, reports.get(p.root)!, { now, acceptances }),
                 p.prev?.findings ?? [],
@@ -268,9 +276,9 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
                         ? { at: now.toISOString(), interrupt: a.interrupt.map((f) => f.key), digest: a.digest.length }
                         : carriedNotice(p.prev?.notice ?? null, findings, now),
                 silent_since: silent,
-                remediations,
             };
             reopenMitigations(remediations, findings);
+            writeRemediations(p.root, remediations);
             const sp = statePath(p.root);
             if (sp !== null) writeJson(sp, state);
             const sent = egressOf.get(p.root) === 'query';
@@ -301,11 +309,14 @@ function carriedNotice(prev: AdvisoryState['notice'], findings: { key: string }[
 }
 
 /**
- * An action from the project's own GitHub owner may live in a private
- * repository, and nothing in a workflow says which — so it is treated as private
- * and never sent to OSV. An action from any other owner is a public reference by
- * construction of how `uses:` resolves; a private action of a THIRD owner is the
- * residual this cannot see.
+ * Names the project's own organisation publishes may live in a private registry
+ * scope or a private repository, and nothing in a lockfile says which: npm's
+ * paid private packages resolve from registry.npmjs.org like any public one.
+ * So everything under the project's OWN namespace is treated as private and
+ * never sent — its npm scope (from package.json `name`, and the GitHub owner as
+ * `@owner`), its Composer vendor (from composer.json `name`), and its GitHub
+ * Actions. A private package of a THIRD namespace is the residual this cannot
+ * see; `advisories.egress: none` is the setting for a project that has one.
  */
 export function markOwnActionsPrivate<T extends { entries: Array<{ ecosystem: string; name: string; private: boolean }> }>(root: string, inv: T): T {
     let url = '';
@@ -315,9 +326,24 @@ export function markOwnActionsPrivate<T extends { entries: Array<{ ecosystem: st
         url = '';
     }
     const owner = /github\.com[:/]([^/]+)\//i.exec(url)?.[1]?.toLowerCase() ?? null;
-    if (owner === null) return inv;
+    const nameOf = (file: string): string | null => {
+        try {
+            const n = (JSON.parse(fs.readFileSync(path.join(root, file), 'utf-8')) as { name?: unknown }).name;
+            return typeof n === 'string' ? n.toLowerCase() : null;
+        } catch {
+            return null;
+        }
+    };
+    const npmScopes = new Set<string>();
+    const ownNpm = /^(@[^/]+)\//.exec(nameOf('package.json') ?? '')?.[1];
+    if (ownNpm !== undefined) npmScopes.add(ownNpm);
+    if (owner !== null) npmScopes.add(`@${owner}`);
+    const vendor = /^([^/]+)\//.exec(nameOf('composer.json') ?? '')?.[1] ?? null;
     for (const e of inv.entries) {
-        if (e.ecosystem === 'GitHub Actions' && e.name.split('/')[0]!.toLowerCase() === owner) e.private = true;
+        const n = e.name.toLowerCase();
+        if (e.ecosystem === 'GitHub Actions' && owner !== null && n.split('/')[0] === owner) e.private = true;
+        if (e.ecosystem === 'npm' && [...npmScopes].some((sc) => n.startsWith(`${sc}/`))) e.private = true;
+        if (e.ecosystem === 'Packagist' && vendor !== null && n.startsWith(`${vendor}/`)) e.private = true;
     }
     return inv;
 }
@@ -411,10 +437,12 @@ export function issueBody(state: AdvisoryState | null): string {
 
 
 /** Changed paths of this branch against the trunk that a dependency fix must never touch (1.3). */
-function suspiciousInBranch(root: string): string[] {
+function suspiciousInBranch(root: string, fixBase: string | null = null): string[] {
     const trunk = ['origin/main', 'origin/master', 'main', 'master'].find((r) => defaultExec('git', ['rev-parse', '--verify', '--quiet', r], root) !== null);
-    if (trunk === undefined) return [];
-    const base = defaultExec('git', ['merge-base', trunk, 'HEAD'], root)?.trim();
+    if (trunk === undefined && fixBase === null) return [];
+    // A fix sharing the branch with a feature is judged from its own start, never
+    // from the trunk — the feature's own workflow edit is not the fix's.
+    const base = fixBase ?? defaultExec('git', ['merge-base', trunk!, 'HEAD'], root)?.trim();
     if (base === undefined || base === '') return [];
     const changed = (defaultExec('git', ['diff', '--name-only', base], root) ?? '').split('\n').filter((l) => l !== '');
     const scriptsOf = (file: string, rev: string | null): Record<string, string> => {
@@ -446,7 +474,7 @@ function suspiciousInBranch(root: string): string[] {
 function usage(): number {
     process.stderr.write(
         'usage: agent-config audit:deps refresh [--force] [--all-projects] | show [--json] | ' +
-            'accept <id> --reason=<text> --expires=YYYY-MM-DD | fix <id> [--here] | verify <id> | pr-body <id> [--verified] [--tests=passed] [--audit-ran] [--released-at=<iso>] [--release=<x.y.z>] | mitigate <id> --note=<text> | track [--deployed=<id>] | notice | gaps | issue-body\n',
+            'accept <id> --reason=<text> --expires=YYYY-MM-DD | fix <id> [--here] | verify <id> | pr-body <id> [--tests=passed|failed|not-run] [--audit-ran] [--released-at=<iso>] [--release=<x.y.z>] | mitigate <id> --note=<text> | track [--deployed=<id>] | notice | gaps | issue-body\n',
     );
     return 2;
 }
@@ -476,7 +504,7 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
         if (rest.includes('--json')) {
             // Findings plus what the latency claims read: the ledger's
             // first_seen / announced_at and the remediation stamps.
-            process.stdout.write(`${JSON.stringify({ findings: state.findings, ledger: state.ledger, remediations: state.remediations ?? {} }, null, 2)}\n`);
+            process.stdout.write(`${JSON.stringify({ findings: state.findings, ledger: state.ledger, remediations: readRemediations(root) }, null, 2)}\n`);
             return 0;
         }
         process.stdout.write(`advisories for ${state.root} · checked ${state.at} · ${state.inventory.length} component(s)\n`);
@@ -516,9 +544,53 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
     }
     if (mode === 'fix' || mode === 'verify' || mode === 'pr-body' || mode === 'mitigate') {
         const id = rest.find((a) => !a.startsWith('--'));
+        if (id === undefined) {
+            process.stderr.write('usage: agent-config audit:deps fix|verify|pr-body|mitigate <id> — after a refresh\n');
+            return 2;
+        }
+        const rems = readRemediations(root);
+        const claimed = Object.values(rems).find((r) => r.key === id || r.key.split('|')[0] === id || (r.ids ?? []).includes(id));
+        if (mode === 'verify') {
+            // Verify runs where the fixed lockfile is — often a fix worktree with no
+            // cache of its own yet. The claim, read from the repository-wide store,
+            // carries what the proof needs: the IDs and the reporting sources.
+            const before = readState(root)?.findings.find((x) => x.id === id || x.aliases.includes(id) || x.key === id) ?? null;
+            const key = claimed?.key ?? before?.key;
+            if (key === undefined) {
+                process.stderr.write(`no claimed fix and no finding ${id} here — run \`agent-config audit:deps fix ${id}\` first\n`);
+                return 1;
+            }
+            const [after] = await refreshMany([root], { force: true });
+            if (after === undefined || after.reason === 'refresh-in-progress') {
+                // A refresh held by another process returns the OLD findings; a
+                // verdict on them would call a working fix failed. No verdict.
+                process.stdout.write(`${id}: unverifiable — another refresh is running; re-run verify in a minute\n`);
+                return 2;
+            }
+            const ok = after.state.reports.filter((r) => r.status === 'ok').map((r) => r.source);
+            const ids = [...new Set([...(claimed?.ids ?? []), ...(before === null ? [] : [before.id, ...before.aliases])])];
+            const sources = claimed?.sources ?? before?.sources ?? [];
+            const proof = proveFixed(key, sources, { findings: after.state.findings, okSources: ok }, ids);
+            const fresh = readRemediations(root);
+            const r = fresh[key];
+            // Agent-config paths or install scripts in the fix diff stop the fix (1.3),
+            // judged from where THIS fix started, not from the trunk.
+            const suspicious = suspiciousInBranch(root, r?.base ?? null);
+            if (r !== undefined) {
+                if (suspicious.length > 0) advance(r, 'fix-failed', new Date(), { note: `touches ${suspicious.join(', ')}` });
+                else if (proof === 'fixed-in-branch') advance(r, 'ready-to-merge');
+                else if (proof === 'fix-failed') advance(r, 'fix-failed');
+                writeRemediations(root, fresh);
+            }
+            if (suspicious.length > 0) {
+                process.stdout.write(`${id}: stopped — the fix changes ${suspicious.join(', ')}; a dependency update never touches agent configuration or install scripts\n`);
+                return 1;
+            }
+            process.stdout.write(`${id}: ${proof}${proof === 'fix-failed' ? ' — the reporting source still reports it; do not call this fixed' : ''}\n`);
+            return proof === 'fixed-in-branch' ? 0 : 1;
+        }
         const state = readState(root);
-        const sp = statePath(root);
-        if (state === null || sp === null || id === undefined) {
+        if (state === null) {
             process.stderr.write('usage: agent-config audit:deps fix|verify|pr-body|mitigate <id> — after a refresh\n');
             return 2;
         }
@@ -527,14 +599,25 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
             process.stderr.write(`no finding ${id} in the last refresh — run \`agent-config audit:deps show\`\n`);
             return 1;
         }
-        state.remediations = state.remediations ?? {};
         if (mode === 'fix') {
-            const { remediation, joined } = claimRemediation(state.remediations, f.key, process.env['CLAUDE_CODE_SESSION_ID'] ?? `pid-${process.pid}`);
+            const { remediation, joined } = claimRemediation(rems, f.key, process.env['CLAUDE_CODE_SESSION_ID'] ?? `pid-${process.pid}`);
             const ctx = readRoutingContext(root, f, { userWantsCurrent: rest.includes('--here') });
             const route = routeSecurityFix(ctx);
             const plan = fixPlan(f, state.inventory);
-            remediation.branch = route.route === 'current-branch' ? remediation.branch : branchName(f);
-            writeJson(sp, state);
+            if (!joined) {
+                remediation.ids = [f.id, ...f.aliases];
+                remediation.sources = f.sources;
+                if (route.route === 'current-branch') {
+                    // The fix shares the branch with the feature: name that branch
+                    // and remember where the fix starts, so verify judges only it.
+                    remediation.branch = defaultExec('git', ['rev-parse', '--abbrev-ref', 'HEAD'], root)?.trim() ?? null;
+                    remediation.base = defaultExec('git', ['rev-parse', 'HEAD'], root)?.trim() ?? null;
+                } else {
+                    remediation.branch = branchName(f);
+                    remediation.base = null;
+                }
+            }
+            writeRemediations(root, rems);
             const out = [
                 `finding  ${describe(f)}`,
                 joined ? `joined   an open fix for this finding (${remediation.branch ?? 'branch unset'}) — do not start a second` : `claimed  fix-in-progress`,
@@ -552,35 +635,6 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
             process.stdout.write(`${out.join('\n')}\n`);
             return 0;
         }
-        if (mode === 'verify') {
-            const [after] = await refreshMany([root], { force: true });
-            if (after === undefined || after.reason === 'refresh-in-progress') {
-                // A refresh held by another process returns the OLD findings; a
-                // verdict on them would call a working fix failed. No verdict.
-                process.stdout.write(`${f.id}: unverifiable — another refresh is running; re-run verify in a minute\n`);
-                return 2;
-            }
-            const ok = after.state.reports.filter((r) => r.status === 'ok').map((r) => r.source);
-            const proof = proveFixed(f.key, f.sources, { findings: after.state.findings, okSources: ok });
-            // The refresh carried the remediations forward (and reopened mitigations); advance on its copy.
-            const fresh = after.state;
-            fresh.remediations = fresh.remediations ?? {};
-            const r = fresh.remediations[f.key];
-            // Agent-config paths or install scripts in the fix diff stop the fix (1.3).
-            const suspicious = suspiciousInBranch(root);
-            if (r !== undefined) {
-                if (suspicious.length > 0) advance(r, 'fix-failed', new Date(), { note: `touches ${suspicious.join(', ')}` });
-                else if (proof === 'fixed-in-branch') advance(r, 'ready-to-merge');
-                else if (proof === 'fix-failed') advance(r, 'fix-failed');
-            }
-            writeJson(sp, fresh);
-            if (suspicious.length > 0) {
-                process.stdout.write(`${f.id}: stopped — the fix changes ${suspicious.join(', ')}; a dependency update never touches agent configuration or install scripts\n`);
-                return 1;
-            }
-            process.stdout.write(`${f.id}: ${proof}${proof === 'fix-failed' ? ' — the reporting source still reports it; do not call this fixed' : ''}\n`);
-            return proof === 'fixed-in-branch' ? 0 : 1;
-        }
         if (mode === 'mitigate') {
             if (f.fixed !== null) {
                 process.stderr.write(`${f.id}: a fix exists (${f.fixed}) — a mitigation would be discarded at the next refresh; use \`audit:deps fix ${f.id}\`\n`);
@@ -591,17 +645,24 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
                 process.stderr.write('a mitigation names what was done, in a sentence (--note="…")\n');
                 return 1;
             }
-            const r = state.remediations[f.key] ?? claimRemediation(state.remediations, f.key, `pid-${process.pid}`).remediation;
+            const r = rems[f.key] ?? claimRemediation(rems, f.key, `pid-${process.pid}`).remediation;
             advance(r, 'mitigated', new Date(), { note });
-            writeJson(sp, state);
+            writeRemediations(root, rems);
             process.stdout.write(`${f.id}: mitigated — stays open and reopens when a fix appears\n`);
             return 0;
         }
-        const tests = (flag('tests') ?? 'not-run') as 'passed' | 'failed' | 'not-run';
+        const testsFlag = flag('tests') ?? 'not-run';
+        if (testsFlag !== 'passed' && testsFlag !== 'failed' && testsFlag !== 'not-run') {
+            process.stderr.write('--tests is passed, failed or not-run\n');
+            return 2;
+        }
+        // The After field is read from what verify recorded, never from a flag.
+        const recorded = rems[f.key]?.state;
+        const after = recorded === 'ready-to-merge' ? 'fixed-in-branch' : recorded === 'fix-failed' ? 'fix-failed' : 'unverifiable';
         const body = prBody(f, {
             before: `${f.sources.join(', ')} reported ${f.package} ${f.version ?? '?'} as ${f.verdict}`,
-            after: rest.includes('--verified') ? 'fixed-in-branch' : 'unverifiable',
-            tests,
+            after,
+            tests: testsFlag,
             cooldown: (() => {
                 const released = flag('released-at') ?? null;
                 const audited = rest.includes('--audit-ran');
@@ -622,15 +683,20 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
         return 0;
     }
     if (mode === 'track') {
-        const state = readState(root);
-        const sp = statePath(root);
-        if (state === null || sp === null) return 0;
-        for (const r of Object.values(state.remediations ?? {})) {
+        const rems = readRemediations(root);
+        for (const r of Object.values(rems)) {
             if (r.pr === null && r.branch === null) continue;
-            const view = r.pr !== null ? defaultExec('gh', ['pr', 'view', String(r.pr), '--json', 'state,mergeCommit'], root) : null;
+            // The PR is found by its head branch, which `fix` recorded, and its
+            // number and merge commit are kept once seen.
+            const view =
+                r.pr !== null
+                    ? defaultExec('gh', ['pr', 'view', String(r.pr), '--json', 'number,state,mergeCommit'], root)
+                    : defaultExec('gh', ['pr', 'list', '--head', r.branch!, '--state', 'all', '--limit', '1', '--json', 'number,state,mergeCommit'], root);
             let mergedSha: string | null = null;
             try {
-                const v = view === null ? null : (JSON.parse(view) as { state?: string; mergeCommit?: { oid?: string } | null });
+                const parsed = view === null ? null : (JSON.parse(view) as unknown);
+                const v = (Array.isArray(parsed) ? parsed[0] : parsed) as { number?: number; state?: string; mergeCommit?: { oid?: string } | null } | undefined | null;
+                if (typeof v?.number === 'number') r.pr = v.number;
                 if (v?.state === 'MERGED') mergedSha = v.mergeCommit?.oid ?? null;
             } catch {
                 mergedSha = null;
@@ -650,8 +716,8 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
             }
             track(r, { mergedSha: sha, releaseContains: (tags ?? '').trim() !== '', deployed });
         }
-        writeJson(sp, state);
-        for (const r of Object.values(state.remediations ?? {})) process.stdout.write(`${r.key.split('|')[0]}  ${r.state}\n`);
+        writeRemediations(root, rems);
+        for (const r of Object.values(rems)) process.stdout.write(`${r.key.split('|')[0]}  ${r.state}${r.pr === null ? '' : `  #${r.pr}`}\n`);
         return 0;
     }
     if (mode === 'notice') {

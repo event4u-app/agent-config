@@ -243,11 +243,16 @@ export type FixProof = 'fixed-in-branch' | 'fix-failed' | 'unverifiable';
  * The same authority that reported the finding must stop reporting it on the
  * changed lockfile. An authority that did not answer proves nothing either way.
  */
-export function proveFixed(key: string, sourcesBefore: string[], after: { findings: Finding[]; okSources: string[] }): FixProof {
+export function proveFixed(key: string, sourcesBefore: string[], after: { findings: Finding[]; okSources: string[] }, idsBefore: string[] = []): FixProof {
     const reporters = sourcesBefore.filter((s) => after.okSources.includes(s));
     if (reporters.length === 0) return 'unverifiable';
     const [id, pkg] = key.split('|');
-    const still = after.findings.find((f) => f.key === key || (pkg !== undefined && f.id === id && f.package === pkg));
+    // The same advisory under another canonical ID is still the same advisory:
+    // match on any ID it was known by, for the same package.
+    const known = new Set([id, ...idsBefore].filter((x): x is string => typeof x === 'string' && x !== ''));
+    const still = after.findings.find(
+        (f) => f.key === key || (pkg !== undefined && f.package === pkg && [f.id, ...f.aliases].some((x) => known.has(x))),
+    );
     if (still === undefined) return 'fixed-in-branch';
     return still.sources.some((s) => reporters.includes(s)) ? 'fix-failed' : 'fixed-in-branch';
 }
@@ -324,6 +329,12 @@ export interface Remediation {
     stamps: Partial<Record<RemediationState, string>>;
     /** A mitigation's note, when no fix exists (1.5). */
     note: string | null;
+    /** The finding's canonical ID and aliases at the claim, so a re-canonicalised finding is still recognised. */
+    ids?: string[];
+    /** The sources that reported it at the claim: only they can prove it fixed. */
+    sources?: string[];
+    /** The commit the fix started from, when the fix shares a branch with other work (route `current-branch`). */
+    base?: string | null;
 }
 
 export type Remediations = Record<string, Remediation>;
@@ -334,10 +345,11 @@ export type Remediations = Record<string, Remediation>;
  */
 export function claimRemediation(all: Remediations, key: string, session: string, now: Date = new Date()): { remediation: Remediation; joined: boolean } {
     const open = all[key];
-    // Only a failed fix or an unrecorded finding starts over; every other state —
-    // in progress, merged, released, deployed, mitigated — is history a second
-    // session joins and never overwrites.
-    if (open !== undefined && open.state !== 'fix-failed') {
+    // A failed fix, a finding that came back after it was deployed (a regression),
+    // or an unrecorded finding starts over; every other state — in progress,
+    // merged, released, mitigated — is history a second session joins and never
+    // overwrites.
+    if (open !== undefined && open.state !== 'fix-failed' && open.state !== 'fixed-deployed') {
         return { remediation: open, joined: true };
     }
     const at = now.toISOString();

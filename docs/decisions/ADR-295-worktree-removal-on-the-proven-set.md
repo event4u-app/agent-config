@@ -61,7 +61,9 @@ merge, regularly, automatically where possible.
    a per-repository lock owned by a token, so a pass that outlived the stale
    window cannot release a successor's lock; the worktree entry, its `HEAD`, the
    session register and every predicate re-read immediately before each
-   removal; subprocess deadlines for the three-second daily budget; a rotating
+   removal; a three-second subprocess deadline on the daily classification,
+   then at most three removals, each re-checked within three seconds and
+   given 30 s of its own; a rotating
    start so no candidate starves; a write-ahead journal (intent with the tip
    before the removal, outcome after); no repository-wide `git worktree prune`;
    a forge proof counted only for a PR whose base is the trunk and whose merge
@@ -84,9 +86,11 @@ merge, regularly, automatically where possible.
   review 2026-10-21), which was weighed and not built: the window is the gap
   between two synchronous calls, and a tree a process is writing into is almost
   always one a registered session holds, which the re-check already keeps.
-- **The three-second budget bounds the subprocesses, not the pass.** Settings,
-  register and journal reads are local file I/O outside it; the pass is
-  measured, not proven, against the budget.
+- **The three-second budget bounds the classification, not the pass.** Under
+  `auto` up to three removals follow it, each with a three-second re-check and a
+  30-second removal timeout — a worst case of about 100 s at a session start
+  that removes three trees, and nothing at all under `notify`. Settings,
+  register and journal reads are local file I/O outside every deadline.
 
 ## Alternatives
 

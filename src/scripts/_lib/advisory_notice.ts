@@ -83,6 +83,31 @@ export function statePath(root: string): string | null {
     return path.join(common, 'agent-config', 'advisories', `${key}.json`);
 }
 
+/**
+ * Fix lifecycles are per REPOSITORY, not per checkout: a fix claimed in the main
+ * checkout is verified in its own worktree, and two worktrees must see one claim
+ * for one finding. So they live beside the per-checkout caches, in the common
+ * git dir every worktree shares.
+ */
+export function remediationsPath(root: string): string | null {
+    const common = git_common_dir(root);
+    return common === null ? null : path.join(common, 'agent-config', 'advisories', 'remediations.json');
+}
+
+export function readRemediations(root: string): Remediations {
+    const p = remediationsPath(root);
+    if (p !== null) {
+        try {
+            const doc = JSON.parse(fs.readFileSync(p, 'utf-8')) as unknown;
+            if (isObject(doc)) return doc as Remediations;
+        } catch {
+            /* absent or unreadable: fall back to a pre-shared cache below */
+        }
+    }
+    // A cache written before the shared file existed carries its own copy.
+    return readState(root)?.remediations ?? {};
+}
+
 export function readState(root: string): AdvisoryState | null {
     const p = statePath(root);
     if (p === null) return null;
@@ -169,7 +194,7 @@ export function describe(f: Finding): string {
  * never an action. Each T0/T1 line ends in the offer; the routing behind the
  * offer is owned by road-to-security-fixes-carried-to-the-merge.
  */
-export function noticeLines(state: AdvisoryState | null, now: Date = new Date()): string[] {
+export function noticeLines(state: AdvisoryState | null, now: Date = new Date(), remediations: Remediations | null = null): string[] {
     if (state === null) return [];
     const lines: string[] = [];
     // An unreadable or future timestamp proves nothing about freshness: stale.
@@ -190,7 +215,7 @@ export function noticeLines(state: AdvisoryState | null, now: Date = new Date())
         const days = (now.getTime() - sinceMs) / 86400000;
         if (days >= SILENCE_NOTICE_DAYS) lines.push(`advisories: ${safeField(source)} has not answered for ${Math.floor(days)} days — findings from it are unknown, not clear`);
     }
-    for (const u of mergedNotDeployed(state.remediations ?? {}, state.findings, now)) {
+    for (const u of mergedNotDeployed(remediations ?? state.remediations ?? {}, state.findings, now)) {
         const sha = u.mergeSha === null ? '' : ` (${safeField(u.mergeSha.slice(0, 12))})`;
         lines.push(`advisory ${safeField(u.id)}: merged${sha} but not deployed for ${safeField(u.hours)} h — deploy it the way this project deploys`);
     }
@@ -214,7 +239,7 @@ export function sessionNotice(root: string, now: Date = new Date()): string | nu
     } catch {
         shown = '';
     }
-    const lines = noticeLines(state, now);
+    const lines = noticeLines(state, now, readRemediations(root));
     if (lines.length === 0) return null;
     // Keyed by what would be printed, not only by when: a same-day change in a
     // silence, a remediation or staleness is a new notice.

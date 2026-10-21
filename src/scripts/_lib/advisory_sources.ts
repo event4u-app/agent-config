@@ -514,6 +514,12 @@ const ANNOUNCES_RELEASE = /security release/i;
 const ANNOUNCES_AHEAD = /upcoming|pre-?announce|will be released|scheduled|planned/i;
 /** A pre-announcement older than this is no longer "ahead" of anything. */
 export const PREANNOUNCE_WINDOW_DAYS = 14;
+/**
+ * How far back the feed's security releases are read. A pin below a release stays
+ * a `fix-available` finding for as long as the feed still lists that release —
+ * the pre-announcement window is for announcements, never for the fix itself.
+ */
+export const RELEASE_WINDOW_DAYS = 365;
 
 /**
  * A runtime vendor's own feed — the one signal that exists BEFORE an advisory
@@ -552,7 +558,7 @@ export async function vendorAnnouncements(
                 const when = Date.parse(/<(?:published|updated|pubDate)>([^<]+)</.exec(item)?.[1] ?? '');
                 if (ver !== undefined && /released|\(lts\)|\(current\)/i.test(t) && /security/i.test(item) && Number.isFinite(when)) {
                     const ageDays = (now.getTime() - when) / 86400000;
-                    if (ageDays >= 0 && ageDays <= PREANNOUNCE_WINDOW_DAYS) releases.push({ version: ver, day: new Date(when).toISOString().slice(0, 10) });
+                    if (ageDays >= 0 && ageDays <= RELEASE_WINDOW_DAYS) releases.push({ version: ver, day: new Date(when).toISOString().slice(0, 10) });
                 }
             }
             for (const item of items) {
@@ -565,9 +571,16 @@ export async function vendorAnnouncements(
                 if (!ANNOUNCES_RELEASE.test(title) || !ANNOUNCES_AHEAD.test(title)) continue;
                 const day = new Date(at).toISOString().slice(0, 10);
                 if (/critical/i.test(title)) criticalDays.push(day);
-                // The release it announced is out: the release finding speaks instead.
-                if (releases.some((r) => r.day >= day)) continue;
-                const subject = users[0]!;
+                // The release it announced is out ON THIS USER'S LINE: the release
+                // finding speaks instead. A release on another line says nothing
+                // about this one, so the first pin still waiting carries it.
+                const subject = users.find(
+                    (u) =>
+                        !releases.some(
+                            (r) => r.day >= day && (u.version === null || releaseLine(runtimeName, r.version) === releaseLine(runtimeName, u.version)),
+                        ),
+                );
+                if (subject === undefined) continue;
                 findings.push({
                     id: `PRE-${runtimeName}-${day}`,
                     aliases: [],

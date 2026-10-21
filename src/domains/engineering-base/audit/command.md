@@ -55,8 +55,11 @@ agent-config audit:deps show      # findings by tier, each with file:line and ID
 `refresh` reads the lockfiles, declared runtimes, Dockerfiles, compose files and
 CI workflows; sends **public** package names and versions to `api.osv.dev`;
 reads runtime lifecycle data from `endoflife.date` and the PHP and Node release
-feeds; and runs `npm audit` / `composer audit` only for a lockfile that names no
-private package. `advisories.egress: none` sends nothing. A cache younger than
+feeds; downloads the whole CISA known-exploited catalog from `www.cisa.gov` and
+matches it locally (`advisories.kev: off` skips it); and runs `npm audit` /
+`composer audit` only for a lockfile that names no private package. Names under
+the project's own npm scope, Composer vendor or GitHub owner count as private.
+`advisories.egress: none` sends nothing. A cache younger than
 20 hours is reused; `--force` refreshes anyway.
 
 Read the result as the tool states it:

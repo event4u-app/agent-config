@@ -7,7 +7,8 @@
 #
 # What it does: `agent-config audit:deps refresh` (public package names and
 # versions to api.osv.dev, runtime lifecycle from endoflife.date, the PHP and
-# Node release feeds; private package names are never sent), then opens or
+# Node release feeds, the whole CISA known-exploited catalog from www.cisa.gov
+# matched locally; private package names are never sent), then opens or
 # updates ONE issue for T0 findings — malware, a critical runtime
 # pre-announcement, a critical fix available, a known-exploited advisory.
 #
@@ -51,7 +52,8 @@ jobs:
         run: |
           body="$(npx --yes @event4u/agent-config@16 audit:deps issue-body)"
           [ -z "$body" ] && { echo "no T0 finding today"; exit 0; }
-          digest="$(printf '%s' "$body" | sha256sum | cut -c1-16)"
+          # The `Checked <time>` line changes on every run; the list is what counts.
+          digest="$(printf '%s' "$body" | grep -v '^Checked ' | sha256sum | cut -c1-16)"
           marker="<!-- advisories-digest: $digest -->"
           title="Security advisories needing action today"
           existing="$(gh issue list --state open --search "in:title \"$title\"" --json number -q '.[0].number')"

@@ -425,7 +425,9 @@ export function mergeEvidence(
     if (isAncestor(repoPath, branch, trunk)) return { evidence: 'merged-ancestor', mergedAt: null };
     if (prIndex !== null) {
         const tip = branchTip(repoPath, branch);
-        const trunkName = trunk.replace(/^refs\/(?:remotes\/[^/]+|heads)\//, '');
+        // `refs/remotes/origin/main`, `refs/heads/main` and the short `origin/main`
+        // a `--trunk=` flag may pass all name the base branch `main`.
+        const trunkName = trunk.replace(/^refs\/(?:remotes\/[^/]+|heads)\//, '').replace(/^(?:origin|upstream)\//, '');
         // Only a PR into the trunk speaks for the trunk; one merged into a
         // release branch is not a record of this branch at all.
         const prs = (prIndex.get(branch) ?? []).filter((p) => p.base === trunkName);

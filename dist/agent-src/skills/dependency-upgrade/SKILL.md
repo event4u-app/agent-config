@@ -305,10 +305,10 @@ source that reported it.
    is still open — say so; `unverifiable` means the source did not answer — say
    that too. Then the project's tests and static checks. A fix that leaves the
    advisory open or breaks a test is reported as exactly that, never as done.
-4. **Open the PR** — `agent-config audit:deps pr-body <id> --verified
-   --tests=passed` prints the body with its seven evidence fields; a library adds
+4. **Open the PR** — `agent-config audit:deps pr-body <id> --tests=passed`
+   prints the body; its After field is what `verify` recorded; a library adds
    `--release=<current version>` for the patch-release draft. Security fixes are
-   never mixed with unrelated changes. Stop before tag and publish.
+   never mixed with unrelated work. Stop before tag and publish.
 5. **Hand over** — watch CI with `agent-config ci:settle <pr>`, fix what the fix
    broke, report "ready to merge". Merge is the owner's, or `/pr:merge` under the
    owner's instruction; under `worktrees.cleanup: auto` the merge removes the fix

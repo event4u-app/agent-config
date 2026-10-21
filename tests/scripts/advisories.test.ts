@@ -9,7 +9,7 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { inventoryFingerprint, readInventory } from '../../src/scripts/_lib/advisory_inventory.js';
-import { describe as describeFinding } from '../../src/scripts/_lib/advisory_notice.js';
+import { describe as describeFinding, readRemediations, remediationsPath } from '../../src/scripts/_lib/advisory_notice.js';
 import { assertAllowed, cvss3Base, type Fetcher, KEV_URL, kevEnrich, nativeAudits, osvQuery, type Runner, vendorAnnouncements } from '../../src/scripts/_lib/advisory_sources.js';
 import {
     announce,
@@ -682,5 +682,56 @@ describe('R2 round 2 fixes (2026-10-21)', () => {
         const t = new Date();
         expect(sessionNotice(root, t)).not.toBeNull();
         expect(sessionNotice(root, new Date(t.getTime() + 3600000))).toBeNull();
+    });
+});
+
+describe('R2 round 3 fixes (2026-10-21)', () => {
+    it('#4 — names under the project’s own npm scope and Composer vendor are private', () => {
+        const root = project('F1-fastify-hono');
+        fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: '@acme/app' }));
+        fs.writeFileSync(path.join(root, 'composer.json'), JSON.stringify({ name: 'acme/site' }));
+        const inv = markOwnActionsPrivate(root, { entries: [
+            { ecosystem: 'npm', name: '@acme/internal-lib', private: false },
+            { ecosystem: 'npm', name: '@types/node', private: false },
+            { ecosystem: 'Packagist', name: 'acme/billing', private: false },
+            { ecosystem: 'Packagist', name: 'symfony/console', private: false },
+        ] });
+        expect(inv.entries.map((e) => e.private)).toEqual([true, false, true, false]);
+    });
+
+    it('#6 — the issue fingerprint ignores the Checked line', () => {
+        const yml = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'agent-src', 'templates', 'github-workflows', 'advisories-daily.yml'), 'utf-8');
+        expect(yml).toMatch(/grep -v '\^Checked '/);
+    });
+
+    it('#10 — a pin below a security release keeps its fix past the pre-announcement window', async () => {
+        const now = new Date('2026-10-21T00:00:00Z');
+        const xml = `<feed><entry><title>PHP 8.3.28 Released!</title><published>2026-09-01T00:00:00Z</published><content>security fixes</content></entry></feed>`;
+        const entries = [{ ecosystem: 'runtime', name: 'php', version: '8.3.27', file: '.php-version', line: 1, provenance: 'version-file', private: false }] as unknown as Parameters<typeof vendorAnnouncements>[0];
+        const r = await vendorAnnouncements(entries, { fetcher: async () => ({ status: 200, text: async () => xml }), now });
+        expect(r.findings.find((f) => f.id.startsWith('REL-'))?.fixed).toBe('8.3.28');
+    });
+
+    it('#12 — a release on another line does not hide a pre-announcement for this one', async () => {
+        const now = new Date('2026-10-21T00:00:00Z');
+        const xml =
+            '<feed><entry><title>PHP 8.4.15 Released!</title><published>2026-10-20T00:00:00Z</published><content>security fixes</content></entry>' +
+            '<entry><title>Upcoming security release for PHP 8.3</title><published>2026-10-18T00:00:00Z</published><content>ahead</content></entry></feed>';
+        const entries = [{ ecosystem: 'runtime', name: 'php', version: '8.3.27', file: '.php-version', line: 1, provenance: 'version-file', private: false }] as unknown as Parameters<typeof vendorAnnouncements>[0];
+        const r = await vendorAnnouncements(entries, { fetcher: async () => ({ status: 200, text: async () => xml }), now });
+        expect(r.findings.some((f) => f.kind === 'pre-announced')).toBe(true);
+    });
+});
+
+describe('R2 round 3 — one fix store per repository', () => {
+    it('#2 — a worktree and its main checkout read and write one remediation store', () => {
+        const root = project('F1-fastify-hono');
+        execFileSync('git', ['-C', root, 'commit', '-q', '--allow-empty', '-m', 'init']);
+        const wt = path.join(tmp, 'wt-fix');
+        execFileSync('git', ['-C', root, 'worktree', 'add', '-q', '-b', 'security/x', wt]);
+        fs.mkdirSync(path.dirname(remediationsPath(root)!), { recursive: true });
+        expect(fs.realpathSync(path.dirname(remediationsPath(wt)!))).toBe(fs.realpathSync(path.dirname(remediationsPath(root)!)));
+        fs.writeFileSync(remediationsPath(root)!, JSON.stringify({ K: { key: 'K', state: 'fix-in-progress' } }));
+        expect(Object.keys(readRemediations(wt))).toEqual(['K']);
     });
 });
