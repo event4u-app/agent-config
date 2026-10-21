@@ -35,6 +35,7 @@ import {
     writeAll,
 } from '../../src/scripts/_lib/tool_output_spool.js';
 import { spoolLoadAttempts } from '../../src/scripts/_lib/tool_output_spool_loader.js';
+import { classifyResult } from '../../src/scripts/_lib/content_class.js';
 import { loadEgressEngine } from '../../src/scripts/hooks/egress_engine_loader.js';
 import { type EgressMode, runEgressStage } from '../../src/scripts/hooks/egress_stage.js';
 import type { JsonObject } from '../../src/scripts/hooks/payload_stub.js';
@@ -165,14 +166,47 @@ describe('spool-write-is-content-addressed', () => {
         expect(fs.statSync(file).size + fs.statSync(`${file}.1`).size).toBeLessThanOrEqual(2 * OBSERVATION_MAX_BYTES);
     });
 
-    it('a record longer than the record cap is dropped, and a long tool name is cut', () => {
-        observe(tmp, { tool: 'Read', huge: 'y'.repeat(OBSERVATION_MAX_RECORD) });
+    it('a record longer than the record cap is dropped', () => {
+        expect(observe(tmp, { tool: 'Read', huge: 'y'.repeat(OBSERVATION_MAX_RECORD) })).toBe(false);
         expect(fs.existsSync(spoolObservationPath(tmp))).toBe(false);
+    });
+
+    it('a tool name longer than 128 characters is cut to its first 128', () => {
+        const longName = `Read${'x'.repeat(300)}`;
         const env = readEnvelope('named at length\n'.repeat(20));
-        (env['payload'] as JsonObject)['tool_name'] = 'Read';
-        runEgressStage(env, fixed('observe'), engineSelecting);
+        (env['payload'] as JsonObject)['tool_name'] = longName;
+        const view: SpoolStageView = { mode: 'observe', placeholder: env, counts: [], refused: [] };
+        const cls = classifyResult(longName, null);
+        expect(spoolResult(env, view, ['tool_response'], tmp, new Set([cls]))).toMatchObject({ action: 'observed' });
         const line = JSON.parse(fs.readFileSync(spoolObservationPath(tmp), 'utf8').trim()) as { tool: string };
-        expect(line.tool.length).toBeLessThanOrEqual(128);
+        expect(line.tool).toBe(longName.slice(0, 128));
+    });
+
+    it('generations already over the cap are dropped before the append, active and .1 alike', () => {
+        const file = spoolObservationPath(tmp);
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, Buffer.alloc(OBSERVATION_MAX_BYTES + 2_000_000, 0x20));
+        fs.writeFileSync(`${file}.1`, Buffer.alloc(OBSERVATION_MAX_BYTES + 1, 0x20));
+        expect(observe(tmp, { tool: 'Read', k: 1 })).toBe(true);
+        for (const f of [file, `${file}.1`]) {
+            const size = fs.existsSync(f) ? fs.statSync(f).size : 0;
+            expect(size, f).toBeLessThanOrEqual(OBSERVATION_MAX_BYTES);
+        }
+    });
+
+    it('a dropped observation answers observe-dropped, not observed', () => {
+        fs.mkdirSync(spoolDirOf(tmp), { recursive: true });
+        const slow = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 20000)']);
+        try {
+            fs.writeFileSync(path.join(spoolDirOf(tmp), '.cleanup.lock'), `${String(slow.pid)}:${'ab'.repeat(16)}`);
+            const env = readEnvelope('cannot be logged now\n'.repeat(20));
+            expect(spoolResult(env, { mode: 'observe', placeholder: env, counts: [], refused: [] }, ['tool_response'], tmp, READ_TEXT)).toEqual({
+                action: 'skip',
+                reason: 'observe-dropped',
+            });
+        } finally {
+            slow.kill();
+        }
     });
 
     it('four processes observing at once leave only whole records', async () => {

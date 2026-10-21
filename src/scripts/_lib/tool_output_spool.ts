@@ -448,7 +448,7 @@ export interface SpoolStageView {
 }
 
 export type SpoolOutcome =
-    | { readonly action: 'skip'; readonly reason: 'unselected' | 'no-result' | 'image' | 'credential' | 'view-differs' | 'mode' | 'replay' | 'no-session' | 'too-large' | 'cap-busy' | 'store-error' | 'store-unavailable' }
+    | { readonly action: 'skip'; readonly reason: 'unselected' | 'no-result' | 'image' | 'credential' | 'view-differs' | 'mode' | 'replay' | 'no-session' | 'too-large' | 'cap-busy' | 'observe-dropped' | 'store-error' | 'store-unavailable' }
     | { readonly action: 'observed'; readonly class: ContentClass; readonly bytes: number; readonly digest: string }
     | ({ readonly action: 'stored'; readonly class: ContentClass } & StoredEntry);
 
@@ -473,7 +473,7 @@ export const OBSERVATION_MAX_RECORD = 1024;
  * a record that would carry the file past the cap rotates it first (replacing
  * any previous `.1`), and a record longer than OBSERVATION_MAX_RECORD is dropped.
  */
-export function observe(root: string, line: Record<string, unknown>): void {
+export function observe(root: string, line: Record<string, unknown>): boolean {
     try {
         const file = spoolObservationPath(root);
         ensureSpoolDir(root);
@@ -481,16 +481,22 @@ export function observe(root: string, line: Record<string, unknown>): void {
         // Appends happen under the store's lock, so two writers cannot interleave a
         // record; a held lock drops this one observation — observing is best effort.
         const owner = acquireCleanupLock(spoolDir(root));
-        if (owner === null) return;
+        if (owner === null) return false;
         try {
             const record = Buffer.from(`${JSON.stringify(line)}\n`, 'utf8');
-            if (record.length > OBSERVATION_MAX_RECORD) return;
-            let size = 0;
-            try {
-                size = fs.lstatSync(file).size;
-            } catch {
-                // no log yet
-            }
+            if (record.length > OBSERVATION_MAX_RECORD) return false;
+            // A generation already over the cap (left by any earlier writer) is dropped
+            // rather than kept or rotated, so the bound holds from the first append on.
+            const sizeOf = (f: string): number => {
+                try {
+                    return fs.lstatSync(f).size;
+                } catch {
+                    return 0;
+                }
+            };
+            if (sizeOf(`${file}.1`) > OBSERVATION_MAX_BYTES) fs.rmSync(`${file}.1`, { force: true });
+            if (sizeOf(file) > OBSERVATION_MAX_BYTES) fs.rmSync(file, { force: true });
+            const size = sizeOf(file);
             if (size + record.length > OBSERVATION_MAX_BYTES) {
                 fs.rmSync(`${file}.1`, { force: true });
                 fs.renameSync(file, `${file}.1`);
@@ -502,11 +508,13 @@ export function observe(root: string, line: Record<string, unknown>): void {
             } finally {
                 fs.closeSync(fd);
             }
+            return true;
         } finally {
             releaseCleanupLock(spoolDir(root), owner);
         }
     } catch {
         // observability never breaks the hook
+        return false;
     }
 }
 
@@ -540,7 +548,9 @@ export function spoolResult(
         if (view.mode === 'observe') {
             // Keyed under the empty session no stored entry uses: a repeat stays countable, equal content is not linkable without the key.
             const digest = address(spoolKey(root, true) as Buffer, '', sha256(raw));
-            observe(root, { ts: new Date(now).toISOString(), tool: tool.slice(0, 128), class: cls, bytes: raw.length, digest });
+            if (!observe(root, { ts: new Date(now).toISOString(), tool: tool.slice(0, 128), class: cls, bytes: raw.length, digest })) {
+                return { action: 'skip', reason: 'observe-dropped' };
+            }
             return { action: 'observed', class: cls, bytes: raw.length, digest };
         }
         const shown = payloadOf(view.placeholder?.['payload'])?.[key];

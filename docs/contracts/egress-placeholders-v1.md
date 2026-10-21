@@ -373,8 +373,11 @@ No setting, environment variable or config file populates the selection.
   observe log is appended under the same lock (a held lock drops that one
   observation), so records never interleave. It is bounded to two files of
   5 MB: a record that would carry the file past 5 MB rotates it first,
-  replacing any previous `.1`; a record is built from bounded fields (the tool
-  name cut to 128 characters) and one longer than 1 KB is dropped. A
+  replacing any previous `.1`; a generation already over 5 MB (left by any
+  earlier writer) is dropped before the append; a record is built from bounded
+  fields (the tool name cut to 128 characters) and one longer than 1 KB is
+  dropped. A dropped observation makes the store answer `observe-dropped`,
+  never `observed`. A
   malformed, forged or foreign-session handle reaches no cleanup and no entry, though a syntactically valid one still reads the key file to check its
   MAC. Expiry is rounded up, so a handle never expires before the full
   retention age.
