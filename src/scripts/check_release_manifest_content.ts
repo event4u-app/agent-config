@@ -26,6 +26,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { CONSUMER_IMPACT_VALUES } from './_lib/consumer_impact.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -78,6 +79,37 @@ function _diffPaths(a: unknown, b: unknown, at: Segment[] = []): Segment[][] {
     return JSON.stringify(a) === JSON.stringify(b) ? [] : [at];
 }
 
+function _isImpactEntry(v: unknown): boolean {
+    if (!_isObject(v)) return false;
+    const keys = Object.keys(v);
+    return (
+        (CONSUMER_IMPACT_VALUES as readonly unknown[]).includes(v['impact']) &&
+        keys.every((k) => k === 'impact' || (k === 'security' && v[k] === true))
+    );
+}
+
+/**
+ * `head` without the one `agentConfig.impact` entry the release itself writes:
+ * keyed to the version being cut, absent at the base, in the trailer
+ * vocabulary. Containers the removal empties go too when the base lacked them,
+ * so any other difference still surfaces at its own path.
+ */
+function _withoutReleaseImpactEntry(base: unknown, head: unknown): unknown {
+    if (!_isObject(base) || !_isObject(head) || !_isObject(head['agentConfig'])) return head;
+    const version = head['version'];
+    const impact = head['agentConfig']['impact'];
+    const baseConfig = _isObject(base['agentConfig']) ? base['agentConfig'] : undefined;
+    const baseImpact = baseConfig && _isObject(baseConfig['impact']) ? baseConfig['impact'] : undefined;
+    if (typeof version !== 'string' || !_isObject(impact) || !_isImpactEntry(impact[version])) return head;
+    if (baseImpact && version in baseImpact) return head;
+    const { [version]: _written, ...restImpact } = impact;
+    const config: Record<string, unknown> = { ...head['agentConfig'], impact: restImpact };
+    if (Object.keys(restImpact).length === 0 && !baseImpact) delete config['impact'];
+    const out: Record<string, unknown> = { ...head, agentConfig: config };
+    if (Object.keys(config).length === 0 && !baseConfig) delete out['agentConfig'];
+    return out;
+}
+
 /**
  * The differences between `base` and `head` text of one manifest that are NOT a
  * version-string change in a declared version field. Empty means in shape.
@@ -94,6 +126,7 @@ export function manifestDifferences(file: string, base: string | null, head: str
     } catch (err) {
         return [`${file}: not parseable JSON (${(err as Error).message})`];
     }
+    if (file === 'package.json') b = _withoutReleaseImpactEntry(a, b);
     const allowed = VERSION_FIELDS[file] ?? [];
     const out: string[] = [];
     for (const p of _diffPaths(a, b)) {

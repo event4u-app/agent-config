@@ -141,3 +141,43 @@ describe('check_release_manifest_content', () => {
         expect(main(['--base', 'no-such-ref', '--root', repo])).toBe(2);
     });
 });
+
+describe('the impact-map entry the release writes into package.json', () => {
+    const base = (extra: Obj = {}): string => JSON.stringify({ name: 'x', version: '1.0.0', ...extra });
+    const head = (extra: Obj = {}): string => JSON.stringify({ name: 'x', version: '2.0.0', ...extra });
+    const entry = (impact: string, more: Obj = {}): Obj => ({ impact, ...more });
+
+    it('passes the first entry, for the version being cut, on a base with no agentConfig', () => {
+        expect(manifestDifferences('package.json', base(), head({ agentConfig: { impact: { '2.0.0': entry('notice') } } }))).toEqual([]);
+    });
+
+    it('passes a new entry beside the ones earlier releases wrote, security flag included', () => {
+        const prior = { agentConfig: { impact: { '1.0.0': entry('action') } } };
+        const next = { agentConfig: { impact: { '1.0.0': entry('action'), '2.0.0': entry('automatic', { security: true }) } } };
+        expect(manifestDifferences('package.json', base(prior), head(next))).toEqual([]);
+    });
+
+    it('fails an entry keyed to a version other than the one being cut', () => {
+        expect(manifestDifferences('package.json', base(), head({ agentConfig: { impact: { '9.9.9': entry('notice') } } }))).toEqual([
+            'package.json: "agentConfig" differs outside the version fields',
+        ]);
+    });
+
+    it('fails an edit to an entry an earlier release wrote', () => {
+        const prior = { agentConfig: { impact: { '1.0.0': entry('action') } } };
+        const next = { agentConfig: { impact: { '1.0.0': entry('none'), '2.0.0': entry('notice') } } };
+        expect(manifestDifferences('package.json', base(prior), head(next))).toEqual([
+            'package.json: "agentConfig"."impact"."1.0.0"."impact" differs outside the version fields',
+        ]);
+    });
+
+    it('fails an out-of-vocabulary value and any other key under agentConfig', () => {
+        expect(manifestDifferences('package.json', base(), head({ agentConfig: { impact: { '2.0.0': entry('huge') } } }))).toHaveLength(1);
+        expect(manifestDifferences('package.json', base(), head({ agentConfig: { impact: { '2.0.0': entry('notice') }, other: 1 } }))).toHaveLength(1);
+        expect(manifestDifferences('package.json', base(), head({ agentConfig: { impact: { '2.0.0': entry('notice', { extra: 1 }) } } }))).toHaveLength(1);
+    });
+
+    it('allows the entry only in package.json', () => {
+        expect(manifestDifferences('.augment-plugin/plugin.json', base(), head({ agentConfig: { impact: { '2.0.0': entry('notice') } } }))).toHaveLength(1);
+    });
+});
