@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **750 public artefacts** shipped by
+Consumer-facing catalog of all **751 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -454,7 +454,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (208)
+## Commands (209)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -487,6 +487,7 @@ are excluded.
 | command | [`analyze-premortem`](../dist/agent-src/commands/analyze/premortem.md) | cluster: analyze | Forward-looking imagined-failure analysis before committing to a heavy or irreversible plan — enumerate failure stories, score each mode, derive early-warning signals and guardrails. |
 | command | [`analyze-reference`](../dist/agent-src/commands/analyze/reference.md) | cluster: analyze | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`analyze-roadmap-repos`](../dist/agent-src/commands/analyze/roadmap-repos.md) | cluster: analyze | Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-reference, one subagent at a time, without producing one roadmap per repository. |
+| command | [`audit`](../dist/agent-src/commands/audit.md) |  | Security advisories for the project's packages, runtimes and toolchain — by tier, with evidence; `deps fix <id>` carries one finding to a verified PR |
 | command | [`brand`](../dist/agent-src/commands/brand.md) | cluster: brand | Brand-as-UX orchestrator — strategy, identity, tokens, review, voice. Routes to the brand-grounding skills that constrain the design layer. |
 | command | [`brand-identity`](../dist/agent-src/commands/brand/identity.md) | cluster: brand | Define the brand identity — logo direction, colour story, type story, imagery direction — and the token constraints downstream generation consumes. |
 | command | [`brand-review`](../dist/agent-src/commands/brand/review.md) | cluster: brand | Audit emitted UI, copy, and assets against the active brand tokens and voice profile — flag any value not traceable to a brand token or voice rule. |
