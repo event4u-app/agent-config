@@ -165,21 +165,11 @@ describe('4.3 — the manifest binding', () => {
         platforms: Record<string, Record<string, string[]>>;
     };
 
-    // FLIPPED 2026-10-20, by the commit the previous wording predicted — see
-    // the matching block in update_notice_hook.test.ts. Round 2 returned
-    // `ratified` 2/2, and this concern registers under `interaction`, a term
-    // that ratification added because the closed vocabulary had no word for
-    // "asks the user something" that was not `notification` ("changes nothing
-    // else"). The pin inverts rather than disappears: a later edit relabelling
-    // it `notification` would be the under-declaration round 1 refused.
-    // FLIPPED again 2026-10-21: the registration was withdrawn after two more
-    // refusals — the one global invitation was claimed on workspace-written
-    // evidence without confirmed delivery. The definition and its effect stay;
-    // a commit that binds it again turns this red and has to carry a new round.
-    it('is defined under the ratified effect, and bound on no event of any host', () => {
-        const entry = manifest.concerns[CONCERN];
-        expect(entry).toBeDefined();
-        expect((entry as { effect?: string }).effect).toBe('interaction');
+    // Refused 2/2 with update-notice on 2026-10-20; see the matching block in
+    // update_notice_hook.test.ts. Re-registering it is the commit that must
+    // carry the new council verdict, and that commit turns this red.
+    it('is neither defined nor bound while the council refusal stands', () => {
+        expect(manifest.concerns[CONCERN]).toBeUndefined();
         const bound: string[] = [];
         for (const [host, events] of Object.entries(manifest.platforms)) {
             for (const [event, concerns] of Object.entries(events)) {

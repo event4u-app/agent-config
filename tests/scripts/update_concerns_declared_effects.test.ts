@@ -18,47 +18,10 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-import { CONCERN_EFFECTS } from '../../src/scripts/lint_hook_manifest.js';
 import { autoInviteDecision, type InviteInput } from '../../src/scripts/_lib/update_invite.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const MANIFEST = fs.readFileSync(path.join(ROOT, 'src', 'scripts', 'hook_manifest.yaml'), 'utf-8');
 const NOTICE_SRC = fs.readFileSync(path.join(ROOT, 'src', 'scripts', '_lib', 'update_notice.ts'), 'utf-8');
-
-/** The concern's block in the manifest, from its key to the next key. */
-function concernBlock(name: string): string {
-    const m = new RegExp(`\\n  ${name}:\\n([\\s\\S]*?)(?=\\n  [a-z][a-z0-9-]*:\\n|\\nroles:)`, 'u').exec(MANIFEST);
-    expect(m, `${name} is registered in hook_manifest.yaml`).not.toBeNull();
-    return (m as RegExpExecArray)[1] as string;
-}
-
-describe('condition 1 — the vocabulary the registration needs exists', () => {
-    it('carries the two terms the council added, and still refuses an invented one', () => {
-        expect(CONCERN_EFFECTS.has('state_change')).toBe(true);
-        expect(CONCERN_EFFECTS.has('interaction')).toBe(true);
-        // Polarity: the set is still CLOSED. A ratification that widened it to
-        // anything would have bought nothing.
-        expect(CONCERN_EFFECTS.has('staging')).toBe(false);
-        expect(CONCERN_EFFECTS.has('anything')).toBe(false);
-    });
-});
-
-describe('condition 5 — the manifest declares the effect the council assigned', () => {
-    it('`update-notice` is state_change, not notification', () => {
-        const block = concernBlock('update-notice');
-        expect(block).toContain('effect: state_change');
-        // The weaker declaration is the one that was refused; assert its
-        // ABSENCE rather than only the presence of the right one, because a
-        // block carrying both would pass a presence-only check.
-        expect(block).not.toContain('effect: notification');
-    });
-
-    it('`update-auto-invite` is interaction, not notification', () => {
-        const block = concernBlock('update-auto-invite');
-        expect(block).toContain('effect: interaction');
-        expect(block).not.toContain('effect: notification');
-    });
-});
 
 describe('condition 2 — every updateNotice path leaves activate null', () => {
     it('the type itself forbids any other value', () => {

@@ -297,10 +297,12 @@ None of this is rebuilt here.
   `reversible` may not be assumed merely because activation is deferred.
   Was: open — raised 2026-10-20 by a council verdict, not by a missing
   decision. The work exists, is tested and is reverted out of the manifest.
-- **Rounds 3–10 (2026-10-21):** both concerns are defined and bound nowhere —
-  `update-auto-invite` until 4.3 closes, `update-notice` until 3.1 does. The
-  2026-10-20 registration this status records was withdrawn, not reversed: the
-  effect terms and the definitions stand.
+- **Rounds 3–11 (2026-10-21):** neither concern is in the manifest —
+  `update-auto-invite` returns when 4.3 closes, `update-notice` when 3.1 does.
+  Round 11 refused even unbound definitions as dead surface, so the
+  2026-10-20 registration and its two effect terms were taken out with them;
+  the concerns' code, its fixes and its tests stay. A return needs the terms
+  and the registration ratified again.
 - **Round 3 and the lifecycle contract (2026-10-21):** `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § Round 3.
 - **Class:** 2 — council. The seats named what the next round has to carry, so
   the question is what they asked for, not who owns it.

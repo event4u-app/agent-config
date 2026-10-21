@@ -356,9 +356,7 @@ describe("effect: — the census's field (Phase 2.2)", () => {
     // declared, which is the failure this case exists for.
     // 63 again since `block-credential-reads` (road-to-one-detector-and-the-
     // senders-we-own 1.1).
-    // 65 since `update-notice` and `update-auto-invite` returned as declared
-    // authority expansions, ratified 2/2 on 2026-10-20.
-    expect(names.length).toBe(65);
+    expect(names.length).toBe(63);
     const missing = names.filter((n) => !CONCERN_EFFECTS.has(String(manifest.concerns[n]?.effect)));
     expect(missing).toStrictEqual([]);
     const mismatched = names.filter(
