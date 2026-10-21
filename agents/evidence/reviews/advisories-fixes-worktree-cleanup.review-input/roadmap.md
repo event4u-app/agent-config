@@ -230,8 +230,8 @@ project.
 - [x] **5.1 `/audit deps`** under the approved `audit` verb (C5): inventory,
       findings by tier, the evidence per finding, and source health.
       verify: the command file exists under `src/domains/` with `visibility:
-      visible` and `./scripts-run src/scripts/lint_command_verbs` passes.
-      *One command under the approved verb, `deps` its argument — a sub-command `deps` would be a new verb under ADR-041.*
+      advanced` and `./scripts-run src/scripts/lint_command_verbs` passes.
+      *One command under the approved verb, `deps` its argument — a sub-command `deps` would be a new verb under ADR-041. Shipped `advanced`, not `visible` as first written: the session notice and `/audit deps fix` are how a user meets it, and a new visible command joins the consumer's top-level menu, which this change has no reason to grow (corrected 2026-10-21 by an R2 review finding).*
       <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
 - [x] **5.2 Gap report over what the project already runs**: platform alerts
       on, security updates ungrouped, a cooldown configured, Composer
