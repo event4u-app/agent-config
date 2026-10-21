@@ -1,0 +1,4 @@
+Node Tests (ubuntu-latest, shard 1/4)	UNKNOWN STEP	2026-10-21T17:26:52.2387306Z  ^[[32m✓^[[39m ^[[30m^[[43m node ^[[49m^[[39m tests/scripts/reach_doctor.test.ts ^[[2m(^[[22m^[[2m93 tests^[[22m^[[2m)^[[22m^[[33m 6945^[[2mms^[[22m^[[39m
+Node Tests (macos-latest, shard 3/4)	UNKNOWN STEP	2026-10-21T17:40:40.2836680Z  ^[[32m✓^[[39m ^[[30m^[[43m node ^[[49m^[[39m tests/scripts/skill_linter.test.ts ^[[2m(^[[22m^[[2m154 tests^[[22m^[[2m)^[[22m^[[33m 1383^[[2mms^[[22m^[[39m
+Node Tests (ubuntu-latest, shard 1/4)	UNKNOWN STEP	2026-10-21T17:26:43.8024721Z ##[group]Run npm run test:ts --silent -- --shard=1/4 --exclude 'tests/golden/**' --exclude 'tests/server/workspace.test.ts' --exclude 'tests/scripts/collector_lifecycle.test.ts' --exclude 'tests/scripts/cli/python/**'
+Node Tests (ubuntu-latest, shard 1/4)	UNKNOWN STEP	2026-10-21T17:31:59.1118883Z ^[[2m Test Files ^[[22m ^[[1m^[[32m493 passed^[[39m^[[22m^[[90m (493)^[[39m

@@ -76,7 +76,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-26.04, macos-26]
         shard: [1, 2, 3, 4]
     env:
       SHARD: ${{ matrix.shard }}/4
@@ -113,7 +113,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-26.04, macos-26]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -220,7 +220,7 @@ jobs:
         # EXCLUDED here, because vitest shards by file COUNT not duration and
         # would otherwise clump the golden files into one > 2 min bucket.
         # ESLint / typecheck / prepack are whole-tree gates → shard 1 only.
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-26.04, macos-26]
         shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -299,6 +299,15 @@ jobs:
         # a call. Folding the two dedicated jobs back in was evaluated against
         # these figures and rejected; the arithmetic and the revisit-if live in
         # docs/contracts/ci-cost-budget.md § Fold-back decision, 2026-08-18.
+        #
+        # VITEST_BALANCED_SHARDS=1 replaces the count split with a duration
+        # split from tests/timing-manifest.json (tests/_lib/balanced-sequencer.ts),
+        # refreshed from a CI run by `plan_test_shards --run <id> --write`.
+        # Replayed on run 39643700286's own timings, the slowest shard's summed
+        # test time drops from 685 s to 539 s on ubuntu and 1089 s to 899 s on
+        # macOS; every file still runs in exactly one shard.
+        env:
+          VITEST_BALANCED_SHARDS: '1'
         run: >-
           npm run test:ts --silent --
           --shard=${{ matrix.shard }}/4
@@ -313,7 +322,7 @@ jobs:
     # are OS-independent) instead of on every node-tests shard, so no vitest
     # shard's wall clock carries their ~40s and the check dedups across OSes.
     name: Static Checks (ESLint · typecheck · prepack)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -537,7 +546,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-26.04, macos-26]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -591,7 +600,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-26.04, macos-26]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -635,10 +644,10 @@ jobs:
     # PLATFORMS, NAMED, because the blocker `lifecycle-ci-runner-provisioning`
     # requires this job to name them rather than leave them to be inferred:
     #
-    #   macos-latest  — the declared macOS row (per-user launchd). VERIFIED here.
+    #   macos-26  — the declared macOS row (per-user launchd). VERIFIED here.
     #   Linux with a user session bus — the second declared supported row.
     #                   NOT CERTIFIED, and not certifiable on a GitHub-hosted
-    #                   runner: ubuntu-latest has no user session bus, so it is
+    #                   runner: ubuntu-26.04 has no user session bus, so it is
     #                   the static-fallback row of the platform table, not the
     #                   supported one. Running the suite there would produce a
     #                   green tick that says nothing about `systemd --user`.
@@ -654,8 +663,8 @@ jobs:
     # unverified, and keep it out of release claims EVEN IF its static fallback
     # appears to work. (a), provisioning a runner with a real user session bus,
     # remains the target.
-    name: Collector Lifecycle (macos-latest — the macOS row only)
-    runs-on: macos-latest
+    name: Collector Lifecycle (macos-26 — the macOS row only)
+    runs-on: macos-26
     # Spawns real daemons with 90 s per-case timeouts, and runs the
     # dispatcher-reaching suite twice for the parity comparison; a hang here
     # would otherwise sit at the runner default (R2 round-2 finding 2).
@@ -775,7 +784,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-26.04, macos-26]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
