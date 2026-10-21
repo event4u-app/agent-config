@@ -208,6 +208,15 @@ if $NO_UI; then
     export AGENT_CONFIG_NO_UI=1
 fi
 
+# `--scope global` is documented above as "same as --global", and it was not:
+# it set SCOPE and nothing else, so the PROJECT payload sync still ran. Under
+# npx that sync auto-detects its target three levels above the package, which
+# is the npx cache, so a global dry-run reported writing `.augment/` there.
+if [[ "${SCOPE:-}" == "global" ]]; then
+    GLOBAL=true
+    SKIP_SYNC=true
+fi
+
 # road-to-global-only-install § Phase 3.3 — consumer-floor gate.
 #
 # Consumer installs are global-only (ADR-020). Explicit --scope=project
@@ -419,12 +428,19 @@ run_bridges() {
         runner=($tsx_bin "$INSTALL_TS")
     fi
 
+    local args=(--project "$TARGET_DIR" --package "$SOURCE_DIR")
     if $DRY_RUN; then
-        $QUIET || echo "  ⏭️  Skipping bridges (--dry-run)"
-        return 0
+        # The install stage owns the global plan, so a dry run asks IT rather
+        # than skipping it: install.ts returns from its plan summary before any
+        # write or subprocess. Skipping it here left a global dry run printing
+        # nothing but the one stage that does not apply to a global install.
+        $GLOBAL && args+=(--global)
+        [[ -n "$SCOPE" ]] && args+=(--scope="$SCOPE")
+        args+=(--tools="$TOOLS" --no-ui --dry-run)
+        "${runner[@]}" "${args[@]}"
+        return $?
     fi
 
-    local args=(--project "$TARGET_DIR" --package "$SOURCE_DIR")
     [[ -n "$PROFILE" ]] && args+=(--profile="$PROFILE")
     [[ -n "$USER_TYPE" ]] && args+=(--user-type="$USER_TYPE")
     $FORCE && args+=(--force)
@@ -473,6 +489,12 @@ if ! $SKIP_SYNC; then
         exit 1
     fi
     run_sync || RC=$?
+elif $DRY_RUN && ! $QUIET; then
+    if $GLOBAL; then
+        echo "  ⏭️  Project payload sync: skipped — a global install writes user-scope host paths only."
+    else
+        echo "  ⏭️  Project payload sync: skipped (--skip-sync)."
+    fi
 fi
 
 if [[ $RC -ne 0 ]]; then

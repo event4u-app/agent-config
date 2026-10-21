@@ -43,7 +43,10 @@ function expectedCommand(acEvent: string, native: string): string {
         `exec node "$B" ${args}; fi; ` +
         'if [ -n "$N" ] && [ -x "$N" ] && [ -f "$S/dist/hooks/dispatch.js" ]; then ' +
         `exec "$N" "$S/dist/hooks/dispatch.js" ${args}; fi; ` +
-        'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; ' +
+        // The local wrapper is taken only when the checkout has node_modules: a
+        // fresh worktree's wrapper is tracked but cannot run (hook_runtime_fresh_worktree).
+        'BIN=agent-config; [ -x "$CLAUDE_PROJECT_DIR/agent-config" ] && ' +
+        '[ -d "$CLAUDE_PROJECT_DIR/node_modules" ] && BIN="$CLAUDE_PROJECT_DIR/agent-config"; ' +
         `command -v "$BIN" >/dev/null 2>&1 || { [ -n "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_STDERR}' >&2;${
             native === 'SessionStart' ? ` echo '${NO_DISPATCHER_CONTEXT}';` : ''
         } }; ${thinned}exit 0; }; ` +
@@ -235,6 +238,11 @@ describe('generated hook command — bundle fast path + CLI fallback', () => {
         writeFileSync(join(ws, 'agent-config'), `#!/usr/bin/env bash\necho "$@" > "${log}"\n`, {
             mode: 0o755,
         });
+        // A RUNNABLE local CLI: the hook command takes `./agent-config` only when
+        // the checkout has node_modules, because a fresh worktree's wrapper is
+        // tracked but cannot resolve its deps (hook_runtime_fresh_worktree). The
+        // assertions below are about the fallback's contract, unchanged.
+        mkdirSync(join(ws, 'node_modules'), { recursive: true });
         return log;
     }
 

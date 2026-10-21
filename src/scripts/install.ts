@@ -121,7 +121,7 @@ import { resolveGlobalRuleScope } from '../install/globalRuleScope.js';
 import { deployClaudeCarrier } from '../install/stagedRuntime.js';
 import { mergeToolsAliases as _merge_tools_aliases } from '../install/toolsArg.js';
 import { installerThinsHost } from './_lib/lean_projection_mode.js';
-import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL } from '../install/wizard-plan.js';
+import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL, dryRunTargetLines } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
 import { settingsSchema } from '../server/schemas/settings.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
@@ -4444,7 +4444,7 @@ function _dry_run_summary(opts: Options): number {
     process.stdout.write(`  user-type:   ${opts.user_type || '(none)'}\n`);
     process.stdout.write(`  scope:       ${opts.scope || (opts.global_install ? 'global' : 'auto')}\n`);
     process.stdout.write(`  tools:       ${opts.tools || 'all'}\n`);
-    process.stdout.write(`  target:      ${target}\n`);
+    process.stdout.write(dryRunTargetLines(Boolean(opts.global_install) || opts.scope === 'global', _parse_tools(opts.tools || 'all'), target));
     process.stdout.write(`  minimal:     ${pyBool(opts.minimal)}\n`);
     process.stdout.write(`  force:       ${pyBool(opts.force)}\n`);
     process.stdout.write(`  offline:     ${pyBool(opts.offline)}\n`);

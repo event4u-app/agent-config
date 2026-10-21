@@ -127,7 +127,13 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
         //
         // Hook-resilience fallback (road-to-opt-subagent-harvest P1.4):
         // local binary → PATH fallback → exit 0 when neither exists (a hook
-        // must never error-spam the loop on an uninstalled repo). Silent on
+        // must never error-spam the loop on an uninstalled repo).
+        // The local wrapper is taken only when the checkout has `node_modules`.
+        // `[ -x ]` alone is true in a fresh git worktree of a source checkout,
+        // where the wrapper is tracked but its dependencies are not: every
+        // event then died on ERR_MODULE_NOT_FOUND while a working global CLI
+        // sat on PATH. A wrapper that cannot resolve its deps is not a runtime,
+        // so the PATH fallback is the correct next candidate. Silent on
         // the settings carrier; the plugin carrier says so (see
         // _no_dispatcher_notice).
         // The dispatcher's own exit code PROPAGATES when it runs — a
@@ -152,7 +158,8 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
             `exec node "$B" ${dispatchArgs}; fi; ` +
             'if [ -n "$N" ] && [ -x "$N" ] && [ -f "$S/dist/hooks/dispatch.js" ]; then ' +
             `exec "$N" "$S/dist/hooks/dispatch.js" ${dispatchArgs}; fi; ` +
-            'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; ' +
+            'BIN=agent-config; [ -x "$CLAUDE_PROJECT_DIR/agent-config" ] && ' +
+            '[ -d "$CLAUDE_PROJECT_DIR/node_modules" ] && BIN="$CLAUDE_PROJECT_DIR/agent-config"; ' +
             `command -v "$BIN" >/dev/null 2>&1 || { ${_no_dispatcher_notice(native)}${_thinned_dead_carrier(native)}exit 0; }; ` +
             `"$BIN" dispatch:hook ${dispatchArgs}`;
     }
