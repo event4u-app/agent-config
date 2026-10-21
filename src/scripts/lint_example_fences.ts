@@ -71,6 +71,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { assignmentPattern } from './_lib/egress_rules.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
@@ -159,8 +160,16 @@ export const PATTERNS: readonly FencePattern[] = [
         source: 'tool-safety',
         langs: 'any',
         label: 'Credential assigned a literal value in an example',
-        pattern:
-            /\b(api[_-]?key|apikey|password|passwd|secret|access[_-]?token|client[_-]?secret)\b\s*[:=]\s*["'][^"']{8,}["']/i,
+        pattern: assignmentPattern(
+            {
+                keywords: ['apiKey', 'apikey', 'password', 'passwd', 'secret', 'accessToken', 'clientSecret'],
+                before: '\\b',
+                after: '\\b',
+                capture: true,
+                value: `["'][^"']{8,}["']`,
+            },
+            'i',
+        ),
         // Placeholders are the correct way to show the shape and must not fire.
         // `secret-vcs-guard` owns real credentials; this pattern owns the
         // *teaching* of an inline literal, so anything self-evidently fake is out.

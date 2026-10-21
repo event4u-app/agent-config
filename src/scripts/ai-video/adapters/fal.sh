@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# egress-content: session-content uncovered — the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach
 # fal.sh — fal.ai multiplexer adapter: one adapter, many video models.
 #
 # Capability: per-model. fal.ai exposes ONE uniform async queue API over

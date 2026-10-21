@@ -1,3 +1,4 @@
+// egress-content: session-content asserted — every body passes councilEgress().check in curlJsonPost before curl is spawned; the council bundle is replaced through the engine first
 /**
  * The council's synchronous HTTP transport, and the per-provider shims that
  * turn it into the SDK-shaped callables `clients.ts::ask()` reads.
@@ -25,8 +26,23 @@
 
 import { spawnSync } from 'node:child_process';
 
+import { councilEgress } from './council_egress.js';
+
 /** The one network primitive. Swappable so tests never reach the network. */
 export type JsonPost = (url: string, extraHeaders: string[], body: unknown) => unknown;
+
+/** Every string a JSON body carries, in order, decoded — what a provider would read. */
+export function stringLeaves(value: unknown, out: string[] = []): string[] {
+    if (typeof value === 'string') out.push(value);
+    else if (Array.isArray(value)) for (const v of value) stringLeaves(v, out);
+    else if (value !== null && typeof value === 'object') {
+        for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+            out.push(k);
+            stringLeaves(v, out);
+        }
+    }
+    return out;
+}
 
 export const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
@@ -38,6 +54,13 @@ export const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta
  * a non-2xx status so `ask()`'s catch surfaces it as a member error.
  */
 export function curlJsonPost(url: string, extraHeaders: string[], body: unknown): unknown {
+    // The final egress check over every string the body carries, immediately
+    // before the request is written (road-to-one-detector-and-the-senders-we-own
+    // 3.3). The headers carry the transport's own credential and are not body.
+    const refusal = councilEgress().check(stringLeaves(body).join('\n'));
+    if (refusal !== null) {
+        throw new Error(`egress refused: ${refusal.reason} (${refusal.what}); nothing was sent`);
+    }
     const args = ['-sS', '-X', 'POST', url, '-H', 'content-type: application/json'];
     for (const h of extraHeaders) {
         args.push('-H', h);

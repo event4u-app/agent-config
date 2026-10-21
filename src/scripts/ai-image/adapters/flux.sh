@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# egress-content: session-content uncovered — the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach
 # flux.sh — Black Forest Labs FLUX photoreal image adapter.
 #
 # Capability: audio=none (still image). Photorealism path

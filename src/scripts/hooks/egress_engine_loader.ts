@@ -34,7 +34,7 @@ import { verifyBundle } from './bundle_integrity.js';
 export type EgressEngine = typeof Engine;
 
 /** The schema this loader accepts. Must equal `ENGINE_SCHEMA` in the engine. */
-export const EXPECTED_ENGINE_SCHEMA = 1;
+export const EXPECTED_ENGINE_SCHEMA = 2;
 
 export const ENGINE_CHUNK_BASENAME = 'egress_engine.chunk.cjs';
 
@@ -98,7 +98,7 @@ export function loadEgressEngineUncached(selfUrl: string = import.meta.url, bund
             return { ok: false, reason: 'invalid' };
         }
         if (mod['ENGINE_SCHEMA'] !== EXPECTED_ENGINE_SCHEMA) return { ok: false, reason: 'schema' };
-        for (const name of ['detect', 'replaceValues', 'scanText', 'TokenScope', 'EgressRefusedError']) {
+        for (const name of ['detect', 'replaceValues', 'scanText', 'TokenScope', 'EgressRefusedError', 'tallyText', 'injectText', 'replaceJson']) {
             if (typeof mod[name] !== 'function') return { ok: false, reason: 'invalid' };
         }
         if (!Array.isArray(mod['EGRESS_RULES'])) return { ok: false, reason: 'invalid' };

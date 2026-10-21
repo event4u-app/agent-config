@@ -43,6 +43,7 @@
  * module guarantees its callers.
  */
 
+import { API_KEY_ASSIGNMENT_KEYWORD } from '../_lib/egress_prefixes.js';
 import { _RAW_KEY_PREFIXES } from './config.js';
 
 /**
@@ -189,9 +190,11 @@ const _MONEY_RE = new RegExp(
     'gu',
 );
 
-// Python: (?i)\bapi[_-]?key\b\s*[:=]\s*[A-Za-z0-9+/=_\-]{12,}
+// The keyword is the rule table's, read through its bundled projection (this
+// module rides in the dispatch bundle); the Unicode word boundary and the
+// 12-character value are this redactor's threshold.
 const _API_KEY_RE = new RegExp(
-    `${_UNB_BEFORE}api[_-]?key${_UNB_AFTER}\\s*[:=]\\s*[A-Za-z0-9+/=_\\-]{12,}`,
+    `${_UNB_BEFORE}${API_KEY_ASSIGNMENT_KEYWORD}${_UNB_AFTER}\\s*[:=]\\s*[A-Za-z0-9+/=_\\-]{12,}`,
     'giu',
 );
 

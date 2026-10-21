@@ -61,7 +61,7 @@ The placeholder grammar is one constant, chosen by a pre-registered measurement,
 and the contract states what each of four published states — `asserted`,
 `replaced`, `gated`, `uncovered` — proves.
 
-## Execution status — 2026-10-15
+## Execution status — 2026-10-20
 
 One lane took the three steps `road-to-placeholders-on-the-wire` Phase 1 waits
 on (its D9) and what they depend on: 0.1, 0.2, 0.3, 2.1 and 3.1. Everything else
@@ -88,11 +88,13 @@ is open.
   values) and 3.2 (variant suffix) landed. 2.3 (identifier rows) and 2.5
   (normalised detection, whose homoglyph fixture needs the e-mail row) were built
   and are held back: see 2.3.
-- **Next in order:** 2.3's fourth ratification round, then 2.5, 2.7, 3.3, 3.4,
-  2.6, 3.5. 2.7 goes before 3.3 because 3.3 turns the bundler's whole-line masks
-  into spans: until the keyword-assignment and `Authorization:` shapes are table
-  rows, a span replacer would pass a low-entropy password or a bearer value the
-  line mask catches today.
+- **2026-10-20:** 2.7 (before 3.3, so the span replacer never passes a
+  low-entropy password or a bearer value the line mask caught), 3.4, 3.5, AC-3
+  and AC-5 landed. 3.3 and 2.6 were built and stay open only on 2.3 (the
+  five-placeholder sample and the IBAN mutation need identifier rows), as do
+  AC-1, AC-2 and the identifier half of AC-6.
+- **Next in order:** 2.3's fourth ratification round (owner-invoked), then 2.5;
+  together they close 3.3, 2.6, AC-1, AC-2 and the identifier half of AC-6.
 
 ## What this roadmap deliberately does not do
 
@@ -394,7 +396,23 @@ read cannot leak through any later bug.
       changing class precedence, logging a raw value or letting a credential
       token restore anywhere turns a named test red.
       verify: each listed mutation, applied to a scratch copy, fails at least one test; the recipes are `canary:` entries in `src/config/gate-coverage.yml`.
-- [ ] **2.7 The shapes with no vendor literal read the table too** — the
+      **Built 2026-10-20 for three of the four mutations; open on 2.3.** The
+      gate `check_egress_mutations` copies the three engine modules into a
+      scratch directory per recipe (never editing them in place) and requires
+      the named invariant to hold on the unmutated copy and fail on the mutated
+      one. Recipes live in `src/config/egress-mutations/`: class precedence
+      swapped, a credential token that restores, a raw value in the count
+      record — each killed. The canary contract is create-only, so a recipe
+      cannot itself be a `canary:` entry: the gate's row in
+      `src/config/gate-coverage.yml` carries one `canary:` that plants a
+      recipe changing nothing, which survives and turns the gate red. Wired in
+      `task ci` and `rule-backstops.yml`; `--self-test` 4/4 (a surviving, a
+      stale and an unknown recipe rejected); `check_gate_coverage` and
+      `check_ci_local_parity` green; `npx vitest run
+      tests/scripts/check_egress_mutations.test.ts` -> 0. **Still open:** the
+      IBAN-checksum mutation, which needs the IBAN row of 2.3 (owner-gated);
+      its recipe joins when that row lands.
+- [x] **2.7 The shapes with no vendor literal read the table too** — the
       keyword-assignment variants (`password =`, `api_key:`) the council bundler,
       `workspace_secrets` and the low-impact redactor read at their own
       threshold, and the class-spelled prefixes in `check_reach_channels.ts`.
@@ -402,6 +420,20 @@ read cannot leak through any later bug.
       threshold and placeholder; the legacy-superset suite gains their frozen
       patterns before the move.
       verify: `npx vitest run src/scripts/_lib/egress_legacy_superset.test.ts` -> 0 with those patterns frozen, and `check_credential_spelling` fails a keyword-assignment or class-spelled shape outside the table (self-test case).
+      **Done 2026-10-20:** the table carries `ASSIGNMENT_KEYWORDS` with the
+      `assignmentPattern` builder, `AUTHORIZATION_HEADER` and
+      `CLASS_SPELLED_PREFIXES`. Seven sites read them, not three: the bundler,
+      `workspace_secrets`, the low-impact redactor, the explain scrubber,
+      `check_memory`, `lint_example_fences` and the table's own
+      `generic-assignment` row, plus both shapes in `check_reach_channels.ts`.
+      Every rebuilt regex is the frozen spelling byte for byte where the
+      consumer exposes it, and the frozen behaviour where it does not
+      (`egress_legacy_superset.test.ts` -> 0, 15 cases). The low-impact
+      redactor rides in the dispatch bundle (388 B of headroom), so it reads
+      the one keyword through `egress_prefixes.ts`, equality-tested against the
+      table. `check_credential_spelling --self-test` -> 8/8, with a class
+      spelling and an assignment shape rejected; run over the `origin/main`
+      copies of the seven files, its new checks flag all eight pre-move lines.
 
 ## Phase 3 — The grammar, and the requests this package writes (F1, F8)
 
@@ -444,14 +476,60 @@ response, with no host contract in between and no hook budget to spend — so
       high-confidence finding; a hit refuses the send. Responses are restored
       locally for display only; the retained record keeps placeholders.
       verify: the F1 sample leaves the bundler with five placeholders and `const token = getToken();` intact; a canary that plants a raw value past the replacement is refused by the final check, and removing the check turns the canary red.
-- [ ] **3.4 Every sender in the 0.4 census is one of three things:** routed
+      **Built 2026-10-20; open on 2.3 only.** The bundler replaces span by span
+      through `src/scripts/ai_council/council_egress.ts` (one scope per run, the
+      replaced values held in memory only), with the table's new
+      `REVIEW_CREDENTIAL_ROWS` (a low-entropy password, a bearer value) and its
+      own three looser readings as rows, so `const token = getToken();` and
+      every key name survive. The final check runs in `callMember`, in
+      `curlJsonPost` before curl and before a CLI seat spawns.
+      `npx vitest run tests/scripts/ai_council/council_egress.test.ts` -> 0
+      (12 cases, 1 skipped): the canary that plants a replaced value is
+      refused with nothing sent and a member handed the same body directly
+      receives it; a high-confidence finding in the system prompt or a split
+      round is refused; a CLI seat refuses before spawning and books no call.
+      The F1 sample leaves with **two** placeholders (the connection URI and
+      the token), not five: the e-mail, IBAN and phone need the identifier rows
+      of 2.3, which are owner-gated. The five-placeholder case is written and
+      skips until those rows exist (`it.skipIf`). The removal half of the
+      verify is shown by the direct-call contrast in that test, not by deleting
+      the check: the host's auto-mode classifier refused an in-tree sabotage
+      edit of the security path, and the run did not route around it.
+- [x] **3.4 Every sender in the 0.4 census is one of three things:** routed
       through the same replacement and final check, marked as carrying a fixed
       corpus only, or listed `uncovered` with a reason. A new sender that is
       none of them fails the census gate.
       verify: the census has no empty cell; a fixture sender with no classification fails the gate.
-- [ ] **3.5 What this package injects into a session goes through the engine
+      **Done 2026-10-20:** every one of the 23 modules carries an
+      `egress-content:` marker; the census gains `coverage` and `reason`
+      columns and reads 2 asserted (the council clients and transport),
+      6 fixed-corpus, 15 uncovered (the 14 shell media adapters and the
+      proposer transport), 0 undeclared. `asserted` is accepted only from a
+      module that imports the final check. `egress_sender_census` exits 1 on an
+      undeclared sender even with `--write`. `npx vitest run
+      src/scripts/_lib/egress_sender_scan.test.ts` -> 0, 13 cases: no empty
+      cell over the tree, and a fixture sender with no marker fails the census
+      and passes once it has one. The census runs as that test in CI; it is
+      not a registered gate-coverage row.
+- [x] **3.5 What this package injects into a session goes through the engine
       too** — hot context, handoff and memory recall re-inject stored text.
       verify: a stored entry containing a listed value is injected as its token.
+      **Done 2026-10-20:** one choke point, not three: the dispatcher passes
+      every concern reply it hands back to the session — the `context` block at
+      session start (hot context, handoff) and every `reason` plus
+      `additional_context` (memory recall) — through `egressInjection`
+      (`hooks/egress_stage.ts`). In `protect` and `strict` each listed value
+      becomes its token under one scope per dispatch; an unproven key block or
+      an unavailable engine withholds the text; `off` and `observe` change
+      nothing. The per-text work (`tallyText`, `injectText`, `replaceJson`)
+      moved into the engine chunk as `_lib/egress_text.ts`, schema 2, which is
+      what pays for it: the dispatch bundle reads 1,549,728 B of 1,550,000 B
+      and the chunk 22,969 B of 28,000 B, with no ceiling raised. `npx vitest
+      run tests/scripts/hooks/egress_injection.test.ts` -> 0, 7 cases: through
+      the real dispatcher, a stored entry injected at session start and a
+      recalled one on a prompt arrive as their token in `protect`, and the same
+      entry arrives unchanged under `mode: off`. The hooks and egress suites
+      stay green (93 files).
 
 ## Blockers
 
@@ -483,7 +561,7 @@ response, with no host contract in between and no hook budget to spend — so
   the decision-revisit gate's reserved set gives to the owner, not to a council.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-21 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -493,27 +571,54 @@ response, with no host contract in between and no hook budget to spend — so
 | 4 | Placeholders degrade review or coding quality | product | A model reasons worse over a value it cannot see | Paired comparison pre-registered in 0.3; a null or a loss is published and D8 keeps consumer defaults off | Phase 0 — Contract, census, pre-registration (no product code) |
 | 5 | The prevention guard costs every tool call | implementation | One more concern on a `pre_tool_use` slot whose latency trigger already fired | Pure path classifier, no dependency; byte delta stated in the PR and in `src/config/hook-latency-budget.json` | Phase 1 — Prevention that needs no rewrite (F4) |
 | 6 | The engine chunk is absent or wrong at run time | implementation | Moving the egress engine out of the dispatch bundle (2.2b) adds a load that can fail: a missing file, a stale digest, a schema drift | The loader verifies a digest sidecar and a schema number and reports why it refused; `off` never loads, `observe` records the refusal, `protect` and `strict` withhold the body; the composition gate pins every chunk's budget and coverage | Phase 2 — One detector table (F2, F3) |
+| 7 | The injection path now carries every concern's context through the engine | implementation | Since 3.5, every concern message and every `session_start` context block passes `egressInjection` before delivery. Risk 1 bounds over-replacement for reviews; it does not cover a concern whose own context — a handoff, a canary line, a roadmap pointer — carries an identifier-shaped value and arrives mangled, and an `egressInjection` that throws or returns empty would silence a concern rather than fail closed visibly | Not yet mitigated, and stated rather than assumed: the council ratification of 2026-10-21 settled AUTHORITY 2/2 and recorded explicitly that this function's fail-safe behaviour lies outside the gated diff and is unverified. Owed: a fixture per concern that injects context, asserting its text survives unchanged in `off` and `observe`; and a test that a throwing `egressInjection` leaves the concern's text in place rather than dropping it | Phase 3 — The grammar, and the requests this package writes (F1, F8) |
 
 ## Acceptance Criteria
 
 - [ ] AC-1 — One rule table defines every credential and identifier pattern;
       the drift matrix is green and the `sk-ant-api03` row passes on every
       consumer.
+      *(2026-10-20: the credential half holds — every credential shape,
+      including the keyword assignments and class-spelled prefixes of 2.7, is
+      the table's, `check_credential_spelling` refuses a second spelling, and
+      the drift matrix with its `sk-ant-api03` row is green. Open on the
+      identifier half: the two unvalidated identifier copies of F3 are
+      replaced by step 2.3, which is owner-gated.)*
 - [ ] AC-2 — The council sample leaves with five placeholders and no lost line,
       and a removed final check turns its canary red. *(Discharges the owner's
       constraint for the council channel, state `asserted`.)*
-- [ ] AC-3 — The sender census has no empty cell; every sender is `asserted`,
-      fixed-corpus or `uncovered` with a reason.
+      *(2026-10-20: no line is lost and the canary is refused (3.3); the sample
+      leaves with two placeholders, not five, until the identifier rows of 2.3
+      exist and identifiers are replaced in `protect`/`strict`.)*
+- [x] AC-3 — The sender census has no empty cell; every sender is `asserted`,
+      fixed-corpus or `uncovered` with a reason. *(3.4, 2026-10-20.)*
 - [x] AC-4 — Credential-class files cannot be read through a hooked tool on a
       deny-capable slot, and `hooks:doctor` prints the deny rows a user would
       paste and reports which are already in force (D10 — offered, never written).
-- [ ] AC-5 — The contract and threat-model row j exist; no shipped prose about
+- [x] AC-5 — The contract and threat-model row j exist; no shipped prose about
       this feature uses the word anonymisation; every channel this package does
       not write is published `uncovered` until the host-carrier roadmap changes
       it.
+      *(2026-10-20: the contract gained § Published, per channel — every host
+      channel, threat rows j2, j4 and j5, and the injected context listed
+      `uncovered`; a grep for `anonymi[sz]` over `src/` and `docs/` finds it only
+      in the screenshot-hygiene and council-blinding features, never in the
+      egress contract, threat row j or this feature's code.)*
 - [ ] AC-6 — The bars of 0.3 were committed before any Phase 2–3 data, and the
       measured result is published against them whatever it is; the grammar of
       3.1 is the spelling that bar selected.
+      *(2026-10-20: (d) was published 2026-10-15 and selected the grammar 3.1
+      carries. `internal/bench/reports/egress-placeholders-engine-2026-10-20.md`
+      publishes the credential half of (a), (b), (c) and (f), each scorer first
+      rejecting a planted defect: 17 vendor rows at 100 % recall,
+      `generic-assignment` at **75 %** (a JSON-quoted key is never seen — a
+      published null, the row's type stays `uncovered`), 0.29 % of tracked files
+      flagged, 0 idempotence mismatches, p95 8.8 ms at 64 KiB on darwin-arm64.
+      Open: the identifier half of (a), (b) and (c) and the paired quality run
+      (e) all need the identifier rows of 2.3; (f) on the CI runner class is
+      not taken. The PREREG and the first Phase 2–3 code reached `main` in one
+      squash commit, so the ordering is a fact of that PR's branch, not of
+      `main`.)*
 
 ## Lineage
 

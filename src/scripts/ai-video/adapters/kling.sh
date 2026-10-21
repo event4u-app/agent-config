@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# egress-content: session-content uncovered — the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach
 # kling.sh — Kuaishou Kling motion-tuned video generation adapter.
 #
 # Capability: audio=none by default (Kling current generation does not

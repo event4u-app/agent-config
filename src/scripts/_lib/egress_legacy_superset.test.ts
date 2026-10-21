@@ -13,7 +13,12 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { scan as workspaceScan, scrub as workspaceScrub } from './workspace_secrets.js';
+import { CLASS_SPELLED_PREFIXES, CREDENTIAL_PREFIXES, EGRESS_RULES } from './egress_rules.js';
+import { FUZZY, scan as workspaceScan, scrub as workspaceScrub } from './workspace_secrets.js';
+import { redact_low_impact_entry } from '../ai_council/redact_low_impact_entry.js';
+import { REDACTION_PATTERNS as memoryRedactions } from '../check_memory.js';
+import { REDACTIONS as reachRedactions } from '../check_reach_channels.js';
+import { PATTERNS as fencePatterns } from '../lint_example_fences.js';
 import { scrub_string as explainScrub } from '../_cli/explain_last/scrubber.js';
 import { redact as bundlerRedact } from '../ai_council/bundler.js';
 import { _RAW_KEY_PREFIXES as councilRefPrefixes } from '../ai_council/config.js';
@@ -160,5 +165,90 @@ describe('legacy superset: no consumer misses what it caught before the move', (
     it('the MCP config lint keeps a keyword assignment out of its HIGH tier', () => {
         expect(hasInlineSecret(`"api_key": "${run(24, 3)}"`)).toBe(false);
         expect(hasInlineSecret(`"token": "${SK}ant-api03-${run(40, 1)}"`)).toBe(true);
+    });
+});
+
+// Step 2.7: the shapes with no vendor literal, frozen as each consumer spelled
+// them before they read the table. A regex the consumer exposes must be the
+// frozen one byte for byte; one it keeps private is held to the frozen
+// behaviour over an assignment corpus.
+const UW = '[\\p{L}\\p{N}_]';
+const OLD_SHAPES = {
+    rowGeneric:
+        /(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*['"]?([^'"\s]{8,})['"]?/dgi,
+    workspaceFuzzy: /(?:api[_-]?key|secret|token|password|passwd|bearer)\s*[:=]\s*['"]?[A-Za-z0-9_\-+/=]{12,}['"]?/i,
+    memory: /\b(api[_-]?key|auth[_-]?token|access[_-]?token|bearer|secret|password|passwd|private[_-]?key)\b\s*[:=]\s*[A-Za-z0-9+/=_\-]{8,}(?![/.\w])/i,
+    fences: /\b(api[_-]?key|apikey|password|passwd|secret|access[_-]?token|client[_-]?secret)\b\s*[:=]\s*["'][^"']{8,}["']/i,
+    reachAuthorization: /(\bauthorization\s*:\s*)(\S.*)$/gi,
+    reachDashKeys: /\b(sk|pk|rk)-[A-Za-z0-9_-]{8,}/gi,
+    reachTokens: /\b(gh[pousr]|github_pat|xox[baprs])[-_][A-Za-z0-9_-]{8,}/gi,
+    lowImpactApiKey: new RegExp(`(?<!${UW})api[_-]?key(?!${UW})\\s*[:=]\\s*[A-Za-z0-9+/=_\\-]{12,}`, 'giu'),
+    explainApiKey: /\bapi[_-]?key\b\s*[:=]\s*[A-Za-z0-9+/=_-]{12,}/giu,
+    bundlerAssignment: /(api[_-]?key|secret|token|password)\s*[:=]/iu,
+    bundlerAuthorization: /^\s*Authorization:\s/iu,
+};
+
+const sameRegex = (actual: RegExp | undefined, frozen: RegExp): void => {
+    expect(actual?.source).toBe(frozen.source);
+    expect(actual?.flags).toBe(frozen.flags);
+};
+
+const KEYWORDS = ['password', 'passwd', 'pwd', 'secret', 'api_key', 'api-key', 'apikey', 'access_token', 'token', 'bearer'];
+const ASSIGN_VALUES = [run(8, 3), run(12, 4), run(30, 5), 'hunter2hunter2', 'A1b2C3d4E5f6G7h8'];
+const ASSIGN_INPUTS: readonly string[] = KEYWORDS.flatMap((k) =>
+    ASSIGN_VALUES.flatMap((v) => [`${k}=${v}`, `${k}: "${v}"`, `  ${k.toUpperCase()} = '${v}'`, `x_${k}:${v}`]),
+);
+
+describe('legacy superset: the shapes with no vendor literal (2.7)', () => {
+    it('the exposed regexes are the frozen spellings, byte for byte', () => {
+        sameRegex(EGRESS_RULES.find((r) => r.rule === 'generic-assignment')?.pattern, OLD_SHAPES.rowGeneric);
+        sameRegex(FUZZY.find(([name]) => name === 'kv_secret')?.[1], OLD_SHAPES.workspaceFuzzy);
+        sameRegex(memoryRedactions.find(([, label]) => label === 'inline credential')?.[0], OLD_SHAPES.memory);
+        sameRegex(fencePatterns.find((p) => p.id === 'secret-literal')?.pattern, OLD_SHAPES.fences);
+        sameRegex(reachRedactions[0]?.[0], OLD_SHAPES.reachAuthorization);
+        sameRegex(reachRedactions[2]?.[0], OLD_SHAPES.reachDashKeys);
+        sameRegex(reachRedactions[3]?.[0], OLD_SHAPES.reachTokens);
+    });
+
+    it('each class-spelled family covers the table prefixes it claims', () => {
+        for (const { family, covers } of Object.values(CLASS_SPELLED_PREFIXES)) {
+            const re = new RegExp(`^${family}`, 'i');
+            for (const p of covers) {
+                expect(CREDENTIAL_PREFIXES).toContain(p);
+                expect(re.exec(p)?.[0]).toBe(p);
+            }
+        }
+    });
+
+    it('the assignment corpus exercises every private frozen shape', () => {
+        for (const re of [OLD_SHAPES.lowImpactApiKey, OLD_SHAPES.explainApiKey, OLD_SHAPES.bundlerAssignment]) {
+            expect(ASSIGN_INPUTS.some((t) => new RegExp(re.source, re.flags).test(t))).toBe(true);
+        }
+    });
+
+    it('the low-impact redactor refuses every input its old api-key shape refused', () => {
+        const missed = ASSIGN_INPUTS.filter(
+            (t) =>
+                new RegExp(OLD_SHAPES.lowImpactApiKey.source, OLD_SHAPES.lowImpactApiKey.flags).test(t) &&
+                !redact_low_impact_entry(t).violations.some((v) => v.note === 'inline api_key'),
+        );
+        expect(missed).toEqual([]);
+    });
+
+    it('the explain scrubber masks every input its old api-key shape masked', () => {
+        const left = ASSIGN_INPUTS.filter((t) => {
+            const m = new RegExp(OLD_SHAPES.explainApiKey.source, OLD_SHAPES.explainApiKey.flags).exec(t);
+            return m !== null && String(explainScrub(t)).includes(m[0]);
+        });
+        expect(left).toEqual([]);
+    });
+
+    it('the council bundler replaces every line its old assignment and header shapes replaced', () => {
+        const lines = [...ASSIGN_INPUTS, 'Authorization: Basic Zm9vOmJhcg==', '  authorization: Bearer abc'];
+        const missed = lines.filter(
+            (t) =>
+                (OLD_SHAPES.bundlerAssignment.test(t) || OLD_SHAPES.bundlerAuthorization.test(t)) && bundlerRedact(t) === t,
+        );
+        expect(missed).toEqual([]);
     });
 });

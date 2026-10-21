@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# egress-content: session-content uncovered — the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach
 # recraft.sh — Recraft vector / SVG image adapter (true <path> logos + icons).
 #
 # Capability: audio=none (still image / vector). The vector path

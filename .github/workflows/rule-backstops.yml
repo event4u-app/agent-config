@@ -284,6 +284,11 @@ jobs:
       - name: credential prefixes are spelled once (rule table)
         run: ./scripts-run src/scripts/check_credential_spelling
 
+      # The egress engine's invariants are tested by mutation: each recipe is
+      # applied to a scratch copy and must turn its named invariant red.
+      - name: egress engine mutations are killed
+        run: ./scripts-run src/scripts/check_egress_mutations
+
       # The target-readiness grader has no repo corpus to scan — it grades a
       # TARGET repository, so on this tree there is nothing to grade. What CI can
       # prove is that it still DISCRIMINATES: knockout verdict is the min, an

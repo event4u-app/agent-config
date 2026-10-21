@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# egress-content: session-content uncovered — the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach
 # gemini-image.sh — Google Gemini image-generation adapter (Nano Banana family + Imagen 4).
 #
 # Capability: audio=none (still image). General-purpose image generation

@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+// egress-content: fixed-corpus — sends the RDP quality corpus (corpus-prompts.json or --corpus), never session content
 /**
  * RDP quality-layer + L6-isolation eval runner (TypeScript).
  *
