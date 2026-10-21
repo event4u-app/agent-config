@@ -107,6 +107,16 @@ export interface Marker {
      * an attributable record instead of an absent one.
      */
     promptHash?: string;
+    /**
+     * OPTIONAL — the review round this artefact records (≥ 1).
+     *
+     * A fix pass re-binds the same artefact in place (§ 2.5), so before this
+     * field the number of rounds was agent-carried convention and nothing could
+     * count it. Absent reads as round 1, so every committed v1 artefact is valid
+     * unchanged; once a predecessor carries it, a re-bind must advance it by one
+     * (`round-not-advanced`).
+     */
+    round?: number;
 }
 
 export interface HonestNull {
@@ -325,7 +335,7 @@ export function isCodePath(p: string): boolean {
  * `| author: …` follow it without being swallowed.
  */
 const MARKER_RE =
-    /^<!--\s*completion-review:\s*v1\s*\|\s*reviewed:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*scope:\s*([0-9a-fA-F]{64})\s*\|\s*diff:\s*([0-9a-fA-F]{7,40})\s*\|\s*reviewer:\s*(\S(?:[^|>]*[^|>\s])?)(?:\s*\|\s*author:\s*(\S(?:[^|>]*[^|>\s])?))?(?:\s*\|\s*prompt_hash:\s*([0-9a-fA-F]{64}))?\s*-->$/;
+    /^<!--\s*completion-review:\s*v1\s*\|\s*reviewed:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*scope:\s*([0-9a-fA-F]{64})\s*\|\s*diff:\s*([0-9a-fA-F]{7,40})\s*\|\s*reviewer:\s*(\S(?:[^|>]*[^|>\s])?)(?:\s*\|\s*author:\s*(\S(?:[^|>]*[^|>\s])?))?(?:\s*\|\s*prompt_hash:\s*([0-9a-fA-F]{64}))?(?:\s*\|\s*round:\s*([1-9]\d*))?\s*-->$/;
 
 export function parseMarkerLine(line: string): Marker | null {
     const m = MARKER_RE.exec(line.trim());
@@ -343,6 +353,9 @@ export function parseMarkerLine(line: string): Marker | null {
     }
     if (m[6] !== undefined) {
         marker.promptHash = m[6].toLowerCase();
+    }
+    if (m[7] !== undefined) {
+        marker.round = Number(m[7]);
     }
     return marker;
 }
@@ -995,6 +1008,9 @@ function evaluate(input: EvalInput): Violation[] {
                 detail: 'artifact has neither a findings table nor an honest-null / skip declaration line',
             });
         }
+        if (art.marker !== null) {
+            violations.push(...checkRoundAdvance(repo, file, art.marker));
+        }
     }
 
     if (relevant.length === 0) {
@@ -1028,6 +1044,48 @@ function evaluate(input: EvalInput): Violation[] {
     }
 
     return violations;
+}
+
+/**
+ * Contract §2.1 `round:` — a re-bind advances the round by exactly one.
+ *
+ * The predecessor round is the newest committed version of this path whose
+ * header binds a DIFFERENT scope; versions with the current scope are the same
+ * round touched again. A predecessor without the field reads as round 1, and
+ * only a predecessor that carries the field obliges the re-bind to carry it —
+ * so a corpus written before the field existed stays valid unchanged.
+ */
+function checkRoundAdvance(repo: string, artifactAbs: string, current: Marker): Violation[] {
+    const rel = path.relative(repo, artifactAbs).split(path.sep).join('/');
+    const log = gitTry(repo, ['log', '--format=%H', '--', rel]);
+    for (const sha of log.stdout.split('\n').map((l) => l.trim()).filter(Boolean)) {
+        const shown = gitTry(repo, ['show', `${sha}:${rel}`]);
+        if (!shown.ok) {
+            continue;
+        }
+        const prior = parseArtifact(shown.stdout).marker;
+        if (prior === null || prior.scope === current.scope) {
+            continue;
+        }
+        if (current.round === undefined && prior.round === undefined) {
+            return [];
+        }
+        const expected = (prior.round ?? 1) + 1;
+        if (current.round === expected) {
+            return [];
+        }
+        return [
+            {
+                kind: 'round-not-advanced',
+                file: artifactAbs,
+                detail:
+                    `re-bound from scope ${prior.scope.slice(0, 12)} (round ${String(prior.round ?? 1)}, ${sha.slice(0, 12)}) ` +
+                    `but the header reads ${current.round === undefined ? 'no round' : `round ${String(current.round)}`} — ` +
+                    `a re-bind records round ${String(expected)} (contract §2.1 \`round:\`)`,
+            },
+        ];
+    }
+    return [];
 }
 
 /** Contract §2.5 — the artifact's FIRST-add commit must precede every fix commit. */

@@ -341,6 +341,18 @@ whole evidence corpus. Absent → no check, byte-identical behaviour to before.
 Field ORDER is fixed (`author` before `prompt_hash`); a reordered marker is
 `bad-marker`, and a `prompt_hash` shorter than 64 hex is not a hash.
 
+A third OPTIONAL trailing field, added 2026-10-21 (`road-to-a-review-that-ends`
+1.2), after `prompt_hash`:
+
+- `round:` — the review round this artefact records, a positive integer. A fix
+  pass re-binds in place, so before this field the number of rounds was
+  convention nothing could count. The dispatcher writes `round: 1` on every new
+  skeleton; a re-bind writes the predecessor's round + 1. The predecessor is the
+  newest committed version of the path whose `scope:` differs; absent there reads
+  as round 1. Once the predecessor carries the field, a re-bind that drops it or
+  does not advance it by exactly one is **`round-not-advanced`**. A corpus written
+  before the field existed — no `round:` on either side — is not checked.
+
 The first four fields are mandatory: a `v1` marker missing `scope:` is malformed
 (`bad-marker`), not tolerated — and so is a review-bearing artefact carrying **no
 header marker at all** (an artefact of manifest plus honest-null line is not

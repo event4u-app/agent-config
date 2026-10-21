@@ -240,7 +240,7 @@ describe('dispatch_r2_reviewer — package + skeleton', () => {
         );
         expect(body).toContain(
             `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${sha256(diff)} | diff: ${head} | ` +
-                `reviewer: r2-fresh-subagent-${SLUG} | prompt_hash: ${sha256(promptText)} -->`,
+                `reviewer: r2-fresh-subagent-${SLUG} | prompt_hash: ${sha256(promptText)} | round: 1 -->`,
         );
 
         const expectedManifest = [
@@ -1107,6 +1107,7 @@ describe('dispatch_r2_reviewer — a leftover artefact is classified, never sile
             'b'.repeat(64),
         );
         expect(text).toContain('RE-BIND IN PLACE');
+        expect(text).toContain('`round:` + 1');
         expect(text).toContain('round<N>-review.md');
         expect(text).toContain('check_review_dispositions');
         expect(text).toContain('destroys the record');

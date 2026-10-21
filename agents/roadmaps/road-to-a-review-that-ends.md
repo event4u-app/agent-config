@@ -70,7 +70,7 @@ rate re-derived in step 0.1.
       plan's and are not cited by 1.1 until this lands.
       verify: the artefact carries the command; re-running it reproduces every
       row; rows per round sum to the round total.
-- [ ] **0.2 Classify what round 3+ found.** For every high/critical row in a
+- [x] **0.2 Classify what round 3+ found.** Done 2026-10-21: 44 rows — 27 fix-delta, 15 missed, 2 unclear; two rows re-checked by hand; same artefact § What round 3+ high/critical rows were. For every high/critical row in a
       round ≥ 3, record whether it was introduced by a fix of the previous round
       (fix-delta) or present in round 1's scope (missed). Only the "missed"
       class is a cost of the cap.
@@ -84,7 +84,7 @@ rate re-derived in step 0.1.
       become `deferred` with a ledger link. Precedent F5. Blocked on
       `review-round-cap-is-an-owner-contract-change`.
       verify: ADR merged; `plan-review-gates.md` § 2.5 and § 2.7 cite it.
-- [ ] **1.2 Make the round readable.** Add an additive `round:` field to the
+- [x] **1.2 Make the round readable.** Done 2026-10-21: `round:` parsed in `check_completion_review`, `round-not-advanced` on a re-bind that drops or skips it, dispatcher writes `round: 1`, § 2.1 documented; 5 gate tests seen RED, then GREEN; sabotage probe reds the two refusal tests. Add an additive `round:` field to the
       § 2.1 header (v1 stays valid, read as round 1), written on every re-bind.
       Without it the gate cannot count what F1 says is convention.
       verify: red-first test — a re-bound artefact without an incremented

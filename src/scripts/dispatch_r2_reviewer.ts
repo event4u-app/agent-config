@@ -389,8 +389,8 @@ export function leftoverArtefactRefusal(
         `    It binds scope ${staleScopeHash.slice(0, 12)}; this dispatch binds ${currentScopeHash.slice(0, 12)},\n` +
         '    so the reviewed content moved under it. That is the normal re-bind case, and\n' +
         '    contract §2.7 gives it two paths — neither of which is a fresh skeleton:\n' +
-        '      1. RE-BIND IN PLACE (the usual one): edit this artefact — new `scope:`, rows\n' +
-        '         flipped to terminal — and re-commit it. §2.5 expects exactly that.\n' +
+        '      1. RE-BIND IN PLACE (the usual one): edit this artefact — new `scope:`, `round:` + 1,\n' +
+        '         rows flipped to terminal — and re-commit it. §2.5 expects exactly that.\n' +
         '      2. ARCHIVE the closed round: rename it to `<slug>.round<N>-review.md` ONCE every\n' +
         '         finding is terminal, which `check_review_dispositions` enforces. Then dispatch.\n' +
         '    --force writes a fresh skeleton OVER this file and destroys the record.\n'
@@ -896,7 +896,7 @@ function findingsSkeleton(args: {
 }): string {
     return [
         `# Findings: ${args.slug}`,
-        `<!-- completion-review: v1 | reviewed: ${args.reviewedDate} | scope: ${args.scopeHash} | diff: ${args.headSha} | reviewer: r2-fresh-subagent-${args.slug} | prompt_hash: ${args.promptHash} -->`,
+        `<!-- completion-review: v1 | reviewed: ${args.reviewedDate} | scope: ${args.scopeHash} | diff: ${args.headSha} | reviewer: r2-fresh-subagent-${args.slug} | prompt_hash: ${args.promptHash} | round: 1 -->`,
         // SECOND PRODUCER of the independence record — step 2.2 of
         // road-to-review-independence. Until this line, `self_review_gate.ts` was the
         // only producer, which is why `check_review_schema` reported `scanned: 1`: a
