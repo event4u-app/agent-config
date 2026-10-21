@@ -267,7 +267,7 @@ return **0** occurrences, and `hardcoded` returns **6**.
 - Long mock setups (> 50% of the test) are a signal that integration tests would be simpler — consider it before piling on more mocks.
 - **Diagnose, do not brute-force.** If a test fails after a mock change, **never guess** at another mock tweak — drop a debugger / Xdebug breakpoint at the seam, observe the real call shape, then mock minimally. Two retries without a root-cause hypothesis = STOP and rethink.
 - An assertion that derives from seeded data but only checks the happy path is still overfit — a code mutation survives it. Require ≥1 boundary/error/abuse case per behavior, not just line coverage.
-- **A green suite over `evaluate()` said nothing about `main --quiet`.** Measured in this repository on 2026-10-21: 21 cases proved a gate built the owner's question, and CI's `--quiet` printed none of it on the one passing path it existed for. A council review found it; a test driving `main(['--quiet', …])` and reading stdout went red with the fix removed.
+- **A green suite over `evaluate()` said nothing about what `main` printed.** Measured in this repository on 2026-10-21: 21 cases proved a gate built the owner's question, and its `--quiet` mode printed none of it on the one passing path the question existed for. A council review found it, and the cases that settled it drive `main` as each caller runs it and read stdout.
 
 ## Do NOT
 

@@ -47,10 +47,10 @@ evidence:
     summary: >
       Round 3 of the step 5.2 modification review, 2026-10-21. Both seats
       refused on one finding: 21 cases called evaluate() and proved the gate
-      built the owner's question, while main() under --quiet, which is how CI
-      runs the gate, printed none of it on a passing change to the mechanism.
-      Fixed in this branch with a test that drives main(['--quiet', ...]) and
-      reads stdout, seen red with the fix removed.
+      built the owner's question, while main() under --quiet printed none of
+      it on a passing change to the mechanism. Settled in this branch by tests
+      that drive main() as each caller runs it — without --quiet as the GitHub
+      workflow does, with it as the local task pipeline does — and read stdout.
   - kind: roadmap
     ref: agents/roadmaps/archive/road-to-what-was-built-and-never-ran.md
     summary: >
