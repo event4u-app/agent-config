@@ -529,7 +529,7 @@ task dev:setup        # boot the onboarding wizard against the working tree
 
 ## Requirements
 
-- **Node ≥ 20.11** — `npx @event4u/agent-config init` is the canonical install path. No Python anywhere on the install path (the Python installer retired with the TypeScript migration).
+- **Node ≥ 22** — `npx @event4u/agent-config init` is the canonical install path. No Python anywhere on the install path (the Python installer retired with the TypeScript migration).
 - **Platform:** macOS 12.3+, Linux, WSL2. Git Bash needs Developer Mode for symlinks. Contributors rebuilding `.augment/` also need [Task](https://taskfile.dev/).
 
 ### Windows

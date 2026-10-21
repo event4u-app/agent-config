@@ -13,7 +13,7 @@ Pick one entrypoint:
 npx @event4u/agent-config init --tools=claude-code,cursor
 
 # Registry-independent path — curl | bash entrypoint (downloads a tarball).
-# Also needs Node >= 20; what it skips is npm dependency resolution.
+# Also needs Node >= 22; what it skips is npm dependency resolution.
 curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash
 
 # Global CLI (one install per machine, all projects)

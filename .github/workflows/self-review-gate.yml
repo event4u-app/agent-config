@@ -58,7 +58,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          node-version: '20'
+          node-version: '22'
       - run: npm ci --no-audit --no-fund --prefer-offline
       - name: Self-review plan (dry-run — no spend, advisory)
         run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --dry-run --base "origin/${{ github.base_ref }}"
@@ -115,7 +115,7 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         if: steps.ledger.outputs.reviewed != 'true'
         with:
-          node-version: '20'
+          node-version: '22'
       - run: npm ci --no-audit --no-fund --prefer-offline
         if: steps.ledger.outputs.reviewed != 'true'
       # CLI-first, like every other review and coding surface in this suite: the
@@ -187,7 +187,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          node-version: '20'
+          node-version: '22'
       - run: npm ci --no-audit --no-fund --prefer-offline
 
       - name: Build the ledger from this run's own findings

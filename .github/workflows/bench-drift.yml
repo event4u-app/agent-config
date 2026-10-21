@@ -47,7 +47,7 @@ jobs:
         # bench_drift_check / bench_baseline_ready / bench_run are now
         # TypeScript; the dispatcher runs them via tsx.
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       - name: Install Node deps

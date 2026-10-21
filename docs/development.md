@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - [Task](https://taskfile.dev/) (task runner)
-- Node.js >= 20.11.0 (the linter, condensation and every gate are TypeScript;
+- Node.js >= 22.0.0 (the linter, condensation and every gate are TypeScript;
   `no-python-in-src.yml` asserts there is no Python left to install)
 - Bash (for install scripts, tests)
 
@@ -61,7 +61,7 @@ npx vitest run <file>          # A single file — stays native, no task wrapper
 #### CI test matrix
 
 `tests.yml` declares 6 job keys that matrix-expand to 23 jobs, all on
-Node 20:
+Node 22:
 
 | Job | Expansion |
 |---|---|
