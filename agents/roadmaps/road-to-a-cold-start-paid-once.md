@@ -268,6 +268,7 @@ waits:
       user's constraints verbatim (`subagent-spawn-contract.md:154-156`). Either
       missing, it ships off with the reading attached.
       verify: `npx vitest run tests/scripts/_lib_subagent_spawn.test.ts -t skipping-worker-carries-kernel-and-constraints --reporter=verbose` -> /✓.*skipping-worker-carries-kernel-and-constraints/
+      Partial 2026-10-21, left open: both conditions now hold. The 1.7 net delta is about 58 % against the 10 % bar. `composeSpawnBrief` carries the safety floor and the user's constraints verbatim for a skipping worker, and it refuses a skip that has no floor to carry; it went red before green in `_lib_subagent_spawn.test.ts`. The ship-on edit itself — `omit_project_instructions: true` on `ac-worker` / `ac-researcher` — is not made. 1.7 observed the flag only in the `--agents` JSON spelling, and the definition files project it through frontmatter as `omitClaudeMd`, a path never observed. Switching it on through that path would read an unobserved capability.
 - [x] **2.6 Correct the fork premise** in `SKILL.md:119-121` from the 1.6 row —
       the premise only; the ordering and the council's cut of "always fork"
       (`SKILL.md:123-125`) stay.
@@ -308,6 +309,17 @@ waits:
       so one count covers spawn and resume; where it did not, the record says
       the resume half is unobserved. Still exit 0 on every path.
       verify: `npx vitest run tests/hooks/spawn_guard_shadow.test.ts -t records-would-resume-and-never-denies --reporter=verbose` -> /✓.*records-would-resume-and-never-denies/
+      Open 2026-10-21, council-refused in three rounds (anthropic + openai seats, CLI, $0). The change was then reverted to the `origin/main` bytes of the manifest, the hook, `worker_reuse.ts` and both test files, under the three-refusing-round cap. What was built:
+        - `SendMessage` added to the concern's `tools:`.
+        - `shadowReuseVerdict()`, recording `would_resume` with the eligible name or `fresh` with reasons. `host_resume_unobserved` comes first, so a host row without `worker_resume` reads no worker.
+        - A send classified by hashing its recipient with the ledger's `refFor`: an open ref is `message_running` (no thresholds); a same-session `subagent_stop`, found in a 1 MiB tail of the current or previous month file, is `resume`; anything else is `message_or_resume`.
+
+      The rounds:
+        - Round 1 (confirmed-non-expanding / refused): every send was counted as a resume.
+        - Round 2 (refused 2/2): a stop from any session counted, and two whole ledger files were read per send.
+        - Round 3 (ratified / refused): one blocking finding, that the tests invented the payload field `tool_input.to` rather than using a real host envelope.
+
+      The probe logs of 2026-10-21 already answer that finding. On 2.1.306 a real `PreToolUse(SendMessage)` carries `tool_input.to` (with `recipient` and `recipient_kind: agent | name` beside it) and a top-level `session_id`. A fourth attempt starts from those three rounds, adds a sanitized verbatim envelope from that log as a fixture, and needs a fresh grant. Prompts: `agents/evidence/council/cold-start-spawn-guard-resume-review-r1-20261021.question.md`, `-r2-`, `-r3-`.
 - [x] **3.4 Retirement is a handoff.** A worker failing (c)–(f) or (h) is not
       re-tasked; its successor is briefed from its `worker` capsule — the
       generation chain the recycling roadmap wanted, reached at task boundaries.
@@ -335,12 +347,13 @@ waits:
       holds. Default stays `3`; no key is added.
       verify: `npx vitest run tests/scripts/_lib_host_env_write.test.ts -t max-parallel-lowers-into-host-cap --reporter=verbose` -> /✓.*max-parallel-lowers-into-host-cap/
       Done 2026-10-18: third row in `host_env_write.ts`, `settingsKey` now a dotted path; the ADR addendum is `docs/setup/host-traffic-environment.md` § Addendum 2026-10-14, next to the 2026-09-30 decision. Written only when the key is set; the settings template sets it to `3`.
-- [ ] **4.2 Say what the cap covers.** The `max_parallel` description
+- [x] **4.2 Say what the cap covers.** The `max_parallel` description
       (`settings.ts:371`) and `subagent-configuration.md:13` drop "no code counts
       spawns" once 4.1 lands, and state whether the host cap bounds resumes, from
       the 1.5 row — never "the host enforces concurrency" without it.
       verify: `grep -c 'resume' src/agent-src/contexts/subagent-configuration.md` -> /^[1-9][0-9]*$/
       Partial 2026-10-18, left open: both texts (and the settings template) dropped "no code counts spawns" with 4.1 and now say the resume half is unobserved. The step closes when the 1.5 row states whether the cap bounds a resume.
+      Done 2026-10-21: the 1.5 row says it does not. The `max_parallel` description, `subagent-configuration.md` and the settings template now say the host cap bounds new spawns only, and that a resume is neither bounded by the host nor counted by any package code yet (3.3 is unratified). "The host enforces concurrency" is claimed nowhere.
 - [ ] **4.3 Bind `StopFailure`** in the Claude event map to the `quota_parked`
       writer, widened from council-only to host-sourced. Still record-only, per
       `quota_parked.ts:25-31`.
