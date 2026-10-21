@@ -23,6 +23,10 @@
  *   5. Required sections all present (1..10 per template).
  *   6. Success signal — Section 7 has a concrete metric, target, and
  *      evaluation date.
+ *   7. A `scope: package` proposal at `stage: gated` declares `changed_files:`
+ *      and names a passing `ratification_record:` and an `owner_authorization:`,
+ *      both bound to the digest of those files (ADR-281 as amended) — see
+ *      `_checkGatedRecord` for what this can and cannot prove.
  *
  * Exit codes: 0 = pass, 1 = gate failure, 2 = PyYAML missing, 3 = internal error.
  *
@@ -31,6 +35,7 @@
  *     check_proposal --format json path/to.md
  */
 
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as nodePath from 'node:path';
 import process from 'node:process';
@@ -38,7 +43,25 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { asOf } from './_lib/as_of.js';
+import {
+    isRatified,
+    RATIFICATION_DIR,
+    readRatification,
+    readRequiredProviders,
+} from './_lib/ratification_artifact.js';
+import {
+    assertContained,
+    DEFAULT_REVISION,
+    fileAtRevision,
+    GatedSubjectRefusal,
+    resolveRevision,
+    subjectOf,
+} from './_lib/ratification_subject.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+
+/** This script's own tree: the quorum policy is read from here, never from the proposal's. */
+const REPO = nodePath.resolve(nodePath.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const POLICY_PATH = 'src/config/ratification-policy.json';
 
 type Severity = 'error' | 'warning';
 
@@ -392,7 +415,165 @@ function _resolvePath(p: string): string {
     return nodePath.resolve(p);
 }
 
-function _runChecks(text: string, p: string | null = null): Finding[] {
+/**
+ * The digest a package proposal's review and approval must both carry: one
+ * digest over EVERY file the proposal declares as its change, read from Git
+ * objects at `revision`.
+ *
+ * Not the gate's `subject`, on purpose. The gate digests only the GATED subset
+ * of a diff, and a learning usually changes a skill or rule body the gate does
+ * not watch — over such a change the gate's digest covers nothing and is the
+ * same for every proposal, so a record bound to it would be bound to no
+ * content. ADR-281 as amended requires a digest-bound review for every
+ * learning-originated package change, so the binding has to cover what the
+ * proposal changes. It reuses the subject module's ONE hashing loop and
+ * serialisation, by handing the declared files in as the closure it treats as
+ * covered, rather than growing a second loop that could drift from the first.
+ */
+export function proposalSubjectOf(
+    root: string,
+    files: readonly string[],
+    revision: string = DEFAULT_REVISION,
+): string {
+    return subjectOf(root, files, files, revision).digest;
+}
+
+/** The Git work tree a proposal file sits in, or `null` outside one. */
+function _repoRootOf(proposalPath: string): string | null {
+    const env = { ...process.env };
+    // A GIT_DIR inherited from a hook would answer for the hook's repository.
+    for (const k of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_COMMON_DIR']) delete env[k];
+    const dir = nodePath.dirname(nodePath.resolve(proposalPath));
+    const res = spawnSync('git', ['-C', dir, 'rev-parse', '--show-toplevel'], { encoding: 'utf8', env });
+    return res.status === 0 ? res.stdout.trim() : null;
+}
+
+/**
+ * A package-scoped proposal reaches `stage: gated` only on a council record
+ * bound to its own change AND an owner authorization bound to the same digest.
+ *
+ * The ORDER is ADR-281's amendment of 2026-10-07: the council record is the
+ * REVIEW, the owner's authorization is the APPROVAL, and a favourable verdict is
+ * advisory until the second exists. A record alone is refused, naming what is
+ * missing.
+ *
+ * WHAT THIS CANNOT PROVE, said before what it can. The authorization is a file
+ * the proposal names and a digest that file carries; nothing here establishes
+ * that the owner wrote it. ADR-281 § 5 makes the owner's route his own recorded
+ * act on the forge, which leaves no artifact a script can authenticate. What
+ * IS established is narrower: the review and the authorization name the SAME
+ * content as the proposal's declared change, read at one commit, so neither can
+ * be carried over from another change, and the review is a record the
+ * ratification reader accepts against the committed provider policy.
+ *
+ * A `scope: project` proposal, and any stage before `gated`, is checked exactly
+ * as before.
+ */
+function _checkGatedRecord(fm: Frontmatter, findings: Finding[], repoRoot: string | null): void {
+    if (fm['stage'] !== 'gated' || fm['scope'] !== 'package') {
+        return;
+    }
+    const refuse = (message: string): void => {
+        findings.push(new Finding('error', 'gated', message));
+    };
+    if (repoRoot === null) {
+        refuse('stage=gated with scope=package is checked against Git objects, and this proposal is not inside a Git work tree');
+        return;
+    }
+
+    const changed = fm['changed_files'];
+    const files = Array.isArray(changed)
+        ? changed.filter((f): f is string => typeof f === 'string').map((f) => f.trim()).filter((f) => f !== '')
+        : [];
+    if (files.length === 0 || !Array.isArray(changed) || files.length !== changed.length) {
+        refuse(
+            'stage=gated with scope=package needs `changed_files:` — a non-empty list of the paths ' +
+                'this proposal declares as its change, which its review and approval are bound to',
+        );
+        return;
+    }
+
+    // One commit for the whole check: the digest and both named files are read
+    // from the same resolved revision, never from a name resolved twice.
+    let commit: string;
+    let expected: string;
+    try {
+        commit = resolveRevision(repoRoot, DEFAULT_REVISION);
+        expected = proposalSubjectOf(repoRoot, files, commit);
+    } catch (err) {
+        if (!(err instanceof GatedSubjectRefusal)) {
+            throw err;
+        }
+        refuse(`the declared change cannot be digested: ${err.message}`);
+        return;
+    }
+
+    const requiredProviders = readRequiredProviders(_readOrNull(joinPath(REPO, POLICY_PATH)));
+    for (const [key, what] of [
+        ['ratification_record', 'the council’s review'],
+        ['owner_authorization', 'the owner’s approval'],
+    ] as const) {
+        const named = fm[key];
+        if (typeof named !== 'string' || named.trim() === '') {
+            refuse(
+                `stage=gated with scope=package needs \`${key}:\` — ${what}, bound to this ` +
+                    'proposal’s own change (ADR-281 as amended 2026-10-07)',
+            );
+            continue;
+        }
+        const rel = named.trim();
+        let bytes: Buffer | null;
+        try {
+            assertContained(rel);
+            bytes = fileAtRevision(repoRoot, commit, rel);
+        } catch (err) {
+            if (!(err instanceof GatedSubjectRefusal)) {
+                throw err;
+            }
+            refuse(`${key} names \`${rel}\`: ${err.message}`);
+            continue;
+        }
+        if (bytes === null) {
+            refuse(`${key} names \`${rel}\`, which is not a committed regular file at HEAD`);
+            continue;
+        }
+        const text = bytes.toString('utf8');
+        if (key === 'ratification_record') {
+            if (!rel.startsWith(`${RATIFICATION_DIR}/`) || !rel.endsWith('.md')) {
+                refuse(`${key} \`${rel}\` is not a record under \`${RATIFICATION_DIR}/\``);
+                continue;
+            }
+            const reading = readRatification(text, requiredProviders, expected);
+            if (!isRatified(reading)) {
+                const why = reading.problems.map((pr) => pr.message);
+                if (reading.artifact !== null && !why.length) {
+                    why.push(`verdict is \`${reading.artifact.verdict}\``);
+                }
+                refuse(`${key} \`${rel}\` does not pass for this change: ${why.join('; ')}`);
+            }
+            continue;
+        }
+        const found = /^subject:\s*([0-9a-f]{64})\s*$/m.exec(text);
+        if (found === null) {
+            refuse(`${key} \`${rel}\` carries no \`subject:\` digest, so it is bound to no change`);
+        } else if (found[1] !== expected) {
+            refuse(
+                `${key} \`${rel}\` is bound to \`${String(found[1]).slice(0, 12)}…\`, not to this ` +
+                    `proposal’s change (\`${expected.slice(0, 12)}…\`)`,
+            );
+        }
+    }
+}
+
+function _readOrNull(p: string): string | null {
+    try {
+        return fs.readFileSync(p, 'utf8');
+    } catch {
+        return null;
+    }
+}
+
+export function _runChecks(text: string, p: string | null = null, repoRoot?: string | null): Finding[] {
     const findings: Finding[] = [];
     const fm = _loadFrontmatter(text);
     _checkFrontmatter(fm, findings);
@@ -402,6 +583,7 @@ function _runChecks(text: string, p: string | null = null): Finding[] {
     _checkMarkers(body, findings);
     _checkSuccessSignal(body, findings);
     _checkOriginatingProject(body, fm, findings);
+    _checkGatedRecord(fm, findings, repoRoot !== undefined ? repoRoot : p === null ? null : _repoRootOf(p));
     if (p !== null) {
         _proposalRateWarning(p, findings);
     }

@@ -268,6 +268,23 @@ reviews. Until 4.2 lands, the 28 high-consequence rules beyond the kernel stay
 editable with no record. Those were the gaps before 2026-10-12 and they are the
 gaps again; the binding closes replay, and nothing else.
 
+## The 2026-10-21 lane — four reviews, one step landed
+
+A drain lane took the file again on 2026-10-21 under the owner's standing
+delegation of 2026-10-16 (technical decisions on the gate's modules go to the
+council). It landed **6.1** (ungated, no review owed) and ran three modification
+reviews: **5.2** seven rounds, **3.4** one round (its third attempt overall),
+**6.2** three rounds. Every round after the first three of 5.2 split the same
+way — anthropic passing, openai refusing — and the refusals converged on one
+question the tree cannot answer: an authenticated owner acknowledgment or an
+attested council session, neither of which exists, and both of which change
+the reviewer's trust model (condition 4) or the route ADR-281 § 5 gives the
+owner. That is condition 1 of § When the user decides for each of the three.
+Each refused change is off the branch with its non-passing record in
+`agents/evidence/ratifications/drain-self-modification-{5-2,3-4,6-2}-20261021.md`
+and its code reachable at the commit the record names. The open steps are 3.4,
+4.1, 4.2, 5.2 and 6.2; what each needs next is in its own entry.
+
 ## Phase 1 — The directive is a decision on record
 
 - [x] **1.1 One decision record, drafted as proposed.** A new ADR with
@@ -984,6 +1001,29 @@ gaps again; the binding closes replay, and nothing else.
       `--prompt-mode pr` the openai seat follows the lens's own closing line,
       not the stance line the question asks for.
 
+      **The split landed (#2499); the writer was attempted a third time
+      2026-10-21 and refused — open, and the owner's to decide.** Record:
+      `agents/evidence/ratifications/drain-self-modification-3-4-20261021.md`.
+      Built on the 2026-10-17 list: verdicts from stance lines only, no answer
+      parser (replies verbatim in fences no reply can close), a `Map` of seats
+      with grammar-checked provider ids, a positive-integer threshold, the
+      session bound to a prompt committed under `agents/evidence/council/` that
+      contains the exact subject, a round trip through the reader, a body that
+      says the record is exactly as trustworthy as a typed one about whether a
+      council produced it, and a CLI (`ratification_record`, `--declared` for
+      the 6.1 digest). It rendered the 5.2 and 3.4 records on this branch. The
+      review split: anthropic `confirmed-non-expanding`; openai `refused` on the
+      2026-10-17 dealbreaker unchanged in substance — a caller-supplied session
+      still yields a gate-accepted `ai-council` record, and a disclaimer does
+      not narrow what the reader accepts. Its remedies (an attested session
+      envelope, or a reviewer kind the gate refuses) need an attestation the
+      tree lacks or an edit to the gate's reader — a change to the reviewer's
+      trust model, reserved to the owner by condition 4. Taken off the branch
+      (empty net diff per file), reachable at `1f9ab5fca`; the record lists the
+      seat's other findings (CLI exit 0 on a refused record, policy root,
+      unfenced summary, prompt-sequencing) for the next attempt. Run in design
+      mode, which is how the seats closed on the stance line.
+
 ## Phase 4 — The reviewer and the consequence class are inside the gate
 
 > **Note, 2026-10-15** — `road-to-a-danger-gate-that-sees-what-governs`
@@ -1050,6 +1090,26 @@ gaps again; the binding closes replay, and nothing else.
       reverted to `origin/main` — verified as an EMPTY net diff per file rather
       than as a revert command that exited 0. Only the content binding (2.1, 2.2)
       stayed on it. See § Staged, not abandoned and D12.
+
+      **Screened 2026-10-18 and left open, for two reasons the tree states.**
+      The artifact contract this step lists is kept OUTSIDE the mechanism set by
+      an owner decision of 2026-10-15 (`agents/evidence/ratifications/gate-the-subject-calculator.md`
+      § Owner decision), and the gate's header repeats it; the writer does not
+      exist until 3.4 lands. What remains — the questions and verdict-rule
+      modules — is imported by nothing (`grep -rl modification_review src`
+      returns only the two modules), so gating them now would charge a record for
+      code no review runs. Revisit when 3.4 wires them into a run.
+
+      **Re-screened 2026-10-21, still open, for the same reason plus one.**
+      3.4 was refused again (see 3.4), so nothing runs the two modules and there
+      is still no writer to gate. And when the writer does land, 4.1 cannot ride
+      in the same change: the gate's own `MECHANISM_IMPORT_PATHS` header says "a
+      module joins this list in a change that leaves its bytes alone", because
+      the base revision's gate and the candidate's digest different files. Its
+      evidence owed from 2026-10-19 now has one concrete answer:
+      `modification_review.ts` imports `stance_tally.parse_stance_line`, so the
+      parser that reads a seat's closing line is in the reviewer's closure and
+      belongs in the 4.1 argument, not on the ungated side of it.
 
 - [ ] **4.2 Rule law beyond the nine kernel rules.** The gate's path set is
       extended by the members of `src/config/rule-consequence-class.json` —
@@ -1129,6 +1189,20 @@ gaps again; the binding closes replay, and nothing else.
       reverted to `origin/main` — verified as an EMPTY net diff per file rather
       than as a revert command that exited 0. Only the content binding (2.1, 2.2)
       stayed on it. See § Staged, not abandoned and D12.
+
+      **Screened 2026-10-18 and left open: an owner ruling, not a council one.**
+      ADR-281's `review_trigger` reads "Owner ruling only. The review load on
+      the gated surface … changes materially". Putting 28 rules and the shared
+      `rule.schema.json` behind a record is that change, so the delegation of
+      2026-10-16 (technical decisions on the gate's modules go to the council)
+      does not reach it.
+
+      **Not re-attempted 2026-10-21.** Five rounds on 2026-10-20 ended on a
+      dealbreaker an existing CI test already answers; a sixth on the same diff
+      would be verdict shopping, and the 2026-10-18 reading above makes the
+      widening itself an owner ruling. It would also edit the gate, so in the
+      same pull request as 5.2 it would have shared 5.2's record — the bundling
+      D12 refuses.
 
 - [x] **4.3 The comment matches the hooks.** The gate's header stops saying
       that the dispatcher source and the kernel list are denied at tool-call
@@ -1262,6 +1336,30 @@ gaps again; the binding closes replay, and nothing else.
       than as a revert command that exited 0. Only the content binding (2.1, 2.2)
       stayed on it. See § Staged, not abandoned and D12.
 
+      **Rebuilt on its own 2026-10-18 to 2026-10-21, seven review rounds, not
+      passed — open, and the owner's to decide.** Record:
+      `agents/evidence/ratifications/drain-self-modification-5-2-20261021.md`;
+      every prompt under `agents/evidence/council/escalation-shape-review-*`.
+      `escalationMessage` in the gate, firing on `refused`, `non-convergent`,
+      diversity-short, and a mechanism change carrying a council answer; exit
+      codes unchanged. Rounds 1–3 refused 2/2 and each finding was fixed
+      (advisory wording, authoring-defect silence, record-text escaping by
+      Unicode class, `--quiet` hiding the question). Rounds 4–7 split —
+      anthropic `ratified` three times and `confirmed-non-expanding` once, openai
+      `refused` four times — and the openai dealbreakers moved from the block's
+      content to the absence of an enforced, authenticated owner stop: round 1
+      refused the block for implying a decision over exit 0, round 7 for not
+      being a stop. The last shape writes the question to stderr on every run
+      (so `--quiet` keeps its stdout contract and no flag hides it), lists the
+      gated paths first, and holds the block to one 50-item budget. **The
+      authenticated stop the seat asks for is the mechanism the contract says
+      does not exist and ADR-281 § 5 assigns to the owner's forge act**, so four
+      splits with a different provider tried are condition 1 of § When the user
+      decides. A `refused` record cannot carry a gated change past the gate:
+      the code was taken off the branch (empty net diff per file) and is
+      reachable at `0e262c5c2`. No eighth round: on the same design it would be
+      verdict shopping.
+
 - [x] **5.3 The user's permission takes the route the owner chose.** At the
       pin there is none: only a council record with two providers passes, the
       check is required, and the contract's bypass procedure is for incidents.
@@ -1310,7 +1408,7 @@ gaps again; the binding closes replay, and nothing else.
 
 ## Phase 6 — One change nobody asked for travels the whole lane
 
-- [ ] **6.1 The pipeline's review is the council's record; the approval is the
+- [x] **6.1 The pipeline's review is the council's record; the approval is the
       owner's.** For a proposal whose scope is the package, `check_proposal`
       accepts `stage: gated` only when the proposal names a record whose
       `subject` matches the files the proposal declares as its change AND the
@@ -1356,6 +1454,23 @@ gaps again; the binding closes replay, and nothing else.
       than as a revert command that exited 0. Only the content binding (2.1, 2.2)
       stayed on it. See § Staged, not abandoned and D12.
 
+      **Landed on its own 2026-10-21, against the Git-object subject (D13).**
+      `proposal:check` check 7 (`_checkGatedRecord`) refuses a `scope: package`
+      proposal at `stage: gated` unless it declares `changed_files:` and names a
+      `ratification_record:` that passes `readRatification` against the
+      committed provider policy AND an `owner_authorization:`, both bound to one
+      digest read at one resolved commit. One deviation from the 2026-10-12
+      shape, recorded rather than taken silently: the digest is
+      `proposalSubjectOf`, over EVERY declared file, not the gate's
+      `expectedSubjectFor` — a learning usually changes an ungated skill body,
+      over which the gate's digest is the empty-set digest every proposal
+      shares, so a binding to it would bind to nothing. It reuses the subject
+      module's one hashing loop. `upstream-contribute` § 3 carries the
+      `stage: gated` refusal, and the pipeline guideline's placeholder for the
+      binding is replaced by the binding. Not gated by `check_kernel_edit_ratified`
+      and not a reviewer module under condition 4, so it carries no record of its
+      own. 14 tests, 10 seen red with the check neutralised.
+
 - [ ] **6.2 A worked example, for real.** One learning from this repository's
       own history is captured, proposed, and passed by a modification review
       as a change to a rule or skill body; its proposal stays under
@@ -1392,6 +1507,25 @@ gaps again; the binding closes replay, and nothing else.
       reverted to `origin/main` — verified as an EMPTY net diff per file rather
       than as a revert command that exited 0. Only the content binding (2.1, 2.2)
       stayed on it. See § Staged, not abandoned and D12.
+
+      **Walked again 2026-10-21 with a learning this run made; reviewed three
+      rounds, not passed — open, and the owner's to decide.** Record:
+      `agents/evidence/ratifications/drain-self-modification-6-2-20261021.md`.
+      `agents/proposals/test-through-the-entry-point.md` captures what round 3 of
+      this run's 5.2 review showed — a green suite over a builder function says
+      nothing about what `main` prints — as Iron Law 8 of `testing-anti-patterns`,
+      bound to the 6.1 digest over the skill file. All three rounds split:
+      anthropic `ratified`, openai `refused`; each round's findings were taken
+      (defined terms, an isolation rule with no exception, a seeded-fault
+      success signal, the enforcement of each sequence link stated) and the
+      next round raised new ones, ending on package-level absences (no check
+      binds the merged commit to the authorized digest; installed skills have
+      no revocation path). A council refusal fails closed for a
+      learning-originated change, so the skill edit is off the branch (empty
+      net diff, source and projection), reachable at `ec866ae5b`; the proposal
+      stays at `stage: proposed` naming the non-passing record. The `verify:`
+      grep above reads 1 — a proposal under `agents/proposals/` names a record
+      — but the step asks for a review that PASSED, and that is not met.
 
 ## What this roadmap deliberately does not do
 
@@ -1601,6 +1735,7 @@ gaps again; the binding closes replay, and nothing else.
 | D11 | product-owned | owner | the owner's route past a recorded council non-convergence is (b), the owner's own recorded bypass on the forge — preceded by an ask: on non-convergence, or on the red check it causes, the agent tells the owner at once and asks in-session with options; a yes is then given as the forge act, never as a chat answer, because a chat answer reaches the tree only as text an agent wrote and ADR-268 § 4 forbids an agent ratifying its own increase in power. The contract's two sentences ruling a bypass out are amended for recorded non-convergence only | owner answer 2026-10-06 to blocker `owner-permission-route`: "the user should be informed beforehand or on a failed CI run and be able to instruct the agent locally when it asks — otherwise option 1, if it cannot be done differently"; option (a) needs a place only a person writes, which does not exist at the pin | a place only a person writes exists (the gate-preauth stub's answer), at which point (a) becomes the route that needs no forge act |
 | D12 | reversible-technical | council:drain-self-modification-20261012 | Land the content binding alone; stage governed-surface expansion, proposal validation, the record writer, the escalation shape and the Iron Law as their own changes | The modification review of 2026-10-12 refused the bundled branch 2/2 and both seats answered `smaller-change` with "landing the binding first would close replay risk while letting the broader self-governance design be evaluated with a smaller blast radius"; the bundled diff was 177 KB against a 51 KB council bundle ceiling, so no seat saw the whole of it | A later council reviews the staged concerns together and asks for them as one change |
 | D13 | reversible-technical | council:drain-self-modification-narrowed-20261013 (round 5) | The ratification subject is read from Git objects at an explicit revision, never from the working tree; a gated path committed as a symbolic link is refused rather than hashed as its target string | Rounds 3, 4 and 5 each refused the working-tree reader on a new filesystem defect (errno handling, non-regular files, a symlinked ancestor); both round-5 seats named hashing an explicit Git revision as the stronger fix | A gated surface legitimately needs to be a symbolic link, or the gate must judge content that is deliberately left uncommitted |
+| D14 | reversible-technical | agent | A package proposal's review and owner authorization are bound to one digest over EVERY declared file (`proposalSubjectOf`), not to the gate's gated-subset subject | A learning usually changes an ungated skill or rule body; over such a change the gate's subject is the empty-set digest every proposal shares, so a binding to it binds to nothing. Reuses the subject module's one hashing loop (step 6.1, 2026-10-21) | The gate's watch list grows to cover every file a learning lane can change |
 
 ## Kill register
 
