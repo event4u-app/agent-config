@@ -5,6 +5,7 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+    flipReadiness,
     parseReviewCorpus,
     receiptCoverage,
     reviewEscapes,
@@ -90,5 +91,32 @@ describe('probe_depth_shadow', () => {
         expect(e.R0).toEqual({ rows: 1, escaped: 1, critical: 0 });
         expect(e.R1).toEqual({ rows: 2, escaped: 1, critical: 0 });
         expect(e.R2).toEqual({ rows: 1, escaped: 0, critical: 0 });
+    });
+});
+
+describe('flipReadiness — D14 (2) per flip class', () => {
+    const flip = {
+        scope: 'structurally-safe-paths' as const,
+        classes: ['R0', 'R1'] as ('R0' | 'R1')[],
+        requires: { min_steps: 30, max_escaped: 1, max_critical: 0 },
+        reading: null,
+    };
+    const coverage = (r0: number, r1: number) => ({ ticked: r0 + r1, byClass: { R0: r0, R1: r1, R2: 0, R3: 0 }, missing: 0 });
+    const escapes = (r0: number, r0crit: number) => ({
+        R0: { rows: r0, escaped: r0, critical: r0crit },
+        R1: { rows: 0, escaped: 0, critical: 0 },
+        R2: { rows: 0, escaped: 0, critical: 0 },
+        R3: { rows: 0, escaped: 0, critical: 0 },
+    });
+
+    it('thirty steps with at most one escape and no critical is ready', () => {
+        expect(flipReadiness(coverage(30, 30), escapes(1, 0), flip).map((r) => r.ready)).toEqual([true, true]);
+    });
+
+    it('too few steps, a second escape, a critical, or an unread review half is not', () => {
+        expect(flipReadiness(coverage(29, 30), escapes(0, 0), flip)[0]!.ready).toBe(false);
+        expect(flipReadiness(coverage(30, 30), escapes(2, 0), flip)[0]!.ready).toBe(false);
+        expect(flipReadiness(coverage(30, 30), escapes(1, 1), flip)[0]!.ready).toBe(false);
+        expect(flipReadiness(coverage(30, 30), null, flip).map((r) => r.ready)).toEqual([false, false]);
     });
 });

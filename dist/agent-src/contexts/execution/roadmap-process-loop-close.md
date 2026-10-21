@@ -118,6 +118,14 @@ execution either way.
   runs through `/pr:merge` § 9a's danger gate (ADR-282). Without a contract
   (interactive mode), the run ends after the archival check with no
   git delivery beyond explicitly authorized commit steps.
+- **Sampled depth audit.** For every step whose receipt reads `active` (a
+  lowered depth), `sampledForAudit` in `src/scripts/_lib/depth_flip.ts`
+  decides whether it gets a full round-1 completion review after merge. If
+  sampled, run that review and append one row to
+  `src/config/depth-audit-samples.json`: `escaped` when it found a high or
+  critical row the lowered depth skipped. `step_receipt` reads that file and
+  returns a class past the threshold to full depth; `probe_depth_shadow
+  --flip-readiness` names it for the owner report.
 
 ### 6-refusals. Host-classifier refusals — hand off, never route around
 

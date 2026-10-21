@@ -1,10 +1,23 @@
 {
-    "_comment": "Ceremony depth per change class — the one table road-to-a-step-that-costs-what-it-changes 2.2 names. SHADOW: `mode` is `shadow`, so no procedure lowers anything from it; `step_receipt` reads it to report what a lowered depth WOULD skip. Lowering depth is the owner's decision (blocker class-depth-flip-reopens-the-risk-null); flipping `mode` is that decision, not a tuning knob. The class comes from src/scripts/classify_change_risk.ts, raise-only.",
+    "_comment": "Ceremony depth per change class — the one table road-to-a-step-that-costs-what-it-changes 2.2 names. The class comes from src/scripts/classify_change_risk.ts, raise-only. `mode: shadow` lowers nothing; `step_receipt` reports what a lowered depth WOULD skip. The owner decided on 2026-10-21 (agents/evidence/owner-directives/2026-10-21-review-cap-and-depth-flip.md, option (d)) that a lower depth may apply only inside `flip`: R0/R1 steps whose every path is structurally safe (src/scripts/_lib/depth_flip.ts), and only once a committed reading (`flip.reading`) shows `flip.requires` met per class. Setting `mode: active` without that reading is refused by tests/scripts/step_receipt.test.ts. A class whose sampled full-depth audits (src/config/depth-audit-samples.json) break the same threshold returns to full depth automatically.",
     "schema_version": 1,
     "registered_at": "2026-10-21",
     "owner": "maintainer",
     "review_by": "2027-04-21",
     "mode": "shadow",
+    "flip": {
+        "scope": "structurally-safe-paths",
+        "classes": [
+            "R0",
+            "R1"
+        ],
+        "requires": {
+            "min_steps": 30,
+            "max_escaped": 1,
+            "max_critical": 0
+        },
+        "reading": null
+    },
     "full": {
         "review": "rounds until the completion review passes (plan-review-gates § 2.5)",
         "council": "on any open question the run cannot settle from the tree (roadmap-process-loop § 5 step 4)",

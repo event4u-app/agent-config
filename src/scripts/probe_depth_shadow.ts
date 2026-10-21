@@ -17,6 +17,7 @@
  * Usage:
  *   ./scripts-run src/scripts/probe_depth_shadow [--since YYYY-MM-DD] [--reviews] [--json]
  *   ./scripts-run src/scripts/probe_depth_shadow --rounds   (severity by round, and per exact round)
+ *   ./scripts-run src/scripts/probe_depth_shadow --flip-readiness   (per flip class: shadow steps, escapes, READY)
  *
  * Coverage counts only steps whose Done note carries a date on or after
  * `--since` (default: the day receipts were introduced); an undated tick
@@ -29,6 +30,8 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { changedPaths, classifyPaths, type RiskClass } from './classify_change_risk.js';
+import { rolledBackClasses, type FlipBlock } from './_lib/depth_flip.js';
+import { loadAuditSamples, loadDepthTable } from './step_receipt.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -236,7 +239,62 @@ function renderRounds(rows: readonly CorpusRow[]): string[] {
     return lines;
 }
 
+export interface ClassReadiness {
+    cls: RiskClass;
+    steps: number;
+    escaped: number | null;
+    critical: number | null;
+    ready: boolean;
+}
+
+/**
+ * Whether each flip class clears the pre-registered threshold. Escapes count
+ * high/critical rows rather than steps, so a step with two escaped rows counts
+ * twice — the conservative direction. Without the review half (`escapes`
+ * null) no class is ready: an unread escape rate is not a low one.
+ */
+export function flipReadiness(
+    coverage: Coverage,
+    escapes: ReturnType<typeof reviewEscapes> | null,
+    flip: FlipBlock,
+): ClassReadiness[] {
+    return flip.classes.map((cls) => {
+        const steps = coverage.byClass[cls];
+        const escaped = escapes === null ? null : escapes[cls].escaped;
+        const critical = escapes === null ? null : escapes[cls].critical;
+        const ready =
+            steps >= flip.requires.min_steps &&
+            escaped !== null &&
+            critical !== null &&
+            escaped <= flip.requires.max_escaped &&
+            critical <= flip.requires.max_critical;
+        return { cls, steps, escaped, critical, ready };
+    });
+}
+
 export function main(argv: readonly string[]): number {
+    if (argv.includes('--flip-readiness')) {
+        const flip = loadDepthTable(REPO_ROOT).flip;
+        const readiness = flipReadiness(
+            receiptCoverage(roadmapTexts(REPO_ROOT), RECEIPTS_SINCE),
+            reviewEscapes(readReviewRows(REPO_ROOT)),
+            flip,
+        );
+        for (const r of readiness) {
+            process.stdout.write(
+                `probe:flip-readiness · ${r.cls} · ${String(r.steps)} shadow step(s) · escaped ${String(r.escaped)} · ` +
+                    `critical ${String(r.critical)} · ${r.ready ? 'READY' : 'not ready'}\n`,
+            );
+        }
+        const rolledBack = rolledBackClasses(loadAuditSamples(REPO_ROOT), flip.requires);
+        if (rolledBack.length > 0) {
+            process.stdout.write(
+                `probe:flip-readiness · ROLLED BACK by the sampled audit, back at full depth: ${rolledBack.join(', ')} — ` +
+                    'name it in the owner report\n',
+            );
+        }
+        return 0;
+    }
     if (argv.includes('--rounds')) {
         process.stdout.write(`${renderRounds(parseReviewCorpus(path.join(REPO_ROOT, 'agents', 'evidence', 'reviews'))).join('\n')}\n`);
         return 0;

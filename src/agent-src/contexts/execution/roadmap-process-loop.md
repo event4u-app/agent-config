@@ -214,8 +214,8 @@ For each open step in the working set (scope-bound — see wrapper):
    rule violation. Do not save flips for the archive commit.
    The flipped line ends with the step's receipt:
    `./scripts-run src/scripts/step_receipt --range <first commit>^..HEAD`
-   (change class, raise-only via `--raise`, and what the `shadow`-mode
-   `src/config/step-depth-table.json` would skip — no ceremony changes).
+   (class, raise-only via `--raise`; what the depth table would skip).
+   CI flags a tick without one, and refuses it once depth is lowered.
 
 ### 5a-residue. Mid-run residue — the same ownership table, inline
 
