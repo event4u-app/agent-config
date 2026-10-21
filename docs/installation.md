@@ -453,8 +453,15 @@ The hook commands do not depend on `PATH`. The global install stages what they
 need — the dispatcher bundle, the node it ran under, and the rule bodies the
 stubs of a thinned layer point at — under `~/.event4u/agent-config/runtime/`,
 so an `npx` install keeps working after npm clears its cache. Each command
-tries a project-local install first, then that staged dispatcher, then an
-`agent-config` binary on `PATH`. The install probes the `SessionStart` command
+tries that staged dispatcher first, then an `agent-config` binary on `PATH` —
+only when its resolved path is absolute and outside the opened project. Since
+17.0.0 nothing inside the project runs as a hook: not a project-local install,
+not a source checkout's `dist/`, not a local `./agent-config`, because a cloned
+repository could commit any of them. When no dispatcher is reachable, a
+`PreToolUse` call is refused with a message naming the repair, so the
+`fail_closed` guards never pass silently; the plugin carrier and every other
+event keep exit 0. To work on the hooks in a source checkout, reinstall to
+stage your build. The install probes the `SessionStart` command
 from `PATH=/usr/bin:/bin` and records the outcome in
 `~/.event4u/agent-config/runtime/carrier.json`; the `hook-carrier` check in
 `agent-config doctor` re-runs the probe and prints the layer state and since
