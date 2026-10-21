@@ -945,7 +945,7 @@ index 0000000000000000000000000000000000000000..1d131a6bdc29ef919431968f20432e74
 +      measured figures, and the evidence artifact the status rests on is
 +      committed.
 diff --git a/agents/roadmaps/road-to-advisories-heard-the-same-day.md b/agents/roadmaps/road-to-advisories-heard-the-same-day.md
-index 69f5532994068a5f5a65deb43534a4a1281f284f..ecc618e1ff4bb9b56a39dce20c1147243c7b63cd 100644
+index 69f5532994068a5f5a65deb43534a4a1281f284f..25872a358101a7374af81800dea8439eab1367da 100644
 --- a/agents/roadmaps/road-to-advisories-heard-the-same-day.md
 +++ b/agents/roadmaps/road-to-advisories-heard-the-same-day.md
 @@ -86,13 +86,14 @@ project.
@@ -1183,7 +1183,7 @@ index 69f5532994068a5f5a65deb43534a4a1281f284f..ecc618e1ff4bb9b56a39dce20c114724
 -- [ ] **AC-4** `session_start` latency stays inside the baseline recorded in
 +- [x] **AC-4** `session_start` latency stays inside the baseline recorded in
        the sibling roadmap, with zero sockets in the hook process.
-+      *Measured 2026-10-21 on a freshly built bundle: `session_start` p95 126 ms, n=50 (`bench_hook_latency`); the notice reads one file. The worktree pass on the same slot runs only on the first session of a day, under a three-second deadline — the retro's own terms (ADR-295).*
++      *Measured 2026-10-21 on a freshly built bundle: `session_start` p95 126 ms, n=50 (`bench_hook_latency`); the notice reads one file. The worktree pass on the same slot runs only on the first session of a day: classification under a three-second deadline, the retro's own terms, and under `auto` up to three removals after it with their own timeouts (ADR-295).*
  - [ ] **AC-5** `task ci` green.
  
  ## Provenance
@@ -1587,10 +1587,10 @@ index e7b3387857d8d04b904af768073c0146a5595e0d..b990e1eb2c5ab6a81a81e77addea7057
  | Worktree registry with lease and heartbeat, per-process PIDs | CHANGED | The session register already carries heartbeats; 3.4 adds a registry line, not a second lease store. |
 diff --git a/dist/agent-src/commands/audit.md b/dist/agent-src/commands/audit.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..a2a6585a49fca6ddd40d2d82747c9ebfb41279c7
+index 0000000000000000000000000000000000000000..4a474e27e5aab8383fcb60cd5ce716e1a900127d
 --- /dev/null
 +++ b/dist/agent-src/commands/audit.md
-@@ -0,0 +1,104 @@
+@@ -0,0 +1,107 @@
 +---
 +model_tier: medium
 +name: audit
@@ -1648,8 +1648,11 @@ index 0000000000000000000000000000000000000000..a2a6585a49fca6ddd40d2d82747c9ebf
 +`refresh` reads the lockfiles, declared runtimes, Dockerfiles, compose files and
 +CI workflows; sends **public** package names and versions to `api.osv.dev`;
 +reads runtime lifecycle data from `endoflife.date` and the PHP and Node release
-+feeds; and runs `npm audit` / `composer audit` only for a lockfile that names no
-+private package. `advisories.egress: none` sends nothing. A cache younger than
++feeds; downloads the whole CISA known-exploited catalog from `www.cisa.gov` and
++matches it locally (`advisories.kev: off` skips it); and runs `npm audit` /
++`composer audit` only for a lockfile that names no private package. Names under
++the project's own npm scope, Composer vendor or GitHub owner count as private.
++`advisories.egress: none` sends nothing. A cache younger than
 +20 hours is reused; `--force` refreshes anyway.
 +
 +Read the result as the tool states it:
@@ -1817,7 +1820,7 @@ index 7ee8bf63be7aea13455ec19eded89cbd88d6e94b..9026a0fcac01a7f2c28acf8bd91c1bd7
  
  ### Path repositories
 diff --git a/dist/agent-src/skills/dependency-upgrade/SKILL.md b/dist/agent-src/skills/dependency-upgrade/SKILL.md
-index 7a0087897fee14f9614308df8b27fc7d69babee0..8a4cbd223d5a418708171f0536583e74c8bdf0cc 100644
+index 7a0087897fee14f9614308df8b27fc7d69babee0..5afacb01d2977a29083809212f1dedff83c9377c 100644
 --- a/dist/agent-src/skills/dependency-upgrade/SKILL.md
 +++ b/dist/agent-src/skills/dependency-upgrade/SKILL.md
 @@ -266,15 +266,67 @@ CVE scanning (above) catches *known-vulnerable* versions. It does **not** catch
@@ -1863,10 +1866,10 @@ index 7a0087897fee14f9614308df8b27fc7d69babee0..8a4cbd223d5a418708171f0536583e74
 +   is still open — say so; `unverifiable` means the source did not answer — say
 +   that too. Then the project's tests and static checks. A fix that leaves the
 +   advisory open or breaks a test is reported as exactly that, never as done.
-+4. **Open the PR** — `agent-config audit:deps pr-body <id> --verified
-+   --tests=passed` prints the body with its seven evidence fields; a library adds
++4. **Open the PR** — `agent-config audit:deps pr-body <id> --tests=passed`
++   prints the body; its After field is what `verify` recorded; a library adds
 +   `--release=<current version>` for the patch-release draft. Security fixes are
-+   never mixed with unrelated changes. Stop before tag and publish.
++   never mixed with unrelated work. Stop before tag and publish.
 +5. **Hand over** — watch CI with `agent-config ci:settle <pr>`, fix what the fix
 +   broke, report "ready to merge". Merge is the owner's, or `/pr:merge` under the
 +   owner's instruction; under `worktrees.cleanup: auto` the merge removes the fix
@@ -1961,10 +1964,10 @@ index b7401792a47362b5786b866d4d97d22acdf2012b..0e7cf0f68b097bb9ba6f460dc999bd1e
  `safe` requires all of: on a branch, merged into the trunk, clean, inside a
 diff --git a/dist/agent-src/templates/github-workflows/advisories-daily.yml b/dist/agent-src/templates/github-workflows/advisories-daily.yml
 new file mode 100644
-index 0000000000000000000000000000000000000000..8719acf90d9785dfa55f158a35e2db11377aaf6a
+index 0000000000000000000000000000000000000000..29ce5b20a6537036fba53bd85243d4dd164d8342
 --- /dev/null
 +++ b/dist/agent-src/templates/github-workflows/advisories-daily.yml
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,66 @@
 +# Advisories, daily — template shipped by agent-config
 +#
 +# Copy this file to `.github/workflows/advisories-daily.yml` in the consumer
@@ -1974,7 +1977,8 @@ index 0000000000000000000000000000000000000000..8719acf90d9785dfa55f158a35e2db11
 +#
 +# What it does: `agent-config audit:deps refresh` (public package names and
 +# versions to api.osv.dev, runtime lifecycle from endoflife.date, the PHP and
-+# Node release feeds; private package names are never sent), then opens or
++# Node release feeds, the whole CISA known-exploited catalog from www.cisa.gov
++# matched locally; private package names are never sent), then opens or
 +# updates ONE issue for T0 findings — malware, a critical runtime
 +# pre-announcement, a critical fix available, a known-exploited advisory.
 +#
@@ -2018,7 +2022,8 @@ index 0000000000000000000000000000000000000000..8719acf90d9785dfa55f158a35e2db11
 +        run: |
 +          body="$(npx --yes @event4u/agent-config@16 audit:deps issue-body)"
 +          [ -z "$body" ] && { echo "no T0 finding today"; exit 0; }
-+          digest="$(printf '%s' "$body" | sha256sum | cut -c1-16)"
++          # The `Checked <time>` line changes on every run; the list is what counts.
++          digest="$(printf '%s' "$body" | grep -v '^Checked ' | sha256sum | cut -c1-16)"
 +          marker="<!-- advisories-digest: $digest -->"
 +          title="Security advisories needing action today"
 +          existing="$(gh issue list --state open --search "in:title \"$title\"" --json number -q '.[0].number')"
@@ -2030,7 +2035,7 @@ index 0000000000000000000000000000000000000000..8719acf90d9785dfa55f158a35e2db11
 +            echo "the T0 list is unchanged since the last report"
 +          fi
 diff --git a/docs/CLAIMS.md b/docs/CLAIMS.md
-index 569931b49b443230cfe737ab845a3b56209a5f34..235681a578d563e6fbbecab8d184ac0f0b652e4a 100644
+index 569931b49b443230cfe737ab845a3b56209a5f34..39338cb14266a02e9645c949b46a6060e568e2a1 100644
 --- a/docs/CLAIMS.md
 +++ b/docs/CLAIMS.md
 @@ -248,6 +248,22 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
@@ -2038,9 +2043,9 @@ index 569931b49b443230cfe737ab845a3b56209a5f34..235681a578d563e6fbbecab8d184ac0f
  - last_verified:
  
 +### claim: advisory-time-to-notice
-+- claim: An advisory, malware report, end-of-support date or pre-announced security release that touches a project's locked packages, declared runtimes, images or CI actions reaches a user-visible notice in a session on that project within 24 hours at the median and 36 hours at the 90th percentile, for a project refreshed at least once per working day (the CLI refresh or the opt-in daily CI schedule — a session start reads the cache and never refreshes); within 4 hours for a T0 finding where the opt-in daily CI schedule runs. PRE-REGISTERED 2026-10-21, before any measurement exists.
++- claim: An advisory, malware report, end-of-support date or pre-announced security release that touches a project's locked packages, declared runtimes, images or CI actions reaches a user-visible notice in a session on that project within 24 hours at the median and 36 hours at the 90th percentile, for a project refreshed at least once per working day (the CLI refresh or the opt-in daily CI schedule — a session start reads the cache and never refreshes); and, where the opt-in daily CI schedule runs, a T0 finding becomes an issue on the repository at its next scheduled run, so within 24 hours however few sessions there are. PRE-REGISTERED 2026-10-21, before any measurement exists.
 +- kind: quant
-+- evidence: PRE-REGISTERED 2026-10-21 (road-to-advisories-heard-the-same-day 0.1 -- no goalpost-moving after the numbers land). AMENDED the same day, before any measurement, by an R2 review finding: the population was "one session per working day", which after D8 no longer refreshes anything; the bar is unchanged. INSTRUMENT: the per-project advisory cache written by `agent-config audit:deps refresh` (`<git-common-dir>/agent-config/advisories/<checkout-key>.json`), whose ledger records each finding's `first_seen` and `announced_at`, against the source's publication stamp. REPRODUCE: `agent-config audit:deps show --json` on a project (it carries `findings`, the `ledger` and the `remediations`), joined to the advisory's published date. BASELINE: none -- before this change nothing announced a consumer advisory at all, so the pre-period has no notice to time. FALSIFICATION: the P50 or P90 misses the bar over 30 days of real projects; a miss traced to the refresh cadence rather than to the sources reopens D6 (no OS daemon), not the bar. An honest null closes the claim as measured-null.
++- evidence: PRE-REGISTERED 2026-10-21 (road-to-advisories-heard-the-same-day 0.1 -- no goalpost-moving after the numbers land). AMENDED the same day, before any measurement, by an R2 review finding: the population was "one session per working day", which after D8 no longer refreshes anything; the bar is unchanged. A second amendment, the same day and also before any measurement: the T0 clause read "within 4 hours" for a schedule that runs once a day, which no run could meet, and named a session notice where the CI run writes an issue; it now times the issue, against the schedule as shipped. INSTRUMENT: the per-project advisory cache written by `agent-config audit:deps refresh` (`<git-common-dir>/agent-config/advisories/<checkout-key>.json`), whose ledger records each finding's `first_seen` and `announced_at`, against the source's publication stamp. REPRODUCE: `agent-config audit:deps show --json` on a project (it carries `findings`, the `ledger` and the `remediations`), joined to the advisory's published date. BASELINE: none -- before this change nothing announced a consumer advisory at all, so the pre-period has no notice to time. FALSIFICATION: the P50 or P90 misses the bar over 30 days of real projects; a miss traced to the refresh cadence rather than to the sources reopens D6 (no OS daemon), not the bar. An honest null closes the claim as measured-null.
 +- non_inference: This times a NOTICE, and licenses nothing about a fix, about coverage of what a project runs, or about advisories the sources did not carry. A notice within 24 hours does not mean every vulnerability was noticed -- a runtime outside PHP and Node, an OS package in an image layer, and anything no queried source knows are out of scope by construction. It says nothing about projects with no session for days, which are only covered where the opt-in CI schedule runs.
 +- status: unbacked
 +- last_verified:
@@ -2183,10 +2188,10 @@ index e9c731570be10bde5e79186a312e36eb34c7cb0d..57e6aadefe552b37551d7883993b2f77
  
 diff --git a/docs/decisions/ADR-295-worktree-removal-on-the-proven-set.md b/docs/decisions/ADR-295-worktree-removal-on-the-proven-set.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..d919bdc420fbfa2755c0760289777ed7316dd839
+index 0000000000000000000000000000000000000000..30e0b997c9097e0fa9c3b608f2240ac9fd55ae0e
 --- /dev/null
 +++ b/docs/decisions/ADR-295-worktree-removal-on-the-proven-set.md
-@@ -0,0 +1,97 @@
+@@ -0,0 +1,101 @@
 +---
 +adr: 295
 +status: accepted
@@ -2250,7 +2255,9 @@ index 0000000000000000000000000000000000000000..d919bdc420fbfa2755c0760289777ed7
 +   a per-repository lock owned by a token, so a pass that outlived the stale
 +   window cannot release a successor's lock; the worktree entry, its `HEAD`, the
 +   session register and every predicate re-read immediately before each
-+   removal; subprocess deadlines for the three-second daily budget; a rotating
++   removal; a three-second subprocess deadline on the daily classification,
++   then at most three removals, each re-checked within three seconds and
++   given 30 s of its own; a rotating
 +   start so no candidate starves; a write-ahead journal (intent with the tip
 +   before the removal, outcome after); no repository-wide `git worktree prune`;
 +   a forge proof counted only for a PR whose base is the trunk and whose merge
@@ -2273,9 +2280,11 @@ index 0000000000000000000000000000000000000000..d919bdc420fbfa2755c0760289777ed7
 +  review 2026-10-21), which was weighed and not built: the window is the gap
 +  between two synchronous calls, and a tree a process is writing into is almost
 +  always one a registered session holds, which the re-check already keeps.
-+- **The three-second budget bounds the subprocesses, not the pass.** Settings,
-+  register and journal reads are local file I/O outside it; the pass is
-+  measured, not proven, against the budget.
++- **The three-second budget bounds the classification, not the pass.** Under
++  `auto` up to three removals follow it, each with a three-second re-check and a
++  30-second removal timeout — a worst case of about 100 s at a session start
++  that removes three trees, and nothing at all under `notify`. Settings,
++  register and journal reads are local file I/O outside every deadline.
 +
 +## Alternatives
 +
@@ -2425,7 +2434,7 @@ index 2baa51d7308893455614e43f02bb98be9f08ed36..43413d92f9c87d5a8f5e392041c9f980
  ---
  
 diff --git a/docs/proof.md b/docs/proof.md
-index 3f00b1001a5608d831d73ffc60faff6935af7ded..838b38e8bebdd92458481e008bd583b279224822 100644
+index 3f00b1001a5608d831d73ffc60faff6935af7ded..4066c6bf5dff4a1fd78044258b1d9fd8200cdfec 100644
 --- a/docs/proof.md
 +++ b/docs/proof.md
 @@ -54,7 +54,7 @@ evidence pointer, or `task check-claims` fails the build.
@@ -2459,7 +2468,7 @@ index 3f00b1001a5608d831d73ffc60faff6935af7ded..838b38e8bebdd92458481e008bd583b2
  | `adr-interruption-baseline` | quant | unbacked | — | `PRE-REGISTERED 2026-08-21 (road-to-evidence-based-adr-governance Phase 6.1). REGISTERED BEFORE THE MECHANISM CHANGES ANY BEHAVIOR, and that ordering is the point: the axes ship descriptive (ADR-240 § 2 — a grade prices review burden and confers no authority), so the baseline is measured against a tree where nothing has been unlocked yet. METRIC, fixed now: a contact counts when a run stops or asks the owner AND the stated reason names an ADR — read from session transcripts, not from an agent's self-report, because "I was blocked by ADR-X" is exactly the claim the surrounding roadmap exists to stop taking on faith. DENOMINATOR: 20 roadmap runs, counted as `/roadmap:process-*` invocations that reach at least one closed step; a run that aborts before its first step is not a run. POWER: at least 20 runs on each side, else UNDERPOWERED and no claim in either direction — a five-run sample producing a favourable ratio is the failure this line exists against. FALSIFICATION: (1) a fall in contacts accompanied by a rise in the held-defect rate is NOT a win and is reported as a trade, not a success; (2) the comparison is rate-vs-rate, never absolute counts, since run volume will differ; (3) a rise is published as a rise — this metric can close the mechanism, and per ADR-240's own review_trigger a flat result reopens that record. HONEST-NULL PATH: if 20 runs do not accumulate, the recorded finding is that the metric was pre-registered and never had a population, and the interruption claim is withdrawn rather than left pending.` |
  | `adversarial-council-finding-coverage` | quant | resolved-null | — | `docs/benchmark.md#adversarial-verification-council` |
  | `adversarial-review-tree-of-thoughts` | qual | backed | — | `https://arxiv.org/abs/2305.10601 (2026-08-11)` |
-+| `advisory-time-to-notice` | quant | unbacked | — | `PRE-REGISTERED 2026-10-21 (road-to-advisories-heard-the-same-day 0.1 -- no goalpost-moving after the numbers land). AMENDED the same day, before any measurement, by an R2 review finding: the population was "one session per working day", which after D8 no longer refreshes anything; the bar is unchanged. INSTRUMENT: the per-project advisory cache written by `agent-config audit:deps refresh` (`<git-common-dir>/agent-config/advisories/<checkout-key>.json`), whose ledger records each finding's `first_seen` and `announced_at`, against the source's publication stamp. REPRODUCE: `agent-config audit:deps show --json` on a project (it carries `findings`, the `ledger` and the `remediations`), joined to the advisory's published date. BASELINE: none -- before this change nothing announced a consumer advisory at all, so the pre-period has no notice to time. FALSIFICATION: the P50 or P90 misses the bar over 30 days of real projects; a miss traced to the refresh cadence rather than to the sources reopens D6 (no OS daemon), not the bar. An honest null closes the claim as measured-null.` |
++| `advisory-time-to-notice` | quant | unbacked | — | `PRE-REGISTERED 2026-10-21 (road-to-advisories-heard-the-same-day 0.1 -- no goalpost-moving after the numbers land). AMENDED the same day, before any measurement, by an R2 review finding: the population was "one session per working day", which after D8 no longer refreshes anything; the bar is unchanged. A second amendment, the same day and also before any measurement: the T0 clause read "within 4 hours" for a schedule that runs once a day, which no run could meet, and named a session notice where the CI run writes an issue; it now times the issue, against the schedule as shipped. INSTRUMENT: the per-project advisory cache written by `agent-config audit:deps refresh` (`<git-common-dir>/agent-config/advisories/<checkout-key>.json`), whose ledger records each finding's `first_seen` and `announced_at`, against the source's publication stamp. REPRODUCE: `agent-config audit:deps show --json` on a project (it carries `findings`, the `ledger` and the `remediations`), joined to the advisory's published date. BASELINE: none -- before this change nothing announced a consumer advisory at all, so the pre-period has no notice to time. FALSIFICATION: the P50 or P90 misses the bar over 30 days of real projects; a miss traced to the refresh cadence rather than to the sources reopens D6 (no OS daemon), not the bar. An honest null closes the claim as measured-null.` |
  | `augment-manifest-version-package-synced` | qual | backed | — | `src/scripts/lint_marketplace.ts#check_augment_manifests` |
  | `autonomous-analysis-self-refine` | qual | backed | — | `https://arxiv.org/abs/2303.17651 (2026-08-11)` |
  | `brand-status-state-truth` | quant | backed | — | `exec:vitest run tests/scripts/brand_status.test.ts tests/scripts/brand_scenarios.test.ts -> 0` |
@@ -2622,10 +2631,10 @@ index e5f24f69af6b3f3eeded1da531d8cb422464f03c..ea401a3ed79e237b983a23f160fe8863
  
 diff --git a/src/agent-src/templates/github-workflows/advisories-daily.yml b/src/agent-src/templates/github-workflows/advisories-daily.yml
 new file mode 100644
-index 0000000000000000000000000000000000000000..8719acf90d9785dfa55f158a35e2db11377aaf6a
+index 0000000000000000000000000000000000000000..29ce5b20a6537036fba53bd85243d4dd164d8342
 --- /dev/null
 +++ b/src/agent-src/templates/github-workflows/advisories-daily.yml
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,66 @@
 +# Advisories, daily — template shipped by agent-config
 +#
 +# Copy this file to `.github/workflows/advisories-daily.yml` in the consumer
@@ -2635,7 +2644,8 @@ index 0000000000000000000000000000000000000000..8719acf90d9785dfa55f158a35e2db11
 +#
 +# What it does: `agent-config audit:deps refresh` (public package names and
 +# versions to api.osv.dev, runtime lifecycle from endoflife.date, the PHP and
-+# Node release feeds; private package names are never sent), then opens or
++# Node release feeds, the whole CISA known-exploited catalog from www.cisa.gov
++# matched locally; private package names are never sent), then opens or
 +# updates ONE issue for T0 findings — malware, a critical runtime
 +# pre-announcement, a critical fix available, a known-exploited advisory.
 +#
@@ -2679,7 +2689,8 @@ index 0000000000000000000000000000000000000000..8719acf90d9785dfa55f158a35e2db11
 +        run: |
 +          body="$(npx --yes @event4u/agent-config@16 audit:deps issue-body)"
 +          [ -z "$body" ] && { echo "no T0 finding today"; exit 0; }
-+          digest="$(printf '%s' "$body" | sha256sum | cut -c1-16)"
++          # The `Checked <time>` line changes on every run; the list is what counts.
++          digest="$(printf '%s' "$body" | grep -v '^Checked ' | sha256sum | cut -c1-16)"
 +          marker="<!-- advisories-digest: $digest -->"
 +          title="Security advisories needing action today"
 +          existing="$(gh issue list --state open --search "in:title \"$title\"" --json number -q '.[0].number')"
@@ -2959,10 +2970,10 @@ index 5bbc2942ea437561b5e3d3fb946e418a5ab3fea2..8e098a17a15e51f64c7b198e054d555b
  }
 diff --git a/src/domains/engineering-base/audit/command.md b/src/domains/engineering-base/audit/command.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..a2a6585a49fca6ddd40d2d82747c9ebfb41279c7
+index 0000000000000000000000000000000000000000..4a474e27e5aab8383fcb60cd5ce716e1a900127d
 --- /dev/null
 +++ b/src/domains/engineering-base/audit/command.md
-@@ -0,0 +1,104 @@
+@@ -0,0 +1,107 @@
 +---
 +model_tier: medium
 +name: audit
@@ -3020,8 +3031,11 @@ index 0000000000000000000000000000000000000000..a2a6585a49fca6ddd40d2d82747c9ebf
 +`refresh` reads the lockfiles, declared runtimes, Dockerfiles, compose files and
 +CI workflows; sends **public** package names and versions to `api.osv.dev`;
 +reads runtime lifecycle data from `endoflife.date` and the PHP and Node release
-+feeds; and runs `npm audit` / `composer audit` only for a lockfile that names no
-+private package. `advisories.egress: none` sends nothing. A cache younger than
++feeds; downloads the whole CISA known-exploited catalog from `www.cisa.gov` and
++matches it locally (`advisories.kev: off` skips it); and runs `npm audit` /
++`composer audit` only for a lockfile that names no private package. Names under
++the project's own npm scope, Composer vendor or GitHub owner count as private.
++`advisories.egress: none` sends nothing. A cache younger than
 +20 hours is reused; `--force` refreshes anyway.
 +
 +Read the result as the tool states it:
@@ -3141,7 +3155,7 @@ index 054db20627ecfae8846404634129f083a1beff5d..cd9be99b71dead0e81fc2af3920bcb13
  - **`bug-fix`** — Plan and implement a bug fix — based on investigation, with quality checks and test verification
  - **`bug-investigate`** — Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause
 diff --git a/src/domains/meta/pack.yaml b/src/domains/meta/pack.yaml
-index fb64250a64d0e2a3cb883fab32c738ad6f0ebaa1..d4aab6642e6d345f85ebaa22b640e10c2d76f944 100644
+index fb64250a64d0e2a3cb883fab32c738ad6f0ebaa1..7921e1c70d1ad8f6849c6e798b887a2be18e487b 100644
 --- a/src/domains/meta/pack.yaml
 +++ b/src/domains/meta/pack.yaml
 @@ -1,5 +1,5 @@
@@ -3170,11 +3184,11 @@ index fb64250a64d0e2a3cb883fab32c738ad6f0ebaa1..d4aab6642e6d345f85ebaa22b640e10c
    basis: chars/4
    catalog_tokens: 3649
 -  commands_tokens: 255212
-+  commands_tokens: 256459
++  commands_tokens: 256513
    other_tokens: 1304
    rules_tokens: 63878
 -  total_tokens: 324043
-+  total_tokens: 325290
++  total_tokens: 325344
  trust_level_default: core
 diff --git a/src/scripts/_dispatch.bash b/src/scripts/_dispatch.bash
 index bbd77aaced2ce32b8857e8f192cf62a768457242..61c020cec096060bd85bfccd6c6e1f4b60a19032 100755
@@ -3617,10 +3631,10 @@ index 0000000000000000000000000000000000000000..a464b739095a342f01ed96f194abe309
 +}
 diff --git a/src/scripts/_lib/advisory_notice.ts b/src/scripts/_lib/advisory_notice.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..dec9bfa1d25aee897f77b7914f73cf77d1a20af1
+index 0000000000000000000000000000000000000000..10bfaadab197f79ec5508786784902b0f7faedc5
 --- /dev/null
 +++ b/src/scripts/_lib/advisory_notice.ts
-@@ -0,0 +1,233 @@
+@@ -0,0 +1,258 @@
 +/**
 + * The read-only half of advisories — what a session start may do
 + * (road-to-advisories-heard-the-same-day Phase 4).
@@ -3704,6 +3718,31 @@ index 0000000000000000000000000000000000000000..dec9bfa1d25aee897f77b7914f73cf77
 +    }
 +    const key = createHash('sha256').update(real).digest('hex').slice(0, 16);
 +    return path.join(common, 'agent-config', 'advisories', `${key}.json`);
++}
++
++/**
++ * Fix lifecycles are per REPOSITORY, not per checkout: a fix claimed in the main
++ * checkout is verified in its own worktree, and two worktrees must see one claim
++ * for one finding. So they live beside the per-checkout caches, in the common
++ * git dir every worktree shares.
++ */
++export function remediationsPath(root: string): string | null {
++    const common = git_common_dir(root);
++    return common === null ? null : path.join(common, 'agent-config', 'advisories', 'remediations.json');
++}
++
++export function readRemediations(root: string): Remediations {
++    const p = remediationsPath(root);
++    if (p !== null) {
++        try {
++            const doc = JSON.parse(fs.readFileSync(p, 'utf-8')) as unknown;
++            if (isObject(doc)) return doc as Remediations;
++        } catch {
++            /* absent or unreadable: fall back to a pre-shared cache below */
++        }
++    }
++    // A cache written before the shared file existed carries its own copy.
++    return readState(root)?.remediations ?? {};
 +}
 +
 +export function readState(root: string): AdvisoryState | null {
@@ -3792,7 +3831,7 @@ index 0000000000000000000000000000000000000000..dec9bfa1d25aee897f77b7914f73cf77
 + * never an action. Each T0/T1 line ends in the offer; the routing behind the
 + * offer is owned by road-to-security-fixes-carried-to-the-merge.
 + */
-+export function noticeLines(state: AdvisoryState | null, now: Date = new Date()): string[] {
++export function noticeLines(state: AdvisoryState | null, now: Date = new Date(), remediations: Remediations | null = null): string[] {
 +    if (state === null) return [];
 +    const lines: string[] = [];
 +    // An unreadable or future timestamp proves nothing about freshness: stale.
@@ -3813,7 +3852,7 @@ index 0000000000000000000000000000000000000000..dec9bfa1d25aee897f77b7914f73cf77
 +        const days = (now.getTime() - sinceMs) / 86400000;
 +        if (days >= SILENCE_NOTICE_DAYS) lines.push(`advisories: ${safeField(source)} has not answered for ${Math.floor(days)} days — findings from it are unknown, not clear`);
 +    }
-+    for (const u of mergedNotDeployed(state.remediations ?? {}, state.findings, now)) {
++    for (const u of mergedNotDeployed(remediations ?? state.remediations ?? {}, state.findings, now)) {
 +        const sha = u.mergeSha === null ? '' : ` (${safeField(u.mergeSha.slice(0, 12))})`;
 +        lines.push(`advisory ${safeField(u.id)}: merged${sha} but not deployed for ${safeField(u.hours)} h — deploy it the way this project deploys`);
 +    }
@@ -3837,7 +3876,7 @@ index 0000000000000000000000000000000000000000..dec9bfa1d25aee897f77b7914f73cf77
 +    } catch {
 +        shown = '';
 +    }
-+    const lines = noticeLines(state, now);
++    const lines = noticeLines(state, now, readRemediations(root));
 +    if (lines.length === 0) return null;
 +    // Keyed by what would be printed, not only by when: a same-day change in a
 +    // silence, a remediation or staleness is a new notice.
@@ -3856,10 +3895,10 @@ index 0000000000000000000000000000000000000000..dec9bfa1d25aee897f77b7914f73cf77
 +
 diff --git a/src/scripts/_lib/advisory_sources.ts b/src/scripts/_lib/advisory_sources.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..6c4697eadf8e101f7338ce8f28c206d0613eca59
+index 0000000000000000000000000000000000000000..860c93730997a65c3f97f60d5100f029eb3bbe6b
 --- /dev/null
 +++ b/src/scripts/_lib/advisory_sources.ts
-@@ -0,0 +1,690 @@
+@@ -0,0 +1,703 @@
 +/**
 + * Ask the authorities, carry nothing (road-to-advisories-heard-the-same-day
 + * Phase 2).
@@ -4376,6 +4415,12 @@ index 0000000000000000000000000000000000000000..6c4697eadf8e101f7338ce8f28c206d0
 +const ANNOUNCES_AHEAD = /upcoming|pre-?announce|will be released|scheduled|planned/i;
 +/** A pre-announcement older than this is no longer "ahead" of anything. */
 +export const PREANNOUNCE_WINDOW_DAYS = 14;
++/**
++ * How far back the feed's security releases are read. A pin below a release stays
++ * a `fix-available` finding for as long as the feed still lists that release —
++ * the pre-announcement window is for announcements, never for the fix itself.
++ */
++export const RELEASE_WINDOW_DAYS = 365;
 +
 +/**
 + * A runtime vendor's own feed — the one signal that exists BEFORE an advisory
@@ -4414,7 +4459,7 @@ index 0000000000000000000000000000000000000000..6c4697eadf8e101f7338ce8f28c206d0
 +                const when = Date.parse(/<(?:published|updated|pubDate)>([^<]+)</.exec(item)?.[1] ?? '');
 +                if (ver !== undefined && /released|\(lts\)|\(current\)/i.test(t) && /security/i.test(item) && Number.isFinite(when)) {
 +                    const ageDays = (now.getTime() - when) / 86400000;
-+                    if (ageDays >= 0 && ageDays <= PREANNOUNCE_WINDOW_DAYS) releases.push({ version: ver, day: new Date(when).toISOString().slice(0, 10) });
++                    if (ageDays >= 0 && ageDays <= RELEASE_WINDOW_DAYS) releases.push({ version: ver, day: new Date(when).toISOString().slice(0, 10) });
 +                }
 +            }
 +            for (const item of items) {
@@ -4427,9 +4472,16 @@ index 0000000000000000000000000000000000000000..6c4697eadf8e101f7338ce8f28c206d0
 +                if (!ANNOUNCES_RELEASE.test(title) || !ANNOUNCES_AHEAD.test(title)) continue;
 +                const day = new Date(at).toISOString().slice(0, 10);
 +                if (/critical/i.test(title)) criticalDays.push(day);
-+                // The release it announced is out: the release finding speaks instead.
-+                if (releases.some((r) => r.day >= day)) continue;
-+                const subject = users[0]!;
++                // The release it announced is out ON THIS USER'S LINE: the release
++                // finding speaks instead. A release on another line says nothing
++                // about this one, so the first pin still waiting carries it.
++                const subject = users.find(
++                    (u) =>
++                        !releases.some(
++                            (r) => r.day >= day && (u.version === null || releaseLine(runtimeName, r.version) === releaseLine(runtimeName, u.version)),
++                        ),
++                );
++                if (subject === undefined) continue;
 +                findings.push({
 +                    id: `PRE-${runtimeName}-${day}`,
 +                    aliases: [],
@@ -4891,10 +4943,10 @@ index 0000000000000000000000000000000000000000..f1f1e50ef039c3a8119c92ccdca6c427
 +}
 diff --git a/src/scripts/_lib/security_fix.ts b/src/scripts/_lib/security_fix.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..4ffcd1a9cb364d8dc6d7ba56847fe4865cfcfeb5
+index 0000000000000000000000000000000000000000..72429e6a0cd0a5acda1d3b7e3e52cf95ff27a72a
 --- /dev/null
 +++ b/src/scripts/_lib/security_fix.ts
-@@ -0,0 +1,424 @@
+@@ -0,0 +1,436 @@
 +/**
 + * The decidable half of carrying a security finding to a merged, deployed fix
 + * (road-to-security-fixes-carried-to-the-merge).
@@ -5140,11 +5192,16 @@ index 0000000000000000000000000000000000000000..4ffcd1a9cb364d8dc6d7ba56847fe486
 + * The same authority that reported the finding must stop reporting it on the
 + * changed lockfile. An authority that did not answer proves nothing either way.
 + */
-+export function proveFixed(key: string, sourcesBefore: string[], after: { findings: Finding[]; okSources: string[] }): FixProof {
++export function proveFixed(key: string, sourcesBefore: string[], after: { findings: Finding[]; okSources: string[] }, idsBefore: string[] = []): FixProof {
 +    const reporters = sourcesBefore.filter((s) => after.okSources.includes(s));
 +    if (reporters.length === 0) return 'unverifiable';
 +    const [id, pkg] = key.split('|');
-+    const still = after.findings.find((f) => f.key === key || (pkg !== undefined && f.id === id && f.package === pkg));
++    // The same advisory under another canonical ID is still the same advisory:
++    // match on any ID it was known by, for the same package.
++    const known = new Set([id, ...idsBefore].filter((x): x is string => typeof x === 'string' && x !== ''));
++    const still = after.findings.find(
++        (f) => f.key === key || (pkg !== undefined && f.package === pkg && [f.id, ...f.aliases].some((x) => known.has(x))),
++    );
 +    if (still === undefined) return 'fixed-in-branch';
 +    return still.sources.some((s) => reporters.includes(s)) ? 'fix-failed' : 'fixed-in-branch';
 +}
@@ -5221,6 +5278,12 @@ index 0000000000000000000000000000000000000000..4ffcd1a9cb364d8dc6d7ba56847fe486
 +    stamps: Partial<Record<RemediationState, string>>;
 +    /** A mitigation's note, when no fix exists (1.5). */
 +    note: string | null;
++    /** The finding's canonical ID and aliases at the claim, so a re-canonicalised finding is still recognised. */
++    ids?: string[];
++    /** The sources that reported it at the claim: only they can prove it fixed. */
++    sources?: string[];
++    /** The commit the fix started from, when the fix shares a branch with other work (route `current-branch`). */
++    base?: string | null;
 +}
 +
 +export type Remediations = Record<string, Remediation>;
@@ -5231,10 +5294,11 @@ index 0000000000000000000000000000000000000000..4ffcd1a9cb364d8dc6d7ba56847fe486
 + */
 +export function claimRemediation(all: Remediations, key: string, session: string, now: Date = new Date()): { remediation: Remediation; joined: boolean } {
 +    const open = all[key];
-+    // Only a failed fix or an unrecorded finding starts over; every other state —
-+    // in progress, merged, released, deployed, mitigated — is history a second
-+    // session joins and never overwrites.
-+    if (open !== undefined && open.state !== 'fix-failed') {
++    // A failed fix, a finding that came back after it was deployed (a regression),
++    // or an unrecorded finding starts over; every other state — in progress,
++    // merged, released, mitigated — is history a second session joins and never
++    // overwrites.
++    if (open !== undefined && open.state !== 'fix-failed' && open.state !== 'fixed-deployed') {
 +        return { remediation: open, joined: true };
 +    }
 +    const at = now.toISOString();
@@ -5643,10 +5707,10 @@ index 0000000000000000000000000000000000000000..b587874d9f8d3ab3875237f61314d45d
 +}
 diff --git a/src/scripts/advisories.ts b/src/scripts/advisories.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd936d0012d6
+index 0000000000000000000000000000000000000000..1534ad89ce0127ede5f642a803df6b111688688b
 --- /dev/null
 +++ b/src/scripts/advisories.ts
-@@ -0,0 +1,695 @@
+@@ -0,0 +1,761 @@
 +#!/usr/bin/env tsx
 +/**
 + * `agent-config audit:deps` — advisories heard the same day
@@ -5684,7 +5748,9 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +    describe,
 +    noticeLines,
 +    readAdvisorySettings,
++    readRemediations,
 +    readState,
++    remediationsPath,
 +    sessionNotice,
 +    statePath,
 +} from './_lib/advisory_notice.js';
@@ -5722,6 +5788,7 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +    prTitle,
 +    releaseDraft,
 +    reopenMitigations,
++    type Remediations,
 +    routeSecurityFix,
 +    suspiciousPaths,
 +    track,
@@ -5732,6 +5799,11 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +export const REFRESH_WINDOW_HOURS = 20;
 +function machineDir(): string {
 +    return path.join(event4u_root(), 'runtime', 'advisories');
++}
++
++function writeRemediations(root: string, rems: Remediations): void {
++    const p = remediationsPath(root);
++    if (p !== null) writeJson(p, rems);
 +}
 +
 +function writeJson(file: string, value: unknown): void {
@@ -5886,7 +5958,7 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +        }
 +        for (const p of inventories) {
 +            const acceptances = p.prev?.acceptances ?? [];
-+            const remediations = { ...(p.prev?.remediations ?? {}) };
++            const remediations = readRemediations(p.root);
 +            const findings = carryForward(
 +                buildFindings(raw.get(p.root)!, p.inv.entries, reports.get(p.root)!, { now, acceptances }),
 +                p.prev?.findings ?? [],
@@ -5917,9 +5989,9 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +                        ? { at: now.toISOString(), interrupt: a.interrupt.map((f) => f.key), digest: a.digest.length }
 +                        : carriedNotice(p.prev?.notice ?? null, findings, now),
 +                silent_since: silent,
-+                remediations,
 +            };
 +            reopenMitigations(remediations, findings);
++            writeRemediations(p.root, remediations);
 +            const sp = statePath(p.root);
 +            if (sp !== null) writeJson(sp, state);
 +            const sent = egressOf.get(p.root) === 'query';
@@ -5950,11 +6022,14 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +}
 +
 +/**
-+ * An action from the project's own GitHub owner may live in a private
-+ * repository, and nothing in a workflow says which — so it is treated as private
-+ * and never sent to OSV. An action from any other owner is a public reference by
-+ * construction of how `uses:` resolves; a private action of a THIRD owner is the
-+ * residual this cannot see.
++ * Names the project's own organisation publishes may live in a private registry
++ * scope or a private repository, and nothing in a lockfile says which: npm's
++ * paid private packages resolve from registry.npmjs.org like any public one.
++ * So everything under the project's OWN namespace is treated as private and
++ * never sent — its npm scope (from package.json `name`, and the GitHub owner as
++ * `@owner`), its Composer vendor (from composer.json `name`), and its GitHub
++ * Actions. A private package of a THIRD namespace is the residual this cannot
++ * see; `advisories.egress: none` is the setting for a project that has one.
 + */
 +export function markOwnActionsPrivate<T extends { entries: Array<{ ecosystem: string; name: string; private: boolean }> }>(root: string, inv: T): T {
 +    let url = '';
@@ -5964,9 +6039,24 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +        url = '';
 +    }
 +    const owner = /github\.com[:/]([^/]+)\//i.exec(url)?.[1]?.toLowerCase() ?? null;
-+    if (owner === null) return inv;
++    const nameOf = (file: string): string | null => {
++        try {
++            const n = (JSON.parse(fs.readFileSync(path.join(root, file), 'utf-8')) as { name?: unknown }).name;
++            return typeof n === 'string' ? n.toLowerCase() : null;
++        } catch {
++            return null;
++        }
++    };
++    const npmScopes = new Set<string>();
++    const ownNpm = /^(@[^/]+)\//.exec(nameOf('package.json') ?? '')?.[1];
++    if (ownNpm !== undefined) npmScopes.add(ownNpm);
++    if (owner !== null) npmScopes.add(`@${owner}`);
++    const vendor = /^([^/]+)\//.exec(nameOf('composer.json') ?? '')?.[1] ?? null;
 +    for (const e of inv.entries) {
-+        if (e.ecosystem === 'GitHub Actions' && e.name.split('/')[0]!.toLowerCase() === owner) e.private = true;
++        const n = e.name.toLowerCase();
++        if (e.ecosystem === 'GitHub Actions' && owner !== null && n.split('/')[0] === owner) e.private = true;
++        if (e.ecosystem === 'npm' && [...npmScopes].some((sc) => n.startsWith(`${sc}/`))) e.private = true;
++        if (e.ecosystem === 'Packagist' && vendor !== null && n.startsWith(`${vendor}/`)) e.private = true;
 +    }
 +    return inv;
 +}
@@ -6060,10 +6150,12 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +
 +
 +/** Changed paths of this branch against the trunk that a dependency fix must never touch (1.3). */
-+function suspiciousInBranch(root: string): string[] {
++function suspiciousInBranch(root: string, fixBase: string | null = null): string[] {
 +    const trunk = ['origin/main', 'origin/master', 'main', 'master'].find((r) => defaultExec('git', ['rev-parse', '--verify', '--quiet', r], root) !== null);
-+    if (trunk === undefined) return [];
-+    const base = defaultExec('git', ['merge-base', trunk, 'HEAD'], root)?.trim();
++    if (trunk === undefined && fixBase === null) return [];
++    // A fix sharing the branch with a feature is judged from its own start, never
++    // from the trunk — the feature's own workflow edit is not the fix's.
++    const base = fixBase ?? defaultExec('git', ['merge-base', trunk!, 'HEAD'], root)?.trim();
 +    if (base === undefined || base === '') return [];
 +    const changed = (defaultExec('git', ['diff', '--name-only', base], root) ?? '').split('\n').filter((l) => l !== '');
 +    const scriptsOf = (file: string, rev: string | null): Record<string, string> => {
@@ -6095,7 +6187,7 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +function usage(): number {
 +    process.stderr.write(
 +        'usage: agent-config audit:deps refresh [--force] [--all-projects] | show [--json] | ' +
-+            'accept <id> --reason=<text> --expires=YYYY-MM-DD | fix <id> [--here] | verify <id> | pr-body <id> [--verified] [--tests=passed] [--audit-ran] [--released-at=<iso>] [--release=<x.y.z>] | mitigate <id> --note=<text> | track [--deployed=<id>] | notice | gaps | issue-body\n',
++            'accept <id> --reason=<text> --expires=YYYY-MM-DD | fix <id> [--here] | verify <id> | pr-body <id> [--tests=passed|failed|not-run] [--audit-ran] [--released-at=<iso>] [--release=<x.y.z>] | mitigate <id> --note=<text> | track [--deployed=<id>] | notice | gaps | issue-body\n',
 +    );
 +    return 2;
 +}
@@ -6125,7 +6217,7 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +        if (rest.includes('--json')) {
 +            // Findings plus what the latency claims read: the ledger's
 +            // first_seen / announced_at and the remediation stamps.
-+            process.stdout.write(`${JSON.stringify({ findings: state.findings, ledger: state.ledger, remediations: state.remediations ?? {} }, null, 2)}\n`);
++            process.stdout.write(`${JSON.stringify({ findings: state.findings, ledger: state.ledger, remediations: readRemediations(root) }, null, 2)}\n`);
 +            return 0;
 +        }
 +        process.stdout.write(`advisories for ${state.root} · checked ${state.at} · ${state.inventory.length} component(s)\n`);
@@ -6165,9 +6257,53 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +    }
 +    if (mode === 'fix' || mode === 'verify' || mode === 'pr-body' || mode === 'mitigate') {
 +        const id = rest.find((a) => !a.startsWith('--'));
++        if (id === undefined) {
++            process.stderr.write('usage: agent-config audit:deps fix|verify|pr-body|mitigate <id> — after a refresh\n');
++            return 2;
++        }
++        const rems = readRemediations(root);
++        const claimed = Object.values(rems).find((r) => r.key === id || r.key.split('|')[0] === id || (r.ids ?? []).includes(id));
++        if (mode === 'verify') {
++            // Verify runs where the fixed lockfile is — often a fix worktree with no
++            // cache of its own yet. The claim, read from the repository-wide store,
++            // carries what the proof needs: the IDs and the reporting sources.
++            const before = readState(root)?.findings.find((x) => x.id === id || x.aliases.includes(id) || x.key === id) ?? null;
++            const key = claimed?.key ?? before?.key;
++            if (key === undefined) {
++                process.stderr.write(`no claimed fix and no finding ${id} here — run \`agent-config audit:deps fix ${id}\` first\n`);
++                return 1;
++            }
++            const [after] = await refreshMany([root], { force: true });
++            if (after === undefined || after.reason === 'refresh-in-progress') {
++                // A refresh held by another process returns the OLD findings; a
++                // verdict on them would call a working fix failed. No verdict.
++                process.stdout.write(`${id}: unverifiable — another refresh is running; re-run verify in a minute\n`);
++                return 2;
++            }
++            const ok = after.state.reports.filter((r) => r.status === 'ok').map((r) => r.source);
++            const ids = [...new Set([...(claimed?.ids ?? []), ...(before === null ? [] : [before.id, ...before.aliases])])];
++            const sources = claimed?.sources ?? before?.sources ?? [];
++            const proof = proveFixed(key, sources, { findings: after.state.findings, okSources: ok }, ids);
++            const fresh = readRemediations(root);
++            const r = fresh[key];
++            // Agent-config paths or install scripts in the fix diff stop the fix (1.3),
++            // judged from where THIS fix started, not from the trunk.
++            const suspicious = suspiciousInBranch(root, r?.base ?? null);
++            if (r !== undefined) {
++                if (suspicious.length > 0) advance(r, 'fix-failed', new Date(), { note: `touches ${suspicious.join(', ')}` });
++                else if (proof === 'fixed-in-branch') advance(r, 'ready-to-merge');
++                else if (proof === 'fix-failed') advance(r, 'fix-failed');
++                writeRemediations(root, fresh);
++            }
++            if (suspicious.length > 0) {
++                process.stdout.write(`${id}: stopped — the fix changes ${suspicious.join(', ')}; a dependency update never touches agent configuration or install scripts\n`);
++                return 1;
++            }
++            process.stdout.write(`${id}: ${proof}${proof === 'fix-failed' ? ' — the reporting source still reports it; do not call this fixed' : ''}\n`);
++            return proof === 'fixed-in-branch' ? 0 : 1;
++        }
 +        const state = readState(root);
-+        const sp = statePath(root);
-+        if (state === null || sp === null || id === undefined) {
++        if (state === null) {
 +            process.stderr.write('usage: agent-config audit:deps fix|verify|pr-body|mitigate <id> — after a refresh\n');
 +            return 2;
 +        }
@@ -6176,14 +6312,25 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +            process.stderr.write(`no finding ${id} in the last refresh — run \`agent-config audit:deps show\`\n`);
 +            return 1;
 +        }
-+        state.remediations = state.remediations ?? {};
 +        if (mode === 'fix') {
-+            const { remediation, joined } = claimRemediation(state.remediations, f.key, process.env['CLAUDE_CODE_SESSION_ID'] ?? `pid-${process.pid}`);
++            const { remediation, joined } = claimRemediation(rems, f.key, process.env['CLAUDE_CODE_SESSION_ID'] ?? `pid-${process.pid}`);
 +            const ctx = readRoutingContext(root, f, { userWantsCurrent: rest.includes('--here') });
 +            const route = routeSecurityFix(ctx);
 +            const plan = fixPlan(f, state.inventory);
-+            remediation.branch = route.route === 'current-branch' ? remediation.branch : branchName(f);
-+            writeJson(sp, state);
++            if (!joined) {
++                remediation.ids = [f.id, ...f.aliases];
++                remediation.sources = f.sources;
++                if (route.route === 'current-branch') {
++                    // The fix shares the branch with the feature: name that branch
++                    // and remember where the fix starts, so verify judges only it.
++                    remediation.branch = defaultExec('git', ['rev-parse', '--abbrev-ref', 'HEAD'], root)?.trim() ?? null;
++                    remediation.base = defaultExec('git', ['rev-parse', 'HEAD'], root)?.trim() ?? null;
++                } else {
++                    remediation.branch = branchName(f);
++                    remediation.base = null;
++                }
++            }
++            writeRemediations(root, rems);
 +            const out = [
 +                `finding  ${describe(f)}`,
 +                joined ? `joined   an open fix for this finding (${remediation.branch ?? 'branch unset'}) — do not start a second` : `claimed  fix-in-progress`,
@@ -6201,35 +6348,6 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +            process.stdout.write(`${out.join('\n')}\n`);
 +            return 0;
 +        }
-+        if (mode === 'verify') {
-+            const [after] = await refreshMany([root], { force: true });
-+            if (after === undefined || after.reason === 'refresh-in-progress') {
-+                // A refresh held by another process returns the OLD findings; a
-+                // verdict on them would call a working fix failed. No verdict.
-+                process.stdout.write(`${f.id}: unverifiable — another refresh is running; re-run verify in a minute\n`);
-+                return 2;
-+            }
-+            const ok = after.state.reports.filter((r) => r.status === 'ok').map((r) => r.source);
-+            const proof = proveFixed(f.key, f.sources, { findings: after.state.findings, okSources: ok });
-+            // The refresh carried the remediations forward (and reopened mitigations); advance on its copy.
-+            const fresh = after.state;
-+            fresh.remediations = fresh.remediations ?? {};
-+            const r = fresh.remediations[f.key];
-+            // Agent-config paths or install scripts in the fix diff stop the fix (1.3).
-+            const suspicious = suspiciousInBranch(root);
-+            if (r !== undefined) {
-+                if (suspicious.length > 0) advance(r, 'fix-failed', new Date(), { note: `touches ${suspicious.join(', ')}` });
-+                else if (proof === 'fixed-in-branch') advance(r, 'ready-to-merge');
-+                else if (proof === 'fix-failed') advance(r, 'fix-failed');
-+            }
-+            writeJson(sp, fresh);
-+            if (suspicious.length > 0) {
-+                process.stdout.write(`${f.id}: stopped — the fix changes ${suspicious.join(', ')}; a dependency update never touches agent configuration or install scripts\n`);
-+                return 1;
-+            }
-+            process.stdout.write(`${f.id}: ${proof}${proof === 'fix-failed' ? ' — the reporting source still reports it; do not call this fixed' : ''}\n`);
-+            return proof === 'fixed-in-branch' ? 0 : 1;
-+        }
 +        if (mode === 'mitigate') {
 +            if (f.fixed !== null) {
 +                process.stderr.write(`${f.id}: a fix exists (${f.fixed}) — a mitigation would be discarded at the next refresh; use \`audit:deps fix ${f.id}\`\n`);
@@ -6240,17 +6358,24 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +                process.stderr.write('a mitigation names what was done, in a sentence (--note="…")\n');
 +                return 1;
 +            }
-+            const r = state.remediations[f.key] ?? claimRemediation(state.remediations, f.key, `pid-${process.pid}`).remediation;
++            const r = rems[f.key] ?? claimRemediation(rems, f.key, `pid-${process.pid}`).remediation;
 +            advance(r, 'mitigated', new Date(), { note });
-+            writeJson(sp, state);
++            writeRemediations(root, rems);
 +            process.stdout.write(`${f.id}: mitigated — stays open and reopens when a fix appears\n`);
 +            return 0;
 +        }
-+        const tests = (flag('tests') ?? 'not-run') as 'passed' | 'failed' | 'not-run';
++        const testsFlag = flag('tests') ?? 'not-run';
++        if (testsFlag !== 'passed' && testsFlag !== 'failed' && testsFlag !== 'not-run') {
++            process.stderr.write('--tests is passed, failed or not-run\n');
++            return 2;
++        }
++        // The After field is read from what verify recorded, never from a flag.
++        const recorded = rems[f.key]?.state;
++        const after = recorded === 'ready-to-merge' ? 'fixed-in-branch' : recorded === 'fix-failed' ? 'fix-failed' : 'unverifiable';
 +        const body = prBody(f, {
 +            before: `${f.sources.join(', ')} reported ${f.package} ${f.version ?? '?'} as ${f.verdict}`,
-+            after: rest.includes('--verified') ? 'fixed-in-branch' : 'unverifiable',
-+            tests,
++            after,
++            tests: testsFlag,
 +            cooldown: (() => {
 +                const released = flag('released-at') ?? null;
 +                const audited = rest.includes('--audit-ran');
@@ -6271,15 +6396,20 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +        return 0;
 +    }
 +    if (mode === 'track') {
-+        const state = readState(root);
-+        const sp = statePath(root);
-+        if (state === null || sp === null) return 0;
-+        for (const r of Object.values(state.remediations ?? {})) {
++        const rems = readRemediations(root);
++        for (const r of Object.values(rems)) {
 +            if (r.pr === null && r.branch === null) continue;
-+            const view = r.pr !== null ? defaultExec('gh', ['pr', 'view', String(r.pr), '--json', 'state,mergeCommit'], root) : null;
++            // The PR is found by its head branch, which `fix` recorded, and its
++            // number and merge commit are kept once seen.
++            const view =
++                r.pr !== null
++                    ? defaultExec('gh', ['pr', 'view', String(r.pr), '--json', 'number,state,mergeCommit'], root)
++                    : defaultExec('gh', ['pr', 'list', '--head', r.branch!, '--state', 'all', '--limit', '1', '--json', 'number,state,mergeCommit'], root);
 +            let mergedSha: string | null = null;
 +            try {
-+                const v = view === null ? null : (JSON.parse(view) as { state?: string; mergeCommit?: { oid?: string } | null });
++                const parsed = view === null ? null : (JSON.parse(view) as unknown);
++                const v = (Array.isArray(parsed) ? parsed[0] : parsed) as { number?: number; state?: string; mergeCommit?: { oid?: string } | null } | undefined | null;
++                if (typeof v?.number === 'number') r.pr = v.number;
 +                if (v?.state === 'MERGED') mergedSha = v.mergeCommit?.oid ?? null;
 +            } catch {
 +                mergedSha = null;
@@ -6299,8 +6429,8 @@ index 0000000000000000000000000000000000000000..6c7974430401a16a7a77686b2966dd93
 +            }
 +            track(r, { mergedSha: sha, releaseContains: (tags ?? '').trim() !== '', deployed });
 +        }
-+        writeJson(sp, state);
-+        for (const r of Object.values(state.remediations ?? {})) process.stdout.write(`${r.key.split('|')[0]}  ${r.state}\n`);
++        writeRemediations(root, rems);
++        for (const r of Object.values(rems)) process.stdout.write(`${r.key.split('|')[0]}  ${r.state}${r.pr === null ? '' : `  #${r.pr}`}\n`);
 +        return 0;
 +    }
 +    if (mode === 'notice') {
@@ -6432,7 +6562,7 @@ index 1f7e4442aa7cb77190e81419f34ed962d558ffc9..c9f936a5ef354abdec0bc2ba519ac700
                          }) + '\n',
                      );
 diff --git a/src/scripts/worktree_cleanup_check.ts b/src/scripts/worktree_cleanup_check.ts
-index e49731de0d913237cab7c7630063f530bf0bf686..fa6c86b8c04999a2a1af86acceb80411b9d0c6c5 100644
+index e49731de0d913237cab7c7630063f530bf0bf686..6f5927b9a420e6f0b96c3500b63bd2458598d6f0 100644
 --- a/src/scripts/worktree_cleanup_check.ts
 +++ b/src/scripts/worktree_cleanup_check.ts
 @@ -18,11 +18,18 @@
@@ -6549,7 +6679,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..fa6c86b8c04999a2a1af86acceb80411
      counts: {
          total: number;
          safe: number;
-@@ -306,6 +316,194 @@ function isAncestor(repoPath: string, branch: string, trunk: string): boolean {
+@@ -306,6 +316,196 @@ function isAncestor(repoPath: string, branch: string, trunk: string): boolean {
      }
  }
  
@@ -6662,7 +6792,9 @@ index e49731de0d913237cab7c7630063f530bf0bf686..fa6c86b8c04999a2a1af86acceb80411
 +    if (isAncestor(repoPath, branch, trunk)) return { evidence: 'merged-ancestor', mergedAt: null };
 +    if (prIndex !== null) {
 +        const tip = branchTip(repoPath, branch);
-+        const trunkName = trunk.replace(/^refs\/(?:remotes\/[^/]+|heads)\//, '');
++        // `refs/remotes/origin/main`, `refs/heads/main` and the short `origin/main`
++        // a `--trunk=` flag may pass all name the base branch `main`.
++        const trunkName = trunk.replace(/^refs\/(?:remotes\/[^/]+|heads)\//, '').replace(/^(?:origin|upstream)\//, '');
 +        // Only a PR into the trunk speaks for the trunk; one merged into a
 +        // release branch is not a record of this branch at all.
 +        const prs = (prIndex.get(branch) ?? []).filter((p) => p.base === trunkName);
@@ -6744,7 +6876,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..fa6c86b8c04999a2a1af86acceb80411
  /**
   * `basePath` MUST be the main worktree, never the invoking repo path.
   *
-@@ -380,6 +578,186 @@ export interface InventoryOptions {
+@@ -380,6 +580,186 @@ export interface InventoryOptions {
      now?: Date;
      minAgeDays?: number | null;
      excludeLiveSessions?: boolean;
@@ -6931,7 +7063,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..fa6c86b8c04999a2a1af86acceb80411
  }
  
  export function buildInventory(
-@@ -391,7 +769,13 @@ export function buildInventory(
+@@ -391,7 +771,13 @@ export function buildInventory(
      const now = opts.now ?? new Date();
      const minAgeDays = opts.minAgeDays ?? null;
      const ageCutoff = minAgeDays === null ? null : now.getTime() - minAgeDays * 86400 * 1000;
@@ -6946,7 +7078,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..fa6c86b8c04999a2a1af86acceb80411
  }
  
  function buildInventoryInner(
-@@ -400,9 +784,10 @@ function buildInventoryInner(
+@@ -400,9 +786,10 @@ function buildInventoryInner(
      ageCutoff: number | null,
      minAgeDays: number | null,
      excludeLiveSessions: boolean,
@@ -6958,7 +7090,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..fa6c86b8c04999a2a1af86acceb80411
      const entries = listWorktrees(repoPath);
      const mainPath = canonical(entries.length > 0 ? entries[0]!.path : repoPath);
      const liveCutoff = now.getTime() - LIVE_WINDOW_HOURS * 3600 * 1000;
-@@ -413,96 +798,19 @@ function buildInventoryInner(
+@@ -413,96 +800,19 @@ function buildInventoryInner(
      // state before any session registers), or when every record has expired.
      const sessionPaths = new Set<string>();
      if (excludeLiveSessions) {
@@ -7065,7 +7197,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..fa6c86b8c04999a2a1af86acceb80411
  
      const reviewReasons: Record<string, number> = {};
      for (const r of rows) {
-@@ -516,6 +824,7 @@ function buildInventoryInner(
+@@ -516,6 +826,7 @@ function buildInventoryInner(
      return {
          trunk,
          rows,
@@ -7073,7 +7205,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..fa6c86b8c04999a2a1af86acceb80411
          counts: {
              total: rows.length,
              safe: rows.filter((r) => r.classification === 'safe').length,
-@@ -544,10 +853,382 @@ export function removalPlan(inv: Inventory): string[] {
+@@ -544,10 +855,382 @@ export function removalPlan(inv: Inventory): string[] {
          });
  }
  
@@ -7457,7 +7589,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..fa6c86b8c04999a2a1af86acceb80411
      );
      process.exit(2);
  }
-@@ -587,15 +1268,77 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
+@@ -587,15 +1270,77 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
          }
          return 1;
      }
@@ -7537,7 +7669,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..fa6c86b8c04999a2a1af86acceb80411
          ) {
              usage();
          }
-@@ -616,10 +1359,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
+@@ -616,10 +1361,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
          const inv = buildInventory(repo, {
              minAgeDays,
              excludeLiveSessions: flags.includes('--exclude-live-sessions'),
@@ -7552,7 +7684,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..fa6c86b8c04999a2a1af86acceb80411
              return 0;
          }
          if (flags.includes('--plan')) {
-@@ -630,8 +1376,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
+@@ -630,8 +1378,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
              }
              process.stdout.write(
                  `# Prepared removal plan for ${plan.length} safe worktree(s).\n` +
@@ -7563,7 +7695,7 @@ index e49731de0d913237cab7c7630063f530bf0bf686..fa6c86b8c04999a2a1af86acceb80411
              );
              process.stdout.write(`${plan.join('\n')}\n`);
              return 0;
-@@ -652,14 +1398,20 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
+@@ -652,14 +1400,20 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
          }
          process.stdout.write(
              '\nThis mode reports only. `--plan` prints the removal commands for the safe set;\n' +
@@ -7650,7 +7782,7 @@ index 7ee8bf63be7aea13455ec19eded89cbd88d6e94b..9026a0fcac01a7f2c28acf8bd91c1bd7
  
  ### Path repositories
 diff --git a/src/skills/dependency-upgrade/SKILL.md b/src/skills/dependency-upgrade/SKILL.md
-index 7a0087897fee14f9614308df8b27fc7d69babee0..8a4cbd223d5a418708171f0536583e74c8bdf0cc 100644
+index 7a0087897fee14f9614308df8b27fc7d69babee0..5afacb01d2977a29083809212f1dedff83c9377c 100644
 --- a/src/skills/dependency-upgrade/SKILL.md
 +++ b/src/skills/dependency-upgrade/SKILL.md
 @@ -266,15 +266,67 @@ CVE scanning (above) catches *known-vulnerable* versions. It does **not** catch
@@ -7696,10 +7828,10 @@ index 7a0087897fee14f9614308df8b27fc7d69babee0..8a4cbd223d5a418708171f0536583e74
 +   is still open — say so; `unverifiable` means the source did not answer — say
 +   that too. Then the project's tests and static checks. A fix that leaves the
 +   advisory open or breaks a test is reported as exactly that, never as done.
-+4. **Open the PR** — `agent-config audit:deps pr-body <id> --verified
-+   --tests=passed` prints the body with its seven evidence fields; a library adds
++4. **Open the PR** — `agent-config audit:deps pr-body <id> --tests=passed`
++   prints the body; its After field is what `verify` recorded; a library adds
 +   `--release=<current version>` for the patch-release draft. Security fixes are
-+   never mixed with unrelated changes. Stop before tag and publish.
++   never mixed with unrelated work. Stop before tag and publish.
 +5. **Hand over** — watch CI with `agent-config ci:settle <pr>`, fix what the fix
 +   broke, report "ready to merge". Merge is the owner's, or `/pr:merge` under the
 +   owner's instruction; under `worktrees.cleanup: auto` the merge removes the fix
@@ -8901,10 +9033,10 @@ index 0000000000000000000000000000000000000000..0fa3571495e7185751fa81eccbfd302e
 +}
 diff --git a/tests/scripts/advisories.test.ts b/tests/scripts/advisories.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..c7047eddf6368e582f24a358767f688629b4ea7f
+index 0000000000000000000000000000000000000000..89d9f920fc38c89e968f7caab48dfafdb807b7be
 --- /dev/null
 +++ b/tests/scripts/advisories.test.ts
-@@ -0,0 +1,686 @@
+@@ -0,0 +1,737 @@
 +// road-to-advisories-heard-the-same-day — the replay corpus F1–F10 and the
 +// per-phase checks. Every source answer is replayed from a recorded fixture;
 +// nothing here touches a network or runs a package manager.
@@ -8916,7 +9048,7 @@ index 0000000000000000000000000000000000000000..c7047eddf6368e582f24a358767f6886
 +import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 +
 +import { inventoryFingerprint, readInventory } from '../../src/scripts/_lib/advisory_inventory.js';
-+import { describe as describeFinding } from '../../src/scripts/_lib/advisory_notice.js';
++import { describe as describeFinding, readRemediations, remediationsPath } from '../../src/scripts/_lib/advisory_notice.js';
 +import { assertAllowed, cvss3Base, type Fetcher, KEV_URL, kevEnrich, nativeAudits, osvQuery, type Runner, vendorAnnouncements } from '../../src/scripts/_lib/advisory_sources.js';
 +import {
 +    announce,
@@ -9591,6 +9723,57 @@ index 0000000000000000000000000000000000000000..c7047eddf6368e582f24a358767f6886
 +        expect(sessionNotice(root, new Date(t.getTime() + 3600000))).toBeNull();
 +    });
 +});
++
++describe('R2 round 3 fixes (2026-10-21)', () => {
++    it('#4 — names under the project’s own npm scope and Composer vendor are private', () => {
++        const root = project('F1-fastify-hono');
++        fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: '@acme/app' }));
++        fs.writeFileSync(path.join(root, 'composer.json'), JSON.stringify({ name: 'acme/site' }));
++        const inv = markOwnActionsPrivate(root, { entries: [
++            { ecosystem: 'npm', name: '@acme/internal-lib', private: false },
++            { ecosystem: 'npm', name: '@types/node', private: false },
++            { ecosystem: 'Packagist', name: 'acme/billing', private: false },
++            { ecosystem: 'Packagist', name: 'symfony/console', private: false },
++        ] });
++        expect(inv.entries.map((e) => e.private)).toEqual([true, false, true, false]);
++    });
++
++    it('#6 — the issue fingerprint ignores the Checked line', () => {
++        const yml = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'agent-src', 'templates', 'github-workflows', 'advisories-daily.yml'), 'utf-8');
++        expect(yml).toMatch(/grep -v '\^Checked '/);
++    });
++
++    it('#10 — a pin below a security release keeps its fix past the pre-announcement window', async () => {
++        const now = new Date('2026-10-21T00:00:00Z');
++        const xml = `<feed><entry><title>PHP 8.3.28 Released!</title><published>2026-09-01T00:00:00Z</published><content>security fixes</content></entry></feed>`;
++        const entries = [{ ecosystem: 'runtime', name: 'php', version: '8.3.27', file: '.php-version', line: 1, provenance: 'version-file', private: false }] as unknown as Parameters<typeof vendorAnnouncements>[0];
++        const r = await vendorAnnouncements(entries, { fetcher: async () => ({ status: 200, text: async () => xml }), now });
++        expect(r.findings.find((f) => f.id.startsWith('REL-'))?.fixed).toBe('8.3.28');
++    });
++
++    it('#12 — a release on another line does not hide a pre-announcement for this one', async () => {
++        const now = new Date('2026-10-21T00:00:00Z');
++        const xml =
++            '<feed><entry><title>PHP 8.4.15 Released!</title><published>2026-10-20T00:00:00Z</published><content>security fixes</content></entry>' +
++            '<entry><title>Upcoming security release for PHP 8.3</title><published>2026-10-18T00:00:00Z</published><content>ahead</content></entry></feed>';
++        const entries = [{ ecosystem: 'runtime', name: 'php', version: '8.3.27', file: '.php-version', line: 1, provenance: 'version-file', private: false }] as unknown as Parameters<typeof vendorAnnouncements>[0];
++        const r = await vendorAnnouncements(entries, { fetcher: async () => ({ status: 200, text: async () => xml }), now });
++        expect(r.findings.some((f) => f.kind === 'pre-announced')).toBe(true);
++    });
++});
++
++describe('R2 round 3 — one fix store per repository', () => {
++    it('#2 — a worktree and its main checkout read and write one remediation store', () => {
++        const root = project('F1-fastify-hono');
++        execFileSync('git', ['-C', root, 'commit', '-q', '--allow-empty', '-m', 'init']);
++        const wt = path.join(tmp, 'wt-fix');
++        execFileSync('git', ['-C', root, 'worktree', 'add', '-q', '-b', 'security/x', wt]);
++        fs.mkdirSync(path.dirname(remediationsPath(root)!), { recursive: true });
++        expect(fs.realpathSync(path.dirname(remediationsPath(wt)!))).toBe(fs.realpathSync(path.dirname(remediationsPath(root)!)));
++        fs.writeFileSync(remediationsPath(root)!, JSON.stringify({ K: { key: 'K', state: 'fix-in-progress' } }));
++        expect(Object.keys(readRemediations(wt))).toEqual(['K']);
++    });
++});
 diff --git a/tests/scripts/check_command_examples.test.ts b/tests/scripts/check_command_examples.test.ts
 index bb2f7f57ca7741162af57258aba60c02fcb4294d..17e486e1c84f939f1a86d7a3d4221525ad6e5e74 100644
 --- a/tests/scripts/check_command_examples.test.ts
@@ -9639,10 +9822,10 @@ index 00b6d7e65f2d3a0061f85718ecfcc22c53387d98..7700636585fdcb1233d2221d8f0f5ec8
  
 diff --git a/tests/scripts/security_fix.test.ts b/tests/scripts/security_fix.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..9dfac9abbf45aee5fcca6823abcbf3525af1e15e
+index 0000000000000000000000000000000000000000..b32d6f5952eb56088ca00e9fef5db3e6853f378a
 --- /dev/null
 +++ b/tests/scripts/security_fix.test.ts
-@@ -0,0 +1,301 @@
+@@ -0,0 +1,316 @@
 +// road-to-security-fixes-carried-to-the-merge — fixtures G1–G9 and the
 +// decidable half of the fix path. Nothing here runs a package manager.
 +import { execFileSync } from 'node:child_process';
@@ -9944,8 +10127,23 @@ index 0000000000000000000000000000000000000000..9dfac9abbf45aee5fcca6823abcbf352
 +        expect(botPrFixes('Bump fastify to 5.12.5', 'fastify', null)).toBe(false);
 +    });
 +});
++
++describe('R2 round 3 fixes (2026-10-21)', () => {
++    it('#3 — the same advisory under a new canonical ID is not fixed', () => {
++        const still = finding({ key: 'CVE-2026-0001|fastify|5.12.4', id: 'CVE-2026-0001', aliases: ['GHSA-f1aa-f1aa-f1aa'], sources: ['native-npm', 'osv'] });
++        expect(proveFixed('GHSA-f1aa-f1aa-f1aa|fastify|5.12.4', ['native-npm'], { findings: [still], okSources: ['native-npm', 'osv'] }, ['GHSA-f1aa-f1aa-f1aa'])).toBe('fix-failed');
++    });
++
++    it('#14 — a finding that returns after it was deployed opens a new fix', () => {
++        const all = {};
++        const { remediation: r } = claimRemediation(all, 'K', 's1');
++        advance(r, 'fixed-in-trunk');
++        advance(r, 'fixed-deployed');
++        expect(claimRemediation(all, 'K', 's2').joined).toBe(false);
++    });
++});
 diff --git a/tests/scripts/worktree_cleanup_check.test.ts b/tests/scripts/worktree_cleanup_check.test.ts
-index e8d3b947e14ae355547a0df81386bd8c632e9ce1..184ef639873f42d0d5b614cd7946427780abcd87 100644
+index e8d3b947e14ae355547a0df81386bd8c632e9ce1..e9d7eb4e0a6524d92167e138c45f3392ed6021be 100644
 --- a/tests/scripts/worktree_cleanup_check.test.ts
 +++ b/tests/scripts/worktree_cleanup_check.test.ts
 @@ -9,14 +9,25 @@ import * as path from 'node:path';
@@ -9974,7 +10172,7 @@ index e8d3b947e14ae355547a0df81386bd8c632e9ce1..184ef639873f42d0d5b614cd79464277
  
  let tmp = '';
  let repo = '';
-@@ -397,3 +408,546 @@ describe('ownsOverlap glob-prefix semantics', () => {
+@@ -397,3 +408,556 @@ describe('ownsOverlap glob-prefix semantics', () => {
          expect(ownsOverlap('src/app/**', 'src/apple/**')).toBe(false);
      });
  });
@@ -10519,5 +10717,15 @@ index e8d3b947e14ae355547a0df81386bd8c632e9ce1..184ef639873f42d0d5b614cd79464277
 +        const at = lines.indexOf('/.eslintcache');
 +        expect(at).toBeGreaterThan(0);
 +        expect(lines[at - 1]!.startsWith('#')).toBe(true);
++    });
++});
++
++describe('R2 round 3 fixes (2026-10-21)', () => {
++    it('#13 — a short `origin/main` trunk still matches the PR base `main`', () => {
++        const wt = addStandardWorktree('short', 'feat/short');
++        commitFile(wt, 'a.txt', 'x', 'w');
++        const head = git(repo, ['rev-parse', 'refs/heads/feat/short']).trim();
++        const idx: PrIndex = new Map([['feat/short', [{ state: 'MERGED', headOid: head, mergedAt: '2020-01-01T00:00:00Z', base: 'main' }]]]);
++        expect(mergeEvidence(wt, 'feat/short', 'origin/main', idx).evidence).toBe('merged-pr');
 +    });
 +});

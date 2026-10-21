@@ -37,8 +37,8 @@ a command or the next step acts on it and medium when nothing does.
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 499c8e358d2680230bd3f284bf26f2614d5f406e, review
-  artefacts excluded), scope hash `425c1b05569c88be05ad5a271f167542d0077b355b5078492b2bae3ecc2f5de5`
+- diff: `diff.patch` — the review scope (branch head cf8d2a9dc76fda563f96009d6426d9bf1855ac68, review
+  artefacts excluded), scope hash `5e4eeb844d2b0235cad1660287cbcd4fa049398014db365677223cbc114552fc`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -203,7 +203,7 @@ Fill the findings table in `advisories-fixes-worktree-cleanup.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 425c1b05569c88be05ad5a271f167542d0077b355b5078492b2bae3ecc2f5de5, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 5e4eeb844d2b0235cad1660287cbcd4fa049398014db365677223cbc114552fc, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
