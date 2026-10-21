@@ -1348,7 +1348,7 @@ gaps again; the binding closes replay, and nothing else.
 
 ## Phase 6 — One change nobody asked for travels the whole lane
 
-- [ ] **6.1 The pipeline's review is the council's record; the approval is the
+- [x] **6.1 The pipeline's review is the council's record; the approval is the
       owner's.** For a proposal whose scope is the package, `check_proposal`
       accepts `stage: gated` only when the proposal names a record whose
       `subject` matches the files the proposal declares as its change AND the
@@ -1393,6 +1393,23 @@ gaps again; the binding closes replay, and nothing else.
       reverted to `origin/main` — verified as an EMPTY net diff per file rather
       than as a revert command that exited 0. Only the content binding (2.1, 2.2)
       stayed on it. See § Staged, not abandoned and D12.
+
+      **Landed on its own 2026-10-21, against the Git-object subject (D13).**
+      `proposal:check` check 7 (`_checkGatedRecord`) refuses a `scope: package`
+      proposal at `stage: gated` unless it declares `changed_files:` and names a
+      `ratification_record:` that passes `readRatification` against the
+      committed provider policy AND an `owner_authorization:`, both bound to one
+      digest read at one resolved commit. One deviation from the 2026-10-12
+      shape, recorded rather than taken silently: the digest is
+      `proposalSubjectOf`, over EVERY declared file, not the gate's
+      `expectedSubjectFor` — a learning usually changes an ungated skill body,
+      over which the gate's digest is the empty-set digest every proposal
+      shares, so a binding to it would bind to nothing. It reuses the subject
+      module's one hashing loop. `upstream-contribute` § 3 carries the
+      `stage: gated` refusal, and the pipeline guideline's placeholder for the
+      binding is replaced by the binding. Not gated by `check_kernel_edit_ratified`
+      and not a reviewer module under condition 4, so it carries no record of its
+      own. 14 tests, 10 seen red with the check neutralised.
 
 - [ ] **6.2 A worked example, for real.** One learning from this repository's
       own history is captured, proposed, and passed by a modification review
