@@ -329,17 +329,20 @@ No setting, environment variable or config file populates the selection.
   crash can lose an entry whose rename had completed. The store is a cache of
   bytes the model already received; a lost entry reads `missing`.
 - *Capacity and age* — a store refuses an entry larger than the cap
-  (`too-large`), then runs cleanup to make room for its bytes, and only then
-  publishes. Nothing is ever taken back after publication, because an entry
-  at a shared address may already carry another store's handle. A cleanup that
-  throws means nothing was written (`store-error`). If another cleaner holds
-  the lock, the store measures the published entries and is not written when
-  it would exceed the cap (`cap-busy`). The cap counts published entries; temp
-  files in flight do not count, and concurrent stores that each made room can
-  together exceed it until the next cleanup. A read whose handle passed every
-  check also runs cleanup; a malformed, forged or foreign-session handle reaches
-  no cleanup and no entry, though a syntactically valid one still reads the
-  key file to check its MAC.
+  (`too-large`). It then takes the cleanup lock and holds it across making room
+  for its bytes (net of any entry already at its address, which it replaces)
+  and publishing, so no two stores can each make room and then publish together
+  past the cap. If another process holds the lock, the store is not written at
+  all (`cap-busy`): a hook must not wait, and a skipped store is a cache miss.
+  A cleanup that throws means nothing was written (`store-error`), and nothing
+  is taken back after publication. The cap counts published entries; temp files
+  in flight do not count. `storeBytesUnchecked` is the low-level publish that
+  enforces neither retention nor the cap; production stores go through
+  `spoolResult` only. A read whose handle passed every check also runs cleanup;
+  a malformed, forged or foreign-session handle reaches no cleanup and no
+  entry, though a syntactically valid one still reads the key file to check its
+  MAC. Expiry is rounded up, so a handle never expires before the full
+  retention age.
 - *The key is not in the workspace* — it lives under the user-global root
   (`runtime/spool-keys/`, one file per workspace named by a digest of the
   workspace's real path, 0600 in a 0700 directory). Anything under the

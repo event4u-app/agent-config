@@ -29,7 +29,7 @@ import {
     spoolKeyPath,
     spoolResult,
     type SpoolStageView,
-    storeBytes,
+    storeBytesUnchecked,
     writeAll,
 } from '../../src/scripts/_lib/tool_output_spool.js';
 import { spoolLoadAttempts } from '../../src/scripts/_lib/tool_output_spool_loader.js';
@@ -208,7 +208,7 @@ describe('credential-match-is-never-spooled', () => {
 describe('expired-handle-says-expired', () => {
     it('expired-handle-says-expired: past the retention age a handle answers expired, before and after cleanup', () => {
         const t0 = Date.UTC(2026, 9, 20);
-        const { handle, address } = storeBytes(tmp, Buffer.from('kept for a week'), S, t0);
+        const { handle, address } = storeBytesUnchecked(tmp, Buffer.from('kept for a week'), S, t0);
         expect(readHandle(tmp, handle, S, undefined, t0 + 1000).state).toBe('ok');
         const later = t0 + SPOOL_RETENTION_MS + 1000;
         expect(readHandle(tmp, handle, S, undefined, later)).toEqual({ state: 'expired' });
@@ -221,8 +221,8 @@ describe('expired-handle-says-expired', () => {
 
     it('past the byte cap the oldest entries go first, and a valid handle to one says missing', () => {
         const now = Date.now();
-        const a = storeBytes(tmp, Buffer.alloc(100, 1), S, now);
-        const b = storeBytes(tmp, Buffer.alloc(100, 2), S, now);
+        const a = storeBytesUnchecked(tmp, Buffer.alloc(100, 1), S, now);
+        const b = storeBytesUnchecked(tmp, Buffer.alloc(100, 2), S, now);
         fs.utimesSync(path.join(tmp, SPOOL_DIR, a.address), new Date(now - 5000), new Date(now - 5000));
         expect(cleanupSpool(tmp, now, 150).removed).toBe(1);
         expect(readHandle(tmp, a.handle, S, undefined, now)).toEqual({ state: 'missing' });
@@ -231,7 +231,7 @@ describe('expired-handle-says-expired', () => {
 
     it('a cleanup lock held by another process skips; a stale one is taken over', () => {
         const now = Date.now();
-        const old = storeBytes(tmp, Buffer.from('old'), S, now - SPOOL_RETENTION_MS - 5000);
+        const old = storeBytesUnchecked(tmp, Buffer.from('old'), S, now - SPOOL_RETENTION_MS - 5000);
         fs.utimesSync(path.join(tmp, SPOOL_DIR, old.address), new Date(now - SPOOL_RETENTION_MS - 5000), new Date(now - SPOOL_RETENTION_MS - 5000));
         const lock = path.join(tmp, SPOOL_DIR, '.cleanup.lock');
         fs.writeFileSync(lock, '1');
@@ -244,31 +244,31 @@ describe('expired-handle-says-expired', () => {
 
 describe('handles are scoped to their session', () => {
     it('a handle read from another session, or with no session, answers invalid', () => {
-        const { handle } = storeBytes(tmp, Buffer.from('session one only'), S);
+        const { handle } = storeBytesUnchecked(tmp, Buffer.from('session one only'), S);
         expect(readHandle(tmp, handle, S).state).toBe('ok');
         expect(readHandle(tmp, handle, 's2')).toEqual({ state: 'invalid' });
         expect(readHandle(tmp, handle, '')).toEqual({ state: 'invalid' });
     });
 
     it('a store without a session is refused outright', () => {
-        expect(() => storeBytes(tmp, Buffer.from('x'), '')).toThrow(/session/);
+        expect(() => storeBytesUnchecked(tmp, Buffer.from('x'), '')).toThrow(/session/);
     });
 });
 
 describe('retention, partial writes and cleanup failure', () => {
     it('a read cleans the store: an entry past its age is gone after any read, not only after a store', () => {
         const now = Date.now();
-        const old = storeBytes(tmp, Buffer.from('old entry'), S, now - SPOOL_RETENTION_MS - 5000);
+        const old = storeBytesUnchecked(tmp, Buffer.from('old entry'), S, now - SPOOL_RETENTION_MS - 5000);
         const oldFile = path.join(tmp, SPOOL_DIR, old.address);
         fs.utimesSync(oldFile, new Date(now - SPOOL_RETENTION_MS - 5000), new Date(now - SPOOL_RETENTION_MS - 5000));
-        const fresh = storeBytes(tmp, Buffer.from('fresh entry'), S, now);
+        const fresh = storeBytesUnchecked(tmp, Buffer.from('fresh entry'), S, now);
         expect(readHandle(tmp, fresh.handle, S, undefined, now).state).toBe('ok');
         expect(fs.existsSync(oldFile)).toBe(false);
     });
 
     it('a write that died before its rename is never served and is removed once stale', () => {
         const now = Date.now();
-        const { handle, address } = storeBytes(tmp, Buffer.from('complete'), S, now);
+        const { handle, address } = storeBytesUnchecked(tmp, Buffer.from('complete'), S, now);
         const partial = path.join(tmp, SPOOL_DIR, `${address}.999.abcdef.tmp`);
         fs.writeFileSync(partial, 'comp');
         expect(readHandle(tmp, handle, S, undefined, now)).toEqual({ state: 'ok', bytes: Buffer.from('complete') });
@@ -279,7 +279,7 @@ describe('retention, partial writes and cleanup failure', () => {
 
     it('a cleanup that fails propagates (so the store refuses) and releases its lock', () => {
         const now = Date.now();
-        const old = storeBytes(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
+        const old = storeBytesUnchecked(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
         const dir = path.join(tmp, SPOOL_DIR);
         fs.utimesSync(path.join(dir, old.address), new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
         expect(() =>
@@ -298,7 +298,7 @@ describe('retention, partial writes and cleanup failure', () => {
         const view: SpoolStageView = { mode: 'protect', placeholder: env, counts: [], refused: [] };
         const first = spoolResult(env, view, ['tool_response'], tmp, READ_TEXT, now) as { action: string; handle: string };
         expect(first.action).toBe('stored');
-        const old = storeBytes(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
+        const old = storeBytesUnchecked(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
         const dir = path.join(tmp, SPOOL_DIR);
         fs.utimesSync(path.join(dir, old.address), new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
         const failing = { hooks: { beforeClaim: (): void => { throw new Error('disk gone'); } } };
@@ -309,7 +309,7 @@ describe('retention, partial writes and cleanup failure', () => {
 
     it('through the store path, a cleanup failure answers store-error and leaves the new result unstored', () => {
         const now = Date.now();
-        const old = storeBytes(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
+        const old = storeBytesUnchecked(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
         const dir = path.join(tmp, SPOOL_DIR);
         fs.utimesSync(path.join(dir, old.address), new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
         const before = new Set(spoolFiles());
@@ -332,7 +332,7 @@ describe('retention, partial writes and cleanup failure', () => {
 
     it('every store enforces retention, in one long session', () => {
         const now = Date.now();
-        const old = storeBytes(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
+        const old = storeBytesUnchecked(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
         const oldFile = path.join(tmp, SPOOL_DIR, old.address);
         fs.utimesSync(oldFile, new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
         for (const body of ['one', 'two', 'three']) {
@@ -346,8 +346,8 @@ describe('retention, partial writes and cleanup failure', () => {
     it('the cap and the age are exact boundaries', () => {
         const now = Date.now();
         const dir = path.join(tmp, SPOOL_DIR);
-        const a = storeBytes(tmp, Buffer.alloc(100, 1), S, now);
-        const b = storeBytes(tmp, Buffer.alloc(100, 2), S, now);
+        const a = storeBytesUnchecked(tmp, Buffer.alloc(100, 1), S, now);
+        const b = storeBytesUnchecked(tmp, Buffer.alloc(100, 2), S, now);
         fs.utimesSync(path.join(dir, a.address), new Date(now - 5000), new Date(now - 5000));
         expect(cleanupSpool(tmp, now, 200).removed).toBe(0);
         expect(cleanupSpool(tmp, now, 199).removed).toBe(1);
@@ -368,10 +368,10 @@ describe('a handle that fails a check causes no filesystem work', () => {
         ['wrong session', 'other-session'],
     ])('%s: an entry past its age survives, and no cleanup lock is taken', (_label, variant) => {
         const now = Date.now();
-        const old = storeBytes(tmp, Buffer.from('old entry'), S, now - SPOOL_RETENTION_MS - 5000);
+        const old = storeBytesUnchecked(tmp, Buffer.from('old entry'), S, now - SPOOL_RETENTION_MS - 5000);
         const oldFile = path.join(tmp, SPOOL_DIR, old.address);
         fs.utimesSync(oldFile, new Date(now - SPOOL_RETENTION_MS - 5000), new Date(now - SPOOL_RETENTION_MS - 5000));
-        const fresh = storeBytes(tmp, Buffer.from('fresh'), S, now);
+        const fresh = storeBytesUnchecked(tmp, Buffer.from('fresh'), S, now);
         const [a, e] = fresh.handle.split('.') as [string, string];
         const handle = variant === null ? `${a}.${e}.${'f'.repeat(32)}` : variant === 'other-session' ? fresh.handle : variant;
         const session = variant === 'other-session' ? 'other-session' : S;
@@ -383,8 +383,8 @@ describe('a handle that fails a check causes no filesystem work', () => {
 
 describe('hostile session ids fail closed', () => {
     it.each(['', '../escape', 'a:b', 'tab\there', 'x'.repeat(129)])('%j is refused for store and read', (bad) => {
-        expect(() => storeBytes(tmp, Buffer.from('x'), bad)).toThrow(/session/);
-        const { handle } = storeBytes(tmp, Buffer.from('y'), S);
+        expect(() => storeBytesUnchecked(tmp, Buffer.from('x'), bad)).toThrow(/session/);
+        const { handle } = storeBytesUnchecked(tmp, Buffer.from('y'), S);
         expect(readHandle(tmp, handle, bad)).toEqual({ state: 'invalid' });
         const env = readEnvelope('z', bad);
         const view: SpoolStageView = { mode: 'protect', placeholder: env, counts: [], refused: [] };
@@ -462,7 +462,7 @@ describe('a held lock and a concurrent identical store', () => {
     const view = (env: JsonObject): SpoolStageView => ({ mode: 'protect', placeholder: env, counts: [], refused: [] });
     const size = (body: string): number => Buffer.byteLength(JSON.stringify({ type: 'text', file: { content: body } }));
 
-    it('with the lock held elsewhere, a store that would exceed the cap is not written; one that fits is', () => {
+    it('with the lock held elsewhere, no store is written, whether or not it would fit', () => {
         const a = 'a'.repeat(100);
         const b = 'b'.repeat(100);
         const now = Date.now();
@@ -470,35 +470,62 @@ describe('a held lock and a concurrent identical store', () => {
         const dir = path.join(tmp, SPOOL_DIR);
         const held = acquireCleanupLock(dir, now);
         expect(held).not.toBeNull();
-        expect(spoolResult(readEnvelope(b), view(readEnvelope(b)), ['tool_response'], tmp, READ_TEXT, now, { maxBytes: size(a) + size(b) - 1 })).toEqual({
-            action: 'skip',
-            reason: 'cap-busy',
-        });
+        for (const cap of [size(a) + size(b) - 1, 10_000]) {
+            expect(spoolResult(readEnvelope(b), view(readEnvelope(b)), ['tool_response'], tmp, READ_TEXT, now, { maxBytes: cap })).toEqual({
+                action: 'skip',
+                reason: 'cap-busy',
+            });
+        }
         expect(spoolFiles()).toHaveLength(1);
-        expect(spoolResult(readEnvelope(b), view(readEnvelope(b)), ['tool_response'], tmp, READ_TEXT, now, { maxBytes: size(a) + size(b) })).toMatchObject({
-            action: 'stored',
-        });
         releaseCleanupLock(dir, held as string);
     });
 
-    it('a store whose cleanup throws while an identical store completes leaves that store\'s handle readable', () => {
+    it('two stores racing between making room and publishing cannot together exceed the cap', () => {
         const now = Date.now();
-        const old = storeBytes(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
+        const a = 'a'.repeat(100);
+        const b = 'b'.repeat(100);
+        const cap = size(a) + 20;
+        const old = storeBytesUnchecked(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
         const dir = path.join(tmp, SPOOL_DIR);
         fs.utimesSync(path.join(dir, old.address), new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
-        const env = readEnvelope('the same bytes, twice at once');
-        let other: { action: string; handle?: string } | null = null;
+        let inner: unknown = null;
+        const racing = {
+            maxBytes: cap,
+            hooks: {
+                // The window between making room and publishing: another store arriving here
+                // must not get the lock, or both publish into the room one of them made.
+                beforePublish: (): void => {
+                    inner = spoolResult(readEnvelope(b), view(readEnvelope(b)), ['tool_response'], tmp, READ_TEXT, now, { maxBytes: cap });
+                },
+            },
+        };
+        expect(spoolResult(readEnvelope(a), view(readEnvelope(a)), ['tool_response'], tmp, READ_TEXT, now, racing)).toMatchObject({ action: 'stored' });
+        expect(inner).toEqual({ action: 'skip', reason: 'cap-busy' });
+        const total = spoolFiles().reduce((n, f) => n + fs.statSync(path.join(dir, f)).size, 0);
+        expect(total).toBeLessThanOrEqual(cap);
+    });
+
+    it('a store whose cleanup throws never removes an identical entry another store published earlier', () => {
+        const now = Date.now();
+        const env = readEnvelope('the same bytes, stored before');
+        const first = spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT, now) as { action: string; handle: string };
+        expect(first.action).toBe('stored');
+        const old = storeBytesUnchecked(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
+        const dir = path.join(tmp, SPOOL_DIR);
+        fs.utimesSync(path.join(dir, old.address), new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
+        let inner: unknown = null;
         const interleaved = {
             hooks: {
                 beforeClaim: (): void => {
-                    other = spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT, now) as { action: string; handle?: string };
+                    inner = spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT, now);
                     throw new Error('disk gone');
                 },
             },
         };
         expect(spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT, now, interleaved)).toEqual({ action: 'skip', reason: 'store-error' });
-        expect(other).toMatchObject({ action: 'stored' });
-        expect(readHandle(tmp, (other as unknown as { handle: string }).handle, S, undefined, now).state).toBe('ok');
+        expect(inner).toEqual({ action: 'skip', reason: 'cap-busy' });
+        expect(readHandle(tmp, first.handle, S, undefined, now).state).toBe('ok');
+        expect(fs.existsSync(path.join(dir, '.cleanup.lock'))).toBe(false);
     });
 });
 
@@ -548,7 +575,7 @@ describe('the repository is not trusted for spool paths', () => {
     });
 
     it('an entry replaced by a symlink is not served', () => {
-        const { handle, address } = storeBytes(tmp, Buffer.from('real'), S);
+        const { handle, address } = storeBytesUnchecked(tmp, Buffer.from('real'), S);
         const file = path.join(tmp, SPOOL_DIR, address);
         fs.rmSync(file);
         fs.writeFileSync(path.join(outside, 'x'), 'real');
@@ -619,13 +646,13 @@ describe('the cleanup lock is owned', () => {
 
     it('an entry a writer replaces between measurement and claim survives; the cap then takes the next oldest', () => {
         const now = Date.now();
-        const a = storeBytes(tmp, Buffer.alloc(100, 1), S, now);
-        const b = storeBytes(tmp, Buffer.alloc(100, 2), S, now);
+        const a = storeBytesUnchecked(tmp, Buffer.alloc(100, 1), S, now);
+        const b = storeBytesUnchecked(tmp, Buffer.alloc(100, 2), S, now);
         const dir = path.join(tmp, SPOOL_DIR);
         fs.utimesSync(path.join(dir, a.address), new Date(now - 5000), new Date(now - 5000));
         const removed = cleanupSpool(tmp, now, 150, {
             beforeClaim: (file) => {
-                if (file.endsWith(a.address)) storeBytes(tmp, Buffer.alloc(100, 1), S, now);
+                if (file.endsWith(a.address)) storeBytesUnchecked(tmp, Buffer.alloc(100, 1), S, now);
             },
         }).removed;
         // The replaced entry is put back; the cap is still over, so the next oldest goes.
@@ -637,7 +664,7 @@ describe('the cleanup lock is owned', () => {
 
     it('overlapping cleaners are harmless: only one claims an entry, so it is counted once', () => {
         const now = Date.now();
-        const a = storeBytes(tmp, Buffer.alloc(100, 1), S, now);
+        const a = storeBytesUnchecked(tmp, Buffer.alloc(100, 1), S, now);
         const dir = path.join(tmp, SPOOL_DIR);
         const seen = fs.statSync(path.join(dir, a.address));
         let inner = false;
@@ -660,7 +687,7 @@ describe('the key is created whole', () => {
             const root = fs.mkdtempSync(path.join(os.tmpdir(), 'spool-key-race-'));
             try {
                 const code = (i: number): string =>
-                    `import { storeBytes } from ${JSON.stringify(mod)}; console.log(storeBytes(${JSON.stringify(root)}, Buffer.from('entry ${String(i)}'), 'k${String(i)}').handle);`;
+                    `import { storeBytesUnchecked } from ${JSON.stringify(mod)}; console.log(storeBytesUnchecked(${JSON.stringify(root)}, Buffer.from('entry ${String(i)}'), 'k${String(i)}').handle);`;
                 const runs = Array.from({ length: 8 }, (_, i) =>
                     new Promise<string>((resolve, reject) => {
                         const p = spawn(tsx, ['--eval', code(i)], { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -700,8 +727,8 @@ describe('concurrent writers, readers and cleanup', () => {
         const mod = path.resolve(__dirname, '../../src/scripts/_lib/tool_output_spool.ts');
         const child = (id: number): Promise<string[]> =>
             new Promise((resolve, reject) => {
-                const code = `import { storeBytes } from ${JSON.stringify(mod)};
-for (let i = 0; i < 40; i++) console.log(storeBytes(${JSON.stringify(tmp)}, Buffer.alloc(2000 + i, ${id} * 40 + i), 'w${id}').handle);`;
+                const code = `import { storeBytesUnchecked } from ${JSON.stringify(mod)};
+for (let i = 0; i < 40; i++) console.log(storeBytesUnchecked(${JSON.stringify(tmp)}, Buffer.alloc(2000 + i, ${id} * 40 + i), 'w${id}').handle);`;
                 const p = spawn(tsx, ['--eval', code], { stdio: ['ignore', 'pipe', 'pipe'] });
                 let out = '';
                 p.stdout.on('data', (d: Buffer) => (out += d.toString()));
@@ -735,10 +762,21 @@ for (let i = 0; i < 40; i++) console.log(storeBytes(${JSON.stringify(tmp)}, Buff
     }, 60_000);
 });
 
+describe('expiry', () => {
+    it('a handle never expires before the full retention age, at any millisecond', () => {
+        for (const now of [Date.UTC(2026, 9, 21, 0, 0, 0, 1), Date.UTC(2026, 9, 21, 0, 0, 0, 999)]) {
+            const { handle } = storeBytesUnchecked(tmp, Buffer.from(`at ${String(now)}`), S, now);
+            const expiry = Number(handle.split('.')[1]) * 1000;
+            expect(expiry).toBeGreaterThanOrEqual(now + SPOOL_RETENTION_MS);
+            expect(readHandle(tmp, handle, S, undefined, now + SPOOL_RETENTION_MS - 1).state).toBe('ok');
+        }
+    });
+});
+
 describe('handle-reads-a-range', () => {
     it('handle-reads-a-range: a byte range returns exactly those stored bytes', () => {
         const bytes = Buffer.from('0123456789abcdef');
-        const { handle } = storeBytes(tmp, bytes, S);
+        const { handle } = storeBytesUnchecked(tmp, bytes, S);
         expect(readHandle(tmp, handle, S, [4, 10])).toEqual({ state: 'ok', bytes: Buffer.from('456789') });
         expect(readHandle(tmp, handle, S, [0, 16]).bytes?.equals(bytes)).toBe(true);
         expect(readHandle(tmp, handle, S, [16, 16]).bytes?.length).toBe(0);
@@ -746,12 +784,12 @@ describe('handle-reads-a-range', () => {
     });
 
     it('out-of-bounds and malformed ranges are refused, never clamped', () => {
-        const { handle } = storeBytes(tmp, Buffer.from('short'), S);
+        const { handle } = storeBytesUnchecked(tmp, Buffer.from('short'), S);
         for (const r of [[0, 6], [-1, 2], [3, 2], [1.5, 3]] as const) expect(readHandle(tmp, handle, S, r)).toEqual({ state: 'range' });
     });
 
     it('missing, corrupted and forged handles each answer their own state; the file on disk is never the source', () => {
-        const { handle, address } = storeBytes(tmp, Buffer.from('original bytes'), S);
+        const { handle, address } = storeBytesUnchecked(tmp, Buffer.from('original bytes'), S);
         const file = path.join(tmp, SPOOL_DIR, address);
         fs.writeFileSync(file, 'tampered bytes');
         expect(readHandle(tmp, handle, S)).toEqual({ state: 'corrupted' });
@@ -766,7 +804,7 @@ describe('handle-reads-a-range', () => {
     });
 
     it('the existing report entry point reads a handle by range and names any other state', () => {
-        const { handle } = storeBytes(tmp, Buffer.from('0123456789'), S);
+        const { handle } = storeBytesUnchecked(tmp, Buffer.from('0123456789'), S);
         const out: (string | Uint8Array)[] = [];
         const err: string[] = [];
         const w = process.stdout.write.bind(process.stdout);

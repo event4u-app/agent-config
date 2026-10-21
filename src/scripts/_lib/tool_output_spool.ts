@@ -183,8 +183,12 @@ export function writeAll(fd: number, bytes: Buffer, write: (fd: number, b: Buffe
     }
 }
 
-/** Store `bytes` for `session` and mint a handle bound to it that expires with the retention age. */
-export function storeBytes(root: string, bytes: Buffer, session: string, now: number = Date.now()): StoredEntry {
+/**
+ * Publish `bytes` for `session` and mint a handle bound to it. LOW-LEVEL: it
+ * enforces neither retention nor the cap and takes no lock. Production stores go
+ * through `spoolResult`, which holds the lock across making room and this call.
+ */
+export function storeBytesUnchecked(root: string, bytes: Buffer, session: string, now: number = Date.now()): StoredEntry {
     if (!SESSION.test(session)) throw new Error('bad session');
     ensureSpoolDir(root);
     const key = spoolKey(root, true) as Buffer;
@@ -203,7 +207,7 @@ export function storeBytes(root: string, bytes: Buffer, session: string, now: nu
     fs.closeSync(fd);
     // An existing entry has the same bytes by construction; the rename refreshes its age.
     fs.renameSync(tmp, target);
-    const expiry = Math.floor((now + SPOOL_RETENTION_MS) / 1000);
+    const expiry = Math.ceil((now + SPOOL_RETENTION_MS) / 1000);
     return { address: addr, handle: `${addr}.${String(expiry)}.${mac(key, addr, expiry, session)}`, bytes: bytes.length };
 }
 
@@ -249,9 +253,10 @@ export function readHandle(
     return { state: 'ok', bytes: bytes.subarray(start, end) };
 }
 
-/** Test seam: run code inside the window a concurrent writer or cleaner can use. */
+/** Test seams: run code inside the windows a concurrent writer or cleaner can use. */
 export interface CleanupHooks {
     readonly beforeClaim?: (file: string) => void;
+    readonly beforePublish?: () => void;
 }
 
 /** The cap and the cleanup seams a store runs with; production passes neither. */
@@ -282,39 +287,44 @@ export function cleanupSpool(
     if (!fs.existsSync(dir)) return { removed: 0, ran: true };
     const owner = acquireCleanupLock(dir, now);
     if (owner === null) return { removed: 0, ran: false };
-    let removed = 0;
     try {
-        const live: { name: string; seen: fs.Stats }[] = [];
-        for (const name of fs.readdirSync(dir)) {
-            let st: fs.Stats;
-            try {
-                st = fs.lstatSync(path.join(dir, name));
-            } catch {
-                continue;
-            }
-            // A link or directory planted under an address-shaped name is neither counted nor followed.
-            if (!st.isFile()) continue;
-            const old = now - st.mtimeMs;
-            const expired = name.endsWith('.tmp') || name.endsWith('.claimed') ? old > STALE_TMP_MS : ADDRESS.test(name) && old >= SPOOL_RETENTION_MS;
-            if (expired) {
-                if (claimAndDelete(dir, name, st, owner, hooks)) removed += 1;
-            } else if (ADDRESS.test(name)) {
-                live.push({ name, seen: st });
-            }
-        }
-        live.sort((a, b) => a.seen.mtimeMs - b.seen.mtimeMs);
-        let total = live.reduce((n, e) => n + e.seen.size, 0);
-        for (const e of live) {
-            if (total <= maxBytes) break;
-            if (claimAndDelete(dir, e.name, e.seen, owner, hooks)) {
-                total -= e.seen.size;
-                removed += 1;
-            }
-        }
+        return { removed: sweepLocked(dir, now, maxBytes, owner, hooks), ran: true };
     } finally {
         releaseCleanupLock(dir, owner);
     }
-    return { removed, ran: true };
+}
+
+/** The cleanup itself, for a caller that already holds the lock as `owner`. */
+function sweepLocked(dir: string, now: number, maxBytes: number, owner: string, hooks: CleanupHooks): number {
+    let removed = 0;
+    const live: { name: string; seen: fs.Stats }[] = [];
+    for (const name of fs.readdirSync(dir)) {
+        let st: fs.Stats;
+        try {
+            st = fs.lstatSync(path.join(dir, name));
+        } catch {
+            continue;
+        }
+        // A link or directory planted under an address-shaped name is neither counted nor followed.
+        if (!st.isFile()) continue;
+        const old = now - st.mtimeMs;
+        const expired = name.endsWith('.tmp') || name.endsWith('.claimed') ? old > STALE_TMP_MS : ADDRESS.test(name) && old >= SPOOL_RETENTION_MS;
+        if (expired) {
+            if (claimAndDelete(dir, name, st, owner, hooks)) removed += 1;
+        } else if (ADDRESS.test(name)) {
+            live.push({ name, seen: st });
+        }
+    }
+    live.sort((a, b) => a.seen.mtimeMs - b.seen.mtimeMs);
+    let total = live.reduce((n, e) => n + e.seen.size, 0);
+    for (const e of live) {
+        if (total <= maxBytes) break;
+        if (claimAndDelete(dir, e.name, e.seen, owner, hooks)) {
+            total -= e.seen.size;
+            removed += 1;
+        }
+    }
+    return removed;
 }
 
 /**
@@ -349,20 +359,14 @@ export function claimAndDelete(dir: string, name: string, seen: fs.Stats, owner:
     }
 }
 
-/** Bytes in published entries. In-flight temp files do not count toward the cap. */
-function spoolBytes(root: string): number {
-    const dir = spoolDir(root);
-    let n = 0;
-    for (const name of fs.readdirSync(dir)) {
-        if (!ADDRESS.test(name)) continue;
-        try {
-            const st = fs.lstatSync(path.join(dir, name));
-            if (st.isFile()) n += st.size;
-        } catch {
-            // removed meanwhile
-        }
+/** Size of the entry at `name`, or 0; a same-address store replaces it rather than adding. */
+function entrySize(dir: string, name: string): number {
+    try {
+        const st = fs.lstatSync(path.join(dir, name));
+        return st.isFile() ? st.size : 0;
+    } catch {
+        return 0;
     }
-    return n;
 }
 
 /**
@@ -484,16 +488,21 @@ export function spoolResult(
         // Admission: an entry the cap could never hold is not written at all.
         if (raw.length > cap) return { action: 'skip', reason: 'too-large' };
         ensureSpoolDir(root);
-        // Room is made BEFORE anything is published, so no write ever has to be taken
-        // back: an entry at a shared address may already carry another store's handle.
-        let made: { removed: number; ran: boolean };
+        assertNoLinks(root, SPOOL_DIR);
+        const dir = spoolDir(root);
+        // One lock spans making room and publishing, so two stores cannot each make room
+        // for themselves and then publish together past the cap. A held lock skips the
+        // store instead of waiting: this is a cache, and a hook must not block.
+        const owner = acquireCleanupLock(dir, now);
+        if (owner === null) return { action: 'skip', reason: 'cap-busy' };
         try {
-            made = cleanupSpool(root, now, cap - raw.length, limits.hooks);
-        } catch {
-            return { action: 'skip', reason: 'store-error' };
+            const existing = entrySize(dir, address(spoolKey(root, true) as Buffer, session, sha256(raw)));
+            sweepLocked(dir, now, cap - raw.length + existing, owner, limits.hooks ?? {});
+            limits.hooks?.beforePublish?.();
+            return { action: 'stored', class: cls, ...storeBytesUnchecked(root, raw, session, now) };
+        } finally {
+            releaseCleanupLock(dir, owner);
         }
-        if (!made.ran && spoolBytes(root) + raw.length > cap) return { action: 'skip', reason: 'cap-busy' };
-        return { action: 'stored', class: cls, ...storeBytes(root, raw, session, now) };
     } catch {
         return { action: 'skip', reason: 'store-error' };
     }
