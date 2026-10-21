@@ -146,7 +146,17 @@ function runtimePlan(f: Finding, inventory: InventoryEntry[]): FixPlan {
         return { commands: [], edits: [], opsChecklist: [], note: 'no fixed runtime release is named yet — prepare, do not invent a version' };
     }
     const pins = inventory.filter((e) => e.ecosystem === 'runtime' && e.name === f.package && e.version !== null);
-    const edits = pins
+    // Only pins on the fixed release's own line move: Node 18 → 22.11.1 would be
+    // an unannounced major, which this plan never makes (1.1).
+    const lineOf = (v: string): string | null => {
+        const m = /^(\d+)(?:\.(\d+))?/.exec(v);
+        if (m === null) return null;
+        return f.package === 'php' ? (m[2] === undefined ? null : `${m[1]}.${m[2]}`) : m[1]!;
+    };
+    const target = lineOf(to);
+    const sameLine = pins.filter((e) => target !== null && lineOf(e.version!) === target);
+    const otherLine = pins.filter((e) => !sameLine.includes(e));
+    const edits = sameLine
         .filter((e) => compare_versions(e.version, to) === -1)
         .map((e) => ({ file: e.file, line: e.line, from: e.version!, to }));
     const runtimeName = f.package === 'node' ? 'Node.js' : f.package === 'php' ? 'PHP' : f.package;
@@ -158,7 +168,11 @@ function runtimePlan(f: Finding, inventory: InventoryEntry[]): FixPlan {
             'any base image built in another repository from these pins: rebuild it',
             'after the deploy: confirm the running version (`php -v` / `node -v`) on each environment',
         ],
-        note: `${edits.length} pinning file(s) move to ${to}; a declared range that already admits ${to} is left alone`,
+        note:
+            `${edits.length} pinning file(s) move to ${to}; a declared range that already admits ${to} is left alone` +
+            (otherLine.length === 0
+                ? ''
+                : `; ${otherLine.length} pin(s) on another release line (${otherLine.map((e) => `${e.file}:${e.line} ${e.version}`).join(', ')}) are not changed — moving them is a major upgrade, decided separately`),
     };
 }
 
@@ -328,18 +342,27 @@ export function track(r: Remediation, s: TrackSignals, now: Date = new Date()): 
 /** Merged but not deployed after this long stays in the notice (3.2). */
 export const UNDEPLOYED_AFTER_HOURS = 24;
 
-export function mergedNotDeployed(all: Remediations, findings: Finding[], now: Date = new Date()): string[] {
+export interface UndeployedFix {
+    id: string;
+    mergeSha: string | null;
+    hours: number;
+}
+
+/** Structured rows only — the session line is rendered, and validated, by the notice module. */
+export function mergedNotDeployed(all: Remediations, findings: Finding[], now: Date = new Date()): UndeployedFix[] {
     const byKey = new Map(findings.map((f) => [f.key, f]));
-    const lines: string[] = [];
+    const rows: UndeployedFix[] = [];
     for (const r of Object.values(all)) {
         if (r.state !== 'fixed-in-trunk' && r.state !== 'fixed-released') continue;
         const since = r.stamps['fixed-in-trunk'];
-        if (since === undefined || now.getTime() - Date.parse(since) < UNDEPLOYED_AFTER_HOURS * 3600000) continue;
+        if (since === undefined) continue;
+        const hours = (now.getTime() - Date.parse(since)) / 3600000;
+        if (!Number.isFinite(hours) || hours < UNDEPLOYED_AFTER_HOURS) continue;
         const f = byKey.get(r.key);
         if (f !== undefined && f.tier !== 'T0' && f.tier !== 'T1') continue;
-        lines.push(`advisory ${r.key.split('|')[0]}: merged${r.merge_sha === null ? '' : ` (${r.merge_sha.slice(0, 9)})`} but not deployed for ${Math.floor((now.getTime() - Date.parse(since)) / 3600000)} h — deploy it the way this project deploys`);
+        rows.push({ id: r.key.split('|')[0] ?? r.key, mergeSha: r.merge_sha, hours: Math.floor(hours) });
     }
-    return lines;
+    return rows;
 }
 
 /** A mitigated finding reopens the moment a refresh reports a fix for it (1.5). */

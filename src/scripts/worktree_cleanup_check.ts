@@ -179,6 +179,8 @@ export interface WorktreeEntry {
     path: string;
     /** Short branch name (`refs/heads/` stripped), or `null` when detached. */
     branch: string | null;
+    /** `git worktree lock` was set on it — never removable here. */
+    locked?: boolean;
 }
 
 export function listWorktrees(repoPath: string): WorktreeEntry[] {
@@ -188,17 +190,19 @@ export function listWorktrees(repoPath: string): WorktreeEntry[] {
     for (const line of out.split('\n')) {
         if (line.startsWith('worktree ')) {
             if (current.path !== undefined) {
-                entries.push({ path: current.path, branch: current.branch ?? null });
+                entries.push({ path: current.path, branch: current.branch ?? null, locked: current.locked === true });
             }
             current = { path: line.slice('worktree '.length) };
         } else if (line.startsWith('branch ')) {
             current.branch = line.slice('branch '.length).replace(/^refs\/heads\//, '');
         } else if (line === 'detached') {
             current.branch = null;
+        } else if (line === 'locked' || line.startsWith('locked ')) {
+            current.locked = true;
         }
     }
     if (current.path !== undefined) {
-        entries.push({ path: current.path, branch: current.branch ?? null });
+        entries.push({ path: current.path, branch: current.branch ?? null, locked: current.locked === true });
     }
     return entries;
 }
@@ -518,15 +522,22 @@ function isRegenerablePattern(pattern: string): boolean {
 }
 
 /** True when the comment block directly above `line` (1-based) reads as "generated". */
-function commentSaysGenerated(lines: string[], line: number): boolean {
-    for (let i = line - 2; i >= 0; i--) {
-        const l = lines[i]!.trim();
-        if (l === '') return false;
-        if (l.startsWith('#')) {
-            if (GENERATED_COMMENT.test(l)) return true;
-            continue;
-        }
-        // Another pattern line in the same block: keep walking up to its comment.
+/** A pattern naming a secret or a local override is never regenerable, whatever its comment says. */
+const NEVER_REGENERABLE = /\.env|secret|credential|token|\bkey|local|\.pem|\.p12|password/i;
+
+/**
+ * True when the NEAREST comment group above `line` (1-based) reads as
+ * "generated". Pattern lines between that group and `line` belong to it; a
+ * comment further up belongs to another block and is not consulted, so one
+ * matching comment cannot vouch for patterns it does not describe.
+ */
+function commentSaysGenerated(lines: string[], line: number, pattern: string): boolean {
+    if (NEVER_REGENERABLE.test(pattern)) return false;
+    let i = line - 2;
+    while (i >= 0 && lines[i]!.trim() !== '' && !lines[i]!.trim().startsWith('#')) i--;
+    if (i < 0 || !lines[i]!.trim().startsWith('#')) return false;
+    for (; i >= 0 && lines[i]!.trim().startsWith('#'); i--) {
+        if (GENERATED_COMMENT.test(lines[i]!)) return true;
     }
     return false;
 }
@@ -577,10 +588,10 @@ export function localOnlyIgnored(worktreePath: string, trunk: string | null = nu
         const src = sourceOf.get(p);
         if (src === undefined) return true;
         if (isRegenerablePattern(src.pattern)) return false;
-        if (commentSaysGenerated(readLines(src.file), src.line)) return false;
+        if (commentSaysGenerated(readLines(src.file), src.line, src.pattern)) return false;
         const t = trunkLines(src.file);
         const idx = t.findIndex((l) => l.trim() === src.pattern.trim());
-        return !(idx >= 0 && commentSaysGenerated(t, idx + 1));
+        return !(idx >= 0 && commentSaysGenerated(t, idx + 1, src.pattern));
     });
 }
 
@@ -731,6 +742,10 @@ export interface InventoryOptions {
     mergeDelayHours?: number;
     /** Override the trunk ref (default: origin/main → origin/master → main → master). */
     trunk?: string;
+    /** See `ClassifyContext.mergedBranch`. */
+    mergedBranch?: string | null;
+    /** See `ClassifyContext.selfSessionId`. */
+    selfSessionId?: string | null;
 }
 
 /** D4 — a revert or follow-up can reuse the tree for a day. */
@@ -746,6 +761,29 @@ export interface ClassifyContext {
     ageCutoff: number | null;
     minAgeDays: number | null;
     forge: { prIndex: PrIndex | null; mergeDelayHours: number };
+    /**
+     * The branch whose merge the calling session itself just performed
+     * (`/pr:merge`). Its git-dir mtimes are that merge work, not another
+     * session, so the mtime fallback is skipped for it; every other gate,
+     * the session register included, still applies.
+     */
+    mergedBranch?: string | null;
+    /** The calling session's own register id, never counted as "another session". */
+    selfSessionId?: string | null;
+    /** Read sessions from the register (re-read before each removal). */
+    readSessions?: boolean;
+}
+
+/** Live session worktrees from the register, minus the caller's own session. */
+export function liveSessionPaths(mainPath: string, now: Date, selfSessionId: string | null = null): Set<string> {
+    const out = new Set<string>();
+    const dir = register_dir(mainPath);
+    if (dir === null) return out;
+    for (const rec of read_live_records(dir, { now })) {
+        if (selfSessionId !== null && rec.session_id === selfSessionId) continue;
+        out.add(canonical(rec.worktree));
+    }
+    return out;
 }
 
 /** One worktree, classified. Shared by the inventory and by the re-check run immediately before a removal. */
@@ -786,7 +824,8 @@ export function classifyEntry(e: WorktreeEntry, ctx: ClassifyContext): Inventory
     // Fallback for sessions the register cannot see (another host, a plain
     // terminal): recent git activity in the per-worktree git dir.
     const activity = lastGitActivity(resolved);
-    if (activity !== null && activity.getTime() >= liveCutoff) {
+    const ownMerge = ctx.mergedBranch !== undefined && ctx.mergedBranch !== null && e.branch === ctx.mergedBranch;
+    if (!ownMerge && activity !== null && activity.getTime() >= liveCutoff) {
         return {
             ...base,
             classification: 'live',
@@ -798,6 +837,7 @@ export function classifyEntry(e: WorktreeEntry, ctx: ClassifyContext): Inventory
     }
 
     if (isMain) reasons.push('main worktree — cannot be removed');
+    if (e.locked === true) reasons.push('locked (`git worktree unlock` first) — never removed here');
     if (e.branch === null) {
         reasons.push('detached HEAD — no branch to judge reachability for');
     }
@@ -881,6 +921,8 @@ export function buildInventory(
         prIndex: opts.prIndex ?? null,
         mergeDelayHours: opts.mergeDelayHours ?? MERGE_DELAY_HOURS,
         trunk: opts.trunk ?? null,
+        mergedBranch: opts.mergedBranch ?? null,
+        selfSessionId: opts.selfSessionId ?? null,
     });
 }
 
@@ -890,7 +932,7 @@ function buildInventoryInner(
     ageCutoff: number | null,
     minAgeDays: number | null,
     excludeLiveSessions: boolean,
-    forge: { prIndex: PrIndex | null; mergeDelayHours: number; trunk: string | null },
+    forge: { prIndex: PrIndex | null; mergeDelayHours: number; trunk: string | null; mergedBranch: string | null; selfSessionId: string | null },
 ): Inventory {
     const now = nowArg;
     const trunk = forge.trunk ?? resolveTrunk(repoPath);
@@ -904,12 +946,7 @@ function buildInventoryInner(
     // state before any session registers), or when every record has expired.
     const sessionPaths = new Set<string>();
     if (excludeLiveSessions) {
-        const dir = register_dir(mainPath);
-        if (dir !== null) {
-            for (const rec of read_live_records(dir, { now })) {
-                sessionPaths.add(canonical(rec.worktree));
-            }
-        }
+        for (const p of liveSessionPaths(mainPath, now, forge.selfSessionId ?? null)) sessionPaths.add(p);
     }
 
     const registry = readRegistry(mainPath);
@@ -917,6 +954,9 @@ function buildInventoryInner(
     const ctx: ClassifyContext = {
         trunk, mainPath, now, liveCutoff, sessionPaths, registry, ageCutoff, minAgeDays,
         forge: { prIndex: forge.prIndex, mergeDelayHours: forge.mergeDelayHours },
+        mergedBranch: forge.mergedBranch,
+        selfSessionId: forge.selfSessionId,
+        readSessions: excludeLiveSessions,
     };
     const rows: InventoryRow[] = entries.map((e) => classifyEntry(e, ctx));
 
@@ -1023,51 +1063,86 @@ function takeRemovalLock(mainPath: string, now: Date): (() => void) | null {
 export function applyRemovals(
     repoPath: string,
     inv: Inventory,
-    opts: { onlyBranch?: string | null; now?: Date; recheck?: ClassifyContext } = {},
+    opts: { onlyBranch?: string | null; now?: Date; recheck?: ClassifyContext; limit?: number } = {},
 ): RemovalOutcome[] {
     const now = opts.now ?? new Date();
     const mainPath = inv.rows.find((r) => r.isMain)?.path ?? repoPath;
-    const rows = inv.rows.filter(
-        (r) =>
-            r.classification === 'safe' &&
-            !r.isMain &&
-            (opts.onlyBranch === undefined || opts.onlyBranch === null || r.branch === opts.onlyBranch),
-    );
+    const rows = inv.rows
+        .filter(
+            (r) =>
+                r.classification === 'safe' &&
+                !r.isMain &&
+                (opts.onlyBranch === undefined || opts.onlyBranch === null || r.branch === opts.onlyBranch),
+        )
+        .slice(0, opts.limit ?? Number.POSITIVE_INFINITY);
     if (rows.length === 0) return [];
     const release = takeRemovalLock(mainPath, now);
     if (release === null) return [];
     const outcomes: RemovalOutcome[] = [];
+    const dir = commonDir(mainPath);
+    // One journal line per candidate, written the moment its outcome is known:
+    // a later throw cannot lose the record of a removal that already happened.
+    const journal = (o: RemovalOutcome): void => {
+        if (dir === null) return;
+        const line = JSON.stringify({ at: now.toISOString(), path: o.path, branch: o.branch, tip: o.tip, evidence: o.evidence, removed: o.removed, error: o.error });
+        try {
+            fs.appendFileSync(path.join(dir, REMOVAL_JOURNAL), `${line}\n`);
+        } catch {
+            /* an unwritable journal never blocks a removal git already judged safe */
+        }
+    };
     try {
-        const ctx = opts.recheck ?? inv.context;
+        const base = opts.recheck ?? inv.context;
         for (const r of rows) {
             let error: string | null = null;
-            const again = classifyEntry({ path: r.path, branch: r.branch }, ctx);
-            if (again.classification !== 'safe' || again.tip !== r.tip) {
+            // The register is read AGAIN for every candidate: a session that
+            // entered the tree after the inventory makes it live here.
+            const ctx: ClassifyContext =
+                base.readSessions === true ? { ...base, sessionPaths: liveSessionPaths(base.mainPath, new Date(), base.selfSessionId ?? null) } : base;
+            let again: InventoryRow | null = null;
+            try {
+                again = classifyEntry({ path: r.path, branch: r.branch }, ctx);
+            } catch {
+                again = null;
+            }
+            if (again === null) {
+                error = 'could not re-check it — kept';
+            } else if (again.classification !== 'safe' || again.tip !== r.tip) {
                 error = `changed since the inventory — kept (${again.reasons[0] ?? 'tip moved'})`;
             } else {
                 try {
-                    git(mainPath, ['worktree', 'remove', r.path]);
+                    // A fixed, generous timeout of its own: a removal is never
+                    // cut short by the classification budget mid-deletion.
+                    execFileSync('git', ['-C', mainPath, 'worktree', 'remove', r.path], {
+                        encoding: 'utf-8',
+                        stdio: ['ignore', 'pipe', 'pipe'],
+                        env: gitEnv(),
+                        timeout: REMOVAL_TIMEOUT_MS,
+                    });
                 } catch (e) {
                     const stderr = (e as { stderr?: Buffer | string }).stderr;
                     error = (stderr === undefined ? String(e) : String(stderr)).trim().split('\n')[0] ?? 'refused';
                 }
             }
-            outcomes.push({ path: r.path, branch: r.branch, tip: r.tip, evidence: r.mergeEvidence, removed: error === null, error });
+            const o: RemovalOutcome = { path: r.path, branch: r.branch, tip: r.tip, evidence: r.mergeEvidence, removed: error === null, error };
+            outcomes.push(o);
+            journal(o);
         }
-        tryGit(mainPath, ['worktree', 'prune']);
-        const dir = commonDir(mainPath);
-        if (dir !== null) {
-            const at = now.toISOString();
-            const lines = outcomes.map((o) =>
-                JSON.stringify({ at, path: o.path, branch: o.branch, tip: o.tip, evidence: o.evidence, removed: o.removed, error: o.error }),
-            );
-            fs.appendFileSync(path.join(dir, REMOVAL_JOURNAL), `${lines.join('\n')}\n`);
+        try {
+            execFileSync('git', ['-C', mainPath, 'worktree', 'prune'], { stdio: 'ignore', env: gitEnv(), timeout: REMOVAL_TIMEOUT_MS });
+        } catch {
+            /* prune only clears registrations whose directory is already gone */
         }
     } finally {
         release();
     }
     return outcomes;
 }
+
+/** Per-removal timeout, independent of any classification budget. */
+export const REMOVAL_TIMEOUT_MS = 30000;
+/** The daily pass removes at most this many trees; the rest wait for tomorrow or `apply`. */
+export const DAILY_REMOVAL_CAP = 3;
 
 /** The one line a session start or a merge prints after a removal pass. */
 export function removalSummary(inv: Inventory, outcomes: RemovalOutcome[]): string {
@@ -1151,7 +1226,7 @@ export function dailyCleanup(
     if (deps.ranToday?.(root) === true) return null;
     const deadlineAt = Date.now() + (deps.budgetMs ?? DAILY_BUDGET_MS);
     try {
-        const result = withDeadline(deadlineAt, () => {
+        const classified = withDeadline(deadlineAt, () => {
             const entries = listWorktrees(root);
             const mainPath = canonical(entries.length > 0 ? entries[0]!.path : root);
             const candidates = entries.slice(1);
@@ -1159,10 +1234,11 @@ export function dailyCleanup(
             const start = candidates.length === 0 ? 0 : day % candidates.length;
             const ordered = [...candidates.slice(start), ...candidates.slice(0, start)];
 
-            const sessionPaths = new Set<string>();
-            const reg = register_dir(mainPath);
-            if (reg !== null) for (const rec of read_live_records(reg, { now })) sessionPaths.add(canonical(rec.worktree));
+            const selfSessionId = process.env['CLAUDE_CODE_SESSION_ID'] ?? null;
+            const sessionPaths = liveSessionPaths(mainPath, now, selfSessionId);
             const ctx: ClassifyContext = {
+                readSessions: true,
+                selfSessionId,
                 trunk: resolveTrunk(mainPath),
                 mainPath,
                 now,
@@ -1194,17 +1270,21 @@ export function dailyCleanup(
                 counts: { total: rows.length, safe: 0, review: 0, live: 0, reviewReasons: {} },
             };
             const safe = rows.filter((r) => r.classification === 'safe');
-            let outcomes: RemovalOutcome[] = [];
-            if (mode === 'auto' && safe.length > 0) {
-                try {
-                    outcomes = applyRemovals(mainPath, inv, { now });
-                } catch {
-                    outcomes = [];
-                }
+            return { inv, safe, rows, candidates, ctx };
+        });
+        let outcomes: RemovalOutcome[] = [];
+        if (mode === 'auto' && classified.safe.length > 0) {
+            try {
+                outcomes = applyRemovals(classified.ctx.mainPath, classified.inv, { now, limit: DAILY_REMOVAL_CAP });
+            } catch {
+                outcomes = [];
             }
+        }
+        const result = (() => {
+            const { inv, safe, rows, candidates, ctx } = classified;
             const removed = outcomes.filter((o) => o.removed).length;
             const decide = rows.filter((r) => r.classification === 'review').length;
-            const dir = commonDir(mainPath);
+            const dir = commonDir(ctx.mainPath);
             if (dir !== null) {
                 const record = {
                     at: now.toISOString(),
@@ -1226,7 +1306,7 @@ export function dailyCleanup(
                     `or set worktrees.cleanup: auto${cut}`;
             }
             return { mode, scanned: rows.length, total: candidates.length, removable: safe.length, removed, decide, line };
-        });
+        })();
         deps.stamp?.(root);
         return result;
     } catch {
@@ -1317,15 +1397,17 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
                 return 0;
             }
         }
+        const onlyBranch = branchFlag === undefined ? null : branchFlag.slice('--branch='.length);
         const inv = buildInventory(repo, {
             excludeLiveSessions: true,
+            selfSessionId: process.env['CLAUDE_CODE_SESSION_ID'] ?? null,
+            // `/pr:merge`'s own tree: its fresh mtimes are the merge, not a second session.
+            mergedBranch: flags.includes('--no-delay') ? onlyBranch : null,
             prIndex: flags.includes('--offline') ? null : readPrIndex(repo),
             mergeDelayHours: flags.includes('--no-delay') ? 0 : MERGE_DELAY_HOURS,
             ...(trunkFlag === undefined ? {} : { trunk: trunkFlag.slice('--trunk='.length) }),
         });
-        const outcomes = applyRemovals(repo, inv, {
-            onlyBranch: branchFlag === undefined ? null : branchFlag.slice('--branch='.length),
-        });
+        const outcomes = applyRemovals(repo, inv, { onlyBranch });
         if (flags.includes('--json')) {
             process.stdout.write(`${JSON.stringify({ outcomes, counts: inv.counts }, null, 2)}\n`);
         } else {

@@ -9,6 +9,7 @@
  * lives in `advisories.ts`, which a hook never imports.
  */
 
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -59,9 +60,23 @@ export function readAdvisorySettings(root: string): { mode: AdvisoriesMode; egre
     }
 }
 
+/**
+ * One cache per checkout. The git common dir is shared by every worktree of a
+ * repository, so the file is keyed by the checkout's own real path: a refresh
+ * inside a fix worktree describes that branch and never overwrites the main
+ * checkout's findings.
+ */
 export function statePath(root: string): string | null {
     const common = git_common_dir(root);
-    return common === null ? null : path.join(common, 'agent-config', 'advisories.json');
+    if (common === null) return null;
+    let real = path.resolve(root);
+    try {
+        real = fs.realpathSync(root);
+    } catch {
+        /* a vanished checkout still gets a stable key from its resolved path */
+    }
+    const key = createHash('sha256').update(real).digest('hex').slice(0, 16);
+    return path.join(common, 'agent-config', 'advisories', `${key}.json`);
 }
 
 export function readState(root: string): AdvisoryState | null {
@@ -82,7 +97,7 @@ export function readState(root: string): AdvisoryState | null {
  * a strict single-line grammar with a length cap before it is printed, and a
  * field that fails is replaced, never passed through (council 2026-10-21, round 2).
  */
-const FIELD = /^[A-Za-z0-9@._:/+~^<>=*-]{1,120}$/;
+const FIELD = /^[A-Za-z0-9@._:/+~^<>=*-]{1,200}$/;
 
 export function safeField(v: unknown, max = 80): string {
     if (typeof v === 'number' && Number.isInteger(v) && v >= 0 && v < 10_000_000) return String(v);
@@ -119,6 +134,8 @@ export function describe(f: Finding): string {
         case 'eol-soon':
             return `${tier} ${pkg}${ver}: security support ends ${date}${where(f)}`;
         case 'unknown':
+            if (typeof f.note === 'string' && f.note.includes('egress-none')) return `${tier} ${pkg}: not checked — advisories.egress is none`;
+            if (typeof f.note === 'string' && f.note.startsWith('vendor-patched')) return `${tier} ${pkg}${ver}: distro-patched — judge it by the distro's own advisory${where(f)}`;
             return `${tier} ${pkg}: unknown — the source did not answer`;
         default:
             return `${tier} ${pkg}${ver}${fix} [${verdict}] ${ids}${where(f)}`;
@@ -144,7 +161,10 @@ export function noticeLines(state: AdvisoryState | null, now: Date = new Date())
         const days = (now.getTime() - Date.parse(since)) / 86400000;
         if (days >= SILENCE_NOTICE_DAYS) lines.push(`advisories: ${safeField(source)} has not answered for ${Math.floor(days)} days — findings from it are unknown, not clear`);
     }
-    for (const l of mergedNotDeployed(state.remediations ?? {}, state.findings, now)) lines.push(l.replace(/[\r\n]/g, ' '));
+    for (const u of mergedNotDeployed(state.remediations ?? {}, state.findings, now)) {
+        const sha = u.mergeSha === null ? '' : ` (${safeField(u.mergeSha.slice(0, 12))})`;
+        lines.push(`advisory ${safeField(u.id)}: merged${sha} but not deployed for ${safeField(u.hours)} h — deploy it the way this project deploys`);
+    }
     if (ageH >= STALE_AFTER_HOURS) {
         lines.push(`advisories: data is ${Math.floor(ageH / 24) || 1} day(s) old — run \`agent-config audit:deps refresh\``);
     }

@@ -176,7 +176,7 @@ describe('following the fix (Phase 3)', () => {
         const { remediation: r } = claimRemediation(all, 'K', 's1', new Date('2026-10-20T00:00:00Z'));
         advance(r, 'fixed-in-trunk', new Date('2026-10-20T00:00:00Z'), { merge_sha: 'abc1234def' });
         expect(mergedNotDeployed(all, [finding({ key: 'K' })], new Date('2026-10-20T20:00:00Z'))).toEqual([]);
-        expect(mergedNotDeployed(all, [finding({ key: 'K' })], new Date('2026-10-21T01:00:00Z'))[0]).toMatch(/not deployed for 25 h/);
+        expect(mergedNotDeployed(all, [finding({ key: 'K' })], new Date('2026-10-21T01:00:00Z'))).toEqual([{ id: 'K', mergeSha: 'abc1234def', hours: 25 }]);
     });
 
     it('two sessions on one finding produce one fix (3.3)', () => {
@@ -222,3 +222,23 @@ function realGitOnly(cmd: string, args: string[], cwd: string): string | null {
         return null;
     }
 }
+
+describe('R2 review fixes (2026-10-21)', () => {
+    it('#7 — a direct dependency gets a range bump, not the transitive plan', () => {
+        const dir = path.join(tmp, 'direct');
+        fs.mkdirSync(dir);
+        fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ dependencies: { fastify: '^5.11.0' } }));
+        const p = fixPlan(finding(), readInventory(dir).entries);
+        expect(p.commands[0]).toBe('npm install fastify@^5.12.5 --save-exact=false');
+    });
+
+    it('#8 — a pin on another release line is named, never moved', () => {
+        const dir = path.join(tmp, 'lines');
+        fs.mkdirSync(dir);
+        fs.writeFileSync(path.join(dir, 'Dockerfile'), 'FROM node:18.20.4-alpine\n');
+        fs.writeFileSync(path.join(dir, '.nvmrc'), '22.11.0\n');
+        const p = fixPlan(finding({ ecosystem: 'runtime', package: 'node', version: '22.11.0', fixed: '22.11.1' }), readInventory(dir).entries);
+        expect(p.edits.map((e) => `${e.file} ${e.from}`)).toEqual(['.nvmrc 22.11.0']);
+        expect(p.note).toMatch(/another release line.*Dockerfile/);
+    });
+});

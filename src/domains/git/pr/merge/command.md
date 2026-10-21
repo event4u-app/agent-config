@@ -289,23 +289,6 @@ gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed
 Never force-merge past a
 failing required check, never admin-bypass.
 
-### The PR's worktree — removed after its merge
-
-After a merge this invocation performed, remove the worktree that held the PR's
-head branch, if one exists and the user armed it (`worktrees.cleanup: auto`,
-ADR-295). If this session is inside that worktree, leave it first (the host's
-`ExitWorktree`, or `cd` to the main checkout):
-
-```bash
-./scripts-run src/scripts/worktree_cleanup_check apply --branch=<head-branch> --no-delay --respect-setting
-```
-
-It removes only a tree that is proven merged, clean, holds no local-only ignored
-file and has no other live session — and re-checks all of that immediately
-before removing. It never uses force and never deletes the branch. Under
-`notify` it prints one line and removes nothing; a refusal is reported, never
-retried with force.
-
 ### The retro — once, after the last merge
 
 After `/pr:merge <N>` merged, and after `/pr:merge all` reached queue empty or

@@ -181,13 +181,40 @@ function readComposerJson(rel: string, text: string): InventoryEntry[] {
 }
 
 function readPackageJson(rel: string, text: string): InventoryEntry[] {
-    let doc: { engines?: Record<string, string>; packageManager?: string };
+    let doc: {
+        engines?: Record<string, string>;
+        packageManager?: string;
+        dependencies?: Record<string, string>;
+        devDependencies?: Record<string, string>;
+    };
     try {
         doc = JSON.parse(text);
     } catch {
         return [];
     }
     const out: InventoryEntry[] = [];
+    // Direct dependencies, as declared ranges: what decides whether a fix is a
+    // range bump of a direct dependency or an override of a transitive one.
+    // A range is never queried as if it were a version.
+    for (const [deps, scope] of [
+        [doc.dependencies ?? {}, 'runtime'],
+        [doc.devDependencies ?? {}, 'dev'],
+    ] as const) {
+        for (const [name, spec] of Object.entries(deps)) {
+            if (typeof spec !== 'string') continue;
+            out.push({
+                ecosystem: 'npm',
+                name,
+                version: null,
+                range: spec,
+                provenance: 'declared',
+                file: rel,
+                line: lineOf(text, `"${name}"`),
+                private: /^(file:|link:|git|github:|workspace:|\.|\/)/.test(spec),
+                scope,
+            });
+        }
+    }
     const node = doc.engines?.['node'];
     if (typeof node === 'string') out.push(runtime('node', node, 'declared', rel, lineOf(text, '"engines"')));
     const pm = /^(npm|pnpm|yarn|bun)@(\d[^+\s]*)/.exec(doc.packageManager ?? '');
@@ -233,7 +260,8 @@ function readToolVersions(rel: string, text: string): InventoryEntry[] {
  * never guessed into a runtime.
  */
 function imageEntry(ref: string, provenance: Provenance, file: string, line: number): InventoryEntry {
-    const m = /^(?:docker\.io\/)?(?:library\/)?(php|node)(?::([^@\s]+))?/.exec(ref);
+    // Anchored: the image NAME must be exactly php or node (phpmyadmin, nodered/node-red are not).
+    const m = /^(?:docker\.io\/)?(?:library\/)?(php|node)(?::([^@\s]+))?(?:@\S+)?$/.exec(ref);
     if (m) {
         const tag = m[2] ?? 'latest';
         const num = /^(\d+(?:\.\d+){0,2})/.exec(tag);
@@ -318,20 +346,25 @@ function sources(root: string): Array<{ rel: string; parse: (rel: string, text: 
 /** Read the whole inventory. Unreadable files are skipped, never guessed. */
 export function readInventory(root: string): Inventory {
     const hash = createHash('sha256');
+    const finger = createHash('sha256');
     const entries: InventoryEntry[] = [];
     const files: string[] = [];
     for (const { rel, parse } of sources(root)) {
         let text: string;
+        let st: fs.Stats;
         try {
+            st = fs.statSync(path.join(root, rel));
             text = fs.readFileSync(path.join(root, rel), 'utf-8');
         } catch {
             continue;
         }
         files.push(rel);
         hash.update(`${rel}\0${text}\0`);
+        finger.update(`${rel}\0${st.size}\0${st.mtimeMs}\0`);
         entries.push(...parse(rel, text));
     }
-    return { entries, hash: hash.digest('hex'), fingerprint: inventoryFingerprint(root), files };
+    // The same fingerprint `inventoryFingerprint` computes, from the same walk.
+    return { entries, hash: hash.digest('hex'), fingerprint: finger.digest('hex'), files };
 }
 
 /**

@@ -69,6 +69,7 @@ import {
     releaseDraft,
     reopenMitigations,
     routeSecurityFix,
+    suspiciousPaths,
     track,
 } from './_lib/security_fix.js';
 import { defaultExec, readRoutingContext } from './_lib/security_fix_context.js';
@@ -144,31 +145,54 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
         } catch {
             /* vanished between the two calls: treat as stale */
         }
-        if (!stale) {
+        let took = false;
+        if (stale) {
+            // Remove the stale lock, then take it with the same exclusive create:
+            // of two processes that both saw it stale, only one wins.
+            try {
+                fs.unlinkSync(lock);
+            } catch {
+                /* the other process removed it first */
+            }
+            try {
+                fs.writeFileSync(lock, `${process.pid} ${now.toISOString()}\n`, { flag: 'wx' });
+                took = true;
+            } catch {
+                took = false;
+            }
+        }
+        if (!took) {
             for (const p of todo) if (p.prev !== null) results.push({ state: p.prev, fetched: false, reason: 'refresh-in-progress' });
             return results;
         }
-        fs.writeFileSync(lock, `${process.pid} ${now.toISOString()}\n`);
     }
     try {
         const inventories = todo.map((p) => ({ ...p, inv: readInventory(p.root) }));
-        const egress = deps.egress ?? readAdvisorySettings(todo[0]!.root).egress;
+        // Egress is each project's own setting: one project's `query` never sends
+        // another project's names (and `--all-projects` reads them all).
+        const egressOf = new Map(inventories.map((p) => [p.root, deps.egress ?? readAdvisorySettings(p.root).egress]));
         const raw = new Map<string, RawFinding[]>();
         const reports = new Map<string, SourceReport[]>();
         for (const p of inventories) {
             raw.set(p.root, []);
             reports.set(p.root, []);
         }
-        if (egress === 'none') {
-            for (const p of inventories) reports.get(p.root)!.push({ source: 'osv', status: 'unavailable', reason: 'egress-none' });
-        } else {
+        const online = inventories.filter((p) => egressOf.get(p.root) === 'query');
+        for (const p of inventories.filter((x) => egressOf.get(x.root) === 'none')) {
+            reports.get(p.root)!.push({ source: 'osv', status: 'unavailable', reason: 'egress-none' });
+        }
+        if (online.length > 0) {
             const cache = readDetailCache(mdir);
-            const all = inventories.flatMap((p) => p.inv.entries.map((e) => ({ root: p.root, e })));
+            const all = online.flatMap((p) => p.inv.entries.map((e) => ({ root: p.root, e })));
             const osv = await osvQuery(all.map((x) => x.e), { fetcher: deps.fetcher, cache });
             writeJson(path.join(mdir, 'osv-details.json'), Object.fromEntries(cache));
-            for (const p of inventories) {
-                const mine = new Set(p.inv.entries);
-                raw.get(p.root)!.push(...osv.findings.filter((f) => all.some((x) => x.root === p.root && mine.has(x.e) && x.e.name === f.package && x.e.file === f.file)));
+            for (const p of online) {
+                // A finding belongs to a project only when that project holds the
+                // same package at the same VERSION in the same file.
+                const mine = p.inv.entries;
+                raw.get(p.root)!.push(
+                    ...osv.findings.filter((f) => mine.some((e) => e.name === f.package && e.file === f.file && e.version === f.version && !e.private)),
+                );
                 reports.get(p.root)!.push(osv.report);
                 const native = nativeAudits(p.root, p.inv.entries, deps.runner);
                 raw.get(p.root)!.push(...native.findings);
@@ -188,7 +212,10 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
             const a = announce(findings, p.prev?.ledger ?? emptyLedger(), now);
             const silent: Record<string, string> = {};
             for (const r of reports.get(p.root)!) {
-                if (r.status !== 'ok' && r.reason !== 'private-names-present') silent[r.source] = p.prev?.silent_since?.[r.source] ?? now.toISOString();
+                // A deliberate skip (private names, `egress: none`) is not silence (4.4).
+                if (r.status !== 'ok' && r.reason !== 'private-names-present' && r.reason !== 'egress-none') {
+                    silent[r.source] = p.prev?.silent_since?.[r.source] ?? now.toISOString();
+                }
             }
             const state: AdvisoryState = {
                 schema: 1,
@@ -210,7 +237,8 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
             reopenMitigations(remediations, findings);
             const sp = statePath(p.root);
             if (sp !== null) writeJson(sp, state);
-            results.push({ state, fetched: egress !== 'none', reason: egress === 'none' ? 'egress-none' : 'refreshed' });
+            const sent = egressOf.get(p.root) === 'query';
+            results.push({ state, fetched: sent, reason: sent ? 'refreshed' : 'egress-none' });
         }
         recordProjects(mdir, inventories.map((p) => ({ root: p.root, fingerprint: p.inv.fingerprint })), now);
     } finally {
@@ -310,6 +338,25 @@ export function issueBody(state: AdvisoryState | null): string {
     ].join('\n');
 }
 
+
+/** Changed paths of this branch against the trunk that a dependency fix must never touch (1.3). */
+function suspiciousInBranch(root: string): string[] {
+    const trunk = ['origin/main', 'origin/master', 'main', 'master'].find((r) => defaultExec('git', ['rev-parse', '--verify', '--quiet', r], root) !== null);
+    if (trunk === undefined) return [];
+    const base = defaultExec('git', ['merge-base', trunk, 'HEAD'], root)?.trim();
+    if (base === undefined || base === '') return [];
+    const changed = (defaultExec('git', ['diff', '--name-only', base], root) ?? '').split('\n').filter((l) => l !== '');
+    const scripts = (rev: string | null): Record<string, string> => {
+        const text = rev === null ? (() => { try { return fs.readFileSync(path.join(root, 'package.json'), 'utf-8'); } catch { return null; } })() : defaultExec('git', ['show', `${rev}:package.json`], root);
+        try {
+            return (JSON.parse(text ?? '{}') as { scripts?: Record<string, string> }).scripts ?? {};
+        } catch {
+            return {};
+        }
+    };
+    return suspiciousPaths(changed, changed.includes('package.json') ? { before: scripts(base), after: scripts(null) } : null);
+}
+
 // ---------------------------------------------------------------------------
 // CLI
 // ---------------------------------------------------------------------------
@@ -317,7 +364,7 @@ export function issueBody(state: AdvisoryState | null): string {
 function usage(): number {
     process.stderr.write(
         'usage: agent-config audit:deps refresh [--force] [--all-projects] | show [--json] | ' +
-            'accept <id> --reason=<text> --expires=YYYY-MM-DD | fix <id> [--here] | verify <id> | pr-body <id> [--verified] [--tests=passed] [--release=<x.y.z>] | mitigate <id> --note=<text> | track [--deployed] | notice | gaps | issue-body\n',
+            'accept <id> --reason=<text> --expires=YYYY-MM-DD | fix <id> [--here] | verify <id> | pr-body <id> [--verified] [--tests=passed] [--audit-ran] [--released-at=<iso>] [--release=<x.y.z>] | mitigate <id> --note=<text> | track [--deployed=<id>] | notice | gaps | issue-body\n',
     );
     return 2;
 }
@@ -368,6 +415,15 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
             return 1;
         }
         state.acceptances = [...state.acceptances.filter((x) => x.id !== id), a as Acceptance];
+        // Take effect now, not at the next refresh: the accepted finding leaves
+        // the notice and the interrupt queue immediately.
+        for (const f of state.findings) {
+            if (f.id === id || f.aliases.includes(id ?? '')) {
+                f.verdict = 'accepted';
+                f.tier = 'T3';
+            }
+        }
+        if (state.notice !== null) state.notice = { ...state.notice, interrupt: state.notice.interrupt.filter((k) => k.split('|')[0] !== id) };
         writeJson(sp, state);
         process.stdout.write(`accepted ${id} until ${a.expires}\n`);
         return 0;
@@ -412,13 +468,30 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
         }
         if (mode === 'verify') {
             const [after] = await refreshMany([root], { force: true });
-            const ok = after!.state.reports.filter((r) => r.status === 'ok').map((r) => r.source);
-            const proof = proveFixed(f.key, f.sources, { findings: after!.state.findings, okSources: ok });
-            const fresh = after!.state;
-            fresh.remediations = { ...(state.remediations ?? {}) };
+            if (after === undefined || after.reason === 'refresh-in-progress') {
+                // A refresh held by another process returns the OLD findings; a
+                // verdict on them would call a working fix failed. No verdict.
+                process.stdout.write(`${f.id}: unverifiable — another refresh is running; re-run verify in a minute\n`);
+                return 2;
+            }
+            const ok = after.state.reports.filter((r) => r.status === 'ok').map((r) => r.source);
+            const proof = proveFixed(f.key, f.sources, { findings: after.state.findings, okSources: ok });
+            // The refresh carried the remediations forward (and reopened mitigations); advance on its copy.
+            const fresh = after.state;
+            fresh.remediations = fresh.remediations ?? {};
             const r = fresh.remediations[f.key];
-            if (r !== undefined) advance(r, proof === 'fixed-in-branch' ? 'ready-to-merge' : proof === 'fix-failed' ? 'fix-failed' : r.state);
+            // Agent-config paths or install scripts in the fix diff stop the fix (1.3).
+            const suspicious = suspiciousInBranch(root);
+            if (r !== undefined) {
+                if (suspicious.length > 0) advance(r, 'fix-failed', new Date(), { note: `touches ${suspicious.join(', ')}` });
+                else if (proof === 'fixed-in-branch') advance(r, 'ready-to-merge');
+                else if (proof === 'fix-failed') advance(r, 'fix-failed');
+            }
             writeJson(sp, fresh);
+            if (suspicious.length > 0) {
+                process.stdout.write(`${f.id}: stopped — the fix changes ${suspicious.join(', ')}; a dependency update never touches agent configuration or install scripts\n`);
+                return 1;
+            }
             process.stdout.write(`${f.id}: ${proof}${proof === 'fix-failed' ? ' — the reporting source still reports it; do not call this fixed' : ''}\n`);
             return proof === 'fixed-in-branch' ? 0 : 1;
         }
@@ -439,7 +512,15 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
             before: `${f.sources.join(', ')} reported ${f.package} ${f.version ?? '?'} as ${f.verdict}`,
             after: rest.includes('--verified') ? 'fixed-in-branch' : 'unverifiable',
             tests,
-            cooldown: isFixFresh(flag('released-at') ?? null) ? `the fixing release is younger than the cooldown — the post-update audit ran` : 'outside the cooldown window',
+            cooldown: (() => {
+                const released = flag('released-at') ?? null;
+                const audited = rest.includes('--audit-ran');
+                if (released === null) return audited ? 'post-update audit ran (dependency-upgrade steps 1–6); release age not stated' : 'release age not stated — run the post-update audit before merging';
+                if (!isFixFresh(released)) return `the fixing release is older than the cooldown${audited ? '; post-update audit ran' : ''}`;
+                return audited
+                    ? 'the fixing release is younger than the cooldown; the post-update audit ran (dependency-upgrade steps 1–6)'
+                    : 'the fixing release is younger than the cooldown — the post-update audit has NOT been recorded; run it before merging';
+            })(),
             deploy: f.ecosystem === 'runtime' ? 'runtime: see the ops checklist; merged is not deployed' : 'ships with the next deploy of this project',
         });
         process.stdout.write(`${body}\n`);
@@ -467,10 +548,13 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
             const sha = mergedSha ?? r.merge_sha;
             const tags = sha === null ? null : defaultExec('git', ['tag', '--contains', sha], root);
             const deployRuns = sha === null ? null : defaultExec('gh', ['run', 'list', '--commit', sha, '--json', 'name,conclusion'], root);
-            let deployed = rest.includes('--deployed');
+            // `--deployed=<id>` confirms ONE fix by the user's word; a bare flag confirms nothing.
+            const confirmed = flag('deployed');
+            let deployed = confirmed !== undefined && (r.key.split('|')[0] === confirmed || r.key === confirmed);
             try {
                 const runs = deployRuns === null ? [] : (JSON.parse(deployRuns) as Array<{ name?: string; conclusion?: string }>);
-                deployed = deployed || runs.some((x) => /deploy|release/i.test(x.name ?? '') && x.conclusion === 'success');
+                // A deploy signal is a successful run whose name says deploy — not a release drafter.
+                deployed = deployed || runs.some((x) => /\bdeploy/i.test(x.name ?? '') && x.conclusion === 'success');
             } catch {
                 /* no deploy signal read — never assume one */
             }

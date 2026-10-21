@@ -151,7 +151,12 @@ export function nativeAudits(
             continue;
         }
         const line = (name: string): number => list.find((e) => e.name === name)?.line ?? 1;
-        const version = (name: string): string | null => list.find((e) => e.name === name)?.version ?? null;
+        // Several resolved versions of one name (nested duplicates): the audit
+        // does not say which one, so the version is unknown, never the first.
+        const version = (name: string): string | null => {
+            const vs = new Set(list.filter((e) => e.name === name).map((e) => e.version));
+            return vs.size === 1 ? ([...vs][0] ?? null) : null;
+        };
         if (npm) {
             const vulns = (doc as { vulnerabilities?: Record<string, { via?: unknown[]; fixAvailable?: unknown }> }).vulnerabilities ?? {};
             for (const [name, v] of Object.entries(vulns)) {
@@ -225,8 +230,60 @@ interface OsvVuln {
     id?: string;
     aliases?: string[];
     modified?: string;
+    severity?: Array<{ type?: string; score?: string }>;
     database_specific?: { severity?: string };
     affected?: Array<{ package?: { name?: string; ecosystem?: string }; ranges?: Array<{ events?: Array<{ fixed?: string }> }> }>;
+}
+
+/**
+ * CVSS v3.x base score from a vector string, per the specification's published
+ * formula. `null` for anything else (a v4 vector, a malformed one): an unknown
+ * score is left unknown rather than guessed.
+ */
+export function cvss3Base(vector: string): number | null {
+    const m = /^CVSS:3\.[01]\/(.+)$/.exec(vector.trim());
+    if (m === null) return null;
+    const v: Record<string, string> = {};
+    for (const part of m[1]!.split('/')) {
+        const [k, val] = part.split(':');
+        if (k !== undefined && val !== undefined) v[k] = val;
+    }
+    const AV: Record<string, number> = { N: 0.85, A: 0.62, L: 0.55, P: 0.2 };
+    const AC: Record<string, number> = { L: 0.77, H: 0.44 };
+    const UI: Record<string, number> = { N: 0.85, R: 0.62 };
+    const CIA: Record<string, number> = { H: 0.56, L: 0.22, N: 0 };
+    const scope = v['S'];
+    const PR: Record<string, number> = scope === 'C' ? { N: 0.85, L: 0.68, H: 0.5 } : { N: 0.85, L: 0.62, H: 0.27 };
+    const need = [AV[v['AV'] ?? ''], AC[v['AC'] ?? ''], PR[v['PR'] ?? ''], UI[v['UI'] ?? ''], CIA[v['C'] ?? ''], CIA[v['I'] ?? ''], CIA[v['A'] ?? '']];
+    if (need.some((x) => x === undefined) || (scope !== 'U' && scope !== 'C')) return null;
+    const [av, ac, pr, ui, c, i, a] = need as number[];
+    const iss = 1 - (1 - c!) * (1 - i!) * (1 - a!);
+    const impact = scope === 'U' ? 6.42 * iss : 7.52 * (iss - 0.029) - 3.25 * Math.pow(iss - 0.02, 15);
+    const exploit = 8.22 * av! * ac! * pr! * ui!;
+    if (impact <= 0) return 0;
+    const roundUp = (x: number): number => {
+        const n = Math.round(x * 100000);
+        return n % 10000 === 0 ? n / 100000 : (Math.floor(n / 10000) + 1) / 10;
+    };
+    return scope === 'U' ? roundUp(Math.min(impact + exploit, 10)) : roundUp(Math.min(1.08 * (impact + exploit), 10));
+}
+
+function cvssScore(vuln: OsvVuln): number | null {
+    for (const s of vuln.severity ?? []) {
+        if (typeof s.score === 'string') {
+            const n = cvss3Base(s.score);
+            if (n !== null) return n;
+        }
+    }
+    return null;
+}
+
+function severityFromScore(score: number | null): Severity {
+    if (score === null) return null;
+    if (score >= 9) return 'critical';
+    if (score >= 7) return 'high';
+    if (score >= 4) return 'moderate';
+    return score > 0 ? 'low' : null;
 }
 
 /** Detail cache: an advisory is fetched again only when its `modified` stamp moved. */
@@ -242,6 +299,7 @@ export async function osvQuery(
     const queryable = entries.filter((e) => !e.private && e.version !== null && OSV_ECOSYSTEMS[e.ecosystem] !== undefined);
     if (queryable.length === 0) return { findings: [], report: { source: 'osv', status: 'ok', reason: 'nothing-queryable' } };
     const findings: RawFinding[] = [];
+    let partial: string | null = null;
     try {
         for (let i = 0; i < queryable.length; i += 1000) {
             const batch = queryable.slice(i, i + 1000);
@@ -250,8 +308,29 @@ export async function osvQuery(
             });
             const res = await fetcher('https://api.osv.dev/v1/querybatch', { method: 'POST', body, timeoutMs: opts.timeoutMs ?? 10000 });
             if (res.status !== 200) return { findings: [], report: { source: 'osv', status: 'error', reason: `http-${res.status}` } };
-            const doc = JSON.parse(await res.text()) as { results?: Array<{ vulns?: Array<{ id?: string; modified?: string }> }> };
+            const doc = JSON.parse(await res.text()) as {
+                results?: Array<{ vulns?: Array<{ id?: string; modified?: string }>; next_page_token?: string }>;
+            };
             const results = doc.results ?? [];
+            // A package with many advisories is paginated: follow each token (bounded).
+            for (let j = 0; j < results.length; j++) {
+                let token = results[j]?.next_page_token;
+                for (let page = 0; typeof token === 'string' && token !== '' && page < 5; page++) {
+                    const e = batch[j]!;
+                    const more = await fetcher('https://api.osv.dev/v1/querybatch', {
+                        method: 'POST',
+                        body: JSON.stringify({ queries: [{ package: { name: e.name, ecosystem: OSV_ECOSYSTEMS[e.ecosystem] }, version: e.version, page_token: token }] }),
+                        timeoutMs: opts.timeoutMs ?? 10000,
+                    });
+                    if (more.status !== 200) {
+                        partial = `page-http-${more.status}`;
+                        break;
+                    }
+                    const r = (JSON.parse(await more.text()) as typeof doc).results?.[0];
+                    results[j] = { vulns: [...(results[j]?.vulns ?? []), ...(r?.vulns ?? [])] };
+                    token = r?.next_page_token;
+                }
+            }
             for (let j = 0; j < batch.length; j++) {
                 const entry = batch[j]!;
                 for (const ref of results[j]?.vulns ?? []) {
@@ -261,9 +340,16 @@ export async function osvQuery(
                     let vuln = cache.get(id)?.modified === modified ? cache.get(id)!.vuln : null;
                     if (vuln === null) {
                         const det = await fetcher(`https://api.osv.dev/v1/vulns/${encodeURIComponent(id)}`, { timeoutMs: opts.timeoutMs ?? 10000 });
-                        if (det.status !== 200) continue;
-                        vuln = JSON.parse(await det.text()) as OsvVuln;
-                        cache.set(id, { modified, vuln });
+                        if (det.status === 200) {
+                            vuln = JSON.parse(await det.text()) as OsvVuln;
+                            cache.set(id, { modified, vuln });
+                        } else {
+                            // The batch SAID it is affected; a missing detail does not
+                            // undo that. Keep the finding with what is known, and mark
+                            // the source partial rather than ok.
+                            vuln = { id };
+                            partial = `detail-http-${det.status}`;
+                        }
                     }
                     findings.push({
                         id,
@@ -272,8 +358,8 @@ export async function osvQuery(
                         ecosystem: entry.ecosystem,
                         package: entry.name,
                         version: entry.version,
-                        severity: severityOf(vuln.database_specific?.severity),
-                        score: null,
+                        severity: severityOf(vuln.database_specific?.severity) ?? severityFromScore(cvssScore(vuln)),
+                        score: cvssScore(vuln),
                         kev: false,
                         fixed: smallestFix(vuln, entry),
                         date: null,
@@ -285,7 +371,7 @@ export async function osvQuery(
                 }
             }
         }
-        return { findings, report: { source: 'osv', status: 'ok', reason: null } };
+        return { findings, report: partial === null ? { source: 'osv', status: 'ok', reason: null } : { source: 'osv', status: 'error', reason: partial } };
     } catch (e) {
         return { findings: [], report: { source: 'osv', status: 'unavailable', reason: (e as Error).name === 'TimeoutError' ? 'timeout' : 'network' } };
     }

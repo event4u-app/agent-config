@@ -506,20 +506,17 @@ describe('merge evidence and the removable set — F1–F12', () => {
         expect(fs.existsSync(wt)).toBe(true);
     });
 
-    it('F7: a host-locked worktree → git itself refuses removal, nothing is journalled', () => {
+    it('F7: a host-locked worktree → review naming the lock, never removed (R2 #18)', () => {
         const wt = addStandardWorktree('f7', 'feat/f7');
         commitFile(wt, 'a.txt', 'x', 'w');
         mergeIntoMain('feat/f7');
         git(repo, ['worktree', 'lock', wt]);
         const inv = buildInventory(repo, { now: afterEverything() });
-        const outcomes = applyRemovals(repo, inv);
-        const o = outcomes.find((x) => fs.realpathSync(path.dirname(x.path)) === fs.realpathSync(path.dirname(wt)) && x.path.endsWith('f7'));
-        expect(o?.removed).toBe(false);
+        const row = rowFor(inv, wt);
+        expect(row.classification).toBe('review');
+        expect(row.reasons.join('\n')).toContain('locked');
+        expect(applyRemovals(repo, inv)).toEqual([]);
         expect(fs.existsSync(wt)).toBe(true);
-        const journal = fs.readFileSync(path.join(repo, '.git', REMOVAL_JOURNAL), 'utf-8');
-        const line = journal.split('\n').find((l) => l.includes('feat/f7'));
-        expect(line).toBeDefined();
-        expect(JSON.parse(line!).removed).toBe(false);
     });
 
     it('F8: a directory deleted by hand → review with the prune hint, never applied', () => {
@@ -788,3 +785,63 @@ describe('regenerable declaration on the trunk', () => {
         expect(localOnlyIgnored(wt, 'refs/heads/main')).toEqual([]);
     });
 });
+
+describe('R2 review fixes (2026-10-21)', () => {
+    it('#1 — the merge path removes the tree it just merged on a REAL clock, its own session aside', () => {
+        const wt = addStandardWorktree('own', 'feat/own');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/own');
+        const now = new Date();
+        const dir = register_dir(repo)!;
+        fs.mkdirSync(dir, { recursive: true });
+        write_record(dir, { session_id: 'me', platform: 'claude', worktree: wt, branch: 'feat/own', roadmap_slug: null, started_at: now.toISOString(), last_seen: now.toISOString() });
+        // Without the merge-path options: live (fresh mtimes, its own session in the register).
+        expect(rowFor(buildInventory(repo, { now, excludeLiveSessions: true }), wt).classification).toBe('live');
+        const inv = buildInventory(repo, { now, excludeLiveSessions: true, mergedBranch: 'feat/own', selfSessionId: 'me', mergeDelayHours: 0 });
+        expect(rowFor(inv, wt).classification).toBe('safe');
+        applyRemovals(repo, inv, { onlyBranch: 'feat/own' });
+        expect(fs.existsSync(wt)).toBe(false);
+    });
+
+    it('#1 — another session in the merged tree still keeps it', () => {
+        const wt = addStandardWorktree('other', 'feat/other');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/other');
+        const now = new Date();
+        const dir = register_dir(repo)!;
+        fs.mkdirSync(dir, { recursive: true });
+        write_record(dir, { session_id: 'someone-else', platform: 'claude', worktree: wt, branch: 'feat/other', roadmap_slug: null, started_at: now.toISOString(), last_seen: now.toISOString() });
+        const inv = buildInventory(repo, { now, excludeLiveSessions: true, mergedBranch: 'feat/other', selfSessionId: 'me', mergeDelayHours: 0 });
+        expect(rowFor(inv, wt).classification).toBe('live');
+    });
+
+    it('#16 — a session that registers between inventory and removal keeps the tree', () => {
+        const wt = addStandardWorktree('late', 'feat/late');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/late');
+        backdateGitDir('late', 10);
+        const inv = buildInventory(repo, { excludeLiveSessions: true });
+        expect(rowFor(inv, wt).classification).toBe('safe');
+        const dir = register_dir(repo)!;
+        fs.mkdirSync(dir, { recursive: true });
+        const now = new Date();
+        write_record(dir, { session_id: 'late', platform: 'claude', worktree: wt, branch: 'feat/late', roadmap_slug: null, started_at: now.toISOString(), last_seen: now.toISOString() });
+        const [o] = applyRemovals(repo, inv);
+        expect(o!.removed).toBe(false);
+        expect(fs.existsSync(wt)).toBe(true);
+    });
+
+    it('#15 — one matching comment does not vouch for a secret, nor for another block', () => {
+        fs.writeFileSync(path.join(repo, '.gitignore'), '# Generated build output\n/out/\n\n# local secrets and generated files\n.env.local\nnotes.txt\n');
+        git(repo, ['add', '.gitignore']);
+        git(repo, ['commit', '-m', 'ignore']);
+        const wt = addStandardWorktree('cmt', 'feat/cmt');
+        fs.mkdirSync(path.join(wt, 'out'), { recursive: true });
+        fs.writeFileSync(path.join(wt, 'out', 'x.js'), '');
+        fs.writeFileSync(path.join(wt, '.env.local'), 'SECRET=1');
+        const local = localOnlyIgnored(wt);
+        expect(local).toContain('.env.local');
+        expect(local).not.toContain('out/');
+    });
+});
+

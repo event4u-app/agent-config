@@ -5,7 +5,7 @@ review_by: 2026-12-15
 entry_condition:
   what: >
     Thirty days of real advisory data exist: the per-project advisory cache
-    (`<git-common-dir>/agent-config/advisories.json`) of at least one project
+    (`<git-common-dir>/agent-config/advisories/<checkout-key>.json`) of at least one project
     carries ledger entries whose `first_seen` spans 30 days or more, so a TTN
     reading is a history rather than one refresh. Checkable without judgement:
     `agent-config audit:deps show --json` on that project, oldest and newest

@@ -1,6 +1,22 @@
 {
   "version": "16.5.0",
   "entries": {
+    "advisories.egress": {
+      "type": "string",
+      "default": "query",
+      "enum": [
+        "none",
+        "query"
+      ]
+    },
+    "advisories.mode": {
+      "type": "string",
+      "default": "notify",
+      "enum": [
+        "off",
+        "notify"
+      ]
+    },
     "agent_config_version": {
       "type": "string",
       "default": ""
@@ -364,21 +380,6 @@
       "type": "boolean",
       "default": true
     },
-    "lean_projection.hosts": {
-      "type": "array",
-      "default": [
-        "claude-code"
-      ]
-    },
-    "lean_projection.mode": {
-      "type": "string",
-      "default": "eager-all",
-      "enum": [
-        "eager-all",
-        "thin",
-        "delivery"
-      ]
-    },
     "legal_review_prep.acknowledged": {
       "type": "boolean",
       "default": false
@@ -513,10 +514,6 @@
       "type": "unknown",
       "default": []
     },
-    "projection.rule_workspaces": {
-      "type": "array",
-      "default": []
-    },
     "quality.local_auto_run": {
       "type": "boolean",
       "default": false
@@ -526,6 +523,10 @@
       "default": true
     },
     "reasoning.enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "retro.enabled": {
       "type": "boolean",
       "default": true
     },
@@ -617,6 +618,16 @@
       "type": "boolean",
       "default": true
     },
+    "update.mode": {
+      "type": "string",
+      "default": "notify",
+      "enum": [
+        "off",
+        "notify",
+        "ask",
+        "auto"
+      ]
+    },
     "update_check.enabled": {
       "type": "boolean",
       "default": true
@@ -624,6 +635,15 @@
     "verbosity.offer_council_in_delivery": {
       "type": "boolean",
       "default": false
+    },
+    "worktrees.cleanup": {
+      "type": "string",
+      "default": "notify",
+      "enum": [
+        "off",
+        "notify",
+        "auto"
+      ]
     }
   },
   "removedKeys": [
@@ -654,6 +674,8 @@
     "knowledge.global_sharing.freshness.stale_after_days",
     "knowledge.global_sharing.redaction.enabled",
     "knowledge.global_sharing.redaction.halt_on_trigger",
+    "lean_projection.hosts",
+    "lean_projection.mode",
     "legal_review_prep.consented_at",
     "memory.cadence",
     "memory.review_threshold",
@@ -662,6 +684,7 @@
     "personal.pr_comment_bot_icon",
     "pipelines.skill_improvement",
     "project.pr_template",
+    "projection.rule_workspaces",
     "quality.wait_for_remote_ci",
     "reasoning.auto_gate",
     "reasoning.components.complexity_first",
