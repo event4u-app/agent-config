@@ -74,13 +74,11 @@ dispositioned in the ledger.
       workflow gates its admin-token step on `github.ref` (fixed with
       `d3b3935f74de`), but a branch can edit the workflow it dispatches; an
       environment deployment-branch rule is the control a branch cannot rewrite.
-      verify: `gh api repos/event4u-app/agent-config/environments/production-visibility`
-      shows a deployment branch policy admitting `main` only.
+      verify: `gh api repos/event4u-app/agent-config/environments/production-visibility/deployment-branch-policies --jq '[.branch_policies[].name]|join(",")'` -> /^main$/
 - [ ] **5.2 Redact the remaining absolute home paths in evidence prose.** One
       was redacted with `3628431c5f51`; 13 more tracked files under
       `agents/evidence/` carry them. Review-input packages stay as recorded.
-      verify: `rg -l -F '/Users/' agents/evidence --glob '!*.review-input/**'`
-      lists no file.
+      verify: `rg -c -F '/Users/' agents/evidence --glob '!*.review-input/**' | wc -l` -> /^\s*0$/
 
 ## Phase 6 — a review that completed, and a ledger with nothing open
 
@@ -92,8 +90,7 @@ dispositioned in the ledger.
 - [ ] **6.2 Disposition every finding of that review.** `fixed` with its
       commit, `false_positive` with the reason, `accepted_risk` only by the
       owner; the release proceeds only on an empty undispositioned list.
-      verify: `./scripts-run src/scripts/check_finding_dispositions --release 17.0.0`
-      reports no undispositioned finding.
+      verify: `./scripts-run src/scripts/check_finding_dispositions --release 17.0.0` -> 0
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-21 | reviewer: claude/host -->
