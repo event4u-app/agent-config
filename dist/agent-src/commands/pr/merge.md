@@ -725,6 +725,23 @@ is a set nobody can check a run against. `unauthorized` names what actually
 happens in its place — § 7's pause and § 6's straggler batch, the two ways a PR
 ends this run prepared and unmerged.
 
+### The retro — once, after the last merge
+
+After `/pr:merge <N>` merged, and after `/pr:merge all` reached queue empty or
+terminal-only — **never between two merges of one queue** — enqueue every PR this
+invocation merged as a retro unit, in one call:
+
+```bash
+./scripts-run src/scripts/retro enqueue-merged --pr <N> [--pr <M> …]
+```
+
+The merge is an event, never a permission: this reads no merge setting and
+writes none. It does nothing when `retro.enabled` is `false`, and it runs no
+model — the retro itself is worked from the queue line afterwards
+(`/retro`, memory pack). A run that merged nothing skips it.
+`/roadmap:process-full --merge` inherits this step, because it merges through
+this command.
+
 ### Held for you — one block, at the end of the run
 
 A run that handed anything over ends with exactly one block headed **Held for

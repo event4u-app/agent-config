@@ -44,6 +44,7 @@ approved_verbs:
   - mode
   - optimize
   - roadmap
+  - retro      # /retro — examine finished work (ADR-292, addendum to ADR-041 § 5)
 
 # Leading tokens banned for NEW visible commands regardless of the allowlist.
 banned_prefixes:

@@ -12554,7 +12554,12 @@ var MERGEABLE_KEYS = [
   // Whitelisting decides only whether a value SURVIVES the merge: it sets
   // nothing, and `installerThinsHost` still refuses a template-only value.
   "lean_projection.mode",
-  "lean_projection.hosts"
+  "lean_projection.hosts",
+  // `retro.enabled` is the one switch over the automatic retro (ADR-292). It
+  // ships `true`, so the only value worth writing is `false`, and a user who
+  // writes it once in the user-global file expects every checkout to honour
+  // it — without this row the off switch would be discarded silently.
+  "retro.enabled"
 ];
 var TEMPLATE_RELATIVE = path24.join("src", "config", "agent-settings.template.yml");
 var _PACKAGE_ROOT = resolvePackageRoot(import.meta.url);
@@ -19087,6 +19092,11 @@ var settingsSchema = external_exports.object({
       "Deterministic run-checkpoint production at session end (road-to-continuity-writer-activation Phase 1.4). on (default) = a session above the recycle threshold and inside a running roadmap contract leaves agents/runtime/state/checkpoints/<run>.json, so a killed run resumes from a derived checkpoint rather than from bookkeeping. off = no checkpoint; continuity writing, the recycle advisory and the context-fill surface are unaffected. Default ON because it is the behavior the tree already had \u2014 the switch exists to make the three session-end handlers independently disableable, not to change what ships."
     )
   }),
+  retro: external_exports.object({
+    enabled: external_exports.boolean().default(true).describe(
+      "Automatic retro after merged work (ADR-292, docs/contracts/retro-v1.md). true (default, owner directive 2026-10-12) = a merged PR and the first session of a new local day enqueue finished work; a deterministic triage picks what is worth one learning, and nothing behavior-changing is applied without a person. The one network read is the daily probe asking GitHub, through your own gh login, whether a pushed PR merged (repository and PR number only, three-second budget). false = no automatic path runs \u2014 no merge enqueue, no forge-merge marker, no daily probe and no network read; an explicit /retro still runs on request. Class C: an agent cannot set it; it cascades from the user-global file."
+    )
+  }).default({}),
   memory: external_exports.object({
     redact_patterns: external_exports.array(external_exports.string()).default([]).describe(
       "Regex patterns (one per line) that scrub matches from chat-history transcripts and memory before they hit disk. Use for secrets, customer names, internal URLs. Patterns are anchored and case-insensitive."

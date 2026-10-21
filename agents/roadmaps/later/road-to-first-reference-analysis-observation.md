@@ -1053,7 +1053,10 @@ not touch it.
 
 - **Pin:** commit `835660b0d`, blob
   `d6921d4cdaa4de52acf91d48fbc723e514d81d9f` of
-  `src/domains/analysis-workbench/analyze/repo/command.md`.
+  `src/domains/analysis-workbench/analyze/repo/command.md`. <!-- ref-ignore -->
+  (The path as it stood at the pin. It moved to `analyze/reference/` on
+  2026-10-20 — see § Post-pin known deltas; the pin line is left unedited
+  because it records where the blob was, not where the file is.)
 - **Known deltas between registration and the pin** — five commits, not the
   three the analysis-family roadmap named (`git log --since=2026-08-12` on the
   file, read at the pin):
@@ -1077,6 +1080,107 @@ changed is that they are no longer what a reader should act on: the frontmatter'
 three-part `entry_condition:` is, because it names the two blockers, their two
 distinct trust boundaries and the actor for each — which the three conditions
 above predate and do not cover.
+
+### Post-pin known deltas — opened 2026-10-20
+
+Additive. Nothing above is rewritten: the pin stays commit `835660b0d`, blob
+`d6921d4cdaa4de52acf91d48fbc723e514d81d9f`, and the registration-to-pin table
+above is untouched. This subsection exists because the pin's stated purpose is
+to make later drift **checkable**, and a drift that moves the file's path
+breaks the one-command check unless the move is recorded next to the pin.
+
+| Delta | Date | What moved | Inside a claimed section |
+|---|---|---|---|
+| `analyze/repo/command.md` → `analyze/reference/command.md` | 2026-10-20 | path only — ADR-288 D1's decided name lands (step 6.2b of `road-to-an-analysis-family-that-deepens-itself`). The door's `name:` becomes `analyze-reference` and the four retired spellings move into `replaces:`. No line of the five mechanisms' sections changed. | no |
+
+**Why this does not disturb the measurement.** The claim
+`reference-loop-upgrade-value` is about what the five mechanisms *produce* —
+an anchor table before the fetch, the bound-claim collision gate, the interop
+probe, verdict convergence and the bounded `--deep` tier. A rename moves no
+line inside any of them, so the upgraded arm an observation run would execute
+is byte-identical to the pinned one in every section the bar reads. The claim's
+own text already names the door `/analyze:reference-repo`, a spelling the tree
+has not carried since `8488bf078`; this move takes the tree toward the published
+claim rather than away from it.
+
+**The check, after the move.** Both forms survive the rename, and either is
+sufficient:
+
+```bash
+# follows the rename
+git log --follow --oneline 835660b0d..HEAD \
+  -- src/domains/analysis-workbench/analyze/reference/command.md
+
+# both paths named, rename detection on
+git diff -M 835660b0d..HEAD \
+  -- src/domains/analysis-workbench/analyze/repo/command.md \
+     src/domains/analysis-workbench/analyze/reference/command.md
+```
+
+The bare `git diff 835660b0d..HEAD -- <old path>` recorded above the table is
+the form that stops working; it is left in place as the record of what was
+written on 2026-10-17 rather than edited, and this paragraph is the correction.
+
+**Authority.** Recorded by a drain lane under ADR-237 (capability before role)
+executing ADR-288 D1, which already decided the name. The lane is *not* editing
+the pinned record, the three conditions of the authorizing seat, the shadow pin,
+or any frozen counting rule — all of those remain exactly as the council left
+them. It is adding one row to a drift ledger whose purpose is to receive rows.
+
+## Observation-slot offer — recorded 2026-10-20
+
+Step 6.5 of
+[`road-to-an-analysis-family-that-deepens-itself`](../road-to-an-analysis-family-that-deepens-itself.md)
+reads: *offer the first two source-door runs on this repository as the
+observation runs of `reference-loop-upgrade-value`, with the shadow arm its
+protocol requires — or decline, recorded.* This section is that record.
+
+**The offer:** made. The analysis family's source door is built and its first
+two runs are available to be spent as observation 1/2 and 2/2 of the claim.
+
+**The answer: declined for now.** Both slots stay unspent.
+
+**Why.** The comparator an observation run would be measured against is
+recorded in this file's own § Blockers → `shadow-pin-is-post-upgrade` as
+**known-invalid and un-ratified**. The claim's pre-registered falsification
+criteria fix the comparison as "against a shadow run of the pre-upgrade command
+text on the same reference" — the exact text this file records as not validly
+pinned. Accepting the offer against that comparator would spend a slot on a
+comparison this roadmap already calls inadmissible, and § Risk Register rank 1
+names that outcome precisely: *a flawed shadow reconstruction … produces a false
+data point that cannot be withdrawn from a pre-registered measurement, forcing a
+null and its bound reversions.* An invalid pair is the one failure mode that
+costs more than not running at all.
+
+**What this decline does NOT claim.** It does not say the runs are unwanted, it
+does not say the mechanisms are unmeasurable, and it does not retire the claim.
+It says the comparator is not yet admissible, which is a statement about
+`shadow-pin-is-post-upgrade` and nothing else.
+
+**The cost, named rather than hidden.** The claim carries a 180-day bound from
+registration (2026-08-12), and `docs/CLAIMS.md` fixes expiry as *the bar not
+cleared* — on expiry the interop-probe, convergence and `--deep` mechanisms
+revert and the null is published, while the anchor-table and bound-claim-gate
+mechanisms stay regardless. Declining therefore trades a false data point for a
+real risk that the window closes unspent (§ Risk Register rank 2). That trade is
+taken deliberately: a published null from an expired window is an honest result
+the claim pre-committed to, and a null forced by an inadmissible comparator is
+not.
+
+**Reversible, and how it reopens.** Nothing is spent, so this costs nothing to
+undo. The offer stands open and is accepted the moment
+`shadow-pin-is-post-upgrade` is ratified — by a full-strength AI council
+convened on the comparator question, or by the repository maintainer, the two
+actors the frontmatter's `entry_condition:` already names. No new gate is
+created here.
+
+**Authority.** Recorded by a drain lane under ADR-237 (capability before role).
+The decline is the reversible half of the step's own either/or: it preserves
+both slots and creates no commitment. **Accepting** the offer would spend a
+pre-registered slot irreversibly and stays owner-reserved — this lane did not
+take, and may not take, that half. The council of 2026-10-19 split 1:1 on the
+step (D19); on the preservation test a split routes the *preserving* disposition
+to the lane and the *spending* one to the owner, which is the line drawn here.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-07 | reviewer: claude/host -->

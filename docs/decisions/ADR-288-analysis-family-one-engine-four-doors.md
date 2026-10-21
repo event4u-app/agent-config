@@ -25,7 +25,7 @@ evidence:
   discovery: complete
   basis:
     - agents/evidence/council/analysis-family-naming.md
-    - agents/roadmaps/road-to-an-analysis-family-that-deepens-itself.md
+    - agents/roadmaps/archive/road-to-an-analysis-family-that-deepens-itself.md
     - src/domains/analysis-workbench/analyze/inbox/command.md:47
     - src/domains/meta/optimize/deep/command.md:115
     - src/scripts/ai_council/cli_agency_bounds.ts:4
@@ -167,6 +167,41 @@ those runs is lowered — fewer analysts, fewer loops, no exchange — and the n
 is published in this record. The comparison pairs are one vs three analysts,
 one vs three loops, and with vs without the exchange.
 
+**Calibration reading — 2026-10-20: fewer than ten runs exist, so no default
+was lowered and no null is published.** Recorded here because step 6.6 of
+`road-to-an-analysis-family-that-deepens-itself` asks this record to carry
+either the ten-run reading or the statement that fewer than ten runs exist.
+This is the second limb, and it is the honest one.
+
+Counted, with a control rather than from an empty `ls`: `agents/runtime/analysis/`
+does not exist, and `find . -name run.json -not -path './node_modules/*'`
+returns **0** over the whole checkout — while the same finder returns 367 over
+`agents/evidence/analysis/*.md`, so the zero is a reading and not a broken
+search. Exactly one execution is *known*: the 3.5 replay of 2026-10-19
+(`agents/evidence/analysis/analysis-family-replay-inbox-2026-10-s.md`), whose
+`run.json` validated against `analysis_run_record` on the machine that ran it.
+Ten is therefore not reached on either count — 0 visible, 1 known.
+
+No calibration was performed, and none was faked. A falsification pass over
+zero runs reports nothing about one-vs-three analysts, one-vs-three loops or
+with-vs-without the exchange, and recording its silence as a result would
+retire the question this rule exists to answer. Every default above stands
+exactly as declared, unmeasured and labelled so.
+
+**The obligation stays live, and it is already machine-surfaced** — no new gate
+is created for it. This record's `review_trigger:` opens with *"Reopen when the
+falsification rule in D9 fires on the first ten recorded runs"*, so
+`adr_cite_check` raises it at every citation of ADR-288 until it fires. That
+trigger, not a roadmap checkbox, is the carrier.
+
+**One measurability residue, named rather than left to be discovered.**
+`agents/runtime/` is gitignored, so `run.json` records never reach a checkout
+and "ten recorded runs exist" is **not decidable from this repository** — it is
+decidable only on the machine that accumulated them. Whoever calibrates counts
+locally, or the records need a committed counterpart first. That is a real gap
+in the rule as written, it is the owner's to close, and neither this reading nor
+step 6.6's closure pretends otherwise.
+
 ### D10 — ADR-118 conformance
 
 Every loop, round and fix cycle carries a numeric cap in the door's `limits:`
@@ -179,7 +214,7 @@ context file `src/agent-src/contexts/execution/analysis-loop.md`
 
 - `agents/evidence/council/analysis-family-naming.md` — the naming verdict, both
   seats, with the prompt committed beside it.
-- `agents/roadmaps/road-to-an-analysis-family-that-deepens-itself.md` § Context —
+- `agents/roadmaps/archive/road-to-an-analysis-family-that-deepens-itself.md` § Context —
   F1–F18 with their anchors; § Blockers — the two owner answers of D7 and D8.
 - `src/domains/analysis-workbench/analyze/inbox/command.md:47` — the branch and
   PR ban D5 lifts.
@@ -222,7 +257,7 @@ context file `src/agent-src/contexts/execution/analysis-loop.md`
 
 ## References
 
-- `agents/roadmaps/road-to-an-analysis-family-that-deepens-itself.md`
+- `agents/roadmaps/archive/road-to-an-analysis-family-that-deepens-itself.md`
 - `agents/roadmaps/later/road-to-first-reference-analysis-observation.md`
 - `docs/decisions/ADR-118-loop-engineering-boundaries.md`
 - `src/agent-src/contexts/execution/analysis-loop.md`
