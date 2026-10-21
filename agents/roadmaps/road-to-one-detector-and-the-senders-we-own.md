@@ -396,22 +396,7 @@ read cannot leak through any later bug.
       changing class precedence, logging a raw value or letting a credential
       token restore anywhere turns a named test red.
       verify: each listed mutation, applied to a scratch copy, fails at least one test; the recipes are `canary:` entries in `src/config/gate-coverage.yml`.
-      **Built 2026-10-20 for three of the four mutations; open on 2.3.** The
-      gate `check_egress_mutations` copies the three engine modules into a
-      scratch directory per recipe (never editing them in place) and requires
-      the named invariant to hold on the unmutated copy and fail on the mutated
-      one. Recipes live in `src/config/egress-mutations/`: class precedence
-      swapped, a credential token that restores, a raw value in the count
-      record — each killed. The canary contract is create-only, so a recipe
-      cannot itself be a `canary:` entry: the gate's row in
-      `src/config/gate-coverage.yml` carries one `canary:` that plants a
-      recipe changing nothing, which survives and turns the gate red. Wired in
-      `task ci` and `rule-backstops.yml`; `--self-test` 4/4 (a surviving, a
-      stale and an unknown recipe rejected); `check_gate_coverage` and
-      `check_ci_local_parity` green; `npx vitest run
-      tests/scripts/check_egress_mutations.test.ts` -> 0. **Still open:** the
-      IBAN-checksum mutation, which needs the IBAN row of 2.3 (owner-gated);
-      its recipe joins when that row lands.
+      Evidence: § Step evidence, 2.6.
 - [x] **2.7 The shapes with no vendor literal read the table too** — the
       keyword-assignment variants (`password =`, `api_key:`) the council bundler,
       `workspace_secrets` and the low-impact redactor read at their own
@@ -420,20 +405,7 @@ read cannot leak through any later bug.
       threshold and placeholder; the legacy-superset suite gains their frozen
       patterns before the move.
       verify: `npx vitest run src/scripts/_lib/egress_legacy_superset.test.ts` -> 0 with those patterns frozen, and `check_credential_spelling` fails a keyword-assignment or class-spelled shape outside the table (self-test case).
-      **Done 2026-10-20:** the table carries `ASSIGNMENT_KEYWORDS` with the
-      `assignmentPattern` builder, `AUTHORIZATION_HEADER` and
-      `CLASS_SPELLED_PREFIXES`. Seven sites read them, not three: the bundler,
-      `workspace_secrets`, the low-impact redactor, the explain scrubber,
-      `check_memory`, `lint_example_fences` and the table's own
-      `generic-assignment` row, plus both shapes in `check_reach_channels.ts`.
-      Every rebuilt regex is the frozen spelling byte for byte where the
-      consumer exposes it, and the frozen behaviour where it does not
-      (`egress_legacy_superset.test.ts` -> 0, 15 cases). The low-impact
-      redactor rides in the dispatch bundle (388 B of headroom), so it reads
-      the one keyword through `egress_prefixes.ts`, equality-tested against the
-      table. `check_credential_spelling --self-test` -> 8/8, with a class
-      spelling and an assignment shape rejected; run over the `origin/main`
-      copies of the seven files, its new checks flag all eight pre-move lines.
+      Evidence: § Step evidence, 2.7.
 
 ## Phase 3 — The grammar, and the requests this package writes (F1, F8)
 
@@ -476,60 +448,113 @@ response, with no host contract in between and no hook budget to spend — so
       high-confidence finding; a hit refuses the send. Responses are restored
       locally for display only; the retained record keeps placeholders.
       verify: the F1 sample leaves the bundler with five placeholders and `const token = getToken();` intact; a canary that plants a raw value past the replacement is refused by the final check, and removing the check turns the canary red.
-      **Built 2026-10-20; open on 2.3 only.** The bundler replaces span by span
-      through `src/scripts/ai_council/council_egress.ts` (one scope per run, the
-      replaced values held in memory only), with the table's new
-      `REVIEW_CREDENTIAL_ROWS` (a low-entropy password, a bearer value) and its
-      own three looser readings as rows, so `const token = getToken();` and
-      every key name survive. The final check runs in `callMember`, in
-      `curlJsonPost` before curl and before a CLI seat spawns.
-      `npx vitest run tests/scripts/ai_council/council_egress.test.ts` -> 0
-      (12 cases, 1 skipped): the canary that plants a replaced value is
-      refused with nothing sent and a member handed the same body directly
-      receives it; a high-confidence finding in the system prompt or a split
-      round is refused; a CLI seat refuses before spawning and books no call.
-      The F1 sample leaves with **two** placeholders (the connection URI and
-      the token), not five: the e-mail, IBAN and phone need the identifier rows
-      of 2.3, which are owner-gated. The five-placeholder case is written and
-      skips until those rows exist (`it.skipIf`). The removal half of the
-      verify is shown by the direct-call contrast in that test, not by deleting
-      the check: the host's auto-mode classifier refused an in-tree sabotage
-      edit of the security path, and the run did not route around it.
+      Evidence: § Step evidence, 3.3.
 - [x] **3.4 Every sender in the 0.4 census is one of three things:** routed
       through the same replacement and final check, marked as carrying a fixed
       corpus only, or listed `uncovered` with a reason. A new sender that is
       none of them fails the census gate.
       verify: the census has no empty cell; a fixture sender with no classification fails the gate.
-      **Done 2026-10-20:** every one of the 23 modules carries an
-      `egress-content:` marker; the census gains `coverage` and `reason`
-      columns and reads 2 asserted (the council clients and transport),
-      6 fixed-corpus, 15 uncovered (the 14 shell media adapters and the
-      proposer transport), 0 undeclared. `asserted` is accepted only from a
-      module that imports the final check. `egress_sender_census` exits 1 on an
-      undeclared sender even with `--write`. `npx vitest run
-      src/scripts/_lib/egress_sender_scan.test.ts` -> 0, 13 cases: no empty
-      cell over the tree, and a fixture sender with no marker fails the census
-      and passes once it has one. The census runs as that test in CI; it is
-      not a registered gate-coverage row.
+      Evidence: § Step evidence, 3.4.
 - [x] **3.5 What this package injects into a session goes through the engine
       too** — hot context, handoff and memory recall re-inject stored text.
       verify: a stored entry containing a listed value is injected as its token.
-      **Done 2026-10-20:** one choke point, not three: the dispatcher passes
-      every concern reply it hands back to the session — the `context` block at
-      session start (hot context, handoff) and every `reason` plus
-      `additional_context` (memory recall) — through `egressInjection`
-      (`hooks/egress_stage.ts`). In `protect` and `strict` each listed value
-      becomes its token under one scope per dispatch; an unproven key block or
-      an unavailable engine withholds the text; `off` and `observe` change
-      nothing. The per-text work (`tallyText`, `injectText`, `replaceJson`)
-      moved into the engine chunk as `_lib/egress_text.ts`, schema 2, which is
-      what pays for it: the dispatch bundle reads 1,549,728 B of 1,550,000 B
-      and the chunk 22,969 B of 28,000 B, with no ceiling raised. `npx vitest
-      run tests/scripts/hooks/egress_injection.test.ts` -> 0, 7 cases: through
-      the real dispatcher, a stored entry injected at session start and a
-      recalled one on a prompt arrive as their token in `protect`, and the same
-      entry arrives unchanged under `mode: off`. The hooks and egress suites
-      stay green (93 files).
+      Evidence: § Step evidence, 3.5.
+
+## Step evidence
+
+The build and done notes of the steps that outgrew the 150-word step cap,
+moved here unchanged so each step stays readable at its cap.
+
+### 2.6
+
+**Built 2026-10-20 for three of the four mutations; open on 2.3.** The
+gate `check_egress_mutations` copies the three engine modules into a
+scratch directory per recipe (never editing them in place) and requires
+the named invariant to hold on the unmutated copy and fail on the mutated
+one. Recipes live in `src/config/egress-mutations/`: class precedence
+swapped, a credential token that restores, a raw value in the count
+record — each killed. The canary contract is create-only, so a recipe
+cannot itself be a `canary:` entry: the gate's row in
+`src/config/gate-coverage.yml` carries one `canary:` that plants a
+recipe changing nothing, which survives and turns the gate red. Wired in
+`task ci` and `rule-backstops.yml`; `--self-test` 4/4 (a surviving, a
+stale and an unknown recipe rejected); `check_gate_coverage` and
+`check_ci_local_parity` green; `npx vitest run
+tests/scripts/check_egress_mutations.test.ts` -> 0. **Still open:** the
+IBAN-checksum mutation, which needs the IBAN row of 2.3 (owner-gated);
+its recipe joins when that row lands.
+
+### 2.7
+
+**Done 2026-10-20:** the table carries `ASSIGNMENT_KEYWORDS` with the
+`assignmentPattern` builder, `AUTHORIZATION_HEADER` and
+`CLASS_SPELLED_PREFIXES`. Seven sites read them, not three: the bundler,
+`workspace_secrets`, the low-impact redactor, the explain scrubber,
+`check_memory`, `lint_example_fences` and the table's own
+`generic-assignment` row, plus both shapes in `check_reach_channels.ts`.
+Every rebuilt regex is the frozen spelling byte for byte where the
+consumer exposes it, and the frozen behaviour where it does not
+(`egress_legacy_superset.test.ts` -> 0, 15 cases). The low-impact
+redactor rides in the dispatch bundle (388 B of headroom), so it reads
+the one keyword through `egress_prefixes.ts`, equality-tested against the
+table. `check_credential_spelling --self-test` -> 8/8, with a class
+spelling and an assignment shape rejected; run over the `origin/main`
+copies of the seven files, its new checks flag all eight pre-move lines.
+
+### 3.3
+
+**Built 2026-10-20; open on 2.3 only.** The bundler replaces span by span
+through `src/scripts/ai_council/council_egress.ts` (one scope per run, the
+replaced values held in memory only), with the table's new
+`REVIEW_CREDENTIAL_ROWS` (a low-entropy password, a bearer value) and its
+own three looser readings as rows, so `const token = getToken();` and
+every key name survive. The final check runs in `callMember`, in
+`curlJsonPost` before curl and before a CLI seat spawns.
+`npx vitest run tests/scripts/ai_council/council_egress.test.ts` -> 0
+(12 cases, 1 skipped): the canary that plants a replaced value is
+refused with nothing sent and a member handed the same body directly
+receives it; a high-confidence finding in the system prompt or a split
+round is refused; a CLI seat refuses before spawning and books no call.
+The F1 sample leaves with **two** placeholders (the connection URI and
+the token), not five: the e-mail, IBAN and phone need the identifier rows
+of 2.3, which are owner-gated. The five-placeholder case is written and
+skips until those rows exist (`it.skipIf`). The removal half of the
+verify is shown by the direct-call contrast in that test, not by deleting
+the check: the host's auto-mode classifier refused an in-tree sabotage
+edit of the security path, and the run did not route around it.
+
+### 3.4
+
+**Done 2026-10-20:** every one of the 23 modules carries an
+`egress-content:` marker; the census gains `coverage` and `reason`
+columns and reads 2 asserted (the council clients and transport),
+6 fixed-corpus, 15 uncovered (the 14 shell media adapters and the
+proposer transport), 0 undeclared. `asserted` is accepted only from a
+module that imports the final check. `egress_sender_census` exits 1 on an
+undeclared sender even with `--write`. `npx vitest run
+src/scripts/_lib/egress_sender_scan.test.ts` -> 0, 13 cases: no empty
+cell over the tree, and a fixture sender with no marker fails the census
+and passes once it has one. The census runs as that test in CI; it is
+not a registered gate-coverage row.
+
+### 3.5
+
+**Done 2026-10-20:** one choke point, not three: the dispatcher passes
+every concern reply it hands back to the session — the `context` block at
+session start (hot context, handoff) and every `reason` plus
+`additional_context` (memory recall) — through `egressInjection`
+(`hooks/egress_stage.ts`). In `protect` and `strict` each listed value
+becomes its token under one scope per dispatch; an unproven key block or
+an unavailable engine withholds the text; `off` and `observe` change
+nothing. The per-text work (`tallyText`, `injectText`, `replaceJson`)
+moved into the engine chunk as `_lib/egress_text.ts`, schema 2, which is
+what pays for it: the dispatch bundle reads 1,549,728 B of 1,550,000 B
+and the chunk 22,969 B of 28,000 B, with no ceiling raised. `npx vitest
+run tests/scripts/hooks/egress_injection.test.ts` -> 0, 7 cases: through
+the real dispatcher, a stored entry injected at session start and a
+recalled one on a prompt arrive as their token in `protect`, and the same
+entry arrives unchanged under `mode: off`. The hooks and egress suites
+stay green (93 files).
 
 ## Blockers
 
