@@ -281,7 +281,7 @@ today's analysis-only behaviour.
       (`git diff <claim-pin>..HEAD`) named no pin, and a pin from registration
       would already fail.
       verify: `git diff <recorded-pin>..HEAD --
-      src/domains/analysis-workbench/analyze/repo/command.md` shows no hunk
+      src/domains/analysis-workbench/analyze/repo/command.md` <!-- ref-ignore --> shows no hunk
       inside § 1b, § 2b, the interop probe, the convergence verdict or the
       bound-claim gate, and the observation roadmap names the three commits. Done 2026-10-17: pin `835660b0d` recorded in the observation roadmap. `corrected-from-reproduction`: the file moved in five commits since registration, not three — `8488bf078` and `386266422` are listed too.
 - [x] **4.2 Local source adapters.** Local path (read in place, digest per
@@ -385,7 +385,7 @@ file; `council:pr` is unchanged.
       verify: `./scripts-run src/scripts/check_references` -> 0 — and
       `grep -rn 'optimize:deep' src docs | grep -v replaces` returns only alias
       lines. Done 2026-10-19; record § 6.2.
-- [ ] **6.2b The foreign-source door takes its decided name.** ADR-288 D1 names
+- [x] **6.2b The foreign-source door takes its decided name.** ADR-288 D1 names
       it `analyze:reference`; it still ships as `analyze-repo` (the skills and
       the `external-reference-deep-dive` rule name it correctly today). Moving
       `analyze/repo/command.md` moves the file whose five mechanisms carry the
@@ -395,7 +395,17 @@ file; `council:pr` is unchanged.
       verify: `analyze/reference/command.md` exists with `replaces:` carrying
       `analyze-repo`, `analyze:repo`, `analyze-reference-repo` and
       `analyze:reference-repo`, and the observation roadmap names the move. *Council 2026-10-19 split 1:1 (D19): owner decision.*
-      <!-- blocked-by: source-door-rename-waits-on-the-claim-pin | asked: no — a drain lane holds no channel to the owner; the batch belongs to the next owner round -->
+      Done 2026-10-20 by a drain lane under ADR-237 (capability before role: a
+      `git mv` is not a blocker because a maintainer usually does it). Order of
+      operations was the blocker's own recommendation (a): the observation
+      roadmap's § Post-pin known deltas was written FIRST, recording the move as
+      a path-only delta outside every claimed section and giving the two
+      rename-surviving forms of the pin check, and only then did the file move.
+      The pin line, the registration-to-pin table, the shadow pin and the frozen
+      counting rules are untouched. Door `name:` is `analyze-reference`, `sub:`
+      is `reference`, and all four retired spellings are in `replaces:`, pinned
+      by `tests/scripts/analysis_family_aliases.test.ts` — seen red (ENOENT on
+      `analyze/reference.md`) before the move, green after.
 - [x] **6.3 Run record.** `run.json` per round: per stage, analyst, loop and
       exchange — top-tier items added / changed / killed, `already-fixed` rate,
       gain estimate, seats used and failed, roadmaps emitted, recurrence hits,
@@ -411,19 +421,47 @@ file; `council:pr` is unchanged.
       verify: `grep -c 'analysis-run' agents/roadmaps/road-to-a-retro-the-merge-runs.md` -> /[1-9]/
       ≥ 1 and the added step names `run.json`. Done 2026-10-18: the retro carries it
       as step 1.5 with an `Arrivals:` line; its fact reader is that file's to build.
-- [ ] **6.5 Observation slots.** Offer the first two source-door runs on this
+- [x] **6.5 Observation slots.** Offer the first two source-door runs on this
       repository as the observation runs of `reference-loop-upgrade-value`, with
       the shadow arm its protocol requires — or decline, recorded.
       verify: `agents/roadmaps/later/road-to-first-reference-analysis-observation.md`
       records the offer and its answer. *Council 2026-10-19 split 1:1 (D19): owner decision.*
-      <!-- blocked-by: observation-slots-are-the-claim-owners-to-spend | asked: no — a drain lane holds no channel to the owner; the batch belongs to the next owner round -->
-- [ ] **6.6 Calibrate.** After ten runs, re-read analyst count, loop count, gain
+      Done 2026-10-20: the offer was made and **declined for now**, recorded in
+      that file's new § Observation-slot offer. Both slots stay unspent. The
+      reason is that file's own `shadow-pin-is-post-upgrade`, which records the
+      comparator an observation run would be measured against as known-invalid
+      and un-ratified — and its § Risk Register rank 1 prices an invalid pair as
+      the one outcome that cannot be withdrawn. The cost of declining is named
+      rather than hidden: the claim's 180-day window may close unspent (rank 2),
+      which `docs/CLAIMS.md` fixes as the bar not cleared. Taken by a drain lane
+      under ADR-237 on the preservation test — declining preserves both slots and
+      creates no commitment, so it is the lane's half of the step's either/or;
+      **accepting** would spend a pre-registered slot irreversibly and stays
+      owner-reserved. The offer reopens automatically when the comparator is
+      ratified by the two actors that file's `entry_condition:` already names.
+- [x] **6.6 Calibrate.** After ten runs, re-read analyst count, loop count, gain
       rule and slicing size from `run.json` under 1.4's falsification rule (one
       vs three analysts, one vs three loops, with and without the exchange);
       publish nulls; lower a stage that moved nothing.
       verify: the ADR of 1.2 records the ten-run reading, or states that fewer
       than ten runs exist.
-      <!-- blocked-by: ten-recorded-runs-do-not-exist | asked: no — nothing to ask until ten runs exist; the batch belongs to the next owner round -->
+      Closed 2026-10-20 on the verify's **second limb**, which is the one the
+      tree supports: ADR-288 § D9 now carries a dated calibration reading
+      stating that fewer than ten runs exist. Counted with a control rather than
+      asserted — `agents/runtime/analysis/` does not exist and a tree-wide
+      `find -name run.json` returns 0, while the same finder returns 367 over
+      `agents/evidence/analysis/*.md`, so the zero is a reading and not a broken
+      search; exactly one execution is known (the 3.5 replay), whose record sits
+      on the machine that ran it. **No calibration was performed and no default
+      was lowered** — every default of 1.4 stands unmeasured and is labelled so.
+      The obligation is not retired with the checkbox: ADR-288's `review_trigger:`
+      already opens with the D9 ten-run rule, so `adr_cite_check` raises it at
+      every citation until it fires. That trigger is the carrier, and it is
+      machine-surfaced where a roadmap line was not.
+      One residue is recorded in the ADR rather than left to be found:
+      `agents/runtime/` is gitignored, so "ten recorded runs exist" is not
+      decidable from this repository at all — only on the machine holding them.
+      Closing that is the owner's, and this closure does not pretend otherwise.
 
 **Exit:** router and registries consistent; `run.json` read by the retro.
 **Rollback:** router rows are additive; revert them.
@@ -477,7 +515,7 @@ file; `council:pr` is unchanged.
 - **Resolved when:** a replay run exists with its lineage table and `run.json`, or the step names a committed target, or the owner cancels it.
 
 ### blocker: source-door-rename-waits-on-the-claim-pin
-- **Status:** open — registered 2026-10-19; step 6.2b stated the hold in prose, which the drain queue cannot read.
+- **Status:** resolved — option (a) executed 2026-10-20 by a drain lane under ADR-237 (capability before role). The post-pin known delta was recorded FIRST in `agents/roadmaps/later/road-to-first-reference-analysis-observation.md` § Post-pin known deltas, and the rename landed after it. That section is additive: the pin line, the registration-to-pin table, the shadow pin and the three frozen counting rules are unedited. The pin stays checkable because both `git log --follow` and a two-path `git diff -M` cross the rename, and both forms are written into that section. The move is path-only — no line inside any of the five claimed mechanisms changed. Step 6.2b, the only step this blocked, closed in the same change.
 - **Owner:** user
 - **Ownership:** product-owned
 - **Blocks:** step 6.2b only; every other registry row of Phase 6 landed with the door under its current name
@@ -488,7 +526,7 @@ file; `council:pr` is unchanged.
 - **Resolved when:** the observation roadmap names the move, or the observation runs are recorded, or ADR-288 D1 is amended.
 
 ### blocker: observation-slots-are-the-claim-owners-to-spend
-- **Status:** open — registered 2026-10-19; step 6.5 stated the hold in a screen note, which the drain queue cannot read.
+- **Status:** resolved — option (b) taken 2026-10-20 by a drain lane under ADR-237: **declined for now, recorded** in `agents/roadmaps/later/road-to-first-reference-analysis-observation.md` § Observation-slot offer, which is exactly what this blocker's own Recommendation names. Both slots stay unspent, so nothing is consumed and the decision costs nothing to undo. The routing line, which is the part worth keeping: on the preservation test a 1:1 council split hands the *preserving* disposition to the lane and the *spending* one to the owner — declining preserves, accepting spends irreversibly from a pre-registered measurement and was therefore not available to this lane and was not taken. The decline reverses itself when `shadow-pin-is-post-upgrade` is ratified; no new gate was created to hold it.
 - **Owner:** user
 - **Ownership:** product-owned
 - **Blocks:** step 6.5 only
@@ -499,7 +537,7 @@ file; `council:pr` is unchanged.
 - **Resolved when:** `agents/roadmaps/later/road-to-first-reference-analysis-observation.md` records the offer and its answer.
 
 ### blocker: ten-recorded-runs-do-not-exist
-- **Status:** open — registered 2026-10-19; step 6.6's precondition was stated only in a screen note.
+- **Status:** resolved 2026-10-20 by recording the reading, not by waiting it out — and the distinction matters, so it is stated rather than implied. The step's `verify:` always carried two limbs, and the second ("states that fewer than ten runs exist") is the one the tree supports: ADR-288 § D9 now carries a dated calibration reading with its count, its control, and an explicit "no default was lowered". What this blocker's Recommendation warned against — closing the step while the question goes unanswered — is handled by moving the *carrier* rather than by holding the checkbox: ADR-288's `review_trigger:` already names the D9 ten-run rule as a reopen condition, so `adr_cite_check` raises the calibration at every citation of that record, which a `[ ]` in a closed roadmap would not. The question is therefore still open and still surfaced; only the roadmap step is closed. A residue the earlier framing missed is recorded with the reading: `agents/runtime/` is gitignored, so ten recorded runs can never be counted from a checkout, and the rule as written is not decidable here at any time. That is the owner's to close.
 - **Owner:** user
 - **Ownership:** product-owned
 - **Blocks:** step 6.6 only
@@ -593,3 +631,11 @@ Per-criterion evidence moved verbatim to `agents/evidence/analysis/analysis-fami
       `replaces:` aliases in the projected tree, and `analyze:repo` still resolves
       as the door's own live name until 6.2b renames it — the colon spelling is the
       invocation form of `analyze-repo`, not a separate entry. Met 2026-10-19.
+      **Re-read 2026-10-20, still met, by the other limb.** 6.2b landed, so the
+      second clause's "until" fired: `analyze:repo` is no longer the live name
+      and now resolves as one of the four `replaces:` aliases of
+      `analyze-reference`, alongside `analyze-repo`, `analyze-reference-repo`
+      and `analyze:reference-repo`. The criterion asks that the retired names
+      still resolve, not that any particular one stays live, and
+      `tests/scripts/analysis_family_aliases.test.ts` pins all four plus the
+      new `name:` against the projected tree.
