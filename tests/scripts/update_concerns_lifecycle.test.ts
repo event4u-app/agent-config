@@ -38,6 +38,7 @@ function probe(candidate: string): string {
 }
 
 const statePath = (): string => path.join(tmp, 'state', 'update-notice.json');
+const throttleDir = (): string => path.join(tmp, 'agents', 'runtime', 'state', 'probe-throttle');
 
 function notice(over: Partial<NoticeDeps> = {}): NoticeDeps {
     // The fixture files are shared paths, so a default is written only when the
@@ -147,14 +148,22 @@ describe('update-notice state — the disable paths neither write nor delete', (
         ['CI', { env: { CI: 'true' } }],
     ];
     for (const [label, over] of disabled) {
-        it(`under ${label}, a pre-existing record keeps its bytes and its mtime`, () => {
+        it(`under ${label}, the session-start entry writes nothing: the record keeps its bytes and mtime, no throttle stamp appears`, () => {
             runNotice(notice());
             const before = snapshot(statePath());
-            const outcome = runNotice(notice({ ...over, probeStatePath: probe('3.0.0') }));
-            expect(outcome.lines).toEqual([]);
+            const lines: string[] = [];
+            const outcome = noticeOncePerDay(notice({ ...over, probeStatePath: probe('3.0.0'), err: { write: (t) => void lines.push(t) } }));
+            expect(outcome).toBeNull();
+            expect(lines).toEqual([]);
             expect(snapshot(statePath())).toEqual(before);
+            expect(fs.existsSync(throttleDir())).toBe(false);
         });
     }
+
+    it('the throttle stamp the assertions above look for is written by an enabled entry', () => {
+        expect(noticeOncePerDay(notice())).not.toBeNull();
+        expect(fs.readdirSync(throttleDir())).toEqual(['update-notice.stamp']);
+    });
 });
 
 function invite(statePathFor: string, over: Partial<InviteDeps> = {}): { deps: InviteDeps; out: string[] } {
