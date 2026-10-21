@@ -775,6 +775,29 @@ for a **category-A** call: a read, a navigation, a build, a test or a lint insid
 the working tree with no consequence operation attached
 (`src/scripts/hooks/category_a.ts`).
 
+**Corrected 2026-10-18** (`road-to-a-hard-floor-the-shell-cannot-talk-past` Phase 0):
+"inside the working tree" was enforced on the read tools only. The Bash branch now
+confines the argument shapes it can see — positionals, `--flag=value` values, the
+tail of a single-dash token (`sort -o/path`), any dash-led token containing `/`
+(which may be the previous option's value, `sort -o --/../x`) and everything after
+`--` — to the working tree,
+refuses any argument with an unquoted glob (`*`, `?`, `[`), because the shell expands
+it after the check and its result is never seen (`.*` reaches `..`, `le*` an outward
+symlink; `ls src/*.ts` loses its allow as the price), admits `git branch` only in its observational forms (listing, `-a`,
+`-r`, `-v`, `--show-current`, `--merged`/`--contains` filters), and the allow's
+reason names the working tree only when a path was actually confined for that
+call. Withholding an allow returns the host's own confirmation; it never adds a
+question from this package. The classifier splits on whitespace after refusing
+every shell metacharacter, including `\`; it is a guardrail against the shapes it
+names, not a shell-equivalent parser and not a per-program option grammar.
+Confinement now follows symlinks in both branches: an in-tree symlink that resolves
+outside the tree (or a path under one) is outside. That is the only filesystem read
+the classifier makes, and it can only withhold an allow: a missing suffix keeps its
+lexical answer, and any other resolution failure (`EACCES`, `ELOOP`) withholds. The
+check runs before the command does, so a link swapped in between is not seen —
+execution-time confinement is the OS sandbox's job. There is no switch that turns
+category A off; withdrawing it means reverting `permission_gate.ts`.
+
 The composition policy is **one `ask` or `deny` beats every `allow`**
 (`composePermissionDecision`), and the emission additionally requires the reduced
 severity to already be `allow`, so an allow can never travel with a finding. This
