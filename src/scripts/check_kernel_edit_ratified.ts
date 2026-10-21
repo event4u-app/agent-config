@@ -348,19 +348,26 @@ export interface GatedPaths {
 }
 
 /**
+ * Every file of the ratification mechanism itself, as one enumerable list, so
+ * a caller that must hold a claim for EACH of them — the escalation block's
+ * `needs-owner` line — iterates the same set the predicate below decides by.
+ */
+export const MECHANISM_PATHS: readonly string[] = [
+    SELF_PATH,
+    READER_PATH,
+    CLOSURE_READER_PATH,
+    POLICY_PATH,
+    WORKFLOW_PATH,
+    ...ANCHOR_PATHS,
+    ...MECHANISM_IMPORT_PATHS,
+];
+
+/**
  * True for a file of the ratification mechanism itself — the one list both the
  * classification and the subject digest read.
  */
 export function isMechanismPath(p: string): boolean {
-    return (
-        p === SELF_PATH ||
-        p === READER_PATH ||
-        p === CLOSURE_READER_PATH ||
-        p === POLICY_PATH ||
-        p === WORKFLOW_PATH ||
-        ANCHOR_PATHS.includes(p) ||
-        MECHANISM_IMPORT_PATHS.includes(p)
-    );
+    return MECHANISM_PATHS.includes(p);
 }
 
 /** Partition a changed-file list into the surfaces this gate watches. */
@@ -624,6 +631,12 @@ export interface GateResult {
     lines: string[];
     /** Number of changed paths inspected — the honest `scanned:` count. */
     scanned: number;
+    /**
+     * True when `lines` carries the user's question. `--quiet` hides a passing
+     * run's lines, and CI passes `--quiet`, so without this a passing change to
+     * the mechanism — the case the question exists for — would print nothing.
+     */
+    escalated?: boolean;
 }
 
 export function evaluate(
@@ -864,7 +877,7 @@ export function evaluate(
         }
         lines.push(...escalation);
         close(false);
-        return { exitCode: 1, lines, scanned };
+        return { exitCode: 1, lines, scanned, escalated: escalation.length > 0 };
     }
 
     if (failures.length > 0) {
@@ -876,7 +889,7 @@ export function evaluate(
     }
     lines.push(...escalation);
     close(true);
-    return { exitCode: 0, lines, scanned };
+    return { exitCode: 0, lines, scanned, escalated: escalation.length > 0 };
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
@@ -979,7 +992,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             'real state, and there is then no kernel rule, governance hook, plumbing source or ' +
             'mechanism file to ratify — the gate has read everything there was.',
     });
-    if (!quiet || result.exitCode !== 0) {
+    // `--quiet` keeps a passing run to its verdict line, except when the run
+    // carries the user's question: a passing change to the mechanism exits 0
+    // and is exactly the case that question is for.
+    if (!quiet || result.exitCode !== 0 || result.escalated === true) {
         for (const l of result.lines) {
             process.stdout.write(`${l}\n`);
         }

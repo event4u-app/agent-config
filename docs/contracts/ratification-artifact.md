@@ -728,7 +728,8 @@ and a subagent fan-out is never a substitute for the council here.
 `check_kernel_edit_ratified` prints that question when it can see the case: on
 a `refused` or `non-convergent` record, on a record short only of provider
 diversity, and on a change to the ratification mechanism itself that carries a
-council answer, passing or not. It fills in the verdict, the dissenting seats
+council answer, passing or not — under `--quiet` too, which is how CI runs it,
+so a passing change to the mechanism does not reach the log as silence. It fills in the verdict, the dissenting seats
 and the gated paths, and asks for the expected gain, the risk and the rollback,
 which it does not know. It stays silent on an authoring defect — no record, a
 self-ratified one, a stale `subject` — on the mechanism's own files too,

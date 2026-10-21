@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as gate from '../../src/scripts/check_kernel_edit_ratified.js';
 import {
@@ -305,24 +305,88 @@ describe('evaluate — when the user decides, the gate says so', () => {
 });
 
 describe('the advisory line is true: the merge gate holds the mechanism as needs-owner', () => {
-    it('every mechanism path this gate escalates on is needs-owner at merge', () => {
-        const mechanism = [
-            gate.SELF_PATH,
-            gate.READER_PATH,
-            gate.CLOSURE_READER_PATH,
-            gate.POLICY_PATH,
-            gate.WORKFLOW_PATH,
-            ...gate.ANCHOR_PATHS,
-            ...gate.MECHANISM_IMPORT_PATHS,
-        ];
-        for (const p of mechanism) {
+    // Iterates `MECHANISM_PATHS`, the list `isMechanismPath` decides by, so a
+    // path added to the mechanism is covered here without an edit to this test.
+    const changes = (p: string) => [
+        { status: 'M', path: p },
+        { status: 'A', path: p },
+        { status: 'D', path: p },
+        { status: 'R', oldPath: p, path: 'src/elsewhere/renamed.ts' },
+        { status: 'R', oldPath: 'src/elsewhere/renamed.ts', path: p },
+    ];
+
+    it('every mechanism path is needs-owner at merge, modified, added, deleted or renamed', () => {
+        expect(gate.MECHANISM_PATHS.length).toBeGreaterThan(0);
+        for (const p of gate.MECHANISM_PATHS) {
             expect(isMechanismPath(p), p).toBe(true);
-            const verdict = classifyChanges([{ status: 'M', path: p }], {
-                dirExistsInHead: () => true,
-                decisionPolicy: () => 'other',
-                consequenceMembers: new Set(),
-            }).verdict;
-            expect(verdict, p).toBe('needs-owner');
+            for (const change of changes(p)) {
+                const verdict = classifyChanges([change], {
+                    dirExistsInHead: () => true,
+                    decisionPolicy: () => 'other',
+                    consequenceMembers: new Set(),
+                }).verdict;
+                expect(verdict, `${change.status} ${p}`).toBe('needs-owner');
+            }
         }
+    });
+
+    it('polarity: a path outside the mechanism is not decided by the same predicate', () => {
+        expect(isMechanismPath('src/scripts/ai_council/prompts.ts')).toBe(false);
+    });
+});
+
+describe('main --quiet — the question reaches the CI log', () => {
+    /**
+     * CI runs this gate with `--quiet`, which keeps a passing run to nothing.
+     * A passing change to the mechanism exits 0 and is the case the question
+     * is for, so the block has to be printed through the CLI, not only placed
+     * in `GateResult.lines`. The assertions read what `main` WROTE.
+     */
+    function runMain(files: readonly string[]): { code: number; out: string } {
+        const writes: string[] = [];
+        const spy = vi.spyOn(process.stdout, 'write').mockImplementation((chunk: unknown) => {
+            writes.push(String(chunk));
+            return true;
+        });
+        const errSpy = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+        try {
+            const head = commitAll(root, 'change');
+            const code = gate.main([
+                '--quiet',
+                '--root',
+                root,
+                '--rev',
+                head,
+                '--base-ref',
+                `${head}~1`,
+                '--files',
+                ...files,
+            ]);
+            return { code, out: writes.join('') };
+        } finally {
+            spy.mockRestore();
+            errSpy.mockRestore();
+        }
+    }
+
+    beforeEach(() => {
+        fs.writeFileSync(path.join(root, 'README.md'), 'base\n');
+        commitAll(root, 'base');
+    });
+
+    it('a passing record over the mechanism prints the question under --quiet, exit 0', () => {
+        const rel = writeRecord('q.md', GOOD, BOTH_RATIFIED, [SELF_PATH]);
+        const r = runMain([SELF_PATH, rel]);
+        expect(r.code).toBe(0);
+        expect(r.out).toContain(ESCALATION_HEADING);
+        expect(r.out).toContain('the reviewer itself');
+    });
+
+    it('polarity: a passing record over an ordinary gated surface stays quiet', () => {
+        const rel = writeRecord('qk.md', GOOD, BOTH_RATIFIED);
+        const r = runMain([KERNEL, rel]);
+        expect(r.code).toBe(0);
+        expect(r.out).not.toContain(ESCALATION_HEADING);
+        expect(r.out).not.toContain('ratified by');
     });
 });
