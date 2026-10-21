@@ -38,14 +38,14 @@ function probe(candidate: string): string {
 }
 
 const statePath = (): string => path.join(tmp, 'state', 'update-notice.json');
-const throttleDir = (): string => path.join(tmp, 'agents', 'runtime', 'state', 'probe-throttle');
+const throttlePath = (): string => path.join(tmp, 'state', 'update-notice.stamp');
 
 function notice(over: Partial<NoticeDeps> = {}): NoticeDeps {
     // The fixture files are shared paths, so a default is written only when the
     // caller did not supply its own — otherwise it would overwrite the override.
     return {
         packageRoot: over.packageRoot ?? install('1.0.0'),
-        projectRoot: tmp,
+        throttlePath: throttlePath(),
         sessionId: 'own-session',
         env: {},
         isTty: true,
@@ -156,13 +156,26 @@ describe('update-notice state — the disable paths neither write nor delete', (
             expect(outcome).toBeNull();
             expect(lines).toEqual([]);
             expect(snapshot(statePath())).toEqual(before);
-            expect(fs.existsSync(throttleDir())).toBe(false);
+            expect(fs.existsSync(throttlePath())).toBe(false);
+            expect(fs.existsSync(path.join(tmp, 'agents'))).toBe(false);
         });
     }
 
-    it('the throttle stamp the assertions above look for is written by an enabled entry', () => {
+    it('the throttle stamp the assertions above look for is written by an enabled entry, and never under the workspace', () => {
         expect(noticeOncePerDay(notice())).not.toBeNull();
-        expect(fs.readdirSync(throttleDir())).toEqual(['update-notice.stamp']);
+        expect(fs.lstatSync(throttlePath()).isFile()).toBe(true);
+        expect(fs.existsSync(path.join(tmp, 'agents'))).toBe(false);
+        expect(noticeOncePerDay(notice())).toBeNull();
+    });
+
+    it('a link at the stamp path is replaced, never written through, and does not count as today', () => {
+        const target = path.join(tmp, 'victim.txt');
+        fs.writeFileSync(target, 'untouched\n');
+        fs.mkdirSync(path.dirname(throttlePath()), { recursive: true });
+        fs.symlinkSync(target, throttlePath());
+        expect(noticeOncePerDay(notice())).not.toBeNull();
+        expect(fs.readFileSync(target, 'utf-8')).toBe('untouched\n');
+        expect(fs.lstatSync(throttlePath()).isSymbolicLink()).toBe(false);
     });
 });
 

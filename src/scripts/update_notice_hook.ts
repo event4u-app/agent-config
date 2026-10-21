@@ -47,11 +47,11 @@ import { parseCuratedHead, RECONCILE_REASONS, updateNotice, type NoticeOutcome }
 import { parse_version } from './_lib/version_order.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
-import { probeRanToday, stampProbeRun } from './hooks/probe_throttle.js';
 import { is_replay_mode } from './hooks/state_io.js';
 
 export const CONCERN = 'update-notice';
 export const NOTICE_STATE_FILENAME = 'update-notice.json';
+export const NOTICE_THROTTLE_FILENAME = 'update-notice.stamp';
 const VALID_MODES: readonly string[] = ['off', 'notify', 'ask', 'auto'];
 
 /**
@@ -64,7 +64,9 @@ const VALID_MODES: readonly string[] = ['off', 'notify', 'ask', 'auto'];
  * carries another schema, reads as empty and is replaced on the next write.
  * Suppressed sessions — the kill switch included — neither write nor delete it.
  * Deleting the file is always safe. `staged` is advisory output: no install
- * path reads it.
+ * path reads it. Beside it, `update-notice.stamp` records the day the notice
+ * last ran; it is user-global, replaced by rename, and written only after a run
+ * that was not suppressed.
  */
 export const NOTICE_STATE_SCHEMA = 1;
 
@@ -146,25 +148,16 @@ function sessionIdFromEnvelope(raw: string): string | null {
     }
 }
 
-function workspaceFromEnvelope(raw: string): string | null {
-    try {
-        const doc: unknown = JSON.parse(raw);
-        const ws = (doc as Record<string, unknown> | null)?.['workspace_root'];
-        return typeof ws === 'string' && ws.trim() !== '' ? ws.trim() : null;
-    } catch {
-        return null;
-    }
-}
-
 export interface NoticeDeps {
     readonly packageRoot: string;
-    readonly projectRoot: string;
     readonly sessionId: string | null;
     readonly env: NodeJS.ProcessEnv;
     readonly isTty: boolean;
     readonly mode: UpdateMode | undefined;
     readonly probeStatePath: string | null;
     readonly noticeStatePath: string;
+    /** The user-global day stamp; never under the workspace, which a repository controls. */
+    readonly throttlePath: string;
     readonly registerDir: string;
     readonly err: { write(text: string): void };
 }
@@ -221,9 +214,35 @@ export function runNotice(deps: NoticeDeps, apply = true): NoticeOutcome {
 export function noticeOncePerDay(deps: NoticeDeps): NoticeOutcome | null {
     const dry = runNotice(deps, false);
     if (dry.suppressed !== null && !RECONCILE_REASONS.has(dry.suppressed)) return null;
-    if (probeRanToday(deps.projectRoot, CONCERN)) return null;
-    stampProbeRun(deps.projectRoot, CONCERN);
-    return runNotice(deps);
+    if (ranToday(deps.throttlePath)) return null;
+    const outcome = runNotice(deps);
+    stampToday(deps.throttlePath);
+    return outcome;
+}
+
+/** Local calendar day, so "once a day" follows the user's clock. */
+function localDay(d: Date): string {
+    return `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** True when the stamp is a regular file dated today. A link or any read problem is "not today". */
+export function ranToday(throttlePath: string): boolean {
+    try {
+        const st = fs.lstatSync(throttlePath);
+        return st.isFile() && localDay(st.mtime) === localDay(new Date());
+    } catch {
+        return false;
+    }
+}
+
+/** Replaces the stamp by rename, so a link at the path is replaced, never followed. */
+function stampToday(throttlePath: string): void {
+    if (is_replay_mode()) return;
+    try {
+        write_atomic(throttlePath, `${new Date().toISOString()}\n`);
+    } catch {
+        /* unwritable → the notice runs again next session, which only costs reads */
+    }
 }
 
 function packageRootOf(): string {
@@ -238,20 +257,19 @@ export function main(argv?: string[]): number {
     if (is_replay_mode()) return 0;
     try {
         const packageRoot = packageRootOf();
-        const projectRoot = workspaceFromEnvelope(raw) ?? process.env['CLAUDE_PROJECT_DIR'] ?? process.cwd();
         const mode = readUpdateMode();
         // The throttle stamp is a WRITE, so it comes after the decision that
         // this context may be written in at all — AC-2 asks for zero writes
         // under CI, a non-TTY, a source checkout and the opt-out.
         const deps: NoticeDeps = {
             packageRoot,
-            projectRoot,
             sessionId: sessionIdFromEnvelope(raw),
             env: process.env,
             isTty: Boolean(process.stderr.isTTY) || Boolean(process.stdout.isTTY),
             mode,
             probeStatePath: user_global_paths.resolve_with_fallback(STATE_FILENAME),
             noticeStatePath: user_global_paths.write_target(NOTICE_STATE_FILENAME),
+            throttlePath: user_global_paths.write_target(NOTICE_THROTTLE_FILENAME),
             registerDir: global_register_dir(),
             err: process.stderr,
         };
