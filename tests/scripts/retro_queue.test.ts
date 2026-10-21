@@ -440,7 +440,7 @@ describe('retro_queue — path C, the daily sweep', () => {
         // A fresh claim is not taken over from another worktree.
         expect(claimSweepDay(wt, '2026-10-21', Date.now())).toBeNull();
         // The generation a racing taker would create already exists, so its exclusive create fails.
-        const dir = path.join(path.dirname(queueDir(main)), 'retro-sweep');
+        const dir = path.join(path.dirname(queueDir(main)!), 'retro-sweep');
         expect(fs.existsSync(path.join(dir, 'claim.1'))).toBe(true);
         expect(fs.existsSync(path.join(dir, 'claim.0'))).toBe(false);
     });
