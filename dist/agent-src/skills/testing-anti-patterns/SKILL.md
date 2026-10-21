@@ -45,7 +45,12 @@ Do NOT use when:
 5. NEVER treat tests as an afterthought — write the failing test first.
 6. NEVER overfit an assertion — assert the general rule, derive expected values from inputs/seeded data, cover boundary + error cases.
 7. NEVER game the green — a failing test is a finding, not an obstacle; fix the code, never skip/weaken/delete the test or rewrite `expected` to the buggy output.
+8. NEVER stop at the function when the claim is about delivery — behaviour promised at an entry point (a CLI flag, a CI step, a hook) is tested THROUGH that entry point, or it is untested.
 ```
+
+Law 8 exists because a suite can be complete and still miss it: every case
+calls the pure function, every case is green, and the flag, the step or the
+caller that decides whether the result reaches anyone is in no test at all.
 
 ## Procedure: Run the gate before each anti-pattern
 
@@ -262,6 +267,7 @@ return **0** occurrences, and `hardcoded` returns **6**.
 - Long mock setups (> 50% of the test) are a signal that integration tests would be simpler — consider it before piling on more mocks.
 - **Diagnose, do not brute-force.** If a test fails after a mock change, **never guess** at another mock tweak — drop a debugger / Xdebug breakpoint at the seam, observe the real call shape, then mock minimally. Two retries without a root-cause hypothesis = STOP and rethink.
 - An assertion that derives from seeded data but only checks the happy path is still overfit — a code mutation survives it. Require ≥1 boundary/error/abuse case per behavior, not just line coverage.
+- **A green suite over `evaluate()` said nothing about `main --quiet`.** Measured in this repository on 2026-10-21: 21 cases proved a gate built the owner's question, and CI's `--quiet` printed none of it on the one passing path it existed for. A council review found it; a test driving `main(['--quiet', …])` and reading stdout went red with the fix removed.
 
 ## Do NOT
 
