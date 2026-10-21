@@ -97,6 +97,9 @@ output. It is the classifier and the data behind it.
       was a command removal. Wiring the surface clause as written would leave
       that shape uncovered, so the list is edited in the same change as the
       wiring or the clause ships with a known hole.
+      Re-screened (2026-10-21) by a `/roadmap:process-full` drain: no ADR
+      under `docs/decisions/` records option (a), so the blocker still holds
+      and nothing in this step is executable without the owner's ruling.
 - [x] **2.2 Replay the real history.** Score 10.0.0 → 16.0.0 through the new
       rule against the recorded rows.
       verify: 13.0.0, 14.0.0 and 16.0.0 come out **minor**; 12.0.0 and 15.0.0
@@ -400,6 +403,8 @@ direct check named in the revisit column.
       it with the owner, `openai` (1) amend with ordered wording. Both agree
       the shipped behaviour is right. Record and the proposed wording:
       `agents/evidence/council/release-impact-ac4-wording-20261018.md`.
+      Re-screened (2026-10-21): no owner ruling has landed since; the
+      criterion stays open and is not amended by the agent.
 - [x] **AC-5** `classifyUpdate` performs no filesystem or network access,
       asserted by a test that calls it with a frozen input.
 - [x] **AC-6** The banner, `upgrade` and `update` produce byte-identical
