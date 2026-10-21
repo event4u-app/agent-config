@@ -74,9 +74,11 @@ import { pruneAgedRefusalState, readSessionCounts } from './_lib/turn_end_refusa
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { probeRanToday, stampProbeRun } from './hooks/probe_throttle.js';
 import { retroDailyProbe } from './retro_sweep.js';
+import { dailyCleanup } from './worktree_cleanup_check.js';
 
 /** The `probe_throttle` stamp of the retro's daily probe. */
 const RETRO_PROBE_STAMP = 'retro-sweep';
+const WORKTREE_PROBE_STAMP = 'worktree-cleanup';
 
 /** Replay-fixture runs must never mutate state (same contract as chat_history). */
 const REPLAY_ENV_VAR = 'AGENT_CONFIG_REPLAY';
@@ -938,13 +940,23 @@ export function main(): number {
                     ranToday: (r) => probeRanToday(r, RETRO_PROBE_STAMP),
                     stamp: (r) => stampProbeRun(r, RETRO_PROBE_STAMP),
                 });
+                // The worktree pass rides the same slot on the same terms
+                // (worktrees roadmap 3.3, council 2026-10-21 Q1): once a day,
+                // a 3 s subprocess deadline, never throws. Under
+                // `worktrees.cleanup: auto` it removes the proven set — a
+                // declared authority expansion the user-owned key arms (ADR-295).
+                const worktrees =
+                    dailyCleanup(root, {
+                        ranToday: (r) => probeRanToday(r, WORKTREE_PROBE_STAMP),
+                        stamp: (r) => stampProbeRun(r, WORKTREE_PROBE_STAMP),
+                    })?.line ?? null;
                 const foreign = foreign_sessions_block(root, session_id, new Date());
-                const block = [foreign, retro].filter((b): b is string => b !== null).join('\n\n');
+                const block = [foreign, retro, worktrees].filter((b): b is string => b !== null).join('\n\n');
                 if (block !== '') {
                     process.stdout.write(
                         JSON.stringify({
                             decision: 'allow',
-                            reason: foreign !== null ? 'live foreign sessions on this repository' : 'retro queue',
+                            reason: foreign !== null ? 'live foreign sessions on this repository' : retro !== null ? 'retro queue' : 'worktree cleanup',
                             context: block,
                         }) + '\n',
                     );

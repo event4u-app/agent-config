@@ -9,14 +9,25 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    applyRemovals,
+    DAILY_RECORD,
+    dailyCleanup,
     buildInventory,
     checkWorktree,
     findScopeOverlaps,
     isStandardLocation,
+    localOnlyIgnored,
+    mergeEvidence,
     ownsOverlap,
+    type PrIndex,
+    readPrIndex,
+    registerWorktree,
+    REMOVAL_JOURNAL,
+    REMOVAL_LOCK,
     removalPlan,
     resolveTrunk,
 } from '../../src/scripts/worktree_cleanup_check.js';
+import { register_dir, write_record } from '../../src/scripts/_lib/session_register.js';
 
 let tmp = '';
 let repo = '';
@@ -395,5 +406,331 @@ describe('ownsOverlap glob-prefix semantics', () => {
 
     it('sibling prefixes that share a string prefix do NOT overlap', () => {
         expect(ownsOverlap('src/app/**', 'src/apple/**')).toBe(false);
+    });
+});
+
+// road-to-worktrees-that-leave-after-the-merge Phase 1–2: the fixtures F1–F12.
+// Each one is a real repository; the PR index is injected, never read from a
+// forge, so the matrix runs offline and deterministically.
+describe('merge evidence and the removable set — F1–F12', () => {
+    function squashMerge(branch: string): void {
+        git(repo, ['merge', '--squash', branch]);
+        git(repo, ['commit', '-m', `squash ${branch} (#1)`]);
+    }
+    function tipOf(branch: string): string {
+        return git(repo, ['rev-parse', `refs/heads/${branch}`]).trim();
+    }
+    function prIndex(rows: Array<[string, 'MERGED' | 'CLOSED' | 'OPEN', string, string | null]>): PrIndex {
+        const m: PrIndex = new Map();
+        for (const [branch, state, headOid, mergedAt] of rows) {
+            m.set(branch, [...(m.get(branch) ?? []), { state, headOid, mergedAt }]);
+        }
+        return m;
+    }
+    const longAgo = '2020-01-01T00:00:00Z';
+
+    it('F1: squash-merged + clean → review under the graph proof alone, safe under the PR proof', () => {
+        const wt = addStandardWorktree('f1', 'feat/f1');
+        commitFile(wt, 'a.txt', 'x', 'w1');
+        commitFile(wt, 'b.txt', 'y', 'w2');
+        squashMerge('feat/f1');
+
+        // The defect this fixture pins: the graph proof alone never holds for a
+        // squash merge. `merged-ancestor` is absent here by construction.
+        expect(mergeEvidence(repo, 'feat/f1', 'refs/heads/main', prIndex([])).evidence).toBeNull();
+
+        const index = prIndex([['feat/f1', 'MERGED', tipOf('feat/f1'), longAgo]]);
+        const row = rowFor(buildInventory(repo, { now: afterEverything(), prIndex: index }), wt);
+        expect(row.mergeEvidence).toBe('merged-pr');
+        expect(row.classification).toBe('safe');
+    });
+
+    it('F2: merge-commit → merged-ancestor, safe', () => {
+        const wt = addStandardWorktree('f2', 'feat/f2');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/f2');
+        const row = rowFor(buildInventory(repo, { now: afterEverything() }), wt);
+        expect(row.mergeEvidence).toBe('merged-ancestor');
+        expect(row.classification).toBe('safe');
+    });
+
+    it('F3: rebase-merged (fast-forward onto main) → merged-ancestor, safe', () => {
+        const wt = addStandardWorktree('f3', 'feat/f3');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        git(repo, ['merge', '--ff-only', 'feat/f3']);
+        expect(rowFor(buildInventory(repo, { now: afterEverything() }), wt).classification).toBe('safe');
+    });
+
+    it('F4: squash-merged, then one more local commit → the PR head no longer matches → review', () => {
+        const wt = addStandardWorktree('f4', 'feat/f4');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        const headAtMerge = tipOf('feat/f4');
+        squashMerge('feat/f4');
+        commitFile(wt, 'later.txt', 'z', 'after the merge');
+        const index = prIndex([['feat/f4', 'MERGED', headAtMerge, longAgo]]);
+        const row = rowFor(buildInventory(repo, { now: afterEverything(), prIndex: index }), wt);
+        expect(row.mergeEvidence).toBeNull();
+        expect(row.classification).toBe('review');
+    });
+
+    it('F5: proven merged but dirty → review', () => {
+        const wt = addStandardWorktree('f5', 'feat/f5');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/f5');
+        fs.writeFileSync(path.join(wt, 'a.txt'), 'edited');
+        expect(rowFor(buildInventory(repo, { now: afterEverything() }), wt).classification).toBe('review');
+    });
+
+    it('F6: a live session registered in the tree → live, whatever the mtimes say', () => {
+        const wt = addStandardWorktree('f6', 'feat/f6');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/f6');
+        const now = afterEverything();
+        expect(rowFor(buildInventory(repo, { now, excludeLiveSessions: true }), wt).classification).toBe('safe');
+
+        const dir = register_dir(repo)!;
+        fs.mkdirSync(dir, { recursive: true });
+        write_record(dir, {
+            session_id: 'f6-session',
+            platform: 'claude',
+            worktree: wt,
+            branch: 'feat/f6',
+            roadmap_slug: null,
+            started_at: now.toISOString(),
+            last_seen: now.toISOString(),
+        });
+        const row = rowFor(buildInventory(repo, { now, excludeLiveSessions: true }), wt);
+        expect(row.classification).toBe('live');
+        expect(applyRemovals(repo, buildInventory(repo, { now, excludeLiveSessions: true }))).toEqual([]);
+        expect(fs.existsSync(wt)).toBe(true);
+    });
+
+    it('F7: a host-locked worktree → git itself refuses removal, nothing is journalled', () => {
+        const wt = addStandardWorktree('f7', 'feat/f7');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/f7');
+        git(repo, ['worktree', 'lock', wt]);
+        const inv = buildInventory(repo, { now: afterEverything() });
+        const outcomes = applyRemovals(repo, inv);
+        const o = outcomes.find((x) => fs.realpathSync(path.dirname(x.path)) === fs.realpathSync(path.dirname(wt)) && x.path.endsWith('f7'));
+        expect(o?.removed).toBe(false);
+        expect(fs.existsSync(wt)).toBe(true);
+        const journal = fs.readFileSync(path.join(repo, '.git', REMOVAL_JOURNAL), 'utf-8');
+        const line = journal.split('\n').find((l) => l.includes('feat/f7'));
+        expect(line).toBeDefined();
+        expect(JSON.parse(line!).removed).toBe(false);
+    });
+
+    it('F8: a directory deleted by hand → review with the prune hint, never applied', () => {
+        const wt = addStandardWorktree('f8', 'feat/f8');
+        fs.rmSync(wt, { recursive: true, force: true });
+        const row = rowFor2(buildInventory(repo, { now: afterEverything() }), wt);
+        expect(row.classification).toBe('review');
+        expect(row.reasons.join('\n')).toContain('git worktree prune');
+    });
+
+    it('F9: PR closed unmerged → closed-unmerged, kept', () => {
+        const wt = addStandardWorktree('f9', 'feat/f9');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        const index = prIndex([['feat/f9', 'CLOSED', tipOf('feat/f9'), null]]);
+        const row = rowFor(buildInventory(repo, { now: afterEverything(), prIndex: index }), wt);
+        expect(row.mergeEvidence).toBe('closed-unmerged');
+        expect(row.classification).toBe('review');
+    });
+
+    it('F10: forge unreadable → the offline tree proof carries a squash merge, and stops a later commit', () => {
+        const wt = addStandardWorktree('f10', 'feat/f10');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        squashMerge('feat/f10');
+        const unreadable = readPrIndex(repo, {
+            run: () => {
+                throw new Error('gh: not logged in');
+            },
+        });
+        expect(unreadable).toBeNull();
+        const row = rowFor(buildInventory(repo, { now: afterEverything(), prIndex: unreadable }), wt);
+        expect(row.mergeEvidence).toBe('merged-equivalent');
+        expect(row.classification).toBe('safe');
+
+        commitFile(wt, 'later.txt', 'z', 'after');
+        const again = rowFor(buildInventory(repo, { now: afterEverything(), prIndex: null }), wt);
+        expect(again.mergeEvidence).toBeNull();
+    });
+
+    it('F11: an ignored file outside the regenerable set → review naming it; node_modules alone stays safe', () => {
+        fs.writeFileSync(path.join(repo, '.gitignore'), 'local.cfg\nnode_modules/\n');
+        git(repo, ['add', '.gitignore']);
+        git(repo, ['commit', '-m', 'ignore']);
+        const wt = addStandardWorktree('f11', 'feat/f11');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/f11');
+        fs.mkdirSync(path.join(wt, 'node_modules', 'pkg'), { recursive: true });
+        fs.writeFileSync(path.join(wt, 'node_modules', 'pkg', 'index.js'), '');
+        expect(rowFor(buildInventory(repo, { now: afterEverything() }), wt).classification).toBe('safe');
+
+        fs.writeFileSync(path.join(wt, 'local.cfg'), 'secret-ish');
+        const row = rowFor(buildInventory(repo, { now: afterEverything() }), wt);
+        expect(row.classification).toBe('review');
+        expect(row.reasons.join('\n')).toContain('local.cfg');
+    });
+
+    it('F11b: a pattern whose .gitignore comment says "generated" counts as regenerable', () => {
+        fs.writeFileSync(path.join(repo, '.gitignore'), '# Generated projection, rebuilt by sync\n/.projection/\n');
+        git(repo, ['add', '.gitignore']);
+        git(repo, ['commit', '-m', 'ignore']);
+        const wt = addStandardWorktree('f11b', 'feat/f11b');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/f11b');
+        fs.mkdirSync(path.join(wt, '.projection'), { recursive: true });
+        fs.writeFileSync(path.join(wt, '.projection', 'x.md'), '');
+        expect(localOnlyIgnored(wt)).toEqual([]);
+    });
+
+    it('F12: a sibling worktree is eligible by registration or by `<repo>-*` plus proof, never by location', () => {
+        const sib = path.join(tmp, 'repo-lane-a');
+        git(repo, ['worktree', 'add', sib, '-b', 'feat/f12']);
+        commitFile(sib, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/f12');
+        expect(rowFor(buildInventory(repo, { now: afterEverything() }), sib).classification).toBe('safe');
+
+        const other = path.join(tmp, 'unrelated-dir');
+        git(repo, ['worktree', 'add', other, '-b', 'feat/f12b']);
+        commitFile(other, 'b.txt', 'x', 'w');
+        mergeIntoMain('feat/f12b');
+        const before = rowFor(buildInventory(repo, { now: afterEverything() }), other);
+        expect(before.classification).toBe('review');
+        expect(before.reasons.join('\n')).toContain('non-standard location');
+
+        registerWorktree(repo, other, 'test lane');
+        const after = rowFor(buildInventory(repo, { now: afterEverything() }), other);
+        expect(after.registered).toBe(true);
+        expect(after.classification).toBe('safe');
+    });
+
+    it('apply removes exactly the safe set, never the main tree, and journals the tip', () => {
+        const done = addStandardWorktree('ap1', 'feat/ap1');
+        commitFile(done, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/ap1');
+        const open = addStandardWorktree('ap2', 'feat/ap2');
+        commitFile(open, 'b.txt', 'y', 'unique');
+        const tip = tipOf('feat/ap1');
+
+        const inv = buildInventory(repo, { now: afterEverything() });
+        const outcomes = applyRemovals(repo, inv);
+        expect(outcomes.filter((o) => o.removed).length).toBe(1);
+        expect(fs.existsSync(done)).toBe(false);
+        expect(fs.existsSync(open)).toBe(true);
+        expect(fs.existsSync(repo)).toBe(true);
+        const journal = fs.readFileSync(path.join(repo, '.git', REMOVAL_JOURNAL), 'utf-8');
+        expect(journal).toContain(tip);
+        // The branch survives: D3, branches are never deleted by this tool.
+        expect(git(repo, ['branch', '--list', 'feat/ap1']).trim()).not.toBe('');
+    });
+
+    it('apply --branch removes only that PR’s tree, and the merge delay keeps a fresh merge', () => {
+        const a = addStandardWorktree('br1', 'feat/br1');
+        commitFile(a, 'a.txt', 'x', 'w');
+        squashMerge('feat/br1');
+        const b = addStandardWorktree('br2', 'feat/br2');
+        commitFile(b, 'b.txt', 'y', 'w');
+        mergeIntoMain('feat/br2');
+
+        const justNow = afterEverything().toISOString();
+        const index = prIndex([['feat/br1', 'MERGED', tipOf('feat/br1'), justNow]]);
+        const delayed = rowFor(buildInventory(repo, { now: afterEverything(), prIndex: index }), a);
+        expect(delayed.classification).toBe('review');
+        expect(delayed.reasons.join('\n')).toContain('merged less than 24h ago');
+
+        const inv = buildInventory(repo, { now: afterEverything(), prIndex: index, mergeDelayHours: 0 });
+        applyRemovals(repo, inv, { onlyBranch: 'feat/br1' });
+        expect(fs.existsSync(a)).toBe(false);
+        expect(fs.existsSync(b)).toBe(true);
+    });
+
+    it('two consecutive inventories leave every per-worktree index mtime unchanged', () => {
+        const wt = addStandardWorktree('mt', 'feat/mt');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/mt');
+        backdateGitDir('mt', 10);
+        const idx = path.join(repo, '.git', 'worktrees', 'mt', 'index');
+        const before = fs.statSync(idx).mtimeMs;
+        buildInventory(repo, new Date());
+        buildInventory(repo, new Date());
+        expect(fs.statSync(idx).mtimeMs).toBe(before);
+    });
+});
+
+function rowFor2(inv: ReturnType<typeof buildInventory>, wt: string) {
+    const row = inv.rows.find((r) => path.basename(r.path) === path.basename(wt));
+    if (row === undefined) throw new Error(`no inventory row for ${wt}`);
+    return row;
+}
+
+describe('check-to-remove and the daily pass (council 2026-10-21)', () => {
+    it('a tree that turns dirty between inventory and removal is kept by the re-check', () => {
+        const wt = addStandardWorktree('toctou', 'feat/toctou');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/toctou');
+        const inv = buildInventory(repo, { now: afterEverything() });
+        expect(rowFor(inv, wt).classification).toBe('safe');
+        fs.writeFileSync(path.join(wt, 'late.txt'), 'arrived after the inventory');
+        const [o] = applyRemovals(repo, inv);
+        expect(o!.removed).toBe(false);
+        expect(o!.error).toContain('changed since the inventory');
+        expect(fs.existsSync(wt)).toBe(true);
+    });
+
+    it('a held removal lock makes a second pass do nothing', () => {
+        const wt = addStandardWorktree('lock', 'feat/lock');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/lock');
+        fs.writeFileSync(path.join(repo, '.git', REMOVAL_LOCK), 'other-pass');
+        expect(applyRemovals(repo, buildInventory(repo, { now: afterEverything() }))).toEqual([]);
+        expect(fs.existsSync(wt)).toBe(true);
+    });
+
+    function backdateAll(): void {
+        for (const name of fs.readdirSync(path.join(repo, '.git', 'worktrees'))) backdateGitDir(name, 10);
+    }
+
+    it('notify mode removes nothing and says how many it could', () => {
+        const wt = addStandardWorktree('dn', 'feat/dn');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/dn');
+        backdateAll();
+        const r = dailyCleanup(repo, { mode: 'notify', run: () => '[]' })!;
+        expect(r.removable).toBe(1);
+        expect(r.removed).toBe(0);
+        expect(r.line).toContain('worktrees.cleanup: auto');
+        expect(fs.existsSync(wt)).toBe(true);
+    });
+
+    it('auto mode removes the proven set, records every candidate, and is stamped once', () => {
+        const done = addStandardWorktree('da', 'feat/da');
+        commitFile(done, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/da');
+        const open = addStandardWorktree('db', 'feat/db');
+        commitFile(open, 'b.txt', 'y', 'unique');
+        backdateAll();
+        let stamped = 0;
+        const r = dailyCleanup(repo, { mode: 'auto', run: () => '[]', stamp: () => void stamped++ })!;
+        expect(r.removed).toBe(1);
+        expect(r.line).toContain('1 removed');
+        expect(fs.existsSync(done)).toBe(false);
+        expect(fs.existsSync(open)).toBe(true);
+        expect(stamped).toBe(1);
+        const record = JSON.parse(fs.readFileSync(path.join(repo, '.git', DAILY_RECORD), 'utf-8'));
+        expect(record.rows.length).toBe(2);
+    });
+
+    it('off and an already-run day do nothing; a spent budget fails closed', () => {
+        const wt = addStandardWorktree('dx', 'feat/dx');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/dx');
+        backdateAll();
+        expect(dailyCleanup(repo, { mode: 'off' })).toBeNull();
+        expect(dailyCleanup(repo, { mode: 'auto', ranToday: () => true })).toBeNull();
+        expect(dailyCleanup(repo, { mode: 'auto', budgetMs: 0, run: () => '[]' })).toBeNull();
+        expect(fs.existsSync(wt)).toBe(true);
     });
 });
