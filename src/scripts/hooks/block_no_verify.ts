@@ -360,7 +360,9 @@ function _is_blocked(git_tokens: string[]): [boolean, string] {
     let i = 1; // skip 'git'
     while (i < git_tokens.length) {
         const tok = git_tokens[i] as string;
-        if (_NO_VERIFY_FLAGS.has(tok)) {
+        // git resolves any unambiguous prefix of a long option, so `--no-verif`
+        // is `--no-verify`; an ambiguous one git refuses itself.
+        if (_NO_VERIFY_FLAGS.has(tok) || (tok.length > 5 && '--no-verify'.startsWith(tok))) {
             return [true, `'${tok}'` + _BYPASSES + _REMEDY];
         }
         if (!shortNIsUnrelated && _NO_VERIFY_SHORT.has(tok)) {

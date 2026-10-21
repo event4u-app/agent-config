@@ -186,6 +186,30 @@ describe('block_no_verify — _is_blocked', () => {
     });
 });
 
+// git resolves any unambiguous prefix of a long option, so `--no-verif` is
+// `--no-verify` to git (17.0.0 self-review finding bc83fb66c55d).
+describe('block_no_verify — abbreviations of --no-verify', () => {
+    const prefixes = ['--no-v', '--no-ve', '--no-ver', '--no-veri', '--no-verif'];
+
+    it.each(prefixes)('blocks git commit %s', (flag) => {
+        expect(_is_blocked(['git', 'commit', flag, '-m', 'x'])[0]).toBe(true);
+    });
+
+    it.each(prefixes)('blocks git push %s', (flag) => {
+        expect(_is_blocked(['git', 'push', flag])[0]).toBe(true);
+    });
+
+    it('blocks the abbreviation end to end, after a separator', () => {
+        expect(_check_command('echo hi && git commit --no-verif -m x')[0]).toBe(true);
+    });
+
+    it('leaves options that only share the --no- stem alone', () => {
+        for (const flag of ['--no-', '--no-verbose', '--no-edit', '--no-verify-signatures']) {
+            expect(_is_blocked(['git', 'commit', flag])[0], flag).toBe(false);
+        }
+    });
+});
+
 // --- _check_command (fail-closed) -------------------------------------------
 
 describe('block_no_verify — _check_command', () => {
