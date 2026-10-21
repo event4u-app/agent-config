@@ -84,11 +84,27 @@ export function readState(root: string): AdvisoryState | null {
     if (p === null) return null;
     try {
         const doc = JSON.parse(fs.readFileSync(p, 'utf-8')) as AdvisoryState;
-        return doc.schema === 1 ? doc : null;
+        return isState(doc) ? doc : null;
     } catch {
         return null;
     }
 }
+
+const isObject = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+/** The shape every reader below relies on; a cache that is not it is no cache. */
+function isState(doc: unknown): doc is AdvisoryState {
+    if (!isObject(doc) || doc['schema'] !== 1 || typeof doc['at'] !== 'string') return false;
+    if (!Array.isArray(doc['findings']) || !doc['findings'].every((f) => isObject(f) && typeof f['key'] === 'string')) return false;
+    const n = doc['notice'];
+    if (n !== null && n !== undefined && !(isObject(n) && Array.isArray(n['interrupt']) && typeof n['digest'] === 'number')) return false;
+    if (doc['silent_since'] !== undefined && !isObject(doc['silent_since'])) return false;
+    if (doc['remediations'] !== undefined && !isObject(doc['remediations'])) return false;
+    return true;
+}
+
+/** Most lines a session start prints, whatever the cache holds. */
+export const MAX_NOTICE_LINES = 8;
 
 /**
  * Every field a session line carries comes from a cache file on disk, and the
@@ -150,25 +166,34 @@ export function describe(f: Finding): string {
 export function noticeLines(state: AdvisoryState | null, now: Date = new Date()): string[] {
     if (state === null) return [];
     const lines: string[] = [];
-    const ageH = (now.getTime() - Date.parse(state.at)) / 3600000;
+    // An unreadable or future timestamp proves nothing about freshness: stale.
+    const atMs = Date.parse(state.at);
+    const ageH = Number.isFinite(atMs) && atMs <= now.getTime() ? (now.getTime() - atMs) / 3600000 : Number.POSITIVE_INFINITY;
     const byKey = new Map(state.findings.map((f) => [f.key, f]));
     const pending = state.notice?.interrupt.map((k) => byKey.get(k)).filter((f): f is Finding => f !== undefined) ?? [];
     for (const f of pending) {
         lines.push(`advisory ${describe(f)} — fix now: /audit deps fix ${safeField(f.id)} (here or in its own worktree), or later`);
     }
     if ((state.notice?.digest ?? 0) > 0) lines.push(`advisories: ${safeField(state.notice!.digest)} more in the digest — /audit deps`);
-    for (const [source, since] of Object.entries(state.silent_since ?? {})) {
-        const days = (now.getTime() - Date.parse(since)) / 86400000;
+    for (const [source, since] of Object.entries(state.silent_since ?? {}).slice(0, 4)) {
+        const sinceMs = Date.parse(String(since));
+        if (!Number.isFinite(sinceMs) || sinceMs > now.getTime()) {
+            lines.push(`advisories: ${safeField(source)} silent since an unreadable date — findings from it are unknown, not clear`);
+            continue;
+        }
+        const days = (now.getTime() - sinceMs) / 86400000;
         if (days >= SILENCE_NOTICE_DAYS) lines.push(`advisories: ${safeField(source)} has not answered for ${Math.floor(days)} days — findings from it are unknown, not clear`);
     }
     for (const u of mergedNotDeployed(state.remediations ?? {}, state.findings, now)) {
         const sha = u.mergeSha === null ? '' : ` (${safeField(u.mergeSha.slice(0, 12))})`;
         lines.push(`advisory ${safeField(u.id)}: merged${sha} but not deployed for ${safeField(u.hours)} h — deploy it the way this project deploys`);
     }
-    if (ageH >= STALE_AFTER_HOURS) {
+    if (ageH === Number.POSITIVE_INFINITY) {
+        lines.push('advisories: data age unreadable — run `agent-config audit:deps refresh`');
+    } else if (ageH >= STALE_AFTER_HOURS) {
         lines.push(`advisories: data is ${Math.floor(ageH / 24) || 1} day(s) old — run \`agent-config audit:deps refresh\``);
     }
-    return lines;
+    return lines.length > MAX_NOTICE_LINES ? [...lines.slice(0, MAX_NOTICE_LINES - 1), `advisories: ${lines.length - MAX_NOTICE_LINES + 1} more — /audit deps`] : lines;
 }
 
 /** Shown once per notice: the stamp records which notice this checkout already printed. */
@@ -183,10 +208,12 @@ export function sessionNotice(root: string, now: Date = new Date()): string | nu
     } catch {
         shown = '';
     }
-    const id = `${state.notice?.at ?? ''}|${now.toISOString().slice(0, 10)}`;
-    if (shown === id) return null;
     const lines = noticeLines(state, now);
     if (lines.length === 0) return null;
+    // Keyed by what would be printed, not only by when: a same-day change in a
+    // silence, a remediation or staleness is a new notice.
+    const id = `${now.toISOString().slice(0, 10)}|${createHash('sha256').update(lines.join('\n')).digest('hex').slice(0, 16)}`;
+    if (shown === id) return null;
     try {
         fs.writeFileSync(stamp, `${id}\n`);
     } catch {

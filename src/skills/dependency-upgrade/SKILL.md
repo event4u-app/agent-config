@@ -294,8 +294,9 @@ source that reported it.
    register <path> --purpose=security-fix`) so its removal after the merge is
    not forgotten.
 2. **Build the smallest fix** — inside the current constraint first
-   (`npm update <pkg>`, an `overrides` entry for a transitive-only fix,
-   `composer update vendor/pkg --with-dependencies`); a constraint change only
+   (`npm update <pkg> --ignore-scripts`, an `overrides` entry for a
+   transitive-only fix, `composer update vendor/pkg --no-scripts --no-plugins`);
+   no install script runs before the diff is inspected; a constraint change only
    when the fixing version is outside it; a new major only with a stated
    compatibility analysis; never `npm audit fix --force`. A runtime fix changes
    every file that pins it in one commit. Run the post-update audit above,

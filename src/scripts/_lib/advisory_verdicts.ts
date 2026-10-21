@@ -220,6 +220,28 @@ export function buildFindings(
     return out.sort((a, b) => order[a.tier] - order[b.tier] || a.key.localeCompare(b.key));
 }
 
+/**
+ * A source that did not answer cannot retract what it reported last time. A
+ * previous finding every one of whose sources failed this run is carried over —
+ * while the same package at the same version is still installed — so a 429 or
+ * a timeout never reads as "fixed". A source that answered `ok` is the only one
+ * that can drop a finding.
+ */
+export function carryForward(findings: Finding[], previous: Finding[], reports: SourceReport[], entries: InventoryEntry[]): Finding[] {
+    const failed = new Set(reports.filter((r) => r.status !== 'ok').map((r) => r.source as string));
+    if (failed.size === 0) return findings;
+    const have = new Set(findings.map((f) => f.key));
+    const carried = previous.filter(
+        (f) =>
+            !f.key.startsWith('UNKNOWN-') &&
+            !have.has(f.key) &&
+            f.sources.length > 0 &&
+            f.sources.every((s) => failed.has(s)) &&
+            entries.some((e) => e.name === f.package && e.version === f.version),
+    );
+    return [...findings, ...carried.map((f) => ({ ...f, note: `carried — ${f.sources.join(', ')} did not answer this run` }))];
+}
+
 // ---------------------------------------------------------------------------
 // The delta ledger and the noise budget
 // ---------------------------------------------------------------------------

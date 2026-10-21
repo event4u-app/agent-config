@@ -389,6 +389,8 @@ export interface PrRecord {
     state: 'MERGED' | 'CLOSED' | 'OPEN';
     headOid: string;
     mergedAt: string | null;
+    /** The PR's base branch; a merge into another branch proves nothing about the trunk. */
+    base: string | null;
 }
 
 /** PR records keyed by head branch name. `null` means the forge was not read. */
@@ -420,7 +422,7 @@ export function readPrIndex(
     const run = opts.run ?? defaultGh(repoPath);
     try {
         const raw = run(
-            ['pr', 'list', '--state', 'all', '--limit', String(opts.limit ?? 1000), '--json', 'headRefName,headRefOid,state,mergedAt'],
+            ['pr', 'list', '--state', 'all', '--limit', String(opts.limit ?? 1000), '--json', 'headRefName,headRefOid,state,mergedAt,baseRefName'],
             Math.min(opts.timeoutMs ?? 15000, timeLeftMs() ?? Number.POSITIVE_INFINITY),
         );
         const rows = JSON.parse(raw) as Array<{
@@ -428,6 +430,7 @@ export function readPrIndex(
             headRefOid?: string;
             state?: string;
             mergedAt?: string | null;
+            baseRefName?: string;
         }>;
         if (!Array.isArray(rows)) return null;
         const index: PrIndex = new Map();
@@ -435,7 +438,12 @@ export function readPrIndex(
             if (typeof r.headRefName !== 'string' || typeof r.headRefOid !== 'string') continue;
             if (r.state !== 'MERGED' && r.state !== 'CLOSED' && r.state !== 'OPEN') continue;
             const list = index.get(r.headRefName) ?? [];
-            list.push({ state: r.state, headOid: r.headRefOid, mergedAt: r.mergedAt ?? null });
+            list.push({
+                state: r.state,
+                headOid: r.headRefOid,
+                mergedAt: typeof r.mergedAt === 'string' ? r.mergedAt : null,
+                base: typeof r.baseRefName === 'string' ? r.baseRefName : null,
+            });
             index.set(r.headRefName, list);
         }
         return index;
@@ -472,7 +480,10 @@ export function mergeEvidence(
     if (isAncestor(repoPath, branch, trunk)) return { evidence: 'merged-ancestor', mergedAt: null };
     if (prIndex !== null) {
         const tip = branchTip(repoPath, branch);
-        const prs = prIndex.get(branch) ?? [];
+        const trunkName = trunk.replace(/^refs\/(?:remotes\/[^/]+|heads)\//, '');
+        // Only a PR into the trunk speaks for the trunk; one merged into a
+        // release branch is not a record of this branch at all.
+        const prs = (prIndex.get(branch) ?? []).filter((p) => p.base === trunkName);
         const merged = prs.find((p) => p.state === 'MERGED' && p.headOid === tip);
         if (merged !== undefined) return { evidence: 'merged-pr', mergedAt: merged.mergedAt };
         if (prs.length > 0 && prs.every((p) => p.state === 'CLOSED')) {
@@ -526,15 +537,14 @@ function isRegenerablePattern(pattern: string): boolean {
 const NEVER_REGENERABLE = /\.env|secret|credential|token|\bkey|local|\.pem|\.p12|password/i;
 
 /**
- * True when the NEAREST comment group above `line` (1-based) reads as
- * "generated". Pattern lines between that group and `line` belong to it; a
- * comment further up belongs to another block and is not consulted, so one
- * matching comment cannot vouch for patterns it does not describe.
+ * True when the comment group IMMEDIATELY above `line` (1-based) reads as
+ * "generated". Another pattern line in between ends the search: a comment
+ * vouches for the one pattern it sits on, never for a later rule appended
+ * under it (`# generated` / `dist/` / `.env` must not cover `.env`).
  */
 function commentSaysGenerated(lines: string[], line: number, pattern: string): boolean {
     if (NEVER_REGENERABLE.test(pattern)) return false;
     let i = line - 2;
-    while (i >= 0 && lines[i]!.trim() !== '' && !lines[i]!.trim().startsWith('#')) i--;
     if (i < 0 || !lines[i]!.trim().startsWith('#')) return false;
     for (; i >= 0 && lines[i]!.trim().startsWith('#'); i--) {
         if (GENERATED_COMMENT.test(lines[i]!)) return true;
@@ -890,9 +900,13 @@ export function classifyEntry(e: WorktreeEntry, ctx: ClassifyContext): Inventory
             const shown = local.slice(0, 5).join(', ');
             reasons.push(`local-only files — ${local.length} ignored path(s) a rebuild would not restore: ${shown}`);
         }
-        if (verdict.mergedAt !== null && forge.mergeDelayHours > 0) {
-            const age = now.getTime() - Date.parse(verdict.mergedAt);
-            if (Number.isFinite(age) && age < forge.mergeDelayHours * 3600 * 1000) {
+        if (verdict.evidence === 'merged-pr' && forge.mergeDelayHours > 0) {
+            // The forge proof carries its own clock; an absent or unparseable
+            // merge time cannot show the delay has passed, so it keeps the tree.
+            const age = verdict.mergedAt === null ? Number.NaN : now.getTime() - Date.parse(verdict.mergedAt);
+            if (!Number.isFinite(age)) {
+                reasons.push('merge time unreadable — cannot show the follow-up delay has passed');
+            } else if (age < forge.mergeDelayHours * 3600 * 1000) {
                 reasons.push(`merged less than ${forge.mergeDelayHours}h ago — kept for a follow-up`);
             }
         }
@@ -1024,9 +1038,13 @@ function takeRemovalLock(mainPath: string, now: Date): (() => void) | null {
     const dir = commonDir(mainPath);
     if (dir === null) return null;
     const file = path.join(dir, REMOVAL_LOCK);
+    // The token names THIS holder: release deletes the lock only while it is
+    // still ours, so a pass that outlived the stale window cannot delete the
+    // lock a later pass took over.
+    const token = `${process.pid} ${now.toISOString()} ${Math.random().toString(36).slice(2)}`;
     const tryCreate = (): boolean => {
         try {
-            fs.writeFileSync(file, `${process.pid} ${now.toISOString()}\n`, { flag: 'wx' });
+            fs.writeFileSync(file, `${token}\n`, { flag: 'wx' });
             return true;
         } catch {
             return false;
@@ -1043,7 +1061,7 @@ function takeRemovalLock(mainPath: string, now: Date): (() => void) | null {
     }
     return () => {
         try {
-            fs.unlinkSync(file);
+            if (fs.readFileSync(file, 'utf-8').trim() === token) fs.unlinkSync(file);
         } catch {
             /* already gone — a stale-lock sweep by another pass */
         }
@@ -1080,11 +1098,12 @@ export function applyRemovals(
     if (release === null) return [];
     const outcomes: RemovalOutcome[] = [];
     const dir = commonDir(mainPath);
-    // One journal line per candidate, written the moment its outcome is known:
-    // a later throw cannot lose the record of a removal that already happened.
-    const journal = (o: RemovalOutcome): void => {
+    // Write-ahead: an `intent` line with the tip goes down BEFORE the removal and
+    // the outcome line after it, so a crash between the two still leaves the SHA
+    // that recreates the branch.
+    const journal = (o: RemovalOutcome, phase: 'intent' | 'outcome'): void => {
         if (dir === null) return;
-        const line = JSON.stringify({ at: now.toISOString(), path: o.path, branch: o.branch, tip: o.tip, evidence: o.evidence, removed: o.removed, error: o.error });
+        const line = JSON.stringify({ v: 1, phase, at: new Date().toISOString(), path: o.path, branch: o.branch, tip: o.tip, evidence: o.evidence, removed: o.removed, error: o.error });
         try {
             fs.appendFileSync(path.join(dir, REMOVAL_JOURNAL), `${line}\n`);
         } catch {
@@ -1099,17 +1118,29 @@ export function applyRemovals(
             // entered the tree after the inventory makes it live here.
             const ctx: ClassifyContext =
                 base.readSessions === true ? { ...base, sessionPaths: liveSessionPaths(base.mainPath, new Date(), base.selfSessionId ?? null) } : base;
+            // The entry is read AGAIN too: a tree switched to another branch or
+            // to a detached commit since the inventory is judged as it is now,
+            // never by the branch it had then.
             let again: InventoryRow | null = null;
             try {
-                again = classifyEntry({ path: r.path, branch: r.branch }, ctx);
+                const fresh = listWorktrees(mainPath).find((e) => canonical(e.path) === canonical(r.path));
+                const head = tryGit(canonical(r.path), ['rev-parse', '--verify', '--quiet', 'HEAD']);
+                if (fresh !== undefined && fresh.branch === r.branch && head !== null && head.trim() === r.tip) {
+                    again = classifyEntry(fresh, ctx);
+                } else {
+                    error = 'HEAD or branch changed since the inventory — kept';
+                }
             } catch {
                 again = null;
             }
-            if (again === null) {
+            if (error !== null) {
+                /* recorded below */
+            } else if (again === null) {
                 error = 'could not re-check it — kept';
             } else if (again.classification !== 'safe' || again.tip !== r.tip) {
                 error = `changed since the inventory — kept (${again.reasons[0] ?? 'tip moved'})`;
             } else {
+                journal({ path: r.path, branch: r.branch, tip: again.tip, evidence: again.mergeEvidence, removed: false, error: null }, 'intent');
                 try {
                     // A fixed, generous timeout of its own: a removal is never
                     // cut short by the classification budget mid-deletion.
@@ -1124,15 +1155,20 @@ export function applyRemovals(
                     error = (stderr === undefined ? String(e) : String(stderr)).trim().split('\n')[0] ?? 'refused';
                 }
             }
-            const o: RemovalOutcome = { path: r.path, branch: r.branch, tip: r.tip, evidence: r.mergeEvidence, removed: error === null, error };
+            const o: RemovalOutcome = {
+                path: r.path,
+                branch: r.branch,
+                tip: again?.tip ?? r.tip,
+                evidence: again?.mergeEvidence ?? r.mergeEvidence,
+                removed: error === null,
+                error,
+            };
             outcomes.push(o);
-            journal(o);
+            journal(o, 'outcome');
         }
-        try {
-            execFileSync('git', ['-C', mainPath, 'worktree', 'prune'], { stdio: 'ignore', env: gitEnv(), timeout: REMOVAL_TIMEOUT_MS });
-        } catch {
-            /* prune only clears registrations whose directory is already gone */
-        }
+        // No `git worktree prune` here: it is repository-wide, and a tree on an
+        // unmounted volume would lose its registration without ever having been
+        // judged. `git worktree remove` already drops the entry it removes.
     } finally {
         release();
     }
@@ -1145,13 +1181,20 @@ export const REMOVAL_TIMEOUT_MS = 30000;
 export const DAILY_REMOVAL_CAP = 3;
 
 /** The one line a session start or a merge prints after a removal pass. */
-export function removalSummary(inv: Inventory, outcomes: RemovalOutcome[]): string {
+export function removalSummary(inv: Inventory, outcomes: RemovalOutcome[], opts: { names?: boolean } = {}): string {
     const removed = outcomes.filter((o) => o.removed).length;
     const decide = inv.rows.filter((r) => r.classification === 'review' && !r.isMain).length;
     const branches = outcomes
         .filter((o) => o.removed && o.branch !== null && o.evidence !== 'merged-ancestor')
         .map((o) => o.branch!);
-    const hint = branches.length > 0 ? ` · local branches kept: git branch -D ${branches.map((b) => JSON.stringify(b)).join(' ')}` : '';
+    // Branch names stay out of what a session start injects; the CLI, run on
+    // purpose, prints them so the cleanup command can be copied.
+    const hint =
+        branches.length === 0
+            ? ''
+            : opts.names === false
+              ? ` · ${branches.length} local branch(es) kept (the removal journal names them)`
+              : ` · local branches kept: git branch -D ${branches.map((b) => JSON.stringify(b)).join(' ')}`;
     return `worktrees: ${removed} removed, ${decide} need a decision (/worktree cleanup)${hint}`;
 }
 
@@ -1221,11 +1264,11 @@ export function dailyCleanup(
     } = {},
 ): DailyResult | null {
     const now = deps.now ?? new Date();
-    const mode = deps.mode ?? cleanupMode(root);
-    if (mode === 'off') return null;
-    if (deps.ranToday?.(root) === true) return null;
-    const deadlineAt = Date.now() + (deps.budgetMs ?? DAILY_BUDGET_MS);
     try {
+        const mode = deps.mode ?? cleanupMode(root);
+        if (mode === 'off') return null;
+        if (deps.ranToday?.(root) === true) return null;
+        const deadlineAt = Date.now() + (deps.budgetMs ?? DAILY_BUDGET_MS);
         const classified = withDeadline(deadlineAt, () => {
             const entries = listWorktrees(root);
             const mainPath = canonical(entries.length > 0 ? entries[0]!.path : root);
@@ -1299,7 +1342,7 @@ export function dailyCleanup(
             const cut = rows.length < candidates.length ? ` (${rows.length}/${candidates.length} checked today)` : '';
             let line: string | null = null;
             if (mode === 'auto' && (removed > 0 || decide > 0)) {
-                line = `${removalSummary(inv, outcomes)}${cut}`;
+                line = `${removalSummary(inv, outcomes, { names: false })}${cut}`;
             } else if (mode === 'notify' && safe.length > 0) {
                 line =
                     `worktrees: ${safe.length} merged, clean and unused — remove with /worktree cleanup --apply, ` +

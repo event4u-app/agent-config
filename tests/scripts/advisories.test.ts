@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { inventoryFingerprint, readInventory } from '../../src/scripts/_lib/advisory_inventory.js';
 import { describe as describeFinding } from '../../src/scripts/_lib/advisory_notice.js';
-import { assertAllowed, cvss3Base, type Fetcher, type Runner } from '../../src/scripts/_lib/advisory_sources.js';
+import { assertAllowed, cvss3Base, type Fetcher, nativeAudits, osvQuery, type Runner, vendorAnnouncements } from '../../src/scripts/_lib/advisory_sources.js';
 import {
     announce,
     emptyLedger,
@@ -431,7 +431,19 @@ describe('R2 review fixes (2026-10-21)', () => {
         const b = project('F1-fastify-hono', 'b');
         const lock = path.join(b, 'package-lock.json');
         fs.writeFileSync(lock, fs.readFileSync(lock, 'utf-8').replace(/"version": "5\.12\.4"/, '"version": "5.12.5"'));
-        const { fetcher } = replay('F1-fastify-hono');
+        const { fetcher: recorded } = replay('F1-fastify-hono');
+        // Answer per query, as OSV does: the recorded vulnerable versions only.
+        const vulnerable: Record<string, number> = { 'fastify@5.12.4': 0, hono: 1 };
+        const fetcher: Fetcher = async (url, init = {}) => {
+            if (!url.endsWith('/querybatch')) return recorded(url, init);
+            const all = JSON.parse(await (await recorded(url, init)).text()) as { results: unknown[] };
+            const qs = (JSON.parse(init.body ?? '{}') as { queries: Array<{ package: { name: string }; version: string }> }).queries;
+            const results = qs.map((q) => {
+                const i = vulnerable[`${q.package.name}@${q.version}`] ?? (q.package.name === 'hono' ? vulnerable['hono'] : undefined);
+                return i === undefined ? {} : all.results[i];
+            });
+            return { status: 200, text: async () => JSON.stringify({ results }) };
+        };
         const [ra, rb] = await refreshMany([a, b], { now: new Date(), fetcher, machineDir: machine, force: true, egress: 'query', runner: () => ({ code: -1, stdout: '' }) });
         expect(ra!.state.findings.some((f) => f.package === 'fastify')).toBe(true);
         expect(rb!.state.findings.some((f) => f.package === 'fastify')).toBe(false);
@@ -517,5 +529,81 @@ describe('R2 review fixes (2026-10-21)', () => {
     it('#26 — one walk yields the same fingerprint the cheap check computes', () => {
         const root = project('F2-php-preannouncement');
         expect(readInventory(root).fingerprint).toBe(inventoryFingerprint(root));
+    });
+});
+
+describe('council code review fixes (2026-10-21)', () => {
+    const emptyOk: Fetcher = async () => ({ status: 200, text: async () => JSON.stringify({ results: [] }) });
+
+    it('a source that fails next time cannot retract what it reported', async () => {
+        const root = project('F1-fastify-hono');
+        const { fetcher } = replay('F1-fastify-hono');
+        const opts = { machineDir: machine, force: true, egress: 'query' as const, runner: () => ({ code: -1, stdout: '' }) };
+        await refreshMany([root], { ...opts, now: new Date(), fetcher });
+        expect(readState(root)!.findings.some((f) => f.package === 'fastify')).toBe(true);
+        const down: Fetcher = async (url) => (url.includes('osv.dev') ? { status: 503, text: async () => '' } : fetcher(url));
+        await refreshMany([root], { ...opts, now: new Date(), fetcher: down });
+        const after = readState(root)!.findings.find((f) => f.package === 'fastify');
+        expect(after?.note).toMatch(/carried/);
+    });
+
+    it('a truncated result array is an error, never a clean answer', async () => {
+        const r = await osvQuery(readInventory(project('F1-fastify-hono')).entries, { fetcher: emptyOk });
+        expect(r.report).toMatchObject({ status: 'error', reason: 'result-count' });
+    });
+
+    it('a detail for another ID is not trusted and not cached', async () => {
+        const entries = readInventory(project('F4-malware')).entries;
+        const cache = new Map();
+        const fetcher: Fetcher = async (url) =>
+            url.endsWith('/querybatch')
+                ? { status: 200, text: async () => JSON.stringify({ results: entries.filter((e) => !e.private && e.version !== null).map(() => ({ vulns: [{ id: 'GHSA-aaaa-bbbb-cccc', modified: 'm' }] })) }) }
+                : { status: 200, text: async () => JSON.stringify({ id: 'GHSA-zzzz-zzzz-zzzz', aliases: ['CVE-2099-0001'] }) };
+        const r = await osvQuery(entries, { fetcher, cache });
+        expect(r.report).toMatchObject({ status: 'error', reason: 'detail-mismatch' });
+        expect(cache.size).toBe(0);
+        expect(r.findings.every((f) => !f.aliases.includes('CVE-2099-0001'))).toBe(true);
+    });
+
+    it('a killed native audit is never read, however parseable its output', () => {
+        const root = project('F1-fastify-hono');
+        const r = nativeAudits(root, readInventory(root).entries, () => ({ code: -2, stdout: '{"vulnerabilities":{}}' }));
+        expect(r.reports[0]).toMatchObject({ status: 'error', reason: 'killed' });
+    });
+
+    it('only package-lock.json and composer.lock reach a native audit', () => {
+        let calls = 0;
+        const entries = [{ ecosystem: 'npm', name: 'x', version: '1.0.0', file: 'yarn.lock', line: 1, provenance: 'lockfile', private: false }] as unknown as Parameters<typeof nativeAudits>[1];
+        const r = nativeAudits(tmp, entries, () => {
+            calls++;
+            return { code: 0, stdout: '{}' };
+        });
+        expect(calls).toBe(0);
+        expect(r.reports).toEqual([]);
+    });
+
+    it('a cache that is not the state shape is no cache', () => {
+        const root = project('F1-fastify-hono');
+        const sp = statePath(root)!;
+        fs.mkdirSync(path.dirname(sp), { recursive: true });
+        fs.writeFileSync(sp, JSON.stringify({ schema: 1 }));
+        expect(readState(root)).toBeNull();
+        expect(sessionNotice(root)).toBeNull();
+    });
+
+    it('a future timestamp reads as unreadable age, never as fresh', () => {
+        const lines = noticeLines({ schema: 1, at: '2999-01-01T00:00:00Z', findings: [], notice: null, silent_since: {} } as never, new Date());
+        expect(lines.join('\n')).toMatch(/data age unreadable/);
+    });
+
+    it('the smallest newer security release is the fix, whatever the feed order', async () => {
+        const now = new Date('2026-10-21T00:00:00Z');
+        const item = (v: string, d: string): string => `<entry><title>PHP ${v} Released!</title><published>${d}</published><content>security fixes</content></entry>`;
+        const xml = `<feed>${item('8.3.29', '2026-10-20T00:00:00Z')}${item('8.3.28', '2026-10-15T00:00:00Z')}</feed>`;
+        const fetcher: Fetcher = async () => ({ status: 200, text: async () => xml });
+        const entries = [{ ecosystem: 'runtime', name: 'php', version: '8.3.27', file: '.php-version', line: 1, provenance: 'version-file', private: false }] as unknown as Parameters<typeof vendorAnnouncements>[0];
+        const r = await vendorAnnouncements(entries, { fetcher, now });
+        expect(r.findings.find((f) => f.id.startsWith('REL-'))?.fixed).toBe('8.3.28');
+        expect(r.findings.find((f) => f.id.startsWith('REL-'))?.severity).toBe('high');
     });
 });

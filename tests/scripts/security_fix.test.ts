@@ -229,7 +229,7 @@ describe('R2 review fixes (2026-10-21)', () => {
         fs.mkdirSync(dir);
         fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ dependencies: { fastify: '^5.11.0' } }));
         const p = fixPlan(finding(), readInventory(dir).entries);
-        expect(p.commands[0]).toBe('npm install fastify@^5.12.5 --save-exact=false');
+        expect(p.commands[0]).toBe('npm install fastify@^5.12.5 --save-exact=false --ignore-scripts');
     });
 
     it('#8 — a pin on another release line is named, never moved', () => {
@@ -240,5 +240,45 @@ describe('R2 review fixes (2026-10-21)', () => {
         const p = fixPlan(finding({ ecosystem: 'runtime', package: 'node', version: '22.11.0', fixed: '22.11.1' }), readInventory(dir).entries);
         expect(p.edits.map((e) => `${e.file} ${e.from}`)).toEqual(['.nvmrc 22.11.0']);
         expect(p.note).toMatch(/another release line.*Dockerfile/);
+    });
+});
+
+describe('council code review fixes (2026-10-21)', () => {
+    const ctx = { onTrunk: false, clean: true, branchTouchesFile: false, branchIntroducedDependency: false, userWantsCurrent: false, openBotPr: null, isLibrary: false, isRuntime: false };
+
+    it('the branch that introduced the dependency fixes it, even with a bot PR open', () => {
+        expect(routeSecurityFix({ ...ctx, openBotPr: 7, branchIntroducedDependency: true }).route).toBe('current-branch');
+        expect(routeSecurityFix({ ...ctx, openBotPr: 7 }).route).toBe('complete-bot-pr');
+    });
+
+    it('a name that is not a registry name never reaches an install command', () => {
+        expect(fixPlan(finding({ package: '../../etc/x' }), []).commands).toEqual([]);
+        expect(fixPlan(finding({ fixed: '1.0.0; rm -rf /' }), []).commands).toEqual([]);
+    });
+
+    it('the Composer plan updates the one package, with scripts and plugins off', () => {
+        const p = fixPlan(finding({ ecosystem: 'Packagist', package: 'foo/bar', version: '2.1.0', fixed: '2.1.1' }), []);
+        expect(p.commands[0]).toBe('composer update foo/bar --no-scripts --no-plugins');
+    });
+
+    it('a merged remediation is joined, never overwritten, by a second session', () => {
+        const all = {};
+        const { remediation: r } = claimRemediation(all, 'K', 's1');
+        advance(r, 'fixed-in-trunk', new Date(), { merge_sha: 'abc' });
+        const second = claimRemediation(all, 'K', 's2');
+        expect(second.joined).toBe(true);
+        expect(second.remediation.merge_sha).toBe('abc');
+    });
+
+    it('the lifecycle never moves backward', () => {
+        const { remediation: r } = claimRemediation({}, 'K', 's1');
+        advance(r, 'fixed-in-trunk');
+        advance(r, 'fixed-deployed');
+        advance(r, 'fix-in-progress');
+        expect(r.state).toBe('fixed-deployed');
+    });
+
+    it('a key without a package part does not match a finding by accident', () => {
+        expect(proveFixed('K', ['osv'], { findings: [finding({ key: 'other', id: 'K', package: undefined as never })], okSources: ['osv'] })).toBe('fixed-in-branch');
     });
 });

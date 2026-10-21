@@ -58,9 +58,8 @@ export interface RoutingDecision {
  */
 export function routeSecurityFix(c: RoutingContext): RoutingDecision {
     const extras = { releaseDraft: c.isLibrary, opsChecklist: c.isRuntime };
-    if (c.openBotPr !== null) {
-        return { route: 'complete-bot-pr', rebaseOfferAfterMerge: false, ...extras, reason: `bot PR #${c.openBotPr} already moves this dependency — complete it rather than open a second` };
-    }
+    // The branch's own bug comes first: a bot PR against the trunk would leave
+    // THIS branch still shipping the dependency it introduced.
     if (c.userWantsCurrent || c.branchIntroducedDependency) {
         return {
             route: 'current-branch',
@@ -70,6 +69,9 @@ export function routeSecurityFix(c: RoutingContext): RoutingDecision {
                 ? 'this branch introduced the dependency — fixing it elsewhere would leave this PR shipping it'
                 : 'asked for in the current branch',
         };
+    }
+    if (c.openBotPr !== null) {
+        return { route: 'complete-bot-pr', rebaseOfferAfterMerge: false, ...extras, reason: `bot PR #${c.openBotPr} already moves this dependency — complete it rather than open a second` };
     }
     if (c.onTrunk && c.clean) {
         return { route: 'new-branch-here', rebaseOfferAfterMerge: false, ...extras, reason: 'on the trunk with a clean tree — nothing to isolate from' };
@@ -100,6 +102,17 @@ function shellArg(v: string): string {
 }
 
 /**
+ * Registry name grammars. A name that is not one — `../x`, a URL, a path — is
+ * never put into an install command: the package manager would resolve it as a
+ * location, not as a package.
+ */
+const PACKAGE_NAME: Partial<Record<string, RegExp>> = {
+    npm: /^(?:@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/,
+    Packagist: /^[a-z0-9](?:[_.-]?[a-z0-9]+)*\/[a-z0-9](?:(?:[_.]|-{1,2})?[a-z0-9]+)*$/,
+};
+const VERSION = /^\d+(?:\.\d+){0,3}(?:[-+][0-9A-Za-z.-]+)?$/;
+
+/**
  * Smallest fixing version inside the current constraint first; a constraint
  * change only when the fix is outside it; never `audit fix --force`, never an
  * unannounced major (1.1).
@@ -109,6 +122,10 @@ export function fixPlan(f: Finding, inventory: InventoryEntry[]): FixPlan {
     if (f.fixed === null) {
         return { commands: [], edits: [], opsChecklist: [], note: 'no fixing version exists — offer a mitigation instead (1.5)' };
     }
+    const grammar = PACKAGE_NAME[f.ecosystem];
+    if ((grammar !== undefined && !grammar.test(f.package)) || !VERSION.test(f.fixed)) {
+        return { commands: [], edits: [], opsChecklist: [], note: `"${f.package}" ${f.fixed} is not a registry name and version — no command is generated; inspect the finding` };
+    }
     const major = (v: string | null): string | null => (v === null ? null : (/^(\d+)/.exec(v)?.[1] ?? null));
     const crossesMajor = major(f.version) !== null && major(f.fixed) !== null && major(f.version) !== major(f.fixed);
     const pkg = shellArg(f.package);
@@ -116,7 +133,11 @@ export function fixPlan(f: Finding, inventory: InventoryEntry[]): FixPlan {
     if (f.ecosystem === 'npm') {
         const direct = inventory.some((e) => e.file.endsWith('package.json') && e.name === f.package);
         return {
-            commands: direct ? [`npm install ${pkg}@^${fixed} --save-exact=false`] : [`npm update ${pkg}`, `npm ls ${pkg}`],
+            // `--ignore-scripts`: a dependency's install script runs before any
+            // inspection of what the update changed, so the fix never runs one.
+            commands: direct
+                ? [`npm install ${pkg}@^${fixed} --save-exact=false --ignore-scripts`]
+                : [`npm update ${pkg} --ignore-scripts`, `npm ls ${pkg}`],
             edits: [],
             opsChecklist: [],
             note: crossesMajor
@@ -128,12 +149,12 @@ export function fixPlan(f: Finding, inventory: InventoryEntry[]): FixPlan {
     }
     if (f.ecosystem === 'Packagist') {
         return {
-            commands: [`composer update ${pkg} --with-dependencies`, `composer show ${pkg}`],
+            commands: [`composer update ${pkg} --no-scripts --no-plugins`, `composer show ${pkg}`],
             edits: [],
             opsChecklist: [],
             note: crossesMajor
                 ? `the fix (${f.fixed}) is a new major — change the constraint deliberately and state the compatibility analysis`
-                : 'update this package and what it needs within the current constraints; change composer.json only if the fixing version is outside them',
+                : 'update this one package within the current constraints (add `-w` only when Composer names a dependency that must move with it); change composer.json only if the fixing version is outside them',
         };
     }
     return { commands: [], edits: [], opsChecklist: [], note: `${f.ecosystem} fixes are a manual pin change to ${f.fixed}` };
@@ -217,7 +238,8 @@ export type FixProof = 'fixed-in-branch' | 'fix-failed' | 'unverifiable';
 export function proveFixed(key: string, sourcesBefore: string[], after: { findings: Finding[]; okSources: string[] }): FixProof {
     const reporters = sourcesBefore.filter((s) => after.okSources.includes(s));
     if (reporters.length === 0) return 'unverifiable';
-    const still = after.findings.find((f) => f.key === key || (f.id === key.split('|')[0] && f.package === key.split('|')[1]));
+    const [id, pkg] = key.split('|');
+    const still = after.findings.find((f) => f.key === key || (pkg !== undefined && f.id === id && f.package === pkg));
     if (still === undefined) return 'fixed-in-branch';
     return still.sources.some((s) => reporters.includes(s)) ? 'fix-failed' : 'fixed-in-branch';
 }
@@ -304,7 +326,10 @@ export type Remediations = Record<string, Remediation>;
  */
 export function claimRemediation(all: Remediations, key: string, session: string, now: Date = new Date()): { remediation: Remediation; joined: boolean } {
     const open = all[key];
-    if (open !== undefined && (open.state === 'fix-in-progress' || open.state === 'ready-to-merge')) {
+    // Only a failed fix or an unrecorded finding starts over; every other state —
+    // in progress, merged, released, deployed, mitigated — is history a second
+    // session joins and never overwrites.
+    if (open !== undefined && open.state !== 'fix-failed') {
         return { remediation: open, joined: true };
     }
     const at = now.toISOString();
@@ -313,7 +338,19 @@ export function claimRemediation(all: Remediations, key: string, session: string
     return { remediation: r, joined: false };
 }
 
+/** The lifecycle only moves forward; a transition not listed here is ignored. */
+const NEXT: Record<RemediationState, RemediationState[]> = {
+    'fix-in-progress': ['ready-to-merge', 'fixed-in-trunk', 'fix-failed', 'mitigated'],
+    'ready-to-merge': ['fixed-in-trunk', 'fix-failed', 'mitigated'],
+    'fixed-in-trunk': ['fixed-released', 'fixed-deployed'],
+    'fixed-released': ['fixed-deployed'],
+    'fixed-deployed': [],
+    'fix-failed': ['fix-in-progress', 'mitigated'],
+    mitigated: [],
+};
+
 export function advance(r: Remediation, to: RemediationState, now: Date = new Date(), extra: Partial<Pick<Remediation, 'branch' | 'pr' | 'merge_sha' | 'note'>> = {}): Remediation {
+    if (!NEXT[r.state].includes(to)) return r;
     r.state = to;
     r.stamps[to] = now.toISOString();
     Object.assign(r, extra);

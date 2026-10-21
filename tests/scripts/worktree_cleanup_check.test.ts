@@ -423,7 +423,7 @@ describe('merge evidence and the removable set — F1–F12', () => {
     function prIndex(rows: Array<[string, 'MERGED' | 'CLOSED' | 'OPEN', string, string | null]>): PrIndex {
         const m: PrIndex = new Map();
         for (const [branch, state, headOid, mergedAt] of rows) {
-            m.set(branch, [...(m.get(branch) ?? []), { state, headOid, mergedAt }]);
+            m.set(branch, [...(m.get(branch) ?? []), { state, headOid, mergedAt, base: 'main' }]);
         }
         return m;
     }
@@ -759,7 +759,7 @@ describe('check-to-remove and the daily pass (council 2026-10-21)', () => {
         commitFile(repo, 'unrelated.txt', 'z', 'trunk moved on');
         backdateAll();
         const forge = JSON.stringify([
-            { headRefName: 'feat/elsewhere', headRefOid: head, state: 'MERGED', mergedAt: '2020-01-01T00:00:00Z' },
+            { headRefName: 'feat/elsewhere', headRefOid: head, state: 'MERGED', mergedAt: '2020-01-01T00:00:00Z', baseRefName: 'main' },
         ]);
         const r = dailyCleanup(repo, { mode: 'auto', run: () => forge })!;
         expect(r.removed).toBe(1);
@@ -845,3 +845,86 @@ describe('R2 review fixes (2026-10-21)', () => {
     });
 });
 
+
+describe('council code review fixes (2026-10-21)', () => {
+    it('a tree switched to a clean detached commit after the inventory is kept', () => {
+        const wt = addStandardWorktree('det', 'feat/det');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/det');
+        backdateGitDir('det', 10);
+        const inv = buildInventory(repo, { excludeLiveSessions: true });
+        expect(rowFor(inv, wt).classification).toBe('safe');
+        commitFile(wt, 'unique.txt', 'only here', 'unique work');
+        git(wt, ['checkout', '--detach', 'HEAD']);
+        git(repo, ['branch', '-f', 'feat/det', 'main']);
+        const [o] = applyRemovals(repo, inv);
+        expect(o!.removed).toBe(false);
+        expect(o!.error).toMatch(/HEAD or branch changed/);
+        expect(fs.existsSync(wt)).toBe(true);
+    });
+
+    it('a generated comment does not vouch for a rule appended under another pattern', () => {
+        fs.writeFileSync(path.join(repo, '.gitignore'), '# generated build output\n/out/\n.secrets-here\n');
+        git(repo, ['add', '.gitignore']);
+        git(repo, ['commit', '-m', 'ignore']);
+        const wt = addStandardWorktree('bleed', 'feat/bleed');
+        fs.writeFileSync(path.join(wt, '.secrets-here'), 'x');
+        expect(localOnlyIgnored(wt)).toContain('.secrets-here');
+    });
+
+    it('a PR merged into another base is no proof for the trunk', () => {
+        const wt = addStandardWorktree('rel', 'feat/rel');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        const head = git(repo, ['rev-parse', 'refs/heads/feat/rel']).trim();
+        const idx: PrIndex = new Map([['feat/rel', [{ state: 'MERGED', headOid: head, mergedAt: '2020-01-01T00:00:00Z', base: 'release/next' }]]]);
+        expect(mergeEvidence(wt, 'feat/rel', 'refs/heads/main', idx).evidence).toBeNull();
+        const onTrunk: PrIndex = new Map([['feat/rel', [{ state: 'MERGED', headOid: head, mergedAt: '2020-01-01T00:00:00Z', base: 'main' }]]]);
+        expect(mergeEvidence(wt, 'feat/rel', 'refs/heads/main', onTrunk).evidence).toBe('merged-pr');
+    });
+
+    it('a forge merge with no readable merge time keeps the tree under the delay', () => {
+        const wt = addStandardWorktree('nots', 'feat/nots');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        const head = git(repo, ['rev-parse', 'refs/heads/feat/nots']).trim();
+        git(repo, ['merge', '--squash', 'feat/nots']);
+        git(repo, ['commit', '-m', 'squash (#3)']);
+        commitFile(repo, 'later.txt', 'z', 'trunk moved on');
+        backdateGitDir('nots', 10);
+        const forge = JSON.stringify([{ headRefName: 'feat/nots', headRefOid: head, state: 'MERGED', mergedAt: null, baseRefName: 'main' }]);
+        const r = dailyCleanup(repo, { mode: 'auto', run: () => forge, budgetMs: 60000 })!;
+        expect(r.removed).toBe(0);
+        expect(fs.existsSync(wt)).toBe(true);
+    });
+
+    it('a throwing ranToday never escapes the daily pass', () => {
+        expect(
+            dailyCleanup(repo, {
+                mode: 'auto',
+                ranToday: () => {
+                    throw new Error('unreadable stamp');
+                },
+            }),
+        ).toBeNull();
+    });
+
+    it('the daily line names no branch; the journal writes intent before outcome', () => {
+        const wt = addStandardWorktree('quiet', 'feat/quiet-private-name');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        const head = git(repo, ['rev-parse', 'refs/heads/feat/quiet-private-name']).trim();
+        git(repo, ['merge', '--squash', 'feat/quiet-private-name']);
+        git(repo, ['commit', '-m', 'squash (#4)']);
+        backdateGitDir('quiet', 10);
+        const forge = JSON.stringify([{ headRefName: 'feat/quiet-private-name', headRefOid: head, state: 'MERGED', mergedAt: '2020-01-01T00:00:00Z', baseRefName: 'main' }]);
+        const r = dailyCleanup(repo, { mode: 'auto', run: () => forge, budgetMs: 60000 })!;
+        expect(r.removed).toBe(1);
+        expect(r.line).not.toContain('quiet-private-name');
+        const common = git(repo, ['rev-parse', '--git-common-dir']).trim();
+        const lines = fs
+            .readFileSync(path.resolve(repo, common, REMOVAL_JOURNAL), 'utf-8')
+            .trim()
+            .split('\n')
+            .map((l) => JSON.parse(l) as { phase: string; tip: string });
+        expect(lines.map((l) => l.phase)).toEqual(['intent', 'outcome']);
+        expect(lines[0]!.tip).toBe(head);
+    });
+});

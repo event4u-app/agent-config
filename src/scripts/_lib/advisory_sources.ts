@@ -64,6 +64,11 @@ export interface FetchResponse {
     text: () => Promise<string>;
 }
 export type Fetcher = (url: string, init?: { method?: string; body?: string; timeoutMs?: number }) => Promise<FetchResponse>;
+/**
+ * `code` is the exit status; `-1` means the command could not start (not
+ * installed), `-2` that it was killed (timeout, signal) — its stdout is then
+ * never an answer, however parseable.
+ */
 export type Runner = (cmd: string, args: string[], cwd: string, timeoutMs: number) => { code: number; stdout: string };
 
 /** The only hosts any adapter may contact. */
@@ -73,7 +78,12 @@ export const ALLOWED_HOSTS = ['api.osv.dev', 'endoflife.date', 'www.php.net', 'n
 const ID_SHAPE = /^[A-Z][A-Z0-9]*-[A-Za-z0-9._:-]{1,80}$/;
 
 export function assertAllowed(url: string): void {
-    const host = new URL(url).host;
+    let host: string;
+    try {
+        host = new URL(url).host;
+    } catch {
+        throw new Error('host not allowed: (malformed url)');
+    }
     if (!(ALLOWED_HOSTS as readonly string[]).includes(host)) throw new Error(`host not allowed: ${host}`);
 }
 
@@ -93,10 +103,12 @@ export const defaultRunner: Runner = (cmd, args, cwd, timeoutMs) => {
         const stdout = execFileSync(cmd, args, { cwd, encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], timeout: timeoutMs });
         return { code: 0, stdout };
     } catch (e) {
-        const err = e as { status?: number | null; stdout?: string };
+        const err = e as { status?: number | null; signal?: string | null; code?: string; stdout?: string };
+        if (err.code === 'ENOENT') return { code: -1, stdout: '' };
+        if (typeof err.signal === 'string' || typeof err.status !== 'number') return { code: -2, stdout: '' };
         // `npm audit` and `composer audit` exit non-zero WHEN they find something;
         // their JSON is still on stdout and is the answer.
-        return { code: typeof err.status === 'number' ? err.status : -1, stdout: typeof err.stdout === 'string' ? err.stdout : '' };
+        return { code: err.status, stdout: typeof err.stdout === 'string' ? err.stdout : '' };
     }
 };
 
@@ -135,7 +147,11 @@ export function nativeAudits(
         byFile.set(e.file, [...(byFile.get(e.file) ?? []), e]);
     }
     for (const [file, list] of byFile) {
-        const npm = path.basename(file) === 'package-lock.json';
+        // Exactly the two lockfiles whose audit reads THIS file: any other name
+        // would run an audit over a sibling file the privacy check never saw.
+        const base = path.basename(file);
+        if (base !== 'package-lock.json' && base !== 'composer.lock') continue;
+        const npm = base === 'package-lock.json';
         const source: SourceName = npm ? 'native-npm' : 'native-composer';
         if (list.some((e) => e.private)) {
             reports.push({ source, status: 'unavailable', reason: 'private-names-present' });
@@ -145,11 +161,15 @@ export function nativeAudits(
         const r = npm
             ? run('npm', ['audit', '--json', '--package-lock-only'], cwd, 30000)
             : run('composer', ['audit', '--format=json', '--locked', '--no-interaction'], cwd, 30000);
+        if (r.code < 0) {
+            reports.push({ source, status: r.code === -1 ? 'unavailable' : 'error', reason: r.code === -1 ? 'not-installed' : 'killed' });
+            continue;
+        }
         let doc: unknown;
         try {
             doc = JSON.parse(r.stdout);
         } catch {
-            reports.push({ source, status: r.code === -1 ? 'unavailable' : 'error', reason: r.code === -1 ? 'not-installed' : 'unparseable' });
+            reports.push({ source, status: 'error', reason: 'unparseable' });
             continue;
         }
         const line = (name: string): number => list.find((e) => e.name === name)?.line ?? 1;
@@ -293,12 +313,25 @@ export type OsvDetailCache = Map<string, { modified: string; vuln: OsvVuln }>;
 
 export async function osvQuery(
     entries: InventoryEntry[],
-    opts: { fetcher?: Fetcher | undefined; cache?: OsvDetailCache; timeoutMs?: number } = {},
+    opts: { fetcher?: Fetcher | undefined; cache?: OsvDetailCache; timeoutMs?: number; deadlineMs?: number } = {},
 ): Promise<{ findings: RawFinding[]; report: SourceReport }> {
-    const fetcher = opts.fetcher ?? defaultFetcher;
+    // `timeoutMs` bounds one request; `deadlineMs` bounds the whole query, so a
+    // batch with hundreds of advisories cannot run for hundreds of timeouts.
+    const deadlineAt = Date.now() + (opts.deadlineMs ?? 120000);
+    const inner = opts.fetcher ?? defaultFetcher;
+    const fetcher: Fetcher = (url, init) => {
+        if (Date.now() >= deadlineAt) return Promise.reject(Object.assign(new Error('deadline'), { name: 'TimeoutError' }));
+        return inner(url, init);
+    };
     const cache = opts.cache ?? new Map();
     // Private names never leave (1.3); entries without an exact version have nothing to query.
-    const queryable = entries.filter((e) => !e.private && e.version !== null && OSV_ECOSYSTEMS[e.ecosystem] !== undefined);
+    const wanted = entries.filter((e) => !e.private && e.version !== null && OSV_ECOSYSTEMS[e.ecosystem] !== undefined);
+    // One query per ecosystem/name/version: two projects (or two lockfiles) that
+    // pin the same package cost one question, and every holder gets the answer.
+    const keyOf = (e: InventoryEntry): string => `${e.ecosystem}|${e.name}|${e.version}`;
+    const holders = new Map<string, InventoryEntry[]>();
+    for (const e of wanted) holders.set(keyOf(e), [...(holders.get(keyOf(e)) ?? []), e]);
+    const queryable = [...holders.values()].map((list) => list[0]!);
     if (queryable.length === 0) return { findings: [], report: { source: 'osv', status: 'ok', reason: 'nothing-queryable' } };
     const findings: RawFinding[] = [];
     let partial: string | null = null;
@@ -314,6 +347,11 @@ export async function osvQuery(
                 results?: Array<{ vulns?: Array<{ id?: string; modified?: string }>; next_page_token?: string }>;
             };
             const results = doc.results ?? [];
+            // One result per query, or the answer is not an answer: a truncated
+            // array would read the missing packages as clean.
+            if (!Array.isArray(results) || results.length !== batch.length) {
+                return { findings: [], report: { source: 'osv', status: 'error', reason: 'result-count' } };
+            }
             // A package with many advisories is paginated: follow each token (bounded).
             for (let j = 0; j < results.length; j++) {
                 let token = results[j]?.next_page_token;
@@ -334,7 +372,7 @@ export async function osvQuery(
                 }
             }
             for (let j = 0; j < batch.length; j++) {
-                const entry = batch[j]!;
+                const sameKey = holders.get(keyOf(batch[j]!)) ?? [batch[j]!];
                 for (const ref of results[j]?.vulns ?? []) {
                     const id = String(ref.id ?? '');
                     if (!ID_SHAPE.test(id)) continue;
@@ -342,34 +380,39 @@ export async function osvQuery(
                     let vuln = cache.get(id)?.modified === modified ? cache.get(id)!.vuln : null;
                     if (vuln === null) {
                         const det = await fetcher(`https://api.osv.dev/v1/vulns/${encodeURIComponent(id)}`, { timeoutMs: opts.timeoutMs ?? 10000 });
-                        if (det.status === 200) {
-                            vuln = JSON.parse(await det.text()) as OsvVuln;
+                        const got = det.status === 200 ? (JSON.parse(await det.text()) as OsvVuln) : null;
+                        // Validated before it is cached: a detail for another ID, or
+                        // one without the shape read below, is treated as missing.
+                        if (got !== null && got.id === id && (got.affected === undefined || Array.isArray(got.affected))) {
+                            vuln = got;
                             cache.set(id, { modified, vuln });
                         } else {
                             // The batch SAID it is affected; a missing detail does not
                             // undo that. Keep the finding with what is known, and mark
                             // the source partial rather than ok.
                             vuln = { id };
-                            partial = `detail-http-${det.status}`;
+                            partial = det.status === 200 ? 'detail-mismatch' : `detail-http-${det.status}`;
                         }
                     }
-                    findings.push({
-                        id,
-                        aliases: (vuln.aliases ?? []).filter((a: string) => ID_SHAPE.test(a)),
-                        kind: id.startsWith('MAL-') ? 'malware' : 'vulnerability',
-                        ecosystem: entry.ecosystem,
-                        package: entry.name,
-                        version: entry.version,
-                        severity: severityOf(vuln.database_specific?.severity) ?? severityFromScore(cvssScore(vuln)),
-                        score: cvssScore(vuln),
-                        kev: false,
-                        fixed: smallestFix(vuln, entry),
-                        date: null,
-                        source: 'osv',
-                        modified: modified === '' ? null : modified,
-                        file: entry.file,
-                        line: entry.line,
-                    });
+                    for (const entry of sameKey) {
+                        findings.push({
+                            id,
+                            aliases: (vuln.aliases ?? []).filter((a: string) => ID_SHAPE.test(a)),
+                            kind: id.startsWith('MAL-') ? 'malware' : 'vulnerability',
+                            ecosystem: entry.ecosystem,
+                            package: entry.name,
+                            version: entry.version,
+                            severity: severityOf(vuln.database_specific?.severity) ?? severityFromScore(cvssScore(vuln)),
+                            score: cvssScore(vuln),
+                            kev: false,
+                            fixed: smallestFix(vuln, entry),
+                            date: null,
+                            source: 'osv',
+                            modified: modified === '' ? null : modified,
+                            file: entry.file,
+                            line: entry.line,
+                        });
+                    }
                 }
             }
         }
@@ -383,7 +426,7 @@ export async function osvQuery(
 function smallestFix(vuln: OsvVuln, entry: InventoryEntry): string | null {
     let best: string | null = null;
     for (const a of vuln.affected ?? []) {
-        if (a.package?.name !== entry.name) continue;
+        if (a.package?.name !== entry.name || a.package?.ecosystem !== OSV_ECOSYSTEMS[entry.ecosystem]) continue;
         for (const r of a.ranges ?? []) {
             for (const ev of r.events ?? []) {
                 if (typeof ev.fixed !== 'string') continue;
@@ -497,7 +540,7 @@ export async function vendorAnnouncements(
             }
             const xml = await res.text();
             const items = xml.split(/<(?:entry|item)[\s>]/).slice(1);
-            let criticalAhead = false;
+            const criticalDays: string[] = [];
             const releases: Array<{ version: string; day: string }> = [];
             for (const item of items) {
                 // A released version: "PHP 8.3.27 Released!" / "Node v22.11.1 (LTS)", whose
@@ -519,7 +562,7 @@ export async function vendorAnnouncements(
                 if (age < 0 || age > PREANNOUNCE_WINDOW_DAYS) continue;
                 if (!ANNOUNCES_RELEASE.test(title) || !ANNOUNCES_AHEAD.test(title)) continue;
                 const day = new Date(at).toISOString().slice(0, 10);
-                if (/critical/i.test(title)) criticalAhead = true;
+                if (/critical/i.test(title)) criticalDays.push(day);
                 // The release it announced is out: the release finding speaks instead.
                 if (releases.some((r) => r.day >= day)) continue;
                 const subject = users[0]!;
@@ -546,8 +589,18 @@ export async function vendorAnnouncements(
             for (const u of users) {
                 if (u.version === null || isVendorPatched(u.version)) continue;
                 const lineOfUse = releaseLine(runtimeName, u.version);
-                const rel = releases.find((r) => releaseLine(runtimeName, r.version) === lineOfUse && compare_versions(r.version, u.version) === 1);
+                // The SMALLEST newer security release on the line, whatever the feed order.
+                const rel = releases
+                    .filter((r) => releaseLine(runtimeName, r.version) === lineOfUse && compare_versions(r.version, u.version) === 1)
+                    .sort((a, b) => compare_versions(a.version, b.version))[0];
                 if (rel === undefined) continue;
+                // Critical only when a critical pre-announcement preceded THIS release
+                // within the window; a vendor-labelled security release is otherwise high.
+                const relAt = Date.parse(rel.day);
+                const critical = criticalDays.some((d) => {
+                    const gap = (relAt - Date.parse(d)) / 86400000;
+                    return gap >= 0 && gap <= PREANNOUNCE_WINDOW_DAYS;
+                });
                 findings.push({
                     id: `REL-${runtimeName}-${rel.version}`,
                     aliases: [],
@@ -555,7 +608,7 @@ export async function vendorAnnouncements(
                     ecosystem: 'runtime',
                     package: runtimeName,
                     version: u.version,
-                    severity: criticalAhead ? 'critical' : 'high',
+                    severity: critical ? 'critical' : 'high',
                     score: null,
                     kev: false,
                     fixed: rel.version,

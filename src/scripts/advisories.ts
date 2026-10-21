@@ -53,6 +53,7 @@ import {
     type Acceptance,
     announce,
     buildFindings,
+    carryForward,
     emptyLedger,
     validateAcceptance,
 } from './_lib/advisory_verdicts.js';
@@ -208,7 +209,12 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
         for (const p of inventories) {
             const acceptances = p.prev?.acceptances ?? [];
             const remediations = { ...(p.prev?.remediations ?? {}) };
-            const findings = buildFindings(raw.get(p.root)!, p.inv.entries, reports.get(p.root)!, { now, acceptances });
+            const findings = carryForward(
+                buildFindings(raw.get(p.root)!, p.inv.entries, reports.get(p.root)!, { now, acceptances }),
+                p.prev?.findings ?? [],
+                reports.get(p.root)!,
+                p.inv.entries,
+            );
             const a = announce(findings, p.prev?.ledger ?? emptyLedger(), now);
             const silent: Record<string, string> = {};
             for (const r of reports.get(p.root)!) {
