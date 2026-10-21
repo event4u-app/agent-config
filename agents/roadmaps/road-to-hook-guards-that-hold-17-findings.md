@@ -25,7 +25,7 @@ dispositioned in the ledger.
 
 ## Phase 1 — the `--no-verify` semantic bypass (finding `bc83fb66c55d`, high)
 
-- [ ] **1.1 Refuse every spelling git reads as `--no-verify`.** Git accepts any
+- [x] **1.1 Refuse every spelling git reads as `--no-verify`.** Git accepts any
       unambiguous prefix (`--no-verif`, `--no-ver`, …) and `-n` on `commit`;
       the guard matches the literal only
       (`agents/evidence/analysis/short-n-change-held-2026-10-20.md`). A fix is
@@ -60,7 +60,7 @@ dispositioned in the ledger.
 
 ## Phase 4 — the upgrade swap, proven safe
 
-- [ ] **4.1 Re-run the mid-session swap probe against the Phase 2 and 3
+- [x] **4.1 Re-run the mid-session swap probe against the Phase 2 and 3
       command.** `agents/evidence/analysis/mid-session-swap-probe-2026-10-18.md`
       measured 490 failures in 4,190 invocations during an `upgrade`, 487 of
       them exit 127, each a silent pass of every guard. The same probe, same
