@@ -5,6 +5,11 @@ review_by: 2026-12-24
 
 # Stub: road to governed worktree lifecycle
 
+> **Skipped 2026-10-21 — superseded by `road-to-worktrees-that-leave-after-the-merge`.**
+> Promotion gate 1 fired on an owner report of ~250 stale worktrees; the
+> successor takes only `cleanup` and `status` to consumers and keeps the
+> six-verb cluster and the merge-readiness score rejected.
+
 > **Stub — not active work.** Proposed in the 8.0.0/8.1.0 external review
 > dumps: `/worktree:create|status|handoff|verify|merge-ready|cleanup`
 > commands with branch naming, linked ticket, risk label, rollback note, and

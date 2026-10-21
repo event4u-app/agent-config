@@ -208,6 +208,9 @@ run the Stage-4 gate first:
 Surface the findings to the user, ask them to fix the proposal (add evidence,
 remove TODO markers, complete required sections), then rerun.
 
+**Also STOP unless `stage: gated`.** For `scope: package` that needs a review
+record and an owner authorization on one digest.
+
 When no proposal doc exists (small fix, typo, pure bug-fix), skip this step and
 record the rationale in the finding.
 

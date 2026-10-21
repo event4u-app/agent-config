@@ -89,6 +89,8 @@ blocks — it does not hand a half-filled doc to the next stage.
   5. `size-enforcement` within the budget for the artefact type.
   6. `preservation-guard` justifies any replacement (section 6 of
      the proposal doc).
+  7. For `scope: package` at `stage: gated`: the review and the owner's
+     authorization are bound to the declared change (see Stage 5).
 - **Guardrails:** the gate is not a rubber stamp. A `block` verdict
   stays in the proposal as history; the pipeline restarts at
   Stage 3 if the author wants to revise.
@@ -102,12 +104,12 @@ blocks — it does not hand a half-filled doc to the next stage.
   council cannot conclude, the user decides by the route ADR-281 § 5 names. A
   proposal scoped to a consumer's own project needs that user's approval, as
   before.
-  > **"whose `subject` matches" is deliberately absent here.** It described a
-  > binding the gate does not perform at this pin: no record is bound to the
-  > content it reviewed. Steps 2.1 and 2.2 of
-  > `road-to-self-modification-that-a-council-must-pass` build that binding,
-  > and the clause returns with them. Naming it before it exists would state a
-  > guarantee a reader could rely on and the gate would not keep.
+  `proposal:check` performs the binding (gate check 7): a `scope: package`
+  proposal at `stage: gated` declares `changed_files:` and names a
+  `ratification_record:` that passes the reader against the committed provider
+  policy and an `owner_authorization:`, both bound to one digest over those
+  files read at one commit. It cannot prove the owner wrote the authorization;
+  it proves the review and the approval name the same content.
 - **Executor:** the `upstream-contribute` skill decides *whether*, and
   `self-repair:release` — the one gated outward step — decides *what leaves*.
   The skill refuses invocation if the proposal frontmatter is not
