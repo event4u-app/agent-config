@@ -9,7 +9,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { readInviteState, runInvite, UNREADABLE_INVITE_RECORD, type InviteDeps } from '../../src/scripts/update_invite_hook.js';
+import { claimInvite, readInviteState, runInvite, UNREADABLE_INVITE_RECORD, type InviteDeps } from '../../src/scripts/update_invite_hook.js';
 import { NOTICE_STATE_SCHEMA, readNoticeState, runNotice, type NoticeDeps } from '../../src/scripts/update_notice_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -200,16 +200,30 @@ describe('update-auto-invite state', () => {
         });
     }
 
-    it('two sessions that decide at the same moment produce exactly one invitation', async () => {
+    it('a claim whose write fails throws nothing, leaves no record, and a later claim succeeds', () => {
+        const failing = (): void => {
+            throw Object.assign(new Error('ENOSPC: no space left on device'), { code: 'ENOSPC' });
+        };
+        expect(claimInvite(invitePath(), '2026-10-21T00:00:00.000Z', failing)).toBe(false);
+        expect(fs.existsSync(invitePath())).toBe(false);
+        expect(claimInvite(invitePath(), '2026-10-21T00:00:00.000Z')).toBe(true);
+        expect(readInviteState(invitePath())).toEqual({ invited_at: '2026-10-21T00:00:00.000Z' });
+    });
+
+    it('three sessions that decide at the same moment produce exactly one invitation', async () => {
         const go = path.join(tmp, 'go');
         const script = path.join(tmp, 'race.ts');
         const hook = path.join(REPO_ROOT, 'src', 'scripts', 'update_invite_hook.ts');
+        // Each child imports the hook, then announces it is ready and spins on
+        // the go file, so the parent releases them only once all three are
+        // loaded and waiting at the same point.
         fs.writeFileSync(
             script,
             [
                 `import * as fs from 'node:fs';`,
                 `import { runInvite } from ${JSON.stringify(hook)};`,
-                `while (!fs.existsSync(${JSON.stringify(go)})) { /* spin until both are ready */ }`,
+                `fs.writeFileSync(${JSON.stringify(tmp)} + '/ready-' + process.argv[3], '');`,
+                `while (!fs.existsSync(${JSON.stringify(go)})) { /* spin until released */ }`,
                 `const d = runInvite({ packageRoot: ${JSON.stringify(REPO_ROOT)}, workspaceRoot: process.argv[2]!, sessionId: '', mode: 'ask',`,
                 `  statePath: ${JSON.stringify(invitePath())}, ringZeroText: 'ring-0-exit: yes\\n', env: {}, isTty: true,`,
                 `  out: { write: () => undefined }, turnEndedOnVerifiedSuccess: true });`,
@@ -217,25 +231,39 @@ describe('update-auto-invite state', () => {
             ].join('\n'),
         );
         const tsx = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
+        const workers = ['a', 'b', 'c'];
         for (let round = 0; round < 5; round += 1) {
             fs.rmSync(invitePath(), { force: true });
             fs.rmSync(go, { force: true });
-            const runs = ['repo-a', 'repo-b', 'repo-c'].map(
-                (ws) =>
-                    new Promise<string>((resolve) => {
-                        const child = spawn(tsx, [script, path.join(tmp, ws)], { cwd: REPO_ROOT });
+            for (const w of workers) fs.rmSync(path.join(tmp, `ready-${w}`), { force: true });
+            const runs = workers.map(
+                (w) =>
+                    new Promise<{ out: string; err: string; code: number | null }>((resolve, reject) => {
+                        const child = spawn(tsx, [script, path.join(tmp, `repo-${w}`), w], { cwd: REPO_ROOT });
                         let out = '';
+                        let err = '';
                         child.stdout.on('data', (b: Buffer) => (out += b.toString()));
-                        child.on('close', () => resolve(out));
+                        child.stderr.on('data', (b: Buffer) => (err += b.toString()));
+                        child.on('error', reject);
+                        child.on('close', (code) => resolve({ out, err, code }));
                     }),
             );
-            await new Promise((r) => setTimeout(r, 1500));
+            const deadline = Date.now() + 60_000;
+            while (!workers.every((w) => fs.existsSync(path.join(tmp, `ready-${w}`)))) {
+                if (Date.now() > deadline) throw new Error(`round ${String(round)}: workers never all became ready`);
+                await new Promise((r) => setTimeout(r, 20));
+            }
             fs.writeFileSync(go, '');
             const results = await Promise.all(runs);
-            expect(results.filter((r) => r === 'asked'), `round ${String(round)}: ${results.join(',')}`).toHaveLength(1);
-            expect(results.filter((r) => r === 'silent')).toHaveLength(2);
+            for (const r of results) {
+                expect(r.code, r.err).toBe(0);
+                expect(r.err).toBe('');
+            }
+            const outs = results.map((r) => r.out);
+            expect(outs.filter((o) => o === 'asked'), `round ${String(round)}: ${outs.join(',')}`).toHaveLength(1);
+            expect(outs.filter((o) => o === 'silent')).toHaveLength(2);
         }
-    }, 120_000);
+    }, 180_000);
 });
 
 describe('the read gate — nothing outside the two concerns reads their state', () => {
