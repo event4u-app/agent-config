@@ -48,9 +48,10 @@ evidence:
       Round 3 of the step 5.2 modification review, 2026-10-21. Both seats
       refused on one finding: 21 cases called evaluate() and proved the gate
       built the owner's question, while main() under --quiet printed none of
-      it on a passing change to the mechanism. Settled in this branch by tests
-      that drive main() as each caller runs it — without --quiet as the GitHub
-      workflow does, with it as the local task pipeline does — and read stdout.
+      it on a passing change to the mechanism. The later rounds' tests drove
+      main(argv) once per flag combination and read stdout and stderr; that
+      code is not on the trunk (the step's review did not pass), and the
+      prompts of every round are committed beside this one.
   - kind: roadmap
     ref: agents/roadmaps/archive/road-to-what-was-built-and-never-ran.md
     summary: >
@@ -64,9 +65,13 @@ evidence:
 
 In `src/skills/testing-anti-patterns/SKILL.md`, Iron Law 8 — "NEVER stop at
 the function when the claim is about delivery — behaviour promised at an entry
-point (a CLI flag, a CI step, a hook) is tested THROUGH that entry point, or it
-is untested." — a three-line paragraph saying why a complete suite can still
-miss it, and one Gotcha carrying the measured 2026-10-21 instance.
+point (a CLI flag, an output stream, a hook) is tested by driving the narrowest
+faithful invocation of it in an isolated fixture and asserting the promised
+observable." — a paragraph defining "narrowest faithful" (in-process
+`main(argv)` unless parsing, packaging or process exit status is the claim),
+the fixture's isolation (no network, credentials or real hooks unless they are
+the contract) and "the promised observable"; and one Gotcha stating the failure
+shape without a dated anecdote.
 
 ## 5. Quality gate expectations
 
@@ -81,20 +86,37 @@ after them.
 
 ## 7. Success signal
 
-- Metric: council or reviewer findings of the form "the function is tested,
-  its entry point is not" on pull requests to this repository
-- Baseline: 2 instances in October 2026 (the two evidence entries above)
-- Target: 0 such findings in the next quarter
+- Metric: the share of review records under `agents/evidence/` written in the
+  quarter whose findings include "the function is tested, its entry point is
+  not", over all review records written in that quarter that report at least
+  one test-coverage finding; counted by reading each record, and a quarter
+  with no such record reports "no data", never zero
+- Baseline: 2 instances in October 2026 (the two evidence entries above),
+  denominator to be counted at evaluation over October 2026 with the same rule
+- Target: a lower share than the October 2026 baseline
 - Evaluation date: 2027-01-21
+- Falsified if the share does not fall, or if the entry-point cases added under
+  the law are later found to catch nothing the function-level cases did not
 
 ## 8. Risks and alternatives rejected
 
 - **Risk:** every pure function gains a slow end-to-end twin. The law binds
   only where a claim is made AT an entry point; a function with no delivery
   promise needs none.
+- **Risk:** a literal reading drives real hooks or hosted CI with ambient
+  credentials. The law's own text confines it to an isolated fixture and the
+  narrowest faithful invocation.
 - **Rejected:** a lint that flags suites calling only an exported function.
   It cannot tell which functions carry a delivery promise, so it would be
   noise.
+- **Rollback:** revert the skill edit. The `dist/agent-src/` copy is a
+  byte-exact projection that CI's "Verify dist == rewrite(src)" step rejects if
+  it differs, so a revert regenerates with `task sync` and installs pick it up
+  on their next update. Revert if the law is cited to justify a test with real
+  side effects, or if the evaluation above falsifies it.
+- **Sequence:** source reviewed at a digest → owner authorization bound to the
+  same digest moves the proposal to `gated` → merge, after which the projection
+  ships. Nothing here is published before the owner's merge.
 
 ## 9. Gate verdict
 
