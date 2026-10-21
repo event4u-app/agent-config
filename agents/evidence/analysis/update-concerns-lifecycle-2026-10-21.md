@@ -36,6 +36,36 @@ them, and the change now carries it:
   the third is `update_concerns_declared_effects.test.ts` for spawns. Every
   lifecycle clause above is a test in the lifecycle file, each seen red.
 
+## Round 4 additions — the claim, the gate's reach, and the thresholds
+
+Round 4 refused on four points; each is answered here.
+
+- **"Once" is a claim, not a read.** `claimInvite` creates `update-invite.json`
+  with `O_CREAT | O_EXCL`, and only the session whose create succeeds prints.
+  Three processes started against one config home in five rounds produce
+  exactly one invitation each round (`update_concerns_lifecycle.test.ts`); with
+  the exclusive flag removed the same test is red.
+- **What the read gate proves, and what it does not.** Two CI assertions: no
+  module but the two owners names either state file or its reader, and no
+  module but the concern registry and the invite hook imports either concern.
+  A reader that builds the path at runtime escapes both. That residue is a
+  review invariant, stated as one, not a guarantee.
+- **The mode disables, tested with existing state.** `update.mode` `notify`,
+  `off` and `auto` each ask nothing and leave an existing invite record
+  byte-identical; the env kill switch does the same for both concerns.
+- **Operational rollback thresholds.**
+  - One confirmed report of a second invitation on one config home → remove the
+    `update-auto-invite` registration.
+  - The hook-latency gate (`bench_hook_latency --gate`) failing on
+    `session_start` or `stop` with either concern as the measured cause →
+    remove that concern's registration.
+  - Any module found reading either state file outside its owner → remove both
+    registrations, and the next registration needs a new ratification.
+  - A host where the invite's text demonstrably does not reach the user → drop
+    that host's `stop` binding.
+  The first and last are reports, not monitors; this package has no runtime
+  telemetry for them, and says so rather than implying one.
+
 ## Step 3.1 — done note, moved verbatim
 
 Written and tested 2026-10-20 as `update-notice`
