@@ -357,6 +357,12 @@ export const settingsSchema = z.object({
     // `worktrees.mode` was DELETED (ADR-229). Worktree creation is
     // instruction-only and hardcoded; there is nothing left to configure. A
     // leftover key is ignored with one deprecation line via REMOVED_KEYS.
+    // `worktrees.cleanup` governs REMOVAL, a separate question (ADR-295).
+    worktrees: z.object({
+        cleanup: z.enum(['off', 'notify', 'auto']).default('notify').describe(
+            'What the agent may do about a worktree whose work is provably on the trunk (merged by merge commit, rebase or squash), that is clean, holds no ignored file a rebuild would not restore, and has no live session. notify (default, and what an absent key resolves to) says once a day how many exist and removes nothing; auto removes them right after /pr:merge and once a day on the first session start, without force, keeping local branches; off says nothing. The daily pass reads merged pull requests through your gh login (branch name and head commit only).',
+        ),
+    }).default({ cleanup: 'notify' }),
     ai_team: z.object({
         model: z.string().default('auto').describe(
             "Model handed to the codex CLI. 'auto' (default) = pass no --model flag so the CLI's own default applies — tracks the subscription's current strongest model instead of pinning a stale ID. Any other value passes through verbatim as `--model <value>`.",

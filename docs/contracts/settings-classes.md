@@ -249,8 +249,10 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 9 |
 | B — consent | 3 |
-| C — guarded | 100 |
-| **Total** | **112** |
+| C — guarded | 101 |
+| **Total** | **113** |
+
+It rose to 113 on 2026-10-21 when `road-to-worktrees-that-leave-after-the-merge` step 4.2 added `worktrees.cleanup` — one C, `consent`: `auto` deletes worktree directories without asking, and a council round on 2026-10-21 held 2/2 that installation alone is not consent to that, so the key ships `notify` and no agent write path may reach it (ADR-295). It is a removal key; ADR-229's deletion of the creation key `worktrees.mode` is untouched.
 
 It fell to 112 on 2026-10-20 when `road-to-a-setup-that-decides-itself` removed the three projection keys the package now decides itself — `lean_projection.mode`, `lean_projection.hosts` and `projection.rule_workspaces` (two `derivable`, one `policy`, all C). Each carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged.
 
@@ -403,9 +405,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 35 |
 | un-inferrable | 10 |
-| consent | 50 |
+| consent | 51 |
 | policy | 17 |
-| **Total** | **112** |
+| **Total** | **113** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -611,6 +613,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `decision_engine.ask_timeout_seconds` | C | `30` | how long a fired gate waits before falling back | derivable — the same non-interactive probe: where nobody can answer there is nothing to wait for |
 | `update_check.enabled` | C | `true` | a background safety check; disabling it pins the user to known-vulnerable code | consent |
 | `update.mode` | C | `notify` | a standing authorisation to replace the user's global install; `auto` is something they cannot un-see happening | consent |
+| `worktrees.cleanup` | C | `notify` | a standing authorisation to delete worktree directories on the proven-merged set; `auto` removes them unasked (ADR-295) | consent |
 | `legal_review_prep.acknowledged` | C | `false` | the consent gate; the safety floor requires the wizard checkbox | consent |
 | `legal_review_prep.require_council` | C | `true` | a fail-closed defence-in-depth gate | consent |
 

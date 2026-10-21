@@ -921,6 +921,25 @@ subagents:
 #
 # The Iron-Law gates on creation (ignore-safety check, clean baseline) are
 # unchanged and still run on every explicitly-requested worktree.
+#
+# Removal is a different question, and it has a setting. What the agent may do
+# about a worktree whose work is provably on the trunk — merged (merge commit,
+# rebase or squash), clean, holding no ignored file a rebuild would not restore,
+# and with no live session in it:
+#
+#   notify  say once a day how many such worktrees exist; remove nothing
+#           (the default, and what an absent key resolves to)
+#   auto    remove them: right after `/pr:merge`, and once a day on the first
+#           session start (three-second budget, `git worktree remove` without
+#           force, local branches always kept, one journal line per removal)
+#   off     say nothing, remove nothing
+#
+# The daily pass asks GitHub, through your own gh login, which pull requests
+# merged (branch name and head commit only) — that is how a squash merge is
+# recognised. `auto` deletes directories; that is why it is yours to turn on
+# (ADR-295).
+worktrees:
+  cleanup: notify
 
 # --- AI Council (external second-opinion network) ---
 #

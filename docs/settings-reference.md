@@ -323,6 +323,12 @@ explanation lives now that the file no longer carries it as comments.
 |---|---|---|---|---|---|
 | `verbosity.offer_council_in_delivery` | A | boolean | `false` |  | Offer "run AI Council on this?" inside delivery commands (/feature-plan, /review-changes, /roadmap-create). Council commands themselves are unaffected. |
 
+## worktrees
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `worktrees.cleanup` | C | string | `"notify"` | `off` · `notify` · `auto` | What the agent may do about a worktree whose work is provably on the trunk (merged by merge commit, rebase or squash), that is clean, holds no ignored file a rebuild would not restore, and has no live session. notify (default, and what an absent key resolves to) says once a day how many exist and removes nothing; auto removes them right after /pr:merge and once a day on the first session start, without force, keeping local branches; off says nothing. The daily pass reads merged pull requests through your gh login (branch name and head commit only). |
+
 ## See also
 
 - [`settings-classes`](contracts/settings-classes.md) — the class contract this page reads.
