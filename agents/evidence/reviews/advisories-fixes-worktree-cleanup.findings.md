@@ -1,15 +1,15 @@
 # Findings: advisories-fixes-worktree-cleanup
-<!-- completion-review: v1 | reviewed: 2026-10-21 | scope: ee27b8ccafd0db77f2797d59458f90664ccc9d64b4513f617807d611c355cfe7 | diff: 6f3b86bbb70492598dc9a4c1b0d500859537fefd | reviewer: r2-fresh-subagent-advisories-fixes-worktree-cleanup | prompt_hash: 423afd1f09086444a2ca7ee32e9b50dc9ca79a4b39f731d44691505c0bc57277 | round: 5 -->
+<!-- completion-review: v1 | reviewed: 2026-10-21 | scope: 3bd245662d92c7f40e3661a207b5915bf74f27f5a2cc50fe934988d523f06132 | diff: 6f3b86bbb70492598dc9a4c1b0d500859537fefd | reviewer: r2-fresh-subagent-advisories-fixes-worktree-cleanup | prompt_hash: 423afd1f09086444a2ca7ee32e9b50dc9ca79a4b39f731d44691505c0bc57277 | round: 5 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-advisories-fixes-worktree-cleanup"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-21 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: 6f3b86bbb70492598dc9a4c1b0d500859537fefd
-  scope_hash: ee27b8ccafd0db77f2797d59458f90664ccc9d64b4513f617807d611c355cfe7
-  roadmap: agents/roadmaps/road-to-advisories-heard-the-same-day.md
-  roadmap_hash: c043b3d11356f6d604727cb9a593387ecdcb5b84e8d808ddff0e352e9fc21d5c
-  ac_hash: 062dd56c8af3ba9237afb8e4449f7a632ed669eb79c3be8d48db524e165eb96a
+  scope_hash: 3bd245662d92c7f40e3661a207b5915bf74f27f5a2cc50fe934988d523f06132
+  roadmap: agents/roadmaps/archive/road-to-advisories-heard-the-same-day.md
+  roadmap_hash: f9c32d1c8e3b7b15a34ba1ea1e324b55a76628dbbf9f47ec3fb1a27cd8d8d219
+  ac_hash: e245d5d46cce6d808d3e5bb63bd6a523dd46ff6194713ea2413c66c10c932df6
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-10-21T16:38:11Z
