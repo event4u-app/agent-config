@@ -21,6 +21,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { runInProc } from '../_lib/run_in_process.js';
 import {
     GIT_MAX_BUFFER,
+    REVIEW_ROUND_CAP,
     artifactRelevance,
     completionReviewDisabled,
     extractFixRef,
@@ -1452,5 +1453,170 @@ describe('check_completion_review — fence arrangements, pinned pre-migration',
         expect(p.malformedRows).toEqual([]);
         expect(p.malformedLines).toEqual([]);
         expect(p.strayFenceLines).toEqual([]);
+    });
+});
+
+describe('round: header field — road-to-a-review-that-ends 1.2', () => {
+    const SCOPE = 'd'.repeat(64);
+    const SHA = 'e'.repeat(40);
+    const base = `<!-- completion-review: v1 | reviewed: 2026-10-21 | scope: ${SCOPE} | diff: ${SHA} | reviewer: r2-x`;
+
+    it('parses an optional trailing round, after every other optional field', () => {
+        expect(parseMarkerLine(`${base} -->`)?.round).toBeUndefined();
+        expect(parseMarkerLine(`${base} | round: 2 -->`)?.round).toBe(2);
+        expect(parseMarkerLine(`${base} | author: impl | prompt_hash: ${'f'.repeat(64)} | round: 3 -->`)?.round).toBe(3);
+        expect(parseMarkerLine(`${base} | round: 0 -->`)).toBeNull();
+        expect(parseMarkerLine(`${base} | round: 2 | author: impl -->`)).toBeNull();
+    });
+});
+
+describe.runIf(hasGit())('round: header field — the round counts review passes', () => {
+    const roundMarker = (scope: string, round: number | null, prompt: string | null = null): string =>
+        `<!-- completion-review: v1 | reviewed: 2026-10-21 | scope: ${scope} | diff: ${'0'.repeat(40)} | reviewer: fresh-subagent-r2${prompt === null ? '' : ` | prompt_hash: ${prompt}`}${round === null ? '' : ` | round: ${String(round)}`} -->`;
+    const nullArtifact = (scope: string, round: number | null, prompt: string | null = null): string =>
+        [
+            '# Findings: feat',
+            roundMarker(scope, round, prompt),
+            '',
+            manifestFor(scope),
+            '',
+            `**Honest-null:** 0 findings, scope ${scope}, reviewed 2026-10-21`,
+            '',
+        ].join('\n');
+
+    /** Round 1 committed against an earlier scope, then the code moves on. */
+    function reboundRepo(firstRound: number | null): string {
+        const dir = makeRepo();
+        write(dir, 'src/fix.ts', 'export const x = 1;\n');
+        commitAll(dir, 'feature');
+        write(dir, ART, nullArtifact(scopeHash(dir), firstRound));
+        commitAll(dir, 'round 1 review');
+        write(dir, 'src/fix.ts', 'export const x = 2;\n');
+        commitAll(dir, 'fix after round 1');
+        return dir;
+    }
+
+    it('refuses a re-bind that drops the round once the predecessor carried one', () => {
+        const dir = reboundRepo(1);
+        write(dir, ART, nullArtifact(scopeHash(dir), null));
+        commitAll(dir, 're-bind without round');
+        expect(runGate(dir).kinds).toContain('round-miscounted');
+    });
+
+    it('refuses a header that skips a pass', () => {
+        const dir = reboundRepo(1);
+        write(dir, ART, nullArtifact(scopeHash(dir), 3));
+        commitAll(dir, 're-bind skipping round 2');
+        expect(runGate(dir).kinds).toContain('round-miscounted');
+    });
+
+    it('accepts a second pass recorded as round 2', () => {
+        const dir = reboundRepo(1);
+        write(dir, ART, nullArtifact(scopeHash(dir), 2, 'b'.repeat(64)));
+        commitAll(dir, 're-bind as round 2');
+        const res = runGate(dir);
+        expect(res.kinds).not.toContain('round-miscounted');
+        expect(res.status).toBe(0);
+    });
+
+    it('reads a predecessor without the field as round 1', () => {
+        const dir = reboundRepo(null);
+        write(dir, ART, nullArtifact(scopeHash(dir), 2, 'b'.repeat(64)));
+        commitAll(dir, 're-bind a v1 artefact as round 2');
+        expect(runGate(dir).status).toBe(0);
+    });
+
+    it('re-binds written before prompt_hash count as one pass, not one per scope', () => {
+        const dir = reboundRepo(1);
+        write(dir, ART, nullArtifact(scopeHash(dir), 2));
+        commitAll(dir, 'legacy re-bind claiming a second pass');
+        expect(runGate(dir).kinds).toContain('round-miscounted');
+        write(dir, ART, nullArtifact(scopeHash(dir), 1));
+        commitAll(dir, 'legacy re-bind keeping round 1');
+        expect(runGate(dir).kinds).not.toContain('round-miscounted');
+    });
+
+    it('an archive does not restart the count — a fresh skeleton continues at the next round', () => {
+        const dir = reboundRepo(1);
+        git(dir, 'mv', ART, 'agents/evidence/reviews/feat.round1-review.md');
+        commitAll(dir, 'archive round 1');
+        write(dir, ART, nullArtifact(scopeHash(dir), 1, 'b'.repeat(64)));
+        commitAll(dir, 'fresh dispatch after archive, restarted at 1');
+        expect(runGate(dir).kinds).toContain('round-miscounted');
+        write(dir, ART, nullArtifact(scopeHash(dir), 2, 'b'.repeat(64)));
+        commitAll(dir, 'fresh dispatch after archive, continued at 2');
+        expect(runGate(dir).kinds).not.toContain('round-miscounted');
+    });
+
+    it('a re-bind with the same prompt_hash is the same pass — CI churn does not burn a round', () => {
+        const prompt = 'a'.repeat(64);
+        const dir = makeRepo();
+        write(dir, 'src/fix.ts', 'export const x = 1;\n');
+        commitAll(dir, 'feature');
+        write(dir, ART, nullArtifact(scopeHash(dir), 1, prompt));
+        commitAll(dir, 'round 1 review');
+        write(dir, 'src/fix.ts', 'export const x = 2;\n');
+        commitAll(dir, 'CI fix');
+        write(dir, ART, nullArtifact(scopeHash(dir), 1, prompt));
+        commitAll(dir, 're-bind, no new reviewer');
+        expect(runGate(dir).status).toBe(0);
+        write(dir, ART, nullArtifact(scopeHash(dir), 2, prompt));
+        commitAll(dir, 're-bind claiming a pass that did not run');
+        expect(runGate(dir).kinds).toContain('round-miscounted');
+    });
+
+    /** `passes` reviewer passes, each on its own prompt and scope, the last one in the working tree. */
+    function passesRepo(passes: number, body = (scope: string, round: number, prompt: string): string => nullArtifact(scope, round, prompt)): string {
+        const dir = makeRepo();
+        for (let n = 1; n <= passes; n++) {
+            write(dir, 'src/fix.ts', `export const x = ${String(n)};\n`);
+            commitAll(dir, `change ${String(n)}`);
+            write(dir, ART, body(scopeHash(dir), n, String(n).repeat(64).slice(0, 64)));
+            commitAll(dir, `review pass ${String(n)}`);
+        }
+        return dir;
+    }
+
+    it(`refuses review pass ${String(REVIEW_ROUND_CAP + 1)} and accepts pass ${String(REVIEW_ROUND_CAP)}`, () => {
+        expect(REVIEW_ROUND_CAP).toBe(5);
+        const atCap = runGate(passesRepo(REVIEW_ROUND_CAP));
+        expect(atCap.kinds).not.toContain('round-cap-exceeded');
+        expect(atCap.status).toBe(0);
+        const past = runGate(passesRepo(REVIEW_ROUND_CAP + 1));
+        expect(past.kinds).toContain('round-cap-exceeded');
+        expect(past.violations.map((v) => v.detail).join('\n')).toContain('owner-report.md');
+    });
+
+    it('at the cap, a deferred high row must cite an existing owner report', () => {
+        const rowsArtifact =
+            (ref: string) =>
+            (scope: string, round: number, prompt: string): string =>
+                [
+                    '# Findings: feat',
+                    roundMarker(scope, round, prompt),
+                    '',
+                    manifestFor(scope),
+                    '',
+                    '| # | Severity | File:line | Finding | Status | Reason/Ref |',
+                    '|---|---|---|---|---|---|',
+                    `| 1 | high | src/fix.ts:1 | a defect the cap leaves open | deferred | ${ref} |`,
+                    '',
+                ].join('\n');
+        const report = 'agents/evidence/reviews/feat.owner-report.md';
+        const missing = runGate(passesRepo(REVIEW_ROUND_CAP, rowsArtifact(`roadmap-x § 1 — ${report}`)));
+        expect(missing.kinds).toContain('cap-deferral-without-owner-report');
+        const dir = passesRepo(REVIEW_ROUND_CAP, rowsArtifact(`roadmap-x § 1 — ${report}`));
+        write(dir, report, '# Owner report: feat\n\nRow 1 stays open at the round cap.\n');
+        commitAll(dir, 'owner report');
+        expect(runGate(dir).kinds).not.toContain('cap-deferral-without-owner-report');
+        const below = runGate(passesRepo(REVIEW_ROUND_CAP - 1, rowsArtifact('roadmap-x § 1')));
+        expect(below.kinds).not.toContain('cap-deferral-without-owner-report');
+    });
+
+    it('leaves a legacy re-bind with no round field anywhere untouched', () => {
+        const dir = reboundRepo(null);
+        write(dir, ART, nullArtifact(scopeHash(dir), null));
+        commitAll(dir, 'legacy re-bind');
+        expect(runGate(dir).status).toBe(0);
     });
 });

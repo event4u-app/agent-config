@@ -268,6 +268,13 @@ export const SUPPRESSION_INVENTORY: readonly SuppressionSpec[] = [
         // 9a013fac5, and the scan reported the stale flag as designed.
         what: 'skill and rule artefacts carrying a standard-conformance claim with no enforced_by declaration',
     },
+    {
+        file: 'src/config/roadmap-step-size-baseline.json',
+        listKey: 'held',
+        tier: 'string_list',
+        newInThisChange: true,
+        what: 'roadmap steps over the 150-word cap when the cap landed, exempt until split or archived',
+    },
 ];
 
 export interface SuppressionFinding {

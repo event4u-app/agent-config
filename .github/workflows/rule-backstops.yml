@@ -173,6 +173,13 @@ jobs:
       - name: code-comment-discipline (language, report and provenance comments)
         run: ./scripts-run src/scripts/lint_code_comments --base origin/main
 
+      # A ceremony depth lowered by change class can only be audited from the
+      # receipt each ticked step carries. Diff-scoped: older unreceipted ticks
+      # never red a later PR. Report-only while the depth table is in shadow
+      # mode; blocking from the flip on.
+      - name: step receipts (every newly ticked roadmap step names its class)
+        run: ./scripts-run src/scripts/check_step_receipts --base origin/main
+
       # A `[~]` carried to a follow-up is validated once, when the parent is
       # archived, by a sweep that then never sees the pair again — so the
       # receiver could be deleted afterwards with nothing going red. This walks

@@ -2786,6 +2786,36 @@ gates:
       the count stays at 24 either side of this change. The self-test is
       therefore adopted on its merits rather than to clear a ratchet.
 
+  - id: check_step_receipts
+    argv: ["--base", "origin/main"]
+    min_scanned: 0
+    corpus: >
+      the roadmap files under `agents/roadmaps/` a change touches, measured
+      against the base ref — a DIFF, with renames followed. The floor is 0
+      deliberately: most changes tick no roadmap step, and git answers for its
+      own range, so there is no committed path list that can go stale. An
+      unreadable base exits 2 rather than reporting zero.
+
+      SELF-TEST ADOPTED: 6 cases, 3 rejecting, against the real CLI over a
+      throwaway repository — a step ticked without a receipt, a new roadmap
+      arriving ticked, and a hand-written receipt claiming `active` that the
+      diff does not allow must RED; a receipted tick, a reworded older tick and
+      a diff with no roadmap must stay GREEN. Sensitivity observed: dropping the
+      receipt condition turns the first two rejecting cases and two unit cases
+      red; allowing every lowered claim turns the third red.
+      The self-test passes `--enforce`; the CI call does not, so while the
+      depth table is in shadow mode a finding is reported and exits 0, and from
+      the flip on it exits 1 — blocking exactly when a lowered depth exists.
+    status: enforced
+    ci_invocation: .github/workflows/rule-backstops.yml
+    no_canary_reason: >-
+      A create-only canary cannot express this gate's violation. The corpus is a
+      DIFF against the base ref, so a planted file is in scope only once it is
+      committed, and the violation is a CHANGE of one line from unticked to
+      ticked, which an added file without a base version cannot represent
+      except as a new roadmap. Discrimination is proven by the gate's own
+      `--self-test` (6 cases, 3 rejecting), which builds these shapes.
+
   - id: check_agent_artifact_location
     argv: []
     min_scanned: 3000

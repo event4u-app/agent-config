@@ -17,6 +17,8 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 
+import { REVIEW_ROUND_CAP } from '../../src/scripts/check_completion_review.js';
+
 import {
     REVIEW_SCOPE_EXCLUDES,
     REVIEW_SCOPE_GIT_CONFIG,
@@ -215,6 +217,12 @@ describe('dispatch_r2_reviewer — package + skeleton', () => {
         expect(prompt).toContain('branch-scoped `git diff`');
         expect(prompt).toContain('no reads of `agents/runtime/`');
         expect(prompt).toContain('| # | Severity | File:Line | Finding | Status | Reason/Ref |');
+        // road-to-a-review-that-ends 1.4 — severity binds to correctness and the
+        // stated requirements; style and wording of record prose is `low`, while a
+        // false statement a gate or a reader acts on keeps its weight.
+        expect(prompt).toContain('## Severity');
+        expect(prompt).toContain('- `low` — style, naming, formatting or wording that changes no behaviour');
+        expect(prompt).toContain('keeps the severity of what it breaks');
         expect(prompt).toContain('- src/foo.ts');
         expect(fs.existsSync(path.join(repo, OUT, `${SLUG}.findings.md`))).toBe(true);
     });
@@ -240,7 +248,7 @@ describe('dispatch_r2_reviewer — package + skeleton', () => {
         );
         expect(body).toContain(
             `<!-- completion-review: v1 | reviewed: 2026-08-04 | scope: ${sha256(diff)} | diff: ${head} | ` +
-                `reviewer: r2-fresh-subagent-${SLUG} | prompt_hash: ${sha256(promptText)} -->`,
+                `reviewer: r2-fresh-subagent-${SLUG} | prompt_hash: ${sha256(promptText)} | round: 1 -->`,
         );
 
         const expectedManifest = [
@@ -1107,6 +1115,7 @@ describe('dispatch_r2_reviewer — a leftover artefact is classified, never sile
             'b'.repeat(64),
         );
         expect(text).toContain('RE-BIND IN PLACE');
+        expect(text).toContain('same `round:`');
         expect(text).toContain('round<N>-review.md');
         expect(text).toContain('check_review_dispositions');
         expect(text).toContain('destroys the record');
@@ -1152,6 +1161,37 @@ describe('dispatch_r2_reviewer — a leftover artefact is classified, never sile
         const again = run(dispatchArgs(repo));
         expect(again.status).toBe(1);
         expect(again.stderr).toContain('LIVE review');
+    });
+
+    /** Dispatch, commit the skeleton, archive it, move the scope — `passes` times. */
+    function archivedPasses(passes: number): string {
+        const repo = initRepo();
+        const findings = path.join(OUT, `${SLUG}.findings.md`);
+        for (let n = 1; n <= passes; n++) {
+            expect(run(dispatchArgs(repo)).status).toBe(0);
+            git(repo, 'add', '-A');
+            git(repo, 'commit', '-qm', `review pass ${String(n)}`);
+            git(repo, 'mv', findings, path.join(OUT, `${SLUG}.round${String(n)}-review.md`));
+            write(repo, 'src/foo.ts', `export const x = ${String(n + 1)};\n`);
+            git(repo, 'add', '-A');
+            git(repo, 'commit', '-qm', `archive pass ${String(n)}, then fix`);
+        }
+        return repo;
+    }
+
+    it('a dispatch after an archive continues the round instead of restarting at 1', () => {
+        const repo = archivedPasses(1);
+        expect(run(dispatchArgs(repo)).status).toBe(0);
+        expect(fs.readFileSync(path.join(repo, OUT, `${SLUG}.findings.md`), 'utf-8')).toContain('| round: 2 -->');
+    });
+
+    it('refuses the review pass past the round cap and writes nothing', () => {
+        const repo = archivedPasses(REVIEW_ROUND_CAP);
+        const past = run(dispatchArgs(repo));
+        expect(past.status).toBe(1);
+        expect(past.stderr).toContain(`review pass ${String(REVIEW_ROUND_CAP + 1)}`);
+        expect(past.stderr).toContain(`${SLUG}.owner-report.md`);
+        expect(fs.existsSync(path.join(repo, OUT, `${SLUG}.findings.md`))).toBe(false);
     });
 
     it('an unreadable artefact is refused rather than replaced on a guess', () => {

@@ -1,0 +1,274 @@
+# PR Merge — Preparation Detail
+
+Branch-only detail of [`/pr:merge`](../../commands/pr/merge.md) § 1–§ 5 and § 7,
+loaded from its pointer lines. Every Iron Law stays in the command; this is verbatim.
+
+## Why the invocation authorizes
+
+**The invocation is the authorization, and nothing else is.** `pr-merge` is
+irreversible, and since 2026-09-04 (ADR-254) NOTHING MECHANICAL CHECKS IT —
+the gate that did was removed after it refused authorizations the owner had in
+fact given. The per-session ledger still records what the user's own prompt
+authorized, and this command still reads it as an audit trail; it introduces no
+second authorization store, and it never writes one. When the work left is
+outside what the owner authorized, the run stops and reports (§ 7).
+
+Why the preparation half is still the bulk of this command: everything before
+§ 9 — the target manifest, the four conflict classes, the superseded check, the
+bounded CI repair, the cutoff — is the expensive, error-prone part, and it is
+what the live runs actually proved. `--no-merge` delivers exactly that half to
+callers that want it, [`/roadmap:process-full`](../../commands/roadmap/process-full.md)
+among them.
+
+## Authorization rules
+
+With the gate removed nothing refuses an unauthorized merge, which makes this
+section the whole control rather than a second layer behind one. Two rules
+follow, and they are stricter than the ones they replace:
+
+- **A cardinality word does not authorize a PR the owner never named.** "All the
+  open PRs" is an instruction to work the queue as it stood when the owner said
+  it. A PR opened after that sentence is new work and needs its own go-ahead.
+- **A one-shot authorization is spent on the operation it named.** Per
+  `commit-policy`, "merge #1499" does not authorize the next merge, and a
+  conflict cycle or a CI fix in between does not renew it.
+
+Write the summary as-is with an `unauthorized` disposition per unprocessed PR
+and name the exact authorization needed. Then STOP and wait — do not end the
+run, and do not proceed to the next PR.
+
+That is the same `unauthorized` row § 6's straggler batch carries, and
+deliberately one token rather than two: both mean *prepared by this run, not
+authorized for it to merge*, and a reader of the summary needs the distinction
+between merged and not-merged, not between two reasons for the same outcome.
+
+## Sub-commands rationale
+
+*(none, deliberately.)* `all` changes **cardinality**, not lifecycle, so it is
+an argument rather than a second command — the locked registry's rule that
+"sibling variants become a flag, never a second command"
+([`command-clusters`](../../../../docs/contracts/command-clusters.md)) applied
+to this cluster. A future sub belongs here only if it has a materially
+different lifecycle, not a different count.
+
+## Bare invocation
+
+**Bare invocation** (`/pr:merge` with no argument) is a **documented default
+flow**, not a menu: it runs the auto-selection in row 2 and says which PR it
+picked and why, before touching it. A menu would be the wrong shape here —
+selection is deterministic from the queue-order rule in § 1, so asking the user
+to pick would hand back a decision the command can compute. When the open-PR
+list is empty there is nothing to select and the command reports that and
+stops.
+
+## Manifest fields
+
+`baseRefName` and the base SHA are part of the record, not incidental: § 2 and
+§ 4 both consume `<base>`, and § 8's kill switch "the base advanced by an actor
+other than this run" is undetectable without a base SHA to compare against.
+
+`--limit 100` caps the manifest. A queue above 100 open PRs is drained
+**partially**, and the run must say so rather than reporting completion — the
+§ 6 bound reads "initial manifest + one batch", and the manifest is what the
+cap truncated.
+
+The manifest is the authorization's target set and is **never silently
+refreshed by a third party's push**. It lives in this run's own context and in
+no file, so nothing verifies it and no gate would notice if it drifted — what
+actually binds the target is the pre-merge re-read below, a check that fires,
+not a property that holds. Say "re-checked", never "immutable" (ADR-266
+§ What this record does not claim, finding 3). It is, by design, advanced by *this run's
+own* commits — § 2 merges the base in and § 5 pushes, so a prepared PR's head
+is never the snapshot head, and a naive "refuse when the SHA moved" check would
+fire on every PR the run touches.
+
+So the record carries **two** SHAs per PR and they mean different things:
+
+| Field | Set at | Meaning |
+|---|---|---|
+| `pr_number` | snapshot | Immutable. A change is branch substitution — refuse. |
+| `observed_head` | snapshot, then **updated by this run after each of its own pushes** | The head this run last produced. |
+| `base_ref` + `base_sha` | snapshot | The base the PR was prepared against; § 8's "base advanced by another actor" compares against it. |
+
+Before every merge, re-read the PR and refuse when the live head is **neither**
+the snapshot head **nor** the head this run last pushed. That is the
+force-push-after-authorization case, and it is the only one the check exists
+for. A PR that appeared after the snapshot is never merged by this run — § 6
+says what happens to it instead.
+
+## Sync procedure and exits
+
+Check the PR out, read the strategy against its base, then let one script do
+the update, so the branch-convergence policy (the base SET a non-default target
+carries) is read on every path. `show` takes the same `--base` as `sync` and
+runs after the checkout: without `--base` both read the default branch, and a PR
+into any other base would be judged against the wrong commit. `--key
+update_strategy` limits `show`'s exit to the strategy, so a `commit_format` or
+`branch_pattern` the PR head breaks does not stop the update.
+
+```bash
+git fetch origin
+gh pr checkout <N>
+agent-config git:convention show --key update_strategy --base origin/<base>   # value, source, state
+agent-config git:convention sync --base origin/<base>
+```
+
+A `git.update_strategy` whose state is `malformed`, `invalid`, `discarded` or
+`unresolvable` is not a strategy — `show` exits `1` on it and the script
+refuses it with exit 4, or with exit 1 when the target itself cannot be
+resolved — so stop on this PR and report the line `show` printed. A
+candidate in such a state (this checkout's uncommitted value) is a warning
+`show` prints with exit `0`; the script never reads it, so it does not stop
+the PR.
+The one narrowing: a base the server names whose commit could not be fetched is
+the `unverified` warning below (exit `0`, nothing merged); origin unreachable at
+the ref lookup is exit `1`. Otherwise
+the strategy decides what the script does — under `merge` it merges the base
+set in, under `rebase` it only checks, because a
+`Merge branch '<base>' into …` commit is what that setting excludes and the
+`/pr:merge` sentence authorises merging the named PRs, not rewriting their
+branches ([`git-history-discipline`](../../rules/git-history-discipline.md)).
+Read its exit and its line together:
+
+- exit `0` with a `✅` line → the PR is current with its base, or under `merge`
+  the base was merged in cleanly; go on to § 3.
+- exit `0` with a `⚠️` line reading `unverified` (the base commit or origin could not be fetched)
+  or `BYPASSED` (the convergence policy is disabled at the target) → **not
+  checked**: nothing is known about freshness. Stop on this PR and report the
+  line; it is never read as current.
+- exit `1` → a conflict report goes to § 3; a base that could not be resolved
+  (a `--base` the server does not know, no origin, origin unreachable) stops
+  this PR.
+- exit `3` → behind under a strategy other than `merge`. This run never
+  rebases a PR it did not author — the rebase is the author's, or a separate
+  request under
+  [`branch-update`](../../skills/git-workflow/references/branch-update.md).
+  What happens to the PR is an owner decision (recorded
+  2026-10-07), and it turns on one forge setting — whether the base requires an
+  up-to-date branch before merging:
+
+  ```bash
+  gh api repos/{owner}/{repo}/branches/<base>/protection \
+    --jq .required_status_checks.strict 2>&1; echo "exit=$?"
+  gh api repos/{owner}/{repo}/rules/branches/<base> \
+    --jq '.[] | select(.type == "required_status_checks") | .parameters.strict_required_status_checks_policy'; echo "exit=$?"
+  ```
+
+  Each read has three outcomes, told apart by the exit code and the message:
+
+  | Read | Absent | Value | Failed |
+  |---|---|---|---|
+  | classic protection | non-zero exit **and** the output contains `(HTTP 404)` (`Branch not protected`); or exit `0` with `null` — the branch is protected but requires no status checks | exit `0`: `true` or `false` | any other non-zero exit, or output that is not `true` / `false` / `null` |
+  | rulesets | exit `0` with empty output (no rule requiring status checks) | exit `0`: one or more lines, each `true` or `false` | non-zero exit, or a line that is not `true` / `false` |
+
+  A `404` from the classic endpoint is not a failed read: it is what a branch
+  protected only by rulesets, or not protected at all, returns; nor is `null`
+  from a `200`, which is a protected branch with no required status checks.
+  The rulesets read prints one line per ruleset on the base that requires
+  status checks, so a base covered by several prints several lines: **any**
+  `true` line reads as `true`; all lines `false` reads as `false`. Either reading
+  `true` means the forge requires an up-to-date branch; both absent or `false`
+  means it does not; a **failed** read is treated as required. A base
+  protected by rulesets alone is decided by the rulesets read.
+  - **The forge does not require an up-to-date branch**, and the PR is green
+    and conflict-free → it goes on to § 3–§ 9 and is merged behind its base;
+    the summary row says so (`merged behind <base>; the forge does not require
+    an up-to-date branch`). Its checks never ran against the current base, and
+    the summary is where that stays visible.
+  - **The forge requires an up-to-date branch** → disposition
+    `blocked-external`, the row naming that setting as the reason.
+  - **The line reads `TARGET_POLICY_STALE`** → the PR is current with its
+    non-default target and that target is itself behind its default branch:
+    `blocked-external`, reason "the target's update", whatever the forge
+    setting. A PR also behind its target gets the ordinary behind line instead,
+    with the target's lag as a note.
+- exit `4` → the strategy could not be read (the line names the reason code
+  and the file); nothing was checked or merged. Stop on this PR and report it.
+- any other exit → the check could not run (internal error); stop on this PR
+  and report the script's message.
+
+## Conflict classes
+
+Conflicts between queued PRs are expected, not exceptional: in this repository
+roadmap PRs touch the same handful of shared paths, so each merge can
+re-conflict every remaining PR. Resolve semantically, by these enumerated
+classes.
+
+`src/config/estate-count-budget.json` used to be the second-worst offender here
+and no longer belongs in any class below: ADR-243 removed its stored baseline, so
+it changes on a policy decision rather than once per roadmap touch. A conflict in
+it now means two humans edited the same policy sentence — read both sides.
+
+| Class | Files | Resolution |
+|---|---|---|
+| Roadmap files | `agents/roadmaps/**` | Union of completions. Never un-check a box either side checked; never resurrect a roadmap either side archived or parked. |
+| Generated artefacts | `agents/roadmaps-progress.md` · `docs/catalog.md` · `docs/command-flows.md` · `agents/index.md` · any file whose first three lines say generated / do-not-edit | Never hand-merge. Take either side, then **regenerate** with the repo's own task and commit the regenerated output. |
+| Archive move vs. edit | `agents/roadmaps/{archive,later,skipped}/**` — one side renamed or deleted, the other edited | The archived end-state wins. Re-apply the edit at the new path if it still matters; otherwise drop it and record the drop in the summary. |
+| Evidence files | `agents/evidence/**` | Append-only. Keep both sides. |
+
+The classes exist so a merge resolution is reproducible by a second reader, and
+that is still their job. What changed is what happens when a conflict falls
+outside them: **`road-to-adversarial-verification-and-long-runs` 5.2** replaced
+the halt with the ladder above, because "nobody has decided this yet" describes
+a class of conflict, not a class of thing only an owner may touch. Most
+unenumerated conflicts are two branches editing adjacent prose, and halting a run
+on one converts a two-minute read into an owner interrupt.
+
+Read the ladder as ordered, and note where the owner sits. The first three rungs
+are the agent's own work — **understand what each side was trying to do**,
+**inspect recency, authorship and the open PRs** that produced them, and
+**preserve both where they are compatible**, which most textual conflicts are.
+The fourth and fifth escalate *laterally* — an independent reviewer for a merge
+whose risk the run cannot bound alone, then the council or the team. The owner is
+the **last** rung and is reached on one condition: the two sides encode
+incompatible PRODUCT semantics, where choosing is a decision about what the thing
+should do rather than about how to combine two edits.
+
+Deciding it **silently** inside a drain loop is still how work disappears, and
+that prohibition is unchanged: an unenumerated resolution is recorded — which
+rung settled it, what both intents were, and why the chosen resolution preserves
+them — so the second reader the classes exist for can still follow it.
+
+**`process-full`'s halt 6 retires with this**, per that command's own halt table.
+
+## Superseded probe
+
+If the effective diff against the base is empty after syncing, the PR's content
+already landed elsewhere. Distinguish genuinely empty from generated-artefact
+churn that regeneration on the base would produce anyway — the latter is not
+emptiness.
+
+The probe is **not** a bare diff: taken literally, a bare diff closes every
+roadmap PR in this repository, because after a base sync and a regenerate the
+only remaining hunks are exactly the generated-artefact churn § 3 tells you to
+regenerate. Exclude those paths before deciding:
+
+```bash
+git diff origin/<base>...HEAD --stat -- . \
+  ':(exclude)agents/roadmaps-progress.md' \
+  ':(exclude)docs/catalog.md' ':(exclude)agents/index.md'
+```
+
+The asymmetry is deliberate and worth stating, because it looks inconsistent:
+merging is authorised once by the invocation, while closing needs a *per-object*
+confirmation every time. Merging a PR this queue prepared is the action the
+run's whole design is about, and § 1's manifest already binds it to a named
+number and a recorded head; closing a PR someone else opened is neither, it
+destroys their work in progress, and no guard in this tree sees it happen. The
+stricter gate goes on the action nothing else watches.
+
+## Red CI repair bounds
+
+- **Root-cause fixes only**, inside the PR's own scope.
+- **One rerun for a known flake class** (`gh run rerun <id> --failed`) before
+  red counts as real.
+- **N=3 per validation target, six touches per PR per pass — two different
+  units, and the smaller one binds first.** The always-loaded
+  [`autonomous-execution`](../../rules/autonomous-execution.md) cap is
+  three consecutive failed attempts on ONE target (a named failing test, a lint
+  rule id, one CI job) and it is not lifted here. The six is a per-PR ceiling
+  across *distinct* targets: a PR whose CI peels one failure to reveal a
+  different one may be worked six times, never one target four times. Hitting
+  N=3 on a single target ends the PR's pass immediately, whatever the six says.
+  Exhaustion of either posts a diagnosis comment and moves the PR to the end of
+  the queue once; a second exhaustion is terminal.

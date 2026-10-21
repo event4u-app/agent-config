@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **619**
-- Edges (incl. self-WRITE): **2351**
+- Files indexed: **630**
+- Edges (incl. self-WRITE): **2397**
 
 ## READ_ONLY edges
 
@@ -138,6 +138,24 @@
 | `.agent-src.uncondensed/contexts/execution/plan-confidence-gate.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/plan-confidence-gate.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/plan-confidence-gate.md` | `.agent-src.uncondensed/skills/roadmap-writing/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-create-branches-content.md` | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-create-branches-content.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-create-branches-content.md` | `.agent-src.uncondensed/rules/direct-answers.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-create-branches-content.md` | `.agent-src.uncondensed/rules/git-history-discipline.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-create-branches-content.md` | `.agent-src.uncondensed/rules/no-attribution-footers.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-create-branches-content.md` | `.agent-src.uncondensed/rules/no-cheap-questions.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-create-branches-content.md` | `.agent-src.uncondensed/rules/no-pr-progress-comments.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-create-branches-content.md` | `.agent-src.uncondensed/rules/token-efficiency.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-create-branches-freshness.md` | `.agent-src.uncondensed/skills/git-workflow/references/branch-update.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-merge-sync.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-merge-sync.md` | `.agent-src.uncondensed/rules/git-history-discipline.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-merge-sync.md` | `.agent-src.uncondensed/skills/git-workflow/references/branch-update.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/process-full-all.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/process-full-all.md` | `.agent-src.uncondensed/skills/using-git-worktrees/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/process-full-delivery.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/process-full-delivery.md` | `.agent-src.uncondensed/contexts/execution/terminal-states.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/process-full-delivery.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/process-full-delivery.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/project-intelligence.md` | `.agent-src.uncondensed/contexts/execution/evidence-discipline.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/project-intelligence.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/project-intelligence.md` | `.agent-src.uncondensed/rules/source-discovery-gate.md` | `body_link` | 1 |
@@ -148,10 +166,12 @@
 | `.agent-src.uncondensed/contexts/execution/roadmap-ci-steps-mechanics.md` | `.agent-src.uncondensed/rules/roadmap-ci-steps-policy.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-ci-steps-mechanics.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-ci-steps-mechanics.md` | `.agent-src.uncondensed/rules/verify-before-complete.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract-branches.md` | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `.agent-src.uncondensed/contexts/authority/commit-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `.agent-src.uncondensed/contexts/authority/kernel-rule-edits.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `.agent-src.uncondensed/contexts/execution/contract-decision-sheet.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract-branches.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `.agent-src.uncondensed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
@@ -160,23 +180,38 @@
 | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `.agent-src.uncondensed/rules/security-sensitive-stop.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/contexts/authority/commit-mechanics.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-close.md` | `.agent-src.uncondensed/contexts/execution/decision-closure-execution.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-close.md` | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-close.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-close.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-close.md` | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-prescan.md` | `.agent-src.uncondensed/contexts/authority/commit-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-prescan.md` | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-prescan.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-prescan.md` | `.agent-src.uncondensed/rules/commit-policy.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-prescan.md` | `.agent-src.uncondensed/rules/direct-answers.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-prescan.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-run.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-run.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-run.md` | `.agent-src.uncondensed/rules/evaluator-independence.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-run.md` | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md` | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md` | `.agent-src.uncondensed/skills/worktree-lifecycle/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/contexts/execution/decision-closure-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/contexts/execution/roadmap-ci-steps-mechanics.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-close.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-prescan.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-run.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/rules/commit-policy.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/rules/direct-answers.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/rules/evaluator-independence.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/rules/roadmap-ci-steps-policy.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/rules/security-sensitive-stop.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/rules/verify-before-complete.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/skills/ai-council/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/skills/worktree-lifecycle/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-writing-source-derived.md` | `.agent-src.uncondensed/rules/external-reference-deep-dive.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-writing-source-derived.md` | `.agent-src.uncondensed/rules/no-roadmap-references.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-writing-source-derived.md` | `.agent-src.uncondensed/rules/source-confidentiality.md` | `body_link` | 1 |
@@ -1749,7 +1784,7 @@
 
 | Kind | Count |
 |---|---:|
-| `context` | 66 |
+| `context` | 77 |
 | `persona` | 36 |
 | `rule` | 122 |
 | `skill` | 395 |

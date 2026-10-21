@@ -831,6 +831,13 @@ that was never a judgement call.
     `## Release holds` exactly as it does everywhere else. A hold names a *state*
     and its clearing *checkbox*; it never names a version, a tag, or a date.
 
+29. **A step is at most 150 words, and its Done note is one line.** The
+    checkbox line plus its indented continuation counts; HTML comments (a
+    receipt, a skip marker) do not. Evidence goes to the commit and, for an
+    R2/R3 change, to the artefact — not into the step. `lint_roadmap_complexity`
+    refuses a new step over the cap; the steps already over it on 2026-10-21 are
+    held in `src/config/roadmap-step-size-baseline.json`, which only shrinks.
+
 ---
 
 ## Quality Gates (remote CI by default)

@@ -57,13 +57,15 @@ import {
     type ExactObjectAsk,
 } from '../../src/scripts/_lib/typed_op_grant.js';
 import { classify, findingFor } from '../../src/scripts/check_test_delta.js';
+import { PROCEDURE_BRANCHES, procedureText } from '../_lib/procedure_text.js';
 import {
     sameSessionTestFlag,
     touchesTestAndCode,
 } from '../../src/scripts/hooks/evidence_independence.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const read = (rel: string): string => fs.readFileSync(path.join(REPO, rel), 'utf8');
+const read = (rel: string): string =>
+    rel in PROCEDURE_BRANCHES ? procedureText(rel) : fs.readFileSync(path.join(REPO, rel), 'utf8');
 /**
  * The same text with every run of whitespace collapsed to one space.
  *
