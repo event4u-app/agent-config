@@ -10,7 +10,7 @@ Loaded by the `subagent-orchestration` skill and the `/do-and-judge`,
 |---|---|---|
 | `subagents.implementer_model` | _(empty → session model)_ | Model alias used for implementer subagents |
 | `subagents.judge_model` | _(empty → one tier up)_ | Model alias used for judge subagents |
-| `subagents.max_parallel` | `3` | Limit on concurrent subagent invocations. On Claude Code the installer writes it into `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`, the host cap on concurrent new spawns; whether that cap also bounds a resumed worker is unobserved, so a resume count is not claimed as enforced |
+| `subagents.max_parallel` | `3` | Limit on concurrent subagent invocations. On Claude Code the installer writes it into `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`, the host cap on concurrent new spawns. That cap does **not** bound a resumed worker — on Claude Code 2.1.306 a resume was admitted past a cap of 1 (`agents/evidence/investigations/host-continuation-observations-2026-10.md`) — so a resume is neither bounded by the host nor counted by any package code yet, and is never claimed as enforced |
 
 ## Model tier ladder
 
