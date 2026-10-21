@@ -59,6 +59,14 @@ export const SPOOL_SCHEMA = 2;
 /** D2: seven days and 500 MB, whichever comes first. */
 export const SPOOL_RETENTION_MS = 7 * 24 * 3600 * 1000;
 export const SPOOL_MAX_BYTES = 500 * 1024 * 1024;
+/**
+ * An entry outlives its handles by this much: a handle's expiry is rounded up to
+ * the second, so without the margin a still-valid handle could find its entry
+ * already gone and read `missing` instead of `ok`.
+ */
+const ENTRY_GRACE_MS = 2000;
+/** The observe log is rotated once past this size, keeping one previous file. */
+export const OBSERVATION_MAX_BYTES = 5 * 1024 * 1024;
 
 const LOCK_FILE = '.cleanup.lock';
 const STALE_TMP_MS = 60 * 60 * 1000;
@@ -87,10 +95,11 @@ function sha256(bytes: Buffer): string {
 
 /**
  * Everything this store writes lives under the user-global root, keyed by a
- * digest of the workspace's real path — never under the workspace. A repository
- * controls its own tree, and a path check there is check-then-use: a process the
- * repository starts could swap a component between the check and the write.
- * Outside the workspace the repository controls no ancestor of these paths.
+ * digest of the workspace's real path — never under the workspace, so nothing
+ * placed in the workspace tree can redirect it. This does NOT isolate the store
+ * from a process running as the same user, a repository-started one included:
+ * such a process can reach the user-global root directly, and that is outside
+ * this store's threat model (see the contract).
  */
 function workspaceDigest(root: string): string {
     let real = root;
@@ -307,7 +316,7 @@ function sweepLocked(dir: string, now: number, maxBytes: number, owner: string, 
         // A link or directory planted under an address-shaped name is neither counted nor followed.
         if (!st.isFile()) continue;
         const old = now - st.mtimeMs;
-        const expired = name.endsWith('.tmp') || name.endsWith('.claimed') ? old > STALE_TMP_MS : ADDRESS.test(name) && old >= SPOOL_RETENTION_MS;
+        const expired = name.endsWith('.tmp') || name.endsWith('.claimed') ? old > STALE_TMP_MS : ADDRESS.test(name) && old >= SPOOL_RETENTION_MS + ENTRY_GRACE_MS;
         if (expired) {
             if (claimAndDelete(dir, name, st, owner, hooks)) removed += 1;
         } else if (ADDRESS.test(name)) {
@@ -459,14 +468,27 @@ function isImage(v: unknown): boolean {
 function observe(root: string, line: Record<string, unknown>): void {
     try {
         const file = spoolObservationPath(root);
-        fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+        ensureSpoolDir(root);
         fs.chmodSync(path.dirname(file), 0o700);
-        const fd = fs.openSync(file, 'a', 0o600);
+        // Appends happen under the store's lock, so two writers cannot interleave a
+        // record; a held lock drops this one observation — observing is best effort.
+        const owner = acquireCleanupLock(spoolDir(root));
+        if (owner === null) return;
         try {
-            fs.fchmodSync(fd, 0o600);
-            writeAll(fd, Buffer.from(`${JSON.stringify(line)}\n`, 'utf8'));
+            try {
+                if (fs.lstatSync(file).size >= OBSERVATION_MAX_BYTES) fs.renameSync(file, `${file}.1`);
+            } catch {
+                // no log yet
+            }
+            const fd = fs.openSync(file, 'a', 0o600);
+            try {
+                fs.fchmodSync(fd, 0o600);
+                writeAll(fd, Buffer.from(`${JSON.stringify(line)}\n`, 'utf8'));
+            } finally {
+                fs.closeSync(fd);
+            }
         } finally {
-            fs.closeSync(fd);
+            releaseCleanupLock(spoolDir(root), owner);
         }
     } catch {
         // observability never breaks the hook

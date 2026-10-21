@@ -364,8 +364,15 @@ No setting, environment variable or config file populates the selection.
   is taken back after publication. The cap counts published entries; temp files
   in flight do not count. `storeBytesUnchecked` is the low-level publish that
   enforces neither retention nor the cap; production stores go through
-  `spoolResult` only. Every authenticated read also runs cleanup, an expired
-  handle included — that read is exactly when its entry should be gone; a
+  `spoolResult` only. Every authenticated read also attempts cleanup, an
+  expired handle included — that read is exactly when its entry should be gone.
+  The attempt is best effort: if another process holds the lock, or cleanup
+  fails, the entry goes at the next cleanup, and the handle answers `expired`
+  either way because its expiry is in the MAC. An entry is kept two seconds
+  past its handles' expiry, so a still-valid handle never finds it gone. The
+  observe log is appended under the same lock (a held lock drops that one
+  observation), so records never interleave, and it is rotated once past 5 MB,
+  keeping one previous file. A
   malformed, forged or foreign-session handle reaches no cleanup and no entry, though a syntactically valid one still reads the key file to check its
   MAC. Expiry is rounded up, so a handle never expires before the full
   retention age.
