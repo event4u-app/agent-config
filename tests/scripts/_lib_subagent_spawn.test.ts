@@ -90,7 +90,11 @@ describe('composeSpawnBrief — a worker that skips project instructions', () =>
 
     it('refuses to skip when there is no floor to carry, and says so', () => {
         for (const floor of [undefined, null, '', '   ']) {
-            const b = composeSpawnBrief({ task: 't', omit_project_instructions: true, safety_floor: floor });
+            const b = composeSpawnBrief({
+                task: 't',
+                omit_project_instructions: true,
+                ...(floor === undefined ? {} : { safety_floor: floor }),
+            });
             expect(b.omit_project_instructions).toBe(false);
             expect(b.safety_floor).toBeNull();
             expect(b.warnings.join()).toMatch(/skip refused/);
