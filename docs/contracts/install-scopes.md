@@ -41,6 +41,17 @@ Installing at **both** scopes simultaneously is the failure mode the canonical-c
 `scripts/install.sh` runs `scripts/_lib/scope_guard.sh` before any file write:
 
 1. **`OK`** — no install at the other scope. Proceed.
+
+   *What counts as an install* needs evidence, not a non-empty directory. The
+   other scope holds an agent-config install when the deploy ledger
+   (`deployed-files.json`) records a file this package wrote there, or when at
+   least one entry carries a name this package ships. Host directories are
+   shared — `~/.claude/skills/` routinely holds another tool's integration — and
+   such a directory has no `package.json` beside it, so its version reads
+   `unknown`, which is `DRIFT`. Until 2026-10-21 any non-empty directory
+   qualified, so a machine whose only Claude skill was a foreign integration was
+   reported as a conflicting install. Foreign entries never hide a real install:
+   one shared name is enough.
 2. **`WARN`** — install at the other scope, same version. No drift, but **not free**: the duplicate registration is delivered twice, and the warning states the per-type overlap count so the cost is visible at the moment of the decision. Surface it, proceed. (This row used to read "Same content; duplicate registration but no drift", which taught every reader that identical copies cost nothing — refuted by the measurement above.)
 3. **`DRIFT`** — install at the other scope, different version. Block with a numbered-options prompt:
 

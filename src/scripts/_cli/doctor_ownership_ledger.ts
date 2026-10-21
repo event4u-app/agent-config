@@ -87,3 +87,40 @@ export function ledgerModifiedRecords(inventoryPath?: string | null, home?: stri
     }
     return out;
 }
+
+/** Tools the global deploy ledger records at least one file for. */
+export function globalInstalledTools(inventoryPath?: string | null): string[] {
+    const inventory = global_deploy_inventory.load_inventory(inventoryPath ?? null);
+    const tools = (inventory['tools'] as Record<string, unknown> | undefined) ?? {};
+    return Object.keys(tools)
+        .filter((id) => {
+            const e = tools[id];
+            const files = typeof e === 'object' && e !== null ? (e as Dict)['files'] : null;
+            return Array.isArray(files) && files.length > 0;
+        })
+        .sort();
+}
+
+/**
+ * What `doctor` says about a project that has no project-scope install.
+ *
+ * It used to say one thing — "no project lockfile and no consumer install
+ * marker", as a warning — whether or not the machine had a working GLOBAL
+ * install. A global-only consumer is the shape ADR-020 makes the default, and
+ * every fresh worktree of any project has no project-scope install by
+ * construction, so the warning fired on exactly the healthy case. It now says
+ * which scopes it checked and what it found in each.
+ */
+export function noProjectInstallLines(projectRoot: string, inventoryPath?: string | null): Array<['out' | 'err', string]> {
+    const global = globalInstalledTools(inventoryPath);
+    if (global.length > 0) {
+        return [
+            ['out', `  ℹ️   global install present (${global.join(', ')}); no project-scope install at ${projectRoot}`],
+            ['out', '      expected for a global-only consumer — checked: global deploy ledger, project lockfile, project install marker'],
+        ];
+    }
+    return [
+        ['err', `  ⚠️   no agent-config install found — not globally (deploy ledger empty) and not at ${projectRoot}`],
+        ['err', '      run `agent-config init` (global install) or `agent-config refresh --project` (global-only consumer)'],
+    ];
+}

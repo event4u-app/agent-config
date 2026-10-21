@@ -269,3 +269,24 @@ export function buildPlanFromWizard(inputs: WizardPlanInputs): InstallPlan {
         policy: inputs.policy,
     });
 }
+
+/**
+ * The `target` block of a dry-run plan summary.
+ *
+ * A global install has no project target, and printing the cwd here read as
+ * "this is where it writes" — under npx the cwd is often the npx cache, so the
+ * plan named a directory the install never touches. For global it prints the
+ * anchor of each SELECTED tool and which phases would run.
+ */
+export function dryRunTargetLines(global: boolean, tools: Iterable<string>, projectTarget: string): string {
+    if (!global) return `  target:      ${projectTarget}\n`;
+    let out = '  target:      user-scope host paths (no project target)\n';
+    for (const tool of tools) {
+        const anchor = USER_SCOPE_PATHS[tool];
+        if (anchor === undefined) continue;
+        out += `      ${tool} → ${anchor.startsWith('~/') ? join(homedir(), anchor.slice(2)) : anchor}\n`;
+    }
+    out += '  phases:      project payload sync — skipped (global installs write user-scope paths only)\n';
+    out += '               host projection + managed hooks — would run\n';
+    return out;
+}
