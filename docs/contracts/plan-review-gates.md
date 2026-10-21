@@ -344,14 +344,18 @@ Field ORDER is fixed (`author` before `prompt_hash`); a reordered marker is
 A third OPTIONAL trailing field, added 2026-10-21 (`road-to-a-review-that-ends`
 1.2), after `prompt_hash`:
 
-- `round:` — the review round this artifact records, a positive integer. A fix
-  pass re-binds in place, so before this field the number of rounds was
-  convention nothing could count. The dispatcher writes `round: 1` on every new
-  skeleton; a re-bind writes the predecessor's round + 1. The predecessor is the
-  newest committed version of the path whose `scope:` differs; absent there reads
-  as round 1. Once the predecessor carries the field, a re-bind that drops it or
-  does not advance it by exactly one is **`round-not-advanced`**. A corpus written
-  before the field existed — no `round:` on either side — is not checked.
+- `round:` — the review round this artifact records, a positive integer: the
+  number of **review passes** its path records, this one included. A pass is a
+  reviewer dispatch, identified by its `prompt_hash` (by its `scope:` where a
+  version predates `prompt_hash`). A fix pass that re-binds in place keeps the
+  same `prompt_hash` and therefore the same round, so CI fixes and base merges
+  move the scope without burning a round. The count walks the path's whole
+  history, the § 2.7 archive rename included, so a fresh skeleton after an
+  archive continues the count; the dispatcher writes that number. A header that
+  disagrees with the derived count, or drops the field once any version carried
+  it, is **`round-miscounted`**. A corpus written before the field existed — no
+  `round:` in any version — is not checked. The cap on the count is § 2.8
+  ([ADR-294](../decisions/ADR-294-completion-review-round-cap.md)).
 
 The first four fields are mandatory: a `v1` marker missing `scope:` is malformed
 (`bad-marker`), not tolerated — and so is a review-bearing artefact carrying **no
@@ -528,7 +532,9 @@ The findings artifact MUST be committed before the first fix commit:
   re-bound; the artefact is edited in place and re-committed, and its first-add
   commit deliberately does not move. § 2.7's rename is the archival step for a
   round that is already **closed and superseded** — it is not an edit ban on the
-  live artefact.
+  live artefact. A re-bind keeps the round; only a new reviewer pass advances
+  it, and five passes close the review (§ 2.8,
+  [ADR-294](../decisions/ADR-294-completion-review-round-cap.md)).
 - **A rebase re-binds the review; nothing edits the record for it.** Under a
   `git.update_strategy` other than `merge`, the completion review binds after
   the **last** rebase of the branch. A rebase rewrites both the artefact's
@@ -651,6 +657,32 @@ gets switched off. The rule is therefore: terminal status, non-empty
 Reason/Ref. Revisit when an unresolvable reference actually hides a disposition
 on a record written after this gate shipped — that record is fixable at source,
 and the trade-off changes.
+
+The archive is not a counter reset: § 2.1's round count walks the path's history
+through the rename, so the round after an archived round N is N + 1 (§ 2.8).
+
+### 2.8 The round cap — a review closes after five passes
+
+Owner decision of 2026-10-21, recorded as
+[ADR-294](../decisions/ADR-294-completion-review-round-cap.md). Measured basis:
+review passes 1-5 yielded 1.49 / 1.54 / 0.78 / 0.79 / 0.71 high+critical rows per
+artefact, passes 6-10 0.38, passes 11 and later 0.15.
+
+- **The cap is five review passes** (`REVIEW_ROUND_CAP` in
+  `check_completion_review.ts`). Pass 6 is refused twice: the dispatcher will not
+  write its skeleton, and the gate reports **`round-cap-exceeded`** on an artefact
+  whose path records six or more passes.
+- **Re-binds are not passes.** After pass 5 the artefact is still re-bound in
+  place to every later scope — CI fixes, base merges, regenerated projections —
+  with `round: 5` and no new reviewer.
+- **The severity gate at the cap.** At pass 5 no row may stay `open` (§ 2.2
+  already blocks that). A **high or critical** row the review cannot close is
+  `deferred` with a Reason/Ref citing `<slug>.owner-report.md` next to the
+  artefact, and that file must exist (**`cap-deferral-without-owner-report`**):
+  the cap ends the review, it never closes a finding. A **medium or low** row is
+  `deferred` with a ledger ref, as § 2.2 already requires.
+- **Not gamed by renaming.** § 2.7's archive keeps the count (§ 2.1), so archiving
+  a round cannot buy a sixth pass.
 
 ## 3. Substantial-change heuristic (R1 trigger)
 

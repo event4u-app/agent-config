@@ -56,7 +56,7 @@ import { isAcceptanceCriteriaHeading } from './_lib/ac_heading.js';
 import { gitEnv } from './_lib/git_env.js';
 import { loadDenyPatterns, redactSourceShape, redactSourceTokens, writeRedacted } from './_lib/source_redact.js';
 import { completionReviewDisabled } from './_lib/planning_settings.js';
-import { artifactRelevance } from './check_completion_review.js';
+import { REVIEW_ROUND_CAP, artifactRelevance, recordedReviewPasses } from './check_completion_review.js';
 
 export interface ManifestInputs {
     diffSha: string; // provenance only — never compared
@@ -389,7 +389,7 @@ export function leftoverArtefactRefusal(
         `    It binds scope ${staleScopeHash.slice(0, 12)}; this dispatch binds ${currentScopeHash.slice(0, 12)},\n` +
         '    so the reviewed content moved under it. That is the normal re-bind case, and\n' +
         '    contract §2.7 gives it two paths — neither of which is a fresh skeleton:\n' +
-        '      1. RE-BIND IN PLACE (the usual one): edit this artefact — new `scope:`, `round:` + 1,\n' +
+        '      1. RE-BIND IN PLACE (the usual one): edit this artefact — new `scope:`, same `round:`,\n' +
         '         rows flipped to terminal — and re-commit it. §2.5 expects exactly that.\n' +
         '      2. ARCHIVE the closed round: rename it to `<slug>.round<N>-review.md` ONCE every\n' +
         '         finding is terminal, which `check_review_dispositions` enforces. Then dispatch.\n' +
@@ -909,10 +909,11 @@ function findingsSkeleton(args: {
     reviewedDate: string;
     manifest: string;
     promptHash: string;
+    round: number;
 }): string {
     return [
         `# Findings: ${args.slug}`,
-        `<!-- completion-review: v1 | reviewed: ${args.reviewedDate} | scope: ${args.scopeHash} | diff: ${args.headSha} | reviewer: r2-fresh-subagent-${args.slug} | prompt_hash: ${args.promptHash} | round: 1 -->`,
+        `<!-- completion-review: v1 | reviewed: ${args.reviewedDate} | scope: ${args.scopeHash} | diff: ${args.headSha} | reviewer: r2-fresh-subagent-${args.slug} | prompt_hash: ${args.promptHash} | round: ${String(args.round)} -->`,
         // SECOND PRODUCER of the independence record — step 2.2 of
         // road-to-review-independence. Until this line, `self_review_gate.ts` was the
         // only producer, which is why `check_review_schema` reported `scanned: 1`: a
@@ -1314,13 +1315,32 @@ function runDispatch(args: Args): number {
     const promptRedacted = redactSourceShape(promptTokens.text);
     redactions += promptTokens.count + promptRedacted.count;
 
+    const promptHash = sha256(promptRedacted.text);
+    // The round is the count of review passes this path records, this one
+    // included. An archived round still counts, so a fresh skeleton after the
+    // archive rename continues instead of restarting at 1.
+    const reviewRel = path.relative(args.repo, findingsAbs).split(path.sep).join('/');
+    const { passes } = recordedReviewPasses(args.repo, reviewRel);
+    passes.add(promptHash);
+    const round = passes.size;
+    if (round > REVIEW_ROUND_CAP) {
+        process.stderr.write(
+            `dispatch_r2_reviewer: refused — this would be review pass ${String(round)}, past the cap of ` +
+                `${String(REVIEW_ROUND_CAP)} (ADR-294). The review closed at round ${String(REVIEW_ROUND_CAP)}: re-bind ` +
+                `that round in place, defer open high/critical rows to ${reviewRel.replace(/\.findings\.md$/, '.owner-report.md')} ` +
+                'and medium/low rows to a ledger ref (contract §2.8).\n',
+        );
+        return 1;
+    }
+
     const skeleton = findingsSkeleton({
         slug,
         headSha,
         scopeHash: hashes.scope_hash,
         reviewedDate,
         manifest,
-        promptHash: sha256(promptRedacted.text),
+        promptHash,
+        round,
     });
 
     fs.mkdirSync(inputDirAbs, { recursive: true });

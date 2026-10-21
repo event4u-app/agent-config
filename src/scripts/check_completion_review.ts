@@ -108,13 +108,14 @@ export interface Marker {
      */
     promptHash?: string;
     /**
-     * OPTIONAL — the review round this artefact records (≥ 1).
+     * OPTIONAL — the review round this artefact records (≥ 1): the number of
+     * review passes its path records, this one included.
      *
      * A fix pass re-binds the same artefact in place (§ 2.5), so before this
      * field the number of rounds was agent-carried convention and nothing could
      * count it. Absent reads as round 1, so every committed v1 artefact is valid
-     * unchanged; once a predecessor carries it, a re-bind must advance it by one
-     * (`round-not-advanced`).
+     * unchanged; once any version carries it, the header must match the derived
+     * count (`round-miscounted`), and the cap applies (`round-cap-exceeded`).
      */
     round?: number;
 }
@@ -1009,7 +1010,7 @@ function evaluate(input: EvalInput): Violation[] {
             });
         }
         if (art.marker !== null) {
-            violations.push(...checkRoundAdvance(repo, file, art.marker));
+            violations.push(...checkReviewRound(repo, file, art.marker, art.rows));
         }
     }
 
@@ -1047,47 +1048,114 @@ function evaluate(input: EvalInput): Violation[] {
 }
 
 /**
- * Contract §2.1 `round:` — a re-bind advances the round by exactly one.
- *
- * The predecessor round is the newest committed version of this path whose
- * header binds a DIFFERENT scope; versions with the current scope are the same
- * round touched again. A predecessor without the field reads as round 1, and
- * only a predecessor that carries the field obliges the re-bind to carry it —
- * so a corpus written before the field existed stays valid unchanged.
+ * The completion review closes after this many review passes (ADR-294). Rounds
+ * 1-5 yielded 0.71-1.54 high+critical rows per artefact, rounds 6-10 0.38.
  */
-function checkRoundAdvance(repo: string, artifactAbs: string, current: Marker): Violation[] {
-    const rel = path.relative(repo, artifactAbs).split(path.sep).join('/');
+export const REVIEW_ROUND_CAP = 5;
+
+/** One review pass: the reviewer prompt it ran on, or — before `prompt_hash` existed — its scope. */
+function passKey(marker: Marker): string {
+    return marker.promptHash ?? `scope:${marker.scope}`;
+}
+
+/**
+ * Every review pass recorded at `rel`, across its WHOLE history.
+ *
+ * A pass is a reviewer dispatch, so a fix pass that re-binds in place with the
+ * same `prompt_hash` is the same pass touched again — CI fixes and base merges
+ * move the scope, not the round. The walk does not stop at the § 2.7 archive
+ * rename: the archived rounds were committed at this path, so a fresh skeleton
+ * after an archive continues the count instead of restarting it at 1.
+ */
+export function recordedReviewPasses(repo: string, rel: string): { passes: Set<string>; anyRound: boolean } {
+    const passes = new Set<string>();
+    let anyRound = false;
     const log = gitTry(repo, ['log', '--format=%H', '--', rel]);
     for (const sha of log.stdout.split('\n').map((l) => l.trim()).filter(Boolean)) {
         const shown = gitTry(repo, ['show', `${sha}:${rel}`]);
         if (!shown.ok) {
-            // The commit removed the path — the § 2.7 archive rename. What came
-            // before belongs to the archived record, not to this artefact.
-            return [];
-        }
-        const prior = parseArtifact(shown.stdout).marker;
-        if (prior === null || prior.scope === current.scope) {
             continue;
         }
-        if (current.round === undefined && prior.round === undefined) {
-            return [];
+        const prior = parseArtifact(shown.stdout).marker;
+        if (prior === null) {
+            continue;
         }
-        const expected = (prior.round ?? 1) + 1;
-        if (current.round === expected) {
-            return [];
-        }
-        return [
-            {
-                kind: 'round-not-advanced',
-                file: artifactAbs,
-                detail:
-                    `re-bound from scope ${prior.scope.slice(0, 12)} (round ${String(prior.round ?? 1)}, ${sha.slice(0, 12)}) ` +
-                    `but the header reads ${current.round === undefined ? 'no round' : `round ${String(current.round)}`} — ` +
-                    `a re-bind records round ${String(expected)} (contract §2.1 \`round:\`)`,
-            },
-        ];
+        passes.add(passKey(prior));
+        anyRound ||= prior.round !== undefined;
     }
-    return [];
+    return { passes, anyRound };
+}
+
+/**
+ * Contract §2.1 `round:` and the round cap.
+ *
+ * The header round must equal the number of review passes the path records,
+ * this one included (`round-miscounted`); past {@link REVIEW_ROUND_CAP} the
+ * review is closed (`round-cap-exceeded`). At the cap, a high or critical row
+ * is deferred only to an owner report that exists (`cap-deferral-without-owner-report`):
+ * the cap ends the review, it never closes a finding.
+ */
+function checkReviewRound(repo: string, artifactAbs: string, current: Marker, rows: readonly FindingRow[]): Violation[] {
+    const rel = path.relative(repo, artifactAbs).split(path.sep).join('/');
+    const { passes, anyRound } = recordedReviewPasses(repo, rel);
+    if (current.round === undefined) {
+        return anyRound
+            ? [
+                  {
+                      kind: 'round-miscounted',
+                      file: artifactAbs,
+                      detail: 'the header dropped `round:` although an earlier version of this path carried it (contract §2.1 `round:`)',
+                  },
+              ]
+            : [];
+    }
+    passes.add(passKey(current));
+    const derived = passes.size;
+    const violations: Violation[] = [];
+    if (current.round !== derived) {
+        violations.push({
+            kind: 'round-miscounted',
+            file: artifactAbs,
+            detail:
+                `the header reads round ${String(current.round)} but this path records ${String(derived)} review ` +
+                `pass(es) — a re-bind with the same prompt_hash keeps the round, a new reviewer pass adds one, ` +
+                'and an archive does not restart it (contract §2.1 `round:`)',
+        });
+    }
+    if (derived > REVIEW_ROUND_CAP) {
+        violations.push({
+            kind: 'round-cap-exceeded',
+            file: artifactAbs,
+            detail:
+                `review pass ${String(derived)} exceeds the cap of ${String(REVIEW_ROUND_CAP)} — the review closed at ` +
+                `round ${String(REVIEW_ROUND_CAP)}: re-bind that round in place, defer open high/critical rows to ` +
+                `${ownerReportPath(rel)} and medium/low rows to a ledger ref (contract §2.8)`,
+        });
+    }
+    if (derived >= REVIEW_ROUND_CAP) {
+        for (const row of rows) {
+            const severe = row.severity === 'high' || row.severity === 'critical';
+            if (!severe || row.status !== 'deferred') {
+                continue;
+            }
+            const cited = /\S+\.owner-report\.md/.exec(row.reasonRef)?.[0];
+            if (cited === undefined || !fs.existsSync(path.join(repo, cited))) {
+                violations.push({
+                    kind: 'cap-deferral-without-owner-report',
+                    file: artifactAbs,
+                    detail:
+                        `row ${row.index} (line ${String(row.line)}): a ${row.severity} row deferred at the round cap must ` +
+                        `cite an existing owner report, e.g. ${ownerReportPath(rel)} (contract §2.8)`,
+                });
+            }
+        }
+    }
+    return violations;
+}
+
+/** `<dir>/<slug>.findings.md` → `<dir>/<slug>.owner-report.md`. */
+function ownerReportPath(rel: string): string {
+    return rel.replace(/\.findings\.md$/, '.owner-report.md');
 }
 
 /** Contract §2.5 — the artifact's FIRST-add commit must precede every fix commit. */

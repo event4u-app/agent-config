@@ -80,7 +80,7 @@ rounds 1..N.
 
 ## Phase 1 — The cap
 
-- [ ] **1.1 Owner ADR: a round cap N and a severity gate.** N is the owner's
+- [x] **1.1 Owner ADR: a round cap N and a severity gate.** Done 2026-10-21: owner chose (b), five passes; ADR-294; contract § 2.1, § 2.5, § 2.7 and the new § 2.8 cite it. A pass is a reviewer dispatch (`prompt_hash`), not a re-bind — the first artefact with `round:` reached 7 on one pass (D5). <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=raised to R2 from R0 --> N is the owner's
       answer to the blocker (two or five). Round 1 reviews the scope; every
       later round reviews the fix delta plus the previous round's open rows.
       After round N: high/critical open rows go to the owner report, medium/low
@@ -92,7 +92,7 @@ rounds 1..N.
       Without it the gate cannot count what F1 says is convention.
       verify: red-first test — a re-bound artefact without an incremented
       `round:` is refused once the field is present.
-- [ ] **1.3 Refuse round N+1 in `check_completion_review`.** A `round: N+1`
+- [x] **1.3 Refuse round N+1 in `check_completion_review`.** Done 2026-10-21: `round-cap-exceeded` at pass 6, `round-miscounted`, `cap-deferral-without-owner-report`; the dispatcher refuses pass 6 and continues the count after an archive. Tests written after the code, so sensitivity was proven by sabotage instead: cap raised to 6, dedupe removed, archive ending the chain, dispatcher writing round 1 — each turned its test red. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_completion_review.ts --> A `round: N+1`
       artefact is refused with the owner-report path in the message; a round-N
       artefact whose scope is the fix delta is accepted. Blocked on the same
       blocker as 1.1.
@@ -113,7 +113,7 @@ rounds 1..N.
 ## Blockers
 
 ### blocker: review-round-cap-is-an-owner-contract-change
-- **Status:** open
+- **Status:** resolved — 2026-10-21, the owner chose (b), five rounds with the severity gate (`agents/evidence/owner-directives/2026-10-21-review-cap-and-depth-flip.md`, ADR-294)
 - **Class:** 3
 - **Owner:** user
 - **Ownership:** product-owned
@@ -132,6 +132,7 @@ rounds 1..N.
 | D1 | reversible-technical | evidence | No change to the council's round limit. Rejected alternative: Lower `debate_max_rounds` default to 2 (supplied plan E8). | The key is wired and user-configurable; the evidence cited for it was four questions, not four rounds of one; changing a shipped default is owner-reserved and nothing measured asks for it. | Phase 2 shows council debates, not completion reviews, carrying the round count. |
 | D2 | reversible-technical | evidence | Dedup key for repeated reviews is not built. Rejected alternative: A `(tree_sha, diff_hash, criteria)` key (supplied plan PR-F). | The scope hash already decides staleness (§ 2.1); an unchanged scope is not re-reviewed today. Nothing measured shows a duplicate review. | 0.1 finds two artefacts with an identical scope hash. |
 | D4 | contested-technical | council: anthropic, openai (2026-10-21) | The cap and its N go to the owner; the blocker's options were re-cut to two or five rounds on the exact-round data (F6). | The seats split on routing (one: council-decidable, three rounds; other: owner-reserved, measurement only) and converged on fix-delta later rounds and an exact-round breakdown, which was then measured. | the owner answers, or a later reading moves the yield curve in F6. |
+| D5 | contested-technical | council: anthropic (2026-10-21, three single-seat readings) | A round is a reviewer pass identified by `prompt_hash`, not a re-bind; the count walks the path's history through the archive rename; no post-cap delta threshold. | The first `round:` artefact read 7 after one reviewer pass; a cap on re-binds caps CI churn. All three readings (openai seat failed `exit_1` each time) recommended passes and archive-continues; they split on a post-cap threshold (500 vs ±50 lines), which nothing measured supports. | 2.1 finds a post-cap re-bind that carried a high/critical defect. |
 | D3 | deterministic | evidence | Closure pass ran 2026-10-21: no open decision beyond the blocker. Step 1.4's prose verify is made command-shaped when the step is executed. | `closure_scan` listed one `unfalsifiable-verify` (non-blocking by its own contract) and no owner question. | the step is executed with the prose oracle unchanged. |
 
 ## Risk Register
@@ -145,6 +146,6 @@ rounds 1..N.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No completion-review artefact beyond round N is accepted by `check_completion_review` after 1.3 lands.
-- [ ] AC-2 — Every high/critical row open after round N appears in an owner report; none is closed by the cap.
+- [x] AC-1 — No completion-review artefact beyond round N is accepted by `check_completion_review` after 1.3 lands.
+- [x] AC-2 — Every high/critical row open after round N appears in an owner report; none is closed by the cap.
 - [ ] AC-3 — The severity-by-round table is re-derived from the tree before any decision cites it.
