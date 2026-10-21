@@ -14,6 +14,10 @@
  * is the test that goes red the moment an `allow` is allowed to outrank a
  * `deny`.
  */
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -309,6 +313,14 @@ describe('working-tree confinement', () => {
         expect(isInsideWorkingTree('../outside', ROOT)).toBe(false);
         expect(isInsideWorkingTree('/etc/passwd', ROOT)).toBe(false);
         expect(isInsideWorkingTree('src/../../outside', ROOT)).toBe(false);
+        expect(isInsideWorkingTree('..', ROOT)).toBe(false);
+    });
+
+    it('a name that merely starts with two dots is inside', () => {
+        // `go test ./...` resolves to `<root>/...`; a prefix test on `..`
+        // read that as an escape.
+        expect(isInsideWorkingTree('./...', ROOT)).toBe(true);
+        expect(isInsideWorkingTree('..cache/x', ROOT)).toBe(true);
     });
 
     it('an empty root confines nothing and therefore admits nothing', () => {
@@ -326,5 +338,287 @@ describe('the confinement root is the host cwd, not the dispatcher process cwd',
 
     it('falls back to the workspace root when the host sends no cwd', () => {
         expect(_working_tree_root({ payload: {}, workspace_root: '/repo' })).toBe('/repo');
+    });
+});
+
+/*
+ * Phase 0 of road-to-a-hard-floor-the-shell-cannot-talk-past: category A stops
+ * granting what it cannot prove. Every D2 row below was executed through
+ * `_permission_for` on main@17f028941 and came back `allow`.
+ */
+describe('category A withdraws only what it cannot prove (Phase 0)', () => {
+    const bash = (command: string) => envelope('Bash', { command });
+    const allowOf = (command: string) => _permission_for('pre_tool_use', bash(command), 0, ['allow']);
+    const a = (command: string) => isCategoryA('Bash', { command }, ROOT);
+
+    it('branch-loses-a-ref: a branch form that can lose a ref is not category A', () => {
+        for (const cmd of [
+            'git branch -d topic',
+            'git branch -D main',
+            'git branch --delete topic',
+            'git branch -f main HEAD~20',
+            'git branch --force main HEAD~20',
+            'git branch -M main old',
+            'git branch -C main old',
+            'git branch -m main old',
+            'git branch --move main old',
+            'git branch -Dr origin/x',
+            'git -C sub branch -D main',
+        ]) {
+            expect(a(cmd), cmd).toBe(false);
+        }
+    });
+
+    it('branch-loses-a-ref: only observational branch forms stay category A', () => {
+        // Council review 2026-10-18: a form that writes a ref without losing
+        // one is still not a read, so the allowlist admits observation only.
+        for (const cmd of [
+            'git branch new',
+            'git branch new HEAD~3',
+            'git branch -c main copy',
+            'git branch --copy main copy',
+            'git branch -u origin/main',
+            'git branch --set-upstream-to=origin/main',
+            'git branch --unset-upstream',
+            'git branch --edit-description',
+            'git branch -t topic origin/x',
+        ]) {
+            expect(a(cmd), cmd).toBe(false);
+        }
+        for (const cmd of [
+            'git branch',
+            'git branch -a',
+            'git branch -av',
+            'git branch -vv',
+            'git branch --list',
+            "git branch --list 'feat*'",
+            'git branch -l feat',
+            'git branch --show-current',
+            'git branch --merged main',
+            'git branch --contains HEAD~3',
+            'git branch --sort=-committerdate',
+        ]) {
+            expect(a(cmd), cmd).toBe(true);
+        }
+    });
+
+    it('bash-path-confinement: shell spellings that reach outside are refused', () => {
+        for (const cmd of [
+            'cat .*/etc/passwd',
+            'cat src/.?/x',
+            'ls [.][.]/other',
+            'cat -- -/../../etc/passwd',
+            'cat -- --/../../etc/passwd',
+            'sort -o --/../../outside src/a',
+            'git diff --output --/../../outside',
+            'sort -o -x/../../../outside src/a',
+            'cat ""/etc/passwd',
+            'cat "."/../x',
+            'grep -f/etc/patterns src',
+            'grep -- -x /etc/passwd',
+            'cat ..\\/outside',
+            'cat ~root/.profile',
+        ]) {
+            expect(a(cmd), cmd).toBe(false);
+        }
+        expect(a('cat -- src/a.ts')).toBe(true);
+        expect(a('ls .github')).toBe(true);
+    });
+
+    it('bash-path-confinement: a path argument outside the working tree is not category A', () => {
+        for (const cmd of [
+            'cat ~/.ssh/id_rsa',
+            "cat '~/.ssh/id_rsa'",
+            'cat "/etc/passwd"',
+            'cat /etc/passwd',
+            'find / -name x',
+            'ls ../../other',
+            'head --file=/etc/shadow',
+            'grep -rn foo /etc',
+        ]) {
+            expect(a(cmd), cmd).toBe(false);
+        }
+        for (const cmd of ['cat src/x.ts', 'cat /repo/src/x.ts', 'ls', 'grep -rn foo src', 'go test ./...', 'git log main..topic']) {
+            expect(a(cmd), cmd).toBe(true);
+        }
+    });
+
+    it('bash-path-confinement: a grep pattern is data, not a path', () => {
+        expect(a('grep -rn /api src')).toBe(true);
+        expect(a('rg -e /api src')).toBe(true);
+        expect(a('grep -rn /api /etc')).toBe(false);
+        expect(a('grep -f /etc/patterns src')).toBe(false);
+    });
+
+    it('output-flags-are-paths: an output-writing flag sends its target through confinement', () => {
+        for (const cmd of [
+            'sort -o /home/u/.bashrc /dev/null',
+            'sort -o/home/u/.bashrc src/a',
+            'sort -o../../x src/a',
+            'sort --output=/home/u/.bashrc src/a',
+            'git diff --output=/home/u/.bashrc',
+            'git diff --output /home/u/.bashrc',
+            'find . -fprint /tmp/x',
+            'tsc --outDir /tmp/out',
+            'tsc --outFile=/tmp/out.js',
+            'prettier --write /etc/hosts',
+            'eslint --fix /etc',
+        ]) {
+            expect(a(cmd), cmd).toBe(false);
+        }
+        for (const cmd of [
+            'sort -o out.txt src/a',
+            'git diff --output=diff.patch',
+            'tsc --outDir dist',
+            'prettier --write src',
+            'eslint --fix .',
+            'find . -fprint list.txt',
+        ]) {
+            expect(a(cmd), cmd).toBe(true);
+        }
+    });
+
+    it('output-flags-are-paths: without a root, an outside target is still refused', () => {
+        expect(isCategoryABashCommand('sort -o /home/u/.bashrc src/a')).toBe(false);
+        expect(isCategoryABashCommand('sort -o ../../x src/a')).toBe(false);
+        expect(isCategoryABashCommand('sort -o out.txt src/a')).toBe(true);
+    });
+
+    it('bash-path-confinement: date reads files, so its arguments are confined', () => {
+        // Council review 2026-10-21, round 8: `date` was exempt from argument
+        // inspection although `-f`/`--file` and `-r`/`--reference` open a path.
+        for (const cmd of [
+            'date -f /etc/passwd',
+            'date --file=/etc/passwd',
+            'date -r /etc/passwd',
+            'date --reference=/etc/passwd',
+            'date -f ../outside',
+        ]) {
+            expect(allowOf(cmd), cmd).toBeNull();
+        }
+        for (const cmd of ['date', 'date +%Y-%m-%d', 'date -r src/x.ts', 'date -f src/dates.txt']) {
+            expect(allowOf(cmd)?.decision, cmd).toBe('allow');
+        }
+    });
+
+    it('reason-names-what-was-checked: the working tree is named only when confinement ran', () => {
+        expect(allowOf('cat src/x.ts')?.reason).toContain('inside the working tree');
+        const bare = allowOf('pwd');
+        expect(bare?.decision).toBe('allow');
+        expect(bare?.reason).not.toContain('inside the working tree');
+        const todo = _permission_for('pre_tool_use', envelope('TodoRead', {}), 0, ['allow']);
+        expect(todo?.decision).toBe('allow');
+        expect(todo?.reason).not.toContain('inside the working tree');
+        const read = _permission_for('pre_tool_use', envelope('Read', { file_path: '/repo/a' }), 0, ['allow']);
+        expect(read?.reason).toContain('inside the working tree');
+    });
+
+    it('every D2 row is withheld through _permission_for, every true row still allowed', () => {
+        for (const cmd of [
+            'git branch -D main',
+            'git branch -f main HEAD~20',
+            'git branch -M main old',
+            'cat ~/.ssh/id_rsa',
+            'find / -name x',
+            'sort -o /home/u/.bashrc /dev/null',
+            'git diff --output=/home/u/.bashrc',
+            'prettier --write /etc/hosts',
+        ]) {
+            expect(allowOf(cmd), cmd).toBeNull();
+        }
+        for (const cmd of ['git branch', 'git branch -a', 'cat src/x.ts', 'prettier --write src', 'eslint --fix .']) {
+            expect(allowOf(cmd)?.decision, cmd).toBe('allow');
+        }
+    });
+
+    it('bash-path-confinement: an in-tree symlink that points outside is outside', () => {
+        // Council review 2026-10-18, round 2: lexical confinement admitted
+        // `cat link` where `link` resolves to a file outside the tree.
+        const base = fs.mkdtempSync(path.join(os.tmpdir(), 'cat-a-'));
+        try {
+            const tree = path.join(base, 'tree');
+            const outside = path.join(base, 'outside');
+            fs.mkdirSync(path.join(tree, 'src'), { recursive: true });
+            fs.mkdirSync(outside);
+            fs.writeFileSync(path.join(outside, 'secret'), 'x');
+            fs.writeFileSync(path.join(tree, 'src', 'a.ts'), 'x');
+            fs.symlinkSync(path.join(outside, 'secret'), path.join(tree, 'link'));
+            fs.symlinkSync(outside, path.join(tree, 'linkdir'));
+            fs.symlinkSync(path.join(tree, 'src'), path.join(tree, 'inner'));
+            // Round 4: a glob is expanded after the check, so `li*` reaches `link`.
+            for (const cmd of [
+                'cat link',
+                'cat linkdir/secret',
+                'sort -o linkdir/new src/a.ts',
+                'cat li*',
+                'cat l?nk',
+                'cat l[i]nk',
+                'grep -r x --include=li*',
+                'grep li* src',
+                'ls src/*.ts',
+            ]) {
+                expect(isCategoryA('Bash', { command: cmd }, tree), cmd).toBe(false);
+            }
+            expect(isCategoryA('Read', { file_path: path.join(tree, 'link') }, tree)).toBe(false);
+            for (const cmd of [
+                'cat src/a.ts',
+                'cat inner/a.ts',
+                'sort -o src/new.txt src/a.ts',
+                "grep -r x --include='*.ts' src",
+                'grep -r x --include="*.ts" src',
+            ]) {
+                expect(isCategoryA('Bash', { command: cmd }, tree), cmd).toBe(true);
+            }
+            expect(isCategoryA('Read', { file_path: path.join(tree, 'inner', 'a.ts') }, tree)).toBe(true);
+            expect(isCategoryA('Bash', { command: 'cat src/missing/new.txt' }, tree)).toBe(true);
+        } finally {
+            fs.rmSync(base, { recursive: true, force: true });
+        }
+    });
+
+    it('bash-path-confinement: a symlink that cannot be resolved is not inside', () => {
+        // Council review 2026-10-18, round 3: a resolution failure other than
+        // a missing suffix must withhold, never fall back to the lexical answer.
+        const tree = fs.mkdtempSync(path.join(os.tmpdir(), 'cat-a-'));
+        const locked = path.join(tree, 'locked');
+        try {
+            fs.symlinkSync('loop', path.join(tree, 'loop'));
+            fs.mkdirSync(path.join(locked, 'sub'), { recursive: true });
+            fs.chmodSync(locked, 0o000);
+            // root reads through mode 000, so the EACCES row needs a non-root user.
+            const rows = ['cat loop', 'cat loop/x', ...(process.getuid?.() === 0 ? [] : ['cat locked/sub/x'])];
+            for (const cmd of rows) {
+                expect(isCategoryA('Bash', { command: cmd }, tree), cmd).toBe(false);
+            }
+            expect(isCategoryA('Read', { file_path: path.join(tree, 'loop') }, tree)).toBe(false);
+        } finally {
+            fs.chmodSync(locked, 0o755);
+            fs.rmSync(tree, { recursive: true, force: true });
+        }
+    });
+
+    it('bash-path-confinement: a dangling in-tree symlink is not a missing suffix', () => {
+        // Council review 2026-10-18, round 5: a link to an absent outside
+        // target makes realpath report ENOENT, which must not be read as a
+        // path that simply does not exist yet.
+        const base = fs.mkdtempSync(path.join(os.tmpdir(), 'cat-a-'));
+        try {
+            const tree = path.join(base, 'tree');
+            fs.mkdirSync(path.join(tree, 'src'), { recursive: true });
+            fs.writeFileSync(path.join(tree, 'src', 'input'), 'x');
+            fs.symlinkSync(path.join(base, 'absent', 'out'), path.join(tree, 'out'));
+            fs.symlinkSync(path.join(base, 'absent'), path.join(tree, 'gone'));
+            const call = (command: string) =>
+                _permission_for('pre_tool_use', { payload: { tool_name: 'Bash', tool_input: { command }, cwd: tree }, workspace_root: tree }, 0, ['allow']);
+            for (const cmd of ['sort -o out src/input', 'cat out', 'cat gone/x', 'sort -o gone/new src/input']) {
+                expect(call(cmd), cmd).toBeNull();
+            }
+            expect(isCategoryA('Read', { file_path: path.join(tree, 'out') }, tree)).toBe(false);
+            for (const cmd of ['sort -o src/new.txt src/input', 'cat src/missing/new.txt', 'cat src/input/x']) {
+                expect(call(cmd)?.decision, cmd).toBe('allow');
+            }
+        } finally {
+            fs.rmSync(base, { recursive: true, force: true });
+        }
     });
 });
