@@ -60,20 +60,21 @@ keep the floor where it is calibrated and make running it cheap.
 
 ## Phase 1 — Measure inside the step
 
-- [ ] **1.1 Per-gate wall time in the meta-gate's output.** `check_gate_coverage`
+- [x] **1.1 Per-gate wall time in the meta-gate's output.** `check_gate_coverage`
       records each gate's elapsed milliseconds and prints them (text: the ten
       slowest; `--format json`: every row). Measurement only, no verdict change.
-      verify: a unit test runs the guard over a two-gate fixture manifest and
-      asserts every JSON row carries a numeric `elapsed_ms`.
+      verify: the `--format json` output of a full local run carries a numeric
+      `elapsed_ms` on every executed row (the manifest path is fixed, so the
+      check is the real run, not a fixture; corrected while executing).
 
 ## Phase 2 — Same proof, less work
 
-- [ ] **2.1 One tsx boot per `./scripts-run` call.** The shim resolves
+- [x] **2.1 One tsx boot per `./scripts-run` call.** The shim resolves
       `<path>.ts` itself (repo-root-relative or absolute, the same rule as
       `run.ts`) and execs tsx on it directly; `run.ts` stays as the fallback for
       anything the shim cannot resolve, so exit 127 and its message are unchanged.
       verify: `npx vitest run tests/scripts/scripts_run_shim.test.ts` -> 0
-- [ ] **2.2 Run the gates concurrently.** `check_gate_coverage` runs gates on a
+- [x] **2.2 Run the gates concurrently.** `check_gate_coverage` runs gates on a
       bounded pool (`os.availableParallelism()`, overridable by
       `--jobs N`), keeps the bounded-output guarantee of `runCountedProbe`, and
       prints results in manifest order so the report is byte-stable regardless of
@@ -81,7 +82,7 @@ keep the floor where it is calibrated and make running it cheap.
       verify: a test with a fixture manifest whose gates finish in reverse order
       asserts the printed order equals manifest order and the verdicts are
       unchanged from `--jobs 1`.
-- [ ] **2.3 Assert `check_static_parity`'s floor where it already runs.** A new
+- [x] **2.3 Assert `check_static_parity`'s floor where it already runs.** A new
       `--from-output <file> --only <id>` mode parses a captured gate output and
       applies that row's floor without executing the gate; `tests.yml`
       `collector-lifecycle` tees the gate's output and runs that mode in the same
@@ -96,11 +97,11 @@ keep the floor where it is calibrated and make running it cheap.
 
 ## Phase 3 — A fence and a true cost record
 
-- [ ] **3.1 `timeout-minutes` on the Consistency job**, set from the measured
+- [x] **3.1 `timeout-minutes` on the Consistency job**, set from the measured
       post-Phase-2 duration with headroom, so a hang costs minutes, not the
       six-hour default.
       verify: `grep -n "timeout-minutes" .github/workflows/consistency.yml` -> 0
-- [ ] **3.2 Replace the stale cost note.** `consistency.yml:498` and the
+- [x] **3.2 Replace the stale cost note.** `consistency.yml:498` and the
       `gate-coverage.yml` header ("115 rows") state what this PR's CI measured,
       with the run id, instead of the 18.6 s / 115 figures.
       verify: `grep -c "18.6 s" .github/workflows/consistency.yml` -> /^0$/
@@ -126,8 +127,8 @@ keep the floor where it is calibrated and make running it cheap.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every enforced gate's floor is still asserted on every PR: executed
+- [x] AC-1 — Every enforced gate's floor is still asserted on every PR: executed
       in Consistency, or delegated to a named workflow that verifiably asserts it.
 - [ ] AC-2 — The Gate coverage floors step on this roadmap's PR CI run is measured
       and recorded below the 443 s baseline, with the run id.
-- [ ] AC-3 — The Consistency job carries a `timeout-minutes` fence.
+- [x] AC-3 — The Consistency job carries a `timeout-minutes` fence.
