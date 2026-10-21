@@ -1416,7 +1416,9 @@ concerns:
     fail_closed: false
     severity: advisory
     effect: telemetry
-    tools: [Agent, Task]
+    # SendMessage: a resume is admitted past the host's spawn cap, so the guard
+    # counts it with the spawns (road-to-a-cold-start-paid-once 1.5, 3.3).
+    tools: [Agent, Task, SendMessage]
   # road-to-source-first-frontend Phase 3 Steps 1-2 — source-first gate, SHADOW
   # ONLY, per docs/contracts/concern-activation-policy.md. On every
   # capture-shaped tool call it appends one `source_first_gate_shadow` line

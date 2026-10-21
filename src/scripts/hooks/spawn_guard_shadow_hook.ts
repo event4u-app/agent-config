@@ -3,10 +3,12 @@
  * Spawn-guard — SHADOW ONLY (road-to-subagent-lifecycle-integrity Phase 3
  * Step 1, activated per `docs/contracts/concern-activation-policy.md`).
  *
- * What it does: on every `Agent` / `Task` tool call, read the open-dispatch
- * set the Phase-1 ledger maintains, and append one `spawn_guard_shadow` line
- * recording what a guard WOULD have done at several candidate thresholds.
- * It emits nothing to the model and it never blocks. Exit is always 0.
+ * What it does: on every `Agent` / `Task` call and every resume (`SendMessage`),
+ * read the open-dispatch set the Phase-1 ledger maintains, and append one
+ * `spawn_guard_shadow` line recording what a guard WOULD have done at several
+ * candidate thresholds; a spawn also records whether a warm worker would have
+ * been re-tasked instead (`reuse`). It emits nothing to the model and it never
+ * blocks. Exit is always 0.
  *
  * ── Why shadow and not warn ───────────────────────────────────────────────
  *
@@ -46,13 +48,16 @@
  * rides along as context and becomes a real measurement only when Phase 0
  * Step 4 establishes whether `agent_id` reaches a PreToolUse payload.
  *
- * PRIVACY BY CONSTRUCTION: counts and candidate verdicts only. No prompt, no
- * agent id, no tool input — the record type has no field able to hold any.
+ * PRIVACY BY CONSTRUCTION: counts, candidate verdicts, and a reuse verdict whose
+ * only free string is a worker's durable name from the register — never read
+ * from the tool input. No prompt, no message, no recipient, no agent id.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { probeHostCapabilities } from '../_lib/host_capability.js';
+import { shadowReuseVerdict, type ReuseContext, type WorkerState } from '../_lib/worker_reuse.js';
 import { appendLedgerLine, openRecordStats, resolveConsumerRoot } from './subagent_ledger_hook.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW } from './exit_codes.js';
@@ -66,6 +71,31 @@ function isObject(v: unknown): v is JsonObject {
 
 /** The two subagent-dispatch tool names this repo has observed across hosts. */
 export const DISPATCH_TOOL_NAMES: ReadonlySet<string> = new Set(['Agent', 'Task']);
+
+/**
+ * The tool that re-tasks a finished worker. The host's concurrency cap checks
+ * new spawns only and admits a resume past it, so a guard that counted spawns
+ * only would undercount exactly the runs the host does not bound. A resume is
+ * recorded against the same candidates.
+ */
+export const RESUME_TOOL_NAMES: ReadonlySet<string> = new Set(['SendMessage']);
+
+/**
+ * Platforms where `pre_tool_use` was observed firing on the resume tool, with a
+ * deny honoured there. Elsewhere the line says the resume half is unobserved.
+ */
+export const RESUME_ADMISSION_OBSERVED: ReadonlySet<string> = new Set(['claude']);
+
+/**
+ * Inputs to the reuse verdict. Production passes none: `host_resume` comes
+ * from the host row, and no worker register is recorded yet, which the verdict
+ * names as `worker_register_unrecorded` rather than reading as empty.
+ */
+export interface ShadowDeps {
+    host_resume?: boolean;
+    workers?: readonly WorkerState[] | null;
+    context?: ReuseContext | null;
+}
 
 /** One candidate guard configuration under shadow evaluation. */
 export interface Candidate {
@@ -136,12 +166,23 @@ function extractToolName(payload: JsonObject): string | null {
     return typeof v === 'string' && v ? v : null;
 }
 
-export function processEnvelope(envelope: JsonValue, consumerRoot: string): number {
+export function processEnvelope(envelope: JsonValue, consumerRoot: string, deps: ShadowDeps = {}): number {
     try {
         if (!isObject(envelope)) return EXIT_ALLOW;
         const payload = unwrapPayload(envelope);
         const toolName = extractToolName(payload);
-        if (toolName === null || !DISPATCH_TOOL_NAMES.has(toolName)) return EXIT_ALLOW;
+        if (toolName === null) return EXIT_ALLOW;
+        const isResume = RESUME_TOOL_NAMES.has(toolName);
+        if (!isResume && !DISPATCH_TOOL_NAMES.has(toolName)) return EXIT_ALLOW;
+        const platform = typeof envelope['platform'] === 'string' ? envelope['platform'] : null;
+        // Only the verdict's label and reason codes reach disk — never the tool input.
+        const reuse = isResume
+            ? null
+            : shadowReuseVerdict({
+                  host_resume: deps.host_resume ?? probeHostCapabilities(platform).worker_resume,
+                  workers: deps.workers ?? null,
+                  context: deps.context ?? null,
+              });
 
         const stats = openRecordStats(consumerRoot);
         // Pre-spawn there is no agent id to resolve a parent from; the deepest
@@ -168,6 +209,9 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string): numb
             ledger_present: stats.ledger_present,
             stale_open_excluded: stats.stale_excluded,
             candidates: verdicts.map((v) => ({ label: v.label, would_deny: v.would_deny, on: v.on })),
+            dispatch_kind: isResume ? 'resume' : 'spawn',
+            resume_admission: platform !== null && RESUME_ADMISSION_OBSERVED.has(platform) ? 'counted' : 'unobserved',
+            ...(reuse === null ? {} : { reuse }),
             // Shadow posture is a property of this file, not of a setting —
             // there is no code path here that can deny.
             posture: 'shadow',

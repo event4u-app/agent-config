@@ -126,6 +126,46 @@ export function eligibleWorkers(workers: readonly WorkerState[], context: ReuseC
     return workers.filter((w) => decideWorkerReuse(w, context).verdict === 'resume').map((w) => w.name);
 }
 
+/**
+ * Reasons the shadow guard can record before any worker is compared: the host
+ * offers no resume, no worker register was recorded, or the register is empty.
+ * An unrecorded register is NOT an empty one — conflating them would let a
+ * missing writer read as "no worker was ever eligible".
+ */
+export type ShadowPreconditionReason = 'host_resume_unobserved' | 'worker_register_unrecorded' | 'no_candidate';
+
+export type ShadowReuseVerdict =
+    | { verdict: 'would_resume'; name: string; reasons: [] }
+    | { verdict: 'fresh'; name: null; reasons: Array<RefusalReason | ShadowPreconditionReason> };
+
+export interface ShadowReuseInput {
+    /** The host row's `worker_resume`; false means nothing below is read. */
+    host_resume: boolean;
+    /** The register view, or null when none was recorded. */
+    workers: readonly WorkerState[] | null;
+    context: ReuseContext | null;
+}
+
+/**
+ * The verdict `spawn-guard-shadow` records for one spawn: the first eligible
+ * worker by name, or `fresh` with every candidate's refusal reasons, each once,
+ * in condition order.
+ */
+export function shadowReuseVerdict(input: ShadowReuseInput): ShadowReuseVerdict {
+    if (!input.host_resume) return { verdict: 'fresh', name: null, reasons: ['host_resume_unobserved'] };
+    if (input.workers === null || input.context === null) {
+        return { verdict: 'fresh', name: null, reasons: ['worker_register_unrecorded'] };
+    }
+    if (input.workers.length === 0) return { verdict: 'fresh', name: null, reasons: ['no_candidate'] };
+    const seen = new Set<RefusalReason>();
+    for (const w of input.workers) {
+        const d = decideWorkerReuse(w, input.context);
+        if (d.verdict === 'resume' && d.name !== null) return { verdict: 'would_resume', name: d.name, reasons: [] };
+        for (const r of d.reasons) seen.add(r);
+    }
+    return { verdict: 'fresh', name: null, reasons: REFUSAL_REASONS.filter((r) => seen.has(r)) };
+}
+
 export type SuccessorBrief =
     | { kind: 'resume'; name: string }
     | { kind: 'fresh' }

@@ -12,6 +12,7 @@ import {
     eligibleWorkers,
     REFUSAL_REASONS,
     RETIRING_REASONS,
+    shadowReuseVerdict,
     type RefusalReason,
     type ReuseContext,
     type WorkerState,
@@ -112,6 +113,53 @@ describe('the register is a view', () => {
         // Pure: nothing in the module can write a store.
         expect(source).not.toMatch(/from 'node:(fs|child_process)'/);
         expect(source).not.toMatch(/agent_?id/i);
+    });
+});
+
+describe('shadowReuseVerdict — what the spawn guard records', () => {
+    it('host-without-resume-records-fresh-before-reading-any-worker', () => {
+        // AC-1: a host whose row lacks worker_resume changes nothing — not even
+        // with a perfectly eligible worker in hand.
+        const v = shadowReuseVerdict({ host_resume: false, workers: [worker()], context: context() });
+        expect(v).toEqual({ verdict: 'fresh', name: null, reasons: ['host_resume_unobserved'] });
+    });
+
+    it('an unrecorded register is named, never read as an empty one', () => {
+        for (const input of [
+            { workers: null, context: context() },
+            { workers: [worker()], context: null },
+        ]) {
+            expect(shadowReuseVerdict({ host_resume: true, ...input }).reasons).toEqual(['worker_register_unrecorded']);
+        }
+        expect(shadowReuseVerdict({ host_resume: true, workers: [], context: context() }).reasons).toEqual([
+            'no_candidate',
+        ]);
+    });
+
+    it('records the first eligible worker by name', () => {
+        const v = shadowReuseVerdict({
+            host_resume: true,
+            workers: [worker({ name: 'ac-worker-search', domain: 'search' }), worker()],
+            context: context(),
+        });
+        expect(v).toEqual({ verdict: 'would_resume', name: 'ac-worker-billing', reasons: [] });
+    });
+
+    it('a refusal carries every candidate reason once, in condition order', () => {
+        const v = shadowReuseVerdict({
+            host_resume: true,
+            workers: [worker({ compacted: true }), worker({ reuse: 'never' }), worker({ compacted: true })],
+            context: context(),
+        });
+        expect(v).toEqual({ verdict: 'fresh', name: null, reasons: ['compacted', 'not_continuity'] });
+    });
+
+    it('agrees with decideWorkerReuse on every single-reason fixture', () => {
+        for (const [reason, change] of Object.entries(ONE_FAILURE)) {
+            const v = shadowReuseVerdict({ host_resume: true, workers: [worker(change.w)], context: context(change.c) });
+            expect(v.verdict, reason).toBe('fresh');
+            expect(v.reasons, reason).toEqual(decideWorkerReuse(worker(change.w), context(change.c)).reasons);
+        }
     });
 });
 
