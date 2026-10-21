@@ -786,7 +786,23 @@ export interface ReviewPlan {
     release?: ReleaseInfo;
 }
 
-export function buildPlan(baseRef: string, cwd: string = REPO_ROOT): ReviewPlan {
+/**
+ * A run narrowed to part of the span, for a local review driven to completion.
+ * `scope` keeps only changed files under one of the given path prefixes, and
+ * names itself in the coverage record so a reader sees what was out of reach;
+ * `maxChunks` lifts the per-run ceiling for a run that is meant to finish. CI
+ * passes neither and keeps the ceiling.
+ */
+export interface PlanOptions {
+    scope?: readonly string[];
+    maxChunks?: number;
+}
+
+export function inScope(file: string, scope: readonly string[] | undefined): boolean {
+    return scope === undefined || scope.some((prefix) => file === prefix || file.startsWith(prefix.endsWith('/') ? prefix : `${prefix}/`));
+}
+
+export function buildPlan(baseRef: string, cwd: string = REPO_ROOT, opts: PlanOptions = {}): ReviewPlan {
     const packagingFiles = changedFiles(baseRef, cwd);
     const releaseVersion = detectReleaseVersionFromGit(baseRef, cwd);
 
@@ -805,7 +821,9 @@ export function buildPlan(baseRef: string, cwd: string = REPO_ROOT): ReviewPlan 
         }
     }
 
-    const files = analysisBase === baseRef ? packagingFiles : changedFiles(analysisBase, cwd);
+    const files = (analysisBase === baseRef ? packagingFiles : changedFiles(analysisBase, cwd)).filter((f) =>
+        inScope(f, opts.scope),
+    );
     const reviewCopies = allChangedFiles(analysisBase, cwd).filter(isReviewCopyPath);
     const diff = diffText(analysisBase, files, cwd);
     const escalation = escalationReasons(files, changedLineCount(analysisBase, files, cwd));
@@ -824,6 +842,7 @@ export function buildPlan(baseRef: string, cwd: string = REPO_ROOT): ReviewPlan 
     const partition = partitionDiff(
         perFileDiffs(analysisBase, files, cwd),
         Math.max(1, PROMPT_BUDGET_CHARS - facts.length),
+        opts.maxChunks ?? MAX_REVIEW_CHUNKS,
     );
     return {
         partition,
@@ -925,6 +944,12 @@ export function coverageBlock(coverage?: ReviewCoverage): string {
         `\n\n**Coverage.** ${String(coverage.chunks)} request(s) over ` +
             `${String(coverage.filesReviewed)} of ${String(coverage.filesTotal)} changed file(s).`,
     ];
+    if (coverage.scope && coverage.scope.length > 0) {
+        parts.push(
+            ` Scoped to ${coverage.scope.map((s) => `\`${s}\``).join(', ')}: changed files outside ` +
+                'these prefixes were not part of this run and are not counted above.',
+        );
+    }
     if ((coverage.reviewCopies ?? 0) > 0) {
         parts.push(
             ` ${String(coverage.reviewCopies)} further path(s) under \`${REVIEW_COPY_PREFIX}\` are ` +
@@ -960,6 +985,8 @@ export interface ReviewCoverage {
      * in `filesTotal`. Optional: a record written before this field has none.
      */
     reviewCopies?: number;
+    /** The path prefixes a scoped run was narrowed to; absent for a whole-span run. */
+    scope?: readonly string[];
 }
 
 export function renderReview(findings: Finding[], enforce: boolean, escalation: readonly string[] = [], coverage?: ReviewCoverage): string {
@@ -1100,8 +1127,16 @@ export function main(argv: string[]): 0 | 2 {
     const enforce = argv.includes('--enforce');
     const baseIdx = argv.indexOf('--base');
     const baseRef = (baseIdx >= 0 ? argv[baseIdx + 1] : undefined) ?? 'origin/main';
+    const scopeIdx = argv.indexOf('--scope');
+    const scope = scopeIdx >= 0 ? (argv[scopeIdx + 1] ?? '').split(',').map((p) => p.trim()).filter((p) => p !== '') : undefined;
+    const maxIdx = argv.indexOf('--max-chunks');
+    const maxChunks = maxIdx >= 0 ? Number(argv[maxIdx + 1]) : undefined;
+    if (maxChunks !== undefined && !(Number.isInteger(maxChunks) && maxChunks > 0)) {
+        process.stderr.write('self-review-gate: --max-chunks takes a positive integer\n');
+        return 2;
+    }
 
-    const plan = buildPlan(baseRef);
+    const plan = buildPlan(baseRef, REPO_ROOT, { ...(scope ? { scope } : {}), ...(maxChunks ? { maxChunks } : {}) });
 
     // The request the live run would send, verbatim and unspent. A summary
     // would be this script's description of the request rather than the
@@ -1279,6 +1314,7 @@ export function main(argv: string[]): 0 | 2 {
             filesTotal: plan.files.length,
             unreviewed,
             reviewCopies: plan.reviewCopies.length,
+            ...(scope ? { scope } : {}),
         };
         // Ground-truth pass, ONCE, before anything reads the finding set. A
         // deletion claim the range and the tree both disprove is annotated
