@@ -10,8 +10,9 @@
  * included.
  *
  * Hard rules:
- * - Redaction is fail-closed. If a redaction pattern fires, the line is
- *   scrubbed *before* the bundle is built.
+ * - Redaction is fail-closed. Every detected value is replaced by its
+ *   placeholder *before* the bundle is built, and the member call refuses a
+ *   body that still carries one.
  * - Size guard is fail-loud. > MAX_BUNDLE_BYTES → raises BundleTooLarge,
  *   never silently truncates (would mislead council members).
  */
@@ -20,7 +21,7 @@ import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { detect, maskingEnd, prefixesOf, rawKeyPrefixPattern } from '../_lib/egress_rules.js';
+import { councilEgress, type CouncilEgress } from './council_egress.js';
 
 export const MAX_BUNDLE_BYTES = 50 * 1024; // 50 KB hard ceiling; user must narrow scope on hit.
 
@@ -76,82 +77,18 @@ function _splitlines(s: string): string[] {
     return lines;
 }
 
-// ── redaction patterns ───────────────────────────────────────────────────
-// Each pattern is matched line-wise; matching lines are replaced with the
-// placeholder. Order matters — the most specific pattern goes first. Credential
-// shapes are not spelled here: they come from the one rule table
-// (road-to-one-detector-and-the-senders-we-own 2.2), which this module reads
-// for detection only; replacing whole lines stays this module's policy.
+// Every value the one rule table detects — its credential rows, the reviewer-
+// threshold assignment and Authorization rows, and the bundler's own looser
+// readings (council_egress.ts) — is replaced by a typed placeholder of the
+// grammar in docs/contracts/egress-placeholders-v1.md, span by span, so a
+// finding no longer costs the reviewer its whole line
+// (road-to-one-detector-and-the-senders-we-own 3.3). The run's scope remembers
+// what it replaced, and every member call checks its body against it before
+// the request is written (`callMember`).
 
-const _REDACTION_LINE_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
-    [/~?\/?\.event4u\/agent-config\/[^/\s]+\.key/u, '[redacted: agent-config key path]'],
-    [/~?\/?\.config\/agent-config\/[^/\s]+\.key/u, '[redacted: agent-config key path]'],
-    [/^\s*Authorization:\s/iu, '[redacted: Authorization header]'],
-    [/(api[_-]?key|secret|token|password)\s*[:=]/iu, '[redacted: secret-like assignment]'],
-    [rawKeyPrefixPattern(8, prefixesOf('anthropic-api-key')), '[redacted: anthropic-key-like token]'],
-    [
-        rawKeyPrefixPattern(20, [...prefixesOf('openai-api-key'), ...prefixesOf('anthropic-project-key')], {
-            boundary: 'never',
-        }),
-        '[redacted: openai-key-like token]',
-    ],
-];
-
-const _ANTHROPIC_LABEL = '[redacted: anthropic-key-like token]';
-const _OPENAI_LABEL = '[redacted: openai-key-like token]';
-const _CREDENTIAL_LABEL = '[redacted: credential-like token]';
-const _RULE_LABEL: Readonly<Record<string, string>> = {
-    'anthropic-api-key': _ANTHROPIC_LABEL,
-    'openai-api-key': _OPENAI_LABEL,
-    'anthropic-project-key': _OPENAI_LABEL,
-};
-
-/**
- * Line index -> placeholder for every line a credential's replacement extent
- * touches, so a multi-line value (a PEM block) loses every line it spans.
- */
-function _credentialLines(lines: readonly string[]): Map<number, string> {
-    const joined = lines.join('\n');
-    const starts: number[] = [];
-    let at = 0;
-    for (const line of lines) {
-        starts.push(at);
-        at += line.length + 1;
-    }
-    const lineOf = (offset: number): number => {
-        let i = 0;
-        while (i + 1 < starts.length && (starts[i + 1] as number) <= offset) i += 1;
-        return i;
-    };
-    const out = new Map<number, string>();
-    for (const span of detect(joined)) {
-        if (span.class !== 'credential') continue;
-        const end = maskingEnd(joined, span);
-        const label = _RULE_LABEL[span.rule] ?? _CREDENTIAL_LABEL;
-        for (let i = lineOf(span.start); i <= lineOf(Math.max(span.start, end - 1)); i += 1) {
-            if (!out.has(i)) out.set(i, label);
-        }
-    }
-    return out;
-}
-
-/** Apply redaction patterns to a multi-line text buffer. */
-export function redact(text: string): string {
-    const lines = _splitlines(text);
-    const credential = _credentialLines(lines);
-    const out: string[] = [];
-    lines.forEach((line, i) => {
-        let replaced = line;
-        for (const [pattern, placeholder] of _REDACTION_LINE_PATTERNS) {
-            pattern.lastIndex = 0;
-            if (pattern.test(replaced)) {
-                replaced = placeholder;
-                break;
-            }
-        }
-        out.push(replaced === line ? (credential.get(i) ?? line) : replaced);
-    });
-    return out.join('\n');
+/** Replace every detected value with its placeholder. Line endings are normalised to `\n`. */
+export function redact(text: string, egress: CouncilEgress = councilEgress()): string {
+    return egress.replace(_splitlines(text).join('\n'));
 }
 
 function _enforceSize(text: string, mode: string): string {

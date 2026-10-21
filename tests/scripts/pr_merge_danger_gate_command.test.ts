@@ -1,7 +1,6 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-
 import { describe, expect, it } from 'vitest';
+
+import { procedureText } from '../_lib/procedure_text.js';
 
 /**
  * The merge command's danger gate is prose an agent executes, so its three
@@ -11,9 +10,8 @@ import { describe, expect, it } from 'vitest';
  * routing eval (prompt → command) and cannot express any of them.
  */
 
-const ROOT = path.resolve(__dirname, '..', '..');
-const MERGE = fs.readFileSync(path.join(ROOT, 'src/domains/git/pr/merge/command.md'), 'utf8');
-const PROCESS_FULL = fs.readFileSync(path.join(ROOT, 'src/domains/product-basic/roadmap/process-full/command.md'), 'utf8');
+const MERGE = procedureText('src/domains/git/pr/merge/command.md');
+const PROCESS_FULL = procedureText('src/domains/product-basic/roadmap/process-full/command.md');
 
 function section(text: string, heading: string): string {
     const start = text.indexOf(heading);
@@ -22,7 +20,13 @@ function section(text: string, heading: string): string {
     return text.slice(start, next < 0 ? undefined : next);
 }
 
-const GATE = section(MERGE, '## 9a. Danger gate');
+// The core keeps each section's heading and fences; its branch detail moved to
+// headings of its own in the merge reference files, read here as part of it.
+const GATE = [
+    section(MERGE, '## 9a. Danger gate'),
+    section(MERGE, '## Danger gate verdicts'),
+    section(MERGE, '## Danger gate mechanics'),
+].join('\n');
 
 describe('§ 9a classes a PR from the base revision', () => {
     it('materialises the manifest base in a worktree and runs that copy with --root on the head', () => {
@@ -53,7 +57,12 @@ describe('the three verdicts', () => {
     });
 });
 
-const MERGE_STEP = section(MERGE, '## 9. Merge, and the summary');
+const MERGE_STEP = [
+    section(MERGE, '## 9. Merge, and the summary'),
+    section(MERGE, '\n## Merge method choice'),
+    section(MERGE, '\n## Drain summary'),
+    section(MERGE, '\n## Held for you'),
+].join('\n');
 
 describe('a needs-council merge rests on a checked record for the merging head', () => {
     it('§ 9a writes the clearance through merge_clearance, from the session record', () => {

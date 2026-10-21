@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+// egress-content: fixed-corpus — sends the deterministic recall corpus of Phase 1, never session content
 /**
  * Second-brain paired measurement — substrate on vs off vs placebo
  * (road-to-second-brain-delta-proof Phase 2).

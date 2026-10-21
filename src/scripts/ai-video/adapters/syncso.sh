@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# egress-content: session-content uncovered — the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach
 # syncso.sh — sync.so lip-sync post-process adapter: one rendered clip +
 # one audio line in, a lip-synced clip out. Hosted, singing-capable, no
 # GPU — the reference implementation for the lip-sync adapter class.

@@ -56,7 +56,7 @@ import { emitFor, type PermissionDecision, type Severity } from "./host_semantic
 import { _concern_permission_verdict, _payload_tool_name, _permission_for } from "./permission_gate.js";
 export { _concern_permission_verdict, _payload_tool_input, _payload_tool_name, _permission_for, _working_tree_root } from "./permission_gate.js";
 import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
-import { egressViewFor, runEgressStage } from "./egress_stage.js";
+import { egressInjection, egressViewFor, runEgressStage } from "./egress_stage.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js';
 export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
@@ -1280,6 +1280,8 @@ export function main(argv?: string[]): number {
   // The egress stage (ADR-285) builds the placeholder view before any concern
   // runs; `egressViewFor` decides which concern gets which view.
   const egress = runEgressStage(envelope);
+  // What the concerns inject back into the session passes the engine too (3.5).
+  const injected = egressInjection(String(envelope["workspace_root"] || process.cwd()));
   // Payload opt-in (step 2.1). One planner owns the whole decision — which
   // classes are present, which any concern loses, the single measurement pass,
   // and the at-most-four envelope shapes — so the loop below reads a shape
@@ -1364,7 +1366,7 @@ export function main(argv?: string[]): number {
         : "";
     const message = [stated, extra].filter(Boolean).join("\n\n");
     if (message) {
-      concern_messages.push({ rc, text: message, def: concern });
+      concern_messages.push({ rc, text: injected(message), def: concern });
     }
     if (
       args.event === "session_start" &&
@@ -1372,7 +1374,7 @@ export function main(argv?: string[]): number {
       typeof reply["context"] === "string" &&
       (reply["context"] as string).trim()
     ) {
-      context_blocks.push((reply["context"] as string).trim());
+      context_blocks.push(injected((reply["context"] as string).trim()));
     }
     feedback_entries.push({
       concern: String(concern["name"]),

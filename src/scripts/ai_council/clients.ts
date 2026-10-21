@@ -1,3 +1,4 @@
+// egress-content: session-content asserted — API seats post through api_transport.curlJsonPost and CLI seats pass councilEgress().check before the spawn; council rounds are replaced through the engine first
 // External-AI clients for the council — ported from the retired Python
 // `src/scripts/ai_council/clients.py` (ADR-200).
 //
@@ -48,6 +49,7 @@ import * as path from 'node:path';
 import { vendorPrefix } from '../_lib/egress_rules.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { boundFor } from './cli_agency_bounds.js';
+import { councilEgress } from './council_egress.js';
 import {
     curlJsonPost as _curlJsonPost,
     geminiRestClient,
@@ -1310,6 +1312,10 @@ export abstract class CliClient extends ExternalAIClient {
         }
     }
 
+    protected _cliFailure(latency_ms: number, error: string, metadata: Record<string, unknown>): CouncilResponse {
+        return new CouncilResponse({ provider: this.name, model: this.model, text: '', latency_ms, error, metadata });
+    }
+
     /**
      * Refuse a call this transport cannot serve, BEFORE spawning.
      *
@@ -1476,19 +1482,23 @@ export abstract class CliClient extends ExternalAIClient {
         // bug someone fixes in a minute and a seat that quietly stays dead.
         const preflight = this._preflight_transport();
         if (preflight !== null) {
-            return new CouncilResponse({
-                provider: this.name,
-                model: this.model,
-                text: '',
-                latency_ms: _elapsedMs(t0),
-                error: preflight.code,
-                metadata: { cli: true, transport: this.transport, detail: preflight.detail },
-            });
+            return this._cliFailure(_elapsedMs(t0), preflight.code, { cli: true, transport: this.transport, detail: preflight.detail });
         }
 
         // 2. build command + spawn.
         const cmd = this._build_command(system_prompt, user_prompt, max_tokens);
         const stdinPayload = this._stdin_payload(system_prompt, user_prompt);
+        // The final egress check, immediately before the request is written
+        // (road-to-one-detector-and-the-senders-we-own 3.3): nothing is spawned
+        // and nothing counts against the daily cap when it refuses.
+        const refusal = councilEgress().check(`${cmd.join('\n')}\n${stdinPayload ?? ''}`);
+        if (refusal !== null) {
+            return this._cliFailure(_elapsedMs(t0), 'egress_refused', {
+                cli: true,
+                egress_reason: refusal.reason,
+                egress_rule: refusal.what,
+            });
+        }
         let proc: SubprocessResult;
         try {
             proc = this._runSubprocess(cmd, stdinPayload);
@@ -1503,24 +1513,10 @@ export abstract class CliClient extends ExternalAIClient {
                     // could not contain, at `timeout_seconds` of wall-clock per
                     // attempt. The process ran; the call counts.
                     this._recordCallQuietly();
-                    return new CouncilResponse({
-                        provider: this.name,
-                        model: this.model,
-                        text: '',
-                        latency_ms: _elapsedMs(t0),
-                        error: 'timeout',
-                        metadata: { cli: true, timeout_seconds: this.timeout_seconds },
-                    });
+                    return this._cliFailure(_elapsedMs(t0), 'timeout', { cli: true, timeout_seconds: this.timeout_seconds });
                 }
                 if (exc.kind === 'file_not_found') {
-                    return new CouncilResponse({
-                        provider: this.name,
-                        model: this.model,
-                        text: '',
-                        latency_ms: _elapsedMs(t0),
-                        error: 'binary_missing',
-                        metadata: { cli: true, binary: this.binary },
-                    });
+                    return this._cliFailure(_elapsedMs(t0), 'binary_missing', { cli: true, binary: this.binary });
                 }
                 // OSError — the spawn was attempted, so it counts. `E2BIG` lands
                 // here when an argv-borne prompt outgrows the platform limit,

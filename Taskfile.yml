@@ -116,6 +116,7 @@ tasks:
       - task: check-no-conflict-markers
       - task: check-secret-leak
       - task: check-credential-spelling
+      - task: check-egress-mutations
       - task: check-claims
       - task: check-adr-frontmatter
       - task: check-adr-citations
@@ -125,6 +126,7 @@ tasks:
       - task: lint-override-kernel-guard
       - task: lint-output-slop
       - task: lint-code-comments
+      - task: check-step-receipts
       - task: lint-deferral-integrity
       - task: lint-never-silent
       - task: lint-example-fences

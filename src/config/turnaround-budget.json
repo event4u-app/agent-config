@@ -127,6 +127,30 @@
                 "merged_changes_per_night": "UP",
                 "net_ticked_steps_per_night": "UP"
             }
+        },
+        {
+            "read_at": "2026-10-21",
+            "reason": "road-to-a-step-that-costs-what-it-changes step 0.2 — the per-STEP baseline its Goal is read against. Thresholds were pre-registered (that roadmap's D14) in a commit before this reading.",
+            "owned_by": "road-to-a-step-that-costs-what-it-changes",
+            "invocation": "./scripts-run src/scripts/probe_turnaround --steps --limit 316 --store <every ~/.claude/projects store of this repository, comma-separated: the main checkout's and each worktree's>",
+            "invocation_note": "316 is the number of transcripts across those stores modified in the 7 days before the reading, subagent transcripts under <session>/subagents/ included. 75 of the 79 transcripts that close a roadmap step are subagent files, which is why the session files alone read 13 steps.",
+            "corpus": {
+                "window": "the 7 days to 2026-10-21, every store of this repository, measuring session excluded",
+                "transcripts": 316,
+                "closed_steps": 75
+            },
+            "reading": {
+                "step_p50_minutes": 4.2,
+                "step_p90_minutes": 33.6,
+                "share_by_class": { "model": 0.303, "change": 0.028, "verify": 0.039, "ceremony": 0.095, "wait": 0.535, "refusal": 0.0, "unknown": 0.0 },
+                "steps_by_change_class": { "R0": 4, "R1": 5, "R2": 30, "R3": 36 },
+                "p50_minutes_by_change_class": { "R0": 2.1, "R1": 2.7, "R2": 7.7, "R3": 0.1 }
+            },
+            "limits": "A step runs from the previous close in the same transcript, so a subagent that ticks several boxes in a row gives the work to the first and near-zero intervals with no edited path to the rest; those classify R3 by upward resolution, which is why the R3 p50 is 0.1 min and the R3 count is high. The anatomy measures time inside the transcript that closes the step; the orchestrating session's review rounds, PR and CI wait around a subagent's step are not in it.",
+            "directions": {
+                "step_p50_minutes": "DOWN",
+                "ceremony_share": "DOWN"
+            }
         }
     ]
 }

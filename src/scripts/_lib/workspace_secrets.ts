@@ -32,6 +32,7 @@
  */
 
 import {
+    assignmentPattern,
     detect,
     EGRESS_RULES,
     type EgressRule,
@@ -112,8 +113,14 @@ function highSpans(text: string): Span[] {
 
 // --- FUZZY pattern (heuristic key/value assignment) -------------------------
 // Python `(?i)` inline flag → JS `i` flag. Character class is identical.
-const _RE_KV_SECRET =
-    /(?:api[_-]?key|secret|token|password|passwd|bearer)\s*[:=]\s*['"]?[A-Za-z0-9_\-+/=]{12,}['"]?/i;
+// The keyword shape is the table's; the 12-character value is this module's threshold.
+const _RE_KV_SECRET = assignmentPattern(
+    {
+        keywords: ['apiKey', 'secret', 'token', 'password', 'passwd', 'bearer'],
+        value: `['"]?[A-Za-z0-9_\\-+/=]{12,}['"]?`,
+    },
+    'i',
+);
 
 type PatternEntry = readonly [string, RegExp];
 
