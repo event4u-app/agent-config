@@ -245,6 +245,8 @@ function _check_orphans(contexts: string[], corpus: string, root: string): Viola
             rel_short,
             `](${base})`,
             `](./${base})`,
+            `](${base}#`,
+            `](./${base}#`,
         ];
         let own_text = '';
         try {

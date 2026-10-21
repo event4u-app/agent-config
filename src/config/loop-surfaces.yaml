@@ -105,7 +105,7 @@ surfaces:
     kind: prose
     bound_kind: prose
     cap: src/domains/product-basic/roadmap/process-full/command.md:count_open
-    no_progress: src/domains/product-basic/roadmap/process-full/command.md:stagnated
+    no_progress: src/agent-src/contexts/execution/process-full-delivery.md:stagnated
     success_stop: >-
       count_open == 0 with the PR open. `blocked` is never presented as
       completion and no checkbox is flipped to reach it.
