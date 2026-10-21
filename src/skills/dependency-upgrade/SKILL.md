@@ -266,8 +266,59 @@ CVE scanning (above) catches *known-vulnerable* versions. It does **not** catch 
 3. **Capability / behavior diff** — did the new version add a capability its job doesn't need: network egress (`fetch`/`net`/`dns`/`http`), `child_process`/shell, env/secret/credential reads, filesystem writes, obfuscated/minified blobs, a `.github/workflows` file? Use `socket` / `guarddog <eco> scan <pkg>@<ver>` if available; else read the delta.
 4. **Purpose-vs-behavior legitimacy check** — a Slack/HTTP client legitimately makes network calls; a date/string/color util does not. For each new capability ask: *does the package's stated purpose require this?* A network/secret capability with no purpose justification — or a **new outbound endpoint** even in a package that already uses the network — is high-risk.
 5. **Provenance + advisory feeds** — `npm audit signatures` (flag a dep that *had* provenance and lost it — a hallmark of a token-theft publish); `osv-scanner --lockfile=…` and the GitHub Advisory / Socket / Snyk malware feeds against the newly-resolved versions.
+6. **Release age and agent-config paths** — a fixing version younger than three days is `fix-fresh`: run steps 1–5 before installing it, not after. Any change under `.claude/`, `.vscode/`, `.cursor/` or `.github/workflows/`, or to an install script, in the diff of a dependency update stops the update — a 2026 worm persisted through exactly such a session-start hook while disguised as "chore: update dependencies".
 
 **Surface to the user** any: new install script · new transitive dep · new network endpoint / secret read · obfuscated blob · lost provenance · advisory/malware hit — with the version delta and the purpose-vs-behavior verdict, and hold the update until they decide. Never auto-accept a bump that introduced an unexplained capability.
+
+## Security fix — one finding carried to a verified PR
+
+Entered from `/audit deps fix <id>` or a finding the user names. The goal is a
+fix the owner can merge, not a plan: smallest change, right place, proven by the
+source that reported it.
+
+1. **Plan and route** — `agent-config audit:deps fix <id>` prints the route
+   (routing table below), the branch and PR title, the smallest fixing change,
+   and for a runtime every pinning file with its edit plus an ops checklist. It
+   claims the finding: a second session sees the open fix and joins it instead
+   of starting another.
+
+   | Situation | Route |
+   |---|---|
+   | an open bot PR already moves this dependency | complete that PR — no second one |
+   | the current branch introduced the dependency, or the user says "here" | this branch, its own `fix(security): …` commit |
+   | trunk, clean tree | a new `security/…` branch in this checkout |
+   | a feature branch is in progress | a separate worktree from fresh trunk, its own branch and PR — the fix travels alone; if the feature changes the same lockfile, offer it a rebase after the merge |
+
+   Choosing "separate worktree" in the offer **is** the explicit ask
+   `using-git-worktrees` requires; register it (`agent-config worktree:cleanup
+   register <path> --purpose=security-fix`) so its removal after the merge is
+   not forgotten.
+2. **Build the smallest fix** — inside the current constraint first
+   (`npm update <pkg>`, an `overrides` entry for a transitive-only fix,
+   `composer update vendor/pkg --with-dependencies`); a constraint change only
+   when the fixing version is outside it; a new major only with a stated
+   compatibility analysis; never `npm audit fix --force`. A runtime fix changes
+   every file that pins it in one commit. Run the post-update audit above,
+   including step 6.
+3. **Prove it** — `agent-config audit:deps verify <id>`: the source that reported
+   the finding must stop reporting it on this branch. `fix-failed` means the hole
+   is still open — say so; `unverifiable` means the source did not answer — say
+   that too. Then the project's tests and static checks. A fix that leaves the
+   advisory open or breaks a test is reported as exactly that, never as done.
+4. **Open the PR** — `agent-config audit:deps pr-body <id> --verified
+   --tests=passed` prints the body with its seven evidence fields; a library adds
+   `--release=<current version>` for the patch-release draft. Security fixes are
+   never mixed with unrelated changes. Stop before tag and publish.
+5. **Hand over** — watch CI with `agent-config ci:settle <pr>`, fix what the fix
+   broke, report "ready to merge". Merge is the owner's, or `/pr:merge` under the
+   owner's instruction; under `worktrees.cleanup: auto` the merge removes the fix
+   worktree. Afterwards `agent-config audit:deps track` follows it from
+   `fixed-in-trunk` to `fixed-released` to `fixed-deployed`; "merged but not
+   deployed" after 24 h stays in the session notice.
+6. **No fix exists** — offer a mitigation (a configuration change, a disabled
+   feature, a pinned-back version where that is safe) and record it with
+   `agent-config audit:deps mitigate <id> --note="…"`; it stays open and reopens
+   the moment a refresh reports a fix.
 
 ## Output format
 
@@ -275,6 +326,7 @@ CVE scanning (above) catches *known-vulnerable* versions. It does **not** catch 
 2. Breaking changes addressed with code modifications
 3. Test results confirming compatibility
 4. Post-update audit result: capability delta old→new, purpose-vs-behavior verdict, provenance/advisory status — and any finding surfaced to the user for confirmation
+5. For a security fix: the route taken, the source's own re-check (`fixed-in-branch` / `fix-failed` / `unverifiable`), and the PR or the reason there is none
 
 ## Auto-trigger keywords
 

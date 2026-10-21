@@ -167,6 +167,14 @@ git push origin --delete <feature-branch>
 Log the discarded SHAs so the work can be recovered via `git reflog`
 within the reflog TTL if needed.
 
+### 5b. A security fix has one more end state
+
+A branch that carries a security fix (`security/…`, opened from
+`/audit deps fix`) does not end at "PR opened": fix PR open → watched until
+merged → worktree removed → finding followed to deployed
+(`agent-config audit:deps track`). "Merged but not deployed" is still an open
+finding, and the report says so rather than calling the hole closed.
+
 ### 6. Clean up worktrees
 
 If the branch lives in a `git worktree`:
