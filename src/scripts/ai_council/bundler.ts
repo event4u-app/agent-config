@@ -77,7 +77,6 @@ function _splitlines(s: string): string[] {
     return lines;
 }
 
-// ── redaction ────────────────────────────────────────────────────────────
 // Every value the one rule table detects — its credential rows, the reviewer-
 // threshold assignment and Authorization rows, and the bundler's own looser
 // readings (council_egress.ts) — is replaced by a typed placeholder of the
