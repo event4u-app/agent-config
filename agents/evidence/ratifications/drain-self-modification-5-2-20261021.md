@@ -128,7 +128,9 @@ STANCE: refused | CONFIDENCE: high | DEALBREAKER: yes
 ## Added by hand after rendering: all seven rounds and the disposition
 
 Everything above this heading was rendered by `ratification_record` from round
-7's session record; this section was written afterwards and is not derived.
+7's session record — the step 3.4 writer, itself refused on this branch and
+reachable at `1f9ab5fca` (see `drain-self-modification-3-4-20261021.md`); this
+section was written afterwards and is not derived.
 
 Step 5.2 of `road-to-self-modification-that-a-council-must-pass` — the
 ratification gate prints the contract's one question for the user. Every round

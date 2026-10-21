@@ -72,17 +72,6 @@ pruned, so nothing on a runner could check them. The body's review record and
 the committed prompt package remain the evidence a reader checks the seats
 against.
 
-`./scripts-run src/scripts/ratification_record --session <council-json> --files
-<f> … --proposed-by … --implemented-by … --summary …` renders the whole record
-from the run instead (`_lib/ratification_record_writer.ts`). Each seat's verdict
-is read from its stance line, never typed; the session must name as its
-artefact a prompt committed under `agents/evidence/council/` at the revision the
-subject is read at, and that prompt must contain the exact `subject`; every
-reply is kept verbatim in the body; and the output is read back through the
-reader before it is printed. It does not change what is established above: the
-session file is the caller's, so the record is exactly as trustworthy as a typed
-one about whether a council produced it, and it says so in its own body.
-
 ## `subject:` — the digest of the content the record reviewed
 
 An eighth field, `subject:`, is a sha-256 hex digest over the **gated** files of
