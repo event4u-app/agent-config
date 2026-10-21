@@ -1312,6 +1312,10 @@ export abstract class CliClient extends ExternalAIClient {
         }
     }
 
+    protected _cliFailure(latency_ms: number, error: string, metadata: Record<string, unknown>): CouncilResponse {
+        return new CouncilResponse({ provider: this.name, model: this.model, text: '', latency_ms, error, metadata });
+    }
+
     /**
      * Refuse a call this transport cannot serve, BEFORE spawning.
      *
@@ -1478,14 +1482,7 @@ export abstract class CliClient extends ExternalAIClient {
         // bug someone fixes in a minute and a seat that quietly stays dead.
         const preflight = this._preflight_transport();
         if (preflight !== null) {
-            return new CouncilResponse({
-                provider: this.name,
-                model: this.model,
-                text: '',
-                latency_ms: _elapsedMs(t0),
-                error: preflight.code,
-                metadata: { cli: true, transport: this.transport, detail: preflight.detail },
-            });
+            return this._cliFailure(_elapsedMs(t0), preflight.code, { cli: true, transport: this.transport, detail: preflight.detail });
         }
 
         // 2. build command + spawn.
@@ -1496,13 +1493,10 @@ export abstract class CliClient extends ExternalAIClient {
         // and nothing counts against the daily cap when it refuses.
         const refusal = councilEgress().check(`${cmd.join('\n')}\n${stdinPayload ?? ''}`);
         if (refusal !== null) {
-            return new CouncilResponse({
-                provider: this.name,
-                model: this.model,
-                text: '',
-                latency_ms: _elapsedMs(t0),
-                error: 'egress_refused',
-                metadata: { cli: true, egress_reason: refusal.reason, egress_rule: refusal.what },
+            return this._cliFailure(_elapsedMs(t0), 'egress_refused', {
+                cli: true,
+                egress_reason: refusal.reason,
+                egress_rule: refusal.what,
             });
         }
         let proc: SubprocessResult;
@@ -1519,24 +1513,10 @@ export abstract class CliClient extends ExternalAIClient {
                     // could not contain, at `timeout_seconds` of wall-clock per
                     // attempt. The process ran; the call counts.
                     this._recordCallQuietly();
-                    return new CouncilResponse({
-                        provider: this.name,
-                        model: this.model,
-                        text: '',
-                        latency_ms: _elapsedMs(t0),
-                        error: 'timeout',
-                        metadata: { cli: true, timeout_seconds: this.timeout_seconds },
-                    });
+                    return this._cliFailure(_elapsedMs(t0), 'timeout', { cli: true, timeout_seconds: this.timeout_seconds });
                 }
                 if (exc.kind === 'file_not_found') {
-                    return new CouncilResponse({
-                        provider: this.name,
-                        model: this.model,
-                        text: '',
-                        latency_ms: _elapsedMs(t0),
-                        error: 'binary_missing',
-                        metadata: { cli: true, binary: this.binary },
-                    });
+                    return this._cliFailure(_elapsedMs(t0), 'binary_missing', { cli: true, binary: this.binary });
                 }
                 // OSError — the spawn was attempted, so it counts. `E2BIG` lands
                 // here when an argv-borne prompt outgrows the platform limit,
