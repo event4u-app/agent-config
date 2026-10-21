@@ -25,7 +25,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { changedPaths, classifyPaths, higher, type RiskClass } from './classify_change_risk.js';
-import { effectiveMode, rolledBackClasses, type AuditSample, type FlipBlock } from './_lib/depth_flip.js';
+import { effectiveMode, isStructurallySafe, rolledBackClasses, type AuditSample, type FlipBlock } from './_lib/depth_flip.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -66,7 +66,8 @@ export function receiptFor(
     const bound = cls === computed.cls ? computed.reason : `raised to ${cls} from ${computed.cls}`;
     const skip = wouldSkip(cls, table);
     const mode = effectiveMode(table.mode, cls, paths, table.flip, rolledBackClasses(samples, table.flip.requires));
-    const line = `<!-- receipt: class=${cls} · ${mode} · would-skip=${skip.length === 0 ? 'none' : skip.join(',')} · bound=${bound} -->`;
+    const scope = isStructurallySafe(paths) ? ' · scope=safe' : '';
+    const line = `<!-- receipt: class=${cls} · ${mode}${scope} · would-skip=${skip.length === 0 ? 'none' : skip.join(',')} · bound=${bound} -->`;
     return { cls, mode, line };
 }
 

@@ -148,7 +148,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 
 ## Phase 4 — Flip, sample, roll back
 
-- [x] **4.0 A receipt on every newly ticked step, checked PR-locally.** Done 2026-10-21: `check_step_receipts` (diff-scoped, renames followed) in `rule-backstops.yml` and `task ci`; reports while the table is shadow and refuses from the flip on, per D16; `--self-test` 5 cases, 2 rejecting; dropping the receipt condition turns 3 tests red. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml --> Before
+- [x] **4.0 A receipt on every newly ticked step, checked PR-locally.** Done 2026-10-21: `check_step_receipts` (diff-scoped, renames followed) in `rule-backstops.yml` and `task ci`; reports while the table is shadow and refuses from the flip on, per D16; `--self-test` 6 cases, 3 rejecting; a receipt claiming `active` is checked against the whole diff (R2 round 2 finding 1); dropping the receipt condition turns 3 tests red. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml --> Before
       4.1, a check refuses a ticked line in the PR's own diff that carries no
       receipt; older ticks and other branches are not read. Blocked on the
       same blocker as 4.1 — it exists only to serve the flip.
@@ -160,7 +160,8 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       test that refuses `mode: active` without a committed `flip.reading`. The
       flip commit itself waits until `probe_depth_shadow --flip-readiness`
       reads READY for a class: 30 shadow steps, at most one escape and no
-      critical. On 2026-10-21 it read R0 3 steps and R1 0 steps.
+      critical, counted only inside the flip scope (receipts carry
+      `scope=safe` from 2026-10-21 on). On 2026-10-21 it read 0 and 0.
       verify: the D18 owner row exists before the flip commit; that commit
       names the reading in `flip.reading`.
 - [ ] **4.2 Rule depth by class, behind an A/B.** R0/R1 steps receive the

@@ -892,7 +892,7 @@ tasks:
 
   check-step-receipts:
     silent: true
-    desc: "Fail when a roadmap step this diff ticks carries no `<!-- receipt: -->` marker — the record a lowered ceremony depth is audited against. Diff-scoped against origin/main"
+    desc: "Report a roadmap step this diff ticks without a `<!-- receipt: -->` marker, or with a lowered-depth claim the diff does not allow — the record a lowered ceremony depth is audited against. Report-only while the depth table is shadow, failing from the flip on. Diff-scoped against origin/main"
     cmd: ./scripts-run src/scripts/check_step_receipts --base origin/main
 
   lint-deferral-integrity:

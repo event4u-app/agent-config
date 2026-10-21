@@ -29,7 +29,9 @@ import { fileURLToPath } from 'node:url';
 
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 import { reportScanned } from './_lib/scan_scope.js';
-import { loadDepthTable } from './step_receipt.js';
+import { classifyPaths } from './classify_change_risk.js';
+import { isStructurallySafe, parseReceipt } from './_lib/depth_flip.js';
+import { DEPTH_TABLE_REL, loadDepthTable, type DepthTable } from './step_receipt.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -50,7 +52,7 @@ export interface MissingReceipt {
  * A step counts as newly ticked when an added line ticks it and no removed line
  * of the same file ticked it already — a reworded or relocated tick is not new.
  */
-export function missingReceipts(diff: string): { files: number; missing: MissingReceipt[] } {
+export function missingReceipts(diff: string): { files: number; missing: MissingReceipt[]; lowered: MissingReceipt[] } {
     const perFile = new Map<string, { added: string[]; removed: string[] }>();
     let current: { added: string[]; removed: string[] } | null = null;
     for (const line of diff.split('\n')) {
@@ -72,16 +74,28 @@ export function missingReceipts(diff: string): { files: number; missing: Missing
         }
     }
     const missing: MissingReceipt[] = [];
+    const lowered: MissingReceipt[] = [];
     for (const [file, { added, removed }] of perFile) {
         const tickedBefore = new Set(removed.map((l) => TICK.exec(l)?.[1]).filter((id): id is string => id !== undefined));
         for (const line of added) {
             const step = TICK.exec(line)?.[1];
-            if (step !== undefined && !tickedBefore.has(step) && !RECEIPT.test(line)) {
-                missing.push({ file, step });
-            }
+            if (step === undefined || tickedBefore.has(step)) continue;
+            if (!RECEIPT.test(line)) missing.push({ file, step });
+            else if (parseReceipt(line)?.mode === 'active') lowered.push({ file, step });
         }
     }
-    return { files: perFile.size, missing };
+    return { files: perFile.size, missing, lowered };
+}
+
+/**
+ * Whether this diff may carry a receipt that claims a lowered depth. A receipt
+ * is written by hand, so its class and mode are not trusted: a lowered claim
+ * stands only when the table is active and the WHOLE diff — every path any of
+ * its steps touched — is structurally safe and of a flip class. One step's
+ * paths cannot be recovered from the diff, so the whole diff is the bound.
+ */
+export function loweredClaimAllowed(table: DepthTable, diffPaths: readonly string[]): boolean {
+    return table.mode === 'active' && isStructurallySafe(diffPaths) && table.flip.classes.includes(classifyPaths(diffPaths).cls);
 }
 
 function roadmapDiff(root: string, base: string): string | null {
@@ -91,6 +105,11 @@ function roadmapDiff(root: string, base: string): string | null {
         { cwd: root, encoding: 'utf-8', maxBuffer: 256 * 1024 * 1024 },
     );
     return res.status === 0 ? res.stdout : null;
+}
+
+function diffPaths(root: string, base: string): string[] {
+    const res = spawnSync('git', ['diff', '--name-only', `${base}...HEAD`], { cwd: root, encoding: 'utf-8', maxBuffer: 64 * 1024 * 1024 });
+    return res.status === 0 ? res.stdout.split('\n').filter((p) => p !== '') : [];
 }
 
 function selfTest(repoRoot: string): number {
@@ -134,6 +153,14 @@ function selfTest(repoRoot: string): number {
                 run: () => caseOn(() => roadmap('# Road Y\n\n- [x] **1.1 Born done.**\n', 'road-y.md')),
             },
             {
+                name: 'a hand-written receipt claiming a lowered depth the diff does not allow',
+                expect: 'reject',
+                run: () =>
+                    caseOn(() =>
+                        roadmap(base.replace('- [ ] **1.1 New step.**', `- [x] **1.1 New step.** Done. ${receipt.replace('· shadow ·', '· active ·')}`)),
+                    ),
+            },
+            {
                 name: 'a step ticked with its receipt',
                 expect: 'accept',
                 run: () => caseOn(() => roadmap(base.replace('- [ ] **1.1 New step.**', `- [x] **1.1 New step.** Done. ${receipt}`))),
@@ -149,7 +176,7 @@ function selfTest(repoRoot: string): number {
                 run: () => caseOn(() => fs.writeFileSync(path.join(dir, 'a.txt'), 'x\n')),
             },
         ];
-        return runSelfTest({ gate: 'check_step_receipts', cases, minCases: 5, minRejectCases: 2 });
+        return runSelfTest({ gate: 'check_step_receipts', cases, minCases: 6, minRejectCases: 3 });
     } finally {
         fs.rmSync(dir, { recursive: true, force: true });
     }
@@ -170,7 +197,7 @@ export function main(argv: readonly string[]): number {
         process.stderr.write(`check_step_receipts: cannot diff ${base}...HEAD in ${root}\n`);
         return 2;
     }
-    const { files, missing } = missingReceipts(diff);
+    const { files, missing, lowered } = missingReceipts(diff);
     reportScanned({
         gate: 'check_step_receipts',
         scanned: files,
@@ -180,14 +207,24 @@ export function main(argv: readonly string[]): number {
             'EMPTY_VALID: the scan root is a DIFF, and most pull requests tick no roadmap step; git ' +
             'answered for the range, and an unreadable ref already exits 2 above.',
     });
-    if (missing.length === 0) {
+    const table = loadDepthTable(fs.existsSync(path.join(root, DEPTH_TABLE_REL)) ? root : REPO_ROOT);
+    const forged = lowered.length > 0 && !loweredClaimAllowed(table, diffPaths(root, base));
+    if (missing.length === 0 && !forged) {
         process.stdout.write('✅  check_step_receipts: every step this diff ticks carries a receipt\n');
         return 0;
     }
-    const enforce = enforcing(loadDepthTable(REPO_ROOT).mode, argv);
+    const enforce = enforcing(table.mode, argv);
     const mark = enforce ? '❌' : '⚠️ ';
     for (const m of missing) {
         process.stdout.write(`${mark}  ${m.file}: step ${m.step} is ticked without a receipt\n`);
+    }
+    if (forged) {
+        for (const m of lowered) {
+            process.stdout.write(
+                `${mark}  ${m.file}: step ${m.step} claims a lowered depth (\`active\`) that this diff does not allow — ` +
+                    'the table must be active and every changed path structurally safe and of a flip class\n',
+            );
+        }
     }
     process.stdout.write(
         '   Append the line `./scripts-run src/scripts/step_receipt --range <base>..HEAD` prints to the step\n' +

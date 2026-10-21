@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { isStructurallySafe, rolledBackClasses, sampledForAudit, type AuditSample } from '../../src/scripts/_lib/depth_flip.js';
+import { isStructurallySafe, lowersSoFar, parseReceipt, rolledBackClasses, sampledForAudit, type AuditSample } from '../../src/scripts/_lib/depth_flip.js';
 import { loadAuditSamples, loadDepthTable, receiptFor, wouldSkip, type DepthTable } from '../../src/scripts/step_receipt.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -33,7 +33,7 @@ describe('step_receipt', () => {
 
     it('renders one marker line naming class, binding reason and would-skip', () => {
         const line = receiptFor(['docs/x.md'], null, table).line;
-        expect(line).toMatch(/^<!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->$/);
+        expect(line).toMatch(/^<!-- receipt: class=R0 · shadow · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->$/);
     });
 });
 
@@ -75,6 +75,9 @@ describe('depth flip — option (d): structurally safe paths, then the audit', (
             'src/skills/x/SKILL.md',
             'docs/contracts/x.md',
             'docs/decisions/ADR-1-x.md',
+            'docs/guidelines/php/x.md',
+            'agents/evidence/owner-directives/2026-10-21-x.md',
+            'agents/evidence/ratifications/x.md',
             'tests/scripts/x.test.ts',
             'agents/roadmaps/x.json',
         ]) {
@@ -106,9 +109,33 @@ describe('depth flip — option (d): structurally safe paths, then the audit', (
         expect(receiptFor(['tests/fixtures/x.json'], null, active, twoEscapes).mode).toBe('active');
     });
 
-    it('fewer samples than the floor never roll a class back', () => {
-        const few = Array.from({ length: 29 }, (_, i) => sample('R1', i, true));
-        expect(rolledBackClasses(few, table.flip.requires)).toEqual([]);
+    it('a breach among fewer samples than the floor rolls the class back at once; clean ones do not', () => {
+        const fewClean = Array.from({ length: 5 }, (_, i) => sample('R1', i));
+        expect(rolledBackClasses(fewClean, table.flip.requires)).toEqual([]);
+        expect(rolledBackClasses([sample('R1', 0, true, true)], table.flip.requires)).toEqual(['R1']);
+        expect(rolledBackClasses([sample('R1', 0, true), sample('R1', 1, true)], table.flip.requires)).toEqual(['R1']);
+        expect(rolledBackClasses([sample('R1', 0, true)], table.flip.requires)).toEqual([]);
+    });
+
+    it('the receipt says when a step sits in the flip scope, and parseReceipt reads it back', () => {
+        const safe = receiptFor(['agents/roadmaps/road-x.md'], null, table).line;
+        expect(safe).toContain('· shadow · scope=safe · would-skip=');
+        expect(parseReceipt(safe)).toEqual({ cls: 'R0', mode: 'shadow', safe: true });
+        const rule = receiptFor(['src/rules/x.md'], null, table).line;
+        expect(rule).not.toContain('scope=safe');
+        expect(parseReceipt(rule)).toEqual({ cls: 'R0', mode: 'shadow', safe: false });
+        expect(parseReceipt('no receipt here')).toBeNull();
+    });
+
+    it('lowersSoFar counts ticked active receipts of the class only', () => {
+        const text = [
+            '- [x] **1.1 a** <!-- receipt: class=R0 · active · scope=safe · would-skip=review · bound=x -->',
+            '- [x] **1.2 b** <!-- receipt: class=R0 · shadow · scope=safe · would-skip=review · bound=x -->',
+            '- [x] **1.3 c** <!-- receipt: class=R1 · active · scope=safe · would-skip=review · bound=x -->',
+            '- [ ] **1.4 d** <!-- receipt: class=R0 · active · scope=safe · would-skip=review · bound=x -->',
+        ].join('\n');
+        expect(lowersSoFar([text], 'R0')).toBe(1);
+        expect(lowersSoFar([text], 'R1')).toBe(1);
     });
 
     it('sampling is seeded and lands near 1 in 4, then near 1 in 10', () => {

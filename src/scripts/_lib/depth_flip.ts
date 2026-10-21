@@ -17,13 +17,14 @@ import type { RiskClass } from '../classify_change_risk.js';
  * Paths whose risk the path itself bounds.
  *
  * Narrower than R0 on purpose: R0 admits every `.md`, and in this repository a
- * rule, a skill or a contract is markdown that changes what agents do. Those
- * stay at full depth whatever their extension.
+ * rule, a skill, a contract, a guideline agents read before coding, or a record
+ * that grants authority (an owner directive, a ratification) is markdown that
+ * changes what agents do. Those stay at full depth whatever their extension.
  */
 export const SAFE_PATH_PATTERNS: readonly RegExp[] = [
     /^agents\/roadmaps\/.+\.md$/,
-    /^agents\/evidence\/.+\.md$/,
-    /^docs\/(?!contracts\/|decisions\/).+\.md$/,
+    /^agents\/evidence\/(?!owner-directives\/|ratifications\/).+\.md$/,
+    /^docs\/(?!contracts\/|decisions\/|guidelines\/).+\.md$/,
     /^README\.md$/,
     /(^|\/)tests?\/(.+\/)?fixtures?\//,
 ];
@@ -56,6 +57,34 @@ export interface AuditSample {
     date: string;
 }
 
+export interface ParsedReceipt {
+    cls: RiskClass;
+    mode: 'shadow' | 'active';
+    /** The receipt was written for a step whose every path is structurally safe. */
+    safe: boolean;
+}
+
+const RECEIPT_LINE = /<!--\s*receipt:\s*class=(R[0-3])\s*·\s*(shadow|active)\b([^>]*)-->/;
+
+export function parseReceipt(line: string): ParsedReceipt | null {
+    const m = RECEIPT_LINE.exec(line);
+    if (m === null) return null;
+    return { cls: m[1] as RiskClass, mode: m[2] as 'shadow' | 'active', safe: /·\s*scope=safe\b/.test(m[3] ?? '') };
+}
+
+/** Ticked steps of `cls` whose receipt reads `active` — the lowered steps so far, from the roadmaps themselves. */
+export function lowersSoFar(roadmapTexts: readonly string[], cls: RiskClass): number {
+    let n = 0;
+    for (const text of roadmapTexts) {
+        for (const line of text.split('\n')) {
+            if (!/^\s*-\s\[x\]\s/.test(line)) continue;
+            const r = parseReceipt(line);
+            if (r !== null && r.cls === cls && r.mode === 'active') n += 1;
+        }
+    }
+    return n;
+}
+
 /**
  * Whether the step is audited at full depth after merge: 1 in 4 of a class's
  * first `min_steps` lowered steps, 1 in 10 after. Seeded by the step key alone,
@@ -68,8 +97,10 @@ export function sampledForAudit(stepKey: string, lowersSoFar: number, threshold:
 }
 
 /**
- * Classes whose audit samples have broken the threshold. A class is read only
- * once it has `min_steps` samples, and from then on the latest `min_steps` decide.
+ * Classes whose audit samples have broken the threshold, read over the latest
+ * `min_steps` samples. A window still filling up is read too: a second escape
+ * or a critical among fewer samples has already broken the threshold, and
+ * waiting for thirty would keep a class lowered after it failed.
  */
 export function rolledBackClasses(samples: readonly AuditSample[], threshold: FlipThreshold): RiskClass[] {
     const byClass = new Map<RiskClass, AuditSample[]>();
@@ -78,7 +109,6 @@ export function rolledBackClasses(samples: readonly AuditSample[], threshold: Fl
     }
     const out: RiskClass[] = [];
     for (const [cls, all] of byClass) {
-        if (all.length < threshold.min_steps) continue;
         const window = all.slice(-threshold.min_steps);
         const escaped = window.filter((s) => s.escaped).length;
         const critical = window.filter((s) => s.critical).length;

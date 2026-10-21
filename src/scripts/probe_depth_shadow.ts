@@ -18,6 +18,7 @@
  *   ./scripts-run src/scripts/probe_depth_shadow [--since YYYY-MM-DD] [--reviews] [--json]
  *   ./scripts-run src/scripts/probe_depth_shadow --rounds   (severity by round, and per exact round)
  *   ./scripts-run src/scripts/probe_depth_shadow --flip-readiness   (per flip class: shadow steps, escapes, READY)
+ *   ./scripts-run src/scripts/probe_depth_shadow --audit-sample <roadmap.md#step> --class R0|R1   (sampled for a full audit?)
  *
  * Coverage counts only steps whose Done note carries a date on or after
  * `--since` (default: the day receipts were introduced); an undated tick
@@ -30,7 +31,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { changedPaths, classifyPaths, type RiskClass } from './classify_change_risk.js';
-import { rolledBackClasses, type FlipBlock } from './_lib/depth_flip.js';
+import { isStructurallySafe, lowersSoFar, parseReceipt, rolledBackClasses, sampledForAudit, type FlipBlock } from './_lib/depth_flip.js';
 import { loadAuditSamples, loadDepthTable } from './step_receipt.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -44,11 +45,14 @@ export const RECEIPTS_SINCE = '2026-10-21';
 export interface Coverage {
     ticked: number;
     byClass: Record<RiskClass, number>;
+    /** Receipts written for a step whose every path is structurally safe — the flip's own population. */
+    safeByClass: Record<RiskClass, number>;
     missing: number;
 }
 
 export function receiptCoverage(texts: readonly string[], since: string | null = null): Coverage {
     const byClass = { R0: 0, R1: 0, R2: 0, R3: 0 } as Record<RiskClass, number>;
+    const safeByClass = { R0: 0, R1: 0, R2: 0, R3: 0 } as Record<RiskClass, number>;
     let ticked = 0;
     let missing = 0;
     for (const text of texts) {
@@ -60,11 +64,15 @@ export function receiptCoverage(texts: readonly string[], since: string | null =
             }
             ticked += 1;
             const m = RECEIPT.exec(line);
-            if (m === null) missing += 1;
-            else byClass[m[1] as RiskClass] += 1;
+            if (m === null) {
+                missing += 1;
+                continue;
+            }
+            byClass[m[1] as RiskClass] += 1;
+            if (parseReceipt(line)?.safe === true) safeByClass[m[1] as RiskClass] += 1;
         }
     }
-    return { ticked, byClass, missing };
+    return { ticked, byClass, safeByClass, missing };
 }
 
 export interface ReviewRow {
@@ -247,11 +255,67 @@ export interface ClassReadiness {
     ready: boolean;
 }
 
+export interface FlipReview {
+    /** The squash commit's date, `YYYY-MM-DD`. */
+    date: string;
+    paths: string[];
+    rows: { round: number; sev: string }[];
+}
+
 /**
- * Whether each flip class clears the pre-registered threshold. Escapes count
- * high/critical rows rather than steps, so a step with two escaped rows counts
- * twice — the conservative direction. Without the review half (`escapes`
- * null) no class is ready: an unread escape rate is not a low one.
+ * Would-have-escaped rows inside the flip's own population: reviews of PRs
+ * merged on or after `since` whose every path is structurally safe, keyed by
+ * that PR's class. `null` — never zero — when the join itself failed, so an
+ * unreadable corpus cannot read as a clean one.
+ */
+export function flipEscapes(
+    reviews: readonly FlipReview[] | null,
+    since: string,
+): ReturnType<typeof reviewEscapes> | null {
+    if (reviews === null) return null;
+    const rows: ReviewRow[] = [];
+    for (const r of reviews) {
+        if (r.date < since || !isStructurallySafe(r.paths)) continue;
+        const cls = classifyPaths(r.paths).cls;
+        for (const row of r.rows) rows.push({ cls, round: row.round, sev: row.sev });
+    }
+    return reviewEscapes(rows);
+}
+
+/** Every completion review joined to its merged PR, or `null` when `git` or `gh` could not answer. */
+function readFlipReviews(root: string): FlipReview[] | null {
+    const log = spawnSync('git', ['log', '--first-parent', '--format=%H %cs %s', 'origin/main'], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 28 });
+    if (log.status !== 0) return null;
+    const squash = new Map<string, { sha: string; date: string }>();
+    for (const l of log.stdout.split('\n')) {
+        const m = /^(\w+) (\d{4}-\d{2}-\d{2}) .*\(#(\d+)\)$/.exec(l);
+        if (m && !squash.has(m[3]!)) squash.set(m[3]!, { sha: m[1]!, date: m[2]! });
+    }
+    if (squash.size === 0) return null;
+    const bySlug = new Map<string, CorpusRow[]>();
+    for (const r of parseReviewCorpus(path.join(root, 'agents', 'evidence', 'reviews'))) {
+        bySlug.set(r.slug, [...(bySlug.get(r.slug) ?? []), r]);
+    }
+    const out: FlipReview[] = [];
+    for (const rows of bySlug.values()) {
+        const diff = rows.find((r) => r.diff !== undefined)?.diff;
+        if (diff === undefined) continue;
+        const gh = spawnSync('gh', ['pr', 'list', '--state', 'merged', '--search', diff, '--json', 'number', '-q', '.[0].number'], { encoding: 'utf8' });
+        if (gh.status !== 0) return null;
+        const merged = squash.get(gh.stdout.trim());
+        if (merged === undefined) continue;
+        out.push({ date: merged.date, paths: changedPaths(`${merged.sha}^..${merged.sha}`, root), rows: rows.map((r) => ({ round: r.round, sev: r.sev })) });
+    }
+    return out;
+}
+
+/**
+ * Whether each flip class clears the pre-registered threshold, over the flip's
+ * own population: receipts carrying `scope=safe`, and escapes from
+ * structurally safe PRs. Escapes count high/critical rows rather than steps, so
+ * a step with two escaped rows counts twice — the conservative direction.
+ * Without the review half (`escapes` null) no class is ready: an unread escape
+ * rate is not a low one.
  */
 export function flipReadiness(
     coverage: Coverage,
@@ -259,7 +323,7 @@ export function flipReadiness(
     flip: FlipBlock,
 ): ClassReadiness[] {
     return flip.classes.map((cls) => {
-        const steps = coverage.byClass[cls];
+        const steps = coverage.safeByClass[cls];
         const escaped = escapes === null ? null : escapes[cls].escaped;
         const critical = escapes === null ? null : escapes[cls].critical;
         const ready =
@@ -273,11 +337,26 @@ export function flipReadiness(
 }
 
 export function main(argv: readonly string[]): number {
+    const ai = argv.indexOf('--audit-sample');
+    if (ai >= 0) {
+        const step = argv[ai + 1];
+        const cls = argv[argv.indexOf('--class') + 1];
+        if (step === undefined || argv.indexOf('--class') < 0 || (cls !== 'R0' && cls !== 'R1')) {
+            process.stderr.write('usage: probe_depth_shadow --audit-sample <roadmap.md#step> --class R0|R1\n');
+            return 2;
+        }
+        const lowered = lowersSoFar(roadmapTexts(REPO_ROOT), cls);
+        const sampled = sampledForAudit(step, lowered, loadDepthTable(REPO_ROOT).flip.requires);
+        process.stdout.write(
+            `probe:audit-sample · ${step} · ${cls} · ${String(lowered)} lowered so far · ${sampled ? 'SAMPLED — run a full round-1 review' : 'not sampled'}\n`,
+        );
+        return 0;
+    }
     if (argv.includes('--flip-readiness')) {
         const flip = loadDepthTable(REPO_ROOT).flip;
         const readiness = flipReadiness(
             receiptCoverage(roadmapTexts(REPO_ROOT), RECEIPTS_SINCE),
-            reviewEscapes(readReviewRows(REPO_ROOT)),
+            flipEscapes(readFlipReviews(REPO_ROOT), RECEIPTS_SINCE),
             flip,
         );
         for (const r of readiness) {

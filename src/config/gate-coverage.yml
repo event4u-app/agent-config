@@ -2796,11 +2796,13 @@ gates:
       own range, so there is no committed path list that can go stale. An
       unreadable base exits 2 rather than reporting zero.
 
-      SELF-TEST ADOPTED: 5 cases, 2 rejecting, against the real CLI over a
-      throwaway repository — a step ticked without a receipt and a new roadmap
-      arriving ticked must RED; a receipted tick, a reworded older tick and a
-      diff with no roadmap must stay GREEN. Sensitivity observed: dropping the
-      receipt condition turns both rejecting cases and the two unit cases red.
+      SELF-TEST ADOPTED: 6 cases, 3 rejecting, against the real CLI over a
+      throwaway repository — a step ticked without a receipt, a new roadmap
+      arriving ticked, and a hand-written receipt claiming `active` that the
+      diff does not allow must RED; a receipted tick, a reworded older tick and
+      a diff with no roadmap must stay GREEN. Sensitivity observed: dropping the
+      receipt condition turns the first two rejecting cases and two unit cases
+      red; allowing every lowered claim turns the third red.
       The self-test passes `--enforce`; the CI call does not, so while the
       depth table is in shadow mode a finding is reported and exits 0, and from
       the flip on it exits 1 — blocking exactly when a lowered depth exists.
@@ -2812,7 +2814,7 @@ gates:
       committed, and the violation is a CHANGE of one line from unticked to
       ticked, which an added file without a base version cannot represent
       except as a new roadmap. Discrimination is proven by the gate's own
-      `--self-test` (5 cases, 2 rejecting), which builds both shapes.
+      `--self-test` (6 cases, 3 rejecting), which builds these shapes.
 
   - id: check_agent_artifact_location
     argv: []
