@@ -132,6 +132,13 @@ export interface DefectFinding {
     mechanism?: string;
     /** One bounded line naming what would refute the claim; a retro's `Candidate.falsifier`. Never leaves. */
     falsifier?: string;
+    /**
+     * The retro unit keys that named this record (`docs/contracts/retro-v1.md`).
+     * Local bookkeeping only, like `release_errors`: no renderer reads it and
+     * the fingerprint ignores it, so it joins a record to the finished work it
+     * came from without widening what can leave the machine.
+     */
+    unit_keys?: string[];
 }
 
 /** `principle` shape: non-empty lowercase segments joined by single `/`, `.`, `_` or `-`; at most 80 characters. */
@@ -825,6 +832,7 @@ export function mergeRecord(
     if (existing !== null && existing.fingerprint === fp) {
         const target = _mergeIds(existing.target, finding.target);
         const proposes = _mergeIds(existing.proposes, finding.proposes);
+        const unitKeys = _mergeIds(existing.unit_keys, finding.unit_keys);
         const merged: DefectRecord = {
             ...existing,
             last_seen: now,
@@ -835,6 +843,7 @@ export function mergeRecord(
             status: 'open',
             ...(target.length > 0 ? { target } : {}),
             ...(proposes.length > 0 ? { proposes } : {}),
+            ...(unitKeys.length > 0 ? { unit_keys: unitKeys } : {}),
             // A detector-opened record that a retro later names keeps the name.
             ...claimFields(existing, finding),
         };

@@ -1,0 +1,14 @@
+{
+  "skill": "competitive-positioning",
+  "last_eval": "2026-10-20",
+  "description": "3 should-trigger + 4 should-not-trigger. Should-trigger covers the ours-vs-theirs verdict table against a named peer, weighing one of their patterns for adoption, and a German phrasing. Should-not-trigger covers the three near-miss neighbours this skill's own section When to use routes away — a general audit of someone else's repo (analyze-reference), deciding whether to push our work upstream (upstream-contribute), and valuation work (dcf-modeling) — plus one unrelated counterexample.",
+  "queries": [
+    {"q": "how do we compare to that other agent-config package — I want an ours-vs-theirs table, not a vibes summary", "trigger": true, "class": "exemplar"},
+    {"q": "should we adopt their citation registry pattern, and what does it cost us if we do", "trigger": true, "class": "exemplar"},
+    {"q": "wie stehen wir im Vergleich zu dem Konkurrenzpaket — bitte eine Entscheidungstabelle", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "deep-dive this external repo and produce an adoption plan for the whole thing", "trigger": false, "class": "near-miss", "note": "a general audit of a foreign repo is analyze-reference; this skill positions ours against theirs"},
+    {"q": "should we contribute this rule back to the upstream project", "trigger": false, "class": "near-miss", "note": "upstream-contribute owns the push-our-work-out decision, not the compare-against-them one"},
+    {"q": "what is that competitor worth — run a DCF on them", "trigger": false, "class": "near-miss", "note": "valuation is dcf-modeling; naming a competitor is not enough to make it positioning"},
+    {"q": "rename this variable across the module", "trigger": false, "class": "counterexample"}
+  ]
+}

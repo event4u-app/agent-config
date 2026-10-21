@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const DOORS = ['repo', 'and-optimize', 'pr', 'inbox'] as const;
+const DOORS = ['reference', 'and-optimize', 'pr', 'inbox'] as const;
 
 function door(name: string): string {
     return fs.readFileSync(

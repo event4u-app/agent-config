@@ -91,6 +91,16 @@ private recovery-ref namespace precedent `refs/agent-config/rewrites/` (archived
 > `road-to-typed-grants-that-persist` blocker `kernel-guard-first-crossing` (open); 4.5 waits
 > on that roadmap's 3.1 (itself `[~]`); 4.6's blocker is resolved, but the vote is a branch of
 > the 4.1 concern, which does not exist yet.
+>
+> **Drain screen, 2026-10-21 (`/roadmap:process-full`, branch `drain/hard-floor-20261021`).**
+> Phase 0 continued from the 2026-10-18 branch through four more review rounds and is
+> **ratified by both seats at round 9**; this pass lands it, alone, as Q1 requires. Phases 1–6
+> are not started here: Q1 puts Phase 0 in its own PR first, and each later step touches a gated
+> hook surface that needs its own cleared review, so they follow in later PRs. The bundle ceiling
+> no longer constrains their order (82 KB of headroom after chunking, measured below). Deferred
+> items re-checked by executing their conditions: `kernel-guard-first-crossing` is still
+> `Status: open` with no maintainer-authored kernel commit (1.9, 7.5), typed-grants 3.1 is still
+> `[~]` (4.5), and 4.6 still needs the 4.1 concern.
 
 ## Design principles
 
@@ -123,30 +133,57 @@ Lands alone, first, as its own PR. It withdraws the allow **only** from irrevers
 from targets outside the working tree. Reversible in-tree forms keep their allow, so this phase
 adds no prompt — neither an agent question nor a host prompt — on reversible work.
 
-- [ ] **0.1 `git branch` keeps its allow except where it loses a ref.** Not category A: `-d`,
+- [x] **0.1 `git branch` keeps its allow except where it loses a ref.** Not category A: `-d`,
       `-D`, `--delete`, `-f`/`--force`, `-M`, `-C`, and `-m`/`--move` onto an existing name.
       Still category A: list forms and creating a new branch.
       verify: `npx vitest run tests/hooks/permission_decision.test.ts --reporter=verbose` -> /✓.*branch-loses-a-ref/
-- [ ] **0.2 Bash path arguments get the read tools' confinement.** Every path-shaped argument
+- [x] **0.2 Bash path arguments get the read tools' confinement.** Every path-shaped argument
       (absolute, `~`, `..`-escaping, or `--flag=<path>`) must resolve inside the working tree
       through the same `isInsideWorkingTree` the read branch uses (`category_a.ts:143`, `:276-282`).
       verify: `npx vitest run tests/hooks/permission_decision.test.ts --reporter=verbose` -> /✓.*bash-path-confinement/
-- [ ] **0.3 Output-writing flags count as paths.** A closed list per safe head: `--output`,
+- [x] **0.3 Output-writing flags count as paths.** A closed list per safe head: `--output`,
       `--output-directory` (git), `-o` (sort), `-fprint`/`-fprintf`/`-fls` (find), `--write`/`-w`
       (prettier, biome), `--fix` (eslint, stylelint, ruff, rubocop), `--outDir`/`--outFile` (tsc),
       as tokens and as `--flag=value`. Their target goes through 0.2; inside the tree the command
       stays category A.
       verify: `npx vitest run tests/hooks/permission_decision.test.ts --reporter=verbose` -> /✓.*output-flags-are-paths/
-- [ ] **0.4 The allow says what it checked.** The reason string at `permission_gate.ts:112-114`
+- [x] **0.4 The allow says what it checked.** The reason string at `permission_gate.ts:112-114`
       names the confinement only when 0.2 actually ran for that call.
       verify: `npx vitest run tests/hooks/permission_decision.test.ts --reporter=verbose` -> /✓.*reason-names-what-was-checked/
-- [ ] **0.5 Rows, both polarities, and sensitivity.** Every D2 row lands as a `false` case and
+- [x] **0.5 Rows, both polarities, and sensitivity.** Every D2 row lands as a `false` case and
       `git branch`, `git branch -a`, `git branch new`, `cat src/x.ts`, `prettier --write src`,
       `eslint --fix .` as `true` cases; reverting each of 0.1–0.3 reds its own rows.
       verify: `npx vitest run tests/hooks/permission_decision.test.ts` -> 0
 
 D3 (names standing in for bodies) closes in 2.4, behind the segmenter: withdrawing the allow
 before then would put a host prompt on every `npm run build`.
+
+**Delivered 2026-10-18, stricter than written in two places.** (1) 0.1: after the
+modification review (`agents/evidence/council/hard-floor-phase0-review-20261018.question.md`
+and its round-2 sibling), `git branch` is an allowlist of **observational** forms only —
+listing, `-a`/`-r`/`-v`, `--show-current`, `--merged`/`--contains` filters. Creating a branch
+(`git branch new`, `-c`, `-u`, `--edit-description`) writes a ref and is no longer category
+A, so the step text's "still category A: … creating a new branch" no longer holds; `-m` is
+withdrawn on every target because target existence is a repository fact. The cost is the
+host's own confirmation on those forms, never a question from this package. (2) 0.3: no
+per-head table. The walk confines every spelling — a separate value token is a positional,
+`--flag=value` an inline value, `-o/path` the tail of a single-dash token, `--write`/`--fix`
+write their positionals — and a table of them was measured inert (removing it redded
+nothing). Added from the review: everything after `--` is a positional, a dash-led token
+containing `/` is a path (it may be the previous option's value, `sort -o --/../x`), an unquoted
+glob (`*`, `?`, `[`) is refused because its expansion is never seen (`ls src/*.ts` pays a host prompt), and confinement follows symlinks in
+both branches (an in-tree link to `~/.ssh` is outside) — the classifier's one filesystem read,
+which can only withhold. Fixed in passing: `isInsideWorkingTree` read `./...` (and any name
+starting `..`) as an escape. Every mechanism has a sensitivity probe that reds its own rows.
+**Bundle cost: +3,581 B, leaving 106 B under the ceiling** — the next bundled addition needs
+1.8's parser deletion first, or an owner-logged raise. *Re-measured 2026-10-21 at
+`main@18f66f61d` plus this phase: 1,467,694 B of 1,550,000 B (the bundle has since been
+chunked), so the ceiling no longer orders 1.1–1.7 behind 1.8.* **Ratified 2026-10-21 at
+round 9, both seats** (`agents/evidence/ratifications/drain-hard-floor-20261021.md`).
+Rounds 5–8 found and this pass fixed, test-first: an in-tree **dangling** symlink read as a
+missing suffix; the new `lstat` probe able to throw out of the classifier; the resolution
+sentinel refused only by an unchanged line; and `date` exempt from argument inspection although
+`-f`/`-r` open a path.
 
 ## Phase 1 — One segmenter
 

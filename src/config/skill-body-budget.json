@@ -45,7 +45,7 @@
     "command-writing": 14711,
     "comp-banding": 11846,
     "competitive-moat-analysis": 10450,
-    "competitive-positioning": 6300,
+    "competitive-positioning": 6315,
     "complexity-first-planning": 6243,
     "composer-packages": 4858,
     "condense-memory": 11220,
@@ -159,7 +159,7 @@
     "laravel-validation": 3325,
     "laravel-websocket": 2519,
     "launch-readiness": 9508,
-    "learning-to-rule-or-skill": 16321,
+    "learning-to-rule-or-skill": 16325,
     "learning-tutor": 10027,
     "legal-intake-triage": 7217,
     "legal-practice-profile": 12921,
@@ -173,7 +173,7 @@
     "logging-monitoring": 12016,
     "logo-generation": 5790,
     "market-entry-analysis": 10016,
-    "markitdown": 14433,
+    "markitdown": 14443,
     "mcp": 9204,
     "mcp-builder": 6833,
     "md-language-check": 5084,
@@ -254,7 +254,7 @@
     "refine-prompt": 13022,
     "refine-ticket": 17500,
     "release-comms": 8198,
-    "repomix-packer": 5417,
+    "repomix-packer": 5427,
     "requesting-code-review": 7845,
     "retention-loops": 8227,
     "review-routing": 7896,
@@ -621,6 +621,30 @@
       "old": 11165,
       "new": 11333,
       "reason": "One taught line under the visual-regression section: baseline updates are shown as a diff and land in a commit of their own, on the pinned Docker renderer. road-to-a-canvas-the-code-owns 7.3."
+    },
+    {
+      "skill": "competitive-positioning",
+      "old": 6300,
+      "new": 6315,
+      "reason": "The analyze-repo door took its decided name analyze-reference, and every route line to it is four to ten bytes longer. road-to-an-analysis-family-that-deepens-itself."
+    },
+    {
+      "skill": "learning-to-rule-or-skill",
+      "old": 16321,
+      "new": 16325,
+      "reason": "The analyze-repo door took its decided name analyze-reference, and every route line to it is four to ten bytes longer. road-to-an-analysis-family-that-deepens-itself."
+    },
+    {
+      "skill": "markitdown",
+      "old": 14433,
+      "new": 14443,
+      "reason": "The analyze-repo door took its decided name analyze-reference, and every route line to it is four to ten bytes longer. road-to-an-analysis-family-that-deepens-itself."
+    },
+    {
+      "skill": "repomix-packer",
+      "old": 5417,
+      "new": 5427,
+      "reason": "The analyze-repo door took its decided name analyze-reference, and every route line to it is four to ten bytes longer. road-to-an-analysis-family-that-deepens-itself."
     }
   ]
 }

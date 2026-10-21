@@ -258,11 +258,16 @@ describe('the vocabulary is the corpus for (c), so an empty one is a dead scope'
     });
 });
 
+/** Visible commands added after the grandfathered corpus; each passes the gate in full. */
+const COMPLIANT_SINCE: readonly string[] = ['retro'];
+
 describe('the live tree', () => {
     it('is green, and the corpus is the measured 23 — not the roadmap\'s 61', () => {
         const { findings, scanned } = evaluate(REPO);
         expect(findings).toEqual([]);
-        expect(scanned).toBe(23);
+        // The 23 grandfathered commands, plus every command added since, which
+        // has to pass the gate in full (today: `retro`, ADR-292).
+        expect(scanned).toBe(23 + COMPLIANT_SINCE.length);
     });
 
     it('IN_SCOPE_VISIBILITY is the two values command.schema.json calls user-facing', () => {
@@ -274,15 +279,21 @@ describe('the live tree', () => {
         // here means a future reader cannot re-derive the wrong denominator.
         expect(GRANDFATHERED.presence).toHaveLength(18);
         expect(GRANDFATHERED.whyLine).toHaveLength(5);
-        const live = collectCommands(REPO).map((c) => c.name).sort();
+        const live = collectCommands(REPO)
+            .map((c) => c.name)
+            .filter((n) => !COMPLIANT_SINCE.includes(n))
+            .sort();
         expect(live).toHaveLength(23);
         expect([...GRANDFATHERED.presence, ...GRANDFATHERED.whyLine].sort()).toEqual(live);
     });
 
-    it('not one shipped command carries a Why line today — the (c) grandfather is total', () => {
+    it('not one grandfathered command carries a Why line today — the (c) grandfather is total', () => {
         // The finding that made forward-only the only workable posture: the
-        // sections that exist are bare fences.
-        const withSection = collectCommands(REPO).filter((c) => c.examples !== null);
+        // sections that exist are bare fences. Commands added since are held to
+        // the full gate, Why line included, so they are not part of this claim.
+        const withSection = collectCommands(REPO).filter(
+            (c) => c.examples !== null && !COMPLIANT_SINCE.includes(c.name),
+        );
         expect(withSection).toHaveLength(5);
         for (const c of withSection) {
             expect(c.examples).not.toContain('**Why it works:**');

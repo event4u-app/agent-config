@@ -1,11 +1,11 @@
 ---
 model_tier: high
-name: analyze-repo
+name: analyze-reference
 pack: analysis-workbench
 visibility: internal
-sub: repo
+sub: reference
 cluster: analyze
-replaces: [analyze-reference-repo, analyze:reference-repo]
+replaces: [analyze-repo, analyze:repo, analyze-reference-repo, analyze:reference-repo]
 skills: [project-analyzer, learning-to-rule-or-skill]
 description: Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 argument-hint: "<source>… [--emit-prompts] [--mode=plan|execute] [--loops=N] [--focus=<area>] [--deep] [--refresh] [--no-roadmap]"
@@ -25,7 +25,7 @@ packs:
   - meta
 ---
 
-# analyze-repo
+# analyze-reference
 
 Analyze a **different** repository (a competitor, a reference implementation, or
 a project the user admires) and produce a structured document that anchors on
@@ -425,7 +425,7 @@ Structure:
 - **Fetched commit:** {sha} ({date})
 - **Own-tree SHA:** {sha}
 - **Focus:** {full | area}  ·  **Depth:** {surface | deep}
-- **Analyst:** agent via `/analyze-repo`
+- **Analyst:** agent via `/analyze:reference`
 
 ## Anchor table
 
