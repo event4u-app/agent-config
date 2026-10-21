@@ -1,12 +1,12 @@
 # Findings: advisories-fixes-worktree-cleanup
-<!-- completion-review: v1 | reviewed: 2026-10-21 | scope: 0683705a18630d06e16f5b415f14d40d3207f74bcf7f37537dd5cfb6616ba494 | diff: 6f3b86bbb70492598dc9a4c1b0d500859537fefd | reviewer: r2-fresh-subagent-advisories-fixes-worktree-cleanup | prompt_hash: 423afd1f09086444a2ca7ee32e9b50dc9ca79a4b39f731d44691505c0bc57277 | round: 5 -->
+<!-- completion-review: v1 | reviewed: 2026-10-21 | scope: bb439752e36e3de576566b2407bae4a0ddc4e29a0b2897934c5b553a31b022b8 | diff: 6f3b86bbb70492598dc9a4c1b0d500859537fefd | reviewer: r2-fresh-subagent-advisories-fixes-worktree-cleanup | prompt_hash: 423afd1f09086444a2ca7ee32e9b50dc9ca79a4b39f731d44691505c0bc57277 | round: 5 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-advisories-fixes-worktree-cleanup"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-21 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: 6f3b86bbb70492598dc9a4c1b0d500859537fefd
-  scope_hash: 0683705a18630d06e16f5b415f14d40d3207f74bcf7f37537dd5cfb6616ba494
+  scope_hash: bb439752e36e3de576566b2407bae4a0ddc4e29a0b2897934c5b553a31b022b8
   roadmap: agents/roadmaps/road-to-advisories-heard-the-same-day.md
   roadmap_hash: c043b3d11356f6d604727cb9a593387ecdcb5b84e8d808ddff0e352e9fc21d5c
   ac_hash: 062dd56c8af3ba9237afb8e4449f7a632ed669eb79c3be8d48db524e165eb96a
