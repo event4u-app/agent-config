@@ -249,8 +249,12 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 9 |
 | B — consent | 3 |
-| C — guarded | 102 |
-| **Total** | **114** |
+| C — guarded | 100 |
+| **Total** | **112** |
+
+It fell to 112 on 2026-10-20 when `road-to-a-setup-that-decides-itself` removed the three projection keys the package now decides itself — `lean_projection.mode`, `lean_projection.hosts` and `projection.rule_workspaces` (two `derivable`, one `policy`, all C). Each carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged.
+
+It rose to 115 on 2026-10-20 when `road-to-a-retro-the-merge-runs` step 0.2 added `retro.enabled` (ADR-292) — one C, `consent`: it arms automatic producers on the merge, push and first-session paths, and it ships `true` by the owner's directive of 2026-10-12, which is the documented-decision shape `continuity.auto_record` already has. A class-B key could not carry that default; the class C fence keeps an agent from switching it either way, and `MERGEABLE_KEYS` lets a user-global `false` hold.
 
 It rose to 114 on 2026-10-20 when `road-to-an-update-that-installs-itself-only-when-it-is-safe` step 4.1 added `update.mode` — one C, `consent`: it is a standing authorisation to replace the user's global install, and `auto` is an action they cannot un-see, so no agent write path may reach it. An absent key resolves to `notify`, which installs nothing.
 
@@ -397,11 +401,11 @@ the template, which is the drift this contract exists to prevent.
 
 | Disposition | Keys |
 |---|---|
-| derivable | 37 |
+| derivable | 35 |
 | un-inferrable | 10 |
-| consent | 49 |
-| policy | 18 |
-| **Total** | **114** |
+| consent | 50 |
+| policy | 17 |
+| **Total** | **112** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -500,12 +504,9 @@ Rows follow template order, so a diff against the template reads straight down.
 | `agent_config_version` | C | `""` | installer-owned pin selecting which package code executes | derivable — the installed package's own `package.json` version; `check_template_pin_drift` already enforces pin == package.json |
 | `profile.id` | C | `developer` | master axis selecting the projected skill and command surface | un-inferrable |
 | `projection.mode` | C | `scoped` | governs which artefacts reach the host trees at all | derivable — the resolved active-profile + `runtime.active_packs` set `_resolve_scoped_projection` already computes |
-| `projection.rule_workspaces` | C | 9 workspaces | allowlist deciding which rules reach the agent | derivable — the rule's own `workspaces:` frontmatter intersected with the active profile/pack set, as `rule_scope.ts` already performs for `rule_packs: auto` |
 | `projection.rule_packs` | C | `[]` | second allowlist axis on rule projection | derivable — the `auto` derivation already implemented in `src/install/rule_scope.ts` |
 | `discipline_profile` | C | `__DISCIPLINE_PROFILE__` | master switch for the discipline rule tier | derivable — its own `auto` resolution against `src/config/host-capabilities.yml` |
 | `rule_loading_tier` | C | `__RULE_LOADING_TIER__` | legacy master switch for rule loading | derivable — `discipline_profile` supersedes it with a documented mapping (minimal→off, balanced→essential, full→full) |
-| `lean_projection.mode` | C | `delivery` | `thin` and `delivery` remove rule bodies from the agent's standing context. Two defaults, and this column carries the template one: the shipped template has said `delivery` since ADR-267, while the parser fallback for a value that resolves from no layer stays `eager-all` (ADR-267 decision 4) | derivable — `probe_host_compliance.ts` already computes the per-host thin/eager recommendation |
-| `lean_projection.hosts` | C | `[claude-code]` | decides WHICH hosts a thinning mode may thin, so an added id removes rule bodies from that host's context | policy — the value is a package-level decision the tree already holds: ADR-267 scopes the shipped `delivery` flip to `claude-code` alone. NOT `derivable`, and the distinction is the whole reason for this row: the mechanism that would compute an admissible host set, `admissibleUnderE3` in `src/scripts/_lib/injection_effect.ts`, admits **nothing** today — `src/config/host-injection-effect.json` carries 1 `observed-false` and 8 `unobserved` rows and no `observed-true` — so a derivation would yield `[]` rather than the shipped `[claude-code]`. Naming a mechanism that returns empty as the replacement would put a key in the deletion queue whose deletion would silently change the default. Move target: the ADR plus that census, once a host earns an `observed-true` row |
 | `cost.budgets.daily` | C | `0` | rolling spend ceiling | consent |
 | `cost.budgets.weekly` | C | `0` | rolling spend ceiling | consent |
 | `cost.budgets.monthly` | C | `0` | rolling spend ceiling | consent |
@@ -586,6 +587,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `commands.create_pr.screenshots` | C | `false` | puts captured screenshots into a published PR body | consent |
 | `continuity.auto_record` | C | `"on"` | arms an automatic producer on the normal session-end path | consent |
 | `continuity.run_checkpoints` | C | `"on"` | disabling it removes a recovery artifact a killed run resumes from | consent |
+| `retro.enabled` | C | `true` | arms automatic producers on the merge, push and first-session paths (ADR-292) | consent |
 | `memory.redact_patterns` | C | `[]` | deny-list of secret and PII regexes | policy |
 | `memory.session_index` | A | `"off"` | injects a compact index at session start | derivable — the row cap and index cost the mechanism already computes; the flag only holds an unproven ship-criterion open |
 | `memory.learn_on_session_end` | B | `false` | turns on automatic memory writes at session end | consent |

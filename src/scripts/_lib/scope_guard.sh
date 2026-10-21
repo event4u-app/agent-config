@@ -75,12 +75,64 @@ installed_version_at() {
     echo "unknown"
 }
 
-# Heuristic: does this look like an agent-config install (vs a vanilla user
-# directory with the same path layout)? We accept "looks like" if the tool
-# directory contains ≥ N entries that ALSO exist in the SOURCE_DIR tree —
-# but we keep the check coarse: simply that the directory is non-empty.
 dir_nonempty() {
     [[ -d "$1" ]] && [[ -n "$(ls -A "$1" 2>/dev/null | head -1)" ]]
+}
+
+# Entry names with their extension stripped, so a skill directory `foo`, a rule
+# `foo.md` and its Cursor projection `foo.mdc` compare as the same name.
+entry_stems() {
+    ls -A "$1" 2>/dev/null | sed 's/\.[^.]*$//' | sort -u
+}
+
+# The names this package ships into a host directory: its skills and its rules.
+shipped_stems() {
+    {
+        ls -A "$SOURCE_DIR/dist/agent-src/skills" 2>/dev/null
+        ls -A "$SOURCE_DIR/dist/agent-src/rules" 2>/dev/null
+    } | sed 's/\.[^.]*$//' | sort -u
+}
+
+# Does the deploy ledger record agent-config writing a file under this
+# directory? The ledger (`deployed-files.json`) is the ownership proof the
+# reaper already trusts to delete safely, so it is the authoritative answer.
+# Needs node to read JSON; without node this returns "no evidence", and the
+# shipped-name test below still runs.
+ledger_owns() {
+    local tool="$1" dir="$2"
+    command -v node >/dev/null 2>&1 || return 1
+    local inv="${AGENT_CONFIG_DEPLOY_INVENTORY:-${EVENT4U_CONFIG_HOME:-$HOME/.event4u/agent-config}/deployed-files.json}"
+    [[ -f "$inv" ]] || return 1
+    node -e '
+        const fs = require("fs"), path = require("path");
+        const [inv, tool, dir, home] = process.argv.slice(1);
+        let d;
+        try { d = JSON.parse(fs.readFileSync(inv, "utf8")); } catch { process.exit(1); }
+        const e = (d && d.tools && d.tools[tool]) || null;
+        if (!e || typeof e.anchor !== "string" || !Array.isArray(e.files)) process.exit(1);
+        const anchor = e.anchor === "~" ? home : e.anchor.startsWith("~/") ? path.join(home, e.anchor.slice(2)) : e.anchor;
+        const want = path.resolve(dir) + path.sep;
+        process.exit(e.files.some((f) => path.resolve(anchor, f).startsWith(want)) ? 0 : 1);
+    ' "$inv" "$tool" "$dir" "$HOME" 2>/dev/null
+}
+
+# Is this directory an agent-config install, as opposed to a host directory
+# that merely holds someone else's files? It used to answer "yes" for ANY
+# non-empty directory, and a host directory such as `~/.claude/skills` has no
+# `package.json` beside it, so the version read `unknown` and `unknown` is
+# DRIFT: a machine whose only Claude skill was a foreign integration was told
+# it had a conflicting agent-config install, and the install stopped.
+#
+# Ownership now needs evidence: the ledger records a file we wrote there, or at
+# least one entry carries a name this package ships. Either is enough. The
+# second covers installs older than the ledger; the first covers an old install
+# whose every name has since been renamed. Foreign entries beside ours never
+# hide ours, because one shared name is sufficient.
+ac_owns_dir() {
+    local tool="$1" dir="$2"
+    dir_nonempty "$dir" || return 1
+    ledger_owns "$tool" "$dir" && return 0
+    [[ -n "$(comm -12 <(entry_stems "$dir") <(shipped_stems) 2>/dev/null | head -1)" ]]
 }
 
 # Count entry names present in BOTH scope directories — what a same-version
@@ -139,7 +191,7 @@ probe_tool() {
         other_scope="project"
     fi
 
-    if ! dir_nonempty "$other_path"; then
+    if ! ac_owns_dir "$tool" "$other_path"; then
         printf 'OK\t%s\t-\t-\t%s\n' "$tool" "$(this_version)"
         return
     fi

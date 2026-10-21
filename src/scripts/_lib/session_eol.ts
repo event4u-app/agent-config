@@ -28,6 +28,9 @@
  * `scanEolSlice` accepts prior counters and only the newly appended complete
  * lines (`readNewCompleteLines`). A full rescan is only ever the bounded
  * 50 MB `isSafeTranscriptPath` cap away.
+ *
+ * loss_class: recoverable-lossy
+ * loss_recovery: the transcript JSONL itself — `readNewCompleteLines` returns only the bytes after `fromByte`, cut at the last complete line, and the rest stays in the file at its byte offsets.
  */
 
 import * as crypto from 'node:crypto';

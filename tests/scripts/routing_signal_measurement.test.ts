@@ -143,7 +143,12 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 35 -> 36 on 2026-10-18b: road-to-steps-the-skill-cannot-skip AC-1
         // touched ten skills that owed a corpus. `condense-memory` is 0x01 = 1
         // and seals; the other nine train. The claim's scope moves to 18 of 36.
-        expect(sealed.length).toBe(36);
+        //
+        // 36 -> 37 on 2026-10-20: road-to-an-analysis-family-that-deepens-itself
+        // step 6.2b renamed the source door, rewriting two routing-away links in
+        // `competitive-positioning`, which owed a corpus. It is 0x21 = 33 and
+        // seals. The claim's scope moves to 18 of 37.
+        expect(sealed.length).toBe(37);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -331,9 +336,12 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // `condense-memory` (0x01 = 1) seals (35 -> 36), nine train (122 -> 131).
         //
         // 167 -> 168 on 2026-10-19: `playwright-testing` (0x61 = 97) trains (131 -> 132).
+        //
+        // 168 -> 169 on 2026-10-20: `competitive-positioning` (0x21 = 33) SEALS
+        // (36 -> 37); the train set stays at 132, so no train-side measurement moves.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(168);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(36);
+        expect(all.length).toBe(169);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(37);
     });
 });
 

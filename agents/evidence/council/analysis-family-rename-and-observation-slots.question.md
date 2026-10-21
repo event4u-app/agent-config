@@ -31,7 +31,7 @@ and give the reason and what would change your answer.
   owner"; (2) the outbound fetch of the third-party reference - since 2026-10-15
   the owner's answer says an invocation that names a source authorises the
   read-only fetch of exactly that source for that run.
-- The command file today is `src/domains/analysis-workbench/analyze/repo/command.md`
+- The command file today is `src/domains/analysis-workbench/analyze/repo/command.md` <!-- ref-ignore -->
   (name `analyze-repo`, alias `analyze:reference-repo`). It was already renamed
   once on 2026-09-07 (`reference-repo` -> `repo`, commit `8488bf078`), after
   registration; the observation roadmap lists that rename among five known

@@ -76,18 +76,28 @@ describe('doctor — rule-scope-drift check', () => {
         expect(res['message']).toContain('3 rules');
     });
 
-    it('legacy-all settings only flag the compat exclusion (source-of-truth.md)', () => {
-        writeSettings(null); // no projection.rule_workspaces → legacy-all
+    it('legacy-all settings still exclude a maintainer-only rule — the workspace axis is a RULE, not a setting', () => {
+        // CHANGED by step 4.6 and only now asserted. This case used to read
+        // "only flag the compat exclusion" and expected `kernel-rule-edits.md`
+        // to SHIP under legacy-all, because the workspace axis came from
+        // `projection.rule_workspaces` and an absent block switched it off.
+        // 4.6 made it derived: `ruleScopeFromSettings` returns
+        // `{ ...LEGACY_ALL, workspaces: derivedWorkspaces }`, so a settings
+        // file that omits a section can no longer hand a consumer the
+        // maintainer-only rules. That is the whole point of the step — "a rule
+        // is not a setting" — and this assertion is STRONGER than the one it
+        // replaces: it requires an exclusion the old one forbade.
+        writeSettings(null); // no projection block at all → legacy-all
         writeRule(rulesDir, 'downstream-changes.md', null);
-        writeRule(rulesDir, 'kernel-rule-edits.md', ['agent-config-maintainer']); // ships under legacy-all
+        writeRule(rulesDir, 'kernel-rule-edits.md', ['agent-config-maintainer']);
         writeRule(rulesDir, 'source-of-truth.md', null); // compat-excluded on every path
 
         const res = _check_rule_scope_drift(tmp);
         expect(res['status']).toBe('warn');
         const msg = res['message'] as string;
-        expect(msg).toContain('1 unexpected');
+        expect(msg).toContain('2 unexpected');
         expect(msg).toContain('source-of-truth.md');
-        expect(msg).not.toContain('kernel-rule-edits.md');
+        expect(msg).toContain('kernel-rule-edits.md');
     });
 
     it('skips when no projected rule tree is present', () => {

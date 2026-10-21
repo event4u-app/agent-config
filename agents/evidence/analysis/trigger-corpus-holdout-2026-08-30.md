@@ -23,7 +23,7 @@ beside it.
 
 - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
   and § Correction 2026-08-31 are about.
-- **Now: 168 files, 36 holdout and 132 train.** That bullet read
+- **Now: 169 files, 37 holdout and 132 train.** That bullet read
   "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
   when there had since been nine — it drifted 31 files behind the tree because
   each growth after 2026-10-01 wrote its own section and left this line alone.
@@ -772,10 +772,55 @@ Neither verdict changes in kind.
 **Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
 and `routing_signal_measurement.test.ts` § 5.1.
 
+## Growth — 2026-10-20, one SEALED corpus; the train side does not move
+
+```
+ONE ROW ADDED, HOLDOUT-SIDE. THE SEALED SET MOVES 36 -> 37, THE TRAIN SET
+STAYS AT 132. NO PRE-EXISTING CORPUS FILE WAS EDITED. THE TRAIN-SIDE
+MEASUREMENTS ARE UNCHANGED BECAUSE NO TRAIN CORPUS CHANGED — STATED, NOT
+SKIPPED: THE PRECEDING SECTIONS RE-TOOK THEM BECAUSE THEIR GROWTH WAS ON THE
+TRAIN SIDE, AND THIS ONE IS NOT.
+```
+
+**What changed.** Step 6.2b of `road-to-an-analysis-family-that-deepens-itself`
+renamed the source door `analyze:repo` to `analyze:reference`, which rewrote two
+routing-away lines in `competitive-positioning`'s `SKILL.md`, and
+`check_routing_coverage` requires a corpus from every touched skill. It gained
+**7** labelled queries: 3 exemplars of which one is German, 3 near-misses taken
+from that skill's own § When to use routing-away list — `analyze-reference`,
+`upstream-contribute` and `dcf-modeling` — and 1 counterexample. The rename
+changes no routing surface on that skill: its `description:` and every trigger
+line are untouched; only two body links moved.
+
+| Row | Partition | `sha256(name)[0:2]` | Bucket |
+|---|---|---|---|
+| `competitive-positioning` | holdout | `0x21` | 33 < 51 |
+
+**The row seals, and nobody chose it.** `sha256('competitive-positioning')`
+opens `0x21` = 33, below the ceiling of 51, so the partition rule sealed it —
+the same name-derived determinism the 2026-10-14 section argues is the point of
+the rule. The sealed set moves **36 -> 37**, the train set stays **132**, and
+the realised split is **37/169 = 21.89 %** against the rule's 19.9 % target
+(21.56 % before). AC-6 still rests on the same 18 rows, so it is now 18 of 37;
+a proposer evaluated against this holdout must exclude `competitive-positioning`
+or say it is using a row whose seal is younger than the evaluation.
+
+**No train-side re-measurement, and the reason is the partition, not the
+budget.** `routing-body-signal-verdict.json` and
+`delivery-set-measurement-2026-08-31.json` are both computed over the TRAIN
+corpora; this growth adds none and edits none, so their inputs are
+byte-identical to the 2026-10-19 section's and their figures carry over
+unchanged — train corpora **132**, cases **1275**, catalogue **301**. Re-running
+them would reproduce the same numbers, which is why the previous sections'
+"re-taken after every skill edit" sentence is answered here rather than copied.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
+
 ## The set hash
 
 ```
-SET-SHA256  2339756bf0af3f785d8e30ebc4cefa8b68f7f41508484e582fece4e68e17c5fe
+SET-SHA256  09e7606ea6f180f1e57844f1a9ad5a6b3bc3d24a57e52fafe57801733d23c013
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -988,6 +1033,7 @@ open and which this file does not settle.
 | `authz-review` | `2dffacd346e8d656affa0af1ea56c7661e7b0c99e3a8ac2c92be50981b2c970c` |
 | `brand` | `43abaf7937a73ea8b041e18d977ce6a080b2226f6c0f49bb55cf59bc4545df36` |
 | `canvas-design` | `63229b3cfc336241f96140baf7c41c695a0f4fdbe8c30c9f1f787cd84ddfe02b` |
+| `competitive-positioning` | `6d1d550d9a2af6b030fb5a30789274a38ab2f2bf5aab4a4b0899c5ee5ff76d46` |
 | `code-intelligence` | `350a6d29f264800744fe9b1a4fcc48e9f7acba25cdd325f33df5b3a0aa1aaac2` |
 | `condense-memory` | `2c150c0b67c0a3342edb6429dfb71ef05c010501e8488a88c26a3757108afc93` |
 | `conventional-commits-writing` | `dc33e3a5c2b87ef7b95a4a588c0d12266f023c80e1adca73cbd147a6a59b25e4` |

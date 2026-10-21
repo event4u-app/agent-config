@@ -17,14 +17,15 @@
  * that ran the session), so a session reader that only looked at its own
  * checkout would lose every session that ran in a worktree. The reader
  * enumerates `git worktree list` and searches each.
+ *
+ * loss_class: recoverable-lossy
+ * loss_recovery: the full review comment or review body on the forge — `gh api repos/<owner>/<repo>/pulls/<N>/comments` and `/pulls/<N>/reviews`; a quote keeps its first QUOTE_MAX_CHARS characters.
  */
 
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { derive_session_tag } from './chat_history.js';
 import { _scan } from './injection_scan_hook.js';
 import {
     liveForgeApi,
@@ -32,22 +33,21 @@ import {
     resolveForgeRepo,
     type ForgeApi,
 } from './_lib/forge_reader.js';
-import { listRecords } from './_lib/self_repair_store.js';
 import { RUN_JSON, readRunJson, type Door, type RunJsonRow } from './analysis_run_record.js';
 import type { RunState } from './analysis_run.js';
-import { eolSessionKey, readEolCounters, type StoredEolCounters } from './_lib/session_eol.js';
+import { liveGit, measured, missing, obj, readSessionFacts, type Fact, type GitRun } from './retro_session_facts.js';
 
-export type Fact<T> =
-    | { status: 'measured'; value: T }
-    | { status: 'missing'; reason: string }
-    | { status: 'not-applicable'; reason: string };
+export {
+    listWorkspaces,
+    liveGit,
+    readSessionFacts,
+    type Fact,
+    type GitRun,
+    type SessionFacts,
+    type SessionFactsInput,
+} from './retro_session_facts.js';
 
-const measured = <T>(value: T): Fact<T> => ({ status: 'measured', value });
-const missing = <T>(reason: string): Fact<T> => ({ status: 'missing', reason });
 const notApplicable = <T>(reason: string): Fact<T> => ({ status: 'not-applicable', reason });
-
-/** One git invocation; `null` on any failure. Injected so tests run offline. */
-export type GitRun = (args: readonly string[]) => string | null;
 
 export interface UntrustedDatum {
     kind: 'data';
@@ -67,10 +67,6 @@ function datum(source: UntrustedDatum['source'], text: string): UntrustedDatum {
         quoted: text.slice(0, QUOTE_MAX_CHARS),
         injection: { risk_level: scan.risk_level, channels: scan.detections.map((d) => d.channel) },
     };
-}
-
-function obj(v: unknown): Record<string, unknown> | null {
-    return v !== null && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
 }
 
 /** A list response, or `null`. Accepts `--paginate --slurp` page arrays too. */
@@ -313,165 +309,6 @@ export function readPrFacts(input: PrFactsInput): PrFacts {
         later_revert: laterRevert,
         drain_row: row === null ? notApplicable('no drain summary names this PR') : measured(row),
         untrusted_text: untrusted,
-    };
-}
-
-// ---------------------------------------------------------------------------
-// Session facts
-// ---------------------------------------------------------------------------
-
-export interface SessionFacts {
-    unit: 'session';
-    tag: string;
-    /** Every workspace searched: the checkout and each of its worktrees. */
-    workspaces: Fact<string[]>;
-    /** The workspace whose end-of-life state carried the session. */
-    found_in: Fact<string>;
-    turns: Fact<number>;
-    assistant_records: Fact<number>;
-    tool_calls: Fact<number>;
-    compactions: Fact<number>;
-    final_context_tokens: Fact<number>;
-    interruptions: Fact<{ ask: number; handback: number; none: number }>;
-    self_repair_in_window: Fact<number>;
-    roadmap: Fact<string>;
-    branch: Fact<string>;
-}
-
-export interface SessionFactsInput {
-    /** The raw session id — needed for the end-of-life state, which is keyed by its hash. */
-    sessionId?: string;
-    /** The session tag, when the id is not known. */
-    tag?: string;
-    root: string;
-    git?: GitRun;
-}
-
-const liveGit =
-    (cwd: string): GitRun =>
-    (args) => {
-        // An inherited GIT_DIR (a hook runs inside git) would point every call
-        // at another repository than the one at `cwd`.
-        const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
-        const r = spawnSync('git', [...args], { cwd, env, encoding: 'utf8', timeout: 5_000 });
-        return r.status === 0 && typeof r.stdout === 'string' ? r.stdout : null;
-    };
-
-/** The checkout and every worktree of it, from `git worktree list --porcelain`. */
-export function listWorkspaces(root: string, git: GitRun): Fact<string[]> {
-    const out = git(['worktree', 'list', '--porcelain']);
-    if (out === null) return missing('git worktree list failed; only this checkout searched');
-    const paths = out
-        .split('\n')
-        .filter((l) => l.startsWith('worktree '))
-        .map((l) => l.slice('worktree '.length).trim());
-    return paths.length === 0 ? missing('git listed no worktree') : measured(paths);
-}
-
-const LEDGER_REL = path.join('agents', 'runtime', 'state', 'interruptions.jsonl');
-
-function num(v: unknown): Fact<number> {
-    return typeof v === 'number' && Number.isFinite(v) ? measured(v) : missing('not counted by the writer of this state');
-}
-
-export function readSessionFacts(input: SessionFactsInput): SessionFacts {
-    const git = input.git ?? liveGit(input.root);
-    const tag = input.sessionId !== undefined ? derive_session_tag(input.sessionId) : (input.tag ?? '');
-    const workspaces = listWorkspaces(input.root, git);
-    const dirs = workspaces.status === 'measured' ? workspaces.value : [input.root];
-
-    let counters: StoredEolCounters | null = null;
-    let foundIn: Fact<string> = missing('no end-of-life state for this session in any workspace');
-    if (input.sessionId === undefined) {
-        foundIn = missing('end-of-life state is keyed by the session id; only a tag was given');
-    } else {
-        const key = eolSessionKey(input.sessionId);
-        for (const ws of dirs) {
-            counters = readEolCounters(ws, key);
-            if (counters !== null) {
-                foundIn = measured(ws);
-                break;
-            }
-        }
-    }
-    const eolGone = foundIn.status === 'missing' ? foundIn.reason : '';
-
-    let ledgerSeen = false;
-    const turns = new Map<number, { kind: string; at: string; roadmap: unknown }>();
-    for (const ws of dirs) {
-        let raw: string;
-        try {
-            raw = fs.readFileSync(path.join(ws, LEDGER_REL), 'utf-8');
-        } catch {
-            continue;
-        }
-        ledgerSeen = true;
-        for (const line of raw.split('\n')) {
-            let r: Record<string, unknown> | null;
-            try {
-                r = obj(JSON.parse(line));
-            } catch {
-                continue;
-            }
-            if (r === null || r['run_id'] !== tag || typeof r['turn'] !== 'number') continue;
-            if (turns.has(r['turn'])) continue;
-            turns.set(r['turn'], {
-                kind: String(r['kind']),
-                at: typeof r['at'] === 'string' ? r['at'] : '',
-                roadmap: r['roadmap'],
-            });
-        }
-    }
-    const interruptions: SessionFacts['interruptions'] = ledgerSeen
-        ? measured({
-              ask: [...turns.values()].filter((t) => t.kind === 'ask').length,
-              handback: [...turns.values()].filter((t) => t.kind === 'handback').length,
-              none: [...turns.values()].filter((t) => t.kind === 'none').length,
-          })
-        : missing('no interruption ledger in any workspace');
-    const roadmapName = [...turns.values()].map((t) => t.roadmap).find((r): r is string => typeof r === 'string');
-
-    const stamps = [
-        ...[...turns.values()].map((t) => t.at),
-        ...(counters?.compactions ?? []).map((c) => c.timestamp ?? ''),
-        counters?.final_context_at ?? '',
-    ]
-        .filter((s) => s !== '')
-        .sort();
-    let selfRepair: Fact<number> = missing('the session has no known time window');
-    if (stamps.length >= 2) {
-        const [from, to] = [stamps[0]!, stamps[stamps.length - 1]!];
-        const seen = new Set<string>();
-        for (const ws of dirs) {
-            for (const rec of listRecords(ws)) {
-                // A record first seen earlier and seen again inside the window is
-                // a recurrence during the session, so either stamp counts.
-                const inside = (t: string): boolean => t >= from && t <= to;
-                if (inside(rec.first_seen) || inside(rec.last_seen)) seen.add(rec.fingerprint);
-            }
-        }
-        selfRepair = measured(seen.size);
-    }
-
-    return {
-        unit: 'session',
-        tag,
-        workspaces,
-        found_in: foundIn,
-        turns: counters === null ? missing(eolGone) : num(counters.turns),
-        assistant_records: counters === null ? missing(eolGone) : num(counters.assistant_records),
-        tool_calls: counters === null ? missing(eolGone) : num(counters.tool_calls),
-        compactions:
-            counters === null
-                ? missing(eolGone)
-                : Array.isArray(counters.compactions)
-                  ? measured(counters.compactions.length)
-                  : missing('compactions not recorded'),
-        final_context_tokens: counters === null ? missing(eolGone) : num(counters.final_context_tokens),
-        interruptions,
-        self_repair_in_window: selfRepair,
-        roadmap: roadmapName === undefined ? missing('no claimed roadmap in the ledger') : measured(roadmapName),
-        branch: missing('nothing in the tree records which branch a session worked on'),
     };
 }
 
@@ -719,7 +556,11 @@ export function main(argv: readonly string[] = process.argv.slice(2), out = (s: 
     return 2;
 }
 
+// Bundle-safety: never auto-run when inlined into an esbuild bundle, where every
+// module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) return false;
     if (process.argv[1] === undefined) return false;
     if (import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) return true;
     try {

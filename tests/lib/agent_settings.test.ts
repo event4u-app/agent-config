@@ -330,15 +330,22 @@ describe('MERGEABLE_KEYS', () => {
             // ADR-271: `design-fidelity.md` tells the reader to resolve this
             // key through the cascade, and the cascade then filtered it out.
             'design.fidelity_mode',
-            // ADR-278: both keys describe a MACHINE — which host rule trees
-            // exist on it, and how much of the rule corpus loads at rest — and
-            // the layer the installer thins (`~/.claude/rules`) belongs to the
-            // machine, not to any checkout. On an ADR-020 global-only install
-            // the user-global file is the ONLY layer that can carry the opt-in,
-            // and it was the one layer being filtered.
-            'lean_projection.mode',
-            'lean_projection.hosts',
+            // ADR-292: the retro's one switch ships `true`, so `false` is the only
+            // value worth writing, and it must hold from the user-global file.
+            'retro.enabled',
         ]);
+    });
+
+    it('no longer whitelists the projection keys, which ADR-293 deleted', () => {
+        // ADR-278 put `lean_projection.mode` / `.hosts` on this list because the
+        // user-global file was the only layer that could carry the opt-in on an
+        // ADR-020 global-only install. ADR-293 removes the keys: there is no
+        // opt-in to carry, and an entry that outlived its key would carry a
+        // user-global value into a tree nothing is meant to read it from —
+        // which is exactly what the `telegraph.speak_scope` pin below states
+        // for the earlier deletion.
+        expect(ags.MERGEABLE_KEYS).not.toContain('lean_projection.mode');
+        expect(ags.MERGEABLE_KEYS).not.toContain('lean_projection.hosts');
     });
 
     it('no longer whitelists telegraph.speak_scope, which is deleted', () => {
