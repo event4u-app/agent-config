@@ -91,6 +91,16 @@ private recovery-ref namespace precedent `refs/agent-config/rewrites/` (archived
 > `road-to-typed-grants-that-persist` blocker `kernel-guard-first-crossing` (open); 4.5 waits
 > on that roadmap's 3.1 (itself `[~]`); 4.6's blocker is resolved, but the vote is a branch of
 > the 4.1 concern, which does not exist yet.
+>
+> **Drain screen, 2026-10-21 (`/roadmap:process-full`, branch `drain/hard-floor-20261021`).**
+> Phase 0 continued from the 2026-10-18 branch through four more review rounds and is
+> **ratified by both seats at round 9**; this pass lands it, alone, as Q1 requires. Phases 1–6
+> are not started here: Q1 puts Phase 0 in its own PR first, and each later step touches a gated
+> hook surface that needs its own cleared review, so they follow in later PRs. The bundle ceiling
+> no longer constrains their order (82 KB of headroom after chunking, measured below). Deferred
+> items re-checked by executing their conditions: `kernel-guard-first-crossing` is still
+> `Status: open` with no maintainer-authored kernel commit (1.9, 7.5), typed-grants 3.1 is still
+> `[~]` (4.5), and 4.6 still needs the 4.1 concern.
 
 ## Design principles
 
@@ -166,7 +176,14 @@ both branches (an in-tree link to `~/.ssh` is outside) — the classifier's one 
 which can only withhold. Fixed in passing: `isInsideWorkingTree` read `./...` (and any name
 starting `..`) as an escape. Every mechanism has a sensitivity probe that reds its own rows.
 **Bundle cost: +3,581 B, leaving 106 B under the ceiling** — the next bundled addition needs
-1.8's parser deletion first, or an owner-logged raise.
+1.8's parser deletion first, or an owner-logged raise. *Re-measured 2026-10-21 at
+`main@18f66f61d` plus this phase: 1,467,694 B of 1,550,000 B (the bundle has since been
+chunked), so the ceiling no longer orders 1.1–1.7 behind 1.8.* **Ratified 2026-10-21 at
+round 9, both seats** (`agents/evidence/ratifications/drain-hard-floor-20261021.md`).
+Rounds 5–8 found and this pass fixed, test-first: an in-tree **dangling** symlink read as a
+missing suffix; the new `lstat` probe able to throw out of the classifier; the resolution
+sentinel refused only by an unchanged line; and `date` exempt from argument inspection although
+`-f`/`-r` open a path.
 
 ## Phase 1 — One segmenter
 
