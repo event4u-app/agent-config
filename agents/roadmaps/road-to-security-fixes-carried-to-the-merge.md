@@ -73,12 +73,13 @@ accepted offer → fix PR green and ready to merge.
 
 ## Phase 0 — Pre-register the promise and the fixtures
 
-- [ ] **0.1 TTR bar**: lockfile-only fix ≤ 30 min of agent time from accepted
+- [x] **0.1 TTR bar**: lockfile-only fix ≤ 30 min of agent time from accepted
       offer to green PR; runtime fix ≤ 2 h to a PR changing every pinning file
       plus an ops checklist. An honest null is a complete result.
       verify: a TTR claim row in `docs/CLAIMS.md`, status `unbacked`, committed
       with `build_proof` in the same change.
-- [ ] **0.2 Fixtures**: G1 trunk clean, lockfile-only fix; G2 a feature
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
+- [x] **0.2 Fixtures**: G1 trunk clean, lockfile-only fix; G2 a feature
       branch in progress that does not touch the lockfile; G3 a feature branch
       that already changes the same lockfile; G4 the vulnerable dependency was
       introduced by the current branch; G5 a library that publishes releases;
@@ -87,44 +88,50 @@ accepted offer → fix PR green and ready to merge.
       fixing version is younger than the cooldown.
       verify: each fixture is a directory under
       `tests/fixtures/security-fixes/` with the expected route and outcome.
-
+      *G1–G9 are routing contexts with an expected route and outcome; the fix outcomes (plan, proof, lifecycle) are asserted by the same test file over helpers, because the package-manager run itself is the agent's, in the session (council 2026-10-21 Q5).*
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
 ## Phase 1 — The fix, built and proven
 
-- [ ] **1.1 Minimal fix first.** `dependency-upgrade` gains a security entry:
+- [x] **1.1 Minimal fix first.** `dependency-upgrade` gains a security entry:
       the smallest fixing version inside the current constraint (`composer
       update vendor/pkg --with-dependencies`, `npm update pkg`, an override or
       resolution for a transitive-only fix); a constraint change only when
       required; never a major without a stated compatibility analysis; never
       `audit fix --force`.
       verify: G1 changes one lockfile entry and no manifest constraint.
-- [ ] **1.2 Runtime fixes as file edits (R5)**: every file that pins the
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
+- [x] **1.2 Runtime fixes as file edits (R5)**: every file that pins the
       runtime is changed in one commit, and a short ops checklist names what no
       file controls (managed hosting, a base image built elsewhere).
       verify: G6 yields one commit touching all three pinning files and a
       checklist in the PR body.
-- [ ] **1.3 Cooldown and provenance (G9)**: a `fix-fresh` version runs the
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
+- [x] **1.3 Cooldown and provenance (G9)**: a `fix-fresh` version runs the
       existing post-update audit before install, extended with the release-age
       check and a diff of `.claude/`, `.vscode/`, `.cursor/` and install
       scripts.
       verify: G9 produces the audit lines and stops if the diff touches an
       agent-config directory.
-- [ ] **1.4 Proof it is fixed, not that it was attempted.** The same source
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
+- [x] **1.4 Proof it is fixed, not that it was attempted.** The same source
       adapters re-run on the changed lockfile and declarations inside the fix
       branch; the finding must move to `fixed-in-branch` by the authority's own
       answer. Then the project's tests and static checks run. A fix that leaves
       the advisory open or breaks a test is reported as exactly that.
       verify: a fixture whose "fix" stays inside the affected range reports
       `fix-failed`, never success.
-- [ ] **1.5 No fix exists (G8)**: a mitigation is offered — a configuration
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
+- [x] **1.5 No fix exists (G8)**: a mitigation is offered — a configuration
       change, a disabled feature, a pinned-back version where that is safe —
       marked temporary, and the finding stays open and watched.
       verify: G8 yields a `mitigated` finding that a later release fixture
       re-opens as `fix-available`.
-
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
 ## Phase 2 — Where the fix goes
 
-- [ ] **2.1 Deterministic routing table**, shown with its reason in the offer:
-
+- [x] **2.1 Deterministic routing table**, shown with its reason in the offer:
+      *`readRoutingContext` reads these facts from git and, through the user's own `gh`, the open bot PR (G7); a real-repository test covers G3/G4.*
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
 | Situation | Default route | Why |
 |---|---|---|
 | Trunk, clean (G1) | new branch from fresh trunk in this checkout | nothing to isolate from |
@@ -135,7 +142,7 @@ accepted offer → fix PR green and ready to merge.
 | Library that releases (G5) | worktree and PR plus a patch-release draft (2.4) | consumers need a version |
 
       verify: each of G1–G5 and G7 routes as the table says.
-- [ ] **2.2 The worktree route, consented per offer (R4).** Choosing "separate
+- [x] **2.2 The worktree route, consented per offer (R4).** Choosing "separate
       worktree" in the offer is the explicit ask ADR-229 requires. The agent
       creates it with `using-git-worktrees` checks, registers it with
       `purpose: security-fix` and the finding IDs (the sibling's 3.4
@@ -143,44 +150,51 @@ accepted offer → fix PR green and ready to merge.
       checkout.
       verify: G2 creates exactly one worktree, registered, and leaves the main
       checkout's status unchanged.
-- [ ] **2.3 The PR carries its evidence.** Branch `security/<pkg>-<id>`;
+      *The creation itself is the agent's, in the session, through `using-git-worktrees` (council Q5); what is asserted here is the route and the registration line it writes (`agent-config worktree:cleanup register`, worktrees F12).*
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
+- [x] **2.3 The PR carries its evidence.** Branch `security/<pkg>-<id>`;
       title `fix(security): <pkg> <from> → <to> (<IDs>)`; body: finding IDs,
       tier, before/after authority verdicts, test result, cooldown and
       provenance note, deploy note. Never mixed with non-security changes;
       several security fixes of one tier in one lockfile may share a PR.
       verify: G1's PR body carries all seven fields.
-- [ ] **2.4 Release, when the project releases (G5).** Version bump per the
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
+- [x] **2.4 Release, when the project releases (G5).** Version bump per the
       project's convention, changelog entry naming the advisory IDs, a
       `release-comms` draft; stop before tag and publish.
       verify: G5 produces the three artefacts and no tag.
-- [ ] **2.5 Watch, then hand over.** CI is watched in the background with
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
+- [x] **2.5 Watch, then hand over.** CI is watched in the background with
       `ci_settle`; red checks the fix caused are fixed; the agent reports
       "ready to merge". Merge is the owner's, or `/pr:merge` under an explicit
       owner instruction (R6). After the merge the sibling's 3.1 removes the
       fix worktree.
       verify: a merged G2 fixture leaves no worktree for its branch.
-
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
 ## Phase 3 — Follow the fix to production
 
-- [ ] **3.1 Lifecycle on the finding**: `fix-in-progress` → `fixed-in-trunk`
+- [x] **3.1 Lifecycle on the finding**: `fix-in-progress` → `fixed-in-trunk`
       (merge SHA) → `fixed-released` (a tag contains it) → `fixed-deployed`
       (only on a deploy signal the project exposes: a deploy workflow run, a
       release environment, or the user's word).
       verify: a fixture with a deploy workflow run moves the finding to
       `fixed-deployed`; one without stops at `fixed-released`.
-- [ ] **3.2 Merged but not deployed is still a finding.** A T0/T1 that is
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
+- [x] **3.2 Merged but not deployed is still a finding.** A T0/T1 that is
       `fixed-in-trunk` and not deployed after 24 h stays in the notice as one
       line naming the project's deploy route.
       verify: a 25 h-old `fixed-in-trunk` fixture is listed.
-- [ ] **3.3 One remediation per scope.** A finding fingerprint (project,
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
+- [x] **3.3 One remediation per scope.** A finding fingerprint (project,
       package or runtime, range, IDs) owns at most one open fix; a second
       session sees and joins it instead of starting another.
       verify: two sessions over G1 produce one branch.
-- [ ] **3.4 `finishing-a-development-branch` gains the security end state**:
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
+- [x] **3.4 `finishing-a-development-branch` gains the security end state**:
       "fix PR open → watched until merged → worktree removed → finding followed
       to deployed".
       verify: `grep -c "security" src/skills/finishing-a-development-branch/SKILL.md` -> /^[1-9]/
-
+      <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/advisory_notice.ts -->
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
@@ -190,6 +204,7 @@ accepted offer → fix PR green and ready to merge.
 | D3 | destructive-owned | evidence | The agent stops at "ready to merge"; merge is the owner's or `/pr:merge` under the owner's instruction | R6; ADR-282 | `road-to-typed-grants-that-persist` lands a merge grant scoped to `security/*` with green checks |
 | D4 | critical-technical | evidence | Never `audit fix --force`, never an unannounced major, never a tag or publish | 1.1, 2.4; an update-applying agent is itself on the supply-chain attack path | never |
 | D5 | reversible-technical | agent | Several security fixes of one tier in one lockfile share a PR; never mixed with non-security changes | reviewability and revertability; R3 | a shared PR is reverted for one of its fixes |
+| D6 | reversible-technical | council:agents/evidence/council/advisories-worktree-run-design-20261021.md | The fix path is deterministic helpers plus the skill procedure; the package-manager commands run in the agent's session, never in an engine of their own | council 2026-10-21 Q5, 2/2: an engine that runs package managers by itself creates authority and recovery questions the guided path avoids | a measured TTR miss traces to the agent's session rather than to the fix itself |
 
 ## What this roadmap deliberately does not do
 
@@ -210,12 +225,13 @@ accepted offer → fix PR green and ready to merge.
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** G6: one accepted offer yields a worktree, a PR changing every
+- [x] **AC-1** G6: one accepted offer yields a worktree, a PR changing every
       file that pins PHP, an ops checklist, and after the merge no worktree.
-- [ ] **AC-2** G1 reaches a green PR with before/after verdicts inside the
+      *Asserted piecewise, because the composite is a session: G6 plans every pinning file and the ops checklist (security_fix tests), routes to a worktree (G6 context), and the merge-time removal leaves no worktree (worktrees `apply --branch` test).*
+- [x] **AC-2** G1 reaches a green PR with before/after verdicts inside the
       0.1 bar; G2 and G3 route to their own worktree; G4 stays in its branch;
       G7 opens no second PR; G5 stops before the tag.
-- [ ] **AC-3** No code path runs `audit fix --force`, `gh pr merge` without
+- [x] **AC-3** No code path runs `audit fix --force`, `gh pr merge` without
       the owner's instruction, or `git tag`.
 - [ ] **AC-4** `task ci` green.
 
