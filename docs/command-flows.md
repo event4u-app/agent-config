@@ -92,6 +92,7 @@ _Check it. Self-review, judge, fix/quality, and threat-model a change before it 
 
 **Default path:** `review/changes` → `judge` → `fix/quality` → `threat-model`
 
+- `audit` — Security advisories for this project
 - `fix-ci` — Fetch CI errors from GitHub Actions and fix them
 - `fix-quality` — Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 - `fix-route` — Classify a vaguely-described problem and dispatch to the right fix sub-command (or name the specialist skil…

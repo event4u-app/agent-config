@@ -1,0 +1,63 @@
+{
+    "skill": "composer-packages",
+    "last_eval": "2026-10-21",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-21 when road-to-security-fixes-carried-to-the-merge added a Composer audit section to this skill, which brought it into check_routing_coverage's touched-skill scope. Exemplars cover building and maintaining a Composer library: versioning, Laravel integration, autoloading, publishing, a German release phrasing. Near-misses are neighbours on the same packages: a security advisory for a dependency (the /audit command), upgrading every dependency (dependency-upgrade), and an npm package (js-library-packaging). Counterexamples guard 'package' in a shipping and a document sense.",
+    "queries": [
+        {
+            "q": "release a new version of our Composer package with the fixed autoloader",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "set up PSR-4 autoloading for this library and add a service provider for Laravel",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "how do we publish this package to our private Satis registry?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "bump the library to 2.0 and write the breaking changes into the changelog",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "unser Composer-Paket braucht eine neue Version — kümmer dich um Tag und Changelog",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "composer audit reports a CVE in guzzlehttp/guzzle — fix it",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a security finding for a dependency → the /audit command and dependency-upgrade's security-fix procedure"
+        },
+        {
+            "q": "upgrade all our dependencies to their latest versions",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "upgrading what the project consumes → dependency-upgrade"
+        },
+        {
+            "q": "publish our TypeScript utils as an npm package",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "an npm library, not Composer → js-library-packaging"
+        },
+        {
+            "q": "package the order and ship it to the customer",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the shipping sense of 'package'"
+        },
+        {
+            "q": "what is in the release package for the board meeting?",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "a document bundle, not a code package"
+        }
+    ]
+}

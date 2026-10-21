@@ -37,6 +37,8 @@ Thumbs.db
 # PHP
 .phpunit.cache/
 composer.lock
+# A test fixture's lockfile is input, not a local artefact.
+!tests/fixtures/**/composer.lock
 
 # Python
 __pycache__/
