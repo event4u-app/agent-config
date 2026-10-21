@@ -61,6 +61,8 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { afterAll } from 'vitest';
+
 /**
  * The variable `user_global_paths.event4u_root()` honours first.
  *
@@ -91,3 +93,11 @@ export const HERMETIC_CONFIG_HOME: string = fs.mkdtempSync(
 );
 
 process.env[CONFIG_HOME_VAR] = HERMETIC_CONFIG_HOME;
+
+// A `setupFiles` entry runs once per test FILE, so without this every file left
+// one directory behind — the largest single source of the `$TMPDIR` flood that
+// `isolate-tmpdir.ts` documents. Registered here, it is the last `afterAll` to
+// run, after every hook the test file itself declares.
+afterAll(() => {
+    fs.rmSync(HERMETIC_CONFIG_HOME, { recursive: true, force: true });
+});
