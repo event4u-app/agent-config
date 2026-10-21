@@ -145,3 +145,18 @@ no rewrite reaches any host yet.
 
 The permission-composition answer (`one ask or deny beats every allow`) is
 unchanged and is cited, not re-decided.
+
+## Amendment — 2026-10-21 · a block outranks a rewrite only where the block stops something
+
+Proposed with the round-8 modification review of the output path, and binding
+only if that review ratifies it. "A block outranks a rewrite" rests on its own
+stated premise: *the call does not run, so there is nothing to rewrite*. On a
+slot that honours no block — Claude Code's `post_tool_use`, `block_exit: null`
+in `host_lowering.yaml` — the call has already run and its result is shown
+whatever the concerns reduce to; a "block" there reaches the host only as
+context. Withholding the replacement on such a slot would disclose the value
+and stop nothing. So the stage applies the rule on slots that honour a block,
+and on the others the replacement is emitted beside the block's context.
+Either way the decision is made final once, and its record written then, so
+the rewrite log states what reached the host
+(`docs/contracts/egress-placeholders-v1.md` § Tool results).

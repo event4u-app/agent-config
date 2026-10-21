@@ -12,7 +12,9 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   emitEgress,
+  MAX_RESULT_NODES,
   observedHostVersion,
+  planStage,
   planToolOutputRewrite,
   readRevocations,
   REVOCATION_FILE,
@@ -124,15 +126,80 @@ describe("3.1 — updatedToolOutput carries the original object with string leav
     });
   });
 
-  it("emitFor puts the replaced value in the host field, and a block outranks it", () => {
+  it("emitFor puts the replaced value in the host field", () => {
     const env = postToolUse("Bash", SHAPES.Bash());
     const r = planToolOutputRewrite(env, stage(env, "protect"), deps());
     const ok = JSON.parse(emitFor("claude", "post_tool_use", "allow", [], 0, null, r).stdout);
     expect(ok.hookSpecificOutput.hookEventName).toBe("PostToolUse");
     expect(JSON.stringify(ok.hookSpecificOutput.updatedToolOutput)).not.toContain(PLANTED);
-    const blocked = JSON.parse(emitFor("claude", "post_tool_use", "block", ["no"], 1, null, r).stdout);
-    expect(blocked.hookSpecificOutput.updatedToolOutput).toBeUndefined();
-    expect(blocked.systemMessage).toMatch(/reached the model unreplaced/);
+  });
+});
+
+/** The claude row with `post_tool_use` made block-capable, the one shape where a block can still outrank a rewrite. */
+function blockCapableRow() {
+  const row = surfaceRow("claude")!;
+  const slots = new Map(row.slots);
+  slots.set("post_tool_use", { ...row.slots.get("post_tool_use")!, block_exit: 2 });
+  return { ...row, slots };
+}
+
+function rewriteLines(): JsonObject[] {
+  const file = path.join(tmp, REWRITE_FILE);
+  if (!fs.existsSync(file)) return [];
+  return fs.readFileSync(file, "utf8").trim().split("\n").map((l) => JSON.parse(l) as JsonObject);
+}
+
+describe("round 7 — the record says what reached the host, decided once", () => {
+  it("on a slot that honours no block, a block does not suppress the replacement: the result is shown either way", () => {
+    const env = postToolUse("Bash", SHAPES.Bash());
+    const { plan } = planStage(env, stage(env, "protect"), deps());
+    const out = JSON.parse(plan!.emit("block", ["a finding"])!.stdout);
+    expect(JSON.stringify(out.hookSpecificOutput.updatedToolOutput)).not.toContain(PLANTED);
+    expect(out.hookSpecificOutput.updatedToolOutput).toBeDefined();
+    expect(rewriteLines()).toMatchObject([{ outcome: "emitted" }]);
+  });
+
+  it("on a block-capable slot a block is recorded as withheld at emission, never as emitted, and no delivered length is published", () => {
+    const env = postToolUse("Bash", SHAPES.Bash());
+    const { plan } = planStage(env, stage(env, "protect"), deps({ row: blockCapableRow() }));
+    expect(plan!.delivered.size).toBe(0);
+    expect(rewriteLines()).toEqual([]);
+    const out = JSON.parse(plan!.emit("block", ["no"])!.stdout);
+    expect(out.hookSpecificOutput.updatedToolOutput).toBeUndefined();
+    expect(out.systemMessage).toMatch(/reached the model unreplaced \(block-precedence\)/);
+    expect(rewriteLines()).toMatchObject([{ outcome: "withheld", reason: "block-precedence" }]);
+    expect(readRevocations(tmp)).toEqual([]);
+  });
+
+  it("emit is final once: a second call records nothing new", () => {
+    const env = postToolUse("Bash", SHAPES.Bash());
+    const { plan } = planStage(env, stage(env, "protect"), deps({ row: blockCapableRow() }));
+    plan!.emit("allow", []);
+    plan!.emit("block", []);
+    expect(rewriteLines()).toMatchObject([{ outcome: "emitted" }]);
+  });
+
+  it("an audit record that cannot be written withholds the rewrite", () => {
+    fs.mkdirSync(path.join(tmp, "agents", "runtime", "state"), { recursive: true });
+    fs.mkdirSync(path.join(tmp, REWRITE_FILE));
+    const env = postToolUse("Bash", SHAPES.Bash());
+    expect(planToolOutputRewrite(env, stage(env, "protect"), deps())).toMatchObject({ outcome: "withheld", reason: "audit-unwritable" });
+  });
+
+  it("a workspace that is not an absolute directory withholds and writes no record", () => {
+    const file = path.join(tmp, "not-a-dir");
+    fs.writeFileSync(file, "");
+    for (const root of [file, "relative/ws"]) {
+      const env = { ...postToolUse("Bash", SHAPES.Bash()), workspace_root: root };
+      expect(planToolOutputRewrite(env, stage(env, "protect"), deps())).toMatchObject({ outcome: "withheld", reason: "no-workspace" });
+    }
+    expect(rewriteLines()).toEqual([]);
+  });
+
+  it("a result larger than the traversal bound is withheld before it is walked", () => {
+    const big = { stdout: `export TOKEN=${PLANTED}\n`, rows: Array.from({ length: MAX_RESULT_NODES }, () => "x") };
+    const env = postToolUse("Bash", big);
+    expect(planToolOutputRewrite(env, stage(env, "protect"), deps())).toMatchObject({ outcome: "withheld", reason: "oversize" });
   });
 });
 
@@ -217,12 +284,55 @@ describe("round 5 — the running host's version and a runtime revocation decide
     expect(planToolOutputRewrite(env, stage(env, "protect"), { ...real(), observedHostVersion: "2.1.311" })?.outcome).toBe("emitted");
   });
 
-  it("the version is read from the tail of the transcript the envelope names", () => {
-    const t = path.join(tmp, "s.jsonl");
+  it("the version is read from the top-level field of the session's own transcript under the host's projects directory", () => {
+    const config = path.join(tmp, "claude-config");
+    const t = path.join(config, "projects", "p", "sess-1.jsonl");
+    fs.mkdirSync(path.dirname(t), { recursive: true });
     fs.writeFileSync(t, `${JSON.stringify({ version: "2.1.300" })}\n${JSON.stringify({ type: "x", version: "2.1.304" })}\n`);
-    expect(observedHostVersion(t)).toBe("2.1.304");
-    expect(observedHostVersion(path.join(tmp, "missing.jsonl"))).toBeNull();
-    expect(observedHostVersion(undefined)).toBeNull();
+    expect(observedHostVersion(t, "sess-1", config)).toBe("2.1.304");
+    expect(observedHostVersion(path.join(config, "projects", "p", "missing.jsonl"), "missing", config)).toBeNull();
+    expect(observedHostVersion(undefined, "sess-1", config)).toBeNull();
+  });
+
+  it("a transcript outside the host's projects directory, or named for another session, yields no version", () => {
+    const config = path.join(tmp, "claude-config");
+    fs.mkdirSync(path.join(config, "projects", "p"), { recursive: true });
+    const outside = path.join(tmp, "sess-1.jsonl");
+    fs.writeFileSync(outside, `${JSON.stringify({ version: "2.1.304" })}\n`);
+    expect(observedHostVersion(outside, "sess-1", config)).toBeNull();
+    const other = path.join(config, "projects", "p", "sess-2.jsonl");
+    fs.writeFileSync(other, `${JSON.stringify({ version: "2.1.304" })}\n`);
+    expect(observedHostVersion(other, "sess-1", config)).toBeNull();
+    fs.symlinkSync(outside, path.join(config, "projects", "p", "sess-3.jsonl"));
+    expect(observedHostVersion(path.join(config, "projects", "p", "sess-3.jsonl"), "sess-3", config)).toBeNull();
+  });
+
+  it("only a top-level version counts; one inside a tool input or a string does not", () => {
+    const config = path.join(tmp, "claude-config");
+    const t = path.join(config, "projects", "p", "sess-1.jsonl");
+    fs.mkdirSync(path.dirname(t), { recursive: true });
+    const nested = { type: "assistant", message: { content: [{ type: "tool_use", input: { version: "2.1.304" } }] } };
+    const inString = { type: "user", text: '{"version":"2.1.304"}' };
+    fs.writeFileSync(t, `${JSON.stringify({ version: "1.0.0" })}\n${JSON.stringify(nested)}\n${JSON.stringify(inString)}\n`);
+    expect(observedHostVersion(t, "sess-1", config)).toBe("1.0.0");
+  });
+
+  it("a corrupt revocation record fails closed: the channel is revoked", () => {
+    fs.mkdirSync(path.dirname(path.join(tmp, REVOCATION_FILE)), { recursive: true });
+    fs.writeFileSync(path.join(tmp, REVOCATION_FILE), "{not json\n");
+    expect(readRevocations(tmp)).toMatchObject([{ host: "*", channel: "*", reason: "revocation-state-unreadable" }]);
+    const env = postToolUse("Bash", SHAPES.Bash());
+    expect(planToolOutputRewrite(env, stage(env, "protect"), real())).toMatchObject({ outcome: "withheld", reason: "no-capability" });
+  });
+
+  it("revocations are appended, so two recorded one after another are both kept", () => {
+    const env = postToolUse("Bash", SHAPES.Bash());
+    const s = stage(env, "protect");
+    const placeholder = s.placeholder as JsonObject;
+    const forced = { ...s, placeholder: { ...placeholder, payload: { ...(placeholder["payload"] as JsonObject), tool_response: "flattened" } } };
+    planToolOutputRewrite(env, forced, deps());
+    planToolOutputRewrite(env, { ...s, placeholder: env }, deps());
+    expect(readRevocations(tmp).map((r) => r.reason)).toEqual(["shape-mismatch", "residual-hit"]);
   });
 
   it("a withheld result for a revoking reason revokes the channel on the workspace until a person clears it", () => {

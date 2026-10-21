@@ -12,6 +12,7 @@
  * model unreplaced is a leak whether this module or the host dropped it.
  */
 import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 
 import type { EgressStageResult } from "../hooks/egress_stage.js";
@@ -30,13 +31,21 @@ export const STAGE_WITHHELD_MARKER = "_agent_config_egress_withheld";
 /** Well inside the host's own hook timeout: a host timeout shows the original. */
 export const REWRITE_DEADLINE_MS = 500;
 
+/** Above this many JSON nodes a result is withheld before it is walked, so no check runs unbounded. */
+export const MAX_RESULT_NODES = 50_000;
+
 export type RewriteWithheld =
   | "no-capability"
+  | "no-workspace"
   | "extent-unproven"
+  | "oversize"
   | "shape-mismatch"
   | "residual-hit"
   | "deadline"
-  | "stage-error";
+  | "stage-error"
+  | "audit-unwritable"
+  | "block-precedence"
+  | "no-emission";
 
 /** The host field a replaced result travels in; MCP tools have their own. */
 export type RewriteField = "updatedToolOutput" | "updatedMCPToolOutput";
@@ -50,7 +59,13 @@ export type ToolOutputRewrite =
       /** The one line telling the model what a token is, on the session's first rewrite only (3.4). */
       readonly explain?: string;
     }
-  | { readonly outcome: "withheld"; readonly reason: RewriteWithheld; readonly replaced: number };
+  | {
+      readonly outcome: "withheld";
+      readonly reason: RewriteWithheld;
+      readonly replaced: number;
+      /** A revoking reason whose revocation could not be written: the channel is NOT disabled. */
+      readonly unrevoked?: true;
+    };
 
 function isObject(v: unknown): v is JsonObject {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -95,8 +110,9 @@ function resultKey(payload: JsonObject): string | null {
 export const REWRITE_FILE = path.join("agents", "runtime", "state", "egress-rewrites.jsonl");
 const TOOL_NAME = /^[A-Za-z0-9_.:-]{1,128}$/;
 
-export function recordRewrite(workspaceRoot: string, envelope: JsonObject, r: ToolOutputRewrite, replay = false): void {
-  if (replay) return;
+/** False when the line could not be written; an emitted rewrite with no record is withheld instead. */
+export function recordRewrite(workspaceRoot: string, envelope: JsonObject, r: ToolOutputRewrite, replay = false): boolean {
+  if (replay) return true;
   const tool = isObject(envelope["payload"]) ? envelope["payload"]["tool_name"] : undefined;
   const line = {
     ts: new Date().toISOString(),
@@ -106,12 +122,30 @@ export function recordRewrite(workspaceRoot: string, envelope: JsonObject, r: To
     reason: r.outcome === "withheld" ? r.reason : null,
     replaced: r.replaced,
   };
+  return appendLine(path.join(workspaceRoot, REWRITE_FILE), line);
+}
+
+/** One `O_APPEND` write per line, so concurrent hook processes never lose each other's lines. */
+function appendLine(file: string, line: object): boolean {
   try {
-    const file = path.join(workspaceRoot, REWRITE_FILE);
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.appendFileSync(file, `${JSON.stringify(line)}\n`, "utf8");
+    return true;
   } catch {
-    // observability never breaks the hook
+    return false;
+  }
+}
+
+/** The workspace's real path, or `null` when it does not resolve to a directory: then nothing is written and nothing emitted. */
+export function resolveWorkspace(envelope: JsonObject): string | null {
+  const raw = envelope["workspace_root"];
+  const candidate = typeof raw === "string" && raw !== "" ? raw : process.cwd();
+  if (!path.isAbsolute(candidate)) return null;
+  try {
+    const real = fs.realpathSync(candidate);
+    return fs.statSync(real).isDirectory() ? real : null;
+  } catch {
+    return null;
   }
 }
 
@@ -142,54 +176,95 @@ export function firstTokenUse(workspaceRoot: string, sessionId: unknown, replay 
 
 /** A withheld rewrite for one of these reasons revokes the channel on the workspace until a person clears it. */
 export const REVOKING_REASONS: ReadonlySet<RewriteWithheld> = new Set(["shape-mismatch", "residual-hit", "deadline", "stage-error"]);
-export const REVOCATION_FILE = path.join("agents", "runtime", "state", "egress-revoked.json");
+export const REVOCATION_FILE = path.join("agents", "runtime", "state", "egress-revoked.jsonl");
 
 type Revocation = { host: string; channel: string; reason: string; at: string };
 
-/** The revocations recorded on this workspace; an unreadable or absent file is none. */
+/**
+ * The revocations recorded on this workspace. An absent file is none; a file
+ * that exists and cannot be read, or holds a line that is not a revocation,
+ * revokes every channel, because a lost revocation must not read as consent.
+ */
 export function readRevocations(workspaceRoot: string): Revocation[] {
+  let text: string;
   try {
-    const raw = JSON.parse(fs.readFileSync(path.join(workspaceRoot, REVOCATION_FILE), "utf8")) as unknown;
-    return Array.isArray(raw) ? (raw as Revocation[]) : [];
-  } catch {
-    return [];
+    text = fs.readFileSync(path.join(workspaceRoot, REVOCATION_FILE), "utf8");
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") return [];
+    return [ALL_REVOKED];
   }
+  const out: Revocation[] = [];
+  for (const l of text.split("\n")) {
+    if (l.trim() === "") continue;
+    try {
+      const r = JSON.parse(l) as Partial<Revocation>;
+      if (typeof r.host !== "string" || typeof r.channel !== "string") return [ALL_REVOKED];
+      out.push({ host: r.host, channel: r.channel, reason: String(r.reason ?? ""), at: String(r.at ?? "") });
+    } catch {
+      return [ALL_REVOKED];
+    }
+  }
+  return out;
 }
 
-function recordRevocation(workspaceRoot: string, r: Revocation, replay: boolean): void {
-  if (replay) return;
-  try {
-    const file = path.join(workspaceRoot, REVOCATION_FILE);
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, `${JSON.stringify([...readRevocations(workspaceRoot), r])}\n`, "utf8");
-  } catch {
-    // a revocation that cannot be written still withheld this result
-  }
-}
+const ALL_REVOKED: Revocation = { host: "*", channel: "*", reason: "revocation-state-unreadable", at: "" };
 
-const VERSION_IN_TRANSCRIPT = /"version":"(\d+\.\d+\.\d+)"/g;
+const SESSION_FILE = /^[A-Za-z0-9_-]{1,128}$/;
+const SEMVER = /^\d+\.\d+\.\d+$/;
+
+function claudeConfigDir(): string {
+  return process.env["CLAUDE_CONFIG_DIR"] || path.join(os.homedir(), ".claude");
+}
 
 /**
- * The running host's version, read from the tail of the session transcript the
- * envelope names — Claude Code stamps every line with it. `null` when there is
- * no transcript or no stamp: an unobserved version revokes a replace.
+ * The running host's version: the top-level `version` of the last line of
+ * this session's own transcript that carries one. The path must resolve, after
+ * links, inside the host's `projects` directory and be named for the session,
+ * so an envelope cannot point the check at a file it wrote. `null` otherwise,
+ * and an unobserved version grants no `replace`.
  */
-export function observedHostVersion(transcriptPath: unknown): string | null {
+export function observedHostVersion(transcriptPath: unknown, sessionId: unknown, configDir: string = claudeConfigDir()): string | null {
   if (typeof transcriptPath !== "string" || transcriptPath === "") return null;
+  if (typeof sessionId !== "string" || !SESSION_FILE.test(sessionId)) return null;
   let fd: number | null = null;
   try {
-    fd = fs.openSync(transcriptPath, "r");
+    const projects = fs.realpathSync(path.join(configDir, "projects"));
+    const real = fs.realpathSync(transcriptPath);
+    if (!real.startsWith(projects + path.sep) || path.basename(real) !== `${sessionId}.jsonl`) return null;
+    fd = fs.openSync(real, "r");
     const size = fs.fstatSync(fd).size;
-    const len = Math.min(size, 16384);
+    const len = Math.min(size, 65536);
     const buf = Buffer.alloc(len);
     fs.readSync(fd, buf, 0, len, size - len);
-    const hits = [...buf.toString("utf8").matchAll(VERSION_IN_TRANSCRIPT)];
-    return hits.at(-1)?.[1] ?? null;
+    const lines = buf.toString("utf8").split("\n");
+    if (len < size) lines.shift();
+    for (const l of lines.reverse()) {
+      if (l.trim() === "") continue;
+      try {
+        const v = (JSON.parse(l) as Record<string, unknown>)["version"];
+        if (typeof v === "string" && SEMVER.test(v)) return v;
+      } catch {
+        // a partial or foreign line carries no version
+      }
+    }
+    return null;
   } catch {
     return null;
   } finally {
     if (fd !== null) fs.closeSync(fd);
   }
+}
+
+function nodeCountExceeds(v: JsonValue, limit: number): boolean {
+  let n = 0;
+  const stack: JsonValue[] = [v];
+  while (stack.length > 0) {
+    const x = stack.pop() as JsonValue;
+    if (++n > limit) return true;
+    if (Array.isArray(x)) for (const y of x) stack.push(y);
+    else if (isObject(x)) for (const y of Object.values(x)) stack.push(y as JsonValue);
+  }
+  return false;
 }
 
 export interface RewriteDeps {
@@ -206,27 +281,59 @@ export interface RewriteDeps {
 }
 
 /**
- * The rewrite for a `post_tool_use` event, or `null` when there is nothing to
- * decide: another event, a mode that replaces nothing, or a result with no
- * listed value. Never throws.
+ * The rewrite for a `post_tool_use` event, decided and made final at once —
+ * the case where nothing after the concern loop can change it. `null` when
+ * there is nothing to decide: another event, a mode that replaces nothing, or a
+ * result with no listed value. Never throws.
  */
 export function planToolOutputRewrite(
   envelope: JsonObject,
   stage: EgressStageResult,
   deps: RewriteDeps,
 ): ToolOutputRewrite | null {
-  const r = decide(envelope, stage, deps);
-  const workspaceRoot = String(envelope["workspace_root"] || process.cwd());
+  const d = decideToolOutputRewrite(envelope, stage, deps);
+  return d === null ? null : finalizeRewrite(envelope, d, deps);
+}
+
+/**
+ * Makes a decision final and writes its record, its revocation and the
+ * per-session explainer flag — once, after the last thing that could change it.
+ * An emitted rewrite whose record cannot be written is withheld instead: no
+ * replacement goes to the host without the line that counts it.
+ */
+export function finalizeRewrite(
+  envelope: JsonObject,
+  decided: ToolOutputRewrite,
+  deps: RewriteDeps,
+  override?: RewriteWithheld,
+): ToolOutputRewrite {
   const replay = deps.replay ?? is_replay_mode();
-  if (r !== null) recordRewrite(workspaceRoot, envelope, r, replay);
-  if (r?.outcome === "withheld" && REVOKING_REASONS.has(r.reason)) {
+  const workspace = resolveWorkspace(envelope);
+  let r: ToolOutputRewrite = override !== undefined && decided.outcome === "emitted"
+    ? { outcome: "withheld", reason: override, replaced: decided.replaced }
+    : decided;
+  if (workspace === null) {
+    return r.outcome === "withheld" ? r : { outcome: "withheld", reason: "no-workspace", replaced: r.replaced };
+  }
+  if (!recordRewrite(workspace, envelope, r, replay) && r.outcome === "emitted") {
+    r = { outcome: "withheld", reason: "audit-unwritable", replaced: r.replaced };
+    recordRewrite(workspace, envelope, r, replay);
+  }
+  if (r.outcome === "emitted") {
+    const payload = isObject(envelope["payload"]) ? envelope["payload"] : {};
+    if (firstTokenUse(workspace, payload["session_id"], replay)) r = { ...r, explain: TOKEN_EXPLAINER };
+  }
+  if (r.outcome === "withheld" && REVOKING_REASONS.has(r.reason) && !replay) {
     const host = String(envelope["platform"] ?? "");
-    recordRevocation(workspaceRoot, { host, channel: "output", reason: r.reason, at: new Date().toISOString() }, replay);
+    if (!appendLine(path.join(workspace, REVOCATION_FILE), { host, channel: "output", reason: r.reason, at: new Date().toISOString() })) {
+      r = { ...r, unrevoked: true };
+    }
   }
   return r;
 }
 
-function decide(envelope: JsonObject, stage: EgressStageResult, deps: RewriteDeps): ToolOutputRewrite | null {
+/** The decision alone: no record, no revocation, no flag. */
+export function decideToolOutputRewrite(envelope: JsonObject, stage: EgressStageResult, deps: RewriteDeps): ToolOutputRewrite | null {
   if (envelope["event"] !== "post_tool_use") return null;
   if (stage.mode !== "protect" && stage.mode !== "strict") return null;
   const replaced = stage.counts.filter((c) => c.field === "result").reduce((n, c) => n + c.count, 0);
@@ -236,13 +343,17 @@ function decide(envelope: JsonObject, stage: EgressStageResult, deps: RewriteDep
   const started = now();
   try {
     if (refusedResult) return { outcome: "withheld", reason: "extent-unproven", replaced };
+    const workspace = resolveWorkspace(envelope);
+    if (workspace === null) return { outcome: "withheld", reason: "no-workspace", replaced };
     const platform = String(envelope["platform"] ?? "");
     const payload = isObject(envelope["payload"]) ? envelope["payload"] : {};
+    const revoked = readRevocations(workspace).map((r) => (r.host === "*" ? { ...r, host: platform, channel: "output" } : r));
     const cap = (deps.capability ?? resolveRewriteCapability)(platform, deps.row, "output", {
       today: deps.today ?? new Date().toISOString().slice(0, 10),
       root: deps.packageRoot,
-      observedHostVersion: deps.observedHostVersion !== undefined ? deps.observedHostVersion : observedHostVersion(payload["transcript_path"]),
-      revoked: readRevocations(String(envelope["workspace_root"] || process.cwd())),
+      observedHostVersion:
+        deps.observedHostVersion !== undefined ? deps.observedHostVersion : observedHostVersion(payload["transcript_path"], payload["session_id"]),
+      revoked,
     });
     if (!cap.ok || cap.capability.mode !== "replace") return { outcome: "withheld", reason: "no-capability", replaced };
     const original = isObject(envelope["payload"]) ? envelope["payload"] : null;
@@ -253,15 +364,15 @@ function decide(envelope: JsonObject, stage: EgressStageResult, deps: RewriteDep
     }
     const before = original[key] as JsonValue;
     const after = placeholder[key] as JsonValue;
+    if (nodeCountExceeds(before, MAX_RESULT_NODES) || nodeCountExceeds(after, MAX_RESULT_NODES)) {
+      return { outcome: "withheld", reason: "oversize", replaced };
+    }
     if (hasWithheld(after) || !sameShape(before, after)) return { outcome: "withheld", reason: "shape-mismatch", replaced };
     if (residual(after)) return { outcome: "withheld", reason: "residual-hit", replaced };
     if (now() - started > REWRITE_DEADLINE_MS) return { outcome: "withheld", reason: "deadline", replaced };
     const tool = original["tool_name"];
     const field: RewriteField = typeof tool === "string" && tool.startsWith("mcp__") ? "updatedMCPToolOutput" : "updatedToolOutput";
-    const told = !firstTokenUse(String(envelope["workspace_root"] || process.cwd()), original["session_id"], deps.replay ?? is_replay_mode());
-    return told
-      ? { outcome: "emitted", field, value: after, replaced }
-      : { outcome: "emitted", field, value: after, replaced, explain: TOKEN_EXPLAINER };
+    return { outcome: "emitted", field, value: after, replaced };
   } catch {
     return { outcome: "withheld", reason: "stage-error", replaced };
   }
@@ -276,6 +387,9 @@ export function rewriteWithheldNotice(r: ToolOutputRewrite): string | null {
   return (
     `agent-config egress: a tool result carrying ${r.replaced} listed value(s) reached the model unreplaced ` +
     `(${r.reason}). Treat it as disclosed and rotate a credential it carried. ` +
+    (r.unrevoked
+      ? "The channel could not be disabled on this workspace; set egress.placeholders.mode to off until the cause is found. "
+      : "") +
     'What each channel is covered by: docs/contracts/egress-placeholders-v1.md § Coverage (agent-config hooks:status --coverage).'
   );
 }
@@ -304,7 +418,7 @@ export interface EgressHostEmission {
 
 export interface EmitContext {
   readonly event: string;
-  /** `allow`, `warn` or `block`: the concerns' reduced verdict, which a block lets outrank a rewrite. */
+  /** `allow`, `warn` or `block`: the concerns' reduced verdict, carried as context; the decision is already final. */
   readonly severity: string;
   /** The concerns' deciding reasons, joined. */
   readonly reason: string;
@@ -313,24 +427,21 @@ export interface EmitContext {
 }
 
 /**
- * The emission for a decided event, or `null` to leave `emitFor` in charge.
- * A block outranks a rewrite (ADR-285): it emits no replaced value, and the
- * result counts as unreplaced.
+ * Renders a FINAL decision for the host, or `null` to leave `emitFor` in
+ * charge. It changes no outcome: whether a block outranks the rewrite is
+ * settled by `finalizeRewrite` before this runs, so what is written to the host
+ * is exactly what the record says.
  */
 export function emitEgress(e: EgressEmission | null, ctx: EmitContext): EgressHostEmission | null {
-  if (e === null) return null;
-  if (ctx.event === "post_tool_use" && (e.outcome === "emitted" || e.outcome === "withheld")) {
-    const hso: Record<string, unknown> = { hookEventName: ctx.hookEventName };
-    const out: Record<string, unknown> = { hookSpecificOutput: hso };
-    const emitted = e.outcome === "emitted" && ctx.severity !== "block";
-    if (emitted) hso[e.field] = e.value;
-    else out["systemMessage"] = rewriteWithheldNotice(e.outcome === "emitted" ? { outcome: "withheld", reason: "stage-error", replaced: e.replaced } : e);
-    const label = ctx.severity === "block" ? ctx.reason || "agent-config hook reported a blocking finding" : ctx.reason;
-    const context = [emitted && e.outcome === "emitted" ? e.explain : undefined, label].filter(Boolean).join("\n\n");
-    if (context) hso["additionalContext"] = context;
-    return { exit: 0, stdout: `${JSON.stringify(out)}\n`, stderr: "" };
-  }
-  return null;
+  if (e === null || ctx.event !== "post_tool_use") return null;
+  const hso: Record<string, unknown> = { hookEventName: ctx.hookEventName };
+  const out: Record<string, unknown> = { hookSpecificOutput: hso };
+  if (e.outcome === "emitted") hso[e.field] = e.value;
+  else out["systemMessage"] = rewriteWithheldNotice(e);
+  const label = ctx.severity === "block" ? ctx.reason || "agent-config hook reported a blocking finding" : ctx.reason;
+  const context = [e.outcome === "emitted" ? e.explain : undefined, label].filter(Boolean).join("\n\n");
+  if (context) hso["additionalContext"] = context;
+  return { exit: 0, stdout: `${JSON.stringify(out)}\n`, stderr: "" };
 }
 
 /** The stage's decision for one event, as the dispatcher consumes it. */
@@ -344,8 +455,11 @@ export interface StagePlan {
 
 /**
  * Decides the event and binds everything the emission needs from the host's
- * lowering row: whether the row emits natively (verified, with a native
- * envelope), its refusal code and its own event name for the slot.
+ * lowering row. The decision is made final exactly once, at the last point
+ * that can change it: here, when the slot honours no block (a block there
+ * cannot stop the result from being shown, so it cannot outrank the rewrite —
+ * ADR-285's premise is a call that does not run); at emission, when the slot
+ * honours one. A row that cannot carry the emission finalizes as withheld.
  */
 export function planStage(
   envelope: JsonObject,
@@ -354,20 +468,27 @@ export function planStage(
 ): { plan?: StagePlan } {
   // `observe` builds no placeholder view and asks the host for nothing.
   if (stage.placeholder === undefined) return {};
-  const decision = planToolOutputRewrite(envelope, stage, deps);
+  const decided = decideToolOutputRewrite(envelope, stage, deps);
   const event = String(envelope["event"] ?? "");
   const row = deps.row ?? null;
   const today = deps.today ?? new Date().toISOString().slice(0, 10);
   const native = row !== null && row.json_shape !== "none" && row.verified !== null && row.verified.expires >= today;
   const slot = row?.slots.get(event);
+  const carries = native && slot !== undefined;
+  const blockCapable = slot?.block_exit !== null && slot?.block_exit !== undefined;
+  let final: ToolOutputRewrite | null | undefined =
+    decided === null ? null : !carries ? finalizeRewrite(envelope, decided, deps, "no-emission") : blockCapable ? undefined : finalizeRewrite(envelope, decided, deps);
   const plan: StagePlan = {
-    decision,
-    delivered: deliveredBodyBytes(envelope, decision),
+    get decision() {
+      return final === undefined ? decided : final;
+    },
+    delivered: final === undefined ? new Map() : deliveredBodyBytes(envelope, final),
     emit(severity, reasons) {
-      if (!native || slot === undefined) return null;
+      if (final === undefined) final = finalizeRewrite(envelope, decided as ToolOutputRewrite, deps, severity === "block" ? "block-precedence" : undefined);
+      if (!carries || slot === undefined) return null;
       const reason = reasons.map((r) => r.trim()).filter((r) => r.length > 0).join(" · ");
       const hookEventName = slot.native.find((n) => n !== "" && n !== "null") ?? event;
-      return emitEgress(decision, { event, severity, reason, hookEventName });
+      return emitEgress(final, { event, severity, reason, hookEventName });
     },
   };
   return { plan };

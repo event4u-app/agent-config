@@ -318,21 +318,52 @@ tool): the original object with its string leaves replaced and nothing else.
 The decision lives in the engine chunk (`src/scripts/_lib/egress_emission.ts`)
 and is taken only on a `RewriteCapability` for the host's `output` channel,
 which `rewrite_capability.ts` alone issues after checking the lowering row, the
-probe record it cites, the running host's version (read from the tail of the
-session transcript; an unobserved or different minor version revokes) and the
-workspace's revocations. The host drops a mismatched replacement in silence
-(probe of 2026-10-20), so before emitting the stage checks keys and types
-against the input, rescans the replaced value, and holds a deadline; a mismatch,
-a residual hit, an unprovable extent, a missing capability, a deadline breach or
-an internal error emits no rewrite, raises a user-visible `systemMessage`, and
-appends a `withheld` line to `agents/runtime/state/egress-rewrites.jsonl`. Those
-lines are the dropped-replacement count. A shape mismatch, residual hit, deadline
-breach or internal error also revokes the channel on that workspace
-(`agents/runtime/state/egress-revoked.json`) until a person deletes the record:
-one silent failure is reason enough to stop claiming the channel. A block outranks a rewrite. The first
-rewrite of a session carries one line of context telling the model what a token
-is. Output spilled to a file reaches the hook only as its prefix; the spill file
-keeps the original until it is read through a hooked tool.
+probe record it cites, the running host's version and the workspace's
+revocations. The version is the top-level `version` field of the session's own
+transcript, accepted only when the path resolves, after links, inside the host's
+`projects` directory (`CLAUDE_CONFIG_DIR`, else `~/.claude`) and is named for the
+session; anything else is unobserved, and an unobserved or different minor
+version grants no `replace`. The workspace is the real path of an absolute
+directory, or nothing is emitted and nothing written. The host drops a
+mismatched replacement in silence (probe of 2026-10-20), so before emitting the
+stage bounds the result (above 50,000 JSON nodes it is withheld unwalked),
+checks keys and types against the input, rescans the replaced value, and holds a
+deadline; a mismatch, a residual hit, an unprovable extent, an oversize result,
+a missing capability, a deadline breach or an internal error emits no rewrite,
+raises a user-visible `systemMessage`, and appends a `withheld` line to
+`agents/runtime/state/egress-rewrites.jsonl`. Those lines are the
+dropped-replacement count.
+
+**The record says what reached the host.** The decision is made final once, at
+the last point that can change it, and the line is written then: when the slot
+honours no block (Claude Code's `post_tool_use`), before the concerns run,
+because a block there cannot stop the result from being shown and so does not
+outrank the replacement; when the slot honours a block, at emission, where a
+block finalizes the result as `withheld (block-precedence)`. An emitted
+replacement whose line cannot be written is withheld instead
+(`audit-unwritable`), and `delivered_bytes` is published only for a final
+`emitted`.
+
+A shape mismatch, residual hit, deadline breach or internal error also revokes
+the channel on that workspace by appending a line to
+`agents/runtime/state/egress-revoked.jsonl` (one append per revocation, so
+concurrent hook processes lose none) until a person deletes the file: one silent
+failure is reason enough to stop claiming the channel. A file that exists and
+cannot be read, or holds a line that is not a revocation, revokes every channel;
+a revocation that cannot be written says so in the `systemMessage` and asks for
+`egress.placeholders.mode: off`.
+
+**Rollback criteria.** Set `egress.placeholders.mode: off` (or the stage's kill
+switch) when any of these is observed: a listed value model-visible after an
+`emitted` line; a revoking `withheld` reason that recurs after a person cleared
+the revocation; a revocation on a workspace with no matching cause in the
+rewrite log. A replace
+answer is withdrawn from `host_lowering.yaml` when a later probe records anything
+but `delivered`.
+
+The first rewrite of a session carries one line of context telling the model
+what a token is. Output spilled to a file reaches the hook only as its prefix;
+the spill file keeps the original until it is read through a hooked tool.
 
 ## Not built yet: restoration and the prompt gate
 

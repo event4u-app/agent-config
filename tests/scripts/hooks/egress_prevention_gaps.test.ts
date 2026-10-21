@@ -96,10 +96,14 @@ function dispatch(fixture: GapFixture): { status: number | null; stdout: string;
     fs.writeFileSync(path.join(ws, '.agent-settings.yml'), 'egress:\n  placeholders:\n    mode: strict\n');
     const manifest = path.join(tmp, 'manifest.yaml');
     writeManifest(manifest);
-    // Claude Code stamps its version on every transcript line; the stage reads it to rule out drift.
-    const transcript = path.join(tmp, 'transcript.jsonl');
+    // Claude Code stamps its version on every transcript line; the stage reads it to rule out drift,
+    // only from the session's own transcript under the host's projects directory.
+    const sid = String(fixture.payload['session_id'] ?? 'gap-session');
+    const configDir = path.join(tmp, 'claude-config');
+    const transcript = path.join(configDir, 'projects', 'p', `${sid}.jsonl`);
+    fs.mkdirSync(path.dirname(transcript), { recursive: true });
     fs.writeFileSync(transcript, `${JSON.stringify({ version: '2.1.304' })}\n`);
-    const env: NodeJS.ProcessEnv = { ...process.env };
+    const env: NodeJS.ProcessEnv = { ...process.env, CLAUDE_CONFIG_DIR: configDir };
     delete env['AGENT_CONFIG_REPLAY'];
     delete env['AGENT_CONFIG_NO_EGRESS_STAGE'];
     const r = spawnSync(
