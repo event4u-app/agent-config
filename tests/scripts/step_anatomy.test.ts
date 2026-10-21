@@ -95,6 +95,21 @@ describe('step anatomy', () => {
         expect(second?.ms.model).toBe(5_000);
     });
 
+    it('counts the roadmap bytes a step read, and nothing else', () => {
+        const file = fixture();
+        const lines = fs.readFileSync(file, 'utf8').trim().split('\n');
+        const read = call(5, 'Read', { file_path: ROADMAP });
+        const other = call(6, 'Read', { file_path: `${CWD}/src/x.ts` });
+        const body = (id: string, text: string): string =>
+            JSON.stringify({ type: 'user', timestamp: at(id === read.id ? 7 : 8), message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: id, content: [{ type: 'text', text }] }] } });
+        lines.splice(1, 0, JSON.stringify(read.row), body(read.id, 'x'.repeat(4000)), JSON.stringify(other.row), body(other.id, 'y'.repeat(9000)));
+        fs.writeFileSync(file, `${lines.join('\n')}\n`);
+        const [first, second] = readSteps(file, classifyBlockingCall);
+        expect(first?.roadmapReadBytes).toBe(4000);
+        expect(second?.roadmapReadBytes).toBe(0);
+        expect(first !== undefined && stepSumError(first)).toBeNull();
+    });
+
     it('metadata rows (queue operations, system notes, pr links) anchor no gap', () => {
         const file = fixture();
         const lines = fs.readFileSync(file, 'utf8').trim().split('\n');
@@ -156,6 +171,7 @@ describe('step anatomy', () => {
         expect(s.steps).toBe(2);
         expect(s.p50Min).toBe(0.2);
         expect(s.p90Min).toBe(0.2);
+        expect(s.roadmapReadP50Kb).toBe(0);
         expect(Object.keys(s.byClass)).toContain('unknown');
         expect(s.byRisk.R2.steps).toBe(1);
         expect(s.byRisk.R3.steps).toBe(1);

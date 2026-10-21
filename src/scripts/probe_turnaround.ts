@@ -717,7 +717,7 @@ function reportSteps(files: readonly string[], store: string, json: boolean): nu
     } else {
         const lines = [
             `probe:turnaround --steps · ${String(s.steps)} closed step(s) over ${String(files.length)} transcript(s) in ${store}`,
-            `  per step: p50 ${String(s.p50Min)} min · p90 ${String(s.p90Min)} min`,
+            `  per step: p50 ${String(s.p50Min)} min · p90 ${String(s.p90Min)} min · roadmap read p50 ${String(s.roadmapReadP50Kb)} KB · p90 ${String(s.roadmapReadP90Kb)} KB`,
             '  class      p50 s   p90 s   share',
             ...STEP_CLASSES.map((c) => {
                 const r = s.byClass[c];

@@ -44,6 +44,8 @@ export interface StepReading {
     riskClass: RiskClass;
     toolCalls: number;
     toolRequests: number;
+    /** Characters of roadmap text the step's Read calls returned. */
+    roadmapReadBytes: number;
 }
 
 type Entry = Record<string, unknown>;
@@ -154,6 +156,26 @@ export function storeTranscripts(store: string): string[] {
 
 const isSubagentFile = (file: string): boolean => path.basename(path.dirname(file)) === 'subagents';
 
+function resultChars(content: unknown): number {
+    if (typeof content === 'string') return content.length;
+    if (!Array.isArray(content)) return 0;
+    return content.reduce<number>((n, b) => n + (isObj(b) && typeof b['text'] === 'string' ? b['text'].length : 0), 0);
+}
+
+/** Characters returned to the Read calls in `roadmapReads`, consuming the ids it answers. */
+function roadmapCharsIn(e: Entry, roadmapReads: Set<string>): number {
+    const msg = e['message'];
+    if (!isObj(msg) || !Array.isArray(msg['content'])) return 0;
+    let n = 0;
+    for (const b of msg['content']) {
+        if (!isObj(b) || b['type'] !== 'tool_result') continue;
+        const id = String(b['tool_use_id'] ?? '');
+        if (!roadmapReads.delete(id)) continue;
+        n += resultChars(b['content']);
+    }
+    return n;
+}
+
 /** Every closed step in one transcript file. */
 export function readSteps(file: string, causeOf: CauseOf): StepReading[] {
     // A subagent's own transcript is sidechain rows throughout; only in a session
@@ -167,6 +189,8 @@ export function readSteps(file: string, causeOf: CauseOf): StepReading[] {
     let paths = new Set<string>();
     let calls = 0;
     let requests = new Set<string>();
+    let roadmapBytes = 0;
+    const roadmapReads = new Set<string>();
     const session = path.basename(file, '.jsonl');
 
     for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
@@ -191,7 +215,10 @@ export function readSteps(file: string, causeOf: CauseOf): StepReading[] {
             acc[cls] += at - lastAt;
         }
         lastAt = at;
-        if (!isAssistant) continue;
+        if (!isAssistant) {
+            roadmapBytes += roadmapCharsIn(e, roadmapReads);
+            continue;
+        }
 
         const msg = e['message'];
         if (!isObj(msg) || !Array.isArray(msg['content'])) continue;
@@ -203,6 +230,7 @@ export function readSteps(file: string, causeOf: CauseOf): StepReading[] {
             calls += 1;
             if (typeof e['requestId'] === 'string') requests.add(e['requestId']);
             const fp = filePathOf(b['input']);
+            if (fp !== null && tool === 'Read' && ROADMAP_FILE.test(fp)) roadmapReads.add(String(b['id'] ?? ''));
             if (fp !== null && (tool === 'Edit' || tool === 'Write' || tool === 'MultiEdit')) {
                 paths.add(cwd !== '' && path.isAbsolute(fp) ? path.relative(cwd, fp) : fp);
             }
@@ -217,12 +245,14 @@ export function readSteps(file: string, causeOf: CauseOf): StepReading[] {
                     riskClass: classifyPaths([...paths].filter((p) => !ROADMAP_FILE.test(p))).cls,
                     toolCalls: calls,
                     toolRequests: requests.size,
+                    roadmapReadBytes: roadmapBytes,
                 });
                 acc = emptyMs();
                 startAt = at;
                 paths = new Set();
                 calls = 0;
                 requests = new Set();
+                roadmapBytes = 0;
             }
         }
     }
@@ -246,6 +276,9 @@ export interface StepAnatomySummary {
     /** Wall-clock minutes per closed step, every class together. */
     p50Min: number;
     p90Min: number;
+    /** Roadmap text the step's Read calls returned, in KB. */
+    roadmapReadP50Kb: number;
+    roadmapReadP90Kb: number;
     /** Per class: p50 / p90 seconds per step, and the share of all step time. */
     byClass: Record<StepClass, { p50: number; p90: number; share: number }>;
     /** Per change class: steps, p50 / p90 minutes per step, and mean tool-call batch size. */
@@ -278,6 +311,8 @@ export function summariseSteps(readings: readonly StepReading[]): StepAnatomySum
         steps: readings.length,
         p50Min: round(quantile(allMin, 0.5), 1),
         p90Min: round(quantile(allMin, 0.9), 1),
+        roadmapReadP50Kb: round(quantile(readings.map((r) => r.roadmapReadBytes / 1024), 0.5), 1),
+        roadmapReadP90Kb: round(quantile(readings.map((r) => r.roadmapReadBytes / 1024), 0.9), 1),
         byClass,
         byRisk,
         sumErrors,
