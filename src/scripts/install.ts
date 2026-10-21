@@ -109,6 +109,7 @@ import * as claude_settings_hooks from './_lib/claude_settings_hooks.js';
 import { applyHostListingPolicies } from './_lib/skill_listing_overrides.js';
 import { hostBindings } from './hooks/host_lowering.js';
 import { find_project_root_with_anchor, load_agent_settings } from './_lib/agent_settings.js';
+import { legacyProjectionPin } from './_lib/projection_key_migration.js';
 import { ruleFileArrives, type RuleScope } from '../install/rule_scope.js';
 import { isExclusivelyPackageOnly, stampHostLayerFingerprint } from '../install/partitionEligibility.js'; // ADR-236
 import * as claude_rule_rewrite from '../install/claudeRuleRewrite.js';
@@ -957,13 +958,7 @@ function ensure_claude_bridge(project_root: string, force: boolean): Record<stri
 // `_lib/mcp_bridge.ts`; only the call sites are here (see that module's header
 // for why). Names are forwarded so the export surface is unchanged.
 const ensure_mcp_bridge = mcp_bridge.makeEnsureMcpBridge(merge_json_file);
-const _resolve_tier_b = mcp_bridge.resolveTierB;
 const _tier_b_advisory = mcp_bridge.tierBAdvisory;
-const _prune_tier_b_modules = (
-    dr: Record<string, DeployResult>,
-    tier_b: ReadonlySet<string>,
-): [number, Record<string, DeployResult>] =>
-    _prune_modules_by(dr, mcp_bridge.tierBPrunePredicate(tier_b));
 
 function _cursor_dispatch_command(ac_event: string, native: string): string {
     // Hook-resilience shim (P1.4): missing binary → silent exit 0; a
@@ -3412,13 +3407,6 @@ function install_global(
     // here and restores the full tree — never a partial or crashed prune.
     try {
         const { mode, active_packs } = _resolve_scoped_projection(package_root);
-        if (mode === 'tiered') {
-            const outcome = mcp_bridge.applyTieredPrune(deploy_results, package_root, _prune_modules_by);
-            deploy_results = outcome.deployResults;
-            if (!state.QUIET && outcome.message !== null) {
-                (outcome.level === 'warn' ? warn : info)(outcome.message);
-            }
-        }
         if (mode === 'scoped') {
             const packs_registry = _load_packs_registry(package_root);
             const active_ids = _compute_active_pack_ids(packs_registry, active_packs);
@@ -4533,7 +4521,7 @@ function pyRepr(v: unknown): string {
 function main(argv: string[]): number {
     const opts = parse_options(argv);
     state.QUIET = opts.quiet;
-    state.FULL_PIN = opts.full;
+    state.FULL_PIN = opts.full || _legacy_projection_pin();
 
     if (opts.apply_payload) {
         const payload_path = resolvePath(opts.apply_payload);
@@ -4715,6 +4703,22 @@ function _propose_modules_config(project_root: string, is_first_run: boolean): v
         'Re-run anytime via `./scripts-run src/scripts/propose_modules_config` ' +
             '(installed under <package>/src/scripts/).',
     );
+}
+
+/**
+ * ADR-293's one-window read of the removed projection keys — rules in
+ * `_lib/projection_key_migration.ts`. MACHINE-global layers only, with the
+ * TEMPLATE isolated (ADR-278 / D3: a template value is not consent, and the
+ * shipped template carried `delivery`), and a layer nothing can read states no
+ * preference. `_ABSENT_LAYER` is [project, template]; no tree contains either.
+ */
+const _ABSENT_LAYER: readonly [string, string] = ['project-settings', 'template'].map((n) => path.join(path.sep, 'dev', 'null', `agent-config-absent-${n}.yml`)) as unknown as readonly [string, string];
+function _legacy_projection_pin(): boolean {
+    let data: Record<string, unknown> | null = null;
+    try {
+        data = load_agent_settings({ project_path: _ABSENT_LAYER[0], template_path: _ABSENT_LAYER[1] });
+    } catch { /* empty */ }
+    return legacyProjectionPin(data, (line) => warn(line));
 }
 
 function _read_consumer_auto_switch(project_root: string): string {
@@ -5068,8 +5072,6 @@ export {
     ensure_cursor_bridge,
     ensure_cline_bridge,
     ensure_mcp_bridge,
-    _prune_tier_b_modules,
-    _resolve_tier_b,
     _tier_b_advisory,
     ensure_windsurf_bridge,
     ensure_gemini_bridge,

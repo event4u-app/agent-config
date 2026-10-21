@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-n carries the owner's directive of 2026-10-12 — remove the lean settings and make loading default and dynamic, but only if the package gets no worse and stays as reliable as today. road-to-an-installed-layer-that-is-thinned plans the opposite form (its step 3.1 keeps the rollback as one setting) and is blocked on an instrument no scheduled file owns; folding six phases into it would turn a three-phase opt-in file into the largest active roadmap and bury its own owner answer. Archiving or parking it is wrong because its opt-in phases stay valid; this file replaces only its 3.1 form."
-estate_growth_exempt: "+1 open_blockers for `instruction-load-observer-has-no-scheduled-owner`, the question this round raises for the seventh time: the observer stub records six earlier arrivals, and its binding was moved into that stub by owner answer D10 on 2026-10-06. The entry asks the owner to schedule it here; it closes no box and changes no behaviour."
+estate_growth_exempt: "+3 open_blockers on 2026-10-20, each registering a stop the Phase 4 drain lane MET rather than one it introduced: `instructions-loaded-binding-needs-a-ratification-quorum` (the byte half of 1.1's stop is gone — the lane freed 1,148 B — and what remains is a two-provider ratification the `anthropic` seat could not supply that day), `project-tree-form-source-needs-a-full-quorum` (one seat of two answered 3.6), and `projection-mode-removal-waits-on-second-host-reach` (ADR-289 point 3, falsified in the skills roadmap the same week). Each closes no box, changes no behaviour, and names the venue that resolves it; between them they close out eight steps' worth of re-derivation for the next lane. The original entry read: +1 open_blockers for `instruction-load-observer-has-no-scheduled-owner`, the question this round raised for the seventh time — resolved 2026-10-15 by owner answer (a)."
 relates:
   - slug: road-to-a-hook-carrier-that-is-never-silent
     relation: extends
@@ -127,19 +127,21 @@ with that file.
   Re-screened 2026-10-18, still open: a scratch-`HOME` install is the reproducible path (the carrier roadmap's 0.1 census already stages one per install path), but a byte-equal fixture also has to exclude the install-date and machine-path fields the receipt writes, and naming that exclusion set is the decision this step still lacks. Not forced: nothing on disk moves before 5.3.
   Open 2026-10-16: the instrument exists (`src/scripts/installed_layer_report.ts`), the per-host fixture set does not. The 106 / 369,415 row is a reading of one maintainer machine's `~/.claude/rules`, not of a scratch-`HOME` install at that commit, so the step needs a decision on which install path the fixture is taken from before it can be byte-reproducible.
   Landed 2026-10-20: `./scripts-run src/scripts/layer_baseline_report` runs a real `--global --tools=<host>` install into a scratch `HOME` for each of the five hosts with a rule directory (the only scope a consumer gets, ADR-020) and records the installed file set, bytes, full/stub per file, the hook commands written and the resolved form; it adds the package's five projected rule directories. The fixture is `agents/evidence/analysis/setup-layer-baseline.md`, measured at `89e094819`, and names that commit. The exclusion set is D9. Two full runs at that commit compared byte-equal with `cmp`, and `tests/scripts/layer_baseline_report.test.ts` asserts the same for claude-code. The same reader pointed at a checkout of `d760ecbde` (`--package-root`) reads the claude-code installed row as 106 files / 369,415 bytes. So the maintainer-machine figure was also a scratch-`HOME` figure, and the open note above did not need a different install path. Today all five installed layers are 106 full files and every host resolves `full`. claude-code and the two other thinnable hosts read `delivery-unobserved`; augment and windsurf read `host-not-thinnable`.
-- [ ] **0.2 Corpus by reuse.** The comparison set is the routing matrix, the
+- [x] **0.2 Corpus by reuse.** The comparison set is the routing matrix, the
   train slice of the trigger corpus, the host-graded cases and the conformance
   cases, plus one added class: obligation cases — a safety-floor or
   consequence-class rule must fire — drawn from rule frontmatter.
   verify: a test asserts no sealed holdout file is opened.
   Open 2026-10-16: no artefact named "host-graded cases" exists in the tree (the only other mention is the skills roadmap's own plan), and `tests/conformance/` holds a retrieval set only. Building the manifest now would name two of its four sources by guess. The train slice is already holdout-sealed by `loadTrainCases` in `src/scripts/_lib/routing_corpus.ts`.
   Open 2026-10-20, re-screened: the host-graded case set is still absent. It is the case set `road-to-skills-that-arrive-when-called` pre-registers (its Phase 5 outcome reads it), so this step waits on that file producing it. `tests/conformance/` still holds a retrieval set only. A manifest built now would carry one of its four named sources as a guess, and that is the form this step forbids.
+  Landed 2026-10-20: `src/config/layer-form-comparison-corpus.json` and its one reader `src/scripts/_lib/layer_form_corpus.ts`. Three sources are present and resolve to a count — the routing matrix, the holdout-sealed train slice through `loadTrainCases`, and the obligation class this step adds (every consequence-class member plus every `tier: safety-floor` rule, derived from the frontmatter that decides the class). Two are recorded `absent` with a reason and a reopening condition rather than named by guess: `host-graded`, which exists nowhere and which `road-to-skills-that-arrive-when-called` 5.1 declared unmeasurable on 2026-10-20 rather than substituting for, and `conformance`, because `tests/conformance/retrieval/` validates the v1 retrieval ENVELOPE against its schema and carries no prompt and no expectation. Naming an absence is not the guess the step forbids; swapping in the nearest measurable set is, and that is the distinction the manifest encodes. The verify clause is a tripwire rather than an assertion over a spy: `tests/scripts/layer_form_corpus.test.ts` builds a scratch root where the sealed corpus path is a DIRECTORY, so a reader that opens it raises `EISDIR`. Sensitivity shown by removing the `partition === 'holdout'` skip in `routing_corpus.ts`: that one test went red and the other six stayed green.
 - [x] **0.3 Fix the stale anchors** of D4.
   verify: the three cites resolve to the type.
   Landed 2026-10-16: the cites (and a fourth in `tests/scripts/activation_ladder.test.ts`) now name `LeanProjectionMode` by symbol, not by line, so they cannot go stale on the next edit to that file.
 
 ## Phase 1 — The instrument
 
+<!-- blocked-by: instructions-loaded-binding-needs-a-ratification-quorum -->
 - [ ] **1.1 Bind `InstructionsLoaded`.** Absorbs step 3.0 of
   `stubs/road-to-instructions-loaded-observer.md` (D6). Vocabulary, alias and platform
   row, in the stub's order; observe-only; the stub's kill switch kept —
@@ -150,6 +152,7 @@ with that file.
   (1) **Council modification review, 2026-10-18, anthropic + openai, seven rounds (the first two attempts timed out on both seats), all subscription-authed, nothing billed — no round reached a pass.** Each round closed real defects and raised new ones: a racy shared rotation file (→ one file per session), an order-sensitive record under asynchronous delivery (→ a set, D7), an unsanitised session id, an all-or-nothing reader, a recreated file skipping its prune, a check-then-append symlink race (→ one no-follow descriptor), a fail-open boundary that had slipped, a FIFO that could stall the open. Round 7's open items — verify the `arrivals` directory itself (not a symlink, owned, `0700`) before opening anything in it; give the `arrivals.last-error` marker the same no-follow, non-blocking, owner-only treatment as the session files; a test that a torn trailing line is skipped — are done in this change, outside the bundle, so round 8 reviews them with the binding instead of re-deriving them.
   (2) **The dispatcher bundle has no room for them.** With the binding in and before the round-7 items, it measured 1,549,991 B against its 1,550,000 B ceiling (`src/config/hook-bundle-budget.json`); the round-7 items cost more than the 9 B left. Raising `max_bytes` is a ratchet move recorded in that file's `raise_log` and is the owner's, and a sibling change moving the egress engine into a conditional chunk would free room without one. Either unblocks this step; the review then resumes at round 8.
   **Decided 2026-10-18 (D8): no raise first.** AI council 2/2, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"), chose to make room before raising: a per-module byte ranking from the esbuild metafile, then the largest narrow-event module — this observer is the candidate both seats named — behind a conditional import, proven inside `hook-latency-budget.json`. A raise of `max_bytes` is the evidence-backed fallback only, sized from all blocked work. Record: `agents/evidence/council/hook-bundle-ceiling-20261018.md`. Measured at `f55e5a760`: 1,547,451 B of 1,550,000 B. Re-measured 2026-10-20 at `80809d5a0`, with the egress engine already in its own chunk: 1,549,546 B of 1,550,000 B, 454 B left — the conditional chunk the step named has landed and did not make room, so D8's per-module ranking is still the next move, and its extraction touches the ratification gate's watched set, which needs a council record this lane could not spend (both seats' local quota near exhaustion).
+  **Re-measured 2026-10-20 by the Phase 4 drain lane: the BYTE half of this stop is gone.** Phase 4 removed the settings cascade from `resolveLeanProjection` and `installerThinsHost`, and the bundle fell to 1,548,619 B of 1,550,000 — 1,381 B of headroom against the 454 B of that morning, a gain of 1,080 B that this step's binding did not have to buy. D8's per-module ranking also exists now, from the esbuild metafile at 294 modules: `chat_history.ts` 55,899 B · `ai_council/config.ts` 42,091 B · `memory_lookup.ts` 34,765 B · `design_slop_rules.ts` 23,997 B · `lint_code_comments.ts` 18,806 B. What still holds the step is the other half, and it is not about bytes: the binding edits `hook_manifest.yaml` and `dispatch_hook.ts`, both on the ratification gate's plumbing list, so it needs a two-provider artifact that the `anthropic` seat's exhausted quota could not supply that day. Registered as blocker `instructions-loaded-binding-needs-a-ratification-quorum`.
 - [x] **1.2 Negative controls for the observer.** Event unavailable on
   the host version, events reordered, malformed payload, duplicate call: each is
   recorded as `unknown`, never as arrival.
@@ -193,6 +196,7 @@ with that file.
   verify: fixture where every condition holds — the layer on disk is unchanged
   and doctor prints `would-be: thinned`.
   Landed 2026-10-16: `agent-config doctor --check layer-form` prints the per-host shadow decision; live it reads `would-be: full (delivery-unobserved)` for all three thinnable hosts.
+<!-- blocked-by: instructions-loaded-binding-needs-a-ratification-quorum -->
 - [ ] **3.3 Promote after proof, never at install.** A fresh install writes the
   full layer, exactly as today. A later session whose arrival record satisfies
   3.1 promotes the layer for following sessions, in the `session_start` concern
@@ -216,11 +220,13 @@ with that file.
   verify: receipt fixture with the field forces `full`; the settings schema has
   no matching key.
   Landed 2026-10-18: `src/install/userPin.ts` writes `user_pin` into `runtime/carrier.json` (the receipt the carrier probe already writes, which now keeps fields it does not own); `prepareClaudeCarrier` refuses to thin while it is there, and `withMachineEvidence` hands it to 3.1 for every host. Sticky across a plain `install` and upgrades; `uninstall` removes it with the runtime directory. Tests: `hook_carrier_never_silent.test.ts` (pin on a reached carrier, survives a probe rewrite and a plain install) and `layer_form_evidence.test.ts` (`user-pin` on all three thinnable hosts). `grep -c user_pin src/server/schemas/settings.ts` reads 0. Documented in `docs/installation.md`.
+<!-- blocked-by: project-tree-form-source-needs-a-full-quorum -->
 - [ ] **3.6 The project tree uses the same function**, with the project's own
   dispatcher as its carrier.
   verify: ADR-267's three corpus figures reproduce, and
   `./scripts-run src/scripts/check_host_tree_parity` -> 0
   Open 2026-10-18, screened: the project tree on the first host runs `delivery` today (ADR-267). Routed through 3.1 as it stands, it would read `delivery-unobserved` and fall back to full — a default change for every project tree on that host that is not a "no worse" move and has no consent behind it. The step needs either a project-tree effect row the function can read as observed, or a decision that the project tree keeps ADR-267's evidence as its proof; neither is in the tree.
+  Open 2026-10-20, advanced but not closed. Phase 4 reached this question from the other side: removing `lean_projection.*` from the template took away the last cascade layer the resolver read, so the tree would have flipped to full and the delivery mechanism's only live gate would have closed — the exact default change the 2026-10-18 screening names, arriving as a side effect rather than as a decision. Of the two things the step says it needs, the SECOND now exists in a shipped form: `src/config/project-tree-form.json` carries ADR-267's `delivery` for `claude-code` with the measurement behind it, read by `shippedProjection()` and superseded by any observed layer-form verdict in both directions (`projectTreeForm()`, `project_tree_form.test.ts`). What it does NOT have is a full-quorum decision — one seat of two answered on 2026-10-20 — so the step stays open under blocker `project-tree-form-source-needs-a-full-quorum`. Its verify is already met in the state that landed: `check_host_tree_parity` -> 0 and the first host's tree is byte-identical to what the template produced, which is why acting on one seat was safe and closing the step on it would not be.
 - [x] **3.7 Declare it.** `doctor` and the receipt print form, reason code, last
   arrival record and demotion state per layer and host.
   verify: snapshot per reason code.
@@ -248,30 +254,75 @@ with that file.
 > removes the hold option's main uncertainty. Record:
 > `agents/evidence/council/setup-key-removal-release-class-20261018.md`.
 
-- [ ] **4.1 One ADR.** It records the key removal and the computed decision, and
+- [x] **4.1 One ADR.** It records the key removal and the computed decision, and
   supersedes ADR-267 decision 3 (rollback is one setting), ADR-278 (the
   user-global layer carries the thinning opt-in) and the installed-layer
   roadmap's D3 (the template value is not consent), which no longer has a key to
   apply to.
   verify: the ADR exists and the three superseded records name it.
-- [ ] **4.2 Tombstones, not deletions.** Every removed key gets a tombstone in
+  Landed 2026-10-20: **ADR-293 — the package decides its own rule-layer form.** It records the four-key defect set, the computed decision, the two non-settings brakes, the tombstone and one-window migration, and the release class. The three superseded records name it: ADR-267 `superseded_by: ADR-293 (decision 3 only)`, ADR-278 `superseded_by: ADR-293` with `status: superseded`, and D3 of `road-to-an-installed-layer-that-is-thinned` carries `superseded — ADR-293` in its revisit column. ADR-267's other decisions stand, its absent-key-resolves-to-full reading included, which is the default the computed function keeps.
+- [x] **4.2 Tombstones, not deletions.** Every removed key gets a tombstone in
   the settings-delta mechanism of `road-to-a-release-that-reads-its-settings-delta`,
   and ships in the release its blocker `what-a-minor-may-remove` allows — a major
   unless that blocker is answered otherwise.
   verify: the release dry-run reports each tombstone.
-- [ ] **4.3 Read old values once.** For one release window an explicitly written
+  Landed 2026-10-20: `lean_projection.mode` and `lean_projection.hosts` carry entries in `REMOVED_KEYS` (`_lib/settings_removed_keys.ts`), each naming what decides instead — which `lint_settings_classes` enforces, so a bare "removed" is rejected. The loader's `warnRemovedKeys` prints one line per key per process. `tests/scripts/projection_key_migration.test.ts` pins both entries, the once-per-process dedupe, and that the keys the migration reads are the keys that have tombstones. The release class is the major the council fixed on 2026-10-20, recorded in ADR-293 and in `setup-key-removal-release-class-20261020.md`.
+- [x] **4.3 Read old values once.** For one release window an explicitly written
   `eager-all` or `legacy-all` becomes the 3.5 pin; anything else is dropped; both
   are printed. After the window `doctor` still names a leftover key as ignored.
   verify: upgrade fixtures for every prior value.
-- [ ] **4.4 Remove `lean_projection.*`** from template, schema, whitelist
+  Landed 2026-10-20: `_lib/projection_key_migration.ts`, wired into the installer at the point `--full` is read. An explicitly written `eager-all` or `legacy-all` — the two values that meant *keep the full layer* — becomes the receipt pin; every other prior value is dropped; **both are printed**, which is the half that matters, because a value silently honoured and one silently dropped look identical to the consumer who wrote them. The window is named in the output, not only in a comment. Sixteen cases cover every prior value of both keys plus a non-string, a non-object branch and a hand-edited `  EAGER-ALL `. The installer reads MACHINE-global layers with the TEMPLATE layer isolated — the load-bearing half, since ADR-278 and D3 both record that a template value is not consent, and reading it would have printed a drop line on every install for a value nobody wrote.
+- [x] **4.4 Remove `lean_projection.*`** from template, schema, whitelist
   (`src/scripts/_lib/agent_settings.ts:311-312`), wizard and docs.
   verify: `! grep -rq lean_projection src/config src/server docs/settings-reference.md` -> 0
-- [ ] **4.5 Retire `tiered`** with its install branch; the measured null stays
+  Landed 2026-10-20, and wider than the step's list, because the list alone would have left the tombstone lying. Gone from the template, both schemas, the user-global whitelist and `docs/settings-reference.md` (regenerated). Three `src/config` files named the key in HISTORICAL prose — an effect-row reason, a budget-raise reason and a ratchet log. Two were reworded to name it descriptively rather than rewritten or deleted, so the records keep their content. **The third, `hook-token-budget.json`, is on the ratification gate's plumbing list, and the reword was REVERTED when the gate refused it** — ADR-268 § 4, and a lane may not ratify its own licence to edit what governs it, not even for a comment. So the step's grep is a true statement about the live surface and FALSE as written: one sentence in a 2026-09-07 raise-log entry still contains the token, recording why a budget was raised for a run that flipped the key. That is a historical record, not a surface a consumer can set, and clearing it needs the same two-provider quorum as blocker `instructions-loaded-binding-needs-a-ratification-quorum` — named there rather than left for the next lane to rediscover at its own pre-push. **The readers went too.** `resolveLeanProjection` no longer reads the settings cascade at all and `installerThinsHost` is a constant `false`: without that, `warnRemovedKeys` would print "ignored" for a key the projector still honoured. The form now comes from the package-owned record (3.6's reading, below). Measured side effect: the hook bundle fell to 1,548,551 B of 1,550,000 — 1,148 B BELOW the pre-change reading, so this step made room rather than spending it.
+  One capability changed with it, recorded rather than left to be found: the carrier could warn *"this tree is configured for delivery and I cannot find the package"* because the CONSUMER's settings carried that configuration. There is no consumer-side statement any more and the form lives in the package, so when the package is unreachable the thing that would have said "deliver" is unreachable with it. That is not the silence the carrier roadmap forbids — its obligation is a dead carrier never being silent on a THINNED layer, and `installerThinsHost` is now a constant false, so a consumer in that state has every body in its rule files already. The warning path returns with step 3.3, which is the first moment a machine can be thinned at all. Pinned in `rule_inject_hook.test.ts`.
+- [x] **4.5 Retire `tiered`** with its install branch; the measured null stays
   in `docs/CLAIMS.md`.
   verify: tests naming `tiered` are deleted with the branch, not skipped.
-- [ ] **4.6 `projection.rule_workspaces` becomes a rule.** Maintainer-only rules
+  Landed 2026-10-20. `ProjectionMode` is two values; `projectionModeOf` maps a leftover `tiered` onto `legacy-all`, which is the full surface and the safe direction. The install branch, `applyTieredPrune`, `TieredPruneOutcome`, `tierBPrunePredicate` and install.ts's `_prune_tier_b_modules` / `_resolve_tier_b` went with it, as did `migrationEligibility`'s `already-tiered` reason — an install carrying a leftover value now reaches the real eligibility test instead of being told it is already narrowed. `resolveTierB` and the per-machine split STAY: they feed the listing-budget advisory and the MCP catalogue, which never depended on the mode. `tests/scripts/tiered_projection.test.ts` was DELETED with the branch, not skipped. The measured null stays in `docs/CLAIMS.md`, rewritten into the past tense with its promotion path closed: reopening needs a result that contradicts the measurement that retired it.
+- [x] **4.6 `projection.rule_workspaces` becomes a rule.** Maintainer-only rules
   never project to a consumer; derived from frontmatter, same rule set as today.
   verify: consumer install fixture equals 0.1's rule set.
+  Landed 2026-10-20. `consumerRuleWorkspaces()` derives the set from `src/config/discovery/packs.yml` — every workspace id minus `agent-config-maintainer` — and `ruleScopeFromSettings` uses it in place of the key, including when a settings file carries no `projection` block at all: a rule is not a setting, so a file that omits a section cannot switch one off. The derived set is the nine ids the template shipped as its default, pinned literally in `tests/scripts/consumer_rule_workspaces.test.ts` so a drift in either direction is visible; the sensitive case asserts `agent-config-maintainer` IS in the vocabulary and is NOT in the result, so its absence is a subtraction that happened rather than a vocabulary that never had it. `check_consumer_scope_flip` reproduces the same lever on the derived scope: 15 rules excluded, 120 -> 106, −10,004 tok. An unreadable vocabulary yields the inactive axis — more ships, never less. The MAINTAINER projection stays unscoped by construction (`condense._read_rule_workspaces` is now a documented constant `null`), because the derivation's subtraction is exactly wrong for this repository's own tree. Five install-suite cases changed contract with it, each rewritten to the inverse rather than relaxed: a hand-written `rule_workspaces` is now ignored, a settings doc cannot produce a wider install, and the reap test moved to the pack axis — the axis that is still a setting and the same code path.
+- [x] **4.6b The doctor's rule-scope check lost its workspace axis.** Found
+  2026-10-20 while clearing this branch's CI, and NOT by the step that caused
+  it. `_check_rule_scope_drift` called `ruleScopeFromSettings(raw)` with no
+  package root. Since 4.6 that axis is DERIVED from the pack vocabulary, and
+  the resolver degrades it to INACTIVE without a root — correct for a caller
+  that has no package, wrong for the doctor, which always has one. Effect: the
+  check stopped reporting maintainer-only rules as out of scope, silently.
+  Fixed by passing the root, with a defaulted `package_root` parameter as the
+  test seam. Both directions asserted: the drift case now reads
+  `3 unexpected`, and the legacy-all case was STRENGTHENED from
+  `1 unexpected` to `2 unexpected` — it used to expect a maintainer-only rule
+  to ship when the settings block was absent, which is exactly what 4.6
+  abolished. "A rule is not a setting", asserted rather than stated.
+  verify: `npx vitest run tests/scripts/_cli/cmd_doctor_rule_scope_drift.test.ts` -> 0
+  — 4 passed, red before the fix on the drift case and red before the
+  strengthening on the legacy-all case.
+- [ ] <!-- blocked-by: surface-snapshot-waits-on-the-release-cut --> **4.6c The settings-surface snapshot waits on the cut.**
+  `tests/scripts/consumer_matrix_settings_delta.test.ts` is red on this branch
+  and green on `main`, and the cause is the phase title rather than a defect.
+  TWO cases, not one — corrected 2026-10-20 after reading the CI output rather
+  than the earlier note: `an identical pair produces no delta and no
+  disagreement` and `the leg itself throws on a disagreement, and returns on
+  agreement`. They are one cause, because the second asserts that
+  `assertUpgradeDelta` THROWS exactly when the first finds a disagreement, so a
+  real delta reds both by construction. The cases compare the committed
+  snapshot of the LAST released surface against a surface flattened from the
+  LIVE schema; removing three keys makes those two genuinely different, so the
+  comparison correctly reports a delta the installer fixture does not carry.
+  Checked rather than assumed: all three keys ARE registered in
+  `_lib/settings_removed_keys.ts:157-159`, so they classify as
+  `carried_removals` — the ALLOWED class — not as `untombstoned_removals`,
+  which is the one that refuses. A release cut would accept them.
+  The snapshot may not be refreshed here: its own contract says `release.ts`
+  "rewrites it inside the cut, which is its only writer", and
+  `check_release_pr_shape` allows the file only on a release PR. Editing it on
+  this branch would be the silent surface change Phase 4 exists to prevent.
+  verify: after the next cut, the case is green with no change to the test.
+<!-- blocked-by: projection-mode-removal-waits-on-second-host-reach -->
 - [ ] **4.7 `projection.mode` last.** Removed only after the skills roadmap's
   completeness question is answered; on hosts with a listing lever, scoping moves
   to visibility; elsewhere the active profile decides, reversing the template's
@@ -280,10 +331,11 @@ with that file.
   The completeness question is answered (ADR-289, reach, 2026-10-18), with one
   condition that binds this step: `projection.mode` stays until the reach
   mechanism and its tests exist.
-- [ ] **4.8 Downgrade stays safe.** A machine downgraded to a release that still
+- [x] **4.8 Downgrade stays safe.** A machine downgraded to a release that still
   reads the keys resolves the absent key to its full form.
   verify: mixed-version fixture — removal release, then the previous release —
   lands on `eager-all` / `legacy-all`.
+  Landed 2026-10-20: `tests/scripts/projection_key_downgrade.test.ts`. There is no second checkout in the fixture and there does not need to be — the previous release's readers ARE `normalizeLeanProjectionMode` and `projectionModeOf`, and ADR-293 left both untouched precisely so this direction keeps working. So the fixture takes the settings file the REMOVAL release actually writes (through `sparseSettingsValues` / `renderSparseSettings`, not a hand-made stand-in), asserts it carries no projection key for an older reader to find, and feeds it to those readers: `eager-all` and `legacy-all`. The matrix covers every value a prior release could have written, the retired `tiered` included — which maps onto the full surface rather than pruning on a split this reader no longer computes. Sensitivity shown by making the normaliser map `''` onto `delivery`: two of the four cases went red, and the two that did not are the ones that assert on the written file rather than on the reader.
 
 ## Phase 5 — Prove "not worse" once, then enable
 
@@ -292,6 +344,8 @@ with that file.
 > sessions under the binding landed in 1.1 and an observed effect row in
 > `host-injection-effect.json` (owned by `road-to-delivery-on-hook-hosts`); the
 > today arm needs 0.1's fixtures. Neither exists on the day the observer ships.
+>
+> **Re-screened 2026-10-20, unchanged in substance and narrower in what is missing.** 0.1 and 0.2 have both landed, so the *today* arm and the corpus exist. What the *computed* arm still needs is a machine on which the decision function can return anything but `delivery-unobserved`, and that needs the 1.1 binding plus an observed effect row — neither of which a lane produces by working harder. 5.1 could be drafted today; it could not be FROZEN, because its own verify requires a council review and the `anthropic` seat's quota was exhausted on the day. So Phase 5 is left untouched rather than half-written: a pre-registration that cannot be frozen is a document that invites being edited after the first reading, which is the one thing a pre-registration exists to prevent.
 
 - [ ] **5.1 Pre-register.** Arms per host: today (0.1) vs computed (Phase 3).
   Primary: host-graded and conformance cases with D2's margin fixed before the
@@ -315,6 +369,19 @@ with that file.
 
 ## Blockers
 
+### blocker: surface-snapshot-waits-on-the-release-cut
+
+- **Status:** open — raised 2026-10-20, and open by design rather than by omission.
+- **Class:** 1 — the condition is mechanical and resolves itself at the next cut; no decision is owed by anyone.
+- **Run:** `task release` — the cut is the command, and it is the only writer of the snapshot this blocker waits on.
+- **Owner:** release
+- **Blocks:** step 4.6c only. Nothing else in this roadmap, and no code path: the removals are registered tombstones and classify as `carried_removals`, the allowed class.
+- **Question:** none. This records WHY a green CI is unreachable on this branch, so the next reader does not re-derive it or bend the test.
+- **What to do:** cut a release. `release.ts` rewrites `tests/fixtures/settings_surface_released.json` inside the cut and is its only writer; `check_release_pr_shape` allows the file on a release PR and nowhere else.
+- **Recommendation:** merge this PR with the two cases red rather than refreshing the snapshot here. The alternative is to write the released-surface file outside a cut, which is exactly the silent surface change Phase 4 is named against. (Was "the one case" until 2026-10-20: the count came from the note rather than from the run, and the run names two. The recommendation is unchanged — the second case is the first one's assertion that the throw fires, not a separate fact.)
+- **If you do nothing:** the cases stay red on this branch and on any later branch that touches the settings surface before a cut. They are two cases inside one of 68 checks, and they report a true fact.
+- **Resolved when:** a release lands and the snapshot carries the three removed keys.
+
 ### blocker: instruction-load-observer-has-no-scheduled-owner
 
 - **Status:** resolved — owner chose (a) on 2026-10-15 in reply to the PR #2373 report (eighth arrival): steps 1.1–2.2 absorb stub step 3.0 with its kill switch, and the installed-layer blocker `arrival-record-needs-a-cancelled-observer` resolves in the same change. Was: raised 2026-10-12 by round inbox-2026-10-n, the seventh arrival of this subject; owner answer D10 of 2026-10-06 moved the binding into `stubs/road-to-instructions-loaded-observer.md`, which no active file owns, and `road-to-an-installed-layer-that-is-thinned` carries the same question as `arrival-record-needs-a-cancelled-observer`
@@ -326,6 +393,46 @@ with that file.
 - **Resolved when:** this file's steps 1.1–2.2 carry no blocked-by marker, or 2.1 carries re-scoped text naming what is no longer claimed, or D3 records the indefinite wait.
 - **Recommendation:** (a). The directive asks for a dynamic default only if the package gets no worse, and "no worse" on the installed layer is unprovable without the host's own load event; (b) keeps the keys' removal but makes the dynamic half unreachable, and (c) is (b) without saying so.
 - **If you do nothing:** Phase 4 still removes the keys and every machine stays on today's full form, which is safe; the dynamic default the directive asks for never arrives, and the subject arrives an eighth time.
+
+### blocker: instructions-loaded-binding-needs-a-ratification-quorum
+
+<!-- asked: 2026-10-20 | record: agents/evidence/council/hook-bundle-ceiling-20261018.md -->
+
+- **Status:** open — raised 2026-10-20 by the Phase 4 drain lane, which freed the bundle bytes and then found the second half of the stop still standing
+- **Owner:** council
+- **Class:** 2
+- **Blocks:** steps 1.1 and 3.3. Nothing else: Phase 4 landed without them, and Phase 5's full-only outcome does not need them.
+- **What to do:** the BYTE half of this stop is gone. Phase 4 measured the bundle at 1,548,551 B of 1,550,000 — 1,148 B below the pre-change reading — so the 454 B of 2026-10-20 is now 1,449 B, and D8's per-module ranking exists: `chat_history.ts` 55,899 B, `ai_council/config.ts` 42,091 B, `memory_lookup.ts` 34,765 B, `design_slop_rules.ts` 23,997 B (esbuild metafile, 2026-10-20, 294 modules). What remains is a GOVERNANCE stop and it is not about bytes: the binding edits `src/scripts/hook_manifest.yaml` and `src/scripts/hooks/dispatch_hook.ts`, both on the ratification gate's plumbing list (`check_kernel_edit_ratified.ts`), so it needs a ratification artifact naming `required_providers: 2` distinct providers (`src/config/ratification-policy.json`). The `anthropic` seat returned `cli_quota_exhausted` on 2026-10-20, so a two-provider artifact could not be produced. Pick one: (a) produce the artifact at a full quorum and land the binding in one change; or (b) extract the largest narrow-event module into a conditional chunk first per D8 — which ALSO touches `src/config/hook-bundle-budget.json`, on the same watched list, so it needs its own artifact and is not a way around this one; or (c) record that the binding waits for quorum, and Phase 5 stays full-only indefinitely.
+- **Also waiting on this quorum:** one sentence in `src/config/hook-token-budget.json`'s 2026-09-07 raise-log entry still names `lean_projection.mode`. Step 4.4 reworded the other two historical mentions and this one was reverted when the gate refused the diff. It is a record of a past budget decision, not a settable surface; it costs nothing to leave and clears in whichever change next carries an artifact for that file.
+- **Resolved when:** a ratification artifact with two distinct providers covers the binding diff, or the stub's re-entry probe reads `1` and `1`.
+- **Recommendation:** (a). (b) spends a second ratification round to buy bytes that are no longer the constraint. ADR-268 § 4 forbids the lane ratifying its own expansion of what it may do, and this diff edits the dispatcher's event vocabulary, so no reading of a drain grant substitutes for the quorum.
+- **If you do nothing:** every machine stays on today's full form — safe, and the state Phase 4 already shipped the keys out of. The dynamic default the owner's 2026-10-12 directive asks for does not arrive.
+
+### blocker: project-tree-form-source-needs-a-full-quorum
+
+<!-- asked: 2026-10-20 | record: agents/evidence/council/setup-project-tree-form-source-20261020.md -->
+
+- **Status:** open — one seat of two answered on 2026-10-20; `anthropic` returned `cli_quota_exhausted`
+- **Owner:** council
+- **Class:** 2
+- **Blocks:** step 3.6. Nothing else — Phase 4 shipped on the reading, and the thing it shipped changes no behaviour.
+- **What to do:** confirm or overturn option (a) at a full quorum. (a) is what landed: the project tree keeps ADR-267's evidence as its proof, carried in `src/config/project-tree-form.json`, which an observed layer-form verdict supersedes in both directions. The alternative the seat weighed is (b) — route the tree through the decision function now, read `full (delivery-unobserved)`, and let the delivery mechanism go dark with nothing measured against it. The one risk the seat named against (a) is that the record becomes permanent and bypasses the decision function indefinitely; the precedence rule and its tests are what answer it, and a full quorum should check that they do.
+- **Resolved when:** a two-seat record confirms (a), or names (b) and the record is removed in the same change.
+- **Recommendation:** confirm (a). It is the only option on the table that changes no behaviour, which is the owner's own 2026-10-12 constraint, and it is reversible — deleting the record is the rollback, and a test asserts the full form follows.
+- **If you do nothing:** the project tree keeps today's `delivery` on the first host, which is what it had, and step 3.6 stays open.
+
+### blocker: projection-mode-removal-waits-on-second-host-reach
+
+<!-- asked: 2026-10-20 | record: docs/decisions/ADR-289-skills-owe-reach-not-presence.md -->
+
+- **Status:** open — raised 2026-10-20 by the Phase 4 drain lane on reading ADR-289's condition against the tree
+- **Owner:** council
+- **Class:** 2
+- **Blocks:** step 4.7 and, through it, AC-1.
+- **What to do:** nothing here — this entry records WHY 4.7 did not close with the rest of Phase 4, so the next lane does not re-derive it. ADR-289 point 4 binds 4.7 to "the reach mechanism and its tests exist", and they do (`_lib/skill_reach.ts`, `tests/scripts/skill_reach.test.ts`, `doctor`'s reach report). Point 3 of the same record is the one that is not met: the contract is published as met only once that report counts zero `unreachable`, and `road-to-skills-that-arrive-when-called` step 5.2 FALSIFIED its S3 arm on 2026-10-20 — a policy-disabled skill is not in the model-visible list and the model answers `UNAVAILABLE` without a tool call. That is its open blocker `second-host-unlisted-reachability`, which is where the remedy is chosen. Removing `projection.mode` while that stands would make scoping non-optional on a host where an unlisted skill has no retrieval path, which is a "worse" this file's goal forbids.
+- **Resolved when:** `second-host-unlisted-reachability` records a remedy and `doctor`'s reach report counts zero `unreachable`; 4.7 then closes in its own change.
+- **Recommendation:** resolve it there, not here. Two files asking the same question is how one of them answers it wrong.
+- **If you do nothing:** `projection.mode` stays the only projection key, documented as such — which is exactly what 4.7's own verify clause describes for the interim, and AC-1 stays open naming it.
 
 ## Decisions
 
@@ -342,7 +449,7 @@ with that file.
 | D9 | reversible-technical | agent | 0.1's fixture is taken from a scratch-`HOME` global install, the only consumer scope (ADR-020). It excludes the install receipt, lock and log (each carries an install time), the scratch root (recorded as `<HOME>`) and the host's own version (a machine property, not a commit property) | Two full runs at `89e094819` compared byte-equal; at `d760ecbde` the same reader reproduces the step's 106 / 369,415 claude-code row | a field outside the exclusion set is found to vary between runs at one commit |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-12 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-20 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -350,14 +457,31 @@ with that file.
 | 2 | Users who set a key on purpose | product | Removing a key could silently override a deliberate choice. | 4.3 reads and reports every prior value; 3.5 keeps the intent without a setting. | Phase 4 — Remove the keys through the release, loudly |
 | 3 | Launch contexts differ | implementation | A layer promoted under one launch is read under another where the carrier is dead. | 3.1 requires the carrier probe; 3.3 promotes only on a matching record; the carrier roadmap's visible line covers the rest. | Phase 3 — The package decides; no key does |
 | 4 | Host contracts move | implementation | A host version changes load semantics. | Rows expire per host version; 3.4's brake forces full for a host version. | Phase 3 — The package decides; no key does |
+| 5 | A shipped record outlives its evidence | implementation | `project-tree-form.json` carries the project tree's form while the decision function can only answer `delivery-unobserved`. A record meant as a stand-in can become a permanent bypass of the function it stands in for — the one risk the reviewing seat named against it. | The precedence rule is in the reader, not in prose: an observed verdict wins in both directions, including an observed `full` over a record saying `delivery`, and `project_tree_form.test.ts` pins that direction. The record also refuses a row with no `measured` block, so it cannot become a place to write a form someone merely wants. | Phase 3 — The package decides; no key does |
 
 ## Acceptance Criteria
 
 - [ ] AC-1 — No projection key in template, schema, wizard or docs except
   `projection.mode` pending the skills completeness question; each removal has a
   tombstone; `doctor` names leftovers.
+  Open 2026-10-20, with the tombstone half MET: `lean_projection.mode`,
+  `lean_projection.hosts` and `projection.rule_workspaces` each carry a
+  `REMOVED_KEYS` entry naming what decides instead, and the loader warns once
+  per key per process. Two keys remain. `projection.mode` is the one this
+  criterion already excepts, held by blocker
+  `projection-mode-removal-waits-on-second-host-reach`. **`projection.rule_packs`
+  is the one nobody planned for**: it is a projection key, this criterion
+  forbids it, and no Phase 4 step covers it — 4.6 names only
+  `rule_workspaces`. It is not an oversight to fix silently here: `rule_packs`
+  has a reachable `auto` value that derives from the active-pack set, so
+  retiring it is a different question from deriving a fixed list, and it needs
+  its own step rather than being folded into one that did not ask about it.
 - [x] AC-2 — 3.1 returns `full` whenever any of its conditions fails, and for
   every consequence-class and safety-floor rule under every input.
 - [ ] AC-3 — 5.2 reads non-inferior under D2, or consumers stay full and the
   record says why.
 - [ ] AC-4 — `check_host_tree_parity` green at every step.
+  Held at every step this lane landed (0.2, 4.1-4.6, 4.8), re-run after each:
+  2 non-delivery host trees byte-identical to `eager-all`, delivery hosts
+  `[claude-code]`. Left open because the criterion is about EVERY step and four
+  are not taken — a tick here would claim a reading for steps nobody has run.

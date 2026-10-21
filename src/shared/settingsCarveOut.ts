@@ -50,14 +50,6 @@ export const SETTINGS_CARVE_OUT: readonly CarveOutKey[] = [
             + 'so an existing install is never silently narrowed on upgrade.',
     },
     {
-        key: 'projection.rule_workspaces',
-        reader: 'src/install/rule_scope.ts:96 ruleScopeFromSettings',
-        absentResolvesTo: 'null — LEGACY_ALL, i.e. every rule ships including maintainer-only ones',
-        reason:
-            'Same upgrade contract as projection.mode, and the failure is louder: '
-            + 'an absent list widens the projection instead of narrowing it.',
-    },
-    {
         key: 'discipline_profile',
         reader: 'work_engine/_lib/agent_settings.ts:1263',
         absentResolvesTo: 'essential, unconditionally',

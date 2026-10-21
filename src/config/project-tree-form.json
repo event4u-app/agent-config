@@ -1,0 +1,23 @@
+{
+    "_comment": "The rule-layer form the PROJECT tree is built with, per host — evidence metadata, never a user-configurable policy. ADR-293 removed `lean_projection.mode`, and the shipped template was where the project tree got its `delivery`. This record carries that value instead, with the evidence ADR-267 measured for it, so the key's removal does not silently flip a tree whose form was decided on data. IT IS NOT A SETTINGS KEY IN DISGUISE: it is package-owned, ships in the repository, has no consumer-writable layer and no cascade, and `modeExplicit` stays false for it exactly as it did for the template — nothing here is read as a consumer's consent. PRECEDENCE: any VALID OBSERVED verdict from the layer-form decision function supersedes this record for that host; the record is what stands while that function can only answer `delivery-unobserved`. Read by src/scripts/_lib/project_tree_form.ts; checked by tests/scripts/project_tree_form.test.ts.",
+    "schema_version": 1,
+    "registered_at": "2026-10-20",
+    "owner": "maintainer",
+    "superseded_by": "a valid observed layer-form verdict for the same host — see projectTreeForm() in src/scripts/_lib/project_tree_form.ts",
+    "retire_when": "step 3.6 of road-to-a-setup-that-decides-itself routes the project tree through the decision function on an observed effect row; this file goes with it, and until then its absence would be a silent default change rather than a simplification",
+    "hosts": {
+        "claude-code": {
+            "form": "delivery",
+            "basis": "ADR-267",
+            "corpus": "tests/eval/routing-matrix",
+            "measured_on": "2026-09, the frozen routing-matrix corpus",
+            "measured": {
+                "deliveries_byte_equal": "616/616",
+                "labelled_rules_reachable": "101/101",
+                "near_misses_fired": "0/212"
+            }
+        }
+    },
+    "hosts_note": "A host with no row here gets the full form, which is what an absent key always meant (ADR-267 decision point 4). Adding a row is a claim that THAT host's delivery was measured, so a row with no `measured` block is refused by the reader rather than read as a default.",
+    "what_this_does_not_bound": "The INSTALLED layer. `~/.claude/rules` belongs to the machine and is decided by the layer-form decision function plus the install receipt's pin; nothing in this file reaches it. The two were one key before ADR-293 and that was the defect."
+}
