@@ -85,7 +85,6 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { readAdrFrontmatter } from './_lib/adr_frontmatter.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import {
     dispatchImportClosure,
@@ -99,7 +98,6 @@ import {
     RATIFICATION_DIR,
     readRatification,
     readRequiredProviders,
-    readSeats,
     type RatificationProblem,
 } from './_lib/ratification_artifact.js';
 import {
@@ -348,26 +346,19 @@ export interface GatedPaths {
 }
 
 /**
- * Every file of the ratification mechanism itself, as one enumerable list, so
- * a caller that must hold a claim for EACH of them — the escalation block's
- * `needs-owner` line — iterates the same set the predicate below decides by.
- */
-export const MECHANISM_PATHS: readonly string[] = [
-    SELF_PATH,
-    READER_PATH,
-    CLOSURE_READER_PATH,
-    POLICY_PATH,
-    WORKFLOW_PATH,
-    ...ANCHOR_PATHS,
-    ...MECHANISM_IMPORT_PATHS,
-];
-
-/**
  * True for a file of the ratification mechanism itself — the one list both the
  * classification and the subject digest read.
  */
 export function isMechanismPath(p: string): boolean {
-    return MECHANISM_PATHS.includes(p);
+    return (
+        p === SELF_PATH ||
+        p === READER_PATH ||
+        p === CLOSURE_READER_PATH ||
+        p === POLICY_PATH ||
+        p === WORKFLOW_PATH ||
+        ANCHOR_PATHS.includes(p) ||
+        MECHANISM_IMPORT_PATHS.includes(p)
+    );
 }
 
 /** Partition a changed-file list into the surfaces this gate watches. */
@@ -522,154 +513,11 @@ export function expectedSubjectFor(
     return subjectOf(root, files, derivedFor(root, baseRef, commit), commit);
 }
 
-/** The escalation block's first line — stable, so a test asserts presence, not wording. */
-export const ESCALATION_HEADING =
-    '⏸  The user decides this change ' +
-    '(docs/contracts/ratification-artifact.md § When the user decides):';
-
-/**
- * ADVISORY, and the block says so: this gate's exit code does not carry the
- * user's decision. A failing record already fails; a passing record over the
- * mechanism passes here, and the merge is the owner's act on the forge
- * (ADR-281 § 5). The line claims no more than the tree holds: the
- * `/pr:merge` risk classifier routes these paths `needs-owner` when an agent
- * merges, and NO required CI status enforces the owner's approval — a
- * blocking status here would need an owner acknowledgment the gate could
- * authenticate, and none exists.
- */
-const ESCALATION_ADVISORY =
-    '  advisory: this exit code does not carry the decision, and no CI check enforces it — ' +
-    'the merge is the owner\'s (ADR-281 § 5); /pr:merge routes these paths needs-owner.';
-
-/**
- * Output bounds. Record text is candidate-controlled and a flooded log hides the
- * question, so each field is clipped to its first code points BEFORE it is
- * escaped, and records, dissenting seats and gated paths share ONE item budget
- * for the whole block — nested caps would multiply. Whatever is not listed is
- * counted in the output and stays in full in the record and the diff.
- */
-export const ESCALATION_FIELD_MAX = 200;
-export const ESCALATION_ITEM_MAX = 50;
-
-/** A field as printed: clipped, then escaped, with the clip said rather than hidden. */
-function field(s: string): string {
-    const points = Array.from(s);
-    const head = printable(points.slice(0, ESCALATION_FIELD_MAX).join(''));
-    const rest = points.length - ESCALATION_FIELD_MAX;
-    return rest > 0 ? `${head}… (${rest} more characters)` : head;
-}
-
-/**
- * Why a run stops for the user. An authoring defect — no record, a malformed or
- * self-ratified one, a stale `subject` — is deliberately not a trigger, for the
- * mechanism's own files too: routing it to the owner would spend the escalation
- * on "write a record". `reviewer` therefore needs a council answer to fire.
- */
-export type EscalationTrigger = 'refused' | 'non-convergent' | 'diversity-short' | 'reviewer';
-
-/**
- * Every character `printable` refuses to emit: controls (`Cc`), format
- * characters (`Cf`, which holds every `Bidi_Control` and the invisible marks),
- * and the line and paragraph separators (`Zl`, `Zp`). Unicode properties
- * rather than ranges, so a code point added to a class is covered without an
- * edit here.
- */
-export const UNPRINTABLE_RE = /[\p{Cc}\p{Cf}\p{Zl}\p{Zp}]/gu;
-
-/**
- * Record text and paths are candidate-controlled, and this block lands in a CI
- * log a person reads: every {@link UNPRINTABLE_RE} character is shown as a
- * `\u{…}` escape, never emitted, so a field cannot forge a line, recolour one,
- * or reorder what is shown.
- */
-export function printable(s: string): string {
-    return s.replace(UNPRINTABLE_RE, (c) => `\\u{${(c.codePointAt(0) ?? 0).toString(16)}}`);
-}
-
-export interface EscalationRecord {
-    path: string;
-    verdict: string | null;
-    seats: Readonly<Record<string, string>>;
-}
-
-const TRIGGER_TEXT: Record<EscalationTrigger, string> = {
-    refused: 'a seat refused the change',
-    'non-convergent': 'the council did not converge',
-    'diversity-short': 'provider diversity is short of the required count',
-    reviewer:
-        'the change is to the reviewer itself ' +
-        '(condition 4 — the owner decides whatever the seats said)',
-};
-
-/**
- * The one question the contract names, as the gate can state it: it FILLS IN
- * the verdict, the dissenting seats and the gated paths, and ASKS FOR the
- * expected gain, the risk and the rollback, which it does not know. A summary
- * the gate never computed would be this mechanism's own failure mode.
- */
-export function escalationMessage(input: {
-    triggers: readonly EscalationTrigger[];
-    records: readonly EscalationRecord[];
-    gatedPaths: readonly string[];
-}): string[] {
-    if (input.triggers.length === 0) {
-        return [];
-    }
-    const out = ['', ESCALATION_HEADING, ESCALATION_ADVISORY];
-    for (const t of input.triggers) {
-        out.push(`  · ${TRIGGER_TEXT[t]}`);
-    }
-    let budget = ESCALATION_ITEM_MAX;
-    let unlisted = 0;
-    const item = (line: string): void => {
-        if (budget > 0) {
-            out.push(line);
-            budget -= 1;
-        } else {
-            unlisted += 1;
-        }
-    };
-    // The gated paths come first: they are the exact change, the paths are the
-    // gate's own classification, and listing them before the candidate's
-    // records means no number of records or seats can crowd them out.
-    out.push(`  the exact change (${input.gatedPaths.length} gated path(s)):`);
-    for (const p of input.gatedPaths) {
-        item(`    · ${field(p)}`);
-    }
-    for (const r of input.records) {
-        item(`  record ${field(r.path)} — verdict: ${field(r.verdict ?? 'unreadable')}`);
-        const dissent = Object.entries(r.seats).filter(
-            ([, v]) => v !== 'ratified' && v !== 'confirmed-non-expanding',
-        );
-        if (dissent.length === 0) {
-            item('    dissent: none recorded');
-        }
-        for (const [p, v] of dissent) {
-            item(`    dissent: ${field(`${p}: ${v}`)}`);
-        }
-    }
-    if (unlisted > 0) {
-        out.push(`  … ${unlisted} more item(s) not listed here; the records and the diff carry them in full`);
-    }
-    const where = input.records.length === 1 ? field(input.records[0]?.path ?? '') : 'the records';
-    out.push(
-        `  this gate does not know the expected gain, the risk, or the rollback — ` +
-            `state each in ${where} and the pull request, then ask the user once.`,
-    );
-    return out;
-}
-
 export interface GateResult {
     exitCode: 0 | 1 | 3;
     lines: string[];
     /** Number of changed paths inspected — the honest `scanned:` count. */
     scanned: number;
-    /**
-     * The user's question, kept apart from `lines` so `main` can write it to
-     * stderr on every run: `--quiet` governs the report on stdout, and the
-     * question must not depend on which flags the invoking workflow passes.
-     */
-    escalation?: string[];
 }
 
 export function evaluate(
@@ -825,13 +673,6 @@ export function evaluate(
 
     let anyRatified = false;
     const failures: string[] = [];
-    const triggers = new Set<EscalationTrigger>();
-    const escalated: EscalationRecord[] = [];
-    const seatsOf = (text: string): Record<string, string> => {
-        const fm = readAdrFrontmatter(text);
-        const seats = fm === null ? null : readSeats(fm, text);
-        return seats?.kind === 'present' ? Object.fromEntries(seats.seats) : {};
-    };
     for (const rel of artifacts) {
         // The record is read at the same commit as the content it answers
         // for: a record rewritten in the working tree and never committed is
@@ -861,47 +702,17 @@ export function evaluate(
                     `effective after ${reading.artifact?.effective_after}; ` +
                     `subject ${String(reading.artifact?.subject).slice(0, 12)}…)`,
             );
-            if (gated.self) {
-                escalated.push({
-                    path: rel,
-                    verdict: reading.artifact?.verdict ?? null,
-                    seats: seatsOf(text),
-                });
-            }
             continue;
         }
         if (reading.artifact !== null) {
-            const v = reading.artifact.verdict;
-            if (v === 'refused' || v === 'non-convergent') {
-                triggers.add(v);
-                escalated.push({ path: rel, verdict: v, seats: seatsOf(text) });
-            }
-            failures.push(`${rel}: verdict is \`${v}\`, not \`ratified\``);
+            failures.push(`${rel}: verdict is \`${reading.artifact.verdict}\`, not \`ratified\``);
             continue;
-        }
-        // Diversity short and nothing else wrong is the council's answer, not a defect.
-        const problems = reading.problems;
-        if (problems.length > 0 && problems.every((p) => p.code === 'diversity-required')) {
-            triggers.add('diversity-short');
-            escalated.push({
-                path: rel,
-                verdict: readAdrFrontmatter(text)?.scalars['verdict'] ?? null,
-                seats: seatsOf(text),
-            });
         }
         for (const p of reading.problems as RatificationProblem[]) {
             failures.push(`${rel}: ${p.message}`);
         }
     }
 
-    if (gated.self && (anyRatified || escalated.length > 0)) {
-        triggers.add('reviewer');
-    }
-    const escalation = escalationMessage({
-        triggers: [...triggers],
-        records: escalated,
-        gatedPaths: [...gatedSet],
-    });
     if (!anyRatified) {
         lines.push('');
         lines.push('❌  no valid `verdict: ratified` artifact for this diff:');
@@ -909,7 +720,7 @@ export function evaluate(
             lines.push(`  · ${f}`);
         }
         close(false);
-        return { exitCode: 1, lines, scanned, escalation };
+        return { exitCode: 1, lines, scanned };
     }
 
     if (failures.length > 0) {
@@ -920,7 +731,7 @@ export function evaluate(
         }
     }
     close(true);
-    return { exitCode: 0, lines, scanned, escalation };
+    return { exitCode: 0, lines, scanned };
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
@@ -1023,16 +834,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             'real state, and there is then no kernel rule, governance hook, plumbing source or ' +
             'mechanism file to ratify — the gate has read everything there was.',
     });
-    // `--quiet` keeps its contract on stdout — a passing run prints no report.
-    // The question goes to stderr on EVERY run, so no invocation flag a
-    // candidate's workflow passes can keep it out of the log.
     if (!quiet || result.exitCode !== 0) {
         for (const l of result.lines) {
             process.stdout.write(`${l}\n`);
         }
-    }
-    for (const l of result.escalation ?? []) {
-        process.stderr.write(`${l}\n`);
     }
     return result.exitCode;
 }

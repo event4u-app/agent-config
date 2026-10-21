@@ -736,44 +736,6 @@ recommendation, the dissent, the exact change, what it is expected to gain,
 what it risks, and how it is undone. A run never decides such a case alone,
 and a subagent fan-out is never a substitute for the council here.
 
-`check_kernel_edit_ratified` prints that question when it can see the case: on
-a `refused` or `non-convergent` record, on a record short only of provider
-diversity, and on a change to the ratification mechanism itself that carries a
-council answer, passing or not. It is written to **stderr on every run**, so
-no flag an invoking workflow passes keeps it out of the log, while `--quiet`
-keeps its contract on stdout — a passing run prints no report. It lists the
-gated paths first, then fills in the verdict and the dissenting seats, and
-asks for the expected gain, the risk and the rollback, which it does not know.
-It stays silent on an authoring defect — no record, a self-ratified one, a
-stale `subject` — on the mechanism's own files too. The precedence is
-deliberate: an authoring defect already fails the gate, so such a change
-cannot land and there is no decision to put to the user yet; the question is
-for a change that carries a council answer. Record fields are clipped to their
-first 200 code points and THEN printed with every control, format and
-line/paragraph-separator character (`Cc`, `Cf`, `Zl`, `Zp`) escaped.
-
-**The printed question is advisory, and says so.** The gate's exit code does
-not carry the user's decision: a failing record fails already, and a passing
-record over the mechanism passes here. The merge is the owner's act on the
-forge (ADR-281 § 5), and **no required CI status enforces it**: what the tree
-holds is that `/pr:merge`'s risk classifier, `classify_merge_risk`, routes
-every mechanism path `needs-owner` when an agent merges — pinned path by path,
-for additions, deletions and both sides of a rename, in
-`check_kernel_edit_ratified_escalation_message.test.ts` — and nothing stops a
-merge made outside that command. A blocking status in this gate would need an
-owner acknowledgment it could authenticate, and none exists. What the gate
-cannot stop is a change that removes or skips its own workflow step: that edit
-is itself a mechanism change carrying a record, and nothing in the gate runs
-when the step does not. The block is bounded — paths, records and dissenting
-seats share one budget of 50 listed items, paths first, with the rest counted
-and left in full in the records and the diff — so candidate-controlled text
-cannot flood the log the question is in. Revert the block if it ever changes
-an exit code, or if a passing change to the mechanism reaches the workflow log
-without the heading.
-Whether a different provider was tried (condition 1) and whether a row of
-the owner-reserved table is touched (condition 3) are judgements the gate
-cannot make from a diff; a run states them itself.
-
 ### The owner-permission-route
 
 Where the council cannot conclude, the owner's permission is **his own
