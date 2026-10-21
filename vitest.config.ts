@@ -112,7 +112,12 @@ export default defineConfig({
         // of 32 local failures purely because `dist/*` had never been built; in
         // CI (`tests.yml` runs `npm run build` first) this is a no-op. Full
         // rationale, and why building beats skipping, in the file itself.
-        globalSetup: ['tests/_lib/ensure-build-artefacts.ts'],
+        //
+        // `isolate-tmpdir.ts` points `TMPDIR` at a root this run owns and deletes,
+        // so a test that never cleans up its `mkdtempSync` cannot flood the
+        // user's real temp directory — which once made every shell start block
+        // for 9-35 s. It must precede any worker fork, hence `globalSetup`.
+        globalSetup: ['tests/_lib/ensure-build-artefacts.ts', 'tests/_lib/isolate-tmpdir.ts'],
         // The python-free-env shim (tests/_lib/python-free-env.ts) is DISABLED:
         // the py2ts test-layer purge converted every live python↔tsx parity
         // block to tsx-only intent tests, so no test needs the python3 shadow.
