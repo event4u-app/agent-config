@@ -42,7 +42,8 @@ import { user_global_settings_paths } from './_lib/agent_settings.js';
 import type { UpdateMode } from './_lib/classify_update.js';
 import { any_live_session, global_register_dir } from './_lib/session_register.js';
 import { STATE_FILENAME } from './_lib/update_check.js';
-import { parseCuratedHead, updateNotice, type NoticeOutcome } from './_lib/update_notice.js';
+import { write_atomic } from './_lib/fs_atomic.js';
+import { parseCuratedHead, RECONCILE_REASONS, updateNotice, type NoticeOutcome } from './_lib/update_notice.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { probeRanToday, stampProbeRun } from './hooks/probe_throttle.js';
@@ -52,7 +53,20 @@ export const CONCERN = 'update-notice';
 export const NOTICE_STATE_FILENAME = 'update-notice.json';
 const VALID_MODES: readonly string[] = ['off', 'notify', 'ask', 'auto'];
 
-/** What this concern remembers between sessions. Everything else is re-read. */
+/**
+ * What this concern remembers between sessions, in the user-global
+ * `update-notice.json`. Everything else is re-read.
+ *
+ * Lifecycle: written atomically at mode 0600 by a session that is not
+ * suppressed; replaced whole each time; `staged` returns to `null` once nothing
+ * newer than the installed version is cached. A record that does not parse, or
+ * carries another schema, reads as empty and is replaced on the next write.
+ * Suppressed sessions — the kill switch included — neither write nor delete it.
+ * Deleting the file is always safe. `staged` is advisory output: no install
+ * path reads it.
+ */
+export const NOTICE_STATE_SCHEMA = 1;
+
 export interface NoticeState {
     readonly staged: string | null;
     readonly last_seen_installed: string | null;
@@ -63,6 +77,7 @@ export function readNoticeState(statePath: string | null): NoticeState {
         if (statePath === null) return { staged: null, last_seen_installed: null };
         const raw: unknown = JSON.parse(fs.readFileSync(statePath, 'utf-8'));
         const o = raw !== null && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
+        if (o['schema'] !== undefined && o['schema'] !== NOTICE_STATE_SCHEMA) return { staged: null, last_seen_installed: null };
         const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() !== '' ? v.trim() : null);
         return { staged: str(o['staged']), last_seen_installed: str(o['last_seen_installed']) };
     } catch {
@@ -72,8 +87,7 @@ export function readNoticeState(statePath: string | null): NoticeState {
 
 export function writeNoticeState(statePath: string, state: NoticeState): void {
     try {
-        fs.mkdirSync(path.dirname(statePath), { recursive: true });
-        fs.writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`, { encoding: 'utf-8', mode: 0o600 });
+        write_atomic(statePath, `${JSON.stringify({ schema: NOTICE_STATE_SCHEMA, ...state }, null, 2)}\n`);
     } catch {
         /* unwritable state dir → the concern simply re-decides next session */
     }
@@ -181,7 +195,12 @@ export function runNotice(deps: NoticeDeps): NoticeOutcome {
         foreignSessionLive: any_live_session(deps.registerDir, deps.sessionId),
     });
 
-    if (outcome.suppressed !== null) return outcome;
+    if (outcome.suppressed !== null) {
+        if (RECONCILE_REASONS.has(outcome.suppressed) && (state.staged !== null || state.last_seen_installed !== installed)) {
+            writeNoticeState(deps.noticeStatePath, { staged: null, last_seen_installed: installed });
+        }
+        return outcome;
+    }
 
     for (const line of outcome.lines) deps.err.write(`[update] ${line}\n`);
     writeNoticeState(deps.noticeStatePath, { staged: outcome.stage, last_seen_installed: installed });

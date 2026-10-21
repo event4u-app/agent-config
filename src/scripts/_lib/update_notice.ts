@@ -137,6 +137,14 @@ export interface NoticeOutcome {
 
 const NOTHING = (reason: string): NoticeOutcome => ({ lines: [], stage: null, activate: null, suppressed: reason });
 
+/**
+ * Silences that still reconcile the record: nothing newer is cached, so a
+ * previously staged candidate is stale — typically because it was installed.
+ * Every other silence ({@link noticeSuppression}) is a context that writes
+ * nothing at all, the kill switch included.
+ */
+export const RECONCILE_REASONS: ReadonlySet<string> = new Set(['no cached candidate', 'nothing newer cached']);
+
 /** Contexts where a session start says nothing and writes nothing. */
 export function noticeSuppression(input: Pick<NoticeInput, 'env' | 'origin' | 'mode'>): string | null {
     if (input.env.ci) return 'CI';
