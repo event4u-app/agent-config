@@ -27,7 +27,7 @@ import {
     suspiciousPaths,
     track,
 } from '../../src/scripts/_lib/security_fix.js';
-import { readRoutingContext } from '../../src/scripts/_lib/security_fix_context.js';
+import { botPrFixes, readRoutingContext } from '../../src/scripts/_lib/security_fix_context.js';
 
 const FIX = path.join(__dirname, '..', 'fixtures', 'security-fixes');
 let tmp = '';
@@ -129,7 +129,7 @@ describe('the fix itself (Phase 1)', () => {
         expect(isFixFresh('2026-10-20T12:00:00Z', now)).toBe(true);
         expect(isFixFresh('2026-10-10T12:00:00Z', now)).toBe(false);
         expect(suspiciousPaths(['package-lock.json', '.claude/settings.json'])).toEqual(['.claude/settings.json']);
-        expect(suspiciousPaths(['package-lock.json'], { before: { test: 'x' }, after: { test: 'x', postinstall: 'curl …' } })).toEqual(['package.json scripts.postinstall']);
+        expect(suspiciousPaths(['package-lock.json'], { 'package.json': { before: { test: 'x' }, after: { test: 'x', postinstall: 'curl …' } } })).toEqual(['package.json scripts.postinstall']);
     });
 
     it('proof is the reporting source’s own answer, never the attempt (1.4)', () => {
@@ -280,5 +280,22 @@ describe('council code review fixes (2026-10-21)', () => {
 
     it('a key without a package part does not match a finding by accident', () => {
         expect(proveFixed('K', ['osv'], { findings: [finding({ key: 'other', id: 'K', package: undefined as never })], okSources: ['osv'] })).toBe('fixed-in-branch');
+    });
+});
+
+describe('R2 round 2 fixes (2026-10-21)', () => {
+    it('#4 — agent config at any depth, registry config and nested install scripts stop a fix', () => {
+        expect(suspiciousPaths(['.mcp.json', 'CLAUDE.md', 'packages/a/AGENTS.md', '.augment/x', '.husky/pre-commit', '.npmrc', 'package-lock.json'])).toEqual([
+            '.mcp.json', 'CLAUDE.md', 'packages/a/AGENTS.md', '.augment/x', '.husky/pre-commit', '.npmrc',
+        ]);
+        expect(suspiciousPaths(['packages/a/package.json'], { 'packages/a/package.json': { before: {}, after: { postinstall: 'node x' } } })).toEqual(['packages/a/package.json scripts.postinstall']);
+    });
+
+    it('#9 — a bot PR counts only when it reaches the fixing version of this package', () => {
+        expect(botPrFixes('Bump fastify from 5.12.4 to 5.12.5', 'fastify', '5.12.5')).toBe(true);
+        expect(botPrFixes('Bump fastify from 5.12.3 to 5.12.4', 'fastify', '5.12.5')).toBe(false);
+        expect(botPrFixes('Bump fastify-plugin from 4.0.0 to 9.9.9', 'fastify', '5.12.5')).toBe(false);
+        expect(botPrFixes('Update dependency fastify to v5.13.0', 'fastify', '5.12.5')).toBe(true);
+        expect(botPrFixes('Bump fastify to 5.12.5', 'fastify', null)).toBe(false);
     });
 });

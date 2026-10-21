@@ -22,7 +22,7 @@ import * as path from 'node:path';
 import type { Ecosystem, InventoryEntry } from './advisory_inventory.js';
 import { compare_versions } from './version_order.js';
 
-export type SourceName = 'native-npm' | 'native-composer' | 'osv' | 'lifecycle' | 'vendor-php' | 'vendor-node';
+export type SourceName = 'native-npm' | 'native-composer' | 'osv' | 'lifecycle' | 'vendor-php' | 'vendor-node' | 'kev';
 export type SourceStatus = 'ok' | 'unavailable' | 'error';
 
 export interface SourceReport {
@@ -72,7 +72,7 @@ export type Fetcher = (url: string, init?: { method?: string; body?: string; tim
 export type Runner = (cmd: string, args: string[], cwd: string, timeoutMs: number) => { code: number; stdout: string };
 
 /** The only hosts any adapter may contact. */
-export const ALLOWED_HOSTS = ['api.osv.dev', 'endoflife.date', 'www.php.net', 'nodejs.org'] as const;
+export const ALLOWED_HOSTS = ['api.osv.dev', 'endoflife.date', 'www.php.net', 'nodejs.org', 'www.cisa.gov'] as const;
 
 /** A fetched advisory ID is used in a URL only after this shape check. */
 const ID_SHAPE = /^[A-Z][A-Z0-9]*-[A-Za-z0-9._:-]{1,80}$/;
@@ -370,6 +370,8 @@ export async function osvQuery(
                     results[j] = { vulns: [...(results[j]?.vulns ?? []), ...(r?.vulns ?? [])] };
                     token = r?.next_page_token;
                 }
+                // Stopped at the cap with pages still outstanding: the answer is partial.
+                if (typeof token === 'string' && token !== '') partial = partial ?? 'page-cap';
             }
             for (let j = 0; j < batch.length; j++) {
                 const sameKey = holders.get(keyOf(batch[j]!)) ?? [batch[j]!];
@@ -625,4 +627,64 @@ export async function vendorAnnouncements(
         }
     }
     return { findings, reports };
+}
+
+// ---------------------------------------------------------------------------
+// CISA KEV — an enrichment, never a finding source (council 2026-10-21, round 3)
+// ---------------------------------------------------------------------------
+
+export const KEV_URL = 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json';
+/** A catalog this old is still used when a fetch fails — and the report says so. */
+export const KEV_MAX_AGE_DAYS = 7;
+
+export interface KevCatalog {
+    at: string;
+    cves: string[];
+}
+
+/**
+ * Mark every finding whose CVE is in the known-exploited catalog. The catalog is
+ * downloaded WHOLE and matched here, so the request carries nothing about the
+ * project. A failed fetch falls back to the last catalog while it is at most
+ * KEV_MAX_AGE_DAYS old and reports `kev-stale`; older, or none, reports
+ * `kev-unavailable` and marks nothing — the tier then rests on the other sources,
+ * which is a stated gap, never a silent downgrade of a fact.
+ */
+export async function kevEnrich(
+    findings: RawFinding[],
+    opts: { fetcher?: Fetcher | undefined; cached?: KevCatalog | null; now?: Date; timeoutMs?: number } = {},
+): Promise<{ catalog: KevCatalog | null; report: SourceReport }> {
+    const now = opts.now ?? new Date();
+    let catalog: KevCatalog | null = null;
+    let reason: string | null = null;
+    try {
+        const res = await (opts.fetcher ?? defaultFetcher)(KEV_URL, { timeoutMs: opts.timeoutMs ?? 15000 });
+        if (res.status === 200) {
+            const doc = JSON.parse(await res.text()) as { vulnerabilities?: Array<{ cveID?: unknown }> };
+            const cves = (doc.vulnerabilities ?? []).map((v) => v.cveID).filter((c): c is string => typeof c === 'string' && /^CVE-\d{4}-\d{4,}$/.test(c));
+            if (cves.length > 0) catalog = { at: now.toISOString(), cves };
+            else reason = 'kev-empty';
+        } else reason = `kev-http-${res.status}`;
+    } catch (e) {
+        reason = (e as Error).name === 'TimeoutError' ? 'kev-timeout' : 'kev-network';
+    }
+    let status: SourceReport['status'] = 'ok';
+    if (catalog === null) {
+        const age = opts.cached ? (now.getTime() - Date.parse(opts.cached.at)) / 86400000 : Number.NaN;
+        if (opts.cached && Number.isFinite(age) && age >= 0 && age <= KEV_MAX_AGE_DAYS) {
+            catalog = opts.cached;
+            status = 'error';
+            reason = `kev-stale (${reason})`;
+        } else {
+            status = 'unavailable';
+            reason = `kev-unavailable (${reason})`;
+        }
+    }
+    if (catalog !== null) {
+        const known = new Set(catalog.cves);
+        for (const f of findings) {
+            if (known.has(f.id) || f.aliases.some((a) => known.has(a))) f.kev = true;
+        }
+    }
+    return { catalog, report: { source: 'kev', status, reason } };
 }

@@ -928,3 +928,26 @@ describe('council code review fixes (2026-10-21)', () => {
         expect(lines[0]!.tip).toBe(head);
     });
 });
+
+describe('R2 round 2 fixes (2026-10-21)', () => {
+    it('#1 — never the tree the caller stands in', () => {
+        const wt = addStandardWorktree('mine', 'feat/mine');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        mergeIntoMain('feat/mine');
+        backdateGitDir('mine', 10);
+        const inv = buildInventory(repo, { excludeLiveSessions: true });
+        expect(rowFor(inv, wt).classification).toBe('safe');
+        expect(applyRemovals(repo, inv, { here: path.join(wt, 'sub') })).toEqual([]);
+        expect(fs.existsSync(wt)).toBe(true);
+        const r = dailyCleanup(wt, { mode: 'auto', run: () => '[]', budgetMs: 60000 })!;
+        expect(r.removed).toBe(0);
+        expect(fs.existsSync(wt)).toBe(true);
+    });
+
+    it('#10 — each generated rule carries its own comment in this repository', () => {
+        const lines = fs.readFileSync(path.join(process.cwd(), '.gitignore'), 'utf-8').split('\n');
+        const at = lines.indexOf('/.eslintcache');
+        expect(at).toBeGreaterThan(0);
+        expect(lines[at - 1]!.startsWith('#')).toBe(true);
+    });
+});

@@ -29,6 +29,7 @@ explanation lives now that the file no longer carries it as comments.
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
 | `advisories.egress` | C | string | `"query"` | `none` · `query` | What leaves the machine when agent-config audit:deps refresh runs. query (default) sends names and versions of public packages to api.osv.dev and reads endoflife.date and the PHP and Node release feeds; a private package name is never sent, and a native npm or composer audit runs only for a lockfile with no private package. none sends nothing, and findings read unknown rather than clear. |
+| `advisories.kev` | C | string | `"on"` | `off` · `on` | Whether a refresh reads the CISA known-exploited catalog. on (default) downloads the whole catalog and matches it locally, so nothing about the project is sent, and a finding in it is raised a tier; off leaves tiers to the other sources. Runs only where egress is query. |
 | `advisories.mode` | C | string | `"notify"` | `off` · `notify` | Whether the first session start of a day prints the advisory findings that need action today. notify (default) reads the local cache only — a session start never touches the network; off prints nothing, and agent-config audit:deps show still works. |
 
 ## ai_team

@@ -22,6 +22,7 @@
  * cache file and nothing else (council 2026-10-21 Q3).
  */
 
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -29,6 +30,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { inventoryFingerprint, readInventory } from './_lib/advisory_inventory.js';
 import {
     type AdvisoriesEgress,
+    type AdvisoriesKev,
     type AdvisoryState,
     describe,
     noticeLines,
@@ -40,6 +42,8 @@ import {
 
 import {
     type Fetcher,
+    type KevCatalog,
+    kevEnrich,
     lifecycle,
     nativeAudits,
     type OsvDetailCache,
@@ -104,6 +108,7 @@ export interface RefreshDeps {
     force?: boolean;
     machineDir?: string;
     egress?: AdvisoriesEgress;
+    kev?: AdvisoriesKev;
 }
 
 export interface RefreshResult {
@@ -124,9 +129,13 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
     const plan = roots.map((root) => {
         const prev = readState(root);
         const fingerprint = inventoryFingerprint(root);
+        // A changed egress setting is a changed question: `none` → `query` must
+        // not keep the egress-none unknowns until the window runs out.
+        const egress = deps.egress ?? readAdvisorySettings(root).egress;
         const fresh =
             prev !== null &&
             prev.fingerprint === fingerprint &&
+            (prev.egress ?? 'query') === egress &&
             now.getTime() - Date.parse(prev.at) < REFRESH_WINDOW_HOURS * 3600000;
         return { root, prev, fingerprint, fresh };
     });
@@ -150,8 +159,14 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
         if (stale) {
             // Remove the stale lock, then take it with the same exclusive create:
             // of two processes that both saw it stale, only one wins.
+            // Move aside only the lock that was judged stale: one another process
+            // took over in between carries a new stamp and is put back.
             try {
-                fs.unlinkSync(lock);
+                const judged = fs.readFileSync(lock, 'utf-8');
+                const aside = `${lock}.${process.pid}.stale`;
+                fs.renameSync(lock, aside);
+                if (fs.readFileSync(aside, 'utf-8') === judged) fs.unlinkSync(aside);
+                else fs.renameSync(aside, lock);
             } catch {
                 /* the other process removed it first */
             }
@@ -168,7 +183,7 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
         }
     }
     try {
-        const inventories = todo.map((p) => ({ ...p, inv: readInventory(p.root) }));
+        const inventories = todo.map((p) => ({ ...p, inv: markOwnActionsPrivate(p.root, readInventory(p.root)) }));
         // Egress is each project's own setting: one project's `query` never sends
         // another project's names (and `--all-projects` reads them all).
         const egressOf = new Map(inventories.map((p) => [p.root, deps.egress ?? readAdvisorySettings(p.root).egress]));
@@ -205,6 +220,20 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
                 raw.get(p.root)!.push(...vendor.findings);
                 reports.get(p.root)!.push(...vendor.reports);
             }
+            // KEV: one download for every project that has it on, matched locally.
+            const kevOn = online.filter((p) => (deps.kev ?? readAdvisorySettings(p.root).kev) === 'on');
+            if (kevOn.length > 0) {
+                const kevFile = path.join(mdir, 'kev.json');
+                let cached: KevCatalog | null = null;
+                try {
+                    cached = JSON.parse(fs.readFileSync(kevFile, 'utf-8')) as KevCatalog;
+                } catch {
+                    cached = null;
+                }
+                const kev = await kevEnrich(kevOn.flatMap((p) => raw.get(p.root)!), { fetcher: deps.fetcher, cached, now });
+                if (kev.catalog !== null && kev.report.status === 'ok') writeJson(kevFile, kev.catalog);
+                for (const p of kevOn) reports.get(p.root)!.push(kev.report);
+            }
         }
         for (const p of inventories) {
             const acceptances = p.prev?.acceptances ?? [];
@@ -228,6 +257,7 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
                 root: p.root,
                 at: now.toISOString(),
                 fingerprint: p.inv.fingerprint,
+                egress: egressOf.get(p.root) ?? 'query',
                 inventory: p.inv.entries,
                 findings,
                 reports: reports.get(p.root)!,
@@ -236,7 +266,7 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
                 notice:
                     a.interrupt.length > 0 || a.digest.length > 0
                         ? { at: now.toISOString(), interrupt: a.interrupt.map((f) => f.key), digest: a.digest.length }
-                        : (p.prev?.notice ?? null),
+                        : carriedNotice(p.prev?.notice ?? null, findings, now),
                 silent_since: silent,
                 remediations,
             };
@@ -255,6 +285,41 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
         }
     }
     return results;
+}
+
+/**
+ * A refresh that announces nothing keeps the last notice for one day only, and
+ * only its keys that are still findings: a digest count from last week is not
+ * news, and printing it every morning teaches the reader to skip the line.
+ */
+function carriedNotice(prev: AdvisoryState['notice'], findings: { key: string }[], now: Date): AdvisoryState['notice'] {
+    if (prev === null) return null;
+    const age = now.getTime() - Date.parse(prev.at);
+    if (!Number.isFinite(age) || age < 0 || age >= 24 * 3600000) return null;
+    const live = new Set(findings.map((f) => f.key));
+    return { ...prev, interrupt: prev.interrupt.filter((k) => live.has(k)) };
+}
+
+/**
+ * An action from the project's own GitHub owner may live in a private
+ * repository, and nothing in a workflow says which — so it is treated as private
+ * and never sent to OSV. An action from any other owner is a public reference by
+ * construction of how `uses:` resolves; a private action of a THIRD owner is the
+ * residual this cannot see.
+ */
+export function markOwnActionsPrivate<T extends { entries: Array<{ ecosystem: string; name: string; private: boolean }> }>(root: string, inv: T): T {
+    let url = '';
+    try {
+        url = execFileSync('git', ['-C', root, 'remote', 'get-url', 'origin'], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 5000 }).trim();
+    } catch {
+        url = '';
+    }
+    const owner = /github\.com[:/]([^/]+)\//i.exec(url)?.[1]?.toLowerCase() ?? null;
+    if (owner === null) return inv;
+    for (const e of inv.entries) {
+        if (e.ecosystem === 'GitHub Actions' && e.name.split('/')[0]!.toLowerCase() === owner) e.private = true;
+    }
+    return inv;
 }
 
 /** The user-global index of project roots — roots and fingerprints only (5.4). */
@@ -352,15 +417,26 @@ function suspiciousInBranch(root: string): string[] {
     const base = defaultExec('git', ['merge-base', trunk, 'HEAD'], root)?.trim();
     if (base === undefined || base === '') return [];
     const changed = (defaultExec('git', ['diff', '--name-only', base], root) ?? '').split('\n').filter((l) => l !== '');
-    const scripts = (rev: string | null): Record<string, string> => {
-        const text = rev === null ? (() => { try { return fs.readFileSync(path.join(root, 'package.json'), 'utf-8'); } catch { return null; } })() : defaultExec('git', ['show', `${rev}:package.json`], root);
+    const scriptsOf = (file: string, rev: string | null): Record<string, string> => {
+        let text: string | null;
+        if (rev === null) {
+            try {
+                text = fs.readFileSync(path.join(root, file), 'utf-8');
+            } catch {
+                text = null;
+            }
+        } else text = defaultExec('git', ['show', `${rev}:${file}`], root);
         try {
             return (JSON.parse(text ?? '{}') as { scripts?: Record<string, string> }).scripts ?? {};
         } catch {
             return {};
         }
     };
-    return suspiciousPaths(changed, changed.includes('package.json') ? { before: scripts(base), after: scripts(null) } : null);
+    // Every changed package.json, at any depth: a workspace's install script runs too.
+    const delta = Object.fromEntries(
+        changed.filter((p) => p === 'package.json' || p.endsWith('/package.json')).map((p) => [p, { before: scriptsOf(p, base), after: scriptsOf(p, null) }]),
+    );
+    return suspiciousPaths(changed, delta);
 }
 
 // ---------------------------------------------------------------------------
@@ -398,7 +474,9 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
             return 0;
         }
         if (rest.includes('--json')) {
-            process.stdout.write(`${JSON.stringify(state.findings, null, 2)}\n`);
+            // Findings plus what the latency claims read: the ledger's
+            // first_seen / announced_at and the remediation stamps.
+            process.stdout.write(`${JSON.stringify({ findings: state.findings, ledger: state.ledger, remediations: state.remediations ?? {} }, null, 2)}\n`);
             return 0;
         }
         process.stdout.write(`advisories for ${state.root} · checked ${state.at} · ${state.inventory.length} component(s)\n`);
@@ -423,13 +501,15 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
         state.acceptances = [...state.acceptances.filter((x) => x.id !== id), a as Acceptance];
         // Take effect now, not at the next refresh: the accepted finding leaves
         // the notice and the interrupt queue immediately.
+        const acceptedKeys = new Set<string>();
         for (const f of state.findings) {
             if (f.id === id || f.aliases.includes(id ?? '')) {
                 f.verdict = 'accepted';
                 f.tier = 'T3';
+                acceptedKeys.add(f.key);
             }
         }
-        if (state.notice !== null) state.notice = { ...state.notice, interrupt: state.notice.interrupt.filter((k) => k.split('|')[0] !== id) };
+        if (state.notice !== null) state.notice = { ...state.notice, interrupt: state.notice.interrupt.filter((k) => !acceptedKeys.has(k)) };
         writeJson(sp, state);
         process.stdout.write(`accepted ${id} until ${a.expires}\n`);
         return 0;
@@ -502,6 +582,10 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
             return proof === 'fixed-in-branch' ? 0 : 1;
         }
         if (mode === 'mitigate') {
+            if (f.fixed !== null) {
+                process.stderr.write(`${f.id}: a fix exists (${f.fixed}) — a mitigation would be discarded at the next refresh; use \`audit:deps fix ${f.id}\`\n`);
+                return 1;
+            }
             const note = flag('note');
             if (note === undefined || note.trim().length < 10) {
                 process.stderr.write('a mitigation names what was done, in a sentence (--note="…")\n');

@@ -891,7 +891,16 @@ function takeRemovalLock(mainPath: string, now: Date): (() => void) | null {
     if (!tryCreate()) {
         try {
             if (now.getTime() - fs.statSync(file).mtimeMs < LOCK_STALE_MS) return null;
-            fs.unlinkSync(file);
+            // Unlink only the stale lock that was judged: a pass that took it over
+            // in between wrote a new token, and that lock is not ours to delete.
+            const judged = fs.readFileSync(file, 'utf-8');
+            const aside = `${file}.${process.pid}.stale`;
+            fs.renameSync(file, aside);
+            if (fs.readFileSync(aside, 'utf-8') !== judged) {
+                fs.renameSync(aside, file);
+                return null;
+            }
+            fs.unlinkSync(aside);
         } catch {
             return null;
         }
@@ -919,15 +928,23 @@ function takeRemovalLock(mainPath: string, now: Date): (() => void) | null {
 export function applyRemovals(
     repoPath: string,
     inv: Inventory,
-    opts: { onlyBranch?: string | null; now?: Date; recheck?: ClassifyContext; limit?: number } = {},
+    opts: { onlyBranch?: string | null; now?: Date; recheck?: ClassifyContext; limit?: number; here?: string } = {},
 ): RemovalOutcome[] {
     const now = opts.now ?? new Date();
     const mainPath = inv.rows.find((r) => r.isMain)?.path ?? repoPath;
+    // Never the tree the caller is standing in: a session started inside a merged
+    // worktree would lose its own working directory.
+    const here = canonical(opts.here ?? process.cwd());
+    const inside = (p: string): boolean => {
+        const t = canonical(p);
+        return here === t || here.startsWith(t + path.sep);
+    };
     const rows = inv.rows
         .filter(
             (r) =>
                 r.classification === 'safe' &&
                 !r.isMain &&
+                !inside(r.path) &&
                 (opts.onlyBranch === undefined || opts.onlyBranch === null || r.branch === opts.onlyBranch),
         )
         .slice(0, opts.limit ?? Number.POSITIVE_INFINITY);
@@ -964,7 +981,10 @@ export function applyRemovals(
                 const fresh = listWorktrees(mainPath).find((e) => canonical(e.path) === canonical(r.path));
                 const head = tryGit(canonical(r.path), ['rev-parse', '--verify', '--quiet', 'HEAD']);
                 if (fresh !== undefined && fresh.branch === r.branch && head !== null && head.trim() === r.tip) {
-                    again = classifyEntry(fresh, ctx);
+                    // The re-check carries a deadline of its own, so one hanging
+                    // `git status` cannot hold a session start; the removal after
+                    // it has the fixed REMOVAL_TIMEOUT_MS instead.
+                    again = withDeadline(Date.now() + RECHECK_BUDGET_MS, () => classifyEntry(fresh, ctx));
                 } else {
                     error = 'HEAD or branch changed since the inventory — kept';
                 }
@@ -1013,6 +1033,8 @@ export function applyRemovals(
     return outcomes;
 }
 
+/** Per-candidate re-check deadline, separate from the removal's own timeout. */
+export const RECHECK_BUDGET_MS = 3000;
 /** Per-removal timeout, independent of any classification budget. */
 export const REMOVAL_TIMEOUT_MS = 30000;
 /** The daily pass removes at most this many trees; the rest wait for tomorrow or `apply`. */
@@ -1078,8 +1100,10 @@ export interface DailyResult {
 }
 
 /**
- * The once-a-day pass (worktrees roadmap 3.3). Synchronous, bounded by
- * DAILY_BUDGET_MS as a SUBPROCESS deadline, run on the first session of the
+ * The once-a-day pass (worktrees roadmap 3.3). Synchronous: classification is
+ * bounded by DAILY_BUDGET_MS as a SUBPROCESS deadline; under `auto` at most
+ * DAILY_REMOVAL_CAP removals follow, each re-checked within RECHECK_BUDGET_MS
+ * and removed within REMOVAL_TIMEOUT_MS. Run on the first session of the
  * day by the existing `session_start` handler. Declared as an authority
  * expansion: under `worktrees.cleanup: auto` it deletes worktrees, which is
  * acting, not observing — the user-owned key is what authorises it (ADR-295).
@@ -1110,7 +1134,11 @@ export function dailyCleanup(
         const classified = withDeadline(deadlineAt, () => {
             const entries = listWorktrees(root);
             const mainPath = canonical(entries.length > 0 ? entries[0]!.path : root);
-            const candidates = entries.slice(1);
+            const here = canonical(root);
+            const candidates = entries.slice(1).filter((e) => {
+                const t = canonical(e.path);
+                return here !== t && !here.startsWith(t + path.sep);
+            });
             const day = Math.floor(now.getTime() / 86400000);
             const start = candidates.length === 0 ? 0 : day % candidates.length;
             const ordered = [...candidates.slice(start), ...candidates.slice(0, start)];
@@ -1156,7 +1184,7 @@ export function dailyCleanup(
         let outcomes: RemovalOutcome[] = [];
         if (mode === 'auto' && classified.safe.length > 0) {
             try {
-                outcomes = applyRemovals(classified.ctx.mainPath, classified.inv, { now, limit: DAILY_REMOVAL_CAP });
+                outcomes = applyRemovals(classified.ctx.mainPath, classified.inv, { now, limit: DAILY_REMOVAL_CAP, here: root });
             } catch {
                 outcomes = [];
             }

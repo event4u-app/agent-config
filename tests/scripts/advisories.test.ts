@@ -10,9 +10,10 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { inventoryFingerprint, readInventory } from '../../src/scripts/_lib/advisory_inventory.js';
 import { describe as describeFinding } from '../../src/scripts/_lib/advisory_notice.js';
-import { assertAllowed, cvss3Base, type Fetcher, nativeAudits, osvQuery, type Runner, vendorAnnouncements } from '../../src/scripts/_lib/advisory_sources.js';
+import { assertAllowed, cvss3Base, type Fetcher, KEV_URL, kevEnrich, nativeAudits, osvQuery, type Runner, vendorAnnouncements } from '../../src/scripts/_lib/advisory_sources.js';
 import {
     announce,
+    buildFindings,
     emptyLedger,
     type Finding,
     INTERRUPT_BUDGET_PER_WEEK,
@@ -22,6 +23,7 @@ import {
 import {
     gapReport,
     issueBody,
+    markOwnActionsPrivate,
     noticeLines,
     readState,
     refreshMany,
@@ -213,9 +215,11 @@ describe('Phase 1 — inventory', () => {
         const { fetcher, log } = replay('F10-five-sessions');
         const now = new Date('2026-10-21T12:00:00Z');
         await refreshMany([root], { now, fetcher, machineDir: machine, egress: 'query', runner: () => ({ code: -1, stdout: '' }) });
+        const afterFirst = log.length;
         const [second] = await refreshMany([root], { now: new Date('2026-10-21T13:00:00Z'), fetcher, machineDir: machine, egress: 'query' });
         expect(second!.reason).toBe('cache-current');
-        expect(log.length).toBe(1);
+        expect(log.length).toBe(afterFirst);
+        expect(log.filter((x) => x.url.endsWith('/querybatch')).length).toBe(1);
     });
 
     it('a changed lockfile invalidates the reuse', async () => {
@@ -605,5 +609,78 @@ describe('council code review fixes (2026-10-21)', () => {
         const r = await vendorAnnouncements(entries, { fetcher, now });
         expect(r.findings.find((f) => f.id.startsWith('REL-'))?.fixed).toBe('8.3.28');
         expect(r.findings.find((f) => f.id.startsWith('REL-'))?.severity).toBe('high');
+    });
+});
+
+describe('R2 round 2 fixes (2026-10-21)', () => {
+    const cve = 'CVE-2026-0001';
+    const raw = (): Parameters<typeof kevEnrich>[0] => [
+        { id: 'GHSA-f1aa-f1aa-f1aa', aliases: [cve], kind: 'vulnerability', ecosystem: 'npm', package: 'fastify', version: '5.12.4', severity: 'high', score: null, kev: false, fixed: '5.12.5', date: null, source: 'osv', modified: null, file: 'package-lock.json', line: 1 },
+    ];
+    const kevDoc = JSON.stringify({ vulnerabilities: [{ cveID: cve }] });
+
+    it('#3 — a CVE in the KEV catalog is marked known-exploited, matched locally', async () => {
+        const seen: string[] = [];
+        const f = raw();
+        const r = await kevEnrich(f, { fetcher: async (url) => (seen.push(url), { status: 200, text: async () => kevDoc }) });
+        expect(f[0]!.kev).toBe(true);
+        expect(r.report.status).toBe('ok');
+        expect(seen).toEqual([KEV_URL]);
+    });
+
+    it('#3 — a failed KEV fetch uses a catalog up to 7 days old and says so; older marks nothing', async () => {
+        const now = new Date('2026-10-21T00:00:00Z');
+        const down: Fetcher = async () => ({ status: 503, text: async () => '' });
+        const fresh = raw();
+        const r1 = await kevEnrich(fresh, { fetcher: down, now, cached: { at: '2026-10-18T00:00:00Z', cves: [cve] } });
+        expect(fresh[0]!.kev).toBe(true);
+        expect(r1.report.reason).toMatch(/kev-stale/);
+        const old = raw();
+        const r2 = await kevEnrich(old, { fetcher: down, now, cached: { at: '2026-10-01T00:00:00Z', cves: [cve] } });
+        expect(old[0]!.kev).toBe(false);
+        expect(r2.report.status).toBe('unavailable');
+    });
+
+    it('#3 — a KEV failure is never an unknown finding', () => {
+        const out = buildFindings([], [], [{ source: 'kev', status: 'unavailable', reason: 'kev-unavailable (kev-network)' }], { now: new Date(), acceptances: [] });
+        expect(out).toEqual([]);
+    });
+
+    it('#3 — a KEV finding in a runtime scope says so in the notice line', () => {
+        const line = describeFinding({ key: 'k', id: cve, aliases: [], verdict: 'fix-available', tier: 'T0', ecosystem: 'npm', package: 'fastify', version: '5.12.4', fixed: '5.12.5', severity: 'high', score: null, kev: true, date: null, scope: 'runtime', sources: ['osv'], modified: null, file: 'package-lock.json', line: 1, note: null });
+        expect(line).toMatch(/known exploited \(KEV\)/);
+    });
+
+    it('#2 — an action from the project’s own GitHub owner is private and never queried', () => {
+        const root = project('F1-fastify-hono');
+        execFileSync('git', ['-C', root, 'remote', 'add', 'origin', 'git@github.com:MyOrg/app.git']);
+        const inv = markOwnActionsPrivate(root, { entries: [
+            { ecosystem: 'GitHub Actions', name: 'myorg/internal-deploy', private: false },
+            { ecosystem: 'GitHub Actions', name: 'actions/checkout', private: false },
+        ] });
+        expect(inv.entries.map((e) => e.private)).toEqual([true, false]);
+    });
+
+    it('#14 — pagination stopped at its cap marks the answer partial', async () => {
+        const entries = readInventory(project('F1-fastify-hono')).entries.filter((e) => !e.private && e.version !== null);
+        const fetcher: Fetcher = async (url, init = {}) => {
+            if (!url.endsWith('/querybatch')) return { status: 200, text: async () => JSON.stringify({ id: url.split('/').pop() }) };
+            const n = (JSON.parse(init.body ?? '{}') as { queries: unknown[] }).queries.length;
+            return { status: 200, text: async () => JSON.stringify({ results: Array.from({ length: n }, () => ({ vulns: [], next_page_token: 'more' })) }) };
+        };
+        const r = await osvQuery(entries, { fetcher });
+        expect(r.report).toMatchObject({ status: 'error', reason: 'page-cap' });
+    });
+
+    it('#6 — an aging hour count is not a new notice', () => {
+        const root = project('F1-fastify-hono');
+        const sp = statePath(root)!;
+        fs.mkdirSync(path.dirname(sp), { recursive: true });
+        const state = { schema: 1, root, at: new Date().toISOString(), fingerprint: 'x', inventory: [], findings: [{ key: 'K|fastify|5.12.4', id: 'K', tier: 'T1' }], reports: [], ledger: emptyLedger(), acceptances: [], notice: null, silent_since: {},
+            remediations: { 'K|fastify|5.12.4': { key: 'K|fastify|5.12.4', state: 'fixed-in-trunk', owner_session: null, branch: null, pr: null, merge_sha: 'abc1234', stamps: { 'fixed-in-trunk': new Date(Date.now() - 30 * 3600000).toISOString() }, note: null } } };
+        fs.writeFileSync(sp, JSON.stringify(state));
+        const t = new Date();
+        expect(sessionNotice(root, t)).not.toBeNull();
+        expect(sessionNotice(root, new Date(t.getTime() + 3600000))).toBeNull();
     });
 });

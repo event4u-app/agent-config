@@ -43,7 +43,6 @@ function isRegenerablePattern(pattern: string): boolean {
     return (REGENERABLE_IGNORED as readonly string[]).includes(last) || /\.tsbuildinfo$|\.pyc$/.test(bare);
 }
 
-/** True when the comment block directly above `line` (1-based) reads as "generated". */
 /** A pattern naming a secret or a local override is never regenerable, whatever its comment says. */
 const NEVER_REGENERABLE = /\.env|secret|credential|token|\bkey|local|\.pem|\.p12|password/i;
 

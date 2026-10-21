@@ -211,15 +211,23 @@ export function isFixFresh(releasedAt: string | null, now: Date = new Date()): b
 }
 
 /**
- * Paths a dependency update must never touch: agent configuration (a 2026 worm
- * persisted through a session-start hook there) and install scripts. Any of
- * them in the fix diff stops the fix.
+ * Paths a dependency update must never touch: agent configuration at any depth
+ * (a 2026 worm persisted through a session-start hook there), git hooks, the
+ * package-manager config that can redirect a registry, and install scripts in
+ * ANY package.json. Any of them in the fix diff stops the fix.
  */
-export function suspiciousPaths(changed: string[], packageJsonScripts: { before: Record<string, string>; after: Record<string, string> } | null = null): string[] {
-    const hits = changed.filter((p) => /^(\.claude|\.vscode|\.cursor|\.github\/workflows)\//.test(p));
-    if (packageJsonScripts !== null) {
-        for (const k of ['preinstall', 'install', 'postinstall', 'prepare']) {
-            if (packageJsonScripts.before[k] !== packageJsonScripts.after[k]) hits.push(`package.json scripts.${k}`);
+const AGENT_OR_HOOK_DIR = /(?:^|\/)(?:\.claude|\.vscode|\.cursor|\.augment|\.husky|\.github\/workflows|\.github\/actions)\//;
+const AGENT_OR_REGISTRY_FILE = /(?:^|\/)(?:\.mcp\.json|CLAUDE\.md|AGENTS\.md|GEMINI\.md|\.clinerules|\.windsurfrules|\.npmrc|\.yarnrc(?:\.yml)?|\.pnpmfile\.cjs)$/;
+const INSTALL_SCRIPTS = ['preinstall', 'install', 'postinstall', 'prepare', 'prepublish'];
+
+/** Lifecycle scripts per changed package.json, before and after the fix. */
+export type ScriptsDelta = Record<string, { before: Record<string, string>; after: Record<string, string> }>;
+
+export function suspiciousPaths(changed: string[], scripts: ScriptsDelta = {}): string[] {
+    const hits = changed.filter((p) => AGENT_OR_HOOK_DIR.test(p) || AGENT_OR_REGISTRY_FILE.test(p));
+    for (const [file, s] of Object.entries(scripts)) {
+        for (const k of INSTALL_SCRIPTS) {
+            if (s.before[k] !== s.after[k]) hits.push(`${file} scripts.${k}`);
         }
     }
     return hits;

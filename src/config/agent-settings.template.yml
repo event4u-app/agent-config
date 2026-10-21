@@ -930,8 +930,10 @@ subagents:
 #   notify  say once a day how many such worktrees exist; remove nothing
 #           (the default, and what an absent key resolves to)
 #   auto    remove them: right after `/pr:merge`, and once a day on the first
-#           session start (three-second budget, `git worktree remove` without
-#           force, local branches always kept, one journal line per removal)
+#           session start (classification within three seconds, then at
+#           most three removals, each re-checked within three seconds and
+#           given up to 30 s; `git worktree remove` without force, local
+#           branches always kept, one journal line per removal)
 #   off     say nothing, remove nothing
 #
 # The daily pass asks GitHub, through your own gh login, which pull requests
@@ -1534,9 +1536,16 @@ update_check:
 #           native `npm audit` / `composer audit` runs only for a lockfile with no
 #           private package in it
 #   none    nothing is sent; findings read `unknown`, never "clear"
+#
+# kev — the CISA catalog of known-exploited vulnerabilities, downloaded whole on
+# a refresh and matched locally, so nothing about this project is sent:
+#   on      (default) a finding in the catalog is "known exploited" and is
+#           raised a tier (T0 in a runtime scope)
+#   off     the catalog is not read; tiers come from the other sources alone
 advisories:
   mode: notify
   egress: query
+  kev: on
 
 # --- Update install mode ---
 #

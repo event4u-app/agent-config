@@ -83,8 +83,9 @@ TS-shell native (run via the installed `agent-config` binary):
   ci:settle <pr>             Wait for a PR's checks to settle; the last line is the
                              verdict (exit 0 green · 1 red · 2 no verdict).
   audit:deps <mode>          Security advisories for this project's packages, runtimes
-                             and toolchain: refresh · show · accept · notice · gaps ·
-                             issue-body. Only `refresh` touches the network.
+                             and toolchain: refresh · show · accept · fix · verify ·
+                             pr-body · mitigate · track · notice · gaps · issue-body.
+                             Only `refresh` touches the network.
   worktree:cleanup <mode>    Worktree inventory and removal: inventory · apply · check
                              <path> · register <path>. `apply` removes only the proven
                              set (merged incl. squash, clean, unused), never with force.

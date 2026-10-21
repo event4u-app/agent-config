@@ -22,6 +22,7 @@ import { mergedNotDeployed, type Remediations } from './security_fix.js';
 
 export type AdvisoriesMode = 'notify' | 'off';
 export type AdvisoriesEgress = 'query' | 'none';
+export type AdvisoriesKev = 'on' | 'off';
 
 /** Advisory data older than this makes the notice say so instead of looking current. */
 export const STALE_AFTER_HOURS = 24;
@@ -33,6 +34,8 @@ export interface AdvisoryState {
     root: string;
     at: string;
     fingerprint: string;
+    /** The egress setting this state was refreshed under. */
+    egress?: AdvisoriesEgress;
     inventory: InventoryEntry[];
     findings: Finding[];
     reports: SourceReport[];
@@ -46,17 +49,18 @@ export interface AdvisoryState {
     remediations?: Remediations;
 }
 
-export function readAdvisorySettings(root: string): { mode: AdvisoriesMode; egress: AdvisoriesEgress } {
+export function readAdvisorySettings(root: string): { mode: AdvisoriesMode; egress: AdvisoriesEgress; kev: AdvisoriesKev } {
     try {
-        if (settings_layer_states({ cwd: root }).some((l) => l.state === 'malformed')) return { mode: 'off', egress: 'none' };
+        if (settings_layer_states({ cwd: root }).some((l) => l.state === 'malformed')) return { mode: 'off', egress: 'none', kev: 'off' };
         const section = load_agent_settings({ cwd: root })['advisories'];
         const s = section !== null && typeof section === 'object' && !Array.isArray(section) ? (section as Record<string, unknown>) : {};
         return {
             mode: s['mode'] === 'off' ? 'off' : 'notify',
             egress: s['egress'] === 'none' ? 'none' : 'query',
+            kev: s['kev'] === 'off' ? 'off' : 'on',
         };
     } catch {
-        return { mode: 'off', egress: 'none' };
+        return { mode: 'off', egress: 'none', kev: 'off' };
     }
 }
 
@@ -142,6 +146,8 @@ export function describe(f: Finding): string {
     const fix = f.fixed === null ? '' : ` → ${safeField(f.fixed)}`;
     const date = safeField(f.date);
     const ids = [f.id, ...(Array.isArray(f.aliases) ? f.aliases : [])].slice(0, 3).map((i) => safeField(i)).join(', ');
+    // Provenance of the tier: "known exploited" is a fact, never a prediction.
+    const kev = f.kev === true ? ' — known exploited (KEV)' : '';
     switch (verdict) {
         case 'pre-announced':
             return `${tier} ${pkg}: a security release is pre-announced (${date}); fixed versions not yet named${where(f)}`;
@@ -154,7 +160,7 @@ export function describe(f: Finding): string {
             if (typeof f.note === 'string' && f.note.startsWith('vendor-patched')) return `${tier} ${pkg}${ver}: distro-patched — judge it by the distro's own advisory${where(f)}`;
             return `${tier} ${pkg}: unknown — the source did not answer`;
         default:
-            return `${tier} ${pkg}${ver}${fix} [${verdict}] ${ids}${where(f)}`;
+            return `${tier} ${pkg}${ver}${fix} [${verdict}] ${ids}${kev}${where(f)}`;
     }
 }
 
@@ -212,7 +218,10 @@ export function sessionNotice(root: string, now: Date = new Date()): string | nu
     if (lines.length === 0) return null;
     // Keyed by what would be printed, not only by when: a same-day change in a
     // silence, a remediation or staleness is a new notice.
-    const id = `${now.toISOString().slice(0, 10)}|${createHash('sha256').update(lines.join('\n')).digest('hex').slice(0, 16)}`;
+    // Hours and days counted up since the last print are not a new notice; the
+    // hash ignores the numbers that only age.
+    const stable = lines.map((l) => l.replace(/\b\d+ (?:h|days?|day\(s\))\b/g, '#')).join('\n');
+    const id = `${now.toISOString().slice(0, 10)}|${createHash('sha256').update(stable).digest('hex').slice(0, 16)}`;
     if (shown === id) return null;
     try {
         fs.writeFileSync(stamp, `${id}\n`);

@@ -194,6 +194,7 @@ export function buildFindings(
     for (const r of reports) {
         if (r.status === 'ok') continue;
         if (r.reason === 'private-names-present') continue; // a deliberate skip, not silence
+        if (r.source === 'kev') continue; // an enrichment: its failure is a report, never a finding
         out.push({
             key: `UNKNOWN-${r.source}`,
             id: `UNKNOWN-${r.source}`,

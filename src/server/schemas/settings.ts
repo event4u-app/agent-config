@@ -541,7 +541,10 @@ export const settingsSchema = z.object({
         egress: z.enum(['none', 'query']).default('query').describe(
             'What leaves the machine when agent-config audit:deps refresh runs. query (default) sends names and versions of public packages to api.osv.dev and reads endoflife.date and the PHP and Node release feeds; a private package name is never sent, and a native npm or composer audit runs only for a lockfile with no private package. none sends nothing, and findings read unknown rather than clear.',
         ),
-    }).default({ mode: 'notify', egress: 'query' }),
+        kev: z.enum(['off', 'on']).default('on').describe(
+            'Whether a refresh reads the CISA known-exploited catalog. on (default) downloads the whole catalog and matches it locally, so nothing about the project is sent, and a finding in it is raised a tier; off leaves tiers to the other sources. Runs only where egress is query.',
+        ),
+    }).default({ mode: 'notify', egress: 'query', kev: 'on' }),
     update: z.object({
         mode: z.enum(['off', 'notify', 'ask', 'auto']).default('notify').describe(
             'What the agent may do about a newer release. notify tells you and installs nothing (the default, and what an absent key resolves to); ask behaves as notify until the ring-0 exit ships a prompt; auto installs a staged release at a session start when every gate passes and no other session is live; off says nothing at all. Read from the user-global layer only — a repository cannot set how your global install updates itself.',
