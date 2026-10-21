@@ -44,6 +44,7 @@ import { any_live_session, global_register_dir } from './_lib/session_register.j
 import { STATE_FILENAME } from './_lib/update_check.js';
 import { write_atomic } from './_lib/fs_atomic.js';
 import { parseCuratedHead, RECONCILE_REASONS, updateNotice, type NoticeOutcome } from './_lib/update_notice.js';
+import { parse_version } from './_lib/version_order.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { probeRanToday, stampProbeRun } from './hooks/probe_throttle.js';
@@ -78,7 +79,7 @@ export function readNoticeState(statePath: string | null): NoticeState {
         const raw: unknown = JSON.parse(fs.readFileSync(statePath, 'utf-8'));
         const o = raw !== null && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
         if (o['schema'] !== undefined && o['schema'] !== NOTICE_STATE_SCHEMA) return { staged: null, last_seen_installed: null };
-        const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() !== '' ? v.trim() : null);
+        const str = (v: unknown): string | null => (typeof v === 'string' && parse_version(v.trim()) !== null ? v.trim() : null);
         return { staged: str(o['staged']), last_seen_installed: str(o['last_seen_installed']) };
     } catch {
         return { staged: null, last_seen_installed: null };
@@ -168,8 +169,11 @@ export interface NoticeDeps {
     readonly err: { write(text: string): void };
 }
 
-/** Decide and act. Separated from `main` so every input is injectable. */
-export function runNotice(deps: NoticeDeps): NoticeOutcome {
+/**
+ * Decide and act. Separated from `main` so every input is injectable.
+ * `apply: false` decides only — it prints nothing and writes nothing.
+ */
+export function runNotice(deps: NoticeDeps, apply = true): NoticeOutcome {
     const pkg = readJson(path.join(deps.packageRoot, 'package.json'));
     const installed = typeof pkg['version'] === 'string' ? (pkg['version'] as string) : '';
     if (installed === '') return { lines: [], stage: null, activate: null, suppressed: 'installed version unreadable' };
@@ -195,6 +199,7 @@ export function runNotice(deps: NoticeDeps): NoticeOutcome {
         foreignSessionLive: any_live_session(deps.registerDir, deps.sessionId),
     });
 
+    if (!apply) return outcome;
     if (outcome.suppressed !== null) {
         if (RECONCILE_REASONS.has(outcome.suppressed) && (state.staged !== null || state.last_seen_installed !== installed)) {
             writeNoticeState(deps.noticeStatePath, { staged: null, last_seen_installed: installed });
@@ -205,6 +210,20 @@ export function runNotice(deps: NoticeDeps): NoticeOutcome {
     for (const line of outcome.lines) deps.err.write(`[update] ${line}\n`);
     writeNoticeState(deps.noticeStatePath, { staged: outcome.stage, last_seen_installed: installed });
     return outcome;
+}
+
+/**
+ * The session-start entry: decide without side effects, honour the day
+ * throttle, then decide again and act — so the throttle stamp, like every other
+ * write, happens only in a context that may be written in at all. Returns
+ * `null` when the throttle or a suppressing context ends it before the act.
+ */
+export function noticeOncePerDay(deps: NoticeDeps): NoticeOutcome | null {
+    const dry = runNotice(deps, false);
+    if (dry.suppressed !== null && !RECONCILE_REASONS.has(dry.suppressed)) return null;
+    if (probeRanToday(deps.projectRoot, CONCERN)) return null;
+    stampProbeRun(deps.projectRoot, CONCERN);
+    return runNotice(deps);
 }
 
 function packageRootOf(): string {
@@ -236,13 +255,7 @@ export function main(argv?: string[]): number {
             registerDir: global_register_dir(),
             err: process.stderr,
         };
-        const dry = runNotice({ ...deps, err: { write: () => undefined } });
-        if (dry.suppressed !== null && dry.suppressed !== 'nothing newer cached' && dry.suppressed !== 'no cached candidate') {
-            return 0;
-        }
-        if (probeRanToday(projectRoot, CONCERN)) return 0;
-        stampProbeRun(projectRoot, CONCERN);
-        runNotice(deps);
+        noticeOncePerDay(deps);
         return 0;
     } catch {
         return 0;

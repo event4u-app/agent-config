@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { claimInvite, readInviteState, runInvite, UNREADABLE_INVITE_RECORD, type InviteDeps } from '../../src/scripts/update_invite_hook.js';
-import { NOTICE_STATE_SCHEMA, readNoticeState, runNotice, type NoticeDeps } from '../../src/scripts/update_notice_hook.js';
+import { NOTICE_STATE_SCHEMA, noticeOncePerDay, readNoticeState, runNotice, type NoticeDeps } from '../../src/scripts/update_notice_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
@@ -110,6 +110,33 @@ describe('update-notice state — reconciliation', () => {
         const before = snapshot(statePath());
         runNotice(notice({ probeStatePath: probe('1.0.0') }));
         expect(snapshot(statePath())).toEqual(before);
+    });
+});
+
+describe('update-notice — the session-start entry', () => {
+    it('a decide-only run prints nothing and writes nothing', () => {
+        const lines: string[] = [];
+        runNotice(notice({ err: { write: (t) => void lines.push(t) } }), false);
+        expect(lines).toEqual([]);
+        expect(fs.existsSync(statePath())).toBe(false);
+    });
+
+    it('after an upgrade, the entry reports the new version once — the decide pass does not consume it', () => {
+        fs.mkdirSync(path.dirname(statePath()), { recursive: true });
+        fs.writeFileSync(statePath(), JSON.stringify({ schema: NOTICE_STATE_SCHEMA, staged: '2.0.0', last_seen_installed: '1.0.0' }));
+        const lines: string[] = [];
+        const outcome = noticeOncePerDay(
+            notice({ packageRoot: install('2.0.0'), probeStatePath: probe('2.0.0'), err: { write: (t) => void lines.push(t) } }),
+        );
+        expect(outcome?.lines[0]).toBe('agent-config is now 2.0.0 (was 1.0.0).');
+        expect(lines.join('')).toContain('agent-config is now 2.0.0 (was 1.0.0).');
+        expect(readNoticeState(statePath())).toEqual({ staged: null, last_seen_installed: '2.0.0' });
+    });
+
+    it('reads a last_seen_installed that is not a version as absent', () => {
+        fs.mkdirSync(path.dirname(statePath()), { recursive: true });
+        fs.writeFileSync(statePath(), JSON.stringify({ schema: NOTICE_STATE_SCHEMA, staged: 'latest', last_seen_installed: '../../etc' }));
+        expect(readNoticeState(statePath())).toEqual({ staged: null, last_seen_installed: null });
     });
 });
 
