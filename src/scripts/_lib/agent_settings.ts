@@ -312,8 +312,9 @@ export const MERGEABLE_KEYS: readonly string[] = [
     'lean_projection.hosts',
     // `retro.enabled` is the one switch over the automatic retro (ADR-292). It
     // ships `true`, so the only value worth writing is `false`, and a user who
-    // writes it once in the user-global file expects every checkout to honour
-    // it — without this row the off switch would be discarded silently.
+    // writes it once in the user-global file expects every checkout without its
+    // own value to honour it — without this row the off switch would be
+    // discarded silently. A project value still wins.
     'retro.enabled',
 ];
 

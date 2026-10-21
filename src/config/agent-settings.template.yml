@@ -1182,7 +1182,7 @@ retro:
   # merged (repository and PR number only, three-second budget).
   #   true  = (default) the automatic paths run.
   #   false = no automatic path runs; an explicit /retro still runs on request.
-  # Set it in the user-global settings file to switch it off everywhere.
+  # Set false in the user-global settings file to switch it off in every project that does not set its own value.
   enabled: true
 
 # --- Memory ---
