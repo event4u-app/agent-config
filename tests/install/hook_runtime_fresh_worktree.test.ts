@@ -56,20 +56,20 @@ function fixturePackage(dir: string): string {
     return dir;
 }
 
-function run(native: string) {
+function run(native: string, projectDir: string = worktree) {
     const stdinPath = path.join(tmp, 'stdin.json');
     writeFileSync(stdinPath, '{}');
     const fd = openSync(stdinPath, 'r');
     try {
         const res = spawnSync('/bin/sh', ['-c', MATRIX[native] as string], {
-            cwd: worktree,
+            cwd: projectDir,
             stdio: [fd, 'pipe', 'pipe'],
             encoding: 'utf-8',
             env: {
                 PATH: `${globalBin}:/usr/bin:/bin`,
                 HOME: tmp,
                 EVENT4U_CONFIG_HOME: machine,
-                CLAUDE_PROJECT_DIR: worktree,
+                CLAUDE_PROJECT_DIR: projectDir,
             },
             timeout: 30000,
         });
@@ -126,6 +126,21 @@ describe('a fresh source worktree with no node_modules', () => {
         const res = run('PreToolUse');
         expect(res.status).toBe(2);
         expect(res.stderr).toContain('blocked by guard');
+    });
+
+    it('two worktrees side by side each take their own route, from one shared runtime', () => {
+        // The hook command reads only CLAUDE_PROJECT_DIR and the shared,
+        // read-only machine runtime, so parallel worktrees cannot pick each
+        // other's wrapper. One has its deps and runs locally; the other has none
+        // and falls through to the global CLI.
+        const withDeps = path.join(tmp, 'worktree-with-deps');
+        write(path.join(withDeps, 'agent-config'), '#!/bin/sh\necho "LOCAL-A $*"\n', 0o755);
+        mkdirSync(path.join(withDeps, 'node_modules'), { recursive: true });
+        const a = run('SessionStart', withDeps);
+        const b = run('SessionStart', worktree);
+        expect(a.stdout).toContain('LOCAL-A dispatch:hook');
+        expect(b.stdout).toContain('GLOBAL-CLI dispatch:hook');
+        expect(b.stderr).not.toContain('ERR_MODULE_NOT_FOUND');
     });
 
     it('still uses the local wrapper once the checkout HAS its node_modules', () => {
