@@ -12,7 +12,7 @@ package can reach.
 | | |
 |---|---|
 | **Instrument** | `./scripts-run src/scripts/autonomy_friction_traffic --store <store> --limit 40` (new in this change) |
-| **Store** | `~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config` |
+| **Store** | `~/.claude/projects/<project-store>` |
 | **Window** | the 40 most recent transcripts by mtime, less the measuring session → **39 read** |
 | **Distinct Bash calls** | **7,569** (deduplicated by tool-use id) |
 | **Measured on** | **2026-09-10** |

@@ -97,7 +97,7 @@ before and after the wave, same command:
 
 ```
 $ ./scripts-run src/scripts/report_skill_activation \
-    --store "$HOME/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config"
+    --store "$HOME/.claude/projects/<project-store>"
 ```
 
 | | before the wave (100/299) | with the wave applied (114/299) |

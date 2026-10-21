@@ -148,7 +148,7 @@ scanned: 207
 ❌  exceeds the 110000 cap
 ```
 
-**Machine:** maintainer (`mathiasberg`, macOS, Claude Code 2.1.238).
+**Machine:** maintainer (macOS, Claude Code 2.1.238).
 **Date:** 2026-08-21. **Verdict:** RED, 179.4 % of cap.
 
 Per the step's own text, a red result *"means the machine predates the installer

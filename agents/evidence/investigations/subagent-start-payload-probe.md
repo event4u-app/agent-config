@@ -33,7 +33,7 @@ something to fire on. The subagent was instructed to make **exactly one** tool
 call (a `Read` of `src/rules/ui-audit-gate.md`) and return; it did.
 
 Hook state under the **parent** checkout
-(`/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-config`,
+(`<repo>`,
 because in a worktree session hook state lands in the parent — `CLAUDE_PROJECT_DIR`
 resolves there) was snapshotted immediately before the spawn and diffed
 immediately after:

@@ -25,7 +25,7 @@ One. `agents/evidence/metrics/skill-activation-census.json` carries a single
 `stores` entry:
 
 ```
-"stores": ["-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config"]
+"stores": ["<project-store>"]
 ```
 
 That is a Claude Code project transcript store. The 30 sessions and 11,338
