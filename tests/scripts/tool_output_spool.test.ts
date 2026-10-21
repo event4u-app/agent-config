@@ -17,14 +17,13 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     acquireCleanupLock,
-    assertNoLinks,
     cleanupSpool,
     readHandle,
     claimAndDelete,
     releaseCleanupLock,
-    SPOOL_DIR,
-    SPOOL_OBSERVATION_FILE,
     SPOOL_RETENTION_MS,
+    spoolDirOf,
+    spoolObservationPath,
     SPOOL_SELECTED_CLASSES,
     spoolKeyPath,
     spoolResult,
@@ -70,7 +69,7 @@ function readEnvelope(content: string, session = 's1'): JsonObject {
 }
 
 const spoolFiles = (): string[] => {
-    const dir = path.join(tmp, SPOOL_DIR);
+    const dir = spoolDirOf(tmp);
     return fs.existsSync(dir) ? fs.readdirSync(dir).filter((n) => /^[0-9a-f]{64}$/.test(n)) : [];
 };
 
@@ -93,7 +92,7 @@ describe('spool-write-is-content-addressed', () => {
         expect(r2.mode).toBe('protect');
         const files = spoolFiles();
         expect(files).toHaveLength(1);
-        const stored = fs.readFileSync(path.join(tmp, SPOOL_DIR, files[0] as string));
+        const stored = fs.readFileSync(path.join(spoolDirOf(tmp), files[0] as string));
         // The name is not the content digest: a file name says nothing about what it holds.
         expect(createHash('sha256').update(stored).digest('hex')).not.toBe(files[0]);
         expect(JSON.parse(stored.toString('utf8'))).toEqual({ type: 'text', file: { content: body } });
@@ -120,7 +119,7 @@ describe('spool-write-is-content-addressed', () => {
         const body = 'observed content\n'.repeat(50);
         runEgressStage(readEnvelope(body), fixed('observe'), engineSelecting);
         expect(spoolFiles()).toHaveLength(0);
-        const lines = fs.readFileSync(path.join(tmp, SPOOL_OBSERVATION_FILE), 'utf8').trim().split('\n');
+        const lines = fs.readFileSync(spoolObservationPath(tmp), 'utf8').trim().split('\n');
         expect(lines).toHaveLength(1);
         const line = JSON.parse(lines[0] as string) as Record<string, unknown>;
         expect(Object.keys(line).sort()).toEqual(['bytes', 'class', 'digest', 'tool', 'ts']);
@@ -134,7 +133,7 @@ describe('spool-write-is-content-addressed', () => {
         expect(SPOOL_SELECTED_CLASSES.size).toBe(0);
         for (const m of ['observe', 'protect', 'strict'] as const) runEgressStage(readEnvelope('x'.repeat(9000)), fixed(m));
         expect(spoolFiles()).toHaveLength(0);
-        expect(fs.existsSync(path.join(tmp, SPOOL_OBSERVATION_FILE))).toBe(false);
+        expect(fs.existsSync(spoolObservationPath(tmp))).toBe(false);
     });
 
     it('with the shipped selection the store is never loaded, nothing is written, and the stage result is unchanged', () => {
@@ -153,8 +152,8 @@ describe('spool-write-is-content-addressed', () => {
         }
         expect(spoolLoadAttempts()).toBe(before);
         // The only two paths the store writes; the stage's own counters are not the store's.
-        expect(fs.existsSync(path.join(tmp, SPOOL_DIR))).toBe(false);
-        expect(fs.existsSync(path.join(tmp, SPOOL_OBSERVATION_FILE))).toBe(false);
+        expect(fs.existsSync(spoolDirOf(tmp))).toBe(false);
+        expect(fs.existsSync(spoolObservationPath(tmp))).toBe(false);
     });
 
     it('an unselected class and an image are never stored', () => {
@@ -174,8 +173,8 @@ describe('credential-match-is-never-spooled', () => {
         expect(spoolFiles()).toHaveLength(0);
         expect(JSON.stringify(env)).toBe(before);
         expect(r.counts.some((c) => c.field === 'result' && c.class === 'credential')).toBe(true);
-        for (const name of fs.existsSync(path.join(tmp, SPOOL_DIR)) ? fs.readdirSync(path.join(tmp, SPOOL_DIR)) : []) {
-            expect(fs.readFileSync(path.join(tmp, SPOOL_DIR, name)).includes(PLANTED)).toBe(false);
+        for (const name of fs.existsSync(spoolDirOf(tmp)) ? fs.readdirSync(spoolDirOf(tmp)) : []) {
+            expect(fs.readFileSync(path.join(spoolDirOf(tmp), name)).includes(PLANTED)).toBe(false);
         }
         // A detection-only rule counts a credential without replacing it, so the view equals
         // the received bytes; the count alone must still refuse storage.
@@ -186,7 +185,7 @@ describe('credential-match-is-never-spooled', () => {
 
     it('a credential count refuses storage even in observe, so no digest of it is recorded', () => {
         runEgressStage(readEnvelope(`token=${PLANTED}`), fixed('observe'), engineSelecting);
-        expect(fs.existsSync(path.join(tmp, SPOOL_OBSERVATION_FILE))).toBe(false);
+        expect(fs.existsSync(spoolObservationPath(tmp))).toBe(false);
     });
 
     it('stored bytes must equal delivered bytes: a placeholder view that differs stores nothing', () => {
@@ -212,7 +211,7 @@ describe('expired-handle-says-expired', () => {
         expect(readHandle(tmp, handle, S, undefined, t0 + 1000).state).toBe('ok');
         const later = t0 + SPOOL_RETENTION_MS + 1000;
         expect(readHandle(tmp, handle, S, undefined, later)).toEqual({ state: 'expired' });
-        const file = path.join(tmp, SPOOL_DIR, address);
+        const file = path.join(spoolDirOf(tmp), address);
         fs.utimesSync(file, new Date(t0), new Date(t0));
         expect(cleanupSpool(tmp, later).removed).toBe(1);
         expect(fs.existsSync(file)).toBe(false);
@@ -223,7 +222,7 @@ describe('expired-handle-says-expired', () => {
         const now = Date.now();
         const a = storeBytesUnchecked(tmp, Buffer.alloc(100, 1), S, now);
         const b = storeBytesUnchecked(tmp, Buffer.alloc(100, 2), S, now);
-        fs.utimesSync(path.join(tmp, SPOOL_DIR, a.address), new Date(now - 5000), new Date(now - 5000));
+        fs.utimesSync(path.join(spoolDirOf(tmp), a.address), new Date(now - 5000), new Date(now - 5000));
         expect(cleanupSpool(tmp, now, 150).removed).toBe(1);
         expect(readHandle(tmp, a.handle, S, undefined, now)).toEqual({ state: 'missing' });
         expect(readHandle(tmp, b.handle, S, undefined, now).state).toBe('ok');
@@ -232,8 +231,8 @@ describe('expired-handle-says-expired', () => {
     it('a cleanup lock held by a live process skips; a dead holder\'s lock is taken over', () => {
         const now = Date.now();
         const old = storeBytesUnchecked(tmp, Buffer.from('old'), S, now - SPOOL_RETENTION_MS - 5000);
-        fs.utimesSync(path.join(tmp, SPOOL_DIR, old.address), new Date(now - SPOOL_RETENTION_MS - 5000), new Date(now - SPOOL_RETENTION_MS - 5000));
-        const lock = path.join(tmp, SPOOL_DIR, '.cleanup.lock');
+        fs.utimesSync(path.join(spoolDirOf(tmp), old.address), new Date(now - SPOOL_RETENTION_MS - 5000), new Date(now - SPOOL_RETENTION_MS - 5000));
+        const lock = path.join(spoolDirOf(tmp), '.cleanup.lock');
         fs.writeFileSync(lock, `${String(process.pid)}:${'cd'.repeat(16)}`);
         expect(cleanupSpool(tmp, now).removed).toBe(0);
         const dead = spawnSync(process.execPath, ['-e', '0']).pid as number;
@@ -260,7 +259,7 @@ describe('retention, partial writes and cleanup failure', () => {
     it('a read cleans the store: an entry past its age is gone after any read, not only after a store', () => {
         const now = Date.now();
         const old = storeBytesUnchecked(tmp, Buffer.from('old entry'), S, now - SPOOL_RETENTION_MS - 5000);
-        const oldFile = path.join(tmp, SPOOL_DIR, old.address);
+        const oldFile = path.join(spoolDirOf(tmp), old.address);
         fs.utimesSync(oldFile, new Date(now - SPOOL_RETENTION_MS - 5000), new Date(now - SPOOL_RETENTION_MS - 5000));
         const fresh = storeBytesUnchecked(tmp, Buffer.from('fresh entry'), S, now);
         expect(readHandle(tmp, fresh.handle, S, undefined, now).state).toBe('ok');
@@ -270,7 +269,7 @@ describe('retention, partial writes and cleanup failure', () => {
     it('a write that died before its rename is never served and is removed once stale', () => {
         const now = Date.now();
         const { handle, address } = storeBytesUnchecked(tmp, Buffer.from('complete'), S, now);
-        const partial = path.join(tmp, SPOOL_DIR, `${address}.999.abcdef.tmp`);
+        const partial = path.join(spoolDirOf(tmp), `${address}.999.abcdef.tmp`);
         fs.writeFileSync(partial, 'comp');
         expect(readHandle(tmp, handle, S, undefined, now)).toEqual({ state: 'ok', bytes: Buffer.from('complete') });
         fs.utimesSync(partial, new Date(now - 2 * 3600 * 1000), new Date(now - 2 * 3600 * 1000));
@@ -281,7 +280,7 @@ describe('retention, partial writes and cleanup failure', () => {
     it('a cleanup that fails propagates (so the store refuses) and releases its lock', () => {
         const now = Date.now();
         const old = storeBytesUnchecked(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.utimesSync(path.join(dir, old.address), new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
         expect(() =>
             cleanupSpool(tmp, now, 10_000, {
@@ -300,7 +299,7 @@ describe('retention, partial writes and cleanup failure', () => {
         const first = spoolResult(env, view, ['tool_response'], tmp, READ_TEXT, now) as { action: string; handle: string };
         expect(first.action).toBe('stored');
         const old = storeBytesUnchecked(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.utimesSync(path.join(dir, old.address), new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
         const failing = { hooks: { beforeClaim: (): void => { throw new Error('disk gone'); } } };
         expect(spoolResult(env, view, ['tool_response'], tmp, READ_TEXT, now, failing)).toEqual({ action: 'skip', reason: 'store-error' });
@@ -311,7 +310,7 @@ describe('retention, partial writes and cleanup failure', () => {
     it('through the store path, a cleanup failure answers store-error and leaves the new result unstored', () => {
         const now = Date.now();
         const old = storeBytesUnchecked(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.utimesSync(path.join(dir, old.address), new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
         const before = new Set(spoolFiles());
         const env = readEnvelope('the new result');
@@ -323,7 +322,7 @@ describe('retention, partial writes and cleanup failure', () => {
     });
 
     it('an existing store directory is tightened to 0700 by a store', () => {
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.mkdirSync(dir, { recursive: true, mode: 0o755 });
         fs.chmodSync(dir, 0o755);
         const env = readEnvelope('tighten me');
@@ -334,7 +333,7 @@ describe('retention, partial writes and cleanup failure', () => {
     it('every store enforces retention, in one long session', () => {
         const now = Date.now();
         const old = storeBytesUnchecked(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
-        const oldFile = path.join(tmp, SPOOL_DIR, old.address);
+        const oldFile = path.join(spoolDirOf(tmp), old.address);
         fs.utimesSync(oldFile, new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
         for (const body of ['one', 'two', 'three']) {
             const env = readEnvelope(body);
@@ -346,7 +345,7 @@ describe('retention, partial writes and cleanup failure', () => {
 
     it('the cap and the age are exact boundaries', () => {
         const now = Date.now();
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         const a = storeBytesUnchecked(tmp, Buffer.alloc(100, 1), S, now);
         const b = storeBytesUnchecked(tmp, Buffer.alloc(100, 2), S, now);
         fs.utimesSync(path.join(dir, a.address), new Date(now - 5000), new Date(now - 5000));
@@ -370,7 +369,7 @@ describe('a handle that fails a check causes no filesystem work', () => {
     ])('%s: an entry past its age survives, and no cleanup lock is taken', (_label, variant) => {
         const now = Date.now();
         const old = storeBytesUnchecked(tmp, Buffer.from('old entry'), S, now - SPOOL_RETENTION_MS - 5000);
-        const oldFile = path.join(tmp, SPOOL_DIR, old.address);
+        const oldFile = path.join(spoolDirOf(tmp), old.address);
         fs.utimesSync(oldFile, new Date(now - SPOOL_RETENTION_MS - 5000), new Date(now - SPOOL_RETENTION_MS - 5000));
         const fresh = storeBytesUnchecked(tmp, Buffer.from('fresh'), S, now);
         const [a, e] = fresh.handle.split('.') as [string, string];
@@ -378,7 +377,7 @@ describe('a handle that fails a check causes no filesystem work', () => {
         const session = variant === 'other-session' ? 'other-session' : S;
         expect(readHandle(tmp, handle, session, undefined, now).state).toBe('invalid');
         expect(fs.existsSync(oldFile)).toBe(true);
-        expect(fs.existsSync(path.join(tmp, SPOOL_DIR, '.cleanup.lock'))).toBe(false);
+        expect(fs.existsSync(path.join(spoolDirOf(tmp), '.cleanup.lock'))).toBe(false);
     });
 });
 
@@ -413,7 +412,7 @@ describe('the cap, through the store path', () => {
     const size = (body: string): number => Buffer.byteLength(JSON.stringify({ type: 'text', file: { content: body } }));
     const store = (body: string, maxBytes: number, now: number): unknown =>
         spoolResult(readEnvelope(body), view(readEnvelope(body)), ['tool_response'], tmp, READ_TEXT, now, { maxBytes });
-    const total = (): number => spoolFiles().reduce((n, f) => n + fs.statSync(path.join(tmp, SPOOL_DIR, f)).size, 0);
+    const total = (): number => spoolFiles().reduce((n, f) => n + fs.statSync(path.join(spoolDirOf(tmp), f)).size, 0);
 
     it('two entries exactly at the cap are both kept', () => {
         const a = 'a'.repeat(100);
@@ -432,7 +431,7 @@ describe('the cap, through the store path', () => {
         const cap = size(a) + size(b) - 1;
         const now = Date.now();
         store(a, cap, now);
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         for (const f of spoolFiles()) fs.utimesSync(path.join(dir, f), new Date(now - 5000), new Date(now - 5000));
         const second = store(b, cap, now) as { action: string; handle: string };
         expect(second.action).toBe('stored');
@@ -460,7 +459,7 @@ describe('the cap, through the store path', () => {
         const l = 'l'.repeat(100);
         const cap = size(e) + size(l) - 1;
         const now = Date.now();
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         store(e, 10_000_000, now);
         const [eFile] = spoolFiles();
         const aged = expired ? now - SPOOL_RETENTION_MS - 1000 : now - 5000;
@@ -486,7 +485,7 @@ describe('a held lock and a concurrent identical store', () => {
         const b = 'b'.repeat(100);
         const now = Date.now();
         spoolResult(readEnvelope(a), view(readEnvelope(a)), ['tool_response'], tmp, READ_TEXT, now, { maxBytes: 10_000 });
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         const held = acquireCleanupLock(dir);
         expect(held).not.toBeNull();
         for (const cap of [size(a) + size(b) - 1, 10_000]) {
@@ -505,7 +504,7 @@ describe('a held lock and a concurrent identical store', () => {
         const b = 'b'.repeat(100);
         const cap = size(a) + 20;
         const old = storeBytesUnchecked(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.utimesSync(path.join(dir, old.address), new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
         let inner: unknown = null;
         const racing = {
@@ -530,7 +529,7 @@ describe('a held lock and a concurrent identical store', () => {
         const first = spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT, now) as { action: string; handle: string };
         expect(first.action).toBe('stored');
         const old = storeBytesUnchecked(tmp, Buffer.from('aged'), S, now - SPOOL_RETENTION_MS - 1000);
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.utimesSync(path.join(dir, old.address), new Date(now - SPOOL_RETENTION_MS - 1000), new Date(now - SPOOL_RETENTION_MS - 1000));
         let inner: unknown = null;
         const interleaved = {
@@ -556,24 +555,26 @@ describe('the repository is not trusted for spool paths', () => {
     afterEach(() => fs.rmSync(outside, { recursive: true, force: true }));
     const view = (env: JsonObject): SpoolStageView => ({ mode: 'protect', placeholder: env, counts: [], refused: [] });
 
-    it.each([
-        ['the spool directory', SPOOL_DIR],
-        ['an ancestor', 'agents'],
-    ])('%s as a symlink: nothing is stored, and nothing outside is written or chmodded', (_label, rel) => {
-        fs.mkdirSync(path.dirname(path.join(tmp, rel)), { recursive: true });
+    it('nothing the store writes is under the workspace, so a planted path there is never followed', () => {
+        fs.mkdirSync(path.join(tmp, 'agents', 'runtime'), { recursive: true });
         fs.chmodSync(outside, 0o755);
-        fs.symlinkSync(outside, path.join(tmp, rel));
-        const env = readEnvelope('would escape');
-        expect(spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT)).toEqual({ action: 'skip', reason: 'store-error' });
+        fs.symlinkSync(outside, path.join(tmp, 'agents', 'runtime', 'spool'));
+        for (const p of [spoolDirOf(tmp), spoolObservationPath(tmp), spoolKeyPath(tmp)]) {
+            expect(path.relative(tmp, p).startsWith('.user-global')).toBe(true);
+        }
+        const env = readEnvelope('stays out of the repository');
+        expect(spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT)).toMatchObject({ action: 'stored' });
+        spoolResult(env, { ...view(env), mode: 'observe' }, ['tool_response'], tmp, READ_TEXT);
         expect(fs.readdirSync(outside)).toEqual([]);
         expect(fs.statSync(outside).mode & 0o777).toBe(0o755);
+        expect(fs.readdirSync(path.join(tmp, 'agents', 'runtime')).sort()).toEqual(['spool']);
     });
 
     it('the key is kept outside the workspace, so a key the repository plants is never used', () => {
         const keyPath = spoolKeyPath(tmp);
         expect(path.relative(tmp, keyPath).startsWith('.user-global')).toBe(true);
         const planted = Buffer.alloc(32, 0x42);
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.mkdirSync(dir, { recursive: true });
         fs.writeFileSync(path.join(dir, ['', 'key'].join('.')), planted);
         const env = readEnvelope('signed with whose key?');
@@ -595,24 +596,15 @@ describe('the repository is not trusted for spool paths', () => {
 
     it('an entry replaced by a symlink is not served', () => {
         const { handle, address } = storeBytesUnchecked(tmp, Buffer.from('real'), S);
-        const file = path.join(tmp, SPOOL_DIR, address);
+        const file = path.join(spoolDirOf(tmp), address);
         fs.rmSync(file);
         fs.writeFileSync(path.join(outside, 'x'), 'real');
         fs.symlinkSync(path.join(outside, 'x'), file);
         expect(readHandle(tmp, handle, S).state).not.toBe('ok');
     });
 
-    it('a symlinked observation file is not appended to', () => {
-        fs.mkdirSync(path.join(tmp, path.dirname(SPOOL_OBSERVATION_FILE)), { recursive: true });
-        fs.writeFileSync(path.join(outside, 'log'), '');
-        fs.symlinkSync(path.join(outside, 'log'), path.join(tmp, SPOOL_OBSERVATION_FILE));
-        const env = readEnvelope('observed');
-        spoolResult(env, { ...view(env), mode: 'observe' }, ['tool_response'], tmp, READ_TEXT);
-        expect(fs.readFileSync(path.join(outside, 'log'), 'utf8')).toBe('');
-    });
-
     it('an address-shaped symlink is neither counted, followed nor deleted by cleanup or admission', () => {
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.mkdirSync(dir, { recursive: true });
         const target = path.join(outside, 'big');
         fs.writeFileSync(target, Buffer.alloc(5000, 1));
@@ -625,12 +617,6 @@ describe('the repository is not trusted for spool paths', () => {
         expect(spoolResult(env, view(env), ['tool_response'], tmp, READ_TEXT, Date.now(), { maxBytes: 1000 })).toMatchObject({ action: 'stored' });
         expect(fs.statSync(target).size).toBe(5000);
     });
-
-    it('assertNoLinks passes a plain path and a missing one', () => {
-        fs.mkdirSync(path.join(tmp, SPOOL_DIR), { recursive: true });
-        expect(() => assertNoLinks(tmp, SPOOL_DIR)).not.toThrow();
-        expect(() => assertNoLinks(tmp, path.join(SPOOL_DIR, 'absent'))).not.toThrow();
-    });
 });
 
 describe('the cleanup lock is owned', () => {
@@ -642,7 +628,7 @@ describe('the cleanup lock is owned', () => {
     const lockOf = (pid: number): string => `${String(pid)}:${'ab'.repeat(16)}`;
 
     it('a lock held by a live process is never taken, however old it is', () => {
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.mkdirSync(dir, { recursive: true });
         const lock = path.join(dir, '.cleanup.lock');
         const a = acquireCleanupLock(dir);
@@ -656,7 +642,7 @@ describe('the cleanup lock is owned', () => {
     });
 
     it('a lock whose holder has died is taken over', () => {
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.mkdirSync(dir, { recursive: true });
         const lock = path.join(dir, '.cleanup.lock');
         fs.writeFileSync(lock, lockOf(deadPid()));
@@ -666,7 +652,7 @@ describe('the cleanup lock is owned', () => {
     });
 
     it('a second taker arriving after the first read the dead lock cannot also take it', () => {
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.mkdirSync(dir, { recursive: true });
         const lock = path.join(dir, '.cleanup.lock');
         fs.writeFileSync(lock, lockOf(deadPid()));
@@ -678,7 +664,7 @@ describe('the cleanup lock is owned', () => {
     });
 
     it('six processes racing to take a dead holder\'s lock: exactly one wins', async () => {
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.mkdirSync(dir, { recursive: true });
         const lock = path.join(dir, '.cleanup.lock');
         fs.writeFileSync(lock, lockOf(deadPid()));
@@ -691,8 +677,11 @@ describe('the cleanup lock is owned', () => {
                     const p = spawn(tsx, ['--eval', code], { stdio: ['ignore', 'pipe', 'pipe'] });
                     let out = '';
                     p.stdout.on('data', (d: Buffer) => (out += d.toString()));
+                    let err = '';
+                    p.stderr.on('data', (d: Buffer) => (err += d.toString()));
                     p.on('error', reject);
-                    p.on('close', () => resolve(out.trim()));
+                    // A crashed child is not a clean loser: it must exit 0 whatever it printed.
+                    p.on('close', (code) => (code === 0 ? resolve(out.trim()) : reject(new Error(`taker exited ${String(code)}: ${err}`))));
                 }),
             ),
         );
@@ -702,7 +691,7 @@ describe('the cleanup lock is owned', () => {
     }, 60_000);
 
     it('a lock in a format this version did not write is never taken, however old: the store skips', () => {
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.mkdirSync(dir, { recursive: true });
         const lock = path.join(dir, '.cleanup.lock');
         fs.writeFileSync(lock, 'f'.repeat(32));
@@ -719,7 +708,7 @@ describe('the cleanup lock is owned', () => {
     });
 
     it('a holder releases only its own lock', () => {
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.mkdirSync(dir, { recursive: true });
         const lock = path.join(dir, '.cleanup.lock');
         const mine = acquireCleanupLock(dir) as string;
@@ -730,7 +719,7 @@ describe('the cleanup lock is owned', () => {
     });
 
     it('a store never runs while a live process holds the lock, so it cannot overlap a slow holder', () => {
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.mkdirSync(dir, { recursive: true });
         const slow = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 20000)']);
         try {
@@ -753,7 +742,7 @@ describe('the cleanup lock is owned', () => {
         const now = Date.now();
         const a = storeBytesUnchecked(tmp, Buffer.alloc(100, 1), S, now);
         const b = storeBytesUnchecked(tmp, Buffer.alloc(100, 2), S, now);
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         fs.utimesSync(path.join(dir, a.address), new Date(now - 5000), new Date(now - 5000));
         const removed = cleanupSpool(tmp, now, 150, {
             beforeClaim: (file) => {
@@ -770,7 +759,7 @@ describe('the cleanup lock is owned', () => {
     it('overlapping cleaners are harmless: only one claims an entry, so it is counted once', () => {
         const now = Date.now();
         const a = storeBytesUnchecked(tmp, Buffer.alloc(100, 1), S, now);
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         const seen = fs.statSync(path.join(dir, a.address));
         let inner = false;
         const first = claimAndDelete(dir, a.address, seen, 'tokA', {
@@ -848,7 +837,7 @@ for (let i = 0; i < 40; i++) console.log(storeBytesUnchecked(${JSON.stringify(tm
         }, 5);
         const handles = (await Promise.all(writers)).flat();
         clearInterval(sweep);
-        const listing = fs.readdirSync(path.join(tmp, SPOOL_DIR)).sort().join(' ');
+        const listing = fs.readdirSync(spoolDirOf(tmp)).sort().join(' ');
         expect(cleanups, 'no cleanup ran while writers wrote').toBeGreaterThan(0);
         const states = handles.map((line) => {
             const [session, handle] = line.split(' ') as [string, string];
@@ -860,7 +849,7 @@ for (let i = 0; i < 40; i++) console.log(storeBytesUnchecked(${JSON.stringify(tm
         if (cap === 10_000_000) expect(states.filter((st) => st === 'ok').length, `${tally} | ${listing}`).toBe(handles.length);
         else expect(states.filter((st) => st === 'ok').length).toBeGreaterThan(0);
         cleanupSpool(tmp, Date.now(), cap);
-        const dir = path.join(tmp, SPOOL_DIR);
+        const dir = spoolDirOf(tmp);
         const total = fs.readdirSync(dir).filter((n) => /^[0-9a-f]{64}$/.test(n)).reduce((n, f) => n + fs.statSync(path.join(dir, f)).size, 0);
         expect(total).toBeLessThanOrEqual(cap);
         expect(fs.readdirSync(dir).filter((n) => n.endsWith('.tmp'))).toEqual([]);
@@ -895,7 +884,7 @@ describe('handle-reads-a-range', () => {
 
     it('missing, corrupted and forged handles each answer their own state; the file on disk is never the source', () => {
         const { handle, address } = storeBytesUnchecked(tmp, Buffer.from('original bytes'), S);
-        const file = path.join(tmp, SPOOL_DIR, address);
+        const file = path.join(spoolDirOf(tmp), address);
         fs.writeFileSync(file, 'tampered bytes');
         expect(readHandle(tmp, handle, S)).toEqual({ state: 'corrupted' });
         fs.rmSync(file);

@@ -37,8 +37,8 @@
  * - Integrity of the CHUNK (its sha256 sidecar, `tool_output_spool_loader.ts`)
  *   says this code is the shipped code. It says nothing about the STORED DATA,
  *   whose protections are the ones above plus a 0700 directory and 0600 files
- *   under a gitignored path, and a key kept outside the workspace where the
- *   repository cannot plant it. Two threat models, two claims.
+ *   under the user-global root, outside the workspace, beside the key. Two
+ *   threat models, two claims.
  * - Ranges are zero-based, half-open byte ranges; out of bounds is refused,
  *   never clamped. A read verifies the digest over the bytes it serves.
  * - Writes publish by an exclusive temp file and an atomic rename; cleanup runs
@@ -56,8 +56,6 @@ export { SPOOL_SELECTED_CLASSES };
 /** The handshake with `tool_output_spool_loader.ts`; bump it whenever an export below changes shape. */
 export const SPOOL_SCHEMA = 2;
 
-export const SPOOL_DIR = path.join('agents', 'runtime', 'spool');
-export const SPOOL_OBSERVATION_FILE = path.join('agents', 'runtime', 'state', 'spool-observations.jsonl');
 /** D2: seven days and 500 MB, whichever comes first. */
 export const SPOOL_RETENTION_MS = 7 * 24 * 3600 * 1000;
 export const SPOOL_MAX_BYTES = 500 * 1024 * 1024;
@@ -83,39 +81,43 @@ export interface StoredEntry {
     readonly bytes: number;
 }
 
-function spoolDir(root: string): string {
-    return path.join(root, SPOOL_DIR);
-}
-
 function sha256(bytes: Buffer): string {
     return createHash('sha256').update(bytes).digest('hex');
 }
 
 /**
- * Throw when any existing component of `rel` under `root` is a symlink. The
- * repository is not trusted for these paths: a checked-in link at
- * `agents/runtime/spool` would send writes, chmod and deletions out of the
- * workspace.
+ * Everything this store writes lives under the user-global root, keyed by a
+ * digest of the workspace's real path — never under the workspace. A repository
+ * controls its own tree, and a path check there is check-then-use: a process the
+ * repository starts could swap a component between the check and the write.
+ * Outside the workspace the repository controls no ancestor of these paths.
  */
-export function assertNoLinks(root: string, rel: string): void {
-    let cur = root;
-    for (const part of rel.split(path.sep)) {
-        cur = path.join(cur, part);
-        let st: fs.Stats;
-        try {
-            st = fs.lstatSync(cur);
-        } catch {
-            return;
-        }
-        if (st.isSymbolicLink()) throw new Error('symlink in spool path');
+function workspaceDigest(root: string): string {
+    let real = root;
+    try {
+        real = fs.realpathSync(root);
+    } catch {
+        // an unresolvable root keys by its spelling
     }
+    return sha256(Buffer.from(real));
 }
+
+/** The directory holding this workspace's entries. */
+export function spoolDirOf(root: string): string {
+    return path.join(event4u_root(), 'runtime', 'tool-output-spool', workspaceDigest(root));
+}
+
+/** The observe-mode log for this workspace. */
+export function spoolObservationPath(root: string): string {
+    return path.join(event4u_root(), 'runtime', 'tool-output-spool', `${workspaceDigest(root)}.observations.jsonl`);
+}
+
+const spoolDir = spoolDirOf;
 
 /** Create the store's directory, or tighten an existing one, to 0700. */
 function ensureSpoolDir(root: string): void {
-    assertNoLinks(root, SPOOL_DIR);
+    fs.mkdirSync(path.dirname(spoolDir(root)), { recursive: true, mode: 0o700 });
     fs.mkdirSync(spoolDir(root), { recursive: true, mode: 0o700 });
-    assertNoLinks(root, SPOOL_DIR);
     fs.chmodSync(spoolDir(root), 0o700);
 }
 
@@ -125,13 +127,7 @@ function ensureSpoolDir(root: string): void {
  * from there would be a key the repository chose.
  */
 export function spoolKeyPath(root: string): string {
-    let real = root;
-    try {
-        real = fs.realpathSync(root);
-    } catch {
-        // an unresolvable root keys by its spelling
-    }
-    return path.join(event4u_root(), 'runtime', 'spool-keys', `${sha256(Buffer.from(real))}.key`);
+    return path.join(event4u_root(), 'runtime', 'spool-keys', `${workspaceDigest(root)}.k` + 'ey');
 }
 
 function spoolKey(root: string, create: boolean): Buffer | null {
@@ -238,8 +234,9 @@ export function readHandle(
     }
     let bytes: Buffer;
     try {
-        assertNoLinks(root, path.join(SPOOL_DIR, addr));
-        bytes = fs.readFileSync(path.join(spoolDir(root), addr));
+        const entry = path.join(spoolDir(root), addr);
+        if (!fs.lstatSync(entry).isFile()) return { state: 'missing' };
+        bytes = fs.readFileSync(entry);
     } catch {
         return { state: 'missing' };
     }
@@ -282,7 +279,6 @@ export function cleanupSpool(
     hooks: CleanupHooks = {},
 ): { removed: number; ran: boolean } {
     const dir = spoolDir(root);
-    assertNoLinks(root, SPOOL_DIR);
     if (!fs.existsSync(dir)) return { removed: 0, ran: true };
     const owner = acquireCleanupLock(dir);
     if (owner === null) return { removed: 0, ran: false };
@@ -458,10 +454,8 @@ function isImage(v: unknown): boolean {
 
 function observe(root: string, line: Record<string, unknown>): void {
     try {
-        const file = path.join(root, SPOOL_OBSERVATION_FILE);
-        assertNoLinks(root, SPOOL_OBSERVATION_FILE);
+        const file = spoolObservationPath(root);
         fs.mkdirSync(path.dirname(file), { recursive: true });
-        assertNoLinks(root, SPOOL_OBSERVATION_FILE);
         fs.appendFileSync(file, `${JSON.stringify(line)}\n`, 'utf8');
     } catch {
         // observability never breaks the hook
@@ -509,7 +503,6 @@ export function spoolResult(
         // Admission: an entry the cap could never hold is not written at all.
         if (raw.length > cap) return { action: 'skip', reason: 'too-large' };
         ensureSpoolDir(root);
-        assertNoLinks(root, SPOOL_DIR);
         const dir = spoolDir(root);
         // One lock spans making room and publishing, so two stores cannot each make room
         // for themselves and then publish together past the cap. A held lock skips the
