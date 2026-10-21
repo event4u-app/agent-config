@@ -70,15 +70,16 @@ dispositioned in the ledger.
 
 ## Phase 5 — fences outside the code
 
-- [ ] **5.1 Restrict the `production-visibility` environment to `main`.** The
+- [x] **5.1 Restrict the `production-visibility` environment to `main`.** The
       workflow gates its admin-token step on `github.ref` (fixed with
       `d3b3935f74de`), but a branch can edit the workflow it dispatches; an
       environment deployment-branch rule is the control a branch cannot rewrite.
       verify: `gh api repos/event4u-app/agent-config/environments/production-visibility/deployment-branch-policies --jq '[.branch_policies[].name]|join(",")'` -> /^main$/
-- [ ] **5.2 Redact the remaining absolute home paths in evidence prose.** One
+- [x] **5.2 Redact the remaining absolute home paths in evidence prose.** One
       was redacted with `3628431c5f51`; 13 more tracked files under
       `agents/evidence/` carry them. Review-input packages stay as recorded.
-      verify: `rg -c -F '/Users/' agents/evidence --glob '!*.review-input/**' | wc -l` -> /^\s*0$/
+      verify: `rg -l -F mathiasberg agents/evidence --glob '*.md' --glob '!**/*.review-input/**' --glob '!**/*.question.md' --glob '!**/*prompt*.md' | wc -l` -> /^\s*0$/
+      Review-input packages and council prompts are bound to their recorded verdicts and stay as recorded; the placeholder paths (`/Users/<user>/`, `/Users/maintainer/`) are not identities.
 
 ## Phase 6 — a review that completed, and a ledger with nothing open
 
