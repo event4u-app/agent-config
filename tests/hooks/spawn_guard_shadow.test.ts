@@ -17,7 +17,7 @@ import {
     evaluateCandidates,
     processEnvelope,
 } from '../../src/scripts/hooks/spawn_guard_shadow_hook.js';
-import { LEDGER_DIR, OPEN_SUBDIR } from '../../src/scripts/hooks/subagent_ledger_hook.js';
+import { LEDGER_DIR, OPEN_SUBDIR, refFor } from '../../src/scripts/hooks/subagent_ledger_hook.js';
 import type { ReuseContext, WorkerState } from '../../src/scripts/_lib/worker_reuse.js';
 
 let root: string;
@@ -46,6 +46,22 @@ function plantOpen(ref: string, depth: number): void {
         }),
         'utf8',
     );
+}
+
+/** A finished leg as the ledger records it: a subagent_stop line for its ref. */
+function plantStopped(ref: string): void {
+    const dir = path.join(root, LEDGER_DIR);
+    fs.mkdirSync(dir, { recursive: true });
+    const ts = new Date().toISOString();
+    fs.appendFileSync(
+        path.join(dir, `${ts.slice(0, 7)}.jsonl`),
+        `${JSON.stringify({ event: 'subagent_stop', ts, ref, session_id: null, agent_type: 'general-purpose' })}\n`,
+        'utf8',
+    );
+}
+
+function shadowLines(): Array<Record<string, unknown>> {
+    return ledgerLines().filter((l) => l.event === 'spawn_guard_shadow');
 }
 
 function ledgerLines(): Array<Record<string, unknown>> {
@@ -96,7 +112,7 @@ function agentCall(subagentType: string): Record<string, unknown> {
     };
 }
 
-function resumeCall(to: string): Record<string, unknown> {
+function sendMessageCall(to: string): Record<string, unknown> {
     return {
         schema_version: 1,
         platform: 'claude',
@@ -160,10 +176,12 @@ describe('spawn-guard-shadow — reuse verdict and resumes (cold-start 3.3)', ()
         expect(ledgerLines()[0]!.reuse).toEqual({ verdict: 'fresh', name: null, reasons: ['host_resume_unobserved'] });
     });
 
-    it('a resume is recorded and counted against the same candidates as a spawn', () => {
+    it('a send to a finished worker is a resume, counted against the same candidates as a spawn', () => {
+        const id = 'a7dda5d30ffee4bb4';
+        plantStopped(refFor(id));
         for (let i = 0; i < 4; i++) plantOpen(`open${i}`, 1);
-        expect(processEnvelope(resumeCall('billing-worker'), root)).toBe(0);
-        const line = ledgerLines()[0]!;
+        expect(processEnvelope(sendMessageCall(id), root)).toBe(0);
+        const line = shadowLines()[0]!;
         expect(line.tool).toBe('SendMessage');
         expect(line.dispatch_kind).toBe('resume');
         expect(line.concurrent_open).toBe(4);
@@ -171,6 +189,27 @@ describe('spawn-guard-shadow — reuse verdict and resumes (cold-start 3.3)', ()
         expect(n2m4!.would_deny).toBe(true);
         // A resume is not a reuse decision; it carries no verdict of its own.
         expect(line).not.toHaveProperty('reuse');
+    });
+
+    it('a send to a running worker starts no run: recorded, never counted as a resume', () => {
+        const id = 'ab43c10fd3f74398a';
+        plantOpen(refFor(id), 1);
+        for (let i = 0; i < 4; i++) plantOpen(`open${i}`, 1);
+        expect(processEnvelope(sendMessageCall(id), root)).toBe(0);
+        const line = shadowLines()[0]!;
+        expect(line.dispatch_kind).toBe('message_running');
+        expect(line).not.toHaveProperty('candidates');
+    });
+
+    it('a recipient the ledger cannot place stays unclassified, never called a resume', () => {
+        for (const to of ['probe-worker', 'main', 'never-seen-id']) {
+            expect(processEnvelope(sendMessageCall(to), root)).toBe(0);
+        }
+        // A finished worker in a DIFFERENT run does not make an unknown name a resume.
+        plantStopped(refFor('some-other-agent'));
+        processEnvelope(sendMessageCall('probe-worker'), root);
+        const kinds = shadowLines().map((l) => l.dispatch_kind);
+        expect(kinds).toEqual(['message_or_resume', 'message_or_resume', 'message_or_resume', 'message_or_resume']);
     });
 
     it('records where the resume half is counted and where it is not observed', () => {
@@ -181,13 +220,20 @@ describe('spawn-guard-shadow — reuse verdict and resumes (cold-start 3.3)', ()
         expect(other!.resume_admission).toBe('unobserved');
     });
 
-    it('keeps tool input off disk: no prompt, no message, no recipient', () => {
-        processEnvelope(agentCall('ac-worker'), root);
-        processEnvelope(resumeCall('billing-worker'), root);
-        const raw = JSON.stringify(ledgerLines());
+    it('keeps tool input off disk: no prompt, no message, no recipient — the register name is the only name', () => {
+        const id = 'a7dda5d30ffee4bb4';
+        plantStopped(refFor(id));
+        processEnvelope(agentCall('ac-worker'), root, { host_resume: true, workers: [WORKER], context: CONTEXT });
+        processEnvelope(sendMessageCall(id), root);
+        processEnvelope(sendMessageCall('recipient-name-xyz'), root);
+        const lines = shadowLines();
+        expect(lines[0]!.reuse).toEqual({ verdict: 'would_resume', name: 'billing-worker', reasons: [] });
+        const raw = JSON.stringify(lines);
         expect(raw).not.toContain('SECRET-PROMPT-BODY');
         expect(raw).not.toContain('SECRET-MESSAGE-BODY');
-        expect(raw).not.toContain('billing-worker');
+        expect(raw).not.toContain('recipient-name-xyz');
+        expect(raw).not.toContain(id);
+        expect(raw).not.toContain(refFor(id));
     });
 });
 

@@ -145,6 +145,15 @@ describe('shadowReuseVerdict — what the spawn guard records', () => {
         expect(v).toEqual({ verdict: 'would_resume', name: 'ac-worker-billing', reasons: [] });
     });
 
+    it('picks the first eligible worker in register order, not by name', () => {
+        const a = worker({ name: 'zeta-worker' });
+        const b = worker({ name: 'alpha-worker' });
+        const v1 = shadowReuseVerdict({ host_resume: true, workers: [a, b], context: context() });
+        const v2 = shadowReuseVerdict({ host_resume: true, workers: [b, a], context: context() });
+        expect(v1.name).toBe('zeta-worker');
+        expect(v2.name).toBe('alpha-worker');
+    });
+
     it('a refusal carries every candidate reason once, in condition order', () => {
         const v = shadowReuseVerdict({
             host_resume: true,

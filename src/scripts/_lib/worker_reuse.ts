@@ -147,9 +147,9 @@ export interface ShadowReuseInput {
 }
 
 /**
- * The verdict `spawn-guard-shadow` records for one spawn: the first eligible
- * worker by name, or `fresh` with every candidate's refusal reasons, each once,
- * in condition order.
+ * The verdict `spawn-guard-shadow` records for one spawn: the name of the first
+ * eligible worker in register order (the caller's order is the contract), or
+ * `fresh` with every candidate's refusal reasons, each once, in condition order.
  */
 export function shadowReuseVerdict(input: ShadowReuseInput): ShadowReuseVerdict {
     if (!input.host_resume) return { verdict: 'fresh', name: null, reasons: ['host_resume_unobserved'] };

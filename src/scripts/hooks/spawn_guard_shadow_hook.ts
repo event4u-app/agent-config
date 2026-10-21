@@ -58,7 +58,14 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { probeHostCapabilities } from '../_lib/host_capability.js';
 import { shadowReuseVerdict, type ReuseContext, type WorkerState } from '../_lib/worker_reuse.js';
-import { appendLedgerLine, openRecordStats, resolveConsumerRoot } from './subagent_ledger_hook.js';
+import {
+    LEDGER_DIR,
+    appendLedgerLine,
+    openRecordStats,
+    readOpenRecords,
+    refFor,
+    resolveConsumerRoot,
+} from './subagent_ledger_hook.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW } from './exit_codes.js';
 
@@ -73,12 +80,52 @@ function isObject(v: unknown): v is JsonObject {
 export const DISPATCH_TOOL_NAMES: ReadonlySet<string> = new Set(['Agent', 'Task']);
 
 /**
- * The tool that re-tasks a finished worker. The host's concurrency cap checks
- * new spawns only and admits a resume past it, so a guard that counted spawns
- * only would undercount exactly the runs the host does not bound. A resume is
- * recorded against the same candidates.
+ * The tool that re-tasks a finished worker — and also messages a running one,
+ * a teammate, or the lead. The host's concurrency cap checks new spawns only
+ * and admits a resume past it, so a guard that counted spawns only would
+ * undercount exactly the runs the host does not bound. Only a send the ledger
+ * can place on a finished leg is called a resume; see {@link classifySend}.
  */
 export const RESUME_TOOL_NAMES: ReadonlySet<string> = new Set(['SendMessage']);
+
+/**
+ * `resume` — the recipient hashes to a ledger ref that has stopped and is not
+ * open: a finished leg is re-entered, which starts a run.
+ * `message_running` — the ref is open: the message starts no run.
+ * `message_or_resume` — the ledger cannot place the recipient (a name, a
+ * teammate, an id from another estate). Recorded, never called a resume.
+ */
+export type SendKind = 'resume' | 'message_running' | 'message_or_resume';
+
+function stoppedInLedger(root: string, ref: string, now: Date): boolean {
+    const months = [now.toISOString().slice(0, 7)];
+    const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+    months.push(prev.toISOString().slice(0, 7));
+    const needle = `"ref":"${ref}"`;
+    for (const month of months) {
+        let text: string;
+        try {
+            text = fs.readFileSync(path.join(root, LEDGER_DIR, `${month}.jsonl`), 'utf8');
+        } catch {
+            continue;
+        }
+        for (const line of text.split('\n')) {
+            if (line.includes(needle) && line.includes('"event":"subagent_stop"')) return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Classify one send from its recipient alone. The recipient is hashed with the
+ * ledger's own `refFor` and compared; neither it nor its ref is written.
+ */
+export function classifySend(root: string, recipient: unknown, now: Date = new Date()): SendKind {
+    if (typeof recipient !== 'string' || recipient === '') return 'message_or_resume';
+    const ref = refFor(recipient);
+    if (readOpenRecords(root).has(ref)) return 'message_running';
+    return stoppedInLedger(root, ref, now) ? 'resume' : 'message_or_resume';
+}
 
 /**
  * Platforms where `pre_tool_use` was observed firing on the resume tool, with a
@@ -175,6 +222,8 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string, deps:
         const isResume = RESUME_TOOL_NAMES.has(toolName);
         if (!isResume && !DISPATCH_TOOL_NAMES.has(toolName)) return EXIT_ALLOW;
         const platform = typeof envelope['platform'] === 'string' ? envelope['platform'] : null;
+        const toolInput = isObject(payload['tool_input']) ? payload['tool_input'] : {};
+        const sendKind: SendKind | null = isResume ? classifySend(consumerRoot, toolInput['to']) : null;
         // Only the verdict's label and reason codes reach disk — never the tool input.
         const reuse = isResume
             ? null
@@ -208,8 +257,12 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string, deps:
             // one the ledger already fixed for itself.
             ledger_present: stats.ledger_present,
             stale_open_excluded: stats.stale_excluded,
-            candidates: verdicts.map((v) => ({ label: v.label, would_deny: v.would_deny, on: v.on })),
-            dispatch_kind: isResume ? 'resume' : 'spawn',
+            // A message to a running worker starts no run, so it is not set
+            // against a threshold that counts runs.
+            ...(sendKind === 'message_running'
+                ? {}
+                : { candidates: verdicts.map((v) => ({ label: v.label, would_deny: v.would_deny, on: v.on })) }),
+            dispatch_kind: sendKind ?? 'spawn',
             resume_admission: platform !== null && RESUME_ADMISSION_OBSERVED.has(platform) ? 'counted' : 'unobserved',
             ...(reuse === null ? {} : { reuse }),
             // Shadow posture is a property of this file, not of a setting —
