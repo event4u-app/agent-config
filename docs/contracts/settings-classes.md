@@ -249,8 +249,10 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 9 |
 | B — consent | 3 |
-| C — guarded | 101 |
-| **Total** | **113** |
+| C — guarded | 103 |
+| **Total** | **115** |
+
+It rose to 115 on 2026-10-21 when `road-to-advisories-heard-the-same-day` step 4.3 added `advisories.mode` and `advisories.egress` — two C. `mode` is `consent`: it adds a line to the first session start of every day, which an install that never asked must not have switched on for it by an agent. `egress` is `policy`: it decides which package names leave the machine, the privacy boundary the roadmap's D4 fixes for private names and this key extends to all of them.
 
 It rose to 113 on 2026-10-21 when `road-to-worktrees-that-leave-after-the-merge` step 4.2 added `worktrees.cleanup` — one C, `consent`: `auto` deletes worktree directories without asking, and a council round on 2026-10-21 held 2/2 that installation alone is not consent to that, so the key ships `notify` and no agent write path may reach it (ADR-295). It is a removal key; ADR-229's deletion of the creation key `worktrees.mode` is untouched.
 
@@ -405,9 +407,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 35 |
 | un-inferrable | 10 |
-| consent | 51 |
-| policy | 17 |
-| **Total** | **113** |
+| consent | 52 |
+| policy | 18 |
+| **Total** | **115** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -612,6 +614,8 @@ Rows follow template order, so a diff against the template reads straight down.
 | `decision_engine.on_block` | C | `stop` | `warn` advances past a gate that fired | derivable — the non-interactive probe decides ask-versus-stop, and the fired gate's own action decides the rest |
 | `decision_engine.ask_timeout_seconds` | C | `30` | how long a fired gate waits before falling back | derivable — the same non-interactive probe: where nobody can answer there is nothing to wait for |
 | `update_check.enabled` | C | `true` | a background safety check; disabling it pins the user to known-vulnerable code | consent |
+| `advisories.mode` | C | `notify` | a notice at every first session start of a day; turning it on for an install that never asked is a flip the agent may not make | consent |
+| `advisories.egress` | C | `query` | decides which package names and versions leave the machine on a refresh | policy |
 | `update.mode` | C | `notify` | a standing authorisation to replace the user's global install; `auto` is something they cannot un-see happening | consent |
 | `worktrees.cleanup` | C | `notify` | a standing authorisation to delete worktree directories on the proven-merged set; `auto` removes them unasked (ADR-295) | consent |
 | `legal_review_prep.acknowledged` | C | `false` | the consent gate; the safety floor requires the wizard checkbox | consent |

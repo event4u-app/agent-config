@@ -24,6 +24,13 @@ explanation lives now that the file no longer carries it as comments.
 | `discipline_profile` | C | string |  | `auto` · `off` · `essential` · `full` | The ONE runtime knob for the discipline-rule tier (successor of rule_loading_tier; council 2026-07-07). off = kernel only (~1x tokens). essential = kernel + the measured lift-carrying rules (~3.3x, keeps the weak-host discipline lift). full = everything (~11.7x, EXPERIMENTAL — residual lift over essential not established). auto = resolve per session against the evidence-gated NULL-lift disable-list in src/config/host-capabilities.yml (measured-null host → off, otherwise → essential). Optional and opt-in until the P1/P2 evidence gates pass (agents/roadmaps/road-to-discipline-profile-tiering.md); absent = legacy rule_loading_tier applies. |
 | `rule_loading_tier` | C | string | `"balanced"` | `minimal` · `balanced` · `full` · `custom` | Master switch for which rule tiers load and how cautiously the agent spends tokens. minimal = only the 9 kernel rules (cheapest, fewest guardrails). balanced = kernel + tier-1 (recommended default). full = kernel + tier-1 + tier-2 (most guardrails, highest token cost). custom = roll your own in agents/overrides/. LEGACY: superseded by discipline_profile — when that key is set it wins (mapping: minimal→off, balanced→essential, full→full). |
 
+## advisories
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `advisories.egress` | C | string | `"query"` | `none` · `query` | What leaves the machine when agent-config audit:deps refresh runs. query (default) sends names and versions of public packages to api.osv.dev and reads endoflife.date and the PHP and Node release feeds; a private package name is never sent, and a native npm or composer audit runs only for a lockfile with no private package. none sends nothing, and findings read unknown rather than clear. |
+| `advisories.mode` | C | string | `"notify"` | `off` · `notify` | Whether the first session start of a day prints the advisory findings that need action today. notify (default) reads the local cache only — a session start never touches the network; off prints nothing, and agent-config audit:deps show still works. |
+
 ## ai_team
 
 | Key | Class | Type | Default | Allowed values | What it does |

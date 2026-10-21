@@ -75,6 +75,7 @@ import { readHookStdin } from './hooks/hook_stdin.js';
 import { probeRanToday, stampProbeRun } from './hooks/probe_throttle.js';
 import { retroDailyProbe } from './retro_sweep.js';
 import { dailyCleanup } from './worktree_cleanup_check.js';
+import { sessionNotice } from './_lib/advisory_notice.js';
 
 /** The `probe_throttle` stamp of the retro's daily probe. */
 const RETRO_PROBE_STAMP = 'retro-sweep';
@@ -950,13 +951,29 @@ export function main(): number {
                         ranToday: (r) => probeRanToday(r, WORKTREE_PROBE_STAMP),
                         stamp: (r) => stampProbeRun(r, WORKTREE_PROBE_STAMP),
                     })?.line ?? null;
+                // The advisory notice (advisories roadmap 4.2): read-only — one
+                // cache file read, one "shown today" stamp written, no network
+                // and no action. `advisories.mode: off` silences it.
+                let advisories: string | null = null;
+                try {
+                    advisories = sessionNotice(root);
+                } catch {
+                    advisories = null;
+                }
                 const foreign = foreign_sessions_block(root, session_id, new Date());
-                const block = [foreign, retro, worktrees].filter((b): b is string => b !== null).join('\n\n');
+                const block = [foreign, retro, worktrees, advisories].filter((b): b is string => b !== null).join('\n\n');
                 if (block !== '') {
                     process.stdout.write(
                         JSON.stringify({
                             decision: 'allow',
-                            reason: foreign !== null ? 'live foreign sessions on this repository' : retro !== null ? 'retro queue' : 'worktree cleanup',
+                            reason: [
+                                foreign !== null ? 'live foreign sessions on this repository' : null,
+                                retro !== null ? 'retro queue' : null,
+                                worktrees !== null ? 'worktree cleanup' : null,
+                                advisories !== null ? 'advisories' : null,
+                            ]
+                                .filter((r): r is string => r !== null)
+                                .join(', '),
                             context: block,
                         }) + '\n',
                     );

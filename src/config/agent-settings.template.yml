@@ -1516,6 +1516,28 @@ decision_engine:
 update_check:
   enabled: true
 
+# --- Security advisories ---
+#
+# Advisories, malware reports, end-of-support dates and pre-announced security
+# releases for what THIS project runs (lockfiles, runtimes, images, CI actions).
+#
+# mode:
+#   notify  (default) the first session start of a day prints one line per
+#           finding that needs action today, read from the local cache only —
+#           a session start never touches the network
+#   off     print nothing; `agent-config audit:deps show` still works
+#
+# egress — what leaves the machine when `agent-config audit:deps refresh` runs:
+#   query   (default) names and versions of PUBLIC packages go to api.osv.dev;
+#           runtime lifecycle data comes from endoflife.date; the PHP and Node
+#           release feeds are read. A private package name is never sent, and a
+#           native `npm audit` / `composer audit` runs only for a lockfile with no
+#           private package in it
+#   none    nothing is sent; findings read `unknown`, never "clear"
+advisories:
+  mode: notify
+  egress: query
+
 # --- Update install mode ---
 #
 # What the agent may DO about a newer release, as opposed to whether it
