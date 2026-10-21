@@ -6,8 +6,9 @@ intent: "Check what this project uses for security advisories and carry a findin
 routes_to: [dependency-upgrade]
 replaces: []
 visibility: advanced
+cluster: audit
 skills: [dependency-upgrade, finishing-a-development-branch, using-git-worktrees]
-description: Security advisories for the project's packages, runtimes and toolchain — by tier, with evidence; `deps fix <id>` carries one finding to a verified PR
+description: Security advisories for this project
 argument-hint: "deps [refresh|show|gaps|fix <id>|accept <id>]"
 suggestion:
   eligible: true

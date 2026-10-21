@@ -24,8 +24,8 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 
 | Axis | Value | Records |
 |---|---|---|
-| `evidence.strength` | `E0` | 85 |
-| `evidence.strength` | `E1` | 81 |
+| `evidence.strength` | `E0` | 84 |
+| `evidence.strength` | `E1` | 82 |
 | `evidence.strength` | `E2` | 52 |
 | `evidence.strength` | `E3` | 25 |
 | `evidence.strength` | `E4` | 0 |
@@ -273,7 +273,7 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `docs/decisions/ADR-293-the-package-decides-its-own-rule-layer-form.md` | `agentic` (`agentic_mode: council`) | `E0` — council / agreement markers only — consensus is not evidence | `incomplete` | council @ ADR-293-the-package-decides-its-own-rule-layer-form.md:42, ADR-293-the-package-decides-its-own-rule-layer-form.md:169 | provenance: agentic · evidence: E1 |
 | `docs/decisions/ADR-294-completion-review-round-cap.md` | `mixed` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | owner @ ADR-294-completion-review-round-cap.md:32<br>measurement @ ADR-294-completion-review-round-cap.md:41, ADR-294-completion-review-round-cap.md:49, ADR-294-completion-review-round-cap.md:52, ADR-294-completion-review-round-cap.md:96, ADR-294-completion-review-round-cap.md:109, ADR-294-completion-review-round-cap.md:110<br>council @ ADR-294-completion-review-round-cap.md:42, ADR-294-completion-review-round-cap.md:123, ADR-294-completion-review-round-cap.md:131 | provenance: mixed · evidence: E1 · authority_basis: owner_intent |
 | `docs/decisions/ADR-295-worktree-removal-on-the-proven-set.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: human · evidence: E1 |
-| `docs/decisions/ADR-296-advisory-session-notice-declared.md` | `agentic` (`agentic_mode: council`) | `E0` — council / agreement markers only — consensus is not evidence | `incomplete` | council @ ADR-296-advisory-session-notice-declared.md:34, ADR-296-advisory-session-notice-declared.md:55, ADR-296-advisory-session-notice-declared.md:83, ADR-296-advisory-session-notice-declared.md:84 | provenance: agentic · evidence: E1 |
+| `docs/decisions/ADR-296-advisory-session-notice-declared.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-296-advisory-session-notice-declared.md:34, ADR-296-advisory-session-notice-declared.md:55, ADR-296-advisory-session-notice-declared.md:99, ADR-296-advisory-session-notice-declared.md:100<br>measurement @ ADR-296-advisory-session-notice-declared.md:92 | provenance: agentic · evidence: E1 |
 | `docs/decisions/ADR-rule-kernel-and-router.md` | `unknown` | `E1` — one dated local observation | `incomplete` | measurement @ ADR-rule-kernel-and-router.md:55, ADR-rule-kernel-and-router.md:107, ADR-rule-kernel-and-router.md:112, ADR-rule-kernel-and-router.md:113, ADR-rule-kernel-and-router.md:117 | provenance: — · evidence: — |
 | `docs/adrs/cost/0001-hard-stop-hook.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: — · evidence: — |
 | `docs/adrs/memory/0001-consumer-side-snapshot.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: — · evidence: — |

@@ -1,0 +1,12 @@
+{
+  "command": "audit",
+  "intent": "Check what this project uses for security advisories and carry a finding to a fix",
+  "cases": [
+    { "prompt": "is anything we use vulnerable right now?", "expected": "audit" },
+    { "prompt": "check our dependencies and runtimes for security advisories", "expected": "audit" },
+    { "prompt": "fix CVE-2026-0001 in this project", "expected": "audit" },
+    { "prompt": "is our PHP version still getting security updates?", "expected": "audit" },
+    { "prompt": "the CI run on my PR is red, fix it", "expected": "fix" },
+    { "prompt": "review my changes before I push", "expected": "review" }
+  ]
+}

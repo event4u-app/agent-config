@@ -742,7 +742,7 @@ describe('R2 round 3 fixes (2026-10-21)', () => {
 describe('R2 round 3 — one fix store per repository', () => {
     it('#2 — a worktree and its main checkout read and write one remediation store', () => {
         const root = project('F1-fastify-hono');
-        execFileSync('git', ['-C', root, 'commit', '-q', '--allow-empty', '-m', 'init']);
+        execFileSync('git', ['-C', root, '-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'init']);
         const wt = path.join(tmp, 'wt-fix');
         execFileSync('git', ['-C', root, 'worktree', 'add', '-q', '-b', 'security/x', wt]);
         fs.mkdirSync(path.dirname(remediationsPath(root)!), { recursive: true });

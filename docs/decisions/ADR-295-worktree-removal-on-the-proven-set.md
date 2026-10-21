@@ -92,6 +92,26 @@ merge, regularly, automatically where possible.
   that removes three trees, and nothing at all under `notify`. Settings,
   register and journal reads are local file I/O outside every deadline.
 
+## Evidence
+
+`strength: E1`, and the grade is a measurement of what this record rests on,
+never a permission it grants.
+
+- **The owner's directive of 2026-10-21**, recorded verbatim in
+  `agents/evidence/owner-directives/2026-10-21-advisories-and-worktree-cleanup.md`:
+  merged worktrees are to leave after the merge.
+- **One council round, 2/2**, `agents/evidence/council/advisories-worktree-run-design-20261021.md`:
+  the synchronous budgeted pass declared as an authority expansion (Q1), the
+  `notify` default (Q2), and the hardening list in Decision 3.
+- **The first pass on the real estate**, `agents/evidence/analysis/worktree-estate-cleanup-2026-10-21.md`:
+  71 registered worktrees, 17 removed, every one on merged-PR proof.
+- **A council code review and five R2 completion-review passes** over the
+  removal code, each finding dispositioned in
+  `agents/evidence/council/review-advisories-code-20261021.md` and
+  `agents/evidence/reviews/advisories-fixes-worktree-cleanup.findings.md`; the
+  re-check of `HEAD`, the trunk-bound forge proof and the own-tree exclusion
+  each have a test seen red under sabotage.
+
 ## Alternatives
 
 - **Detached removal process** — rejected 2/2: a process outliving the hook is

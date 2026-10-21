@@ -76,6 +76,22 @@ stay read-only, (d) gate any action on a user-owned setting.
   stale-data line.
 - The update-notice concerns stay blocked; nothing here changes their terms.
 
+## Evidence
+
+`strength: E1`, and the grade is a measurement of what this record rests on,
+never a permission it grants.
+
+- **Two council rounds, 2/2 each**: the design round
+  (`agents/evidence/council/advisories-worktree-run-design-20261021.md`, Q3 —
+  refresh from the CLI and CI only, the session start reads the cache) and the
+  ratification of this notice with its conditions
+  (`agents/evidence/council/advisory-session-notice-20261021.md`).
+- **The conditions as tests**: the import walk proving no network module is
+  reachable from the hook bundle, the hostile-cache field grammar, and the
+  stamp written only after delivery — all in `tests/scripts/advisories.test.ts`.
+- **The latency measurement** behind AC-4: `session_start` p95 126 ms, n=50,
+  on a freshly built bundle (`bench_hook_latency`), recorded in the roadmap.
+
 ## Alternatives
 
 - **A new hook concern** — rejected: the concern allowance is 0, and a concern
