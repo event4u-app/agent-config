@@ -37,17 +37,23 @@ a command or the next step acts on it and medium when nothing does.
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 39a28e6ce83cbfc77ed98ab12fe2df55fca330ce, review
-  artefacts excluded), scope hash `e806d9de6eb1dfc7c78b342b2b2d3f46baa1a0d8d35a4f394116d23c95e5e771`
+- diff: `diff.patch` — the review scope (branch head 5c22d7d41671664811df671bb5b509c623ddcf07, review
+  artefacts excluded), scope hash `f78c1a1bd03c6b9c0e8c8a5a8df4ce1ba32f9f8740b4dc25f9060ab705366459`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
+- .github/workflows/rule-backstops.yml
+- Taskfile.yml
+- agents/evidence/analysis/adr-evidence-census-2026-08.md
 - agents/evidence/analysis/change-class-last-100-prs-2026-10-21.md
 - agents/evidence/analysis/depth-shadow-retrospective-2026-10-21.md
 - agents/evidence/analysis/review-severity-by-round-2026-10-21.md
+- agents/evidence/owner-directives/2026-10-21-review-cap-and-depth-flip.md
+- agents/roadmaps-owned.md
 - agents/roadmaps/road-to-a-review-that-ends.md
 - agents/roadmaps/road-to-a-step-that-costs-what-it-changes.md
+- agents/settings/contexts/structural/file-ownership-matrix.md
 - dist/agent-src/commands/pr/create.md
 - dist/agent-src/commands/pr/merge.md
 - dist/agent-src/commands/roadmap/process-full.md
@@ -65,7 +71,11 @@ Changed files:
 - dist/agent-src/contexts/execution/roadmap-process-loop-set.md
 - dist/agent-src/contexts/execution/roadmap-process-loop.md
 - dist/agent-src/templates/roadmaps.md
+- docs/contracts/file-ownership-matrix.json
 - docs/contracts/plan-review-gates.md
+- docs/contracts/retrieval-read-surfaces.md
+- docs/decisions/ADR-294-completion-review-round-cap.md
+- docs/decisions/INDEX.md
 - src/agent-src/contexts/execution/pr-create-branches-content.md
 - src/agent-src/contexts/execution/pr-create-branches-freshness.md
 - src/agent-src/contexts/execution/pr-merge-queue.md
@@ -80,7 +90,10 @@ Changed files:
 - src/agent-src/contexts/execution/roadmap-process-loop-set.md
 - src/agent-src/contexts/execution/roadmap-process-loop.md
 - src/agent-src/templates/roadmaps.md
+- src/config/depth-audit-samples.json
+- src/config/gate-coverage.yml
 - src/config/gate-violation-baselines.json
+- src/config/loop-surfaces.yaml
 - src/config/procedure-core-budget.json
 - src/config/roadmap-step-size-baseline.json
 - src/config/step-depth-table.json
@@ -90,19 +103,28 @@ Changed files:
 - src/domains/git/pr/merge/command.md
 - src/domains/meta/pack.yaml
 - src/domains/product-basic/roadmap/process-full/command.md
+- src/scripts/_lib/depth_flip.ts
 - src/scripts/_lib/roadmap_step_size.ts
 - src/scripts/_lib/step_anatomy.ts
 - src/scripts/check_completion_review.ts
+- src/scripts/check_context_paths.ts
+- src/scripts/check_step_receipts.ts
+- src/scripts/check_suppression_hygiene.ts
 - src/scripts/dispatch_r2_reviewer.ts
 - src/scripts/lint_roadmap_complexity.ts
 - src/scripts/probe_depth_shadow.ts
 - src/scripts/probe_turnaround.ts
 - src/scripts/step_receipt.ts
+- taskfiles/ci-fast.yml
 - tests/_lib/procedure_text.ts
 - tests/e2e/adversarial-verification-fixtures.test.ts
+- tests/scripts/_cli/cmd_git_convention.test.ts
 - tests/scripts/check_completion_review.test.ts
+- tests/scripts/check_context_paths.test.ts
+- tests/scripts/check_step_receipts.test.ts
 - tests/scripts/ci_settle_cli.test.ts
 - tests/scripts/dispatch_r2_reviewer.test.ts
+- tests/scripts/lint_budget_ownership.test.ts
 - tests/scripts/pr_merge_danger_gate_command.test.ts
 - tests/scripts/probe_depth_shadow.test.ts
 - tests/scripts/procedure_core_budget.test.ts
@@ -131,7 +153,7 @@ Fill the findings table in `review-cap-and-step-depth.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope e806d9de6eb1dfc7c78b342b2b2d3f46baa1a0d8d35a4f394116d23c95e5e771, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope f78c1a1bd03c6b9c0e8c8a5a8df4ce1ba32f9f8740b4dc25f9060ab705366459, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel

@@ -110,7 +110,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       file shrank.
       verify: detector verdicts identical on a 30-session replay; Stop p95
       lower; the fallback path covered by a test.
-- [x] **1.3 Read the current phase, `## Decisions` and `## Blockers` per step.** Done 2026-10-21 — already the case, measured: `--steps` now reports roadmap text returned to Read calls per step; over the 75-step baseline p50 0 KB, p90 28.4 KB, under the 40 KB target. The loop already reads the step's section (§ 5 step 1) and `## Decisions` once per run (§ 3-0); no contract change was needed. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/step_anatomy.ts -->
+- [ ] **1.3 Read the current phase, `## Decisions` and `## Blockers` per step.** Contract changed 2026-10-21, verify pending: `--steps` counts roadmap text returned to `Read` and to shell reads per step (R2 finding 4 — an early tick on `Read` alone was withdrawn). Over 242 steps p50 0 KB, p90 33.7 KB; but the largest active roadmap had a step read 86.2 KB and the second 46.8 KB, over the target. The loop's § 5 step 1 now says: the step's own section by `grep -n` plus a ranged read, never the whole roadmap. Closes on the first drain over the largest roadmap reading < 40 KB per step.
       Other sections are read on demand. Decisions stay whole, as
       `roadmap-process-loop.md:162-173` requires.
       verify: a drain over the largest active roadmap reads < 40 KB of it per
@@ -143,28 +143,34 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       core path ≤ 15 KB; branches (conflicts, council, red CI, archive) move to
       references loaded on that branch.
       verify: core sizes in a ratchet; the run-loop fixtures pass unchanged.
-- [x] **3.2 Steps ≤ 150 words, Done is one line.** Done 2026-10-21: folded into `lint_roadmap_complexity` via `_lib/roadmap_step_size.ts`; 93 of today's steps held in `roadmap-step-size-baseline.json` (shrink-only); template rule 29; a planted 400-word step fails, today's tree passes, raising the cap reds 2 tests. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/roadmap-step-size-baseline.json --> Evidence goes to the commit
+- [x] **3.2 Steps ≤ 150 words, Done is one line.** Done 2026-10-21: folded into `lint_roadmap_complexity` via `_lib/roadmap_step_size.ts`; 104 of today's steps held in `roadmap-step-size-baseline.json` (106 after main's cold-start 2.5 and 3.3 arrived over the cap in the merge) (shrink-only, stale keys warned); template rule 29; a planted 400-word step fails, today's tree passes, raising the cap reds 2 tests. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/roadmap-step-size-baseline.json --> Evidence goes to the commit
       and, for R2/R3, the artefact. A lint ratchet holds today's oversized steps
       and refuses new ones.
       verify: the lint fails a planted 400-word step and passes today's tree.
 
 ## Phase 4 — Flip, sample, roll back
 
-- [ ] **4.0 A receipt on every newly ticked step, checked PR-locally.** Before
+- [x] **4.0 A receipt on every newly ticked step, checked PR-locally.** Done 2026-10-21: `check_step_receipts` (diff-scoped, renames followed) in `rule-backstops.yml` and `task ci`; reports while the table is shadow and refuses from the flip on, per D16; `--self-test` 5 cases, 2 rejecting; dropping the receipt condition turns 3 tests red. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/rule-backstops.yml --> Before
       4.1, a check refuses a ticked line in the PR's own diff that carries no
       receipt; older ticks and other branches are not read. Blocked on the
       same blocker as 4.1 — it exists only to serve the flip.
       verify: red-first test — a PR ticking a step without a receipt fails, a
       PR touching an older unreceipted tick passes.
-- [ ] **4.1 Lower depth for R0/R1 per the table.** Blocked on
-      `class-depth-flip-reopens-the-risk-null`.
-      verify: the council verdict row exists before the flip commit.
+- [ ] **4.1 Lower depth for R0/R1 per the table.** The owner chose (d)
+      (D18): the flip may apply only to structurally safe paths. Built
+      2026-10-21: the `flip` block, `isStructurallySafe`, `effectiveMode`, and a
+      test that refuses `mode: active` without a committed `flip.reading`. The
+      flip commit itself waits until `probe_depth_shadow --flip-readiness`
+      reads READY for a class: 30 shadow steps, at most one escape and no
+      critical. On 2026-10-21 it read R0 3 steps and R1 0 steps.
+      verify: the D18 owner row exists before the flip commit; that commit
+      names the reading in `flip.reading`.
 - [ ] **4.2 Rule depth by class, behind an A/B.** R0/R1 steps receive the
       kernel plus rules whose triggers match the changed paths; R2/R3 keep
       today's delivery. Paired A/B on the benchmark's frozen tasks: discipline
       score not below the full arm's lower CI bound. No settings key.
       verify: the A/B report is committed before the flip commit.
-- [ ] **4.3 Sampled full-depth audit and rollback.** 1 in 10 R0/R1 steps (1 in
+- [x] **4.3 Sampled full-depth audit and rollback.** Done 2026-10-21: `sampledForAudit` (seeded, about 1 in 4 then 1 in 10) and `rolledBackClasses` over `src/config/depth-audit-samples.json`; `step_receipt` drops a rolled-back class to full depth; `--flip-readiness` names it. A planted second escape or a critical flips the class back. Removing the rollback check reds that test. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/step-depth-table.json --> 1 in 10 R0/R1 steps (1 in
       4 for the first 30 per class) gets a full round-1 review after merge,
       seeded and reproducible. If a class's escape rate exceeds 0.2's threshold
       over 30 samples, it returns to full depth automatically and the owner
@@ -184,7 +190,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 ## Blockers
 
 ### blocker: class-depth-flip-reopens-the-risk-null
-- **Status:** open
+- **Status:** resolved — 2026-10-21, the owner chose (d): structurally safe paths only, on the same shadow threshold (`agents/evidence/owner-directives/2026-10-21-review-cap-and-depth-flip.md`, D18)
 - **Class:** 3
 - **Owner:** user
 - **Ownership:** product-owned
@@ -214,6 +220,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 | D14 | reversible-technical | agent | Pre-registered 2026-10-21, before the 0.2 baseline is read: (1) speed — p50 wall-clock per closed step over five drains after the flip ≤ 0.5 × the 0.2 baseline p50, all classes together; (2) would-have-escaped — per change class, over ≥ 30 shadow steps, at most 1 step in 30 whose would-skip ceremony found a high/critical row, and none critical; (3) the sampled audit of 4.3 uses the same threshold over its 30 samples; (4) CI red-after-merge over the same drains not above the 0.2 window. | Thresholds fixed before any baseline exists so the reading cannot choose them. Disclosed: while building 0.1 the instrument was run once over the main checkout's store alone (13 steps); the baseline reads every store of this repository, so that development run is a subset, not the reading. | the 0.2 reading shows fewer than 30 R0/R1 steps in a week, which makes threshold (2) unreachable in one drain cycle. |
 | D13 | critical-technical | council: anthropic, openai (2026-10-21) | Phases 0-3 and the shadow run now; the flip waits on the owner; a fourth option (d) — flip only structurally safe paths first — was added from one seat's proposal. | Both seats: shadow is measurement and council-decidable, the flip is owner-reserved. One seat argued the shadow is selection-biased; rejected, because in the shadow every step still runs at full depth, so a misclassified R0 change is still reviewed and its findings still count as would-have-escaped. | the owner answers the blocker. |
 | D17 | reversible-technical | agent | 3.1 stays open at two cores over 15 KB rather than closing on a target it missed: the loop core (16,144) keeps its Iron-Law fences with their headings, and the merge core (15,698) keeps the needs-council clearance check directly before `gh pr merge`. Both ceilings carry their reason in `procedure-core-budget.json`. | Moving a fence or the clearance check behind a pointer would meet the number and put an obligation where a reader stopping at the core never sees it — the pinned danger-gate test caught exactly that ordering. `check_depth_budget` fell from 4 violations to 3 with the loop split, and its baseline was lowered to match. | a later edit frees enough of either core to meet 15 KB without moving a fence or the clearance check. |
+| D18 | product-owned | owner | Option (d): depth may be lowered only for R0/R1 steps whose every path is roadmap, evidence or docs prose (not contracts or ADRs), `README.md`, or a test fixture, once `--flip-readiness` reads READY on D14 (2); option (a) is decided later on 4.3's samples. | `agents/evidence/owner-directives/2026-10-21-review-cap-and-depth-flip.md`. "Documentation" excludes `docs/contracts/` and `docs/decisions/`, and every `src/` markdown stays out although R0 admits it: a rule, skill or contract is markdown that changes what agents do. | 4.3's samples roll a class back, or the owner widens the scope. |
 | D16 | reversible-technical | council: anthropic, openai (2026-10-21) | Step 2.3 measures without blocking: receipt coverage and the review row's would-have-escape are reported per class by `probe_depth_shadow`; a blocking receipt check arrives as 4.0, PR-local and only before depth is lowered. | Two seats converged on non-blocking now (first round degraded to one seat, the second ran both): a repo-wide check on every tick turns shadow instrumentation into mandatory ceremony before it has shown value, and would fail parallel branches' flips; the audit-trail half of a receipt only matters once something is skipped. One seat asked for class-stratified coverage, which the probe reports. | R0/R1 receipt coverage below half over a month of ticks, or the probe showing misclassified R1 steps. |
 | D15 | reversible-technical | agent | Steps 1.1 and 1.2 are measured and not built; both are put to the owner for cancellation. | Async telemetry would move ~1.2 ms of a ~68 ms dispatch off the foreground for a second node start per call; a stored Stop ordinal would save ~15 ms per turn on a correctness surface. The supplied plan's hook and Stop costs (D9, D10 there) are real but not where a step's time goes: the 0.2 reading puts 53.5 % in waits and 30.3 % in model time. | a reading shows post_tool_use or Stop above 250 ms p50 on a real session. |
 | D10 | deterministic | evidence | Closure pass ran 2026-10-21: no open decision beyond the blocker. The `typed-op` hits are mentions of the word merge (a sibling slug, the `pr/merge` path, "after merge", red-after-merge); no step here merges, deploys or publishes. Prose verifies on 0.3, 1.2, 1.3 and 3.2 are made command-shaped when each step runs. | `closure_scan` listed six `typed-op` and four `unfalsifiable-verify` rows, the latter non-blocking by its own contract. | a step is executed with its prose oracle unchanged. |
