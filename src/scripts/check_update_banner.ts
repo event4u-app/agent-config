@@ -23,6 +23,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { _is_global_only_consumer } from './_cli/doctor_install_mode.js';
 import * as agent_settings from './_lib/agent_settings.js';
+import { sessionNotice } from './_lib/advisory_notice.js';
 import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 import * as update_check from './_lib/update_check.js';
 
@@ -125,6 +126,17 @@ async function main(argv: readonly string[] = process.argv.slice(2)): Promise<nu
     if (args.help) {
         process.stdout.write(DOC + '\n');
         return 0;
+    }
+
+    // The advisory notice for hosts with no session slot (advisories roadmap
+    // 4.5). Read-only and shown once a day across every surface: whichever of
+    // the session start or a CLI subcommand runs first prints it, the stamp
+    // silences the other. Independent of the update check and its opt-out.
+    try {
+        const advisories = sessionNotice(path.resolve(args.cwd));
+        if (advisories !== null) process.stderr.write(`${advisories}\n`);
+    } catch {
+        /* best-effort, like the banner itself */
     }
 
     if (!args.installed_version) {

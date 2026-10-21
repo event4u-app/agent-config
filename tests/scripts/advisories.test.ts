@@ -1,7 +1,7 @@
 // road-to-advisories-heard-the-same-day — the replay corpus F1–F10 and the
 // per-phase checks. Every source answer is replayed from a recorded fixture;
 // nothing here touches a network or runs a package manager.
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -406,4 +406,20 @@ describe('session notice — council 2026-10-21 round 2 conditions', () => {
         expect(sessionNotice(root, t)).toContain('MAL-2026-1234');
         expect(sessionNotice(root, t)).toBeNull();
     });
+});
+
+describe('hosts without a session slot (4.5)', () => {
+    it('the CLI banner path prints the advisory notice after a subcommand', async () => {
+        const { root } = await run('F4-malware');
+        const tsx = path.join(__dirname, '..', '..', 'node_modules', '.bin', 'tsx');
+        const banner = path.join(__dirname, '..', '..', 'src', 'scripts', 'check_update_banner.ts');
+        const r = spawnSync(tsx, [banner, '--installed-version', '0.0.0-test', '--cwd', root], {
+            encoding: 'utf-8',
+            env: { ...process.env, AGENT_CONFIG_NO_UPDATE_CHECK: '1', CI: '1' },
+            timeout: 60000,
+        });
+        expect(r.status).toBe(0);
+        expect(r.stderr).toContain('MAL-2026-1234');
+        expect(r.stderr).toContain('fix now: /audit deps fix MAL-2026-1234');
+    }, 90000);
 });
