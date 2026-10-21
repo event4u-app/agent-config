@@ -2,6 +2,7 @@
  * The state lifecycle of the two update concerns: what each writes, when it
  * stops writing, how it recovers, and that nothing else reads what they write.
  */
+import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -143,6 +144,7 @@ function invite(statePathFor: string, over: Partial<InviteDeps> = {}): { deps: I
             env: {},
             isTty: true,
             out: { write: (t) => void out.push(t) },
+            turnEndedOnVerifiedSuccess: true,
             ...over,
         },
     };
@@ -177,15 +179,63 @@ describe('update-auto-invite state', () => {
         expect(snapshot(invitePath())).toEqual(before);
     });
 
-    it('is shared by every workspace of one config home: a second repository is not asked again', () => {
-        fs.mkdirSync(path.dirname(invitePath()), { recursive: true });
-        fs.writeFileSync(invitePath(), JSON.stringify({ invited_at: '2026-10-01T00:00:00.000Z' }));
-        for (const ws of ['repo-a', 'repo-b']) {
-            const { deps, out } = invite(invitePath(), { workspaceRoot: path.join(tmp, ws) });
-            expect(runInvite(deps).ask).toBe(false);
-            expect(out).toEqual([]);
-        }
+    it('is shared by every workspace of one config home: the first repository is asked, the second is not', () => {
+        const a = invite(invitePath(), { workspaceRoot: path.join(tmp, 'repo-a') });
+        expect(runInvite(a.deps).ask).toBe(true);
+        expect(a.out.length).toBeGreaterThan(0);
+        const b = invite(invitePath(), { workspaceRoot: path.join(tmp, 'repo-b') });
+        expect(runInvite(b.deps)).toEqual({ ask: false, reason: 'already invited once' });
+        expect(b.out).toEqual([]);
     });
+
+    for (const mode of ['notify', 'off', 'auto'] as const) {
+        it(`update.mode ${mode} asks nothing and leaves an existing record untouched`, () => {
+            fs.mkdirSync(path.dirname(invitePath()), { recursive: true });
+            fs.writeFileSync(invitePath(), JSON.stringify({ invited_at: '2026-10-01T00:00:00.000Z' }));
+            const before = snapshot(invitePath());
+            const { deps, out } = invite(invitePath(), { mode });
+            expect(runInvite(deps)).toEqual({ ask: false, reason: 'no user opt-in: update.mode is not ask' });
+            expect(out).toEqual([]);
+            expect(snapshot(invitePath())).toEqual(before);
+        });
+    }
+
+    it('two sessions that decide at the same moment produce exactly one invitation', async () => {
+        const go = path.join(tmp, 'go');
+        const script = path.join(tmp, 'race.ts');
+        const hook = path.join(REPO_ROOT, 'src', 'scripts', 'update_invite_hook.ts');
+        fs.writeFileSync(
+            script,
+            [
+                `import * as fs from 'node:fs';`,
+                `import { runInvite } from ${JSON.stringify(hook)};`,
+                `while (!fs.existsSync(${JSON.stringify(go)})) { /* spin until both are ready */ }`,
+                `const d = runInvite({ packageRoot: ${JSON.stringify(REPO_ROOT)}, workspaceRoot: process.argv[2]!, sessionId: '', mode: 'ask',`,
+                `  statePath: ${JSON.stringify(invitePath())}, ringZeroText: 'ring-0-exit: yes\\n', env: {}, isTty: true,`,
+                `  out: { write: () => undefined }, turnEndedOnVerifiedSuccess: true });`,
+                `process.stdout.write(d.ask ? 'asked' : 'silent');`,
+            ].join('\n'),
+        );
+        const tsx = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
+        for (let round = 0; round < 5; round += 1) {
+            fs.rmSync(invitePath(), { force: true });
+            fs.rmSync(go, { force: true });
+            const runs = ['repo-a', 'repo-b', 'repo-c'].map(
+                (ws) =>
+                    new Promise<string>((resolve) => {
+                        const child = spawn(tsx, [script, path.join(tmp, ws)], { cwd: REPO_ROOT });
+                        let out = '';
+                        child.stdout.on('data', (b: Buffer) => (out += b.toString()));
+                        child.on('close', () => resolve(out));
+                    }),
+            );
+            await new Promise((r) => setTimeout(r, 1500));
+            fs.writeFileSync(go, '');
+            const results = await Promise.all(runs);
+            expect(results.filter((r) => r === 'asked'), `round ${String(round)}: ${results.join(',')}`).toHaveLength(1);
+            expect(results.filter((r) => r === 'silent')).toHaveLength(2);
+        }
+    }, 120_000);
 });
 
 describe('the read gate — nothing outside the two concerns reads their state', () => {
@@ -201,6 +251,14 @@ describe('the read gate — nothing outside the two concerns reads their state',
 
     it('scans the source tree', () => {
         expect(all.length).toBeGreaterThan(100);
+    });
+
+    it('imports either concern module from nowhere but the registry and the invite (which reads the mode)', () => {
+        const IMPORTERS = new Set(['src/scripts/hooks/concern_registry.ts', 'src/scripts/update_invite_hook.ts']);
+        const importers = all
+            .filter((f) => /from\s+['"][^'"]*update_(notice|invite)_hook(\.js)?['"]|import\(\s*['"][^'"]*update_(notice|invite)_hook/.test(fs.readFileSync(f, 'utf-8')))
+            .map((f) => path.relative(REPO_ROOT, f).split(path.sep).join('/'));
+        expect(importers.filter((r) => !IMPORTERS.has(r))).toEqual([]);
     });
 
     it('names update-notice.json and update-invite.json nowhere but in their owners', () => {
