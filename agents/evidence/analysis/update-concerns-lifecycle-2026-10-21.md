@@ -65,6 +65,23 @@ Round 4 refused on four points; each is answered here.
     that host's `stop` binding.
   The first and last are reports, not monitors; this package has no runtime
   telemetry for them, and says so rather than implying one.
+- **Claim failure and delivery loss (round 5).** A claim that cannot be created
+  or fully written asks nothing and withdraws a half-written record, so a
+  failure degrades to "not invited yet" and never to "silenced forever"; a
+  claim made and then not displayed by the host leaves the install on
+  `notify` — the outcome ADR-291 assigns to a dismissal — and is covered by
+  the delivery threshold above.
+- **Who, when, how.** The package maintainer owns a revert. A threshold hit is
+  answered in the next release by deleting the concern's binding from
+  `hook_manifest.yaml`, regenerating the JSON, and shipping; until a user has
+  that release, `AGENT_CONFIG_NO_UPDATE_CHECK=1` or `update.mode: off`
+  disables both concerns on their machine immediately, with no state written
+  or deleted.
+- **What opens the invite gate.** The verified-success condition reads the
+  turn's run evidence from the workspace, which a repository could influence.
+  It cannot open the invite alone: `update.mode: ask` is a user-global value a
+  human sets, the ring-0 record is read from the installed package, and the
+  claim is once per config home.
 
 ## Step 3.1 — done note, moved verbatim
 
