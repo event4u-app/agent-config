@@ -1,0 +1,56 @@
+# Advisories, daily — template shipped by agent-config
+#
+# Copy this file to `.github/workflows/advisories-daily.yml` in the consumer
+# project. It is the opt-in out-of-band runner of
+# road-to-advisories-heard-the-same-day (5.3): on days nobody opens a session,
+# a critical advisory for something this project runs still becomes an issue.
+#
+# What it does: `agent-config audit:deps refresh` (public package names and
+# versions to api.osv.dev, runtime lifecycle from endoflife.date, the PHP and
+# Node release feeds; private package names are never sent), then opens or
+# updates ONE issue for T0 findings — malware, a critical runtime
+# pre-announcement, a critical fix available, a known-exploited advisory.
+#
+# What it never does: merge, push, open a PR, change a dependency, or run a
+# package manager's install. Carrying a finding to a fix is `/audit deps fix
+# <id>` in a session, where a person decides.
+#
+# Permissions: `issues: write` to open the issue; nothing else is written.
+
+name: Advisories (daily)
+
+on:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  advisories:
+    name: audit:deps refresh → T0 issue
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Refresh advisories
+        run: npx --yes @event4u/agent-config audit:deps refresh --force
+      - name: Open or update the T0 issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          body="$(npx --yes @event4u/agent-config audit:deps issue-body)"
+          [ -z "$body" ] && { echo "no T0 finding today"; exit 0; }
+          title="Security advisories needing action today"
+          existing="$(gh issue list --state open --search "in:title \"$title\"" --json number -q '.[0].number')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi

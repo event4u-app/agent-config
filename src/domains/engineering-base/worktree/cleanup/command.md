@@ -2,7 +2,7 @@
 model_tier: medium
 name: worktree-cleanup
 pack: engineering-base
-visibility: advanced
+visibility: internal
 cluster: worktree
 sub: cleanup
 skills: [worktree-lifecycle, git-workflow]

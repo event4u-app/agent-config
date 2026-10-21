@@ -2,7 +2,7 @@
 model_tier: medium
 name: worktree-status
 pack: engineering-base
-visibility: advanced
+visibility: internal
 cluster: worktree
 sub: status
 skills: [worktree-lifecycle, git-workflow]

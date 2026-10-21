@@ -7,9 +7,9 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 306
+- **artefacts**: 307
 
-## Commands (159)
+## Commands (160)
 
 - **`agent-design`** — Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation
 - **`agent-handoff`** — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
@@ -31,6 +31,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`analyze-pr`** — Run the analysis family's loops and councils on an existing pull request — a read-only verdict by default, `--optimize` to push tested fixes to a writable PR branch.
 - **`analyze-reference`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 - **`analyze-roadmap-repos`** — Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-reference, one subagent at a time, without producing one roadmap per repository.
+- **`audit`** — Security advisories for the project's packages, runtimes and toolchain — by tier, with evidence; `deps fix <id>` carries one finding to a verified PR
 - **`bug`** — Bug orchestrator — routes to investigate (root cause) and fix (plan + implement)
 - **`bug-fix`** — Plan and implement a bug fix — based on investigation, with quality checks and test verification
 - **`bug-investigate`** — Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause

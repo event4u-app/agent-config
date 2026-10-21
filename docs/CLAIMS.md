@@ -248,6 +248,22 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - status: unbacked
 - last_verified:
 
+### claim: advisory-time-to-notice
+- claim: An advisory, malware report, end-of-support date or pre-announced security release that touches a project's locked packages, declared runtimes, images or CI actions reaches a user-visible notice in a session on that project within 24 hours at the median and 36 hours at the 90th percentile, for a project with at least one session per working day; within 4 hours for a T0 finding where the opt-in daily CI schedule runs. PRE-REGISTERED 2026-10-21, before any measurement exists.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-21 (road-to-advisories-heard-the-same-day 0.1 -- no goalpost-moving after the numbers land). INSTRUMENT: the per-project advisory cache written by `agent-config audit:deps refresh` (`<git-common-dir>/agent-config/advisories.json`), whose ledger records each finding's `first_seen` and `announced_at`, against the source's publication stamp. REPRODUCE: `agent-config audit:deps show --json` on a project, joined to the advisory's published date. BASELINE: none -- before this change nothing announced a consumer advisory at all, so the pre-period has no notice to time. FALSIFICATION: the P50 or P90 misses the bar over 30 days of real projects; a miss traced to the refresh cadence rather than to the sources reopens D6 (no OS daemon), not the bar. An honest null closes the claim as measured-null.
+- non_inference: This times a NOTICE, and licenses nothing about a fix, about coverage of what a project runs, or about advisories the sources did not carry. A notice within 24 hours does not mean every vulnerability was noticed -- a runtime outside PHP and Node, an OS package in an image layer, and anything no queried source knows are out of scope by construction. It says nothing about projects with no session for days, which are only covered where the opt-in CI schedule runs.
+- status: unbacked
+- last_verified:
+
+### claim: security-fix-time-to-remediation
+- claim: From an accepted fix offer to a fix PR that is green and ready for the owner's merge takes at most 30 minutes of agent time for a lockfile-only fix, and at most 2 hours to a PR that changes every file pinning a runtime plus an ops checklist for a runtime fix. PRE-REGISTERED 2026-10-21, before any measurement exists.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-21 (road-to-security-fixes-carried-to-the-merge 0.1). INSTRUMENT: the finding lifecycle the fix path records (`fix-in-progress` stamped at the accepted offer, `ready-to-merge` at the first green settle of the fix PR) in the same per-project advisory cache. REPRODUCE: `agent-config audit:deps show --json`, the two stamps per finding. FALSIFICATION: the bar is missed on the replay fixtures G1 (lockfile-only) and G6 (runtime) or on real fixes over 30 days; a fix reported done while the advisory is still open, or with failing tests, does not count as a success at any speed.
+- non_inference: This times reaching a green, mergeable PR, and licenses nothing about the merge, the release or the deployment, which stay the owner's and are tracked separately as fixed-in-trunk, fixed-released and fixed-deployed. It says nothing about fixes the agent could not build (no fixed version exists), about majors that need a compatibility analysis, or about the quality of a fix beyond the source's own re-check and the project's tests.
+- status: unbacked
+- last_verified:
+
 ### claim: published-artifact-counts
 - claim: Every artifact count this package publishes about itself — the six badge integers for skills, rules, commands, guidelines, personas and advisors — is re-derived from the tree by one canonical counter rather than hand-typed, and a drift of even one fails CI. Measured 2026-09-28 via that counter: skills 299, rules 121, commands 203 (recursive; 60 top-level), guidelines 121, personas 29 (README excluded), advisors 5. The counting BASIS differs per noun and is not inferable from the directory the badge links to — `commands` counts recursively while the linked directory holds 60 top-level files, and `rules` counts the 121 source rules while the linked projection holds 120 because one dormant rule is not projected. Both bases are stated next to the badge block, because an undeclared basis is not a wrong number but an unreadable one.
 - kind: quant
@@ -442,7 +458,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-08
 
 ### claim: command-count
-- claim: 208 commands.
+- claim: 209 commands.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
