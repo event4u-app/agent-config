@@ -18,6 +18,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     acquireCleanupLock,
     OBSERVATION_MAX_BYTES,
+    OBSERVATION_MAX_RECORD,
+    observe,
     cleanupSpool,
     readHandle,
     claimAndDelete,
@@ -151,6 +153,47 @@ describe('spool-write-is-content-addressed', () => {
         expect(fs.statSync(`${file}.1`).size).toBe(OBSERVATION_MAX_BYTES);
         expect(fs.readFileSync(file, 'utf8').trim().split('\n')).toHaveLength(1);
     });
+
+    it('a record that would cross the cap rotates first, replacing an older .1, so the log stays within two files', () => {
+        const file = spoolObservationPath(tmp);
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(`${file}.1`, 'older generation\n');
+        fs.writeFileSync(file, Buffer.alloc(OBSERVATION_MAX_BYTES - 10, 0x20));
+        observe(tmp, { tool: 'Read', note: 'x'.repeat(50) });
+        expect(fs.statSync(`${file}.1`).size).toBe(OBSERVATION_MAX_BYTES - 10);
+        expect(fs.readFileSync(file, 'utf8').trim().split('\n')).toHaveLength(1);
+        expect(fs.statSync(file).size + fs.statSync(`${file}.1`).size).toBeLessThanOrEqual(2 * OBSERVATION_MAX_BYTES);
+    });
+
+    it('a record longer than the record cap is dropped, and a long tool name is cut', () => {
+        observe(tmp, { tool: 'Read', huge: 'y'.repeat(OBSERVATION_MAX_RECORD) });
+        expect(fs.existsSync(spoolObservationPath(tmp))).toBe(false);
+        const env = readEnvelope('named at length\n'.repeat(20));
+        (env['payload'] as JsonObject)['tool_name'] = 'Read';
+        runEgressStage(env, fixed('observe'), engineSelecting);
+        const line = JSON.parse(fs.readFileSync(spoolObservationPath(tmp), 'utf8').trim()) as { tool: string };
+        expect(line.tool.length).toBeLessThanOrEqual(128);
+    });
+
+    it('four processes observing at once leave only whole records', async () => {
+        const tsx = path.resolve(__dirname, '../../node_modules/.bin/tsx');
+        const mod = path.resolve(__dirname, '../../src/scripts/_lib/tool_output_spool.ts');
+        const code = (i: number): string =>
+            `import { observe } from ${JSON.stringify(mod)}; for (let k = 0; k < 50; k++) observe(${JSON.stringify(tmp)}, { w: ${String(i)}, k, pad: 'z'.repeat(400) });`;
+        await Promise.all(
+            [0, 1, 2, 3].map(
+                (i) =>
+                    new Promise<void>((resolve, reject) => {
+                        const p = spawn(tsx, ['--eval', code(i)], { stdio: 'ignore' });
+                        p.on('error', reject);
+                        p.on('close', (c) => (c === 0 ? resolve() : reject(new Error(`observer exited ${String(c)}`))));
+                    }),
+            ),
+        );
+        const lines = fs.readFileSync(spoolObservationPath(tmp), 'utf8').trim().split('\n');
+        expect(lines.length).toBeGreaterThan(0);
+        for (const l of lines) expect(() => JSON.parse(l)).not.toThrow();
+    }, 60_000);
 
     it('an observation arriving while another process holds the lock is dropped, never interleaved', () => {
         fs.mkdirSync(spoolDirOf(tmp), { recursive: true });
@@ -733,7 +776,9 @@ describe('the cleanup lock is owned', () => {
         fs.writeFileSync(lock, lockOf(deadPid()));
         const tsx = path.resolve(__dirname, '../../node_modules/.bin/tsx');
         const mod = path.resolve(__dirname, '../../src/scripts/_lib/tool_output_spool.ts');
-        const code = `import { acquireCleanupLock } from ${JSON.stringify(mod)}; console.log(acquireCleanupLock(${JSON.stringify(dir)}) ?? 'none');`;
+        // Each taker stays alive for a while: a winner that exited at once would leave a
+        // dead holder's lock, which a later taker is right to take over.
+        const code = `import { acquireCleanupLock } from ${JSON.stringify(mod)}; console.log(acquireCleanupLock(${JSON.stringify(dir)}) ?? 'none'); setTimeout(() => {}, 4000);`;
         const results = await Promise.all(
             Array.from({ length: 6 }, () =>
                 new Promise<string>((resolve, reject) => {

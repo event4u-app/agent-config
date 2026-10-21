@@ -465,7 +465,15 @@ function isImage(v: unknown): boolean {
     return o !== null && (o['type'] === 'image' || payloadOf(o['file'])?.['type'] === 'image');
 }
 
-function observe(root: string, line: Record<string, unknown>): void {
+/** Longest record the observe log accepts; a longer one is dropped, never written. */
+export const OBSERVATION_MAX_RECORD = 1024;
+
+/**
+ * Append one record. The log is bounded to two files of OBSERVATION_MAX_BYTES:
+ * a record that would carry the file past the cap rotates it first (replacing
+ * any previous `.1`), and a record longer than OBSERVATION_MAX_RECORD is dropped.
+ */
+export function observe(root: string, line: Record<string, unknown>): void {
     try {
         const file = spoolObservationPath(root);
         ensureSpoolDir(root);
@@ -475,15 +483,22 @@ function observe(root: string, line: Record<string, unknown>): void {
         const owner = acquireCleanupLock(spoolDir(root));
         if (owner === null) return;
         try {
+            const record = Buffer.from(`${JSON.stringify(line)}\n`, 'utf8');
+            if (record.length > OBSERVATION_MAX_RECORD) return;
+            let size = 0;
             try {
-                if (fs.lstatSync(file).size >= OBSERVATION_MAX_BYTES) fs.renameSync(file, `${file}.1`);
+                size = fs.lstatSync(file).size;
             } catch {
                 // no log yet
+            }
+            if (size + record.length > OBSERVATION_MAX_BYTES) {
+                fs.rmSync(`${file}.1`, { force: true });
+                fs.renameSync(file, `${file}.1`);
             }
             const fd = fs.openSync(file, 'a', 0o600);
             try {
                 fs.fchmodSync(fd, 0o600);
-                writeAll(fd, Buffer.from(`${JSON.stringify(line)}\n`, 'utf8'));
+                writeAll(fd, record);
             } finally {
                 fs.closeSync(fd);
             }
@@ -525,7 +540,7 @@ export function spoolResult(
         if (view.mode === 'observe') {
             // Keyed under the empty session no stored entry uses: a repeat stays countable, equal content is not linkable without the key.
             const digest = address(spoolKey(root, true) as Buffer, '', sha256(raw));
-            observe(root, { ts: new Date(now).toISOString(), tool, class: cls, bytes: raw.length, digest });
+            observe(root, { ts: new Date(now).toISOString(), tool: tool.slice(0, 128), class: cls, bytes: raw.length, digest });
             return { action: 'observed', class: cls, bytes: raw.length, digest };
         }
         const shown = payloadOf(view.placeholder?.['payload'])?.[key];

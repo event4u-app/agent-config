@@ -371,8 +371,10 @@ No setting, environment variable or config file populates the selection.
   either way because its expiry is in the MAC. An entry is kept two seconds
   past its handles' expiry, so a still-valid handle never finds it gone. The
   observe log is appended under the same lock (a held lock drops that one
-  observation), so records never interleave, and it is rotated once past 5 MB,
-  keeping one previous file. A
+  observation), so records never interleave. It is bounded to two files of
+  5 MB: a record that would carry the file past 5 MB rotates it first,
+  replacing any previous `.1`; a record is built from bounded fields (the tool
+  name cut to 128 characters) and one longer than 1 KB is dropped. A
   malformed, forged or foreign-session handle reaches no cleanup and no entry, though a syntactically valid one still reads the key file to check its
   MAC. Expiry is rounded up, so a handle never expires before the full
   retention age.
