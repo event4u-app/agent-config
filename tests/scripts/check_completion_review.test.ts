@@ -1512,7 +1512,7 @@ describe.runIf(hasGit())('round: header field — the round counts review passes
 
     it('accepts a second pass recorded as round 2', () => {
         const dir = reboundRepo(1);
-        write(dir, ART, nullArtifact(scopeHash(dir), 2));
+        write(dir, ART, nullArtifact(scopeHash(dir), 2, 'b'.repeat(64)));
         commitAll(dir, 're-bind as round 2');
         const res = runGate(dir);
         expect(res.kinds).not.toContain('round-miscounted');
@@ -1521,19 +1521,29 @@ describe.runIf(hasGit())('round: header field — the round counts review passes
 
     it('reads a predecessor without the field as round 1', () => {
         const dir = reboundRepo(null);
-        write(dir, ART, nullArtifact(scopeHash(dir), 2));
+        write(dir, ART, nullArtifact(scopeHash(dir), 2, 'b'.repeat(64)));
         commitAll(dir, 're-bind a v1 artefact as round 2');
         expect(runGate(dir).status).toBe(0);
+    });
+
+    it('re-binds written before prompt_hash count as one pass, not one per scope', () => {
+        const dir = reboundRepo(1);
+        write(dir, ART, nullArtifact(scopeHash(dir), 2));
+        commitAll(dir, 'legacy re-bind claiming a second pass');
+        expect(runGate(dir).kinds).toContain('round-miscounted');
+        write(dir, ART, nullArtifact(scopeHash(dir), 1));
+        commitAll(dir, 'legacy re-bind keeping round 1');
+        expect(runGate(dir).kinds).not.toContain('round-miscounted');
     });
 
     it('an archive does not restart the count — a fresh skeleton continues at the next round', () => {
         const dir = reboundRepo(1);
         git(dir, 'mv', ART, 'agents/evidence/reviews/feat.round1-review.md');
         commitAll(dir, 'archive round 1');
-        write(dir, ART, nullArtifact(scopeHash(dir), 1));
+        write(dir, ART, nullArtifact(scopeHash(dir), 1, 'b'.repeat(64)));
         commitAll(dir, 'fresh dispatch after archive, restarted at 1');
         expect(runGate(dir).kinds).toContain('round-miscounted');
-        write(dir, ART, nullArtifact(scopeHash(dir), 2));
+        write(dir, ART, nullArtifact(scopeHash(dir), 2, 'b'.repeat(64)));
         commitAll(dir, 'fresh dispatch after archive, continued at 2');
         expect(runGate(dir).kinds).not.toContain('round-miscounted');
     });

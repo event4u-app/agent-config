@@ -1053,9 +1053,13 @@ function evaluate(input: EvalInput): Violation[] {
  */
 export const REVIEW_ROUND_CAP = 5;
 
-/** One review pass: the reviewer prompt it ran on, or — before `prompt_hash` existed — its scope. */
+/**
+ * One review pass: the reviewer prompt it ran on. Versions written before
+ * `prompt_hash` existed cannot be told apart — every in-place re-bind moved
+ * their `scope:` — so together they count as one pass.
+ */
 function passKey(marker: Marker): string {
-    return marker.promptHash ?? `scope:${marker.scope}`;
+    return marker.promptHash ?? 'legacy';
 }
 
 /**

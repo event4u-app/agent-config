@@ -62,7 +62,9 @@ chain, so a fresh skeleton restarted at round 1.
    write the skeleton of pass 6, and `check_completion_review` reports
    `round-cap-exceeded` on an artefact whose path records six passes.
 2. **A pass is a reviewer dispatch, not a re-bind.** It is identified by its
-   `prompt_hash` (by its `scope:` for a version that predates `prompt_hash`).
+   `prompt_hash`. Versions that predate `prompt_hash` count together as one
+   pass: every in-place re-bind moved their `scope:`, so keying them by scope
+   would count re-binds.
    `round:` must equal the number of passes the path records
    (`round-miscounted`). A re-bind in place keeps the round.
 3. **The archive keeps the count.** The count walks the path's whole history,

@@ -346,8 +346,8 @@ A third OPTIONAL trailing field, added 2026-10-21 (`road-to-a-review-that-ends`
 
 - `round:` — the review round this artifact records, a positive integer: the
   number of **review passes** its path records, this one included. A pass is a
-  reviewer dispatch, identified by its `prompt_hash` (by its `scope:` where a
-  version predates `prompt_hash`). A fix pass that re-binds in place keeps the
+  reviewer dispatch, identified by its `prompt_hash`; versions that predate
+  `prompt_hash` cannot be told apart and count together as one pass. A fix pass that re-binds in place keeps the
   same `prompt_hash` and therefore the same round, so CI fixes and base merges
   move the scope without burning a round. The count walks the path's whole
   history, the § 2.7 archive rename included, so a fresh skeleton after an
