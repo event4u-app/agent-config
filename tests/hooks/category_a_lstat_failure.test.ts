@@ -12,12 +12,14 @@
  * root that cannot be resolved. The filesystem is mocked because none of the
  * three can be produced deterministically on a real one.
  */
+import type * as FsModule from 'node:fs';
+
 import { describe, expect, it, vi } from 'vitest';
 
 const BAD_ROOT = '/category-a-unresolvable-root';
 
 vi.mock('node:fs', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('node:fs')>();
+    const actual = await importOriginal<typeof FsModule>();
     const fail = (code: string) => {
         throw Object.assign(new Error(code), { code });
     };
