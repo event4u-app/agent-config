@@ -36,7 +36,10 @@ on:
 # about-description drift by hand). Repo metadata writes (PATCH /repos,
 # PUT /topics) need repo-admin rights the Actions GITHUB_TOKEN cannot carry;
 # the apply step fails with a clear API error in that case — dispatchable and
-# honest beats unparseable.
+# honest beats unparseable. The two metadata steps therefore read the
+# fine-grained `RELEASE_PR_TOKEN` (Administration: read and write on this repo)
+# when it is configured, with the same `|| GITHUB_TOKEN` fallback release.yml
+# uses; the checkout and the audit-log push keep the Actions token.
 permissions:
   contents: write # commit the audit log
 
@@ -72,13 +75,13 @@ jobs:
 
       - name: Dry-run preview
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PR_TOKEN || secrets.GITHUB_TOKEN }}
         run: ./scripts-run src/scripts/sync_github_metadata
 
       - name: Apply (gated on dry_run=false)
         if: ${{ inputs.dry_run == 'false' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PR_TOKEN || secrets.GITHUB_TOKEN }}
         run: ./scripts-run src/scripts/sync_github_metadata --apply
 
       - name: Commit audit log
