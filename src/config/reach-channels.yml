@@ -130,7 +130,7 @@ channels:
           darwin: brew install node@22
           linux: "os-baseline: distro or NodeSource nodejs package — version tracks the chosen channel, no pin meaningful here"
           win32: "os-baseline: winget package OpenJS.NodeJS.LTS — version tracks the LTS line, no pin meaningful here"
-          default: "os-baseline: any Node runtime at or above this package's engines floor (>=20.11.0) already on PATH"
+          default: "os-baseline: any Node runtime at or above this package's engines floor (>=22.0.0) already on PATH"
 
   # Single-page read. Same two candidates as `rss`: curl fetches the bytes;
   # Node covers the case where the extraction step runs in-process.
@@ -156,7 +156,7 @@ channels:
           darwin: brew install node@22
           linux: "os-baseline: distro or NodeSource nodejs package — version tracks the chosen channel, no pin meaningful here"
           win32: "os-baseline: winget package OpenJS.NodeJS.LTS — version tracks the LTS line, no pin meaningful here"
-          default: "os-baseline: any Node runtime at or above this package's engines floor (>=20.11.0) already on PATH"
+          default: "os-baseline: any Node runtime at or above this package's engines floor (>=22.0.0) already on PATH"
 
   # Discussion search over the public Hacker News search API. Keyless, and
   # the endpoint returns JSON directly — one candidate is enough.
@@ -198,7 +198,7 @@ channels:
           darwin: brew install node@22
           linux: "os-baseline: distro or NodeSource nodejs package — version tracks the chosen channel, no pin meaningful here"
           win32: "os-baseline: winget package OpenJS.NodeJS.LTS — version tracks the LTS line, no pin meaningful here"
-          default: "os-baseline: any Node runtime at or above this package's engines floor (>=20.11.0) already on PATH"
+          default: "os-baseline: any Node runtime at or above this package's engines floor (>=22.0.0) already on PATH"
 
   - id: twitter-oembed
     description: Single public tweet read through the platform's own oEmbed endpoint, credential-free.

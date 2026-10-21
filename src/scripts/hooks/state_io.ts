@@ -280,7 +280,7 @@ export function atomic_write_text(target: string, text: string): void {
  *
  * PLATFORM AND VERSION the guarantee is claimed on: **local filesystems on the
  * platforms this package supports** — macOS/APFS and Linux/ext4|btrfs|xfs, on
- * Node >= 20.11.0 (`package.json` `engines`). Native Windows is explicitly not
+ * Node >= 22.0.0 (`package.json` `engines`). Native Windows is explicitly not
  * a first-class target (`docs/installation.md` § Windows names WSL2 or Git
  * Bash), so no claim is made for it. Verified locally on Darwin 24.6.0 arm64.
  *
@@ -708,7 +708,7 @@ export function session_state_file(dir: string, session_id: string): string {
  * FILESYSTEMS WITHOUT HARD LINKS fall back to the racy sequence, deliberately.
  * The peer-review round asked for this before accepting `link` as the fix, and
  * it was the one condition of the three not already met: `linkSync` is the
- * tree's first, `engines` only pins Node >= 20.11, and `installation.md` names
+ * tree's first, `engines` only pins Node >= 22.0, and `installation.md` names
  * Windows — so a share, a FUSE mount, or a restricted container can answer
  * `EPERM` / `ENOSYS` / `EXDEV` / `EOPNOTSUPP` / `EMLINK`. Throwing there would
  * be caught by the pruner's outer handler and leave the tombstone behind, which

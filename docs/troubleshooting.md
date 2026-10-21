@@ -113,10 +113,10 @@ we cannot validate changes without access to a Windows setup.
 
 ## `Node.js is required but was not found`
 
-The installer is Node.js-based and needs Node 20.11+ on PATH.
+The installer is Node.js-based and needs Node 22+ on PATH.
 
 \- **macOS**: install via [nodejs.org](https://nodejs.org/) or `brew install node`.
-\- **Linux**: `apt install nodejs` / `dnf install nodejs` / equivalent (ensure Node 20+).
+\- **Linux**: `apt install nodejs` / `dnf install nodejs` / equivalent (ensure Node 22+).
 \- **Windows**: install from [nodejs.org](https://nodejs.org/) or the Microsoft
   Store; ensure "Add to PATH" is checked.
 
