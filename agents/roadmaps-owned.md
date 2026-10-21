@@ -15,7 +15,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-review-that-ends | active | ready | A completion review runs at most N rounds, N set by the owner — round 1 over the scope, each … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
-| road-to-advisories-heard-the-same-day | active | ready | When a security advisory, a malware report, an end-of-security-support date or a pre-announced security release touches something a project actually … |
 | road-to-agent-throughput-recovery | active | ready | A night run carries more finished, merged work, and the reason it stopped is visible in one reading. |
 | road-to-an-installed-layer-that-is-thinned | active | ready | The layer a Claude install writes under `~/.claude/rules` is the thinned one, first as an opt-in and then as the … |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
@@ -26,12 +25,10 @@ and keep the full search — this file only adds candidates to it.
 | road-to-decision-closure | active | draft | Every roadmap enters execution as an execution contract: every foreseeable decision closed, the closing done council-first, the owner reached only … |
 | road-to-one-detector-and-the-senders-we-own | active | ready | On every request this package writes to a model provider itself, no value of a listed type leaves in plaintext, … |
 | road-to-placeholders-on-the-wire | active | ready | On Claude Code at a probed version, a tool result carrying a listed value reaches the model as a token … |
-| road-to-security-fixes-carried-to-the-merge | active | ready | A security finding that has a fix leaves the agent as a verified fix ready for the owner's merge: the … |
 | road-to-self-modification-that-a-council-must-pass | active | ready | A change the package makes to what governs it lands on a council's verdict about that exact change. |
 | road-to-svg-witness-provenance | active | draft | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |
 | road-to-tool-results-that-leave-a-handle | active | ready | A large tool result can reach the model shorter than the host produced it without losing anything: the bytes the … |
 | road-to-typed-grants-that-persist | active | draft | One grant object — ADR-260's `{op, target, scope, granted_by, span, expires}` — governs every irreversible operation, is honoured for the … |
-| road-to-worktrees-that-leave-after-the-merge | active | ready | A worktree exists while work lives in it and not one day longer than its merge. |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-a-byte-bound-and-a-public-figure | later | later | Two numbers this tree can now produce and cannot yet bound. |
 | road-to-a-canvas-the-code-owns | later | later | The repository is the only store of the design system. |
