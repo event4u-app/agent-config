@@ -284,8 +284,8 @@ source that reported it.
 
    | Situation | Route |
    |---|---|
-   | an open bot PR already moves this dependency | complete that PR — no second one |
    | the current branch introduced the dependency, or the user says "here" | this branch, its own `fix(security): …` commit |
+   | an open bot PR already moves this dependency | complete that PR |
    | trunk, clean tree | a new `security/…` branch in this checkout |
    | a feature branch is in progress | a separate worktree from fresh trunk, its own branch and PR — the fix travels alone; if the feature changes the same lockfile, offer it a rebase after the merge |
 
@@ -295,8 +295,7 @@ source that reported it.
    not forgotten.
 2. **Build the smallest fix** — inside the current constraint first
    (`npm update <pkg> --ignore-scripts`, an `overrides` entry for a
-   transitive-only fix, `composer update vendor/pkg --no-scripts --no-plugins`);
-   no install script runs before the diff is inspected; a constraint change only
+   transitive fix, `composer update vendor/pkg --no-scripts --no-plugins`); a constraint change only
    when the fixing version is outside it; a new major only with a stated
    compatibility analysis; never `npm audit fix --force`. A runtime fix changes
    every file that pins it in one commit. Run the post-update audit above,

@@ -592,7 +592,7 @@ export async function vendorAnnouncements(
                 // The SMALLEST newer security release on the line, whatever the feed order.
                 const rel = releases
                     .filter((r) => releaseLine(runtimeName, r.version) === lineOfUse && compare_versions(r.version, u.version) === 1)
-                    .sort((a, b) => compare_versions(a.version, b.version))[0];
+                    .sort((a, b) => compare_versions(a.version, b.version) ?? 0)[0];
                 if (rel === undefined) continue;
                 // Critical only when a critical pre-announcement preceded THIS release
                 // within the window; a vendor-labelled security release is otherwise high.
