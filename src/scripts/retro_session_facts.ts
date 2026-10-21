@@ -67,12 +67,15 @@ export interface SessionFactsInput {
 }
 
 export const liveGit =
-    (cwd: string): GitRun =>
+    (cwd: string, timeoutMs: () => number = () => 5_000): GitRun =>
     (args) => {
+        // A caller with a deadline passes the time it has left; none left is no call.
+        const timeout = Math.min(5_000, timeoutMs());
+        if (timeout <= 0) return null;
         // An inherited GIT_DIR (a hook runs inside git) would point every call
         // at another repository than the one at `cwd`.
         const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
-        const r = spawnSync('git', [...args], { cwd, env, encoding: 'utf8', timeout: 5_000 });
+        const r = spawnSync('git', [...args], { cwd, env, encoding: 'utf8', timeout });
         return r.status === 0 && typeof r.stdout === 'string' ? r.stdout : null;
     };
 

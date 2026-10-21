@@ -17,6 +17,9 @@
  * that ran the session), so a session reader that only looked at its own
  * checkout would lose every session that ran in a worktree. The reader
  * enumerates `git worktree list` and searches each.
+ *
+ * loss_class: recoverable-lossy
+ * loss_recovery: the full review comment or review body on the forge — `gh api repos/<owner>/<repo>/pulls/<N>/comments` and `/pulls/<N>/reviews`; a quote keeps its first QUOTE_MAX_CHARS characters.
  */
 
 import * as fs from 'node:fs';
