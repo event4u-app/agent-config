@@ -177,6 +177,7 @@ project.
       exploited (KEV) in a runtime scope, `pre-announced` critical runtime,
       CVSS ≥ 9.0 runtime-direct with a fix. T1 today. T2 digest. T3 ledger.
       EPSS and KEV raise a tier; neither lowers one.
+      *Changed by the council round of 2026-10-21 (D9): KEV raises a tier and is read; EPSS is withdrawn, not deferred.*
       verify: a tier table test over the F-corpus with the expected tier per
       fixture.
       <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/agent-settings.template.yml -->
@@ -268,6 +269,7 @@ project.
 | D6 | reversible-technical | agent | Scheduling is a daily stamp plus an opt-in CI schedule, never an OS daemon | a daemon contradicts the no-runtime install model; the stamp already exists | a measured TTN P90 miss on projects without daily sessions |
 | D7 | critical-technical | council:agents/evidence/council/advisories-worktree-run-design-20261021.md | v1 sources: native audits (only where no private package is in the lockfile), OSV for public packages, endoflife.date, the PHP and Node release feeds; no authenticated GitHub access | council 2026-10-21 Q4, 2/2; one seat conditioned it on stating what a native audit transmits, which is why a lockfile naming a private package skips it | an adapter for platform alerts is proposed with its own privacy statement |
 | D8 | critical-technical | council:agents/evidence/council/advisories-worktree-run-design-20261021.md | Refresh from the CLI and the opt-in CI schedule only; a session start reads the cache; the notice is a declared, read-only authority expansion (ADR-296) | council 2026-10-21 Q3 (2/2) and round 2 (2/2, ratified with conditions) | the notice is found to carry fetched text, or a session start is measured past its baseline because of it |
+| D9 | critical-technical | council:agents/evidence/council/advisory-kev-epss-sources-20261021.md | KEV is read (the CISA catalog, downloaded whole and matched locally, behind `advisories.kev`); EPSS is not — 3.1's "EPSS raises a tier" is withdrawn | council 2026-10-21 round 3, 2/2: a project's CVE set is its vulnerability profile and needs its own opt-in; a predicted score in T0 would make T0 mean two things | an EPSS proposal arrives with its own opt-in key, display-only first, and a backtest that names the acceptable false-escalation rate |
 
 ## What this roadmap deliberately does not do
 
