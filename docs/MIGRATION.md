@@ -42,6 +42,51 @@ reason, which no arithmetic can.
 or that promises a future breaking removal, gets a row here in the same commit
 that makes the promise. A promise with no row is not tracked and will be missed.
 
+## 17.0.0 — Node 22 is the floor, and the rule-layer form is no longer a setting
+
+✋ manual on Node 20 · 🔄 automatic for the removed settings keys.
+
+### Node 22 or newer is required
+
+`engines.node` is `>=22.0.0` (ADR-290). Node 20 left its upstream support
+window on 2026-04-30, and this package backports nothing (`SECURITY.md`), so
+the old `>=20.11.0` floor promised support that was never given.
+
+- **On Node 22 or newer:** nothing to do.
+- **On Node 20:** upgrade Node before taking 17.0.0. npm reports the
+  `engines` mismatch as a warning (a hard failure under pnpm, yarn or
+  `engine-strict`); the unattended updater refuses the release outright — it
+  compares `engines.node` against the running Node, and the release is
+  classed `action`, which it never installs on its own.
+- **Staying on Node 20:** the last compatible release is **16.5.0**. It
+  receives no security, bug or compatibility backports. Pinning it keeps the
+  install working; it does not keep it maintained.
+
+### Three settings keys are removed
+
+`lean_projection.mode`, `lean_projection.hosts` and
+`projection.rule_workspaces` are gone (ADR-293). How the rule layer is
+delivered is now computed per layer, host and machine, and the computation
+returns the full layer whenever any of its conditions is missing.
+
+- **Never set them:** nothing to do.
+- **Set one of them:** a leftover value is ignored with one line naming what
+  decides instead. For this release, an explicit `lean_projection.mode:
+  eager-all` or `legacy-all` — the values that meant *keep the full layer* — is
+  read once more and converted into the install receipt's pin. Every other
+  value is dropped. Delete the keys at your convenience.
+- **Want the full layer regardless:** run `agent-config install --full`.
+  `agent-config doctor --check layer-form` shows which form each layer is in
+  and why.
+
+### Also in 17.0.0 — changes that landed after 16.5.0
+
+The two rows of the `BREAKING_CHANGES.md` pending table ship in this release:
+three `fail_closed` hook guards now run on installs where the hook command
+used to end silently, and `uninstall --global --purge` deletes only what this
+package recorded writing rather than whole host configuration roots. The
+migration for each is in that row.
+
 ## 16.2.0 — `doctor --json` reads the forge, and `--no-forge` opts out
 
 💡 advisory · ✋ manual only if you scripted `doctor` as an offline diagnostic.

@@ -12,7 +12,7 @@
 #
 # Exit 0 means: both apply scenarios installed a populated tree inside the
 # container. Driven in CI by tests/test_e2e_container_install.py.
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 ca-certificates curl bash coreutils \

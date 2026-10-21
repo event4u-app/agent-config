@@ -7,7 +7,7 @@
 // copies of the same lazy-import + warning-silencer dance.
 //
 // `node:sqlite` ships from Node 22.5 (experimental on 22.x, stable/silent on
-// >= 23); the package's supported floor is `>=20.11` (package.json
+// >= 23); the package's supported floor is `>=22.0` (package.json
 // `engines`), so every caller MUST treat this module's failure modes as
 // expected, not exceptional — lazy import + graceful fallback, never a hard
 // dependency (ADR-129).
