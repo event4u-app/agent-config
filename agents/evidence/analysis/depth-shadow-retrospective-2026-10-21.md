@@ -12,7 +12,10 @@ answer for every review that ran, so this reads it backwards first.
 
 1. Each review slug under `agents/evidence/reviews/` is joined to the merged
    PR whose commits contain its first header `diff:` sha (GitHub PR search by
-   sha): 185 of 189 slugs matched.
+   sha): 185 of 189 slugs matched. 189 counts slugs whose artefact carries a v1
+   header with a `diff:` sha; the 293 "reviews" a first version of the sibling
+   severity analysis cited counted every file, honest-null and skip artefacts
+   included, and was replaced by 188 reviews that carry a finding row.
 2. The PR's change class is `classify_change_risk` over its squash commit on
    the first-parent line; 74 of the matched PRs have one (the rest merged
    without a `(#N)` squash subject and are left out rather than guessed).
@@ -29,6 +32,12 @@ answer for every review that ran, so this reads it backwards first.
 | R1 | 4 | 3 | 9 | 2 | 0 |
 | R2 | 22 | 12 | 35 | 1 | — |
 | R3 | 48 | 22 | 76 | 4 | — |
+
+Re-run after the completion review's findings 2, 3 and 12 with
+`probe_depth_shadow --reviews`, whose parser reads archived round records and
+the `round:` header and drops non-finding rows: R1 9 high/critical rows, 0
+would have escaped — unchanged; R2 40 and R3 96 rows, the archived rounds
+added.
 
 **R0 has no reviews at all.** An R0 change is non-behavioural by definition,
 and the completion review already takes the skip declaration for a diff with
@@ -51,7 +60,6 @@ is one round, not none, and this is the measured reason.
 
 ## Reproduce
 
-`slug_to_pr.mjs` (the sha join) and `retro_shadow2.mts` (the class join and
-the count) were run from the repository root; their logic is the three
-method steps above, and both read only `agents/evidence/reviews/`, `git log`
-and `gh pr list --search <sha>`.
+`./scripts-run src/scripts/probe_depth_shadow --reviews` runs the three method
+steps above; it reads only `agents/evidence/reviews/`, `git log` and
+`gh pr list --search <sha>`.

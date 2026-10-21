@@ -1,6 +1,58 @@
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
-import { receiptCoverage, reviewEscapes, type ReviewRow } from '../../src/scripts/probe_depth_shadow.js';
+import {
+    parseReviewCorpus,
+    receiptCoverage,
+    reviewEscapes,
+    roundTable,
+    type ReviewRow,
+} from '../../src/scripts/probe_depth_shadow.js';
+
+const header = (round?: number): string =>
+    `<!-- completion-review: v1 | reviewed: 2026-10-21 | scope: ${'a'.repeat(64)} | diff: ${'b'.repeat(40)} | reviewer: r${round === undefined ? '' : ` | round: ${String(round)}`} -->`;
+const row = (n: number, sev: string, status = 'fixed'): string => `| ${String(n)} | ${sev} | a.ts:1 | f | ${status} | ref |`;
+
+function corpus(files: Record<string, string[]>): string {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'depth-corpus-'));
+    for (const [name, lines] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), `${lines.join('\n')}\n`);
+    return dir;
+}
+
+describe('review corpus parse', () => {
+    it('reads archived round records, the round: header, and a suffix only where the slug has siblings', () => {
+        const dir = corpus({
+            // archived § 2.7 record of round 1, then the live artefact re-bound in place as round 2
+            'feat.round1-review.md': [header(), row(1, 'high')],
+            'feat.findings.md': [header(2), row(1, 'critical'), row(2, 'low')],
+            // a subject name that merely contains "round7": one file, so round 1
+            'conformance-round7.findings.md': [header(), row(1, 'high')],
+            // a genuine suffixed round with a sibling
+            'x-round2.findings.md': [header(), row(1, 'medium')],
+            'x.findings.md': [header(), row(1, 'medium')],
+            // an illustrative row is not a finding
+            'y.findings.md': [header(), row(1, 'high', 'example')],
+        });
+        const rows = parseReviewCorpus(dir);
+        const key = (r: { slug: string; round: number; sev: string }): string => `${r.slug}:${String(r.round)}:${r.sev}`;
+        expect(rows.map(key).sort()).toEqual(
+            ['conformance-round7:1:high', 'feat:1:high', 'feat:2:critical', 'feat:2:low', 'x:1:medium', 'x:2:medium'].sort(),
+        );
+    });
+
+    it('the round table counts artefacts, rows and reviews ending at each round', () => {
+        const t = roundTable([
+            { slug: 'a', round: 1, sev: 'high' },
+            { slug: 'a', round: 2, sev: 'low' },
+            { slug: 'b', round: 1, sev: 'medium' },
+        ]);
+        expect(t.find((r) => r.band === '1')).toMatchObject({ artefacts: 2, findings: 2, hc: 1, ending: 1 });
+        expect(t.find((r) => r.band === '2')).toMatchObject({ artefacts: 1, findings: 1, hc: 0, ending: 1 });
+    });
+});
 
 const roadmap = [
     '## Phase 1',

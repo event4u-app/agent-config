@@ -39,9 +39,9 @@ counts the passes:
 | F1 | No round cap. A fix commit changes the scope hash, the artefact re-binds, the review runs again. | `docs/contracts/plan-review-gates.md:303-307` (§ 2.1), § 2.5 at `:504`, § 2.7 at `:580`; `check_completion_review.ts:1050-1053` states per-round ordering is "agent-carried convention" |
 | F2 | Rounds reach 25. Per-slug maxima: round 1 only 16 slugs, 2: 4, 3: 1, 5: 2, 6: 2, 7: 3, 8: 3, 9: 1, 25: 1. The supplied plan said "up to round 9"; it under-counted. | `ls agents/evidence/reviews \| grep -oE 'round[0-9]+'` — `round22`..`round25` on one slug, `round21` on another |
 | F3 | The live HEAD at the pin was a five-round review that did not pass and was reverted. | `git log -1 418a09379d` (#2537) |
-| F4 | Round 3+ carries less weight and more noise — high+critical 13.3 % (round 1) → **17.5 %** (round 2) → 8.7 % (round 3+); low 47.3 % → 40.7 % → 53.0 %. Round 2 is the round with the highest severity share, so a one-round cap would drop it. | Re-derived in step 0.1: `agents/evidence/analysis/review-severity-by-round-2026-10-21.md` (2,455 findings; the supplied plan read 14.1 / 11.5 / 7.4 %) |
+| F4 | Round 3+ carries less weight and more noise — high+critical 14.0 % (round 1) → **16.5 %** (round 2) → 8.2 % (round 3+); low 46.0 % → 42.6 % → 54.4 %. Round 2 is the round with the highest severity share, so a one-round cap would drop it. | Re-derived in step 0.1: `agents/evidence/analysis/review-severity-by-round-2026-10-21.md` (2,867 findings incl. archived round records; the supplied plan read 14.1 / 11.5 / 7.4 %) |
 | F5 | A two-round cap with a narrow round 2 and a default-plus-memo for the rest already governs another loop in this tree. | `src/agent-src/contexts/execution/plan-confidence-gate.md:110-118` |
-| F6 | Per exact round, high/critical rows per artefact: 0.82 · 1.48 · 0.71 · 1.00 · 0.89 (rounds 1-5), 0.44 (6-10), 0.15 (11+). 18 of 293 reviews ran past round 2. Of the 44 high/critical rows in rounds ≥ 3, 27 were introduced by an earlier round's fix and 15 were missed in earlier rounds. | Measured 2026-10-21 for steps 0.1/0.2: `agents/evidence/analysis/review-severity-by-round-2026-10-21.md` |
+| F6 | Per exact round, high/critical rows per artefact: 1.49 · 1.54 · 0.78 · 0.79 · 0.71 (rounds 1-5), 0.38 (6-10), 0.15 (11+). 18 of 188 reviews ran past round 2. Of the 51 high/critical rows in rounds ≥ 3, 33 were introduced by an earlier round's fix and 18 were missed in earlier rounds. | Measured 2026-10-21 for steps 0.1/0.2: `agents/evidence/analysis/review-severity-by-round-2026-10-21.md` |
 
 The council's own round limit is **not** in scope: `debate_max_rounds` is wired
 (`src/scripts/council_cli.ts:1746`, default 4, user-global config), and the
@@ -66,13 +66,13 @@ rounds 1..N.
 
 ## Phase 0 — Re-derive what the cap rests on
 
-- [x] **0.1 Re-derive the severity-by-round table.** Done 2026-10-21: `agents/evidence/analysis/review-severity-by-round-2026-10-21.md`; its code block reproduced the table byte-for-byte; F4 corrected (round 2 rises to 17.5 %). Count findings per round <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **0.1 Re-derive the severity-by-round table.** Done 2026-10-21: `agents/evidence/analysis/review-severity-by-round-2026-10-21.md`; revised after R2 findings 2/3/7/9 to `probe_depth_shadow --rounds` (archived rounds, `round:` header, sibling rule), which reproduces both tables; F4 corrected (round 2 rises to 16.5 %). Count findings per round <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       and severity over `agents/evidence/reviews/*.md`; write it as an analysis
       artefact with the command that produced it. F4's figures are a supplied
       plan's and are not cited by 1.1 until this lands.
       verify: the artefact carries the command; re-running it reproduces every
       row; rows per round sum to the round total.
-- [x] **0.2 Classify what round 3+ found.** Done 2026-10-21: 44 rows — 27 fix-delta, 15 missed, 2 unclear; two rows re-checked by hand; same artefact § What round 3+ high/critical rows were. For every high/critical row in a <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
+- [x] **0.2 Classify what round 3+ found.** Done 2026-10-21: 51 rows after the revised parse — 33 fix-delta, 18 missed (two fresh subagent passes); two rows re-checked by hand; same artefact § What round 3+ high/critical rows were. For every high/critical row in a <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       round ≥ 3, record whether it was introduced by a fix of the previous round
       (fix-delta) or present in round 1's scope (missed). Only the "missed"
       class is a cost of the cap.
@@ -119,8 +119,8 @@ rounds 1..N.
 - **Ownership:** product-owned
 - **Blocks:** steps 1.1, 1.3; AC-1
 - **Routed:** council 2026-10-21 ESCALATE — cannot be bounded from available evidence (one seat; the other read it council-decidable, so the seats split). One seat: council-decidable by a narrow margin, recommends a three-round cap. The other: owner-reserved under "cannot be bounded from available evidence", recommends measurement only for now. Both converged on: later rounds scoped to the fix delta, an exact-round breakdown, and a shadow reading of the cap before any hard cap. A split plus an unbounded-risk reading routes to the owner. The exact-round breakdown both asked for was then measured (Context F6).
-- **Question:** The completion review is a recorded verification loop with no round limit (F1). Rounds 3-5 still yield 0.7-1.0 high/critical rows per round, close to round 1; from round 6 the yield falls to 0.44, from round 11 to 0.15 (F6). 18 of 293 reviews ran past round 2. Should the loop be capped, and where?
-- **Recommendation:** (b). The measured yield is flat through round 5 and falls after it, so a cap at five keeps every round that still pays and ends the 12 reviews that ran to round 6-25 (15 high/critical rows across those rounds, each routed to the owner report rather than dropped). A two-round cap (a) would cut rounds 3-5, which the data says still find defects; (c) leaves the 25-round loop in place.
+- **Question:** The completion review is a recorded verification loop with no round limit (F1). Rounds 1 and 2 yield about 1.5 high/critical rows per artefact, rounds 3-5 about half of that (0.71-0.79); from round 6 the yield falls to 0.38, from round 11 to 0.15 (F6). 18 of 188 reviews ran past round 2. Should the loop be capped, and where?
+- **Recommendation:** (b). Rounds 3-5 still pay half of round 1, and the yield falls sharply only after round 5, so a cap at five keeps every round that still pays and ends the 12 reviews that ran to round 6-25 (16 high/critical rows across those rounds, each routed to the owner report rather than dropped). A two-round cap (a) would cut rounds 3-5, which the data says still find defects; (c) leaves the 25-round loop in place.
 - **If you do nothing:** reviews keep re-binding until they pass or are abandoned; the `round:` field (1.2) keeps counting, so Phase 2 still reads the next 20 reviews as measurement.
 - **What to do:** pick exactly one — (a) approve a two-round cap with the severity gate as written in 1.1; or (b) approve a five-round cap with the same severity gate; or (c) refuse any cap and cancel 1.1 and 1.3, keeping 1.2 as measurement only.
 - **Resolved when:** the chosen option is recorded in `docs/decisions/` or in this entry, and this entry's Status reads resolved.
@@ -139,7 +139,7 @@ rounds 1..N.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A real later-round finding is lost | product | The cap ends a review whose next round would have found a missed critical defect. | 0.2 measured the "missed" share first (15 of 44); F6 sets N where the yield falls; open high/critical rows after round N reach the owner report; 2.1 reads the rate. | Phase 0 — Re-derive what the cap rests on |
+| 1 | A real later-round finding is lost | product | The cap ends a review whose next round would have found a missed critical defect. | 0.2 measured the "missed" share first (18 of 51); F6 sets N where the yield falls; open high/critical rows after round N reach the owner report; 2.1 reads the rate. | Phase 0 — Re-derive what the cap rests on |
 | 2 | Round counting is gamed | implementation | An agent re-names the artefact to restart at round 1. | 1.2 writes `round:` on every re-bind; § 2.7's superseding rename carries the round forward; the sabotage probe in 1.3. | Phase 1 — The cap |
 | 3 | Round 2 widens back to the full scope | implementation | A fix that touches many files makes the "fix delta" the whole change. | The round-2 scope is the delta by hash; a delta larger than round 1's scope is reported in the owner report rather than reviewed a third time. | Phase 1 — The cap |
 
