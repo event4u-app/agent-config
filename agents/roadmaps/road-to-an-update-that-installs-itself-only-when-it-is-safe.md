@@ -179,21 +179,7 @@ None of this is rebuilt here.
       `probe_throttle.ts:50`, a 1 s budget, fail-open, effect `notification`,
       addressed to the **user**.
       verify: p95 hook latency stays inside the Phase 1.3 baseline.
-      Written and tested 2026-10-20 as `update-notice`
-      (`src/scripts/update_notice_hook.ts`), and **not registered**: the
-      manifest binds it on no event of any host, and its test asserts exactly
-      that, so the commit that registers it turns the test red and has to carry
-      the new council verdict. File reads only — the cached registry probe, the installed
-      `package.json` and `CHANGELOG.md`, the session register — so it opens no
-      socket; measured p95 over 20 in-process runs is asserted under 100 ms
-      against the 1.3 `session_start` baseline of 160 ms for the WHOLE
-      dispatch. **Registering it will need room first.** The conditional chunk
-      that made room for it (D10) was split out of this change on 2026-10-20:
-      it touches four ratification-watched files, the round that would ratify
-      it alone could not run on exhausted council quota, and without the two
-      concerns it buys nothing. Without it the bundle stands at 1,549,984 of
-      1,550,000 B, so the next round has to bring the room back with the
-      registration.
+      Done note: `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § 3.1.
 - [x] **3.2 Stage and verify only; activate at a boundary.** The concern never
       swaps files mid-session; activation happens at the next `session_start`
       before the dispatcher reads anything.
@@ -210,17 +196,7 @@ None of this is rebuilt here.
       package, plus any `notice` entry from the impact map. Fetched release
       notes are remote untrusted text and never enter model context.
       verify: a fixture with a hostile remote changelog produces no model-
-      visible token from it.
-      Landed 2026-10-20, as a SHAPE rather than as a scrubbing pass. The
-      update-check cache is the sanitising boundary: `_cacheable_impact` keeps
-      only keys that parse as versions and values from the published enum, so
-      a hostile description, version label or nested object is dropped once at
-      write time instead of being re-checked by every reader, and
-      `sanitiseImpactMap` applies the same reduction again on read. Prose comes
-      from `parseCuratedHead` over the INSTALLED `CHANGELOG.md` or from
-      sentences written in `_lib/update_notice.ts`; a cached version string
-      that does not parse produces no line at all. The concern exits 0 and
-      writes to stderr, so nothing it emits is model context on any host.
+      Done note: `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § 3.3.
 - [x] **3.4 A security release is loud in every mode but `off`.** The notice
       names the latest-only policy at `SECURITY.md:21`.
       verify: a fixture with `Security: yes` in range produces the notice
@@ -273,24 +249,8 @@ None of this is rebuilt here.
       verified success. It carries a permanent "never". Existing installs are
       **asked**, never flipped.
       verify: a fixture asserts zero prompts under CI, non-TTY, headless,
-      `--json` output and a subagent run.
-      Landed 2026-10-20 as `update-auto-invite`
-      (`src/scripts/update_invite_hook.ts`), bound on `stop` and nowhere else.
-      All five contexts are asserted to produce zero prompts, and so are a
-      recorded "never", a second run, a mode the user already chose, and a turn
-      that did not end on a verified success — the last read through
-      `readRunEvidence`, the same evidence the turn-end gate uses.
-      **It is closed today by the 4.2 record, not by a flag:** it returns
-      before reading anything else while `ring-0-exit: no`, which is every
-      install. It never writes `update.mode`; the invitation says how, and the
-      "never" it records lives in its own state file and binds nothing else.
-      The question reaches the user through the warn path, in the host's
-      declared `ask:` shape (native tool where a host offers one, the numbered
-      text block otherwise).
-      **Narrowed 2026-10-20 to the council's (d):** the invitation now needs
-      `update.mode: ask` — a class-C value only a human can write — before it
-      reads the ring-0 record, which stays as a second kill switch. An absent
-      key and `notify` ask nothing, asserted. Not registered, like 3.1.
+      Since 2026-10-21 the "never" is the setting: any mode but `ask` stops it.
+      Done note: `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § 4.3.
 - [x] **4.4 A pin advisor for teams.** `update --check` in a pinned project
       lists what lies between the pin and latest, read from the impact map.
       It proposes; it never moves the pin.
@@ -331,6 +291,7 @@ None of this is rebuilt here.
   `reversible` may not be assumed merely because activation is deferred.
   Was: open — raised 2026-10-20 by a council verdict, not by a missing
   decision. The work exists, is tested and is reverted out of the manifest.
+- **Round 3 and the lifecycle contract (2026-10-21):** `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § Round 3.
 - **Class:** 2 — council. The seats named what the next round has to carry, so
   the question is what they asked for, not who owns it.
 - **Owner:** council

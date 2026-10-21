@@ -669,6 +669,11 @@ concerns:
   # They are registered under two effect terms the same ratification added,
   # because squeezing them into `notification` is exactly the under-declaration
   # that was refused.
+  # `update-auto-invite` is one-way text on EVERY host, `ask: native` hosts
+  # included: it collects no answer, and the user acts by editing `update.mode`.
+  # A host's ask shape may carry the text; it decides nothing more. Both
+  # concerns are disabled without a release by `AGENT_CONFIG_NO_UPDATE_CHECK=1`
+  # or `update.mode: off`, and the invite by any mode but `ask`.
   update-notice:
     script: src/scripts/update_notice_hook.ts
     args: []
