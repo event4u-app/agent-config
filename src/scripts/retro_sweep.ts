@@ -16,11 +16,13 @@ import { triageSession, unitKey } from './retro_triage.js';
 import {
     BACKLOG_PAUSE_AT,
     DAILY_RETRO_BUDGET,
+    SWEEP_CLAIM_LEASE_MS,
     TRIAGE_P50_LIMIT_MS,
     claimSweepDay,
     classifyUnit,
     enqueue,
     expireStaleDeferred,
+    holdsSweepDay,
     listQueue,
     listSessionPointers,
     localDay,
@@ -36,6 +38,7 @@ import {
     resolveMarkers,
     retroEnabled,
     retroSessionTags,
+    sweepClaimHolder,
     writeSweepState,
     type MarkerResolution,
     type PrState,
@@ -76,10 +79,16 @@ export interface SweepInput {
     enabled?: boolean;
     /** Monotonic clock in ms, injectable for the latency figure. */
     clock?: () => number;
+    /**
+     * A claim the caller already holds for today ({@link claimDailySweep}). The
+     * probe claims before it discovers sessions, so a session start that loses
+     * the race does no discovery work at all.
+     */
+    claim?: string;
 }
 
 export interface SweepResult {
-    status: 'disabled' | 'already-swept' | 'paused' | 'ran';
+    status: 'disabled' | 'already-swept' | 'paused' | 'ran' | 'superseded';
     /** The `<retro-queue>` line, or `null` — zero candidates is silence. */
     line: string | null;
     counts: SweepCounts;
@@ -112,21 +121,48 @@ export function runDailySweep(root: string, input: SweepInput): SweepResult {
     if (!(input.enabled ?? retroEnabled(root))) return { status: 'disabled', line: null, counts };
     const today = localDay(input.now, input.timeZone);
     const state = readSweepState(root);
-    if (state.last_sweep?.day === today) return { status: 'already-swept', line: null, counts };
     // One sweep per repository and day, even when two worktrees start sessions at
     // the same moment. A sweep that throws gives the claim back; one that crashes
     // leaves it to expire after the lease.
-    const token = claimSweepDay(root, today);
-    if (token === null) return { status: 'already-swept', line: null, counts };
+    let token = input.claim;
+    if (token === undefined) {
+        if (state.last_sweep?.day === today) return { status: 'already-swept', line: null, counts };
+        token = claimSweepDay(root, today) ?? undefined;
+        if (token === undefined) return { status: 'already-swept', line: null, counts };
+    }
+    let result: SweepResult;
     try {
-        return sweepClaimed(root, input, today, state, counts);
+        result = sweepClaimed(root, input, today, state, counts, token);
     } catch (err) {
         releaseSweepDay(root, today, token);
         throw err;
     }
+    // A finished sweep gives its claim back; the sweep state now marks the day done.
+    if (result.status !== 'superseded') releaseSweepDay(root, today, token);
+    return result;
 }
 
-function sweepClaimed(root: string, input: SweepInput, today: string, state: SweepState, counts: SweepCounts): SweepResult {
+/**
+ * Claim today's sweep before any discovery work. `null` when the switch is off,
+ * the day is already swept, or another session holds the claim.
+ */
+export function claimDailySweep(root: string, now: string, timeZone: string): string | null {
+    if (!retroEnabled(root)) return null;
+    const today = localDay(now, timeZone);
+    if (readSweepState(root).last_sweep?.day === today) return null;
+    return claimSweepDay(root, today);
+}
+
+function sweepClaimed(
+    root: string,
+    input: SweepInput,
+    today: string,
+    state: SweepState,
+    counts: SweepCounts,
+    token: string,
+): SweepResult {
+    // A sweep whose lease ran out and was taken over records nothing.
+    if (!holdsSweepDay(root, today, token)) return { status: 'superseded', line: null, counts };
     counts.expired += expireStaleDeferred(root, today, input.timeZone, input.now);
     pruneStalePointers(root, today, input.timeZone);
     if (deferredBacklog(root) > BACKLOG_PAUSE_AT) {
@@ -177,6 +213,7 @@ function sweepClaimed(root: string, input: SweepInput, today: string, state: Swe
     }
 
     candidates.sort((a, b) => b.score - a.score || (a.day < b.day ? 1 : a.day > b.day ? -1 : 0));
+    if (!holdsSweepDay(root, today, token)) return { status: 'superseded', line: null, counts };
     candidates.forEach((c, i) => {
         if (i < DAILY_RETRO_BUDGET) {
             counts.analyse += 1;
@@ -207,6 +244,8 @@ export interface RetroStatus {
     paused: boolean;
     triage_p50_ms: number | null;
     latency_over_budget: boolean;
+    /** The sweep claim when it has been held past the lease, else `null`. */
+    stuck_claim: { pid: number | null; held_ms: number } | null;
 }
 
 export function retroStatus(root: string): RetroStatus {
@@ -214,6 +253,7 @@ export function retroStatus(root: string): RetroStatus {
     const ms = [...(state.last_sweep?.triage_ms ?? [])].sort((a, b) => a - b);
     const p50 = ms.length === 0 ? null : ms[Math.floor((ms.length - 1) / 2)]!;
     const backlog = deferredBacklog(root);
+    const stuck = sweepClaimHolder(root);
     return {
         enabled: retroEnabled(root),
         pending: pendingUnits(root),
@@ -222,6 +262,7 @@ export function retroStatus(root: string): RetroStatus {
         paused: backlog > BACKLOG_PAUSE_AT,
         triage_p50_ms: p50,
         latency_over_budget: p50 !== null && p50 > TRIAGE_P50_LIMIT_MS,
+        stuck_claim: stuck !== null && stuck.held_ms >= SWEEP_CLAIM_LEASE_MS ? stuck : null,
     };
 }
 
@@ -260,7 +301,12 @@ export function discoverSessions(
     opts: { git?: GitRun; today?: string; deadlineAt?: number; now?: () => number } = {},
 ): SweepSession[] {
     const now = opts.now ?? Date.now;
-    const live = opts.git ?? liveGit(root);
+    const deadlineAt = opts.deadlineAt;
+    const pastDeadline = (): boolean => deadlineAt !== undefined && now() >= deadlineAt;
+    // Every git call gets only the time left, so a fact read in flight when the
+    // deadline passes makes no further process call.
+    const live =
+        opts.git ?? liveGit(root, deadlineAt === undefined ? undefined : () => Math.max(0, deadlineAt - now()));
     const memo = new Map<string, string | null>();
     const git: GitRun = (args) => {
         const k = args.join('\0');
@@ -282,49 +328,47 @@ export function discoverSessions(
             const day = localDay(p.ended_at, timeZone);
             const inWindow =
                 day < today && classifyUnit({ day, today, covered: false, retroSession: false }) === 'in-window';
-            const canRead =
-                inWindow &&
-                !disposed.has(p.tag) &&
-                read < MAX_SESSIONS_PER_SWEEP && (opts.deadlineAt === undefined || now() < opts.deadlineAt);
+            const canRead = inWindow && !disposed.has(p.tag) && read < MAX_SESSIONS_PER_SWEEP && !pastDeadline();
             if (canRead) read += 1;
-            return {
-                tag: p.tag,
-                day,
-                branch: p.branch,
-                eol_key: p.eol_key,
-                facts: canRead ? readSessionFacts({ tag: p.tag, root, git }) : null,
-            };
+            let facts = canRead ? readSessionFacts({ tag: p.tag, root, git }) : null;
+            // A read the deadline cut short may carry `missing` facts that would
+            // triage as low-signal; it is left undisposed for the next sweep instead.
+            if (facts !== null && pastDeadline()) facts = null;
+            return { tag: p.tag, day, branch: p.branch, eol_key: p.eol_key, facts };
         });
 }
 
 /**
- * The probe's deadline, shared by discovery and forge reads. It is checked
- * between units: a `gh` call gets only the time left, and no session's facts are
- * read once it has passed, but one synchronous fact read already started runs to
- * its end. The pointer directory it lists stays bounded by the catch-up window.
+ * The probe's deadline, shared by discovery and forge reads. A `gh` call and a
+ * `git` call each get only the time left, no session's facts are read once it
+ * has passed, and a fact read the deadline cut short is discarded rather than
+ * triaged. What remains past it is local file reads of the one session in
+ * flight. The pointer directory it lists stays bounded by the catch-up window.
  */
 export const PROBE_BUDGET_MS = 3000;
 
 /**
  * The first-session-of-the-day probe (path C, K1/K7): no model, no spawn. It is
- * throttled per workspace by `probe_throttle` and per repository by the sweep
- * state, reads the forge for open markers inside a fixed budget — an unread
- * marker is kept, never dropped — and returns the `<retro-queue>` line or
- * `null`. A failure returns `null` and is not stamped, so the next session start
- * tries again (after the claim lease when the sweep itself crashed). The cost a
- * session start can pay is bounded by {@link PROBE_BUDGET_MS} plus at most one
- * fact read in flight.
+ * throttled per workspace by `probe_throttle` and per repository by an
+ * exclusive day claim TAKEN BEFORE ANY DISCOVERY, so of two session starts
+ * racing in two worktrees only the claimant reads sessions or the forge. It
+ * reads the forge for open markers inside a fixed budget — an unread marker is
+ * kept, never dropped — and returns the `<retro-queue>` line or `null`. A
+ * failure gives the claim back, returns `null` and is not stamped, so the next
+ * session start tries again. A session start that loses the claim to a sweep
+ * still running is not stamped either, so it retries once that claim's lease
+ * has run out if the sweep never finished.
  */
 export function retroDailyProbe(
     root: string,
     deps: { now?: Date; ranToday?: (root: string) => boolean; stamp?: (root: string) => void } = {},
 ): string | null {
+    let held: { day: string; token: string } | null = null;
     try {
         if (!retroEnabled(root)) return null;
         if (deps.ranToday?.(root) === true) return null;
         const deadlineAt = Date.now() + PROBE_BUDGET_MS;
         const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        const slug = originSlug(root);
         const nowIso = (deps.now ?? new Date()).toISOString();
         const today = localDay(nowIso, tz);
         // Another worktree already swept today: no discovery work at all.
@@ -332,18 +376,32 @@ export function retroDailyProbe(
             deps.stamp?.(root);
             return null;
         }
+        const token = claimDailySweep(root, nowIso, tz);
+        if (token === null) return null;
+        held = { day: today, token };
+        const slug = originSlug(root);
         const sessions = discoverSessions(root, tz, { today, deadlineAt });
         const r = runDailySweep(root, {
             now: nowIso,
             timeZone: tz,
             repo: slug ?? path.basename(root),
             sessions,
+            claim: token,
             ...(slug !== null ? { readPr: budgetedGhPrState(root, Math.max(0, deadlineAt - Date.now())) } : {}),
         });
-        // Stamped only after the sweep returned; a throw skips the stamp.
-        deps.stamp?.(root);
+        held = null;
+        // Stamped only after a sweep that completed; a throw or a superseded sweep
+        // leaves the workspace free to try again.
+        if (r.status !== 'superseded') deps.stamp?.(root);
         return r.line;
     } catch {
+        if (held !== null) {
+            try {
+                releaseSweepDay(root, held.day, held.token);
+            } catch {
+                /* the claim expires with its lease */
+            }
+        }
         return null;
     }
 }
@@ -419,6 +477,12 @@ export function renderStatus(s: RetroStatus): string {
     }
     lines.push(`deferred backlog: ${s.deferred_backlog} (sweep pauses above ${BACKLOG_PAUSE_AT})`);
     if (s.paused) lines.push('the daily sweep is PAUSED by the backlog; /retro by hand still runs');
+    if (s.stuck_claim !== null) {
+        lines.push(
+            `the daily sweep claim is held by pid ${s.stuck_claim.pid ?? 'unknown'} for ${Math.round(s.stuck_claim.held_ms / 60_000)} min; ` +
+                'a holder whose process exists is never taken over, so if that pid is not a retro sweep, end it or remove the newest claim.<n> file in the retro-sweep store',
+        );
+    }
     if (s.triage_p50_ms !== null) {
         lines.push(
             `triage p50: ${Math.round(s.triage_p50_ms)} ms${s.latency_over_budget ? ` — over the ${TRIAGE_P50_LIMIT_MS} ms budget` : ''}`,

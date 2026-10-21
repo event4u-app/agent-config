@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { SessionFacts } from '../../src/scripts/retro_facts.js';
 import { planManualRetro, retroStatus, runDailySweep, type SweepSession } from '../../src/scripts/retro.js';
-import { discoverSessions, retroDailyProbe } from '../../src/scripts/retro_sweep.js';
+import { discoverSessions, renderStatus, retroDailyProbe } from '../../src/scripts/retro_sweep.js';
 import { recordMergeMarker } from '../../src/scripts/hooks/push_settle_hook.js';
 import { writeRetroPointer } from '../../src/scripts/hooks/session_eol_hook.js';
 import { derive_session_tag } from '../../src/scripts/_lib/session_tag.js';
@@ -22,6 +22,7 @@ import {
     enqueue,
     enqueueMerged,
     expireStaleDeferred,
+    holdsSweepDay,
     listMarkers,
     listQueue,
     localDay,
@@ -180,6 +181,8 @@ function userGlobal(body: string): void {
 }
 
 const NOW = '2026-10-21T07:00:00Z';
+/** A claim holder that has exited: the only holder a takeover may supersede. */
+const gone = { isAlive: (): boolean => false };
 const m = <T>(value: T) => ({ status: 'measured' as const, value });
 const miss = { status: 'missing' as const, reason: 'not read' };
 
@@ -388,7 +391,7 @@ describe('retro_queue — path C, the daily sweep', () => {
         // The loser of the claim reports already-swept even before any state was written.
         expect(runDailySweep(wt, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [] }).status).toBe('already-swept');
         // A new day is a new claim, and the old one is pruned.
-        expect(claimSweepDay(wt, '2026-10-22')).not.toBeNull();
+        expect(claimSweepDay(wt, '2026-10-22', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, gone)).not.toBeNull();
     });
 
     it('a sweep that throws after its claim gives the claim back, and the next start sweeps', () => {
@@ -411,19 +414,183 @@ describe('retro_queue — path C, the daily sweep', () => {
         const t0 = Date.now();
         expect(claimSweepDay(main, '2026-10-21', t0)).not.toBeNull();
         expect(claimSweepDay(main, '2026-10-21', t0 + SWEEP_CLAIM_LEASE_MS / 2)).toBeNull();
-        expect(claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1)).not.toBeNull();
+        expect(claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, gone)).not.toBeNull();
     });
 
     it('a sweep whose claim was taken over cannot release its successor', () => {
         const { main } = repoWithWorktree();
         const first = claimSweepDay(main, '2026-10-21', Date.now())!;
-        const second = claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1)!;
+        const second = claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, gone)!;
         expect(second).not.toBe(first);
         releaseSweepDay(main, '2026-10-21', first);
         // The successor still holds the day.
         expect(claimSweepDay(main, '2026-10-21', Date.now())).toBeNull();
         releaseSweepDay(main, '2026-10-21', second);
         expect(claimSweepDay(main, '2026-10-21', Date.now())).not.toBeNull();
+    });
+
+    it('a takeover creates the next claim generation exclusively and never overwrites one', () => {
+        const { main, wt } = repoWithWorktree();
+        const first = claimSweepDay(main, '2026-10-21', Date.now())!;
+        const taker = claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, gone)!;
+        expect(first.startsWith('0:')).toBe(true);
+        expect(taker.startsWith('1:')).toBe(true);
+        expect(holdsSweepDay(main, '2026-10-21', taker)).toBe(true);
+        expect(holdsSweepDay(main, '2026-10-21', first)).toBe(false);
+        // A fresh claim is not taken over from another worktree.
+        expect(claimSweepDay(wt, '2026-10-21', Date.now())).toBeNull();
+        // The generation a racing taker would create already exists, so its exclusive create fails.
+        const dir = path.join(path.dirname(queueDir(main)!), 'retro-sweep');
+        expect(fs.existsSync(path.join(dir, 'claim.1'))).toBe(true);
+        expect(fs.existsSync(path.join(dir, 'claim.0'))).toBe(false);
+    });
+
+    it('a live holder is never superseded, however long it holds: no second writer can start', () => {
+        const { main, wt } = repoWithWorktree();
+        const held = claimSweepDay(main, '2026-10-21', Date.now())!;
+        const alive = { isAlive: (): boolean => true };
+        expect(claimSweepDay(wt, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, alive)).toBeNull();
+        // A live holder of an earlier day blocks the next day's sweep too.
+        expect(claimSweepDay(wt, '2026-10-22', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, alive)).toBeNull();
+        expect(holdsSweepDay(main, '2026-10-21', held)).toBe(true);
+        // Not after a day, not after a month: age alone never revokes a live writer.
+        const month = 30 * 24 * 60 * 60 * 1000;
+        expect(claimSweepDay(wt, '2026-10-21', Date.now() + month, alive)).toBeNull();
+        expect(holdsSweepDay(main, '2026-10-21', held)).toBe(true);
+        // `/retro status` names a claim held past the lease, so a reused pid is visible.
+        const status = renderStatus(retroStatus(main));
+        expect(status).not.toContain('claim is held by pid');
+        const dir = path.join(path.dirname(queueDir(main)!), 'retro-sweep');
+        const old = new Date(Date.now() - SWEEP_CLAIM_LEASE_MS - 1000);
+        fs.utimesSync(path.join(dir, 'claim.0'), old, old);
+        expect(renderStatus(retroStatus(main))).toContain(`claim is held by pid ${process.pid}`);
+    });
+
+    it('takeover-during-write: a rival trying to take the claim mid-sweep, at any age, is refused and the sweep completes', () => {
+        const { main, wt } = repoWithWorktree();
+        const month = 30 * 24 * 60 * 60 * 1000;
+        const rivals: (string | null)[] = [];
+        // The clock is read inside the triage loop, i.e. after the sweep's first
+        // ownership check and before its writes; the rival runs there.
+        const clock = (): number => {
+            rivals.push(claimSweepDay(wt, '2026-10-21', Date.now() + month));
+            return 0;
+        };
+        const busy = session('w', '2026-10-20', { self_repair_in_window: m(1) });
+        const r = runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [busy], clock });
+        expect(rivals.length).toBeGreaterThan(0);
+        expect(rivals.every((t) => t === null)).toBe(true);
+        expect(r.status).toBe('ran');
+        expect(listQueue(main).map((e) => e.session)).toEqual(['w']);
+    });
+
+    it('two claimants for different days, interleaved after their read: exactly one holds and can mutate', () => {
+        const { main, wt } = repoWithWorktree();
+        let rival: string | null = null;
+        const first = claimSweepDay(main, '2026-10-21', Date.now(), {
+            beforeCreate: () => {
+                rival = claimSweepDay(wt, '2026-10-22', Date.now());
+            },
+        });
+        expect(rival).not.toBeNull();
+        expect(first).toBeNull();
+        expect(holdsSweepDay(main, '2026-10-22', rival!)).toBe(true);
+        // The loser cannot sweep: without a claim it reports the day as taken and writes nothing.
+        expect(runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [] }).status).toBe('already-swept');
+        expect(readSweepState(main).last_sweep).toBeNull();
+        // Same interleaving across a takeover of a dead holder.
+        const { main: m2, wt: w2 } = repoWithWorktree();
+        claimSweepDay(m2, '2026-10-21', Date.now());
+        const later = Date.now() + SWEEP_CLAIM_LEASE_MS + 1;
+        let rival2: string | null = null;
+        const taker = claimSweepDay(m2, '2026-10-21', later, {
+            ...gone,
+            beforeCreate: () => {
+                rival2 = claimSweepDay(w2, '2026-10-22', later, gone);
+            },
+        });
+        expect(rival2).not.toBeNull();
+        expect(taker).toBeNull();
+    });
+
+    it('a claimant that waited past an acquire, a release and a prune cannot reuse a pruned generation', () => {
+        const { main, wt } = repoWithWorktree();
+        let rival: string | null = null;
+        const stale = claimSweepDay(main, '2026-10-21', Date.now(), {
+            beforeCreate: () => {
+                // Generation 0 is acquired and released (1 = free); the next claim
+                // takes 2 and prunes 0 and 1, so the waiting claimant's 0 is free again.
+                const b = claimSweepDay(wt, '2026-10-20', Date.now())!;
+                releaseSweepDay(wt, '2026-10-20', b);
+                rival = claimSweepDay(wt, '2026-10-22', Date.now());
+            },
+        });
+        expect(rival).not.toBeNull();
+        expect(stale).toBeNull();
+        expect(holdsSweepDay(main, '2026-10-22', rival!)).toBe(true);
+        const dir = path.join(path.dirname(queueDir(main)!), 'retro-sweep');
+        expect(fs.readdirSync(dir).filter((n) => n.startsWith('claim.'))).toEqual(['claim.2']);
+    });
+
+    it('a finished sweep gives its claim back, and the finished day is not claimed again', () => {
+        const { main, wt } = repoWithWorktree();
+        expect(runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [] }).status).toBe('ran');
+        const alive = { isAlive: (): boolean => true };
+        expect(claimSweepDay(wt, '2026-10-21', Date.now(), alive)).toBeNull();
+        expect(claimSweepDay(wt, '2026-10-22', Date.now(), alive)).not.toBeNull();
+    });
+
+    it('a sweep whose claim was taken over records nothing', () => {
+        const { main } = repoWithWorktree();
+        const first = claimSweepDay(main, '2026-10-21', Date.now())!;
+        claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, gone);
+        const busy = session('late', '2026-10-20', { self_repair_in_window: m(1) });
+        const r = runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [busy], claim: first });
+        expect(r.status).toBe('superseded');
+        expect(listQueue(main)).toEqual([]);
+        expect(readSweepState(main).last_sweep).toBeNull();
+    });
+
+    it('the probe claims before it discovers: a session start that loses the claim reads nothing and is not stamped', () => {
+        const { main, wt } = repoWithWorktree();
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        expect(claimSweepDay(wt, localDay(NOW, tz))).not.toBeNull();
+        writeSessionPointer(main, { eol_key: 'p'.repeat(64), tag: 'mine', branch: null, workspace: main, ended_at: '2026-10-19T10:00:00Z' }, { enabled: true });
+        let stamped = 0;
+        expect(retroDailyProbe(main, { ranToday: () => false, stamp: () => void (stamped += 1), now: new Date(NOW) })).toBeNull();
+        expect(stamped).toBe(0);
+        expect(readSweepState(main).last_sweep).toBeNull();
+        expect(listSessionPointers(main)).toHaveLength(1);
+    });
+
+    it('the session-start slot runs the probe: session-register sweeps the day once and stamps the throttle', () => {
+        const { main } = repoWithWorktree();
+        const envelope = JSON.stringify({
+            event: 'session_start',
+            workspace_root: main,
+            session_id: 'retro-wiring-1',
+            platform: 'claude',
+            payload: { cwd: main },
+        });
+        const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_') && k !== 'AGENT_CONFIG_REPLAY'));
+        const r = spawnSync('npx', ['tsx', path.resolve('src/scripts/session_register_hook.ts')], {
+            input: envelope,
+            encoding: 'utf8',
+            env,
+            timeout: 60_000,
+        });
+        expect(r.status).toBe(0);
+        expect(readSweepState(main).last_sweep).not.toBeNull();
+        expect(fs.existsSync(path.join(main, 'agents', 'runtime', 'state', 'probe-throttle', 'retro-sweep.stamp'))).toBe(true);
+    }, 90_000);
+
+    it('a fact read the deadline cut short is discarded, never triaged as low-signal', () => {
+        const { main } = repoWithWorktree();
+        writeSessionPointer(main, { eol_key: 'q'.repeat(64), tag: 'cut', branch: null, workspace: main, ended_at: '2026-10-20T10:00:00Z' }, { enabled: true });
+        let t = 0;
+        // Before the deadline when the read starts, past it once the read has run.
+        const sessions = discoverSessions(main, BERLIN, { git: () => null, today: '2026-10-21', deadlineAt: 10, now: () => (t += 6) });
+        expect(sessions[0]!.facts).toBeNull();
     });
 
     it('expirations are counted, and a disposed session takes no fact read', () => {

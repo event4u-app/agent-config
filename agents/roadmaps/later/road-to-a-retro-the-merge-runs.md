@@ -1,10 +1,15 @@
 ---
 complexity: lightweight
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-o found at 2bc5715c7 that no merge moment, session end or daily point feeds the learning loop that already exists: /pr:merge writes a per-PR summary nothing reads (src/domains/git/pr/merge/command.md:527-548), the session-end aggregation is class B default false (settings.ts:445), and the learning dogfood protocol can never mint a lesson. No active, later, stub or archived roadmap owns a retro, a merge-triggered learning step or a daily sweep (grep over agents/roadmaps for retro, push-settle, daily sweep). Archiving or parking costs more because the owner asked for this behaviour on by default on 2026-10-12; merging into road-to-learning-you-can-see-carried would wake a parked file whose class B key this plan deliberately leaves untouched."
-estate_growth_exempt: "open_blockers 74 -> 76, measured by check_estate_count at this change: one blocker here (retro-transcript-excerpts-by-default) and one in road-to-one-upstream-that-checks-what-leaves (upstream-pr-shows-the-account). Each records an owner-reserved privacy decision this round could not close - lowering the per-call transcript opt-in, and accepting that an upstream pull request reveals the opening account - and each blocks only the steps that need the answer."
+estate_growth_exempt: "later_roadmaps 107 -> 108 with active_roadmaps 16 -> 15, measured by check_estate_count at this change: every step a session can do is closed, and the three left (5.2, 5.3, AC-6) wait on a thirty-day dogfood window that opens only once this change merges and cannot be simulated. Parking it in later/ instead of leaving it active keeps a drain lane from picking up a wait; the total estate is unchanged."
+entry_condition:
+  what: thirty days of the automatic retro paths running in this repository, measured from the first session start after the session-start wiring merged; 5.2 writes agents/evidence/analysis/retro-dogfood-*.md from /retro status and the retro stores, then 5.3 recalibrates and AC-6 closes
+  when: thirty days after the merge of the change that wired the daily probe into session start (2026-10-21 or later)
+  who: any session in this repository once the window has elapsed
+review_by: 2026-12-01
 relates:
   - slug: road-to-one-upstream-that-checks-what-leaves
     relation: extends
@@ -93,7 +98,7 @@ a learning held is read from the recurrence count that already exists. With
       their date, under `agents/evidence/owner-directives/`.
       verify: `ls agents/evidence/owner-directives/` -> /2026-10-12-retro/
       *Done 2026-10-16: `2026-10-12-retro-inbox-2026-10-o.md`.*
-- [ ] **0.2 One ADR for the setting and the verb (D1, D2, D3).** It adds
+- [x] **0.2 One ADR for the setting and the verb (D1, D2, D3).** It adds
       `retro.enabled` as class C with default `true` to
       `docs/contracts/settings-classes.md` after the `continuity.auto_record`
       pattern, adds it to `MERGEABLE_KEYS` so a user-global `false` holds
@@ -111,6 +116,14 @@ a learning held is read from the recurrence count that already exists. With
       The verify's pattern cannot match a green run — the lint prints
       `115 settings key(s) classified` and names findings only when there are
       some — so its evidence is exit 0 with that line.*
+      *Done 2026-10-21: a council round on the eight settings-and-verb files of
+      `5100656c9` alone — anthropic `confirmed-non-expanding`, openai
+      `ratified`, derived verdict `ratified` — filed as
+      `agents/evidence/ratifications/retro-settings-and-verb-20261021.md` with
+      its prompt beside the council records. The one wording finding (a
+      user-global `false` reads as "everywhere" although a project value wins)
+      is fixed in the template and the `MERGEABLE_KEYS` comment. Lint exit 0,
+      `115 settings key(s) classified`.*
 - [x] **0.3 The contract.** `docs/contracts/retro-v1.md`: the three paths, one
       local-only unit key `{repo, pr|session, merge_sha|tag, policy}`, the closed
       target vocabulary (`intake-signal`, `override-proposal`,
@@ -253,12 +266,12 @@ pre-registration in place, settings lint green with the new key.*
       `/pr:merge all` once, after the queue ends — never between two merges of a
       drain. `/roadmap:process-full --merge` inherits it.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t drain-of-three-enqueues-once --reporter=verbose` -> /✓.*drain-of-three-enqueues-once/
-- [ ] **3.3 Path B — forge merges.** `push-settle` writes a marker with the PR
+- [x] **3.3 Path B — forge merges.** `push-settle` writes a marker with the PR
       number at push time; the daily probe checks each open marker through the
       forge reader for `MERGED` / `CLOSED`. A merge through the web UI, by
       automerge or by someone else is picked up; `unread` keeps the marker.
       verify: `npx vitest run tests/scripts/retro_queue.test.ts -t web-merge-is-picked-up --reporter=verbose` -> /✓.*web-merge-is-picked-up/
-- [ ] **3.4 Path C — the daily sweep.** A probe throttled by `probe_throttle` to
+- [x] **3.4 Path C — the daily sweep.** A probe throttled by `probe_throttle` to
       the first session of a new local day counts the sessions since the last
       high-water mark from the session state, checks open merge markers, triages
       deterministically and writes one `<retro-queue>` line — no model, no spawn
@@ -306,6 +319,18 @@ pre-registration in place, settings lint green with the new key.*
       session-start wiring was removed rather than shipped refused. What closes
       3.3 and 3.4: a session-start call whose claim is taken before any
       discovery, re-reviewed by the council to a non-refusing verdict.*
+      *3.3 and 3.4 done 2026-10-21: the `session-register` concern's
+      `session_start` slot calls `retroDailyProbe`, throttled per workspace and
+      day. The probe takes the claim before it reads a single session; the claim
+      is one repository-wide sequence `claim.<generation>` whose every
+      transition is an exclusive create, verified as the newest generation
+      before use; a holder whose process exists is never taken over at any age,
+      and `/retro status` names a claim held past the lease; every `git` and
+      `gh` call gets only the time left of the three-second budget, and a fact
+      read the deadline cut short is discarded. Five council rounds on
+      2026-10-21 closed the findings one by one; the last ended anthropic
+      `ship-with-fixes` (one condition, met in the tree) and openai `ship`,
+      recorded in `agents/evidence/council/retro-session-start-probe-2026-10-21.md`.*
 
 ## Phase 4 — Local effect without automatic promotion
 
@@ -373,6 +398,10 @@ pre-registration in place, settings lint green with the new key.*
       and the automatic paths first run here; the window is a wait that cannot
       be simulated. `/retro status` and the stores of the contract's § Where the
       state lives are the instruments it reads.*
+      *2026-10-21: every automatic path is now wired (3.3, 3.4), so the window
+      opens on the first session start after this change merges and closes
+      thirty days later. Parked in `later/` for that wait, with 5.3 and AC-6,
+      which read its measurements.*
 - [ ] **5.3 Calibration.** Triage thresholds and the daily budget are reset from
       the measurements as a documented contract revision.
       verify: `grep -c 'revision' docs/contracts/retro-v1.md` -> /[1-9]/
@@ -388,7 +417,7 @@ pre-registration in place, settings lint green with the new key.*
       reports a p50 above `TRIAGE_P50_LIMIT_MS`. A deferral older than the
       window expires, so the pause ends by itself. The figures come from the
       sweep the probe calls; until the probe is wired (3.4) they come from
-      `retro sweep`.*
+      `retro sweep`. Since 2026-10-21 the probe runs at session start.*
 
 ## Blockers
 
@@ -450,9 +479,9 @@ pre-registration in place, settings lint green with the new key.*
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** A merged PR — by `/pr:merge`, in the web UI or by automerge —
+- [x] **AC-1** A merged PR — by `/pr:merge`, in the web UI or by automerge —
       yields exactly one queue unit, and a drain of three yields one retro run.
-- [ ] **AC-2** The first session of a new local day sweeps the previous days'
+- [x] **AC-2** The first session of a new local day sweeps the previous days'
       sessions up to the window, including worktree-only sessions, and writes
       nothing when there are no candidates.
 - [x] **AC-3** A short session without a friction signal is `skip:low-signal`,

@@ -34,6 +34,15 @@ describe('settings carve-out set', () => {
     it('names every key the 2026-08-07 audit found where absent !== template default', () => {
         // Pinned explicitly: the audit is the expensive artefact, and a set that
         // silently shrank would re-open the blocker without anyone noticing.
+        //
+        // `projection.rule_workspaces` left this list on 2026-10-20, and the
+        // reason is stated rather than the entry just deleted — which is what
+        // the sentence above exists to force. It was carved out because an
+        // ABSENT key did not mean the template default; step 4.6 removed the
+        // key entirely and derived the axis from the pack vocabulary instead
+        // (`consumerRuleWorkspaces`). A key that does not exist cannot have an
+        // absent-vs-default divergence, so this is a removed SUBJECT, not a
+        // dropped obligation. `projection.mode` stays: 4.7 has not landed.
         expect([...carveOutKeys()].sort()).toEqual([
             'chat_history.enabled',
             'chat_history.frequency',
@@ -41,7 +50,6 @@ describe('settings carve-out set', () => {
             'onboarding.onboarded',
             'profile.id',
             'projection.mode',
-            'projection.rule_workspaces',
             'quality.local_auto_run',
         ]);
     });

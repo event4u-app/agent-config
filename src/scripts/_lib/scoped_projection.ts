@@ -42,6 +42,45 @@ export const SCOPED_ACTIVE_WORKSPACES: ReadonlySet<string> = new Set([
     'agent-config-maintainer',
 ]);
 
+/**
+ * The workspace this package's OWN rules carry — the one workspace a consumer
+ * install never receives. ADR-293 step 4.6: the consumer workspace list is
+ * DERIVED from the pack vocabulary rather than written into settings, and this
+ * is the single id that derivation subtracts.
+ */
+export const MAINTAINER_WORKSPACE = 'agent-config-maintainer';
+
+/**
+ * Every workspace a CONSUMER install scopes rules to: the ids `packs.yml`
+ * declares, minus {@link MAINTAINER_WORKSPACE}.
+ *
+ * WHY DERIVED AND NOT CONFIGURED. `projection.rule_workspaces` carried this
+ * list as a settings default — nine ids, re-typed into the template, and
+ * needing a re-type whenever a pack arrived with a new workspace. What the key
+ * actually encoded is a RULE, and the rule is "maintainer-only rules never
+ * project to a consumer". Deriving it from the frontmatter that already decides
+ * the question makes a new workspace reach consumers the day its pack lands,
+ * instead of the day somebody remembers to edit a template.
+ *
+ * Empty when the vocabulary cannot be read, which is the inactive axis — every
+ * rule projects, exactly as an unset key meant. The failure direction is
+ * deliberate: a package that cannot read its own pack list must ship MORE than
+ * it should, never less.
+ */
+export function consumerRuleWorkspaces(packageRoot: string): string[] {
+    const ids = new Set<string>();
+    let records: PackRecord[];
+    try {
+        records = load_packs_registry(packageRoot);
+    } catch {
+        return []; // unreadable vocabulary: the inactive axis, which ships more
+    }
+    for (const rec of records) {
+        for (const ws of rec.workspaces) if (ws !== MAINTAINER_WORKSPACE) ids.add(ws);
+    }
+    return [...ids].sort();
+}
+
 export interface PackRecord {
     id: string;
     workspaces: string[];

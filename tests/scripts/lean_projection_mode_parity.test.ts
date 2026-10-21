@@ -22,8 +22,6 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { _reset_template_defaults_cache } from '../../src/scripts/_lib/agent_settings.js';
 import { leanProjectionModeRaw } from '../../src/scripts/_lib/hook_settings.js';
 import {
-    leanProjectionModeChosen,
-    rawExplicitLeanProjectionMode,
     resolveLeanProjection,
     type ResolvedLeanProjection,
 } from '../../src/scripts/_lib/lean_projection_mode.js';
@@ -80,83 +78,73 @@ function resolve(root: string, packageRoot: string | null = REPO_ROOT): Resolved
     return resolveLeanProjection({ projectRoot: root, packageRoot });
 }
 
-describe('the template states the shipped answer, and the test states it too', () => {
-    it('the template ships delivery on claude-code — asserted on the FILE, not on a constant', () => {
-        // If this ever fails, the expectations in every case below are stale and
-        // must be re-derived rather than patched. Reading the file is the point:
-        // a test that compared the resolver against a constant it also owns
-        // would pass whatever the shipped default became.
+describe('the template no longer states an answer, and the test states that', () => {
+    it('the shipped template carries no projection key at all — asserted on the FILE', () => {
+        // ADR-293. Reading the file is still the point: the expectations below
+        // are derived from what the template says, so if a key ever comes back
+        // they are stale and must be re-derived rather than patched.
         const text = fs.readFileSync(TEMPLATE, 'utf-8');
-        expect(text).toMatch(/^lean_projection:\s*$/m);
-        expect(text).toMatch(/^\s{2}mode:\s*delivery\s*$/m);
-        expect(text).toMatch(/^\s{2}hosts:\s*\[claude-code\]\s*$/m);
+        expect(text).not.toMatch(/^lean_projection:\s*$/m);
+        expect(text).not.toMatch(/^\s{2}mode:\s*delivery\s*$/m);
     });
 });
 
-describe('resolveLeanProjection — one answer per layer state (1.2)', () => {
-    it('no settings file anywhere resolves to the TEMPLATE value, not the parser fallback', () => {
+// ---------------------------------------------------------------------------
+// ADR-293 removed `lean_projection.*`, and with it the CASCADE this block used
+// to pin. Each case below is its predecessor inverted: the layer that used to
+// decide the answer is still written, and the answer must not move. That is the
+// sensitive direction — a cascade read coming back would red here — and it is
+// what makes the key's tombstone line ("ignored") true for this reader rather
+// than only for the docs. What decides instead is the package-owned record in
+// `project-tree-form.json`, read through `packageRoot`.
+// ---------------------------------------------------------------------------
+
+describe('resolveLeanProjection — no settings layer moves the answer (ADR-293)', () => {
+    it('this repository\'s own record is what a packageRoot resolves to', () => {
         const root = tree();
-        const r = resolve(root);
-        expect(r.mode).toBe('delivery');
-        expect(r.hosts.hosts).toEqual(['claude-code']);
+        expect(resolve(root).mode).toBe('delivery');
+        expect(resolve(root).hosts.hosts).toEqual(['claude-code']);
     });
 
-    it('with no package root the template cannot be found and the fallback stands', () => {
-        // Stated rather than hidden: `agent_settings.default_template_path()`
-        // derives the package from `import.meta.url` three dirs up, which is
-        // the PARENT of the package inside the composed hook bundle. A caller
-        // that cannot name the package root gets `eager-all` — safe, and the
-        // reason the carrier passes one.
+    it('with no package root there is no record to read, and the full form stands', () => {
         const root = tree();
-        const r = resolve(root, null);
-        expect(['delivery', 'eager-all']).toContain(r.mode);
+        expect(resolve(root, null).mode).toBe('eager-all');
     });
 
-    it('the CANONICAL file the installer writes is read — and the old reader missed it', () => {
+    it('the CANONICAL file the installer writes no longer moves it', () => {
         const root = tree();
         write(root, ['agents', 'settings', '.agent-settings.yml'],
             'lean_projection:\n  mode: eager-all\n');
-        expect(resolve(root).mode).toBe('eager-all');
-
-        // The defect itself, pinned rather than described. `leanProjectionModeRaw`
-        // is the reader the carrier used before 1.2 and is still the reader two
-        // CLI gates use; it opens `<root>/.agent-settings.yml` and nothing else.
-        // On this tree — which is the shape `install.ts` actually produces — it
-        // finds nothing, which normalised to `eager-all` and closed the delivery
-        // gate on every install. If a later change makes this assertion fail,
-        // that reader has grown a cascade and the two can drift again.
+        expect(resolve(root).mode).toBe('delivery');
+        // `leanProjectionModeRaw` is the OTHER reader — the one two CLI gates
+        // still use. It opens `<root>/.agent-settings.yml` and nothing else, so
+        // it finds nothing here, exactly as before. Pinned so the two readers
+        // cannot quietly start disagreeing again.
         expect(leanProjectionModeRaw(root)).toBe('');
     });
 
-    it('the LEGACY root file is read', () => {
+    it('the LEGACY root file no longer moves it', () => {
         const root = tree();
         write(root, ['.agent-settings.yml'], 'lean_projection:\n  mode: thin\n');
-        expect(resolve(root).mode).toBe('thin');
+        expect(resolve(root).mode).toBe('delivery');
     });
 
-    it('canonical wins over legacy when a tree carries both', () => {
+    it('a tree carrying BOTH files is still unmoved', () => {
         const root = tree();
         write(root, ['.agent-settings.yml'], 'lean_projection:\n  mode: thin\n');
         write(root, ['agents', 'settings', '.agent-settings.yml'],
             'lean_projection:\n  mode: eager-all\n');
-        expect(resolve(root).mode).toBe('eager-all');
+        expect(resolve(root).mode).toBe('delivery');
     });
 
-    it('a configured hosts list narrows, and an unknown id is dropped rather than enrolled', () => {
+    it('a hosts list written by hand enrols nobody', () => {
         const root = tree();
         write(root, ['agents', 'settings', '.agent-settings.yml'],
             'lean_projection:\n  mode: delivery\n  hosts: [cursor, nonesuch]\n');
         const r = resolve(root);
-        expect(r.mode).toBe('delivery');
-        expect(r.hosts.hosts).toEqual(['cursor']);
-        expect(r.hosts.dropped.map((d) => d.id)).toEqual(['nonesuch']);
-    });
-
-    it('an unspellable mode is the safe fallback, never a silent thinning', () => {
-        const root = tree();
-        write(root, ['agents', 'settings', '.agent-settings.yml'],
-            'lean_projection:\n  mode: delivry\n');
-        expect(resolve(root).mode).toBe('eager-all');
+        // `cursor` is the sensitive id: before ADR-293 this read `['cursor']`.
+        expect(r.hosts.hosts).toEqual(['claude-code']);
+        expect(r.hosts.dropped).toEqual([]);
     });
 
     it('a malformed settings file never throws — a hook must not fail a turn', () => {
@@ -165,105 +153,63 @@ describe('resolveLeanProjection — one answer per layer state (1.2)', () => {
         expect(() => resolve(root)).not.toThrow();
     });
 
-    it('an explicit settingsPath overrides projectRoot — the projector pins its own file', () => {
-        const root = tree();
-        write(root, ['.agent-settings.yml'], 'lean_projection:\n  mode: thin\n');
+    it('an explicit settingsPath is accepted and ignored — no caller has to change', () => {
         const other = tree();
-        write(other, ['pinned.yml'], 'lean_projection:\n  mode: eager-all\n');
+        write(other, ['pinned.yml'], 'lean_projection:\n  mode: thin\n');
         _reset_template_defaults_cache();
         const r = resolveLeanProjection({
             settingsPath: path.join(other, 'pinned.yml'),
             packageRoot: REPO_ROOT,
         });
-        expect(r.mode).toBe('eager-all');
+        expect(r.mode).toBe('delivery');
     });
 });
 
 // ---------------------------------------------------------------------------
 // Provenance — "did a HUMAN ask for this", which `mode` cannot answer.
 //
-// Step 1.1 of `road-to-an-installed-layer-that-is-thinned` keys the installer
+// Step 1.1 of `road-to-an-installed-layer-that-is-thinned` keyed the installer
 // on `lean_projection.mode: delivery` "set on a layer OTHER than the shipped
-// template", and the reason is in that roadmap's Context: the template already
-// ships `delivery`, so an installer that merely resolved the mode would thin
-// every consumer the day it started reading it — a consumer-facing default flip
-// nobody decided, while the decision itself is owner-reserved (blocker
-// `default-flip-of-the-installed-layer`).
+// template", because the template already shipped `delivery` and an installer
+// that merely resolved the mode would have thinned every consumer the day it
+// started reading it.
 //
-// The first case below is therefore the whole point: template says `delivery`,
-// user said nothing, and the answer must be "not chosen".
+// ADR-293 answers that question by removing the thing it was about. There is no
+// layer a human can write the key on that any reader consults, so provenance is
+// the constant `false` — and the cases below pin it against the exact layers
+// that used to make it `true`, which is the direction a regression would come
+// back from.
 // ---------------------------------------------------------------------------
 
-describe('resolveLeanProjection — provenance, so a template value is never read as consent', () => {
-    it('the TEMPLATE saying delivery is NOT explicit, and is not a choice of delivery', () => {
+describe('resolveLeanProjection — provenance is constant false, because no layer carries consent', () => {
+    it('a package-owned record is not a consumer choice', () => {
         const root = tree();
         _reset_template_defaults_cache();
         const r = resolveLeanProjection({ projectRoot: root, packageRoot: REPO_ROOT });
-        // The mode resolves to the template value — unchanged, and the carrier
-        // depends on it.
         expect(r.mode).toBe('delivery');
-        // and it is nonetheless not a decision anyone took
         expect(r.modeExplicit).toBe(false);
-        expect(leanProjectionModeChosen('delivery', { projectRoot: root })).toBe(false);
-        expect(rawExplicitLeanProjectionMode({ projectRoot: root })).toBe('');
     });
 
-    it('a project layer saying delivery IS explicit, and IS a choice of delivery', () => {
+    it('a project layer saying delivery is NOT a choice of delivery any more', () => {
         const root = tree();
         write(root, ['.agent-settings.yml'], 'lean_projection:\n  mode: delivery\n');
         _reset_template_defaults_cache();
-        expect(
-            resolveLeanProjection({ projectRoot: root, packageRoot: REPO_ROOT }).modeExplicit,
-        ).toBe(true);
-        expect(leanProjectionModeChosen('delivery', { projectRoot: root })).toBe(true);
+        // Before ADR-293 this read `true`. It is the sensitive case: a `true`
+        // here would mean a hand-written leftover had become consent again.
+        expect(resolveLeanProjection({ projectRoot: root, packageRoot: REPO_ROOT }).modeExplicit).toBe(false);
     });
 
-    it('the CANONICAL layer the installer writes counts, not only the legacy root file', () => {
-        // The installer writes `agents/settings/.agent-settings.yml`. A
-        // provenance reader that only opened the legacy root path would call
-        // every real install "not explicit" — the same which-file defect step
-        // 1.2 removed, reintroduced one question later.
+    it('the CANONICAL layer the installer writes is not consent either', () => {
         const root = tree();
-        write(root, ['agents', 'settings', '.agent-settings.yml'], 'lean_projection:\n  mode: delivery\n');
+        write(root, ['agents', 'settings', '.agent-settings.yml'],
+            'lean_projection:\n  mode: delivery\n');
         _reset_template_defaults_cache();
-        expect(leanProjectionModeChosen('delivery', { projectRoot: root })).toBe(true);
-    });
-
-    it('explicit eager-all is explicit, and is NOT a choice of delivery', () => {
-        // The case that makes `modeExplicit` insufficient on its own: a human
-        // who explicitly asked for the full layer has set the key, and must not
-        // be thinned because the key is set.
-        const root = tree();
-        write(root, ['.agent-settings.yml'], 'lean_projection:\n  mode: eager-all\n');
-        _reset_template_defaults_cache();
-        expect(
-            resolveLeanProjection({ projectRoot: root, packageRoot: REPO_ROOT }).modeExplicit,
-        ).toBe(true);
-        expect(leanProjectionModeChosen('delivery', { projectRoot: root })).toBe(false);
-        expect(leanProjectionModeChosen('eager-all', { projectRoot: root })).toBe(true);
-    });
-
-    it('an unrecognised explicit value is explicit but chooses nothing it did not say', () => {
-        const root = tree();
-        write(root, ['.agent-settings.yml'], 'lean_projection:\n  mode: banana\n');
-        _reset_template_defaults_cache();
-        expect(
-            resolveLeanProjection({ projectRoot: root, packageRoot: REPO_ROOT }).modeExplicit,
-        ).toBe(true);
-        // `banana` normalises to the safe value, so it chooses eager-all and
-        // emphatically not delivery.
-        expect(leanProjectionModeChosen('delivery', { projectRoot: root })).toBe(false);
+        expect(resolveLeanProjection({ projectRoot: root, packageRoot: REPO_ROOT }).modeExplicit).toBe(false);
     });
 
     it('provenance does not depend on a package root being findable', () => {
-        // The installer may resolve provenance before it has decided anything
-        // about the template. With no package root the MODE falls back, and the
-        // explicit answer must still be the user's.
         const root = tree();
         write(root, ['.agent-settings.yml'], 'lean_projection:\n  mode: delivery\n');
-        _reset_template_defaults_cache();
-        expect(resolveLeanProjection({ projectRoot: root, packageRoot: null }).modeExplicit).toBe(
-            true,
-        );
+        expect(resolveLeanProjection({ projectRoot: root, packageRoot: null }).modeExplicit).toBe(false);
     });
 });

@@ -66,7 +66,7 @@ export function verify_flip(repoRoot = '.'): FlipVerdict {
     const template = parseYaml(fs.readFileSync(path.join(repoRoot, TEMPLATE), 'utf-8')) as Record<string, unknown>;
     const scope = ruleScopeFromSettings(template, repoRoot);
     if (scope.workspaces === null) {
-        throw new Error('template rule_workspaces is empty — nothing flipped, nothing to verify');
+        throw new Error('the derived consumer workspace set is empty — packs.yml unreadable, nothing to verify');
     }
     const rulesDir = path.join(repoRoot, RULES_DIR);
     const excluded = excludedRuleBasenames(rulesDir, scope);

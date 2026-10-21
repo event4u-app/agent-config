@@ -72,6 +72,11 @@ import {
 import { pr_watch_block } from './_lib/session_pr_watch.js';
 import { pruneAgedRefusalState, readSessionCounts } from './_lib/turn_end_refusals.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
+import { probeRanToday, stampProbeRun } from './hooks/probe_throttle.js';
+import { retroDailyProbe } from './retro_sweep.js';
+
+/** The `probe_throttle` stamp of the retro's daily probe. */
+const RETRO_PROBE_STAMP = 'retro-sweep';
 
 /** Replay-fixture runs must never mutate state (same contract as chat_history). */
 const REPLAY_ENV_VAR = 'AGENT_CONFIG_REPLAY';
@@ -926,12 +931,20 @@ export function main(): number {
                 }
             }
             if (event === 'session_start') {
-                const block = foreign_sessions_block(root, session_id, new Date());
-                if (block !== null) {
+                // The retro's daily probe (docs/contracts/retro-v1.md, path C)
+                // rides this slot rather than a concern of its own: it fires once
+                // per session, the concern count is ratcheted, and it never throws.
+                const retro = retroDailyProbe(root, {
+                    ranToday: (r) => probeRanToday(r, RETRO_PROBE_STAMP),
+                    stamp: (r) => stampProbeRun(r, RETRO_PROBE_STAMP),
+                });
+                const foreign = foreign_sessions_block(root, session_id, new Date());
+                const block = [foreign, retro].filter((b): b is string => b !== null).join('\n\n');
+                if (block !== '') {
                     process.stdout.write(
                         JSON.stringify({
                             decision: 'allow',
-                            reason: 'live foreign sessions on this repository',
+                            reason: foreign !== null ? 'live foreign sessions on this repository' : 'retro queue',
                             context: block,
                         }) + '\n',
                     );

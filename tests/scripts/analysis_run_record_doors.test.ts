@@ -41,10 +41,12 @@ describe('every door leaves a run record', () => {
     it('the writer the doors name is the one the retro reads', () => {
         const writer = path.join(ROOT, 'src/scripts/analysis_run_record.ts');
         expect(fs.existsSync(writer)).toBe(true);
-        const retro = fs.readFileSync(
-            path.join(ROOT, 'agents/roadmaps/road-to-a-retro-the-merge-runs.md'),
-            'utf-8',
-        );
+        // The roadmap moves between dispositions over its life; read it wherever it is.
+        const where = ['', 'later/', 'archive/']
+            .map((d) => path.join(ROOT, 'agents/roadmaps', d, 'road-to-a-retro-the-merge-runs.md'))
+            .find((p) => fs.existsSync(p));
+        expect(where).toBeDefined();
+        const retro = fs.readFileSync(where!, 'utf-8');
         expect(retro).toContain('analysis-run');
         expect(retro).toContain('run.json');
     });
