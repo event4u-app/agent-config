@@ -174,11 +174,14 @@ None of this is rebuilt here.
 
 ## Phase 3 — Delivery into the session, without entering the model
 
-- [x] **3.1 A `session_start` concern beside `wrapper-freshness`.**
+- [ ] **3.1 A `session_start` concern beside `wrapper-freshness`.**
       Registered in `src/scripts/hook_manifest.yaml`, day-throttled through
       `probe_throttle.ts:50`, a 1 s budget, fail-open, effect `notification`,
       addressed to the **user**.
       verify: p95 hook latency stays inside the Phase 1.3 baseline.
+      **Reopened 2026-10-21:** the concern reports on stderr and is silent
+      without a TTY, and every host runs the dispatcher on pipes, so bound it
+      says nothing. It closes with a delivery path a review can verify.
       Done note: `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § 3.1.
 - [x] **3.2 Stage and verify only; activate at a boundary.** The concern never
       swaps files mid-session; activation happens at the next `session_start`
@@ -294,8 +297,10 @@ None of this is rebuilt here.
   `reversible` may not be assumed merely because activation is deferred.
   Was: open — raised 2026-10-20 by a council verdict, not by a missing
   decision. The work exists, is tested and is reverted out of the manifest.
-- **Rounds 3–6 (2026-10-21):** `update-notice` stays registered;
-  `update-auto-invite` is defined and bound nowhere until 4.3 closes.
+- **Rounds 3–10 (2026-10-21):** both concerns are defined and bound nowhere —
+  `update-auto-invite` until 4.3 closes, `update-notice` until 3.1 does. The
+  2026-10-20 registration this status records was withdrawn, not reversed: the
+  effect terms and the definitions stand.
 - **Round 3 and the lifecycle contract (2026-10-21):** `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § Round 3.
 - **Class:** 2 — council. The seats named what the next round has to carry, so
   the question is what they asked for, not who owns it.

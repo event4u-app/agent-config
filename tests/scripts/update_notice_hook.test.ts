@@ -105,17 +105,19 @@ describe('3.1 — a session_start concern beside wrapper-freshness', () => {
         expect((entry as { effect?: string }).effect).toBe('state_change');
     });
 
-    it('is bound on session_start, and on no other event, on every host that binds it', () => {
+    // FLIPPED 2026-10-21: the registration was withdrawn. The concern reports on
+    // stderr and is silent without a TTY, and every host runs the dispatcher on
+    // pipes, so bound it would say nothing. A commit that binds it again turns
+    // this red and has to carry a delivery path and a new ratification round.
+    it('is defined, and bound on no event of any host', () => {
         const bound: string[] = [];
         for (const [host, events] of Object.entries(manifest.platforms)) {
             for (const [event, concerns] of Object.entries(events)) {
                 if (Array.isArray(concerns) && concerns.includes(CONCERN)) bound.push(`${host}:${event}`);
             }
         }
-        expect(bound.length).toBeGreaterThan(0);
-        // The event, not the host count: a concern that quietly gained a
-        // second event would be deciding at a moment nobody reviewed.
-        expect([...new Set(bound.map((b) => b.split(':')[1]))]).toEqual(['session_start']);
+        expect(manifest.concerns[CONCERN]).toBeDefined();
+        expect(bound).toEqual([]);
     });
 
     it('costs file reads only — p95 over 20 runs stays far inside the 160 ms session_start baseline', () => {
