@@ -30,13 +30,18 @@ not: **who, on this repository today, could supply an approving review at all?**
 
 `GET /repos/event4u-app/agent-config/collaborators`, 2026-10-13:
 
-| Login | Affiliation | Role | Commits on `main` | PRs authored |
+| Account | Affiliation | Role | Commits on `main` | PRs authored |
 |---|---|---|---|---|
-| `matze4u` | direct | admin | 11 492 | 98 |
-| `h3xa2` | outside | maintain | 4 | 0 |
-| `php-jesus` | outside | write | 1 | 1 |
-| `phpjob` | outside | write | 0 | 0 |
-| `0sama` | outside | write | 0 | 0 |
+| owner | direct | admin | 11 492 | 98 |
+| outside collaborator A | outside | maintain | 4 | 0 |
+| outside collaborator B | outside | write | 1 | 1 |
+| outside collaborator C | outside | write | 0 | 0 |
+| outside collaborator D | outside | write | 0 | 0 |
+
+Logins redacted 2026-10-21 (17.0.0 self-review, finding `139e1271f1eb`): a
+tracked table pairing each approving-capable account with its role and the
+repository's review posture is a target list; the counts and roles carry the
+argument without it.
 
 Four accounts distinct from the proposing and merging principal hold `write` or
 better. On GitHub, `write` is the threshold at which a review counts toward
