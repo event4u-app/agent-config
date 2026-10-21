@@ -793,7 +793,8 @@ names, not a shell-equivalent parser and not a per-program option grammar.
 Confinement now follows symlinks in both branches: an in-tree symlink that resolves
 outside the tree (or a path under one) is outside. That is the only filesystem read
 the classifier makes, and it can only withhold an allow: a missing suffix keeps its
-lexical answer, and any other resolution failure (`EACCES`, `ELOOP`) withholds. The
+lexical answer, while a dangling in-tree link (its target is unknowable) and any
+other resolution failure (`EACCES`, `ELOOP`) withhold. The
 check runs before the command does, so a link swapped in between is not seen —
 execution-time confinement is the OS sandbox's job. There is no switch that turns
 category A off; withdrawing it means reverting `permission_gate.ts`.

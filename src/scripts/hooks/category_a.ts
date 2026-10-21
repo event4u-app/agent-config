@@ -159,7 +159,11 @@ function _real(p: string): string {
         const code = (e as NodeJS.ErrnoException).code;
         if (code !== "ENOENT" && code !== "ENOTDIR") return "";
         // A dangling link is not a missing suffix: its target is unknowable.
-        if (code === "ENOENT" && fs.lstatSync(p, { throwIfNoEntry: false })?.isSymbolicLink()) return "";
+        try {
+            if (code === "ENOENT" && fs.lstatSync(p, { throwIfNoEntry: false })?.isSymbolicLink()) return "";
+        } catch {
+            return "";
+        }
         const parent = path.dirname(p);
         if (parent === p) return p;
         const up = _real(parent);
