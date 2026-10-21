@@ -74,20 +74,20 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 
 ## Phase 0 — Read a step before cutting it
 
-- [x] **0.1 Step anatomy in `probe_turnaround`.** Done 2026-10-21: `probe_turnaround --steps [--json]` over `src/scripts/_lib/step_anatomy.ts`; `--store` takes a comma list (drains write to worktree stores); classes sum per step (exit 1 if not); `unknown` fell from 53 % to 0 % once metadata rows stopped anchoring gaps; 7 tests, a sabotage of the ceremony branch reds 3 of them. Per closed step: `model`,
+- [x] **0.1 Step anatomy in `probe_turnaround`.** Done 2026-10-21: `probe_turnaround --steps [--json]` over `src/scripts/_lib/step_anatomy.ts`; `--store` takes a comma list (drains write to worktree stores); classes sum per step (exit 1 if not); `unknown` fell from 53 % to 0 % once metadata rows stopped anchoring gaps; 7 tests, a sabotage of the ceremony branch reds 3 of them. Per closed step: `model`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/step_anatomy.ts -->
       `change` (edits/tests on the step's own paths), `verify`, `ceremony`
       (roadmap, evidence, review, council, PR text, archive), `wait` (CI, push,
       user, sleep), `refusal`; joined on the roadmap checkbox flip. Rows sum to
       the step total, `unknown` printed. `meanBatchSize` split per class.
       verify: a fixture with a planted ceremony turn classifies it; the sum
       check goes red with one class neutralised.
-- [x] **0.2 Pre-register, then baseline.** Done 2026-10-21: thresholds committed as D14 first, then the reading as a `subsequent_readings` entry in `turnaround-budget.json` — 75 closed steps over 7 days, p50 4.2 min / p90 33.6 min per step; wait 53.5 %, model 30.3 %, ceremony 9.5 %, verify 3.9 %, change 2.8 %, unknown 0 %; R0/R1 only 9 of 75. D14's revisit-if fired (fewer than 30 R0/R1 steps a week): the threshold stays, the shadow window becomes as many weeks as 30 steps per class take. Commit the Goal's thresholds and the
+- [x] **0.2 Pre-register, then baseline.** Done 2026-10-21: thresholds committed as D14 first, then the reading as a `subsequent_readings` entry in `turnaround-budget.json` — 75 closed steps over 7 days, p50 4.2 min / p90 33.6 min per step; wait 53.5 %, model 30.3 %, ceremony 9.5 %, verify 3.9 %, change 2.8 %, unknown 0 %; R0/R1 only 9 of 75. D14's revisit-if fired (fewer than 30 R0/R1 steps a week): the threshold stays, the shadow window becomes as many weeks as 30 steps per class take. Commit the Goal's thresholds and the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/turnaround-budget.json -->
       would-have-escaped threshold before reading. Then record p50/p90 per class
       and per change class as a `subsequent_readings` entry in
       `src/config/turnaround-budget.json` over the last 10 drains or 7 days,
       whichever comes first.
       verify: the threshold commit predates the reading commit.
-- [x] **0.3 Classify the last 100 merged PRs.** Done 2026-10-21: PRs #2444-#2552 — R0 24, R1 5, R2 35, R3 36; R3 rate 0.36, under the 0.40 line; the largest R3 driver is `gate-violation-baselines.json` (8); `agents/evidence/analysis/change-class-last-100-prs-2026-10-21.md`. R0-R3 split and R3 rate. C3
+- [x] **0.3 Classify the last 100 merged PRs.** Done 2026-10-21: PRs #2444-#2552 — R0 24, R1 5, R2 35, R3 36; R3 rate 0.36, under the 0.40 line; the largest R3 driver is `gate-violation-baselines.json` (8); `agents/evidence/analysis/change-class-last-100-prs-2026-10-21.md`. R0-R3 split and R3 rate. C3 <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       says the R3 share is near half; if it stays above 0.40 here, the depth
       table cannot speed up most steps and the override list is the first
       defect to fix.
@@ -108,7 +108,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       file shrank.
       verify: detector verdicts identical on a 30-session replay; Stop p95
       lower; the fallback path covered by a test.
-- [x] **1.3 Read the current phase, `## Decisions` and `## Blockers` per step.** Done 2026-10-21 — already the case, measured: `--steps` now reports roadmap text returned to Read calls per step; over the 75-step baseline p50 0 KB, p90 28.4 KB, under the 40 KB target. The loop already reads the step's section (§ 5 step 1) and `## Decisions` once per run (§ 3-0); no contract change was needed.
+- [x] **1.3 Read the current phase, `## Decisions` and `## Blockers` per step.** Done 2026-10-21 — already the case, measured: `--steps` now reports roadmap text returned to Read calls per step; over the 75-step baseline p50 0 KB, p90 28.4 KB, under the 40 KB target. The loop already reads the step's section (§ 5 step 1) and `## Decisions` once per run (§ 3-0); no contract change was needed. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/step_anatomy.ts -->
       Other sections are read on demand. Decisions stay whole, as
       `roadmap-process-loop.md:162-173` requires.
       verify: a drain over the largest active roadmap reads < 40 KB of it per
@@ -116,11 +116,11 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 
 ## Phase 2 — The class decides, in shadow
 
-- [ ] **2.1 Compute the class at step start and before the PR.** The agent may
+- [x] **2.1 Compute the class at step start and before the PR.** Done 2026-10-21: `step_receipt --range|--paths [--raise]` prints the marker (class, binding path, would-skip); the loop's § 5 flip appends it; 4 tests; the 8 steps ticked before it carry back-filled receipts from their commits. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/step-depth-table.json --> The agent may
       raise it, never lower it; unknown resolves upward (the classifier already
       does). Nothing changes depth yet.
       verify: the step receipt carries the class and the paths it came from.
-- [ ] **2.2 One depth table, one file.** Per class R0-R3: review (R0
+- [x] **2.2 One depth table, one file.** Done 2026-10-21: `src/config/step-depth-table.json`, `mode: shadow`; `process-full`, `pr/create` and `pr/merge` each name the row their ceremonies read (the § 9a danger gate deliberately has none). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/step-depth-table.json --> Per class R0-R3: review (R0
       deterministic gates only; R1 one round; R2/R3 the sibling's cap; R3 plus
       a parallel independent seat), council (R3 or owner-reserved only),
       evidence (R0/R1 commit message and PR body; R2/R3 artefact), retro (R0/R1
@@ -128,12 +128,12 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       on detected drift).
       verify: every ceremony in `process-full`, `pr/create`, `pr/merge` names
       its row.
-- [ ] **2.3 Receipt and would-have-escaped, in shadow.** Each step's receipt
+- [x] **2.3 Receipt and would-have-escaped, in shadow.** Done 2026-10-21, re-scoped by the council (D16): `probe_depth_shadow` reports receipt coverage per class over ticks since 2026-10-21 and, with `--reviews`, the review row's would-have-escape per class from the review corpus — today R0 has no reviews at all (docs-only skip), R1 9 high/critical rows and 0 escaped, n = 4 reviews; the blocking check moved to 4.0, before anything is lowered. `agents/evidence/analysis/depth-shadow-retrospective-2026-10-21.md`. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/probe_depth_shadow.ts --> Each step's receipt
       lists every ceremony run and the ones the table *would* skip. Where a
       would-skip ceremony ran anyway and found a high/critical row, that row
       is a would-have-escape.
-      verify: a step with no receipt fails the roadmap-progress check; the
-      would-have-escape count per class is in 0.1's reading.
+      verify: receipt coverage and the would-have-escape count are reported per
+      class (`probe_depth_shadow --reviews`).
 
 ## Phase 3 — Load what the step needs
 
@@ -148,6 +148,12 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 
 ## Phase 4 — Flip, sample, roll back
 
+- [ ] **4.0 A receipt on every newly ticked step, checked PR-locally.** Before
+      4.1, a check refuses a ticked line in the PR's own diff that carries no
+      receipt; older ticks and other branches are not read. Blocked on the
+      same blocker as 4.1 — it exists only to serve the flip.
+      verify: red-first test — a PR ticking a step without a receipt fails, a
+      PR touching an older unreceipted tick passes.
 - [ ] **4.1 Lower depth for R0/R1 per the table.** Blocked on
       `class-depth-flip-reopens-the-risk-null`.
       verify: the council verdict row exists before the flip commit.
@@ -181,7 +187,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 - **Owner:** user
 - **Ownership:** product-owned
 - **Routed:** council 2026-10-21 ESCALATE — lowers a recorded safety floor (two seats, anthropic and openai, convergent on owner-reserved): the shadow phase (Phases 0-3, 2.1-2.3) is council-decidable and proceeds now; the flip itself is owner-reserved — one seat under "lowers a recorded safety floor", the other under "cannot be bounded" until the class is validated against human labels or R0/R1 are narrowed to structurally safe paths. Both noted that raise-only use of the class is available immediately (2.1 already does that).
-- **Blocks:** steps 4.1, 4.2, 4.3; AC-3
+- **Blocks:** steps 4.0, 4.1, 4.2, 4.3; AC-3
 - **Question:** Phase 2 of the archived `road-to-target-project-assurance-readiness` let `classify_change_risk` decide what a completion claim must carry, and was cancelled on a pre-registered null on 2026-08-23 because the class was never validated against human labels. Step 4.1 lets the same class lower ceremony depth for R0/R1 steps. Once the shadow of 2.3 has counted would-have-escaped rows on at least 30 steps per class — steps that still ran at full depth, so a high-risk change misclassified as R0 is still reviewed and its findings still count — may depth be lowered, and for what?
 - **Recommendation:** (d). It keeps the first flip inside paths whose risk the path itself bounds (documentation, roadmap and evidence prose, test fixtures), which answers the "cannot be bounded" reading without waiting on a human corpus, and widens to (a) only on the same shadow evidence.
 - **If you do nothing:** Phases 0-3 run and deliver their savings; depth stays uniform; the shadow keeps counting.
@@ -205,6 +211,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 | D12 | reversible-technical | evidence | Review patch packets under `agents/evidence/` (~74 MB per the supplied annex) are not addressed here. | They cost clone size, not step wall-clock; nothing in 0.1's classes reads them. | 0.1 attributes measurable `ceremony` time to reading or writing them. |
 | D14 | reversible-technical | agent | Pre-registered 2026-10-21, before the 0.2 baseline is read: (1) speed — p50 wall-clock per closed step over five drains after the flip ≤ 0.5 × the 0.2 baseline p50, all classes together; (2) would-have-escaped — per change class, over ≥ 30 shadow steps, at most 1 step in 30 whose would-skip ceremony found a high/critical row, and none critical; (3) the sampled audit of 4.3 uses the same threshold over its 30 samples; (4) CI red-after-merge over the same drains not above the 0.2 window. | Thresholds fixed before any baseline exists so the reading cannot choose them. Disclosed: while building 0.1 the instrument was run once over the main checkout's store alone (13 steps); the baseline reads every store of this repository, so that development run is a subset, not the reading. | the 0.2 reading shows fewer than 30 R0/R1 steps in a week, which makes threshold (2) unreachable in one drain cycle. |
 | D13 | critical-technical | council: anthropic, openai (2026-10-21) | Phases 0-3 and the shadow run now; the flip waits on the owner; a fourth option (d) — flip only structurally safe paths first — was added from one seat's proposal. | Both seats: shadow is measurement and council-decidable, the flip is owner-reserved. One seat argued the shadow is selection-biased; rejected, because in the shadow every step still runs at full depth, so a misclassified R0 change is still reviewed and its findings still count as would-have-escaped. | the owner answers the blocker. |
+| D16 | reversible-technical | council: anthropic, openai (2026-10-21) | Step 2.3 measures without blocking: receipt coverage and the review row's would-have-escape are reported per class by `probe_depth_shadow`; a blocking receipt check arrives as 4.0, PR-local and only before depth is lowered. | Two seats converged on non-blocking now (first round degraded to one seat, the second ran both): a repo-wide check on every tick turns shadow instrumentation into mandatory ceremony before it has shown value, and would fail parallel branches' flips; the audit-trail half of a receipt only matters once something is skipped. One seat asked for class-stratified coverage, which the probe reports. | R0/R1 receipt coverage below half over a month of ticks, or the probe showing misclassified R1 steps. |
 | D15 | reversible-technical | agent | Steps 1.1 and 1.2 are measured and not built; both are put to the owner for cancellation. | Async telemetry would move ~1.2 ms of a ~68 ms dispatch off the foreground for a second node start per call; a stored Stop ordinal would save ~15 ms per turn on a correctness surface. The supplied plan's hook and Stop costs (D9, D10 there) are real but not where a step's time goes: the 0.2 reading puts 53.5 % in waits and 30.3 % in model time. | a reading shows post_tool_use or Stop above 250 ms p50 on a real session. |
 | D10 | deterministic | evidence | Closure pass ran 2026-10-21: no open decision beyond the blocker. The `typed-op` hits are mentions of the word merge (a sibling slug, the `pr/merge` path, "after merge", red-after-merge); no step here merges, deploys or publishes. Prose verifies on 0.3, 1.2, 1.3 and 3.2 are made command-shaped when each step runs. | `closure_scan` listed six `typed-op` and four `unfalsifiable-verify` rows, the latter non-blocking by its own contract. | a step is executed with its prose oracle unchanged. |
 

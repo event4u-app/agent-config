@@ -66,13 +66,13 @@ rounds 1..N.
 
 ## Phase 0 — Re-derive what the cap rests on
 
-- [x] **0.1 Re-derive the severity-by-round table.** Done 2026-10-21: `agents/evidence/analysis/review-severity-by-round-2026-10-21.md`; its code block reproduced the table byte-for-byte; F4 corrected (round 2 rises to 17.5 %). Count findings per round
+- [x] **0.1 Re-derive the severity-by-round table.** Done 2026-10-21: `agents/evidence/analysis/review-severity-by-round-2026-10-21.md`; its code block reproduced the table byte-for-byte; F4 corrected (round 2 rises to 17.5 %). Count findings per round <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       and severity over `agents/evidence/reviews/*.md`; write it as an analysis
       artefact with the command that produced it. F4's figures are a supplied
       plan's and are not cited by 1.1 until this lands.
       verify: the artefact carries the command; re-running it reproduces every
       row; rows per round sum to the round total.
-- [x] **0.2 Classify what round 3+ found.** Done 2026-10-21: 44 rows — 27 fix-delta, 15 missed, 2 unclear; two rows re-checked by hand; same artefact § What round 3+ high/critical rows were. For every high/critical row in a
+- [x] **0.2 Classify what round 3+ found.** Done 2026-10-21: 44 rows — 27 fix-delta, 15 missed, 2 unclear; two rows re-checked by hand; same artefact § What round 3+ high/critical rows were. For every high/critical row in a <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       round ≥ 3, record whether it was introduced by a fix of the previous round
       (fix-delta) or present in round 1's scope (missed). Only the "missed"
       class is a cost of the cap.
@@ -87,7 +87,7 @@ rounds 1..N.
       become `deferred` with a ledger link. Precedent F5. Blocked on
       `review-round-cap-is-an-owner-contract-change`.
       verify: ADR merged; `plan-review-gates.md` § 2.5 and § 2.7 cite it.
-- [x] **1.2 Make the round readable.** Done 2026-10-21: `round:` parsed in `check_completion_review`, `round-not-advanced` on a re-bind that drops or skips it, dispatcher writes `round: 1`, § 2.1 documented; 5 gate tests seen RED, then GREEN; sabotage probe reds the two refusal tests. Add an additive `round:` field to the
+- [x] **1.2 Make the round readable.** Done 2026-10-21: `round:` parsed in `check_completion_review`, `round-not-advanced` on a re-bind that drops or skips it, dispatcher writes `round: 1`, § 2.1 documented; 5 gate tests seen RED, then GREEN; sabotage probe reds the two refusal tests. Add an additive `round:` field to the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/check_completion_review.ts -->
       § 2.1 header (v1 stays valid, read as round 1), written on every re-bind.
       Without it the gate cannot count what F1 says is convention.
       verify: red-first test — a re-bound artefact without an incremented
@@ -98,7 +98,7 @@ rounds 1..N.
       blocker as 1.1.
       verify: red-first tests for both; sabotage-probe by raising the cap and
       watching the refusal test go red.
-- [x] **1.4 Findings bind to correctness and the step's stated requirements.** Done 2026-10-21: `## Severity` in the reviewer brief (`dispatch_r2_reviewer.ts`), test seen RED then GREEN. Re-scoring the 35 record-prose high/critical round-1 rows: 0 style, 2 inert false claims (→ medium), 33 actionable (unchanged) — so 2 of 224 move; a blanket "record prose is low" would have moved 35. Verify done by re-scoring existing rows, not re-running 20 reviews; reason in the artefact.
+- [x] **1.4 Findings bind to correctness and the step's stated requirements.** Done 2026-10-21: `## Severity` in the reviewer brief (`dispatch_r2_reviewer.ts`), test seen RED then GREEN. Re-scoring the 35 record-prose high/critical round-1 rows: 0 style, 2 inert false claims (→ medium), 33 actionable (unchanged) — so 2 of 224 move; a blanket "record prose is low" would have moved 35. Verify done by re-scoring existing rows, not re-running 20 reviews; reason in the artefact. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/dispatch_r2_reviewer.ts -->
       The reviewer brief scores style and record-prose findings `low`.
       verify: replay 20 archived round-1 artefacts through the new brief;
       high+critical count unchanged, low count reported.
