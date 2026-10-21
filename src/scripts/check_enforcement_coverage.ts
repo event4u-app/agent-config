@@ -414,11 +414,24 @@ export function strip_comments(src: string): string {
         .join('\n');
 }
 
-/** True when `base`/`stem` appears inside a quoted specifier — an invocation shape. */
+/**
+ * True when `base`/`stem` appears inside a quoted specifier — an invocation shape.
+ *
+ * This answers exactly what `/['"\`][^'"\`]*NEEDLE[^'"\`]*['"\`]/` answered —
+ * an occurrence with some quote character before it and some after it — without
+ * compiling two regexes per script per round over a body that reaches megabytes.
+ * That sweep was ~99 % of `build_proof`'s `render()` (88 s of 89 s locally,
+ * CPU profile 2026-10-21). The regex is kept as the oracle in
+ * `check_enforcement_coverage_mentions.test.ts`.
+ */
 export function mentions_as_code(haystack: string, base: string, stem: string): boolean {
+    const firsts = ["'", '"', '`'].map((q) => haystack.indexOf(q)).filter((i) => i !== -1);
+    if (firsts.length === 0) return false;
+    const first = Math.min(...firsts);
+    const last = Math.max(...["'", '"', '`'].map((q) => haystack.lastIndexOf(q)));
     for (const needle of [base, stem]) {
-        const q = needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        if (new RegExp(`['"\`][^'"\`]*${q}[^'"\`]*['"\`]`).test(haystack)) return true;
+        const at = haystack.indexOf(needle, first + 1);
+        if (at !== -1 && at + needle.length <= last) return true;
     }
     return false;
 }
