@@ -81,7 +81,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       the step total, `unknown` printed. `meanBatchSize` split per class.
       verify: a fixture with a planted ceremony turn classifies it; the sum
       check goes red with one class neutralised.
-- [ ] **0.2 Pre-register, then baseline.** Commit the Goal's thresholds and the
+- [x] **0.2 Pre-register, then baseline.** Done 2026-10-21: thresholds committed as D14 first, then the reading as a `subsequent_readings` entry in `turnaround-budget.json` — 75 closed steps over 7 days, p50 4.2 min / p90 33.6 min per step; wait 53.5 %, model 30.3 %, ceremony 9.5 %, verify 3.9 %, change 2.8 %, unknown 0 %; R0/R1 only 9 of 75. D14's revisit-if fired (fewer than 30 R0/R1 steps a week): the threshold stays, the shadow window becomes as many weeks as 30 steps per class take. Commit the Goal's thresholds and the
       would-have-escaped threshold before reading. Then record p50/p90 per class
       and per change class as a `subsequent_readings` entry in
       `src/config/turnaround-budget.json` over the last 10 drains or 7 days,

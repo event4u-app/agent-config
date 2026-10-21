@@ -78,7 +78,7 @@ import {
 } from './_lib/turnaround_throughput.js';
 import { defaultStore, isInjectedBody, userText } from './conformance_scan.js';
 import { upsertFinding } from './_lib/self_repair_store.js';
-import { readSteps, STEP_CLASSES, summariseSteps } from './_lib/step_anatomy.js';
+import { readSteps, STEP_CLASSES, storeTranscripts, summariseSteps } from './_lib/step_anatomy.js';
 
 const _FILE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_FILE), '..', '..');
@@ -716,7 +716,8 @@ function reportSteps(files: readonly string[], store: string, json: boolean): nu
         process.stdout.write(`${JSON.stringify({ store, sessions: files.length, ...s }, null, 2)}\n`);
     } else {
         const lines = [
-            `probe:turnaround --steps · ${String(s.steps)} closed step(s) over ${String(files.length)} session(s) in ${store}`,
+            `probe:turnaround --steps · ${String(s.steps)} closed step(s) over ${String(files.length)} transcript(s) in ${store}`,
+            `  per step: p50 ${String(s.p50Min)} min · p90 ${String(s.p90Min)} min`,
             '  class      p50 s   p90 s   share',
             ...STEP_CLASSES.map((c) => {
                 const r = s.byClass[c];
@@ -783,9 +784,12 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         // A drain runs in a worktree, and the host files a worktree's transcripts
         // under a project directory of its own, so one store holds a fraction of
         // the steps. `--steps` reads a comma-separated list of stores as one corpus.
+        const sid = process.env['CLAUDE_CODE_SESSION_ID'];
+        const measuring = argv.includes('--include-current') || sid === undefined || sid === '' ? null : `${sid}.jsonl`;
         const stepFiles = store
             .split(',')
-            .flatMap((s) => recentSessions(s, Number.MAX_SAFE_INTEGER, argv.includes('--include-current')))
+            .flatMap((s) => storeTranscripts(s))
+            .filter((f) => path.basename(f) !== measuring)
             .map((f) => ({ f, m: fs.statSync(f).mtimeMs }))
             .sort((a, b) => b.m - a.m)
             .slice(0, limit)

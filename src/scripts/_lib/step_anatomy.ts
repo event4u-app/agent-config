@@ -133,8 +133,32 @@ function userRowClass(e: Entry, pending: Map<string, StepClass>): StepClass {
     return 'unknown';
 }
 
+/**
+ * The transcripts a store holds: each session file, plus the subagent files the
+ * host files under `<session>/subagents/`. Most roadmap steps are closed by
+ * subagents, so a reading of the session files alone sees a small minority.
+ */
+export function storeTranscripts(store: string): string[] {
+    if (!fs.existsSync(store)) return [];
+    const out: string[] = [];
+    for (const name of fs.readdirSync(store)) {
+        const p = path.join(store, name);
+        if (name.endsWith('.jsonl')) out.push(p);
+        const sub = path.join(p, 'subagents');
+        if (fs.existsSync(sub) && fs.statSync(sub).isDirectory()) {
+            for (const f of fs.readdirSync(sub)) if (f.endsWith('.jsonl')) out.push(path.join(sub, f));
+        }
+    }
+    return out;
+}
+
+const isSubagentFile = (file: string): boolean => path.basename(path.dirname(file)) === 'subagents';
+
 /** Every closed step in one transcript file. */
 export function readSteps(file: string, causeOf: CauseOf): StepReading[] {
+    // A subagent's own transcript is sidechain rows throughout; only in a session
+    // file does the flag mark rows that belong to someone else's timeline.
+    const skipSidechain = !isSubagentFile(file);
     const out: StepReading[] = [];
     const pending = new Map<string, StepClass>();
     let acc = emptyMs();
@@ -156,7 +180,7 @@ export function readSteps(file: string, causeOf: CauseOf): StepReading[] {
         // Only the conversation's own rows end a gap. Queue operations, system
         // notes and pr links carry timestamps too, and letting them anchor a gap
         // split a CI wait into a waited half and an unattributable half.
-        if (e['isSidechain'] === true || (e['type'] !== 'user' && e['type'] !== 'assistant')) continue;
+        if ((skipSidechain && e['isSidechain'] === true) || (e['type'] !== 'user' && e['type'] !== 'assistant')) continue;
         const at = ms(e['timestamp']);
         if (at === null) continue;
         if (startAt === null) startAt = at;
@@ -219,6 +243,9 @@ function quantile(xs: readonly number[], q: number): number {
 
 export interface StepAnatomySummary {
     steps: number;
+    /** Wall-clock minutes per closed step, every class together. */
+    p50Min: number;
+    p90Min: number;
     /** Per class: p50 / p90 seconds per step, and the share of all step time. */
     byClass: Record<StepClass, { p50: number; p90: number; share: number }>;
     /** Per change class: steps, p50 / p90 minutes per step, and mean tool-call batch size. */
@@ -246,5 +273,13 @@ export function summariseSteps(readings: readonly StepReading[]): StepAnatomySum
         }),
     ) as StepAnatomySummary['byRisk'];
     const sumErrors = readings.map(stepSumError).filter((x): x is string => x !== null);
-    return { steps: readings.length, byClass, byRisk, sumErrors };
+    const allMin = readings.map((r) => r.totalMs / 60_000);
+    return {
+        steps: readings.length,
+        p50Min: round(quantile(allMin, 0.5), 1),
+        p90Min: round(quantile(allMin, 0.9), 1),
+        byClass,
+        byRisk,
+        sumErrors,
+    };
 }

@@ -135,9 +135,27 @@ describe('step anatomy', () => {
         expect((JSON.parse(res.stdout) as { steps: number; sessions: number }).steps).toBe(4);
     });
 
+    it('reads the steps a subagent closed — its transcript is all sidechain rows, filed under the session', () => {
+        const top = fixture();
+        const store = path.dirname(top);
+        const sub = path.join(store, 'sess', 'subagents');
+        fs.mkdirSync(sub, { recursive: true });
+        const rows = fs
+            .readFileSync(top, 'utf8')
+            .trim()
+            .split('\n')
+            .map((l) => JSON.stringify({ ...(JSON.parse(l) as Record<string, unknown>), isSidechain: true }));
+        fs.writeFileSync(path.join(sub, 'agent-1.jsonl'), `${rows.join('\n')}\n`);
+        const res = runInProc(main, ['--steps', '--json', '--include-current', '--store', store]);
+        expect(res.status).toBe(0);
+        expect((JSON.parse(res.stdout) as { steps: number }).steps).toBe(4);
+    });
+
     it('summarises per class and per change class, unknown always present', () => {
         const s = summariseSteps(readSteps(fixture(), classifyBlockingCall));
         expect(s.steps).toBe(2);
+        expect(s.p50Min).toBe(0.2);
+        expect(s.p90Min).toBe(0.2);
         expect(Object.keys(s.byClass)).toContain('unknown');
         expect(s.byRisk.R2.steps).toBe(1);
         expect(s.byRisk.R3.steps).toBe(1);
