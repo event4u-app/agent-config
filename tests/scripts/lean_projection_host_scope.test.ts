@@ -39,7 +39,7 @@ let savedHome: string | undefined;
 /**
  * A project root with a two-rule projection and the given form record.
  *
- * ADR-292 removed the settings key these cases used to write, so the driver is
+ * ADR-293 removed the settings key these cases used to write, so the driver is
  * now the package-owned record `src/config/project-tree-form.json` — the same
  * input the shipped projector reads. `form` is the mode and `hosts` is implicit
  * in the record (claude-code), so a case that needs another host writes its own
@@ -354,7 +354,7 @@ describe('4.5 — rollback is removing the shipped form record, not a setting', 
         const flipped = treeContentsLocal(rolled, path.join('.claude', 'rules'));
         expect(Object.values(flipped).some((t) => is_thin_entry(t))).toBe(true);
 
-        // The rollback, after ADR-292: remove the package-owned record — one
+        // The rollback, after ADR-293: remove the package-owned record — one
         // file the maintainer owns rather than one setting a consumer writes —
         // then regenerate into the SAME root.
         seedForm(rolled, null);

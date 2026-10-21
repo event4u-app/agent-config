@@ -64,12 +64,12 @@ function leanProjectionScalar(file: string, key: string): string {
 const rawMode = (file: string): string => leanProjectionScalar(file, 'mode');
 
 // ADR-267 flipped the shipped TEMPLATE to `delivery` for claude-code only, and
-// this file pinned that value on the file rather than on a constant. ADR-292
+// this file pinned that value on the file rather than on a constant. ADR-293
 // removes the key: there is no shipped value to pin, so the same reader now
 // pins its ABSENCE — which is the assertion that reds if the template ever
 // grows the key back, and it is the one direction the 4.4 grep cannot state
 // (a grep says the token is gone; this says the resolver reads nothing).
-describe('the projection key is gone from the shipped surface (ADR-292)', () => {
+describe('the projection key is gone from the shipped surface (ADR-293)', () => {
     it('the shipped settings template states no mode', () => {
         const raw = rawMode(path.join(REPO_ROOT, 'src', 'config', 'agent-settings.template.yml'));
         expect(raw).toBe('');

@@ -44,7 +44,7 @@ export const SCOPED_ACTIVE_WORKSPACES: ReadonlySet<string> = new Set([
 
 /**
  * The workspace this package's OWN rules carry — the one workspace a consumer
- * install never receives. ADR-292 step 4.6: the consumer workspace list is
+ * install never receives. ADR-293 step 4.6: the consumer workspace list is
  * DERIVED from the pack vocabulary rather than written into settings, and this
  * is the single id that derivation subtracts.
  */

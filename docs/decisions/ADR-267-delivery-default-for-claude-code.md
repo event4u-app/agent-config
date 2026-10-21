@@ -4,7 +4,7 @@ status: accepted
 date: 2026-09-07
 decision: delivery-default-for-claude-code
 supersedes: —
-superseded_by: ADR-292 (decision 3 only — the rollback is one setting)
+superseded_by: ADR-293 (decision 3 only — the rollback is one setting)
 type: structural
 reopen_policy: owner
 protected_dimensions: governance

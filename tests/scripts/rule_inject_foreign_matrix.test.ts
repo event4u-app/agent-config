@@ -232,7 +232,7 @@ describe('rule-inject — foreign-project matrix on the built bundle (1.8)', () 
     });
 
     it('a consumer settings value no longer silences the carrier', () => {
-        // Before ADR-292 this wrote `eager-all` and the carrier went quiet: the
+        // Before ADR-293 this wrote `eager-all` and the carrier went quiet: the
         // consumer's own settings file decided the form. The key is gone and
         // the form is the package's, so the same file changes nothing — which
         // is the sensitive direction, and the one a regression would come back

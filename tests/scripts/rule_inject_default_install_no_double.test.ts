@@ -53,7 +53,7 @@ function makeRoot(): string {
     for (const [id, text] of Object.entries(BODIES)) {
         fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', `${id}.md`), text, 'utf-8');
     }
-    // ADR-292: the form is the package-owned record, not a settings key.
+    // ADR-293: the form is the package-owned record, not a settings key.
     fs.mkdirSync(path.join(root, 'src', 'config'), { recursive: true });
     fs.writeFileSync(
         path.join(root, 'src', 'config', 'project-tree-form.json'),
@@ -174,7 +174,7 @@ describe('rule-inject — a default install is served once (1.1)', () => {
     });
 
     it('there is no opt-in left that lifts the filter, and the all-stub delivery is unchanged', () => {
-        // The pre-ADR-292 case asserted that a RECORDED CONSENT lifted the
+        // The pre-ADR-293 case asserted that a RECORDED CONSENT lifted the
         // served-once filter: `installerThinsHost` read the user-global opt-in,
         // and an opted-in install delivered every in-scope match regardless of
         // installed form. The key that carried the consent is gone and
@@ -186,7 +186,7 @@ describe('rule-inject — a default install is served once (1.1)', () => {
         installLayer(home, ['alpha-rule'], ['beta-rule']);
         const withLeftoverOptIn = run(root, 'once-4');
         // `alpha-rule` stands FULL in the layer, so the filter drops it. Before
-        // ADR-292 the leftover opt-in above made this contain ALPHA RULE BODY.
+        // ADR-293 the leftover opt-in above made this contain ALPHA RULE BODY.
         expect(withLeftoverOptIn).not.toContain('ALPHA RULE BODY');
         expect(withLeftoverOptIn).toContain('BETA RULE BODY');
 

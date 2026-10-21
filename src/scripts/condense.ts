@@ -464,7 +464,7 @@ function _read_projection_scope_dedup(): boolean {
 
 function _lean_projection_settings(): { mode: LeanProjectionMode; hosts: LeanProjectionHosts } {
     // Step 1.2 of `road-to-a-rule-carrier-that-works-outside-the-repo` made this
-    // the ONE shared resolver; ADR-292 changed what it reads — the settings key
+    // the ONE shared resolver; ADR-293 changed what it reads — the settings key
     // is gone, so the input is `PROJECT_ROOT`, where the form record lives.
     // Projector and hook still share one reader, which is how risk 2 of that
     // roadmap's register is discharged by construction.
@@ -939,7 +939,7 @@ export { _HRR_BANNER_MARKER };
 
 // ── Consumer-scoped rule projection (road-to-request-scoped-rule-load P1) ──
 //
-// Scope came from `projection.rule_workspaces` until ADR-292 step 4.6 removed
+// Scope came from `projection.rule_workspaces` until ADR-293 step 4.6 removed
 // the key; `consumerRuleWorkspaces` derives the CONSUMER scope now and the
 // MAINTAINER projection below is unscoped by construction. A non-kernel rule
 // projects into a scoped tree only if its `workspaces:` frontmatter intersects.
@@ -958,7 +958,7 @@ function _read_projection_raw(key: string): unknown {
 
 /**
  * The MAINTAINER projection is never workspace-scoped — a constant since
- * ADR-292 step 4.6, not a settings read. `consumerRuleWorkspaces` subtracts
+ * ADR-293 step 4.6, not a settings read. `consumerRuleWorkspaces` subtracts
  * `agent-config-maintainer`, and this is the one tree where that subtraction
  * would be wrong: the repository's own `.claude/rules` must carry exactly the
  * rules it drops. So this stays the inactive axis, which is what an absent key

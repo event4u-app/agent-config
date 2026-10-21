@@ -25,7 +25,7 @@ const parse = (body: string): Record<string, unknown> => (yamlLoad(body) ?? {}) 
  * The scenario is a machine that installed the REMOVAL release and is then put
  * back on the previous one, whose readers still look for the keys. There is no
  * second checkout to run here, and there does not need to be: the previous
- * release's readers are the two normalisers below, and ADR-292 left both
+ * release's readers are the two normalisers below, and ADR-293 left both
  * untouched precisely so this direction keeps working. So the fixture is the
  * settings file the removal release actually writes, fed to the readers the
  * older release used.

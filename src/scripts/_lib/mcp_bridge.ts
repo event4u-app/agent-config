@@ -297,7 +297,7 @@ export function migrateMcpBridge(
  * `legacy-all` ships everything and stays the default. `scoped` narrows to the
  * active packs.
  *
- * `tiered` was a third, and it was RETIRED on 2026-10-20 (ADR-292, step 4.5)
+ * `tiered` was a third, and it was RETIRED on 2026-10-20 (ADR-293, step 4.5)
  * with the install branch that acted on it. It narrowed the catalogue to the
  * skills predicted to reach the model WITH their description, and its own
  * roadmap closed it at `measured-null`: the split usually came from an

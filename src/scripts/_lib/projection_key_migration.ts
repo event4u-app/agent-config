@@ -1,5 +1,5 @@
 /**
- * The one-release-window read of the projection keys ADR-292 removed.
+ * The one-release-window read of the projection keys ADR-293 removed.
  *
  * WHAT A REMOVED KEY MAY STILL DO, AND WHAT IT MAY NOT. A consumer who wrote
  * `lean_projection.mode: eager-all` or `projection.mode: legacy-all` asked for
@@ -97,9 +97,9 @@ export function readLegacyProjectionIntent(merged: SettingsDict): LegacyProjecti
 export function migrationLines(intent: LegacyProjectionIntent): string[] {
     return intent.rows.map((row) =>
         row.disposition === 'pin'
-            ? `${row.key}: "${row.value}" was removed (ADR-292); read once as a request to keep the rule layer full, ` +
+            ? `${row.key}: "${row.value}" was removed (ADR-293); read once as a request to keep the rule layer full, ` +
               `and kept as the install receipt's pin — ${MIGRATION_WINDOW}.`
-            : `${row.key}: "${row.value}" was removed (ADR-292); ignored — the package decides the layer form from ` +
+            : `${row.key}: "${row.value}" was removed (ADR-293); ignored — the package decides the layer form from ` +
               `machine evidence, and \`doctor --check layer-form\` says which form it chose and why — ${MIGRATION_WINDOW}.`,
     );
 }

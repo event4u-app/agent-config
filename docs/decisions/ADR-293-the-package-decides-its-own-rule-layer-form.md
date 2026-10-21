@@ -1,5 +1,5 @@
 ---
-adr: 292
+adr: 293
 status: accepted
 date: 2026-10-20
 decision: the-package-decides-its-own-rule-layer-form
@@ -32,7 +32,7 @@ review_trigger: >-
   on a machine whose arrival record does not satisfy it.
 ---
 
-# ADR-292 — The package decides its own rule-layer form; no settings key does
+# ADR-293 — The package decides its own rule-layer form; no settings key does
 
 ## Status
 
@@ -42,6 +42,11 @@ package does not get worse; it must stay as reliable as it is today"). Its
 release class and timing were decided by the AI council, 2/2, in two rounds:
 round 1 (2026-10-18) settled the class, round 2 (2026-10-20) settled the timing
 and authorised an agent lane to execute it.
+
+Drafted and reviewed as ADR-292; renumbered to ADR-293 on 2026-10-21 because
+`ADR-292-retro-switch-and-verb` reached `main` first. The dated council
+records under `agents/evidence/council/setup-*-20261020*` keep the number
+they were asked under.
 
 ## Context
 

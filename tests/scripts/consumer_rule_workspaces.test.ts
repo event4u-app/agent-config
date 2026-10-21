@@ -15,7 +15,7 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 
 /**
  * The list `projection.rule_workspaces` shipped as its template default on the
- * day ADR-292 step 4.6 removed it. The derived set must equal it exactly —
+ * day ADR-293 step 4.6 removed it. The derived set must equal it exactly —
  * that equality is the step's "same rule set as today", and it is pinned
  * literally so a drift in either direction is visible rather than argued.
  */
@@ -72,7 +72,7 @@ describe('the consumer workspace set is derived, not configured', () => {
 describe('ruleScopeFromSettings no longer reads the key', () => {
     it('ignores a hand-written rule_workspaces and uses the derived set', () => {
         const scope = ruleScopeFromSettings({ projection: { rule_workspaces: ['engineering'] } }, REPO);
-        // Before ADR-292 this read `['engineering']`.
+        // Before ADR-293 this read `['engineering']`.
         expect(scope.workspaces).toEqual(SHIPPED_DEFAULT);
     });
 

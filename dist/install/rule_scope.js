@@ -51,7 +51,7 @@ function _list(value) {
  * `_read_projection_list` — absent / empty = legacy-all).
  */
 export function ruleScopeFromSettings(settings, packageRoot) {
-    // The WORKSPACE axis is derived from the pack vocabulary since ADR-292 step
+    // The WORKSPACE axis is derived from the pack vocabulary since ADR-293 step
     // 4.6, so it no longer depends on a `projection` block existing at all — a
     // rule is not a setting, and a settings file that happens to omit a section
     // cannot switch one off. The pack and role axes are still read, so a
@@ -71,7 +71,7 @@ export function ruleScopeFromSettings(settings, packageRoot) {
         ? _list(p['rule_packs'])
         : resolve_rule_pack_scope(p['rule_packs'], packageRoot, _list(_runtimeActivePacks(settings)) ?? []);
     return {
-        // DERIVED since ADR-292 step 4.6, not read. `projection.rule_workspaces`
+        // DERIVED since ADR-293 step 4.6, not read. `projection.rule_workspaces`
         // carried this list as a settings default — the nine consumer workspace
         // ids, re-typed into the template and needing a re-type whenever a pack
         // arrived with a new one. What it encoded is a RULE: maintainer-only

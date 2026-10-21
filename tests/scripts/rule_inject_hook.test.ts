@@ -63,7 +63,7 @@ function makeRoot(opts: { delivery: boolean; hosts?: string }): string {
     for (const [id, text] of Object.entries(BODIES)) {
         fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', `${id}.md`), text, 'utf-8');
     }
-    // ADR-292 removed `lean_projection.*`; the form the projector and this
+    // ADR-293 removed `lean_projection.*`; the form the projector and this
     // gate read is the package-owned record. The fixture writes THAT, so what
     // drives the gate here is what drives it in a real tree.
     const hostList =
@@ -352,7 +352,7 @@ describe('rule-inject — never blocks (1.5)', () => {
     it('a tree with no router reports the gap rather than throwing', () => {
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-norouter-'));
         // A tree whose FORM says delivery and whose corpus is missing. Since
-        // ADR-292 the form is the package-owned record, so that is what the
+        // ADR-293 the form is the package-owned record, so that is what the
         // fixture writes; the point of the case is unchanged.
         fs.mkdirSync(path.join(root, 'src', 'config'), { recursive: true });
         fs.writeFileSync(
@@ -563,7 +563,7 @@ function makePackageRoot(): string {
     for (const [id, text] of Object.entries(BODIES)) {
         fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', `${id}.md`), text, 'utf-8');
     }
-    // ADR-292: the gate's form comes from the PACKAGE's own record, which is
+    // ADR-293: the gate's form comes from the PACKAGE's own record, which is
     // the whole point of the foreign-project cases — the consumer tree carries
     // no such file and must not need one.
     fs.mkdirSync(path.join(root, 'src', 'config'), { recursive: true });
@@ -603,7 +603,7 @@ function runWithPackage(
 }
 
 /**
- * A consumer settings file. It no longer carries a projection key — ADR-292
+ * A consumer settings file. It no longer carries a projection key — ADR-293
  * removed it — and the constant is kept so the cases still exercise "a project
  * that HAS a settings file", which is a different path from one that has none.
  */
@@ -643,7 +643,7 @@ describe('rule-inject — foreign-project resolution (1.1)', () => {
         expect(out).not.toContain('PROMPT RULE BODY');
     });
 
-    // ADR-292 MOVED THE FORM, AND THESE TWO CASES CHANGED WITH IT — stated
+    // ADR-293 MOVED THE FORM, AND THESE TWO CASES CHANGED WITH IT — stated
     // rather than deleted, because the capability they covered is genuinely
     // different now and a silent rewrite would hide that.
     //
@@ -655,7 +655,7 @@ describe('rule-inject — foreign-project resolution (1.1)', () => {
     // know it was meant to open.
     //
     // That is not the silence the carrier roadmap forbids. Its obligation is
-    // "a dead carrier is never silent on a THINNED layer", and after ADR-292
+    // "a dead carrier is never silent on a THINNED layer", and after ADR-293
     // the installer never thins: `installerThinsHost` is a constant false and a
     // fresh install writes the full layer. A consumer in this state has every
     // body in its rule files already, so there is nothing withheld to warn

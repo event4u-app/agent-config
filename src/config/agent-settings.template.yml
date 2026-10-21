@@ -59,7 +59,7 @@ profile:
 # project the full set.
 projection:
   mode: scoped
-  # Rule scope is DERIVED, not configured, since ADR-292 step 4.6: a consumer
+  # Rule scope is DERIVED, not configured, since ADR-293 step 4.6: a consumer
   # install scopes rules to every workspace `src/config/discovery/packs.yml`
   # declares except `agent-config-maintainer`, so maintainer-only rules never
   # project to a consumer and a new pack reaches consumers the day it lands.

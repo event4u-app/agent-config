@@ -4706,7 +4706,7 @@ function _propose_modules_config(project_root: string, is_first_run: boolean): v
 }
 
 /**
- * ADR-292's one-window read of the removed projection keys — rules in
+ * ADR-293's one-window read of the removed projection keys — rules in
  * `_lib/projection_key_migration.ts`. MACHINE-global layers only, with the
  * TEMPLATE isolated (ADR-278 / D3: a template value is not consent, and the
  * shipped template carried `delivery`), and a layer nothing can read states no

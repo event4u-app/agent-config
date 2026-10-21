@@ -80,7 +80,7 @@ function resolve(root: string, packageRoot: string | null = REPO_ROOT): Resolved
 
 describe('the template no longer states an answer, and the test states that', () => {
     it('the shipped template carries no projection key at all — asserted on the FILE', () => {
-        // ADR-292. Reading the file is still the point: the expectations below
+        // ADR-293. Reading the file is still the point: the expectations below
         // are derived from what the template says, so if a key ever comes back
         // they are stale and must be re-derived rather than patched.
         const text = fs.readFileSync(TEMPLATE, 'utf-8');
@@ -90,7 +90,7 @@ describe('the template no longer states an answer, and the test states that', ()
 });
 
 // ---------------------------------------------------------------------------
-// ADR-292 removed `lean_projection.*`, and with it the CASCADE this block used
+// ADR-293 removed `lean_projection.*`, and with it the CASCADE this block used
 // to pin. Each case below is its predecessor inverted: the layer that used to
 // decide the answer is still written, and the answer must not move. That is the
 // sensitive direction — a cascade read coming back would red here — and it is
@@ -99,7 +99,7 @@ describe('the template no longer states an answer, and the test states that', ()
 // `project-tree-form.json`, read through `packageRoot`.
 // ---------------------------------------------------------------------------
 
-describe('resolveLeanProjection — no settings layer moves the answer (ADR-292)', () => {
+describe('resolveLeanProjection — no settings layer moves the answer (ADR-293)', () => {
     it('this repository\'s own record is what a packageRoot resolves to', () => {
         const root = tree();
         expect(resolve(root).mode).toBe('delivery');
@@ -142,7 +142,7 @@ describe('resolveLeanProjection — no settings layer moves the answer (ADR-292)
         write(root, ['agents', 'settings', '.agent-settings.yml'],
             'lean_projection:\n  mode: delivery\n  hosts: [cursor, nonesuch]\n');
         const r = resolve(root);
-        // `cursor` is the sensitive id: before ADR-292 this read `['cursor']`.
+        // `cursor` is the sensitive id: before ADR-293 this read `['cursor']`.
         expect(r.hosts.hosts).toEqual(['claude-code']);
         expect(r.hosts.dropped).toEqual([]);
     });
@@ -174,7 +174,7 @@ describe('resolveLeanProjection — no settings layer moves the answer (ADR-292)
 // that merely resolved the mode would have thinned every consumer the day it
 // started reading it.
 //
-// ADR-292 answers that question by removing the thing it was about. There is no
+// ADR-293 answers that question by removing the thing it was about. There is no
 // layer a human can write the key on that any reader consults, so provenance is
 // the constant `false` — and the cases below pin it against the exact layers
 // that used to make it `true`, which is the direction a regression would come
@@ -194,7 +194,7 @@ describe('resolveLeanProjection — provenance is constant false, because no lay
         const root = tree();
         write(root, ['.agent-settings.yml'], 'lean_projection:\n  mode: delivery\n');
         _reset_template_defaults_cache();
-        // Before ADR-292 this read `true`. It is the sensitive case: a `true`
+        // Before ADR-293 this read `true`. It is the sensitive case: a `true`
         // here would mean a hand-written leftover had become consent again.
         expect(resolveLeanProjection({ projectRoot: root, packageRoot: REPO_ROOT }).modeExplicit).toBe(false);
     });

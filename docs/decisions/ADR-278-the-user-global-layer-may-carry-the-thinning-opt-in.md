@@ -4,7 +4,7 @@ status: superseded
 date: 2026-10-05
 decision: lean-projection-mode-and-hosts-are-mergeable-from-the-user-global-settings-layer
 supersedes: —
-superseded_by: ADR-292
+superseded_by: ADR-293
 type: structural
 reopen_policy: unclassified
 protected_dimensions: none

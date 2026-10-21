@@ -268,21 +268,21 @@ describe('the installer applies the projector predicate when asked', () => {
     });
 });
 
-// ADR-292 removed `lean_projection.*`. The gate below used to answer "did a
+// ADR-293 removed `lean_projection.*`. The gate below used to answer "did a
 // human ask, and is this host in scope"; the keys that carried the asking are
 // gone, and the user-global layer that was the ONLY one able to carry them on
 // an ADR-020 global-only install is no longer whitelisted. So every case here
 // now asserts the same thing from a different direction — the installer cannot
 // be made to thin by a settings value — which is what makes the key's tombstone
 // line ("ignored") true for this reader rather than only for the docs.
-describe('after ADR-292 no settings value can make the installer thin', () => {
+describe('after ADR-293 no settings value can make the installer thin', () => {
     it('does NOT thin when the only layer carrying the mode is the shipped template', () => {
         writeUserGlobalSettings(null);
         expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
     });
 
     it('does NOT thin when a user-controlled layer still carries delivery', () => {
-        // The pre-ADR-292 opt-in, written exactly as a consumer would have
+        // The pre-ADR-293 opt-in, written exactly as a consumer would have
         // written it. It is filtered out of the merge now, so it reaches
         // nothing: this is the assertion that reds if the whitelist row ever
         // comes back.
@@ -299,7 +299,7 @@ describe('after ADR-292 no settings value can make the installer thin', () => {
         writeUserGlobalSettings('lean_projection:\n  mode: delivery\n  hosts:\n    - cursor\n');
         expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
         // `cursor` was the host this leftover opted IN. It is the sensitive
-        // direction: before ADR-292 this read `true`.
+        // direction: before ADR-293 this read `true`.
         expect(installerThinsHost('cursor', { packageRoot: pkg })).toBe(false);
     });
 

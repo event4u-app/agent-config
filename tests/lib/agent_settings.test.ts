@@ -336,10 +336,10 @@ describe('MERGEABLE_KEYS', () => {
         ]);
     });
 
-    it('no longer whitelists the projection keys, which ADR-292 deleted', () => {
+    it('no longer whitelists the projection keys, which ADR-293 deleted', () => {
         // ADR-278 put `lean_projection.mode` / `.hosts` on this list because the
         // user-global file was the only layer that could carry the opt-in on an
-        // ADR-020 global-only install. ADR-292 removes the keys: there is no
+        // ADR-020 global-only install. ADR-293 removes the keys: there is no
         // opt-in to carry, and an entry that outlived its key would carry a
         // user-global value into a tree nothing is meant to read it from —
         // which is exactly what the `telegraph.speak_scope` pin below states

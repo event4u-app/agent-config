@@ -267,7 +267,7 @@ export interface ResolveOptions {
 /**
  * The form the PROJECT tree is built with, and the hosts it applies to.
  *
- * NO SETTINGS READ SINCE ADR-292. The key this resolved is removed from every
+ * NO SETTINGS READ SINCE ADR-293. The key this resolved is removed from every
  * shipped surface, and a hand-written leftover is not read either — which is
  * what makes its tombstone line ("ignored") true for this reader as well as for
  * the docs. The form comes from the package-owned record in
@@ -292,7 +292,7 @@ export function resolveLeanProjection(opts: ResolveOptions = {}): ResolvedLeanPr
 
 
 /**
- * May the INSTALLER thin this host's rule tree? Never, since ADR-292.
+ * May the INSTALLER thin this host's rule tree? Never, since ADR-293.
  *
  * It used to fold three conditions — a human asked, the chosen mode writes
  * stubs, this host is in scope — over a settings key. The key is gone, so the

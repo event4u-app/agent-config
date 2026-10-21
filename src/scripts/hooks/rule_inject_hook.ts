@@ -971,7 +971,7 @@ export function gateOpen(root: string, cliEntry: boolean, packageRoot?: string |
     const { mode, hosts } = resolveLeanProjection({
         projectRoot: root,
         // FALLS BACK TO `root`, and the fallback is what makes this work in a
-        // source checkout. Since ADR-292 the form comes from the package-owned
+        // source checkout. Since ADR-293 the form comes from the package-owned
         // record under `<packageRoot>/src/config/`, and `packageRoot` here is
         // `AGENT_CONFIG_PACKAGE_ROOT` — unset outside an install, where the
         // project root IS the package root. A consumer project has no such

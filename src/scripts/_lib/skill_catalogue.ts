@@ -919,7 +919,7 @@ export interface ProjectionModeCounts {
      * Skills predicted to reach the model WITH their description, from the
      * per-machine tier split. `null` when no split exists on this machine,
      * which is the common case and is NOT zero. The `tiered` projection mode
-     * that consumed this number was retired on 2026-10-20 (ADR-292); the split
+     * that consumed this number was retired on 2026-10-20 (ADR-293); the split
      * itself still informs the listing-budget advisory and the MCP catalogue.
      */
     tierACount: number | null;
@@ -1205,7 +1205,7 @@ export function migrationEligibility(
     // There were three modes until 2026-10-20. `tiered` carried its own
     // `already-tiered` reason because it narrowed on a different axis — the
     // host's listing budget rather than the pack set. It was retired at
-    // `measured-null` (ADR-292, step 4.5) and a leftover value now resolves to
+    // `measured-null` (ADR-293, step 4.5) and a leftover value now resolves to
     // `legacy-all`, so such an install reaches the real eligibility test below
     // instead of being told it is already narrowed.
     const limit = limits.get(host);

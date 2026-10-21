@@ -179,7 +179,7 @@ describe('CLI global deploy — rule set equals the wizard plan', () => {
     });
 
     it('ships the derived scope whatever the settings say, and it is strictly smaller', () => {
-        // ADR-292 step 4.6: the workspace axis is DERIVED from the pack
+        // ADR-293 step 4.6: the workspace axis is DERIVED from the pack
         // vocabulary, so "unscoped" is no longer a state a settings doc can
         // ask for. Both docs therefore deploy the same set — which is the
         // assertion, and the sensitive one: a difference here would mean a
@@ -205,7 +205,7 @@ describe('CLI global deploy — rule set equals the wizard plan', () => {
 
 describe('CLI global deploy — upgrade reaps newly-excluded rules', () => {
     it('deletes rules a narrower re-install newly excludes', () => {
-        // The upgrade path. ADR-292 step 4.6 took the WORKSPACE axis out of
+        // The upgrade path. ADR-293 step 4.6 took the WORKSPACE axis out of
         // settings, so the two states are produced on the PACK axis instead —
         // the axis that is still a setting, and the same reap code path. The
         // point is unchanged: the newly-excluded rules are GONE from disk, not
@@ -292,7 +292,7 @@ describe('scope resolution fails safe', () => {
     });
 
     it('derives the workspace axis even with no projection block, and leaves packs inactive', () => {
-        // Before ADR-292 step 4.6 this read `workspaces: null`. A rule is not a
+        // Before ADR-293 step 4.6 this read `workspaces: null`. A rule is not a
         // setting, so a settings file that happens to omit a section cannot
         // switch the workspace scope off; the pack axis is still a setting and
         // stays inactive, which is the half that did not change.

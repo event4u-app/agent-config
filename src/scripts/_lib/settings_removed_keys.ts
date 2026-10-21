@@ -63,7 +63,7 @@ type SettingsDict = Record<string, unknown>;
  * default; what a consumer who had set a non-default value loses is named by
  * the reason.
  *
- * The 2026-10-20 batch (ADR-292) is a fifth doctrine: keys that WERE read and
+ * The 2026-10-20 batch (ADR-293) is a fifth doctrine: keys that WERE read and
  * whose decision is now COMPUTED rather than configured. They are not
  * default-neutral — `lean_projection.mode: delivery` written user-globally
  * thinned a real machine — which is why they ship in a major and why
@@ -153,7 +153,7 @@ export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     ['consistency.cross_source', 'the cross-source-consistency rule, always on; batching and the no-cheap-questions floor bound the noise'],
     ['subagents.downshift', 'the model_tier each sub-task declares; downshift is always on'],
     ['ai_team.suppress_setup_hint', 'nothing: the one-line team-mode setup hint is always shown'],
-    // 2026-10-20 — the projection keys (ADR-292, road-to-a-setup-that-decides-itself Phase 4)
+    // 2026-10-20 — the projection keys (ADR-293, road-to-a-setup-that-decides-itself Phase 4)
     ['lean_projection.mode', 'the computed layer-form decision (_lib/layer_form_decision.ts), plus `install --full` and src/config/layer-form-brakes.json as the two brakes. The installer no longer reads this key at all; the in-repo projector honours a hand-written PROJECT value until step 3.6 of road-to-a-setup-that-decides-itself lands'],
     ['lean_projection.hosts', 'THINNABLE_HOSTS in _lib/lean_projection_mode.ts and the per-host row in src/config/host-injection-effect.json; same reader boundary as the mode above'],
     ['projection.rule_workspaces', 'consumerRuleWorkspaces() in _lib/scoped_projection.ts, which derives the consumer workspace set from src/config/discovery/packs.yml — every id minus `agent-config-maintainer` — so a new pack reaches consumers without a settings edit'],

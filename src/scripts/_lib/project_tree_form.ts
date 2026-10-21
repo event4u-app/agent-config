@@ -2,7 +2,7 @@
  * Where the PROJECT tree's rule-layer form comes from, now that no settings key
  * carries it.
  *
- * WHY THIS EXISTS. ADR-292 removed `lean_projection.*`, and the shipped
+ * WHY THIS EXISTS. ADR-293 removed `lean_projection.*`, and the shipped
  * settings template was the last layer of the cascade `resolveLeanProjection`
  * read — so the project tree on the first host got its `delivery` from a key
  * that no longer exists. Removing the key with nothing in its place would have
