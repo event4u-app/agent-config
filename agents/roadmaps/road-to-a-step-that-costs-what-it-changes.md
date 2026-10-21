@@ -87,7 +87,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       `src/config/turnaround-budget.json` over the last 10 drains or 7 days,
       whichever comes first.
       verify: the threshold commit predates the reading commit.
-- [ ] **0.3 Classify the last 100 merged PRs.** R0-R3 split and R3 rate. C3
+- [x] **0.3 Classify the last 100 merged PRs.** Done 2026-10-21: PRs #2444-#2552 — R0 24, R1 5, R2 35, R3 36; R3 rate 0.36, under the 0.40 line; the largest R3 driver is `gate-violation-baselines.json` (8); `agents/evidence/analysis/change-class-last-100-prs-2026-10-21.md`. R0-R3 split and R3 rate. C3
       says the R3 share is near half; if it stays above 0.40 here, the depth
       table cannot speed up most steps and the override list is the first
       defect to fix.
