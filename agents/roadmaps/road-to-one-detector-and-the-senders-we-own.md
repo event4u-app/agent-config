@@ -561,7 +561,7 @@ response, with no host contract in between and no hook budget to spend — so
   the decision-revisit gate's reserved set gives to the owner, not to a council.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-19 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-21 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -571,6 +571,7 @@ response, with no host contract in between and no hook budget to spend — so
 | 4 | Placeholders degrade review or coding quality | product | A model reasons worse over a value it cannot see | Paired comparison pre-registered in 0.3; a null or a loss is published and D8 keeps consumer defaults off | Phase 0 — Contract, census, pre-registration (no product code) |
 | 5 | The prevention guard costs every tool call | implementation | One more concern on a `pre_tool_use` slot whose latency trigger already fired | Pure path classifier, no dependency; byte delta stated in the PR and in `src/config/hook-latency-budget.json` | Phase 1 — Prevention that needs no rewrite (F4) |
 | 6 | The engine chunk is absent or wrong at run time | implementation | Moving the egress engine out of the dispatch bundle (2.2b) adds a load that can fail: a missing file, a stale digest, a schema drift | The loader verifies a digest sidecar and a schema number and reports why it refused; `off` never loads, `observe` records the refusal, `protect` and `strict` withhold the body; the composition gate pins every chunk's budget and coverage | Phase 2 — One detector table (F2, F3) |
+| 7 | The injection path now carries every concern's context through the engine | implementation | Since 3.5, every concern message and every `session_start` context block passes `egressInjection` before delivery. Risk 1 bounds over-replacement for reviews; it does not cover a concern whose own context — a handoff, a canary line, a roadmap pointer — carries an identifier-shaped value and arrives mangled, and an `egressInjection` that throws or returns empty would silence a concern rather than fail closed visibly | Not yet mitigated, and stated rather than assumed: the council ratification of 2026-10-21 settled AUTHORITY 2/2 and recorded explicitly that this function's fail-safe behaviour lies outside the gated diff and is unverified. Owed: a fixture per concern that injects context, asserting its text survives unchanged in `off` and `observe`; and a test that a throwing `egressInjection` leaves the concern's text in place rather than dropping it | Phase 3 — The grammar, and the requests this package writes (F1, F8) |
 
 ## Acceptance Criteria
 
