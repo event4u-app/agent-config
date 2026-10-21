@@ -25,9 +25,14 @@
  * place that may be parsed.
  *
  * **It never writes the setting.** `update.mode` is class C: only a human's
- * hand-edit or the GUI's write route may set it. The invitation says how; the
- * "never" it offers is recorded in this concern's own state file, which is not
- * a setting and binds nothing but this question.
+ * hand-edit or the GUI's write route may set it. The invitation says how, and
+ * stopping it is the same setting: `ask` is the opt-in, so any other value
+ * ends every future invitation. One mechanism, rather than a second "never"
+ * record that could disagree with the setting.
+ *
+ * **It is one-way text on every host.** The concern collects no answer; the
+ * user acts by editing the setting. A host with a native ask shape may relay
+ * the text through it, which changes how it is shown, not what it can decide.
  */
 import type { UpdateMode } from './classify_update.js';
 
@@ -51,6 +56,8 @@ export function ringZeroExited(recordText: string | null): boolean {
 
 export interface InviteEnv {
     readonly ci: boolean;
+    /** `AGENT_CONFIG_NO_UPDATE_CHECK=1`, the kill switch both update concerns honour. */
+    readonly noUpdateCheck: boolean;
     /** stdout AND stderr are a terminal a human is looking at. */
     readonly interactive: boolean;
     readonly headless: boolean;
@@ -65,8 +72,6 @@ export interface InviteInput {
     readonly ringZeroExited: boolean;
     /** True once a global live-session register exists — step 1.4. */
     readonly registerAvailable: boolean;
-    /** The user already said never. Binding, forever, on this machine. */
-    readonly neverAsked: boolean;
     /** The invitation was already shown once. It is a once, not a cadence. */
     readonly alreadyInvited: boolean;
     /** The turn that just ended finished on a verified success. */
@@ -79,6 +84,7 @@ export type InviteDecision = { readonly ask: true; readonly lines: readonly stri
 /** The question, once, or the reason there is none. */
 export function autoInviteDecision(input: InviteInput): InviteDecision {
     if (input.env.ci) return { ask: false, reason: 'CI' };
+    if (input.env.noUpdateCheck) return { ask: false, reason: 'AGENT_CONFIG_NO_UPDATE_CHECK=1' };
     if (input.env.jsonOutput) return { ask: false, reason: '--json output' };
     if (input.env.subagent) return { ask: false, reason: 'subagent run' };
     if (input.env.headless) return { ask: false, reason: 'headless' };
@@ -90,7 +96,6 @@ export function autoInviteDecision(input: InviteInput): InviteDecision {
     if (input.mode !== 'ask') return { ask: false, reason: 'no user opt-in: update.mode is not ask' };
     if (!input.ringZeroExited) return { ask: false, reason: 'ring-0 has not exited' };
     if (!input.registerAvailable) return { ask: false, reason: 'no machine-wide session register' };
-    if (input.neverAsked) return { ask: false, reason: 'the user said never' };
     if (input.alreadyInvited) return { ask: false, reason: 'already invited once' };
     if (!input.turnEndedOnVerifiedSuccess) return { ask: false, reason: 'the turn did not end on a verified success' };
     return {
@@ -103,7 +108,7 @@ export function autoInviteDecision(input: InviteInput): InviteDecision {
             '  1. Turn it on — set `update: { mode: auto }` in your user-global settings,',
             '     by hand or in `agent-config setup`.',
             '  2. Leave it as it is — you keep being told, and nothing installs itself.',
-            '  3. Never ask me again — run `agent-config upgrade --never-ask-auto`.',
+            '  3. Stop these invitations — set `update.mode` back to `notify`; update notices continue.',
             '',
             'Recommendation: 2, unless this machine is one you maintain rather than one you work on.',
         ],

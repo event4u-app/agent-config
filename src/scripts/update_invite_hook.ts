@@ -18,9 +18,15 @@
  * code the next change can flip.
  *
  * **It never writes `update.mode`.** That key is class C — only a hand-edit or
- * the GUI's write route may set it. The invitation says how; the "never" it
- * offers is recorded in this concern's own state file and binds nothing but
- * this question.
+ * the GUI's write route may set it. The invitation says how, and setting it to
+ * anything but `ask` is also how it stops.
+ *
+ * **State: one timestamp, per user-global config home.** `update-invite.json`
+ * holds `{invited_at}`. Every repository and session of one OS user shares it,
+ * so "once" means once per config home. Absent means never invited; present but
+ * unreadable counts as invited, because a corrupt record must not re-open the
+ * question. Deleting the file is the reset. Created once, exclusively, at mode
+ * 0600 — see {@link claimInvite}.
  *
  * Fail-open, exit 0 on every path except the one that carries the question,
  * which exits 2 — the warn path, so the question reaches the agent that can
@@ -45,27 +51,71 @@ export const RING_ZERO_GLOB_DIR = path.join('agents', 'evidence', 'analysis');
 export const RING_ZERO_PREFIX = 'ring-0-unattended-record-';
 
 export interface InviteState {
-    readonly never: boolean;
+    /** `null` only when no record exists; a record that does not parse reads as invited. */
     readonly invited_at: string | null;
 }
 
+export const UNREADABLE_INVITE_RECORD = 'unreadable record';
+
 export function readInviteState(statePath: string): InviteState {
+    let text: string;
     try {
-        const raw: unknown = JSON.parse(fs.readFileSync(statePath, 'utf-8'));
+        text = fs.readFileSync(statePath, 'utf-8');
+    } catch (err) {
+        return { invited_at: (err as NodeJS.ErrnoException).code === 'ENOENT' ? null : UNREADABLE_INVITE_RECORD };
+    }
+    try {
+        const raw: unknown = JSON.parse(text);
         const o = raw !== null && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
-        return { never: o['never'] === true, invited_at: typeof o['invited_at'] === 'string' ? o['invited_at'] : null };
+        return { invited_at: typeof o['invited_at'] === 'string' && o['invited_at'] !== '' ? o['invited_at'] : UNREADABLE_INVITE_RECORD };
     } catch {
-        return { never: false, invited_at: null };
+        return { invited_at: UNREADABLE_INVITE_RECORD };
     }
 }
 
-export function writeInviteState(statePath: string, state: InviteState): void {
+/**
+ * Claim the one invitation: create the record only if it does not exist yet.
+ *
+ * `O_CREAT | O_EXCL` makes the claim, not the read before it, so of two
+ * sessions that both decided to ask, exactly one creates the record and only
+ * that one prints. It also refuses a symlink at the path. Nothing here throws:
+ * a claim that cannot be made asks nothing, because a question that cannot be
+ * recorded could repeat; a record created but not fully written is removed
+ * again, so a failed write cannot silence the invitation forever. A reader
+ * racing the content write sees an unreadable record, which counts as invited.
+ */
+export function claimInvite(
+    statePath: string,
+    invitedAt: string,
+    writeRecord: (fd: number, text: string) => void = (fd, text) => fs.writeFileSync(fd, text),
+): boolean {
+    let fd: number;
     try {
         fs.mkdirSync(path.dirname(statePath), { recursive: true });
-        fs.writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`, { encoding: 'utf-8', mode: 0o600 });
+        fd = fs.openSync(statePath, 'wx', 0o600);
     } catch {
-        /* unwritable → the question may be asked again, which is the safe direction */
+        return false;
     }
+    let written = false;
+    try {
+        writeRecord(fd, `${JSON.stringify({ invited_at: invitedAt } satisfies InviteState, null, 2)}\n`);
+        written = true;
+    } catch {
+        /* handled below: the half-written claim is withdrawn */
+    }
+    try {
+        fs.closeSync(fd);
+    } catch {
+        written = false;
+    }
+    if (!written) {
+        try {
+            fs.unlinkSync(statePath);
+        } catch {
+            /* an unremovable half-record reads as invited, the direction that cannot repeat */
+        }
+    }
+    return written;
 }
 
 /**
@@ -99,12 +149,13 @@ export interface InviteDeps {
     readonly env: NodeJS.ProcessEnv;
     readonly isTty: boolean;
     readonly out: { write(text: string): void };
+    /** Overrides the read of the turn's verification evidence. */
+    readonly turnEndedOnVerifiedSuccess?: boolean;
 }
 
-/** Decide, emit, remember. Returns the decision so a test asserts on a value. */
+/** Decide, claim, emit. Returns the decision so a test asserts on a value. */
 export function runInvite(deps: InviteDeps): InviteDecision {
     const state = readInviteState(deps.statePath);
-    const runState = readTurnRunState(deps.workspaceRoot, deps.sessionId);
     const decision = autoInviteDecision({
         mode: deps.mode,
         ringZeroExited: ringZeroExited(deps.ringZeroText),
@@ -112,11 +163,11 @@ export function runInvite(deps: InviteDeps): InviteDecision {
         // this code runs. It stays an input because the condition is ADR-291's,
         // not this file's, and a reader should see it being checked.
         registerAvailable: true,
-        neverAsked: state.never,
         alreadyInvited: state.invited_at !== null,
-        turnEndedOnVerifiedSuccess: runState !== null && readRunEvidence(runState).passed,
+        turnEndedOnVerifiedSuccess: deps.turnEndedOnVerifiedSuccess ?? verifiedSuccess(deps.workspaceRoot, deps.sessionId),
         env: {
             ci: ['1', 'true'].includes((deps.env['CI'] ?? '').trim().toLowerCase()) || deps.env['GITHUB_ACTIONS'] === 'true',
+            noUpdateCheck: deps.env['AGENT_CONFIG_NO_UPDATE_CHECK'] === '1',
             interactive: deps.isTty,
             headless: deps.env['AGENT_CONFIG_NO_UI'] === '1' || (deps.env['DISPLAY'] === '' && deps.env['AGENT_CONFIG_HEADLESS'] === '1'),
             jsonOutput: deps.env['AGENT_CONFIG_JSON'] === '1' || (deps.env['AGENT_CONFIG_ARGV'] ?? '').includes('--json'),
@@ -124,9 +175,14 @@ export function runInvite(deps: InviteDeps): InviteDecision {
         },
     });
     if (!decision.ask) return decision;
+    if (!claimInvite(deps.statePath, new Date().toISOString())) return { ask: false, reason: 'already invited once' };
     for (const line of decision.lines) deps.out.write(`${line}\n`);
-    writeInviteState(deps.statePath, { never: state.never, invited_at: new Date().toISOString() });
     return decision;
+}
+
+function verifiedSuccess(workspaceRoot: string, sessionId: string): boolean {
+    const runState = readTurnRunState(workspaceRoot, sessionId);
+    return runState !== null && readRunEvidence(runState).passed;
 }
 
 function envelopeField(raw: string, key: string): string {

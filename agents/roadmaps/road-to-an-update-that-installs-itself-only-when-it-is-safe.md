@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-t verified at 5fa963cec that `upgrade` runs only on explicit invocation, that `update_check.enabled` is the only settings key on the whole surface (agent-settings.template.yml:1529), that the notice is emitted solely by the CLI dispatcher and suppressed on non-TTY (update_check.ts:239-255, sole caller check_update_banner.ts:149) while consumption is global-only through hosts (README.md:188), and that SECURITY.md:21-22 backports nothing — so an install that is not current is unsupported and nothing tells its user. No active, parked or stub roadmap owns this: a grep over agents/roadmaps/{*,later,stubs} for cmd_upgrade, update_check, unattended and probe_throttle returns nothing. Archiving or parking costs more because the support consequence is live on every install today; merging into road-to-a-release-that-says-whether-it-needs-you would put an install transaction behind a release-numbering decision the owner has not taken."
-estate_growth_exempt: "Adds three blockers above the open_blockers floor measured at origin/main. Two are owner blockers (`node-floor-raise`, `auto-default-for-existing-installs`) above the open_blockers floor measured at origin/main. Both are consumer-facing commitments — a minimum-runtime raise and a default flip on installs that already exist — which template rule 27 records as structured blockers rather than as decisions the agent takes. Measure the delta with `./scripts-run src/scripts/check_estate_count` on the landed commit rather than reading this sentence. The third, `dsse-trust-root`, is Class 2 and council-decidable: step 2.1 closed the half of the provenance gate that could be closed without a dependency decision, and the half that remains — pinning a sigstore trust root, or shelling out to the npm client, or recording the certificate-bound check as the floor — trades bytes against bandwidth against coverage with no measurement in this tree to separate them. Recording it as a structured blocker is what keeps the gate's real limit readable; the alternative was a docstring nobody greps."
+estate_growth_exempt: "Grows concern_count 63 -> 65: `update-notice` and `update-auto-invite`, registered on 2026-10-20 under a council ratification of 2/2 that declared them authority expansions and named the two effect terms they take. They are not new work the estate acquired — they are work it already carried, reverted out of the manifest in the same week by the refusal this ratification lifts, so the growth is a restoration rather than an accretion. open_blockers moves the other way in the same diff (71 -> 70, `concerns-refused-as-authority-expansion` resolved). PRIOR CLAIM, still live for the blockers it covers: Adds three blockers above the open_blockers floor measured at origin/main. Two are owner blockers (`node-floor-raise`, `auto-default-for-existing-installs`) above the open_blockers floor measured at origin/main. Both are consumer-facing commitments — a minimum-runtime raise and a default flip on installs that already exist — which template rule 27 records as structured blockers rather than as decisions the agent takes. Measure the delta with `./scripts-run src/scripts/check_estate_count` on the landed commit rather than reading this sentence. The third, `dsse-trust-root`, is Class 2 and council-decidable: step 2.1 closed the half of the provenance gate that could be closed without a dependency decision, and the half that remains — pinning a sigstore trust root, or shelling out to the npm client, or recording the certificate-bound check as the floor — trades bytes against bandwidth against coverage with no measurement in this tree to separate them. Recording it as a structured blocker is what keeps the gate's real limit readable; the alternative was a docstring nobody greps."
 relates:
   - slug: road-to-a-release-that-says-whether-it-needs-you
     relation: depends
@@ -123,23 +123,12 @@ None of this is rebuilt here.
       signature or tie it to `publish-npm.yml`. That verification is what
       keeps this step open. Harmless today: the production wiring swaps
       nothing until 1.4.
-      *The `running_origin` half is fixed (2026-10-19).* `_is_source_repo`
-      answers "am I standing in an agent-config tree", and **both** of its
-      positive signals — a `dist/agent-src/` directory and a `package.json`
-      named `@event4u/agent-config` — are in every published tarball, so every
-      installed package read as a source checkout and `quiet_context`
-      suppressed the unattended run on all of them. The `.git`-at-package-root
-      test is now the one shared definition
-      (`doctor_install_mode.isSourceCheckoutPackage`), used by
-      `running_origin` and by `doctor_update_verdict` so the two cannot drift;
-      `_is_source_repo` itself is unchanged, because its three remaining
-      callers ask the question it actually answers. Measured on a real packaged
-      install (`npm pack` → `npm install --omit=dev --ignore-scripts` into an
-      empty directory outside the repo → `upgrade --unattended --dry-run`):
-      **before** `not installing — suppressed: source checkout`, **after**
-      `not installing (installed: 16.5.0) — candidate 16.5.0 is not newer than
-      16.5.0` — the origin gate now passes and the refusal is the honest one.
-      A real checkout still reads `source-checkout`.
+      *The `running_origin` half is fixed (2026-10-19).* Both of
+      `_is_source_repo`'s positive signals ship in every tarball, so every
+      installed package read as a source checkout; the `.git`-at-package-root
+      test is now the one shared definition. Measured on a real packaged
+      install, before and after:
+      `agents/evidence/analysis/running-origin-source-checkout-2026-10-19.md`.
       *The signature half landed half-closed (2026-10-20), and the half that
       did not is now a blocker rather than a sentence.* `provenance_verify`
       gained `verify_attestation_signature`: the DSSE envelope's signature is
@@ -185,27 +174,16 @@ None of this is rebuilt here.
 
 ## Phase 3 — Delivery into the session, without entering the model
 
-- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.1 A `session_start` concern beside `wrapper-freshness`.**
+- [ ] **3.1 A `session_start` concern beside `wrapper-freshness`.**
       Registered in `src/scripts/hook_manifest.yaml`, day-throttled through
       `probe_throttle.ts:50`, a 1 s budget, fail-open, effect `notification`,
       addressed to the **user**.
       verify: p95 hook latency stays inside the Phase 1.3 baseline.
-      Written and tested 2026-10-20 as `update-notice`
-      (`src/scripts/update_notice_hook.ts`), and **not registered**: the
-      manifest binds it on no event of any host, and its test asserts exactly
-      that, so the commit that registers it turns the test red and has to carry
-      the new council verdict. File reads only — the cached registry probe, the installed
-      `package.json` and `CHANGELOG.md`, the session register — so it opens no
-      socket; measured p95 over 20 in-process runs is asserted under 100 ms
-      against the 1.3 `session_start` baseline of 160 ms for the WHOLE
-      dispatch. **Registering it will need room first.** The conditional chunk
-      that made room for it (D10) was split out of this change on 2026-10-20:
-      it touches four ratification-watched files, the round that would ratify
-      it alone could not run on exhausted council quota, and without the two
-      concerns it buys nothing. Without it the bundle stands at 1,549,984 of
-      1,550,000 B, so the next round has to bring the room back with the
-      registration.
-- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.2 Stage and verify only; activate at a boundary.** The concern never
+      **Reopened 2026-10-21:** the concern reports on stderr and is silent
+      without a TTY, and every host runs the dispatcher on pipes, so bound it
+      says nothing. It closes with a delivery path a review can verify.
+      Done note: `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § 3.1.
+- [x] **3.2 Stage and verify only; activate at a boundary.** The concern never
       swaps files mid-session; activation happens at the next `session_start`
       before the dispatcher reads anything.
       verify: a fixture session observes no file change between its first and
@@ -216,23 +194,13 @@ None of this is rebuilt here.
       which refuses while `any_live_session` reports a foreign session. The
       fixture asserts a byte-identical install tree across five invocations.
       Open with 3.1, because a concern nobody registers delivers nothing.
-- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.3 One line from the shipped curated head.** After an update, the
+- [x] **3.3 One line from the shipped curated head.** After an update, the
       line comes from `release_highlights.ts:35-41` in the **installed**
       package, plus any `notice` entry from the impact map. Fetched release
       notes are remote untrusted text and never enter model context.
       verify: a fixture with a hostile remote changelog produces no model-
-      visible token from it.
-      Landed 2026-10-20, as a SHAPE rather than as a scrubbing pass. The
-      update-check cache is the sanitising boundary: `_cacheable_impact` keeps
-      only keys that parse as versions and values from the published enum, so
-      a hostile description, version label or nested object is dropped once at
-      write time instead of being re-checked by every reader, and
-      `sanitiseImpactMap` applies the same reduction again on read. Prose comes
-      from `parseCuratedHead` over the INSTALLED `CHANGELOG.md` or from
-      sentences written in `_lib/update_notice.ts`; a cached version string
-      that does not parse produces no line at all. The concern exits 0 and
-      writes to stderr, so nothing it emits is model context on any host.
-- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.4 A security release is loud in every mode but `off`.** The notice
+      Done note: `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § 3.3.
+- [x] **3.4 A security release is loud in every mode but `off`.** The notice
       names the latest-only policy at `SECURITY.md:21`.
       verify: a fixture with `Security: yes` in range produces the notice
       under `notify` and under `ask`.
@@ -241,7 +209,7 @@ None of this is rebuilt here.
       on the fixture alone because the probe now caches the impact block beside
       the version (`fetch_latest_document`) — one fetch, two readers; without
       that the security branch could never have fired in production.
-- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **3.5 Hosts with no session slot keep the CLI banner.**
+- [x] **3.5 Hosts with no session slot keep the CLI banner.**
       verify: a fixture in which `agent-config hooks:status` reports no
       `session_start` binding still yields the banner path.
       True by construction today, because no host binds `update-notice` and
@@ -279,29 +247,16 @@ None of this is rebuilt here.
       a change. The record carries one machine-readable line,
       `ring-0-exit: no`, written by a human after reading the table and
       recomputed by nothing, and that line is what 4.3's gate reads.
-- [ ] <!-- blocked-by: concerns-refused-as-authority-expansion | asked: no — the council refused 2/2 on 2026-10-20 and asked for the two concerns to return as their own declared expansion; that is the next round, not an owner question --> **4.3 Ask once, at a moment that earned it.** After the ring-0 exit, one
+- [ ] **4.3 Ask once, at a moment that earned it.** After the ring-0 exit, one
       host-native question in the `stop` slot, after a turn that ended on a
       verified success. It carries a permanent "never". Existing installs are
       **asked**, never flipped.
       verify: a fixture asserts zero prompts under CI, non-TTY, headless,
-      `--json` output and a subagent run.
-      Landed 2026-10-20 as `update-auto-invite`
-      (`src/scripts/update_invite_hook.ts`), bound on `stop` and nowhere else.
-      All five contexts are asserted to produce zero prompts, and so are a
-      recorded "never", a second run, a mode the user already chose, and a turn
-      that did not end on a verified success — the last read through
-      `readRunEvidence`, the same evidence the turn-end gate uses.
-      **It is closed today by the 4.2 record, not by a flag:** it returns
-      before reading anything else while `ring-0-exit: no`, which is every
-      install. It never writes `update.mode`; the invitation says how, and the
-      "never" it records lives in its own state file and binds nothing else.
-      The question reaches the user through the warn path, in the host's
-      declared `ask:` shape (native tool where a host offers one, the numbered
-      text block otherwise).
-      **Narrowed 2026-10-20 to the council's (d):** the invitation now needs
-      `update.mode: ask` — a class-C value only a human can write — before it
-      reads the ring-0 record, which stays as a second kill switch. An absent
-      key and `notify` ask nothing, asserted. Not registered, like 3.1.
+      Since 2026-10-21 the "never" is the setting: any mode but `ask` stops it.
+      **Reopened 2026-10-21:** the registration was withdrawn after rounds 5
+      and 6 refused it — the one global claim is finalised on workspace-written
+      evidence without confirmed delivery. It closes when the claim is.
+      Done note: `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § 4.3.
 - [x] **4.4 A pin advisor for teams.** `update --check` in a pinned project
       lists what lies between the pin and latest, read from the impact map.
       It proposes; it never moves the pin.
@@ -330,8 +285,25 @@ None of this is rebuilt here.
 
 ### blocker: concerns-refused-as-authority-expansion
 
-- **Status:** open — raised 2026-10-20 by a council verdict, not by a missing
+- **Status:** resolved 2026-10-20 — round 2 returned `ratified` 2/2 (anthropic +
+  openai), recorded at `agents/evidence/ratifications/`
+  `update-concerns-declared-20261020.md`. Both concerns are registered, under
+  two effect terms the same ratification added: `update-notice` is
+  `state_change`, `update-auto-invite` is `interaction`. Four of the six
+  conditions the seats attached are tests rather than sentences
+  (`tests/scripts/update_concerns_declared_effects.test.ts`); condition 6 —
+  documenting whether staged state is visible, replaceable and clearable — is
+  NOT discharged and is named here rather than quietly dropped, because
+  `reversible` may not be assumed merely because activation is deferred.
+  Was: open — raised 2026-10-20 by a council verdict, not by a missing
   decision. The work exists, is tested and is reverted out of the manifest.
+- **Rounds 3–11 (2026-10-21):** neither concern is in the manifest —
+  `update-auto-invite` returns when 4.3 closes, `update-notice` when 3.1 does.
+  Round 11 refused even unbound definitions as dead surface, so the
+  2026-10-20 registration and its two effect terms were taken out with them;
+  the concerns' code, its fixes and its tests stay. A return needs the terms
+  and the registration ratified again.
+- **Round 3 and the lifecycle contract (2026-10-21):** `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § Round 3.
 - **Class:** 2 — council. The seats named what the next round has to carry, so
   the question is what they asked for, not who owns it.
 - **Owner:** council

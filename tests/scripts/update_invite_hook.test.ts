@@ -40,10 +40,9 @@ const OPEN: InviteInput = {
     mode: 'ask',
     ringZeroExited: true,
     registerAvailable: true,
-    neverAsked: false,
     alreadyInvited: false,
     turnEndedOnVerifiedSuccess: true,
-    env: { ci: false, interactive: true, headless: false, jsonOutput: false, subagent: false },
+    env: { ci: false, noUpdateCheck: false, interactive: true, headless: false, jsonOutput: false, subagent: false },
 };
 
 describe('4.3 — the invitation exists at all', () => {
@@ -52,7 +51,8 @@ describe('4.3 — the invitation exists at all', () => {
         expect(d.ask).toBe(true);
         const text = d.ask ? d.lines.join('\n') : '';
         expect(text).toMatch(/mode: auto/);
-        expect(text).toMatch(/Never ask me again/);
+        expect(text).toMatch(/Stop these invitations — set `update\.mode` back to `notify`/);
+        expect(text).not.toMatch(/never-ask-auto/);
         expect(text).toMatch(/Leave it as it is/);
     });
 });
@@ -113,9 +113,10 @@ describe('4.3 / AC-7 — the ring-0 record is the kill switch', () => {
     });
 });
 
-describe('4.3 — a once, with a binding never', () => {
-    it('a recorded never closes it forever', () => {
-        expect(autoInviteDecision({ ...OPEN, neverAsked: true }).ask).toBe(false);
+describe('4.3 — a once, and the setting as the only stop', () => {
+    it('the env kill switch closes it, as it does the notice', () => {
+        const d = autoInviteDecision({ ...OPEN, env: { ...OPEN.env, noUpdateCheck: true } });
+        expect(d).toEqual({ ask: false, reason: 'AGENT_CONFIG_NO_UPDATE_CHECK=1' });
     });
 
     it('a second run after an invitation asks nothing', () => {
