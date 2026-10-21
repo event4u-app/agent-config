@@ -37,27 +37,31 @@ a command or the next step acts on it and medium when nothing does.
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 7247c0ca9f463189e06d7cdfc501831b623ced77, review
-  artefacts excluded), scope hash `0092cb6cac489ce9cf524b46b4480602c01ff6dec3a78104fab6f57326e90353`
+- diff: `diff.patch` — the review scope (branch head adc852f14a7bdcfb3ec3fec492ee8af13a342e2c, review
+  artefacts excluded), scope hash `0315f350f5a7db8fe1437187bbf2aa6bdf77709f71ea5ccaf3b842ce4cbad7c9`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
 
 - .gitignore
+- .path-leak-allow
+- CAPABILITIES.yaml
 - README.md
 - agents/evidence/analysis/worktree-estate-cleanup-2026-10-21.md
 - agents/evidence/council/advisories-worktree-run-design-20261021.md
 - agents/evidence/council/advisories-worktree-run-design-20261021.question.md
 - agents/evidence/council/advisory-session-notice-20261021.md
 - agents/evidence/council/advisory-session-notice-20261021.question.md
+- agents/evidence/council/review-advisories-code-20261021.md
 - agents/evidence/owner-directives/2026-10-21-advisories-and-worktree-cleanup.md
+- agents/roadmaps-owned.md
 - agents/roadmaps/later/road-to-advisory-latency-measured.md
 - agents/roadmaps/road-to-advisories-heard-the-same-day.md
 - agents/roadmaps/road-to-security-fixes-carried-to-the-merge.md
 - agents/roadmaps/road-to-worktrees-that-leave-after-the-merge.md
 - dist/agent-src/commands/audit.md
-- dist/agent-src/commands/pr/merge.md
 - dist/agent-src/commands/worktree/cleanup.md
+- dist/agent-src/contexts/execution/pr-merge-queue.md
 - dist/agent-src/contexts/execution/process-full-all.md
 - dist/agent-src/skills/composer-packages/SKILL.md
 - dist/agent-src/skills/dependency-upgrade/SKILL.md
@@ -69,6 +73,8 @@ Changed files:
 - docs/CLAIMS.md
 - docs/architecture.md
 - docs/command-flows.md
+- docs/contracts/egress-placeholders-v1.md
+- docs/contracts/retrieval-read-surfaces.md
 - docs/contracts/settings-classes.md
 - docs/decisions/ADR-295-worktree-removal-on-the-proven-set.md
 - docs/decisions/ADR-296-advisory-session-notice-declared.md
@@ -83,15 +89,15 @@ Changed files:
 - site/src/content/docs/agent-commands/overview.md
 - site/src/content/docs/architecture/overview.md
 - site/src/content/docs/getting-started/introduction.md
+- src/agent-src/contexts/execution/pr-merge-queue.md
 - src/agent-src/contexts/execution/process-full-all.md
 - src/agent-src/templates/github-workflows/advisories-daily.yml
 - src/cli/registry.ts
 - src/config/agent-settings.template.yml
 - src/config/evaluator-budgets.json
+- src/config/skill-body-budget.json
 - src/domains/engineering-base/audit/command.md
 - src/domains/engineering-base/worktree/cleanup/command.md
-- src/domains/git/pack.yaml
-- src/domains/git/pr/merge/command.md
 - src/domains/meta/README.md
 - src/domains/meta/pack.yaml
 - src/scripts/_dispatch.bash
@@ -101,6 +107,8 @@ Changed files:
 - src/scripts/_lib/advisory_verdicts.ts
 - src/scripts/_lib/security_fix.ts
 - src/scripts/_lib/security_fix_context.ts
+- src/scripts/_lib/worktree_git.ts
+- src/scripts/_lib/worktree_ignored.ts
 - src/scripts/advisories.ts
 - src/scripts/check_update_banner.ts
 - src/scripts/session_register_hook.ts
@@ -167,6 +175,9 @@ Changed files:
 - tests/fixtures/security-fixes/G9-fix-fresh/context.json
 - tests/fixtures/security-fixes/G9-fix-fresh/expected.json
 - tests/scripts/advisories.test.ts
+- tests/scripts/check_command_examples.test.ts
+- tests/scripts/cli/python/workspace_inbox.test.ts
+- tests/scripts/consumer_invocations.test.ts
 - tests/scripts/security_fix.test.ts
 - tests/scripts/worktree_cleanup_check.test.ts
 
@@ -190,7 +201,7 @@ Fill the findings table in `advisories-fixes-worktree-cleanup.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 0092cb6cac489ce9cf524b46b4480602c01ff6dec3a78104fab6f57326e90353, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 0315f350f5a7db8fe1437187bbf2aa6bdf77709f71ea5ccaf3b842ce4cbad7c9, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
