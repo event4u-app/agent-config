@@ -118,7 +118,9 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
         // local wrapper — because a cloned repository can commit any of them
         // and would then run as the user's global hook, ahead of the guards.
         // `exec` replaces the shell; stdin and exit codes flow through, so a
-        // fail_closed concern still denies.
+        // fail_closed concern still denies. PreToolUse is the exception: it
+        // runs the dispatcher as a child so a missing verdict can be refused
+        // (see _pre_tool_use_exit_guard).
         //
         // With no dispatcher, PreToolUse refuses (exit 2) on the settings
         // carrier (finding bb6ab0f5f37d): every fail_closed guard would
@@ -136,11 +138,13 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
             'R="${EVENT4U_CONFIG_HOME:-$HOME/.event4u/agent-config}/runtime"; S="$R/current"; N=""; ' +
             '[ -f "$S/node" ] && read -r N < "$S/node"; ' +
             'if [ -n "$N" ] && [ -x "$N" ] && [ -f "$S/dist/hooks/dispatch.js" ]; then ' +
-            `exec "$N" "$S/dist/hooks/dispatch.js" ${dispatchArgs}; fi; ` +
+            `${native === 'PreToolUse' ? '' : 'exec '}"$N" "$S/dist/hooks/dispatch.js" ${dispatchArgs}; ` +
+            `${native === 'PreToolUse' ? 'else ' : 'fi; '}` +
             'BIN=$(command -v agent-config 2>/dev/null); [ "${BIN#/}" = "$BIN" ] && BIN=""; ' +
             '[ -n "$CLAUDE_PROJECT_DIR" ] && [ "${BIN#"$CLAUDE_PROJECT_DIR"/}" != "$BIN" ] && BIN=""; ' +
             `[ -n "$BIN" ] || { ${_no_dispatcher_notice(native)}${_thinned_dead_carrier(native)}${_no_dispatcher_exit(native)} }; ` +
-            `"$BIN" dispatch:hook ${dispatchArgs}`;
+            `"$BIN" dispatch:hook ${dispatchArgs}` +
+            (native === 'PreToolUse' ? _pre_tool_use_exit_guard() : '');
     }
     return matrix;
 }
@@ -184,6 +188,23 @@ export const NO_DISPATCHER_REFUSAL =
 function _no_dispatcher_exit(native: string): string {
     if (native !== 'PreToolUse') return 'exit 0;';
     return `[ -z "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_REFUSAL}' >&2; exit 2; }; exit 0;`;
+}
+
+export const DISPATCHER_FAILED_REFUSAL =
+    'agent-config: the hook dispatcher did not return a verdict, so this tool call is refused: the fail_closed ' +
+    'guards could not decide. If an agent-config upgrade is running, retry once it has finished.';
+
+/**
+ * PreToolUse runs its dispatcher as a child, never via `exec`, so this tail can
+ * read the exit code: Claude Code lets a tool call through on any exit other
+ * than 2, so a dispatcher that vanished mid-upgrade (127) or crashed on a
+ * half-written tree (1) used to pass the call. Only 0 and 2 are verdicts.
+ */
+function _pre_tool_use_exit_guard(): string {
+    return (
+        `; fi; RC=$?; [ "$RC" = 0 ] || [ "$RC" = 2 ] || { echo '${DISPATCHER_FAILED_REFUSAL}' >&2; exit 2; }; ` +
+        'exit $RC'
+    );
 }
 
 export const THINNED_DEAD_CARRIER_LINE =

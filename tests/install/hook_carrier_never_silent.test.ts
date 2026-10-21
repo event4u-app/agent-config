@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { build_claude_hook_matrix, NO_DISPATCHER_REFUSAL, THINNED_DEAD_CARRIER_LINE } from '../../src/scripts/_lib/claude_settings_hooks.js';
+import { build_claude_hook_matrix, DISPATCHER_FAILED_REFUSAL, NO_DISPATCHER_REFUSAL, THINNED_DEAD_CARRIER_LINE } from '../../src/scripts/_lib/claude_settings_hooks.js';
 import { absoluteBodyLinkPrefix } from '../../src/scripts/_lib/thin_rules.js';
 import {
     describeCarrierProbe,
@@ -197,6 +197,43 @@ describe('no dispatcher reachable — PreToolUse refuses on the settings carrier
         const res = run('PreToolUse', bin);
         expect(res.stdout).toContain('FIXTURE-DISPATCH global dispatch:hook --platform claude');
         expect(res.status).toBe(0);
+    });
+});
+
+// A dispatcher that is reached but returns no verdict — vanished mid-upgrade
+// (127) or crashed on a half-written tree (1) — used to let the tool call
+// through, because Claude Code refuses only on exit 2.
+describe('PreToolUse treats only 0 and 2 as a verdict', () => {
+    function globalCli(body: string): string {
+        const bin = path.join(tmp, 'global-bin');
+        write(path.join(bin, 'agent-config'), `#!/bin/sh\n${body}\n`);
+        chmodSync(path.join(bin, 'agent-config'), 0o755);
+        return bin;
+    }
+
+    it.each([1, 126, 127])('refuses when the dispatcher exits %i', (code) => {
+        const res = run('PreToolUse', globalCli(`exit ${code}`));
+        expect(res.status).toBe(2);
+        expect(res.stderr).toContain(DISPATCHER_FAILED_REFUSAL);
+    });
+
+    it('passes a dispatcher refusal through unchanged', () => {
+        const res = run('PreToolUse', globalCli('echo "blocked by guard" >&2; exit 2'));
+        expect(res.status).toBe(2);
+        expect(res.stderr).toContain('blocked by guard');
+        expect(res.stderr).not.toContain(DISPATCHER_FAILED_REFUSAL);
+    });
+
+    it('passes a dispatcher allow through, from the staged runtime too', () => {
+        expect(run('PreToolUse', globalCli('exit 0')).status).toBe(0);
+        stageRuntime({ packageRoot: fixturePackage(path.join(tmp, 'pkg'), true), runtimeRoot: runtimeRoot(), nodePath: process.execPath });
+        const res = run('PreToolUse', '', { FIXTURE_TAG: 'staged' });
+        expect(res.status).toBe(0);
+        expect(res.stdout).toContain('FIXTURE-DISPATCH staged --platform claude --event pre_tool_use');
+    });
+
+    it('keeps other events on the dispatcher exit code, unguarded', () => {
+        expect(run('PostToolUse', globalCli('exit 1')).status).toBe(1);
     });
 });
 

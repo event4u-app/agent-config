@@ -11471,7 +11471,7 @@ function build_claude_hook_matrix(manifest_path2) {
     const concerns = claude_events[ac_event];
     if (!concerns || Array.isArray(concerns) && concerns.length === 0) continue;
     const dispatchArgs = `--platform claude --event ${ac_event} --native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
-    matrix[native] = `R="\${EVENT4U_CONFIG_HOME:-$HOME/.event4u/agent-config}/runtime"; S="$R/current"; N=""; [ -f "$S/node" ] && read -r N < "$S/node"; if [ -n "$N" ] && [ -x "$N" ] && [ -f "$S/dist/hooks/dispatch.js" ]; then exec "$N" "$S/dist/hooks/dispatch.js" ${dispatchArgs}; fi; BIN=$(command -v agent-config 2>/dev/null); [ "\${BIN#/}" = "$BIN" ] && BIN=""; [ -n "$CLAUDE_PROJECT_DIR" ] && [ "\${BIN#"$CLAUDE_PROJECT_DIR"/}" != "$BIN" ] && BIN=""; [ -n "$BIN" ] || { ${_no_dispatcher_notice(native)}${_thinned_dead_carrier(native)}${_no_dispatcher_exit(native)} }; "$BIN" dispatch:hook ${dispatchArgs}`;
+    matrix[native] = `R="\${EVENT4U_CONFIG_HOME:-$HOME/.event4u/agent-config}/runtime"; S="$R/current"; N=""; [ -f "$S/node" ] && read -r N < "$S/node"; if [ -n "$N" ] && [ -x "$N" ] && [ -f "$S/dist/hooks/dispatch.js" ]; then ${native === "PreToolUse" ? "" : "exec "}"$N" "$S/dist/hooks/dispatch.js" ${dispatchArgs}; ${native === "PreToolUse" ? "else " : "fi; "}BIN=$(command -v agent-config 2>/dev/null); [ "\${BIN#/}" = "$BIN" ] && BIN=""; [ -n "$CLAUDE_PROJECT_DIR" ] && [ "\${BIN#"$CLAUDE_PROJECT_DIR"/}" != "$BIN" ] && BIN=""; [ -n "$BIN" ] || { ${_no_dispatcher_notice(native)}${_thinned_dead_carrier(native)}${_no_dispatcher_exit(native)} }; "$BIN" dispatch:hook ${dispatchArgs}` + (native === "PreToolUse" ? _pre_tool_use_exit_guard() : "");
   }
   return matrix;
 }
@@ -11485,6 +11485,10 @@ var NO_DISPATCHER_REFUSAL = "agent-config: no hook dispatcher reachable, so this
 function _no_dispatcher_exit(native) {
   if (native !== "PreToolUse") return "exit 0;";
   return `[ -z "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_REFUSAL}' >&2; exit 2; }; exit 0;`;
+}
+var DISPATCHER_FAILED_REFUSAL = "agent-config: the hook dispatcher did not return a verdict, so this tool call is refused: the fail_closed guards could not decide. If an agent-config upgrade is running, retry once it has finished.";
+function _pre_tool_use_exit_guard() {
+  return `; fi; RC=$?; [ "$RC" = 0 ] || [ "$RC" = 2 ] || { echo '${DISPATCHER_FAILED_REFUSAL}' >&2; exit 2; }; exit $RC`;
 }
 var THINNED_DEAD_CARRIER_LINE = "agent-config: no hook dispatcher was reached and the rule layer on disk is thinned, so routed rule bodies will not arrive in this session. Open a rule body from the absolute Body path in its stub. The full rule layer is restored for the next session.";
 function _thinned_dead_carrier(native) {
