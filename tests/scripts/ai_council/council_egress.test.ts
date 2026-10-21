@@ -81,6 +81,7 @@ describe('council bundle: span replacement through the engine (3.3)', () => {
         expect(out).toMatch(/^export GITHUB=__TOKEN_1_/m);
     });
 
+    // skip-reason: the rule table carries no EMAIL, IBAN or PHONE identifier rows yet, so protect has nothing to replace them with
     it.skipIf(!hasIdentifierRows)('the F1 sample leaves with five placeholders in protect', () => {
         const out = redact(F1, new CouncilEgress({ identifiers: true }));
         expect(parseTokens(out)).toHaveLength(5);
@@ -88,7 +89,7 @@ describe('council bundle: span replacement through the engine (3.3)', () => {
         expect(out.split('\n')).toContain(CODE_LINE);
     });
 
-    it.skipIf(!hasIdentifierRows)('identifiers are left, and not refused, under the shipped default (D8)', () => {
+    it('identifiers are left, and not refused, under the shipped default (D8)', () => {
         const egress = new CouncilEgress({ identifiers: false });
         const out = redact(F1, egress);
         expect(out).toContain(EMAIL);
