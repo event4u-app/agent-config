@@ -47,6 +47,17 @@ export interface SpawnSelection {
      * set one (legacy dispatch).
      */
     max_tokens_per_worker?: number | null;
+    /**
+     * The worker skips the host's instruction hierarchy. Measured on Claude
+     * Code 2.1.306, that drops the user-level rule layer as well as every
+     * CLAUDE.md, so the floor and the constraints reach it only through this
+     * brief.
+     */
+    omit_project_instructions?: boolean;
+    /** The rendered safety floor (`generate_subagent_floor.render_floor`). */
+    safety_floor?: string | null;
+    /** The user's constraints, exclusions and preferences, verbatim. */
+    user_constraints?: string[];
 }
 
 export interface SpawnBrief {
@@ -63,6 +74,12 @@ export interface SpawnBrief {
      * drift away from the budget it sits under. Null when no budget is set.
      */
     capsule_watermark: number | null;
+    /** True only when a non-empty floor rides with the brief. */
+    omit_project_instructions: boolean;
+    /** The floor, carried only for a skipping worker; null otherwise. */
+    safety_floor: string | null;
+    /** Never trimmed, deduplicated or capped (spawn contract rule (a)). */
+    user_constraints: string[];
     warnings: string[];
 }
 
@@ -113,6 +130,19 @@ export function composeSpawnBrief(sel: SpawnSelection): SpawnBrief {
         }
     }
 
+    // A worker that skips the instruction hierarchy has no other path to the
+    // floor, so a skip without one falls back to loading, loudly.
+    let omit_project_instructions = sel.omit_project_instructions === true;
+    let safety_floor: string | null = null;
+    if (omit_project_instructions) {
+        if (typeof sel.safety_floor === 'string' && sel.safety_floor.trim().length > 0) {
+            safety_floor = sel.safety_floor;
+        } else {
+            omit_project_instructions = false;
+            warnings.push('instruction skip refused: no safety floor to carry, worker loads project instructions');
+        }
+    }
+
     return {
         task: sel.task,
         role_mode,
@@ -124,6 +154,9 @@ export function composeSpawnBrief(sel: SpawnSelection): SpawnBrief {
             max_tokens_per_worker === null
                 ? null
                 : Math.floor(max_tokens_per_worker * CAPSULE_WATERMARK_FRACTION),
+        omit_project_instructions,
+        safety_floor,
+        user_constraints: [...(sel.user_constraints ?? [])],
         warnings,
     };
 }
@@ -146,10 +179,13 @@ export function serializeSpawnPayload(brief: SpawnBrief): string {
         personas: brief.personas,
         max_tokens_per_worker: brief.max_tokens_per_worker,
         capsule_watermark: brief.capsule_watermark,
+        omit_project_instructions: brief.omit_project_instructions,
+        safety_floor: brief.safety_floor,
     });
     const variableTail = JSON.stringify({
         task: brief.task,
         knowledge_refs: brief.knowledge_refs,
+        user_constraints: brief.user_constraints,
     });
     return `${staticPrefix}\n${variableTail}`;
 }

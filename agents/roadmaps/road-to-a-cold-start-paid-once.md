@@ -124,7 +124,7 @@ Nothing in Phases 2–6 that reads a capability starts before its row exists.
       so Phase 5 has a baseline of its own.
       verify: `grep -c 'council seat' agents/evidence/analysis/spawn-burst-baseline-2026-10.md` -> /^[1-9][0-9]*$/
       Done 2026-10-16: same file, n=4 joined seat launches, filed as a scale and not a subtrahend; Phase 5 should re-read.
-- [ ] **1.4 Observe `worker_resume`.** In a real session: a finished leg receives
+- [x] **1.4 Observe `worker_resume`.** In a real session: a finished leg receives
       a follow-up by name, its next `SubagentStart` carries the same ledger
       `ref`, and that run's first call reads more than half its input from
       cache. Also record the cache-read share after a gap longer than five
@@ -132,29 +132,33 @@ Nothing in Phases 2–6 that reads a capability starts before its row exists.
       verify: `grep -c 'worker_resume' agents/evidence/investigations/host-continuation-observations-2026-10.md` -> /^[1-9][0-9]*$/
       Partial 2026-10-17, left open: on Claude Code 2.1.302 a resumed leg kept its ledger `ref` and read 99.7 % of its first call from cache; after a 6 min 51 s gap the resumed run read 0 % and rewrote the whole transcript. The resume was addressed by the host's per-run id, not by a durable name — the dispatch surface offered no name at spawn — so the by-name half is unobserved and `worker_resume` stays out of the registry row.
       Re-read 2026-10-21 on 2.1.305: the subagent tool still has no name parameter (`description, effort, isolation, model, prompt, run_in_background, subagent_type`), so the by-name half remains unreachable from the dispatch surface.
-- [ ] **1.5 Observe the resume admission point.** Whether `PreToolUse` fires on
+      Done 2026-10-21 on 2.1.306: with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` set before the session, a spawn named `probe-worker` was re-tasked by that name, the resume's `SubagentStart` carried the same host agent id (so the same derived ledger `ref`), and its first call read 99.8 % from cache. The by-name half holds only under that experimental flag, so the registry row is left unedited — whether `worker_resume` may be recorded as conditional is a separate decision. Rows in the observation file's second 2026-10-21 addendum.
+- [x] **1.5 Observe the resume admission point.** Whether `PreToolUse` fires on
       the `SendMessage` call that resumes a worker, and whether a deny there is
       honoured; and whether a resumed worker counts against
       `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` or can push the running count past
       it. One supplied plan reads the host documentation as saying the cap
       checks new spawns only; that is the claim this row settles.
       verify: `grep -c 'SendMessage pre_tool_use' agents/evidence/investigations/host-continuation-observations-2026-10.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-21 on 2.1.306: `PreToolUse` fires on the `SendMessage` that resumes a worker, and a deny there is honoured (no `SubagentStart` follows). With `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS=1` the host refused a second fresh spawn while one subagent ran, but admitted a resume in the same window, so two ran under a cap of one: the cap checks new spawns only. Risk 1, observed.
 - [x] **1.6 Observe fork cache sharing.** A fork's first call reads the parent
       prefix (share above half) and keeps the parent tool pool. Decides the D5
       correction text and nothing else.
       verify: `grep -c 'fork_shares_cache' agents/evidence/investigations/host-continuation-observations-2026-10.md` -> /^[1-9][0-9]*$/
       Done 2026-10-17: a fork's first own call read 99.8 % of its input from cache and reported the parent's tool list, on Claude Code 2.1.302; `fork_shares_cache: true` written into the `claude` registry row with that citation.
-- [ ] **1.7 Observe what skipping project instructions sheds.** Paired spawns,
+- [x] **1.7 Observe what skipping project instructions sheds.** Paired spawns,
       same task and model, with and without the host's skip flag: first-call
       written-or-uncached tokens **net of** the kernel floor and verbatim
       constraints the dispatch must then carry, and whether the installed
       `~/.claude/rules` layer is skipped too — the documentation names
       `CLAUDE.md` files only.
       verify: `grep -c 'net delta' agents/evidence/investigations/host-continuation-observations-2026-10.md` -> /^[1-9][0-9]*$/
-- [ ] **1.8 Observe naming under agent teams.** A named spawn with the agent-teams
+      Done 2026-10-21 on 2.1.306, one pair via `--agents` with `omitClaudeMd: true` on one side: first-call total input 143,354 against 1,854, gross delta about 141,500 tokens; net of a floor-carrying definition of 3,582 bytes, about 140,000 tokens, roughly 58 % of the median cold start. The skip also drops `~/.claude/rules` (canary readback and token collapse), not only `CLAUDE.md`. n = 1, and most of the delta is the operator's user-level layer.
+- [x] **1.8 Observe naming under agent teams.** A named spawn with the agent-teams
       flag set and unset; record which yields a resumable subagent and which a
       teammate.
       verify: `grep -c 'agent teams' agents/evidence/investigations/host-continuation-observations-2026-10.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-21 on 2.1.306: flag unset, the spawning tool takes no name and a send to the chosen name fails as unreachable; flag set, the name is accepted and the spawn is a resumable subagent (not a teammate) that answers to it. Neither arm produced a teammate.
 - [x] **1.9 Observe the rate surfaces.** On one subscription session: status-line
       `rate_limits` after the first response, `StopFailure` with matcher
       `rate_limit`, `api_retry` in a print-mode stream, the `quota_auto_resume_*`
@@ -162,10 +166,11 @@ Nothing in Phases 2–6 that reads a capability starts before its row exists.
       `not reached` is a valid row, and no step forces a limit to get one.
       verify: `grep -c 'StopFailure' agents/evidence/investigations/host-continuation-observations-2026-10.md` -> /^[1-9][0-9]*$/
       Done 2026-10-21 on Claude Code 2.1.305, two print-mode child sessions on a subscription login: all four named surfaces **not reached** (print mode runs no status line; no limit was hit, so `StopFailure`, `api_retry` and `quota_auto_resume_*` had nothing to fire on). One unnamed surface was present: each print-mode stream carried a structured `rate_limit_event` with five-hour and seven-day utilisation. Rows in the observation file's 2026-10-21 addendum.
-- [ ] **1.10 Version floors.** Every observed field carries the host version it
+- [x] **1.10 Version floors.** Every observed field carries the host version it
       was seen on; resume, the skip flag, the cap and the subagent TTL arrived in
       different releases.
       verify: `grep -c '2\.1\.' agents/evidence/investigations/host-continuation-observations-2026-10.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-21: every observed field is tabled with the host it was seen on (2.1.302, 2.1.305, 2.1.306) in the observation file's § Version floors. These are seen-on versions, not first-shipped releases — no earlier host was probed — and the subagent cache-TTL setting itself was never exercised, only the default TTL's effect.
 
 **Exit:** one baseline file and one observation file, every row in the
 protocol's four-part citation. **Rollback:** both are evidence files only.
@@ -212,6 +217,22 @@ waits on:
   3.3 lands.
 - **1.10** stays open until the 1.5, 1.7 and 1.8 rows exist.
 
+**Screen 2026-10-21, second pass (Claude Code 2.1.306).** The operator left auto
+mode and approved each probe at its prompt, so 1.4, 1.5, 1.7, 1.8 and with them
+1.10 closed from operator-approved child sessions. That moves the downstream
+waits:
+
+- **3.3** is unblocked: the guard can bind `pre_tool_use` on `SendMessage`, and a
+  named, resumable worker exists under the agent-teams flag. Its count must
+  include resumes, because the host cap does not.
+- **4.2** is unblocked: the row now states that the host cap does **not** bound
+  a resume. Its two texts still say the resume half is unobserved.
+- **2.5**'s measured half holds, at about 58 % against a 10 % bar. Its fixture
+  half — a dispatch that carries the kernel floor and the user's constraints
+  verbatim — is still unbuilt. 6.5 follows 2.5.
+- Not changed by this pass: 4.3, 4.5 and 5.3 (`StopFailure` still not
+  reached), 5.1 and 5.2, and the 3.5 → 3.6 → 6.2 window.
+
 ## Phase 2 — Workers that load what their role needs
 
 - [x] **2.1 Two capability atoms with a reader.** `worker_resume` (read by 3.1)
@@ -247,6 +268,7 @@ waits on:
       user's constraints verbatim (`subagent-spawn-contract.md:154-156`). Either
       missing, it ships off with the reading attached.
       verify: `npx vitest run tests/scripts/_lib_subagent_spawn.test.ts -t skipping-worker-carries-kernel-and-constraints --reporter=verbose` -> /✓.*skipping-worker-carries-kernel-and-constraints/
+      Partial 2026-10-21, left open: both conditions now hold. The 1.7 net delta is about 58 % against the 10 % bar. `composeSpawnBrief` carries the safety floor and the user's constraints verbatim for a skipping worker, and it refuses a skip that has no floor to carry; it went red before green in `_lib_subagent_spawn.test.ts`. The ship-on edit itself — `omit_project_instructions: true` on `ac-worker` / `ac-researcher` — is not made. 1.7 observed the flag only in the `--agents` JSON spelling, and the definition files project it through frontmatter as `omitClaudeMd`, a path never observed. Switching it on through that path would read an unobserved capability.
 - [x] **2.6 Correct the fork premise** in `SKILL.md:119-121` from the 1.6 row —
       the premise only; the ordering and the council's cut of "always fork"
       (`SKILL.md:123-125`) stay.
@@ -287,6 +309,17 @@ waits on:
       so one count covers spawn and resume; where it did not, the record says
       the resume half is unobserved. Still exit 0 on every path.
       verify: `npx vitest run tests/hooks/spawn_guard_shadow.test.ts -t records-would-resume-and-never-denies --reporter=verbose` -> /✓.*records-would-resume-and-never-denies/
+      Open 2026-10-21, council-refused in three rounds (anthropic + openai seats, CLI, $0). The change was then reverted to the `origin/main` bytes of the manifest, the hook, `worker_reuse.ts` and both test files, under the three-refusing-round cap. What was built:
+        - `SendMessage` added to the concern's `tools:`.
+        - `shadowReuseVerdict()`, recording `would_resume` with the eligible name or `fresh` with reasons. `host_resume_unobserved` comes first, so a host row without `worker_resume` reads no worker.
+        - A send classified by hashing its recipient with the ledger's `refFor`: an open ref is `message_running` (no thresholds); a same-session `subagent_stop`, found in a 1 MiB tail of the current or previous month file, is `resume`; anything else is `message_or_resume`.
+
+      The rounds:
+        - Round 1 (confirmed-non-expanding / refused): every send was counted as a resume.
+        - Round 2 (refused 2/2): a stop from any session counted, and two whole ledger files were read per send.
+        - Round 3 (ratified / refused): one blocking finding, that the tests invented the payload field `tool_input.to` rather than using a real host envelope.
+
+      The probe logs of 2026-10-21 already answer that finding. On 2.1.306 a real `PreToolUse(SendMessage)` carries `tool_input.to` (with `recipient` and `recipient_kind: agent | name` beside it) and a top-level `session_id`. A fourth attempt starts from those three rounds, adds a sanitized verbatim envelope from that log as a fixture, and needs a fresh grant. Prompts: `agents/evidence/council/cold-start-spawn-guard-resume-review-r1-20261021.question.md`, `-r2-`, `-r3-`.
 - [x] **3.4 Retirement is a handoff.** A worker failing (c)–(f) or (h) is not
       re-tasked; its successor is briefed from its `worker` capsule — the
       generation chain the recycling roadmap wanted, reached at task boundaries.
@@ -314,12 +347,13 @@ waits on:
       holds. Default stays `3`; no key is added.
       verify: `npx vitest run tests/scripts/_lib_host_env_write.test.ts -t max-parallel-lowers-into-host-cap --reporter=verbose` -> /✓.*max-parallel-lowers-into-host-cap/
       Done 2026-10-18: third row in `host_env_write.ts`, `settingsKey` now a dotted path; the ADR addendum is `docs/setup/host-traffic-environment.md` § Addendum 2026-10-14, next to the 2026-09-30 decision. Written only when the key is set; the settings template sets it to `3`.
-- [ ] **4.2 Say what the cap covers.** The `max_parallel` description
+- [x] **4.2 Say what the cap covers.** The `max_parallel` description
       (`settings.ts:371`) and `subagent-configuration.md:13` drop "no code counts
       spawns" once 4.1 lands, and state whether the host cap bounds resumes, from
       the 1.5 row — never "the host enforces concurrency" without it.
       verify: `grep -c 'resume' src/agent-src/contexts/subagent-configuration.md` -> /^[1-9][0-9]*$/
       Partial 2026-10-18, left open: both texts (and the settings template) dropped "no code counts spawns" with 4.1 and now say the resume half is unobserved. The step closes when the 1.5 row states whether the cap bounds a resume.
+      Done 2026-10-21: the 1.5 row says it does not. The `max_parallel` description, `subagent-configuration.md` and the settings template now say the host cap bounds new spawns only, and that a resume is neither bounded by the host nor counted by any package code yet (3.3 is unratified). "The host enforces concurrency" is claimed nowhere.
 - [ ] **4.3 Bind `StopFailure`** in the Claude event map to the `quota_parked`
       writer, widened from council-only to host-sourced. Still record-only, per
       `quota_parked.ts:25-31`.

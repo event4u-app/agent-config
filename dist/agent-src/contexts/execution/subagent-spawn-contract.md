@@ -14,9 +14,21 @@ task without re-inventing any taxonomy.
   "profile": "<active profile id or null>",
   "personas": ["<persona id>", "..."],
   "knowledge_refs": ["<id-or-path>", "..."],
-  "max_tokens_per_worker": 15000
+  "max_tokens_per_worker": 15000,
+  "omit_project_instructions": false,
+  "safety_floor": null,
+  "user_constraints": ["<the user's constraint, verbatim>", "..."]
 }
 ```
+
+**A worker that skips project instructions carries its floor in the brief.**
+On Claude Code 2.1.306 the host's skip flag drops the user-level rule layer as
+well as every `CLAUDE.md`
+(`agents/evidence/investigations/host-continuation-observations-2026-10.md`).
+So for such a worker the brief is the only path to the floor. A skip with no
+non-empty `safety_floor` is refused, and the worker loads its instructions
+instead, with a warning. `user_constraints` ride verbatim for every worker, with
+no trimming, no deduplication and no cap — rule (a) below.
 
 ## Selection — reuse existing seams, no new taxonomy
 
@@ -135,7 +147,7 @@ with RESULTS.md is test-enforced (`tests/scripts/_lib_rtk_allowlist.test.ts`)
 ## Prefix stability — deterministic payload ordering
 
 Spawn payloads serialize **static prefix first** (role contract, profile,
-personas, budget — byte-identical across dispatches of the same
+personas, budget, and the safety floor of a skipping worker — byte-identical across dispatches of the same
 configuration), **variable task part last**; no timestamps, no random IDs
 (`serializeSpawnPayload` / `spawnPayloadHash`). Provider prompt-caching keys
 on the stable prefix; the `payload_hash` + `cache_hit` audit fields
