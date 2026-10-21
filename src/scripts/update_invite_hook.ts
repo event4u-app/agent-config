@@ -25,7 +25,8 @@
  * holds `{invited_at}`. Every repository and session of one OS user shares it,
  * so "once" means once per config home. Absent means never invited; present but
  * unreadable counts as invited, because a corrupt record must not re-open the
- * question. Deleting the file is the reset. Written atomically at mode 0600.
+ * question. Deleting the file is the reset. Created once, exclusively, at mode
+ * 0600 — see {@link claimInvite}.
  *
  * Fail-open, exit 0 on every path except the one that carries the question,
  * which exits 2 — the warn path, so the question reaches the agent that can
@@ -36,7 +37,6 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { readTurnRunState } from './before_complete_hook.js';
-import { write_atomic } from './_lib/fs_atomic.js';
 import type { UpdateMode } from './_lib/classify_update.js';
 import { autoInviteDecision, ringZeroExited, type InviteDecision } from './_lib/update_invite.js';
 import { readRunEvidence } from './_lib/verification_evidence.js';
@@ -73,12 +73,30 @@ export function readInviteState(statePath: string): InviteState {
     }
 }
 
-export function writeInviteState(statePath: string, state: InviteState): void {
+/**
+ * Claim the one invitation: create the record only if it does not exist yet.
+ *
+ * `O_CREAT | O_EXCL` makes the claim, not the read before it, so of two
+ * sessions that both decided to ask, exactly one creates the record and only
+ * that one prints. It also refuses a symlink at the path. A claim that cannot be
+ * made for any other reason asks nothing: a question that cannot be recorded
+ * could repeat. A reader racing the content write sees an unreadable record,
+ * which counts as invited.
+ */
+export function claimInvite(statePath: string, invitedAt: string): boolean {
+    let fd: number;
     try {
-        write_atomic(statePath, `${JSON.stringify(state, null, 2)}\n`);
+        fs.mkdirSync(path.dirname(statePath), { recursive: true });
+        fd = fs.openSync(statePath, 'wx', 0o600);
     } catch {
-        /* unwritable → the question may be asked again; the gates before it still hold */
+        return false;
     }
+    try {
+        fs.writeSync(fd, `${JSON.stringify({ invited_at: invitedAt } satisfies InviteState, null, 2)}\n`);
+    } finally {
+        fs.closeSync(fd);
+    }
+    return true;
 }
 
 /**
@@ -112,12 +130,13 @@ export interface InviteDeps {
     readonly env: NodeJS.ProcessEnv;
     readonly isTty: boolean;
     readonly out: { write(text: string): void };
+    /** Overrides the read of the turn's verification evidence. */
+    readonly turnEndedOnVerifiedSuccess?: boolean;
 }
 
-/** Decide, emit, remember. Returns the decision so a test asserts on a value. */
+/** Decide, claim, emit. Returns the decision so a test asserts on a value. */
 export function runInvite(deps: InviteDeps): InviteDecision {
     const state = readInviteState(deps.statePath);
-    const runState = readTurnRunState(deps.workspaceRoot, deps.sessionId);
     const decision = autoInviteDecision({
         mode: deps.mode,
         ringZeroExited: ringZeroExited(deps.ringZeroText),
@@ -126,7 +145,7 @@ export function runInvite(deps: InviteDeps): InviteDecision {
         // not this file's, and a reader should see it being checked.
         registerAvailable: true,
         alreadyInvited: state.invited_at !== null,
-        turnEndedOnVerifiedSuccess: runState !== null && readRunEvidence(runState).passed,
+        turnEndedOnVerifiedSuccess: deps.turnEndedOnVerifiedSuccess ?? verifiedSuccess(deps.workspaceRoot, deps.sessionId),
         env: {
             ci: ['1', 'true'].includes((deps.env['CI'] ?? '').trim().toLowerCase()) || deps.env['GITHUB_ACTIONS'] === 'true',
             noUpdateCheck: deps.env['AGENT_CONFIG_NO_UPDATE_CHECK'] === '1',
@@ -137,9 +156,14 @@ export function runInvite(deps: InviteDeps): InviteDecision {
         },
     });
     if (!decision.ask) return decision;
+    if (!claimInvite(deps.statePath, new Date().toISOString())) return { ask: false, reason: 'already invited once' };
     for (const line of decision.lines) deps.out.write(`${line}\n`);
-    writeInviteState(deps.statePath, { invited_at: new Date().toISOString() });
     return decision;
+}
+
+function verifiedSuccess(workspaceRoot: string, sessionId: string): boolean {
+    const runState = readTurnRunState(workspaceRoot, sessionId);
+    return runState !== null && readRunEvidence(runState).passed;
 }
 
 function envelopeField(raw: string, key: string): string {
