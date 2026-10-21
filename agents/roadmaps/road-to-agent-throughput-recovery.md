@@ -32,7 +32,8 @@ relates:
 > 2026-10-15. Figures the owner's local transcripts or the CI API carry, and
 > this revision could not re-read, are marked *(local)*.
 >
-> **Arrivals:** 2 — latest `inbox-2026-10-s` (2026-10-15); earlier: the draft
+> **Arrivals:** 3 — latest `inbox-2026-10-u` (2026-10-21, per-step; routed to
+> two new roadmaps); earlier: `inbox-2026-10-s` (2026-10-15), the draft
 > merged as #2359 (2026-10-14). The subject's earlier carriers closed rather
 > than dismissed it: `archive/road-to-agent-turnaround.md`,
 > `archive/road-to-blocking-time-by-cause.md`,
