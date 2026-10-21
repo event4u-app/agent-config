@@ -245,7 +245,8 @@ commit is ever lost.
       worktrees that are merged, clean, not live and older than 24 h after the
       first daily run, and every remaining one with a reason.
 - [x] **AC-3** No automatic path passes `--force` (2.4's check).
-- [ ] **AC-4** `task ci` green.
+- [x] **AC-4** `task ci` green.
+      *Settled green 2026-10-21: all 52 checks of PR #2568 on `fd9cc4bac` (`ci_settle`).*
 
 ## Provenance
 

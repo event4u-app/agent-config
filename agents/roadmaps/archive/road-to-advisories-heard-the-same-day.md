@@ -301,7 +301,8 @@ project.
 - [x] **AC-4** `session_start` latency stays inside the baseline recorded in
       the sibling roadmap, with zero sockets in the hook process.
       *Measured 2026-10-21 on a freshly built bundle: `session_start` p95 126 ms, n=50 (`bench_hook_latency`); the notice reads one file. The worktree pass on the same slot runs only on the first session of a day: classification under a three-second deadline, the retro's own terms, and under `auto` up to three removals after it with their own timeouts (ADR-295).*
-- [ ] **AC-5** `task ci` green.
+- [x] **AC-5** `task ci` green.
+      *Settled green 2026-10-21: all 52 checks of PR #2568 on `fd9cc4bac` (`ci_settle`).*
 
 ## Provenance
 

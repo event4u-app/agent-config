@@ -21,6 +21,7 @@ entry_condition:
 execution:
   mode: phase-checkpoints
 owner: maintainer
+parent_roadmap: road-to-advisories-heard-the-same-day
 estate_growth_exempt: "Adds one file to `later/` rather than moving one there: it receives the single time-gated step of road-to-advisories-heard-the-same-day (5.5, publish the measured TTN after 30 days), which no run can execute before 30 days of data exist. The parking allowance covers a move, and the parent cannot be moved — every other step of it is done in the same change and it archives."
 estate_offset_exempt: "Receives the one time-gated step of road-to-advisories-heard-the-same-day, which closes in the same change. A grep over agents/roadmaps/{*,later,stubs} for advisory-time-to-notice and security-fix-time-to-remediation returns nothing outside the two claim rows, so no roadmap already owns the measurement; the alternative was leaving the parent open on a step that waits only for the calendar."
 relates:

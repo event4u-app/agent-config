@@ -233,7 +233,8 @@ accepted offer → fix PR green and ready to merge.
       G7 opens no second PR; G5 stops before the tag.
 - [x] **AC-3** No code path runs `audit fix --force`, `gh pr merge` without
       the owner's instruction, or `git tag`.
-- [ ] **AC-4** `task ci` green.
+- [x] **AC-4** `task ci` green.
+      *Settled green 2026-10-21: all 52 checks of PR #2568 on `fd9cc4bac` (`ci_settle`).*
 
 ## Provenance
 

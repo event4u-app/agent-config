@@ -18,7 +18,7 @@ evidence:
   basis:
     - agents/evidence/owner-directives/2026-10-21-advisories-and-worktree-cleanup.md
     - agents/evidence/council/advisories-worktree-run-design-20261021.md
-    - agents/roadmaps/road-to-worktrees-that-leave-after-the-merge.md
+    - agents/roadmaps/archive/road-to-worktrees-that-leave-after-the-merge.md
     - docs/contracts/settings-classes.md
     - docs/decisions/ADR-229-worktrees-are-instruction-only.md
 review_trigger: >-
