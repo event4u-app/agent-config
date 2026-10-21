@@ -215,6 +215,12 @@ describe('dispatch_r2_reviewer — package + skeleton', () => {
         expect(prompt).toContain('branch-scoped `git diff`');
         expect(prompt).toContain('no reads of `agents/runtime/`');
         expect(prompt).toContain('| # | Severity | File:Line | Finding | Status | Reason/Ref |');
+        // road-to-a-review-that-ends 1.4 — severity binds to correctness and the
+        // stated requirements; style and wording of record prose is `low`, while a
+        // false statement a gate or a reader acts on keeps its weight.
+        expect(prompt).toContain('## Severity');
+        expect(prompt).toContain('- `low` — style, naming, formatting or wording that changes no behaviour');
+        expect(prompt).toContain('keeps the severity of what it breaks');
         expect(prompt).toContain('- src/foo.ts');
         expect(fs.existsSync(path.join(repo, OUT, `${SLUG}.findings.md`))).toBe(true);
     });

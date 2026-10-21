@@ -136,6 +136,32 @@ worktree-long-horizon.round6	r6	fix-delta	routing through detectIndentWidth was 
 worktree-long-horizon.round6	r6	missed	classifier present at the round-1 diff
 ```
 
+## Record-prose findings under the step 1.4 brief
+
+Step 1.4 adds a `## Severity` section to the reviewer brief: style, naming,
+formatting and wording are `low`, also in record prose; a false statement keeps
+the severity of what it breaks. To see what that rubric would have done to the
+corpus, the 35 high/critical round-1 rows whose File:Line points at
+`agents/roadmaps/`, `agents/evidence/`, `docs/decisions/` or
+`agents/roadmaps-` (of 224 high/critical round-1 rows) were classified by a
+fresh subagent:
+
+| class | rows | severity under the brief |
+|---|---|---|
+| style | 0 | low |
+| false claim nothing acts on | 2 | medium |
+| wrong statement a gate, command or next step acts on | 33 | unchanged |
+
+So the brief moves 2 of 224 round-1 high/critical rows (both in
+`release-written-answer-removal`: ADR line counts and a stale commit citation
+nothing consumes) and none of the 33 that broke a gate, a blocker or an
+acceptance criterion. A blanket "record prose is low" rule — the supplied
+plan's wording — would have downgraded all 35. Four of the 33 were borderline
+(the subagent named them); moving all four would make it 6 of 224. This is a
+re-scoring of existing rows, not a re-run of 20 reviews: the brief changes how
+severity is assigned, not what a reviewer looks at, so re-scoring is the direct
+measure of its effect.
+
 ## Reproduce
 
 Save as `severity_by_round.mjs` and run `node severity_by_round.mjs` from the

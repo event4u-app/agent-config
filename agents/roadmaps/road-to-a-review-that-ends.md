@@ -98,7 +98,7 @@ rounds 1..N.
       blocker as 1.1.
       verify: red-first tests for both; sabotage-probe by raising the cap and
       watching the refusal test go red.
-- [ ] **1.4 Findings bind to correctness and the step's stated requirements.**
+- [x] **1.4 Findings bind to correctness and the step's stated requirements.** Done 2026-10-21: `## Severity` in the reviewer brief (`dispatch_r2_reviewer.ts`), test seen RED then GREEN. Re-scoring the 35 record-prose high/critical round-1 rows: 0 style, 2 inert false claims (→ medium), 33 actionable (unchanged) — so 2 of 224 move; a blanket "record prose is low" would have moved 35. Verify done by re-scoring existing rows, not re-running 20 reviews; reason in the artefact.
       The reviewer brief scores style and record-prose findings `low`.
       verify: replay 20 archived round-1 artefacts through the new brief;
       high+critical count unchanged, low count reported.
