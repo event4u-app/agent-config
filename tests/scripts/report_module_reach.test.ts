@@ -56,19 +56,13 @@ describe('on the real tree', () => {
         }
     });
 
-    // One full-tree scan per case: three in one case measured 31.6 s on a macOS
-    // runner against the 30 s test budget (PR #2557).
+    // Three full scans of the real tree; on macOS CI runners that measured
+    // 30.8–33.8 s and tripped the 30 s default on main as well as on PRs.
     it('exits 0 — this is a report, never a gate', () => {
         expect(main([], REPO)).toBe(0);
-    });
-
-    it('exits 0 with --json', () => {
         expect(main(['--json'], REPO)).toBe(0);
-    });
-
-    it('exits 0 with --markdown', () => {
         expect(main(['--markdown'], REPO)).toBe(0);
-    });
+    }, 90_000);
 
     it('--json output is a single parseable JSON document (R2 finding 3)', () => {
         // A trailing `scanned:` line after the closing `}` made this throw —
