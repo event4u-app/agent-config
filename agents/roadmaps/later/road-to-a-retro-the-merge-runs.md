@@ -1,10 +1,15 @@
 ---
 complexity: lightweight
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-o found at 2bc5715c7 that no merge moment, session end or daily point feeds the learning loop that already exists: /pr:merge writes a per-PR summary nothing reads (src/domains/git/pr/merge/command.md:527-548), the session-end aggregation is class B default false (settings.ts:445), and the learning dogfood protocol can never mint a lesson. No active, later, stub or archived roadmap owns a retro, a merge-triggered learning step or a daily sweep (grep over agents/roadmaps for retro, push-settle, daily sweep). Archiving or parking costs more because the owner asked for this behaviour on by default on 2026-10-12; merging into road-to-learning-you-can-see-carried would wake a parked file whose class B key this plan deliberately leaves untouched."
-estate_growth_exempt: "open_blockers 74 -> 76, measured by check_estate_count at this change: one blocker here (retro-transcript-excerpts-by-default) and one in road-to-one-upstream-that-checks-what-leaves (upstream-pr-shows-the-account). Each records an owner-reserved privacy decision this round could not close - lowering the per-call transcript opt-in, and accepting that an upstream pull request reveals the opening account - and each blocks only the steps that need the answer."
+estate_growth_exempt: "later_roadmaps 107 -> 108 with active_roadmaps 16 -> 15, measured by check_estate_count at this change: every step a session can do is closed, and the three left (5.2, 5.3, AC-6) wait on a thirty-day dogfood window that opens only once this change merges and cannot be simulated. Parking it in later/ instead of leaving it active keeps a drain lane from picking up a wait; the total estate is unchanged."
+entry_condition:
+  what: thirty days of the automatic retro paths running in this repository, measured from the first session start after the session-start wiring merged; 5.2 writes agents/evidence/analysis/retro-dogfood-*.md from /retro status and the retro stores, then 5.3 recalibrates and AC-6 closes
+  when: thirty days after the merge of the change that wired the daily probe into session start (2026-10-21 or later)
+  who: any session in this repository once the window has elapsed
+review_by: 2026-12-01
 relates:
   - slug: road-to-one-upstream-that-checks-what-leaves
     relation: extends
