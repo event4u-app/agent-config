@@ -140,7 +140,7 @@ governance ratification artefact.
   lists every lock this roadmap reopens, each with its route and its blocker; it
   supersedes no other ADR itself, so a lock the council keeps stays in force and
   is listed as kept, with its admissible reason.
-  verify: `./scripts-run src/scripts/adr_cite_check <new ADR>` prints LIVE and `check_adr_frontmatter` passes.
+  verify: the new ADR reads LIVE in `adr_cite_check` and passes `check_adr_frontmatter`.
 - [ ] **0.2 Charter on a projected surface.**
   `src/agent-src/contexts/contracts/capability-breadth-charter.md` (sibling of
   `frugality-charter.md`), with a one-line pointer from `docs/contracts/`: both
@@ -154,7 +154,7 @@ governance ratification artefact.
   needed", "outside AC's domain", "too big". **Precedence:** safety floor >
   licence > measured cost > P1-P7; a conflict between principles goes to the
   council, a conflict with the purpose to the owner.
-  verify: `test -f dist/agent-src/contexts/contracts/capability-breadth-charter.md` after `task sync`.
+  verify: `test -f dist/agent-src/contexts/contracts/capability-breadth-charter.md` -> 0
 - [ ] **0.3 Orientation and the domain gate, one PR.** Replace
   `package-self-orientation.md:16` and the wing table's agnostic clauses
   (`:64-67`) with a pointer to the charter; fix `:3`, `:22-23`, `:71`,
@@ -164,7 +164,7 @@ governance ratification artefact.
   the maintainer is a valid owner, the CI decision is a label (reference-only vs
   validated) — and the "≥ 2 consumer projects" arm and the "asking once" clause
   are deleted (ADR-216 D5). The rule body shrinks and funds the PR.
-  verify: `! grep -rn "Depth over breadth\|install\.py\|No app runtime\|no app runtime" AGENTS.md docs/contracts/package-self-orientation.md` and `! grep -n "consumer projects\|asking once" src/rules/domain-adoption-policy.md docs/guidelines/agent-infra/domain-adoption-gates.md`
+  verify: `grep -rn "Depth over breadth\|install\.py\|No app runtime\|no app runtime\|consumer projects\|asking once" AGENTS.md docs/contracts/package-self-orientation.md src/rules/domain-adoption-policy.md docs/guidelines/agent-infra/domain-adoption-gates.md` -> 1
 - [ ] **0.4 Domain register.** `src/agent-src/contexts/contracts/domain-register.md`,
   in three levels — domain → capability family → toolchain — plus a
   *platform capabilities* section for what cuts across domains (testing, code
@@ -207,7 +207,7 @@ governance ratification artefact.
   package for?" and "what would a professional in this domain expect that AC
   lacks?"; overbuild-sequencing keeps folding duplicates and orders stages, never
   drops a capability.
-  verify: `tests/scripts/analysis_prompts.test.ts` pins both new questions.
+  verify: the test file `tests/scripts/analysis_prompts.test.ts` pins both new questions.
 - [ ] **1.3** `reference`, `roadmap-repos`, `and-optimize` and `inbox` link the
   charter as a source of truth; a capability row may be `declined` only with an
   admissible reason; gaps found are appended to the register, not dropped.
@@ -231,7 +231,7 @@ governance ratification artefact.
   model knows, but professional depth — decision rules, checklists, pitfalls,
   worked examples — is admissible, and the pitfall cap becomes "sourced", not
   "≤ 5".
-  verify: `! grep -rn "paid for by removal\|No new skills expected\|keeps climbing" src/skills/skill-writing agents/settings/contexts docs/guidelines/agent-infra`
+  verify: `grep -rn "paid for by removal\|No new skills expected\|keeps climbing" src/skills/skill-writing agents/settings/contexts docs/guidelines/agent-infra` -> 1
 
 ## Phase 2 — Rules that cap content become cost controls
 
@@ -243,11 +243,11 @@ governance ratification artefact.
 - [ ] **2.2** Personas: `PER_DOMAIN_CAP` becomes a quality gate — distinct lens,
   ≥ 1 cited skill, no duplicated review questions; `persona-schema.md § 8`
   follows. Blocked by `rich-ratio-and-persona-cap`.
-  verify: `lint_persona_governance` self-test covers a third distinct persona (green) and a duplicate lens (red).
+  verify: the self-test of `lint_persona_governance` covers a third distinct persona (green) and a duplicate lens (red).
 - [ ] **2.3** Rich class: the 15 % ratio goes; the "Why this skill is rich"
   section stays; the per-skill ceiling stays and is raisable by the 2.4 path.
   Blocked by `rich-ratio-and-persona-cap`.
-  verify: `lint_token_budget_discipline` self-test passes with no ratio check.
+  verify: the self-test of `lint_token_budget_discipline` passes with no ratio check.
 - [ ] **2.4** Raise path for body, depth and rich ratchets: a raise is accepted
   when the diff names the register gap it closes **and** that gap carries a
   deliverable with its fixture, an `owned` state, the per-task payload delta, and
@@ -257,16 +257,16 @@ governance ratification artefact.
   warnings for Wings 2-4; `domain-pack-architecture.md` "Deferred by default" →
   "Staged by default"; the capability-packs six-month new-pack tripwire becomes a
   register review run by the council at each register-lint red.
-  verify: `skill_linter` self-test no longer warns on a channel-specific marketing fixture.
+  verify: the self-test of `skill_linter` no longer warns on a channel-specific marketing fixture.
 - [ ] **2.6** Framework-neutrality carve-outs are read from the register's
   toolchain column instead of a source list, so a newly registered stack or tool
   becomes admissible without a lint edit.
-  verify: `lint_framework_leakage` self-test registers a fixture toolchain and accepts its skill name without a source change.
+  verify: the self-test of `lint_framework_leakage` registers a fixture toolchain and accepts its skill name without a source change.
 - [ ] **2.7** ADR-011 gains a frontmatter `review_trigger` from its § (ii) and an
   amendment: extraction may move a capability into an installable pack, never
   out of the AC distribution; `docs/contracts/domain-pack-overlap-inventory.md`
   is written so its design gate can run.
-  verify: `adr_cite_check ADR-011` no longer prints NO REOPEN CONDITION.
+  verify: `./scripts-run src/scripts/adr_cite_check ADR-011` -> /review_trigger +[^—]/
 - [ ] **2.8 Governance rollback.** Each change in 0.3, 2.2-2.6 records an
   observation window (the next 10 admissions it governs), its audit signal
   (register lint, skill-quality lint, persona lint), and a suspension trigger
@@ -296,7 +296,7 @@ governance ratification artefact.
   The switch is thrown back when an artefact disagrees with its reading, a
   registered host cannot be measured, a host exceeds its ceiling with CI green,
   or a tokenizer/serialisation change moves a reading without explanation.
-  verify: `check_preamble_payload_budget` test suite green, covering cutover, each rollback trigger, and absolute-delta reporting.
+  verify: the test suite of `check_preamble_payload_budget` is green, covering cutover, each rollback trigger, and absolute-delta reporting.
 - [ ] **3.2b Maintainability stays gated after cutover.** Source growth is
   governed by its own blocking controls instead of a token cap: every skill and
   rule carries an owner and a register row, orphan content (shipped to no host)
@@ -306,7 +306,7 @@ governance ratification artefact.
 - [ ] **3.3** Skill estate: `skill_count` and `skill_description_tokens` ratchet
   the default-active resident set; a skill in a non-default pack with an `owned`
   register gap needs no exemption.
-  verify: `check_estate_count` test accepts a non-default-pack skill with an owned gap and rejects a default-pack one without a claim.
+  verify: the test of `check_estate_count` accepts a non-default-pack skill with an owned gap and rejects a default-pack one without a claim.
 - [ ] **3.4** Commands: measure whether each material host lists command
   descriptions (174 of 208 lack `disable-model-invocation`, ~7.9k tokens). Where
   one does, they are charged to the gated surface; reach is never reduced to make
@@ -324,7 +324,7 @@ governance ratification artefact.
   verify: a consumer install in `gtm` with `ai-video` enabled lists `/video`, and the before-probe list is a subset of the after-probe list.
 - [ ] **4.2** Cluster heads of `/video`, `/image`, `/brand`, `/design-system`,
   `/research` become `advanced` within the visible-command budget.
-  verify: `audit_command_surface --check-new` green.
+  verify: `./scripts-run src/scripts/audit_command_surface --check-new` -> 0
 
 ## Phase 5 — Stage-1 roadmaps for the named domains
 
