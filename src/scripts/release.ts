@@ -126,7 +126,7 @@ import {
 } from './_lib/release_highlights.js';
 import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import type { CommitRecord, ImpactTrailers } from './_lib/consumer_impact.js';
-import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, impact_span_verdict, is_breaking_commit, parse_commit_log, parse_impact_trailers, write_impact_map } from './_lib/consumer_impact.js';
+import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, is_breaking_commit, parse_commit_log, parse_impact_trailers, write_impact_map } from './_lib/consumer_impact.js';
 import { preflightPosition } from './_lib/release_position.js';
 import { settleFindingsLedger } from './_lib/release_findings_ingest.js';
 import { TAG_TRIGGERED_WORKFLOWS, dispatchTagWorkflows } from './_lib/release_tag_dispatch.js';
@@ -1483,8 +1483,6 @@ function main(argv: readonly string[] | null = null): number {
 
     const prev = latest_tag();
     const commits = commits_since(prev);
-    const impact = impact_span_verdict(commits);
-    if (impact.exit !== 0) die(impact.message, impact.exit);
 
     if (nothing_to_release_ci(args.ci, args.explicit, args.bump_override, commits)) {
         process.stdout.write(
