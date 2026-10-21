@@ -35,7 +35,7 @@ What this change does, in one PR:
    mismatched one silently dropped, and `updatedInput` delivered. So claude's
    `output` and `input` answers move to `replace` citing two records; `prompt`
    stays `gate`. The records' structured lines ship as
-   `src/config/rewrite-probe-attestations.json`, which the lint holds equal to them.
+   `src/config/rewrite-probe-attestations.json`, which the lint holds equal to them. <!-- ref-ignore -->
 3. **Phases 3–5, the stage acting on a capability** — all in the egress engine
    chunk (loaded only when `egress.placeholders.mode` is `protect`/`strict`; the
    shipped default is `off`): a tool result carrying a listed value goes back as

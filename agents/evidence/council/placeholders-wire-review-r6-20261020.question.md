@@ -44,7 +44,7 @@ probe record for host, version, channel, `result: delivered`, dated the day of
 the answer, with no later contradicting record. Claude's `output` (and `input`,
 which nothing acts on yet) answers cite live probe records of 2026-10-20 (Claude
 Code 2.1.304, `claude -p --settings <scratch file>`, no host settings file
-written); their structured lines ship as `src/config/rewrite-probe-attestations.json`,
+written); their structured lines ship as `src/config/rewrite-probe-attestations.json`, <!-- ref-ignore -->
 which the lint holds equal to the records. The engine chunk (loaded only when
 `egress.placeholders.mode` is `protect`/`strict`; the shipped default is `off`)
 carries the decision; its ceiling rises 28,000 → 44,000 with a `raise_log` entry

@@ -46,7 +46,7 @@ stub, the byte census and every budget file are byte-identical to `origin/main`.
   Revocations a caller supplies refuse too.
 - `lint_hook_manifest` runs the same check over the table (it passes no running
   version: it judges the table, not a host), refuses malformed, undated,
-  future-dated or unknown answers, and holds `src/config/rewrite-probe-attestations.json`
+  future-dated or unknown answers, and holds `src/config/rewrite-probe-attestations.json` <!-- ref-ignore -->
   equal to the probe records, so a consumer install without `agents/evidence/`
   resolves the same answers.
 

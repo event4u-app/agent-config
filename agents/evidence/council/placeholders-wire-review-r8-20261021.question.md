@@ -63,7 +63,7 @@ A workspace that is not an absolute directory emits and writes nothing.
 
 **Judging standards, stated rather than left to inference.** (a) The engine
 chunk's byte ceiling rose 28,000 → 44,000 through the budget file's own
-`raise_log` rule (measured 42,271 now); the dispatch bundle ceiling is unchanged
+`raise_log` rule (measured 42,271 now); the dispatch bundle ceiling is unchanged <!-- ref-ignore -->
 (1,464,283 of 1,550,000). (b) One test assertion changed meaning: "a block
 outranks it" on `post_tool_use` is replaced by "on a slot that honours no block,
 a block does not suppress the replacement" plus a new test that on a
