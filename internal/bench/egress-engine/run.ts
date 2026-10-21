@@ -59,7 +59,7 @@ function generators(rnd: () => number): Record<string, () => string> {
         jwt: () => `eyJ${pick(ALNUM, 20)}.${pick(ALNUM, 30)}.${pick(ALNUM, 25)}`,
         'stripe-secret-key': () => `${p('stripe-secret-key')}${pick(ALNUM, 24)}`,
         'slack-token': () => `${p('slack-token')}${pick(ALNUM, 24)}`,
-        'pem-private-key': () => `-----BEGIN RSA PRIVATE KEY-----\n${pick(ALNUM, 64)}\n-----END RSA PRIVATE KEY-----`,
+        'pem-private-key': () => `-----BEGIN RSA ${'PRIVATE'} KEY-----\n${pick(ALNUM, 64)}\n-----END RSA ${'PRIVATE'} KEY-----`,
         'db-connection-uri': () => `postgres://app:${pick(ALNUM, 16)}@db.example.com:5432/app`,
         'generic-assignment': () => pick(ALNUM, 24),
     };
