@@ -67,13 +67,12 @@ placeholders 1.3 is open on its one release of readings, so D8's wait holds as
 recorded. 1.3 and 1.4 here are dated on or after 2026-10-29; a run before then
 is labelled PEEK and counts for nothing.
 
-**Run 2026-10-20 (`main@220f8af88`): Phase 2 built.** D8's revisit-if fired
-(ADR-285 accepted, the stage exists), the council reopened it and chose to build
-the store now behind an empty selection (D16), and settled the four open
-contracts (D17). 2.1–2.4 are closed: the stage calls the store, which stores
-nothing until D14 names a class. Still waiting, each on a date or a reading:
-1.3 and 1.4 on the D11 window (closes 2026-10-29); 1.5, 3.1–3.4 on 1.3's
-selection; 3.5 and 4.2 on a release of readings; 4.1 on D15.
+**Unblock events, unchanged in kind:** 1.2 is buildable now (a report, not a
+store). 1.3 and 1.4 wait on the window. Phase 2 waits on placeholders 1.1's ADR and
+its 1.2/1.3 (D8). Open contracts before 2.1 is built: whether 2.4's range is in
+lines or bytes; which detector confidence refuses storage in 2.2; how an expired
+handle is told from an unknown one without keeping sensitive metadata past
+retention; concurrent write, read and cleanup.
 
 ## Context — read at `main@9a943f30c`, F6 at `main@085ec41ff`
 
@@ -141,20 +140,16 @@ selection; 3.5 and 4.2 on a release of readings; 4.1 on D15.
 
 ## Phase 2 — A local store the stand-in can point into
 
-- [x] **2.1 Store the delivered bytes under their hash.** *Done 2026-10-20:
-      `_lib/tool_output_spool.ts`, its own conditional chunk, called by
-      `egress_stage.ts` through the engine's `spoolResult`; the selection is
-      `_lib/tool_output_selection.ts`, empty until D14 (D16).* In the placeholders
+- [ ] **2.1 Store the delivered bytes under their hash.** In the placeholders
       stage, from `protect` upward, a result of a selected class is written to
-      the user-global root, keyed by the workspace (`runtime/tool-output-spool/`;
-      moved out of `agents/runtime/spool/` by D18 so the repository controls no
-      ancestor of it), never `agents/tmp/` — before anything is shortened; the hash is over the bytes the
+      `agents/runtime/spool/<sha256>` — gitignored, workspace-local, never
+      `agents/tmp/` — before anything is shortened; the hash is over the bytes the
       model receives. In `observe` the stage writes no body and counts what it
       would store (class, bytes, digest), because `observe` never changes a view
       (D9 of the placeholders roadmap). Writing is idempotent on the hash. Case
       `spool-write-is-content-addressed` asserts equal outputs share one file.
       verify: `npx vitest run tests/scripts/tool_output_spool.test.ts -t spool-write-is-content-addressed --reporter=verbose` -> /✓.*spool-write-is-content-addressed/
-- [x] **2.2 No credential rests in the store, and the store holds what the model
+- [ ] **2.2 No credential rests in the store, and the store holds what the model
       saw.** The spool receives the placeholder view of the envelope, never the
       execution view, so a value the placeholders stage replaces is a token on disk
       too. When the stored bytes would differ from the bytes delivered to the model,
@@ -162,16 +157,12 @@ selection; 3.5 and 4.2 on a release of readings; 4.1 on D15.
       stage off, a result carrying a credential-class match is not stored and is
       delivered unreduced.
       verify: `npx vitest run tests/scripts/tool_output_spool.test.ts -t credential-match-is-never-spooled --reporter=verbose` -> /✓.*credential-match-is-never-spooled/
-- [x] **2.3 The store expires.** *Done 2026-10-20: cleanup runs at the first
-      store of each session, under an exclusive lock (D17); a handle carries
-      its expiry and a MAC, so `expired` survives its entry's removal.* Entries older than the retention age (D2) are
+- [ ] **2.3 The store expires.** Entries older than the retention age (D2) are
       removed at `session_start`; the store has a byte cap past which the oldest
       go first. A handle to an expired entry answers "expired", never an empty
       body.
       verify: `npx vitest run tests/scripts/tool_output_spool.test.ts -t expired-handle-says-expired --reporter=verbose` -> /✓.*expired-handle-says-expired/
-- [x] **2.4 A handle returns the stored bytes.** *Done 2026-10-20:
-      `report_reducible_classes --read-handle <handle> [--range start:end]`,
-      byte ranges, half-open (D17).* One existing read path — not a new
+- [ ] **2.4 A handle returns the stored bytes.** One existing read path — not a new
       CLI verb — returns a stored result by hash, whole or by range. It never
       re-reads the file from disk; a missing, an expired and a corrupted entry
       (digest mismatch) each answer their own state (D13).
@@ -180,13 +171,15 @@ selection; 3.5 and 4.2 on a release of readings; 4.1 on D15.
 *Exit: 2.1–2.4 green; nothing is shortened yet, and `delivered_bytes` still equals `raw_bytes`.*
 
 <!-- blocked-by: tool-output-store-refused-until-activation-is-gated -->
-**Phase 2 is written and locally green, and it does not ship.** The AI council
-refused it 2/2 on 2026-10-20 under ADR-268 § 4. The four boxes above stay `[x]`
-because the work they describe is done and verified; what is blocked is the
-LANDING, not the step. Record, verdict and the five conditions:
+**Phase 2 is written, locally green, and not on `main`.** The AI council
+refused it under ADR-268 § 4 in eighteen rounds (2026-10-20 to 2026-10-21); the
+last refusal was about the hand-rolled cleanup lock alone. The store code,
+its tests and its activation gating are kept on the branch
+`wip/tool-output-store-lock-redesign`; the four boxes above stay open until a
+redesign on a real mutual-exclusion primitive is ratified (D19). What landed
+from that work is the shared classifier, `_lib/content_class.ts`. Record,
+verdicts and conditions:
 `agents/evidence/ratifications/tool-output-spool-20261020.md`.
-The five conditions are now answered in code and tests (D18), and the blocker
-stays open until a new round ratifies the result.
 
 ## Phase 3 — Shorten, in observe mode first
 
@@ -256,9 +249,9 @@ stays open until a new round ratifies the result.
 - **Blocks:** the PUSH of Phase 2 (steps 2.1–2.4 and every later phase that builds on the store). Not the steps' correctness — they are locally green.
 - **Question:** is the tool-output store an increase in the agent's own power? Both seats answered yes-in-latent-form and refused the submitted framing of `confirmed-non-expanding`.
 - **What to do:** (1) show that EVERY activation or broadening path triggers ratification, not only `_lib/tool_output_selection.ts`; (2) tests proving an empty selection never loads the store, writes, issues a handle, withholds output or changes behaviour; (3) document and test authorization scope, expiry, replay, range requests, equality leakage, retention, cleanup failure, partial writes and corruption; (4) separate the code-integrity claim from the stored-data security claim; (5) resubmit the complete diff with that evidence.
-- **Progress (2026-10-21):** conditions (1)–(5) are answered (D18) and nine further rounds ran (2–10, record in the ratification artefact). Each found a real defect, each was fixed with a test that a neutralised guard turns red, and from round 5 both seats called the expansion acceptable in principle. Round 10 refused 2/2 on two points that remain: (a) a store credits the size of an entry at its own address before cleanup, and that entry can itself be expired or evicted, so one store can finish over the cap — stop crediting it, or exempt it from that sweep and verify it survived; (b) since the cleanup lock now protects the cap, it needs real mutual exclusion that fences a displaced owner (an OS lock, or a fencing generation checked immediately before publication), not only a token-checked release. The fix loop stopped at its bound of 10 there. Resumed 2026-10-21 on the owner's instruction: (a) the credit is dropped, and (b) the lock is taken over only from a holder whose pid is no longer running, never for age, so a live holder is never displaced and no fencing is needed — a dead holder cannot publish. Round 11 found the age rule still applied to locks of an older format; such a lock is now never taken, and the takeover itself runs under a mkdir guard after a concurrent test showed two takers could both win. Round 12 asked for the rest of the store to follow the key out of the workspace, since any path check there is check-then-use against a process the repository starts: entries, the observation log and the lock now live under `runtime/tool-output-spool/<workspace digest>/`. Round 13 asked for a coherent threat model (a same-user process a repository starts, acting on the user-global root directly, is out of scope; isolating it is a sandbox's job) and a private observe log; both done.
-- **Recommendation:** resubmit asking for `ratified`, not `confirmed-non-expanding`. A seat said so directly: if the controls hold, this is an accepted expansion rather than no expansion, and arguing the weaker verdict again spends a round on a framing one seat has already rejected.
-- **If you do nothing:** the branch cannot be pushed at all — the pre-push gate reads the whole governed diff, so even the resolved `origin/main` merge sitting in the worktree stays local.
+- **Progress (2026-10-21):** conditions (1)–(5) were answered (D18) and seventeen further rounds ran (2–18, record in the ratification artefact). Each found a real defect and each was fixed with a test that a neutralised guard turns red; from round 5 both seats called the expansion acceptable in principle. Rounds 12–17 refused on narrow points (where the store lives, the threat-model wording, an expired read that skipped cleanup, expiry timing, the observe log's bound); rounds 10, 11 and 18 on the file-based cleanup lock: a displaced owner, takeover by age of older lock formats, two concurrent takers both winning, a takeover guard a crashed taker leaves behind, and pid reuse. On the owner's choice the store left PR #2527 (D19): it waits on `wip/tool-output-store-lock-redesign` for a lock with real process identity or an OS-level primitive.
+- **Recommendation:** redesign the cleanup lock on a primitive that releases on process death (an OS file lock, or a holder identity that includes the process start time), then resubmit the whole store diff asking for `ratified`.
+- **If you do nothing:** Phase 2 and everything after it stays unbuilt on `main`; nothing shipped depends on it, because the selection was empty.
 - **Resolved when:** a council round over the same subject returns `ratified` or `confirmed-non-expanding` from both seats, and the artefact under `agents/evidence/ratifications/` carries that verdict with a subject digest matching the pushed diff.
 
 ## Decisions
@@ -280,6 +273,7 @@ stays open until a new round ratifies the result.
 | D16 | reversible-technical | council:tool-results-d8-reopen-2026-10-20 (2/2 present, both seats chose this) | D8 reopened on its own revisit-if (ADR-285 accepted, `egress_stage.ts` built) and replaced: Phase 2 is built now inside the existing stage, with the selected-class set an empty constant (`_lib/tool_output_selection.ts`) that only D14 fills, so production stores nothing before a class is selected and tests inject a selection. The store is its own conditional chunk, loaded by the engine only when that set is non-empty | `agents/evidence/council/tool-results-d8-reopen-2026-10-20.md`, prompt verbatim beside it | D14 selects no class — then the store, its chunk and its door are removed with the roadmap's close |
 | D17 | reversible-technical | council:tool-results-d8-reopen-2026-10-20 (2/2 on (i), (ii), (iv); split on (iii), openai's taken on the requirement) | Contracts: (i) a range is zero-based, half-open, in bytes, refused when out of bounds, never clamped; (ii) any credential detection in the result at any confidence, or any refusal the stage recorded for it, refuses storage; (iii) a handle is `<sha256>.<expiry seconds>.<mac>` keyed by a workspace-local secret, so expired is told from unknown with no metadata kept past retention; (iv) writes publish through an exclusive temp file and an atomic rename, a read hashes the bytes it serves, cleanup runs under an exclusive lock taken over when stale. Cleanup runs at the first store of each session, not on the `session_start` event (implementer: the stage runs only on events with a body, and a session-start concern would cost a manifest entry and bundle bytes for an empty store). The read path is `report_reducible_classes --read-handle` | the same record; the anthropic (iii) answers `unknown` once cleanup removes an expired entry, which 2.3 forbids | a handle is followed after expiry in the 4.2 readings, or the first selected class needs line ranges |
 | D18 | reversible-technical | agent, against the five conditions of the council refusal of 2026-10-20 (`agents/evidence/ratifications/tool-output-spool-20261020.md`); the next ratification round decides | Amends D13's naming and D17 (iii): the entry is filed under `HMAC(key, session, sha256)` and the handle is `<address>.<expiry>.<mac>` with the MAC over address, expiry and session, so a handle reads only in the session that stored it and equal content is not linkable across sessions or without the key. D13's substance holds — a read still verifies the sha256 of the delivered bytes, recomputed into the address. A store refuses an entry larger than the cap, makes room for its bytes, and only then publishes — nothing is taken back after publication, holding one lock across making room and publishing, and with the lock held elsewhere it is not written at all; every spool path is refused if any component is a symlink; the key lives outside the workspace under the user-global root, where a repository cannot plant it; the key is link-published so concurrent first stores cannot sign with a partial key; cleanup also runs at every fully checked read (not once per session), and deletes only by a rename claim that puts back an entry a writer replaced; the cleanup lock is efficiency, not correctness. Writes are complete or absent. The store directory is re-tightened to 0700. The observe digest is keyed. Every activation path is gated by name in `check_kernel_edit_ratified.ts`, plus any source file that newly imports a store module | condition 3 (authorization scope, equality leakage, retention) and condition 1 (every activation path); session binding is a scope boundary between sessions, not a defence against the machine's own user, and the contract says so | the ratification round refuses it again, or a selected class needs a handle readable across sessions |
+| D19 | reversible-technical | owner, 2026-10-21 (answer "1" to: narrow and merge / keep iterating / park) | PR #2527 lands without the store: the shared classifier `_lib/content_class.ts`, this roadmap and the ratification record land; the store, its loader, its selection, its call from the stage, its chunk entry and budget, and its activation gating in `check_kernel_edit_ratified.ts` are kept on `wip/tool-output-store-lock-redesign` and come back as one diff. D16–D18 describe that branch's code, not `main` | eighteen ratification rounds, three of them (10, 11, 18) refusing on the file-based cleanup lock (`agents/evidence/ratifications/tool-output-spool-20261020.md`) | a lock design on a primitive that releases on process death is ratified, or D14 selects no class |
 
 ## What this roadmap deliberately does not do
 

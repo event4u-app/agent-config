@@ -1,9 +1,8 @@
 /**
  * The content classes of `internal/bench/tool-results-content-profile-PREREG.md`
- * as one dependency-free module: the selection report reads them over a window,
- * and the result store (`tool_output_spool.ts`, bundled into the egress engine
- * chunk) reads them per hook event. One classifier, so the class a result was
- * selected under is the class it is stored under.
+ * as one dependency-free module, so the result store that reads them per hook
+ * event (road-to-tool-results-that-leave-a-handle Phase 2) classes a result
+ * exactly as the selection report did over its window.
  */
 export type ContentClass = 'Read:text' | 'Bash:file-print' | 'Bash:vcs-content' | 'execution' | 'residue' | 'out-of-scope';
 export const CONTENT_CLASSES = ['Read:text', 'Bash:file-print', 'Bash:vcs-content'] as const;

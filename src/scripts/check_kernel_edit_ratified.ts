@@ -278,60 +278,6 @@ export function derivedPlumbing(root: string = REPO): readonly string[] {
 }
 
 /**
- * Every path that can activate or broaden the tool-output store, by name.
- *
- * Condition 1 of the 2026-10-20 council refusal (agents/evidence/ratifications/
- * tool-output-spool-20261020.md): the store's gate rested on its modules being
- * reachable from the dispatcher, so a refactor that moved them out of the
- * closure would have dropped the gate without a word. A fixed list does not
- * move with the closure: the selection, the store, its door, the classifier
- * that decides what a selected class covers, the engine that re-exports the
- * door, the stage that calls it, the loader that admits the engine chunk, and
- * the chunk table that builds the store.
- */
-const STORE_ACTIVATION_RE =
-    /^src\/scripts\/(?:_lib\/(?:tool_output_(?:selection|spool|spool_loader)|content_class|egress_engine)\.ts|hooks\/egress_(?:stage|engine_loader)\.ts|hook_chunks\.mjs)$/;
-
-/** A source line that loads a store module — import, re-export, require or dynamic import. */
-const STORE_IMPORT_RE =
-    /(?:\bfrom\s*|\brequire\s*\(\s*|\bimport\s*\(\s*)['"][^'"]*\btool_output_(?:selection|spool|spool_loader)(?:\.(?:js|ts|mjs|cjs))?['"]/;
-
-/**
- * Source files that load a store module by a literal specifier. A NEW caller
- * written that way is gated on the diff that adds it. A computed specifier, an
- * alias or a wrapper is not seen here; such a caller is gated only if it is
- * newly reachable from the dispatcher (closure arrival) or ships as a new
- * concern (manifest). This is a heuristic layer over those two, not a boundary.
- */
-export function storeImporters(root: string = REPO): string[] {
-    const out: string[] = [];
-    const walk = (dir: string): void => {
-        let entries: fs.Dirent[];
-        try {
-            entries = fs.readdirSync(dir, { withFileTypes: true });
-        } catch {
-            return;
-        }
-        for (const e of entries) {
-            const full = path.join(dir, e.name);
-            if (e.isDirectory()) {
-                if (e.name !== 'node_modules') walk(full);
-            } else if (/\.(?:ts|mts|mjs|cjs|js)$/.test(e.name)) {
-                try {
-                    if (STORE_IMPORT_RE.test(fs.readFileSync(full, 'utf-8'))) {
-                        out.push(path.relative(root, full).replace(/\\/g, '/'));
-                    }
-                } catch {
-                    /* unreadable file loads nothing */
-                }
-            }
-        }
-    };
-    walk(path.join(root, 'src'));
-    return out.sort();
-}
-
-/**
  * Modules that ARRIVE in the dispatcher's closure: non-concern modules present
  * in the closure under `root` and absent from the closure under `baseRoot`.
  *
@@ -419,9 +365,8 @@ export function isMechanismPath(p: string): boolean {
 export function classifyPaths(
     files: readonly string[],
     derived: readonly string[] = derivedPlumbing(),
-    importers: readonly string[] = storeImporters(),
 ): GatedPaths {
-    const derivedSet = new Set([...derived, ...importers]);
+    const derivedSet = new Set(derived);
     const kernelRules: string[] = [];
     const governanceHooks: string[] = [];
     const plumbing: string[] = [];
@@ -444,7 +389,7 @@ export function classifyPaths(
             governanceHooks.push(p);
             continue;
         }
-        if (PLUMBING_SOURCE_RE.test(p) || STORE_ACTIVATION_RE.test(p) || derivedSet.has(p)) {
+        if (PLUMBING_SOURCE_RE.test(p) || derivedSet.has(p)) {
             plumbing.push(p);
         }
     }

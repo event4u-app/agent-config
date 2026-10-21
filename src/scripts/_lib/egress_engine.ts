@@ -1,7 +1,6 @@
 /**
- * The egress engine as one loadable unit: the rule table, the token grammar,
- * the commit scanner's reading of the table, and the door into the tool-result
- * store, which is a chunk of its own (`tool_output_spool_loader.ts`).
+ * The egress engine as one loadable unit: the rule table, the token grammar and
+ * the commit scanner's reading of the table.
  *
  * The dispatcher does not import this statically. `build:hook-chunks` emits it
  * as `dist/hooks/egress_engine.chunk.cjs` beside the dispatch bundle, and
@@ -21,4 +20,3 @@ export { detect, EGRESS_RULES } from './egress_rules.js';
 export { EgressRefusedError, replaceValues, TokenScope } from './egress_token.js';
 export { injectText, replaceJson, tallyText } from './egress_text.js';
 export { scanText } from './secret_detector.js';
-export { spoolResult } from './tool_output_spool_loader.js';

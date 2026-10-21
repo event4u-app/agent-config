@@ -415,13 +415,6 @@
             "reason": "Egress-stage counts by field, class and type, one fixed-field line per scanned dispatch. Measurement output, written only while `egress.placeholders.mode` is not `off`; it holds no value and is read by no successor session."
         },
         {
-            "id": "spool-observations.jsonl",
-            "axis": "persistent_continuity_artefacts",
-            "disposition": "excluded",
-            "locus": "src/scripts/_lib/tool_output_spool.ts",
-            "reason": "Tool-result store counts in observe mode: class, length and a keyed digest of a result the store would keep, no body; written under the user-global root (runtime/tool-output-spool/<workspace digest>.observations.jsonl), not the workspace. Measurement output for road-to-tool-results-that-leave-a-handle, written only while the egress mode is observe and a class is selected; read by no successor session."
-        },
-        {
             "id": "tool-result-census.jsonl",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",

@@ -25,7 +25,6 @@ import { buildSync } from 'esbuild';
 export const HOOK_CHUNKS = Object.freeze([
     Object.freeze({ entry: 'src/scripts/_lib/svg_rules.ts', outfile: 'dist/hooks/svg_rules.chunk.cjs' }),
     Object.freeze({ entry: 'src/scripts/_lib/egress_engine.ts', outfile: 'dist/hooks/egress_engine.chunk.cjs' }),
-    Object.freeze({ entry: 'src/scripts/_lib/tool_output_spool.ts', outfile: 'dist/hooks/tool_output_spool.chunk.cjs' }),
     // `yaml` stays external here, alone among the chunks. Inlined it is
     // 258 KB of the 472 KB chunk — a second copy of a parser the dispatch
     // bundle already carries, shipped so one `session_start` concern can

@@ -127,3 +127,26 @@ it from that sweep and verify it survived. (b) Mutual exclusion that holds
 through slow operations — an OS-level lock, or a fencing generation checked
 immediately before publication — with a deterministic stale-takeover test. Ask
 for `ratified`.
+
+## Rounds 11–18 (2026-10-21, resumed on the owner's instruction)
+
+| Round | Seats | Finding that refused it | Changed in response |
+|---|---|---|---|
+| 11 | 2/2 refused | locks of an older format were still taken over by age | such a lock is never taken; the same-address credit dropped; takeover only from a dead pid |
+| 12 | 2/2 refused | entries, log and lock still under the workspace, where every path check is check-then-use | the whole store under `runtime/tool-output-spool/<workspace digest>/` in the user-global root |
+| 13 | 2/2 refused | the threat model put repository-started processes in scope and excluded them in the same text; the observe log was not private | one coherent threat model; observe log 0700/0600, written under the lock |
+| 14 | 2/2 refused | an expired authenticated read skipped cleanup | an expired read cleans, best effort; a loose key tightened to 0600 |
+| 15 | 2/2 refused | rounding left a sub-second window where an authenticated handle answered `missing` instead of `expired` | a two-second entry grace |
+| 16 | 2/2 refused | the observe log was rotated but not bounded | a record cap; rotation before crossing 5 MB |
+| 17 | 2/2 refused | a pre-existing oversized log generation broke the stated bound | oversized generations dropped, and the drop reported as `observe-dropped` |
+| 18 | 2/2 refused | a takeover guard a crashed taker leaves behind blocks cleanup forever; pid reuse needs process-instance identity or an OS lock | — not changed; see below |
+
+Found by the submitter between rounds: six concurrent takers could produce two
+winners; the takeover moved under a `mkdir` guard, with a deterministic test.
+
+**Outcome (2026-10-21).** The owner chose to land PR #2527 without the store
+(roadmap D19). The store, its tests and its activation gating are kept, as
+refused here, on `wip/tool-output-store-lock-redesign`. A resubmission replaces
+the file-based lock with a primitive that releases on process death, or a holder
+identity that includes the process start time, and asks for `ratified`. This
+record's verdict stays `refused`: nothing it covers is on `main`.
