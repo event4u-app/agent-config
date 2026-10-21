@@ -442,8 +442,8 @@ describe('retro_queue — path C, the daily sweep', () => {
         expect(claimSweepDay(wt, '2026-10-21', Date.now())).toBeNull();
         // The generation a racing taker would create already exists, so its exclusive create fails.
         const dir = path.join(path.dirname(queueDir(main)), 'retro-sweep');
-        expect(fs.existsSync(path.join(dir, 'claim-2026-10-21.1'))).toBe(true);
-        expect(fs.existsSync(path.join(dir, 'claim-2026-10-21.0'))).toBe(false);
+        expect(fs.existsSync(path.join(dir, 'claim.1'))).toBe(true);
+        expect(fs.existsSync(path.join(dir, 'claim.0'))).toBe(false);
     });
 
     it('a live holder is never superseded, however long it holds: no second writer can start', () => {
@@ -456,6 +456,35 @@ describe('retro_queue — path C, the daily sweep', () => {
         expect(holdsSweepDay(main, '2026-10-21', held)).toBe(true);
         // Past the maximum hold the pid is presumed reused, so a crash cannot block forever.
         expect(claimSweepDay(wt, '2026-10-21', Date.now() + SWEEP_CLAIM_MAX_HOLD_MS + 1, alive)).not.toBeNull();
+    });
+
+    it('two claimants for different days, interleaved after their read: exactly one holds and can mutate', () => {
+        const { main, wt } = repoWithWorktree();
+        let rival: string | null = null;
+        const first = claimSweepDay(main, '2026-10-21', Date.now(), {
+            beforeCreate: () => {
+                rival = claimSweepDay(wt, '2026-10-22', Date.now());
+            },
+        });
+        expect(rival).not.toBeNull();
+        expect(first).toBeNull();
+        expect(holdsSweepDay(main, '2026-10-22', rival!)).toBe(true);
+        // The loser cannot sweep: without a claim it reports the day as taken and writes nothing.
+        expect(runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [] }).status).toBe('already-swept');
+        expect(readSweepState(main).last_sweep).toBeNull();
+        // Same interleaving across a takeover of a dead holder.
+        const { main: m2, wt: w2 } = repoWithWorktree();
+        claimSweepDay(m2, '2026-10-21', Date.now());
+        const later = Date.now() + SWEEP_CLAIM_LEASE_MS + 1;
+        let rival2: string | null = null;
+        const taker = claimSweepDay(m2, '2026-10-21', later, {
+            ...gone,
+            beforeCreate: () => {
+                rival2 = claimSweepDay(w2, '2026-10-22', later, gone);
+            },
+        });
+        expect(rival2).not.toBeNull();
+        expect(taker).toBeNull();
     });
 
     it('a finished sweep gives its claim back, and the finished day is not claimed again', () => {

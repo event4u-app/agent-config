@@ -58,16 +58,17 @@ a permission — nothing here reads or writes a merge setting.
 
 **Where paths B and C run.** The daily probe rides the `session_start` slot of
 the `session-register` concern, throttled once per workspace and day. It takes
-the repository's day claim **before** it lists or reads a single session. A
-claim is a file `claim-<day>.<generation>` created exclusively, and it is taken
-over only when its holder process has exited — never inside a 60-second lease,
-and never from a live holder, however long it is suspended — so one process at a
-time mutates the retro stores. A claim of an earlier day with a live holder
-blocks the next day too. The one escape is age: past 24 hours a holder's pid is
-presumed reused and the claim is taken over, so a crash cannot block every later
-sweep. A takeover exclusively creates the next generation, so of two takers one
-succeeds, and a sweep that finds it no longer holds the newest generation records
-nothing further. A finished sweep gives its claim back. A session start that
+the repository's sweep claim **before** it lists or reads a single session. The
+claim is one repository-wide sequence of files `claim.<generation>`, and every
+transition — acquire, take over, release — exclusively creates the next
+generation, so of any two processes acting on the same newest generation exactly
+one succeeds, whatever days they claim. A claim is taken over only when its
+holder process has exited — never inside a 60-second lease, and never from a
+live holder, however long it is suspended — so one process at a time mutates the
+retro stores. The one escape is age: past 24 hours a holder's pid is presumed
+reused and the claim is taken over, so a crash cannot block every later sweep. A
+sweep that finds it no longer holds the newest generation records nothing
+further. A finished sweep gives its claim back. A session start that
 loses the claim does no discovery and is not stamped, so it retries later. Every
 `gh` and `git` call gets only the time left of the probe's three seconds, and a
 session read the deadline cut short is discarded, never triaged; what remains
@@ -243,4 +244,4 @@ reopens nothing — `missing` is not `false`.
 | v1 | 2026-10-17 | Held or recurred: three verdicts read from record status, never from the occurrence count; a measured revert reopens. |
 | v1 | 2026-10-20 | The switch (ADR-292) and where the state lives; path A wired into `/pr:merge`; the push-time marker and the session pointer written by their hooks; `/retro` and its forms. |
 | v1 | 2026-10-20 | After council review: the queue line grants no delegation, the sweep holds one owner-tokened claim per day with a lease, a stale backlog expires, pointers stay bounded by the window, and the network read is disclosed. The session-start call of the daily probe is not wired yet; the sweep runs by hand through `retro sweep`. |
-| v1 | 2026-10-21 | The session-start call wired through `session-register`: the day claim is taken before discovery, a claim is taken over only from an exited holder (or after 24 hours) by exclusively creating the next generation, a finished sweep releases it, and the deadline bounds every process call and discards a cut-short read. |
+| v1 | 2026-10-21 | The session-start call wired through `session-register`: the day claim is taken before discovery, the claim is one repository-wide generation sequence whose every transition exclusively creates the next generation, a claim is taken over only from an exited holder (or after 24 hours), a finished sweep releases it, and the deadline bounds every process call and discards a cut-short read. |
