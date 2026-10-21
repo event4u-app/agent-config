@@ -98,6 +98,32 @@ chain, so a fresh skeleton restarted at round 1.
   Revisit if step 2.1 finds a post-cap re-bind that carried one.
 - **No cap** (option (c)). Declined by the owner.
 
+## Evidence
+
+`strength: E1`, and the grade is a measurement of what this record rests on,
+never a permission it grants.
+
+- **The owner's directive of 2026-10-21**,
+  `agents/evidence/owner-directives/2026-10-21-review-cap-and-depth-flip.md`,
+  which sets the number and the severity gate. Authority for those two halves
+  rests here, not on the measurement.
+- **The yield-by-round measurement**,
+  `agents/evidence/analysis/review-severity-by-round-2026-10-21.md`: high and
+  critical rows per artefact by pass over the committed review corpus, the
+  figures quoted in § Context.
+- **The contract the cap amends**, `docs/contracts/plan-review-gates.md` § 2.1
+  and § 2.8, and the step-level record in
+  `agents/roadmaps/road-to-a-review-that-ends.md`.
+- **The gate that enforces it**, readable rather than asserted:
+  `src/scripts/_lib/review_round.ts` counts passes and applies the cap,
+  `src/scripts/check_completion_review.ts` reads each committed version.
+
+**What the evidence does NOT establish:** the pass-counting half rests on three
+council runs that each degraded to one seat (§ Council record), so it carries no
+provider-diverse convergence. The yield table is a retrospective reading of the
+corpus, not a prospective measurement; step 2.1's reading of the next 20 reviews
+is what `review_trigger` waits on.
+
 ## Council record
 
 Three council runs on 2026-10-21, each DEGRADED to one seat (anthropic; the
