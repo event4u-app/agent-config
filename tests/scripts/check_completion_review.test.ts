@@ -1525,6 +1525,15 @@ describe.runIf(hasGit())('round: header field — a re-bind advances the round',
         expect(runGate(dir).status).toBe(0);
     });
 
+    it('a fresh round-1 skeleton after the § 2.7 archive rename is not a re-bind', () => {
+        const dir = reboundRepo(1);
+        git(dir, 'mv', ART, 'agents/evidence/reviews/feat.round1-review.md');
+        commitAll(dir, 'archive round 1');
+        write(dir, ART, nullArtifact(scopeHash(dir), 1));
+        commitAll(dir, 'fresh dispatch after archive');
+        expect(runGate(dir).kinds).not.toContain('round-not-advanced');
+    });
+
     it('leaves a legacy re-bind with no round field anywhere untouched', () => {
         const dir = reboundRepo(null);
         write(dir, ART, nullArtifact(scopeHash(dir), null));

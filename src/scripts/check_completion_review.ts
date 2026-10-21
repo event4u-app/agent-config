@@ -1061,7 +1061,9 @@ function checkRoundAdvance(repo: string, artifactAbs: string, current: Marker): 
     for (const sha of log.stdout.split('\n').map((l) => l.trim()).filter(Boolean)) {
         const shown = gitTry(repo, ['show', `${sha}:${rel}`]);
         if (!shown.ok) {
-            continue;
+            // The commit removed the path — the § 2.7 archive rename. What came
+            // before belongs to the archived record, not to this artefact.
+            return [];
         }
         const prior = parseArtifact(shown.stdout).marker;
         if (prior === null || prior.scope === current.scope) {
