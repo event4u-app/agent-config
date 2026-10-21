@@ -409,12 +409,15 @@ const defaultGh =
  * Any failure — no `gh`, no login, no network, a timeout — returns `null`, and
  * the caller falls back to the offline proof rather than guessing.
  */
-export function readPrIndex(repoPath: string, opts: { run?: GhRunner; timeoutMs?: number } = {}): PrIndex | null {
+export function readPrIndex(
+    repoPath: string,
+    opts: { run?: GhRunner; timeoutMs?: number; limit?: number } = {},
+): PrIndex | null {
     const run = opts.run ?? defaultGh(repoPath);
     try {
         const raw = run(
-            ['pr', 'list', '--state', 'all', '--limit', '1000', '--json', 'headRefName,headRefOid,state,mergedAt'],
-            Math.min(opts.timeoutMs ?? 5000, timeLeftMs() ?? Number.POSITIVE_INFINITY),
+            ['pr', 'list', '--state', 'all', '--limit', String(opts.limit ?? 1000), '--json', 'headRefName,headRefOid,state,mergedAt'],
+            Math.min(opts.timeoutMs ?? 15000, timeLeftMs() ?? Number.POSITIVE_INFINITY),
         );
         const rows = JSON.parse(raw) as Array<{
             headRefName?: string;
@@ -471,7 +474,10 @@ export function mergeEvidence(
         if (prs.length > 0 && prs.every((p) => p.state === 'CLOSED')) {
             return { evidence: 'closed-unmerged', mergedAt: null };
         }
-        return { evidence: null, mergedAt: null };
+        // A PR record exists but none merged at this tip: the forge has spoken.
+        if (prs.length > 0) return { evidence: null, mergedAt: null };
+        // No record at all — the PR is older than the window read, or the branch
+        // never had one. The tree proof is still a proof, so fall through to it.
     }
     if (mergeEquivalent(repoPath, branch, trunk)) return { evidence: 'merged-equivalent', mergedAt: null };
     return { evidence: null, mergedAt: null };
@@ -529,8 +535,8 @@ function commentSaysGenerated(lines: string[], line: number): boolean {
  * Ignored paths in `worktreePath` that are NOT regenerable. Empty means losing
  * every ignored file with the tree costs nothing a rebuild would not restore.
  */
-export function localOnlyIgnored(worktreePath: string): string[] {
-    const status = tryGit(worktreePath, ['status', '--ignored', '--porcelain']);
+export function localOnlyIgnored(worktreePath: string, trunk: string | null = null): string[] {
+    const status = tryGit(worktreePath, ['status', '--ignored=matching', '--porcelain']);
     if (status === null) return ['(ignored files could not be listed)'];
     const ignored = status
         .split('\n')
@@ -555,11 +561,26 @@ export function localOnlyIgnored(worktreePath: string): string[] {
         }
         return fileCache.get(abs)!;
     };
+    // The trunk's copy of the same ignore file speaks for an old branch too: a
+    // repository that declares a path generated today should not have to wait
+    // for every long-lived branch to pick the comment up.
+    const trunkCache = new Map<string, string[]>();
+    const trunkLines = (file: string): string[] => {
+        if (trunk === null || path.isAbsolute(file)) return [];
+        if (!trunkCache.has(file)) {
+            const text = tryGit(worktreePath, ['show', `${trunk}:${file}`]);
+            trunkCache.set(file, text === null ? [] : text.split('\n'));
+        }
+        return trunkCache.get(file)!;
+    };
     return ignored.filter((p) => {
         const src = sourceOf.get(p);
         if (src === undefined) return true;
         if (isRegenerablePattern(src.pattern)) return false;
-        return !commentSaysGenerated(readLines(src.file), src.line);
+        if (commentSaysGenerated(readLines(src.file), src.line)) return false;
+        const t = trunkLines(src.file);
+        const idx = t.findIndex((l) => l.trim() === src.pattern.trim());
+        return !(idx >= 0 && commentSaysGenerated(t, idx + 1));
     });
 }
 
@@ -708,6 +729,8 @@ export interface InventoryOptions {
      * `/pr:merge` path, where the session that merged has nothing left to do.
      */
     mergeDelayHours?: number;
+    /** Override the trunk ref (default: origin/main → origin/master → main → master). */
+    trunk?: string;
 }
 
 /** D4 — a revert or follow-up can reuse the tree for a day. */
@@ -822,7 +845,7 @@ export function classifyEntry(e: WorktreeEntry, ctx: ClassifyContext): Inventory
             const n = status.trimEnd().split('\n').length;
             reasons.push(`unsaved work — ${n} dirty or untracked path(s)`);
         }
-        const local = localOnlyIgnored(resolved);
+        const local = localOnlyIgnored(resolved, trunk);
         if (local.length > 0) {
             const shown = local.slice(0, 5).join(', ');
             reasons.push(`local-only files — ${local.length} ignored path(s) a rebuild would not restore: ${shown}`);
@@ -857,6 +880,7 @@ export function buildInventory(
     return buildInventoryInner(repoPath, now, ageCutoff, minAgeDays, opts.excludeLiveSessions === true, {
         prIndex: opts.prIndex ?? null,
         mergeDelayHours: opts.mergeDelayHours ?? MERGE_DELAY_HOURS,
+        trunk: opts.trunk ?? null,
     });
 }
 
@@ -866,10 +890,10 @@ function buildInventoryInner(
     ageCutoff: number | null,
     minAgeDays: number | null,
     excludeLiveSessions: boolean,
-    forge: { prIndex: PrIndex | null; mergeDelayHours: number },
+    forge: { prIndex: PrIndex | null; mergeDelayHours: number; trunk: string | null },
 ): Inventory {
     const now = nowArg;
-    const trunk = resolveTrunk(repoPath);
+    const trunk = forge.trunk ?? resolveTrunk(repoPath);
     const entries = listWorktrees(repoPath);
     const mainPath = canonical(entries.length > 0 ? entries[0]!.path : repoPath);
     const liveCutoff = now.getTime() - LIVE_WINDOW_HOURS * 3600 * 1000;
@@ -891,7 +915,8 @@ function buildInventoryInner(
     const registry = readRegistry(mainPath);
 
     const ctx: ClassifyContext = {
-        trunk, mainPath, now, liveCutoff, sessionPaths, registry, ageCutoff, minAgeDays, forge,
+        trunk, mainPath, now, liveCutoff, sessionPaths, registry, ageCutoff, minAgeDays,
+        forge: { prIndex: forge.prIndex, mergeDelayHours: forge.mergeDelayHours },
     };
     const rows: InventoryRow[] = entries.map((e) => classifyEntry(e, ctx));
 
@@ -1081,6 +1106,8 @@ export function cleanupMode(root: string, opts: { userGlobalPath?: string | null
 
 /** The daily pass's budget — the retro's, on the same slot (council 2026-10-21 Q1). */
 export const DAILY_BUDGET_MS = 3000;
+/** Most recent PRs the daily pass reads; older merges fall back to the tree proof. */
+export const DAILY_PR_WINDOW = 200;
 /** Per-candidate record of the last daily pass, in the common git dir. */
 export const DAILY_RECORD = 'agent-config-worktree-daily.json';
 
@@ -1144,7 +1171,12 @@ export function dailyCleanup(
                 registry: readRegistry(mainPath),
                 ageCutoff: null,
                 minAgeDays: null,
-                forge: { prIndex: readPrIndex(mainPath, deps.run === undefined ? {} : { run: deps.run }), mergeDelayHours: MERGE_DELAY_HOURS },
+                forge: {
+                    // 200 PRs read in ~1.2 s on this repository (measured 2026-10-21; 1,000 took 6.1 s),
+                    // which leaves the rest of the three seconds for the candidates.
+                    prIndex: readPrIndex(mainPath, { limit: DAILY_PR_WINDOW, ...(deps.run === undefined ? {} : { run: deps.run }) }),
+                    mergeDelayHours: MERGE_DELAY_HOURS,
+                },
             };
             const rows: InventoryRow[] = [];
             for (const e of ordered) {
@@ -1205,8 +1237,8 @@ export function dailyCleanup(
 function usage(): never {
     process.stderr.write(
         'usage: worktree_cleanup_check check <worktree-path> | scope-overlap [repo-path] | ' +
-            'inventory [repo-path] [--json|--plan] [--min-age-days=N] [--exclude-live-sessions] [--offline] | ' +
-            'apply [repo-path] [--branch=<name>] [--no-delay] [--offline] [--json] | ' +
+            'inventory [repo-path] [--json|--plan] [--min-age-days=N] [--exclude-live-sessions] [--offline] [--trunk=<ref>] | ' +
+            'apply [repo-path] [--branch=<name>] [--no-delay] [--offline] [--json] [--respect-setting] [--trunk=<ref>] | ' +
             'register <worktree-path> [--purpose=<text>]\n',
     );
     process.exit(2);
@@ -1260,16 +1292,36 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         const rest = argv.slice(1);
         const flags = rest.filter((a) => a.startsWith('--'));
         const positional = rest.filter((a) => !a.startsWith('--'));
-        const KNOWN_APPLY = ['--no-delay', '--offline', '--json'];
+        const KNOWN_APPLY = ['--no-delay', '--offline', '--json', '--respect-setting'];
+        const trunkFlag = flags.find((f) => f.startsWith('--trunk='));
         const branchFlag = flags.find((f) => f.startsWith('--branch='));
-        if (positional.length > 1 || flags.some((f) => !KNOWN_APPLY.includes(f) && !f.startsWith('--branch='))) {
+        if (
+            positional.length > 1 ||
+            flags.some((f) => !KNOWN_APPLY.includes(f) && !f.startsWith('--branch=') && !f.startsWith('--trunk='))
+        ) {
             usage();
         }
         const repo = path.resolve(positional[0] ?? '.');
+        // `--respect-setting`: the path a merge takes on its own initiative
+        // (`/pr:merge`). It removes only under `worktrees.cleanup: auto`; the
+        // explicit `/worktree cleanup --apply` is the user's own ask and does not
+        // consult the key (ADR-295).
+        if (flags.includes('--respect-setting')) {
+            const mode = cleanupMode(repo);
+            if (mode !== 'auto') {
+                if (mode === 'notify') {
+                    process.stdout.write(
+                        'worktrees: not removed — worktrees.cleanup is notify; /worktree cleanup --apply removes the merged ones\n',
+                    );
+                }
+                return 0;
+            }
+        }
         const inv = buildInventory(repo, {
             excludeLiveSessions: true,
             prIndex: flags.includes('--offline') ? null : readPrIndex(repo),
             mergeDelayHours: flags.includes('--no-delay') ? 0 : MERGE_DELAY_HOURS,
+            ...(trunkFlag === undefined ? {} : { trunk: trunkFlag.slice('--trunk='.length) }),
         });
         const outcomes = applyRemovals(repo, inv, {
             onlyBranch: branchFlag === undefined ? null : branchFlag.slice('--branch='.length),
@@ -1291,10 +1343,11 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         const flags = rest.filter((a) => a.startsWith('--'));
         const positional = rest.filter((a) => !a.startsWith('--'));
         const KNOWN = ['--json', '--plan', '--exclude-live-sessions', '--offline'];
+        const invTrunk = flags.find((f) => f.startsWith('--trunk='));
         const ageFlag = flags.find((f) => f.startsWith('--min-age-days='));
         if (
             positional.length > 1 ||
-            flags.some((f) => !KNOWN.includes(f) && !f.startsWith('--min-age-days='))
+            flags.some((f) => !KNOWN.includes(f) && !f.startsWith('--min-age-days=') && !f.startsWith('--trunk='))
         ) {
             usage();
         }
@@ -1316,6 +1369,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             minAgeDays,
             excludeLiveSessions: flags.includes('--exclude-live-sessions'),
             prIndex: flags.includes('--offline') ? null : readPrIndex(repo),
+            ...(invTrunk === undefined ? {} : { trunk: invTrunk.slice('--trunk='.length) }),
         });
 
         if (flags.includes('--json')) {

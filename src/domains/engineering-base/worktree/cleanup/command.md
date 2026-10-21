@@ -2,7 +2,7 @@
 model_tier: medium
 name: worktree-cleanup
 pack: engineering-base
-visibility: internal
+visibility: advanced
 cluster: worktree
 sub: cleanup
 skills: [worktree-lifecycle, git-workflow]
@@ -34,18 +34,25 @@ For a whole-checkout sweep, get the classified set in one pass instead of
 running the per-worktree gate by hand:
 
 ```bash
-./scripts-run src/scripts/worktree_cleanup_check inventory        # counts + review reasons
-./scripts-run src/scripts/worktree_cleanup_check inventory --plan # commands for the safe set
+agent-config worktree:cleanup inventory          # counts + review reasons
+agent-config worktree:cleanup inventory --plan   # commands for the safe set
+agent-config worktree:cleanup apply              # remove the safe set (`--apply`)
 ```
 
-`safe` = on a branch, merged into the trunk, clean, in a conventional
-worktree root, and no git activity for 48 h. `review` carries its
-disqualifying reason; `live` means another session may hold it. The mode
-reports only — running the plan is a bulk deletion needing the user's
-explicit this-turn approval per
-[`non-destructive-by-default`](../../../rules/non-destructive-by-default.md).
-Present the safe set as a list and wait; a bulk sweep never inherits a
-single earlier approval.
+`safe` = on a branch whose work is on the trunk — merged by merge commit or
+rebase (`merged-ancestor`), squash-merged with the branch tip equal to the PR's
+head (`merged-pr`, read once through your `gh` login), or offline by tree
+equivalence (`merged-equivalent`) — clean, holding no ignored file a rebuild
+would not restore, not locked, with no live session and no git activity for
+48 h, inside a conventional root or registered by this package. `review` names
+its disqualifier; `live` means a session may hold it.
+
+**`/worktree cleanup --apply`** runs `apply`: it removes exactly the safe set,
+re-checks every candidate immediately before removing it, never passes force,
+never deletes a branch, and writes one journal line per candidate. Removing the
+proven set is housekeeping (ADR-295), so the explicit command is the user's ask
+and needs no second confirmation. Anything outside the safe set is listed, never
+removed here — removing it stays a decision per candidate, below.
 
 ### 2. Per candidate, run the gates IN ORDER
 
@@ -54,7 +61,7 @@ branch without remote, tag-only reachability, deleted remote branch,
 untracked files, paths with spaces — `tests/scripts/worktree_cleanup_check.test.ts`):
 
 ```bash
-./scripts-run src/scripts/worktree_cleanup_check check <worktree-path>
+agent-config worktree:cleanup check <worktree-path>
 ```
 
 Exit `0` → removal allowed. Exit `1` → **refuse** that candidate; the

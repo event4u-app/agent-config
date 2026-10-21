@@ -170,6 +170,10 @@ which is the authority on what may be copied and what must never be — not
 restated here, because a second copy of a safety list is a copy that can
 drift. Under `--all` the worktree is created
 once and re-branched per roadmap; `/worktree:cleanup` runs at end of run.
+Every lane worktree is registered when it is created —
+`agent-config worktree:cleanup register <lane worktree> --purpose=lane` — so
+the merge-time and daily removal reach it although it sits beside the
+checkout rather than under a conventional root (ADR-295).
 
 ## Full is Full — halt detail
 

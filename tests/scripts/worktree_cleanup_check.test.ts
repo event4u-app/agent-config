@@ -437,7 +437,8 @@ describe('merge evidence and the removable set — F1–F12', () => {
 
         // The defect this fixture pins: the graph proof alone never holds for a
         // squash merge. `merged-ancestor` is absent here by construction.
-        expect(mergeEvidence(repo, 'feat/f1', 'refs/heads/main', prIndex([])).evidence).toBeNull();
+        expect(() => git(repo, ['merge-base', '--is-ancestor', 'feat/f1', 'main'])).toThrow();
+        expect(mergeEvidence(repo, 'feat/f1', 'refs/heads/main', prIndex([])).evidence).toBe('merged-equivalent');
 
         const index = prIndex([['feat/f1', 'MERGED', tipOf('feat/f1'), longAgo]]);
         const row = rowFor(buildInventory(repo, { now: afterEverything(), prIndex: index }), wt);
@@ -732,5 +733,58 @@ describe('check-to-remove and the daily pass (council 2026-10-21)', () => {
         expect(dailyCleanup(repo, { mode: 'auto', ranToday: () => true })).toBeNull();
         expect(dailyCleanup(repo, { mode: 'auto', budgetMs: 0, run: () => '[]' })).toBeNull();
         expect(fs.existsSync(wt)).toBe(true);
+    });
+
+    it('one forge read per pass, however many worktrees (1.3)', () => {
+        for (let i = 0; i < 6; i++) {
+            const wt = addStandardWorktree(`gh${i}`, `feat/gh${i}`);
+            commitFile(wt, `f${i}.txt`, 'x', `w${i}`);
+        }
+        backdateAll();
+        let calls = 0;
+        dailyCleanup(repo, {
+            mode: 'notify',
+            run: (args) => {
+                calls++;
+                expect(args.slice(0, 2)).toEqual(['pr', 'list']);
+                return '[]';
+            },
+        });
+        expect(calls).toBe(1);
+    });
+
+    it('a PR merged outside the session is removed by the next daily pass (3.2)', () => {
+        const wt = addStandardWorktree('elsewhere', 'feat/elsewhere');
+        commitFile(wt, 'a.txt', 'x', 'w');
+        const head = git(repo, ['rev-parse', 'refs/heads/feat/elsewhere']).trim();
+        git(repo, ['merge', '--squash', 'feat/elsewhere']);
+        git(repo, ['commit', '-m', 'squash (#9)']);
+        commitFile(repo, 'unrelated.txt', 'z', 'trunk moved on');
+        backdateAll();
+        const forge = JSON.stringify([
+            { headRefName: 'feat/elsewhere', headRefOid: head, state: 'MERGED', mergedAt: '2020-01-01T00:00:00Z' },
+        ]);
+        const r = dailyCleanup(repo, { mode: 'auto', run: () => forge })!;
+        expect(r.removed).toBe(1);
+        expect(fs.existsSync(wt)).toBe(false);
+    });
+});
+
+
+describe('regenerable declaration on the trunk', () => {
+    it('an old branch without the comment is covered by the trunk .gitignore', () => {
+        fs.writeFileSync(path.join(repo, '.gitignore'), '/out/\n');
+        git(repo, ['add', '.gitignore']);
+        git(repo, ['commit', '-m', 'ignore out']);
+        const wt = path.join(repo, '.claude', 'worktrees', 'old');
+        fs.mkdirSync(path.dirname(wt), { recursive: true });
+        git(repo, ['worktree', 'add', wt, '-b', 'feat/old']);
+        fs.mkdirSync(path.join(wt, 'out'), { recursive: true });
+        fs.writeFileSync(path.join(wt, 'out', 'x.js'), '');
+        expect(localOnlyIgnored(wt, 'refs/heads/main')).toEqual(['out/']);
+        fs.writeFileSync(path.join(repo, '.gitignore'), '# Generated build output\n/out/\n');
+        git(repo, ['add', '.gitignore']);
+        git(repo, ['commit', '-m', 'declare out generated']);
+        expect(localOnlyIgnored(wt, 'refs/heads/main')).toEqual([]);
     });
 });

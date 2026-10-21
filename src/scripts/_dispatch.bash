@@ -82,6 +82,9 @@ TS-shell native (run via the installed `agent-config` binary):
                              .tokens.json, which nothing reads.
   ci:settle <pr>             Wait for a PR's checks to settle; the last line is the
                              verdict (exit 0 green · 1 red · 2 no verdict).
+  worktree:cleanup <mode>    Worktree inventory and removal: inventory · apply · check
+                             <path> · register <path>. `apply` removes only the proven
+                             set (merged incl. squash, clean, unused), never with force.
   packs:active               Which packs are active HERE, and from which file.
                              Names the degraded case (settings file without a
                              profile.id → zero packs) that nothing else reports.
@@ -847,6 +850,13 @@ cmd_ci_settle() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_ci_settle.ts" "$@"
 }
 
+# `worktree:cleanup <mode>` — the worktree safety gate and the removal of the
+# proven set, through the package's own executable so a consumer with a global
+# install reaches it without a node_modules path (ADR-295).
+cmd_worktree_cleanup() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/worktree_cleanup_check.ts" "$@"
+}
+
 # `--archive`: a completed roadmap is archived here rather than reported as a
 # warning the caller has to act on. `roadmap:progress-check` never passes it —
 # a CI gate must not mutate the tree it is checking. Pass `--no-archive` to get
@@ -1608,6 +1618,7 @@ main() {
     mcp:available)           cmd_mcp_available "$@" ;;
     brand:status)            cmd_brand_status "$@" ;;
     ci:settle)               cmd_ci_settle "$@" ;;
+    worktree:cleanup)        cmd_worktree_cleanup "$@" ;;
     roadmap:context)         cmd_roadmap_context "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;

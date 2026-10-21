@@ -171,8 +171,12 @@ within the reflog TTL if needed.
 
 If the branch lives in a `git worktree`:
 
-* Options 1, 2, 4 → `git worktree remove <path>` after the branch
-  terminal state
+* Option 1 (PR opened) → the worktree stays until the PR merges;
+  removal is scheduled by the daily run, not forgotten — `/pr:merge` removes it right after
+  its merge, and the first session start of a day removes any whose PR merged
+  elsewhere, both under `worktrees.cleanup: auto` (ADR-295). Under `notify` the
+  daily line names it and `agent-config worktree:cleanup apply` removes it.
+* Options 2, 4 → `git worktree remove <path>` after the branch terminal state
 * Option 3 → keep the worktree
 
 ## Output format
