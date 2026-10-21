@@ -53,8 +53,9 @@ calls the pure function, every case is green, and the flag or the caller that
 decides whether the result reaches anyone is in no test at all. "Narrowest
 faithful" means in-process `main(argv)` when argument handling and output are
 the claim, and the executable as a subprocess only when parsing, packaging or
-the exit status of the process is; the fixture carries no network, credentials
-or real hooks unless those are the contract. "The promised observable" means
+the exit status of the process is. The fixture carries no network, no
+credentials and no real hooks, without exception: a behaviour that needs them
+is an integration test, which this law does not authorise. "The promised observable" means
 what was promised — the stdout or stderr line, the exit code, the written
 artefact — never only that the call returned. Whether a workflow actually calls
 the entry point is a separate claim, checked against the workflow file.

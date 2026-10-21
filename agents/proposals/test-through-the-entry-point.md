@@ -69,8 +69,9 @@ point (a CLI flag, an output stream, a hook) is tested by driving the narrowest
 faithful invocation of it in an isolated fixture and asserting the promised
 observable." — a paragraph defining "narrowest faithful" (in-process
 `main(argv)` unless parsing, packaging or process exit status is the claim),
-the fixture's isolation (no network, credentials or real hooks unless they are
-the contract) and "the promised observable"; and one Gotcha stating the failure
+the fixture's isolation (no network, credentials or real hooks, without
+exception — a behaviour that needs them is an integration test the law does not
+authorise) and "the promised observable"; and one Gotcha stating the failure
 shape without a dated anecdote.
 
 ## 5. Quality gate expectations
@@ -86,17 +87,18 @@ after them.
 
 ## 7. Success signal
 
-- Metric: the share of review records under `agents/evidence/` written in the
-  quarter whose findings include "the function is tested, its entry point is
-  not", over all review records written in that quarter that report at least
-  one test-coverage finding; counted by reading each record, and a quarter
-  with no such record reports "no data", never zero
-- Baseline: 2 instances in October 2026 (the two evidence entries above),
-  denominator to be counted at evaluation over October 2026 with the same rule
-- Target: a lower share than the October 2026 baseline
+- Metric: seeded-fault catch rate. For every entry-point case added under
+  Law 8 by the evaluation date, remove the write that delivers the promised
+  observable (the print, the stream write, the exit-code propagation) and run
+  the suite; count the cases that turn red while the function-level cases for
+  the same behaviour stay green
+- Baseline: 1 of 1 — the step 5.2 case on this branch (reachable at
+  `0e262c5c2`) turned red when the stderr write was removed, with the
+  function-level cases green
+- Target: every such case turns red under its seeded fault
 - Evaluation date: 2027-01-21
-- Falsified if the share does not fall, or if the entry-point cases added under
-  the law are later found to catch nothing the function-level cases did not
+- Falsified if any entry-point case added under the law stays green under its
+  seeded fault, or if no such case was added (the law then changed nothing)
 
 ## 8. Risks and alternatives rejected
 
@@ -111,12 +113,21 @@ after them.
   noise.
 - **Rollback:** revert the skill edit. The `dist/agent-src/` copy is a
   byte-exact projection that CI's "Verify dist == rewrite(src)" step rejects if
-  it differs, so a revert regenerates with `task sync` and installs pick it up
-  on their next update. Revert if the law is cited to justify a test with real
-  side effects, or if the evaluation above falsifies it.
+  it differs, so a revert regenerates with `task sync`. This package has no
+  revocation mechanism for instruction text: an installed copy keeps the law
+  until its next update, and the corrected text ships in the next release.
+  Revert on the first test written under the law that touches network,
+  credentials or a real hook, or if the evaluation above falsifies it.
 - **Sequence:** source reviewed at a digest → owner authorization bound to the
   same digest moves the proposal to `gated` → merge, after which the projection
-  ships. Nothing here is published before the owner's merge.
+  ships. What enforces which link: `proposal:check` check 7 (step 6.1, this
+  branch) refuses `stage: gated` without a passing record and an
+  `owner_authorization:` bound to the digest of the declared files read at one
+  commit, so a source edited after either is refused — its suite pins the
+  missing authorization, a record or authorization bound to other content, and
+  an edit after the review; the projection is held equal by the CI step above;
+  that the merged commit is the authorized one is the owner's merge (ADR-281
+  § 5), which no check here enforces.
 
 ## 9. Gate verdict
 
