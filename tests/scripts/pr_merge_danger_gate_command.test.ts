@@ -1,6 +1,3 @@
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-
 import { describe, expect, it } from 'vitest';
 
 import { procedureText } from '../_lib/procedure_text.js';
@@ -13,7 +10,6 @@ import { procedureText } from '../_lib/procedure_text.js';
  * routing eval (prompt → command) and cannot express any of them.
  */
 
-const ROOT = path.resolve(__dirname, '..', '..');
 const MERGE = procedureText('src/domains/git/pr/merge/command.md');
 const PROCESS_FULL = procedureText('src/domains/product-basic/roadmap/process-full/command.md');
 
