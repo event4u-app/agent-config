@@ -11477,7 +11477,7 @@ function build_claude_hook_matrix(manifest_path2) {
     const concerns = claude_events[ac_event];
     if (!concerns || Array.isArray(concerns) && concerns.length === 0) continue;
     const dispatchArgs = `--platform claude --event ${ac_event} --native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
-    matrix[native] = `R="\${EVENT4U_CONFIG_HOME:-$HOME/.event4u/agent-config}/runtime"; S="$R/current"; N=""; [ -f "$S/node" ] && read -r N < "$S/node"; B=""; [ -f "$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js" ] && B="$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js"; [ -z "$B" ] && [ -f "$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js" ] && [ -f "$CLAUDE_PROJECT_DIR/src/scripts/hook_manifest.yaml" ] && B="$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js"; if [ -n "$B" ] && command -v node >/dev/null 2>&1; then exec node "$B" ${dispatchArgs}; fi; if [ -n "$N" ] && [ -x "$N" ] && [ -f "$S/dist/hooks/dispatch.js" ]; then exec "$N" "$S/dist/hooks/dispatch.js" ${dispatchArgs}; fi; BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; command -v "$BIN" >/dev/null 2>&1 || { ${_no_dispatcher_notice(native)}${_thinned_dead_carrier(native)}exit 0; }; "$BIN" dispatch:hook ${dispatchArgs}`;
+    matrix[native] = `R="\${EVENT4U_CONFIG_HOME:-$HOME/.event4u/agent-config}/runtime"; S="$R/current"; N=""; [ -f "$S/node" ] && read -r N < "$S/node"; B=""; [ -f "$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js" ] && B="$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js"; [ -z "$B" ] && [ -f "$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js" ] && [ -f "$CLAUDE_PROJECT_DIR/src/scripts/hook_manifest.yaml" ] && B="$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js"; if [ -n "$B" ] && command -v node >/dev/null 2>&1; then exec node "$B" ${dispatchArgs}; fi; if [ -n "$N" ] && [ -x "$N" ] && [ -f "$S/dist/hooks/dispatch.js" ]; then exec "$N" "$S/dist/hooks/dispatch.js" ${dispatchArgs}; fi; BIN=agent-config; [ -x "$CLAUDE_PROJECT_DIR/agent-config" ] && [ -d "$CLAUDE_PROJECT_DIR/node_modules" ] && BIN="$CLAUDE_PROJECT_DIR/agent-config"; command -v "$BIN" >/dev/null 2>&1 || { ${_no_dispatcher_notice(native)}${_thinned_dead_carrier(native)}exit 0; }; "$BIN" dispatch:hook ${dispatchArgs}`;
   }
   return matrix;
 }
@@ -24637,8 +24637,21 @@ function _dry_run_summary(opts) {
 `);
   process4.stdout.write(`  tools:       ${opts.tools || "all"}
 `);
-  process4.stdout.write(`  target:      ${target}
+  if (opts.global_install || opts.scope === "global") {
+    process4.stdout.write("  target:      user-scope host paths (no project target)\n");
+    for (const tool_id of _parse_tools(opts.tools || "all")) {
+      const anchor = USER_SCOPE_PATHS[tool_id];
+      if (anchor === void 0) continue;
+      const expanded = anchor.startsWith("~/") ? path38.join(os13.homedir(), anchor.slice(2)) : anchor;
+      process4.stdout.write(`      ${tool_id} \u2192 ${expanded}
 `);
+    }
+    process4.stdout.write("  phases:      project payload sync \u2014 skipped (global installs write user-scope paths only)\n");
+    process4.stdout.write("               host projection + managed hooks \u2014 would run\n");
+  } else {
+    process4.stdout.write(`  target:      ${target}
+`);
+  }
   process4.stdout.write(`  minimal:     ${pyBool(opts.minimal)}
 `);
   process4.stdout.write(`  force:       ${pyBool(opts.force)}

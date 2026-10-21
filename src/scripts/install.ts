@@ -4444,7 +4444,22 @@ function _dry_run_summary(opts: Options): number {
     process.stdout.write(`  user-type:   ${opts.user_type || '(none)'}\n`);
     process.stdout.write(`  scope:       ${opts.scope || (opts.global_install ? 'global' : 'auto')}\n`);
     process.stdout.write(`  tools:       ${opts.tools || 'all'}\n`);
-    process.stdout.write(`  target:      ${target}\n`);
+    if (opts.global_install || opts.scope === 'global') {
+        // A global install has no project target. Printing the cwd here read as
+        // "this is where it writes", and under npx the cwd is often the npx
+        // cache, so the plan named a directory the install never touches.
+        process.stdout.write('  target:      user-scope host paths (no project target)\n');
+        for (const tool_id of _parse_tools(opts.tools || 'all')) {
+            const anchor = USER_SCOPE_PATHS[tool_id];
+            if (anchor === undefined) continue;
+            const expanded = anchor.startsWith('~/') ? path.join(os.homedir(), anchor.slice(2)) : anchor;
+            process.stdout.write(`      ${tool_id} → ${expanded}\n`);
+        }
+        process.stdout.write('  phases:      project payload sync — skipped (global installs write user-scope paths only)\n');
+        process.stdout.write('               host projection + managed hooks — would run\n');
+    } else {
+        process.stdout.write(`  target:      ${target}\n`);
+    }
     process.stdout.write(`  minimal:     ${pyBool(opts.minimal)}\n`);
     process.stdout.write(`  force:       ${pyBool(opts.force)}\n`);
     process.stdout.write(`  offline:     ${pyBool(opts.offline)}\n`);
