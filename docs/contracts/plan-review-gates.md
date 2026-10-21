@@ -344,7 +344,7 @@ Field ORDER is fixed (`author` before `prompt_hash`); a reordered marker is
 A third OPTIONAL trailing field, added 2026-10-21 (`road-to-a-review-that-ends`
 1.2), after `prompt_hash`:
 
-- `round:` — the review round this artefact records, a positive integer. A fix
+- `round:` — the review round this artifact records, a positive integer. A fix
   pass re-binds in place, so before this field the number of rounds was
   convention nothing could count. The dispatcher writes `round: 1` on every new
   skeleton; a re-bind writes the predecessor's round + 1. The predecessor is the
