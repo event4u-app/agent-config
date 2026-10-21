@@ -172,7 +172,11 @@ describe('4.3 — the manifest binding', () => {
     // "asks the user something" that was not `notification` ("changes nothing
     // else"). The pin inverts rather than disappears: a later edit relabelling
     // it `notification` would be the under-declaration round 1 refused.
-    it('is registered under the ratified effect, and bound only on stop', () => {
+    // FLIPPED again 2026-10-21: the registration was withdrawn after two more
+    // refusals — the one global invitation was claimed on workspace-written
+    // evidence without confirmed delivery. The definition and its effect stay;
+    // a commit that binds it again turns this red and has to carry a new round.
+    it('is defined under the ratified effect, and bound on no event of any host', () => {
         const entry = manifest.concerns[CONCERN];
         expect(entry).toBeDefined();
         expect((entry as { effect?: string }).effect).toBe('interaction');
@@ -182,7 +186,6 @@ describe('4.3 — the manifest binding', () => {
                 if (Array.isArray(concerns) && concerns.includes(CONCERN)) bound.push(`${host}:${event}`);
             }
         }
-        expect(bound.length).toBeGreaterThan(0);
-        expect([...new Set(bound.map((b) => b.split(':')[1]))]).toEqual(['stop']);
+        expect(bound).toEqual([]);
     });
 });

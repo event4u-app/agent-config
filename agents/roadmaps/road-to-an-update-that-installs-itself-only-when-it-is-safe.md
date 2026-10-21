@@ -244,12 +244,15 @@ None of this is rebuilt here.
       a change. The record carries one machine-readable line,
       `ring-0-exit: no`, written by a human after reading the table and
       recomputed by nothing, and that line is what 4.3's gate reads.
-- [x] **4.3 Ask once, at a moment that earned it.** After the ring-0 exit, one
+- [ ] **4.3 Ask once, at a moment that earned it.** After the ring-0 exit, one
       host-native question in the `stop` slot, after a turn that ended on a
       verified success. It carries a permanent "never". Existing installs are
       **asked**, never flipped.
       verify: a fixture asserts zero prompts under CI, non-TTY, headless,
       Since 2026-10-21 the "never" is the setting: any mode but `ask` stops it.
+      **Reopened 2026-10-21:** the registration was withdrawn after rounds 5
+      and 6 refused it — the one global claim is finalised on workspace-written
+      evidence without confirmed delivery. It closes when the claim is.
       Done note: `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § 4.3.
 - [x] **4.4 A pin advisor for teams.** `update --check` in a pinned project
       lists what lies between the pin and latest, read from the impact map.
@@ -291,6 +294,8 @@ None of this is rebuilt here.
   `reversible` may not be assumed merely because activation is deferred.
   Was: open — raised 2026-10-20 by a council verdict, not by a missing
   decision. The work exists, is tested and is reverted out of the manifest.
+- **Rounds 3–6 (2026-10-21):** `update-notice` stays registered;
+  `update-auto-invite` is defined and bound nowhere until 4.3 closes.
 - **Round 3 and the lifecycle contract (2026-10-21):** `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § Round 3.
 - **Class:** 2 — council. The seats named what the next round has to carry, so
   the question is what they asked for, not who owns it.
