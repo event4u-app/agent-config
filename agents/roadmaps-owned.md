@@ -24,6 +24,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-consumer-invocations-that-install | active | draft | Every executable instruction in shipped text that runs one of this package's scripts uses a form that works from a … |
 | road-to-corpus-refresh-cadence-shape | active | draft | The maintainer has answered whether four grounding corpora sharing one `last_checked` stamp is a deliberate cadence or an accident of … |
 | road-to-decision-closure | active | draft | Every roadmap enters execution as an execution contract: every foreseeable decision closed, the closing done council-first, the owner reached only … |
+| road-to-hook-guards-that-hold-17-findings | active | draft | 17.0.0 is cut only when the three `fail_closed` hook guards (`block-no-verify`, `block-kernel-rule-writes`, `block-plumbing-writes`) refuse what they claim on every install … |
 | road-to-one-detector-and-the-senders-we-own | active | ready | On every request this package writes to a model provider itself, no value of a listed type leaves in plaintext, … |
 | road-to-placeholders-on-the-wire | active | ready | On Claude Code at a probed version, a tool result carrying a listed value reaches the model as a token … |
 | road-to-security-fixes-carried-to-the-merge | active | ready | A security finding that has a fix leaves the agent as a verified fix ready for the owner's merge: the … |
