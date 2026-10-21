@@ -9,7 +9,7 @@ cluster: analyze
 type: orchestrator
 replaces: []
 skills: [subagent-orchestration]
-description: Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-repo, one subagent at a time, without producing one roadmap per repository.
+description: Walk the roadmap estate's encrypted reference tokens and feed each unique repository through analyze-reference, one subagent at a time, without producing one roadmap per repository.
 argument-hint: "[--limit=N] [--resume] [--refresh] [--mode=plan|execute]"
 suggestion:
   eligible: false
@@ -22,13 +22,13 @@ packs:
 
 # analyze-roadmap-repos
 
-The thin harvester in front of [`analyze-repo`](repo.md). It walks the roadmap
+The thin harvester in front of [`analyze-reference`](reference.md). It walks the roadmap
 estate's encrypted reference tokens, resolves each to a repository identity, and
 feeds the unique ones through the analysis command one at a time.
 
 **This command contains no analysis instruction and never will.** It resolves,
 dispatches, and folds. Every judgement about a reference — what to fetch, what
-to compare, what to adopt, how to converge — belongs to `analyze-repo`, which
+to compare, what to adopt, how to converge — belongs to `analyze-reference`, which
 owns the loop contract and its limits. A second copy of that reasoning here
 would be a second implementation to keep in step with the first, which is the
 condition step 1.1 of its roadmap removed.
@@ -58,10 +58,10 @@ Read the manifest. Do not re-derive any of it here.
 For each manifest entry with status `pending`, in manifest order, up to the
 batch limit:
 
-- Spawn **one subagent** and have it run `/analyze:repo` for that entry.
+- Spawn **one subagent** and have it run `/analyze:reference` for that entry.
 - Pass the subagent **the opaque id only** — never a resolved URL. The subagent
   reads the URL from `agents/.harvest-local/manifest.jsonl` itself. One
-  indirection, taken on precaution (`analyze-repo` § 7).
+  indirection, taken on precaution (`analyze-reference` § 7).
 - **Sequential, never a fan-out.** Over a hundred identities at four passes each
   cannot share one session, and every external fetch is spent deliberately. The
   manifest is the only shared state between subagents.
@@ -75,7 +75,7 @@ took.
 ### 3. Ownership fold — one gap, one roadmap
 
 After the batch, and never during it, run the fold pass of
-[`analyze-repo`](repo.md) § 7 across the batch's findings as a set. Consult
+[`analyze-reference`](reference.md) § 7 across the batch's findings as a set. Consult
 `src/scripts/roadmap_context.ts` and the run's own candidate registry, then pick
 exactly one disposition per repository:
 
@@ -90,7 +90,7 @@ exactly one disposition per repository:
 
 **Three repositories showing the same gap strengthen the evidence on one owning
 roadmap. They never create three.** That is the whole reason this command exists
-rather than a loop that invokes `analyze-repo` and keeps whatever it returns.
+rather than a loop that invokes `analyze-reference` and keeps whatever it returns.
 
 **An owned gap lands on its owner as a step and an `Arrivals:` line.** "Already
 planned" and "extend" both mean the owning roadmap — active, `later/` or
@@ -117,7 +117,7 @@ any other.
 
 ## Safety
 
-- Read-only on every reference. The no-execute invariant of `analyze-repo`
+- Read-only on every reference. The no-execute invariant of `analyze-reference`
   § Safety binds every subagent this command spawns.
 - No plaintext repository URL is ever passed as a dispatch argument.
 - Nothing tracked is written by this command itself.
@@ -126,14 +126,14 @@ any other.
 
 ## When **not** to use
 
-- One known reference → [`analyze-repo`](repo.md) directly. The harvester's only
+- One known reference → [`analyze-reference`](reference.md) directly. The harvester's only
   job is the estate walk.
 - Analyzing this repository → `/project-analyze`.
 - A dropped local artifact → [`/analyze:inbox`](inbox.md).
 
 ## Related
 
-- Command: [`analyze-repo`](repo.md) — the analysis engine this dispatches to.
+- Command: [`analyze-reference`](reference.md) — the analysis engine this dispatches to.
 - Script: `src/scripts/harvest_reference_tokens.ts` — discovery, the only one.
 - Rule: [`source-confidentiality`](../../../../rules/source-confidentiality.md)
   — why the identities stay in the gitignored area.

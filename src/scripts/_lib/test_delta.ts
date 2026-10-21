@@ -133,6 +133,28 @@ const SUPPRESSION =
 const DIFF_LINE_AS_DATA = /['"`][+-]/;
 
 /**
+ * A line the language never executes — prose, not code.
+ *
+ * Found on road-to-an-analysis-family-that-deepens-itself 6.2b: a rename
+ * rewrote a doc comment whose old wording carried "assertion failures" and
+ * "this expectation moves into the list" and whose new wording carried
+ * neither. `ASSERTION` matched both old lines, so a file whose executed
+ * assertions GREW by two array entries was reported as having net-removed two
+ * of them. A gate that reds a test edit which strengthened the test is the
+ * false positive this gate's own docstring says erodes it.
+ *
+ * Strictly a PRECISION fix, never a hole: commenting an assertion out now
+ * counts as the loss it is — the executed line leaves the removed side and the
+ * prose that replaces it no longer cancels it on the added side.
+ *
+ * Deliberately line-leading only. A trailing `// why` after a real assertion
+ * leaves the assertion executable and still counted; the markers cover the
+ * comment syntax of every framework `ASSERTION` spreads across (JS/TS/PHP
+ * `//`, block-comment continuation `*`, Python/shell `#`, SQL/Lua `--`).
+ */
+const COMMENT_LINE = /^\s*(\/\/|\/\*|\*|#|--)/;
+
+/**
  * A runtime-conditional skip (`it.skipIf(c)`, `describe.runIf(c)`).
  *
  * Counted apart from `SUPPRESSION` because it is legitimate far more often — a
@@ -149,6 +171,7 @@ function unreasonedConditionalSkips(added: readonly string[]): number {
     let n = 0;
     added.forEach((line, i) => {
         if (!CONDITIONAL_SKIP.test(line) || DIFF_LINE_AS_DATA.test(line)) return;
+        if (COMMENT_LINE.test(line)) return;
         if (SKIP_REASON.test(line) || SKIP_REASON.test(added[i - 1] ?? '')) return;
         n += 1;
     });
@@ -175,7 +198,7 @@ export interface WeakeningSignal {
  */
 export function weakeningSignal(file: FileDiff): WeakeningSignal {
     const count = (lines: readonly string[], re: RegExp): number =>
-        lines.filter((l) => re.test(l) && !DIFF_LINE_AS_DATA.test(l)).length;
+        lines.filter((l) => re.test(l) && !DIFF_LINE_AS_DATA.test(l) && !COMMENT_LINE.test(l)).length;
     return {
         path: file.path,
         assertionsLost: count(file.removed, ASSERTION) - count(file.added, ASSERTION),

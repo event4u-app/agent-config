@@ -131,6 +131,7 @@ Nothing in Phases 2–6 that reads a capability starts before its row exists.
       minutes, which is the run the plan expects to be cold.
       verify: `grep -c 'worker_resume' agents/evidence/investigations/host-continuation-observations-2026-10.md` -> /^[1-9][0-9]*$/
       Partial 2026-10-17, left open: on Claude Code 2.1.302 a resumed leg kept its ledger `ref` and read 99.7 % of its first call from cache; after a 6 min 51 s gap the resumed run read 0 % and rewrote the whole transcript. The resume was addressed by the host's per-run id, not by a durable name — the dispatch surface offered no name at spawn — so the by-name half is unobserved and `worker_resume` stays out of the registry row.
+      Re-read 2026-10-21 on 2.1.305: the subagent tool still has no name parameter (`description, effort, isolation, model, prompt, run_in_background, subagent_type`), so the by-name half remains unreachable from the dispatch surface.
 - [ ] **1.5 Observe the resume admission point.** Whether `PreToolUse` fires on
       the `SendMessage` call that resumes a worker, and whether a deny there is
       honoured; and whether a resumed worker counts against
@@ -154,12 +155,13 @@ Nothing in Phases 2–6 that reads a capability starts before its row exists.
       flag set and unset; record which yields a resumable subagent and which a
       teammate.
       verify: `grep -c 'agent teams' agents/evidence/investigations/host-continuation-observations-2026-10.md` -> /^[1-9][0-9]*$/
-- [ ] **1.9 Observe the rate surfaces.** On one subscription session: status-line
+- [x] **1.9 Observe the rate surfaces.** On one subscription session: status-line
       `rate_limits` after the first response, `StopFailure` with matcher
       `rate_limit`, `api_retry` in a print-mode stream, the `quota_auto_resume_*`
       notifications. Each gets `present`, `absent` or `not reached` with a date;
       `not reached` is a valid row, and no step forces a limit to get one.
       verify: `grep -c 'StopFailure' agents/evidence/investigations/host-continuation-observations-2026-10.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-21 on Claude Code 2.1.305, two print-mode child sessions on a subscription login: all four named surfaces **not reached** (print mode runs no status line; no limit was hit, so `StopFailure`, `api_retry` and `quota_auto_resume_*` had nothing to fire on). One unnamed surface was present: each print-mode stream carried a structured `rate_limit_event` with five-hour and seven-day utilisation. Rows in the observation file's 2026-10-21 addendum.
 - [ ] **1.10 Version floors.** Every observed field carries the host version it
       was seen on; resume, the skip flag, the cap and the subagent TTL arrived in
       different releases.
@@ -183,6 +185,32 @@ ledger does not carry, plus the resume addressing 1.4 left unobserved; 3.5, 3.6
 and 6.2 wait on its window. 4.3 and 4.5 bind hook surfaces and 4.6 waits on 1.9.
 Phase 5 edits the council modules, an owner-gated surface for a lane. 2.5 and
 6.5 wait on 1.7; 2.6 on its own holdout re-pin change.
+
+**Screen 2026-10-21 (drain lane, Claude Code 2.1.305).** Each open step's
+condition was executed rather than read from its status line. 1.9 closed from
+two print-mode child sessions in an empty scratch project, and 4.6 with it. A
+child session built to settle 1.5 — a `PreToolUse` hook on `SendMessage` bound
+through `--settings`, then one spawn and one re-task — was refused by the
+host's auto-mode permission classifier and not re-attempted in another form, so
+1.5, 1.7 and 1.8 still need an operator-run session. The open rest, by what each
+waits on:
+
+- **1.5 → 3.3, 3.6's resume half, 4.2.** 3.3 also needs the 1.4 by-name half:
+  on 2.1.305 the dispatch surface still offers no name, so a `would_resume`
+  verdict would name a worker no call can address. Building stop-time worker
+  state into the ledger before that exists would be a register nothing reads.
+- **1.7 → 2.5, 6.5.** 2.5's fixture half (a dispatch that carries the kernel
+  floor and the user's constraints) is only needed if skipping ships on, which
+  the missing 1.7 reading cannot decide.
+- **1.9 rows not reached → 4.3 → 4.5, 5.3.** `StopFailure` was not observed
+  firing, so binding it would read a capability whose row is `not reached`;
+  4.5 and 5.3 read the host-sourced marker 4.3 would write.
+- **5.1, 5.2.** Change how council seats launch and resume — the reviewer every
+  ratification here depends on — and need measured child-session launches of
+  the kind the classifier refused for 1.5.
+- **3.5 → 3.6 → 6.2.** A shadow window of at least 100 calls or two weeks after
+  3.3 lands.
+- **1.10** stays open until the 1.5, 1.7 and 1.8 rows exist.
 
 ## Phase 2 — Workers that load what their role needs
 
@@ -314,10 +342,11 @@ Phase 5 edits the council modules, an owner-gated surface for a lane. 2.5 and
       user's existing status-line command and never replaces it (decision D4),
       read against the pre-registered threshold (decision D5).
       verify: `npx vitest run tests/hooks/spawn_guard_shadow.test.ts -t recent-rate-marker-yields-would-wait --reporter=verbose` -> /✓.*recent-rate-marker-yields-would-wait/
-- [ ] **4.6 Hand the rate-surface rows to their owner.** The 1.9 verdicts are
+- [x] **4.6 Hand the rate-surface rows to their owner.** The 1.9 verdicts are
       appended to `later/road-to-billing-cliff-detection.md` under its S-1
       prior; the billing-class question stays there.
       verify: `grep -c 'host-continuation-observations-2026-10' agents/roadmaps/later/road-to-billing-cliff-detection.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-21: appended under its S-1 prior, including that the one present rate surface (`rate_limit_event` on a print-mode stream, with `overageStatus` and `isUsingOverage`) bears on its S-3 row rather than S-1; the billing-class question stays there.
 
 ## Phase 5 — Council seats that do not boot a workstation
 
