@@ -39,7 +39,7 @@ counts the passes:
 | F1 | No round cap. A fix commit changes the scope hash, the artefact re-binds, the review runs again. | `docs/contracts/plan-review-gates.md:303-307` (§ 2.1), § 2.5 at `:504`, § 2.7 at `:580`; `check_completion_review.ts:1050-1053` states per-round ordering is "agent-carried convention" |
 | F2 | Rounds reach 25. Per-slug maxima: round 1 only 16 slugs, 2: 4, 3: 1, 5: 2, 6: 2, 7: 3, 8: 3, 9: 1, 25: 1. The supplied plan said "up to round 9"; it under-counted. | `ls agents/evidence/reviews \| grep -oE 'round[0-9]+'` — `round22`..`round25` on one slug, `round21` on another |
 | F3 | The live HEAD at the pin was a five-round review that did not pass and was reverted. | `git log -1 418a09379d` (#2537) |
-| F4 | Later rounds carry less weight and more noise — high+critical 14.1 % (round 1) → 11.5 % (round 2) → 7.4 % (round 3+); low 46.5 % → 55.5 %. | Supplied plan's count over 3,069 findings; **not re-derived here** — step 0.1 re-derives it before 1.1 cites it |
+| F4 | Round 3+ carries less weight and more noise — high+critical 13.3 % (round 1) → **17.5 %** (round 2) → 8.7 % (round 3+); low 47.3 % → 40.7 % → 53.0 %. Round 2 is the round with the highest severity share, so a one-round cap would drop it. | Re-derived in step 0.1: `agents/evidence/analysis/review-severity-by-round-2026-10-21.md` (2,455 findings; the supplied plan read 14.1 / 11.5 / 7.4 %) |
 | F5 | A two-round cap with a narrow round 2 and a default-plus-memo for the rest already governs another loop in this tree. | `src/agent-src/contexts/execution/plan-confidence-gate.md:110-118` |
 
 The council's own round limit is **not** in scope: `debate_max_rounds` is wired
@@ -64,7 +64,7 @@ rate re-derived in step 0.1.
 
 ## Phase 0 — Re-derive what the cap rests on
 
-- [ ] **0.1 Re-derive the severity-by-round table.** Count findings per round
+- [x] **0.1 Re-derive the severity-by-round table.** Done 2026-10-21: `agents/evidence/analysis/review-severity-by-round-2026-10-21.md`; its code block reproduced the table byte-for-byte; F4 corrected (round 2 rises to 17.5 %). Count findings per round
       and severity over `agents/evidence/reviews/*.md`; write it as an analysis
       artefact with the command that produced it. F4's figures are a supplied
       plan's and are not cited by 1.1 until this lands.
