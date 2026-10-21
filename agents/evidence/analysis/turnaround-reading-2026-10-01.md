@@ -11,7 +11,7 @@ a reading. This is that reading.
 
 ```
 ./scripts-run src/scripts/probe_turnaround \
-    --store ~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config \
+    --store ~/.claude/projects/<project-store> \
     --limit 10 --against-baseline
 ```
 

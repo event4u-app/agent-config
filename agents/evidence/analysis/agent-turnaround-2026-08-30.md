@@ -634,7 +634,7 @@ distinction is the whole point: an mtime-ordered window can put a session that
 *started* three days ago at the top.
 
 In this package's own store
-(`~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config/`),
+(`~/.claude/projects/<project-store>/`),
 162 sessions, **3** begin after that instant:
 
 | first timestamp | session |

@@ -13,7 +13,7 @@ because the probe kept only durations. The probe now assigns every call over
 
 ```
 ./scripts-run src/scripts/probe_turnaround \
-    --store ~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config \
+    --store ~/.claude/projects/<project-store> \
     --limit 10
 ```
 

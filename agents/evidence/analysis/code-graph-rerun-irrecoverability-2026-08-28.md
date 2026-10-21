@@ -44,9 +44,9 @@ The stub specifies four `[ -f ]`-plus-hash readings and one corpus reading.
 
 Widened, so "absent here" is not confused with "absent in this worktree":
 
-- `find /Users/mathiasberg/projects -maxdepth 6 -name 'repo-?-questions.yaml'`
+- `find <projects> -maxdepth 6 -name 'repo-?-questions.yaml'`
   → **0 results**.
-- `find /Users/mathiasberg/projects -maxdepth 6 -name 'probes.yaml'`
+- `find <projects> -maxdepth 6 -name 'probes.yaml'`
   → **0 results**.
 
 No hash could be computed for any of the four, because none exists to hash. This

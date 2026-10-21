@@ -117,7 +117,7 @@ on the witness consumer `event4u/agent-ide-plugin`, the user (or any
 maintainer with write access to that sibling repo) runs:
 
 ```bash
-cd /Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-ide-plugin
+cd <projects>/agent-ide-plugin
 
 # Make a working branch
 git checkout -b chore/agent-config-init-validation

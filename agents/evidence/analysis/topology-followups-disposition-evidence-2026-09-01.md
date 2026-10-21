@@ -56,7 +56,7 @@ status`, which prints identically) reports at this commit:
 
 ```
 council:status · CONFIGURED
-  config path      /Users/mathiasberg/.event4u/agent-config/settings/.ai-council.yml
+  config path      ~/.event4u/agent-config/settings/.ai-council.yml
   resolved by      user-global
   members          2 enabled of 5
                    anthropic, openai

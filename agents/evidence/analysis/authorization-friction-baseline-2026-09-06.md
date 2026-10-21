@@ -18,7 +18,7 @@ the check counts violations per run and nothing pinned a reference value.
 | | |
 |---|---|
 | **Instrument** | `./scripts-run src/scripts/conformance_scan --store <store> --limit 30 --json` → `totals["git-authorization"]` |
-| **Store** | `~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config` |
+| **Store** | `~/.claude/projects/<project-store>` |
 | **Window** | the 30 most recent transcripts by mtime (`--limit 30`) |
 | **Sessions in window** | **30** |
 | **Measured on** | **2026-09-06** |
