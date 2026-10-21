@@ -6,7 +6,7 @@
  * the query path PREFERS the SQLite twin (cheap freshness check via the
  * JSON's stat + stored source_checksum) and falls back to parsing the JSON
  * when the twin is absent, stale, corrupt, version-mismatched, or the
- * runtime has no `node:sqlite` (engines floor is Node >=20.11; the module
+ * runtime has no `node:sqlite` (engines floor is Node >=22.0; the module
  * needs >=22.5 — sqlite_guard's lazy import keeps old Nodes on the JSON
  * path).
  *

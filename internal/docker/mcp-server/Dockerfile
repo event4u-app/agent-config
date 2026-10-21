@@ -19,7 +19,7 @@
 #   docker build -f internal/docker/mcp-server/Dockerfile -t agent-config-mcp:local .
 
 # ---------- builder ----------
-FROM node:20-slim AS builder
+FROM node:22-slim AS builder
 
 WORKDIR /build
 COPY package.json package-lock.json tsconfig.json ./
@@ -31,7 +31,7 @@ RUN npm run build:cli \
  && npm prune --omit=dev
 
 # ---------- runtime ----------
-FROM node:20-slim AS runtime
+FROM node:22-slim AS runtime
 
 # Run as non-root for defense-in-depth (A0 still binds on top).
 RUN groupadd --system mcp \
