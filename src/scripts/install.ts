@@ -121,7 +121,7 @@ import { resolveGlobalRuleScope } from '../install/globalRuleScope.js';
 import { deployClaudeCarrier } from '../install/stagedRuntime.js';
 import { mergeToolsAliases as _merge_tools_aliases } from '../install/toolsArg.js';
 import { installerThinsHost } from './_lib/lean_projection_mode.js';
-import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL } from '../install/wizard-plan.js';
+import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL, dryRunTargetLines } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
 import { settingsSchema } from '../server/schemas/settings.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
@@ -4444,22 +4444,7 @@ function _dry_run_summary(opts: Options): number {
     process.stdout.write(`  user-type:   ${opts.user_type || '(none)'}\n`);
     process.stdout.write(`  scope:       ${opts.scope || (opts.global_install ? 'global' : 'auto')}\n`);
     process.stdout.write(`  tools:       ${opts.tools || 'all'}\n`);
-    if (opts.global_install || opts.scope === 'global') {
-        // A global install has no project target. Printing the cwd here read as
-        // "this is where it writes", and under npx the cwd is often the npx
-        // cache, so the plan named a directory the install never touches.
-        process.stdout.write('  target:      user-scope host paths (no project target)\n');
-        for (const tool_id of _parse_tools(opts.tools || 'all')) {
-            const anchor = USER_SCOPE_PATHS[tool_id];
-            if (anchor === undefined) continue;
-            const expanded = anchor.startsWith('~/') ? path.join(os.homedir(), anchor.slice(2)) : anchor;
-            process.stdout.write(`      ${tool_id} → ${expanded}\n`);
-        }
-        process.stdout.write('  phases:      project payload sync — skipped (global installs write user-scope paths only)\n');
-        process.stdout.write('               host projection + managed hooks — would run\n');
-    } else {
-        process.stdout.write(`  target:      ${target}\n`);
-    }
+    process.stdout.write(dryRunTargetLines(Boolean(opts.global_install) || opts.scope === 'global', _parse_tools(opts.tools || 'all'), target));
     process.stdout.write(`  minimal:     ${pyBool(opts.minimal)}\n`);
     process.stdout.write(`  force:       ${pyBool(opts.force)}\n`);
     process.stdout.write(`  offline:     ${pyBool(opts.offline)}\n`);

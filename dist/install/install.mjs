@@ -14523,6 +14523,33 @@ var NO_PROJECT_LAYER = path35.join(
 );
 
 // src/install/wizard-plan.ts
+import { homedir as homedir14 } from "node:os";
+import { isAbsolute as isAbsolute7, join as join37, resolve as resolve19 } from "node:path";
+var USER_SCOPE_PATHS = {
+  "claude-code": "~/.claude/",
+  "claude-desktop": "~/Library/Application Support/Claude/",
+  cursor: "~/.cursor/",
+  windsurf: "~/.codeium/windsurf/",
+  cline: "~/Documents/Cline/Rules/",
+  "gemini-cli": "~/.gemini/",
+  copilot: "~/.copilot/",
+  augment: "~/.augment/",
+  aider: "~/.aider.conf.yml",
+  codex: "~/.codex/",
+  roocode: "~/.roo/",
+  continue: "~/.continue/",
+  kilocode: "~/.kilocode/",
+  zed: "~/.config/zed/",
+  jetbrains: "~/.config/JetBrains/",
+  kiro: "~/.kiro/",
+  qoder: "~/.qoder/",
+  opencode: "~/.opencode/",
+  trae: "~/.trae/",
+  antigravity: "~/.agents/",
+  codebuddy: "~/.codebuddy/",
+  droid: "~/.factory/",
+  warp: "~/.warp/"
+};
 var CLAUDE_SKILL_BUNDLE = [
   ["dist/agent-src/rules", "rules"],
   ["dist/agent-src/skills", "skills"],
@@ -14576,6 +14603,20 @@ var GLOBAL_DEPLOY_SOURCES = {
     ["dist/agent-src/personas", "personas"]
   ]
 };
+function dryRunTargetLines(global, tools, projectTarget) {
+  if (!global) return `  target:      ${projectTarget}
+`;
+  let out = "  target:      user-scope host paths (no project target)\n";
+  for (const tool of tools) {
+    const anchor = USER_SCOPE_PATHS[tool];
+    if (anchor === void 0) continue;
+    out += `      ${tool} \u2192 ${anchor.startsWith("~/") ? join37(homedir14(), anchor.slice(2)) : anchor}
+`;
+  }
+  out += "  phases:      project payload sync \u2014 skipped (global installs write user-scope paths only)\n";
+  out += "               host projection + managed hooks \u2014 would run\n";
+  return out;
+}
 
 // src/shared/settingsSurface.ts
 function unwrapRef(root) {
@@ -21366,15 +21407,15 @@ var SCOPE_DETECT_AI_DIRS = [
 ];
 
 // src/install/paths.ts
-import { homedir as homedir14, tmpdir as tmpdir2 } from "node:os";
-import { join as join39 } from "node:path";
+import { homedir as homedir15, tmpdir as tmpdir2 } from "node:os";
+import { join as join40 } from "node:path";
 var INSTALL_ROOT_SUBPATH = ".event4u/agent-config";
 var INSTALL_LOG_FILENAME = "install-log.jsonl";
 function resolveHome(home) {
   if (home && home.length > 0) {
     return home;
   }
-  const fromOs = homedir14();
+  const fromOs = homedir15();
   if (!fromOs) {
     throw new Error(
       "Cannot resolve home directory \u2014 both $HOME (POSIX) and $USERPROFILE (Windows) are unset."
@@ -21383,10 +21424,10 @@ function resolveHome(home) {
   return fromOs;
 }
 function getInstallRoot(home) {
-  return join39(resolveHome(home), INSTALL_ROOT_SUBPATH);
+  return join40(resolveHome(home), INSTALL_ROOT_SUBPATH);
 }
 function getLogPath(home) {
-  return join39(getInstallRoot(home), INSTALL_LOG_FILENAME);
+  return join40(getInstallRoot(home), INSTALL_LOG_FILENAME);
 }
 
 // src/install/txlog.ts
@@ -22703,7 +22744,7 @@ function _smoke_test_hooks(project_root, package_root) {
   }
   return failed.length ? 1 : 0;
 }
-var USER_SCOPE_PATHS = {
+var USER_SCOPE_PATHS2 = {
   "claude-code": "~/.claude/",
   "claude-desktop": "~/Library/Application Support/Claude/",
   cursor: "~/.cursor/",
@@ -22803,7 +22844,7 @@ var GLOBAL_ROOT = path38.join(os13.homedir(), ".event4u", "agent-config");
 var GLOBAL_USER_SETTINGS_PATH = path38.join(GLOBAL_ROOT, ".agent-user.yml");
 var GLOBAL_AGENT_SETTINGS_PATH = path38.join(GLOBAL_ROOT, ".agent-settings.yml");
 function _bridge_marker(tool_id, scope) {
-  if (scope === "global") return USER_SCOPE_PATHS[tool_id] ?? "";
+  if (scope === "global") return USER_SCOPE_PATHS2[tool_id] ?? "";
   return PROJECT_BRIDGE_MARKERS[tool_id] ?? "";
 }
 function _validate_scope(tools, scope, was_all) {
@@ -23426,7 +23467,7 @@ function _claude_desktop_bundles_dir() {
   return write_target(_CLAUDE_DESKTOP_BUNDLES_SUBPATH);
 }
 function _write_claude_desktop_marker(force, lockfile_path2, bundles_dir, bundle_count) {
-  const anchor = expanduser8(USER_SCOPE_PATHS["claude-desktop"]);
+  const anchor = expanduser8(USER_SCOPE_PATHS2["claude-desktop"]);
   const target = path38.join(anchor, "agent-config.md");
   mkdirp(anchor);
   const body = claudeDesktopMarkerBody(lockfile_path2, anchor, bundles_dir, bundle_count);
@@ -23444,7 +23485,7 @@ function _deploy_claude_desktop(force, package_root, lockfile_path2) {
   build_command_bundles(package_root, bundles_dir, force);
   const bundle_count = countZips(bundles_dir);
   const [, , marker_paths] = _write_claude_desktop_marker(force, lockfile_path2, bundles_dir, bundle_count);
-  recordGlobalDeploy({ toolId: "claude-desktop", anchorRaw: USER_SCOPE_PATHS["claude-desktop"], anchor: expanduser8(USER_SCOPE_PATHS["claude-desktop"]), currentFiles: /* @__PURE__ */ new Set(["agent-config.md"]), destSubs: [], packageTag: PACKAGE_TAG_ID, preserved: tracker.conflictState.preserved, staged: tracker.conflictState.staged, recordedFor: tracker.recordedDigest });
+  recordGlobalDeploy({ toolId: "claude-desktop", anchorRaw: USER_SCOPE_PATHS2["claude-desktop"], anchor: expanduser8(USER_SCOPE_PATHS2["claude-desktop"]), currentFiles: /* @__PURE__ */ new Set(["agent-config.md"]), destSubs: [], packageTag: PACKAGE_TAG_ID, preserved: tracker.conflictState.preserved, staged: tracker.conflictState.staged, recordedFor: tracker.recordedDigest });
   return [bundle_count, 0, "deployed", [bundles_dir, ...marker_paths]];
 }
 var _CLAUDE_FLAT_WRAPPER_EXTRA = /* @__PURE__ */ new Set(["commit"]);
@@ -23503,7 +23544,7 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
       results[tool_id] = [0, 0, status, []];
       continue;
     }
-    const anchor_raw = USER_SCOPE_PATHS[tool_id];
+    const anchor_raw = USER_SCOPE_PATHS2[tool_id];
     if (!anchor_raw) {
       results[tool_id] = [0, 0, "unsupported", []];
       continue;
@@ -23629,7 +23670,7 @@ function _preview_global_reap(tools, package_root) {
   for (const tool_id of [...tools].sort()) {
     const plan = GLOBAL_DEPLOY_SOURCES[tool_id];
     if (plan === void 0) continue;
-    const anchor_raw = USER_SCOPE_PATHS[tool_id];
+    const anchor_raw = USER_SCOPE_PATHS2[tool_id];
     if (!anchor_raw) continue;
     const anchor = expanduser8(anchor_raw);
     let current_files = /* @__PURE__ */ new Set();
@@ -23763,7 +23804,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
     info("Agent Config \u2014 Global (user-scope) install [ADR-007]");
     info("Per-tool anchor paths:");
     for (const tool_id of [...tools].sort()) {
-      const anchor = USER_SCOPE_PATHS[tool_id];
+      const anchor = USER_SCOPE_PATHS2[tool_id];
       if (anchor === void 0) continue;
       process4.stdout.write(`      ${tool_id.padEnd(15)} \u2192 ${anchor}
 `);
@@ -23825,7 +23866,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
       warn(`Scoped-projection prune failed \u2014 restoring full tree (${String(e)}).`);
     }
   }
-  applyHostListingPolicies({ claudeCode: deploy_results["claude-code"]?.[2] === "deployed", codex: deploy_results["codex"]?.[2] === "deployed" }, os13.homedir(), expanduser8(USER_SCOPE_PATHS["claude-code"]), state.QUIET ? () => void 0 : info);
+  applyHostListingPolicies({ claudeCode: deploy_results["claude-code"]?.[2] === "deployed", codex: deploy_results["codex"]?.[2] === "deployed" }, os13.homedir(), expanduser8(USER_SCOPE_PATHS2["claude-code"]), state.QUIET ? () => void 0 : info);
   const failed_tools = new Set(
     Object.keys(deploy_results).filter(
       (tool_id) => deploy_results[tool_id][2] === "deploy_failed"
@@ -23868,7 +23909,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
     info("Deployed per-tool content:");
     for (const tool_id of Object.keys(deploy_results).sort()) {
       const [w, s, status] = deploy_results[tool_id];
-      const anchor = USER_SCOPE_PATHS[tool_id] ?? "";
+      const anchor = USER_SCOPE_PATHS2[tool_id] ?? "";
       if (status === "deployed" && tool_id === "claude-desktop") {
         const bundles_dir = _claude_desktop_bundles_dir();
         process4.stdout.write(`      ${tool_id.padEnd(15)} \u2192 ${bundles_dir} (${w} bundles)
@@ -23955,7 +23996,7 @@ function _catalogue_truncation_warnings(deploy_results, project_root) {
     if (status !== "deployed") continue;
     const limit = limits.get(tool_id);
     if (limit === void 0) continue;
-    const anchor_raw = USER_SCOPE_PATHS[tool_id];
+    const anchor_raw = USER_SCOPE_PATHS2[tool_id];
     if (!anchor_raw) continue;
     const volume = measureCatalogueVolume(tool_id, expanduser8(anchor_raw));
     const warning = catalogueLimitWarning(volume, limit);
@@ -23976,7 +24017,7 @@ function _scoped_migration_notice(deploy_results, project_root, package_root, pr
   for (const tool_id of Object.keys(deploy_results).sort()) {
     const [, , status] = deploy_results[tool_id];
     if (status !== "deployed") continue;
-    const anchor_raw = USER_SCOPE_PATHS[tool_id];
+    const anchor_raw = USER_SCOPE_PATHS2[tool_id];
     if (!anchor_raw) continue;
     const volume = measureCatalogueVolume(tool_id, expanduser8(anchor_raw));
     const eligibility = migrationEligibility(
@@ -24637,21 +24678,7 @@ function _dry_run_summary(opts) {
 `);
   process4.stdout.write(`  tools:       ${opts.tools || "all"}
 `);
-  if (opts.global_install || opts.scope === "global") {
-    process4.stdout.write("  target:      user-scope host paths (no project target)\n");
-    for (const tool_id of _parse_tools(opts.tools || "all")) {
-      const anchor = USER_SCOPE_PATHS[tool_id];
-      if (anchor === void 0) continue;
-      const expanded = anchor.startsWith("~/") ? path38.join(os13.homedir(), anchor.slice(2)) : anchor;
-      process4.stdout.write(`      ${tool_id} \u2192 ${expanded}
-`);
-    }
-    process4.stdout.write("  phases:      project payload sync \u2014 skipped (global installs write user-scope paths only)\n");
-    process4.stdout.write("               host projection + managed hooks \u2014 would run\n");
-  } else {
-    process4.stdout.write(`  target:      ${target}
-`);
-  }
+  process4.stdout.write(dryRunTargetLines(Boolean(opts.global_install) || opts.scope === "global", _parse_tools(opts.tools || "all"), target));
   process4.stdout.write(`  minimal:     ${pyBool(opts.minimal)}
 `);
   process4.stdout.write(`  force:       ${pyBool(opts.force)}
@@ -25154,7 +25181,7 @@ export {
   SETTINGS_FILE,
   SUPPORTED_PROFILES,
   SystemExitError,
-  USER_SCOPE_PATHS,
+  USER_SCOPE_PATHS2 as USER_SCOPE_PATHS,
   ZED_MARKER,
   _VALID_TOOLS,
   _append_unknown_legacy,
