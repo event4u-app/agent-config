@@ -108,7 +108,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       file shrank.
       verify: detector verdicts identical on a 30-session replay; Stop p95
       lower; the fallback path covered by a test.
-- [x] **1.3 Read the current phase, `## Decisions` and `## Blockers` per step.** Done 2026-10-21 — already the case, measured: `--steps` now reports roadmap text returned to Read calls per step; over the 75-step baseline p50 0 KB, p90 28.4 KB, under the 40 KB target. The loop already reads the step's section (§ 5 step 1) and `## Decisions` once per run (§ 3-0); no contract change was needed. <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/step_anatomy.ts -->
+- [ ] **1.3 Read the current phase, `## Decisions` and `## Blockers` per step.** Contract changed 2026-10-21, verify pending: `--steps` counts roadmap text returned to `Read` and to shell reads per step (R2 finding 4 — an early tick on `Read` alone was withdrawn). Over 242 steps p50 0 KB, p90 33.7 KB; but the largest active roadmap had a step read 86.2 KB and the second 46.8 KB, over the target. The loop's § 5 step 1 now says: the step's own section by `grep -n` plus a ranged read, never the whole roadmap. Closes on the first drain over the largest roadmap reading < 40 KB per step.
       Other sections are read on demand. Decisions stay whole, as
       `roadmap-process-loop.md:162-173` requires.
       verify: a drain over the largest active roadmap reads < 40 KB of it per

@@ -56,7 +56,7 @@ const CEREMONY_SHELL =
     /\b(council_cli|roadmap:progress|closure_scan|lint_roadmap|check_roadmap|dispatch_r2_reviewer|check_completion_review|generate_owned_digest|gh pr (create|edit|comment|view)|git (commit|add)\b)/;
 const VERIFY_SHELL = /\b(eslint|tsc\b|lint_|check_|vitest|jest|pytest|phpunit|npm (run )?test|task (ci|test))/;
 const REFUSAL_TEXT = /turn-end-gate: REFUSED|Stop hook feedback/;
-const FLIP = /^\s*-\s\[[x~-]\]\s+\*\*(\d+\.\d+[a-z]?)/m;
+const FLIP = /^\s*-\s\[[x~-]\]\s+\*\*(\d+\.\d+[a-z]?)\b/gm;
 
 function isObj(v: unknown): v is Record<string, unknown> {
     return typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -106,9 +106,10 @@ export function closedStep(tool: string, input: unknown): { roadmap: string; ste
     const edits = tool === 'MultiEdit' && Array.isArray(input['edits']) ? input['edits'] : [input];
     for (const e of edits) {
         if (!isObj(e) || typeof e['new_string'] !== 'string' || typeof e['old_string'] !== 'string') continue;
-        const m = FLIP.exec(e['new_string']);
-        if (m !== null && new RegExp(`-\\s\\[ \\]\\s+\\*\\*${m[1]!.replace('.', '\\.')}`).test(e['old_string'])) {
-            return { roadmap: path.basename(fp, '.md'), step: m[1]! };
+        for (const m of e['new_string'].matchAll(FLIP)) {
+            if (new RegExp(`-\\s\\[ \\]\\s+\\*\\*${m[1]!.replace('.', '\\.')}\\b`).test(e['old_string'])) {
+                return { roadmap: path.basename(fp, '.md'), step: m[1]! };
+            }
         }
     }
     return null;
@@ -155,6 +156,13 @@ export function storeTranscripts(store: string): string[] {
 }
 
 const isSubagentFile = (file: string): boolean => path.basename(path.dirname(file)) === 'subagents';
+
+const SHELL_READ = /(^|[\s;&|(])(cat|sed|head|tail|grep|rg|awk|less|nl)\s[^;&|]*agents\/roadmaps\/[^/\s'"]+\.md/;
+
+/** A shell call whose output is roadmap text: a read verb with a roadmap path as its operand. */
+function isShellRoadmapRead(tool: string, input: unknown): boolean {
+    return tool === 'Bash' && isObj(input) && typeof input['command'] === 'string' && SHELL_READ.test(input['command']);
+}
 
 function resultChars(content: unknown): number {
     if (typeof content === 'string') return content.length;
@@ -230,7 +238,9 @@ export function readSteps(file: string, causeOf: CauseOf): StepReading[] {
             calls += 1;
             if (typeof e['requestId'] === 'string') requests.add(e['requestId']);
             const fp = filePathOf(b['input']);
-            if (fp !== null && tool === 'Read' && ROADMAP_FILE.test(fp)) roadmapReads.add(String(b['id'] ?? ''));
+            if ((fp !== null && tool === 'Read' && ROADMAP_FILE.test(fp)) || isShellRoadmapRead(tool, b['input'])) {
+                roadmapReads.add(String(b['id'] ?? ''));
+            }
             if (fp !== null && (tool === 'Edit' || tool === 'Write' || tool === 'MultiEdit')) {
                 paths.add(cwd !== '' && path.isAbsolute(fp) ? path.relative(cwd, fp) : fp);
             }

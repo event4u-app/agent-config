@@ -7,7 +7,7 @@
     "cap_bytes": 15000,
     "cores": {
         "src/agent-src/contexts/execution/roadmap-process-loop.md": {
-            "ceiling": 16144,
+            "ceiling": 16091,
             "over_cap_reason": "The mandatory core (sections 1, 2, 3-0, 4, the section 5 step loop with the receipt, the 5b essentials, the halt list, the section 6 essentials) is about 12 KB, and the Iron-Law fences that must stay with their headings add about 3 KB; every further move costs a pointer line worth more than it saves. Under the 16,000-char depth ceiling, above the 15,000-byte target."
         },
         "src/domains/product-basic/roadmap/process-full/command.md": { "ceiling": 14969 },

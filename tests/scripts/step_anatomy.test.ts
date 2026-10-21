@@ -103,9 +103,13 @@ describe('step anatomy', () => {
         const body = (id: string, text: string): string =>
             JSON.stringify({ type: 'user', timestamp: at(id === read.id ? 7 : 8), message: { role: 'user', content: [{ type: 'tool_result', tool_use_id: id, content: [{ type: 'text', text }] }] } });
         lines.splice(1, 0, JSON.stringify(read.row), body(read.id, 'x'.repeat(4000)), JSON.stringify(other.row), body(other.id, 'y'.repeat(9000)));
+        // A shell read of the roadmap counts too; a shell command that only names it does not read it.
+        const shell = call(8, 'Bash', { command: `sed -n 1,80p ${ROADMAP}` });
+        const write = call(9, 'Bash', { command: `git add ${ROADMAP}` });
+        lines.splice(5, 0, JSON.stringify(shell.row), body(shell.id, 'z'.repeat(1500)), JSON.stringify(write.row), body(write.id, 'w'.repeat(700)));
         fs.writeFileSync(file, `${lines.join('\n')}\n`);
         const [first, second] = readSteps(file, classifyBlockingCall);
-        expect(first?.roadmapReadBytes).toBe(4000);
+        expect(first?.roadmapReadBytes).toBe(5500);
         expect(second?.roadmapReadBytes).toBe(0);
         expect(first !== undefined && stepSumError(first)).toBeNull();
     });
@@ -140,6 +144,22 @@ describe('step anatomy', () => {
         expect(closedStep('Edit', { file_path: ROADMAP, old_string: 'a', new_string: 'b' })).toBeNull();
         expect(closedStep('Edit', { ...flip('1.1'), file_path: `${CWD}/src/x.md` })).toBeNull();
         expect(closedStep('Edit', flip('2.3'))).toEqual({ roadmap: 'road-to-x', step: '2.3' });
+        // An already-ticked step in the edit's context must not hide the flip below it.
+        expect(
+            closedStep('Edit', {
+                file_path: ROADMAP,
+                old_string: '- [x] **1.1 Done.**\n- [ ] **1.2 Next.**',
+                new_string: '- [x] **1.1 Done.**\n- [x] **1.2 Next.** Done.',
+            }),
+        ).toEqual({ roadmap: 'road-to-x', step: '1.2' });
+        // `1.1` is not `1.10`.
+        expect(
+            closedStep('Edit', {
+                file_path: ROADMAP,
+                old_string: '- [ ] **1.10 Ten.**\n- [x] **1.1 One.**',
+                new_string: '- [x] **1.10 Ten.** Done.\n- [x] **1.1 One.**',
+            }),
+        ).toEqual({ roadmap: 'road-to-x', step: '1.10' });
     });
 
     it('probe_turnaround --steps reads a comma-separated list of stores as one corpus', () => {
