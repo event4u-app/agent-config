@@ -74,8 +74,39 @@ describe('hooks_status — collect', () => {
         expect(platforms).toEqual(new Set(Object.keys(PLATFORM_BRIDGES)));
     });
 
+    it('a working global install is not reported missing from a fresh worktree', () => {
+        // The reported failure: `claude missing (.claude/settings.json)` inside a
+        // worktree, while `~/.claude/settings.json` carried the managed hooks and
+        // they ran.
+        const home = path.join(tmp, 'home');
+        const worktree = path.join(tmp, 'worktree');
+        fs.mkdirSync(worktree, { recursive: true });
+        fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
+        fs.writeFileSync(
+            path.join(home, '.claude', 'settings.json'),
+            JSON.stringify({
+                hooks: { SessionStart: [{ hooks: [{ type: 'command', command: 'x dispatch:hook --platform claude --event session_start' }] }] },
+            }),
+        );
+        const claude = byPlatform(
+            collect(worktree, manifest(), { home, runtimeRoot: path.join(home, 'runtime'), pathEnv: '' }),
+        )['claude']!;
+        expect(claude.status).toBe('installed');
+        expect(claude.claude_scope?.registered_in).toEqual(['global']);
+    });
+
     it('reports missing bridges on a fresh project, degraded copilot, n/a cowork', () => {
-        const matrix = collect(tmp, manifest());
+        // "Fresh" has to mean fresh on BOTH halves of Claude's merged settings.
+        // With the developer's real HOME, a machine that has a global install
+        // reads `installed` here — correctly, since those hooks do run — and the
+        // test would pass in CI and fail on every maintainer's laptop.
+        const emptyHome = path.join(tmp, 'empty-home');
+        fs.mkdirSync(emptyHome, { recursive: true });
+        const matrix = collect(tmp, manifest(), {
+            home: emptyHome,
+            runtimeRoot: path.join(emptyHome, 'runtime'),
+            pathEnv: '',
+        });
         const rows = byPlatform(matrix);
 
         // All non-Copilot, non-Cowork platforms have a real bridge_path and
