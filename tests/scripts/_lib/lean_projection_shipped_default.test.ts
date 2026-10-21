@@ -63,21 +63,26 @@ function leanProjectionScalar(file: string, key: string): string {
 
 const rawMode = (file: string): string => leanProjectionScalar(file, 'mode');
 
-describe('lean_projection.mode — shipped default is delivery for claude-code only', () => {
-    it('the shipped settings template says delivery', () => {
+// ADR-267 flipped the shipped TEMPLATE to `delivery` for claude-code only, and
+// this file pinned that value on the file rather than on a constant. ADR-293
+// removes the key: there is no shipped value to pin, so the same reader now
+// pins its ABSENCE — which is the assertion that reds if the template ever
+// grows the key back, and it is the one direction the 4.4 grep cannot state
+// (a grep says the token is gone; this says the resolver reads nothing).
+describe('the projection key is gone from the shipped surface (ADR-293)', () => {
+    it('the shipped settings template states no mode', () => {
         const raw = rawMode(path.join(REPO_ROOT, 'src', 'config', 'agent-settings.template.yml'));
-        expect(raw).toBe('delivery');
-        expect(normalizeLeanProjectionMode(raw)).toBe('delivery');
+        expect(raw).toBe('');
+        // And an absent value is the FULL form, not a thinning one.
+        expect(normalizeLeanProjectionMode(raw)).toBe('eager-all');
     });
 
-    it('the template scopes the flip to claude-code and to no other host', () => {
+    it('the template states no hosts list either', () => {
         const hosts = leanProjectionScalar(
             path.join(REPO_ROOT, 'src', 'config', 'agent-settings.template.yml'),
             'hosts',
         );
-        // ADR-267's whole claim is per-host. A widening edit here is the one
-        // that would silently thin cursor and cline, so it is pinned literally.
-        expect(hosts).toBe('[claude-code]');
+        expect(hosts).toBe('');
     });
 
     it('the in-code default has NOT been moved — an absent key still means eager-all', () => {
@@ -94,20 +99,17 @@ describe('lean_projection.mode — shipped default is delivery for claude-code o
         expect(['eager-all', 'thin', 'delivery']).toContain(normalizeLeanProjectionMode(raw));
     });
 
-    it('the settings schema admits `delivery`, so the template value is settable', () => {
+    it('the settings schema carries no projection property to validate against', () => {
         const schema = JSON.parse(
             fs.readFileSync(
                 path.join(REPO_ROOT, 'src', 'scripts', 'schemas', 'agent-settings.schema.json'),
                 'utf-8',
             ),
-        ) as { properties: { lean_projection: { properties: { mode: { enum: string[] } } } } };
-        const modes = schema.properties.lean_projection.properties.mode.enum;
-        // The fourth hold on the flip: for months the enum did NOT list
-        // `delivery` while the normaliser accepted it, so a consumer who set
-        // the documented value failed validation. The flip had to widen it.
-        expect(modes).toContain('delivery');
-        expect(modes).toContain('eager-all');
-        expect(modes).toContain('thin');
+        ) as { properties: Record<string, unknown> };
+        // The enum this used to pin was the AUTHORING layer for the key. With
+        // the key gone the property must go with it — a schema entry outliving
+        // its key documents a surface the package no longer has.
+        expect(schema.properties['lean_projection']).toBeUndefined();
     });
 
     it('the activation charge is paid and is still the measured number', () => {

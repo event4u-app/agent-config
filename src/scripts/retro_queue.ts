@@ -527,43 +527,124 @@ export function readSweepState(workspaceRoot: string): SweepState {
  */
 export const SWEEP_CLAIM_LEASE_MS = 60_000;
 
+/** Whether a process with this pid exists on this machine. */
+export function pidAlive(pid: number): boolean {
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch (err) {
+        return (err as NodeJS.ErrnoException).code === 'EPERM';
+    }
+}
+
 /**
- * Claim one local day's sweep for the whole repository. The claim file is
- * created exclusively, so of two session starts racing in two worktrees one
- * sweeps and the other sees `false`. A claim older than the lease, for a day
- * whose sweep state was never written, is taken over. Claims of earlier days are
- * pruned.
+ * Claim the repository's sweep for one local day. The claim is a single
+ * repository-wide sequence of files `claim.<generation>`, and EVERY transition —
+ * acquire, take over, release — exclusively creates the next generation. So the
+ * newest generation is a total order: of any two processes that read the same
+ * newest generation and act on it, exactly one creation succeeds, whatever days
+ * they are claiming. No file is ever overwritten, and the newest is never
+ * deleted.
+ *
+ * The newest generation is free when it was released, or when its holder can
+ * no longer write: older than the lease AND its process gone. A holder whose
+ * process still exists is never superseded, at any age — even a suspended one —
+ * so one process at a time mutates the retro stores. The price is that a claim
+ * whose pid was reused by an unrelated process blocks the daily sweep until that
+ * process exits; `/retro status` names such a claim, and `/retro` by hand is
+ * unaffected. Older generations are pruned.
  */
-export function claimSweepDay(workspaceRoot: string, day: string, nowMs: number = Date.now()): string | null {
+export function claimSweepDay(
+    workspaceRoot: string,
+    day: string,
+    nowMs: number = Date.now(),
+    opts: { isAlive?: (pid: number) => boolean; beforeCreate?: () => void } = {},
+): string | null {
     const dir = commonSub(workspaceRoot, 'retro-sweep');
     if (dir === null) return null;
     fs.mkdirSync(dir, { recursive: true });
-    const file = path.join(dir, `claim-${day}`);
-    const token = `${process.pid}-${createHash('sha256').update(`${nowMs}\0${Math.random()}`).digest('hex').slice(0, 16)}`;
-    try {
-        fs.writeFileSync(file, `${token}\n`, { flag: 'wx' });
-    } catch (err) {
-        if ((err as NodeJS.ErrnoException).code !== 'EEXIST') throw err;
-        const finished = readSweepState(workspaceRoot).last_sweep?.day === day;
-        let age = 0;
+    if (readSweepState(workspaceRoot).last_sweep?.day === day) return null;
+    const isAlive = opts.isAlive ?? pidAlive;
+    const newest = newestClaim(dir);
+    if (newest !== null && newest.content !== FREE) {
+        let age: number;
         try {
-            age = nowMs - fs.statSync(file).mtimeMs;
+            age = nowMs - fs.statSync(path.join(dir, newest.name)).mtimeMs;
         } catch {
+            // Pruned under us: a newer generation exists, so this read is stale.
             return null;
         }
-        if (finished || age < SWEEP_CLAIM_LEASE_MS) return null;
-        // Takeover: write our token over the stale claim, then read it back — of
-        // two processes taking over at once, only the one whose token stands
-        // proceeds. The rename makes each write whole, never interleaved.
-        const tmp = `${file}.${token}.tmp`;
-        fs.writeFileSync(tmp, `${token}\n`);
-        fs.renameSync(tmp, file);
-        if (claimToken(file) !== token) return null;
+        const pid = holderPid(newest.content);
+        // Past the lease, a claim naming no pid was left by a create that never
+        // finished its few-byte write, so no process is shown to hold it.
+        const holderMayWrite = age < SWEEP_CLAIM_LEASE_MS || (pid !== null && isAlive(pid));
+        if (holderMayWrite) return null;
+    }
+    const gen = newest === null ? 0 : newest.gen + 1;
+    // The window between reading the newest generation and creating the next; a
+    // test interleaves a rival claimant here.
+    opts.beforeCreate?.();
+    const token = `${gen}:${process.pid}-${createHash('sha256').update(`${nowMs}\0${Math.random()}`).digest('hex').slice(0, 16)}@${day}`;
+    if (!createGeneration(dir, gen, token)) return null;
+    // A generation number can be free again after pruning: a claimant that read
+    // generation N and then waited may create N+1 after newer ones were made and
+    // N+1 pruned. Only the newest generation is a claim, so verify before use.
+    if (newestClaim(dir)?.content !== token) {
+        if (claimToken(path.join(dir, `claim.${gen}`)) === token) fs.rmSync(path.join(dir, `claim.${gen}`), { force: true });
+        return null;
     }
     for (const n of fs.readdirSync(dir)) {
-        if (n.startsWith('claim-') && n !== `claim-${day}`) fs.rmSync(path.join(dir, n), { force: true });
+        if (!n.startsWith('claim')) continue;
+        const m = /^claim\.(\d+)$/.exec(n);
+        if (m === null || Number(m[1]) < gen) fs.rmSync(path.join(dir, n), { force: true });
     }
     return token;
+}
+
+function holderPid(content: string | null): number | null {
+    const pid = Number(/^\d+:(\d+)-/.exec(content ?? '')?.[1] ?? NaN);
+    return Number.isInteger(pid) && pid > 0 ? pid : null;
+}
+
+/**
+ * The newest claim when it is held — its holder pid and how long it has been
+ * held — or `null` when the sweep is free. Read by `/retro status`.
+ */
+export function sweepClaimHolder(workspaceRoot: string, nowMs: number = Date.now()): { pid: number | null; held_ms: number } | null {
+    const dir = commonSub(workspaceRoot, 'retro-sweep');
+    if (dir === null || !fs.existsSync(dir)) return null;
+    const newest = newestClaim(dir);
+    if (newest === null || newest.content === FREE) return null;
+    try {
+        return { pid: holderPid(newest.content), held_ms: nowMs - fs.statSync(path.join(dir, newest.name)).mtimeMs };
+    } catch {
+        return null;
+    }
+}
+
+/** The content a release writes as the next generation. */
+const FREE = 'free';
+
+function createGeneration(dir: string, gen: number, content: string): boolean {
+    try {
+        fs.writeFileSync(path.join(dir, `claim.${gen}`), `${content}\n`, { flag: 'wx' });
+        return true;
+    } catch (err) {
+        if ((err as NodeJS.ErrnoException).code === 'EEXIST') return false;
+        throw err;
+    }
+}
+
+/** The newest claim generation, or `null` when none was ever written. */
+function newestClaim(dir: string): { name: string; gen: number; content: string | null } | null {
+    let best: { name: string; gen: number } | null = null;
+    for (const n of fs.readdirSync(dir)) {
+        const m = /^claim\.(\d+)$/.exec(n);
+        if (m === null) continue;
+        const gen = Number(m[1]);
+        if (best === null || gen > best.gen) best = { name: n, gen };
+    }
+    return best === null ? null : { ...best, content: claimToken(path.join(dir, best.name)) };
 }
 
 function claimToken(file: string): string | null {
@@ -575,15 +656,27 @@ function claimToken(file: string): string | null {
 }
 
 /**
- * Give a claim back, so a sweep that failed is retried by the next session
- * start. Only the holder's own token releases it: a sweep whose claim was taken
- * over after the lease never deletes its successor's.
+ * True while `token` is still the newest claim generation. A sweep checks it
+ * before it records anything, so one that was taken over stops instead of
+ * writing beside its successor.
+ */
+export function holdsSweepDay(workspaceRoot: string, day: string, token: string): boolean {
+    const dir = commonSub(workspaceRoot, 'retro-sweep');
+    if (dir === null || !token.endsWith(`@${day}`)) return false;
+    const newest = newestClaim(dir);
+    return newest !== null && newest.content === token;
+}
+
+/**
+ * Give a claim back by creating the next generation as free. Only the newest
+ * generation's holder can: a sweep that was taken over finds its successor's
+ * generation and gives nothing back.
  */
 export function releaseSweepDay(workspaceRoot: string, day: string, token: string): void {
     const dir = commonSub(workspaceRoot, 'retro-sweep');
-    if (dir === null) return;
-    const file = path.join(dir, `claim-${day}`);
-    if (claimToken(file) === token) fs.rmSync(file, { force: true });
+    if (dir === null || !holdsSweepDay(workspaceRoot, day, token)) return;
+    const gen = Number(/^(\d+):/.exec(token)?.[1] ?? NaN);
+    if (Number.isFinite(gen)) createGeneration(dir, gen + 1, FREE);
 }
 
 /**

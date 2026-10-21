@@ -9,6 +9,7 @@
  * rule_workspace_scoping.test.ts on the projection path).
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -55,7 +56,7 @@ function maintainerOnly(): string[] {
 }
 
 function planRuleBasenames(ruleScope: Parameters<typeof expandWizardSources>[0]['ruleScope']): string[] {
-    const home = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'rule-scope-home-'));
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-scope-home-'));
     try {
         const sources = expandWizardSources({
             toolIds: ['augment'],
@@ -101,9 +102,12 @@ describe('global install plan — legacy-all default', () => {
 });
 
 describe('global install plan — scoped', () => {
-    const scope = ruleScopeFromSettings({
-        projection: { rule_workspaces: ['engineering'] },
-    });
+    // ADR-293 step 4.6: the workspace axis is derived from the pack vocabulary,
+    // so the scope comes from the package root and a hand-written
+    // `rule_workspaces` is ignored. The literal below is kept exactly because
+    // it IS ignored — a plan that narrowed to `[engineering]` would mean the
+    // key had come back.
+    const scope = ruleScopeFromSettings({ projection: { rule_workspaces: ['engineering'] } }, REPO);
 
     it('ships ZERO exclusively-maintainer rules', () => {
         const names = new Set(planRuleBasenames(scope));

@@ -46,8 +46,11 @@ function delta(changes: InstallerDelta['changes']): InstallerDelta {
 
 describe('the upgrade leg reads the delta the installer wrote', () => {
     it('an identical pair produces no delta and no disagreement', () => {
+        // The committed surface against ITSELF. Against the working tree the
+        // pair is identical only until a branch removes a key, and then this
+        // case reds every PR until the next release cuts a new surface.
         const base = readReleasedSurface();
-        const computed = classifySettingsDelta(base, emitReleasedSurface(base.version));
+        const computed = classifySettingsDelta(base, base);
         expect(compareInstallerDelta(delta([]), computed)).toEqual([]);
     });
 
@@ -130,6 +133,16 @@ describe('the upgrade leg reads the delta the installer wrote', () => {
         fs.mkdirSync(stateDir, { recursive: true });
         const deltaFile = path.join(stateDir, 'settings-delta.json');
         const base = readReleasedSurface();
+        // What the release computes for this tree, written as the installer
+        // would write it — so the agreeing case holds whatever the tree has
+        // removed since the committed surface was cut.
+        const computed = classifySettingsDelta(base, emitReleasedSurface(base.version));
+        const agreeing: InstallerDelta['changes'] = [
+            ...computed.untombstoned_removals.map((key) => ({ kind: 'removed' as const, key })),
+            ...computed.carried_removals.map((r) => ({ kind: 'removed' as const, key: r.key })),
+            ...computed.type_changed.map((key) => ({ kind: 'type_changed' as const, key })),
+            ...computed.enum_removed.map((e) => ({ kind: 'enum_removed' as const, key: e.key, values: e.values })),
+        ];
         const write = (d: InstallerDelta): void =>
             fs.writeFileSync(deltaFile, `${JSON.stringify(d, null, 2)}\n`, 'utf8');
 
@@ -141,15 +154,15 @@ describe('the upgrade leg reads the delta the installer wrote', () => {
             write({ oldVersion: '0.0.1', newVersion: base.version, changes: [] });
             expect(assertUpgradeDelta(home, '0.0.1')).toContain('skipped');
 
-            // The real pair with nothing in it: the surfaces agree.
-            write({ oldVersion: base.version, newVersion: base.version, changes: [] });
+            // The real pair carrying exactly what the release computes: the surfaces agree.
+            write({ oldVersion: base.version, newVersion: base.version, changes: agreeing });
             expect(assertUpgradeDelta(home, base.version)).toContain('agrees');
 
             // A removal the release does not compute: the leg throws.
             write({
                 oldVersion: base.version,
                 newVersion: base.version,
-                changes: [{ kind: 'removed', key: 'quality.local_auto_run' }],
+                changes: [...agreeing, { kind: 'removed', key: 'quality.local_auto_run' }],
             });
             expect(() => assertUpgradeDelta(home, base.version)).toThrow(/settings delta disagrees/);
         } finally {

@@ -12,7 +12,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-cold-start-paid-once | active | ready | On a host where a re-task is observed to be cheaper than a fresh spawn, the orchestrator re-tasks a warm … |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | active | ready | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
 | road-to-a-release-that-says-whether-it-needs-you | active | ready | This package's version number carries consumer impact, so "install it when it is safe, ask when it matters" is a … |
-| road-to-a-retro-the-merge-runs | active | ready | After every merged pull request, and on the first session of every new day, the package examines finished work that … |
 | road-to-a-review-that-ends | active | ready | A completion review runs at most two rounds — round 1 over the scope, round 2 over the fix delta … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
@@ -20,10 +19,10 @@ and keep the full search — this file only adds candidates to it.
 | road-to-an-installed-layer-that-is-thinned | active | ready | The layer a Claude install writes under `~/.claude/rules` is the thinned one, first as an opt-in and then as the … |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
 | road-to-authority-routing-mechanism | active | ready | A passing authorisation record always means the authority that produced it was the authority entitled to produce it: three authorities … |
+| road-to-breadth-with-depth | active | ready | The next release ships with the directive in the tree; with no rule, gate or analysis lens left that rejects … |
 | road-to-consumer-invocations-that-install | active | draft | Every executable instruction in shipped text that runs one of this package's scripts uses a form that works from a … |
 | road-to-corpus-refresh-cadence-shape | active | draft | The maintainer has answered whether four grounding corpora sharing one `last_checked` stamp is a deliberate cadence or an accident of … |
 | road-to-decision-closure | active | draft | Every roadmap enters execution as an execution contract: every foreseeable decision closed, the closing done council-first, the owner reached only … |
-| road-to-gates-that-read-what-was-written | active | ready | Two gates stop reporting a finding the thing in front of them does not support. |
 | road-to-one-detector-and-the-senders-we-own | active | ready | On every request this package writes to a model provider itself, no value of a listed type leaves in plaintext, … |
 | road-to-placeholders-on-the-wire | active | ready | On Claude Code at a probed version, a tool result carrying a listed value reaches the model as a token … |
 | road-to-self-modification-that-a-council-must-pass | active | ready | A change the package makes to what governs it lands on a council's verdict about that exact change. |
@@ -38,6 +37,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-menu-whose-precision-is-measured | later | later | Routing precision is a number with an interval on a labelled corpus large enough to carry one (≥ 100 prompts, … |
 | road-to-a-ranker-whose-ties-break-on-signal | later | later | When two skills score the same, the order between them comes from something the ranker measured, not from their names … |
 | road-to-a-release-record-that-says-what-it-reviewed-carried | later | later | Every step road-to-a-release-record-that-says-what-it-reviewed deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-a-retro-the-merge-runs | later | later | After every merged pull request, and on the first session of every new day, the package examines finished work that … |
 | road-to-a-runnable-share-ratchet | later | later | A shrink-only bound on the share of `verify:` clauses that can actually fail. |
 | road-to-a-stop-that-holds-carried | later | later | Every step road-to-a-stop-that-holds deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-trunk-whose-own-gates-are-green-carried | later | later | Every step road-to-a-trunk-whose-own-gates-are-green deferred is either done here or explicitly disposed of — a step that still cannot run is … |

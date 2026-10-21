@@ -4001,10 +4001,10 @@ var require_resolve_block_map = __commonJS({
       let offset = bm.offset;
       let commentEnd = null;
       for (const collItem of bm.items) {
-        const { start, key, sep: sep11, value } = collItem;
+        const { start, key, sep: sep10, value } = collItem;
         const keyProps = resolveProps.resolveProps(start, {
           indicator: "explicit-key-ind",
-          next: key ?? sep11?.[0],
+          next: key ?? sep10?.[0],
           offset,
           onError,
           parentIndent: bm.indent,
@@ -4018,7 +4018,7 @@ var require_resolve_block_map = __commonJS({
             else if ("indent" in key && key.indent !== bm.indent)
               onError(offset, "BAD_INDENT", startColMsg);
           }
-          if (!keyProps.anchor && !keyProps.tag && !sep11) {
+          if (!keyProps.anchor && !keyProps.tag && !sep10) {
             commentEnd = keyProps.end;
             if (keyProps.comment) {
               if (map.comment)
@@ -4042,7 +4042,7 @@ var require_resolve_block_map = __commonJS({
         ctx.atKey = false;
         if (utilMapIncludes.mapIncludes(ctx, map.items, keyNode))
           onError(keyStart, "DUPLICATE_KEY", "Map keys must be unique");
-        const valueProps = resolveProps.resolveProps(sep11 ?? [], {
+        const valueProps = resolveProps.resolveProps(sep10 ?? [], {
           indicator: "map-value-ind",
           next: value,
           offset: keyNode.range[2],
@@ -4058,7 +4058,7 @@ var require_resolve_block_map = __commonJS({
             if (ctx.options.strict && keyProps.start < valueProps.found.offset - 1024)
               onError(keyNode.range, "KEY_OVER_1024_CHARS", "The : indicator must be at most 1024 chars after the start of an implicit block mapping key");
           }
-          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : composeEmptyNode(ctx, offset, sep11, null, valueProps, onError);
+          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : composeEmptyNode(ctx, offset, sep10, null, valueProps, onError);
           if (ctx.schema.compat)
             utilFlowIndentCheck.flowIndentCheck(bm.indent, value, onError);
           offset = valueNode.range[2];
@@ -4149,7 +4149,7 @@ var require_resolve_end = __commonJS({
       let comment = "";
       if (end) {
         let hasSpace = false;
-        let sep11 = "";
+        let sep10 = "";
         for (const token of end) {
           const { source, type } = token;
           switch (type) {
@@ -4163,13 +4163,13 @@ var require_resolve_end = __commonJS({
               if (!comment)
                 comment = cb;
               else
-                comment += sep11 + cb;
-              sep11 = "";
+                comment += sep10 + cb;
+              sep10 = "";
               break;
             }
             case "newline":
               if (comment)
-                sep11 += source;
+                sep10 += source;
               hasSpace = true;
               break;
             default:
@@ -4212,18 +4212,18 @@ var require_resolve_flow_collection = __commonJS({
       let offset = fc.offset + fc.start.source.length;
       for (let i = 0; i < fc.items.length; ++i) {
         const collItem = fc.items[i];
-        const { start, key, sep: sep11, value } = collItem;
+        const { start, key, sep: sep10, value } = collItem;
         const props = resolveProps.resolveProps(start, {
           flow: fcName,
           indicator: "explicit-key-ind",
-          next: key ?? sep11?.[0],
+          next: key ?? sep10?.[0],
           offset,
           onError,
           parentIndent: fc.indent,
           startOnNewline: false
         });
         if (!props.found) {
-          if (!props.anchor && !props.tag && !sep11 && !value) {
+          if (!props.anchor && !props.tag && !sep10 && !value) {
             if (i === 0 && props.comma)
               onError(props.comma, "UNEXPECTED_TOKEN", `Unexpected , in ${fcName}`);
             else if (i < fc.items.length - 1)
@@ -4277,8 +4277,8 @@ var require_resolve_flow_collection = __commonJS({
             }
           }
         }
-        if (!isMap && !sep11 && !props.found) {
-          const valueNode = value ? composeNode(ctx, value, props, onError) : composeEmptyNode(ctx, props.end, sep11, null, props, onError);
+        if (!isMap && !sep10 && !props.found) {
+          const valueNode = value ? composeNode(ctx, value, props, onError) : composeEmptyNode(ctx, props.end, sep10, null, props, onError);
           coll.items.push(valueNode);
           offset = valueNode.range[2];
           if (isBlock(value))
@@ -4290,7 +4290,7 @@ var require_resolve_flow_collection = __commonJS({
           if (isBlock(key))
             onError(keyNode.range, "BLOCK_IN_FLOW", blockMsg);
           ctx.atKey = false;
-          const valueProps = resolveProps.resolveProps(sep11 ?? [], {
+          const valueProps = resolveProps.resolveProps(sep10 ?? [], {
             flow: fcName,
             indicator: "map-value-ind",
             next: value,
@@ -4301,8 +4301,8 @@ var require_resolve_flow_collection = __commonJS({
           });
           if (valueProps.found) {
             if (!isMap && !props.found && ctx.options.strict) {
-              if (sep11)
-                for (const st of sep11) {
+              if (sep10)
+                for (const st of sep10) {
                   if (st === valueProps.found)
                     break;
                   if (st.type === "newline") {
@@ -4319,7 +4319,7 @@ var require_resolve_flow_collection = __commonJS({
             else
               onError(valueProps.start, "MISSING_CHAR", `Missing , or : between ${fcName} items`);
           }
-          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : valueProps.found ? composeEmptyNode(ctx, valueProps.end, sep11, null, valueProps, onError) : null;
+          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : valueProps.found ? composeEmptyNode(ctx, valueProps.end, sep10, null, valueProps, onError) : null;
           if (valueNode) {
             if (isBlock(value))
               onError(valueNode.range, "BLOCK_IN_FLOW", blockMsg);
@@ -4499,7 +4499,7 @@ var require_resolve_block_scalar = __commonJS({
           chompStart = i + 1;
       }
       let value = "";
-      let sep11 = "";
+      let sep10 = "";
       let prevMoreIndented = false;
       for (let i = 0; i < contentStart; ++i)
         value += lines[i][0].slice(trimIndent) + "\n";
@@ -4516,24 +4516,24 @@ var require_resolve_block_scalar = __commonJS({
           indent = "";
         }
         if (type === Scalar.Scalar.BLOCK_LITERAL) {
-          value += sep11 + indent.slice(trimIndent) + content;
-          sep11 = "\n";
+          value += sep10 + indent.slice(trimIndent) + content;
+          sep10 = "\n";
         } else if (indent.length > trimIndent || content[0] === "	") {
-          if (sep11 === " ")
-            sep11 = "\n";
-          else if (!prevMoreIndented && sep11 === "\n")
-            sep11 = "\n\n";
-          value += sep11 + indent.slice(trimIndent) + content;
-          sep11 = "\n";
+          if (sep10 === " ")
+            sep10 = "\n";
+          else if (!prevMoreIndented && sep10 === "\n")
+            sep10 = "\n\n";
+          value += sep10 + indent.slice(trimIndent) + content;
+          sep10 = "\n";
           prevMoreIndented = true;
         } else if (content === "") {
-          if (sep11 === "\n")
+          if (sep10 === "\n")
             value += "\n";
           else
-            sep11 = "\n";
+            sep10 = "\n";
         } else {
-          value += sep11 + content;
-          sep11 = " ";
+          value += sep10 + content;
+          sep10 = " ";
           prevMoreIndented = false;
         }
       }
@@ -4715,25 +4715,25 @@ var require_resolve_flow_scalar = __commonJS({
       if (!match)
         return source;
       let res = match[1];
-      let sep11 = " ";
+      let sep10 = " ";
       let pos = first.lastIndex;
       line.lastIndex = pos;
       while (match = line.exec(source)) {
         if (match[1] === "") {
-          if (sep11 === "\n")
-            res += sep11;
+          if (sep10 === "\n")
+            res += sep10;
           else
-            sep11 = "\n";
+            sep10 = "\n";
         } else {
-          res += sep11 + match[1];
-          sep11 = " ";
+          res += sep10 + match[1];
+          sep10 = " ";
         }
         pos = line.lastIndex;
       }
       const last = /[ \t]*(.*)/sy;
       last.lastIndex = pos;
       match = last.exec(source);
-      return res + sep11 + (match?.[1] ?? "");
+      return res + sep10 + (match?.[1] ?? "");
     }
     function doubleQuotedValue(source, onError) {
       let res = "";
@@ -5543,14 +5543,14 @@ var require_cst_stringify = __commonJS({
         }
       }
     }
-    function stringifyItem({ start, key, sep: sep11, value }) {
+    function stringifyItem({ start, key, sep: sep10, value }) {
       let res = "";
       for (const st of start)
         res += st.source;
       if (key)
         res += stringifyToken(key);
-      if (sep11)
-        for (const st of sep11)
+      if (sep10)
+        for (const st of sep10)
           res += st.source;
       if (value)
         res += stringifyToken(value);
@@ -6717,18 +6717,18 @@ var require_parser = __commonJS({
         if (this.type === "map-value-ind") {
           const prev = getPrevProps(this.peek(2));
           const start = getFirstKeyStartProps(prev);
-          let sep11;
+          let sep10;
           if (scalar.end) {
-            sep11 = scalar.end;
-            sep11.push(this.sourceToken);
+            sep10 = scalar.end;
+            sep10.push(this.sourceToken);
             delete scalar.end;
           } else
-            sep11 = [this.sourceToken];
+            sep10 = [this.sourceToken];
           const map = {
             type: "block-map",
             offset: scalar.offset,
             indent: scalar.indent,
-            items: [{ start, key: scalar, sep: sep11 }]
+            items: [{ start, key: scalar, sep: sep10 }]
           };
           this.onKeyLine = true;
           this.stack[this.stack.length - 1] = map;
@@ -6881,15 +6881,15 @@ var require_parser = __commonJS({
                 } else if (isFlowToken(it.key) && !includesToken(it.sep, "newline")) {
                   const start2 = getFirstKeyStartProps(it.start);
                   const key = it.key;
-                  const sep11 = it.sep;
-                  sep11.push(this.sourceToken);
+                  const sep10 = it.sep;
+                  sep10.push(this.sourceToken);
                   delete it.key;
                   delete it.sep;
                   this.stack.push({
                     type: "block-map",
                     offset: this.offset,
                     indent: this.indent,
-                    items: [{ start: start2, key, sep: sep11 }]
+                    items: [{ start: start2, key, sep: sep10 }]
                   });
                 } else if (start.length > 0) {
                   it.sep = it.sep.concat(start, this.sourceToken);
@@ -7083,13 +7083,13 @@ var require_parser = __commonJS({
             const prev = getPrevProps(parent);
             const start = getFirstKeyStartProps(prev);
             fixFlowSeqItems(fc);
-            const sep11 = fc.end.splice(1, fc.end.length);
-            sep11.push(this.sourceToken);
+            const sep10 = fc.end.splice(1, fc.end.length);
+            sep10.push(this.sourceToken);
             const map = {
               type: "block-map",
               offset: fc.offset,
               indent: fc.indent,
-              items: [{ start, key: fc, sep: sep11 }]
+              items: [{ start, key: fc, sep: sep10 }]
             };
             this.onKeyLine = true;
             this.stack[this.stack.length - 1] = map;
@@ -8595,7 +8595,7 @@ function registerMcpHosts(mergeJsonFile, projectRoot, force, packageRoot, tools,
   }
 }
 function projectionModeOf(raw) {
-  return raw === "scoped" ? "scoped" : raw === "tiered" ? "tiered" : "legacy-all";
+  return raw === "scoped" ? "scoped" : "legacy-all";
 }
 function resolveTierB(packageRoot) {
   const p = path5.join(packageRoot, "agents", "runtime", "state", "skill-tiers.json");
@@ -8608,32 +8608,13 @@ function resolveTierB(packageRoot) {
     return null;
   }
 }
-function tierBPrunePredicate(tierB) {
-  return (mdPath) => tierB.has(path5.basename(path5.dirname(mdPath)));
-}
 function tierBAdvisory(packageRoot) {
   const tierB = resolveTierB(packageRoot);
   if (tierB === null || tierB.size === 0) return null;
   return `\u2139\uFE0F  ${tierB.size} skill(s) are predicted to reach the model WITHOUT their description on a default 200k window.
    Two levers, neither applied for you:
    \u2022 raise \`skillListingBudgetFraction\` in your Claude Code settings \u2014 restores descriptions at a token cost (100% delivery of this catalogue measures ~13,003 tok)
-   \u2022 or set \`projection.mode: tiered\` to withhold them from the catalogue and reach them via the MCP server instead (opt-in, still unproven \u2014 see docs/mcp-server.md)`;
-}
-function applyTieredPrune(deployResults, packageRoot, pruneBy) {
-  const tierB = resolveTierB(packageRoot);
-  if (tierB === null || tierB.size === 0) {
-    return {
-      deployResults,
-      level: "warn",
-      message: "projection.mode: tiered but no skill-tier split exists (agents/runtime/state/skill-tiers.json) \u2014 shipping the full surface. Compute one with `./scripts-run src/scripts/compute_skill_tiers` first."
-    };
-  }
-  const [pruned, adjusted] = pruneBy(deployResults, tierBPrunePredicate(tierB));
-  return {
-    deployResults: adjusted,
-    level: "info",
-    message: `\u{1F9F9} Tiered install: pruned ${pruned} Tier-B skill artefact(s) \u2014 still reachable via the MCP server's suggest_skill_for_task / read_skill. Set projection.mode: legacy-all to restore the full surface.`
-  };
+   \u2022 or reach them through the MCP server, which serves every skill by name regardless of what the host catalogue carries (docs/mcp-server.md)`;
 }
 
 // src/scripts/_lib/mcp_consent_residual.ts
@@ -8810,6 +8791,20 @@ var SCOPED_ACTIVE_WORKSPACES = /* @__PURE__ */ new Set([
   "engineering",
   "agent-config-maintainer"
 ]);
+var MAINTAINER_WORKSPACE = "agent-config-maintainer";
+function consumerRuleWorkspaces(packageRoot) {
+  const ids = /* @__PURE__ */ new Set();
+  let records;
+  try {
+    records = load_packs_registry(packageRoot);
+  } catch {
+    return [];
+  }
+  for (const rec of records) {
+    for (const ws of rec.workspaces) if (ws !== MAINTAINER_WORKSPACE) ids.add(ws);
+  }
+  return [...ids].sort();
+}
 function isPlainObject2(v) {
   return typeof v === "object" && v !== null && !Array.isArray(v);
 }
@@ -11033,7 +11028,6 @@ function catalogueLimitWarning(volume, limit) {
 }
 function migrationEligibility(host, resolvedMode, currentSkillCount, limits) {
   if (resolvedMode === "scoped") return { eligible: false, reason: "already-scoped" };
-  if (resolvedMode === "tiered") return { eligible: false, reason: "already-tiered" };
   const limit = limits.get(host);
   if (limit === void 0) return { eligible: false, reason: "no-observation-for-host" };
   if (limit.projectedSkills === null) return { eligible: false, reason: "observation-not-comparable" };
@@ -11398,10 +11392,10 @@ import {
   unlinkSync as unlinkSync6,
   writeSync
 } from "node:fs";
-import { dirname as dirname8, join as join19 } from "node:path";
+import { dirname as dirname7, join as join19 } from "node:path";
 function atomicWriteFile(target, data, options = {}) {
   const mode = options.mode ?? 420;
-  const parent = dirname8(target);
+  const parent = dirname7(target);
   mkdirSync6(parent, { recursive: true });
   const tmp = join19(parent, `.tmp.${process.pid}.${randSuffix()}`);
   let fd = null;
@@ -11434,8 +11428,8 @@ function atomicAppendLine(target, line) {
   } catch {
     existing = "";
   }
-  const sep11 = existing.length > 0 && !existing.endsWith("\n") ? "\n" : "";
-  atomicWriteFile(target, `${existing}${sep11}${line}
+  const sep10 = existing.length > 0 && !existing.endsWith("\n") ? "\n" : "";
+  atomicWriteFile(target, `${existing}${sep10}${line}
 `);
 }
 function randSuffix() {
@@ -12264,12 +12258,6 @@ var SETTINGS_CARVE_OUT = [
     reason: "The template fallback applies only when NO global settings file exists. Once a file exists, an absent key means legacy-all by documented contract, so an existing install is never silently narrowed on upgrade."
   },
   {
-    key: "projection.rule_workspaces",
-    reader: "src/install/rule_scope.ts:96 ruleScopeFromSettings",
-    absentResolvesTo: "null \u2014 LEGACY_ALL, i.e. every rule ships including maintainer-only ones",
-    reason: "Same upgrade contract as projection.mode, and the failure is louder: an absent list widens the projection instead of narrowing it."
-  },
-  {
     key: "discipline_profile",
     reader: "work_engine/_lib/agent_settings.ts:1263",
     absentResolvesTo: "essential, unconditionally",
@@ -12418,7 +12406,11 @@ var REMOVED_KEYS = /* @__PURE__ */ new Map([
   ["pipelines.skill_improvement", "the skill-improvement-trigger rule; the capture is a proposal the user confirms"],
   ["consistency.cross_source", "the cross-source-consistency rule, always on; batching and the no-cheap-questions floor bound the noise"],
   ["subagents.downshift", "the model_tier each sub-task declares; downshift is always on"],
-  ["ai_team.suppress_setup_hint", "nothing: the one-line team-mode setup hint is always shown"]
+  ["ai_team.suppress_setup_hint", "nothing: the one-line team-mode setup hint is always shown"],
+  // 2026-10-20 — the projection keys (ADR-293, road-to-a-setup-that-decides-itself Phase 4)
+  ["lean_projection.mode", "the computed layer-form decision (_lib/layer_form_decision.ts), plus `install --full` and src/config/layer-form-brakes.json as the two brakes. The installer no longer reads this key at all; the in-repo projector honours a hand-written PROJECT value until step 3.6 of road-to-a-setup-that-decides-itself lands"],
+  ["lean_projection.hosts", "THINNABLE_HOSTS in _lib/lean_projection_mode.ts and the per-host row in src/config/host-injection-effect.json; same reader boundary as the mode above"],
+  ["projection.rule_workspaces", "consumerRuleWorkspaces() in _lib/scoped_projection.ts, which derives the consumer workspace set from src/config/discovery/packs.yml \u2014 every id minus `agent-config-maintainer` \u2014 so a new pack reaches consumers without a settings edit"]
 ]);
 var _warnedRemovedKeys = /* @__PURE__ */ new Set();
 function _readDotted(root, dotted) {
@@ -12544,21 +12536,11 @@ var MERGEABLE_KEYS = [
   // GUI; whitelisting decides only whether the value SURVIVES the merge
   // (ADR-271, road-to-design-intent-conformance 2.3).
   "design.fidelity_mode",
-  // `lean_projection.*` is a per-MACHINE setting and the install it governs is
-  // a user-scope one: the layer being thinned is `~/.claude/rules`, which
-  // belongs to the machine and not to any checkout. Without these two rows a
-  // consumer who wrote the opt-in into the user-global file got no error, no
-  // warning and no effect — the same silent-filter defect the two entries
-  // above repair, reaching a third key, and unsatisfiable-by-construction on
-  // an ADR-020 global-only install, where no project layer exists to carry it.
-  // Whitelisting decides only whether a value SURVIVES the merge: it sets
-  // nothing, and `installerThinsHost` still refuses a template-only value.
-  "lean_projection.mode",
-  "lean_projection.hosts",
   // `retro.enabled` is the one switch over the automatic retro (ADR-292). It
   // ships `true`, so the only value worth writing is `false`, and a user who
-  // writes it once in the user-global file expects every checkout to honour
-  // it — without this row the off switch would be discarded silently.
+  // writes it once in the user-global file expects every checkout without its
+  // own value to honour it — without this row the off switch would be
+  // discarded silently. A project value still wins.
   "retro.enabled"
 ];
 var TEMPLATE_RELATIVE = path24.join("src", "config", "agent-settings.template.yml");
@@ -12934,6 +12916,46 @@ function _is_plain_dict(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+// src/scripts/_lib/projection_key_migration.ts
+var MIGRATION_WINDOW = "one release window after the 2026-10 key removal";
+var LEGACY_FULL_VALUE = Object.freeze({
+  "lean_projection.mode": "eager-all",
+  "projection.mode": "legacy-all"
+});
+function readDotted(root, dotted) {
+  let node = root;
+  for (const part of dotted.split(".")) {
+    if (typeof node !== "object" || node === null || Array.isArray(node)) return void 0;
+    node = node[part];
+  }
+  return node;
+}
+function readLegacyProjectionIntent(merged) {
+  const rows = [];
+  let pin = false;
+  for (const [key, full] of Object.entries(LEGACY_FULL_VALUE)) {
+    const raw = readDotted(merged, key);
+    if (typeof raw !== "string") continue;
+    const value = raw.trim();
+    if (value === "") continue;
+    const disposition = value.toLowerCase() === full ? "pin" : "dropped";
+    if (disposition === "pin") pin = true;
+    rows.push({ key, value, disposition });
+  }
+  return { pin, rows };
+}
+function migrationLines(intent) {
+  return intent.rows.map(
+    (row) => row.disposition === "pin" ? `${row.key}: "${row.value}" was removed (ADR-293); read once as a request to keep the rule layer full, and kept as the install receipt's pin \u2014 ${MIGRATION_WINDOW}.` : `${row.key}: "${row.value}" was removed (ADR-293); ignored \u2014 the package decides the layer form from machine evidence, and \`doctor --check layer-form\` says which form it chose and why \u2014 ${MIGRATION_WINDOW}.`
+  );
+}
+function legacyProjectionPin(merged, emit) {
+  if (merged === null) return false;
+  const intent = readLegacyProjectionIntent(merged);
+  for (const line of migrationLines(intent)) emit(line);
+  return intent.pin;
+}
+
 // src/install/rule_scope.ts
 import * as path25 from "node:path";
 
@@ -13004,9 +13026,10 @@ function _list(value) {
   return null;
 }
 function ruleScopeFromSettings(settings, packageRoot) {
+  const derivedWorkspaces = packageRoot === void 0 ? null : consumerRuleWorkspaces(packageRoot);
   const proj = settings["projection"];
   if (typeof proj !== "object" || proj === null || Array.isArray(proj)) {
-    return LEGACY_ALL;
+    return { ...LEGACY_ALL, workspaces: derivedWorkspaces };
   }
   const p = proj;
   const packs = packageRoot === void 0 ? _list(p["rule_packs"]) : resolve_rule_pack_scope(
@@ -13015,7 +13038,18 @@ function ruleScopeFromSettings(settings, packageRoot) {
     _list(_runtimeActivePacks(settings)) ?? []
   );
   return {
-    workspaces: _list(p["rule_workspaces"]),
+    // DERIVED since ADR-293 step 4.6, not read. `projection.rule_workspaces`
+    // carried this list as a settings default — the nine consumer workspace
+    // ids, re-typed into the template and needing a re-type whenever a pack
+    // arrived with a new one. What it encoded is a RULE: maintainer-only
+    // rules never project to a consumer. `consumerRuleWorkspaces` derives
+    // exactly that from the pack vocabulary, and the derived set equals the
+    // old default (asserted in `consumer_rule_workspaces.test.ts`).
+    // Without a package root there is no vocabulary to read, so the axis is
+    // INACTIVE rather than empty — the same degradation `rule_packs` makes
+    // above, and the same reason: a package that cannot read its own pack
+    // list must ship more than it should, never less.
+    workspaces: derivedWorkspaces,
     packs,
     roles: _list(p["rule_roles"])
   };
@@ -13028,8 +13062,8 @@ function ruleFileArrives(sourcePath, scope) {
   if (!sourcePath.endsWith(".md")) {
     return true;
   }
-  const basename10 = path25.basename(sourcePath);
-  if (COMPAT_ALWAYS_EXCLUDED.includes(basename10)) {
+  const basename9 = path25.basename(sourcePath);
+  if (COMPAT_ALWAYS_EXCLUDED.includes(basename9)) {
     return false;
   }
   return rule_in_scope(sourcePath, scope.workspaces, scope.packs, scope.roles ?? null);
@@ -13094,7 +13128,7 @@ function hostLayerInputs(userHome) {
 }
 
 // src/install/partitionEligibility.ts
-var MAINTAINER_WORKSPACE = "agent-config-maintainer";
+var MAINTAINER_WORKSPACE2 = "agent-config-maintainer";
 function isExclusivelyPackageOnly(source_path) {
   let meta;
   try {
@@ -13106,7 +13140,7 @@ function isExclusivelyPackageOnly(source_path) {
   if (!Array.isArray(raw) || raw.length === 0) {
     return false;
   }
-  return raw.every((w) => String(w) === MAINTAINER_WORKSPACE);
+  return raw.every((w) => String(w) === MAINTAINER_WORKSPACE2);
 }
 function stampHostLayerFingerprint(installedVersion, tools, lockfilePath, skip2, report) {
   if (skip2) {
@@ -14420,107 +14454,14 @@ function mergeToolsAliases(tools, ai) {
   return items.length > 0 ? items.join(",") : "all";
 }
 
-// src/scripts/_lib/lean_projection_mode.ts
+// src/scripts/_lib/project_tree_form.ts
 import * as path35 from "node:path";
-var DEFAULT_LEAN_PROJECTION_MODE = "eager-all";
-function normalizeLeanProjectionMode(raw) {
-  const v = typeof raw === "string" ? raw.trim().toLowerCase() : "";
-  if (v === "thin") return "thin";
-  if (v === "delivery") return "delivery";
-  return DEFAULT_LEAN_PROJECTION_MODE;
+var PROJECT_TREE_FORM_REL = path35.join("src", "config", "project-tree-form.json");
+
+// src/scripts/_lib/lean_projection_mode.ts
+function installerThinsHost(_hostId, _opts = {}) {
+  return false;
 }
-function writesThinFiles(mode) {
-  return mode === "thin" || mode === "delivery";
-}
-var THINNABLE_HOSTS = ["claude-code", "cursor", "cline"];
-var DEFAULT_LEAN_PROJECTION_HOSTS = ["claude-code"];
-function resolveLeanProjectionHosts(raw) {
-  const known = new Set(THINNABLE_HOSTS);
-  if (!Array.isArray(raw) || raw.length === 0) {
-    return { hosts: [...DEFAULT_LEAN_PROJECTION_HOSTS], dropped: [], usedDefault: true };
-  }
-  const hosts = [];
-  const dropped = [];
-  for (const entry of raw) {
-    const id = typeof entry === "string" ? entry.trim().toLowerCase() : "";
-    if (id === "") {
-      dropped.push({ id: String(entry), reason: "unknown" });
-      continue;
-    }
-    if (!known.has(id)) {
-      dropped.push({ id, reason: KNOWN_NON_THINNABLE_HOSTS.has(id) ? "not-thinnable" : "unknown" });
-      continue;
-    }
-    if (!hosts.includes(id)) hosts.push(id);
-  }
-  hosts.sort();
-  return { hosts, dropped, usedDefault: false };
-}
-var KNOWN_NON_THINNABLE_HOSTS = /* @__PURE__ */ new Set([
-  "claude-desktop",
-  "augment",
-  "copilot",
-  "windsurf",
-  "gemini",
-  "codex",
-  "cowork"
-]);
-function thinsHost(mode, hosts, hostId) {
-  return writesThinFiles(mode) && hosts.includes(hostId);
-}
-function resolveLeanProjection(opts = {}) {
-  const file = opts.settingsPath ?? path35.join(opts.projectRoot ?? process.cwd(), ".agent-settings.yml");
-  const tpl = opts.packageRoot == null ? null : path35.join(opts.packageRoot, "src", "config", "agent-settings.template.yml");
-  let lean;
-  try {
-    lean = load_agent_settings(
-      tpl === null ? { project_path: file } : { project_path: file, template_path: tpl }
-    )["lean_projection"];
-  } catch {
-  }
-  const obj = typeof lean === "object" && lean !== null && !Array.isArray(lean) ? lean : {};
-  const o = obj;
-  return {
-    mode: normalizeLeanProjectionMode(o["mode"] ?? ""),
-    hosts: resolveLeanProjectionHosts(o["hosts"]),
-    // LAZY, and the hot path is the reason. Provenance needs a SECOND,
-    // template-isolated cascade, and only the installer reads it — the
-    // delivery concern on `user_prompt_submit` destructures `{ mode, hosts }`
-    // and discards this field, so computing it eagerly doubled the per-prompt
-    // settings read for an answer nobody asked for. A getter keeps the
-    // field's shape (`readonly modeExplicit: boolean`) and charges only the
-    // caller that touches it.
-    get modeExplicit() {
-      return rawExplicitLeanProjectionMode(opts) !== "";
-    }
-  };
-}
-var NO_TEMPLATE_LAYER = path35.join(path35.sep, "dev", "null", "agent-config-absent-template.yml");
-function rawExplicitLeanProjectionMode(opts = {}) {
-  const file = opts.settingsPath ?? path35.join(opts.projectRoot ?? process.cwd(), ".agent-settings.yml");
-  let lean;
-  try {
-    lean = load_agent_settings({ project_path: file, template_path: NO_TEMPLATE_LAYER })["lean_projection"];
-  } catch {
-    return "";
-  }
-  if (typeof lean !== "object" || lean === null || Array.isArray(lean)) return "";
-  const m = lean["mode"];
-  return typeof m === "string" ? m.trim() : "";
-}
-function installerThinsHost(hostId, opts = {}) {
-  const { mode, hosts, modeExplicit } = resolveLeanProjection({
-    ...opts,
-    settingsPath: opts.settingsPath ?? NO_PROJECT_LAYER
-  });
-  return modeExplicit && thinsHost(mode, hosts.hosts, hostId);
-}
-var NO_PROJECT_LAYER = path35.join(
-  path35.sep,
-  "dev",
-  "null",
-  "agent-config-absent-project-settings.yml"
-);
 
 // src/install/wizard-plan.ts
 import { homedir as homedir14 } from "node:os";
@@ -18744,8 +18685,6 @@ var replyMethod = external_exports.enum(["replies_endpoint", "create_review_comm
 var confidenceBand = external_exports.enum(["off", "low", "medium", "high"]);
 var onBlock = external_exports.enum(["stop", "ask", "warn"]);
 var modelAutoSwitch = external_exports.enum(["auto", "suggest", "off"]);
-var leanProjectionMode = external_exports.enum(["eager-all", "thin", "delivery"]);
-var leanProjectionHost = external_exports.enum(["claude-code", "cursor", "cline"]);
 var projectionMode = external_exports.enum(["legacy-all", "scoped"]);
 var projectAudience = external_exports.enum(["self", "internal", "client", "public"]);
 var deliveryMerge = external_exports.enum(["off", "on-green"]);
@@ -18765,11 +18704,8 @@ var settingsSchema = external_exports.object({
     mode: projectionMode.default("legacy-all").describe(
       "Whether the per-tool projector writes EVERY artefact into the host-tool trees (.claude/ .cursor/ .windsurf/) or only the active profile + packs' artefacts (ADR-040, docs/contracts/capability-packs.md). legacy-all = (default, non-breaking) project the full surface exactly as 5.x did. scoped = project only the active profile's packs unioned with the runtime.active_packs overlay, expanded over the requires graph \u2014 opt in with `agent-config use --profile=<id>`. A failed scoped projection restores the full tree."
     ),
-    rule_workspaces: external_exports.array(external_exports.string()).default([]).describe(
-      "Workspace scope for the RULE layer only (road-to-request-scoped-rule-load P1/P1b, opt-in). Absent or empty = legacy-all: every rule projects AND installs. Non-empty = only rules whose workspaces frontmatter intersects this list are projected (condense) and installed (install.sh + global wizard payload). Kernel rules always ship; untagged rules fail safe. The default flip to a scoped value is a HUMAN release gate \u2014 do not set this from automation."
-    ),
     rule_packs: external_exports.union([external_exports.literal("auto"), external_exports.array(external_exports.string())]).default([]).describe(
-      'Optional second scoping axis for the RULE layer, per pack ids (src/config/discovery/packs.yml). When set, a non-kernel rule also needs a packs frontmatter intersection to ship \u2014 e.g. deselecting frontend-design drops ui-audit-gate + design-fidelity. Same opt-in / human-gate semantics as rule_workspaces. The literal "auto" derives the id list from the active-pack set (the same set the skill/command prune uses), so a domain safety floor stops shipping into installs that do not have the pack it guards; an explicit list stays supported and wins over the derivation.'
+      'Scoping axis for the RULE layer beyond the derived workspace set, per pack ids (src/config/discovery/packs.yml). When set, a non-kernel rule also needs a packs frontmatter intersection to ship \u2014 e.g. deselecting frontend-design drops ui-audit-gate + design-fidelity. Opt-in, and an empty list is inactive; the workspace axis beside it is derived rather than configured (ADR-293 step 4.6). The literal "auto" derives the id list from the active-pack set (the same set the skill/command prune uses), so a domain safety floor stops shipping into installs that do not have the pack it guards; an explicit list stays supported and wins over the derivation.'
     )
   }).default({ mode: "legacy-all" }),
   rule_loading_tier: ruleLoadingTier.default("balanced").describe(
@@ -18778,14 +18714,6 @@ var settingsSchema = external_exports.object({
   discipline_profile: disciplineProfile.optional().describe(
     "The ONE runtime knob for the discipline-rule tier (successor of rule_loading_tier; council 2026-07-07). off = kernel only (~1x tokens). essential = kernel + the measured lift-carrying rules (~3.3x, keeps the weak-host discipline lift). full = everything (~11.7x, EXPERIMENTAL \u2014 residual lift over essential not established). auto = resolve per session against the evidence-gated NULL-lift disable-list in src/config/host-capabilities.yml (measured-null host \u2192 off, otherwise \u2192 essential). Optional and opt-in until the P1/P2 evidence gates pass (agents/roadmaps/road-to-discipline-profile-tiering.md); absent = legacy rule_loading_tier applies."
   ),
-  lean_projection: external_exports.object({
-    mode: leanProjectionMode.default("eager-all").describe(
-      "How the per-tool projector emits the rule layer. eager-all = every rule body inlined into every projection (safe; what an ABSENT key still resolves to, per ADR-267 decision point 4). thin = kernel rules full-bodied + non-kernel rules as router-resolved pointers (~45k GPT-tok lighter per session, exact-BPE \u2014 a different unit from the chars/4 figures below, never compare the two directly), with no delivery mechanism. delivery = thin stubs PLUS the rule-inject hook concern, which delivers a body back on a trigger match; this is the value the SHIPPED TEMPLATE carries for Claude Code since ADR-267. SAVING AND CHARGE, MEASURED TOGETHER so neither is published alone (2026-09-12, `check_preamble_payload_budget`): the rule bucket falls 122,769 -> 24,537 chars/4 tok per session on a thinned host (-80.0%), and a trigger match costs p50 6,728 B / p90 14,016 B / max 16,297 B per fire over 318 gate-open fires of the frozen tests/eval/routing-matrix corpus at the concern's 16,384 B cap. Bytes per fire and tokens per session are different denominators and are never summed; re-read both rather than quoting this line. The ceiling for that charge is registered in src/config/hook-token-budget.json (user_prompt_submit slot sum 4,096 -> 16,384)."
-    ),
-    hosts: external_exports.array(leanProjectionHost).default(["claude-code"]).describe(
-      "Which hosts a thinning mode may thin (ADR-267). Absent resolves to [claude-code]. Only the three hosts with a per-rule rule tree are accepted, and this enum is the AUTHORING layer: an id outside it is a hard validation FAILURE here and under validate_agent_settings, never a warning. resolveLeanProjectionHosts is the READ-TIME backstop for a hand-edited .agent-settings.yml that passed neither, and THERE the id is dropped with a warning (R2 finding 6 \u2014 the two layers answer differently and neither said so). Every host outside this list receives exactly what eager-all writes, asserted byte-for-byte by check_host_tree_parity."
-    )
-  }).default({ mode: "eager-all", hosts: ["claude-code"] }),
   cost: external_exports.object({
     budgets: external_exports.object({
       daily: external_exports.number().min(0).default(0).describe(
@@ -22138,9 +22066,7 @@ function ensure_claude_bridge(project_root, force) {
   return merge_json_file(target, bridge, force || healed.length > 0, ".claude/settings.json");
 }
 var ensure_mcp_bridge = makeEnsureMcpBridge(merge_json_file);
-var _resolve_tier_b = resolveTierB;
 var _tier_b_advisory = tierBAdvisory;
-var _prune_tier_b_modules = (dr, tier_b) => _prune_modules_by(dr, tierBPrunePredicate(tier_b));
 function _cursor_dispatch_command(ac_event, native) {
   return `[ -x ./agent-config ] || exit 0; ./agent-config dispatch:hook --platform cursor --event ${ac_event} --native-event ${native}`;
 }
@@ -23843,13 +23769,6 @@ function install_global(tools, force, project_root = null, core_only = false) {
   }
   try {
     const { mode, active_packs } = _resolve_scoped_projection(package_root);
-    if (mode === "tiered") {
-      const outcome = applyTieredPrune(deploy_results, package_root, _prune_modules_by);
-      deploy_results = outcome.deployResults;
-      if (!state.QUIET && outcome.message !== null) {
-        (outcome.level === "warn" ? warn : info)(outcome.message);
-      }
-    }
     if (mode === "scoped") {
       const packs_registry = _load_packs_registry(package_root);
       const active_ids = _compute_active_pack_ids(packs_registry, active_packs);
@@ -24775,7 +24694,7 @@ function pyRepr(v) {
 function main2(argv) {
   const opts = parse_options(argv);
   state.QUIET = opts.quiet;
-  state.FULL_PIN = opts.full;
+  state.FULL_PIN = opts.full || _legacy_projection_pin();
   if (opts.apply_payload) {
     const payload_path = resolvePath(opts.apply_payload);
     if (!isFile(payload_path)) fail(`--apply-payload path not found: ${payload_path}`);
@@ -24932,6 +24851,15 @@ function _propose_modules_config(project_root, is_first_run) {
   info(
     "Re-run anytime via `./scripts-run src/scripts/propose_modules_config` (installed under <package>/src/scripts/)."
   );
+}
+var _ABSENT_LAYER = ["project-settings", "template"].map((n) => path38.join(path38.sep, "dev", "null", `agent-config-absent-${n}.yml`));
+function _legacy_projection_pin() {
+  let data = null;
+  try {
+    data = load_agent_settings({ project_path: _ABSENT_LAYER[0], template_path: _ABSENT_LAYER[1] });
+  } catch {
+  }
+  return legacyProjectionPin(data, (line) => warn(line));
 }
 function _read_consumer_auto_switch(project_root) {
   let data;
@@ -25212,7 +25140,6 @@ export {
   _prune_lab_modules,
   _prune_modules_by,
   _prune_scoped_modules,
-  _prune_tier_b_modules,
   _render_template,
   _replace_template_value,
   _replace_template_value_raw,
@@ -25221,7 +25148,6 @@ export {
   _resolve_scope,
   _resolve_scoped_projection,
   _resolve_settings_read,
-  _resolve_tier_b,
   _rule_filter_for_source,
   _scoped_migration_notice,
   _team_setup_hint_line,
