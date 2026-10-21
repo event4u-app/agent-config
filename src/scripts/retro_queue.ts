@@ -586,6 +586,13 @@ export function claimSweepDay(
     opts.beforeCreate?.();
     const token = `${gen}:${process.pid}-${createHash('sha256').update(`${nowMs}\0${Math.random()}`).digest('hex').slice(0, 16)}@${day}`;
     if (!createGeneration(dir, gen, token)) return null;
+    // A generation number can be free again after pruning: a claimant that read
+    // generation N and then waited may create N+1 after newer ones were made and
+    // N+1 pruned. Only the newest generation is a claim, so verify before use.
+    if (newestClaim(dir)?.content !== token) {
+        if (claimToken(path.join(dir, `claim.${gen}`)) === token) fs.rmSync(path.join(dir, `claim.${gen}`), { force: true });
+        return null;
+    }
     for (const n of fs.readdirSync(dir)) {
         if (!n.startsWith('claim')) continue;
         const m = /^claim\.(\d+)$/.exec(n);

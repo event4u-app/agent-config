@@ -513,6 +513,25 @@ describe('retro_queue — path C, the daily sweep', () => {
         expect(taker).toBeNull();
     });
 
+    it('a claimant that waited past an acquire, a release and a prune cannot reuse a pruned generation', () => {
+        const { main, wt } = repoWithWorktree();
+        let rival: string | null = null;
+        const stale = claimSweepDay(main, '2026-10-21', Date.now(), {
+            beforeCreate: () => {
+                // Generation 0 is acquired and released (1 = free); the next claim
+                // takes 2 and prunes 0 and 1, so the waiting claimant's 0 is free again.
+                const b = claimSweepDay(wt, '2026-10-20', Date.now())!;
+                releaseSweepDay(wt, '2026-10-20', b);
+                rival = claimSweepDay(wt, '2026-10-22', Date.now());
+            },
+        });
+        expect(rival).not.toBeNull();
+        expect(stale).toBeNull();
+        expect(holdsSweepDay(main, '2026-10-22', rival!)).toBe(true);
+        const dir = path.join(path.dirname(queueDir(main)!), 'retro-sweep');
+        expect(fs.readdirSync(dir).filter((n) => n.startsWith('claim.'))).toEqual(['claim.2']);
+    });
+
     it('a finished sweep gives its claim back, and the finished day is not claimed again', () => {
         const { main, wt } = repoWithWorktree();
         expect(runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [] }).status).toBe('ran');
