@@ -679,15 +679,17 @@ describe("rewrite axis in host_lowering.yaml (placeholders 6.1)", () => {
       expect(errors.join("\n")).toMatch(/a later probe agents\/evidence\/analysis\/host-input-rewrite-probe-2026-10-19\.md records `result: dropped`/);
     });
 
-    it("a running host on another minor version revokes a replace; a patch release does not", () => {
+    it("a running host on any version other than the probed one revokes a replace, a patch release included", () => {
       const yaml = base().replace("input:  { mode: offered, answered_at: 2026-08-23,", REPLACE);
       const row = parseHostLowering(yaml).get("claude")?.get("any");
       const dir = root(GOOD_PROBE);
+      const same = resolveRewriteCapability("claude", row, "input", { today: TODAY, root: dir, observedHostVersion: "2.1.301" });
+      expect(same.ok).toBe(true);
       const patch = resolveRewriteCapability("claude", row, "input", { today: TODAY, root: dir, observedHostVersion: "2.1.309" });
-      expect(patch.ok).toBe(true);
+      expect(patch.ok).toBe(false);
+      expect(!patch.ok && patch.gaps.join(" ")).toMatch(/the running host is 2\.1\.309 and the probe observed 2\.1\.301/);
       const drift = resolveRewriteCapability("claude", row, "input", { today: TODAY, root: dir, observedHostVersion: "2.2.0" });
       expect(drift.ok).toBe(false);
-      expect(!drift.ok && drift.gaps.join(" ")).toMatch(/the running host is 2\.2\.0 and the probe observed 2\.1\.301/);
     });
 
     it("authority comes only from the resolver: a capability-shaped object is not a capability", () => {

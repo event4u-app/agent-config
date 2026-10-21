@@ -135,17 +135,14 @@ function recordsOnDisk(root: string): ProbeRecord[] {
   return out;
 }
 
-function minorOf(v: string): string {
-  return v.split(".").slice(0, 2).join(".");
-}
-
 /**
  * Every reason the answer for `channel` on `row` does not authorize `mode`.
  * Both modes need a propagating trampoline, a current `verified` block and a
  * bound native slot; a gate also needs a `block_exit`; a replace also needs a
  * native envelope and a structured probe record for this host, version and
  * channel, dated the day of the answer, that no later record contradicts. A
- * running host whose minor version differs from the probed one revokes it.
+ * running host on any version but the probed one revokes it — a patch release
+ * included, because a probe establishes one build and nothing about the next.
  */
 export function rewriteCapabilityGaps(
   host: string,
@@ -208,7 +205,7 @@ export function rewriteCapabilityGaps(
   if (later !== undefined) why.push(`a later probe ${later.path} records \`result: ${later.result ?? "nothing"}\``);
   const seen = ctx.observedHostVersion;
   if (seen === null) why.push("the running host's version is not observable, so drift from the probed version cannot be ruled out");
-  else if (seen && answer.host_version !== null && minorOf(seen) !== minorOf(answer.host_version)) {
+  else if (seen && answer.host_version !== null && seen !== answer.host_version) {
     why.push(`the running host is ${seen} and the probe observed ${answer.host_version}`);
   }
   const revoked = ctx.revoked?.find((r) => r.host === host && r.channel === channel);

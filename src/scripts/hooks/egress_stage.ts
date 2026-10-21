@@ -21,8 +21,6 @@ import type { EgressClass, EgressRule } from "../_lib/egress_rules.js";
 import type { TokenScope } from "../_lib/egress_token.js";
 import { isEnvKillSwitchActive } from "../_lib/env_kill_switch.js";
 import { type EgressEngine, loadEgressEngine } from "./egress_engine_loader.js";
-import type { StagePlan } from "../_lib/egress_emission.js";
-import { surfaceRow } from "./host_lowering.js";
 import { BODY_KEYS, type JsonObject, type JsonValue } from "./payload_stub.js";
 import { is_replay_mode } from "./state_io.js";
 
@@ -94,13 +92,6 @@ export interface EgressStageResult {
   readonly counts: readonly EgressCount[];
   /** Fields whose secret had no provable extent; withheld from the placeholder view. */
   readonly refused: readonly EgressRefusal[];
-  /**
-   * What the stage asks the host to do with this event — a replaced tool result
-   * — decided in the engine chunk before any concern runs.
-   * Absent outside `protect` and `strict`, without a package root, and when the
-   * engine could not load (every body is then withheld and the miss recorded).
-   */
-  readonly plan?: StagePlan;
 }
 
 function isObject(v: unknown): v is JsonObject {
@@ -364,7 +355,6 @@ export function runEgressStage(
   envelope: JsonObject,
   readMode: (workspaceRoot: string) => EgressMode = readEgressMode,
   loadEngine: () => ReturnType<typeof loadEgressEngine> = loadEgressEngine,
-  packageRoot?: string,
 ): EgressStageResult {
   const none: EgressStageResult = { mode: "off", placeholder: undefined, scanned: [], counts: [], refused: [] };
   const payload = payloadOf(envelope);
@@ -383,7 +373,6 @@ export function runEgressStage(
     const counted = countEnvelope(envelope, engine);
     const placeholder = mode === "observe" ? undefined : buildPlaceholderEnvelope(envelope, engine);
     result = { mode, placeholder, ...counted };
-    if (packageRoot) result = { ...result, ...engine.planStage(envelope, result, { packageRoot, row: surfaceRow(envelope["platform"] as string) }) };
   } catch (exc) {
     const rule = exc instanceof EngineUnavailableError ? ENGINE_UNAVAILABLE : "stage-error";
     const scanned = FIELDS.filter((f) => presentKeys(payload, f).length > 0);
@@ -414,4 +403,3 @@ export function publishedEgressState(claimed: PublishedState, mode: EgressMode):
   if (mode !== "protect" && mode !== "strict") return "uncovered";
   return claimed;
 }
-

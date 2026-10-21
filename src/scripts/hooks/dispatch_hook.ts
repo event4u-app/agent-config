@@ -1277,9 +1277,9 @@ export function main(argv?: string[]): number {
   // Per-concern `tools:` filter (see _concern_matches_tool). Applied here so it
   // is one place, after the envelope exists and before any concern is spawned.
   const tool_name = _payload_tool_name(envelope);
-  // The egress stage (ADR-285) builds the placeholder view and decides any rewrite
-  // before a concern runs; `egressViewFor` decides which concern gets which view.
-  const egress = runEgressStage(envelope, undefined, undefined, REPO_ROOT);
+  // The egress stage (ADR-285) builds the placeholder view before any concern
+  // runs; `egressViewFor` decides which concern gets which view.
+  const egress = runEgressStage(envelope);
   // Payload opt-in (step 2.1). One planner owns the whole decision — which
   // classes are present, which any concern loses, the single measurement pass,
   // and the at-most-four envelope shapes — so the loop below reads a shape
@@ -1292,7 +1292,6 @@ export function main(argv?: string[]): number {
     envelope,
     keep_by_concern.map(([, keep]) => keep),
     egress.placeholder,
-    egress.plan?.delivered,
   );
   for (const [concern, keep_classes] of keep_by_concern) {
     if (!_concern_matches_tool(concern, tool_name)) {
@@ -1418,7 +1417,7 @@ export function main(argv?: string[]): number {
     concern_messages,
     final_rc,
   );
-  const emission = egress.plan?.emit(_severity_for(final_rc), decidingReasons) ?? emitFor(
+  const emission = emitFor(
     args.platform,
     args.event,
     _severity_for(final_rc) as Severity,
@@ -1426,8 +1425,12 @@ export function main(argv?: string[]): number {
     final_rc,
     _permission_for(args.event, envelope, final_rc, permission_verdicts),
   );
-  if (emission.stdout) process.stdout.write(emission.stdout);
-  if (emission.stderr) process.stderr.write(emission.stderr);
+  if (emission.stdout) {
+    process.stdout.write(emission.stdout);
+  }
+  if (emission.stderr) {
+    process.stderr.write(emission.stderr);
+  }
   return emission.exit;
 }
 

@@ -96,7 +96,7 @@ describe('the loader refuses every unusable chunk', () => {
     });
 
     it('refuses a correctly digested chunk of another schema', () => {
-        const stale = Buffer.from(goodChunk.toString('utf-8').replace(/ENGINE_SCHEMA = 2\b/, 'ENGINE_SCHEMA = 0'));
+        const stale = Buffer.from(goodChunk.toString('utf-8').replace(/ENGINE_SCHEMA = 1\b/, 'ENGINE_SCHEMA = 0'));
         expect(stale.equals(goodChunk)).toBe(false);
         expect(reason(loadEgressEngineUncached(writeChunk(path.join(tmp, 'stale'), stale, 'match'), true))).toBe('schema');
     });
@@ -119,7 +119,7 @@ describe('the loader refuses every unusable chunk', () => {
     });
 
     it('refuses a chunk missing an export it must carry', () => {
-        const body = 'module.exports = { ENGINE_SCHEMA: 2, EGRESS_RULES: [] };';
+        const body = 'module.exports = { ENGINE_SCHEMA: 1, EGRESS_RULES: [] };';
         expect(reason(loadEgressEngineUncached(writeChunk(path.join(tmp, 'partial'), body, 'match'), true))).toBe('invalid');
     });
 });

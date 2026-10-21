@@ -44,9 +44,6 @@ applies_to_user_types:
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
 obligation_frequency: "per-task"
-enforced_by:
-  - "test:tests/scripts/hooks/egress_prevention_gaps.test.ts"
-  - "instruction-only: the output side — what a draft, log line or export the model writes contains — is decided while the model writes it, before any hook sees a byte"
 evidence:
   source_type: external-standard
   verified_on: 2026-08-30
@@ -67,15 +64,7 @@ PII leaks via three surfaces: AI-drafted artifacts (emails, scorecards, invoices
 
 ## Surface 1 — Drafts (artifacts)
 
-Two statements, because two parties hold them:
-
-- **Input side — held by the egress stage where the host allows it.** With
-  `egress.placeholders.mode` at `protect` or `strict`, a listed value in a tool
-  result reaches the model as a token on hosts whose rewrite axis grants it
-  (`docs/contracts/egress-placeholders-v1.md`). A typed prompt is not covered yet.
-- **Output side — the model's duty, always, and `instruction-only`:** nothing
-  sees a draft before the model writes it. Replace any pasted PII with
-  placeholders **before** drafting. Sector matrix:
+Replace any pasted PII with placeholders **before** drafting. Sector matrix:
 
 | Sector | Placeholders | Routes |
 |---|---|---|

@@ -197,8 +197,8 @@ describe('root and tool-name resolution', () => {
 
 // -- Steps 3.2 / 3.3 (road-to-a-bytes-row-that-exists) -----------------
 
-describe('delivered_bytes comes from the one writer of a result rewrite', () => {
-    it('records both fields with equal values when nothing was rewritten', () => {
+describe('delivered_bytes is equal to raw_bytes BY CONSTRUCTION, not by copy', () => {
+    it('records both fields with equal values on every measurable line', () => {
         for (const body of ['a', 'x'.repeat(5000), '\u{1F642} Gr\u00fc\u00dfe']) {
             const root = fs.mkdtempSync(path.join(os.tmpdir(), 'trb-equal-'));
             markMaintainer(root);
@@ -210,31 +210,28 @@ describe('delivered_bytes comes from the one writer of a result rewrite', () => 
         }
     });
 
-    it('exactly one module emits the result-rewrite field: the egress stage', () => {
-        // The two fields differ only where that one writer rewrote a result. A
-        // second writer would make delivered_bytes a guess, so this goes red the
-        // day one appears. A directory sweep rather than `git grep`: an
-        // untracked file that emits the field would still rewrite results.
+    it('the construction still holds: nothing in the tree rewrites a tool result', () => {
+        // The equality above is only meaningful while no concern can rewrite a
+        // result on its way to the model. This is that premise, checked rather
+        // than asserted - the day a rewrite lands, this goes red and the two
+        // fields stop being redundant.
         const repoRoot = path.resolve(__dirname, '..', '..');
-        const hits = execFileSync('grep', ['-rlE', '--include=*.ts', '--', "\"updatedToolOutput\"|updatedToolOutput:", 'src'], {
-            cwd: repoRoot,
-            encoding: 'utf8',
-        })
-            .trim()
-            .split('\n')
-            .filter((f) => !f.endsWith('.test.ts'));
-        expect(hits).toEqual(['src/scripts/_lib/egress_emission.ts']);
-    });
-
-    it('a replaced result records delivered_bytes from the stage, different from raw_bytes', () => {
-        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'trb-rewritten-'));
-        markMaintainer(root);
-        const stub = { _agent_config_body_omitted: true, key: 'tool_response', body_class: 'result', bytes: 120, value_type: 'object', delivered_bytes: 96 };
-        processEnvelope(envelope({ tool_name: 'Bash', tool_response: stub }), root);
-        const line = readCensus(root)[0]!;
-        expect(line['raw_bytes']).toBe(120);
-        expect(line['delivered_bytes']).toBe(96);
-        fs.rmSync(root, { recursive: true, force: true });
+        // `grep` exits 1 on NO MATCH, which is the outcome this asserts, so the
+        // throw has to be read as a result rather than as a failure. A
+        // directory sweep rather than `git grep`: an untracked file that emits
+        // the field would still rewrite results, and git would not see it.
+        let hits: string;
+        try {
+            hits = execFileSync('grep', ['-rl', '--', 'updatedToolOutput', 'src', 'docs'], {
+                cwd: repoRoot,
+                encoding: 'utf8',
+            }).trim();
+        } catch (err) {
+            const status = (err as { status?: number }).status;
+            if (status !== 1) throw err;
+            hits = '';
+        }
+        expect(hits).toBe('');
     });
 });
 

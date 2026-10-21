@@ -141,12 +141,6 @@ export interface PayloadStub extends JsonObject {
    * the type again has no field able to hold content.
    */
   key_count?: number;
-  /**
-   * UTF-8 byte length of the value the egress stage hands the host in place of
-   * this body, present only when it rewrites it. `bytes` stays the received
-   * body's length, so a census reads both without seeing either.
-   */
-  delivered_bytes?: number;
 }
 
 function isObject(v: unknown): v is JsonObject {
@@ -234,8 +228,6 @@ export function makePayloadStub(
   if (isObject(value)) {
     stub.key_count = Object.keys(value).length;
   }
-  const out = measured.get(`${key}#`);
-  if (out != null) stub.delivered_bytes = out;
   return stub;
 }
 
@@ -437,8 +429,6 @@ export function planPayloadShapes(
   envelope: JsonObject,
   keepSets: Iterable<ReadonlySet<BodyClass>>,
   placeholder?: JsonObject,
-  /** A rewritten body's length per `<key>#` (no body key holds a `#`), carried into that body's stub. */
-  delivered?: ReadonlyMap<string, number>,
 ): PayloadShapePlan {
   const present = presentBodyClasses(envelope);
   const stubbedSomewhere = new Set<BodyClass>();
@@ -451,7 +441,6 @@ export function planPayloadShapes(
     stubbedSomewhere.size > 0
       ? measureBodies(envelope, stubbedSomewhere)
       : new Map<string, number | null>();
-  for (const e of delivered ?? []) measured.set(...e);
   const shaped = new Map<string, JsonObject>();
   const cacheKey = (keep: ReadonlySet<BodyClass>): string =>
     [...keep].sort().join(",");
