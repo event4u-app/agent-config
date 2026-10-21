@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import * as doctor from '../../../src/scripts/hooks_doctor.js';
 import { _load_yaml } from '../../../src/scripts/hooks/dispatch_hook.js';
+import { MANAGED_SIGNATURE } from '../../../src/scripts/_lib/claude_settings_hooks.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
@@ -133,6 +134,12 @@ describe('hooks_doctor — main / strict', () => {
             if (rel.endsWith('/hooks')) {
                 fs.mkdirSync(bridge, { recursive: true });
                 fs.writeFileSync(path.join(bridge, 'placeholder'), '{}');
+            } else if (rel === '.claude/settings.json') {
+                // Claude's bridge is installed only when it carries a MANAGED hook;
+                // an empty settings file is not an install. Before that rule this
+                // fixture passed on '{}' alone — and only locally, where a real
+                // global install in ~/.claude filled the gap.
+                fs.writeFileSync(bridge, JSON.stringify({ hooks: { SessionStart: [{ hooks: [{ type: 'command', command: `x ${MANAGED_SIGNATURE} --event session_start` }] }] } }));
             } else {
                 fs.writeFileSync(bridge, '{}');
             }
