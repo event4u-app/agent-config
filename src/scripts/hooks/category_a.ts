@@ -183,7 +183,9 @@ function _real(p: string): string {
  */
 function _reallyInside(candidate: string, root: string): boolean {
     if (!isInsideWorkingTree(candidate, root)) return false;
-    return isInsideWorkingTree(_real(path.resolve(root, candidate)), _real(path.resolve(root)));
+    const real = _real(path.resolve(root, candidate));
+    const realRoot = _real(path.resolve(root));
+    return real !== "" && realRoot !== "" && isInsideWorkingTree(real, realRoot);
 }
 
 /** Split a command on whitespace; the caller has already refused metacharacters. */
