@@ -452,6 +452,11 @@ direct check named in the revisit column.
       the config-bending it exists to make visible. These three readings are
       the start of that distribution and are recorded here for whoever
       derives it.
+      **Not closable by a roadmap-only PR (2026-10-21).** PR #2558 touched
+      only this file and settled green on `b83a9fb86` with 9 checks, none of
+      them the Tests workflow, which is path-filtered out for such a diff.
+      That green says nothing about `task ci`, so it is not used here; the
+      box closes with a PR whose pipeline actually runs the suite.
 
 ## Provenance
 
