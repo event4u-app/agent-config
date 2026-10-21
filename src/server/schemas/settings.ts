@@ -27,8 +27,6 @@ const replyMethod = z.enum(['replies_endpoint', 'create_review_comment', 'auto']
 const confidenceBand = z.enum(['off', 'low', 'medium', 'high']);
 const onBlock = z.enum(['stop', 'ask', 'warn']);
 const modelAutoSwitch = z.enum(['auto', 'suggest', 'off']);
-const leanProjectionMode = z.enum(['eager-all', 'thin', 'delivery']);
-const leanProjectionHost = z.enum(['claude-code', 'cursor', 'cline']);
 const projectionMode = z.enum(['legacy-all', 'scoped']);
 const projectAudience = z.enum(['self', 'internal', 'client', 'public']);
 const deliveryMerge = z.enum(['off', 'on-green']);
@@ -49,11 +47,8 @@ export const settingsSchema = z.object({
         mode: projectionMode.default('legacy-all').describe(
             'Whether the per-tool projector writes EVERY artefact into the host-tool trees (.claude/ .cursor/ .windsurf/) or only the active profile + packs\' artefacts (ADR-040, docs/contracts/capability-packs.md). legacy-all = (default, non-breaking) project the full surface exactly as 5.x did. scoped = project only the active profile\'s packs unioned with the runtime.active_packs overlay, expanded over the requires graph — opt in with `agent-config use --profile=<id>`. A failed scoped projection restores the full tree.',
         ),
-        rule_workspaces: z.array(z.string()).default([]).describe(
-            'Workspace scope for the RULE layer only (road-to-request-scoped-rule-load P1/P1b, opt-in). Absent or empty = legacy-all: every rule projects AND installs. Non-empty = only rules whose workspaces frontmatter intersects this list are projected (condense) and installed (install.sh + global wizard payload). Kernel rules always ship; untagged rules fail safe. The default flip to a scoped value is a HUMAN release gate — do not set this from automation.',
-        ),
         rule_packs: z.union([z.literal('auto'), z.array(z.string())]).default([]).describe(
-            'Optional second scoping axis for the RULE layer, per pack ids (src/config/discovery/packs.yml). When set, a non-kernel rule also needs a packs frontmatter intersection to ship — e.g. deselecting frontend-design drops ui-audit-gate + design-fidelity. Same opt-in / human-gate semantics as rule_workspaces. The literal "auto" derives the id list from the active-pack set (the same set the skill/command prune uses), so a domain safety floor stops shipping into installs that do not have the pack it guards; an explicit list stays supported and wins over the derivation.',
+            'Scoping axis for the RULE layer beyond the derived workspace set, per pack ids (src/config/discovery/packs.yml). When set, a non-kernel rule also needs a packs frontmatter intersection to ship — e.g. deselecting frontend-design drops ui-audit-gate + design-fidelity. Opt-in, and an empty list is inactive; the workspace axis beside it is derived rather than configured (ADR-293 step 4.6). The literal "auto" derives the id list from the active-pack set (the same set the skill/command prune uses), so a domain safety floor stops shipping into installs that do not have the pack it guards; an explicit list stays supported and wins over the derivation.',
         ),
     }).default({ mode: 'legacy-all' }),
     rule_loading_tier: ruleLoadingTier.default('balanced').describe(
@@ -62,21 +57,6 @@ export const settingsSchema = z.object({
     discipline_profile: disciplineProfile.optional().describe(
         'The ONE runtime knob for the discipline-rule tier (successor of rule_loading_tier; council 2026-07-07). off = kernel only (~1x tokens). essential = kernel + the measured lift-carrying rules (~3.3x, keeps the weak-host discipline lift). full = everything (~11.7x, EXPERIMENTAL — residual lift over essential not established). auto = resolve per session against the evidence-gated NULL-lift disable-list in src/config/host-capabilities.yml (measured-null host → off, otherwise → essential). Optional and opt-in until the P1/P2 evidence gates pass (agents/roadmaps/road-to-discipline-profile-tiering.md); absent = legacy rule_loading_tier applies.',
     ),
-    lean_projection: z.object({
-        mode: leanProjectionMode.default('eager-all').describe(
-            'How the per-tool projector emits the rule layer. eager-all = every rule body inlined into every projection (safe; what an ABSENT key still resolves to, per ADR-267 decision point 4). thin = kernel rules full-bodied + non-kernel rules as router-resolved pointers (~45k GPT-tok lighter per session, exact-BPE — a different unit from the chars/4 figures below, never compare the two directly), with no delivery mechanism. delivery = thin stubs PLUS the rule-inject hook concern, which delivers a body back on a trigger match; this is the value the SHIPPED TEMPLATE carries for Claude Code since ADR-267. SAVING AND CHARGE, MEASURED TOGETHER so neither is published alone (2026-09-12, `check_preamble_payload_budget`): the rule bucket falls 122,769 -> 24,537 chars/4 tok per session on a thinned host (-80.0%), and a trigger match costs p50 6,728 B / p90 14,016 B / max 16,297 B per fire over 318 gate-open fires of the frozen tests/eval/routing-matrix corpus at the concern\'s 16,384 B cap. Bytes per fire and tokens per session are different denominators and are never summed; re-read both rather than quoting this line. The ceiling for that charge is registered in src/config/hook-token-budget.json (user_prompt_submit slot sum 4,096 -> 16,384).',
-        ),
-        hosts: z.array(leanProjectionHost).default(['claude-code']).describe(
-            'Which hosts a thinning mode may thin (ADR-267). Absent resolves to [claude-code]. '
-            + 'Only the three hosts with a per-rule rule tree are accepted, and this enum is the '
-            + 'AUTHORING layer: an id outside it is a hard validation FAILURE here and under '
-            + 'validate_agent_settings, never a warning. resolveLeanProjectionHosts is the '
-            + 'READ-TIME backstop for a hand-edited .agent-settings.yml that passed neither, and '
-            + 'THERE the id is dropped with a warning (R2 finding 6 — the two layers answer '
-            + 'differently and neither said so). Every host outside this list receives exactly '
-            + 'what eager-all writes, asserted byte-for-byte by check_host_tree_parity.',
-        ),
-    }).default({ mode: 'eager-all', hosts: ['claude-code'] }),
     cost: z.object({
         budgets: z.object({
             daily: z.number().min(0).default(0).describe(

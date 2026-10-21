@@ -1512,7 +1512,7 @@ const _RULE_PROJECTION_DIRS: readonly string[] = [
  * `.augment/rules` is the full generated projection, not a consumer surface)
  * and `skipped` when no projected rule tree is present to inspect.
  */
-function _check_rule_scope_drift(project_root: string): Dict {
+function _check_rule_scope_drift(project_root: string, package_root: string = _package_root()): Dict {
     if (_is_source_repo(project_root)) {
         return {
             id: 'rule-scope-drift',
@@ -1532,7 +1532,7 @@ function _check_rule_scope_drift(project_root: string): Dict {
             typeof loaded === 'object' && loaded !== null && !Array.isArray(loaded)
                 ? (loaded as Dict)
                 : {};
-        scope = ruleScopeFromSettings(raw);
+        scope = ruleScopeFromSettings(raw, package_root);
     }
 
     // First projected rule tree that exists and holds a `.md` rule.

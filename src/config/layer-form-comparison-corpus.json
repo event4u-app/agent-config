@@ -1,0 +1,42 @@
+{
+    "_comment": "The comparison set for `road-to-a-setup-that-decides-itself` step 0.2 — the cases Phase 5 reads when it compares today's full rule layer against the computed form. ONE MANIFEST, BY REUSE: the step's whole point is that no new frozen corpus is authored, so every present source names an artefact the tree already carries and a resolver that reads it. A source the tree does NOT carry is recorded as `absent` with the reason and the condition that reopens it, never swapped for whatever happened to be measurable — the form `road-to-skills-that-arrive-when-called` 5.1 used on 2026-10-20 for the same missing artefact. Read by src/scripts/_lib/layer_form_corpus.ts; checked by tests/scripts/layer_form_corpus.test.ts.",
+    "schema_version": 1,
+    "registered_at": "2026-10-20",
+    "owner": "maintainer",
+    "sources": [
+        {
+            "id": "routing-matrix",
+            "state": "present",
+            "resolver": "routing-matrix-yaml",
+            "path": "tests/eval/routing-matrix",
+            "what": "Per-rule positives and near-misses: a prompt and the skills it must reach. The near-miss half is what a thinned layer would regress first, which is why the matrix is the primary source rather than a supporting one."
+        },
+        {
+            "id": "trigger-corpus-train",
+            "state": "present",
+            "resolver": "routing-corpus-train-slice",
+            "path": "src/skills",
+            "what": "The train slice of the trigger corpus, through `loadTrainCases`. The sealed holdout is never opened: the partition is decided from the skill directory name before any file is read, so the seal is kept by refusal and not by filtering."
+        },
+        {
+            "id": "obligation",
+            "state": "present",
+            "resolver": "obligation-class",
+            "path": "src/config/rule-consequence-class.json",
+            "what": "The class the step adds: one case per rule that must fire under every input — every member of the consequence class, plus every rule whose frontmatter carries `tier: safety-floor`. These are the cases D2 fixes at a zero margin, so they are derived from the frontmatter that decides the class rather than listed here."
+        },
+        {
+            "id": "conformance",
+            "state": "absent",
+            "why": "`tests/conformance/` holds one set, `retrieval/`, and it validates the v1 retrieval ENVELOPE against its schema. It carries no prompt and no expectation, so it cannot be an arm of a comparison between two rule layers. Naming it the step's `conformance cases` would be the guess this step forbids.",
+            "reopens_when": "A conformance set exists whose rows carry a prompt and an adjudicated expectation — then it joins this manifest as a present source and Phase 5's primary reads it."
+        },
+        {
+            "id": "host-graded",
+            "state": "absent",
+            "why": "No artefact named `host-graded cases` exists in the tree. `road-to-a-setup-that-decides-itself` recorded that on 2026-10-16, and `road-to-skills-that-arrive-when-called` step 5.1 reached the same reading on 2026-10-20 and declared its own primary unmeasurable rather than substituting for it.",
+            "reopens_when": "A host-graded case set is committed — a set whose rows are graded by what a host actually did with them, not by an offline ranker. Until then Phase 5's primary reads the three present sources and says so."
+        }
+    ],
+    "what_this_does_not_bound": "The margin. D2 fixes it — zero regressions on the obligation source, at most one regressed case per hundred elsewhere, valid only under a powered pre-registration — and 5.1 freezes it before the first run. A manifest that also carried the margin would let a corpus edit move a threshold."
+}

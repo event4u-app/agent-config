@@ -83,9 +83,10 @@ describe('fresh install writes a sparse settings file', () => {
     it('resolves the SAME rule scope as the full template did', () => {
         // The regression the blocker exists to prevent: dropping
         // `projection.*` flips every consumer from scoped to legacy-all.
-        const fromTemplate = ruleScopeFromSettings(parse(TEMPLATE));
+        const fromTemplate = ruleScopeFromSettings(parse(TEMPLATE), ROOT);
         const fromSparse = ruleScopeFromSettings(
             parse(renderSparseSettings(sparseSettingsValues(TEMPLATE, {}))),
+            ROOT,
         );
         expect(fromSparse).toEqual(fromTemplate);
         expect(fromSparse.workspaces).not.toBeNull();
