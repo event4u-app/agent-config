@@ -57,6 +57,21 @@ import {
     validateAcceptance,
 } from './_lib/advisory_verdicts.js';
 import { event4u_root } from './_lib/user_global_paths.js';
+import {
+    advance,
+    branchName,
+    claimRemediation,
+    fixPlan,
+    isFixFresh,
+    prBody,
+    proveFixed,
+    prTitle,
+    releaseDraft,
+    reopenMitigations,
+    routeSecurityFix,
+    track,
+} from './_lib/security_fix.js';
+import { defaultExec, readRoutingContext } from './_lib/security_fix_context.js';
 
 /** A cache younger than this is reused without a fetch (F10: one refresh per window). */
 export const REFRESH_WINDOW_HOURS = 20;
@@ -168,6 +183,7 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
         }
         for (const p of inventories) {
             const acceptances = p.prev?.acceptances ?? [];
+            const remediations = { ...(p.prev?.remediations ?? {}) };
             const findings = buildFindings(raw.get(p.root)!, p.inv.entries, reports.get(p.root)!, { now, acceptances });
             const a = announce(findings, p.prev?.ledger ?? emptyLedger(), now);
             const silent: Record<string, string> = {};
@@ -189,7 +205,9 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
                         ? { at: now.toISOString(), interrupt: a.interrupt.map((f) => f.key), digest: a.digest.length }
                         : (p.prev?.notice ?? null),
                 silent_since: silent,
+                remediations,
             };
+            reopenMitigations(remediations, findings);
             const sp = statePath(p.root);
             if (sp !== null) writeJson(sp, state);
             results.push({ state, fetched: egress !== 'none', reason: egress === 'none' ? 'egress-none' : 'refreshed' });
@@ -299,7 +317,7 @@ export function issueBody(state: AdvisoryState | null): string {
 function usage(): number {
     process.stderr.write(
         'usage: agent-config audit:deps refresh [--force] [--all-projects] | show [--json] | ' +
-            'accept <id> --reason=<text> --expires=YYYY-MM-DD | notice | gaps | issue-body\n',
+            'accept <id> --reason=<text> --expires=YYYY-MM-DD | fix <id> [--here] | verify <id> | pr-body <id> [--verified] [--tests=passed] [--release=<x.y.z>] | mitigate <id> --note=<text> | track [--deployed] | notice | gaps | issue-body\n',
     );
     return 2;
 }
@@ -352,6 +370,114 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
         state.acceptances = [...state.acceptances.filter((x) => x.id !== id), a as Acceptance];
         writeJson(sp, state);
         process.stdout.write(`accepted ${id} until ${a.expires}\n`);
+        return 0;
+    }
+    if (mode === 'fix' || mode === 'verify' || mode === 'pr-body' || mode === 'mitigate') {
+        const id = rest.find((a) => !a.startsWith('--'));
+        const state = readState(root);
+        const sp = statePath(root);
+        if (state === null || sp === null || id === undefined) {
+            process.stderr.write('usage: agent-config audit:deps fix|verify|pr-body|mitigate <id> — after a refresh\n');
+            return 2;
+        }
+        const f = state.findings.find((x) => x.id === id || x.aliases.includes(id) || x.key === id);
+        if (f === undefined) {
+            process.stderr.write(`no finding ${id} in the last refresh — run \`agent-config audit:deps show\`\n`);
+            return 1;
+        }
+        state.remediations = state.remediations ?? {};
+        if (mode === 'fix') {
+            const { remediation, joined } = claimRemediation(state.remediations, f.key, process.env['CLAUDE_CODE_SESSION_ID'] ?? `pid-${process.pid}`);
+            const ctx = readRoutingContext(root, f, { userWantsCurrent: rest.includes('--here') });
+            const route = routeSecurityFix(ctx);
+            const plan = fixPlan(f, state.inventory);
+            remediation.branch = route.route === 'current-branch' ? remediation.branch : branchName(f);
+            writeJson(sp, state);
+            const out = [
+                `finding  ${describe(f)}`,
+                joined ? `joined   an open fix for this finding (${remediation.branch ?? 'branch unset'}) — do not start a second` : `claimed  fix-in-progress`,
+                `route    ${route.route} — ${route.reason}`,
+                route.route === 'worktree' || route.route === 'new-branch-here' ? `branch   ${branchName(f)}` : null,
+                `title    ${prTitle(f)}`,
+                ...plan.commands.map((c) => `run      ${c}`),
+                ...plan.edits.map((e) => `edit     ${e.file}:${e.line}  ${e.from} → ${e.to}`),
+                `note     ${plan.note}`,
+                ...(route.opsChecklist ? plan.opsChecklist.map((o) => `ops      ${o}`) : []),
+                route.releaseDraft ? 'release  library: prepare the patch release draft (`audit:deps pr-body` prints it); stop before the tag' : null,
+                route.rebaseOfferAfterMerge ? 'after    offer the feature branch a rebase onto the trunk once this merges' : null,
+                'then     agent-config audit:deps verify ' + f.id + '   # the reporting source must stop reporting it',
+            ].filter((l): l is string => l !== null);
+            process.stdout.write(`${out.join('\n')}\n`);
+            return 0;
+        }
+        if (mode === 'verify') {
+            const [after] = await refreshMany([root], { force: true });
+            const ok = after!.state.reports.filter((r) => r.status === 'ok').map((r) => r.source);
+            const proof = proveFixed(f.key, f.sources, { findings: after!.state.findings, okSources: ok });
+            const fresh = after!.state;
+            fresh.remediations = { ...(state.remediations ?? {}) };
+            const r = fresh.remediations[f.key];
+            if (r !== undefined) advance(r, proof === 'fixed-in-branch' ? 'ready-to-merge' : proof === 'fix-failed' ? 'fix-failed' : r.state);
+            writeJson(sp, fresh);
+            process.stdout.write(`${f.id}: ${proof}${proof === 'fix-failed' ? ' — the reporting source still reports it; do not call this fixed' : ''}\n`);
+            return proof === 'fixed-in-branch' ? 0 : 1;
+        }
+        if (mode === 'mitigate') {
+            const note = flag('note');
+            if (note === undefined || note.trim().length < 10) {
+                process.stderr.write('a mitigation names what was done, in a sentence (--note="…")\n');
+                return 1;
+            }
+            const r = state.remediations[f.key] ?? claimRemediation(state.remediations, f.key, `pid-${process.pid}`).remediation;
+            advance(r, 'mitigated', new Date(), { note });
+            writeJson(sp, state);
+            process.stdout.write(`${f.id}: mitigated — stays open and reopens when a fix appears\n`);
+            return 0;
+        }
+        const tests = (flag('tests') ?? 'not-run') as 'passed' | 'failed' | 'not-run';
+        const body = prBody(f, {
+            before: `${f.sources.join(', ')} reported ${f.package} ${f.version ?? '?'} as ${f.verdict}`,
+            after: rest.includes('--verified') ? 'fixed-in-branch' : 'unverifiable',
+            tests,
+            cooldown: isFixFresh(flag('released-at') ?? null) ? `the fixing release is younger than the cooldown — the post-update audit ran` : 'outside the cooldown window',
+            deploy: f.ecosystem === 'runtime' ? 'runtime: see the ops checklist; merged is not deployed' : 'ships with the next deploy of this project',
+        });
+        process.stdout.write(`${body}\n`);
+        const version = flag('release');
+        if (version !== undefined) {
+            const draft = releaseDraft(version, [f]);
+            if (draft !== null) process.stdout.write(`\n--- release draft (not tagged) ---\n${draft.changelog}\n`);
+        }
+        return 0;
+    }
+    if (mode === 'track') {
+        const state = readState(root);
+        const sp = statePath(root);
+        if (state === null || sp === null) return 0;
+        for (const r of Object.values(state.remediations ?? {})) {
+            if (r.pr === null && r.branch === null) continue;
+            const view = r.pr !== null ? defaultExec('gh', ['pr', 'view', String(r.pr), '--json', 'state,mergeCommit'], root) : null;
+            let mergedSha: string | null = null;
+            try {
+                const v = view === null ? null : (JSON.parse(view) as { state?: string; mergeCommit?: { oid?: string } | null });
+                if (v?.state === 'MERGED') mergedSha = v.mergeCommit?.oid ?? null;
+            } catch {
+                mergedSha = null;
+            }
+            const sha = mergedSha ?? r.merge_sha;
+            const tags = sha === null ? null : defaultExec('git', ['tag', '--contains', sha], root);
+            const deployRuns = sha === null ? null : defaultExec('gh', ['run', 'list', '--commit', sha, '--json', 'name,conclusion'], root);
+            let deployed = rest.includes('--deployed');
+            try {
+                const runs = deployRuns === null ? [] : (JSON.parse(deployRuns) as Array<{ name?: string; conclusion?: string }>);
+                deployed = deployed || runs.some((x) => /deploy|release/i.test(x.name ?? '') && x.conclusion === 'success');
+            } catch {
+                /* no deploy signal read — never assume one */
+            }
+            track(r, { mergedSha: sha, releaseContains: (tags ?? '').trim() !== '', deployed });
+        }
+        writeJson(sp, state);
+        for (const r of Object.values(state.remediations ?? {})) process.stdout.write(`${r.key.split('|')[0]}  ${r.state}\n`);
         return 0;
     }
     if (mode === 'notice') {

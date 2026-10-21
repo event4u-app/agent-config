@@ -17,6 +17,7 @@ import type { InventoryEntry } from './advisory_inventory.js';
 import type { SourceReport } from './advisory_sources.js';
 import type { Acceptance, Finding, Ledger } from './advisory_verdicts.js';
 import { git_common_dir } from './git_common_dir.js';
+import { mergedNotDeployed, type Remediations } from './security_fix.js';
 
 export type AdvisoriesMode = 'notify' | 'off';
 export type AdvisoriesEgress = 'query' | 'none';
@@ -40,6 +41,8 @@ export interface AdvisoryState {
     notice: { at: string; interrupt: string[]; digest: number } | null;
     /** First time each source went silent, for the 4.4 silence notice. */
     silent_since: Record<string, string>;
+    /** Fixes in flight and their lifecycle (road-to-security-fixes-carried-to-the-merge Phase 3). */
+    remediations?: Remediations;
 }
 
 export function readAdvisorySettings(root: string): { mode: AdvisoriesMode; egress: AdvisoriesEgress } {
@@ -141,6 +144,7 @@ export function noticeLines(state: AdvisoryState | null, now: Date = new Date())
         const days = (now.getTime() - Date.parse(since)) / 86400000;
         if (days >= SILENCE_NOTICE_DAYS) lines.push(`advisories: ${safeField(source)} has not answered for ${Math.floor(days)} days — findings from it are unknown, not clear`);
     }
+    for (const l of mergedNotDeployed(state.remediations ?? {}, state.findings, now)) lines.push(l.replace(/[\r\n]/g, ' '));
     if (ageH >= STALE_AFTER_HOURS) {
         lines.push(`advisories: data is ${Math.floor(ageH / 24) || 1} day(s) old — run \`agent-config audit:deps refresh\``);
     }
