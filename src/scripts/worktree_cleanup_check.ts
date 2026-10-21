@@ -1077,6 +1077,8 @@ export function cleanupMode(root: string, opts: { userGlobalPath?: string | null
         if (section !== null && typeof section === 'object' && !Array.isArray(section)) {
             const v = (section as Record<string, unknown>)['cleanup'];
             if (v === 'auto' || v === 'notify' || v === 'off') return v;
+            // An unquoted `off` is YAML's boolean false.
+            if (v === false) return 'off';
         }
         return 'notify';
     } catch {
@@ -1186,7 +1188,12 @@ export function dailyCleanup(
         let outcomes: RemovalOutcome[] = [];
         if (mode === 'auto' && classified.safe.length > 0) {
             try {
-                outcomes = applyRemovals(classified.ctx.mainPath, classified.inv, { now, limit: DAILY_REMOVAL_CAP, here: root });
+                // Every git call of the removal phase is bounded too: the per-tree
+                // re-check and the removal set their own, tighter limits inside.
+                const removalBudget = DAILY_REMOVAL_CAP * (RECHECK_BUDGET_MS + REMOVAL_TIMEOUT_MS) + DAILY_BUDGET_MS;
+                outcomes = withDeadline(Date.now() + removalBudget, () =>
+                    applyRemovals(classified.ctx.mainPath, classified.inv, { now, limit: DAILY_REMOVAL_CAP, here: root }),
+                );
             } catch {
                 outcomes = [];
             }
@@ -1195,7 +1202,7 @@ export function dailyCleanup(
             const { inv, safe, rows, candidates, ctx } = classified;
             const removed = outcomes.filter((o) => o.removed).length;
             const decide = rows.filter((r) => r.classification === 'review').length;
-            const dir = commonDir(ctx.mainPath);
+            const dir = withDeadline(Date.now() + DAILY_BUDGET_MS, () => commonDir(ctx.mainPath));
             if (dir !== null) {
                 const record = {
                     at: now.toISOString(),

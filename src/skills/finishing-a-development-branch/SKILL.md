@@ -171,7 +171,7 @@ within the reflog TTL if needed.
 
 If the branch lives in a `git worktree`:
 
-* Option 1 → kept until merged; removal is scheduled by the daily run, not forgotten
+* Option 1 → kept until merged; the daily run then lists it (`auto` removes it)
 * Options 2, 4 → `git worktree remove <path>`; a `security/…` fix ends at deployed
 * Option 3 → keep the worktree
 

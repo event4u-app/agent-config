@@ -1533,14 +1533,15 @@ update_check:
 #   query   (default) names and versions of PUBLIC packages go to api.osv.dev;
 #           runtime lifecycle data comes from endoflife.date; the PHP and Node
 #           release feeds are read. A private package name is never sent, and a
-#           native `npm audit` / `composer audit` runs only for a lockfile with no
-#           private package in it
+#           native `npm audit` / `composer audit` — which sends the lockfile's
+#           package list to the registry that tool is configured for — runs only
+#           for a lockfile with no private package in it
 #   none    nothing is sent; findings read `unknown`, never "clear"
 #
 # kev — the CISA catalog of known-exploited vulnerabilities, downloaded whole on
 # a refresh and matched locally, so nothing about this project is sent:
 #   on      (default) a finding in the catalog is "known exploited" and is
-#           raised a tier (T0 in a runtime scope)
+#           raised one tier in a runtime scope (a high one to T0)
 #   off     the catalog is not read; tiers come from the other sources alone
 advisories:
   mode: notify

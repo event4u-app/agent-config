@@ -18,6 +18,7 @@
  */
 
 import * as fs from 'node:fs';
+import * as tty from 'node:tty';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -137,6 +138,9 @@ async function main(argv: readonly string[] = process.argv.slice(2)): Promise<nu
     // caller with no fd 3 never consumes the day's notice unseen.
     try {
         sessionNotice(path.resolve(args.cwd), undefined, (text) => {
+            // Delivered means a person can see it: a terminal. A redirect, a log
+            // or /dev/null would consume the day's notice unread.
+            if (!tty.isatty(3)) return false;
             try {
                 fs.writeSync(3, `${text}\n`);
                 return true;

@@ -56,9 +56,10 @@ export function readAdvisorySettings(root: string): { mode: AdvisoriesMode; egre
         const section = load_agent_settings({ cwd: root })['advisories'];
         const s = section !== null && typeof section === 'object' && !Array.isArray(section) ? (section as Record<string, unknown>) : {};
         return {
-            mode: s['mode'] === 'off' ? 'off' : 'notify',
+            // An unquoted `off` is YAML's boolean false: both mean off.
+            mode: s['mode'] === 'off' || s['mode'] === false ? 'off' : 'notify',
             egress: s['egress'] === 'none' ? 'none' : 'query',
-            kev: s['kev'] === 'off' ? 'off' : 'on',
+            kev: s['kev'] === 'off' || s['kev'] === false ? 'off' : 'on',
         };
     } catch {
         return { mode: 'off', egress: 'none', kev: 'off' };
@@ -183,6 +184,7 @@ export function describe(f: Finding): string {
             return `${tier} ${pkg}${ver}: security support ends ${date}${where(f)}`;
         case 'unknown':
             if (typeof f.note === 'string' && f.note.includes('egress-none')) return `${tier} ${pkg}: not checked — advisories.egress is none`;
+            if (typeof f.note === 'string' && f.note.includes('lockfile-unsupported')) return `${tier} ${pkg}: not checked — a lockfile format this audit cannot read (yarn, pnpm, bun or npm v1)`;
             if (typeof f.note === 'string' && f.note.startsWith('vendor-patched')) return `${tier} ${pkg}${ver}: distro-patched — judge it by the distro's own advisory${where(f)}`;
             return `${tier} ${pkg}: unknown — the source did not answer`;
         default:
@@ -234,29 +236,35 @@ export function sessionNotice(root: string, now: Date = new Date(), deliver?: (t
     const state = readState(root);
     if (state === null) return null;
     const stamp = statePath(root) + '.shown';
-    let shown = '';
+    let prev: { day?: string; once?: string[]; today?: string[] } = {};
     try {
-        shown = fs.readFileSync(stamp, 'utf-8').trim();
+        prev = JSON.parse(fs.readFileSync(stamp, 'utf-8')) as typeof prev;
     } catch {
-        shown = '';
+        prev = {};
     }
+    const day = now.toISOString().slice(0, 10);
     const lines = noticeLines(state, now, readRemediations(root));
-    if (lines.length === 0) return null;
-    // Keyed by what would be printed, not only by when: a same-day change in a
-    // silence, a remediation or staleness is a new notice.
-    // Hours and days counted up since the last print are not a new notice; the
-    // hash ignores the numbers that only age.
-    const stable = lines.map((l) => l.replace(/\b\d+ (?:h|days?|day\(s\))\b/g, '#')).join('\n');
-    const id = `${now.toISOString().slice(0, 10)}|${createHash('sha256').update(stable).digest('hex').slice(0, 16)}`;
-    if (shown === id) return null;
+    // A finding announced by a refresh is printed ONCE, whatever day it is and
+    // however long the cache goes unrefreshed — the weekly budget and the delta
+    // ledger count at refresh time, and a re-print would escape both. Reminders
+    // (stale data, a silent source, merged-not-deployed) come back once a day.
+    // Numbers that only age (hours, days) are not part of a line's identity.
+    const keyOf = (l: string): string => createHash('sha256').update(l.replace(/\b\d+ (?:h|days?|day\(s\))\b/g, '#')).digest('hex').slice(0, 16);
+    const isReminder = (l: string): boolean => /^advisories: (?:data|\S+ (?:has not answered|silent since))|: merged/.test(l);
+    const once = new Set(Array.isArray(prev.once) ? prev.once : []);
+    const today = new Set(prev.day === day && Array.isArray(prev.today) ? prev.today : []);
+    const out = lines.filter((l) => (isReminder(l) ? !today.has(keyOf(l)) : !once.has(keyOf(l))));
+    if (out.length === 0) return null;
+    const text = out.join('\n');
     // Stamped only once the text reached someone: a caller that could not
     // deliver it leaves the notice for the next surface.
-    if (deliver !== undefined && !deliver(lines.join('\n'))) return null;
+    if (deliver !== undefined && !deliver(text)) return null;
+    for (const l of out) (isReminder(l) ? today : once).add(keyOf(l));
     try {
-        fs.writeFileSync(stamp, `${id}\n`);
+        fs.writeFileSync(stamp, `${JSON.stringify({ day, once: [...once].slice(-200), today: [...today] })}\n`);
     } catch {
         /* an unwritable stamp means the line may show twice; never a failure */
     }
-    return lines.join('\n');
+    return text;
 }
 

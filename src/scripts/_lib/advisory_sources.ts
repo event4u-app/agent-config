@@ -4,7 +4,9 @@
  *
  * Every adapter reports `ok | unavailable | error` — a timeout is never `ok`,
  * and "no findings" from a source that did not answer is never "no findings".
- * Every outbound request goes to a host on a fixed allowlist; no URL is built
+ * Every request this module makes goes to a host on a fixed allowlist (the
+ * native audits are the package managers' own requests, to the registry each is
+ * configured for, and run only for a lockfile with no private name); no URL is built
  * from fetched content except an advisory ID that passed a strict shape check.
  * What leaves an adapter is IDs, versions, enums and numbers only — no advisory
  * prose — because the cache is the sanitising boundary (C3): nothing fetched
@@ -14,7 +16,7 @@
  * against fixtures in tests.
  */
 
-// egress-content: fixed-corpus — sends public package names and versions read from the project's lockfiles to api.osv.dev, and plain GETs to endoflife.date, the PHP/Node feeds and the whole CISA KEV catalog; never session content, never a private package name
+// egress-content: fixed-corpus — sends public package names and versions read from the project's lockfiles to api.osv.dev, and plain GETs to endoflife.date, the PHP/Node feeds and the whole CISA KEV catalog; a native npm or composer audit sends a lockfile's public package list to the registry that package manager is configured for; never session content, never a private package name
 
 import { execFileSync } from 'node:child_process';
 import * as path from 'node:path';
@@ -125,6 +127,31 @@ function numberOrNull(v: unknown): number | null {
     return typeof v === 'number' && Number.isFinite(v) ? v : null;
 }
 
+/**
+ * Whether `version` lies in an npm-style range (`<1.2.3`, `>=1.0.0 <1.2.3`,
+ * `a || b`). `null` when the range has a shape this does not read, so a caller
+ * keeps the version rather than guessing it safe.
+ */
+export function inRange(version: string, range: string): boolean | null {
+    const alternatives = range.split('||').map((x) => x.trim()).filter((x) => x !== '');
+    if (alternatives.length === 0) return null;
+    let any = false;
+    for (const alt of alternatives) {
+        let all = true;
+        for (const part of alt.split(/\s+/)) {
+            const m = /^(<=|>=|<|>|=)?v?(\d+(?:\.\d+){0,3}(?:-[0-9A-Za-z.-]+)?)$/.exec(part);
+            if (m === null) return null;
+            const c = compare_versions(version, m[2]!);
+            if (c === null) return null;
+            const op = m[1] ?? '=';
+            const ok = op === '<' ? c < 0 : op === '<=' ? c <= 0 : op === '>' ? c > 0 : op === '>=' ? c >= 0 : c === 0;
+            if (!ok) all = false;
+        }
+        if (all) any = true;
+    }
+    return any;
+}
+
 // ---------------------------------------------------------------------------
 // Native audits — the package managers' own answer
 // ---------------------------------------------------------------------------
@@ -176,13 +203,18 @@ export function nativeAudits(
         // Several resolved versions of one name (nested duplicates): the audit
         // does not say which one, so each installed version gets its own finding
         // and merges with OSV's per-version answer for the same advisory.
-        const versionsOf = (name: string): Array<{ version: string | null; line: number }> => {
+        // `range` (npm's own affected range) narrows them to the versions it names.
+        const versionsOf = (name: string, range: string | null = null): Array<{ version: string | null; line: number }> => {
             const seen = new Map<string, number>();
-            for (const e of list) if (e.name === name && e.version !== null && !seen.has(e.version)) seen.set(e.version, e.line);
+            for (const e of list) {
+                if (e.name !== name || e.version === null || seen.has(e.version)) continue;
+                if (range !== null && inRange(e.version, range) === false) continue;
+                seen.set(e.version, e.line);
+            }
             return seen.size === 0 ? [{ version: null, line: line(name) }] : [...seen].map(([version, l]) => ({ version, line: l }));
         };
         if (npm) {
-            const vulns = (doc as { vulnerabilities?: Record<string, { via?: unknown[]; fixAvailable?: unknown }> }).vulnerabilities ?? {};
+            const vulns = (doc as { vulnerabilities?: Record<string, { via?: unknown[]; fixAvailable?: unknown; range?: unknown }> }).vulnerabilities ?? {};
             for (const [name, v] of Object.entries(vulns)) {
                 for (const via of v.via ?? []) {
                     if (typeof via !== 'object' || via === null) continue;
@@ -190,7 +222,7 @@ export function nativeAudits(
                     const ghsa = /GHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}/i.exec(o.url ?? '')?.[0];
                     if (ghsa === undefined) continue;
                     const fix = v.fixAvailable as { name?: string; version?: string } | boolean | undefined;
-                    for (const at of versionsOf(name))
+                    for (const at of versionsOf(name, typeof v.range === 'string' ? v.range : null))
                         findings.push({
                             id: `GHSA-${ghsa.slice(5).toLowerCase()}`,
                             aliases: [],
@@ -346,7 +378,8 @@ export async function osvQuery(
                 queries: batch.map((e) => ({ package: { name: e.name, ecosystem: OSV_ECOSYSTEMS[e.ecosystem] }, version: e.version })),
             });
             const res = await fetcher('https://api.osv.dev/v1/querybatch', { method: 'POST', body, timeoutMs: opts.timeoutMs ?? 10000 });
-            if (res.status !== 200) return { findings: [], report: { source: 'osv', status: 'error', reason: `http-${res.status}` } };
+            // A later batch failing keeps what the earlier batches said.
+            if (res.status !== 200) return { findings, report: { source: 'osv', status: 'error', reason: `http-${res.status}` } };
             const doc = JSON.parse(await res.text()) as {
                 results?: Array<{ vulns?: Array<{ id?: string; modified?: string }>; next_page_token?: string }>;
             };
@@ -354,7 +387,7 @@ export async function osvQuery(
             // One result per query, or the answer is not an answer: a truncated
             // array would read the missing packages as clean.
             if (!Array.isArray(results) || results.length !== batch.length) {
-                return { findings: [], report: { source: 'osv', status: 'error', reason: 'result-count' } };
+                return { findings, report: { source: 'osv', status: 'error', reason: 'result-count' } };
             }
             // A package with many advisories is paginated: follow each token (bounded).
             for (let j = 0; j < results.length; j++) {

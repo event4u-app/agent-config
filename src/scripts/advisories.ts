@@ -131,9 +131,12 @@ export interface RefreshResult {
  * fetch and yield two findings (5.4). A machine-wide lock keeps five sessions
  * starting together from refreshing five times (F10).
  */
-export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Promise<RefreshResult[]> {
+export async function refreshMany(allRoots: string[], deps: RefreshDeps = {}): Promise<RefreshResult[]> {
     const now = deps.now ?? new Date();
     const mdir = deps.machineDir ?? machineDir();
+    // `advisories.mode: off` is off for the refresh too: such a project is not
+    // queried, not cached and not written into the machine's project index (5.4).
+    const roots = allRoots.filter((r) => readAdvisorySettings(r).mode !== 'off');
     const plan = roots.map((root) => {
         const prev = readState(root);
         const fingerprint = inventoryFingerprint(root);
@@ -191,7 +194,17 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
         }
     }
     try {
-        const inventories = todo.map((p) => ({ ...p, inv: markOwnActionsPrivate(p.root, readInventory(p.root)) }));
+        // Unchanged files are not read again (1.2): the cache's own inventory is
+        // reused whenever the fingerprint still matches, window or `--force` alike.
+        const inventories = todo.map((p) => ({
+            ...p,
+            inv: markOwnActionsPrivate(
+                p.root,
+                p.prev !== null && p.prev.fingerprint === p.fingerprint && Array.isArray(p.prev.inventory)
+                    ? { entries: p.prev.inventory.map((e) => ({ ...e })), hash: '', fingerprint: p.fingerprint, files: [] }
+                    : readInventory(p.root),
+            ),
+        }));
         // Egress is each project's own setting: one project's `query` never sends
         // another project's names (and `--all-projects` reads them all).
         const egressOf = new Map(inventories.map((p) => [p.root, deps.egress ?? readAdvisorySettings(p.root).egress]));
@@ -258,7 +271,7 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
             const silent: Record<string, string> = {};
             for (const r of reports.get(p.root)!) {
                 // A deliberate skip (private names, `egress: none`) is not silence (4.4).
-                if (r.status !== 'ok' && r.reason !== 'private-names-present' && r.reason !== 'egress-none') {
+                if (r.status !== 'ok' && r.reason !== 'private-names-present' && r.reason !== 'egress-none' && !(r.reason ?? '').startsWith('lockfile-unsupported')) {
                     silent[r.source] = p.prev?.silent_since?.[r.source] ?? now.toISOString();
                 }
             }
@@ -468,10 +481,21 @@ export function suspiciousInBranch(root: string, fixBase: string | null = null, 
     );
     // A workflow the plan edits is allowed only where every changed line is a
     // version pin or an action ref; any other line in it still stops the fix.
+    // Each removed pin pairs with one added pin of the SAME key and, for an
+    // action, the same action: only the version or ref may move. A swapped
+    // action or a new step is a workflow change, not a pin.
     const pinOnly = (file: string): boolean => {
         const diff = defaultExec('git', ['diff', '-U0', base, '--', file], root) ?? '';
-        const lines = diff.split('\n').filter((l) => /^[+-](?![+-])/.test(l));
-        return lines.length > 0 && lines.every((l) => /^[+-]\s*(?:-\s*)?(?:node-version|php-version|uses):/.test(l));
+        const changed = diff.split('\n').filter((l) => /^[+-](?![+-])/.test(l));
+        const pin = (l: string): string | null => {
+            const m = /^[+-]\s*(?:-\s*)?(node-version|php-version|uses):\s*["']?([^"'\s@]+)(?:@[^"'\s]+)?["']?\s*$/.exec(l);
+            if (m === null) return null;
+            return m[1] === 'uses' ? `uses:${m[2]}` : m[1]!;
+        };
+        const removed = changed.filter((l) => l.startsWith('-')).map(pin);
+        const added = changed.filter((l) => l.startsWith('+')).map(pin);
+        if (changed.length === 0 || removed.includes(null) || added.includes(null) || removed.length !== added.length) return false;
+        return [...removed].sort().join('\n') === [...added].sort().join('\n');
     };
     const allowed = new Set(planned.filter((f) => changed.includes(f) && pinOnly(f)));
     return suspiciousPaths(changed.filter((p) => !allowed.has(p)), delta);
@@ -657,8 +681,14 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
                 process.stderr.write('a mitigation names what was done, in a sentence (--note="…")\n');
                 return 1;
             }
-            const r = rems[f.key] ?? claimRemediation(rems, f.key, `pid-${process.pid}`).remediation;
+            // A regression after a deploy starts a new record; any other state the
+            // lifecycle cannot leave for `mitigated` is refused, never reported done.
+            const r = rems[f.key] !== undefined && rems[f.key]!.state !== 'fixed-deployed' ? rems[f.key]! : claimRemediation(rems, f.key, `pid-${process.pid}`).remediation;
             advance(r, 'mitigated', new Date(), { note });
+            if (r.state !== 'mitigated') {
+                process.stderr.write(`${f.id}: the open fix is ${r.state} — a mitigation does not replace it\n`);
+                return 1;
+            }
             writeRemediations(root, rems);
             process.stdout.write(`${f.id}: mitigated — stays open and reopens when a fix appears\n`);
             return 0;
@@ -733,7 +763,7 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
         return 0;
     }
     if (mode === 'notice') {
-        process.stdout.write(`${noticeLines(readState(root)).join('\n')}\n`);
+        process.stdout.write(`${noticeLines(readState(root), new Date(), readRemediations(root)).join('\n')}\n`);
         return 0;
     }
     if (mode === 'gaps') {

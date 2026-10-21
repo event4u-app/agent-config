@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     applyRemovals,
+    cleanupMode,
     DAILY_RECORD,
     dailyCleanup,
     buildInventory,
@@ -959,5 +960,12 @@ describe('R2 round 3 fixes (2026-10-21)', () => {
         const head = git(repo, ['rev-parse', 'refs/heads/feat/short']).trim();
         const idx: PrIndex = new Map([['feat/short', [{ state: 'MERGED', headOid: head, mergedAt: '2020-01-01T00:00:00Z', base: 'main' }]]]);
         expect(mergeEvidence(wt, 'feat/short', 'origin/main', idx).evidence).toBe('merged-pr');
+    });
+});
+
+describe('R2 round 5 — YAML off', () => {
+    it('an unquoted `off` (YAML false) switches the cleanup off', () => {
+        fs.writeFileSync(path.join(repo, '.agent-settings.yml'), 'worktrees:\n  cleanup: off\n');
+        expect(cleanupMode(repo, { userGlobalPath: path.join(repo, 'no-global.yml') })).toBe('off');
     });
 });

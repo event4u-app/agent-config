@@ -148,7 +148,8 @@ export function tierOf(f: Pick<Finding, 'verdict' | 'severity' | 'score' | 'kev'
             else if (critical || high || f.severity === 'moderate') tier = 'T2';
             else tier = 'T3';
     }
-    if (f.kev && runtimeScope && tier !== 'T0') tier = tier === 'T1' ? 'T0' : 'T1';
+    // KEV raises exactly one tier in a runtime scope: T3 → T2 → T1 → T0.
+    if (f.kev && runtimeScope && tier !== 'T0') tier = ({ T1: 'T0', T2: 'T1', T3: 'T2' } as const)[tier];
     return tier;
 }
 
@@ -200,10 +201,16 @@ export function buildFindings(
     }
     // Silence is a verdict, never an empty list (F6): every source that did not
     // answer becomes one `unknown` finding naming it.
+    // One unknown per source, however many reports it gave: the reasons join.
+    const unknown = new Map<string, SourceReport[]>();
     for (const r of reports) {
         if (r.status === 'ok') continue;
         if (r.reason === 'private-names-present') continue; // a deliberate skip, not silence
         if (r.source === 'kev') continue; // an enrichment: its failure is a report, never a finding
+        unknown.set(r.source, [...(unknown.get(r.source) ?? []), r]);
+    }
+    for (const [source, rs] of unknown) {
+        const r = { source, status: rs[0]!.status, reason: rs.map((x) => x.reason).filter((x): x is string => x !== null).join('; ') || null };
         out.push({
             key: `UNKNOWN-${r.source}`,
             id: `UNKNOWN-${r.source}`,
@@ -331,7 +338,10 @@ export function announce(findings: Finding[], previous: Ledger, now: Date = new 
 }
 
 /** An acceptance needs a reason and an expiry; a grep-negative is not a reason (3.3, K4). */
-export function validateAcceptance(a: Partial<Acceptance>): string | null {
+/** An acceptance lasts at most this long; renewing it is the re-check. */
+export const ACCEPTANCE_MAX_DAYS = 365;
+
+export function validateAcceptance(a: Partial<Acceptance>, now: Date = new Date()): string | null {
     if (typeof a.id !== 'string' || a.id === '') return 'an acceptance names the finding ID';
     if (typeof a.reason !== 'string' || a.reason.trim().length < 10) return 'an acceptance carries a reason of at least a sentence';
     // A search that found nothing is never a reason. "Not reachable" is one only
@@ -342,5 +352,12 @@ export function validateAcceptance(a: Partial<Acceptance>): string | null {
         return 'absence of a hit is not unreachability — name what makes the code path unreachable';
     }
     if (typeof a.expires !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(a.expires)) return 'an acceptance carries an expiry day (YYYY-MM-DD)';
+    // A real calendar day, after today, within a year: past is no acceptance,
+    // 9999-12-31 is a permanent one wearing a date.
+    const at = Date.parse(`${a.expires}T00:00:00Z`);
+    if (!Number.isFinite(at) || new Date(at).toISOString().slice(0, 10) !== a.expires) return 'the expiry is not a calendar day';
+    const days = (at - now.getTime()) / 86400000;
+    if (days <= 0) return 'the expiry is not in the future';
+    if (days > ACCEPTANCE_MAX_DAYS) return `an acceptance lasts at most ${ACCEPTANCE_MAX_DAYS} days — renew it then`;
     return null;
 }

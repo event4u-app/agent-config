@@ -539,10 +539,10 @@ export const settingsSchema = z.object({
             'Whether the first session start of a day prints the advisory findings that need action today. notify (default) reads the local cache only — a session start never touches the network; off prints nothing, and agent-config audit:deps show still works.',
         ),
         egress: z.enum(['none', 'query']).default('query').describe(
-            'What leaves the machine when agent-config audit:deps refresh runs. query (default) sends names and versions of public packages to api.osv.dev and reads endoflife.date and the PHP and Node release feeds; a private package name is never sent, and a native npm or composer audit runs only for a lockfile with no private package. none sends nothing, and findings read unknown rather than clear.',
+            'What leaves the machine when agent-config audit:deps refresh runs. query (default) sends names and versions of public packages to api.osv.dev and reads endoflife.date and the PHP and Node release feeds; a private package name is never sent, and a native npm or composer audit, which sends the lockfile package list to the registry that tool is configured for, runs only for a lockfile with no private package. none sends nothing, and findings read unknown rather than clear.',
         ),
         kev: z.enum(['off', 'on']).default('on').describe(
-            'Whether a refresh reads the CISA known-exploited catalog. on (default) downloads the whole catalog and matches it locally, so nothing about the project is sent, and a finding in it is raised a tier; off leaves tiers to the other sources. Runs only where egress is query.',
+            'Whether a refresh reads the CISA known-exploited catalog. on (default) downloads the whole catalog and matches it locally, so nothing about the project is sent, and a finding in it is raised one tier in a runtime scope; off leaves tiers to the other sources. Runs only where egress is query.',
         ),
     }).default({ mode: 'notify', egress: 'query', kev: 'on' }),
     update: z.object({
