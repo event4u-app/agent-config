@@ -42,17 +42,34 @@ import { user_global_settings_paths } from './_lib/agent_settings.js';
 import type { UpdateMode } from './_lib/classify_update.js';
 import { any_live_session, global_register_dir } from './_lib/session_register.js';
 import { STATE_FILENAME } from './_lib/update_check.js';
-import { parseCuratedHead, updateNotice, type NoticeOutcome } from './_lib/update_notice.js';
+import { write_atomic } from './_lib/fs_atomic.js';
+import { parseCuratedHead, RECONCILE_REASONS, updateNotice, type NoticeOutcome } from './_lib/update_notice.js';
+import { parse_version } from './_lib/version_order.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
-import { probeRanToday, stampProbeRun } from './hooks/probe_throttle.js';
 import { is_replay_mode } from './hooks/state_io.js';
 
 export const CONCERN = 'update-notice';
 export const NOTICE_STATE_FILENAME = 'update-notice.json';
+export const NOTICE_THROTTLE_FILENAME = 'update-notice.stamp';
 const VALID_MODES: readonly string[] = ['off', 'notify', 'ask', 'auto'];
 
-/** What this concern remembers between sessions. Everything else is re-read. */
+/**
+ * What this concern remembers between sessions, in the user-global
+ * `update-notice.json`. Everything else is re-read.
+ *
+ * Lifecycle: written atomically at mode 0600 by a session that is not
+ * suppressed; replaced whole each time; `staged` returns to `null` once nothing
+ * newer than the installed version is cached. A record that does not parse, or
+ * carries another schema, reads as empty and is replaced on the next write.
+ * Suppressed sessions — the kill switch included — neither write nor delete it.
+ * Deleting the file is always safe. `staged` is advisory output: no install
+ * path reads it. Beside it, `update-notice.stamp` records the day the notice
+ * last ran; it is user-global, replaced by rename, and written only after a run
+ * that was not suppressed.
+ */
+export const NOTICE_STATE_SCHEMA = 1;
+
 export interface NoticeState {
     readonly staged: string | null;
     readonly last_seen_installed: string | null;
@@ -63,7 +80,8 @@ export function readNoticeState(statePath: string | null): NoticeState {
         if (statePath === null) return { staged: null, last_seen_installed: null };
         const raw: unknown = JSON.parse(fs.readFileSync(statePath, 'utf-8'));
         const o = raw !== null && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
-        const str = (v: unknown): string | null => (typeof v === 'string' && v.trim() !== '' ? v.trim() : null);
+        if (o['schema'] !== undefined && o['schema'] !== NOTICE_STATE_SCHEMA) return { staged: null, last_seen_installed: null };
+        const str = (v: unknown): string | null => (typeof v === 'string' && parse_version(v.trim()) !== null ? v.trim() : null);
         return { staged: str(o['staged']), last_seen_installed: str(o['last_seen_installed']) };
     } catch {
         return { staged: null, last_seen_installed: null };
@@ -72,8 +90,7 @@ export function readNoticeState(statePath: string | null): NoticeState {
 
 export function writeNoticeState(statePath: string, state: NoticeState): void {
     try {
-        fs.mkdirSync(path.dirname(statePath), { recursive: true });
-        fs.writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`, { encoding: 'utf-8', mode: 0o600 });
+        write_atomic(statePath, `${JSON.stringify({ schema: NOTICE_STATE_SCHEMA, ...state }, null, 2)}\n`);
     } catch {
         /* unwritable state dir → the concern simply re-decides next session */
     }
@@ -131,31 +148,25 @@ function sessionIdFromEnvelope(raw: string): string | null {
     }
 }
 
-function workspaceFromEnvelope(raw: string): string | null {
-    try {
-        const doc: unknown = JSON.parse(raw);
-        const ws = (doc as Record<string, unknown> | null)?.['workspace_root'];
-        return typeof ws === 'string' && ws.trim() !== '' ? ws.trim() : null;
-    } catch {
-        return null;
-    }
-}
-
 export interface NoticeDeps {
     readonly packageRoot: string;
-    readonly projectRoot: string;
     readonly sessionId: string | null;
     readonly env: NodeJS.ProcessEnv;
     readonly isTty: boolean;
     readonly mode: UpdateMode | undefined;
     readonly probeStatePath: string | null;
     readonly noticeStatePath: string;
+    /** The user-global day stamp; never under the workspace, which a repository controls. */
+    readonly throttlePath: string;
     readonly registerDir: string;
     readonly err: { write(text: string): void };
 }
 
-/** Decide and act. Separated from `main` so every input is injectable. */
-export function runNotice(deps: NoticeDeps): NoticeOutcome {
+/**
+ * Decide and act. Separated from `main` so every input is injectable.
+ * `apply: false` decides only — it prints nothing and writes nothing.
+ */
+export function runNotice(deps: NoticeDeps, apply = true): NoticeOutcome {
     const pkg = readJson(path.join(deps.packageRoot, 'package.json'));
     const installed = typeof pkg['version'] === 'string' ? (pkg['version'] as string) : '';
     if (installed === '') return { lines: [], stage: null, activate: null, suppressed: 'installed version unreadable' };
@@ -181,11 +192,57 @@ export function runNotice(deps: NoticeDeps): NoticeOutcome {
         foreignSessionLive: any_live_session(deps.registerDir, deps.sessionId),
     });
 
-    if (outcome.suppressed !== null) return outcome;
+    if (!apply) return outcome;
+    if (outcome.suppressed !== null) {
+        if (RECONCILE_REASONS.has(outcome.suppressed) && (state.staged !== null || state.last_seen_installed !== installed)) {
+            writeNoticeState(deps.noticeStatePath, { staged: null, last_seen_installed: installed });
+        }
+        return outcome;
+    }
 
     for (const line of outcome.lines) deps.err.write(`[update] ${line}\n`);
     writeNoticeState(deps.noticeStatePath, { staged: outcome.stage, last_seen_installed: installed });
     return outcome;
+}
+
+/**
+ * The session-start entry: decide without side effects, honour the day
+ * throttle, then decide again and act — so the throttle stamp, like every other
+ * write, happens only in a context that may be written in at all. Returns
+ * `null` when the throttle or a suppressing context ends it before the act.
+ */
+export function noticeOncePerDay(deps: NoticeDeps): NoticeOutcome | null {
+    const dry = runNotice(deps, false);
+    if (dry.suppressed !== null && !RECONCILE_REASONS.has(dry.suppressed)) return null;
+    if (ranToday(deps.throttlePath)) return null;
+    const outcome = runNotice(deps);
+    stampToday(deps.throttlePath);
+    return outcome;
+}
+
+/** Local calendar day, so "once a day" follows the user's clock. */
+function localDay(d: Date): string {
+    return `${String(d.getFullYear())}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+/** True when the stamp is a regular file dated today. A link or any read problem is "not today". */
+export function ranToday(throttlePath: string): boolean {
+    try {
+        const st = fs.lstatSync(throttlePath);
+        return st.isFile() && localDay(st.mtime) === localDay(new Date());
+    } catch {
+        return false;
+    }
+}
+
+/** Replaces the stamp by rename, so a link at the path is replaced, never followed. */
+function stampToday(throttlePath: string): void {
+    if (is_replay_mode()) return;
+    try {
+        write_atomic(throttlePath, `${new Date().toISOString()}\n`);
+    } catch {
+        /* unwritable → the notice runs again next session, which only costs reads */
+    }
 }
 
 function packageRootOf(): string {
@@ -200,30 +257,23 @@ export function main(argv?: string[]): number {
     if (is_replay_mode()) return 0;
     try {
         const packageRoot = packageRootOf();
-        const projectRoot = workspaceFromEnvelope(raw) ?? process.env['CLAUDE_PROJECT_DIR'] ?? process.cwd();
         const mode = readUpdateMode();
         // The throttle stamp is a WRITE, so it comes after the decision that
         // this context may be written in at all — AC-2 asks for zero writes
         // under CI, a non-TTY, a source checkout and the opt-out.
         const deps: NoticeDeps = {
             packageRoot,
-            projectRoot,
             sessionId: sessionIdFromEnvelope(raw),
             env: process.env,
             isTty: Boolean(process.stderr.isTTY) || Boolean(process.stdout.isTTY),
             mode,
             probeStatePath: user_global_paths.resolve_with_fallback(STATE_FILENAME),
             noticeStatePath: user_global_paths.write_target(NOTICE_STATE_FILENAME),
+            throttlePath: user_global_paths.write_target(NOTICE_THROTTLE_FILENAME),
             registerDir: global_register_dir(),
             err: process.stderr,
         };
-        const dry = runNotice({ ...deps, err: { write: () => undefined } });
-        if (dry.suppressed !== null && dry.suppressed !== 'nothing newer cached' && dry.suppressed !== 'no cached candidate') {
-            return 0;
-        }
-        if (probeRanToday(projectRoot, CONCERN)) return 0;
-        stampProbeRun(projectRoot, CONCERN);
-        runNotice(deps);
+        noticeOncePerDay(deps);
         return 0;
     } catch {
         return 0;

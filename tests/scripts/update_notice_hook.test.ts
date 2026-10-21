@@ -53,7 +53,7 @@ function install(version: string, highlights: readonly string[] = []): string {
 function deps(over: Partial<NoticeDeps> & { packageRoot: string }): NoticeDeps {
     const lines: string[] = [];
     return {
-        projectRoot: tmp,
+        throttlePath: path.join(tmp, 'state', 'update-notice.stamp'),
         sessionId: 'own-session',
         env: {},
         isTty: true,
