@@ -3,6 +3,8 @@ import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import { procedureText } from '../_lib/procedure_text.js';
+
 const COMMAND = path.resolve(__dirname, '../../src/domains/product-basic/roadmap/process-full/command.md');
 
 function section(text: string, heading: string): string {
@@ -28,7 +30,7 @@ const FORBIDDEN: readonly RegExp[] = [
     /do not ask the owner/i,
 ];
 
-const text = fs.readFileSync(COMMAND, 'utf-8');
+const text = procedureText(path.relative(path.resolve(__dirname, '..', '..'), COMMAND));
 
 describe('process-full lane brief', () => {
     const brief = laneBrief(text);

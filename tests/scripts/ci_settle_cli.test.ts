@@ -14,6 +14,7 @@ import { describe, expect, it } from 'vitest';
 
 import { findCommand } from '../../src/cli/registry.js';
 import { CI_SETTLE_INVOCATION } from '../../src/scripts/hooks/push_settle_hook.js';
+import { PROCEDURE_BRANCHES, procedureText } from '../_lib/procedure_text.js';
 
 const ROOT = process.cwd();
 const DISPATCH = path.join(ROOT, 'src/scripts/_dispatch.bash');
@@ -56,7 +57,7 @@ describe('ci:settle verb', () => {
     it('every shipped surface emits the one invocation that works on a project-local install', () => {
         expect(CI_SETTLE_INVOCATION).toBe('npm exec --no -- agent-config ci:settle');
         for (const rel of EMITTERS) {
-            const text = fs.readFileSync(path.join(ROOT, rel), 'utf8');
+            const text = rel in PROCEDURE_BRANCHES ? procedureText(rel) : fs.readFileSync(path.join(ROOT, rel), 'utf8');
             const uses = text.split('ci:settle').length - 1;
             expect(uses, rel).toBeGreaterThan(0);
             expect(text.split(CI_SETTLE_INVOCATION).length - 1, rel).toBe(uses);

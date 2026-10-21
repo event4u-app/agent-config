@@ -1,0 +1,21 @@
+{
+    "_comment": "Core size of the five run procedures (road-to-a-step-that-costs-what-it-changes 3.1). Branch-only material lives in sibling references under src/agent-src/contexts/execution/, each held under 16,000 chars by check_depth_budget. Each ceiling is the measured size on 2026-10-21 and only shrinks; read by tests/scripts/procedure_core_budget.test.ts.",
+    "schema_version": 1,
+    "registered_at": "2026-10-21",
+    "owner": "maintainer",
+    "review_by": "2027-04-21",
+    "cap_bytes": 15000,
+    "cores": {
+        "src/agent-src/contexts/execution/roadmap-process-loop.md": {
+            "ceiling": 16144,
+            "over_cap_reason": "The mandatory core (sections 1, 2, 3-0, 4, the section 5 step loop with the receipt, the 5b essentials, the halt list, the section 6 essentials) is about 12 KB, and the Iron-Law fences that must stay with their headings add about 3 KB; every further move costs a pointer line worth more than it saves. Under the 16,000-char depth ceiling, above the 15,000-byte target."
+        },
+        "src/domains/product-basic/roadmap/process-full/command.md": { "ceiling": 14969 },
+        "src/domains/git/pr/create/command.md": { "ceiling": 14997 },
+        "src/domains/git/pr/merge/command.md": {
+            "ceiling": 15698,
+            "over_cap_reason": "The needs-council clearance check stays in the core directly before `gh pr merge`: moved behind a pointer, the merge command read first and the check second, and a reader stopping at the core would merge without it. Its ~800 bytes are the overshoot."
+        },
+        "src/agent-src/contexts/execution/roadmap-execution-contract.md": { "ceiling": 14621 }
+    }
+}

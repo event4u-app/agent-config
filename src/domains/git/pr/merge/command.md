@@ -41,32 +41,14 @@ MERGES ONLY ON TWO CONVERGENT CLEARING SEATS (§ 9a) — OTHERWISE THE OWNER DEC
 A `needs-owner` PR IS NEVER SENT FOR CLEARANCE AND NEVER MERGES ON THIS COMMAND.
 ```
 
-**The invocation is the authorization, and nothing else is.** `pr-merge` is
-irreversible, and since 2026-09-04 (ADR-254) NOTHING MECHANICAL CHECKS IT —
-the gate that did was removed after it refused authorizations the owner had in
-fact given. The per-session ledger still records what the user's own prompt
-authorized, and this command still reads it as an audit trail; it introduces no
-second authorization store, and it never writes one. When the work left is
-outside what the owner authorized, the run stops and reports (§ 7).
-
-Why the preparation half is still the bulk of this command: everything before
-§ 9 — the target manifest, the four conflict classes, the superseded check, the
-bounded CI repair, the cutoff — is the expensive, error-prone part, and it is
-what the live runs actually proved. `--no-merge` delivers exactly that half to
-callers that want it, [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md)
-among them.
+**Why the invocation authorizes** — read [`pr-merge-sync`](../../../../agent-src/contexts/execution/pr-merge-sync.md#why-the-invocation-authorizes).
 
 ## Sub-commands
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
 
-*(none, deliberately.)* `all` changes **cardinality**, not lifecycle, so it is
-an argument rather than a second command — the locked registry's rule that
-"sibling variants become a flag, never a second command"
-([`command-clusters`](../../../../../docs/contracts/command-clusters.md)) applied
-to this cluster. A future sub belongs here only if it has a materially
-different lifecycle, not a different count.
+**Sub-commands rationale** — read [`pr-merge-sync`](../../../../agent-src/contexts/execution/pr-merge-sync.md#sub-commands-rationale).
 
 ## Dispatch
 
@@ -83,13 +65,7 @@ merged (§ 5).
 | `… --merge` | as above | yes | yes, through § 9a's danger gate — the form [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) calls when the owner gave an auto-merge instruction (ADR-282) |
 | `… --no-merge` | as above | yes | **never**, explicitly. This is the form [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) calls for its delivery loop without an auto-merge instruction. |
 
-**Bare invocation** (`/pr:merge` with no argument) is a **documented default
-flow**, not a menu: it runs the auto-selection in row 2 and says which PR it
-picked and why, before touching it. A menu would be the wrong shape here —
-selection is deterministic from the queue-order rule in § 1, so asking the user
-to pick would hand back a decision the command can compute. When the open-PR
-list is empty there is nothing to select and the command reports that and
-stops.
+**Bare invocation** — read [`pr-merge-sync`](../../../../agent-src/contexts/execution/pr-merge-sync.md#bare-invocation).
 
 ## 1. Snapshot the target — a manifest re-checked before every merge
 
@@ -102,148 +78,15 @@ gh pr list --state open --limit 100 \
 gh api repos/:owner/:repo/git/ref/heads/<baseRefName> --jq .object.sha   # per distinct base
 ```
 
-`baseRefName` and the base SHA are part of the record, not incidental: § 2 and
-§ 4 both consume `<base>`, and § 8's kill switch "the base advanced by an actor
-other than this run" is undetectable without a base SHA to compare against.
-
-`--limit 100` caps the manifest. A queue above 100 open PRs is drained
-**partially**, and the run must say so rather than reporting completion — the
-§ 6 bound reads "initial manifest + one batch", and the manifest is what the
-cap truncated.
-
-The manifest is the authorization's target set and is **never silently
-refreshed by a third party's push**. It lives in this run's own context and in
-no file, so nothing verifies it and no gate would notice if it drifted — what
-actually binds the target is the pre-merge re-read below, a check that fires,
-not a property that holds. Say "re-checked", never "immutable" (ADR-266
-§ What this record does not claim, finding 3). It is, by design, advanced by *this run's
-own* commits — § 2 merges the base in and § 5 pushes, so a prepared PR's head
-is never the snapshot head, and a naive "refuse when the SHA moved" check would
-fire on every PR the run touches.
-
-So the record carries **two** SHAs per PR and they mean different things:
-
-| Field | Set at | Meaning |
-|---|---|---|
-| `pr_number` | snapshot | Immutable. A change is branch substitution — refuse. |
-| `observed_head` | snapshot, then **updated by this run after each of its own pushes** | The head this run last produced. |
-| `base_ref` + `base_sha` | snapshot | The base the PR was prepared against; § 8's "base advanced by another actor" compares against it. |
-
-Before every merge, re-read the PR and refuse when the live head is **neither**
-the snapshot head **nor** the head this run last pushed. That is the
-force-push-after-authorization case, and it is the only one the check exists
-for. A PR that appeared after the snapshot is never merged by this run — § 6
-says what happens to it instead.
+**Manifest fields, re-read** — read [`pr-merge-sync`](../../../../agent-src/contexts/execution/pr-merge-sync.md#manifest-fields).
 
 ## 2. Sync with the base
 
-Check the PR out, read the strategy against its base, then let one script do
-the update, so the branch-convergence policy (the base SET a non-default target
-carries) is read on every path. `show` takes the same `--base` as `sync` and
-runs after the checkout: without `--base` both read the default branch, and a PR
-into any other base would be judged against the wrong commit. `--key
-update_strategy` limits `show`'s exit to the strategy, so a `commit_format` or
-`branch_pattern` the PR head breaks does not stop the update.
-
-```bash
-git fetch origin
-gh pr checkout <N>
-agent-config git:convention show --key update_strategy --base origin/<base>   # value, source, state
-agent-config git:convention sync --base origin/<base>
-```
-
-A `git.update_strategy` whose state is `malformed`, `invalid`, `discarded` or
-`unresolvable` is not a strategy — `show` exits `1` on it and the script
-refuses it with exit 4, or with exit 1 when the target itself cannot be
-resolved — so stop on this PR and report the line `show` printed. A
-candidate in such a state (this checkout's uncommitted value) is a warning
-`show` prints with exit `0`; the script never reads it, so it does not stop
-the PR.
-The one narrowing: a base the server names whose commit could not be fetched is
-the `unverified` warning below (exit `0`, nothing merged); origin unreachable at
-the ref lookup is exit `1`. Otherwise
-the strategy decides what the script does — under `merge` it merges the base
-set in, under `rebase` it only checks, because a
-`Merge branch '<base>' into …` commit is what that setting excludes and the
-`/pr:merge` sentence authorises merging the named PRs, not rewriting their
-branches ([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
-Read its exit and its line together:
-
-- exit `0` with a `✅` line → the PR is current with its base, or under `merge`
-  the base was merged in cleanly; go on to § 3.
-- exit `0` with a `⚠️` line reading `unverified` (the base commit or origin could not be fetched)
-  or `BYPASSED` (the convergence policy is disabled at the target) → **not
-  checked**: nothing is known about freshness. Stop on this PR and report the
-  line; it is never read as current.
-- exit `1` → a conflict report goes to § 3; a base that could not be resolved
-  (a `--base` the server does not know, no origin, origin unreachable) stops
-  this PR.
-- exit `3` → behind under a strategy other than `merge`. This run never
-  rebases a PR it did not author — the rebase is the author's, or a separate
-  request under
-  [`branch-update`](../../../../skills/git-workflow/references/branch-update.md).
-  What happens to the PR is an owner decision (recorded
-  2026-10-07), and it turns on one forge setting — whether the base requires an
-  up-to-date branch before merging:
-
-  ```bash
-  gh api repos/{owner}/{repo}/branches/<base>/protection \
-    --jq .required_status_checks.strict 2>&1; echo "exit=$?"
-  gh api repos/{owner}/{repo}/rules/branches/<base> \
-    --jq '.[] | select(.type == "required_status_checks") | .parameters.strict_required_status_checks_policy'; echo "exit=$?"
-  ```
-
-  Each read has three outcomes, told apart by the exit code and the message:
-
-  | Read | Absent | Value | Failed |
-  |---|---|---|---|
-  | classic protection | non-zero exit **and** the output contains `(HTTP 404)` (`Branch not protected`); or exit `0` with `null` — the branch is protected but requires no status checks | exit `0`: `true` or `false` | any other non-zero exit, or output that is not `true` / `false` / `null` |
-  | rulesets | exit `0` with empty output (no rule requiring status checks) | exit `0`: one or more lines, each `true` or `false` | non-zero exit, or a line that is not `true` / `false` |
-
-  A `404` from the classic endpoint is not a failed read: it is what a branch
-  protected only by rulesets, or not protected at all, returns; nor is `null`
-  from a `200`, which is a protected branch with no required status checks.
-  The rulesets read prints one line per ruleset on the base that requires
-  status checks, so a base covered by several prints several lines: **any**
-  `true` line reads as `true`; all lines `false` reads as `false`. Either reading
-  `true` means the forge requires an up-to-date branch; both absent or `false`
-  means it does not; a **failed** read is treated as required. A base
-  protected by rulesets alone is decided by the rulesets read.
-  - **The forge does not require an up-to-date branch**, and the PR is green
-    and conflict-free → it goes on to § 3–§ 9 and is merged behind its base;
-    the summary row says so (`merged behind <base>; the forge does not require
-    an up-to-date branch`). Its checks never ran against the current base, and
-    the summary is where that stays visible.
-  - **The forge requires an up-to-date branch** → disposition
-    `blocked-external`, the row naming that setting as the reason.
-  - **The line reads `TARGET_POLICY_STALE`** → the PR is current with its
-    non-default target and that target is itself behind its default branch:
-    `blocked-external`, reason "the target's update", whatever the forge
-    setting. A PR also behind its target gets the ordinary behind line instead,
-    with the target's lag as a note.
-- exit `4` → the strategy could not be read (the line names the reason code
-  and the file); nothing was checked or merged. Stop on this PR and report it.
-- any other exit → the check could not run (internal error); stop on this PR
-  and report the script's message.
+**Sync procedure, exits** — read [`pr-merge-sync`](../../../../agent-src/contexts/execution/pr-merge-sync.md#sync-procedure-and-exits).
 
 ## 3. Resolve conflicts by class, never by taste
 
-Conflicts between queued PRs are expected, not exceptional: in this repository
-roadmap PRs touch the same handful of shared paths, so each merge can
-re-conflict every remaining PR. Resolve semantically, by these enumerated
-classes.
-
-`src/config/estate-count-budget.json` used to be the second-worst offender here
-and no longer belongs in any class below: ADR-243 removed its stored baseline, so
-it changes on a policy decision rather than once per roadmap touch. A conflict in
-it now means two humans edited the same policy sentence — read both sides.
-
-| Class | Files | Resolution |
-|---|---|---|
-| Roadmap files | `agents/roadmaps/**` | Union of completions. Never un-check a box either side checked; never resurrect a roadmap either side archived or parked. |
-| Generated artefacts | `agents/roadmaps-progress.md` · `docs/catalog.md` · `docs/command-flows.md` · `agents/index.md` · any file whose first three lines say generated / do-not-edit | Never hand-merge. Take either side, then **regenerate** with the repo's own task and commit the regenerated output. |
-| Archive move vs. edit | `agents/roadmaps/{archive,later,skipped}/**` — one side renamed or deleted, the other edited | The archived end-state wins. Re-apply the edit at the new path if it still matters; otherwise drop it and record the drop in the summary. |
-| Evidence files | `agents/evidence/**` | Append-only. Keep both sides. |
+**Conflict classes** — read [`pr-merge-sync`](../../../../agent-src/contexts/execution/pr-merge-sync.md#conflict-classes).
 
 ```
 THE FOUR CLASSES ARE AIDS, NOT EXHAUSTIVE AUTHORITY.
@@ -253,24 +96,6 @@ PRESERVE BOTH WHERE COMPATIBLE → INDEPENDENT REVIEW FOR A RISKY MERGE →
 COUNCIL OR TEAM → THE OWNER ONLY FOR A PRODUCT-SEMANTIC INCOMPATIBILITY.
 ```
 
-The classes exist so a merge resolution is reproducible by a second reader, and
-that is still their job. What changed is what happens when a conflict falls
-outside them: **`road-to-adversarial-verification-and-long-runs` 5.2** replaced
-the halt with the ladder above, because "nobody has decided this yet" describes
-a class of conflict, not a class of thing only an owner may touch. Most
-unenumerated conflicts are two branches editing adjacent prose, and halting a run
-on one converts a two-minute read into an owner interrupt.
-
-Read the ladder as ordered, and note where the owner sits. The first three rungs
-are the agent's own work — **understand what each side was trying to do**,
-**inspect recency, authorship and the open PRs** that produced them, and
-**preserve both where they are compatible**, which most textual conflicts are.
-The fourth and fifth escalate *laterally* — an independent reviewer for a merge
-whose risk the run cannot bound alone, then the council or the team. The owner is
-the **last** rung and is reached on one condition: the two sides encode
-incompatible PRODUCT semantics, where choosing is a decision about what the thing
-should do rather than about how to combine two edits.
-
 ```
 A CONFLICT THE RUN CANNOT UNDERSTAND IS NOT AUTOMATICALLY OWNER-OWNED.
 "I DO NOT KNOW WHICH SIDE IS RIGHT" IS A REASON TO ESCALATE INDEPENDENTLY,
@@ -278,30 +103,9 @@ NOT A REASON TO ASK. THE OWNER RUNG IS REACHED BY THE SEMANTIC TEST,
 NEVER BY THE RUN'S OWN UNCERTAINTY.
 ```
 
-Deciding it **silently** inside a drain loop is still how work disappears, and
-that prohibition is unchanged: an unenumerated resolution is recorded — which
-rung settled it, what both intents were, and why the chosen resolution preserves
-them — so the second reader the classes exist for can still follow it.
-
-**`process-full`'s halt 6 retires with this**, per that command's own halt table.
-
 ## 4. Superseded check — before any CI is spent
 
-If the effective diff against the base is empty after syncing, the PR's content
-already landed elsewhere. Distinguish genuinely empty from generated-artefact
-churn that regeneration on the base would produce anyway — the latter is not
-emptiness.
-
-The probe is **not** a bare diff: taken literally, a bare diff closes every
-roadmap PR in this repository, because after a base sync and a regenerate the
-only remaining hunks are exactly the generated-artefact churn § 3 tells you to
-regenerate. Exclude those paths before deciding:
-
-```bash
-git diff origin/<base>...HEAD --stat -- . \
-  ':(exclude)agents/roadmaps-progress.md' \
-  ':(exclude)docs/catalog.md' ':(exclude)agents/index.md'
-```
+**Superseded probe** — read [`pr-merge-sync`](../../../../agent-src/contexts/execution/pr-merge-sync.md#superseded-probe).
 
 Empty **after that exclusion** ⇒ superseded. **Never merge an empty PR to make
 the queue count fall — and never close one on a bare diff.**
@@ -319,33 +123,11 @@ IT CANNOT NAME WHERE THE CONTENT LANDED → DO NOT EVEN ASK; LEAVE THE PR OPEN
 AND RECORD IT AS `blocked-external`.
 ```
 
-The asymmetry is deliberate and worth stating, because it looks inconsistent:
-merging is authorised once by the invocation, while closing needs a *per-object*
-confirmation every time. Merging a PR this queue prepared is the action the
-run's whole design is about, and § 1's manifest already binds it to a named
-number and a recorded head; closing a PR someone else opened is neither, it
-destroys their work in progress, and no guard in this tree sees it happen. The
-stricter gate goes on the action nothing else watches.
-
 ## 5. Drive CI green — bounded
 
 Push, then wait for the verdict on the pushed head. Green means **the required
 checks succeeded for the exact head SHA that will be merged** — never a local
 run, never an earlier commit ([`/git-pr-create` § 4d](../create/command.md)).
-
-- **Root-cause fixes only**, inside the PR's own scope.
-- **One rerun for a known flake class** (`gh run rerun <id> --failed`) before
-  red counts as real.
-- **N=3 per validation target, six touches per PR per pass — two different
-  units, and the smaller one binds first.** The always-loaded
-  [`autonomous-execution`](../../../../rules/autonomous-execution.md) cap is
-  three consecutive failed attempts on ONE target (a named failing test, a lint
-  rule id, one CI job) and it is not lifted here. The six is a per-PR ceiling
-  across *distinct* targets: a PR whose CI peels one failure to reveal a
-  different one may be worked six times, never one target four times. Hitting
-  N=3 on a single target ends the PR's pass immediately, whatever the six says.
-  Exhaustion of either posts a diagnosis comment and moves the PR to the end of
-  the queue once; a second exhaustion is terminal.
 
 ```
 THESE ARE HALTS, NOT OPTIONS OF LAST RESORT:
@@ -356,45 +138,9 @@ A BRANCH-PROTECTION CHANGE.
 THAT WOULD HAVE CAUGHT THE PROBLEM.
 ```
 
+**Red CI repair bounds** — read [`pr-merge-sync`](../../../../agent-src/contexts/execution/pr-merge-sync.md#red-ci-repair-bounds).
+
 ## 6. `all` — the queue, and the cutoff that ends it
-
-Process the manifest in the order § 1 recorded it — the queue-order rule in the
-Dispatch table's second row is the traversal for `all` too, not only for
-single-PR selection, so two runs over the same queue agree.
-
-After each merge the base has moved, so the next PR is re-synced against the
-NEW base — that is the loop, and it is why pre-greening several PRs ahead of
-their merges is wasted work.
-
-**Under a strategy other than `merge`**, every PR after the first is behind the
-base the previous merge moved, and this run rebases none of them. Where the
-forge does not require an up-to-date branch, a green, conflict-free PR that is
-behind still merges (§ 2, exit `3`) — three green branches merge without three
-sequential rebases — and each such row says it merged behind its base. Where
-the forge requires an up-to-date branch, the first merge leaves every remaining
-PR `blocked-external`, and the summary names that setting rather than leaving
-the reader to find it.
-
-**Under `--no-merge` that loop does not turn**, and the paragraph above is
-written for the form that does. Nothing merges, so the base does not advance,
-no PR leaves the open list, and the run is a **preparation sweep**: it syncs,
-classifies, greens and reports each PR once, then stops. It does not re-prepare
-a PR its own predecessor invalidated, because it has no predecessor that
-landed. The cutoff below bounds both forms.
-
-**Cutoff.** When the manifest is exhausted, recompute the open-PR list
-**exactly once**. PRs that appeared during the run are **prepared** as ONE final
-straggler batch. After that batch the run ends unconditionally; anything
-arriving during or after it is recorded as `arrived-after-cutoff` and is not
-processed.
-
-**The straggler batch is prepared and never merged — in both forms.** It is not
-in § 1's manifest, so the invocation does not reach it (the Iron Law above § 1,
-and § 7's first rule). "Drained" is therefore preparation here: each straggler
-is synced, classified, greened and reported, ends at mergeable-and-open exactly
-as under `--no-merge`, and is recorded `unauthorized` with the go-ahead it needs.
-Reading "drained" as "merged" is the one way `all` could merge a PR the owner
-never named, which is why the word is pinned rather than left to context.
 
 ```
 THE CUTOFF IS THE TERMINATION PROOF.
@@ -403,27 +149,7 @@ SESSION THAT KEEPS OPENING PRs — THE RECOMPUTE JUST REFILLS IT.
 BOUND: INITIAL MANIFEST + ONE BATCH, WHATEVER ELSE IS HAPPENING IN THE REPO.
 ```
 
-**Window-aware scheduling.** A green, waiting PR is spent authorization window,
-because the next merge re-conflicts it. When the projected remaining work
-exceeds the remaining window, stop entering CI-fix loops and merge everything
-already green first. Pre-greening several PRs ahead of their merge is forbidden
-under window pressure.
-
-**No mechanical window remains, and that is the change.** Until 2026-09-04 the
-run read a freshness bound off the authorization ledger and paused when it
-closed. The owner removed the enforcing gate (ADR-254) after it was measured
-refusing authorizations that had in fact been given, so there is no constant to
-read and no expiry to schedule against. Authorization is carried by the
-conversation and by `non-destructive-by-default`, not by a clock.
-
-The per-session ledger is still written, and is still read-only to this run:
-
-```bash
-cat "agents/state/git-authorization/$(<session-slug>).json"   # detected_at
-```
-
-It records what a turn authorized. It no longer gates anything, so treat it as
-an audit trail, never as permission. The run never edits that file.
+**The `all` queue** — read [`pr-merge-queue`](../../../../agent-src/contexts/execution/pr-merge-queue.md#the-all-queue).
 
 ## 7. Authorization is the owner's sentence, not a timer
 
@@ -433,38 +159,9 @@ IS OUTSIDE WHAT WAS AUTHORIZED, THE RUN PAUSES, REPORTS, AND ASKS. IT NEVER
 INFERS A WIDER MANDATE FROM A LONG RUN OR FROM MOMENTUM.
 ```
 
-With the gate removed nothing refuses an unauthorized merge, which makes this
-section the whole control rather than a second layer behind one. Two rules
-follow, and they are stricter than the ones they replace:
-
-- **A cardinality word does not authorize a PR the owner never named.** "All the
-  open PRs" is an instruction to work the queue as it stood when the owner said
-  it. A PR opened after that sentence is new work and needs its own go-ahead.
-- **A one-shot authorization is spent on the operation it named.** Per
-  `commit-policy`, "merge #1499" does not authorize the next merge, and a
-  conflict cycle or a CI fix in between does not renew it.
-
-Write the summary as-is with an `unauthorized` disposition per unprocessed PR
-and name the exact authorization needed. Then STOP and wait — do not end the
-run, and do not proceed to the next PR.
-
-That is the same `unauthorized` row § 6's straggler batch carries, and
-deliberately one token rather than two: both mean *prepared by this run, not
-authorized for it to merge*, and a reader of the summary needs the distinction
-between merged and not-merged, not between two reasons for the same outcome.
+**Authorization rules** — read [`pr-merge-sync`](../../../../agent-src/contexts/execution/pr-merge-sync.md#authorization-rules).
 
 ## 8. Kill switches, and what happens after a merge
-
-**Armed during preparation, not only before a merge** — otherwise a
-`--no-merge` sweep would have no way to stop at all. Each one aborts the current
-PR and ends the run on any of:
-
-- target number or head SHA differs from the manifest;
-- the base advanced by an actor other than this run;
-- a review was dismissed, or the required-check set changed;
-- a conflict outside the four enumerated classes;
-- guard or hook-bundle verification failed;
-- the first unexplained CI-repair failure.
 
 ```
 A COMPLETED MERGE IS THE COMMIT POINT.
@@ -472,6 +169,8 @@ NEVER AUTO-REVERT AN EARLIER MERGE AS "ROLLBACK" — AFTER FIVE MERGES THERE IS
 NO ROLLBACK, ONLY COMPENSATION, AND COMPENSATION IS A SEPARATELY AUTHORIZED
 HUMAN DECISION. STOP, EMIT THE MERGE SHAs AND THE REASON, HAND OVER.
 ```
+
+**Kill switches** — read [`pr-merge-queue`](../../../../agent-src/contexts/execution/pr-merge-queue.md#kill-switches).
 
 ## 9a. Danger gate — before every merge (ADR-282)
 
@@ -554,113 +253,7 @@ echo "$VERDICT"
 [ "$VERDICT" = "verdict: routine" ]
 ```
 
-**Why the base.** § 2 checked the PR out, so the tree's own copy of the
-classifier — and of `check_kernel_edit_ratified`, whose `classifyPaths` it
-reads — is the head's: a PR could rewrite the code that classes it and call
-itself `routine`. The ratification gate's workflow step records the same defect
-and runs the base copy for the same reason. The consequence-class list and each
-ADR's `reopen_policy` are read from both revisions by the base copy itself.
-
-**Which runtime.** The base copy's import closure uses only `node:` built-ins,
-so it is first run by `node` itself — `--experimental-strip-types` and a
-resolver hook the block writes into its own temporary directory — which depends
-on no `node_modules` at all, the head's or anyone's. Only when that cannot run
-(a Node without type stripping, or a base whose closure uses syntax stripping
-cannot carry) does the block fall back to the checkout's `tsx`, never through
-`./scripts-run`, whose dispatcher is the head's code.
-
-**Dependency manifests go to the council (owner decision, 2026-10-15).** A head
-that changes `package.json` or a lockfile, at any depth, is never `routine` —
-the classifier's `dependency-manifest` trigger, and a floor in the block for a
-base copy that predates it, make it `needs-council` — and never `needs-owner` on
-that ground alone. Where the package-free run worked, its verdict stands as for
-any PR. Where it could not run, the checkout's `tsx` may be one the head's
-manifest installed, so a valid answer from it is not trusted downward: a
-`needs-owner` is kept, any other valid verdict becomes
-`needs-council (runtime-uncertain)`. A fallback that gives no valid verdict at
-all is an anomaly like any other and stays `needs-owner`. The changed paths are
-read NUL-separated and matched by basename with shell built-ins only, so an odd
-path cannot slip past. The block appends an empty record — a path git never
-prints — as an end marker and believes the listing only if the loop reaches
-that marker: a listing that cannot be written or opened, or ends before the
-marker, is `manifest-unreadable`, `needs-owner`.
-
-**What it fails to.** Every other anomaly is **`needs-owner`** and says why —
-never a skipped gate and never a fall-back to the head's copy: a private
-temporary directory that cannot be made (no path is derived before it exists),
-a base without the classifier or a worktree that cannot be made, a
-`node_modules` that is tracked or cannot be listed, a manifest diff that cannot
-be read, and an exit status and last line that do not agree on one of the three
-verdicts under either runtime. The `trap` is installed right after two checks on
-the new directory, so it removes the worktree and the directory on every path
-after them, a `cd` that fails included; an interruption inside those two checks
-can leave an empty directory behind, never a classification. The block prints
-the verdict last and exits 0 only on `routine`. The temporary directory is
-resolved to its real path: the classifier's entry guard compares real paths,
-and on a host whose temp directory is a symlink an unresolved path makes it
-print nothing.
-
-**Residual risk, stated.** On a host whose Node cannot strip types, a PR that
-changes a dependency manifest is classified by the checkout's `tsx`. If this run
-installed that runtime from the head, the head chooses the classifier's answer:
-it cannot reach `routine` (the floor holds), but by printing a lower verdict it
-can turn the `needs-owner` an honest runtime would report into
-`needs-council (runtime-uncertain)`. So there, a gated change paired with a
-dependency bump can reach the council instead of the owner. Where Node
-strips types (22.6 and later) this does not arise, and no run of this command
-installs dependencies from a head.
-
-The last line is the verdict; each trigger names the rule it comes from. An
-unreadable diff is `needs-council` — the gate fails closed.
-
-- **`routine`** → merge in § 9. No review step.
-- **`needs-owner`** → the gated surface or the reviewer's trust chain (the
-  classifier and its imports, the commands that call it, ADR-282, the council,
-  the ratification contract, the subject binding, the predicate record), or an
-  ADR whose `reopen_policy: owner` reserves its reopening to the owner. It is
-  **never sent for clearance**: under ADR-281 § Amendment a favourable council
-  verdict on that surface is advisory until an authenticated owner
-  authorisation is bound to the digest, and an auto-merge sentence is neither.
-  Do not merge; record the PR `unauthorized` and hand it to the owner with its
-  triggers.
-- **`needs-council`** → the AI council reviews the diff with a **neutral**
-  prompt (scope, diff, the triggers, two questions: *does any of the six
-  dangerous-action predicates of the authority-routing council record
-  (`agents/evidence/council/authority-routing-20261007.md` § 4) apply?* and *is
-  an owner review unnecessary?* — never an expected answer, per
-  `evaluator-independence`). A council may resolve doubt but cannot waive
-  danger: a seat finding that a predicate applies is a "dangerous" seat. The
-  prompt asks each seat to end its reply with two lines, `DANGEROUS: yes|no`
-  and `OWNER REVIEW NEEDED: yes|no` — a format, not an expected answer. **Both
-  seats: not dangerous, owner review unnecessary → merge**, through the
-  clearance below and never on the run's own reading of the replies.
-  Dangerous, split, degraded quorum, or council unavailable → do not merge;
-  record the PR `unauthorized` and hand it to the owner with the seats' reasons.
-
-**The clearance is a record, written and checked by `merge_clearance`.** Save
-the gate's output, run the council with `--output` on the prompt file, then:
-
-```bash
-./scripts-run src/scripts/merge_clearance write --pr <N> \
-  --head <manifest-head-sha> --base <manifest-base_sha> \
-  --classification <gate-output-file> --session <council-session-json> --prompt <prompt-file>
-```
-
-It writes `agents/evidence/merge-clearances/pr-<N>-<head>.md` from the
-council's own session record — per seat the provider, the model, a digest of
-the reply (never its text) and one reading, `clear`, `dangerous`,
-`owner-review` or `no-final-verdict` — plus the head, the base, the triggers
-and the prompt's digest. The outcome is derived from the seats and never typed:
-any `dangerous` seat gives `dangerous`, fewer clearing providers than
-`required_providers` in `src/config/ratification-policy.json` gives
-`not-cleared`, otherwise `cleared`. The record says `assurance: recorded` and
-what that does not prove. It refuses a classification other than
-`needs-council`, and a session whose prompt is not the file given. The record
-is not pushed to the PR: it is committed with the drain's summary
-(§ 9), so writing it does not move the head it names.
-
-A `needs-council` clearance only clears the merge. Deploy, release and every
-other Hard-Floor action keep their own confirmation.
+**Verdicts, gate mechanics** — read [`pr-merge-queue`](../../../../agent-src/contexts/execution/pr-merge-queue.md#danger-gate-verdicts).
 
 ## 9. Merge, and the summary
 
@@ -679,6 +272,8 @@ runs again on the new head. A non-zero exit is never overridden by the run's
 reading of the replies; the PR is held (below). A `routine` PR needs no check,
 and a `needs-owner` PR never reaches one.
 
+**Method choice, drain summary** — read [`pr-merge-queue`](../../../../agent-src/contexts/execution/pr-merge-queue.md#merge-method-choice).
+
 ```bash
 gh pr merge <N> --<detected-method> --delete-branch --match-head-commit <manifest-head-sha>
 ```
@@ -691,39 +286,8 @@ Detect the method once, at invocation, and reuse it for the whole queue:
 gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed
 ```
 
-The mapping is explicit, because `<detected-method>` has to be derivable from
-the text: `mergeCommitAllowed` → `--merge`, `squashMergeAllowed` → `--squash`,
-`rebaseMergeAllowed` → `--rebase`.
-
-Exactly one allowed → that is the method. More than one → read the last twenty
-merges on the base (`git log --first-parent origin/<base> -20 --format=%s`) and
-take the shape they overwhelmingly share. **A mixed history with no clear
-majority is not a tie to break — it is a stop:** report it and let the operator
-name the method. Inventing one is what the next sentence forbids, and a wrong
-merge shape is not revertible by this command (§ 8). Never force-merge past a
+Never force-merge past a
 failing required check, never admin-bypass.
-
-On queue empty or terminal-only, `all` writes
-`agents/evidence/pr-drain-run-summary.md` <!-- ref-ignore --> (created by the
-run, so it does not exist until one has happened): one row per PR with queue
-position, the `base_ref@base_sha` it was prepared against — without it a
-"prepared" row records nothing checkable, since mergeability is a fact about a
-base and not about a queue —
-conflict classes hit, CI iterations used, disposition **with its reason** —
-`merged behind <base>` where § 2 merged a PR its forge let through behind,
-`requires an up-to-date branch` or `TARGET_POLICY_STALE` for a behind PR left
-blocked — and any edits dropped in conflict resolution. Every PR the run saw
-gets a row; none is summarised away. The disposition set is closed:
-
-`merged <sha>` · `superseded-closed` · `blocked-external` · `twice-exhausted` ·
-`unauthorized` · `arrived-after-cutoff`
-
-`unauthorized` replaces `window-expired`, and the swap is one-for-one on
-purpose. `window-expired` named a clock ADR-254 removed on 2026-09-04, so no run
-can produce that row any more, and a closed set holding an unproducible member
-is a set nobody can check a run against. `unauthorized` names what actually
-happens in its place — § 7's pause and § 6's straggler batch, the two ways a PR
-ends this run prepared and unmerged.
 
 ### The retro — once, after the last merge
 
@@ -735,13 +299,6 @@ invocation merged as a retro unit, in one call:
 ./scripts-run src/scripts/retro enqueue-merged --pr <N> [--pr <M> …]
 ```
 
-The merge is an event, never a permission: this reads no merge setting and
-writes none. It does nothing when `retro.enabled` is `false`, and it runs no
-model — the retro itself is worked from the queue line afterwards
-(`/retro`, memory pack). A run that merged nothing skips it.
-`/roadmap:process-full --merge` inherits this step, because it merges through
-this command.
-
 Depth row: `retro` in `src/config/step-depth-table.json`. The table is in
 `shadow` mode, so the retro runs per merge as above; the row records that an
 R0/R1 merge would batch it per drain. The § 9a danger gate has no row — it is
@@ -749,26 +306,7 @@ not ceremony and no class lowers it.
 
 ### Held for you — one block, at the end of the run
 
-A run that handed anything over ends with exactly one block headed **Held for
-you**, after the summary and nowhere else. While the run works it asks nothing
-about a held PR: holding it is the whole action, and the decision is the
-owner's once, with everything in front of him. Per held PR:
-
-- number and title;
-- the verdict and its triggers, each with the rule it comes from;
-- where a council ran, each seat's provider and its reading with the seat's
-  stated reason, and the clearance record's path;
-- the head it was judged at, in full;
-- how the change is undone if it merges — the revert, and anything a revert
-  does not undo.
-
-A PR with a `dangerous` seat is listed under its own sub-heading, **Held — a
-seat found it dangerous**, ahead of the rest, so it cannot read as one more
-`needs-owner` hand-over. The entry shape is the one
-[`ratification-artifact` § When the user decides](../../../../../docs/contracts/ratification-artifact.md)
-already gives — the council's reading, the dissent, the exact change, what it
-risks and how it is undone — reused per PR, not restated as a second contract.
-A run with nothing held prints no block.
+**Retro scope, Held for you** — read [`pr-merge-queue`](../../../../agent-src/contexts/execution/pr-merge-queue.md#retro-scope).
 
 ## Rules
 
