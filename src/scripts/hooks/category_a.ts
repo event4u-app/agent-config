@@ -23,6 +23,7 @@
  * grant — the host's own strings record `permissionDecision=allow ignored: a
  * confined session takes grants only from its command line`.
  */
+import * as fs from "node:fs";
 import * as path from "node:path";
 
 /** A JSON-ish tool input as it arrives in the dispatcher envelope. */
@@ -145,7 +146,46 @@ export function isInsideWorkingTree(candidate: string, root: string): boolean {
     const abs = path.resolve(root, candidate);
     const rel = path.relative(path.resolve(root), abs);
     if (rel === "") return true;
-    return !rel.startsWith("..") && !path.isAbsolute(rel);
+    // `..` as a whole first segment escapes; `...` or `..cache` is a name.
+    const escapes = rel === ".." || rel.startsWith(`..${path.sep}`);
+    return !escapes && !path.isAbsolute(rel);
+}
+
+/** `p` with every symlink in its longest existing prefix resolved. */
+function _real(p: string): string {
+    try {
+        return fs.realpathSync(p);
+    } catch (e) {
+        const code = (e as NodeJS.ErrnoException).code;
+        if (code !== "ENOENT" && code !== "ENOTDIR") return "";
+        // A dangling link is not a missing suffix: its target is unknowable.
+        try {
+            if (code === "ENOENT" && fs.lstatSync(p, { throwIfNoEntry: false })?.isSymbolicLink()) return "";
+        } catch {
+            return "";
+        }
+        const parent = path.dirname(p);
+        if (parent === p) return p;
+        const up = _real(parent);
+        return up && path.join(up, path.basename(p));
+    }
+}
+
+/**
+ * {@link isInsideWorkingTree}, and still inside once symlinks are followed.
+ *
+ * The one place the classifier reads the filesystem, and it can only withhold:
+ * an in-tree symlink to `~/.ssh` is lexically inside and really outside. A
+ * missing suffix keeps its lexical answer; a dangling link and any other
+ * resolution failure (`EACCES`, `ELOOP`) resolve to `""`, which is never inside. The check runs
+ * before the command does, so a link swapped in between is not seen — the
+ * OS sandbox is the boundary, this is a guardrail.
+ */
+function _reallyInside(candidate: string, root: string): boolean {
+    if (!isInsideWorkingTree(candidate, root)) return false;
+    const real = _real(path.resolve(root, candidate));
+    const realRoot = _real(path.resolve(root));
+    return real !== "" && realRoot !== "" && isInsideWorkingTree(real, realRoot);
 }
 
 /** Split a command on whitespace; the caller has already refused metacharacters. */
@@ -182,7 +222,7 @@ const GIT_VALUE_FLAGS: ReadonlySet<string> = new Set([
 ]);
 
 /**
- * The `git` subcommand, with global options skipped.
+ * The `git` subcommand and its argv index, with global options skipped.
  *
  * Returns `""` when a global option's VALUE escapes the working tree — an
  * absolute path or a `..` traversal. The check is textual rather than resolved
@@ -190,20 +230,126 @@ const GIT_VALUE_FLAGS: ReadonlySet<string> = new Set([
  * can decide is exactly the property that matters, and a relative path with no
  * `..` cannot escape.
  */
-function _gitSubcommand(argv: readonly string[]): string {
+function _gitSubcommandAt(argv: readonly string[]): { sub: string; index: number } {
     for (let i = 1; i < argv.length; i++) {
         const token = argv[i] as string;
-        if (!_isFlag(token)) return token;
+        if (!_isFlag(token)) return { sub: token, index: i };
         const [flag, inlineValue] = token.includes("=")
             ? [token.slice(0, token.indexOf("=")), token.slice(token.indexOf("=") + 1)]
             : [token, null];
         const value = inlineValue ?? (GIT_VALUE_FLAGS.has(flag) ? argv[++i] : undefined);
         if (value !== undefined && (path.isAbsolute(value) || value.split("/").includes(".."))) {
-            return "";
+            return { sub: "", index: -1 };
         }
     }
-    return "";
+    return { sub: "", index: -1 };
 }
+
+/**
+ * `git branch` is category A only in its observational forms — an allowlist,
+ * like the rest of this file. Every other form writes a ref: `-d`/`-D` and
+ * `-f`/`-m`/`-M`/`-C` can lose one, and a bare `git branch <name>`, `-c`,
+ * `-u` or `--edit-description` create or rewrite one. A positional operand is
+ * admitted only under `-l`/`--list`, where it is a pattern, or as the value of
+ * a filter flag.
+ */
+const GIT_BRANCH_OBSERVES =
+    /^(-[arlvi]+|--(all|remotes|list|verbose|show-current|(no-)?color)(=.*)?)$/;
+const GIT_BRANCH_FILTER = /^--((no-)?(contains|merged)|points-at|sort|format|abbrev)(=|$)/;
+
+function _gitBranchOnlyObserves(argv: readonly string[], index: number): boolean {
+    const rest = argv.slice(index + 1);
+    const listing = rest.some((t) => /^(-[arvi]*l[arlvi]*|--list)$/.test(t));
+    for (let i = 0; i < rest.length; i++) {
+        const token = rest[i] as string;
+        if (!_isFlag(token)) {
+            if (!listing) return false;
+        } else if (GIT_BRANCH_FILTER.test(token)) {
+            if (!token.includes("=") && !_isFlag(rest[i + 1] ?? "-")) i++;
+        } else if (!GIT_BRANCH_OBSERVES.test(token)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * Heads that never open their arguments, so a path-shaped argument is a string
+ * and confining it would only put a prompt on `echo /tmp`. Not `date`: its
+ * `-f`/`--file` and `-r`/`--reference` open a path.
+ */
+const NON_OPENING_HEADS = /^(pwd|echo|basename|dirname|which)$/;
+
+/**
+ * Output-writing flags (0.3). Their target is a path like any other, and the
+ * walk below confines every spelling: a separate value token (`--output x`,
+ * `-fprint x`, `--outDir x`) is a positional, `--output=x` is an inline value,
+ * a glued short value (`sort -o/path`) is the tail of a single-dash token, and
+ * the value-less writers (`--write`/`-w`, `--fix`) write their positionals. So
+ * no per-head table is needed; one was measured inert and removed.
+ *
+ * For `grep`/`rg` the first positional, or an `-e`/`--regexp` value, is a
+ * pattern and therefore data; an `-f`/`--file` value is a path.
+ */
+const PATTERN_GIVEN = /^(-e|--regexp|-f|--file)(=|$)/;
+
+/**
+ * Every argument of a Bash command that may name a filesystem location.
+ *
+ * Positionals, flag inline values and the tail of a single-dash token
+ * (`-o/path`, `-f/path`) are all candidates: one that stays inside is harmless
+ * to check, and missing one is not. After `--` every token is a positional.
+ * Shell quote removal is applied; every other expansion is refused upstream by
+ * the metacharacter rule.
+ */
+function _pathArguments(argv: readonly string[], head: string): string[] {
+    const out: string[] = [];
+    const grep = head === "grep" || head === "rg";
+    let patternPending = grep && !argv.some((t) => PATTERN_GIVEN.test(t));
+    let endOfOptions = false;
+    for (let i = 1; i < argv.length; i++) {
+        const raw = argv[i] as string;
+        // An unquoted glob is expanded after this check, so what it selects
+        // (`.*` to `..`, `le*` to an outward symlink) is never seen. "*" is a
+        // candidate nothing confines.
+        if (/[*?[]/.test(raw.replace(/'[^']*'|"[^"]*"/g, ""))) out.push("*");
+        const token = raw.replace(/["']/g, "");
+        if (!endOfOptions && token === "--") {
+            endOfOptions = true;
+        } else if (endOfOptions || !_isFlag(token)) {
+            if (patternPending) patternPending = false;
+            else out.push(token);
+        } else if (grep && /^(-e|--regexp)$/.test(token)) {
+            i++;
+        } else if (grep && /^(-f|--file)$/.test(token)) {
+            out.push((argv[++i] ?? "").replace(/["']/g, ""));
+        } else {
+            // A dash-led token may itself be the value of the option before it
+            // (`sort -o --/../x`), so one that contains `/` is a path too.
+            if (token.includes("/")) out.push(token);
+            const eq = token.indexOf("=");
+            if (eq >= 0) out.push(token.slice(eq + 1));
+            else if (!token.startsWith("--") && token.length > 2) out.push(token.slice(2));
+        }
+    }
+    return out;
+}
+
+/** Stands in for the tree when the caller has none: absolute and `..` still escape it. */
+const UNROOTED = path.resolve("/agent-config-unrooted");
+
+function _confined(candidate: string, workingTree: string): boolean {
+    if (candidate.startsWith("~") || candidate === "*") return false;
+    return _reallyInside(candidate, workingTree.trim() ? workingTree : UNROOTED);
+}
+
+/** What the classifier decided, and whether a path confinement actually ran. */
+export interface CategoryAVerdict {
+    categoryA: boolean;
+    confined: boolean;
+}
+
+const NOT_A: CategoryAVerdict = { categoryA: false, confined: false };
 
 /** Non-flag token after the subcommand, or `""`. */
 function _secondSubcommand(argv: readonly string[]): string {
@@ -231,20 +377,14 @@ export function namesConsequenceOperation(command: string): boolean {
     return false;
 }
 
-/** Is this Bash command string category A? */
-export function isCategoryABashCommand(command: string): boolean {
-    if (typeof command !== "string" || !command.trim()) return false;
-    if (SHELL_METACHARACTERS.test(command)) return false;
-    if (namesConsequenceOperation(command)) return false;
-
-    const argv = _argv(command);
-    const head = (argv[0] ?? "").toLowerCase();
-    if (!head) return false;
-
+/** Does the head and its subcommand name a read, build, test or lint? */
+function _namesASafeOperation(argv: readonly string[], head: string): boolean {
     if (SAFE_HEADS.has(head)) return true;
 
     if (head === "git") {
-        return GIT_READ_SUBCOMMANDS.has(_gitSubcommand(argv));
+        const { sub, index } = _gitSubcommandAt(argv);
+        if (!GIT_READ_SUBCOMMANDS.has(sub)) return false;
+        return sub !== "branch" || _gitBranchOnlyObserves(argv, index);
     }
 
     const allowed = RUNNER_SUBCOMMANDS[head];
@@ -259,33 +399,70 @@ export function isCategoryABashCommand(command: string): boolean {
 }
 
 /**
+ * Classify a Bash command string.
+ *
+ * `workingTree` is the root every path argument must resolve inside. Without
+ * one, the command is judged against a stand-in root, so an absolute, `~` or
+ * `..`-escaping argument still disqualifies it.
+ */
+export function bashCategoryAVerdict(command: string, workingTree = ""): CategoryAVerdict {
+    if (typeof command !== "string" || !command.trim()) return NOT_A;
+    if (SHELL_METACHARACTERS.test(command)) return NOT_A;
+    if (namesConsequenceOperation(command)) return NOT_A;
+
+    const argv = _argv(command);
+    const head = (argv[0] ?? "").toLowerCase();
+    if (!head) return NOT_A;
+    if (!_namesASafeOperation(argv, head)) return NOT_A;
+
+    if (NON_OPENING_HEADS.test(head)) return { categoryA: true, confined: false };
+    const candidates = _pathArguments(argv, head);
+    for (const candidate of candidates) {
+        if (!_confined(candidate, workingTree)) return NOT_A;
+    }
+    return { categoryA: true, confined: candidates.length > 0 };
+}
+
+/** Is this Bash command string category A? */
+export function isCategoryABashCommand(command: string, workingTree = ""): boolean {
+    return bashCategoryAVerdict(command, workingTree).categoryA;
+}
+
+/**
  * Is this tool call category A?
  *
  * `workingTree` is the root every path argument must resolve inside. An empty
  * root means the dispatcher could not establish one, and an unestablished
  * boundary is not a boundary — the call is not category A.
  */
-export function isCategoryA(
+export function categoryAVerdict(
     toolName: string,
     toolInput: ToolInput,
     workingTree: string,
-): boolean {
-    if (!workingTree.trim()) return false;
-    if (typeof toolName !== "string" || !toolName) return false;
+): CategoryAVerdict {
+    if (!workingTree.trim()) return NOT_A;
+    if (typeof toolName !== "string" || !toolName) return NOT_A;
 
     if (READ_ONLY_TOOLS.has(toolName)) {
+        let checked = false;
         for (const key of PATH_KEYS) {
             const value = toolInput?.[key];
             if (typeof value !== "string") continue;
-            if (!isInsideWorkingTree(value, workingTree)) return false;
+            if (!_reallyInside(value, workingTree)) return NOT_A;
+            checked = true;
         }
-        return true;
+        return { categoryA: true, confined: checked };
     }
 
     if (toolName === "Bash") {
         const command = toolInput?.["command"];
-        return typeof command === "string" && isCategoryABashCommand(command);
+        return typeof command === "string" ? bashCategoryAVerdict(command, workingTree) : NOT_A;
     }
 
-    return false;
+    return NOT_A;
+}
+
+/** Is this tool call category A? */
+export function isCategoryA(toolName: string, toolInput: ToolInput, workingTree: string): boolean {
+    return categoryAVerdict(toolName, toolInput, workingTree).categoryA;
 }
