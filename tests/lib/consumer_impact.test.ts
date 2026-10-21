@@ -8,7 +8,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
     COMMIT_LOG_FORMAT,
     CONSUMER_IMPACT_VALUES,
-    impact_span_verdict,
     parse_commit_log,
     parse_impact_trailers,
     release_impact_entry,
@@ -134,15 +133,15 @@ describe('breaking detection — independent of the conventional subject parse',
         ['Remove legacy command', 'BREAKING CHANGE: it is gone\n\nMore detail on a later paragraph.'],
     ];
 
-    it.each(breaking)('%j with body %j is breaking and the span refuses it without a trailer', (subject, body) => {
+    it.each(breaking)('%j with body %j is breaking, and without a trailer it records none', (subject, body) => {
         const c = commit_from_record({ sha, subject, body });
         expect(c.breaking).toBe(true);
-        expect(impact_span_verdict([c]).exit).toBe(2);
+        expect(c.trailers).toMatchObject({ impact: 'none', recorded: false });
     });
 
-    it.each(breaking)('%j with body %j passes once a valid trailer closes the body', (subject, body) => {
+    it.each(breaking)('%j with body %j records the trailer that closes the body', (subject, body) => {
         const c = commit_from_record({ sha, subject, body: `${body}\n\nConsumer-Impact: action\n` });
-        expect(impact_span_verdict([c])).toEqual({ exit: 0, message: '' });
+        expect(c.trailers).toMatchObject({ impact: 'action', recorded: true });
     });
 
     it('does not flag lowercase prose or a non-conventional plain subject', () => {
@@ -150,11 +149,10 @@ describe('breaking detection — independent of the conventional subject parse',
         expect(commit_from_record({ sha, subject: 'Merge stuff', body: '' }).breaking).toBe(false);
     });
 
-    it('refuses a breaking commit whose trailers conflict', () => {
+    it('keeps conflicting trailers on a breaking commit as invalid, not recorded', () => {
         const c = commit_from_record({ sha, subject: 'feat!: x', body: 'Consumer-Impact: none\nConsumer-Impact: action' });
-        const v = impact_span_verdict([c]);
-        expect(v.exit).toBe(2);
-        expect(v.message).toContain('conflicting');
+        expect(c.trailers.recorded).toBe(false);
+        expect(c.trailers.invalid).toContain('conflicting');
     });
 });
 
@@ -221,21 +219,17 @@ function fixture_span(breaking_body: string): Commit[] {
     return parse_commit_log(raw).map(commit_from_record);
 }
 
-describe('impact_span_verdict — both directions over a fixture span', () => {
-    it('exits non-zero when a breaking subject carries no Consumer-Impact trailer', () => {
-        const v = impact_span_verdict(fixture_span('Internal only.'));
-        expect(v.exit).not.toBe(0);
-        expect(v.message).toContain('feat(ci)!: rework the pipeline');
-        expect(v.message).toContain('Consumer-Impact:');
+describe('a release span read from a real git log', () => {
+    it('keeps a breaking commit without a trailer in the span, recorded as none', () => {
+        const span = fixture_span('Internal only.');
+        const breaking = span.find((c) => c.breaking);
+        expect(breaking?.subject).toBe('rework the pipeline');
+        expect(breaking?.trailers).toMatchObject({ impact: 'none', recorded: false });
+        expect(release_impact_entry(span)).toEqual({ impact: 'none' });
     });
 
-    it('exits 0 for the same span once the trailer is present', () => {
-        const v = impact_span_verdict(fixture_span('Internal only.\n\nConsumer-Impact: none'));
-        expect(v).toEqual({ exit: 0, message: '' });
-    });
-
-    it('refuses an out-of-enum trailer the same way as a missing one', () => {
-        expect(impact_span_verdict(fixture_span('Consumer-Impact: maybe')).exit).not.toBe(0);
+    it('reads the trailer of the same breaking commit into the release entry', () => {
+        expect(release_impact_entry(fixture_span('Internal only.\n\nConsumer-Impact: action'))).toEqual({ impact: 'action' });
     });
 });
 

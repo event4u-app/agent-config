@@ -354,8 +354,9 @@ severe one counts, as it does across a release span.
 
 An optional `Security: yes` trailer, in any trailer block, marks a security
 fix. A commit with no valid `Consumer-Impact:` trailer is recorded as `none`,
-with the absence kept. A breaking commit must carry a valid trailer, and
-`task release` refuses a span that contains one without it. A commit is
+with the absence kept. A breaking commit should carry a valid trailer; one that
+lost it — a squash merge that dropped the commit bodies, say — is recorded as
+`none` like any other, and `task release` does not refuse it. A commit is
 breaking when any of these holds, whether or not its subject is a Conventional
 Commit: a `!` before the colon of a conventional subject (`feat!:`,
 `feat(api)!:`); `BREAKING CHANGE` or `BREAKING-CHANGE` anywhere in the subject;

@@ -1,5 +1,5 @@
 /**
- * The `Consumer-Impact:` commit trailer — parsing, the release-span refusal, and
+ * The `Consumer-Impact:` commit trailer — parsing, breaking-ness, and
  * the impact map the release writes into the published `package.json`.
  *
  * The trailer lives in the commit BODY, so the release log is read with a body
@@ -136,8 +136,8 @@ export function parse_impact_trailers(body: string): ImpactTrailers {
  * CHANGE` / `BREAKING-CHANGE` in the subject, or a `BREAKING CHANGE:` /
  * `BREAKING-CHANGE:` footer at any body line start. The footer is not limited to
  * the trailer block: a Conventional Commits breaking footer may run on over
- * paragraphs, and over-matching here only demands a trailer, where
- * under-matching lets a breaking change through.
+ * paragraphs. It decides the major bump; a breaking commit with no trailer is
+ * recorded as `none` like any other, and the release does not refuse it.
  */
 export function is_breaking_commit(subject: string, body: string, bang = false): boolean {
     return bang || /BREAKING[ -]CHANGE/.test(subject) || /^BREAKING[ -]CHANGE:/m.test(body);
@@ -150,32 +150,6 @@ export interface ImpactCommit {
     readonly subject: string;
     readonly breaking: boolean;
     readonly trailers: ImpactTrailers;
-}
-
-function label(c: ImpactCommit): string {
-    if (c.type === 'other') return c.subject;
-    return `${c.type}${c.scope ? `(${c.scope})` : ''}${c.breaking ? '!' : ''}: ${c.subject}`;
-}
-
-/**
- * The release-span refusal: a breaking subject must say what it costs a
- * consumer. Exit 2 matches `die()`'s default code in `release.ts`.
- */
-export function impact_span_verdict(commits: readonly ImpactCommit[]): { exit: number; message: string } {
-    const missing = commits.filter((c) => c.breaking && !c.trailers.recorded);
-    if (missing.length === 0) return { exit: 0, message: '' };
-    const lines = missing.map((c) => {
-        const why = c.trailers.invalid !== null ? `invalid trailer: ${c.trailers.invalid}` : 'no trailer';
-        return `  ${c.sha.slice(0, 7)} ${label(c)} — ${why}`;
-    });
-    return {
-        exit: 2,
-        message:
-            'release span carries a breaking subject with no valid Consumer-Impact trailer:\n' +
-            `${lines.join('\n')}\n` +
-            `Each needs one 'Consumer-Impact: ${CONSUMER_IMPACT_VALUES.join(' | ')}' trailer in a trailer-only paragraph of the body ` +
-            '(CONTRIBUTING.md § Versioning policy).',
-    };
 }
 
 export interface ImpactEntry {
