@@ -203,7 +203,7 @@ changes what either gate is for.
       fixture and asserts it is not blocked.
       Landed 2026-10-20: the line is lifted from `denyMessage`, the
       placeholder filled with a source URL, and run with and without a `cwd`.
-- [ ] **3.5 Word the absolute-path hint as guard recognition.** Both round-3
+- [x] **3.5 Word the absolute-path hint as guard recognition.** Both round-3
       seats (low): "a shell command reaches it only by its absolute path"
       describes shell resolution; `cd /tree && ls agents/tmp/<x>` reaches it
       relatively. Replace with the seats' wording — "this guard recognizes it
@@ -214,6 +214,10 @@ changes what either gate is for.
       restored to the ratified bytes.
       verify: a ratification record over the reworded file, and an assertion
       on the new line in `tests/hooks/block_speaking_inbox_dir.test.ts`.
+      Landed 2026-10-21 at `ae1133533`: assertion observed red first (1
+      failed, 91 passed), green after (92/92); council round 5 returned
+      `confirmed-non-expanding` 2/2, record
+      `agents/evidence/ratifications/drain-gates-that-read-20261021.md`.
 
 ## Decisions
 
