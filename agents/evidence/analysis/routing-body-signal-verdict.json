@@ -3,7 +3,7 @@
   "step": "5.1",
   "roadmap": "road-to-governed-harness-evolution",
   "preregistration": "agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md",
-  "measured_at": "2026-10-19",
+  "measured_at": "2026-10-21",
   "proxy_to_real_fidelity": {
     "value": null,
     "status": "unmeasured-by-construction",
@@ -11,13 +11,13 @@
   },
   "body_signal": {
     "verdict": "harmful",
-    "reason": "false activation +5.75 pp breaches the +2.0 pp guard",
+    "reason": "false activation +5.77 pp breaches the +2.0 pp guard",
     "k": 5,
-    "delta_recall_pp": 2.928,
-    "delta_false_activation_pp": 5.751,
-    "p_value": 0.2018,
+    "delta_recall_pp": 3.163,
+    "delta_false_activation_pp": 5.772,
+    "p_value": 0.1582,
     "discordant_positive_pairs": {
-      "gained": 109,
+      "gained": 111,
       "lost": 90
     },
     "bars": {
@@ -28,36 +28,36 @@
     },
     "arms": {
       "description": {
-        "positives": 649,
-        "positiveHits": 391,
-        "negatives": 626,
-        "negativeHits": 92
+        "positives": 664,
+        "positiveHits": 401,
+        "negatives": 641,
+        "negativeHits": 95
       },
       "description+body": {
-        "positives": 649,
-        "positiveHits": 410,
-        "negatives": 626,
-        "negativeHits": 128
+        "positives": 664,
+        "positiveHits": 422,
+        "negatives": 641,
+        "negativeHits": 132
       }
     },
     "recall_pp": {
-      "description": 60.247,
-      "description+body": 63.174
+      "description": 60.392,
+      "description+body": 63.554
     },
     "false_activation_pp": {
-      "description": 14.696,
-      "description+body": 20.447
+      "description": 14.821,
+      "description+body": 20.593
     }
   },
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "train_corpora": 132,
+    "train_corpora": 135,
     "legacy_shaped_corpora": [
       "brand-asset-generation",
       "estimate-ticket"
     ],
-    "cases": 1275,
+    "cases": 1305,
     "catalogue_size": 301
   }
 }

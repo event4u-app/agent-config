@@ -340,7 +340,11 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 168 -> 169 on 2026-10-20: `competitive-positioning` (0x21 = 33) SEALS
         // (36 -> 37); the train set stays at 132, so no train-side measurement moves.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(169);
+        // 169 -> 172 on 2026-10-21: `composer-packages`, `dependency-upgrade` and
+        // `docker` gained corpora for the touched-skill reason; all three train
+        // (0x53, 0x5a, 0xd5), so the seal stays at 37 and the train set moves
+        // 132 -> 135, and both train-side measurements are re-taken.
+        expect(all.length).toBe(172);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(37);
     });
 });
@@ -405,7 +409,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 122 -> 131 on 2026-10-18b: nine AC-1 link-repair skills train;
         // `condense-memory` seals and is absent here.
         // 131 -> 132 on 2026-10-19: `playwright-testing` (0x61 = 97) trains.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(132);
+        // 132 -> 135 on 2026-10-21: three train corpora (see the 172 line).
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(135);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {
