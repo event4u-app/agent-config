@@ -21,12 +21,24 @@ import {
     type PlatformRow,
     type StatusMatrix,
 } from '../../src/scripts/hooks_status.js';
+import { MANAGED_SIGNATURE } from '../../src/scripts/_lib/claude_settings_hooks.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const MANIFEST_PATH = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
 
 function manifest(): JsonObject {
     return _load_yaml(MANIFEST_PATH) as JsonObject;
+}
+
+// Built from the signature itself so the fixture cannot drift from what
+// `collect` recognises as an agent-config-managed hook.
+const MANAGED_SETTINGS = JSON.stringify({
+    hooks: { SessionStart: [{ hooks: [{ type: 'command', command: `x ${MANAGED_SIGNATURE} --event session_start` }] }] },
+});
+
+function isolatedUserScope(): { home: string; runtimeRoot: string; pathEnv: string } {
+    const home = fs.mkdtempSync(path.join(tmp, 'home-'));
+    return { home, runtimeRoot: path.join(home, 'runtime'), pathEnv: '' };
 }
 
 function byPlatform(matrix: StatusMatrix): Record<string, PlatformRow> {
@@ -74,8 +86,39 @@ describe('hooks_status — collect', () => {
         expect(platforms).toEqual(new Set(Object.keys(PLATFORM_BRIDGES)));
     });
 
+    it('a working global install is not reported missing from a fresh worktree', () => {
+        // The reported failure: `claude missing (.claude/settings.json)` inside a
+        // worktree, while `~/.claude/settings.json` carried the managed hooks and
+        // they ran.
+        const home = path.join(tmp, 'home');
+        const worktree = path.join(tmp, 'worktree');
+        fs.mkdirSync(worktree, { recursive: true });
+        fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
+        fs.writeFileSync(
+            path.join(home, '.claude', 'settings.json'),
+            JSON.stringify({
+                hooks: { SessionStart: [{ hooks: [{ type: 'command', command: 'x dispatch:hook --platform claude --event session_start' }] }] },
+            }),
+        );
+        const claude = byPlatform(
+            collect(worktree, manifest(), { home, runtimeRoot: path.join(home, 'runtime'), pathEnv: '' }),
+        )['claude']!;
+        expect(claude.status).toBe('installed');
+        expect(claude.claude_scope?.registered_in).toEqual(['global']);
+    });
+
     it('reports missing bridges on a fresh project, degraded copilot, n/a cowork', () => {
-        const matrix = collect(tmp, manifest());
+        // "Fresh" has to mean fresh on BOTH halves of Claude's merged settings.
+        // With the developer's real HOME, a machine that has a global install
+        // reads `installed` here — correctly, since those hooks do run — and the
+        // test would pass in CI and fail on every maintainer's laptop.
+        const emptyHome = path.join(tmp, 'empty-home');
+        fs.mkdirSync(emptyHome, { recursive: true });
+        const matrix = collect(tmp, manifest(), {
+            home: emptyHome,
+            runtimeRoot: path.join(emptyHome, 'runtime'),
+            pathEnv: '',
+        });
         const rows = byPlatform(matrix);
 
         // All non-Copilot, non-Cowork platforms have a real bridge_path and
@@ -104,13 +147,24 @@ describe('hooks_status — collect', () => {
         expect(cowork.hint ?? '').toContain('upstream-blocked');
     });
 
-    it('detects an installed claude bridge (file present)', () => {
+    it('detects an installed claude bridge (managed hooks present)', () => {
         fs.mkdirSync(path.join(tmp, '.claude'));
-        fs.writeFileSync(path.join(tmp, '.claude', 'settings.json'), '{}', 'utf8');
-        const matrix = collect(tmp, manifest());
+        fs.writeFileSync(path.join(tmp, '.claude', 'settings.json'), MANAGED_SETTINGS, 'utf8');
+        const matrix = collect(tmp, manifest(), isolatedUserScope());
         const claude = matrix.platforms.find((r) => r.platform === 'claude')!;
         expect(claude.status).toBe('installed');
         expect(claude.hint).toBeNull();
+    });
+
+    it('an empty claude settings file is NOT an installed bridge', () => {
+        // This case was titled "(file present)" and expected `installed` for
+        // '{}' — the defect this report fixed. It passed only on machines whose
+        // real ~/.claude carried a global install; CI caught it. The home is
+        // isolated so the answer cannot come from the developer's machine.
+        fs.mkdirSync(path.join(tmp, '.claude'));
+        fs.writeFileSync(path.join(tmp, '.claude', 'settings.json'), '{}', 'utf8');
+        const claude = collect(tmp, manifest(), isolatedUserScope()).platforms.find((r) => r.platform === 'claude')!;
+        expect(claude.status).toBe('missing');
     });
 
     it('detects a non-empty cline directory bridge as installed', () => {
@@ -153,7 +207,7 @@ describe('hooks_status — main strict mode', () => {
     it('strict mode returns 0 when all bridges are installed', () => {
         const bridges: Record<string, string> = {
             '.augment/settings.json': '{}',
-            '.claude/settings.json': '{}',
+            '.claude/settings.json': MANAGED_SETTINGS,
             '.cursor/hooks.json': '{}',
             '.windsurf/hooks.json': '{}',
             '.gemini/settings.json': '{}',

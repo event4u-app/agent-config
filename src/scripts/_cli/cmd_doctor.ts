@@ -84,7 +84,7 @@ import * as YAML from 'yaml';
 
 import { _check_overrides } from './doctor_overrides.js';
 import { _is_global_only_consumer } from './doctor_install_mode.js';
-import { classifyOwnership, ledgerModifiedRecords } from './doctor_ownership_ledger.js';
+import { classifyOwnership, ledgerModifiedRecords, noProjectInstallLines } from './doctor_ownership_ledger.js';
 // Forwarded, not re-declared: both names moved to doctor_install_mode.ts and existing
 // importers of cmd_doctor.js keep resolving. `export ... from` rather than an import,
 // because INSTALL_MODE_MARKER_RELATIVE is not referenced here any more and an unused
@@ -2953,11 +2953,7 @@ function _run_no_manifest(
                     'to project-local distributed tools',
             );
         } else {
-            eprint(`  ⚠️   no project lockfile and no consumer install marker at ${project_root}`);
-            eprint(
-                '      run `agent-config init` (project install) or ' +
-                    '`agent-config refresh --project` (global-only consumer)',
-            );
+            for (const [stream, line] of noProjectInstallLines(project_root)) (stream === 'err' ? eprint : print)(line);
         }
         _emit_checks_text(checks);
         _emit_detection_text(project_root, checks);
