@@ -335,6 +335,8 @@ export interface Remediation {
     sources?: string[];
     /** The commit the fix started from, when the fix shares a branch with other work (route `current-branch`). */
     base?: string | null;
+    /** Workflow files the plan itself edits (a runtime pin, an action ref) — the only ones a fix may touch there. */
+    files?: string[];
 }
 
 export type Remediations = Record<string, Remediation>;
@@ -396,31 +398,7 @@ export function track(r: Remediation, s: TrackSignals, now: Date = new Date()): 
     return r;
 }
 
-/** Merged but not deployed after this long stays in the notice (3.2). */
-export const UNDEPLOYED_AFTER_HOURS = 24;
-
-export interface UndeployedFix {
-    id: string;
-    mergeSha: string | null;
-    hours: number;
-}
-
-/** Structured rows only — the session line is rendered, and validated, by the notice module. */
-export function mergedNotDeployed(all: Remediations, findings: Finding[], now: Date = new Date()): UndeployedFix[] {
-    const byKey = new Map(findings.map((f) => [f.key, f]));
-    const rows: UndeployedFix[] = [];
-    for (const r of Object.values(all)) {
-        if (r.state !== 'fixed-in-trunk' && r.state !== 'fixed-released') continue;
-        const since = r.stamps['fixed-in-trunk'];
-        if (since === undefined) continue;
-        const hours = (now.getTime() - Date.parse(since)) / 3600000;
-        if (!Number.isFinite(hours) || hours < UNDEPLOYED_AFTER_HOURS) continue;
-        const f = byKey.get(r.key);
-        if (f !== undefined && f.tier !== 'T0' && f.tier !== 'T1') continue;
-        rows.push({ id: r.key.split('|')[0] ?? r.key, mergeSha: r.merge_sha, hours: Math.floor(hours) });
-    }
-    return rows;
-}
+export { mergedNotDeployed, UNDEPLOYED_AFTER_HOURS, type UndeployedFix } from './undeployed_fixes.js';
 
 /** A mitigated finding reopens the moment a refresh reports a fix for it (1.5). */
 export function reopenMitigations(all: Remediations, findings: Finding[]): string[] {

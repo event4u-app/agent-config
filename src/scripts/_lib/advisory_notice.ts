@@ -18,7 +18,8 @@ import type { InventoryEntry } from './advisory_inventory.js';
 import type { SourceReport } from './advisory_sources.js';
 import type { Acceptance, Finding, Ledger } from './advisory_verdicts.js';
 import { git_common_dir } from './git_common_dir.js';
-import { mergedNotDeployed, type Remediations } from './security_fix.js';
+import type { Remediations } from './security_fix.js';
+import { mergedNotDeployed } from './undeployed_fixes.js';
 
 export type AdvisoriesMode = 'notify' | 'off';
 export type AdvisoriesEgress = 'query' | 'none';
@@ -228,7 +229,7 @@ export function noticeLines(state: AdvisoryState | null, now: Date = new Date(),
 }
 
 /** Shown once per notice: the stamp records which notice this checkout already printed. */
-export function sessionNotice(root: string, now: Date = new Date()): string | null {
+export function sessionNotice(root: string, now: Date = new Date(), deliver?: (text: string) => boolean): string | null {
     if (readAdvisorySettings(root).mode === 'off') return null;
     const state = readState(root);
     if (state === null) return null;
@@ -248,6 +249,9 @@ export function sessionNotice(root: string, now: Date = new Date()): string | nu
     const stable = lines.map((l) => l.replace(/\b\d+ (?:h|days?|day\(s\))\b/g, '#')).join('\n');
     const id = `${now.toISOString().slice(0, 10)}|${createHash('sha256').update(stable).digest('hex').slice(0, 16)}`;
     if (shown === id) return null;
+    // Stamped only once the text reached someone: a caller that could not
+    // deliver it leaves the notice for the next surface.
+    if (deliver !== undefined && !deliver(lines.join('\n'))) return null;
     try {
         fs.writeFileSync(stamp, `${id}\n`);
     } catch {

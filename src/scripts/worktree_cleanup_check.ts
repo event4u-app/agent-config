@@ -1221,6 +1221,13 @@ export function dailyCleanup(
         deps.stamp?.(root);
         return result;
     } catch {
+        // A pass that failed is still today's pass: without the stamp it would
+        // rerun on every session start of the day.
+        try {
+            deps.stamp?.(root);
+        } catch {
+            /* an unwritable stamp is the caller's to report */
+        }
         return null;
     }
 }
@@ -1427,7 +1434,9 @@ function _isCliEntry(): boolean {
     }
 }
 
-if (_isCliEntry()) {
+// The `typeof` test is folded by the bundler, so inside the hook bundle the CLI
+// (`main` and what only it reaches) is dead code and dropped, not merely unrun.
+if (typeof __AGENT_CONFIG_BUNDLE__ === 'undefined' && _isCliEntry()) {
     try {
         process.exit(main());
     } catch (e) {

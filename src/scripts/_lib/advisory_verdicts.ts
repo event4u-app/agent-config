@@ -42,6 +42,8 @@ export interface Finding {
     kev: boolean;
     date: string | null;
     scope: 'runtime' | 'dev' | null;
+    /** `false` when the project's manifest is read and does not declare it (transitive); unknown counts as direct. */
+    direct?: boolean | null;
     sources: string[];
     /** Newest source-side `modified` stamp; a change means a corrected advisory. */
     modified: string | null;
@@ -119,7 +121,7 @@ export function verdictOf(items: RawFinding[], now: Date, acceptances: Acceptanc
  * Deterministic tiers (3.1). T0 interrupts, T1 is today, T2 is the digest, T3
  * is the ledger. KEV raises a tier and never lowers one.
  */
-export function tierOf(f: Pick<Finding, 'verdict' | 'severity' | 'score' | 'kev' | 'scope' | 'ecosystem'>): Tier {
+export function tierOf(f: Pick<Finding, 'verdict' | 'severity' | 'score' | 'kev' | 'scope' | 'ecosystem'> & { direct?: boolean | null }): Tier {
     const runtimeScope = f.scope !== 'dev';
     const critical = f.severity === 'critical' || (f.score !== null && f.score >= 9);
     const high = f.severity === 'high' || (f.score !== null && f.score >= 7);
@@ -140,7 +142,8 @@ export function tierOf(f: Pick<Finding, 'verdict' | 'severity' | 'score' | 'kev'
             tier = 'T2';
             break;
         default:
-            if (critical && runtimeScope && (f.verdict === 'fix-available' || f.verdict === 'fix-fresh')) tier = 'T0';
+            // T0 is runtime-DIRECT with a fix (3.1); a known transitive is T1.
+            if (critical && runtimeScope && f.direct !== false && (f.verdict === 'fix-available' || f.verdict === 'fix-fresh')) tier = 'T0';
             else if ((critical || high) && runtimeScope) tier = 'T1';
             else if (critical || high || f.severity === 'moderate') tier = 'T2';
             else tier = 'T3';
@@ -163,6 +166,11 @@ export function buildFindings(
         const id = canonical(ids);
         const first = items[0]!;
         const scope = inventory.find((e) => e.name === first.package && e.file === first.file)?.scope ?? null;
+        // Direct when the manifest beside the lockfile declares it; transitive
+        // only when that manifest was read and does not.
+        const dir = first.file.includes('/') ? first.file.slice(0, first.file.lastIndexOf('/') + 1) : '';
+        const declared = inventory.filter((e) => e.provenance === 'declared' && e.ecosystem === first.ecosystem && e.file === `${dir}package.json`);
+        const direct = declared.length === 0 ? null : declared.some((e) => e.name === first.package);
         const { verdict, note } = verdictOf(items, now, opts.acceptances ?? [], ids);
         const base = {
             verdict,
@@ -170,6 +178,7 @@ export function buildFindings(
             score: items.map((f) => f.score).find((s) => s !== null) ?? null,
             kev: items.some((f) => f.kev),
             scope,
+            direct,
             ecosystem: first.ecosystem,
         };
         out.push({
@@ -325,7 +334,11 @@ export function announce(findings: Finding[], previous: Ledger, now: Date = new 
 export function validateAcceptance(a: Partial<Acceptance>): string | null {
     if (typeof a.id !== 'string' || a.id === '') return 'an acceptance names the finding ID';
     if (typeof a.reason !== 'string' || a.reason.trim().length < 10) return 'an acceptance carries a reason of at least a sentence';
-    if (/\b(grep|not (found|used|reachable)|no (hits|matches|usage))\b/i.test(a.reason)) {
+    // A search that found nothing is never a reason. "Not reachable" is one only
+    // with the mechanism named after it — a bare claim is the same grep in prose.
+    const searched = /\b(grep|not found|no (hits|matches))\b/i.test(a.reason);
+    const bare = /\b(not (used|reachable)|no usage)\b/i.test(a.reason) && a.reason.trim().split(/\s+/).length < 8;
+    if (searched || bare) {
         return 'absence of a hit is not unreachability — name what makes the code path unreachable';
     }
     if (typeof a.expires !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(a.expires)) return 'an acceptance carries an expiry day (YYYY-MM-DD)';

@@ -27,7 +27,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { inventoryFingerprint, readInventory } from './_lib/advisory_inventory.js';
+import { inventoryFingerprint, readInventory, unsupportedLockfiles } from './_lib/advisory_inventory.js';
 import {
     type AdvisoriesEgress,
     type AdvisoriesKev,
@@ -200,6 +200,8 @@ export async function refreshMany(roots: string[], deps: RefreshDeps = {}): Prom
         for (const p of inventories) {
             raw.set(p.root, []);
             reports.set(p.root, []);
+            const unread = unsupportedLockfiles(p.root);
+            if (unread.length > 0) reports.get(p.root)!.push({ source: 'native-npm', status: 'unavailable', reason: `lockfile-unsupported: ${unread.slice(0, 3).join(', ')}` });
         }
         const online = inventories.filter((p) => egressOf.get(p.root) === 'query');
         for (const p of inventories.filter((x) => egressOf.get(x.root) === 'none')) {
@@ -437,7 +439,7 @@ export function issueBody(state: AdvisoryState | null): string {
 
 
 /** Changed paths of this branch against the trunk that a dependency fix must never touch (1.3). */
-function suspiciousInBranch(root: string, fixBase: string | null = null): string[] {
+export function suspiciousInBranch(root: string, fixBase: string | null = null, planned: string[] = []): string[] {
     const trunk = ['origin/main', 'origin/master', 'main', 'master'].find((r) => defaultExec('git', ['rev-parse', '--verify', '--quiet', r], root) !== null);
     if (trunk === undefined && fixBase === null) return [];
     // A fix sharing the branch with a feature is judged from its own start, never
@@ -464,7 +466,15 @@ function suspiciousInBranch(root: string, fixBase: string | null = null): string
     const delta = Object.fromEntries(
         changed.filter((p) => p === 'package.json' || p.endsWith('/package.json')).map((p) => [p, { before: scriptsOf(p, base), after: scriptsOf(p, null) }]),
     );
-    return suspiciousPaths(changed, delta);
+    // A workflow the plan edits is allowed only where every changed line is a
+    // version pin or an action ref; any other line in it still stops the fix.
+    const pinOnly = (file: string): boolean => {
+        const diff = defaultExec('git', ['diff', '-U0', base, '--', file], root) ?? '';
+        const lines = diff.split('\n').filter((l) => /^[+-](?![+-])/.test(l));
+        return lines.length > 0 && lines.every((l) => /^[+-]\s*(?:-\s*)?(?:node-version|php-version|uses):/.test(l));
+    };
+    const allowed = new Set(planned.filter((f) => changed.includes(f) && pinOnly(f)));
+    return suspiciousPaths(changed.filter((p) => !allowed.has(p)), delta);
 }
 
 // ---------------------------------------------------------------------------
@@ -575,7 +585,7 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
             const r = fresh[key];
             // Agent-config paths or install scripts in the fix diff stop the fix (1.3),
             // judged from where THIS fix started, not from the trunk.
-            const suspicious = suspiciousInBranch(root, r?.base ?? null);
+            const suspicious = suspiciousInBranch(root, r?.base ?? null, r?.files ?? []);
             if (r !== undefined) {
                 if (suspicious.length > 0) advance(r, 'fix-failed', new Date(), { note: `touches ${suspicious.join(', ')}` });
                 else if (proof === 'fixed-in-branch') advance(r, 'ready-to-merge');
@@ -607,6 +617,8 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
             if (!joined) {
                 remediation.ids = [f.id, ...f.aliases];
                 remediation.sources = f.sources;
+                // A runtime pin or an action ref in a workflow is the fix itself.
+                remediation.files = [...new Set([...plan.edits.map((e) => e.file), ...(f.ecosystem === 'GitHub Actions' ? [f.file] : [])])].filter((x) => x.startsWith('.github/'));
                 if (route.route === 'current-branch') {
                     // The fix shares the branch with the feature: name that branch
                     // and remember where the fix starts, so verify judges only it.

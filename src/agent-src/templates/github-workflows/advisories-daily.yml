@@ -10,7 +10,8 @@
 # Node release feeds, the whole CISA known-exploited catalog from www.cisa.gov
 # matched locally; private package names are never sent), then opens or
 # updates ONE issue for T0 findings — malware, a critical runtime
-# pre-announcement, a critical fix available, a known-exploited advisory.
+# pre-announcement, a critical fix for a direct dependency, a high finding that
+# is known-exploited (KEV raises one tier).
 #
 # What it never does: merge, push, open a PR, change a dependency, or run a
 # package manager's install. Carrying a finding to a fix is `/audit deps fix

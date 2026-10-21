@@ -174,10 +174,12 @@ export function nativeAudits(
         }
         const line = (name: string): number => list.find((e) => e.name === name)?.line ?? 1;
         // Several resolved versions of one name (nested duplicates): the audit
-        // does not say which one, so the version is unknown, never the first.
-        const version = (name: string): string | null => {
-            const vs = new Set(list.filter((e) => e.name === name).map((e) => e.version));
-            return vs.size === 1 ? ([...vs][0] ?? null) : null;
+        // does not say which one, so each installed version gets its own finding
+        // and merges with OSV's per-version answer for the same advisory.
+        const versionsOf = (name: string): Array<{ version: string | null; line: number }> => {
+            const seen = new Map<string, number>();
+            for (const e of list) if (e.name === name && e.version !== null && !seen.has(e.version)) seen.set(e.version, e.line);
+            return seen.size === 0 ? [{ version: null, line: line(name) }] : [...seen].map(([version, l]) => ({ version, line: l }));
         };
         if (npm) {
             const vulns = (doc as { vulnerabilities?: Record<string, { via?: unknown[]; fixAvailable?: unknown }> }).vulnerabilities ?? {};
@@ -188,23 +190,24 @@ export function nativeAudits(
                     const ghsa = /GHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}/i.exec(o.url ?? '')?.[0];
                     if (ghsa === undefined) continue;
                     const fix = v.fixAvailable as { name?: string; version?: string } | boolean | undefined;
-                    findings.push({
-                        id: `GHSA-${ghsa.slice(5).toLowerCase()}`,
-                        aliases: [],
-                        kind: 'vulnerability',
-                        ecosystem: 'npm',
-                        package: name,
-                        version: version(name),
-                        severity: severityOf(o.severity),
-                        score: numberOrNull(o.cvss?.score),
-                        kev: false,
-                        fixed: typeof fix === 'object' && fix?.name === name ? (fix.version ?? null) : null,
-                        date: null,
-                        source,
-                        modified: null,
-                        file,
-                        line: line(name),
-                    });
+                    for (const at of versionsOf(name))
+                        findings.push({
+                            id: `GHSA-${ghsa.slice(5).toLowerCase()}`,
+                            aliases: [],
+                            kind: 'vulnerability',
+                            ecosystem: 'npm',
+                            package: name,
+                            version: at.version,
+                            severity: severityOf(o.severity),
+                            score: numberOrNull(o.cvss?.score),
+                            kev: false,
+                            fixed: typeof fix === 'object' && fix?.name === name ? (fix.version ?? null) : null,
+                            date: null,
+                            source,
+                            modified: null,
+                            file,
+                            line: at.line,
+                        });
                 }
             }
         } else {
@@ -213,23 +216,24 @@ export function nativeAudits(
                 for (const a of list2) {
                     const id = String(a.advisoryId ?? '');
                     if (!ID_SHAPE.test(id)) continue;
-                    findings.push({
-                        id,
-                        aliases: a.cve && ID_SHAPE.test(a.cve) ? [a.cve] : [],
-                        kind: 'vulnerability',
-                        ecosystem: 'Packagist',
-                        package: name,
-                        version: version(name),
-                        severity: severityOf(a.severity),
-                        score: null,
-                        kev: false,
-                        fixed: null,
-                        date: null,
-                        source,
-                        modified: null,
-                        file,
-                        line: line(name),
-                    });
+                    for (const at of versionsOf(name))
+                        findings.push({
+                            id,
+                            aliases: a.cve && ID_SHAPE.test(a.cve) ? [a.cve] : [],
+                            kind: 'vulnerability',
+                            ecosystem: 'Packagist',
+                            package: name,
+                            version: at.version,
+                            severity: severityOf(a.severity),
+                            score: null,
+                            kev: false,
+                            fixed: null,
+                            date: null,
+                            source,
+                            modified: null,
+                            file,
+                            line: at.line,
+                        });
                 }
             }
         }
@@ -381,8 +385,16 @@ export async function osvQuery(
                     const modified = String(ref.modified ?? '');
                     let vuln = cache.get(id)?.modified === modified ? cache.get(id)!.vuln : null;
                     if (vuln === null) {
-                        const det = await fetcher(`https://api.osv.dev/v1/vulns/${encodeURIComponent(id)}`, { timeoutMs: opts.timeoutMs ?? 10000 });
-                        const got = det.status === 200 ? (JSON.parse(await det.text()) as OsvVuln) : null;
+                        // A detail that throws (timeout, network, the query deadline, bad
+                        // JSON) is a missing detail — the batch's answer stands.
+                        let det: FetchResponse = { status: 0, text: async () => '' };
+                        let got: OsvVuln | null = null;
+                        try {
+                            det = await fetcher(`https://api.osv.dev/v1/vulns/${encodeURIComponent(id)}`, { timeoutMs: opts.timeoutMs ?? 10000 });
+                            got = det.status === 200 ? (JSON.parse(await det.text()) as OsvVuln) : null;
+                        } catch {
+                            got = null;
+                        }
                         // Validated before it is cached: a detail for another ID, or
                         // one without the shape read below, is treated as missing.
                         if (got !== null && got.id === id && (got.affected === undefined || Array.isArray(got.affected))) {
@@ -420,7 +432,9 @@ export async function osvQuery(
         }
         return { findings, report: partial === null ? { source: 'osv', status: 'ok', reason: null } : { source: 'osv', status: 'error', reason: partial } };
     } catch (e) {
-        return { findings: [], report: { source: 'osv', status: 'unavailable', reason: (e as Error).name === 'TimeoutError' ? 'timeout' : 'network' } };
+        // What the batch already said stays said; the source is marked, never ok.
+        const reason = (e as Error).name === 'TimeoutError' ? 'timeout' : e instanceof SyntaxError ? 'unparseable' : 'network';
+        return { findings, report: { source: 'osv', status: findings.length > 0 ? 'error' : 'unavailable', reason } };
     }
 }
 

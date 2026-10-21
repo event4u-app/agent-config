@@ -1781,20 +1781,21 @@ run_update_check_banner() {
   esac
   # Best-effort: bundle first, then a dev-tree tsx. No `npx tsx` last resort —
   # same reason as maybe_pin_reexec: npx runs against the CONSUMER's npm config.
-  local runner=""
-  local target=""
+  local -a run=()
   local aux
   aux="$(delegate_aux_bundle 'check_update_banner.js')"
   if [[ -n "$aux" ]]; then
-    runner="node"
-    target="$aux"
-  elif [[ -x "$PACKAGE_ROOT/node_modules/.bin/tsx" && -f "$PACKAGE_ROOT/src/scripts/check_update_banner.ts" ]]; then
-    runner="$PACKAGE_ROOT/node_modules/.bin/tsx"
-    target="$PACKAGE_ROOT/src/scripts/check_update_banner.ts"
+    run=(node "$aux")
+  elif [[ -f "$PACKAGE_ROOT/node_modules/tsx/dist/loader.mjs" && -f "$PACKAGE_ROOT/src/scripts/check_update_banner.ts" ]]; then
+    # The loader, not the tsx CLI: the CLI runs the script in a child whose
+    # fd 3 is its IPC channel, and fd 3 is where the notice goes.
+    run=(node --import "file://$PACKAGE_ROOT/node_modules/tsx/dist/loader.mjs" "$PACKAGE_ROOT/src/scripts/check_update_banner.ts")
   else
     return 0
   fi
-  "$runner" "$target" --cwd "$CONSUMER_ROOT" 2>/dev/null || true
+  # fd 3 is the real stderr: the advisory notice is written there and stamped
+  # only on success; everything else the banner process prints stays discarded.
+  "${run[@]}" --cwd "$CONSUMER_ROOT" 3>&2 2>/dev/null || true
 }
 
 # Global `--root <path>` / `--root=<path>` parsing (Step 8 A3).

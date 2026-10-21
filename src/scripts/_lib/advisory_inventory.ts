@@ -344,6 +344,25 @@ function sources(root: string): Array<{ rel: string; parse: (rel: string, text: 
 }
 
 /** Read the whole inventory. Unreadable files are skipped, never guessed. */
+/**
+ * Lockfiles this inventory cannot read: yarn, pnpm and bun locks, and an npm
+ * lock in the v1 format. Their packages are not in the inventory, so a refresh
+ * must say "not checked" for them — an empty list from a lock nobody read would
+ * otherwise read as a clean project.
+ */
+export function unsupportedLockfiles(root: string): string[] {
+    const out = walk(root, (n) => n === 'yarn.lock' || n === 'pnpm-lock.yaml' || n === 'bun.lock' || n === 'bun.lockb');
+    for (const rel of walk(root, (n) => n === 'package-lock.json')) {
+        try {
+            const v = (JSON.parse(fs.readFileSync(path.join(root, rel), 'utf-8')) as { lockfileVersion?: unknown }).lockfileVersion;
+            if (v === 1 || v === undefined) out.push(rel);
+        } catch {
+            out.push(rel);
+        }
+    }
+    return out.sort();
+}
+
 export function readInventory(root: string): Inventory {
     const hash = createHash('sha256');
     const finger = createHash('sha256');

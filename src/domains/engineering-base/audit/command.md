@@ -73,8 +73,9 @@ Read the result as the tool states it:
 
 ### 2. Tiers decide the tone
 
-`T0` — act today (malware, a critical runtime pre-announcement, a critical
-runtime fix available, a known-exploited advisory). `T1` — today. `T2` — the
+`T0` — act today (malware, a critical runtime pre-announcement, a critical fix
+available for a direct runtime dependency, or a high one that is known-exploited
+— KEV raises a finding one tier). `T1` — today. `T2` — the
 digest. `T3` — the ledger. Lead with T0, then T1; mention the T2 count; leave T3
 unless asked.
 

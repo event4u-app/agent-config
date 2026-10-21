@@ -132,9 +132,18 @@ async function main(argv: readonly string[] = process.argv.slice(2)): Promise<nu
     // 4.5). Read-only and shown once a day across every surface: whichever of
     // the session start or a CLI subcommand runs first prints it, the stamp
     // silences the other. Independent of the update check and its opt-out.
+    // The dispatcher discards this process's stderr and hands the terminal's
+    // over as fd 3; the notice is stamped only when that write succeeded, so a
+    // caller with no fd 3 never consumes the day's notice unseen.
     try {
-        const advisories = sessionNotice(path.resolve(args.cwd));
-        if (advisories !== null) process.stderr.write(`${advisories}\n`);
+        sessionNotice(path.resolve(args.cwd), new Date(), (text) => {
+            try {
+                fs.writeSync(3, `${text}\n`);
+                return true;
+            } catch {
+                return false;
+            }
+        });
     } catch {
         /* best-effort, like the banner itself */
     }
