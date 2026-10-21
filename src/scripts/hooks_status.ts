@@ -30,6 +30,8 @@ import {
   _load_yaml,
 } from "./hooks/dispatch_hook.js";
 import { loadHostLowering } from "./hooks/host_lowering.js";
+import { type ClaudeHookScope, claudeHookScope } from "./_lib/claude_hook_scope.js";
+import { event4u_root } from "./_lib/user_global_paths.js";
 import { type SlotReading, readSlots } from "./report_enforcement_drift.js";
 
 // src/scripts/hooks_status.ts → parents[1] is the repo root (.../parents[2]
@@ -106,6 +108,13 @@ export interface PlatformRow {
    */
   blocking_enforcement: Record<string, string>;
   hint: string | null;
+  /**
+   * Claude only. Where the managed hooks are registered (global and/or
+   * project), which runtime they would reach, and the resulting state. Present
+   * because Claude Code MERGES `~/.claude/settings.json` with the project file,
+   * so one file cannot answer "are the hooks installed" for that host.
+   */
+  claude_scope?: ClaudeHookScope;
 }
 
 export interface StatusMatrix {
@@ -206,8 +215,27 @@ function _blocking_enforcement(
   return out;
 }
 
+/** Where to look for the user-scope half of Claude's merged settings. Injected by tests. */
+export interface UserScope {
+  home: string;
+  runtimeRoot: string;
+  pathEnv: string;
+}
+
+function _defaultUserScope(): UserScope {
+  return {
+    home: process.env["HOME"] ?? "",
+    runtimeRoot: path.join(event4u_root(), "runtime"),
+    pathEnv: process.env["PATH"] ?? "",
+  };
+}
+
 /** Build the runtime matrix as a plain object — JSON-serialisable. */
-export function collect(project_root: string, manifest: JsonObject): StatusMatrix {
+export function collect(
+  project_root: string,
+  manifest: JsonObject,
+  userScope: UserScope = _defaultUserScope(),
+): StatusMatrix {
   const platformsRaw = manifest["platforms"];
   const platforms = _isObject(platformsRaw) ? platformsRaw : {};
   const severities = _severities(manifest);
@@ -226,9 +254,20 @@ export function collect(project_root: string, manifest: JsonObject): StatusMatri
         }
       }
     }
+    // Claude merges the user-scope settings file with the project one, so its
+    // status comes from the managed commands in BOTH, never from whether the
+    // project file merely exists.
+    const claude_scope =
+      platform === "claude" && !fallback_only
+        ? claudeHookScope({ projectRoot: project_root, ...userScope })
+        : undefined;
     const status = fallback_only
       ? "degraded"
-      : _bridge_status(project_root, rel);
+      : claude_scope !== undefined
+        ? claude_scope.registered_in.length > 0
+          ? "installed"
+          : "missing"
+        : _bridge_status(project_root, rel);
     rows.push({
       platform,
       status,
@@ -240,6 +279,7 @@ export function collect(project_root: string, manifest: JsonObject): StatusMatri
       hint: ["missing", "empty", "degraded", "n/a"].includes(status)
         ? hint
         : null,
+      ...(claude_scope !== undefined ? { claude_scope } : {}),
     });
   }
   return { schema_version: 1, platforms: rows };
@@ -277,10 +317,25 @@ export function _render_table(matrix: StatusMatrix): string {
   for (const row of matrix.platforms) {
     const marker = _STATUS_MARKER[row.status] ?? "?  ";
     let head = `${marker}${row.platform.padEnd(9)} ${row.status}`;
-    if (row.bridge_path) {
+    if (row.claude_scope !== undefined) {
+      const where = row.claude_scope.registered_in.length > 0 ? row.claude_scope.registered_in.join(" + ") : "neither scope";
+      head += `  (managed hooks in: ${where} — ~/.claude/settings.json and <project>/.claude/settings.json are merged)`;
+    } else if (row.bridge_path) {
       head += `  (${row.bridge_path})`;
     }
     lines.push(head);
+    if (row.claude_scope !== undefined) {
+      const s = row.claude_scope;
+      lines.push(`    state                  → ${s.state}`);
+      lines.push(
+        `    runtime                → ${s.runtime}` + (s.runtime_version !== null ? ` v${s.runtime_version}` : ""),
+      );
+      lines.push(
+        `    managed / foreign      → global ${s.managed_commands.global} / ${s.foreign_commands.global}, ` +
+          `project ${s.managed_commands.project} / ${s.foreign_commands.project}  (foreign hooks are never counted as ours)`,
+      );
+      if (s.version_skew !== null) lines.push(`    ⚠️  ${s.version_skew}`);
+    }
     lines.push(
       `    ask                    → ${row.ask}` +
         (row.ask === "native"

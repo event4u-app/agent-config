@@ -74,6 +74,32 @@ the raw value. A generated coverage table — channel × host × auth mode × la
 mode — states `asserted`, `replaced`, `gated` or `uncovered` per cell, and the
 published claim is the measured result per class per state, a null included.
 
+## Execution status — 2026-10-21, branch `drain/placeholders-20261021`
+
+No step closed; nothing gated ships. Three modification-review rounds over the
+hook plumbing did not ratify it, which is this lane's cap, so the gated change
+was reverted to `main`'s bytes. Record: `agents/evidence/ratifications/drain-placeholders-on-the-wire-20261020.md`;
+prompts `agents/evidence/council/placeholders-wire-review-r{7,8,9}-20261021.question.md`.
+
+- **Round 7** (6.1 + Phase 3 after a merge with `main`): both seats refused —
+  the log recorded `emitted` before the decision was final, the host version
+  came from any file the envelope named, revocations failed open, traversal was
+  unbounded.
+- **Round 8** (those four fixed): `anthropic` confirmed-non-expanding with seven
+  conditions, `openai` refused. Both asked for staging: the axis and capability
+  check first, then output replacement, then version tolerance and the ADR-285
+  amendment (a block outranks a rewrite only where the block stops something)
+  as separate decisions.
+- **Round 9** (6.1 alone, exact-version capability): `anthropic` refused, no
+  dealbreaker — an *omitted* `observedHostVersion` adds no gap, so a caller that
+  leaves it out gets a capability unchecked. `openai` returned `exit_1` with an
+  empty stderr; degraded quorum.
+
+Next lane: start a fresh review from round 9's subject (commit `fd17092bc`) with
+`observedHostVersion` required, then the output path from local branch
+`wip/placeholders-output-r8-20261021` with round 8's conditions. Steps 6.2, 6.4,
+6.5, 7.2–7.7 and AC-1/AC-6/AC-7 remain blocked for the reasons below.
+
 ## Execution status — 2026-10-20
 
 This PR carries what can land without a ratification: the Phase 0 probes and the
