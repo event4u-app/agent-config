@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+// egress-content: fixed-corpus — sends the seeded retrieval corpus (retrieval-corpus.yml) and entries retrieved from it, never session content
 /**
  * Second-brain RETRIEVAL-PRECISION follow-up
  * (road-to-second-brain-retrieval-precision).

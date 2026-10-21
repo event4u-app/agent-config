@@ -24,8 +24,13 @@ export interface EgressRule {
      * refuses the whole text rather than replace part of it.
      */
     readonly replacement: 'detection' | { readonly through: (text: string, span: SpanBounds) => number | null };
-    /** Capture group holding the value; the whole match when absent. A rule that sets it MUST carry the d flag. */
-    readonly valueGroup?: number;
+    /**
+     * Capture group holding the value; the whole match when absent. A rule that
+     * sets it MUST carry the d flag. A list names alternatives of one value
+     * shape — the first group that participated in the match is the value — so
+     * a shape whose delimiter decides its extent stays one row.
+     */
+    readonly valueGroup?: number | readonly number[];
     readonly validator?: (value: string) => boolean;
     /** The rule fires only when `words` matches within `window` chars of the value. */
     readonly context?: { readonly words: RegExp; readonly window: number };
@@ -91,6 +96,71 @@ export function looksLikeSecretValue(value: string): boolean {
     }
     return shannonEntropy(value) >= GENERIC_MIN_ENTROPY;
 }
+
+/**
+ * The keyword names a credential assignment is spelled with (`password =`,
+ * `api_key:`). They carry no vendor literal, so each consumer reads the ones it
+ * always read, in its own order, and keeps its own threshold for the value.
+ */
+export const ASSIGNMENT_KEYWORDS = {
+    password: 'password',
+    passwd: 'passwd',
+    pwd: 'pwd',
+    secret: 'secret',
+    apiKey: 'api[_-]?key',
+    apikey: 'apikey',
+    accessToken: 'access[_-]?token',
+    authToken: 'auth[_-]?token',
+    clientSecret: 'client[_-]?secret',
+    privateKey: 'private[_-]?key',
+    token: 'token',
+    bearer: 'bearer',
+} as const;
+
+export type AssignmentKeyword = keyof typeof ASSIGNMENT_KEYWORDS;
+
+export interface AssignmentShape {
+    readonly keywords: readonly AssignmentKeyword[];
+    /** Spelled around the keyword group, e.g. `\b` or a Unicode non-word lookaround. */
+    readonly before?: string;
+    readonly after?: string;
+    /** The keyword group captures instead of `(?:…)`. */
+    readonly capture?: boolean;
+    /** What follows `\s*[:=]\s*`; absent, the shape ends at the operator. */
+    readonly value?: string;
+    /** The whitespace around the operator; `\s*` when absent, `[ \t]*` to stay on one line. */
+    readonly gap?: string;
+}
+
+/** Source of a keyword-assignment shape: keyword group, operator, then the consumer's value. */
+export function assignmentSource(shape: AssignmentShape): string {
+    const alt = shape.keywords.map((k) => ASSIGNMENT_KEYWORDS[k]).join('|');
+    const group = shape.capture === true ? `(${alt})` : `(?:${alt})`;
+    const gap = shape.gap ?? '\\s*';
+    const head = `${shape.before ?? ''}${group}${shape.after ?? ''}${gap}[:=]`;
+    return shape.value === undefined ? head : `${head}${gap}${shape.value}`;
+}
+
+export function assignmentPattern(shape: AssignmentShape, flags: string): RegExp {
+    return new RegExp(assignmentSource(shape), flags);
+}
+
+/** An HTTP `Authorization` header name; everything after its colon is the credential. */
+export const AUTHORIZATION_HEADER = 'authorization';
+
+/**
+ * Raw-key prefix families spelled as a class, for a surface that keeps the
+ * prefix and drops the value: group 1 is the prefix stem. Wider than the rows on
+ * purpose (`pk-`, `rk-`); a test checks each family still covers the table
+ * prefixes it claims.
+ */
+export const CLASS_SPELLED_PREFIXES = {
+    dashKeys: { family: '(sk|pk|rk)-', covers: ['sk-'] },
+    tokens: {
+        family: '(gh[pousr]|github_pat|xox[baprs])[-_]',
+        covers: ['ghp_', 'gho_', 'ghu_', 'ghs_', 'ghr_', 'github_pat_', 'xoxb-', 'xoxp-', 'xoxa-', 'xoxr-', 'xoxs-'],
+    },
+} as const satisfies Readonly<Record<string, { readonly family: string; readonly covers: readonly string[] }>>;
 
 // The nearest key marker after the header decides: an END carrying the same
 // label as the header ends the block; another BEGIN, an END with a different
@@ -277,10 +347,81 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         type: 'SECRET',
         class: 'credential',
         replacement: 'detection',
-        pattern:
-            /(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*[:=]\s*['"]?([^'"\s]{8,})['"]?/dgi,
+        pattern: assignmentPattern(
+            {
+                keywords: ['password', 'passwd', 'pwd', 'secret', 'apiKey', 'accessToken', 'authToken'],
+                value: `['"]?([^'"\\s]{8,})['"]?`,
+            },
+            'dgi',
+        ),
         valueGroup: 1,
         validator: looksLikeSecretValue,
+    },
+];
+
+// A value that is a type word, a literal, a language keyword or a credential
+// keyword itself (`password: 'password'`) is code, not a secret, whatever its key.
+const TYPE_WORD =
+    /^(?:string|number|boolean|bigint|unknown|any|never|void|undefined|null|true|false|none|nil|new|typeof|keyof|await|async|function|const|let|var|return|this|self|class|import|require|readonly|export|default|yield|password|passwd|pwd|secret|token|bearer|api[_-]?key|apikey)$/i;
+
+/**
+ * A credential keyword is a key, not a suffix: `mytoken=` and `notsecret=` are
+ * other words that happen to end in one. A separator is not a letter, so
+ * `client_secret` and `api-key` still read as the keyword they contain.
+ */
+const KEY_START = '(?<![A-Za-z0-9])';
+
+/**
+ * One value, whichever delimiter bounds it, as four alternatives read in order
+ * by `valueGroup: [2, 3, 4, 5]`. The shape it replaces — an optional quote
+ * around a capture that forbade whitespace — matched `"correct` of
+ * `password = "correct horse battery staple"` and left the rest of the
+ * credential in the outbound body (council, 2026-10-21, both seats).
+ *
+ * A complete quoted value is captured without its quotes, so the validator
+ * still reads `password: 'password'` as the type word it is. An UNTERMINATED
+ * quote takes the rest of the line: its extent is unprovable, and the house
+ * rule for an unprovable extent is to cover too much rather than leave the
+ * value behind (`pemMaskEnd`). Each alternative is anchored at the same
+ * position and none can backtrack into another, so the shape stays linear.
+ */
+const QUOTED_OR_BARE_VALUE = `(?:"([^"\\n]*)"|'([^'\\n]*)'|["']([^\\n]+)|([^\\s'"]+))`;
+
+/**
+ * Credential shapes at a reviewer's threshold, for a surface that REPLACES a
+ * value it would otherwise have masked with its whole line (the council
+ * bundle, step 3.3). Not in EGRESS_RULES: a refusing surface or the commit
+ * scanner would refuse ordinary code on them. Any value after a credential
+ * keyword that is not a code expression or a type word, on the same line, and
+ * every byte after the colon of a line that opens with an `Authorization`
+ * header.
+ */
+export const REVIEW_CREDENTIAL_ROWS: readonly EgressRule[] = [
+    {
+        rule: 'review-assignment',
+        type: 'SECRET',
+        class: 'credential',
+        replacement: 'detection',
+        pattern: assignmentPattern(
+            {
+                keywords: ['apiKey', 'secret', 'token', 'password'],
+                before: KEY_START,
+                capture: true,
+                gap: '[ \\t]*',
+                value: QUOTED_OR_BARE_VALUE,
+            },
+            'dgi',
+        ),
+        valueGroup: [2, 3, 4, 5],
+        validator: (v) => !CODE_EXPR.test(v) && !TYPE_WORD.test(v),
+    },
+    {
+        rule: 'review-authorization-header',
+        type: 'TOKEN',
+        class: 'credential',
+        replacement: 'detection',
+        pattern: new RegExp(`^[ \\t]*${AUTHORIZATION_HEADER}:[ \\t]*(\\S[^\\n]*)`, 'dgim'),
+        valueGroup: 1,
     },
 ];
 
@@ -406,14 +547,28 @@ function testWholeValue(re: RegExp, value: string): boolean {
  * engine's capture offsets, exclusions, the context window and the validator.
  * The single place both readers of the table evaluate a candidate.
  */
+/**
+ * The capture group this match put the value in. `'whole-match'` is a rule that
+ * declares none. `null` is a rule that declares alternatives and matched none
+ * of them — the match is then discarded, never silently read as the whole
+ * match, which would hand a replacer the keyword along with the value.
+ */
+function valueGroupOf(r: EgressRule, m: RegExpExecArray): number | 'whole-match' | null {
+    if (r.valueGroup === undefined) return 'whole-match';
+    if (typeof r.valueGroup === 'number') return r.valueGroup;
+    return r.valueGroup.find((g) => m[g] !== undefined) ?? null;
+}
+
 export function evaluateMatch(
     r: EgressRule,
     text: string,
     m: RegExpExecArray,
 ): { start: number; end: number; validated: boolean } | null {
-    const value = r.valueGroup !== undefined ? m[r.valueGroup] : m[0];
+    const group = valueGroupOf(r, m);
+    if (group === null) return null;
+    const value = group === 'whole-match' ? m[0] : m[group];
     if (value === undefined || value.length === 0) return null;
-    const start = r.valueGroup !== undefined ? (m.indices?.[r.valueGroup]?.[0] ?? -1) : m.index;
+    const start = group === 'whole-match' ? m.index : (m.indices?.[group]?.[0] ?? -1);
     if (start < 0) {
         throw new Error(`egress rule ${r.rule}: a valueGroup rule needs the d flag for capture offsets`);
     }

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# egress-content: session-content uncovered — the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach
 # musetalk.sh — MuseTalk-class LOCAL lip-sync adapter: the offline (MIT)
 # alternative to the hosted sync.so post-process. One rendered clip plus
 # one audio line in, a lip-synced clip out — no network, no spend.

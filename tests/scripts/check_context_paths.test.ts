@@ -116,6 +116,14 @@ describe('check_context_paths — behavioural spec (1:1 port of pytest)', () => 
         expect(ccp.scan(root)).toEqual([]);
     });
 
+    it('a sibling link to an anchor in the file is a reference', () => {
+        const root = makeFakeRoot(tmp);
+        ctx(root, 'execution/core.md', 'read [`core-run`](core-run.md#5-step-loop) on that branch\n');
+        ctx(root, 'execution/core-run.md');
+        rule(root, 'demo', 'loads contexts/execution/core.md\n');
+        expect(ccp.scan(root)).toEqual([]);
+    });
+
     it('full path reference form satisfies', () => {
         const root = makeFakeRoot(tmp);
         ctx(root, 'judges/foo.md');

@@ -1,3 +1,4 @@
+// egress-content: fixed-corpus — a DNS lookup of the provider hosts; no request body exists
 /**
  * Airgap detection for the AI Council installer / first-run (step-9 P11 · U1).
  *

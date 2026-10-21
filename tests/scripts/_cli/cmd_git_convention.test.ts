@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { commitMessageValidator, commitMessageValidators, runGitConvention, showConvention, SUBCOMMANDS } from '../../../src/scripts/_cli/cmd_git_convention.js';
 import { REFUSAL_STATES } from '../../../src/scripts/_lib/git_convention.js';
 import { runSettingsGet, PACKAGE_ROOT } from '../../../src/scripts/_cli/cmd_settings_get.js';
+import { procedureText } from '../../_lib/procedure_text.js';
 
 const made: string[] = [];
 const prevHome = process.env.EVENT4U_CONFIG_HOME;
@@ -257,15 +258,15 @@ describe('git:convention show exits non-zero on every state sync refuses', () =>
     });
 
     it('the /pr:merge prose lists exactly the states the code refuses', () => {
-        const text = fs.readFileSync(path.join(PACKAGE_ROOT, 'src', 'domains', 'git', 'pr', 'merge', 'command.md'), 'utf8');
+        const text = procedureText('src/domains/git/pr/merge/command.md');
         const sentence = /A `git\.update_strategy` whose state is ([^\n]+(?:\n[^\n]+)?) is\s+not a strategy/.exec(text)?.[1] ?? '';
         const listed = [...sentence.matchAll(/`([a-z]+)`/g)].map((m) => m[1]).sort();
         expect(listed).toEqual([...REFUSAL_STATES].sort());
     });
 
     it('the /pr:merge gate reads the strategy against the same target the sync acts on', () => {
-        const text = fs.readFileSync(path.join(PACKAGE_ROOT, 'src', 'domains', 'git', 'pr', 'merge', 'command.md'), 'utf8');
-        const block = /## 2\. Sync with the base[\s\S]*?```bash\n([\s\S]*?)```/.exec(text)?.[1] ?? '';
+        const text = procedureText('src/domains/git/pr/merge/command.md');
+        const block = /Check the PR out, read the strategy against its base[\s\S]*?```bash\n([\s\S]*?)```/.exec(text)?.[1] ?? '';
         const lines = block.split('\n').map((l) => l.replace(/#.*$/, '').trim()).filter((l) => l !== '');
         const checkout = lines.indexOf('gh pr checkout <N>');
         const show = lines.indexOf('agent-config git:convention show --key update_strategy --base origin/<base>');

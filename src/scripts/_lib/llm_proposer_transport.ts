@@ -1,3 +1,4 @@
+// egress-content: session-content uncovered — the prompt is assembled from repository evidence at run time and is not passed through the engine; the module has made no live call
 /**
  * The metered transport for the LLM proposer arm — one provider, one call shape.
  *

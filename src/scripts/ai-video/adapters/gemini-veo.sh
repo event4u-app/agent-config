@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# egress-content: session-content uncovered — the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach
 # gemini-veo.sh — Google Gemini Veo video generation adapter.
 #
 # Capability: audio=native. Veo accepts dialogue + ambient sound blocks

@@ -173,6 +173,13 @@ jobs:
       - name: code-comment-discipline (language, report and provenance comments)
         run: ./scripts-run src/scripts/lint_code_comments --base origin/main
 
+      # A ceremony depth lowered by change class can only be audited from the
+      # receipt each ticked step carries. Diff-scoped: older unreceipted ticks
+      # never red a later PR. Report-only while the depth table is in shadow
+      # mode; blocking from the flip on.
+      - name: step receipts (every newly ticked roadmap step names its class)
+        run: ./scripts-run src/scripts/check_step_receipts --base origin/main
+
       # A `[~]` carried to a follow-up is validated once, when the parent is
       # archived, by a sweep that then never sees the pair again — so the
       # receiver could be deleted afterwards with nothing going red. This walks
@@ -283,6 +290,11 @@ jobs:
       # caught by one consumer and passed unchanged by the next.
       - name: credential prefixes are spelled once (rule table)
         run: ./scripts-run src/scripts/check_credential_spelling
+
+      # The egress engine's invariants are tested by mutation: each recipe is
+      # applied to a scratch copy and must turn its named invariant red.
+      - name: egress engine mutations are killed
+        run: ./scripts-run src/scripts/check_egress_mutations
 
       # The target-readiness grader has no repo corpus to scan — it grades a
       # TARGET repository, so on this tree there is nothing to grade. What CI can

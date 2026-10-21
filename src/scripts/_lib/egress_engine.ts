@@ -14,8 +14,9 @@
  * schema is not the one it was built against, so a stale chunk is a load
  * failure, never stale rules. Bump it whenever an export below changes shape.
  */
-export const ENGINE_SCHEMA = 1;
+export const ENGINE_SCHEMA = 2;
 
 export { detect, EGRESS_RULES } from './egress_rules.js';
 export { EgressRefusedError, replaceValues, TokenScope } from './egress_token.js';
+export { injectText, replaceJson, tallyText } from './egress_text.js';
 export { scanText } from './secret_detector.js';

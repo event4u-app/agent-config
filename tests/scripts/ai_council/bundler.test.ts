@@ -32,7 +32,9 @@ function tmpDir(prefix = 'bundler-'): string {
     return mkdtempSync(path.join(tmpdir(), prefix));
 }
 
-describe('bundler — redact (line-wise, most-specific-first)', () => {
+const TOKEN = /__[A-Z][A-Z0-9]{1,15}_[1-9][0-9]{0,5}_[0-9a-f]{6}(?:_v[0-9]{1,2})?__/;
+
+describe('bundler — redact (span replacement, road-to-one-detector 3.3)', () => {
     it('scrubs Authorization, secret-like assignments, and key-like tokens', () => {
         const input = [
             'normal line',
@@ -42,16 +44,13 @@ describe('bundler — redact (line-wise, most-specific-first)', () => {
             SK_OPENAI,
             'tail',
         ].join('\n');
-        expect(redact(input)).toBe(
-            [
-                'normal line',
-                '[redacted: Authorization header]',
-                '[redacted: secret-like assignment]',
-                '[redacted: anthropic-key-like token]',
-                '[redacted: openai-key-like token]',
-                'tail',
-            ].join('\n'),
-        );
+        const out = redact(input).split('\n');
+        expect(out[0]).toBe('normal line');
+        expect(out[1]).toMatch(new RegExp(`^Authorization: ${TOKEN.source}$`));
+        expect(out[2]).toMatch(new RegExp(`^api_key = ${TOKEN.source}$`));
+        expect(out[3]).toMatch(new RegExp(`^${TOKEN.source}$`));
+        expect(out[4]).toMatch(new RegExp(`^${TOKEN.source}$`));
+        expect(out[5]).toBe('tail');
     });
 });
 
@@ -60,7 +59,7 @@ describe('bundler — bundle_prompt / bundle_files / bundle_roadmap', () => {
         const ctx = bundle_prompt('hi\ntoken: abc\nbye');
         expect(ctx.mode).toBe('prompt');
         expect(ctx.manifest).toEqual(['<inline prompt>']);
-        expect(ctx.text).toContain('[redacted: secret-like assignment]');
+        expect(ctx.text).toMatch(new RegExp(`^hi\ntoken: ${TOKEN.source}\nbye$`));
     });
 
     it('bundle_files records manifest + exclusions for missing files', () => {

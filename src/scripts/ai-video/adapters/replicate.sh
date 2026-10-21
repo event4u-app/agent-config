@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# egress-content: session-content uncovered — the generation prompt is an operator-authored brief sent from a shell adapter the TypeScript engine does not reach
 # replicate.sh — Replicate multiplexer adapter: one adapter, many models.
 #
 # Capability: per-model. Replicate exposes ONE uniform predictions API

@@ -1,0 +1,5 @@
+{
+    "_comment": "Full-depth audits of steps that ran at a lowered depth (road-to-a-step-that-costs-what-it-changes 4.3). Append one row per audited step: `step` is `<roadmap file>#<step id>`, `escaped` is true when the full round-1 review found a high or critical row the lowered depth skipped, `critical` when one of them was critical. Which steps are audited is decided by `sampledForAudit` in src/scripts/_lib/depth_flip.ts. `rolledBackClasses` reads the latest `requires.min_steps` rows per class against the depth table's `flip.requires`; a class past the threshold returns to full depth in `step_receipt`. These agent-run audits do not feed a human-labelled corpus.",
+    "schema_version": 1,
+    "samples": []
+}

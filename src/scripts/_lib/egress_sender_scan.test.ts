@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { main } from '../egress_sender_census.js';
-import { classifyModule, scanSenders } from './egress_sender_scan.js';
+import { classifyModule, renderTable, scanSenders, undeclared } from './egress_sender_scan.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..', '..');
@@ -47,6 +47,51 @@ describe('sender census over this tree', () => {
 
     it('matches the table committed to the contract', () => {
         expect(main([], REPO)).toBe(0);
+    });
+
+    it('has no empty cell: every sender is asserted, fixed-corpus or uncovered with a reason (3.4)', () => {
+        expect(undeclared(rows).map((r) => `${r.module}: ${r.reason}`)).toEqual([]);
+        for (const line of renderTable(rows).split('\n').filter((l) => l.startsWith('| `'))) {
+            expect(line.split('|').slice(1, -1).every((cell) => cell.trim() !== '')).toBe(true);
+        }
+    });
+
+    it('publishes the council transports as asserted', () => {
+        const cov = new Map(rows.map((r) => [r.module, r.coverage]));
+        expect(cov.get('src/scripts/ai_council/clients.ts')).toBe('asserted');
+        expect(cov.get('src/scripts/ai_council/api_transport.ts')).toBe('asserted');
+    });
+});
+
+describe('the census gate (3.4)', () => {
+    const SEND = "await fetch('https://api.openai.com/v1/chat', { method: 'POST' });\n";
+    const DOC = '<!-- BEGIN egress-sender-census (generated) -->\n<!-- END egress-sender-census -->\n';
+
+    it('fails a fixture sender with no classification, and passes it once it has one', () => {
+        const root = fixtureRepo({ 'src/scripts/new_sender.ts': SEND, 'docs/contracts/egress-placeholders-v1.md': DOC });
+        expect(main(['--write'], root)).toBe(1);
+        expect(main([], root)).toBe(1);
+        fs.writeFileSync(
+            path.join(root, 'src/scripts/new_sender.ts'),
+            `// egress-content: fixed-corpus — sends one fixed probe\n${SEND}`,
+        );
+        expect(main(['--write'], root)).toBe(0);
+        expect(main([], root)).toBe(0);
+    });
+
+    it('refuses a marker with no reason, a reasonless session claim, and an unproven asserted', () => {
+        const cov = (marker: string) => classifyModule('src/scripts/x.ts', `${marker}\n${SEND}`)?.coverage;
+        expect(cov('// egress-content: fixed-corpus')).toBe('undeclared');
+        expect(cov('// egress-content: session-content — sends the prompt')).toBe('undeclared');
+        expect(cov('// egress-content: session-content asserted — checked')).toBe('undeclared');
+        expect(cov('// egress-content: session-content uncovered — not yet routed')).toBe('uncovered');
+        expect(cov('// egress-content: fixed-corpus uncovered — mixed')).toBe('undeclared');
+        const proven = classifyModule(
+            'src/scripts/x.ts',
+            "// egress-content: session-content asserted — checked before the write\nimport { councilEgress } from '" +
+                `./ai_council/council_egress.js';\n${SEND}`,
+        );
+        expect(proven?.coverage).toBe('asserted');
     });
 });
 

@@ -39,7 +39,7 @@
  *    matching the original's `f"<{len(out)} chars>"`.
  */
 
-import { rawKeyPrefixPattern } from '../../_lib/egress_rules.js';
+import { assignmentPattern, rawKeyPrefixPattern } from '../../_lib/egress_rules.js';
 
 export const LONG_STRING_THRESHOLD = 200;
 
@@ -50,8 +50,8 @@ const _W = '\\p{L}\\p{N}_';
 // senders-we-own 2.2); this surface keeps its own policy: prefix plus six key
 // characters is enough to mask, because it cannot refuse.
 const _RAW_KEY_RE = rawKeyPrefixPattern(6);
-const _API_KEY_RE = new RegExp(
-    '\\bapi[_-]?key\\b\\s*[:=]\\s*[A-Za-z0-9+/=_-]{12,}',
+const _API_KEY_RE = assignmentPattern(
+    { keywords: ['apiKey'], before: '\\b', after: '\\b', value: '[A-Za-z0-9+/=_-]{12,}' },
     'giu',
 );
 const _EMAIL_RE = new RegExp(

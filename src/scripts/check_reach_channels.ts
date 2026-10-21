@@ -53,6 +53,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { AUTHORIZATION_HEADER, CLASS_SPELLED_PREFIXES } from './_lib/egress_rules.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { SchemaError, validate, type YamlValue } from './validate_frontmatter.js';
 
@@ -145,7 +146,7 @@ const REDACTED = '<redacted>';
 export const REDACTIONS: readonly (readonly [RegExp, string])[] = [
     // `Authorization: Bearer …` — the header name stays, the value does not.
     // Runs to end of line: everything after the colon is the credential.
-    [/(\bauthorization\s*:\s*)(\S.*)$/gi, `$1${REDACTED}`],
+    [new RegExp(`(\\b${AUTHORIZATION_HEADER}\\s*:\\s*)(\\S.*)$`, 'gi'), `$1${REDACTED}`],
     // `KEY=VALUE`. Two narrowings carry their weight. The lookbehind requires
     // the key to START a token — so `yt-dlp==2026.7.4` is never chopped at its
     // `dlp=` tail and `--target=/opt` is left alone — while still admitting a
@@ -153,8 +154,9 @@ export const REDACTIONS: readonly (readonly [RegExp, string])[] = [
     // actually appears in a command. `(?!=)` excludes the `==` pin operator.
     [/(?<![A-Za-z0-9_./-])([A-Za-z_][A-Za-z0-9_]{2,})=(?!=)\S+/g, `$1=${REDACTED}`],
     // Provider key prefixes — the shapes that are a secret by construction.
-    [/\b(sk|pk|rk)-[A-Za-z0-9_-]{8,}/gi, `$1-${REDACTED}`],
-    [/\b(gh[pousr]|github_pat|xox[baprs])[-_][A-Za-z0-9_-]{8,}/gi, `$1_${REDACTED}`],
+    // Spelled as classes in the rule table; the prefix stem stays, the value does not.
+    [new RegExp(`\\b${CLASS_SPELLED_PREFIXES.dashKeys.family}[A-Za-z0-9_-]{8,}`, 'gi'), `$1-${REDACTED}`],
+    [new RegExp(`\\b${CLASS_SPELLED_PREFIXES.tokens.family}[A-Za-z0-9_-]{8,}`, 'gi'), `$1_${REDACTED}`],
     // A hex digest ≥ 32: an API key or a signature, never part of an install verb.
     [/(?<![0-9a-fA-F])[0-9a-fA-F]{32,}(?![0-9a-fA-F])/g, REDACTED],
     // A ≥ 24-char run carrying lower + upper + digit — the entropy shape of an

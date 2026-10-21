@@ -54,6 +54,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import YAML, { parseDocument } from 'yaml';
 
 import { asOf } from './_lib/as_of.js';
+import { assignmentPattern } from './_lib/egress_rules.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 type Severity = 'error' | 'warning' | 'info';
@@ -112,11 +113,20 @@ const _TYPE_COUNTS: Record<string, number> = {};
 // Redaction heuristics — plain-regex, deliberately conservative.
 // False positives are fixed by quoting the line differently; false
 // negatives are a curator responsibility.
-const REDACTION_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
+export const REDACTION_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
     // Key=value secret with a clear credential-word prefix. The value must
     // be a single token (no spaces, no "/" — skips filepaths and URLs).
     [
-        /\b(api[_-]?key|auth[_-]?token|access[_-]?token|bearer|secret|password|passwd|private[_-]?key)\b\s*[:=]\s*[A-Za-z0-9+/=_\-]{8,}(?![/.\w])/i,
+        assignmentPattern(
+            {
+                keywords: ['apiKey', 'authToken', 'accessToken', 'bearer', 'secret', 'password', 'passwd', 'privateKey'],
+                before: '\\b',
+                after: '\\b',
+                capture: true,
+                value: '[A-Za-z0-9+/=_\\-]{8,}(?![/.\\w])',
+            },
+            'i',
+        ),
         'inline credential',
     ],
     [/https?:\/\/[^\s"'/]*:[^\s"'/]*@/, 'url with credentials'],
