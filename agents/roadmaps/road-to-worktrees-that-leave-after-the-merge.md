@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 review_by: 2026-12-01
-estate_offset_exempt: "Round inbox-2026-10-v reproduced at 324969e7e that worktree_cleanup_check classes a clean, pushed, squash-merged worktree as `review: unmerged work` (isAncestor, worktree_cleanup_check.ts:300-307,485) while its merge-commit twin is `safe`, and that nothing in the tree removes a worktree at all (:19-24, workspace_doctor.ts:5-10). No active or parked roadmap owns cleanup: the only owner is stubs/road-to-worktree-lifecycle.md, parked on zero demand, which this change retires to skipped/ because the owner reported ~250 stale trees on 2026-10-21. Archiving or parking costs more because every new lane, review and security-fix worktree adds to an estate that already holds 73 linked trees in this checkout; merging into road-to-security-fixes-carried-to-the-merge would put a general lifecycle fault behind one consumer of it."
+estate_offset_exempt: "Round inbox-2026-10-v reproduced at 324969e7e that worktree_cleanup_check classes a clean, pushed, squash-merged worktree as `review: unmerged work` (isAncestor, worktree_cleanup_check.ts:300-307,485) while its merge-commit twin is `safe`, and that nothing in the tree removes a worktree at all (:19-24, workspace_doctor.ts:5-10). No active or parked roadmap owns cleanup: a grep over agents/roadmaps/{*,later,stubs} for worktree remove, isAncestor, merged-pr and worktrees.cleanup returns nothing, and the only owner is stubs/road-to-worktree-lifecycle.md, parked on zero demand, which this change retires to skipped/ because the owner reported ~250 stale trees on 2026-10-21. Archiving or parking costs more because every new lane, review and security-fix worktree adds to an estate that already holds 73 linked trees in this checkout; merging into road-to-security-fixes-carried-to-the-merge would put a general lifecycle fault behind one consumer of it."
 relates:
   - slug: road-to-security-fixes-carried-to-the-merge
     relation: extends
@@ -71,9 +71,8 @@ commit is ever lost.
       unmerged; F10 `gh` unavailable; F11 an ignored non-regenerable file
       (W5); F12 a sibling-directory worktree (W4). Each fixture backdates
       nothing: 1.4 removes the need.
-      verify: `npx vitest run tests/scripts/worktree_cleanup_check` passes with
-      a named case per fixture, and F1 is seen red against the current
-      predicate before 1.2 lands.
+      verify: the cleanup-check test file carries a named case per fixture,
+      and F1 is seen red against the current predicate before 1.2 lands.
 - [ ] **1.2 Merge evidence in three strengths**, strongest wins:
       `merged-ancestor` (today); `merged-pr` — the host reports the branch's PR
       MERGED **and** the branch tip equals that PR's head commit;
@@ -120,7 +119,7 @@ commit is ever lost.
       that `git cat-file -e` resolves.
 - [ ] **2.4 Never in an automatic path:** `--force`, `git clean -x`, the main
       worktree, a tree a live session is in.
-      verify: `grep -nE "worktree remove[^\n]*(--force|-f)" src/scripts/worktree_cleanup_check.ts` -> 1
+      verify: `grep -qE "worktree remove.*(--force| -f)" src/scripts/worktree_cleanup_check.ts` -> 1
 - [ ] **2.5 Correct the checker's self-description.** The header and the two
       plan strings that call this removal Hard-Floor (W2) are rewritten to the
       scoped rule D1 records: proven-merged, clean, not live is housekeeping;
@@ -141,8 +140,8 @@ commit is ever lost.
       day (`probe_throttle`, riding the existing `session_start` block — no
       new concern), the inventory runs detached; the next start reads one
       file and shows one line: "N worktrees removed, M need a decision".
-      verify: `session_start` performs no git call and no socket in the hook
-      process, asserted in a test.
+      verify: a test asserts the `session_start` hook process performs no git
+      call and opens no socket.
 - [ ] **3.4 Lanes and night runs register what they create.** Every worktree
       the process-full lanes or `using-git-worktrees` create gets a registry
       line: path, branch, `created_by: agent-config`, `purpose`.
