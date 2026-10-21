@@ -528,31 +528,65 @@ export function readSweepState(workspaceRoot: string): SweepState {
 export const SWEEP_CLAIM_LEASE_MS = 60_000;
 
 /**
+ * The longest a claim whose holder process still answers is honoured. Past it
+ * the pid is presumed reused by an unrelated process, so a claim left by a
+ * crash cannot block every later sweep.
+ */
+export const SWEEP_CLAIM_MAX_HOLD_MS = 24 * 60 * 60 * 1000;
+
+/** Whether a process with this pid exists on this machine. */
+export function pidAlive(pid: number): boolean {
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch (err) {
+        return (err as NodeJS.ErrnoException).code === 'EPERM';
+    }
+}
+
+/**
  * Claim one local day's sweep for the whole repository. A claim is a file
  * `claim-<day>.<generation>` created exclusively, so of two session starts
- * racing in two worktrees one sweeps and the other sees `null`. A claim older
- * than the lease, for a day whose sweep state was never written, is taken over
- * by creating the NEXT generation exclusively: of two processes taking over at
- * once exactly one creation succeeds, and nothing is ever overwritten. Claims of
+ * racing in two worktrees one sweeps and the other sees `null`.
+ *
+ * A claim is taken over only when its holder process is gone (or after
+ * {@link SWEEP_CLAIM_MAX_HOLD_MS}), and never inside the lease: a live holder —
+ * even one suspended — is never superseded, so only one process at a time ever
+ * mutates the retro stores. The takeover creates the NEXT generation
+ * exclusively, so of two takers exactly one succeeds and nothing is overwritten.
+ * A claim of an earlier day whose holder is still alive blocks too. Claims of
  * earlier days and superseded generations are pruned.
  */
-export function claimSweepDay(workspaceRoot: string, day: string, nowMs: number = Date.now()): string | null {
+export function claimSweepDay(
+    workspaceRoot: string,
+    day: string,
+    nowMs: number = Date.now(),
+    opts: { isAlive?: (pid: number) => boolean } = {},
+): string | null {
     const dir = commonSub(workspaceRoot, 'retro-sweep');
     if (dir === null) return null;
     fs.mkdirSync(dir, { recursive: true });
-    const current = currentClaim(dir, day);
-    let gen = 0;
-    if (current !== null) {
-        if (readSweepState(workspaceRoot).last_sweep?.day === day) return null;
+    if (readSweepState(workspaceRoot).last_sweep?.day === day) return null;
+    const isAlive = opts.isAlive ?? pidAlive;
+    const holderMayWrite = (name: string): boolean => {
         let age: number;
         try {
-            age = nowMs - fs.statSync(path.join(dir, current.name)).mtimeMs;
+            age = nowMs - fs.statSync(path.join(dir, name)).mtimeMs;
         } catch {
-            return null;
+            return false;
         }
-        if (age < SWEEP_CLAIM_LEASE_MS) return null;
-        gen = current.gen + 1;
+        if (age < SWEEP_CLAIM_LEASE_MS) return true;
+        const pid = Number(/^\d+:(\d+)-/.exec(claimToken(path.join(dir, name)) ?? '')?.[1] ?? NaN);
+        // An unreadable holder is treated as alive: the cost is a skipped day.
+        return age < SWEEP_CLAIM_MAX_HOLD_MS && (!Number.isFinite(pid) || isAlive(pid));
+    };
+    const current = currentClaim(dir, day);
+    if (current !== null && holderMayWrite(current.name)) return null;
+    for (const n of fs.readdirSync(dir)) {
+        const m = /^claim-(.+)\.(\d+)$/.exec(n);
+        if (m !== null && m[1] !== day && holderMayWrite(n)) return null;
     }
+    const gen = current === null ? 0 : current.gen + 1;
     const token = `${gen}:${process.pid}-${createHash('sha256').update(`${nowMs}\0${Math.random()}`).digest('hex').slice(0, 16)}`;
     try {
         fs.writeFileSync(path.join(dir, `claim-${day}.${gen}`), `${token}\n`, { flag: 'wx' });

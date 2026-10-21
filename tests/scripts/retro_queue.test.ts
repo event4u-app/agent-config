@@ -16,6 +16,7 @@ import {
     CATCH_UP_WINDOW_DAYS,
     DAILY_RETRO_BUDGET,
     SWEEP_CLAIM_LEASE_MS,
+    SWEEP_CLAIM_MAX_HOLD_MS,
     TRIAGE_P50_LIMIT_MS,
     claimSweepDay,
     classifyUnit,
@@ -181,6 +182,8 @@ function userGlobal(body: string): void {
 }
 
 const NOW = '2026-10-21T07:00:00Z';
+/** A claim holder that has exited: the only holder a takeover may supersede. */
+const gone = { isAlive: (): boolean => false };
 const m = <T>(value: T) => ({ status: 'measured' as const, value });
 const miss = { status: 'missing' as const, reason: 'not read' };
 
@@ -389,7 +392,7 @@ describe('retro_queue — path C, the daily sweep', () => {
         // The loser of the claim reports already-swept even before any state was written.
         expect(runDailySweep(wt, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [] }).status).toBe('already-swept');
         // A new day is a new claim, and the old one is pruned.
-        expect(claimSweepDay(wt, '2026-10-22')).not.toBeNull();
+        expect(claimSweepDay(wt, '2026-10-22', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, gone)).not.toBeNull();
     });
 
     it('a sweep that throws after its claim gives the claim back, and the next start sweeps', () => {
@@ -412,13 +415,13 @@ describe('retro_queue — path C, the daily sweep', () => {
         const t0 = Date.now();
         expect(claimSweepDay(main, '2026-10-21', t0)).not.toBeNull();
         expect(claimSweepDay(main, '2026-10-21', t0 + SWEEP_CLAIM_LEASE_MS / 2)).toBeNull();
-        expect(claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1)).not.toBeNull();
+        expect(claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, gone)).not.toBeNull();
     });
 
     it('a sweep whose claim was taken over cannot release its successor', () => {
         const { main } = repoWithWorktree();
         const first = claimSweepDay(main, '2026-10-21', Date.now())!;
-        const second = claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1)!;
+        const second = claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, gone)!;
         expect(second).not.toBe(first);
         releaseSweepDay(main, '2026-10-21', first);
         // The successor still holds the day.
@@ -430,7 +433,7 @@ describe('retro_queue — path C, the daily sweep', () => {
     it('a takeover creates the next claim generation exclusively and never overwrites one', () => {
         const { main, wt } = repoWithWorktree();
         const first = claimSweepDay(main, '2026-10-21', Date.now())!;
-        const taker = claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1)!;
+        const taker = claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, gone)!;
         expect(first.startsWith('0:')).toBe(true);
         expect(taker.startsWith('1:')).toBe(true);
         expect(holdsSweepDay(main, '2026-10-21', taker)).toBe(true);
@@ -443,10 +446,30 @@ describe('retro_queue — path C, the daily sweep', () => {
         expect(fs.existsSync(path.join(dir, 'claim-2026-10-21.0'))).toBe(false);
     });
 
+    it('a live holder is never superseded, however long it holds: no second writer can start', () => {
+        const { main, wt } = repoWithWorktree();
+        const held = claimSweepDay(main, '2026-10-21', Date.now())!;
+        const alive = { isAlive: (): boolean => true };
+        expect(claimSweepDay(wt, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, alive)).toBeNull();
+        // A live holder of an earlier day blocks the next day's sweep too.
+        expect(claimSweepDay(wt, '2026-10-22', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, alive)).toBeNull();
+        expect(holdsSweepDay(main, '2026-10-21', held)).toBe(true);
+        // Past the maximum hold the pid is presumed reused, so a crash cannot block forever.
+        expect(claimSweepDay(wt, '2026-10-21', Date.now() + SWEEP_CLAIM_MAX_HOLD_MS + 1, alive)).not.toBeNull();
+    });
+
+    it('a finished sweep gives its claim back, and the finished day is not claimed again', () => {
+        const { main, wt } = repoWithWorktree();
+        expect(runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [] }).status).toBe('ran');
+        const alive = { isAlive: (): boolean => true };
+        expect(claimSweepDay(wt, '2026-10-21', Date.now(), alive)).toBeNull();
+        expect(claimSweepDay(wt, '2026-10-22', Date.now(), alive)).not.toBeNull();
+    });
+
     it('a sweep whose claim was taken over records nothing', () => {
         const { main } = repoWithWorktree();
         const first = claimSweepDay(main, '2026-10-21', Date.now())!;
-        claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1);
+        claimSweepDay(main, '2026-10-21', Date.now() + SWEEP_CLAIM_LEASE_MS + 1, gone);
         const busy = session('late', '2026-10-20', { self_repair_in_window: m(1) });
         const r = runDailySweep(main, { now: NOW, timeZone: BERLIN, repo: 'acme/widget', sessions: [busy], claim: first });
         expect(r.status).toBe('superseded');

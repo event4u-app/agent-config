@@ -128,12 +128,16 @@ export function runDailySweep(root: string, input: SweepInput): SweepResult {
         token = claimSweepDay(root, today) ?? undefined;
         if (token === undefined) return { status: 'already-swept', line: null, counts };
     }
+    let result: SweepResult;
     try {
-        return sweepClaimed(root, input, today, state, counts, token);
+        result = sweepClaimed(root, input, today, state, counts, token);
     } catch (err) {
         releaseSweepDay(root, today, token);
         throw err;
     }
+    // A finished sweep gives its claim back; the sweep state now marks the day done.
+    if (result.status !== 'superseded') releaseSweepDay(root, today, token);
+    return result;
 }
 
 /**
@@ -380,8 +384,9 @@ export function retroDailyProbe(
             ...(slug !== null ? { readPr: budgetedGhPrState(root, Math.max(0, deadlineAt - Date.now())) } : {}),
         });
         held = null;
-        // Stamped only after the sweep returned; a throw skips the stamp.
-        deps.stamp?.(root);
+        // Stamped only after a sweep that completed; a throw or a superseded sweep
+        // leaves the workspace free to try again.
+        if (r.status !== 'superseded') deps.stamp?.(root);
         return r.line;
     } catch {
         if (held !== null) {
