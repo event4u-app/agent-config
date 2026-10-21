@@ -530,14 +530,36 @@ export const ESCALATION_HEADING =
 /**
  * ADVISORY, and the block says so: this gate's exit code does not carry the
  * user's decision. A failing record already fails; a passing record over the
- * mechanism passes here and is held at merge, where `classify_merge_risk`
- * classes the same paths `needs-owner` and the owner's forge act is the only
- * approval (ADR-281 § 5). A blocking status here would need an owner
- * acknowledgment the gate could authenticate, and none exists.
+ * mechanism passes here, and the merge is the owner's act on the forge
+ * (ADR-281 § 5). The line claims no more than the tree holds: the
+ * `/pr:merge` risk classifier routes these paths `needs-owner` when an agent
+ * merges, and NO required CI status enforces the owner's approval — a
+ * blocking status here would need an owner acknowledgment the gate could
+ * authenticate, and none exists.
  */
 const ESCALATION_ADVISORY =
-    '  advisory: this exit code does not carry the decision — the merge gate holds ' +
-    'these paths as needs-owner, and the owner approves on the forge (ADR-281 § 5).';
+    '  advisory: this exit code does not carry the decision, and no CI check enforces it — ' +
+    'the merge is the owner\'s (ADR-281 § 5); /pr:merge routes these paths needs-owner.';
+
+/** Output bounds: record text is candidate-controlled, and a flooded log hides the question. */
+export const ESCALATION_FIELD_MAX = 200;
+export const ESCALATION_LIST_MAX = 50;
+
+/** A field as printed: escaped, then clipped, with the clip said rather than hidden. */
+function field(s: string): string {
+    const out = printable(s);
+    return out.length > ESCALATION_FIELD_MAX
+        ? `${out.slice(0, ESCALATION_FIELD_MAX)}… (${out.length - ESCALATION_FIELD_MAX} more characters)`
+        : out;
+}
+
+/** The first `ESCALATION_LIST_MAX` items, and a count of the rest. */
+function bounded<T>(items: readonly T[]): { shown: readonly T[]; omitted: number } {
+    return {
+        shown: items.slice(0, ESCALATION_LIST_MAX),
+        omitted: Math.max(0, items.length - ESCALATION_LIST_MAX),
+    };
+}
 
 /**
  * Why a run stops for the user. An authoring defect — no record, a malformed or
@@ -599,25 +621,34 @@ export function escalationMessage(input: {
     for (const t of input.triggers) {
         out.push(`  · ${TRIGGER_TEXT[t]}`);
     }
-    for (const r of input.records) {
-        const verdict = printable(r.verdict ?? 'unreadable');
-        out.push(`  record ${printable(r.path)} — verdict: ${verdict}`);
-        const dissent = Object.entries(r.seats).filter(
-            ([, v]) => v !== 'ratified' && v !== 'confirmed-non-expanding',
+    const records = bounded(input.records);
+    for (const r of records.shown) {
+        const verdict = field(r.verdict ?? 'unreadable');
+        out.push(`  record ${field(r.path)} — verdict: ${verdict}`);
+        const dissent = bounded(
+            Object.entries(r.seats).filter(([, v]) => v !== 'ratified' && v !== 'confirmed-non-expanding'),
         );
         out.push(
-            dissent.length === 0
+            dissent.shown.length === 0
                 ? '    dissent: none recorded'
-                : `    dissent: ${dissent.map(([p, v]) => printable(`${p}: ${v}`)).join(', ')}`,
+                : `    dissent: ${dissent.shown.map(([p, v]) => field(`${p}: ${v}`)).join(', ')}` +
+                      (dissent.omitted > 0 ? ` … and ${dissent.omitted} more` : ''),
         );
     }
+    if (records.omitted > 0) {
+        out.push(`  … and ${records.omitted} more record(s)`);
+    }
     out.push('  the exact change (gated paths):');
-    for (const p of input.gatedPaths) {
-        out.push(`    · ${printable(p)}`);
+    const paths = bounded(input.gatedPaths);
+    for (const p of paths.shown) {
+        out.push(`    · ${field(p)}`);
+    }
+    if (paths.omitted > 0) {
+        out.push(`    … and ${paths.omitted} more path(s)`);
     }
     const where =
-        input.records.length > 0
-            ? input.records.map((r) => printable(r.path)).join(', ')
+        records.shown.length > 0
+            ? records.shown.map((r) => field(r.path)).join(', ')
             : 'the record';
     out.push(
         `  this gate does not know the expected gain, the risk, or the rollback — ` +

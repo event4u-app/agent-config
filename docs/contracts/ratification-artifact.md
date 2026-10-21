@@ -739,11 +739,16 @@ control, format and line/paragraph-separator character (`Cc`, `Cf`, `Zl`,
 
 **The printed question is advisory, and says so.** The gate's exit code does
 not carry the user's decision: a failing record fails already, and a passing
-record over the mechanism passes here and is held at merge, where
-`classify_merge_risk` classes the same paths `needs-owner` — pinned path by
-path in `check_kernel_edit_ratified_escalation_message.test.ts` — and the
-owner's forge act is the approval (ADR-281 § 5). A blocking status in this gate would
-need an owner acknowledgment it could authenticate, and none exists.
+record over the mechanism passes here. The merge is the owner's act on the
+forge (ADR-281 § 5), and **no required CI status enforces it**: what the tree
+holds is that `/pr:merge`'s risk classifier, `classify_merge_risk`, routes
+every mechanism path `needs-owner` when an agent merges — pinned path by path,
+for additions, deletions and both sides of a rename, in
+`check_kernel_edit_ratified_escalation_message.test.ts` — and nothing stops a
+merge made outside that command. A blocking status in this gate would need an
+owner acknowledgment it could authenticate, and none exists. The block is
+bounded — each field at 200 characters, each list at 50 entries, with what was
+left out counted — so candidate-controlled text cannot bury the question.
 Whether a different provider was tried (condition 1) and whether a row of
 the owner-reserved table is touched (condition 3) are judgements the gate
 cannot make from a diff; a run states them itself.

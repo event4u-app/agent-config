@@ -124,9 +124,26 @@ describe('escalationMessage — the shape of the one question', () => {
         expect(msg).not.toContain('anthropic: ratified');
     });
 
-    it('says it is advisory and where the decision is actually held', () => {
+    it('says it is advisory, that no CI check enforces it, and whose the merge is', () => {
         expect(msg).toContain('advisory');
+        expect(msg).toContain('no CI check enforces it');
+        expect(msg).toContain('ADR-281 § 5');
         expect(msg).toContain('needs-owner');
+    });
+
+    it('bounds what candidate-controlled text can print, and says what it left out', () => {
+        const many = Array.from({ length: gate.ESCALATION_LIST_MAX + 10 }, (_, i) => `p/${i}.md`);
+        const long = 'v'.repeat(gate.ESCALATION_FIELD_MAX * 5);
+        const out = escalationMessage({
+            triggers: ['refused'],
+            records: [{ path: 'r.md', verdict: long, seats: { openai: 'refused' } }],
+            gatedPaths: many,
+        });
+        expect(out.filter((l) => l.startsWith('    · ')).length).toBe(gate.ESCALATION_LIST_MAX);
+        expect(out.join('\n')).toContain('… and 10 more path(s)');
+        const verdictLine = out.find((l) => l.includes('verdict:')) ?? '';
+        expect(verdictLine.length).toBeLessThan(gate.ESCALATION_FIELD_MAX + 100);
+        expect(verdictLine).toContain(`${gate.ESCALATION_FIELD_MAX * 4} more characters`);
     });
 
     // Chosen from OUTSIDE the implementation's own list: C0, DEL, C1, the
@@ -304,7 +321,7 @@ describe('evaluate — when the user decides, the gate says so', () => {
     });
 });
 
-describe('the advisory line is true: the merge gate holds the mechanism as needs-owner', () => {
+describe('the /pr:merge classifier routes every mechanism path needs-owner', () => {
     // Iterates `MECHANISM_PATHS`, the list `isMechanismPath` decides by, so a
     // path added to the mechanism is covered here without an edit to this test.
     const changes = (p: string) => [
@@ -330,8 +347,8 @@ describe('the advisory line is true: the merge gate holds the mechanism as needs
         }
     });
 
-    it('polarity: a path outside the mechanism is not decided by the same predicate', () => {
-        expect(isMechanismPath('src/scripts/ai_council/prompts.ts')).toBe(false);
+    it('polarity: a path outside the mechanism is not in the list', () => {
+        expect(isMechanismPath('README.md')).toBe(false);
     });
 });
 
