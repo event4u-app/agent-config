@@ -588,6 +588,15 @@ describe('spawn-guard-shadow — rate window', () => {
         processEnvelope(agentCall('ac-worker'), root);
         expect(shadowLines().at(-1)!.rate_window).toBe('clear');
     });
+
+    it('a council marker followed by a host StopFailure marker on the same run reads would_wait (D5)', () => {
+        writeQuotaParked(root, 'sess-both', ['openai'], () => new Date(Date.now() - 6 * 3_600_000), 'council');
+        const host = writeQuotaParked(root, 'sess-both', ['anthropic'], () => new Date(), 'host');
+        expect(host.source).toBe('host');
+        expect(Date.now() - Date.parse(host.parked_at)).toBeLessThan(60_000);
+        processEnvelope(agentCall('ac-worker'), root);
+        expect(shadowLines().at(-1)!.rate_window).toBe('would_wait');
+    });
 });
 
 describe('spawn-guard-shadow — payload bodies never reach the ledger (ratification r1)', () => {
