@@ -335,11 +335,12 @@ waits:
       generation chain the recycling roadmap wanted, reached at task boundaries.
       verify: `npx vitest run tests/scripts/_lib_worker_reuse.test.ts -t retired-worker-briefs-successor-from-capsule --reporter=verbose` -> /✓.*retired-worker-briefs-successor-from-capsule/
       Done 2026-10-16: `briefSuccessor`. (b) also retires, per 4.4 and risk 2; (a) and (g) spawn plain fresh; a missing or invalid capsule falls back to stop-loss.
-- [ ] **3.5 File the shadow window** — at least 100 `Agent` calls or two
+- [x] **3.5 File the shadow window** — at least 100 `Agent` calls or two
       weeks, the would-resume distribution and the refusal reasons. A window in
       which every reuse was refused is a valid null.
       verify: `ls agents/evidence/analysis/` -> /worker-reuse-shadow-window/
       Built 2026-10-22, waits on its window: `src/scripts/worker_reuse_shadow_report.ts` summarises the window (calls, would-resume names, refusal reasons, resumes, valid null). Read on the maintainer's ledger the same day: 0 reuse-bearing lines, because the recording guard (3.3) is not installed yet. Closes when the report over ≥ 100 `Agent` calls or two weeks is filed as `agents/evidence/analysis/worker-reuse-shadow-window-<date>.md`.
+      Done 2026-10-23: `agents/evidence/analysis/worker-reuse-shadow-window-2026-10-22.md` — 107 spawn lines (a manufactured bench of 16 child sessions plus organic review work, labelled apart), 85 complete joins, **0 `would_resume`** (`transcript_over_cold_start` 64, `no_candidate` 21), 22 incomplete joins named by field. Verdicts are reconstructed at report time (council decision 1, D14; bc48e93a91, 9916f6e3d0). The null is the as-implemented result: condition (c) compares a whole transcript with written-or-uncached tokens, which D15 keeps unchanged and reads beside a pre-registered like-for-like second reading (also 0).
 - [ ] **3.6 Flip only under the policy's four conditions**
       (`concern-activation-policy.md:67-85`), with a council ratification
       artefact and the reverse trigger shipped in the same change. Blocking form:
@@ -349,6 +350,7 @@ waits:
       enforced.
       verify: `ls agents/evidence/ratifications/` -> /worker-reuse-guard-flip/
       Built 2026-10-22, not flipped: `flipReadiness` in the same module encodes the four conditions — failure observed, false-positive rate measured and ≤ 1 %, economics measured and favourable, window met — and returns `ready: false` while any is unmeasured (`tests/scripts/worker_reuse_shadow_report.test.ts`). The blocking form and its ratification wait on 3.5's window. Owed before a flip: an indexed register, or a measured miss rate for the 1 MiB ledger tail read (ratification 2026-10-22).
+      Evaluated 2026-10-23, not flipped: `flipReadiness` over the filed window returns `ready: false`, missing all four — no would-resume was observed (so no failure to catch and nothing to grade for false positives or price for economics), and 85 complete calls over 0.02 days miss the window. Closes when a window of ≥ 100 complete calls or two weeks, read under a decided condition (c) (D15), returns `ready: true`; then the blocking form, `worker-reuse-guard-flip` ratification and reverse trigger land in one change.
       Indexed 2026-10-22 (40786bb420): the ledger writes a digest-keyed index entry at every stop and named spawn, and the guard answers with one read; `spawn_guard_shadow.test.ts` › indexed register (two cases bury the answer under 2 MiB of later traffic) and › the ledger hook's own stop writes the index the guard reads (seen red with the write neutralised). The hook also receives only the five addressing fields it reads (`payload_fields`, e2e04d1aa3).
 
 ## Phase 4 — Rate pressure that waits instead of spawning
@@ -433,11 +435,12 @@ waits:
       of the same class, margin from decision D6.
       verify: `grep -c 'warm-worker-cold-start-relief' docs/CLAIMS.md` -> /^[1-9][0-9]*$/
       Done 2026-10-16: four `unbacked` pre-registrations, D6 margin set at -5 pp, `build_proof` run in the same change.
-- [ ] **6.2 Dated verdicts.** Each claim carries a verdict, positive or null; a
+- [x] **6.2 Dated verdicts.** Each claim carries a verdict, positive or null; a
       sample that never fills is a publishable outcome. A cheaper resume that
       fails non-inferiority keeps the reuse half in shadow.
       verify: `grep -c 'resume-non-inferiority' docs/CLAIMS.md` -> /^[1-9][0-9]*$/
       Waits on its window 2026-10-22: the four claims stay `unbacked`. Their instruments now exist (shadow window report, host rate marker, seat resume); none has a sample yet, and a verdict written before one would be invented.
+      Done 2026-10-23 (926483b4c5, `docs/CLAIMS.md`, `build_proof` in the same change), all on one manufactured window (O6): `warm-worker-cold-start-relief` **backed** (ratio 0.170, 64 resumes in 8 sessions); `resume-non-inferiority` **backed** (+10.9 pp pooled, +12.5 pp paired); `fresh-spawns-per-drain` **underpowered** (the arm prompts fix the count; revisit on a real drain pair); `rate-limit-stops-per-drain` **underpowered** (0 stops, no before/after pair, no plan-limit `StopFailure` observed). Evidence `agents/evidence/analysis/warm-worker-claims-2026-10-22.md`. The reuse half is non-inferior, so it is not held in shadow on quality grounds.
 - [x] **6.3 Correct D3** in the recycling roadmap's Context, citing the
       per-spawn reading.
       verify: `grep -c 'per-spawn-standing-2026-10' agents/roadmaps/later/road-to-worker-generation-recycling.md` -> /^[1-9][0-9]*$/
@@ -547,11 +550,12 @@ waits:
       observation protocol, and a host without `worker_resume: true` changes no
       behaviour.
       Done 2026-10-22: every capability row is dated in `host-continuation-observations-2026-10.md`; `host-without-resume-records-fresh-before-reading-any-worker` (`tests/scripts/_lib_worker_reuse.test.ts`).
-- [ ] **AC-2** The owner's governing constraint holds: the plan reduces requests
+- [x] **AC-2** The owner's governing constraint holds: the plan reduces requests
       and concurrent cold starts in a short window, not only tokens —
       `rate-limit-stops-per-drain` and `fresh-spawns-per-drain` carry dated
       verdicts beside the token claim.
       Built, waits on its window 2026-10-22: both claims are pre-registered (6.1); the host marker (4.3) and the shadow `rate_window` field (4.5) are the instruments. No drain has run since they landed, so no verdict is written.
+      Done 2026-10-23: both carry dated verdicts beside the token claim (6.2) — `rate-limit-stops-per-drain` and `fresh-spawns-per-drain` underpowered with their revisit conditions, `warm-worker-cold-start-relief` backed.
 - [x] **AC-3** Every reuse decision comes from one pure function, with a fixture
       per refusal reason (a)–(h); no prose rule re-implements it.
       Done 2026-10-22: `decideWorkerReuse` › `one-fixture-per-refusal-reason`; `shadowReuseVerdict` agrees with it on every single-reason fixture.
@@ -566,9 +570,10 @@ waits:
       count, the host's spawn cap and whether resumes are inside it — no claim
       the host caps resumes without a row.
       Done 2026-10-22: `subagent-configuration.md` and the `max_parallel` description say the host cap bounds new spawns only (4.2); the shadow line separates `dispatch_kind: spawn | resume`.
-- [ ] **AC-8** The guard's shadow window is filed before any flip, and every
+- [x] **AC-8** The guard's shadow window is filed before any flip, and every
       claim in 6.1 carries a dated verdict, positive or null.
       Built, waits on its window 2026-10-22: `worker_reuse_shadow_report.ts` files the window and `flipReadiness` refuses a flip before it; the 6.1 claims are unbacked until the window fills.
+      Done 2026-10-23: the window is filed (3.5) and the guard was not flipped (3.6); every 6.1 claim carries a dated verdict (6.2).
 - [x] **AC-9** No settings key, no CLI namespace and no schema file beyond the
       opened subagent schema were added.
       Done 2026-10-22: no settings key, CLI namespace or schema file was added; the new concern `host-rate-marker` is a hook registration.

@@ -139,3 +139,22 @@ fresh run.
 
 The output carries the primary `summary` and `flip`, and `secondary_c_like_for_like` with its
 own label, threshold and summary. Raw transcripts and the scratch ledger are not committed.
+
+## Extended reading — the window without `--until` (2026-10-23)
+
+The filed window above stops at 21:38Z, when it was written. The same command without `--until`
+also counts the spawns recorded afterwards in the maintainer ledger: twelve read-only review
+agents over this branch's diff and the fix agents that followed — organic work, not part of the
+manufactured bench, labelled here only so the two are not pooled silently.
+
+| | value |
+|---|---|
+| spawn lines since 20:40Z | **107** |
+| complete joins | 85 |
+| incomplete joins | 22 — `session_id` 22 (parallel background spawns of one type inside the 10 s join window cannot be told apart), `agent_type` 14, stamps 11 (lines written before the main checkout's hook bundle was rebuilt with this branch) |
+| `would_resume` (primary, as implemented) | **0** — `transcript_over_cold_start` 64, `no_candidate` 21 |
+| `would_resume` (secondary `c_like_for_like`) | 0 |
+| `flipReadiness` | not ready — `failure_observed`, `false_positive_rate_measured`, `economics_measured`, `window_met` (85 complete calls over 0.02 days) |
+
+Step 3.5 asked for at least 100 `Agent` calls; 107 were recorded. The reading is a valid null for
+the policy as implemented, and the step closes on it.
