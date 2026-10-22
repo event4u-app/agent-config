@@ -387,6 +387,33 @@ export function _concern_body_classes(concern: JsonObject): Set<BodyClass> {
   return parseBodyClasses(concern["needs_payload_bodies"]);
 }
 
+/**
+ * Field-level projection: a concern declaring `payload_fields: [k, …]` gets
+ * each tool body reduced to those top-level keys, and a body that is not an
+ * object as a stub. It reads only what it was handed, so its privacy does not
+ * rest on what it chooses to keep. The same guard floor as the body classes:
+ * a blocking or fail-closed concern is never narrowed.
+ */
+export function applyPayloadFields(concern: JsonObject, env: JsonObject): JsonObject {
+  const fields = concern["payload_fields"];
+  const payload = env["payload"];
+  if (!Array.isArray(fields) || !isObject(payload) || concern["fail_closed"] === true || concern["severity"] === "blocking") {
+    return env;
+  }
+  const keep = new Set(fields);
+  const out: JsonObject = { ...payload };
+  for (const cls of BODY_CLASSES) {
+    for (const key of BODY_KEYS[cls]) {
+      const v = payload[key];
+      if (v === undefined || v === null || isPayloadStub(v)) continue;
+      out[key] = isObject(v)
+        ? Object.fromEntries(Object.entries(v).filter(([k]) => keep.has(k)))
+        : makePayloadStub(key, cls, v, new Map());
+    }
+  }
+  return { ...env, payload: out };
+}
+
 /** The per-dispatch shaping plan. Built once, read per concern. */
 export interface PayloadShapePlan {
   /**

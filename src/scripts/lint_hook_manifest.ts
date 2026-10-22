@@ -276,6 +276,24 @@ function _check_concerns(manifest: YamlObject, errors: string[]): Set<string> {
         }
       }
     }
+    // `payload_fields:` — field-level projection of the declared bodies. A
+    // non-list is ignored at run time, which would silently hand the concern
+    // whole bodies; a projection on a guard is ignored by design, so declaring
+    // one there states a narrowing that never happens.
+    if ("payload_fields" in spec) {
+      const raw = spec["payload_fields"];
+      if (!Array.isArray(raw) || raw.length === 0 || raw.some((f) => typeof f !== "string" || f === "")) {
+        errors.push(
+          `concerns.${name}: 'payload_fields' must be a non-empty list of key names`,
+        );
+      }
+      if (spec["fail_closed"] === true || spec["severity"] === "blocking") {
+        errors.push(
+          `concerns.${name}: 'payload_fields' has no effect on a blocking or ` +
+            `fail-closed concern, which always receives whole bodies — remove it`,
+        );
+      }
+    }
     // `re_arm:` — the named boundary at which a rebuilt prompt prefix is
     // expected and paid for once (`road-to-runtime-context-floors` step 1.2).
     // `check_prefix_stable_mutation` reads this key to decide whether a
