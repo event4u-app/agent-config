@@ -28,6 +28,7 @@ import type { EvidenceBasis } from './evidence_basis.js';
 import type { NoFreeForm } from './runtime_journal.js';
 import { type PrivacyClass } from './privacy_class.js';
 import type { PhaseOutcome } from './outcome_vocabularies.js';
+import { HAND_KINDS, type HandKind } from './hand_kinds.js';
 
 export type DispatchOutcome = 'DONE' | 'DONE_WITH_CONCERNS' | 'NEEDS_CONTEXT' | 'BLOCKED' | 'killed';
 /** Which route the rung took: deterministic primitive (lean-init L0),
@@ -235,6 +236,10 @@ export interface RecordInput {
     // same built-and-unreachable class the rest of this change detects, so it
     // goes rather than waiting behind a label. Re-adding them is one commit
     // once an observation source exists.
+    /** The typed kind a rung-0.5 hand was asked to do; null for an untyped ask or a spawn. */
+    hand_kind?: HandKind | null | undefined;
+    /** Whether the hand's return matched its kind's schema; a mismatch is a failed call. */
+    schema_valid?: boolean | undefined;
     // Audit-log envelope (sensible defaults for a dispatch record)
     phase?: LinePhase | undefined;
     outcome?: LineOutcome | undefined;
@@ -560,6 +565,13 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         errors.push('rules_used cannot exceed rules_carried (a worker cannot apply a rule it was not given)');
     }
 
+    if (input.hand_kind != null && !HAND_KINDS.includes(input.hand_kind)) {
+        errors.push(`hand_kind must be one of ${HAND_KINDS.join(' | ')} (or omitted)`);
+    }
+    if (input.schema_valid !== undefined && typeof input.schema_valid !== 'boolean') {
+        errors.push('schema_valid must be a boolean or omitted');
+    }
+
     if (input.capsule_emitted !== undefined && typeof input.capsule_emitted !== 'boolean') {
         errors.push('capsule_emitted must be a boolean or omitted');
     }
@@ -627,6 +639,8 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         // capsule shadow-measurement — readers ignore unknowns per audit-log-v1
         capsule_emitted: input.capsule_emitted ?? null,
         capsule_entries: input.capsule_entries ?? null,
+        hand_kind: input.hand_kind ?? null,
+        schema_valid: input.schema_valid ?? null,
     };
 
     const line: Record<string, unknown> = {

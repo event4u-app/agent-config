@@ -36,9 +36,15 @@
  *   ./scripts-run src/scripts/ask_transport "is X true in file Y?" \
  *     [--system "<system prompt>"] [--member <name>] [--format text|json] \
  *     [--content-class public-artifact|project-content] \
+ *     [--kind classify|extract|summarise-given-text|draft-candidate|test-candidates|finding-proposal] \
  *     [--no-record] [--dir <audit-dir>]
  *
- * Exit codes: 0 answer produced · 2 usage error · 3 honest-∅ (no transport).
+ * `--kind` makes the call a typed hand: the system prompt is the kind's schema
+ * and nothing else (so `--system` is refused beside it), and a return that does
+ * not match the schema is a failed call (exit 3, logged), never a partial answer.
+ *
+ * Exit codes: 0 answer produced · 2 usage error · 3 honest-∅ (no transport, or a
+ * typed return that does not parse).
  */
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
@@ -47,6 +53,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import type { ExternalAIClient } from './ai_council/clients.js';
 import { classifyContentClass, DEFAULT_CONTENT_CLASS, type ContentClass } from './ai_council/content_ceiling.js';
+import { handSystemPrompt, parseHandReturn } from './ai_council/hand_schemas.js';
+import { isHandKind, type HandKind } from './_lib/hand_kinds.js';
 import { buildOrchestrationLine } from './_lib/orchestration_record.js';
 import { DEFAULT_DIR } from './orchestration_record.js';
 
@@ -67,6 +75,8 @@ export interface AskResult {
     input_tokens: number;
     output_tokens: number;
     latency_ms: number;
+    /** The schema-valid value of a typed return; untrusted data until the head verifies it. */
+    parsed?: unknown;
 }
 
 export interface AskOptions {
@@ -82,6 +92,13 @@ export interface AskOptions {
     id?: () => string;
     /** The class of the prompt; `project-content` unless the caller declares a repo-owned artefact. */
     contentClass?: ContentClass;
+    /** A typed hand call: the kind's schema is the whole system prompt and the return must match it. */
+    kind?: HandKind;
+}
+
+interface LineExtras {
+    hand_kind?: HandKind;
+    schema_valid?: boolean;
 }
 
 const DEFAULT_SYSTEM =
@@ -97,7 +114,14 @@ async function defaultMembers(contentClass: ContentClass): Promise<ExternalAICli
     return mod.build_members(settings, { content_class: contentClass });
 }
 
-function recordAskLine(auditDir: string, result: AskResult | null, member: string, ts: string, id: string): void {
+function recordAskLine(
+    auditDir: string,
+    result: AskResult | null,
+    member: string,
+    ts: string,
+    id: string,
+    extras: LineExtras,
+): void {
     const { line, errors } = buildOrchestrationLine({
         spawn_count: 0,
         token_delta: 0,
@@ -117,6 +141,8 @@ function recordAskLine(auditDir: string, result: AskResult | null, member: strin
         model_requested: result === null || result.model === UNKNOWN_MODEL ? null : result.model,
         model_served: result === null ? null : result.model_served,
         origin: 'dispatch-economy-2026',
+        ...(extras.hand_kind !== undefined ? { hand_kind: extras.hand_kind } : {}),
+        ...(extras.schema_valid !== undefined ? { schema_valid: extras.schema_valid } : {}),
         ts,
         id,
     });
@@ -155,14 +181,21 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
     }
     const provider = memberName(pick);
 
+    const system = opts.kind !== undefined ? handSystemPrompt(opts.kind) : (opts.systemPrompt ?? DEFAULT_SYSTEM);
     try {
-        const response = pick.ask(opts.systemPrompt ?? DEFAULT_SYSTEM, trimmed);
+        const response = pick.ask(system, trimmed);
         const r = response instanceof Promise ? await response : response;
         if (r === null || r === undefined || (r.error !== null && r.error !== undefined && r.error !== '')) {
             return _finish(null, provider, opts);
         }
         const text = (r.text ?? '').trim();
         if (!text) return _finish(null, provider, opts);
+        let parsed: unknown;
+        if (opts.kind !== undefined) {
+            const p = parseHandReturn(opts.kind, text);
+            if (!p.ok) return _finish(null, provider, opts, false);
+            parsed = p.value;
+        }
         return _finish(
             {
                 answer: text,
@@ -172,26 +205,41 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
                 input_tokens: r.input_tokens ?? 0,
                 output_tokens: r.output_tokens ?? 0,
                 latency_ms: r.latency_ms ?? 0,
+                ...(opts.kind !== undefined ? { parsed } : {}),
             },
             provider,
             opts,
+            opts.kind !== undefined ? true : undefined,
         );
     } catch {
         return _finish(null, provider, opts); // ONE completion — no retry here
     }
 }
 
-function _finish(result: AskResult | null, member: string, opts: AskOptions): AskResult | null {
+function _finish(
+    result: AskResult | null,
+    member: string,
+    opts: AskOptions,
+    schemaValid?: boolean,
+): AskResult | null {
     const auditDir = opts.auditDir === undefined ? path.join(process.cwd(), DEFAULT_DIR) : opts.auditDir;
     if (auditDir !== null) {
         const ts = (opts.now ? opts.now() : new Date()).toISOString();
         const id = opts.id ? opts.id() : crypto.randomUUID();
-        recordAskLine(auditDir, result, member, ts, id);
+        recordAskLine(auditDir, result, member, ts, id, {
+            ...(opts.kind !== undefined ? { hand_kind: opts.kind } : {}),
+            ...(schemaValid !== undefined ? { schema_valid: schemaValid } : {}),
+        });
     }
     return result;
 }
 
-export async function main(argv: readonly string[]): Promise<number> {
+/** Test seam: inject members instead of reading the council configuration. */
+export interface MainDeps {
+    members?: ExternalAIClient[];
+}
+
+export async function main(argv: readonly string[], deps: MainDeps = {}): Promise<number> {
     let prompt = '';
     let system: string | undefined;
     let member: string | undefined;
@@ -199,6 +247,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     let record = true;
     let dir: string | undefined;
     let contentClass: ContentClass = DEFAULT_CONTENT_CLASS;
+    let kindRaw: string | undefined;
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i] ?? '';
         if (a === '--system') system = argv[++i];
@@ -207,10 +256,19 @@ export async function main(argv: readonly string[]): Promise<number> {
         else if (a === '--no-record') record = false;
         else if (a === '--dir') dir = argv[++i];
         else if (a === '--content-class') contentClass = classifyContentClass(argv[++i]);
+        else if (a === '--kind') kindRaw = argv[++i] ?? '';
         else if (!a.startsWith('--')) prompt = prompt ? `${prompt} ${a}` : a;
     }
     if (!prompt.trim()) {
         process.stderr.write('ask_transport: a question argument is required\n');
+        return 2;
+    }
+    if (kindRaw !== undefined && !isHandKind(kindRaw)) {
+        process.stderr.write(`ask_transport: --kind must be one of the hand kinds; '${kindRaw}' is not one (head-only work never reaches a hand)\n`);
+        return 2;
+    }
+    if (kindRaw !== undefined && system !== undefined) {
+        process.stderr.write('ask_transport: --system cannot be combined with --kind; a hand sees only its kind schema\n');
         return 2;
     }
     const opts: AskOptions = {
@@ -218,10 +276,14 @@ export async function main(argv: readonly string[]): Promise<number> {
         ...(member !== undefined ? { member } : {}),
         auditDir: record ? (dir ?? path.join(process.cwd(), DEFAULT_DIR)) : null,
         contentClass,
+        ...(kindRaw !== undefined && isHandKind(kindRaw) ? { kind: kindRaw } : {}),
+        ...(deps.members !== undefined ? { members: deps.members } : {}),
     };
     const result = await askOnce(prompt, opts);
     if (result === null) {
-        process.stderr.write('ask_transport: ∅ — no transport resolved or the single completion failed (no retry by design)\n');
+        process.stderr.write(
+            'ask_transport: ∅ — no transport resolved, the single completion failed, or a typed return did not match its schema (no retry by design)\n',
+        );
         return 3;
     }
     process.stdout.write(
