@@ -1,0 +1,17 @@
+{
+  "skill": "analyze-reference",
+  "last_eval": "2026-10-22",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers analysing an external reference repository (competitor, peer, inspiration) and producing a comparison and adoption plan, including the renamed analyze-repo door. Should-not-trigger covers the neighbours that own a different surface: /analyze:pr (a pull request), /analyze:inbox (dropped artifacts in agents/tmp), /project:analyze (this project), /analyze:roadmap-repos (repositories a roadmap names) and plain library recommendations.",
+  "queries": [
+    { "q": "analyze https://github.com/acme/agent-kit and tell me what we should adopt from it", "trigger": true },
+    { "q": "compare our rule layer against the reference repo owner/repo and write an adoption plan", "trigger": true },
+    { "q": "schau dir das Repo acme/peer-suite an und vergleiche es mit unserem Paket", "trigger": true },
+    { "q": "deep-dive this competitor repository, inspect its skills and hooks, not just the README", "trigger": true },
+    { "q": "/analyze:reference owner/repo --deep", "trigger": true },
+    { "q": "analyse PR #42 with the loops and the council", "trigger": false },
+    { "q": "process the review I dropped into agents/tmp", "trigger": false },
+    { "q": "analyze this project's architecture and tech stack", "trigger": false },
+    { "q": "check the repositories my roadmap links to for new releases", "trigger": false },
+    { "q": "which npm package should I use for date parsing", "trigger": false }
+  ]
+}
