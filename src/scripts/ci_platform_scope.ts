@@ -5,8 +5,8 @@
  *
  * GitHub-hosted macOS is capped at 5 concurrent jobs and tests.yml requests 13
  * per run, so most of a PR's wait is a macOS queue (PR #2569: 5.7-33 min). The
- * per-OS attribution over 520 runs (agents/evidence/analysis/ci-os-attribution-2026-10.md)
- * found macOS-only reds in 10 of 5365 twin pairs, all in node-tests. So a PR
+ * per-OS failure attribution found macOS-only reds almost exclusively in
+ * node-tests, a fraction of a percent of twin pairs. So a PR
  * whose diff cannot reach platform behaviour runs the macOS tier only; one that
  * can, and any diff this script cannot read, runs everything. `push: main`
  * always runs everything — this script is only consulted on pull requests.

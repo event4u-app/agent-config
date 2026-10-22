@@ -47,7 +47,7 @@ run on the way to `main`.
 - ADR-223 forbids demoting a **required** check on cost grounds. No macOS job is
   required (`branch-protection-policy.md:55`, live ruleset: two checks, `strict`
   off); moving a non-required leg between PR and `push: main` is placement.
-- Ruleset `17749383` live: no `merge_queue` rule; 0 workflows declare
+- Ruleset `17749383` live: no merge-queue rule; 0 workflows declare
   `merge_group`.
 
 ## Phase 1 — Decide the PR tier on evidence
@@ -106,7 +106,7 @@ run on the way to `main`.
 |---|---|---|---|---|---|
 | C1-C5, C7 | deterministic | evidence | Not decisions: frontmatter, `relates` notes, source block, goal and a phase heading describing merge-queue readiness; no operation | `closure_scan` keyword matches on "merge" | any of them gains an imperative |
 | C6 | deterministic | evidence | Not a decision: `git diff --name-only` is a read | step 1.1 | — |
-| C8 | reversible-technical | agent | Declaring `merge_group` in workflows is a reversible file edit and inert until an admin enables a queue; enabling it stays with the admin stub | live ruleset `17749383` has no `merge_queue` rule | the step is widened to write the ruleset |
+| C8 | reversible-technical | agent | Declaring `merge_group` in workflows is a reversible file edit and inert until an admin enables a queue; enabling it stays with the admin stub | live ruleset `17749383` has no merge-queue rule | the step is widened to write the ruleset |
 | D1 | critical-technical | council:agents/evidence/council/ci-macos-tier-and-static-diagnostic-2026-10-22.md | Option 2, 2/2: on a `tier` PR macOS runs install, install-aux, collector-lifecycle, workspace; node, golden, svg-witness macOS legs on `full`, `ci:macos`, every `push: main`; observed rollout with job-summary trace | attribution: 10 of 5365 twin pairs macOS-only red, all node-tests | one macOS-only red on `push: main` from a `tier` PR |
 | D2 | destructive-owned | evidence | Out of scope here: enabling the merge queue and changing the required set were transferred to the admin stub by council disposition B | stub `road-to-main-protection-ruleset-changes`, council disposition B | — |
 
