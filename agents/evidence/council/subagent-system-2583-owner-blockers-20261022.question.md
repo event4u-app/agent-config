@@ -1,5 +1,7 @@
 # Three open roadmap blockers — pick one option each, with your reasoning
 
+<!-- evidence-type: analysis -->
+
 You are reviewing three blockers recorded in this repository's roadmaps. Each lists its
 options. For each, answer with: the option you choose, the two or three facts that decide it,
 the condition under which you would choose differently, and whether the chosen option is
