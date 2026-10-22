@@ -1,5 +1,6 @@
 ---
 complexity: lightweight
+status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
