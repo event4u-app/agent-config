@@ -460,22 +460,21 @@ not a source checkout's `dist/`, not a local `./agent-config`, because a cloned
 repository could commit any of them. When no dispatcher is reachable, a
 `PreToolUse` call from the `settings.json` carrier is refused with a message
 naming the repair, so on an npx/npm install the `fail_closed` guards never pass
-silently; every other event keeps exit 0. The plugin carrier is the exception,
-below. To work on the hooks in a source checkout, reinstall to stage your build.
+silently; every other event keeps exit 0. The plugin carrier behaves the same,
+below.
 
-**A plugin-only install is unguarded.** If the marketplace plugin is installed
+**A plugin-only install refuses tool calls.** If the marketplace plugin is installed
 without the npm package (no `npx -y @event4u/agent-config init`, no
 `npm i -g @event4u/agent-config`), no dispatcher is reachable, so no
-agent-config hook runs at all — the three `fail_closed` guards
+agent-config hook runs — the three `fail_closed` guards
 `block-no-verify`, `block-kernel-rule-writes` and `block-plumbing-writes`
-included. The plugin's `PreToolUse` command then exits 0 with one stderr line,
-which Claude Code generally does not show you; the only visible notice is the
-line the `SessionStart` hook prints into the session context. This degraded
-state is deliberate — refusing every tool call on a plugin-only install would
-lock out a user who has no package to enforce with — but it means guard
-coverage does **not** extend to plugin-only installs. Install the npm package
-to get the guards. The install probes the `SessionStart` command
-from `PATH=/usr/bin:/bin` and records the outcome in
+included. Because those guards cannot run, the plugin's `PreToolUse` command
+refuses every tool call (exit 2) with a line naming the repair, exactly like the
+`settings.json` carrier; the `SessionStart` hook prints the same fact into the
+session context. Until 17.0.0 the plugin carrier exited 0 here and left the
+session unguarded; the release review ruled that fail-open path unshippable.
+Install the npm package to get the guards, or disable the plugin to stop the
+refusals. The install probes the `SessionStart` command from `PATH=/usr/bin:/bin` and records the outcome in
 `~/.event4u/agent-config/runtime/carrier.json`; the `hook-carrier` check in
 `agent-config doctor` re-runs the probe and prints the layer state and since
 when the outcome holds. A thinned rule layer is only written on a carrier that

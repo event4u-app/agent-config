@@ -160,7 +160,7 @@ describe('2.1 — the staged dispatcher ahead of PATH', () => {
 
 // 17.0.0 finding bb6ab0f5f37d: with no dispatcher every fail_closed guard used
 // to pass silently through exit 0.
-describe('no dispatcher reachable — PreToolUse refuses on the settings carrier', () => {
+describe('no dispatcher reachable — PreToolUse refuses on both carriers', () => {
     it('refuses a tool call, naming the guards and the repair', () => {
         const res = run('PreToolUse');
         expect(res.status).toBe(2);
@@ -173,11 +173,11 @@ describe('no dispatcher reachable — PreToolUse refuses on the settings carrier
         }
     });
 
-    it('keeps the plugin carrier at exit 0 with its warning — a plugin-only install has no package to enforce with', () => {
+    // 17.0.0 finding c72572abf2e4: the plugin carrier used to exit 0 here.
+    it('refuses on the plugin carrier too — the fail_closed guards cannot run there either', () => {
         const res = run('PreToolUse', '', { CLAUDE_PLUGIN_ROOT: path.join(tmp, 'plugin') });
-        expect(res.status).toBe(0);
-        expect(res.stderr).toContain('no hook dispatcher reachable');
-        expect(res.stderr).not.toContain(NO_DISPATCHER_REFUSAL);
+        expect(res.status).toBe(2);
+        expect(res.stderr).toContain(NO_DISPATCHER_REFUSAL);
     });
 
     it('does not take an agent-config on PATH that resolves into the project', () => {

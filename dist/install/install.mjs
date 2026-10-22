@@ -11482,15 +11482,16 @@ function build_claude_hook_matrix(manifest_path2) {
   return matrix;
 }
 var NO_DISPATCHER_STDERR = "agent-config: no hook dispatcher reachable, so no agent-config hook runs in this session. Hooks need the npm package where they can reach it: npm i -g @event4u/agent-config (then npx -y @event4u/agent-config init)";
-var NO_DISPATCHER_CONTEXT = "agent-config hooks are NOT running in this session: the plugin found no dispatcher, so no concern runs, the fail_closed guards block-no-verify, block-kernel-rule-writes and block-plumbing-writes included.";
+var NO_DISPATCHER_CONTEXT = "agent-config hooks are NOT running in this session: the plugin found no dispatcher, so no concern runs and every tool call is refused until one is installed, because the fail_closed guards block-no-verify, block-kernel-rule-writes and block-plumbing-writes cannot run.";
 function _no_dispatcher_notice(native) {
+  if (native === "PreToolUse") return "";
   const context = native === "SessionStart" ? ` echo '${NO_DISPATCHER_CONTEXT}';` : "";
   return `[ -n "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_STDERR}' >&2;${context} }; `;
 }
-var NO_DISPATCHER_REFUSAL = "agent-config: no hook dispatcher reachable, so this tool call is refused: the fail_closed guards block-no-verify, block-kernel-rule-writes and block-plumbing-writes cannot run. Repair in a terminal: npm i -g @event4u/agent-config then npx -y @event4u/agent-config init. To drop the hooks instead: agent-config uninstall, or delete the agent-config entries from ~/.claude/settings.json.";
+var NO_DISPATCHER_REFUSAL = "agent-config: no hook dispatcher reachable, so this tool call is refused: the fail_closed guards block-no-verify, block-kernel-rule-writes and block-plumbing-writes cannot run. Repair in a terminal: npm i -g @event4u/agent-config then npx -y @event4u/agent-config init. To drop the hooks instead: agent-config uninstall, delete the agent-config entries from ~/.claude/settings.json, or disable the agent-config plugin.";
 function _no_dispatcher_exit(native) {
   if (native !== "PreToolUse") return "exit 0;";
-  return `[ -z "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_REFUSAL}' >&2; exit 2; }; exit 0;`;
+  return `echo '${NO_DISPATCHER_REFUSAL}' >&2; exit 2;`;
 }
 var DISPATCHER_FAILED_REFUSAL = "agent-config: the hook dispatcher did not return a verdict, so this tool call is refused: the fail_closed guards could not decide. If an agent-config upgrade is running, retry once it has finished.";
 function _pre_tool_use_exit_guard() {
