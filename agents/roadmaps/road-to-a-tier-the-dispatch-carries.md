@@ -118,11 +118,12 @@ the judge-one-tier-up ladder (`src/agent-src/contexts/subagent-configuration.md:
   verify: a nudge fixture for a read-only fan-out slice names the mapped model value and
   dispatches nothing.
   Done 2026-10-22 (commit 1f48d0ff15): the nudge's tier now comes from `inferSliceTier` over a deterministic slice kind read off the prompt; only a read-only fan-out earns `lite`, and its line names `model: "haiku"` and the kind. It used to say "lite tier recommended" for every delegable prompt from a hardcoded default — a tier the table never produced; an unknown kind now says `inherit` and names no model. Test: `delegation_nudge_hook.test.ts` › a read-only fan-out nudge names the mapped model value and dispatches nothing.
-- [ ] **1.3 A `lite` leg does not climb by itself.** It never spawns, and a slice it cannot
+- [x] **1.3 A `lite` leg does not climb by itself.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/orchestration_record.ts --> It never spawns, and a slice it cannot
   finish returns to the head with a named reason; the head re-dispatches one tier up per the
   existing verify-fail cascade. The escalation is a record, not a retry inside the leg.
   verify: an escalation fixture produces one `lite` record with a reason and one `medium`
   record, never a `lite` record that spawned.
+  Done 2026-10-22 (commit de939ddb62): `liteEscalationRecords` (`src/scripts/_lib/subagent_steering.ts`) yields the lite record with its outcome and the head's `medium` record with `escalated_from: lite`; a second failure fails the slice instead. The builder now writes `escalated_from`, which the contract already named. Tests: `_lib_subagent_steering.test.ts` › liteEscalationRecords (three cases, including that neither package worker holds `Agent` or `Task`).
 
 ## Phase 2 — Measure, then flip per slice kind (T1, T4)
 
