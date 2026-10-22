@@ -479,7 +479,7 @@ describe('ledgerAbsentMessage', () => {
         expect(msg).toContain('has not finished yet');
         expect(msg).toContain('ANTHROPIC_API_KEY');
         expect(msg).toContain('self_review_gate --findings-out');
-        expect(msg).toContain('--ingest /tmp/findings.json --release 1.2.3');
+        expect(msg).toContain('--ingest agents/runtime/release-findings.json --release 1.2.3');
         expect(msg).not.toContain('no_findings_reason');
     });
 

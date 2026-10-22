@@ -583,10 +583,10 @@ export function unreviewed_ledger_problem(
         + `${release} and this cut would ship a release that reviewed itself not at all.\n`
         + '    Review it. The self-review gate resolves the local subscription CLI before any\n'
         + '    metered key, so a review is usually one command away and needs no credit:\n'
-        + '        ./scripts-run src/scripts/self_review_gate --findings-out /tmp/findings.json\n'
+        + '        ./scripts-run src/scripts/self_review_gate --findings-out agents/runtime/release-findings.json\n'
         + '    Then ingest what it reported:\n'
         + '        ./scripts-run src/scripts/check_finding_dispositions --ingest '
-        + `/tmp/findings.json --release ${release}\n`
+        + `agents/runtime/release-findings.json --release ${release}\n`
         + '    If this cut must go out unreviewed, that is an owner decision and it leaves a\n'
         + `    file: commit a directive under ${OWNER_DIRECTIVES_DIR}/ whose text names `
         + `${release},\n`
