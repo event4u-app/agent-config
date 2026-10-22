@@ -148,7 +148,16 @@ export interface AskOptions {
      * Default: `skipped` — the head has not checked either return at call time.
      */
     shadowVerify?: HeadVerify;
+    /** How long the paid answer waits for its shadow call; default `SHADOW_WAIT_MS`. */
+    shadowWaitMs?: number;
 }
+
+/**
+ * The longest a shadow call may hold the paid answer. Past it the paid answer
+ * returns; the free call keeps running and its row lands only if it finishes,
+ * so a call that never returns is not ledgered.
+ */
+export const SHADOW_WAIT_MS = 30_000;
 
 /** The model a `base_url` route member calls; null for a provider member. */
 function routeModel(member: ExternalAIClient): string | null {
@@ -268,7 +277,7 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
         const served = shadow === null ? pick : _teeMember(pick);
         const shadowRun = shadow === null ? null : _runShadow(trimmed, served, shadow, opts, stateRoot as string);
         const outcome = await _callRoute(served, route.name, system, trimmed, opts, stateRoot);
-        if (shadowRun !== null) await shadowRun;
+        if (shadowRun !== null) await _bounded(shadowRun, opts.shadowWaitMs ?? SHADOW_WAIT_MS);
         if (outcome.done) return _finish(outcome.result, route.name, opts, outcome.schemaValid, route.billing);
         last = { provider: route.name, billing: route.billing };
         if (++failures > 1) break;
@@ -314,12 +323,43 @@ function _shadowCandidate(
     return pool.find((r) => r.route === free)?.member ?? null;
 }
 
-/** The member with its first completion memoised, so the paid route is called once for both the caller and the ledger. */
+/** Resolves when `run` settles or after `ms`, whichever comes first. */
+async function _bounded(run: Promise<void>, ms: number): Promise<void> {
+    let timer: NodeJS.Timeout | undefined;
+    const wait = new Promise<void>((resolve) => {
+        timer = setTimeout(resolve, ms);
+        timer.unref();
+    });
+    try {
+        await Promise.race([run, wait]);
+    } finally {
+        clearTimeout(timer);
+    }
+}
+
+/**
+ * The member with its first completion memoised, so the paid route is called once
+ * for both the caller and the ledger. Sound only because both consumers send the
+ * same `(handSystemPrompt(kind), prompt)` and neither retries on one member.
+ */
 function _teeMember(member: ExternalAIClient): ExternalAIClient {
     let first: ReturnType<ExternalAIClient['ask']> | undefined;
     const tee = Object.create(member) as ExternalAIClient;
     tee.ask = (...args: Parameters<ExternalAIClient['ask']>) => (first ??= member.ask(...args));
     return tee;
+}
+
+/** The member that records the exposure only when it is actually asked. */
+function _exposingMember(member: ExternalAIClient, opts: AskOptions): ExternalAIClient {
+    if (opts.exposure === undefined) return member;
+    const { ledger, exposes } = opts.exposure;
+    const route = routeCandidateFromMember(member).name;
+    const wrapped = Object.create(member) as ExternalAIClient;
+    wrapped.ask = (...args: Parameters<ExternalAIClient['ask']>) => {
+        ledger.record(route, exposes);
+        return member.ask(...args);
+    };
+    return wrapped;
 }
 
 /** The shadow call; its result is the ledger row only, and nothing it raises reaches the caller. */
@@ -332,12 +372,11 @@ async function _runShadow(
 ): Promise<void> {
     if (opts.kind === undefined) return;
     try {
-        opts.exposure?.ledger.record(routeCandidateFromMember(free).name, opts.exposure.exposes);
         await shadowAsk(prompt, {
             kind: opts.kind,
             contentClass: 'public-artifact',
             paid,
-            free,
+            free: _exposingMember(free, opts),
             verify: opts.shadowVerify ?? ((): { verdict: VerifyVerdict; tokens: number } => ({ verdict: 'skipped', tokens: 0 })),
             stateRoot,
             ...(opts.now !== undefined ? { now: opts.now } : {}),
