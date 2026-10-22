@@ -87,6 +87,27 @@ function read_impact_range(map: unknown, installed: string, candidate: string): 
 }
 
 /**
+ * The majors crossed by `(installed, candidate]` whose `M.0.0` release the map
+ * holds no entry for.
+ *
+ * The map says nothing about a release it omits, so an omitted MAJOR is an
+ * unknown, never a declared no-impact: a breaking release whose impact was
+ * never recorded must not install by itself. The producer records every
+ * major, `none` included (`consumer_impact.with_release_impact`), so a real
+ * no-action major is present and only an unrecorded one lands here.
+ */
+function unrecorded_majors(map: Record<string, unknown>, installed: string, candidate: string): number[] {
+    const from = parse_version(installed);
+    const to = parse_version(candidate);
+    if (from === null || to === null) return [];
+    const missing: number[] = [];
+    for (let major = from.major + 1; major <= to.major; major++) {
+        if (!Object.prototype.hasOwnProperty.call(map, `${major}.0.0`)) missing.push(major);
+    }
+    return missing;
+}
+
+/**
  * The local machine overrides the published map: a candidate whose
  * `engines.node` this runtime does not satisfy — or that cannot be checked —
  * is `action` here whatever the map says. No `engines.node` at all, or a
@@ -157,6 +178,11 @@ export function classifyUpdate(input: ClassifyUpdateInput): UpdateVerdict {
     const notify: string[] = [];
     if (range?.worst === 'notice') notify.push('a release in range carries a notice');
     if (security) notify.push('security fix in range');
+    if (range !== null && range.forged === null) {
+        for (const major of unrecorded_majors(input.impactMap as Record<string, unknown>, input.installed, input.candidate)) {
+            uncertain.push(`impact of major ${major} is not recorded`);
+        }
+    }
     if (input.provenance !== true) uncertain.push('provenance attestation missing');
     if (input.settings.projectPin) uncertain.push(`project pins ${input.settings.projectPin}`);
     else if (input.origin === 'project-pin') uncertain.push('install is pinned by the project');

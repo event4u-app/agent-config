@@ -78,12 +78,30 @@ const MATRIX: readonly Case[] = [
             patch: {
                 installed: `${Number(major) - 1}.9.0`,
                 candidate: v,
-                impactMap: v === '13.0.0' || v === '16.0.0' ? {} : { [v]: { impact: 'automatic' } },
+                // 13.0.0 and 16.0.0 needed nothing: the producer now records that as `none`.
+                impactMap: v === '13.0.0' || v === '16.0.0' ? { [v]: { impact: 'none' } } : { [v]: { impact: 'automatic' } },
             },
             expected: 'auto',
             uncertain: false,
         };
     }),
+    // A major the map omits is an UNRECORDED impact, not a declared no-impact
+    // (release 17 review ab2178c815f6): it fails closed.
+    ...(['13.0.0', '16.0.0'] as const).map((v): Case => {
+        const [major] = v.split('.');
+        return {
+            name: `unrecorded major ${v} (absent from map) never auto-installs`,
+            patch: { installed: `${Number(major) - 1}.9.0`, candidate: v, impactMap: {} },
+            expected: 'notify',
+            uncertain: true,
+        };
+    }),
+    {
+        name: 'a skipped-over major is unrecorded even when the candidate minor is',
+        patch: { installed: '15.9.0', candidate: '16.1.0', impactMap: { '16.1.0': { impact: 'automatic' } } },
+        expected: 'notify',
+        uncertain: true,
+    },
     // ...and two needed a hand.
     ...(['12.0.0', '15.0.0'] as const).map((v): Case => {
         const [major] = v.split('.');
