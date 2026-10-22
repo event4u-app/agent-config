@@ -61,7 +61,7 @@ jobs:
     container:
       # Clean Node container — the point is the PACKED artifact evaluated
       # outside the checkout's toolchain assumptions.
-      image: node:20-bullseye
+      image: node:22-bullseye
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -110,7 +110,7 @@ jobs:
         if: github.event_name == 'schedule'
         # The job runs in a container, where the default shell is dash and
         # `set -o pipefail` is an illegal option — the step died on its first
-        # line on every nightly. node:20-bullseye carries bash, and the step
+        # line on every nightly. node:22-bullseye carries bash, and the step
         # above already shells out to it.
         shell: bash
         run: |

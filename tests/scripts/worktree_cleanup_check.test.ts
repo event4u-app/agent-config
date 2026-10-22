@@ -26,7 +26,9 @@ import {
     REMOVAL_JOURNAL,
     REMOVAL_LOCK,
     removalPlan,
+    removalSummary,
     resolveTrunk,
+    shQuote,
 } from '../../src/scripts/worktree_cleanup_check.js';
 import { register_dir, write_record } from '../../src/scripts/_lib/session_register.js';
 
@@ -233,7 +235,7 @@ describe('inventory classification', () => {
         expect(row.mergedIntoTrunk).toBe(true);
 
         const plan = removalPlan(inv);
-        expect(plan.some((c) => c.includes(wt) && c.includes('git branch -d "feat/safe"'))).toBe(
+        expect(plan.some((c) => c.includes(wt) && c.includes("git branch -d 'feat/safe'"))).toBe(
             true,
         );
     });
@@ -284,7 +286,7 @@ describe('inventory classification', () => {
         expect(main.isMain).toBe(true);
         expect(main.classification).not.toBe('safe');
         expect(main.reasons.join('\n')).toContain('main worktree');
-        expect(removalPlan(inv).some((c) => c.includes(`"${repo}"`))).toBe(false);
+        expect(removalPlan(inv).some((c) => c.includes(`'${repo}'`))).toBe(false);
     });
 
     it('recent git activity wins over the structural verdict → live, not safe', () => {
@@ -337,6 +339,34 @@ describe('inventory classification', () => {
         expect(plan.length).toBeGreaterThan(0);
         expect(plan.join('\n')).not.toContain('branch -D');
         expect(plan.join('\n')).not.toContain('--force');
+    });
+});
+
+describe('printed commands quote a branch name a PR author chose', () => {
+    // git allows `$`, `(`, `)` and backticks in a ref name; a copied line must
+    // hand the shell the literal name, never a command substitution.
+    const HOSTILE = 'feat/a$(id)`id`';
+    const literal = (arg: string): string => execFileSync('sh', ['-c', `printf '%s' ${arg}`], { encoding: 'utf-8' });
+
+    it('the removal plan prints the branch as one literal argv element', () => {
+        const wt = addStandardWorktree('wt-hostile', HOSTILE);
+        commitFile(wt, 'a.txt', 'x', 'work');
+        mergeIntoMain(HOSTILE);
+        const line = removalPlan(buildInventory(repo, afterEverything())).find((c) => c.includes('git branch -d '));
+        expect(line).toBeDefined();
+        expect(literal((line as string).slice((line as string).indexOf('git branch -d ') + 'git branch -d '.length))).toBe(HOSTILE);
+    });
+
+    it('the kept-branches hint prints each branch as one literal argv element', () => {
+        const inv = { rows: [] } as unknown as Parameters<typeof removalSummary>[0];
+        const summary = removalSummary(inv, [
+            { path: '/w', branch: HOSTILE, tip: null, evidence: 'merged-equivalent', removed: true, error: null },
+        ]);
+        expect(literal(summary.slice(summary.indexOf('git branch -D ') + 'git branch -D '.length))).toBe(HOSTILE);
+    });
+
+    it('a single quote inside the name survives quoting', () => {
+        expect(literal(shQuote("feat/it's"))).toBe("feat/it's");
     });
 });
 

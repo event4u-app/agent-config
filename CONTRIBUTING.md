@@ -574,6 +574,15 @@ push / PR. If `administration: write` becomes unacceptable, swap to
 a fine-grained PAT in repo secrets and document the rotation cadence
 here.
 
+The apply job reads that fine-grained `RELEASE_PR_TOKEN` and fails at
+its first step when the secret is missing. It never runs `npm ci`: it
+fetches only `yaml` at the version `package-lock.json` pins, checks the
+tarball against the lockfile's integrity hash, and runs
+`sync_github_metadata.ts` under plain `node --experimental-strip-types`,
+so no devDependency executes where the admin token is readable. The
+dry-run job installs the full tree and holds only the read-only Actions
+token.
+
 ## License of contributions
 
 By contributing you agree that your contributions are licensed under the

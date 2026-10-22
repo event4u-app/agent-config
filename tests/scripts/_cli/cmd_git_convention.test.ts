@@ -269,10 +269,10 @@ describe('git:convention show exits non-zero on every state sync refuses', () =>
         const block = /Check the PR out, read the strategy against its base[\s\S]*?```bash\n([\s\S]*?)```/.exec(text)?.[1] ?? '';
         const lines = block.split('\n').map((l) => l.replace(/#.*$/, '').trim()).filter((l) => l !== '');
         const checkout = lines.indexOf('gh pr checkout <N>');
-        const show = lines.indexOf('agent-config git:convention show --key update_strategy --base origin/<base>');
+        const show = lines.indexOf("agent-config git:convention show --key update_strategy --base 'origin/<base>'");
         expect(checkout).toBeGreaterThanOrEqual(0);
         expect(show).toBeGreaterThan(checkout);
-        expect(lines).toContain('agent-config git:convention sync --base origin/<base>');
+        expect(lines).toContain("agent-config git:convention sync --base 'origin/<base>'");
     });
 });
 

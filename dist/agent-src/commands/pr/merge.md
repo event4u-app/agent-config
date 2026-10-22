@@ -73,12 +73,12 @@ Compute the queue ONCE at invocation and record it as a manifest of
 `(PR number, head SHA)` pairs:
 
 ```bash
-gh pr list --state open --limit 100 \
-  --json number,title,headRefName,headRefOid,baseRefName,additions,deletions,changedFiles,mergeable,updatedAt
-gh api repos/:owner/:repo/git/ref/heads/<baseRefName> --jq .object.sha   # per distinct base
+gh pr list --limit 100 \
+  --json number,title,headRefName,headRefOid,baseRefName,isCrossRepository,additions,deletions,changedFiles,mergeable,updatedAt
+gh api 'repos/:owner/:repo/git/ref/heads/<baseRefName>' --jq .object.sha   # per distinct base
 ```
 
-**Manifest fields, re-read** — read [`pr-merge-sync`](../../contexts/execution/pr-merge-sync.md#manifest-fields).
+**Manifest fields** — read [`pr-merge-sync`](../../contexts/execution/pr-merge-sync.md#manifest-fields).
 
 ## 2. Sync with the base
 

@@ -840,6 +840,15 @@ function buildInventoryInner(
 }
 
 /**
+ * One argv element for a printed POSIX shell line, always single-quoted. A
+ * branch name can come from a pull request's author, and git allows `$`, `(`,
+ * `)` and backticks in it, so double quotes would let a copied line run it.
+ */
+export function shQuote(arg: string): string {
+    return `'${arg.replaceAll("'", `'\\''`)}'`;
+}
+
+/**
  * The removal commands for the safe set — printed for a human to review and
  * run, never executed here. `git branch -d` (never `-D`) so git itself
  * re-checks the merge before the branch goes.
@@ -848,9 +857,9 @@ export function removalPlan(inv: Inventory): string[] {
     return inv.rows
         .filter((r) => r.classification === 'safe')
         .map((r) => {
-            const remove = `git worktree remove ${JSON.stringify(r.path)}`;
+            const remove = `git worktree remove ${shQuote(r.path)}`;
             return r.branch !== null && r.mergedIntoTrunk
-                ? `${remove} && git branch -d ${JSON.stringify(r.branch)}`
+                ? `${remove} && git branch -d ${shQuote(r.branch)}`
                 : remove;
         });
 }
@@ -1056,7 +1065,7 @@ export function removalSummary(inv: Inventory, outcomes: RemovalOutcome[], opts:
             ? ''
             : opts.names === false
               ? ` · ${branches.length} local branch(es) kept (the removal journal names them)`
-              : ` · local branches kept: git branch -D ${branches.map((b) => JSON.stringify(b)).join(' ')}`;
+              : ` · local branches kept: git branch -D ${branches.map(shQuote).join(' ')}`;
     return `worktrees: ${removed} removed, ${decide} need a decision (/worktree cleanup)${hint}`;
 }
 

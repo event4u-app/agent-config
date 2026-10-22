@@ -134,7 +134,7 @@ the per-IDE index above.
 > Python is **not** required — the bridge stage was TypeScript from ADR-200
 > onward, and `no-python-in-src.yml` keeps it that way.
 >
-> **Node.js 22+** is required for the `agent-config` binary itself.
+> **Node.js 22.6+** is required for the `agent-config` binary itself.
 > Starting with the TypeScript CLI shell (ADR-012, road
 > `typescript-cli-and-local-gui-foundation`), the published `bin/`
 > entry is the compiled `dist/cli/agent-config.js`; `npx` resolves it
@@ -458,10 +458,23 @@ only when its resolved path is absolute and outside the opened project. Since
 17.0.0 nothing inside the project runs as a hook: not a project-local install,
 not a source checkout's `dist/`, not a local `./agent-config`, because a cloned
 repository could commit any of them. When no dispatcher is reachable, a
-`PreToolUse` call is refused with a message naming the repair, so the
-`fail_closed` guards never pass silently; the plugin carrier and every other
-event keep exit 0. To work on the hooks in a source checkout, reinstall to
-stage your build. The install probes the `SessionStart` command
+`PreToolUse` call from the `settings.json` carrier is refused with a message
+naming the repair, so on an npx/npm install the `fail_closed` guards never pass
+silently; every other event keeps exit 0. The plugin carrier is the exception,
+below. To work on the hooks in a source checkout, reinstall to stage your build.
+
+**A plugin-only install is unguarded.** If the marketplace plugin is installed
+without the npm package (no `npx -y @event4u/agent-config init`, no
+`npm i -g @event4u/agent-config`), no dispatcher is reachable, so no
+agent-config hook runs at all — the three `fail_closed` guards
+`block-no-verify`, `block-kernel-rule-writes` and `block-plumbing-writes`
+included. The plugin's `PreToolUse` command then exits 0 with one stderr line,
+which Claude Code generally does not show you; the only visible notice is the
+line the `SessionStart` hook prints into the session context. This degraded
+state is deliberate — refusing every tool call on a plugin-only install would
+lock out a user who has no package to enforce with — but it means guard
+coverage does **not** extend to plugin-only installs. Install the npm package
+to get the guards. The install probes the `SessionStart` command
 from `PATH=/usr/bin:/bin` and records the outcome in
 `~/.event4u/agent-config/runtime/carrier.json`; the `hook-carrier` check in
 `agent-config doctor` re-runs the probe and prints the layer state and since

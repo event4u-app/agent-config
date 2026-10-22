@@ -65,7 +65,9 @@ stops.
 
 `baseRefName` and the base SHA are part of the record, not incidental: § 2 and
 § 4 both consume `<base>`, and § 8's kill switch "the base advanced by an actor
-other than this run" is undetectable without a base SHA to compare against.
+other than this run" is undetectable without a base SHA to compare.
+
+Untrusted heads, ref names: [`pr-merge-trust-boundary`](pr-merge-trust-boundary.md).
 
 `--limit 100` caps the manifest. A queue above 100 open PRs is drained
 **partially**, and the run must say so rather than reporting completion — the
@@ -109,8 +111,8 @@ update_strategy` limits `show`'s exit to the strategy, so a `commit_format` or
 ```bash
 git fetch origin
 gh pr checkout <N>
-agent-config git:convention show --key update_strategy --base origin/<base>   # value, source, state
-agent-config git:convention sync --base origin/<base>
+agent-config git:convention show --key update_strategy --base 'origin/<base>'   # value, source, state
+agent-config git:convention sync --base 'origin/<base>'
 ```
 
 A `git.update_strategy` whose state is `malformed`, `invalid`, `discarded` or
@@ -148,9 +150,9 @@ Read its exit and its line together:
   up-to-date branch before merging:
 
   ```bash
-  gh api repos/{owner}/{repo}/branches/<base>/protection \
+  gh api 'repos/{owner}/{repo}/branches/<base>/protection' \
     --jq .required_status_checks.strict 2>&1; echo "exit=$?"
-  gh api repos/{owner}/{repo}/rules/branches/<base> \
+  gh api 'repos/{owner}/{repo}/rules/branches/<base>' \
     --jq '.[] | select(.type == "required_status_checks") | .parameters.strict_required_status_checks_policy'; echo "exit=$?"
   ```
 
@@ -244,7 +246,7 @@ only remaining hunks are exactly the generated-artefact churn § 3 tells you to
 regenerate. Exclude those paths before deciding:
 
 ```bash
-git diff origin/<base>...HEAD --stat -- . \
+git diff 'origin/<base>...HEAD' --stat -- . \
   ':(exclude)agents/roadmaps-progress.md' \
   ':(exclude)docs/catalog.md' ':(exclude)agents/index.md'
 ```

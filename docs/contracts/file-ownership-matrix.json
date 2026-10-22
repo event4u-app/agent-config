@@ -279,6 +279,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncondensed/contexts/execution/pr-merge-trust-boundary.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncondensed/contexts/execution/process-full-all.md": {
       "kind": "context",
       "rule_type": null,
@@ -5091,11 +5097,25 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncondensed/contexts/execution/pr-merge-queue.md",
+      "target": ".agent-src.uncondensed/contexts/execution/pr-merge-trust-boundary.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncondensed/contexts/execution/pr-merge-sync.md",
       "target": ".agent-src.uncondensed/contexts/execution/pr-merge-sync.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/pr-merge-sync.md",
+      "target": ".agent-src.uncondensed/contexts/execution/pr-merge-trust-boundary.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/pr-merge-sync.md",
@@ -5117,6 +5137,27 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/pr-merge-trust-boundary.md",
+      "target": ".agent-src.uncondensed/contexts/execution/pr-merge-queue.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/pr-merge-trust-boundary.md",
+      "target": ".agent-src.uncondensed/contexts/execution/pr-merge-sync.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/pr-merge-trust-boundary.md",
+      "target": ".agent-src.uncondensed/contexts/execution/pr-merge-trust-boundary.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/process-full-all.md",

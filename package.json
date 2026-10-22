@@ -75,7 +75,7 @@
         "agent-config": "dist/cli/agent-config.js"
     },
     "engines": {
-        "node": ">=22.0.0"
+        "node": ">=22.6.0"
     },
     "scripts": {
         "build:cli": "tsc -p tsconfig.json && chmod +x dist/cli/agent-config.js",

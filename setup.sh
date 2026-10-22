@@ -3,7 +3,7 @@
 #
 # Downloads the latest GitHub tarball into a temp dir,
 # runs src/scripts/install with the user's tool selection, then cleans up.
-# Requires Node.js (>=22): the installer's bridge stage runs a pre-bundled,
+# Requires Node.js (>=22.6): the installer's bridge stage runs a pre-bundled,
 # dependency-inlined `dist/install/install.mjs` via plain `node` — no tsx /
 # npm install needed (fallback D of the py2ts consumer-runtime decision).
 # For an npm-managed install instead, use `npx @event4u/agent-config init`.
