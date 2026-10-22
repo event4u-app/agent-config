@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 import { flipReadiness, summariseShadowWindow, type ShadowLine } from '../../src/scripts/worker_reuse_shadow_report.js';
 
 const DAY = 86_400_000;
-function spawn(tsMs: number, reuse: ShadowLine['reuse']): ShadowLine {
+function spawn(tsMs: number, reuse: NonNullable<ShadowLine['reuse']>): ShadowLine {
     return { event: 'spawn_guard_shadow', ts: new Date(tsMs).toISOString(), tool: 'Agent', dispatch_kind: 'spawn', reuse };
 }
 const T0 = Date.parse('2026-10-22T00:00:00.000Z');
