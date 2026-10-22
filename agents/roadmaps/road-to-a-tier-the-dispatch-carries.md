@@ -155,10 +155,11 @@ the judge-one-tier-up ladder (`src/agent-src/contexts/subagent-configuration.md:
   verify: an evidence row per host version; if no worker path exists, the phase closes as a
   recorded null and K12 applies.
   Done 2026-10-22 (commit f3a3b4dcc7): on 2.1.308 a `haiku` `ac-researcher` dispatched under `--advisor opus` (experimental variable set) consulted the advisor — `advisor_tool_result` in its own transcript; the advisor billed 26,109 uncached input and 1,683 output tokens on `claude-opus-5-5`. Row in `tier-realisation-2026-10-22.md` § Step 3.1. A worker path exists; K12 does not apply.
-- [ ] **3.2 Only on a green 3.1:** one pre-registered comparison on bounded implementation
+- [x] **3.2 Only on a green 3.1:** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/tier_downshift_verdict.ts --> one pre-registered comparison on bounded implementation
   slices — `lite` executor with a `high` advisor against `medium` alone, same two bars as 2.1.
   No adoption step in this roadmap; a backed claim opens its own.
   verify: the claim row precedes the run; the run report names both arms' verified costs.
+  Done 2026-10-22 (commit 23428d8b20): claim `advisor-pairing-held` filed (commit a8ac989ea3) before the run; 60 pairs (`internal/bench/advisor-pairing/run.ts`), quality held (60/60 against 58/60) and cost failed — 0.2838 USD against 0.0204 per verified slice, the advisor's input billed uncached. Resolved null; report `agents/evidence/analysis/advisor-pairing-run-2026-10-22.md`. No adoption step, per the step.
 
 ## Phase 4 — Folds into the owners (no build here)
 
@@ -246,10 +247,10 @@ them from day one; only 4.4 waits, on its blocker.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 The served-versus-requested share and the downshift share are published for the current host (0.1).
-- [ ] AC-2 A `lite` slice reaches the host as a per-call model argument, observed served (0.2, 1.2).
-- [ ] AC-3 Every suite-recorded dispatch carries the four tier fields (1.1).
-- [ ] AC-4 Both Phase 2 claims are filed before the first paired run; any flip cites them and reverts on the kill (2.1, 2.3).
-- [ ] AC-5 The advisor phase ends as a backed claim or a recorded null (3.1, 3.2).
-- [ ] AC-6 The four folds are present in their owner files (Phase 4).
-- [ ] AC-7 The fake-data question carries a dated owner line (blocker).
+- [x] AC-1 The served-versus-requested share and the downshift share are published for the current host (0.1).
+- [x] AC-2 A `lite` slice reaches the host as a per-call model argument, observed served (0.2, 1.2).
+- [x] AC-3 Every suite-recorded dispatch carries the four tier fields (1.1).
+- [x] AC-4 Both Phase 2 claims are filed before the first paired run; any flip cites them and reverts on the kill (2.1, 2.3).
+- [x] AC-5 The advisor phase ends as a backed claim or a recorded null (3.1, 3.2).
+- [x] AC-6 The four folds are present in their owner files (Phase 4).
+- [ ] AC-7 The fake-data question carries a dated owner line (blocker). *(2026-10-22: a dated council line, A7, applied as the default under the run's delegation; the owner line itself is still owed.)*
