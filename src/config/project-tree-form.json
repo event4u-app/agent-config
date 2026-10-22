@@ -10,6 +10,7 @@
             "form": "delivery",
             "basis": "ADR-267",
             "corpus": "tests/eval/routing-matrix",
+            "evidence": "internal/bench/reports/thin-inject-2026-09-08.md — carries this reading and the later 591/591 taken after CAP_BYTES was lowered; the bar is zero unequal deliveries, which both meet",
             "measured_on": "2026-09, the frozen routing-matrix corpus",
             "measured": {
                 "deliveries_byte_equal": "616/616",
