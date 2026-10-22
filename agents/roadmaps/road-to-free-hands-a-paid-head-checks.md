@@ -133,9 +133,10 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 
 ## Phase 2 — The route (gateway M1)
 
-- [ ] **2.1 One provider table.** Fold `PROVIDER_CLI_META`, `PROVIDER_ENV_KEY` and
+- [x] **2.1 One provider table.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/environment_detector.ts --> Fold `PROVIDER_CLI_META`, `PROVIDER_ENV_KEY` and
   `PROVIDER_KEY_FILE` (`_lib/environment_detector.ts`).
   verify: adding a provider is one edit; a partial entry fails all three lookups together.
+  Done 2026-10-22 (commit 09507c1510): `PROVIDER_TABLE` and `providerRow` in `_lib/environment_detector.ts`; tests › one provider table.
 - [ ] **2.2 `base_url` member** for OpenAI-compatible routes. Billing class `free-quota` only
   with proof (keyless endpoint or documented free tier, dated URL), else `per-token` inside
   the USD gate; any 402 is `policy_unproven_cost`, never a silent paid fallback.
