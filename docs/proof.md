@@ -103,21 +103,19 @@ evidence pointer, or `task check-claims` fails the build.
 | Whether serving low-priority skills over MCP instead of listing them natively improves skill selection (H1) is NOT established. The `projection.mode: tiered` value it gated was RETIRED on 2026-10-20 (ADR-293, step 4.5) rather than promoted; the null is the reason, and it is kept here because a retired experiment with no recorded result is indistinguishable from one nobody ran. | quant | `agents/evidence/analysis/skill-tiering-matrix-arm.md#The question this arm cannot answer` | ✅ |
 | Removes only its own keys from a shared host config, and leaves a neighbour tool's entries byte-identical — including inside a shared `hooks.<event>` array, where a key this package merely appends to is identified by its own command signature rather than claimed wholesale. | qual | `exec:vitest run tests/install/uninstall_shared_host_config_real_install.test.ts tests/lib/json_pointers.test.ts tests/lib/host_hook_merge.test.ts -> 0` | ✅ |
 | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex reviewer gpt-5.5), the cross-model team-review arm produced NO recall lift over single-model self-review — all three arms recalled every planted defect (Δ = 0, H1 not met). Honest null, ceiling-limited (recall 1.00 everywhere: the seeded defects are too obvious to discriminate the arms on recall); the only non-null signal is a single self-review false positive on the controversial-but-correct control vs 0 for team/council. No cross-model quality/lift claim binds; team mode stays workflow-value-only. Re-open: a judge-survivable-subtlety corpus or a new model generation. | quant | `internal/bench/reports/defect-finding.json#honest_null` | ✅ |
-| A read-only fan-out slice verified on `lite` costs fewer price-weighted billable tokens than the same slice verified on the inherited tier, with every escalated re-run charged to `lite`. | quant | `agents/evidence/analysis/tier-downshift-paired-run-2026-10-22.md#Verdict **relief**` | ✅ |
-| Read-only fan-out slices dispatched on `lite` fail verification or escalate at most 5 percentage points more often than the same slices on the inherited tier, and below the escalation kill. | quant | `agents/evidence/analysis/tier-downshift-paired-run-2026-10-22.md#Verdict **held**` | ✅ |
 | Over the frozen ui-conformance fixture, the probe reports all four planted behavioral defects and raises zero findings for the one declared deviation, against a pre-registered screenshot arm that catches two of the same four and raises one. | quant | `tests/scripts/ui_conformance_probe.test.ts#finds four of four planted defects` | ✅ |
 | `uninstall --global --purge` deletes only the anchor-relative paths this package's own deploy inventory recorded writing, never the host anchor itself — a file nothing recorded is byte-identical afterwards, a recorded path that is a symlink is unlinked rather than followed, and an absent or unreadable inventory refuses with exit 1 having deleted nothing. | qual | `exec:vitest run tests/install/uninstall_purge_containment.test.ts tests/install/uninstall_lockfile_retention.test.ts -> 0` | ✅ |
 | On a manufactured window, a resumed warm worker's first call wrote or left uncached 0.170 of the tokens a fresh spawn of the same definition did (bar 0.20), over 64 resumes in 8 sessions. | quant | `agents/evidence/analysis/warm-worker-claims-2026-10-22.md#**0.170**` | ✅ |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent returned the correct verdict on both fixtures — NOT READY with the exact `file:line` citation on a planted hollow implementation, READY with zero spurious findings on the clean control — while consuming ~45k fewer tokens than the inline-host baseline on each task. Scope: two planted fixtures on a Claude Code host, not a broad hit-rate. | quant | `internal/bench/orchestration/pv-a3-results.md#token_delta_provenance: measured` | ✅ |
 
-**64 backed claim(s)** — all evidence pointers resolve in CI.
+**62 backed claim(s)** — all evidence pointers resolve in CI.
 
 ### How many of those re-derive themselves
 
-**22 of 64** backed claims carry `exec:` evidence —
+**22 of 62** backed claims carry `exec:` evidence —
 CI re-runs the command and compares its exit code to the claim, so a
 stale one turns the build red. The other
-**42** rest on a pointer: CI checks that the artefact
+**40** rest on a pointer: CI checks that the artefact
 exists and contains what it should, which cannot distinguish a live
 claim from one whose producer nobody has run in months.
 
@@ -165,8 +163,6 @@ given:
 | Every cross-skill `SKILL.md` link in the authored skill corpus resolves on disk, and the census behind that st | prose or contract artefact — no exit code carries the verdict |
 | Whether serving low-priority skills over MCP instead of listing them natively improves skill selection (H1) is | prose or contract artefact — no exit code carries the verdict |
 | On the pre-registered 12-fixture defect-finding corpus (three arms, deterministic file-level recall, codex rev | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
-| A read-only fan-out slice verified on `lite` costs fewer price-weighted billable tokens than the same slice ve | prose or contract artefact — no exit code carries the verdict |
-| Read-only fan-out slices dispatched on `lite` fail verification or escalate at most 5 percentage points more o | prose or contract artefact — no exit code carries the verdict |
 | Over the frozen ui-conformance fixture, the probe reports all four planted behavioral defects and raises zero  | prose or contract artefact — no exit code carries the verdict |
 | On a manufactured window, a resumed warm worker's first call wrote or left uncached 0.170 of the tokens a fres | prose or contract artefact — no exit code carries the verdict |
 | On the A3 orchestration eval (deterministic verify, measured token deltas), the production-validator subagent  | benchmark output — regenerating it needs paid or stochastic model calls no CI job can re-derive |
@@ -190,7 +186,7 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
 fails the build on any count-shaped prose mention that drifts from the
 source count — or on two different numbers for the same artefact kind.
 
-We also publish our **debt**: 44 claim(s) are logged as
+We also publish our **debt**: 46 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
@@ -372,7 +368,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (79, of which 9 kernel-denied) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 121 ledger entries · 64 backed · 4 measured-in-repo · 45 unbacked inventory · 8 resolved-null.
+**Axis 2 — evidence form per public claim.** 121 ledger entries · 62 backed · 4 measured-in-repo · 47 unbacked inventory · 8 resolved-null.
 
 | Claim id | Kind | Status | Measured on | Evidence pointer |
 |---|---|---|---|---|
@@ -484,8 +480,8 @@ Undeclared rules (79, of which 9 kernel-denied) carry no row — an honest gap b
 | `surgical-uninstall` | qual | backed | — | `exec:vitest run tests/install/uninstall_shared_host_config_real_install.test.ts tests/lib/json_pointers.test.ts tests/lib/host_hook_merge.test.ts -> 0` |
 | `team-defect-finding-null` | quant | backed | — | `internal/bench/reports/defect-finding.json#honest_null` |
 | `thin-inject-delivery-equivalence` | quant | measured-in-repo | maintainer checkout, project-scope tree, claude-code, widened corpus re-measured 2026-09-08 | `internal/bench/reports/thin-inject-2026-09-08.md#endpoints` |
-| `tier-downshift-limit-relief` | quant | backed | — | `agents/evidence/analysis/tier-downshift-paired-run-2026-10-22.md#Verdict **relief**` |
-| `tier-downshift-quality-held` | quant | backed | — | `agents/evidence/analysis/tier-downshift-paired-run-2026-10-22.md#Verdict **held**` |
+| `tier-downshift-limit-relief` | quant | unbacked | — | `agents/evidence/analysis/tier-downshift-paired-run-2026-10-23.md#Verdict **underpowered**` |
+| `tier-downshift-quality-held` | quant | unbacked | — | `agents/evidence/analysis/tier-downshift-paired-run-2026-10-23.md#Verdict **underpowered**` |
 | `touched-file-quality-shadow-to-warn-bar` | quant | unbacked | — | `PRE-REGISTERED 2026-10-07 (`road-to-touched-file-quality-that-says-when-it-did-not-look` step 4.1), BEFORE any reading is taken against it. The only reading that exists is `agents/evidence/analysis/touched-file-quality-readings-2026-Q4.md`, a replay of 30 merged commits, and that corpus is EXCLUDED below — so no number here can have been fitted to a result.` |
 | `turnaround-blocking-by-cause-targets` | quant | unbacked | — | `PRE-REGISTERED 2026-10-07 (`road-to-blocking-time-by-cause` step 3.1), committed BEFORE either mitigation lands; the step order in the roadmap and the commit order here are the pre-registration. Reading: `agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md` (145 blocking calls, 802 blocking minutes over ten sessions).` |
 | `ui-conformance-behavioral-catch` | quant | backed | — | `tests/scripts/ui_conformance_probe.test.ts#finds four of four planted defects` |

@@ -35,6 +35,32 @@ models:
     cache_write: 18.75
     cache_read: 1.50
 
+  # Per-model rows, read 2026-10-23 from the model pricing table of the source
+  # below (base input / 5m cache writes / cache hits / output). A reader that
+  # knows the served model id (tier_downshift_verdict via price_freshness)
+  # prefers these over the family rows above, which are kept unchanged for the
+  # family-keyed readers and their pinned tests. Haiku 5.5's rates hold for
+  # prompts up to 100,000 tokens; a longer prompt pays $0.50 / $0.625 /
+  # $0.05 / $2.50 and is not priced by this row.
+  - tier: claude-haiku-5-5
+    model: claude-haiku-5-5
+    sourced_on: 2026-10-23
+    source: https://platform.claude.com/docs/en/about-claude/pricing
+    input: 0.10
+    output: 0.50
+    cache_write: 0.125
+    cache_read: 0.01
+
+  # Sonnet 5.5 cache hits are 0.05x base input, not 0.1x (same source).
+  - tier: claude-sonnet-5-5
+    model: claude-sonnet-5-5
+    sourced_on: 2026-10-23
+    source: https://platform.claude.com/docs/en/about-claude/pricing
+    input: 2.00
+    output: 10.00
+    cache_write: 2.50
+    cache_read: 0.10
+
 # Tier resolution: model string is lowercased and matched substring-wise
 # against {haiku, sonnet, opus}; unmatched models price at 0 with a
 # `tier: unknown` marker in the report (NOT silently dropped — surface

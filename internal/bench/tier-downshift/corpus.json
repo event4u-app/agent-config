@@ -1,5 +1,5 @@
 {
-  "commit": "de05ef770947d5603418f3d20c2317529b85cf84",
+  "commit": "fe4fa4bcd7b9bffaba49a233b18a6e82bdcfcc7b",
   "slices": [
     {
       "id": "count-ts-src/scripts/hooks",
@@ -9,7 +9,7 @@
     {
       "id": "count-ts-src/scripts/_lib",
       "question": "How many files ending in .ts are directly inside src/scripts/_lib (not in subdirectories)? Answer with the number only.",
-      "answer": "469"
+      "answer": "470"
     },
     {
       "id": "count-ts-src/scripts/ai_council",
