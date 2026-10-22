@@ -48,7 +48,12 @@ and describes the historical reason majors were frequent.
 A row here has shipped in no release. It carries no version, because the
 version it lands in is a release decision and writing a guess would be the
 pinned-release-target this repository refuses elsewhere. The release that
-carries it moves the row into the table below with its number and date.
+carries it names the row in its own row of the table below, and the row stays
+here until that release is cut: the cut reads this table into the release's
+highlights (`pendingBreakingLine` in `src/scripts/_lib/release_highlights.ts`),
+so removing it earlier would drop it from the release notes. Once the release
+is published the row is deleted from this table. A row that a version row below
+already names is therefore shipping in that version, not still undecided.
 
 | Landed | What changes | Migration |
 |---|---|---|
