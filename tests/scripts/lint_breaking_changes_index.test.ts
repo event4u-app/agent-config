@@ -18,6 +18,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     added_released_breaking_majors,
     evaluate,
+    indexed_majors,
     released_breaking_majors,
 } from '../../src/scripts/lint_breaking_changes_index.js';
 
@@ -60,6 +61,28 @@ describe('lint_breaking_changes_index — pure decision fixtures', () => {
     it('PASS: override token present', () => {
         const r = evaluate(L(RELEASED_NO_BREAKING), L(RELEASED_WITH_BREAKING), false, true);
         expect(r.violation).toBe(false);
+    });
+
+    it('PASS: index untouched, but it already carries a row for the added major', () => {
+        const r = evaluate(L(RELEASED_NO_BREAKING), L(RELEASED_WITH_BREAKING), false, false, new Set(['9.0.0']));
+        expect(r.violation).toBe(false);
+        expect(r.unindexedMajors).toEqual([]);
+    });
+
+    it('MUST-FAIL: index untouched and its rows name only other majors', () => {
+        const r = evaluate(L(RELEASED_NO_BREAKING), L(RELEASED_WITH_BREAKING), false, false, new Set(['8.0.0']));
+        expect(r.violation).toBe(true);
+        expect(r.unindexedMajors).toEqual(['9.0.0']);
+    });
+
+    it('indexed_majors reads the bold version cell of a by-major row only', () => {
+        const index = L(
+            '# Breaking Changes\n\n## Pending\n\n| Landed | What | Migration |\n|---|---|---|\n' +
+                '| 2026-10-18 | **9.9.9 is mentioned in prose** | none |\n\n' +
+                '## Breaking changes by major\n\n| Version | Date |\n|---|---|\n' +
+                '| **9.0.0** | 2026-07-13 |\n| **8.0.0** | 2026-07-07 |\n',
+        );
+        expect([...indexed_majors(index)].sort()).toEqual(['8.0.0', '9.0.0']);
     });
 
     it('PASS: BREAKING only under [Unreleased] (WIP) does not trip', () => {
@@ -171,6 +194,20 @@ const CHANGELOG_WITH_BREAKING =
         write(fx.root, 'CHANGELOG.md', CHANGELOG_WITH_BREAKING);
         git(fx.root, 'add', '-A');
         git(fx.root, 'commit', '-qm', 'chore(release): 9.0.0\n\nci-override: breaking-index-override');
+        const r = runCli(fx);
+        expect(r.status, r.stderr).toBe(0);
+    });
+
+    it('released BREAKING added, index row landed before the cut → exit 0', () => {
+        // The Pending workflow writes the version row on main before the cut,
+        // so the release diff adds the CHANGELOG section and leaves the index alone.
+        write(fx.root, 'BREAKING_CHANGES.md', '# Breaking Changes\n\n| Version | Date |\n|---|---|\n| **9.0.0** | 2026-07-13 |\n');
+        git(fx.root, 'add', '-A');
+        git(fx.root, 'commit', '-qm', 'docs: index 9.0.0 ahead of the cut');
+        setOrigin(fx.root);
+        write(fx.root, 'CHANGELOG.md', CHANGELOG_WITH_BREAKING);
+        git(fx.root, 'add', '-A');
+        git(fx.root, 'commit', '-qm', 'chore(release): 9.0.0');
         const r = runCli(fx);
         expect(r.status, r.stderr).toBe(0);
     });
