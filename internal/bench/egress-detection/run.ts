@@ -9,6 +9,14 @@
  * `tests/fixtures/egress-detection/`; scoring reads the frozen files, never a
  * fresh generation. Before a reading counts, the scorer must reject a planted
  * defect: the IBAN row with its checksum disabled has to fail endpoint (b).
+ *
+ *   node_modules/.bin/tsx internal/bench/egress-detection/run.ts --store        # (b) over the store rows
+ *
+ * `--store` takes the same (b) reading over `STORAGE_IDENTIFIER_RULES`, the rows
+ * the knowledge and cross-repo stores apply with context words dropped, next to
+ * the naive drop-every-context form those stores shipped before. It reads the
+ * tree through `../pinned_tree.ts`, so it refuses a dirty working tree and the
+ * reading names the commit whose files it counted.
  */
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -16,6 +24,8 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { detect, EGRESS_RULES, type EgressRule, IDENTIFIER_RULES } from '../../../src/scripts/_lib/egress_rules.js';
+import { STORAGE_IDENTIFIER_RULES } from '../../../src/scripts/_lib/identifier_redaction.js';
+import { resolveBenchTree } from '../pinned_tree.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const CORPUS = path.join(REPO, 'tests', 'fixtures', 'egress-detection');
@@ -142,10 +152,10 @@ function generate(): { w1: Planted[]; negatives: Negative[] } {
 interface Reading {
     readonly recall: Record<string, { found: number; total: number }>;
     readonly negativeHits: Record<string, number>;
-    readonly tree: { files: number; withHit: number };
+    readonly tree: { files: number; withHit: number; hitFiles: string[] };
 }
 
-function score(rules: readonly EgressRule[], w1: readonly Planted[], negatives: readonly Negative[], withTree: boolean): Reading {
+function score(rules: readonly EgressRule[], w1: readonly Planted[], negatives: readonly Negative[], withTree: boolean, root = REPO): Reading {
     const recall: Record<string, { found: number; total: number }> = {};
     for (const p of w1) {
         const row = (recall[p.type] ??= { found: 0, total: 0 });
@@ -159,22 +169,26 @@ function score(rules: readonly EgressRule[], w1: readonly Planted[], negatives: 
     }
     let files = 0;
     let withHit = 0;
+    const hitFiles: string[] = [];
     if (withTree) {
-        const listed = execFileSync('git', ['-C', REPO, 'ls-files', '-z'], { encoding: 'utf8' }).split('\0').filter(Boolean);
+        const listed = execFileSync('git', ['-C', root, 'ls-files', '-z'], { encoding: 'utf8' }).split('\0').filter(Boolean);
         for (const f of listed) {
             if (f.startsWith('tests/fixtures/egress-detection/')) continue;
             let body: Buffer;
             try {
-                body = fs.readFileSync(path.join(REPO, f));
+                body = fs.readFileSync(path.join(root, f));
             } catch {
                 continue;
             }
             if (body.length > 2_000_000 || body.includes(0)) continue;
             files += 1;
-            if (detect(body.toString('utf8'), rules).some((s) => s.class === 'identifier')) withHit += 1;
+            if (detect(body.toString('utf8'), rules).some((s) => s.class === 'identifier')) {
+                withHit += 1;
+                hitFiles.push(f);
+            }
         }
     }
-    return { recall, negativeHits, tree: { files, withHit } };
+    return { recall, negativeHits, tree: { files, withHit, hitFiles } };
 }
 
 /** The bars of PREREG (a) and (b). */
@@ -184,6 +198,34 @@ function verdicts(r: Reading): { a: boolean; b: boolean } {
     const emailIbanNegatives = Object.values(r.negativeHits).reduce((x, y) => x + y, 0);
     const b = emailIbanNegatives === 0 && (r.tree.files === 0 || r.tree.withHit / r.tree.files < 0.01);
     return { a, b };
+}
+
+/** The context-free rows the two stores shipped before the store-specific shapes. */
+const NAIVE_STORE_RULES: readonly EgressRule[] = IDENTIFIER_RULES.map(({ context: _context, ...rest }) => rest);
+
+function storeReading(w1: readonly Planted[], negatives: readonly Negative[]): void {
+    const tree = resolveBenchTree({ repo: REPO });
+    const broken = STORAGE_IDENTIFIER_RULES.map((r) => (r.rule === 'iban' ? { ...r, validator: () => true } : r));
+    if (verdicts(score(broken, w1, negatives, false)).b) {
+        process.stderr.write('self-test FAILED: the store scorer passed endpoint (b) with the IBAN checksum disabled\n');
+        process.exit(1);
+    }
+    process.stdout.write('self-test passed: the store rows with the IBAN checksum disabled fail endpoint (b)\n');
+    const store = score(STORAGE_IDENTIFIER_RULES, w1, negatives, true, tree.root);
+    const naive = score(NAIVE_STORE_RULES, w1, negatives, true, tree.root);
+    const rate = (r: Reading): number => r.tree.withHit / r.tree.files;
+    process.stdout.write(
+        JSON.stringify(
+            {
+                commit: tree.commit,
+                storeRules: STORAGE_IDENTIFIER_RULES.map((r) => r.rule),
+                store: { ...store, rate: rate(store), verdicts: verdicts(store) },
+                naiveBefore: { tree: naive.tree, negativeHits: naive.negativeHits, rate: rate(naive), verdicts: verdicts(naive) },
+            },
+            null,
+            2,
+        ) + '\n',
+    );
 }
 
 function main(): void {
@@ -198,6 +240,10 @@ function main(): void {
     const w1 = (JSON.parse(fs.readFileSync(path.join(CORPUS, 'w1-identifiers.json'), 'utf8')) as { documents: Planted[] }).documents;
     const negatives = (JSON.parse(fs.readFileSync(path.join(CORPUS, 'w4-negatives.json'), 'utf8')) as { documents: Negative[] }).documents;
 
+    if (process.argv.includes('--store')) {
+        storeReading(w1, negatives);
+        return;
+    }
     const broken = EGRESS_RULES.map((r) => (r.rule === 'iban' ? { ...r, validator: () => true } : r));
     const planted = verdicts(score(broken, w1, negatives, false));
     if (planted.b) {
