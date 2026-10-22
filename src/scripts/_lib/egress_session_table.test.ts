@@ -243,6 +243,22 @@ describe('2.1b restoration fails closed in five named outcomes', () => {
         });
     });
 
+    it('DESTINATION_MISMATCH on a credential token offers no recovery that would show it', () => {
+        const value = iban(21);
+        const { origin } = writeOrigin('c.txt', `account: ${value}\n`);
+        const token = issueToken({ dir, sessionId: 's', type: 'SECRET', class: 'credential', canonical: value, origin });
+        const r = restoreToken(token, { dir, sessionId: 's', destination: fileDestination(path.join(work, 'x.txt')), rules: RULES });
+        expect(r).toMatchObject({ ok: false, outcome: 'DESTINATION_MISMATCH', recovery: 'none' });
+    });
+
+    it('with no workspace named, a table directory inside the working directory is refused', () => {
+        const inside = path.join(process.cwd(), 'agents', 'runtime', `egress-cwd-probe-${process.pid}`);
+        expect(() =>
+            issueToken({ dir: inside, sessionId: 's', type: 'IBAN', class: 'identifier', canonical: iban(2), origin: writeOrigin('d.txt', iban(2)).origin }),
+        ).toThrow(/inside the workspace/);
+        expect(fs.existsSync(inside)).toBe(false);
+    });
+
     it('a token this session never issued is unresolved and has no recovery', () => {
         const a = issueIban('a', iban(19), 'a.txt');
         issueIban('b', iban(20), 'b.txt');
@@ -290,6 +306,14 @@ describe('2.2 continuity never resolves a token to the wrong value', () => {
         const carried = reissueIntoSession(`x ${one.token} y`, { dir, from: 'one', to: 'two', rules: RULES });
         expect(carried).toBe(`x ${deadForm('IBAN')} y`);
         expect(parseTokens(carried)).toEqual([]);
+    });
+
+    it('a mint the new session refuses becomes the dead form instead of throwing', () => {
+        const one = issueIban('one', iban(71), 'one.txt');
+        // The successor already holds this value under another class.
+        issueToken({ dir, sessionId: 'two', type: 'SECRET', class: 'credential', canonical: iban(71), origin: one.origin });
+        const carried = reissueIntoSession(`x ${one.token} y`, { dir, from: 'one', to: 'two', rules: RULES });
+        expect(carried).toBe(`x ${deadForm('IBAN')} y`);
     });
 
     it('a token whose origin changed since is not carried forward with a stale value', () => {
