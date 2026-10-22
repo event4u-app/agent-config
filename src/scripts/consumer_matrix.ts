@@ -43,6 +43,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { MANAGED_SIGNATURE } from './_lib/claude_settings_hooks.js';
+import { computeSurfaceDelta } from '../shared/settingsSurface.js';
 import {
     classifySettingsDelta,
     compareInstallerDelta,
@@ -674,7 +675,9 @@ function legUpgrade(ctx: Ctx): string {
     if (r.status !== 0) {
         throw new Error(`conformance red after ${published} → tarball upgrade: ${(r.stdout + r.stderr).slice(-600)}`);
     }
-    return `upgrade ${published} → packed tarball, conformance green; ${assertUpgradeDelta(upHome, published)}`;
+    const packedManifest = path.join(upPrefix, 'lib', 'node_modules', ...PKG_NAME.split('/'), 'package.json');
+    const packed = (JSON.parse(fs.readFileSync(packedManifest, 'utf8')) as { version: string }).version;
+    return `upgrade ${published} → packed tarball, conformance green; ${assertUpgradeDelta(upHome, published, packed)}`;
 }
 
 /**
@@ -688,22 +691,41 @@ function legUpgrade(ctx: Ctx): string {
  * computes from its committed file for the same pair.
  *
  * Absent delta file: the installer only writes one when the two versions
- * differ and something changed. Nothing to compare is not a disagreement, and
- * saying so is the honest reading — the test for this comparison lives in
- * `tests/scripts/consumer_matrix_settings_delta.test.ts`, which does not need
- * the network to exercise the branches.
+ * differ and something changed. An absent file is therefore evidence only when
+ * the release computes no change for the same pair — when it computes one, the
+ * installer failed to write it and the leg throws. A pair the committed surface
+ * is not about runs no comparison, and the output says the assertion did not
+ * run rather than reporting the surfaces identical. The test for these branches
+ * lives in `tests/scripts/consumer_matrix_settings_delta.test.ts`, which does
+ * not need the network.
  */
-export function assertUpgradeDelta(upHome: string, published: string): string {
+export function assertUpgradeDelta(upHome: string, published: string, packed: string): string {
     const deltaPath = path.join(upHome, '.event4u', 'agent-config', 'state', 'settings-delta.json');
-    if (!fs.existsSync(deltaPath)) return 'no settings delta written (surfaces identical)';
-    const installer = JSON.parse(fs.readFileSync(deltaPath, 'utf8')) as InstallerDelta;
     const released = readReleasedSurface();
+    if (!fs.existsSync(deltaPath)) {
+        if (published === packed) return `no settings delta written (same version ${packed}, none expected)`;
+        if (released.version !== published) {
+            return (
+                `settings delta NOT asserted: registry latest ${published}, ` +
+                `committed surface is ${released.version} — no comparison ran`
+            );
+        }
+        const expected = computeSurfaceDelta(released, emitReleasedSurface(packed)).changes.length;
+        if (expected > 0) {
+            throw new Error(
+                `no settings delta was written after ${published} → ${packed}, ` +
+                    `yet the release computes ${String(expected)} surface changes`,
+            );
+        }
+        return `no settings delta written (compared, surfaces identical ${published} → ${packed})`;
+    }
+    const installer = JSON.parse(fs.readFileSync(deltaPath, 'utf8')) as InstallerDelta;
     if (released.version !== installer.oldVersion) {
         // A different pair is not a disagreement about this one. It happens
         // when the registry's latest is not the version the committed file was
         // cut at — during a release, for one window.
         return (
-            `settings delta skipped: installed ${installer.oldVersion}, ` +
+            `settings delta skipped (NOT asserted): installed ${installer.oldVersion}, ` +
             `committed surface is ${released.version}`
         );
     }

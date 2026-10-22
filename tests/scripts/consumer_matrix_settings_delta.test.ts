@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { assertUpgradeDelta } from '../../src/scripts/consumer_matrix.js';
+import { computeSurfaceDelta } from '../../src/shared/settingsSurface.js';
 import {
     classifySettingsDelta,
     compareInstallerDelta,
@@ -117,7 +118,7 @@ describe('the upgrade leg reads the delta the installer wrote', () => {
 
     it('the leg is wired to the path the installer actually writes', () => {
         const src = fs.readFileSync(path.join(REPO_ROOT, 'src/scripts/consumer_matrix.ts'), 'utf8');
-        expect(src).toContain('assertUpgradeDelta(upHome, published)');
+        expect(src).toContain('assertUpgradeDelta(upHome, published, packed)');
         // Not a guess at the path — the one `install.ts` writes.
         const installer = fs.readFileSync(path.join(REPO_ROOT, 'src/scripts/install.ts'), 'utf8');
         expect(installer).toContain("path.join('state', 'settings-delta.json')");
@@ -147,16 +148,30 @@ describe('the upgrade leg reads the delta the installer wrote', () => {
             fs.writeFileSync(deltaFile, `${JSON.stringify(d, null, 2)}\n`, 'utf8');
 
         try {
-            // No file at all — nothing to compare is not a disagreement.
-            expect(assertUpgradeDelta(home, base.version)).toContain('no settings delta');
+            // No file at all, upgrading onto the same version — the installer writes no delta then.
+            expect(assertUpgradeDelta(home, base.version, base.version)).toContain('no settings delta');
 
-            // A pair the committed file is not about is skipped, not failed.
+            // No file although the versions differ and the release computes a change: the
+            // installer failed to write the delta, and the leg says so instead of "identical".
+            const live = emitReleasedSurface('9999.0.0');
+            const expectsDelta = computeSurfaceDelta(base, live).changes.length > 0;
+            if (expectsDelta) {
+                expect(() => assertUpgradeDelta(home, base.version, '9999.0.0')).toThrow(/no settings delta was written/);
+            } else {
+                expect(assertUpgradeDelta(home, base.version, '9999.0.0')).toContain('compared, surfaces identical');
+            }
+            // Registry latest is not the version the committed surface was cut at: no
+            // comparison can run, and the output says the assertion did not run.
+            expect(assertUpgradeDelta(home, '0.0.1', '9999.0.0')).toMatch(/settings delta NOT asserted/);
+
+            // A pair the committed file is not about is skipped, not failed — and named as not asserted.
             write({ oldVersion: '0.0.1', newVersion: base.version, changes: [] });
-            expect(assertUpgradeDelta(home, '0.0.1')).toContain('skipped');
+            expect(assertUpgradeDelta(home, '0.0.1', base.version)).toContain('skipped');
+            expect(assertUpgradeDelta(home, '0.0.1', base.version)).toMatch(/NOT asserted/);
 
             // The real pair carrying exactly what the release computes: the surfaces agree.
             write({ oldVersion: base.version, newVersion: base.version, changes: agreeing });
-            expect(assertUpgradeDelta(home, base.version)).toContain('agrees');
+            expect(assertUpgradeDelta(home, base.version, base.version)).toContain('agrees');
 
             // A removal the release does not compute: the leg throws.
             write({
@@ -164,7 +179,7 @@ describe('the upgrade leg reads the delta the installer wrote', () => {
                 newVersion: base.version,
                 changes: [...agreeing, { kind: 'removed', key: 'quality.local_auto_run' }],
             });
-            expect(() => assertUpgradeDelta(home, base.version)).toThrow(/settings delta disagrees/);
+            expect(() => assertUpgradeDelta(home, base.version, base.version)).toThrow(/settings delta disagrees/);
         } finally {
             fs.rmSync(home, { recursive: true, force: true });
         }
