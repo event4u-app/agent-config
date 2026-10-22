@@ -197,7 +197,7 @@ change that. Recovery is an act outside the tree.
   make the gap explicit rather than to pretend it is data:
   - `agents/tmp/bench-local/` — **does not exist**, in this worktree or in the
     maintainer's main checkout.
-  - `find /Users/mathiasberg/projects -maxdepth 6 -name 'repo-?-questions.yaml'`
+  - `find ~/projects -maxdepth 6 -name 'repo-?-questions.yaml'`
     → **0 results**. Same search for `probes.yaml` → **0 results**. So all four
     pinned files read **absent**, not stale.
   - Clones of the three corpora: **none reachable**. The corpus identities are
