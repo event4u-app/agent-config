@@ -5,7 +5,14 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { _runChecks, proposalSubjectOf } from '../../src/scripts/check_proposal.js';
+import { spawnSync } from 'node:child_process';
+
 import { commitAll } from './ratification_git_fixture.js';
+
+function git(cwd: string, ...args: string[]): void {
+    const r = spawnSync('git', ['-C', cwd, ...args], { encoding: 'utf8' });
+    if (r.status !== 0) throw new Error(r.stderr);
+}
 
 /**
  * Step 6.1 of `road-to-self-modification-that-a-council-must-pass`: a package
@@ -127,6 +134,10 @@ function record(subject: string, verdict = 'ratified', providers = ['anthropic',
 
 /** Commit the skill, then write record and authorization for its digest, then commit those. */
 function setUp(opts: { recordSubject?: string; authSubject?: string | null; verdict?: string; providers?: string[] } = {}): string {
+    // The base the declared change is compared against: the tree before it.
+    write('README.md', '# base\n');
+    commitAll(root, 'base');
+    git(root, 'tag', 'base');
     write(SKILL, 'the skill body the learning changes\n');
     commitAll(root);
     const digest = proposalSubjectOf(root, [SKILL]);
@@ -139,7 +150,7 @@ function setUp(opts: { recordSubject?: string; authSubject?: string | null; verd
 }
 
 function gated(fm: Record<string, string>): string[] {
-    return _runChecks(proposal(fm), null, root)
+    return _runChecks(proposal(fm), null, root, 'base')
         .filter((f) => f.section === 'gated')
         .map((f) => f.message);
 }
@@ -221,6 +232,40 @@ describe('check_proposal — a gated package proposal names its review and its a
         const { changed_files: _drop, ...noFiles } = GATED;
         expect(gated(noFiles).join('\n')).toContain('changed_files');
         expect(gated({ ...GATED, changed_files: '[]' }).join('\n')).toContain('changed_files');
+    });
+
+    it('a change the declared list does not cover is refused, naming the undeclared file', () => {
+        // Finding 859618a507fb: the record and the authorization bind the
+        // DECLARED files, so an undeclared file in the range shipped unreviewed.
+        setUp();
+        write('src/scripts/extra.ts', 'export const smuggled = 1;\n');
+        commitAll(root, 'an undeclared package change');
+        const out = gated(GATED).join('\n');
+        expect(out).toContain('does not cover the change');
+        expect(out).toContain('src/scripts/extra.ts');
+    });
+
+    it('a range that cannot be listed fails closed', () => {
+        setUp();
+        const out = _runChecks(proposal(GATED), null, root, 'no-such-base')
+            .filter((f) => f.section === 'gated')
+            .map((f) => f.message)
+            .join('\n');
+        expect(out).toContain('cannot be listed');
+    });
+
+    it('an owner-authorization record outside its directory is refused, even bound to the change', () => {
+        // Finding c065d8063498: any committed file with the digest — the review
+        // itself, a file the agent just wrote — counted as the owner's approval.
+        const digest = setUp();
+        write('agents/evidence/notes/approval.md', `subject: ${digest}\n`);
+        commitAll(root);
+        expect(gated({ ...GATED, owner_authorization: 'agents/evidence/notes/approval.md' }).join('\n')).toContain(
+            'is not a record under `agents/evidence/owner-authorizations/`',
+        );
+        write(RECORD, `${record(digest)}subject: ${digest}\n`);
+        commitAll(root);
+        expect(gated({ ...GATED, owner_authorization: RECORD }).join('\n')).toContain('owner-authorizations');
     });
 
     it('polarity: a project-scoped proposal at gated is checked as before', () => {
