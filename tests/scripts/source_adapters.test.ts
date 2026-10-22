@@ -79,6 +79,12 @@ describe('local source adapters', () => {
         expect(resolveSource(path.join(root, 'ref')).digest).not.toBe(ref.digest);
     });
 
+    it('skips a dangling symlink instead of escaping with a raw ENOENT', () => {
+        write('ref/src/a.ts', 'export const a = 1;\n');
+        fs.symlinkSync(path.join(root, 'ref', 'missing'), path.join(root, 'ref', 'dangling'));
+        expect(Object.keys(resolveSource(path.join(root, 'ref')).files)).toEqual(['src/a.ts']);
+    });
+
     it('pins an existing local clone to its HEAD sha without running git', () => {
         const sha = 'a'.repeat(40);
         write('clone/.git/HEAD', 'ref: refs/heads/main\n');
