@@ -128,6 +128,13 @@
             "reason": "Tool-call count and freshness milestones for the context-hygiene carrier; never read by a successor."
         },
         {
+            "id": "free-hand-shadow.jsonl",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/ai_council/free_hand_shadow.ts:37",
+            "reason": "One row per shadowed hand call: routes, verify verdicts and token counts, never a prompt or an answer. Measurement data for the free-hands claims; nothing resumes from it."
+        },
+        {
             "id": "hand-exposure.json",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",

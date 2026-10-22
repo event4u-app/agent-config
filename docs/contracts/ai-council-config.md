@@ -1459,6 +1459,15 @@ call to the next route; a server fault, a timeout or an empty quota on a paid
 route does not, so no question is paid for twice. A second failure is an
 honest ∅.
 
+Shadow mode (`free_hand_shadow.ts`) asks a free route the same typed slice
+beside the paid route; the paid answer is used and the head verifies both. One
+row per call lands in `agents/runtime/state/free-hand-shadow.jsonl` — routes,
+verdicts and token counts, never the prompt or an answer. A metered free side,
+a `project-content` payload, or a ledger at the 2,000-call cap (decision A5)
+skips the free side. `./scripts-run src/scripts/ai_council/free_hand_shadow
+--report` prints per kind both failure rates, the paid tokens avoided, the
+head's verify tokens and the net per ISO week.
+
 ## Precedence
 
 Resolution order for every member-level setting (mode, model, key):
