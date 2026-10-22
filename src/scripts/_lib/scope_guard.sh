@@ -128,6 +128,13 @@ ledger_owns() {
 # second covers installs older than the ledger; the first covers an old install
 # whose every name has since been renamed. Foreign entries beside ours never
 # hide ours, because one shared name is sufficient.
+#
+# The trade, stated: an install with NO ledger whose every name was renamed is
+# not recognised, so a real duplicate registration there passes as OK; and a
+# foreign skill that happens to share a stem with a shipped one (`docker`,
+# `security`) is counted as ours. Stems are cut at the first dot, so names that
+# differ only after one compare equal. Wrong in both directions only at the
+# edges, where the old any-non-empty-directory test was wrong everywhere.
 ac_owns_dir() {
     local tool="$1" dir="$2"
     dir_nonempty "$dir" || return 1
