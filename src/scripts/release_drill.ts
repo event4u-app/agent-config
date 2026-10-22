@@ -41,6 +41,7 @@ import {
     SystemExitError,
 } from './release.js';
 import { releaseHoldPreflight } from './_lib/release_holds.js';
+import { SETTINGS_SURFACE_FIXTURE } from './_lib/release_settings_surface.js';
 import { die } from './release_publication.js';
 import { DERIVED_MARKER } from './_lib/release_highlights.js';
 import {
@@ -83,6 +84,7 @@ const _MUTATED_BY_STEP_2: readonly string[] = [
     AUGMENT_PLUGIN_JSON,
     AUGMENT_MARKETPLACE_JSON,
     PROJECT_TEMPLATE,
+    SETTINGS_SURFACE_FIXTURE,
 ];
 
 const _fs_cjs = createRequire(import.meta.url)('node:fs') as typeof fs;

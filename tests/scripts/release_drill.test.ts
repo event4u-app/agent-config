@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
+import { SETTINGS_SURFACE_FIXTURE } from '../../src/scripts/_lib/release_settings_surface.js';
 import { run_scenario, SCENARIOS } from '../../src/scripts/release_drill.js';
 import {
     AUGMENT_MARKETPLACE_JSON,
@@ -43,6 +44,7 @@ describe('release drill — execute() against the simulated world', () => {
             AUGMENT_PLUGIN_JSON,
             AUGMENT_MARKETPLACE_JSON,
             PROJECT_TEMPLATE,
+            SETTINGS_SURFACE_FIXTURE,
         ].filter((f) => fs.existsSync(f));
         const stamp = (): string[] => files.map((f) => `${f}:${fs.statSync(f).mtimeMs}`);
         const before = stamp();
