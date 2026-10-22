@@ -56,7 +56,7 @@ branch, right only for a branch that targets it; nothing asks the forge:
   it — the re-binding reviewer cites the post-rebase commits in a commit of its
   own. The step 3 equivalence report is supporting data for that reviewer, never
   the re-binding itself, and nothing edits a findings file automatically
-  ([`plan-review-gates`](../../../../docs/contracts/plan-review-gates.md) § 2.5).
+  (`plan-review-gates` (agent-config repository: `docs/contracts/plan-review-gates.md`) § 2.5).
 - **Conflicts** → resolve to the correct end state per commit, `git add`,
   `git rebase --continue`; `git rebase --abort` returns to the pre-rebase state.
   Re-run the relevant tests afterwards — a conflict-free tree is not a correct

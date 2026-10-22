@@ -101,7 +101,7 @@ number in the Default column — the scanner, when a runtime is available, or th
 step-3 audit by eye. A row can have a signal and still be eye-checked: the
 count exists, the threshold is not machine-applied.
 
-`tests/scripts/tell_bound_attribution.test.ts` reads this table and probes the
+agent-config's own test `tell_bound_attribution.test.ts` reads this table and probes the
 scanner for every row, so a bound claimed here and absent from the code fails
 the suite.
 

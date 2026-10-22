@@ -60,8 +60,8 @@ returned 0, the turn closed, and the red arrived where the user found it.
 
 | Half | Carrier | Behavior |
 |---|---|---|
-| Stale base | `check_branch_freshness` in the pre-push hook (`src/scripts/install-hooks.sh`) | Asks the REMOTE, one `ls-remote`, ~4.5 s. Refuses only on a VERIFIED behind state and names the push-ready sequence. Never merges. |
-| Unsettled push | the `push-settle` PostToolUse concern (`src/scripts/hooks/push_settle_hook.ts`) | Fires on git's own ref-advance report, resolves the PR number, and names the literal `ci_settle` command. Warn only. |
+| Stale base | `check_branch_freshness` in the pre-push hook (`node_modules/@event4u/agent-config/src/scripts/install-hooks.sh`) | Asks the REMOTE, one `ls-remote`, ~4.5 s. Refuses only on a VERIFIED behind state and names the push-ready sequence. Never merges. |
+| Unsettled push | the `push-settle` PostToolUse concern (`node_modules/@event4u/agent-config/src/scripts/hooks/push_settle_hook.ts`) | Fires on git's own ref-advance report, resolves the PR number, and names the literal `ci_settle` command. Warn only. |
 
 ### What each one does NOT do
 
@@ -175,7 +175,7 @@ A consumer install writes **no git hooks at all** (`src/install/` references
 not run for a registry dependency), so the pre-push gate is a maintainer-only
 mechanism. The same council, unanimously, made that the decision rather than the
 status quo: the pre-push chain runs this repository's own consistency and
-preflight gate chains, which depend on its Taskfile, its `./scripts-run` shim
+preflight gate chains, which depend on its Taskfile, its script-dispatcher shim
 and its generated trees — none of which exist in a consumer project — and a
 dependency install should not establish persistent repository execution. *Revisit-if* a
 consumer-native gate set is designed with its own opt-in command and consent

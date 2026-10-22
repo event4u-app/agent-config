@@ -138,6 +138,12 @@ The first non-blank line after the `## Risk Register` heading MUST be:
   committed until that date.
 - `reviewer:` — free identifier (`claude/host`, `human`, `gpt-4o`, …);
   non-empty.
+- **Generated, not reviewed.** A generator that drafts the register (the
+  analysis emitter) writes `<!-- risk-review: v1 | generated: YYYY-MM-DD | reviewer: none -->`.
+  The date is the drafting date and feeds the same staleness rule; the form
+  attests that **no review happened**. `generated:` and `reviewer: none` imply
+  each other — `reviewed:` with `none`, or `generated:` with a named reviewer,
+  is malformed. A review replaces the line with the `reviewed:` form.
 
 ### 1.2 Table rules
 

@@ -4,7 +4,7 @@ Catalog material for [`no-cheap-questions`](../../rules/no-cheap-questions.md) �
 
 ## Cheap classes — full catalog
 
-Sequencing · format-only · commit / CI / test asks · fenced re-ask · Iron-Law option · context-derived · dominant option · re-ask after decline · paternalistic (IL 3) · continuation under mandate (IL 4) · prereq-for-authorized-action (IL 5) · destination-already-stated (IL 6) · self-cleaning artefact follow-up · disguised commit ask (preview-as-bait) · commit-chunking-strategy (one-or-multiple / which-first / how-to-split). Extended examples: [`asking-and-brevity-examples`](../../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
+Sequencing · format-only · commit / CI / test asks · fenced re-ask · Iron-Law option · context-derived · dominant option · re-ask after decline · paternalistic (IL 3) · continuation under mandate (IL 4) · prereq-for-authorized-action (IL 5) · destination-already-stated (IL 6) · self-cleaning artefact follow-up · disguised commit ask (preview-as-bait) · commit-chunking-strategy (one-or-multiple / which-first / how-to-split). Extended examples: `asking-and-brevity-examples` (agent-config repository: `docs/guidelines/agent-infra/asking-and-brevity-examples.md`).
 
 ## Iron Law 3 — No Paternalistic State-Assuming Options
 
@@ -43,7 +43,7 @@ The only halts named in the invoking command:
   that ask and states it holds "regardless of `personal.autonomy`". Without this
   halt the two rules contradict each other outright under a mandate — IL 4
   forbids the ask, `user-interrupt-priority` requires it. Declared as a pair in
-  [`rule-interactions.yml`](../../../docs/contracts/rule-interactions.yml)
+  `rule-interactions.yml` (agent-config repository: `docs/contracts/rule-interactions.yml`)
   (`interrupt-x-no-cheap-questions`).
 
 A clean edit-batch is not a halt condition — pick the next item. Neither is a

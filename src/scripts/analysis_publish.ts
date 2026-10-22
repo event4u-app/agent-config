@@ -1,3 +1,4 @@
+// egress-content: session-content uncovered — pushes the run's branch and opens a PR through git and gh, not a model provider; the PR title and body are derived from dropped private files and pass assertOutbound (_lib/outbound_text.ts) before anything is committed
 /**
  * analysis_publish.ts — the publish stage of the analysis doors (step 3.3,
  * ADR-288 D5/D6): commit the emitted roadmaps, push the run's own branch, open
@@ -10,12 +11,16 @@
  * The caller names none of the objects a push can reach:
  * the branch comes from the run id, the publishable paths
  * and the PR body from the run directory, and every push is a compare-and-swap
- * on the head the flow last saw.
+ * on the head the flow last saw. Nothing leaves before the caller passes, as
+ * `confirmedBranch`, the exact branch this turn's confirmation named — the
+ * invocation alone names neither the branch nor the PR — and before the title
+ * and body pass the outbound check, since both are derived from private files.
  */
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { assertOutbound, OutboundRefusedError } from './_lib/outbound_text.js';
 import { handBack, publicationKey, publishOnce, reached, transition, type RunRecord } from './analysis_run.js';
 
 export const MAX_CI_FIX_ROUNDS = 3;
@@ -101,6 +106,30 @@ export interface PublishInput {
     baseSha: string;
     title: string;
     message: string;
+    /**
+     * The branch the user confirmed this turn, after being shown it and told
+     * that a push and one non-draft PR follow. Anything but the run's own
+     * branch publishes nothing.
+     */
+    confirmedBranch?: string;
+}
+
+/** Null when the run may publish; otherwise why not. Reads the body, never echoes it. */
+function publicationGate(r: Resolved, input: PublishInput): string | null {
+    if (input.confirmedBranch !== r.target.branch) {
+        return (
+            `publication not confirmed: pushing ${r.target.branch} and opening one non-draft PR on ${r.target.base} ` +
+            'needs this turn\'s confirmation naming that branch'
+        );
+    }
+    try {
+        assertOutbound(input.title, 'PR title');
+        assertOutbound(fs.readFileSync(r.bodyFile, 'utf8'), 'PR body');
+    } catch (err) {
+        if (err instanceof OutboundRefusedError) return err.message;
+        throw err;
+    }
+    return null;
 }
 
 function assertPublishable(paths: readonly unknown[]): string[] {
@@ -203,6 +232,8 @@ export function publish(
         if (!(err instanceof PublishError)) throw err;
         return { record: handBack(runDir, rec, err.message), pr: null };
     }
+    const refused = publicationGate(r, input);
+    if (refused !== null) return { record: handBack(runDir, rec, refused), pr: null };
     if (!reached(rec, 'committed')) {
         const outside = outsideAllowed(port, r.emitted);
         if (outside.length > 0) {

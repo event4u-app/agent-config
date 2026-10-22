@@ -13,7 +13,7 @@ model-carried — the same honesty boundary
 [`active-remediation`](active-remediation.md) state for their own obligations.
 
 Two reach limits, named rather than implied. The tool lives in this repository's
-`src/scripts/` and is **not** exposed as an `agent-config` verb, so a consumer
+`node_modules/@event4u/agent-config/src/scripts/` and is **not** exposed as an `agent-config` verb, so a consumer
 install performs step 2 by hand; wiring the verb touches six further surfaces
 plus the curated `dist/agent-src/scripts/` list and is deliberately out of this
 change. And `docs/decisions/` is projected into no agent-visible tree at all —

@@ -57,7 +57,7 @@
   wireframe's placeholder grays are non-decisions, and reproducing them 1:1
   honors the wrong half of the artifact. That axis used to live only as a prose
   table, so every consumer re-derived it by eye and two consumers could disagree
-  without either misreading the text. `src/scripts/_lib/artifact_maturity.ts`
+  without either misreading the text. `node_modules/@event4u/agent-config/src/scripts/_lib/artifact_maturity.ts`
   resolves it, and the block carries the verdict **with its provenance**:
   `maturity_source` says which rung decided (a user signal beats the artifact's
   own declaration, which beats inference from its content, which beats the
@@ -79,7 +79,7 @@
   a long time that meant nothing read it at all: the block was written by
   capture and consumed by nobody, so easing and duration were re-derived from
   taste on every port. On the **Port a provided artifact** branch
-  ([`design-artifact-lifecycle`](../../../docs/contracts/design-artifact-lifecycle.md))
+  (`design-artifact-lifecycle` (agent-config repository: `docs/contracts/design-artifact-lifecycle.md`))
   the audit reads `motion.durations` and `motion.easings` as the answer. The
   extraction-only marking above still holds: `motion._meta.detected_libs`
   informs the human and never becomes a token.
@@ -111,7 +111,7 @@ The contract above says what this skill reads. This section says how a real
 tool's output becomes that shape, so the answer to *"which crawler?"* lives in
 the contract rather than in somebody's memory.
 
-`src/scripts/design_system_import.ts` is a **pure, offline file transform** with
+`node_modules/@event4u/agent-config/src/scripts/design_system_import.ts` is a **pure, offline file transform** with
 three file lanes and one snapshot-directory lane. It reads files and writes the contract shape to stdout — no
 network, no browser, no crawl. That is the lock restated as code: a transform
 that fetched would quietly become the crawler this package does not ship.
@@ -172,6 +172,6 @@ already assessed, and taken up only if a design-quality roadmap asks for runtime
 drift detection.
 
 The compatibility matrix is committed as tests, not prose:
-`tests/scripts/fixtures/design-system-import/` holds one input/expected pair per
+agent-config's own test fixtures for the import (`design-system-import/`) hold one input/expected pair per
 lane, and that directory's README states which sample is a real capture and
 which is derived from a tool's published output surface.

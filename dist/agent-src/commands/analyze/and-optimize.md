@@ -65,9 +65,10 @@ limits.
 ### Execution mode — plan-only default
 
 `--mode=plan` is the **default**: run Steps 0–4 only — analyze, verify,
-council, author the roadmap set in the worktree — then present the plan
-plus the predicted delta on the target metric and STOP. No push, no PR, no
-refinement loop, no edit outside the worktree's roadmap drafts.
+council, author the roadmap set as uncommitted drafts in the current
+checkout — then present the plan plus the predicted delta on the target
+metric and STOP. No push, no PR, no
+refinement loop, no branch, no worktree, no edit outside the roadmap drafts.
 `--mode=execute` must be **explicitly present in the invocation** to enter
 Steps 5–6; treat its absence as plan mode even when conversation momentum
 suggests otherwise. An execute-mode run still respects every gate below.
@@ -116,8 +117,10 @@ above that, re-invoke deliberately with fresh context.
 - **Public contracts:** no change to a `docs/contracts/` surface marked
   `stability: stable` without explicit user approval this run — record as a
   proposal otherwise.
-- **Commit / push / PR floors:** unchanged — the invocation authorizes the
-  worktree branch and (execute mode) pushes to the run's own PR; merge,
+- **Commit / push / PR floors:** unchanged — the invocation authorizes no
+  branch, worktree, push or PR by itself. Execute mode creates the run's
+  branch and worktree, and later publishes, only after a confirmation this
+  turn that names them (Step 0.3, Step 5); merge,
   deploy, and every Hard-Floor action stay this-turn gated.
 
 ## Steps
@@ -133,10 +136,14 @@ above that, re-invoke deliberately with fresh context.
    `project_root`. Nothing below reads outside the scope root.
 2. Live remote state first (`direct-answers` live-state law): fetch,
    open PRs, recently merged work overlapping the scope — never from memory.
-3. Create or enter an isolated worktree on a fresh branch off the trunk
-   (branch/worktree creation is authorized by invoking this command; every
-   Hard-Floor action below stays gated).
-4. Seed it per the
+3. **Plan mode stays in the current checkout: no branch, no worktree.** In
+   execute mode, name the fresh branch off the trunk and the worktree path the
+   run would create, and create them
+   only after this turn's confirmation names that branch and that path
+   ([`scope-control`](../../../../rules/scope-control.md) § Git operations —
+   invoking the command names neither, so it is not that permission). No
+   confirmation → the run continues as plan mode in the checkout.
+4. Execute mode only: seed the worktree per the
    [`using-git-worktrees` § 4b allow/deny list](../../../../skills/using-git-worktrees/SKILL.md#4b-seed-the-worktree--allow--deny-list)
    — symlink or fully install dependencies, copy or regenerate the generated
    projections, regenerate build output, and never copy `.agent-settings.yml`
@@ -210,7 +217,8 @@ and present the plan (plan mode's defined end state). Then push the branch
 and open the PR per [`/create-pr`](../pr/create.md) — its mechanics and the
 always-active PR-surface rules govern the body and reply shape; do not
 restate them here. The publish stage (`analysis_publish.ts`) does it: own
-branch only, the allowed path set, a leased push, a non-draft PR exactly once.
+branch only, the allowed path set, a leased push, a non-draft PR exactly once,
+and only with `confirmedBranch` — the branch this turn's confirmation named.
 
 **Run record.** Every run writes `run.json` for its round through
 `src/scripts/analysis_run_record.ts` — one row per analyst and loop, the

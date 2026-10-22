@@ -58,7 +58,7 @@ is routed identically:
 
 Every resolution is appended to `## Decisions` **with the step id in the
 evidence column**, so a later reader can tell a decision planning closed from
-one the run met. `./scripts-run src/scripts/lint_decision_classes` validates
+one the run met. `lint_decision_classes.ts` validates
 the row.
 
 **Parking is not deferring.** A parked step keeps its `[ ]`, keeps its place in
@@ -71,7 +71,7 @@ and recorded as a scope delta, council-owned growth routes through the ladder,
 and a larger unrelated opportunity becomes a follow-up artifact rather than
 expanding the mission. Both lists, closed:
 [`scope-growth-ownership`](../authority/scope-growth-ownership.md), with
-`./scripts-run src/scripts/scope_growth "<description>"` for a single item.
+`scope_growth.ts "<description>"` for a single item.
 
 
 ## What `blocked-by:` may point at, after the retirement

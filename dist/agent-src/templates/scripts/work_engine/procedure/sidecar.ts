@@ -94,7 +94,8 @@ function parseExit(raw: unknown, where: string): Exit {
     const hash = arg.lastIndexOf('#');
     const file = hash === -1 ? '' : arg.slice(0, hash);
     if (file === '' || !containedPath(file)) throw new SidecarError(`${where}: schema exit must be <path>#<id>`);
-    return { kind: 'schema', path: file, id: arg.slice(hash + 1) };
+    // A step whose exit can never be met would hold the procedure at that step forever.
+    throw new SidecarError(`${where}: schema exits are not executable by this engine version, so the procedure could never complete`);
 }
 
 function parseWhen(raw: unknown, where: string): When {

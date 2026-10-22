@@ -1,3 +1,4 @@
+// egress-content: session-content uncovered — posts a PR comment through `gh`, not a model provider; the comment is built from model text about an untrusted PR, neutralised and refused by assertOutbound (_lib/outbound_text.ts) before it leaves
 /**
  * analysis_pr_review.ts — the read-only verdict of `analyze:pr` (step 5.2,
  * ADR-288 D1, D9).
@@ -16,6 +17,8 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+
+import { assertOutbound, neutraliseForGithub } from './_lib/outbound_text.js';
 
 export const DEFAULT_CONFIDENCE_THRESHOLD = 0.7;
 
@@ -149,14 +152,16 @@ export function renderVerdict(v: Omit<PrVerdict, 'text'>, threshold: number): st
     const head = `analyze:pr #${v.pr} at ${v.headSha.slice(0, 12)} (base ${v.baseSha.slice(0, 12)})`;
     const tally = `refuted ${v.refuted} · below threshold ${v.belowThreshold} · folded duplicates ${v.duplicates}`;
     if (v.findings.length === 0) return `${head}\n\nno finding above threshold (${threshold}) — ${tally}\n`;
+    // Every field below is model text about an untrusted PR: inert before it can be posted.
+    const t = neutraliseForGithub;
     const rows = v.findings.map(
         (f) =>
-            `- **${f.severity}** \`${f.file}:${f.line}\` — ${f.claim}\n` +
-            `  - evidence: ${f.evidence}\n` +
-            `  - fix: ${f.fix}\n` +
+            `- **${t(f.severity)}** \`${t(f.file).replace(/`/gu, "'")}:${f.line}\` — ${t(f.claim)}\n` +
+            `  - evidence: ${t(f.evidence)}\n` +
+            `  - fix: ${t(f.fix)}\n` +
             `  - confidence: ${f.confidence} · ${f.origin === 'introduced' ? 'introduced here' : 'pre-existing'}` +
-            (f.reproduction === null ? '' : `\n  - reproduction: ${f.reproduction}`) +
-            (f.test === null || f.test === undefined ? '' : `\n  - test: ${f.test}`),
+            (f.reproduction === null ? '' : `\n  - reproduction: ${t(f.reproduction)}`) +
+            (f.test === null || f.test === undefined ? '' : `\n  - test: ${t(f.test)}`),
     );
     return `${head}\n\n${rows.join('\n')}\n\n${tally}\n`;
 }
@@ -212,7 +217,10 @@ export function reviewPr(
     const metric = findings.filter((f) => f.origin === 'introduced' && (shown(f.reproduction) || shown(f.test))).length;
     const base = { pr: input.pr, baseSha, headSha, findings, belowThreshold, refuted, duplicates, metric };
     const text = renderVerdict(base, threshold);
-    if (input.comment) port.comment(input.pr, text);
+    if (input.comment) {
+        assertOutbound(text, `analyze:pr comment on #${input.pr}`);
+        port.comment(input.pr, text);
+    }
     return { ...base, text };
 }
 

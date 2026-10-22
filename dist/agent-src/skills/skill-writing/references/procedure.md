@@ -53,7 +53,7 @@ to catch rather than an answer.
 not name a skill that exists — a record saying a capability was refused while it
 ships is worse than no record.
 
-**Surface overlap before deciding** — run `./scripts-run src/scripts/skill_overlap`
+**Surface overlap before deciding** — run `skill_overlap.ts`
 (or `audit_skill_overlap`) and read the nearest matches; a high-overlap hit is a
 merge signal, not a green light. This gate is the authoring-time companion to the
 [capability-boundary matrix](../../../docs/contracts/capability-boundary.md): the
@@ -97,7 +97,7 @@ description: "Use when writing Playwright E2E tests — locators, assertions,
 ```
 
 The *good* version routes correctly on *"my E2E keeps flaking on CI"*
-without naming Playwright. Run `./scripts-run src/scripts/audit_skill_descriptions`
+without naming Playwright. Run `audit_skill_descriptions.ts`
 after writing; if flagged `too-short` or `no-trigger-prefix`, rewrite
 before commit.
 
@@ -263,7 +263,7 @@ each criterion to one falsifiable sentence.
 
 **Loop** (orchestrated by `scripts/run_skill_evals.ts`):
 
-1. **Scaffold** — `./scripts-run src/scripts/run_skill_evals scaffold {skill}`
+1. **Scaffold** — `run_skill_evals.ts scaffold {skill}`
    creates `runs/{timestamp}-{baseline,with-skill}/` and seeds each
    scenario's `meta.json`.
 2. **Baseline run** — spawn one subagent per scenario **without** the
@@ -274,10 +274,10 @@ each criterion to one falsifiable sentence.
 4. **Grade** — for each scenario, write a `grade.json` file with
    per-assertion pass/fail. Deterministic assertions auto-grade;
    rubric assertions need a grader subagent.
-5. **Aggregate** — `./scripts-run src/scripts/run_skill_evals aggregate {skill}
+5. **Aggregate** — `run_skill_evals.ts aggregate {skill}
    --run {timestamp}` produces `runs/{timestamp}-benchmark.json` with
    pass-rate, timing, token deltas baseline-vs-with-skill.
-6. **Report** — `./scripts-run src/scripts/run_skill_evals report {skill}
+6. **Report** — `run_skill_evals.ts report {skill}
    --run {timestamp}` prints the diff. Iterate on the skill body
    until `with-skill` outperforms `baseline` on every scenario.
 

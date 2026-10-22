@@ -129,7 +129,7 @@ skims it produces the fidelity failure `design-fidelity` exists to prevent.
 Two obligations, and they compose rather than cancel:
 
 1. **The size gate does not fire on it.** Read the artifact whole.
-2. **The read is declared** — [`context-hygiene`](../../../../../docs/guidelines/agent-infra/context-hygiene-mechanics.md)
+2. **The read is declared** — `context-hygiene` (agent-config repository: `docs/guidelines/agent-infra/context-hygiene-mechanics.md`)
    § the declared-protocol cap — with its goal, its expected read count and the
    output shape, before the reading starts. Declaring raises the read-only abort
    from 5 turns to 8; it never suspends it, and exceeding the declared count by
@@ -210,7 +210,7 @@ Over 40,268 real Bash calls from one maintainer's transcripts:
   classifier (`permission_gate` + `category_a.ts`) is therefore reachable on
   **2.3 %** of real calls; the host allowlist decides the rest.
 - **17.9 %** have a head token matching no allowlist pattern. Distribution:
-  a leading `VAR=…` assignment 5,215×, `./scripts-run` 520×, `python3` 518×,
+  a leading `VAR=…` assignment 5,215×, the package's script dispatcher 520×, `python3` 518×,
   shell loop keywords 460×, `sleep` 155×, `mkdir` 71×, `cp` 49×.
 - Of those 5,215 assignments, **5,037 are genuinely standalone** (`F=/path; …`)
   and only 178 are env prefixes (`VAR=v cmd`). The distinction was checked
@@ -221,7 +221,7 @@ Over 40,268 real Bash calls from one maintainer's transcripts:
 ### Re-measured 2026-09-10, with a shipped probe
 
 The figures above were computed once by hand. `autonomy_friction_traffic`
-(`./scripts-run src/scripts/autonomy_friction_traffic --store <dir> --limit 40`)
+(`autonomy_friction_traffic.ts --store <dir> --limit 40`)
 recomputes them from a transcript store and shares the live detectors — and the
 metacharacter class is `category_a`'s own exported constant — so those cannot
 drift; the bucket ORDER restates the classifier by hand and is pinned by a test.
@@ -256,7 +256,7 @@ refuses a global option whose value is absolute, and every cross-worktree
 invocation in a multi-worktree checkout writes an absolute one. So unwinding a
 chain removes the metacharacter without buying the allow. The row stays because
 it is still the cheaper shape; what changes is the claim that it lands inside
-category A. Pinned in `tests/scripts/autonomy_friction_traffic.test.ts` §
+category A. Pinned in agent-config's own test `autonomy_friction_traffic.test.ts` §
 "the recommended substitution is only covered with a RELATIVE path".
 
 ### The substitutions
@@ -276,7 +276,7 @@ prefer a script file over an inline `for` when it recurs.
 
 ### What the carrier does and does not do
 
-`chain-nudge` (`src/scripts/hooks/chain_nudge_hook.ts`) is a `pre_tool_use`
+`chain-nudge` (`node_modules/@event4u/agent-config/src/scripts/hooks/chain_nudge_hook.ts`) is a `pre_tool_use`
 concern bound on the three hook-capable platforms. It reads
 `tool_input.command`, strips quoted spans and heredoc bodies so an operator
 inside a string literal cannot be misread, and injects one advisory line the

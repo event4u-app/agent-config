@@ -61,11 +61,17 @@ reads runtime lifecycle data from `endoflife.date` and the PHP and Node release
 feeds; downloads the whole CISA known-exploited catalog from `www.cisa.gov` and
 matches it locally (`advisories.kev: off` skips it); and runs `npm audit` /
 `composer audit` (each sends the lockfile's package list to its configured
-registry) only for a lockfile that names no private package. Names under
-the project's own npm scope, Composer vendor or GitHub owner count as private.
-A third-party private scope, an internal unscoped name or a package resolved
-from a private registry host is NOT recognised as private; with any of those
-in a lockfile, set `advisories.egress: none`.
+registry) only for a lockfile that names no private package. Private means:
+resolved from any host but the public registry (npm `resolved`, Composer
+`notification-url`), a path / link / VCS dependency, a name under the
+project's own npm scope, Composer vendor or GitHub owner, a scope mapped to its
+own registry in `.npmrc`, and — once npm can authenticate to the public
+registry (an `_authToken` for `registry.npmjs.org` in the project's or your
+`.npmrc`), where a paid private package resolves like a public one — **every**
+scoped npm name. A name private in one entry is private in all of them.
+Unknown counts as private; the remaining residual is a third-party private
+GitHub Action of a sibling organisation, for which `advisories.egress: none`
+is the setting.
 `advisories.egress: none` sends nothing. A cache younger than
 20 hours is reused; `--force` refreshes anyway.
 

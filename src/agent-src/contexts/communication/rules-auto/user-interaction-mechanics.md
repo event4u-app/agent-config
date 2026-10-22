@@ -82,7 +82,7 @@ position or framing:
    underneath.
 
 Mechanical backstop:
-`./scripts-run src/scripts/check_reply_consistency --stdin < draft.md`
+`check_reply_consistency.ts --stdin < draft.md`
 (non-zero exit on any rule above). Self-scan is the primary gate;
 the script is the deterministic safety net for ambiguous cases.
 
@@ -189,7 +189,7 @@ rendered as a bulleted list of reasons — declines are short prose (one or
 two sentences), because a bulleted refusal reads as a checklist to argue
 against rather than a direct answer.
 
-Full example set: [`asking-and-brevity-examples § Bullet floor`](../../../../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#bullet-floor).
+Full example set: `asking-and-brevity-examples § Bullet floor` (agent-config repository: `docs/guidelines/agent-infra/asking-and-brevity-examples.md`).
 
 ## Summaries
 
@@ -246,7 +246,7 @@ findings rather than issued decisions, and `no-cheap-questions` guards the
 opposite direction.
 
 **Carrier, stated honestly.** The deterministic half is the
-`pending-decision` detector in `src/scripts/hooks/turn_end_gate_hook.ts` —
+`pending-decision` detector in `node_modules/@event4u/agent-config/src/scripts/hooks/turn_end_gate_hook.ts` —
 it refuses a turn-end when an earlier reply in the same user turn carried a
 block and the closing reply carries none. It sees one user turn on one host,
 so everything outside that is model-carried, exactly like Iron Law 2's own
@@ -264,7 +264,7 @@ and holds no cross-turn state; it cannot see this law at all.
 > material: Iron Law 1 governs the recommendation identically on both shapes,
 > so the rule needed no new obligation, only this contract to point at.
 
-`ask: native | text` is declared per host in `src/scripts/hook_manifest.yaml`
+`ask: native | text` is declared per host in `node_modules/@event4u/agent-config/src/scripts/hook_manifest.yaml`
 and printed by `agent-config hooks:status`. It is **declared, not probed**: the
 row records what the host's documented tool surface offers. A host declaring
 `native` whose primitive turns out to be absent degrades to the text block —

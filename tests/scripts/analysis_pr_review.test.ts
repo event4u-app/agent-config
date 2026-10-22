@@ -150,3 +150,27 @@ describe('reviewPr (step 5.2)', () => {
         expect(p.removed).toHaveLength(1);
     });
 });
+
+describe('reviewPr — what a comment carries out', () => {
+    it('model text derived from the PR cannot mention, link or inject HTML in the posted comment', () => {
+        const hostile = {
+            ...planted,
+            claim: 'ping @octocat and see [docs](https://evil.example/x) <img src=x onerror=1>',
+            fix: '![t](https://evil.example/p.png) cc @org/team',
+        };
+        const p = port();
+        reviewPr({ pr: 7, baseSha: BASE, headSha: HEAD, comment: true }, p, () => [hostile], kept);
+        const body = p.writes[0] ?? '';
+        expect(body).not.toMatch(/(^|[^\w`])@[A-Za-z0-9]/u);
+        expect(body).not.toContain('](');
+        expect(body).not.toContain('https://');
+        expect(body).not.toContain('<img');
+    });
+
+    it('a comment that would carry a credential or a local path is refused, and nothing is posted', () => {
+        const leaky = { ...planted, evidence: 'the PR adds token ghp_0123456789abcdefghijklmnopqrstuvwxyzAB in /Users/alice/repo/.env' };
+        const p = port();
+        expect(() => reviewPr({ pr: 7, baseSha: BASE, headSha: HEAD, comment: true }, p, () => [leaky], kept)).toThrow(/not sent/);
+        expect(p.writes).toEqual([]);
+    });
+});

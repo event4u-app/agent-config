@@ -12,7 +12,7 @@ stay in the command; this file carries the moved explanatory text verbatim.
 `--all` changes **cardinality, not lifecycle**: the same single-roadmap loop,
 iterated over the whole active estate. It is a flag rather than a
 `/roadmap:process-all` command because
-[`command-clusters`](../../docs/contracts/command-clusters.md) says
+`command-clusters` (agent-config repository: `docs/contracts/command-clusters.md`) says
 sibling variants become a flag, and a drain is a count of the thing this
 command already does.
 
@@ -22,7 +22,7 @@ command already does.
    non-draft roadmaps directly under `agents/roadmaps/`; `later/`, `skipped/`,
    `archive/` and `stubs/` are out of scope.
 2. **Order the queue — finish before start.** Run
-   `./scripts-run src/scripts/roadmap_drain_queue` (`--json` for the record) and
+   `roadmap_drain_queue.ts` (`--json` for the record) and
    take its order; never build the queue in prose. It answers *can this started
    roadmap still move?*, not *how far along is it?*:
    `resume` (a dead session's claimed roadmap — continue in its worktree) →

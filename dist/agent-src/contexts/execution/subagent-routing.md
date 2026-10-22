@@ -49,7 +49,7 @@ THE SAME MINUS THE QUOTA WIN.
    for a removed category — and because `session_tier` sits non-null in 0 of 327
    records, leaving the saving unmeasurable in principle. Migration record and
    the union revisit-if:
-   [`budget-routing` contract](../../docs/contracts/budget-routing.md).
+   `budget-routing` contract (agent-config repository: `docs/contracts/budget-routing.md`).
    **Tier resolution therefore ends at step 3.** What survives of the module is
    `TIER_ORDER` and `readCooldowns`, read by `routing:doctor` as a diagnostic —
    monitoring, not routing, and note that nothing writes the cool-down file any
@@ -177,7 +177,7 @@ This resolves the direction; it does not license downshifting as a target. The
 cold start is paid per leg regardless of tier, which is precisely what the
 non-escalation floor above bounds. Analogous downgrade/cache coupling on the
 council side: see
-[`docs/contracts/ai-council-config.md`](../../docs/contracts/ai-council-config.md)
+`docs/contracts/ai-council-config.md` (agent-config repository)
 § `model_downgrade` for the analogous downgrade/cache coupling this suite
 already ships on the council side.
 
@@ -190,14 +190,14 @@ rule, or context asserts "model X is free".
 
 ## Reference implementation
 
-[`src/scripts/_lib/subagent_routing.ts`](../../../../src/scripts/_lib/subagent_routing.ts)
+`node_modules/@event4u/agent-config/src/scripts/_lib/subagent_routing.ts`
 (`resolveSubagentRouting`), covered by
-[`tests/scripts/_lib_subagent_routing.test.ts`](../../../../tests/scripts/_lib_subagent_routing.test.ts).
+`_lib_subagent_routing.test.ts` (agent-config’s own test suite).
 Tier vocabulary + cool-down state:
-[`src/scripts/_lib/tier_budget_routing.ts`](../../../../src/scripts/_lib/tier_budget_routing.ts)
+`node_modules/@event4u/agent-config/src/scripts/_lib/tier_budget_routing.ts`
 (`TIER_ORDER`, `readCooldowns` — the budget decision layer that used to live
 there is archived, see step 3), covered by
-[`tests/scripts/tier_budget_routing.test.ts`](../../../../tests/scripts/tier_budget_routing.test.ts);
+`tier_budget_routing.test.ts` (agent-config’s own test suite);
 live state: `agent-config routing:doctor` (orchestration section).
 
 ## Related

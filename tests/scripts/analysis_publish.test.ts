@@ -99,6 +99,7 @@ const INPUT: PublishInput = {
     baseSha: BASE,
     title: 'Analysis round r1',
     message: 'docs(roadmaps): analysis round r1',
+    confirmedBranch: 'analysis/r1',
 };
 
 const ADVERSARIAL_REFS = [
@@ -168,6 +169,43 @@ describe('prCreateArgs', () => {
 });
 
 describe('publish (step 3.3)', () => {
+    it('publishes nothing until this turn confirmed the exact branch the run would push', () => {
+        for (const confirmedBranch of [undefined, '', 'analysis/r2', 'main']) {
+            const { runDir, record } = validatedRun();
+            const f = fakePort();
+            const out = publish(f.port, runDir, record, { ...INPUT, confirmedBranch } as PublishInput);
+            expect(out.record.state).toBe('handed-back');
+            expect(out.record.handed_back_reason).toMatch(/analysis\/r1/);
+            expect(out.record.handed_back_reason).toMatch(/non-draft PR/);
+            expect(f.calls).toEqual([]);
+            fs.rmSync(runDir, { recursive: true, force: true });
+        }
+    });
+
+    it('refuses a PR body or title that would carry a credential, a local path or an address, before any commit', () => {
+        const bodies = [
+            '# r1\n| 1 | token ghp_0123456789abcdefghijklmnopqrstuvwxyzAB |\n',
+            '# r1\nread from /Users/alice/private/notes.md\n',
+            '# r1\nsent by alice@corp-internal.io\n',
+        ];
+        for (const body of bodies) {
+            const { runDir, record } = validatedRun({ body: false });
+            fs.writeFileSync(path.join(runDir, PR_BODY_FILE), body);
+            const f = fakePort();
+            const out = publish(f.port, runDir, record, INPUT);
+            expect(out.record.state).toBe('handed-back');
+            expect(out.record.handed_back_reason).toMatch(/not sent/);
+            expect(out.record.handed_back_reason).not.toMatch(/ghp_|alice/);
+            expect(f.calls).toEqual([]);
+            fs.rmSync(runDir, { recursive: true, force: true });
+        }
+        const { runDir, record } = validatedRun();
+        const f = fakePort();
+        const out = publish(f.port, runDir, record, { ...INPUT, title: 'Round for /home/bob/x' });
+        expect(out.record.state).toBe('handed-back');
+        expect(f.calls).toEqual([]);
+    });
+
     it('refuses a staged file outside the allowed set and hands the run back naming it', () => {
         const { runDir, record } = validatedRun();
         const f = fakePort({ staged: [...EMITTED, 'src/rules/x.md'] });

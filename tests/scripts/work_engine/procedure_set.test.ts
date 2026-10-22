@@ -22,6 +22,10 @@ import {
     PROCEDURE_CHECK_INPUTS,
     registeredCheckIds,
 } from '../../../src/agent-src/templates/scripts/work_engine/procedure/checks.js';
+import { _CLIError } from '../../../src/agent-src/templates/scripts/work_engine/errors.js';
+import { _load_or_build } from '../../../src/agent-src/templates/scripts/work_engine/input_builders.js';
+import type { ParsedArgs } from '../../../src/agent-src/templates/scripts/work_engine/cli_args.js';
+import { createHash } from 'node:crypto';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const PROCEDURE_SRC = path.join(REPO, 'src', 'agent-src', 'templates', 'scripts', 'work_engine', 'procedure');
@@ -125,7 +129,7 @@ describe('judgement exits (5.7)', () => {
         run();
         const waiting = run();
         expect(waiting.code).toBe(1);
-        expect(waiting.output).toContain('sequenced, not verified');
+        expect(waiting.output).toContain('self-attested, not verified');
         expect(waiting.output).toContain('--procedure-confirm decide');
 
         expect(run({ confirm: 'write-d' }).code).toBe(2);
@@ -134,7 +138,7 @@ describe('judgement exits (5.7)', () => {
         expect(cleared.code).toBe(1);
         const adjudication = stepRecord('decide')['adjudication'] as Record<string, unknown>;
         expect(adjudication['answer']).toBe('confirmed');
-        expect(adjudication['by']).toBe('operator');
+        expect(adjudication['by']).toBe('self-attested');
         expect(typeof adjudication['at']).toBe('string');
         expect(stepRecord('maybe')['status']).toBe('skipped');
         expect(String(stepRecord('maybe')['reason'])).toContain('file-exists: enable-c');
@@ -268,5 +272,103 @@ describe('bounds (5.6)', () => {
 
     it('every registered check declares the inputs it reads', () => {
         expect(Object.keys(PROCEDURE_CHECK_INPUTS).sort()).toEqual([...registeredCheckIds()].sort());
+    });
+});
+
+describe('labels say what the cursor corroborated (release review 7bbdecdb5903)', () => {
+    it('a judgement is recorded as self-attested and the summary never calls a check "verified"', () => {
+        put('out/a.txt');
+        run();
+        run();
+        run({ confirm: 'decide' });
+        put('out/d.txt');
+        const done = run();
+        expect(done.code).toBe(0);
+        expect(done.output).not.toMatch(/\d+ verified/u);
+        expect(done.output).toMatch(/1 self-attested/u);
+        expect(done.output).toMatch(/2 shape/u);
+    });
+});
+
+describe('the persisted record is untrusted (release review 8bf0e3d6440d)', () => {
+    const sha = (file: string): string => createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+    const mutate = (fn: (data: { steps: Record<string, Record<string, unknown>> }) => void): void => {
+        const s = state();
+        fn((s['input'] as { data: { steps: Record<string, Record<string, unknown>> } }).data);
+        fs.writeFileSync(path.join(project, '.work-state.json'), JSON.stringify(s));
+    };
+
+    it('a confirmation written into the state file does not clear a judgement — only --procedure-confirm does', () => {
+        put('out/a.txt');
+        run();
+        run();
+        const decideFile = path.join(skills, 'demo', 'references', 'steps', '02-decide.md');
+        mutate((d) => {
+            (d.steps['decide'] as Record<string, unknown>)['adjudication'] = {
+                answer: 'confirmed',
+                by: 'self-attested',
+                at: new Date().toISOString(),
+                step_sha: sha(decideFile),
+            };
+        });
+        const out = run();
+        expect(out.code).toBe(1);
+        expect(out.output).toContain('step 2 of 4 (decide)');
+        expect(out.output).toContain('awaiting confirmation');
+    });
+
+    it('refuses wrongly typed record fields', () => {
+        const cases: Array<(r: Record<string, unknown>) => void> = [
+            (r) => {
+                r['failed_approaches'] = [1];
+            },
+            (r) => {
+                r['head'] = 5;
+            },
+            (r) => {
+                r['step_sha'] = 'not-hex';
+            },
+            (r) => {
+                r['adjudication'] = 'yes';
+            },
+            (r) => {
+                r['adjudication'] = { answer: 'confirmed', by: 'operator', at: 'now', step_sha: 'x' };
+            },
+            (r) => {
+                r['reason'] = { a: 1 };
+            },
+        ];
+        for (const c of cases) {
+            fs.rmSync(path.join(project, '.work-state.json'), { force: true });
+            run();
+            mutate((d) => c(d.steps['write-a'] as Record<string, unknown>));
+            expect(run().code).toBe(2);
+        }
+    });
+
+    it('an exists: exit does not count a symlink that leaves the project as in the tree', () => {
+        const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'procedure-outside-'));
+        fs.writeFileSync(path.join(outside, 'a.txt'), 'x');
+        fs.mkdirSync(path.join(project, 'out'), { recursive: true });
+        fs.symlinkSync(path.join(outside, 'a.txt'), path.join(project, 'out', 'a.txt'));
+        run();
+        const out = run();
+        expect(out.code).toBe(1);
+        expect(out.output).toContain('exit not met');
+        fs.rmSync(outside, { recursive: true, force: true });
+    });
+
+    it('a sidecar with a schema: exit, which no engine version can meet, is refused at load', () => {
+        writeSkill('schemaful', SIDECAR.replace("exit: 'exists: out/a.txt'", "exit: 'schema: out/a.json#thing'"));
+        const out = run_procedure({ skill: 'schemaful', projectRoot: project, skillsRoot: skills, env: {} });
+        expect(out.code).toBe(2);
+        expect(out.output).toMatch(/schema/u);
+    });
+
+    it('the ordinary /work path refuses a state file that holds a procedure run', () => {
+        run();
+        const args = { ticket_file: null, prompt_file: null, diff_file: null, file_file: null } as unknown as ParsedArgs;
+        expect(() => _load_or_build(path.join(project, '.work-state.json'), args)).toThrow(_CLIError);
+        expect(() => _load_or_build(path.join(project, '.work-state.json'), args)).toThrow(/--procedure/u);
     });
 });

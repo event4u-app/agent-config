@@ -46,7 +46,11 @@ function port(over: Partial<OptimizePort> = {}): Probe {
 }
 
 const finding = (key: string) => ({ key, file: 'src/pay.ts', line: 12 });
-const testFix = (key: string): Fix => ({ findingKey: key, disposition: { kind: 'regression-test-red', test: `tests/pay.test.ts > ${key}` } });
+const testFix = (key: string): Fix => ({
+    findingKey: key,
+    disposition: { kind: 'regression-test-red', test: `tests/pay.test.ts > ${key}` },
+    paths: ['src/pay.ts', 'tests/pay.test.ts'],
+});
 
 describe('eligibility (step 5.3)', () => {
     it('pushes only to an open, writable, same-repository PR branch', () => {
@@ -98,14 +102,23 @@ describe('optimizePr (step 5.3)', () => {
     });
 
     it('an infeasible disposition needs a known reason code and a reviewer', () => {
-        const bad: Fix = { findingKey: 'f1', disposition: { kind: 'infeasible', reasonCode: 'because', reviewedBy: 'openai' } };
+        const bad: Fix = { findingKey: 'f1', disposition: { kind: 'infeasible', reasonCode: 'because', reviewedBy: 'openai' }, paths: ['src/pay.ts'] };
         expect(() => optimizePr(OPEN, port(), () => [finding('f1')], () => [bad])).toThrow(OptimizeError);
-        const unreviewed: Fix = { findingKey: 'f1', disposition: { kind: 'infeasible', reasonCode: 'no-test-harness', reviewedBy: '' } };
+        const unreviewed: Fix = { findingKey: 'f1', disposition: { kind: 'infeasible', reasonCode: 'no-test-harness', reviewedBy: '' }, paths: ['src/pay.ts'] };
         expect(() => optimizePr(OPEN, port(), () => [finding('f1')], () => [unreviewed])).toThrow(OptimizeError);
         let i = 0;
-        const ok: Fix = { findingKey: 'f1', disposition: { kind: 'infeasible', reasonCode: 'no-test-harness', reviewedBy: 'openai' } };
+        const ok: Fix = { findingKey: 'f1', disposition: { kind: 'infeasible', reasonCode: 'no-test-harness', reviewedBy: 'openai' }, paths: ['src/pay.ts'] };
         const out = optimizePr(OPEN, port(), () => (i++ === 0 ? [finding('f1')] : []), () => [ok]);
         expect(out.end).toBe('converged');
+    });
+
+    it('refuses a fix that declares no paths, or a path that escapes the worktree', () => {
+        const run = (paths: string[]): unknown =>
+            optimizePr(OPEN, port(), () => [finding('f1')], () => [{ ...testFix('f1'), paths }]);
+        expect(() => run([])).toThrow(/declares no paths/);
+        for (const bad of ['../outside.ts', '/etc/passwd', 'a/../../b', '.git/config', 'C:/x', '']) {
+            expect(() => run([bad])).toThrow(OptimizeError);
+        }
     });
 
     it('a finding still present after its fix was pushed ends the run as fix-failed, never converged', () => {

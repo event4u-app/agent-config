@@ -28,6 +28,8 @@ export interface ProcedureCheckResult {
     ok: boolean;
     /** Why the exit is not met; shown to the agent as the step's PARTIAL reason. */
     reason?: string;
+    /** `shape` when a pass corroborated nothing (there was nothing to compare against); default `corroborated`. */
+    basis?: 'corroborated' | 'shape';
 }
 
 export type ProcedureCheck = (ctx: ProcedureCheckContext) => ProcedureCheckResult;
@@ -211,25 +213,30 @@ function manifestNames(ctx: ProcedureCheckContext): string[] {
     return names;
 }
 
-/** The words a dependency may appear as in prose: its name and its non-generic parts. */
+/** Parts shorter than this are too likely to be an ordinary word to count as naming a dependency. */
+const MIN_PART = 4;
+/** How many distinct dependencies the overview must name, capped by how many there are. */
+const MIN_NAMED = 2;
+
+/** The words a dependency may appear as in prose: its full name and its distinctive, non-generic parts. */
 function nameForms(name: string): string[] {
     const lower = name.toLowerCase();
     if (lower.startsWith('@types/') || lower.startsWith('ext-')) return [];
     const forms = new Set<string>();
     if (!GENERIC_NAME_PARTS.has(lower)) forms.add(lower);
     for (const part of lower.replace(/^@/, '').split('/')) {
-        if (part.length > 2 && !GENERIC_NAME_PARTS.has(part)) forms.add(part);
+        if (part.length >= MIN_PART && !GENERIC_NAME_PARTS.has(part)) forms.add(part);
     }
     return [...forms];
 }
 
-/**
- * True when `form` appears as a whole word: a substring match lets `react`
- * pass on "reactive" and `vue` on "revue", which is prose that names nothing.
- */
-function namesWord(lowerText: string, form: string): boolean {
-    const escaped = form.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`).test(lowerText);
+function escapeRe(s: string): string {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/** A whole-word occurrence: a fragment inside a longer word does not count. */
+function namesWord(lower: string, form: string): boolean {
+    return new RegExp(`(?<![a-z0-9_@/-])${escapeRe(form)}(?![a-z0-9_-])`, 'u').test(lower);
 }
 
 const overviewMatchesManifests: ProcedureCheck = (ctx) => {
@@ -240,12 +247,18 @@ const overviewMatchesManifests: ProcedureCheck = (ctx) => {
         return fail(`${OVERVIEW} does not exist`);
     }
     if (text.trim() === '') return fail(`${OVERVIEW} is empty`);
-    const forms = manifestNames(ctx).flatMap(nameForms);
-    if (forms.length === 0) return ok;
+    const deps = [...new Set(manifestNames(ctx))].map((n) => nameForms(n)).filter((f) => f.length > 0);
+    // Nothing declared to compare against: the overview exists, and that is all this pass shows.
+    if (deps.length === 0) return { ok: true, basis: 'shape' };
     const lower = text.toLowerCase();
-    return forms.some((f) => namesWord(lower, f))
+    const named = deps.filter((forms) => forms.some((f) => namesWord(lower, f))).length;
+    const need = Math.min(MIN_NAMED, deps.length);
+    return named >= need
         ? ok
-        : fail(`${OVERVIEW} names none of the dependencies package.json or composer.json declare`);
+        : fail(
+              `${OVERVIEW} names ${String(named)} of the dependencies package.json or composer.json declare; ` +
+                  `at least ${String(need)} must appear as whole words`,
+          );
 };
 
 export const PROCEDURE_CHECKS: Readonly<Record<string, ProcedureCheck>> = Object.freeze({

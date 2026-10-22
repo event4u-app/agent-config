@@ -21,7 +21,7 @@ traceability:
   - requirement_id: pointer-reaches-the-worker
     acceptance_id: pointer-under-line-cap
     evidence_refs:
-      - src/scripts/dispatch_r2_reviewer.ts
+      - node_modules/@event4u/agent-config/src/scripts/dispatch_r2_reviewer.ts
 ```
 
 Three flat top-level fields would be **countable but not traceable**: with more
@@ -37,6 +37,6 @@ bodies.
 Identity semantics, revision semantics, the three senses of "gate" and the
 `[AC:<id>]` convention — including the verified fact that nothing parses
 `verify:` lines structurally today — are in
-[`guideline:agent-infra/traceability-field-mechanics`](../../guidelines/agent-infra/traceability-field-mechanics.md).
+`guideline:agent-infra/traceability-field-mechanics` (agent-config repository: `docs/guidelines/agent-infra/traceability-field-mechanics.md`).
 They are not optional reading: a slug grammar does not imply a namespace, and
 `evidence_refs` are syntactically safe tokens rather than verified evidence.

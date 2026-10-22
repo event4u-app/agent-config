@@ -29,10 +29,13 @@
  * the maintainer-only `./scripts-run` dispatch wrapper (not shipped —
  * `package.json` `files` never lists the repo-root `scripts-run` file).
  *
- * Scope: every `dist/agent-src/skills/<name>/SKILL.md` — the consumer projection
- * actually shipped in the npm package (mirrors the reviewer's own vantage
- * point: `npm i` + read the installed skills) — plus, for the skill-script
- * form alone, `references/*.md` beside it.
+ * Scope: every `dist/agent-src/skills/<name>/SKILL.md` and the
+ * `references/*.md` beside it — the consumer projection actually shipped in
+ * the npm package (mirrors the reviewer's own vantage point: `npm i` + read the
+ * installed skills) — and every `dist/agent-src/contexts/**\/*.md`, which
+ * ships and installs the same way. Contexts are read with one more pattern: a
+ * relative markdown link into the package's `docs/`, which is never installed
+ * beside the projection and so resolves to nothing in a consumer.
  *
  * The twenty-skill `SCRIPTS_RUN_ALLOWLIST` this gate used to carry is GONE.
  * It exempted the one form that most needed the finding: a line telling a
@@ -56,6 +59,13 @@ import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SKILLS_DIR = path.join(REPO_ROOT, 'dist', 'agent-src', 'skills');
+const CONTEXTS_DIR = path.join(REPO_ROOT, 'dist', 'agent-src', 'contexts');
+
+/** A relative link into `docs/`: dead in an install, where no `docs/` sits beside the projection. */
+const DOCS_LINK: PatternDef = {
+    re: /\]\((?:\.\.?\/)+docs\//,
+    label: 'relative link into the package’s `docs/` (not installed beside a consumer’s projection — name the document instead)',
+};
 
 interface PatternDef {
     readonly re: RegExp;
@@ -78,7 +88,7 @@ const PATTERNS: readonly PatternDef[] = [
         label: 'reference to maintainer-only docs (`docs/maintainers/`)',
     },
     {
-        re: /(?<!node_modules\/@event4u\/agent-config\/)src\/scripts\//,
+        re: /(?<!node_modules\/@event4u\/agent-config\/)(?<![\w-])src\/scripts\//,
         label: 'bare `src/scripts/` reference (broken once installed — prefix with `node_modules/@event4u/agent-config/` or drop)',
     },
     {
@@ -155,6 +165,35 @@ export function scanSkillScriptForm(relPath: string, text: string): string[] {
     return findings;
 }
 
+/** Every `.md` under the contexts projection, sorted; [] when it is absent. */
+export function contextFiles(root: string): string[] {
+    if (!fs.existsSync(root)) return [];
+    const out: string[] = [];
+    const walk = (dir: string): void => {
+        for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+            const abs = path.join(dir, e.name);
+            if (e.isDirectory()) walk(abs);
+            else if (e.isFile() && e.name.endsWith('.md')) out.push(abs);
+        }
+    };
+    walk(root);
+    return out.sort();
+}
+
+/**
+ * The context pattern set: every skill pattern but the Taskfile verb — a
+ * context documents how to treat a CONSUMER's `task ci` (the CI-step policy
+ * lists those literals as the thing to detect), so the verb is subject matter
+ * there, not an instruction to run this repository's Taskfile — plus the
+ * docs-link pattern.
+ */
+const CONTEXT_PATTERNS: readonly PatternDef[] = [...PATTERNS.filter((p) => !p.re.source.startsWith('`task ')), DOCS_LINK];
+
+/** Findings for one context file. */
+export function scanContext(relPath: string, text: string): string[] {
+    return [...scanText('', relPath, text, CONTEXT_PATTERNS), ...scanSkillScriptForm(relPath, text)];
+}
+
 /** `workspaces:` frontmatter list of a skill file ([] when untagged). */
 function skillWorkspaces(skillPath: string): string[] {
     const src = fs.readFileSync(skillPath, 'utf-8');
@@ -174,11 +213,16 @@ function isExclusivelyMaintainer(ws: readonly string[]): boolean {
     return ws.length === 1 && ws[0] === 'agent-config-maintainer';
 }
 
-export function scanText(skillName: string, relPath: string, text: string): string[] {
+export function scanText(
+    skillName: string,
+    relPath: string,
+    text: string,
+    patterns: readonly PatternDef[] = PATTERNS,
+): string[] {
     const findings: string[] = [];
     const lines = text.split('\n');
     for (let i = 0; i < lines.length; i += 1) {
-        for (const { re, label, allowlist } of PATTERNS) {
+        for (const { re, label, allowlist } of patterns) {
             if (allowlist?.has(skillName)) continue;
             // Fresh RegExp per line: lookbehind + no /g is safe to reuse via .test().
             if (re.test(lines[i] as string)) {
@@ -224,8 +268,7 @@ export function main(): number {
         findings.push(...scanText(name, relPath, text));
         findings.push(...scanSkillScriptForm(relPath, text));
 
-        // `references/` is read for the skill-script form only — see the note
-        // above `SKILL_SCRIPT_RE` for why the other patterns stop at SKILL.md.
+        // `references/` ships with the skill, so it is read with every pattern.
         const refsDir = path.join(SKILLS_DIR, name, 'references');
         if (!fs.existsSync(refsDir) || !fs.statSync(refsDir).isDirectory()) continue;
         for (const ref of fs.readdirSync(refsDir).sort()) {
@@ -237,8 +280,14 @@ export function main(): number {
             } catch {
                 continue;
             }
-            findings.push(...scanSkillScriptForm(path.relative(REPO_ROOT, refAbs), refText));
+            const refRel = path.relative(REPO_ROOT, refAbs);
+            findings.push(...scanText(name, refRel, refText));
+            findings.push(...scanSkillScriptForm(refRel, refText));
         }
+    }
+
+    for (const abs of contextFiles(CONTEXTS_DIR)) {
+        findings.push(...scanContext(path.relative(REPO_ROOT, abs), fs.readFileSync(abs, 'utf-8')));
     }
 
     // Counted BEFORE the maintainer-exclusive skip, so an all-maintainer
@@ -266,14 +315,14 @@ export function main(): number {
             process.stderr.write(`❌  consumer-internal reference: ${f}\n`);
         }
         process.stderr.write(
-            `\n${findings.length} consumer-internal reference(s) in the shipped skill projection. ` +
+            `\n${findings.length} consumer-internal reference(s) in the shipped skill and context projection. ` +
                 'Replace with the existing consumer-safe indirection (an `agent-config <verb>` CLI command, ' +
                 'the `node_modules/@event4u/agent-config/src/scripts/...` path, or a docs-site link) ' +
                 'or drop the reference (road-to-credible-install Phase 4 step 2).\n',
         );
         return 1;
     }
-    process.stdout.write('✅  no consumer-internal references in the shipped skill projection\n');
+    process.stdout.write('✅  no consumer-internal references in the shipped skill and context projection\n');
     return 0;
 }
 

@@ -43,8 +43,8 @@ usual casualty — it merges without a conflict marker and then reports a roadma
 set that no longer exists.
 
 1. `./agent-config roadmap:progress` → the roadmap dashboard.
-2. `./scripts-run src/scripts/build_proof` → `docs/proof.md`.
-3. `bash src/scripts/condense.sh --sync`, then `--check` → re-projects
+2. `build_proof.ts` → `docs/proof.md`.
+3. `bash node_modules/@event4u/agent-config/src/scripts/condense.sh --sync`, then `--check` → re-projects
    `dist/agent-src/` from the merged source.
 4. Stage the regenerated files, complete the merge, and re-run the touched
    verification before pushing.
@@ -104,7 +104,7 @@ against what it actually merges into. It never asks the forge itself: without
 `--base` the target is the default branch, which is right only for a PR into it. The base is a
 **set**: when the PR targets something other than the default branch, whether
 the default branch joins the set is a per-target policy read from the *target's
-own commit*, never from this branch — see `src/scripts/_lib/branch_convergence.ts`.
+own commit*, never from this branch — see `node_modules/@event4u/agent-config/src/scripts/_lib/branch_convergence.ts`.
 A non-default target with no policy entry is refused, not guessed. The default
 is merged first, so a conflict surfaces against the broader base first. On a conflict it
 STOPS and splits the conflicted paths into generated, remeasured and authored —

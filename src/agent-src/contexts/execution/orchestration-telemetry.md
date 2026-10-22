@@ -39,7 +39,7 @@ v1 forward-compat rule on unknown fields).
 |---|---|---|
 | `task_size_estimate` | int | Pre-dispatch estimate of the task's size (the orchestrator's sizing heuristic). Counts only, no body. |
 | `spawn_count` | int | Number of subagents dispatched for this task. `0` → handled in-session. |
-| `empty_cycles` | int \| null | Trigger fires suppressed as duplicates since the last outcome record. Reported as its OWN quantity and never folded into a success rate's numerator or denominator: a duplicate is not an outcome, and it is also not nothing — a rising count is what an idle loop looks like from outside. `null` = not tracked by this producer, which is **not** the same as zero duplicates observed. Deduplication rule in `src/scripts/_lib/empty_cycles.ts`: same key AND inside the window, both conjuncts required. |
+| `empty_cycles` | int \| null | Trigger fires suppressed as duplicates since the last outcome record. Reported as its OWN quantity and never folded into a success rate's numerator or denominator: a duplicate is not an outcome, and it is also not nothing — a rising count is what an idle loop looks like from outside. `null` = not tracked by this producer, which is **not** the same as zero duplicates observed. Deduplication rule in `node_modules/@event4u/agent-config/src/scripts/_lib/empty_cycles.ts`: same key AND inside the window, both conjuncts required. |
 | `tiers` | string[] | Model tiers dispatched to, one entry per spawn class (e.g. `["sonnet","opus"]`). Tier names only, no prompts. |
 | `token_delta` | int | Net token cost of the dispatch versus the in-session baseline. Positive = orchestration cost more; negative = saved tokens. Counts only. |
 | `token_delta_provenance` | enum | `"measured"` when sourced from host-reported `usage` metadata (preferred); `"estimated"` when self-estimated from response length (mark always when host usage is unavailable). |
@@ -150,7 +150,7 @@ hand-author the JSON: run the recorder, which validates the inputs and builds a
 conformant audit-log-v1 line from the counts you already have:
 
 ```bash
-./scripts-run src/scripts/orchestration_record --spawn-count <n> \
+orchestration_record.ts --spawn-count <n> \
   --token-delta <±n> --provenance measured|estimated \
   [--tier-chosen lite|medium|high] [--tier-source static|inferred|inherit] \
   [--task-class <id>] [--tiers a,b] [--dispatch-outcome DONE|BLOCKED|…] \
@@ -162,12 +162,12 @@ A capture **hook** is now the primary path where the host has a
 SYNCHRONOUS dispatch results DO carry `resolvedModel` / `totalTokens` /
 `usage` — the 2026-06-30 "payload carries no usage" premise held only for
 async dispatches, which stay metrics-absent. The `orchestration-record`
-concern (`src/scripts/hooks/orchestration_record_hook.ts`, registered in
+concern (`node_modules/@event4u/agent-config/src/scripts/hooks/orchestration_record_hook.ts`, registered in
 `hook_manifest.yaml`) emits the line deterministically on every Agent/Task
 completion; measured model-carried capture before it existed was 1 of 370
 dispatches (0.27 %). The CLI above stays for hosts without the slot and for
 orchestrator-side records the hook cannot see. Reader:
-`src/scripts/orchestration_savings_report.ts`.
+`node_modules/@event4u/agent-config/src/scripts/orchestration_savings_report.ts`.
 
 **`token_delta` sourcing priority:**
 1. Host-reported: read `usage.output_tokens` (and `usage.input_tokens` if
@@ -183,7 +183,7 @@ orchestrator-side records the hook cannot see. Reader:
 Aggregate the accumulated telemetry into a token-savings report:
 
 ```bash
-./scripts-run src/scripts/orchestration_savings_report [--dir <path>] [--format text|json]
+orchestration_savings_report.ts [--dir <path>] [--format text|json]
 ```
 
 It sums `token_delta` across dispatches (negative = net saved) and splits by
@@ -197,17 +197,17 @@ render beside the savings figures, below 20 the quality columns render as
 delta, not the absolute in-session baseline, so a "% of session saved" is not
 derivable from this data. A percentage would require an additive
 absolute-baseline field on this object (deferred follow-up). Reader:
-[`src/scripts/_lib/orchestration_savings.ts`](../../../../src/scripts/_lib/orchestration_savings.ts).
+`node_modules/@event4u/agent-config/src/scripts/_lib/orchestration_savings.ts`.
 
 ## Payload-hash drift report (`payload_hash` × `cache_hit`)
 
 Join the two fields into a stable/unstable prefix-stability cohort split:
 
 ```bash
-./scripts-run src/scripts/orchestration_payload_hash_drift [--dir <path>] [--format text|json]
+orchestration_payload_hash_drift.ts [--dir <path>] [--format text|json]
 ```
 
-Reader: [`src/scripts/_lib/payload_hash_drift.ts`](../../../../src/scripts/_lib/payload_hash_drift.ts).
+Reader: `node_modules/@event4u/agent-config/src/scripts/_lib/payload_hash_drift.ts`.
 Zero recorded lines carrying both fields is the current expected state — both
 are lean-init extensions with no caller wiring a real value into them yet;
 the report says so rather than presenting empty input as a pass.
@@ -215,7 +215,7 @@ the report says so rather than presenting empty input as a pass.
 **Refusal (report, never act).** `cache_hit` is a provider-reported proxy for
 HOST-controlled cache behaviour — this package causes the dispatch but does
 not control whether the host reports a hit. Per
-[`ADR-118`](../../../../docs/decisions/ADR-118-loop-engineering-boundaries.md)
+`ADR-118` (agent-config repository: `docs/decisions/ADR-118-loop-engineering-boundaries.md`)
 §1 (a measure→adjust loop is automated only when it is a *direct* measure of
 the failure mode, the false-positive rate is low, and human judgement adds no
 unique information), a host-controlled proxy fails the direct-measure
@@ -243,7 +243,7 @@ removes or tightens THE TRIGGER, and the removal PR cites the numbers.
 
 ## Related
 
-- [`audit-log-v1`](../../../../docs/contracts/audit-log-v1.md) — the frozen
+- `audit-log-v1` (agent-config repository: `docs/contracts/audit-log-v1.md`) — the frozen
   JSONL contract this object rides on; the `orchestration` field is optional
   and additive, schema_version unchanged.
 - [`host-capability-manifest`](host-capability-manifest.md) — the manifest that

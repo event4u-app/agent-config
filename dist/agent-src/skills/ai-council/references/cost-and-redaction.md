@@ -84,7 +84,7 @@ and a stale table is exactly that case:
 
 > Note: price table last updated YYYY-MM-DD and may be stale, so the
 > figures above are an estimate. Refresh with
-> `./scripts-run src/scripts/update_prices`.
+> `update_prices.ts`.
 
 Do not silently auto-refresh — the user keeps control of when prices
 change. Stating the staleness is what keeps that control without

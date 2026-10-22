@@ -43,9 +43,9 @@ the rollup passes exactly when it should fail.
 ### `--merge` — merging, on the owner's word only (ADR-282)
 
 The owner settled the half of
-[ADR-239](../../../../docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md)
+ADR-239 (agent-config repository: `docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md`)
 § Disposition that ADR-266 left open:
-[ADR-282](../../../../docs/decisions/ADR-282-auto-merge-authority-with-a-council-danger-gate.md).
+ADR-282 (agent-config repository: `docs/decisions/ADR-282-auto-merge-authority-with-a-council-danger-gate.md`).
 An explicit auto-merge instruction is the this-turn confirmation
 [`non-destructive-by-default`](../../rules/non-destructive-by-default.md)
 requires for the production-branch merge of a **routine** PR. Delivery runs
@@ -70,7 +70,7 @@ Report "mergeable against base `<SHA>`", never "the queue is mergeable".
 
 ## Terminal outcomes — `complete`, or a genuine external impossibility
 
-**Rewritten by [ADR-237](../../../../docs/decisions/ADR-237-end-to-end-execution-authority.md),
+**Rewritten by ADR-237 (agent-config repository: `docs/decisions/ADR-237-end-to-end-execution-authority.md`),
 which supersedes ADR-235.** The prior version measured twelve nearly-complete
 roadmaps and found that **zero** could reach `count_open == 0` in one PR, because
 every remaining step needed "a human action". That census was sound; the reading

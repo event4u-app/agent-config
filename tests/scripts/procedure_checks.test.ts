@@ -222,4 +222,33 @@ describe('analysis-overview-matches-manifests', () => {
     it('passes a non-empty overview where the tree has no manifest to check against', () => {
         expect(run('analysis-overview-matches-manifests', project({ [OVERVIEW]: '# Overview\n\nGo service.\n' })).ok).toBe(true);
     });
+
+    it('a pass with no manifest to compare against is marked shape, not corroborated', () => {
+        const r = PROCEDURE_CHECKS['analysis-overview-matches-manifests']!({
+            projectRoot: project({ [OVERVIEW]: '# Overview\n\nGo service.\n' }),
+            skillDir: '/nowhere',
+        });
+        expect(r).toEqual({ ok: true, basis: 'shape' });
+    });
+
+    it('a name fragment inside ordinary prose does not count as naming a dependency', () => {
+        const root = project({
+            [OVERVIEW]: '# Overview\n\nWe expressed interest in the reactive vitesse of things.\n',
+            'package.json': JSON.stringify({ dependencies: { react: '^18', express: '^4' } }),
+        });
+        expect(run('analysis-overview-matches-manifests', root).ok).toBe(false);
+    });
+
+    it('naming one of several declared dependencies is not enough', () => {
+        const root = project({
+            [OVERVIEW]: '# Overview\n\nA React 18 SPA.\n',
+            'package.json': JSON.stringify({ dependencies: { react: '^18', express: '^4', zod: '^3' } }),
+        });
+        expect(run('analysis-overview-matches-manifests', root).ok).toBe(false);
+        const both = project({
+            [OVERVIEW]: '# Overview\n\nA React 18 SPA on an Express API.\n',
+            'package.json': JSON.stringify({ dependencies: { react: '^18', express: '^4', zod: '^3' } }),
+        });
+        expect(run('analysis-overview-matches-manifests', both).ok).toBe(true);
+    });
 });

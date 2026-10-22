@@ -1,28 +1,21 @@
 // Fixture tests for `src/scripts/lint_consumer_internal_refs.ts`.
 //
 // The skill-script half of this gate is checked here: the form a consumer is
-// told to type, and the scope boundary that keeps a reference file naming a
-// MAINTAINER script out of it. That boundary is the reason the gate reads
-// `references/` for one pattern rather than all of them, and a boundary that
-// is assumed rather than measured is how a widening reds a tree nobody meant
-// to touch.
+// told to type. The gate reads `references/` and the context projection with
+// every pattern — the five reference files that used to tell a consumer to run
+// the maintainer-only dispatcher are repaired, and pinned below as repaired.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { scanSkillScriptForm, scanText } from '../../src/scripts/lint_consumer_internal_refs.js';
+import { main, scanContext, scanSkillScriptForm, scanText } from '../../src/scripts/lint_consumer_internal_refs.js';
 
 const REPO = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const PROJECTION = path.join(REPO, 'dist', 'agent-src', 'skills');
 
-/**
- * Reference files that name the maintainer dispatcher. They are a different
- * class — a script you run while working on this package, not one an install
- * deploys — and this gate does not decide them. Listed so the exclusion is a
- * recorded set rather than a silence.
- */
+/** Reference files that named the maintainer dispatcher until they were repaired; they must stay clean. */
 const MAINTAINER_SCRIPT_REFERENCES: readonly string[] = [
     'ai-council/references/cost-and-redaction.md',
     'git-workflow/references/commit-subject.md',
@@ -74,18 +67,32 @@ describe('references-and-allowlist: the skill-script form, and what it deliberat
         expect(scanSkillScriptForm('fixture/SKILL.md', text)).toEqual([]);
     });
 
-    it('leaves a maintainer-script reference alone — and those references still exist', () => {
+    it('the reference files that told a consumer to run ./scripts-run no longer do, under every pattern', () => {
         const stillThere: string[] = [];
         for (const rel of MAINTAINER_SCRIPT_REFERENCES) {
             const abs = path.join(PROJECTION, rel);
-            expect(fs.existsSync(abs), `${rel} must exist, or this exclusion is stale`).toBe(true);
+            expect(fs.existsSync(abs), `${rel} must exist`).toBe(true);
             const text = fs.readFileSync(abs, 'utf-8');
             if (text.includes('./scripts-run')) stillThere.push(rel);
+            expect(scanText(rel.split('/')[0] as string, rel, text), rel).toEqual([]);
             expect(scanSkillScriptForm(rel, text), `${rel} is not the skill-script form`).toEqual([]);
         }
-        // Not a repair this gate owes — a recorded residue, so that a later
-        // widening has to argue with a number instead of discovering one.
-        expect(stillThere).toEqual([...MAINTAINER_SCRIPT_REFERENCES]);
+        expect(stillThere).toEqual([]);
+    });
+
+    it('a context is read with every pattern plus the docs link, and not the Taskfile verb', () => {
+        expect(scanContext('c.md', 'see [ADR-1](../../../docs/decisions/ADR-1.md)')).toHaveLength(1);
+        expect(scanContext('c.md', 'run `./scripts-run src/scripts/x`')).toHaveLength(2);
+        expect(scanContext('c.md', 'pinned in `tests/scripts/x.test.ts`')).toHaveLength(1);
+        // A consumer's `task ci` is the subject of the CI-step policy, not an instruction.
+        expect(scanContext('c.md', 'a step reading `task ci` is CI-shaped')).toEqual([]);
+        // `agent-src/scripts/` is not this package's `src/scripts/`.
+        expect(scanContext('c.md', 'the curated `dist/agent-src/scripts/` list')).toEqual([]);
+        expect(scanContext('c.md', 'see `node_modules/@event4u/agent-config/src/scripts/x.ts`')).toEqual([]);
+    });
+
+    it('the shipped skill and context projection carries no consumer-internal reference', () => {
+        expect(main()).toBe(0);
     });
 
     it('carries no allowlist: the wrapper pattern fires on every skill alike', () => {

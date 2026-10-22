@@ -39,7 +39,7 @@ decision). Full enumeration and the council / owner rows:
 [`scope-mechanics`](../authority/scope-mechanics.md)
 section Scope growth.
 
-`./scripts-run src/scripts/scope_growth "<one-line description>"` classifies a
+`scope_growth.ts "<one-line description>"` classifies a
 single item when the row is not obvious. `unknown` is a real verdict: growth
 nothing classifies is growth nobody decided, and it does not silently become
 agent work.
@@ -223,7 +223,7 @@ turns on `gh pr checks` every minute is the tool-loop
      *Update branch*. `git push` exiting non-zero means the PR still carries the
      failure — never report the fix as delivered off a local verification.
 
-   `./scripts-run src/scripts/check_pr_ci_current` answers both in one call.
+   `check_pr_ci_current.ts` answers both in one call.
 
 **When the verdict cannot be reached** — network down, `gh` failing, the run
 never registering — say so plainly and name what is unverified. A background

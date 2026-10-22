@@ -175,6 +175,15 @@ describe('subagent-v1 reuse and loading fields', () => {
         }
     });
 
+    it('no package subagent holds repository reads and a web leg together (lethal trifecta)', () => {
+        for (const file of _definitions()) {
+            const tools = ((_frontmatterOf(file).tools as string[] | undefined) ?? []).map((t) => t.split('(')[0]);
+            const reads = tools.some((t) => ['Read', 'Grep', 'Glob', 'Bash'].includes(t as string));
+            const web = tools.some((t) => ['WebFetch', 'WebSearch'].includes(t as string));
+            expect(reads && web, `${path.basename(file)} combines repository reads with web access`).toBe(false);
+        }
+    });
+
     it('judges-are-never-reusable', () => {
         // Judge Iron Law (subagent-orchestration): no judge on the same model and
         // context. Keyed on the declared `role` (finding 8851a226345a): every

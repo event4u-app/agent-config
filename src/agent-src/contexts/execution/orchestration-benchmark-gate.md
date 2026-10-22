@@ -64,9 +64,9 @@ is auditable rather than asserted.
 
 ## Reference implementation
 
-[`src/scripts/_lib/orchestration_gate.ts`](../../../../src/scripts/_lib/orchestration_gate.ts)
+`node_modules/@event4u/agent-config/src/scripts/_lib/orchestration_gate.ts`
 (`gateVerdict`, `resolveShippedDefault`), covered by
-[`tests/scripts/_lib_orchestration_gate.test.ts`](../../../../tests/scripts/_lib_orchestration_gate.test.ts).
+`_lib_orchestration_gate.test.ts` (agent-config’s own test suite).
 
 ## Related
 

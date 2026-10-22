@@ -14,11 +14,18 @@
  * sidecar or a state file is executed.
  *
  * Judgement steps (5.7): a `judgement` exit cannot be verified by code, so the
- * step is sequenced, not verified. The operator who runs the cursor answers it
- * with `--procedure-confirm <step-id>`; that explicit confirmation of the
- * current step is the only answer that clears it, and it is recorded with the
- * step file's hash and a timestamp. When nobody answers, the step stays the
- * current step on every call — it never times out and never advances itself.
+ * step is self-attested, not verified. Whoever runs the cursor — in practice the
+ * agent — answers it with `--procedure-confirm <step-id>`; that explicit
+ * confirmation of the current step, given in the same call, is the only answer
+ * that clears it, and it is recorded as `by: self-attested` with the step file's
+ * hash and a timestamp. An adjudication found in the state file never clears a
+ * step. When nobody answers, the step stays the current step on every call — it
+ * never times out and never advances itself.
+ *
+ * Labels say what was corroborated: a `check:` exit that passed is
+ * `check-passed` (or `shape` when the check had nothing to corroborate), never
+ * "verified"; an `exists:` exit is `shape`. Filesystem exits resolve symlinks
+ * and must stay inside the project.
  */
 
 import * as fs from 'node:fs';
@@ -48,7 +55,8 @@ const STATUSES: ReadonlySet<string> = new Set(['emitted', 'partial', 'ok', 'skip
 
 export interface Adjudication {
     answer: 'confirmed';
-    by: 'operator';
+    /** The cursor cannot tell who ran it; the record says so instead of naming an operator. */
+    by: 'self-attested';
     at: string;
     step_sha: string;
 }
@@ -61,6 +69,8 @@ export interface StepRecord {
     step_sha?: string;
     inputs_sha?: string;
     adjudication?: Adjudication;
+    /** For a passed `check:` exit: whether the check corroborated anything, or only found nothing to compare. */
+    basis?: 'corroborated' | 'shape';
 }
 
 export interface ProcedureData {
@@ -92,7 +102,37 @@ export interface ProcedureRunResult {
 
 class Refusal extends Error {}
 
-const RECORD_KEYS = new Set(['status', 'failed_approaches', 'reason', 'head', 'step_sha', 'inputs_sha', 'adjudication']);
+const RECORD_KEYS = new Set(['status', 'failed_approaches', 'reason', 'head', 'step_sha', 'inputs_sha', 'adjudication', 'basis']);
+const HEX64 = /^[0-9a-f]{64}$/;
+const HEAD_RE = /^(?:[0-9a-f]{40}|[0-9a-f]{64}|none)$/;
+const ADJ_KEYS = new Set(['answer', 'by', 'at', 'step_sha']);
+
+function validAdjudication(v: unknown): boolean {
+    if (!isDict(v)) return false;
+    for (const k of Object.keys(v)) if (!ADJ_KEYS.has(k)) return false;
+    return (
+        v['answer'] === 'confirmed' &&
+        v['by'] === 'self-attested' &&
+        typeof v['at'] === 'string' &&
+        !Number.isNaN(Date.parse(v['at'])) &&
+        typeof v['step_sha'] === 'string' &&
+        HEX64.test(v['step_sha'])
+    );
+}
+
+/** Every optional field of a step record, typed; anything else is a refusal. */
+function validRecordFields(rec: Record<string, unknown>): boolean {
+    const fa = rec['failed_approaches'];
+    if (!Array.isArray(fa) || fa.length > MAX_FAILED || !fa.every((x) => typeof x === 'string')) return false;
+    if ('reason' in rec && typeof rec['reason'] !== 'string') return false;
+    if ('head' in rec && (typeof rec['head'] !== 'string' || !HEAD_RE.test(rec['head']))) return false;
+    for (const k of ['step_sha', 'inputs_sha']) {
+        if (k in rec && (typeof rec[k] !== 'string' || !HEX64.test(rec[k] as string))) return false;
+    }
+    if ('adjudication' in rec && !validAdjudication(rec['adjudication'])) return false;
+    if ('basis' in rec && rec['basis'] !== 'corroborated' && rec['basis'] !== 'shape') return false;
+    return true;
+}
 const DATA_KEYS = new Set(['schema', 'skill', 'sidecar_sha', 'engine_version', 'started_head', 'current', 'order', 'steps']);
 
 function isDict(v: unknown): v is Record<string, unknown> {
@@ -113,6 +153,7 @@ function validateData(raw: unknown, sidecar: Sidecar): ProcedureData {
             throw new Refusal(`the record of step '${id}' is malformed`);
         }
         for (const k of Object.keys(rec)) if (!RECORD_KEYS.has(k)) throw new Refusal(`unknown key '${k}' in step '${id}'`);
+        if (!validRecordFields(rec)) throw new Refusal(`the record of step '${id}' carries a field of the wrong type`);
     }
     const order = raw['order'];
     if (!Array.isArray(order) || order.join('\n') !== sidecar.steps.map((s) => s.id).join('\n')) {
@@ -120,6 +161,10 @@ function validateData(raw: unknown, sidecar: Sidecar): ProcedureData {
     }
     const current = raw['current'];
     if (current !== null && (typeof current !== 'string' || !ids.has(current))) throw new Refusal('the current step is unknown');
+    for (const k of ['skill', 'sidecar_sha', 'started_head'] as const) {
+        if (typeof raw[k] !== 'string') throw new Refusal(`the procedure record's ${k} is not a string`);
+    }
+    if (typeof raw['engine_version'] !== 'number') throw new Refusal('the procedure record\'s engine_version is not a number');
     return raw as unknown as ProcedureData;
 }
 
@@ -177,13 +222,25 @@ function readOr(file: string): string {
     }
 }
 
+/** The real path of `rel` when it exists and, symlinks resolved, stays inside the project; else null. */
+function realInTree(projectRoot: string, rel: string): string | null {
+    if (!containedPath(rel)) return null;
+    try {
+        const root = fs.realpathSync(projectRoot);
+        const abs = fs.realpathSync(path.join(projectRoot, rel));
+        return abs === root || abs.startsWith(root + path.sep) ? abs : null;
+    } catch {
+        return null;
+    }
+}
+
 function inTree(projectRoot: string, rel: string): boolean {
-    if (!containedPath(rel)) return false;
-    return fs.existsSync(path.join(projectRoot, rel));
+    return realInTree(projectRoot, rel) !== null;
 }
 
 function existsFingerprint(projectRoot: string, rel: string): string {
-    const abs = path.join(projectRoot, rel);
+    const abs = realInTree(projectRoot, rel);
+    if (abs === null) return 'absent';
     try {
         const st = fs.statSync(abs);
         return st.isDirectory() ? fs.readdirSync(abs).sort().join('\n') : sha256(fs.readFileSync(abs));
@@ -209,9 +266,21 @@ function inputsSha(sidecar: Sidecar, step: SidecarStep, projectRoot: string): st
 interface ExitResult {
     ok: boolean;
     reason: string;
+    basis?: 'corroborated' | 'shape';
 }
 
-function evaluate(sidecar: Sidecar, step: SidecarStep, rec: StepRecord | undefined, projectRoot: string): ExitResult {
+/**
+ * `confirmedNow` is the adjudication `--procedure-confirm` wrote in THIS call. A
+ * judgement step that is not yet `ok` clears only on it; one already `ok` is
+ * re-checked against the adjudication it was recorded with.
+ */
+function evaluate(
+    sidecar: Sidecar,
+    step: SidecarStep,
+    rec: StepRecord | undefined,
+    projectRoot: string,
+    confirmedNow: string | null = null,
+): ExitResult {
     const exit = step.exit;
     if (exit.kind === 'exists') {
         return inTree(projectRoot, exit.path) ? { ok: true, reason: '' } : { ok: false, reason: `${exit.path} does not exist` };
@@ -220,13 +289,14 @@ function evaluate(sidecar: Sidecar, step: SidecarStep, rec: StepRecord | undefin
         const check = PROCEDURE_CHECKS[exit.id];
         if (check === undefined) return { ok: false, reason: `check '${exit.id}' is not registered` };
         const r = check({ projectRoot, skillDir: sidecar.skillDir });
-        return { ok: r.ok, reason: r.reason ?? '' };
+        return { ok: r.ok, reason: r.reason ?? '', basis: r.basis ?? 'corroborated' };
     }
     if (exit.kind === 'schema') {
         return { ok: false, reason: 'schema exits are not executable by this engine version' };
     }
     const adj = rec?.adjudication;
     if (adj === undefined) return { ok: false, reason: 'awaiting confirmation' };
+    if (rec?.status !== 'ok' && confirmedNow !== step.id) return { ok: false, reason: 'awaiting confirmation' };
     if (adj.step_sha !== stepSha(sidecar, step)) {
         return { ok: false, reason: 'the step file changed after it was confirmed' };
     }
@@ -239,9 +309,9 @@ function whenHolds(step: SidecarStep, projectRoot: string): boolean {
     return step.when.predicate === 'file-exists' ? present : !present;
 }
 
-function exitClass(step: SidecarStep): string {
-    if (step.exit.kind === 'check') return 'verified';
-    if (step.exit.kind === 'judgement') return 'sequenced, not verified';
+function exitClass(step: SidecarStep, rec?: StepRecord): string {
+    if (step.exit.kind === 'check') return rec?.basis === 'shape' ? 'shape' : 'check-passed';
+    if (step.exit.kind === 'judgement') return 'self-attested, not verified';
     return 'shape';
 }
 
@@ -307,13 +377,13 @@ function brief(sidecar: Sidecar, data: ProcedureData, step: SidecarStep, headlin
         `goal: ${sidecar.brief.goal}`,
         `done_when: ${sidecar.brief.done_when}`,
         `step file: ${path.join(sidecar.skillDir, step.file)}`,
-        `exit: ${step.exitText} (${exitClass(step)})`,
+        `exit: ${step.exitText} (${exitClass(step, rec)})`,
         `remaining: ${remaining.length === 0 ? 'none' : remaining.join(', ')}`,
         `failed_approaches: ${rec === undefined || rec.failed_approaches.length === 0 ? 'none' : rec.failed_approaches.join('; ')}`,
     ];
     if (step.exit.kind === 'judgement') {
         lines.push(
-            'This step is sequenced, not verified: no code can check it. Do it, state the decision you took, ' +
+            'This step is self-attested, not verified: no code can check it. Do it, state the decision you took, ' +
                 `then run: agent-config work --procedure ${sidecar.skill} --procedure-confirm ${step.id}`,
         );
     }
@@ -341,8 +411,9 @@ export function run_procedure(opts: ProcedureRunOptions): ProcedureRunResult {
             if (target === undefined || target.exit.kind !== 'judgement' || data.current !== opts.confirm || rec === undefined || rec.status === 'ok') {
                 throw new Refusal(`--procedure-confirm ${opts.confirm}: only the current judgement step can be confirmed (current: ${String(data.current)})`);
             }
-            rec.adjudication = { answer: 'confirmed', by: 'operator', at: new Date().toISOString(), step_sha: stepSha(sidecar, target) };
+            rec.adjudication = { answer: 'confirmed', by: 'self-attested', at: new Date().toISOString(), step_sha: stepSha(sidecar, target) };
         }
+        const confirmedNow = opts.confirm ?? null;
 
         for (const step of sidecar.steps) {
             const rec = data.steps[step.id];
@@ -373,7 +444,7 @@ export function run_procedure(opts: ProcedureRunOptions): ProcedureRunResult {
                 handedOut = step.id;
                 return new StepResult({ outcome: Outcome.PARTIAL, questions: [`do step ${step.id}`], message: 'handed out' });
             }
-            const result = evaluate(sidecar, step, rec, projectRoot);
+            const result = evaluate(sidecar, step, rec, projectRoot, confirmedNow);
             if (result.ok) {
                 const done: StepRecord = {
                     status: 'ok',
@@ -383,6 +454,7 @@ export function run_procedure(opts: ProcedureRunOptions): ProcedureRunResult {
                     inputs_sha: inputsSha(sidecar, step, projectRoot),
                 };
                 if (rec.adjudication !== undefined) done.adjudication = rec.adjudication;
+                if (step.exit.kind === 'check' && result.basis !== undefined) done.basis = result.basis;
                 data.steps[step.id] = done;
                 return new StepResult({ outcome: Outcome.SUCCESS });
             }
@@ -404,13 +476,13 @@ export function run_procedure(opts: ProcedureRunOptions): ProcedureRunResult {
             const recs = sidecar.steps.map((s) => ({ s, r: data.steps[s.id] }));
             const skipped = recs.filter((x) => x.r?.status === 'skipped').length;
             const taken = recs.filter((x) => x.r?.status !== 'skipped');
-            const count = (cls: string): number => taken.filter((x) => exitClass(x.s) === cls).length;
+            const count = (cls: string): number => taken.filter((x) => exitClass(x.s, x.r) === cls).length;
             return {
                 code: 0,
                 output: [
                     ...notes,
-                    `procedure ${sidecar.skill} complete — ${String(sidecar.steps.length)} steps: ${String(count('verified'))} verified, ` +
-                        `${String(count('shape'))} shape, ${String(count('sequenced, not verified'))} sequenced, ${String(skipped)} skipped`,
+                    `procedure ${sidecar.skill} complete — ${String(sidecar.steps.length)} steps: ${String(count('check-passed'))} check-passed, ` +
+                        `${String(count('shape'))} shape, ${String(count('self-attested, not verified'))} self-attested, ${String(skipped)} skipped`,
                 ].join('\n'),
             };
         }

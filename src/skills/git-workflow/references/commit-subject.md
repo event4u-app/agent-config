@@ -168,7 +168,7 @@ describes a team habit; the name the agent creates follows the declared pattern.
 ## The grammar
 
 <!-- BEGIN GENERATED: git-convention-grammar -->
-<!-- Written by `./scripts-run src/scripts/generate_git_convention_grammar` from `src/scripts/_lib/git_convention_grammar.ts` and `src/scripts/_lib/git_convention_measure.ts`; edit the modules, never this block. -->
+<!-- Written by agent-config's `generate_git_convention_grammar.ts` from `git_convention_grammar.ts` and `git_convention_measure.ts`; edit those modules in the agent-config repository, never this block. -->
 
 ```
 ticket                                 [A-Z][A-Z0-9]+-[0-9]+
@@ -207,11 +207,11 @@ lower-case key is never detected.
 - **Suggester metadata.** The `trigger_context:` frontmatter of
   `src/domains/engineering-base/implement-ticket/command.md` and
   `src/domains/product-basic/estimate-ticket/command.md`, and the same literal in
-  `src/scripts/migrate_command_suggestions.ts`, match a bare-key ticket in a
+  `node_modules/@event4u/agent-config/src/scripts/migrate_command_suggestions.ts`, match a bare-key ticket in a
   prompt to decide when a command is suggested. They keep their own pattern:
   changing it changes when a command is offered.
-- **The suggester's matcher.** `src/scripts/command_suggester/match.ts` carries
+- **The suggester's matcher.** `node_modules/@event4u/agent-config/src/scripts/command_suggester/match.ts` carries
   the ticket grammar above; a test pins the two equal.
-- **A project key in a ticket body.** `src/scripts/refine_ticket_detect.ts` reads
+- **A project key in a ticket body.** `node_modules/@event4u/agent-config/src/scripts/refine_ticket_detect.ts` reads
   a project key out of ticket text, not a branch, and is intentionally
   independent.

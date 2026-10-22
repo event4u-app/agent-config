@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+// egress-content: fixed-corpus — delegates every network call to _lib/advisory_sources.ts: public package names and versions, never session content and never a name markOwnActionsPrivate marks private
 /**
  * `agent-config audit:deps` — advisories heard the same day
  * (road-to-advisories-heard-the-same-day).
@@ -24,6 +25,7 @@
 
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -330,10 +332,22 @@ function carriedNotice(prev: AdvisoryState['notice'], findings: { key: string }[
  * So everything under the project's OWN namespace is treated as private and
  * never sent — its npm scope (from package.json `name`, and the GitHub owner as
  * `@owner`), its Composer vendor (from composer.json `name`), and its GitHub
- * Actions. A private package of a THIRD namespace is the residual this cannot
- * see; `advisories.egress: none` is the setting for a project that has one.
+ * Actions.
+ *
+ * A third namespace is unknown, and unknown counts as private wherever the
+ * machine says a private name could exist: once npm can authenticate to the
+ * public registry (an `_authToken` / `_auth` / `_password` for it in the
+ * project's or the user's `.npmrc`), a paid private package of ANY scope can
+ * resolve from registry.npmjs.org, so every scoped name stays home; a scope
+ * mapped to its own registry (`@scope:registry=`) is private by declaration.
+ * A name private in one entry is private in all of them, so a declared range
+ * never sends what its lockfile marked private.
  */
-export function markOwnActionsPrivate<T extends { entries: Array<{ ecosystem: string; name: string; private: boolean }> }>(root: string, inv: T): T {
+export function markOwnActionsPrivate<T extends { entries: Array<{ ecosystem: string; name: string; private: boolean }> }>(
+    root: string,
+    inv: T,
+    home: string = os.homedir(),
+): T {
     let url = '';
     try {
         url = execFileSync('git', ['-C', root, 'remote', 'get-url', 'origin'], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 5000 }).trim();
@@ -360,6 +374,24 @@ export function markOwnActionsPrivate<T extends { entries: Array<{ ecosystem: st
         if (e.ecosystem === 'npm' && [...npmScopes].some((sc) => n.startsWith(`${sc}/`))) e.private = true;
         if (e.ecosystem === 'Packagist' && vendor !== null && n.startsWith(`${vendor}/`)) e.private = true;
     }
+    const npmrc = [path.join(root, '.npmrc'), path.join(home, '.npmrc')]
+        .map((f) => {
+            try {
+                return fs.readFileSync(f, 'utf-8');
+            } catch {
+                return '';
+            }
+        })
+        .join('\n');
+    const publicRegistryAuth = /^\s*\/\/registry\.npmjs\.org\/:_(?:authToken|auth|password)\s*=/im.test(npmrc);
+    const privateScopes = new Set([...npmrc.matchAll(/^\s*(@[^:\s]+):registry\s*=/gim)].map((m) => (m[1] as string).toLowerCase()));
+    for (const e of inv.entries) {
+        if (e.ecosystem !== 'npm') continue;
+        const scope = /^(@[^/]+)\//.exec(e.name.toLowerCase())?.[1];
+        if (scope !== undefined && (publicRegistryAuth || privateScopes.has(scope))) e.private = true;
+    }
+    const privateNames = new Set(inv.entries.filter((e) => e.private).map((e) => `${e.ecosystem}\0${e.name.toLowerCase()}`));
+    for (const e of inv.entries) if (privateNames.has(`${e.ecosystem}\0${e.name.toLowerCase()}`)) e.private = true;
     return inv;
 }
 

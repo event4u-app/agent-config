@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { emitRound, type Finding } from '../../src/scripts/analysis_emit.js';
 import { parseHandoff } from '../../src/scripts/analysis_analysts.js';
-import { LENS_QUESTIONS, emitPrompts, foldLanes } from '../../src/scripts/analysis_prompts.js';
+import { LENS_QUESTIONS, emitPrompts, foldLanes, promptOutput } from '../../src/scripts/analysis_prompts.js';
+import { OutboundRefusedError } from '../../src/scripts/_lib/outbound_text.js';
+import type { AnalysisTarget } from '../../src/scripts/analysis_target.js';
 
 function finding(id: string, anchor: string, step: string): Finding {
     return {
@@ -67,5 +69,29 @@ describe('emitPrompts (step 4.4)', () => {
 
     it('the exchange prompt carries the three reconcile loops', () => {
         for (const loop of ['inventory', 'cross-exam', 'converge']) expect(prompts.exchange).toContain(loop);
+    });
+});
+
+describe('promptOutput — the printed prompts leave this host', () => {
+    const target = {
+        project_root: '/Users/alice/work/acme',
+        scope_root: '/Users/alice/work/acme/packages/pay',
+        scope_kind: 'module',
+        scope_name: 'pay',
+        anchor: 'git',
+        module_source: 'detected',
+        vcs: 'git',
+        pr_target: 'github',
+        ac_installed: true,
+    } as unknown as AnalysisTarget;
+
+    it('names the scope relative to the project, never by its absolute path', () => {
+        const out = promptOutput(target, 'abc123', 'inbox-2026-10-x');
+        expect(out).not.toContain('/Users/alice');
+        expect(out).toContain('Scope: module pay at packages/pay (anchor: git)');
+    });
+
+    it('refuses to print a prompt that would carry a credential', () => {
+        expect(() => promptOutput(target, 'ghp_0123456789abcdefghijklmnopqrstuvwxyzAB', 'r')).toThrow(OutboundRefusedError);
     });
 });

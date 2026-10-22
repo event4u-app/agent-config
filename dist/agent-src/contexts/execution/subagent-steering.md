@@ -226,11 +226,11 @@ requires a non-empty `emergency.orchestration_halt_justification`.
 
 ## Reference implementation
 
-[`src/scripts/_lib/subagent_steering.ts`](../../../../src/scripts/_lib/subagent_steering.ts)
+`node_modules/@event4u/agent-config/src/scripts/_lib/subagent_steering.ts`
 (`isLayerDisabled`, `budgetHalt`, `typeStop`, `sliceDispatchAllowed`,
 `breachedGuardrails`, `readTierRoutingMetrics`,
 `escalationPromotionCandidates`, `verifyPassDrift`), covered by
-[`tests/scripts/_lib_subagent_steering.test.ts`](../../../../tests/scripts/_lib_subagent_steering.test.ts).
+`_lib_subagent_steering.test.ts` (agent-config’s own test suite).
 
 ## Related
 

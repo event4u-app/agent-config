@@ -20,7 +20,7 @@ real interactions before the second edit lands and confounds the
 diagnosis.
 
 A kernel-rule PR also carries a ratification artifact
-([`ratification-artifact`](../../../../docs/contracts/ratification-artifact.md)),
+(`ratification-artifact` (agent-config repository: `docs/contracts/ratification-artifact.md`)),
 gated by `check_kernel_edit_ratified` — an ADDITION to this soak, never a
 replacement, until blocker `ratification-platform-anchor` is decided.
 
@@ -28,7 +28,7 @@ replacement, until blocker `ratification-platform-anchor` is decided.
 
 A PR is a "kernel-rule edit" iff it modifies any file in `src/rules/`
 that is in the locked kernel set
-(see [`docs/contracts/kernel-membership.md`](../../../docs/contracts/kernel-membership.md)).
+(see `docs/contracts/kernel-membership.md` (agent-config repository)).
 
 The CI guard (Phase 4.2 of the always-budget-relief roadmap) fails
 any PR that touches **> 1** kernel rule in the same diff. Override is
@@ -42,7 +42,7 @@ one invalidates that cache for every consumer. `check_kernel_prefix_stability`
 (Rule Backstops workflow) fails until the edit is recorded:
 
 ```bash
-./scripts-run src/scripts/check_kernel_prefix_stability --update-baseline
+check_kernel_prefix_stability.ts --update-baseline
 ```
 
 Commit the resulting `internal/bench/reports/kernel-prefix.json` **in the

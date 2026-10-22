@@ -21,9 +21,9 @@ when a run reaches that branch; the Iron-Law fences stay in the core.
    call's *input* depends on another call's *output*, never the count):
 
    - **Fires (batch these):** a step says "update the hook, its test,
-     and the manifest entry" → `view src/scripts/hooks/foo_hook.ts` +
-     `view tests/scripts/foo_hook.test.ts` +
-     `view src/scripts/hook_manifest.yaml` are three independent reads
+     and the manifest entry" → `view node_modules/@event4u/agent-config/src/scripts/hooks/foo_hook.ts` +
+     `view tests/foo_hook.test.ts` +
+     `view node_modules/@event4u/agent-config/src/scripts/hook_manifest.yaml` are three independent reads
      whose paths are all known BEFORE the first call — dispatch all
      three in ONE parallel block. Issuing them serially is the
      violation: each extra round-trip re-transmits the accumulated

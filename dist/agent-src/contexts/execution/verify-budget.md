@@ -53,9 +53,9 @@ small to carry risk, where the deterministic check is sufficient evidence.
 
 ## Reference implementation
 
-[`src/scripts/_lib/verify_budget.ts`](../../../../src/scripts/_lib/verify_budget.ts)
+`node_modules/@event4u/agent-config/src/scripts/_lib/verify_budget.ts`
 (`selectVerifyMode`, `verificationGap`), covered by
-[`tests/scripts/_lib_verify_budget.test.ts`](../../../../tests/scripts/_lib_verify_budget.test.ts).
+`_lib_verify_budget.test.ts` (agent-config’s own test suite).
 
 ## Related
 

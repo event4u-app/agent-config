@@ -19,7 +19,7 @@ set, and what the host can physically do.
 |---|---|---|
 | `subagents.quota_arbitrage` | `true` | Prefer a separate-quota-pool model where the host manifest allows it (Phase 2 bonus). |
 | `subagents.model_map` | `{}` | Optional per-tier model override for downshift routing. |
-| `emergency.orchestration_halt` | `false` | The ONE audited incident switch — see [`settings-classes.md`](../../docs/contracts/settings-classes.md) § "The one exception". NOT an activation gate: on-by-default, ceremony-free to arm, requires a non-empty `orchestration_halt_justification` to disarm. |
+| `emergency.orchestration_halt` | `false` | The ONE audited incident switch — see `settings-classes.md` (agent-config repository: `docs/contracts/settings-classes.md`) § "The one exception". NOT an activation gate: on-by-default, ceremony-free to arm, requires a non-empty `orchestration_halt_justification` to disarm. |
 
 ## Activation decision
 
@@ -89,7 +89,7 @@ The obligation travels on three carriers instead:
    plus this telemetry.
 
 The capability gate itself resolves from the committed host registry merged with
-a live environment probe in `src/scripts/_lib/host_capability.ts`
+a live environment probe in `node_modules/@event4u/agent-config/src/scripts/_lib/host_capability.ts`
 (`probeHostCapabilities`) — capability is a fact about the host, never a settings
 override.
 

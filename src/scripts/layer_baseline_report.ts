@@ -97,6 +97,29 @@ export function readRuleLayer(host: string, scope: LayerFixture['scope'], dir: s
     };
 }
 
+/** Tokens a hook command may carry into committed evidence; anything else becomes `<arg>`. */
+const SAFE_TOKEN = [
+    /^<(?:HOME|PACKAGE_ROOT)>(?:\/[\w.-]+)*\/?$/u,
+    /^--?[A-Za-z][A-Za-z0-9-]*$/u,
+    /^[a-z][a-z_]{0,23}$/u,
+    /^\d{1,3}$/u,
+    /^(?:&&|\|\||;|\||\[|\]|!)$/u,
+];
+
+/**
+ * A hook command as committed evidence: the binary, flags, short lowercase
+ * words and placeholder paths survive; every other token — a header value, a
+ * URL, an assignment, an absolute path outside the placeholders — is `<arg>`,
+ * so a token or an internal host embedded in a hook never reaches the report.
+ */
+export function redactHookCommand(command: string): string {
+    return command
+        .split(/\s+/u)
+        .filter((t) => t !== '')
+        .map((t) => (SAFE_TOKEN.some((re) => re.test(t)) ? t : '<arg>'))
+        .join(' ');
+}
+
 export function readHookCommands(home: string, packageRoot?: string): string[] {
     const settings = path.join(home, '.claude', 'settings.json');
     if (!fs.existsSync(settings)) return [];
@@ -110,7 +133,8 @@ export function readHookCommands(home: string, packageRoot?: string): string[] {
                 if (typeof h.command !== 'string') continue;
                 let command = h.command.split(home).join('<HOME>');
                 if (packageRoot !== undefined) command = command.split(packageRoot).join('<PACKAGE_ROOT>');
-                out.push(`${event}${group.matcher ? ` [${group.matcher}]` : ''}: ${command}`);
+                const matcher = group.matcher ? ` [${/^[\w|*.()-]{1,80}$/u.test(group.matcher) ? group.matcher : '<arg>'}]` : '';
+                out.push(`${event}${matcher}: ${redactHookCommand(command)}`);
             }
         }
     }
