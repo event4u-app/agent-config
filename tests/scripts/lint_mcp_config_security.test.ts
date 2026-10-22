@@ -45,6 +45,21 @@ describe('lint_mcp_config_security — _scan over a built ScannedFile', () => {
         expect(hits.some((h) => h.message.includes('inline secret value'))).toBe(true);
     });
 
+    it('still catches every shape the retired local regex caught, now through the shared rule table', () => {
+        const a = 'abcdefghijklmnopqrstuvwxyz0123456789ABCD';
+        const shapes: Record<string, string> = {
+            'sk-ant': 'sk-' + 'ant-api03-' + a + a,
+            'sk-proj': FAKE_SECRET,
+            AKIA: 'AKIA' + 'QWERTYUIOPASDFGH',
+            AIza: 'AIza' + 'SyA1b2C3d4E5f6G7h8I9j0KlMnOpQrStUvW',
+            ghp_: 'ghp' + '_aB3dE5gH7jK9mN1pQ3sT5vW7yZ9bC1dE3fG5',
+            JWT: 'eyJ' + 'hbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c',
+        };
+        for (const [name, value] of Object.entries(shapes)) {
+            expect(mcp.hasInlineSecret(`{ "env": { "TOKEN": "${value}" } }`), name).toBe(true);
+        }
+    });
+
     it('flags 0.0.0.0 bind and autoApprove as MED', () => {
         const hits = scanFile(
             'mcp.json',
