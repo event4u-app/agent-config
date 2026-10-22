@@ -19,6 +19,11 @@
 #
 # Permissions: `issues: write` to open the issue; nothing else is written.
 #
+# Private repositories only. On a public repository the issue, and this job's
+# log, would advertise which unpatched components the project runs before they
+# are fixed; the first step checks visibility and every later step is skipped
+# unless the repository is private.
+#
 # Pin the package to the major you run (`@16` below) and keep the actions pinned
 # the way the rest of your workflows are; a security job that installs `latest`
 # with a write token is a supply-chain path of its own.
@@ -39,15 +44,28 @@ jobs:
     name: audit:deps refresh → T0 issue
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Run on a private repository only
+        id: visibility
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          private="$(gh api "repos/$REPO" -q .private)"
+          echo "private=$private" >> "$GITHUB_OUTPUT"
+          [ "$private" = "true" ] || echo "not a private repository: nothing is refreshed or published here"
+      - if: steps.visibility.outputs.private == 'true'
+        uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - if: steps.visibility.outputs.private == 'true'
+        uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Refresh advisories
+        if: steps.visibility.outputs.private == 'true'
         run: npx --yes @event4u/agent-config@16 audit:deps refresh --force
       - name: Open or update the T0 issue (only when the list changed)
+        if: steps.visibility.outputs.private == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
