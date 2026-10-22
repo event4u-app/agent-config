@@ -1,6 +1,8 @@
 import { defineConfig } from 'vitest/config';
 import preact from '@preact/preset-vite';
 
+import BalancedSequencer from './tests/_lib/balanced-sequencer';
+
 const BASE_ALIAS: Record<string, string> = {
     '@cli': new URL('./src/cli', import.meta.url).pathname,
     '@server': new URL('./src/server', import.meta.url).pathname,
@@ -187,6 +189,9 @@ export default defineConfig({
         // contention hypothesis, which remains unverified in the direction that
         // note already admits.
         maxWorkers: '50%',
+        // Shards by measured seconds instead of file count when CI sets
+        // VITEST_BALANCED_SHARDS=1; unchanged otherwise. See the file.
+        sequence: { sequencer: BalancedSequencer },
         testTimeout: 30_000,
         hookTimeout: 30_000,
         reporters: process.env.CI ? ['default'] : ['default'],

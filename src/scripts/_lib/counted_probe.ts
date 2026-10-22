@@ -24,7 +24,7 @@
  * counting/listing class, where a short read silently manufactures a passing
  * result.
  */
-import { spawnSync, type SpawnSyncReturns } from 'node:child_process';
+import { spawn, spawnSync, type SpawnSyncReturns } from 'node:child_process';
 
 /**
  * Default ceiling: 64 MiB.
@@ -88,6 +88,73 @@ export function runCountedProbe(
         ...(opts.env === undefined ? {} : { env: opts.env }),
     });
     return interpretProbeResult(res, `${command} ${args.join(' ')}`.trim(), maxBuffer);
+}
+
+/**
+ * `runCountedProbe` without blocking the event loop, so a caller can run several
+ * probes at once. Same contract: the per-stream `maxBuffer` mirrors `spawnSync`,
+ * and an overflow kills the child and throws rather than resolving to a short read.
+ *
+ * @throws {ProbeOverflowError} (as a rejection) when a stream exceeded `maxBuffer`.
+ */
+export function runCountedProbeAsync(
+    command: string,
+    args: readonly string[],
+    opts: ProbeOptions = {},
+): Promise<ProbeResult> {
+    const maxBuffer = opts.maxBuffer ?? DEFAULT_PROBE_MAX_BUFFER;
+    const label = `${command} ${args.join(' ')}`.trim();
+    return new Promise((resolve, reject) => {
+        const child = spawn(command, [...args], {
+            cwd: opts.cwd,
+            stdio: ['ignore', 'pipe', 'pipe'],
+            ...(opts.env === undefined ? {} : { env: opts.env }),
+        });
+        const out: Buffer[] = [];
+        const err: Buffer[] = [];
+        let outBytes = 0;
+        let errBytes = 0;
+        let error: (Error & { code?: string }) | undefined;
+        const fail = (code: string): void => {
+            if (error !== undefined) return;
+            error = Object.assign(new Error(code), { code });
+            child.kill('SIGTERM');
+        };
+        const timer =
+            opts.timeout === undefined ? undefined : setTimeout(() => fail('ETIMEDOUT'), opts.timeout);
+        child.stdout.on('data', (chunk: Buffer) => {
+            outBytes += chunk.length;
+            if (outBytes > maxBuffer) fail('ENOBUFS');
+            else out.push(chunk);
+        });
+        child.stderr.on('data', (chunk: Buffer) => {
+            errBytes += chunk.length;
+            if (errBytes > maxBuffer) fail('ENOBUFS');
+            else err.push(chunk);
+        });
+        child.on('error', (e: Error & { code?: string }) => {
+            error ??= e;
+        });
+        child.on('close', (status: number | null) => {
+            if (timer !== undefined) clearTimeout(timer);
+            try {
+                resolve(
+                    interpretProbeResult(
+                        {
+                            error,
+                            status: error === undefined ? status : null,
+                            stdout: Buffer.concat(out).toString('utf-8'),
+                            stderr: Buffer.concat(err).toString('utf-8'),
+                        },
+                        label,
+                        maxBuffer,
+                    ),
+                );
+            } catch (e) {
+                reject(e as Error);
+            }
+        });
+    });
 }
 
 /**

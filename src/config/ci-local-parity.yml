@@ -135,6 +135,19 @@ ci_only:
   # state cannot decide the answer.
   #
   # Reachable on demand: `./scripts-run src/scripts/check_static_parity`.
+  # road-to-macos-where-the-platform-is-the-point 1.3. Decides which OSes the
+  # macOS-sensitive tests.yml legs run on from the PR's diff against its base;
+  # outside a pull request there is no base and no decision to make. Unit-tested
+  # (tests/scripts/ci_platform_scope.test.ts) and reachable on demand:
+  # `./scripts-run src/scripts/ci_platform_scope --base origin/main`.
+  - id: ci_platform_scope
+    class: matrix
+    reason: "chooses the tests.yml OS matrix for a pull request from its diff; it has no verdict to give a working tree and nothing to gate locally"
+  # road-to-ci-time-that-counts-the-queue 3.1. Reads a week of the Actions API;
+  # reachable on demand: `./scripts-run src/scripts/ci_time_to_green --days 7`.
+  - id: ci_time_to_green
+    class: network
+    reason: "reads the GitHub Actions runs and jobs API for a time window; offline it has nothing to measure, and it reports rather than gates"
   - id: check_static_parity
     class: benchmark
     reason: "two full runs of the dispatcher-reaching suite, compared per-test verdict by verdict, ~1 minute; a per-change local gate cannot afford it and its answer is a property of a clean checkout rather than of a working tree"
