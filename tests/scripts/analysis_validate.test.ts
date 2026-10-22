@@ -119,6 +119,27 @@ describe('deterministic validation before anything leaves the machine', () => {
         expect(ran).toEqual([...VALIDATION_GATES]);
     });
 
+    it('records on the validated transition every gate that checked nothing of the project', () => {
+        const file = emitted();
+        const { runDir, record } = runAt('emitted');
+        const v = validateEmitted({
+            runDir,
+            record,
+            projectRoot: root,
+            files: [file],
+            councilDissent: false,
+            runner: (gate) => (gate === 'lint_plan_risk_register' ? { ok: true, skipped: true, detail: '' } : { ok: true, detail: '' }),
+        });
+        expect(v.record.state).toBe('validated');
+        expect(v.unchecked).toEqual([
+            "lint_roadmap_blockers read this package's tree, not the project's",
+            'lint_plan_risk_register skipped',
+            "check_references read this package's tree, not the project's",
+            "check_estate_count read this package's tree, not the project's",
+        ]);
+        expect(v.record.history.at(-1)?.reason).toContain('lint_plan_risk_register skipped');
+    });
+
     it('passes the real complexity and risk-register gates on an emitted roadmap', () => {
         const file = emitted();
         for (const gate of ['lint_roadmap_complexity', 'lint_plan_risk_register'] as const) {
