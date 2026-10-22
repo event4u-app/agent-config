@@ -147,11 +147,12 @@ the judge-one-tier-up ladder (`src/agent-src/contexts/subagent-configuration.md:
 
 ## Phase 3 — Advisor pairing, measured or closed (T6)
 
-- [ ] **3.1 Probe once per host version** whether a dispatched worker (not only the main
+- [x] **3.1 Probe once per host version** <!-- receipt: class=R0 · shadow · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> whether a dispatched worker (not only the main
   session) can run with an advisor, and record what the advisor's calls cost in the usage
   report.
   verify: an evidence row per host version; if no worker path exists, the phase closes as a
   recorded null and K12 applies.
+  Done 2026-10-22 (commit f3a3b4dcc7): on 2.1.308 a `haiku` `ac-researcher` dispatched under `--advisor opus` (experimental variable set) consulted the advisor — `advisor_tool_result` in its own transcript; the advisor billed 26,109 uncached input and 1,683 output tokens on `claude-opus-5-5`. Row in `tier-realisation-2026-10-22.md` § Step 3.1. A worker path exists; K12 does not apply.
 - [ ] **3.2 Only on a green 3.1:** one pre-registered comparison on bounded implementation
   slices — `lite` executor with a `high` advisor against `medium` alone, same two bars as 2.1.
   No adoption step in this roadmap; a backed claim opens its own.
