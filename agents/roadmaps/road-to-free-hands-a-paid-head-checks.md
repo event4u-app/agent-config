@@ -106,11 +106,12 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 
 ## Phase 1 — Floors that ship regardless of free routes
 
-- [ ] **1.1 Content ceiling fail-closed (D2).** An undeclared payload is classified
+- [x] **1.1 Content ceiling fail-closed (D2).** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/transport_resolver.ts --> An undeclared payload is classified
   `project-content`; `ask_transport` and the council bundle declare their class explicitly;
   repo-owned eval corpora declare `public-artifact`.
   verify: a `public-artifact` seat receiving an undeclared payload reports
   `available: false, policy_content_ceiling`; every existing seat is unchanged.
+  Done 2026-10-22 (commit ec9df20078): undeclared → `project-content` in `resolveTransport`; `build_members` now passes each seat's configured ceiling and the pass's class (it passed neither, so the ceiling never reached a council run); `ask_transport --content-class`. Tests: `seat_policy_and_ceiling.test.ts` › an undeclared content class is project-content: a public-artifact seat refuses it, and › … leaves every default seat unchanged; `council_cli.test.ts` › the content ceiling reaches the resolver. No repo-owned eval corpus goes through a council seat today, so none had a class to declare; `--content-class public-artifact` is the path when one does.
 - [ ] **1.2 Three prefix rows (D4).** Add `hf_`, `nvapi-`, `r8_` to the egress rule table; every
   credential env var a shipped adapter reads maps to a prefix row or to an explicit
   `no-stable-prefix` row. `corrected-from-reproduction`: `csk-` is dropped from the list.
