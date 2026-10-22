@@ -657,6 +657,7 @@ stay green (93 files).
       squash commit, so the ordering is a fact of that PR's branch, not of
       `main`.)*
       *(2026-10-22: the identifier half of (a) and (b) is published — 100 % recall per type on the seeded corpus, 20 of 14,274 tracked files, 0 of 400 negatives — in `internal/bench/reports/egress-placeholders-detection-2026-10-19.md`. Still open: (c) on identifiers, the paired quality run (e), which needs model calls on real review tasks, and (f) on the CI runner class.)*
+      *(2026-10-22, second run: (c) on identifiers **passes** — 0 restore and 0 idempotence mismatches in every type on the frozen W1 corpus and a seeded W1x corpus (SSN, North American phone, mixed documents, `_v2` variants), each scorer first rejecting a planted defect; `internal/bench/reports/egress-placeholders-identifier-roundtrip-2026-10-22.md`, commit 86e8f46788. (e) published as **underpowered**: 60 pairs, 120 subscription CLI calls, both arms 60/60, 0 discordant pairs against a derived floor of 5, so no regression and no pass; the rule of three caps an unseen loss rate at 5 pp; the tasks are synthetic and hit a ceiling; `internal/bench/reports/egress-placeholders-paired-quality-2026-10-22.md`, commit d5f7f453d9. (f) on the CI runner class is read by the warn-only Bench Drift step added in 7f23bb3813.)*
 
 ## Lineage
 

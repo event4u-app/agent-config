@@ -153,6 +153,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   verify: offline, the roster reports `unknown`, never a cached list; a route whose attestation
   lacks the distribution field is refused as a consumer default.
   Done 2026-10-22 (e750d31083): `free_route_catalog.test.ts`; no shipped row is attested yet.
+  Attested 2026-10-22 (e9009baac5): one keyless first-party route (`pollinations`) carries a dated attestation read from the provider's published policy — no training on prompts without opt-in for first-party models, transient processing with short caches, inference-host retention per host — and distribution `unknown`, so it is maintainer-only (council decision 2, A14). The route's own list marks models `community: true|false`; discovery keeps first-party ids and fails closed when the list is unreadable, and `routeMemberFor` refuses a model outside a fresh first-party roster. Tests `free_route_catalog.test.ts` › keyless first-party route (3), `first_party_route_member.test.ts` (3).
 - [x] **2.4 Identity derived, not declared (D5).** Family comes from the served id; a free route <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_route.ts -->
   answering with `model_served ≠ requested` is absent with `policy_model_mismatch` (paid
   aliases keep today's attribution-only behaviour). Random/auto routers are refused at config
@@ -169,6 +170,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   payload; the same stub reporting a remote model, and on a non-loopback address, both refuse
   it with `policy_content_ceiling`.
   Done 2026-10-22 (commits d0d9dd44af, 15d021b4a2): `self_hosted_route.test.ts`, six cases. The production probe is `UNPROVEN_PROBE`, so self-hosted stays `public-artifact` until a real probe ships (residue in the PR).
+  Real probe 2026-10-22 (7b4054e5f9): `self_hosted_probe.ts` proves local weights (Ollama blob, llama-server `/props`, LM Studio path; cloud tags and missing files read remote) and samples the listening PID's established connections during one completion call; any non-loopback peer is outbound. `routeMemberFor` and the status surface use it; `free_route.ts` keeps `UNPROVEN_PROBE` as its default because it is in the hook bundle. Tests `self_hosted_probe.test.ts` (16), `self_hosted_probe_wiring.test.ts`; outbound check seen red when neutralised. No local model server exists on the maintainer's machine, so it was not exercised live.
 
 ## Phase 3 — The worker contract (rung 0.5, free hands)
 

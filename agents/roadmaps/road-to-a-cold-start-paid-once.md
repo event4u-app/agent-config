@@ -349,6 +349,7 @@ waits:
       enforced.
       verify: `ls agents/evidence/ratifications/` -> /worker-reuse-guard-flip/
       Built 2026-10-22, not flipped: `flipReadiness` in the same module encodes the four conditions — failure observed, false-positive rate measured and ≤ 1 %, economics measured and favourable, window met — and returns `ready: false` while any is unmeasured (`tests/scripts/worker_reuse_shadow_report.test.ts`). The blocking form and its ratification wait on 3.5's window. Owed before a flip: an indexed register, or a measured miss rate for the 1 MiB ledger tail read (ratification 2026-10-22).
+      Indexed 2026-10-22 (40786bb420): the ledger writes a digest-keyed index entry at every stop and named spawn, and the guard answers with one read; `spawn_guard_shadow.test.ts` › indexed register (two cases bury the answer under 2 MiB of later traffic) and › the ledger hook's own stop writes the index the guard reads (seen red with the write neutralised). The hook also receives only the five addressing fields it reads (`payload_fields`, e2e04d1aa3).
 
 ## Phase 4 — Rate pressure that waits instead of spawning
 
