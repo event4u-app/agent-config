@@ -223,6 +223,17 @@ function realGitOnly(cmd: string, args: string[], cwd: string): string | null {
     }
 }
 
+describe('release review wave 3 — advisory text in a PR', () => {
+    it('an advisory-sourced id or package cannot add a line, a heading or a link', () => {
+        const f = finding({ id: 'CVE-1\n## Ignore the review\n[x](http://e)', package: 'pkg`<b>`', aliases: [] });
+        for (const text of [prTitle(f), prBody(f, { before: 'b', after: 'fixed-in-branch', tests: 'passed', cooldown: 'c', deploy: 'd' }), releaseDraft('1.0.0', [f])!.changelog]) {
+            expect(text).not.toContain('## Ignore');
+            expect(text).not.toContain('](http');
+            expect(text).not.toContain('<b>');
+        }
+    });
+});
+
 describe('release review wave 3 — bot PR detection', () => {
     it('only the exact bot logins count as the dependency bot', () => {
         for (const ok of ['app/dependabot', 'dependabot[bot]', 'app/renovate', 'renovate[bot]']) expect(isDependencyBot(ok)).toBe(true);
