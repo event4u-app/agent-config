@@ -419,6 +419,19 @@ describe('lint_plan_risk_register — git layers (grandfather + staleness)', () 
         expect(res.violations[0]?.detail).toContain('substantially');
     });
 
+    it('a review stamp later than today is refused, so it cannot cover the edits made until then', () => {
+        initRepo(tmp);
+        const p = path.join(tmp, 'plan.md');
+        const reviewedBody = '<!-- risk-review: v1 | reviewed: 2999-12-31 | reviewer: tester -->\n' + VALID_TABLE;
+        fs.writeFileSync(p, planWith(reviewedBody), 'utf-8');
+        commitAll(tmp, '2026-01-01');
+        fs.writeFileSync(p, planWith(reviewedBody).replace('## Phase 2: Ship the thing', '## Phase 2: Ship something else'), 'utf-8');
+        commitAll(tmp, '2026-02-01');
+        const res = mod.checkFile(p);
+        expect(res.status).toBe('fail');
+        expect(kinds(res.violations)).toContain('future_review');
+    });
+
     it('stale review: COMMITTED substantial change after the reviewed date → violation', () => {
         initRepo(tmp);
         const p = path.join(tmp, 'plan.md');

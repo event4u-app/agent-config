@@ -133,6 +133,9 @@ The first non-blank line after the `## Risk Register` heading MUST be:
   baseline yet, and comparing it against the previous commit reports a register
   written the same minute as stale. The committed case is unchanged — a
   committed substantial change with an older `reviewed:` date still fails.
+  A `reviewed:` date later than today (in the furthest-ahead time zone,
+  UTC+14) fails as `future_review`: it would otherwise cover every change
+  committed until that date.
 - `reviewer:` — free identifier (`claude/host`, `human`, `gpt-4o`, …);
   non-empty.
 
