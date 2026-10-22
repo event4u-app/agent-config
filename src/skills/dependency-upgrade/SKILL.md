@@ -109,7 +109,7 @@ pip list --outdated         # pip
 poetry show --outdated       # poetry
 uv pip list --outdated       # uv
 
-# Upgrade a specific package
+# Upgrade a specific package (same shape for composer require / npm install pkg@latest)
 pip install --upgrade package-name
 poetry update package-name
 uv pip install --upgrade package-name
