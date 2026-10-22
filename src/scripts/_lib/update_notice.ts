@@ -168,6 +168,16 @@ export function oneCuratedLine(head: ReadonlyMap<string, string>): string | null
 }
 
 /**
+ * The candidate as the reader sees it: rebuilt from the parsed numeric core.
+ * The cached string came from the registry, and `parse_version` accepts a
+ * prerelease label of any length, so the label itself is never printed.
+ */
+function shownVersion(candidate: string): string {
+    const v = parse_version(candidate)!;
+    return `${v.major}.${v.minor}.${v.patch}${v.pre.length > 0 ? ' (pre-release)' : ''}`;
+}
+
+/**
  * What to say and what may happen.
  *
  * The post-update branch comes first because it is the one that reports a
@@ -190,7 +200,7 @@ export function updateNotice(input: NoticeInput): NoticeOutcome {
     if (compare_versions(input.candidate, input.installed) !== 1) return NOTHING('nothing newer cached');
 
     const range = impactInRange(sanitiseImpactMap(input.impactMap), input.installed, input.candidate);
-    const lines = [`agent-config ${input.candidate} is available (installed: ${input.installed}).`];
+    const lines = [`agent-config ${shownVersion(input.candidate)} is available (installed: ${input.installed}).`];
     if (range.security) lines.push(`  Security fix in range. ${SECURITY_POLICY_REF}.`);
     if (range.worst === 'notice') lines.push('  A release in range carries a notice — read it before upgrading.');
     if (range.worst === 'action') lines.push('  A release in range needs a hand; it is never installed unattended.');

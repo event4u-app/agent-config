@@ -207,6 +207,16 @@ describe('3.3 / AC-8 — a hostile remote changelog produces no model-visible to
         expect(emitted).toContain('2.0.0');
     });
 
+    it('never prints the registry-chosen prerelease label of a candidate', () => {
+        const root = install('1.0.0');
+        const d = deps({ packageRoot: root, probeStatePath: probeState(tmp, { last_seen_version: `2.0.0-${HOSTILE}` }) });
+        const { lines, run } = captured(d);
+        run();
+        const emitted = lines.join('');
+        expect(emitted).not.toContain(HOSTILE);
+        expect(emitted).toContain('2.0.0 (pre-release) is available');
+    });
+
     it('says nothing at all when the cached version is not a version', () => {
         const root = install('1.0.0');
         const d = deps({ packageRoot: root, probeStatePath: probeState(tmp, { last_seen_version: `9.9.9 ${HOSTILE}` }) });
