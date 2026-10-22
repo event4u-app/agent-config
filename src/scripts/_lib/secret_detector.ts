@@ -153,15 +153,18 @@ export function scanText(text: string, opts: ScanOptions = {}): SecretFinding[] 
 
         // Layer 1 — regex rule pack (HIGH, demoted to LOW for placeholders).
         for (const rule of opts.rules ?? RULES) {
-            rule.pattern.lastIndex = 0;
+            // The loop advances through lastIndex, which a non-global pattern
+            // never moves: a caller-supplied row without `g` would match forever.
+            const pattern = rule.pattern.global ? rule.pattern : new RegExp(rule.pattern.source, `${rule.pattern.flags}g`);
+            pattern.lastIndex = 0;
             let m: RegExpExecArray | null;
-            while ((m = rule.pattern.exec(line)) !== null) {
+            while ((m = pattern.exec(line)) !== null) {
                 // Every field of the row — capture offsets, exclusions, context,
                 // validator — is applied by the table, the same way for both readers.
                 const c = evaluateMatch(rule, line, m);
                 if (c === null) {
-                    if (m.index === rule.pattern.lastIndex) {
-                        rule.pattern.lastIndex += 1;
+                    if (m.index === pattern.lastIndex) {
+                        pattern.lastIndex += 1;
                     }
                     continue;
                 }
@@ -179,8 +182,8 @@ export function scanText(text: string, opts: ScanOptions = {}): SecretFinding[] 
                     confidence,
                 });
                 covered.push([valueStart, valueStart + value.length]);
-                if (m.index === rule.pattern.lastIndex) {
-                    rule.pattern.lastIndex += 1;
+                if (m.index === pattern.lastIndex) {
+                    pattern.lastIndex += 1;
                 }
             }
         }
