@@ -295,7 +295,10 @@ describe("the cut major's own index row reaches the curated head", () => {
         const out: Record<string, string> = {};
         appendIndexBreakingLines(out, real, '17.0.0');
         const head = render_release_head(out).join('\n');
-        for (const broke of ['>=22.6.0', 'lean_projection.mode', 'lean_projection.hosts', 'projection.rule_workspaces', 'fail_closed', '--purge']) {
+        // The four command surfaces renamed or removed since 16.5.0 (finding
+        // 95a9bad15692) have no host-level alias, so they are breaks too.
+        const commands = ['`/agent-design`', '`/analyze:reference`', '`/analyze:and-optimize`', 'learn-low-impact --apply'];
+        for (const broke of ['>=22.6.0', 'lean_projection.mode', 'lean_projection.hosts', 'projection.rule_workspaces', 'fail_closed', '--purge', ...commands]) {
             expect(head).toContain(broke);
         }
         expect(release_head_line_count(render_release_head(out))).toBeLessThanOrEqual(RELEASE_HEAD_CAP_LINES);
