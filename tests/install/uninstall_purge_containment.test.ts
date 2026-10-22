@@ -251,6 +251,9 @@ describe('uninstall --purge — containment', () => {
         const res = purge(fx);
 
         expect(res.stdout).toMatch(/refus|no recorded|inventory/i);
+        // The caller decides the exit code from this flag, never from the
+        // message's wording.
+        expect(JSON.parse(res.stdout.trim().split('\n').at(-1) as string)[2]).toBe(true);
         for (const [f, d] of before) {
             expect(fs.existsSync(f), `${path.basename(f)} was deleted`).toBe(true);
             expect(digest(f)).toBe(d);
