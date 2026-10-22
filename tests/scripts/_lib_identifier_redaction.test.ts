@@ -5,8 +5,8 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { redact as ingestRedact } from '../../cli/python/knowledge_ingest.js';
-import { redact as crossRepoRedact } from '../cross_repo_retrieve.js';
+import { redact as ingestRedact } from '../../src/cli/python/knowledge_ingest.js';
+import { redact as crossRepoRedact } from '../../src/scripts/cross_repo_retrieve.js';
 
 const j = (...p: string[]): string => p.join('');
 const CASES: ReadonlyArray<readonly [string, string, string]> = [
