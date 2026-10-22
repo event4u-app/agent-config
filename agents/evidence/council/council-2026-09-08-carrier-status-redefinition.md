@@ -15,6 +15,12 @@ commit: 0ee772b9dff8807924a50d4ab9df367df1ec68ed
 > ADR-262 cites this file instead. Nothing below is paraphrased; the two seat
 > responses are reproduced in full.
 >
+> **Correction, 2026-10-22 (release finding `8cf5a92226b0`).** "In full" holds
+> for the final round only. The run had three rounds, and only the round-3
+> answers are reproduced; rounds 1 and 2 — the critiques the round-3 answers
+> call "Reviewer A" and "Reviewer B" — are omitted, so a claim of the form
+> "Reviewer A said X" cannot be checked from this file.
+>
 > **What the council was and was not asked.** Whether the human-gate semantics
 > of `status: carrier` are abolished was **settled by the maintainer before the
 > run** and the question file said so explicitly, instructing the seats not to

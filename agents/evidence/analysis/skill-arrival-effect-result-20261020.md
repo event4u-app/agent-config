@@ -100,9 +100,12 @@ authored SKILL.md carries a `context:` key. Both are asserted by
 
 ## Guards
 
-- **G1 — skill-not-found at invocation. 0 treated.** The one `UNAVAILABLE` is
-  S3's finding above, not a not-found on a skill that should have been found;
-  it is reported there rather than counted twice here.
+- **G1 — skill-not-found at invocation. 1 treated, explained.** The one
+  `UNAVAILABLE` is S3's finding above, a not-found on a skill the treated
+  configuration made non-resident on purpose. (Corrected 2026-10-22, release
+  finding `378dbe246014`: this line read "0 treated", which reclassified the
+  event the guard counts after seeing it. The count is the event; the
+  explanation sits beside it.)
 - **G2 — removal under a live lease. 0.** And the zero is weak on its own, so
   the weakness is stated: no entry was ever materialised in these runs, so the
   opportunity count is zero and a zero over zero opportunities proves nothing.

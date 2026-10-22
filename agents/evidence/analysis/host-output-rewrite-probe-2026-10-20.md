@@ -10,6 +10,16 @@ channel: output
 result: delivered
 auth_mode: subscription
 
+> **Correction, 2026-10-22 (release finding `7ae1c435f174`).** `delivered`
+> means the host applies a shape-preserving replacement to a tool result. It
+> does **not** mean the value is protected. The narrative below records five
+> limits a reader of these lines alone would miss: a shape mismatch on a
+> built-in tool falls back to the original output (fail-open); a spilled output
+> holds the original on disk before the hook runs; `@file` inclusion fires no
+> tool hook; a timed-out `UserPromptSubmit` hook is fail-open; and on the input
+> side the restored real value is persisted in the transcript's `hook_success`
+> attachment. See § What this means for the roadmap (own analysis).
+
 - **Host:** Claude Code `2.1.304` (`claude --version`), model for probe sessions `claude-haiku-5-5` (`--model haiku`).
 - **Date:** 2026-10-20.
 - **Roadmap:** `road-to-placeholders-on-the-wire`, steps 0.1 and 0.2.

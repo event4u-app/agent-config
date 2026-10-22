@@ -34,6 +34,12 @@ before resolution.
   41 sites in 21 files, not the 45 below. The figure does not change the
   decision.
 
+  > **Correction, 2026-10-22 (release finding `0313f57807fe`).** "In 2 more"
+  > overstates by one file: the matrix lists sit in `consumer-matrix.yml`
+  > (two, a file already among the 20) and `smoke-public-install.yml` (one).
+  > The total of 21 files is right. Re-derived with
+  > `git grep "node: \[" b30932a787d4 -- .github/workflows`.
+
   *Original reasoning:* Node 20 passed its support window on 2026-04-30,
   `SECURITY.md:21` backports nothing, and the raise is the only consumer-facing
   `action` release in sight — which makes it the honest first test of the ask

@@ -6,6 +6,13 @@
 **Mode:** prompt, 2 rounds, blind chairman · **Cost:** $0.00 (subscription transport)
 **Quorum:** 2/2 present, concluded
 
+> **Correction, 2026-10-22 (release finding `fcb83f8c860f`).** The prompt
+> that produced this verdict was not retained: no `.question.md` sits beside
+> this file, and the local council store it was written to is pruned after
+> its retention window. What was asked can therefore not be checked against
+> this record, and the verdict is weaker gate evidence than a round whose
+> prompt is committed.
+
 Three earlier passes over `road-to-gates-that-run-where-the-consumer-stands`
 step 4.1 left six consumer-facing ledger rows whose evidence ran in this
 repository rather than where the consumer stands, and called the residue

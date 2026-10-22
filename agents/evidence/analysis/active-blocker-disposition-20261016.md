@@ -116,7 +116,9 @@ on: `agents/evidence/council/owner-blocker-routing-20261016.md`.
 
 The sweep's own framing was wrong in one respect, and the correction is the
 most useful thing in this document: **"waiting on the owner" described the
-labels, not the transitions.** The labels were right about four of the eleven.
+labels, not the transitions.** The labels were right about five of the eleven
+— the five the table below escalates. (Corrected 2026-10-22, release finding
+`3a0f5743db3a`: this read "four", which matches no row of the table.)
 
 | Outcome | Count | Blockers |
 |---|---:|---|

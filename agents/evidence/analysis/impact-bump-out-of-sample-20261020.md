@@ -331,6 +331,14 @@ not written on, on both axes, with zero false negatives on BREAKING.
    show is a **disagreement** between the written surface list and the recorded
    impact, in both cases resolved by the surface list toward the stricter
    answer. Whether that is the wanted behaviour is F2's question.
+   (Corrected 2026-10-22, release finding `ee4ca201755b`: since F2 was narrowed
+   on 2026-10-21, only 11.0.0 is a clean pairing — the 10.0.0 detector hit and
+   the 10.0.0 recorded break describe different removals — so "both cases"
+   holds for the stricter answer the surface list produced, not for a
+   disagreement shown twice. The "three of the fourteen" empty pathspecs in the
+   reproduction block stand: `12.1.0..13.0.0` lacks the template but its diff
+   carries `src/server/schemas/settings.ts`, which `SETTINGS_KEY_FILES`
+   matches, so its pathspec is not empty.)
 3. Fourteen majors is the entire population, not a sample. No confidence
    interval is quoted, because none would mean anything at this size.
 4. **This file was wrong once.** It was caught by an independent review and not
