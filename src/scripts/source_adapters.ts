@@ -67,7 +67,13 @@ function walk(rootAbs: string): Record<string, string> {
             const abs = path.join(dir, name);
             const st = fs.lstatSync(abs);
             if (st.isSymbolicLink()) {
-                const target = fs.realpathSync(abs);
+                let target: string;
+                try {
+                    target = fs.realpathSync(abs);
+                } catch {
+                    // Dangling: nothing to read, and links are never followed here anyway.
+                    continue;
+                }
                 if (target !== real && !target.startsWith(`${real}${path.sep}`)) {
                     throw new SourceError(`${abs}: symlink points outside the source`);
                 }
