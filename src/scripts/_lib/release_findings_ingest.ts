@@ -5,8 +5,9 @@
  * A release no longer reads the ledger. Every commit on main is already
  * reviewed and merged, so the cut waits for no review (owner, 2026-10-22);
  * the 17.0.0 cut stopped for a day on a ledger whose self-review never
- * finished. The self-review and `check_finding_dispositions` stay available
- * as advisory tools.
+ * finished. The self-review on a release PR is advisory. No release workflow
+ * waits for `check_finding_dispositions`; the consistency coverage guard still
+ * executes it, so any committed ledger must remain valid.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

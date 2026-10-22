@@ -926,11 +926,11 @@ gates:
       row rather than a weakening of it. The corpus is one release's finding
       count, and zero findings is a legitimate state — 14.17.0 and 14.18.0 both
       legitimately record zero, because their self-review never completed. What
-      this row buys is a scan count for a tool, not a release gate: since
-      2026-10-22 no workflow runs it as a gate and no release waits for a
-      ledger, because everything on main is already reviewed and merged
-      (owner). This guard still invokes it bare, which keeps that invocation
-      green and honest for whoever runs it by hand.
+      this row buys is not a release gate: since 2026-10-22 no release
+      workflow waits for this check and an absent ledger passes, because
+      everything on main is already reviewed and merged (owner). This
+      consistency coverage guard still executes it and requires it to
+      succeed, so any committed ledger must remain valid.
 
   - id: check_review_schema
     argv: []

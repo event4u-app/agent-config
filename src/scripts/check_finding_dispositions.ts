@@ -27,8 +27,9 @@
  * AN ABSENT LEDGER IS NOT A FAILURE (owner, 2026-10-22). A release waits for
  * no review ledger, because every commit on main is already reviewed and
  * merged; the 17.0.0 cut stopped for a day on a ledger whose self-review never
- * finished. An absent file reads as an empty ledger, shipped or not, and no
- * workflow runs this gate any more — it is an advisory tool.
+ * finished. No release workflow waits for this check, and an absent ledger
+ * passes, shipped or not. The consistency coverage guard still executes it,
+ * so any committed ledger must remain valid.
  *
  * AN EMPTY LEDGER MUST SAY WHY IT IS EMPTY. A ledger that exists is a record,
  * and `findings: []` used to pass while asserting nothing. A writer could satisfy

@@ -163,8 +163,10 @@ doing it, so a crash localises to a step.
    `main` is already reviewed and merged, so the cut does not stop for a
    self-review (owner, 2026-10-22 — the 17.0.0 cut stopped for a day on a
    ledger whose review never finished). The step stays numbered so the step
-   anchors do not move. The self-review on the release PR is advisory, and
-   `check_finding_dispositions` remains a tool to run by hand.
+   anchors do not move. The self-review on the release PR is advisory. No
+   release workflow waits for `check_finding_dispositions`, and an absent
+   ledger passes; the consistency coverage guard still executes it, so any
+   committed ledger must remain valid.
 8. **Merge** — `gh pr merge --merge --delete-branch`.
 9. **Tag main** — fast-forward `main`, tag the merge commit, push the tag.
 10. **GitHub Release** — `gh release create X.Y.Z --notes <changelog>`. Under
