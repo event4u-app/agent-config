@@ -12,7 +12,7 @@
  *     --tier-chosen lite --model-requested haiku --tier-source inferred --task-class read-only-fanout \
  *     [--model-served claude-haiku-5-5] [--session-tier high] \
  *     [--rules-applied a,b] [--tiers sonnet,opus] [--agent-combo implementer,judge] [--wall-clock-ms 18500] [--dispatch-outcome DONE] \
- *     [--first-pass-success true|false] [--escalated true|false] \
+ *     [--first-pass-success true|false] [--escalated true|false] [--escalated-from lite|medium] \
  *     [--init-tokens 1200] [--payload-hash <hex8-64>] [--lookup-class definition|references|string-existence|report-run] \
  *     [--route-taken primitive|subagent|ask] [--budget-hit true|false] [--correctness-match true|false] \
  *     [--cache-hit true|false] [--origin lean-init-2026] \
@@ -161,6 +161,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         verify_mode: str(flags, 'verify-mode') as VerifyMode | undefined,
         first_pass_success: bool(flags, 'first-pass-success'),
         escalated: bool(flags, 'escalated'),
+        escalated_from: str(flags, 'escalated-from') as TierChosen | undefined,
         init_tokens: int(flags, 'init-tokens'),
         payload_hash: str(flags, 'payload-hash'),
         lookup_class: str(flags, 'lookup-class') as LookupClass | undefined,

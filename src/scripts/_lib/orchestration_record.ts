@@ -168,6 +168,8 @@ export interface RecordInput {
     first_pass_success?: boolean | undefined;
     /** QUALITY: slice retried on a higher tier after a verification failure. Optional boolean (null = not measured). */
     escalated?: boolean | undefined;
+    /** The tier of the failed attempt when this dispatch re-ran a slice one tier up. */
+    escalated_from?: TierChosen | null | undefined;
     /** U5 (reliability-measurement): the subagent-type combination this dispatch
      *  ran (ordered agent-type ids, e.g. ['implementer','implementer','judge']) —
      *  with `outcome`, lets the orchestrator prefer combos that worked. Ids only. */
@@ -493,6 +495,9 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     if (input.first_pass_success !== undefined && typeof input.first_pass_success !== 'boolean') {
         errors.push('first_pass_success must be a boolean (true = return adopted without parent rework) or omitted');
     }
+    if (input.escalated_from != null && !TIERS_CHOSEN.includes(input.escalated_from)) {
+        errors.push(`escalated_from must be one of ${TIERS_CHOSEN.join(' | ')} (or omitted)`);
+    }
     if (input.escalated !== undefined && typeof input.escalated !== 'boolean') {
         errors.push('escalated must be a boolean (true = retried on a higher tier after verification failure) or omitted');
     }
@@ -601,6 +606,7 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         model_divergent: modelDivergent(input.model_requested, input.model_served),
         first_pass_success: input.first_pass_success ?? null,
         escalated: input.escalated ?? null,
+        escalated_from: input.escalated_from ?? null,
         agent_combo: input.agent_combo ?? [],
         // lean-init additive fields — readers ignore unknowns per audit-log-v1
         init_tokens: input.init_tokens ?? null,

@@ -11,6 +11,9 @@
  * automatic stop is the per-target N=3 budget.
  */
 
+import { TIER_TO_CLAUDE_MODEL } from './model_tier.js';
+import type { DispatchOutcome, RecordInput } from './orchestration_record.js';
+
 /** Max consecutive failed attempts on one validation target before halting. */
 export const MAX_ATTEMPTS_PER_TARGET = 3;
 
@@ -388,6 +391,54 @@ export function escalateOnVerifyFail(inp: VerifyFailInputs): VerifyFailDecision 
         next_tier: above,
         reason: `verify-fail on ${inp.failed_tier} → re-dispatch one tier up (${above}); consumes the N=3 budget`,
     };
+}
+
+export interface LiteEscalationInput {
+    /** How the lite leg ended: it returns to the head with a named outcome, never a retry inside the leg. */
+    outcome: Exclude<DispatchOutcome, 'DONE'>;
+    /** Consecutive failed attempts on this slice including the lite one. */
+    consecutive_failures: number;
+    ts: string;
+    ids: readonly [string, string];
+}
+
+/**
+ * The records a lite leg that could not finish leaves behind: one `lite`
+ * record with its outcome and, when the cascade allows a climb, one record of
+ * the head's re-dispatch one tier up. The climb is the head's, so the lite
+ * record never carries `escalated`.
+ */
+export function liteEscalationRecords(inp: LiteEscalationInput): RecordInput[] {
+    const lite: RecordInput = {
+        spawn_count: 1,
+        token_delta: 0,
+        token_delta_provenance: 'estimated',
+        verify_mode: 'none',
+        tier_chosen: 'lite',
+        tier_source: 'inferred',
+        model_requested: TIER_TO_CLAUDE_MODEL['lite'],
+        dispatch_outcome: inp.outcome,
+        ts: inp.ts,
+        id: inp.ids[0],
+    };
+    const next = escalateOnVerifyFail({ failed_tier: 'lite', tier_source: 'inferred', consecutive_failures: inp.consecutive_failures });
+    if (next.action !== 'escalate' || next.next_tier === null) return [lite];
+    return [
+        lite,
+        {
+            spawn_count: 1,
+            token_delta: 0,
+            token_delta_provenance: 'estimated',
+            verify_mode: 'none',
+            tier_chosen: next.next_tier,
+            tier_source: 'inferred',
+            model_requested: TIER_TO_CLAUDE_MODEL[next.next_tier],
+            escalated: true,
+            escalated_from: 'lite',
+            ts: inp.ts,
+            id: inp.ids[1],
+        },
+    ];
 }
 
 /**
