@@ -137,7 +137,9 @@ export function classifyUpdate(input: ClassifyUpdateInput): UpdateVerdict {
         waits.push('wait: candidate is deprecated');
     }
     const gateHours = input.settings.minReleaseAgeHours ?? 0;
-    if (gateHours > 0) {
+    // `NaN > 0` is false, so an unreadable gate would otherwise read as no gate.
+    if (!Number.isFinite(gateHours)) uncertain.push('release-age gate is not a number');
+    else if (gateHours > 0) {
         const published = input.publishedAt === null ? NaN : Date.parse(input.publishedAt);
         const now = Date.parse(input.env.now);
         if (Number.isNaN(published) || Number.isNaN(now)) uncertain.push('publish time unknown under a release-age gate');

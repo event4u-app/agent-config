@@ -188,6 +188,7 @@ const MATRIX: readonly Case[] = [
     { name: 'publishedAt unparseable', patch: { publishedAt: 'yesterday' }, expected: 'notify', uncertain: true },
     { name: 'mode not set', patch: { settings: { mode: undefined } }, expected: 'notify', uncertain: true },
     { name: 'mode ask caps auto', patch: { settings: { mode: 'ask' } }, expected: 'notify', uncertain: false },
+    { name: 'release-age gate unreadable', patch: { settings: { minReleaseAgeHours: Number.NaN } }, expected: 'notify', uncertain: true },
 
     { name: 'inside the release-age gate → wait', patch: { publishedAt: '2026-10-15T12:00:00Z' }, expected: 'none', uncertain: false },
     { name: 'deprecated candidate → wait', patch: { deprecated: 'broken, use 16.6.1' }, expected: 'none', uncertain: false },
