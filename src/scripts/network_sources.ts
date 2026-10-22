@@ -195,32 +195,30 @@ function pinnedGet(pinned: PinnedUrl, maxBytes: number, timeoutMs: number): Prom
     };
     const where = pinned.url.host;
     return new Promise((resolve, reject) => {
-        const mod = pinned.url.protocol === 'https:' ? https : http;
-        const req = mod.get(
-            pinned.url,
-            { lookup: pin, headers: { accept: 'text/*, application/json' }, signal: AbortSignal.timeout(timeoutMs) },
-            (res) => {
-                const status = res.statusCode ?? 0;
-                if (status >= 300 && status < 400) {
-                    res.resume();
-                    resolve({ status, location: res.headers.location ?? null, body: Buffer.alloc(0) });
+        const onResponse = (res: http.IncomingMessage): void => {
+            const status = res.statusCode ?? 0;
+            if (status >= 300 && status < 400) {
+                res.resume();
+                resolve({ status, location: res.headers.location ?? null, body: Buffer.alloc(0) });
+                return;
+            }
+            const chunks: Buffer[] = [];
+            let total = 0;
+            res.on('data', (chunk: Buffer) => {
+                total += chunk.byteLength;
+                if (total > maxBytes) {
+                    req.destroy();
+                    reject(new SourceError(`${where}: body exceeds ${maxBytes} bytes`));
                     return;
                 }
-                const chunks: Buffer[] = [];
-                let total = 0;
-                res.on('data', (chunk: Buffer) => {
-                    total += chunk.byteLength;
-                    if (total > maxBytes) {
-                        req.destroy();
-                        reject(new SourceError(`${where}: body exceeds ${maxBytes} bytes`));
-                        return;
-                    }
-                    chunks.push(chunk);
-                });
-                res.on('end', () => resolve({ status, location: null, body: Buffer.concat(chunks) }));
-                res.on('error', reject);
-            },
-        );
+                chunks.push(chunk);
+            });
+            res.on('end', () => resolve({ status, location: null, body: Buffer.concat(chunks) }));
+            res.on('error', reject);
+        };
+        const options = { lookup: pin, headers: { accept: 'text/*, application/json' }, signal: AbortSignal.timeout(timeoutMs) };
+        // Both calls spelled out, so the read-surface scan still sees this module's network read.
+        const req = pinned.url.protocol === 'https:' ? https.get(pinned.url, options, onResponse) : http.get(pinned.url, options, onResponse);
         req.on('error', reject);
     });
 }

@@ -86,7 +86,7 @@ reason `unclassified` exists and the reason this paragraph does.
 | `classify_merge_risk.ts` | `remote-subprocess` | `stdout-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `memory_lookup.ts` | `ingested-corpus` | `stdout-write` | **covered** | imports the sanitize floor |
 | `merge_clearance.ts` | `remote-subprocess` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
-| `network_sources.ts` | `network-fetch` | `file-write` | **covered** | imports the sanitize floor |
+| `network_sources.ts` | `node-http-request` | `file-write` | **covered** | imports the sanitize floor |
 | `plan_test_shards.ts` | `remote-subprocess` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `probe_depth_shadow.ts` | `remote-subprocess` | `stdout-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `rdp_gate_classify.ts` | `network-fetch` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
