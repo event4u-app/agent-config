@@ -20,6 +20,12 @@
  *       comment reports must exist in the ledger — an un-ingested blocking
  *       finding is red. Deleting the comment can evade the trigger, but the
  *       committed ledger stays the durable record either way.
+ *   --at-cut                                  this run IS the cut of --release:
+ *       an `assurance: unreviewed` ledger whose release status cannot be
+ *       determined (tagless / shallow checkout) refuses instead of passing,
+ *       because the version being cut is unreleased by definition. The local
+ *       cut (`release.ts` via `release_findings_ingest`) and the release-PR
+ *       workflow pass it.
  *   --ingest <findings.json> --release X.Y.Z  merge findings (from
  *       self_review_gate --findings-out) into the ledger with an empty
  *       disposition, so validation is red until a human fills it.
@@ -521,7 +527,9 @@ export const OWNER_DIRECTIVES_DIR = 'agents/evidence/owner-directives';
  * `undeterminable` status passes for the same reason read from the other side:
  * a checkout that cannot say whether a version shipped cannot say the ledger is
  * a backfill either, and refusing there would turn a tagless clone into a
- * blocked release. The cut itself runs where tags are complete.
+ * blocked release — EXCEPT at the cut (`--at-cut`), where the version is the one
+ * being released and an undeterminable status is refused like `unreleased`, so
+ * the refusal no longer rests on the assumption that the cut has complete tags.
  *
  * THE OVERRIDE IS A PATH, NOT A SENTENCE. It names a committed file under
  * {@link OWNER_DIRECTIVES_DIR} whose text names the version — so the escape
@@ -534,6 +542,7 @@ export function unreviewed_ledger_problem(
     release: string,
     status: ReleaseStatus,
     readDirective: (relPath: string) => string | null,
+    options: { atCut?: boolean } = {},
 ): string | null {
     if (ledger.findings.length > 0) {
         return null;
@@ -575,7 +584,11 @@ export function unreviewed_ledger_problem(
         }
         return null;
     }
-    if (status !== 'unreleased') {
+    // At the cut the version is, by definition, the one being released: an
+    // `undeterminable` status there is a tagless or shallow checkout, not a
+    // backfill, so it refuses like `unreleased` instead of passing open.
+    const effective = options.atCut === true && status === 'undeterminable' ? 'unreleased' : status;
+    if (effective !== 'unreleased') {
         return null;
     }
     return (
@@ -798,12 +811,14 @@ function main(argv: readonly string[]): number {
     let dir = path.join(REPO_ROOT, LEDGER_DIR);
     let pr: string | null = null;
     let ingest: string | null = null;
+    let atCut = false;
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
         if (a === '--release') release = argv[++i] ?? null;
         else if (a === '--dir') dir = argv[++i] ?? dir;
         else if (a === '--pr') pr = argv[++i] ?? null;
         else if (a === '--ingest') ingest = argv[++i] ?? null;
+        else if (a === '--at-cut') atCut = true;
         else {
             process.stderr.write(`unknown argument: ${a}\n`);
             return 2;
@@ -942,6 +957,7 @@ function main(argv: readonly string[]): number {
             release,
             needsStatus ? resolve_release_status(release) : 'undeterminable',
             (rel) => readCommittedFile(rel),
+            { atCut },
         );
         if (unreviewedProblem !== null) {
             process.stderr.write(

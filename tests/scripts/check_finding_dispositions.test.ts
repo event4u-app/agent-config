@@ -786,6 +786,20 @@ describe('an unreviewed ledger at the cut', () => {
         ).toBeNull();
     });
 
+    it('at the cut, an undeterminable status refuses — the version being cut is unreleased', () => {
+        // The node-tests checkout is depth 1 with no tags; the release-PR job is
+        // too. Without --at-cut the refusal above was inert exactly there
+        // (finding 4d820b58e890).
+        const msg = unreviewed_ledger_problem(SIXTEEN_FOUR_ZERO, '99.99.0', 'undeterminable', noDirective, {
+            atCut: true,
+        });
+        expect(msg).toContain('assurance: unreviewed');
+        // A shipped version stays a backfill even at a re-run of its cut.
+        expect(
+            unreviewed_ledger_problem(SIXTEEN_FOUR_ZERO, '16.4.0', 'released', noDirective, { atCut: true }),
+        ).toBeNull();
+    });
+
     /** Three ways an override fails, so the escape hatch is not a free pass. */
     it('an override outside the directives directory is refused', () => {
         expect(

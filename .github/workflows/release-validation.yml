@@ -400,7 +400,7 @@ jobs:
           set -euo pipefail
           version="${HEAD_REF#release/}"
           ./scripts-run src/scripts/check_finding_dispositions \
-            --release "$version" --pr "${{ github.event.pull_request.number }}"
+            --release "$version" --at-cut --pr "${{ github.event.pull_request.number }}"
 
   audit-gate:
     if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}
