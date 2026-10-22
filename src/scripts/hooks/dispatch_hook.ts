@@ -56,7 +56,7 @@ import { emitFor, type PermissionDecision, type Severity } from "./host_semantic
 import { _concern_permission_verdict, _payload_tool_name, _permission_for } from "./permission_gate.js";
 export { _concern_permission_verdict, _payload_tool_input, _payload_tool_name, _permission_for, _working_tree_root } from "./permission_gate.js";
 import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
-import { egressInjection, egressViewFor, runEgressStage } from "./egress_stage.js";
+import { attributeRefusal, egressInjection, egressViewFor, runEgressStage } from "./egress_stage.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js';
 export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
@@ -1366,7 +1366,7 @@ export function main(argv?: string[]): number {
         : "";
     const message = [stated, extra].filter(Boolean).join("\n\n");
     if (message) {
-      concern_messages.push({ rc, text: injected(message), def: concern });
+      concern_messages.push({ rc, text: attributeRefusal(String(concern["name"]), rc === EXIT_BLOCK, injected(message)), def: concern });
     }
     if (
       args.event === "session_start" &&
