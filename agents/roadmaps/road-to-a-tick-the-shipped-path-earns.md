@@ -76,33 +76,34 @@ the bench harnesses and `pricing.yaml`.
 
 ## Phase 1 — Before #2585 merges: put the tree back on the true side
 
-- [x] **1.1 The three #2585 blockers carry the owner's decision, not the council's (D1).** Overtaken
+- [x] **1.1 The three #2585 blockers carry the owner's decision, not the council's (D1).** Overtaken <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   in substance: the owner answered all three on 2026-10-23 (O1–O3) and A7, A9, A10, D11 are owner
   rows in #2588. Left: the two free-hands blocker `Status:` lines still say "council 2/2 chose …
   applied as the default under the run's delegation"; they are rewritten to name the owner
   decision and its date. Built code stays dormant (no route configured, no default).
   verify: `grep -n "Status:" agents/roadmaps/road-to-free-hands-a-paid-head-checks.md` names the owner and 2026-10-23 on both, and no row of A7, A9, A10, D11 carries a `council:` resolver.
       Done 2026-10-23: both free-hands blocker `Status:` lines name the owner decisions O2/O3 of 2026-10-23; A7, A9, A10, D11 were already owner rows in #2588.
-- [x] **1.2 Revert the 2.5 ship-on edit (D2a).** `omit_project_instructions` off on `ac-worker`
+- [x] **1.2 Revert the 2.5 ship-on edit (D2a).** `omit_project_instructions` off on `ac-worker` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   and `ac-researcher` until 2.3 lands; cold-start 2.5 back to open with the reason.
   verify: the projected definitions carry no `omitClaudeMd`; `package-workers-skip-project-instructions` is renamed to its negation or skipped with the blocker reason.
       Done 2026-10-23: `omit_project_instructions` removed from `ac-worker` and `ac-researcher` (and the `docs/wedge` copies); the test is now `package-workers-load-project-instructions-until-a-carrier-exists`, seen red against the old definitions; cold-start 2.5 reopened with the reason.
-- [x] **1.3 Revert the definition-level tier flip (D4).** `ac-researcher` back to
+- [x] **1.3 Revert the definition-level tier flip (D4).** `ac-researcher` back to <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   `model_tier: inherit`; `lite` stays a per-call argument for the fan-out kind (tier A3).
   Tier 2.3 and both tier claims back to `unbacked` pending 4.2.
   verify: `ac-researcher-tier-follows-the-claim` passes with `inherit` and both claims unbacked.
       Done 2026-10-23 for the definition: `ac-researcher` is `model_tier: inherit`; `ac-researcher-tier-follows-the-claim` is replaced by `ac-researcher-with-web-tools-is-never-lite`, seen red against the `lite` definition, because the claims back exact lookups and the definition keeps web synthesis. The two tier claims are re-decided by 4.2, either way.
-- [ ] **1.4 Reopen one-detector 2.5** as "built, not wired" and correct the `raise_log` text that
+- [x] **1.4 Reopen one-detector 2.5** as "built, not wired" and correct the `raise_log` text that
   cites it (`src/config/hook-bundle-budget.json`).
   verify: the step is `[ ]` with that note; the raise_log entry names only code in the chunk.
+      Done 2026-10-23: one-detector 2.5 reopened as built, not wired; the `raise_log` entry no longer counts the normalisation as chunk content (`check_kernel_edit_ratified` stays green).
 
 ## Phase 2 — The owner lock reaches the roadmap (D1)
 
-- [x] **2.1 Red first.** A fixture roadmap with `| X | product-owned | council:… |` and a
+- [x] **2.1 Red first.** A fixture roadmap with `| X | product-owned | council:… |` and a <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   class-3 blocker `Status: resolved` with no owner line; both lints pass it today.
   verify: both self-test cases are red at the base commit.
       Done 2026-10-23: `tests/scripts/roadmap_owner_lock.test.ts`, 4 of 8 cases red before either lint changed.
-- [x] **2.2 `lint_decision_classes` imports `OWNER_LOCKED_CLASSES`** and refuses a locked class
+- [x] **2.2 `lint_decision_classes` imports `OWNER_LOCKED_CLASSES`** and refuses a locked class <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   whose resolver is not `owner`. A council answer on a locked class is legal only as text in the
   row ("proposed — council recommends …") with resolver `owner` and the row's decision cell
   starting `proposed`; the lint and `closure_scan` count such a row as open.
@@ -111,7 +112,7 @@ the bench harnesses and `pricing.yaml`.
   any row not in it.
   verify: 2.1's decision case red → green; the estate passes with exactly those four baselined.
       Done 2026-10-23: `lint_decision_classes` imports `OWNER_LOCKED_CLASSES`; the four pre-#2585 rows are `LOCKED_RESOLVER_BASELINE`, confirmed to be the only estate hits with the baseline cleared; the template states the rule. `closure_scan` does not yet count a `proposed` row as open.
-- [x] **2.3 `lint_roadmap_blockers` refuses `resolved` on a class-3 blocker** unless the file's
+- [x] **2.3 `lint_roadmap_blockers` refuses `resolved` on a class-3 blocker** unless the file's <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   `## Decisions` table has a row naming the blocker id with resolver `owner` and a date.
   verify: 2.1's blocker case red → green.
       Done 2026-10-23: a resolved class-3 blocker with no dated `owner` row naming it reds the new `lint_roadmap_blockers:owner-close` ratchet; 20 historic entries baselined (K1), headroom zero.
@@ -128,13 +129,13 @@ the bench harnesses and `pricing.yaml`.
 
 ## Phase 3 — A tick reaches production (D2)
 
-- [x] **3.1 Declare the production entries** once: the hook dispatcher, the CLI registry
+- [x] **3.1 Declare the production entries** once: the hook dispatcher, the CLI registry <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   commands, shipped command scripts, and the projected subagent definitions. Reuse
   `dispatchImportClosure`'s resolver for the import walk.
   verify: the entry list is a committed file; its closure is printed by a `report_` script and
   is stable across two runs.
       Done 2026-10-23: `src/config/production-entries.json` (fixed entries plus every script an entry source names); `report_production_reach` printed digest `43c1e7324c5e6705` twice over one tree.
-- [x] **3.2 `check_step_production_reach`** reads only the PR's own new ticks (the
+- [x] **3.2 `check_step_production_reach`** reads only the PR's own new ticks (the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   `check_step_receipts` diff walk). For each tick whose verify names a test file, it collects
   the `src/` modules that test imports; a tick passes when at least one of them is in the
   closure, or when the step text carries `production entry: <path>` that is. A step may instead
@@ -149,61 +150,65 @@ the bench harnesses and `pricing.yaml`.
 
 ## Phase 4 — Evidence bound to the bytes it pins (D3)
 
-- [ ] **4.1 Bench harness rule.** A bench refuses to run on a dirty tree (`git status
+- [x] **4.1 Bench harness rule.** A bench refuses to run on a dirty tree (`git status
   --porcelain` non-empty) unless pointed at a `git archive` of a named commit; every result
   row carries that commit; corpus answers are computed from the same archive; `verified` reads
   the measured leg's final message from its transcript, never the dispatching session's reply.
   verify: a seeded dirty tree refuses; a fixture result whose corpus answer disagrees with its
   pinned archive fails the bench self-test.
-- [ ] **4.2 Rerun the tier pair** under 4.1, with the haiku row re-sourced for the served model
+      Done 2026-10-23 (`9972c5575f`): `internal/bench/pinned_tree.ts`; the self-test finds `461` wrong at `f4e20ba12f` and `5653d32f32` (460 files) and one more wrong answer at `5653d32f32`.
+- [x] **4.2 Rerun the tier pair** under 4.1, with the haiku row re-sourced for the served model
   and dated, and the quality bound from an exact (Clopper–Pearson) or Wilson interval on the
   discordant pairs; hold only below the bar. Both tier claims are re-decided by this run, either
   way. The interval lives in `src/scripts/_lib/tier_downshift_verdict.ts`, whose 0-error branch
   (rule of three) is stricter than its 1-error branch (Wald) — the inversion the annex names F7.
   verify: the new report's pin, corpus and result rows agree; the claims cite it; a fixture with 1
   discordant failure is never held where 0 is refused.
-- [ ] **4.3 Price rows carry a freshness bound.** A row older than 120 days, or whose tier
+      Done 2026-10-23: exact one-sided 95 % Clopper–Pearson bound (`f7383bd7b1`, decision A7); rerun pinned at `fe4fa4bcd7`, 120 legs on subscription: lite 59/60, inherit 60/60, upper bound 7.66 pp → both tier claims `underpowered` (`agents/evidence/analysis/tier-downshift-paired-run-2026-10-23.md`).
+- [x] **4.3 Price rows carry a freshness bound.** A row older than 120 days, or whose tier
   maps to a served model of a newer generation than its source, refuses to price.
   verify: a fixture row dated 2026-05-14 against `claude-haiku-5-5` refuses.
-- [ ] **4.4 Store-rule precision (D3, one-detector).** PREREG (b) gains a reading over
+      Done 2026-10-23 (`fe4fa4bcd7`): `src/scripts/_lib/price_freshness.ts`; the 2026-05-14 row against `claude-haiku-5-5` refuses (162 days); haiku and sonnet 5.5 rows re-sourced 2026-10-23.
+- [x] **4.4 Store-rule precision (D3, one-detector).** PREREG (b) gains a reading over
   `STORAGE_IDENTIFIER_RULES` on the tree corpus; phone and card lookaheads become
   `(?![0-9A-Za-z])`, NANP keeps a context word or validator in stores, a leading `+` on a diff
   line needs a grouped shape.
   verify: the store reading is below 1 %; `2147483647`, `+192.168.100.200` and a digit-led hex
   SHA stay untouched in fixtures.
+      Done 2026-10-23: store reading 82 of 14,873 files = 0.55 % (naive rules 1.92 %), 0 e-mail or IBAN hits on negatives (`internal/bench/reports/egress-placeholders-store-precision-2026-10-23.md`); recall cost named there.
 
 ## Phase 5 — Repairs, red first (D5)
 
-- [x] **5.1 Hand payload:** one named declaration per callee via the code-graph extractor, or
+- [x] **5.1 Hand payload:** one named declaration per callee via the code-graph extractor, or <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   refuse unless exactly one top-level declaration remains; assert after extraction that no
   block body survives. Fixtures: two functions, `export default`, trailing comment, Python with
   imports, PHP namespace.
   verify: each fixture is red at the base commit and sends signatures only after.
       Done 2026-10-23 (`57c3ba1445`): `signatureOf` drops comments, imports and PHP/Python preambles, then refuses unless one declaration remains and no block body survives; 7 fixture cases red at base (`hand_payload.test.ts`).
-- [x] **5.2 Ceiling on members:** `FreeRouteClient` and built seats carry `content_ceiling`
+- [x] **5.2 Ceiling on members:** `FreeRouteClient` and built seats carry `content_ceiling` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   from `routeCeiling` or seat config; an unknown `base_url` member defaults to
   `public-artifact`; a probed self-hosted route reaches `ask_transport`.
   verify: an injected base_url member without a ceiling refuses a `project-content` payload.
       Done 2026-10-23 (`4ff3a8d307`): `FreeRouteClient` and built seats carry `content_ceiling`; a `base_url` member without one defaults to `public-artifact`; paid `base_url` seats stay out of route liveness. 4 of 4 red at base.
-- [x] **5.3 Shadow takes a `HandSlice`,** builds the payload, records exposure, requires a
+- [x] **5.3 Shadow takes a `HandSlice`,** builds the payload, records exposure, requires a <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   non-route paid side.
   verify: a shadow fixture's outbound body equals `buildHandPayload`'s output.
       Done 2026-10-23 (`788b0029e3`): `shadowAsk(slice)` builds one `buildHandPayload` payload for both sides, records exposure only on a real route call, refuses a route on the paid side.
-- [x] **5.4 Any `route !== null` member is ineligible** for chair, synthesis and verdict.
+- [x] **5.4 Any `route !== null` member is ineligible** for chair, synthesis and verdict. <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   verify: a base_url member without `billing_proof` is refused as chair with a named reason.
       Done 2026-10-23 (`89af384370`): `seatRoleRefusal` refuses chair, synthesis and verdict to any route member (`route_head_role`), whatever billing it reports.
-- [x] **5.5 `resumeNext` is cleared in a `finally`** around the stance-repair round, and the real
+- [x] **5.5 `resumeNext` is cleared in a `finally`** around the stance-repair round, and the real <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   `blind` flag reaches `ask`.
   verify: a quota-gated stance repair followed by a blind chairman call carries no resume flag.
       Done 2026-10-23 (`dd2860f4d1`): the stance-repair round clears `resumeNext` in a `finally`; `CliClient.blind` replaces both hard-coded `blind: false`.
-- [x] **5.6 A host marker sets its own `source` and refreshes `parked_at`.**
+- [x] **5.6 A host marker sets its own `source` and refreshes `parked_at`.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   verify: a council marker followed by a host `StopFailure` reads `would_wait`.
       Done 2026-10-23 (`d4b84753c0`): a host park writes `source: host` and a fresh `parked_at`; net −2 B in the hook bundle.
 - [ ] **5.7 `StopFailure` binding gated** on the oldest host version recorded as accepting it;
   record that version or gate in the generator.
   verify: the generator emits no `StopFailure` key for a host row below the recorded version.
   Open 2026-10-23: the binding is the `StopFailure: agent_error` alias in `src/scripts/hook_manifest.yaml`, a ratification-gated file, and the one recorded observation is 2.1.308; the gate needs that manifest edit and its ratification.
-- [x] **5.8 Corrections:** cold-start 4.3 says `server_error` observed, `rate_limit` unobserved;
+- [x] **5.8 Corrections:** cold-start 4.3 says `server_error` observed, `rate_limit` unobserved; <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   AC-4 says `name_key`; the egress setting description names identifier rows; each
   ratification record commits its seats' answers or a verdict digest beside the prompt.
   verify: the four texts read as stated.
@@ -211,10 +216,11 @@ the bench harnesses and `pricing.yaml`.
 
 ## Phase 6 — Re-read #2585 and publish the count
 
-- [ ] **6.1 Replay every tick of #2585** through 2.2, 2.3, 3.2 and 4.1; reopen what fails; publish
+- [x] **6.1 Replay every tick of #2585** through 2.2, 2.3, 3.2 and 4.1; reopen what fails; publish
   `ticked / reopened / reason` in `agents/evidence/analysis/`.
   verify: the analysis lists every ticked step id of #2585 with a verdict.
-- [x] **6.2 Fingerprint the `main` residue** (second reviewer P0.3): each gate red on clean
+      Done 2026-10-23: `agents/evidence/analysis/tick-replay-2585-2026-10-23.md`, 60 ticks; 2 reopened, tier 2.2/2.3 re-decided as underpowered by 4.2, 13 reach findings classified.
+- [x] **6.2 Fingerprint the `main` residue** (second reviewer P0.3): each gate red on clean <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   `origin/main` is recorded with job, SHA, toolchain and failure class, so a new red cannot hide
   under an old one.
   verify: the fingerprint file names every residue gate listed in #2588 with a SHA.
@@ -243,6 +249,7 @@ the bench harnesses and `pricing.yaml`.
 | A4 | reversible-technical | agent | Reverting the two flips (1.2, 1.3) rather than patching forward | each flip shipped behaviour to every consumer on a claim or carrier that does not hold; a revert is one line each and loses nothing measured | — |
 | A5 | reversible-technical | agent | A1 is applied as: every phase lands in #2588, the PR that already carries O1–O6 | #2585 merged before this file existed; #2588 is its open follow-up and the owner asked for this roadmap in it | the owner splits #2588 |
 | A6 | reversible-technical | agent | Pre-#2585 locked-class rows with a council resolver are baselined, not rewritten | K1: rewriting four other roadmaps' decisions is a backlog re-audit; a baseline keeps them visible and refuses a fifth | the owner rules on blocker `delegated-owner-defaults` |
+| A7 | reversible-technical | agent | The tier quality bound is an exact one-sided 95 % Clopper–Pearson interval | the pre-registered rule of three used the same level; one-sided 97.5 % makes a 60-pair run unable ever to hold (5.96 % with zero failures) | a later PREREG fixes another level before its run |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-23 | reviewer: claude/host -->

@@ -336,7 +336,7 @@ waits:
       generation chain the recycling roadmap wanted, reached at task boundaries.
       verify: `npx vitest run tests/scripts/_lib_worker_reuse.test.ts -t retired-worker-briefs-successor-from-capsule --reporter=verbose` -> /✓.*retired-worker-briefs-successor-from-capsule/
       Done 2026-10-16: `briefSuccessor`. (b) also retires, per 4.4 and risk 2; (a) and (g) spawn plain fresh; a missing or invalid capsule falls back to stop-loss.
-- [x] **3.5 File the shadow window** — at least 100 `Agent` calls or two
+- [x] **3.5 File the shadow window** — at least 100 `Agent` calls or two <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
       weeks, the would-resume distribution and the refusal reasons. A window in
       which every reuse was refused is a valid null.
       verify: `ls agents/evidence/analysis/` -> /worker-reuse-shadow-window/
@@ -433,7 +433,7 @@ waits:
       of the same class, margin from decision D6.
       verify: `grep -c 'warm-worker-cold-start-relief' docs/CLAIMS.md` -> /^[1-9][0-9]*$/
       Done 2026-10-16: four `unbacked` pre-registrations, D6 margin set at -5 pp, `build_proof` run in the same change.
-- [x] **6.2 Dated verdicts.** Each claim carries a verdict, positive or null; a
+- [x] **6.2 Dated verdicts.** Each claim carries a verdict, positive or null; a <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
       sample that never fills is a publishable outcome. A cheaper resume that
       fails non-inferiority keeps the reuse half in shadow.
       verify: `grep -c 'resume-non-inferiority' docs/CLAIMS.md` -> /^[1-9][0-9]*$/
@@ -547,7 +547,7 @@ waits:
       observation protocol, and a host without `worker_resume: true` changes no
       behaviour.
       Done 2026-10-22: every capability row is dated in `host-continuation-observations-2026-10.md`; `host-without-resume-records-fresh-before-reading-any-worker` (`tests/scripts/_lib_worker_reuse.test.ts`).
-- [x] **AC-2** The owner's governing constraint holds: the plan reduces requests
+- [x] **AC-2** The owner's governing constraint holds: the plan reduces requests <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
       and concurrent cold starts in a short window, not only tokens —
       `rate-limit-stops-per-drain` and `fresh-spawns-per-drain` carry dated
       verdicts beside the token claim.
@@ -567,7 +567,7 @@ waits:
       count, the host's spawn cap and whether resumes are inside it — no claim
       the host caps resumes without a row.
       Done 2026-10-22: `subagent-configuration.md` and the `max_parallel` description say the host cap bounds new spawns only (4.2); the shadow line separates `dispatch_kind: spawn | resume`.
-- [x] **AC-8** The guard's shadow window is filed before any flip, and every
+- [x] **AC-8** The guard's shadow window is filed before any flip, and every <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
       claim in 6.1 carries a dated verdict, positive or null.
       Built, waits on its window 2026-10-22: `worker_reuse_shadow_report.ts` files the window and `flipReadiness` refuses a flip before it; the 6.1 claims are unbacked until the window fills.
       Done 2026-10-23: the window is filed (3.5) and the guard was not flipped (3.6); every 6.1 claim carries a dated verdict (6.2).
