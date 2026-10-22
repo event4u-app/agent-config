@@ -348,7 +348,7 @@ waits:
       honoured; otherwise documentation says the resume count is observed, not
       enforced.
       verify: `ls agents/evidence/ratifications/` -> /worker-reuse-guard-flip/
-      Built 2026-10-22, not flipped: `flipReadiness` in the same module encodes the four conditions — failure observed, false-positive rate measured and ≤ 1 %, economics measured and favourable, window met — and returns `ready: false` while any is unmeasured (`tests/scripts/worker_reuse_shadow_report.test.ts`). The blocking form and its ratification wait on 3.5's window. Owed before any flip (ratification 2026-10-22, non-blocking while in shadow): name and stop resolution read only the last 1 MiB of two monthly ledger files, so heavy traffic can push a real resume out of view — an indexed register or a measured false-negative rate.
+      Built 2026-10-22, not flipped: `flipReadiness` in the same module encodes the four conditions — failure observed, false-positive rate measured and ≤ 1 %, economics measured and favourable, window met — and returns `ready: false` while any is unmeasured (`tests/scripts/worker_reuse_shadow_report.test.ts`). The blocking form and its ratification wait on 3.5's window. Owed before a flip: an indexed register, or a measured miss rate for the 1 MiB ledger tail read (ratification 2026-10-22).
 
 ## Phase 4 — Rate pressure that waits instead of spawning
 
