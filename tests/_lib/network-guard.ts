@@ -137,7 +137,7 @@ function closeFetch(): void {
         // A loopback server may answer 3xx to a public host, and the real
         // `fetch` would follow it. So redirects are followed here, one hop at a
         // time, and every hop's target is checked before it is requested.
-        let hopInit: RequestInit = { method: request?.method, headers: request?.headers, ...init };
+        let hopInit: RequestInit = request ? { method: request.method, headers: request.headers, ...init } : { ...init };
         let res = await real(input, { ...init, redirect: 'manual' });
         for (let hop = 0; REDIRECT_STATUSES.has(res.status); hop += 1) {
             const location = res.headers.get('location');
@@ -148,7 +148,8 @@ function closeFetch(): void {
             await res.body?.cancel();
             const method = (hopInit.method ?? 'GET').toUpperCase();
             if (res.status === 303 || ((res.status === 301 || res.status === 302) && method === 'POST')) {
-                hopInit = { ...hopInit, method: 'GET', body: undefined };
+                hopInit = { ...hopInit, method: 'GET' };
+                delete hopInit.body;
             }
             res = await real(target, { ...hopInit, redirect: 'manual' });
         }

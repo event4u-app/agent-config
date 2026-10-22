@@ -180,9 +180,10 @@ describe('release settings delta — control', () => {
         expect(h.tally_at_tag).toEqual(h.tally);
         for (const p of h.pairs) {
             for (const r of p.removed) {
-                // Labelled, so a disagreement names the release and the key.
-                expect(`${p.to}/${r.key}=${String(r.classification_at_tag)}`)
-                    .toBe(`${p.to}/${r.key}=${r.classification}`);
+                // The key is non-empty, so the labelled assertion below names
+                // a real release/key pair when the two readings disagree.
+                expect(r.key).not.toBe('');
+                expect(`${p.to}/${r.key}=${String(r.classification_at_tag)}`).toBe(`${p.to}/${r.key}=${r.classification}`);
             }
         }
 
