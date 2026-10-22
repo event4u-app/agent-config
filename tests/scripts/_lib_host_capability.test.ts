@@ -49,10 +49,12 @@ const ALL_FALSE: HostCapabilityManifest = {
 
 describe('worker_resume / fork_shares_cache (road-to-a-cold-start-paid-once 2.1)', () => {
     it('worker-resume-defaults-false', () => {
-        // `worker_resume` has no admissible row on any host: the 2026-10-17
-        // resume was addressed by the host's per-run id, not by a durable name,
-        // so it does not meet the criterion. `fork_shares_cache` is observed on
-        // `claude` only; every other host keeps the safe default.
+        // No host carries a `worker_resume` row; on claude it is a live probe of
+        // the agent-teams flag (tested below), so the flag is cleared here.
+        // `fork_shares_cache` is observed on `claude` only.
+        const prev = process.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'];
+        delete process.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'];
+        try {
         for (const host of ['claude', 'cursor', 'some-unrecognized-host', null]) {
             const { manifest, sources } = describeHostCapabilities(host);
             expect(manifest.worker_resume).toBe(false);
@@ -74,6 +76,10 @@ describe('worker_resume / fork_shares_cache (road-to-a-cold-start-paid-once 2.1)
         expect(set.worker_resume).toBe(true);
         expect(set.fork_shares_cache).toBe(true);
         expect(set.worker_respawn).toBe(false);
+        } finally {
+            if (prev === undefined) delete process.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'];
+            else process.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'] = prev;
+        }
     });
 });
 

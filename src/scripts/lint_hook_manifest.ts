@@ -287,6 +287,12 @@ function _check_concerns(manifest: YamlObject, errors: string[]): Set<string> {
           `concerns.${name}: 'payload_fields' must be a non-empty list of key names`,
         );
       }
+      if (!("needs_payload_bodies" in spec)) {
+        errors.push(
+          `concerns.${name}: 'payload_fields' without 'needs_payload_bodies' ` +
+            `narrows bodies the concern never receives — declare the body classes`,
+        );
+      }
       if (spec["fail_closed"] === true || spec["severity"] === "blocking") {
         errors.push(
           `concerns.${name}: 'payload_fields' has no effect on a blocking or ` +

@@ -408,7 +408,7 @@ export function applyPayloadFields(concern: JsonObject, env: JsonObject): JsonOb
       if (v === undefined || v === null || isPayloadStub(v)) continue;
       out[key] = isObject(v)
         ? Object.fromEntries(Object.entries(v).filter(([k]) => keep.has(k)))
-        : makePayloadStub(key, cls, v, new Map());
+        : makePayloadStub(key, cls, v, new Map([[key, bodyBytes(v)]]));
     }
   }
   return { ...env, payload: out };

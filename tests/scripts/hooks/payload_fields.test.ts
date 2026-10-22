@@ -145,3 +145,28 @@ describe('payload_fields — end to end through the dispatcher', () => {
         }
     });
 });
+
+describe('payload_fields — review findings of 2026-10-23', () => {
+    it('a non-object body becomes a stub that still carries its byte length', () => {
+        const out = applyPayloadFields({ payload_fields: ['to'] }, envelope({ to: 'w1' }, 'twelve bytes'));
+        const stub = (out['payload'] as JsonObject)['tool_response'] as JsonObject;
+        expect(isPayloadStub(stub)).toBe(true);
+        expect(stub['bytes']).toBe(12);
+    });
+
+    it('the lint refuses payload_fields on a concern that declares no body class', () => {
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'payload-fields-lint-'));
+        try {
+            const manifest = path.join(tmp, 'm.yaml');
+            fs.writeFileSync(
+                manifest,
+                ['schema_version: 1', 'concerns:', '  c:', '    script: tests/hooks/fixtures/concern_report_bodies.ts', '    fail_closed: false', '    severity: advisory', '    payload_fields: [to]', 'platforms:', '  claude:', '    post_tool_use: [c]', ''].join('\n'),
+            );
+            const r = spawnSync(path.join(REPO, 'node_modules', '.bin', 'tsx'), [path.join(REPO, 'src/scripts/lint_hook_manifest.ts'), '--manifest', manifest], { encoding: 'utf8' });
+            expect(r.status).not.toBe(0);
+            expect(`${r.stdout}${r.stderr}`).toMatch(/payload_fields.*needs_payload_bodies/);
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    });
+});

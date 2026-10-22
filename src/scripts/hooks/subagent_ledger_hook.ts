@@ -515,8 +515,12 @@ export function writeIndexEntry(root: string, ts: string, key: string, value: st
     const dir = path.join(root, LEDGER_DIR, INDEX_SUBDIR, ts.slice(0, 7));
     fs.mkdirSync(dir, { recursive: true });
     const tmp = path.join(dir, `.${key}.${process.pid}.tmp`);
-    fs.writeFileSync(tmp, value, 'utf8');
-    fs.renameSync(tmp, path.join(dir, key));
+    try {
+        fs.writeFileSync(tmp, value, 'utf8');
+        fs.renameSync(tmp, path.join(dir, key));
+    } finally {
+        fs.rmSync(tmp, { force: true });
+    }
 }
 
 /** The entry for `key` in this month or the previous one; null when neither holds it. */
@@ -535,7 +539,9 @@ export function readIndexEntry(root: string, key: string, now: Date): string | n
 /** The commit the checkout containing `dir` is on; null outside a repository or on any failure. */
 export function headOf(dir: string): string | null {
     try {
-        return execFileSync('git', ['-C', dir, 'rev-parse', 'HEAD'], { encoding: 'utf8', timeout: 2000, stdio: ['ignore', 'pipe', 'ignore'] }).trim() || null;
+        // An inherited GIT_DIR / GIT_WORK_TREE would override `-C`.
+        const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
+        return execFileSync('git', ['-C', dir, 'rev-parse', 'HEAD'], { encoding: 'utf8', timeout: 2000, stdio: ['ignore', 'pipe', 'ignore'], env }).trim() || null;
     } catch {
         return null;
     }
@@ -791,7 +797,6 @@ function handleStop(root: string, payload: JsonObject, nowIso: string, sessionId
 
     // Remove FIRST, count AFTER — same definition on both lines.
     removeOpenRecord(root, ref);
-    if (sessionId !== null) recordStopIndex(root, nowIso, sessionId, ref);
 
     appendLedgerLine(root, nowIso, {
         event: 'subagent_stop',
@@ -820,6 +825,12 @@ function handleStop(root: string, payload: JsonObject, nowIso: string, sessionId
         concurrent_open: countOpen(root),
         ...stateStamp(payload['cwd']),
     });
+    // After the line, and on its own: a failed index write must not cost the stop record.
+    try {
+        if (sessionId !== null) recordStopIndex(root, nowIso, sessionId, ref);
+    } catch {
+        // The guard then reads this stop as unplaced, the safe reading.
+    }
 }
 
 /** Process an ALREADY-PARSED dispatcher envelope. Always returns EXIT_ALLOW. */

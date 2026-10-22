@@ -250,9 +250,20 @@ describe('spawn-guard-shadow — reuse verdict and resumes (cold-start 3.3)', ()
         expect(ledgerLines()[1]!.reuse).toEqual({ verdict: 'fresh', name: null, reasons: ['compacted'] });
     });
 
-    it('production default on claude: no worker_resume in the row, so every spawn records host_resume_unobserved', () => {
-        processEnvelope(agentCall('ac-worker'), root);
-        expect(ledgerLines()[0]!.reuse).toEqual({ verdict: 'fresh', name: null, reasons: ['host_resume_unobserved'] });
+    it('production default on claude without the agent-teams flag: every spawn records host_resume_unobserved', () => {
+        const prev = process.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'];
+        delete process.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'];
+        try {
+            processEnvelope(agentCall('ac-worker'), root);
+            expect(ledgerLines()[0]!.reuse).toEqual({ verdict: 'fresh', name: null, reasons: ['host_resume_unobserved'] });
+            // With the flag the precondition holds and the register is what is missing.
+            process.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'] = '1';
+            processEnvelope(agentCall('ac-worker'), root);
+            expect(ledgerLines()[1]!.reuse).toEqual({ verdict: 'fresh', name: null, reasons: ['worker_register_unrecorded'] });
+        } finally {
+            if (prev === undefined) delete process.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'];
+            else process.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'] = prev;
+        }
     });
 
     it('a send to a finished worker is a resume, counted against the same candidates as a spawn', () => {
@@ -691,5 +702,39 @@ describe('spawn-guard-shadow — ratification 2026-10-22 rest r1, non-blocking f
         expect(readIndexEntry(root, 'k1', new Date())).toBe('second');
         const names = fs.readdirSync(path.join(root, LEDGER_DIR, 'index', ts.slice(0, 7)));
         expect(names).toEqual(['k1']);
+    });
+});
+
+describe('spawn-guard-shadow — review findings of 2026-10-23', () => {
+    it('an index that cannot be written never costs the stop line', () => {
+        // A file where the index directory should be makes every index write throw.
+        fs.mkdirSync(path.join(root, LEDGER_DIR), { recursive: true });
+        fs.writeFileSync(path.join(root, LEDGER_DIR, 'index'), 'not a directory');
+        processLedgerEnvelope(
+            { schema_version: 1, platform: 'claude', event: 'subagent_stop', payload: { session_id: SESSION, agent_id: 'a1b2c3d4e5f6071a' } },
+            root,
+        );
+        expect(ledgerLines().filter((l) => l.event === 'subagent_stop')).toHaveLength(1);
+    });
+
+    it('an inherited GIT_DIR does not redirect the commit a directory is on', () => {
+        const git = (cwd: string, ...args: string[]): string =>
+            execFileSync('git', ['-c', 'user.email=t@example.com', '-c', 'user.name=t', '-C', cwd, ...args], { encoding: 'utf8' }).trim();
+        const a = fs.mkdtempSync(path.join(root, 'a-'));
+        const b = fs.mkdtempSync(path.join(root, 'b-'));
+        for (const d of [a, b]) {
+            git(d, 'init', '-q');
+            git(d, 'commit', '-q', '--allow-empty', '-m', d);
+        }
+        const expected = git(a, 'rev-parse', 'HEAD');
+        expect(git(b, 'rev-parse', 'HEAD')).not.toBe(expected);
+        const prev = process.env['GIT_DIR'];
+        process.env['GIT_DIR'] = path.join(b, '.git');
+        try {
+            expect(headOf(a)).toBe(expected);
+        } finally {
+            if (prev === undefined) delete process.env['GIT_DIR'];
+            else process.env['GIT_DIR'] = prev;
+        }
     });
 });
