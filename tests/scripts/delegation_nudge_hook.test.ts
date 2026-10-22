@@ -338,7 +338,35 @@ describe("classifyPrompt — activation + verdict wiring", () => {
     expect(result?.classification.mode).toBe("do-in-parallel");
     expect(result?.rung).toBe(2);
     expect(result?.sliceCount).toBe(6);
+    // A fix is a mutation of unknown coverage: the table says inherit, never lite.
+    expect(result?.tier).toBe("inherit");
+  });
+
+  it("a read-only fan-out nudge names the mapped model value and dispatches nothing", () => {
+    const root = makeWorkspace(null);
+    const result = classifyPrompt(
+      "find every caller of resolveRoute in these 6 files: a.ts b.ts c.ts d.ts e.ts f.ts",
+      root,
+      "claude",
+    );
     expect(result?.tier).toBe("lite");
+    expect(result?.sliceKind).toBe("read-only-fanout");
+    const line = buildNudgeLine(result!.rung, result!.classification, result!.sliceCount, result!.tier, result!.sliceKind);
+    expect(line).toContain('model: "haiku"');
+    expect(line).toContain("read-only-fanout");
+    expect(line).not.toMatch(/dispatched|spawned/);
+  });
+
+  it("an inherit verdict names no model argument", () => {
+    const line = buildNudgeLine(
+      2,
+      { delegable: true, action: "dispatch", mode: "do-in-parallel", reason: "independent slices (6)" },
+      6,
+      "inherit",
+      "unknown",
+    );
+    expect(line).toContain("inherit tier recommended");
+    expect(line).not.toContain("model:");
   });
 
   it("an unknown host resolves the all-false safe default → gate closed → null", () => {
@@ -438,21 +466,22 @@ describe("resolveActivation + recommendSliceTier", () => {
     expect(activation.subagent_spawn).toBe(true);
   });
 
-  it("downshift default (no settings) recommends the lite tier", () => {
+  it("downshift default (no settings) recommends lite only for a read-only fan-out", () => {
     const root = makeWorkspace(null);
     const { downshift, separate_quota_pool } = resolveActivation(root, "claude");
-    expect(recommendSliceTier(downshift, separate_quota_pool)).toBe("lite");
+    expect(recommendSliceTier(downshift, separate_quota_pool, "read-only-fanout")).toBe("lite");
+    expect(recommendSliceTier(downshift, separate_quota_pool, "unknown")).toBe("inherit");
   });
 
-  it("a leftover downshift: false is ignored — the key was retired, lite stays the recommendation", () => {
+  it("a leftover downshift: false is ignored — the key was retired", () => {
     const root = makeWorkspace(["subagents:", "  downshift: false", ""].join("\n"));
     const { downshift, separate_quota_pool } = resolveActivation(root, "claude");
     expect(downshift).toBe(true);
-    expect(recommendSliceTier(downshift, separate_quota_pool)).toBe("lite");
+    expect(recommendSliceTier(downshift, separate_quota_pool, "read-only-fanout")).toBe("lite");
   });
 
   it("the tier function itself still honours a downshift-off caller (session tier)", () => {
-    expect(recommendSliceTier(false, false)).toBe("high");
+    expect(recommendSliceTier(false, false, "read-only-fanout")).toBe("inherit");
   });
 });
 
@@ -481,7 +510,9 @@ describe("delegation_nudge_hook — end-to-end (Phase 4.4)", () => {
     expect(parsed.decision).toBe("warn");
     expect(parsed.additional_context).toContain("do-in-parallel");
     expect(parsed.additional_context).toContain("6 slices");
-    expect(parsed.additional_context).toContain("lite tier");
+    // A fix of unknown coverage: the table yields inherit, and no model argument is named.
+    expect(parsed.additional_context).toContain("inherit tier");
+    expect(parsed.additional_context).not.toContain("model:");
     expect(parsed.reason).toContain("delegation-nudge");
   });
 
