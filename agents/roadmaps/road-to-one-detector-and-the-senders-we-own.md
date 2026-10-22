@@ -93,8 +93,11 @@ is open.
   and AC-5 landed. 3.3 and 2.6 were built and stay open only on 2.3 (the
   five-placeholder sample and the IBAN mutation need identifier rows), as do
   AC-1, AC-2 and the identifier half of AC-6.
-- **Next in order:** 2.3's fourth ratification round (owner-invoked), then 2.5;
-  together they close 3.3, 2.6, AC-1, AC-2 and the identifier half of AC-6.
+- **2026-10-22:** 2.3 and 2.5 landed on `feat/subagent-system-2583` after review
+  rounds 5–6 and the branch ratification (2/2, three rounds); 3.3, 2.6, AC-1 and
+  AC-2 closed with them. The identifier half of AC-6 (a) and (b) is published in
+  `internal/bench/reports/egress-placeholders-detection-2026-10-19.md`.
+- **Next in order:** AC-6's paired quality run (e) and the CI-runner reading of (f).
 
 ## What this roadmap deliberately does not do
 
@@ -319,7 +322,7 @@ read cannot leak through any later bug.
       test and `check_credential_spelling` hold equal to the table. Probed end to
       end on the built bundle: in `observe` it counted a planted token, and with
       the chunk moved away it recorded `engine-unavailable`.
-- [ ] **2.3 Validators for the identifier class:** IBAN by country length and
+- [x] **2.3 Validators for the identifier class:** IBAN by country length and <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
       mod-97; payment card by Luhn **and** a context word; e-mail by TLD and an
       allowlist (documentation domains, no-reply forms, this repository's own
       commit identities); phone only with a country code or a context word;
@@ -366,6 +369,7 @@ read cannot leak through any later bug.
       `agent-config-lane-detector` worktree, with the four committed prompts.
       **Closing it needs:** a fourth round asked by the owner (or a prompt the
       filter admits), then the ratification record and that branch's commits.
+      **Done 2026-10-22:** landed on `feat/subagent-system-2583` (`40aa265f1e` … `dc8648b9ac`, every ISO 13616 country after rounds 5 and 6); ratified 2/2 in `agents/evidence/ratifications/subagent-system-2583-20261022.md`.
 - [x] **2.4 Known values (D7).** An exact-match set built per invocation from
       environment variables whose names mark them as credentials and from local
       `.env*` files, matched also in base64, URL-encoded and JSON-escaped form
@@ -382,7 +386,7 @@ read cannot leak through any later bug.
       triple base64 is a counted `pastLayerBound` miss; the size and time bounds
       count too (a third layer and the JSON decoder each seen red). Not yet read
       by a sender — 3.3 wires it.
-- [ ] **2.5 Invisible characters do not hide a value.** Reuse the strip-then-
+- [x] **2.5 Invisible characters do not hide a value.** Reuse the strip-then- <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/confusables.ts -->
       rescan step and its fixtures (`src/scripts/_lib/knowledge_global_redaction.ts`,
       `tests/fixtures/global-knowledge-redaction/`).
       An evasion corpus beside them — inserted spaces, alternate casing, line
@@ -393,7 +397,8 @@ read cannot leak through any later bug.
       (hidden set defined once, confusables folded through a new `LATIN_TWIN`,
       spans mapped back) with the evasion corpus pinned; its homoglyph fixture is
       an e-mail, so it lands after 2.3.
-- [ ] **2.6 A mutation suite kills the invariants.** Disabling the IBAN checksum,
+      **Done 2026-10-22:** landed with 2.3 (`2b758dcf56`); the zero-width and homoglyph fixtures are detected and the evasion corpus prints its miss count.
+- [x] **2.6 A mutation suite kills the invariants.** Disabling the IBAN checksum, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/egress-mutations/iban-checksum-disabled.json -->
       changing class precedence, logging a raw value or letting a credential
       token restore anywhere turns a named test red.
       verify: each listed mutation, applied to a scratch copy, fails at least one test; the recipes are `canary:` entries in `src/config/gate-coverage.yml`.
@@ -441,7 +446,7 @@ response, with no host contract in between and no hook budget to spend — so
       -> 0, the variant cases seen red with the canonical form and the suffix each
       neutralised. Residue in the contract: the host carrier's session table mints
       by spelling and issues no variant yet.
-- [ ] **3.3 The council bundle goes through the engine, and the transport checks
+- [x] **3.3 The council bundle goes through the engine, and the transport checks <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       what it is about to send.** The six line patterns of `bundler.ts:81-88`
       become span replacement, so a finding no longer costs the reviewer the
       whole line. Immediately before the request is written, the outbound body
@@ -467,6 +472,8 @@ The build and done notes of the steps that outgrew the 150-word step cap,
 moved here unchanged so each step stays readable at its cap.
 
 ### 2.6
+
+**Done 2026-10-22:** the IBAN-checksum recipe joined (`8332c8be01`); `check_egress_mutations` kills all four.
 
 **Built 2026-10-20 for three of the four mutations; open on 2.3.** The
 gate `check_egress_mutations` copies the three engine modules into a
@@ -503,6 +510,8 @@ spelling and an assignment shape rejected; run over the `origin/main`
 copies of the seven files, its new checks flag all eight pre-move lines.
 
 ### 3.3
+
+**Done 2026-10-22:** with the 2.3 rows on this branch the F1 sample leaves with five placeholders in `protect` (`34b0f37d69`; `council_egress.test.ts` › `the F1 sample leaves with five placeholders in protect`).
 
 **Built 2026-10-20; open on 2.3 only.** The bundler replaces span by span
 through `src/scripts/ai_council/council_egress.ts` (one scope per run, the
@@ -601,7 +610,7 @@ stay green (93 files).
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — One rule table defines every credential and identifier pattern;
+- [x] AC-1 — One rule table defines every credential and identifier pattern;
       the drift matrix is green and the `sk-ant-api03` row passes on every
       consumer.
       *(2026-10-20: the credential half holds — every credential shape,
@@ -610,12 +619,14 @@ stay green (93 files).
       the drift matrix with its `sk-ant-api03` row is green. Open on the
       identifier half: the two unvalidated identifier copies of F3 are
       replaced by step 2.3, which is owner-gated.)*
-- [ ] AC-2 — The council sample leaves with five placeholders and no lost line,
+      *(2026-10-22: the identifier half landed with 2.3; the drift matrix is green.)*
+- [x] AC-2 — The council sample leaves with five placeholders and no lost line,
       and a removed final check turns its canary red. *(Discharges the owner's
       constraint for the council channel, state `asserted`.)*
       *(2026-10-20: no line is lost and the canary is refused (3.3); the sample
       leaves with two placeholders, not five, until the identifier rows of 2.3
       exist and identifiers are replaced in `protect`/`strict`.)*
+      *(2026-10-22: five placeholders, no lost line, and the canary turns red when the final check is removed — 3.3.)*
 - [x] AC-3 — The sender census has no empty cell; every sender is `asserted`,
       fixed-corpus or `uncovered` with a reason. *(3.4, 2026-10-20.)*
 - [x] AC-4 — Credential-class files cannot be read through a hooked tool on a
@@ -645,6 +656,7 @@ stay green (93 files).
       not taken. The PREREG and the first Phase 2–3 code reached `main` in one
       squash commit, so the ordering is a fact of that PR's branch, not of
       `main`.)*
+      *(2026-10-22: the identifier half of (a) and (b) is published — 100 % recall per type on the seeded corpus, 20 of 14,274 tracked files, 0 of 400 negatives — in `internal/bench/reports/egress-placeholders-detection-2026-10-19.md`. Still open: (c) on identifiers, the paired quality run (e), which needs model calls on real review tasks, and (f) on the CI runner class.)*
 
 ## Lineage
 
