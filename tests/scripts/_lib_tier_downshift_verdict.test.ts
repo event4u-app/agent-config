@@ -87,3 +87,15 @@ describe('tierDownshiftVerdict — no discordant pair is not certainty', () => {
         expect(small.quality).toBe('underpowered');
     });
 });
+
+describe('tierDownshiftVerdict — usage a leg caused beyond itself', () => {
+    it('charges an advisor consultation to the arm that consulted it', () => {
+        const base = pairs(60, () => true, () => true);
+        const withAdvisor = base.map((r) =>
+            r.arm === 'lite' ? { ...r, extra: [{ served_model: 'claude-sonnet-5-5', usage: { input: 30000, cache_read: 0, cache_write: 0, output: 2000 } }] } : r,
+        );
+        const v = tierDownshiftVerdict(withAdvisor, PRICES);
+        expect(v.lite.cost_usd).toBeGreaterThan(tierDownshiftVerdict(base, PRICES).lite.cost_usd);
+        expect(v.cost).toBe('no-relief');
+    });
+});

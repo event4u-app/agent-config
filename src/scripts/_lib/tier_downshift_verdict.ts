@@ -46,6 +46,8 @@ export interface LegResult {
     usage: LegUsage;
     /** Usage of the head's re-run one tier up, charged to this leg's arm. */
     rerun?: { served_model: string; usage: LegUsage; verified: boolean };
+    /** Other model usage the leg caused (an advisor it consulted), charged to this leg's arm. */
+    extra?: { served_model: string; usage: LegUsage }[];
 }
 
 export interface ArmSummary {
@@ -103,6 +105,7 @@ function summarise(legs: LegResult[], prices: Record<string, Price>, notes: stri
     let escalated = 0;
     for (const leg of legs) {
         cost += legCost(leg.served_model, leg.usage, prices, notes);
+        for (const x of leg.extra ?? []) cost += legCost(x.served_model, x.usage, prices, notes);
         if (leg.escalated) escalated++;
         if (!leg.verified || leg.escalated) failedOrEscalated++;
         if (leg.rerun) {
