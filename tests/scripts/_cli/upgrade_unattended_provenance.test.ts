@@ -66,6 +66,8 @@ function deps(over: Partial<UnattendedDeps> = {}): UnattendedDeps {
     return {
         fetchPackument: async () => ({ ok: true, doc: packument() }) as never,
         verifyProvenance: async () => null,
+        // Assumed pinned so the workflow check below is what decides.
+        provenanceTrustRoot: true,
         run: (cmd: string[]) => {
             cmds.push(cmd);
             return { rc: 0, stderr: '' };

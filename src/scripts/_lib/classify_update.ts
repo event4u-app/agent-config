@@ -42,8 +42,15 @@ export interface ClassifyUpdateInput {
     readonly engines: unknown;
     readonly publishedAt: string | null;
     readonly deprecated: unknown;
-    /** True only when the registry document carried a provenance attestation. */
+    /** True only when the registry document carried a provenance attestation — a PRESENCE reading. */
     readonly provenance: boolean | null;
+    /**
+     * True only when the attestation is checked against a pinned trust root
+     * (Sigstore/Fulcio) before anything installs. Without it the attestation
+     * and the impact map are both the candidate publisher's own assertions,
+     * so absent or `false` never resolves to `auto`.
+     */
+    readonly provenanceTrustRoot?: boolean;
     readonly settings: {
         readonly mode?: UpdateMode | undefined;
         readonly projectPin?: string | null;
@@ -184,6 +191,9 @@ export function classifyUpdate(input: ClassifyUpdateInput): UpdateVerdict {
         }
     }
     if (input.provenance !== true) uncertain.push('provenance attestation missing');
+    else if (input.provenanceTrustRoot !== true) {
+        uncertain.push('provenance is not checked against a trust root, so the publisher-supplied attestation and impact map cannot authorize an install');
+    }
     if (input.settings.projectPin) uncertain.push(`project pins ${input.settings.projectPin}`);
     else if (input.origin === 'project-pin') uncertain.push('install is pinned by the project');
     if (input.origin === 'unknown') uncertain.push('install origin unknown');

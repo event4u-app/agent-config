@@ -131,6 +131,8 @@ export interface UnattendedDeps {
     readonly fetchPackument: () => Promise<Packument>;
     /** Refusal reason when the attestation does not tie to this package's publish workflow, else `null`. */
     readonly verifyProvenance: (candidate: RegistryCandidate) => Promise<string | null>;
+    /** Whether `verifyProvenance` checks the certificate chain against a pinned trust root. */
+    readonly provenanceTrustRoot: boolean;
     readonly run: (cmd: string[]) => StepResult;
     /** The version recorded in `installed.lock`; `''` when unknown. */
     readonly readInstalled: () => string;
@@ -319,6 +321,7 @@ async function decide(installed: string, deps: UnattendedDeps): Promise<{ candid
         candidate,
         origin: deps.origin,
         skipped: read_skips(deps.skipPath),
+        provenanceTrustRoot: deps.provenanceTrustRoot,
         env: { ...deps.env, now: deps.now().toISOString() },
     });
     if (!decision.install) return { refused: [...decision.reasons] };
@@ -552,6 +555,7 @@ function run_unattended_wired(
         interrupted,
         fetchPackument: () => fetch_packument(),
         verifyProvenance: (c) => verify_provenance_default(c),
+        provenanceTrustRoot: PROVENANCE_TRUST_ROOT_PINNED,
         run: (cmd) => default_run(cmd, options.err),
         readInstalled: () => {
             const v = installed_lock.read_lockfile()?.agent_config_version;

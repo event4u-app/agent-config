@@ -31,6 +31,7 @@ const CLEAN: ClassifyUpdateInput = {
     publishedAt: '2026-10-10T12:00:00Z',
     deprecated: null,
     provenance: true,
+    provenanceTrustRoot: true,
     settings: { mode: 'auto', projectPin: null, minReleaseAgeHours: 48 },
 };
 
@@ -102,6 +103,10 @@ const MATRIX: readonly Case[] = [
         expected: 'notify',
         uncertain: true,
     },
+    // Provenance presence alone is the publisher's own assertion
+    // (release 17 review e272e779dba9): no trust root, no auto.
+    { name: 'provenance present but not checked against a trust root', patch: { provenanceTrustRoot: undefined }, expected: 'notify', uncertain: true },
+    { name: 'provenance trust root explicitly false', patch: { provenanceTrustRoot: false }, expected: 'notify', uncertain: true },
     // ...and two needed a hand.
     ...(['12.0.0', '15.0.0'] as const).map((v): Case => {
         const [major] = v.split('.');
