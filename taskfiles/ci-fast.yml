@@ -720,7 +720,8 @@ tasks:
     desc: |
       A skill body may shrink, never silently grow. `lint_token_budget_discipline`
       gates only `token_budget_class: rich` and skips a skill with no key, so 141
-      of the 147 bodies over 8 KB had nothing stopping them growing. The ceiling
+      of the 147 bodies over 8 KiB (the ceilings first recorded at 4d2e0424f)
+      had nothing stopping them growing. The ceiling
       per skill is the measured distribution in `src/config/skill-body-budget.json`,
       monotone down: re-record with `--update` after a shrink, and raise one only
       through a `raised` entry carrying a reason. The check moves no ceiling itself.
@@ -966,7 +967,8 @@ tasks:
     # this gate with `dist/cli` present — so it measured 3,455 entries /
     # 13.703 MB against a 13.700 ceiling derived from a 3,568-entry reading
     # and reddened `main` itself at 8c90aad26. The 113-entry difference is a
-    # blind spot, not headroom.
+    # blind spot, not headroom. The reading is recorded with its council
+    # disposition in `src/config/pack-size-budget.json`.
     #
     # Building here rather than in the workflow puts the fix where the
     # divergence is: every caller of this gate — CI, `task ci`, a maintainer
