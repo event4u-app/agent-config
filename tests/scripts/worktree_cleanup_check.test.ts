@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -976,7 +977,7 @@ describe('R2 round 2 fixes (2026-10-21)', () => {
     });
 
     it('#10 — each generated rule carries its own comment in this repository', () => {
-        const lines = fs.readFileSync(path.join(process.cwd(), '.gitignore'), 'utf-8').split('\n');
+        const lines = fs.readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../.gitignore'), 'utf-8').split('\n');
         const at = lines.indexOf('/.eslintcache');
         expect(at).toBeGreaterThan(0);
         expect(lines[at - 1]!.startsWith('#')).toBe(true);

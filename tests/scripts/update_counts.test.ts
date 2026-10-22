@@ -10,14 +10,13 @@
 // nothing under it, and the Python source has since been retired, so there is
 // nothing left to be parity with. The header says so rather than implying a
 // guard that is not here; the sibling header in generate_catalog.test.ts
-// carried the same claim and the catalogue drifted by a whole skill under it.
+// carried the same unbacked claim.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import * as uc from '../../src/scripts/update_counts.js';
-
 
 afterEach(() => {
     vi.restoreAllMocks();
@@ -200,7 +199,7 @@ describe('update_counts — missed-pattern-fails', () => {
     // --check printed "All counts in sync" about a sentence it could not find.
     // The figure that pattern owned was then ungenerated and ungated, and the
     // only signal was a line in a stream nobody reads on a passing run.
-    function withTempTarget(body: string, patterns: Array<[string, string]>, fn: (root: string) => void) {
+    function withTempTarget(body: string, fn: (root: string) => void) {
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'uc-'));
         try {
             fs.writeFileSync(path.join(root, 'TARGET.md'), body, 'utf-8');
@@ -213,7 +212,7 @@ describe('update_counts — missed-pattern-fails', () => {
     it('--check exits 1 and names the pattern that applied to nothing', () => {
         const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
         const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-        withTempTarget('this file mentions no count at all\n', [['(ships )(\\d+)( rules)', 'rules']], (root) => {
+        withTempTarget('this file mentions no count at all\n', (root) => {
             const code = uc.main(['--check'], {
                 root,
                 targets: [['TARGET.md', [['(ships )(\\d+)( rules)', 'rules']]]],
@@ -233,7 +232,7 @@ describe('update_counts — missed-pattern-fails', () => {
         // refused to avoid writing `undefined`, and the refusal then passed.
         const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
         vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-        withTempTarget('ships 7 widgets\n', [], (root) => {
+        withTempTarget('ships 7 widgets\n', (root) => {
             const code = uc.main(['--check'], {
                 root,
                 targets: [['TARGET.md', [['(ships )(\\d+)( widgets)', 'no_such_kind']]]],
@@ -248,7 +247,7 @@ describe('update_counts — missed-pattern-fails', () => {
         // main() that returned 1 unconditionally.
         vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
         const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-        withTempTarget(`ships ${uc.count('rules')} rules\n`, [], (root) => {
+        withTempTarget(`ships ${uc.count('rules')} rules\n`, (root) => {
             const code = uc.main(['--check'], {
                 root,
                 targets: [['TARGET.md', [['(ships )(\\d+)( rules)', 'rules']]]],
@@ -352,5 +351,3 @@ describe('update_counts.TARGETS — regression guard', () => {
         expect(paths).not.toContain('agents/roadmaps/skipped/road-to-stronger-skills.md');
     });
 });
-
-

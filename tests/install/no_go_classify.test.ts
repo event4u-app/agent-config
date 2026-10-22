@@ -12,6 +12,7 @@
 // learns which host it runs for, and the adapter never re-derives semantics.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
@@ -326,7 +327,7 @@ describe('extractNoGosSection — the fence skip is the load-bearing part', () =
         // material, and it is the file a reader without the skip would mistake
         // for a filled contract.
         const guide = path.resolve(
-            __dirname,
+            path.dirname(fileURLToPath(import.meta.url)),
             '../../src/agent-src/contexts/contracts/consumer-agents-md-guide.md',
         );
         const body = fs.readFileSync(guide, 'utf8');

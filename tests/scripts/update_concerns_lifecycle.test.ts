@@ -265,14 +265,20 @@ describe('update-auto-invite state', () => {
         const hook = path.join(REPO_ROOT, 'src', 'scripts', 'update_invite_hook.ts');
         // Each child imports the hook, then announces it is ready and spins on
         // the go file, so the parent releases them only once all three are
-        // loaded and waiting at the same point.
+        // loaded and waiting at the same point. The spin carries its own
+        // deadline, below the test's 180 s timeout.
         fs.writeFileSync(
             script,
             [
                 `import * as fs from 'node:fs';`,
                 `import { runInvite } from ${JSON.stringify(hook)};`,
                 `fs.writeFileSync(${JSON.stringify(tmp)} + '/ready-' + process.argv[3], '');`,
-                `while (!fs.existsSync(${JSON.stringify(go)})) { /* spin until released */ }`,
+                // Bounded, so a parent that throws before releasing never
+                // leaves a child spinning past the test's own timeout.
+                `const until = Date.now() + 120_000;`,
+                `while (!fs.existsSync(${JSON.stringify(go)})) {`,
+                `  if (Date.now() > until) { process.stderr.write('never released'); process.exit(3); }`,
+                `}`,
                 `const d = runInvite({ packageRoot: ${JSON.stringify(REPO_ROOT)}, workspaceRoot: process.argv[2]!, sessionId: '', mode: 'ask',`,
                 `  statePath: ${JSON.stringify(invitePath())}, ringZeroText: 'ring-0-exit: yes\\n', env: {}, isTty: true,`,
                 `  out: { write: () => undefined }, turnEndedOnVerifiedSuccess: true });`,
