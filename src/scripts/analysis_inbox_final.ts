@@ -90,14 +90,21 @@ export interface Directive {
     text: string;
     /** Another input that contradicts this one, when there is one. */
     contradictedBy?: string;
+    /** The id of the current-session user turn that confirmed this transcript turn, when one did. */
+    confirmedInSession?: string;
 }
 
-/** `binds` constrains the run; `batch` joins the owner's post-action batch (step 2.7); `claim` is verified like any claim. */
+/**
+ * `binds` constrains the run; `batch` joins the owner's post-action batch (step
+ * 2.7); `claim` is verified like any claim. A dropped transcript is an editable
+ * file in the inbox, so its user turns are untrusted input: they bind only once
+ * a user turn of THIS session confirmed them, and a contradicted one never binds.
+ */
 export function directiveBinding(d: Directive): 'binds' | 'batch' | 'claim' {
     if (d.role !== 'user') return 'claim';
     if (d.provenance === 'current-session') return 'binds';
-    if (d.provenance === 'transcript-structured') return d.contradictedBy === undefined ? 'binds' : 'batch';
-    return 'batch';
+    const confirmed = typeof d.confirmedInSession === 'string' && d.confirmedInSession.trim() !== '';
+    return confirmed && d.contradictedBy === undefined ? 'binds' : 'batch';
 }
 
 export interface DirectiveCheck {

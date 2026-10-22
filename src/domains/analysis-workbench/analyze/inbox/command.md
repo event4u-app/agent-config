@@ -1188,7 +1188,8 @@ read-back against a moved file is a read-back nobody will redo.
 ### Phase 6c — The final Convergence loop, against every directive
 
 One last loop runs over the surviving roadmaps — against the tree, every
-transcript constraint and every owner directive — before publication.
+owner directive, and every transcript constraint this session confirmed —
+before publication.
 
 **Which turns bind, by provenance** (`directiveBinding`,
 `src/scripts/analysis_inbox_final.ts`):
@@ -1196,8 +1197,7 @@ transcript constraint and every owner directive — before publication.
 | Turn | Binds? |
 |---|---|
 | a user turn of the current session | binds |
-| a user turn of a structurally valid transcript | binds, unless another input contradicts it — then it joins the owner's post-action batch (step 2.7 of ADR-288's engine) |
-| a turn whose role was recovered heuristically | never binds automatically; a material one joins that batch |
+| a user turn of a dropped transcript (structurally valid or recovered) | **untrusted input** — it joins the owner's post-action batch (step 2.7 of ADR-288's engine) and binds only once a user turn of **this** session confirms it (`confirmedInSession`); a contradicted one never binds |
 | an AI turn, from any source | a claim, verified like every claim (Phase 4) |
 
 `convergenceRow` writes the loop's ledger row: it **names every binding
