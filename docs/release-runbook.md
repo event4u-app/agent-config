@@ -158,37 +158,13 @@ doing it, so a crash localises to a step.
    version (skip this and the PR's own consistency check fails — PR #226
    post-mortem).
 5. **Commit + push** — commit `release: X.Y.Z`, push the branch, open the PR.
-6. **Wait for CI** — `gh pr checks --watch`. `--no-wait` skips it, but on a
-   **first** run that only moves the stop to step 7: the ledger step 7 requires
-   is committed by the CI review, so skipping the wait guarantees the release
-   stops one step later. `--no-wait` is useful on a resume, once the ledger is
-   already on the branch.
-7. **Findings ledger — verify only.** Asserts that
-   `agents/evidence/release-findings/X.Y.Z.json` is on **`origin/release/X.Y.Z`**
-   and that the disposition gate passes (in `--pr` mode, the same one CI uses),
-   and **stops** otherwise. It produces nothing.
-   *The ledger is produced by CI:* the `ingest-release-ledger` job in
-   `self-review-gate.yml` commits it to the release branch as soon as it has
-   reviewed the head. That placement is deliberate — two review rounds showed
-   `release.ts` cannot produce the file at any point in its own sequence,
-   because `finding-dispositions` already reds the check step 6 waits on.
-   *That job needs `RELEASE_PR_TOKEN`.* Its commit lands inside step 6's check
-   wait by construction, and a push authenticated with `GITHUB_TOKEN` starts no
-   workflow run — so the new head would carry zero checks against a protection
-   requiring one, and the wait could never end. With the PAT the push produces
-   the checks the wait is waiting for. Without it the job refuses to push at all
-   (a warning in its run log) rather than deadlock the release, and step 7 then
-   stops here on the missing ledger.
-   *If it stops:* for an absent ledger, wait for the review to finish, `git pull`
-   the release branch, resume. In a repository with no `ANTHROPIC_API_KEY` no
-   review runs and no ledger ever appears — write one carrying a
-   `no_findings_reason` and push it, once per release; the same is true with no
-   `RELEASE_PR_TOKEN`. For a refusing gate, fill
-   each blocking finding's `{status, rationale, verified_by}` (and `commit`, when
-   the status is `fixed`), push, then `task release -- --resume --yes`. No
-   automation writes a disposition.
-   *Before the merge on purpose:* the ledger lives on the release branch and
-   step 8 deletes it, so this is the last moment the check means anything.
+6. **Wait for CI** — `gh pr checks --watch`. `--no-wait` skips it.
+7. **No review gate.** A release waits for no review ledger: every commit on
+   `main` is already reviewed and merged, so the cut does not stop for a
+   self-review (owner, 2026-10-22 — the 17.0.0 cut stopped for a day on a
+   ledger whose review never finished). The step stays numbered so the step
+   anchors do not move. The self-review on the release PR is advisory, and
+   `check_finding_dispositions` remains a tool to run by hand.
 8. **Merge** — `gh pr merge --merge --delete-branch`.
 9. **Tag main** — fast-forward `main`, tag the merge commit, push the tag.
 10. **GitHub Release** — `gh release create X.Y.Z --notes <changelog>`. Under
@@ -197,7 +173,7 @@ doing it, so a crash localises to a step.
    GitHub's `GITHUB_TOKEN` recursion guard).
 11. **Delete the merged release branch**, local and remote. This step was in
     `release.ts` before this list mentioned it; it is written down here now
-    rather than left as the drift found while adding step 7.
+    rather than left as drift.
 
 ## 3. The two ways to run it
 
@@ -332,13 +308,9 @@ for wf in evaluator-umbrella consumer-matrix release-validation; do
   grep -q "workflow_dispatch" ".github/workflows/$wf.yml" \
     || { echo "stale: $wf.yml no longer accepts workflow_dispatch"; exit 1; }
 done
-# step 7 verifies, and the job that produces what it verifies still exists:
-grep -q "settle_findings_ledger" src/scripts/release.ts \
-  || { echo "stale: the findings-ledger step is gone from release.ts"; exit 1; }
-grep -q "ingest-release-ledger:" .github/workflows/self-review-gate.yml \
-  || { echo "stale: nothing produces the ledger step 7 requires"; exit 1; }
-grep -q "RELEASE_PR_TOKEN" .github/workflows/self-review-gate.yml \
-  || { echo "stale: the ledger job no longer pushes with the PAT this doc promises"; exit 1; }
+# step 7 gates nothing — a release never waits for a review ledger:
+! grep -q "settleFindingsLedger" src/scripts/release.ts \
+  || { echo "stale: release.ts waits for a findings ledger again"; exit 1; }
 ```
 
 A written-steps-only **dry run** (cut a no-op release following ONLY this doc,
