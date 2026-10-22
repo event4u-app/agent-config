@@ -14,8 +14,10 @@
  *
  * Hard caps, per the roadmap's anti-loop discipline (Risk 2 — "rung 0.5
  * becomes a hidden agent loop"):
- *   - ONE completion. No retry beyond the transport chain's own cli→api
- *     fallback semantics inside the client.
+ *   - ONE completion, plus at most ONE retry on the next route of the
+ *     chooser's chain, gated by `MidFlightFallback`: only a failure that
+ *     cannot have been generated and charged falls through (an empty free
+ *     quota or an unservable model does; a server fault never does).
  *   - NO tool use, NO session, NO follow-up turn.
  *   - Honest ∅: council disabled / no member / transport failure → null
  *     (CLI exit 3), never a fabricated answer and never an escalation this
@@ -59,8 +61,14 @@ import { classifyContentClass, DEFAULT_CONTENT_CLASS, type ContentClass } from '
 import { councilEgress, type CouncilEgress } from './ai_council/council_egress.js';
 import { buildHandPayload, projectLinkingIdentifiers, type HandSlice } from './ai_council/hand_payload.js';
 import { handSystemPrompt, parseHandReturn } from './ai_council/hand_schemas.js';
-import { chooseRoute, routeCandidateFromMember } from './ai_council/route_chooser.js';
-import { classifyRouteOutcome, isRouteModelLive, recordRouteOutcome } from './ai_council/route_liveness.js';
+import { chooseRouteChain, routeCandidateFromMember } from './ai_council/route_chooser.js';
+import {
+    classifyRouteOutcome,
+    isRouteModelLive,
+    recordRouteOutcome,
+    routeFailureClass,
+} from './ai_council/route_liveness.js';
+import { MidFlightFallback } from './ai_council/transport_resolver.js';
 import {
     EXPOSURE_LEDGER_RELPATH,
     ExposureLedger,
@@ -68,7 +76,7 @@ import {
     trackedFileCount,
     type Exposure,
 } from './ai_council/exposure_ledger.js';
-import { isHandKind, type HandKind, type RouteBilling, type VerifyVerdict } from './_lib/hand_kinds.js';
+import { isHandKind, isUnpaid, type HandKind, type RouteBilling, type VerifyVerdict } from './_lib/hand_kinds.js';
 import { buildOrchestrationLine } from './_lib/orchestration_record.js';
 import { DEFAULT_DIR } from './orchestration_record.js';
 
@@ -217,7 +225,7 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
         return { member: m, route: retired ? { ...route, live: false } : route };
     });
     const pool = opts.member !== undefined ? routed.filter((r) => r.route.name === opts.member) : routed;
-    const choice = chooseRoute({
+    const { chain } = chooseRouteChain({
         kind: opts.kind ?? null,
         contentClass: opts.contentClass ?? DEFAULT_CONTENT_CLASS,
         candidates: pool.map((r) => r.route),
@@ -225,36 +233,64 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
             ? { exposureShare: exposureShareFn(opts.exposure.ledger, opts.exposure.exposes, opts.exposure.trackedFiles) }
             : {}),
     });
-    const pick = choice.route === null ? undefined : pool.find((r) => r.route === choice.route)?.member;
-    if (pick === undefined) {
-        return _finish(null, opts.member ?? 'none', opts);
-    }
-    const provider = choice.route!.name;
-    const billing = choice.route!.billing;
-    opts.exposure?.ledger.record(provider, opts.exposure.exposes);
-
     const system = opts.kind !== undefined ? handSystemPrompt(opts.kind) : (opts.systemPrompt ?? DEFAULT_SYSTEM);
+    // One retry down the chain, gated like the council's cli→api fallback: a
+    // failure that may have been generated and charged never falls through.
+    const ledger = new MidFlightFallback();
+    let last: { provider: string; billing: RouteBilling } | null = null;
+    let failures = 0;
+    for (const route of chain) {
+        const pick = pool.find((r) => r.route === route)?.member;
+        if (pick === undefined) continue;
+        const outcome = await _callRoute(pick, route.name, system, trimmed, opts, stateRoot);
+        if (outcome.done) return _finish(outcome.result, route.name, opts, outcome.schemaValid, route.billing);
+        last = { provider: route.name, billing: route.billing };
+        if (++failures > 1) break;
+        // An empty quota on a free route is that route's limit, not a cap the user set.
+        const failure = routeFailureClass(classifyRouteOutcome(outcome.error));
+        if (ledger.attempt(route.name, failure, { apiOnQuota: isUnpaid(route.billing) }) !== 'api') break;
+    }
+    return last === null ? _finish(null, opts.member ?? 'none', opts) : _finish(null, last.provider, opts, undefined, last.billing);
+}
+
+type RouteCallOutcome =
+    | { readonly done: true; readonly result: AskResult | null; readonly schemaValid: boolean | undefined }
+    | { readonly done: false; readonly error: string };
+
+/**
+ * One completion on one route. `done: false` only for a transport failure the
+ * route reported; an empty or unparseable answer was generated, so it ends the
+ * ask rather than being paid for again elsewhere.
+ */
+async function _callRoute(
+    pick: ExternalAIClient,
+    provider: string,
+    system: string,
+    prompt: string,
+    opts: AskOptions,
+    stateRoot: string | null,
+): Promise<RouteCallOutcome> {
+    opts.exposure?.ledger.record(provider, opts.exposure.exposes);
     const model = routeModel(pick);
-    const noteLiveness = (error: string | null | undefined): void => {
-        if (stateRoot !== null && model !== null) recordRouteOutcome(stateRoot, provider, model, classifyRouteOutcome(error));
-    };
     try {
-        const response = pick.ask(system, trimmed);
+        const response = pick.ask(system, prompt);
         const r = response instanceof Promise ? await response : response;
-        noteLiveness(r === null || r === undefined ? 'no response' : r.error);
-        if (r === null || r === undefined || (r.error !== null && r.error !== undefined && r.error !== '')) {
-            return _finish(null, provider, opts, undefined, billing);
-        }
+        const error = r === null || r === undefined ? 'no response' : r.error;
+        if (stateRoot !== null && model !== null) recordRouteOutcome(stateRoot, provider, model, classifyRouteOutcome(error));
+        if (r === null || r === undefined) return { done: true, result: null, schemaValid: undefined };
+        if (error !== null && error !== undefined && error !== '') return { done: false, error };
         const text = (r.text ?? '').trim();
-        if (!text) return _finish(null, provider, opts, undefined, billing);
+        if (!text) return { done: true, result: null, schemaValid: undefined };
         let parsed: unknown;
         if (opts.kind !== undefined) {
             const p = parseHandReturn(opts.kind, text);
-            if (!p.ok) return _finish(null, provider, opts, false, billing);
+            if (!p.ok) return { done: true, result: null, schemaValid: false };
             parsed = p.value;
         }
-        return _finish(
-            {
+        return {
+            done: true,
+            schemaValid: opts.kind !== undefined ? true : undefined,
+            result: {
                 answer: text,
                 member: provider,
                 model: r.model ?? UNKNOWN_MODEL,
@@ -264,13 +300,9 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
                 latency_ms: r.latency_ms ?? 0,
                 ...(opts.kind !== undefined ? { parsed, untrusted: true as const } : {}),
             },
-            provider,
-            opts,
-            opts.kind !== undefined ? true : undefined,
-            billing,
-        );
+        };
     } catch {
-        return _finish(null, provider, opts, undefined, billing); // ONE completion — no retry here
+        return { done: true, result: null, schemaValid: undefined }; // a thrown call is never retried
     }
 }
 

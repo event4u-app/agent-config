@@ -85,9 +85,16 @@ function byQuota(a: RouteCandidate, b: RouteCandidate): number {
     return b.remainingQuota - a.remainingQuota;
 }
 
-export function chooseRoute(input: ChooseInput): RouteChoice {
+export interface RouteChain {
+    /** Every admissible route, in the order a failed call walks them. */
+    readonly chain: RouteCandidate[];
+    readonly headOnly: boolean;
+    readonly refused: RouteRefusal[];
+}
+
+export function chooseRouteChain(input: ChooseInput): RouteChain {
     const refused: RouteRefusal[] = [];
-    if (isHeadOnlyKind(input.kind)) return { route: null, reason: 'head-only', refused };
+    if (isHeadOnlyKind(input.kind)) return { chain: [], headOnly: true, refused };
     const admissible: RouteCandidate[] = [];
     for (const c of input.candidates) {
         const why = refusalOf(c, input);
@@ -97,10 +104,16 @@ export function chooseRoute(input: ChooseInput): RouteChoice {
     const share = (c: RouteCandidate): number => input.exposureShare?.(c.name) ?? 0;
     const order = (a: RouteCandidate, b: RouteCandidate): number => share(a) - share(b) || byQuota(a, b);
     const unpaid = admissible.filter((c) => isUnpaid(c.billing)).sort(order);
-    if (unpaid[0] !== undefined) return { route: unpaid[0], reason: 'unpaid-route', refused };
     const paid = admissible.filter((c) => !isUnpaid(c.billing)).sort(order);
-    if (paid[0] !== undefined) return { route: paid[0], reason: 'paid-fallback', refused };
-    return { route: null, reason: 'no-admissible-route', refused };
+    return { chain: [...unpaid, ...paid], headOnly: false, refused };
+}
+
+export function chooseRoute(input: ChooseInput): RouteChoice {
+    const { chain, headOnly, refused } = chooseRouteChain(input);
+    if (headOnly) return { route: null, reason: 'head-only', refused };
+    const first = chain[0];
+    if (first === undefined) return { route: null, reason: 'no-admissible-route', refused };
+    return { route: first, reason: isUnpaid(first.billing) ? 'unpaid-route' : 'paid-fallback', refused };
 }
 
 const _BILLINGS: ReadonlySet<string> = new Set<string>(ROUTE_BILLINGS);

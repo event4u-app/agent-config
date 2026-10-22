@@ -1452,6 +1452,13 @@ answers (HTTP 410, or 404 naming the model) retire the model from the
 discovered roster, and the chooser reads it as not live until a later
 discovery serves it again. An answered call resets the streak.
 
+A typed ask walks the chooser's chain (admissible unpaid routes, then paid
+ones) with at most one retry, gated by `MidFlightFallback`: a route that
+answered `model_unservable`, or a free route whose quota ran out, hands the
+call to the next route; a server fault, a timeout or an empty quota on a paid
+route does not, so no question is paid for twice. A second failure is an
+honest ∅.
+
 ## Precedence
 
 Resolution order for every member-level setting (mode, model, key):
