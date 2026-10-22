@@ -107,7 +107,16 @@ export class CouncilEgress {
             this.replaced.add(value);
             return this.scope.mint(s.type, s.class, value);
         });
-        return replaceSpans(text, merged, (_s, i) => tokens[i] as string);
+        let out = replaceSpans(text, merged, (_s, i) => tokens[i] as string);
+        // A value detected once is a secret wherever it stands: a password the
+        // rules saw inside a connection URI is the same password on a line of
+        // its own, where no rule fires. Leaving it there sent it anyway — and
+        // `check` then refused the whole payload for it.
+        merged.forEach((s, i) => {
+            const value = text.slice(s.start, s.end);
+            if (out.includes(value)) out = out.split(value).join(tokens[i] as string);
+        });
+        return out;
     }
 
     /** The final check: null when the body may be sent. */
