@@ -146,6 +146,12 @@ describe('check_voice_lexicon — lexicon', () => {
         expect(scanLexicon(text, terms.slice(0, 1)).map((f) => [f.line, f.column])).toEqual([[7, 10]]);
     });
 
+    it('lexicon: a ghostwriter taboo is not hidden by wrapping it in quotes', () => {
+        const taboo: LexiconTerm[] = [{ term: 'game changer', match: 'word', source: 'ghostwriter' }];
+        const found = scanLexicon('This is a "game changer" for you.\n> game changer\n', taboo);
+        expect(found.map((f) => [f.line, f.severity])).toEqual([[1, 'error']]);
+    });
+
     it('lexicon: a term is an escaped literal, never a pattern', () => {
         const t: LexiconTerm[] = [{ term: 'a.b*', match: 'substring', source: 'user' }];
         expect(scanLexicon('axbbb and a.b* here', t).map((f) => f.column)).toEqual([11]);
