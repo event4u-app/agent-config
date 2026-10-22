@@ -17,6 +17,7 @@ export const CREDENTIAL_PREFIXES: readonly string[] = [
     'sk_live_',
     'sk_test_',
     'sk-ant-',
+    'nvapi-',
     'ya29.',
     'pplx-',
     'xoxb-',
@@ -34,6 +35,8 @@ export const CREDENTIAL_PREFIXES: readonly string[] = [
     'xai-',
     'gsk_',
     'sk-',
+    'hf_',
+    'r8_',
 ];
 
 export const API_KEY_ASSIGNMENT_KEYWORD = 'api[_-]?key';
