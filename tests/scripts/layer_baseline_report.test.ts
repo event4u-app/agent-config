@@ -73,6 +73,25 @@ describe('layer_baseline_report', () => {
         expect(readHookCommands(home, pkg)).toEqual(['Stop: node <PACKAGE_ROOT>/dist/hooks/dispatch.js']);
     });
 
+    it('hook commands keep only the binary, flags and placeholder paths — an argument that could carry a secret or a host never reaches the report', () => {
+        const home = mkTmp();
+        fs.mkdirSync(path.join(home, '.claude'));
+        const command =
+            `node ${home}/hook.js --platform claude --event stop --min-version 1 ` +
+            `--header "Authorization: Bearer abc123def456" https://hooks.internal.corp/x?token=s3cr3t ` +
+            'GITHUB_TOKEN=ghp_0123456789abcdefghijklmnopqrstuvwxyzAB /opt/acme/bin/run';
+        fs.writeFileSync(
+            path.join(home, '.claude', 'settings.json'),
+            JSON.stringify({ hooks: { Stop: [{ hooks: [{ type: 'command', command }] }] } }),
+        );
+        const [line] = readHookCommands(home);
+        expect(line).toMatch(/^Stop: node <HOME>\/hook\.js --platform claude --event stop --min-version 1 --header /u);
+        for (const leaked of ['Bearer', 'abc123', 'internal.corp', 's3cr3t', 'ghp_', 'GITHUB_TOKEN', '/opt/acme']) {
+            expect(line).not.toContain(leaked);
+        }
+        expect(line).toContain('<arg>');
+    });
+
     it('rejects an unknown host', () => {
         expect(parseArgs(['--hosts', 'no-such-host'])).toBeNull();
         expect(parseArgs(['--hosts', 'cursor'])?.hosts).toEqual(['cursor']);
