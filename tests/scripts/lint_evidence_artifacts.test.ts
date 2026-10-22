@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { GateLedger } from '../../src/scripts/_lib/gate_ledger.js';
 import { renderClearance } from '../../src/scripts/_lib/merge_clearance_record.js';
+import { BYPASS_RECORD_MARKER } from '../../src/scripts/_lib/platform_anchor.js';
 import {
     checkFiles,
     EVIDENCE_TYPES,
@@ -363,5 +364,14 @@ describe('the merge-clearance evidence type', () => {
     it('refuses a record when the quorum policy cannot be read', () => {
         fs.rmSync(path.join(root, 'src/config/ratification-policy.json'));
         expect(checkFiles(root, [write(record)])).toHaveLength(1);
+    });
+
+    it('resolves a bypass record by its marker; its content is validated by the platform-anchor gate', () => {
+        // This linter only types the file. The record's fields are parsed by
+        // `_lib/platform_anchor.ts` (bypass-record-malformed and friends),
+        // whose cases live in check_platform_anchor_open_bypass.test.ts.
+        const body = `${BYPASS_RECORD_MARKER}\n\n# Bypass record\n`;
+        expect(resolveEvidenceType('x.md', body).type).toBe('bypass-record');
+        expect(resolveEvidenceType('x.md', '# no marker\n').type).not.toBe('bypass-record');
     });
 });

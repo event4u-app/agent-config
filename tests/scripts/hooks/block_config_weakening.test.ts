@@ -747,6 +747,10 @@ describe('block_config_weakening — snapshot surfaces', () => {
             // a governance class inside a snapshot directory still blocks as before
             const many = JSON.stringify(Array.from({ length: SESSION_ENTRY_CAP + 1 }, (_, i) => `e${i}`));
             expect(evaluate({ tool_name: 'Write', cwd: root, session_id: 'esc', tool_input: { file_path: 'x-snapshots/lint_x_allowlist.json', content: many } })).toBe(1);
+            // ...and so does one reached through a `..` out of the snapshot
+            // directory: the class is read from the file name, never skipped
+            // because a snapshot-directory substring appears in the raw path.
+            expect(evaluate({ tool_name: 'Write', cwd: root, session_id: 'esc-dotdot', tool_input: { file_path: 'x-snapshots/../lint_x_allowlist.json', content: many } })).toBe(1);
         } finally {
             out.mockRestore();
             err.mockRestore();

@@ -151,7 +151,20 @@ describe('depth flip — option (d): structurally safe paths, then the audit', (
         );
     });
 
-    it('the committed audit ledger parses and starts empty', () => {
-        expect(loadAuditSamples()).toEqual([]);
+    it('the committed audit ledger parses and every sample is well-formed', () => {
+        // Not pinned empty: the flip needs recorded samples, so a test that
+        // only stays green while the ledger holds no evidence would forbid the
+        // thing it gates. Each recorded sample must carry the fields the flip reads.
+        const samples = loadAuditSamples();
+        expect(Array.isArray(samples)).toBe(true);
+        for (const s of samples) {
+            expect(s, JSON.stringify(s)).toMatchObject({
+                step: expect.any(String) as unknown,
+                cls: expect.stringMatching(/^R[0-3]$/u) as unknown,
+                escaped: expect.any(Boolean) as unknown,
+                critical: expect.any(Boolean) as unknown,
+                date: expect.any(String) as unknown,
+            });
+        }
     });
 });

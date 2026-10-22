@@ -39,15 +39,19 @@ describe('condition 2 — every updateNotice path leaves activate null', () => {
 });
 
 describe('condition 3 — the user opt-in is read BEFORE the ring-0 kill switch', () => {
+    // Fully typed, no cast: a new required field or a changed `mode` type must
+    // fail to compile here rather than leave the cases on the wrong shape.
     const base: InviteInput = {
         mode: 'ask',
         ringZeroExited: true,
         registerAvailable: true,
-        env: { ci: false, jsonOutput: false, subagent: false, headless: false, interactive: true },
-    } as unknown as InviteInput;
+        alreadyInvited: false,
+        turnEndedOnVerifiedSuccess: true,
+        env: { ci: false, noUpdateCheck: false, jsonOutput: false, subagent: false, headless: false, interactive: true },
+    };
 
     it('refuses without the opt-in even when ring-0 has exited', () => {
-        const d = autoInviteDecision({ ...base, mode: 'auto' } as unknown as InviteInput);
+        const d = autoInviteDecision({ ...base, mode: 'auto' });
         expect(d.ask).toBe(false);
         if (!d.ask) expect(d.reason).toContain('no user opt-in');
     });
@@ -58,13 +62,13 @@ describe('condition 3 — the user opt-in is read BEFORE the ring-0 kill switch'
         // read first this would report the ring-0 reason instead, and the
         // council's condition (d) would be false while every other case here
         // still passed.
-        const d = autoInviteDecision({ ...base, mode: 'auto', ringZeroExited: false } as unknown as InviteInput);
+        const d = autoInviteDecision({ ...base, mode: 'auto', ringZeroExited: false });
         expect(d.ask).toBe(false);
         if (!d.ask) expect(d.reason).toContain('no user opt-in');
     });
 
     it('still refuses on the ring-0 switch when the opt-in IS present', () => {
-        const d = autoInviteDecision({ ...base, ringZeroExited: false } as unknown as InviteInput);
+        const d = autoInviteDecision({ ...base, ringZeroExited: false });
         expect(d.ask).toBe(false);
         if (!d.ask) expect(d.reason).toContain('ring-0');
     });

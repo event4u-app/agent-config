@@ -128,6 +128,13 @@ describe('lint_context_spine_usage — slot-untrusted', () => {
         expect(validateBrandVoiceSlotText(VALID_SLOT)).toEqual([]);
     });
 
+    it('slot-untrusted: home, drive, file-URL and backslash-escaping references are refused too', () => {
+        for (const ref of ['~/notes.md', 'C:\\Users\\x\\notes.md', 'file:///etc/passwd', 'docs\\..\\..\\outside.md']) {
+            const text = VALID_SLOT.replace('evidence_ref: docs/bench/import.md', `evidence_ref: '${ref}'`);
+            expect(validateBrandVoiceSlotText(text).map((i) => i.field), ref).toContain('claims[0].evidence_ref');
+        }
+    });
+
     it('slot-untrusted: the lint reports a broken slot file under its path', () => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'spine-slot-'));
         try {
