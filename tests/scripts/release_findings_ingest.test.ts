@@ -30,6 +30,18 @@ describe('the self-review workflow commits nothing', () => {
         'utf-8',
     );
 
+    it('exists', () => {
+        expect(workflow.length).toBeGreaterThan(0);
+    });
+
+    it('keeps a read-only floor', () => {
+        expect(workflow).toMatch(/^permissions:\n\s*contents: read/m);
+    });
+
+    it('ignores a missing findings file rather than failing — absence is normal', () => {
+        expect(workflow).toMatch(/name: self-review-findings[\s\S]*?if-no-files-found: ignore/);
+    });
+
     it('carries no ledger job and grants no write scope to the repository', () => {
         expect(workflow).not.toMatch(/^  (ingest|commit)-release-ledger:/m);
         expect(workflow).not.toMatch(/contents: write/);
