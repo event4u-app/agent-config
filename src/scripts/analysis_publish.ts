@@ -266,6 +266,9 @@ export function settleCi(
             return handBack(runDir, rec, `CI red after ${MAX_CI_FIX_ROUNDS} fix rounds: ${verdict.red.join(', ')}`);
         }
         fix(verdict.red);
+        if (port.stagedPaths().length === 0) {
+            return handBack(runDir, rec, `CI fix staged nothing for: ${verdict.red.join(', ')}`);
+        }
         const outside = outsideAllowed(port, r.emitted);
         if (outside.length > 0) {
             rec = handBack(runDir, rec, `CI fix staged a path outside the allowed set: ${outside.join(', ')}`);

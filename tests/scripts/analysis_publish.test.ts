@@ -358,6 +358,17 @@ describe('settleCi (step 3.3)', () => {
         expect(out.handed_back_reason).toMatch(/src\/scripts\/other\.ts/);
     });
 
+    it('a CI fix that stages nothing hands back naming the red instead of committing', () => {
+        const { runDir, record, f, pr } = openRun([{ green: false, red: ['Rule backstops'] }]);
+        const out = settleCi(f.port, runDir, record, { ...INPUT, pr }, () => {
+            f.setStaged([]);
+            return [];
+        });
+        expect(out.state).toBe('handed-back');
+        expect(out.handed_back_reason).toMatch(/staged nothing for: Rule backstops/);
+        expect(f.calls.filter((c) => c.startsWith('commit:fix'))).toEqual([]);
+    });
+
     it('a fix push whose lease fails hands back instead of throwing (finding 2)', () => {
         const red: CiVerdict = { green: false, red: ['lint'] };
         const { runDir, record, f, pr } = openRun([red, red]);
