@@ -338,6 +338,7 @@ waits:
       weeks, the would-resume distribution and the refusal reasons. A window in
       which every reuse was refused is a valid null.
       verify: `ls agents/evidence/analysis/` -> /worker-reuse-shadow-window/
+      Built 2026-10-22, waits on its window: `src/scripts/worker_reuse_shadow_report.ts` summarises the window (calls, would-resume names, refusal reasons, resumes, valid null). Read on the maintainer's ledger the same day: 0 reuse-bearing lines, because the recording guard (3.3) is not installed yet. Closes when the report over ≥ 100 `Agent` calls or two weeks is filed as `agents/evidence/analysis/worker-reuse-shadow-window-<date>.md`.
 - [ ] **3.6 Flip only under the policy's four conditions**
       (`concern-activation-policy.md:67-85`), with a council ratification
       artefact and the reverse trigger shipped in the same change. Blocking form:
@@ -346,6 +347,7 @@ waits:
       honoured; otherwise documentation says the resume count is observed, not
       enforced.
       verify: `ls agents/evidence/ratifications/` -> /worker-reuse-guard-flip/
+      Built 2026-10-22, not flipped: `flipReadiness` in the same module encodes the four conditions — failure observed, false-positive rate measured and ≤ 1 %, economics measured and favourable, window met — and returns `ready: false` while any is unmeasured (`tests/scripts/worker_reuse_shadow_report.test.ts`). The blocking form and its ratification wait on 3.5's window.
 
 ## Phase 4 — Rate pressure that waits instead of spawning
 
