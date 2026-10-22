@@ -8,9 +8,9 @@ sub: inbox
 cluster: analyze
 skills: [learning-to-rule-or-skill, roadmap-writing, decision-review]
 description: Analyze a dropped inbox artifact (review, prompt, spec, transcript) against the current tree, reproduce its steps, verify its claims, map survivors onto this suite's artefacts, emit a roadmap each.
-argument-hint: "[<file> | <dir> | <round-id>] [--triage-only] [--no-roadmap] [--no-pr] [--keep-inbox] [--worktree]"
+argument-hint: "[<file> | <dir> | <round-id>] [--triage-only] [--no-roadmap] [--publish] [--no-pr] [--keep-inbox] [--worktree]"
 limits:
-  mode_default: execute
+  mode_default: plan
   max_iterations: 3
   hard_ceiling: 3
   no_gain_stop: 1
@@ -54,7 +54,9 @@ shared vocabulary, lenses and tiers:
 
 Flags: `--triage-only` stops after Phase 2 (no deep analysis, no roadmap) ·
 `--no-roadmap` analyses but emits findings instead of roadmaps ·
-`--no-pr` stops after validation, without a commit or a push ·
+`--publish` asks to publish a validated round — the run then names its branch
+and asks for this turn's confirmation before any commit or push ·
+`--no-pr` stops after validation, without a commit or a push (the default) ·
 `--keep-inbox` skips the `tmp.old/` move (default is to move — see Phase 6) ·
 `--worktree` runs the analysis itself in an isolated worktree (see below; off
 by default).
@@ -66,10 +68,13 @@ The frontmatter `limits:` block is the machine-readable pin
 the phases below are the enforcement. The fourth door of ADR-288 carries the
 same five keys as its three siblings, mapped onto the work it actually does:
 
-- `mode_default: execute` — unlike the three analysing doors, a round that
-  validates **publishes**: the run's own branch and one non-draft PR (§ Where
-  the work happens). `--no-pr`, `--no-roadmap`, `--triage-only` and `vcs: none`
-  each stop earlier, and the run says in one line which of them it obeyed.
+- `mode_default: plan` — like the three analysing doors, a round that
+  validates stays local: its roadmaps land in the checkout and nothing is
+  committed or pushed. It publishes the run's own branch and one non-draft PR
+  only on `--publish` **and** a confirmation this turn naming that branch
+  (§ Where the work happens). `--no-pr`, `--no-roadmap`, `--triage-only` and
+  `vcs: none` each stop earlier, and the run says in one line which of them it
+  obeyed.
 - `max_iterations: 3` and `hard_ceiling: 3` — the extraction loop is capped at
   three passes (§ The three-pass contract). The ceiling equals the default
   because no flag raises it: a fourth pass is not reachable from the surface.
@@ -86,10 +91,11 @@ rather than a loop budget, and it is stated where it fires.
 ## Where the work happens — and how a run ends
 
 ```
-THE RUN ENDS IN A NON-DRAFT PR CARRYING EXACTLY ITS ROADMAPS, WHEN vcs: git.
---no-pr STOPS AFTER VALIDATION, WITHOUT A COMMIT OR A PUSH.
-THE INVOCATION AUTHORISES ONLY THE RUN'S OWN BRANCH AND ITS ONE PR — NEVER
-ANOTHER BRANCH, NEVER A MERGE.
+A VALIDATED RUN ENDS LOCAL BY DEFAULT — NO COMMIT, NO PUSH, NO PR.
+IT PUBLISHES ONLY ON --publish PLUS A THIS-TURN CONFIRMATION THAT NAMES THE
+EXACT BRANCH (analysis/<run-id>) AND SAYS A NON-DRAFT PR FOLLOWS.
+THE INVOCATION ALONE IS NEVER THAT CONFIRMATION. NEVER ANOTHER BRANCH, NEVER
+A MERGE.
 ```
 
 This is the final stage of the analysis doors (ADR-288), so it ends the way the
@@ -102,7 +108,11 @@ including its seeding allow/deny list.
 
 **Publication** is the engine's publish stage
 (`src/scripts/analysis_publish.ts`), after Phase 6b and only when the scope
-resolves with `vcs: git` and `--no-pr` is absent:
+resolves with `vcs: git`, `--publish` was given, and the user confirmed this
+turn — after being shown the branch name, the base and the PR title — that the
+run may push `analysis/<run-id>` and open one non-draft PR. The door passes
+that confirmed branch as `confirmedBranch`; `publish()` hands the run back,
+changing nothing, when it is absent or names any other branch:
 
 1. The validate stage (`analysis_validate.ts`) passes on every emitted roadmap;
    a failure stops the run in `emitted` and nothing leaves the machine.
@@ -114,11 +124,18 @@ resolves with `vcs: git` and `--no-pr` is absent:
 4. One PR, opened non-draft (`isDraft: false`) and never twice for the same
    run; its body carries the point ledger, the coverage ledger and the open
    decisions. Merging is never part of the run.
+5. The PR title and body are derived from private dropped files, so both pass
+   the outbound check (`src/scripts/_lib/outbound_text.ts`) **before** the
+   commit: a credential, an absolute local path, an e-mail address or a
+   source-confidentiality deny token hands the run back naming only what
+   fired. Codenames reduce what a ledger says; the check is what stops it.
 
-The invocation is the this-turn confirmation of exactly those objects (ADR-288
-D6/D7); [`scope-control`](../../../../rules/scope-control.md) § Git operations
-still gates every other branch, PR or worktree. `vcs: none` or `--no-pr` ends
-the run validated and local, and says so in one line.
+The invocation is **not** the confirmation of those objects: it names neither
+the branch nor the PR ([`non-destructive-by-default`](../../../../rules/non-destructive-by-default.md)
+requires an approval naming the exact object).
+[`scope-control`](../../../../rules/scope-control.md) § Git operations still
+gates every other branch, PR or worktree. Without `--publish`, with `--no-pr`,
+or with `vcs: none` the run ends validated and local, and says so in one line.
 
 ## The Iron Law
 
@@ -1294,7 +1311,8 @@ prompted this section could not be given.
   state that hands nobody anything to do is what produced nine arrivals of one
   item; past the third, the escalation block is the output.
 - Push anything but the run's own branch, or open more than its one PR. A
-  large run is lanes (Phase 2b), never a second branch; `--no-pr` and
+  large run is lanes (Phase 2b), never a second branch; a run without
+  `--publish` and a this-turn confirmation of its branch, `--no-pr` and
   `vcs: none` end the run local.
 - Read the newest revision and call the set read. `v3` is the operative plan,
   not the union of the set; an item `v2` carried and `v3` dropped left no note

@@ -42,7 +42,7 @@ function section(heading: string): string {
 describe('analyze:inbox limits', () => {
     it('pins the limit values', () => {
         expect(fm['limits']).toEqual({
-            mode_default: 'execute',
+            mode_default: 'plan',
             max_iterations: 3,
             hard_ceiling: 3,
             no_gain_stop: 1,
@@ -54,7 +54,7 @@ describe('analyze:inbox limits', () => {
         const s = section('Enforced limits');
         expect(s).not.toBe('');
         for (const key of [
-            'mode_default: execute',
+            'mode_default: plan',
             'max_iterations: 3',
             'hard_ceiling: 3',
             'no_gain_stop: 1',
@@ -66,8 +66,11 @@ describe('analyze:inbox limits', () => {
 
     it('that section explains each key against the work the door does', () => {
         const s = section('Enforced limits');
-        // mode_default: execute — the door publishes, and names its stop flags.
-        expect(s).toMatch(/publishes/u);
+        // mode_default: plan — the door stays local, publishes only on --publish
+        // plus a this-turn confirmation naming the branch, and names its stop flags.
+        expect(s).toMatch(/stays local/u);
+        expect(s).toContain('`--publish`');
+        expect(s).toMatch(/confirmation this turn naming that branch/u);
         expect(s).toContain('`--no-pr`');
         // max_iterations / hard_ceiling — the extraction-pass cap, and why they are equal.
         expect(s).toMatch(/capped at\s+three passes/u);

@@ -113,6 +113,14 @@ expected-head check; at most one publication push plus three CI-fix pushes;
 never a merge, never another branch, never an approval of the run's own change.
 Precedent: `optimize:deep` Step 0 (`src/domains/meta/optimize/deep/command.md:115`).
 
+**Amended 2026-10-22 (17.0.0 release review, council FIX-BEFORE-RELEASE on the
+inbox push default).** For `analyze:inbox` the invocation is no longer the
+confirmation: an invocation names neither the generated branch nor the PR, and
+the non-destructive floor asks for an approval naming the exact object. The door
+defaults to `mode_default: plan` (a validated round stays local) and publishes
+only on `--publish` plus a this-turn confirmation naming `analysis/<run-id>`;
+`analysis_publish.publish()` enforces it through `confirmedBranch`.
+
 ### D7 — Fetching (owner, 2026-10-15, blocker `source-fetch-authorization`, option a)
 
 An invocation that names a source (`analyze:reference https://…`) authorises
