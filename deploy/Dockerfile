@@ -13,7 +13,7 @@
 #                      `dist/gui/static-assets.js` — no static/ dir to copy.
 
 # ---------- node-builder ----------
-FROM node:22-slim AS node-builder
+FROM node:22.22-slim AS node-builder
 
 WORKDIR /build
 
@@ -33,7 +33,7 @@ COPY packages/core/installer/src packages/core/installer/src
 RUN cd packages/core/installer && npx tsc -p tsconfig.json
 
 # ---------- runtime ----------
-FROM node:22-slim AS runtime
+FROM node:22.22-slim AS runtime
 
 # Defense-in-depth: non-root user, no shell login, fixed UID/GID for
 # bind-mount stability on Compose hosts.
