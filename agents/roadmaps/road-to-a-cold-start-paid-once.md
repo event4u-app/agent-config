@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-r verified at 9a943f30c that every subagent leg starts cold (median first-call written-or-uncached 242,891 tokens, agents/evidence/analysis/downshift-vs-cache.md:51) while the tree carries zero references to the host's resume primitive, rate-limit events or concurrency cap (grep over src, docs and agents/roadmaps for SendMessage, StopFailure, rate_limits, CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS returns nothing). No active roadmap owns spawn economics. Parking costs more because the owner asked for this to stop rate-limit refusals now; merging into later/road-to-worker-generation-recycling would wake a parked file whose Phase 2 waits on a primitive that does not exist and whose own posed owner question this plan only hands an answer to; merging into road-to-an-installed-layer-that-is-thinned would mix how many times a payload is paid with how big it is, which that file explicitly does not own."
-estate_growth_exempt: "+0 open_blockers: both owner-reserved blockers this round raised were answered by the owner on 2026-10-14 — `recycling-question-gets-its-answer` (option d, D11) and `third-writable-host-env-row` (option a, D12)."
+estate_growth_exempt: "+1 concern_count on 2026-10-22: step 4.3 binds the host's StopFailure to the quota_parked writer, and no existing concern listens on agent_error — the slot had no binding at all — so the record-only host-rate-marker concern is the step itself, not a side effect; it exits 0 on every path. Earlier claim, unchanged: +0 open_blockers, both owner-reserved blockers this round raised were answered by the owner on 2026-10-14 (D11, D12)."
 relates:
   - slug: road-to-worker-generation-recycling
     relation: extends
