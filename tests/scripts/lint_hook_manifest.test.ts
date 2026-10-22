@@ -440,6 +440,12 @@ describe("rewrite-concern-refused — no concern may produce a rewrite (ADR-285)
     expect(r.text).toMatch(/concerns\.block-no-verify: execution-view-not-granted — the grant is bound to/);
   });
 
+  it("execution-view-not-granted: a fail-closed concern missing from the closed list is refused, blocking or not", () => {
+    const r = run(VALID.replace("    fail_closed: false\n    effect: context\n", "    fail_closed: true\n    effect: context\n"));
+    expect(r.code).toBe(1);
+    expect(r.text).toMatch(/concerns\.session-canary: execution-view-not-granted — can refuse a call/);
+  });
+
   it("execution-view-not-granted: a blocking concern missing from the closed list is refused", () => {
     const r = run(VALID.replace("    fail_closed: false\n    effect: context\n", "    fail_closed: false\n    severity: blocking\n    effect: permission\n"));
     expect(r.code).toBe(1);
