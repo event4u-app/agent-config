@@ -5,8 +5,10 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { _resetAsOfCacheForTests } from '../../src/scripts/_lib/as_of.js';
 import { BYPASS_RECORD_DIR, bypassInstant, evaluateBypassRecords } from '../../src/scripts/_lib/platform_anchor.js';
 import {
+    bypassReviewCloses,
     committedEvidence,
     main,
     readRecordOnce,
@@ -42,6 +44,31 @@ function record(fields: Partial<Record<string, string | null>> = {}, extra = '')
         .filter(([, v]) => v !== null)
         .map(([k, v]) => `${k}: ${String(v)}`);
     return ['---', ...lines, ...(extra === '' ? [] : [extra]), '---', '<!-- evidence-type: bypass-record -->', '', '# Bypass', ''].join('\n');
+}
+
+/** A structured council review of a bypassed change, as the record's `council_review` must name. */
+function review(subject: string, seats: Record<string, string> = { anthropic: 'endorsed', openai: 'not-endorsed' }, outcome?: string): string {
+    const derived = Object.values(seats).every((v) => v === 'endorsed') ? 'endorsed' : 'not-endorsed';
+    return [
+        '<!-- evidence-type: analysis -->',
+        '',
+        '# Council review of a bypassed change',
+        '',
+        '## Bypass review',
+        '',
+        `bypass_subject: ${subject}`,
+        ...Object.entries(seats).map(([p, v]) => `seat: ${p} ${v}`),
+        `outcome: ${outcome ?? derived}`,
+        '',
+    ].join('\n');
+}
+
+/** `body` padded with `fill` to exactly `bytes` UTF-8 bytes. */
+function padTo(body: string, bytes: number, fill: string): string {
+    let out = body;
+    while (Buffer.byteLength(out) + Buffer.byteLength(fill) <= bytes) out += fill;
+    while (Buffer.byteLength(out) < bytes) out += 'x';
+    return out;
 }
 
 const one = (text: string | null, now = NOW) =>
@@ -150,6 +177,30 @@ describe('evaluateBypassRecords — a record that cannot show it closed fails cl
     });
 });
 
+describe('bypassReviewCloses — a review records a verdict, not a mention', () => {
+    const S = 'a'.repeat(64);
+
+    it('a structured review with two distinct seats and the derived outcome closes', () => {
+        expect(bypassReviewCloses(review(S), S)).toBe(true);
+        expect(bypassReviewCloses(review(S, { anthropic: 'endorsed', openai: 'endorsed' }), S)).toBe(true);
+    });
+
+    it('a bare mention, a missing marker or another subject does not', () => {
+        expect(bypassReviewCloses(`# review of subject ${S}\n`, S)).toBe(false);
+        expect(bypassReviewCloses(review(S).replace('## Bypass review', ''), S)).toBe(false);
+        expect(bypassReviewCloses(review('c'.repeat(64)), S)).toBe(false);
+        expect(bypassReviewCloses(`${review(S)}bypass_subject: ${'c'.repeat(64)}\n`, S)).toBe(false);
+    });
+
+    it('one seat, a repeated provider, an unknown verdict or an outcome the seats do not derive does not', () => {
+        expect(bypassReviewCloses(review(S, { anthropic: 'endorsed' }), S)).toBe(false);
+        expect(bypassReviewCloses(`${review(S)}seat: openai endorsed\n`, S)).toBe(false);
+        expect(bypassReviewCloses(review(S, { anthropic: 'endorsed', openai: 'fine' }), S)).toBe(false);
+        expect(bypassReviewCloses(review(S, { anthropic: 'endorsed', openai: 'not-endorsed' }, 'endorsed'), S)).toBe(false);
+        expect(bypassReviewCloses(`${review(S)}outcome: not-endorsed\n`, S)).toBe(false);
+    });
+});
+
 describe('check_platform_anchor reds on an open bypass, even on a diff it does not gate', () => {
     let root: string;
     const source: AnchorSource = { rulesets: () => null, defaultBranch: () => null };
@@ -197,7 +248,7 @@ describe('check_platform_anchor reds on an open bypass, even on a diff it does n
     it('passes once that record is closed and its review is committed and cites it', () => {
         git('init', '-q');
         put(`${BYPASS_RECORD_DIR}/closed.md`, record());
-        put(REVIEW, `# review of subject ${'a'.repeat(64)}\n`);
+        put(REVIEW, review('a'.repeat(64)));
         commitAll();
         expect(run()).toBe(0);
     });
@@ -223,7 +274,7 @@ describe('check_platform_anchor reds on an open bypass, even on a diff it does n
 
     it('a review committed before the restore does not close the record', () => {
         git('init', '-q');
-        put(REVIEW, `# review of subject ${'a'.repeat(64)}\n`);
+        put(REVIEW, review('a'.repeat(64)));
         git('add', '-A');
         const early = { GIT_COMMITTER_DATE: '2026-10-10T12:00:00Z', GIT_AUTHOR_DATE: '2026-10-10T12:00:00Z' };
         const r = spawnSync('git', ['-C', root, '-c', 'core.hooksPath=/dev/null', 'commit', '-q', '-m', 'early'], {
@@ -239,9 +290,9 @@ describe('check_platform_anchor reds on an open bypass, even on a diff it does n
     it('the review budget is checked before each read and counted in bytes', () => {
         git('init', '-q');
         const s = 'a'.repeat(64);
-        put('agents/evidence/council/r1.md', `${s}\n${'x'.repeat(535)}`);
-        put('agents/evidence/council/r2.md', `${s}\n${'x'.repeat(535)}`);
-        put('agents/evidence/council/r3.md', `${s}\n${'ä'.repeat(300)}`);
+        put('agents/evidence/council/r1.md', padTo(review(s), 600, 'x'));
+        put('agents/evidence/council/r2.md', padTo(review(s), 600, 'x'));
+        put('agents/evidence/council/r3.md', padTo(review(s), 665, 'ä'));
         commitAll();
         const index = committedEvidence(root);
         const reader = reviewReader(root, index, { perReview: 1000, total: 1100, reads: 20 });
@@ -257,7 +308,7 @@ describe('check_platform_anchor reds on an open bypass, even on a diff it does n
     it('fails when the committed review cites a different subject', () => {
         git('init', '-q');
         put(`${BYPASS_RECORD_DIR}/closed.md`, record());
-        put(REVIEW, `# review of subject ${'c'.repeat(64)}\n`);
+        put(REVIEW, review('c'.repeat(64)));
         commitAll();
         expect(run()).toBe(1);
     });
@@ -312,11 +363,33 @@ describe('check_platform_anchor reds on an open bypass, even on a diff it does n
         expect(run()).toBe(1);
     });
 
+    it('a review that only mentions the subject digest does not close the record', () => {
+        git('init', '-q');
+        put(`${BYPASS_RECORD_DIR}/closed.md`, record());
+        put(REVIEW, `# review of subject ${'a'.repeat(64)}\n`);
+        commitAll();
+        expect(run()).toBe(1);
+    });
+
+    it('an AC_AS_OF before restore_by does not make an overdue bypass read as not yet due', () => {
+        // The bypass clock is the later of the pin and the wall clock: a caller
+        // can pin "now" forward, never back (finding 882f1cbd89de).
+        put(`${BYPASS_RECORD_DIR}/open.md`, record({ restored_at: 'pending', council_review: 'pending' }));
+        process.env['AC_AS_OF'] = '2026-10-10T10:00:00Z';
+        _resetAsOfCacheForTests();
+        try {
+            expect(run()).toBe(1);
+        } finally {
+            process.env['AC_AS_OF'] = NOW.toISOString();
+            _resetAsOfCacheForTests();
+        }
+    });
+
     describe('a record the base carries and the checkout does not — with no file list at all', () => {
         const base = (): string => {
             git('init', '-q');
             put(`${BYPASS_RECORD_DIR}/closed.md`, record());
-            put(REVIEW, `# review of subject ${'a'.repeat(64)}\n`);
+            put(REVIEW, review('a'.repeat(64)));
             commitAll();
             const r = spawnSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf8' });
             return r.stdout.trim();

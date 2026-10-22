@@ -42,7 +42,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { asOf } from './_lib/as_of.js';
+import { asOf, asOfNotBeforeWallClock } from './_lib/as_of.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import {
     BYPASS_RECORD_DIR,
@@ -287,7 +287,7 @@ export function removedBypassRecords(root: string, baseRef: string): BypassFindi
         .map((f) => ({ code: 'bypass-record-removed' as const, path: printable(f), message: `${printable(f)} is at the base \`${printable(baseRef)}\` and gone here` }));
 }
 
-/** The committed review cites the record's subject digest, read from `HEAD`. */
+/** The committed review is a structured review of the record's subject, read from `HEAD`. */
 export function reviewReader(
     root: string,
     index: ReadonlySet<string>,
@@ -328,8 +328,51 @@ export function reviewReader(
             cache.set(rel, read(rel));
         }
         const review = cache.get(rel);
-        return review !== null && review !== undefined && review.text.includes(subject) && review.addedAtMs >= restoredAtMs;
+        return review !== null && review !== undefined && bypassReviewCloses(review.text, subject) && review.addedAtMs >= restoredAtMs;
     };
+}
+
+/** The heading a council review of a bypass carries, exactly once. */
+export const BYPASS_REVIEW_HEADING = '## Bypass review';
+
+/** The verdict a seat or a review may record on a bypassed change. */
+const REVIEW_VERDICTS: ReadonlySet<string> = new Set(['endorsed', 'not-endorsed']);
+
+/**
+ * True when `text` is a council review OF this bypass that records an outcome.
+ *
+ * A bare mention of the subject digest used to close the record, so a file that
+ * merely named the hash — written by the owner whose bypass it closes — counted
+ * as a review (finding 848868872ae6). The review must now carry, each on its own
+ * line: exactly one `## Bypass review` heading, exactly one `bypass_subject:` equal
+ * to the record's subject, at least two `seat: <provider> <verdict>` lines from
+ * distinct providers, and exactly one `outcome:` equal to the outcome those
+ * seats derive (`endorsed` only when every seat endorsed). Any outcome closes the
+ * record — the review happened; what it concluded is the council's.
+ */
+export function bypassReviewCloses(text: string, subject: string): boolean {
+    const lines = text.split(/\r?\n/u).map((l) => l.trim());
+    if (lines.filter((l) => l === BYPASS_REVIEW_HEADING).length !== 1) {
+        return false;
+    }
+    const subjects = lines.filter((l) => l.startsWith('bypass_subject:')).map((l) => l.slice('bypass_subject:'.length).trim());
+    if (subjects.length !== 1 || subjects[0] !== subject || !/^[0-9a-f]{64}$/u.test(subject)) {
+        return false;
+    }
+    const seats = new Map<string, string>();
+    for (const l of lines.filter((x) => x.startsWith('seat:'))) {
+        const m = /^seat:\s+([a-z][a-z0-9_-]*)\s+(\S+)$/u.exec(l);
+        if (m === null || !REVIEW_VERDICTS.has(m[2] as string) || seats.has(m[1] as string)) {
+            return false;
+        }
+        seats.set(m[1] as string, m[2] as string);
+    }
+    if (seats.size < 2) {
+        return false;
+    }
+    const outcomes = lines.filter((l) => l.startsWith('outcome:')).map((l) => l.slice('outcome:'.length).trim());
+    const derived = [...seats.values()].every((v) => v === 'endorsed') ? 'endorsed' : 'not-endorsed';
+    return outcomes.length === 1 && outcomes[0] === derived;
 }
 
 /** Where a council review a bypass record may cite lives. */
@@ -599,7 +642,9 @@ export function main(argv: readonly string[] = process.argv.slice(2), source = l
 
     const result = evaluateGate(changed, policyText, source, repo);
     const open = [
-        ...evaluateBypassRecords(readBypassRecords(root), asOf(), reviewReader(root, committedEvidence(root))),
+        // The bypass clock cannot be rewound by `--as-of` / `AC_AS_OF`: whoever sets
+        // the environment could otherwise make an overdue bypass read as not yet due.
+        ...evaluateBypassRecords(readBypassRecords(root), asOfNotBeforeWallClock(), reviewReader(root, committedEvidence(root))),
         ...removedBypassRecords(root, resolveBaseRef(baseRef, root)),
     ];
     if (open.length > 0) {
