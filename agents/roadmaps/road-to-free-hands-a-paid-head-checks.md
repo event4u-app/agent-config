@@ -117,7 +117,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   `no-stable-prefix` row. `corrected-from-reproduction`: `csk-` is dropped from the list.
   verify: an `egress_prefixes` test masks every synthetic key of each of the three prefixes,
   and a fixture adapter reading an unmapped `*_TOKEN` fails the coverage-join test.
-  Done 2026-10-22 (commit 06777113cc): rows `huggingface-token`, `nvidia-api-key`, `replicate-api-token` in `egress_rules.ts`; `CREDENTIAL_ENV_ROWS` maps the eleven credential variables the adapters and council clients read (the media adapters' `AIV_ACCESS_KEY` / `AIV_SECRET_KEY` as `no-stable-prefix`). Tests: `tests/scripts/_lib_egress_free_tier_prefixes.test.ts` (50/50 per prefix, seen 0/50 first; the coverage join and its fixture).
+  Done 2026-10-22 (commit 06777113cc): rows `huggingface-token`, `nvidia-api-key`, `replicate-api-token` in `egress_rules.ts`; `CREDENTIAL_ENV_ROWS` (`src/scripts/_lib/egress_credential_env.ts`) maps the eleven credential variables the adapters and council clients read (the media adapters' `AIV_ACCESS_KEY` / `AIV_SECRET_KEY` as `no-stable-prefix`). Tests: `tests/scripts/_lib_egress_free_tier_prefixes.test.ts` (50/50 per prefix, seen 0/50 first; the coverage join and its fixture).
 - [x] **1.3 An egress canary run before any free call.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/egress_canary.ts --> (Folded 2026-10-22 from
   `inbox-2026-10-z`.) A fixed set of planted canary values — personal data, credentials and
   internal identifiers — placed in the payload, in the hand's system prompt and in rule or skill
