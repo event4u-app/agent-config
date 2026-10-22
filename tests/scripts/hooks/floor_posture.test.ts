@@ -99,6 +99,19 @@ describe('floor posture — a neighbour PreToolUse hook', () => {
         expect(renderFloorPosture(posture).join('\n')).toContain('1 PreToolUse hook');
     });
 
+    it('a hook that only mentions a dispatcher or agent-config in its name is still foreign', () => {
+        const hooks = {
+            hooks: {
+                PreToolUse: [
+                    { hooks: [{ type: 'command', command: '"$BIN" dispatch:hook --platform claude --event pre_tool_use' }] },
+                    { hooks: [{ type: 'command', command: 'node rewrite-dispatch.js' }] },
+                    { hooks: [{ type: 'command', command: '~/tools/agent-config-helpers/rewrite.sh' }] },
+                ],
+            },
+        };
+        expect(readFloorPosture(deps({ [USER]: JSON.stringify(hooks) })).foreignPreToolUseHooks).toBe(2);
+    });
+
     it('none registered reads as none, not as unknown', () => {
         expect(renderFloorPosture(readFloorPosture(deps({}))).join('\n')).toContain('other PreToolUse hooks: none');
     });
