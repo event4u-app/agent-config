@@ -229,7 +229,11 @@ export function proofHolds(proof: string | undefined, root: string = REPO_ROOT):
     const title = proof.slice(sep + 2).trim();
     if (title === '' || !fs.existsSync(file)) return false;
     const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return new RegExp(`(?<![.\\w])(?:it|test)\\s*\\(\\s*['"\`]${escaped}`).test(fs.readFileSync(file, 'utf8'));
+    const call = new RegExp(`(?<![.\\w])(?:it|test)\\s*\\(\\s*['"\`]${escaped}`);
+    return fs
+        .readFileSync(file, 'utf8')
+        .split('\n')
+        .some((line) => !/^\s*(?:\/\/|\/?\*)/.test(line) && call.test(line));
 }
 
 /**
