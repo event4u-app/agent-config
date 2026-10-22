@@ -74,6 +74,7 @@ reason `unclassified` exists and the reason this paragraph does.
 | `ai_council/api_transport.ts` | `remote-subprocess` | `exported-api` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `ai_team/team_dispatch.ts` | `inter-agent-reply` | `stdout-write` | **covered** | imports the sanitize floor |
 | `analysis_pr_target.ts` | `remote-subprocess` | `exported-api` | **covered** | imports the sanitize floor |
+| `canary_liveness.ts` | `remote-subprocess` | `file-write` | **covered** | imports the sanitize floor |
 | `check_branch_freshness.ts` | `remote-subprocess` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `check_finding_dispositions.ts` | `remote-subprocess` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `check_host_docs_digest.ts` | `network-fetch` | `file-write` | **covered** | imports the sanitize floor |
@@ -102,7 +103,7 @@ reason `unclassified` exists and the reason this paragraph does.
 | `update_prices.ts` | `node-http-request` | `file-write` | **covered** | imports the sanitize floor |
 | `worktree_cleanup_check.ts` | `remote-subprocess` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 
-38 read surface(s): 11 covered, 24 uncovered, 3 unclassified.
+39 read surface(s): 12 covered, 24 uncovered, 3 unclassified.
 <!-- END read-surface-table -->
 ## The second layer — structural hiding in fetched markup
 

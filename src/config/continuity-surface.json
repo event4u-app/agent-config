@@ -135,6 +135,13 @@
             "reason": "Digests of the project files and symbols each hand route has been sent. Provider exposure accounting; no session resumes from it."
         },
         {
+            "id": "canary-liveness.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/canary_status.ts:14",
+            "reason": "The cross-model canary's red streak and status line, refolded from the workflow's scheduled runs on every refresh. CI state; nothing resumes from it."
+        },
+        {
             "id": "council-probes.json",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",

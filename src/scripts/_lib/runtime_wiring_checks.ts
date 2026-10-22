@@ -27,6 +27,7 @@ import process from 'node:process';
 
 import { parse as parseYaml } from 'yaml';
 
+import { readCanaryStatusLine } from './canary_status.js';
 import { inheritedGitOverrides } from './repo_root.js';
 import { layerFormDoctorCheck } from './layer_form_evidence.js';
 import {
@@ -358,6 +359,8 @@ export function wiringRunners(opts: {
             checkHostPermissionSettings(defaultHostPermissionDeps(opts.projectRoot)),
         // Shadow rule-layer form (road-to-a-setup-that-decides-itself 3.2); writes nothing.
         'layer-form': () => layerFormDoctorCheck(opts.packageRoot),
+        // Here rather than in cmd_doctor, which sits past the source ceiling. Reads state only, never `gh`.
+        'canary-liveness': () => canaryLivenessCheck(opts.projectRoot),
     };
 }
 
@@ -441,4 +444,12 @@ export function checkHookWiring(deps: HookWiringDeps): WiringCheck {
             ? 'agent-config refresh --global'
             : 'npm install -g @event4u/agent-config, then agent-config refresh --global',
     };
+}
+
+/** The cross-model canary's red-streak line, as `canary_liveness.ts --refresh` last recorded it. */
+export function canaryLivenessCheck(projectRoot: string): WiringCheck {
+    const line = readCanaryStatusLine(projectRoot);
+    return line === null
+        ? { id: 'canary-liveness', status: 'ok', message: 'no red streak recorded for the cross-model canary', remedy: '' }
+        : { id: 'canary-liveness', status: 'warn', message: line, remedy: './scripts-run src/scripts/canary_liveness --refresh after the canary is green again' };
 }
