@@ -432,6 +432,15 @@ jobs:
       - name: Override reachability (delivery, not efficacy)
         run: npx vitest run tests/scripts/override_reachability.test.ts
 
+      # The released-surface single-writer check reads `git log` of the fixture.
+      # The sharded Node Tests jobs check out shallow, so there it has nothing to
+      # read and skips; this job has full history, and the env var turns missing
+      # history into a failure instead of a skip.
+      - name: Released settings surface has a single writer (full history)
+        env:
+          RELEASE_SURFACE_REQUIRE_HISTORY: '1'
+        run: npx vitest run tests/scripts/release_settings_delta.test.ts
+
       # Same step: the precedence table is GENERATED, so a stale committed copy is
       # a silent lie about the tree. Regenerating and diffing is the freshness
       # check; `--write-table` writes in place and the diff is the assertion.
