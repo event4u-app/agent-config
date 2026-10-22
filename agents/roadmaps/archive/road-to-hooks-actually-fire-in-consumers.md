@@ -12,7 +12,7 @@ A Council pre-check (`agents/runtime/council/responses/hooks-actually-fire-roadm
 
 ### Symptom — what the consumer saw
 
-Consumer project: `/Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-ide-plugin`
+Consumer project: `~/projects/galawork/galawork-packages/event4u/agent-ide-plugin`
 
 - `agents/roadmaps/road-to-phase-0-validation.md` flipped from 0 → 20 done checkboxes across multiple commits.
 - `agents/roadmaps-progress.md` updated **only** when the author manually invoked the regenerator and committed. Two such commits exist (`46d3d8b`, `c3b806e`); zero hook-driven regens.
@@ -57,7 +57,7 @@ Lock the symptom to a script so any future regression test can replay it.
 
 - [x] **Step 1:** Add `scripts/repro/repro_marketplace_install_gap.sh` — clones into a temp dir, writes only `.claude/settings.json` with the plugin enabled (mirroring the marketplace install end-state), touches a fake roadmap, emits a synthetic `PostToolUse` JSON envelope on stdin to `scripts/hooks/dispatch_hook.py`, captures stderr + the regenerated dashboard (or its absence).
 - [x] **Step 2:** Run the script. Expected output: the dispatcher exits 0, no `agents/roadmaps-progress.md` written, no state file under `agents/runtime/state/`. Capture the run output to `agents/evidence/analysis/hooks-marketplace-gap-2026-05-29.md`. **Result: dispatcher exit=0, dashboard NOT written, dispatch-issues.jsonl ABSENT (pre-Phase-1, as expected). Note: 7 dispatcher-feedback files DO land under `agents/runtime/state/.dispatcher/`, but they don't surface the failure reason — that's exactly what Phase 1 fixes.**
-- [x] **Step 3:** Cross-check against the live consumer: `cd /Users/mathiasberg/projects/galawork/galawork-packages/event4u/agent-ide-plugin && ls .claude/ .augment/ ./agent-config 2>&1`. Expected: every path missing. Append to the evidence file. **Result: even more bare than expected — no `.claude/` at all (consumer may not have enabled the plugin either). The repro's failure shape covers both cases.**
+- [x] **Step 3:** Cross-check against the live consumer: `cd ~/projects/galawork/galawork-packages/event4u/agent-ide-plugin && ls .claude/ .augment/ ./agent-config 2>&1`. Expected: every path missing. Append to the evidence file. **Result: even more bare than expected — no `.claude/` at all (consumer may not have enabled the plugin either). The repro's failure shape covers both cases.**
 - [x] **Step 4:** Document in the evidence file which of the five missing artefacts (table in *Context*) the repro script confirms are load-bearing. **Result: 2 structural load-bearing prerequisites confirmed — `./agent-config` symlink (Phase 4 provisions) + `update_roadmap_progress.py` (Phase 3 provisions, post-reorder).**
 
 **Exit criteria:** the repro script reproduces the silent-no-op locally and the evidence doc cites which artefact missing → which hook concern silently fails.
