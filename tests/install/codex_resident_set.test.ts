@@ -28,7 +28,10 @@ import {
     ensureCodexResidentSet,
     ownedCatalogue,
     removeCodexResidentSet,
+    applyCodexResidentSet,
 } from '../../src/scripts/_lib/codex_resident_set.js';
+import { FINDER_NAME, readFinderIndex } from '../../src/scripts/_lib/codex_skill_finder.js';
+import { recordDeployedSkills } from '../_lib/codex_inventory.js';
 import { GLOBAL_DEPLOY_SOURCES } from '../../src/install/wizard-plan.js';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -218,5 +221,64 @@ describe('codex resident set — against the real projection', () => {
             'commands',
             'personas',
         ]);
+    });
+});
+
+// 17.0.0 finding 527716e47753: the catalogue came from readdir, so a skill the
+// user wrote, or another tool installed, under ~/.codex/skills or
+// ~/.agents/skills got a policy file and left the listing.
+describe('codex resident set — only skills this package deployed', () => {
+    it('never writes a policy file into a skill directory the deploy inventory does not record', () => {
+        const home = scratch();
+        const saved = process.env['EVENT4U_CONFIG_HOME'];
+        process.env['EVENT4U_CONFIG_HOME'] = path.join(home, '.event4u', 'agent-config');
+        try {
+            const codex = path.join(home, '.codex', 'skills');
+            const agents = path.join(home, '.agents', 'skills');
+            const owned: string[] = [];
+            for (let i = 0; i < 120; i++) {
+                const n = `pkg-${String(i).padStart(3, '0')}`;
+                writeSkill(codex, n, 'd'.repeat(150));
+                owned.push(n);
+            }
+            for (const n of ['zz-user-skill', 'aa-user-skill']) writeSkill(codex, n, 'mine '.repeat(20));
+            writeSkill(agents, 'zz-third-party', 'theirs '.repeat(20));
+            recordDeployedSkills(home, 'codex', '~/.codex/', owned);
+
+            const msgs: string[] = [];
+            applyCodexResidentSet(home, (m) => msgs.push(m));
+
+            for (const foreign of [
+                path.join(codex, 'zz-user-skill'),
+                path.join(codex, 'aa-user-skill'),
+                path.join(agents, 'zz-third-party'),
+            ]) {
+                expect(fs.existsSync(path.join(foreign, POLICY_REL)), foreign).toBe(false);
+            }
+            const unlisted = owned.filter((n) => fs.existsSync(path.join(codex, n, POLICY_REL)));
+            expect(unlisted.length).toBeGreaterThan(0);
+            const index = readFinderIndex(path.join(codex, FINDER_NAME, 'SKILL.md')).map((t) => t.name);
+            expect(index).not.toContain('zz-user-skill');
+            expect(index.sort()).toEqual(unlisted.sort());
+        } finally {
+            if (saved === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+            else process.env['EVENT4U_CONFIG_HOME'] = saved;
+        }
+    });
+
+    it('unlists nothing when the deploy inventory records no skills for the root', () => {
+        const home = scratch();
+        const saved = process.env['EVENT4U_CONFIG_HOME'];
+        process.env['EVENT4U_CONFIG_HOME'] = path.join(home, '.event4u', 'agent-config');
+        try {
+            const codex = path.join(home, '.codex', 'skills');
+            for (let i = 0; i < 120; i++) writeSkill(codex, `s-${String(i).padStart(3, '0')}`, 'd'.repeat(150));
+            applyCodexResidentSet(home, () => undefined);
+            const unlisted = fs.readdirSync(codex).filter((n) => fs.existsSync(path.join(codex, n, POLICY_REL)));
+            expect(unlisted).toEqual([]);
+        } finally {
+            if (saved === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+            else process.env['EVENT4U_CONFIG_HOME'] = saved;
+        }
     });
 });

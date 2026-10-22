@@ -11809,6 +11809,32 @@ function codexSkillRoots(home) {
     (a) => fs21.existsSync(path20.join(a, "skills"))
   );
 }
+var CODEX_ROOT_TOOL_IDS = ["codex", "antigravity"];
+function realOrResolved(p) {
+  try {
+    return fs21.realpathSync(p);
+  } catch {
+    return path20.resolve(p);
+  }
+}
+function inventoryOwnedSkills(anchor, home, inventory = load_inventory()) {
+  const out = /* @__PURE__ */ new Set();
+  const tools = inventory["tools"] ?? {};
+  const want = realOrResolved(anchor);
+  for (const id of CODEX_ROOT_TOOL_IDS) {
+    const entry = tools[id];
+    if (!entry || typeof entry.anchor !== "string" || !Array.isArray(entry.files)) continue;
+    const raw = entry.anchor;
+    const expanded = raw === "~" ? home : raw.startsWith("~/") ? path20.join(home, raw.slice(2)) : raw;
+    if (realOrResolved(expanded) !== want) continue;
+    for (const rel of entry.files) {
+      if (typeof rel !== "string") continue;
+      const m = /^skills\/([^/]+)\/SKILL\.md$/.exec(rel.split(path20.sep).join("/"));
+      if (m) out.add(m[1]);
+    }
+  }
+  return out;
+}
 function ownedCatalogue(skillsDir, owned) {
   const out = [];
   for (const name of owned) {
@@ -11900,21 +11926,30 @@ function applyCodexResidentSet(home, report) {
   try {
     const roots = codexSkillRoots(home);
     if (roots.length === 0) return;
+    const inventory = load_inventory();
+    const listedHere = (skillsDir) => fs21.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs21.existsSync(path20.join(skillsDir, d.name, "SKILL.md"))).map((d) => d.name);
+    const ownedIn = new Map(roots.map((a) => [a, inventoryOwnedSkills(a, home, inventory)]));
     const firstRootOf = /* @__PURE__ */ new Map();
     const catalogue = [];
+    let foreignCost = 0;
     for (const anchor of roots) {
       const skillsDir = path20.join(anchor, "skills");
-      const owned = fs21.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs21.existsSync(path20.join(skillsDir, d.name, "SKILL.md"))).map((d) => d.name);
-      for (const e of ownedCatalogue(skillsDir, owned)) {
+      const owned = ownedIn.get(anchor);
+      const here = listedHere(skillsDir);
+      for (const e of ownedCatalogue(skillsDir, here.filter((n) => !owned.has(n)))) {
+        foreignCost += e.name.length + e.descriptionChars + DEFAULT_PER_ENTRY_OVERHEAD_CHARS;
+      }
+      for (const e of ownedCatalogue(skillsDir, here.filter((n) => owned.has(n)))) {
         if (firstRootOf.has(e.name)) continue;
         firstRootOf.set(e.name, anchor);
         catalogue.push(e);
       }
     }
     const finderCost = FINDER_NAME.length + finderDescription(catalogue.length).length + DEFAULT_PER_ENTRY_OVERHEAD_CHARS;
-    let split = computeCodexResidentSet(catalogue);
+    const available = Math.max(0, CODEX_BUDGET_CHARS - foreignCost);
+    let split = computeCodexResidentSet(catalogue, { budgetChars: available });
     if (split.nonResident.length > 0) {
-      split = computeCodexResidentSet(catalogue, { budgetChars: CODEX_BUDGET_CHARS - finderCost });
+      split = computeCodexResidentSet(catalogue, { budgetChars: Math.max(0, available - finderCost) });
     }
     const resident = new Set(split.resident);
     const finder = ensureCodexFinder(
@@ -11927,8 +11962,8 @@ function applyCodexResidentSet(home, report) {
     let reenabled = 0;
     let foreign = 0;
     for (const anchor of roots) {
-      const skillsDir = path20.join(anchor, "skills");
-      const here = fs21.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs21.existsSync(path20.join(skillsDir, d.name, "SKILL.md"))).map((d) => d.name);
+      const owned = ownedIn.get(anchor);
+      const here = listedHere(path20.join(anchor, "skills")).filter((n) => owned.has(n));
       const nonResident = unlistAllowed ? here.filter((n) => !resident.has(n) || firstRootOf.get(n) !== anchor) : [];
       const res = ensureCodexResidentSet(anchor, recordPath(anchor), nonResident);
       disabled += res.disabled.length;

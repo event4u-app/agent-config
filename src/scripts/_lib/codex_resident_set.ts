@@ -57,6 +57,7 @@ import * as path from 'node:path';
 
 import { atomicWriteFile } from '../../install/atomic.js';
 import { ensureCodexFinder, FINDER_NAME, finderDescription, removeCodexFinder } from './codex_skill_finder.js';
+import { load_inventory, type Inventory } from './global_deploy_inventory.js';
 import type { FinderOutcome } from './codex_skill_finder.js';
 import * as user_global_paths from './user_global_paths.js';
 
@@ -229,6 +230,47 @@ export function codexSkillRoots(home: string): string[] {
     );
 }
 
+/**
+ * The deploy-inventory tools whose anchor can be one of {@link codexSkillRoots}:
+ * `codex` deploys `~/.codex/`, `antigravity` deploys `~/.agents/`.
+ */
+export const CODEX_ROOT_TOOL_IDS: readonly string[] = ['codex', 'antigravity'];
+
+function realOrResolved(p: string): string {
+    try {
+        return fs.realpathSync(p);
+    } catch {
+        return path.resolve(p);
+    }
+}
+
+/**
+ * The skill names the deploy inventory records under `anchor`, for any tool in
+ * {@link CODEX_ROOT_TOOL_IDS}. The inventory stores the anchor tilde-relative,
+ * so it is expanded against the STATED home, never `os.homedir()` — a staged
+ * install under a temporary home would otherwise own nothing, or the wrong
+ * machine's skills. A skill directory not recorded here is the user's or
+ * another tool's (17.0.0 finding 527716e47753), and nothing is written into it.
+ */
+export function inventoryOwnedSkills(anchor: string, home: string, inventory: Inventory = load_inventory()): Set<string> {
+    const out = new Set<string>();
+    const tools = (inventory['tools'] as Record<string, unknown> | undefined) ?? {};
+    const want = realOrResolved(anchor);
+    for (const id of CODEX_ROOT_TOOL_IDS) {
+        const entry = tools[id] as { anchor?: unknown; files?: unknown } | undefined;
+        if (!entry || typeof entry.anchor !== 'string' || !Array.isArray(entry.files)) continue;
+        const raw = entry.anchor;
+        const expanded = raw === '~' ? home : raw.startsWith('~/') ? path.join(home, raw.slice(2)) : raw;
+        if (realOrResolved(expanded) !== want) continue;
+        for (const rel of entry.files) {
+            if (typeof rel !== 'string') continue;
+            const m = /^skills\/([^/]+)\/SKILL\.md$/.exec(rel.split(path.sep).join('/'));
+            if (m) out.add(m[1]!);
+        }
+    }
+    return out;
+}
+
 /** The owned catalogue as deployed, read from disk. */
 export function ownedCatalogue(skillsDir: string, owned: readonly string[]): CodexCatalogueEntry[] {
     const out: CodexCatalogueEntry[] = [];
@@ -389,18 +431,29 @@ export function applyCodexResidentSet(home: string, report: (msg: string) => voi
     try {
         const roots = codexSkillRoots(home);
         if (roots.length === 0) return;
-
-        // The union, in root precedence order: the first root that carries a
-        // name is the one that may describe it.
-        const firstRootOf = new Map<string, string>();
-        const catalogue: CodexCatalogueEntry[] = [];
-        for (const anchor of roots) {
-            const skillsDir = path.join(anchor, 'skills');
-            const owned = fs
+        const inventory = load_inventory();
+        const listedHere = (skillsDir: string): string[] =>
+            fs
                 .readdirSync(skillsDir, { withFileTypes: true })
                 .filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs.existsSync(path.join(skillsDir, d.name, 'SKILL.md')))
                 .map((d) => d.name);
-            for (const e of ownedCatalogue(skillsDir, owned)) {
+        const ownedIn = new Map(roots.map((a) => [a, inventoryOwnedSkills(a, home, inventory)]));
+
+        // The union, in root precedence order: the first root that carries a
+        // name is the one that may describe it. Only names the deploy inventory
+        // records are in it; a foreign skill stays listed, so its entry is paid
+        // for out of the budget before the split instead of being unlisted.
+        const firstRootOf = new Map<string, string>();
+        const catalogue: CodexCatalogueEntry[] = [];
+        let foreignCost = 0;
+        for (const anchor of roots) {
+            const skillsDir = path.join(anchor, 'skills');
+            const owned = ownedIn.get(anchor)!;
+            const here = listedHere(skillsDir);
+            for (const e of ownedCatalogue(skillsDir, here.filter((n) => !owned.has(n)))) {
+                foreignCost += e.name.length + e.descriptionChars + DEFAULT_PER_ENTRY_OVERHEAD_CHARS;
+            }
+            for (const e of ownedCatalogue(skillsDir, here.filter((n) => owned.has(n)))) {
                 if (firstRootOf.has(e.name)) continue;
                 firstRootOf.set(e.name, anchor);
                 catalogue.push(e);
@@ -410,9 +463,10 @@ export function applyCodexResidentSet(home: string, report: (msg: string) => voi
         // rather than squeezed in after it. Its description is sized for the
         // whole catalogue being unlisted, an upper bound on the real count.
         const finderCost = FINDER_NAME.length + finderDescription(catalogue.length).length + DEFAULT_PER_ENTRY_OVERHEAD_CHARS;
-        let split = computeCodexResidentSet(catalogue);
+        const available = Math.max(0, CODEX_BUDGET_CHARS - foreignCost);
+        let split = computeCodexResidentSet(catalogue, { budgetChars: available });
         if (split.nonResident.length > 0) {
-            split = computeCodexResidentSet(catalogue, { budgetChars: CODEX_BUDGET_CHARS - finderCost });
+            split = computeCodexResidentSet(catalogue, { budgetChars: Math.max(0, available - finderCost) });
         }
         const resident = new Set(split.resident);
 
@@ -433,11 +487,8 @@ export function applyCodexResidentSet(home: string, report: (msg: string) => voi
         let reenabled = 0;
         let foreign = 0;
         for (const anchor of roots) {
-            const skillsDir = path.join(anchor, 'skills');
-            const here = fs
-                .readdirSync(skillsDir, { withFileTypes: true })
-                .filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs.existsSync(path.join(skillsDir, d.name, 'SKILL.md')))
-                .map((d) => d.name);
+            const owned = ownedIn.get(anchor)!;
+            const here = listedHere(path.join(anchor, 'skills')).filter((n) => owned.has(n));
             // Disabled here when it is not resident at all, OR when it is
             // resident but some earlier root already carries its description.
             const nonResident = unlistAllowed ? here.filter((n) => !resident.has(n) || firstRootOf.get(n) !== anchor) : [];
