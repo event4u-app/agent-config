@@ -176,7 +176,7 @@ mode: replace  # or extend
 ---
 ```
 
-This step is optional if the change is low-urgency.
+Optional for a low-urgency change.
 
 ### 2b. Generalize project-specific content (if needed)
 
@@ -229,8 +229,7 @@ is no scrubbing pass, because a rewritten identifier is still a leaked one.
 
 ### 5. Quality gates (only inside a checkout of this package)
 
-Run the package's full CI pipeline and confirm it is green. Numbered before
-the send because it runs before the send.
+Run the package's full CI pipeline and confirm it is green.
 [`package-ci-checks`](../../rules/package-ci-checks.md) owns the entry point
 and names it; a consumer has no such runner, so the command is not repeated.
 Outside a checkout the package CI runs after the issue or pull request exists.
@@ -241,11 +240,10 @@ Outside a checkout the package CI runs after the issue or pull request exists.
 ./agent-config self-repair:release <fingerprint> --approve <digest>
 ```
 
-The user runs that command; the agent prints it and never runs the `--approve`
-form itself. The digest only proves the bytes are unchanged since the dry run —
-it is not consent, and the agent can read it as easily as the user. Sending is
-a Hard-Floor action under `non-destructive-by-default`. No autonomy setting,
-standing instruction or earlier consent substitutes for it.
+The user runs it; the agent prints it and never runs `--approve` itself. The
+digest proves the bytes unchanged since the dry run, not consent — the agent
+can read it too. Sending is a Hard-Floor action (`non-destructive-by-default`);
+no autonomy setting, standing instruction or earlier consent substitutes for it.
 
 A byte changed since the dry run voids the approval. The ladder picks the
 vehicle: a pull request only when the release runs from a checkout of this
@@ -279,8 +277,6 @@ replaces the local override.
 ## Gotcha
 
 - Agent in consumer project doesn't know the package repo URL — this skill provides it
-- Agent may try to hand-edit a generated projection — `src/` is the source
-- Agent may try to write a second condensed copy — ADR-201 removed that step
 - Agent may include project-specific references — the floor in step 4 refuses them
 - Agent may not have git access to the package repo — the ladder degrades to an issue
 - A consumer install reaches the issue step, not the pull-request step

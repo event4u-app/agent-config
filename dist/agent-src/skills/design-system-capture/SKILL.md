@@ -291,17 +291,17 @@ handoff shape emitted alongside `design-system.json`
 - **Specimen granularity.** Many small foundation cards beat one dense dump —
   each specimen demonstrates ONE reusable sub-concept (a single button state,
   one spacing step, one elevation level), so a consumer lifts concepts
-  individually rather than parsing a monolith.
+  one by one, not from a monolith.
 - **Developer handoff bundle** (extends § Design→dev handoff README): a
   high-fidelity reference, behaviour notes, the assets list, the component
   mapping (design name → code component), responsive states, known caveats, and
-  — when the artifact is a mock — an explicit "prototype, not production code"
-  warning so a consumer never ships the reference verbatim.
+  — for a mock — an explicit "prototype, not production code" warning so a
+  consumer never ships the reference verbatim.
 
-**React stacks with the host's canvas:** the host's own `/design-sync` (a host feature, not shipped by this package) projects
-the components; run `/design-system:sync plan` first and do not hand-build the
-bundle. This floor stays the artifact for a manual projection — every non-React
-stack, or a host without the sync.
+**React stacks with the host's canvas:** the host's own `/design-sync` (not
+shipped by this package) projects the components; run `/design-system:sync plan`
+first, never hand-build the bundle. This floor stays the artifact for a manual
+projection — a non-React stack, or a host without the sync.
 
 **What to capture FROM** a running project: sources first, SSR fetch second,
 rendered snapshot only with consumer tooling; record the git SHA. Rationale:

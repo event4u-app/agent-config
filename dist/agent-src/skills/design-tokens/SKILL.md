@@ -59,9 +59,8 @@ linter. Obligations: [`design-intelligence/ATTRIBUTION.md`](../design-intelligen
 Rules: components never reference primitives directly; dark mode lives
 under `dark.semantic.*` overriding the same semantic names (emitted as a
 `.dark { … }` block); every value is a `{"$value": …, "$type": …}` pair
-(DTCG; 2025.10 colour, dimension and duration objects read — a composite
-object such as shadow or typography fails `generate` by design, naming the
-token). Start from
+(DTCG; 2025.10 colour/dimension/duration objects read — a composite such
+as shadow or typography fails `generate` by design, naming the token). Start from
 [the bundled starter template](templates/design-tokens-starter.json).
 
 ## Toolchain (`scripts/tokens.ts` — skill-relative, any cwd)
@@ -81,28 +80,27 @@ node …/tokens.mjs validate --dir src/ [--json [--tokens tokens.json]]
 node …/tokens.mjs embed --tokens assets/design-tokens.css --minimal --style
 ```
 
-`validate --json` emits findings with `"kind": "token_violation"` — the
-exact finding kind the UI directive set's polish step auto-converts
-against `state.ui_audit.design_tokens`. Wire it into review/polish runs:
+`validate --json` emits `"kind": "token_violation"` findings — the kind
+the UI directive set's polish step auto-converts
+against `state.ui_audit.design_tokens`. Wire it into review/polish:
 scan the changed files, append the findings to
 `state.ui_review.findings`, and let the polish round fix them
-(`var(--token)` over hardcoded hex — the validation rule the council's
-four-operation split assigns to *rules/linters*, not the corpus).
+(`var(--token)` over hardcoded hex — a *rules/linters* job in the
+council's four-operation split, not the corpus).
 
 **Set `artifact_covered: true` on a finding whose value traces to a provided
 design artifact.** Without it the polish round edits AWAY from the artifact:
 `polish.ts::partition_artifact_covered` drops flagged findings and treats every
 unmarked one as actionable, and this path appended `token_violation` findings
-without the flag — so a hex the handover states was converted to a project token
-by a loop nobody asked. The flag is per finding, not per run: a hardcoded hex
-the artifact never mentioned stays actionable and is still fixed. Marking is not
-suppression — the finding stays in the report as informational, so a reader
-still sees that the spec carries a value the token system does not.
+without the flag — so a loop nobody asked converted a handover hex to a project
+token. The flag is per finding: a hardcoded hex the artifact
+never mentioned stays actionable and is fixed. Marking is not suppression — the
+finding stays in the report as informational, so a reader sees that the spec
+carries a value the token system does not.
 (AI council 2026-09-09 on `blocker: findings-actionability-default`, option (b):
 one call site, no package-wide default changed. Reopens if a second
-artifact-derived finding path reaches the loop without provenance — recurrence
-would argue for carrying provenance in the finding TYPE rather than at a third
-call site.)
+artifact-derived finding path reaches the loop without provenance — then
+provenance belongs in the finding TYPE, not at a third call site.)
 
 ## Procedure
 

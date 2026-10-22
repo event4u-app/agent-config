@@ -55,9 +55,6 @@ Ask in this order, and stop at the first that answers:
 3. **The member manifest** — the ordinary case, and only after 1 and 2 are
    silent.
 
-A repository with no catalog and no root pin behaves exactly as before; this
-step adds a lookup, not a change of default.
-
 ### 2. Plan
 
 Categorize changes needed:
@@ -112,7 +109,7 @@ pip list --outdated         # pip
 poetry show --outdated       # poetry
 uv pip list --outdated       # uv
 
-# Upgrade a specific package (same shape for composer require / npm install pkg@latest)
+# Upgrade a specific package
 pip install --upgrade package-name
 poetry update package-name
 uv pip install --upgrade package-name
@@ -184,11 +181,8 @@ When upgrading multiple packages:
 
 | Pitfall | Prevention |
 |---|---|
-| Upgrading without reading changelog | Always read the changelog first |
-| Upgrading all packages at once | One package at a time (or tightly coupled groups) |
 | Trusting `composer update` blindly | Use `--dry-run` first, review changes |
 | Ignoring deprecation warnings | Fix deprecations before they become errors |
-| Skipping tests after upgrade | Full test suite + project type-checker (PHPStan / tsc / mypy / `go vet` / `cargo check`) after every upgrade |
 | Lock file conflicts | Coordinate upgrades with the team |
 
 ## Version constraint guidelines
@@ -266,7 +260,7 @@ CVE scanning (above) catches *known-vulnerable* versions. It does **not** catch 
 3. **Capability / behavior diff** — did the new version add a capability its job doesn't need: network egress (`fetch`/`net`/`dns`/`http`), `child_process`/shell, env/secret/credential reads, filesystem writes, obfuscated/minified blobs, a `.github/workflows` file? Use `socket` / `guarddog <eco> scan <pkg>@<ver>` if available; else read the delta.
 4. **Purpose-vs-behavior legitimacy check** — a Slack/HTTP client legitimately makes network calls; a date/string/color util does not. For each new capability ask: *does the package's stated purpose require this?* A network/secret capability with no purpose justification — or a **new outbound endpoint** even in a package that already uses the network — is high-risk.
 5. **Provenance + advisory feeds** — `npm audit signatures` (flag a dep that *had* provenance and lost it — a hallmark of a token-theft publish); `osv-scanner --lockfile=…` and the GitHub Advisory / Socket / Snyk malware feeds against the newly-resolved versions.
-6. **Release age and agent-config paths** — a fixing version younger than three days (a default, not a measured threshold) is `fix-fresh`: run steps 1–5 before installing it, not after. Any change to an agent, editor, git-hook or CI configuration path in the diff of a dependency update stops the update — for example `.claude/`, `.augment/`, `.cursor/`, `.gemini/`, `.windsurf/`, `.codex/`, `.vscode/`, `.husky/`, `.github/workflows/`, `.mcp.json`, an `AGENTS.md` / `CLAUDE.md` / `.cursorrules`-style instruction file — or to an install script. The list illustrates the class; an unlisted path of that class stops the update too. Own analysis: a session-start hook is a persistence point that runs with the developer's credentials, which is why the class is a stop and not a warning.
+6. **Release age and agent-config paths** — a fixing version younger than three days (a default, not a measured threshold) is `fix-fresh`: run steps 1–5 before installing it, not after. Any change to an agent, editor, git-hook or CI config path in a dependency update's diff stops the update — e.g. `.claude/`, `.augment/`, `.cursor/`, `.gemini/`, `.windsurf/`, `.codex/`, `.vscode/`, `.husky/`, `.github/workflows/`, `.mcp.json`, an `AGENTS.md` / `CLAUDE.md` / `.cursorrules`-style instruction file — or to an install script; an unlisted path of that class stops it too. Own analysis: a session-start hook is a persistence point running with the developer's credentials, hence a stop, not a warning.
 
 **Surface to the user** any: new install script · new transitive dep · new network endpoint / secret read · obfuscated blob · lost provenance · advisory/malware hit — with the version delta and the purpose-vs-behavior verdict, and hold the update until they decide. Never auto-accept a bump that introduced an unexplained capability.
 
@@ -309,11 +303,10 @@ source that reported it.
    prints the body; its After field is what `verify` recorded; a library adds
    `--release=<current version>` for the patch-release draft. Security fixes are
    never mixed with unrelated work. Stop before tag and publish. The entry
-   command authorizes the local fix only: before the first push or PR, show the
-   branch, the PR title and the body and wait for this-turn confirmation
+   command authorizes only the local fix: before the first push or PR, show
+   branch, title and body and wait for this-turn confirmation
    (`non-destructive-by-default`). On a public remote the body names the
-   advisory id and the fixed version, never an exploit path, until the fix is
-   merged.
+   advisory id and fixed version, never an exploit path, until merged.
 5. **Hand over** — watch CI with `agent-config ci:settle <pr>`, fix what the fix
    broke, report "ready to merge". Merge is the owner's, or `/pr:merge` under the
    owner's instruction; under `worktrees.cleanup: auto` the merge removes the fix
@@ -345,7 +338,7 @@ source that reported it.
 
 ## Gotcha
 
-- **A trusted package is not a safe version.** Every major supply-chain attack (event-stream, ua-parser-js, chalk/debug, xz) shipped through a *legitimate* package's normal-looking bump — maintainer-authored ≠ safe. Run the post-update behavior audit, not just `audit` for CVEs.
+- **A trusted package is not a safe version.** Every attack listed above shipped as a *legitimate* package's normal-looking bump. Run the post-update behavior audit, not just `audit` for CVEs.
 - **`audit` (CVE) ≠ malware scan.** `npm/composer audit` only knows *published* vulnerabilities; a fresh compromised version has no CVE yet. The capability/behavior diff + purpose-vs-behavior check is what catches zero-hour malware.
 - Don't upgrade multiple major versions at once — one major version per upgrade cycle.
 - The model tends to skip reading the CHANGELOG — breaking changes hide in minor releases too.
