@@ -14,6 +14,7 @@ import {
     SourceCodebook,
     cloneRepoSource,
     fetchUrlSource,
+    forTestsOnly,
     isPrivateAddress,
     quotedAnchor,
     validateSourceUrl,
@@ -53,7 +54,7 @@ afterAll(() => {
     server.close();
 });
 
-const FIXTURE = { allowPrivateHosts: true, network: true } as const;
+const FIXTURE = forTestsOnly({ network: true }, { allowPrivateHosts: true });
 
 describe('validateSourceUrl', () => {
     it('refuses credentials, non-http schemes and private hosts', async () => {
@@ -84,6 +85,68 @@ describe('validateSourceUrl', () => {
     });
 });
 
+describe('the network boundary holds under DNS rebinding (release 17 review 0794cff3e176)', () => {
+    it('connects to the address it validated, never re-resolving the host', async () => {
+        // `rebind.invalid` exists in no DNS. Only the validated answer can reach the fixture.
+        let calls = 0;
+        const resolver = async () => {
+            calls += 1;
+            return [{ address: '127.0.0.1', family: 4 }];
+        };
+        const port = (server.address() as AddressInfo).port;
+        const opts = forTestsOnly({ network: true }, { hostAllowlist: ['rebind.invalid'], resolver });
+        const ref = await fetchUrlSource(`http://rebind.invalid:${port}/article`, opts);
+        expect(ref.text).toContain('evicts the oldest entry');
+        expect(calls).toBe(1);
+    });
+
+    it('a private-host bypass set as a plain option field is ignored', async () => {
+        const plain = { network: true, allowPrivateHosts: true, hostAllowlistForTests: ['127.0.0.1'] } as unknown as { network: boolean };
+        await expect(fetchUrlSource(`${base}/article`, plain)).rejects.toThrow(/private/);
+    });
+
+    it('the test-only factory refuses outside a test runner', () => {
+        const saved = process.env['VITEST'];
+        delete process.env['VITEST'];
+        try {
+            expect(() => forTestsOnly({ network: true }, { allowPrivateHosts: true })).toThrow(/test runner/);
+        } finally {
+            process.env['VITEST'] = saved;
+        }
+    });
+
+    it('pins the clone to the validated address too, so git never resolves the host itself', async () => {
+        const work = fs.mkdtempSync(path.join(os.tmpdir(), 'clone-pinned-'));
+        const hits = path.join(work, 'hits');
+        const script = [
+            "const http = require('node:http'); const fs = require('node:fs');",
+            `const hits = ${JSON.stringify(hits)}; fs.writeFileSync(hits, '0');`,
+            "const s = http.createServer((q, r) => { fs.writeFileSync(hits, String(Number(fs.readFileSync(hits, 'utf8')) + 1)); r.writeHead(404); r.end(); });",
+            "s.listen(0, '127.0.0.1', () => process.stdout.write(String(s.address().port) + '\\n'));",
+        ].join('\n');
+        const child = spawn(process.execPath, ['-e', script], { stdio: ['ignore', 'pipe', 'inherit'] });
+        try {
+            const port = await new Promise<string>((resolve) => child.stdout.once('data', (d: Buffer) => resolve(d.toString().trim())));
+            const resolver = async () => [{ address: '127.0.0.1', family: 4 }];
+            const opts = forTestsOnly({ network: true }, { hostAllowlist: ['rebind.invalid'], resolver });
+            // The suite's setup routes HTTP through a dead proxy; this case needs git's own connection.
+            const proxies = Object.keys(process.env).filter((k) => /proxy/i.test(k));
+            const saved = proxies.map((k) => [k, process.env[k]] as const);
+            for (const k of proxies) delete process.env[k];
+            try {
+                await expect(cloneRepoSource(`http://rebind.invalid:${port}/repo.git`, path.join(work, 'run'), opts)).rejects.toThrow();
+            } finally {
+                for (const [k, v] of saved) process.env[k] = v;
+            }
+            // The 404 proves git reached the pinned address; without the pin it fails on DNS and never connects.
+            expect(Number(fs.readFileSync(hits, 'utf8'))).toBeGreaterThan(0);
+        } finally {
+            child.kill();
+            fs.rmSync(work, { recursive: true, force: true });
+        }
+    });
+});
+
 describe('fetchUrlSource (step 4.2b)', () => {
     it('reads a URL to a pinned, digested SourceRef', async () => {
         const ref = await fetchUrlSource(`${base}/article`, FIXTURE);
@@ -94,19 +157,19 @@ describe('fetchUrlSource (step 4.2b)', () => {
     });
 
     it('gives up on a server that trickles a body without ending it', async () => {
-        await expect(fetchUrlSource(`${base}/slow`, { ...FIXTURE, timeoutMs: 200 })).rejects.toThrow(/abort|timeout/i);
+        await expect(fetchUrlSource(`${base}/slow`, forTestsOnly({ network: true, timeoutMs: 200 }, { allowPrivateHosts: true }))).rejects.toThrow(/abort|timeout/i);
     });
 
     it('follows at most the redirect cap and re-validates every hop', async () => {
-        expect((await fetchUrlSource(`${base}/hop2`, { ...FIXTURE, maxRedirects: 3 })).text).toContain('Caching');
-        await expect(fetchUrlSource(`${base}/hop5`, { ...FIXTURE, maxRedirects: 3 })).rejects.toThrow(/redirect/);
-        await expect(fetchUrlSource(`${base}/to-metadata`, { network: true, allowPrivateHosts: false, hostAllowlistForTests: ['127.0.0.1'] })).rejects.toThrow(
+        expect((await fetchUrlSource(`${base}/hop2`, forTestsOnly({ network: true, maxRedirects: 3 }, { allowPrivateHosts: true }))).text).toContain('Caching');
+        await expect(fetchUrlSource(`${base}/hop5`, forTestsOnly({ network: true, maxRedirects: 3 }, { allowPrivateHosts: true }))).rejects.toThrow(/redirect/);
+        await expect(fetchUrlSource(`${base}/to-metadata`, forTestsOnly({ network: true }, { hostAllowlist: ['127.0.0.1'] }))).rejects.toThrow(
             /private/,
         );
     });
 
     it('refuses a body over the size cap', async () => {
-        await expect(fetchUrlSource(`${base}/big`, { ...FIXTURE, maxBytes: 1000 })).rejects.toThrow(/exceeds/);
+        await expect(fetchUrlSource(`${base}/big`, forTestsOnly({ network: true, maxBytes: 1000 }, { allowPrivateHosts: true }))).rejects.toThrow(/exceeds/);
     });
 
     it('without network it returns a degraded result instead of fetching', async () => {
@@ -176,7 +239,7 @@ describe('cloneRepoSource (step 4.2b)', () => {
         run(['add', 'README.md'], origin);
         run(['-c', 'user.email=t@example.com', '-c', 'user.name=t', 'commit', '-q', '-m', 'init'], origin);
         const head = run(['rev-parse', 'HEAD'], origin);
-        const ref = await cloneRepoSource(`file://${origin}`, path.join(work, 'run'), { network: true, allowPrivateHosts: true });
+        const ref = await cloneRepoSource(`file://${origin}`, path.join(work, 'run'), forTestsOnly({ network: true }, { allowPrivateHosts: true }));
         expect(ref.kind).toBe('local-clone');
         expect(ref.pin).toBe(head);
         expect(ref.identity).toBe(`file://${origin}`);
@@ -201,7 +264,7 @@ describe('cloneRepoSource (step 4.2b)', () => {
         try {
             const port = await new Promise<string>((resolve) => child.stdout.once('data', (d: Buffer) => resolve(d.toString().trim())));
             await expect(
-                cloneRepoSource(`http://127.0.0.1:${port}/repo.git`, path.join(work, 'run'), { network: true, hostAllowlistForTests: ['127.0.0.1'] }),
+                cloneRepoSource(`http://127.0.0.1:${port}/repo.git`, path.join(work, 'run'), forTestsOnly({ network: true }, { hostAllowlist: ['127.0.0.1'] })),
             ).rejects.toThrow();
             expect(fs.readFileSync(hits, 'utf8')).toBe('0');
         } finally {
