@@ -25,7 +25,7 @@
     "transcript": "~/.codex/sessions/2026/10/19/rollout-2026-10-19T21-39-15-01a155ac-e1af-7643-bb1f-e47def5bf033.jsonl",
     "date": "2026-10-19",
     "expiry": "2027-01-17",
-    "reason": "Same 120 repo-scope skills, 60 of them with `agents/openai.yaml` `policy: allow_implicit_invocation: false`. The 60 disabled ones left the model-visible list entirely, the omitted count fell from 554 to 481 and the list grew from 347 to 355 entries. A skill with implicit invocation disabled is not listed and does not occupy the budget — a resident set can be enforced by disabling implicit invocation for everything outside it."
+    "reason": "Same 120 repo-scope skills, 60 of them with `agents/openai.yaml` `policy: allow_implicit_invocation: false`. The 60 disabled ones left the model-visible list entirely, the omitted count fell from 554 to 481 and the list grew from 347 to 355 entries. The totals do not reconcile exactly: 347 + 554 = 901 and 355 + 481 = 836, five fewer than the 841 that removing 60 predicts, and these two runs do not explain the five. A skill with implicit invocation disabled is not listed and does not occupy the budget — a resident set can be enforced by disabling implicit invocation for everything outside it."
   },
   "double-listing": {
     "host": "codex",
