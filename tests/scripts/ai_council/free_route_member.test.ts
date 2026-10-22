@@ -120,6 +120,7 @@ describe('2.2 — a 402 is an unproven cost, never a paid fallback', () => {
             base_url: 'https://route.example.test/v1',
             api_key: null,
             billing: 'free-quota',
+            content_ceiling: 'public-artifact',
             post: () => {
                 throw new Error('HTTP 402: {"error":"payment required"}');
             },
@@ -138,6 +139,7 @@ describe('2.2 — a 402 is an unproven cost, never a paid fallback', () => {
             base_url: 'https://route.example.test/v1',
             api_key: null,
             billing: 'free-quota',
+            content_ceiling: 'public-artifact',
             post: (_url, headers) => {
                 seen.push(headers);
                 return { model: 'm', choices: [{ message: { content: 'ok' } }] };
