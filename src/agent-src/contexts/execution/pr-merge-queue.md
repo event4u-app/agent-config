@@ -127,6 +127,12 @@ the gate's output, run the council with `--output` on the prompt file, then:
   --classification <gate-output-file> --session <council-session-json> --prompt <prompt-file>
 ```
 
+`write` also leaves the prompt and every seat reply beside the record
+(`pr-<N>-<head>.prompt.txt`, `.replies.json`); commit all three. `--check`
+re-derives every seat from those replies, so a record without them, or with a
+retyped reading, does not clear. Every reply counts: a seat re-asked until it
+clears keeps its worst reading.
+
 A `needs-council` clearance only clears the merge. Deploy, release and every
 other Hard-Floor action keep their own confirmation.
 

@@ -49,7 +49,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
-import { parseClearance } from './_lib/merge_clearance_record.js';
+import { clearanceCompanions, parseClearance, verifyClearanceCompanions } from './_lib/merge_clearance_record.js';
 import { readRequiredProviders } from './_lib/ratification_artifact.js';
 import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
 import { parseExecutionMode } from './_lib/repeated_run.js';
@@ -208,7 +208,7 @@ export interface Finding {
 
 const RATIFICATION_POLICY = path.join('src', 'config', 'ratification-policy.json');
 
-function clearanceProblems(root: string, contents: string): string[] {
+function clearanceProblems(root: string, rel: string, contents: string): string[] {
     let required: number | null = null;
     try {
         required = readRequiredProviders(fs.readFileSync(path.join(root, RATIFICATION_POLICY), 'utf8'));
@@ -219,7 +219,18 @@ function clearanceProblems(root: string, contents: string): string[] {
         return [`${RATIFICATION_POLICY} is missing or unreadable, so the outcome cannot be derived`];
     }
     const parsed = parseClearance(contents, required);
-    return Array.isArray(parsed) ? parsed : [];
+    if (Array.isArray(parsed)) return parsed;
+    // Internal consistency is not provenance (finding 6db6a97ba552): the seats
+    // must be what the committed replies beside the record derive.
+    const companions = clearanceCompanions(parsed.pr, parsed.head);
+    const read = (name: string): string | null => {
+        try {
+            return fs.readFileSync(path.join(root, path.dirname(rel), name), 'utf8');
+        } catch {
+            return null;
+        }
+    };
+    return verifyClearanceCompanions(parsed, read(companions.prompt), read(companions.replies));
 }
 
 export function checkFiles(root: string, files: readonly string[], ledger?: GateLedger): Finding[] {
@@ -272,7 +283,7 @@ export function checkFiles(root: string, files: readonly string[], ledger?: Gate
         // does not parse — or whose outcome its own seats do not support under
         // the committed quorum policy — is a finding rather than a typed record.
         if (res.type === 'merge-clearance') {
-            const problems = clearanceProblems(root, contents);
+            const problems = clearanceProblems(root, rel, contents);
             if (problems.length > 0) {
                 ledger?.fail(rel, 'merge clearance does not parse');
                 findings.push({ file: rel, reason: `merge-clearance does not parse: ${problems.join('; ')}` });
