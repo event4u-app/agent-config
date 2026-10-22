@@ -86,7 +86,9 @@ export const QUERIES_PER_SUITE = 10;
  * 117 suites" assumed an even spread the hash did not produce — the tree passed
  * at 140 — and is kept here as the 2026-09-30 reasoning, not as a live figure.
  *
- * **Raised to 200 by the repository owner on 2026-10-14.** Measured that day:
+ * **Raised to 200 by the repository owner on 2026-10-14** (the decision is
+ * recorded in commit 1696ac45b). Own analysis, re-derivable at any commit
+ * with `rotation_plan(list_trigger_suites())`. Measured that day:
  * 140 suites on `main`, ~117 queries a week on average, and a peak of exactly
  * 160 because FNV-1a puts 16 suites in each of slots 3 and 10. The `security`
  * corpus hashes into slot 3 and made it 17, a peak of 170. The peak is set by
