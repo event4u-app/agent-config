@@ -1548,7 +1548,49 @@ describe.runIf(hasGit())('round: header field — the round counts review passes
         expect(runGate(dir).kinds).not.toContain('round-miscounted');
     });
 
-    it('a re-bind with the same prompt_hash is the same pass — CI churn does not burn a round', () => {
+    it('a re-bind with the same prompt_hash keeps the round over the fixes it cites, never over other code', () => {
+        // Finding b84f74c7bd2f: the same prompt_hash used to carry the old verdict
+        // to changed code with no reviewer. It keeps the ROUND; the code it
+        // covers is only the fixes the artefact records.
+        const prompt = 'a'.repeat(64);
+        const rowsArt = (scope: string, round: number, row: string): string =>
+            [
+                '# Findings: feat',
+                roundMarker(scope, round, prompt),
+                '',
+                manifestFor(scope),
+                '',
+                '| # | Severity | File:line | Finding | Status | Reason/Ref |',
+                '|---|---|---|---|---|---|',
+                row,
+                '',
+            ].join('\n');
+        const dir = makeRepo();
+        write(dir, 'src/fix.ts', 'export const x = 1;\n');
+        commitAll(dir, 'feature');
+        write(dir, ART, rowsArt(scopeHash(dir), 1, '| 1 | high | src/fix.ts:1 | x is wrong | open | - |'));
+        commitAll(dir, 'round 1 review');
+        write(dir, 'src/fix.ts', 'export const x = 2;\n');
+        commitAll(dir, 'fix row 1');
+        const fix = git(dir, 'rev-parse', 'HEAD').trim();
+        write(dir, ART, rowsArt(scopeHash(dir), 1, `| 1 | high | src/fix.ts:1 | x is wrong | fixed | ${fix.slice(0, 12)} |`));
+        commitAll(dir, 're-bind over the cited fix, no new reviewer');
+        const kept = runGate(dir);
+        expect(kept.kinds).not.toContain('rebind-over-unreviewed-code');
+        expect(kept.status).toBe(0);
+        write(dir, ART, rowsArt(scopeHash(dir), 2, `| 1 | high | src/fix.ts:1 | x is wrong | fixed | ${fix.slice(0, 12)} |`));
+        commitAll(dir, 're-bind claiming a pass that did not run');
+        expect(runGate(dir).kinds).toContain('round-miscounted');
+
+        // New code no row cites: the same prompt_hash cannot carry the verdict to it.
+        write(dir, 'src/fix.ts', 'export const x = 3;\nexport const y = 4;\n');
+        commitAll(dir, 'more code after the review');
+        write(dir, ART, rowsArt(scopeHash(dir), 1, `| 1 | high | src/fix.ts:1 | x is wrong | fixed | ${fix.slice(0, 12)} |`));
+        commitAll(dir, 're-bind over unreviewed code');
+        expect(runGate(dir).kinds).toContain('rebind-over-unreviewed-code');
+    });
+
+    it('an honest-null re-bound to changed code with the same prompt_hash is refused', () => {
         const prompt = 'a'.repeat(64);
         const dir = makeRepo();
         write(dir, 'src/fix.ts', 'export const x = 1;\n');
@@ -1559,10 +1601,35 @@ describe.runIf(hasGit())('round: header field — the round counts review passes
         commitAll(dir, 'CI fix');
         write(dir, ART, nullArtifact(scopeHash(dir), 1, prompt));
         commitAll(dir, 're-bind, no new reviewer');
+        expect(runGate(dir).kinds).toContain('rebind-over-unreviewed-code');
+        // A new reviewer pass over the changed code is the way forward.
+        write(dir, ART, nullArtifact(scopeHash(dir), 2, 'b'.repeat(64)));
+        commitAll(dir, 'second pass');
         expect(runGate(dir).status).toBe(0);
-        write(dir, ART, nullArtifact(scopeHash(dir), 2, prompt));
-        commitAll(dir, 're-bind claiming a pass that did not run');
-        expect(runGate(dir).kinds).toContain('round-miscounted');
+    });
+
+    it('a rename or a fresh artefact under a new name does not restart the round count', () => {
+        // Finding 4e47471d7760: the count was keyed on one path.
+        const renamed = 'agents/evidence/reviews/feat-again.findings.md';
+        const dir = passesRepo(REVIEW_ROUND_CAP);
+        git(dir, 'mv', ART, renamed);
+        commitAll(dir, 'rename the artefact');
+        write(dir, 'src/fix.ts', 'export const x = 99;\n');
+        commitAll(dir, 'more code');
+        write(dir, renamed, nullArtifact(scopeHash(dir), 1, 'c'.repeat(64)));
+        commitAll(dir, 'restart at round 1 under the new name');
+        const res = runGate(dir);
+        expect(res.kinds).toContain('round-miscounted');
+        expect(res.kinds).toContain('round-cap-exceeded');
+
+        const fresh = passesRepo(REVIEW_ROUND_CAP);
+        git(fresh, 'rm', '-q', ART);
+        commitAll(fresh, 'drop the artefact');
+        write(fresh, 'src/fix.ts', 'export const x = 98;\n');
+        commitAll(fresh, 'more code');
+        write(fresh, renamed, nullArtifact(scopeHash(fresh), 1, 'e'.repeat(64)));
+        commitAll(fresh, 'a new artefact under a new name');
+        expect(runGate(fresh).kinds).toContain('round-cap-exceeded');
     });
 
     /** `passes` reviewer passes, each on its own prompt and scope, the last one in the working tree. */
@@ -1619,10 +1686,13 @@ describe.runIf(hasGit())('round: header field — the round counts review passes
         expect(below.kinds).not.toContain('cap-deferral-without-owner-report');
     });
 
-    it('leaves a legacy re-bind with no round field anywhere untouched', () => {
+    it('a legacy re-bind with no round field keeps its count, but not its verdict over new code', () => {
         const dir = reboundRepo(null);
         write(dir, ART, nullArtifact(scopeHash(dir), null));
         commitAll(dir, 'legacy re-bind');
-        expect(runGate(dir).status).toBe(0);
+        const res = runGate(dir);
+        expect(res.kinds).not.toContain('round-miscounted');
+        // Omitting prompt_hash is not a way around finding b84f74c7bd2f.
+        expect(res.kinds).toEqual(['rebind-over-unreviewed-code']);
     });
 });
