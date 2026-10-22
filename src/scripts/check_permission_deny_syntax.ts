@@ -31,7 +31,10 @@
  * Exit codes: 0 — every pin is current and every rule conforms · 1 — a finding.
  */
 
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import process from 'node:process';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { asOf } from './_lib/as_of.js';
 import { reportScanned } from './_lib/scan_scope.js';
@@ -224,6 +227,21 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     return 0;
 }
 
-if (process.argv[1] !== undefined && import.meta.url === `file://${process.argv[1]}`) {
+/**
+ * True when this module is the process entry. Compared as resolved URLs, then
+ * as real paths: a raw `file://` string misses spaces, percent-encoding and
+ * symlinked paths (macOS `/var`), and a missed match exits 0 having run nothing.
+ */
+function isCliEntry(): boolean {
+    if (process.argv[1] === undefined) return false;
+    try {
+        return import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href ||
+            fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(path.resolve(process.argv[1]));
+    } catch {
+        return false;
+    }
+}
+
+if (isCliEntry()) {
     process.exit(main());
 }
