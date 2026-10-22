@@ -572,6 +572,10 @@ export function _final_exit_code(payload: DoctorPayload, strict: boolean): numbe
   if (payload.concerns.some((c) => !c.script_present)) {
     return 1;
   }
+  // No hook runtime resolves, so the destructive-action floor does not run.
+  if (payload.floor_posture.runtime === "floor-not-running") {
+    return 1;
+  }
   return 0;
 }
 
