@@ -128,18 +128,20 @@ the bench harnesses and `pricing.yaml`.
 
 ## Phase 3 — A tick reaches production (D2)
 
-- [ ] **3.1 Declare the production entries** once: the hook dispatcher, the CLI registry
+- [x] **3.1 Declare the production entries** once: the hook dispatcher, the CLI registry
   commands, shipped command scripts, and the projected subagent definitions. Reuse
   `dispatchImportClosure`'s resolver for the import walk.
   verify: the entry list is a committed file; its closure is printed by a `report_` script and
   is stable across two runs.
-- [ ] **3.2 `check_step_production_reach`** reads only the PR's own new ticks (the
+      Done 2026-10-23: `src/config/production-entries.json` (fixed entries plus every script an entry source names); `report_production_reach` printed digest `43c1e7324c5e6705` twice over one tree.
+- [x] **3.2 `check_step_production_reach`** reads only the PR's own new ticks (the
   `check_step_receipts` diff walk). For each tick whose verify names a test file, it collects
   the `src/` modules that test imports; a tick passes when at least one of them is in the
   closure, or when the step text carries `production entry: <path>` that is. A step may instead
   stay `[ ]` with `built, not wired` — never `[x]`.
   verify: replaying #2585's ticks reds cold-start 2.5, one-detector 2.5 and free-hands 3.2;
   `--self-test` covers a wired and an unwired fixture.
+      Done 2026-10-23 in report mode: reach is symbol-level, because module-level reach passed one-detector 2.5 through one constant. The #2585 replay lists 15 ticks, cold-start 2.5, one-detector 2.5 and free-hands 3.2 among them; registered in `rule-backstops.yml` and `task ci`.
 - [ ] **3.3 Shadow first, then enforce.** One release in report mode (exit 0, list printed),
   then enforcing, like the receipts check. False positives are allow-listed per step with a
   reason, never globally.

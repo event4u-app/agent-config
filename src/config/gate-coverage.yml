@@ -2821,6 +2821,28 @@ gates:
       except as a new roadmap. Discrimination is proven by the gate's own
       `--self-test` (6 cases, 3 rejecting), which builds these shapes.
 
+  - id: check_step_production_reach
+    argv: ["--base", "origin/main"]
+    min_scanned: 0
+    corpus: >
+      the roadmap steps a change newly ticks, read from the same base-ref diff as
+      check_step_receipts, against the import closure of the entries in
+      `src/config/production-entries.json`. The floor is 0 deliberately: most
+      changes tick no step, and git answers for its own range.
+
+      SELF-TEST ADOPTED: an unwired tested symbol and a ticked `built, not wired`
+      step must RED; a wired symbol, a declared `production entry:` and a
+      reworded older tick must stay GREEN. Sensitivity observed: counting an
+      export as reached on its declaration alone turns three unit cases red.
+      Report-only for one release (road-to-a-tick-the-shipped-path-earns 3.3);
+      a replay of #2585 lists 15 ticks, the three D2 cases among them.
+    status: enforced
+    ci_invocation: .github/workflows/rule-backstops.yml
+    no_canary_reason: >-
+      Same shape as check_step_receipts: the corpus is a base-ref DIFF, and the
+      violation is a line changing from unticked to ticked, which a created
+      file cannot represent. Discrimination is proven by `--self-test`.
+
   - id: check_agent_artifact_location
     argv: []
     min_scanned: 3000
