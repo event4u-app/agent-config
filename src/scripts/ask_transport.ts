@@ -49,6 +49,11 @@
  * domains are replaced by placeholders before the call.
  * A typed hand reaches a free route only for a kind the shadow bars flipped
  * (`ai_council/kind_flip.ts`); until then the paid route serves it.
+ * While it does, a `--content-class public-artifact` typed ask is also shadowed
+ * on the first admissible free route (free-hands 6.2): both calls run at once,
+ * the paid answer is returned unchanged, and the free one only becomes a row in
+ * the shadow ledger (`ai_council/free_hand_shadow.ts`, capped at 2,000 rows).
+ * `--no-record` turns the shadow off with the rest of the state writes.
  *
  * Exit codes: 0 answer produced · 2 usage error · 3 honest-∅ (no transport, or a
  * typed return that does not parse).
@@ -72,6 +77,7 @@ import {
 } from './ai_council/route_liveness.js';
 import { MidFlightFallback } from './ai_council/transport_resolver.js';
 import { isKindFlipped } from './ai_council/kind_flip.js';
+import { readShadowLedger, shadowAsk, SHADOW_CALL_CAP, type HeadVerify } from './ai_council/free_hand_shadow.js';
 import {
     EXPOSURE_LEDGER_RELPATH,
     ExposureLedger,
@@ -137,6 +143,11 @@ export interface AskOptions {
      * `stateRoot`; no state, or no `stateRoot`, is not flipped.
      */
     flips?: (kind: HandKind) => boolean;
+    /**
+     * The verify recorded for both sides of a shadow call (free-hands 6.2).
+     * Default: `skipped` — the head has not checked either return at call time.
+     */
+    shadowVerify?: HeadVerify;
 }
 
 /** The model a `base_url` route member calls; null for a provider member. */
@@ -244,6 +255,7 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
             : {}),
     });
     const system = opts.kind !== undefined ? handSystemPrompt(opts.kind) : (opts.systemPrompt ?? DEFAULT_SYSTEM);
+    const shadowFree = _shadowCandidate(opts, stateRoot, pool, chain);
     // One retry down the chain, gated like the council's cli→api fallback: a
     // failure that may have been generated and charged never falls through.
     const ledger = new MidFlightFallback();
@@ -252,7 +264,11 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
     for (const route of chain) {
         const pick = pool.find((r) => r.route === route)?.member;
         if (pick === undefined) continue;
-        const outcome = await _callRoute(pick, route.name, system, trimmed, opts, stateRoot);
+        const shadow = failures === 0 && shadowFree !== null && !isUnpaid(route.billing) ? shadowFree : null;
+        const served = shadow === null ? pick : _teeMember(pick);
+        const shadowRun = shadow === null ? null : _runShadow(trimmed, served, shadow, opts, stateRoot as string);
+        const outcome = await _callRoute(served, route.name, system, trimmed, opts, stateRoot);
+        if (shadowRun !== null) await shadowRun;
         if (outcome.done) return _finish(outcome.result, route.name, opts, outcome.schemaValid, route.billing);
         last = { provider: route.name, billing: route.billing };
         if (++failures > 1) break;
@@ -261,6 +277,74 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
         if (ledger.attempt(route.name, failure, { apiOnQuota: isUnpaid(route.billing) }) !== 'api') break;
     }
     return last === null ? _finish(null, opts.member ?? 'none', opts) : _finish(null, last.provider, opts, undefined, last.billing);
+}
+
+/** Fewer than `SHADOW_CALL_CAP` rows; past it nothing but the paid route is called. */
+function _belowShadowCap(stateRoot: string): boolean {
+    return readShadowLedger(stateRoot).length < SHADOW_CALL_CAP;
+}
+
+/**
+ * The free route a typed `public-artifact` ask is shadowed on (free-hands 6.2):
+ * the first unpaid route the chooser admits once the flip gate is set aside,
+ * and only while the ask itself is served by a paid route. Null for anything
+ * else — untyped, project content, no state root, a flipped kind, the cap.
+ */
+function _shadowCandidate(
+    opts: AskOptions,
+    stateRoot: string | null,
+    pool: readonly { member: ExternalAIClient; route: ReturnType<typeof routeCandidateFromMember> }[],
+    chain: readonly ReturnType<typeof routeCandidateFromMember>[],
+): ExternalAIClient | null {
+    if (opts.kind === undefined || stateRoot === null) return null;
+    if ((opts.contentClass ?? DEFAULT_CONTENT_CLASS) !== 'public-artifact') return null;
+    const first = chain[0];
+    if (first === undefined || isUnpaid(first.billing)) return null;
+    const { chain: open } = chooseRouteChain({
+        kind: opts.kind,
+        contentClass: 'public-artifact',
+        unpaidAllowed: true,
+        candidates: pool.map((r) => r.route),
+        ...(opts.exposure !== undefined
+            ? { exposureShare: exposureShareFn(opts.exposure.ledger, opts.exposure.exposes, opts.exposure.trackedFiles) }
+            : {}),
+    });
+    const free = open.find((c) => isUnpaid(c.billing));
+    if (free === undefined || !_belowShadowCap(stateRoot)) return null;
+    return pool.find((r) => r.route === free)?.member ?? null;
+}
+
+/** The member with its first completion memoised, so the paid route is called once for both the caller and the ledger. */
+function _teeMember(member: ExternalAIClient): ExternalAIClient {
+    let first: ReturnType<ExternalAIClient['ask']> | undefined;
+    const tee = Object.create(member) as ExternalAIClient;
+    tee.ask = (...args: Parameters<ExternalAIClient['ask']>) => (first ??= member.ask(...args));
+    return tee;
+}
+
+/** The shadow call; its result is the ledger row only, and nothing it raises reaches the caller. */
+async function _runShadow(
+    prompt: string,
+    paid: ExternalAIClient,
+    free: ExternalAIClient,
+    opts: AskOptions,
+    stateRoot: string,
+): Promise<void> {
+    if (opts.kind === undefined) return;
+    try {
+        opts.exposure?.ledger.record(routeCandidateFromMember(free).name, opts.exposure.exposes);
+        await shadowAsk(prompt, {
+            kind: opts.kind,
+            contentClass: 'public-artifact',
+            paid,
+            free,
+            verify: opts.shadowVerify ?? ((): { verdict: VerifyVerdict; tokens: number } => ({ verdict: 'skipped', tokens: 0 })),
+            stateRoot,
+            ...(opts.now !== undefined ? { now: opts.now } : {}),
+        });
+    } catch {
+        /* the shadow never fails the ask */
+    }
 }
 
 type RouteCallOutcome =
