@@ -20,7 +20,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
     buildDuplicateReadLine,
@@ -176,6 +176,17 @@ describe('content key and its size bound (D3)', () => {
             // The file grew between stat and read: the read itself must enforce the bound.
             const f = realFile(HASH_BOUND_BYTES + 1);
             expect(contentDigest(f, 16)).toEqual({ kind: 'grew-during-read' });
+        });
+
+        it('sizes its read buffer to the stat, not to the bound', () => {
+            const f = realFile(16);
+            const spy = vi.spyOn(Buffer, 'allocUnsafe');
+            try {
+                expect(contentDigest(f, 16).kind).toBe('sha256');
+                expect(Math.max(...spy.mock.calls.map((c) => Number(c[0])))).toBeLessThanOrEqual(17);
+            } finally {
+                spy.mockRestore();
+            }
         });
 
         it('a file that grew past the bound after its stat is never called unchanged', () => {
