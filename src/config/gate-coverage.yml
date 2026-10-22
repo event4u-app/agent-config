@@ -52,12 +52,12 @@
 #                of them.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-10-12)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-10-22)
 # ----------------------------------------------------------
-# 354 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 361 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows.)
-# **115 rows are listed below**, so the manifest covers 115/354 = 32.5 % of the
+# **118 rows are listed below**, so the manifest covers 118/361 = 32.7 % of the
 # population, and is complete for every gate that can carry a floor. The row
 # count is `grep -c '^  - id:'`, recomputed here rather than incremented.
 #
