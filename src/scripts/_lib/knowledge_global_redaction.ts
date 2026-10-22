@@ -41,6 +41,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
     redact_low_impact_entry,
 } from '../ai_council/redact_low_impact_entry.js';
+import { HIDDEN_UNICODE_RE } from './egress_normalize.js';
 import type { RedactionViolation } from '../ai_council/redact_low_impact_entry.js';
 
 const _ROOT = path.resolve(path.dirname(_thisFile()), '..', '..');
@@ -130,8 +131,7 @@ function _compileIgnoreCase(pattern: string): RegExp {
 // council re-evaluation (2026-07-11). Presence is itself a violation:
 // a knowledge card has no legitimate need for invisible characters, and
 // halt-and-surface (never silent-rewrite) is this gate's contract.
-const _HIDDEN_UNICODE_RE =
-    /[­​-‏‪-‮⁠-⁤⁦-⁩﻿\u{E0000}-\u{E007F}]/gu;
+const _HIDDEN_UNICODE_RE = HIDDEN_UNICODE_RE;
 
 /**
  * Combined privacy-floor + source-confidentiality scan over `text`.

@@ -51,6 +51,8 @@ interface EngineMods {
 
 // Built at runtime so no credential literal sits in this file.
 const PAT = ['ghp', 'Qw3Er5Ty7Ui9Op2As4Df6Gh8Jk1Lz3Xc5Vb7'].join('_');
+// The registry's own example IBAN, and the same digits under a wrong check pair.
+const IBAN_BODY = '370400440532013000';
 
 /** Each returns true when the invariant holds on the engine it is given. */
 export const INVARIANTS: Readonly<Record<string, (m: EngineMods) => boolean>> = {
@@ -66,6 +68,14 @@ export const INVARIANTS: Readonly<Record<string, (m: EngineMods) => boolean>> = 
         const out = m.token.replaceValues(`key ${PAT} here`, scope);
         const tokens = m.token.parseTokens(out);
         return tokens.length === 1 && tokens.every((t) => scope.resolve(out.slice(t.start, t.end)) === null);
+    },
+    'iban-checksum-refuses-a-wrong-check-digit': (m) => {
+        const wrong = `DE88${IBAN_BODY}`;
+        return (
+            m.rules.isValidIban(`DE89${IBAN_BODY}`) &&
+            !m.rules.isValidIban(wrong) &&
+            !m.rules.detect(`IBAN ${wrong}`).some((s) => s.type === 'IBAN')
+        );
     },
     'tally-carries-no-value': (m) => {
         const tally = m.text.tallyText(`key ${PAT} here`);

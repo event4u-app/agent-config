@@ -97,12 +97,15 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { readHookStdin } from "./hook_stdin.js";
 import { load_agent_settings } from "../_lib/agent_settings.js";
 import { probeHostCapabilities } from "../_lib/host_capability.js";
-import type { ActivationInputs, Classification, TaskSignals } from "../_lib/auto_dispatch.js";
+import { inferSliceTier, type ActivationInputs, type Classification, type SliceType, type TaskSignals } from "../_lib/auto_dispatch.js";
+import { TIER_TO_CLAUDE_MODEL } from "../_lib/model_tier.js";
 import { classifyLadder, type LadderRung } from "../_lib/judgment_ladder.js";
 import { resolveSessionRole } from "../_lib/session_role.js";
 import { resolveSubagentRouting, type Tier } from "../_lib/subagent_routing.js";
 import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
+import { handKindFromPrompt, type HandKind } from "../_lib/hand_kinds.js";
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
+import { councilConfigPath, freeRungFor } from "../ai_council/free_rung.js";
 
 // Severity is taken from the EXIT CODE, not from the `decision` field in the
 // stdout payload — mirrors `language_mirror_hook.ts`'s own note (found the
@@ -330,22 +333,38 @@ export function resolveActivation(
 }
 
 /**
- * Tier recommendation for the (not-yet-inspected) slices: `resolveSubagentRouting`'s
- * first production caller. Conservative "lite, downshifted" default — the
- * concern has no per-slice type classification available at prompt-submit
- * time, so it recommends the cheapest starting point and lets the downshift
- * setting (shipped default: on) decide whether that survives.
+ * Tier recommendation for the slices, from the cheapest-sufficient table
+ * (`inferSliceTier`) and never from a default: an unknown slice kind is
+ * `inherit`, so the nudge cannot name a tier the table did not produce.
  */
-export function recommendSliceTier(downshift: boolean, separate_quota_pool: boolean): Tier {
+export function recommendSliceTier(
+  downshift: boolean,
+  separate_quota_pool: boolean,
+  sliceKind: SliceType = "unknown",
+): Tier {
   const decision = resolveSubagentRouting({
-    task_tier: "lite",
-    session_tier: "high",
+    task_tier: inferSliceTier({ slice_type: sliceKind }).tier,
+    session_tier: "inherit",
     downshift,
     quota_arbitrage: false,
     model_map: {},
     separate_quota_pool,
   });
   return decision.tier;
+}
+
+const READ_ONLY_FANOUT_RE =
+  /\b(find|locate|search|grep|list|inventor(?:y|ise|ize)|enumerate|count|which files|where (?:is|are)|finde|suche|liste|z(?:ä|ae)hle|wo (?:ist|sind))\b/i;
+const MUTATING_RE =
+  /\b(fix|implement|edit|write|refactor|change|add|create|remove|delete|update|rename|migrate|build|move|replace|mach|bau|implementier\w*|(?:ä|ae)nder\w*|erstell\w*|l(?:ö|oe)sch\w*|f(?:ü|ue)g\w*|schreib\w*)\b/i;
+
+/**
+ * The slice kind a prompt names, deterministically: a read verb with no
+ * mutating verb is a read-only fan-out; everything else is `unknown`, which
+ * the table maps to `inherit`.
+ */
+export function sliceKindFromPrompt(prompt: string): SliceType {
+  return READ_ONLY_FANOUT_RE.test(prompt) && !MUTATING_RE.test(prompt) ? "read-only-fanout" : "unknown";
 }
 
 /**
@@ -367,9 +386,21 @@ export function buildNudgeLine(
   classification: Classification,
   sliceCount: number,
   tier: Tier,
+  sliceKind?: SliceType,
+  handKind?: HandKind,
 ): string {
   const unit = sliceCount === 1 ? "slice" : "slices";
   const rungLabel = rung === null ? "rung-?" : `rung-${rung}`;
+  // A pointer only: nothing is sent, and the return is a proposal the head verifies.
+  if (rung === 0.5 && handKind !== undefined) {
+    return (
+      `<delegation-nudge>rung-0.5: free rung. This slice is a typed \`${handKind}\` task and an unpaid ` +
+      "route is admissible — you may send it as ONE call via " +
+      `\`./scripts-run src/scripts/ask_transport --kind ${handKind} --content-class public-artifact "<slice>"\` ` +
+      `(public-artifact text only; project content stays on a paid route). The return is a proposal: ` +
+      `verify it before acting on it. Nothing was sent for you — ${classification.reason}.</delegation-nudge>`
+    );
+  }
   // Rung 0.5 (token-economy-dispatch 4.3): cite the sub-spawn ask path —
   // never a spawn recommendation for a question-shaped slice.
   if (rung === 0.5) {
@@ -417,11 +448,14 @@ export function buildNudgeLine(
       ? ` A leg starts cold (~${Math.round(LEG_COLD_START_UNCACHED_TOKENS / 1000)}k uncached tokens): ` +
         "a slice of one to three direct reads does not amortise it."
       : "";
+  // The per-call model value, only for a tier the table produced for a known kind.
+  const model = tier === "lite" && sliceKind !== undefined && sliceKind !== "unknown" ? TIER_TO_CLAUDE_MODEL[tier] : undefined;
+  const carrier = model ? ` Pass \`model: "${model}"\` on each Agent call (${sliceKind} slices earn lite).` : "";
   return (
     `<delegation-nudge>${rungLabel}: dispatch ${modeLabel} ` +
     `(${sliceCount} ${unit}, ${tier} tier recommended). Consider dispatching via ` +
     `subagent-orchestration instead of doing every slice in-session — ` +
-    `${classification.reason}.${coldStart}</delegation-nudge>`
+    `${classification.reason}.${carrier}${coldStart}</delegation-nudge>`
   );
 }
 
@@ -429,9 +463,14 @@ export interface NudgeResult {
   classification: Classification;
   sliceCount: number;
   tier: Tier;
+  /** The slice kind the tier was read from (`unknown` → `inherit`). */
+  sliceKind: SliceType;
+  /** Set only for a rung-0.5 slice of a typed hand kind with an admissible unpaid route. */
+  handKind?: HandKind;
   /** The judgment-ladder rung this verdict resolved to (2.4) — 1 or 2 in
    *  production today: classifyPrompt returns null for every non-subagent
-   *  verdict including rung 0.5 (the carrier stays silent on questions);
+   *  verdict including rung 0.5 (the carrier stays silent on questions),
+   *  except a typed hand slice whose unpaid route an injected check admits;
    *  buildNudgeLine's 0.5 branch is vocabulary for orchestrator-facing
    *  surfaces and direct callers. */
   rung: LadderRung;
@@ -443,10 +482,20 @@ export interface NudgeResult {
  * verdict out of this concern's scope, activation gate closed, or an
  * internal error — all degrade to the same silent outcome).
  */
+export interface ClassifyOptions {
+  /**
+   * Whether an unpaid route would admit this kind. Injected so the verdict does
+   * not depend on what is configured; absent means no route, so the free rung
+   * stays silent.
+   */
+  freeRouteAdmissible?: (kind: HandKind) => boolean;
+}
+
 export function classifyPrompt(
   prompt: string,
   workspace_root: string,
   hostId: string | null | undefined,
+  opts: ClassifyOptions = {},
 ): NudgeResult | null {
   try {
     const { signals, sliceCountForLine } = extractTaskSignals(prompt);
@@ -490,13 +539,30 @@ export function classifyPrompt(
         classification: { delegable: false, action: "ask", mode: null, reason: ladder.reason },
         sliceCount: 0,
         tier: recommendSliceTier(downshift, separate_quota_pool),
+        sliceKind: "unknown",
         rung: ladder.rung,
       };
+    }
+    // The one rung-0.5 exception to silence: a typed hand kind with an admissible
+    // unpaid route, which moves paid work off the head rather than adding a line.
+    if (ladder.rung === 0.5 && opts.freeRouteAdmissible !== undefined) {
+      const handKind = handKindFromPrompt(prompt);
+      if (handKind !== null && opts.freeRouteAdmissible(handKind)) {
+        return {
+          classification: { delegable: false, action: "ask", mode: null, reason: ladder.reason },
+          sliceCount: 0,
+          tier: recommendSliceTier(downshift, separate_quota_pool),
+          sliceKind: "unknown",
+          rung: ladder.rung,
+          handKind,
+        };
+      }
     }
     if (ladder.verdict !== "subagent") {
       return null; // rung-0 script, rung-0.5 ask-transport, or ∅ user-ask/in-session
     }
-    const tier = recommendSliceTier(downshift, separate_quota_pool);
+    const sliceKind = sliceKindFromPrompt(prompt);
+    const tier = recommendSliceTier(downshift, separate_quota_pool, sliceKind);
     // Rung 1 (single bounded slice) has no explicit slice count of its own —
     // extractTaskSignals never produces one for that shape — so the line
     // always names it as exactly one slice.
@@ -507,7 +573,7 @@ export function classifyPrompt(
       mode: ladder.mode ?? null,
       reason: ladder.reason,
     };
-    return { classification, sliceCount, tier, rung: ladder.rung };
+    return { classification, sliceCount, tier, sliceKind, rung: ladder.rung };
   } catch {
     return null; // classifier/settings error → silence, never a crash-to-block
   }
@@ -559,7 +625,10 @@ export function main(): number {
   const root = _workspaceRoot(env);
   const platform = env["platform"];
   const hostId = typeof platform === "string" && platform ? platform : null;
-  const result = classifyPrompt(prompt, root, hostId);
+  // Read lazily: the council config is opened only on a rung-0.5 hand-kind slice.
+  const result = classifyPrompt(prompt, root, hostId, {
+    freeRouteAdmissible: (kind) => freeRungFor(root, kind, councilConfigPath()),
+  });
   if (!result) {
     return EXIT_ALLOW; // anti-canary default: no verdict → no output
   }
@@ -568,7 +637,14 @@ export function main(): number {
     `${JSON.stringify({
       decision: "warn",
       reason: `delegation-nudge: rung-${result.rung} verdict (${result.sliceCount} slices, ${result.tier} tier)`,
-      additional_context: buildNudgeLine(result.rung, result.classification, result.sliceCount, result.tier),
+      additional_context: buildNudgeLine(
+        result.rung,
+        result.classification,
+        result.sliceCount,
+        result.tier,
+        result.sliceKind,
+        result.handKind,
+      ),
     })}\n`,
   );
   return EXIT_WARN;

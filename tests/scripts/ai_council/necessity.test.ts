@@ -150,3 +150,19 @@ describe('necessity — message helpers + structural parity', () => {
         expect(IMPACT_TRIGGERS.high_impact.length).toBeGreaterThan(0);
     });
 });
+
+describe('cold-start 5.3 — a recent host rate marker raises the necessity bar', () => {
+    it('rate-marker-raises-the-bar: a borderline analysis question with no necessary marker turns unnecessary under rate pressure', () => {
+        const prompt = 'Thoughts on the colour of this button?';
+        expect(classify_necessity(prompt, 'analysis').verdict).toBe('borderline');
+        const pressed = classify_necessity(prompt, 'analysis', 'agent', { ratePressure: true });
+        expect(pressed.verdict).toBe('unnecessary');
+        expect(pressed.rationale).toMatch(/rate/);
+    });
+
+    it('rate pressure never demotes a question carrying a necessary marker', () => {
+        const prompt = 'Evaluate the architecture trade-off for this migration.';
+        const plain = classify_necessity(prompt, 'analysis');
+        expect(classify_necessity(prompt, 'analysis', 'agent', { ratePressure: true }).verdict).toBe(plain.verdict);
+    });
+});

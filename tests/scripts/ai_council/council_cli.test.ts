@@ -58,6 +58,7 @@ import {
     _synthesize_ai_council_block,
     _postRunQuorum,
     _format_quorum_line,
+    chairman_candidates,
 } from '../../../src/scripts/council_cli.js';
 
 
@@ -1523,5 +1524,53 @@ describe('mid-flight fallback — end to end from a config file', () => {
         // the honest outcome when there is nothing to fall back to.
         expect(responses[0]!.error).toBe('cli_quota_exhausted');
         expect(responses[0]!.metadata['fallback_from']).toBeUndefined();
+    });
+});
+
+// road-to-free-hands-a-paid-head-checks 1.1: the council path never passed a
+// seat's ceiling or the payload's class to the resolver, so a seat configured
+// `public-artifact` received consumer content.
+describe('build_members — the content ceiling reaches the resolver', () => {
+    function publicSeat(): Record<string, unknown> {
+        return {
+            ai_council: {
+                enabled: true,
+                mode: 'cli',
+                members: {
+                    anthropic: { enabled: true, model: 'claude-sonnet-4-5', binary: process.execPath, content_ceiling: 'public-artifact' },
+                },
+            },
+        };
+    }
+
+    it('an undeclared payload never reaches a public-artifact seat', () => {
+        const skipped: Record<string, unknown>[] = [];
+        expect(() => build_members(publicSeat(), { skipped })).toThrow();
+        expect(JSON.stringify(skipped)).toContain('policy_content_ceiling');
+    });
+
+    it('a declared public-artifact payload does', () => {
+        expect(build_members(publicSeat(), { content_class: 'public-artifact' })).toHaveLength(1);
+    });
+});
+
+// free-hands 4.1 wiring: the chair candidates carry each seat's billing, so a
+// free-quota route is refused the chair by select_chairman.
+describe('chairman candidates carry route billing', () => {
+    it('a free-quota route candidate carries billing free-quota; a provider seat carries none', () => {
+        const cands = chairman_candidates({
+            anthropic: { enabled: true, model: 'claude-sonnet-4-5' },
+            freeroute: {
+                enabled: true,
+                model: 'some-model',
+                base_url: 'https://free.example.test/v1',
+                billing_proof: { kind: 'keyless', url: 'https://free.example.test/pricing', checked: '2026-10-22' },
+            },
+            off: { enabled: false, model: 'x' },
+        });
+        expect(cands.map((c) => [c.name, c.billing ?? null])).toEqual([
+            ['anthropic', null],
+            ['freeroute', 'free-quota'],
+        ]);
     });
 });

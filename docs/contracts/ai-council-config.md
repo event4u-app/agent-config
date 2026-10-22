@@ -1403,6 +1403,84 @@ Exactly two forms. Raw keys in the yml are a hard validation error.
 - `env:<VAR>` — read from the named environment variable at load time.
   Missing or empty env var is a `KeyGateError`.
 
+## `base_url` route members
+
+A member whose name is not one of the five providers is admitted only when it
+carries `base_url` — an OpenAI-compatible endpoint (`<base_url>/chat/completions`).
+Parsing and resolution live in `src/scripts/ai_council/free_route.ts`.
+
+```yaml
+members:
+  hands:
+    enabled: true
+    model: <an id the route lists under /models>
+    base_url: "https://route.example/v1"   # https, or http on loopback only
+    # api_key_ref: env:ROUTE_KEY           # omit for a keyless route
+    billing_proof:                         # optional
+      kind: keyless                        # keyless | free-tier
+      url: "https://route.example/docs/free-tier"
+      checked: "2026-10-22"                # quoted, a real date
+```
+
+| Rule | Effect |
+|---|---|
+| Billing class | `free-quota` only with a complete `billing_proof`; otherwise `per-token`, inside the USD gate. `kind: keyless` with an `api_key_ref` is a config error. |
+| HTTP 402 | The member is absent with `policy_unproven_cost`; no other route or provider is tried in its place. |
+| Content ceiling | Forced to `public-artifact`, whatever `content_ceiling` says. |
+| Self-hosted | A loopback `base_url` is a precondition, not proof. Billing `self-hosted` and the declared `content_ceiling` apply only after a per-model probe reports local weights and no outbound connection during the probe call. The default probe proves nothing. |
+| Identity | The family is read from the served id. An answer reporting another model than the requested one, or none, is absent with `policy_model_mismatch`. Provider members keep `model_served` as attribution only. |
+| Routers | A model id that asks the route to pick (`auto`, `random`, `free`, `router`, or `<x>/auto` …) is a config error. |
+| Keyless | No `Authorization` header is sent. |
+| Naming | `base_url` on one of the five provider names is a config error. |
+
+`council:status` prints one `route <name>: <base_url> · <billing class>` line per
+route member, and `--json` carries `route` per transport.
+
+The package ships base URLs and the attestation shape only, never model ids
+(`free_route_catalog.ts`). A route is a consumer default only with a dated
+attestation younger than 90 days whose `client_distribution_eea_ch_uk` is
+`permitted`; anything else is for the maintainer's own runs. Model ids come
+from one GET of `<base_url>/models` into
+`agents/runtime/state/council-route-models.json`; a failed probe clears the
+entry, so an offline route reads `unknown`.
+
+Liveness is a streak per route and model (`route_liveness.ts`, state in
+`agents/runtime/state/council-route-liveness.json`). A `rate_limited`,
+`quota_exhausted` or `server_error` answer marks the route absent for the pass
+and never counts against the model; three consecutive `model_unservable`
+answers (HTTP 410, or 404 naming the model) retire the model from the
+discovered roster, and the chooser reads it as not live until a later
+discovery serves it again. An answered call resets the streak.
+
+A typed ask walks the chooser's chain (admissible unpaid routes, then paid
+ones) with at most one retry, gated by `MidFlightFallback`: a route that
+answered `model_unservable`, or a free route whose quota ran out, hands the
+call to the next route; a server fault, a timeout or an empty quota on a paid
+route does not, so no question is paid for twice. A second failure is an
+honest ∅.
+
+Shadow mode (`free_hand_shadow.ts`) asks a free route the same typed slice
+beside the paid route; the paid answer is used and the head verifies both. One
+row per call lands in `agents/runtime/state/free-hand-shadow.jsonl` — routes,
+verdicts and token counts, never the prompt or an answer. A metered free side,
+a `project-content` payload, or a ledger at the 2,000-call cap (decision A5)
+skips the free side. `./scripts-run src/scripts/ai_council/free_hand_shadow
+--report` prints per kind both failure rates, the paid tokens avoided, the
+head's verify tokens and the net per ISO week.
+
+A typed ask reaches a free route only for a kind that has flipped
+(`kind_flip.ts`, state in `agents/runtime/state/hand-kind-flips.json`). A kind
+flips when its shadow data clears both pre-registered bars: free failure rate
+at most the paid rate + 5 pp and below the 0.3 escalation kill
+(`free-hands-quality-held`), and paid tokens avoided minus the head's verify
+tokens above zero in every shadow week (`free-hands-limit-relief`), on at least
+333 shadow calls (the A5 cap shared across the six kinds). Missing or
+underpowered data is not ready. A flipped kind whose free-routed asks reach
+the kill over at least 30 asks reverts to the paid route on its own and stays
+reverted until the record is cleared by a person; each flip and reversion is
+stored with one line a claim row can cite. `./scripts-run
+src/scripts/ai_council/kind_flip --apply` runs the pass.
+
 ## Precedence
 
 Resolution order for every member-level setting (mode, model, key):
@@ -1494,7 +1572,9 @@ error) when any of these hold:
 1. Required top-level key missing (`enabled`, `defaults`, `cost_budget`,
    `members`).
 2. `members` block has no provider with `enabled: true`.
-3. Unknown provider key under `members` or `advisors`.
+3. Unknown provider key under `members` or `advisors` — except a `members`
+   entry carrying `base_url` (see § `base_url` route members), which is
+   validated by its own rules there.
 4. `api_key_ref` missing for an enabled member, or in an unknown form
    (not `file:` and not `env:`), or pointing at a non-existent file /
    missing env var.

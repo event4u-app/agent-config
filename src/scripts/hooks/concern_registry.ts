@@ -81,6 +81,7 @@ import { main as sessionEolMain } from './session_eol_hook.js';
 import { main as subagentLedgerMain } from './subagent_ledger_hook.js';
 import { main as toolResultBytesMain } from './tool_result_bytes_hook.js';
 import { main as spawnGuardShadowMain } from './spawn_guard_shadow_hook.js';
+import { main as hostRateMarkerMain } from './host_rate_marker_hook.js';
 import { main as sourceFirstGateMain } from './source_first_gate_hook.js';
 import { main as interruptionLedgerMain } from './interruption_ledger_hook.js';
 import { main as journalRecordMain } from './journal_record_hook.js';
@@ -151,6 +152,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/subagent_ledger_hook.ts': subagentLedgerMain as ConcernMain,
     'src/scripts/hooks/tool_result_bytes_hook.ts': toolResultBytesMain as ConcernMain,
     'src/scripts/hooks/spawn_guard_shadow_hook.ts': spawnGuardShadowMain as ConcernMain,
+    'src/scripts/hooks/host_rate_marker_hook.ts': hostRateMarkerMain as ConcernMain,
     'src/scripts/hooks/source_first_gate_hook.ts': sourceFirstGateMain as ConcernMain,
     'src/scripts/hooks/interruption_ledger_hook.ts': interruptionLedgerMain as ConcernMain,
     'src/scripts/hooks/journal_record_hook.ts': journalRecordMain as ConcernMain,

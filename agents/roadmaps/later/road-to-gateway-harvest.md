@@ -19,7 +19,7 @@ relates:
 > `inbox-2026-09-n` (2026-09-05), the untracked round of 2026-08-03 that created this roadmap.
 >
 > **Executing elsewhere since 2026-10-22:** M1 and M9 are planned in
-> `road-to-free-hands-a-paid-head-checks` (Phases 2 and 5), M2 in
+> `road-to-free-hands-a-paid-head-checks` (Phases 2 and 5) and were built there on 2026-10-22, M2 in
 > `road-to-seats-that-know-why-they-failed` (Phase 3). The owner question this file has held
 > since 2026-09-07 — whether to spend the M1 slot — is posed there as blockers
 > `free-route-admission` and `project-content-ceiling`. M4-M8 stay parked here.
@@ -76,7 +76,8 @@ relates:
 >
 > **Source identity:** an external LLM-gateway reference ("Source B") — a
 > permanent gateway in the request path, the architectural antithesis of
-> this package's zero-runtime-daemon claim. ~80% of it is structurally
+> this package's place outside the request path (it is not a router; ADR-249
+> admits a supervised resident process, never one carrying requests). ~80% of it is structurally
 > unadoptable here; the analysis harvested only position-independent
 > patterns. The raw analysis with the source name and pinned commits is
 > maintainer-local and gitignored, per source-confidentiality.
@@ -97,8 +98,8 @@ relates:
 
 ## Rejected at analysis time (do not resurrect without beating the recorded reasoning)
 
-Request-path compression of any kind (requires gateway position; violates the
-machine-checked zero-runtime-daemon claim), external runtime federation
+Request-path compression of any kind (requires a gateway position, which the
+package does not take — it is not a router), external runtime federation
 (ADR-088), MITM/TLS interception (outside any mandate), a memory system
 (agent-memory sunset + no-runtime boundary), a stage pipeline (duplicates
 do-and-judge + model downshift), quota accounting (agent-switch territory), an

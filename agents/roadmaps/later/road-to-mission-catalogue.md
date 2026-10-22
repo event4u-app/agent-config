@@ -52,8 +52,9 @@ trigger-gated.
 - [ ] Each catalogue mission lands only after the flagship is operationally
       proven; each reuses existing skills (no new per-language agents —
       `persona-governance` + `framework-neutrality` hold).
-- [ ] No daemon / cross-session persistent state introduced (the
-      `no-runtime-boundary` contract holds for every mission).
+- [ ] No daemon / cross-session persistent state introduced outside ADR-249's
+      four governance conditions (the no-runtime boundary it superseded no
+      longer forbids one outright).
 
 ## Provenance
 

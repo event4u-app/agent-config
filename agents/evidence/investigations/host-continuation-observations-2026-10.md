@@ -302,9 +302,62 @@ does not make, so the row was not edited.
 | `SendMessage` pre_tool_use fires · deny honoured | yes · yes | 2.1.306 | 2026-10-21 |
 | `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` refuses a fresh spawn · bounds a resume | yes · no | 2.1.306 | 2026-10-21 |
 | skip flag (`omitClaudeMd`) sheds `CLAUDE.md` and `~/.claude/rules` | about 141,500 tokens gross | 2.1.306 | 2026-10-21 |
+| skip flag honoured through **definition frontmatter** (`omitClaudeMd: true` in `.claude/agents/<name>.md`) | first-call cache write 2,620 vs 144,138 for the same definition without it | 2.1.308 | 2026-10-22 |
 | named spawn under agent teams → resumable subagent, by-name resume warm | yes, 99.8 % | 2.1.306 | 2026-10-21 |
 
 These are the versions each field was **seen on**, not the releases it first
 shipped in. No earlier version was probed, so no field's true floor is
 established. The subagent cache-TTL **setting** (`subagentPromptCacheTtl`) was
 never exercised; only the default TTL's effect was seen.
+
+## Addendum 2026-10-22 — the skip flag through definition frontmatter (step 2.5)
+
+Step 1.7 observed the skip only in the `--agents` JSON spelling. The shipped
+definitions project the vendor-neutral `omit_project_instructions` through
+frontmatter (`src/scripts/_lib/subagent_native_fields.ts`), a path step 2.5 left
+unobserved. This addendum observes it.
+
+**Setup.** Claude Code **2.1.308**, subscription login, one print-mode child
+session in an empty scratch project carrying a one-line `CLAUDE.md` canary. Two
+project definitions, identical except for one line: `skipper` declares
+`omitClaudeMd: true` in its frontmatter, `keeper` does not; both `model: haiku`,
+`tools: Read`. The parent dispatched each once with the same prompt.
+
+**Reading** (each subagent transcript's first assistant call, read 2026-10-22):
+
+| Definition | `omitClaudeMd` | First-call cache write | First-call cache read |
+|---|---|---:|---:|
+| `skipper` | `true` (frontmatter) | 2,620 | 0 |
+| `keeper` | absent | 144,138 | 0 |
+
+The frontmatter spelling is honoured: the skipping definition's first call
+carried about 141,500 fewer tokens, the same order as the 1.7 `--agents` pair,
+and consistent with the user-level rule layer being dropped as well.
+
+**Bound.** n = 1 pair. The canary was not a clean readback this time: both
+agents held `Read` and `skipper` found the codeword by reading the file, so the
+token delta is the observation, not the answer text. Most of the delta is the
+operator's user-level layer, as in 1.7.
+
+## Addendum 2026-10-22 (second) — `StopFailure` fires, and where its class lives (steps 1.9, 4.3)
+
+Step 1.9 left `StopFailure` **not reached**: no limit was hit. It was reached on Claude Code
+**2.1.308** by a different failure — a print-mode session in an empty scratch project with
+`HTTPS_PROXY` pointed at a closed loopback port and a `StopFailure` command hook bound through
+`--settings`. The hook received:
+
+| Field | Value |
+|---|---|
+| `hook_event_name` | `StopFailure` |
+| `error` | `server_error` |
+| `last_assistant_message` | `API Error: Connection refused — a firewall or proxy may be blocking it (ECONNREFUSED)` |
+| also present | `session_id`, `transcript_path`, `cwd`, `prompt_id`, `effort` |
+
+So the event fires on an API failure and carries its error class in `error`. The `rate_limit`
+class itself is still unobserved — no step forces a limit — so a binding reads
+`error === "rate_limit"` and treats every other class as not a rate signal.
+
+| Field | Observed value | Host version | Date |
+|---|---|---|---|
+| `StopFailure` fires on an API failure; class in `error` | yes (`server_error`) | 2.1.308 | 2026-10-22 |
+| `StopFailure` with `error: rate_limit` | not reached | 2.1.308 | 2026-10-22 |

@@ -9,15 +9,19 @@
  * Usage:
  *   ./scripts-run src/scripts/orchestration_record \
  *     --spawn-count 1 --token-delta -72000 --provenance measured \
- *     --tier-chosen lite --tier-source inferred --task-class read-only-fanout \
+ *     --tier-chosen lite --model-requested haiku --tier-source inferred --task-class read-only-fanout \
+ *     [--model-served claude-haiku-5-5] [--session-tier high] \
  *     [--rules-applied a,b] [--tiers sonnet,opus] [--agent-combo implementer,judge] [--wall-clock-ms 18500] [--dispatch-outcome DONE] \
- *     [--first-pass-success true|false] [--escalated true|false] \
+ *     [--first-pass-success true|false] [--escalated true|false] [--escalated-from lite|medium] \
  *     [--init-tokens 1200] [--payload-hash <hex8-64>] [--lookup-class definition|references|string-existence|report-run] \
  *     [--route-taken primitive|subagent|ask] [--budget-hit true|false] [--correctness-match true|false] \
  *     [--cache-hit true|false] [--origin lean-init-2026] \
  *     [--rules-carried 32] [--rules-used 5] \
  *     [--work-tokens 41000] [--floor-provenance measured|estimated] \
  *     [--capsule-emitted true|false] [--capsule-entries 9] \
+ *     [--hand-kind classify] [--schema-valid true|false] \
+ *     [--route-billing free-quota|self-hosted|per-token|subscription] \
+ *     [--verified pass|fail|skipped] [--verify-tokens 320] [--work-id <ask work id>] \
  *     [--dir <audit-dir>] [--dry-run]
  *
  * Read by `src/scripts/orchestration_savings_report.ts`.
@@ -29,6 +33,7 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import type { LookupClass } from './_lib/auto_dispatch.js';
+import type { HandKind, RouteBilling, VerifyVerdict } from './_lib/hand_kinds.js';
 import {
     buildOrchestrationLine,
     type Provenance,
@@ -154,10 +159,13 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         wall_clock_ms: int(flags, 'wall-clock-ms'),
         dispatch_tokens: int(flags, 'dispatch-tokens'),
         session_tier: str(flags, 'session-tier'),
+        model_requested: str(flags, 'model-requested'),
+        model_served: str(flags, 'model-served'),
         dispatch_outcome: str(flags, 'dispatch-outcome') as DispatchOutcome | undefined,
         verify_mode: str(flags, 'verify-mode') as VerifyMode | undefined,
         first_pass_success: bool(flags, 'first-pass-success'),
         escalated: bool(flags, 'escalated'),
+        escalated_from: str(flags, 'escalated-from') as TierChosen | undefined,
         init_tokens: int(flags, 'init-tokens'),
         payload_hash: str(flags, 'payload-hash'),
         lookup_class: str(flags, 'lookup-class') as LookupClass | undefined,
@@ -172,6 +180,11 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         floor_provenance: str(flags, 'floor-provenance') as Provenance | undefined,
         capsule_emitted: bool(flags, 'capsule-emitted'),
         capsule_entries: int(flags, 'capsule-entries'),
+        hand_kind: str(flags, 'hand-kind') as HandKind | undefined,
+        schema_valid: bool(flags, 'schema-valid'),
+        route_billing: str(flags, 'route-billing') as RouteBilling | undefined,
+        verified: str(flags, 'verified') as VerifyVerdict | undefined,
+        verify_tokens: int(flags, 'verify-tokens'),
         phase: str(flags, 'phase') as LinePhase | undefined,
         outcome: str(flags, 'outcome') as LineOutcome | undefined,
         confidence_band: str(flags, 'confidence-band') as Band | undefined,

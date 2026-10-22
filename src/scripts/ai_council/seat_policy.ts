@@ -135,3 +135,43 @@ export function parseSeatFields(
         },
     };
 }
+
+/**
+ * Council roles, and the three a route this package does not pay for may never
+ * hold (ADR-257: an unpaid route may propose and score, never decide). Kept
+ * apart from `PolicyExclusion`: that union makes a seat ABSENT for the whole
+ * run, while a role refusal leaves the seat free to propose or judge.
+ */
+export const COUNCIL_ROLES = ['proposer', 'juror', 'chair', 'synthesis', 'verdict'] as const;
+export type CouncilRole = (typeof COUNCIL_ROLES)[number];
+export const HEAD_ROLES: ReadonlySet<CouncilRole> = new Set<CouncilRole>(['chair', 'synthesis', 'verdict']);
+
+const _PAID_BILLING: ReadonlySet<string> = new Set(['subscription', 'per-token']);
+/** The classes positively known to cost the package nothing per call. */
+export const UNPAID_BILLING_CLASSES: readonly string[] = ['free-quota', 'self-hosted'];
+
+/**
+ * True unless the billing class is a paid one. Absent means a seat configured
+ * before billing classes existed, all of them paid; any other unrecognised
+ * value fails closed, so a typo cannot hand a free route the chair.
+ */
+export function isUnpaidBilling(billing: string | null | undefined): boolean {
+    return billing !== undefined && billing !== null && !_PAID_BILLING.has(billing);
+}
+
+export interface RoleRefusal {
+    readonly reason: 'unpaid_head_role';
+    readonly message: string;
+}
+
+export function seatRoleRefusal(
+    role: CouncilRole,
+    billing: string | null | undefined,
+    seat = 'this seat',
+): RoleRefusal | null {
+    if (!HEAD_ROLES.has(role) || !isUnpaidBilling(billing)) return null;
+    return {
+        reason: 'unpaid_head_role',
+        message: `${seat} (billing ${String(billing)}) may not hold the ${role} role: an unpaid route proposes and scores, never decides (ADR-257)`,
+    };
+}

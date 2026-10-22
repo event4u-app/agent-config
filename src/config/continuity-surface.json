@@ -128,11 +128,53 @@
             "reason": "Tool-call count and freshness milestones for the context-hygiene carrier; never read by a successor."
         },
         {
+            "id": "free-hand-shadow.jsonl",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/ai_council/free_hand_shadow.ts:37",
+            "reason": "One row per shadowed hand call: routes, verify verdicts and token counts, never a prompt or an answer. Measurement data for the free-hands claims; nothing resumes from it."
+        },
+        {
+            "id": "hand-kind-flips.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/ai_council/kind_flip.ts:36",
+            "reason": "Which hand kinds the shadow bars moved to a free route, and every flip and reversion with the line a claim row cites. Routing state read on each ask; no session resumes from it."
+        },
+        {
+            "id": "hand-exposure.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/ai_council/exposure_ledger.ts:21",
+            "reason": "Digests of the project files and symbols each hand route has been sent. Provider exposure accounting; no session resumes from it."
+        },
+        {
+            "id": "canary-liveness.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/_lib/canary_status.ts:14",
+            "reason": "The cross-model canary's red streak and status line, refolded from the workflow's scheduled runs on every refresh. CI state; nothing resumes from it."
+        },
+        {
             "id": "council-probes.json",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
             "locus": "src/scripts/ai_council/probe_store.ts:52",
             "reason": "Council seat availability probe cache. Provider state."
+        },
+        {
+            "id": "council-route-liveness.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/ai_council/route_liveness.ts:39",
+            "reason": "Per route and model, the streak of unservable answers and when a model was retired from the roster. Provider state; nothing resumes from it."
+        },
+        {
+            "id": "council-route-models.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/ai_council/free_route_catalog.ts:80",
+            "reason": "Model ids a base_url route served at its last discovery. Provider state, cleared on a failed probe; nothing resumes from it."
         },
         {
             "id": "decisions",

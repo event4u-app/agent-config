@@ -1,6 +1,11 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
-import { MAX_ATTEMPTS_PER_TARGET, MAX_CONSECUTIVE_TYPE_FAILURES, breachedGuardrails, budgetHalt, isLayerDisabled, escalateOnVerifyFail, escalationPromotionCandidates, readOrchestrationMetrics, readTierRoutingMetrics, sliceDispatchAllowed, transientFailureAction, verifyPassDrift, typeStop, classifyTransientFailure, type EscalationTier, type RawTransientFailure, type SlotState, type TransientErrorClass, type WellFormedTransientDecision } from '../../src/scripts/_lib/subagent_steering.js';
+import { buildOrchestrationLine } from '../../src/scripts/_lib/orchestration_record.js';
+
+import { MAX_ATTEMPTS_PER_TARGET, MAX_CONSECUTIVE_TYPE_FAILURES, breachedGuardrails, budgetHalt, isLayerDisabled, escalateOnVerifyFail, escalationPromotionCandidates, liteEscalationRecords, readOrchestrationMetrics, readTierRoutingMetrics, sliceDispatchAllowed, transientFailureAction, verifyPassDrift, typeStop, classifyTransientFailure, type EscalationTier, type RawTransientFailure, type SlotState, type TransientErrorClass, type WellFormedTransientDecision } from '../../src/scripts/_lib/subagent_steering.js';
 
 describe('isLayerDisabled — kill-switch', () => {
     it('emergency halt on → disabled', () => {
@@ -663,5 +668,39 @@ describe('classifyTransientFailure — precedence', () => {
             }, `case ${idx}`).not.toThrow();
             expect(c, `case ${idx}`).toBeNull();
         });
+    });
+});
+
+// road-to-a-tier-the-dispatch-carries 1.3: a lite leg does not climb by itself.
+describe('liteEscalationRecords', () => {
+    it('an escalation is one lite record with a named outcome and one medium record', () => {
+        const recs = liteEscalationRecords({
+            outcome: 'BLOCKED',
+            consecutive_failures: 1,
+            ts: '2026-10-22T12:00:00.000Z',
+            ids: ['lite-1', 'medium-1'],
+        });
+        expect(recs).toHaveLength(2);
+        const [lite, medium] = recs.map((r) => buildOrchestrationLine(r));
+        expect(lite!.errors).toEqual([]);
+        expect(medium!.errors).toEqual([]);
+        const lo = lite!.line!.orchestration as Record<string, unknown>;
+        const mo = medium!.line!.orchestration as Record<string, unknown>;
+        expect(lo).toMatchObject({ tier_chosen: 'lite', model_requested: 'haiku', outcome: 'BLOCKED', spawn_count: 1 });
+        expect(mo).toMatchObject({ tier_chosen: 'medium', model_requested: 'sonnet', escalated: true, escalated_from: 'lite' });
+        // The lite leg is one dispatch: it spawned nothing of its own.
+        expect(lo['escalated']).not.toBe(true);
+    });
+
+    it('a second failure fails the slice instead of climbing again', () => {
+        expect(liteEscalationRecords({ outcome: 'BLOCKED', consecutive_failures: 2, ts: 't', ids: ['a', 'b'] })).toHaveLength(1);
+    });
+
+    it('package workers hold no dispatch tool, so a lite leg cannot spawn', () => {
+        for (const name of ['ac-worker', 'ac-researcher']) {
+            const text = fs.readFileSync(path.join(process.cwd(), 'src', 'subagents', `${name}.md`), 'utf8');
+            const tools = text.split('\n---')[0]!.match(/^tools:\n((?:  - .*\n)+)/m)?.[1] ?? '';
+            expect(tools).not.toMatch(/- (Agent|Task)\b/);
+        }
     });
 });

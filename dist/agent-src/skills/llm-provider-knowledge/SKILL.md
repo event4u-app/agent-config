@@ -47,6 +47,7 @@ copy is exactly the stale "from memory" answer this skill exists to prevent.
 - Coding against a provider SDK where a wrong model name, parameter, or limit
   would break at runtime.
 - Content or comparisons that assert provider capabilities or pricing.
+- Setting up a free-tier API key — see § Free tiers.
 - Any time you would otherwise answer such a fact from training data — it may be
   outdated or wrong.
 
@@ -95,6 +96,23 @@ Google Vertex AI resell the underlying vendor's models. Route to BOTH the
 underlying vendor's row above AND the cloud's own docs (`learn.microsoft.com`,
 `docs.aws.amazon.com/bedrock`, `cloud.google.com/vertex-ai`) — model IDs,
 quotas, and regions differ from the vendor's direct API.
+
+## Free tiers
+
+A free tier ("set up a free LLM API") is three facts, each read live from the
+provider's own pages, never from this skill:
+
+| Fact | Where to read it |
+|---|---|
+| Whether a free tier exists, and its quota | the pricing or plans page linked from the docs root above |
+| **Data use** — whether free-tier prompts may be stored or used for training | the terms, privacy or data-usage page linked from the docs root; it often differs from the paid tier |
+| **Region** — whether the free tier is offered where the user is | the same terms page; some free tiers are unavailable, or require paid services, in the EEA, Switzerland or the UK |
+
+For an OpenAI-compatible endpoint not in the table, the same three facts come
+from that endpoint's own docs, terms and pricing pages. Report all three with
+their URLs; never send project or personal data to a free tier whose data-use
+page allows training on prompts, and never copy its quota into the reply as
+durable.
 
 ## Procedure
 

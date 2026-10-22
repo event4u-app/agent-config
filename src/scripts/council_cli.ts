@@ -16,8 +16,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { project_settings_path, resolve_project_root } from './_lib/agent_settings.js';
-import { load_agent_settings } from './_lib/agent_settings.js';
+import { load_agent_settings, project_settings_path, resolve_project_root } from './_lib/agent_settings.js';
+import { recentHostMarker } from './_lib/quota_parked.js';
 import { detectEnvironment, type EnvironmentReport } from './_lib/environment_detector.js';
 
 import {
@@ -79,10 +79,14 @@ import {
 import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
 import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
 import { classifyCliFailure, resolveMemberTransport, type AbsentReason } from './ai_council/transport_resolver.js';
+import { classifyContentClass, DEFAULT_CONTENT_CLASS, DEFAULT_SEAT_CEILING, type ContentClass } from './ai_council/content_ceiling.js';
+import { parseRouteFields, routeBilling } from './ai_council/free_route.js';
 import {
     disabledSeats as _disabledSeats,
     resolvedTransportFor as _resolvedTransportFor,
+    routeStatusLines as _routeStatusLines,
 } from './ai_council/status_surface.js';
+import { routeMemberFor } from './ai_council/route_member.js';
 import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
 import {
     _emitQuorumEvent,
@@ -519,6 +523,11 @@ interface BuildMembersOptions {
      */
     environment_report?: EnvironmentReport | null;
     /**
+     * The class of what this pass sends. Omitted → `project-content`, so a seat
+     * whose ceiling is `public-artifact` is dropped as absent.
+     */
+    content_class?: ContentClass;
+    /**
      * Recorded provider observations. Supplied ⇒ presence is gated on the
      * qualification ladder; omitted ⇒ not evaluated at all, and presence keeps
      * its constructibility-only meaning. Why omission is the safe default:
@@ -678,14 +687,12 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             continue;
         }
         total_enabled += 1;
-        // road-to-always-on-orchestration Phase 3.1: the single reconciled
-        // entry point — composes `resolve_mode` (which layer decided the
-        // mode) with `resolveTransport` (what `auto` expands to on THIS
-        // machine). The hand-rolled `mode === 'api' | 'cli' | 'manual'`
-        // switch this replaces had no `'auto'` case, so every invocation
-        // broke the moment the loader default flipped `api` → `auto`
-        // (`config.ts::_build_defaults`) — every member fell through to the
-        // final `else` below and killed the whole pass.
+        const routed = routeMemberFor(name, cfg, opts.content_class ?? DEFAULT_CONTENT_CLASS, overrides[name] as string | undefined);
+        if (routed !== null) {
+            if ('absent' in routed) { record_absent(routed.absent); _stderr(`[council] SKIP ${name}: ${routed.absent.detail}\n`); } else members.push(routed.client);
+            continue;
+        }
+        // Composes `resolve_mode` with what `auto` expands to on THIS machine.
         const api_key_present = _member_api_key_present(cfg);
         const resolved = resolveMemberTransport({
             provider: name,
@@ -694,6 +701,8 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             memberSettings: cfg,
             globalMode: global_mode ?? null,
             binaryOverride: (cfg['binary'] as string | null) ?? null,
+            seatCeiling: classifyContentClass(cfg['content_ceiling'], DEFAULT_SEAT_CEILING),
+            contentClass: opts.content_class ?? DEFAULT_CONTENT_CLASS,
             // `exactOptionalPropertyTypes` rejects an explicit `undefined` —
             // see `resolveMemberTransport`'s own forwarding call for the
             // same pattern.
@@ -757,23 +766,10 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
         }
         const model = (overrides[name] as string | undefined) || (cfg['model'] as string | undefined) || null;
         if (resolved.transport === 'api' && _API_PROVIDERS.has(name)) {
-            // m2 fix (independent-review finding) — `resolveMemberTransport`'s
-            // `auto` chain treats "a key-file or env-key auth record exists
-            // for this provider" as sufficient to resolve transport=`api`
-            // (its own default `apiKeyPresent` read off the environment
-            // report, used whenever the member config carries no explicit
-            // `api_key_ref` at all — see `_member_api_key_present` above,
-            // which returns `undefined`, not `false`, in exactly that case).
-            // But gemini/xai/perplexity's OWN construction contract is
-            // stricter: `_construct_api_member` requires an EXPLICIT
-            // `api_key_ref` for those three and refuses the legacy-fallback
-            // path other providers get, throwing `CouncilDisabledError`. A
-            // generic env var (e.g. `GEMINI_API_KEY` set for an unrelated
-            // tool) satisfying the permissive auto-chain read while
-            // `api_key_ref` was never wired into the council config is
-            // exactly this mismatch — previously an UNCAUGHT throw here
-            // killed the entire pass. Same catch-and-skip shape the CLI
-            // branch below already uses for its own construction failure.
+            // The `auto` chain resolves `api` on any detected key, but gemini,
+            // xai and perplexity require an EXPLICIT `api_key_ref` and throw
+            // `CouncilDisabledError` without one. A generic env var set for an
+            // unrelated tool must skip the seat, not kill the pass.
             try {
                 members.push(
                     _construct_api_member(name, model, {
@@ -1343,6 +1339,23 @@ interface ChairmanResult {
     response: CouncilResponse | null;
 }
 
+/** Enabled seats as chair candidates, each with its route billing so an unpaid seat is refused the chair. */
+export function chairman_candidates(membersRaw: Dict): ChairmanCandidate[] {
+    const candidates: ChairmanCandidate[] = [];
+    for (const [name, raw] of Object.entries(membersRaw)) {
+        const md = (raw as Dict) || {};
+        if (md['enabled'] !== true) continue;
+        const parsed = parseRouteFields(name, md, false);
+        const billing = 'route' in parsed && parsed.route !== null ? routeBilling(parsed.route) : null;
+        candidates.push({
+            name,
+            tier: typeof md['tier'] === 'number' ? (md['tier'] as number) : null,
+            ...(billing !== null ? { billing } : {}),
+        });
+    }
+    return candidates;
+}
+
 /** Phase 2 chairman dispatch — optional extra billable pass after consult.
  *  Gated on `ai_council.chairman.mode != host`; selection per the 2026-07-12
  *  council decision (provider-difference primary, tier tie-break) via
@@ -1367,15 +1380,7 @@ function _maybe_run_chairman(
     }
     const cfg_member = typeof ch['member'] === 'string' ? (ch['member'] as string) : null;
     const membersRaw = (_isDict(ai_cfg) ? (ai_cfg['members'] as Dict) : null) || {};
-    const candidates: ChairmanCandidate[] = [];
-    for (const [name, raw] of Object.entries(membersRaw)) {
-        const md = (raw as Dict) || {};
-        if (md['enabled'] !== true) continue;
-        candidates.push({
-            name,
-            tier: typeof md['tier'] === 'number' ? (md['tier'] as number) : null,
-        });
-    }
+    const candidates = chairman_candidates(membersRaw);
     const deliberated = new Set(
         responses.filter((r) => r.error === null && r.text.trim() !== '').map((r) => r.provider),
     );
@@ -1885,7 +1890,7 @@ function _necessity_gate(opts: {
     if (!enabled || mode === 'off') {
         return [true, 0, null];
     }
-    const result = classify_necessity(opts.prompt, opts.lens, opts.invocation as never);
+    const result = classify_necessity(opts.prompt, opts.lens, opts.invocation as never, { ratePressure: recentHostMarker(REPO_ROOT) });
     const caps = _provider_caps_snapshot(opts.ai_cfg);
     const hashed = (opts.original_ask || '') || opts.prompt;
 
@@ -2247,6 +2252,7 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
                                 absent_reason: t.absentReason,
                                 policy_exclusion: m.policy_exclusion,
                                 content_ceiling: m.content_ceiling,
+                                route: m.route?.base_url ?? null,
                             },
                         ];
                     }),
@@ -2301,6 +2307,7 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
             }
             _stdout(`  content ceiling  ${name}: ${member.content_ceiling}\n`);
         }
+        for (const line of _routeStatusLines(enabledMembers)) _stdout(`${line}\n`);
         // 1.2: a disabled seat was invisible here — `enabled` members only.
         for (const [name, reason] of Object.entries(_disabledSeats(cfg))) {
             _stdout(`  disabled seat    ${name}: ${reason}\n`);

@@ -90,39 +90,44 @@ the judge-one-tier-up ladder (`src/agent-src/contexts/subagent-configuration.md:
 
 ## Phase 0 — Read before building
 
-- [ ] **0.1 Re-read T2 on the current host.** Run `cache_realization_report` and
+- [x] **0.1 Re-read T2 on the current host.** <!-- receipt: class=R0 · shadow · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Run `cache_realization_report` and
   `orchestration_savings_report` over the last 14 days; record the share of dispatches with a
   non-null `tier_chosen`, the share of `lite` among them, and the share where `model_served`
   differs from `model_requested`. Record in `agents/evidence/analysis/`.
   verify: the analysis states the three shares, the host version and the record count.
-- [ ] **0.2 Probe the carrier (T3).** Dispatch `ac-researcher` (`model: inherit`) once with a
+  Done 2026-10-22: `agents/evidence/analysis/tier-realisation-2026-10-22.md` § Step 0.1 — host 2.1.308, 435 orchestration records in 14 days, `tier_chosen` 0 %, `lite` share n/a, `model_requested`/`model_served` 0 of 435; transcripts show 14 of 443 legs served on `haiku`, none of them recorded as such.
+- [x] **0.2 Probe the carrier (T3).** <!-- receipt: class=R0 · shadow · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Dispatch `ac-researcher` (`model: inherit`) once with a
   per-call model argument naming the `lite` model; read the served model from the transcript.
   A carrier that is silently ignored on some host builds is a known failure mode (S10), so the
   probe result is a row with host version, requested and served id — not a belief.
   verify: the evidence row exists; on `served ≠ requested` Phase 1.2 stops and the null is
   recorded.
+  Done 2026-10-22: same file § Step 0.2 — on 2.1.308 `ac-researcher` (`model: inherit`) dispatched with `model: haiku` served `claude-haiku-5-5` on 7 of 7 calls. Green; 1.2 may proceed.
 
 ## Phase 1 — The tier rides on the dispatch (T2, T3)
 
-- [ ] **1.1 Every suite-recorded dispatch carries the four fields** `tier_chosen`,
+- [x] **1.1 Every suite-recorded dispatch carries the four fields** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/orchestration_record_hook.ts --> `tier_chosen`,
   `session_tier`, `model_requested`, `model_served`; a record with `tier_chosen` and no
   `model_requested` fails validation. No new field.
   verify: a validator test refuses that record; a fixture dispatch writes all four.
-- [ ] **1.2 The nudge names the argument, not the word.** When the ladder resolves a slice to
+  Done 2026-10-22 (commit aa74c70c5f): the validator refuses `tier_chosen` without `model_requested` (`_lib_orchestration_record.test.ts` › refuses tier_chosen without model_requested); the `orchestration-record` hook writes all four from the dispatch's `model` argument, the served id and the head's transcript tail (`orchestration_record_hook.test.ts` › a fixture dispatch writes all four). Live check first: a `model: haiku` dispatch from this session had been recorded with all four null, because the hook never read `tool_input.model`. On this host most dispatches launch async, so `model_served` stays null for them — the ack carries no usage — and only the request half is recorded.
+- [x] **1.2 The nudge names the argument, not the word.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/delegation_nudge_hook.ts --> When the ladder resolves a slice to
   `lite`, the nudge names the per-call model value from `TIER_TO_CLAUDE_MODEL` and the slice
   kind that earned it; it never auto-spawns and never names a tier the table did not produce.
   Runs only on a green 0.2.
   verify: a nudge fixture for a read-only fan-out slice names the mapped model value and
   dispatches nothing.
-- [ ] **1.3 A `lite` leg does not climb by itself.** It never spawns, and a slice it cannot
+  Done 2026-10-22 (commit 1f48d0ff15): the tier comes from `inferSliceTier` over the prompt's slice kind; only a read-only fan-out earns `lite` and names `model: "haiku"`, an unknown kind says `inherit`. Test: `delegation_nudge_hook.test.ts` › a read-only fan-out nudge names the mapped model value and dispatches nothing.
+- [x] **1.3 A `lite` leg does not climb by itself.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/orchestration_record.ts --> It never spawns, and a slice it cannot
   finish returns to the head with a named reason; the head re-dispatches one tier up per the
   existing verify-fail cascade. The escalation is a record, not a retry inside the leg.
   verify: an escalation fixture produces one `lite` record with a reason and one `medium`
   record, never a `lite` record that spawned.
+  Done 2026-10-22 (commit de939ddb62): `liteEscalationRecords` (`src/scripts/_lib/subagent_steering.ts`) yields the lite record with its outcome and the head's `medium` record with `escalated_from: lite`; a second failure fails the slice instead. The builder now writes `escalated_from`, which the contract already named. Tests: `_lib_subagent_steering.test.ts` › liteEscalationRecords (three cases, including that neither package worker holds `Agent` or `Task`).
 
 ## Phase 2 — Measure, then flip per slice kind (T1, T4)
 
-- [ ] **2.1 Two claims filed before any paired run:**
+- [x] **2.1 Two claims filed before any paired run:** <!-- receipt: class=R0 · shadow · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
   `tier-downshift-quality-held` — verify-fail plus escalation rate of `lite` legs is at most the
   inherit legs' rate + 5 pp, and below the 0.3 escalation kill;
   `tier-downshift-limit-relief` — price-weighted billable tokens per *verified* slice, using
@@ -130,26 +135,31 @@ the judge-one-tier-up ladder (`src/agent-src/contexts/subagent-configuration.md:
   escalated re-run charged to the `lite` arm. Underpowered means neither is backed.
   verify: both rows exist in `docs/CLAIMS.md` with bars before the first paired run, and
   `check_claims` is green.
-- [ ] **2.2 Paired run.** Read-only fan-out slices only (the one kind both tables already put
+  Done 2026-10-22 (commit e61a0db79c): both rows `unbacked` in `docs/CLAIMS.md`, `build_proof` run in the same change, `check_claims` green (117 entries).
+- [x] **2.2 Paired run.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/tier_downshift_verdict.ts --> Read-only fan-out slices only (the one kind both tables already put
   at `lite`); each slice runs once per arm, both verified; capped at decision A2.
   verify: the ledger shows two arms with a verify result for every slice.
-- [ ] **2.3 Flip per kind.** A kind that clears both bars gets `lite` as its default
+  Done 2026-10-22: 60 read-only fan-out slices, each once per arm in a print-mode child session (subscription, no metered API), against a pinned snapshot; both arms verified 60/60, `lite` cost 0.00152 USD per verified slice against 0.01548 on inherit (`sonnet`). Harness `internal/bench/tier-downshift/run.ts`, verdict as code `src/scripts/_lib/tier_downshift_verdict.ts` (tests `_lib_tier_downshift_verdict.test.ts`), rows `internal/bench/tier-downshift/results.jsonl`, report `agents/evidence/analysis/tier-downshift-paired-run-2026-10-22.md`. Held exactly at the 5 pp margin by the rule of three.
+- [x] **2.3 Flip per kind.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/tier_downshift_verdict.ts --> A kind that clears both bars gets `lite` as its default
   dispatch; then — and only then — `ac-researcher` declares `model_tier: lite` (T1). A later
   breach of the kill reverts the kind and records the reversion in the claim row.
   verify: a seeded breach above the kill reverts the kind; `ac-researcher.md` changes in the
   same commit as the backed claim, never before.
+  Done 2026-10-22: both claims `backed` and `ac-researcher` → `model_tier: lite` in one commit; the test `ac-researcher-tier-follows-the-claim` fails whenever the definition and the claims disagree (seen red by setting `lite` before the backing); `kindTierAfter` reverts a lite kind on a seeded breach (`_lib_tier_downshift_verdict.test.ts` › a seeded breach above the kill reverts a kind already on lite).
 
 ## Phase 3 — Advisor pairing, measured or closed (T6)
 
-- [ ] **3.1 Probe once per host version** whether a dispatched worker (not only the main
+- [x] **3.1 Probe once per host version** <!-- receipt: class=R0 · shadow · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> whether a dispatched worker (not only the main
   session) can run with an advisor, and record what the advisor's calls cost in the usage
   report.
   verify: an evidence row per host version; if no worker path exists, the phase closes as a
   recorded null and K12 applies.
-- [ ] **3.2 Only on a green 3.1:** one pre-registered comparison on bounded implementation
+  Done 2026-10-22 (commit f3a3b4dcc7): on 2.1.308 a `haiku` `ac-researcher` dispatched under `--advisor opus` (experimental variable set) consulted the advisor — `advisor_tool_result` in its own transcript; the advisor billed 26,109 uncached input and 1,683 output tokens on `claude-opus-5-5`. Row in `tier-realisation-2026-10-22.md` § Step 3.1. A worker path exists; K12 does not apply.
+- [x] **3.2 Only on a green 3.1:** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/tier_downshift_verdict.ts --> one pre-registered comparison on bounded implementation
   slices — `lite` executor with a `high` advisor against `medium` alone, same two bars as 2.1.
   No adoption step in this roadmap; a backed claim opens its own.
   verify: the claim row precedes the run; the run report names both arms' verified costs.
+  Done 2026-10-22 (commit 23428d8b20): claim `advisor-pairing-held` filed (commit a8ac989ea3) before the run; 60 pairs (`internal/bench/advisor-pairing/run.ts`), quality held (60/60 against 58/60) and cost failed — 0.2838 USD against 0.0204 per verified slice, the advisor's input billed uncached. Resolved null; report `agents/evidence/analysis/advisor-pairing-run-2026-10-22.md`. No adoption step, per the step.
 
 ## Phase 4 — Folds into the owners (no build here)
 
@@ -168,10 +178,11 @@ them from day one; only 4.4 waits, on its blocker.
 - [x] **4.3 Into `road-to-a-cold-start-paid-once`:** a dated note that the owner's minimal-setup
   turn is answered by its 2.5 and 5.1, recommended ahead of its Phase 3 shadow window.
   verify: the note exists with the date and both step ids.
-- [ ] **4.4 Into `road-to-one-detector-and-the-senders-we-own`:** the decision line of blocker
+- [x] **4.4 Into `road-to-one-detector-and-the-senders-we-own`:** <!-- receipt: class=R0 · shadow · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> the decision line of blocker
   `realistic-fakes-for-hands`, either way. The question itself is already pointed to from that
   file's N4.
   verify: the line is in that file's decisions table with a date.
+  Done 2026-10-22: D11 in that file and A7 here, option (a), dated; resolved by council 2/2 under the run's delegation and listed for the owner, not by an owner line.
 - [x] **4.5 Into the free-hands file's 1.3:** an egress canary run — planted values in payload,
   system prompt and quotable rule text, sent to a loopback mock endpoint — before any free call.
   verify: the 1.3 step exists in that file.
@@ -210,6 +221,7 @@ them from day one; only 4.4 waits, on its blocker.
 | A4 | reversible-technical | agent | The ChatGPT plan's twelve-phase runtime is declined wholesale, its measurement-first ordering kept | K1–K7; its own section 9 asked for an A/B against today's runtime first, which is Phase 0 and 2 here | — |
 | A6 | reversible-technical | agent | No hysteresis or turn-by-turn model switching of the main session | the head never switches its own model (the user owns it, `delegation-policy` scope); a per-call tier on a dispatch switches nothing mid-session, so the cache cost a switching router must amortise does not arise | the host adds a per-turn model override for the main session |
 | A5 | reversible-technical | agent | Only the read-only fan-out kind enters the first paired run | the one kind both tier tables already assign to `lite` with deterministic verification (`model-recommendations.md:52`) | the kind's sample is too small at the cap |
+| A7 | product-owned | council:agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md | Blocker `realistic-fakes-for-hands`: option (a) — keep N4, values leave as tokens; T5 becomes a pre-registered comparison triggered at a 5 pp verify-fail gap. Council 2/2, 2026-10-22, applied as the default under the run's delegation; the owner may overturn it | tokens leak the least; (b) would add a second substitution path before the identifier half of the detector exists | the T5 trigger fires and a privacy review clears independently generated fakes |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
@@ -224,7 +236,7 @@ them from day one; only 4.4 waits, on its blocker.
 ## Blockers
 
 ### blocker: realistic-fakes-for-hands
-- **Status:** open
+- **Status:** resolved — council 2/2 chose (a) on 2026-10-22 (`agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md`), applied as the default under the run's delegation and listed for the owner, who may overturn it; recorded as A7 here and D11 in the one-detector file
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** step 4.4 only. Phases 0–3 run without it.
@@ -235,10 +247,10 @@ them from day one; only 4.4 waits, on its blocker.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 The served-versus-requested share and the downshift share are published for the current host (0.1).
-- [ ] AC-2 A `lite` slice reaches the host as a per-call model argument, observed served (0.2, 1.2).
-- [ ] AC-3 Every suite-recorded dispatch carries the four tier fields (1.1).
-- [ ] AC-4 Both Phase 2 claims are filed before the first paired run; any flip cites them and reverts on the kill (2.1, 2.3).
-- [ ] AC-5 The advisor phase ends as a backed claim or a recorded null (3.1, 3.2).
-- [ ] AC-6 The four folds are present in their owner files (Phase 4).
-- [ ] AC-7 The fake-data question carries a dated owner line (blocker).
+- [x] AC-1 The served-versus-requested share and the downshift share are published for the current host (0.1).
+- [x] AC-2 A `lite` slice reaches the host as a per-call model argument, observed served (0.2, 1.2).
+- [x] AC-3 Every suite-recorded dispatch carries the four tier fields (1.1).
+- [x] AC-4 Both Phase 2 claims are filed before the first paired run; any flip cites them and reverts on the kill (2.1, 2.3).
+- [x] AC-5 The advisor phase ends as a backed claim or a recorded null (3.1, 3.2).
+- [x] AC-6 The four folds are present in their owner files (Phase 4).
+- [ ] AC-7 The fake-data question carries a dated owner line (blocker). *(2026-10-22: a dated council line, A7, applied as the default under the run's delegation; the owner line itself is still owed.)*

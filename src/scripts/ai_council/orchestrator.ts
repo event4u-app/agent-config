@@ -34,7 +34,7 @@ import {
     would_exceed as _would_exceed_daily,
 } from './budget_guard.js';
 import type {
-    ExternalAIClient} from './clients.js';
+    CliClient, ExternalAIClient} from './clients.js';
 import {
     DEFAULT_MAX_TOKENS,
     CouncilResponse
@@ -499,6 +499,9 @@ export function consult(
             // health and structural validity are INDEPENDENT failure modes,
             // so refusing the retry would discard salvageable work for an
             // unrelated reason. Bounded by the retry's own spend gate.
+            // Non-blind: the seat is asked about its own reply, so it continues the session that wrote it.
+            const seat = member as Partial<Pick<CliClient, 'lastSession' | 'resumeNext'>>;
+            if (seat.lastSession !== undefined) seat.resumeNext = seat.lastSession;
             const rr = _run_round([member], repairQ, resolvedBudget, spent, {
                 table,
                 on_overrun,

@@ -69,7 +69,7 @@
     "decision-review": 19391,
     "deep-reading-analyst": 13546,
     "defense-in-depth": 6205,
-    "dependency-upgrade": 17217,
+    "dependency-upgrade": 17216,
     "description-assist": 7718,
     "design-intelligence": 11085,
     "design-review": 19912,
@@ -169,7 +169,7 @@
     "lint-skills": 3705,
     "livewire": 5734,
     "livewire-architect": 6631,
-    "llm-provider-knowledge": 7434,
+    "llm-provider-knowledge": 8465,
     "logging-monitoring": 12016,
     "logo-generation": 5790,
     "market-entry-analysis": 10016,
@@ -675,6 +675,12 @@
       "old": 16777,
       "new": 16856,
       "reason": "Phases 3-6 gain a not-applicable path (write not-applicable.md, or a one-line service-map.md, naming why) so a library or CLI can meet the exists exit honestly. It sits in the head's Procedure section because the step files must stay verbatim runs of the pre-split body (procedure_conservation) and every conserved head line is fixed; the cursor sentence was tightened to pay for most of it."
+    },
+    {
+      "skill": "llm-provider-knowledge",
+      "old": 7434,
+      "new": 8465,
+      "reason": "A § Free tiers table (where a free tier's quota, data-use and region terms are read live, plus the never-send-project-data-to-a-training-tier line) so the skill answers 'set up a free LLM API' without copying any model id or limit. road-to-free-hands-a-paid-head-checks 7.1."
     }
   ]
 }

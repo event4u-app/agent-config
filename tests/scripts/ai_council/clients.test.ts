@@ -86,6 +86,7 @@ import {
     type TextInputStream,
     type TextOutputStream,
 } from '../../../src/scripts/ai_council/clients.js';
+import { LIGHT_LAUNCH_PROBES } from '../../../src/scripts/ai_council/cli_agency_bounds.js';
 import { classifyCliFailure, isFallbackEligible } from '../../../src/scripts/ai_council/transport_resolver.js';
 import { hasPython3, oracleFile, REPO_ROOT, runPyCode } from './_harness.js';
 
@@ -599,6 +600,24 @@ describe('clients — CLI command construction', () => {
         expect(r.input_tokens).toBe(1);
         expect(r.output_tokens).toBe(2);
         expect(r.metadata.cli).toBe(true);
+    });
+
+    it('AnthropicCliClient adds the light launch only on the version it was probed on', () => {
+        const probed = LIGHT_LAUNCH_PROBES.find((p) => p.selected && p.member === 'anthropic')!;
+        const dir = mkTmp();
+        const bin = path.join(dir, 'claude-probed');
+        fs.writeFileSync(bin, `#!/bin/sh\nif [ "$1" = "--version" ]; then echo "${probed.probed_version}"; fi\n`);
+        fs.chmodSync(bin, 0o755);
+        const light = stubCli(AnthropicCliClient, { returncode: 0, stdout: '{}', stderr: '' }, { binary: bin });
+        light.client.ask('SYS', 'USER', 100);
+        const cmd = light.calls[0]!.cmd;
+        for (const f of probed.flag) expect(cmd).toContain(f);
+        expect(cmd[cmd.indexOf('--tools') + 1]).toBe('');
+
+        // `/bin/echo --version` prints no probed version: nothing is added.
+        const plain = stubCli(AnthropicCliClient, { returncode: 0, stdout: '{}', stderr: '' });
+        plain.client.ask('SYS', 'USER', 100);
+        for (const f of probed.flag) expect(plain.calls[0]!.cmd).not.toContain(f);
     });
 
     it('AnthropicCliClient grants the spawned agent NO tools, for every system prompt', () => {
@@ -2250,5 +2269,64 @@ describe('a timeout stays a timeout, and a parse failure is not replayed', () =>
         // eligible, so the same prompt was paid for twice.
         expect(classifyCliFailure('parse_failed')).not.toBe('cli_unsupported');
         expect(isFallbackEligible(classifyCliFailure('parse_failed'))).toBe(false);
+    });
+});
+
+describe('cold-start 5.2 — a non-blind follow-up continues the seat session inside the TTL', () => {
+    const okClaude = (): SubprocessResult => ({ returncode: 0, stdout: JSON.stringify({ result: 'ok', session_id: 'sess-1', usage: {} }), stderr: '' }) as SubprocessResult;
+
+    it('blind-round-never-resumes: a blind round keeps a fresh session even inside the TTL', async () => {
+        const { seatResumeArgs } = await import('../../../src/scripts/ai_council/seat_resume.js');
+        const session = { id: 'sess-1', at_ms: 1_000 };
+        expect(seatResumeArgs('anthropic', session, { blind: true, now_ms: 1_001 })).toEqual([]);
+        expect(seatResumeArgs('openai', session, { blind: true, now_ms: 1_001 })).toEqual([]);
+        expect(seatResumeArgs('anthropic', session, { blind: false, now_ms: 1_001 })).toEqual(['--resume', 'sess-1']);
+        expect(seatResumeArgs('openai', session, { blind: false, now_ms: 1_001 })).toEqual(['resume', 'sess-1']);
+    });
+
+    it('an expired or absent session, or an unprobed provider, starts fresh', async () => {
+        const { seatResumeArgs, SEAT_RESUME_TTL_MS } = await import('../../../src/scripts/ai_council/seat_resume.js');
+        expect(seatResumeArgs('anthropic', { id: 's', at_ms: 0 }, { blind: false, now_ms: SEAT_RESUME_TTL_MS })).toEqual([]);
+        expect(seatResumeArgs('anthropic', null, { blind: false, now_ms: 1 })).toEqual([]);
+        expect(seatResumeArgs('gemini', { id: 's', at_ms: 0 }, { blind: false, now_ms: 1 })).toEqual([]);
+    });
+
+    it('the claude seat records its session and resumes it only when the caller marks the call non-blind', () => {
+        const { client, calls } = stubCli(AnthropicCliClient, okClaude);
+        client.ask('sys', 'first', 100);
+        expect(client.lastSession?.id).toBe('sess-1');
+        client.ask('sys', 'second', 100);
+        expect(calls[1]!.cmd).not.toContain('--resume');
+        client.resumeNext = client.lastSession;
+        client.ask('sys', 'repair', 100);
+        expect(calls[2]!.cmd.slice(0, 4)).toEqual([calls[2]!.cmd[0], '--resume', 'sess-1', '--print']);
+        client.ask('sys', 'after', 100);
+        expect(calls[3]!.cmd).not.toContain('--resume');
+    });
+});
+
+describe('cold-start 5.2 — the codex seat', () => {
+    const thread = (): SubprocessResult =>
+        ({
+            returncode: 0,
+            stdout: [
+                JSON.stringify({ type: 'thread.started', thread_id: 'th-1' }),
+                JSON.stringify({ type: 'item.completed', item: { id: 'i', type: 'agent_message', text: 'ok' } }),
+                JSON.stringify({ type: 'turn.completed', usage: { input_tokens: 1, output_tokens: 1 } }),
+            ].join('\n'),
+            stderr: '',
+        }) as SubprocessResult;
+
+    it('records thread.started as its session and resumes with the sandbox bound as a config override', () => {
+        const { client, calls } = stubCli(OpenAICliClient, thread);
+        client.ask('sys', 'first', 100);
+        expect(client.lastSession?.id).toBe('th-1');
+        client.resumeNext = client.lastSession;
+        client.ask('sys', 'repair', 100);
+        const cmd = calls[1]!.cmd;
+        expect(cmd.slice(1, 4)).toEqual(['exec', 'resume', 'th-1']);
+        expect(cmd).not.toContain('--sandbox');
+        expect(cmd.join(' ')).toContain('-c sandbox_mode="read-only"');
+        expect(calls[0]!.cmd).toContain('--sandbox');
     });
 });

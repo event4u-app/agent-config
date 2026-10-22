@@ -16,8 +16,9 @@ re-defines a term below.
 
 **Stability: experimental.** The rule table, the token grammar, an in-memory
 replacement and the dispatcher's egress stage (local views and counts only)
-exist, and the council channel's replacement and final check; identifier
-rules, a final check on every other sender and every host rewrite do not. A
+exist, with validated identifier rows, and the council channel's replacement
+and final check; a final check on every other sender and every host rewrite
+do not. A
 section below that names an open decision is not a promise of its outcome.
 
 ## What this is not
@@ -223,6 +224,35 @@ than claimed conforming; moving the scanner onto this rule is part of step 2.2
 of `road-to-one-detector-and-the-senders-we-own`, which shares detection across
 consumers.
 
+## Identifier rows
+
+A shape is never enough to replace an identifier: each row carries a checksum,
+a context word within a window, or both, because a false positive damages
+ordinary code and review text.
+
+| Rule | Type | Proof |
+|---|---|---|
+| `iban` | `IBAN` | the country's registered length and ISO 13616 mod-97; spaced groups of four allowed |
+| `payment-card` | `CARD` | Luhn, no single repeated digit, **and** a card word within 48 characters |
+| `email` | `EMAIL` | label and TLD shape; documentation and reserved domains (RFC 2606, RFC 6761), no-reply senders, `git@` remotes, image-density and code file names excluded; the repository's own published identities allowlisted as keyed digests, never as addresses |
+| `phone-international` | `PHONE` | a `+` country code and 8–15 digits, a parenthesis only balanced; a date after a diff marker is not a number |
+| `phone-national` | `PHONE` | a leading `0`, 7–13 digits **and** a phone word within 32 characters; a parenthesis only balanced |
+| `phone-nanp` | `PHONE` | an optional `1`/`+1`, a North American area code bare or parenthesised, then 3 and 4 digits, separators optional, **and** a phone word within 32 characters |
+| `de-tax-id` | `TAXID` | the repeated-digit structure and ISO 7064 MOD 11,10 **and** a tax-ID word within 48 characters |
+| `us-ssn` | `SSN` | no `000`, `666` or `9xx` area, no `00` group, no `0000` serial |
+
+Consumers whose verdict reads credentials only read the credential rows alone —
+the commit-time scanner, the MCP config lint and the council bundler's line
+masking by filtering on class, the self-repair payload floor through
+`CREDENTIAL_RULES`. The class-tag redactor of knowledge ingestion
+and cross-repo retrieval reads `IDENTIFIER_RULES` through
+`src/scripts/_lib/identifier_redaction.ts`, **recall-first**: a store that
+persists text has no reviewer after it, so the context requirements are dropped
+there while every checksum holds. Over `src/` and `docs/` the rows' counts are
+pinned as false-positive ceilings by
+`src/scripts/_lib/egress_identifier_census.test.ts`; a ceiling does not protect
+recall, the rule tests do.
+
 ## Detection ceilings
 
 None. The credential rows match everything the commit-time scanner matched
@@ -395,8 +425,8 @@ mode that replaces nothing reports `uncovered` the same way.
 appends one line to `agents/runtime/state/egress-observations.jsonl` (gitignored,
 rotated once past 4 MiB): platform, event, an id-shaped tool name, the mode, the
 fields scanned, and per field the class, type and count, plus the rule id of any
-refusal — nothing derived from a value. The rule table holds credential rules
-only, so every count is a credential count until identifier rules exist.
+refusal — nothing derived from a value. Identifier rows count under their own
+class, so a count is a credential count only where its class says so.
 `agent-config hooks:replay … --json` reports what the stage would do with a
 fixture under the workspace's mode, in the same shape, without writing.
 
@@ -473,12 +503,13 @@ check, `council_egress.ts`); `undeclared` fails the census.
 | `src/scripts/ai_council/airgap.ts` | `api.anthropic.com`, `api.openai.com`, `generativelanguage.googleapis.com` | fixed-corpus | no | **unclassified** | names a provider endpoint with no recognised send shape — read the module | **fixed-corpus** | a DNS lookup of the provider hosts; no request body exists |
 | `src/scripts/ai_council/api_transport.ts` | `generativelanguage.googleapis.com` | session-content | no | **sender** | names a provider endpoint and carries a send shape | **asserted** | every body passes councilEgress().check in curlJsonPost before curl is spawned; the council bundle is replaced through the engine first |
 | `src/scripts/ai_council/clients.ts` | `api.anthropic.com`, `api.openai.com`, `api.perplexity.ai`, `api.x.ai` | session-content | no | **unclassified** | names a provider endpoint with no recognised send shape — read the module | **asserted** | API seats post through api_transport.curlJsonPost and CLI seats pass councilEgress().check before the spawn; council rounds are replaced through the engine first |
+| `src/scripts/ai_council/free_route_catalog.ts` | `api.groq.com`, `openrouter.ai` | fixed-corpus | no | **unclassified** | names a provider endpoint with no recognised send shape — read the module | **fixed-corpus** | a GET of the route's /models listing with no request body, never session content |
 | `src/scripts/rdp_gate_classify.ts` | `api.anthropic.com` | fixed-corpus | no | **sender** | names a provider endpoint and carries a send shape | **fixed-corpus** | sends the labelled classification corpus named by --corpus, never session content |
 | `src/scripts/rdp_quality_eval.ts` | `api.anthropic.com` | fixed-corpus | no | **sender** | names a provider endpoint and carries a send shape | **fixed-corpus** | sends the RDP quality corpus (corpus-prompts.json or --corpus), never session content |
 | `src/scripts/second_brain_retrieval.ts` | `api.anthropic.com` | fixed-corpus | no | **sender** | names a provider endpoint and carries a send shape | **fixed-corpus** | sends the seeded retrieval corpus (retrieval-corpus.yml) and entries retrieved from it, never session content |
 | `src/scripts/second_brain_run.ts` | `api.anthropic.com` | fixed-corpus | no | **sender** | names a provider endpoint and carries a send shape | **fixed-corpus** | sends the deterministic recall corpus of Phase 1, never session content |
 
-24 module(s): 17 sender, 1 local, 6 unclassified; coverage 2 asserted, 7 fixed-corpus, 15 uncovered, 0 undeclared. Scope: `.ts` and `.sh` under `src/scripts`, `src/cli`, `src/install`, `src/shared` only; `asserted` means the module imports and calls the final check, not that every request path reaches it. <!-- enforcement-count-ok: egress coverage census of sender modules, not a rule-enforcement figure -->
+25 module(s): 17 sender, 1 local, 7 unclassified; coverage 2 asserted, 8 fixed-corpus, 15 uncovered, 0 undeclared. Scope: `.ts` and `.sh` under `src/scripts`, `src/cli`, `src/install`, `src/shared` only; `asserted` means the module imports and calls the final check, not that every request path reaches it. <!-- enforcement-count-ok: egress coverage census of sender modules, not a rule-enforcement figure -->
 <!-- END egress-sender-census -->
 
 ## See also

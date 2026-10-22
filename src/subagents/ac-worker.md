@@ -29,6 +29,9 @@ source: package
 # whether a re-task is cheaper than a fresh spawn. `preload_skills` and
 # `cache_ttl` stay unset (road-to-a-cold-start-paid-once 2.3, decision D7).
 reuse: continuity
+# Skips CLAUDE.md and ~/.claude/rules, the largest part of a cold start; the
+# dispatch carries the floor and the user's constraints instead.
+omit_project_instructions: true
 ---
 
 You are `ac-worker`, an implementation worker. Each task names one slice: the

@@ -40,6 +40,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { redactIdentifiers } from './_lib/identifier_redaction.js';
 import { scrub } from './_lib/workspace_secrets.js';
 import { collect } from './linked_projects_list.js';
 
@@ -60,29 +61,6 @@ const SKIP_DIRS: ReadonlySet<string> = new Set([
 
 const CHUNK_BYTES = 2 * 1024;
 
-// knowledge_ingest PII patterns.
-const _RE_EMAIL = /[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g;
-const _RE_PHONE = new RegExp(
-    '(?:(?<=\\s)|(?<=^))' +
-        '(?:\\+?\\d{1,3}[\\s.\\-]?)?' +
-        '(?:\\(\\d{2,4}\\)[\\s.\\-]?|\\d{2,4}[\\s.\\-])' +
-        '\\d{2,4}[\\s.\\-]?\\d{2,4}(?:[\\s.\\-]?\\d{2,4})?',
-    'g',
-);
-const _RE_IBAN = /\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/g;
-const _RE_CC = /\b(?:\d[ \-]?){13,19}\b/g;
-const _RE_SSN = /\b\d{3}-\d{2}-\d{4}\b/g;
-
-/** Count and replace all matches like Python `re.subn`. */
-function _subn(text: string, pat: RegExp, repl: string): [string, number] {
-    let n = 0;
-    const out = text.replace(pat, () => {
-        n += 1;
-        return repl;
-    });
-    return [out, n];
-}
-
 /** `workspace_secrets.scrub(text, include_fuzzy=True)`: credential detection is the rule table's. */
 function _scrub_secrets(text: string): [string, number] {
     return scrub(text, { include_fuzzy: true });
@@ -90,25 +68,8 @@ function _scrub_secrets(text: string): [string, number] {
 
 /** Faithful port of `knowledge_ingest.redact(text, counters)`. */
 function redact(text: string, counters: Record<string, number>): [string, number] {
-    const _bump = (name: string, n = 1): void => {
-        counters[name] = (counters[name] ?? 0) + n;
-    };
-    let [out, secrets_count] = _scrub_secrets(text);
-    const piiPats: ReadonlyArray<[RegExp, string]> = [
-        [_RE_IBAN, 'IBAN'],
-        [_RE_CC, 'CC'],
-        [_RE_SSN, 'SSN'],
-        [_RE_EMAIL, 'EMAIL'],
-        [_RE_PHONE, 'PHONE'],
-    ];
-    for (const [pat, tag] of piiPats) {
-        const [t, n] = _subn(out, pat, `[${tag}]`);
-        out = t;
-        if (n) {
-            _bump(tag, n);
-        }
-    }
-    return [out, secrets_count];
+    const [out, secrets_count] = _scrub_secrets(text);
+    return [redactIdentifiers(out, counters), secrets_count];
 }
 
 /** UTF-8 byte length, mirror of Python `len(s.encode("utf-8"))`. */

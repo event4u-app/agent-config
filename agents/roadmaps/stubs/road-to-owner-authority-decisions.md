@@ -227,8 +227,10 @@ not a new constraint, and that reopening it is owner-reserved.
 - `docs/decisions/ADR-124-embedded-engine-doctrine.md:110` — the Class-B row:
   *"Anything with a lifecycle beyond one command … **PROHIBITED in core**,
   unchanged."*
-- `docs/CLAIMS.md:120-125` — `claim:no-runtime-daemon`, `status: backed`,
-  *"The whole layer is compiled into host agents with zero runtime daemon."*
+- `docs/CLAIMS.md:120-125` — `claim:no-runtime-daemon`, `status: backed` at the time
+  this was written: the claim that the layer compiles into host agents with no
+  resident process. Withdrawn 2026-08-27 by ADR-249; its wording is no longer
+  repeated here.
 
 **Provenance correction, recorded rather than silently fixed:** the roadmap step
 that requested this entry cited `docs/CLAIMS.md:104-108` for that claim. Read at

@@ -42,6 +42,8 @@ export interface QuotaParkedMarker {
     /** Providers whose plan quota was exhausted, sorted and deduplicated. */
     readonly providers: string[];
     readonly parked_at: string;
+    /** Who established the exhaustion: the council's own seat gate, or the host's `StopFailure`. */
+    readonly source: 'council' | 'host';
 }
 
 /** Filesystem-safe path for a run's marker. Mirrors `billing_grant.grantFile`. */
@@ -65,6 +67,7 @@ export function writeQuotaParked(
     runId: string,
     providers: readonly string[],
     now: () => Date = () => new Date(),
+    source: 'council' | 'host' = 'council',
 ): QuotaParkedMarker {
     const file = markerFile(repoRoot, runId);
     const existing = readMarker(file);
@@ -73,6 +76,7 @@ export function writeQuotaParked(
         run_id: runId,
         providers: merged,
         parked_at: existing?.parked_at ?? now().toISOString(),
+        source: existing?.source ?? source,
     };
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, `${JSON.stringify(marker, null, 2)}\n`, 'utf8');
@@ -118,6 +122,27 @@ export function findQuotaParked(repoRoot: string, sessionId: string): QuotaParke
     return null;
 }
 
+/** The plan's rolling rate window; a host marker older than this no longer describes it. */
+export const HOST_RATE_WINDOW_MS = 5 * 3_600_000;
+
+/** True when a host-sourced marker was parked inside the rate window ending at `nowMs`. */
+export function recentHostMarker(repoRoot: string, nowMs: number = Date.now(), windowMs: number = HOST_RATE_WINDOW_MS): boolean {
+    let names: string[];
+    try {
+        names = fs.readdirSync(path.join(repoRoot, QUOTA_PARKED_DIR_REL));
+    } catch {
+        return false;
+    }
+    for (const name of names) {
+        if (!name.endsWith('.json')) continue;
+        const m = readMarker(path.join(repoRoot, QUOTA_PARKED_DIR_REL, name));
+        if (m === null || m.source !== 'host') continue;
+        const at = Date.parse(m.parked_at);
+        if (Number.isFinite(at) && nowMs - at >= 0 && nowMs - at < windowMs) return true;
+    }
+    return false;
+}
+
 function readMarker(file: string): QuotaParkedMarker | null {
     try {
         const raw: unknown = JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -126,7 +151,8 @@ function readMarker(file: string): QuotaParkedMarker | null {
         if (typeof o['run_id'] !== 'string' || typeof o['parked_at'] !== 'string') return null;
         if (!Array.isArray(o['providers'])) return null;
         const providers = o['providers'].filter((p): p is string => typeof p === 'string');
-        return { run_id: o['run_id'], providers, parked_at: o['parked_at'] };
+        const source = o['source'] === 'host' ? 'host' : 'council';
+        return { run_id: o['run_id'], providers, parked_at: o['parked_at'], source };
     } catch {
         return null;
     }

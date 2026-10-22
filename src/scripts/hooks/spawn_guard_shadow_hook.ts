@@ -3,10 +3,12 @@
  * Spawn-guard — SHADOW ONLY (road-to-subagent-lifecycle-integrity Phase 3
  * Step 1, activated per `docs/contracts/concern-activation-policy.md`).
  *
- * What it does: on every `Agent` / `Task` tool call, read the open-dispatch
- * set the Phase-1 ledger maintains, and append one `spawn_guard_shadow` line
- * recording what a guard WOULD have done at several candidate thresholds.
- * It emits nothing to the model and it never blocks. Exit is always 0.
+ * What it does: on every `Agent` / `Task` call and every resume (`SendMessage`),
+ * read the open-dispatch set the Phase-1 ledger maintains, and append one
+ * `spawn_guard_shadow` line recording what a guard WOULD have done at several
+ * candidate thresholds; a spawn also records whether a warm worker would have
+ * been re-tasked instead (`reuse`). It emits nothing to the model and it never
+ * blocks. Exit is always 0.
  *
  * ── Why shadow and not warn ───────────────────────────────────────────────
  *
@@ -46,14 +48,26 @@
  * rides along as context and becomes a real measurement only when Phase 0
  * Step 4 establishes whether `agent_id` reaches a PreToolUse payload.
  *
- * PRIVACY BY CONSTRUCTION: counts and candidate verdicts only. No prompt, no
- * agent id, no tool input — the record type has no field able to hold any.
+ * PRIVACY BY CONSTRUCTION: counts, candidate verdicts, and a reuse verdict whose
+ * only free string is a worker's durable name from the register. A name read
+ * from the tool input reaches disk only as a session-bound digest. No prompt, no
+ * message, no recipient, no agent id.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { appendLedgerLine, openRecordStats, resolveConsumerRoot } from './subagent_ledger_hook.js';
+import { probeHostCapabilities } from '../_lib/host_capability.js';
+import { recentHostMarker } from '../_lib/quota_parked.js';
+import { shadowReuseVerdict, type ReuseContext, type WorkerState } from '../_lib/worker_reuse.js';
+import {
+    LEDGER_DIR,
+    appendLedgerLine,
+    openRecordStats,
+    readOpenRecords,
+    refFor,
+    resolveConsumerRoot,
+} from './subagent_ledger_hook.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW } from './exit_codes.js';
 
@@ -66,6 +80,154 @@ function isObject(v: unknown): v is JsonObject {
 
 /** The two subagent-dispatch tool names this repo has observed across hosts. */
 export const DISPATCH_TOOL_NAMES: ReadonlySet<string> = new Set(['Agent', 'Task']);
+
+/**
+ * The tool that re-tasks a finished worker — and also messages a running one,
+ * a teammate, or the lead. The host's concurrency cap checks new spawns only
+ * and admits a resume past it, so a guard that counted spawns only would
+ * undercount exactly the runs the host does not bound. Only a send the ledger
+ * can place on a finished leg is called a resume; see {@link classifySend}.
+ */
+export const RESUME_TOOL_NAMES: ReadonlySet<string> = new Set(['SendMessage']);
+
+/**
+ * `resume` — the recipient hashes to a ledger ref that is not open and whose
+ * stop this same session recorded: a finished leg of this session is
+ * re-entered, which starts a run.
+ * `message_running` — the ref is open: the message starts no run.
+ * `message_or_resume` — the ledger cannot place the recipient in this session
+ * (a name, a teammate, the lead, another session's leg, no session id, a stop
+ * older than the scan window). Recorded, never called a resume.
+ *
+ * The verdict describes the attempted send at `pre_tool_use`; whether the host
+ * then accepts it is not visible here.
+ */
+export type SendKind = 'resume' | 'message_running' | 'message_or_resume';
+
+/** Bytes read from the end of each monthly ledger file when looking for a stop. */
+export const STOP_SCAN_BYTES = 1024 * 1024;
+
+function tailOf(file: string): string {
+    let fd: number;
+    try {
+        fd = fs.openSync(file, 'r');
+    } catch {
+        return '';
+    }
+    try {
+        const size = fs.fstatSync(fd).size;
+        const length = Math.min(size, STOP_SCAN_BYTES);
+        const buf = Buffer.alloc(length);
+        fs.readSync(fd, buf, 0, length, size - length);
+        return buf.toString('utf8');
+    } finally {
+        fs.closeSync(fd);
+    }
+}
+
+function stoppedInSession(root: string, ref: string, sessionId: string, now: Date): boolean {
+    const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+    for (const month of [now.toISOString().slice(0, 7), prev.toISOString().slice(0, 7)]) {
+        for (const line of tailOf(path.join(root, LEDGER_DIR, `${month}.jsonl`)).split('\n')) {
+            if (!line.includes(ref)) continue;
+            try {
+                const rec = JSON.parse(line) as Record<string, unknown>;
+                if (rec['event'] === 'subagent_stop' && rec['ref'] === ref && rec['session_id'] === sessionId) {
+                    return true;
+                }
+            } catch {
+                // The first line of a tail is usually cut; a torn line is no evidence.
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ * The ref a named spawn of this session left in the register, read from the
+ * same bounded tails as a stop; null when this session named no such worker.
+ */
+/** Longer names are neither recorded nor resolved: a name is an address, not a payload. */
+export const NAME_MAX = 128;
+
+/** Domain-separated digest of (session, name); the only form a tool-input name takes on disk. */
+function nameKey(sessionId: string, name: string): string {
+    return refFor(`subagent-name\0${sessionId}\0${name}`);
+}
+
+function refForName(root: string, name: string, sessionId: string, now: Date): string | null {
+    if (name.length > NAME_MAX) return null;
+    const key = nameKey(sessionId, name);
+    let found: string | null = null;
+    const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+    for (const month of [prev.toISOString().slice(0, 7), now.toISOString().slice(0, 7)]) {
+        for (const line of tailOf(path.join(root, LEDGER_DIR, `${month}.jsonl`)).split('\n')) {
+            if (!line.includes('subagent_named')) continue;
+            try {
+                const rec = JSON.parse(line) as Record<string, unknown>;
+                if (rec['event'] === 'subagent_named' && rec['name_key'] === key && typeof rec['ref'] === 'string') {
+                    found = rec['ref'];
+                }
+            } catch {
+                // A torn line is no evidence.
+            }
+        }
+    }
+    return found;
+}
+
+/**
+ * Classify one send. `recipient_kind: name` is resolved through the register a
+ * named spawn of this session left; any other recipient is taken as an agent id
+ * and hashed with the ledger's own `refFor`. Neither the recipient nor its ref
+ * is written.
+ */
+export function classifySend(
+    root: string,
+    toolInput: unknown,
+    sessionId: string | null,
+    now: Date = new Date(),
+): SendKind {
+    const input = isObject(toolInput) ? toolInput : {};
+    const recipient = input['to'];
+    if (typeof recipient !== 'string' || recipient === '') return 'message_or_resume';
+    if (sessionId === null || sessionId === '') return 'message_or_resume';
+    const ref = input['recipient_kind'] === 'name' ? refForName(root, recipient, sessionId, now) : refFor(recipient);
+    if (ref === null) return 'message_or_resume';
+    if (readOpenRecords(root).has(ref)) return 'message_running';
+    return stoppedInSession(root, ref, sessionId, now) ? 'resume' : 'message_or_resume';
+}
+
+/**
+ * On a completed named spawn, record which ledger ref the name now addresses.
+ * Neither the name nor the agent id reaches disk in clear; both are digested first.
+ */
+export function recordNamedSpawn(root: string, payload: JsonObject, sessionId: string | null, nowIso: string): void {
+    const input = isObject(payload['tool_input']) ? payload['tool_input'] : {};
+    const result = isObject(payload['tool_response']) ? payload['tool_response'] : {};
+    const name = input['name'];
+    const agentId = result['agentId'];
+    if (typeof name !== 'string' || name === '' || name.length > NAME_MAX || typeof agentId !== 'string' || agentId === '') return;
+    if (sessionId === null) return;
+    appendLedgerLine(root, nowIso, { event: 'subagent_named', ts: nowIso, ref: refFor(agentId), name_key: nameKey(sessionId, name), session_id: sessionId });
+}
+
+/**
+ * Platforms where `pre_tool_use` was observed firing on the resume tool, with a
+ * deny honoured there. Elsewhere the line says the resume half is unobserved.
+ */
+export const RESUME_ADMISSION_OBSERVED: ReadonlySet<string> = new Set(['claude']);
+
+/**
+ * Inputs to the reuse verdict. Production passes none: `host_resume` comes
+ * from the host row, and no worker register is recorded yet, which the verdict
+ * names as `worker_register_unrecorded` rather than reading as empty.
+ */
+export interface ShadowDeps {
+    host_resume?: boolean;
+    workers?: readonly WorkerState[] | null;
+    context?: ReuseContext | null;
+}
 
 /** One candidate guard configuration under shadow evaluation. */
 export interface Candidate {
@@ -136,12 +298,34 @@ function extractToolName(payload: JsonObject): string | null {
     return typeof v === 'string' && v ? v : null;
 }
 
-export function processEnvelope(envelope: JsonValue, consumerRoot: string): number {
+export function processEnvelope(envelope: JsonValue, consumerRoot: string, deps: ShadowDeps = {}): number {
     try {
         if (!isObject(envelope)) return EXIT_ALLOW;
         const payload = unwrapPayload(envelope);
         const toolName = extractToolName(payload);
-        if (toolName === null || !DISPATCH_TOOL_NAMES.has(toolName)) return EXIT_ALLOW;
+        if (toolName === null) return EXIT_ALLOW;
+        if (envelope['event'] === 'post_tool_use' || payload['hook_event_name'] === 'PostToolUse') {
+            if (DISPATCH_TOOL_NAMES.has(toolName)) {
+                const sid = payload['session_id'] ?? envelope['session_id'];
+                recordNamedSpawn(consumerRoot, payload, typeof sid === 'string' ? sid : null, new Date().toISOString());
+            }
+            return EXIT_ALLOW;
+        }
+        const isResume = RESUME_TOOL_NAMES.has(toolName);
+        if (!isResume && !DISPATCH_TOOL_NAMES.has(toolName)) return EXIT_ALLOW;
+        const platform = typeof envelope['platform'] === 'string' ? envelope['platform'] : null;
+        const toolInput = isObject(payload['tool_input']) ? payload['tool_input'] : {};
+        const sessionRaw = payload['session_id'] ?? envelope['session_id'];
+        const sessionId = typeof sessionRaw === 'string' ? sessionRaw : null;
+        const sendKind: SendKind | null = isResume ? classifySend(consumerRoot, toolInput, sessionId) : null;
+        // Only the verdict's label and reason codes reach disk — never the tool input.
+        const reuse = isResume
+            ? null
+            : shadowReuseVerdict({
+                  host_resume: deps.host_resume ?? probeHostCapabilities(platform).worker_resume,
+                  workers: deps.workers ?? null,
+                  context: deps.context ?? null,
+              });
 
         const stats = openRecordStats(consumerRoot);
         // Pre-spawn there is no agent id to resolve a parent from; the deepest
@@ -167,7 +351,16 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string): numb
             // one the ledger already fixed for itself.
             ledger_present: stats.ledger_present,
             stale_open_excluded: stats.stale_excluded,
-            candidates: verdicts.map((v) => ({ label: v.label, would_deny: v.would_deny, on: v.on })),
+            // A message to a running worker starts no run, so it is not set
+            // against a threshold that counts runs.
+            ...(sendKind === 'message_running'
+                ? {}
+                : { candidates: verdicts.map((v) => ({ label: v.label, would_deny: v.would_deny, on: v.on })) }),
+            dispatch_kind: sendKind ?? 'spawn',
+            resume_admission: platform !== null && RESUME_ADMISSION_OBSERVED.has(platform) ? 'counted' : 'unobserved',
+            ...(reuse === null ? {} : { reuse }),
+            // A recent host-sourced rate marker: a new spawn would have waited.
+            ...(isResume ? {} : { rate_window: recentHostMarker(consumerRoot) ? 'would_wait' : 'clear' }),
             // Shadow posture is a property of this file, not of a setting —
             // there is no code path here that can deny.
             posture: 'shadow',

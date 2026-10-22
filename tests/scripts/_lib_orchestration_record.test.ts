@@ -15,6 +15,7 @@ describe('buildOrchestrationLine', () => {
             ...BASE,
             token_delta_provenance: 'measured',
             tier_chosen: 'lite',
+            model_requested: 'haiku',
             tier_source: 'inferred',
             task_class: 'read-only-fanout',
             tiers: ['sonnet'],
@@ -76,7 +77,7 @@ describe('buildOrchestrationLine', () => {
     });
 
     it('carries dispatch_tokens + session_tier into the orchestration object (for the cost-%)', () => {
-        const { line, errors } = buildOrchestrationLine({ ...BASE, dispatch_tokens: 84000, session_tier: 'high', tier_chosen: 'lite' });
+        const { line, errors } = buildOrchestrationLine({ ...BASE, dispatch_tokens: 84000, session_tier: 'high', tier_chosen: 'lite', model_requested: 'haiku' });
         expect(errors).toEqual([]);
         expect(line!.orchestration).toMatchObject({ dispatch_tokens: 84000, session_tier: 'high', tier_chosen: 'lite' });
     });
@@ -472,5 +473,23 @@ describe('outcome_semantics — the cutover marker the council required', () => 
         });
         expect(line!.outcome).toBe('success');
         expect(line!.outcome_semantics).toBe(2);
+    });
+});
+
+// road-to-a-tier-the-dispatch-carries 1.1: a chosen tier that names no
+// requested model is a claim about a dispatch nobody can check.
+describe('buildOrchestrationLine — the tier rides with the request', () => {
+    it('refuses tier_chosen without model_requested', () => {
+        const { line, errors } = buildOrchestrationLine({ ...BASE, tier_chosen: 'lite' });
+        expect(line).toBeNull();
+        expect(errors.some((e) => e.includes('model_requested'))).toBe(true);
+    });
+
+    it('a bare family alias matches a served id of that family', () => {
+        const same = buildOrchestrationLine({ ...BASE, tier_chosen: 'lite', model_requested: 'haiku', model_served: 'claude-haiku-5-5' });
+        expect(same.errors).toEqual([]);
+        expect((same.line!.orchestration as Record<string, unknown>)['model_divergent']).toBe(false);
+        const other = buildOrchestrationLine({ ...BASE, tier_chosen: 'lite', model_requested: 'haiku', model_served: 'claude-opus-5-5' });
+        expect((other.line!.orchestration as Record<string, unknown>)['model_divergent']).toBe(true);
     });
 });

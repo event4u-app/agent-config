@@ -331,3 +331,83 @@ describe('model_served — an unmapped band must not look like a silent host', (
         expect(input.model_served).toBeUndefined();
     });
 });
+
+// road-to-a-tier-the-dispatch-carries 1.1: every dispatch the suite records
+// carries the tier it chose, the session tier, and both model ids.
+describe('orchestration_record_hook — the four tier fields', () => {
+    function transcript(model: string): string {
+        const f = path.join(tmp, 'session.jsonl');
+        fs.writeFileSync(
+            f,
+            [
+                JSON.stringify({ type: 'user', message: { content: 'x' } }),
+                JSON.stringify({ type: 'assistant', message: { model: 'claude-sonnet-4-5', content: [] } }),
+                JSON.stringify({ type: 'assistant', message: { model, content: [] } }),
+            ].join('\n') + '\n',
+        );
+        return f;
+    }
+
+    it('a fixture dispatch writes all four', () => {
+        run(
+            envelope({
+                tool_name: 'Agent',
+                transcript_path: transcript('claude-opus-5-5'),
+                tool_input: { subagent_type: 'ac-researcher', model: 'haiku', prompt: 'p' },
+                tool_response: { resolvedModel: 'claude-haiku-5-5', totalTokens: 900, totalDurationMs: 10 },
+            }),
+            { consumer_root: tmp },
+        );
+        const o = readAuditLines(tmp)[0]!['orchestration'] as Record<string, unknown>;
+        expect(o['tier_chosen']).toBe('lite');
+        expect(o['tier_source']).toBe('static');
+        expect(o['model_requested']).toBe('haiku');
+        expect(o['model_served']).toBe('claude-haiku-5-5');
+        expect(o['model_divergent']).toBe(false);
+        expect(o['session_tier']).toBe('high');
+    });
+
+    it('an async dispatch carries the request, never a served model it did not see', () => {
+        run(
+            envelope({
+                tool_name: 'Agent',
+                tool_input: { subagent_type: 'general-purpose', model: 'sonnet', prompt: 'p' },
+                tool_response: { isAsync: true, status: 'async_launched' },
+            }),
+            { consumer_root: tmp },
+        );
+        const o = readAuditLines(tmp)[0]!['orchestration'] as Record<string, unknown>;
+        expect(o['tier_chosen']).toBe('medium');
+        expect(o['model_requested']).toBe('sonnet');
+        expect(o['model_served']).toBeNull();
+        expect(o['session_tier']).toBeNull();
+    });
+
+    it('a dispatch with no model argument inherits and claims no tier', () => {
+        run(
+            envelope({
+                tool_name: 'Agent',
+                transcript_path: transcript('claude-opus-5-5'),
+                tool_input: { subagent_type: 'general-purpose', prompt: 'p' },
+                tool_response: { resolvedModel: 'claude-opus-5-5', totalTokens: 9, totalDurationMs: 1 },
+            }),
+            { consumer_root: tmp },
+        );
+        const o = readAuditLines(tmp)[0]!['orchestration'] as Record<string, unknown>;
+        expect(o['tier_chosen']).toBeNull();
+        expect(o['tier_source']).toBe('inherit');
+        expect(o['model_requested']).toBeNull();
+        expect(o['session_tier']).toBe('high');
+    });
+
+    it('a transcript path that is not a .jsonl file is never read', () => {
+        const notJsonl = path.join(tmp, 'secret.txt');
+        fs.writeFileSync(notJsonl, JSON.stringify({ type: 'assistant', message: { model: 'claude-opus-5-5' } }));
+        run(
+            envelope({ tool_name: 'Agent', transcript_path: notJsonl, tool_input: { model: 'haiku' }, tool_response: { isAsync: true } }),
+            { consumer_root: tmp },
+        );
+        const o = readAuditLines(tmp)[0]!['orchestration'] as Record<string, unknown>;
+        expect(o['session_tier']).toBeNull();
+    });
+});

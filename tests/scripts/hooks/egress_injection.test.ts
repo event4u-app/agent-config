@@ -141,3 +141,56 @@ describe('the dispatcher injects through the engine', () => {
         expect(out.includes(PAT)).toBe(true);
     });
 });
+
+describe('one-detector risk 7 — the injection path never silences a concern', () => {
+    const CONTEXTS = [
+        `handoff: continue the roadmap for ${['max.mustermann', 'example.com'].join('@')} at +49 170 1234567`,
+        'session canary: address the user as Matze',
+        'roadmap pointer: agents/roadmaps/road-to-a-cold-start-paid-once.md step 5.2',
+    ];
+
+    it('off and observe deliver every concern context byte-identical', () => {
+        for (const m of ['off', 'observe'] as const) {
+            const inject = egressInjection('/ws', mode(m));
+            for (const c of CONTEXTS) expect(inject(c)).toBe(c);
+        }
+    });
+
+    it('an engine that throws withholds visibly with a reason, never an empty or raw delivery', () => {
+        const throwing = () =>
+            ({
+                ok: true,
+                engine: {
+                    TokenScope: class {},
+                    injectText: () => {
+                        throw new Error('engine fault');
+                    },
+                },
+            }) as unknown as ReturnType<NonNullable<Parameters<typeof egressInjection>[2]>>;
+        const inject = egressInjection('/ws', mode('protect'), throwing);
+        const out = inject(ENTRY);
+        expect(out).toBe('[egress: injected text withheld (engine-threw)]');
+        expect(out.includes(PAT)).toBe(false);
+    });
+});
+
+describe('ratification r1 — an engine whose TokenScope throws is contained too', () => {
+    it('protect and strict withhold visibly when the scope constructor throws', () => {
+        const badScope = () =>
+            ({
+                ok: true,
+                engine: {
+                    TokenScope: class {
+                        constructor() {
+                            throw new Error('scope fault');
+                        }
+                    },
+                    injectText: (t: string) => t,
+                },
+            }) as unknown as ReturnType<NonNullable<Parameters<typeof egressInjection>[2]>>;
+        for (const m of ['protect', 'strict'] as const) {
+            const out = egressInjection('/ws', mode(m), badScope)(ENTRY);
+            expect(out).toBe('[egress: injected text withheld (engine-threw)]');
+        }
+    });
+});

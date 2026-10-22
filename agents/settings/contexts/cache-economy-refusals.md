@@ -34,8 +34,10 @@ cold-start share below 50%.
 ## Refusals — do not rebuild these
 
 - **An interception proxy** (any `ANTHROPIC_BASE_URL` shim, however packaged) —
-  a resident process on a listening socket with network egress. Prohibited by
-  the no-runtime boundary and the embedded-engine doctrine, and **unnecessary**:
+  a resident process on a listening socket with network egress. Refused at the
+  time under the no-runtime boundary, which ADR-249 has since superseded, and
+  under the embedded-engine doctrine; it stays refused because it is
+  **unnecessary**:
   the host already emits per-leg cache attribution locally in its own
   transcripts.
 - **A beta-flag OTel join** (`agent_id` spans carrying cache tokens) — richer,

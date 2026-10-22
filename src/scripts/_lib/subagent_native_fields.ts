@@ -13,9 +13,9 @@
  *  - `cache_ttl` has no per-definition host key either — the host's TTL knob is
  *    a settings value.
  *
- * `omit_project_instructions` → `omitClaudeMd` is a string read from the
- * installed host binary, not an observed behaviour, so no shipped definition
- * sets it until the skip has been measured.
+ * `omit_project_instructions` → `omitClaudeMd` drops the instruction hierarchy
+ * for that definition, so a definition setting it relies on its dispatch to
+ * carry the floor and the user's constraints.
  */
 
 export function nativeFieldLines(fm: Record<string, unknown>): string {

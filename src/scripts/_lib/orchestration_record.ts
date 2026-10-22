@@ -28,6 +28,15 @@ import type { EvidenceBasis } from './evidence_basis.js';
 import type { NoFreeForm } from './runtime_journal.js';
 import { type PrivacyClass } from './privacy_class.js';
 import type { PhaseOutcome } from './outcome_vocabularies.js';
+import {
+    HAND_KINDS,
+    isUnpaid,
+    ROUTE_BILLINGS,
+    VERIFY_VERDICTS,
+    type HandKind,
+    type RouteBilling,
+    type VerifyVerdict,
+} from './hand_kinds.js';
 
 export type DispatchOutcome = 'DONE' | 'DONE_WITH_CONCERNS' | 'NEEDS_CONTEXT' | 'BLOCKED' | 'killed';
 /** Which route the rung took: deterministic primitive (lean-init L0),
@@ -168,6 +177,8 @@ export interface RecordInput {
     first_pass_success?: boolean | undefined;
     /** QUALITY: slice retried on a higher tier after a verification failure. Optional boolean (null = not measured). */
     escalated?: boolean | undefined;
+    /** The tier of the failed attempt when this dispatch re-ran a slice one tier up. */
+    escalated_from?: TierChosen | null | undefined;
     /** U5 (reliability-measurement): the subagent-type combination this dispatch
      *  ran (ordered agent-type ids, e.g. ['implementer','implementer','judge']) —
      *  with `outcome`, lets the orchestrator prefer combos that worked. Ids only. */
@@ -233,6 +244,16 @@ export interface RecordInput {
     // same built-and-unreachable class the rest of this change detects, so it
     // goes rather than waiting behind a label. Re-adding them is one commit
     // once an observation source exists.
+    /** The typed kind a rung-0.5 hand was asked to do; null for an untyped ask or a spawn. */
+    hand_kind?: HandKind | null | undefined;
+    /** Whether the hand's return matched its kind's schema; a mismatch is a failed call. */
+    schema_valid?: boolean | undefined;
+    /** How the route that served this call is paid for. */
+    route_billing?: RouteBilling | null | undefined;
+    /** The head's verdict on the hand's return; required on an unpaid route's line. */
+    verified?: VerifyVerdict | null | undefined;
+    /** Tokens the head itself spent verifying the return — what limit relief is measured net of. */
+    verify_tokens?: number | null | undefined;
     // Audit-log envelope (sensible defaults for a dispatch record)
     phase?: LinePhase | undefined;
     outcome?: LineOutcome | undefined;
@@ -428,8 +449,13 @@ function modelDivergent(
 ): boolean | null {
     if (typeof requested !== 'string' || typeof served !== 'string') return null;
     if (!requested || !served) return null;
+    // A dispatch argument names a family alias (`haiku`), the host serves a
+    // full id of it; any other requested spelling is compared exactly.
+    if (MODEL_FAMILY_ALIASES.includes(requested)) return !served.toLowerCase().includes(requested);
     return requested !== served;
 }
+
+const MODEL_FAMILY_ALIASES: readonly string[] = ['haiku', 'sonnet', 'opus', 'fable'];
 
 /**
  * Build + validate the audit-log-v1 line. Returns `{line, errors}`; when
@@ -471,6 +497,9 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     if (input.tier_chosen != null && !TIERS_CHOSEN.includes(input.tier_chosen)) {
         errors.push(`tier_chosen must be one of ${TIERS_CHOSEN.join(' | ')} (or omitted)`);
     }
+    if (input.tier_chosen != null && (typeof input.model_requested !== 'string' || !input.model_requested)) {
+        errors.push('tier_chosen needs model_requested: a tier the dispatch did not carry is not checkable');
+    }
     if (input.tier_source != null && !TIER_SOURCES.includes(input.tier_source)) {
         errors.push(`tier_source must be one of ${TIER_SOURCES.join(' | ')} (or omitted)`);
     }
@@ -484,6 +513,9 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
 
     if (input.first_pass_success !== undefined && typeof input.first_pass_success !== 'boolean') {
         errors.push('first_pass_success must be a boolean (true = return adopted without parent rework) or omitted');
+    }
+    if (input.escalated_from != null && !TIERS_CHOSEN.includes(input.escalated_from)) {
+        errors.push(`escalated_from must be one of ${TIERS_CHOSEN.join(' | ')} (or omitted)`);
     }
     if (input.escalated !== undefined && typeof input.escalated !== 'boolean') {
         errors.push('escalated must be a boolean (true = retried on a higher tier after verification failure) or omitted');
@@ -547,6 +579,25 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         errors.push('rules_used cannot exceed rules_carried (a worker cannot apply a rule it was not given)');
     }
 
+    if (input.hand_kind != null && !HAND_KINDS.includes(input.hand_kind)) {
+        errors.push(`hand_kind must be one of ${HAND_KINDS.join(' | ')} (or omitted)`);
+    }
+    if (input.schema_valid !== undefined && typeof input.schema_valid !== 'boolean') {
+        errors.push('schema_valid must be a boolean or omitted');
+    }
+    if (input.route_billing != null && !ROUTE_BILLINGS.includes(input.route_billing)) {
+        errors.push(`route_billing must be one of ${ROUTE_BILLINGS.join(' | ')} (or omitted)`);
+    }
+    if (input.verified != null && !VERIFY_VERDICTS.includes(input.verified)) {
+        errors.push(`verified must be one of ${VERIFY_VERDICTS.join(' | ')} (or omitted)`);
+    }
+    if (input.route_billing != null && ROUTE_BILLINGS.includes(input.route_billing) && isUnpaid(input.route_billing) && input.verified == null) {
+        errors.push('verified is required on an unpaid route: every hand return is verified by the head, or recorded as skipped');
+    }
+    if (input.verify_tokens != null && (!isInt(input.verify_tokens) || input.verify_tokens < 0)) {
+        errors.push('verify_tokens must be a non-negative integer count');
+    }
+
     if (input.capsule_emitted !== undefined && typeof input.capsule_emitted !== 'boolean') {
         errors.push('capsule_emitted must be a boolean or omitted');
     }
@@ -593,6 +644,7 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         model_divergent: modelDivergent(input.model_requested, input.model_served),
         first_pass_success: input.first_pass_success ?? null,
         escalated: input.escalated ?? null,
+        escalated_from: input.escalated_from ?? null,
         agent_combo: input.agent_combo ?? [],
         // lean-init additive fields — readers ignore unknowns per audit-log-v1
         init_tokens: input.init_tokens ?? null,
@@ -613,6 +665,15 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         // capsule shadow-measurement — readers ignore unknowns per audit-log-v1
         capsule_emitted: input.capsule_emitted ?? null,
         capsule_entries: input.capsule_entries ?? null,
+        hand_kind: input.hand_kind ?? null,
+        schema_valid: input.schema_valid ?? null,
+        route_billing: input.route_billing ?? null,
+        verified: input.verified ?? null,
+        verify_tokens: input.verify_tokens ?? null,
+        // Derived: an unpaid return nobody verified is read as an escalation,
+        // so skipping the check can never look cheaper than doing it.
+        counts_as_escalation:
+            input.route_billing == null ? null : isUnpaid(input.route_billing) && input.verified === 'skipped',
     };
 
     const line: Record<string, unknown> = {

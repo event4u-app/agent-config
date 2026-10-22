@@ -192,6 +192,115 @@ export function pemMaskEnd(text: string, span: SpanBounds): number | null {
     return null;
 }
 
+// Identifier validators. A shape alone is never enough to replace an identifier:
+// each row carries a checksum, a context word, or both, because a false positive
+// here damages ordinary code and review text.
+
+// IBAN length per country (ISO 13616 registry), packed as `CCnn` pairs. A country
+// missing here leaves its IBANs unmasked, so the table errs towards inclusion.
+const IBAN_LENGTHS =
+    'AD24AE23AL28AT20AZ28BA20BE16BG22BH22BI27BR29BY28CH21CR22CY28CZ24DE22DJ27DK18DO28EE20EG29ES24FI18FK18FO18FR27GB22GE22GI23GL18GR27GT28HN28HR21HU28IE22IL23IQ23IS26IT27JO30KW30KZ20LB28LC32LI21LT20LU20LV21LY25MC27MD24ME22MK19MN20MR27MT31MU30NI28NL18NO15OM23PK24PL28PS29PT25QA29RO24RS22RU33SA24SC31SD18SE24SI19SK24SM27SO23ST25SV28TL23TN24TR26UA29VA22VG24XK20YE30';
+
+export function isValidIban(value: string): boolean {
+    const iban = value.replace(/ /g, '').toUpperCase();
+    const at = IBAN_LENGTHS.indexOf(iban.slice(0, 2));
+    if (at === -1 || at % 4 !== 0 || Number(IBAN_LENGTHS.slice(at + 2, at + 4)) !== iban.length) return false;
+    if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]+$/.test(iban)) return false;
+    let rest = 0;
+    for (const ch of iban.slice(4) + iban.slice(0, 4)) {
+        const n = ch <= '9' ? ch.charCodeAt(0) - 48 : ch.charCodeAt(0) - 55;
+        rest = n > 9 ? (rest * 100 + n) % 97 : (rest * 10 + n) % 97;
+    }
+    return rest === 1;
+}
+
+export function passesLuhn(value: string): boolean {
+    const digits = value.replace(/[ -]/g, '');
+    if (!/^[0-9]{13,19}$/.test(digits) || /^(.)\1+$/.test(digits)) return false;
+    let sum = 0;
+    for (let i = 0; i < digits.length; i += 1) {
+        let d = digits.charCodeAt(digits.length - 1 - i) - 48;
+        if (i % 2 === 1) {
+            d *= 2;
+            if (d > 9) d -= 9;
+        }
+        sum += d;
+    }
+    return sum % 10 === 0;
+}
+
+/** E.164 bounds: a country code plus at most 15 digits in all; never a date after a diff marker. */
+function phoneDigits(min: number, max: number): (value: string) => boolean {
+    return (value) => {
+        if (/^\+?[0-9]{4}-[0-9]{2}-[0-9]{2}/.test(value)) return false;
+        const n = value.replace(/[^0-9]/g, '').length;
+        return n >= min && n <= max;
+    };
+}
+
+/**
+ * German tax identification number: 11 digits, no leading zero, one digit of
+ * the first ten repeated two or three times and no other repeated, and an
+ * ISO 7064 MOD 11,10 check digit.
+ */
+export function isValidGermanTaxId(value: string): boolean {
+    const d = value.replace(/ /g, '');
+    if (!/^[1-9][0-9]{10}$/.test(d)) return false;
+    const counts = new Map<string, number>();
+    for (const ch of d.slice(0, 10)) counts.set(ch, (counts.get(ch) ?? 0) + 1);
+    const repeated = [...counts.values()].filter((c) => c > 1);
+    if (repeated.length !== 1 || (repeated[0] as number) > 3) return false;
+    let product = 10;
+    for (let i = 0; i < 10; i += 1) {
+        let sum = (d.charCodeAt(i) - 48 + product) % 10;
+        if (sum === 0) sum = 10;
+        product = (sum * 2) % 11;
+    }
+    const check = (11 - product) % 10;
+    return check === d.charCodeAt(10) - 48;
+}
+
+/** US social security number: no 000, 666 or 9xx area, no 00 group, no 0000 serial. */
+export function isValidUsSsn(value: string): boolean {
+    const m = /^([0-9]{3})-([0-9]{2})-([0-9]{4})$/.exec(value);
+    if (m === null) return false;
+    const [area, group, serial] = [m[1] as string, m[2] as string, m[3] as string];
+    return area !== '000' && area !== '666' && !area.startsWith('9') && group !== '00' && serial !== '0000';
+}
+
+// Addresses that name no one: documentation and reserved domains (RFC 2606,
+// RFC 6761), no-reply senders, and image-density file names (`logo@2x.png`).
+const EMAIL_EXCLUSIONS: readonly RegExp[] = [
+    /^git@/i,
+    /@(?:[a-z0-9-]+\.)*(?:example\.(?:com|net|org)|example|test|invalid|localhost|local)$/i,
+    /^(?:no-?reply|do-?not-?reply|noreply\+[^@]*)@/i,
+    /@users\.noreply\.github\.com$/i,
+    /@[0-9]x\.[a-z]+$/i,
+    /\.(?:png|jpe?g|gif|svg|webp|ico|js|mjs|cjs|ts|tsx|css|json|ya?ml|lock)$/i,
+];
+
+/**
+ * The repository's own published identities (package author, copyright holder),
+ * held as keyed 64-bit FNV-1a digests of the lower-cased address so the list
+ * reads as noise. A digest hides an address from a reader, not from someone who
+ * guesses it; the list exists to keep the tree's own metadata out of a review's
+ * placeholder count.
+ */
+const EMAIL_ALLOWLIST_DIGESTS: ReadonlySet<string> = new Set(['924acfa874365f8a', '8066a43fc18158bf']);
+
+export function emailAllowlistDigest(address: string): string {
+    let h = 0xcbf29ce484222325n;
+    for (const ch of `egress-email-allowlist-v1\u0000${address.toLowerCase()}`) {
+        h ^= BigInt(ch.codePointAt(0) as number);
+        h = (h * 0x100000001b3n) & 0xffffffffffffffffn;
+    }
+    return h.toString(16).padStart(16, '0');
+}
+
+function isReportableEmail(value: string): boolean {
+    return !EMAIL_ALLOWLIST_DIGESTS.has(emailAllowlistDigest(value));
+}
+
 // Quantifiers are unbounded where the pattern is linear without a bound, so a
 // long value is matched whole and no suffix survives a replacement. Each rule's
 // argument for why it is linear lives in `egress_rules_linearity.ts`, kept out
@@ -303,6 +412,33 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         pattern: /(?<![A-Za-z0-9])gsk_[A-Za-z0-9]{20,}/g,
     },
     {
+        rule: 'huggingface-token',
+        type: 'TOKEN',
+        prefixes: ['hf_'],
+        class: 'credential',
+        replacement: 'detection',
+        tokenStart: true,
+        pattern: /(?<![A-Za-z0-9])hf_[A-Za-z0-9]{30,}/g,
+    },
+    {
+        rule: 'nvidia-api-key',
+        type: 'APIKEY',
+        prefixes: ['nvapi-'],
+        class: 'credential',
+        replacement: 'detection',
+        tokenStart: true,
+        pattern: /(?<![A-Za-z0-9])nvapi-[A-Za-z0-9_-]{40,}/g,
+    },
+    {
+        rule: 'replicate-api-token',
+        type: 'TOKEN',
+        prefixes: ['r8_'],
+        class: 'credential',
+        replacement: 'detection',
+        tokenStart: true,
+        pattern: /(?<![A-Za-z0-9])r8_[A-Za-z0-9]{30,}/g,
+    },
+    {
         rule: 'jwt',
         type: 'TOKEN',
         class: 'credential',
@@ -357,6 +493,81 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         ),
         valueGroup: 1,
         validator: looksLikeSecretValue,
+    },
+    {
+        rule: 'iban',
+        type: 'IBAN',
+        class: 'identifier',
+        replacement: 'detection',
+        pattern: /(?<![A-Za-z0-9])[A-Z]{2}[0-9]{2}(?: ?[A-Z0-9]{4}){2,7}(?: ?[A-Z0-9]{1,3})?(?![A-Za-z0-9])/g,
+        validator: isValidIban,
+    },
+    {
+        rule: 'payment-card',
+        type: 'CARD',
+        class: 'identifier',
+        replacement: 'detection',
+        pattern: /(?<![0-9])[0-9](?:[ -]?[0-9]){12,18}(?![0-9])/g,
+        validator: passesLuhn,
+        context: {
+            words: /\b(?:card|credit|debit|visa|mastercard|amex|maestro|kreditkarte|karte|kartennummer|payment|zahlung)\b/i,
+            window: 48,
+        },
+    },
+    {
+        rule: 'email',
+        type: 'EMAIL',
+        class: 'identifier',
+        replacement: 'detection',
+        pattern:
+            /(?<![A-Za-z0-9._%+\\-])[A-Za-z0-9][A-Za-z0-9._%+-]{0,63}@(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\.){1,8}[A-Za-z]{2,24}(?![A-Za-z0-9-])/g,
+        exclusions: EMAIL_EXCLUSIONS,
+        validator: isReportableEmail,
+    },
+    {
+        rule: 'phone-international',
+        type: 'PHONE',
+        class: 'identifier',
+        replacement: 'detection',
+        pattern: /(?<![A-Za-z0-9+])\+[1-9][0-9]{0,2}(?:[ ./-]?(?:\([0-9]{1,6}\)|(?=([0-9]{1,6}))\1)){1,5}(?![0-9])/g,
+        validator: phoneDigits(8, 15),
+    },
+    {
+        rule: 'phone-national',
+        type: 'PHONE',
+        class: 'identifier',
+        replacement: 'detection',
+        pattern: /(?<![A-Za-z0-9+(])(?:\(0[1-9][0-9]{1,4}\)|0[1-9][0-9]{1,4})(?:[ ./-]?(?=([0-9]{2,8}))\1){1,3}(?![0-9])/g,
+        validator: phoneDigits(7, 13),
+        context: { words: /\b(?:tel|telefon|telephone|phone|mobil|mobile|cell|fax|handy|call|ruf)\b/i, window: 32 },
+    },
+    {
+        rule: 'phone-nanp',
+        type: 'PHONE',
+        class: 'identifier',
+        replacement: 'detection',
+        pattern: /(?<![A-Za-z0-9+(-])(?:\+?1[ .-]?)?(?:\([2-9][0-9]{2}\) ?|[2-9][0-9]{2}[ .-]?)[2-9][0-9]{2}[ .-]?[0-9]{4}(?![0-9-])/g,
+        context: { words: /\b(?:tel|telephone|phone|mobile|cell|fax|call)\b/i, window: 32 },
+    },
+    {
+        rule: 'de-tax-id',
+        type: 'TAXID',
+        class: 'identifier',
+        replacement: 'detection',
+        pattern: /(?<![0-9])[1-9](?: ?[0-9]){10}(?![0-9])/g,
+        validator: isValidGermanTaxId,
+        context: {
+            words: /\b(?:steuer-?id|steuer-?identifikationsnummer|identifikationsnummer|idnr|tax[ -]?id|tin)\b/i,
+            window: 48,
+        },
+    },
+    {
+        rule: 'us-ssn',
+        type: 'SSN',
+        class: 'identifier',
+        replacement: 'detection',
+        pattern: /(?<![0-9-])[0-9]{3}-[0-9]{2}-[0-9]{4}(?![0-9-])/g,
+        validator: isValidUsSsn,
     },
 ];
 
@@ -434,6 +645,10 @@ export const REVIEW_CREDENTIAL_ROWS: readonly EgressRule[] = [
         valueGroup: 1,
     },
 ];
+
+/** The credential rows alone, for consumers whose verdict reads credentials only. */
+export const CREDENTIAL_RULES: readonly EgressRule[] = EGRESS_RULES.filter((r) => r.class === 'credential');
+export const IDENTIFIER_RULES: readonly EgressRule[] = EGRESS_RULES.filter((r) => r.class === 'identifier');
 
 /** Every raw-key prefix the table declares, longest first. */
 export const CREDENTIAL_PREFIXES: readonly string[] = EGRESS_RULES.flatMap((r) => r.prefixes ?? []).sort(

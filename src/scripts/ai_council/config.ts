@@ -85,6 +85,7 @@ import * as budget from './cli_call_budget.js';
 // quorum into config — creates a real ESM cycle in the loader's init path.
 import { OPENAI_CLI_VENDOR_DEFAULT } from './vendor_defaults.js';
 import { parseSeatFields, type PolicyExclusion } from './seat_policy.js';
+import { parseRouteFields, type RouteSpec } from './free_route.js';
 import type { ContentClass } from './content_ceiling.js';
 import { SOLO_FLOOR_MIN_PRESENT } from './quorum.js';
 
@@ -332,6 +333,8 @@ export interface MemberConfig {
     readonly disabled_reason: string | null;
     readonly policy_exclusion: PolicyExclusion | null;
     readonly content_ceiling: ContentClass;
+    /** A `base_url` route (`free_route.ts`); absent or null for a provider member. */
+    readonly route?: RouteSpec | null;
 }
 
 /**
@@ -1693,18 +1696,15 @@ function _build_cost_budget(d: Dict): CostBudgetConfig {
 function _build_member(
     name: string,
     cfg: Dict,
-    // road-to-always-on-orchestration Phase 3.1: kept in sync with
-    // `_build_defaults`'s `auto` default for consistency. The sole call site
-    // (`_build_config`) always passes `defaults.mode` explicitly, so this
-    // parameter default is unreachable on the live path today; it exists so
-    // a future caller that omits the third argument observes the same
-    // doctrine rather than silently reverting to the retired `api` default.
+    // Unreachable today (the caller passes `defaults.mode`); mirrors that default.
     default_mode = 'auto',
     ignored: string[] = [],
 ): MemberConfig {
-    if (!_VALID_PROVIDERS.has(name)) {
+    const routeParsed = parseRouteFields(name, cfg as Record<string, unknown>, _VALID_PROVIDERS.has(name));
+    if ('error' in routeParsed) throw new CouncilConfigError(routeParsed.error);
+    if (!_VALID_PROVIDERS.has(name) && routeParsed.route === null) {
         throw new CouncilConfigError(
-            `members.${name}: unknown provider; valid: ` +
+            `members.${name}: unknown provider (or a route without base_url); valid: ` +
                 `${_sortedListRepr(_VALID_PROVIDERS)}.`,
         );
     }
@@ -1713,10 +1713,8 @@ function _build_member(
     const model = _pyTruthy(modelVal) ? (modelVal as string) : '';
     const api_key_ref_raw = _get(cfg, 'api_key_ref', null);
     const api_key_ref = api_key_ref_raw === undefined ? null : api_key_ref_raw;
-    // Per-member transport is no longer configurable either — same reasoning
-    // as `_build_defaults`. A member that pinned `mode: api` would reintroduce
-    // exactly the silent-spend path the global key was removed for, one
-    // provider at a time. Recorded as ignored, never read.
+    // Ignored, never read: a pinned `mode: api` would reopen the silent-spend
+    // path the global key was removed for, one provider at a time.
     if (_get(cfg, 'mode', null) !== null) {
         ignored.push(`members.${name}.mode`);
     }
@@ -1911,6 +1909,8 @@ function _build_member(
         prompt_cache_ttl,
         verified_at,
         ...seat.fields,
+        route: routeParsed.route,
+        ...(routeParsed.route === null ? {} : { content_ceiling: 'public-artifact' as const }),
     };
 }
 

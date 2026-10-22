@@ -48,6 +48,9 @@ const ADDED_AFTER_MOVE: readonly string[] = [
     'xai-api-key',
     'perplexity-api-key',
     'groq-api-key',
+    'huggingface-token',
+    'nvidia-api-key',
+    'replicate-api-token',
 ];
 
 const ALNUM = 'Ab3Cd5Ef7Gh9Jk2Lm4Np6Qr8St1Uv3Wx5Yz7';

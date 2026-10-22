@@ -13,6 +13,7 @@ import * as path from 'node:path';
 
 import { classify, digest, render, type Candidate } from '../../src/scripts/run_supervise.js';
 import { iso_now, type SessionRecord } from '../../src/scripts/_lib/session_register.js';
+import { run as runHostRateMarker } from '../../src/scripts/hooks/host_rate_marker_hook.js';
 import {
     QUOTA_PARKED_DIR_REL,
     clearQuotaParked,
@@ -65,10 +66,11 @@ function writeRoadmap(repoRoot: string, slug: string, lines: string[]): void {
 }
 
 describe('the marker', () => {
-    it('holds a run id, providers and a stamp — and no field for anything else', () => {
+    it('holds a run id, providers, a stamp and a source enum — and no field for anything else', () => {
         const r = root();
         const m = writeQuotaParked(r, 'run-a', ['openai', 'anthropic'], () => NOW);
-        expect(Object.keys(m).sort()).toEqual(['parked_at', 'providers', 'run_id']);
+        expect(Object.keys(m).sort()).toEqual(['parked_at', 'providers', 'run_id', 'source']);
+        expect(['council', 'host']).toContain(m.source);
         // Sorted and deduplicated so two rounds cannot produce two orderings of
         // one fact.
         expect(m.providers).toEqual(['anthropic', 'openai']);
@@ -285,5 +287,48 @@ describe('the grant is re-read at resume, never carried in the plan', () => {
             if (before === undefined) delete process.env[BILLING_GRANT_ENV];
             else process.env[BILLING_GRANT_ENV] = before;
         }
+    });
+});
+
+// road-to-a-cold-start-paid-once 4.3: the host's own StopFailure(rate_limit)
+// writes the same record-only marker, tagged host-sourced.
+describe('host-stop-failure-writes-marker', () => {
+    const dirs: string[] = [];
+    afterEach(() => {
+        for (const d of dirs.splice(0)) fs.rmSync(d, { recursive: true, force: true });
+    });
+    const envelope = (error: string): string =>
+        JSON.stringify({
+            schema_version: 1,
+            platform: 'claude',
+            event: 'agent_error',
+            payload: { hook_event_name: 'StopFailure', session_id: 'sess-host-1', error, last_assistant_message: 'API Error: 429' },
+        });
+
+    it('host-stop-failure-writes-marker', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'host-rate-'));
+        dirs.push(root);
+        expect(runHostRateMarker(envelope('rate_limit'), root)).toBe(0);
+        const m = findQuotaParked(root, 'sess-host-1');
+        expect(m).not.toBeNull();
+        expect(m!.source).toBe('host');
+        expect(m!.providers).toEqual(['anthropic']);
+    });
+
+    it('any other failure class writes nothing, and nothing ever blocks', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'host-rate-'));
+        dirs.push(root);
+        for (const error of ['server_error', 'overloaded', 'authentication_failed', '']) {
+            expect(runHostRateMarker(envelope(error), root)).toBe(0);
+        }
+        expect(runHostRateMarker('not json', root)).toBe(0);
+        expect(findQuotaParked(root, 'sess-host-1')).toBeNull();
+    });
+
+    it('a council-written marker carries source council', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'host-rate-'));
+        dirs.push(root);
+        writeQuotaParked(root, 'run-c', ['openai']);
+        expect(findQuotaParked(root, 'run-c')!.source).toBe('council');
     });
 });

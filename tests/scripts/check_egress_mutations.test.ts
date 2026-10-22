@@ -16,10 +16,11 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const run = (args: string[]): number => runGateCli(REPO, 'src/scripts/check_egress_mutations.ts', args, REPO);
 
 describe('check_egress_mutations', () => {
-    it('lists the three mutations the roadmap names that exist without identifier rows', () => {
+    it('lists the four mutations the roadmap names', () => {
         expect(readRecipes(REPO).map((r) => r.killed_by).sort()).toEqual([
             'credential-outranks-identifier',
             'credential-token-never-restores',
+            'iban-checksum-refuses-a-wrong-check-digit',
             'tally-carries-no-value',
         ]);
         for (const r of readRecipes(REPO)) {
@@ -27,6 +28,15 @@ describe('check_egress_mutations', () => {
             expect(INVARIANTS[r.killed_by]).toBeTypeOf('function');
         }
     });
+
+    it('the IBAN checksum mutation is killed by its own invariant', async () => {
+        const recipe = readRecipes(REPO).find((r) => r.mutation === 'iban-checksum-disabled');
+        expect(recipe?.module).toBe('src/scripts/_lib/egress_rules.ts');
+        expect(await findSurvivors(REPO, recipe === undefined ? [] : [recipe])).toEqual([]);
+        expect(await findSurvivors(REPO, recipe === undefined ? [] : [{ ...recipe, replace: recipe.find }])).toEqual([
+            'iban-checksum-disabled: survived — iban-checksum-refuses-a-wrong-check-digit still holds',
+        ]);
+    }, 60_000);
 
     it('kills every committed mutation on the tree', () => {
         expect(run([])).toBe(0);

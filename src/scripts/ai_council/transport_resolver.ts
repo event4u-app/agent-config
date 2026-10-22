@@ -51,6 +51,7 @@ import {
 import { resolve_mode } from './modes.js';
 import {
     admitsContent,
+    DEFAULT_CONTENT_CLASS,
     DEFAULT_SEAT_CEILING,
     type ContentClass,
 } from './content_ceiling.js';
@@ -134,10 +135,7 @@ export interface ResolveTransportOptions {
     readonly policyExclusion?: PolicyExclusion | null;
     /** The seat's content ceiling (2.2). Defaults to `project-content`. */
     readonly seatCeiling?: ContentClass | null;
-    /**
-     * The class of what this pass would send. Omitted → no content check runs,
-     * which is what keeps every existing caller's behaviour identical.
-     */
+    /** The class of what this pass would send. Omitted → `project-content`. */
     readonly contentClass?: ContentClass | null;
 }
 
@@ -197,19 +195,17 @@ export function resolveTransport(opts: ResolveTransportOptions): ResolvedTranspo
     if (exclusion !== null) {
         return unavailable(provider, billing, policyExclusionReason(exclusion, provider), exclusion);
     }
-    // Content ceiling (2.2). Only runs when the caller declared what it would
-    // send; an undeclared pass is unchanged, not silently refused.
-    const contentClass = opts.contentClass ?? null;
-    if (contentClass !== null) {
-        const verdict = admitsContent(opts.seatCeiling ?? DEFAULT_SEAT_CEILING, contentClass);
-        if (!verdict.admitted) {
-            return unavailable(
-                provider,
-                billing,
-                `${provider}: ${verdict.reason ?? 'content ceiling refused the payload'}`,
-                'policy_content_ceiling',
-            );
-        }
+    // Content ceiling (2.2). An undeclared payload is project-content: a seat
+    // cleared only for public artefacts refuses it, and a default seat is unchanged.
+    const contentClass = opts.contentClass ?? DEFAULT_CONTENT_CLASS;
+    const verdict = admitsContent(opts.seatCeiling ?? DEFAULT_SEAT_CEILING, contentClass);
+    if (!verdict.admitted) {
+        return unavailable(
+            provider,
+            billing,
+            `${provider}: ${verdict.reason ?? 'content ceiling refused the payload'}`,
+            'policy_content_ceiling',
+        );
     }
 
     if (mode === 'manual') {

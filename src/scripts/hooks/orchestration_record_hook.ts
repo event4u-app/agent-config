@@ -68,7 +68,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { buildOrchestrationLine, type RecordInput } from '../_lib/orchestration_record.js';
+import { TIER_TO_CLAUDE_MODEL } from '../_lib/model_tier.js';
+import { buildOrchestrationLine, type RecordInput, type TierChosen } from '../_lib/orchestration_record.js';
 import { DEFAULT_DIR } from '../orchestration_record.js';
 import { is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -137,6 +138,10 @@ export interface DispatchFacts {
     returnChannelChars: number | null;
     isAsync: boolean;
     isError: boolean;
+    /** The per-call `model` argument of the dispatch, verbatim; null when it carried none. */
+    requestedModel?: string | null;
+    /** The model id of the head's latest assistant call, read from its transcript tail. */
+    sessionModel?: string | null;
 }
 
 function numOrNull(v: JsonValue | undefined): number | null {
@@ -215,8 +220,70 @@ export function extractDispatchFacts(payload: JsonObject): DispatchFacts {
         }
     }
 
-    return { subagentType, resolvedModel, totalTokens, totalDurationMs, returnChannelChars, isAsync, isError };
+    const requestedModel = input && typeof input['model'] === 'string' && input['model'] ? (input['model'] as string) : null;
+    const sessionModel = lastAssistantModel(payload['transcript_path']);
+
+    return {
+        subagentType,
+        resolvedModel,
+        totalTokens,
+        totalDurationMs,
+        returnChannelChars,
+        isAsync,
+        isError,
+        requestedModel,
+        sessionModel,
+    };
 }
+
+const TRANSCRIPT_TAIL_BYTES = 256 * 1024;
+
+/**
+ * The `model` of the last assistant line in a host transcript, read from its
+ * tail only. The path is host-supplied: anything but an existing `.jsonl`
+ * regular file is not read, and only a model id leaves this function.
+ */
+function lastAssistantModel(transcriptPath: JsonValue | undefined): string | null {
+    if (typeof transcriptPath !== 'string' || !path.isAbsolute(transcriptPath) || !transcriptPath.endsWith('.jsonl')) {
+        return null;
+    }
+    let fd: number | null = null;
+    try {
+        const st = fs.statSync(transcriptPath);
+        if (!st.isFile()) return null;
+        const len = Math.min(st.size, TRANSCRIPT_TAIL_BYTES);
+        const buf = Buffer.alloc(len);
+        fd = fs.openSync(transcriptPath, 'r');
+        fs.readSync(fd, buf, 0, len, st.size - len);
+        const lines = buf.toString('utf8').split('\n');
+        for (let i = lines.length - 1; i >= 0; i--) {
+            const line = lines[i]!;
+            if (!line.includes('"assistant"')) continue;
+            try {
+                const rec = JSON.parse(line) as JsonObject;
+                const msg = rec['message'];
+                if (rec['type'] === 'assistant' && isObject(msg) && typeof msg['model'] === 'string') return msg['model'];
+            } catch {
+                // A line cut by the tail window, or not JSON.
+            }
+        }
+    } catch {
+        return null;
+    } finally {
+        if (fd !== null) fs.closeSync(fd);
+    }
+    return null;
+}
+
+/** The tier whose model family a model id or alias names, via the one tier→model map. */
+function tierForModel(model: string | null | undefined): string | null {
+    if (model == null) return null;
+    const family = extractModelFamily(model);
+    if (family === null) return null;
+    return Object.entries(TIER_TO_CLAUDE_MODEL).find(([, m]) => m === family)?.[0] ?? null;
+}
+
+const CHOSEN_TIERS: readonly string[] = ['lite', 'medium', 'high'];
 
 /**
  * Build the `RecordInput` for one dispatch-completion event. Pure — no I/O,
@@ -238,6 +305,17 @@ export function buildRecordInput(facts: DispatchFacts, ts: string, id: string): 
         id,
     };
     if (facts.subagentType) input.agent_combo = [facts.subagentType];
+
+    const requestedTier = tierForModel(facts.requestedModel);
+    if (facts.requestedModel != null) input.model_requested = facts.requestedModel;
+    if (requestedTier !== null && CHOSEN_TIERS.includes(requestedTier)) {
+        input.tier_chosen = requestedTier as TierChosen;
+        input.tier_source = 'static';
+    } else if (facts.requestedModel == null) {
+        input.tier_source = 'inherit';
+    }
+    const sessionTier = tierForModel(facts.sessionModel);
+    if (sessionTier !== null) input.session_tier = sessionTier;
     if (facts.isError) input.dispatch_outcome = 'killed';
 
     if (!facts.isAsync) {

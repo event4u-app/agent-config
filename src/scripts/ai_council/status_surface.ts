@@ -16,6 +16,8 @@
 import type { EnvironmentReport } from '../_lib/environment_detector.js';
 import { detectEnvironment } from '../_lib/environment_detector.js';
 import { DEFAULT_SEAT_CEILING, type ContentClass } from './content_ceiling.js';
+import { resolve_api_key } from './config.js';
+import { resolveRouteTransport, type RouteSpec } from './free_route.js';
 import type { PolicyExclusion } from './seat_policy.js';
 import { resolveMemberTransport } from './transport_resolver.js';
 
@@ -24,6 +26,8 @@ interface SeatLike {
     readonly api_key_ref: string | null;
     readonly policy_exclusion?: PolicyExclusion | null;
     readonly content_ceiling?: ContentClass;
+    readonly route?: RouteSpec | null;
+    readonly model?: string;
 }
 
 interface ConfigLike {
@@ -46,6 +50,16 @@ export function resolvedTransportFor(
     report?: EnvironmentReport,
     contentClass?: ContentClass | null,
 ): ReturnType<typeof resolveMemberTransport> {
+    if (member.route !== undefined && member.route !== null) {
+        const resolved = resolveRouteTransport({
+            name,
+            route: member.route,
+            model: member.model ?? '',
+            contentClass: contentClass ?? null,
+            keyPresent: keyResolves(member.api_key_ref),
+        });
+        return { ...resolved, configuredMode: 'api' };
+    }
     return resolveMemberTransport({
         provider: name,
         report: report ?? detectEnvironment(),
@@ -77,3 +91,26 @@ export function disabledSeats(cfg: ConfigLike | null): Record<string, string> {
     );
 }
 
+
+/** True when `ref` resolves to a non-empty key right now. */
+export function keyResolves(ref: string | null): boolean {
+    if (ref === null) return false;
+    try {
+        return resolve_api_key(ref) !== '';
+    } catch {
+        return false;
+    }
+}
+
+/** One `route` line per route member: where it points and how it bills. */
+export function routeStatusLines(
+    members: readonly (readonly [string, SeatLike])[],
+    report?: EnvironmentReport,
+): string[] {
+    return members
+        .filter(([, m]) => m.route !== undefined && m.route !== null)
+        .map(([n, m]) => {
+            const t = resolvedTransportFor(n, m, report, 'public-artifact');
+            return `  route            ${n}: ${m.route?.base_url ?? ''} · ${t.billing}`;
+        });
+}

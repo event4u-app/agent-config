@@ -53,8 +53,9 @@
  * - uuid7 uses `crypto.randomBytes` for `secrets.randbits` via `BigInt`; the
  *   value is random so it is NOT byte-comparable (tests normalise it), but the
  *   layout regex `^[0-9a-f]{8}-...-7...-[89ab]...$` validates.
- * - PII regexes are ported with the `g` flag for `subn`-equivalent counting.
- *   Node V8 supports the Python `(?<=\s)|(?<=^)` lookbehind in `_RE_PHONE`.
+ * - PII is detected by the egress rule table's identifier rows, not by the
+ *   Python port's own regexes: a value is tagged only where its checksum or
+ *   context holds.
  * - `chunk_text` measures bytes with `Buffer.byteLength(s, 'utf-8')`; the
  *   hard-split slices a `Buffer` and `.toString('utf-8')` (Node's lenient
  *   decode ≈ Python `decode(errors="ignore")` for whole-codepoint boundaries).
@@ -77,6 +78,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { redactIdentifiers } from '../../scripts/_lib/identifier_redaction.js';
 import * as workspace_secrets from './workspace_secrets.js';
 
 // --- Bounds (contract §Bounds) ---------------------------------------------
@@ -224,30 +226,8 @@ export function uuid7_ts(value: string): number {
 
 // --- Redaction (contract §Redaction defaults) -------------------------------
 
-const _RE_EMAIL = /[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g;
-const _RE_PHONE = new RegExp(
-    '(?:(?<=\\s)|(?<=^))' +
-        '(?:\\+?\\d{1,3}[\\s.\\-]?)?' +
-        '(?:\\(\\d{2,4}\\)[\\s.\\-]?|\\d{2,4}[\\s.\\-])' +
-        '\\d{2,4}[\\s.\\-]?\\d{2,4}(?:[\\s.\\-]?\\d{2,4})?',
-    'gm',
-);
-const _RE_IBAN = /\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b/g;
-const _RE_CC = /\b(?:\d[ \-]?){13,19}\b/g;
-const _RE_SSN = /\b\d{3}-\d{2}-\d{4}\b/g;
-
 // Secret patterns live in the shared leaf module ``workspace_secrets`` so the
 // ingestion redactor and the per-store pre-write guard stay in lock-step.
-
-/** `pat.subn(repl, text)` → `[clean, count]` (non-overlapping, left-to-right). */
-function _subn(pat: RegExp, repl: string, text: string): [string, number] {
-    let count = 0;
-    const clean = text.replace(pat, () => {
-        count += 1;
-        return repl;
-    });
-    return [clean, count];
-}
 
 /**
  * Replace PII and secret patterns with class placeholders.
@@ -256,29 +236,11 @@ function _subn(pat: RegExp, repl: string, text: string): [string, number] {
  * names without brackets so the manifest can sum them.
  */
 export function redact(text: string, counters: Record<string, number>): [string, number] {
-    const _bump = (name: string, n = 1): void => {
-        counters[name] = (counters[name] ?? 0) + n;
-    };
-
     // Secrets first — never stored, manifest counter incremented. The shared
     // module replaces every match with ``[SECRET]`` (both tiers).
-    let [out, secrets_count] = workspace_secrets.scrub(text) as [string, number];
-    // PII placeholders.
-    const patterns: ReadonlyArray<[RegExp, string]> = [
-        [_RE_IBAN, 'IBAN'],
-        [_RE_CC, 'CC'],
-        [_RE_SSN, 'SSN'],
-        [_RE_EMAIL, 'EMAIL'],
-        [_RE_PHONE, 'PHONE'],
-    ];
-    for (const [pat, tag] of patterns) {
-        const [next, n] = _subn(pat, `[${tag}]`, out);
-        out = next;
-        if (n) {
-            _bump(tag, n);
-        }
-    }
-    return [out, secrets_count];
+    const [out, secrets_count] = workspace_secrets.scrub(text) as [string, number];
+    // PII placeholders, detected by the rule table's identifier rows.
+    return [redactIdentifiers(out, counters), secrets_count];
 }
 
 // --- Chunking ---------------------------------------------------------------

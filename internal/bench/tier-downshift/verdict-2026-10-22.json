@@ -1,0 +1,26 @@
+{
+  "pairs": 60,
+  "lite": {
+    "slices": 60,
+    "failed_or_escalated": 0,
+    "escalated": 0,
+    "verified": 60,
+    "cost_usd": 0.09102902999999997,
+    "cost_per_verified_usd": 0.0015171504999999994
+  },
+  "inherit": {
+    "slices": 60,
+    "failed_or_escalated": 0,
+    "escalated": 0,
+    "verified": 60,
+    "cost_usd": 0.9289613999999999,
+    "cost_per_verified_usd": 0.015482689999999999
+  },
+  "diff_pp": 0,
+  "ci_half_width_pp": 5,
+  "escalation_rate_lite": 0,
+  "quality": "held",
+  "cost": "relief",
+  "flip": true,
+  "notes": []
+}

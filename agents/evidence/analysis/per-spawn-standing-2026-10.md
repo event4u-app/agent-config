@@ -95,12 +95,27 @@ and that phase is open.
 |---|---:|---:|
 | before the flip (2026-10-02) | 351,894 | 351,894 |
 | after the flip | — | — |
+| a skipping worker (`omit_project_instructions: true`, 2026-10-22) | unchanged | not measured in bytes — see below |
 
 Re-run the two commands under **How to reproduce** at the flip commit and fill
 the second row. The per-spawn column is not independently measurable: as long
 as the host loads the hierarchy into every non-built-in subagent, it equals the
 session column by construction, and the day that stops being true is the day
 this table needs a third row rather than a second.
+
+**That day arrived for the two package workers on 2026-10-22.** `ac-worker` and
+`ac-researcher` now declare `omit_project_instructions: true`, so the host skips
+`CLAUDE.md` and `~/.claude/rules` for them and their per-spawn column no longer
+equals the session column. The reading is in tokens, not bytes: a paired probe
+on Claude Code 2.1.306 measured about 141,500 tokens gross shed on a skipping
+spawn's first call, and on 2.1.308 the same skip through definition frontmatter
+wrote 2,620 tokens against 144,138
+(`agents/evidence/investigations/host-continuation-observations-2026-10.md`,
+step 1.7 and § Addendum 2026-10-22). Both are n = 1 and mostly the operator's
+user-level layer. A byte figure for the third row needs the two commands under
+**How to reproduce** run against a skipping definition; this hand-off does not
+invent one. `production-validator` still loads the hierarchy, so a judge's
+per-spawn column still equals the session column.
 
 ## What this does NOT say
 

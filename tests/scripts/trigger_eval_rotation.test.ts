@@ -129,3 +129,19 @@ describe('run_rotation — dry-run plumbing (MockRouter, no keys, no spend)', ()
         expect(wider.outcomes.length).toBeGreaterThan(summary.outcomes.length);
     });
 });
+
+// road-to-free-hands-a-paid-head-checks 0.1: from 2026-10-05 every scheduled
+// suite scored precision 0 / recall 0 with zero tokens — the router answered
+// no call at all, and that read as a routing regression.
+describe('run_rotation — a suite with no answered call is not a score', () => {
+    it('marks a live suite whose router never answered as unanswered', async () => {
+        const outDir = join(tmpdir(), `rot-unanswered-${process.pid}-${Date.now()}`);
+        const silent = { name: 'silent', route: () => [[], 0, 0] as [string[], number, number] };
+        const summary = await run_rotation({ week: 3, cycleWeeks: 64, outDir, router: silent as never });
+        expect(summary.outcomes.length).toBeGreaterThan(0);
+        for (const o of summary.outcomes) {
+            expect(o.answered).toBe(false);
+            expect(o.passed).toBe(false);
+        }
+    });
+});

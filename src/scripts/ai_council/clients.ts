@@ -48,7 +48,10 @@ import * as path from 'node:path';
 
 import { vendorPrefix } from '../_lib/egress_rules.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
-import { boundFor } from './cli_agency_bounds.js';
+import { boundFor, lightLaunchFor } from './cli_agency_bounds.js';
+import { _cliVersion, _subagentModelCeiling } from './cli_launch_env.js';
+export { _resetModelCeilingMemo, _subagentModelCeiling } from './cli_launch_env.js';
+import { resumeBound, seatResumeArgs, type SeatSession } from './seat_resume.js';
 import { councilEgress } from './council_egress.js';
 import {
     curlJsonPost as _curlJsonPost,
@@ -57,36 +60,7 @@ import {
     type JsonPost,
 } from './api_transport.js';
 import { SESSION_ROLE_ENV } from '../_lib/session_role.js';
-import { load_agent_settings } from '../_lib/agent_settings.js';
 
-// Session-wide subagent model ceiling (token-economy-dispatch Phase 5.2):
-// class-C setting, default absent, HUMAN-set only. When present, the CLI
-// spawn below exports CLAUDE_CODE_SUBAGENT_MODEL so the spawned vendor
-// session caps its own subagents' models. Memoised PER CWD, not per
-// process (review finding 2026-08-10): a long-lived server process may
-// serve several projects, and a single-slot memo would apply project A's
-// spend cap to project B's spawns. A human edit still needs a process
-// restart to be seen — acceptable for a per-install cap, stated here.
-const _modelCeilingMemo = new Map<string, string | null>();
-export function _subagentModelCeiling(cwd: string = process.cwd()): string | null {
-    const hit = _modelCeilingMemo.get(cwd);
-    if (hit !== undefined) return hit;
-    let ceiling: string | null;
-    try {
-        const settings = load_agent_settings({ cwd }) as Record<string, unknown>;
-        const sub = (settings['subagents'] ?? {}) as Record<string, unknown>;
-        const v = typeof sub['model_ceiling'] === 'string' ? sub['model_ceiling'].trim() : '';
-        ceiling = v.length > 0 ? v : null;
-    } catch {
-        ceiling = null; // unreadable settings → no ceiling (fail-open)
-    }
-    _modelCeilingMemo.set(cwd, ceiling);
-    return ceiling;
-}
-/** Test seam: reset the per-cwd ceiling memo. */
-export function _resetModelCeilingMemo(): void {
-    _modelCeilingMemo.clear();
-}
 import * as user_global_paths from '../_lib/user_global_paths.js';
 import { jsonDumpsIndent2 as _jsonDumpsIndent2 } from './_py_json.js';
 import * as budget from './cli_call_budget.js';
@@ -1215,6 +1189,9 @@ export abstract class CliClient extends ExternalAIClient {
     protected _cli_calls_path: string | null;
     /** Attribution label for every booking this client makes. */
     protected _consumer: string;
+    /** The session the last answered call ran in; `resumeNext` continues it once, non-blind only. */
+    lastSession: SeatSession | null = null;
+    resumeNext: SeatSession | null = null;
 
     static _AUTH_FAILURE_PATTERNS: readonly string[] = [
         'authentication',
@@ -1487,6 +1464,7 @@ export abstract class CliClient extends ExternalAIClient {
 
         // 2. build command + spawn.
         const cmd = this._build_command(system_prompt, user_prompt, max_tokens);
+        this.resumeNext = null;
         const stdinPayload = this._stdin_payload(system_prompt, user_prompt);
         // The final egress check, immediately before the request is written
         // (road-to-one-detector-and-the-senders-we-own 3.3): nothing is spawned
@@ -1609,6 +1587,8 @@ export abstract class CliClient extends ExternalAIClient {
             meta['cli'] = true;
         }
         response.metadata = meta;
+        const sid = meta['session_id'];
+        if (typeof sid === 'string' && sid !== '' && !response.error) this.lastSession = { id: sid, at_ms: Date.now() };
         return response;
     }
 
@@ -1695,7 +1675,11 @@ export class AnthropicCliClient extends CliClient {
         void max_tokens;
         return [
             this.binary,
+            ...seatResumeArgs(this.name, this.resumeNext, { blind: false, now_ms: Date.now() }),
             '--print',
+            // The seat never needs the user environment; only a version the light
+            // launch was probed on gets the flag (`LIGHT_LAUNCH_PROBES`).
+            ...lightLaunchFor('anthropic', _cliVersion(this.binary)),
             '--output-format',
             'json',
             '--model',
@@ -1838,7 +1822,9 @@ export class OpenAICliClient extends CliClient {
         // the payload itself is assembled in `_stdin_payload`.
         const modelArgs =
             this.model === OPENAI_CLI_VENDOR_DEFAULT ? [] : ['--model', this.model];
-        return [this.binary, 'exec', '--json', '--skip-git-repo-check', ...boundFor('openai'), ...modelArgs, '-'];
+        const resume = seatResumeArgs(this.name, this.resumeNext, { blind: false, now_ms: Date.now() });
+        const bound = resume.length === 0 ? boundFor('openai') : resumeBound(boundFor('openai'));
+        return [this.binary, 'exec', ...resume, '--json', '--skip-git-repo-check', ...bound, ...modelArgs, '-'];
     }
 
     /**
@@ -1969,10 +1955,9 @@ export class OpenAICliClient extends CliClient {
                     input_tokens = _pyIntCoerce(_dictGet(usageObj, 'input_tokens', 0));
                     output_tokens = _pyIntCoerce(_dictGet(usageObj, 'output_tokens', 0));
                 }
-            } else if (event_type === 'session.created') {
-                if (_pyTruthy(_dictGet(ev, 'session_id', undefined))) {
-                    meta['session_id'] = _pyStr(ev['session_id']);
-                }
+            } else if (event_type === 'session.created' || event_type === 'thread.started') {
+                const sid = _dictGet(ev, 'session_id', undefined) ?? _dictGet(ev, 'thread_id', undefined);
+                if (_pyTruthy(sid)) meta['session_id'] = _pyStr(sid);
             } else if (event_type === 'turn.failed') {
                 // The turn's real cause lives ONLY here, and codex still exits
                 // 0. Without this branch the response is an empty text, which
