@@ -285,3 +285,14 @@ describe('a credential keyword is a key, not a suffix (council A1)', () => {
         }
     });
 });
+
+describe('CouncilEgress.replace — a value detected once is replaced everywhere', () => {
+    const PASSWORD = ['hun', 'ter2-fixture-', 'Xy9'].join('');
+
+    it('replaces a repetition the rules did not flag, so the final check passes', () => {
+        const eg = new CouncilEgress({ identifiers: false });
+        const out = eg.replace(`password = "${PASSWORD}"\nexpect(seen).toContain('${PASSWORD}');\n`);
+        expect(out).not.toContain(PASSWORD);
+        expect(eg.check(out)).toBeNull();
+    });
+});
