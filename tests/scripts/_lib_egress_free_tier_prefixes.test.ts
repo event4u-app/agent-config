@@ -36,6 +36,30 @@ describe('egress_prefixes — the three free-tier prefixes', () => {
     }
 });
 
+describe('egress_prefixes — the three rows at their stated minimum', () => {
+    // Council round 5 asked for the quantifier minimums to be exercised, not only longer keys.
+    const MIN: Record<string, { prefix: string; min: number; alphabet: string }> = {
+        'huggingface-token': { prefix: 'h' + 'f_', min: 30, alphabet: ALNUM },
+        'nvidia-api-key': { prefix: 'nv' + 'api-', min: 40, alphabet: `${ALNUM}-_` },
+        'replicate-api-token': { prefix: 'r' + '8_', min: 30, alphabet: ALNUM },
+    };
+    for (const [rule, { prefix, min, alphabet }] of Object.entries(MIN)) {
+        it(`${rule}: a body of exactly ${min} is masked, one shorter is not`, () => {
+            const egress = resetCouncilEgress({ identifiers: true });
+            const at = `${prefix}${randomBody(min, alphabet)}`;
+            const short = `${prefix}${randomBody(min - 1, alphabet)}`;
+            expect(egress.replace(`k ${at} x`)).not.toContain(at);
+            expect(egress.replace(`k ${short} x`)).toContain(short);
+        });
+    }
+
+    it('nvidia-api-key covers every permitted character, - and _ included', () => {
+        const egress = resetCouncilEgress({ identifiers: true });
+        const key = `${'nv' + 'api-'}${'-_'.repeat(10)}${randomBody(30)}`;
+        expect(egress.replace(`k ${key} x`)).not.toContain(key);
+    });
+});
+
 describe('egress coverage join — every credential env var a shipped adapter reads', () => {
     const REPO = path.resolve(__dirname, '..', '..');
     const SOURCES = [

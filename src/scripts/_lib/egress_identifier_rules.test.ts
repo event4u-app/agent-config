@@ -170,3 +170,36 @@ describe('identifier rows — table invariants', () => {
         }
     });
 });
+
+// Council round 5 (2026-10-22) refused on a valid Omani IBAN passing unmasked:
+// a country missing from the length table is a silent miss, not a checksum failure.
+describe('identifier rows — every registry country masks', () => {
+    const LENGTHS: Record<string, number> = {
+        BI: 27, DJ: 27, FK: 18, HN: 28, LY: 25, MN: 20, NI: 28, OM: 23, RU: 33, SD: 18, SO: 23, YE: 30,
+    };
+    const mod97 = (digits: string): number => {
+        let r = 0;
+        for (const ch of digits) r = (r * 10 + Number(ch)) % 97;
+        return r;
+    };
+    const numeric = (s: string): string => [...s].map((c) => (/[A-Z]/.test(c) ? String(c.charCodeAt(0) - 55) : c)).join('');
+    function makeIban(cc: string, length: number): string {
+        const bban = '1'.repeat(length - 4);
+        const check = 98 - mod97(numeric(`${bban}${cc}00`));
+        return `${cc}${String(check).padStart(2, '0')}${bban}`;
+    }
+
+    it('the official Omani example is valid and is masked end to end', () => {
+        const om = j('OM81', '0180', '0000', '0129', '9123', '456');
+        expect(isValidIban(om)).toBe(true);
+        expect(has(`Bank: ${om}`, 'iban')).toBe(true);
+    });
+
+    it('a checksum-valid IBAN of each added country is detected', () => {
+        for (const [cc, len] of Object.entries(LENGTHS)) {
+            const v = makeIban(cc, len);
+            expect(isValidIban(v), cc).toBe(true);
+            expect(has(`Bank: ${v}`, 'iban'), cc).toBe(true);
+        }
+    });
+});
