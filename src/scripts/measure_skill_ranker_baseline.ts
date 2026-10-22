@@ -556,9 +556,11 @@ export type CorpusArg = CorpusName | typeof TRIGGERS_TRAIN;
 
 /**
  * The depths printed. 1 and 3 so the arm is comparable with the accuracy arm,
- * 5 because that is the shipped default `limit` (`src/cli/mcp/dispatch.ts`),
+ * 5 because that was the shipped default `limit` the bar is measured against,
  * and 8, 10, 20 because the question this arm exists to answer is how much
- * recall a deeper default would buy.
+ * recall a deeper default would buy. 8 is the default it selected
+ * (`DEFAULT_SUGGEST_LIMIT` in `src/shared/skillRanking.ts`, which records the
+ * pre-registered bar).
  */
 export const RECALL_DEPTHS: readonly number[] = [1, 3, 5, 8, 10, 20];
 
