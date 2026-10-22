@@ -116,7 +116,7 @@ keep the floor where it is calibrated and make running it cheap.
 | D1 | contested-technical | agent | The supplied plans' in-gate floor (env-var mode) is not taken; floors stay where they are calibrated, execution gets cheaper | 26 of 118 rows carry `ci_invocation`; floors are per-argv (`gate-coverage.yml`) | a per-invocation floor schema lands |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-21 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
