@@ -1,3 +1,4 @@
+// egress-content: session-content uncovered — prints prompts the user carries to sessions on other hosts; no network call here, the printed text carries no absolute local path and passes assertOutbound (_lib/outbound_text.ts) before it is printed
 /**
  * analysis_prompts.ts — two halves of step 4.4 (ADR-288): several sources fold
  * so one gap is one roadmap phase, and `--emit-prompts` prints the analyst and
@@ -12,10 +13,11 @@
 import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { assertOutbound, OutboundRefusedError } from './_lib/outbound_text.js';
 import type { Finding } from './analysis_emit.js';
 import { EVIDENCE_TIERS } from './analysis_ledger.js';
 import { RESEARCH_BRIEF } from './network_sources.js';
-import { resolveAnalysisTarget, scopeLine } from './analysis_target.js';
+import { resolveAnalysisTarget, type AnalysisTarget } from './analysis_target.js';
 
 export const LENS_QUESTIONS = {
     coverage: 'What is actually there? Read the code, not the README, and name everything your draft wrongly marks as missing.',
@@ -112,6 +114,20 @@ function readFlag(argv: string[], name: string): string | null {
     return i === -1 ? null : (argv[i + 1] ?? null);
 }
 
+/** The scope line for a prompt that leaves this host: the scope root relative to the project, never absolute. */
+export function outboundScopeLine(target: AnalysisTarget): string {
+    const rel = path.relative(target.project_root, target.scope_root).split(path.sep).join('/');
+    return `Scope: ${target.scope_kind} ${target.scope_name} at ${rel === '' ? '.' : rel} (anchor: ${target.anchor})`;
+}
+
+/** Both prompts as printed; throws OutboundRefusedError when the text would carry a credential, a local path or a deny token. */
+export function promptOutput(target: AnalysisTarget, pin: string, roundId: string): string {
+    const p = emitPrompts({ scope: outboundScopeLine(target), pin, roundId });
+    const out = `## Analyst prompt\n\n${p.analyst}\n\n## Exchange prompt\n\n${p.exchange}\n`;
+    assertOutbound(out, 'analysis prompts');
+    return out;
+}
+
 export function main(argv: string[] = process.argv.slice(2), cwd: string = process.cwd()): number {
     const pin = readFlag(argv, 'pin');
     const roundId = readFlag(argv, 'round');
@@ -120,8 +136,13 @@ export function main(argv: string[] = process.argv.slice(2), cwd: string = proce
         return 2;
     }
     const target = resolveAnalysisTarget({ cwd, project: null, scope: readFlag(argv, 'scope') });
-    const p = emitPrompts({ scope: scopeLine(target), pin, roundId });
-    process.stdout.write(`## Analyst prompt\n\n${p.analyst}\n\n## Exchange prompt\n\n${p.exchange}\n`);
+    try {
+        process.stdout.write(promptOutput(target, pin, roundId));
+    } catch (err) {
+        if (!(err instanceof OutboundRefusedError)) throw err;
+        process.stderr.write(`analysis_prompts: ${err.message}\n`);
+        return 1;
+    }
     return 0;
 }
 
