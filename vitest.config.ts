@@ -45,14 +45,21 @@ const SHARED_EXCLUDE = [
 // The two font-witness suites drive a browser too. The dedicated job names its
 // files on the command line, so they reach it through an import at the foot of
 // `ui_render_asset_profile.test.ts`.
-const BROWSER_SUITES = [
-    'tests/cli/ui_render_asset_profile.test.ts',
-    'tests/design-artifacts/svg_scenarios.test.ts',
+// Those two stay excluded even with the browser flag set: collected as files of
+// their own as well, every case would register twice and launch Chromium twice.
+const IMPORTED_BROWSER_SUITES = [
     'tests/cli/ui_render_asset_font_state.test.ts',
     'tests/cli/ui_render_painted_family.test.ts',
 ];
+const BROWSER_SUITES = [
+    'tests/cli/ui_render_asset_profile.test.ts',
+    'tests/design-artifacts/svg_scenarios.test.ts',
+    ...IMPORTED_BROWSER_SUITES,
+];
 const WITH_BROWSER = process.env['AGENT_CONFIG_BROWSER_SUITES'] === '1';
-const NODE_EXCLUDE = WITH_BROWSER ? SHARED_EXCLUDE : [...SHARED_EXCLUDE, ...BROWSER_SUITES];
+const NODE_EXCLUDE = WITH_BROWSER
+    ? [...SHARED_EXCLUDE, ...IMPORTED_BROWSER_SUITES]
+    : [...SHARED_EXCLUDE, ...BROWSER_SUITES];
 
 export default defineConfig({
     plugins: [preact()],

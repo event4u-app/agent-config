@@ -325,7 +325,10 @@ describe('token-name-parity', () => {
     const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
     const ROOTS = ['src/skills', 'src/domains', 'docs/contracts'];
     const DOTTED = /(?<![\w.])\.tokens\.json/;
-    const EXPLAINS = /NEVER|nothing reads|near-miss/;
+    // `NEVER` waives a line only when it governs the dotted name itself, so
+    // "NEVER skip writing .tokens.json" is still an offender. `evals/` holds
+    // user utterances, which quote the wrong name on purpose.
+    const EXPLAINS = /NEVER\s+`?\.tokens\.json|nothing reads|near-miss/;
 
     function walk(dir: string, out: string[]): void {
         for (const name of readdirSync(dir)) {
