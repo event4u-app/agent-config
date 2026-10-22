@@ -100,6 +100,17 @@ describe('holds — each op fails on an empty run and holds on a matching one', 
     it('is_null does not hold for an absent key', () => {
         expect(holds(dir({ '.work-state.json': '{}' }), { kind: 'json', file: '.work-state.json', path: 'x', op: 'is_null' })).toBe(false);
     });
+    it('a symlink in the run directory cannot satisfy a predicate from outside it', () => {
+        const outside = dir({ 'o.md': 'a1 b2', 'm/a.md': 'Alpha beta', 's.json': JSON.stringify({ c: [{ kind: 'x' }] }) });
+        const run = dir();
+        fs.symlinkSync(path.join(outside, 'o.md'), path.join(run, 'o.md'));
+        fs.symlinkSync(path.join(outside, 'm'), path.join(run, 'm'));
+        fs.symlinkSync(path.join(outside, 's.json'), path.join(run, 's.json'));
+        expect(holds(run, { kind: 'file', path: 'o.md', op: 'exists' })).toBe(false);
+        expect(holds(run, { kind: 'dir', path: 'm', op: 'mentions_all', values: ['Alpha'] })).toBe(false);
+        expect(holds(run, { kind: 'dir', path: 'm', op: 'min_files', min: 1 })).toBe(false);
+        expect(holds(run, { kind: 'json', file: 's.json', path: 'c', op: 'not_empty' })).toBe(false);
+    });
     it('mentions_all does not hold when one value is missing', () => {
         const p: Parameters<typeof holds>[1] = { kind: 'file', path: 'o.md', op: 'mentions_all', values: ['a1', 'b2'] };
         expect(holds(dir({ 'o.md': 'a1 only' }), p)).toBe(false);
