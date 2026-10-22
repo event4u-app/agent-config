@@ -1351,7 +1351,7 @@ export function chairman_candidates(membersRaw: Dict): ChairmanCandidate[] {
         candidates.push({
             name,
             tier: typeof md['tier'] === 'number' ? (md['tier'] as number) : null,
-            ...(billing !== null ? { billing } : {}),
+            ...(billing !== null ? { billing, route: true } : {}),
         });
     }
     return candidates;

@@ -60,6 +60,8 @@ import {
     _format_quorum_line,
     chairman_candidates,
 } from '../../../src/scripts/council_cli.js';
+import { select_chairman } from '../../../src/scripts/ai_council/chairman.js';
+import { seatRoleRefusal } from '../../../src/scripts/ai_council/seat_policy.js';
 
 
 // The council's necessity-classifier emits to the events log, whose default
@@ -1572,5 +1574,20 @@ describe('chairman candidates carry route billing', () => {
             ['anthropic', null],
             ['freeroute', 'free-quota'],
         ]);
+    });
+
+    it('a base_url member without billing_proof is refused as chair with a named reason (D5)', () => {
+        const cands = chairman_candidates({
+            anthropic: { enabled: true, model: 'claude-sonnet-4-5' },
+            router: { enabled: true, model: 'some-model', base_url: 'https://router.example.test/v1' },
+        });
+        const asMember = select_chairman('member', 'router', new Set(), cands);
+        expect(asMember.member).toBeNull();
+        expect(asMember.annotation).toContain('route_head_role');
+        expect(select_chairman('auto', null, new Set(['anthropic']), cands).member).toBeNull();
+        for (const role of ['chair', 'synthesis', 'verdict'] as const) {
+            expect(seatRoleRefusal(role, 'per-token', 'router', true)?.reason).toBe('route_head_role');
+        }
+        expect(seatRoleRefusal('juror', 'per-token', 'router', true)).toBeNull();
     });
 });
