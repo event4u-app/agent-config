@@ -1,6 +1,6 @@
 name: Visibility Sync (manual)
 
-# MUTATING sync workflow. `workflow_dispatch` ONLY \u2014 never triggered
+# MUTATING sync workflow. `workflow_dispatch` ONLY — never triggered
 # automatically. Holds the `administration: write` permission required
 # by `PUT /repos/{owner}/{repo}/topics`. Every run appends an audit
 # row to `agents/notes/visibility-sync-audit.md` and (when changes are
@@ -8,7 +8,7 @@ name: Visibility Sync (manual)
 #
 # Split-by-design per the AI-Council security review: the read-only
 # detector lives in `check-visibility-drift.yml`. Trade-off documented
-# in CONTRIBUTING.md \u00a7 "Visibility surface".
+# in CONTRIBUTING.md § "Visibility surface".
 #
 # Known GitHub Actions anomaly: workflows with `workflow_dispatch`-only
 # triggers occasionally register phantom "failure" runs on pushes to
@@ -16,7 +16,7 @@ name: Visibility Sync (manual)
 # real failures and cannot be eliminated workflow-side; they are
 # GitHub's check-suite registration behavior for workflow files at
 # HEAD. Treat any run on this workflow with 0 jobs as a phantom and
-# ignore it. Real runs always have a `sync` job in the run details.
+# ignore it. Real runs always have a `preview` job in the run details.
 
 on:
   workflow_dispatch:
@@ -34,14 +34,24 @@ on:
 # made the whole workflow unparseable, so `workflow_dispatch` returned HTTP 422
 # and the sync channel was dead (found 2026-08-03 while repairing an
 # about-description drift by hand). Repo metadata writes (PATCH /repos,
-# PUT /topics) need repo-admin rights the Actions GITHUB_TOKEN cannot carry;
-# the apply step fails with a clear API error in that case — dispatchable and
-# honest beats unparseable. The apply step therefore reads the fine-grained
-# `RELEASE_PR_TOKEN` (Administration: read and write on this repo) when it is
-# configured, with the same `|| GITHUB_TOKEN` fallback release.yml uses, and
-# runs only for a dispatch of `main`: a dispatch of another branch would run
-# that branch's code with an admin-write token. The dry-run only reads, so it
-# keeps the Actions token, as do the checkout and the audit-log push.
+# PUT /topics) need repo-admin rights the Actions GITHUB_TOKEN cannot carry, so
+# the apply step reads the fine-grained `RELEASE_PR_TOKEN` (Administration: read
+# and write on this repo). A missing secret fails the apply job at its first
+# step with a message naming the secret; there is no fallback to GITHUB_TOKEN,
+# which could only fail later at the API with a 403.
+#
+# Two jobs, split so the admin token never shares a job with the project's
+# dependency tree. `preview` runs `npm ci` and the lint and dry-run on the
+# read-only Actions token. `apply` runs only for a `dry_run=false` dispatch of
+# `main` and never runs `npm ci`: it fetches the one runtime dependency of
+# `sync_github_metadata.ts` (`yaml`) as a tarball at the version
+# package-lock.json pins, checks it against the lockfile's sha512 integrity,
+# unpacks it without lifecycle scripts, and runs the script under plain
+# `node --experimental-strip-types`. A compromised devDependency therefore never
+# executes where the admin token is readable. A `dry_run=false` dispatch of
+# another ref fails `preview` with an error rather than skipping the apply
+# silently: another branch's code must not run with an admin-write token, and a
+# skipped apply must not read as a done one.
 permissions:
   contents: write # commit the audit log
 
@@ -50,16 +60,26 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  sync:
+  preview:
+    # No `environment:` here on purpose: the environment's main-only branch
+    # rule would stop a non-main dispatch before the refusal step below could
+    # say why. This job holds only the read-only Actions token.
     runs-on: ubuntu-latest
-    environment: production-visibility
+    permissions:
+      contents: read
     steps:
+      - name: Refuse an apply from a non-main ref
+        if: ${{ inputs.dry_run == 'false' && github.ref != 'refs/heads/main' }}
+        env:
+          REF: ${{ github.ref }}
+        run: |
+          echo "::error title=Apply refused::dry_run=false was dispatched from ${REF}; the apply runs only for a dispatch of refs/heads/main. Nothing was applied. Re-dispatch from main."
+          exit 1
+
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          # persist-credentials KEPT: git push at :91 pushes with the ambient credential.
-          persist-credentials: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
       - name: Set up Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
@@ -80,14 +100,57 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts-run src/scripts/sync_github_metadata
 
-      - name: Apply (gated on dry_run=false, main only)
-        if: ${{ inputs.dry_run == 'false' && github.ref == 'refs/heads/main' }}
+  apply:
+    needs: preview
+    if: ${{ inputs.dry_run == 'false' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: production-visibility
+    steps:
+      - name: Require RELEASE_PR_TOKEN
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_PR_TOKEN || secrets.GITHUB_TOKEN }}
-        run: ./scripts-run src/scripts/sync_github_metadata --apply
+          RELEASE_PR_TOKEN: ${{ secrets.RELEASE_PR_TOKEN }}
+        run: |
+          if [ -z "${RELEASE_PR_TOKEN}" ]; then
+            echo "::error title=RELEASE_PR_TOKEN missing::The apply needs the RELEASE_PR_TOKEN secret (fine-grained, Administration: read and write on this repository). The Actions GITHUB_TOKEN cannot write repository metadata. Nothing was applied."
+            exit 1
+          fi
+
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # persist-credentials KEPT: the audit-log commit below pushes with the
+          # ambient Actions credential, never with RELEASE_PR_TOKEN.
+          persist-credentials: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: '22'
+
+      - name: Fetch yaml (lockfile-pinned, integrity-checked, no scripts)
+        run: |
+          set -euo pipefail
+          VER=$(node -p 'JSON.parse(require("fs").readFileSync("package-lock.json", "utf8")).packages["node_modules/yaml"].version')
+          WANT=$(node -p 'JSON.parse(require("fs").readFileSync("package-lock.json", "utf8")).packages["node_modules/yaml"].integrity')
+          PKG_DIR="${RUNNER_TEMP}/yaml-pkg"
+          mkdir -p "${PKG_DIR}"
+          TGZ=$(npm pack "yaml@${VER}" --pack-destination "${PKG_DIR}" --ignore-scripts --silent)
+          GOT="sha512-$(openssl dgst -sha512 -binary "${PKG_DIR}/${TGZ}" | base64 -w0)"
+          if [ "${GOT}" != "${WANT}" ]; then
+            echo "::error title=yaml integrity mismatch::yaml@${VER} hashes to ${GOT}, package-lock.json pins ${WANT}. Nothing was applied."
+            exit 1
+          fi
+          mkdir -p node_modules/yaml
+          tar -xzf "${PKG_DIR}/${TGZ}" -C node_modules/yaml --strip-components=1
+          echo "yaml@${VER} matches package-lock.json"
+
+      - name: Apply
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PR_TOKEN }}
+        run: node --experimental-strip-types src/scripts/sync_github_metadata.ts --apply
 
       - name: Commit audit log
-        if: ${{ inputs.dry_run == 'false' }}
         run: |
           set -euo pipefail
           if [ -n "$(git status --porcelain agents/notes/visibility-sync-audit.md)" ]; then

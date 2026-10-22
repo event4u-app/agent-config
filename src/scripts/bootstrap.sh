@@ -3,7 +3,7 @@
 #
 # road-to-unified-setup § C1. Replaces the legacy Python boot path.
 # Flow:
-#   1. Verify Node ≥ 22.0.0 (the package engines bound).
+#   1. Verify Node ≥ 22.6.0 (the package engines bound).
 #   2. Launch `npx @event4u/agent-config <subcommand>` in the background.
 #   3. Tail stdout for the `WIZARD_READY <url>` marker (Phase B4).
 #   4. Open the URL in the user's browser (best-effort; no fatal error
@@ -24,7 +24,7 @@
 set -euo pipefail
 
 MIN_NODE_MAJOR=22
-MIN_NODE_MINOR=0
+MIN_NODE_MINOR=6
 TIMEOUT_SECONDS=30
 SUBCOMMAND="${1:-install}"
 shift || true

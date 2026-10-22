@@ -46,13 +46,19 @@ that makes the promise. A promise with no row is not tracked and will be missed.
 
 ✋ manual on Node 20 · 🔄 automatic for the removed settings keys.
 
-### Node 22 or newer is required
+### Node 22.6 or newer is required
 
-`engines.node` is `>=22.0.0` (ADR-290). Node 20 left its upstream support
+`engines.node` is `>=22.6.0` (ADR-290). Node 20 left its upstream support
 window on 2026-04-30, and this package backports nothing (`SECURITY.md`), so
-the old `>=20.11.0` floor promised support that was never given.
+the old `>=20.11.0` floor promised support that was never given. The floor is
+22.6 rather than 22.0 because 22.6 is the first Node with
+`--experimental-strip-types`: `/pr merge`'s danger gate runs the base copy of
+its classifier under plain `node` with that flag, and on 22.0–22.5 it would
+fall back to the checkout's `tsx`, which a head that changes a dependency
+manifest can influence.
 
-- **On Node 22 or newer:** nothing to do.
+- **On Node 22.6 or newer:** nothing to do.
+- **On Node 22.0–22.5:** upgrade to a current Node 22 release.
 - **On Node 20:** upgrade Node before taking 17.0.0. npm reports the
   `engines` mismatch as a warning (a hard failure under pnpm, yarn or
   `engine-strict`); the unattended updater refuses the release outright — it
