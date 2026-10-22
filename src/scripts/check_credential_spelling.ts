@@ -1,7 +1,8 @@
 #!/usr/bin/env tsx
 /**
- * The rule table is the only place a raw-key prefix is spelled
- * (road-to-one-detector-and-the-senders-we-own 2.2).
+ * Within `src/scripts` and `src/cli`, the rule table is the only place a raw-key
+ * prefix is spelled. `src/server`, `src/shared`, `src/install`, skill scripts,
+ * test files and `fixtures/` directories are outside the scan.
  *
  * Every non-test TypeScript file under `src/scripts` and `src/cli` is read, from
  * the filesystem rather than the index so a file not yet added is seen too; a
@@ -173,7 +174,7 @@ export function check(root: string): number {
         );
         return 1;
     }
-    process.stdout.write(`✅  ${GATE}: one spelling — every raw-key prefix lives in ${OWNER}.\n`);
+    process.stdout.write(`✅  ${GATE}: one spelling — every raw-key prefix under ${SCAN_DIRS.join(', ')} lives in ${OWNER}.\n`);
     return 0;
 }
 
