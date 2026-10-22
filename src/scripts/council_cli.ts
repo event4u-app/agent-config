@@ -1440,12 +1440,13 @@ function _maybe_run_chairman(
     // `model_unservable` being eligible and by the retry's spend gate, and the
     // annotation below still reports FAILED rather than degrading silently.
     // `consult` builds its own ledger: this is a separate invocation.
-    const out = consult([client], synthQ, budget, {
-        table,
-        project: project as never,
-        original_ask: args.original_ask,
-        cli_fallback,
-    });
+    if (client instanceof CliClient) client.blind = blind;
+    let out: CouncilResponse[];
+    try {
+        out = consult([client], synthQ, budget, { table, project: project as never, original_ask: args.original_ask, cli_fallback });
+    } finally {
+        if (client instanceof CliClient) client.blind = false;
+    }
     const r = out[0] ?? null;
     if (r === null || r.error !== null || r.text.trim() === '') {
         return {
