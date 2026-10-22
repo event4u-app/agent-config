@@ -74,25 +74,82 @@ describe('condition 3 — the user opt-in is read BEFORE the ring-0 kill switch'
     });
 });
 
+/**
+ * Every module a file can load at runtime, following relative VALUE imports
+ * (static, side-effect, re-export and dynamic) and skipping `import type` /
+ * `export type`, which the compiler erases. Bare specifiers are recorded, not
+ * followed: a package is a leaf whose name says whether it can spawn.
+ */
+function runtimeClosure(entry: string): { files: Map<string, string | null>; bare: Map<string, string> } {
+    const files = new Map<string, string | null>([[entry, null]]);
+    const bare = new Map<string, string>();
+    const queue = [entry];
+    const spec = /(?:^|[\s;])(?:import|export)\s+(?!type\s)(?:[^'"]*?\sfrom\s+)?['"]([^'"]+)['"]|import\(\s*['"]([^'"]+)['"]\s*\)|require\(\s*['"]([^'"]+)['"]\s*\)/gu;
+    while (queue.length > 0) {
+        const file = queue.shift() as string;
+        const src = fs.readFileSync(file, 'utf-8').replace(/\/\*[\s\S]*?\*\//gu, '').replace(/^\s*\/\/.*$/gmu, '');
+        for (const m of src.matchAll(spec)) {
+            const s = (m[1] ?? m[2] ?? m[3]) as string;
+            if (!s.startsWith('.')) {
+                if (!bare.has(s)) bare.set(s, path.relative(ROOT, file));
+                continue;
+            }
+            const base = path.resolve(path.dirname(file), s);
+            const hit = [base.replace(/\.js$/u, '.ts'), base, `${base}.ts`, path.join(base, 'index.ts')].find(
+                (c) => fs.existsSync(c) && fs.statSync(c).isFile(),
+            );
+            if (hit !== undefined && !files.has(hit)) {
+                files.set(hit, file);
+                queue.push(hit);
+            }
+        }
+    }
+    return { files, bare };
+}
+
+/** The import chain from the entry to `file`, for a failure a reader can act on. */
+function chainTo(files: Map<string, string | null>, file: string): string {
+    const out: string[] = [];
+    for (let f: string | null | undefined = file; f !== null && f !== undefined; f = files.get(f)) {
+        out.unshift(path.relative(ROOT, f));
+    }
+    return out.join(' -> ');
+}
+
 describe('condition 4 — neither concern may invoke an upgrade command', () => {
+    // Finding 791c7f052d01 (17.0.0 review): this used to check each file's OWN
+    // imports, which a transitive import of a spawning helper passes. The claim
+    // is about everything the concern can load, so the check walks the whole
+    // runtime import graph. A process can also be reached without the module —
+    // `process.binding('spawn_sync')` — so that route is refused on every file
+    // in the closure as well.
     for (const rel of [
         'src/scripts/_lib/update_notice.ts',
         'src/scripts/_lib/update_invite.ts',
         'src/scripts/update_notice_hook.ts',
         'src/scripts/update_invite_hook.ts',
     ]) {
-        it(`${rel} cannot reach a child process`, () => {
-            const src = fs.readFileSync(path.join(ROOT, rel), 'utf-8');
-            // The invariant is IMPORT reachability, not a name. A first pass
-            // grepped for `exec(` and failed on `RING_ZERO_EXIT_LINE.exec()`
-            // and `/re/.exec()` — a regex method, not a process. Matching the
-            // name would have had to be loosened until it matched nothing,
-            // which is how a guard becomes decoration. A module that never
-            // imports `child_process` cannot spawn whatever it calls things.
-            expect(src).not.toMatch(/from\s+'node:child_process'/u);
-            expect(src).not.toMatch(/require\(['"]child_process['"]\)/u);
-            // And no dynamic reach into it either.
-            expect(src).not.toMatch(/import\(\s*['"]node:child_process['"]/u);
+        it(`${rel} cannot reach a child process through anything it loads`, () => {
+            const { files, bare } = runtimeClosure(path.join(ROOT, rel));
+            // `_lib/update_invite.ts` has only a type import, so a closure of
+            // one is legitimate; the walker's sensitivity is the last case below.
+            expect(files.has(path.join(ROOT, rel))).toBe(true);
+            const spawning = [...bare.keys()].filter((b) => /^(?:node:)?(?:child_process|cluster|worker_threads)$/u.test(b));
+            expect(spawning.map((b) => `${b} imported by ${bare.get(b) ?? '?'}`)).toEqual([]);
+            const bindings = [...files.keys()].filter((f) =>
+                /process\s*\.\s*(?:binding|_linkedBinding)\s*\(/u.test(fs.readFileSync(f, 'utf-8')),
+            );
+            expect(bindings.map((f) => chainTo(files, f))).toEqual([]);
         });
     }
+
+    it('the walker sees a transitive spawn — sensitivity of the check above', () => {
+        // before_complete_hook reaches `node:child_process` only through
+        // `_lib/touched_file_quality.ts`, never directly, which is exactly the
+        // shape the per-file grep missed.
+        const own = fs.readFileSync(path.join(ROOT, 'src', 'scripts', 'before_complete_hook.ts'), 'utf-8');
+        expect(own).not.toMatch(/['"]node:child_process['"]/u);
+        const { bare } = runtimeClosure(path.join(ROOT, 'src', 'scripts', 'before_complete_hook.ts'));
+        expect([...bare.keys()]).toContain('node:child_process');
+    });
 });
