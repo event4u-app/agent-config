@@ -4,4 +4,3 @@
 - Document request/response contracts (field names, types, validation rules)
 - Map version differences (v1 vs v2)
 - **Output:** `agents/evidence/analysis/api/endpoints-v1.md`, `endpoints-v2.md`, `contracts.md`
-- **No API surface**: write `agents/evidence/analysis/api/not-applicable.md` naming why — the exit checks the output exists, and an absent surface is a finding, not a skipped step.
