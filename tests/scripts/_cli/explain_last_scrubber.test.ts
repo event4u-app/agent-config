@@ -53,6 +53,29 @@ const CORPUS: string[] = [
     'normal text with no secrets',
 ];
 
+describe('explain_last/scrubber — no narrower than the patterns it replaced', () => {
+    // The pre-rule-table sources, kept verbatim as the parity oracle: every
+    // string either masked must still be masked by the shared rule table.
+    const OLD_PREFIXES = ['sk_live_', 'sk_test_', 'ghp_', 'github_pat_', 'gho_', 'ghs_', 'ghu_', 'xoxb-', 'xoxp-', 'AIza', 'AKIA'];
+    const OLD_RAW = new RegExp(`(?:${OLD_PREFIXES.map((p) => p.replace(/-/g, '\\u002d')).join('|')})[A-Za-z0-9_-]{6,}`, 'u');
+    const OLD_API = /\bapi[_-]?key\b\s*[:=]\s*[A-Za-z0-9+/=_-]{12,}/iu;
+    const CASES = [
+        ...OLD_PREFIXES.map((p) => `use ${p}Zq9Zq9Zq9Zq9 now`),
+        'api_key=ABCDEFGHIJKL123',
+        'api-key: ABCDEFGHIJKL123',
+        'apikey = ABCDEFGHIJKL123',
+        'API_KEY:ABCDEFGHIJKL123',
+    ];
+
+    it('masks every case the old patterns masked', () => {
+        for (const c of CASES) {
+            expect(OLD_RAW.test(c) || OLD_API.test(c), `oracle misses ${c}`).toBe(true);
+            expect(String(scrub_string(c)), c).toContain('<secret>');
+            expect(String(scrub_string(c)), c).not.toContain('Zq9Zq9Zq9Zq9');
+        }
+    });
+});
+
 describe('explain_last/scrubber — contract', () => {
     it('scrub_string over the full corpus (pinned redaction output)', () => {
         expect(CORPUS.map((s) => scrub_string(s))).toMatchInlineSnapshot(`
