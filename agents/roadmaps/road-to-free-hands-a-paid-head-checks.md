@@ -92,11 +92,12 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 
 ## Phase 0 — Read before building
 
-- [ ] **0.1 Classify the canary's uniform zero (D8).** Read the uploaded `rotation-results/*.json`
+- [x] **0.1 Classify the canary's uniform zero (D8).** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/trigger_eval_rotation.ts --> Read the uploaded `rotation-results/*.json`
   of the 2026-10-19 run and the oldest red; name for each whether the zero is a provider answer
   scored wrong, an empty answer, or no call at all. Record in `agents/evidence/analysis/`. No
   Phase 5 design before this.
   verify: the analysis names the failing class for at least three scheduled runs.
+  Done 2026-10-22: `agents/evidence/analysis/cross-model-canary-uniform-zero-2026-10-22.md` names the class of eight scheduled runs — the three October runs had no answered call at all (0 input tokens in every suite; the router turns a non-OK response into "no skill, zero tokens"), the five September runs are real answers below a recall floor of 1. Fix in the same step: a live suite with no answered call is reported `NO ANSWER`, not scored (commit 40482d31cb, test `trigger_eval_rotation.test.ts` › marks a live suite whose router never answered as unanswered).
 - [ ] **0.2 Correct D9.** Replace the withdrawn-claim rationale in the five files with the live
   reason, or mark the item re-open-eligible; extend the `retires_phrasings` scan to
   `agents/roadmaps/later/`, `agents/roadmaps/stubs/` and `agents/settings/contexts/`.
