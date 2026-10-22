@@ -9,7 +9,7 @@
     "project-analyzer",
     "repomix-packer"
   ],
-  "why_these": "The five of the six D2 skills that carried the retired `context: large` key. They are the population the defect was found in, they are all `report`, and they are the heaviest bodies in the catalogue — so if a fork saves main-conversation tokens anywhere, it is here. `universal-project-analysis` is the sixth and is deliberately left out to keep the pilot at five and leave one untouched sibling to compare against.",
+  "why_these": "The five of the six D2 skills that carried the retired `context: large` key. They are the population the defect was found in, and they are all `report`. They were chosen for carrying that key, not for size: in skill-body-budget.json three of the five sit under 5,500 bytes against a catalogue maximum near 22,000, so a pilot result is not the best case for forking. `universal-project-analysis` is the sixth and is deliberately left out to keep the pilot at five and leave one untouched sibling to compare against.",
   "hosts": [
     "claude-code"
   ],
