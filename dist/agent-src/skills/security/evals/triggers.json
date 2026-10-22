@@ -1,7 +1,7 @@
 {
     "skill": "security",
     "last_eval": "2026-10-13",
-    "description": "9 exemplars (1 de), 5 near-misses, 2 counterexamples. The exemplars are the account-lifecycle entry points a consumer actually asks through — sign-up, verification, reset, storage, MFA, passkey, session, logout, and 'add login with Google', which was a should-trigger for no skill before this set existed. The near-misses are this skill's own four 'Do NOT use when' routes plus request validation: each belongs to a sibling that answers a different question. The counterexamples carry no security vocabulary at all and guard against over-triggering on ordinary engineering work.",
+    "description": "9 exemplars (1 de), 7 near-misses, 2 counterexamples. The exemplars are the account-lifecycle entry points a consumer actually asks through — sign-up, verification, reset, storage, MFA, passkey, session, logout, and 'add login with Google', which was a should-trigger for no skill before this set existed. The near-misses are this skill's own four 'Do NOT use when' routes plus request validation and two non-auth uses of \"session\": each belongs to a sibling that answers a different question. The counterexamples carry no security vocabulary at all and guard against over-triggering on ordinary engineering work.",
     "queries": [
         {
             "q": "add login with Google",
@@ -71,6 +71,16 @@
         },
         {
             "q": "validate the shape of this request payload",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "open a new terminal session and rerun the failing tests",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "the database session times out in the queue worker",
             "trigger": false,
             "class": "near-miss"
         },
