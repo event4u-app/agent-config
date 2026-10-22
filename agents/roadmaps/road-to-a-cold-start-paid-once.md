@@ -311,7 +311,7 @@ waits:
       address; no agent id is written anywhere.
       verify: `npx vitest run tests/scripts/_lib_worker_reuse.test.ts -t no-agent-id-reaches-disk --reporter=verbose` -> /✓.*no-agent-id-reaches-disk/
       Done 2026-10-16: `eligibleWorkers` derives the view from caller-supplied state; the module imports no I/O and no field can hold a host id.
-- [ ] **3.3 Shadow first.** `spawn-guard-shadow` records, on every `Agent`
+- [x] **3.3 Shadow first.** `spawn-guard-shadow` records, on every `Agent` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.json -->
       call, the verdict `would_resume` with the eligible name or `fresh` with
       the reason. Where 1.5 observed `PreToolUse` on `SendMessage`, the concern
       is also bound to that tool and its open-dispatch count includes resumes,
@@ -329,6 +329,7 @@ waits:
         - Round 3 (ratified / refused): one blocking finding, that the tests invented the payload field `tool_input.to` rather than using a real host envelope.
 
       The probe logs of 2026-10-21 already answer that finding. On 2.1.306 a real `PreToolUse(SendMessage)` carries `tool_input.to` (with `recipient` and `recipient_kind: agent | name` beside it) and a top-level `session_id`. A fourth attempt starts from those three rounds, adds a sanitized verbatim envelope from that log as a fixture, and needs a fresh grant. Prompts: `agents/evidence/council/cold-start-spawn-guard-resume-review-r1-20261021.question.md`, `-r2-`, `-r3-`.
+      Done 2026-10-22, fourth attempt (commit c3f7f1a199): the real `PreToolUse(SendMessage)` envelope from the 2026-10-21 probe log is the fixture (`to` is the worker name); `recordNamedSpawn` on `PostToolUse(Agent)` writes a `subagent_named` line, so a send resolves `recipient_kind: name` against this session's spawns only, with no whole-file read. Still exit 0 on every path. Ratified with the run's gated diff (`agents/evidence/ratifications/subagent-system-2583-20261022.md`).
 - [x] **3.4 Retirement is a handoff.** A worker failing (c)–(f) or (h) is not
       re-tasked; its successor is briefed from its `worker` capsule — the
       generation chain the recycling roadmap wanted, reached at task boundaries.
@@ -365,10 +366,11 @@ waits:
       verify: `grep -c 'resume' src/agent-src/contexts/subagent-configuration.md` -> /^[1-9][0-9]*$/
       Partial 2026-10-18, left open: both texts (and the settings template) dropped "no code counts spawns" with 4.1 and now say the resume half is unobserved. The step closes when the 1.5 row states whether the cap bounds a resume.
       Done 2026-10-21: the 1.5 row says it does not. The `max_parallel` description, `subagent-configuration.md` and the settings template now say the host cap bounds new spawns only, and that a resume is neither bounded by the host nor counted by any package code yet (3.3 is unratified). "The host enforces concurrency" is claimed nowhere.
-- [ ] **4.3 Bind `StopFailure`** in the Claude event map to the `quota_parked`
+- [x] **4.3 Bind `StopFailure`** in the Claude event map to the `quota_parked` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hook_manifest.json -->
       writer, widened from council-only to host-sourced. Still record-only, per
       `quota_parked.ts:25-31`.
       verify: `npx vitest run tests/scripts/quota_parked.test.ts -t host-stop-failure-writes-marker --reporter=verbose` -> /✓.*host-stop-failure-writes-marker/
+      Done 2026-10-22 (commits 8dedad4f8a, 5df71aacd6): a forced `StopFailure` on 2.1.308 carries `error: server_error`/`rate_limit` (addendum in `host-continuation-observations-2026-10.md`); `StopFailure` is aliased onto `agent_error` for claude, the `host-rate-marker` concern writes `quota_parked` with `source: host` on `rate_limit` only, and exits 0 on every path.
 - [x] **4.4 Split the transient branch by error class** in
       `subagent-steering.md:34-40`: `rate_limit` causes no same-turn
       re-dispatch, the slice parks until a recovery signal, then re-runs the
@@ -379,7 +381,7 @@ waits:
       verify: `npx vitest run tests/scripts/_lib_subagent_steering.test.ts -t rate-limit-never-redispatches-same-turn --reporter=verbose` -> /✓.*rate-limit-never-redispatches-same-turn/
       Open 2026-10-18, council-refused three rounds (anthropic + openai seats, 2026-10-18), not shipped. The split itself was not contested; every round refused the state machine around it. Rounds 1–2 closed a double downshift via the post-recovery path, billing class as discriminator, an undefined recovery signal, unbounded parking, N=3 accounting, turn boundaries, a missing classifier and a helper that returned no next state. Round 3 left four open: a timeout after a partial response is still retried (discarding the late result does not stop the original run, so non-idempotent work can duplicate); "no status and no bytes" is not proof of a transport failure; a `Retry-After` longer than the run conflicts with the overloaded branch's same-turn redispatch; and the function does not refuse an already-exhausted slot. Residue for the next attempt, which starts from those four and needs an explicit idempotency or read-only precondition for a retried subagent. Round 4 (2026-10-18) reviewed a branch that closed those four and added a `retry_safe` precondition test-first (prompt `agents/evidence/council/cold-start-steering-review-r4-20261018.question.md`) and refused 2/2: `response_started` was checked after the status branches, the counters and the time left were not validated at runtime, and the provenance of `retry_safe` was unstated.
       Done 2026-10-20: rounds 5–10 (anthropic + openai seats, CLI, $0), each fixing the previous round's finding test-first — the three round-4 findings (5); a null slot that threw (6); a cast decision state, a non-boolean `retry_safe` and an unchecked classifier, now a discriminated union (7); inherited tier names (8); inherited values, getters and proxy traps, now an own-data snapshot (9); a revoked proxy outside the `try` (10). Round 10 ratified 2/2; artefact `agents/evidence/ratifications/cold-start-rate-limit-steering-20261020.md`, prompts beside the round-4 one, `agents/evidence/council/cold-start-steering-review-r10-20261020.question.md` the last. Non-blocking conditions carried there: no caller, no operational kill criterion beyond `emergency.orchestration_halt`.
-- [ ] **4.5 The same guard reads the window.** While a recent host-sourced
+- [x] **4.5 The same guard reads the window.** While a recent host-sourced <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/spawn_guard_shadow_hook.ts -->
       `quota_parked` marker exists, the shadow verdict for a new `Agent` call is
       `would_wait`, and after 3.6 a denial whose reason says "resume or run
       in-session". The marker alone is sufficient; a status-line snapshot is an
@@ -387,6 +389,7 @@ waits:
       user's existing status-line command and never replaces it (decision D4),
       read against the pre-registered threshold (decision D5).
       verify: `npx vitest run tests/hooks/spawn_guard_shadow.test.ts -t recent-rate-marker-yields-would-wait --reporter=verbose` -> /✓.*recent-rate-marker-yields-would-wait/
+      Done 2026-10-22 (commit d4c716ba4d): `recentHostMarker` reads host-sourced markers inside the five-hour plan window; the shadow line of a new `Agent` call carries `rate_window: would_wait | clear`. The denial wording waits on 3.6; no status-line wrapper was added (D4 leaves it optional).
 - [x] **4.6 Hand the rate-surface rows to their owner.** The 1.9 verdicts are
       appended to `later/road-to-billing-cliff-detection.md` under its S-1
       prior; the billing-class question stays there.
@@ -404,15 +407,17 @@ waits:
       login.
       verify: `npx vitest run tests/scripts/ai_council/cli_agency_bounds.test.ts -t light-launch-is-probed-per-version --reporter=verbose` -> /✓.*light-launch-is-probed-per-version/
       Done 2026-10-22 on Claude Code 2.1.308, subscription login: the seat argv's first call carried 145,587 tokens and saw a user rule; `--safe-mode` 2,790 and `--setting-sources project,local` 3,548, neither saw it, both kept the login. Rows in `LIGHT_LAUNCH_PROBES` and `spawn-burst-baseline-2026-10.md` § Step 5.1; the Anthropic seat now launches with the selected flag only on the probed version (commits eaf5811486, b63871b61f). n = 1 per arm.
-- [ ] **5.2 Non-blind multi-round questions continue the seat session** inside
+- [x] **5.2 Non-blind multi-round questions continue the seat session** inside <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/clients.ts -->
       the TTL — the first provider's resume flag, the second's `exec resume`.
       Blind rounds keep fresh sessions by construction; resuming one would leak
       the reviewer's earlier position.
       verify: `npx vitest run tests/scripts/ai_council/clients.test.ts -t blind-round-never-resumes --reporter=verbose` -> /✓.*blind-round-never-resumes/
-- [ ] **5.3 Above the window threshold, the existing gates decide stricter.**
+      Done 2026-10-22 (commits be6e3b3a3d, defbc6fdae): `seatResumeArgs` resumes only a non-blind call inside the 5-minute cache TTL. The anonymised debate rounds are blind by construction and stay fresh; the stance repair, which asks a seat about its own reply, resumes. Probed live the same day, n = 1 each: `claude --resume` with the seat flags recalled the planted word with 2,355 cache-read tokens; `codex exec resume` recalled it with 20,224 cached tokens, refuses `--sandbox`, and keeps the bound as `-c sandbox_mode="read-only"`. The codex seat now records `thread.started` as its session.
+- [x] **5.3 Above the window threshold, the existing gates decide stricter.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/necessity.ts -->
       `ai_council/necessity.ts` and `low_impact.ts` apply their stricter bar
       while a host-sourced rate marker is recent. No new throttle.
       verify: `npx vitest run tests/scripts/ai_council/necessity.test.ts -t rate-marker-raises-the-bar --reporter=verbose` -> /✓.*rate-marker-raises-the-bar/
+      Done 2026-10-22 (commit 604d512a3b): `classify_necessity` applies the strict bar on every lens while `recentHostMarker` is true; `council_cli` passes it. `low_impact.ts` is left unchanged, recorded here as a deviation: its only lever is the corpus-similarity threshold, and raising it routes more questions to the full council — the opposite of what a rate window wants. No new throttle.
 
 ## Phase 6 — Prove it or record the null, then hand off
 
@@ -431,6 +436,7 @@ waits:
       sample that never fills is a publishable outcome. A cheaper resume that
       fails non-inferiority keeps the reuse half in shadow.
       verify: `grep -c 'resume-non-inferiority' docs/CLAIMS.md` -> /^[1-9][0-9]*$/
+      Waits on its window 2026-10-22: the four claims stay `unbacked`. Their instruments now exist (shadow window report, host rate marker, seat resume); none has a sample yet, and a verdict written before one would be invented.
 - [x] **6.3 Correct D3** in the recycling roadmap's Context, citing the
       per-spawn reading.
       verify: `grep -c 'per-spawn-standing-2026-10' agents/roadmaps/later/road-to-worker-generation-recycling.md` -> /^[1-9][0-9]*$/
@@ -533,27 +539,35 @@ waits:
 
 ## Acceptance Criteria
 
-- [ ] **AC-1** Every capability a later phase reads has a dated row under the
+- [x] **AC-1** Every capability a later phase reads has a dated row under the
       observation protocol, and a host without `worker_resume: true` changes no
       behaviour.
+      Done 2026-10-22: every capability row is dated in `host-continuation-observations-2026-10.md`; `host-without-resume-records-fresh-before-reading-any-worker` (`tests/scripts/_lib_worker_reuse.test.ts`).
 - [ ] **AC-2** The owner's governing constraint holds: the plan reduces requests
       and concurrent cold starts in a short window, not only tokens —
       `rate-limit-stops-per-drain` and `fresh-spawns-per-drain` carry dated
       verdicts beside the token claim.
-- [ ] **AC-3** Every reuse decision comes from one pure function, with a fixture
+      Built, waits on its window 2026-10-22: both claims are pre-registered (6.1); the host marker (4.3) and the shadow `rate_window` field (4.5) are the instruments. No drain has run since they landed, so no verdict is written.
+- [x] **AC-3** Every reuse decision comes from one pure function, with a fixture
       per refusal reason (a)–(h); no prose rule re-implements it.
-- [ ] **AC-4** No agent id is written to disk; workers are addressed by name.
-- [ ] **AC-5** A definition declared `reuse: never` is never resumed or forked
+      Done 2026-10-22: `decideWorkerReuse` › `one-fixture-per-refusal-reason`; `shadowReuseVerdict` agrees with it on every single-reason fixture.
+- [x] **AC-4** No agent id is written to disk; workers are addressed by name.
+      Done 2026-10-22: `no-agent-id-reaches-disk`; the `subagent_named` line stores `refFor(agentId)` and the name, never the id.
+- [x] **AC-5** A definition declared `reuse: never` is never resumed or forked
       from an implementer (fixture).
+      Done 2026-10-22: the `not_continuity` fixture (`reuse: 'never'`) and the refusal-order test in `_lib_worker_reuse.test.ts`.
 - [x] **AC-6** A `rate_limit` failure causes zero same-turn re-dispatches
       (fixture).
-- [ ] **AC-7** Documentation and telemetry distinguish the guard's open-dispatch
+- [x] **AC-7** Documentation and telemetry distinguish the guard's open-dispatch
       count, the host's spawn cap and whether resumes are inside it — no claim
       the host caps resumes without a row.
+      Done 2026-10-22: `subagent-configuration.md` and the `max_parallel` description say the host cap bounds new spawns only (4.2); the shadow line separates `dispatch_kind: spawn | resume`.
 - [ ] **AC-8** The guard's shadow window is filed before any flip, and every
       claim in 6.1 carries a dated verdict, positive or null.
-- [ ] **AC-9** No settings key, no CLI namespace and no schema file beyond the
+      Built, waits on its window 2026-10-22: `worker_reuse_shadow_report.ts` files the window and `flipReadiness` refuses a flip before it; the 6.1 claims are unbacked until the window fills.
+- [x] **AC-9** No settings key, no CLI namespace and no schema file beyond the
       opened subagent schema were added.
+      Done 2026-10-22: no settings key, CLI namespace or schema file was added; the new concern `host-rate-marker` is a hook registration.
 
 ## Notes — how this file was derived
 
