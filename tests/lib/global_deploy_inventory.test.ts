@@ -336,23 +336,3 @@ describe("reap_tagged_orphans", () => {
     expect(exists(path.join(anchor, "skills", "foreign", "SKILL.md"))).toBe(true);
   });
 });
-
-const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..");
-
-/** Anchor-relative POSIX paths of every regular file under `root`. */
-function list_files_rel(root: string): string[] {
-  const out: string[] = [];
-  const walk = (dir: string): void => {
-    for (const name of fs.readdirSync(dir)) {
-      const full = path.join(dir, name);
-      const lst = fs.lstatSync(full);
-      if (lst.isDirectory()) {
-        walk(full);
-      } else if (lst.isFile()) {
-        out.push(path.relative(root, full).split(path.sep).join("/"));
-      }
-    }
-  };
-  walk(root);
-  return out;
-}
