@@ -73,17 +73,12 @@ Compute the queue ONCE at invocation and record it as a manifest of
 `(PR number, head SHA)` pairs:
 
 ```bash
-gh pr list --state open --limit 100 \
-  --json number,title,headRefName,headRefOid,baseRefName,isCrossRepository,headRepositoryOwner,additions,deletions,changedFiles,mergeable,updatedAt
+gh pr list --limit 100 \
+  --json number,title,headRefName,headRefOid,baseRefName,isCrossRepository,additions,deletions,changedFiles,mergeable,updatedAt
 gh api 'repos/:owner/:repo/git/ref/heads/<baseRefName>' --jq .object.sha   # per distinct base
 ```
 
-A PR whose head lives in another repository (`isCrossRepository: true`) never
-enters the manifest — preparing it would run its author's scripts with your
-credentials — and a head or base name outside `^[A-Za-z0-9._/-]+$` is skipped,
-never substituted into a command.
-
-**Manifest fields, re-read** — read [`pr-merge-sync`](../../contexts/execution/pr-merge-sync.md#manifest-fields).
+**Manifest fields** — read [`pr-merge-sync`](../../contexts/execution/pr-merge-sync.md#manifest-fields).
 
 ## 2. Sync with the base
 

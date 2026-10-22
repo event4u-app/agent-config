@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **630**
-- Edges (incl. self-WRITE): **2397**
+- Files indexed: **631**
+- Edges (incl. self-WRITE): **2402**
 
 ## READ_ONLY edges
 
@@ -147,9 +147,13 @@
 | `.agent-src.uncondensed/contexts/execution/pr-create-branches-content.md` | `.agent-src.uncondensed/rules/no-pr-progress-comments.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/pr-create-branches-content.md` | `.agent-src.uncondensed/rules/token-efficiency.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/pr-create-branches-freshness.md` | `.agent-src.uncondensed/skills/git-workflow/references/branch-update.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-merge-queue.md` | `.agent-src.uncondensed/contexts/execution/pr-merge-trust-boundary.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-merge-sync.md` | `.agent-src.uncondensed/contexts/execution/pr-merge-trust-boundary.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/pr-merge-sync.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/pr-merge-sync.md` | `.agent-src.uncondensed/rules/git-history-discipline.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/pr-merge-sync.md` | `.agent-src.uncondensed/skills/git-workflow/references/branch-update.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-merge-trust-boundary.md` | `.agent-src.uncondensed/contexts/execution/pr-merge-queue.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/pr-merge-trust-boundary.md` | `.agent-src.uncondensed/contexts/execution/pr-merge-sync.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/process-full-all.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/process-full-all.md` | `.agent-src.uncondensed/skills/using-git-worktrees/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/process-full-delivery.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
@@ -1784,7 +1788,7 @@
 
 | Kind | Count |
 |---|---:|
-| `context` | 77 |
+| `context` | 78 |
 | `persona` | 36 |
 | `rule` | 122 |
 | `skill` | 395 |
