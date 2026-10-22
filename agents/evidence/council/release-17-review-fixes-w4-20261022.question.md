@@ -8,9 +8,9 @@ may modify its constitution and may not ratify its own increase in power.
 Branch `fix/release-17-review-fixes-w4` is built on
 `fix/release-17-review-fixes-w2` and merges four slices that fix further
 findings of the 17.0.0 self-review. The gate `check_kernel_edit_ratified`,
-run against `origin/main`, classifies five changed files as gated; the
-record's `subject` digest is taken over exactly these five, so this review
-covers exactly these five, in their cumulative state against `origin/main`:
+run against `origin/main`, classifies six changed files as gated; the
+record's `subject` digest is taken over exactly these six, so this review
+covers exactly these six, in their cumulative state against `origin/main`:
 
 | File | Why it is gated |
 |---|---|
@@ -18,14 +18,16 @@ covers exactly these five, in their cumulative state against `origin/main`:
 | `src/scripts/hooks/dispatch_hook.ts` | hook-plumbing source (the dispatcher) |
 | `src/scripts/hooks/egress_stage.ts` | hook-plumbing source (dispatcher import closure) |
 | `src/scripts/_lib/egress_rules.ts` | hook-plumbing source (dispatcher import closure) |
+| `src/scripts/_lib/ratification_subject.ts` | the ratification mechanism itself (computes the record digest) |
 | `src/scripts/check_platform_anchor.ts` | the ratification mechanism itself (anchor path) |
 
 Part of the cumulative diff was already reviewed in the wave-2 round
 (`agents/evidence/ratifications/release-17-review-fixes-w2-20261022.md`):
 `attributeRefusal` in the dispatcher and egress stage, the review-assignment
 validator taking a capture group in `egress_rules.ts`, a docblock in
-`block_credential_reads.ts`, and the `-`-led `--base-ref` refusal in
-`check_platform_anchor.ts`. Because the subject digest now covers different
+`block_credential_reads.ts`, `refExists` refusing an empty or `-`-led ref in
+`ratification_subject.ts` (wave 4 does not touch that file), and the `-`-led
+`--base-ref` refusal in `check_platform_anchor.ts`. Because the subject digest now covers different
 content, that record no longer answers for the branch, and this review covers
 the whole cumulative diff below, old and new parts alike.
 
@@ -69,6 +71,22 @@ the whole cumulative diff below, old and new parts alike.
    `--as-of` / `AC_AS_OF` pin can move "now" later but never earlier than the
    wall clock.
 
+6. `5560144507` — **egress rules, generic assignment, follow-up.** An earlier
+   round of this review (one seat `refused`, one `confirmed-non-expanding`)
+   named a case commit 1 opened: a secret-shaped run glued to a long
+   low-entropy tail by the other quote character
+   (`password = "<secret-run>'aaaa…"`) is one whitespace-free word,
+   low-entropy as a whole, so it passed, while the old row stopped at the inner
+   quote and judged the run before it. A quoted value's runs now split on
+   quotes as well as whitespace. Two test cases pin it; they were seen failing
+   without the fix.
+
+7. `0ce47de0a0` — **egress stage, disclosure message.** A later round of this
+   review (both seats `confirmed-non-expanding`) noted that the strict
+   disclosure's `withSystemMessage` replaced a `systemMessage` already on the
+   host emission, which could hide another guard's message. A message already
+   there is now kept and the disclosure follows it; a unit test pins it.
+
 The findings and the council's FIX-BEFORE-RELEASE verdicts on them come from
 the 17.0.0 accepted-risk round.
 
@@ -77,29 +95,32 @@ the 17.0.0 accepted-risk round.
 - `vitest run` over the egress rule tests (`src/scripts/_lib/egress_*`), the
   egress stage, injection and prevention-gap tests, the dispatcher tests,
   `block_credential_reads.test.ts`, the `check_platform_anchor*` tests and the
-  `as_of` tests: 22 files, 1,233 tests, all pass.
+  `as_of` tests: 22 files, 1,233 tests, all pass before commit 6; after it,
+  the 21 egress and dispatcher test files (1,187 tests, the two new cases
+  included) pass; after commit 7, the egress-stage and dispatcher test files
+  (6 files, 96 tests) pass.
 - The full suite on the merged branch was run; the reds it showed were in
   ungated files (size and reference ratchets the merge crossed) and were fixed
-  in separate commits; none touched the five gated files except commit 4.
+  in separate commits; none touched the six gated files except commit 4.
 - `tsc --noEmit` is clean.
 
 ## What is shown, and what is left out
 
-Shown in full context: the cumulative diff of the five gated files against
-`origin/main`, and the diff of `_lib/credential_files.ts` and `_lib/as_of.ts`,
-which the gated files call. Shown with one line of context: the changed test
-files whose assertions moved (`egress_legacy_superset.test.ts`,
-`egress_prevention_gaps.test.ts`, `egress_stage.test.ts`). Left out for the
-51,200-byte input ceiling: the added test files
-`egress_generic_assignment_quoted.test.ts`, the new cases in
+Shown in full context: the cumulative diff of the six gated files against
+`origin/main`. Shown with one line of context: the diff of
+`_lib/credential_files.ts` and `_lib/as_of.ts`, which the gated files call,
+and the changed test files whose assertions moved (`egress_legacy_superset.test.ts`,
+`egress_prevention_gaps.test.ts`, `egress_stage.test.ts`) and the added
+`egress_generic_assignment_quoted.test.ts`. Left out for the 51,200-byte input
+ceiling: the new cases in
 `block_credential_reads.test.ts`, `check_platform_anchor_open_bypass.test.ts`
 and `egress_injection.test.ts`, and every ungated file.
 
-## The diff — the five gated files
+## The diff — the six gated files
 
 ```diff
 diff --git a/src/scripts/_lib/egress_rules.ts b/src/scripts/_lib/egress_rules.ts
-index 4f9f9de01d..3e115ff0b2 100644
+index 4f9f9de01d..09145ac58e 100644
 --- a/src/scripts/_lib/egress_rules.ts
 +++ b/src/scripts/_lib/egress_rules.ts
 @@ -31,7 +31,8 @@ export interface EgressRule {
@@ -112,7 +133,7 @@ index 4f9f9de01d..3e115ff0b2 100644
      /** The rule fires only when `words` matches within `window` chars of the value. */
      readonly context?: { readonly words: RegExp; readonly window: number };
      readonly exclusions?: readonly RegExp[];
-@@ -97,6 +98,20 @@ export function looksLikeSecretValue(value: string): boolean {
+@@ -97,6 +98,23 @@ export function looksLikeSecretValue(value: string): boolean {
      return shannonEntropy(value) >= GENERIC_MIN_ENTROPY;
  }
  
@@ -123,17 +144,20 @@ index 4f9f9de01d..3e115ff0b2 100644
 +const GENERIC_VALUE = `(?:"([^"\\n]*)"|'([^'\\n]*)'|['"]?([^'"\\s]{8,})['"]?)`;
 +
 +// A quoted value is a secret when it is secret-shaped as a whole or any of its
-+// words is: the trigger is the same word the old row examined, or a later one,
-+// and the span is the whole quoted value either way.
++// runs is: the trigger is the same run the old row examined, or a later one,
++// and the span is the whole quoted value either way. Runs split on quotes as
++// well as whitespace, because the old row stopped at an inner quote: a
++// secret-shaped run glued to a low-entropy tail by the other quote character
++// would otherwise pass (ratification review 2026-10-22).
 +function genericValueIsSecret(value: string, group: number | 'whole-match'): boolean {
 +    if (looksLikeSecretValue(value)) return true;
-+    return group !== 3 && value.split(/\s+/).some(looksLikeSecretValue);
++    return group !== 3 && value.split(/[\s'"]+/).some(looksLikeSecretValue);
 +}
 +
  /**
   * The keyword names a credential assignment is spelled with (`password =`,
   * `api_key:`). They carry no vendor literal, so each consumer reads the ones it
-@@ -350,12 +365,12 @@ export const EGRESS_RULES: readonly EgressRule[] = [
+@@ -350,12 +368,12 @@ export const EGRESS_RULES: readonly EgressRule[] = [
          pattern: assignmentPattern(
              {
                  keywords: ['password', 'passwd', 'pwd', 'secret', 'apiKey', 'accessToken', 'authToken'],
@@ -149,7 +173,7 @@ index 4f9f9de01d..3e115ff0b2 100644
      },
  ];
  
-@@ -395,6 +410,12 @@ const QUOTED_OR_BARE_VALUE = `(?:"([^"\\n]*)"|'([^'\\n]*)'|["']([^\\n]+)|([^\\s'
+@@ -395,6 +413,12 @@ const QUOTED_OR_BARE_VALUE = `(?:"([^"\\n]*)"|'([^'\\n]*)'|["']([^\\n]+)|([^\\s'
   * keyword that is not a code expression or a type word, on the same line, and
   * every byte after the colon of a line that opens with an `Authorization`
   * header.
@@ -162,7 +186,7 @@ index 4f9f9de01d..3e115ff0b2 100644
   */
  export const REVIEW_CREDENTIAL_ROWS: readonly EgressRule[] = [
      {
-@@ -413,7 +434,10 @@ export const REVIEW_CREDENTIAL_ROWS: readonly EgressRule[] = [
+@@ -413,7 +437,10 @@ export const REVIEW_CREDENTIAL_ROWS: readonly EgressRule[] = [
              'dgi',
          ),
          valueGroup: [2, 3, 4, 5],
@@ -174,7 +198,7 @@ index 4f9f9de01d..3e115ff0b2 100644
      },
      {
          rule: 'review-authorization-header',
-@@ -582,7 +606,7 @@ export function evaluateMatch(
+@@ -582,7 +609,7 @@ export function evaluateMatch(
          if (!r.context.words.test(around)) return null;
      }
      if (r.validator) {
@@ -183,6 +207,19 @@ index 4f9f9de01d..3e115ff0b2 100644
      }
      return { start, end, validated: false };
  }
+diff --git a/src/scripts/_lib/ratification_subject.ts b/src/scripts/_lib/ratification_subject.ts
+index 176f6532cb..82f5f6cac0 100644
+--- a/src/scripts/_lib/ratification_subject.ts
++++ b/src/scripts/_lib/ratification_subject.ts
+@@ -285,6 +285,8 @@ export function resolveRevision(root: string, revision: string): string {
+  * repository the diff and the digest read.
+  */
+ export function refExists(root: string, ref: string): boolean {
++    // Same guard as resolveRevision: a `-`-led ref would be read as an option.
++    if (ref === '' || ref.startsWith('-')) return false;
+     return runGit(root, ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`], '').status === 0;
+ }
+ 
 diff --git a/src/scripts/check_platform_anchor.ts b/src/scripts/check_platform_anchor.ts
 index 5150ccd1dd..84c00b85c6 100644
 --- a/src/scripts/check_platform_anchor.ts
@@ -377,7 +414,7 @@ index d750344390..4f4f2d17d4 100644
      process.stdout.write(emission.stdout);
    }
 diff --git a/src/scripts/hooks/egress_stage.ts b/src/scripts/hooks/egress_stage.ts
-index d56d7dfed9..73a0bf6323 100644
+index d56d7dfed9..d882382119 100644
 --- a/src/scripts/hooks/egress_stage.ts
 +++ b/src/scripts/hooks/egress_stage.ts
 @@ -21,6 +21,7 @@ import type { EgressClass } from "../_lib/egress_rules.js";
@@ -388,7 +425,7 @@ index d56d7dfed9..73a0bf6323 100644
  import { BODY_KEYS, type JsonObject, type JsonValue } from "./payload_stub.js";
  import { is_replay_mode } from "./state_io.js";
  
-@@ -403,11 +404,104 @@ function injector(
+@@ -403,11 +404,110 @@ function injector(
    }
    if (mode !== "protect" && mode !== "strict") return (t) => t;
    const load = loadEngine();
@@ -477,13 +514,19 @@ index d56d7dfed9..73a0bf6323 100644
 +  return { ...emission, stdout: withSystemMessage(emission.stdout, strict.message), stderr: `${emission.stderr}${strict.message}\n` };
 +}
 +
-+/** `stdout` with a user-visible `systemMessage` added; a non-JSON stdout is kept and the message follows as its own object. */
-+function withSystemMessage(stdout: string, message: string): string {
++/**
++ * `stdout` with a user-visible `systemMessage` added; a message already there is
++ * kept ahead of it, never replaced. A non-JSON stdout is kept and the message
++ * follows as its own object.
++ */
++export function withSystemMessage(stdout: string, message: string): string {
 +  const text = stdout.trim();
 +  try {
 +    const parsed: unknown = text === "" ? {} : JSON.parse(text);
 +    if (parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)) {
-+      return `${JSON.stringify({ ...(parsed as Record<string, unknown>), systemMessage: message })}\n`;
++      const prior = (parsed as Record<string, unknown>)["systemMessage"];
++      const combined = typeof prior === "string" && prior !== "" ? `${prior}\n\n${message}` : message;
++      return `${JSON.stringify({ ...(parsed as Record<string, unknown>), systemMessage: combined })}\n`;
 +    }
 +  } catch {
 +    // not one JSON object
@@ -503,9 +546,7 @@ diff --git a/src/scripts/_lib/as_of.ts b/src/scripts/_lib/as_of.ts
 index ed263329ea..5834902ed3 100644
 --- a/src/scripts/_lib/as_of.ts
 +++ b/src/scripts/_lib/as_of.ts
-@@ -207,6 +207,22 @@ export function asOfMs(): number {
-     return asOfResolution().at.getTime();
- }
+@@ -209,2 +209,18 @@ export function asOfMs(): number {
  
 +/**
 + * "Now" for a gate whose clock must not be rewindable by its caller: the later
@@ -524,15 +565,11 @@ index ed263329ea..5834902ed3 100644
 +}
 +
  /**
-  * One line a gate prints so a reviewer can see WHICH "now" produced the verdict.
-  *
 diff --git a/src/scripts/_lib/credential_files.ts b/src/scripts/_lib/credential_files.ts
 index e8ebf08e15..c53a652057 100644
 --- a/src/scripts/_lib/credential_files.ts
 +++ b/src/scripts/_lib/credential_files.ts
-@@ -9,6 +9,19 @@
-  * decided from the path alone, never from content — the guard runs before the
-  * file is opened.
+@@ -11,2 +11,15 @@
   *
 + * A glob or a brace list is judged by what it can expand to: `cat .e*`,
 + * `cat .e[n]v`, `cat ~/.aws/cred*` and `cat .{env,txt}` refuse, because some
@@ -548,21 +585,13 @@ index e8ebf08e15..c53a652057 100644
 + * stage as tool output, not here.
 + *
   * Pure: no I/O. The one import is `node:path`'s POSIX normaliser.
-  */
- import * as path from 'node:path';
-@@ -67,7 +80,8 @@ const CREDENTIAL_TAILS: ReadonlyArray<readonly [string, CredentialFileClass]> =
-     ['.config/composer/auth.json', 'registry-credentials'],
- ];
+@@ -69,3 +82,4 @@ const CREDENTIAL_TAILS: ReadonlyArray<readonly [string, CredentialFileClass]> =
  
 -const PROC_ENVIRON = /^\/proc\/[^/]+\/environ$/;
 +/** A process's environment, and each of its threads' (`/proc/self/task/<tid>/environ`). */
 +const PROC_ENVIRON = /^\/proc\/[^/]+(?:\/task\/[^/]+)?\/environ$/;
  
- /**
-  * The host whose filesystem decides what a path names. A backslash separates
-@@ -88,19 +102,23 @@ export function credentialFileClass(rawPath: string, host: PathHost = HOST): Cre
-     // `.` and `..` segments resolved, so `/proc/self/../self/environ` is the file it names.
-     const p = path.posix.normalize(trimmed);
+@@ -90,11 +104,14 @@ export function credentialFileClass(rawPath: string, host: PathHost = HOST): Cre
      if (PROC_ENVIRON.test(p)) return 'process-environment';
 -    const base = p.slice(p.lastIndexOf('/') + 1);
 -    if (base === '.env' || base === '.envrc') return 'env-file';
@@ -583,17 +612,13 @@ index e8ebf08e15..c53a652057 100644
 -    const lower = base.toLowerCase();
 +    if (SSH_KEY.test(lower)) return 'private-key';
      if (KEY_EXTENSIONS.some((ext) => lower.endsWith(ext) && lower.length > ext.length)) return 'private-key';
-     if (lower.endsWith('.pem') && KEY_PEM_NAME.test(lower.slice(0, -4))) return 'private-key';
+@@ -102,3 +119,4 @@ export function credentialFileClass(rawPath: string, host: PathHost = HOST): Cre
      for (const [tail, cls] of CREDENTIAL_TAILS) {
 -        if (p === tail || p.endsWith(`/${tail}`)) return cls;
 +        const t = tail.toLowerCase();
 +        if (lp === t || lp.endsWith(`/${t}`)) return cls;
      }
-     return null;
- }
-@@ -228,14 +246,105 @@ export function credentialMention(text: string, host: PathHost = HOST): Verdict
- }
- 
+@@ -230,10 +248,101 @@ export function credentialMention(text: string, host: PathHost = HOST): Verdict
  function mentionIn(text: string, host: PathHost): Verdict {
 -    for (const raw of text.split(/[\s'"<>|;&()`=,]+/)) {
 -        if (raw === '') continue;
@@ -701,13 +726,80 @@ index e8ebf08e15..c53a652057 100644
 +        if (cls !== null) return cls;
 +    }
      return null;
- }
- 
 ```
 
 ## Changed test assertions (one line of context)
 
 ```diff
+diff --git a/src/scripts/_lib/egress_generic_assignment_quoted.test.ts b/src/scripts/_lib/egress_generic_assignment_quoted.test.ts
+new file mode 100644
+index 0000000000..c9ed382878
+--- /dev/null
++++ b/src/scripts/_lib/egress_generic_assignment_quoted.test.ts
+@@ -0,0 +1,63 @@
++/**
++ * A quoted credential after an assignment keyword is one value, whitespace and
++ * all. The row used to capture only the first whitespace-free run, so
++ * `password = "Tr0ub4dorXyz9 correct horse"` sent `correct horse` on to the
++ * provider (council FIX-BEFORE-RELEASE, finding 39ef3dba582a). Values are built
++ * at runtime and never printed.
++ */
++import { describe, expect, it } from 'vitest';
++
++import { detect, EGRESS_RULES, replaceSpans } from './egress_rules.js';
++
++const ALNUM = 'Qw3Er5Ty7Ui9Op2As4Df6Gh8Jk1Lz3Xc5Vb7Nm9';
++const run = (n: number, shift = 0): string => {
++    let s = '';
++    for (let i = 0; i < n; i += 1) s += ALNUM[(i + shift) % ALNUM.length];
++    return s;
++};
++
++const generic = (text: string) => detect(text, EGRESS_RULES.filter((r) => r.rule === 'generic-assignment'));
++const scrub = (text: string): string => replaceSpans(text, generic(text), () => '<SECRET>');
++
++describe('generic-assignment: a quoted multi-word value is replaced whole', () => {
++    for (const q of ['"', "'"]) {
++        it(`a secret-shaped first word takes the rest of the ${q}-quoted value with it`, () => {
++            const value = `${run(20, 2)} correct horse battery`;
++            const out = scrub(`password = ${q}${value}${q}`);
++            expect(out).toBe(`password = ${q}<SECRET>${q}`);
++        });
++
++        it(`a secret-shaped later word still covers the whole ${q}-quoted value`, () => {
++            const value = `correct horse ${run(18, 5)} staple`;
++            const out = scrub(`api_key: ${q}${value}${q}`);
++            expect(out).toBe(`api_key: ${q}<SECRET>${q}`);
++        });
++    }
++
++    // Ratification review 2026-10-22 (openai seat): the old row stopped at an
++    // inner quote and validated the run before it, so a secret-shaped run glued
++    // to a low-entropy tail by the other quote character must still be caught.
++    for (const [outer, inner] of [['"', "'"], ["'", '"']] as const) {
++        it(`a secret-shaped run before an inner ${inner} in a ${outer}-quoted value is still a secret`, () => {
++            const value = `${run(20, 4)}${inner}${'a'.repeat(64)}`;
++            const out = scrub(`password = ${outer}${value}${outer}`);
++            expect(out).toBe(`password = ${outer}<SECRET>${outer}`);
++        });
++    }
++
++    it('nothing after the closing quote is taken', () => {
++        const out = scrub(`password = "${run(20, 1)} two words" # comment`);
++        expect(out).toBe('password = "<SECRET>" # comment');
++    });
++
++    it('quoted prose with no secret-shaped word is left alone, as before', () => {
++        for (const t of ['password = "just some ordinary words here"', 'secret: "short"', "pwd = 'see the vault'"]) {
++            expect(generic(t)).toEqual([]);
++        }
++    });
++
++    it('a bare value still ends at whitespace, as before', () => {
++        const out = scrub(`secret=${run(24, 3)} trailing words`);
++        expect(out).toBe('secret=<SECRET> trailing words');
++    });
++});
 diff --git a/src/scripts/_lib/egress_legacy_superset.test.ts b/src/scripts/_lib/egress_legacy_superset.test.ts
 index 39b1eda686..99f9b9b44d 100644
 --- a/src/scripts/_lib/egress_legacy_superset.test.ts
@@ -808,14 +900,18 @@ index 1301bd8571..41318f97c4 100644
 +        });
      }
 diff --git a/tests/scripts/hooks/egress_stage.test.ts b/tests/scripts/hooks/egress_stage.test.ts
-index 422849e89a..78a7259c11 100644
+index 422849e89a..08dee6cd8d 100644
 --- a/tests/scripts/hooks/egress_stage.test.ts
 +++ b/tests/scripts/hooks/egress_stage.test.ts
 @@ -20,2 +20,3 @@ import { fileURLToPath } from "node:url";
  import { afterEach, beforeEach, describe, expect, it } from "vitest";
 +import { parse as parseYaml } from "yaml";
  
-@@ -238,2 +239,20 @@ describe("the execution view is granted, never requested", () => {
+@@ -34,2 +35,3 @@ import {
+   WITHHELD_MARKER,
++  withSystemMessage,
+   type EgressMode,
+@@ -238,2 +240,20 @@ describe("the execution view is granted, never requested", () => {
    });
 +
 +  // The reverse direction (council 2026-10-22, 8b2484eb1292): every concern the
@@ -836,6 +932,23 @@ index 422849e89a..78a7259c11 100644
 +    expect(starved).toStrictEqual([]);
 +  });
  });
+@@ -270,2 +290,16 @@ describe("published state", () => {
+ 
++// Ratification review 2026-10-22 (openai seat): the strict disclosure must not
++// hide a systemMessage another guard already put on the emission.
++describe("the strict disclosure's systemMessage", () => {
++  it("keeps a message already on the emission and adds its own after it", () => {
++    const out = JSON.parse(withSystemMessage(JSON.stringify({ systemMessage: "guard says X", decision: "allow" }), "egress says Y"));
++    expect(out).toEqual({ systemMessage: "guard says X\n\negress says Y", decision: "allow" });
++  });
++
++  it("stands alone on an empty or non-JSON stdout", () => {
++    expect(JSON.parse(withSystemMessage("", "egress says Y"))).toEqual({ systemMessage: "egress says Y" });
++    expect(withSystemMessage("plain\n", "egress says Y")).toBe('plain\n{"systemMessage":"egress says Y"}\n');
++  });
++});
++
+ describe("end to end through the dispatcher", () => {
 ```
 
 ## The question
