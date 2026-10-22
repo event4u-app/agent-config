@@ -35,10 +35,13 @@ const CLEAN: ClassifyUpdateInput = {
     settings: { mode: 'auto', projectPin: null, minReleaseAgeHours: 48 },
 };
 
+// `undefined` is a value a patch may carry: it reads as the field being absent.
 type Patch = {
-    [K in keyof ClassifyUpdateInput]?: ClassifyUpdateInput[K] extends object | null
-        ? Partial<NonNullable<ClassifyUpdateInput[K]>> | ClassifyUpdateInput[K]
-        : ClassifyUpdateInput[K];
+    [K in keyof ClassifyUpdateInput]?:
+        | (ClassifyUpdateInput[K] extends object | null
+              ? Partial<NonNullable<ClassifyUpdateInput[K]>> | ClassifyUpdateInput[K]
+              : ClassifyUpdateInput[K])
+        | undefined;
 };
 
 function input(patch: Patch = {}): ClassifyUpdateInput {

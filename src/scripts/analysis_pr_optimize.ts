@@ -110,7 +110,7 @@ function checkPaths(fix: Fix): void {
             p.trim() === '' ||
             path.isAbsolute(p) ||
             /^[A-Za-z]:/.test(p) ||
-            segs.some((seg) => seg === '..' || seg === '.git' || seg === '');
+            segs.some((seg: string) => seg === '..' || seg === '.git' || seg === '');
         if (bad) throw new OptimizeError(`finding ${fix.findingKey} declares an unsafe path ${JSON.stringify(p)}`);
     }
 }

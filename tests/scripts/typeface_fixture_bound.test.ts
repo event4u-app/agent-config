@@ -36,7 +36,7 @@ interface Suspension {
 
 interface FixtureManifest {
     admitted_by: string;
-    suspended?: Suspension;
+    suspended?: Suspension | undefined;
     families: FixtureFamily[];
 }
 
