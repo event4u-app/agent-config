@@ -36,7 +36,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { readTurnRunState } from './before_complete_hook.js';
+import { readTurnRunState } from './_lib/turn_run_state.js';
 import type { UpdateMode } from './_lib/classify_update.js';
 import { autoInviteDecision, ringZeroExited, type InviteDecision } from './_lib/update_invite.js';
 import { readRunEvidence } from './_lib/verification_evidence.js';

@@ -9,8 +9,10 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { runInProc } from '../_lib/run_in_process.js';
 import { classifyBlockingCall, main } from '../../src/scripts/probe_turnaround.js';
 import {
+    BATCH_TICK_MAX_MS,
     classifyCall,
     closedStep,
+    foldBatchTicks,
     readSteps,
     stepSumError,
     summariseSteps,
@@ -196,5 +198,40 @@ describe('step anatomy', () => {
         expect(s.byRisk.R2.steps).toBe(1);
         expect(s.byRisk.R3.steps).toBe(1);
         expect(s.sumErrors).toEqual([]);
+    });
+});
+
+// Finding 474a586cabe8 (17.0.0 review): a step runs from the previous close in
+// the same transcript, so a subagent ticking several boxes in a row hands the
+// work to the first and near-zero intervals to the rest — 36 of 75 steps read
+// R3 at a p50 of 0.1 min, and that p50 was registered as a baseline. The
+// orchestrated view folds such a tick into the step it trails.
+describe('the orchestrated view folds a batch tick into the step it trails', () => {
+    it('folds the 10-second tick with no edit into the step before it, keeping the time', () => {
+        const raw = readSteps(fixture(), classifyBlockingCall);
+        expect(raw).toHaveLength(2);
+        expect(raw[1]?.editedPaths).toBe(0);
+        const folded = foldBatchTicks(raw);
+        expect(folded).toHaveLength(1);
+        expect(folded[0]?.step).toBe('1.1+1.2');
+        expect(folded[0]?.totalMs).toBe((raw[0]?.totalMs ?? 0) + (raw[1]?.totalMs ?? 0));
+        expect(folded[0] !== undefined && stepSumError(folded[0])).toBeNull();
+        expect(folded[0]?.riskClass).toBe('R2');
+    });
+
+    it('keeps a no-edit step that took real time, and never folds across sessions', () => {
+        const [a, b] = readSteps(fixture(), classifyBlockingCall);
+        if (a === undefined || b === undefined) throw new Error('fixture read no steps');
+        const long = { ...b, totalMs: BATCH_TICK_MAX_MS, ms: { ...b.ms, wait: b.ms.wait + BATCH_TICK_MAX_MS - b.totalMs } };
+        expect(foldBatchTicks([a, long])).toHaveLength(2);
+        expect(foldBatchTicks([a, { ...b, session: 'other' }])).toHaveLength(2);
+    });
+
+    it('the summary carries the orchestrated reading beside the raw one', () => {
+        const s = summariseSteps(readSteps(fixture(), classifyBlockingCall));
+        expect(s.steps).toBe(2);
+        expect(s.orchestrated.steps).toBe(1);
+        expect(s.orchestrated.byRisk.R3.steps).toBe(0);
+        expect(s.orchestrated.p50Min).toBe(13);
     });
 });

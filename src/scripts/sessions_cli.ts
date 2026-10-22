@@ -72,6 +72,8 @@ import {
     type SessionRecord,
 } from './_lib/session_register.js';
 import { claim_file, claim_is_stale, claim_read_paths } from './session_register_hook.js';
+import { tickProcessLoop, type ProcessLoopState } from './_lib/process_loop_bound.js';
+import { countRoadmap, roadmapPath } from './_lib/run_checkpoint.js';
 
 function usage(): number {
     process.stderr.write(
@@ -86,6 +88,7 @@ function usage(): number {
             '  agent-config sessions:claim <slug> --lane [--worktree P] [--branch B]',
             '                                           claim a roadmap for a subagent lane of this session',
             '  agent-config sessions:claim --release [<slug>]   drop this session\'s claim and locks, or one slug',
+            '  agent-config sessions:claim <slug> --step   count one drain-loop step; exit 3 = the loop must end',
             '',
         ].join('\n'),
     );
@@ -527,6 +530,7 @@ function cmd_claim(argv: string[], root: string): number {
         );
         return 0;
     }
+    if (argv.includes('--step')) return cmd_step(argv, root, target);
     const paths_idx = argv.indexOf('--paths');
     const paths_arg = paths_idx >= 0 ? (argv[paths_idx + 1] ?? '') : '';
     const wt_idx = argv.indexOf('--worktree');
@@ -655,6 +659,57 @@ function cmd_claim(argv: string[], root: string): number {
                   '  A name match is a reason to look, not proof — check before you write code.\n'
                 : ''),
     );
+    return 0;
+}
+
+/**
+ * `sessions:claim <slug> --step` — the drain loop's executable bound.
+ *
+ * Called before each step of a `/roadmap:process-*` run. It reads the open count
+ * from the roadmap, records it in this session's claim, and refuses (exit 3)
+ * once `_lib/process_loop_bound.ts` says the loop must end — over its iteration
+ * cap, or stagnated. Exit 3 rather than 1 so a caller can tell "the loop is
+ * over" from "the command could not run".
+ */
+function cmd_step(argv: string[], root: string, target: string): number {
+    const slug = (argv.find((a) => !a.startsWith('-')) ?? '').trim();
+    if (slug === '') return usage();
+    let claim: Record<string, unknown> | null = null;
+    try {
+        claim = JSON.parse(fs.readFileSync(target, 'utf-8')) as Record<string, unknown>;
+    } catch {
+        claim = null;
+    }
+    if (claim === null || claim['slug'] !== slug) {
+        process.stderr.write(
+            `sessions:claim --step: REFUSED — this session holds no claim on "${slug}". ` +
+                `Run \`agent-config sessions:claim ${slug}\` first; a step nothing counts is the unbounded loop this guards.\n`,
+        );
+        return 3;
+    }
+    let text: string;
+    try {
+        text = fs.readFileSync(roadmapPath(root, slug), 'utf-8');
+    } catch {
+        process.stderr.write(`sessions:claim --step: REFUSED — cannot read agents/roadmaps/${slug}.md.\n`);
+        return 3;
+    }
+    const prior = (claim['loop'] ?? null) as ProcessLoopState | null;
+    const { state, verdict } = tickProcessLoop(prior, countRoadmap(text).open);
+    try {
+        write_atomic(target, `${JSON.stringify({ ...claim, loop: state }, null, 2)}\n`);
+    } catch (exc) {
+        process.stderr.write(`sessions:claim --step: could not record the step — ${String(exc)}\n`);
+        return 1;
+    }
+    if (!verdict.ok) {
+        process.stderr.write(
+            `sessions:claim --step: REFUSED — ${verdict.reason}: ${verdict.detail}.\n` +
+                `The loop ends here as \`${verdict.reason === 'stagnated' ? 'stagnated' : 'exhausted'}\` (terminal-states); open steps stay open.\n`,
+        );
+        return 3;
+    }
+    process.stdout.write(`Step ${String(verdict.iteration)} of at most ${String(verdict.cap)} for "${slug}".\n`);
     return 0;
 }
 

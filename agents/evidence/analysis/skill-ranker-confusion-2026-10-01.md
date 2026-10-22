@@ -393,7 +393,8 @@ as a first measurement.
 Named, as step 3.1 requires:
 
 - **Ties decided by the alphabet (67 of 315 tuning rows, 21.3 %; 15 of 75
-  sealed, 20.0 %).** The largest class after zero-recall, found by the fourth
+  sealed, 20.0 % — the 2026-10-01 reading; the live, test-pinned figures since
+  the 2026-10-13 tokenizer change are 69 and 14, see the note above).** The largest class after zero-recall, found by the fourth
   blind review and absent from the first three readings of this report. The
   score is `roundHalfToEven(overlap * 70 + personaHit * 30)` — an INTEGER — so a
   whole 299-skill ranking carries **at most 6 distinct values** under

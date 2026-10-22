@@ -50,8 +50,23 @@ counts rows, hit or miss, whose expected skill scores the winner's integer.
 | `idf` = `{ idfWeighting }`, tuning | 20 / 315 (6.3 %) | 94 / 315 (29.8 %) |
 | `idf+ties` = `{ idfWeighting, tieBreakUnrounded }`, tuning | 14 / 315 (4.4 %) | 94 / 315 (29.8 %) |
 
-Both 2026-10-01 figures reproduce exactly: 67 of 315 and 15 of 75, pinned by
-`tests/scripts/skill_ranker_tie_metrics.test.ts`.
+Both 2026-10-01 figures reproduced exactly on 2026-10-06: 67 of 315 and 15 of 75.
+
+> **Superseded pin, 2026-10-13.** The table above is a dated reading under the
+> OLD token class and is left as written. On 2026-10-13
+> `src/shared/skillRanking.ts` widened `[a-z][a-z0-9]+` to a Unicode letter
+> class, so a term that used to fragment at an umlaut became one token: two
+> tuning rows crossed into a tie block and one sealed row crossed out of one.
+> The `keyword-v1` re-derivation now reads **69 of 315 on tuning and 14 of 75
+> on sealed**, and `tests/scripts/skill_ranker_tie_metrics.test.ts` pins THOSE
+> figures, not the ones in the table. The `idf` / `ties` rows were not re-taken
+> and stay dated.
+>
+> Why the sealed count was re-read after a scoring-input change: the test is a
+> canary that reproduces the PUBLISHED `keyword-v1` count, so a tokenizer change
+> reddens it by design. Re-deriving that baseline count under `keyword-v1` is
+> not a reading of the sealed slice under the flag, which D1 still forbids
+> until a freshly cut slice exists; the flag was not run on sealed rows.
 
 ## The headline under the flag, tuning
 

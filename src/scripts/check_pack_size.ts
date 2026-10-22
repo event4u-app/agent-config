@@ -54,7 +54,11 @@ export interface PackResult {
 
 export interface PackSizeBudget {
     regression_pct: number;
-    budgets: Record<string, { max: number; last_measured: number; method: string }>;
+    /**
+     * `max` is optional: the unbuilt absolute cap was retired on 2026-10-22
+     * (`retired_max_2026_10_22` in the budget file). A re-cut cap is still honoured.
+     */
+    budgets: Record<string, { max?: number; last_measured: number; method: string }>;
     per_skill_share: {
         max_pct: number;
         basis: string;
@@ -649,15 +653,15 @@ export function evaluate(budget: PackSizeBudget, pack: PackResult): string[] {
                 );
             }
         }
-    } else if (packedMb > entry.max) {
+    } else if (entry.max !== undefined && packedMb > entry.max) {
         errors.push(`packed_size_mb: measured ${packedMb.toFixed(3)} exceeds budget ${entry.max}`);
     } else {
         const ceiling = entry.last_measured * (1 + pct / 100);
         if (entry.last_measured > 0 && packedMb > ceiling) {
             errors.push(
                 `packed_size_mb: measured ${packedMb.toFixed(3)} regressed >${pct}% vs ` +
-                    `last_measured ${entry.last_measured} (ceiling ${ceiling.toFixed(3)}) — ` +
-                    'fails even under the absolute budget',
+                    `last_measured ${entry.last_measured} (ceiling ${ceiling.toFixed(3)})` +
+                    (entry.max !== undefined ? ' — fails even under the absolute budget' : ''),
             );
         }
     }

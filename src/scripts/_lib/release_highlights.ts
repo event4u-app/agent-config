@@ -790,15 +790,44 @@ export function derive_head_prefill(
         const existing = out[KNOWN_LIMITATIONS_LABEL];
         out[KNOWN_LIMITATIONS_LABEL] = existing ? `${existing} ${override}` : override;
     }
-    // Same shape for the breaking-changes index: a Pending row has landed, so
-    // whatever this release is, it ships it — and no commit subject carries the
-    // row's wording, so the span classifier above cannot derive it.
-    const pending = pendingBreakingLine(readIndex(cwd));
-    if (pending !== null) {
-        const existing = out[MIGRATION_LABEL];
-        out[MIGRATION_LABEL] = existing ? `${existing} ${pending}` : pending;
-    }
+    appendIndexBreakingLines(out, readIndex(cwd), version ?? null);
     return out;
+}
+
+/**
+ * Append what `BREAKING_CHANGES.md` says this release breaks to the migration
+ * label: every Pending row (landed, so whatever this release is, it ships it),
+ * and — for a major — that major's own row. No commit subject carries the
+ * rows' wording, so the span classifier cannot derive either, and the
+ * generated `### BREAKING CHANGES` section lists only commits with a breaking
+ * marker: 17.0.0's row named six breaks while one commit carried the marker.
+ */
+export function appendIndexBreakingLines(out: Record<string, string>, index: string, version: string | null): void {
+    for (const line of [pendingBreakingLine(index), releasedBreakingLine(index, version)]) {
+        if (line === null) continue;
+        const existing = out[MIGRATION_LABEL];
+        out[MIGRATION_LABEL] = existing ? `${existing} ${line}` : line;
+    }
+}
+
+/**
+ * The `What broke` cell of the by-major row for `version`, as one head value;
+ * null for a non-major, or a major the index has no row for.
+ */
+export function releasedBreakingLine(index: string, version: string | null): string | null {
+    if (version === null || !/^\d+\.0\.0$/u.test(version)) return null;
+    for (const line of index.split('\n')) {
+        if (!line.startsWith('|')) continue;
+        const cells = line.split('|');
+        if ((cells[1] ?? '').replace(/\*/gu, '').trim() !== version) continue;
+        const broke = (cells[3] ?? '').trim();
+        if (broke === '') return null;
+        return (
+            `Breaking in ${version}, as indexed in \`BREAKING_CHANGES.md\`: ${broke} ` +
+            `Migration: [docs/MIGRATION.md § ${version}](docs/MIGRATION.md).`
+        );
+    }
+    return null;
 }
 
 const MIGRATION_LABEL = 'Default changes + migration';

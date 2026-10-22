@@ -60,11 +60,10 @@ import {
   has_stable_session_id,
   prune_legacy_state_file,
   prune_stale_session_states,
-  session_state_file,
   update_json_under_lock,
-  owns_session_state,
 } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
+import { STATE_DIR, statePathFor } from "./_lib/turn_run_state.js";
 import { hookSectionValue } from "./_lib/hook_settings.js";
 import { isVerificationCommand, mightBeVerification } from "./_lib/verification_command.js";
 import { observeAssetRender, type AssetRenderGap, type AssetRenderRecord } from "./_lib/asset_render_record.js";
@@ -126,7 +125,7 @@ export const STATE_FILE = path.join("agents", "state", "verify-before-complete.j
  * prune all live once in `hooks/state_io.ts` § Per-session concern state — this
  * is the second concern to need them, which is what made sharing them right.
  */
-export const STATE_DIR = path.join("agents", "state", "verify-before-complete");
+export { STATE_DIR, statePathFor } from "./_lib/turn_run_state.js";
 
 /**
  * Days after which an untouched session's state is pruned.
@@ -136,10 +135,6 @@ export const STATE_DIR = path.join("agents", "state", "verify-before-complete");
  */
 export const STATE_RETENTION_DAYS = 7;
 
-/** Path of one session's state file. */
-export function statePathFor(session_id: string): string {
-  return session_state_file(STATE_DIR, session_id);
-}
 
 // Tool names across platforms whose `command` / `tool_input.command` field
 // carries a shell command we can inspect. Edit tools are deliberately
@@ -1130,82 +1125,10 @@ export function main(argv?: string[]): number {
   return run(_readStdin(), { consumer_root: process.cwd(), verbose: args.verbose });
 }
 
-// ---------------------------------------------------------------------------
-// The consumer side of `verification_runs`, living with its producer
-// ---------------------------------------------------------------------------
-
-/**
- * Why the turn-end gate's reader sits HERE and not in the gate.
- *
- * The shape of `verification_runs` and `edits_this_turn` is this file's; the
- * reader is the only consumer of that shape, and the gate already imported this
- * module's path BUILDER rather than a path constant for exactly the reason that
- * applies here too — "the consumer cannot read a path the producer does not
- * write" is only true while the two agree, and separating them made the
- * agreement invisible when the layout moved. Keeping the reader beside the
- * writer makes a shape change a type error in one file instead of a silent
- * disagreement across two.
- *
- * It also keeps the gate under its source-size ceiling without deleting
- * anything, which is the move the ratchet asks for rather than a trim.
- */
-export interface TurnRunState {
-  readonly runs: readonly unknown[];
-  readonly edits_this_turn: number;
-  /** Absent when the recorder that wrote the file predates the field. */
-  readonly asset_renders?: readonly unknown[];
-}
-
-/**
- * The turn's recorded verification runs, or `null` when the recorder is not live.
- *
- * WHY THE LIVENESS TEST IS `edits_this_turn >= 1` AND NOT "the file exists".
- * The obvious predicate — a state file with a `verification_runs` key — is
- * wrong in a way that would refuse honest work on entire platforms. That key is
- * present in the recorder's EMPTY state, so a host whose `post_tool_use` slot
- * the manifest does not bind still has a file carrying `[]`, written by the
- * prompt and stop events alone. Reading that as "this turn ran nothing" would
- * refuse every editing turn on such a host, whatever the operator actually ran.
- *
- * `edits_this_turn` is the one field only a `post_tool_use` event can raise. The
- * detector reaches here having already found an edit in the transcript, so a
- * recorder that saw none of this turn's tool events is exactly the case this
- * returns `null` for — and `null` means the transcript path answers, which is
- * the behavior that predates the record path.
- *
- * The ownership check is the same one detector D applies to `ci_last`, for the
- * same reason: a FOREIGN file's passing record would vouch for a run this
- * session never made.
- */
-export function readTurnRunState(
-    workspaceRoot: string,
-    session_id: string,
-): TurnRunState | null {
-    if (!has_stable_session_id(session_id)) return null;
-    try {
-        const raw = fs.readFileSync(path.join(workspaceRoot, statePathFor(session_id)), 'utf-8');
-        const decoded: unknown = JSON.parse(raw);
-        if (!owns_session_state(decoded, session_id)) return null;
-        if (typeof decoded !== 'object' || decoded === null || Array.isArray(decoded)) return null;
-        const state = decoded as Record<string, unknown>;
-        const runs = state['verification_runs'];
-        const edits = state['edits_this_turn'];
-        if (!Array.isArray(runs)) return null;
-        if (typeof edits !== 'number' || !Number.isFinite(edits) || edits < 1) return null;
-        const renders = state['asset_renders'];
-        return {
-            runs: runs as readonly unknown[],
-            edits_this_turn: edits,
-            // Absent rather than empty when the writer predates the field, so
-            // the SVG obligation falls back instead of reading "no render".
-            ...(Array.isArray(renders) ? { asset_renders: renders as readonly unknown[] } : {}),
-        };
-    } catch {
-        // Absent, unreadable or malformed — the recorder said nothing, so the
-        // transcript answers. Never a refusal of its own.
-        return null;
-    }
-}
+// The consumer side of `verification_runs` lives in `_lib/turn_run_state.ts`,
+// beside the path builder both sides share; re-exported so existing callers keep
+// addressing it here.
+export { readTurnRunState, type TurnRunState } from "./_lib/turn_run_state.js";
 
 // Bundle-safety: never auto-run when inlined into an esbuild bundle, where
 // every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).

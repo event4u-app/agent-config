@@ -95,9 +95,17 @@ export function measure(ref: string): Side {
 function readCap(): number | null {
     try {
         const raw = fs.readFileSync(path.join(REPO, 'src', 'config', 'pack-size-budget.json'), 'utf8');
-        const d = JSON.parse(raw) as { budgets?: { packed_size_mb?: { max?: number } } };
-        const max = d.budgets?.packed_size_mb?.max;
-        return typeof max === 'number' ? max : null;
+        const d = JSON.parse(raw) as {
+            regression_pct?: number;
+            budgets?: { packed_size_mb?: { max?: number; last_measured?: number } };
+        };
+        const entry = d.budgets?.packed_size_mb;
+        if (typeof entry?.max === 'number') return entry.max;
+        // No absolute cap since 2026-10-22: the unbuilt creep line is the one
+        // line an unbuilt pack (which this reporter takes) is judged against.
+        const last = entry?.last_measured;
+        const pct = d.regression_pct;
+        return typeof last === 'number' && typeof pct === 'number' ? Math.round(last * (1 + pct / 100) * 1000) / 1000 : null;
     } catch {
         return null;
     }
@@ -138,7 +146,7 @@ export function markdown(d: Delta): string {
             `Cap ${d.capMb} MB · headroom after this branch **${kb(d.headroomBytes)}**.`,
             '',
             '<sub>Measured `npm pack --dry-run --ignore-scripts` on unbuilt detached worktrees of both refs — the ' +
-                'conditions `pack-size-budget.json` documents. A report, not a gate: the absolute cap owns the refusal. ' +
+                'conditions `pack-size-budget.json` documents. A report, not a gate: `check_pack_size` owns the refusal. ' +
                 'This line exists because the 2026-08-24 trip was a MERGE artifact — neither side was over alone.</sub>',
         );
     }

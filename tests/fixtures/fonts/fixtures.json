@@ -1,6 +1,11 @@
 {
   "_comment": "Held-out truth for the type-reconstruction benchmark (internal/bench/type-reconstruction-PREREG.md). Bound and admission rule: README.md beside this file. Checked by tests/scripts/typeface_fixture_bound.test.ts.",
   "admitted_by": "agents/evidence/council/benchmark-fixture-fonts-20261016.md",
+  "suspended": {
+    "since": "2026-10-22",
+    "record": "agents/evidence/council/typeface-lock-amendment-routing-20261022.md",
+    "lifted_by": null
+  },
   "source": {
     "url": "https://github.com/google/fonts",
     "sha": "47d54ca1ebb14fd864695f1d39dc734f39017c33"

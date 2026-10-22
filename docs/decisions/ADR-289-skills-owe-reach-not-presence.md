@@ -24,6 +24,7 @@ evidence:
     - agents/roadmaps/archive/road-to-skills-that-arrive-when-called.md
     - agents/evidence/council/second-host-unlisted-reachability-20261020.md
     - agents/evidence/analysis/second-host-finder-probe-20261020.md
+    - agents/evidence/council/skills-promise-delegation-reach-20261022.md
 review_trigger: >-
   Reopened if a supported host cannot supply any deterministic retrieval path
   for a packaged skill and the package cannot install it there either — then
@@ -41,6 +42,17 @@ both (b)), under the owner's delegation of 2026-10-18 ("versuche die offenen
 entscheidungen im ai council zu lösen"). Resolves the blocker <!-- md-language-check: ignore -->
 `which-completeness-skills-owe` of `road-to-skills-that-arrive-when-called`.
 
+**Owner ratification pending for Decision 1 (2026-10-22).** The reach
+contract in Decision 1 is a public commitment, which `decision-revisit-gate`
+reserves to the owner. The 2026-10-18 delegation ("resolve the open decisions in
+the council") names no decision class, and a 2026-10-22 council round
+(`agents/evidence/council/skills-promise-delegation-reach-20261022.md`, 2/2,
+`anthropic` + `openai`) held that a general delegation does not reach a
+reserved class. Decision 1 is therefore a council RECOMMENDATION awaiting
+explicit owner ratification and does not establish a public commitment;
+`README.md` cites it as proposed. Decisions 2-4 are installer-internal and stand.
+Open owner decision: ratify, amend or reject Decision 1's contract text.
+
 ## Context
 
 ADR-267 § Decision 5 states completeness for rules: every rule file is written
@@ -54,7 +66,8 @@ install, and Codex CLI omits skills over its budget.
 
 ## Decision
 
-1. **Reach.** The contract text, as the council worded it: *On supported
+1. **Reach (recommendation — owner ratification pending, see § Status).** The
+   contract text, as the council worded it: *On supported
    hosts, every packaged skill is either installed locally or retrievable by
    its canonical name in one deterministic operation. Retrieval returns the
    skill from the installed package version and fails explicitly if that exact

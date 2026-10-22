@@ -135,15 +135,11 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
-          # 22, not 20, and ONLY on the jobs that run Vitest. Vitest 5 declares
-          # `engines: ^22.12.0 || ^24.0.0 || >=26.0.0`, so this job cannot run
-          # the suite on 20. Every other job here stays on 20 deliberately:
-          # `install-tests`, `install-aux-tests` and `static-checks` never
-          # invoke Vitest, and `consumer-matrix.yml` tests the packed tarball
-          # across node 20 and 22 without it — so the package's
-          # `engines: >=20.11.0` claim stays MEASURED rather than merely
-          # asserted. Bumping every pin would have quietly retired that
-          # evidence as a side effect of a test-runner upgrade.
+          # 22 — the package floor since 17.0.0 (`engines: >=22.6.0`, ADR-290),
+          # and the line Vitest 5 needs (`engines: ^22.12.0 || ^24.0.0 || >=26.0.0`);
+          # '22' resolves to the newest 22.x, which clears both. Every job in the
+          # repository now runs 22, and `consumer-matrix.yml` measures the packed
+          # tarball on 22, so the floor is MEASURED rather than merely asserted.
           node-version: '22'
           cache: 'npm'
 

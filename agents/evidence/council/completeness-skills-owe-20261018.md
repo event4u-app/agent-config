@@ -48,3 +48,12 @@ closure is immediately actionable) is the same as its second answer.
 > **Correction, 2026-10-22 (release finding `a762bc02c707`).** The first run's
 > prompt and output were not retained in the tree, so the account above is the
 > only record of that run and cannot be checked against it.
+
+> **Authority correction, 2026-10-22 (release finding `852d58ec59a3`).** The
+> `Authority:` line above cites a general delegation that names no decision
+> class. Choosing the skills promise creates a public commitment, which is
+> owner-reserved; a council round on 2026-10-22 (2/2,
+> `skills-promise-delegation-reach-20261022.md`) held that the delegation
+> does not reach it. The verdict above is therefore a recommendation pending
+> explicit owner ratification, and ADR-289 records Decision 1 as such. The
+> 6.3 keep-declared half is installer-internal and is not affected.

@@ -164,12 +164,25 @@ describe('committed pack-size budget', () => {
         expect(COMMITTED.budgets['packed_size_mb']?.method.length ?? 0).toBeGreaterThan(20);
     });
 
-    it('the absolute budget leaves headroom over the last measurement, but not unlimited', () => {
+    it('the unbuilt absolute cap is retired; the creep line on a recorded measurement judges it', () => {
+        // AI council 2026-10-22, 2/2 (17.0.0 finding 7109e2c536e8): `max: 11.5`
+        // was breached by the unbuilt surface and consulted by no job, which is
+        // policy the tree contradicts. Retired rather than raised or gated.
         const entry = COMMITTED.budgets['packed_size_mb'];
         expect(entry).toBeDefined();
-        const e = entry as { max: number; last_measured: number };
-        expect(e.max).toBeGreaterThan(e.last_measured);
-        expect(e.max).toBeLessThan(e.last_measured * 1.5);
+        const e = entry as { max?: number; last_measured: number; retired_max_2026_10_22?: string };
+        expect(e.max).toBeUndefined();
+        expect(e.last_measured).toBeGreaterThan(0);
+        expect(e.retired_max_2026_10_22 ?? '').toContain('11.5');
+    });
+
+    it('an unbuilt payload is judged by its creep line when no absolute cap is set', () => {
+        const noCap: PackSizeBudget = {
+            ...budget,
+            budgets: { packed_size_mb: { last_measured: 5, method: 'npm pack --json' } },
+        };
+        expect(evaluate(noCap, pack(5.2, { big: 500 }, 100))).toEqual([]);
+        expect(evaluate(noCap, pack(11, { big: 500 }, 100)).join(' ')).toContain('regressed >10%');
     });
 
     it('every per-skill exception carries a substantive reason', () => {

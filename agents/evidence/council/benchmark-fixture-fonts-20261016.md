@@ -92,3 +92,18 @@ fixture identities are retained alongside the verdict.
   unsupported and are not adopted.
 - The exception is cited to admit a binary class other than typeface fixtures
   for this benchmark.
+
+## Suspension — 2026-10-22 (release finding `341079d844b6`)
+
+This record does not show why the amendment was not routed to the owner,
+although `decision-revisit-gate` reserves a weakened licensing commitment to the
+owner whatever the original lock's author. Asked directly on 2026-10-22
+(`typeface-lock-amendment-routing-20261022.md`), the council split: `anthropic`
+held the transition council-routable (the consumer-facing prohibition is
+unchanged and checked), `openai` held it owner-reserved (committing the binaries
+is public git redistribution). A split escalates, so the classification is an
+open owner decision. Until the owner decides, the amendment's effect is
+suspended fail-closed: the three binaries are removed from the tree, the
+manifest records the suspension, and the bound test refuses their return. The
+four conditions above stay in force for the day it is lifted.
+

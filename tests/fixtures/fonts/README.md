@@ -1,5 +1,14 @@
 # Typeface fixtures — repository-only, bounded
 
+> **Suspended since 2026-10-22.** The amendment below narrowed a licensing lock,
+> which `decision-revisit-gate` may reserve to the owner; the 2026-10-22 council
+> split on whether it did (`agents/evidence/council/typeface-lock-amendment-routing-20261022.md`), and a split
+> escalates. Until an owner record is named in `fixtures.json` →
+> `suspended.lifted_by`, the typeface binaries are NOT in the tree: only each
+> family's license text and its pinned upstream path and SHA-256 remain, and
+> `tests/scripts/typeface_fixture_bound.test.ts` refuses a binary that
+> reappears. Lifting restores the exact files from the pinned commit.
+
 These files are the held-out truth for the type-reconstruction benchmark
 (`internal/bench/type-reconstruction-PREREG.md`). They exist under an
 amendment the AI council made on 2026-10-16

@@ -44,7 +44,8 @@ that makes the promise. A promise with no row is not tracked and will be missed.
 
 ## 17.0.0 — Node 22 is the floor, and the rule-layer form is no longer a setting
 
-✋ manual on Node 20 · 🔄 automatic for the removed settings keys.
+✋ manual on Node 20 · 🔄 automatic for the removed settings keys · ✋ manual for
+the three renamed commands.
 
 ### Node 22.6 or newer is required
 
@@ -84,6 +85,24 @@ returns the full layer whenever any of its conditions is missing.
 - **Want the full layer regardless:** run `agent-config install --full`.
   `agent-config doctor --check layer-form` shows which form each layer is in
   and why.
+
+### Three commands are renamed and one flag is removed
+
+The analysis doors were consolidated (ADR-288), and the design dispatcher was
+renamed. The old names stay `replaces:` entries, so the package's own router
+and routing evals still map them — but no host receives a command file under
+the old name, so typing the old slash command reports an unknown command.
+
+| Before 17.0.0 | From 17.0.0 |
+|---|---|
+| `/design` | `/agent-design` |
+| `/analyze:repo` (and `/analyze-repo`, `/analyze:reference-repo`) | `/analyze:reference` |
+| `/optimize:deep` (and `/optimize-deep`) | `/analyze:and-optimize` |
+| `/memory learn-low-impact --apply` | removed — it wrote into a package seed file that does not exist; the read-only preview stays, and the one way out for an upstream proposal is `agent-config self-repair:release` |
+
+- **Never used them:** nothing to do.
+- **Typed or scripted the old name:** use the new one. Search your own docs,
+  prompts and scripts for the left column.
 
 ### Also in 17.0.0 — changes that landed after 16.5.0
 

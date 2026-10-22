@@ -101,6 +101,18 @@ subtraction gives, because the pollution masked growth rather than inventing it.
 **The `src/scripts` question.** See below; it is the reason there are three
 rounds and not two.
 
+## Amendment — 2026-10-22 · the unbuilt absolute cap is retired
+
+The `max: 11.5` this record set on the UNBUILT surface was retired by an AI
+council round (2/2, `anthropic` + `openai`,
+`agents/evidence/council/retire-the-unbuilt-pack-cap-20261022.md`). The
+unbuilt surface measured 12.053 MB on 2026-10-17 and 12.5806 MB on 2026-10-22,
+no job packs an unbuilt tree, and a published tarball is always built, so the
+cap was a limit the tree contradicted and nothing read. The built-surface creep
+line this record introduced is unchanged and remains the enforced line on what
+consumers receive; the unbuilt creep line stays, re-recorded at 12.5806 MB.
+`check_pack_size` still honours a `max` if one is ever re-cut.
+
 ## What the third round found, and why it matters more than the reset
 
 Rounds 1 and 2 both asserted that WASM "compresses poorly" and that the three

@@ -55,6 +55,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { CLEARANCE_DIR } from './_lib/merge_clearance_record.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
@@ -120,10 +122,14 @@ const TOKEN_RE = new RegExp(
 const MAX_READ_BYTES = 8 * 1024 * 1024;
 
 /**
- * Directories inside the evidence tree that a gate enumerates as its corpus.
+ * Directories inside the evidence tree that a gate enumerates as its corpus, or
+ * reads by a path it CONSTRUCTS.
  *
  * Membership is the point: these gates do not merely happen to read a file they
  * were handed, they walk the directory and derive a verdict from what is in it.
+ * A constructed-path reader (`merge-clearances/`, read as `pr-<N>-<head>.md`)
+ * belongs here for the stronger reason: nothing ever CITES its files, so the
+ * literal-reference scan below would class every one of them cold.
  * A file that left one of these roots would leave the gate scanning fewer files
  * and still exiting green, which is the gate-that-scans-nothing shape this
  * repository refuses elsewhere. So every file beneath them is hot by that fact
@@ -165,6 +171,13 @@ export const GATE_SCAN_ROOTS: ReadonlyArray<{
         dir: 'archived-skills',
         gates: ['lint_archived_skills'],
         loses: 'The archive note for a retired skill is the record that it was retired rather than lost.',
+    },
+    {
+        dir: path.posix.relative(EVIDENCE_ROOT, CLEARANCE_DIR),
+        gates: ['merge_clearance', 'report_merge_gate_load'],
+        loses:
+            'A needs-council merge is cleared only by the record at the path `merge_clearance check` ' +
+            'builds from the PR number and head sha; a moved record reads as a missing clearance.',
     },
     {
         dir: 'ratifications',
@@ -520,7 +533,9 @@ export function renderReport(census: Census, previousCold: Set<string> | null): 
     L.push('## Gates that scan the tree, and what each would lose');
     L.push('');
     L.push(
-        'A gate below enumerates its directory and derives a verdict from what is in it. Membership is the point, ' +
+        'A gate below enumerates its directory and derives a verdict from what is in it, or reads a file there by ' +
+            'a path it constructs (the merge clearances, named by PR number and head sha, which nothing cites). ' +
+            'Membership is the point, ' +
             'so every file beneath one of these roots is hot by that fact alone — a gate that relies on a file ' +
             'reclassifies it hot, applied mechanically rather than by hand. A file leaving one of these roots would ' +
             'leave its gate scanning fewer files and still exiting green.',
