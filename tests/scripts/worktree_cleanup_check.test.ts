@@ -999,3 +999,15 @@ describe('R2 round 5 — YAML off', () => {
         expect(cleanupMode(repo, { userGlobalPath: path.join(repo, 'no-global.yml') })).toBe('off');
     });
 });
+
+describe('only the user grants auto-removal', () => {
+    it('a project layer cannot raise the mode to auto; the user-global layer can, and the project may still lower it', () => {
+        const global = path.join(repo, 'global.yml');
+        fs.writeFileSync(path.join(repo, '.agent-settings.yml'), 'worktrees:\n  cleanup: auto\n');
+        expect(cleanupMode(repo, { userGlobalPath: path.join(repo, 'no-global.yml') })).toBe('notify');
+        fs.writeFileSync(global, 'worktrees:\n  cleanup: auto\n');
+        expect(cleanupMode(repo, { userGlobalPath: global })).toBe('auto');
+        fs.writeFileSync(path.join(repo, '.agent-settings.yml'), 'worktrees:\n  cleanup: notify\n');
+        expect(cleanupMode(repo, { userGlobalPath: global })).toBe('notify');
+    });
+});
