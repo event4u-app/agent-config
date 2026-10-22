@@ -42,7 +42,7 @@ describe('tierDownshiftVerdict', () => {
     });
 
     it('holds and flips when lite verifies as often and costs less per verified slice', () => {
-        const v = tierDownshiftVerdict(pairs(40, () => true, () => true), PRICES);
+        const v = tierDownshiftVerdict(pairs(60, () => true, () => true), PRICES);
         expect(v.quality).toBe('held');
         expect(v.cost).toBe('relief');
         expect(v.flip).toBe(true);
@@ -56,8 +56,8 @@ describe('tierDownshiftVerdict', () => {
     });
 
     it('charges an escalated re-run to the lite arm', () => {
-        const plain = tierDownshiftVerdict(pairs(40, () => true, () => true), PRICES);
-        const withRerun = tierDownshiftVerdict(pairs(40, () => true, () => true, (i) => i === 0), PRICES);
+        const plain = tierDownshiftVerdict(pairs(60, () => true, () => true), PRICES);
+        const withRerun = tierDownshiftVerdict(pairs(60, () => true, () => true, (i) => i === 0), PRICES);
         expect(withRerun.lite.cost_usd).toBeGreaterThan(plain.lite.cost_usd);
     });
 
@@ -69,10 +69,21 @@ describe('tierDownshiftVerdict', () => {
     it('a seeded breach above the kill reverts a kind already on lite', () => {
         const breach = tierDownshiftVerdict(pairs(40, () => true, () => true, (i) => i < 13), PRICES);
         expect(kindTierAfter('lite', breach)).toBe('inherit');
-        const ok = tierDownshiftVerdict(pairs(40, () => true, () => true), PRICES);
+        const ok = tierDownshiftVerdict(pairs(60, () => true, () => true), PRICES);
         expect(kindTierAfter('lite', ok)).toBe('lite');
         expect(kindTierAfter('inherit', ok)).toBe('lite');
         const under = tierDownshiftVerdict(pairs(5, () => true, () => true), PRICES);
         expect(kindTierAfter('inherit', under)).toBe('inherit');
+    });
+});
+
+describe('tierDownshiftVerdict — no discordant pair is not certainty', () => {
+    it('bounds the difference by the rule of three when no pair disagrees', () => {
+        const v = tierDownshiftVerdict(pairs(60, () => true, () => true), PRICES);
+        expect(v.ci_half_width_pp).toBeCloseTo(5, 5);
+        expect(v.quality).toBe('held');
+        const small = tierDownshiftVerdict(pairs(40, () => true, () => true), PRICES);
+        expect(small.ci_half_width_pp).toBeCloseTo(7.5, 5);
+        expect(small.quality).toBe('underpowered');
     });
 });

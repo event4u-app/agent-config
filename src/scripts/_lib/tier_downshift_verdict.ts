@@ -166,6 +166,9 @@ export function tierDownshiftVerdict(rows: readonly LegResult[], prices: Record<
         const variance = (b + c - (b - c) ** 2 / n) / (n * n);
         diffPp = diff * 100;
         halfWidthPp = 1.96 * Math.sqrt(Math.max(variance, 0)) * 100;
+        // No discordant pair gives a zero-width interval; the rule of three bounds
+        // an unseen disagreement rate at 3/n instead.
+        if (b + c === 0) halfWidthPp = (3 / n) * 100;
         escalationRate = lite.escalated / n;
     }
 
