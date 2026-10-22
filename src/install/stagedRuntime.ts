@@ -63,11 +63,6 @@ export const STAGED_ENTRIES: readonly string[] = [
 ];
 
 /**
- * Source under `src/scripts/` stays behind: the bundle carries the code, and
- * reads only the data tables beside it (the manifest, the host lowering table,
- * schemas), which is about 1.6 MB where the TypeScript is 27 MB.
- */
-/**
  * Packages the bundle still resolves at run time (a `createRequire` the bundler
  * cannot inline). Each is copied into the stage's own `node_modules` from wherever
  * the package root resolves it; `yaml` has no dependencies of its own.
@@ -87,6 +82,11 @@ function stageRuntimeDeps(packageRoot: string, stage: string): void {
     }
 }
 
+/**
+ * Source under `src/scripts/` stays behind: the bundle carries the code, and
+ * reads only the data tables beside it (the manifest, the host lowering table,
+ * schemas), which are a small fraction of the TypeScript's size.
+ */
 function stagedFilter(src: string): boolean {
     return !/\.m?ts$/.test(src);
 }
