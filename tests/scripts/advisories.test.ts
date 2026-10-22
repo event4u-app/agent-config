@@ -9,7 +9,7 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { inventoryFingerprint, readInventory, unsupportedLockfiles } from '../../src/scripts/_lib/advisory_inventory.js';
-import { describe as describeFinding, readRemediations, remediationsPath } from '../../src/scripts/_lib/advisory_notice.js';
+import { describe as describeFinding, readAdvisorySettings, readRemediations, remediationsPath } from '../../src/scripts/_lib/advisory_notice.js';
 import { assertAllowed, cvss3Base, type Fetcher, inRange, KEV_URL, kevEnrich, nativeAudits, osvQuery, type Runner, vendorAnnouncements } from '../../src/scripts/_lib/advisory_sources.js';
 import {
     announce,
@@ -472,10 +472,22 @@ describe('R2 review fixes (2026-10-21)', () => {
     it('#3 — each project’s own egress setting holds under a multi-project refresh', async () => {
         const a = project('F1-fastify-hono', 'a');
         const b = project('F7-private-name', 'b');
+        // `a` opts in, so the refresh really does send something and `b`'s refusal is what is tested.
+        fs.writeFileSync(path.join(a, '.agent-settings.yml'), 'advisories:\n  egress: query\n');
         fs.writeFileSync(path.join(b, '.agent-settings.yml'), 'advisories:\n  egress: none\n');
         const { fetcher, log } = replay('F1-fastify-hono');
         await refreshMany([a, b], { now: new Date(), fetcher, machineDir: machine, force: true, runner: () => ({ code: -1, stdout: '' }) });
+        expect(log.length).toBeGreaterThan(0);
         for (const req of log) expect(req.body ?? '').not.toContain('lodash');
+    });
+
+    it('a project that never set advisories.egress sends nothing (release 17 review e9d7d5b3eea2)', async () => {
+        const root = project('F1-fastify-hono');
+        expect(readAdvisorySettings(root).egress).toBe('none');
+        const { fetcher, log } = replay('F1-fastify-hono');
+        const [r] = await refreshMany([root], { now: new Date(), fetcher, machineDir: machine, force: true, runner: () => ({ code: -1, stdout: '' }) });
+        expect(log).toEqual([]);
+        expect(r!.reason).toBe('egress-none');
     });
 
     it('#4 — a failed detail fetch keeps the finding and marks the source partial', async () => {

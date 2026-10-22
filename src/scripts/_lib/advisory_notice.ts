@@ -58,7 +58,8 @@ export function readAdvisorySettings(root: string): { mode: AdvisoriesMode; egre
         return {
             // An unquoted `off` is YAML's boolean false: both mean off.
             mode: s['mode'] === 'off' || s['mode'] === false ? 'off' : 'notify',
-            egress: s['egress'] === 'none' ? 'none' : 'query',
+            // Opt-in: only an explicit `query` sends package names (release 17 review, council 2/2).
+            egress: s['egress'] === 'query' ? 'query' : 'none',
             kev: s['kev'] === 'off' || s['kev'] === false ? 'off' : 'on',
         };
     } catch {

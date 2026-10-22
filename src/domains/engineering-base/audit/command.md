@@ -53,8 +53,10 @@ agent-config audit:deps refresh   # the ONLY step that touches the network
 agent-config audit:deps show      # findings by tier, each with file:line and IDs
 ```
 
-`refresh` reads the lockfiles, declared runtimes, Dockerfiles, compose files and
-CI workflows; sends **public** package names and versions to `api.osv.dev`;
+`refresh` sends nothing until the project opts in with `advisories.egress:
+query` (the default is `none`). With it, `refresh` reads the lockfiles, declared
+runtimes, Dockerfiles, compose files and CI workflows; sends **public** package
+names and versions to `api.osv.dev`;
 reads runtime lifecycle data from `endoflife.date` and the PHP and Node release
 feeds; downloads the whole CISA known-exploited catalog from `www.cisa.gov` and
 matches it locally (`advisories.kev: off` skips it); and runs `npm audit` /

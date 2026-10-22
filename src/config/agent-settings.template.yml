@@ -1530,13 +1530,16 @@ update_check:
 #   off     print nothing; `agent-config audit:deps show` still works
 #
 # egress — what leaves the machine when `agent-config audit:deps refresh` runs:
-#   query   (default) names and versions of PUBLIC packages go to api.osv.dev;
+#   none    (default) nothing is sent; findings read `unknown`, never "clear"
+#   query   opt-in: names and versions of packages go to api.osv.dev;
 #           runtime lifecycle data comes from endoflife.date; the PHP and Node
-#           release feeds are read. A private package name is never sent, and a
-#           native `npm audit` / `composer audit` — which sends the lockfile's
-#           package list to the registry that tool is configured for — runs only
-#           for a lockfile with no private package in it
-#   none    nothing is sent; findings read `unknown`, never "clear"
+#           release feeds are read. Names under this project's own npm scope,
+#           Composer vendor or GitHub owner are withheld, and a native
+#           `npm audit` / `composer audit` — which sends the lockfile's package
+#           list to the registry that tool is configured for — runs only for a
+#           lockfile with none of them. Any OTHER private name (a third-party
+#           private scope, an internal unscoped package) is not recognised and
+#           would be sent
 #
 # kev — the CISA catalog of known-exploited vulnerabilities, downloaded whole on
 # a refresh and matched locally, so nothing about this project is sent:
@@ -1545,7 +1548,7 @@ update_check:
 #   off     the catalog is not read; tiers come from the other sources alone
 advisories:
   mode: notify
-  egress: query
+  egress: none
   kev: on
 
 # --- Update install mode ---
