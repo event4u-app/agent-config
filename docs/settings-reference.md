@@ -130,7 +130,7 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `egress.placeholders.mode` | C | string | `"off"` | `off` · `observe` · `protect` · `strict` | Dispatcher egress stage (docs/contracts/egress-placeholders-v1.md). off (default) = nothing. observe = detect and count listed values in prompts and tool bodies, types and counts only, and change nothing a hook concern sees. protect = also give every recording and advisory concern a copy with each value replaced by a placeholder token, so local stores keep tokens; guards still see the original. strict = as protect until the host rewrite exists. No mode yet changes what reaches the model; the rule table holds credential rules only. Project layers only. |
+| `egress.placeholders.mode` | C | string | `"off"` | `off` · `observe` · `protect` · `strict` | Dispatcher egress stage (docs/contracts/egress-placeholders-v1.md). off (default) = nothing. observe = detect and count listed values in prompts and tool bodies, types and counts only, and change nothing a hook concern sees. protect = also give every recording and advisory concern a copy with each value replaced by a placeholder token, so local stores keep tokens; guards still see the original. strict = as protect, and a detected credential is never sent silently: a prompt carrying one is refused, and a tool result carrying one is reported to the user as sent to the provider (it cannot be withheld until the host rewrite exists). No mode yet replaces a value on the wire; the rule table holds credential rules only. Project layers only. |
 
 ## eloquent
 
