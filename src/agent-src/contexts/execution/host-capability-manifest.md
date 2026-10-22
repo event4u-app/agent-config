@@ -37,7 +37,9 @@ host, never a configuration decision (always-on orchestration, Phase 1):
 2. A live environment probe merged on top: `agent_teams` resolves `true`
    when `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is set in the process
    environment — the one host fact this repo can observe about Claude
-   Code's experimental multi-instance Agent Teams feature.
+   Code's experimental multi-instance Agent Teams feature. On `claude` the
+   same flag also sets `worker_resume`: the by-name re-task was observed
+   there only under it (cold-start 1.4, 2.1.306; council 2026-10-22).
 3. `SAFE_DEFAULT` (all `false`) for an unrecognized host or an unset probe.
 
 `resolveHostCapabilities(hostId, override?)` still accepts an optional
@@ -92,7 +94,7 @@ SAFE DEGRADATION, NOT BECAUSE ANYTHING WAS MEASURED.
 
 The seven booleans look alike and are not. `HOST_CAPABILITY_REGISTRY` holds
 exactly one row today, so on every other host **all six** fields are the safe
-default — and `agent_teams` is the only field any live check touches. The name
+default — and `agent_teams` (plus `worker_resume` on `claude`) is the only field any live check touches. The name
 `probeHostCapabilities` says "detected" about values that were mostly asserted
 at authoring time.
 

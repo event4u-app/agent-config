@@ -331,6 +331,17 @@ describe('probeHostCapabilities — registry merged with live environment facts'
         expect(probeHostCapabilities('claude').agent_teams).toBe(false);
     });
 
+    it('worker_resume is live on claude only, and only under the agent-teams flag (council 2026-10-22, decision 1)', () => {
+        expect(probeHostCapabilities('claude').worker_resume).toBe(false);
+        process.env[ENV_KEY] = '1';
+        expect(probeHostCapabilities('claude').worker_resume).toBe(true);
+        // The by-name resume was observed on claude (1.4); a flag on another host proves nothing.
+        expect(probeHostCapabilities('cursor').worker_resume).toBe(false);
+        expect(probeHostCapabilities('some-unrecognized-host').worker_resume).toBe(false);
+        expect(describeHostCapabilities('claude').sources.worker_resume).toBe('live-probe');
+        expect(describeHostCapabilities('cursor').sources.worker_resume).toBe('default');
+    });
+
     it('still resolves the committed registry row for the other fields', () => {
         const manifest = probeHostCapabilities('claude');
         expect(manifest.subagent_spawn).toBe(true);

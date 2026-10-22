@@ -107,6 +107,7 @@
  * undercount landed precisely in parallel fan-out, the mode this instrument
  * exists to measure.
  */
+import { execFileSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -529,6 +530,33 @@ export function readIndexEntry(root: string, key: string, now: Date): string | n
     return null;
 }
 
+/** The commit the checkout containing `dir` is on; null outside a repository or on any failure. */
+export function headOf(dir: string): string | null {
+    try {
+        return execFileSync('git', ['-C', dir, 'rev-parse', 'HEAD'], { encoding: 'utf8', timeout: 2000, stdio: ['ignore', 'pipe', 'ignore'] }).trim() || null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * What a reuse decision compares between a worker's stop and a later spawn,
+ * stamped at both so a report can reconstruct it after the fact: the commit,
+ * a digest of the directory, and the install epoch (the running bundle's
+ * mtime, which changes whenever the package is rebuilt or reinstalled).
+ */
+export function stateStamp(cwd: unknown): { head: string | null; cwd_key: string | null; epoch: number | null } {
+    let epoch: number | null = null;
+    try {
+        epoch = fs.statSync(fileURLToPath(import.meta.url)).mtimeMs;
+    } catch {
+        // No file behind the module; the epoch stays unknown.
+    }
+    return typeof cwd === 'string' && cwd
+        ? { head: headOf(cwd), cwd_key: refFor(cwd), epoch }
+        : { head: null, cwd_key: null, epoch };
+}
+
 export function stopIndexKey(sessionId: string, ref: string): string {
     return refFor(`subagent-stop\0${sessionId}\0${ref}`);
 }
@@ -788,6 +816,7 @@ function handleStop(root: string, payload: JsonObject, nowIso: string, sessionId
         // candidate was, this says whether it was aimed at the envelope.
         envelope_field_hits: parse.field_hits,
         concurrent_open: countOpen(root),
+        ...stateStamp(payload['cwd']),
     });
 }
 

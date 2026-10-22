@@ -67,6 +67,7 @@ import {
     readOpenRecords,
     refFor,
     resolveConsumerRoot,
+    stateStamp,
     stopIndexKey,
     writeIndexEntry,
 } from './subagent_ledger_hook.js';
@@ -269,6 +270,7 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string, deps:
         const spawnFacts = isResume
             ? {}
             : {
+                  ...stateStamp(payload['cwd']),
                   agent_type: typeof toolInput['subagent_type'] === 'string' ? toolInput['subagent_type'] : null,
                   ...(typeof reqName === 'string' && reqName && reqName.length <= NAME_MAX && sessionId
                       ? { name_key: nameKey(sessionId, reqName) }

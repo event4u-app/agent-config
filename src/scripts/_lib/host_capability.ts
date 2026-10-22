@@ -365,19 +365,24 @@ export function resolveHostCapabilities(
  * settings decision, so there is no override parameter here (that stays on
  * {@link resolveHostCapabilities} for back-compat callers only).
  *
- * The one probed fact today: `agent_teams` resolves `true` when
+ * Two probed facts today. `agent_teams` resolves `true` when
  * `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is set (any non-empty value) in the
  * process environment — the one host fact this repo can observe about Claude
  * Code's documented-but-unshipped-by-default multi-instance Agent Teams
  * primitive. A registry row can also carry `agent_teams: true` directly for a
  * host where it is unconditionally available; the two sources OR together —
- * a probe never turns a registry-granted capability back off.
+ * a probe never turns a registry-granted capability back off. `worker_resume`
+ * follows the same flag on `claude` only, because the by-name re-task was
+ * observed there under it and nowhere else.
  */
 export function probeHostCapabilities(hostId: string | null | undefined): HostCapabilityManifest {
     const base = resolveHostCapabilities(hostId);
     const flag = process.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS;
     const probedAgentTeams = typeof flag === 'string' && flag !== '';
-    return { ...base, agent_teams: base.agent_teams || probedAgentTeams };
+    // By-name resume was observed on claude only under this flag (cold-start
+    // 1.4, 2.1.306); council 2026-10-22 decision 1 made it a live probe.
+    const probedResume = probedAgentTeams && hostId === 'claude';
+    return { ...base, agent_teams: base.agent_teams || probedAgentTeams, worker_resume: base.worker_resume || probedResume };
 }
 
 /** Every manifest field that carries a capability answer (i.e. not `schema_version`). */
@@ -450,7 +455,7 @@ export function describeHostCapabilities(
         // a different fact from the default's "nobody answered".
         if (row !== undefined && typeof row[field] === 'boolean') {
             sources[field] = 'registry';
-        } else if (field === 'agent_teams' && probedAgentTeams) {
+        } else if ((field === 'agent_teams' || (field === 'worker_resume' && hostId === 'claude')) && probedAgentTeams) {
             sources[field] = 'live-probe';
         } else {
             sources[field] = 'default';

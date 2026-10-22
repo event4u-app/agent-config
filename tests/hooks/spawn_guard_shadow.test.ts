@@ -6,6 +6,7 @@
  * does is measurement, and a measurement that can change the run is not a
  * measurement.
  */
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -22,6 +23,7 @@ import {
 import {
     LEDGER_DIR,
     OPEN_SUBDIR,
+    headOf,
     processEnvelope as processLedgerEnvelope,
     recordStopIndex,
     refFor,
@@ -624,5 +626,51 @@ describe('spawn-guard-shadow — a worker name reaches disk only as a session-bo
         processEnvelope(named(long, 'agent-long'), root);
         plantStopped(refFor('agent-long'));
         expect(classifySend(root, { to: long, recipient_kind: 'name' }, SESSION)).toBe('message_or_resume');
+    });
+});
+
+describe('spawn-guard-shadow — state stamped for reconstruction (council 2026-10-22, decision 1)', () => {
+    const git = (cwd: string, ...args: string[]): string =>
+        execFileSync('git', ['-c', 'user.email=t@example.com', '-c', 'user.name=t', '-C', cwd, ...args], { encoding: 'utf8' }).trim();
+
+    function repo(): { dir: string; sha: string } {
+        const dir = fs.mkdtempSync(path.join(root, 'repo-'));
+        git(dir, 'init', '-q');
+        git(dir, 'commit', '-q', '--allow-empty', '-m', 'c');
+        return { dir, sha: git(dir, 'rev-parse', 'HEAD') };
+    }
+
+    it('reads the commit a checkout is on: a repository, a subdirectory, a worktree, or none', () => {
+        const { dir, sha } = repo();
+        fs.mkdirSync(path.join(dir, 'sub'));
+        expect(headOf(dir)).toBe(sha);
+        expect(headOf(path.join(dir, 'sub'))).toBe(sha);
+        const wt = path.join(root, 'wt');
+        git(dir, 'worktree', 'add', '-q', '-b', 'side', wt);
+        git(wt, 'commit', '-q', '--allow-empty', '-m', 'side');
+        expect(headOf(wt)).toBe(git(wt, 'rev-parse', 'HEAD'));
+        expect(headOf(wt)).not.toBe(sha);
+        expect(headOf(fs.mkdtempSync(path.join(os.tmpdir(), 'nogit-')))).toBeNull();
+    });
+
+    it('a stop and a spawn both carry the commit, a digest of the directory and the install epoch', () => {
+        const { dir, sha } = repo();
+        processLedgerEnvelope(
+            { schema_version: 1, platform: 'claude', event: 'subagent_stop', payload: { session_id: SESSION, agent_id: 'a1b2c3d4e5f60719', cwd: dir } },
+            root,
+        );
+        processEnvelope(
+            { schema_version: 1, platform: 'claude', event: 'pre_tool_use', payload: { session_id: SESSION, cwd: dir, tool_name: 'Agent', tool_input: { subagent_type: 'ac-worker' } } },
+            root,
+        );
+        const stop = ledgerLines().find((l) => l.event === 'subagent_stop')!;
+        const spawn = shadowLines()[0]!;
+        for (const line of [stop, spawn]) {
+            expect(line.head).toBe(sha);
+            expect(line.cwd_key).toBe(refFor(dir));
+            expect(typeof line.epoch).toBe('number');
+            expect(JSON.stringify(line)).not.toContain(dir);
+        }
+        expect(spawn.epoch).toBe(stop.epoch);
     });
 });
