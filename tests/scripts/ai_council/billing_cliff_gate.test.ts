@@ -281,11 +281,12 @@ describe('the run-scoped grant', () => {
         expect(isBillingGrantActive(root, 'run-a', env('run-a'), wayLater)).toBe(false);
     });
 
-    it('is revoked by the run-end revocation path', () => {
+    it('is revoked by revokeBillingGrant', () => {
         // Called through `clearRunState` until that hook was withdrawn
-        // (road-to-what-was-built-and-never-ran Phase 4). The grant's TTL is
-        // the run, and `revokeBillingGrant` is what ends it; the wrapper only
-        // ever forwarded to it.
+        // (road-to-what-was-built-and-never-ran Phase 4). Nothing calls it at
+        // run end any more: a grant now ends by an explicit revoke (the
+        // billing-grant CLI) or by the `BILLING_GRANT_MAX_AGE_MS` backstop.
+        // This case proves the function, not a run-end wiring.
         issueBillingGrant(root, 'run-a');
         expect(isBillingGrantActive(root, 'run-a', env('run-a'))).toBe(true);
         revokeBillingGrant(root, 'run-a');

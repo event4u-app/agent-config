@@ -61,9 +61,19 @@ function attack(branch: string, file: string, edit: (src: string) => string): st
 function gateBlock(): string {
     const cmd = fs.readFileSync(path.join(REPO, 'src/domains/git/pr/merge/command.md'), 'utf8');
     const start = cmd.indexOf('## 9a. Danger gate');
-    const m = /```bash\n([\s\S]*?)```/u.exec(cmd.slice(start));
-    if (start < 0 || m === null) throw new Error('the danger gate block is not where the command keeps it');
-    return m[1] ?? '';
+    if (start < 0) throw new Error('the danger gate heading is not where the command keeps it');
+    // Only the section itself, so a fence under a later heading is never read.
+    const rest = cmd.slice(start + 1);
+    const next = rest.search(/^## /mu);
+    const section = next < 0 ? rest : rest.slice(0, next);
+    // The block is the one carrying both placeholders this file substitutes —
+    // a different fence placed first would run something else against the
+    // `routine` cases and could pass them.
+    const block = [...section.matchAll(/```bash\n([\s\S]*?)```/gu)]
+        .map((m) => m[1] ?? '')
+        .find((b) => b.includes('<manifest-base_sha>') && b.includes('<manifest-head-sha>'));
+    if (block === undefined) throw new Error('no bash block in the danger gate section carries both placeholders');
+    return block;
 }
 
 /** Run the shipped block for `baseSha...headSha` inside the clone. */

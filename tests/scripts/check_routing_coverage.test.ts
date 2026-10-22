@@ -175,9 +175,10 @@ describe('the live tree', () => {
         // purpose: it asserts the SHAPE of the finding, and closing the gap is
         // the roadmap's goal, so a future run that legitimately narrows it
         // should change this line deliberately rather than trip it.
-        // 0.4 -> 0.35 on 2026-10-21, deliberately: three more skill corpora
-        // (172 of 301) narrowed the gap to 0.39 — the roadmap's goal moving, not
-        // the finding's shape. It still says the skills surface trails by far.
+        // 0.4 -> 0.35 on 2026-10-21, deliberately: more skill corpora (157 ->
+        // 172 of 301 skills covered; rules 103 of 107) narrowed the gap to 0.39,
+        // reproducible from `readSeed`/`measureSkills` — the roadmap's goal
+        // moving, not the finding's shape. The skills surface still trails far.
         const s = readSeed(REPO);
         expect(s.rules - s.skills).toBeGreaterThan(0.35);
     });
