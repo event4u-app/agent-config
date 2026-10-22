@@ -110,7 +110,7 @@ the bench harnesses and `pricing.yaml`.
   baseline, each with its file, id and the reason, and are listed for the owner; the lint refuses
   any row not in it.
   verify: 2.1's decision case red → green; the estate passes with exactly those four baselined.
-      Done 2026-10-23: `lint_decision_classes` imports `OWNER_LOCKED_CLASSES`; the four pre-#2585 rows are `LOCKED_RESOLVER_BASELINE`, confirmed to be the only estate hits with the baseline cleared; self-test covers both directions; the roadmap template states the rule. `closure_scan` does not yet count a `proposed` row as open.
+      Done 2026-10-23: `lint_decision_classes` imports `OWNER_LOCKED_CLASSES`; the four pre-#2585 rows are `LOCKED_RESOLVER_BASELINE`, confirmed to be the only estate hits with the baseline cleared; the template states the rule. `closure_scan` does not yet count a `proposed` row as open.
 - [x] **2.3 `lint_roadmap_blockers` refuses `resolved` on a class-3 blocker** unless the file's
   `## Decisions` table has a row naming the blocker id with resolver `owner` and a date.
   verify: 2.1's blocker case red → green.
