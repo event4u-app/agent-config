@@ -40,7 +40,6 @@ export const HOOK_CHUNKS = Object.freeze([
     }),
 ]);
 
-/** The esbuild options every chunk is built with. */
 /**
  * The esbuild options every chunk is built with.
  *
