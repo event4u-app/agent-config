@@ -1468,6 +1468,19 @@ skips the free side. `./scripts-run src/scripts/ai_council/free_hand_shadow
 --report` prints per kind both failure rates, the paid tokens avoided, the
 head's verify tokens and the net per ISO week.
 
+A typed ask reaches a free route only for a kind that has flipped
+(`kind_flip.ts`, state in `agents/runtime/state/hand-kind-flips.json`). A kind
+flips when its shadow data clears both pre-registered bars: free failure rate
+at most the paid rate + 5 pp and below the 0.3 escalation kill
+(`free-hands-quality-held`), and paid tokens avoided minus the head's verify
+tokens above zero in every shadow week (`free-hands-limit-relief`), on at least
+333 shadow calls (the A5 cap shared across the six kinds). Missing or
+underpowered data is not ready. A flipped kind whose free-routed asks reach
+the kill over at least 30 asks reverts to the paid route on its own and stays
+reverted until the record is cleared by a person; each flip and reversion is
+stored with one line a claim row can cite. `./scripts-run
+src/scripts/ai_council/kind_flip --apply` runs the pass.
+
 ## Precedence
 
 Resolution order for every member-level setting (mode, model, key):

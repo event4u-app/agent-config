@@ -135,6 +135,13 @@
             "reason": "One row per shadowed hand call: routes, verify verdicts and token counts, never a prompt or an answer. Measurement data for the free-hands claims; nothing resumes from it."
         },
         {
+            "id": "hand-kind-flips.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/ai_council/kind_flip.ts:36",
+            "reason": "Which hand kinds the shadow bars moved to a free route, and every flip and reversion with the line a claim row cites. Routing state read on each ask; no session resumes from it."
+        },
+        {
             "id": "hand-exposure.json",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",

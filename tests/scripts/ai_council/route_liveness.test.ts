@@ -127,7 +127,7 @@ describe('the chooser sees a retired model as not live', () => {
         seedRoster(root, 'free1', ['m-1'], T0);
         const free = routeMember('free1', 'free-quota', 'm-1', '{"label":"x","confidence":0.5}');
         const paid = routeMember('paid1', 'per-token', 'p-1', '{"label":"y","confidence":0.5}');
-        const opts = { members: [free, paid], kind: 'classify' as const, contentClass: 'public-artifact' as const, auditDir: null, stateRoot: root };
+        const opts = { members: [free, paid], kind: 'classify' as const, contentClass: 'public-artifact' as const, auditDir: null, stateRoot: root, flips: () => true };
         expect((await askOnce('q', opts))?.member).toBe('free1');
         for (let i = 1; i <= RETIRE_STREAK; i++) recordRouteOutcome(root, 'free1', 'm-1', 'model_unservable', at(i));
         expect((await askOnce('q', opts))?.member).toBe('paid1');

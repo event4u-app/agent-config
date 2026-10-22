@@ -31,7 +31,7 @@ function stub(name: string, billing: string, error: string | null): Stub {
     return s;
 }
 
-const typed = { kind: 'classify' as const, contentClass: 'public-artifact' as const, auditDir: null };
+const typed = { kind: 'classify' as const, contentClass: 'public-artifact' as const, auditDir: null, flips: () => true };
 
 describe('chooseRouteChain — the order the fallback walks', () => {
     it('admissible unpaid routes first, then paid ones; refused routes are not in it', () => {

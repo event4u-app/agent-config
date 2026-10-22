@@ -47,6 +47,8 @@
  * The question becomes the slice's specification; each `--callee-file` adds only
  * the signature of the function in it, and the project's own names, paths and
  * domains are replaced by placeholders before the call.
+ * A typed hand reaches a free route only for a kind the shadow bars flipped
+ * (`ai_council/kind_flip.ts`); until then the paid route serves it.
  *
  * Exit codes: 0 answer produced · 2 usage error · 3 honest-∅ (no transport, or a
  * typed return that does not parse).
@@ -69,6 +71,7 @@ import {
     routeFailureClass,
 } from './ai_council/route_liveness.js';
 import { MidFlightFallback } from './ai_council/transport_resolver.js';
+import { isKindFlipped } from './ai_council/kind_flip.js';
 import {
     EXPOSURE_LEDGER_RELPATH,
     ExposureLedger,
@@ -129,6 +132,11 @@ export interface AskOptions {
      * directory, or none when `auditDir` is null; null reads and writes nothing.
      */
     stateRoot?: string | null;
+    /**
+     * Whether a kind may use a free route. Default: the flip state under
+     * `stateRoot`; no state, or no `stateRoot`, is not flipped.
+     */
+    flips?: (kind: HandKind) => boolean;
 }
 
 /** The model a `base_url` route member calls; null for a provider member. */
@@ -225,9 +233,11 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
         return { member: m, route: retired ? { ...route, live: false } : route };
     });
     const pool = opts.member !== undefined ? routed.filter((r) => r.route.name === opts.member) : routed;
+    const flipped = opts.flips ?? ((k: HandKind): boolean => stateRoot !== null && isKindFlipped(stateRoot, k));
     const { chain } = chooseRouteChain({
         kind: opts.kind ?? null,
         contentClass: opts.contentClass ?? DEFAULT_CONTENT_CLASS,
+        ...(opts.kind !== undefined ? { unpaidAllowed: flipped(opts.kind) } : {}),
         candidates: pool.map((r) => r.route),
         ...(opts.exposure !== undefined
             ? { exposureShare: exposureShareFn(opts.exposure.ledger, opts.exposure.exposes, opts.exposure.trackedFiles) }

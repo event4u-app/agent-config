@@ -37,6 +37,7 @@ export type RouteRefusalReason =
     | 'quota-exhausted'
     | 'content-ceiling'
     | 'untyped-call'
+    | 'kind-not-flipped'
     | 'exposure-cap'
     | 'exposure-unknown';
 
@@ -56,6 +57,11 @@ export interface ChooseInput {
     readonly exposureShare?: (route: string) => number | null;
     /** Default {@link EXPOSURE_SHARE_CAP}. */
     readonly exposureCap?: number;
+    /**
+     * False when the kind has not cleared the shadow bars (free-hands 6.3):
+     * every unpaid route is then refused. Absent keeps the chooser's own order.
+     */
+    readonly unpaidAllowed?: boolean;
 }
 
 export type RouteChoice =
@@ -67,6 +73,7 @@ function refusalOf(c: RouteCandidate, input: ChooseInput): RouteRefusalReason | 
     if (c.remainingQuota !== null && c.remainingQuota <= 0) return 'quota-exhausted';
     if (!admitsContent(c.ceiling, input.contentClass).admitted) return 'content-ceiling';
     if (isUnpaid(c.billing) && input.kind === null) return 'untyped-call';
+    if (isUnpaid(c.billing) && input.unpaidAllowed === false) return 'kind-not-flipped';
     if (input.exposureShare !== undefined) {
         const share = input.exposureShare(c.name);
         // Unknown exposure fails closed for an unpaid route only; a paid route

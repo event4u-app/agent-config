@@ -83,6 +83,7 @@ describe('askOnce records a hand as unverified until the head says otherwise', (
             kind: 'summarise-given-text',
             contentClass: 'public-artifact',
             auditDir: dir,
+            flips: () => true,
             id: () => 'ask-1',
         });
         expect(r!.untrusted).toBe(true);
@@ -93,7 +94,7 @@ describe('askOnce records a hand as unverified until the head says otherwise', (
 
     it('a schema-invalid free return is recorded as a failed verify', async () => {
         const dir = path.join(tmp, 'b');
-        await askOnce('q', { members: [freeMember('prose')], kind: 'classify', contentClass: 'public-artifact', auditDir: dir });
+        await askOnce('q', { members: [freeMember('prose')], kind: 'classify', contentClass: 'public-artifact', auditDir: dir, flips: () => true });
         expect(lines(dir)[0]!['orchestration']).toMatchObject({ verified: 'fail', schema_valid: false });
     });
 });
