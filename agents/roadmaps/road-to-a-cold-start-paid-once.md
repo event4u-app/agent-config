@@ -329,7 +329,7 @@ waits:
         - Round 3 (ratified / refused): one blocking finding, that the tests invented the payload field `tool_input.to` rather than using a real host envelope.
 
       The probe logs of 2026-10-21 already answer that finding. On 2.1.306 a real `PreToolUse(SendMessage)` carries `tool_input.to` (with `recipient` and `recipient_kind: agent | name` beside it) and a top-level `session_id`. A fourth attempt starts from those three rounds, adds a sanitized verbatim envelope from that log as a fixture, and needs a fresh grant. Prompts: `agents/evidence/council/cold-start-spawn-guard-resume-review-r1-20261021.question.md`, `-r2-`, `-r3-`.
-      Done 2026-10-22, fourth attempt (commit c3f7f1a199): the real `PreToolUse(SendMessage)` envelope from the 2026-10-21 probe log is the fixture (`to` is the worker name); `recordNamedSpawn` on `PostToolUse(Agent)` writes a `subagent_named` line, so a send resolves `recipient_kind: name` against this session's spawns only, with no whole-file read. Still exit 0 on every path. Ratified with the run's gated diff (`agents/evidence/ratifications/subagent-system-2583-20261022.md`).
+      Done 2026-10-22, fourth attempt (commit c3f7f1a199): the real `PreToolUse(SendMessage)` envelope from the 2026-10-21 probe log is the fixture (`to` is the worker name); `recordNamedSpawn` on `PostToolUse(Agent)` writes a `subagent_named` line carrying only a session-bound digest of the name (names over 128 characters are not recorded), so a send resolves `recipient_kind: name` against this session's spawns only, with no whole-file read. Still exit 0 on every path. Ratified with the run's gated diff (`agents/evidence/ratifications/subagent-system-2583-20261022.md`).
 - [x] **3.4 Retirement is a handoff.** A worker failing (c)–(f) or (h) is not
       re-tasked; its successor is briefed from its `worker` capsule — the
       generation chain the recycling roadmap wanted, reached at task boundaries.
@@ -348,7 +348,7 @@ waits:
       honoured; otherwise documentation says the resume count is observed, not
       enforced.
       verify: `ls agents/evidence/ratifications/` -> /worker-reuse-guard-flip/
-      Built 2026-10-22, not flipped: `flipReadiness` in the same module encodes the four conditions — failure observed, false-positive rate measured and ≤ 1 %, economics measured and favourable, window met — and returns `ready: false` while any is unmeasured (`tests/scripts/worker_reuse_shadow_report.test.ts`). The blocking form and its ratification wait on 3.5's window.
+      Built 2026-10-22, not flipped: `flipReadiness` in the same module encodes the four conditions — failure observed, false-positive rate measured and ≤ 1 %, economics measured and favourable, window met — and returns `ready: false` while any is unmeasured (`tests/scripts/worker_reuse_shadow_report.test.ts`). The blocking form and its ratification wait on 3.5's window. Owed before any flip (ratification 2026-10-22, non-blocking while in shadow): name and stop resolution read only the last 1 MiB of two monthly ledger files, so heavy traffic can push a real resume out of view — an indexed register or a measured false-negative rate.
 
 ## Phase 4 — Rate pressure that waits instead of spawning
 
