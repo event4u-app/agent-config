@@ -81,6 +81,16 @@ const UNGATED = 'docs/contracts/ratification-artifact.md';
  */
 const DERIVED_ONLY = 'src/scripts/hooks/host_semantics.ts';
 
+describe('refExists takes no option-shaped ref', () => {
+    it('answers false for an empty or `-`-led ref without asking git', () => {
+        const root = tmpTree({ 'a.txt': 'a' });
+        expect(lib.refExists(root, 'HEAD')).toBe(true);
+        expect(lib.refExists(root, '')).toBe(false);
+        expect(lib.refExists(root, '--all')).toBe(false);
+        expect(lib.refExists(root, '-q')).toBe(false);
+    });
+});
+
 describe('2.1 — the gated set, assembled from the gate’s own constants', () => {
     it('keeps a kernel rule and drops an ungated file', () => {
         const g = gatedFilesOf([KERNEL, UNGATED, 'README.md']);
