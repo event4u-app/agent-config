@@ -1,0 +1,70 @@
+name: CI time to green (weekly + manual)
+
+# The unit the owner feels — push to green, queue included — measured on a
+# schedule, so a regression like the Consistency job's 75 s → 10 min drift is
+# seen in a week instead of in a complaint. Reads the Actions API only; writes the
+# job summary and an artifact. It opens no issues and posts nothing: a
+# percentile that grew by more than 25 % against the committed reading
+# (agents/reports/ci-time-to-green-tests.json) becomes a ::warning annotation.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  measure:
+    name: CI time to green
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund --prefer-offline
+
+      # tests.yml only: GITHUB_TOKEN allows ~1,000 API requests an hour, and a week
+      # of every workflow is ~6,600 runs; tests.yml (~550 a week) is where the
+      # macOS queue lives. Compared with its own baseline, never with the
+      # all-workflow reading in agents/reports/ci-time-to-green.json. Exit 3
+      # means the API budget truncated the sample — reported, not a failure.
+      - name: Measure the last 7 days of tests.yml against the committed reading
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          ./scripts-run src/scripts/ci_time_to_green --days 7 --workflow tests.yml \
+            --out "$RUNNER_TEMP/ci-time" \
+            --baseline agents/reports/ci-time-to-green-tests.json \
+            --cache-dir "$RUNNER_TEMP/ci-time-cache"
+          rc=$?
+          set -e
+          cat "$RUNNER_TEMP/ci-time/ci-time-to-green.md" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$rc" -eq 3 ]; then
+            echo "::warning title=CI time sample truncated::the API budget ran out before every run was read"
+          elif [ "$rc" -ne 0 ]; then
+            exit "$rc"
+          fi
+
+      - name: Upload the reading
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: ci-time-to-green
+          path: ${{ runner.temp }}/ci-time/
+          retention-days: 30
