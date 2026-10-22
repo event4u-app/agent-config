@@ -149,3 +149,35 @@ recorded there rather than here.
 - `.github/workflows/tests.yml` — `node-tests` shard matrix (`:198`),
   `static-checks` (`:244`), the `npm audit` step (`:340`).
 - `.github/workflows/release-validation.yml:370` — the duplicate audit run.
+
+## Amendment, 2026-10-22 — both triggers have fired; the decision holds
+
+**Trigger (b) fired on 2026-09-11.** The required set became two entries —
+`Sync + Generate Tools Consistency` and `Standing payload delta + budget gate`
+(ADR-276; `branch-protection-policy.md:55`, live ruleset `17749383` re-read
+2026-10-22, `strict` false). It was never recorded as fired until now.
+
+**Trigger (a) now has its instrument and a reading.** `ci_os_attribution` over the
+520 most recent completed `Tests` runs (2026-10-15 → 2026-10-21, every attempt,
+5,365 decisive twin pairs): macOS red / ubuntu green **10** (0.2 %, all `Node Tests`,
+nine on shard 4/4), macOS green / ubuntu red **20**, both red 143, both green 5,192 —
+`agents/evidence/analysis/ci-os-attribution-2026-10.md`. The "20 runs in which
+neither did" arm is met many times over.
+
+**Outcome of the revisit: the decision stands.** Nothing in the CI-speed round of
+2026-10-21 demotes a required check. What changed is placement of **non-required**
+jobs: macOS node, golden and svg-witness legs leave a PR whose diff the in-repo
+classifier calls `tier` (they keep running on `full` PRs, label `ci:macos` and every
+`push: main`) — decided by the council 2/2 on the reading above
+(`agents/evidence/council/ci-macos-tier-and-static-diagnostic-2026-10-22.md`). A
+`Tests result` aggregate and `merge_group` triggers were added so that an
+*enlargement* of the required set — the direction this ADR and the policy recommend —
+is a ruleset write away; that write stays with
+`stubs/road-to-main-protection-ruleset-changes`.
+
+**Why `adr_cite_check` still reports the trigger state as indeterminate.** Both
+triggers are observable events, not dates, and the checker parses only dated
+triggers; this amendment is the record that both events occurred. **Revisit if:** a
+macOS-only red reaches `push: main` from a PR classified `tier`, or a proposal to
+remove or narrow a required check appears — the latter is still the decision this
+ADR refuses on cost grounds.

@@ -1,25 +1,20 @@
 ---
 stability: beta
-keep-beta-until: 2026-10-06
+keep-beta-until: 2027-01-04
 keep-beta-reason: >-
-  Beta review 2026-09-05. The healthiest of its group and the closest to
-  promotable — no dead reference, and its own kill criterion holds: every job in
-  the table resolves to a live job. It is not promoted because a measurements
-  contract cannot be frozen while its newest row is marked "not yet in CI"
-  (`collector-lifecycle`, a local estimate) and its stated next review, 2026-08-26,
-  is overdue and unperformed. Anchor, derived from a clause inside the file
-  rather than chosen: § Quarterly review checklist says "run the first Monday of
-  every quarter"; the first Monday of Q4 2026 is 2026-10-05, so 2026-10-06 reads
-  the checklist's output instead of scheduling it. Before the window ends: the Q4
-  pass runs, `collector-lifecycle` gets a real CI figure, shard 3/4 is measured
-  against its own 300 s threshold, and the resulting classification is written
-  into this file rather than left in CI history.
+  Q4 pass run 2026-10-22 from the Actions jobs API (§ Baseline 2026-10-22): every
+  tests.yml job has a CI row, collector-lifecycle included, and time-to-green is
+  recorded beside the per-job rows as a separate unit. Not promoted because this
+  same change moves four jobs (parallel gate census, balanced shards, macOS tier,
+  one macOS install job) whose post-change rows exist only as single-PR readings.
+  2027-01-04 is the first Monday of Q1 2027, the next quarterly pass; the weekly
+  ci-time-to-green workflow is the drift signal in between.
 ---
 
 # CI Cost Budget
 
 > **Status:** active · **Owner:** maintainer · **Opened:** 2026-05-26 ·
-> **Review cadence:** quarterly (next: 2026-08-26)
+> **Review cadence:** quarterly (next: 2027-01-04)
 >
 > Measured durations + trigger surfaces for every PR-blocking CI job in
 > `.github/workflows/`. Sets a per-job wall-clock budget (5 min average)
@@ -28,7 +23,63 @@ keep-beta-reason: >-
 > [`release-pr-gating.md`](release-pr-gating.md) and
 > [`branch-protection-policy.md`](branch-protection-policy.md).
 
-## Baseline (re-measured 2026-08-11 · `tests.yml` rows re-measured 2026-08-18, post-fix)
+## Baseline 2026-10-22 (Q4 pass)
+
+**Method.** Per-job execution (`completed_at − started_at`) of **successful** jobs from
+the Actions jobs API, 2026-10-14 → 2026-10-21: `tests.yml` jobs from `main` pushes,
+the three gate workflows from every event. Read by `ci_time_to_green`'s cache
+(6,619 runs). Queue is NOT in these rows — it is a different unit, in the table after.
+
+`tests.yml` declared **8** job keys → **26** jobs over this window. After this change
+it declares **10** keys (`platform-scope`, `tests-result` added; macOS install
+unsharded): **25** jobs on `push: main`, **19** on a PR whose diff the classifier calls
+`tier` (council 2026-10-22, decision A).
+
+| Workflow | Job | OS × variant | n | Mean | p50 |
+|---|---|---|--:|--:|--:|
+| `tests.yml` | `install-tests` | ubuntu, 4 shards | 540 | 56 s | 57 s |
+| `tests.yml` | `install-tests` | macOS, 4 shards (now 1 unsharded job) | 464 | 109 s | 110 s |
+| `tests.yml` | `install-aux-tests` | ubuntu / macOS | 135 / 123 | 71 / 140 s | 72 / 142 s |
+| `tests.yml` | `node-tests` shards 1, 2, 4 | ubuntu / macOS | 387 / 311 | 325 / 427 s | 331 / 438 s |
+| `tests.yml` | `node-tests` **shard 3/4** | ubuntu / macOS | 125 / 101 | **423 / 609 s** | 435 / 626 s |
+| `tests.yml` | `static-checks` | ubuntu | 125 | 345 s | 377 s |
+| `tests.yml` | `golden-tests` | ubuntu / macOS | 135 / 120 | 85 / 106 s | 88 / 110 s |
+| `tests.yml` | `svg-witness-tests` | ubuntu / macOS | 134 / 113 | 125 / 145 s | 126 / 150 s |
+| `tests.yml` | `workspace-tests` | ubuntu / macOS | 135 / 121 | 71 / 84 s | 73 / 85 s |
+| `tests.yml` | `collector-lifecycle` | macOS only | 114 | **232 s** | 232 s |
+| `tests.yml` | `platform-scope`, `tests-result` | ubuntu, new in this change | — | first reading in the macOS roadmap | — |
+| `consistency.yml` | `Sync + Generate Tools Consistency` (required) | ubuntu | 502 | **632 s** | 664 s |
+| `standing-payload-delta.yml` | `Standing payload delta + budget gate` (required) | ubuntu | 402 | 105 s | 115 s |
+| `rule-backstops.yml` | `Rule backstops` | ubuntu | 602 | 211 s | 222 s |
+
+The required Consistency job ran **8.4×** the 75 s recorded below, past the 300 s
+ceiling, with no gate noticing: its `check_gate_coverage` step re-ran 118 gates serially
+(443 s of 613 s on PR #2569). Fixed in `road-to-a-required-check-that-does-not-rerun-the-gates`;
+its first post-change CI figure is written there.
+
+### Time to green, including queue — a second unit, never compared with the rows above
+
+From `agents/evidence/analysis/ci-time-to-green-2026-10.md` (same window):
+
+| Event | Queue p50 / p90 ubuntu | Queue p50 / p90 macOS | Required-green p50 / p90 | All-green p50 / p90 |
+|---|---|---|---|---|
+| `pull_request` | 29 s / 3m34s | 5m34s / 25m09s | 11m36s / 13m21s | 21m17s / 51m44s |
+| `push` (main) | 3 s / 1m23s | 3m08s / 15m47s | — (one required check is PR-only) | — |
+
+### Decisions taken in this pass
+
+- **`render()` lever closed.** Its 54-241 s were `check_enforcement_coverage`'s
+  per-name regex sweep (99 % of the CPU profile), not `build_proof`; replaced by an
+  index scan with byte-identical output. `build_proof --check` 87 s → 7.7 s locally.
+- **Shards balanced by duration** (`tests/timing-manifest.json`, `VITEST_BALANCED_SHARDS=1`).
+  Replayed on run 39643700286: slowest shard's summed test time 685 → 539 s ubuntu,
+  1089 → 899 s macOS. Refresh with `plan_test_shards --run <id> --write`.
+- **Transform caches not adopted.** CI log split: tests 90 %, import 5 %, transform 3 %;
+  local A/B (61 files) cold 4.37 s / warm 4.24 s / none 4.60 s — inside noise.
+- **macOS install unsharded.** One queue entry instead of four; reverted to shards if its
+  runtime outweighs the freed slots (first reading in the macOS roadmap).
+
+## Previous baseline (re-measured 2026-08-11 · `tests.yml` rows re-measured 2026-08-18, post-fix)
 
 **Method.** Every row is a **per-job** duration from the GitHub Actions jobs
 API (`/actions/runs/<id>/jobs`) — the non-`tests.yml` workflows from the most
