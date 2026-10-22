@@ -92,7 +92,7 @@ the bench harnesses and `pricing.yaml`.
   Tier 2.3 and both tier claims back to `unbacked` pending 4.2.
   verify: `ac-researcher-tier-follows-the-claim` passes with `inherit` and both claims unbacked.
       Done 2026-10-23 for the definition: `ac-researcher` is `model_tier: inherit`; `ac-researcher-tier-follows-the-claim` is replaced by `ac-researcher-with-web-tools-is-never-lite`, seen red against the `lite` definition, because the claims back exact lookups and the definition keeps web synthesis. The two tier claims are re-decided by 4.2, either way.
-- [x] **1.4 Reopen one-detector 2.5** as "built, not wired" and correct the `raise_log` text that
+- [x] **1.4 Reopen one-detector 2.5** as "built, not wired" and correct the `raise_log` text that <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   cites it (`src/config/hook-bundle-budget.json`).
   verify: the step is `[ ]` with that note; the raise_log entry names only code in the chunk.
       Done 2026-10-23: one-detector 2.5 reopened as built, not wired; the `raise_log` entry no longer counts the normalisation as chunk content (`check_kernel_edit_ratified` stays green).
@@ -150,14 +150,14 @@ the bench harnesses and `pricing.yaml`.
 
 ## Phase 4 — Evidence bound to the bytes it pins (D3)
 
-- [x] **4.1 Bench harness rule.** A bench refuses to run on a dirty tree (`git status
+- [x] **4.1 Bench harness rule.** A bench refuses to run on a dirty tree (`git status <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   --porcelain` non-empty) unless pointed at a `git archive` of a named commit; every result
   row carries that commit; corpus answers are computed from the same archive; `verified` reads
   the measured leg's final message from its transcript, never the dispatching session's reply.
   verify: a seeded dirty tree refuses; a fixture result whose corpus answer disagrees with its
   pinned archive fails the bench self-test.
       Done 2026-10-23 (`9972c5575f`): `internal/bench/pinned_tree.ts`; the self-test finds `461` wrong at `f4e20ba12f` and `5653d32f32` (460 files) and one more wrong answer at `5653d32f32`.
-- [x] **4.2 Rerun the tier pair** under 4.1, with the haiku row re-sourced for the served model
+- [x] **4.2 Rerun the tier pair** under 4.1, with the haiku row re-sourced for the served model <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   and dated, and the quality bound from an exact (Clopper–Pearson) or Wilson interval on the
   discordant pairs; hold only below the bar. Both tier claims are re-decided by this run, either
   way. The interval lives in `src/scripts/_lib/tier_downshift_verdict.ts`, whose 0-error branch
@@ -165,11 +165,11 @@ the bench harnesses and `pricing.yaml`.
   verify: the new report's pin, corpus and result rows agree; the claims cite it; a fixture with 1
   discordant failure is never held where 0 is refused.
       Done 2026-10-23: exact one-sided 95 % Clopper–Pearson bound (`f7383bd7b1`, decision A7); rerun pinned at `fe4fa4bcd7`, 120 legs on subscription: lite 59/60, inherit 60/60, upper bound 7.66 pp → both tier claims `underpowered` (`agents/evidence/analysis/tier-downshift-paired-run-2026-10-23.md`).
-- [x] **4.3 Price rows carry a freshness bound.** A row older than 120 days, or whose tier
+- [x] **4.3 Price rows carry a freshness bound.** A row older than 120 days, or whose tier <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   maps to a served model of a newer generation than its source, refuses to price.
   verify: a fixture row dated 2026-05-14 against `claude-haiku-5-5` refuses.
       Done 2026-10-23 (`fe4fa4bcd7`): `src/scripts/_lib/price_freshness.ts`; the 2026-05-14 row against `claude-haiku-5-5` refuses (162 days); haiku and sonnet 5.5 rows re-sourced 2026-10-23.
-- [x] **4.4 Store-rule precision (D3, one-detector).** PREREG (b) gains a reading over
+- [x] **4.4 Store-rule precision (D3, one-detector).** PREREG (b) gains a reading over <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   `STORAGE_IDENTIFIER_RULES` on the tree corpus; phone and card lookaheads become
   `(?![0-9A-Za-z])`, NANP keeps a context word or validator in stores, a leading `+` on a diff
   line needs a grouped shape.
@@ -216,7 +216,7 @@ the bench harnesses and `pricing.yaml`.
 
 ## Phase 6 — Re-read #2585 and publish the count
 
-- [x] **6.1 Replay every tick of #2585** through 2.2, 2.3, 3.2 and 4.1; reopen what fails; publish
+- [x] **6.1 Replay every tick of #2585** through 2.2, 2.3, 3.2 and 4.1; reopen what fails; publish <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   `ticked / reopened / reason` in `agents/evidence/analysis/`.
   verify: the analysis lists every ticked step id of #2585 with a verdict.
       Done 2026-10-23: `agents/evidence/analysis/tick-replay-2585-2026-10-23.md`, 60 ticks; 2 reopened, tier 2.2/2.3 re-decided as underpowered by 4.2, 13 reach findings classified.
