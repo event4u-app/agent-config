@@ -1041,6 +1041,9 @@ function _parseArgs(argv: string[]): ParsedArgs {
         if (dir === null) {
             _usageError('the following arguments are required: --dir/-d');
         }
+        if (tokens !== null && !json) {
+            _usageError('argument --tokens: only applies together with --json');
+        }
         return { op: 'validate', dir, ignore, json, tokens };
     }
 

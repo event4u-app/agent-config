@@ -59,7 +59,9 @@ linter. Obligations: [`design-intelligence/ATTRIBUTION.md`](../design-intelligen
 Rules: components never reference primitives directly; dark mode lives
 under `dark.semantic.*` overriding the same semantic names (emitted as a
 `.dark { … }` block); every value is a `{"$value": …, "$type": …}` pair
-(DTCG; 2025.10 objects read). Start from
+(DTCG; 2025.10 colour, dimension and duration objects read — a composite
+object such as shadow or typography fails `generate` by design, naming the
+token). Start from
 [the bundled starter template](templates/design-tokens-starter.json).
 
 ## Toolchain (`scripts/tokens.ts` — skill-relative, any cwd)
