@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import { createRequire, syncBuiltinESMExports } from 'node:module';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
@@ -88,6 +89,26 @@ describe('retro_queue — one queue', () => {
     it('leaves no temp file behind', () => {
         const { main } = repoWithWorktree();
         enqueue(main, { unit_key: 'retro:x#pr1@a/p1', kind: 'pr', pr: 1 }, '2026-10-17T08:00:00Z');
+        expect(fs.readdirSync(queueDir(main)!).every((n) => n.endsWith('.json'))).toBe(true);
+    });
+
+    it('on a filesystem without hard links it publishes by rename instead of throwing', () => {
+        const { main } = repoWithWorktree();
+        // The ESM namespace of a builtin is read-only; patch the CommonJS object and sync it across.
+        const cjsFs = createRequire(import.meta.url)('node:fs') as typeof fs;
+        const original = cjsFs.linkSync;
+        cjsFs.linkSync = (): void => {
+            throw Object.assign(new Error('operation not permitted'), { code: 'EPERM' });
+        };
+        syncBuiltinESMExports();
+        try {
+            expect(enqueue(main, { unit_key: 'retro:x#pr2@a/p1', kind: 'pr', pr: 2 }, '2026-10-17T08:00:00Z')).toBe('enqueued');
+            expect(enqueue(main, { unit_key: 'retro:x#pr2@a/p1', kind: 'pr', pr: 2 }, '2026-10-17T09:00:00Z')).toBe('exists');
+        } finally {
+            cjsFs.linkSync = original;
+            syncBuiltinESMExports();
+        }
+        expect(listQueue(main).map((e) => e.unit_key)).toEqual(['retro:x#pr2@a/p1']);
         expect(fs.readdirSync(queueDir(main)!).every((n) => n.endsWith('.json'))).toBe(true);
     });
 

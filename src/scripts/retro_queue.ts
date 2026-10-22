@@ -46,7 +46,9 @@ function entryFile(dir: string, unitKey: string): string {
     return path.join(dir, `${createHash('sha256').update(unitKey).digest('hex').slice(0, 32)}.json`);
 }
 
-export type EnqueueResult = 'enqueued' | 'exists' | 'no-queue';
+const NO_HARD_LINK_CODES: ReadonlySet<string> = new Set(['EPERM', 'ENOTSUP', 'EOPNOTSUPP', 'ENOSYS', 'EXDEV']);
+
+export type EnqueueResult ='enqueued' | 'exists' | 'no-queue';
 
 export function enqueue(workspaceRoot: string, entry: QueueEntry, nowIso: string): EnqueueResult {
     const dir = queueDir(workspaceRoot);
@@ -63,8 +65,15 @@ export function enqueue(workspaceRoot: string, entry: QueueEntry, nowIso: string
     } catch (err) {
         // A concurrent enqueue of the same unit won; theirs stands. Any other
         // failure would lose the unit, so it is not reported as `exists`.
-        if ((err as NodeJS.ErrnoException).code === 'EEXIST') return 'exists';
-        throw err;
+        const code = (err as NodeJS.ErrnoException).code ?? '';
+        if (code === 'EEXIST') return 'exists';
+        // A filesystem without hard links: publish by rename. Only the
+        // exclusive-create guarantee is weaker, and a duplicate unit is the
+        // cost, not a lost one.
+        if (!NO_HARD_LINK_CODES.has(code)) throw err;
+        if (fs.existsSync(file)) return 'exists';
+        fs.renameSync(tmp, file);
+        return 'enqueued';
     } finally {
         fs.rmSync(tmp, { force: true });
     }
