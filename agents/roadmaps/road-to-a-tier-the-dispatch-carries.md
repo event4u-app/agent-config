@@ -90,17 +90,19 @@ the judge-one-tier-up ladder (`src/agent-src/contexts/subagent-configuration.md:
 
 ## Phase 0 — Read before building
 
-- [ ] **0.1 Re-read T2 on the current host.** Run `cache_realization_report` and
+- [x] **0.1 Re-read T2 on the current host.** <!-- receipt: class=R0 · shadow · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Run `cache_realization_report` and
   `orchestration_savings_report` over the last 14 days; record the share of dispatches with a
   non-null `tier_chosen`, the share of `lite` among them, and the share where `model_served`
   differs from `model_requested`. Record in `agents/evidence/analysis/`.
   verify: the analysis states the three shares, the host version and the record count.
-- [ ] **0.2 Probe the carrier (T3).** Dispatch `ac-researcher` (`model: inherit`) once with a
+  Done 2026-10-22: `agents/evidence/analysis/tier-realisation-2026-10-22.md` § Step 0.1 — host 2.1.308, 435 orchestration records in 14 days, `tier_chosen` 0 %, `lite` share n/a, `model_requested`/`model_served` 0 of 435; transcripts show 14 of 443 legs served on `haiku`, none of them recorded as such.
+- [x] **0.2 Probe the carrier (T3).** <!-- receipt: class=R0 · shadow · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> Dispatch `ac-researcher` (`model: inherit`) once with a
   per-call model argument naming the `lite` model; read the served model from the transcript.
   A carrier that is silently ignored on some host builds is a known failure mode (S10), so the
   probe result is a row with host version, requested and served id — not a belief.
   verify: the evidence row exists; on `served ≠ requested` Phase 1.2 stops and the null is
   recorded.
+  Done 2026-10-22: same file § Step 0.2 — on 2.1.308 `ac-researcher` (`model: inherit`) dispatched with `model: haiku` served `claude-haiku-5-5` on 7 of 7 calls. Green; 1.2 may proceed.
 
 ## Phase 1 — The tier rides on the dispatch (T2, T3)
 
