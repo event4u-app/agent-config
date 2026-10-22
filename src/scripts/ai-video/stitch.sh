@@ -157,7 +157,6 @@ MODE_JSON=""
 if [ "${MODE}" = "handoff" ]; then
   MODE_JSON=',"mode":"handoff"'
   printf 'stitch: --mode handoff RE-ENCODES (libx264 -crf 20 -g 8 +faststart -an) — the cut path stream-copies. Audio is dropped by -an; mux a bed afterwards if the chain needs one.\n' >&2
-  [ "${DRYRUN_FLAG}" -eq 0 ] && aiv_require_cmd ffprobe
 fi
 
 # --- 6.4 / 6.5 -------------------------------------------------------------
@@ -227,6 +226,9 @@ while IFS= read -r row; do
   scene_id="$(printf '%s' "${row}" | jq -r '.scene_id // .id')"
   clip_path="$(printf '%s' "${row}" | jq -r '.clip_path // .expected_clip')"
   audio_embedded="$(printf '%s' "${row}" | jq -r '.audio_embedded // false')"
+  # Never empty: the per-clip list is tab-separated, and `read` collapses an
+  # empty field between tabs, which would shift the path into this column.
+  audio_embedded="${audio_embedded:-false}"
   audio_path="$(printf '%s' "${row}" | jq -r '.audio_path // empty')"
   continuity="cut"
   if [ "${MODE}" = "handoff" ]; then
@@ -322,8 +324,6 @@ if [ "${DRYRUN_FLAG}" -eq 1 ]; then
   exit 0
 fi
 
-# The re-encode settings are one constant, used by both handoff branches, so a
-# port cannot drift them apart.
 # Seconds of shortfall tolerated between the summed inputs and the output.
 # Container rounding and a trailing partial frame are not a defect; half a
 # second is well above both and well below any dropped scene. Overridable
@@ -332,6 +332,8 @@ fi
 # something `testsrc` can produce — so the branch would otherwise ship having
 # never been seen fire. The test drives it to a negative tolerance and back.
 DURATION_TOLERANCE="${AIV_DURATION_TOLERANCE:-0.5}"
+# The re-encode settings are one constant, used by both handoff branches, so a
+# port cannot drift them apart.
 HANDOFF_VCODEC="libx264"
 HANDOFF_ARGS="-crf 20 -g 8 -pix_fmt yuv420p -movflags +faststart -an"
 
@@ -464,7 +466,7 @@ else
   [ -n "${actual_dur}" ] || aiv_die 8 "stitch: wrote ${OUTPUT} and cannot read its duration back"
   awk -v e="${expected_dur}" -v a="${actual_dur}" -v t="${DURATION_TOLERANCE}" \
     'BEGIN { exit !(e - a > t) }' \
-    && aiv_die 8 "stitch: output is short — ${actual_dur}s against ${expected_dur}s of input (tolerance ${DURATION_TOLERANCE}s, missing=${missing} scene(s) already excluded). The concat reported success and produced less video than it was given, which is what an unreadable or mid-file-truncated input does on the copy path."
+    && { rm -f "${OUTPUT}"; aiv_die 8 "stitch: output is short — ${actual_dur}s against ${expected_dur}s of input (tolerance ${DURATION_TOLERANCE}s, missing=${missing} scene(s) already excluded). The concat reported success and produced less video than it was given, which is what an unreadable or mid-file-truncated input does on the copy path."; }
 fi
 
 printf '{"output":"%s","scenes":%d,"missing":%d%s}\n' \
