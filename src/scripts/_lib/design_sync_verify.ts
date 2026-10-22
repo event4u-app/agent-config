@@ -81,6 +81,13 @@ export function verifyLedger(ledger: Ledger, input: VerifyInput): VerifyResult {
             if (input.renderDispositions[field] === undefined) failures.push(`render check ${field} = ${count} with no disposition`);
         }
     }
+    // A ledger with an unresolved row or a stale baseline did not pass, so the
+    // verdict says so on its own — a caller reading `verification` alone must
+    // never see `verified` beside a failure.
+    if (verification === 'verified' && (failures.length > 0 || stale.length > 0)) {
+        verification = 'degraded';
+        reasons.push(`${failures.length} unresolved failure(s) and ${stale.length} stale baseline(s)`);
+    }
     return { verification, reasons, failures, stale_baselines: stale };
 }
 
