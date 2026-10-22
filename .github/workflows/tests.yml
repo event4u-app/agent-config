@@ -139,7 +139,12 @@ jobs:
       - name: Install bundle is fresh (dist/install/install.mjs)
         run: |
           npm run build:install-bundle
-          git diff --exit-code -- dist/install/
+          drift="$(git status --porcelain -- dist/install/)"
+          if [ -n "$drift" ]; then
+            echo "::error::dist/install/install.mjs is stale. Run 'npm run build:install-bundle' and commit the result."
+            echo "$drift"
+            exit 1
+          fi
 
       # The six skill entry points ship as committed single-file bundles, so a
       # consumer can start them with the one runtime the install proves
@@ -149,7 +154,14 @@ jobs:
       - name: Skill-script bundles are fresh (src/skills/*/scripts/*.mjs)
         run: |
           npm run build:skill-scripts
-          git diff --exit-code -- 'src/skills/*/scripts/*.mjs'
+          # --porcelain, not `git diff`: a new entry point whose bundle was
+          # never committed is untracked, and `git diff` does not see it.
+          drift="$(git status --porcelain -- 'src/skills/*/scripts/*.mjs')"
+          if [ -n "$drift" ]; then
+            echo "::error::Skill-script bundles are stale or missing. Run 'npm run build:skill-scripts' and commit the result."
+            echo "$drift"
+            exit 1
+          fi
 
       # road-to-feedback-9.2.0-followups Phase 4: three 9.1 commits each
       # manually rebuilt this bundle to strip a leaked build-machine path
