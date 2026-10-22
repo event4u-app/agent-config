@@ -11,13 +11,9 @@ description: >-
 # Install agent-config
 
 This plugin is a **bootstrap shim** kept so the marketplace listing stays
-discoverable. Its hooks run only alongside a global npm install of the
-package — the staged runtime under `~/.event4u/agent-config/runtime/` or an
-`agent-config` binary on `PATH` outside the opened project; a project-local
-install is never used. On a plugin-only install no dispatcher is reachable, so
-no hook runs and the `fail_closed` guards (`block-no-verify`,
-`block-kernel-rule-writes`, `block-plumbing-writes`) are **off**; the session
-start says so once. Content (skills, rules, commands, personas) ships as a file projection.
+discoverable. Its hooks run only alongside a global npm install of the package (never a project-local one) —
+on a plugin-only install no hook runs, so the `fail_closed` guards (`block-no-verify`, `block-kernel-rule-writes`,
+`block-plumbing-writes`) are **off**; the session start says so once. Content ships as a file projection.
 
 ## Install (canonical, one command)
 
