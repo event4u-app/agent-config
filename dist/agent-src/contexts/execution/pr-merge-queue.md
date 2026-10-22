@@ -201,9 +201,12 @@ installed that runtime from the head, the head chooses the classifier's answer:
 it cannot reach `routine` (the floor holds), but by printing a lower verdict it
 can turn the `needs-owner` an honest runtime would report into
 `needs-council (runtime-uncertain)`. So there, a gated change paired with a
-dependency bump can reach the council instead of the owner. Where Node
-strips types (22.6 and later) this does not arise, and no run of this command
-installs dependencies from a head.
+dependency bump can reach the council instead of the owner. Every Node the
+package supports has the flag (`engines.node` is `>=22.6.0`, and 22.6 is where
+`--experimental-strip-types` arrived), so on a supported runtime the fallback
+is reached only by a base whose closure carries syntax stripping cannot — never
+by the Node version — and no run of this command installs dependencies from a
+head.
 
 It writes `agents/evidence/merge-clearances/pr-<N>-<head>.md` from the
 council's own session record — per seat the provider, the model, a digest of

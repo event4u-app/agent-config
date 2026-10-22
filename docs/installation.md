@@ -134,7 +134,7 @@ the per-IDE index above.
 > Python is **not** required — the bridge stage was TypeScript from ADR-200
 > onward, and `no-python-in-src.yml` keeps it that way.
 >
-> **Node.js 22+** is required for the `agent-config` binary itself.
+> **Node.js 22.6+** is required for the `agent-config` binary itself.
 > Starting with the TypeScript CLI shell (ADR-012, road
 > `typescript-cli-and-local-gui-foundation`), the published `bin/`
 > entry is the compiled `dist/cli/agent-config.js`; `npx` resolves it

@@ -172,7 +172,7 @@ os_baseline:
     os_baseline: true
     rationale: >-
       A Node runtime is this package's own execution baseline
-      (package.json engines >=22.0.0), so any environment that can run the
+      (package.json engines >=22.6.0), so any environment that can run the
       validator already has it. The one platform where a pin IS meaningful —
       Homebrew's versioned major-line formula — carries a real pin
       (`brew install node@22`), verified below; the remaining platforms track

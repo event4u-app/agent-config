@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - [Task](https://taskfile.dev/) (task runner)
-- Node.js >= 22.0.0 (the linter, condensation and every gate are TypeScript;
+- Node.js >= 22.6.0 (the linter, condensation and every gate are TypeScript;
   `no-python-in-src.yml` asserts there is no Python left to install)
 - Bash (for install scripts, tests)
 
