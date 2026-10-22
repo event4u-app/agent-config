@@ -8482,7 +8482,8 @@ function probeHostCapabilities(hostId) {
   const base = resolveHostCapabilities(hostId);
   const flag = process2.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS;
   const probedAgentTeams = typeof flag === "string" && flag !== "";
-  return { ...base, agent_teams: base.agent_teams || probedAgentTeams };
+  const probedResume = probedAgentTeams && hostId === "claude";
+  return { ...base, agent_teams: base.agent_teams || probedAgentTeams, worker_resume: base.worker_resume || probedResume };
 }
 var CAPABILITY_FIELDS = [
   "subagent_spawn",
@@ -8506,7 +8507,7 @@ function describeHostCapabilities(hostId) {
   for (const field of CAPABILITY_FIELDS) {
     if (row !== void 0 && typeof row[field] === "boolean") {
       sources[field] = "registry";
-    } else if (field === "agent_teams" && probedAgentTeams) {
+    } else if ((field === "agent_teams" || field === "worker_resume" && hostId === "claude") && probedAgentTeams) {
       sources[field] = "live-probe";
     } else {
       sources[field] = "default";
