@@ -84,10 +84,28 @@ function write_store(root: string, session_id: string, store: PrStore): void {
 }
 
 /** Record a PR this session created. Idempotent per number. */
+/** `owner/repo` of the repository's `origin`, lower-cased, or null when it cannot be read. */
+function origin_slug(root: string): string | null {
+    try {
+        const url = execFileSync('git', ['-C', root, 'config', '--get', 'remote.origin.url'], {
+            encoding: 'utf-8',
+            stdio: ['ignore', 'pipe', 'ignore'],
+        }).trim();
+        const m = /[/:]([^/:]+)\/([^/]+?)(?:\.git)?\/?$/.exec(url);
+        return m === null ? null : `${m[1]}/${m[2]}`.toLowerCase();
+    } catch {
+        return null;
+    }
+}
+
 export function record_pr(root: string, session_id: string, url: string): void {
-    const m = /\/pull\/(\d+)/.exec(url);
+    const m = /\/([^/]+)\/([^/]+)\/pull\/(\d+)/.exec(url);
     if (m === null || session_id === '') return;
-    const number = Number.parseInt(m[1] ?? '', 10);
+    // The probe asks for a PR NUMBER in this repository: a PR of another repo
+    // or a fork would be read as whatever this repo's PR of that number is.
+    const here = origin_slug(root);
+    if (here !== null && `${m[1]}/${m[2]}`.toLowerCase() !== here) return;
+    const number = Number.parseInt(m[3] ?? '', 10);
     const store = read_store(root, session_id);
     if (store.prs.some((p) => p.number === number)) return;
     store.prs = [...store.prs, { number, url, state: 'OPEN' as PrState }].slice(-MAX_TRACKED);

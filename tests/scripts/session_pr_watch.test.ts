@@ -85,6 +85,14 @@ describe('pr_watch_block', () => {
         record_pr(root, 's1', URL);
         expect(pr_watch_block(root, 's2', T0, probeOf({ 2534: 'OPEN' }))).toBeNull();
     });
+
+    it('records only a PR of this repository, never one of another repo or a fork', () => {
+        execFileSync('git', ['-C', root, 'remote', 'add', 'origin', 'git@github.com:o/r.git']);
+        record_pr(root, 's1', 'https://github.com/someone/fork/pull/9');
+        expect(read_store(root, 's1').prs).toEqual([]);
+        record_pr(root, 's1', 'https://github.com/O/R/pull/2534');
+        expect(read_store(root, 's1').prs.map((p) => p.number)).toEqual([2534]);
+    });
 });
 
 describe('gh_probe — what reaches the model from GitHub', () => {
