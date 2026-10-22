@@ -37,6 +37,15 @@ describe('foldLanes (step 4.4)', () => {
         ]);
         expect(folded[0]?.steps).toHaveLength(1);
     });
+
+    it('keeps the strongest tier and an owner or block a later lane carried', () => {
+        const later: Finding = { ...finding('b1', 'src/x.ts', 'Add the cache'), tier: 'executed', owner: 'a-cache', blocked_until: 'the owner names a TTL' };
+        const folded = foldLanes([
+            { source: 'S1', findings: [finding('a1', 'src/x.ts', 'Add the cache')] },
+            { source: 'S2', findings: [later] },
+        ]);
+        expect(folded[0]).toMatchObject({ tier: 'executed', owner: 'a-cache', blocked_until: 'the owner names a TTL' });
+    });
 });
 
 describe('emitPrompts (step 4.4)', () => {
