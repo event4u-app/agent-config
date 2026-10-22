@@ -3388,13 +3388,12 @@ gates:
       A create-only canary cannot discriminate on this gate, for the same reason
       `lint_pack_boundaries` records: it is a ratchet, so it fails only when the
       live violation count rises ABOVE the recorded baseline in
-      `src/config/gate-violation-baselines.json`. The reading on 2026-10-13 is 8
-      against a baseline of 10, so there are two of headroom and a single
-      planted citation reads green — the ledger would call a live gate dead. The
-      headroom is itself the open residue of the step that wired this gate: the
-      baseline may only be lowered on a reading from the enforcing environment,
-      which this row's author did not have, so it is left at 10 and the gap is
-      recorded rather than closed on a local number.
+      `src/config/gate-violation-baselines.json`, and any headroom there lets a
+      planted citation read green — the ledger would call a live gate dead. The
+      headroom this row first recorded (8 against 10) was closed on 2026-10-22,
+      when the baseline was lowered to 8 on the Rule backstops job's own
+      reading. A canary would still discriminate only while the baseline sits
+      exactly at the live count, which the next fixed citation changes.
     note: >-
       road-to-what-was-built-and-never-ran 1.3. Same history as the row above —
       written, tested, and named by no caller until this change.
