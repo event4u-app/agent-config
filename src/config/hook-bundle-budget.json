@@ -25,7 +25,7 @@
             "to": 32000,
             "by": "agent, during the feat/subagent-system-2583 run",
             "what_was_added": "The queued engine work the 28,000 ceiling was sized for, landed together: the validated identifier rows of one-detector 2.3 (IBAN, card, e-mail with a keyed-digest allowlist, three phone shapes, German tax id, US SSN), and three free-tier credential rows (Hugging Face, NVIDIA, Replicate) of free-hands 1.2. The invisible-character normalisation of one-detector 2.5 (`egress_normalize.ts`) is not in this chunk: the engine does not import it (corrected 2026-10-23, road-to-a-tick-the-shipped-path-earns 1.4). Measured 30,445 bytes when the raise landed; 30,493 bytes at the ratified revision, after the round-6 IBAN rows.",
-            "why_it_could_not_be_avoided": "Each addition is a detection row or the normalisation that keeps one from being hidden; the 2026-10-18 derivation already counted them as the chunk's planned growth and underestimated their sum by about 2.4 KB. The chunk is loaded only when a caller needs detection, so no dispatch pays these bytes; the dispatch bundle itself is unchanged.",
+            "why_it_could_not_be_avoided": "Each addition is an identifier or credential detection row; the 2026-10-18 derivation already counted them as the chunk's planned growth and underestimated their sum by about 2.4 KB. The chunk is loaded only when a caller needs detection, so no dispatch pays these bytes; the dispatch bundle itself is unchanged.",
             "what_would_have_caught_it": "Re-measuring the queued items' sum when the ceiling was set, rather than estimating each."
         }
     ],
