@@ -8505,7 +8505,7 @@ function describeHostCapabilities(hostId) {
   const probedAgentTeams = typeof flag === "string" && flag !== "";
   const sources = {};
   for (const field of CAPABILITY_FIELDS) {
-    if (row !== void 0 && typeof row[field] === "boolean") {
+    if (row !== void 0 && typeof row[field] === "boolean" && !(row[field] === false && manifest[field] === true)) {
       sources[field] = "registry";
     } else if ((field === "agent_teams" || field === "worker_resume" && hostId === "claude") && probedAgentTeams) {
       sources[field] = "live-probe";

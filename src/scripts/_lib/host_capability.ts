@@ -453,7 +453,7 @@ export function describeHostCapabilities(
         // A row entry claims the field whatever its value: an explicit
         // `false` in the table is an observation ("checked, absent"), which is
         // a different fact from the default's "nobody answered".
-        if (row !== undefined && typeof row[field] === 'boolean') {
+        if (row !== undefined && typeof row[field] === 'boolean' && !(row[field] === false && manifest[field] === true)) {
             sources[field] = 'registry';
         } else if ((field === 'agent_teams' || (field === 'worker_resume' && hostId === 'claude')) && probedAgentTeams) {
             sources[field] = 'live-probe';

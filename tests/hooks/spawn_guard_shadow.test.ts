@@ -25,8 +25,10 @@ import {
     OPEN_SUBDIR,
     headOf,
     processEnvelope as processLedgerEnvelope,
+    readIndexEntry,
     recordStopIndex,
     refFor,
+    writeIndexEntry,
 } from '../../src/scripts/hooks/subagent_ledger_hook.js';
 import type { ReuseContext, WorkerState } from '../../src/scripts/_lib/worker_reuse.js';
 
@@ -672,5 +674,22 @@ describe('spawn-guard-shadow — state stamped for reconstruction (council 2026-
             expect(JSON.stringify(line)).not.toContain(dir);
         }
         expect(spawn.epoch).toBe(stop.epoch);
+    });
+});
+
+describe('spawn-guard-shadow — ratification 2026-10-22 rest r1, non-blocking findings', () => {
+    it('a named spawn with an empty session id writes no register entry', () => {
+        processEnvelope(namedSpawnDone('w-empty', 'a0000000000000002', ''), root);
+        expect(ledgerLines().filter((l) => l.event === 'subagent_named')).toEqual([]);
+        expect(walk(path.join(root, LEDGER_DIR, 'index'))).toEqual([]);
+    });
+
+    it('an index entry is replaced whole, leaving no temporary file behind', () => {
+        const ts = new Date().toISOString();
+        writeIndexEntry(root, ts, 'k1', 'first-value');
+        writeIndexEntry(root, ts, 'k1', 'second');
+        expect(readIndexEntry(root, 'k1', new Date())).toBe('second');
+        const names = fs.readdirSync(path.join(root, LEDGER_DIR, 'index', ts.slice(0, 7)));
+        expect(names).toEqual(['k1']);
     });
 });

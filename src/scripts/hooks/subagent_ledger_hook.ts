@@ -514,7 +514,9 @@ export function writeIndexEntry(root: string, ts: string, key: string, value: st
     if (is_replay_mode()) return;
     const dir = path.join(root, LEDGER_DIR, INDEX_SUBDIR, ts.slice(0, 7));
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, key), value, 'utf8');
+    const tmp = path.join(dir, `.${key}.${process.pid}.tmp`);
+    fs.writeFileSync(tmp, value, 'utf8');
+    fs.renameSync(tmp, path.join(dir, key));
 }
 
 /** The entry for `key` in this month or the previous one; null when neither holds it. */

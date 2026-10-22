@@ -152,7 +152,7 @@ export function recordNamedSpawn(root: string, payload: JsonObject, sessionId: s
     const name = input['name'];
     const agentId = result['agentId'];
     if (typeof name !== 'string' || name === '' || name.length > NAME_MAX || typeof agentId !== 'string' || agentId === '') return;
-    if (sessionId === null) return;
+    if (!sessionId) return;
     const key = nameKey(sessionId, name);
     appendLedgerLine(root, nowIso, { event: 'subagent_named', ts: nowIso, ref: refFor(agentId), name_key: key, session_id: sessionId });
     writeIndexEntry(root, nowIso, key, refFor(agentId));
