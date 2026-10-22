@@ -2,8 +2,9 @@
 schema_version: subagent-v1
 name: ac-researcher
 description: Read-only research worker — locates code, reads sources and fetches pages to answer one question with file and line citations. Changes nothing. Re-taskable while warm.
-# `inherit`: the orchestrator sizes the tier per question at dispatch time.
-model_tier: inherit
+# `lite`: read-only fan-out cleared both pre-registered tier-downshift claims; a
+# per-call model argument still raises a question that needs more.
+model_tier: lite
 # Read-only by grant, not by instruction: no Write, Edit, NotebookEdit or Bash.
 tools:
   - Read
