@@ -18,7 +18,7 @@ import { median, readLedgerStarts, segmentLegsIntoRuns, type SubagentRun } from 
 import { scanTranscripts } from './_lib/cc_transcript.js';
 import type { Tier } from './_lib/subagent_routing.js';
 import { watermarkForTier } from './_lib/worker_budget.js';
-import { shadowReuseVerdict, type ReuseClass, type ReuseContext, type WorkerState } from './_lib/worker_reuse.js';
+import { REFUSAL_REASONS, shadowReuseVerdict, type ReuseClass, type ReuseContext, type WorkerState } from './_lib/worker_reuse.js';
 import { LEDGER_DIR, refFor } from './hooks/subagent_ledger_hook.js';
 
 export interface ShadowLine {
@@ -120,8 +120,11 @@ export interface LedgerLine {
 
 /** A stopped worker's transcript, keyed by its ledger ref. */
 export interface WorkerTranscript {
-    /** Assistant calls, chronological; `context_tokens` is billable input + output of that call. */
-    calls: Array<{ ts: string; context_tokens: number }>;
+    /**
+     * Assistant calls, chronological. `context_tokens` is billable input + output of that call;
+     * `input_tokens` is its total input (uncached + cache write + cache read).
+     */
+    calls: Array<{ ts: string; context_tokens: number; input_tokens: number }>;
     /** Timestamps of `compact_boundary` records. */
     compact_ts: string[];
 }
@@ -141,6 +144,11 @@ export interface ReconstructionInputs {
     cache_ttl_ms?: number;
     /** A spawn line without a session id is joined to the next start of its type inside this window. */
     session_join_window_ms?: number;
+    /**
+     * Spawns before this instant are not reported. `lines` must then reach back past it: a session
+     * with register lines before it has a register the window cut, so it reads as unrecorded.
+     */
+    window_start?: string | null;
 }
 
 export type ReconstructedSpawn =
@@ -152,33 +160,46 @@ export const HOST_DEFAULT_CACHE_TTL_MS = 300_000;
 
 /** Stated beside every reconstructed window: what was approximated, and by what. */
 export const RECONSTRUCTION_APPROXIMATIONS = [
-    'skill_set_signature := epoch of the stop/spawn line (bundle mtime) — no per-worker skill signature is recorded',
-    'package_version := epoch of the stop/spawn line (bundle mtime) — the install epoch stands in for the version',
+    'package_version := epoch of the stop/spawn line (bundle mtime); a change is reported once, as epoch_changed (the decision function\'s policy_epoch_changed)',
+    'skill_set_signature := not recorded per worker, so not compared — workspace_changed reflects worktree and head only',
     'last_request_at := the worker\'s last subagent_stop ts',
     'cache_ttl := host default 300000 ms',
     'host_resume := true (worker_resume live on claude under CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS, council 2026-10-22)',
     'observed fresh cold start := median over the whole window, not only runs before the spawn',
+    'transcript_tokens := last streamed record per message id of the worker\'s last call before the spawn',
+    'register := a session with register lines before --since, or a named worker whose start is unseen, is worker_register_unrecorded',
 ] as const;
+
+/** The pre-registered secondary reading of condition (c); never merged into the primary series. */
+export const SECONDARY_C_LIKE_FOR_LIKE_LABEL =
+    'secondary — pre-registered 2026-10-23 after the primary window; computed over the same window for information only; a decision on (c) waits for a later window not used to choose it';
+
+const ms = (ts: string): number => Date.parse(ts);
+const REGISTER_EVENTS = new Set(['subagent_start', 'subagent_stop', 'subagent_named']);
 
 function isSpawn(l: LedgerLine): boolean {
     return l.event === 'spawn_guard_shadow' && l.dispatch_kind === 'spawn' && (l.tool === 'Agent' || l.tool === 'Task');
 }
 
+function reconstructedReason(r: string): string {
+    return r === 'policy_epoch_changed' ? 'epoch_changed' : r;
+}
+
 export function reconstructSpawnVerdicts(input: ReconstructionInputs): ReconstructedSpawn[] {
     const ttl = input.cache_ttl_ms ?? HOST_DEFAULT_CACHE_TTL_MS;
     const joinWindow = input.session_join_window_ms ?? 10_000;
-    const lines = [...input.lines].sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0));
+    const windowStartMs = input.window_start ? ms(input.window_start) : null;
+    const lines = [...input.lines].filter((l) => Number.isFinite(ms(l.ts))).sort((a, b) => ms(a.ts) - ms(b.ts));
     const out: ReconstructedSpawn[] = [];
     for (const sp of lines.filter(isSpawn)) {
-        const spMs = Date.parse(sp.ts);
+        const spMs = ms(sp.ts);
+        if (windowStartMs !== null && spMs < windowStartMs) continue;
         const type = typeof sp.agent_type === 'string' && sp.agent_type ? sp.agent_type : null;
         const missing: string[] = [];
         if (type === null) missing.push('agent_type');
         let session = typeof sp.session_id === 'string' && sp.session_id ? sp.session_id : null;
         if (session === null && type !== null) {
-            const start = lines.find(
-                (l) => l.event === 'subagent_start' && l.agent_type === type && Date.parse(l.ts) >= spMs && Date.parse(l.ts) - spMs <= joinWindow,
-            );
+            const start = lines.find((l) => l.event === 'subagent_start' && l.agent_type === type && ms(l.ts) >= spMs && ms(l.ts) - spMs <= joinWindow);
             session = typeof start?.session_id === 'string' && start.session_id ? start.session_id : null;
         }
         if (session === null) missing.push('session_id');
@@ -187,11 +208,28 @@ export function reconstructSpawnVerdicts(input: ReconstructionInputs): Reconstru
             out.push({ ts: sp.ts, agent_type: type, basis: 'reconstructed', verdict: 'incomplete_join', missing });
             continue;
         }
-        const before = lines.filter((l) => l.session_id === session && l.ts < sp.ts);
+        const before = lines.filter((l) => l.session_id === session && ms(l.ts) < spMs);
+        const context: ReuseContext = {
+            domain: type!,
+            now_ms: spMs,
+            observed_fresh_cold_start_tokens: input.fresh_cold_start_by_type[type!] ?? null,
+            worktree: sp.cwd_key!,
+            branch_head: sp.head!,
+            skill_set_signature: 'unrecorded',
+            package_version: String(sp.epoch),
+        };
         const named = new Map<string, string>();
         for (const l of before) if (l.event === 'subagent_named' && l.ref && l.name_key) named.set(l.ref, l.name_key);
+        const cutByWindow = windowStartMs !== null && before.some((l) => REGISTER_EVENTS.has(l.event) && ms(l.ts) < windowStartMs);
+        const startUnseen = [...named.keys()].some((ref) => !before.some((l) => l.ref === ref && l.event === 'subagent_start'));
+        if (cutByWindow || startUnseen) {
+            const v = shadowReuseVerdict({ host_resume: true, workers: null, context });
+            out.push({ ts: sp.ts, agent_type: type!, basis: 'reconstructed', verdict: 'fresh', name: null, reasons: v.reasons.map(reconstructedReason), candidates: 0 });
+            continue;
+        }
         const workers: WorkerState[] = [];
         const workerMissing = new Set<string>();
+        const knownRefusals = new Set<string>();
         const candidateRefs = [...named.keys()]
             .map((ref) => {
                 const legs = before.filter((l) => l.ref === ref && (l.event === 'subagent_start' || l.event === 'subagent_stop'));
@@ -199,34 +237,38 @@ export function reconstructSpawnVerdicts(input: ReconstructionInputs): Reconstru
                 const lastStop = legs.filter((l) => l.event === 'subagent_stop').pop();
                 return { ref, lastStart, lastStop };
             })
-            .filter((c) => c.lastStop !== undefined && (c.lastStart === undefined || c.lastStart.ts <= c.lastStop.ts))
-            .sort((a, b) => (a.lastStop!.ts > b.lastStop!.ts ? -1 : 1));
-        for (const { ref, lastStop } of candidateRefs) {
+            .filter((c) => c.lastStop !== undefined && (c.lastStart === undefined || ms(c.lastStart.ts) <= ms(c.lastStop.ts)))
+            .sort((a, b) => ms(b.lastStop!.ts) - ms(a.lastStop!.ts));
+        for (const { ref, lastStart, lastStop } of candidateRefs) {
             const stop = lastStop!;
-            const wType = typeof stop.agent_type === 'string' && stop.agent_type ? stop.agent_type : null;
+            const typeField = (l: LedgerLine | undefined): string | null => (typeof l?.agent_type === 'string' && l.agent_type ? l.agent_type : null);
+            const wType = typeField(stop) ?? typeField(lastStart);
+            const def = wType === null ? undefined : input.definitions[wType];
             const tr = input.transcripts.get(ref);
-            const calls = tr?.calls.filter((c) => c.ts < sp.ts) ?? [];
+            const calls = tr?.calls.filter((c) => ms(c.ts) < spMs) ?? [];
             const gaps: string[] = [];
             if (wType === null) gaps.push('worker_agent_type');
             if (calls.length === 0) gaps.push('worker_transcript');
             for (const f of ['cwd_key', 'head', 'epoch'] as const) if (stop[f] === null || stop[f] === undefined) gaps.push(`worker_${f}`);
             if (gaps.length > 0) {
-                for (const g of gaps) workerMissing.add(g);
+                // Only a worker that could be resumed can leave the join incomplete.
+                if (wType !== null && wType !== type) knownRefusals.add('domain_mismatch');
+                else if (wType !== null && def?.reuse !== 'continuity') knownRefusals.add('not_continuity');
+                else for (const g of gaps) workerMissing.add(g);
                 continue;
             }
-            const def = input.definitions[wType!];
             workers.push({
                 name: named.get(ref)!,
                 domain: wType!,
                 reuse: def?.reuse ?? 'never',
-                last_request_at_ms: Date.parse(stop.ts),
+                last_request_at_ms: ms(stop.ts),
                 cache_ttl_ms: ttl,
                 transcript_tokens: calls[calls.length - 1]!.context_tokens,
                 capsule_watermark_tokens: watermarkForTier(def?.tier ?? 'inherit'),
-                compacted: (tr?.compact_ts ?? []).some((t) => t < sp.ts),
+                compacted: (tr?.compact_ts ?? []).some((t) => ms(t) < spMs),
                 worktree: stop.cwd_key!,
                 branch_head: stop.head!,
-                skill_set_signature: String(stop.epoch),
+                skill_set_signature: 'unrecorded',
                 package_version: String(stop.epoch),
             });
         }
@@ -234,23 +276,28 @@ export function reconstructSpawnVerdicts(input: ReconstructionInputs): Reconstru
             out.push({ ts: sp.ts, agent_type: type, basis: 'reconstructed', verdict: 'incomplete_join', missing: [...workerMissing].sort() });
             continue;
         }
-        const context: ReuseContext = {
-            domain: type!,
-            now_ms: spMs,
-            observed_fresh_cold_start_tokens: input.fresh_cold_start_by_type[type!] ?? null,
-            worktree: sp.cwd_key!,
-            branch_head: sp.head!,
-            skill_set_signature: String(sp.epoch),
-            package_version: String(sp.epoch),
-        };
-        const v = shadowReuseVerdict({ host_resume: true, workers, context });
-        out.push(
-            v.verdict === 'would_resume'
-                ? { ts: sp.ts, agent_type: type!, basis: 'reconstructed', verdict: 'would_resume', name: v.name, reasons: [], candidates: workers.length }
-                : { ts: sp.ts, agent_type: type!, basis: 'reconstructed', verdict: 'fresh', name: null, reasons: v.reasons, candidates: workers.length },
-        );
+        const v = workers.length === 0 && knownRefusals.size > 0 ? null : shadowReuseVerdict({ host_resume: true, workers, context });
+        if (v !== null && v.verdict === 'would_resume') {
+            out.push({ ts: sp.ts, agent_type: type!, basis: 'reconstructed', verdict: 'would_resume', name: v.name, reasons: [], candidates: workers.length });
+            continue;
+        }
+        const seen = new Set<string>([...(v?.reasons ?? []), ...knownRefusals]);
+        const ordered = [...REFUSAL_REASONS.filter((r) => seen.has(r)), ...[...seen].filter((r) => !(REFUSAL_REASONS as readonly string[]).includes(r))];
+        out.push({ ts: sp.ts, agent_type: type!, basis: 'reconstructed', verdict: 'fresh', name: null, reasons: ordered.map(reconstructedReason), candidates: workers.length });
     }
     return out;
+}
+
+/** Median first-call TOTAL input (uncached + cache write + cache read) of fresh runs, per definition — the like-for-like threshold. */
+export function likeForLikeColdStartByType(transcripts: ReadonlyMap<string, WorkerTranscript>, lines: readonly LedgerLine[]): Record<string, number> {
+    const typeOf = new Map<string, string>();
+    for (const l of lines) if (l.event === 'subagent_start' && l.ref && typeof l.agent_type === 'string' && !typeOf.has(l.ref)) typeOf.set(l.ref, l.agent_type);
+    const by: Record<string, number[]> = {};
+    for (const [ref, t] of typeOf) {
+        const first = transcripts.get(ref)?.calls[0];
+        if (first !== undefined) (by[t] ??= []).push(first.input_tokens);
+    }
+    return Object.fromEntries(Object.entries(by).map(([t, v]) => [t, median(v)]));
 }
 
 /** Median first-call written-or-uncached tokens of FRESH (ordinal 1) runs, per definition. */
@@ -305,7 +352,7 @@ export function readLedgerLines(ledgerDir: string, sinceIso: string | null = nul
             if (!line.trim()) continue;
             try {
                 const o = JSON.parse(line) as LedgerLine;
-                if (typeof o.event === 'string' && typeof o.ts === 'string' && (sinceIso === null || o.ts >= sinceIso)) out.push(o);
+                if (typeof o.event === 'string' && typeof o.ts === 'string' && (sinceIso === null || Date.parse(o.ts) >= Date.parse(sinceIso))) out.push(o);
             } catch {
                 // A torn line is not a record.
             }
@@ -331,7 +378,8 @@ export function readWorkerTranscripts(root: string): Map<string, WorkerTranscrip
             if (e.isDirectory()) stack.push(full);
             const m = /^agent-(.+)\.jsonl$/.exec(e.name);
             if (!e.isFile() || m === null) continue;
-            const seen = new Set<string>();
+            // Streamed records repeat one message id with growing usage; the last one is the call.
+            const byId = new Map<string, { ts: string; context_tokens: number; input_tokens: number }>();
             const t: WorkerTranscript = { calls: [], compact_ts: [] };
             for (const line of fs.readFileSync(full, 'utf8').split('\n')) {
                 if (!line.trim()) continue;
@@ -346,14 +394,12 @@ export function readWorkerTranscripts(root: string): Map<string, WorkerTranscrip
                 if (o['subtype'] === 'compact_boundary') t.compact_ts.push(ts);
                 const msg = o['message'] as { id?: string; usage?: Record<string, number> } | undefined;
                 if (o['type'] !== 'assistant' || !msg?.usage) continue;
-                const key = msg.id ?? `${ts}`;
-                if (seen.has(key)) continue;
-                seen.add(key);
                 const u = msg.usage;
                 const n = (k: string): number => (typeof u[k] === 'number' ? u[k] : 0);
-                t.calls.push({ ts, context_tokens: n('input_tokens') + n('cache_read_input_tokens') + n('cache_creation_input_tokens') + n('output_tokens') });
+                const input = n('input_tokens') + n('cache_read_input_tokens') + n('cache_creation_input_tokens');
+                byId.set(msg.id ?? ts, { ts, context_tokens: input + n('output_tokens'), input_tokens: input });
             }
-            t.calls.sort((a, b) => (a.ts < b.ts ? -1 : 1));
+            t.calls = [...byId.values()].sort((a, b) => Date.parse(a.ts) - Date.parse(b.ts));
             out.set(refFor(m[1]!), t);
         }
     }
@@ -393,11 +439,13 @@ function readLedger(root: string): ShadowLine[] {
     return out;
 }
 
-interface ReconstructArgs {
+export interface ReconstructArgs {
     ledgerDirs: string[];
     transcriptRoots: string[];
     definitionsDir: string;
     since: string | null;
+    /** Lines after this instant are ignored, so a re-run reads the window that was filed. */
+    until?: string | null;
 }
 
 function parseReconstructArgs(argv: readonly string[]): ReconstructArgs | null {
@@ -410,6 +458,7 @@ function parseReconstructArgs(argv: readonly string[]): ReconstructArgs | null {
         else if (k === '--transcripts') a.transcriptRoots.push(v);
         else if (k === '--definitions') a.definitionsDir = v;
         else if (k === '--since') a.since = v;
+        else if (k === '--until') a.until = v;
         else continue;
         i++;
     }
@@ -417,21 +466,37 @@ function parseReconstructArgs(argv: readonly string[]): ReconstructArgs | null {
 }
 
 export function reconstructFromDisk(a: ReconstructArgs): Record<string, unknown> {
-    const lines = a.ledgerDirs.flatMap((d) => readLedgerLines(d, a.since));
+    // Read the whole ledger: a register cut by --since must be seen to be reported as unrecorded.
+    const untilMs = a.until ? Date.parse(a.until) : null;
+    const inWindowEnd = (ts: string): boolean => untilMs === null || Date.parse(ts) <= untilMs;
+    const all = a.ledgerDirs.flatMap((d) => readLedgerLines(d)).filter((l) => inWindowEnd(l.ts));
+    const sinceMs = a.since === null ? null : Date.parse(a.since);
+    const lines = sinceMs === null ? all : all.filter((l) => Date.parse(l.ts) >= sinceMs);
     const transcripts = new Map<string, WorkerTranscript>();
     for (const r of a.transcriptRoots) for (const [k, v] of readWorkerTranscripts(r)) transcripts.set(k, v);
     const records = a.transcriptRoots.flatMap((r) => scanTranscripts({ root: r }).records);
-    const starts = a.ledgerDirs.flatMap((d) => readLedgerStarts(d)).filter((s) => a.since === null || s.ts >= a.since);
+    const starts = a.ledgerDirs.flatMap((d) => readLedgerStarts(d)).filter((s) => (sinceMs === null || Date.parse(s.ts) >= sinceMs) && inWindowEnd(s.ts));
     const runs = segmentLegsIntoRuns(records, starts).runs;
     const fresh = freshColdStartByType(runs, lines);
-    const spawns = reconstructSpawnVerdicts({ lines, transcripts, definitions: readDefinitions(a.definitionsDir), fresh_cold_start_by_type: fresh });
+    const definitions = readDefinitions(a.definitionsDir);
+    const base = { lines: all, transcripts, definitions, window_start: a.since };
+    const spawns = reconstructSpawnVerdicts({ ...base, fresh_cold_start_by_type: fresh });
     const summary = summariseReconstruction(spawns);
+    const likeForLike = likeForLikeColdStartByType(transcripts, lines);
+    const secondarySpawns = reconstructSpawnVerdicts({ ...base, fresh_cold_start_by_type: likeForLike });
     return {
         basis: 'reconstructed',
         approximations: RECONSTRUCTION_APPROXIMATIONS,
         observed_fresh_cold_start_by_type: fresh,
         summary,
         flip: flipReadiness(summary.window, { false_positive_rate: null, cost_avoided: null, friction: null }),
+        secondary_c_like_for_like: {
+            label: SECONDARY_C_LIKE_FOR_LIKE_LABEL,
+            condition_c: 'transcript_tokens < median first-call TOTAL input tokens (input + cache_creation + cache_read) of fresh runs of the definition',
+            threshold_by_type: likeForLike,
+            summary: summariseReconstruction(secondarySpawns),
+            spawns: secondarySpawns,
+        },
         spawns,
     };
 }

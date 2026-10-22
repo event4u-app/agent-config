@@ -20,9 +20,11 @@ the window, never counted as `fresh`.
 
 Approximations, stated because the verdicts depend on them:
 
-- `skill_set_signature` and `package_version` both come from the line's `epoch`, the bundle
-  mtime. No per-worker skill signature is recorded, so an epoch change also reads as
-  `workspace_changed`.
+- `package_version` comes from the line's `epoch`, the bundle mtime. An epoch change is reported
+  once, as `epoch_changed` (the decision function's `policy_epoch_changed`). No per-worker skill
+  signature is recorded, so `skill_set_signature` is not compared and `workspace_changed`
+  reflects worktree and head only. (Until 2026-10-23 both fields took the epoch, so one change
+  counted as two reasons. No spawn in this window had an epoch change.)
 - `last_request_at` is the worker's last `subagent_stop`, and `cache_ttl` is the host default of
   300 000 ms.
 - `host_resume` is true: `worker_resume` is live on claude under the agent-teams flag.
@@ -30,15 +32,38 @@ Approximations, stated because the verdicts depend on them:
   type within 10 s. If none is found, the spawn is `incomplete_join: session_id`.
 - The observed fresh cold start is the median over the whole window, so it can use runs that came
   after the spawn.
+- A worker's `transcript_tokens` is its last call before the spawn, read from the last streamed
+  record per message id.
+- A session with register lines before `--since`, or a named worker whose `subagent_start` is not
+  in view, reads as `worker_register_unrecorded`, never `no_candidate`. Only a worker that could
+  be resumed (same `agent_type`, `reuse: continuity`) can make a join incomplete. All timestamps
+  are compared as instants.
 
 ## Sources
 
 | Source | Lines used | Transcripts |
 |---|---|---|
 | Scratch bench ledger (16 sessions, `internal/bench/worker-resume`) | all | the scratch project store |
-| Maintainer ledger `agent-config/agents/runtime/state/subagent-ledger` | `ts >= 2026-10-22T20:40Z` | the main project store |
+| Maintainer ledger `agent-config/agents/runtime/state/subagent-ledger` | `2026-10-22T20:40Z <= ts <= 21:38Z` | the main project store |
 
-## The window
+## Re-run after the review fixes (2026-10-23)
+
+An independent review on 2026-10-23 found four defects in the reconstruction. They are fixed in
+`worker_reuse_shadow_report` with tests seen red first: (2) an unrelated worker's missing data
+voided the whole spawn; (3) a register cut by `--since` read as `no_candidate`; (4) transcript
+dedup kept the first streamed record, undercounting the last call's output; (5) timestamps were
+compared as strings. The report was re-run over the same ledger and transcript roots with the
+same `--since`. A new `--until 2026-10-22T21:38:00Z` was added, the time the filed window was
+written: the maintainer ledger is live, and without a cutoff 18 spawn lines appended after
+21:45Z would have joined the window (10 `general-purpose`, 8 without `agent_type`).
+
+**Nothing moved.** All 89 spawns get the same verdict and the same reasons as before. Fix 2 did
+not apply: every incomplete join is a spawn-side gap (`agent_type`, `session_id`). Fix 3 did not
+apply: no session in the window had register lines before `--since`. Fix 4 changed the median
+worker transcript from 7 066 to 7 065 tokens. Fix 5 changed no ordering because every line
+carries a UTC `Z` timestamp.
+
+## The window — primary reading
 
 | Measure | Value |
 |---|---|
@@ -57,13 +82,40 @@ only: condition (c) compares a worker's whole transcript (about 7 k tokens) with
 start measured as written-or-uncached tokens. A fresh spawn of a definition whose prefix is
 already in the prompt cache writes about 860 tokens, so every warm candidate fails (c), the case
 reuse is meant for included. This is a property of the condition as specified, not missing data.
-That 64 of 64 candidates failed only on (c) is the finding. Comparing like with like (billable
-context against billable context, or written against written) would change it. Neither
-alternative was chosen here.
+That 64 of 64 candidates failed only on (c) is the finding. The like-for-like comparison is
+reported below as a secondary reading; in this window it does not change the count.
 
 **A null window, recorded as one.** Every reuse was refused, and per 3.5 that is a valid null.
 
-## flipReadiness
+**What the primary reading says, and what it does not.** This is the as-implemented policy
+result: 0/81 eligible. It does not establish that reuse was more expensive or worse than a fresh
+start. (Council 2026-10-23, both seats agreed on this wording.)
+
+## Secondary reading `c_like_for_like`
+
+> secondary — pre-registered 2026-10-23 after the primary window; computed over the same window
+> for information only; a decision on (c) waits for a later window not used to choose it
+
+The council of 2026-10-23 split 1:1 in each of two rounds on condition (c). The default applied
+was option (d): (c) stays unchanged in the shipped decision function, and the report computes a
+second reading beside the primary one. In this reading (c) is `transcript_tokens <` the median
+first-call **total** input (input + cache_creation + cache_read) of fresh runs of the
+definition. Everything else is as in the decision function. This reading is never merged into
+the primary series.
+
+| Measure | Value |
+|---|---|
+| Threshold, `ac-researcher` | 5 496 tokens (median first-call total input, fresh runs) |
+| Complete joins | 81 (same 8 incomplete) |
+| `would_resume` | **0** |
+| Refusals | `transcript_over_cold_start` 64 · `no_candidate` 17 |
+| Smallest candidate transcript | 6 575 tokens, above the threshold |
+
+Comparing like with like still admits no worker. A worker that has done one task carries its
+first call (about 5.5 k) plus that task's own turns, so it is above the median first call of a
+fresh run.
+
+## flipReadiness (primary reading)
 
 `ready: false`. Missing: `failure_observed` (0 would-resume), `false_positive_rate_measured`,
 `economics_measured`, `window_met` (81 calls, 0.02 days; the bar is ≥ 100 calls or 14 days).
@@ -79,9 +131,11 @@ alternative was chosen here.
 ```
 ./scripts-run src/scripts/worker_reuse_shadow_report \
   --ledger-dir <scratch>/proj/agents/runtime/state/subagent-ledger \
-  --ledger-dir <main checkout>/agents/runtime/state/subagent-ledger --since 2026-10-22T20:40:00Z \
+  --ledger-dir <main checkout>/agents/runtime/state/subagent-ledger \
+  --since 2026-10-22T20:40:00Z --until 2026-10-22T21:38:00Z \
   --transcripts ~/.claude/projects/<scratch project slug> \
   --transcripts ~/.claude/projects/<main checkout slug>
 ```
 
-Raw transcripts and the scratch ledger are not committed.
+The output carries the primary `summary` and `flip`, and `secondary_c_like_for_like` with its
+own label, threshold and summary. Raw transcripts and the scratch ledger are not committed.
