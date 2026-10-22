@@ -135,6 +135,13 @@
             "reason": "Council seat availability probe cache. Provider state."
         },
         {
+            "id": "council-route-models.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/ai_council/free_route_catalog.ts:80",
+            "reason": "Model ids a base_url route served at its last discovery. Provider state, cleared on a failed probe; nothing resumes from it."
+        },
+        {
             "id": "decisions",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
