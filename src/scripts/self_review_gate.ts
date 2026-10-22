@@ -43,6 +43,7 @@ import {
     load_anthropic_key,
 } from './ai_council/clients.js';
 import { independenceFields } from './_lib/review_independence.js';
+import { mergeReviewRuns, type ReviewRange, type RunFile } from './_lib/review_run_merge.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -808,7 +809,9 @@ export interface ReviewPlan {
  * `scope` keeps only changed files under one of the given path prefixes, and
  * names itself in the coverage record so a reader sees what was out of reach;
  * `maxChunks` lifts the per-run ceiling for a run that is meant to finish. CI
- * passes neither and keeps the ceiling.
+ * passes neither and keeps the ceiling. A scoped run is advisory only: it
+ * refuses `--enforce`, its coverage label says `scoped`, and
+ * `check_finding_dispositions` refuses a ledger whose coverage records a scope.
  */
 export interface PlanOptions {
     scope?: readonly string[];
@@ -1138,14 +1141,93 @@ function resolveReviewer(): Reviewer | null {
     return { client: new AnthropicClient({ api_key: key }), transport: 'api', how: 'ANTHROPIC_API_KEY' };
 }
 
+/** The reviewable changed files of `base...head` under `prefixes` — the set a run over that range saw. */
+export function inScopeFilesForRange(range: ReviewRange, prefixes: readonly string[] | null, cwd: string = REPO_ROOT): string[] {
+    const r = spawnSync('git', ['-c', 'core.quotePath=false', 'diff', '--name-only', `${range.base}...${range.head}`], {
+        cwd,
+        encoding: 'utf8',
+        maxBuffer: 64 * 1024 * 1024,
+    });
+    if (r.status !== 0) {
+        throw new Error(`git diff ${range.base}...${range.head} failed: ${(r.stderr ?? '').toString().slice(0, 300)}`);
+    }
+    return (r.stdout ?? '')
+        .split('\n')
+        .map((x) => x.trim())
+        .filter(Boolean)
+        .filter(isReviewablePath)
+        .filter((f) => inScope(f, prefixes ?? undefined));
+}
+
+function resolveCommit(ref: string, cwd: string = REPO_ROOT): string | null {
+    const r = spawnSync('git', ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`], { cwd, encoding: 'utf8' });
+    return r.status === 0 ? r.stdout.trim() : null;
+}
+
+/**
+ * `--merge-runs a.json,b.json --out merged.json [--head <ref> --base <ref>]`:
+ * one findings file from several runs over one range, whole only when their
+ * union read every in-scope file (`_lib/review_run_merge.ts`). Exit 0 merged,
+ * 1 refused (the problems are printed), 2 usage.
+ */
+export function mergeRunsMain(argv: string[], cwd: string = REPO_ROOT): 0 | 1 | 2 {
+    const val = (flag: string): string | undefined => {
+        const i = argv.indexOf(flag);
+        return i >= 0 ? argv[i + 1] : undefined;
+    };
+    const list = (val('--merge-runs') ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+    const out = val('--out');
+    const head = val('--head');
+    const base = val('--base');
+    if (list.length === 0 || out === undefined || (head === undefined) !== (base === undefined)) {
+        process.stderr.write('self-review-gate: --merge-runs <a.json,b.json,…> --out <file> [--head <ref> --base <ref>]\n');
+        return 2;
+    }
+    const runs: RunFile[] = [];
+    for (const f of list) {
+        try {
+            runs.push({ name: path.basename(f), json: JSON.parse(readFileSync(f, 'utf8')) as Record<string, unknown> });
+        } catch (e) {
+            process.stderr.write(`self-review-gate: ${f} is not readable JSON (${e instanceof Error ? e.message : String(e)})\n`);
+            return 2;
+        }
+    }
+    const result = mergeReviewRuns(runs, {
+        ...(head !== undefined && base !== undefined ? { asserted: { head, base } } : {}),
+        listInScope: (range, prefixes) => inScopeFilesForRange(range, prefixes, cwd),
+        resolve: (ref) => resolveCommit(ref, cwd),
+    });
+    if (!result.ok) {
+        process.stderr.write(`❌  self-review-gate --merge-runs refused:\n${result.problems.map((p) => `    - ${p}`).join('\n')}\n`);
+        return 1;
+    }
+    writeFileSync(out, `${JSON.stringify(result.merged, null, 2)}\n`);
+    const cov = result.merged['coverage'] as { filesTotal: number };
+    process.stdout.write(
+        `✅  merged ${String(runs.length)} run(s): ${String(cov.filesTotal)} of ${String(cov.filesTotal)} in-scope file(s) read ` +
+            `(range ${result.rangeSource}), ${String((result.merged['findings'] as unknown[]).length)} distinct finding(s) → ${out}\n`,
+    );
+    return 0;
+}
+
 // ── CLI ───────────────────────────────────────────────────────────────
-export function main(argv: string[]): 0 | 2 {
+export function main(argv: string[]): 0 | 1 | 2 {
+    if (argv.includes('--merge-runs')) {
+        return mergeRunsMain(argv);
+    }
     const dryRun = argv.includes('--dry-run');
     const enforce = argv.includes('--enforce');
     const baseIdx = argv.indexOf('--base');
     const baseRef = (baseIdx >= 0 ? argv[baseIdx + 1] : undefined) ?? 'origin/main';
     const scopeIdx = argv.indexOf('--scope');
     const scope = scopeIdx >= 0 ? (argv[scopeIdx + 1] ?? '').split(',').map((p) => p.trim()).filter((p) => p !== '') : undefined;
+    // A scoped run reads only the prefixes its author picked, so it cannot
+    // produce an ENFORCED verdict that reads as a review of the whole span
+    // (finding cc59a3fd0ca7). It stays available as a local, advisory run.
+    if (scope !== undefined && enforce) {
+        process.stderr.write('self-review-gate: --scope narrows the review to chosen paths and cannot be combined with --enforce\n');
+        return 2;
+    }
     const maxIdx = argv.indexOf('--max-chunks');
     const maxChunks = maxIdx >= 0 ? Number(argv[maxIdx + 1]) : undefined;
     if (maxChunks !== undefined && !(Number.isInteger(maxChunks) && maxChunks > 0)) {
@@ -1359,6 +1441,9 @@ export function main(argv: string[]): 0 | 2 {
                     {
                         schema_version: 1,
                         ...independenceFields(['anthropic']),
+                        // The range this run read, so runs can be merged on a
+                        // checkable range rather than an asserted one.
+                        review: { head: resolveCommit('HEAD') ?? 'HEAD', base: resolveCommit(plan.analysisBase) ?? plan.analysisBase },
                         coverage,
                         // Readable, not recomputable: the falsifier for the
                         // supplied-facts change is a count over the NEXT cut,

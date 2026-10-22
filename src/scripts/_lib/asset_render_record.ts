@@ -102,22 +102,19 @@ export interface AssetRenderRecord {
     readonly manifest: string;
     /** sha256 of the manifest's bytes as the render left them. */
     readonly manifest_digest: string;
-    readonly exit_code: number;
+    /** `null` when the host reported no exit status — see {@link observeAssetRender}. */
+    readonly exit_code: number | null;
+    /** Set on a render whose exit status the host did not report. */
+    readonly instrument_gap?: true;
 }
 
 /**
- * A render the hook saw finish without a readable exit status. Not evidence
- * either way: its presence sends the gate back to the transcript rule, the
- * same instrument-gap reading the turn-end gate's other detectors apply.
+ * A render the hook saw finish without a readable exit status AND whose
+ * manifest it could not bind. Evidence of nothing: the obligation stays open.
  */
 export interface AssetRenderGap {
     readonly instrument_gap: true;
     readonly command: string;
-}
-
-/** Does a state value carry a render the host reported no exit for? */
-export function hasInstrumentGap(raw: readonly unknown[]): boolean {
-    return raw.some((r) => typeof r === 'object' && r !== null && (r as Record<string, unknown>)['instrument_gap'] === true);
 }
 
 /** `ui:render` options that take a value, so their value is not the target. */
@@ -155,10 +152,15 @@ export function observeAssetRender(
     shellCwd: string = root,
 ): AssetRenderRecord | AssetRenderGap | null {
     if (!isPureRender(command)) return null;
-    if (exitCode === null) return { instrument_gap: true, command: command.slice(0, 512) };
-    if (!RECORDED_EXITS.has(exitCode)) return null;
+    // No readable exit status is NOT a reason to fall back to the transcript,
+    // which any write route can forge (finding 37af6b94b10a). The manifest is
+    // bound exactly as for a readable exit — its bytes as this render left
+    // them — and only the exit code is unknown. A render that failed leaves a
+    // `render-failed` manifest, which discharges nothing on its own reading.
+    if (exitCode !== null && !RECORDED_EXITS.has(exitCode)) return null;
+    const gap = (): AssetRenderGap | null => (exitCode === null ? { instrument_gap: true, command: command.slice(0, 512) } : null);
     const cd = /^\s*cd\s+([^;&|<>`$\n]+?)\s*&&/.exec(command);
-    if (cd && !PLAIN_WORD.test(cd[1]!.trim())) return null;
+    if (cd && !PLAIN_WORD.test(cd[1]!.trim())) return gap();
     const cwd = path.resolve(shellCwd, cd ? unquote(cd[1]!.trim()) : '.');
     const head =
         command
@@ -168,10 +170,10 @@ export function observeAssetRender(
             .split('|')[0] ?? '';
     const words = head.trim().split(/\s+/);
     // One word the shell could rewrite and the computed path is a guess.
-    if (!words.every((w) => PLAIN_WORD.test(w))) return null;
+    if (!words.every((w) => PLAIN_WORD.test(w))) return gap();
     const tokens = words.map(unquote);
     const at = tokens.findIndex((t) => t === 'ui:render');
-    if (at === -1) return null;
+    if (at === -1) return gap();
 
     const opts = new Map<string, string>();
     let target: string | undefined;
@@ -187,7 +189,7 @@ export function observeAssetRender(
             target = t;
         }
     }
-    if (target === undefined) return null;
+    if (target === undefined) return gap();
 
     const projectRoot = path.resolve(cwd, opts.get('--project-root') ?? '.');
     const fileAbs = path.resolve(projectRoot, target);
@@ -198,18 +200,19 @@ export function observeAssetRender(
         const m = JSON.parse(manifestBytes.toString('utf8')) as { target?: unknown; slug?: unknown };
         // The manifest must describe THIS call — a leftover from another
         // target or slug at the same path is not its output.
-        if (m.target !== target || m.slug !== slug) return null;
+        if (m.target !== target || m.slug !== slug) return gap();
         return {
             file: slashed(path.relative(root, fileAbs)),
             file_digest: sha256(fs.readFileSync(fileAbs)),
             manifest: slashed(path.relative(root, manifestAbs)),
             manifest_digest: sha256(manifestBytes),
             exit_code: exitCode,
+            ...(exitCode === null ? { instrument_gap: true as const } : {}),
         };
     } catch {
         // No file or no manifest: the render left nothing to bind, so nothing
         // is recorded — the same verdict as a render that never ran.
-        return null;
+        return gap();
     }
 }
 

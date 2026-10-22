@@ -84,7 +84,19 @@ describe('1.1 — the recorder writes a successful asset render, and only that',
         renderManifest();
         expect(observeAssetRender(root, RENDER, 3)?.exit_code).toBe(3);
         expect(observeAssetRender(root, RENDER, 1)).toBeNull();
-        // No readable exit is an instrument gap, recorded as such, never a render.
+        // No readable exit is an instrument gap, recorded as such — and the
+        // manifest bytes the render left are still bound, so the gap is never a
+        // reason to read the forgeable transcript instead (finding 37af6b94b10a).
+        expect(observeRaw(root, RENDER, null)).toEqual({
+            file: FILE,
+            file_digest: digestOf(SVG),
+            manifest: MANIFEST,
+            manifest_digest: digestOf(fs.readFileSync(path.join(root, MANIFEST), 'utf8')),
+            exit_code: null,
+            instrument_gap: true,
+        });
+        // With no manifest to bind, the gap is evidence of nothing.
+        fs.rmSync(path.join(root, MANIFEST));
         expect(observeRaw(root, RENDER, null)).toEqual({ instrument_gap: true, command: RENDER });
     });
 
@@ -206,13 +218,23 @@ describe('1.3 — no record is a named fallback', () => {
         expect(openSvgObligation(root, [edit(FILE), bash(RENDER)], [])?.reason).not.toContain(TRANSCRIPT_FALLBACK_REASON);
     });
 
-    it('a render with no readable exit sends the gate back to the transcript rule', () => {
-        // Review round 2, finding 1: a live recorder on a host that reports no
-        // exit status would otherwise refuse every edited .svg forever.
+    it('a render with no readable exit is read on the record path, never the transcript', () => {
+        // Review round 2, finding 1 wanted a host that reports no exit status not
+        // to refuse every edited .svg forever; the gap now binds the manifest the
+        // render left, so honest work still discharges on the record.
         renderManifest();
         const gap = [observeRaw(root, RENDER, null)];
         expect(openSvgObligation(root, [edit(FILE), bash(RENDER)], gap)).toBeNull();
-        expect(openSvgObligation(root, [edit(FILE)], gap)?.reason).toContain(TRANSCRIPT_FALLBACK_REASON);
+        // A manifest forged after the gap render no longer hashes to what the
+        // hook bound, so it discharges nothing — the transcript rule would have
+        // accepted it, because the forging write is not in the tool calls.
+        write(MANIFEST, `${JSON.stringify({ target: FILE, slug: 'assets-logo-svg', profile: 'asset', verification: 'verified', asset: { digest: digestOf(SVG) }, forged: true })}\n`);
+        const forged = openSvgObligation(root, [edit(FILE), bash(RENDER)], gap);
+        expect(forged).not.toBeNull();
+        expect(forged?.reason).not.toContain(TRANSCRIPT_FALLBACK_REASON);
+        // A gap with nothing bound is evidence of nothing either.
+        const unbound = [{ instrument_gap: true, command: RENDER }];
+        expect(openSvgObligation(root, [edit(FILE), bash(RENDER)], unbound)).not.toBeNull();
     });
 
     it('a recorder that predates the field reads as no record', () => {

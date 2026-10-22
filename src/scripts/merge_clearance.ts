@@ -17,7 +17,8 @@
  *
  * `--check` exits 0 only when the record named for the pull request's live
  * head exists, parses, re-derives to `cleared` under the committed quorum
- * policy, and names that pull request and head. `--head` additionally pins the
+ * policy, names that pull request and head, AND is backed by the prompt and
+ * replies committed beside it: the seats are re-derived from those replies. `--head` additionally pins the
  * head the caller recorded; a live head that moved away from it fails.
  *
  * The record shape and every derivation live in `_lib/merge_clearance_record.ts`.
@@ -33,6 +34,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
     CLEARANCE_DIR,
     checkPromptFraming,
+    clearanceCompanions,
     clearanceFileName,
     deriveOutcome,
     parseClearance,
@@ -40,6 +42,7 @@ import {
     renderClearance,
     seatsFromSession,
     sha256,
+    verifyClearanceCompanions,
 } from './_lib/merge_clearance_record.js';
 import { readRequiredProviders } from './_lib/ratification_artifact.js';
 
@@ -127,8 +130,17 @@ export function writeClearance(argv: readonly string[], root: string, out: Out):
         outcome,
     });
     const rel = path.posix.join(CLEARANCE_DIR, clearanceFileName(pr, head));
+    const companions = clearanceCompanions(pr, head);
     fs.mkdirSync(path.join(root, CLEARANCE_DIR), { recursive: true });
     fs.writeFileSync(path.join(root, rel), body, 'utf8');
+    // The prompt and every reply, so the check re-derives the seats instead of
+    // trusting the record (findings 4679f232ac0d, 6db6a97ba552).
+    fs.writeFileSync(path.join(root, CLEARANCE_DIR, companions.prompt), prompt, 'utf8');
+    const responses = (session as { responses: unknown[] }).responses.map((r) => {
+        const x = r as { provider?: unknown; model?: unknown; text?: unknown; error?: unknown };
+        return { provider: x.provider, model: x.model, text: typeof x.text === 'string' ? x.text : '', error: x.error ?? null };
+    });
+    fs.writeFileSync(path.join(root, CLEARANCE_DIR, companions.replies), `${JSON.stringify({ responses }, null, 2)}\n`, 'utf8');
     out(`merge_clearance: wrote ${rel}`);
     out(`outcome: ${outcome}`);
     return 0;
@@ -177,6 +189,20 @@ export function checkClearance(
     }
     if (parsed.pr !== pr || parsed.head !== liveHead) {
         out(`merge_clearance: not cleared — ${rel} names #${String(parsed.pr)} at ${parsed.head}`);
+        return 1;
+    }
+    const companions = clearanceCompanions(pr, liveHead);
+    const readOrNull = (name: string): string | null => {
+        try {
+            return fs.readFileSync(path.join(root, CLEARANCE_DIR, name), 'utf8');
+        } catch {
+            return null;
+        }
+    };
+    const unbacked = verifyClearanceCompanions(parsed, readOrNull(companions.prompt), readOrNull(companions.replies));
+    if (unbacked.length > 0) {
+        out(`merge_clearance: not cleared — ${rel} is not backed by its committed prompt and replies:`);
+        for (const p of unbacked) out(`  ${p}`);
         return 1;
     }
     if (parsed.outcome !== 'cleared') {

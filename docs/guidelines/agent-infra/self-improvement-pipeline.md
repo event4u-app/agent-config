@@ -107,9 +107,14 @@ blocks — it does not hand a half-filled doc to the next stage.
   `proposal:check` performs the binding (gate check 7): a `scope: package`
   proposal at `stage: gated` declares `changed_files:` and names a
   `ratification_record:` that passes the reader against the committed provider
-  policy and an `owner_authorization:`, both bound to one digest over those
-  files read at one commit. It cannot prove the owner wrote the authorization;
-  it proves the review and the approval name the same content.
+  policy and an `owner_authorization:` — an owner-authorization record under
+  `agents/evidence/owner-authorizations/` — both bound to one digest over those
+  files read at one commit. The declared list must cover every file outside
+  `agents/` that the range `<base>...HEAD` changes (`--base`, default
+  `origin/main`; an unlistable range fails closed). It cannot prove the owner
+  wrote the authorization — the record is a content binding, not an
+  authenticated approval; it proves the review and the record name the same
+  content, and that content is the whole change.
 - **Executor:** the `upstream-contribute` skill decides *whether*, and
   `self-repair:release` — the one gated outward step — decides *what leaves*.
   The skill refuses invocation if the proposal frontmatter is not

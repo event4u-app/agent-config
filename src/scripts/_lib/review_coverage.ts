@@ -50,6 +50,28 @@ export interface ReviewCoverage {
     readonly filesReviewed?: unknown;
     readonly filesTotal?: unknown;
     readonly unreviewed?: unknown;
+    readonly scope?: unknown;
+}
+
+/**
+ * The path prefixes a scoped self-review run was narrowed to, or `null` for a
+ * whole-span run. A malformed `scope` (not an array of strings) reads as
+ * scoped with the raw value, never as whole-span: a field that says the run was
+ * narrowed is not dropped for being badly shaped.
+ */
+export function coverageScope(coverage: unknown): readonly string[] | null {
+    if (coverage === null || typeof coverage !== 'object') {
+        return null;
+    }
+    const raw = (coverage as ReviewCoverage).scope;
+    if (raw === undefined || raw === null) {
+        return null;
+    }
+    if (Array.isArray(raw)) {
+        const prefixes = raw.map((x) => String(x));
+        return prefixes.length === 0 ? null : prefixes;
+    }
+    return [String(raw)];
 }
 
 function _finite(v: unknown): number | null {
@@ -77,6 +99,14 @@ export function coverageLabel(coverage: unknown): string | null {
     const c = coverage as ReviewCoverage;
     const reviewed = _finite(c.filesReviewed);
     const total = _finite(c.filesTotal);
+    // A scoped run counts only in-scope files, so `reviewed === total` there is
+    // NOT whole-span coverage — the label must say so whatever the numbers read
+    // (finding cc59a3fd0ca7).
+    const scope = coverageScope(coverage);
+    if (scope !== null) {
+        const counted = reviewed !== null && total !== null ? `read ${String(reviewed)} of ${String(total)} changed files within it` : 'counted only files within it';
+        return `self-review was scoped to ${scope.map((x) => `\`${x}\``).join(', ')} and ${counted} (scoped — not the whole span)`;
+    }
     if (reviewed === null || total === null || total <= 0 || reviewed >= total) {
         return null;
     }

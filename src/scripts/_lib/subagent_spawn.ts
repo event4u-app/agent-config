@@ -13,6 +13,7 @@
 
 import * as crypto from 'node:crypto';
 
+import { render_floor } from './subagent_floor.js';
 import { CAPSULE_WATERMARK_FRACTION } from './worker_budget.js';
 
 export type RoleMode = 'developer' | 'reviewer' | 'tester' | 'po' | 'incident' | 'planner';
@@ -54,7 +55,7 @@ export interface SpawnSelection {
      * brief.
      */
     omit_project_instructions?: boolean;
-    /** The rendered safety floor (`generate_subagent_floor.render_floor`). */
+    /** The rendered safety floor (`_lib/subagent_floor.render_floor`), carried verbatim. */
     safety_floor?: string | null;
     /** The user's constraints, exclusions and preferences, verbatim. */
     user_constraints?: string[];
@@ -131,15 +132,21 @@ export function composeSpawnBrief(sel: SpawnSelection): SpawnBrief {
     }
 
     // A worker that skips the instruction hierarchy has no other path to the
-    // floor, so a skip without one falls back to loading, loudly.
+    // floor, so a skip without THE floor falls back to loading, loudly. Any
+    // non-empty string used to pass, so 'x' could stand in for the rule layer
+    // the skip drops; the brief must carry the generated floor verbatim.
     let omit_project_instructions = sel.omit_project_instructions === true;
     let safety_floor: string | null = null;
     if (omit_project_instructions) {
-        if (typeof sel.safety_floor === 'string' && sel.safety_floor.trim().length > 0) {
+        if (typeof sel.safety_floor === 'string' && sel.safety_floor.includes(render_floor())) {
             safety_floor = sel.safety_floor;
         } else {
             omit_project_instructions = false;
-            warnings.push('instruction skip refused: no safety floor to carry, worker loads project instructions');
+            warnings.push(
+                typeof sel.safety_floor === 'string' && sel.safety_floor.trim().length > 0
+                    ? 'instruction skip refused: safety floor is not the generated floor, worker loads project instructions'
+                    : 'instruction skip refused: no safety floor to carry, worker loads project instructions',
+            );
         }
     }
 

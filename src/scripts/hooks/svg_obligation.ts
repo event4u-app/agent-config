@@ -85,7 +85,6 @@ import * as path from 'node:path';
 import { isAssetRenderCommand } from '../_lib/verification_command.js';
 import {
     RENDER_REL,
-    hasInstrumentGap,
     isPureRender,
     readAssetRenderRecords,
     recordedManifest,
@@ -279,9 +278,8 @@ export interface SvgObligationInputs {
 
 /** Appended to every refusal on a host with no live recorder. Pinned verbatim. */
 export const TRANSCRIPT_FALLBACK_REASON =
-    'transcript fallback: no readable `post_tool_use` render record exists for this turn — no live ' +
-    'recorder on this host (`agent-config hooks:status`), or a render whose exit status the host did not ' +
-    'report — so the manifest was read under the transcript rule — ' +
+    'transcript fallback: no `post_tool_use` render record exists for this turn — no live ' +
+    'recorder on this host (`agent-config hooks:status`) — so the manifest was read under the transcript rule — ' +
     'an omission check, not an attestation';
 
 /** The record-path verdict for one file. */
@@ -478,10 +476,12 @@ export function openSvgObligation(
     toolCalls: readonly ToolCall[],
     recordedRaw: readonly unknown[] | null = null,
 ): { detector: 'verification'; evidence: string; reason: string; mode: 'transcript' } | null {
-    // A render the host reported no exit for is an instrument gap, never a
-    // missing render: refusing on it would refuse honest work for the host's
-    // silence, so the transcript rule answers instead.
-    const recordedRenders = recordedRaw === null || hasInstrumentGap(recordedRaw) ? null : recordedRaw;
+    // A live recorder is the only evidence read, instrument gaps included: a
+    // render whose exit the host did not report still binds the manifest bytes
+    // it left (`observeAssetRender`), so it discharges on the record path like
+    // any other. Falling back to the forgeable transcript rule on a gap
+    // re-opened the hole the record closes (finding 37af6b94b10a).
+    const recordedRenders = recordedRaw;
     // Precision (iii). The render has to come AFTER the edit it describes, on
     // both evidence paths — `toolCalls` is assembled for both, so one rule
     // covers them rather than two that can disagree.

@@ -208,6 +208,22 @@ export function asOfMs(): number {
 }
 
 /**
+ * "Now" for a gate whose clock must not be rewindable by its caller: the later
+ * of the resolved pin and the wall clock.
+ *
+ * The argv / `AC_AS_OF` / commit-date rungs are all set by whoever runs the
+ * gate or authors the commit. For an age gate whose subject is the caller's own
+ * overdue obligation — an open bypass of the ratification gate — an EARLIER
+ * "now" makes the obligation look not yet due, so a pin may move "now" later
+ * (stricter) but never earlier than real time. Verdicts read through this are
+ * monotone in real time rather than reproducible from the commit alone; that is
+ * the trade, and it only ever tightens the verdict.
+ */
+export function asOfNotBeforeWallClock(): Date {
+    return new Date(Math.max(asOfMs(), Date.now()));
+}
+
+/**
  * One line a gate prints so a reviewer can see WHICH "now" produced the verdict.
  *
  * Without it, pinning is invisible: a reproducible run and a wall-clock run look

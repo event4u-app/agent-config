@@ -351,10 +351,16 @@ A third OPTIONAL trailing field, added 2026-10-21 (`road-to-a-review-that-ends`
   number of **review passes** its path records, this one included. A pass is a
   reviewer dispatch, identified by its `prompt_hash`; versions that predate
   `prompt_hash` cannot be told apart and count together as one pass. A fix pass that re-binds in place keeps the
-  same `prompt_hash` and therefore the same round, so CI fixes and base merges
-  move the scope without burning a round. The count walks the path's whole
-  history, the § 2.7 archive rename included, so a fresh skeleton after an
-  archive continues the count; the dispatcher writes that number. A header that
+  same `prompt_hash` and therefore the same round — but it keeps the ROUND, never
+  the verdict: every branch commit after the commit that first recorded the pass
+  that touches a code path must be a fix a `fixed` row of the artefact cites, and
+  any other code commit is **`rebind-over-unreviewed-code`** until a new reviewer
+  pass (new `prompt_hash`, next round) covers it. Base merges are not branch code.
+  The count walks the path's whole history across renames, the § 2.7 archive
+  rename included, AND every other `*.findings.md` the branch range touched, so
+  neither a rename nor a fresh artefact under a new name restarts it; a fresh
+  skeleton after an archive continues the count; the dispatcher writes that
+  number. A header that
   disagrees with the derived count, or drops the field once any version carried
   it, is **`round-miscounted`**. A corpus written before the field existed — no
   `round:` in any version — is not checked. The cap on the count is § 2.8

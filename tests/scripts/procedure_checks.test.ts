@@ -196,6 +196,19 @@ describe('analysis-overview-matches-manifests', () => {
         expect(run('analysis-overview-matches-manifests', root).ok).toBe(false);
     });
 
+    it('a dependency name inside another word is not a mention', () => {
+        const root = project({
+            [OVERVIEW]: '# Overview\n\nA reactive Django project with a revue page.\n',
+            'package.json': JSON.stringify({ dependencies: { react: '^18', vue: '^3' } }),
+        });
+        expect(run('analysis-overview-matches-manifests', root).ok).toBe(false);
+        const named = project({
+            [OVERVIEW]: '# Overview\n\nA Django project with a React (18) front end.\n',
+            'package.json': JSON.stringify({ dependencies: { react: '^18' } }),
+        });
+        expect(run('analysis-overview-matches-manifests', named).ok).toBe(true);
+    });
+
     it('passes an overview naming a declared dependency, composer or npm', () => {
         const npm = project({ [OVERVIEW]: '# Overview\n\nReact 18 SPA.\n', 'package.json': JSON.stringify({ dependencies: { react: '^18' } }) });
         expect(run('analysis-overview-matches-manifests', npm).ok).toBe(true);

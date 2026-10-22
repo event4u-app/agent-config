@@ -7,7 +7,16 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { GateLedger } from '../../src/scripts/_lib/gate_ledger.js';
-import { renderClearance } from '../../src/scripts/_lib/merge_clearance_record.js';
+import {
+    clearanceCompanions,
+    renderClearance,
+    seatsFromSession,
+    sha256,
+    type Seat,
+    UNTRUSTED_DIFF_BEGIN,
+    UNTRUSTED_DIFF_END,
+    UNTRUSTED_DIFF_NOTICE,
+} from '../../src/scripts/_lib/merge_clearance_record.js';
 import { BYPASS_RECORD_MARKER } from '../../src/scripts/_lib/platform_anchor.js';
 import {
     checkFiles,
@@ -351,8 +360,37 @@ describe('the merge-clearance evidence type', () => {
         expect(resolveEvidenceType('x.md', record).type).toBe('merge-clearance');
     });
 
-    it('accepts a record that parses', () => {
-        expect(checkFiles(root, [write(record)])).toEqual([]);
+    it('refuses a record that parses but has no committed prompt and replies beside it', () => {
+        // Finding 6db6a97ba552: placeholder digests passed on internal consistency alone.
+        const findings = checkFiles(root, [write(record)]);
+        expect(findings).toHaveLength(1);
+        expect(findings[0]?.reason).toMatch(/committed prompt beside the record is missing/u);
+    });
+
+    it('accepts a record whose seats the committed replies derive', () => {
+        const prompt = `Q.\n\n${UNTRUSTED_DIFF_NOTICE}\n\n${UNTRUSTED_DIFF_BEGIN}\ndiff --git a/x b/x\n${UNTRUSTED_DIFF_END}\n`;
+        const clear = 'DANGEROUS: no\nOWNER REVIEW NEEDED: no\nREASON: no predicate applies to the changed workflow file\n';
+        const session = {
+            responses: [
+                { provider: 'anthropic', model: 'claude-x', text: clear, error: null },
+                { provider: 'openai', model: 'codex-default', text: clear, error: null },
+            ],
+        };
+        const backed = renderClearance({
+            pr: 9,
+            head: 'a'.repeat(40),
+            base: 'b'.repeat(40),
+            classifierVerdict: 'needs-council',
+            triggers: ['ci-workflow'],
+            promptSha256: sha256(prompt),
+            seats: seatsFromSession(session) as Seat[],
+            outcome: 'cleared',
+        });
+        const rel = write(backed);
+        const { prompt: p, replies } = clearanceCompanions(9, 'a'.repeat(40));
+        fs.writeFileSync(path.join(root, path.dirname(rel), p), prompt);
+        fs.writeFileSync(path.join(root, path.dirname(rel), replies), JSON.stringify(session));
+        expect(checkFiles(root, [rel])).toEqual([]);
     });
 
     it('refuses a record whose outcome disagrees with its seats', () => {

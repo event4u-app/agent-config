@@ -47,10 +47,13 @@
  * check runs only on the repository's own tree: a `--root` fixture has no
  * archived roadmaps and would red every self-test case.
  *
- * What the masks still cost, stated rather than discovered later, and pinned
- * by tests: an author who writes the unmet half inside backticks, or inside an
- * HTML comment, escapes this lint. The bare phrase with no masking still
- * fails, which is the case the lint exists for.
+ * Both masks are narrowed to QUOTATION: a span or comment is blanked only when
+ * it names the phrase (its content is the bare `NOT met`, or every occurrence
+ * sits in its own quotes). A span or comment that says something IS NOT met —
+ * `the second is NOT met`, a comment parking the admission beside the tick —
+ * is still a finding. An earlier version masked every span and comment and
+ * pinned that an author could hide the unmet half in either; the release
+ * review (finding d33b619f2972) refused shipping that weakening.
  *
  * On the DISPOSITION of the three archived hits the detector refinement was
  * decided on: AI council, 2026-10-13, ONE seat of two (the second returned
@@ -103,7 +106,23 @@ function _indent(line: string): number {
  * stray backtick cannot blind the scanner for the rest of a criterion.
  */
 function maskHtmlComments(text: string): string {
-    return text.replace(/<!--[\s\S]*?-->/gu, (m) => m.replace(/[^\n]/gu, ' '));
+    return text.replace(/<!--[\s\S]*?-->/gu, (m) =>
+        isQuotation(m.slice(4, -3)) ? m.replace(/[^\n]/gu, ' ') : m,
+    );
+}
+
+/** The phrase itself, quoted — `NOT met` named as a word rather than said of something. */
+const QUOTED_UNMET_RE = /[`'"\u2018\u2019\u201C\u201D]NOT met[`'"\u2018\u2019\u201C\u201D]/gu;
+
+/**
+ * True when a masked construct only NAMES the phrase: its content is the bare
+ * phrase, or every `NOT met` in it sits inside its own quotes. A span or comment
+ * that says something is NOT met — `the second is NOT met` — is an admission,
+ * and hiding it in backticks or a comment does not make it a quotation.
+ */
+function isQuotation(content: string): boolean {
+    const rest = content.replace(QUOTED_UNMET_RE, '');
+    return rest.trim() === UNMET || !rest.includes(UNMET);
 }
 
 /** One grandfathered criterion, pinned by content so an edit un-grandfathers it. */
@@ -132,6 +151,12 @@ const HISTORICAL: readonly Historical[] = [
         criterion: 'AC-5',
         sha256: 'f78a74e4a7a3e30b81f33cc59a53c0e01f147d6ed3d7d7bcbbfc47a76e13c2fd',
         why: 'Reads "CLOSED 2026-08-31 … The audit below is preserved"; the phrase sits 29 lines down inside that preserved audit.',
+    },
+    {
+        file: 'agents/roadmaps/archive/road-to-blocking-severities-where-a-refusal-can-land.md',
+        criterion: 'AC-1',
+        sha256: '124bf8d202b5ad0c1472b9eaf4c92bbc517ba219031cbb2e060ffe5c375e9435',
+        why: 'The phrase sits in a comment beside AC-1 and states that one clause of the GOAL is NOT met — a different proposition from AC-1, which the comment above it records as met. Moved here from the blanket comment mask when that mask was narrowed to quotation.',
     },
 ];
 
@@ -175,9 +200,8 @@ function maskInlineCode(text: string): string {
             continue;
         }
         out += text.slice(i, i + n);
-        out += text
-            .slice(i + n, close)
-            .replace(/[^\n]/gu, ' ');
+        const content = text.slice(i + n, close);
+        out += isQuotation(content) ? content.replace(/[^\n]/gu, ' ') : content;
         out += text.slice(close, close + n);
         i = close + n;
     }
@@ -300,9 +324,14 @@ function selfTest(): number {
                 run: over('- [x] AC-1 — an opening ` and then NOT met in the clear.\n'),
             },
             {
-                name: 'the same phrase inside an HTML comment is accepted',
-                expect: 'accept',
+                name: 'an admission inside an HTML comment is rejected',
+                expect: 'reject',
                 run: over('- [x] AC-1 — The gate ships.\n      <!-- the Goal clause is NOT met -->\n'),
+            },
+            {
+                name: 'an admission inside backticks is rejected',
+                expect: 'reject',
+                run: over('- [x] AC-1 — Both halves land, `the second is NOT met`.\n'),
             },
             {
                 name: 'a dated closure marker does NOT exempt — the exemption is a frozen digest list',

@@ -10,7 +10,9 @@
  *   - **Read, never typed.** Each seat's reading comes from the reply the
  *     council's own session record holds (`ai_council/response_record.ts`
  *     shapes it), never from a verdict the run writes down. The record keeps a
- *     digest of the reply, never its text, so no transcript enters the tree.
+ *     digest of each reply; the prompt and the replies are committed BESIDE it
+ *     (`clearanceCompanions`) so the check re-derives every seat rather than
+ *     trusting the record's own fields (findings 4679f232ac0d, 6db6a97ba552).
  *   - **Derived, never typed.** The outcome follows from the seats by the rule
  *     `deriveRatificationHeader` keeps for ratification records; a record whose
  *     stated outcome disagrees with its own seats does not parse.
@@ -50,8 +52,9 @@ export type Outcome = (typeof OUTCOMES)[number];
 export const ASSURANCE = 'recorded';
 
 export const ASSURANCE_NOTE =
-    'assurance: recorded — this names what the council session file on the run’s machine held. ' +
-    'The run can write that file, so it is not proof a seat said it (decision D6).';
+    'assurance: recorded — this names what the council session on the run’s machine held; its prompt and every ' +
+    'reply are committed beside this record and re-derived by the check. The run can write those files, so they ' +
+    'are not proof a seat said it (decision D6).';
 
 const SHA40_RE = /^[0-9a-f]{40}$/u;
 const SHA64_RE = /^[0-9a-f]{64}$/u;
@@ -148,27 +151,51 @@ export function hasStatedReason(text: string): boolean {
     return false;
 }
 
+/** A line that carries one of the three answer labels, bold or plain. */
+const LABEL_LINE_RE = /^\s*(?:\*\*)?(?:DANGEROUS|OWNER REVIEW NEEDED|REASON):/iu;
+
+/**
+ * Split a reply into its body and its TRAILER — the run of non-empty lines at
+ * the very end that each carry an answer label. Only the trailer is the seat's
+ * own answer: the seat has read the pull request's diff, so answer lines it
+ * quotes or echoes from that diff sit in the body.
+ */
+function splitTrailer(text: string): { body: string; trailer: string } {
+    const lines = text.replace(/\s+$/u, '').split('\n');
+    let i = lines.length;
+    while (i > 0 && LABEL_LINE_RE.test(lines[i - 1] ?? '')) i -= 1;
+    return { body: lines.slice(0, i).join('\n'), trailer: lines.slice(i).join('\n') };
+}
+
 /**
  * Read a seat's reply. The § 9a prompt asks each seat to end with three lines,
- * `DANGEROUS: yes|no`, `OWNER REVIEW NEEDED: yes|no` and `REASON: <why>`. A
- * reply missing either verdict line, or answering one both ways, gave no final
- * verdict; an errored or empty reply gave none either. A reply without a stated
- * reason gave none unless it calls the change dangerous — a danger finding
- * holds the PR whatever else the reply lacks, so it is never weakened.
+ * `DANGEROUS: yes|no`, `OWNER REVIEW NEEDED: yes|no` and `REASON: <why>`. Only
+ * that trailer is read (finding ab40ea536318): answer lines anywhere else in
+ * the reply — quoted from the diff, echoed from an injected block — make a
+ * non-dangerous reading `no-final-verdict`, because the reply then carries two
+ * candidate answers and only an injection needs the second one. A trailer
+ * missing either verdict line, or answering one both ways, gave no final
+ * verdict; an errored or empty reply gave none either. A trailer without a
+ * stated reason gave none unless it calls the change dangerous — a danger
+ * finding holds the PR whatever else the reply lacks, so it is never weakened.
  */
 export function readSeatReply(text: string | null | undefined, error: unknown = null): SeatReading {
     if ((error !== null && error !== undefined && String(error) !== '') || typeof text !== 'string' || text.trim() === '') {
         return 'no-final-verdict';
     }
-    const dangerous = answers(text, 'DANGEROUS');
-    const owner = answers(text, 'OWNER REVIEW NEEDED');
+    const { body, trailer } = splitTrailer(text);
+    const dangerous = answers(trailer, 'DANGEROUS');
+    const owner = answers(trailer, 'OWNER REVIEW NEEDED');
     if (dangerous.size !== 1 || owner.size !== 1) {
         return 'no-final-verdict';
     }
     if (dangerous.has('yes')) {
         return 'dangerous';
     }
-    if (!hasStatedReason(text)) {
+    if (body.split('\n').some((l) => LABEL_LINE_RE.test(l))) {
+        return 'no-final-verdict';
+    }
+    if (!hasStatedReason(trailer)) {
         return 'no-final-verdict';
     }
     return owner.has('no') ? 'clear' : 'owner-review';
@@ -198,17 +225,20 @@ export function deriveOutcome(seats: readonly Pick<Seat, 'provider' | 'reading'>
 /**
  * The seats a council session record holds, one per provider.
  *
- * The last reply per provider AND model is that model's final one, so a retry
- * after an error still counts. A provider answering through more than one model
- * is then reduced to its worst final reading — `dangerous` first, then any other
- * non-clearing one — never to whichever model replied last: a `DANGEROUS: yes`
- * followed by another model's `no` must not read as clear.
+ * EVERY reply counts (finding 5001ffdfb623). Taking the last reply per seat let
+ * a seat be re-asked until it answered CLEAR — verdict shopping, which
+ * evaluator-independence forbids. Now a provider is reduced to its WORST reading
+ * across all its replies, every model included: `dangerous` first, then any
+ * other non-clearing one, `clear` only when every reply cleared. The single
+ * exception is a reply that ERRORED (an error, or no text) on a model that also
+ * answered: a failed call carries no verdict to shop away, so a retry after a
+ * transport error still counts.
  */
 export function seatsFromSession(session: unknown): Seat[] | string {
     if (session === null || typeof session !== 'object' || !Array.isArray((session as { responses?: unknown }).responses)) {
         return 'the session record has no `responses` list';
     }
-    const last = new Map<string, Seat>();
+    const all: Array<Seat & { errored: boolean; key: string }> = [];
     for (const raw of (session as { responses: unknown[] }).responses) {
         if (raw === null || typeof raw !== 'object') {
             return 'a session response is not an object';
@@ -221,23 +251,84 @@ export function seatsFromSession(session: unknown): Seat[] | string {
             return `provider ${r.provider} names no valid model (${String(r.model)})`;
         }
         const text = typeof r.text === 'string' ? r.text : '';
-        last.set(`${r.provider}\u0000${r.model}`, {
+        const errored = (r.error !== null && r.error !== undefined && String(r.error) !== '') || text.trim() === '';
+        all.push({
             provider: r.provider,
             model: r.model,
             replySha256: sha256(text),
             reading: readSeatReply(text, r.error ?? null),
+            errored,
+            key: `${r.provider}\u0000${r.model}`,
         });
     }
-    if (last.size === 0) {
+    if (all.length === 0) {
         return 'the session record holds no reply';
     }
+    const answered = new Set(all.filter((s) => !s.errored).map((s) => s.key));
+    const counted = all.filter((s) => !(s.errored && answered.has(s.key)));
     const rank = (s: Seat): number => (s.reading === 'dangerous' ? 2 : s.reading === 'clear' ? 0 : 1);
     const perProvider = new Map<string, Seat>();
-    for (const seat of last.values()) {
+    for (const { errored: _e, key: _k, ...seat } of counted) {
         const held = perProvider.get(seat.provider);
-        if (held === undefined || rank(seat) >= rank(held)) perProvider.set(seat.provider, seat);
+        if (held === undefined || rank(seat) > rank(held)) perProvider.set(seat.provider, seat);
     }
     return [...perProvider.values()];
+}
+
+/** Where the record's committed prompt and replies sit, beside it. */
+export function clearanceCompanions(pr: number, head: string): { prompt: string; replies: string } {
+    const stem = `pr-${String(pr)}-${head}`;
+    return { prompt: `${stem}.prompt.txt`, replies: `${stem}.replies.json` };
+}
+
+/**
+ * Re-derive a record from the prompt and replies committed beside it
+ * (findings 4679f232ac0d, 6db6a97ba552). A record alone was checked for
+ * internal consistency only, so any process that could commit a file could
+ * mint `cleared` with placeholder digests. Now the prompt must hash to
+ * `prompt_sha256` and fence the diff as untrusted data, and the seats must be
+ * exactly what {@link seatsFromSession} derives from the committed replies —
+ * provider, model, reply digest and reading — so no reading is typed.
+ *
+ * What it still cannot prove (decision D6): that a provider wrote those
+ * replies. A forged record now needs forged model replies committed in plain
+ * sight beside it, which a reviewer of the pull request reads.
+ */
+export function verifyClearanceCompanions(c: Clearance, prompt: string | null, replies: string | null): string[] {
+    const problems: string[] = [];
+    if (prompt === null) {
+        problems.push('the committed prompt beside the record is missing');
+    } else {
+        if (sha256(prompt) !== c.promptSha256) problems.push('the committed prompt does not hash to `prompt_sha256`');
+        const framing = checkPromptFraming(prompt);
+        if (framing !== null) problems.push(`the committed prompt does not fence the diff as untrusted data — ${framing}`);
+    }
+    if (replies === null) {
+        problems.push('the committed replies beside the record are missing');
+        return problems;
+    }
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(replies) as unknown;
+    } catch {
+        problems.push('the committed replies are not JSON');
+        return problems;
+    }
+    const derived = seatsFromSession(parsed);
+    if (typeof derived === 'string') {
+        problems.push(`the committed replies hold no seats — ${derived}`);
+        return problems;
+    }
+    const key = (s: Seat): string => `${s.provider}|${s.model}|${s.replySha256}|${s.reading}`;
+    const want = new Set(derived.map(key));
+    const have = new Set(c.seats.map(key));
+    if (want.size !== have.size || [...want].some((k) => !have.has(k))) {
+        problems.push(
+            'the recorded seats are not what the committed replies derive ' +
+                `(${[...want].map((k) => k.split('|').filter((_, i) => i !== 2).join(' ')).join('; ')})`,
+        );
+    }
+    return problems;
 }
 
 /** The triggers a classifier verdict line names, or `null` when it is not `needs-council`. */

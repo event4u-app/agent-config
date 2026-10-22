@@ -101,6 +101,21 @@ describe('composeSpawnBrief — a worker that skips project instructions', () =>
         }
     });
 
+    it('refuses to skip on a floor that is not the generated one', () => {
+        // Any non-empty string used to pass, so 'x' stood in for the whole rule
+        // layer the host's skip flag drops (finding c27e483ddcba).
+        const truncated = FLOOR.split('\n').slice(0, 6).join('\n');
+        for (const floor of ['x', 'SAFETY FLOOR — be careful.', truncated, FLOOR.replace('Do NOT commit', 'Do commit')]) {
+            const b = composeSpawnBrief({ task: 't', omit_project_instructions: true, safety_floor: floor });
+            expect(b.omit_project_instructions, floor).toBe(false);
+            expect(b.safety_floor, floor).toBeNull();
+            expect(b.warnings.join(), floor).toMatch(/not the generated floor/);
+        }
+        // The generated floor with framing around it is still the floor.
+        const framed = composeSpawnBrief({ task: 't', omit_project_instructions: true, safety_floor: `intro\n${FLOOR}\noutro` });
+        expect(framed.omit_project_instructions).toBe(true);
+    });
+
     it('a worker that loads project instructions carries no floor copy, constraints still verbatim', () => {
         const b = composeSpawnBrief({ task: 't', safety_floor: FLOOR, user_constraints: CONSTRAINTS });
         expect(b.omit_project_instructions).toBe(false);

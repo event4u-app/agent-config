@@ -143,6 +143,14 @@ export interface AnalystBound {
     readonly probed_version: string | null;
     readonly probed_on: string | null;
     readonly rationale: string;
+    /**
+     * True only where a probe showed the bound REFUSES a read outside the scope
+     * the analyst is spawned in (finding 982b1b914b50). Write-blocking is not
+     * enough: an analyst reads an untrusted repository and its output goes to a
+     * provider, so a bound that still opens `~/.ssh` or another project holds
+     * all three legs of the lethal trifecta. Until then the profile is refused.
+     */
+    readonly reads_confined: boolean;
 }
 
 export const ANALYST_BOUNDS: readonly AnalystBound[] = [
@@ -157,6 +165,7 @@ export const ANALYST_BOUNDS: readonly AnalystBound[] = [
             'Read, Grep and Glob are the read half of the built-in tool set; no Bash, Edit, Write or WebFetch. Probe: ' +
             'the fact came back, the sentinel was refused ("no tool that writes local files"). `--tools` is variadic ' +
             'and swallowed a positional prompt in the same probe, so the prompt goes on stdin.',
+        reads_confined: false,
     },
     {
         member: 'openai',
@@ -168,6 +177,7 @@ export const ANALYST_BOUNDS: readonly AnalystBound[] = [
         rationale:
             'The same flag as the seat bound, because `read-only` already permits reading the workspace and forbids ' +
             'writing it. Probe: the fact came back, the sentinel was refused ("the workspace is read-only").',
+        reads_confined: false,
     },
     {
         member: 'gemini',
@@ -180,6 +190,7 @@ export const ANALYST_BOUNDS: readonly AnalystBound[] = [
             'refused — the 2026-10-18 probe printed "Approval mode overridden to \\"default\\" because the current ' +
             'folder is not trusted": the `plan` bound is silently dropped in an untrusted directory, and the client was ' +
             'refused by its service. A bound the binary can override is not a bound.',
+        reads_confined: false,
     },
     {
         member: 'xai',
@@ -189,6 +200,7 @@ export const ANALYST_BOUNDS: readonly AnalystBound[] = [
         probed_version: null,
         probed_on: null,
         rationale: 'not-probed — binary absent on the probing machine.',
+        reads_confined: false,
     },
     {
         member: 'perplexity',
@@ -198,12 +210,23 @@ export const ANALYST_BOUNDS: readonly AnalystBound[] = [
         probed_version: null,
         probed_on: null,
         rationale: 'not-probed — binary absent on the probing machine.',
+        reads_confined: false,
     },
 ];
 
-/** The analyst profile's argv fragment for a member, or `[]` when it was refused or never probed. */
+/**
+ * The analyst profile's argv fragment for a member, or `[]` when it was refused,
+ * never probed, or never shown to confine reads to the scope.
+ *
+ * Every profile reads `[]` today: the 2026-10-18 probe proved only that writes
+ * are refused — it never attempted a read outside the working directory, and
+ * `claude --tools Read,Grep,Glob` / `codex --sandbox read-only` both read
+ * absolute paths. Flip `reads_confined` only on a probe that asks the bound
+ * binary to read a sentinel OUTSIDE its scope and records the refusal.
+ */
 export function analystBoundFor(member: string): readonly string[] {
-    return ANALYST_BOUNDS.find((b) => b.member === member)?.bound ?? [];
+    const b = ANALYST_BOUNDS.find((x) => x.member === member);
+    return b !== undefined && b.reads_confined ? b.bound : [];
 }
 
 /**

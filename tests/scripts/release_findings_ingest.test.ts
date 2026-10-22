@@ -21,6 +21,7 @@ import {
     ledgerAbsentMessage,
     ledgerOnBranchArgv,
     ledgerRelPath,
+    settleFindingsLedger,
 } from '../../src/scripts/_lib/release_findings_ingest.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -571,5 +572,40 @@ describe('assuranceOverrideLimitation', () => {
         fs.mkdirSync(path.dirname(abs), { recursive: true });
         fs.writeFileSync(abs, '{ not json', 'utf-8');
         expect(assuranceOverrideLimitation('1.2.3', dir)).toBeNull();
+    });
+});
+
+describe('the local cut asks the disposition gate as the cut', () => {
+    it('passes --at-cut, so an unreviewed ledger on a tagless checkout refuses rather than passes', () => {
+        const calls: string[][] = [];
+        settleFindingsLedger(
+            {
+                run: (argv) => {
+                    calls.push(argv);
+                    return { returncode: 0, stdout: '', stderr: '' };
+                },
+                die: (msg) => {
+                    throw new Error(msg);
+                },
+                step: () => undefined,
+                write: () => undefined,
+                repoRoot: REPO_ROOT,
+                remote: 'origin',
+                trunk: 'main',
+                resolvePr: () => 42,
+            },
+            '1.2.3',
+            'release/1.2.3',
+            false,
+        );
+        const gate = calls.find((c) => c.includes('src/scripts/check_finding_dispositions'));
+        expect(gate).toBeDefined();
+        expect(gate).toContain('--at-cut');
+        expect(gate?.slice(gate.indexOf('--release'), gate.indexOf('--release') + 2)).toEqual(['--release', '1.2.3']);
+    });
+
+    it('the release-PR workflow passes --at-cut too', () => {
+        const wf = fs.readFileSync(path.join(REPO_ROOT, '.github', 'workflows', 'release-validation.yml'), 'utf8');
+        expect(wf).toMatch(/check_finding_dispositions \\\n\s+--release "\$version" --at-cut/);
     });
 });

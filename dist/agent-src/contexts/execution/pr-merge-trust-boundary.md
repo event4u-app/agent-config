@@ -67,3 +67,6 @@ Each seat ends its reply with `DANGEROUS: yes|no`, `OWNER REVIEW NEEDED:
 yes|no` and `REASON: <why, in one sentence>`. A seat that answers without a
 `REASON:` line of at least three words gave no final verdict, so it does not
 clear; a seat that answers `DANGEROUS: yes` stays dangerous with or without one.
+Only the reply's own closing lines are read: answer lines anywhere earlier in
+the reply — quoted or echoed from the diff — make a non-dangerous reading
+`no-final-verdict`.

@@ -457,9 +457,10 @@ function _repoRootOf(proposalPath: string): string | null {
  * advisory until the second exists. A record alone is refused, naming what is
  * missing.
  *
- * WHAT THIS CANNOT PROVE, said before what it can. The authorization is a file
- * the proposal names and a digest that file carries; nothing here establishes
- * that the owner wrote it. ADR-281 § 5 makes the owner's route his own recorded
+ * WHAT THIS CANNOT PROVE, said before what it can. The "owner authorization" is
+ * an OWNER-AUTHORIZATION RECORD: a file under {@link OWNER_AUTHORIZATION_DIR}
+ * that carries the digest — a content binding, never an authenticated approval;
+ * nothing here establishes that the owner wrote it. ADR-281 § 5 makes the owner's route his own recorded
  * act on the forge, which leaves no artifact a script can authenticate. What
  * IS established is narrower: the review and the authorization name the SAME
  * content as the proposal's declared change, read at one commit, so neither can
@@ -469,7 +470,37 @@ function _repoRootOf(proposalPath: string): string | null {
  * A `scope: project` proposal, and any stage before `gated`, is checked exactly
  * as before.
  */
-function _checkGatedRecord(fm: Frontmatter, findings: Finding[], repoRoot: string | null): void {
+/**
+ * Where an owner-authorization record may live. A path the proposal could point
+ * anywhere — at itself, at the review, at a file the agent just wrote beside
+ * them — made "the owner's approval" any committed file carrying the digest
+ * (finding c065d8063498). Confined to one directory, which CODEOWNERS routes to
+ * the owner, the record is at least a file in the place the owner's approvals
+ * live, never the proposal's own artefacts. It is still a CONTENT BINDING, not
+ * an authenticated approval — see {@link _checkGatedRecord}.
+ */
+export const OWNER_AUTHORIZATION_DIR = 'agents/evidence/owner-authorizations';
+
+/**
+ * Paths a gated proposal's range may change without declaring them: its own
+ * evidence (the proposal, the review, the authorization) lives under `agents/`,
+ * and that is not the package change the review and the approval are bound to.
+ */
+function _isProposalEvidence(p: string): boolean {
+    return p.startsWith('agents/');
+}
+
+/** The committed files the range `base...HEAD` changes, or `null` when it cannot be listed. */
+function _rangeFiles(repoRoot: string, base: string): string[] | null {
+    const res = spawnSync('git', ['-C', repoRoot, '-c', 'core.quotePath=false', 'diff', '--name-only', `${base}...HEAD`], {
+        encoding: 'utf8',
+        maxBuffer: 64 * 1024 * 1024,
+    });
+    if (res.status !== 0) return null;
+    return res.stdout.split('\n').map((l) => l.trim()).filter(Boolean);
+}
+
+function _checkGatedRecord(fm: Frontmatter, findings: Finding[], repoRoot: string | null, base: string = DEFAULT_GATED_BASE): void {
     if (fm['stage'] !== 'gated' || fm['scope'] !== 'package') {
         return;
     }
@@ -493,6 +524,33 @@ function _checkGatedRecord(fm: Frontmatter, findings: Finding[], repoRoot: strin
         return;
     }
 
+    // The declared list must cover the change the range actually makes
+    // (finding 859618a507fb): a review and an approval bound to a declared
+    // subset would otherwise ship every undeclared file unreviewed. Fails closed
+    // when the range cannot be listed.
+    if (base.startsWith('-')) {
+        refuse(`the base ref \`${base}\` reads as an option and is refused`);
+        return;
+    }
+    const inRange = _rangeFiles(repoRoot, base);
+    if (inRange === null) {
+        refuse(
+            `stage=gated with scope=package compares \`changed_files:\` against the change \`${base}...HEAD\` makes, ` +
+                'and that range cannot be listed — pass a resolvable --base',
+        );
+        return;
+    }
+    const declared = new Set(files);
+    const undeclared = inRange.filter((f) => !_isProposalEvidence(f) && !declared.has(f));
+    if (undeclared.length > 0) {
+        refuse(
+            `\`changed_files:\` does not cover the change: ${String(undeclared.length)} file(s) changed in ` +
+                `\`${base}...HEAD\` are not declared, so neither the review nor the approval is bound to them: ` +
+                `${undeclared.slice(0, 10).join(', ')}${undeclared.length > 10 ? ', …' : ''}`,
+        );
+        return;
+    }
+
     // One commit for the whole check: the digest and both named files are read
     // from the same resolved revision, never from a name resolved twice.
     let commit: string;
@@ -511,7 +569,7 @@ function _checkGatedRecord(fm: Frontmatter, findings: Finding[], repoRoot: strin
     const requiredProviders = readRequiredProviders(_readOrNull(joinPath(REPO, POLICY_PATH)));
     for (const [key, what] of [
         ['ratification_record', 'the council’s review'],
-        ['owner_authorization', 'the owner’s approval'],
+        ['owner_authorization', 'the owner-authorization record (a content binding to the change, not an authenticated approval)'],
     ] as const) {
         const named = fm[key];
         if (typeof named !== 'string' || named.trim() === '') {
@@ -553,6 +611,13 @@ function _checkGatedRecord(fm: Frontmatter, findings: Finding[], repoRoot: strin
             }
             continue;
         }
+        if (!rel.startsWith(`${OWNER_AUTHORIZATION_DIR}/`) || !rel.endsWith('.md')) {
+            refuse(
+                `${key} \`${rel}\` is not a record under \`${OWNER_AUTHORIZATION_DIR}/\` — the owner-authorization ` +
+                    'record (a content binding, not an authenticated approval) lives only there',
+            );
+            continue;
+        }
         const found = /^subject:\s*([0-9a-f]{64})\s*$/m.exec(text);
         if (found === null) {
             refuse(`${key} \`${rel}\` carries no \`subject:\` digest, so it is bound to no change`);
@@ -573,7 +638,10 @@ function _readOrNull(p: string): string | null {
     }
 }
 
-export function _runChecks(text: string, p: string | null = null, repoRoot?: string | null): Finding[] {
+/** The base a gated proposal's declared change is compared against, unless `--base` names another. */
+export const DEFAULT_GATED_BASE = 'origin/main';
+
+export function _runChecks(text: string, p: string | null = null, repoRoot?: string | null, base: string = DEFAULT_GATED_BASE): Finding[] {
     const findings: Finding[] = [];
     const fm = _loadFrontmatter(text);
     _checkFrontmatter(fm, findings);
@@ -583,7 +651,7 @@ export function _runChecks(text: string, p: string | null = null, repoRoot?: str
     _checkMarkers(body, findings);
     _checkSuccessSignal(body, findings);
     _checkOriginatingProject(body, fm, findings);
-    _checkGatedRecord(fm, findings, repoRoot !== undefined ? repoRoot : p === null ? null : _repoRootOf(p));
+    _checkGatedRecord(fm, findings, repoRoot !== undefined ? repoRoot : p === null ? null : _repoRootOf(p), base);
     if (p !== null) {
         _proposalRateWarning(p, findings);
     }
@@ -593,19 +661,30 @@ export function _runChecks(text: string, p: string | null = null, repoRoot?: str
 interface ParsedArgs {
     path: string;
     format: string;
+    base: string;
 }
 
 function _parseArgs(argv: string[]): ParsedArgs {
     let pathArg: string | null = null;
     let format = 'text';
+    let base = DEFAULT_GATED_BASE;
     for (let i = 0; i < argv.length; i += 1) {
         const a = argv[i] as string;
-        if (a === '--format') {
+        if (a === '--base') {
+            const v = argv[++i];
+            if (v === undefined) {
+                process.stderr.write('check_proposal: error: argument --base: expected one argument\n');
+                process.exit(2);
+            }
+            base = v;
+        } else if (a.startsWith('--base=')) {
+            base = a.slice('--base='.length);
+        } else if (a === '--format') {
             format = _checkChoice(argv[++i], ['text', 'json'], '--format');
         } else if (a.startsWith('--format=')) {
             format = _checkChoice(a.slice('--format='.length), ['text', 'json'], '--format');
         } else if (a === '-h' || a === '--help') {
-            process.stdout.write('usage: check_proposal [-h] [--format {text,json}] path\n');
+            process.stdout.write('usage: check_proposal [-h] [--format {text,json}] [--base REF] path\n');
             process.exit(0);
         } else if (a.startsWith('-') && a !== '-') {
             process.stderr.write(`check_proposal: error: unrecognized arguments: ${a}\n`);
@@ -621,7 +700,7 @@ function _parseArgs(argv: string[]): ParsedArgs {
         process.stderr.write('check_proposal: error: the following arguments are required: path\n');
         process.exit(2);
     }
-    return { path: pathArg, format };
+    return { path: pathArg, format, base };
 }
 
 function _checkChoice(value: string | undefined, choices: string[], flag: string): string {
@@ -662,7 +741,7 @@ function main(): number {
         }
         throw exc;
     }
-    const findings = _runChecks(text, p);
+    const findings = _runChecks(text, p, undefined, args.base);
     const errors = findings.filter((f) => f.severity === 'error');
     if (args.format === 'json') {
         process.stdout.write(

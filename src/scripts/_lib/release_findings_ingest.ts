@@ -330,7 +330,7 @@ export function settleFindingsLedger(
     }
     deps.write(`    ledger on ${deps.remote}/${ref}: ${rel}\n`);
 
-    const argv = ['./scripts-run', 'src/scripts/check_finding_dispositions', '--release', version];
+    const argv = ['./scripts-run', 'src/scripts/check_finding_dispositions', '--release', version, '--at-cut'];
     const pr = deps.resolvePr();
     if (pr !== null) {
         argv.push('--pr', String(pr));

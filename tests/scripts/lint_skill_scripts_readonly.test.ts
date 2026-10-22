@@ -75,28 +75,42 @@ describe('CLI contract — must-fail fixture tree + real repo', () => {
         expect(r.status).toBe(0);
     });
 
-    it('bundles-not-double-counted: a .mjs its own .ts produced is read once', () => {
+    it('bundles-not-double-counted: a committed bundle proven to be its source build is read once', () => {
+        // The real tree: every build:skill-scripts entry point ships a .mjs. The
+        // lint rebuilds them and skips only the ones that equal the build, so the
+        // count is the sources alone — the bundles are not read a second time.
+        const r = spawnSync(TSX, [SCRIPT], { cwd: REPO, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+        expect(r.status).toBe(0);
+        const scripts = /(\d+) skill script\(s\)/.exec(r.stdout);
+        const mjs = fs
+            .readdirSync(path.join(REPO, 'src', 'skills'), { recursive: true, encoding: 'utf8' })
+            .filter((f) => /\/scripts\/.*\.mjs$/.test(f.split(path.sep).join('/')));
+        const all = fs
+            .readdirSync(path.join(REPO, 'src', 'skills'), { recursive: true, encoding: 'utf8' })
+            .filter((f) => /\/scripts\/.*\.(ts|js|mjs|cjs|py|sh)$/.test(f.split(path.sep).join('/')));
+        expect(mjs.length).toBeGreaterThan(0);
+        expect(Number(scripts?.[1])).toBe(all.length - mjs.length);
+    });
+
+    it('a diverged bundle beside its source is scanned as itself, not skipped', () => {
+        // The .mjs is what ships. A sibling .ts proves nothing about its bytes: a
+        // stale, hand-edited or tampered bundle with an ungated write must fail
+        // even when its source is a clean, gated writer (finding 23f0cf03e558).
         const d = path.join(work, 'bundled-skill', 'scripts');
         fs.mkdirSync(d, { recursive: true });
-        const ungated = 'import fs from "node:fs";\nfs.writeFileSync("out.txt", "x");\n';
-
-        // The source alone: one finding, named by its own path.
-        fs.writeFileSync(path.join(d, 'gen.ts'), ungated);
-        const sourceOnly = spawnSync(TSX, [SCRIPT, '--root', work], { cwd: REPO, encoding: 'utf8' });
-        expect(sourceOnly.status).toBe(1);
-        expect(sourceOnly.stderr).toContain('1 ungated write');
-
-        // Its bundle beside it: still one finding, still the source's. Without
-        // the skip this reads 2, and the second names a file nobody edits.
-        fs.writeFileSync(path.join(d, 'gen.mjs'), ungated);
-        const withBundle = spawnSync(TSX, [SCRIPT, '--root', work], { cwd: REPO, encoding: 'utf8' });
-        expect(withBundle.status).toBe(1);
-        expect(withBundle.stderr).toContain('1 ungated write');
-        expect(withBundle.stderr).not.toContain('gen.mjs');
+        fs.writeFileSync(
+            path.join(d, 'gen.ts'),
+            'import fs from "node:fs";\nif (parsed.output) fs.writeFileSync(parsed.output, "x"); // --output gate\n',
+        );
+        fs.writeFileSync(path.join(d, 'gen.mjs'), 'import fs from "node:fs";\nfs.writeFileSync("out.txt", "x");\n');
+        const diverged = spawnSync(TSX, [SCRIPT, '--root', work], { cwd: REPO, encoding: 'utf8' });
+        expect(diverged.status).toBe(1);
+        expect(diverged.stderr).toContain('gen.mjs');
+        expect(diverged.stderr).toContain('1 ungated write');
 
         // A .mjs with no .ts beside it is somebody's hand-written script and
-        // is still read — the skip is keyed to production, not to extension.
-        fs.writeFileSync(path.join(d, 'standalone.mjs'), ungated);
+        // is read the same way.
+        fs.writeFileSync(path.join(d, 'standalone.mjs'), 'import fs from "node:fs";\nfs.writeFileSync("out.txt", "x");\n');
         const standalone = spawnSync(TSX, [SCRIPT, '--root', work], { cwd: REPO, encoding: 'utf8' });
         expect(standalone.stderr).toContain('2 ungated write');
         expect(standalone.stderr).toContain('standalone.mjs');

@@ -71,13 +71,19 @@ describe('lint_ticked_unmet_criteria', () => {
         expect(runInProc(main, ['--bogus']).status).toBe(2);
     });
 
-    it('an HTML comment is not the criterion a checkbox reader sees', () => {
+    it('an admission parked in an HTML comment is still a finding', () => {
         const text = [
             '- [x] AC-1 — The gate ships.',
             '      <!-- One clause of the Goal is NOT met and is reported rather than',
             '      quietly satisfied. -->',
         ].join('\n');
-        expect(scanText(text, 'f.md')).toEqual([]);
+        expect(scanText(text, 'f.md')).toEqual([{ file: 'f.md', line: 1, criterion: 'AC-1' }]);
+    });
+
+    it('a comment or span that only NAMES the phrase stays a quotation', () => {
+        expect(scanText('- [x] AC-1 — The lint hunts <!-- NOT met --> under a tick.', 'f.md')).toEqual([]);
+        expect(scanText('- [x] AC-1 — The lint hunts <!-- the phrase "NOT met" --> here.', 'f.md')).toEqual([]);
+        expect(scanText("- [x] AC-1 — It reads ``a span quoting `NOT met` here``.", 'f.md')).toEqual([]);
     });
 
     it('the comment mask keeps line structure, so a bare phrase after it still fails', () => {
@@ -128,23 +134,26 @@ describe('lint_ticked_unmet_criteria', () => {
         expect(scanText(edited, rel, after).some((h) => h.criterion === entry?.criterion)).toBe(true);
     });
 
-    it('records what the masks cost: a backticked or commented unmet half escapes this lint', () => {
-        // Not a gap the scanner can close. Both are constructs the lint reads as
-        // quotation by design, and an author who uses one deliberately is a
-        // review question rather than something a text matcher can decide.
-        expect(scanText('- [x] AC-9 — Both halves land, `the second is NOT met`.', 'f.md')).toEqual([]);
-        expect(scanText('- [x] AC-9 — Both halves land.\n      <!-- second is NOT met -->', 'f.md')).toEqual([]);
+    it('a backticked or commented unmet half does not escape this lint', () => {
+        // The masks blank quotation only. An admission hidden in a span or a
+        // comment is the contradiction the lint exists for (finding d33b619f2972).
+        expect(scanText('- [x] AC-9 — Both halves land, `the second is NOT met`.', 'f.md')).toEqual([
+            { file: 'f.md', line: 1, criterion: 'AC-9' },
+        ]);
+        expect(scanText('- [x] AC-9 — Both halves land.\n      <!-- second is NOT met -->', 'f.md')).toEqual([
+            { file: 'f.md', line: 1, criterion: 'AC-9' },
+        ]);
     });
 
     it('the real tree is green, and every exemption it grants is on the frozen list', () => {
         const { hits, historical } = scanTree(REPO_ROOT);
         expect(hits).toEqual([]);
-        // The exemption set is the frozen list and nothing else: a third entry
+        // The exemption set is the frozen list and nothing else: a fourth entry
         // would mean a block took a pass without anyone reading it.
         expect(historical.map((h) => `${h.file}:${String(h.criterion)}`).sort()).toEqual(
             HISTORICAL.map((h) => `${h.file}:${h.criterion}`).sort(),
         );
-        expect(HISTORICAL).toHaveLength(2);
+        expect(HISTORICAL).toHaveLength(3);
     });
 
     it('reads the real tree, and reports the archived plumbing AC-3 while it is still ticked', () => {

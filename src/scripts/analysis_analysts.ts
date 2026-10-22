@@ -131,6 +131,15 @@ export function cliAnalystCommand(member: string): CliAnalystCommand {
     if (b === undefined || b.bound.length === 0) {
         throw new AnalystError(`${member}: no probed read-only analyst profile in cli_agency_bounds.ts`);
     }
+    // A bound that blocks writes but still reads anywhere hands credentials and
+    // other projects to a provider (finding 982b1b914b50) — refused until a
+    // probe shows out-of-scope reads are refused.
+    if (!b.reads_confined) {
+        throw new AnalystError(
+            `${member}: the read-only analyst profile is not read-confined — no probe has shown it refuses a read ` +
+                'outside the scope, so a cli analyst is refused (cli_agency_bounds.ts `reads_confined`)',
+        );
+    }
     return { binary: b.binary, argv: [...b.bound], promptVia: b.prompt_via };
 }
 

@@ -39,6 +39,7 @@ discovery:
 source: package
 # A validator judges a done-claim, so it is never re-tasked: a warm run carries
 # the context of the work it is judging (judge Iron Law, subagent-orchestration).
+role: judge
 reuse: never
 ---
 

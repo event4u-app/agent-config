@@ -346,7 +346,17 @@ bypass leaves a trace, not that it be impossible.
    procedure that no reader here can see; every other way it can stay open is
    a finding of `check_platform_anchor`, below.
 7. **Review after the fact.** The council reviews the bypassed change once it is
-   restored, and the record names that review.
+   restored, and the record names that review. The review carries a verdict,
+   not a mention: exactly one `## Bypass review` heading, exactly one
+   `bypass_subject: <64-hex>` line equal to the record's `subject`, at least two
+   `seat: <provider> <endorsed|not-endorsed>` lines from distinct providers, and
+   exactly one `outcome:` line equal to what the seats derive (`endorsed` only
+   when every seat endorsed). A file that merely names the digest does not close
+   the record.
+
+`check_platform_anchor` judges an open bypass against the later of the pinned
+"now" (`--as-of` / `AC_AS_OF` / the commit date) and the wall clock: a pin can
+make the verdict stricter, never rewind an overdue bypass to not yet due.
 
 **A run never changes the ruleset for this route, on any instruction.** The
 bypass is the owner's own act on the forge; an agent records it and never
@@ -389,8 +399,8 @@ record that cannot show it closed: a missing, repeated or unknown field, a
 real calendar instant with a timezone, `restore_by` before `time` or more than
 seven days after it, `restored_at` before `time` or in the future, a
 `time` in the future, a `council_review` that names anything but a regular file
-committed at `HEAD` under `agents/evidence/council/` that cites the record's
-`subject` digest and was first committed at or after `restored_at` (an
+committed at `HEAD` under `agents/evidence/council/` that records a review of
+the record's `subject` and was first committed at or after `restored_at` (an
 untracked file, a directory, a symbolic link, a bypass record — itself
 included — a review of another change and one committed before the restore do
 not count; a review named while `restored_at` is still `pending` is malformed;

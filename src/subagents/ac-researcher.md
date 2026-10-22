@@ -24,6 +24,7 @@ discovery:
 source: package
 # Durable name as the re-task address; `preload_skills` and `cache_ttl` stay
 # unset (road-to-a-cold-start-paid-once 2.3, decision D7).
+role: researcher
 reuse: continuity
 ---
 

@@ -406,6 +406,34 @@ function ledgerDir(body: unknown, version = '1.0.0'): string {
     return dir;
 }
 
+describe('a scoped self-review is not release evidence', () => {
+    // Findings cc59a3fd0ca7 / 9229106e0826: a run narrowed with --scope counts
+    // only the prefixes its author picked, so its record cannot stand for the span.
+    const body = (scope: unknown) => ({
+        schema_version: 1,
+        release: '1.0.0',
+        coverage: { chunks: 2, filesReviewed: 9, filesTotal: 9, unreviewed: [], ...(scope === undefined ? {} : { scope }) },
+        findings: [],
+        no_findings_reason: 'the review ran over the span and reported nothing',
+    });
+
+    it('refuses a ledger whose coverage records a scope, and names it', () => {
+        const r = runGate(ledgerDir(body(['src/scripts'])), '1.0.0');
+        expect(r.code).toBe(1);
+        expect(r.out).toContain('scoped to src/scripts');
+    });
+
+    it('accepts the same ledger from a whole-span run', () => {
+        expect(runGate(ledgerDir(body(undefined)), '1.0.0').code).toBe(0);
+    });
+
+    it('labels a scoped run as scoped even when it read every in-scope file', () => {
+        expect(coverageLabel({ filesReviewed: 9, filesTotal: 9, scope: ['src/scripts', 'hooks'] })).toBe(
+            'self-review was scoped to `src/scripts`, `hooks` and read 9 of 9 changed files within it (scoped — not the whole span)',
+        );
+    });
+});
+
 /**
  * An empty ledger must say why it is empty.
  *
@@ -783,6 +811,20 @@ describe('an unreviewed ledger at the cut', () => {
                 'undeterminable',
                 noDirective,
             ),
+        ).toBeNull();
+    });
+
+    it('at the cut, an undeterminable status refuses — the version being cut is unreleased', () => {
+        // The node-tests checkout is depth 1 with no tags; the release-PR job is
+        // too. Without --at-cut the refusal above was inert exactly there
+        // (finding 4d820b58e890).
+        const msg = unreviewed_ledger_problem(SIXTEEN_FOUR_ZERO, '99.99.0', 'undeterminable', noDirective, {
+            atCut: true,
+        });
+        expect(msg).toContain('assurance: unreviewed');
+        // A shipped version stays a backfill even at a re-run of its cut.
+        expect(
+            unreviewed_ledger_problem(SIXTEEN_FOUR_ZERO, '16.4.0', 'released', noDirective, { atCut: true }),
         ).toBeNull();
     });
 
