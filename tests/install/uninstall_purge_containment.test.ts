@@ -222,6 +222,24 @@ describe('uninstall --purge — containment', () => {
         expect(fs.readFileSync(outside, 'utf-8')).toBe('must survive\n');
     });
 
+    it('does not delete through a symlinked directory inside the anchor', () => {
+        // A recorded path whose parent directory is now a link out of the
+        // anchor passes a lexical containment check; the file it resolves to
+        // lives elsewhere and must survive.
+        const fx = makeFixture({ record: true });
+        const elsewhere = path.join(fx.root, 'elsewhere', 'skills');
+        fs.mkdirSync(path.join(elsewhere, 'ac-skill'), { recursive: true });
+        const victim = path.join(elsewhere, 'ac-skill', 'SKILL.md');
+        fs.writeFileSync(victim, 'not ours\n');
+        fs.rmSync(path.join(fx.anchor, 'skills'), { recursive: true });
+        fs.symlinkSync(elsewhere, path.join(fx.anchor, 'skills'));
+
+        purge(fx);
+
+        expect(fs.readFileSync(victim, 'utf-8')).toBe('not ours\n');
+        expect(fs.existsSync(fx.ours[0] as string)).toBe(false);
+    });
+
     it('refuses rather than guessing when no inventory records the anchor', () => {
         // Polarity for the refusal arm. Without it the fix could satisfy every
         // assertion above by deleting nothing at all, ever.
