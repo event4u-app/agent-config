@@ -8,7 +8,7 @@ seats:
   anthropic: confirmed-non-expanding
   openai: confirmed-non-expanding
 effective_after: merge
-subject: SUBJECT_PLACEHOLDER
+subject: c65ab41dac76c91ef80f9a931dc7797416d71971db5887f20da6f67291e88f82
 ---
 
 <!-- evidence-type: ratification -->
