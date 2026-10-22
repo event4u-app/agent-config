@@ -77,6 +77,9 @@ export function parse_age_log(log: string): Map<string, RoadmapAge> {
 /** Ages for the given absolute roadmap paths, one `git log` call for all of them. */
 export function collect_ages(repo_root: string, roadmap_paths: readonly string[]): Map<string, RoadmapAge> {
     if (roadmap_paths.length === 0) return new Map();
+    // A shallow clone reports every file as added in its boundary commit, so its ages are invented.
+    const shallow = spawnSync('git', ['rev-parse', '--is-shallow-repository'], { cwd: repo_root, encoding: 'utf-8' });
+    if (shallow.status !== 0 || String(shallow.stdout).trim() !== 'false') return new Map();
     const rels = roadmap_paths.map((p) => path.relative(repo_root, p).split(path.sep).join('/'));
     const r = spawnSync('git', ['log', '-U0', '-p', '--no-renames', '--format=@@C %as', '--', ...rels], {
         cwd: repo_root,
@@ -109,7 +112,9 @@ export function is_park_proposal(age: RoadmapAge | undefined, frontmatter: strin
     if (!(since_landing >= STALL_DAYS)) return false;
     if (age.last_tick !== null && age.last_tick >= age.landed) return false;
     const renewed = renewal_date(frontmatter);
-    if (renewed !== null && days_between(renewed, now) < STALL_DAYS) return false;
+    const since_renewal = renewed === null ? NaN : days_between(renewed, now);
+    // A renewal dated in the future would clear the proposal forever, so it renews nothing.
+    if (since_renewal >= 0 && since_renewal < STALL_DAYS) return false;
     return true;
 }
 
@@ -149,4 +154,22 @@ export function render_age_section(rows: readonly AgeRow[], now: Date): string {
         lines.push('');
     }
     return lines.join('\n') + '\n';
+}
+
+/**
+ * The dashboard without its `## Age` and `## Park proposals` blocks. Ages are
+ * relative to today, so `--check` compares this view: a committed dashboard
+ * must not go stale at midnight with no commit.
+ */
+export function strip_age_section(text: string): string {
+    // Only lines render_age_section writes are skipped, so anything else beside the block still counts.
+    const AGE_LINE = /^(## Age|## Park proposals|Days since each |No ticked step |\| Roadmap \||\|---\||\| \[|- \[|$)/;
+    const out: string[] = [];
+    let skipping = false;
+    for (const line of text.split('\n')) {
+        if (line === '## Age' || line === '## Park proposals') skipping = true;
+        else if (skipping && !AGE_LINE.test(line)) skipping = false;
+        if (!skipping) out.push(line);
+    }
+    return out.join('\n');
 }

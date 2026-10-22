@@ -75,7 +75,7 @@ import { headerFragment as stubHeaderFragment } from './stubs_due.js';
 
 import { isCliEntry } from './_cli_entry.js';
 import { reportGuardedBaselines } from './guarded_baseline.js'; // third step state; contract lives there
-import { collect_ages, render_age_section } from './roadmap_age.js';
+import { collect_ages, render_age_section, strip_age_section } from './roadmap_age.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _require = createRequire(import.meta.url);
@@ -1405,7 +1405,7 @@ function main(argv?: readonly string[]): number {
     if (args.check) {
         const rel = _relPosix(repo_root, target);
         const r = reportCheckVerdict({
-            verdict: evaluateDashboardOnDisk({ mode: args.mode, target, repo_root, rendered: new_text, rel }),
+            verdict: evaluateDashboardOnDisk({ mode: args.mode, target, repo_root, rendered: new_text, rel, normalize: strip_age_section }),
             complete,
             pending,
             dashboardOnly: args.dashboard_only,

@@ -136,13 +136,16 @@ export function evaluateDashboardOnDisk(opts: {
     rel: string;
     regen?: string;
     noun?: string;
+    /** Applied to both sides before comparing — drops text that changes with the clock. */
+    normalize?: (text: string) => string;
 }): DashboardStateVerdict {
     const present = fs.existsSync(opts.target);
+    const norm = opts.normalize ?? ((t: string): string => t);
     return evaluateDashboardState({
         mode: opts.mode,
         present,
         trackedInGit: opts.mode === 'untracked' && isTrackedInGit(opts.target, opts.repo_root),
-        current: present && fs.readFileSync(opts.target, { encoding: 'utf-8' }) === opts.rendered,
+        current: present && norm(fs.readFileSync(opts.target, { encoding: 'utf-8' })) === norm(opts.rendered),
         rel: opts.rel,
         ...(opts.regen === undefined ? {} : { regen: opts.regen }),
         ...(opts.noun === undefined ? {} : { noun: opts.noun }),
