@@ -3,14 +3,14 @@
  * The council's synchronous HTTP transport, and the per-provider shims that
  * turn it into the SDK-shaped callables `clients.ts::ask()` reads.
  *
- * Extracted from `clients.ts` (road-to-admissible-council-seats 1.1). Two
- * reasons, and only the first is about tidiness:
+ * Extracted from `clients.ts`. Two reasons, and only the first is about
+ * tidiness:
  *
  * 1. `clients.ts` is ~1,370 lines past the 1,500-line ceiling
  *    `check_source_size_budget` ratchets, so every line added there costs one
  *    excess line. The three shims below are new code; putting them in a file
- *    UNDER the ceiling is what lets 1.1 land without raising a baseline.
- * 2. Before 1.1 exactly one provider (OpenAI) had a live transport and the
+ *    UNDER the ceiling is what lets them land without raising a baseline.
+ * 2. Before the extraction exactly one provider (OpenAI) had a live transport and the
  *    other four constructors threw `… package not installed. pip install …`
  *    after the api-key check — so `mode: api` was dead for gemini, xai and
  *    perplexity. A shared shim module is the honest home for "how this
@@ -55,8 +55,8 @@ export const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta
  */
 export function curlJsonPost(url: string, extraHeaders: string[], body: unknown): unknown {
     // The final egress check over every string the body carries, immediately
-    // before the request is written (road-to-one-detector-and-the-senders-we-own
-    // 3.3). The headers carry the transport's own credential and are not body.
+    // before the request is written. The headers carry the transport's own
+    // credential and are not body.
     const refusal = councilEgress().check(stringLeaves(body).join('\n'));
     if (refusal !== null) {
         throw new Error(`egress refused: ${refusal.reason} (${refusal.what}); nothing was sent`);
