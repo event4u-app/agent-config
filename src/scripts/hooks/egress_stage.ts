@@ -488,13 +488,19 @@ export function withStrictDisclosure<E extends { stdout: string; stderr: string 
   return { ...emission, stdout: withSystemMessage(emission.stdout, strict.message), stderr: `${emission.stderr}${strict.message}\n` };
 }
 
-/** `stdout` with a user-visible `systemMessage` added; a non-JSON stdout is kept and the message follows as its own object. */
-function withSystemMessage(stdout: string, message: string): string {
+/**
+ * `stdout` with a user-visible `systemMessage` added; a message already there is
+ * kept ahead of it, never replaced. A non-JSON stdout is kept and the message
+ * follows as its own object.
+ */
+export function withSystemMessage(stdout: string, message: string): string {
   const text = stdout.trim();
   try {
     const parsed: unknown = text === "" ? {} : JSON.parse(text);
     if (parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)) {
-      return `${JSON.stringify({ ...(parsed as Record<string, unknown>), systemMessage: message })}\n`;
+      const prior = (parsed as Record<string, unknown>)["systemMessage"];
+      const combined = typeof prior === "string" && prior !== "" ? `${prior}\n\n${message}` : message;
+      return `${JSON.stringify({ ...(parsed as Record<string, unknown>), systemMessage: combined })}\n`;
     }
   } catch {
     // not one JSON object

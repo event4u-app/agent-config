@@ -33,6 +33,7 @@ import {
   resolveEgressMode,
   runEgressStage,
   WITHHELD_MARKER,
+  withSystemMessage,
   type EgressMode,
 } from "../../../src/scripts/hooks/egress_stage.js";
 import { planPayloadShapes, type JsonObject } from "../../../src/scripts/hooks/payload_stub.js";
@@ -284,6 +285,20 @@ describe("published state", () => {
     expect(publishedEgressState("replaced", "off")).toBe("uncovered");
     process.env[EGRESS_STAGE_KILL_SWITCH] = "1";
     expect(publishedEgressState("replaced", "protect")).toBe("uncovered");
+  });
+});
+
+// Ratification review 2026-10-22 (openai seat): the strict disclosure must not
+// hide a systemMessage another guard already put on the emission.
+describe("the strict disclosure's systemMessage", () => {
+  it("keeps a message already on the emission and adds its own after it", () => {
+    const out = JSON.parse(withSystemMessage(JSON.stringify({ systemMessage: "guard says X", decision: "allow" }), "egress says Y"));
+    expect(out).toEqual({ systemMessage: "guard says X\n\negress says Y", decision: "allow" });
+  });
+
+  it("stands alone on an empty or non-JSON stdout", () => {
+    expect(JSON.parse(withSystemMessage("", "egress says Y"))).toEqual({ systemMessage: "egress says Y" });
+    expect(withSystemMessage("plain\n", "egress says Y")).toBe('plain\n{"systemMessage":"egress says Y"}\n');
   });
 });
 
