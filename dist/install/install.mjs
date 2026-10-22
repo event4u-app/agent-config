@@ -9415,7 +9415,12 @@ function file_sha256(p) {
 function edited_since_install(target, rec) {
   if (rec === void 0) return false;
   const on_disk = file_sha256(target);
-  return on_disk !== null && on_disk !== rec.installed_sha256;
+  if (on_disk !== null) return on_disk !== rec.installed_sha256;
+  try {
+    return !fs9.lstatSync(target).isSymbolicLink();
+  } catch {
+    return false;
+  }
 }
 function digests_of_entry(e) {
   const out = /* @__PURE__ */ new Map();
@@ -11653,8 +11658,10 @@ var FINDER_NAME = "agent-config-skill-finder";
 function finderDescription(count) {
   return `Use when no listed skill fits the task, or the user names a skill not in this list \u2014 ${count} more agent-config skills are installed here but unlisted; this finds and loads one.`;
 }
+var SKILL_NAME_RE = /^[a-z0-9][a-z0-9-]*$/;
 function renderFinder(targets) {
-  const sorted = [...targets].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+  const safe = targets.filter((t) => SKILL_NAME_RE.test(t.name) && !/[\r\n]/.test(t.skillsDir));
+  const sorted = [...safe].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
   const byDir = /* @__PURE__ */ new Map();
   for (const t of sorted) {
     const list = byDir.get(t.skillsDir) ?? [];
@@ -11711,7 +11718,8 @@ function ours(anchor, recordFile) {
   const file = finderFile(anchor);
   if (!fs20.existsSync(path19.dirname(file))) return true;
   const rec = readRecord(recordFile, anchor);
-  if (rec === null || !fs20.existsSync(file)) return false;
+  if (rec === null) return false;
+  if (!fs20.existsSync(file)) return true;
   return sha256(fs20.readFileSync(file, "utf-8")) === rec.sha256;
 }
 function ensureCodexFinder(anchor, recordFile, targets) {
@@ -11758,7 +11766,7 @@ var ASSUMPTIONS2 = [
   },
   {
     id: "per-entry-overhead",
-    provenance: "upstream-prose",
+    provenance: "estimate",
     why: "Each entry also costs separators and a newline. The host quantifies none of it, so the default here is 5 characters per entry and the resulting resident set is therefore an estimate of what fits, never a guarantee \u2014 too small, never too large."
   },
   {
@@ -11908,25 +11916,26 @@ function applyCodexResidentSet(home, report) {
       split = computeCodexResidentSet(catalogue, { budgetChars: CODEX_BUDGET_CHARS - finderCost });
     }
     const resident = new Set(split.resident);
+    const finder = ensureCodexFinder(
+      roots[0],
+      finderRecordPath(roots[0]),
+      split.nonResident.map((name) => ({ name, skillsDir: path20.join(firstRootOf.get(name), "skills") }))
+    );
+    const unlistAllowed = finder !== "foreign";
     let disabled = 0;
     let reenabled = 0;
     let foreign = 0;
     for (const anchor of roots) {
       const skillsDir = path20.join(anchor, "skills");
       const here = fs21.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs21.existsSync(path20.join(skillsDir, d.name, "SKILL.md"))).map((d) => d.name);
-      const nonResident = here.filter((n) => !resident.has(n) || firstRootOf.get(n) !== anchor);
+      const nonResident = unlistAllowed ? here.filter((n) => !resident.has(n) || firstRootOf.get(n) !== anchor) : [];
       const res = ensureCodexResidentSet(anchor, recordPath(anchor), nonResident);
       disabled += res.disabled.length;
       reenabled += res.reenabled.length;
       foreign += res.skipped_foreign.length;
     }
-    const finder = ensureCodexFinder(
-      roots[0],
-      finderRecordPath(roots[0]),
-      split.nonResident.map((name) => ({ name, skillsDir: path20.join(firstRootOf.get(name), "skills") }))
-    );
     report(
-      `codex: resident set across ${roots.length} root(s) \u2014 ${split.resident.length} listed (${split.listingChars} of ${split.budgetChars} chars), ${disabled} newly unlisted, ${reenabled} relisted` + (foreign > 0 ? `, ${foreign} existing policy file(s) untouched` : "") + `, finder ${finder}`
+      `codex: resident set across ${roots.length} root(s) \u2014 ${split.resident.length} listed (${split.listingChars} of ${split.budgetChars} chars), ${disabled} newly unlisted, ${reenabled} relisted` + (foreign > 0 ? `, ${foreign} existing policy file(s) untouched` : "") + `, finder ${finder}` + (unlistAllowed ? "" : " \u2014 nothing unlisted, because no finder could route to it")
     );
   } catch (e) {
     report(`codex: resident set skipped \u2014 ${String(e)}`);
@@ -12418,8 +12427,8 @@ var REMOVED_KEYS = /* @__PURE__ */ new Map([
   ["subagents.downshift", "the model_tier each sub-task declares; downshift is always on"],
   ["ai_team.suppress_setup_hint", "nothing: the one-line team-mode setup hint is always shown"],
   // 2026-10-20 — the projection keys (ADR-293, road-to-a-setup-that-decides-itself Phase 4)
-  ["lean_projection.mode", "the computed layer-form decision (_lib/layer_form_decision.ts), plus `install --full` and src/config/layer-form-brakes.json as the two brakes. The installer no longer reads this key at all; the in-repo projector honours a hand-written PROJECT value until step 3.6 of road-to-a-setup-that-decides-itself lands"],
-  ["lean_projection.hosts", "THINNABLE_HOSTS in _lib/lean_projection_mode.ts and the per-host row in src/config/host-injection-effect.json; same reader boundary as the mode above"],
+  ["lean_projection.mode", "the computed layer-form decision (_lib/layer_form_decision.ts), plus `install --full` and src/config/layer-form-brakes.json as the two brakes. For one release window an installer converts a leftover `eager-all` into the install receipt pin and drops any other value, saying which (_lib/projection_key_migration.ts); the project tree reads the package-owned src/config/project-tree-form.json, never this key"],
+  ["lean_projection.hosts", "THINNABLE_HOSTS in _lib/lean_projection_mode.ts and the per-host row in src/config/host-injection-effect.json; no reader of this key remains"],
   ["projection.rule_workspaces", "consumerRuleWorkspaces() in _lib/scoped_projection.ts, which derives the consumer workspace set from src/config/discovery/packs.yml \u2014 every id minus `agent-config-maintainer` \u2014 so a new pack reaches consumers without a settings edit"]
 ]);
 var _warnedRemovedKeys = /* @__PURE__ */ new Set();
