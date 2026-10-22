@@ -44,8 +44,8 @@ describe('quotes-owner-search — an added exemption quotes the owner search it 
         // a search that found something is a reason to land on the owner
         expect(quotesOwnerSearch(`${DISPOSED}; rg 'OIDC' agents/roadmaps → 2 files`)).toBe(false);
         // `only` naming a live roadmap is an owner found, not an empty search
-        expect(quotesOwnerSearch(`${DISPOSED}; grep -rn 'x' agents/roadmaps/ found only agents/roadmaps/owner.md`)).toBe(false);
-        expect(quotesOwnerSearch(`${DISPOSED}; grep -rn 'x' agents/roadmaps/ found only agents/roadmaps/archive/old.md`)).toBe(true);
+        expect(quotesOwnerSearch(`${DISPOSED}; grep -rn 'x' ${TREE}/ found only ${TREE}/owner.md`)).toBe(false);
+        expect(quotesOwnerSearch(`${DISPOSED}; grep -rn 'x' ${TREE}/ found only ${TREE}/archive/old.md`)).toBe(true);
         // an arrow with no result
         expect(quotesOwnerSearch(`${DISPOSED}; search agents/roadmaps for x -> pending`)).toBe(false);
         // no result at all

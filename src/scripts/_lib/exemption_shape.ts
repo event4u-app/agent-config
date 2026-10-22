@@ -136,8 +136,8 @@ function clauses(reason: string): string[] {
 }
 
 /**
- * `only` followed by a live roadmap file is a search that FOUND an owner:
- * "found only agents/roadmaps/owner.md" names one, unlike "only archived files".
+ * `only` followed by a live (non-archived) roadmap file path is a search that
+ * FOUND an owner, unlike "only archived files", which names no owner.
  */
 const ONLY_NAMES_OWNER_RE = /\bonly\b[^;]*?agents\/roadmaps\/(?!archive\/)[\w.-]+(?:\/[\w.-]+)*\.md\b/i;
 
