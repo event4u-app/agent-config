@@ -153,6 +153,18 @@ describe('subagent-v1 reuse and loading fields', () => {
         expect(validate(data, schema).some((e) => e.path === '$.reuse')).toBe(true);
     });
 
+    // 2.5: on once the 1.7 net delta cleared its bar and the frontmatter
+    // spelling was observed honoured (2.1.308). A judge keeps the hierarchy.
+    it('package-workers-skip-project-instructions', () => {
+        for (const name of ['ac-worker', 'ac-researcher']) {
+            const data = _frontmatterOf(path.join(_AGENTS, `${name}.md`));
+            expect(data.omit_project_instructions).toBe(true);
+            expect(nativeFieldLines(data as Record<string, unknown>)).toContain('omitClaudeMd: true\n');
+        }
+        const validator = _frontmatterOf(path.join(_AGENTS, 'production-validator.md'));
+        expect(validator.omit_project_instructions).not.toBe(true);
+    });
+
     it('package-workers-preload-nothing', () => {
         const floor = render_floor();
         for (const name of ['ac-worker', 'ac-researcher']) {
