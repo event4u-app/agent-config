@@ -196,6 +196,13 @@
         {
             "date": "2026-10-18",
             "scope": "skills",
+            "from": 0.5033,
+            "to": 0.52,
+            "reason": "RECONSTRUCTED 2026-10-22 by the 17.0.0 self-review, because the change that moved the seed added no row and the chain jumped 0.5033 -> 0.52 unrecorded. git log -S'\"skills\": 0.52' names 3a9b54d4c (#2449, brand checkability), which authored corpus files for content-funnel-design, gtm-launch, messaging-architecture, release-comms and voice-and-tone-design (151 -> 156 of 300). Recorded from the commit, not re-measured on that tree."
+        },
+        {
+            "date": "2026-10-18",
+            "scope": "skills",
             "from": 0.52,
             "to": 0.5216,
             "reason": "road-to-type-with-a-witness Phase 4 added the `type-design` skill, which moved the DENOMINATOR 300 -> 301 -- the ratio-falls-two-ways case the _comment names. The repair is the corpus, not the seed: the skill shipped its own evals/triggers.json in the same change (156 -> 157 of 301), so the ratio ROSE across the increase. 12 cases: 6 exemplars of which one is German, 5 near-misses naming the neighbours and 1 counterexample. sha256('type-design')[0:2] is 0x43 = 67, above the holdout ceiling of 51, so it trains (121 -> 122) and the sealed set stays at 35. BOTH published train-side measurements were re-taken after every skill edit was on disk: routing-body-signal-verdict.json still harmful (false activation +5.73 pp against the +2.0 pp guard, delta-recall +3.67 pp against the 5.0 pp bar, McNemar p 0.1214, train corpora 122, cases 1175, catalogue 301); delivery-set-measurement-2026-08-31.json precision@5 80.81 %, recall@5 59.77 %, false activation@5 14.76 %. The seed rises to the live value; it may never be LOWERED."
