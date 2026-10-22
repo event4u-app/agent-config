@@ -19202,7 +19202,7 @@ var settingsSchema = external_exports.object({
   egress: external_exports.object({
     placeholders: external_exports.object({
       mode: external_exports.enum(["off", "observe", "protect", "strict"]).default("off").describe(
-        "Dispatcher egress stage (docs/contracts/egress-placeholders-v1.md). off (default) = nothing. observe = detect and count listed values in prompts and tool bodies, types and counts only, and change nothing a hook concern sees. protect = also give every recording and advisory concern a copy with each value replaced by a placeholder token, so local stores keep tokens; guards still see the original. strict = as protect until the host rewrite exists. No mode yet changes what reaches the model; the rule table holds credential rules only. Project layers only."
+        "Dispatcher egress stage (docs/contracts/egress-placeholders-v1.md). off (default) = nothing. observe = detect and count listed values in prompts and tool bodies, types and counts only, and change nothing a hook concern sees. protect = also give every recording and advisory concern a copy with each value replaced by a placeholder token, so local stores keep tokens; guards still see the original. strict = as protect, and a detected credential is never sent silently: a prompt carrying one is refused, and a tool result carrying one is reported to the user as sent to the provider (it cannot be withheld until the host rewrite exists). No mode yet replaces a value on the wire; the rule table holds credential rules only. Project layers only."
       )
     }).default({})
   }).default({}),
@@ -19290,13 +19290,13 @@ var settingsSchema = external_exports.object({
     mode: external_exports.enum(["off", "notify"]).default("notify").describe(
       "Whether the first session start of a day prints the advisory findings that need action today. notify (default) reads the local cache only \u2014 a session start never touches the network; off prints nothing, and agent-config audit:deps show still works."
     ),
-    egress: external_exports.enum(["none", "query"]).default("query").describe(
-      "What leaves the machine when agent-config audit:deps refresh runs. query (default) sends names and versions of public packages to api.osv.dev and reads endoflife.date and the PHP and Node release feeds; a private package name is never sent, and a native npm or composer audit, which sends the lockfile package list to the registry that tool is configured for, runs only for a lockfile with no private package. none sends nothing, and findings read unknown rather than clear."
+    egress: external_exports.enum(["none", "query"]).default("none").describe(
+      "What leaves the machine when agent-config audit:deps refresh runs. none (default, and what an absent key resolves to) sends nothing, and findings read unknown rather than clear. query is the opt-in: it sends names and versions of public packages to api.osv.dev and reads endoflife.date and the PHP and Node release feeds; a private package name is never sent, and a native npm or composer audit, which sends the lockfile package list to the registry that tool is configured for, runs only for a lockfile with no private package. The private-name check covers only the npm scope, Composer vendor and GitHub owner of the project itself, so any other private name would be sent."
     ),
     kev: external_exports.enum(["off", "on"]).default("on").describe(
       "Whether a refresh reads the CISA known-exploited catalog. on (default) downloads the whole catalog and matches it locally, so nothing about the project is sent, and a finding in it is raised one tier in a runtime scope; off leaves tiers to the other sources. Runs only where egress is query."
     )
-  }).default({ mode: "notify", egress: "query", kev: "on" }),
+  }).default({ mode: "notify", egress: "none", kev: "on" }),
   update: external_exports.object({
     mode: external_exports.enum(["off", "notify", "ask", "auto"]).default("notify").describe(
       "What the agent may do about a newer release. notify tells you and installs nothing (the default, and what an absent key resolves to); ask behaves as notify until the ring-0 exit ships a prompt; auto installs a staged release at a session start when every gate passes and no other session is live; off says nothing at all. Read from the user-global layer only \u2014 a repository cannot set how your global install updates itself."
