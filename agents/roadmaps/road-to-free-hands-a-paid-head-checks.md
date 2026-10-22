@@ -212,7 +212,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   and refuses a route past a share cap (default 20 % of tracked files, decision A4). This raises
   reconstruction cost; it never substitutes for the content ceiling or K4.
   verify: a seeded multi-route test leaves no route above the configured cap.
-  Done 2026-10-22 (commit 34a1ca4623): `exposure_ledger.test.ts` › `leaves no route above the cap` (3 routes, 100 files, 90 calls, 60 served); cap is the constant 0.2. Open question carried to the PR: the cap applies to paid routes too.
+  Done 2026-10-22 (commit 34a1ca4623): `exposure_ledger.test.ts` › `leaves no route above the cap` (3 routes, 100 files, 90 calls, 60 served); cap is the constant 0.2. The cap applies to paid routes too, as decision A4 is written; whether to exempt them is listed for the owner in the PR.
 
 ## Phase 4 — Council: free proposers and jurors, paid chair
 
