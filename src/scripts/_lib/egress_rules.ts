@@ -31,7 +31,8 @@ export interface EgressRule {
      * a shape whose delimiter decides its extent stays one row.
      */
     readonly valueGroup?: number | readonly number[];
-    readonly validator?: (value: string) => boolean;
+    /** `group` is the capture group the value came from, so a delimiter can change the test. */
+    readonly validator?: (value: string, group: number | 'whole-match') => boolean;
     /** The rule fires only when `words` matches within `window` chars of the value. */
     readonly context?: { readonly words: RegExp; readonly window: number };
     readonly exclusions?: readonly RegExp[];
@@ -395,6 +396,12 @@ const QUOTED_OR_BARE_VALUE = `(?:"([^"\\n]*)"|'([^'\\n]*)'|["']([^\\n]+)|([^\\s'
  * keyword that is not a code expression or a type word, on the same line, and
  * every byte after the colon of a line that opens with an `Authorization`
  * header.
+ *
+ * The header row being HERE and not in EGRESS_RULES is a stated gap of the
+ * main table: an `Authorization: Bearer <opaque token>` with no vendor prefix
+ * and no JWT shape passes the replacing and refusing surfaces unchanged, and
+ * so does any value under the `token`, `bearer`, `clientSecret` or
+ * `privateKey` keywords, which no EGRESS_RULES row reads.
  */
 export const REVIEW_CREDENTIAL_ROWS: readonly EgressRule[] = [
     {
@@ -413,7 +420,10 @@ export const REVIEW_CREDENTIAL_ROWS: readonly EgressRule[] = [
             'dgi',
         ),
         valueGroup: [2, 3, 4, 5],
-        validator: (v) => !CODE_EXPR.test(v) && !TYPE_WORD.test(v),
+        // Group 5 is the bare value. A quoted one is a literal, where `,` `$`
+        // or `.` is password punctuation rather than code, so only a bare value
+        // is read as a code expression.
+        validator: (v, g) => (g !== 5 || !CODE_EXPR.test(v)) && !TYPE_WORD.test(v),
     },
     {
         rule: 'review-authorization-header',
@@ -582,7 +592,7 @@ export function evaluateMatch(
         if (!r.context.words.test(around)) return null;
     }
     if (r.validator) {
-        return r.validator(value) ? { start, end, validated: true } : null;
+        return r.validator(value, group) ? { start, end, validated: true } : null;
     }
     return { start, end, validated: false };
 }
