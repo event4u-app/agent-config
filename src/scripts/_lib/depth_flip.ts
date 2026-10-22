@@ -117,7 +117,12 @@ export function rolledBackClasses(samples: readonly AuditSample[], threshold: Fl
     return out.sort();
 }
 
-/** The depth a step actually runs at: lowered only inside the owner's scope, and never for a rolled-back class. */
+/**
+ * The depth a step actually runs at: lowered only inside the owner's scope,
+ * only once a committed reading has cleared `requires`, and never for a
+ * rolled-back class. An `active` table with no reading recorded stays at full
+ * depth: the owner decision allows the lowering on the reading, not on the flag.
+ */
 export function effectiveMode(
     tableMode: 'shadow' | 'active',
     cls: RiskClass,
@@ -125,7 +130,12 @@ export function effectiveMode(
     flip: FlipBlock,
     rolledBack: readonly RiskClass[],
 ): 'shadow' | 'active' {
+    const cleared = typeof flip.reading === 'string' && flip.reading.trim() !== '';
     const lowered =
-        tableMode === 'active' && flip.classes.includes(cls) && isStructurallySafe(paths) && !rolledBack.includes(cls);
+        tableMode === 'active' &&
+        cleared &&
+        flip.classes.includes(cls) &&
+        isStructurallySafe(paths) &&
+        !rolledBack.includes(cls);
     return lowered ? 'active' : 'shadow';
 }
