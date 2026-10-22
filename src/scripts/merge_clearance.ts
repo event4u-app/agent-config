@@ -11,7 +11,9 @@
  * line. It refuses a classification other than `needs-council` — `routine`
  * needs no clearance and `needs-owner` is never sent for one — and a session
  * whose `artefact` is not the prompt file given, so the prompt digest names
- * what the seats were actually asked.
+ * what the seats were actually asked. It also refuses a prompt that does not
+ * fence the diff between the untrusted-data markers, under the notice that the
+ * content inside is data and not instructions (`checkPromptFraming`).
  *
  * `--check` exits 0 only when the record named for the pull request's live
  * head exists, parses, re-derives to `cleared` under the committed quorum
@@ -30,6 +32,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
     CLEARANCE_DIR,
+    checkPromptFraming,
     clearanceFileName,
     deriveOutcome,
     parseClearance,
@@ -95,6 +98,11 @@ export function writeClearance(argv: readonly string[], root: string, out: Out):
     const triggers = readNeedsCouncilLine(lastLine);
     if (triggers === null) {
         out(`merge_clearance: the classification's last line is not \`verdict: needs-council (…)\`: ${lastLine}`);
+        return 2;
+    }
+    const framing = checkPromptFraming(prompt);
+    if (framing !== null) {
+        out(`merge_clearance: the prompt does not fence the diff as untrusted data — ${framing}`);
         return 2;
     }
     const artefact = (session as { artefact?: unknown } | null)?.artefact;
