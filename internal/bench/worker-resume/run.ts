@@ -85,6 +85,14 @@ function setupScratch(scratch: string): { proj: string; settings: string; agents
 
 const RATE_LIMIT = /rate.?limit|usage limit|429|overloaded/i;
 
+/**
+ * A failed, non-zero or unparsed session stops the run. Rate-limit wording alone does not: the
+ * audited lines are about rate limits, so a parsed answer may quote it.
+ */
+export function shouldStop(s: { isError: boolean; status: number | null; answersParsed: boolean }): boolean {
+    return s.isError || s.status !== 0 || !s.answersParsed;
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
     const arg = (k: string): string | undefined => {
         const i = argv.indexOf(k);
@@ -148,12 +156,13 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                 tasks: tasks.map((t) => t.id),
                 answers,
                 passes: scores.map((s) => s.pass),
+                rate_limit_text: RATE_LIMIT.test(`${String(out['api_error_status'] ?? '')} ${result.slice(0, 300)} ${r.stderr.slice(-300)}`),
                 stderr_tail: r.stderr.slice(-500),
             };
             fs.appendFileSync(results, `${JSON.stringify(record)}\n`);
             process.stdout.write(`${arm} #${k} session=${String(record.session_id)} pass=${scores.filter((s) => s.pass).length}/${tasks.length} err=${String(record.is_error)}\n`);
-            if (record.is_error === true || r.status !== 0 || RATE_LIMIT.test(`${String(out['api_error_status'] ?? '')} ${result.slice(0, 300)} ${r.stderr.slice(-300)}`) && answers === null) {
-                process.stdout.write('stopping: the session failed or was rate-limited; counts recorded, nothing invented\n');
+            if (shouldStop({ isError: record.is_error === true, status: r.status, answersParsed: answers !== null })) {
+                process.stdout.write(`stopping: the session failed or its answers did not parse (rate-limit text: ${String(record.rate_limit_text)}); counts recorded, nothing invented\n`);
                 return 1;
             }
         }

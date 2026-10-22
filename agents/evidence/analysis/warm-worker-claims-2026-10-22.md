@@ -17,7 +17,7 @@
   `road-to-free-hands-a-paid-head-checks` and `road-to-one-detector-and-the-senders-we-own`. Each
   task reads "Read `<path>` line N; reply with that line's text only". The pool holds 70 tasks;
   4 citations land on blank lines and are left out. Session k draws 9 tasks with seed 1000+k, and
-  both arms of session k get the same 9 (a paired design).
+  both arms of session k get the same 9, so the arms can be paired by session and task position.
 - **FRESH arm.** 8 sessions × 9 tasks. Each task is a new named synchronous spawn, `r1` to `r9`.
 - **REUSE arm.** 8 sessions × 9 tasks. Task 1 spawns `r`; tasks 2 to 9 re-task `r` by
   `SendMessage`, back to back inside the 5-minute TTL.
@@ -28,16 +28,19 @@
   answer is rejected (`tests/scripts/worker_resume_score.test.ts`, shown red against a
   presence-only scorer first).
 - **Completed.** 16 of 16 sessions: 144 tasks, 80 fresh spawns and 64 resumes. There were no
-  errors, refusals or rate limits.
+  errors, refusals or rate limits, and every session's answers parsed (9 of 9 each).
+- **Analysis** (`analyze.ts`, re-read 2026-10-22 from the same `results.jsonl`, no session
+  re-run). A session whose answers did not parse, that failed, or that scored fewer than 9 tasks
+  is excluded from non-inferiority and counted separately. Here 0 sessions were excluded.
 
 ## Readings
 
 | Claim | Sample | Value | Bar | Verdict |
 |---|---|---|---|---|
 | `warm-worker-cold-start-relief` | 64 resumed runs in 8 sessions; 80 fresh runs (72 in the FRESH arm) | resumed median first-call written-or-uncached **147** vs fresh **863.5**, ratio **0.170** (FRESH-arm-only fresh median 864) | ≤ 0.20 with ≥ 30 resumes in ≥ 5 sessions | **backed** (manufactured window) |
-| `resume-non-inferiority` | 64 resumed tasks (REUSE tasks 2–9) · 72 fresh tasks (FRESH arm) | 98.4 % vs 87.5 %, difference **+10.9 pp** | ≥ −5 pp with ≥ 30 each | **backed** (manufactured window) |
-| `fresh-spawns-per-drain` | 8 sessions per arm | 9 fresh spawns per session (FRESH) vs 1 (REUSE) | direction only | **backed** (direction: a fall). The cut is in spawns, not requests |
-| `rate-limit-stops-per-drain` | 16 sessions | 0 host `quota-parked` markers, 0 ledger `agent_error` lines, 0 failed sessions | direction only, before vs after Phases 3–4 | **underpowered / null**. 0 was expected at this load, and no before/after pair exists |
+| `resume-non-inferiority` | pooled: 64 resumed tasks (REUSE tasks 2–9) · 72 fresh tasks (FRESH arm), 0 sessions excluded | pooled 98.4 % vs 87.5 %, difference **+10.9 pp**. Paired by session and position 2–9 (64 pairs, 8 sessions): 98.4 % vs 85.9 %, **+12.5 pp**, discordant 9 reuse-only vs 1 fresh-only | pooled ≥ −5 pp with ≥ 30 each | **backed** (manufactured window) |
+| `fresh-spawns-per-drain` | 8 sessions per arm | 9 fresh spawns per session (FRESH) vs 1 (REUSE) | direction only, ledger spawns per drain run before vs after Phase 3 | **underpowered: not measurable by this window.** The 9 vs 1 is fixed by the arm prompts, so it measures prompt compliance, not the registered metric |
+| `rate-limit-stops-per-drain` | 16 sessions | 0 host `quota-parked` markers, 0 ledger `agent_error` lines, 0 failed sessions | direction only, before vs after Phases 3–4 | **underpowered** by the registration: no before/after pair, and the step 1.9 `StopFailure` precondition was not checked by this window |
 
 Caveats that limit each reading:
 
@@ -45,13 +48,19 @@ Caveats that limit each reading:
   of a leg's first call is cache-read. So the fresh "cold start" here is about 860 written
   tokens, not the 242 891 of the corpus baseline. The ratio holds against a warm fresh spawn,
   which is the harder comparison, but the absolute saving is small, about 700 tokens per task.
-- **Non-inferiority.** The FRESH misses (9 of 72) are reading errors: wrong line, a dropped
-  `# `, an off-by-one. The REUSE arm had 1 miss in 64. The design is paired and the tasks are
-  deterministic, but this is a single run of one task class.
-- **Fresh spawns.** By construction a resume still costs a request, so this claim never stands in
-  for `rate-limit-stops-per-drain`.
-- **Rate-limit revisit condition.** Revisit after a real drain run with Phases 3–4 live, same
-  operator and host band, compared with one from before. Or revisit as soon as any `StopFailure
+- **Non-inferiority.** The registered comparison is pooled, not paired, and the tasks cluster in
+  8 sessions, so the 136 tasks are not independent draws. The FRESH misses (9 of 72) are reading
+  errors (wrong line, a dropped `# `, an off-by-one) spread over 6 of 8 sessions (2, 1, 0, 1, 2,
+  2, 0, 1), so they are not one bad session. All 9 fall at positions 2–9. The REUSE arm had 1 miss
+  in 64. Per session, REUSE never scored below FRESH on positions 2–9 (smallest session
+  difference 0 pp). This is still a single run of one task class.
+- **Fresh spawns.** The FRESH prompt orders 9 spawns and the REUSE prompt 1 (`run.ts`
+  `promptFor`), so the counts are tautological here. Revisit condition: a real drain run before
+  Phase 3 and one after it, same operator and host band, counted by the registered metric. A
+  resume still costs a request, so this claim never stands in for `rate-limit-stops-per-drain`.
+- **Rate-limit revisit condition.** Check the step 1.9 `StopFailure` row first (on 2.1.305 it
+  read `not reached`). Then revisit after a real drain run with Phases 3–4 live, same operator
+  and host band, compared with one from before. Or revisit as soon as any `StopFailure
   (rate_limit)` marker appears in a drain.
 
 None of these are owner-run drains. They are dated readings for 6.2 on a manufactured window, and
