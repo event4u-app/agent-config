@@ -8,14 +8,14 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { EGRESS_RULES } from '../../../src/scripts/_lib/egress_rules.js';
 import { parseTokens } from '../../../src/scripts/_lib/egress_token.js';
 import { bundle_prompt, redact } from '../../../src/scripts/ai_council/bundler.js';
 import { curlJsonPost, stringLeaves } from '../../../src/scripts/ai_council/api_transport.js';
 import { AnthropicCliClient, CouncilResponse, ExternalAIClient } from '../../../src/scripts/ai_council/clients.js';
 import { CouncilEgress, resetCouncilEgress } from '../../../src/scripts/ai_council/council_egress.js';
+import { serializeResponses } from '../../../src/scripts/ai_council/response_record.js';
 import { callMember } from '../../../src/scripts/ai_council/response_render.js';
 
 const ALNUM = 'Qw3Er5Ty7Ui9Op2As4Df6Gh8Jk1Lz3Xc5Vb7Nm9';
@@ -28,7 +28,8 @@ const run = (n: number, shift = 0): string => {
 const PAT = `${'gh'}p_${run(36, 2)}`;
 const DB_PASSWORD = `pw${run(10, 4)}`;
 const DB_URI = `postgres://app:${DB_PASSWORD}@db.example.com:5432/app`;
-const EMAIL = ['jane.doe', 'example.org'].join('@');
+// A documentation domain names no one and is allowlisted, so the sample needs an ordinary one.
+const EMAIL = ['jane.doe', 'kanzlei-muster.de'].join('@');
 const IBAN = 'DE89 3704 0044 0532 0130 00';
 const PHONE = '+49 30 1234567';
 const AWS = `AKIA${'ABCDEFGHIJ234567'}`;
@@ -60,9 +61,6 @@ class FakeClient extends ExternalAIClient {
 const call = (client: FakeClient, user_prompt: string, system = 'You review.'): CouncilResponse =>
     callMember(client, { user_prompt, max_tokens: 64 }, {}, () => system, (e) => String(e));
 
-const IDENTIFIER_TYPES = new Set(EGRESS_RULES.filter((r) => r.class === 'identifier').map((r) => r.type));
-const hasIdentifierRows = ['EMAIL', 'IBAN', 'PHONE'].every((t) => IDENTIFIER_TYPES.has(t));
-
 describe('council bundle: span replacement through the engine (3.3)', () => {
     beforeEach(() => {
         resetCouncilEgress({ identifiers: false });
@@ -81,10 +79,9 @@ describe('council bundle: span replacement through the engine (3.3)', () => {
         expect(out).toMatch(/^export GITHUB=__TOKEN_1_/m);
     });
 
-    // skip-reason: the rule table carries no EMAIL, IBAN or PHONE identifier rows yet, so protect has nothing to replace them with
-    it.skipIf(!hasIdentifierRows)('the F1 sample leaves with five placeholders in protect', () => {
+    it('the F1 sample leaves with five placeholders in protect', () => {
         const out = redact(F1, new CouncilEgress({ identifiers: true }));
-        expect(parseTokens(out)).toHaveLength(5);
+        expect(parseTokens(out).map((t) => t.type).sort()).toEqual(['DBURI', 'EMAIL', 'IBAN', 'PHONE', 'TOKEN']);
         for (const v of [EMAIL, IBAN, PHONE, DB_PASSWORD, PAT]) expect(out).not.toContain(v);
         expect(out.split('\n')).toContain(CODE_LINE);
     });
@@ -119,6 +116,19 @@ describe('council bundle: span replacement through the engine (3.3)', () => {
         expect(redact(once, egress)).toBe(once);
     });
 
+    it('a reply restores for display only; the retained record keeps the placeholder', () => {
+        const egress = new CouncilEgress({ identifiers: true });
+        const sent = redact(F1, egress);
+        const iban = parseTokens(sent).find((t) => t.type === 'IBAN');
+        expect(iban).toBeDefined();
+        const token = sent.slice(iban?.start, iban?.end);
+        const reply = new CouncilResponse({ provider: 'fake', model: 'fake-1', text: `The account ${token} is fine.` });
+        expect(egress.restoreForDisplay(reply.text)).toBe(`The account ${IBAN} is fine.`);
+        const record = JSON.stringify(serializeResponses([reply]));
+        expect(record).toContain(token);
+        expect(record).not.toContain(IBAN);
+    });
+
     it('a credential token never restores for display', () => {
         const egress = new CouncilEgress();
         const out = redact(F1, egress);
@@ -129,6 +139,9 @@ describe('council bundle: span replacement through the engine (3.3)', () => {
 describe('council member call: the final check (3.3)', () => {
     beforeEach(() => {
         resetCouncilEgress({ identifiers: false });
+    });
+    afterEach(() => {
+        vi.restoreAllMocks();
     });
 
     it('sends a bundled body', () => {
@@ -150,6 +163,19 @@ describe('council member call: the final check (3.3)', () => {
         // The canary is live: without the check this body would reach the member.
         expect(new FakeClient().ask('You review.', planted).text).toBe('ok');
         expect(planted).toContain(PAT);
+    });
+
+    it('removing the final check turns the canary red', () => {
+        const canaryHolds = (): boolean => {
+            resetCouncilEgress({ identifiers: false });
+            const planted = `${bundle_prompt(F1).text}\n\nappendix: ${PAT}`;
+            const client = new FakeClient();
+            const r = call(client, planted);
+            return r.error !== null && client.sent.length === 0;
+        };
+        expect(canaryHolds()).toBe(true);
+        vi.spyOn(CouncilEgress.prototype, 'check').mockReturnValue(null);
+        expect(canaryHolds()).toBe(false);
     });
 
     it('a high-confidence finding that never went through the bundler is refused, in the system prompt too', () => {
