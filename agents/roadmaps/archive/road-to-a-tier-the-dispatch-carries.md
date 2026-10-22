@@ -224,7 +224,7 @@ them from day one; only 4.4 waits, on its blocker.
 | A7 | product-owned | owner (run invocation, 2026-10-23) | Blocker `realistic-fakes-for-hands`: option (a) — keep N4, values leave as tokens; T5 becomes a pre-registered comparison triggered at a 5 pp verify-fail gap. Owner decision O1, dated 2026-10-23, confirms the council's 2/2 default of 2026-10-22 | tokens leak the least; (b) would add a second substitution path before the identifier half of the detector exists | the T5 trigger fires and a privacy review clears independently generated fakes |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-23 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
