@@ -42,7 +42,7 @@ function osList(env: { EVENT: string; LABELED: string; classifier: 'full' | 'tie
     }
 }
 
-const BOTH = ['ubuntu-26.04', 'macos-26'];
+const BOTH = ['ubuntu-latest', 'macos-26'];
 
 describe('tests.yml platform-scope — which OSes node, golden and svg-witness run on', () => {
     it('finds the step', () => {
@@ -50,7 +50,7 @@ describe('tests.yml platform-scope — which OSes node, golden and svg-witness r
     });
 
     it('drops macOS only on an unlabeled PR the classifier calls tier', () => {
-        expect(osList({ EVENT: 'pull_request', LABELED: 'false', classifier: 'tier' })).toEqual(['ubuntu-26.04']);
+        expect(osList({ EVENT: 'pull_request', LABELED: 'false', classifier: 'tier' })).toEqual(['ubuntu-latest']);
     });
 
     it('keeps both OSes when the classifier says full', () => {

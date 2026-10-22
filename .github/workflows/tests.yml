@@ -68,7 +68,7 @@ jobs:
     # job summary so a skipped macOS leg that later fails on `push: main` is
     # traceable to the PR that skipped it — the escape threshold the council set.
     name: Platform scope
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     outputs:
       os_list: ${{ steps.scope.outputs.os_list }}
     steps:
@@ -91,9 +91,9 @@ jobs:
             scope="$(node --experimental-strip-types src/scripts/ci_platform_scope.ts --base "origin/$BASE_REF" | sed -n 's/^macos=//p')"
           fi
           if [ "$scope" = "tier" ]; then
-            echo 'os_list=["ubuntu-26.04"]' >> "$GITHUB_OUTPUT"
+            echo 'os_list=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
           else
-            echo 'os_list=["ubuntu-26.04","macos-26"]' >> "$GITHUB_OUTPUT"
+            echo 'os_list=["ubuntu-latest","macos-26"]' >> "$GITHUB_OUTPUT"
           fi
           {
             echo "### Platform scope: macOS ${scope}"
@@ -136,10 +136,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-26.04, slice: shard 1/4, shard: '1/4' }
-          - { os: ubuntu-26.04, slice: shard 2/4, shard: '2/4' }
-          - { os: ubuntu-26.04, slice: shard 3/4, shard: '3/4' }
-          - { os: ubuntu-26.04, slice: shard 4/4, shard: '4/4' }
+          - { os: ubuntu-latest, slice: shard 1/4, shard: '1/4' }
+          - { os: ubuntu-latest, slice: shard 2/4, shard: '2/4' }
+          - { os: ubuntu-latest, slice: shard 3/4, shard: '3/4' }
+          - { os: ubuntu-latest, slice: shard 4/4, shard: '4/4' }
           - { os: macos-26, slice: unsharded, shard: '' }
     env:
       SHARD: ${{ matrix.shard }}
@@ -176,7 +176,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-26.04, macos-26]
+        os: [ubuntu-latest, macos-26]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -388,7 +388,7 @@ jobs:
     # are OS-independent) instead of on every node-tests shard, so no vitest
     # shard's wall clock carries their ~40s and the check dedups across OSes.
     name: Static Checks (ESLint · typecheck · prepack)
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -715,7 +715,7 @@ jobs:
     #   macos-26  — the declared macOS row (per-user launchd). VERIFIED here.
     #   Linux with a user session bus — the second declared supported row.
     #                   NOT CERTIFIED, and not certifiable on a GitHub-hosted
-    #                   runner: ubuntu-26.04 has no user session bus, so it is
+    #                   runner: ubuntu-latest has no user session bus, so it is
     #                   the static-fallback row of the platform table, not the
     #                   supported one. Running the suite there would produce a
     #                   green tick that says nothing about `systemd --user`.
@@ -852,7 +852,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-26.04, macos-26]
+        os: [ubuntu-latest, macos-26]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -904,7 +904,7 @@ jobs:
     # stubs/road-to-main-protection-ruleset-changes. Skipped legs pass — they are
     # skipped by their own `if:` (release PRs), not lost.
     name: Tests result
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
     if: always()
     needs:
       - platform-scope

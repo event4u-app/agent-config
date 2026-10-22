@@ -86,8 +86,11 @@ job it sits in.
       verify: the existing build_proof tests pass and the phase split is recorded.
 - [x] **2.3 Pin runner images in tests.yml** (`ubuntu-24.04`, and the current
       concrete macOS label) so readings across the 26.04 rollout compare like with
-      like.
-      verify: `grep -c "ubuntu-latest" .github/workflows/tests.yml` -> /^0$/
+      like. **Outcome, narrower than planned:** macOS is pinned to `macos-26`; ubuntu
+      stays on `ubuntu-latest` (decision B4 — the pinned actionlint rejects
+      `ubuntu-26.04`, and 24.04 would roll back what `ubuntu-latest` already serves).
+      Ubuntu readings until the rollout ends on 2026-11-19 may mix two images.
+      verify: `grep -c "macos-latest" .github/workflows/tests.yml` -> /^0$/
 - [x] **2.4 Persist the transform caches.** `NODE_COMPILE_CACHE` and vitest's
       module cache restored via `actions/cache` keyed on lockfile + tsconfig + OS,
       saved only from `main`; kept only if this PR's run shows a gain, reverted in
@@ -101,7 +104,7 @@ job it sits in.
 | B1 | reversible-technical | council:agents/evidence/council/ci-macos-tier-and-static-diagnostic-2026-10-22.md | The hook-latency diagnostic stays in Static Checks (2/2) | Static Checks 6m07 vs ubuntu shard 8m40 vs ~40 min run on PR #2569 | Static Checks becomes the last or a required job |
 | B2 | reversible-technical | evidence | `render()`'s cost was not in `build_proof` but in `check_enforcement_coverage.mentions_as_code` (99 % of 89 s); fixed there with an oracle-equivalence test, output byte-identical | CPU profile 2026-10-22; `build_proof --check` 87 s -> 7.7 s | — |
 | B3 | reversible-technical | evidence | Transform caches not adopted | local A/B on 61 files: cold 4.37 s, warm 4.24 s, none 4.60 s — inside noise; CI log split tests 90 %, import 5 %, transform 3 % | the import+transform share rises above ~20 % |
-| B4 | reversible-technical | evidence | Images pinned to the rollout's destination (`ubuntu-26.04`, `macos-26`), not back to 24.04 | job logs 2026-10-21: `ubuntu-latest` already served `ubuntu-26.04`, `macos-latest` `macos-26-arm64` | an image breaks a suite |
+| B4 | reversible-technical | evidence | macOS pinned to `macos-26`; ubuntu left on `ubuntu-latest` — `ubuntu-26.04` ran fine but the repo's pinned actionlint does not know the label (PR #2577, job 119664223824), and widening the linter's label list or rolling back to 24.04 were both worse than letting a rollout that ends 2026-11-19 finish | job logs 2026-10-21: `ubuntu-latest` already served `ubuntu-26.04`, `macos-latest` `macos-26-arm64` | an image breaks a suite |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
