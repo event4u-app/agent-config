@@ -15,6 +15,7 @@
     "lifecycle",
     "discovery",
     "source",
+    "role",
     "reuse"
   ],
   "properties": {
@@ -109,6 +110,12 @@
       "type": "string",
       "enum": ["package", "project"],
       "default": "package"
+    },
+    "role": {
+      "type": "string",
+      "enum": ["worker", "researcher", "judge"],
+      "description": "What the definition is for, declared rather than inferred from its name or description. `judge` covers every definition that judges, reviews, validates or audits another agent's work; a `judge` MUST declare `reuse: never` (judge Iron Law), enforced by validate_frontmatter and read by the reuse decision in `_lib/worker_reuse.ts`.",
+      "$comment": "Release-17 finding 8851a226345a: the judge-never-reusable invariant used to rest on a /judge|review|validat|audit/ regex over name and description, so a judging agent described differently stayed reusable."
     },
     "reuse": {
       "type": "string",

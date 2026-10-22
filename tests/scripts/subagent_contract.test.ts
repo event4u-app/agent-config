@@ -18,6 +18,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     apply_schema_defaults,
+    check_subagent_role,
     load_schema,
     parse_frontmatter,
     validate,
@@ -176,18 +177,40 @@ describe('subagent-v1 reuse and loading fields', () => {
 
     it('judges-are-never-reusable', () => {
         // Judge Iron Law (subagent-orchestration): no judge on the same model and
-        // context. Every definition that judges, reviews or validates declares
+        // context. Keyed on the declared `role` (finding 8851a226345a): every
+        // definition declares one, and every `role: judge` declares
         // `reuse: never`, so the law is a field the decision function reads.
-        const judging = /judge|review|validat|audit/i;
         let seen = 0;
         for (const file of _definitions()) {
             const data = _frontmatterOf(file);
             expect(data.reuse, `${path.basename(file)} must declare reuse`).toBeDefined();
-            if (judging.test(String(data.name)) || judging.test(String(data.description))) {
+            expect(['worker', 'researcher', 'judge'], `${path.basename(file)} must declare role`).toContain(data.role);
+            if (data.role === 'judge') {
                 expect(data.reuse, path.basename(file)).toBe('never');
                 seen++;
             }
+            // The old keyword reading survives as a tripwire only: a definition
+            // that SAYS it judges cannot declare itself a worker to stay warm.
+            const judging = /judge|review|validat|audit/i;
+            if (judging.test(String(data.name)) || judging.test(String(data.description))) {
+                expect(data.role, path.basename(file)).toBe('judge');
+            }
         }
         expect(seen).toBeGreaterThan(0);
+    });
+
+    it('role is required, closed, and a judge without reuse: never fails validation', () => {
+        const data = _frontmatterOf(_UNIT);
+        delete data.role;
+        expect(validate(data, schema).some((e) => e.rule === 'required' && e.path === '$.role')).toBe(true);
+        const other = _frontmatterOf(_UNIT);
+        other.role = 'reviewer';
+        expect(validate(other, schema).some((e) => e.path === '$.role')).toBe(true);
+        // A judge described with no judging keyword at all still cannot stay warm.
+        const quiet = _frontmatterOf(_UNIT);
+        Object.assign(quiet, { name: 'quiet-checker', description: 'Looks things over.', role: 'judge', reuse: 'continuity' });
+        expect(check_subagent_role(quiet).map((e) => e.rule)).toEqual(['judge-reuse']);
+        quiet.reuse = 'never';
+        expect(check_subagent_role(quiet)).toEqual([]);
     });
 });

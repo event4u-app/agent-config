@@ -85,6 +85,14 @@ describe('decideWorkerReuse', () => {
         }
     });
 
+    it('a judge is never re-tasked, whatever its reuse field says', () => {
+        // Judge Iron Law read off the declared role, not off a name keyword.
+        const d = decideWorkerReuse(worker({ name: 'quiet-checker', role: 'judge' }), context());
+        expect(d.verdict).toBe('fresh');
+        expect(d.reasons).toEqual(['not_continuity']);
+        expect(decideWorkerReuse(worker({ role: 'worker' }), context()).verdict).toBe('resume');
+    });
+
     it('each workspace axis refuses on its own', () => {
         for (const c of [{ worktree: '/repo/wt-b' }, { skill_set_signature: 'sig-2' }, { branch_head: 'x' }]) {
             expect(decideWorkerReuse(worker(), context(c)).reasons).toEqual(['workspace_changed']);

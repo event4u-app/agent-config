@@ -1005,6 +1005,25 @@ export function check_host_key_collisions(
     return errors;
 }
 
+/**
+ * Judge Iron Law, keyed on the declared `role` rather than on words in the name
+ * or description: a `judge` is never re-tasked, so it must declare
+ * `reuse: never`. The schema validator has no `if`/`then`, so the coupling
+ * between the two fields is checked here.
+ */
+export function check_subagent_role(data: Record<string, YamlValue>): SchemaError[] {
+    if (data.role === 'judge' && data.reuse !== 'never') {
+        return [
+            new SchemaError(
+                '$.reuse',
+                'judge-reuse',
+                `a subagent with role: judge must declare reuse: never (got ${pyRepr(data.reuse ?? null)})`,
+            ),
+        ];
+    }
+    return [];
+}
+
 // --- CLI entry point -------------------------------------------------------
 
 /** Yield `[artefact_type, path]` pairs for all lintable artefacts. */
@@ -1134,6 +1153,9 @@ export function _main(argv: string[]): number {
             }
             if (artefactType === 'skill') {
                 errors.push(...check_scope_declaration(data));
+            }
+            if (artefactType === 'subagent') {
+                errors.push(...check_subagent_role(data));
             }
             const fatal = errors.filter((e) => e.severity === 'error');
             const warnings = errors.filter((e) => e.severity === 'warning');

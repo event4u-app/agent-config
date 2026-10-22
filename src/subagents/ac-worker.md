@@ -28,6 +28,7 @@ source: package
 # A durable name is the address a re-task uses; `_lib/worker_reuse.ts` decides
 # whether a re-task is cheaper than a fresh spawn. `preload_skills` and
 # `cache_ttl` stay unset (road-to-a-cold-start-paid-once 2.3, decision D7).
+role: worker
 reuse: continuity
 ---
 

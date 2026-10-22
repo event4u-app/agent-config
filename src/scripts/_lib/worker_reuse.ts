@@ -24,6 +24,11 @@ export interface WorkerState {
     domain: string;
     /** From the worker's definition; `never` for judges and reviewers. */
     reuse: ReuseClass;
+    /**
+     * The definition's declared role. A `judge` is never re-tasked whatever its
+     * `reuse` says — the judge Iron Law is read off the role, not inferred.
+     */
+    role?: 'worker' | 'researcher' | 'judge';
     last_request_at_ms: number;
     /** The worker's effective cache TTL. */
     cache_ttl_ms: number;
@@ -110,7 +115,7 @@ export function decideWorkerReuse(worker: WorkerState, context: ReuseContext): W
     ) {
         reasons.push('workspace_changed');
     }
-    if (worker.reuse !== 'continuity') reasons.push('not_continuity');
+    if (worker.reuse !== 'continuity' || worker.role === 'judge') reasons.push('not_continuity');
     if (worker.package_version !== context.package_version) reasons.push('policy_epoch_changed');
 
     return {
