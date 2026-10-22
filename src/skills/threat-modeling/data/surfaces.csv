@@ -1,6 +1,6 @@
 Surface,Keywords,Surface Class,Data Classes,Notes
 Login / session / token issuance,login password session jwt token oauth sso 2fa mfa reset,authentication,"credentials, session tokens",Covers password reset and remember-me flows
-Account lifecycle / registration / credential change,register registration signup sign-up verify verification email-change passkey webauthn otp totp recovery magic-link oidc logout remember,authentication,"credentials, identity claims, recovery codes",Covers sign-up email ownership MFA enrolment federated linking credential and email change and session termination
+Account lifecycle / registration / credential change,register registration signup sign-up email-verification email-change passkey webauthn otp totp recovery magic-link oidc logout remember,authentication,"credentials, identity claims, recovery codes",Covers sign-up email ownership MFA enrolment federated linking credential and email change and session termination
 Authorization / policy / role check,authorization policy gate voter role permission admin rbac acl,authorization,entitlements,Includes admin-only routes and ownership checks
 Tenant boundary / row-level scope,tenant multi-tenant tenant_id scope row-level isolation,tenancy,all tenant data,Any query touching tenant-scoped tables
 File upload / user-supplied URL,upload file image attachment url fetch import csv,file-upload,"user files, server filesystem",Includes URL-fetch (SSRF surface)
