@@ -80,6 +80,7 @@ import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
 import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
 import { classifyCliFailure, resolveMemberTransport, type AbsentReason } from './ai_council/transport_resolver.js';
 import { classifyContentClass, DEFAULT_CONTENT_CLASS, DEFAULT_SEAT_CEILING, type ContentClass } from './ai_council/content_ceiling.js';
+import { parseRouteFields, routeBilling } from './ai_council/free_route.js';
 import {
     disabledSeats as _disabledSeats,
     resolvedTransportFor as _resolvedTransportFor,
@@ -1338,6 +1339,23 @@ interface ChairmanResult {
     response: CouncilResponse | null;
 }
 
+/** Enabled seats as chair candidates, each with its route billing so an unpaid seat is refused the chair. */
+export function chairman_candidates(membersRaw: Dict): ChairmanCandidate[] {
+    const candidates: ChairmanCandidate[] = [];
+    for (const [name, raw] of Object.entries(membersRaw)) {
+        const md = (raw as Dict) || {};
+        if (md['enabled'] !== true) continue;
+        const parsed = parseRouteFields(name, md, false);
+        const billing = 'route' in parsed && parsed.route !== null ? routeBilling(parsed.route) : null;
+        candidates.push({
+            name,
+            tier: typeof md['tier'] === 'number' ? (md['tier'] as number) : null,
+            ...(billing !== null ? { billing } : {}),
+        });
+    }
+    return candidates;
+}
+
 /** Phase 2 chairman dispatch — optional extra billable pass after consult.
  *  Gated on `ai_council.chairman.mode != host`; selection per the 2026-07-12
  *  council decision (provider-difference primary, tier tie-break) via
@@ -1362,15 +1380,7 @@ function _maybe_run_chairman(
     }
     const cfg_member = typeof ch['member'] === 'string' ? (ch['member'] as string) : null;
     const membersRaw = (_isDict(ai_cfg) ? (ai_cfg['members'] as Dict) : null) || {};
-    const candidates: ChairmanCandidate[] = [];
-    for (const [name, raw] of Object.entries(membersRaw)) {
-        const md = (raw as Dict) || {};
-        if (md['enabled'] !== true) continue;
-        candidates.push({
-            name,
-            tier: typeof md['tier'] === 'number' ? (md['tier'] as number) : null,
-        });
-    }
+    const candidates = chairman_candidates(membersRaw);
     const deliberated = new Set(
         responses.filter((r) => r.error === null && r.text.trim() !== '').map((r) => r.provider),
     );

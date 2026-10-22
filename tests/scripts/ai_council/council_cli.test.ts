@@ -58,6 +58,7 @@ import {
     _synthesize_ai_council_block,
     _postRunQuorum,
     _format_quorum_line,
+    chairman_candidates,
 } from '../../../src/scripts/council_cli.js';
 
 
@@ -1550,5 +1551,26 @@ describe('build_members — the content ceiling reaches the resolver', () => {
 
     it('a declared public-artifact payload does', () => {
         expect(build_members(publicSeat(), { content_class: 'public-artifact' })).toHaveLength(1);
+    });
+});
+
+// free-hands 4.1 wiring: the chair candidates carry each seat's billing, so a
+// free-quota route is refused the chair by select_chairman.
+describe('chairman candidates carry route billing', () => {
+    it('a free-quota route candidate carries billing free-quota; a provider seat carries none', () => {
+        const cands = chairman_candidates({
+            anthropic: { enabled: true, model: 'claude-sonnet-4-5' },
+            freeroute: {
+                enabled: true,
+                model: 'some-model',
+                base_url: 'https://free.example.test/v1',
+                billing_proof: { kind: 'keyless', url: 'https://free.example.test/pricing', checked: '2026-10-22' },
+            },
+            off: { enabled: false, model: 'x' },
+        });
+        expect(cands.map((c) => [c.name, c.billing ?? null])).toEqual([
+            ['anthropic', null],
+            ['freeroute', 'free-quota'],
+        ]);
     });
 });
