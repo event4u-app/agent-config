@@ -60,6 +60,7 @@ import { councilEgress, type CouncilEgress } from './ai_council/council_egress.j
 import { buildHandPayload, projectLinkingIdentifiers, type HandSlice } from './ai_council/hand_payload.js';
 import { handSystemPrompt, parseHandReturn } from './ai_council/hand_schemas.js';
 import { chooseRoute, routeCandidateFromMember } from './ai_council/route_chooser.js';
+import { classifyRouteOutcome, isRouteModelLive, recordRouteOutcome } from './ai_council/route_liveness.js';
 import {
     EXPOSURE_LEDGER_RELPATH,
     ExposureLedger,
@@ -115,6 +116,17 @@ export interface AskOptions {
     kind?: HandKind;
     /** What this call shows of the project, the ledger it is counted in, and the tracked-file denominator. */
     exposure?: { ledger: ExposureLedger; exposes: Exposure; trackedFiles: number | null };
+    /**
+     * Root of the gitignored route state (liveness). Default: the working
+     * directory, or none when `auditDir` is null; null reads and writes nothing.
+     */
+    stateRoot?: string | null;
+}
+
+/** The model a `base_url` route member calls; null for a provider member. */
+function routeModel(member: ExternalAIClient): string | null {
+    const m = member as unknown as Record<string, unknown>;
+    return typeof m['base_url'] === 'string' && typeof m['model'] === 'string' && m['model'] !== '' ? m['model'] : null;
 }
 
 interface LineExtras {
@@ -196,8 +208,14 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
     } catch {
         return _finish(null, 'none', opts); // disabled / unreadable config → ∅
     }
+    const stateRoot = opts.stateRoot !== undefined ? opts.stateRoot : opts.auditDir === null ? null : process.cwd();
     // `--member` narrows the candidates; it never bypasses the chooser's checks.
-    const routed = members.map((m) => ({ member: m, route: routeCandidateFromMember(m) }));
+    const routed = members.map((m) => {
+        const route = routeCandidateFromMember(m);
+        const model = routeModel(m);
+        const retired = stateRoot !== null && model !== null && !isRouteModelLive(stateRoot, route.name, model);
+        return { member: m, route: retired ? { ...route, live: false } : route };
+    });
     const pool = opts.member !== undefined ? routed.filter((r) => r.route.name === opts.member) : routed;
     const choice = chooseRoute({
         kind: opts.kind ?? null,
@@ -216,9 +234,14 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
     opts.exposure?.ledger.record(provider, opts.exposure.exposes);
 
     const system = opts.kind !== undefined ? handSystemPrompt(opts.kind) : (opts.systemPrompt ?? DEFAULT_SYSTEM);
+    const model = routeModel(pick);
+    const noteLiveness = (error: string | null | undefined): void => {
+        if (stateRoot !== null && model !== null) recordRouteOutcome(stateRoot, provider, model, classifyRouteOutcome(error));
+    };
     try {
         const response = pick.ask(system, trimmed);
         const r = response instanceof Promise ? await response : response;
+        noteLiveness(r === null || r === undefined ? 'no response' : r.error);
         if (r === null || r === undefined || (r.error !== null && r.error !== undefined && r.error !== '')) {
             return _finish(null, provider, opts, undefined, billing);
         }

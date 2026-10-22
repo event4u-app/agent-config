@@ -117,6 +117,19 @@ export function readRouteRoster(repoRoot: string, routeKey: string): RouteRoster
     return { status: 'known', models: row.models, observed_at: row.observed_at };
 }
 
+/**
+ * Drop one model from a route's discovered roster; the next discovery that
+ * serves it brings it back. False when the roster does not list it.
+ */
+export function retireRouteModel(repoRoot: string, routeKey: string, model: string): boolean {
+    const store = _readStore(repoRoot);
+    const row = store[routeKey];
+    if (row === undefined || !Array.isArray(row.models) || !row.models.includes(model)) return false;
+    store[routeKey] = { ...row, models: row.models.filter((m) => m !== model) };
+    _writeStore(repoRoot, store);
+    return true;
+}
+
 export interface DiscoverOptions {
     readonly repoRoot: string;
     readonly apiKey?: string | null;

@@ -142,6 +142,13 @@
             "reason": "Council seat availability probe cache. Provider state."
         },
         {
+            "id": "council-route-liveness.json",
+            "axis": "persistent_continuity_artefacts",
+            "disposition": "excluded",
+            "locus": "src/scripts/ai_council/route_liveness.ts:39",
+            "reason": "Per route and model, the streak of unservable answers and when a model was retired from the roster. Provider state; nothing resumes from it."
+        },
+        {
             "id": "council-route-models.json",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
