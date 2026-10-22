@@ -76,19 +76,22 @@ the bench harnesses and `pricing.yaml`.
 
 ## Phase 1 — Before #2585 merges: put the tree back on the true side
 
-- [ ] **1.1 The three #2585 blockers carry the owner's decision, not the council's (D1).** Overtaken
+- [x] **1.1 The three #2585 blockers carry the owner's decision, not the council's (D1).** Overtaken
   in substance: the owner answered all three on 2026-10-23 (O1–O3) and A7, A9, A10, D11 are owner
   rows in #2588. Left: the two free-hands blocker `Status:` lines still say "council 2/2 chose …
   applied as the default under the run's delegation"; they are rewritten to name the owner
   decision and its date. Built code stays dormant (no route configured, no default).
   verify: `grep -n "Status:" agents/roadmaps/road-to-free-hands-a-paid-head-checks.md` names the owner and 2026-10-23 on both, and no row of A7, A9, A10, D11 carries a `council:` resolver.
-- [ ] **1.2 Revert the 2.5 ship-on edit (D2a).** `omit_project_instructions` off on `ac-worker`
+      Done 2026-10-23: both free-hands blocker `Status:` lines name the owner decisions O2/O3 of 2026-10-23; A7, A9, A10, D11 were already owner rows in #2588.
+- [x] **1.2 Revert the 2.5 ship-on edit (D2a).** `omit_project_instructions` off on `ac-worker`
   and `ac-researcher` until 2.3 lands; cold-start 2.5 back to open with the reason.
   verify: the projected definitions carry no `omitClaudeMd`; `package-workers-skip-project-instructions` is renamed to its negation or skipped with the blocker reason.
-- [ ] **1.3 Revert the definition-level tier flip (D4).** `ac-researcher` back to
+      Done 2026-10-23: `omit_project_instructions` removed from `ac-worker` and `ac-researcher` (and the `docs/wedge` copies); the test is now `package-workers-load-project-instructions-until-a-carrier-exists`, seen red against the old definitions; cold-start 2.5 reopened with the reason.
+- [x] **1.3 Revert the definition-level tier flip (D4).** `ac-researcher` back to
   `model_tier: inherit`; `lite` stays a per-call argument for the fan-out kind (tier A3).
   Tier 2.3 and both tier claims back to `unbacked` pending 4.2.
   verify: `ac-researcher-tier-follows-the-claim` passes with `inherit` and both claims unbacked.
+      Done 2026-10-23 for the definition: `ac-researcher` is `model_tier: inherit`; `ac-researcher-tier-follows-the-claim` is replaced by `ac-researcher-with-web-tools-is-never-lite`, seen red against the `lite` definition, because the claims back exact lookups and the definition keeps web synthesis. The two tier claims are re-decided by 4.2, either way.
 - [ ] **1.4 Reopen one-detector 2.5** as "built, not wired" and correct the `raise_log` text that
   cites it (`src/config/hook-bundle-budget.json`).
   verify: the step is `[ ]` with that note; the raise_log entry names only code in the chunk.

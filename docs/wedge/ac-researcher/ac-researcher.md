@@ -2,8 +2,7 @@
 name: ac-researcher
 description: Read-only research worker — locates code, reads sources and fetches pages to answer one question with file and line citations. Changes nothing. Re-taskable while warm.
 tools: Read, Grep, Glob, WebFetch, WebSearch
-model: haiku
-omitClaudeMd: true
+model: inherit
 ---
 
 <!-- agent-config:prompt-defense-preamble — injected into every projected

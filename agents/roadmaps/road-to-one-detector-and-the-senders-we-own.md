@@ -386,7 +386,7 @@ read cannot leak through any later bug.
       triple base64 is a counted `pastLayerBound` miss; the size and time bounds
       count too (a third layer and the JSON decoder each seen red). Not yet read
       by a sender — 3.3 wires it.
-- [x] **2.5 Invisible characters do not hide a value.** Reuse the strip-then- <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/confusables.ts -->
+- [ ] **2.5 Invisible characters do not hide a value.** Reuse the strip-then- <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/confusables.ts -->
       rescan step and its fixtures (`src/scripts/_lib/knowledge_global_redaction.ts`,
       `tests/fixtures/global-knowledge-redaction/`).
       An evasion corpus beside them — inserted spaces, alternate casing, line
@@ -398,6 +398,8 @@ read cannot leak through any later bug.
       spans mapped back) with the evasion corpus pinned; its homoglyph fixture is
       an e-mail, so it lands after 2.3.
       **Done 2026-10-22:** landed with 2.3 (`2b758dcf56`); the zero-width and homoglyph fixtures are detected and the evasion corpus prints its miss count.
+      Reopened 2026-10-23, built, not wired (road-to-a-tick-the-shipped-path-earns 1.4): `detectNormalized` (`src/scripts/_lib/egress_normalize.ts`) is imported only by its test, and the egress engine chunk does not import the module; only `HIDDEN_UNICODE_RE` reaches production, through `knowledge_global_redaction.ts`.
+
 - [x] **2.6 A mutation suite kills the invariants.** Disabling the IBAN checksum, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/egress-mutations/iban-checksum-disabled.json -->
       changing class precedence, logging a raw value or letting a credential
       token restore anywhere turns a named test red.

@@ -270,7 +270,7 @@ waits:
       the Iron Law becomes a field a function reads.
       verify: `npx vitest run tests/scripts/subagent_contract.test.ts -t judges-are-never-reusable --reporter=verbose` -> /✓.*judges-are-never-reusable/
       Done 2026-10-18: `production-validator` is the only judging definition in `src/subagents/` (judges and reviewers are skills, not definitions) and declares `reuse: never`; the test fails any judging definition that does not.
-- [x] **2.5 Skipping project instructions ships on only when both hold:** the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/subagent_native_fields.ts -->
+- [ ] **2.5 Skipping project instructions ships on only when both hold:** the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/subagent_native_fields.ts -->
       1.7 net delta is at least 10 % of the median cold start, and a fixture
       shows the dispatch for a skipping worker carries the kernel floor and the
       user's constraints verbatim (`subagent-spawn-contract.md:154-156`). Either
@@ -278,6 +278,7 @@ waits:
       verify: `npx vitest run tests/scripts/_lib_subagent_spawn.test.ts -t skipping-worker-carries-kernel-and-constraints --reporter=verbose` -> /✓.*skipping-worker-carries-kernel-and-constraints/
       Partial 2026-10-21, left open: both conditions now hold. The 1.7 net delta is about 58 % against the 10 % bar. `composeSpawnBrief` carries the safety floor and the user's constraints verbatim for a skipping worker, and it refuses a skip that has no floor to carry; it went red before green in `_lib_subagent_spawn.test.ts`. The ship-on edit itself — `omit_project_instructions: true` on `ac-worker` / `ac-researcher` — is not made. 1.7 observed the flag only in the `--agents` JSON spelling, and the definition files project it through frontmatter as `omitClaudeMd`, a path never observed. Switching it on through that path would read an unobserved capability.
       Done 2026-10-22: the frontmatter path was observed on Claude Code 2.1.308 — a paired probe (`omitClaudeMd: true` in `.claude/agents/<name>.md` on one side) wrote 2,620 tokens on the skipping definition's first call against 144,138 (observation file § Addendum 2026-10-22). `ac-worker` and `ac-researcher` now declare `omit_project_instructions: true`; `production-validator` does not. Commit d5afdea316; test `package-workers-skip-project-instructions` in `tests/scripts/subagent_contract.test.ts`, red before green.
+      Reopened 2026-10-23 (road-to-a-tick-the-shipped-path-earns 1.2): the fixture is on `composeSpawnBrief`, which no production path calls; a host Agent dispatch carried the floor but not the consumer's CLAUDE.md or rules. The ship-on edit is reverted until that roadmap's 2.4 carrier exists on the host's own Agent path.
 - [x] **2.6 Correct the fork premise** in `SKILL.md:119-121` from the 1.6 row —
       the premise only; the ordering and the council's cut of "always fork"
       (`SKILL.md:123-125`) stay.

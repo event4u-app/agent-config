@@ -333,7 +333,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 ## Blockers
 
 ### blocker: free-route-admission
-- **Status:** resolved — council 2/2 chose (a) on 2026-10-22 (`agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md`), applied as the default under the run's delegation and listed for the owner, who may overturn it; recorded as A9
+- **Status:** resolved — the owner chose (a) on 2026-10-23 (decision O2), confirming the council's 2/2 recommendation of 2026-10-22 (`agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md`); recorded as A9
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** Phases 2-7, except 2.5 (a self-hosted route is not a free route). Phases 0 and 1 run without it.
@@ -343,7 +343,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 - **Resolved when:** a dated owner decision line naming (a) or (b) is recorded in this file's `## Decisions` table.
 
 ### blocker: project-content-ceiling
-- **Status:** resolved — council 2/2 chose (b) on 2026-10-22 (`agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md`), applied as the default under the run's delegation and listed for the owner, who may overturn it; recorded as A10
+- **Status:** resolved — the owner chose (b) on 2026-10-23 (decision O3), confirming the council's 2/2 recommendation of 2026-10-22 (`agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md`); recorded as A10
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** any free route above `public-artifact` — the subagent-style kinds of 3.1 on consumer code. Hands on repo-owned artefacts run without it.
