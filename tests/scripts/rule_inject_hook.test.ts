@@ -72,7 +72,7 @@ function makeRoot(opts: { delivery: boolean; hosts?: string }): string {
             : opts.hosts.replace(/[[\]]/g, '').split(',').map((h) => h.trim()).filter((h) => h !== '');
     const rows: Record<string, unknown> = {};
     for (const host of hostList) {
-        rows[host] = { form: opts.delivery ? 'delivery' : 'thin', basis: 'test fixture', measured: { fixture: true } };
+        rows[host] = { form: opts.delivery ? 'delivery' : 'thin', basis: 'test fixture', measured: { fixture: 'measured by this test' } };
     }
     fs.mkdirSync(path.join(root, 'src', 'config'), { recursive: true });
     fs.writeFileSync(
@@ -359,7 +359,7 @@ describe('rule-inject — never blocks (1.5)', () => {
             path.join(root, 'src', 'config', 'project-tree-form.json'),
             JSON.stringify({
                 schema_version: 1,
-                hosts: { 'claude-code': { form: 'delivery', basis: 'test fixture', measured: { fixture: true } } },
+                hosts: { 'claude-code': { form: 'delivery', basis: 'test fixture', measured: { fixture: 'measured by this test' } } },
             }),
             'utf-8',
         );
@@ -571,7 +571,7 @@ function makePackageRoot(): string {
         path.join(root, 'src', 'config', 'project-tree-form.json'),
         JSON.stringify({
             schema_version: 1,
-            hosts: { 'claude-code': { form: 'delivery', basis: 'test fixture', measured: { fixture: true } } },
+            hosts: { 'claude-code': { form: 'delivery', basis: 'test fixture', measured: { fixture: 'measured by this test' } } },
         }),
         'utf-8',
     );
