@@ -17,6 +17,8 @@ import * as path from 'node:path';
 
 import {
     PROVIDER_CLI_META,
+    PROVIDER_TABLE,
+    providerRow,
     classifyBilling,
     codexHome,
     detectEnvironment,
@@ -495,5 +497,24 @@ describe('anthropic cli-subscription — Keychain vs credential file', () => {
         const strongest = strongestAuth(report, 'anthropic');
         expect(strongest?.source).toBe('cli-subscription');
         expect(strongest?.evidence).toContain('.credentials.json');
+    });
+});
+
+// road-to-free-hands-a-paid-head-checks 2.1: one provider table, so adding a
+// provider is one edit and a partial entry is no provider at all.
+describe('one provider table', () => {
+    it('the three lookups are projections of PROVIDER_TABLE', () => {
+        for (const [p, row] of Object.entries(PROVIDER_TABLE)) {
+            expect(PROVIDER_CLI_META[p]).toEqual([row.cli, row.community]);
+            expect(providerRow(p)?.envKey).toBe(row.envKey);
+            expect(providerRow(p)?.keyFile).toBe(row.keyFile);
+        }
+        expect(knownProviders()).toEqual(Object.keys(PROVIDER_TABLE));
+    });
+
+    it('a partial entry fails all three lookups together', () => {
+        const table = { half: { cli: 'half-cli', community: false, envKey: 'HALF_API_KEY' } } as unknown as typeof PROVIDER_TABLE;
+        expect(providerRow('half', table)).toBeNull();
+        expect(providerRow('missing', table)).toBeNull();
     });
 });

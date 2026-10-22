@@ -124,39 +124,50 @@ export interface EnvironmentReport {
 }
 
 /**
- * Provider → (default CLI binary, community-wrapper flag).
+ * One row per provider: the default CLI binary, whether that CLI is a
+ * community wrapper, the environment variable carrying a raw API key, and the
+ * key-file name under the user-global root. Adding a provider is this one
+ * edit; a row missing any field is no provider at all (`providerRow`).
  *
- * Mirrors the `CliClient` subclass attributes without importing the client
- * layer. The boolean is the load-bearing billing input: a VENDOR-OFFICIAL CLI
+ * `community` is the load-bearing billing input: a VENDOR-OFFICIAL CLI
  * (`false`) runs under the user's subscription; a COMMUNITY wrapper (`true`)
- * shells out to the same paid API and stays metered. Canonical here so
- * `cmd_doctor` and this module cannot drift.
+ * shells out to the same paid API and stays metered. Mirrors the `CliClient`
+ * subclass attributes without importing the client layer.
  */
-export const PROVIDER_CLI_META: Readonly<Record<string, readonly [string, boolean]>> = {
-    anthropic: ['claude', false],
-    openai: ['codex', false],
-    gemini: ['gemini', false],
-    xai: ['grok', true],
-    perplexity: ['perplexity', true],
+export interface ProviderRow {
+    readonly cli: string;
+    readonly community: boolean;
+    readonly envKey: string;
+    readonly keyFile: string;
+}
+
+export const PROVIDER_TABLE: Readonly<Record<string, ProviderRow>> = {
+    anthropic: { cli: 'claude', community: false, envKey: 'ANTHROPIC_API_KEY', keyFile: 'anthropic.key' },
+    openai: { cli: 'codex', community: false, envKey: 'OPENAI_API_KEY', keyFile: 'openai.key' },
+    gemini: { cli: 'gemini', community: false, envKey: 'GEMINI_API_KEY', keyFile: 'gemini.key' },
+    xai: { cli: 'grok', community: true, envKey: 'XAI_API_KEY', keyFile: 'xai.key' },
+    perplexity: { cli: 'perplexity', community: true, envKey: 'PERPLEXITY_API_KEY', keyFile: 'perplexity.key' },
 };
 
-/** Provider → environment variable carrying a raw API key. */
-const PROVIDER_ENV_KEY: Readonly<Record<string, string>> = {
-    anthropic: 'ANTHROPIC_API_KEY',
-    openai: 'OPENAI_API_KEY',
-    gemini: 'GEMINI_API_KEY',
-    xai: 'XAI_API_KEY',
-    perplexity: 'PERPLEXITY_API_KEY',
-};
+/** The complete row for `provider`, or null when it is absent or any field is missing. */
+export function providerRow(provider: string, table: Readonly<Record<string, ProviderRow>> = PROVIDER_TABLE): ProviderRow | null {
+    const row = table[provider] as Partial<ProviderRow> | undefined;
+    if (row === undefined) return null;
+    const complete =
+        typeof row.cli === 'string' && row.cli !== '' &&
+        typeof row.community === 'boolean' &&
+        typeof row.envKey === 'string' && row.envKey !== '' &&
+        typeof row.keyFile === 'string' && row.keyFile !== '';
+    return complete ? (row as ProviderRow) : null;
+}
 
-/** Provider → key-file name under the user-global root (`file:` ref target). */
-const PROVIDER_KEY_FILE: Readonly<Record<string, string>> = {
-    anthropic: 'anthropic.key',
-    openai: 'openai.key',
-    gemini: 'gemini.key',
-    xai: 'xai.key',
-    perplexity: 'perplexity.key',
-};
+/** Provider → (default CLI binary, community-wrapper flag); a projection of `PROVIDER_TABLE`. */
+export const PROVIDER_CLI_META: Readonly<Record<string, readonly [string, boolean]>> = Object.fromEntries(
+    Object.keys(PROVIDER_TABLE).flatMap((p) => {
+        const row = providerRow(p);
+        return row === null ? [] : [[p, [row.cli, row.community] as const]];
+    }),
+);
 
 /** Providers this module knows how to classify, in a stable order. */
 export function knownProviders(): readonly string[] {
@@ -419,7 +430,7 @@ function detectAuth(opts: DetectEnvironmentOptions): {
             auth.push({ provider, source: cli.source, evidence: cli.evidence });
         }
 
-        const keyFile = PROVIDER_KEY_FILE[provider];
+        const keyFile = providerRow(provider)?.keyFile;
         if (keyFile !== undefined) {
             let resolved: string | null = null;
             try {
@@ -433,7 +444,7 @@ function detectAuth(opts: DetectEnvironmentOptions): {
             }
         }
 
-        const envVar = PROVIDER_ENV_KEY[provider];
+        const envVar = providerRow(provider)?.envKey;
         if (envVar !== undefined && (env[envVar] ?? '').trim() !== '') {
             auth.push({ provider, source: 'env-key', evidence: `env:${envVar}` });
             keys.push({ provider, ref: `env:${envVar}` });
