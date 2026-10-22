@@ -52,7 +52,7 @@ React island vs. Vue SFC) is the apply-step's concern, not this skill's.
 - **One stateful component per concern** — don't build mega-components.
 - **Compose with reusable UI components** for shared shells, headers, fields.
 - **Use the project's library primitives first** — never rebuild what the design system already provides (audit findings tell you which).
-- **Extract a props-only UI shell when used 3+ times** — DRY applies to UI too; stateful components carry a higher bar (~4 + real state) — per-class canon: [`abstraction-thresholds`](../../../guidelines/abstraction-thresholds.md).
+- **Extract a props-only UI shell when used 3+ times** — DRY applies to UI too; stateful components carry a higher bar (~4 + real state) — per-class canon: `abstraction-thresholds` (agent-config repository: `docs/guidelines/abstraction-thresholds.md`).
 - **Component workshop when the project is large enough** — for a real, growing shared-component library, isolate and document each reusable component in a component workshop so it stays discoverable and reused, not re-invented; skip it for a small surface of one-offs. Tool-specific setup is a carve-out (Storybook et al.) — see the implementation skill (e.g. [`react-shadcn-ui`](../../react-shadcn-ui/SKILL.md) § Component workshop), never a generic mandate.
 
 ## Form Design
@@ -169,7 +169,7 @@ Step indicator (1 — 2 — 3)
 This section is the **sole carrier** of motion duration bands, easing choice and
 the bounce prohibition; the five files that restate any of them are bound to the
 values below and are checked against them by
-`src/scripts/lint_motion_authority_drift.ts`:
+`node_modules/@event4u/agent-config/src/scripts/lint_motion_authority_drift.ts`:
 `src/skills/design-intelligence/references/design-rules-checklist.md`,
 `src/skills/design-intelligence/data/ux-guidelines.csv`,
 `src/skills/design-intelligence/data/app-interface.csv`,

@@ -34,7 +34,7 @@ no trimming, no deduplication and no cap — rule (a) below.
 
 | Element | Source |
 |---|---|
-| `role_mode` | The six contracts in [`role-contracts`](../../guidelines/agent-infra/role-contracts.md). A review sub-task → `reviewer`; a planning sub-task → `planner`; default → null (no contract). |
+| `role_mode` | The six contracts in `role-contracts` (agent-config repository: `docs/guidelines/agent-infra/role-contracts.md`). A review sub-task → `reviewer`; a planning sub-task → `planner`; default → null (no contract). |
 | `profile` | The active profile (`profile.id` in `.agent-settings.yml`); inherited from the session unless the sub-task is a different domain. |
 | `personas` | The persona ids already cited in the task's skill frontmatter (review lenses). Capped at 2 (`MAX_PERSONAS`). |
 | `knowledge_refs` | A SMALL set of knowledge references (ingest ids / file paths) relevant to the sub-task. Capped at 5 (`MAX_KNOWLEDGE_REFS`). |
@@ -95,10 +95,10 @@ returns the `BLOCKED` partial result exactly as before; the capsule is recorded,
 never acted on. Behaviour is unchanged on purpose, so the Phase-1 measurement is
 not confounded by the mechanism it is measuring. A second candidate trigger —
 novelty-per-step saturation
-([`capsule_trigger.ts`](../../../../src/scripts/_lib/capsule_trigger.ts),
+(`node_modules/@event4u/agent-config/src/scripts/_lib/capsule_trigger.ts`,
 term-frequency, no embeddings) — is logged alongside it, and the paired
 comparison is pre-registered as `worker-capsule-trigger-arm` in
-[`docs/CLAIMS.md`](../../../../docs/CLAIMS.md) with both arms losing as an
+`docs/CLAIMS.md` (agent-config repository) with both arms losing as an
 explicitly publishable outcome.
 
 ## Bundle resolver — bind to the existing surfaces
@@ -122,15 +122,15 @@ only, never bodies.
 
 ## Reference implementation
 
-[`src/scripts/_lib/subagent_spawn.ts`](../../../../src/scripts/_lib/subagent_spawn.ts)
-(`composeSpawnBrief`) + [`src/scripts/_lib/subagent_bundle.ts`](../../../../src/scripts/_lib/subagent_bundle.ts)
+`node_modules/@event4u/agent-config/src/scripts/_lib/subagent_spawn.ts`
+(`composeSpawnBrief`) + `node_modules/@event4u/agent-config/src/scripts/_lib/subagent_bundle.ts`
 (`resolveBundle`, `filterKnowledgeByPolicy`, `bundleAuditLine`) +
-[`src/scripts/_lib/worker_budget.ts`](../../../../src/scripts/_lib/worker_budget.ts)
+`node_modules/@event4u/agent-config/src/scripts/_lib/worker_budget.ts`
 (`budgetForTier`, `evaluateWorkerBudget`, `validateWorkerPartialResult`),
 covered by
-[`tests/scripts/_lib_subagent_spawn.test.ts`](../../../../tests/scripts/_lib_subagent_spawn.test.ts)
-+ [`tests/scripts/_lib_subagent_bundle.test.ts`](../../../../tests/scripts/_lib_subagent_bundle.test.ts)
-+ [`tests/scripts/_lib_worker_budget.test.ts`](../../../../tests/scripts/_lib_worker_budget.test.ts)
+`_lib_subagent_spawn.test.ts` (agent-config’s own test suite)
++ `_lib_subagent_bundle.test.ts` (agent-config’s own test suite)
++ `_lib_worker_budget.test.ts` (agent-config’s own test suite)
 (the budget-hit partial-result fixture).
 
 ## Worker rtk allowlist — wrap only the measured class
@@ -140,8 +140,8 @@ class measured ≥ ~50% output saving in
 `internal/bench/rtk-savings/RESULTS.md` (`git status`, full-format
 `git log -N`, `ls -la`); the ~0%-class (`--oneline`, `--stat` views,
 `npm ls`) stays unwrapped — wrap overhead without return. Deterministic
-list: `src/scripts/_lib/rtk_allowlist.ts` (`shouldWrapWithRtk`); congruence
-with RESULTS.md is test-enforced (`tests/scripts/_lib_rtk_allowlist.test.ts`)
+list: `node_modules/@event4u/agent-config/src/scripts/_lib/rtk_allowlist.ts` (`shouldWrapWithRtk`); congruence
+with RESULTS.md is test-enforced (`_lib_rtk_allowlist.test.ts` in agent-config's own test suite)
 — the numbers live in the bench file, referenced, never duplicated.
 
 ## Prefix stability — deterministic payload ordering

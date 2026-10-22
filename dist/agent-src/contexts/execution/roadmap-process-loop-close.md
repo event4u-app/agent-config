@@ -10,7 +10,7 @@ when a run reaches that branch; the Iron-Law fences stay in the core.
 The halt list above answers *"what interrupts runnable work"*. This answers
 *"what does the run report when the roadmap is not finished and the remaining
 work is not the agent's to do"* — and under
-[ADR-237](../../../docs/decisions/ADR-237-end-to-end-execution-authority.md) that
+ADR-237 (agent-config repository: `docs/decisions/ADR-237-end-to-end-execution-authority.md`) that
 second set is much smaller than it looks.
 
 **The measurement that motivated the old answer, and the reading that replaced
@@ -119,7 +119,7 @@ execution either way.
   (interactive mode), the run ends after the archival check with no
   git delivery beyond explicitly authorized commit steps.
 - **Sampled depth audit.** For every step whose receipt reads `active` (a
-  lowered depth), `./scripts-run src/scripts/probe_depth_shadow --audit-sample
+  lowered depth), `probe_depth_shadow.ts --audit-sample
   <roadmap.md#step> --class R0|R1` decides whether it gets a full round-1
   completion review after merge. If sampled, run that review and append one row to
   `src/config/depth-audit-samples.json`: `escaped` when it found a high or
@@ -139,7 +139,7 @@ ONCE so the classifier decides again with the owner's word in front of it
 continuation prompt for the owner and names its path in one line:
 
 ```bash
-./scripts-run src/scripts/refusal_envelope --input <envelope.json>
+refusal_envelope.ts --input <envelope.json>
 ```
 
 The input is task · done · refusals · remaining · the owner-directive record

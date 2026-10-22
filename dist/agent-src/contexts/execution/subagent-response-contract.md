@@ -29,7 +29,7 @@ orchestrator synthesises and re-verifies.
   line-shaped fields (`handoff`, a risk, a finding title) ≤ 240 · arrays ≤ 40
   entries · one artifact ref ≤ 200 · the whole serialized envelope ≤ 12,000
   chars (~3k tokens against a measured ~251k spawn floor). Constants + checks:
-  `src/scripts/_lib/subagent_response.ts`.
+  `node_modules/@event4u/agent-config/src/scripts/_lib/subagent_response.ts`.
 
 ## The canonical shape, and the three-way divergence it resolves
 
@@ -56,7 +56,7 @@ OUTPUT CONTRACT IS NOT EVIDENCE OF SUCCESS. IT IS EVIDENCE OF A CLAIM.
 ```
 
 **The failure this prevents.** Every downstream aggregation reads the recorded
-outcome, not the return. `src/scripts/extract_audit_patterns.ts` mines repeated
+outcome, not the return. `node_modules/@event4u/agent-config/src/scripts/extract_audit_patterns.ts` mines repeated
 patterns from it, and the per-asset effectiveness report is built on the same
 stream. A forged `success` does not stay one line: it becomes signal, and the
 report then recommends keeping an asset that never worked and retiring one that
@@ -79,7 +79,7 @@ the gate does not fire. Treating "not measured" as zero manufactures the same
 forgery with the opposite sign, and an aggregation cannot tell the two apart any
 better than it can tell a forged success from a real one.
 
-Implemented by `envelopeOutcome` in `src/scripts/_lib/orchestration_record.ts`,
+Implemented by `envelopeOutcome` in `node_modules/@event4u/agent-config/src/scripts/_lib/orchestration_record.ts`,
 the tree's only cross-domain outcome mapping. Because it is the only one, the
 mapping is **versioned**: lines carry `outcome_semantics`, and an absent field
 means the pre-2026-08-30 unconditional semantics. `audit-log-v1` is append-only,
@@ -257,7 +257,7 @@ reached by accumulation either. There is no field a raw transcript fits in —
 and that is load-bearing, not stylistic: the claim under test is whether a
 successor can work from the *capsule*, which is unmeasurable the moment raw
 context can ride along. Validator:
-[`subagent_capsule.validateCapsule`](../../../../src/scripts/_lib/subagent_capsule.ts);
+`subagent_capsule.validateCapsule` (`node_modules/@event4u/agent-config/src/scripts/_lib/subagent_capsule.ts`);
 the orchestrator never briefs a successor from an invalid capsule.
 
 **Status today: additive and off.** Nothing reads a capsule. Emission is
@@ -291,9 +291,9 @@ recorded in [`orchestration-telemetry`](orchestration-telemetry.md).
 
 ## Reference implementation
 
-[`src/scripts/_lib/subagent_response.ts`](../../../../src/scripts/_lib/subagent_response.ts)
+`node_modules/@event4u/agent-config/src/scripts/_lib/subagent_response.ts`
 (`validateResponse`, `synthesisGaps`, `forcesJudge`), covered by
-[`tests/scripts/_lib_subagent_response.test.ts`](../../../../tests/scripts/_lib_subagent_response.test.ts).
+`_lib_subagent_response.test.ts` (agent-config’s own test suite).
 
 ## Related
 

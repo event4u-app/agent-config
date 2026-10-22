@@ -122,7 +122,7 @@ unreadable diff is `needs-council` — the gate fails closed.
 the gate's output, run the council with `--output` on the prompt file, then:
 
 ```bash
-./scripts-run src/scripts/merge_clearance write --pr <N> \
+merge_clearance.ts write --pr <N> \
   --head <manifest-head-sha> --base <manifest-base_sha> \
   --classification <gate-output-file> --session <council-session-json> --prompt <prompt-file>
 ```
@@ -145,7 +145,7 @@ resolver hook the block writes into its own temporary directory — which depend
 on no `node_modules` at all, the head's or anyone's. Only when that cannot run
 (a Node without type stripping, or a base whose closure uses syntax stripping
 cannot carry) does the block fall back to the checkout's `tsx`, never through
-`./scripts-run`, whose dispatcher is the head's code.
+the repository's script dispatcher, which is the head's code.
 
 **Dependency manifests go to the council (owner decision, 2026-10-15).** A head
 that changes `package.json` or a lockfile, at any depth, is never `routine` —
@@ -281,7 +281,7 @@ owner's once, with everything in front of him. Per held PR:
 A PR with a `dangerous` seat is listed under its own sub-heading, **Held — a
 seat found it dangerous**, ahead of the rest, so it cannot read as one more
 `needs-owner` hand-over. The entry shape is the one
-[`ratification-artifact` § When the user decides](../../docs/contracts/ratification-artifact.md)
+`ratification-artifact` § When the user decides (agent-config repository: `docs/contracts/ratification-artifact.md`)
 already gives — the council's reading, the dissent, the exact change, what it
 risks and how it is undone — reused per PR, not restated as a second contract.
 A run with nothing held prints no block.

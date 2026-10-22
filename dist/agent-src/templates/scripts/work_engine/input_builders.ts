@@ -35,7 +35,14 @@ import { _load, _maybe_raise_legacy_hint, _read_json } from './state_io.js';
  */
 export function _load_or_build(state_file: string, args: ParsedArgs): [WorkState, string] {
     if (_exists(state_file)) {
-        return _load(state_file);
+        const loaded = _load(state_file);
+        if (loaded[0].input.kind === 'procedure') {
+            throw new _CLIError(
+                `${state_file} holds a procedure run; continue it with --procedure <skill>, ` +
+                    'or pass --state-file to start an ordinary run elsewhere.',
+            );
+        }
+        return loaded;
     }
     _maybe_raise_legacy_hint(state_file);
     const inputs: Array<[string, string | null]> = [

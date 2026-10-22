@@ -24,7 +24,7 @@ declared mode into this-turn grants **cached for this run only**
 is harmless: no confirmation, no grants.
 
 **`/roadmap:process-full` is the exception, per
-[ADR-237](../../../docs/decisions/ADR-237-end-to-end-execution-authority.md):
+ADR-237 (agent-config repository: `docs/decisions/ADR-237-end-to-end-execution-authority.md`):
 the invocation IS the confirmation.** There is no separate acceptance round
 and no contract screen to wait on — the user asked for the finished PR, and
 the grants in § 3 activate on the invocation itself, whatever

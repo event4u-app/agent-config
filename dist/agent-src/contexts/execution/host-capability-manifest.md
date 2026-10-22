@@ -28,7 +28,7 @@ A single JSON object, `schema_version: 1`:
 
 ## Resolution
 
-`probeHostCapabilities(hostId)` (`src/scripts/_lib/host_capability.ts`) fills
+`probeHostCapabilities(hostId)` (`node_modules/@event4u/agent-config/src/scripts/_lib/host_capability.ts`) fills
 the manifest from OBSERVABLE FACTS ONLY — capability is a fact about the
 host, never a configuration decision (always-on orchestration, Phase 1):
 
@@ -201,7 +201,7 @@ date after which this tree stops treating the observation as current, which is a
 statement about the record, never about the host.
 
 The machine-readable twin of this field is `verified.expires` in
-`src/scripts/hooks/host_lowering.yaml`, the same discipline applied to hook
+`node_modules/@event4u/agent-config/src/scripts/hooks/host_lowering.yaml`, the same discipline applied to hook
 lowering: `lint_hook_manifest` refuses an expired row that still carries a
 blocking binding and warns on every other lapse, and `host_semantics.ts` reads
 an expired row exactly as `verified: null`. A registry row here has no such

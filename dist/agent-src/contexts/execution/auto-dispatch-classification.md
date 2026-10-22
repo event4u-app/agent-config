@@ -62,7 +62,7 @@ dwarfs the work). Below the floor → in-session.
 One committed table replacing three scattered classification surfaces
 (the delegable-signal rules above, ad-hoc "should this be a team" calls,
 and the absence of any council-routing signal on the task side). Resolver:
-[`judgment_ladder.ts`](../../../../src/scripts/_lib/judgment_ladder.ts)
+`node_modules/@event4u/agent-config/src/scripts/_lib/judgment_ladder.ts`
 (`classifyLadder`) — a WRAPPER around `classifyTask`, never a replacement:
 rungs 1 and 2 ARE `classifyTask`'s existing dispatch verdict.
 
@@ -129,7 +129,7 @@ tier `inferSliceTier` (§ below) already raised.
 Deny-by-default — a direction not listed here is denied. Direction rules,
 payload allow/deny lists, the report-only boundary, the no-recursion clause and
 the human egress gate:
-[`cross-vendor-worker-direction`](../../docs/contracts/cross-vendor-worker-direction.md).
+`cross-vendor-worker-direction` (agent-config repository: `docs/contracts/cross-vendor-worker-direction.md`).
 Role pairs, never vendor names — `classifyLadder` carries no vendor identity
 ([`subagent-routing`](subagent-routing.md) § Why vendor-neutral).
 
@@ -261,15 +261,15 @@ budgeted (consume part of the N=3 autonomous budget) and opt-in. Not in v1.
 ## Reference implementation
 
 - `classifyTask` / `classifyLookup` —
-  [`auto_dispatch.ts`](../../../../src/scripts/_lib/auto_dispatch.ts)
+  `node_modules/@event4u/agent-config/src/scripts/_lib/auto_dispatch.ts`
 - `classifyLadder` + the rung-0/1/3/4 signal detectors —
-  [`judgment_ladder.ts`](../../../../src/scripts/_lib/judgment_ladder.ts)
+  `node_modules/@event4u/agent-config/src/scripts/_lib/judgment_ladder.ts`
 - First production caller —
-  [`delegation_nudge_hook.ts`](../../../../src/scripts/hooks/delegation_nudge_hook.ts):
+  `node_modules/@event4u/agent-config/src/scripts/hooks/delegation_nudge_hook.ts`:
   its injected line cites the resolved rung, scoped to the dispatch rungs
   (1/2); a rung-0/3/4 verdict stays silent on this carrier.
 
-Each has a sibling `*.test.ts` under `tests/scripts/` covering every rung, the
+Each has a sibling `*.test.ts` in agent-config's own test suite covering every rung, the
 rung-3 degrade path, the recursive-dispatch guard and every ∅ case.
 
 ## Related

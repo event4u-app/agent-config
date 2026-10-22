@@ -25,7 +25,7 @@ ordering is the fix, not the label.
   `| asked: no — <reason>`. The reason is required: without it a later reader
   cannot tell a declined decision from one that was never offered.
 
-The decision itself is `src/scripts/_lib/blocked_by_marker.ts` (`decideAsk`),
+The decision itself is `node_modules/@event4u/agent-config/src/scripts/_lib/blocked_by_marker.ts` (`decideAsk`),
 so the ordering is testable rather than only described; `lint_roadmap_blockers`
 fails a user-decision annotation carrying no `asked:` field, and one saying
 `asked: no` with no reason.
