@@ -12,10 +12,11 @@
  * the reason; the run then counts as a notification, not an install. `EACCES`
  * prints the exact command for the user to run and never escalates.
  *
- * The production wiring refuses the swap while the machine-wide live-session
- * register reports a running session (`activation_blocked_reason`), because the
- * measured mid-session swap breaks running hooks. With no session live, every
- * other gate still has to pass before anything installs.
+ * The production wiring refuses every swap while the provenance check has no
+ * pinned trust root (`PROVENANCE_TRUST_ROOT_PINNED`), and, once it has one,
+ * while the machine-wide live-session register reports a running session,
+ * because the measured mid-session swap breaks running hooks. Dry runs still
+ * evaluate every gate and report the block.
  *
  * Exit codes: `0` installed, a dry run whose gates all passed, or `--skip`
  * recorded · `3` refused (a gate — including no newer version — the lock, the
@@ -82,8 +83,37 @@ export const ACTIVATION_BLOCKED =
  * single stale byte in the global root an unattended upgrade that can never
  * run again on that machine, with no signal to the user that it stopped.
  */
-export function activation_blocked_reason(env?: EnvMap | null): string | null {
+export function live_session_blocked_reason(env?: EnvMap | null): string | null {
     return any_live_session(global_register_dir(env)) ? ACTIVATION_BLOCKED : null;
+}
+
+/**
+ * Whether `verify_attestation_signature` checks the certificate chain against
+ * a pinned Sigstore/Fulcio root. It does not: a self-signed certificate whose
+ * SAN names the publish workflow passes (`tests/lib/provenance_signature`).
+ * Flip only in the change that pins the root and makes that test refuse.
+ */
+export const PROVENANCE_TRUST_ROOT_PINNED = false;
+
+export const TRUST_ROOT_BLOCKED =
+    'the provenance check cannot yet tell who issued the attestation certificate (no pinned ' +
+    'Sigstore/Fulcio trust root), so a forged attestation would pass it — unattended installs stay ' +
+    'off until one is pinned; run `agent-config upgrade` yourself';
+
+/**
+ * Why the production wiring may not swap now, or `null` when it may.
+ *
+ * Fails closed on the trust root first: without it the provenance gate proves
+ * only that the bundle is internally consistent, which is not enough to let an
+ * install happen with nobody watching (release 17.0.0 review, council 2/2).
+ * The live-session check then still applies on its own.
+ */
+export function activation_blocked_reason(
+    env?: EnvMap | null,
+    trustRootPinned: boolean = PROVENANCE_TRUST_ROOT_PINNED,
+): string | null {
+    if (!trustRootPinned) return TRUST_ROOT_BLOCKED;
+    return live_session_blocked_reason(env);
 }
 
 interface OutSink {

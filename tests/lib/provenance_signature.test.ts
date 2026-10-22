@@ -20,6 +20,12 @@ import * as path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import {
+    PROVENANCE_TRUST_ROOT_PINNED,
+    TRUST_ROOT_BLOCKED,
+    activation_blocked_reason,
+} from '../../src/scripts/_cli/upgrade_unattended.js';
+
+import {
     EXPECTED_REPOSITORY,
     EXPECTED_WORKFLOW_REF,
     dssePae,
@@ -167,5 +173,20 @@ describe('verify_attestation_signature', () => {
         // blocker, asserted so the limit cannot be forgotten and so the test
         // flips the day a Fulcio root is pinned.
         expect(await verify_attestation_signature(doc)).toBeNull();
+    });
+});
+
+describe('the known limitation keeps unattended activation off', () => {
+    // While a self-signed certificate passes the signature check above, the
+    // provenance gate proves only internal consistency, so the production
+    // wiring of `upgrade --unattended` must refuse every swap.
+    it('refuses activation for as long as no trust root is pinned', () => {
+        expect(PROVENANCE_TRUST_ROOT_PINNED).toBe(false);
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'trust-root-block-'));
+        try {
+            expect(activation_blocked_reason({ EVENT4U_CONFIG_HOME: home })).toBe(TRUST_ROOT_BLOCKED);
+        } finally {
+            fs.rmSync(home, { recursive: true, force: true });
+        }
     });
 });
