@@ -14,7 +14,9 @@
  * breaking note under `## [Unreleased]` is WIP and never trips the gate.
  *
  * REQUIREMENT: when triggered, the same diff must also modify
- * `BREAKING_CHANGES.md`.
+ * `BREAKING_CHANGES.md`, unless the index already carries a by-major row
+ * (`| **N.0.0** |`) for that major — the row the Pending workflow lands on main
+ * before the cut, which the release diff then never touches.
  *
  * Escape hatch (mirrors `check_structural_breaking.ts`'s `ci-override` trailer):
  * an own-line trailer `ci-override: breaking-index-override` (the bare token
@@ -95,23 +97,45 @@ export function added_released_breaking_majors(
     return added;
 }
 
+// A by-major row opens with the version in bold: `| **17.0.0** | 2026-10-21 | …`.
+const INDEX_ROW_RE = /^\|\s*\*\*(?<version>\d+\.\d+\.\d+)\*\*\s*\|/;
+
+/** The majors `BREAKING_CHANGES.md` already carries a by-major row for. */
+export function indexed_majors(indexLines: readonly string[]): Set<string> {
+    const found = new Set<string>();
+    for (const ln of indexLines) {
+        const m = INDEX_ROW_RE.exec(ln);
+        if (m) found.add(m.groups!['version']!);
+    }
+    return found;
+}
+
 export interface CheckResult {
     readonly addedMajors: readonly string[];
+    /** Added majors with no by-major row in the index. */
+    readonly unindexedMajors: readonly string[];
     readonly indexChanged: boolean;
     readonly overridden: boolean;
     readonly violation: boolean;
 }
 
-/** Pure decision: violation iff a released BREAKING was added, the index was not touched, and no override cleared it. */
+/**
+ * Pure decision: violation iff a released BREAKING was added for a major the
+ * index carries no row for, the index was not touched, and no override cleared
+ * it. A row landed before the cut satisfies the index: the Pending workflow
+ * writes it on main, so the release diff itself never touches the file.
+ */
 export function evaluate(
     oldLines: readonly string[],
     newLines: readonly string[],
     indexChanged: boolean,
     overridden: boolean,
+    indexed: ReadonlySet<string> = new Set(),
 ): CheckResult {
     const addedMajors = added_released_breaking_majors(oldLines, newLines);
-    const violation = addedMajors.length > 0 && !indexChanged && !overridden;
-    return { addedMajors, indexChanged, overridden, violation };
+    const unindexedMajors = addedMajors.filter((v) => !indexed.has(v));
+    const violation = unindexedMajors.length > 0 && !indexChanged && !overridden;
+    return { addedMajors, unindexedMajors, indexChanged, overridden, violation };
 }
 
 // ─── git helpers (CLI only) ──────────────────────────────────────────────────
@@ -267,12 +291,21 @@ function main(argv?: readonly string[]): number {
     const log = _git('log', '--format=%B', `${base}..HEAD`);
     const overridden = OVERRIDE_RE.test(log) || process.env['BREAKING_INDEX_OVERRIDE'] === '1';
 
-    const result = evaluate(oldLines, newLines, indexChanged, overridden);
+    const indexPath = path.join(REPO_ROOT, INDEX_REL);
+    const indexed = fs.existsSync(indexPath)
+        ? indexed_majors(_splitlines(fs.readFileSync(indexPath, 'utf-8')))
+        : new Set<string>();
+
+    const result = evaluate(oldLines, newLines, indexChanged, overridden, indexed);
 
     if (!result.violation) {
         if (!args.quiet) {
             if (result.addedMajors.length > 0) {
-                const why = result.overridden ? 'override' : `${INDEX_REL} updated`;
+                const why = result.indexChanged
+                    ? `${INDEX_REL} updated`
+                    : result.unindexedMajors.length === 0
+                      ? `an existing ${INDEX_REL} row`
+                      : 'override';
                 process.stdout.write(
                     `✅ lint-breaking-changes-index: ${result.addedMajors.length} released ` +
                         `BREAKING addition(s), cleared by ${why}\n`,
@@ -290,7 +323,7 @@ function main(argv?: readonly string[]): number {
         `❌ lint-breaking-changes-index: released BREAKING entr(y/ies) added to ${CHANGELOG_REL} ` +
             `without a matching ${INDEX_REL} change:\n`,
     );
-    for (const v of result.addedMajors) {
+    for (const v of result.unindexedMajors) {
         process.stderr.write(`   - ## [${v}] gained a ### BREAKING section\n`);
     }
     process.stderr.write(
