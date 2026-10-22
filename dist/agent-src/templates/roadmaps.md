@@ -153,10 +153,8 @@ that was never a judgement call.
     needs elapsed time rather than effort — goes into a `stubs/` entry with
     its trigger when the roadmap is authored, not into the roadmap's phases.
     Left inside, it holds a roadmap whose work is done at `count_open > 0`,
-    and a drain can never close it: on 2026-10-19 about a fifth of the active
-    estate's open steps were such waits. `lint_roadmap_complexity` warns on an
-    open step whose block pairs a wait word with a date after today — the same
-    reading `roadmap_drain_queue` classifies as `time`.
+    and a drain can never close it. `lint_roadmap_complexity` warns on an
+    open step whose block pairs a wait word with a date after today.
 17. **Follow-up roadmaps from deferred items carry `parent_roadmap`.**
     When a roadmap closes with `[~]` deferred items, the
     [`roadmap-management`](../skills/roadmap-management/SKILL.md) skill
@@ -372,10 +370,8 @@ that was never a judgement call.
     reserved row it crosses in `Routed:`. A `DECIDE` is a `## Decisions`
     row, not a blocker. An unreachable council writes `Routed: pending —
     <reason>` and the entry goes to the next council pass, never to the
-    owner by default. Measured 2026-10-20: the council resolved all ten
-    blockers closed in two days, including all seven labelled owner or
-    maintainer. `lint_roadmap_blockers:routing` ratchets entries without
-    the field.
+    owner by default. `lint_roadmap_blockers:routing` ratchets entries
+    without the field.
 
     **A blocker stops execution; a hold stops publication.** The two are not
     interchangeable and never substitute for one another. A blocker says the work
@@ -835,8 +831,8 @@ that was never a judgement call.
     checkbox line plus its indented continuation counts; HTML comments (a
     receipt, a skip marker) do not. Evidence goes to the commit and, for an
     R2/R3 change, to the artefact — not into the step. `lint_roadmap_complexity`
-    refuses a new step over the cap; the steps already over it on 2026-10-21 are
-    held in `src/config/roadmap-step-size-baseline.json`, which only shrinks.
+    refuses a new step over the cap; steps already over it when the cap landed
+    sit in a baseline that only shrinks.
 
 ---
 

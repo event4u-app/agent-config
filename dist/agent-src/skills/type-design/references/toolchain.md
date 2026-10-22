@@ -37,6 +37,8 @@ default builder.
 ## Intake record — 2026-10-18
 
 Taken through `supply-chain-intake` against the live registry on 2026-10-18.
+The figures below are as that run reported them; the raw registry and OSV
+responses were not stored, so re-query the registry before relying on one.
 
 | Pin | Exists | Published | Downloads, last month | Known vulnerabilities |
 |---|---|---|---|---|
