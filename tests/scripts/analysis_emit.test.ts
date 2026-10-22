@@ -48,9 +48,11 @@ describe('emitting a round locally', () => {
     });
 
     it('lands an owned finding as a step plus an Arrivals line on its owner, not a new roadmap', () => {
-        const r = emitRound({ ...BASE, findings: [OWNED] });
+        const r = emitRound({ ...BASE, findings: [OWNED], ownerNextPhase: (slug) => (slug === 'a-retro-the-merge-runs' ? 4 : null) });
         expect(r.roadmaps).toEqual([]);
         expect(r.estate_delta).toBe(0);
+        expect(r.arrivals[0]?.step).toMatch(/^- \[ \] \*\*4\.1 /);
+        expect(r.arrivals[0]?.step).not.toContain('N.');
         expect(r.arrivals).toEqual([
             {
                 slug: 'a-retro-the-merge-runs',
@@ -59,6 +61,10 @@ describe('emitting a round locally', () => {
                 arrivals_line: '> **Arrivals:** latest `run-20261017-ab12cd` (2026-10-17) — f-retro',
             },
         ]);
+    });
+
+    it('refuses an owned finding whose owner phase number is unknown rather than writing a placeholder', () => {
+        expect(() => emitRound({ ...BASE, findings: [OWNED] })).toThrow(/no next phase number/);
     });
 
     it('lands draft above the intake limit and says so in one line', () => {
