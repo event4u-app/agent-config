@@ -17,6 +17,8 @@
  *   whose per-model probe shows local weights and no outbound connection may
  *   carry its declared ceiling (`self-hosted`). Loopback alone proves nothing:
  *   a local proxy forwards upstream;
+ * - identity is derived from the served id, and a route serving another model
+ *   than the one requested is absent with `policy_model_mismatch`;
  * - random or auto routers are refused at config time: their family is unknown
  *   until after the call.
  */
@@ -196,4 +198,19 @@ export function resolveRouteTransport(opts: ResolveRouteOptions): ResolvedTransp
         reason: null,
         absentReason: null,
     };
+}
+
+/** The family a served id belongs to: the leading word of its last path segment. */
+export function familyOf(servedId: string): string {
+    const last = servedId.trim().split('/').pop() ?? '';
+    return (last.split(/[^a-zA-Z]+/).find((t) => t !== '') ?? '').toLowerCase();
+}
+
+/** Same model, allowing only a vendor prefix and a dated or variant suffix of the requested id. */
+export function servedMatches(requested: string, served: string): boolean {
+    const norm = (s: string): string => (s.trim().split('/').pop() ?? '').toLowerCase();
+    const r = norm(requested);
+    const s = norm(served);
+    if (r === '' || s === '') return false;
+    return s === r || (s.startsWith(`${r}-`) && familyOf(s) === familyOf(r));
 }

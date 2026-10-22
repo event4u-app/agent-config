@@ -6,7 +6,7 @@
 
 import { curlJsonPost, type JsonPost } from './api_transport.js';
 import { CouncilResponse, ExternalAIClient } from './clients.js';
-import type { RouteBilling } from './free_route.js';
+import { familyOf, servedMatches, type RouteBilling } from './free_route.js';
 import { policyExclusionReason, type PolicyExclusion } from './seat_policy.js';
 
 export interface FreeRouteClientOptions {
@@ -20,7 +20,9 @@ export interface FreeRouteClientOptions {
 
 /**
  * `chat/completions` against a route. Distinct from `_OpenAICompatibleClient`
- * because a keyless route must send no Authorization header at all.
+ * because a keyless route must send no Authorization header at all, and
+ * because its answer is only kept when the served model is the requested one.
+ * Paid provider clients keep `model_served` as attribution only.
  */
 export class FreeRouteClient extends ExternalAIClient {
     readonly base_url: string;
@@ -72,6 +74,9 @@ export class FreeRouteClient extends ExternalAIClient {
         }
         const ms = Math.trunc(performance.now() - t0);
         const served = typeof response['model'] === 'string' ? response['model'] : '';
+        if (!servedMatches(this.model, served)) {
+            return this._refused('policy_model_mismatch', `requested ${this.model}, served ${served || '(none reported)'}`, ms, served);
+        }
         const choices = Array.isArray(response['choices']) ? (response['choices'] as Record<string, unknown>[]) : [];
         const message = (choices[0]?.['message'] ?? {}) as Record<string, unknown>;
         const usage = (response['usage'] ?? {}) as Record<string, unknown>;
@@ -84,7 +89,7 @@ export class FreeRouteClient extends ExternalAIClient {
             input_tokens: num(usage['prompt_tokens']),
             output_tokens: num(usage['completion_tokens']),
             latency_ms: ms,
-            metadata: { billing: this.billing, route: this.base_url, billable: this.billable },
+            metadata: { family: familyOf(served), billing: this.billing, route: this.base_url, billable: this.billable },
         });
     }
 }
