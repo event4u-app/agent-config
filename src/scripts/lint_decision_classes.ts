@@ -34,6 +34,7 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { OWNER_LOCKED_CLASSES } from './ai_council/ownership_classes.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const _PROG = 'lint_decision_classes';
@@ -64,6 +65,19 @@ export const RESOLVER_FORMS: readonly string[] = [
     'team:',
     'owner',
 ];
+
+/**
+ * Locked-class rows resolved by the council before the owner lock reached this
+ * lint (road-to-a-tick-the-shipped-path-earns 2.2, decision A6). Listed rather
+ * than rewritten, so a fifth cannot land; each waits on the owner's ruling on
+ * blocker `delegated-owner-defaults`.
+ */
+export const LOCKED_RESOLVER_BASELINE: ReadonlySet<string> = new Set([
+    'agents/roadmaps/road-to-an-update-that-installs-itself-only-when-it-is-safe.md#D7',
+    'agents/roadmaps/road-to-an-update-that-installs-itself-only-when-it-is-safe.md#D8',
+    'agents/roadmaps/road-to-authority-routing-mechanism.md#D11',
+    'agents/roadmaps/road-to-placeholders-on-the-wire.md#D7',
+]);
 
 /**
  * Unresolved-decision markers. Deliberately narrow: every pattern is a phrase
@@ -204,6 +218,21 @@ export function checkOwnershipColumn(rel: string, lines: readonly string[]): Vio
                         `resolved by=\`${resolved}\` is not one of ` +
                         `evidence, agent, independent:<session or model>, council:<record>, ` +
                         `team:<record>, owner`,
+                });
+            }
+            const id = (cells[0] ?? '').replace(/`/g, '').trim();
+            if (
+                OWNER_LOCKED_CLASSES.has(owner) &&
+                resolved !== 'owner' &&
+                !LOCKED_RESOLVER_BASELINE.has(`${rel}#${id}`)
+            ) {
+                out.push({
+                    file: rel,
+                    line: i + 1,
+                    reason:
+                        `ownership=\`${owner}\` is locked to the owner (ownership_classes.ts), ` +
+                        `so resolved by=\`${resolved}\` cannot close it. Record a council answer ` +
+                        `as \`owner\` with a decision cell starting "proposed".`,
                 });
             }
         }
@@ -437,6 +466,11 @@ function _selfTest(): number {
     ].join('\n');
     if (checkFile('m2.md', resolved).length !== 0) {
         failures.push('a marker naming its own closure row red');
+    }
+    const locked = good.replace('critical-technical | council:rec-1', 'product-owned | council:rec-1');
+    if (checkFile('l.md', locked).length === 0) failures.push('a locked class closed by the council did not red');
+    if (checkFile('l2.md', locked.replace('council:rec-1', 'owner')).length !== 0) {
+        failures.push('a locked class closed by the owner red');
     }
     const dangling = 'Pick the codec: TBD — closed as D9.\n';
     if (checkFile('m3.md', dangling).length === 0) {

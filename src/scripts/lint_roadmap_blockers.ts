@@ -281,6 +281,27 @@ const TECHNICAL_CLASSES: ReadonlySet<string> = new Set([
  * parses as `1`: the taxonomy name is documentation for the reader and must
  * not have to be spelled identically in every entry to stay valid.
  */
+/** A `## Decisions` row resolved by `owner`, dated, that names blocker `id`. */
+function _ownerDecisionNames(text: string, id: string): boolean {
+    const lines = text.split('\n');
+    const start = lines.findIndex((l) => /^##\s+Decisions\s*$/.test(l));
+    if (start < 0) return false;
+    let resolvedCol = -1;
+    for (let i = start + 1; i < lines.length && !/^##\s/.test(lines[i] as string); i += 1) {
+        const line = (lines[i] as string).trim();
+        if (!line.startsWith('|')) continue;
+        const cells = line.replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim());
+        if (resolvedCol < 0) {
+            resolvedCol = cells.findIndex((c) => /^resolved[ _]by$/i.test(c));
+            continue;
+        }
+        if (cells[resolvedCol]?.replace(/`/g, '') !== 'owner') continue;
+        if (!line.includes(id) || !/\b\d{4}-\d{2}-\d{2}\b/.test(line)) continue;
+        return true;
+    }
+    return false;
+}
+
 function _blockerClass(body: string): string {
     const m = CLASS_FIELD_RE.exec(body);
     if (!m) {
@@ -341,6 +362,8 @@ interface ScanResult {
     decidability: Violation[];
     /** Open human-owned entries with no `Routed:` field — counted against its own ratchet. */
     routing: Violation[];
+    /** Resolved human-only entries no owner `## Decisions` row names — ratcheted (K1). */
+    ownerClose: Violation[];
 }
 
 /** What a scan needs to resolve a qualified reference: who it is, and where it may point. */
@@ -354,6 +377,7 @@ function _scanBoth(rawText: string, ctx: ScanContext = {}): ScanResult {
     const violations: Violation[] = [];
     const decidability: Violation[] = [];
     const routing: Violation[] = [];
+    const ownerClose: Violation[] = [];
     const text = _stripFencedCode(rawText);
     const declaredIds = new Set<string>();
     const userDecisionIds = new Set<string>();
@@ -416,6 +440,15 @@ function _scanBoth(rawText: string, ctx: ScanContext = {}): ScanResult {
             // Resolved entries are history — re-litigating a decision already
             // made would be churn, and the ratchet would never reach zero.
             const isResolved = /^-[ \t]*\*\*Status:\*\*[ \t]*resolved/im.test(body);
+            if (isResolved && ['', '3'].includes(_blockerClass(body)) && !_ownerDecisionNames(text, cur.id)) {
+                ownerClose.push({
+                    line: _lineAt(text, sectionStart + cur.start),
+                    message:
+                        `blocker '${cur.id}' is human-only and resolved, but no \`## Decisions\` row ` +
+                        'resolved by `owner` names it with a date — a class-3 blocker closes only on an ' +
+                        'owner decision (road-to-a-tick-the-shipped-path-earns 2.3)',
+                });
+            }
             if (!isResolved) {
                 openIds.add(cur.id);
                 // The class/run contract is HARD rather than ratcheted, and it
@@ -552,7 +585,7 @@ function _scanBoth(rawText: string, ctx: ScanContext = {}): ScanResult {
     violations.sort((a, b) => a.line - b.line);
     decidability.sort((a, b) => a.line - b.line);
     routing.sort((a, b) => a.line - b.line);
-    return { hard: violations, decidability, routing };
+    return { hard: violations, decidability, routing, ownerClose };
 }
 
 interface LocalBlockers {
@@ -920,10 +953,11 @@ function main(): number {
     let failed = 0;
     const undecidable: Array<{ rel: string; v: Violation }> = [];
     const unrouted: Array<{ rel: string; v: Violation }> = [];
+    const unowned: Array<{ rel: string; v: Violation }> = [];
     for (const roadmap of roadmaps) {
         const rel = _relPosix(roadmap, REPO_ROOT);
         const text = fs.readFileSync(roadmap, 'utf-8');
-        const { hard, decidability, routing } = _scanBoth(text, {
+        const { hard, decidability, routing, ownerClose } = _scanBoth(text, {
             selfStem: path.basename(roadmap, '.md'),
             index,
         });
@@ -932,6 +966,9 @@ function main(): number {
         }
         for (const v of routing) {
             unrouted.push({ rel, v });
+        }
+        for (const v of ownerClose) {
+            unowned.push({ rel, v });
         }
         if (hard.length) {
             failed += 1;
@@ -1021,12 +1058,24 @@ function main(): number {
                 '    See templates/roadmaps.md rule 20 "Route before you file".\n',
         );
     }
-    if (!verdict.ok || !routingVerdict.ok) {
+    const ownerVerdict = checkRatchet({
+        gate: 'lint_roadmap_blockers:owner-close',
+        actual: unowned.length,
+        repoRoot: REPO_ROOT,
+    });
+    if (!ownerVerdict.ok) {
+        process.stderr.write(`❌  ${ownerVerdict.message}\n`);
+        for (const { rel, v } of unowned) {
+            process.stderr.write(`    ${rel}:${v.line}: ${v.message}\n`);
+        }
+    }
+    if (!verdict.ok || !routingVerdict.ok || !ownerVerdict.ok) {
         return 1;
     }
     if (!QUIET) {
         process.stdout.write(`\n✅  ${roadmaps.length} roadmap(s) blocker-contract-clean\n`);
         process.stdout.write(`✅  ${routingVerdict.message}\n`);
+        process.stdout.write(`✅  ${ownerVerdict.message}\n`);
         process.stdout.write(
             `✅  0 blocker id(s) open in both an active and an archived roadmap ` +
                 `(${_globArchivedRoadmaps().length} archived file(s) read)\n`,

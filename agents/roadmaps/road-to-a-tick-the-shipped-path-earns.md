@@ -98,10 +98,11 @@ the bench harnesses and `pricing.yaml`.
 
 ## Phase 2 — The owner lock reaches the roadmap (D1)
 
-- [ ] **2.1 Red first.** A fixture roadmap with `| X | product-owned | council:… |` and a
+- [x] **2.1 Red first.** A fixture roadmap with `| X | product-owned | council:… |` and a
   class-3 blocker `Status: resolved` with no owner line; both lints pass it today.
   verify: both self-test cases are red at the base commit.
-- [ ] **2.2 `lint_decision_classes` imports `OWNER_LOCKED_CLASSES`** and refuses a locked class
+      Done 2026-10-23: `tests/scripts/roadmap_owner_lock.test.ts`, 4 of 8 cases red before either lint changed.
+- [x] **2.2 `lint_decision_classes` imports `OWNER_LOCKED_CLASSES`** and refuses a locked class
   whose resolver is not `owner`. A council answer on a locked class is legal only as text in the
   row ("proposed — council recommends …") with resolver `owner` and the row's decision cell
   starting `proposed`; the lint and `closure_scan` count such a row as open.
@@ -109,9 +110,11 @@ the bench harnesses and `pricing.yaml`.
   baseline, each with its file, id and the reason, and are listed for the owner; the lint refuses
   any row not in it.
   verify: 2.1's decision case red → green; the estate passes with exactly those four baselined.
-- [ ] **2.3 `lint_roadmap_blockers` refuses `resolved` on a class-3 blocker** unless the file's
+      Done 2026-10-23: `lint_decision_classes` imports `OWNER_LOCKED_CLASSES`; the four pre-#2585 rows are `LOCKED_RESOLVER_BASELINE`, confirmed to be the only estate hits with the baseline cleared; self-test covers both directions; the roadmap template states the rule. `closure_scan` does not yet count a `proposed` row as open.
+- [x] **2.3 `lint_roadmap_blockers` refuses `resolved` on a class-3 blocker** unless the file's
   `## Decisions` table has a row naming the blocker id with resolver `owner` and a date.
   verify: 2.1's blocker case red → green.
+      Done 2026-10-23: a resolved class-3 blocker with no dated `owner` row naming it reds the new `lint_roadmap_blockers:owner-close` ratchet; 20 historic entries baselined (K1), headroom zero.
 - [ ] **2.4 A constraint carrier for skipping workers (D2a, unblocks cold-start 2.5).** The
   consumer's constraints reach a worker that skips instruction files on the host's own Agent
   path — a `SubagentStart` injection of the floor plus a bounded digest of the project's
