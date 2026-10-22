@@ -145,9 +145,9 @@ skill — that is `messaging-architecture`'s job.
 ## Sourcing
 
 Each claim about the segment, the category or the named alternative carries
-its source — an interview, the competitor's own page, an analyst — under the
-rule [`/research:deep`](../../domains/product-discovery/research/deep/command.md) states: a cited live source, never model memory,
-`[uncertain]` for the rest. A position built on an unsourced belief is
+its source — an interview, the competitor's own page, an analyst — per
+[`/research:deep`](../../domains/product-discovery/research/deep/command.md): a cited live source, never model memory,
+`[uncertain]` for the rest. A position on an unsourced belief is
 opposable to nothing.
 
 ## Gotcha
@@ -158,7 +158,7 @@ opposable to nothing.
   often skipped. If the buyer's status quo is free, the alternative
   is free, and the positioning has to clear that bar.
 - A positioning frame without non-goals expands until everyone is a
-  prospect; that is the failure mode, not the success state.
+  prospect — a failure, not a success.
 
 ## Do NOT
 
@@ -166,7 +166,7 @@ opposable to nothing.
   beat coined categories; category theatre is the council Q1
   out-of-scope.
 - Do NOT collapse positioning into a tagline; the four anchors are
-  the artefact, the tagline is a downstream condensation.
+  the artefact, the tagline comes later.
 - Do NOT decide pricing tiers from positioning — hand off to
   pricing / unit-economics work.
 

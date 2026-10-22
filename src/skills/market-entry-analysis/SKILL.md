@@ -130,14 +130,14 @@ Produce the entry plan artifact. P2 composes P3 (`competitive-positioning`) for 
 - "Enter the European enterprise healthcare market" mixes three axes. Pick one.
 - The largest segment is rarely the right beachhead; the segment where constraints favour us is.
 - Geo regulatory delta is the most under-estimated cost. Budget the high-end of the band for compliance.
-- Beachhead win without sequenced expansion = isolated revenue stream that never compounds.
+- A beachhead win without sequenced expansion never compounds.
 
 ## Do NOT
 
 - Do NOT write a market size, growth rate, deadline, price or competitor
-  claim without its source. These are fresh-lookup-class fields under the
-  rule [`/research:deep`](../../domains/product-discovery/research/deep/command.md) states: a cited live source, never model memory,
-  `[uncertain]` for what could not be sourced. A beachhead chosen on an
+  claim without its source. These fresh-lookup-class fields follow
+  [`/research:deep`](../../domains/product-discovery/research/deep/command.md): a cited live source, never model memory,
+  `[uncertain]` for the unsourced. A beachhead chosen on an
   unsourced number is a guess with a table around it.
 - Do NOT mix entry axes — sequence them.
 - Do NOT pick a beachhead without a named 18-month failure mode + mitigation.

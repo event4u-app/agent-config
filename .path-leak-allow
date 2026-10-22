@@ -62,4 +62,4 @@ dist/agent-src/skills/traefik/SKILL.md:60
 # This package's own worktree convention, documented by the skill that owns it.
 # `worktree-path` exists to catch a build run from inside `.claude/worktrees/`;
 # the skill defining the convention is the one place the string is the subject.
-dist/agent-src/skills/worktree-lifecycle/SKILL.md:146
+dist/agent-src/skills/worktree-lifecycle/SKILL.md:144

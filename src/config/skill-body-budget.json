@@ -69,12 +69,12 @@
     "decision-review": 19391,
     "deep-reading-analyst": 13546,
     "defense-in-depth": 6205,
-    "dependency-upgrade": 17218,
+    "dependency-upgrade": 17217,
     "description-assist": 7718,
     "design-intelligence": 11085,
     "design-review": 19912,
-    "design-system-capture": 14880,
-    "design-tokens": 8815,
+    "design-system-capture": 14873,
+    "design-tokens": 8812,
     "design-variations": 6907,
     "devcontainer": 4553,
     "developer-like-execution": 11443,
@@ -101,13 +101,13 @@
     "existing-ui-audit/references/steps/06-match-candidates.md": 2847,
     "existing-ui-audit/references/steps/07-greenfield-branch.md": 1923,
     "existing-ui-audit/references/steps/08-a11y-baseline.md": 1565,
-    "existing-ui-audit/references/steps/09-validate-and-write.md": 445,
+    "existing-ui-audit/references/steps/09-validate-and-write.md": 430,
     "expansion-playbook": 8838,
     "experiment-loop": 7297,
     "fe-design": 16747,
     "feature-planning": 14676,
     "file-editor": 7026,
-    "finishing-a-development-branch": 9409,
+    "finishing-a-development-branch": 9404,
     "flux": 5632,
     "forecast-accuracy": 8187,
     "forecasting": 8626,
@@ -158,7 +158,7 @@
     "laravel-scheduling": 5889,
     "laravel-validation": 3325,
     "laravel-websocket": 2519,
-    "launch-readiness": 9508,
+    "launch-readiness": 9501,
     "learning-to-rule-or-skill": 16325,
     "learning-tutor": 10027,
     "legal-intake-triage": 7217,
@@ -214,7 +214,7 @@
     "playwright-architect": 5774,
     "playwright-testing": 11333,
     "po-discovery": 5282,
-    "positioning-strategy": 8376,
+    "positioning-strategy": 8375,
     "prediction-pool-optimizer": 16448,
     "premortem": 7456,
     "privacy-review": 11249,
@@ -226,7 +226,7 @@
     "project-analysis-react": 3632,
     "project-analysis-symfony": 3854,
     "project-analysis-zend-laminas": 3669,
-    "project-analyzer": 16777,
+    "project-analyzer": 16856,
     "project-analyzer/references/steps/01-project-overview.md": 304,
     "project-analyzer/references/steps/02-architecture.md": 299,
     "project-analyzer/references/steps/03-data-layer.md": 293,
@@ -273,7 +273,7 @@
     "screenshot-hygiene": 9081,
     "script-writing": 9324,
     "secrets-management": 12029,
-    "security": 6728,
+    "security": 6722,
     "security-audit": 9042,
     "security-maturity-assessment": 5819,
     "sentry-integration": 5536,
@@ -314,7 +314,7 @@
     "ui-component-architect": 13328,
     "unit-economics-modeling": 9297,
     "universal-project-analysis": 5547,
-    "upstream-contribute": 12151,
+    "upstream-contribute": 12143,
     "using-git-worktrees": 11846,
     "validate-feature-fit": 4252,
     "verify-completion-evidence": 9612,
@@ -325,7 +325,7 @@
     "voice-and-tone-design": 12228,
     "wireframe": 6196,
     "workspace-link": 5931,
-    "worktree-lifecycle": 9508
+    "worktree-lifecycle": 9502
   },
   "raised": [
     {
@@ -669,6 +669,12 @@
       "old": 11762,
       "new": 11846,
       "reason": "Creation gains the one `agent-config worktree:cleanup register` line that lets the merge-time removal reach a tree outside the standard roots (ADR-295)."
+    },
+    {
+      "skill": "project-analyzer",
+      "old": 16777,
+      "new": 16856,
+      "reason": "Phases 3-6 gain a not-applicable path (write not-applicable.md, or a one-line service-map.md, naming why) so a library or CLI can meet the exists exit honestly. It sits in the head's Procedure section because the step files must stay verbatim runs of the pre-split body (procedure_conservation) and every conserved head line is fixed; the cursor sentence was tightened to pay for most of it."
     }
   ]
 }
