@@ -173,3 +173,24 @@ describe('one-detector risk 7 — the injection path never silences a concern', 
         expect(out.includes(PAT)).toBe(false);
     });
 });
+
+describe('ratification r1 — an engine whose TokenScope throws is contained too', () => {
+    it('protect and strict withhold visibly when the scope constructor throws', () => {
+        const badScope = () =>
+            ({
+                ok: true,
+                engine: {
+                    TokenScope: class {
+                        constructor() {
+                            throw new Error('scope fault');
+                        }
+                    },
+                    injectText: (t: string) => t,
+                },
+            }) as unknown as ReturnType<NonNullable<Parameters<typeof egressInjection>[2]>>;
+        for (const m of ['protect', 'strict'] as const) {
+            const out = egressInjection('/ws', mode(m), badScope)(ENTRY);
+            expect(out).toBe('[egress: injected text withheld (engine-threw)]');
+        }
+    });
+});

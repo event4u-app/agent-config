@@ -404,9 +404,10 @@ function injector(
   if (mode !== "protect" && mode !== "strict") return (t) => t;
   const load = loadEngine();
   if (!load.ok) return () => `${WITHHELD_PREFIX}${ENGINE_UNAVAILABLE})]`;
-  const scope = new load.engine.TokenScope();
+  let scope: InstanceType<typeof load.engine.TokenScope> | undefined;
   return (t) => {
     try {
+      scope ??= new load.engine.TokenScope();
       return load.engine.injectText(t, scope);
     } catch {
       return `${WITHHELD_PREFIX}engine-threw)]`;
