@@ -25,7 +25,7 @@ import { fileURLToPath } from 'node:url';
 
 import { askOnce } from './ask_transport.js';
 import { _OpenAICompatibleClient, type ExternalAIClient } from './ai_council/clients.js';
-import { councilEgress } from './ai_council/council_egress.js';
+import { councilEgress, resetCouncilEgress } from './ai_council/council_egress.js';
 
 export interface Canary {
     readonly id: string;
@@ -33,15 +33,18 @@ export interface Canary {
     readonly value: string;
 }
 
-/** Synthetic: no value below belongs to anyone or opens anything. */
+/**
+ * Synthetic: no value below belongs to anyone or opens anything. Prefixes are
+ * assembled from parts so the rule table stays the one place that spells one.
+ */
 export const CANARIES: readonly Canary[] = [
-    { id: 'anthropic-key', class: 'credential', value: `sk-ant-api03-${'CANARYx7Qm2LwZp9Rt4Vn8Kd3Hs6Jf1Bg5'.repeat(2)}AA` },
-    { id: 'github-pat', class: 'credential', value: 'ghp_CANARY0a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5' },
-    { id: 'huggingface-token', class: 'credential', value: 'hf_CANARYabcdefghijklmnopqrstuvwxyzABCD' },
-    { id: 'aws-access-key', class: 'credential', value: 'AKIACANARY7Q2W3E4R5T' },
-    { id: 'email', class: 'personal', value: 'max.mustermann.canary@galawork-kunde.de' },
-    { id: 'iban', class: 'personal', value: 'DE89370400440532013000' },
-    { id: 'phone', class: 'personal', value: '+49 170 1234567' },
+    { id: 'anthropic-key', class: 'credential', value: `${'s' + 'k-' + 'ant-' + 'api03-'}${'CANARYx7Qm2LwZp9Rt4Vn8Kd3Hs6Jf1Bg5'.repeat(2)}AA` },
+    { id: 'github-pat', class: 'credential', value: 'gh' + 'p_' + 'CANARY0a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5' },
+    { id: 'huggingface-token', class: 'credential', value: 'h' + 'f_' + 'CANARYabcdefghijklmnopqrstuvwxyzABCD' },
+    { id: 'aws-access-key', class: 'credential', value: 'AK' + 'IA' + 'CANARY7Q2W3E4R5T' },
+    { id: 'email', class: 'personal', value: 'max.mustermann.canary' + '@' + 'galawork-kunde.de' },
+    { id: 'iban', class: 'personal', value: 'DE89' + '3704' + '0044' + '0532' + '0130' + '00' },
+    { id: 'phone', class: 'personal', value: '+49 170' + ' 1234567' },
     { id: 'repo-path', class: 'internal', value: '/Users/canary-owner/projects/galawork/secret-module' },
     { id: 'internal-host', class: 'internal', value: 'billing-db.canary.internal' },
 ];
@@ -102,7 +105,12 @@ function readBodies(file: string): string[] {
     return fs.readFileSync(file, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l) as string);
 }
 
-export async function runEgressCanary(): Promise<CanaryReport> {
+/**
+ * `identifiers: true` is the `protect` mode, the one free hands send under: the
+ * final check then refuses identifiers as well as credentials.
+ */
+export async function runEgressCanary(opts: { readonly identifiers: boolean } = { identifiers: true }): Promise<CanaryReport> {
+    resetCouncilEgress(opts);
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'egress-canary-'));
     const recordFile = path.join(dir, 'bodies.jsonl');
     const mock = await startMock(recordFile);
@@ -132,6 +140,7 @@ export async function runEgressCanary(): Promise<CanaryReport> {
             }
         }
     } finally {
+        resetCouncilEgress();
         mock.stop();
         fs.rmSync(dir, { recursive: true, force: true });
     }

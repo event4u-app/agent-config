@@ -18,5 +18,10 @@ describe('egress canary run', () => {
             expect(row.outcome, `${row.canary} in ${row.placement}`).not.toBe('not-detectable');
         }
         expect(report.leaked).toEqual([]);
+        // In protect mode the identifier rows of one-detector 2.3 see every
+        // personal canary; only the internal identifiers have no row.
+        for (const row of report.rows.filter((r) => r.class === 'personal')) {
+            expect(row.outcome, `${row.canary} in ${row.placement}`).not.toBe('not-detectable');
+        }
     }, 60_000);
 });
