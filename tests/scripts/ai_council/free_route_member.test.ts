@@ -183,3 +183,21 @@ describe('2.2 — a 402 is an unproven cost, never a paid fallback', () => {
         expect(skipped[0]?.['reason']).toBe('policy_content_ceiling');
     });
 });
+
+describe('free-hands 3.4 wiring — the nudge asks the council config whether a free rung exists', () => {
+    it('a keyless route with a dated proof is an admissible free rung', async () => {
+        const { freeRouteAvailable } = await import('../../../src/scripts/ai_council/free_rung.js');
+        expect(freeRouteAvailable(writeConfig(routeMember(PROOF)))).toBe(true);
+    });
+
+    it('a route without proof is metered, so no free rung is named', async () => {
+        const { freeRouteAvailable } = await import('../../../src/scripts/ai_council/free_rung.js');
+        expect(freeRouteAvailable(writeConfig(routeMember('    api_key_ref: env:HANDS_KEY_UNSET_X\n')))).toBe(false);
+    });
+
+    it('a missing or unreadable config names no free rung', async () => {
+        const { freeRouteAvailable } = await import('../../../src/scripts/ai_council/free_rung.js');
+        expect(freeRouteAvailable(path.join(os.tmpdir(), 'no-such-council-config.yml'))).toBe(false);
+        expect(freeRouteAvailable(writeConfig(': not yaml ::'))).toBe(false);
+    });
+});
