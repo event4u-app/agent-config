@@ -24,7 +24,9 @@ import {
     HEAD_NONE,
     type SpanCommit,
     derive_category_hits,
+    appendIndexBreakingLines,
     pendingBreakingLine,
+    releasedBreakingLine,
     publication_blockers,
     render_derived_head_values,
     stale_draft_labels,
@@ -247,5 +249,55 @@ describe('pending breaking-changes rows reach the curated head', () => {
             expect(head).toContain(guard);
         }
         expect(publication_blockers(head, '17.0.0')).toEqual([]);
+    });
+});
+
+// Finding 3dd6c3b34cb0 (17.0.0 review): the generated `### BREAKING CHANGES`
+// section lists only commits carrying a breaking marker, so a major whose index
+// row names several breaks — 17.0.0 removed three settings keys and armed three
+// guards beside the Node floor — published one. The row for the major being cut
+// now reaches the curated head, the same way a Pending row already did.
+describe("the cut major's own index row reaches the curated head", () => {
+    const index = [
+        '# Breaking',
+        '',
+        '## Breaking changes by major',
+        '',
+        '| Version | Date | What broke | Migration | Consumer impact |',
+        '|---|---|---|---|---|',
+        '| **17.0.0** | 2026-10-21 | Node floor. Keys `a.b` removed. | Upgrade Node. | action |',
+        '| 16.0.0 | 2026-10-01 | **Older row.** | z | z |',
+    ].join('\n');
+
+    it('carries the What-broke cell of the row for the version being cut, bold or not', () => {
+        const line = releasedBreakingLine(index, '17.0.0');
+        expect(line).toContain('Node floor. Keys `a.b` removed.');
+        expect(line).toContain('docs/MIGRATION.md');
+        expect(line).not.toContain('Older row');
+        expect(releasedBreakingLine(index, '16.0.0')).toContain('**Older row.**');
+    });
+
+    it('is null for a minor, a patch, an absent version and a major with no row', () => {
+        expect(releasedBreakingLine(index, '17.1.0')).toBeNull();
+        expect(releasedBreakingLine(index, '17.0.1')).toBeNull();
+        expect(releasedBreakingLine(index, null)).toBeNull();
+        expect(releasedBreakingLine(index, '18.0.0')).toBeNull();
+    });
+
+    it('is appended to the migration label, after any derived value', () => {
+        const out: Record<string, string> = { 'Default changes + migration': 'Derived.' };
+        appendIndexBreakingLines(out, index, '17.0.0');
+        expect(out['Default changes + migration']).toMatch(/^Derived\. Breaking in 17\.0\.0/u);
+    });
+
+    it('names every 17.0.0 break from the real index in the rendered head', () => {
+        const real = fs.readFileSync(path.join(import.meta.dirname, '..', '..', 'BREAKING_CHANGES.md'), 'utf-8');
+        const out: Record<string, string> = {};
+        appendIndexBreakingLines(out, real, '17.0.0');
+        const head = render_release_head(out).join('\n');
+        for (const broke of ['>=22.6.0', 'lean_projection.mode', 'lean_projection.hosts', 'projection.rule_workspaces', 'fail_closed', '--purge']) {
+            expect(head).toContain(broke);
+        }
+        expect(release_head_line_count(render_release_head(out))).toBeLessThanOrEqual(RELEASE_HEAD_CAP_LINES);
     });
 });
