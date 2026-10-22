@@ -23,7 +23,9 @@
  * Usage: ./scripts-run src/scripts/lint_skill_scripts_readonly [--quiet] [--root <dir>]
  */
 
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -82,17 +84,62 @@ function loadAllowlist(): Set<string> {
 }
 
 /**
- * A `.mjs` a sibling `.ts` produced — `build:skill-scripts` emits one beside
- * every entry point. It is the same code twice, so counting it would report
- * each mutation primitive in a bundled entry point a second time and let a
- * source file pass review while its own bundle fails it.
+ * The committed bundles proven to be a faithful build of their source: the
+ * `build:skill-scripts` command, read out of `package.json`, is re-run into a
+ * temporary directory and each output compared byte-for-byte with the `.mjs`
+ * beside its entry point. Only a bundle in this set is skipped.
+ *
+ * Presence of a sibling `.ts` is NOT the key. The `.mjs` is what ships, so a
+ * stale, hand-edited or tampered bundle carrying an ungated write must be read
+ * as itself (finding 23f0cf03e558); the skip exists only so a bundle that IS
+ * its source's build does not report the source's primitives a second time.
+ * No esbuild, a failed build, or no build command → an empty set, and every
+ * bundle is scanned: the correspondence is proven here, never assumed.
  */
-function isProducedBundle(file: string): boolean {
-    if (path.extname(file) !== '.mjs') return false;
-    return fs.existsSync(file.replace(/\.mjs$/, '.ts'));
+function provenBundles(): Set<string> {
+    const proven = new Set<string>();
+    let cmd: string | undefined;
+    try {
+        const pkg = JSON.parse(fs.readFileSync(path.join(REPO, 'package.json'), 'utf-8')) as {
+            scripts?: Record<string, string>;
+        };
+        cmd = pkg.scripts?.['build:skill-scripts'];
+    } catch {
+        return proven;
+    }
+    if (cmd === undefined) return proven;
+    const parts = cmd.split(/\s+/).filter((x) => x !== '');
+    if (parts[0] !== 'esbuild') return proven;
+    const esbuild = path.join(REPO, 'node_modules', '.bin', process.platform === 'win32' ? 'esbuild.cmd' : 'esbuild');
+    if (!fs.existsSync(esbuild)) return proven;
+    const out = fs.mkdtempSync(path.join(os.tmpdir(), 'skill-bundle-proof-'));
+    try {
+        const argv = parts.slice(1).map((a) => (a.startsWith('--outdir=') ? `--outdir=${out}` : a));
+        const r = spawnSync(esbuild, argv, { cwd: REPO, encoding: 'utf8' });
+        if (r.status !== 0) return proven;
+        for (const entry of parts.slice(1).filter((a) => /^src\/skills\/.+\.ts$/.test(a))) {
+            const rel = entry.slice('src/skills/'.length).replace(/\.ts$/, '.mjs');
+            const committed = path.join(REPO, 'src', 'skills', rel);
+            const built = path.join(out, rel);
+            try {
+                if (fs.readFileSync(committed).equals(fs.readFileSync(built))) proven.add(path.resolve(committed));
+            } catch {
+                // Missing on either side — not proven, so it is scanned.
+            }
+        }
+    } finally {
+        fs.rmSync(out, { recursive: true, force: true });
+    }
+    return proven;
 }
 
-function* scriptFiles(root: string): Generator<string> {
+/** A `.mjs` proven to be its sibling `.ts`'s faithful build — see {@link provenBundles}. */
+function isProducedBundle(file: string, proven: ReadonlySet<string>): boolean {
+    if (path.extname(file) !== '.mjs') return false;
+    return proven.has(path.resolve(file)) && fs.existsSync(file.replace(/\.mjs$/, '.ts'));
+}
+
+function* scriptFiles(root: string, proven: ReadonlySet<string>): Generator<string> {
     if (!fs.existsSync(root)) return;
     for (const skill of fs.readdirSync(root, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
         if (!skill.isDirectory()) continue;
@@ -104,7 +151,7 @@ function* scriptFiles(root: string): Generator<string> {
             for (const e of fs.readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
                 const full = path.join(d, e.name);
                 if (e.isDirectory()) stack.push(full);
-                else if (SCRIPT_EXT.has(path.extname(e.name)) && !isProducedBundle(full)) yield full;
+                else if (SCRIPT_EXT.has(path.extname(e.name)) && !isProducedBundle(full, proven)) yield full;
             }
         }
     }
@@ -128,7 +175,7 @@ function main(argv: string[]): number {
     const allow = loadAllowlist();
     const violations: Violation[] = [];
     let scanned = 0;
-    for (const f of scriptFiles(args.root)) {
+    for (const f of scriptFiles(args.root, provenBundles())) {
         scanned += 1;
         const rel = path.relative(REPO, f);
         // Compare against the src/skills-relative form for the allowlist key.
