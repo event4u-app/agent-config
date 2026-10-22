@@ -299,7 +299,7 @@ function _remove_project_marker(
 export function _remove_global_content(
     tool: string,
     opts: { dry_run: boolean; purge: boolean },
-): [string, boolean] {
+): [string, boolean, boolean?] {
     const anchor = USER_SCOPE_PATHS[tool];
     if (!anchor) {
         return [`${tool}: no global anchor registered (skipped)`, false];
@@ -322,12 +322,14 @@ export function _remove_global_content(
         return [
             `${tool}: ❌ refusing to purge ${anchor} — deploy inventory unreadable (${_osErr(exc)})`,
             false,
+            true,
         ];
     }
     if (recorded.size === 0) {
         return [
             `${tool}: ❌ refusing to purge ${anchor} — no recorded inventory for this anchor; nothing was deleted`,
             false,
+            true,
         ];
     }
 
@@ -342,7 +344,7 @@ export function _remove_global_content(
     try {
         real_anchor = fs.realpathSync(resolved_anchor);
     } catch (exc) {
-        return [`${tool}: ❌ refusing to purge ${anchor} — anchor unresolvable (${_osErr(exc)})`, false];
+        return [`${tool}: ❌ refusing to purge ${anchor} — anchor unresolvable (${_osErr(exc)})`, false, true];
     }
     const really_inside = (p: string): boolean => {
         try {
@@ -967,12 +969,12 @@ function _uninstall_global(opts: Options): number {
         }
     }
     for (const tool of tools) {
-        const [line, removed] = _remove_global_content(tool, {
+        const [line, removed, refusedHere] = _remove_global_content(tool, {
             dry_run: opts.dry_run,
             purge: opts.purge,
         });
         _print(_stdout, `  · ${line}`);
-        if (line.includes('refusing to purge')) {
+        if (refusedHere === true) {
             refused = true;
         }
         if (removed && !opts.dry_run) {
