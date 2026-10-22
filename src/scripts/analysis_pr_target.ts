@@ -22,6 +22,8 @@ export interface PrLookup {
     byNumber(n: number): PrInfo | null;
     /** Open PR numbers whose head is `branch`. */
     openForBranch(branch: string): number[];
+    /** `owner/name` of the repository `byNumber` reads, when known. */
+    repo?(): string | null;
 }
 
 export type PrTarget =
@@ -29,6 +31,17 @@ export type PrTarget =
     | { kind: 'ask'; question: string; candidates: number[] };
 
 const URL_RE = /\/pull\/(\d+)(?:[/?#]|$)/;
+const URL_REPO_RE = /\/([^/\s]+\/[^/\s]+)\/pull\/\d+(?:[/?#\s]|$)/;
+
+/**
+ * Whether a PR URL names another repository than the one the lookup reads. A
+ * number taken from a link to another repository is a different PR here.
+ */
+function foreignUrl(ref: string, lookup: PrLookup): boolean {
+    const named = URL_REPO_RE.exec(ref)?.[1];
+    const here = lookup.repo?.() ?? null;
+    return named !== undefined && here !== null && named.toLowerCase() !== here.toLowerCase();
+}
 
 /** A PR number from `42`, `#42` or a `…/pull/42` URL; null for anything else. */
 export function parsePrRef(ref: string): number | null {
@@ -37,10 +50,12 @@ export function parsePrRef(ref: string): number | null {
     return m === null ? null : Number(m[1]);
 }
 
-function mentioned(conversation: readonly string[]): number[] {
+function mentioned(conversation: readonly string[], lookup: PrLookup): number[] {
     const out = new Set<number>();
     for (const turn of conversation) {
-        for (const m of turn.matchAll(/(?:\/pull\/|#)(\d+)\b/g)) out.add(Number(m[1]));
+        for (const m of turn.matchAll(/(?:\S*\/pull\/|#)(\d+)\b/g)) {
+            if (!foreignUrl(m[0], lookup)) out.add(Number(m[1]));
+        }
     }
     return [...out];
 }
@@ -61,14 +76,15 @@ export function resolvePrTarget(
 ): PrTarget {
     if (input.argument !== null) {
         const n = parsePrRef(input.argument);
-        return n === null ? ask([]) : resolved('argument', lookup.byNumber(n), []);
+        if (n === null || foreignUrl(input.argument.trim(), lookup)) return ask([]);
+        return resolved('argument', lookup.byNumber(n), []);
     }
     if (input.branch !== null) {
         const open = lookup.openForBranch(input.branch);
         if (open.length > 1) return ask(open);
         if (open.length === 1) return resolved('branch', lookup.byNumber(open[0] as number), open);
     }
-    const named = mentioned(input.conversation);
+    const named = mentioned(input.conversation, lookup);
     if (named.length === 1) return resolved('conversation', lookup.byNumber(named[0] as number), named);
     return ask(named);
 }
@@ -94,5 +110,12 @@ export function ghPrLookup(cwd: string): PrLookup {
             (JSON.parse(gh(['pr', 'list', '--head', branch, '--state', 'open', '--json', 'number'])) as Array<{ number: number }>).map(
                 (r) => r.number,
             ),
+        repo: () => {
+            try {
+                return (JSON.parse(gh(['repo', 'view', '--json', 'nameWithOwner'])) as { nameWithOwner: string }).nameWithOwner;
+            } catch {
+                return null;
+            }
+        },
     };
 }
