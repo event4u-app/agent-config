@@ -41,7 +41,8 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { load_agent_settings, settings_layer_states } from './_lib/agent_settings.js';
+import { parse as parseYaml } from 'yaml';
+import { load_agent_settings, settings_layer_states, user_global_settings_paths } from './_lib/agent_settings.js';
 import { read_live_records, register_dir } from './_lib/session_register.js';
 import { git, gitEnv, timeLeftMs, tryGit, withDeadline } from './_lib/worktree_git.js';
 import { localOnlyIgnored } from './_lib/worktree_ignored.js';
@@ -1071,25 +1072,39 @@ export function removalSummary(inv: Inventory, outcomes: RemovalOutcome[], opts:
 
 export type CleanupMode = 'auto' | 'notify' | 'off';
 
+const CLEANUP_RANK: Record<CleanupMode, number> = { off: 0, notify: 1, auto: 2 };
+
+function cleanupValue(doc: unknown): CleanupMode | undefined {
+    const section = doc !== null && typeof doc === 'object' && !Array.isArray(doc) ? (doc as Record<string, unknown>)['worktrees'] : undefined;
+    if (section === null || typeof section !== 'object' || Array.isArray(section)) return undefined;
+    const v = (section as Record<string, unknown>)['cleanup'];
+    if (v === 'auto' || v === 'notify' || v === 'off') return v;
+    // An unquoted `off` is YAML's boolean false.
+    return v === false ? 'off' : undefined;
+}
+
 /**
- * `worktrees.cleanup`, read through the same settings cascade every surface
- * reads. Absent resolves to `notify` (council 2026-10-21 Q2: installation alone
- * is not consent to delete). Fail-closed: a malformed settings layer reads as
- * `off`, so a file the user broke never lets the shipped default speak for it.
+ * `worktrees.cleanup`. Absent resolves to `notify` (council 2026-10-21 Q2:
+ * installation alone is not consent to delete). The consent to `auto` is the
+ * user's, so only the user-global layers can grant it, read by hand as
+ * `readUpdateMode` reads `update.mode`; a project layer — which a cloned
+ * repository can carry — may lower the mode but never raise it. Fail-closed: a
+ * malformed settings layer reads as `off`, so a file the user broke never lets
+ * the shipped default speak for it.
  */
 export function cleanupMode(root: string, opts: { userGlobalPath?: string | null } = {}): CleanupMode {
     const ug = opts.userGlobalPath ?? null;
     const scope = { cwd: root, ...(ug !== null ? { user_global_path: ug } : {}) };
     try {
         if (settings_layer_states(scope).some((l) => l.state === 'malformed')) return 'off';
-        const section = load_agent_settings(scope)['worktrees'];
-        if (section !== null && typeof section === 'object' && !Array.isArray(section)) {
-            const v = (section as Record<string, unknown>)['cleanup'];
-            if (v === 'auto' || v === 'notify' || v === 'off') return v;
-            // An unquoted `off` is YAML's boolean false.
-            if (v === false) return 'off';
+        let user: CleanupMode = 'notify';
+        for (const p of ug !== null ? [ug] : user_global_settings_paths()) {
+            if (!fs.existsSync(p)) continue;
+            user = cleanupValue(parseYaml(fs.readFileSync(p, 'utf-8'), { version: '1.1' })) ?? user;
         }
-        return 'notify';
+        const none = path.join(root, '.agent-settings-none', 'absent.yml');
+        const project = cleanupValue(load_agent_settings({ cwd: root, user_global_path: none, template_path: none }));
+        return project !== undefined && CLEANUP_RANK[project] < CLEANUP_RANK[user] ? project : user;
     } catch {
         return 'off';
     }
