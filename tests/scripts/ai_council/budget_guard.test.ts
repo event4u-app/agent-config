@@ -343,6 +343,29 @@ describe('budget_guard — reservations under a set ceiling', () => {
         expect(fs.existsSync(p)).toBe(false);
     });
 
+    it('an old lock whose holder is still alive is never broken', () => {
+        // The stale-lock race: a waiter that reads an old mtime must not delete a lock
+        // a live holder owns, or both enter the section that checks the ceiling.
+        const p = path.join(mkTmp(), 'council-spend.jsonl');
+        fs.writeFileSync(`${p}.lock`, `${process.pid} live-holder`);
+        const old = new Date(NOW - 60_000);
+        fs.utimesSync(`${p}.lock`, old, old);
+        const r = reserve_spend(1.0, 0.1, 'p', 'm', { path: p, now: NOW, run_id: 'r', hold_ms: HOLD, lock_wait_ms: 100 });
+        expect(r).toEqual({ ok: false, reason: 'lock' });
+        expect(fs.readFileSync(`${p}.lock`, 'utf-8')).toBe(`${process.pid} live-holder`);
+    });
+
+    it('an old lock whose holder is gone is taken over, and released after', () => {
+        const p = path.join(mkTmp(), 'council-spend.jsonl');
+        fs.writeFileSync(`${p}.lock`, '2147483646 crashed-holder');
+        const old = new Date(Date.now() - 60_000);
+        fs.utimesSync(`${p}.lock`, old, old);
+        const r = reserve_spend(1.0, 0.1, 'p', 'm', { path: p, now: NOW, run_id: 'r', hold_ms: HOLD, lock_wait_ms: 500 });
+        expect(r.ok).toBe(true);
+        expect(fs.existsSync(`${p}.lock`)).toBe(false);
+        expect(fs.existsSync(`${p}.lock.break`)).toBe(false);
+    });
+
     it('reservation-states-never-reopen', () => {
         const p = path.join(mkTmp(), 'council-spend.jsonl');
         const done = reserve_spend(5.0, 0.5, 'p', 'm', { path: p, now: NOW, run_id: 'r', hold_ms: HOLD });

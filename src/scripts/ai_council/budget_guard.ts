@@ -634,30 +634,99 @@ function _sleepMs(ms: number): void {
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
 
+/** True when `pid` names a process on this machine that still exists. */
+function _pidAlive(pid: number): boolean {
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch (exc) {
+        return (exc as NodeJS.ErrnoException).code === 'EPERM';
+    }
+}
+
 /**
- * Run `fn` holding `<ledger>.lock`, created `O_EXCL`. Unlike the counter lock
- * in `cli_call_budget.ts`, a wait that runs out returns `null` instead of
- * proceeding unlocked: a ceiling checked without the lock is the race this
- * exists to close, so the caller refuses rather than guesses.
+ * A held lock counts as crashed only when it is old AND its recorded holder is
+ * gone. Age alone is not enough: a live holder that outruns the stale window
+ * would otherwise have its lock broken under it.
+ */
+function _lockIsStale(content: string, mtimeMs: number): boolean {
+    if (Date.now() - mtimeMs <= RESERVATION_LOCK_STALE_MS) {
+        return false;
+    }
+    const pid = Number.parseInt(content.split(' ')[0] ?? '', 10);
+    return !(Number.isInteger(pid) && pid > 0 && _pidAlive(pid));
+}
+
+/**
+ * Remove the lock judged stale — and only that one. Breakers serialise on
+ * `<lock>.break` and re-read the lock under it, so a waiter that judged an old
+ * lock stale cannot delete the fresh lock another waiter has since created:
+ * the content no longer matches what it judged.
+ */
+function _breakStaleLock(lockPath: string, judged: string): void {
+    const breakPath = `${lockPath}.break`;
+    let bfd: number;
+    try {
+        bfd = fs.openSync(breakPath, 'wx', 0o600);
+    } catch {
+        try {
+            const st = fs.statSync(breakPath);
+            if (_lockIsStale(fs.readFileSync(breakPath, 'utf-8'), st.mtimeMs)) {
+                fs.unlinkSync(breakPath);
+            }
+        } catch {
+            // Gone already — the next attempt retries.
+        }
+        return;
+    }
+    try {
+        fs.writeSync(bfd, `${process.pid} ${randomUUID()}`);
+        try {
+            const now = fs.readFileSync(lockPath, 'utf-8');
+            if (now === judged && _lockIsStale(now, fs.statSync(lockPath).mtimeMs)) {
+                fs.unlinkSync(lockPath);
+            }
+        } catch {
+            // Released meanwhile — nothing to break.
+        }
+    } finally {
+        fs.closeSync(bfd);
+        try {
+            fs.unlinkSync(breakPath);
+        } catch {
+            // Already gone.
+        }
+    }
+}
+
+/**
+ * Run `fn` holding `<ledger>.lock`, created `O_EXCL` and carrying an owner
+ * token. Unlike the counter lock in `cli_call_budget.ts`, a wait that runs out
+ * returns `null` instead of proceeding unlocked: a ceiling checked without the
+ * lock is the race this exists to close, so the caller refuses rather than
+ * guesses. Release removes the lock only while it still carries this token.
  */
 function _withLedgerLock<T>(p: string, waitMs: number, fn: () => T): T | null {
     if (!_ensureLedgerDir(p)) {
         return null;
     }
     const lockPath = `${p}.lock`;
+    const token = `${process.pid} ${randomUUID()}`;
     const started = Date.now();
     let fd: number | null = null;
     while (fd === null) {
         try {
             fd = fs.openSync(lockPath, 'wx', 0o600);
+            fs.writeSync(fd, token);
             break;
         } catch {
             try {
-                if (Date.now() - fs.statSync(lockPath).mtimeMs > RESERVATION_LOCK_STALE_MS) {
-                    fs.unlinkSync(lockPath);
+                const judged = fs.readFileSync(lockPath, 'utf-8');
+                if (_lockIsStale(judged, fs.statSync(lockPath).mtimeMs)) {
+                    _breakStaleLock(lockPath, judged);
                 }
             } catch {
-                // Released between the failed create and the stat — retry.
+                // Released between the failed create and the read — retry.
             }
         }
         if (Date.now() - started >= waitMs) {
@@ -670,7 +739,9 @@ function _withLedgerLock<T>(p: string, waitMs: number, fn: () => T): T | null {
     } finally {
         fs.closeSync(fd);
         try {
-            fs.unlinkSync(lockPath);
+            if (fs.readFileSync(lockPath, 'utf-8') === token) {
+                fs.unlinkSync(lockPath);
+            }
         } catch {
             // Already gone is the end state wanted.
         }
