@@ -35,6 +35,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { CLI_CONSUMER_SELF_REVIEW } from './ai_council/cli_call_budget.js';
+import { councilEgress } from './ai_council/council_egress.js';
 import {
     AnthropicClient,
     AnthropicCliClient,
@@ -664,6 +665,22 @@ export const PROMPT_BUDGET_CHARS = Math.floor(180_000 * BUDGET_CHARS_PER_TOKEN);
  */
 export const MAX_REVIEW_CHUNKS = 6;
 
+/**
+ * `--redact-egress`: a chunk carrying a credential-shaped fixture is refused by
+ * the egress guard before it is sent, so a test of the secret detector could
+ * never be reviewed. With the flag, every detected value is replaced by a typed
+ * token through the same engine that later checks the payload, and the
+ * reviewer is told what the tokens are (AI council 2026-10-22, 2/2).
+ */
+export const REDACTION_NOTE =
+    'NOTE: credential-shaped literals in this diff were replaced by typed placeholder tokens before sending, ' +
+    'because they are test fixtures the egress guard does not let leave the machine. Review the logic around them; ' +
+    'do not report the placeholders themselves as findings.\n\n';
+
+export function redactEgress(text: string): string {
+    return councilEgress().replace(text);
+}
+
 /** How many unreviewed paths `--dry-run` names before collapsing to a count. */
 export const DRY_RUN_UNREVIEWED_SAMPLE = 5;
 
@@ -1137,6 +1154,7 @@ export function main(argv: string[]): 0 | 2 {
     }
 
     const plan = buildPlan(baseRef, REPO_ROOT, { ...(scope ? { scope } : {}), ...(maxChunks ? { maxChunks } : {}) });
+    const redact = argv.includes('--redact-egress');
 
     // The request the live run would send, verbatim and unspent. A summary
     // would be this script's description of the request rather than the
@@ -1272,7 +1290,8 @@ export function main(argv: string[]): 0 | 2 {
             // Facts FIRST, then the partition. The reviewer reads what the
             // range did before it reads the fragment it was given, so "absent
             // from my chunk" can no longer be mistaken for "deleted".
-            const resp = client.ask(systemPrompt, plan.facts + chunk.text, 4096);
+            const body = redact ? `${REDACTION_NOTE}${redactEgress(plan.facts + chunk.text)}` : plan.facts + chunk.text;
+            const resp = client.ask(systemPrompt, body, 4096);
             if (resp.error) {
                 process.stdout.write(
                     `::warning::self-review-gate — chunk ${String(i + 1)}/` +
