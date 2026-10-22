@@ -235,21 +235,24 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 
 ## Phase 5 — Liveness and quota (gateway M9, D7)
 
-- [ ] **5.1 Streaks, not last outcomes.** Per route+model, using the failure vocabulary of
+- [x] **5.1 Streaks, not last outcomes.** Per route+model, using the failure vocabulary of <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/continuity-surface.json -->
   `road-to-seats-that-know-why-they-failed`: `rate_limited` / `quota_exhausted` / server errors
   mark the route absent for this pass and never count against liveness; `model_unservable`
   (404 model-not-found, 410) extends a streak; three consecutive retire the model from the
   discovered roster until re-discovered.
   verify: three seeded `model_unservable` results retire the model; three `rate_limited`
   results do not.
-- [ ] **5.2 Fallback chain per kind** reusing `MidFlightFallback` (one retry, double-spend guard
+  Done 2026-10-22 (594698ab11): `route_liveness.test.ts`, 17 green; vocabulary names reused from the seats roadmap via a local HTTP classifier; sabotage seen red.
+- [x] **5.2 Fallback chain per kind** reusing `MidFlightFallback` (one retry, double-spend guard <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/route_chooser.ts -->
   kept).
   verify: a stub chain whose first route fails serves the call from the second route, and a
   repeated failure yields honest ∅ without a second paid call.
-- [ ] **5.3 Liveness folds into the existing canary** (ADR-118: no new scheduled workflow). A
+  Done 2026-10-22 (a962afa732): `route_fallback_chain.test.ts` — second route serves, repeated failure is ∅ with no third call.
+- [x] **5.3 Liveness folds into the existing canary** (ADR-118: no new scheduled workflow). A <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/continuity-surface.json -->
   keyless leg needs no secret, so the cross-vendor leg finally runs; a streak of three or more
   red scheduled runs writes one status line that `doctor` and session start surface.
   verify: three seeded reds put the status line in place; one green clears it.
+  Done 2026-10-22 (bd113de533): `canary_liveness.test.ts`; doctor runner and the session-start line on `council-availability`. The keyless leg is not in `cross-model-canary.yml`: no keyless route is catalogued; `--refresh` is manual.
 
 ## Phase 6 — Measure, then flip
 
@@ -264,9 +267,11 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 - [ ] **6.2 Shadow:** a free route answers in parallel, the paid answer is used, both are
   verified; the call budget recorded in decision A5, public-artifact corpus first.
   verify: the shadow ledger shows a free and a paid answer with a verify result for every call.
-- [ ] **6.3 Flip per kind**, only for kinds that clear both bars; a kind that later breaches the
+  Built 2026-10-22 (e7f38f239a), waits on its window: `free_hand_shadow.test.ts` ledgers both answers with a verify result. No free route is configured and no production caller runs `shadowAsk`, so no shadow call has happened.
+- [x] **6.3 Flip per kind**, only for kinds that clear both bars; a kind that later breaches the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/continuity-surface.json -->
   escalation kill reverts automatically and the reversion is recorded in the claim row.
   verify: a seeded breach above the kill flips the kind back to the paid route.
+  Done 2026-10-22 (6fb2cb8e5b, 2ace081b28): `kind_flip.test.ts` — seeded breach reverts and is recorded; missing data never flips; the nudge names the free rung only for a flipped kind.
 
 ## Phase 7 — Breadth for consumers
 
@@ -354,6 +359,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   Done 2026-10-22: 4.1, `seat_policy_and_ceiling.test.ts`.
 - [x] AC-5 n_eff is reported beside κ on every jury run (4.3).
   Done 2026-10-22: 4.3, `jury_aggregate.test.ts`.
-- [ ] AC-6 Both Phase 6 claims are filed before the first free call, and limit relief is reported net of verification tokens; every flip cites them.
+- [x] AC-6 Both Phase 6 claims are filed before the first free call, and limit relief is reported net of verification tokens; every flip cites them.
+  Done 2026-10-22: claims filed before any free call (6.1); the shadow report nets verify tokens (6.2); every flip and revert line names `free-hands-quality-held` (6.3).
 - [x] AC-7 The canary's uniform zero is classified before Phase 5 is designed (0.1).
   Done 2026-10-22: 0.1, `15d00c9420`, before Phase 5 was designed.

@@ -19,7 +19,7 @@ relates:
 > `inbox-2026-09-n` (2026-09-05), the untracked round of 2026-08-03 that created this roadmap.
 >
 > **Executing elsewhere since 2026-10-22:** M1 and M9 are planned in
-> `road-to-free-hands-a-paid-head-checks` (Phases 2 and 5), M2 in
+> `road-to-free-hands-a-paid-head-checks` (Phases 2 and 5) and were built there on 2026-10-22, M2 in
 > `road-to-seats-that-know-why-they-failed` (Phase 3). The owner question this file has held
 > since 2026-09-07 — whether to spend the M1 slot — is posed there as blockers
 > `free-route-admission` and `project-content-ceiling`. M4-M8 stay parked here.
