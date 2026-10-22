@@ -440,12 +440,16 @@ export function procedurePositionLine(root: string): string | null {
         const input = (JSON.parse(fs.readFileSync(file, 'utf-8')) as { input?: { kind?: unknown; data?: unknown } }).input;
         if (input?.kind !== 'procedure' || typeof input.data !== 'object' || input.data === null) return null;
         const d = input.data as { skill?: unknown; started_head?: unknown; current?: unknown; order?: unknown; steps?: unknown };
+        // A committed state file is repo content, re-injected at every compaction:
+        // only id-shaped strings reach the context, never free text.
+        const id = /^[a-z0-9._-]{1,64}$/;
         if (typeof d.skill !== 'string' || !Array.isArray(d.order) || typeof d.current !== 'string') return null;
+        if (!id.test(d.skill) || !id.test(d.current)) return null;
         const k = d.order.indexOf(d.current) + 1;
         if (k === 0) return null;
         const rec = (d.steps as Record<string, { status?: unknown }> | undefined)?.[d.current];
         const exit = rec?.status === 'ok' || rec?.status === 'stale' ? rec.status : 'partial';
-        const head = typeof d.started_head === 'string' ? d.started_head.slice(0, 12) : 'none';
+        const head = typeof d.started_head === 'string' && /^[0-9a-f]{4,64}$/.test(d.started_head) ? d.started_head.slice(0, 12) : 'none';
         return `procedure ${d.skill}@${head} · step ${String(k)} of ${String(d.order.length)} (${d.current}) · last exit ${exit}`;
     } catch {
         return null;
