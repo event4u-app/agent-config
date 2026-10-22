@@ -165,6 +165,17 @@ describe('subagent-v1 reuse and loading fields', () => {
         expect(validator.omit_project_instructions).not.toBe(true);
     });
 
+    // road-to-a-tier-the-dispatch-carries 2.3: the definition follows the
+    // backed claims, never precedes them.
+    it('ac-researcher-tier-follows-the-claim', () => {
+        const claims = fs.readFileSync(path.join(_REPO, 'docs', 'CLAIMS.md'), 'utf-8');
+        const backed = (id: string): boolean =>
+            new RegExp(`### claim: ${id}\\n(?:- .*\\n)*?- status: backed\\n`).test(claims);
+        const both = backed('tier-downshift-quality-held') && backed('tier-downshift-limit-relief');
+        const tier = _frontmatterOf(path.join(_AGENTS, 'ac-researcher.md')).model_tier;
+        expect(tier === 'lite').toBe(both);
+    });
+
     it('package-workers-preload-nothing', () => {
         const floor = render_floor();
         for (const name of ['ac-worker', 'ac-researcher']) {
