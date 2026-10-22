@@ -19,9 +19,8 @@ import { DROPS_REL } from './analysis_analysts.js';
 import { RUN_STATE_FILE, RUNS_REL } from './analysis_run.js';
 
 /**
- * ADR-288 D9: the inbox's batch threshold, set where adoption rate fell with
- * round size across five consecutive rounds — recorded in
- * `agents/evidence/analysis/inbox-2026-09-w-batch1-disposition.md`.
+ * ADR-288 D9: the inbox's default batch threshold. Adoption rate fell as round
+ * size rose over five consecutive rounds, and this is where it was cut.
  */
 export const INBOX_LANE_MAX_BYTES = 400_000;
 export const INBOX_LANE_MAX_TOPICS = 5;
