@@ -501,6 +501,43 @@ export function appendLedgerLine(root: string, ts: string, line: Record<string, 
 }
 
 /**
+ * The register's index: one file per key under `index/<YYYY-MM>/`, so a reader
+ * answers "did this session stop that leg" or "which ref does this name
+ * address" with one stat or read instead of scanning a ledger tail that heavy
+ * traffic can push the answer out of. Keys are digests only (`refFor` over a
+ * domain-separated string), so no session id, agent id or name is a file name.
+ */
+const INDEX_SUBDIR = 'index';
+
+export function writeIndexEntry(root: string, ts: string, key: string, value: string): void {
+    if (is_replay_mode()) return;
+    const dir = path.join(root, LEDGER_DIR, INDEX_SUBDIR, ts.slice(0, 7));
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, key), value, 'utf8');
+}
+
+/** The entry for `key` in this month or the previous one; null when neither holds it. */
+export function readIndexEntry(root: string, key: string, now: Date): string | null {
+    const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+    for (const month of [now.toISOString().slice(0, 7), prev.toISOString().slice(0, 7)]) {
+        try {
+            return fs.readFileSync(path.join(root, LEDGER_DIR, INDEX_SUBDIR, month, key), 'utf8');
+        } catch {
+            // Not in this month.
+        }
+    }
+    return null;
+}
+
+export function stopIndexKey(sessionId: string, ref: string): string {
+    return refFor(`subagent-stop\0${sessionId}\0${ref}`);
+}
+
+export function recordStopIndex(root: string, ts: string, sessionId: string, ref: string): void {
+    writeIndexEntry(root, ts, stopIndexKey(sessionId, ref), '');
+}
+
+/**
  * Candidate wall-clock stop-loss arms — Phase 3 Step 3, shadow only.
  *
  * Recorded retrospectively rather than fired: a `subagent_stop` knows the real
@@ -724,6 +761,7 @@ function handleStop(root: string, payload: JsonObject, nowIso: string, sessionId
 
     // Remove FIRST, count AFTER — same definition on both lines.
     removeOpenRecord(root, ref);
+    if (sessionId !== null) recordStopIndex(root, nowIso, sessionId, ref);
 
     appendLedgerLine(root, nowIso, {
         event: 'subagent_stop',
