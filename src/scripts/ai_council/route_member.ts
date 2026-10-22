@@ -12,10 +12,10 @@ import { FreeRouteClient } from './free_route_client.js';
 import {
     parseRouteFields,
     resolveRouteTransport,
-    UNPROVEN_PROBE,
     type RouteBilling,
     type SelfHostedProbe,
 } from './free_route.js';
+import { SELF_HOSTED_PROBE } from './self_hosted_probe.js';
 import { keyResolves } from './status_surface.js';
 
 export type RouteMemberResult =
@@ -28,7 +28,7 @@ export function routeMemberFor(
     cfg: Record<string, unknown>,
     contentClass: ContentClass,
     modelOverride?: string,
-    probe: SelfHostedProbe = UNPROVEN_PROBE,
+    probe: SelfHostedProbe = SELF_HOSTED_PROBE,
 ): RouteMemberResult | null {
     const parsed = parseRouteFields(name, cfg, Object.hasOwn(PROVIDER_TABLE, name));
     if ('error' in parsed) return { absent: { member: name, reason: 'policy_unknown', detail: parsed.error } };
