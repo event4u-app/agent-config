@@ -27,4 +27,18 @@ describe('mergeIdentity — style.avoid (brand-checkability 5.5)', () => {
         const avoid = [{ pattern: 'x', match: 'regex' }];
         expect(mergeIdentity({ ...BASE, style: { pace: 'rapid', avoid } }).style).toEqual({ pace: 'rapid' });
     });
+
+    it('keeps the valid entries when one entry is invalid, instead of erasing the list', () => {
+        const good = { pattern: 'circle back', match: 'word' };
+        const avoid = [good, { pattern: 'x'.repeat(65), match: 'word' }, { pattern: 'y', match: 'regex' }];
+        expect(mergeIdentity({ ...BASE, style: { pace: 'rapid', avoid } }).style).toEqual({
+            pace: 'rapid',
+            avoid: [good],
+        });
+    });
+
+    it('keeps an over-cap list whole so the save rejects it visibly rather than dropping it', () => {
+        const avoid = Array.from({ length: 33 }, (_, i) => ({ pattern: `term${String(i)}`, match: 'word' }));
+        expect(mergeIdentity({ ...BASE, style: { pace: 'rapid', avoid } }).style.avoid).toHaveLength(33);
+    });
 });
