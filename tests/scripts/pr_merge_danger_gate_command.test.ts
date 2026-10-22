@@ -8,6 +8,10 @@ import { procedureText } from '../_lib/procedure_text.js';
  * a `needs-owner` PR is never sent to the council, and a `routine` PR still
  * merges with no review. `src/agent-src/commands/evals/git-pr-merge.json` is a
  * routing eval (prompt → command) and cannot express any of them.
+ *
+ * A WORDING PIN ONLY: a reworded procedure that keeps these strings but
+ * changes behaviour still passes here. The shell block itself is executed
+ * against real commits in `classify_merge_risk_base_revision.test.ts`.
  */
 
 const MERGE = procedureText('src/domains/git/pr/merge/command.md');

@@ -9,8 +9,9 @@
 // No such layer is in this file and the Python source has been retired. The
 // claim is not unique to this file: measured 2026-10-14, 203 of the 225 test
 // files whose header announces a parity layer never name python3 in their
-// body. Only the three this branch edited are corrected; the rest is recorded
-// in road-to-sentences-the-tree-can-back as a measured population.
+// body (the author's own count; no artifact records the method). Only the
+// headers of files this branch edited are corrected; the rest is recorded in
+// road-to-sentences-the-tree-can-back as a population to sweep.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';

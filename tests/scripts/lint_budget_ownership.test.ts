@@ -133,7 +133,7 @@ describe('governed non-JSON budgets — explicit list, never a widened glob', ()
         expect(rels).toContain('budgets.yml');
     });
 
-    it('the corpus is 18 — the seventeen JSON budgets plus the one named YAML', () => {
+    it('the corpus is 19 — the eighteen JSON budgets plus the one named YAML', () => {
         // A floor AND a ceiling: a drop means src/config/ moved, and a silent rise
         // is exactly the glob-widening failure this mechanism exists to prevent.
         //

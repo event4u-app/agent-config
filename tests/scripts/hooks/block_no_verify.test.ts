@@ -331,9 +331,11 @@ describe('separator-attached tokens do not leak a later -n into the git scan', (
 
 // Step 4.3 of road-to-agent-throughput-recovery. Short `-n` was read as
 // `--no-verify` on EVERY subcommand, so `git grep -n`, `git log -n 5`,
-// `git branch -n` and `git push -n` were refused. Verified against this git's
-// own `git <sub> -h` on 2026-10-20: `commit` is the only builtin where `-n`
-// means `--no-verify`.
+// `git branch -n` and `git push -n` were refused. `commit` and `am` are the
+// builtins where `-n` means `--no-verify`: `git-am` documents `-n, --no-verify`
+// (skipping pre-applypatch and applypatch-msg) in newer git, even though an
+// older `git am -h` (2.39) does not list it. So `am` must never join the
+// allowlist below.
 //
 // The narrowing is an ALLOWLIST, not a denylist of commit/am: a denylist lets
 // `git ci -n` through when `ci = commit` is aliased, because the alias name is
@@ -375,7 +377,7 @@ describe('short -n is scoped to the subcommands where it can bypass a hook', () 
         ['git commit -n', 'the one builtin where -n IS --no-verify'],
         ['git commit -nm x', 'bundle on commit'],
         ['git commit -mn x', 'bundle on commit, reversed'],
-        ['git am -n', 'kept blocked: this git documents no -n for am, and unverified is not safe'],
+        ['git am -n', '-n, --no-verify on git-am: it skips the applypatch hooks'],
         ['git ci -n', 'an alias for commit resolves to its own name, not a builtin'],
         ['git -n', 'no subcommand — unresolved is not safe'],
         ['git push --no-verify', 'the long form stays unscoped'],
@@ -392,8 +394,8 @@ describe('short -n is scoped to the subcommands where it can bypass a hook', () 
 
     // Subcommand resolution is asserted through the public entry rather than a
     // unit on the resolver: the resolver is not exported, because each export
-    // the dispatcher bundle carries is paid on every hook event and this file
-    // sits 52 bytes under the bundle ceiling.
+    // the dispatcher bundle carries is paid on every hook event and the bundle
+    // sits close to its size ceiling (measured by the hook-bundle size gate).
     const RESOLUTION: readonly [string, boolean][] = [
         ['git -c a.b=c commit -n', true],
         ['git --git-dir /d/.git log -n 1', false],

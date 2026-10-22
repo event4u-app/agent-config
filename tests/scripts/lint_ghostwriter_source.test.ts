@@ -1,8 +1,8 @@
 // Tests for src/scripts/lint_ghostwriter_source.ts (py2ts Phase 4 / Wave 4b — VERIFY).
 //
 // No pytest suite exists. Light behavioural spec over exported pure helpers
-// (validate_alias, is_latin_or_allowed) plus the golden-parity layer that runs
-// python3 vs tsx on the REAL REPO (skipped without python3).
+// (validate_alias, is_latin_or_allowed) and the documented-path cases. There is
+// no python3 parity layer: the Python source has been retired.
 import { execFileSync, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -47,8 +47,6 @@ describe('lint_ghostwriter_source — is_latin_or_allowed', () => {
         expect(lgs.is_latin_or_allowed('А')).toBe(false); // U+0410
     });
 });
-
-// --- Golden parity on the REAL REPO -----------------------------------------
 
 // --- documented-path (road-to-a-brand-the-tree-can-check 0.5 / 1.1) ---------
 //

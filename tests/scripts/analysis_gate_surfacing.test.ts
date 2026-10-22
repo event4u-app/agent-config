@@ -12,6 +12,10 @@
  *
  * Two assertions, both over the shared context file every door links, so the
  * obligation lands once rather than four times.
+ *
+ * A DRIFT PIN between the procedure text and the code, not evidence that a
+ * door does this at run time: these cases read markdown. The behavioural half
+ * is the resolver/writer unit suite named above.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
