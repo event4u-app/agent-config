@@ -82,6 +82,16 @@ jobs:
             | tee /tmp/baseline.json
           echo "exit_code=$?" >> "$GITHUB_OUTPUT"
 
+      # PREREG (f) of internal/bench/egress-placeholders-PREREG.md is read on the
+      # CI runner class; the bar is p95 < 20 ms per 64 KiB. Warn-only, like the
+      # rest of this job: the reading lands in the job summary.
+      - name: Egress engine latency (PREREG f, warn-only)
+        continue-on-error: true
+        run: |
+          npx tsx internal/bench/egress-engine/run.ts --json /tmp/egress-engine.json > /dev/null
+          node -e 'const r = require("/tmp/egress-engine.json"); const l = r.latency_ms; console.log(`egress-engine latency: p50=${l.p50.toFixed(3)} ms p95=${l.p95.toFixed(3)} ms bytes=${l.bytes} platform=${r.platform} node=${r.node} cpus=${require("node:os").cpus().length} model=${require("node:os").cpus()[0].model}`)' \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
       - name: Render PR comment body
         id: render
         # actionlint shellchecks only CHANGED workflow files, so this step's
