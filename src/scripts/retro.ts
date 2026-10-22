@@ -26,6 +26,7 @@ import {
     type Sidecar,
     type Signal,
 } from './learning_sidecar.js';
+import { _scan } from './injection_scan_hook.js';
 import { _assert_project_writable } from './memory_signal.js';
 import { derive_session_tag } from './_lib/session_tag.js';
 import { liveGit, readPrFacts, readSessionFacts, type PrFacts, type SessionFacts } from './retro_facts.js';
@@ -337,9 +338,19 @@ const slug = (s: string): string =>
  * stays a person's act. Returns the repository-relative path, or `null` when
  * the output is not one of the two proposal targets.
  */
+/**
+ * True when a synthesised field carries an injection or encoding signal. The
+ * synthesis read review comments, so its output is scanned before it is
+ * persisted into a file a later session loads as context; a hit writes nothing.
+ */
+export function carriesInjectionSignal(out: RetroOutput): boolean {
+    return [out.subject, out.learning, out.counter_hypothesis, out.falsifier].some((t) => typeof t === 'string' && _scan(t).risk_level !== 'low');
+}
+
 export function writeProposal(root: string, out: RetroOutput, candidate: Candidate, nowIso: string): string | null {
     if (out.target !== 'override-proposal' && out.target !== 'contract-no-go-proposal') return null;
     if (out.learning === null || out.subject === null) return null;
+    if (carriesInjectionSignal(out)) return null;
     const hash = createHash('sha256').update(`${out.unit_key}\0${out.subject}`).digest('hex').slice(0, 8);
     const id = `${RETRO_PROPOSAL_PREFIX}${slug(out.subject)}-${hash}`;
     const rel = path.join(PROPOSALS_REL, `${id}.md`);
@@ -406,6 +417,7 @@ export function writePackageRecord(
     opts: { treeRoot?: string } = {},
 ): DefectRecord | null {
     if (out.target !== 'package-record' || out.learning === null || out.subject === null) return null;
+    if (carriesInjectionSignal(out)) return null;
     const finding: DefectFinding = {
         defect_class: 'model-noticed',
         source: 'model-noticed',
