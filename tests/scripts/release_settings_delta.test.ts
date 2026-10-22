@@ -467,6 +467,17 @@ describe('release settings delta — the assertion', () => {
         expect(proofHolds('tests/scripts/consumer_matrix_settings_delta.test.ts::no such title anywhere')).toBe(false);
         expect(proofHolds('tests/scripts/missing.test.ts::tombstoned-removal')).toBe(false);
         expect(proofHolds('no-separator')).toBe(false);
+        // The title in a comment, or on a skipped test, is not a test that proves anything.
+        const tmp = fs.mkdtempSync(path.join(REPO_ROOT, 'tests', 'fixtures', '.proof-'));
+        try {
+            fs.writeFileSync(path.join(tmp, 'p.test.ts'), "// it('only-in-a-comment')\nit.skip('only-skipped', () => {});\nit('real-one', () => {});\n");
+            const rel = path.relative(REPO_ROOT, path.join(tmp, 'p.test.ts'));
+            expect(proofHolds(`${rel}::only-in-a-comment`)).toBe(false);
+            expect(proofHolds(`${rel}::only-skipped`)).toBe(false);
+            expect(proofHolds(`${rel}::real-one`)).toBe(true);
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
         expect(belowMajorRefusalLines(base, tombstoned, f, '16.6.0', new Map([[key, 'x::y']]))).toHaveLength(1);
         // A proof that holds licenses the minor.
         expect(proofHolds(PROOF)).toBe(true);
