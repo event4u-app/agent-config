@@ -150,6 +150,8 @@ export interface AskOptions {
     shadowVerify?: HeadVerify;
     /** How long the paid answer waits for its shadow call; default `SHADOW_WAIT_MS`. */
     shadowWaitMs?: number;
+    /** The slice the prompt was built from; the shadow rebuilds the same payload from it. */
+    handSlice?: { slice: HandSlice; egress: CouncilEgress };
 }
 
 /**
@@ -350,19 +352,6 @@ function _teeMember(member: ExternalAIClient): ExternalAIClient {
     return tee;
 }
 
-/** The member that records the exposure only when it is actually asked. */
-function _exposingMember(member: ExternalAIClient, opts: AskOptions): ExternalAIClient {
-    if (opts.exposure === undefined) return member;
-    const { ledger, exposes } = opts.exposure;
-    const route = routeCandidateFromMember(member).name;
-    const wrapped = Object.create(member) as ExternalAIClient;
-    wrapped.ask = (...args: Parameters<ExternalAIClient['ask']>) => {
-        ledger.record(route, exposes);
-        return member.ask(...args);
-    };
-    return wrapped;
-}
-
 /** The shadow call; its result is the ledger row only, and nothing it raises reaches the caller. */
 async function _runShadow(
     prompt: string,
@@ -373,11 +362,13 @@ async function _runShadow(
 ): Promise<void> {
     if (opts.kind === undefined) return;
     try {
-        await shadowAsk(prompt, {
-            kind: opts.kind,
+        const hand = opts.handSlice ?? { slice: { kind: opts.kind, spec: prompt }, egress: councilEgress() };
+        await shadowAsk(hand.slice, {
             contentClass: 'public-artifact',
             paid,
-            free: _exposingMember(free, opts),
+            free,
+            egress: hand.egress,
+            ...(opts.exposure !== undefined ? { exposure: { ledger: opts.exposure.ledger, exposes: opts.exposure.exposes } } : {}),
             verify: opts.shadowVerify ?? ((): { verdict: VerifyVerdict; tokens: number } => ({ verdict: 'skipped', tokens: 0 })),
             stateRoot,
             ...(opts.now !== undefined ? { now: opts.now } : {}),
@@ -473,7 +464,7 @@ function _finish(
         : { ...result, work_id: askWorkId(id), ...(billing !== undefined ? { route_billing: billing } : {}) };
 }
 
-export interface AskHandOptions extends Omit<AskOptions, 'kind' | 'systemPrompt'> {
+export interface AskHandOptions extends Omit<AskOptions, 'kind' | 'systemPrompt' | 'handSlice'> {
     /** The run's placeholder scope; default: the council egress state. */
     egress?: CouncilEgress;
 }
@@ -485,8 +476,9 @@ export interface AskHandOptions extends Omit<AskOptions, 'kind' | 'systemPrompt'
  */
 export async function askHand(slice: HandSlice, opts: AskHandOptions = {}): Promise<AskResult | null> {
     const { egress, ...rest } = opts;
-    const payload = buildHandPayload(slice, egress ?? councilEgress());
-    return askOnce(payload.user, { ...rest, kind: slice.kind });
+    const scope = egress ?? councilEgress();
+    const payload = buildHandPayload(slice, scope);
+    return askOnce(payload.user, { ...rest, kind: slice.kind, handSlice: { slice, egress: scope } });
 }
 
 /** The declared name of a callee, for the ledger's symbol count. */
