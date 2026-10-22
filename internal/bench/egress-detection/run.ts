@@ -214,13 +214,26 @@ function storeReading(w1: readonly Planted[], negatives: readonly Negative[]): v
     const store = score(STORAGE_IDENTIFIER_RULES, w1, negatives, true, tree.root);
     const naive = score(NAIVE_STORE_RULES, w1, negatives, true, tree.root);
     const rate = (r: Reading): number => r.tree.withHit / r.tree.files;
+    // PREREG (b) as written: under 1 % of tree files, and zero e-mail or IBAN
+    // detections on the labelled negatives. A store drops the card row's context
+    // word by design, so a card-shaped id is a store hit the bar does not count;
+    // every type is still tallied below so the reading hides nothing.
+    const negativesByType = (rules: readonly EgressRule[]): Record<string, number> => {
+        const out: Record<string, number> = {};
+        for (const n of negatives) for (const sp of detect(n.text, rules)) if (sp.class === 'identifier') out[sp.type] = (out[sp.type] ?? 0) + 1;
+        return out;
+    };
+    const storeBar = (r: Reading, byType: Record<string, number>): boolean =>
+        r.tree.withHit / r.tree.files < 0.01 && (byType['EMAIL'] ?? 0) === 0 && (byType['IBAN'] ?? 0) === 0;
+    const storeTypes = negativesByType(STORAGE_IDENTIFIER_RULES);
+    const naiveTypes = negativesByType(NAIVE_STORE_RULES);
     process.stdout.write(
         JSON.stringify(
             {
                 commit: tree.commit,
                 storeRules: STORAGE_IDENTIFIER_RULES.map((r) => r.rule),
-                store: { ...store, rate: rate(store), verdicts: verdicts(store) },
-                naiveBefore: { tree: naive.tree, negativeHits: naive.negativeHits, rate: rate(naive), verdicts: verdicts(naive) },
+                store: { ...store, negativeHitsByType: storeTypes, rate: rate(store), b: storeBar(store, storeTypes) },
+                naiveBefore: { tree: naive.tree, negativeHitsByType: naiveTypes, rate: rate(naive), b: storeBar(naive, naiveTypes) },
             },
             null,
             2,
