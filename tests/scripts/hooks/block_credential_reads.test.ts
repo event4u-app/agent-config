@@ -51,6 +51,17 @@ describe('the file classes', () => {
 
     it('reads the process environment file as the environment', () => {
         expect(credentialFileClass('/proc/self/environ')).toBe('process-environment');
+        expect(credentialFileClass('/proc/self/task/123/environ')).toBe('process-environment');
+    });
+
+    it('matches names case-folded, as a case-insensitive filesystem opens them', () => {
+        expect(credentialFileClass('.ENV')).toBe('env-file');
+        expect(credentialFileClass('.Env.Local')).toBe('env-file');
+        expect(credentialFileClass('.ENV.EXAMPLE')).toBeNull();
+        expect(credentialFileClass('~/.ssh/ID_RSA')).toBe('private-key');
+        expect(credentialFileClass('~/.AWS/credentials')).toBe('cloud-credentials');
+        expect(credentialFileClass('.NPMRC')).toBe('registry-credentials');
+        expect(credentialFileClass('~/.azure/accesstokens.json')).toBe('cloud-credentials');
     });
 });
 

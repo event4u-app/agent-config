@@ -9,6 +9,12 @@
  * decided from the path alone, never from content — the guard runs before the
  * file is opened.
  *
+ * What a path-text guard cannot see, and so does not catch: a glob or an
+ * expansion that names the file only after the shell runs (`cat .e*`,
+ * `cat .e[n]v`, `$(echo .env)`), a recursive search that never names it, and
+ * an interpreter that prints the environment (`node -e 'console.log(process.env)'`,
+ * `python -c …`). Those reach the egress stage as tool output, not here.
+ *
  * Pure: no I/O. The one import is `node:path`'s POSIX normaliser.
  */
 import * as path from 'node:path';
@@ -67,7 +73,8 @@ const CREDENTIAL_TAILS: ReadonlyArray<readonly [string, CredentialFileClass]> = 
     ['.config/composer/auth.json', 'registry-credentials'],
 ];
 
-const PROC_ENVIRON = /^\/proc\/[^/]+\/environ$/;
+/** A process's environment, and each of its threads' (`/proc/self/task/<tid>/environ`). */
+const PROC_ENVIRON = /^\/proc\/[^/]+(?:\/task\/[^/]+)?\/environ$/;
 
 /**
  * The host whose filesystem decides what a path names. A backslash separates
@@ -88,19 +95,23 @@ export function credentialFileClass(rawPath: string, host: PathHost = HOST): Cre
     // `.` and `..` segments resolved, so `/proc/self/../self/environ` is the file it names.
     const p = path.posix.normalize(trimmed);
     if (PROC_ENVIRON.test(p)) return 'process-environment';
-    const base = p.slice(p.lastIndexOf('/') + 1);
-    if (base === '.env' || base === '.envrc') return 'env-file';
-    if (base.startsWith('.env.')) {
+    // Compared case-folded: on the default macOS and Windows filesystems `.ENV`
+    // and `ID_RSA` open the same file. On a case-sensitive one this refuses a
+    // differently-cased neighbour too, which is the side a read guard errs on.
+    const lp = p.toLowerCase();
+    const lower = lp.slice(lp.lastIndexOf('/') + 1);
+    if (lower === '.env' || lower === '.envrc') return 'env-file';
+    if (lower.startsWith('.env.')) {
         // The LAST suffix decides: `.env.local.example` documents keys, `.env.local` holds values.
-        const last = base.slice(base.lastIndexOf('.') + 1).toLowerCase();
+        const last = lower.slice(lower.lastIndexOf('.') + 1);
         return ENV_TEMPLATE_SUFFIXES.has(last) ? null : 'env-file';
     }
-    if (SSH_KEY.test(base)) return 'private-key';
-    const lower = base.toLowerCase();
+    if (SSH_KEY.test(lower)) return 'private-key';
     if (KEY_EXTENSIONS.some((ext) => lower.endsWith(ext) && lower.length > ext.length)) return 'private-key';
     if (lower.endsWith('.pem') && KEY_PEM_NAME.test(lower.slice(0, -4))) return 'private-key';
     for (const [tail, cls] of CREDENTIAL_TAILS) {
-        if (p === tail || p.endsWith(`/${tail}`)) return cls;
+        const t = tail.toLowerCase();
+        if (lp === t || lp.endsWith(`/${t}`)) return cls;
     }
     return null;
 }
