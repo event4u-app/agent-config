@@ -13,7 +13,12 @@ review_by: 2026-09-25
 > `merge_group` is declared on both required workflows and on `tests.yml`, and
 > `tests.yml` has one always-run `Tests result` check (see the table below). Enable
 > the merge queue on ruleset `17749383` (and, optionally, add `Tests result` to the
-> required set) — yes, or no and why? Measured cost of not having it: every merge
+> required set) — yes, or no and why?
+> **Condition attached by the ratification of 2026-10-22**
+> (`agents/evidence/ratifications/consistency-yml-ci-green-20261022.md`): before the
+> queue is enabled, verify that every merge-blocking invariant the required
+> workflows skip on `merge_group` (steps guarded by `github.event_name ==
+> 'pull_request'`) is enforced elsewhere or intentionally PR-only. Measured cost of not having it: every merge
 > re-runs the full `Tests` matrix on `push: main`, and PR jobs queue for macOS p50
 > 5m34s / p90 25m09s (`agents/evidence/analysis/ci-time-to-green-2026-10.md`).
 
