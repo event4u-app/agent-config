@@ -18,8 +18,13 @@ import * as path from 'node:path';
 
 import { credentialFileClass } from './credential_files.js';
 
-/** Env-var names that hold a credential by naming convention. */
-const CREDENTIAL_NAME = /(?:TOKEN|SECRET|PASSWORD|PASSWD|PASSPHRASE|API_?KEY|PRIVATE_?KEY|CREDENTIAL|AUTH|DSN)/i;
+/**
+ * Env-var names that hold a credential by naming convention. `AUTH` counts only
+ * as a whole trailing word (`BASIC_AUTH`): as a substring it took
+ * `GIT_AUTHOR_NAME` and `SSH_AUTH_SOCK`, whose values then got replaced in
+ * every command and output.
+ */
+const CREDENTIAL_NAME = /(?:TOKEN|SECRET|PASSWORD|PASSWD|PASSPHRASE|API_?KEY|PRIVATE_?KEY|CREDENTIAL|DSN|(?:^|_)AUTH$)/i;
 /** Shorter values collide with ordinary words too often to replace. */
 export const MIN_KNOWN_VALUE_LENGTH = 8;
 export const MAX_DECODE_LAYERS = 2;
