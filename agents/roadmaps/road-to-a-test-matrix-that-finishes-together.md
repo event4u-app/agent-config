@@ -102,7 +102,7 @@ job it sits in.
 | B4 | reversible-technical | evidence | Images pinned to the rollout's destination (`ubuntu-26.04`, `macos-26`), not back to 24.04 | job logs 2026-10-21: `ubuntu-latest` already served `ubuntu-26.04`, `macos-latest` `macos-26-arm64` | an image breaks a suite |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-21 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
