@@ -1375,3 +1375,17 @@ is the named exception in the claim itself.
 - evidence: PRE-REGISTERED 2026-10-16 (`road-to-a-cold-start-paid-once` step 6.1, margin per its decision D6), BEFORE step 3.6 and before any resumed task exists. METRIC: verify-pass rate of resumed tasks minus verify-pass rate of fresh tasks of the same class, in the same window. MARGIN: -5 percentage points; a difference at or above -5 pp is non-inferior. SAMPLE FLOOR: >= 30 resumed and >= 30 fresh tasks of the same class. FALSIFICATION: the difference is below -5 pp at the floor; the reuse half of the guard then stays in shadow even if `warm-worker-cold-start-relief` passes. UNDERPOWERED below the floor, cited for neither direction.
 - status: unbacked
 - last_verified: 2026-10-16
+
+### claim: tier-downshift-quality-held
+- claim: PRE-REGISTERED, unmeasured. Read-only fan-out slices dispatched on `lite` fail verification or escalate at most 5 percentage points more often than the same slices on the inherited tier, and below the escalation kill.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-22 (`road-to-a-tier-the-dispatch-carries` step 2.1), BEFORE the first paired run (step 2.2) and before any slice kind's default dispatch changes (step 2.3). ARMS: each slice runs once with the per-call model argument of `lite` and once with no model argument (inherit), both verified by the same deterministic check. KIND: read-only fan-out only (that roadmap's decision A5). METRIC: (verify-fail + escalation) rate of the `lite` arm minus the same rate of the inherit arm. THRESHOLD: <= +5 pp, AND the `lite` arm's escalation rate stays below the 0.3 escalation kill of `src/config/dispatch-economy-metrics.json`. SAMPLE: at most 60 slice pairs (decision A2). FALSIFICATION: the difference exceeds +5 pp, or the escalation rate reaches 0.3; the kind then keeps the inherited tier. UNDERPOWERED when the run cannot separate a 5 pp difference at the cap — then this claim and `tier-downshift-limit-relief` are both cited for neither direction.
+- status: unbacked
+- last_verified: 2026-10-22
+
+### claim: tier-downshift-limit-relief
+- claim: PRE-REGISTERED, unmeasured. A read-only fan-out slice verified on `lite` costs fewer price-weighted billable tokens than the same slice verified on the inherited tier, with every escalated re-run charged to `lite`.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-22 (`road-to-a-tier-the-dispatch-carries` step 2.1), on the same paired run as `tier-downshift-quality-held`. METRIC: per arm, the sum over its slices of billable input weighted as the tree already weights cache (cache read 0.1x, five-minute cache write 1.25x, uncached 1x) plus output, each leg's tokens priced at its served model's per-token rate, divided by the number of slices that passed verification in that arm; a `lite` slice that escalated adds its re-run's cost to the `lite` arm. DIRECTION: the `lite` arm's cost per verified slice is lower. No percentage target is set (that roadmap's K10). UNDERPOWERED under the same condition as the quality claim; a cheaper arm that fails `tier-downshift-quality-held` backs nothing.
+- status: unbacked
+- last_verified: 2026-10-22

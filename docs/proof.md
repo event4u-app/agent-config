@@ -182,7 +182,7 @@ guidelines, personas) are **generated from source and CI-drift-checked**:
 fails the build on any count-shaped prose mention that drifts from the
 source count — or on two different numbers for the same artefact kind.
 
-We also publish our **debt**: 43 claim(s) are logged as
+We also publish our **debt**: 45 claim(s) are logged as
 `unbacked` inventory in the ledger — not yet bound, and therefore not
 allowed to carry a marker in public prose. Hiding them would be the
 opposite of the point.
@@ -364,7 +364,7 @@ resolution (`check_enforcement_coverage`) and the claims ledger
 
 Undeclared rules (79, of which 9 kernel-denied) carry no row — an honest gap beats a false claim.
 
-**Axis 2 — evidence form per public claim.** 115 ledger entries · 60 backed · 4 measured-in-repo · 44 unbacked inventory · 7 resolved-null.
+**Axis 2 — evidence form per public claim.** 117 ledger entries · 60 backed · 4 measured-in-repo · 46 unbacked inventory · 7 resolved-null.
 
 | Claim id | Kind | Status | Measured on | Evidence pointer |
 |---|---|---|---|---|
@@ -472,6 +472,8 @@ Undeclared rules (79, of which 9 kernel-denied) carry no row — an honest gap b
 | `surgical-uninstall` | qual | backed | — | `exec:vitest run tests/install/uninstall_shared_host_config_real_install.test.ts tests/lib/json_pointers.test.ts tests/lib/host_hook_merge.test.ts -> 0` |
 | `team-defect-finding-null` | quant | backed | — | `internal/bench/reports/defect-finding.json#honest_null` |
 | `thin-inject-delivery-equivalence` | quant | measured-in-repo | maintainer checkout, project-scope tree, claude-code, widened corpus re-measured 2026-09-08 | `internal/bench/reports/thin-inject-2026-09-08.md#endpoints` |
+| `tier-downshift-limit-relief` | quant | unbacked | — | `PRE-REGISTERED 2026-10-22 (`road-to-a-tier-the-dispatch-carries` step 2.1), on the same paired run as `tier-downshift-quality-held`. METRIC: per arm, the sum over its slices of billable input weighted as the tree already weights cache (cache read 0.1x, five-minute cache write 1.25x, uncached 1x) plus output, each leg's tokens priced at its served model's per-token rate, divided by the number of slices that passed verification in that arm; a `lite` slice that escalated adds its re-run's cost to the `lite` arm. DIRECTION: the `lite` arm's cost per verified slice is lower. No percentage target is set (that roadmap's K10). UNDERPOWERED under the same condition as the quality claim; a cheaper arm that fails `tier-downshift-quality-held` backs nothing.` |
+| `tier-downshift-quality-held` | quant | unbacked | — | `PRE-REGISTERED 2026-10-22 (`road-to-a-tier-the-dispatch-carries` step 2.1), BEFORE the first paired run (step 2.2) and before any slice kind's default dispatch changes (step 2.3). ARMS: each slice runs once with the per-call model argument of `lite` and once with no model argument (inherit), both verified by the same deterministic check. KIND: read-only fan-out only (that roadmap's decision A5). METRIC: (verify-fail + escalation) rate of the `lite` arm minus the same rate of the inherit arm. THRESHOLD: <= +5 pp, AND the `lite` arm's escalation rate stays below the 0.3 escalation kill of `src/config/dispatch-economy-metrics.json`. SAMPLE: at most 60 slice pairs (decision A2). FALSIFICATION: the difference exceeds +5 pp, or the escalation rate reaches 0.3; the kind then keeps the inherited tier. UNDERPOWERED when the run cannot separate a 5 pp difference at the cap — then this claim and `tier-downshift-limit-relief` are both cited for neither direction.` |
 | `touched-file-quality-shadow-to-warn-bar` | quant | unbacked | — | `PRE-REGISTERED 2026-10-07 (`road-to-touched-file-quality-that-says-when-it-did-not-look` step 4.1), BEFORE any reading is taken against it. The only reading that exists is `agents/evidence/analysis/touched-file-quality-readings-2026-Q4.md`, a replay of 30 merged commits, and that corpus is EXCLUDED below — so no number here can have been fitted to a result.` |
 | `turnaround-blocking-by-cause-targets` | quant | unbacked | — | `PRE-REGISTERED 2026-10-07 (`road-to-blocking-time-by-cause` step 3.1), committed BEFORE either mitigation lands; the step order in the roadmap and the commit order here are the pre-registration. Reading: `agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md` (145 blocking calls, 802 blocking minutes over ten sessions).` |
 | `ui-conformance-behavioral-catch` | quant | backed | — | `tests/scripts/ui_conformance_probe.test.ts#finds four of four planted defects` |
