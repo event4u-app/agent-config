@@ -11,6 +11,9 @@
  * Layout, with `current` a relative symlink swapped by rename:
  *
  *     runtime/current -> v-<version>-<nonce>
+ *     runtime/v-…                   the version `current` pointed at before the
+ *                                   last swap stays too: two versions at most
+ *     runtime/.install.lock/        held while an install stages and swaps
  *     runtime/v-…/node              the node the install ran under
  *     runtime/v-…/dist/hooks/…      the dispatcher bundle
  *     runtime/v-…/dist/agent-src/…  rule bodies the stubs point at, with the
@@ -127,22 +130,87 @@ function snapshotStampedLayer(rulesDir, dest) {
         fs.writeFileSync(path.join(dest, name), text);
     }
 }
+/**
+ * Serialises stage, swap and sweep across installs (17.0.0 finding
+ * 064424ba17b9): without it two installs at once deleted each other's stage or
+ * freshly renamed version and left `current` dangling. A directory, because
+ * `mkdir` is atomic on every platform the installer runs on.
+ */
+export const LOCK_DIRNAME = '.install.lock';
+/** A lock older than this was left by an install that died; it is taken over. */
+export const LOCK_STALE_MS = 10 * 60 * 1000;
+const LOCK_WAIT_MS = 120 * 1000;
+const LOCK_POLL_MS = 100;
+function sleepSync(ms) {
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+function acquireLock(runtimeRoot, waitMs) {
+    const lock = path.join(runtimeRoot, LOCK_DIRNAME);
+    const deadline = Date.now() + waitMs;
+    for (;;) {
+        try {
+            fs.mkdirSync(lock);
+            fs.writeFileSync(path.join(lock, 'owner'), `${process.pid}\n`);
+            return () => fs.rmSync(lock, { recursive: true, force: true });
+        }
+        catch (e) {
+            if (e.code !== 'EEXIST')
+                throw e;
+        }
+        try {
+            if (Date.now() - fs.statSync(lock).mtimeMs > LOCK_STALE_MS) {
+                fs.rmSync(lock, { recursive: true, force: true });
+                continue;
+            }
+        }
+        catch {
+            continue;
+        }
+        if (Date.now() >= deadline) {
+            throw new Error(`stageRuntime: another install is staging the runtime (${lock}); retry once it has finished`);
+        }
+        sleepSync(LOCK_POLL_MS);
+    }
+}
+/**
+ * Removes what an interrupted stage left behind and every version except the
+ * new one and the one `current` pointed at before the swap — a hook started
+ * a moment earlier may still be running out of that directory. Two versions
+ * stay on disk at most. Runs under the install lock only.
+ */
 function sweepStale(runtimeRoot, keep) {
     for (const name of fs.readdirSync(runtimeRoot)) {
-        const stale = (name.startsWith('v-') && name !== keep) || name.startsWith('.stage-') || name.startsWith('.current-');
+        const stale = (name.startsWith('v-') && !keep.has(name)) || name.startsWith('.stage-') || name.startsWith('.current-');
         if (stale)
             fs.rmSync(path.join(runtimeRoot, name), { recursive: true, force: true });
     }
 }
+function currentTarget(current) {
+    try {
+        return path.basename(fs.readlinkSync(current));
+    }
+    catch {
+        return null;
+    }
+}
 /**
- * Stage the runtime, then make it current by one rename. A stage interrupted at
- * any point leaves `current` on the previous version; the next stage sweeps
- * what the interrupted one left behind, so one version stays on disk.
+ * Stage the runtime, then make it current by one rename, all under the install
+ * lock. A stage interrupted at any point leaves `current` on the previous
+ * version; the next stage sweeps what the interrupted one left behind.
  */
 export function stageRuntime(opts) {
     const runtimeRoot = path.resolve(opts.runtimeRoot);
-    const packageRoot = path.resolve(opts.packageRoot);
     fs.mkdirSync(runtimeRoot, { recursive: true });
+    const release = acquireLock(runtimeRoot, opts._lockWaitMs ?? LOCK_WAIT_MS);
+    try {
+        return stageLocked(opts, runtimeRoot);
+    }
+    finally {
+        release();
+    }
+}
+function stageLocked(opts, runtimeRoot) {
+    const packageRoot = path.resolve(opts.packageRoot);
     const version = readVersion(packageRoot);
     const nonce = `${process.pid}-${randomBytes(4).toString('hex')}`;
     const stage = path.join(runtimeRoot, `.stage-${nonce}`);
@@ -165,16 +233,23 @@ export function stageRuntime(opts) {
     const versionDir = `v-${version.replace(/[^A-Za-z0-9._-]/g, '_')}-${nonce}`;
     fs.renameSync(stage, path.join(runtimeRoot, versionDir));
     const current = currentRuntimeDir(runtimeRoot);
+    const previous = currentTarget(current);
     const link = path.join(runtimeRoot, `.current-${nonce}`);
     if (process.platform === 'win32') {
+        // A junction cannot be renamed over: move the old one aside and put the
+        // new one in place by two renames, instead of a recursive delete
+        // between them, so the window without `current` is two syscalls wide.
         fs.symlinkSync(path.join(runtimeRoot, versionDir), link, 'junction');
-        fs.rmSync(current, { recursive: true, force: true });
+        const aside = path.join(runtimeRoot, `.current-old-${nonce}`);
+        if (fs.existsSync(current))
+            fs.renameSync(current, aside);
+        fs.renameSync(link, current);
     }
     else {
         fs.symlinkSync(versionDir, link);
+        fs.renameSync(link, current);
     }
-    fs.renameSync(link, current);
-    sweepStale(runtimeRoot, versionDir);
+    sweepStale(runtimeRoot, new Set(previous === null ? [versionDir] : [versionDir, previous]));
     return {
         currentDir: current,
         version,
