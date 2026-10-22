@@ -10,7 +10,7 @@ import {
     type RouteSpec,
     type SelfHostedProbe,
 } from '../../../src/scripts/ai_council/free_route.js';
-import { FreeRouteClient } from '../../../src/scripts/ai_council/free_route_client.js';
+import type { FreeRouteClient } from '../../../src/scripts/ai_council/free_route_client.js';
 import { routeMemberFor } from '../../../src/scripts/ai_council/route_member.js';
 
 function route(base_url: string): RouteSpec {
