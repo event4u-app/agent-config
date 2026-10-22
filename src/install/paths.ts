@@ -73,8 +73,15 @@ export function getInstallRoot(home?: string): string {
  * `~/.event4u/agent-config/install-log.jsonl`.
  *
  * Phase A4 writers append here on every successful atomic rename.
+ *
+ * `EVENT4U_CONFIG_HOME` relocates it with the rest of the config home when no
+ * explicit `home` is given. Without that, the hermetic test environment —
+ * which sets only that variable — appended every test install to the real
+ * user's log, and the log is now read back as ownership proof.
  */
 export function getLogPath(home?: string): string {
+    const configHome = home ? undefined : process.env['EVENT4U_CONFIG_HOME'];
+    if (configHome) return join(configHome, INSTALL_LOG_FILENAME);
     return join(getInstallRoot(home), INSTALL_LOG_FILENAME);
 }
 

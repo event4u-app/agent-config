@@ -18,6 +18,7 @@
 import { existsSync } from 'node:fs';
 
 import { sha256File } from './plan.js';
+import { loggedWriteDigests, wroteTheseBytes, type LoggedWrites } from './loggedWrites.js';
 import { isLedgerMigration } from './preserve.js';
 import {
     classifyOwnership,
@@ -200,10 +201,12 @@ export const CONFLICT_BATCH_THRESHOLD = 5;
  *
  * `recorded` is injectable for tests; by default it is read from the
  * manifest at `plan.root`, with the user-scoped ownership ledger laid over it.
+ * `logged` likewise; by default it is the install transaction log.
  */
 export function computeConflicts(
     plan: InstallPlan,
     recordedOverride?: RecordedHashes,
+    loggedOverride?: LoggedWrites,
 ): readonly ConflictEntry[] {
     // Force returns before the manifest is read. As a default parameter the
     // map was built at call entry and discarded on the next line, so every
@@ -214,6 +217,7 @@ export function computeConflicts(
     // digests never reaches the branch that needs this, and an unconditional
     // read would charge every plan for an answer most of them discard.
     let ledgerFiles: ReadonlySet<string> | null = null;
+    let logged: LoggedWrites | undefined;
     const ledgerLists = (p: string): boolean => {
         ledgerFiles ??= ledgerListedPaths();
         return ledgerFiles.has(p);
@@ -234,6 +238,11 @@ export function computeConflicts(
             const onDisk = sha256File(entry.path);
             const ownership = classifyOwnership(recorded.get(entry.path), onDisk);
             if (ownership === 'recorded-unchanged') continue;
+            // The writer's transaction-log proof (`./loggedWrites.ts`): bytes
+            // we logged writing to this path are ours and untouched, so the
+            // writer replaces them and the preview must not name them.
+            logged ??= loggedOverride ?? loggedWriteDigests();
+            if (onDisk !== null && wroteTheseBytes(entry.path, onDisk, logged)) continue;
             if (ownership === 'unknown' && plan.policy.knownPaths.has(entry.path)) continue;
             // CANDIDACY, not the verdict, and it is computed BEFORE the
             // equality short-circuit below rather than after. The migration

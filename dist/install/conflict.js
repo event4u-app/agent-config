@@ -16,6 +16,7 @@
  */
 import { existsSync } from 'node:fs';
 import { sha256File } from './plan.js';
+import { loggedWriteDigests, wroteTheseBytes } from './loggedWrites.js';
 import { isLedgerMigration } from './preserve.js';
 import { classifyOwnership, ledgerListedPaths, recordedHashesWithLedger, } from './recordedOwnership.js';
 /**
@@ -161,8 +162,9 @@ export const CONFLICT_BATCH_THRESHOLD = 5;
  *
  * `recorded` is injectable for tests; by default it is read from the
  * manifest at `plan.root`, with the user-scoped ownership ledger laid over it.
+ * `logged` likewise; by default it is the install transaction log.
  */
-export function computeConflicts(plan, recordedOverride) {
+export function computeConflicts(plan, recordedOverride, loggedOverride) {
     // Force returns before the manifest is read. As a default parameter the
     // map was built at call entry and discarded on the next line, so every
     // force-mode plan paid a read and a YAML parse for nothing.
@@ -173,6 +175,7 @@ export function computeConflicts(plan, recordedOverride) {
     // digests never reaches the branch that needs this, and an unconditional
     // read would charge every plan for an answer most of them discard.
     let ledgerFiles = null;
+    let logged;
     const ledgerLists = (p) => {
         ledgerFiles ??= ledgerListedPaths();
         return ledgerFiles.has(p);
@@ -196,6 +199,12 @@ export function computeConflicts(plan, recordedOverride) {
             const onDisk = sha256File(entry.path);
             const ownership = classifyOwnership(recorded.get(entry.path), onDisk);
             if (ownership === 'recorded-unchanged')
+                continue;
+            // The writer's transaction-log proof (`./loggedWrites.ts`): bytes
+            // we logged writing to this path are ours and untouched, so the
+            // writer replaces them and the preview must not name them.
+            logged ??= loggedOverride ?? loggedWriteDigests();
+            if (onDisk !== null && wroteTheseBytes(entry.path, onDisk, logged))
                 continue;
             if (ownership === 'unknown' && plan.policy.knownPaths.has(entry.path))
                 continue;

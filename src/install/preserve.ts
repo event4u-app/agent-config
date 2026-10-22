@@ -109,6 +109,16 @@ export interface DeployWriteInputs {
      * `null` when the file could not be read.
      */
     readonly onDiskSha256: string | null;
+    /**
+     * True when the install transaction log records this installer writing
+     * exactly the bytes now on disk to this path (`./loggedWrites.ts`).
+     *
+     * That is proof the file is our own untouched output, whatever the ledger
+     * says — it outranks a missing digest AND a recorded digest the bytes do
+     * not match, because the ledger records a preserved target under the
+     * digest STAGED beside it, not the one on disk. Absent means false.
+     */
+    readonly loggedWrite?: boolean;
     /** True when the run carries `--force`. */
     readonly force: boolean;
 }
@@ -135,7 +145,7 @@ export interface DeployWriteInputs {
  * behaviour stands rather than being changed on a case nobody reasoned about.
  */
 export function isLedgerMigration(inputs: Omit<DeployWriteInputs, 'packagedSha256'>): boolean {
-    if (!inputs.exists || inputs.force) return false;
+    if (!inputs.exists || inputs.force || inputs.loggedWrite === true) return false;
     if (inputs.ledgerListed !== true) return false;
     if (inputs.onDiskSha256 === null) return false;
     return classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256) === 'unknown';
@@ -144,9 +154,10 @@ export function isLedgerMigration(inputs: Omit<DeployWriteInputs, 'packagedSha25
 /**
  * Decide whether the writer may replace one managed file.
  *
- * A target that does not exist is written. A forced run writes. Otherwise the
- * recorded-ownership verdict decides: `recorded-modified` preserves, and
- * `recorded-unchanged` writes.
+ * A target that does not exist is written. A forced run writes. A target whose
+ * bytes the transaction log records this installer writing there is written —
+ * there is no edit to lose. Otherwise the recorded-ownership verdict decides:
+ * `recorded-modified` preserves, and `recorded-unchanged` writes.
  *
  * The `unknown` arm is the one worth stating out loud. No recorded digest
  * means no divergence to measure — a tree with no manifest, a global anchor
@@ -169,6 +180,7 @@ export function isLedgerMigration(inputs: Omit<DeployWriteInputs, 'packagedSha25
 export function decideDeployWrite(inputs: DeployWriteInputs): DeployWriteDecision {
     if (!inputs.exists) return 'write';
     if (inputs.force) return 'write';
+    if (inputs.loggedWrite === true) return 'write';
     const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
     if (ownership === 'recorded-modified') return 'preserve';
     if (ownership === 'unknown' && isLedgerMigration(inputs)) {

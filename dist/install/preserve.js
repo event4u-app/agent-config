@@ -80,7 +80,7 @@ export const EXIT_COMPLETED_WITH_CONFLICTS = 3;
  * behaviour stands rather than being changed on a case nobody reasoned about.
  */
 export function isLedgerMigration(inputs) {
-    if (!inputs.exists || inputs.force)
+    if (!inputs.exists || inputs.force || inputs.loggedWrite === true)
         return false;
     if (inputs.ledgerListed !== true)
         return false;
@@ -91,9 +91,10 @@ export function isLedgerMigration(inputs) {
 /**
  * Decide whether the writer may replace one managed file.
  *
- * A target that does not exist is written. A forced run writes. Otherwise the
- * recorded-ownership verdict decides: `recorded-modified` preserves, and
- * `recorded-unchanged` writes.
+ * A target that does not exist is written. A forced run writes. A target whose
+ * bytes the transaction log records this installer writing there is written —
+ * there is no edit to lose. Otherwise the recorded-ownership verdict decides:
+ * `recorded-modified` preserves, and `recorded-unchanged` writes.
  *
  * The `unknown` arm is the one worth stating out loud. No recorded digest
  * means no divergence to measure — a tree with no manifest, a global anchor
@@ -117,6 +118,8 @@ export function decideDeployWrite(inputs) {
     if (!inputs.exists)
         return 'write';
     if (inputs.force)
+        return 'write';
+    if (inputs.loggedWrite === true)
         return 'write';
     const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
     if (ownership === 'recorded-modified')

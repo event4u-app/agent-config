@@ -313,6 +313,22 @@ describe('conflict — computeConflicts', () => {
             expect(computeConflicts(p, recorded)).toEqual([]);
         });
 
+        it('drops a file whose bytes the transaction log records us writing there', () => {
+            // The ledger records a preserved target under the STAGED digest, so
+            // an untouched pre-ledger file reads as recorded-modified. The log
+            // proves the bytes on disk are ours; anything else stays reported.
+            const e = entry('a.md', 'planned-v2');
+            writeFileSync(e.path, 'installed-v1');
+            const p = plan({ claude: [e] });
+            const recorded = new Map([[e.path, hex('planned-v2')]]);
+            const ours = new Map([[e.path, new Set([hex('installed-v1')])]]);
+            expect(computeConflicts(p, recorded, ours)).toEqual([]);
+            const other = new Map([[e.path, new Set([hex('installed-v0')])]]);
+            expect(computeConflicts(p, recorded, other)[0]?.ownership).toBe('recorded-modified');
+            const elsewhere = new Map([[join(root, 'b.md'), new Set([hex('installed-v1')])]]);
+            expect(computeConflicts(p, recorded, elsewhere)).toHaveLength(1);
+        });
+
         it('does not over-fire: a bridge-shaped null digest stays unknown, not modified', () => {
             const e = entry('a.md', 'planned');
             writeFileSync(e.path, 'on-disk');
