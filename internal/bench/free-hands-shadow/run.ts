@@ -49,8 +49,10 @@
  * the first-party roster discovered at start (`discoverRouteModels`).
  *
  * The run is paced (free calls ≥ 31 s apart), capped (333 per kind, 2,000 in
- * all), resumable from its run ledger, and backs off on HTTP 429 and stops on
- * HTTP 402. Every row it writes is `manufactured`.
+ * all), resumable from its run ledger, and backs off on HTTP 429, stops on HTTP
+ * 402 and after `FREE_FAILURE_STREAK_MAX` failed free answers in a row. Pacing,
+ * back-off and streaks are derived from the run ledger, so a restart honours
+ * them. Every row it writes is `manufactured`.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -69,7 +71,7 @@ import { flipVerdict, isKindFlipped, QUALITY_MARGIN, ESCALATION_KILL, MIN_SHADOW
 import { routeCandidateFromMember } from '../../../src/scripts/ai_council/route_chooser.js';
 import { isUnpaid, type VerifyVerdict } from '../../../src/scripts/_lib/hand_kinds.js';
 import { DEFAULT_DIR } from '../../../src/scripts/orchestration_record.js';
-import { AUDIT_SEED, buildCorpus, MEASURED_KINDS, PER_KIND, seededShuffle, type Corpus, type CorpusItem, type MeasuredKind } from './corpus.js';
+import { AUDIT_SEED, buildCorpus, corpusEgress, MEASURED_KINDS, PER_KIND, seededShuffle, type Corpus, type CorpusItem, type MeasuredKind } from './corpus.js';
 import { headVerifyFor, verifyAnswer, VERIFIER_VERSION, type SideCapture } from './verify.js';
 
 type Dict = Record<string, unknown>;
@@ -77,15 +79,40 @@ type Dict = Record<string, unknown>;
 export const MIN_FREE_INTERVAL_MS = 31_000;
 export const BACKOFF_START_MS = 120_000;
 export const BACKOFF_MAX_STREAK = 4;
+/** Failed free answers of any class in a row that stop the run: each one also spent a paid call. */
+export const FREE_FAILURE_STREAK_MAX = 10;
 export const RUN_DIR_RELPATH = path.join('agents', 'runtime', 'bench', 'free-hands-shadow');
 export const LABEL = 'manufactured';
 
 /** Variables under which a vendor CLI bills the vendor's API or a cloud account instead of the subscription. */
 export const VENDOR_BILLING_ENV: Readonly<Record<string, readonly string[]>> = {
-    anthropic: ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN', 'CLAUDE_CODE_USE_BEDROCK', 'CLAUDE_CODE_USE_VERTEX'],
-    openai: ['OPENAI_API_KEY', 'CODEX_API_KEY'],
+    anthropic: [
+        'ANTHROPIC_API_KEY',
+        'ANTHROPIC_AUTH_TOKEN',
+        'ANTHROPIC_BASE_URL',
+        'CLAUDE_CODE_USE_BEDROCK',
+        'CLAUDE_CODE_USE_VERTEX',
+        'CLAUDE_CODE_USE_FOUNDRY',
+        'ANTHROPIC_FOUNDRY_API_KEY',
+    ],
+    openai: ['OPENAI_API_KEY', 'CODEX_API_KEY', 'OPENAI_BASE_URL'],
     gemini: ['GEMINI_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_GENAI_USE_VERTEXAI'],
 };
+
+/** The billing variables of `vendor` that are set in `env`. */
+function billingVarsSet(vendor: string, env: NodeJS.ProcessEnv): string[] {
+    return (VENDOR_BILLING_ENV[vendor] ?? []).filter((v) => (env[v] ?? '') !== '');
+}
+
+/** Why the blind audit head may not run; empty when its CLI can only bill the subscription. */
+export function headRefusals(env: NodeJS.ProcessEnv): string[] {
+    return billingVarsSet('anthropic', env).map((v) => `anthropic: ${v} is set, so the audit head may bill the API instead of the subscription`);
+}
+
+/** A cap or count option: a positive integer, else the reason it is refused. */
+export function positiveInt(name: string, v: number | undefined): string | null {
+    return v === undefined || (Number.isInteger(v) && v > 0) ? null : `${name} must be a positive integer, got ${String(v)}`;
+}
 
 /** Why the members may not run this window; empty when every paid seat is a subscription CLI and the free side is unpaid. */
 export function subscriptionRefusals(members: readonly ExternalAIClient[], env: NodeJS.ProcessEnv): string[] {
@@ -104,14 +131,11 @@ export function subscriptionRefusals(members: readonly ExternalAIClient[], env: 
             out.push(`${route.name}: transport ${String(rec['transport'])}, billable ${String(rec['billable'])} — not a subscription CLI`);
             continue;
         }
-        const vars = VENDOR_BILLING_ENV[route.name];
-        if (vars === undefined) {
+        if (VENDOR_BILLING_ENV[route.name] === undefined) {
             out.push(`${route.name}: no known subscription-only contract for this CLI`);
             continue;
         }
-        for (const v of vars) {
-            if ((env[v] ?? '') !== '') out.push(`${route.name}: ${v} is set, so its CLI may bill the API instead of the subscription`);
-        }
+        for (const v of billingVarsSet(route.name, env)) out.push(`${route.name}: ${v} is set, so its CLI may bill the API instead of the subscription`);
     }
     if (paid === 0) out.push('no paid seat: the paid arm would be absent');
     if (free === 0) out.push('no unpaid route: there is nothing to shadow');
@@ -159,6 +183,16 @@ export interface RunRow {
     readonly free_verdict: VerifyVerdict | null;
     readonly free_outcome: string | null;
     readonly paid_outcome: string | null;
+    /** Position and timestamp of this call's row in the production shadow ledger; null when none was written. */
+    readonly shadow_index: number | null;
+    readonly shadow_ts: string | null;
+}
+
+/** An `--ac3-demo` call: it reaches the free route, so the window's pacing counts it. */
+export interface DemoRow {
+    readonly type: 'demo';
+    readonly id: string;
+    readonly started_at: string;
 }
 
 interface RunHeader {
@@ -200,12 +234,37 @@ function appendJsonl(file: string, row: unknown): void {
     fs.appendFileSync(file, `${JSON.stringify(row)}\n`, 'utf8');
 }
 
-export function readRunLedger(root: string): { header: RunHeader | null; rows: RunRow[] } {
-    const all = readJsonl<RunHeader | RunRow>(path.join(runDir(root), 'run.jsonl'));
+export function readRunLedger(root: string): { header: RunHeader | null; rows: RunRow[]; demos: DemoRow[] } {
+    const all = readJsonl<RunHeader | RunRow | DemoRow>(path.join(runDir(root), 'run.jsonl'));
     return {
         header: (all.find((r) => r.type === 'header') as RunHeader | undefined) ?? null,
         rows: all.filter((r): r is RunRow => r.type === 'call'),
+        demos: all.filter((r): r is DemoRow => r.type === 'demo'),
     };
+}
+
+/** The production shadow rows this run wrote, matched by position and timestamp; rows added by anything else are left out. */
+export function windowShadowRows(root: string): { row: RunRow; shadow: ShadowRow }[] {
+    const production = readShadowLedger(root);
+    const out: { row: RunRow; shadow: ShadowRow }[] = [];
+    for (const row of readRunLedger(root).rows) {
+        if (!row.shadowed || row.shadow_index === null || row.shadow_index === undefined) continue;
+        const shadow = production[row.shadow_index];
+        if (shadow !== undefined && shadow.ts === row.shadow_ts && shadow.kind === row.kind) out.push({ row, shadow });
+    }
+    return out;
+}
+
+/** The streaks a resumed run inherits: rate-limited answers and failed answers of any class, trailing the ledger. */
+export function trailingStreaks(rows: readonly RunRow[]): { rateLimited: number; failed: number; backoffMs: number } {
+    let rateLimited = 0;
+    let failed = 0;
+    for (const r of rows) {
+        if (r.free_outcome === null) continue;
+        rateLimited = r.free_outcome === 'rate_limited' || r.free_outcome === 'quota_exhausted' ? rateLimited + 1 : 0;
+        failed = r.free_outcome === 'ok' ? 0 : failed + 1;
+    }
+    return { rateLimited, failed, backoffMs: rateLimited === 0 ? 0 : BACKOFF_START_MS * 2 ** (rateLimited - 1) };
 }
 
 interface Prepared {
@@ -276,7 +335,7 @@ async function callOnce(
                 trackedFiles,
             },
             ...(flips !== undefined ? { flips } : {}),
-            ...(deps.egress !== undefined ? { egress: deps.egress } : {}),
+            egress: deps.egress ?? corpusEgress(),
         },
     );
     const after = readShadowLedger(deps.root);
@@ -295,14 +354,16 @@ async function callOnce(
         free_verdict: shadow?.free.verified ?? null,
         free_outcome: shadow?.free.outcome ?? null,
         paid_outcome: shadow?.paid.outcome ?? null,
+        shadow_index: shadow !== null ? after.length - 1 : null,
+        shadow_ts: shadow?.ts ?? null,
     };
     return { result, row, shadow };
 }
 
-/** Wait until the next free call may start: the pacing floor plus any back-off. */
-async function pace(deps: HarnessDeps, rows: readonly RunRow[], minIntervalMs: number, backoffMs: number): Promise<void> {
-    const last = rows.reduce((t, r) => Math.max(t, Date.parse(r.started_at)), 0);
-    const wait = Math.max(last === 0 ? 0 : last + minIntervalMs - deps.now().getTime(), backoffMs);
+/** Wait until the next free call may start: the pacing floor or the back-off, whichever is longer, from the last ledgered start. */
+async function pace(deps: HarnessDeps, starts: readonly { started_at: string }[], minIntervalMs: number, backoffMs: number): Promise<void> {
+    const last = starts.reduce((t, r) => Math.max(t, Date.parse(r.started_at)), 0);
+    const wait = last === 0 ? 0 : last + Math.max(minIntervalMs, backoffMs) - deps.now().getTime();
     if (wait > 0) await deps.sleep(wait);
 }
 
@@ -314,6 +375,11 @@ export interface WindowResult {
 
 export async function runWindow(deps: HarnessDeps, opts: WindowOptions = {}): Promise<WindowResult> {
     const kinds = opts.kinds ?? MEASURED_KINDS;
+    const bad = positiveInt('perKind', opts.perKind) ?? positiveInt('maxTotal', opts.maxTotal);
+    if (bad !== null) {
+        deps.log(bad);
+        return { code: 2, calls: 0, stopped: bad };
+    }
     const perKind = opts.perKind ?? PER_KIND;
     const maxTotal = Math.min(opts.maxTotal ?? SHADOW_CALL_CAP, SHADOW_CALL_CAP);
     const minInterval = opts.minIntervalMs ?? MIN_FREE_INTERVAL_MS;
@@ -353,35 +419,33 @@ export async function runWindow(deps: HarnessDeps, opts: WindowOptions = {}): Pr
         appendJsonl(file, header);
     }
     const rows = [...ledger.rows];
-    const done = new Set(rows.map((r) => r.id));
+    const starts: { started_at: string }[] = [...ledger.rows, ...ledger.demos];
+    // Only a ledgered shadow row completes an item; one that wrote none is retried.
+    const done = new Set(rows.filter((r) => r.shadowed).map((r) => r.id));
+    const count = (k?: MeasuredKind): number => rows.filter((r) => r.shadowed && (k === undefined || r.kind === k)).length;
     let calls = 0;
-    let backoff = 0;
-    let streak = 0;
     for (const kind of kinds) {
         for (const item of prep.corpus.items[kind]) {
-            const total = readShadowLedger(deps.root).length;
-            if (total >= maxTotal) return { code: 0, calls, stopped: `window cap ${String(maxTotal)} reached` };
-            if (readShadowLedger(deps.root).filter((r) => r.kind === kind).length >= perKind) break;
+            if (count() >= maxTotal) return { code: 0, calls, stopped: `window cap ${String(maxTotal)} reached` };
+            if (count(kind) >= perKind) break;
             if (done.has(item.id)) continue;
-            await pace(deps, rows, minInterval, backoff);
+            await pace(deps, starts, minInterval, trailingStreaks(rows).backoffMs);
             const out = await callOnce(deps, prep, item, undefined);
             appendJsonl(file, out.row);
             rows.push(out.row);
-            done.add(item.id);
+            starts.push(out.row);
             calls++;
             if (out.shadow === null) {
                 return { code: 1, calls, stopped: `${item.id}: no shadow row was written (free route not admissible, retired or capped); resume later` };
             }
+            done.add(item.id);
             if (out.result === null) return { code: 1, calls, stopped: `${item.id}: the paid arm returned nothing (${String(out.row.paid_outcome)}); resume later` };
             const fo = out.shadow.free.outcome;
             if (fo === 'billing') return { code: 1, calls, stopped: `${item.id}: the free route answered 402, which contradicts its keyless proof` };
-            if (fo === 'rate_limited' || fo === 'quota_exhausted') {
-                streak++;
-                backoff = backoff === 0 ? BACKOFF_START_MS : backoff * 2;
-                if (streak >= BACKOFF_MAX_STREAK) return { code: 1, calls, stopped: `${String(streak)} rate-limited free answers in a row; resume later` };
-            } else {
-                streak = 0;
-                backoff = 0;
+            const st = trailingStreaks(rows);
+            if (st.rateLimited >= BACKOFF_MAX_STREAK) return { code: 1, calls, stopped: `${String(st.rateLimited)} rate-limited free answers in a row; resume later` };
+            if (st.failed >= FREE_FAILURE_STREAK_MAX) {
+                return { code: 1, calls, stopped: `${String(st.failed)} failed free answers in a row (last: ${fo}); the free route looks dead, resume later` };
             }
             deps.log(`${item.id}: paid ${String(out.row.paid_verdict)} · free ${String(out.row.free_verdict)} (${fo})`);
         }
@@ -398,9 +462,12 @@ export async function ac3Demo(deps: HarnessDeps, opts: Pick<WindowOptions, 'minI
     }
     const item = prep.corpus.items.classify[0];
     if (item === undefined) return { code: 2, calls: 0, stopped: 'empty classify corpus' };
-    await pace(deps, readRunLedger(deps.root).rows, opts.minIntervalMs ?? MIN_FREE_INTERVAL_MS, 0);
+    const ledger = readRunLedger(deps.root);
+    await pace(deps, [...ledger.rows, ...ledger.demos], opts.minIntervalMs ?? MIN_FREE_INTERVAL_MS, trailingStreaks(ledger.rows).backoffMs);
     const auditDir = deps.auditDir ?? path.join(deps.root, DEFAULT_DIR);
     const out = await callOnce(deps, prep, item, (k) => k === 'classify');
+    const demo: DemoRow = { type: 'demo', id: item.id, started_at: out.row.started_at };
+    appendJsonl(path.join(runDir(deps.root), 'run.jsonl'), demo);
     const r = out.result;
     const verdict = r === null ? 'fail' : verifyAnswer('classify', item.truth, r.parsed);
     const servedFree = r !== null && r.route_billing !== undefined && isUnpaid(r.route_billing);
@@ -453,9 +520,14 @@ export function parseAuditAnswer(raw: string | null): boolean | null {
     return m === null ? null : m[1] === 'true';
 }
 
-/** The blind head: `claude -p` from an empty directory, project and local settings only, vendor billing variables removed. */
+/**
+ * The blind head: `claude -p` from an empty directory, project and local settings
+ * only. It refuses (null, nothing spawned) while a billing variable is set, and
+ * still strips them from the child's environment.
+ */
 export function claudeHead(model: string, env: NodeJS.ProcessEnv = process.env): (prompt: string) => string | null {
     return (prompt) => {
+        if (headRefusals(env).length > 0) return null;
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fhs-audit-'));
         try {
             const clean: NodeJS.ProcessEnv = { ...env };
@@ -473,8 +545,31 @@ export function claudeHead(model: string, env: NodeJS.ProcessEnv = process.env):
     };
 }
 
+const auditKey = (a: { id: string; side: 'paid' | 'free' }): string => `${a.id}#${a.side}`;
+
+/** The audit rows of this run's shadowed ids, one per question: an answered row wins over an unanswered one. */
+export function readAudit(root: string): AuditRow[] {
+    const ids = new Set(readRunLedger(root).rows.filter((r) => r.shadowed).map((r) => r.id));
+    const by = new Map<string, AuditRow>();
+    for (const a of readJsonl<AuditRow>(path.join(runDir(root), 'audit.jsonl'))) {
+        if (!ids.has(a.id)) continue;
+        const prev = by.get(auditKey(a));
+        if (prev === undefined || (prev.head === null && a.head !== null)) by.set(auditKey(a), a);
+    }
+    return [...by.values()];
+}
+
+/** Audits the sample once: a question with an answered row is never asked again, so a rerun neither re-bills nor double-counts. */
 export async function runAudit(deps: HarnessDeps, model = 'haiku'): Promise<AuditRow[]> {
-    const { rows } = readRunLedger(deps.root);
+    if (deps.askHead === undefined) {
+        const refused = headRefusals(deps.env);
+        if (refused.length > 0) {
+            deps.log(`refusing to audit — ${refused.join('; ')}`);
+            return [];
+        }
+    }
+    const answered = new Set(readAudit(deps.root).filter((a) => a.head !== null).map(auditKey));
+    const rows = windowShadowRows(deps.root).map((x) => x.row);
     const corpus = deps.corpus?.() ?? buildCorpus(deps.root, { linking: projectLinkingIdentifiers(deps.root) });
     const specs = new Map([...corpus.items.classify, ...corpus.items.extract].map((i) => [i.id, i.spec]));
     const ask = deps.askHead ?? claudeHead(model, deps.env);
@@ -489,6 +584,7 @@ export async function runAudit(deps: HarnessDeps, model = 'haiku'): Promise<Audi
     const out: AuditRow[] = [];
     const file = path.join(runDir(deps.root), 'audit.jsonl');
     for (const q of seededShuffle(questions, AUDIT_SEED, (x) => `${x.row.id}#${x.side}`)) {
+        if (answered.has(auditKey({ id: q.row.id, side: q.side }))) continue;
         const answer = q.side === 'paid' ? q.row.paid_answer : q.row.free_answer;
         const spec = specs.get(q.row.id);
         const deterministic = q.side === 'paid' ? q.row.paid_verdict : q.row.free_verdict;
@@ -518,9 +614,9 @@ interface KindReport {
 }
 
 export function buildReport(deps: Pick<HarnessDeps, 'root'>, corpus: Corpus | null): { kinds: KindReport[]; markdown: string; inconsistencies: Corpus['inconsistencies'] } {
-    const shadow = readShadowLedger(deps.root);
+    const shadow = windowShadowRows(deps.root).map((x) => x.shadow);
     const stats = shadowReport(shadow);
-    const audit = readJsonl<AuditRow>(path.join(runDir(deps.root), 'audit.jsonl'));
+    const audit = readAudit(deps.root);
     const kinds: KindReport[] = MEASURED_KINDS.map((kind) => {
         const rs = shadow.filter((r) => r.kind === kind);
         const n = rs.length;
@@ -649,12 +745,20 @@ export async function main(argv: readonly string[]): Promise<number> {
     const deps = await _productionDeps(root);
     const fp = flag(argv, '--first-party-list');
     const d: HarnessDeps = fp !== undefined ? { ...deps, firstPartyList: fp } : deps;
+    const num = (name: string): number | undefined => {
+        const v = flag(argv, name);
+        return v === undefined ? undefined : /^\d+$/.test(v) ? Number(v) : Number.NaN;
+    };
+    const perKind = num('--per-kind');
+    const maxTotal = num('--max-total');
+    const bad = positiveInt('--per-kind', perKind) ?? positiveInt('--max-total', maxTotal);
+    if (bad !== null) {
+        process.stderr.write(`run.ts: ${bad}\n`);
+        return 2;
+    }
     const res = argv.includes('--ac3-demo')
         ? await ac3Demo(d)
-        : await runWindow(d, {
-              ...(flag(argv, '--per-kind') !== undefined ? { perKind: Number(flag(argv, '--per-kind')) } : {}),
-              ...(flag(argv, '--max-total') !== undefined ? { maxTotal: Number(flag(argv, '--max-total')) } : {}),
-          });
+        : await runWindow(d, { ...(perKind !== undefined ? { perKind } : {}), ...(maxTotal !== undefined ? { maxTotal } : {}) });
     process.stdout.write(`stopped: ${res.stopped} (${String(res.calls)} calls)\n`);
     return res.code;
 }

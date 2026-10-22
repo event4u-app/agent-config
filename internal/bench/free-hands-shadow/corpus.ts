@@ -69,10 +69,31 @@ export interface Frontmatter {
     readonly body: string;
 }
 
-function unquote(v: string): string {
-    const t = v.trim();
-    if (t.length >= 2 && ((t.startsWith('"') && t.endsWith('"')) || (t.startsWith("'") && t.endsWith("'")))) return t.slice(1, -1);
-    return t;
+/**
+ * A plain or quoted YAML scalar with its trailing comment dropped. A quoted value
+ * is read up to its closing quote first, so a `#` inside the quotes is kept; one
+ * layer of quotes is removed and nothing is unescaped.
+ */
+export function scalarValue(raw: string): string {
+    const t = raw.trim();
+    const q = t[0];
+    if (q === '"' || q === "'") {
+        for (let i = 1; i < t.length; i++) {
+            if (q === '"' && t[i] === '\\') {
+                i++;
+                continue;
+            }
+            if (t[i] !== q) continue;
+            if (q === "'" && t[i + 1] === "'") {
+                i++;
+                continue;
+            }
+            const rest = t.slice(i + 1).trim();
+            if (rest === '' || rest.startsWith('#')) return t.slice(1, i);
+            break;
+        }
+    }
+    return t.replace(/(^|\s)#.*$/, '').trim();
 }
 
 /** The leading `---` block and its top-level scalar fields; nested and list values are skipped. */
@@ -86,7 +107,7 @@ export function frontmatterOf(text: string): Frontmatter {
         const m = /^([A-Za-z_][\w-]*):[ \t]*(\S.*)?$/.exec(l);
         if (m === null || m[2] === undefined) continue;
         if (/^[|>[{]/.test(m[2])) continue;
-        fields[m[1] as string] = unquote(m[2].replace(/\s+#.*$/, ''));
+        fields[m[1] as string] = scalarValue(m[2]);
     }
     return { block: lines.slice(0, end + 1).join('\n'), fields, body: lines.slice(end + 1).join('\n') };
 }
@@ -125,10 +146,15 @@ export interface CorpusItem {
     readonly spec: string;
 }
 
+/** The identifier-protecting placeholder scope; the corpus filter and the run both use it. */
+export function corpusEgress(): CouncilEgress {
+    return new CouncilEgress({ identifiers: true });
+}
+
 /** True when the production payload builder leaves `needle` byte-identical in the payload. */
 export function survivesPayload(kind: MeasuredKind, spec: string, needle: string, linking: readonly LinkingIdentifier[]): boolean {
     try {
-        const p = buildHandPayload({ kind, spec, linking }, new CouncilEgress({ identifiers: true }));
+        const p = buildHandPayload({ kind, spec, linking }, corpusEgress());
         return p.user.includes(needle);
     } catch {
         return false;

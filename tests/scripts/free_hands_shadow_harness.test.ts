@@ -22,13 +22,17 @@ import {
     buildCorpus,
     classifySpec,
     extractSpec,
+    frontmatterOf,
     inconsistencyOf,
     type Corpus,
     type CorpusItem,
 } from '../../internal/bench/free-hands-shadow/corpus.js';
 import {
     ac3Demo,
+    BACKOFF_START_MS,
     buildReport,
+    claudeHead,
+    FREE_FAILURE_STREAK_MAX,
     readRunLedger,
     runAudit,
     runWindow,
@@ -42,6 +46,7 @@ const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const STUB = `
 const http = require('node:http');
 const stats = { free: 0, paid: 0, models: 0 };
+let freeFail = { code: 0, n: 0 };
 const label = (p) => p.startsWith('src/skills/') ? 'skill' : p.startsWith('src/rules/') ? 'rule' : 'script';
 function answer(system, user, side) {
   if (system.includes('"classify"')) {
@@ -59,9 +64,15 @@ http.createServer((req, res) => {
     if (req.method === 'GET' && req.url === '/v1/models') { stats.models++; return send(200, { data: [{ id: 'stub-free' }, { id: 'community-x' }] }); }
     if (req.method === 'GET' && req.url === '/first-party') return send(200, [{ name: 'stub-free', community: false }, { name: 'community-x', community: true }]);
     if (req.method === 'GET' && req.url === '/stats') return send(200, stats);
+    if (req.method === 'GET' && req.url.startsWith('/set?')) {
+      const q = new URL(req.url, 'http://stub').searchParams;
+      freeFail = { code: Number(q.get('code')), n: Number(q.get('n')) };
+      return send(200, {});
+    }
     const side = req.url === '/v1/chat/completions' ? 'free' : req.url === '/paid/chat/completions' ? 'paid' : null;
     if (side === null) return send(404, {});
     stats[side]++;
+    if (side === 'free' && freeFail.n > 0) { freeFail.n--; return send(freeFail.code, { error: { message: 'stub failure' } }); }
     const b = JSON.parse(body);
     send(200, { model: b.model, choices: [{ message: { content: answer(b.messages[0].content, b.messages[1].content, side) } }], usage: { prompt_tokens: 20, completion_tokens: 5 } });
   });
@@ -85,11 +96,17 @@ afterAll(() => {
 beforeEach(() => {
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fhs-run-'));
 });
-afterEach(() => {
+afterEach(async () => {
     fs.rmSync(tmp, { recursive: true, force: true });
+    await failFree(0, 0);
 });
 
 const base = (): string => `http://127.0.0.1:${String(port)}`;
+
+/** The next `n` free completions answer HTTP `code`. */
+async function failFree(code: number, n: number): Promise<void> {
+    await fetch(`${base()}/set?code=${String(code)}&n=${String(n)}`);
+}
 
 async function stats(): Promise<{ free: number; paid: number; models: number }> {
     return (await (await fetch(`${base()}/stats`)).json()) as { free: number; paid: number; models: number };
@@ -133,8 +150,9 @@ function item(kind: 'classify' | 'extract', p: string, content: string, truth: s
     return { id: `${kind}:${p}`, kind, path: p, truth, spec: kind === 'classify' ? classifySpec(p, content) : extractSpec(content) };
 }
 
-function corpus(): Corpus {
+function corpus(extraClassify = 0): Corpus {
     const skill = (n: string): string => `---\nname: ${n}\ndescription: x\n---\n# ${n}\n`;
+    const extra = Array.from({ length: extraClassify }, (_, i) => item('classify', `src/scripts/extra${String(i)}.ts`, 'export const x = 1;\n', 'script'));
     return {
         ref: 'test',
         digest: 'd1',
@@ -144,6 +162,7 @@ function corpus(): Corpus {
                 item('classify', 'src/skills/alpha/SKILL.md', skill('alpha'), 'skill'),
                 item('classify', 'src/rules/beta.md', '---\ntype: auto\n---\n', 'rule'),
                 item('classify', 'src/scripts/gamma.ts', 'export const g = 1;\n', 'script'),
+                ...extra,
             ],
             extract: ['delta', 'epsilon', 'zeta'].map((n) => item('extract', `src/skills/${n}/SKILL.md`, skill(n), n)),
         },
@@ -212,6 +231,126 @@ describe('the frozen corpus', () => {
         expect(inconsistencyOf('src/rules/r.md', 'rule', '---\ntype: sometimes\n---\n')).toMatch(/always\|auto\|manual/);
         expect(inconsistencyOf('docs/decisions/ADR-012-x.md', 'adr', '---\nadr: 013\nstatus: accepted\n---\n')).toMatch(/filename number/);
         expect(inconsistencyOf('src/skills/a/SKILL.md', 'skill', '---\nname: a\ndescription: x\n---\n')).toBeNull();
+    });
+
+    it('a quoted scalar keeps a `#` inside its quotes; a comment after it or after a plain scalar is dropped', () => {
+        const f = (v: string): string | undefined => frontmatterOf(`---\nname: ${v}\n---\n`).fields['name'];
+        expect(f('"a #b"')).toBe('a #b');
+        expect(f("'a #b' # note")).toBe('a #b');
+        expect(f('"x" # note')).toBe('x');
+        expect(f('plain # note')).toBe('plain');
+        expect(f('a#b')).toBe('a#b');
+    });
+});
+
+describe('the window stops, backs off and resumes from its own ledger', () => {
+    const shadowRows = (): number => readShadowLedger(tmp).length;
+
+    it('a 402 from the free route stops the run at once, with the row ledgered', async () => {
+        await failFree(402, 1);
+        const res = await runWindow(deps(), { perKind: 3, kinds: ['classify'], minIntervalMs: 0 });
+        expect(res.code).toBe(1);
+        expect(res.calls).toBe(1);
+        expect(res.stopped).toMatch(/402/);
+        expect(readShadowLedger(tmp)[0]!.free.outcome).toBe('billing');
+    });
+
+    it('a 429 doubles the wait from 120 s; four in a row stop the run', async () => {
+        await failFree(429, 2);
+        const clock: Clock = { t: Date.parse('2026-10-22T10:00:00Z'), sleeps: [] };
+        const res = await runWindow(deps({}, clock), { perKind: 3, kinds: ['classify'], minIntervalMs: 0 });
+        expect(res.code).toBe(0);
+        expect(clock.sleeps).toEqual([BACKOFF_START_MS, 2 * BACKOFF_START_MS]);
+        fs.rmSync(tmp, { recursive: true, force: true });
+        fs.mkdirSync(tmp);
+        await failFree(429, 10);
+        const stop = await runWindow(deps({ corpus: () => corpus(6) }), { perKind: 9, kinds: ['classify'], minIntervalMs: 0 });
+        expect(stop.code).toBe(1);
+        expect(stop.calls).toBe(4);
+        expect(stop.stopped).toMatch(/4 rate-limited/);
+    });
+
+    it('the back-off survives a restart: the next run waits it out from the last ledgered start', async () => {
+        await failFree(429, 1);
+        const clock: Clock = { t: Date.parse('2026-10-22T10:00:00Z'), sleeps: [] };
+        await runWindow(deps({}, clock), { perKind: 1, kinds: ['classify'], minIntervalMs: 0 });
+        expect(clock.sleeps).toEqual([]);
+        clock.t += 20_000;
+        await runWindow(deps({}, clock), { perKind: 2, kinds: ['classify'], minIntervalMs: 0 });
+        expect(clock.sleeps).toEqual([BACKOFF_START_MS - 20_000]);
+    });
+
+    it(`${String(10)} failed free answers in a row (any class) stop the run, and a restart only probes once`, async () => {
+        expect(FREE_FAILURE_STREAK_MAX).toBe(10);
+        await failFree(500, 100);
+        const before = await stats();
+        const res = await runWindow(deps({ corpus: () => corpus(12) }), { perKind: 15, kinds: ['classify'], minIntervalMs: 0 });
+        expect(res.code).toBe(1);
+        expect(res.calls).toBe(FREE_FAILURE_STREAK_MAX);
+        expect(res.stopped).toMatch(/failed free answers in a row/);
+        const again = await runWindow(deps({ corpus: () => corpus(12) }), { perKind: 15, kinds: ['classify'], minIntervalMs: 0 });
+        expect(again.calls).toBe(1);
+        expect(again.code).toBe(1);
+        expect((await stats()).paid - before.paid).toBe(FREE_FAILURE_STREAK_MAX + 1);
+    });
+
+    it('pacing holds across restarts and counts the --ac3-demo call', async () => {
+        const clock: Clock = { t: Date.parse('2026-10-22T10:00:00Z'), sleeps: [] };
+        await ac3Demo(deps({}, clock), { minIntervalMs: 31_000 });
+        await runWindow(deps({}, clock), { perKind: 1, kinds: ['classify'] });
+        expect(clock.sleeps).toEqual([31_000]);
+        clock.t += 1_000;
+        await runWindow(deps({}, clock), { perKind: 2, kinds: ['classify'] });
+        expect(clock.sleeps).toEqual([31_000, 30_000]);
+    });
+
+    it('refuses a production ledger carrying rows this run did not write', async () => {
+        await runWindow(deps(), { perKind: 1, kinds: ['classify'], minIntervalMs: 0 });
+        const file = path.join(tmp, 'agents/runtime/state/free-hand-shadow.jsonl');
+        fs.appendFileSync(file, fs.readFileSync(file, 'utf8'), 'utf8');
+        const before = await stats();
+        const res = await runWindow(deps(), { perKind: 3, kinds: ['classify'], minIntervalMs: 0 });
+        expect(res.code).toBe(2);
+        expect(res.stopped).toMatch(/foreign shadow rows/);
+        expect((await stats()).paid - before.paid).toBe(0);
+    });
+
+    it('an item that wrote no shadow row is retried on resume, so a kind can still reach its cap', async () => {
+        const first = await runWindow(deps({ trackedFiles: 1 }), { perKind: 3, kinds: ['classify'], minIntervalMs: 0 });
+        expect(first.code).toBe(1);
+        expect(first.stopped).toMatch(/no shadow row/);
+        expect(shadowRows()).toBe(0);
+        const again = await runWindow(deps(), { perKind: 3, kinds: ['classify'], minIntervalMs: 0 });
+        expect(again.code).toBe(0);
+        expect(shadowRows()).toBe(3);
+        expect(new Set(readShadowLedger(tmp).map((r) => r.kind))).toEqual(new Set(['classify']));
+    });
+
+    it('rejects a cap that is not a positive integer instead of running uncapped', async () => {
+        const before = await stats();
+        for (const o of [{ maxTotal: Number('abc') }, { perKind: 0 }, { maxTotal: -1 }, { perKind: 2.5 }]) {
+            const res = await runWindow(deps(), { ...o, minIntervalMs: 0 });
+            expect(res.code).toBe(2);
+            expect(res.stopped).toMatch(/positive integer/);
+        }
+        expect((await stats()).paid - before.paid).toBe(0);
+    });
+
+    it('the report reads only the rows this run ledgered, and a rerun of the audit neither re-asks nor double-counts', async () => {
+        await runWindow(deps(), { perKind: 3, minIntervalMs: 0 });
+        const file = path.join(tmp, 'agents/runtime/state/free-hand-shadow.jsonl');
+        const organic = JSON.parse(fs.readFileSync(file, 'utf8').split('\n')[0]!) as Record<string, unknown>;
+        fs.appendFileSync(file, `${JSON.stringify({ ...organic, ts: '2026-11-01T00:00:00.000Z' })}\n`, 'utf8');
+        expect(buildReport({ root: tmp }, corpus()).kinds.find((k) => k.kind === 'classify')!.calls).toBe(3);
+        let asked = 0;
+        const head = (): string => (asked++, '{"correct": true}');
+        await runAudit(deps({ askHead: head }));
+        expect(asked).toBe(4);
+        const second = await runAudit(deps({ askHead: head }));
+        expect(asked).toBe(4);
+        expect(second).toHaveLength(0);
+        const ext = buildReport({ root: tmp }, corpus()).kinds.find((k) => k.kind === 'extract')!;
+        expect(ext.audit.questions).toBe(2);
     });
 });
 
@@ -309,6 +448,10 @@ describe('the paid arm is subscription-only', () => {
         expect(subscriptionRefusals([paidSeat(), free()], {})).toEqual([]);
         expect(subscriptionRefusals([paidSeat({ transport: 'api', billable: true }), free()], {})[0]).toMatch(/not a subscription CLI/);
         expect(subscriptionRefusals([paidSeat(), free()], { ANTHROPIC_API_KEY: 'k' })[0]).toMatch(/ANTHROPIC_API_KEY is set/);
+        for (const v of ['ANTHROPIC_BASE_URL', 'CLAUDE_CODE_USE_FOUNDRY', 'ANTHROPIC_FOUNDRY_API_KEY']) {
+            expect(subscriptionRefusals([paidSeat(), free()], { [v]: '1' }).join(' ')).toContain(`${v} is set`);
+        }
+        expect(subscriptionRefusals([paidSeat({ name: 'openai' }), free()], { OPENAI_BASE_URL: 'http://x' }).join(' ')).toContain('OPENAI_BASE_URL is set');
         const metered = { ...free(), billing: 'per-token', billable: true } as unknown as ExternalAIClient;
         expect(subscriptionRefusals([paidSeat(), metered], {}).join(' ')).toMatch(/no unpaid route/);
     });
@@ -321,6 +464,22 @@ describe('the paid arm is subscription-only', () => {
         const after = await stats();
         expect([after.paid - before.paid, after.free - before.free]).toEqual([0, 0]);
         expect(readShadowLedger(tmp)).toHaveLength(0);
+    });
+
+    it('the audit head refuses to run, and spawns nothing, when a billing variable is set', async () => {
+        const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'fhs-bin-'));
+        const marker = path.join(bin, 'spawned');
+        fs.writeFileSync(path.join(bin, 'claude'), `#!/bin/sh\n/usr/bin/touch ${marker}\necho '{"correct": true}'\n`, { mode: 0o755 });
+        try {
+            for (const v of ['ANTHROPIC_API_KEY', 'ANTHROPIC_BASE_URL', 'CLAUDE_CODE_USE_FOUNDRY']) {
+                expect(claudeHead('haiku', { PATH: bin, [v]: '1' })('q')).toBeNull();
+            }
+            expect(fs.existsSync(marker)).toBe(false);
+            expect(claudeHead('haiku', { PATH: bin })('q')).toContain('"correct": true');
+            expect(fs.existsSync(marker)).toBe(true);
+        } finally {
+            fs.rmSync(bin, { recursive: true, force: true });
+        }
     });
 
     it('the documented run-local config parses; its `mode: cli` is an ignored key, the hands route is free-quota', () => {
