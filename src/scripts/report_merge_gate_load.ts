@@ -14,9 +14,10 @@
  *
  * Two properties are the point:
  *
- *   - **Reproducible.** The output names the resolved pin, the window and the
- *     command, and carries no wall-clock time, so a re-run at the same pin and
- *     timestamp is byte-identical. Days are cut in the offset `--since` names.
+ *   - **Reproducible.** The output names the resolved pin, the window, the
+ *     command and the classifier's revision, and carries no wall-clock time, so
+ *     a re-run at the same pin, timestamp and classifier revision is
+ *     byte-identical. Days are cut in the offset `--since` names.
  *   - **Counts and names only.** It reads commit ids, subjects and paths, and
  *     the clearance records' derived fields; never a prompt or a reply.
  *
@@ -62,6 +63,19 @@ export interface ClearanceTally {
 function git(root: string, args: readonly string[]): { ok: boolean; out: string } {
     const r = spawnSync('git', ['-C', root, ...args], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
     return { ok: r.status === 0, out: typeof r.stdout === 'string' ? r.stdout : '' };
+}
+
+/**
+ * The revision of the checkout the classifier runs from — its path sets are
+ * module code, not read at `--pin` — marked `-dirty` when its source differs.
+ */
+export function classifierRevision(): string {
+    const file = fileURLToPath(new URL('./classify_merge_risk.ts', import.meta.url));
+    const dir = path.dirname(file);
+    const head = git(dir, ['rev-parse', 'HEAD']);
+    if (!head.ok) return 'unknown';
+    const dirty = git(dir, ['status', '--porcelain', '--', file]).out.trim() !== '';
+    return `${head.out.trim()}${dirty ? '-dirty' : ''}`;
 }
 
 /** `+02:00` → 120; `Z` or no offset → 0. */
@@ -137,8 +151,9 @@ export function render(opts: {
     clearances: ClearanceTally;
     named: readonly string[];
     command: string;
+    classifier: string;
 }): string {
-    const { pin, since, rows, clearances, named, command } = opts;
+    const { pin, since, rows, clearances, named, command, classifier } = opts;
     const verdicts: Verdict[] = ['routine', 'needs-council', 'needs-owner'];
     const byVerdict = new Map(verdicts.map((v) => [v, rows.filter((r) => r.verdict === v).length]));
     const byTrigger = new Map<string, number>();
@@ -159,7 +174,8 @@ export function render(opts: {
         command,
         '```',
         '',
-        'A re-run of that command at the same pin and timestamp is byte-identical.',
+        `Classifier revision \`${classifier}\`. A re-run of that command at the same pin, timestamp`,
+        'and classifier revision is byte-identical.',
         '',
         '**Caveat.** The classifier is this checkout\'s, so its path sets are applied to',
         'the whole window: a commit from before a trigger existed is classed as if it',
@@ -252,7 +268,7 @@ export function main(argv: readonly string[] = process.argv.slice(2), write: (l:
     const command =
         `./scripts-run src/scripts/report_merge_gate_load --pin ${pin} --since ${since}` +
         (namedArg.length > 0 ? namedArg.map((n) => ` --named ${n}`).join('') : '');
-    const body = render({ pin, since, rows, clearances: tallyClearances(root, pin), named, command });
+    const body = render({ pin, since, rows, clearances: tallyClearances(root, pin), named, command, classifier: classifierRevision() });
     if (argv.includes('--stdout')) {
         process.stdout.write(body);
         return 0;
