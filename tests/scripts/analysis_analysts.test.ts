@@ -215,12 +215,21 @@ describe('cli analysts (step 2.4b)', () => {
         expect(() => cli('someone')).toThrow(AnalystError);
     });
 
-    it('builds the analyst argv from the read-only analyst profile, not the seat bound', () => {
-        const cmd = cliAnalystCommand('anthropic');
-        expect(cmd.binary).toBe('claude');
-        expect(cmd.argv).toEqual(analystBoundFor('anthropic'));
-        expect(cmd.argv).not.toEqual(boundFor('anthropic'));
-        expect(cmd.promptVia).toBe('stdin');
+    it('the analyst profile is its own bound, not the seat bound', () => {
+        const profile = ANALYST_BOUNDS.find((b) => b.member === 'anthropic');
+        expect(profile?.binary).toBe('claude');
+        expect(profile?.bound).not.toEqual(boundFor('anthropic'));
+        expect(profile?.prompt_via).toBe('stdin');
+    });
+
+    it('refuses every cli analyst whose profile was never shown to confine reads to the scope', () => {
+        // Finding 982b1b914b50: write-blocking bounds still read absolute paths
+        // (credentials, other projects) and send the result to a provider.
+        for (const member of ['anthropic', 'openai']) {
+            expect(() => cliAnalystCommand(member)).toThrow(/not read-confined/);
+            expect(analystBoundFor(member)).toEqual([]);
+        }
+        expect(ANALYST_BOUNDS.filter((b) => b.reads_confined)).toEqual([]);
     });
 
     it('refuses a member whose analyst profile was never probed or failed its probe', () => {
