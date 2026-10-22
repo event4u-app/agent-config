@@ -60,6 +60,13 @@ import { councilEgress, type CouncilEgress } from './ai_council/council_egress.j
 import { buildHandPayload, projectLinkingIdentifiers, type HandSlice } from './ai_council/hand_payload.js';
 import { handSystemPrompt, parseHandReturn } from './ai_council/hand_schemas.js';
 import { chooseRoute, routeCandidateFromMember } from './ai_council/route_chooser.js';
+import {
+    EXPOSURE_LEDGER_RELPATH,
+    ExposureLedger,
+    exposureShareFn,
+    trackedFileCount,
+    type Exposure,
+} from './ai_council/exposure_ledger.js';
 import { isHandKind, type HandKind, type RouteBilling, type VerifyVerdict } from './_lib/hand_kinds.js';
 import { buildOrchestrationLine } from './_lib/orchestration_record.js';
 import { DEFAULT_DIR } from './orchestration_record.js';
@@ -106,6 +113,8 @@ export interface AskOptions {
     contentClass?: ContentClass;
     /** A typed hand call: the kind's schema is the whole system prompt and the return must match it. */
     kind?: HandKind;
+    /** What this call shows of the project, the ledger it is counted in, and the tracked-file denominator. */
+    exposure?: { ledger: ExposureLedger; exposes: Exposure; trackedFiles: number | null };
 }
 
 interface LineExtras {
@@ -194,6 +203,9 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
         kind: opts.kind ?? null,
         contentClass: opts.contentClass ?? DEFAULT_CONTENT_CLASS,
         candidates: pool.map((r) => r.route),
+        ...(opts.exposure !== undefined
+            ? { exposureShare: exposureShareFn(opts.exposure.ledger, opts.exposure.exposes, opts.exposure.trackedFiles) }
+            : {}),
     });
     const pick = choice.route === null ? undefined : pool.find((r) => r.route === choice.route)?.member;
     if (pick === undefined) {
@@ -201,6 +213,7 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
     }
     const provider = choice.route!.name;
     const billing = choice.route!.billing;
+    opts.exposure?.ledger.record(provider, opts.exposure.exposes);
 
     const system = opts.kind !== undefined ? handSystemPrompt(opts.kind) : (opts.systemPrompt ?? DEFAULT_SYSTEM);
     try {
@@ -287,6 +300,13 @@ export async function askHand(slice: HandSlice, opts: AskHandOptions = {}): Prom
     return askOnce(payload.user, { ...rest, kind: slice.kind });
 }
 
+/** The declared name of a callee, for the ledger's symbol count. */
+function calleeName(source: string): string[] {
+    const m = /\b(?:function|def|class)\s+([A-Za-z_$][\w$]*)|\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=/.exec(source);
+    const name = m?.[1] ?? m?.[2];
+    return name === undefined ? [] : [name];
+}
+
 /** Test seam: inject members instead of reading the council configuration. */
 export interface MainDeps {
     members?: ExternalAIClient[];
@@ -348,9 +368,21 @@ export async function main(argv: readonly string[], deps: MainDeps = {}): Promis
             return 2;
         }
         const { kind, systemPrompt: _unused, ...rest } = opts;
+        const root = process.cwd();
+        const exposes: Exposure = {
+            files: calleeFiles.map((f) => path.relative(root, path.resolve(f))),
+            symbols: callees.flatMap((c) => calleeName(c)),
+        };
         result = await askHand(
-            { kind, spec: prompt, callees, linking: projectLinkingIdentifiers(process.cwd()) },
-            rest,
+            { kind, spec: prompt, callees, linking: projectLinkingIdentifiers(root) },
+            {
+                ...rest,
+                exposure: {
+                    ledger: ExposureLedger.load(path.join(root, EXPOSURE_LEDGER_RELPATH)),
+                    exposes,
+                    trackedFiles: trackedFileCount(root),
+                },
+            },
         );
     } else {
         result = await askOnce(prompt, opts);

@@ -9,6 +9,7 @@
  */
 
 import type { ExternalAIClient } from './clients.js';
+import { EXPOSURE_SHARE_CAP } from './exposure_ledger.js';
 import { admitsContent, classifyContentClass, DEFAULT_SEAT_CEILING, type ContentClass } from './content_ceiling.js';
 import {
     isHeadOnlyKind,
@@ -31,7 +32,13 @@ export interface RouteCandidate {
     readonly live: boolean;
 }
 
-export type RouteRefusalReason = 'not-live' | 'quota-exhausted' | 'content-ceiling' | 'untyped-call';
+export type RouteRefusalReason =
+    | 'not-live'
+    | 'quota-exhausted'
+    | 'content-ceiling'
+    | 'untyped-call'
+    | 'exposure-cap'
+    | 'exposure-unknown';
 
 export interface RouteRefusal {
     readonly name: string;
@@ -42,6 +49,13 @@ export interface ChooseInput {
     readonly kind: HandKind | HeadOnlyKind | null;
     readonly contentClass: ContentClass;
     readonly candidates: readonly RouteCandidate[];
+    /**
+     * Each route's share of tracked files after this call; null when the share
+     * cannot be computed. Absent means exposure is not tracked for this call.
+     */
+    readonly exposureShare?: (route: string) => number | null;
+    /** Default {@link EXPOSURE_SHARE_CAP}. */
+    readonly exposureCap?: number;
 }
 
 export type RouteChoice =
@@ -53,6 +67,13 @@ function refusalOf(c: RouteCandidate, input: ChooseInput): RouteRefusalReason | 
     if (c.remainingQuota !== null && c.remainingQuota <= 0) return 'quota-exhausted';
     if (!admitsContent(c.ceiling, input.contentClass).admitted) return 'content-ceiling';
     if (isUnpaid(c.billing) && input.kind === null) return 'untyped-call';
+    if (input.exposureShare !== undefined) {
+        const share = input.exposureShare(c.name);
+        // Unknown exposure fails closed for an unpaid route only; a paid route
+        // stays usable so an untracked project still has a fallback.
+        if (share === null) return isUnpaid(c.billing) ? 'exposure-unknown' : null;
+        if (share > (input.exposureCap ?? EXPOSURE_SHARE_CAP)) return 'exposure-cap';
+    }
     return null;
 }
 
@@ -73,9 +94,11 @@ export function chooseRoute(input: ChooseInput): RouteChoice {
         if (why === null) admissible.push(c);
         else refused.push({ name: c.name, reason: why });
     }
-    const unpaid = admissible.filter((c) => isUnpaid(c.billing)).sort(byQuota);
+    const share = (c: RouteCandidate): number => input.exposureShare?.(c.name) ?? 0;
+    const order = (a: RouteCandidate, b: RouteCandidate): number => share(a) - share(b) || byQuota(a, b);
+    const unpaid = admissible.filter((c) => isUnpaid(c.billing)).sort(order);
     if (unpaid[0] !== undefined) return { route: unpaid[0], reason: 'unpaid-route', refused };
-    const paid = admissible.filter((c) => !isUnpaid(c.billing)).sort(byQuota);
+    const paid = admissible.filter((c) => !isUnpaid(c.billing)).sort(order);
     if (paid[0] !== undefined) return { route: paid[0], reason: 'paid-fallback', refused };
     return { route: null, reason: 'no-admissible-route', refused };
 }
