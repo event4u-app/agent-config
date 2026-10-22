@@ -151,9 +151,11 @@ unrelated roadmap's S0.1 step; no roadmap follows from it.
   enforcement architecture this package does not have.
 - **Sampling-parameter steering + telemetry-exfiltration differential** —
   self-labelled "expected null" by the draft.
-- **Runtime intensity levels / statusline / mode flag file** — a writable
-  runtime state surface contradicts the machine-checked zero-runtime-daemon
-  posture; the install-time discipline profile already covers the knob.
+- **Runtime intensity levels / statusline / mode flag file** — refused at the
+  time under a no-daemon posture that ADR-249 has since withdrawn, so that
+  reason no longer holds; the item stays cut because the install-time
+  discipline profile already covers the knob, and is re-open-eligible on its
+  own merits.
 - **Host-adapter breadth race** — every extra adapter is standing drift debt;
   demand-driven only.
 - **Product-vertical pilot + adversarial builder/deleter pairing + symmetric

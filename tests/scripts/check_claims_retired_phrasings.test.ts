@@ -221,3 +221,28 @@ describe('check_claims — retires_phrasings shape (Phase 1)', () => {
         expect(r.stderr).toContain('with no resident process');
     });
 });
+
+// road-to-free-hands-a-paid-head-checks 0.2: parked roadmaps and context files
+// kept justifying parked items with the withdrawn claim, because the scan read
+// the publish surfaces only.
+describe('check_claims — a retired phrasing may not be a rationale either', () => {
+    it('RED on a seeded line in a later/ roadmap', () => {
+        write('docs/CLAIMS.md', ledger('- retires_phrasings: zero-runtime-daemon'));
+        write('agents/roadmaps/later/road-to-x.md', '# X\n\nParked: it violates the machine-checked zero-runtime-daemon claim.\n');
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain('agents/roadmaps/later/road-to-x.md');
+    });
+
+    it('RED in stubs/ and settings/contexts/, GREEN in the archive', () => {
+        write('docs/CLAIMS.md', ledger('- retires_phrasings: zero-runtime-daemon'));
+        write('agents/roadmaps/stubs/road-to-y.md', 'refused under the zero-runtime-daemon posture\n');
+        write('agents/settings/contexts/z.md', 'contradicts the zero-runtime-daemon claim\n');
+        write('agents/roadmaps/archive/road-to-old.md', 'history: the zero-runtime-daemon claim held then\n');
+        const r = run();
+        expect(r.code).toBe(2);
+        expect(r.stderr).toContain('agents/roadmaps/stubs/road-to-y.md');
+        expect(r.stderr).toContain('agents/settings/contexts/z.md');
+        expect(r.stderr).not.toContain('archive/road-to-old.md');
+    });
+});

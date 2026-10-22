@@ -117,6 +117,32 @@ const PUBLISH_SURFACES = [
     '.claude-plugin/marketplace.json',
 ];
 
+/**
+ * Trees whose files justify parked or refused work. A retired phrasing there is
+ * a rationale resting on a property the package no longer claims, so it is
+ * read like a publish surface; the archive is history and is not.
+ */
+const RATIONALE_DIRS = ['agents/roadmaps/later', 'agents/roadmaps/stubs', 'agents/settings/contexts'];
+
+function rationaleFiles(): string[] {
+    const out: string[] = [];
+    const walk = (rel: string): void => {
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(path.join(REPO, rel), { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const e of entries) {
+            const child = `${rel}/${e.name}`;
+            if (e.isDirectory()) walk(child);
+            else if (e.isFile() && e.name.endsWith('.md')) out.push(child);
+        }
+    };
+    for (const d of RATIONALE_DIRS) walk(d);
+    return out.sort();
+}
+
 /** The sentinel `retires_phrasings` value for a claim that never left the ledger. */
 const NEVER_PUBLISHED = 'never-published';
 
@@ -825,10 +851,11 @@ function main(argv: string[] = process.argv.slice(2)): number {
             });
         }
     }
+    const scanned = usableNeedles.size > 0 ? [...liveSurfaces, ...rationaleFiles()] : liveSurfaces;
     for (const entry of ledger.values()) {
         const phrasings = usableNeedles.get(entry.id);
         if (phrasings === undefined) continue;
-        for (const rel of liveSurfaces) {
+        for (const rel of scanned) {
             const abs = path.join(REPO, rel);
             const body = fs.readFileSync(abs, 'utf8').toLowerCase();
             for (const ph of phrasings) {
