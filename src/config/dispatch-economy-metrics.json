@@ -42,6 +42,7 @@
         "ask_economy": {
             "definition": "Rung-0.5 substitution and adoption (roadmap Phase 4.4): substitution = ask-routed lines / (ask-routed + rung-1 spawn lines); adoption = ask lines with dispatch_outcome DONE / all ask lines; escalation = the caller's follow-up SPAWN lines carrying route_taken=subagent + escalated=true + origin=dispatch-economy-2026 (the ask line itself cannot know it was insufficient).",
             "source": "Audit-log orchestration lines with route_taken='ask' (written by src/scripts/ask_transport.ts, origin tag dispatch-economy-2026).",
+            "billing_axis": "Added 2026-10-22 (road-to-free-hands-a-paid-head-checks 6.1): every count is also split by the line's route_billing class (a line without one reads as undeclared). paid_tokens_avoided = dispatch_tokens of ask lines served by an unpaid class (free-quota, self-hosted); head_verify_tokens = the verify_tokens those lines carry; net_paid_tokens_avoided = the difference, null when no unpaid route served an ask. Read by claims free-hands-limit-relief and free-hands-quality-held in docs/CLAIMS.md; the escalation_kill below is unchanged.",
             "thresholds": {
                 "escalation_kill": 0.3,
                 "_kill": "if more than 30% of asks over the review window are re-asked or escalated to spawns, the rung's signals tighten or the rung dies — by evidence, in a PR (roadmap 4.4)"

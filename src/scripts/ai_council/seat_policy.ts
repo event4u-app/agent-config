@@ -147,6 +147,8 @@ export type CouncilRole = (typeof COUNCIL_ROLES)[number];
 export const HEAD_ROLES: ReadonlySet<CouncilRole> = new Set<CouncilRole>(['chair', 'synthesis', 'verdict']);
 
 const _PAID_BILLING: ReadonlySet<string> = new Set(['subscription', 'per-token']);
+/** The classes positively known to cost the package nothing per call. */
+export const UNPAID_BILLING_CLASSES: readonly string[] = ['free-quota', 'self-hosted'];
 
 /**
  * True unless the billing class is a paid one. Absent means a seat configured
