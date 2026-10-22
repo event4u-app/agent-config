@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     acquire_lock,
     holder_is_live,
+    lock_dir,
     read_locks,
     release_locks,
     UNRECORDED_HOLDER_MS,
@@ -60,6 +61,24 @@ describe('acquire_lock', () => {
         const got = acquire_lock(root, lock({ session_id: 's2', worktree: '/wt/two' }), dead, { now: NOW });
         expect(got.ok).toBe(true);
         if (got.ok) expect(got.took_over?.worktree).toBe('/wt/one');
+    });
+
+    it('a faster taker of the same dead lock keeps it: the slower one never deletes a fresh lock', () => {
+        acquire_lock(root, lock(), NONE, { now: NOW });
+        const file = path.join(lock_dir(root)!, 'road-to-a.json');
+        const fresh = lock({ session_id: 's3', worktree: '/wt/three' });
+        // The liveness read sits between this taker reading the dead lock and
+        // taking it over; another taker finishes its own takeover right there.
+        class RacingSet extends Set<string> {
+            override has(v: string): boolean {
+                fs.writeFileSync(file, `${JSON.stringify(fresh, null, 2)}\n`);
+                return super.has(v);
+            }
+        }
+        const dead: HolderView = { live: new RacingSet(), known: new Set(['s1']) };
+        const got = acquire_lock(root, lock({ session_id: 's2', worktree: '/wt/two' }), dead, { now: NOW });
+        expect(got.ok).toBe(false);
+        expect(read_locks(root).map((l) => l.session_id)).toEqual(['s3']);
     });
 
     it('keeps one lock per slug, so one session can hold one per lane', () => {
