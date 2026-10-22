@@ -5,6 +5,9 @@
 // per-shape required-check selection). The live `gh run list` path is not
 // golden-differentiated because it requires network + authenticated gh +
 // real CI runs on a branch; the pure functions are the behavioural spec.
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import * as cs from '../../src/scripts/ci_status.js';
@@ -87,4 +90,27 @@ describe('ci_status — JSON-parser path (ports test_ci_status.py)', () => {
         expect(cs.is_phantom(run('x', 'success', 0))).toBe(false);
         expect(cs.is_phantom(run('x', 'cancelled', 0))).toBe(false);
     });
+});
+
+describe('ci_status — shape sets name workflows that exist', () => {
+    const repoRoot = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+    const workflowsDir = path.join(repoRoot, '.github', 'workflows');
+    const workflowNames = new Set(
+        fs
+            .readdirSync(workflowsDir)
+            .filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'))
+            .map((f) => {
+                const text = fs.readFileSync(path.join(workflowsDir, f), 'utf-8');
+                const m = /^name:\s*(.+?)\s*$/m.exec(text);
+                return m ? (m[1] as string).replace(/^['"]|['"]$/g, '') : '';
+            })
+            .filter((n) => n !== ''),
+    );
+
+    for (const [shape, names] of Object.entries(cs.REQUIRED_CHECKS_BY_SHAPE)) {
+        it(`every ${shape} required check is the name: of a workflow`, () => {
+            const missing = [...names].filter((n) => !workflowNames.has(n));
+            expect(missing).toEqual([]);
+        });
+    }
 });

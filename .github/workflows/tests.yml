@@ -1,6 +1,12 @@
 name: Tests
 
 on:
+  # Merge-queue ready, not merge-queue enabled: inert until an admin turns a
+  # queue on (stubs/road-to-main-protection-ruleset-changes). PR-only steps are
+  # already guarded by `github.event_name == 'pull_request'` or an empty
+  # `github.base_ref`, the same path workflow_dispatch takes.
+  merge_group:
+    types: [checks_requested]
   pull_request:
     branches: [main, master]
     paths:
@@ -51,6 +57,52 @@ permissions:
   contents: read
 
 jobs:
+  platform-scope:
+    # Which macOS legs this run requests (council 2026-10-22, decision A,
+    # agents/evidence/council/ci-macos-tier-and-static-diagnostic-2026-10-22.md).
+    # A pull request whose diff cannot reach platform behaviour runs node-tests,
+    # golden and svg-witness on ubuntu only; install, install-aux,
+    # collector-lifecycle and workspace keep their macOS legs regardless. Every
+    # other event, label `ci:macos`, and any diff ci_platform_scope cannot read
+    # or calls platform-sensitive get both OSes. The decision is written to the
+    # job summary so a skipped macOS leg that later fails on `push: main` is
+    # traceable to the PR that skipped it — the escape threshold the council set.
+    name: Platform scope
+    runs-on: ubuntu-latest
+    outputs:
+      os_list: ${{ steps.scope.outputs.os_list }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: '22'
+      - name: Classify the diff
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          LABELED: ${{ contains(github.event.pull_request.labels.*.name, 'ci:macos') }}
+        run: |
+          scope=full
+          if [ "$EVENT" = "pull_request" ] && [ "$LABELED" != "true" ]; then
+            scope="$(node --experimental-strip-types src/scripts/ci_platform_scope.ts --base "origin/$BASE_REF" | sed -n 's/^macos=//p')"
+          fi
+          if [ "$scope" = "tier" ]; then
+            echo 'os_list=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'os_list=["ubuntu-latest","macos-26"]' >> "$GITHUB_OUTPUT"
+          fi
+          {
+            echo "### Platform scope: macOS ${scope}"
+            echo "event=${EVENT} label ci:macos=${LABELED}"
+            if [ "$scope" = "tier" ]; then
+              echo "Skipped on macOS: node-tests ×4, golden, svg-witness (they run on push: main)."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
   install-tests:
     # test_install.sh runs each of 35 tests in its own mktemp dir,
     # invoking install.sh which symlinks hundreds of skill/rule/command
@@ -60,6 +112,13 @@ jobs:
     # runners returns only 3, leaving cycles on the table; with only
     # 9 tests/shard the fs contention that hurt at the un-sharded
     # -P 8 setting is no longer a concern.
+    #
+    # macOS runs it as ONE unsharded job. GitHub-hosted macOS is capped at 5
+    # concurrent jobs and every macOS job in this workflow queues for a slot
+    # (PR #2569: 5.7-33 min); four 1-2 min shards bought four queue entries.
+    # The -P 8 contention note above is the risk this trades against, so the
+    # job's runtime is recorded in docs/contracts/ci-cost-budget.md and the
+    # shards come back if it costs more than the slots it frees.
     #
     # Release-PR skip: docs/contracts/release-pr-gating.md § Cut surface —
     # a release PR (head branch `release/X.Y.Z`) touches only that
@@ -71,15 +130,19 @@ jobs:
     # is the kept surface for release PRs; push: main + workflow_dispatch
     # stay unconditional.
     if: ${{ !startsWith(github.head_ref, 'release/') }}
-    name: Install Script Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
+    name: Install Script Tests (${{ matrix.os }}, ${{ matrix.slice }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
-        shard: [1, 2, 3, 4]
+        include:
+          - { os: ubuntu-latest, slice: shard 1/4, shard: '1/4' }
+          - { os: ubuntu-latest, slice: shard 2/4, shard: '2/4' }
+          - { os: ubuntu-latest, slice: shard 3/4, shard: '3/4' }
+          - { os: ubuntu-latest, slice: shard 4/4, shard: '4/4' }
+          - { os: macos-26, slice: unsharded, shard: '' }
     env:
-      SHARD: ${{ matrix.shard }}/4
+      SHARD: ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -97,7 +160,7 @@ jobs:
       - name: Install dependencies (provides node_modules/.bin/tsx for the installer)
         run: npm ci --no-audit --no-fund --prefer-offline
 
-      - name: Run install.sh integration tests (shard ${{ matrix.shard }}/4)
+      - name: Run install.sh integration tests (${{ matrix.slice }})
         run: bash tests/test_install.sh --parallel 9
 
   install-aux-tests:
@@ -113,7 +176,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-26]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -201,6 +264,7 @@ jobs:
     # explicit build:cli + build:ui + build triple was a no-op duplicate;
     # collapsed to a single build invocation.
     name: Node Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
+    needs: platform-scope
     runs-on: ${{ matrix.os }}
     # Release-PR skip per docs/contracts/release-pr-gating.md § Cut surface.
     # The allowlist DOES admit five paths under src/ — pack and domain
@@ -220,7 +284,7 @@ jobs:
         # EXCLUDED here, because vitest shards by file COUNT not duration and
         # would otherwise clump the golden files into one > 2 min bucket.
         # ESLint / typecheck / prepack are whole-tree gates → shard 1 only.
-        os: [ubuntu-latest, macos-latest]
+        os: ${{ fromJSON(needs.platform-scope.outputs.os_list) }}
         shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -299,6 +363,17 @@ jobs:
         # a call. Folding the two dedicated jobs back in was evaluated against
         # these figures and rejected; the arithmetic and the revisit-if live in
         # docs/contracts/ci-cost-budget.md § Fold-back decision, 2026-08-18.
+        #
+        # VITEST_BALANCED_SHARDS=1 replaces the count split with a duration
+        # split from tests/timing-manifest.json (tests/_lib/balanced-sequencer.ts),
+        # refreshed from a CI run by `plan_test_shards --run <id> --write`.
+        # Replayed on run 39643700286's own timings, the slowest shard's summed
+        # test time drops from 685 s to 539 s on ubuntu and 1089 s to 899 s on
+        # macOS; every file still runs in exactly one shard. First CI run with it
+        # (PR #2577, run 39709319417): ubuntu node-test jobs 5m14s-6m12s, ratio
+        # 1.19 against the 2.3 recorded above.
+        env:
+          VITEST_BALANCED_SHARDS: '1'
         run: >-
           npm run test:ts --silent --
           --shard=${{ matrix.shard }}/4
@@ -532,12 +607,13 @@ jobs:
     # clusters in one job oversubscribed the fork pool and produced flaky
     # spawn-timeout failures — each cluster gets its own runner.
     name: Golden Tests (${{ matrix.os }})
+    needs: platform-scope
     runs-on: ${{ matrix.os }}
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: ${{ fromJSON(needs.platform-scope.outputs.os_list) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -586,12 +662,13 @@ jobs:
     # pass — is covered by `absent-path-reads-unverified`, which needs no
     # browser and therefore stays in the sharded matrix with everything else.
     name: SVG Witness Tests (${{ matrix.os }})
+    needs: platform-scope
     runs-on: ${{ matrix.os }}
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: ${{ fromJSON(needs.platform-scope.outputs.os_list) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -635,7 +712,7 @@ jobs:
     # PLATFORMS, NAMED, because the blocker `lifecycle-ci-runner-provisioning`
     # requires this job to name them rather than leave them to be inferred:
     #
-    #   macos-latest  — the declared macOS row (per-user launchd). VERIFIED here.
+    #   macos-26  — the declared macOS row (per-user launchd). VERIFIED here.
     #   Linux with a user session bus — the second declared supported row.
     #                   NOT CERTIFIED, and not certifiable on a GitHub-hosted
     #                   runner: ubuntu-latest has no user session bus, so it is
@@ -654,8 +731,8 @@ jobs:
     # unverified, and keep it out of release claims EVEN IF its static fallback
     # appears to work. (a), provisioning a runner with a real user session bus,
     # remains the target.
-    name: Collector Lifecycle (macos-latest — the macOS row only)
-    runs-on: macos-latest
+    name: Collector Lifecycle (macos-26 — the macOS row only)
+    runs-on: macos-26
     # Spawns real daemons with 90 s per-case timeouts, and runs the
     # dispatcher-reaching suite twice for the parity comparison; a hang here
     # would otherwise sit at the runner default (R2 round-2 finding 2).
@@ -751,7 +828,16 @@ jobs:
         # `ci_only` in `src/config/ci-local-parity.yml` with that reason and
         # reachable on demand. The test count is deliberately not written here —
         # it moves with the suite and the gate prints the live figure.
-        run: ./scripts-run src/scripts/check_static_parity --quiet
+        #
+        # The floor src/config/gate-coverage.yml declares for this gate is
+        # asserted HERE, from the output this step already produced, so the
+        # required Consistency job does not run both suites a second time
+        # (`floor_asserted_in` on the row). `shell: bash` gives pipefail, so
+        # the gate's own exit code still decides the step.
+        shell: bash
+        run: |
+          ./scripts-run src/scripts/check_static_parity --quiet | tee "$RUNNER_TEMP/static-parity.out"
+          ./scripts-run src/scripts/check_gate_coverage --from-output "$RUNNER_TEMP/static-parity.out" --only check_static_parity
 
   workspace-tests:
     # The workspace cluster: tests/server/workspace.test.ts + the cli/python
@@ -766,7 +852,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-26]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -809,3 +895,36 @@ jobs:
   # firing on every PR touching scripts/**, even ones that never
   # went near install_global (measured ~60-90 s wasted wall-clock
   # on the Windows leg per such PR).
+
+  tests-result:
+    # One stable check name over the whole matrix. A required-set change can pin
+    # this instead of shard/OS names, which a matrix edit renames silently
+    # (docs/contracts/branch-protection-policy.md § why shard names are not
+    # required). Not required today; the ruleset write stays with
+    # stubs/road-to-main-protection-ruleset-changes. Skipped legs pass — they are
+    # skipped by their own `if:` (release PRs), not lost.
+    name: Tests result
+    runs-on: ubuntu-latest
+    if: always()
+    needs:
+      - platform-scope
+      - install-tests
+      - install-aux-tests
+      - node-tests
+      - static-checks
+      - golden-tests
+      - svg-witness-tests
+      - collector-lifecycle
+      - workspace-tests
+    steps:
+      - name: Every needed job passed or was skipped by its own condition
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "needed job results: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in
+              success|skipped) ;;
+              *) echo "::error::a needed Tests job ended '$r'"; exit 1 ;;
+            esac
+          done

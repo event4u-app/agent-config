@@ -45,6 +45,7 @@
  * disagrees with the census) · 2 the manifest itself is missing/empty/malformed.
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -53,7 +54,7 @@ import * as yaml from 'js-yaml';
 import { asOf } from './_lib/as_of.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
 import { GateLedger, type GateSkipReason } from './_lib/gate_ledger.js';
-import { runCountedProbe } from './_lib/counted_probe.js';
+import { runCountedProbe, runCountedProbeAsync } from './_lib/counted_probe.js';
 import { listGateScripts } from './_lib/gate_population.js';
 import { describeOutcome, namesEstateInvalidatingError } from './_lib/gate_result.js';
 import { assertScanned } from './_lib/scan_scope.js';
@@ -129,6 +130,15 @@ export interface GateSpec {
    * gate whose argument list equals `argv` exactly.
    */
   ci_invocation?: string;
+  /**
+   * Repo-relative workflow that already runs this gate AND asserts its floor in
+   * the same job via `check_gate_coverage --from-output <file> --only <id>`.
+   * The per-PR census then does not execute the gate a second time — but only
+   * after confirming that workflow still carries the assertion; otherwise it
+   * runs the gate as usual, so a removed assertion can never leave the floor
+   * unenforced.
+   */
+  floor_asserted_in?: string;
   note?: string;
 }
 
@@ -139,7 +149,8 @@ export type Verdict =
   | 'crashed'
   | 'estate_invalid'
   | 'pending'
-  | 'unavailable';
+  | 'unavailable'
+  | 'delegated';
 
 export interface GateResult {
   id: string;
@@ -148,6 +159,8 @@ export interface GateResult {
   scanned: number | null;
   min_scanned: number;
   message: string;
+  /** Wall time of this gate's run inside the guard; absent when it was not executed. */
+  elapsed_ms?: number;
 }
 
 function _require_str(v: unknown, field: string, id: string, i: number): string {
@@ -210,6 +223,9 @@ export function load_manifest(file = MANIFEST): GateSpec[] {
       ...(e['ci_invocation'] === undefined
         ? {}
         : { ci_invocation: _require_str(e['ci_invocation'], 'ci_invocation', id, i) }),
+      ...(e['floor_asserted_in'] === undefined
+        ? {}
+        : { floor_asserted_in: _require_str(e['floor_asserted_in'], 'floor_asserted_in', id, i) }),
       ...(e['note'] === undefined ? {} : { note: String(e['note']) }),
       ...(e['canary'] === undefined ? {} : { canary: _require_canary(e['canary'], id, i) }),
       ...(e['no_canary_reason'] === undefined
@@ -283,6 +299,10 @@ export function ledgerOutcomeFor(
       return 'fail';
     case 'ok':
       return 'complete';
+    case 'delegated':
+      // Not inspected HERE: the row's `floor_asserted_in` is the reviewable
+      // exemption, and the floor is asserted in that workflow's own job.
+      return 'declared_exemption';
     default: {
       // Exhaustiveness guard. A `Verdict` member added later must be classified
       // deliberately: without this, a new member would silently count as
@@ -362,23 +382,82 @@ export function classify(
   return { ...base, verdict: 'ok', message: `scanned ${String(scanned)} ≥ ${String(spec.min_scanned)}` };
 }
 
-function run_gate(spec: GateSpec): {
+async function run_gate_async(spec: GateSpec): Promise<{
   scanned: number | null;
   crashed: boolean;
   exit_code: number | null;
   output: string;
-} {
+  elapsed_ms: number;
+}> {
   const runner = path.join(REPO_ROOT, 'scripts-run');
   // Bounded read: a gate whose output overflowed would lose its `scanned:`
   // line and be classified `silent` — the scan-scope guard reporting a dead
-  // scope that is merely truncated. `runCountedProbe` throws instead.
-  const r = runCountedProbe(runner, [`src/scripts/${spec.id}`, ...spec.argv], { cwd: REPO_ROOT });
+  // scope that is merely truncated. `runCountedProbeAsync` rejects instead.
+  const t0 = performance.now();
+  const r = await runCountedProbeAsync(runner, [`src/scripts/${spec.id}`, ...spec.argv], { cwd: REPO_ROOT });
+  const elapsed_ms = Math.round(performance.now() - t0);
   const output = `${r.stdout}\n${r.stderr}`;
   if (r.failure !== null && r.status === null)
-    return { scanned: null, crashed: true, exit_code: null, output };
+    return { scanned: null, crashed: true, exit_code: null, output, elapsed_ms };
   // A gate may legitimately exit non-zero (it found real violations) and still
   // have scanned plenty — coverage and verdict are different questions.
-  return { scanned: parse_scanned(output), crashed: false, exit_code: r.status, output };
+  return { scanned: parse_scanned(output), crashed: false, exit_code: r.status, output, elapsed_ms };
+}
+
+/**
+ * Run `fn` over `items` with at most `jobs` in flight, returning results in
+ * INPUT order — the report must be byte-stable whatever order the gates finish in.
+ */
+export async function runPool<T, R>(
+  items: readonly T[],
+  jobs: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const out: R[] = new Array<R>(items.length);
+  let next = 0;
+  const worker = async (): Promise<void> => {
+    for (;;) {
+      const i = next++;
+      if (i >= items.length) return;
+      out[i] = await fn(items[i] as T, i);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.max(1, Math.min(jobs, items.length)) }, worker));
+  return out;
+}
+
+/** `--jobs N` when given and valid, else the host's available parallelism. */
+export function parse_jobs(argv: readonly string[]): number {
+  const i = argv.indexOf('--jobs');
+  if (i >= 0) {
+    const n = Number(argv[i + 1]);
+    if (Number.isInteger(n) && n >= 1) return n;
+  }
+  return os.availableParallelism();
+}
+
+/**
+ * Why a row's `floor_asserted_in` cannot be honoured, or null when it can: the
+ * named workflow must call `check_gate_coverage --from-output … --only <id>`.
+ */
+export function floor_delegation_problem(workflowText: string, id: string): string | null {
+  const calls = ci_invocations(workflowText, 'check_gate_coverage');
+  const ok = calls.some((a) => a.includes('--from-output') && a[a.indexOf('--only') + 1] === id);
+  return ok ? null : `no \`check_gate_coverage --from-output … --only ${id}\` assertion there`;
+}
+
+/** Apply one row's floor to a captured gate output, without running the gate. */
+export function assert_from_output(specs: readonly GateSpec[], argv: readonly string[]): number {
+  const file = argv[argv.indexOf('--from-output') + 1];
+  const id = argv[argv.indexOf('--only') + 1];
+  const spec = specs.find((s) => s.id === id);
+  if (file === undefined || id === undefined || spec === undefined || !fs.existsSync(file)) {
+    process.stderr.write(`❌  --from-output needs an existing file and --only <manifest id>\n`);
+    return 2;
+  }
+  const r = classify(spec, parse_scanned(fs.readFileSync(file, 'utf-8')), false);
+  process.stdout.write(`  ${ICON[r.verdict]} ${r.id}: ${r.message}\n`);
+  return r.verdict === 'ok' ? 0 : 1;
 }
 
 const ICON: Record<Verdict, string> = {
@@ -389,6 +468,7 @@ const ICON: Record<Verdict, string> = {
   estate_invalid: '❌',
   pending: '⚠️',
   unavailable: '⚠️',
+  delegated: '↪️',
 };
 
 /**
@@ -491,7 +571,7 @@ export function ci_invocation_drift(specs: readonly GateSpec[], repoRoot = REPO_
   return problems;
 }
 
-export function main(argv: readonly string[]): number {
+export async function main(argv: readonly string[]): Promise<number> {
   const wantJson = argv.includes('--format') && argv[argv.indexOf('--format') + 1] === 'json';
   const listOnly = argv.includes('--list');
 
@@ -517,6 +597,9 @@ export function main(argv: readonly string[]): number {
 
   if (argv.includes('--canary')) {
     return run_canary_mode(specs, argv);
+  }
+  if (argv.includes('--from-output')) {
+    return assert_from_output(specs, argv);
   }
 
   if (listOnly) {
@@ -555,13 +638,29 @@ export function main(argv: readonly string[]): number {
   // refuses to double-count it.
   ledger.plan([...new Set(specs.map((s) => s.id))]);
 
-  const results = specs.map((s) => {
-    if (spec_is_pending(s)) {
-      const { scanned, crashed } = probe_pending(s);
-      return classify(s, scanned, crashed);
+  const results = await runPool(specs, parse_jobs(argv), async (s): Promise<GateResult> => {
+    if (s.floor_asserted_in !== undefined && !spec_is_pending(s)) {
+      const file = path.join(REPO_ROOT, s.floor_asserted_in);
+      const problem = fs.existsSync(file)
+        ? floor_delegation_problem(fs.readFileSync(file, 'utf-8'), s.id)
+        : `${s.floor_asserted_in} does not exist`;
+      if (problem === null) {
+        return {
+          id: s.id,
+          status: s.status,
+          verdict: 'delegated',
+          scanned: null,
+          min_scanned: s.min_scanned,
+          message: `floor asserted in ${s.floor_asserted_in}, not re-run here`,
+        };
+      }
+      process.stdout.write(`  ⚠️  ${s.id}: floor_asserted_in ignored — ${problem}; running it here\n`);
     }
-    const { scanned, crashed, exit_code, output } = run_gate(s);
-    return classify(s, scanned, crashed, exit_code, output);
+    const { scanned, crashed, exit_code, output, elapsed_ms } = await run_gate_async(s);
+    // Pending gates are still probed (so the report shows what they currently
+    // do), but their count never fails the build.
+    const r = spec_is_pending(s) ? classify(s, scanned, crashed) : classify(s, scanned, crashed, exit_code, output);
+    return { ...r, elapsed_ms };
   });
 
   // `recorded` pairs with the deduplicated plan above: a duplicated manifest id
@@ -583,6 +682,14 @@ export function main(argv: readonly string[]): number {
   } else {
     for (const r of results) {
       process.stdout.write(`  ${ICON[r.verdict]} ${r.id}: ${r.message}\n`);
+    }
+    const slowest = results
+      .filter((r) => r.elapsed_ms !== undefined)
+      .sort((a, b) => (b.elapsed_ms ?? 0) - (a.elapsed_ms ?? 0))
+      .slice(0, 10);
+    process.stdout.write(`\nslowest gates (wall, ${String(parse_jobs(argv))} in parallel):\n`);
+    for (const r of slowest) {
+      process.stdout.write(`  ${(((r.elapsed_ms ?? 0) / 1000).toFixed(1)).padStart(7)} s  ${r.id}\n`);
     }
   }
 
@@ -794,11 +901,6 @@ function spec_is_pending(s: GateSpec): boolean {
   return s.status === 'pending';
 }
 
-/** Pending gates are still probed (so the report shows what they currently do),
- * but their count never fails the build. */
-function probe_pending(s: GateSpec): { scanned: number | null; crashed: boolean } {
-  return run_gate(s);
-}
 
 // ── Mutation canary (Phase 7) ──────────────────────────────────────────────
 
@@ -1113,5 +1215,5 @@ function _isCliEntry(): boolean {
 }
 
 if (_isCliEntry()) {
-  process.exit(main(process.argv.slice(2)));
+  void main(process.argv.slice(2)).then((code) => process.exit(code));
 }

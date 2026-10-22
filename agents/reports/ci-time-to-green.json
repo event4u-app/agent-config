@@ -1,0 +1,243 @@
+{
+  "generated_at": "2026-10-21T22:28:03.329Z",
+  "sample": {
+    "window": "2026-10-14T22:19:24.970Z \u2192 2026-10-21T22:19:24.970Z (7 d)",
+    "workflow": "all",
+    "runs_listed": 6835,
+    "runs_with_jobs": 6619,
+    "truncated": false,
+    "reason": null
+  },
+  "required": [
+    "Sync + Generate Tools Consistency",
+    "Standing payload delta + budget gate"
+  ],
+  "by_os_event": [
+    {
+      "os": "macos",
+      "event": "pull_request",
+      "queue": {
+        "n": 5628,
+        "p50": 334,
+        "p90": 1509
+      },
+      "exec": {
+        "n": 5628,
+        "p50": 138,
+        "p90": 574
+      }
+    },
+    {
+      "os": "macos",
+      "event": "push",
+      "queue": {
+        "n": 2309,
+        "p50": 188,
+        "p90": 947
+      },
+      "exec": {
+        "n": 2309,
+        "p50": 119,
+        "p90": 539
+      }
+    },
+    {
+      "os": "macos",
+      "event": "schedule",
+      "queue": {
+        "n": 2,
+        "p50": 0,
+        "p90": 0
+      },
+      "exec": {
+        "n": 2,
+        "p50": 128,
+        "p90": 128
+      }
+    },
+    {
+      "os": "ubuntu",
+      "event": "dynamic",
+      "queue": {
+        "n": 2,
+        "p50": 2,
+        "p90": 2
+      },
+      "exec": {
+        "n": 2,
+        "p50": 49,
+        "p90": 148
+      }
+    },
+    {
+      "os": "ubuntu",
+      "event": "pull_request",
+      "queue": {
+        "n": 12117,
+        "p50": 29,
+        "p90": 214
+      },
+      "exec": {
+        "n": 12117,
+        "p50": 56,
+        "p90": 366
+      }
+    },
+    {
+      "os": "ubuntu",
+      "event": "push",
+      "queue": {
+        "n": 4016,
+        "p50": 3,
+        "p90": 83
+      },
+      "exec": {
+        "n": 4016,
+        "p50": 53,
+        "p90": 369
+      }
+    },
+    {
+      "os": "ubuntu",
+      "event": "schedule",
+      "queue": {
+        "n": 45,
+        "p50": 2,
+        "p90": 3
+      },
+      "exec": {
+        "n": 45,
+        "p50": 31,
+        "p90": 136
+      }
+    },
+    {
+      "os": "ubuntu",
+      "event": "workflow_dispatch",
+      "queue": {
+        "n": 3,
+        "p50": 3,
+        "p90": 6
+      },
+      "exec": {
+        "n": 3,
+        "p50": 24,
+        "p90": 25
+      }
+    },
+    {
+      "os": "windows",
+      "event": "pull_request",
+      "queue": {
+        "n": 480,
+        "p50": 24,
+        "p90": 73
+      },
+      "exec": {
+        "n": 480,
+        "p50": 199,
+        "p90": 224
+      }
+    },
+    {
+      "os": "windows",
+      "event": "push",
+      "queue": {
+        "n": 385,
+        "p50": 3,
+        "p90": 37
+      },
+      "exec": {
+        "n": 385,
+        "p50": 195,
+        "p90": 217
+      }
+    },
+    {
+      "os": "windows",
+      "event": "schedule",
+      "queue": {
+        "n": 2,
+        "p50": 1,
+        "p90": 2
+      },
+      "exec": {
+        "n": 2,
+        "p50": 138,
+        "p90": 139
+      }
+    }
+  ],
+  "by_event": [
+    {
+      "event": "dynamic",
+      "shas": 1,
+      "all_green": {
+        "n": 1,
+        "p50": 157,
+        "p90": 157
+      },
+      "required_green": {
+        "n": 0,
+        "p50": null,
+        "p90": null
+      }
+    },
+    {
+      "event": "pull_request",
+      "shas": 476,
+      "all_green": {
+        "n": 226,
+        "p50": 1277,
+        "p90": 3104
+      },
+      "required_green": {
+        "n": 317,
+        "p50": 696,
+        "p90": 801
+      }
+    },
+    {
+      "event": "push",
+      "shas": 204,
+      "all_green": {
+        "n": 111,
+        "p50": 891,
+        "p90": 1704
+      },
+      "required_green": {
+        "n": 0,
+        "p50": null,
+        "p90": null
+      }
+    },
+    {
+      "event": "schedule",
+      "shas": 24,
+      "all_green": {
+        "n": 14,
+        "p50": 34,
+        "p90": 2912
+      },
+      "required_green": {
+        "n": 0,
+        "p50": null,
+        "p90": null
+      }
+    },
+    {
+      "event": "workflow_dispatch",
+      "shas": 3,
+      "all_green": {
+        "n": 1,
+        "p50": 29,
+        "p90": 29
+      },
+      "required_green": {
+        "n": 0,
+        "p50": null,
+        "p90": null
+      }
+    }
+  ]
+}

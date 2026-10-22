@@ -38,7 +38,6 @@ export const REQUIRED_CHECKS_BY_SHAPE: Record<string, Set<string>> = {
         'Smoke Contracts',
         'Skill Lint',
         'Tests',
-        'Python Version Sweep',
         'Public Install Smoke',
     ]),
     release: new Set(['Consistency', 'Smoke Contracts', 'Release Validation']),
