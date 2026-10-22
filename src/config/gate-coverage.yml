@@ -927,9 +927,10 @@ gates:
       count, and zero findings is a legitimate state — 14.17.0 and 14.18.0 both
       legitimately record zero, because their self-review never completed. What
       this row buys is a scan count for a tool, not a release gate: since
-      2026-10-22 no workflow calls it and no release waits for a ledger,
-      because everything on main is already reviewed and merged (owner). The
-      row keeps the bare invocation honest for whoever runs it by hand.
+      2026-10-22 no workflow runs it as a gate and no release waits for a
+      ledger, because everything on main is already reviewed and merged
+      (owner). This guard still invokes it bare, which keeps that invocation
+      green and honest for whoever runs it by hand.
 
   - id: check_review_schema
     argv: []

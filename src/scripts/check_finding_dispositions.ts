@@ -838,7 +838,7 @@ function main(argv: readonly string[]): number {
         fs.writeFileSync(ledgerPath, JSON.stringify(ledger, null, 2) + '\n');
         process.stdout.write(
             `📥  ingested ${added} new finding(s) into ${path.relative(REPO_ROOT, ledgerPath)} — ` +
-                'fill dispositions before the release validation goes green\n',
+                'fill dispositions by hand; no release waits for them\n',
         );
         if (carried.length > 0) {
             process.stdout.write(`    carried integrity fields: ${carried.join(', ')}\n`);
@@ -921,15 +921,12 @@ function main(argv: readonly string[]): number {
             units: 'recorded finding(s)',
             roots: [path.relative(REPO_ROOT, ledgerPath)],
             allowEmpty:
-                'EMPTY_VALID: zero recorded findings IS the pass state for a release whose '
-                + 'self-review reported none — the ledger file is created on first --ingest, so a '
-                + 'clean release legitimately has no <version>.json. NARROWED TWICE: it no longer '
-                + 'covers a RELEASED version with no ledger, which returns 1 above on the '
-                + 'released/unreleased split, and it no longer covers an empty ledger that does '
-                + 'not say why it is empty, which returns 1 above via empty_ledger_problem. What '
-                + 'remains is an EXPLAINED empty ledger and an unreleased version. Un-ingested '
-                + 'findings on an in-flight release are caught by --pr (unrecorded_findings), '
-                + 'never by this count.',
+                'EMPTY_VALID: zero recorded findings is a pass. A version with no ledger reads '
+                + 'as empty, shipped or not, because a release waits for no review ledger '
+                + '(owner, 2026-10-22). It does not cover an existing empty ledger that does not '
+                + 'say why it is empty, which returns 1 above via empty_ledger_problem. '
+                + 'Un-ingested findings are caught by --pr (unrecorded_findings), never by this '
+                + 'count.',
         });
     } catch (exc) {
         if (exc instanceof DeadScopeError) {

@@ -20,11 +20,11 @@ export function ledgerRelPath(version: string): string {
 /**
  * The `Known limitations` line a cut taken on an override owes its readers.
  *
- * An override is the one way a release ships without having reviewed itself,
- * and it is recorded where only a releaser looks — inside the ledger JSON. A
- * consumer reading the published notes would see a release indistinguishable
- * from one that passed its self-review, which is the same silence-reads-as-
- * acceptance defect `assurance` was added to end one layer down.
+ * An override is a ledger's explicit statement that its release was not
+ * self-reviewed, recorded where only a releaser looks — inside the ledger JSON.
+ * Since 2026-10-22 a release needs no ledger at all, so this line appears only
+ * for a ledger that carries an override; a release with no ledger publishes no
+ * limitation, because main is reviewed before the cut.
  *
  * Returns null for every ordinary release: no ledger, a reviewed one, or one
  * carrying no override. The caller appends; it never replaces a derived line.
