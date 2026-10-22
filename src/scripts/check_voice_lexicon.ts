@@ -80,12 +80,13 @@ function blank(s: string): string {
  * The detector's exemption set, blanked in place: same length, same line breaks,
  * so offsets into the result are offsets into the draft.
  */
-export function blankExempt(text: string): string {
+export function blankExempt(text: string, opts: { quotes: boolean } = { quotes: true }): string {
     let t = text.replace(/^---\n[\s\S]*?\n---\n/, blank);
     t = t.replace(/```[\s\S]*?```/g, blank).replace(/~~~[\s\S]*?~~~/g, blank);
     t = t.replace(/`[^`\n]*`/g, blank);
     t = t.replace(/^\s*>.*$/gm, blank);
     t = t.replace(/https?:\/\/\S+/g, blank);
+    if (!opts.quotes) return t;
     t = t
         .replace(/"[^"\n]{1,300}"/g, blank)
         // German low-high quotes close on “, the English opener, so they run first.
@@ -126,10 +127,14 @@ function locator(text: string): (index: number) => { line: number; column: numbe
 /** Every avoid/taboo hit outside the exempt regions, located in the original draft. */
 export function scanLexicon(text: string, terms: readonly LexiconTerm[]): Finding[] {
     const scanned = blankExempt(text);
+    // A taboo aborts the draft, so wrapping it in quotes must not hide it: the
+    // quote exemption is the AI-tell detector's, and only advisory terms share it.
+    const tabooScanned = blankExempt(text, { quotes: false });
     const locate = locator(text);
     const found: Array<Finding & { index: number }> = [];
     for (const t of terms) {
-        for (const m of scanned.matchAll(literalRegex(t.term, t.match))) {
+        const source = t.source === 'ghostwriter' ? tabooScanned : scanned;
+        for (const m of source.matchAll(literalRegex(t.term, t.match))) {
             const index = m.index ?? 0;
             found.push({
                 kind: 'avoid',
