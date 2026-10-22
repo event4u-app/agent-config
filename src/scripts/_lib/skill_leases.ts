@@ -21,8 +21,10 @@
  * same clock a session record does and a platform's measured TTL is stated in
  * one place. This file adds the keying and the collection, nothing about time.
  *
- * NOT ON `stop`. K3: `stop` fires every turn. Collection runs where the session
- * register is already read — see `session_register_hook`.
+ * NOT ON `stop`. K3: `stop` fires every turn. Collection runs at the start of
+ * each materialisation request — see `materialiseUnderLease` for why it is not
+ * on `session_start`. `collectMaterialisedSkills` below is the collector for
+ * that slot and has no caller while it stays unwired.
  */
 
 import { createHash } from 'node:crypto';
@@ -162,7 +164,7 @@ export interface CollectMaterialisedResult {
 }
 
 /**
- * The `session_start` collect — 4.4.
+ * The `session_start` collect — 4.4. Not wired to that slot: see the header.
  *
  * Reads the lock for this host root, asks the leases which of those entries
  * nobody holds any more, and releases exactly those. Never removes an entry the
