@@ -14,8 +14,9 @@ relates:
 
 # Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B)
 
-> **Arrivals:** 4 — latest `inbox-2026-10-x` and `inbox-2026-10-y` (2026-10-22, one round each);
-> earlier: `inbox-2026-09-n` (2026-09-05), the untracked round of 2026-08-03 that created this roadmap.
+> **Arrivals:** 5 — latest `inbox-2026-10-z` (2026-10-22, the owner asking again for free
+> endpoints on uncritical work); earlier: `inbox-2026-10-x` and `inbox-2026-10-y` (2026-10-22),
+> `inbox-2026-09-n` (2026-09-05), the untracked round of 2026-08-03 that created this roadmap.
 >
 > **Executing elsewhere since 2026-10-22:** M1 and M9 are planned in
 > `road-to-free-hands-a-paid-head-checks` (Phases 2 and 5), M2 in
