@@ -112,11 +112,12 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   verify: a `public-artifact` seat receiving an undeclared payload reports
   `available: false, policy_content_ceiling`; every existing seat is unchanged.
   Done 2026-10-22 (commit ec9df20078): undeclared → `project-content` in `resolveTransport`; `build_members` now passes each seat's configured ceiling and the pass's class (it passed neither, so the ceiling never reached a council run); `ask_transport --content-class`. Tests: `seat_policy_and_ceiling.test.ts` › an undeclared content class is project-content: a public-artifact seat refuses it, and › … leaves every default seat unchanged; `council_cli.test.ts` › the content ceiling reaches the resolver. No repo-owned eval corpus goes through a council seat today, so none had a class to declare; `--content-class public-artifact` is the path when one does.
-- [ ] **1.2 Three prefix rows (D4).** Add `hf_`, `nvapi-`, `r8_` to the egress rule table; every
+- [x] **1.2 Three prefix rows (D4).** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/egress_prefixes.ts --> Add `hf_`, `nvapi-`, `r8_` to the egress rule table; every
   credential env var a shipped adapter reads maps to a prefix row or to an explicit
   `no-stable-prefix` row. `corrected-from-reproduction`: `csk-` is dropped from the list.
   verify: an `egress_prefixes` test masks every synthetic key of each of the three prefixes,
   and a fixture adapter reading an unmapped `*_TOKEN` fails the coverage-join test.
+  Done 2026-10-22 (commit 06777113cc): rows `huggingface-token`, `nvidia-api-key`, `replicate-api-token` in `egress_rules.ts`; `CREDENTIAL_ENV_ROWS` maps the eleven credential variables the adapters and council clients read (the media adapters' `AIV_ACCESS_KEY` / `AIV_SECRET_KEY` as `no-stable-prefix`). Tests: `tests/scripts/_lib_egress_free_tier_prefixes.test.ts` (50/50 per prefix, seen 0/50 first; the coverage join and its fixture).
 - [ ] **1.3 An egress canary run before any free call.** (Folded 2026-10-22 from
   `inbox-2026-10-z`.) A fixed set of planted canary values — personal data, credentials and
   internal identifiers — placed in the payload, in the hand's system prompt and in rule or skill
