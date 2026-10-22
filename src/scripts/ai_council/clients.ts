@@ -48,7 +48,7 @@ import * as path from 'node:path';
 
 import { vendorPrefix } from '../_lib/egress_rules.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
-import { boundFor } from './cli_agency_bounds.js';
+import { boundFor, lightLaunchFor } from './cli_agency_bounds.js';
 import { councilEgress } from './council_egress.js';
 import {
     curlJsonPost as _curlJsonPost,
@@ -92,6 +92,23 @@ import { jsonDumpsIndent2 as _jsonDumpsIndent2 } from './_py_json.js';
 import * as budget from './cli_call_budget.js';
 import { appendEvent } from './events_log.js';
 import { OPENAI_CLI_VENDOR_DEFAULT } from './vendor_defaults.js';
+
+const _cliVersionCache = new Map<string, string | null>();
+
+/** What `<binary> --version` prints, once per binary per process; null when it cannot run. */
+function _cliVersion(binary: string): string | null {
+    const cached = _cliVersionCache.get(binary);
+    if (cached !== undefined) return cached;
+    let version: string | null = null;
+    try {
+        const r = spawnSync(binary, ['--version'], { encoding: 'utf8', timeout: 10_000 });
+        if (r.status === 0 && typeof r.stdout === 'string') version = r.stdout.trim() || null;
+    } catch {
+        version = null;
+    }
+    _cliVersionCache.set(binary, version);
+    return version;
+}
 
 export const ANTHROPIC_KEY_FILENAME = 'anthropic.key';
 export const OPENAI_KEY_FILENAME = 'openai.key';
@@ -1696,6 +1713,9 @@ export class AnthropicCliClient extends CliClient {
         return [
             this.binary,
             '--print',
+            // The seat never needs the user environment; only a version the light
+            // launch was probed on gets the flag (`LIGHT_LAUNCH_PROBES`).
+            ...lightLaunchFor('anthropic', _cliVersion(this.binary)),
             '--output-format',
             'json',
             '--model',

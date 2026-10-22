@@ -86,6 +86,7 @@ import {
     type TextInputStream,
     type TextOutputStream,
 } from '../../../src/scripts/ai_council/clients.js';
+import { LIGHT_LAUNCH_PROBES } from '../../../src/scripts/ai_council/cli_agency_bounds.js';
 import { classifyCliFailure, isFallbackEligible } from '../../../src/scripts/ai_council/transport_resolver.js';
 import { hasPython3, oracleFile, REPO_ROOT, runPyCode } from './_harness.js';
 
@@ -599,6 +600,24 @@ describe('clients — CLI command construction', () => {
         expect(r.input_tokens).toBe(1);
         expect(r.output_tokens).toBe(2);
         expect(r.metadata.cli).toBe(true);
+    });
+
+    it('AnthropicCliClient adds the light launch only on the version it was probed on', () => {
+        const probed = LIGHT_LAUNCH_PROBES.find((p) => p.selected && p.member === 'anthropic')!;
+        const dir = mkTmp();
+        const bin = path.join(dir, 'claude-probed');
+        fs.writeFileSync(bin, `#!/bin/sh\nif [ "$1" = "--version" ]; then echo "${probed.probed_version}"; fi\n`);
+        fs.chmodSync(bin, 0o755);
+        const light = stubCli(AnthropicCliClient, { returncode: 0, stdout: '{}', stderr: '' }, { binary: bin });
+        light.client.ask('SYS', 'USER', 100);
+        const cmd = light.calls[0]!.cmd;
+        for (const f of probed.flag) expect(cmd).toContain(f);
+        expect(cmd[cmd.indexOf('--tools') + 1]).toBe('');
+
+        // `/bin/echo --version` prints no probed version: nothing is added.
+        const plain = stubCli(AnthropicCliClient, { returncode: 0, stdout: '{}', stderr: '' });
+        plain.client.ask('SYS', 'USER', 100);
+        for (const f of probed.flag) expect(plain.calls[0]!.cmd).not.toContain(f);
     });
 
     it('AnthropicCliClient grants the spawned agent NO tools, for every system prompt', () => {
