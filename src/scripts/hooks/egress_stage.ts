@@ -405,7 +405,13 @@ function injector(
   const load = loadEngine();
   if (!load.ok) return () => `${WITHHELD_PREFIX}${ENGINE_UNAVAILABLE})]`;
   const scope = new load.engine.TokenScope();
-  return (t) => load.engine.injectText(t, scope);
+  return (t) => {
+    try {
+      return load.engine.injectText(t, scope);
+    } catch {
+      return `${WITHHELD_PREFIX}engine-threw)]`;
+    }
+  };
 }
 
 const WITHHELD_PREFIX = "[egress: injected text withheld (";
