@@ -117,7 +117,7 @@ the judge-one-tier-up ladder (`src/agent-src/contexts/subagent-configuration.md:
   Runs only on a green 0.2.
   verify: a nudge fixture for a read-only fan-out slice names the mapped model value and
   dispatches nothing.
-  Done 2026-10-22 (commit 1f48d0ff15): the nudge's tier now comes from `inferSliceTier` over a deterministic slice kind read off the prompt; only a read-only fan-out earns `lite`, and its line names `model: "haiku"` and the kind. It used to say "lite tier recommended" for every delegable prompt from a hardcoded default — a tier the table never produced; an unknown kind now says `inherit` and names no model. Test: `delegation_nudge_hook.test.ts` › a read-only fan-out nudge names the mapped model value and dispatches nothing.
+  Done 2026-10-22 (commit 1f48d0ff15): the tier comes from `inferSliceTier` over the prompt's slice kind; only a read-only fan-out earns `lite` and names `model: "haiku"`, an unknown kind says `inherit`. Test: `delegation_nudge_hook.test.ts` › a read-only fan-out nudge names the mapped model value and dispatches nothing.
 - [x] **1.3 A `lite` leg does not climb by itself.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/orchestration_record.ts --> It never spawns, and a slice it cannot
   finish returns to the head with a named reason; the head re-dispatches one tier up per the
   existing verify-fail cascade. The escalation is a record, not a retry inside the leg.

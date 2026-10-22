@@ -129,7 +129,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   verify: no planted canary in clear text; the report names each canary as replaced (with its
   placeholder), refused (with its reason) or `not-detectable`. Zero observed leaks is a test
   result, never a guarantee.
-  Done 2026-10-22 (commits ffb6a6b722, 61bb2463f6): `src/scripts/egress_canary.ts` sends nine synthetic canaries in three placements through `ask_transport` to an OpenAI-compatible mock on loopback (a separate process, because `curlJsonPost` blocks). In `protect` mode — the mode free hands send under — every credential and every personal canary is refused in all three placements; the repo path and the internal host name are `not-detectable` until 3.5's placeholder scope. Seen red with the final check neutralised. The identifier rows it relies on came onto this branch with one-detector 2.3. Test: `tests/scripts/egress_canary.test.ts`.
+  Done 2026-10-22 (ffb6a6b722, 61bb2463f6): `egress_canary.test.ts`, seen red with the check neutralised.
 
 ## Phase 2 — The route (gateway M1)
 
@@ -152,7 +152,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   `road-to-a-tier-the-dispatch-carries` T9.)
   verify: offline, the roster reports `unknown`, never a cached list; a route whose attestation
   lacks the distribution field is refused as a consumer default.
-  Done 2026-10-22 (commit e750d31083): `free_route_catalog.test.ts` › `offline, the roster reports unknown, never…` and `a route whose attestation lacks the distribution…`. No shipped row carries a dated attestation yet, so no route is a consumer default today — a recorded empty, not a filled table.
+  Done 2026-10-22 (e750d31083): `free_route_catalog.test.ts`; no shipped row is attested yet.
 - [x] **2.4 Identity derived, not declared (D5).** Family comes from the served id; a free route <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_route.ts -->
   answering with `model_served ≠ requested` is absent with `policy_model_mismatch` (paid
   aliases keep today's attribution-only behaviour). Random/auto routers are refused at config
@@ -168,7 +168,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   verify: a loopback stub whose probe reports local weights admits a `project-content`
   payload; the same stub reporting a remote model, and on a non-loopback address, both refuse
   it with `policy_content_ceiling`.
-  Done 2026-10-22 (commits d0d9dd44af, 15d021b4a2): `self_hosted_route.test.ts`, six cases including the three in the verify line. The production probe is `UNPROVEN_PROBE`, so a self-hosted route carries `public-artifact` only until a real per-model probe ships — fail-closed by construction. No self-hosted server runs on the maintainer's host to build that probe against; listed as residue in the PR.
+  Done 2026-10-22 (commits d0d9dd44af, 15d021b4a2): `self_hosted_route.test.ts`, six cases. The production probe is `UNPROVEN_PROBE`, so self-hosted stays `public-artifact` until a real probe ships (residue in the PR).
 
 ## Phase 3 — The worker contract (rung 0.5, free hands)
 
@@ -206,7 +206,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   scope before send.
   verify: the outbound payload of a call containing the project name carries its placeholder
   instead, and a payload fixture carries no implementation body of a called function.
-  Done 2026-10-22 (commit 3064cf4394): `hand_payload.test.ts` › `carries no implementation body of a called function`, `a call whose slice names the project sends its placeholder instead`; sabotage of the replacement turned 2 tests red.
+  Done 2026-10-22 (commit 3064cf4394): `hand_payload.test.ts` — no callee body, project name placeholdered; sabotage turned 2 red.
 - [x] **3.6 An exposure ledger per route.** Gitignored runtime state counts distinct project <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/continuity-surface.json -->
   files and symbols each route has seen; the chooser prefers the least-exposed admissible route
   and refuses a route past a share cap (default 20 % of tracked files, decision A4). This raises
