@@ -96,10 +96,7 @@ export function flipReadiness(w: ShadowWindow, m: FlipMeasurements): { ready: bo
     return { ready: missing.length === 0, missing };
 }
 
-
-// ── Reconstruction (council 2026-10-22, decision 1) ─────────────────────────
-//
-// The hook records the precondition and the join keys only. The full verdict
+// Council 2026-10-22, decision 1: the hook records the precondition and the join keys only. The full verdict
 // for each spawn is rebuilt here, at report time, from the ledger and the
 // stopped workers' transcripts, and every output carries `basis:
 // 'reconstructed'`. A spawn whose join lacks an input is `incomplete_join` with
@@ -299,8 +296,6 @@ export function summariseReconstruction(spawns: readonly ReconstructedSpawn[]): 
         window,
     };
 }
-
-// ── Readers ────────────────────────────────────────────────────────────────
 
 export function readLedgerLines(ledgerDir: string, sinceIso: string | null = null): LedgerLine[] {
     if (!fs.existsSync(ledgerDir)) return [];
