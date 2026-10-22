@@ -51,8 +51,9 @@
  * its binding lands; the binding needs bundle headroom it does not have today.
  *
  * KILL SWITCH. `AGENT_CONFIG_INSTRUCTIONS_OBSERVER=off` makes it a no-op without
- * a reinstall; removing the one `instructions_loaded` binding in
- * `hook_manifest.yaml` and reinstalling removes it entirely. Either is the
+ * a reinstall; once the binding above lands, removing that one
+ * `instructions_loaded` row from `hook_manifest.yaml` and reinstalling removes
+ * it entirely. Either is the
  * response to hook failures, duplicate events, a session-start regression or an
  * unexplained test break.
  */
