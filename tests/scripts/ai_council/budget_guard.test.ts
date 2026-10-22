@@ -25,7 +25,7 @@ import {
 } from '../../../src/scripts/ai_council/budget_guard.js';
 import { CouncilResponse, type ExternalAIClient } from '../../../src/scripts/ai_council/clients.js';
 import type { CostEstimate } from '../../../src/scripts/ai_council/pricing.js';
-import { RoundReservations } from '../../../src/scripts/ai_council/round_reservations.js';
+import { RoundReservations, outcomeIsUnknown } from '../../../src/scripts/ai_council/round_reservations.js';
 import { CostBudget } from '../../../src/scripts/ai_council/spend_gate.js';
 import { hasPython3, oracleFile, runPyCode } from './_harness.js';
 
@@ -450,5 +450,13 @@ describe('budget_guard — reservations under a set ceiling', () => {
         round.finish([]);
         expect(states()).toEqual(['released', 'unreconciled']);
         expect(today_spend_usd({ path: p })).toBeCloseTo(0.2, 9);
+    });
+
+    it('an unreadable answer is billed; a stray three-digit number is not a 5xx', () => {
+        expect(outcomeIsUnknown('parse_failed: SyntaxError')).toBe(true);
+        expect(outcomeIsUnknown('Error: HTTP 503: unavailable')).toBe(true);
+        expect(outcomeIsUnknown('exit_502')).toBe(true);
+        expect(outcomeIsUnknown('invalid key at line 500')).toBe(false);
+        expect(outcomeIsUnknown('refused after 500 ms')).toBe(false);
     });
 });

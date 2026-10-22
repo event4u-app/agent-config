@@ -29,9 +29,12 @@ const HOLD_PAST_TIMEOUT_MS = 3_600_000;
  * An error whose outcome nobody knows: the provider may have generated and
  * billed before the connection died. Anything else that fails with no tokens
  * failed before the provider accepted the request — auth, a missing key, a
- * refused connection — and releases its reservation.
+ * refused connection — and releases its reservation. `parse_failed` is an
+ * answer that arrived unreadable, so it was billed. A 5xx counts only where it
+ * is named as a status, so `line 500` or `500 ms` in a message is not one.
  */
-const UNKNOWN_OUTCOME = /time[sd]?\s*out|timeout|deadline exceeded|ETIMEDOUT|ECONNRESET|socket hang up|server[_ ]error|overloaded|\b5\d\d\b/iu;
+const UNKNOWN_OUTCOME =
+    /time[sd]?\s*out|timeout|deadline exceeded|ETIMEDOUT|ECONNRESET|socket hang up|server[_ ]error|overloaded|parse_failed|(?:\bHTTP\s*|\bstatus(?:\s+code)?\s*:?\s*|\bexit_|\berror\s+)5\d\d\b/iu;
 
 export function outcomeIsUnknown(error: string): boolean {
     return UNKNOWN_OUTCOME.test(error);
