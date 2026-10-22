@@ -7,6 +7,7 @@
  * for 9-35 s. Removing the `globalSetup` entry keeps the suite green and brings
  * the leak back silently, so the wiring is asserted, not trusted.
  */
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -19,6 +20,7 @@ import {
     isolate,
     ISOLATION_SKIPPED_VAR,
     MAX_SOCKET_PATH,
+    OWNER_PID_FILE,
     RUN_ROOT_PREFIX,
     STALE_AFTER_MS,
     sweepStaleRunRoots,
@@ -38,6 +40,12 @@ describe('the suite runs inside a run-scoped temp root', () => {
     });
 });
 
+/** A pid that is certainly not running: a child that has already exited. */
+function deadPid(): number {
+    const r = spawnSync(process.execPath, ['-e', '0']);
+    return r.pid ?? 999_999;
+}
+
 describe('sweepStaleRunRoots', () => {
     let base: string;
 
@@ -52,6 +60,7 @@ describe('sweepStaleRunRoots', () => {
         const young = createRunRoot(base);
         const foreign = fs.mkdtempSync(path.join(base, 'someone-else-'));
         const old = new Date(now - STALE_AFTER_MS - 60_000);
+        fs.writeFileSync(path.join(stale, OWNER_PID_FILE), String(deadPid()));
         fs.utimesSync(stale, old, old);
         fs.utimesSync(foreign, old, old);
 
@@ -61,6 +70,19 @@ describe('sweepStaleRunRoots', () => {
         expect(fs.existsSync(stale)).toBe(false);
         expect(fs.existsSync(young)).toBe(true);
         expect(fs.existsSync(foreign)).toBe(true);
+    });
+
+    it('keeps an old root whose owning run is still alive', () => {
+        // A quiet long run leaves its root unwritten; age alone must not
+        // delete it from under that run. createRunRoot names this process.
+        base = fs.mkdtempSync(path.join(os.tmpdir(), 'sweep-'));
+        const now = Date.now();
+        const quiet = createRunRoot(base);
+        const old = new Date(now - STALE_AFTER_MS - 60_000);
+        fs.utimesSync(quiet, old, old);
+
+        expect(sweepStaleRunRoots(base, now)).toEqual([]);
+        expect(fs.existsSync(quiet)).toBe(true);
     });
 
     it('returns nothing for a base that does not exist', () => {
