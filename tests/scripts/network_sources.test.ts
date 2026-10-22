@@ -30,6 +30,9 @@ beforeAll(async () => {
         } else if (req.url === '/big') {
             res.writeHead(200);
             res.end('x'.repeat(5000));
+        } else if (req.url === '/slow') {
+            res.writeHead(200);
+            res.write('a trickle that never ends');
         } else if (req.url?.startsWith('/hop')) {
             const n = Number(req.url.slice(4));
             res.writeHead(302, { location: n > 0 ? `/hop${n - 1}` : '/article' });
@@ -65,6 +68,20 @@ describe('validateSourceUrl', () => {
         }
         for (const a of ['93.184.216.34', '8.8.8.8', '2606:4700::1111']) expect(isPrivateAddress(a)).toBe(false);
     });
+
+    it('judges an IPv6 address that embeds an IPv4 one by the IPv4 address, and refuses the reserved ranges', async () => {
+        // WHATWG URL rewrites [::ffff:127.0.0.1] to the hex form, which the dotted-quad check alone missed.
+        expect(new URL('http://[::ffff:127.0.0.1]/').hostname).toBe('[::ffff:7f00:1]');
+        const embedded = ['::ffff:7f00:1', '::ffff:a9fe:a9fe', '::ffff:127.0.0.1', '::ffff:10.0.0.1', '64:ff9b::7f00:1', '2002:7f00:1::', '::7f00:1'];
+        const reserved = ['fec0::1', 'fe80::1', 'ff02::1', '192.0.0.8', '198.18.0.1', '198.19.255.1', '224.0.0.1', '255.255.255.255'];
+        for (const a of [...embedded, ...reserved]) expect(isPrivateAddress(a), a).toBe(true);
+        for (const a of ['::ffff:5db8:d822', '64:ff9b::808:808', '2002:808:808::', '198.20.0.1', '192.0.2.1']) expect(isPrivateAddress(a), a).toBe(false);
+        await expect(validateSourceUrl('http://[::ffff:127.0.0.1]/x', { network: true })).rejects.toThrow(/private/);
+    });
+
+    it('refuses a clone pin that is not a full commit SHA, so it can never be read as an option', async () => {
+        await expect(cloneRepoSource('https://example.com/r.git', os.tmpdir(), { network: true, pinSha: '--upload-pack=x' })).rejects.toThrow(/40-hex/);
+    });
 });
 
 describe('fetchUrlSource (step 4.2b)', () => {
@@ -74,6 +91,10 @@ describe('fetchUrlSource (step 4.2b)', () => {
         expect(ref.digest).toMatch(/^sha256:[0-9a-f]{64}$/);
         expect(ref.pin).toBe(ref.digest);
         expect(ref.text).toContain('evicts the oldest entry');
+    });
+
+    it('gives up on a server that trickles a body without ending it', async () => {
+        await expect(fetchUrlSource(`${base}/slow`, { ...FIXTURE, timeoutMs: 200 })).rejects.toThrow(/abort|timeout/i);
     });
 
     it('follows at most the redirect cap and re-validates every hop', async () => {
