@@ -488,8 +488,13 @@ describe('release settings delta — the assertion', () => {
 
     it('tombstoned-removal: below a major a carried removal needs a proof, at a major it does not', () => {
         const base = readReleasedSurface();
+        // Targets relative to the committed surface, which a cut moves: a
+        // literal 16.x target turns into a downgrade the moment 17.0.0 is cut.
+        const [baseMajor, baseMinor] = base.version.split('.').map(Number);
+        const minorTarget = `${baseMajor}.${baseMinor! + 1}.0`;
+        const nextMajor = `${baseMajor! + 1}.0.0`;
         const key = 'quality.local_auto_run';
-        const live = plantRemoval(base, key, '16.6.0');
+        const live = plantRemoval(base, key, minorTarget);
         const tombstoned: ReleasedSurface = { ...live, removedKeys: [...live.removedKeys, key].sort() };
         const f = classifySettingsDelta(base, tombstoned);
         expect(f.carried_removals.map((r) => r.key)).toEqual([key]);
@@ -499,7 +504,7 @@ describe('release settings delta — the assertion', () => {
         expect(isMajorBump('16.5.0', '17.0.0-next.1')).toBe(true);
 
         // Below a major, no proof: refused, and the key is named.
-        const none = belowMajorRefusalLines(base, tombstoned, f, '16.6.0', new Map());
+        const none = belowMajorRefusalLines(base, tombstoned, f, minorTarget, new Map());
         expect(none).toHaveLength(1);
         expect(none[0]).toContain(key);
         // A proof naming a test the tree does not contain is no proof.
@@ -517,12 +522,12 @@ describe('release settings delta — the assertion', () => {
         } finally {
             fs.rmSync(tmp, { recursive: true, force: true });
         }
-        expect(belowMajorRefusalLines(base, tombstoned, f, '16.6.0', new Map([[key, 'x::y']]))).toHaveLength(1);
+        expect(belowMajorRefusalLines(base, tombstoned, f, minorTarget, new Map([[key, 'x::y']]))).toHaveLength(1);
         // A proof that holds licenses the minor.
         expect(proofHolds(PROOF)).toBe(true);
-        expect(belowMajorRefusalLines(base, tombstoned, f, '16.6.0', new Map([[key, PROOF]]))).toEqual([]);
+        expect(belowMajorRefusalLines(base, tombstoned, f, minorTarget, new Map([[key, PROOF]]))).toEqual([]);
         // At a major the same removal needs nothing more than its tombstone.
-        expect(belowMajorRefusalLines(base, { ...tombstoned, version: '17.0.0' }, f, '17.0.0', new Map())).toEqual([]);
+        expect(belowMajorRefusalLines(base, { ...tombstoned, version: nextMajor }, f, nextMajor, new Map())).toEqual([]);
 
         // A rename is a removal too: carried, and below a major it needs a proof.
         const renamedTo = 'quality.local_auto_run_renamed';
@@ -533,20 +538,20 @@ describe('release settings delta — the assertion', () => {
         };
         const fr = classifySettingsDelta(base, renamed);
         expect(fr.carried_removals).toEqual([{ key, via: 'renamed', to: renamedTo }]);
-        expect(belowMajorRefusalLines(base, renamed, fr, '16.6.0', new Map())[0]).toContain(key);
+        expect(belowMajorRefusalLines(base, renamed, fr, minorTarget, new Map())[0]).toContain(key);
 
         // Dropping an alias is the removal it postponed: refused below a major.
         const alias = base.renamedKeys[0];
         expect(alias).toBeDefined();
-        const aliasDropped: ReleasedSurface = { ...base, version: '16.6.0', renamedKeys: [] };
+        const aliasDropped: ReleasedSurface = { ...base, version: minorTarget, renamedKeys: [] };
         const fd = classifySettingsDelta(base, aliasDropped);
-        const dropLines = belowMajorRefusalLines(base, aliasDropped, fd, '16.6.0', new Map());
+        const dropLines = belowMajorRefusalLines(base, aliasDropped, fd, minorTarget, new Map());
         expect(dropLines.join('\n')).toContain(`rename alias dropped below a major: ${alias?.[0]}`);
-        expect(belowMajorRefusalLines(base, aliasDropped, fd, '17.0.0', new Map())).toEqual([]);
+        expect(belowMajorRefusalLines(base, aliasDropped, fd, nextMajor, new Map())).toEqual([]);
 
         // Through the assertion: dry-run reports, a real minor cut refuses.
         const preview = capture((write) => {
-            assert_settings_surface_delta('16.6.0', {
+            assert_settings_surface_delta(minorTarget, {
                 previewOnly: true,
                 emit: () => tombstoned,
                 read: () => base,
@@ -566,7 +571,7 @@ describe('release settings delta — the assertion', () => {
         try {
             capture((write) => {
                 try {
-                    assert_settings_surface_delta('16.6.0', {
+                    assert_settings_surface_delta(minorTarget, {
                         emit: () => tombstoned,
                         read: () => base,
                         write,
