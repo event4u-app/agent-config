@@ -24,8 +24,14 @@ export interface RouteAttestation {
     readonly checked: string;
     readonly source_url: string;
     readonly trains_on_prompts: boolean;
-    /** Whether the terms permit use inside a client distributed to users in the EEA, Switzerland and the UK. */
-    readonly client_distribution_eea_ch_uk?: 'permitted' | 'forbidden';
+    /** What the terms say about keeping prompts and outputs, in their words' substance. */
+    readonly retention?: string;
+    /**
+     * Whether the terms permit use inside a client distributed to users in the
+     * EEA, Switzerland and the UK. `unknown` records that the terms were read
+     * and say neither, which keeps the route maintainer-only like an absent field.
+     */
+    readonly client_distribution_eea_ch_uk?: 'permitted' | 'forbidden' | 'unknown';
 }
 
 export interface CatalogRoute {
@@ -34,13 +40,36 @@ export interface CatalogRoute {
     readonly keyless: boolean;
     /** `null` until someone reads the terms and dates what they say. */
     readonly attestation: RouteAttestation | null;
+    /**
+     * The route's own model list marking each entry `community: true|false`.
+     * When set, discovery admits only first-party ids and fails closed when the
+     * list cannot be read, because the attestation speaks for first-party
+     * models only.
+     */
+    readonly first_party_list?: string;
 }
 
 /**
- * Base URLs only. No row carries an attestation yet: none has been read and
- * dated, so every row is maintainer-only until one is.
+ * Base URLs only. One row carries an attestation (council 2026-10-22,
+ * decision 2): its terms were read from the provider's published policy, and
+ * they settle neither way whether a distributed client may serve EEA, CH or UK
+ * users, so it stays maintainer-only.
  */
 export const ROUTE_CATALOG: readonly CatalogRoute[] = [
+    {
+        id: 'pollinations',
+        base_url: 'https://text.pollinations.ai/openai',
+        keyless: true,
+        first_party_list: 'https://text.pollinations.ai/models',
+        attestation: {
+            checked: '2026-10-22',
+            source_url: 'https://pollinations.ai/privacy',
+            trains_on_prompts: false,
+            retention:
+                'prompts and outputs processed transiently, with short-lived response caches; the selected model\'s inference host sets its own retention',
+            client_distribution_eea_ch_uk: 'unknown',
+        },
+    },
     { id: 'groq', base_url: 'https://api.groq.com/openai/v1', keyless: false, attestation: null },
     { id: 'cerebras', base_url: 'https://api.cerebras.ai/v1', keyless: false, attestation: null },
     { id: 'openrouter', base_url: 'https://openrouter.ai/api/v1', keyless: false, attestation: null },
@@ -64,7 +93,7 @@ export function consumerDefaultVerdict(route: CatalogRoute, now: Date = new Date
     if (ageDays > ATTESTATION_MAX_AGE_DAYS) {
         return { admissible: false, reason: `${route.id}: attestation from ${a.checked} is older than ${ATTESTATION_MAX_AGE_DAYS} days` };
     }
-    if (a.client_distribution_eea_ch_uk === undefined) {
+    if (a.client_distribution_eea_ch_uk === undefined || a.client_distribution_eea_ch_uk === 'unknown') {
         return { admissible: false, reason: `${route.id}: attestation records no EEA/CH/UK distribution term — maintainer runs only` };
     }
     if (a.client_distribution_eea_ch_uk === 'forbidden') {
@@ -137,6 +166,27 @@ export interface DiscoverOptions {
     readonly fetchImpl?: typeof fetch;
     readonly now?: Date;
     readonly timeoutMs?: number;
+    /** A route's `first_party_list`; when set, only ids it marks `community: false` are kept. */
+    readonly firstPartyListUrl?: string;
+}
+
+async function firstPartyIds(url: string, opts: DiscoverOptions): Promise<Set<string>> {
+    const res = await (opts.fetchImpl ?? fetch)(url, {
+        headers: { accept: 'application/json' },
+        signal: AbortSignal.timeout(opts.timeoutMs ?? 15_000),
+    });
+    if (!res.ok) throw new Error(`first-party list HTTP ${res.status}`);
+    const body = (await res.json()) as unknown;
+    if (!Array.isArray(body)) throw new Error('first-party list is not a list');
+    const ids = new Set<string>();
+    for (const m of body) {
+        if (m === null || typeof m !== 'object') continue;
+        const e = m as Record<string, unknown>;
+        if (e['community'] !== false) continue;
+        if (typeof e['name'] === 'string') ids.add(e['name']);
+        if (Array.isArray(e['aliases'])) for (const a of e['aliases']) if (typeof a === 'string') ids.add(a);
+    }
+    return ids;
 }
 
 /**
@@ -159,6 +209,10 @@ export async function discoverRouteModels(routeKey: string, baseUrl: string, opt
         models = body.data
             .map((m) => (m !== null && typeof m === 'object' ? (m as Record<string, unknown>)['id'] : undefined))
             .filter((id): id is string => typeof id === 'string' && id !== '');
+        if (opts.firstPartyListUrl) {
+            const fp = await firstPartyIds(opts.firstPartyListUrl, opts);
+            models = models.filter((id) => fp.has(id));
+        }
     } catch (exc) {
         if (routeKey in store) {
             delete store[routeKey];

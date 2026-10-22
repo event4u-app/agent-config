@@ -61,7 +61,7 @@ const NOW = new Date('2026-10-22T12:00:00Z');
 
 describe('2.3 — ship endpoints and attestations, never model ids', () => {
     it('no shipped catalogue row carries a model id', () => {
-        const allowed = new Set(['id', 'base_url', 'keyless', 'attestation']);
+        const allowed = new Set(['id', 'base_url', 'keyless', 'attestation', 'first_party_list']);
         for (const row of ROUTE_CATALOG) {
             expect(Object.keys(row).filter((k) => !allowed.has(k))).toEqual([]);
             expect(JSON.stringify(row)).not.toMatch(/"model/);
@@ -130,5 +130,60 @@ describe('2.3 — model ids are discovered live and kept in runtime state', () =
         expect(roster.status).toBe('unknown');
         expect(readRouteRoster(root, 'hands').status).toBe('unknown');
         expect(readRouteRoster(tmpRoot(), 'never-probed').status).toBe('unknown');
+    });
+});
+
+describe('keyless first-party route (council 2026-10-22, decision 2, round 2: option a)', () => {
+    async function mockKeyless(ids: string[], list: unknown, listStatus = 200): Promise<{ base: string; list: string }> {
+        const server = http.createServer((req, res) => {
+            if (req.url === '/openai/models') {
+                res.writeHead(200, { 'content-type': 'application/json' });
+                res.end(JSON.stringify({ object: 'list', data: ids.map((id) => ({ id, object: 'model' })) }));
+                return;
+            }
+            if (req.url === '/models') {
+                res.writeHead(listStatus, { 'content-type': 'application/json' });
+                res.end(JSON.stringify(list));
+                return;
+            }
+            res.writeHead(404);
+            res.end();
+        });
+        await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+        cleanups.push(() => server.close());
+        const port = (server.address() as AddressInfo).port;
+        return { base: `http://127.0.0.1:${port}/openai`, list: `http://127.0.0.1:${port}/models` };
+    }
+
+    it('the catalogue carries the keyless route with a dated attestation that keeps it maintainer-only', () => {
+        const row = ROUTE_CATALOG.find((r) => r.id === 'pollinations')!;
+        expect(row.keyless).toBe(true);
+        expect(row.base_url).toBe('https://text.pollinations.ai/openai');
+        expect(row.first_party_list).toBe('https://text.pollinations.ai/models');
+        expect(row.attestation).toMatchObject({ checked: '2026-10-22', trains_on_prompts: false, client_distribution_eea_ch_uk: 'unknown' });
+        expect(row.attestation!.retention).toMatch(/transient/);
+        const v = consumerDefaultVerdict(row, NOW);
+        expect(v.admissible).toBe(false);
+        expect(v.reason).toMatch(/maintainer/);
+    });
+
+    it('discovery keeps only ids the route lists as first-party, by name or alias', async () => {
+        const root = tmpRoot();
+        const { base, list } = await mockKeyless(['fp-a', 'fp-b-alias', 'community-c', 'unlisted-d'], [
+            { name: 'fp-a', community: false },
+            { name: 'fp-b', aliases: ['fp-b-alias'], community: false },
+            { name: 'community-c', community: true },
+        ]);
+        const roster = await discoverRouteModels('poll', base, { repoRoot: root, now: NOW, firstPartyListUrl: list });
+        expect(roster).toEqual({ status: 'known', models: ['fp-a', 'fp-b-alias'], observed_at: NOW.toISOString() });
+    });
+
+    it('a first-party list that cannot be read fails closed: the roster is unknown', async () => {
+        const root = tmpRoot();
+        const { base, list } = await mockKeyless(['fp-a'], { error: 'down' }, 503);
+        const roster = await discoverRouteModels('poll', base, { repoRoot: root, now: NOW, firstPartyListUrl: list });
+        expect(roster.status).toBe('unknown');
+        const malformed = await mockKeyless(['fp-a'], { not: 'a list' });
+        expect((await discoverRouteModels('poll', malformed.base, { repoRoot: root, now: NOW, firstPartyListUrl: malformed.list })).status).toBe('unknown');
     });
 });

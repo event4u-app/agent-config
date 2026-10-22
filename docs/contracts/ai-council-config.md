@@ -1439,7 +1439,13 @@ route member, and `--json` carries `route` per transport.
 The package ships base URLs and the attestation shape only, never model ids
 (`free_route_catalog.ts`). A route is a consumer default only with a dated
 attestation younger than 90 days whose `client_distribution_eea_ch_uk` is
-`permitted`; anything else is for the maintainer's own runs. Model ids come
+`permitted`; `unknown`, `forbidden` or an absent field keeps it for the
+maintainer's own runs. A catalogued route carrying `first_party_list` (its own
+model list marking `community: true|false`) is attested for first-party models
+only: discovery keeps only the ids that list marks `community: false` and reads
+`unknown` when the list cannot be read, and a member on that route is absent
+with `policy_model_mismatch` unless its model is in a first-party roster
+discovered within the last day. Model ids come
 from one GET of `<base_url>/models` into
 `agents/runtime/state/council-route-models.json`; a failed probe clears the
 entry, so an offline route reads `unknown`.
