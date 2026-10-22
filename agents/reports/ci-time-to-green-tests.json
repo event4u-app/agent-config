@@ -1,0 +1,103 @@
+{
+  "generated_at": "2026-10-22T01:26:18.276Z",
+  "sample": {
+    "window": "2026-10-15T01:25:43.001Z → 2026-10-22T01:25:43.001Z (7 d)",
+    "workflow": "tests.yml",
+    "runs_listed": 553,
+    "runs_with_jobs": 550,
+    "truncated": false,
+    "reason": null
+  },
+  "required": [
+    "Sync + Generate Tools Consistency",
+    "Standing payload delta + budget gate"
+  ],
+  "by_os_event": [
+    {
+      "os": "macos",
+      "event": "pull_request",
+      "queue": {
+        "n": 5148,
+        "p50": 368,
+        "p90": 1576
+      },
+      "exec": {
+        "n": 5148,
+        "p50": 150,
+        "p90": 586
+      }
+    },
+    {
+      "os": "macos",
+      "event": "push",
+      "queue": {
+        "n": 1934,
+        "p50": 226,
+        "p90": 1037
+      },
+      "exec": {
+        "n": 1934,
+        "p50": 136,
+        "p90": 594
+      }
+    },
+    {
+      "os": "ubuntu",
+      "event": "pull_request",
+      "queue": {
+        "n": 5148,
+        "p50": 59,
+        "p90": 291
+      },
+      "exec": {
+        "n": 5148,
+        "p50": 90,
+        "p90": 386
+      }
+    },
+    {
+      "os": "ubuntu",
+      "event": "push",
+      "queue": {
+        "n": 1937,
+        "p50": 16,
+        "p90": 133
+      },
+      "exec": {
+        "n": 1937,
+        "p50": 80,
+        "p90": 381
+      }
+    }
+  ],
+  "by_event": [
+    {
+      "event": "pull_request",
+      "shas": 396,
+      "all_green": {
+        "n": 223,
+        "p50": 1593,
+        "p90": 3216
+      },
+      "required_green": {
+        "n": 0,
+        "p50": null,
+        "p90": null
+      }
+    },
+    {
+      "event": "push",
+      "shas": 153,
+      "all_green": {
+        "n": 81,
+        "p50": 1094,
+        "p90": 1968
+      },
+      "required_green": {
+        "n": 0,
+        "p50": null,
+        "p90": null
+      }
+    }
+  ]
+}
