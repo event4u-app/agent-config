@@ -13082,8 +13082,8 @@ function ruleFileArrives(sourcePath, scope) {
   if (!sourcePath.endsWith(".md")) {
     return true;
   }
-  const basename9 = path25.basename(sourcePath);
-  if (COMPAT_ALWAYS_EXCLUDED.includes(basename9)) {
+  const basename10 = path25.basename(sourcePath);
+  if (COMPAT_ALWAYS_EXCLUDED.includes(basename10)) {
     return false;
   }
   return rule_in_scope(sourcePath, scope.workspaces, scope.packs, scope.roles ?? null);
@@ -14275,16 +14275,64 @@ function snapshotStampedLayer(rulesDir, dest) {
     fs35.writeFileSync(path34.join(dest, name), text);
   }
 }
+var LOCK_DIRNAME = ".install.lock";
+var LOCK_STALE_MS = 10 * 60 * 1e3;
+var LOCK_WAIT_MS = 120 * 1e3;
+var LOCK_POLL_MS = 100;
+function sleepSync(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+function acquireLock(runtimeRoot, waitMs) {
+  const lock = path34.join(runtimeRoot, LOCK_DIRNAME);
+  const deadline = Date.now() + waitMs;
+  for (; ; ) {
+    try {
+      fs35.mkdirSync(lock);
+      fs35.writeFileSync(path34.join(lock, "owner"), `${process.pid}
+`);
+      return () => fs35.rmSync(lock, { recursive: true, force: true });
+    } catch (e) {
+      if (e.code !== "EEXIST") throw e;
+    }
+    try {
+      if (Date.now() - fs35.statSync(lock).mtimeMs > LOCK_STALE_MS) {
+        fs35.rmSync(lock, { recursive: true, force: true });
+        continue;
+      }
+    } catch {
+      continue;
+    }
+    if (Date.now() >= deadline) {
+      throw new Error(`stageRuntime: another install is staging the runtime (${lock}); retry once it has finished`);
+    }
+    sleepSync(LOCK_POLL_MS);
+  }
+}
 function sweepStale(runtimeRoot, keep) {
   for (const name of fs35.readdirSync(runtimeRoot)) {
-    const stale = name.startsWith("v-") && name !== keep || name.startsWith(".stage-") || name.startsWith(".current-");
+    const stale = name.startsWith("v-") && !keep.has(name) || name.startsWith(".stage-") || name.startsWith(".current-");
     if (stale) fs35.rmSync(path34.join(runtimeRoot, name), { recursive: true, force: true });
+  }
+}
+function currentTarget(current) {
+  try {
+    return path34.basename(fs35.readlinkSync(current));
+  } catch {
+    return null;
   }
 }
 function stageRuntime(opts) {
   const runtimeRoot = path34.resolve(opts.runtimeRoot);
-  const packageRoot = path34.resolve(opts.packageRoot);
   fs35.mkdirSync(runtimeRoot, { recursive: true });
+  const release = acquireLock(runtimeRoot, opts._lockWaitMs ?? LOCK_WAIT_MS);
+  try {
+    return stageLocked(opts, runtimeRoot);
+  } finally {
+    release();
+  }
+}
+function stageLocked(opts, runtimeRoot) {
+  const packageRoot = path34.resolve(opts.packageRoot);
   const version = readVersion(packageRoot);
   const nonce = `${process.pid}-${randomBytes6(4).toString("hex")}`;
   const stage = path34.join(runtimeRoot, `.stage-${nonce}`);
@@ -14306,15 +14354,18 @@ function stageRuntime(opts) {
   const versionDir = `v-${version.replace(/[^A-Za-z0-9._-]/g, "_")}-${nonce}`;
   fs35.renameSync(stage, path34.join(runtimeRoot, versionDir));
   const current = currentRuntimeDir(runtimeRoot);
+  const previous = currentTarget(current);
   const link = path34.join(runtimeRoot, `.current-${nonce}`);
   if (process.platform === "win32") {
     fs35.symlinkSync(path34.join(runtimeRoot, versionDir), link, "junction");
-    fs35.rmSync(current, { recursive: true, force: true });
+    const aside = path34.join(runtimeRoot, `.current-old-${nonce}`);
+    if (fs35.existsSync(current)) fs35.renameSync(current, aside);
+    fs35.renameSync(link, current);
   } else {
     fs35.symlinkSync(versionDir, link);
+    fs35.renameSync(link, current);
   }
-  fs35.renameSync(link, current);
-  sweepStale(runtimeRoot, versionDir);
+  sweepStale(runtimeRoot, new Set(previous === null ? [versionDir] : [versionDir, previous]));
   return {
     currentDir: current,
     version,
