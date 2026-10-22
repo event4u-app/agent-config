@@ -28,3 +28,13 @@ export function seatResumeArgs(
     if (provider === 'openai') return ['resume', session.id];
     return [];
 }
+
+/**
+ * `codex exec resume` refuses `--sandbox` (measured on codex-cli 0.148.0), so a
+ * resumed seat carries the same bound as a config override instead of dropping it.
+ */
+export function resumeBound(bound: readonly string[]): string[] {
+    const i = bound.indexOf('--sandbox');
+    if (i < 0 || bound[i + 1] === undefined) return [...bound];
+    return [...bound.slice(0, i), '-c', `sandbox_mode="${bound[i + 1]}"`, ...bound.slice(i + 2)];
+}

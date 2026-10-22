@@ -49,7 +49,7 @@ import * as path from 'node:path';
 import { vendorPrefix } from '../_lib/egress_rules.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { boundFor, lightLaunchFor } from './cli_agency_bounds.js';
-import { seatResumeArgs, type SeatSession } from './seat_resume.js';
+import { resumeBound, seatResumeArgs, type SeatSession } from './seat_resume.js';
 import { councilEgress } from './council_egress.js';
 import {
     curlJsonPost as _curlJsonPost,
@@ -1866,7 +1866,9 @@ export class OpenAICliClient extends CliClient {
         // the payload itself is assembled in `_stdin_payload`.
         const modelArgs =
             this.model === OPENAI_CLI_VENDOR_DEFAULT ? [] : ['--model', this.model];
-        return [this.binary, 'exec', ...seatResumeArgs(this.name, this.resumeNext, { blind: false, now_ms: Date.now() }), '--json', '--skip-git-repo-check', ...boundFor('openai'), ...modelArgs, '-'];
+        const resume = seatResumeArgs(this.name, this.resumeNext, { blind: false, now_ms: Date.now() });
+        const bound = resume.length === 0 ? boundFor('openai') : resumeBound(boundFor('openai'));
+        return [this.binary, 'exec', ...resume, '--json', '--skip-git-repo-check', ...bound, ...modelArgs, '-'];
     }
 
     /**
@@ -1997,10 +1999,9 @@ export class OpenAICliClient extends CliClient {
                     input_tokens = _pyIntCoerce(_dictGet(usageObj, 'input_tokens', 0));
                     output_tokens = _pyIntCoerce(_dictGet(usageObj, 'output_tokens', 0));
                 }
-            } else if (event_type === 'session.created') {
-                if (_pyTruthy(_dictGet(ev, 'session_id', undefined))) {
-                    meta['session_id'] = _pyStr(ev['session_id']);
-                }
+            } else if (event_type === 'session.created' || event_type === 'thread.started') {
+                const sid = _dictGet(ev, 'session_id', undefined) ?? _dictGet(ev, 'thread_id', undefined);
+                if (_pyTruthy(sid)) meta['session_id'] = _pyStr(sid);
             } else if (event_type === 'turn.failed') {
                 // The turn's real cause lives ONLY here, and codex still exits
                 // 0. Without this branch the response is an empty text, which

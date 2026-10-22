@@ -2304,3 +2304,29 @@ describe('cold-start 5.2 — a non-blind follow-up continues the seat session in
         expect(calls[3]!.cmd).not.toContain('--resume');
     });
 });
+
+describe('cold-start 5.2 — the codex seat', () => {
+    const thread = (): SubprocessResult =>
+        ({
+            returncode: 0,
+            stdout: [
+                JSON.stringify({ type: 'thread.started', thread_id: 'th-1' }),
+                JSON.stringify({ type: 'item.completed', item: { id: 'i', type: 'agent_message', text: 'ok' } }),
+                JSON.stringify({ type: 'turn.completed', usage: { input_tokens: 1, output_tokens: 1 } }),
+            ].join('\n'),
+            stderr: '',
+        }) as SubprocessResult;
+
+    it('records thread.started as its session and resumes with the sandbox bound as a config override', () => {
+        const { client, calls } = stubCli(OpenAICliClient, thread);
+        client.ask('sys', 'first', 100);
+        expect(client.lastSession?.id).toBe('th-1');
+        client.resumeNext = client.lastSession;
+        client.ask('sys', 'repair', 100);
+        const cmd = calls[1]!.cmd;
+        expect(cmd.slice(1, 4)).toEqual(['exec', 'resume', 'th-1']);
+        expect(cmd).not.toContain('--sandbox');
+        expect(cmd.join(' ')).toContain('-c sandbox_mode="read-only"');
+        expect(calls[0]!.cmd).toContain('--sandbox');
+    });
+});
