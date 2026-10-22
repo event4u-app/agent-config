@@ -185,9 +185,11 @@ export function nativeAudits(
             continue;
         }
         const cwd = path.join(root, path.dirname(file));
+        // `--no-plugins`: the scanned project's Composer plugins are its code,
+        // and an audit has no reason to run them. npm audit runs no scripts.
         const r = npm
             ? run('npm', ['audit', '--json', '--package-lock-only'], cwd, 30000)
-            : run('composer', ['audit', '--format=json', '--locked', '--no-interaction'], cwd, 30000);
+            : run('composer', ['audit', '--format=json', '--locked', '--no-interaction', '--no-plugins'], cwd, 30000);
         if (r.code < 0) {
             reports.push({ source, status: r.code === -1 ? 'unavailable' : 'error', reason: r.code === -1 ? 'not-installed' : 'killed' });
             continue;

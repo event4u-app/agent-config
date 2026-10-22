@@ -602,6 +602,17 @@ describe('council code review fixes (2026-10-21)', () => {
         expect(r.reports).toEqual([]);
     });
 
+    it('composer audit never loads the scanned project\'s plugins', () => {
+        const entries = [{ ecosystem: 'packagist', name: 'a/b', version: '1.0.0', file: 'composer.lock', line: 1, provenance: 'lockfile', private: false }] as unknown as Parameters<typeof nativeAudits>[1];
+        const seen: string[][] = [];
+        nativeAudits(tmp, entries, (cmd, args) => {
+            seen.push([cmd, ...args]);
+            return { code: 0, stdout: '{}' };
+        });
+        expect(seen).toHaveLength(1);
+        expect(seen[0]).toContain('--no-plugins');
+    });
+
     it('a cache that is not the state shape is no cache', () => {
         const root = project('F1-fastify-hono');
         const sp = statePath(root)!;
