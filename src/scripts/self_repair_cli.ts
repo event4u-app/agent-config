@@ -698,13 +698,12 @@ function tryPullRequest(
             return { step: 'whoami', ok: false, detail: 'whoami: the signed-in account changed after the approval — nothing was pushed' };
         }
         const repoName = repo.split('/')[1] ?? repo;
+        const forkUrl = `https://github.com/${login}/${repoName}.git`;
+        // A remote of that name already in the checkout's config is reused only
+        // when it points at the approved fork; anything else is repointed first.
         const hasRemote = deps.runner('git', ['remote', 'get-url', FORK_REMOTE], checkout);
-        if (!hasRemote.ok) {
-            const added = deps.runner(
-                'git',
-                ['remote', 'add', FORK_REMOTE, `https://github.com/${login}/${repoName}.git`],
-                checkout,
-            );
+        if (!hasRemote.ok || hasRemote.out.trim() !== forkUrl) {
+            const added = deps.runner('git', ['remote', hasRemote.ok ? 'set-url' : 'add', FORK_REMOTE, forkUrl], checkout);
             if (!added.ok) {
                 return { step: 'fork-remote', ok: false, detail: failDetail('fork-remote', added) };
             }
@@ -807,13 +806,12 @@ export function executeRelease(
     }
 
     const issue = collected.outgoing.issue!;
-    if (plan.route === 'pull-request') {
-        // The degraded body is re-rendered, so it is scanned on its own.
-        const bodyFindings = scanPayload({ branch: '', commits: '', objects: '', title: '', body: issue.body }, deny);
-        if (bodyFindings.length > 0) {
-            attempts.push({ step: 'payload-scan', ok: false, detail: describeFindings(bodyFindings) });
-            return { published: null, attempts };
-        }
+    // Scanned on every route that reaches here: the degraded body is re-rendered,
+    // and an issue-only plan never passed the pull-request scan above.
+    const bodyFindings = scanPayload({ branch: '', commits: '', objects: '', title: issue.title, body: issue.body }, deny);
+    if (bodyFindings.length > 0) {
+        attempts.push({ step: 'payload-scan', ok: false, detail: describeFindings(bodyFindings) });
+        return { published: null, attempts };
     }
     const created = deps.runner('gh', ['issue', 'create', '--repo', repo, '--title', issue.title, '--body', issue.body]);
     if (created.ok) {
