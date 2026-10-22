@@ -39,6 +39,9 @@ unsharded): **25** jobs on `push: main`, **19** on a PR whose diff the classifie
 |---|---|---|--:|--:|--:|
 | `tests.yml` | `install-tests` | ubuntu, 4 shards | 540 | 56 s | 57 s |
 | `tests.yml` | `install-tests` | macOS, 4 shards (now 1 unsharded job) | 464 | 109 s | 110 s |
+| `tests.yml` | `install-tests` | macOS, 1 unsharded job (PR #2577, run 39706826749) | 1 | 198 s | — |
+| `tests.yml` | `node-tests`, duration-balanced | ubuntu / macOS (PR #2577, run 39709319417) | 4 / 4 | 5m14s-6m12s / 5m30s-10m17s per job | — |
+| `consistency.yml` | Gate coverage floors step, parallel census | ubuntu (PR #2577, job 119596603743) | 1 | **96 s** (was 443 s) | — |
 | `tests.yml` | `install-aux-tests` | ubuntu / macOS | 135 / 123 | 71 / 140 s | 72 / 142 s |
 | `tests.yml` | `node-tests` shards 1, 2, 4 | ubuntu / macOS | 387 / 311 | 325 / 427 s | 331 / 438 s |
 | `tests.yml` | `node-tests` **shard 3/4** | ubuntu / macOS | 125 / 101 | **423 / 609 s** | 435 / 626 s |

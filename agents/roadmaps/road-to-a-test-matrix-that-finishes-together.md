@@ -61,7 +61,9 @@ job it sits in.
       verify: tests assert that over a fixture file list every file is assigned to
       exactly one of four shards, the assignment is stable across runs, and an
       unknown file is placed rather than skipped.
-- [ ] **1.3 Wire it into both OSes and record the effect.** `tests.yml` node-tests
+- [x] **1.3 Wire it into both OSes and record the effect.** **Measured (run 39709319417, manifest
+      refreshed from run 39706826749):** ubuntu node-test jobs 5m14s-6m12s (slowest/fastest
+      1.19, was 2.3 on 2026-08-18); macOS 5m30s-10m17s (1.87, was 3.2). `tests.yml` node-tests
       set the env var; the PR's own CI run is the measurement and the per-shard
       vitest times are recorded in the tests.yml comment that today states the
       2026-08-18 imbalance.
@@ -113,8 +115,8 @@ job it sits in.
 ## Acceptance Criteria
 
 - [x] AC-1 — Every vitest file in the node-tests set runs in exactly one shard.
-- [ ] AC-2 — The slowest-to-fastest shard ratio on this PR's run is recorded and
-      lower than the count-based 2026-08-18 ratio.
+- [x] AC-2 — The slowest-to-fastest shard ratio on this PR's run is recorded and
+      lower than the count-based 2026-08-18 ratio (ubuntu 1.19 vs 2.3, macOS 1.87 vs 3.2).
 - [x] AC-3 — The placement of the diagnostic-only step in Static Checks is decided on
       evidence (council 2026-10-22, decision B: it stays). Rewritten from "no diagnostic-only
       step remains", which assumed Static Checks was on the critical path; it is not.

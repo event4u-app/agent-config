@@ -129,6 +129,8 @@ keep the floor where it is calibrated and make running it cheap.
 
 - [x] AC-1 — Every enforced gate's floor is still asserted on every PR: executed
       in Consistency, or delegated to a named workflow that verifiably asserts it.
-- [ ] AC-2 — The Gate coverage floors step on this roadmap's PR CI run is measured
-      and recorded below the 443 s baseline, with the run id.
+- [x] AC-2 — The Gate coverage floors step on this roadmap's PR CI run is measured
+      and recorded below the 443 s baseline, with the run id. **96 s** on PR #2577
+      (job 119596603743, run of head 6574d5311); the whole job reached its last steps
+      in 3m00s against 613 s on PR #2569. The 25-min fence is 8× that.
 - [x] AC-3 — The Consistency job carries a `timeout-minutes` fence.

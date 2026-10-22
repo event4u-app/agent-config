@@ -77,7 +77,10 @@ run on the way to `main`.
 
 ## Phase 2 — Fewer queue entries for the same macOS work
 
-- [ ] **2.1 One macOS install job instead of four shards.** macOS runs
+- [x] **2.1 One macOS install job instead of four shards.** **Measured (run 39706826749):**
+      3m18s execution for the whole suite in one job, against four shards of ~110 s each
+      (`ci-cost-budget.md`, 464 jobs) — about 7.3 runner-minutes and four queue entries
+      before, 3.3 runner-minutes and one queue entry now. Kept. macOS runs
       `test_install.sh` unsharded with its parallelism sized to the runner; ubuntu
       keeps its four shards.
       verify: this PR's CI shows one macOS install job running the full install

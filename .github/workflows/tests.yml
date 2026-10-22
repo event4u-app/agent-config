@@ -369,7 +369,9 @@ jobs:
         # refreshed from a CI run by `plan_test_shards --run <id> --write`.
         # Replayed on run 39643700286's own timings, the slowest shard's summed
         # test time drops from 685 s to 539 s on ubuntu and 1089 s to 899 s on
-        # macOS; every file still runs in exactly one shard.
+        # macOS; every file still runs in exactly one shard. First CI run with it
+        # (PR #2577, run 39709319417): ubuntu node-test jobs 5m14s-6m12s, ratio
+        # 1.19 against the 2.3 recorded above.
         env:
           VITEST_BALANCED_SHARDS: '1'
         run: >-
