@@ -50,6 +50,11 @@ describe('BREAKING_CHANGES.md carries the recorded impact (step 2.3, AC-7)', () 
     });
 });
 
+// What this replay can and cannot show: the impact cells it reads were written
+// into BREAKING_CHANGES.md after these releases shipped, with their outcomes
+// known. A pass shows the rule REPRODUCES labels chosen in hindsight, not that
+// it would have classified the releases correctly in advance — any "AC-1
+// passes" or "rule validated" statement built on it must say so.
 describe('replaying 10.0.0 → 16.0.0 through the proposed rule (step 2.2, AC-1)', () => {
     const replay = replay_majors(parse_impact_rows(BREAKING));
 

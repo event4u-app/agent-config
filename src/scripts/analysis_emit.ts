@@ -59,6 +59,8 @@ export interface EmitInput {
     findings: readonly Finding[];
     readyAtZero: number;
     intakeLimit?: number;
+    /** The phase number an arrival opens in its owner roadmap; needed when any finding has an owner. */
+    ownerNextPhase?: (slug: string) => number | null;
 }
 
 function stepLines(n: string, step: FindingStep): string {
@@ -117,12 +119,20 @@ export function emitRound(input: EmitInput): EmitResult {
     const owned = input.findings.filter((f) => f.owner !== undefined);
     const fresh = input.findings.filter((f) => f.owner === undefined);
 
-    const arrivals = owned.map((f) => ({
-        slug: f.owner as string,
-        finding_id: f.id,
-        step: f.steps.map((s, k) => stepLines(`N.${String(k + 1)}`, s)).join('\n'),
-        arrivals_line: `> **Arrivals:** latest \`${input.roundId}\` (${input.date}) — ${f.id}`,
-    }));
+    const arrivals = owned.map((f) => {
+        const slug = f.owner as string;
+        // A literal placeholder would land in the owner roadmap as its step id.
+        const phase = input.ownerNextPhase?.(slug) ?? null;
+        if (phase === null || !Number.isInteger(phase) || phase < 1) {
+            throw new Error(`analysis_emit: no next phase number for owner roadmap road-to-${slug} (finding ${f.id})`);
+        }
+        return {
+            slug,
+            finding_id: f.id,
+            step: f.steps.map((s, k) => stepLines(`${String(phase)}.${String(k + 1)}`, s)).join('\n'),
+            arrivals_line: `> **Arrivals:** latest \`${input.roundId}\` (${input.date}) — ${f.id}`,
+        };
+    });
 
     if (fresh.length === 0) return { roadmaps: [], arrivals, estate_delta: 0, status_note: null };
 

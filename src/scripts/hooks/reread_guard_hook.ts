@@ -143,14 +143,18 @@ export function contentDigest(absPath: string, size: number): Digest {
     let fd: number | undefined;
     try {
         fd = fs.openSync(absPath, 'r');
-        const buf = Buffer.allocUnsafe(HASH_BOUND_BYTES + 1);
+        // Sized to the stat, not the bound: a full 2 MB buffer per small Read
+        // is the hottest slot's largest cost. One byte over the stat size is
+        // enough to see that the file grew, which voids the stat pair anyway.
+        const limit = Math.max(0, Math.min(size, HASH_BOUND_BYTES));
+        const buf = Buffer.allocUnsafe(limit + 1);
         let filled = 0;
         while (filled < buf.length) {
             const n = fs.readSync(fd, buf, filled, buf.length - filled, null);
             if (n === 0) break;
             filled += n;
         }
-        if (filled > HASH_BOUND_BYTES) return { kind: 'grew-during-read' };
+        if (filled > limit) return { kind: 'grew-during-read' };
         return { kind: 'sha256', value: crypto.createHash('sha256').update(buf.subarray(0, filled)).digest('hex') };
     } catch {
         return { kind: 'unreadable' };

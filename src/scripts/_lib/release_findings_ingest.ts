@@ -71,8 +71,10 @@ export function assuranceOverrideLimitation(version: string, repoRoot: string): 
         // A malformed ledger is the disposition gate's finding, not this line's.
         return null;
     }
+    // Printed into public release notes: one line, no markdown, bounded. Whether
+    // it names a committed directive is check_finding_dispositions' to refuse.
     const override = typeof ledger.assurance_override === 'string'
-        ? ledger.assurance_override.trim()
+        ? ledger.assurance_override.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/[`*[\]<>|#!]/g, '').trim().slice(0, 200)
         : '';
     if (override === '' || String(ledger.assurance ?? '').trim() !== 'unreviewed') {
         return null;
@@ -137,8 +139,8 @@ export function ledgerAbsentMessage(version: string, branch: string, remote: str
         'flight (same); no ANTHROPIC_API_KEY, so no review ran in CI and no ledger will appear — ' +
         'review it locally instead, which needs no credit because the gate resolves the ' +
         'subscription CLI before any metered key: `./scripts-run src/scripts/self_review_gate ' +
-        '--findings-out /tmp/findings.json`, then `./scripts-run ' +
-        'src/scripts/check_finding_dispositions --ingest /tmp/findings.json --release ' +
+        '--findings-out agents/runtime/release-findings.json`, then `./scripts-run ' +
+        'src/scripts/check_finding_dispositions --ingest agents/runtime/release-findings.json --release ' +
         `${version}\`, and push the ledger to ${branch}; no RELEASE_PR_TOKEN, in which ` +
         'case the job refuses to push rather than deadlock this wait and says so as a warning in ' +
         'its run log — configure the PAT, or write the ledger by hand; or the workflow could not ' +
@@ -175,9 +177,9 @@ export function ledgerAbsentAfterMergeMessage(
         `  The release branch is gone, so the ${FINDINGS_WORKFLOW} run that would have committed ` +
         'the ledger cannot be waited for. Put the ledger on the trunk instead: recover what the ' +
         "review for this version reported in its own workflow run, or — if none ran — review it " +
-        'now with `./scripts-run src/scripts/self_review_gate --findings-out /tmp/findings.json`, ' +
+        'now with `./scripts-run src/scripts/self_review_gate --findings-out agents/runtime/release-findings.json`, ' +
         'which needs no credit because the gate resolves the subscription CLI before any metered ' +
-        `key. Ingest with \`--ingest /tmp/findings.json --release ${version}\`, push, and resume.\n` +
+        `key. Ingest with \`--ingest agents/runtime/release-findings.json --release ${version}\`, push, and resume.\n` +
         '  A ledger that reviewed nothing no longer clears the cut on a reason string: an ' +
         '`assurance: unreviewed` ledger is refused unless it carries an `assurance_override` ' +
         'naming a committed owner directive.'

@@ -68,6 +68,18 @@ describe('check_skill_body_budget — red, then green, 3.2', () => {
         expect(findings[0]?.reason).toBe('grew-without-a-raise');
     });
 
+    it('a `raised` entry written against an earlier ceiling does not license later growth', () => {
+        // Raised 400 → 5000 once, re-recorded down to 1000 since: the old
+        // entry is not a standing allowance up to 5000.
+        const budget: Budget = {
+            ceilings: BUDGET.ceilings,
+            raised: [{ skill: 'alpha', old: 400, new: 5000, reason: 'an earlier growth' }],
+        };
+        const findings = compare({ ...BODIES, alpha: 1200 }, budget);
+        expect(findings.map((f) => f.reason)).toEqual(['raise-does-not-match']);
+        expect(nextCeilings({ ...BODIES, alpha: 1200 }, budget).alpha).toBe(1000);
+    });
+
     it('shrinking is never a finding', () => {
         expect(compare({ ...BODIES, alpha: 1 }, BUDGET)).toHaveLength(0);
     });

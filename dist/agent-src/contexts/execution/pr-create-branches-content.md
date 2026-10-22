@@ -203,7 +203,10 @@ turns on `gh pr checks` every minute is the tool-loop
 
    **What is still NOT covered**, so the floor keeps its teeth: an instruction
    about the *code* only ("fix the type error", "use file X for the tests") — that
-   authorizes the edit, never the push. A push to a branch or base the user did
+   authorizes the edit, never the push. A red after `/create-pr` when that
+   invocation is the only authorization: its push was spent on the initial PR
+   (`commit-policy`), so the fix stays in the working tree and the re-push waits
+   for the user's fix-the-CI instruction. A push to a branch or base the user did
    not name. A push after the named deliverable is already green. And a
    force-push over a commit you did not author, which
    [`git-history-discipline`](../../rules/git-history-discipline.md) gates

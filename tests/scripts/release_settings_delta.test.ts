@@ -183,8 +183,10 @@ describe('release settings delta — control', () => {
         expect(h.tally_at_tag).toEqual(h.tally);
         for (const p of h.pairs) {
             for (const r of p.removed) {
-                expect(`${p.to}/${r.key}`).toBe(`${p.to}/${r.key}`);
-                expect(r.classification_at_tag).toBe(r.classification);
+                // The key is non-empty, so the labelled assertion below names
+                // a real release/key pair when the two readings disagree.
+                expect(r.key).not.toBe('');
+                expect(`${p.to}/${r.key}=${String(r.classification_at_tag)}`).toBe(`${p.to}/${r.key}=${r.classification}`);
             }
         }
 
@@ -245,7 +247,7 @@ describe('release settings delta — the released surface', () => {
         expect(a.version).toBe('9.9.9');
     });
 
-    it('single-writer: the committed file is written by the cut and nothing else', () => {
+    it('single-writer: the committed file is written by the cut and nothing else', (t) => {
         const committed = readReleasedSurface();
         // It is a real surface, not a stub: more than 50 entries, keys sorted,
         // no descriptions, sorted tombstone lists. It is NOT compared with a
@@ -318,8 +320,11 @@ describe('release settings delta — the released surface', () => {
         } catch (e) {
             // History does not reach back that far (an exported tree, a
             // shallow fetch). The writer-set assertion above still holds;
-            // this half has nothing to read, unless the caller demanded it.
+            // this half has nothing to read, unless the caller demanded it,
+            // and says so as a skip.
             if (requireHistory) throw e;
+            // skip-reason: no git history to read.
+            t.skip('no git history reachable for the history half');
             return;
         }
         const blobAt = (rev: string): string => {
@@ -501,6 +506,17 @@ describe('release settings delta — the assertion', () => {
         expect(proofHolds('tests/scripts/consumer_matrix_settings_delta.test.ts::no such title anywhere')).toBe(false);
         expect(proofHolds('tests/scripts/missing.test.ts::tombstoned-removal')).toBe(false);
         expect(proofHolds('no-separator')).toBe(false);
+        // The title in a comment, or on a skipped test, is not a test that proves anything.
+        const tmp = fs.mkdtempSync(path.join(REPO_ROOT, 'tests', 'fixtures', '.proof-'));
+        try {
+            fs.writeFileSync(path.join(tmp, 'p.test.ts'), "// it('only-in-a-comment')\nit.skip('only-skipped', () => {});\nit('real-one', () => {});\n");
+            const rel = path.relative(REPO_ROOT, path.join(tmp, 'p.test.ts'));
+            expect(proofHolds(`${rel}::only-in-a-comment`)).toBe(false);
+            expect(proofHolds(`${rel}::only-skipped`)).toBe(false);
+            expect(proofHolds(`${rel}::real-one`)).toBe(true);
+        } finally {
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
         expect(belowMajorRefusalLines(base, tombstoned, f, '16.6.0', new Map([[key, 'x::y']]))).toHaveLength(1);
         // A proof that holds licenses the minor.
         expect(proofHolds(PROOF)).toBe(true);

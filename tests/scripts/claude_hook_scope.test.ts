@@ -124,26 +124,36 @@ describe('the four states', () => {
 describe('the runtime it resolves mirrors the hook command, in order', () => {
     beforeEach(() => settings(path.join(home, '.claude', 'settings.json'), [AC_COMMAND]));
 
-    it('a fresh source worktree without node_modules does not count its wrapper as a runtime', () => {
+    it('a project wrapper is never a runtime; a global CLI outside the project is', () => {
         write(path.join(project, 'src', 'scripts', 'hook_manifest.yaml'), 'schema_version: 1\n');
         write(path.join(project, 'agent-config'), '#!/bin/sh\n', 0o755);
+        mkdirSync(path.join(project, 'node_modules'), { recursive: true });
+        expect(scope().runtime).toBe('none');
         write(path.join(bin, 'agent-config'), '#!/bin/sh\n', 0o755);
         expect(scope().runtime).toBe('path-cli');
     });
 
-    it('the same wrapper counts once the checkout has its node_modules', () => {
-        write(path.join(project, 'agent-config'), '#!/bin/sh\n', 0o755);
-        mkdirSync(path.join(project, 'node_modules'), { recursive: true });
-        expect(scope().runtime).toBe('local-wrapper');
+    it('a committed project dispatcher or npm install is not executable — the hook command never runs it', () => {
+        write(path.join(project, 'dist', 'hooks', 'dispatch.js'), '//\n');
+        write(path.join(project, 'src', 'scripts', 'hook_manifest.yaml'), 'schema_version: 1\n');
+        write(path.join(project, 'node_modules', '@event4u', 'agent-config', 'dist', 'hooks', 'dispatch.js'), '//\n');
+        const s = scope();
+        expect(s.runtime).toBe('none');
+        expect(s.state).toBe('installed-not-executable');
     });
 
-    it('a project-local npm install wins ahead of the staged runtime', () => {
+    it('an agent-config on PATH inside the project is not trusted', () => {
+        const projectBin = path.join(project, 'bin');
+        write(path.join(projectBin, 'agent-config'), '#!/bin/sh\n', 0o755);
+        expect(claudeHookScope({ projectRoot: project, home, runtimeRoot, pathEnv: projectBin }).runtime).toBe('none');
+    });
+
+    it('the staged runtime wins whatever the project carries', () => {
         stagedRuntime('16.6.0');
         write(path.join(project, 'node_modules', '@event4u', 'agent-config', 'dist', 'hooks', 'dispatch.js'), '//\n');
-        write(path.join(project, 'node_modules', '@event4u', 'agent-config', 'package.json'), JSON.stringify({ version: '16.7.0' }));
         const s = scope();
-        expect(s.runtime).toBe('project-local');
-        expect(s.runtime_version).toBe('16.7.0');
+        expect(s.runtime).toBe('staged');
+        expect(s.runtime_version).toBe('16.6.0');
     });
 });
 

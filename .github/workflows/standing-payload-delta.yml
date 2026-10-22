@@ -109,6 +109,10 @@ jobs:
     # here, one PR before.
     name: Standing payload delta + budget gate
     runs-on: ubuntu-latest
+    # The runtime budget of a required context. Fifteen pull_request runs on
+    # 2026-10-21/22 took 1.5 to 4 minutes; a hang fails here rather than holding
+    # every PR for the six-hour platform default.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:

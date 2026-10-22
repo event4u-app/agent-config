@@ -25,6 +25,16 @@ describe('questions: council first, owner once', () => {
         expect(nextOwnerAsk(r, 'destructive')).toBeNull();
     });
 
+    it('puts a gated item before its action even when its class would let the agent or council decide it', () => {
+        const r = routeQuestions([
+            { id: 'q-hf', text: 'Drop the prod table?', ownership: 'reversible-technical', gates: 'hard-floor' },
+            { id: 'q-pc', text: 'Push now?', ownership: 'contested-technical', gates: 'push' },
+        ]);
+        expect(nextOwnerAsk(r, 'hard-floor')?.id).toBe('q-hf');
+        expect(nextOwnerAsk(r, 'push')?.id).toBe('q-pc');
+        expect([...r.agent, ...r.council]).toEqual([]);
+    });
+
     it('batches the remaining owner items for the end, each with its recommendation', () => {
         const r = routeQuestions(SET);
         expect(r.endBatch).toEqual([{ id: 'q-scope', text: 'Should the billing module join the next run?', recommendation: 'yes, as its own run' }]);

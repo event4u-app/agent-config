@@ -55,9 +55,6 @@ Ask in this order, and stop at the first that answers:
 3. **The member manifest** — the ordinary case, and only after 1 and 2 are
    silent.
 
-A repository with no catalog and no root pin behaves exactly as before; this
-step adds a lookup, not a change of default.
-
 ### 2. Plan
 
 Categorize changes needed:
@@ -184,11 +181,8 @@ When upgrading multiple packages:
 
 | Pitfall | Prevention |
 |---|---|
-| Upgrading without reading changelog | Always read the changelog first |
-| Upgrading all packages at once | One package at a time (or tightly coupled groups) |
 | Trusting `composer update` blindly | Use `--dry-run` first, review changes |
 | Ignoring deprecation warnings | Fix deprecations before they become errors |
-| Skipping tests after upgrade | Full test suite + project type-checker (PHPStan / tsc / mypy / `go vet` / `cargo check`) after every upgrade |
 | Lock file conflicts | Coordinate upgrades with the team |
 
 ## Version constraint guidelines
@@ -205,7 +199,7 @@ When upgrading multiple packages:
 
 For security patches:
 
-- **Prioritize** — security upgrades should be fast-tracked.
+- **Prioritize** — fast-track security upgrades.
 - **Check `composer audit`** / `npm audit` regularly.
 - **Patch versions** (e.g., 2.1.3 → 2.1.4) are usually safe to apply immediately.
 - **Still run tests** — even security patches can break things.
@@ -217,7 +211,7 @@ Before adding a **new** dependency (not just upgrading), run a security audit:
 ### Composer (PHP)
 
 ```bash
-# Check for known vulnerabilities in current dependencies
+# Known vulnerabilities in installed packages
 composer audit
 
 # After adding a new package, re-check
@@ -257,7 +251,7 @@ When `composer require` or `npm install` fails with conflicts:
 
 ## Post-update malware & behavior audit
 
-CVE scanning (above) catches *known-vulnerable* versions. It does **not** catch a **compromised update**: a trusted package with a legitimate history ships a normal-looking version bump that quietly adds data-exfiltration or other harmful behavior. This is how the biggest supply-chain attacks landed — event-stream (wallet stealer as a new transitive dep), ua-parser-js (`preinstall` miner + credential stealer), @solana/web3.js (key exfil hidden inside expected network calls), chalk/debug + 16 (browser crypto-drainer, 2B weekly downloads), the self-propagating Shai-Hulud worm (added a `.github/workflows` + secret-scanning `postinstall`), xz-utils (backdoor in the released tarball, not the git repo). Routine updates slip through because the version looks normal and install runs scripts across the whole transitive tree silently — this is the exact [`lethal-trifecta-guard`](../../rules/lethal-trifecta-guard.md) egress shape.
+CVE scanning (above) catches *known-vulnerable* versions. It does **not** catch a **compromised update**: a trusted package with a legitimate history ships a normal-looking version bump that quietly adds data-exfiltration or other harmful behavior. This is how the biggest supply-chain attacks landed — event-stream (wallet stealer as a new transitive dep), ua-parser-js (`preinstall` miner + credential stealer), @solana/web3.js (key exfil hidden inside expected network calls), chalk/debug + 16 (browser crypto-drainer), the self-propagating Shai-Hulud worm (added a `.github/workflows` + secret-scanning `postinstall`), xz-utils (backdoor in the released tarball, not the git repo). Routine updates slip through because the version looks normal and install runs scripts across the whole transitive tree silently — this is the exact [`lethal-trifecta-guard`](../../rules/lethal-trifecta-guard.md) egress shape.
 
 **Run this audit during/after any add or upgrade, then surface findings to the user and hold pending confirmation** (per [`active-remediation`](../../rules/active-remediation.md) — a live supply-chain risk is surfaced, never silently accepted):
 
@@ -266,7 +260,7 @@ CVE scanning (above) catches *known-vulnerable* versions. It does **not** catch 
 3. **Capability / behavior diff** — did the new version add a capability its job doesn't need: network egress (`fetch`/`net`/`dns`/`http`), `child_process`/shell, env/secret/credential reads, filesystem writes, obfuscated/minified blobs, a `.github/workflows` file? Use `socket` / `guarddog <eco> scan <pkg>@<ver>` if available; else read the delta.
 4. **Purpose-vs-behavior legitimacy check** — a Slack/HTTP client legitimately makes network calls; a date/string/color util does not. For each new capability ask: *does the package's stated purpose require this?* A network/secret capability with no purpose justification — or a **new outbound endpoint** even in a package that already uses the network — is high-risk.
 5. **Provenance + advisory feeds** — `npm audit signatures` (flag a dep that *had* provenance and lost it — a hallmark of a token-theft publish); `osv-scanner --lockfile=…` and the GitHub Advisory / Socket / Snyk malware feeds against the newly-resolved versions.
-6. **Release age and agent-config paths** — a fixing version younger than three days is `fix-fresh`: run steps 1–5 before installing it, not after. Any change under `.claude/`, `.vscode/`, `.cursor/` or `.github/workflows/`, or to an install script, in the diff of a dependency update stops the update — a 2026 worm persisted through exactly such a session-start hook while disguised as "chore: update dependencies".
+6. **Release age and agent-config paths** — a fixing version younger than three days (a default, not a measured threshold) is `fix-fresh`: run steps 1–5 before installing it, not after. Any change to an agent, editor, git-hook or CI config path in a dependency update's diff stops the update — e.g. `.claude/`, `.augment/`, `.cursor/`, `.gemini/`, `.windsurf/`, `.codex/`, `.vscode/`, `.husky/`, `.github/workflows/`, `.mcp.json`, an `AGENTS.md` / `CLAUDE.md` / `.cursorrules`-style instruction file — or to an install script; an unlisted path of that class stops it too. Own analysis: a session-start hook is a persistence point running with the developer's credentials, hence a stop, not a warning.
 
 **Surface to the user** any: new install script · new transitive dep · new network endpoint / secret read · obfuscated blob · lost provenance · advisory/malware hit — with the version delta and the purpose-vs-behavior verdict, and hold the update until they decide. Never auto-accept a bump that introduced an unexplained capability.
 
@@ -308,7 +302,11 @@ source that reported it.
 4. **Open the PR** — `agent-config audit:deps pr-body <id> --tests=passed`
    prints the body; its After field is what `verify` recorded; a library adds
    `--release=<current version>` for the patch-release draft. Security fixes are
-   never mixed with unrelated work. Stop before tag and publish.
+   never mixed with unrelated work. Stop before tag and publish. The entry
+   command authorizes only the local fix: before the first push or PR, show
+   branch, title and body and wait for this-turn confirmation
+   (`non-destructive-by-default`). On a public remote the body names the
+   advisory id and fixed version, never an exploit path, until merged.
 5. **Hand over** — watch CI with `agent-config ci:settle <pr>`, fix what the fix
    broke, report "ready to merge". Merge is the owner's, or `/pr:merge` under the
    owner's instruction; under `worktrees.cleanup: auto` the merge removes the fix
@@ -340,12 +338,12 @@ source that reported it.
 
 ## Gotcha
 
-- **A trusted package is not a safe version.** Every major supply-chain attack (event-stream, ua-parser-js, chalk/debug, xz) shipped through a *legitimate* package's normal-looking bump — maintainer-authored ≠ safe. Run the post-update behavior audit, not just `audit` for CVEs.
+- **A trusted package is not a safe version.** Every attack listed above shipped as a *legitimate* package's normal-looking bump. Run the post-update behavior audit, not just `audit` for CVEs.
 - **`audit` (CVE) ≠ malware scan.** `npm/composer audit` only knows *published* vulnerabilities; a fresh compromised version has no CVE yet. The capability/behavior diff + purpose-vs-behavior check is what catches zero-hour malware.
 - Don't upgrade multiple major versions at once — one major version per upgrade cycle.
 - The model tends to skip reading the CHANGELOG — breaking changes hide in minor releases too.
 - Always run the full test suite after upgrading, not just the affected tests.
-- Lock file conflicts after upgrade are expected — resolve by re-running the package manager's update (`composer update`, `npm update`, `poetry update`).
+- Lock file conflicts after upgrade are expected — re-run the package manager's update (`composer update`, `npm update`, `poetry update`).
 
 ## Do NOT
 

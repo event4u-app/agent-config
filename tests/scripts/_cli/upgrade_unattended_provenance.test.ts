@@ -174,10 +174,25 @@ function fetcher(body: unknown, ok = true, status = 200): typeof fetch {
     return (async () => ({ ok, status, json: async () => body })) as unknown as typeof fetch;
 }
 
+const ATT_URL = 'https://registry.npmjs.org/-/npm/v1/attestations/@event4u%2fagent-config@16.6.0';
+
 describe('verify_provenance_default', () => {
+    it('refuses an attestation url on another host, before fetching it', async () => {
+        let fetched = false;
+        const reason = await verify_provenance_default(
+            candidate('http://169.254.169.254/att'),
+            (async () => {
+                fetched = true;
+                return { ok: true, status: 200, json: async () => bundle(EXPECTED_WORKFLOW_REF) };
+            }) as unknown as typeof fetch,
+        );
+        expect(reason).toContain('attestation url is not on https://registry.npmjs.org');
+        expect(fetched).toBe(false);
+    });
+
     it('passes for an attestation naming this package publish workflow', async () => {
         const reason = await verify_provenance_default(
-            candidate('https://example.test/att'),
+            candidate(ATT_URL),
             fetcher(bundle(EXPECTED_WORKFLOW_REF)),
         );
         expect(reason).toBeNull();
@@ -185,7 +200,7 @@ describe('verify_provenance_default', () => {
 
     it('refuses an attestation produced by a different workflow, and names it', async () => {
         const reason = await verify_provenance_default(
-            candidate('https://example.test/att'),
+            candidate(ATT_URL),
             fetcher(bundle('.github/workflows/attacker.yml')),
         );
         expect(reason).toContain('.github/workflows/attacker.yml');
@@ -194,7 +209,7 @@ describe('verify_provenance_default', () => {
 
     it('refuses an attestation from a different repository', async () => {
         const reason = await verify_provenance_default(
-            candidate('https://example.test/att'),
+            candidate(ATT_URL),
             fetcher(bundle(EXPECTED_WORKFLOW_REF, 'https://github.com/someone-else/agent-config')),
         );
         expect(reason).not.toBeNull();
@@ -207,7 +222,7 @@ describe('verify_provenance_default', () => {
 
     it('refuses — never passes — when the bundle cannot be fetched', async () => {
         const reason = await verify_provenance_default(
-            candidate('https://example.test/att'),
+            candidate(ATT_URL),
             fetcher({}, false, 503),
         );
         expect(reason).toContain('503');

@@ -59,7 +59,7 @@ function makeRoot(): string {
         path.join(root, 'src', 'config', 'project-tree-form.json'),
         JSON.stringify({
             schema_version: 1,
-            hosts: { 'claude-code': { form: 'delivery', basis: 'test fixture', measured: { fixture: true } } },
+            hosts: { 'claude-code': { form: 'delivery', basis: 'test fixture', measured: { fixture: 'measured by this test' } } },
         }),
         'utf-8',
     );

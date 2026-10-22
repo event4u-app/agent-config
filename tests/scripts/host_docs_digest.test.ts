@@ -389,7 +389,7 @@ describe('docs digest — the sibling page list', () => {
         expect(bad('pages: {}\n')).toThrow(/empty/);
     });
 
-    it('the offline report lists the page beside the hook rows', async () => {
+    it('the offline report succeeds with the page corpus wired in and writes nothing', async () => {
         const out: string[] = [];
         const write = process.stdout.write.bind(process.stdout);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -7,6 +7,11 @@
  * because the warning itself is a host string this suite cannot emit), and the
  * host's AGENTS.md projection byte-equal to before (checked as: this step adds
  * nothing to `GLOBAL_DEPLOY_SOURCES['codex']`).
+ *
+ * The second check is MODELLED, not observed. `CODEX_BUDGET_CHARS` and the
+ * per-entry overhead are upstream-prose assumptions, so a pass supports "the
+ * listing fits the model", never "the host shows no warning". Any proof or
+ * claim built on this file inherits that wording.
  */
 
 import { describe, expect, it } from 'vitest';
@@ -81,7 +86,8 @@ describe('codex resident set — the split', () => {
     it('names the per-entry overhead as an assumption, not a measurement', () => {
         const r = computeCodexResidentSet([]);
         const overhead = r.assumptions.find((a) => a.id === 'per-entry-overhead');
-        expect(overhead?.provenance).toBe('upstream-prose');
+        // The host states no overhead at all, so the 5 is this package's estimate.
+        expect(overhead?.provenance).toBe('estimate');
         const order = r.assumptions.find((a) => a.id === 'fill-order-alphabetical');
         expect(order?.provenance).toBe('first-party-observation');
     });
@@ -181,7 +187,9 @@ describe('codex resident set — the effect on disk', () => {
 describe('codex resident set — against the real projection', () => {
     it('brings the projected catalogue inside the budget it is over today', () => {
         const projection = path.join(REPO_ROOT, 'dist', 'agent-src', 'skills');
-        if (!fs.existsSync(projection)) return;
+        // `dist/agent-src/` is tracked, so its absence is a broken checkout
+        // rather than a reason to pass on nothing.
+        expect(fs.existsSync(projection), `${projection} is missing`).toBe(true);
         const owned = fs
             .readdirSync(projection, { withFileTypes: true })
             .filter((d) => d.isDirectory() && fs.existsSync(path.join(projection, d.name, 'SKILL.md')))

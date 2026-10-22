@@ -27,7 +27,13 @@ export const VALIDATION_GATES = [
 ] as const;
 export type ValidationGate = (typeof VALIDATION_GATES)[number];
 
-export type GateRunner = (gate: ValidationGate, ctx: { projectRoot: string; files: readonly string[] }) => { ok: boolean; detail: string };
+export type GateRunner = (
+    gate: ValidationGate,
+    ctx: { projectRoot: string; files: readonly string[] },
+) => { ok: boolean; detail: string; skipped?: boolean };
+
+/** Gates that read this package's own tree, whatever `projectRoot` says. */
+const PACKAGE_TREE_GATES: ReadonlySet<ValidationGate> = new Set(['lint_roadmap_blockers', 'check_references', 'check_estate_count']);
 
 const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const EVIDENCE_RE = new RegExp(`Evidence \\((${EVIDENCE_TIERS.join('|')})\\): \`[^\`]+\``);
@@ -79,7 +85,7 @@ export function validateEmitted(input: {
     runner?: GateRunner;
     /** On a fixture run: the findings the fixture holds, and the ones the run emitted. */
     recovery?: { expected: readonly string[]; found: readonly string[] };
-}): { record: RunRecord; failures: string[] } {
+}): { record: RunRecord; failures: string[]; unchecked: string[] } {
     if (input.record.state !== 'emitted') {
         throw new RunError(`validation runs on an emitted run, not one in ${input.record.state}`);
     }
@@ -92,12 +98,19 @@ export function validateEmitted(input: {
         for (const id of found) if (!expected.includes(id)) failures.push(`finding ${id} is not in the fixture`);
     }
     const runner = input.runner ?? scriptGateRunner;
+    // A pass that checked nothing of the emitted files is recorded on the
+    // transition, so `validated` never reads as more than it was.
+    const unchecked: string[] = [];
+    const foreignRoot = path.resolve(input.projectRoot) !== PACKAGE_ROOT;
     for (const gate of VALIDATION_GATES) {
         const res = runner(gate, { projectRoot: input.projectRoot, files: input.files });
         if (!res.ok) failures.push(`gate ${gate} failed: ${res.detail}`);
+        else if (res.skipped === true) unchecked.push(`${gate} skipped`);
+        else if (foreignRoot && PACKAGE_TREE_GATES.has(gate)) unchecked.push(`${gate} read this package's tree, not the project's`);
     }
-    if (failures.length > 0) return { record: input.record, failures };
-    return { record: transition(input.runDir, input.record, 'validated'), failures };
+    if (failures.length > 0) return { record: input.record, failures, unchecked };
+    const reason = unchecked.length > 0 ? `unchecked: ${unchecked.join('; ')}` : null;
+    return { record: transition(input.runDir, input.record, 'validated', reason), failures, unchecked };
 }
 
 function flag(argv: readonly string[], name: string): string | null {
@@ -120,12 +133,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const valued = new Set([runDir, root]);
     const files = argv.filter((a) => !a.startsWith('--') && !valued.has(a));
     const contentOnly = argv.includes('--content-only');
-    const runner: GateRunner | undefined = contentOnly ? () => ({ ok: true, detail: 'skipped (--content-only)' }) : undefined;
+    const runner: GateRunner | undefined = contentOnly ? () => ({ ok: true, skipped: true, detail: 'skipped (--content-only)' }) : undefined;
     let record: RunRecord;
     try {
         record = loadRun(runDir);
         const res = validateEmitted({ runDir, record, projectRoot: root, files, councilDissent: argv.includes('--council-dissent'), ...(runner === undefined ? {} : { runner }) });
         for (const f of res.failures) process.stdout.write(`${f}\n`);
+        for (const u of res.unchecked) process.stdout.write(`unchecked: ${u}\n`);
         process.stdout.write(`analysis_validate: ${res.record.state}${contentOnly ? ' (tree gates skipped: --content-only)' : ''}\n`);
         return res.failures.length === 0 ? 0 : 1;
     } catch (err) {

@@ -490,6 +490,15 @@ export function empty_ledger_problem(
 export type ReleaseStatus = 'released' | 'unreleased' | 'undeterminable';
 export type RemoteReleaseAnswer = 'released' | 'unreleased' | 'unavailable';
 
+/**
+ * A version named as a whole token: `16.4.1` does not occur in `16.4.10` or in
+ * `116.4.1`, which a substring test would accept.
+ */
+export function mentionsVersion(text: string, release: string): boolean {
+    const escaped = release.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(?<![\\w.-])v?${escaped}(?![\\w-]|\\.\\d)`).test(text);
+}
+
 /** Where an `assurance_override` may point. Nothing outside it is accepted. */
 export const OWNER_DIRECTIVES_DIR = 'agents/evidence/owner-directives';
 
@@ -537,7 +546,14 @@ export function unreviewed_ledger_problem(
     // nothing is wrong on a released version too, and a reader who wrote one
     // is owed the reason rather than a silent pass.
     if (override !== '') {
-        if (!override.startsWith(`${OWNER_DIRECTIVES_DIR}/`)) {
+        // Normalised first: a prefix test on the raw value admits
+        // `owner-directives/../../CHANGELOG.md`, which names any file at all.
+        const normalised = path.posix.normalize(override);
+        if (
+            normalised !== override
+            || override.split('/').includes('..')
+            || !override.startsWith(`${OWNER_DIRECTIVES_DIR}/`)
+        ) {
             return (
                 `\`assurance_override\` is \`${override}\`, which is not under `
                 + `${OWNER_DIRECTIVES_DIR}/. The override names a committed owner directive, `
@@ -551,7 +567,7 @@ export function unreviewed_ledger_problem(
                 + 'Commit the directive, or remove the override and get the ledger reviewed.'
             );
         }
-        if (!text.includes(release)) {
+        if (!mentionsVersion(text, release)) {
             return (
                 `\`assurance_override\` names ${override}, whose text does not mention `
                 + `${release}. A directive permitting some other cut does not permit this one.`
@@ -567,10 +583,10 @@ export function unreviewed_ledger_problem(
         + `${release} and this cut would ship a release that reviewed itself not at all.\n`
         + '    Review it. The self-review gate resolves the local subscription CLI before any\n'
         + '    metered key, so a review is usually one command away and needs no credit:\n'
-        + '        ./scripts-run src/scripts/self_review_gate --findings-out /tmp/findings.json\n'
+        + '        ./scripts-run src/scripts/self_review_gate --findings-out agents/runtime/release-findings.json\n'
         + '    Then ingest what it reported:\n'
         + '        ./scripts-run src/scripts/check_finding_dispositions --ingest '
-        + `/tmp/findings.json --release ${release}\n`
+        + `agents/runtime/release-findings.json --release ${release}\n`
         + '    If this cut must go out unreviewed, that is an owner decision and it leaves a\n'
         + `    file: commit a directive under ${OWNER_DIRECTIVES_DIR}/ whose text names `
         + `${release},\n`
@@ -635,6 +651,21 @@ function _git(args: readonly string[]): { ok: boolean; out: string } {
         maxBuffer: 16 * 1024 * 1024,
     });
     return { ok: r.status === 0, out: (r.stdout ?? '').trim() };
+}
+
+/**
+ * A file as committed at HEAD, or null. The working tree is not read: an
+ * uncommitted directive is exactly what the override's error calls "not
+ * committed", and only a regular blob counts — a symlink or submodule entry
+ * would let the path name content stored somewhere else.
+ */
+function readCommittedFile(rel: string): string | null {
+    const entry = _git(['ls-tree', 'HEAD', '--', rel]);
+    if (!entry.ok || !/^100(644|755) blob /.test(entry.out.trim())) {
+        return null;
+    }
+    const shown = _git(['show', `HEAD:${rel}`]);
+    return shown.ok ? shown.out : null;
 }
 
 /** This repository tags. A git failure is an empty list, i.e. not complete. */
@@ -910,10 +941,7 @@ function main(argv: readonly string[]): number {
             ledger,
             release,
             needsStatus ? resolve_release_status(release) : 'undeterminable',
-            (rel) => {
-                const abs = path.join(REPO_ROOT, rel);
-                return fs.existsSync(abs) ? fs.readFileSync(abs, 'utf-8') : null;
-            },
+            (rel) => readCommittedFile(rel),
         );
         if (unreviewedProblem !== null) {
             process.stderr.write(

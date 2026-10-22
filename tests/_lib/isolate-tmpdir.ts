@@ -51,7 +51,32 @@ export const STALE_AFTER_MS = 24 * 60 * 60 * 1000;
 /** The variables `os.tmpdir()` consults on POSIX (`TMPDIR`) and Windows (`TEMP`, `TMP`). */
 const TMP_VARS = ['TMPDIR', 'TEMP', 'TMP'] as const;
 
-/** Remove run roots under `base` older than `STALE_AFTER_MS`; returns the names removed. */
+/** File in a run root naming the pid of the run that owns it. */
+export const OWNER_PID_FILE = 'owner.pid';
+
+/** True while the run that wrote `root`'s owner file is still alive. */
+function ownerAlive(root: string): boolean {
+    let pid: number;
+    try {
+        pid = Number(fs.readFileSync(path.join(root, OWNER_PID_FILE), 'utf8').trim());
+    } catch {
+        return false;
+    }
+    if (!Number.isInteger(pid) || pid <= 0) return false;
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch (err) {
+        // EPERM: the process exists but belongs to someone else — still alive.
+        return (err as NodeJS.ErrnoException).code === 'EPERM';
+    }
+}
+
+/**
+ * Remove run roots under `base` older than `STALE_AFTER_MS` whose owning run is
+ * gone; returns the names removed. Age alone is not enough: a quiet long run
+ * leaves its root unwritten, and its live owner pid is what keeps it.
+ */
 export function sweepStaleRunRoots(base: string, now: number = Date.now()): string[] {
     const removed: string[] = [];
     let entries: string[];
@@ -66,7 +91,7 @@ export function sweepStaleRunRoots(base: string, now: number = Date.now()): stri
         }
         const full = path.join(base, name);
         try {
-            if (now - fs.statSync(full).mtimeMs > STALE_AFTER_MS) {
+            if (now - fs.statSync(full).mtimeMs > STALE_AFTER_MS && !ownerAlive(full)) {
                 fs.rmSync(full, { recursive: true, force: true });
                 removed.push(name);
             }
@@ -79,7 +104,9 @@ export function sweepStaleRunRoots(base: string, now: number = Date.now()): stri
 
 /** Create a fresh run root under `base`. */
 export function createRunRoot(base: string): string {
-    return fs.mkdtempSync(path.join(base, RUN_ROOT_PREFIX));
+    const root = fs.mkdtempSync(path.join(base, RUN_ROOT_PREFIX));
+    fs.writeFileSync(path.join(root, OWNER_PID_FILE), String(process.pid));
+    return root;
 }
 
 /** Whether the longest socket a spawned `tsx` opens under `root` stays within the limit. */

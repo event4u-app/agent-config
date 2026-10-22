@@ -58,10 +58,10 @@ corpus and the exported seed path:
 ```ts
 import * as path from 'node:path';
 
-import {
-    build_preview,
-    PACKAGE_SEED_PATH,
-} from 'src/scripts/ai_council/learn_low_impact_preview.js';
+// Resolved against the package root — a bare `src/…` specifier does not resolve.
+const { build_preview, PACKAGE_SEED_PATH } = await import(
+    path.join(packageRoot, 'src/scripts/ai_council/learn_low_impact_preview.ts'),
+);
 
 // Both paths are RELATIVE and must be resolved explicitly — the corpus
 // against the project root, the seed against the PACKAGE root. Passed bare

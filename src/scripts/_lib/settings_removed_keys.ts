@@ -154,8 +154,8 @@ export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     ['subagents.downshift', 'the model_tier each sub-task declares; downshift is always on'],
     ['ai_team.suppress_setup_hint', 'nothing: the one-line team-mode setup hint is always shown'],
     // 2026-10-20 — the projection keys (ADR-293, road-to-a-setup-that-decides-itself Phase 4)
-    ['lean_projection.mode', 'the computed layer-form decision (_lib/layer_form_decision.ts), plus `install --full` and src/config/layer-form-brakes.json as the two brakes. The installer no longer reads this key at all; the in-repo projector honours a hand-written PROJECT value until step 3.6 of road-to-a-setup-that-decides-itself lands'],
-    ['lean_projection.hosts', 'THINNABLE_HOSTS in _lib/lean_projection_mode.ts and the per-host row in src/config/host-injection-effect.json; same reader boundary as the mode above'],
+    ['lean_projection.mode', 'the computed layer-form decision (_lib/layer_form_decision.ts), plus `install --full` and src/config/layer-form-brakes.json as the two brakes. For one release window an installer converts a leftover `eager-all` into the install receipt pin and drops any other value, saying which (_lib/projection_key_migration.ts); the project tree reads the package-owned src/config/project-tree-form.json, never this key'],
+    ['lean_projection.hosts', 'THINNABLE_HOSTS in _lib/lean_projection_mode.ts and the per-host row in src/config/host-injection-effect.json; no reader of this key remains'],
     ['projection.rule_workspaces', 'consumerRuleWorkspaces() in _lib/scoped_projection.ts, which derives the consumer workspace set from src/config/discovery/packs.yml — every id minus `agent-config-maintainer` — so a new pack reaches consumers without a settings edit'],
 ]);
 

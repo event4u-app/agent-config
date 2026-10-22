@@ -1429,6 +1429,8 @@ describe('update_roadmap_progress — ages and park proposals', () => {
         expect(is_park_proposal(stale, 'renewed: 2026-02-20 — still wanted', now)).toBe(false);
         expect(is_park_proposal(stale, 'renewed: 2026-02-01 — still wanted', now)).toBe(true);
         expect(is_park_proposal(stale, 'renewed: 2026-02-20', now)).toBe(true);
+        // a renewal dated in the future renews nothing — it would otherwise clear the proposal forever
+        expect(is_park_proposal(stale, 'renewed: 2099-01-01 — still wanted', now)).toBe(true);
         const out = render_age_section([{ rel: 'road-to-old.md', frontmatter: '', age: stale }], now);
         expect(out).toContain('## Park proposals');
         expect(out).toContain('- [road-to-old.md](roadmaps/road-to-old.md) — landed 2026-02-01');
@@ -1438,7 +1440,8 @@ describe('update_roadmap_progress — ages and park proposals', () => {
     it('park-proposal-renewable: the CLI lists a stalled file and leaves it where it is', () => {
         gitInit();
         commit('agents/roadmaps/road-to-old.md', roadmap('[ ]'), '2020-01-01');
-        commit('agents/roadmaps/road-to-kept.md', roadmap('[ ]', 'renewed: 2999-01-01 — still wanted\n'), '2020-01-01');
+        const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+        commit('agents/roadmaps/road-to-kept.md', roadmap('[ ]', `renewed: ${yesterday} — still wanted\n`), '2020-01-01');
         const r = runTs(['--repo-root', root], tmp);
         expect(r.status, r.stderr).toBe(0);
         const dash = fs.readFileSync(path.join(root, 'agents', 'roadmaps-progress.md'), 'utf-8');
@@ -1447,5 +1450,31 @@ describe('update_roadmap_progress — ages and park proposals', () => {
         expect(proposals).toContain('road-to-old.md');
         expect(proposals).not.toContain('road-to-kept.md');
         expect(fs.existsSync(path.join(root, 'agents', 'roadmaps', 'road-to-old.md'))).toBe(true);
+    });
+
+    it('shallow-clone: ages read — and no proposal is made, as the header promises', () => {
+        gitInit();
+        commit('agents/roadmaps/road-to-old.md', roadmap('[ ]'), '2020-01-01');
+        commit('agents/roadmaps/road-to-old.md', roadmap('[x]'), '2020-01-02');
+        const clone = path.join(tmp, 'shallow');
+        const c = spawnSync('git', ['clone', '--quiet', '--depth', '1', `file://${root}`, clone], { encoding: 'utf8' });
+        expect(c.status, c.stderr).toBe(0);
+        const r = runTs(['--repo-root', clone], tmp);
+        expect(r.status, r.stderr).toBe(0);
+        const dash = fs.readFileSync(path.join(clone, 'agents', 'roadmaps-progress.md'), 'utf-8');
+        expect(dash).toMatch(/\| \[road-to-old\.md\]\(roadmaps\/road-to-old\.md\) \| — \| — \|/);
+        expect(dash).not.toContain('## Park proposals');
+    });
+
+    it('check-is-clock-stable: --check ignores the age section, which moves with the date', () => {
+        gitInit();
+        commit('agents/roadmaps/road-to-old.md', roadmap('[ ]'), '2020-01-01');
+        expect(runTs(['--repo-root', root], tmp).status).toBe(0);
+        const dashPath = path.join(root, 'agents', 'roadmaps-progress.md');
+        const tomorrow = fs.readFileSync(dashPath, 'utf-8').replace(/\| (\d+) \| — \|/, (_m, d: string) => `| ${Number(d) + 1} | — |`);
+        fs.writeFileSync(dashPath, tomorrow, 'utf-8');
+        const r = runTs(['--repo-root', root, '--check', '--dashboard-only'], tmp);
+        expect(r.stderr).not.toContain('is stale');
+        expect(r.status, r.stderr).toBe(0);
     });
 });

@@ -60,8 +60,11 @@ a few dozen between runs; the hit counts did not move.
   which touches detection.
 - The replay script and its raw aggregate were a local one-off and are not
   committed: the transcripts they read live outside this tree. The steps above
-  are the whole method; re-running them over the same window reproduces the
-  counts, give or take the envelopes of any session still live.
+  are the whole method, and only a machine holding those transcripts can re-run
+  them; nobody else can reproduce these counts from the repository.
+  (Corrected 2026-10-22, release finding `570666e20b2f`: this read "re-running
+  them over the same window reproduces the counts", a reproducibility claim the
+  uncommitted script and machine-local transcripts cannot back.)
 
 ## Rule table at reading time
 

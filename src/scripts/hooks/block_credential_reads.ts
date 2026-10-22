@@ -31,7 +31,10 @@
  * guard is never the reason an unrelated call fails. Not caught, and recorded
  * as the residue `tests/fixtures/egress-prevention-gaps/` names: a program that
  * reads the file itself (`node -e "…readFileSync('.env')"`), a value printed by
- * a running process, a secret typed by the user.
+ * a running process, a secret typed by the user — and a search or glob that
+ * never names the file (`Grep path=.`, `grep -r KEY .`, `rg KEY`, `cat .e*`).
+ * The last returns the file's lines as tool output, which is the
+ * `program-output` fixture's channel: the stage sees it, this guard does not.
  *
  * Kill switch: `AGENT_CONFIG_ALLOW_CREDENTIAL_READS=1`.
  *

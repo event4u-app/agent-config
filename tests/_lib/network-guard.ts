@@ -19,7 +19,8 @@
  *      upper-case spelling. `NO_PROXY` exempts loopback so the suite's own
  *      local servers keep working.
  *   2. AN IN-PROCESS `fetch` WRAPPER. `globalThis.fetch` refuses any origin
- *      that is not loopback, before a socket is opened.
+ *      that is not loopback, before a socket is opened — including the target
+ *      of every redirect, which it follows itself one hop at a time.
  *
  * `undici`'s `setGlobalDispatcher` would be the more thorough version of (2),
  * and it is deliberately NOT used: `undici` is not a dependency of this
@@ -114,21 +115,45 @@ function closeProxies(env: NodeJS.ProcessEnv): void {
     env.no_proxy = env.NO_PROXY;
 }
 
+/** Statuses `fetch` follows on its own under the default `redirect: 'follow'`. */
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+const MAX_REDIRECTS = 20;
+
 /** Replace `globalThis.fetch` with one that refuses a non-loopback origin. */
 function closeFetch(): void {
     const real = globalThis.fetch;
     if (typeof real !== 'function') return;
-    const guarded: typeof fetch = (input, init) => {
-        const target =
-            typeof input === 'string' ? input : input instanceof URL ? input.href : (input as Request).url;
-        // REJECT, never throw. The real `fetch` returns a promise on every
-        // path, so a synchronous throw escapes `fetch(...).catch(...)` and
-        // lands somewhere the caller has no handler — measured here as three
-        // suites timing out rather than failing. A guard that changes the
-        // SHAPE of the API it guards is a second defect wearing the first
-        // one's clothes.
-        if (!isLoopback(target)) return Promise.reject(new NetworkRefused(target));
-        return real(input, init);
+    // `async`, so a refusal is a REJECTION, never a throw. The real `fetch`
+    // returns a promise on every path, so a synchronous throw escapes
+    // `fetch(...).catch(...)` and lands somewhere the caller has no handler —
+    // measured here as three suites timing out rather than failing. A guard
+    // that changes the SHAPE of the API it guards is a second defect wearing
+    // the first one's clothes.
+    const guarded: typeof fetch = async (input, init) => {
+        const request = input instanceof Request ? input : null;
+        let target = typeof input === 'string' ? input : input instanceof URL ? input.href : (input as Request).url;
+        if (!isLoopback(target)) throw new NetworkRefused(target);
+        if ((init?.redirect ?? request?.redirect ?? 'follow') !== 'follow') return real(input, init);
+        // A loopback server may answer 3xx to a public host, and the real
+        // `fetch` would follow it. So redirects are followed here, one hop at a
+        // time, and every hop's target is checked before it is requested.
+        let hopInit: RequestInit = request ? { method: request.method, headers: request.headers, ...init } : { ...init };
+        let res = await real(input, { ...init, redirect: 'manual' });
+        for (let hop = 0; REDIRECT_STATUSES.has(res.status); hop += 1) {
+            const location = res.headers.get('location');
+            if (location === null) return res;
+            if (hop >= MAX_REDIRECTS) throw new TypeError('fetch failed: redirect count exceeded');
+            target = new URL(location, target).href;
+            if (!isLoopback(target)) throw new NetworkRefused(target);
+            await res.body?.cancel();
+            const method = (hopInit.method ?? 'GET').toUpperCase();
+            if (res.status === 303 || ((res.status === 301 || res.status === 302) && method === 'POST')) {
+                hopInit = { ...hopInit, method: 'GET' };
+                delete hopInit.body;
+            }
+            res = await real(target, { ...hopInit, redirect: 'manual' });
+        }
+        return res;
     };
     globalThis.fetch = guarded;
 }

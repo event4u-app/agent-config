@@ -164,17 +164,19 @@ export interface TableTarget {
     readonly dir: string;
     readonly sessionId: string;
     readonly now?: number;
-    /** When given, a table directory inside it is refused before anything is written. */
+    /**
+     * A table directory inside it is refused before anything is written. When
+     * absent the working directory stands in for it, so a caller that forgets it
+     * still cannot put the table, key included, into the project it runs in.
+     */
     readonly workspaceRoot?: string;
 }
 
 /** Read-modify-write under an exclusive lock; the file is written whole and renamed into place. */
 function updateTable<T>(t: TableTarget, fn: (table: SessionTable) => T): T {
-    if (t.workspaceRoot !== undefined) {
-        const rel = path.relative(path.resolve(t.workspaceRoot), path.resolve(t.dir));
-        if (!rel.startsWith('..') && !path.isAbsolute(rel)) {
-            throw new Error('egress session table: refusing a table directory inside the workspace');
-        }
+    const rel = path.relative(path.resolve(t.workspaceRoot ?? process.cwd()), path.resolve(t.dir));
+    if (!rel.startsWith('..') && !path.isAbsolute(rel)) {
+        throw new Error('egress session table: refusing a table directory inside the workspace');
     }
     fs.mkdirSync(t.dir, { recursive: true, mode: 0o700 });
     const file = sessionTablePath(t.dir, t.sessionId);
@@ -259,7 +261,16 @@ export function issueToken(r: IssueRequest): string {
     return updateTable(r, (table) => mintInto(table, r.type, r.class, r.canonical, r.origin));
 }
 
-/** A TokenScope whose state is the session table: it owns its tokens and resolves nothing in memory. */
+/**
+ * A TokenScope whose state is the session table: it owns its tokens and
+ * resolves nothing in memory.
+ *
+ * Unlike the in-memory scope it does NOT canonicalise: it digests the spelling
+ * it is handed, so `DE89 3704…` and `DE893704…` are two entries with two
+ * numbers here, where TokenScope issues one number with a `_vK` variant.
+ * Restoration stays exact (it re-derives the same spelling), and only the
+ * one-entity-one-number reading differs between the two scopes.
+ */
 class SessionScope extends TokenScope {
     constructor(
         private readonly table: SessionTable,
@@ -314,7 +325,8 @@ export type RestoreOutcome =
 /**
  * The five outcomes, each with a message that names no value and one recovery:
  * explicit confirmation with the value shown. A credential token toward a
- * foreign destination is denied before this recovery is offered, never shown.
+ * foreign destination is denied before this recovery is offered, never shown —
+ * `restoreToken` returns that refusal with `recovery: 'none'`.
  */
 export const RESTORE_OUTCOMES: ReadonlyArray<{
     readonly outcome: RestoreOutcome;
@@ -331,7 +343,7 @@ export const RESTORE_OUTCOMES: ReadonlyArray<{
 export type RestoreResult =
     | { readonly ok: true; readonly value: string }
     | { readonly ok: false; readonly outcome: RestoreOutcome; readonly message: string; readonly recovery: 'confirm-with-value-shown' }
-    | { readonly ok: false; readonly outcome: 'UNRESOLVED'; readonly message: string; readonly recovery: 'none' };
+    | { readonly ok: false; readonly outcome: RestoreOutcome | 'UNRESOLVED'; readonly message: string; readonly recovery: 'none' };
 
 function refuse(outcome: RestoreOutcome): RestoreResult {
     const o = RESTORE_OUTCOMES.find((x) => x.outcome === outcome) as (typeof RESTORE_OUTCOMES)[number];
@@ -398,7 +410,14 @@ export function restoreToken(token: string, req: RestoreRequest): RestoreResult 
     }
     if (!macValid(table, entry)) return refuse('ORIGIN_UNAVAILABLE');
     const origin = entry.origins.find((o) => originKey(o) === req.destination);
-    if (origin === undefined) return refuse('DESTINATION_MISMATCH');
+    if (origin === undefined) {
+        // A credential toward a foreign destination is denied outright: the
+        // usual recovery would display the secret.
+        if (entry.class === 'credential') {
+            return { ok: false, outcome: 'DESTINATION_MISMATCH', message: 'A credential placeholder is never restored toward another destination.', recovery: 'none' };
+        }
+        return refuse('DESTINATION_MISMATCH');
+    }
     const got = rederive(table, entry, origin, req);
     return typeof got === 'string' ? refuse(got) : { ok: true, value: got.value };
 }
@@ -443,7 +462,16 @@ export function reissueIntoSession(text: string, r: ReissueRequest): string {
         r.from === r.to
             ? tokens.map((t, i) => (plan[i] === null ? null : text.slice(t.start, t.end)))
             : updateTable({ dir: r.dir, sessionId: r.to, now }, (table) =>
-                  plan.map((p) => (p === null ? null : mintInto(table, p.entry.type, p.entry.class, p.value, p.origin))),
+                  // One refused mint (a detected value in the origin, a class
+                  // clash) becomes that token's dead form; the injection never throws.
+                  plan.map((p) => {
+                      if (p === null) return null;
+                      try {
+                          return mintInto(table, p.entry.type, p.entry.class, p.value, p.origin);
+                      } catch {
+                          return null;
+                      }
+                  }),
               );
     let out = text;
     for (let i = tokens.length - 1; i >= 0; i--) {

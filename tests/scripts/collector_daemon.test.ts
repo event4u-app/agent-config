@@ -159,11 +159,18 @@ function enumerateDaemonProcesses(opts: { includeTestOwned?: boolean } = {}): st
  * rather than throwing: a stuck grandchild is a slower teardown, never a test
  * failure attributed to the wrong suite.
  */
-async function waitForNoDaemonAt(root: string, timeoutMs = 10_000): Promise<void> {
-    const deadline = Date.now() + timeoutMs;
+async function waitForNoDaemonAt(root: string, timeoutMs = 10_000, graceMs = 2_000): Promise<void> {
+    const started = Date.now();
+    const deadline = started + timeoutMs;
     while (Date.now() < deadline) {
         const mine = enumerateDaemonProcesses({ includeTestOwned: true }).filter((l) => l.includes(root));
         if (mine.length === 0) return;
+        // A grace window first, so the daemon's own shutdown path runs after
+        // `stop()` rather than being pre-empted by a SIGKILL.
+        if (Date.now() - started < graceMs) {
+            await new Promise<void>((r) => setTimeout(r, 25));
+            continue;
+        }
         for (const line of mine) {
             const pid = Number(pidOf(line));
             if (!Number.isInteger(pid) || pid <= 0) continue;

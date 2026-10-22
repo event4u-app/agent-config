@@ -24,8 +24,8 @@ packs:
 # /agent-design
 
 One entry point for work on an existing UI surface. A **command**, not a skill —
-the skill catalogue is already the largest standing cost in this suite, and this
-adds a router rather than a 295th entry to it.
+every skill adds a catalogue entry that is loaded in every session, and this
+adds a router rather than one more entry to that catalogue.
 
 Formerly `/design`. The host registers its own `/design` built-in, which this
 package must never shadow, so the router takes the name `/agent-design`

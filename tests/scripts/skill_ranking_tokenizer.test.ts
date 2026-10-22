@@ -76,19 +76,20 @@ describe('skillRanking — stopword blocks', () => {
         expect(t.has('modul')).toBe(true);
     });
 
-    it('the German block collides with no ENGLISH content word in this catalogue', () => {
-        // Measured over every shipped `name + description` before the block was
-        // added: the only entries it hits at all are `also` (6), `mach` (4),
-        // `das` (4), `ist` (4), `will` (3) and a tail of single hits — and all
-        // but `also` and `will` are German trigger phrases this package writes
-        // INTO its own English descriptions, which is where stopping them is
-        // right. `also` and `will` are function words in English too.
+    it('the German block stops none of five English routing content words', () => {
+        // A spot check, not a catalogue-wide proof. The author's own reading of
+        // the shipped `name + description` before the block was added (not
+        // recorded as an artifact) was that its hits are German trigger phrases
+        // written into English descriptions, plus `also` and `will`, which are
+        // function words in English too.
         //
         // The assertion is the narrow invariant behind that reading: the two
         // blocks may overlap, but a German entry must never be the only thing
         // standing between a prompt and an English content word that carries
         // routing signal. `request` and `review` are two such words.
-        for (const contentWord of ['request', 'review', 'merge', 'deploy', 'render']) {
+        // The English half of a German homograph is one: `mit` (the licence),
+        // `bin` and `dir` (paths), `man` (pages), `war` and `des` (formats).
+        for (const contentWord of ['request', 'review', 'merge', 'deploy', 'render', 'mit', 'bin', 'dir', 'man', 'war', 'des']) {
             expect(STOPWORDS.has(contentWord)).toBe(false);
         }
     });

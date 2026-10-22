@@ -62,6 +62,17 @@ describe('layer_baseline_report', () => {
         expect(readHookCommands(home)).toEqual(['Stop: node <HOME>/x.js']);
     });
 
+    it('hook commands carry <PACKAGE_ROOT>, never the measured checkout path', () => {
+        const home = mkTmp();
+        const pkg = mkTmp();
+        fs.mkdirSync(path.join(home, '.claude'));
+        fs.writeFileSync(
+            path.join(home, '.claude', 'settings.json'),
+            JSON.stringify({ hooks: { Stop: [{ hooks: [{ type: 'command', command: `node ${pkg}/dist/hooks/dispatch.js` }] }] } }),
+        );
+        expect(readHookCommands(home, pkg)).toEqual(['Stop: node <PACKAGE_ROOT>/dist/hooks/dispatch.js']);
+    });
+
     it('rejects an unknown host', () => {
         expect(parseArgs(['--hosts', 'no-such-host'])).toBeNull();
         expect(parseArgs(['--hosts', 'cursor'])?.hosts).toEqual(['cursor']);

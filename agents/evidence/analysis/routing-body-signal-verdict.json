@@ -3,7 +3,7 @@
   "step": "5.1",
   "roadmap": "road-to-governed-harness-evolution",
   "preregistration": "agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md",
-  "measured_at": "2026-10-21",
+  "measured_at": "2026-10-22",
   "proxy_to_real_fidelity": {
     "value": null,
     "status": "unmeasured-by-construction",
@@ -11,14 +11,14 @@
   },
   "body_signal": {
     "verdict": "harmful",
-    "reason": "false activation +5.77 pp breaches the +2.0 pp guard",
+    "reason": "false activation +5.75 pp breaches the +2.0 pp guard",
     "k": 5,
-    "delta_recall_pp": 3.163,
-    "delta_false_activation_pp": 5.772,
-    "p_value": 0.1582,
+    "delta_recall_pp": 2.861,
+    "delta_false_activation_pp": 5.754,
+    "p_value": 0.2064,
     "discordant_positive_pairs": {
       "gained": 111,
-      "lost": 90
+      "lost": 92
     },
     "bars": {
       "recall_gain_pp": 5,
@@ -30,23 +30,23 @@
       "description": {
         "positives": 664,
         "positiveHits": 401,
-        "negatives": 641,
+        "negatives": 643,
         "negativeHits": 95
       },
       "description+body": {
         "positives": 664,
-        "positiveHits": 422,
-        "negatives": 641,
+        "positiveHits": 420,
+        "negatives": 643,
         "negativeHits": 132
       }
     },
     "recall_pp": {
       "description": 60.392,
-      "description+body": 63.554
+      "description+body": 63.253
     },
     "false_activation_pp": {
-      "description": 14.821,
-      "description+body": 20.593
+      "description": 14.774,
+      "description+body": 20.529
     }
   },
   "corpus": {
@@ -57,7 +57,7 @@
       "brand-asset-generation",
       "estimate-ticket"
     ],
-    "cases": 1305,
+    "cases": 1307,
     "catalogue_size": 301
   }
 }

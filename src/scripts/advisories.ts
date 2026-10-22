@@ -513,6 +513,16 @@ function usage(): number {
     return 2;
 }
 
+/**
+ * Whether the user confirmed this fix as deployed: `--deployed=<id>` names ONE
+ * fix, and a bare flag confirms nothing. No workflow run counts — a run whose
+ * name merely contains "deploy" (a docs site, a worker) would move a dependency
+ * fix to `fixed-deployed`, which is a security state, on nobody's word.
+ */
+export function deploymentConfirmed(key: string, confirmed: string | undefined): boolean {
+    return confirmed !== undefined && confirmed !== '' && (key.split('|')[0] === confirmed || key === confirmed);
+}
+
 export async function main(argv: readonly string[] = process.argv.slice(2)): Promise<number> {
     const [mode, ...rest] = argv;
     const flag = (name: string): string | undefined => rest.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
@@ -745,17 +755,7 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
             }
             const sha = mergedSha ?? r.merge_sha;
             const tags = sha === null ? null : defaultExec('git', ['tag', '--contains', sha], root);
-            const deployRuns = sha === null ? null : defaultExec('gh', ['run', 'list', '--commit', sha, '--json', 'name,conclusion'], root);
-            // `--deployed=<id>` confirms ONE fix by the user's word; a bare flag confirms nothing.
-            const confirmed = flag('deployed');
-            let deployed = confirmed !== undefined && (r.key.split('|')[0] === confirmed || r.key === confirmed);
-            try {
-                const runs = deployRuns === null ? [] : (JSON.parse(deployRuns) as Array<{ name?: string; conclusion?: string }>);
-                // A deploy signal is a successful run whose name says deploy — not a release drafter.
-                deployed = deployed || runs.some((x) => /\bdeploy/i.test(x.name ?? '') && x.conclusion === 'success');
-            } catch {
-                /* no deploy signal read — never assume one */
-            }
+            const deployed = deploymentConfirmed(r.key, flag('deployed'));
             track(r, { mergedSha: sha, releaseContains: (tags ?? '').trim() !== '', deployed });
         }
         writeRemediations(root, rems);

@@ -138,8 +138,10 @@ pull request exists.
 ./agent-config self-repair:release <fingerprint> --approve <digest>
 ```
 
-Running that command IS the user's word, and the digest names the bytes it
-covers: anything changed since the dry run voids it. It is a Hard-Floor action under
+The user runs that command; the agent prints it and never runs the `--approve`
+form itself. The digest names the bytes it covers — anything changed since the
+dry run voids it — but it is not consent: the agent can read it as easily as
+the user. It is a Hard-Floor action under
 `non-destructive-by-default`, so no standing instruction, autonomy setting or
 earlier approval substitutes for it.
 

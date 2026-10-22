@@ -87,6 +87,11 @@ describe('a global dry-run shows the global plan', () => {
         const out = (r => r.stdout + r.stderr)(install('--scope', 'global', '--tools', 'claude-code', '--dry-run'));
         expect(out).not.toMatch(/\bcursor\b.*\.cursor/);
         expect(out).not.toMatch(/\baugment\b.*\.augment/);
+        // Format-independent: the other tools' anchors appear nowhere, however
+        // the plan lays out its lines.
+        expect(out).not.toContain(path.join(home, '.cursor'));
+        expect(out).not.toContain(path.join(home, '.augment'));
+        expect(out).not.toContain(path.join(home, '.codex'));
     });
 
     it('writes nothing at all', () => {

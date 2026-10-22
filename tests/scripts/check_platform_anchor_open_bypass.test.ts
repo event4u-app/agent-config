@@ -340,6 +340,13 @@ describe('check_platform_anchor reds on an open bypass, even on a diff it does n
             expect(runAgainst(sha)).toBe(1);
         });
 
+        it('a base ref that reads as an option is refused before git sees it', () => {
+            base();
+            const written = path.join(root, 'written-by-git');
+            expect(main(['--base-ref', `--output=${written}`, '--root', root, '--repo', 'o/r'], source)).toBe(1);
+            expect(fs.readdirSync(root).filter((f) => f.startsWith('written-by-git'))).toEqual([]);
+        });
+
         it('a base that cannot be listed fails closed', () => {
             base();
             expect(runAgainst('no-such-ref')).toBe(1);

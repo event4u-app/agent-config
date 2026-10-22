@@ -38,8 +38,6 @@ import { main as firstRunGateMain } from '../first_run_gate_hook.js';
 import { main as profileStalenessMain } from '../profile_staleness_hook.js';
 import { main as wrapperFreshnessMain } from '../wrapper_freshness_hook.js';
 import { main as surfaceProbeMain } from '../surface_probe_hook.js';
-import { main as updateNoticeMain } from '../update_notice_hook.js';
-import { main as updateAutoInviteMain } from '../update_invite_hook.js';
 import { main as teamReviewGateMain } from '../team_review_gate_hook.js';
 import { main as prUrlReminderMain } from '../pr_url_reminder_hook.js';
 import { main as pushSettleMain } from './push_settle_hook.js';
@@ -109,8 +107,6 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/profile_staleness_hook.ts': profileStalenessMain as ConcernMain,
     'src/scripts/wrapper_freshness_hook.ts': wrapperFreshnessMain as ConcernMain,
     'src/scripts/surface_probe_hook.ts': surfaceProbeMain as ConcernMain,
-    'src/scripts/update_notice_hook.ts': updateNoticeMain as ConcernMain,
-    'src/scripts/update_invite_hook.ts': updateAutoInviteMain as ConcernMain,
     'src/scripts/team_review_gate_hook.ts': teamReviewGateMain as ConcernMain,
     'src/scripts/pr_url_reminder_hook.ts': prUrlReminderMain as ConcernMain,
     'src/scripts/hooks/push_settle_hook.ts': pushSettleMain as ConcernMain,

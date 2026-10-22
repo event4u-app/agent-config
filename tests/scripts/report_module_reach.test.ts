@@ -56,8 +56,9 @@ describe('on the real tree', () => {
         }
     });
 
-    // Three full scans of the real tree; on macOS CI runners that measured
-    // 30.8–33.8 s and tripped the 30 s default on main as well as on PRs.
+    // Three full scans of the real tree. By the author's own observation of
+    // macOS CI runners (no artifact records the figures) that took just over
+    // 30 s and tripped the 30 s default on main as well as on PRs.
     it('exits 0 — this is a report, never a gate', () => {
         expect(main([], REPO)).toBe(0);
         expect(main(['--json'], REPO)).toBe(0);

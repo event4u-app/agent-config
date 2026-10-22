@@ -134,14 +134,15 @@ not reset by moving to the next member.
 Lanes are **shipped**, on the owner's decision of 2026-10-19. They were staged
 behind ten clean serial set runs; that gate was overtaken in practice — 285 lane
 runs happened outside it between 2026-10-01 and 10-19, under briefs each
-orchestrator improvised, and 17 of 207 drain lanes reached `count_open == 0`.
+orchestrator improvised, and 17 of 207 drain lanes reached `count_open == 0`
+(`agents/evidence/analysis/drain-lanes-leave-roadmaps-partial-2026-10-19.md`).
 What ships is not those runs but the contract that replaces them: the canonical
 brief in `/roadmap:process-full` § Lanes, the finish-first order of
 `roadmap_drain_queue`, and the cap below. (The AI council was asked; only one
 seat could answer, it favoured keeping lanes staged, and without convergence the
 decision went to the owner.)
 
-**Provisional, and on a dated re-decision.** A later two-seat round read the
+**Provisional, and re-decided on a measurement, not a date.** A later two-seat round read the
 change as inside `road-to-agent-throughput-recovery` AC-3, which held lane
 changes until that roadmap's Phase 2 verdict. The owner's decision stands as a
 recorded exception to that hold (D10 there), not a lifting of it: step 2.3 of

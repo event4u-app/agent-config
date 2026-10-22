@@ -1,6 +1,9 @@
 /**
- * Sender census — every module of this package that posts to a model-provider
- * endpoint, derived from the tree rather than listed by hand
+ * Sender census — every `.ts` and `.sh` module under {@link SCAN_ROOTS} that
+ * posts to a model-provider endpoint, derived from the tree rather than listed
+ * by hand. A `.js`/`.mjs` sender, or one under another root (skill scripts,
+ * `src/server`, templates, `internal/bench`), is not read, and the rendered
+ * table says so
  * (road-to-one-detector-and-the-senders-we-own, step 0.4; contract
  * docs/contracts/egress-placeholders-v1.md § This package's own senders).
  *
@@ -108,6 +111,15 @@ const CONTENT_MARKER =
     /(?:\/\/|#)\s*egress-content:\s*(session-content|fixed-corpus)\b(?:[ \t]+(asserted|uncovered)\b)?(?:[ \t]*(?:—|--)[ \t]*(\S[^\n]*))?/;
 // `asserted` is a claim about the final check, so the module must reach it.
 const FINAL_CHECK_IMPORT = /import\s*\{[^}]*\bcouncilEgress\b[^}]*\}\s*from\s+['"][^'"]*council_egress(?:\.js)?['"]/;
+/** The check actually called, on a code line: an import alone, or the call named in a comment, is not it. */
+const FINAL_CHECK_CALL = /\bcouncilEgress\(\)\s*\.\s*check\s*\(/;
+
+function reachesFinalCheck(src: string): boolean {
+    return (
+        FINAL_CHECK_IMPORT.test(src) &&
+        src.split('\n').some((line) => !/^\s*(?:\/\/|\/?\*)/.test(line) && FINAL_CHECK_CALL.test(line))
+    );
+}
 // Passing the engine means importing a function that detects or replaces; a
 // module that reads only a table constant (a vendor key prefix) does not.
 const ENGINE_IMPORT =
@@ -172,7 +184,7 @@ function coverageOf(
     if (marker[2] === 'asserted') {
         return reachesFinalCheck
             ? { coverage: 'asserted', reason }
-            : { coverage: 'undeclared', reason: 'claims `asserted` but does not import the final check' };
+            : { coverage: 'undeclared', reason: 'claims `asserted` but does not import and call the final check' };
     }
     return { coverage: 'undeclared', reason: 'session content without `asserted` or `uncovered`' };
 }
@@ -194,7 +206,7 @@ export function classifyModule(rel: string, src: string): SenderRow | null {
     const marker = CONTENT_MARKER.exec(src);
     const content = (marker?.[1] as SenderContent | undefined) ?? 'undeclared';
     const engine = ENGINE_IMPORT.test(src);
-    const { coverage, reason } = coverageOf(marker, FINAL_CHECK_IMPORT.test(src));
+    const { coverage, reason } = coverageOf(marker, reachesFinalCheck(src));
     const row = (endpoints: Set<string>, status: SenderStatus, evidence: string): SenderRow => ({
         module: rel,
         endpoints: endpoints.size === 0 ? ['configured'] : [...endpoints].sort(),
@@ -269,6 +281,8 @@ export function renderTable(rows: readonly SenderRow[]): string {
             `${String(t.unclassified)} unclassified; coverage ${String(c.asserted)} asserted, ` +
             `${String(c['fixed-corpus'])} fixed-corpus, ${String(c.uncovered)} uncovered, ` +
             `${String(c.undeclared)} undeclared. ` +
+            `Scope: \`.ts\` and \`.sh\` under ${SCAN_ROOTS.map((r) => `\`${r}\``).join(', ')} only; ` +
+            '`asserted` means the module imports and calls the final check, not that every request path reaches it. ' +
             // check_enforcement_denominator reads `N undeclared` beside the word as a rule-enforcement figure.
             '<!-- enforcement-count-ok: egress coverage census of sender modules, not a rule-enforcement figure -->',
     );

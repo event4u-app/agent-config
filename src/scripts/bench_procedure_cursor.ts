@@ -191,24 +191,42 @@ function readTree(dir: string): string {
         .join('\n');
 }
 
+/**
+ * `rel` under `runDir` when its real path stays inside the run's real path,
+ * else null. The run directory is an agent's output, so a symlink in it must
+ * not let a file outside satisfy a predicate.
+ */
+function inRun(runDir: string, rel: string): string | null {
+    const abs = path.join(runDir, rel);
+    try {
+        const root = fs.realpathSync(runDir);
+        const real = fs.realpathSync(abs);
+        return real === root || real.startsWith(root + path.sep) ? abs : null;
+    } catch {
+        return null;
+    }
+}
+
 /** Whether one predicate holds on the run directory. Every op except a dir mentions_none fails on an empty run. */
 export function holds(runDir: string, p: Predicate): boolean {
     if (p.kind === 'dir') {
-        if (p.op === 'min_files') return countFiles(path.join(runDir, p.path)) >= p.min;
-        const text = readTree(path.join(runDir, p.path));
+        const dir = inRun(runDir, p.path);
+        if (p.op === 'min_files') return dir !== null && countFiles(dir) >= p.min;
+        const text = dir === null ? '' : readTree(dir);
         // An absent directory invents nothing, so mentions_none holds there; mentions_all needs the text.
         if (p.op === 'mentions_none') return !p.values.some((v) => mentions(text, v));
         return text !== '' && p.values.every((v) => mentions(text, v));
     }
     if (p.kind === 'file') {
-        const file = path.join(runDir, p.path);
-        if (!fs.existsSync(file) || !fs.statSync(file).isFile()) return false;
+        const file = inRun(runDir, p.path);
+        if (file === null || !fs.statSync(file).isFile()) return false;
         if (p.op === 'exists') return true;
         const text = fs.readFileSync(file, 'utf-8');
         const values = p.values ?? [];
         return p.op === 'mentions_all' ? values.every((v) => mentions(text, v)) : !values.some((v) => mentions(text, v));
     }
-    const doc = readJson(path.join(runDir, p.file));
+    const json = inRun(runDir, p.file);
+    const doc = json === null ? undefined : readJson(json);
     if (doc === undefined) return false;
     const found = resolvePath(doc, p.path);
     if (p.op === 'absent') return found === undefined;
@@ -235,7 +253,7 @@ export function holds(runDir: string, p: Predicate): boolean {
 
 function stepApplies(runDir: string, step: SidecarStep): boolean {
     if (step.when === undefined) return true;
-    const present = fs.existsSync(path.join(runDir, step.when.path));
+    const present = inRun(runDir, step.when.path) !== null;
     return step.when.predicate === 'file-exists' ? present : !present;
 }
 
@@ -253,7 +271,7 @@ export function scoreExits(runDir: string, pilot: Pilot, skillsRoot = SKILLS_ROO
             if (check !== undefined && check({ projectRoot: runDir, skillDir: sidecar.skillDir }).ok) verified.met += 1;
         } else if (exit.kind === 'exists') {
             sequenced.total += 1;
-            if (contained(exit.path) && fs.existsSync(path.join(runDir, exit.path))) sequenced.met += 1;
+            if (contained(exit.path) && inRun(runDir, exit.path) !== null) sequenced.met += 1;
         }
     }
     return { verified, sequenced };

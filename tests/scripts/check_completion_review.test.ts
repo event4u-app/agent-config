@@ -1609,6 +1609,12 @@ describe.runIf(hasGit())('round: header field — the round counts review passes
         write(dir, report, '# Owner report: feat\n\nRow 1 stays open at the round cap.\n');
         commitAll(dir, 'owner report');
         expect(runGate(dir).kinds).not.toContain('cap-deferral-without-owner-report');
+        // An existing report outside the artefact's own directory is not this round's.
+        const elsewhere = 'agents/evidence/reviews/other/feat.owner-report.md';
+        const away = passesRepo(REVIEW_ROUND_CAP, rowsArtifact(`roadmap-x § 1 — ${elsewhere}`));
+        write(away, elsewhere, '# Owner report: feat\n');
+        commitAll(away, 'owner report elsewhere');
+        expect(runGate(away).kinds).toContain('cap-deferral-without-owner-report');
         const below = runGate(passesRepo(REVIEW_ROUND_CAP - 1, rowsArtifact('roadmap-x § 1')));
         expect(below.kinds).not.toContain('cap-deferral-without-owner-report');
     });

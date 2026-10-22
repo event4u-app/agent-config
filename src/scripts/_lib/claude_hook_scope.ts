@@ -20,7 +20,7 @@ import { MANAGED_SIGNATURE } from './claude_settings_hooks.js';
 export type ClaudeHookState = 'not-installed' | 'installed-not-executable' | 'executable' | 'observed-at-runtime';
 
 /** The dispatcher a hook command would reach, in the order the command tries them. */
-export type ClaudeHookRuntime = 'project-local' | 'source-checkout' | 'staged' | 'local-wrapper' | 'path-cli' | 'none';
+export type ClaudeHookRuntime = 'staged' | 'path-cli' | 'none';
 
 export interface ClaudeHookScope {
     registered_in: Array<'global' | 'project'>;
@@ -101,10 +101,6 @@ function versionAt(pkgDir: string): string | null {
     return typeof v === 'string' ? v : null;
 }
 
-function onPath(name: string, pathEnv: string): boolean {
-    return pathEnv.split(path.delimiter).some((dir) => dir !== '' && executable(path.join(dir, name)));
-}
-
 /** Numeric dotted-version compare; a non-numeric part compares as 0. */
 function olderThan(a: string, b: string): boolean {
     const pa = a.split(/[.-]/).map((x) => Number.parseInt(x, 10) || 0);
@@ -119,20 +115,12 @@ function olderThan(a: string, b: string): boolean {
 /**
  * The runtime the installed hook command reaches, tried in the SAME order as
  * `build_claude_hook_matrix` — a status that resolved in a different order
- * would report a runtime the hooks never use.
+ * would report a runtime the hooks never use. That command trusts only two:
+ * the staged runtime, then an `agent-config` on PATH whose path is absolute and
+ * outside the project. Nothing inside the project counts, however runnable.
  */
 function resolveRuntime(input: ClaudeHookScopeInput): { runtime: ClaudeHookRuntime; version: string | null } {
     const { projectRoot, runtimeRoot, pathEnv } = input;
-    const projectPkg = path.join(projectRoot, 'node_modules', '@event4u', 'agent-config');
-    if (exists(path.join(projectPkg, 'dist', 'hooks', 'dispatch.js'))) {
-        return { runtime: 'project-local', version: versionAt(projectPkg) };
-    }
-    if (
-        exists(path.join(projectRoot, 'dist', 'hooks', 'dispatch.js')) &&
-        exists(path.join(projectRoot, 'src', 'scripts', 'hook_manifest.yaml'))
-    ) {
-        return { runtime: 'source-checkout', version: versionAt(projectRoot) };
-    }
     const current = path.join(runtimeRoot, 'current');
     let nodePath = '';
     try {
@@ -143,11 +131,24 @@ function resolveRuntime(input: ClaudeHookScopeInput): { runtime: ClaudeHookRunti
     if (nodePath !== '' && executable(nodePath) && exists(path.join(current, 'dist', 'hooks', 'dispatch.js'))) {
         return { runtime: 'staged', version: versionAt(current) };
     }
-    if (executable(path.join(projectRoot, 'agent-config')) && exists(path.join(projectRoot, 'node_modules'))) {
-        return { runtime: 'local-wrapper', version: versionAt(projectRoot) };
-    }
-    if (onPath('agent-config', pathEnv)) return { runtime: 'path-cli', version: null };
+    const cli = firstOnPath('agent-config', pathEnv);
+    if (cli !== null && path.isAbsolute(cli) && !insideDir(cli, projectRoot)) return { runtime: 'path-cli', version: null };
     return { runtime: 'none', version: null };
+}
+
+/** `command -v` reads the first PATH hit, so only that one decides. */
+function firstOnPath(name: string, pathEnv: string): string | null {
+    for (const dir of pathEnv.split(path.delimiter)) {
+        if (dir === '') continue;
+        const p = path.join(dir, name);
+        if (executable(p)) return p;
+    }
+    return null;
+}
+
+function insideDir(p: string, dir: string): boolean {
+    const rel = path.relative(path.resolve(dir), path.resolve(p));
+    return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel);
 }
 
 function observedReached(runtimeRoot: string): boolean {

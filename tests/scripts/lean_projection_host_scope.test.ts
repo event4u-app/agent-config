@@ -54,7 +54,7 @@ function seedForm(root: string, hosts: Record<string, string> | null): void {
     }
     const rows: Record<string, unknown> = {};
     for (const [host, form] of Object.entries(hosts)) {
-        rows[host] = { form, basis: 'test fixture', measured: { fixture: true } };
+        rows[host] = { form, basis: 'test fixture', measured: { fixture: 'measured by this test' } };
     }
     fs.writeFileSync(path.join(dir, 'project-tree-form.json'), JSON.stringify({ schema_version: 1, hosts: rows }));
 }

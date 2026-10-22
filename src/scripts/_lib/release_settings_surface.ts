@@ -216,8 +216,10 @@ export function isMajorBump(from: string, target: string): boolean {
 
 /**
  * Does a `<test file>::<it title>` proof name a test this tree contains?
- * Presence of the file and of the title string is all a cut can check without
- * running the suite; the test itself is what carries the claim.
+ * The file must hold an `it(` or `test(` whose quoted title starts with the one
+ * named — not the string in a comment, and not a `.skip` or `.todo` test.
+ * Whether that test PASSES is not checked: a cut does not run the suite, and
+ * the test itself is what carries the claim.
  */
 export function proofHolds(proof: string | undefined, root: string = REPO_ROOT): boolean {
     if (proof === undefined) return false;
@@ -226,7 +228,12 @@ export function proofHolds(proof: string | undefined, root: string = REPO_ROOT):
     const file = path.join(root, proof.slice(0, sep));
     const title = proof.slice(sep + 2).trim();
     if (title === '' || !fs.existsSync(file)) return false;
-    return fs.readFileSync(file, 'utf8').includes(title);
+    const escaped = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const call = new RegExp(`(?<![.\\w])(?:it|test)\\s*\\(\\s*['"\`]${escaped}`);
+    return fs
+        .readFileSync(file, 'utf8')
+        .split('\n')
+        .some((line) => !/^\s*(?:\/\/|\/?\*)/.test(line) && call.test(line));
 }
 
 /**

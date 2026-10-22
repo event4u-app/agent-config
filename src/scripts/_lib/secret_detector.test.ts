@@ -175,3 +175,11 @@ describe('the scanner and the replacer on multi-line text', () => {
         expect(scanText(split).some((f) => f.rule === 'generic-assignment')).toBe(false);
     });
 });
+
+describe('scanText — caller-supplied rules', () => {
+    it('a row without the global flag still terminates and finds each match once', () => {
+        const probe = { rule: 'probe-non-global', type: 'SECRET', class: 'credential', replacement: 'detection', pattern: /zz9q[A-Za-z0-9]{12}/ } as unknown as EgressRule;
+        const line = 'a zz9qAbCdEfGh1234 b zz9qXyZwVuTs5678';
+        expect(scanText(line, { rules: [probe] }).filter((f) => f.rule === 'probe-non-global')).toHaveLength(2);
+    });
+});

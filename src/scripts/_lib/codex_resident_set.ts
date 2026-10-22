@@ -67,7 +67,10 @@ export const RECORD_DIRNAME = 'codex-resident-set';
 export const POLICY_REL = path.join('agents', 'openai.yaml');
 
 /**
- * The host's documented skills-context budget, in characters.
+ * The skills-context budget assumed for this host, in characters. Not a
+ * documented figure: it is the census's fallback for a context window it cannot
+ * read, so a host with a larger window fits more and this unlists more than it
+ * has to — the safe direction, never the exact one.
  *
  * Mirrors `CODEX_UNKNOWN_WINDOW_BUDGET_CHARS` in `report_skill_host_census.ts`
  * rather than importing it, because that module is a CLI whose main-guard fires
@@ -88,7 +91,8 @@ export interface CodexCatalogueEntry {
 /** A behaviour this model had to pin down that the host states as prose. */
 export interface CodexResidentAssumption {
     id: 'entry-cost-is-name-plus-description' | 'per-entry-overhead' | 'fill-order-alphabetical';
-    provenance: 'upstream-prose' | 'first-party-observation';
+    /** `estimate`: a number this package chose because nothing states one. */
+    provenance: 'upstream-prose' | 'first-party-observation' | 'estimate';
     why: string;
 }
 
@@ -114,7 +118,7 @@ const ASSUMPTIONS: readonly CodexResidentAssumption[] = [
     },
     {
         id: 'per-entry-overhead',
-        provenance: 'upstream-prose',
+        provenance: 'estimate',
         why:
             'Each entry also costs separators and a newline. The host quantifies none of it, so ' +
             'the default here is 5 characters per entry and the resulting resident set is therefore ' +
@@ -412,6 +416,19 @@ export function applyCodexResidentSet(home: string, report: (msg: string) => voi
         }
         const resident = new Set(split.resident);
 
+        // 5.2's S3: an unlisted skill is not reached unless something listed
+        // routes to it. The finder lives in the first root and indexes every
+        // non-resident name at the root whose copy the host would have used.
+        // Written FIRST: when it cannot be (a foreign entry holds its path),
+        // nothing is unlisted, because an unlisted skill with no finder is
+        // unreachable — an over-budget listing is the lesser failure.
+        const finder = ensureCodexFinder(
+            roots[0]!,
+            finderRecordPath(roots[0]!),
+            split.nonResident.map((name) => ({ name, skillsDir: path.join(firstRootOf.get(name)!, 'skills') })),
+        );
+        const unlistAllowed = finder !== 'foreign';
+
         let disabled = 0;
         let reenabled = 0;
         let foreign = 0;
@@ -423,26 +440,19 @@ export function applyCodexResidentSet(home: string, report: (msg: string) => voi
                 .map((d) => d.name);
             // Disabled here when it is not resident at all, OR when it is
             // resident but some earlier root already carries its description.
-            const nonResident = here.filter((n) => !resident.has(n) || firstRootOf.get(n) !== anchor);
+            const nonResident = unlistAllowed ? here.filter((n) => !resident.has(n) || firstRootOf.get(n) !== anchor) : [];
             const res = ensureCodexResidentSet(anchor, recordPath(anchor), nonResident);
             disabled += res.disabled.length;
             reenabled += res.reenabled.length;
             foreign += res.skipped_foreign.length;
         }
-        // 5.2's S3: an unlisted skill is not reached unless something listed
-        // routes to it. The finder lives in the first root and indexes every
-        // non-resident name at the root whose copy the host would have used.
-        const finder = ensureCodexFinder(
-            roots[0]!,
-            finderRecordPath(roots[0]!),
-            split.nonResident.map((name) => ({ name, skillsDir: path.join(firstRootOf.get(name)!, 'skills') })),
-        );
         report(
             `codex: resident set across ${roots.length} root(s) — ${split.resident.length} listed ` +
                 `(${split.listingChars} of ${split.budgetChars} chars), ` +
                 `${disabled} newly unlisted, ${reenabled} relisted` +
                 (foreign > 0 ? `, ${foreign} existing policy file(s) untouched` : '') +
-                `, finder ${finder}`,
+                `, finder ${finder}` +
+                (unlistAllowed ? '' : ' — nothing unlisted, because no finder could route to it'),
         );
     } catch (e) {
         report(`codex: resident set skipped — ${String(e)}`);

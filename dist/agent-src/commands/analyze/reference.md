@@ -211,8 +211,15 @@ refuting an anchored hypothesis, never on open-ended browsing.
 **The clone's shape.** Reuse an existing local clone that already holds the
 pinned SHA (`git -C <dir> cat-file -e <sha>^{commit}` succeeds) — no network at
 all. Otherwise fetch **only that commit, at depth 1**, into a fresh directory:
-`git init <dir>`, `git -C <dir> remote add origin <url>`,
-`git -C <dir> fetch --depth 1 origin <sha>`, `git -C <dir> checkout --detach FETCH_HEAD`.
+`git init <dir>`, `git -C <dir> remote add -- origin <url>`,
+`GIT_ALLOW_PROTOCOL=https git -C <dir> fetch --depth 1 origin <sha>`, then the
+checkout with LFS smudge and symlinks off (fetched content cannot install a
+git hook, so none needs disabling):
+`GIT_LFS_SKIP_SMUDGE=1 git -C <dir> -c core.symlinks=false checkout --detach FETCH_HEAD`.
+Validate before any of it: `<owner>` and `<repo>` match `^[A-Za-z0-9._-]+$` and
+do not start with `-`, `<sha>` is 40 hex characters, `<url>` is `https://`.
+A value that fails is refused, never quoted into shape — the same holds for
+`gh api repos/<owner>/<repo>` below.
 Never a full-history clone, and no persistent object store: `--deep` is opt-in
 and rare, and a store is a maintenance surface for a rare path.
 

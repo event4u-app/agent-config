@@ -51,6 +51,17 @@ describe('the file classes', () => {
 
     it('reads the process environment file as the environment', () => {
         expect(credentialFileClass('/proc/self/environ')).toBe('process-environment');
+        expect(credentialFileClass('/proc/self/task/123/environ')).toBe('process-environment');
+    });
+
+    it('matches names case-folded, as a case-insensitive filesystem opens them', () => {
+        expect(credentialFileClass('.ENV')).toBe('env-file');
+        expect(credentialFileClass('.Env.Local')).toBe('env-file');
+        expect(credentialFileClass('.ENV.EXAMPLE')).toBeNull();
+        expect(credentialFileClass('~/.ssh/ID_RSA')).toBe('private-key');
+        expect(credentialFileClass('~/.AWS/credentials')).toBe('cloud-credentials');
+        expect(credentialFileClass('.NPMRC')).toBe('registry-credentials');
+        expect(credentialFileClass('~/.azure/accesstokens.json')).toBe('cloud-credentials');
     });
 });
 
@@ -75,6 +86,14 @@ describe('the tool and command surface', () => {
         }
         for (const cmd of ['env FOO=1 node app.js', 'printenv HOME', 'export PATH=/x:$PATH', 'set -euo pipefail', 'declare -a list']) {
             expect(run('Bash', { command: cmd }), cmd).toBe(0);
+        }
+    });
+
+    it("refuses another process's environment, not only self's", () => {
+        // The host process's environment is the same secret leak as this
+        // shell's: the parent by variable, and any process by numeric pid.
+        for (const cmd of ['cat /proc/$PPID/environ', 'cat /proc/1234/environ', 'tr "\\0" "\\n" < /proc/1/environ']) {
+            expect(run('Bash', { command: cmd }), cmd).toBe(1);
         }
     });
 

@@ -18,7 +18,10 @@ import { isOpaqueRoundId } from './_lib/source_shape.js';
 import { DROPS_REL } from './analysis_analysts.js';
 import { RUN_STATE_FILE, RUNS_REL } from './analysis_run.js';
 
-/** ADR-288 D9: the inbox's own measured batch threshold (Phase 2b). */
+/**
+ * ADR-288 D9: the inbox's default batch threshold. Adoption rate fell as round
+ * size rose over five consecutive rounds, and this is where it was cut.
+ */
 export const INBOX_LANE_MAX_BYTES = 400_000;
 export const INBOX_LANE_MAX_TOPICS = 5;
 export const ROUND_MANIFEST = 'manifest.json';

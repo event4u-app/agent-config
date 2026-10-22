@@ -55,6 +55,20 @@ describe('resolvePrTarget (step 5.1)', () => {
         expect(nothing).toMatchObject({ kind: 'ask', candidates: [] });
     });
 
+    it("a link to another repository's PR is never read as that number here", () => {
+        const here = lookup({ repo: () => 'o/r' });
+        expect(resolvePrTarget({ argument: 'https://github.com/other/repo/pull/42', branch: null, conversation: [] }, here)).toMatchObject({
+            kind: 'ask',
+        });
+        expect(
+            resolvePrTarget({ argument: null, branch: null, conversation: ['see https://github.com/other/repo/pull/42'] }, here),
+        ).toMatchObject({ kind: 'ask', candidates: [] });
+        expect(resolvePrTarget({ argument: 'https://github.com/O/R/pull/42', branch: null, conversation: [] }, here)).toMatchObject({
+            kind: 'resolved',
+            pr: 42,
+        });
+    });
+
     it('an argument naming no open PR asks rather than guessing', () => {
         const out = resolvePrTarget({ argument: '99', branch: 'feat/x', conversation: [] }, lookup({ openForBranch: () => [42] }));
         expect(out).toMatchObject({ kind: 'ask', candidates: [] });

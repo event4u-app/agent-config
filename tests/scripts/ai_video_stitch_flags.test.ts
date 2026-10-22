@@ -325,6 +325,7 @@ describe('stitch.sh — a clip nobody opened is not a clip', () => {
         expect(forced.stderr).toMatch(/output is short/);
         expect(forced.stderr).toMatch(/4\.0+s against 4\.0+s of input/);
         expect(forced.stdout).not.toMatch(/"output"/);
+        expect(fs.existsSync(output), 'a short output was left behind').toBe(false);
 
         const shipped = runStitch([manifest, output], { AIV_DRYRUN: 'false' });
         expect(shipped.status, shipped.stderr).toBe(0);

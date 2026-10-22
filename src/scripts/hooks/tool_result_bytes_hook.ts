@@ -51,9 +51,10 @@
  * ENVELOPE — the serialised `tool_response` the host hands a post_tool_use
  * hook — and NOT what reached the model. The two differ by tool: for Edit and
  * Write the hook envelope carries the whole original file while the model
- * receives a short confirmation (measured over 12 local transcripts: 19.5x;
- * Bash 1.44x; Read within 0.1 %). The payload the model received is a separate
- * metric, `tool-result-payload-bytes`, read from transcripts. `raw_bytes` is
+ * receives a short confirmation, so for those two tools the envelope is many
+ * times what the model saw, and for a text Read it is about the same. The
+ * payload the model received is a separate metric,
+ * `tool-result-payload-bytes`, read from transcripts. `raw_bytes` is
  * the hook envelope the host handed the dispatcher; `delivered_bytes` is the
  * hook envelope after any rewrite a concern could apply on its way back.
  * Today they are EQUAL BY CONSTRUCTION, and the construction is

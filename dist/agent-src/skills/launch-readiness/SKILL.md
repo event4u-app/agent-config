@@ -65,7 +65,7 @@ Walk the diff with the following gates:
   [`release-comms`](../release-comms/SKILL.md) for the prose).
 - Rollback path tested at least mentally; named in step 4.
 
-Cells without evidence block the launch.
+Cells without evidence block the launch — surface the gap, do not hand-wave.
 
 ### 2b. Epistemics block — the diagnostic report (contract-backed)
 
@@ -167,8 +167,7 @@ team's monitoring stack.
 **WHEN to use this**
 
 - A release-shaped PR is about to merge.
-- Rollback criteria need to land in writing before the merge button
-  is pressed.
+- Rollback criteria must be written down before merge.
 - Ops handoff is implied and not yet executed.
 
 **WHEN NOT to use this**
@@ -179,8 +178,7 @@ team's monitoring stack.
   [`release-comms`](../release-comms/SKILL.md).
 - The rollout decision involves stakeholder conflict — route to
   [`stakeholder-tradeoff`](../stakeholder-tradeoff/SKILL.md) first.
-- The decision is reversible-and-cheap — write a one-line note,
-  skip the full artefact.
+- The decision is reversible and cheap — a one-line note will do.
 
 ## When the agent should load this
 
@@ -198,8 +196,7 @@ team's monitoring stack.
 4. **Rollback contract** — per stage: trip wire · decision window ·
    abort path · irreversible steps.
 5. **Ops handoff** — pager mapping · runbook link · sign-off.
-6. **Outstanding** — anything blocking the launch; explicit, not
-   collapsed.
+6. **Outstanding** — each launch blocker, listed explicitly.
 
 ## Gotcha
 
@@ -216,4 +213,4 @@ team's monitoring stack.
   output block, citable.
 - Do NOT let any stage own itself — every stage names a role from
   the **team** spine slot.
-- Do NOT hand off to a receiver who has not signed off.
+- Do NOT hand the artefact to a receiver who has not signed off on ops handoff.

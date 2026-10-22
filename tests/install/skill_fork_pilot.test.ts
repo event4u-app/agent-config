@@ -49,6 +49,13 @@ describe('the pilot set is legal', () => {
             .toEqual([{ name: 'codex', message: 'host does not document a `context` key' }]);
     });
 
+    it('a missing or non-integer cap is a problem, never a pass', () => {
+        for (const cap of [Number.NaN, 1.5, -1]) {
+            expect(pilotProblems({ status: 'pilot', max_names: cap, names: [], hosts: [] }, {})
+                .some((p) => p.message.includes('max_names is not'))).toBe(true);
+        }
+    });
+
     it('treats a name the shape file does not carry as standing', () => {
         expect(outputShapeOf({}, 'no-such-skill')).toBe('standing');
     });
@@ -71,6 +78,12 @@ describe('the render writes the host key, once', () => {
     it('never rewrites a `context:` the document already carries', () => {
         const existing = '---\nname: x\ncontext: something-else\n---\n\nbody\n';
         expect(renderForkContext(existing)).toBe(existing);
+    });
+
+    it('does not end the frontmatter at a `----` or `--- x` line inside it', () => {
+        const tricky = '---\nname: x\nnote: |\n----\n--- x\ndescription: d\n---\n\nbody\n';
+        const out = renderForkContext(tricky);
+        expect(out).toBe('---\nname: x\nnote: |\n----\n--- x\ndescription: d\ncontext: fork\n---\n\nbody\n');
     });
 
     it('leaves a document without frontmatter untouched', () => {

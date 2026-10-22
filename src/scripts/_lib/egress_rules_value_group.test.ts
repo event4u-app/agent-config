@@ -17,7 +17,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { evaluateMatch, type EgressRule } from './egress_rules.js';
+import { evaluateMatch, findSpans, REVIEW_CREDENTIAL_ROWS, type EgressRule } from './egress_rules.js';
 
 /** A row with two alternative value groups behind a keyword. */
 function rule(valueGroup: number | readonly number[]): EgressRule {
@@ -74,5 +74,20 @@ describe('valueGroupOf — alternative groups', () => {
         const r = rule(3);
         const hit = evaluateMatch(r, text, firstMatch(r, text));
         expect(text.slice(hit!.start, hit!.end)).toBe('abc123');
+    });
+});
+
+describe('review-assignment — a quoted literal is not a code expression', () => {
+    const values = (text: string): string[] =>
+        findSpans(text, REVIEW_CREDENTIAL_ROWS).map((s) => text.slice(s.start, s.end));
+
+    it('masks a quoted value carrying password punctuation', () => {
+        expect(values('password = "p@ss,word$1"')).toEqual(['p@ss,word$1']);
+        expect(values("secret: 'ab.cd1234'")).toEqual(['ab.cd1234']);
+    });
+
+    it('still reads a bare code expression as code', () => {
+        expect(values('secret: opts.secret')).toEqual([]);
+        expect(values('token = load(x)')).toEqual([]);
     });
 });

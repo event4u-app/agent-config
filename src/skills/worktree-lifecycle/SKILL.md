@@ -101,9 +101,9 @@ A worktree is **merge-ready** only when ALL hold:
 
 ### 4. Cleanup discipline
 
-Removal is gated by the deterministic helper (edge-case-tested: detached
-HEAD, branch without remote, tag-only reachability, deleted remote
-branch, untracked files, paths with spaces):
+Removal is gated by the deterministic helper (tested on detached HEAD,
+no remote, tag-only reachability, deleted remote branch, untracked
+files, paths with spaces):
 
 ```bash
 agent-config worktree:cleanup check <worktree-path>
@@ -130,13 +130,15 @@ Cross-worktree scope-lock overlaps are scanned via
 
 **Whole-checkout sweeps.** Under `worktrees.cleanup: auto` the proven set leaves
 at `/pr:merge` and daily (ADR-295). `git worktree prune` only clears registrations whose
-directory is already gone, so it does nothing for the live ones. Classify the
-whole set in one pass rather than gate-checking by hand:
+directory is gone. Classify the whole set in one pass:
 
 ```bash
 agent-config worktree:cleanup inventory [repo] [--json|--plan]
 agent-config worktree:cleanup apply [repo]   # removes the safe set only
 ```
+
+`apply` runs only on the user's ask (`/worktree cleanup --apply`) or under
+the user-set `worktrees.cleanup: auto` — never on the agent's initiative.
 
 `safe` requires all of: on a branch, merged into the trunk, clean, inside a
 conventional worktree root (`.claude/worktrees/` or `.worktrees/`), and no git
@@ -169,15 +171,14 @@ merge-ready checklist, and cleanup gates are host-independent.
 * **`git log <branch> --not --all` is always empty** — `--all` includes
   the branch itself, so the naive check never fires. The
   `--exclude="refs/heads/<branch>" --all` variant is also unreliable
-  when combined with `--not` (observed on git 2.39). Use the
-  `for-each-ref` expansion above — it enumerates every ref except the
-  branch explicitly.
+  when combined with `--not` (observed on git 2.39). The cleanup
+  helper above excludes the branch explicitly.
 * **Scope note committed by accident** — `.worktree-scope.md` must be
   in `.git/info/exclude`; `.gitignore` would be a tracked change
   outside the scope lock.
 * **"Unchanged worktree" ≠ "no unique commits"** — a host auto-clean
-  only covers worktrees with no changes; a worktree with committed but
-  unmerged work still needs the unique-commit gate.
+  only covers worktrees with no changes; committed but unmerged work
+  still needs the unique-commit gate.
 * **Stale ahead/behind** — always `git fetch` before the
   `rev-list --left-right` count; a cached view reports merge-ready on
   a diverged branch.

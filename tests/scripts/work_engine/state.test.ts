@@ -16,10 +16,6 @@ import {
     to_dict,
 } from '../../../src/agent-src/templates/scripts/work_engine/state.js';
 
-
-
-
-
 // ── Fixtures ────────────────────────────────────────────────────────────
 //
 // NOTE: fixtures deliberately avoid integer-valued floats (e.g. `1.0`). JSON
@@ -85,9 +81,6 @@ const FULL_ENVELOPE = JSON.stringify({
     questions: ['Which layout?'],
     report: 'done',
 });
-
-
-
 
 describe('work_engine/state — TS-side unit checks (no python3 needed)', () => {
     it('module constants match the schema', () => {

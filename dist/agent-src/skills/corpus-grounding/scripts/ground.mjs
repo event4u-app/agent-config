@@ -511,7 +511,12 @@ function resolve_data_path(manifest, relative) {
   if (path.isAbsolute(data_dir) || _pathParts(data_dir).includes("..")) {
     throw new ManifestError(`data_dir must be manifest-relative: ${pyRepr(data_dir)}`);
   }
-  return pyResolve(path.join(base, data_dir, relative));
+  const resolved = pyResolve(path.join(base, data_dir, relative));
+  const root = pyResolve(base);
+  if (resolved !== root && !resolved.startsWith(root + path.sep)) {
+    throw new ManifestError(`corpus path resolves outside the manifest directory: ${pyRepr(relative)}`);
+  }
+  return resolved;
 }
 function _pathParts(p) {
   return p.split(/[\\/]/u).filter((seg) => seg !== "" && seg !== ".");

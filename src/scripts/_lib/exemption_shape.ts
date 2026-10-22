@@ -135,10 +135,20 @@ function clauses(reason: string): string[] {
     return reason.split(/;|\.(?=\s|$)/);
 }
 
+/**
+ * `only` followed by a live (non-archived) roadmap file path is a search that
+ * FOUND an owner, unlike "only archived files", which names no owner.
+ */
+const ONLY_NAMES_OWNER_RE = /\bonly\b[^;]*?agents\/roadmaps\/(?!archive\/)[\w.-]+(?:\/[\w.-]+)*\.md\b/i;
+
 export function quotesOwnerSearch(reason: string): boolean {
     return clauses(reason).some(
         (c) =>
-            SEARCH_VERB_RE.test(c) && SEARCH_QUERY_RE.test(c) && SEARCH_SCOPE_RE.test(c) && SEARCH_EMPTY_RE.test(c),
+            SEARCH_VERB_RE.test(c) &&
+            SEARCH_QUERY_RE.test(c) &&
+            SEARCH_SCOPE_RE.test(c) &&
+            SEARCH_EMPTY_RE.test(c) &&
+            !ONLY_NAMES_OWNER_RE.test(c),
     );
 }
 

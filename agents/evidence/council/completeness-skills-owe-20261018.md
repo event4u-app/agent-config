@@ -44,3 +44,7 @@ line was reworded and the question re-run once in `prompt` mode; the seven
 other questions of this sweep ran in `prompt` mode only. The first run's
 `openai` substance (reach is under-specified as a public promise; dependency
 closure is immediately actionable) is the same as its second answer.
+
+> **Correction, 2026-10-22 (release finding `a762bc02c707`).** The first run's
+> prompt and output were not retained in the tree, so the account above is the
+> only record of that run and cannot be checked against it.

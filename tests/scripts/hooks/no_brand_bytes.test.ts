@@ -27,6 +27,9 @@ const BRAND_HEX = '#3A7F9C';
 const VOICE_PHRASE = 'luminous-not-loud';
 const MARKERS = [BRAND_NAME, BRAND_HEX, BRAND_HEX.toLowerCase(), VOICE_PHRASE, 'brand-voice', 'tokens.json'];
 
+/** Scripts that threw during a capture, so a crash never reads as "printed nothing". */
+const crashed: string[] = [];
+
 function runConcern(script: string, args: readonly string[], envelope: Record<string, unknown>): string {
     // The dispatcher's own resolver: inlined concerns AND the ones that live
     // in a conditional chunk. A direct table lookup here would miss the second
@@ -54,8 +57,10 @@ function runConcern(script: string, args: readonly string[], envelope: Record<st
     try {
         process.argv = [prevArgv[0] as string, script, ...args, '--platform', 'claude'];
         main([...args, '--platform', 'claude']);
-    } catch {
-        /* a crashing concern injects nothing; its own suite owns the crash */
+    } catch (err) {
+        // A crashing concern injects nothing here, but it must not pass the
+        // leak check silently: the crash is recorded and asserted against.
+        crashed.push(`${script}: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
         process.stdout.write = prevWrite;
         process.stderr.write = prevErr;
@@ -112,6 +117,7 @@ describe('hooks — no-brand-bytes', () => {
             const concerns = _resolve_concerns(manifest, 'claude', event);
             expect(concerns.length).toBeGreaterThan(0);
             const leaks: string[] = [];
+            crashed.length = 0;
             for (const concern of concerns) {
                 const args = Array.isArray(concern['args']) ? concern['args'].map(String) : [];
                 const out = runConcern(String(concern['script']), args, envelope);
@@ -120,6 +126,7 @@ describe('hooks — no-brand-bytes', () => {
                 }
             }
             expect(leaks).toEqual([]);
+            expect(crashed, 'a concern that throws proves nothing about what it would print').toEqual([]);
         });
     }
 

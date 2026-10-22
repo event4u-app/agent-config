@@ -26,6 +26,11 @@ describe('pin_advice_lines', () => {
         expect(pin_advice_lines('18.0.0', '17.0.0', MAP)).toEqual([]);
     });
 
+    it('says an unreadable pin is unreadable instead of saying nothing', () => {
+        const lines = pin_advice_lines('^17', '17.1.0', MAP);
+        expect(lines.join('\n')).toMatch(/not a version this check can read/);
+    });
+
     it('names an absent or forged map instead of trusting it', () => {
         expect(pin_advice_lines('16.0.0', '17.0.0', null).join('\n')).toMatch(/carries no impact map/);
         expect(pin_advice_lines('16.0.0', '17.0.0', undefined).join('\n')).toMatch(/could not be fetched/);

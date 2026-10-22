@@ -14,7 +14,9 @@ triggers:
   - phrase: "social login"
   - keyword: "login"
   - keyword: "registration"
-  - keyword: "session"
+  - phrase: "session id"
+  - phrase: "session cookie"
+  - keyword: "logout"
   - keyword: "mfa"
   - keyword: "passkey"
   - keyword: "oauth"
@@ -24,7 +26,7 @@ triggers:
 
 ## When to use
 
-Use when implementing authentication, authorization, or any security-sensitive functionality.
+Use when implementing authentication, authorization, or other security-sensitive work.
 
 Do NOT use when:
 
@@ -66,7 +68,7 @@ The procedure below is stack-agnostic. For framework-specific primitives (Larave
 ### Step 3: Review for adversarial
 
 For security-sensitive changes, run [`adversarial-review`](../adversarial-review/SKILL.md).
-Focus on: attack surface, trusting user input, authorization gaps.
+Focus: attack surface, trusted user input, authz gaps.
 
 ## Conventions
 
@@ -100,7 +102,7 @@ external authority named in the block below.
 
 This skill carries no cryptographic parameter, key size, work factor, cipher
 suite, or TLS version floor: such a value is authoritative-looking long after it stops
-being true. Take it from <https://cheatsheetseries.owasp.org/> at the moment you
+being true. Take it from <https://cheatsheetseries.owasp.org/> when you
 need it — never from memory, never from this file. Rationale and reopening
 condition: [ADR-238](../../../docs/decisions/ADR-238-security-content-routes-to-external-authority.md).
 
@@ -109,7 +111,7 @@ condition: [ADR-238](../../../docs/decisions/ADR-238-security-content-routes-to-
 - Verify all user input is validated at the boundary via the framework's primitive — never trust raw request data.
 - Confirm an authorization check exists for every state-changing action.
 - Check that no raw user input reaches SQL, HTML output, shell commands, or template renderers without escaping.
-- Run the project's type-checker — must pass (catches type-safety issues that enable injection).
+- Run the project's type-checker — must pass (type errors can enable injection).
 
 ## Output format
 
@@ -119,7 +121,7 @@ condition: [ADR-238](../../../docs/decisions/ADR-238-security-content-routes-to-
 ## Gotcha
 
 - Validation ensures format, not intent — don't trust input after validation alone.
-- "Throw" vs "boolean" authz APIs behave differently (`Gate::authorize()` throws vs `Gate::allows()` returns bool in Laravel; `CanActivate` in NestJS throws; FastAPI dependencies throw `HTTPException`). Pick based on how the framework expects failure to surface.
+- "Throw" vs "boolean" authz APIs behave differently (`Gate::authorize()` throws vs `Gate::allows()` returns bool in Laravel; `CanActivate` in NestJS throws; FastAPI dependencies throw `HTTPException`). Pick per how the framework surfaces failure.
 - Rate-limit ALL public endpoints, not just login.
 - Never log passwords, tokens, or API keys.
 

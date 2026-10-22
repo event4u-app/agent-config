@@ -24,6 +24,7 @@ import {
     isBlocking,
     MEDIUM_SECURITY_BLOCKS_AFTER,
     localTagHit,
+    mentionsVersion,
     merge_ingest,
     releaseStatus,
     tags_complete,
@@ -817,6 +818,32 @@ describe('an unreviewed ledger at the cut', () => {
                 () => 'the owner permits cutting 16.4.0 without a review',
             ),
         ).toContain('does not mention');
+    });
+
+    it('an override that climbs out of the directives directory is refused before any read', () => {
+        expect(
+            unreviewed_ledger_problem(
+                {
+                    ...SIXTEEN_FOUR_ZERO,
+                    assurance_override: `${OWNER_DIRECTIVES_DIR}/../../../CHANGELOG.md`,
+                },
+                '99.99.0',
+                'unreleased',
+                () => 'release notes for 99.99.0',
+            ),
+        ).toContain('never a sentence');
+    });
+
+    it('a directive naming a longer version does not permit its prefix', () => {
+        expect(
+            unreviewed_ledger_problem(
+                { ...SIXTEEN_FOUR_ZERO, assurance_override: `${OWNER_DIRECTIVES_DIR}/d.md` },
+                '16.4.1',
+                'unreleased',
+                () => 'the owner permits cutting 16.4.10 without a review',
+            ),
+        ).toContain('does not mention');
+        expect(mentionsVersion('cut v16.4.1.', '16.4.1')).toBe(true);
     });
 
     /**

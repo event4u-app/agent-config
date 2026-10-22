@@ -61,6 +61,9 @@ matches it locally (`advisories.kev: off` skips it); and runs `npm audit` /
 `composer audit` (each sends the lockfile's package list to its configured
 registry) only for a lockfile that names no private package. Names under
 the project's own npm scope, Composer vendor or GitHub owner count as private.
+A third-party private scope, an internal unscoped name or a package resolved
+from a private registry host is NOT recognised as private; with any of those
+in a lockfile, set `advisories.egress: none`.
 `advisories.egress: none` sends nothing. A cache younger than
 20 hours is reused; `--force` refreshes anyway.
 
@@ -108,3 +111,5 @@ agent-config audit:deps accept <id> --reason="<why the vulnerable path is unreac
 
 The tool refuses an acceptance without an expiry, and refuses a reason that is
 only the absence of a search hit — "grep found nothing" is not unreachability.
+That refusal is a phrase check: a reworded non-argument passes it, so an
+acceptance is the owner's to review, never cleared by the tool.

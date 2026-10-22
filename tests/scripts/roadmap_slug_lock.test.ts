@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     acquire_lock,
     holder_is_live,
+    lock_dir,
     read_locks,
     release_locks,
     UNRECORDED_HOLDER_MS,
@@ -62,6 +63,24 @@ describe('acquire_lock', () => {
         if (got.ok) expect(got.took_over?.worktree).toBe('/wt/one');
     });
 
+    it('a faster taker of the same dead lock keeps it: the slower one never deletes a fresh lock', () => {
+        acquire_lock(root, lock(), NONE, { now: NOW });
+        const file = path.join(lock_dir(root)!, 'road-to-a.json');
+        const fresh = lock({ session_id: 's3', worktree: '/wt/three' });
+        // The liveness read sits between this taker reading the dead lock and
+        // taking it over; another taker finishes its own takeover right there.
+        class RacingSet extends Set<string> {
+            override has(v: string): boolean {
+                fs.writeFileSync(file, `${JSON.stringify(fresh, null, 2)}\n`);
+                return super.has(v);
+            }
+        }
+        const dead: HolderView = { live: new RacingSet(), known: new Set(['s1']) };
+        const got = acquire_lock(root, lock({ session_id: 's2', worktree: '/wt/two' }), dead, { now: NOW });
+        expect(got.ok).toBe(false);
+        expect(read_locks(root).map((l) => l.session_id)).toEqual(['s3']);
+    });
+
     it('keeps one lock per slug, so one session can hold one per lane', () => {
         acquire_lock(root, lock({ lane: true }), NONE, { now: NOW });
         acquire_lock(root, lock({ slug: 'road-to-b', lane: true, worktree: '/wt/b' }), NONE, { now: NOW });
@@ -96,19 +115,10 @@ describe('release_locks', () => {
 
 describe('readClaims — a lock is visible the moment it is written', () => {
     it('reports a fresh lock as a live claim before any register record exists', () => {
-        // RESOLVED 2026-10-20 in favour of origin/main. Two sessions fixed the
-        // same defect independently and both fixes are correct: the time bomb
-        // was that `acquire_lock` writes the lock VERBATIM, so the stored
-        // `written_at` stayed at the fixture's frozen 2026-10-20T12:00:00Z
-        // while `readClaims` read the WALL CLOCK — a 6-hour
-        // `UNRECORDED_HOLDER_MS` window that closed at 18:00Z and never
-        // reopens. The other branch pinned BOTH clocks to the frozen NOW; this
-        // one stamps a real fresh lock. Main's is kept because it is already
-        // the incumbent and because it is closer to what the case NAME claims
-        // to test — a lock that is actually fresh, rather than two clocks
-        // agreeing on a past instant.
-        // The lock's own `written_at` decides liveness, and the fixture's is the
-        // fixed NOW: stamping it with the wall clock keeps this off the calendar.
+        // `acquire_lock` stores the lock verbatim and `readClaims` reads the
+        // wall clock, so a frozen `written_at` would age past
+        // `UNRECORDED_HOLDER_MS` and turn this case into a time bomb.
+        // Stamping it with the wall clock keeps this case off the calendar.
         const now = new Date();
         acquire_lock(root, lock({ lane: true, written_at: now.toISOString() }), NONE, { now });
         const claims = readClaims(root);

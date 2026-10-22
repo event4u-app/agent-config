@@ -285,6 +285,8 @@ export function resolveRevision(root: string, revision: string): string {
  * repository the diff and the digest read.
  */
 export function refExists(root: string, ref: string): boolean {
+    // Same guard as resolveRevision: a `-`-led ref would be read as an option.
+    if (ref === '' || ref.startsWith('-')) return false;
     return runGit(root, ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`], '').status === 0;
 }
 

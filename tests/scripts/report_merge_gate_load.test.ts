@@ -138,6 +138,10 @@ describe('report_merge_gate_load', () => {
         expect(report()).toBe(report());
     });
 
+    it('records the classifier revision its byte-identical claim depends on', () => {
+        expect(report()).toMatch(/Classifier revision `([0-9a-f]{40}(-dirty)?|unknown)`\. A re-run of that command at the same pin, timestamp\nand classifier revision/u);
+    });
+
     it('names no prompt and no reply', () => {
         expect(report()).not.toMatch(/prompt_sha256|reply/iu);
     });

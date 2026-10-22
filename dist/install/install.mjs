@@ -7371,7 +7371,7 @@ var require_dist = __commonJS({
 import { spawn, spawnSync as spawnSync3 } from "node:child_process";
 import * as crypto5 from "node:crypto";
 import * as fs39 from "node:fs";
-import * as os13 from "node:os";
+import * as os14 from "node:os";
 import * as path38 from "node:path";
 import process4 from "node:process";
 import { fileURLToPath as fileURLToPath8, pathToFileURL as pathToFileURL2 } from "node:url";
@@ -9002,6 +9002,7 @@ function prune_lab_modules(deploy_results, lab_ids) {
 // src/install/conflictTracker.ts
 import * as crypto2 from "node:crypto";
 import * as fs12 from "node:fs";
+import * as os5 from "node:os";
 import * as path11 from "node:path";
 
 // src/install/fsPrimitives.ts
@@ -9414,7 +9415,12 @@ function file_sha256(p) {
 function edited_since_install(target, rec) {
   if (rec === void 0) return false;
   const on_disk = file_sha256(target);
-  return on_disk !== null && on_disk !== rec.installed_sha256;
+  if (on_disk !== null) return on_disk !== rec.installed_sha256;
+  try {
+    return !fs9.lstatSync(target).isSymbolicLink();
+  } catch {
+    return false;
+  }
 }
 function digests_of_entry(e) {
   const out = /* @__PURE__ */ new Map();
@@ -10142,8 +10148,8 @@ function createConflictTracker(host) {
   }
   function wouldWriteDigest(target, would) {
     const tmp = path11.join(
-      path11.dirname(target),
-      `.${path11.basename(target)}.would.${process.pid}.${crypto2.randomBytes(6).toString("hex")}${path11.extname(target)}`
+      os5.tmpdir(),
+      `agent-config-would.${process.pid}.${crypto2.randomBytes(6).toString("hex")}${path11.extname(target)}`
     );
     try {
       if ("content" in would) {
@@ -10510,7 +10516,7 @@ function retainedFileMessage(target) {
 
 // src/scripts/_lib/rule_layer_overlap.ts
 import * as fs14 from "node:fs";
-import * as os5 from "node:os";
+import * as os6 from "node:os";
 import * as path13 from "node:path";
 var INSTALLER_PROVENANCE_KEYS = ["package", "source_path"];
 function stripProvenance(text) {
@@ -10564,7 +10570,7 @@ function compareLayers(global_layer, project_layer) {
 }
 function hostRuleLayerDirs(projectRoot) {
   return [
-    path13.join(os5.homedir(), ".claude", "rules"),
+    path13.join(os6.homedir(), ".claude", "rules"),
     path13.join(projectRoot, ".claude", "rules")
   ];
 }
@@ -10618,14 +10624,14 @@ function decideLayerAction(report, choice, global_dir, project_dir) {
 var import_yaml = __toESM(require_dist(), 1);
 import * as crypto3 from "node:crypto";
 import * as fs15 from "node:fs";
-import * as os6 from "node:os";
+import * as os7 from "node:os";
 import * as path14 from "node:path";
 function expanduser7(p) {
   if (p === "~") {
-    return os6.homedir();
+    return os7.homedir();
   }
   if (p.startsWith("~/") || process.platform === "win32" && p.startsWith("~\\")) {
-    return path14.join(os6.homedir(), p.slice(2));
+    return path14.join(os7.homedir(), p.slice(2));
   }
   return p;
 }
@@ -11652,8 +11658,10 @@ var FINDER_NAME = "agent-config-skill-finder";
 function finderDescription(count) {
   return `Use when no listed skill fits the task, or the user names a skill not in this list \u2014 ${count} more agent-config skills are installed here but unlisted; this finds and loads one.`;
 }
+var SKILL_NAME_RE = /^[a-z0-9][a-z0-9-]*$/;
 function renderFinder(targets) {
-  const sorted = [...targets].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
+  const safe = targets.filter((t) => SKILL_NAME_RE.test(t.name) && !/[\r\n]/.test(t.skillsDir));
+  const sorted = [...safe].sort((a, b) => a.name < b.name ? -1 : a.name > b.name ? 1 : 0);
   const byDir = /* @__PURE__ */ new Map();
   for (const t of sorted) {
     const list = byDir.get(t.skillsDir) ?? [];
@@ -11710,7 +11718,8 @@ function ours(anchor, recordFile) {
   const file = finderFile(anchor);
   if (!fs20.existsSync(path19.dirname(file))) return true;
   const rec = readRecord(recordFile, anchor);
-  if (rec === null || !fs20.existsSync(file)) return false;
+  if (rec === null) return false;
+  if (!fs20.existsSync(file)) return true;
   return sha256(fs20.readFileSync(file, "utf-8")) === rec.sha256;
 }
 function ensureCodexFinder(anchor, recordFile, targets) {
@@ -11757,7 +11766,7 @@ var ASSUMPTIONS2 = [
   },
   {
     id: "per-entry-overhead",
-    provenance: "upstream-prose",
+    provenance: "estimate",
     why: "Each entry also costs separators and a newline. The host quantifies none of it, so the default here is 5 characters per entry and the resulting resident set is therefore an estimate of what fits, never a guarantee \u2014 too small, never too large."
   },
   {
@@ -11907,25 +11916,26 @@ function applyCodexResidentSet(home, report) {
       split = computeCodexResidentSet(catalogue, { budgetChars: CODEX_BUDGET_CHARS - finderCost });
     }
     const resident = new Set(split.resident);
+    const finder = ensureCodexFinder(
+      roots[0],
+      finderRecordPath(roots[0]),
+      split.nonResident.map((name) => ({ name, skillsDir: path20.join(firstRootOf.get(name), "skills") }))
+    );
+    const unlistAllowed = finder !== "foreign";
     let disabled = 0;
     let reenabled = 0;
     let foreign = 0;
     for (const anchor of roots) {
       const skillsDir = path20.join(anchor, "skills");
       const here = fs21.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs21.existsSync(path20.join(skillsDir, d.name, "SKILL.md"))).map((d) => d.name);
-      const nonResident = here.filter((n) => !resident.has(n) || firstRootOf.get(n) !== anchor);
+      const nonResident = unlistAllowed ? here.filter((n) => !resident.has(n) || firstRootOf.get(n) !== anchor) : [];
       const res = ensureCodexResidentSet(anchor, recordPath(anchor), nonResident);
       disabled += res.disabled.length;
       reenabled += res.reenabled.length;
       foreign += res.skipped_foreign.length;
     }
-    const finder = ensureCodexFinder(
-      roots[0],
-      finderRecordPath(roots[0]),
-      split.nonResident.map((name) => ({ name, skillsDir: path20.join(firstRootOf.get(name), "skills") }))
-    );
     report(
-      `codex: resident set across ${roots.length} root(s) \u2014 ${split.resident.length} listed (${split.listingChars} of ${split.budgetChars} chars), ${disabled} newly unlisted, ${reenabled} relisted` + (foreign > 0 ? `, ${foreign} existing policy file(s) untouched` : "") + `, finder ${finder}`
+      `codex: resident set across ${roots.length} root(s) \u2014 ${split.resident.length} listed (${split.listingChars} of ${split.budgetChars} chars), ${disabled} newly unlisted, ${reenabled} relisted` + (foreign > 0 ? `, ${foreign} existing policy file(s) untouched` : "") + `, finder ${finder}` + (unlistAllowed ? "" : " \u2014 nothing unlisted, because no finder could route to it")
     );
   } catch (e) {
     report(`codex: resident set skipped \u2014 ${String(e)}`);
@@ -12225,7 +12235,7 @@ function hostBindings(host, table = loadHostLowering()) {
 // src/scripts/_lib/agent_settings.ts
 import { createRequire as createRequire2 } from "node:module";
 import * as fs25 from "node:fs";
-import * as os7 from "node:os";
+import * as os8 from "node:os";
 import * as path24 from "node:path";
 
 // src/scripts/_lib/package_root.ts
@@ -12417,8 +12427,8 @@ var REMOVED_KEYS = /* @__PURE__ */ new Map([
   ["subagents.downshift", "the model_tier each sub-task declares; downshift is always on"],
   ["ai_team.suppress_setup_hint", "nothing: the one-line team-mode setup hint is always shown"],
   // 2026-10-20 — the projection keys (ADR-293, road-to-a-setup-that-decides-itself Phase 4)
-  ["lean_projection.mode", "the computed layer-form decision (_lib/layer_form_decision.ts), plus `install --full` and src/config/layer-form-brakes.json as the two brakes. The installer no longer reads this key at all; the in-repo projector honours a hand-written PROJECT value until step 3.6 of road-to-a-setup-that-decides-itself lands"],
-  ["lean_projection.hosts", "THINNABLE_HOSTS in _lib/lean_projection_mode.ts and the per-host row in src/config/host-injection-effect.json; same reader boundary as the mode above"],
+  ["lean_projection.mode", "the computed layer-form decision (_lib/layer_form_decision.ts), plus `install --full` and src/config/layer-form-brakes.json as the two brakes. For one release window an installer converts a leftover `eager-all` into the install receipt pin and drops any other value, saying which (_lib/projection_key_migration.ts); the project tree reads the package-owned src/config/project-tree-form.json, never this key"],
+  ["lean_projection.hosts", "THINNABLE_HOSTS in _lib/lean_projection_mode.ts and the per-host row in src/config/host-injection-effect.json; no reader of this key remains"],
   ["projection.rule_workspaces", "consumerRuleWorkspaces() in _lib/scoped_projection.ts, which derives the consumer workspace set from src/config/discovery/packs.yml \u2014 every id minus `agent-config-maintainer` \u2014 so a new pack reaches consumers without a settings edit"]
 ]);
 var _warnedRemovedKeys = /* @__PURE__ */ new Set();
@@ -12723,10 +12733,10 @@ function _validate_root_path(p, origin_label) {
 }
 function _expanduser(p) {
   if (p === "~") {
-    return os7.homedir();
+    return os8.homedir();
   }
   if (p.startsWith("~/") || process.platform === "win32" && p.startsWith("~\\")) {
-    return path24.join(os7.homedir(), p.slice(2));
+    return path24.join(os8.homedir(), p.slice(2));
   }
   return p;
 }
@@ -13080,7 +13090,7 @@ function ruleFileArrives(sourcePath, scope) {
 
 // src/install/partitionEligibility.ts
 import * as fs28 from "node:fs";
-import * as os8 from "node:os";
+import * as os9 from "node:os";
 
 // src/install/hostLayerFingerprint.ts
 import { createHash as createHash9 } from "node:crypto";
@@ -13156,7 +13166,7 @@ function stampHostLayerFingerprint(installedVersion, tools, lockfilePath, skip2,
     return null;
   }
   try {
-    const fingerprint = fingerprintLayers(hostLayerInputs(os8.homedir()));
+    const fingerprint = fingerprintLayers(hostLayerInputs(os9.homedir()));
     write_lockfile(installedVersion, [...tools], {
       path: lockfilePath,
       host_layer_fingerprint: fingerprint
@@ -13390,16 +13400,16 @@ function rewriteClaudeRules(rulesDir, preserved = /* @__PURE__ */ new Set()) {
 // src/install/installThinLayer.ts
 import * as fs33 from "node:fs";
 import * as path32 from "node:path";
-import * as os11 from "node:os";
+import * as os12 from "node:os";
 
 // src/scripts/_lib/installed_layer.ts
 import * as fs30 from "node:fs";
-import * as os10 from "node:os";
+import * as os11 from "node:os";
 import * as path29 from "node:path";
 import { fileURLToPath as fileURLToPath5 } from "node:url";
 
 // src/install/globalRuleLayers.ts
-import * as os9 from "node:os";
+import * as os10 from "node:os";
 import * as path28 from "node:path";
 var GLOBAL_RULE_DIRS = {
   "claude-code": ".claude/rules",
@@ -13410,7 +13420,7 @@ var GLOBAL_RULE_DIRS = {
   // Cline's scope root IS the rules directory — no `rules/` suffix.
   cline: "Documents/Cline/Rules"
 };
-function globalRuleLayerPath(toolId, home = process.env["HOME"] ?? os9.homedir()) {
+function globalRuleLayerPath(toolId, home = process.env["HOME"] ?? os10.homedir()) {
   const rel = GLOBAL_RULE_DIRS[toolId];
   return rel === void 0 ? null : path28.join(home, rel);
 }
@@ -13631,7 +13641,7 @@ function defaultInventoryPath(home) {
         return path29.resolve(q);
       }
     };
-    const mine = os10.homedir();
+    const mine = os11.homedir();
     if (path29.resolve(home) === path29.resolve(mine) || real(home) === real(mine)) {
       return inventory_path();
     }
@@ -14073,7 +14083,7 @@ function describeThinInstalledLayer(res) {
   }
   return out;
 }
-function installReceiptBudgetLines(packageRoot, home = os11.homedir(), opts = {}) {
+function installReceiptBudgetLines(packageRoot, home = os12.homedir(), opts = {}) {
   try {
     const { recorded, sources } = resolveLayerOwnership({
       manifestPath: opts.manifestPath === void 0 ? manifest_path(packageRoot) : opts.manifestPath,
@@ -14162,7 +14172,7 @@ import { spawnSync } from "node:child_process";
 import { randomBytes as randomBytes6 } from "node:crypto";
 import * as fs35 from "node:fs";
 import { createRequire as createRequire3 } from "node:module";
-import * as os12 from "node:os";
+import * as os13 from "node:os";
 import * as path34 from "node:path";
 
 // src/install/userPin.ts
@@ -14337,7 +14347,7 @@ function layerAfterInstall(state2, opts) {
 var STRIPPED_PATH = "/usr/bin:/bin";
 function probeHookCommand(command, env = process.env) {
   const probeCommand = command.replace(/--min-version (\d+)/g, "--min-version $1 --read-exit");
-  const project = fs35.mkdtempSync(path34.join(os12.tmpdir(), "ac-carrier-probe-"));
+  const project = fs35.mkdtempSync(path34.join(os13.tmpdir(), "ac-carrier-probe-"));
   const stdinPath = path34.join(project, "stdin.json");
   fs35.writeFileSync(stdinPath, "{}");
   const fd = fs35.openSync(stdinPath, "r");
@@ -21361,7 +21371,7 @@ var SCOPE_DETECT_AI_DIRS = [
 ];
 
 // src/install/paths.ts
-import { homedir as homedir15, tmpdir as tmpdir2 } from "node:os";
+import { homedir as homedir15, tmpdir as tmpdir3 } from "node:os";
 import { join as join40 } from "node:path";
 var INSTALL_ROOT_SUBPATH = ".event4u/agent-config";
 var INSTALL_LOG_FILENAME = "install-log.jsonl";
@@ -21474,9 +21484,9 @@ var ArgparseExit2 = class extends Error {
   code;
 };
 function expanduser8(p) {
-  if (p === "~") return os13.homedir();
+  if (p === "~") return os14.homedir();
   if (p.startsWith("~/") || p.startsWith("~\\")) {
-    return path38.join(os13.homedir(), p.slice(2));
+    return path38.join(os14.homedir(), p.slice(2));
   }
   return p;
 }
@@ -22008,7 +22018,7 @@ function ensure_augment_bridge(project_root, force) {
     ".augment/settings.json"
   );
 }
-var AUGMENT_USER_DIR = path38.join(os13.homedir(), ".augment");
+var AUGMENT_USER_DIR = path38.join(os14.homedir(), ".augment");
 var AUGMENT_USER_HOOKS_DIR = path38.join(AUGMENT_USER_DIR, "hooks");
 var AUGMENT_DISPATCHER_TRAMPOLINE = "augment-dispatcher.sh";
 var AUGMENT_LEGACY_TRAMPOLINES = [
@@ -22109,7 +22119,7 @@ function ensure_cursor_bridge(project_root, force) {
     ".cursor/hooks.json"
   );
 }
-var CURSOR_USER_DIR = path38.join(os13.homedir(), ".cursor");
+var CURSOR_USER_DIR = path38.join(os14.homedir(), ".cursor");
 var CURSOR_USER_HOOKS_DIR = path38.join(CURSOR_USER_DIR, "hooks");
 var CURSOR_DISPATCHER_TRAMPOLINE = "cursor-dispatcher.sh";
 function ensure_cursor_user_hooks(package_root, force) {
@@ -22193,7 +22203,7 @@ function ensure_cline_bridge(project_root, force) {
     skip(".clinerules/hooks/ already up to date");
   }
 }
-var CLINE_USER_DIR = path38.join(os13.homedir(), "Documents", "Cline", "Hooks");
+var CLINE_USER_DIR = path38.join(os14.homedir(), "Documents", "Cline", "Hooks");
 var CLINE_DISPATCHER_TRAMPOLINE = "cline-dispatcher.sh";
 function ensure_cline_user_hooks(package_root, force) {
   const src = path38.join(package_root, "scripts", "hooks", CLINE_DISPATCHER_TRAMPOLINE);
@@ -22245,7 +22255,7 @@ function ensure_windsurf_bridge(project_root, force) {
     ".windsurf/hooks.json"
   );
 }
-var WINDSURF_USER_DIR = path38.join(os13.homedir(), ".codeium", "windsurf");
+var WINDSURF_USER_DIR = path38.join(os14.homedir(), ".codeium", "windsurf");
 var WINDSURF_USER_HOOKS_DIR = path38.join(WINDSURF_USER_DIR, "hooks");
 var WINDSURF_DISPATCHER_TRAMPOLINE = "windsurf-dispatcher.sh";
 function ensure_windsurf_user_hooks(package_root, force) {
@@ -22301,7 +22311,7 @@ function ensure_gemini_bridge(project_root, force) {
     ".gemini/settings.json"
   );
 }
-var GEMINI_USER_DIR = path38.join(os13.homedir(), ".gemini");
+var GEMINI_USER_DIR = path38.join(os14.homedir(), ".gemini");
 var GEMINI_USER_HOOKS_DIR = path38.join(GEMINI_USER_DIR, "hooks");
 var GEMINI_DISPATCHER_TRAMPOLINE = "gemini-dispatcher.sh";
 function ensure_gemini_user_hooks(package_root, force) {
@@ -22792,7 +22802,7 @@ To remove this marker, delete this file.
 `;
 }
 var _CLAUDE_DESKTOP_BUNDLES_SUBPATH = "claude-desktop/bundles";
-var GLOBAL_ROOT = path38.join(os13.homedir(), ".event4u", "agent-config");
+var GLOBAL_ROOT = path38.join(os14.homedir(), ".event4u", "agent-config");
 var GLOBAL_USER_SETTINGS_PATH = path38.join(GLOBAL_ROOT, ".agent-user.yml");
 var GLOBAL_AGENT_SETTINGS_PATH = path38.join(GLOBAL_ROOT, ".agent-settings.yml");
 function _bridge_marker(tool_id, scope) {
@@ -23180,7 +23190,7 @@ function _run_migrate_to_global(project_root) {
   }
 }
 function _format_global_root_for_marker(global_root) {
-  const home = resolvePath(os13.homedir());
+  const home = resolvePath(os14.homedir());
   const resolved = resolvePath(global_root);
   const rel = path38.relative(home, resolved);
   if (rel === "" || rel.startsWith("..") || path38.isAbsolute(rel)) {
@@ -23811,7 +23821,7 @@ function install_global(tools, force, project_root = null, core_only = false) {
       warn(`Scoped-projection prune failed \u2014 restoring full tree (${String(e)}).`);
     }
   }
-  applyHostListingPolicies({ claudeCode: deploy_results["claude-code"]?.[2] === "deployed", codex: deploy_results["codex"]?.[2] === "deployed" }, os13.homedir(), expanduser8(USER_SCOPE_PATHS2["claude-code"]), state.QUIET ? () => void 0 : info);
+  applyHostListingPolicies({ claudeCode: deploy_results["claude-code"]?.[2] === "deployed", codex: deploy_results["codex"]?.[2] === "deployed" }, os14.homedir(), expanduser8(USER_SCOPE_PATHS2["claude-code"]), state.QUIET ? () => void 0 : info);
   const failed_tools = new Set(
     Object.keys(deploy_results).filter(
       (tool_id) => deploy_results[tool_id][2] === "deploy_failed"
@@ -24433,7 +24443,7 @@ function _wizard_cli_dist(_project_root) {
   return pathExists(cli) ? cli : null;
 }
 function _server_info_path() {
-  return path38.join(os13.homedir(), ".event4u", "agent-config", "local-server.json");
+  return path38.join(os14.homedir(), ".event4u", "agent-config", "local-server.json");
 }
 function _pid_is_agent_config(pid) {
   let res;
@@ -24529,7 +24539,7 @@ function _wizard_spawn(project_root, pass_project_root = true) {
 function _wizard_run_sync(cmd, env, cli) {
   const total = _WIZARD_TIMEOUTS.reduce((a, b) => a + b, 0);
   const log_path = path38.join(
-    os13.tmpdir(),
+    os14.tmpdir(),
     `agent-config-wizard-${process4.pid}-${Date.now()}.log`
   );
   let child;

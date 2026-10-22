@@ -107,9 +107,13 @@ function _bool(v: unknown): boolean | null {
     return typeof v === "boolean" ? v : null;
 }
 
-/** Is this hook command this package's own dispatcher? */
+/**
+ * Is this hook command this package's own dispatcher? The invocation, not a
+ * name: `rewrite-dispatch.js` or a path containing `agent-config` is another
+ * hook, and counting it as ours would hide the warning it exists for.
+ */
 function _ours(command: string): boolean {
-    return command.includes("dispatch.js") || /\bagent-config\b/.test(command);
+    return /dispatch(?:\.js"?|:hook) --platform claude\b/.test(command);
 }
 
 export function readFloorPosture(deps: FloorPostureDeps): FloorPosture {
@@ -151,9 +155,11 @@ export function readFloorPosture(deps: FloorPostureDeps): FloorPosture {
 }
 
 const RUNTIME_TEXT: Record<FloorRuntime, string> = {
-    "project-bundle": "runs — the project's own dispatcher bundle",
-    "runtime-current": "runs — the installed runtime's dispatcher",
-    cli: "runs — through the agent-config CLI",
+    // "reaches", not "runs": what was checked is that the trampoline finds a
+    // dispatcher, not that a PreToolUse entry is registered or enabled.
+    "project-bundle": "reaches a dispatcher — the project's own bundle",
+    "runtime-current": "reaches a dispatcher — the installed runtime's",
+    cli: "reaches a dispatcher — through the agent-config CLI",
     "floor-not-running":
         "floor not running — the trampoline reaches no dispatcher and exits 0, so no hook runs in a session here",
 };

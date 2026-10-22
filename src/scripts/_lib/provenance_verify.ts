@@ -11,14 +11,15 @@
  * 2.1) named exactly that gap — *"does not verify the attestation's signature
  * or tie it to `publish-npm.yml`"* — and this module closes the second half.
  *
- * **The first half is NOT closed here, and the distinction is load-bearing.**
- * Everything below parses an UNSIGNED reading of the DSSE payload: the base64
- * body is decoded and inspected, the envelope's signature is never checked.
- * On its own that stops an attestation produced by the wrong workflow and
- * stops nothing produced by someone who can forge the document. The signature
- * half is `npm audit signatures`, which verifies against npm's own trusted
- * keys and is run by the caller as a separate step; this function is only
- * meaningful WITH it, and the caller says so where it composes the two.
+ * **The first half is only partly closed here, and the distinction is
+ * load-bearing.** `provenance_matches_publish` parses an UNSIGNED reading of
+ * the DSSE payload. `verify_attestation_signature` below checks the envelope's
+ * signature against the certificate the bundle carries, and requires the
+ * payload it verified to name the same workflow — but checks no trust root
+ * (see its own note). The registry-key half is `npm audit signatures`, which
+ * verifies against npm's own trusted keys and is run by the caller as a
+ * separate step; these functions are only meaningful WITH it, and the caller
+ * says so where it composes them.
  *
  * Why not verify the signature in-process: it needs a sigstore/cosign
  * verification path, which is a dependency this package does not carry and
@@ -97,11 +98,26 @@ export function attestation_repository(doc: unknown): string | null {
  * signal.
  */
 export function provenance_matches_publish(doc: unknown): boolean {
-    const ref = attestation_workflow_ref(doc);
-    if (ref !== EXPECTED_WORKFLOW_REF) return false;
-    const repo = attestation_repository(doc);
-    if (repo === null) return false;
+    return payload_names_publish(decode_payload(doc));
+}
+
+/** The workflow and repository check, over one already-decoded payload. */
+function payload_names_publish(payload: Record<string, unknown> | null): boolean {
+    const predicate = asRecord(payload?.['predicate']);
+    const workflow = asRecord(asRecord(asRecord(predicate?.['buildDefinition'])?.['externalParameters'])?.['workflow']);
+    if (workflow?.['path'] !== EXPECTED_WORKFLOW_REF) return false;
+    const repo = workflow['repository'];
+    if (typeof repo !== 'string' || repo === '') return false;
     return repo.replace(/\.git$/, '').replace(/\/$/, '') === EXPECTED_REPOSITORY;
+}
+
+/**
+ * Does the certificate's SAN carry the workflow identity as a whole URI entry?
+ * Anchored: the entry is the expected workflow followed by `@<ref>`, never a
+ * SAN that merely contains the string.
+ */
+function san_names_workflow(san: string): boolean {
+    return san.split(/,\s*/).some((e) => e.startsWith(`URI:${SAN_WORKFLOW_MARKER}@`));
 }
 
 // --- the signature half -------------------------------------------------------
@@ -223,7 +239,7 @@ export async function verify_attestation_signature(doc: unknown): Promise<Signat
         }
         // The certificate's own identity, not the payload's claim about it.
         const san = cert.subjectAltName ?? '';
-        if (!san.includes(SAN_WORKFLOW_MARKER)) {
+        if (!san_names_workflow(san)) {
             lastReason = `the signing certificate names ${san === '' ? 'no identity' : san}, not ${SAN_WORKFLOW_MARKER}`;
             continue;
         }
@@ -235,6 +251,19 @@ export async function verify_attestation_signature(doc: unknown): Promise<Signat
         }
         if (!ok) {
             lastReason = 'the DSSE signature does not verify against the certificate in the bundle';
+            continue;
+        }
+        // The payload this signature covers must itself name the workflow:
+        // otherwise a valid signature on one entry vouches for a claim made in
+        // another, which is all the unsigned check reads.
+        let verified: Record<string, unknown> | null = null;
+        try {
+            verified = asRecord(JSON.parse(env.payload.toString('utf8')));
+        } catch {
+            verified = null;
+        }
+        if (!payload_names_publish(verified)) {
+            lastReason = 'the signed payload does not name this package\'s publish workflow';
             continue;
         }
         return null;

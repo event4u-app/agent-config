@@ -5,8 +5,9 @@ Measured at commit `89e094819`, package version `16.5.0`, by
 `./scripts-run src/scripts/layer_baseline_report`. Every row below names that commit.
 
 Excluded so that two runs at one commit are byte-equal: the install receipt, lock and
-log (each carries an install time), the scratch root (recorded as `<HOME>`), and the
-host's own version (a property of the machine, not of the commit).
+log (each carries an install time), the scratch root (recorded as `<HOME>`), the
+measured checkout (recorded as `<PACKAGE_ROOT>`), and the host's own version (a
+property of the machine, not of the commit).
 
 | host | scope | dir | files | bytes | full | stub | file-set digest | resolved form |
 |---|---|---|---|---|---|---|---|---|

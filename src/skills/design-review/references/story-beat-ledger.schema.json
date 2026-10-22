@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "story-beat-ledger.schema.json",
   "title": "Story-beat ledger and style bible",
-  "description": "The one cleanly unmet gap Phase 9.1 of road-to-frontend-fidelity-calibration verified: `grep -rilE 'beat ledger|story ledger|style bible' src/` returned zero paths on 2026-08-22. Hosted in `wireframe` because that skill already owns the low-fidelity artefact — a beat ledger IS a low-fidelity artefact, one axis further along than a static skeleton. No skill was created to hold a schema. Two halves in one file, deliberately: the ledger is what happens in order, the style bible is what it looks like throughout, and splitting them into two files would let a beat reference a style that no longer exists.",
+  "description": "The one cleanly unmet gap Phase 9.1 of road-to-frontend-fidelity-calibration verified: `grep -rilE 'beat ledger|story ledger|style bible' src/` returned zero paths on 2026-08-22. Hosted in `design-review`, which verifies the ledger; the `wireframe` skill authors it, since a beat ledger IS a low-fidelity artefact, one axis further along than a static skeleton. No skill was created to hold a schema. Two halves in one file, deliberately: the ledger is what happens in order, the style bible is what it looks like throughout, and splitting them into two files would let a beat reference a style that no longer exists.",
   "type": "object",
   "required": [
     "schema_version",

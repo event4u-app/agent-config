@@ -80,7 +80,17 @@ describe('hook-dispatch-latency — the timed path is the installed path', () =>
             cwd,
             encoding: 'utf8',
             timeout: 180_000,
-            env: { ...process.env, HOME: home, EVENT4U_CONFIG_HOME: configHome, AGENT_CONFIG_NO_UI: '1', CI: '1' },
+            // A maintainer's inventory/lock overrides must not steer a real
+            // install out of the injected HOME.
+            env: {
+                ...process.env,
+                HOME: home,
+                EVENT4U_CONFIG_HOME: configHome,
+                AGENT_CONFIG_NO_UI: '1',
+                CI: '1',
+                AGENT_CONFIG_DEPLOY_INVENTORY: undefined,
+                AGENT_CONFIG_INSTALLED_TOOLS: undefined,
+            },
         });
         expect(r.status, `install failed:\n${r.stdout}\n${r.stderr}`).toBe(0);
 

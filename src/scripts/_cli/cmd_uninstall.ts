@@ -299,7 +299,7 @@ function _remove_project_marker(
 export function _remove_global_content(
     tool: string,
     opts: { dry_run: boolean; purge: boolean },
-): [string, boolean] {
+): [string, boolean, boolean?] {
     const anchor = USER_SCOPE_PATHS[tool];
     if (!anchor) {
         return [`${tool}: no global anchor registered (skipped)`, false];
@@ -322,12 +322,14 @@ export function _remove_global_content(
         return [
             `${tool}: ❌ refusing to purge ${anchor} — deploy inventory unreadable (${_osErr(exc)})`,
             false,
+            true,
         ];
     }
     if (recorded.size === 0) {
         return [
             `${tool}: ❌ refusing to purge ${anchor} — no recorded inventory for this anchor; nothing was deleted`,
             false,
+            true,
         ];
     }
 
@@ -336,6 +338,22 @@ export function _remove_global_content(
     }
 
     const resolved_anchor = path.resolve(target);
+    // The lexical check below does not see a symlinked intermediate directory,
+    // so each parent is also resolved and held to the anchor's real path.
+    let real_anchor: string;
+    try {
+        real_anchor = fs.realpathSync(resolved_anchor);
+    } catch (exc) {
+        return [`${tool}: ❌ refusing to purge ${anchor} — anchor unresolvable (${_osErr(exc)})`, false, true];
+    }
+    const really_inside = (p: string): boolean => {
+        try {
+            const real = fs.realpathSync(p);
+            return real === real_anchor || real.startsWith(real_anchor + path.sep);
+        } catch {
+            return false;
+        }
+    };
     let deleted = 0;
     const touched_dirs = new Set<string>();
     for (const rel of recorded) {
@@ -344,6 +362,9 @@ export function _remove_global_content(
         // recorded path must not reach outside the anchor even if the record
         // was written by an older or tampered-with install.
         if (abs !== resolved_anchor && !abs.startsWith(resolved_anchor + path.sep)) {
+            continue;
+        }
+        if (!really_inside(path.dirname(abs))) {
             continue;
         }
         try {
@@ -366,6 +387,7 @@ export function _remove_global_content(
         let cur = dir;
         while (cur.startsWith(resolved_anchor + path.sep)) {
             try {
+                if (!really_inside(cur) || fs.realpathSync(cur) === real_anchor) break;
                 if (fs.readdirSync(cur).length > 0) break;
                 fs.rmdirSync(cur);
             } catch {
@@ -853,7 +875,9 @@ function _uninstall_project(opts: Options): number {
  *
  * Measured end to end on 2026-10-16: `uninstall --global` then
  * `uninstall --global --purge` gave `plain_rc=0 purge_after_rc=1
- * files_left=892`. The sibling unit case passed throughout, because the
+ * files_left=892` — the run and its reproduction are recorded in
+ * `tests/install/uninstall_lockfile_retention.test.ts`, which pins the flow at
+ * CLI level. The sibling unit case passed throughout, because the
  * defect sits between the deletion function and the lockfile block that runs
  * after it.
  *
@@ -945,12 +969,12 @@ function _uninstall_global(opts: Options): number {
         }
     }
     for (const tool of tools) {
-        const [line, removed] = _remove_global_content(tool, {
+        const [line, removed, refusedHere] = _remove_global_content(tool, {
             dry_run: opts.dry_run,
             purge: opts.purge,
         });
         _print(_stdout, `  · ${line}`);
-        if (line.includes('refusing to purge')) {
+        if (refusedHere === true) {
             refused = true;
         }
         if (removed && !opts.dry_run) {

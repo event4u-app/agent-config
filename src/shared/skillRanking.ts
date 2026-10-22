@@ -89,15 +89,19 @@ export const ENGLISH_STOPWORDS: ReadonlySet<string> = new Set([
  * mirroring the English block's `file` / `code` / `task` entries into German
  * would delete the signal this change exists to recover.
  *
+ * Six German words are left out because their English homograph is a routing
+ * term: `mit` (the licence), `bin` and `dir` (paths), `man` (pages), `war` and
+ * `des` (formats). A German prompt pays a little denominator for them.
+ *
  * Words of three code points or fewer never reach this set — `tokenize` drops
  * them first — so `in`, `am`, `zu`, `es` are listed nowhere and need not be.
  */
 export const GERMAN_STOPWORDS: ReadonlySet<string> = new Set([
-    'der', 'die', 'das', 'den', 'dem', 'des', 'ein', 'eine', 'einen', 'einem',
+    'der', 'die', 'das', 'den', 'dem', 'ein', 'eine', 'einen', 'einem',
     'einer', 'eines', 'und', 'oder', 'aber', 'sondern', 'denn', 'also',
-    'für', 'mit', 'von', 'vom', 'zum', 'zur', 'auf', 'aus', 'bei', 'beim',
+    'für', 'von', 'vom', 'zum', 'zur', 'auf', 'aus', 'bei', 'beim',
     'nach', 'über', 'unter', 'durch', 'ohne', 'gegen', 'zwischen', 'vor',
-    'ist', 'sind', 'war', 'waren', 'bin', 'bist', 'sein', 'seine', 'seiner',
+    'ist', 'sind', 'waren', 'bist', 'sein', 'seine', 'seiner',
     'wird', 'werden', 'wurde', 'wurden', 'worden',
     'hat', 'habe', 'haben', 'hatte', 'hatten',
     'kann', 'kannst', 'können', 'könnte', 'soll', 'sollte', 'sollen',
@@ -108,8 +112,8 @@ export const GERMAN_STOPWORDS: ReadonlySet<string> = new Set([
     'nicht', 'kein', 'keine', 'keinen', 'keiner', 'nichts',
     'alle', 'allen', 'alles', 'auch', 'noch', 'nur', 'schon', 'sehr', 'mehr',
     'hier', 'dort', 'jetzt', 'dann', 'immer', 'wieder',
-    'ich', 'mir', 'mich', 'dir', 'dich', 'sie', 'ihr', 'ihre', 'ihren',
-    'wir', 'uns', 'euch', 'man', 'ihm', 'ihn', 'mein', 'meine', 'dein',
+    'ich', 'mir', 'mich', 'dich', 'sie', 'ihr', 'ihre', 'ihren',
+    'wir', 'uns', 'euch', 'ihm', 'ihn', 'mein', 'meine', 'dein',
     'bitte', 'mal', 'etwas', 'eigentlich', 'einfach',
     // The counterparts of the English block's generic verbs. `mach` survives
     // the three-code-point floor, so it is listed; `tu` does not and is not.
@@ -194,12 +198,12 @@ export function triggerTextFromFlatLines(lines: readonly string[]): string[] {
  * over 5 exceeds 5 points on the train slice of the trigger corpus", with 5
  * staying and the step closing as an honest null if no depth cleared it.
  *
- * The committed run selects 8. Over 487 positives, recall@5 is 0.620 and
- * recall@8 is 0.686 — a gain of 6.6 points, the only candidate depth whose
- * gain clears the bar at the smallest depth (10 adds 2.7 more, 20 another 6.5,
- * neither of them the SMALLEST qualifying depth). The same bar selects 8 after
- * the tokenizer widening too (+6.2 points), so the choice does not depend on
- * which tokenizer was in the tree when it was read.
+ * The committed run selects 8. Before the tokenizer widening, over 487
+ * positives, recall@5 was 0.620 and recall@8 0.686 — a gain of 6.6 points, the
+ * only candidate depth whose gain clears the bar at the smallest depth (10 adds
+ * 2.7 more, 20 another 6.5, neither of them the SMALLEST qualifying depth).
+ * With the widened tokenizer that ships, recall@5 is 0.622 and recall@8 0.684
+ * (+6.2 points), so the same bar still selects 8.
  *
  * Three more rows per call is the cost; each carries a description capped at
  * 200 characters, so the ceiling it buys is bounded and paid only when the

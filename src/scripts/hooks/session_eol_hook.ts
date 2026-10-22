@@ -422,36 +422,13 @@ export function main(): number {
 }
 
 /**
- * The continuity-record handler — one of the three lifecycle handlers this
- * concern carries, and independently switchable from the other two.
- *
- * `road-to-continuity-writer-activation` step 1.2, and it lands INSIDE this
- * concern rather than as a fourth concern id on purpose: `check_estate_count`
- * ratchets `concern_count` with allowance 0, and the 2026-09-08 AI council
- * refused a temporary allowance 2/2. The substance the 2026-09-07 council's D2
- * asked for is independent switching and failure isolation, and a handler
- * behind its own settings key inside a `try` gives both without a manifest
- * split. The split itself is step 2.1 and stays blocked until a concern is
- * retired to pay for it.
- *
- * Fires from the recycle THRESHOLD, not from the once-per-session advisory
- * stamp: the stamp fires once, so a record written from it would be frozen at
- * the moment the session crossed the threshold and would go stale as the
- * session continued. Driving it from the raw threshold condition instead means
- * every later Stop supersedes the record under the slot's own policy, so what a
- * successor reads is always the newest state, and the write rate is still
- * bounded to the end phase of a session rather than every turn of it.
- *
- * Best-effort throughout, like the checkpoint above it: a continuity record is
- * a recovery aid, and a recovery aid that can fail a Stop is a liability.
- */
-/**
  * The retro's session pointer (`docs/contracts/retro-v1.md`, path C): one small
  * file per session in the git common directory, refreshed on every Stop. It is
  * what lets the next day's sweep find a session that ran only in a worktree,
  * after the worktree is gone, and what records the session's branch. A fourth
  * handler inside this concern for the reason the continuity record is one: the
- * concern count is ratcheted. Off with `retro.enabled: false`; never blocks.
+ * concern count is ratcheted. Off with `retro.enabled: false`, which
+ * `writeSessionPointer` reads; never blocks.
  */
 export function writeRetroPointer(
     workspaceRoot: string,
@@ -486,6 +463,30 @@ export function writeRetroPointer(
 /** The `probe_throttle` stamp for the once-a-day retro store prune. */
 const RETRO_PRUNE_STAMP = 'retro-prune';
 
+/**
+ * The continuity-record handler — one of the three lifecycle handlers this
+ * concern carries, and independently switchable from the other two.
+ *
+ * `road-to-continuity-writer-activation` step 1.2, and it lands INSIDE this
+ * concern rather than as a fourth concern id on purpose: `check_estate_count`
+ * ratchets `concern_count` with allowance 0, and the 2026-09-08 AI council
+ * refused a temporary allowance 2/2. The substance the 2026-09-07 council's D2
+ * asked for is independent switching and failure isolation, and a handler
+ * behind its own settings key inside a `try` gives both without a manifest
+ * split. The split itself is step 2.1 and stays blocked until a concern is
+ * retired to pay for it.
+ *
+ * Fires from the recycle THRESHOLD, not from the once-per-session advisory
+ * stamp: the stamp fires once, so a record written from it would be frozen at
+ * the moment the session crossed the threshold and would go stale as the
+ * session continued. Driving it from the raw threshold condition instead means
+ * every later Stop supersedes the record under the slot's own policy, so what a
+ * successor reads is always the newest state, and the write rate is still
+ * bounded to the end phase of a session rather than every turn of it.
+ *
+ * Best-effort throughout, like the checkpoint above it: a continuity record is
+ * a recovery aid, and a recovery aid that can fail a Stop is a liability.
+ */
 function writeContinuityRecord(
     workspaceRoot: string,
     rawSessionId: string | null,

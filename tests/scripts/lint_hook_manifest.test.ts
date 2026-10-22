@@ -221,37 +221,44 @@ describe("lint_hook_manifest — red fixtures", () => {
   });
 });
 
+type BindingManifest = {
+  concerns: Record<string, { script: string }>;
+  platforms: Record<string, Record<string, unknown>>;
+};
+
+/** Bound concerns with neither an in-process registry entry nor a lazy chunk. */
+function unroutedBoundConcerns(manifest: BindingManifest): string[] {
+  const bound = new Set<string>();
+  for (const [, events] of Object.entries(manifest.platforms)) {
+    if (events === null || typeof events !== "object") continue;
+    for (const [key, chain] of Object.entries(events)) {
+      if (key === "fallback_only" || !Array.isArray(chain)) continue;
+      for (const name of chain) bound.add(String(name));
+    }
+  }
+  return [...bound]
+    .filter((name) => {
+      const spec = manifest.concerns[name];
+      if (!spec) return true;
+      // Two in-process routes, not one. A concern is either inlined in the
+      // bundle (CONCERN_REGISTRY) or loaded from a sibling chunk
+      // (LAZY_CONCERNS) — both stay in-process, so neither falls back to the
+      // ~1.6 s tsx spawn, which is what this assertion is about. Widened
+      // when `chat_history` moved into a chunk; a concern in NEITHER map is
+      // still a failure, which is the direction the DENIAL case proves.
+      return !(spec.script in CONCERN_REGISTRY) && !(spec.script in LAZY_CONCERNS);
+    })
+    .sort();
+}
+
 describe("lint_hook_manifest — the shipped manifest", () => {
   it("the real manifest lints clean (non-strict)", () => {
     expect(lint(REAL_MANIFEST, false)).toBe(0);
   });
 
   it("every concern bound to any platform chain has a CONCERN_REGISTRY entry", () => {
-    const manifest = _load_yaml(REAL_MANIFEST) as {
-      concerns: Record<string, { script: string }>;
-      platforms: Record<string, Record<string, unknown>>;
-    };
-    const bound = new Set<string>();
-    for (const [, events] of Object.entries(manifest.platforms)) {
-      if (events === null || typeof events !== "object") continue;
-      for (const [key, chain] of Object.entries(events)) {
-        if (key === "fallback_only" || !Array.isArray(chain)) continue;
-        for (const name of chain) bound.add(String(name));
-      }
-    }
-    const missing = [...bound]
-      .filter((name) => {
-        const spec = manifest.concerns[name];
-        if (!spec) return true;
-        // Two in-process routes, not one. A concern is either inlined in the
-        // bundle (CONCERN_REGISTRY) or loaded from a sibling chunk
-        // (LAZY_CONCERNS) — both stay in-process, so neither falls back to the
-        // ~1.6 s tsx spawn, which is what this assertion is about. Widened
-        // when `chat_history` moved into a chunk; a concern in NEITHER map is
-        // still a failure, which is the direction the next case proves.
-        return !(spec.script in CONCERN_REGISTRY) && !(spec.script in LAZY_CONCERNS);
-      })
-      .sort();
+    const manifest = _load_yaml(REAL_MANIFEST) as BindingManifest;
+    const missing = unroutedBoundConcerns(manifest);
     expect(
       missing,
       `bound concerns with neither an in-process registry entry nor a lazy chunk (would fall back to the ~1.6s tsx spawn path): ${missing.join(", ")}`,
@@ -262,16 +269,17 @@ describe("lint_hook_manifest — the shipped manifest", () => {
     // Without this the widened filter above would pass a manifest that binds
     // anything at all, which is the failure mode of relaxing an invariant to
     // accommodate a new mechanism.
-    const manifest = _load_yaml(REAL_MANIFEST) as {
-      concerns: Record<string, { script: string }>;
-      platforms: Record<string, Record<string, unknown>>;
-    };
+    const manifest = _load_yaml(REAL_MANIFEST) as BindingManifest;
     const invented = "src/scripts/a_concern_that_is_in_neither_map.ts";
     expect(invented in CONCERN_REGISTRY).toBe(false);
     expect(invented in LAZY_CONCERNS).toBe(false);
-    const spec = { script: invented };
-    const reported = !(spec.script in CONCERN_REGISTRY) && !(spec.script in LAZY_CONCERNS);
-    expect(reported).toBe(true);
+    // The SAME filter the case above runs, over the real manifest with one
+    // extra concern bound, so a widened filter goes red here.
+    const withInvented: BindingManifest = {
+      concerns: { ...manifest.concerns, "invented-concern": { script: invented } },
+      platforms: { ...manifest.platforms, probe: { session_start: ["invented-concern"] } },
+    };
+    expect(unroutedBoundConcerns(withInvented)).toEqual(["invented-concern"]);
     // And the real manifest does not already contain such a concern, so the
     // case above is not passing by accident of the tree.
     expect(Object.values(manifest.concerns).some((c) => c.script === invented)).toBe(false);
@@ -354,8 +362,8 @@ describe("effect: — the census's field (Phase 2.2)", () => {
     // rather than read from the manifest on purpose: a census that counts
     // whatever it finds cannot notice a concern that silently stopped being
     // declared, which is the failure this case exists for.
-    // 63 again since `block-credential-reads` (road-to-one-detector-and-the-
-    // senders-we-own 1.1).
+    // So 62 after that withdrawal, and 63 again since `block-credential-reads`
+    // (road-to-one-detector-and-the-senders-we-own 1.1).
     expect(names.length).toBe(63);
     const missing = names.filter((n) => !CONCERN_EFFECTS.has(String(manifest.concerns[n]?.effect)));
     expect(missing).toStrictEqual([]);

@@ -18,6 +18,7 @@
  */
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { mkdirp, pathExists, resolvePath, sha256OfFile } from './fsPrimitives.js';
 import { EXIT_COMPLETED_WITH_CONFLICTS, conflictSummaryMessage, decideDeployWrite, foreignSidecarMessage, isLedgerMigration, migrationPreservedMessage, preservedFileMessage, sidecarPathFor, } from './preserve.js';
@@ -93,7 +94,10 @@ export function createConflictTracker(host) {
      * the whole point of the branch that calls it.
      */
     function wouldWriteDigest(target, would) {
-        const tmp = path.join(path.dirname(target), `.${path.basename(target)}.would.${process.pid}.${crypto.randomBytes(6).toString('hex')}${path.extname(target)}`);
+        // Under the OS temp dir, never beside the target: a host rule directory
+        // loads every `.md` in it, and a process killed before the unlink below
+        // would leave this file there to be loaded as a rule.
+        const tmp = path.join(os.tmpdir(), `agent-config-would.${process.pid}.${crypto.randomBytes(6).toString('hex')}${path.extname(target)}`);
         try {
             if ('content' in would) {
                 fs.writeFileSync(tmp, would.content, 'utf-8');

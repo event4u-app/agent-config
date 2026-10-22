@@ -23,10 +23,13 @@ beside it.
 
 - **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
   and § Correction 2026-08-31 are about.
-- **Now: 169 files, 37 holdout and 132 train.** That bullet read
-  "103 files, 19 holdout and 84 train" until 2026-10-14, naming three growths
-  when there had since been nine — it drifted 31 files behind the tree because
-  each growth after 2026-10-01 wrote its own section and left this line alone.
+- **Now: 172 files, 37 holdout and 135 train.** That bullet read
+  "103 files, 19 holdout and 84 train" until 2026-10-14, and drifted behind the
+  tree again after it was rewritten, because each growth writes its own section
+  and leaves this line alone. (Corrected 2026-10-22, release finding
+  `54f4c9762c08`: the rewrite's own "nine growths" and "31 files behind" were
+  true on 2026-10-14 and stale by the time the list below was extended, so they
+  are dropped rather than re-counted.)
   It is the same count-drift the two corrections below repair one field away,
   surviving in the bullet that exists to state the live figure. The growths are
   § Growth 2026-09-19, § Growth 2026-09-30, § Growth 2026-10-01 (the first on
@@ -34,8 +37,9 @@ beside it.
   § Re-pin 2026-10-11, § Growth — 2026-10-12, § Growth — 2026-10-14,
   § Growth — 2026-10-14b, § Growth — 2026-10-14c, § Growth — 2026-10-14d,
   § Growth — 2026-10-14e, § Growth — 2026-10-16, § Growth — 2026-10-16b,
-  § Growth — 2026-10-17, § Growth — 2026-10-18, § Growth — 2026-10-18b and
-  § Growth — 2026-10-19; the
+  § Growth — 2026-10-17, § Re-pin — 2026-10-17b, § Growth — 2026-10-18,
+  § Growth — 2026-10-18b, § Growth — 2026-10-19, § Growth — 2026-10-20,
+  § Growth — 2026-10-21 and § Re-pin — 2026-10-22; the
   2026-10-02, 2026-10-04 and 2026-10-06 growths are recorded as blockquotes
   above the two tables rather than as sections. Only `trigger_corpus_holdout_pin.test.ts`
   keeps this bullet honest, and it did not: it asserts the rows and the set hash,
@@ -350,6 +354,15 @@ all.
 | Row | Partition | `sha256(name)[0:2]` | Bucket |
 |---|---|---|---|
 | `security` | train | `0x5d` | 93 ≥ 51 |
+
+> **Correction, 2026-10-22 (release finding `1e586a845b8b`).** This growth
+> published the `security` hash only as a two-cell row in the § Correction
+> 2026-08-31 re-pin table — the defect § Growth — 2026-10-14c names for
+> `database` — and never in the `## Train` table, which carried 134 rows
+> against 135 train corpora. The row is added there now. Its hash matches
+> `shasum -a 256 src/skills/security/evals/triggers.json`, and diffing the two
+> tables' row names against `src/skills/*/evals/triggers.json` reports no
+> other gap. `SET-SHA256` is computed over the tree, so no hash moves.
 
 **The sealed set does not move.** 93 is above the ceiling of 51, so the holdout
 stays at **31** and the train set goes **109 -> 110**; the realised split is
@@ -820,7 +833,7 @@ and `routing_signal_measurement.test.ts` § 5.1.
 ## The set hash
 
 ```
-SET-SHA256  0952f55b36d7ccc582431de456d0e85546d5c484ed148e526bf3e20f91f2a981
+SET-SHA256  2b91239cddc834c7e7415951d18ea9ed23f63bfd572e05c5e1730b442b847b4a
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -1301,6 +1314,7 @@ open and which this file does not settle.
 | `rtk-output-filtering` | `39b3821f591c1b3ca5c5b5792636ba1f8ada85ac997ab91bbb966bade346323f` |
 | `rule-writing` | `c03c83678a07e7c08201aa06fb1109bad1270a0d9883d14508cda496c21dbe0f` |
 | `screenshot-hygiene` | `2493ae6cee8869c659e34610c7ec6a7d7a6f5c76098136c98fa35c90484adb2c` |
+| `security` | `7e2c5b70d7d42d0fa53ce71e5f664f89c3afe943e198389eecebfd82a0ef61d3` |
 | `security-audit` | `27ccbdcd02b8cf7fbd6b85da1043c680233a6ed840697eac6ef9dace37cb0993` |
 | `security-maturity-assessment` | `071894293d4c9a1997843d9bfc78f69b2fc64c0e5306544756cb6853bfd31b30` |
 | `server-hardening` | `8301bedcbcd9129f8c55d3640e66164baec4753e92a55a8b56df54449e3f3f46` |
@@ -1695,4 +1709,39 @@ changes in kind.
 **The standing repair was followed.** `trigger_corpus_holdout_pin.test.ts` and
 `routing_signal_measurement.test.ts` § 5.1 were both run after the rows were
 placed — the second is what proves they sit on the train side of the seal.
+
+## Re-pin — 2026-10-22, one train corpus re-hashed; the seal does not move
+
+```
+NO ROW IS NEW. ONE TRAIN-SIDE FILE WAS EDITED AND RE-HASHED.
+NO HOLDOUT FILE WAS ADDED OR EDITED; THE SEALED SET STAYS AT 37.
+BOTH TRAIN-SIDE MEASUREMENTS WERE RE-TAKEN IN THE SAME CHANGE.
+```
+
+**What changed.** A 17.0.0 self-review fix (`fix(security, threat-modeling):
+drop generic auth keywords`) replaced the `security` skill's bare `session`
+trigger with `session id`, `session cookie` and `logout`, and gave its corpus
+two near-misses that use "session" outside authentication — a terminal session
+and a database session. The corpus goes from 5 to 7 near-misses; its exemplars
+and counterexamples are unchanged.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `security` | train | `0x5d` = 93 ≥ 51 | re-hashed |
+
+The set is still 172 files, 37 of them sealed. `SET-SHA256` moves because the
+file's bytes moved: `0952f55b…` → `2b91239c…`.
+
+**Both train-side measurements were re-taken on this tree**, after the same
+change set trimmed ten skill bodies back under their byte ceilings, so the
+figures include those body edits. `routing-body-signal-verdict.json`: still
+`harmful` on the false-activation guard (**+5.75 pp** against +2.0 pp),
+delta-recall **+2.86 pp**, below the 5.0 pp bar, McNemar p **0.2064**, cases
+**1307**. `delivery-set-measurement-2026-08-31.json`: precision@5 **80.85 %**,
+recall loss **39.61 pp** — the ceiling stays **BREACHED** — false
+activation@5 **14.77 %**, context cost **231** tokens against the 500 target,
+still **MET**. Neither verdict changes in kind.
+
+**Both gates were run after the final edit**: `trigger_corpus_holdout_pin.test.ts`
+and `routing_signal_measurement.test.ts` § 5.1.
 

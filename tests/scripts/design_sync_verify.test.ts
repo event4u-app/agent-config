@@ -23,6 +23,8 @@ describe('verify — baseline stamp', () => {
         l = { ...stampBaselines({ ...l, projection: { ...l.projection, commit: 'bbb2222' } }, ['tests/e2e/b.spec.ts-snapshots/b.png']) };
         const r = verifyLedger(l, { renderCheck: CLEAN, renderDispositions: {} });
         expect(r.stale_baselines).toEqual(['tests/e2e/a.spec.ts-snapshots/a.png (made against aaa1111, current bbb2222)']);
+        // The verdict alone says it did not pass.
+        expect(r.verification).toBe('degraded');
     });
 
     it('stale-baseline: with no projection commit staleness is undecidable and reported degraded', () => {
@@ -50,6 +52,8 @@ describe('verify — render check', () => {
 
     it('render-check: an undispositioned ledger row also fails verify', () => {
         const l = ledger('aaa1111', { rows: [{ key: 'Hero', kind: 'component', class: 'remote-only:twin', base: null, code: null, remote: '{}', disposition: 'pending' }] });
-        expect(verifyLedger(l, { renderCheck: CLEAN, renderDispositions: {} }).failures).toEqual(['row Hero (remote-only:twin) has no disposition']);
+        const r = verifyLedger(l, { renderCheck: CLEAN, renderDispositions: {} });
+        expect(r.failures).toEqual(['row Hero (remote-only:twin) has no disposition']);
+        expect(r.verification).toBe('degraded');
     });
 });

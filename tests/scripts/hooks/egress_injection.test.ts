@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { parseTokens } from '../../../src/scripts/_lib/egress_token.js';
-import { egressInjection, type EgressMode } from '../../../src/scripts/hooks/egress_stage.js';
+import { attributeRefusal, egressInjection, type EgressMode } from '../../../src/scripts/hooks/egress_stage.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'dispatch_hook.ts');
@@ -61,6 +61,21 @@ describe('egressInjection', () => {
             throw new Error('unreadable');
         });
         expect(broken(ENTRY).includes(PAT)).toBe(false);
+    });
+});
+
+describe('attributeRefusal', () => {
+    const missing = egressInjection('/ws', mode('protect'), () => ({ ok: false, reason: 'missing' }));
+
+    it('a withheld refusal still names the concern that refused', () => {
+        const out = attributeRefusal('block-no-verify', true, missing('block-no-verify: BLOCKED — use the hook'));
+        expect(out.startsWith('block-no-verify: BLOCKED')).toBe(true);
+        expect(out.endsWith('[egress: injected text withheld (engine-unavailable)]')).toBe(true);
+    });
+
+    it('leaves advisory text and unwithheld refusals unchanged', () => {
+        expect(attributeRefusal('nudge', false, missing(ENTRY))).toBe(missing(ENTRY));
+        expect(attributeRefusal('guard', true, 'guard: BLOCKED — reason')).toBe('guard: BLOCKED — reason');
     });
 });
 

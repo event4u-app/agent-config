@@ -602,6 +602,17 @@ describe('council code review fixes (2026-10-21)', () => {
         expect(r.reports).toEqual([]);
     });
 
+    it('composer audit never loads the scanned project\'s plugins', () => {
+        const entries = [{ ecosystem: 'packagist', name: 'a/b', version: '1.0.0', file: 'composer.lock', line: 1, provenance: 'lockfile', private: false }] as unknown as Parameters<typeof nativeAudits>[1];
+        const seen: string[][] = [];
+        nativeAudits(tmp, entries, (cmd, args) => {
+            seen.push([cmd, ...args]);
+            return { code: 0, stdout: '{}' };
+        });
+        expect(seen).toHaveLength(1);
+        expect(seen[0]).toContain('--no-plugins');
+    });
+
     it('a cache that is not the state shape is no cache', () => {
         const root = project('F1-fastify-hono');
         const sp = statePath(root)!;
@@ -718,6 +729,15 @@ describe('R2 round 3 fixes (2026-10-21)', () => {
     it('#6 — the issue fingerprint ignores the Checked line', () => {
         const yml = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'agent-src', 'templates', 'github-workflows', 'advisories-daily.yml'), 'utf-8');
         expect(yml).toMatch(/grep -v '\^Checked '/);
+    });
+
+    it('the daily runner publishes nothing on a public repository — every step after the visibility probe is gated', async () => {
+        const { parse } = await import('yaml');
+        const yml = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'agent-src', 'templates', 'github-workflows', 'advisories-daily.yml'), 'utf-8');
+        const steps = (parse(yml) as { jobs: { advisories: { steps: Array<{ id?: string; if?: string; run?: string }> } } }).jobs.advisories.steps;
+        expect(steps[0]!.id).toBe('visibility');
+        expect(steps[0]!.run).toContain('.private');
+        for (const s of steps.slice(1)) expect(s.if).toBe("steps.visibility.outputs.private == 'true'");
     });
 
     it('#10 — a pin below a security release keeps its fix past the pre-announcement window', async () => {

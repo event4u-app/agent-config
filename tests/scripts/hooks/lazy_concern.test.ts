@@ -77,9 +77,15 @@ describe('loadLazyConcernUncached', () => {
         }
     });
 
-    it('loads the built chunk from dist/hooks when one is there', () => {
+    it('loads the built chunk from dist/hooks when one is there', (t) => {
         const chunk = path.join(REPO_ROOT, 'dist', 'hooks', 'chat_history.chunk.cjs');
-        if (!fs.existsSync(chunk)) return; // dist/ is untracked; nothing to assert on a clean checkout
+        // skip-reason: dist/ is untracked, so a clean checkout has no chunk to load.
+        if (!fs.existsSync(chunk)) {
+            t.skip('dist/hooks/chat_history.chunk.cjs is not built');
+            return;
+        }
+        // A built chunk ships with the digest sidecar the loader checks.
+        expect(fs.existsSync(`${chunk}.sha256`)).toBe(true);
         const selfUrl = pathToFileURL(path.join(REPO_ROOT, 'dist', 'hooks', 'dispatch.js')).href;
         _resetLazyConcernCache();
         expect(typeof loadLazyConcernUncached(CHAT_HISTORY, selfUrl, true)).toBe('function');

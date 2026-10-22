@@ -238,7 +238,8 @@ line count, and say up front how many there are.
 **A round id reads one set.** `roundUnion` (`src/scripts/analysis_inbox_final.ts`)
 reads the runtime round `agents/runtime/analysis/<round-id>/` — the analysts'
 outputs of a door run — and the owner's drops under `agents/tmp/<round-id>/`
-as **one union**, and takes the lineage (which file consolidates which) from
+as **one union** — refusing a round id that is not a single folder name or
+contains `..` — and takes the lineage (which file consolidates which) from
 the round's `manifest.json`, never from filenames. An opaque round id skips
 the rename below; a speaking one still renames before Phase 2. **A large inbox is a triage problem, not a
 throughput problem** — never open ten files at full depth in one pass.
@@ -901,8 +902,12 @@ verified finding becomes a new top-level roadmap, search for the roadmap that
 already owns its subject — active, `later/` or `stubs/`:
 
 ```bash
-grep -rlE '<identifier-a>|<identifier-b>' agents/roadmaps/*.md agents/roadmaps/later agents/roadmaps/stubs
+grep -rlF -e '<identifier-a>' -e '<identifier-b>' -- agents/roadmaps/*.md agents/roadmaps/later agents/roadmaps/stubs
 ```
+
+Identifiers come from untrusted file content: each is a fixed string (`-F`)
+in its own `-e`, and one carrying a quote or a newline is dropped from the
+search and named, never spliced into the command line.
 
 A hit that owns the subject takes the finding as a **new step** on that file
 plus an `Arrivals:` line under its `Source:` header (format below), and no new

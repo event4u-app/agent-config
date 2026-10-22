@@ -266,9 +266,24 @@ export function branchName(f: Finding): string {
     return `security/${slug(f.package)}-${slug(f.id)}`;
 }
 
+/**
+ * An advisory-sourced value as PR and changelog text: one line, no control
+ * characters, no markdown that could open a heading, link or table, bounded.
+ * The ids, package and versions come from external advisory sources.
+ */
+export function prField(value: string | null | undefined): string {
+    if (value === null || value === undefined) return '?';
+    const flat = value.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/[`*[\]<>|#!]/g, '').trim();
+    return flat === '' ? '?' : flat.slice(0, 120);
+}
+
+function idList(f: Finding, max?: number): string {
+    const ids = [f.id, ...f.aliases].map(prField);
+    return (max === undefined ? ids : ids.slice(0, max)).join(', ');
+}
+
 export function prTitle(f: Finding): string {
-    const ids = [f.id, ...f.aliases].slice(0, 2).join(', ');
-    return `fix(security): ${f.package} ${f.version ?? '?'} → ${f.fixed ?? '?'} (${ids})`;
+    return `fix(security): ${prField(f.package)} ${prField(f.version)} → ${prField(f.fixed)} (${idList(f, 2)})`;
 }
 
 export interface PrEvidence {
@@ -282,10 +297,10 @@ export interface PrEvidence {
 /** The seven fields every security PR carries. */
 export function prBody(f: Finding, e: PrEvidence): string {
     return [
-        `## Security fix — ${f.package}`,
+        `## Security fix — ${prField(f.package)}`,
         '',
-        `- **Finding:** ${[f.id, ...f.aliases].join(', ')}`,
-        `- **Tier:** ${f.tier} (${f.verdict}${f.severity === null ? '' : `, ${f.severity}`})`,
+        `- **Finding:** ${idList(f)}`,
+        `- **Tier:** ${f.tier} (${f.verdict}${f.severity === null ? '' : `, ${prField(f.severity)}`})`,
         `- **Before:** ${e.before}`,
         `- **After:** ${e.after === 'fixed-in-branch' ? 'the reporting source no longer reports it on this branch' : e.after}`,
         `- **Tests:** ${e.tests}`,
@@ -301,7 +316,7 @@ export function releaseDraft(currentVersion: string, fixes: Finding[]): { versio
     const m = /^(\d+)\.(\d+)\.(\d+)/.exec(currentVersion);
     if (m === null) return null;
     const version = `${m[1]}.${m[2]}.${Number(m[3]) + 1}`;
-    const lines = fixes.map((f) => `- ${f.package} ${f.version ?? '?'} → ${f.fixed ?? '?'} (${[f.id, ...f.aliases].join(', ')})`);
+    const lines = fixes.map((f) => `- ${prField(f.package)} ${prField(f.version)} → ${prField(f.fixed)} (${idList(f)})`);
     return { version, changelog: [`## ${version}`, '', '### Security', '', ...lines].join('\n') };
 }
 

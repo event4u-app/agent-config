@@ -35,6 +35,7 @@ import {
     validate_file,
 } from '../../src/scripts/check_reach_channels.js';
 import { SchemaError } from '../../src/scripts/validate_frontmatter.js';
+import { CLASS_SPELLED_PREFIXES } from '../../src/scripts/_lib/egress_rules.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const FIXTURE_DIR = path.join(REPO_ROOT, 'tests', 'fixtures', 'reach-channels');
@@ -561,6 +562,29 @@ describe('check_reach_channels — unusable input is exit 3, never "0 violations
             expect(main([target])).toBe(3);
         } finally {
             fs.rmSync(tmp, { recursive: true, force: true });
+        }
+    });
+});
+
+describe('prefix redaction stays coupled to the rule table it reads', () => {
+    // REDACTIONS replaces with `$1-` / `$1_`, which is right only while each
+    // family keeps exactly one capture group holding the stem. A reworded
+    // family would otherwise change the output or leak the value silently.
+    it('each family has exactly one capture group', () => {
+        for (const { family } of Object.values(CLASS_SPELLED_PREFIXES)) {
+            expect(new RegExp(`${family}|`).exec('')?.length, family).toBe(2);
+        }
+    });
+
+    it('every covered prefix keeps its stem and loses its value', () => {
+        const value = 'Zq9Zq9Zq9Zq9Zq9Zq9';
+        for (const { covers } of Object.values(CLASS_SPELLED_PREFIXES)) {
+            for (const prefix of covers) {
+                const out = excerpt_for_finding(`fetch ${prefix}${value}`);
+                expect(out, prefix).not.toContain(value);
+                expect(out, prefix).toContain(prefix.slice(0, -1));
+                expect(out, prefix).toContain('<redacted>');
+            }
         }
     });
 });

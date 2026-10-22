@@ -72,9 +72,17 @@ covers the paths that remain broken even with it.
 reported 0 before the change, so no consumer installed them. `vite` 8.3.1
 (three launch-editor advisories, reachable while a maintainer runs the dev
 server) and `source-map-js` 1.2.1 (event-loop denial of service from a crafted
-source map). Fixed with `npm update vite source-map-js`: 21 packages moved,
-every one a patch bump inside those two packages' dependency closure,
-`package.json` unchanged. `npm ci --ignore-scripts` now reports 0.
+source map). Fixed with `npm update vite source-map-js`: 21 packages moved
+inside those two packages' dependency closure, `package.json` unchanged.
+`npm ci --ignore-scripts` now reports 0.
+
+> **Correction, 2026-10-22 (release finding `7be58021a4ea`).** This read
+> "every one a patch bump", which is false for one of the 21. From the
+> `package-lock.json` diff of `4338b2e3a`: `vite` 8.3.1 → 8.3.4,
+> `source-map-js` 1.2.1 → 1.2.2, `postcss` 8.5.28 → 8.5.31, `nanoid` 3.3.19 →
+> 3.3.20, `rolldown` and its 15 `@rolldown/binding-*` packages 1.2.11 → 1.2.14
+> — and `@oxc-project/types` 0.151.0 → 0.154.0, a minor bump on a 0.x line.
+
 
 **Context.** Measured, not reduced. The rule corpus is 121 files, 116 projected,
 475,611 bytes (~118,903 tokens by chars/4). The lever that already exists is the

@@ -400,9 +400,10 @@ describe('a prose-named parent is unresolvable, not missing (2.2)', () => {
 
 describe('the round that found these defects reproduces from a committed mirror (2.3)', () => {
     // `round-mirror/` mirrors the DECLARATION SHAPES of the gitignored round
-    // folder, with neutral names. Verified equivalence, 2026-10-16: the gate at
-    // origin/main reported 3 findings over both the live folder and this
-    // mirror, and reports exactly 1 over both after the fix.
+    // folder, with neutral names. The live folder is gitignored, so its
+    // equivalence with this mirror (3 findings before the fix, 1 after, on
+    // 2026-10-16) is the author's own observation and cannot be re-run here;
+    // the mirror is what this case pins.
     it('yields exactly one finding, and it is the prose-named ghost', () => {
         const f = analyseFolder(path.join(FIX, 'round-mirror'));
         expect(f.map((x) => [x.code, x.file])).toEqual([['unresolvable-parent', 'road-to-consolidator.md']]);

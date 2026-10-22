@@ -12,6 +12,7 @@
 // learns which host it runs for, and the adapter never re-derives semantics.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
@@ -142,6 +143,17 @@ describe('classifyNoGo — what it refuses to guess', () => {
             kindOf('There is no need to run `npm install` — the lockfile is committed'),
         ).toBe('prose');
         expect(kindOf('Not every change needs to touch `docs/`')).toBe('prose');
+    });
+
+    it('stays prose when a temporal or conditional conjunction introduces the token', () => {
+        // The token names the PRECONDITION the bullet prescribes, so a deny row
+        // over it would block the very step the bullet asks for.
+        expect(kindOf('Never commit without reading `docs/spec.md`')).toBe('prose');
+        expect(kindOf('Never commit before running `scripts/check.sh`')).toBe('prose');
+        expect(kindOf('Never delete a branch after merging `release/`')).toBe('prose');
+        expect(kindOf('Never edit anything until reviewing `docs/adr/`')).toBe('prose');
+        // The bare prohibition still builds its row.
+        expect(kindOf('Never commit `secrets/`')).toBe('path');
     });
 
     it('stays prose on a dotted identifier that is not a path', () => {
@@ -315,7 +327,7 @@ describe('extractNoGosSection — the fence skip is the load-bearing part', () =
         // material, and it is the file a reader without the skip would mistake
         // for a filled contract.
         const guide = path.resolve(
-            __dirname,
+            path.dirname(fileURLToPath(import.meta.url)),
             '../../src/agent-src/contexts/contracts/consumer-agents-md-guide.md',
         );
         const body = fs.readFileSync(guide, 'utf8');

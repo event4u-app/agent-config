@@ -42,6 +42,16 @@ describe('knownValueSet', () => {
         expect(set.has('changeme-template-value')).toBe(false);
         expect([...set].every((v) => v.length >= MIN_KNOWN_VALUE_LENGTH)).toBe(true);
     });
+
+    it('reads AUTH as a trailing word, not a substring of AUTHOR or AUTH_SOCK', () => {
+        const set = knownValueSet(
+            { GIT_AUTHOR_NAME: 'Someone Longname', SSH_AUTH_SOCK: '/tmp/ssh-agent.sock', BASIC_AUTH: 'user:pass-1234' },
+            [],
+        );
+        expect(set.has('Someone Longname')).toBe(false);
+        expect(set.has('/tmp/ssh-agent.sock')).toBe(false);
+        expect(set.has('user:pass-1234')).toBe(true);
+    });
 });
 
 describe('findKnownValues — a password with no recognisable shape', () => {

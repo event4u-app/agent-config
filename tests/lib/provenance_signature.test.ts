@@ -29,6 +29,14 @@ import {
 const IDENTITY = `${EXPECTED_REPOSITORY}/${EXPECTED_WORKFLOW_REF}@refs/heads/main`;
 const PAYLOAD_TYPE = 'application/vnd.in-toto+json';
 
+/** A statement naming this package's publish workflow — what a real release signs. */
+function statement(workflowPath = EXPECTED_WORKFLOW_REF): string {
+    return JSON.stringify({
+        _type: 'https://in-toto.io/Statement/v1',
+        predicate: { buildDefinition: { externalParameters: { workflow: { path: workflowPath, repository: EXPECTED_REPOSITORY } } } },
+    });
+}
+
 // A generous hook timeout, because these fixtures are `mkdtempSync` and
 // nothing else: measured on a machine running several parallel lanes, the
 // default 30 s hook budget expired inside `beforeEach` itself while every one
@@ -37,7 +45,10 @@ const PAYLOAD_TYPE = 'application/vnd.in-toto+json';
 const HOOK_TIMEOUT_MS = 120_000;
 
 let tmp: string;
-let haveOpenssl = true;
+// Read at collection time, so a machine without openssl reports the signing
+// cases as SKIPPED rather than green with nothing verified.
+const HAVE_OPENSSL = spawnSync('openssl', ['version'], { encoding: 'utf-8' }).status === 0;
+const NO_CERT = 'openssl is present but could not mint a certificate';
 
 /** A self-signed P-256 certificate carrying `san` as a URI SAN, plus its key. */
 function mintCert(name: string, san: string): { keyPem: string; certDer: Buffer } | null {
@@ -82,7 +93,6 @@ function signed(payloadText: string, identity = IDENTITY, name = 'good'): unknow
 
 beforeAll(() => {
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dsse-'));
-    haveOpenssl = spawnSync('openssl', ['version'], { encoding: 'utf-8' }).status === 0;
 }, HOOK_TIMEOUT_MS);
 afterAll(() => {
     fs.rmSync(tmp, { recursive: true, force: true });
@@ -107,23 +117,40 @@ describe('verify_attestation_signature', () => {
         expect(await verify_attestation_signature({ attestations: [{ bundle: {} }] })).toMatch(/readable DSSE envelope/);
     });
 
-    it('accepts a genuine signature over the payload', async () => {
-        const doc = signed('{"_type":"https://in-toto.io/Statement/v1"}');
-        if (doc === null) return expect(haveOpenssl).toBe(false);
+    // skip-reason: openssl is absent, so no certificate can be minted.
+    it.skipIf(!HAVE_OPENSSL)('accepts a genuine signature over a payload naming the publish workflow', async () => {
+        const doc = signed(statement());
+        if (doc === null) return expect.unreachable(NO_CERT);
         expect(await verify_attestation_signature(doc)).toBeNull();
     });
 
-    it('refuses when the payload was edited after signing', async () => {
+    // skip-reason: openssl is absent, so no certificate can be minted.
+    it.skipIf(!HAVE_OPENSSL)('refuses a genuine signature over a payload that names another workflow', async () => {
+        const doc = signed(statement('.github/workflows/other.yml'), IDENTITY, 'mismatch');
+        if (doc === null) return expect.unreachable(NO_CERT);
+        expect(await verify_attestation_signature(doc)).toMatch(/signed payload does not name/);
+    });
+
+    // skip-reason: openssl is absent, so no certificate can be minted.
+    it.skipIf(!HAVE_OPENSSL)('refuses a SAN that only contains the workflow identity as a substring', async () => {
+        const doc = signed(statement(), `https://evil.example/?x=${IDENTITY}`, 'substring');
+        if (doc === null) return expect.unreachable(NO_CERT);
+        expect(await verify_attestation_signature(doc)).toMatch(/signing certificate names/);
+    });
+
+    // skip-reason: openssl is absent, so no certificate can be minted.
+    it.skipIf(!HAVE_OPENSSL)('refuses when the payload was edited after signing', async () => {
         const doc = signed('{"_type":"https://in-toto.io/Statement/v1"}') as { attestations: Array<Record<string, never>> } | null;
-        if (doc === null) return expect(haveOpenssl).toBe(false);
+        if (doc === null) return expect.unreachable(NO_CERT);
         const env = (doc.attestations[0] as unknown as { bundle: { dsseEnvelope: { payload: string } } }).bundle.dsseEnvelope;
         env.payload = Buffer.from('{"_type":"tampered"}', 'utf8').toString('base64');
         expect(await verify_attestation_signature(doc)).toMatch(/does not verify/);
     });
 
-    it('refuses a certificate issued to another identity, however well it signs', async () => {
+    // skip-reason: openssl is absent, so no certificate can be minted.
+    it.skipIf(!HAVE_OPENSSL)('refuses a certificate issued to another identity, however well it signs', async () => {
         const doc = signed('{"ok":true}', 'https://github.com/someone-else/their-repo/.github/workflows/publish.yml@refs/heads/main', 'other');
-        if (doc === null) return expect(haveOpenssl).toBe(false);
+        if (doc === null) return expect.unreachable(NO_CERT);
         expect(await verify_attestation_signature(doc)).toMatch(/names .*someone-else/);
     });
 
@@ -132,9 +159,10 @@ describe('verify_attestation_signature', () => {
         expect(await verify_attestation_signature(doc)).toMatch(/could not be parsed/);
     });
 
-    it('KNOWN LIMITATION — a self-signed certificate passes, because no trust root is checked', async () => {
-        const doc = signed('{"ok":true}', IDENTITY, 'selfsigned');
-        if (doc === null) return expect(haveOpenssl).toBe(false);
+    // skip-reason: openssl is absent, so no certificate can be minted.
+    it.skipIf(!HAVE_OPENSSL)('KNOWN LIMITATION — a self-signed certificate passes, because no trust root is checked', async () => {
+        const doc = signed(statement(), IDENTITY, 'selfsigned');
+        if (doc === null) return expect.unreachable(NO_CERT);
         // This is not a bug in the function; it is the `dsse-trust-root`
         // blocker, asserted so the limit cannot be forgotten and so the test
         // flips the day a Fulcio root is pinned.

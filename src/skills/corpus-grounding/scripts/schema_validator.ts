@@ -267,7 +267,13 @@ export function resolve_data_path(manifest: Manifest, relative: string): string 
         throw new ManifestError(`data_dir must be manifest-relative: ${pyRepr(data_dir)}`);
     }
     // Python: (base / dd / rel).resolve() — resolve() follows symlinks.
-    return pyResolve(path.join(base, data_dir, relative));
+    const resolved = pyResolve(path.join(base, data_dir, relative));
+    // The string checks above cannot see a symlink inside the pack that points out of it.
+    const root = pyResolve(base);
+    if (resolved !== root && !resolved.startsWith(root + path.sep)) {
+        throw new ManifestError(`corpus path resolves outside the manifest directory: ${pyRepr(relative)}`);
+    }
+    return resolved;
 }
 
 /** Mirror pathlib Path(p).parts for the relative-path containment check. */

@@ -15,8 +15,8 @@
  * rules was deleted by a command whose README line advertises a *surgical*
  * uninstall.
  *
- * `tests/install/` held 47 files at that commit and **none** of them was
- * uninstall- or purge-shaped, so the behaviour had never been pinned in either
+ * By the author's own count at that commit, none of the files in
+ * `tests/install/` was uninstall- or purge-shaped, so the behaviour had never been pinned in either
  * direction. That absence is why the defect survived: the inventory that makes
  * reaping safe has existed since the 2026-06 Zed fix
  * (`_lib/global_deploy_inventory.ts`, whose own docstring states "Never deletes
@@ -222,6 +222,24 @@ describe('uninstall --purge — containment', () => {
         expect(fs.readFileSync(outside, 'utf-8')).toBe('must survive\n');
     });
 
+    it('does not delete through a symlinked directory inside the anchor', () => {
+        // A recorded path whose parent directory is now a link out of the
+        // anchor passes a lexical containment check; the file it resolves to
+        // lives elsewhere and must survive.
+        const fx = makeFixture({ record: true });
+        const elsewhere = path.join(fx.root, 'elsewhere', 'skills');
+        fs.mkdirSync(path.join(elsewhere, 'ac-skill'), { recursive: true });
+        const victim = path.join(elsewhere, 'ac-skill', 'SKILL.md');
+        fs.writeFileSync(victim, 'not ours\n');
+        fs.rmSync(path.join(fx.anchor, 'skills'), { recursive: true });
+        fs.symlinkSync(elsewhere, path.join(fx.anchor, 'skills'));
+
+        purge(fx);
+
+        expect(fs.readFileSync(victim, 'utf-8')).toBe('not ours\n');
+        expect(fs.existsSync(fx.ours[0] as string)).toBe(false);
+    });
+
     it('refuses rather than guessing when no inventory records the anchor', () => {
         // Polarity for the refusal arm. Without it the fix could satisfy every
         // assertion above by deleting nothing at all, ever.
@@ -232,7 +250,10 @@ describe('uninstall --purge — containment', () => {
 
         const res = purge(fx);
 
-        expect(res.stdout).toMatch(/refus|no recorded|inventory/i);
+        expect(res.stdout).toMatch(/refusing to purge .* no recorded inventory for this anchor; nothing was deleted/);
+        // The caller decides the exit code from this flag, never from the
+        // message's wording.
+        expect(JSON.parse(res.stdout.trim().split('\n').at(-1) as string)[2]).toBe(true);
         for (const [f, d] of before) {
             expect(fs.existsSync(f), `${path.basename(f)} was deleted`).toBe(true);
             expect(digest(f)).toBe(d);

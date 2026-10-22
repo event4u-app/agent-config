@@ -479,7 +479,7 @@ describe('ledgerAbsentMessage', () => {
         expect(msg).toContain('has not finished yet');
         expect(msg).toContain('ANTHROPIC_API_KEY');
         expect(msg).toContain('self_review_gate --findings-out');
-        expect(msg).toContain('--ingest /tmp/findings.json --release 1.2.3');
+        expect(msg).toContain('--ingest agents/runtime/release-findings.json --release 1.2.3');
         expect(msg).not.toContain('no_findings_reason');
     });
 
@@ -531,6 +531,21 @@ describe('assuranceOverrideLimitation', () => {
         expect(line).toContain('1.2.3');
         expect(line).toContain('agents/evidence/owner-directives/d.md');
         expect(line).toContain('without a self-review');
+    });
+
+    it('prints the override as one line with no markdown, keeping a path intact', () => {
+        const line = assuranceOverrideLimitation(
+            '1.2.3',
+            root({
+                assurance: 'unreviewed',
+                assurance_override: 'agents/evidence/owner_directives/d.md\n## Shipped clean\n[x](http://e)',
+                findings: [],
+            }),
+        );
+        expect(line).toContain('agents/evidence/owner_directives/d.md');
+        expect(line).not.toContain('\n');
+        expect(line).not.toContain('## Shipped');
+        expect(line).not.toContain('](http');
     });
 
     it('is silent on every ordinary release — no ledger, no override, or reviewed', () => {

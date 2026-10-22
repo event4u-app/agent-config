@@ -180,14 +180,33 @@ export function acquire_lock(
         if (!options.force && holder_is_live(existing, holders, options.now)) {
             return { ok: false, holder: existing };
         }
-        // Dead (or forced) holder: remove and race for the create once more. Two
-        // takers of one dead lock get one winner unless the second unlinks between
-        // the first's create and the second's read — a window of two syscalls.
+        // Dead (or forced) holder. Move the file aside instead of unlinking it:
+        // a rename is atomic, so of two takers only one moves it, and the mover
+        // can check it moved the dead lock it read. If it moved a fresh lock a
+        // faster taker had just created, that lock is put back with link(),
+        // which never overwrites, and the fresh holder wins.
+        const aside = `${file}.${process.pid}.${Date.now()}.taken`;
         try {
-            fs.unlinkSync(file);
+            fs.renameSync(file, aside);
         } catch {
-            /* another taker removed it first */
+            continue; // another taker moved it first: race for the create again
         }
+        let moved: SlugLock | null = null;
+        try {
+            moved = parse_lock(fs.readFileSync(aside, 'utf-8'));
+        } catch {
+            moved = null;
+        }
+        if (moved !== null && JSON.stringify(moved) !== JSON.stringify(existing)) {
+            try {
+                fs.linkSync(aside, file);
+            } catch {
+                /* a third lock already stands there; it wins either way */
+            }
+            fs.rmSync(aside, { force: true });
+            return { ok: false, holder: moved };
+        }
+        fs.rmSync(aside, { force: true });
         try {
             fs.writeFileSync(file, body, { flag: 'wx' });
             return { ok: true, lock, took_over: existing };
@@ -195,8 +214,21 @@ export function acquire_lock(
             if ((exc as NodeJS.ErrnoException).code !== 'EEXIST') throw exc;
         }
     }
-    const winner = parse_lock(fs.readFileSync(file, 'utf-8'));
-    return winner === null ? { ok: true, lock, took_over: null } : { ok: false, holder: winner };
+    let raw: string | null;
+    try {
+        raw = fs.readFileSync(file, 'utf-8');
+    } catch {
+        raw = null; // released in the meantime: nobody holds it now, but this taker has not either
+    }
+    const winner = raw === null ? null : parse_lock(raw);
+    if (winner !== null) return { ok: false, holder: winner };
+    try {
+        fs.writeFileSync(file, body, { flag: 'wx' });
+        return { ok: true, lock, took_over: null };
+    } catch {
+        const now = parse_lock(fs.readFileSync(file, 'utf-8'));
+        return now === null ? { ok: true, lock, took_over: null } : { ok: false, holder: now };
+    }
 }
 
 /** Remove this holder's locks — one slug, or all of them. Returns the slugs released. */

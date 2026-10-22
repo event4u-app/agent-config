@@ -12833,6 +12833,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/design-system-capture/references/design-system-json.md",
+      "target": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/design-system-capture/references/design-system-json.md",
       "target": ".agent-src.uncondensed/skills/design-system-capture/references/design-system-json.md",
       "type": "WRITE",
       "via": "self",

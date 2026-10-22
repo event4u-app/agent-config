@@ -38,7 +38,8 @@ describe('step_receipt', () => {
 });
 
 describe('depth flip — option (d): structurally safe paths, then the audit', () => {
-    const active: DepthTable = { ...table, mode: 'active' };
+    // An active table as the owner decision allows it: with the committed reading recorded.
+    const active: DepthTable = { ...table, mode: 'active', flip: { ...table.flip, reading: 'agents/evidence/analysis/depth-reading.md' } };
     const sample = (cls: 'R0' | 'R1', i: number, escaped = false, critical = false): AuditSample => ({
         step: `road-x.md#${String(i)}`,
         cls,
@@ -85,6 +86,11 @@ describe('depth flip — option (d): structurally safe paths, then the audit', (
         }
         expect(isStructurallySafe([])).toBe(false);
         expect(isStructurallySafe(['agents/roadmaps/road-x.md', 'src/rules/x.md'])).toBe(false);
+    });
+
+    it('an active table with no recorded reading lowers nothing', () => {
+        const flagOnly: DepthTable = { ...table, mode: 'active', flip: { ...table.flip, reading: null } };
+        expect(receiptFor(['agents/roadmaps/road-x.md'], null, flagOnly).mode).toBe('shadow');
     });
 
     it('an active table lowers only safe R0/R1 steps', () => {
@@ -151,7 +157,20 @@ describe('depth flip — option (d): structurally safe paths, then the audit', (
         );
     });
 
-    it('the committed audit ledger parses and starts empty', () => {
-        expect(loadAuditSamples()).toEqual([]);
+    it('the committed audit ledger parses and every sample is well-formed', () => {
+        // Not pinned empty: the flip needs recorded samples, so a test that
+        // only stays green while the ledger holds no evidence would forbid the
+        // thing it gates. Each recorded sample must carry the fields the flip reads.
+        const samples = loadAuditSamples();
+        expect(Array.isArray(samples)).toBe(true);
+        for (const s of samples) {
+            expect(s, JSON.stringify(s)).toMatchObject({
+                step: expect.any(String) as unknown,
+                cls: expect.stringMatching(/^R[0-3]$/u) as unknown,
+                escaped: expect.any(Boolean) as unknown,
+                critical: expect.any(Boolean) as unknown,
+                date: expect.any(String) as unknown,
+            });
+        }
     });
 });

@@ -8,11 +8,14 @@
  * a `curl` subprocess, so an in-process-only guard would have left the one
  * path that can spend money wide open.
  *
- * THE PUBLIC ADDRESS IS NEVER REACHED, in either direction. A refusal is
+ * THE PUBLIC ADDRESS IS NOT REACHED WHILE THE GUARD IS ON. A refusal is
  * asserted; nothing in this file depends on `example.com` resolving, being up,
- * or answering, so the suite stays offline whether the guard works or not.
- * `example.com` is used as a name that is unambiguously not loopback, not as a
- * host.
+ * or answering. With the network opted open (`AGENT_CONFIG_ALLOW_NETWORK=1`)
+ * the guard is not installed, so the cases that would dial out are skipped
+ * rather than run against the real host. If the guard is unwired while the
+ * network is closed, those cases DO dial out — and then fail on the assertion,
+ * which is the point. `example.com` is a name that is unambiguously not
+ * loopback, not a host this file wants to reach.
  *
  * WHAT EACH CASE ACTUALLY PROVES, because the obvious reading is wrong and was
  * measured wrong. This file IMPORTS the guard, and importing it runs its side
@@ -24,7 +27,11 @@
  * environment, and why it is not a redundant extra.
  */
 import { spawnSync } from 'node:child_process';
+import * as http from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { describe, expect, it } from 'vitest';
+
+import vitestConfig from '../../vitest.config.js';
 
 import {
     ALLOW_NETWORK_VAR,
@@ -37,9 +44,13 @@ import {
 } from './network-guard.js';
 
 const PUBLIC = 'https://example.com/';
+// With the opt-in set the guard is not installed, and a case below would dial
+// the public host for real.
+const OPEN = networkIsOpen();
 
 describe('network-guard', () => {
-    it('in-process-fetch-is-refused', async () => {
+    // skip-reason: the network is opted open, so the guard is not installed.
+    it.skipIf(OPEN)('in-process-fetch-is-refused', async () => {
         // A REJECTION, and asserting the shape is half the point. The guard
         // refuses before a socket is opened, so it would be cheaper to throw
         // synchronously — and that is exactly what the first version did, and
@@ -49,6 +60,27 @@ describe('network-guard', () => {
         // API's shape.
         await expect(fetch(PUBLIC)).rejects.toBeInstanceOf(NetworkRefused);
         await expect(fetch(new URL(PUBLIC))).rejects.toThrow(/is not loopback/);
+    });
+
+    // skip-reason: the network is opted open, so the guard is not installed.
+    it.skipIf(OPEN)('refuses a loopback redirect to a public host, and follows a loopback one', async () => {
+        // The real `fetch` follows a 3xx on its own, so a guard that checked
+        // only the first origin would let a local server hand the request on.
+        const server = http.createServer((req, res) => {
+            if (req.url === '/to-public') res.writeHead(302, { location: PUBLIC }).end();
+            else if (req.url === '/to-local') res.writeHead(307, { location: '/ok' }).end();
+            else res.writeHead(200).end('ok');
+        });
+        await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+        const base = `http://127.0.0.1:${String((server.address() as AddressInfo).port)}`;
+        try {
+            await expect(fetch(`${base}/to-public`)).rejects.toBeInstanceOf(NetworkRefused);
+            const res = await fetch(`${base}/to-local`);
+            expect(await res.text()).toBe('ok');
+            expect(res.status).toBe(200);
+        } finally {
+            await new Promise<void>((resolve) => server.close(() => resolve()));
+        }
     });
 
     it('lets a loopback origin through, so the suite keeps its own servers', () => {
@@ -62,7 +94,8 @@ describe('network-guard', () => {
         expect(isLoopback('https://registry.npmjs.org/foo')).toBe(false);
     });
 
-    it('spawned-curl-cannot-reach-a-public-address', () => {
+    // skip-reason: the network is opted open, so the proxies are not closed.
+    it.skipIf(OPEN)('spawned-curl-cannot-reach-a-public-address', () => {
         const curl = spawnSync('curl', ['-sS', '--max-time', '5', '-o', '/dev/null', PUBLIC], {
             encoding: 'utf8',
         });
@@ -123,10 +156,8 @@ describe('network-guard', () => {
         // The guard is a file nobody imports. If it falls out of
         // `vitest.config.ts` the four cases above keep passing — the two that
         // read `process.env` would go red, but only because of the assertions,
-        // and the wiring itself would be unasserted. This reads the config.
-        const config = spawnSync('node', ['-e', 'process.stdout.write(require("fs").readFileSync("vitest.config.ts","utf8"))'], {
-            encoding: 'utf8',
-        });
-        expect(config.stdout).toContain('tests/_lib/network-guard.ts');
+        // and the wiring itself would be unasserted. This reads the evaluated
+        // config, so a commented-out entry or one under another key fails.
+        expect(vitestConfig.test?.setupFiles).toContain('tests/_lib/network-guard.ts');
     });
 });

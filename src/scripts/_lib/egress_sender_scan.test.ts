@@ -86,10 +86,17 @@ describe('the census gate (3.4)', () => {
         expect(cov('// egress-content: session-content asserted — checked')).toBe('undeclared');
         expect(cov('// egress-content: session-content uncovered — not yet routed')).toBe('uncovered');
         expect(cov('// egress-content: fixed-corpus uncovered — mixed')).toBe('undeclared');
+        const importOnly = classifyModule(
+            'src/scripts/x.ts',
+            "// egress-content: session-content asserted — councilEgress().check before the write\nimport { councilEgress } from '" +
+                `./ai_council/council_egress.js';\n${SEND}`,
+        );
+        // Imported, and the call named in the marker comment, but never made.
+        expect(importOnly?.coverage).toBe('undeclared');
         const proven = classifyModule(
             'src/scripts/x.ts',
             "// egress-content: session-content asserted — checked before the write\nimport { councilEgress } from '" +
-                `./ai_council/council_egress.js';\n${SEND}`,
+                `./ai_council/council_egress.js';\nconst refusal = councilEgress().check(body);\n${SEND}`,
         );
         expect(proven?.coverage).toBe('asserted');
     });

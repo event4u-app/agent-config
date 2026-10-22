@@ -8,7 +8,9 @@ Pin `a10aa16a1fe1a27b7ff54bcb564154a28877625f`, window from `2026-09-07T00:00:00
 ./scripts-run src/scripts/report_merge_gate_load --pin a10aa16a1fe1a27b7ff54bcb564154a28877625f --since 2026-09-07T00:00:00+02:00
 ```
 
-A re-run of that command at the same pin and timestamp is byte-identical.
+The classifier revision this reading was produced with was not recorded; the
+nearest record is the commit that added the file, `73eb69439`. A re-run is
+byte-identical only from a checkout whose classifier matches that one.
 
 **Caveat.** The classifier is this checkout's, so its path sets are applied to
 the whole window: a commit from before a trigger existed is classed as if it

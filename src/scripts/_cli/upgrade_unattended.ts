@@ -12,14 +12,15 @@
  * the reason; the run then counts as a notification, not an install. `EACCES`
  * prints the exact command for the user to run and never escalates.
  *
- * The production wiring never swaps today: `ACTIVATION_BLOCKED` stands until a
- * global live-session register exists, because the measured mid-session swap
- * breaks running hooks. Gates, lock
- * and restore are exercised through the injected seams and by `--dry-run`.
+ * The production wiring refuses the swap while the machine-wide live-session
+ * register reports a running session (`activation_blocked_reason`), because the
+ * measured mid-session swap breaks running hooks. With no session live, every
+ * other gate still has to pass before anything installs.
  *
- * Exit codes: `0` installed or nothing newer · `3` refused (a gate, the lock, the
- * registry) · `1` a step failed and the previous version was restored · `4` a
- * step failed and the restore did not reach the previous version.
+ * Exit codes: `0` installed, a dry run whose gates all passed, or `--skip`
+ * recorded · `3` refused (a gate — including no newer version — the lock, the
+ * registry, a live session) · `1` a step failed and the previous version was
+ * restored · `4` a step failed and the restore did not reach the previous version.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -333,11 +334,23 @@ export async function verify_provenance_default(
     if (candidate.attestationsUrl === null) {
         return `${candidate.version} carries no attestation bundle to verify`;
     }
+    // The URL comes from the packument, so a hostile registry answer would
+    // otherwise choose both the host fetched and the document verified.
+    let origin: string;
+    try {
+        origin = new URL(candidate.attestationsUrl).origin;
+    } catch {
+        origin = '';
+    }
+    if (origin !== new URL(PACKUMENT_URL).origin) {
+        return `${candidate.version}: attestation url is not on ${new URL(PACKUMENT_URL).origin}`;
+    }
     let doc: unknown;
     try {
         const resp = await fetch_impl(candidate.attestationsUrl, {
             signal: AbortSignal.timeout(timeoutMs),
             headers: { accept: 'application/json' },
+            redirect: 'error',
         });
         if (!resp.ok) return `attestation fetch failed: HTTP ${resp.status}`;
         doc = await resp.json();

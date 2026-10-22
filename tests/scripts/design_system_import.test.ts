@@ -27,7 +27,7 @@ import {
     resolveAlias,
     roleName,
 } from '../../src/scripts/_lib/design_system_import.js';
-import { importClaudeDesignSnapshot } from '../../src/scripts/_lib/design_system_claude_design.js';
+import { importClaudeDesignSnapshot, readCustomProperties } from '../../src/scripts/_lib/design_system_claude_design.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const FIXTURES = path.join(HERE, 'fixtures', 'design-system-import');
@@ -589,6 +589,19 @@ describe('CLI contract', () => {
 });
 
 // road-to-a-canvas-the-code-owns 3.2 — the `claude-design` lane, snapshot input.
+describe('claude-design lane — untrusted CSS', () => {
+    it('reads a declaration and stays linear on an undelimited megabyte', () => {
+        const into = { light: new Map<string, string>(), dark: new Map<string, string>(), references: new Set<string>() };
+        readCustomProperties(':root { --a: #fff; }', into);
+        expect(into.light.get('--a')).toBe('#fff');
+        const hostile = `--a:${'x'.repeat(1_000_000)}`;
+        const t0 = performance.now();
+        readCustomProperties(hostile, { light: new Map(), dark: new Map(), references: new Set() });
+        // Quadratic took minutes here; linear takes milliseconds. The bound is loose on purpose.
+        expect(performance.now() - t0).toBeLessThan(5_000);
+    });
+});
+
 describe('claude-design lane (snapshot directory)', () => {
     function snapshot(files: Record<string, string>): string {
         const dir = mkdtempSync(path.join(tmpdir(), 'cd-snapshot-'));

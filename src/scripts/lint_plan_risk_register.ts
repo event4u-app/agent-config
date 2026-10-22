@@ -42,6 +42,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { isAcceptanceCriteriaHeading } from './_lib/ac_heading.js';
+import { asOfMs } from './_lib/as_of.js';
 import { workspaceIdentity } from './_lib/git_common_dir.js';
 import { gitEnv } from './_lib/git_env.js';
 import { splitMarkdownRow } from './_lib/md_table.js';
@@ -639,6 +640,11 @@ function _stampIntroducedAt(
     return sameDay ?? introduced;
 }
 
+/** The latest calendar day anywhere on earth at the as-of instant (UTC+14), so no author's real today reads as future. */
+function _latestToday(now: number = asOfMs()): string {
+    return new Date(now + 14 * 3_600_000).toISOString().slice(0, 10);
+}
+
 export type FileStatus = 'ok' | 'draft-exempt' | 'grandfathered' | 'fail';
 
 export interface FileResult {
@@ -700,6 +706,16 @@ export function checkFile(absPath: string): FileResult {
         };
     }
     const violations = [...content.violations];
+    // A stamp after today would cover every commit made until that date as
+    // "reviewed" — the same-day residual of contract § 1 holds for today only.
+    if (content.reviewed !== null && content.reviewed > _latestToday()) {
+        violations.push({
+            file: absPath,
+            line: 1,
+            kind: 'future_review',
+            detail: `\`reviewed: ${content.reviewed}\` is later than today — stamp the day the review happened`,
+        });
+    }
     // A file with uncommitted modifications has no committed baseline for the
     // current content, so staleness is not judgeable — see
     // hasUncommittedChanges. The committed-history case below is unchanged.

@@ -403,9 +403,20 @@ function injector(
   }
   if (mode !== "protect" && mode !== "strict") return (t) => t;
   const load = loadEngine();
-  if (!load.ok) return () => `[egress: injected text withheld (${ENGINE_UNAVAILABLE})]`;
+  if (!load.ok) return () => `${WITHHELD_PREFIX}${ENGINE_UNAVAILABLE})]`;
   const scope = new load.engine.TokenScope();
   return (t) => load.engine.injectText(t, scope);
+}
+
+const WITHHELD_PREFIX = "[egress: injected text withheld (";
+
+/**
+ * A refusal's reason may be withheld, never the fact of who refused. Without
+ * the concern name a withheld block reads as an unexplained deny, and the user
+ * cannot tell which guard to look up.
+ */
+export function attributeRefusal(concernName: string, refused: boolean, text: string): string {
+  return refused && text.startsWith(WITHHELD_PREFIX) ? `${concernName}: BLOCKED — reason ${text}` : text;
 }
 
 export type PublishedState = "asserted" | "replaced" | "gated" | "uncovered";

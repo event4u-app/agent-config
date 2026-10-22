@@ -43,6 +43,13 @@ describe('the shipped project-tree form', () => {
         expect(readProjectTreeForms(root).has('cursor')).toBe(false);
     });
 
+    it('refuses an empty or figure-less measured block as no measurement', () => {
+        for (const measured of [{}, { deliveries_byte_equal: '' }, { deliveries_byte_equal: 616 }]) {
+            const root = rootWith({ schema_version: 1, hosts: { cursor: { form: 'delivery', basis: 'x', measured } } });
+            expect(readProjectTreeForms(root).has('cursor')).toBe(false);
+        }
+    });
+
     it('refuses a row whose form is not a form the projector has', () => {
         const root = rootWith({ schema_version: 1, hosts: { cline: { form: 'turbo', basis: 'x', measured: {} } } });
         expect(readProjectTreeForms(root).has('cline')).toBe(false);

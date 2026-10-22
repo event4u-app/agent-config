@@ -7,6 +7,11 @@
  * own metafile: `src/scripts/chat_history.ts` and the modules reachable only
  * through it were 121,219 bytes of a 1,549,961-byte bundle.
  *
+ * Every byte figure in this header is a point-in-time reading with no
+ * committed artifact behind it. Treat it as unreproduced: before citing one,
+ * re-measure from a `build:hooks` run with `--metafile`, since the bundle
+ * moves with every merge.
+ *
  * This paragraph used to end "and `chat-history` is bound on `session_start`
  * alone", and an independent review caught that it is false. The manifest
  * binds it on FIVE events — `session_start`, `session_end`, `stop`,

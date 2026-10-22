@@ -31,9 +31,13 @@ instrument, unchanged, reading `~/.claude/projects` (full tree) over the last
 | Cold start as a share of subagent write volume | 64.6 % | 26.8 % |
 | Subagent cache-read share, all calls | 96.9 % | 98.2 % |
 
-The cold start fell by about a quarter — consistent with the scoped projection
-shrinking the standing payload a leg loads — and a leg still opens by writing or
-reading uncached a median 182,257 tokens. That is above the 100,000-token
+The cold start fell by about a quarter — one hypothesis is the scoped projection
+shrinking the standing payload a leg loads, but this reading measures no
+projection change between the two windows, and host version, workload mix and
+leg length moved too — and a leg still opens by writing or reading uncached a
+median 182,257 tokens. (Corrected 2026-10-22, release finding `8b75b89ebe36`:
+the attribution read "consistent with the scoped projection", which stated a
+cause the data does not isolate.) That is above the 100,000-token
 threshold D5 set, so step 4.2's advisory clause applies.
 
 ## What this does not say
