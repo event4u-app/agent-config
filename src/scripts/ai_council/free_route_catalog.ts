@@ -1,3 +1,4 @@
+// egress-content: fixed-corpus — a GET of the route's /models listing with no request body, never session content
 /**
  * What the package ships about `base_url` routes: endpoints and dated data-use
  * attestations, never model ids. Catalogues lose and gain rows within weeks,
