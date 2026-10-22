@@ -266,7 +266,7 @@ CVE scanning (above) catches *known-vulnerable* versions. It does **not** catch 
 3. **Capability / behavior diff** — did the new version add a capability its job doesn't need: network egress (`fetch`/`net`/`dns`/`http`), `child_process`/shell, env/secret/credential reads, filesystem writes, obfuscated/minified blobs, a `.github/workflows` file? Use `socket` / `guarddog <eco> scan <pkg>@<ver>` if available; else read the delta.
 4. **Purpose-vs-behavior legitimacy check** — a Slack/HTTP client legitimately makes network calls; a date/string/color util does not. For each new capability ask: *does the package's stated purpose require this?* A network/secret capability with no purpose justification — or a **new outbound endpoint** even in a package that already uses the network — is high-risk.
 5. **Provenance + advisory feeds** — `npm audit signatures` (flag a dep that *had* provenance and lost it — a hallmark of a token-theft publish); `osv-scanner --lockfile=…` and the GitHub Advisory / Socket / Snyk malware feeds against the newly-resolved versions.
-6. **Release age and agent-config paths** — a fixing version younger than three days is `fix-fresh`: run steps 1–5 before installing it, not after. Any change under `.claude/`, `.vscode/`, `.cursor/` or `.github/workflows/`, or to an install script, in the diff of a dependency update stops the update — a 2026 worm persisted through exactly such a session-start hook while disguised as "chore: update dependencies".
+6. **Release age and agent-config paths** — a fixing version younger than three days (a default, not a measured threshold) is `fix-fresh`: run steps 1–5 before installing it, not after. Any change to an agent, editor, git-hook or CI configuration path in the diff of a dependency update stops the update — for example `.claude/`, `.augment/`, `.cursor/`, `.gemini/`, `.windsurf/`, `.codex/`, `.vscode/`, `.husky/`, `.github/workflows/`, `.mcp.json`, an `AGENTS.md` / `CLAUDE.md` / `.cursorrules`-style instruction file — or to an install script. The list illustrates the class; an unlisted path of that class stops the update too. Own analysis: a session-start hook is a persistence point that runs with the developer's credentials, which is why the class is a stop and not a warning.
 
 **Surface to the user** any: new install script · new transitive dep · new network endpoint / secret read · obfuscated blob · lost provenance · advisory/malware hit — with the version delta and the purpose-vs-behavior verdict, and hold the update until they decide. Never auto-accept a bump that introduced an unexplained capability.
 
@@ -308,7 +308,12 @@ source that reported it.
 4. **Open the PR** — `agent-config audit:deps pr-body <id> --tests=passed`
    prints the body; its After field is what `verify` recorded; a library adds
    `--release=<current version>` for the patch-release draft. Security fixes are
-   never mixed with unrelated work. Stop before tag and publish.
+   never mixed with unrelated work. Stop before tag and publish. The entry
+   command authorizes the local fix only: before the first push or PR, show the
+   branch, the PR title and the body and wait for this-turn confirmation
+   (`non-destructive-by-default`). On a public remote the body names the
+   advisory id and the fixed version, never an exploit path, until the fix is
+   merged.
 5. **Hand over** — watch CI with `agent-config ci:settle <pr>`, fix what the fix
    broke, report "ready to merge". Merge is the owner's, or `/pr:merge` under the
    owner's instruction; under `worktrees.cleanup: auto` the merge removes the fix
