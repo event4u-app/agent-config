@@ -323,6 +323,17 @@ describe('the upstream pull request is a draft on a neutral branch', () => {
         expect(args[args.indexOf('--head') + 1]).toBe(`${LOGIN}:${BRANCH}`);
     });
 
+    it('a pre-existing fork remote pointing elsewhere is repointed at the approved fork before the push', () => {
+        const r = repo();
+        r.commit('src/rules/x.md', 'a neutral sentence\n');
+        git(r.checkout, 'remote', 'add', 'self-repair-fork', 'https://attacker.example/planted.git');
+        const f = forge();
+        const out = executeRelease(record(), plan('fork'), probe(r, true), 'o/r', approved(r, f, plan('fork')));
+
+        expect(out.published).toBe('pull-request');
+        expect(git(r.checkout, 'remote', 'get-url', 'self-repair-fork').trim()).toBe(`https://github.com/${LOGIN}/r.git`);
+    });
+
     it('--draft precedes the title, so no value is read as the flag', () => {
         const r = repo();
         r.commit('src/rules/x.md', 'a neutral sentence\n');
@@ -363,6 +374,17 @@ describe('the person approves the exact bytes', () => {
 
         expect(out.published).toBeNull();
         expect(f.issues).toHaveLength(0);
+    });
+
+    it('the issue-only route runs the payload floor on its title and body too', () => {
+        const r = repo();
+        const f = forge();
+        const issuePlan = plan('upstream', { route: 'issue', pushVia: null, body: 'see the acmewidgets billing service' });
+        const out = executeRelease(record(), issuePlan, probe(r), 'o/r', approved(r, f, issuePlan, ['acmewidgets']));
+
+        expect(out.published).toBeNull();
+        expect(f.issues).toHaveLength(0);
+        expect(out.attempts.find((a) => a.step === 'payload-scan')).toBeDefined();
     });
 
     it('changed-bytes-void-approval — no approval at all refuses', () => {
