@@ -14,10 +14,13 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     CANDIDATES,
+    STOP_SCAN_BYTES,
+    classifySend,
     evaluateCandidates,
     processEnvelope,
 } from '../../src/scripts/hooks/spawn_guard_shadow_hook.js';
-import { LEDGER_DIR, OPEN_SUBDIR } from '../../src/scripts/hooks/subagent_ledger_hook.js';
+import { LEDGER_DIR, OPEN_SUBDIR, refFor } from '../../src/scripts/hooks/subagent_ledger_hook.js';
+import type { ReuseContext, WorkerState } from '../../src/scripts/_lib/worker_reuse.js';
 
 let root: string;
 
@@ -45,6 +48,24 @@ function plantOpen(ref: string, depth: number): void {
         }),
         'utf8',
     );
+}
+
+/** A finished leg as the ledger records it: a subagent_stop line for its ref. */
+const SESSION = 'sess-current';
+
+function plantStopped(ref: string, sessionId: string | null = SESSION, at: Date = new Date()): void {
+    const dir = path.join(root, LEDGER_DIR);
+    fs.mkdirSync(dir, { recursive: true });
+    const ts = at.toISOString();
+    fs.appendFileSync(
+        path.join(dir, `${ts.slice(0, 7)}.jsonl`),
+        `${JSON.stringify({ event: 'subagent_stop', ts, ref, session_id: sessionId, agent_type: 'general-purpose' })}\n`,
+        'utf8',
+    );
+}
+
+function shadowLines(): Array<Record<string, unknown>> {
+    return ledgerLines().filter((l) => l.event === 'spawn_guard_shadow');
 }
 
 function ledgerLines(): Array<Record<string, unknown>> {
@@ -83,6 +104,270 @@ describe('spawn-guard-shadow — posture', () => {
         processEnvelope(toolCall('Bash'), root);
         processEnvelope(toolCall('Read'), root);
         expect(ledgerLines()).toEqual([]);
+    });
+});
+
+function agentCall(subagentType: string): Record<string, unknown> {
+    return {
+        schema_version: 1,
+        platform: 'claude',
+        event: 'pre_tool_use',
+        payload: { tool_name: 'Agent', tool_input: { subagent_type: subagentType, prompt: 'SECRET-PROMPT-BODY' } },
+    };
+}
+
+/**
+ * The envelope a real `PreToolUse(SendMessage)` carries on Claude Code 2.1.308,
+ * captured from a probe session on 2026-10-22 and reduced to its keys: `to` is
+ * the name the spawn chose (or an agent id when `recipient_kind` is `agent`),
+ * and `session_id` sits at the top of the payload.
+ */
+function sendMessageCall(
+    to: unknown,
+    sessionId: string | null = SESSION,
+    recipientKind: 'name' | 'agent' = 'agent',
+): Record<string, unknown> {
+    return {
+        schema_version: 1,
+        platform: 'claude',
+        event: 'pre_tool_use',
+        payload: {
+            ...(sessionId === null ? {} : { session_id: sessionId }),
+            transcript_path: '/tmp/session.jsonl',
+            cwd: '/tmp',
+            permission_mode: 'default',
+            hook_event_name: 'PreToolUse',
+            tool_name: 'SendMessage',
+            tool_input: {
+                to,
+                summary: 'Ask the worker again',
+                message: 'SECRET-MESSAGE-BODY',
+                type: 'message',
+                recipient: to,
+                recipient_kind: recipientKind,
+                content: 'SECRET-MESSAGE-BODY',
+            },
+            tool_use_id: 'toolu_probe',
+        },
+    };
+}
+
+/** A completed named spawn as `PostToolUse(Agent)` reports it: the name the call chose and the host's agent id. */
+function namedSpawnDone(name: string, agentId: string, sessionId: string = SESSION): Record<string, unknown> {
+    return {
+        schema_version: 1,
+        platform: 'claude',
+        event: 'post_tool_use',
+        payload: {
+            session_id: sessionId,
+            hook_event_name: 'PostToolUse',
+            tool_name: 'Agent',
+            tool_input: { subagent_type: 'general-purpose', name, model: 'haiku', prompt: 'SECRET-PROMPT-BODY' },
+            tool_response: { status: 'completed', agentId, agentType: 'general-purpose', content: [] },
+        },
+    };
+}
+
+const NOW = Date.parse('2026-10-21T12:00:00.000Z');
+const WORKER: WorkerState = {
+    name: 'billing-worker',
+    domain: 'ac-worker',
+    reuse: 'continuity',
+    last_request_at_ms: NOW - 60_000,
+    cache_ttl_ms: 300_000,
+    transcript_tokens: 20_000,
+    capsule_watermark_tokens: 48_000,
+    compacted: false,
+    worktree: '/repo/wt',
+    branch_head: 'abc1234',
+    skill_set_signature: 'sig-1',
+    package_version: '9.40.0',
+};
+const CONTEXT: ReuseContext = {
+    domain: 'ac-worker',
+    now_ms: NOW,
+    observed_fresh_cold_start_tokens: 240_000,
+    worktree: '/repo/wt',
+    branch_head: 'abc1234',
+    skill_set_signature: 'sig-1',
+    package_version: '9.40.0',
+};
+
+describe('spawn-guard-shadow — reuse verdict and resumes (cold-start 3.3)', () => {
+    it('records-would-resume-and-never-denies', () => {
+        for (let i = 0; i < 12; i++) plantOpen(`open${i}`, 1);
+        const exit = processEnvelope(agentCall('ac-worker'), root, {
+            host_resume: true,
+            workers: [WORKER],
+            context: CONTEXT,
+        });
+        expect(exit).toBe(0);
+        const line = ledgerLines()[0]!;
+        expect(line.dispatch_kind).toBe('spawn');
+        expect(line.reuse).toEqual({ verdict: 'would_resume', name: 'billing-worker', reasons: [] });
+        expect(line.posture).toBe('shadow');
+
+        // The refusal path records its reasons and is just as unable to deny.
+        expect(
+            processEnvelope(agentCall('ac-worker'), root, {
+                host_resume: true,
+                workers: [{ ...WORKER, compacted: true }],
+                context: CONTEXT,
+            }),
+        ).toBe(0);
+        expect(ledgerLines()[1]!.reuse).toEqual({ verdict: 'fresh', name: null, reasons: ['compacted'] });
+    });
+
+    it('production default on claude: no worker_resume in the row, so every spawn records host_resume_unobserved', () => {
+        processEnvelope(agentCall('ac-worker'), root);
+        expect(ledgerLines()[0]!.reuse).toEqual({ verdict: 'fresh', name: null, reasons: ['host_resume_unobserved'] });
+    });
+
+    it('a send to a finished worker is a resume, counted against the same candidates as a spawn', () => {
+        const id = 'a7dda5d30ffee4bb4';
+        plantStopped(refFor(id));
+        for (let i = 0; i < 4; i++) plantOpen(`open${i}`, 1);
+        expect(processEnvelope(sendMessageCall(id), root)).toBe(0);
+        const line = shadowLines()[0]!;
+        expect(line.tool).toBe('SendMessage');
+        expect(line.dispatch_kind).toBe('resume');
+        expect(line.concurrent_open).toBe(4);
+        const n2m4 = (line.candidates as Array<{ label: string; would_deny: boolean }>).find((c) => c.label === 'n2m4');
+        expect(n2m4!.would_deny).toBe(true);
+        // A resume is not a reuse decision; it carries no verdict of its own.
+        expect(line).not.toHaveProperty('reuse');
+    });
+
+    it('a send to a running worker starts no run: recorded, never counted as a resume', () => {
+        const id = 'ab43c10fd3f74398a';
+        plantOpen(refFor(id), 1);
+        for (let i = 0; i < 4; i++) plantOpen(`open${i}`, 1);
+        expect(processEnvelope(sendMessageCall(id), root)).toBe(0);
+        const line = shadowLines()[0]!;
+        expect(line.dispatch_kind).toBe('message_running');
+        expect(line).not.toHaveProperty('candidates');
+    });
+
+    it('a recipient the ledger cannot place stays unclassified, never called a resume', () => {
+        for (const to of ['probe-worker', 'main', 'never-seen-id']) {
+            expect(processEnvelope(sendMessageCall(to), root)).toBe(0);
+        }
+        // A finished worker in a DIFFERENT run does not make an unknown name a resume.
+        plantStopped(refFor('some-other-agent'));
+        processEnvelope(sendMessageCall('probe-worker'), root);
+        const kinds = shadowLines().map((l) => l.dispatch_kind);
+        expect(kinds).toEqual(['message_or_resume', 'message_or_resume', 'message_or_resume', 'message_or_resume']);
+    });
+
+    it('records where the resume half is counted and where it is not observed', () => {
+        processEnvelope(agentCall('ac-worker'), root);
+        processEnvelope({ ...agentCall('ac-worker'), platform: 'cursor' }, root);
+        const [claude, other] = ledgerLines();
+        expect(claude!.resume_admission).toBe('counted');
+        expect(other!.resume_admission).toBe('unobserved');
+    });
+
+    it('a send by name resolves through the register a named spawn left, in the same session only', () => {
+        const id = 'ae9eb891c0ffee123';
+        processEnvelope(namedSpawnDone('probe-worker', id), root);
+        plantStopped(refFor(id));
+        expect(processEnvelope(sendMessageCall('probe-worker', SESSION, 'name'), root)).toBe(0);
+        expect(shadowLines().at(-1)!.dispatch_kind).toBe('resume');
+        // The same name sent from another session is not placed.
+        processEnvelope(sendMessageCall('probe-worker', 'sess-other', 'name'), root);
+        expect(shadowLines().at(-1)!.dispatch_kind).toBe('message_or_resume');
+        // A name nobody spawned is not placed either.
+        processEnvelope(sendMessageCall('never-named', SESSION, 'name'), root);
+        expect(shadowLines().at(-1)!.dispatch_kind).toBe('message_or_resume');
+    });
+
+    it('a send by name to a running named worker starts no run', () => {
+        const id = 'ae9eb891c0ffee456';
+        processEnvelope(namedSpawnDone('live-worker', id), root);
+        plantOpen(refFor(id), 1);
+        processEnvelope(sendMessageCall('live-worker', SESSION, 'name'), root);
+        expect(shadowLines().at(-1)!.dispatch_kind).toBe('message_running');
+    });
+
+    it('the register keeps the name and the ref, never the agent id', () => {
+        const id = 'ae9eb891c0ffee789';
+        processEnvelope(namedSpawnDone('kept-worker', id), root);
+        const raw = JSON.stringify(ledgerLines());
+        expect(raw).toContain('kept-worker');
+        expect(raw).toContain(refFor(id));
+        expect(raw).not.toContain(id);
+        expect(raw).not.toContain('SECRET-PROMPT-BODY');
+    });
+
+    it('a stop recorded in another session never makes a send a resume', () => {
+        const id = 'a7dda5d30ffee4bb4';
+        plantStopped(refFor(id), 'sess-other');
+        plantStopped(refFor(id), null);
+        processEnvelope(sendMessageCall(id), root);
+        expect(shadowLines()[0]!.dispatch_kind).toBe('message_or_resume');
+    });
+
+    it('without a session id on the payload, nothing is called a resume', () => {
+        const id = 'a7dda5d30ffee4bb4';
+        plantStopped(refFor(id));
+        processEnvelope(sendMessageCall(id, null), root);
+        expect(shadowLines()[0]!.dispatch_kind).toBe('message_or_resume');
+    });
+
+    it('finds a same-session stop recorded in the previous month', () => {
+        const now = new Date('2026-11-01T00:00:05.000Z');
+        const id = 'a7dda5d30ffee4bb4';
+        plantStopped(refFor(id), SESSION, new Date('2026-10-31T23:59:50.000Z'));
+        expect(classifySend(root, { to: id, recipient_kind: 'agent' }, SESSION, now)).toBe('resume');
+        // Two months back is outside the window and stays unplaced.
+        const old = 'abcdef0123456789a';
+        plantStopped(refFor(old), SESSION, new Date('2026-09-15T00:00:00.000Z'));
+        expect(classifySend(root, { to: old, recipient_kind: 'agent' }, SESSION, now)).toBe('message_or_resume');
+    });
+
+    it('an open record wins over a matching stop', () => {
+        const id = 'a7dda5d30ffee4bb4';
+        plantStopped(refFor(id));
+        plantOpen(refFor(id), 1);
+        expect(classifySend(root, { to: id, recipient_kind: 'agent' }, SESSION)).toBe('message_running');
+    });
+
+    it('reads only a bounded tail of each ledger file', () => {
+        const id = 'a7dda5d30ffee4bb4';
+        plantStopped(refFor(id));
+        // Bury the stop under more than the scan window of unrelated lines.
+        const dir = path.join(root, LEDGER_DIR);
+        const file = path.join(dir, `${new Date().toISOString().slice(0, 7)}.jsonl`);
+        const filler = `${JSON.stringify({ event: 'subagent_start', ref: 'x'.repeat(12), pad: 'p'.repeat(200) })}\n`;
+        fs.appendFileSync(file, filler.repeat(Math.ceil((STOP_SCAN_BYTES + 1024) / filler.length)), 'utf8');
+        expect(classifySend(root, { to: id, recipient_kind: 'agent' }, SESSION)).toBe('message_or_resume');
+    });
+
+    it('malformed send input is recorded as unplaced and never throws', () => {
+        for (const to of [undefined, null, 42, '', { id: 'x' }]) {
+            expect(processEnvelope(sendMessageCall(to), root)).toBe(0);
+        }
+        expect(
+            processEnvelope({ schema_version: 1, platform: 'claude', event: 'pre_tool_use', payload: { tool_name: 'SendMessage', tool_input: 'nope' } }, root),
+        ).toBe(0);
+        expect(shadowLines().map((l) => l.dispatch_kind)).toEqual(Array(6).fill('message_or_resume'));
+    });
+
+    it('keeps tool input off disk: no prompt, no message, no recipient — the register name is the only name', () => {
+        const id = 'a7dda5d30ffee4bb4';
+        plantStopped(refFor(id));
+        processEnvelope(agentCall('ac-worker'), root, { host_resume: true, workers: [WORKER], context: CONTEXT });
+        processEnvelope(sendMessageCall(id), root);
+        processEnvelope(sendMessageCall('recipient-name-xyz'), root);
+        const lines = shadowLines();
+        expect(lines[0]!.reuse).toEqual({ verdict: 'would_resume', name: 'billing-worker', reasons: [] });
+        const raw = JSON.stringify(lines);
+        expect(raw).not.toContain('SECRET-PROMPT-BODY');
+        expect(raw).not.toContain('SECRET-MESSAGE-BODY');
+        expect(raw).not.toContain('recipient-name-xyz');
+        expect(raw).not.toContain(id);
+        expect(raw).not.toContain(refFor(id));
+        expect(raw).not.toContain(refFor('recipient-name-xyz'));
     });
 });
 
