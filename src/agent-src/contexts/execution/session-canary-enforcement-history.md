@@ -43,7 +43,7 @@ What IS decidable is the per-**session** instance, and it was measured rather th
 asserted — reproducibly, which took a correction: the probe resolves the name
 through the same settings layers this rule names and REFUSES when no layer carries
 one, so the figure below is reproduced with the name passed explicitly
-(`./scripts-run src/scripts/probe_session_canary --limit 30 --name <your name>`;
+(`probe_session_canary.ts --limit 30 --name <your name>`;
 the first version hardcoded a maintainer's nickname as its default, which made the
 number irreproducible for anyone else and silently read 0 %). Over 30 sessions on
 2026-08-12: the opening greeting is present in **25 of 28** sessions carrying

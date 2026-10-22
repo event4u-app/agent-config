@@ -59,7 +59,8 @@ export function renderBlock(): string {
     const width = Math.max(...rows.map(([k]) => k.length)) + 2;
     return [
         BEGIN,
-        `<!-- Written by \`./scripts-run ${GENERATOR.replace(/\.ts$/, '')}\` from \`${GRAMMAR_MODULE}\` and \`${MEASURE_MODULE}\`; edit the modules, never this block. -->`,
+        // Names the modules by file only: this block ships in a consumer projection, where the repository's paths and dispatcher do not exist.
+        `<!-- Written by agent-config's \`${path.basename(GENERATOR)}\` from \`${path.basename(GRAMMAR_MODULE)}\` and \`${path.basename(MEASURE_MODULE)}\`; edit those modules in the agent-config repository, never this block. -->`,
         '',
         '```',
         ...rows.map(([k, v]) => `${k.padEnd(width)}${v}`),

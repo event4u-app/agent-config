@@ -96,7 +96,7 @@ to explain the rest with "the guard has nowhere to bind", which is false for
 cursor, cline and gemini, whose native pre-tool events `native_event_aliases`
 already maps onto `pre_tool_use`: there it is **unbound, not unbindable**. Only
 windsurf and copilot carry no alias row. The four states are tabulated once in
-[`hook-architecture-v1 § Which hosts carry pre_tool_use`](../../../docs/contracts/hook-architecture-v1.md).
+`hook-architecture-v1 § Which hosts carry pre_tool_use` (agent-config repository: `docs/contracts/hook-architecture-v1.md`).
 
 The sibling rules `git-history-discipline` and `evaluator-independence` qualify
 the identical slot, so an unqualified claim in any of them would read as a

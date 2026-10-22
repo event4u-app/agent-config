@@ -180,9 +180,9 @@ Structural bonuses (ticket key, file path) override every suppressor.
 
 ## Hardening tests — what we lock down
 
-`tests/scripts/command_suggester.test.ts` covers the matcher, rank,
+agent-config's own test `command_suggester.test.ts` covers the matcher, rank,
 cooldown, sanitiser, render, settings, and directive cases. The GT-CS
-goldens (`tests/scripts/command_suggester_goldens.test.ts`) lock
+goldens (`command_suggester_goldens.test.ts` in agent-config's own test suite) lock
 end-to-end shape.
 Together they enforce:
 

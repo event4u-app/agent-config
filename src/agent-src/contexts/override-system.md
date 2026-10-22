@@ -219,7 +219,7 @@ When a project using this package wants to **optimize** a shared rule or skill:
 
 - The PR must contain **both** uncondensed and condensed versions (complete files)
 - The condensed version must be derived from the uncondensed version
-- Changes must pass the skill linter (`./scripts-run src/scripts/skill_linter --all`)
+- Changes must pass the skill linter (`skill_linter.ts --all`)
 - Changes must not be project-specific (no domain assumptions)
 - Changes must pass the promotion gate (see `controlled-self-optimization.md`)
 

@@ -213,7 +213,7 @@ For each open step in the working set (scope-bound — see wrapper):
    A loop iteration that lands work without flipping its box is a
    rule violation. Do not save flips for the archive commit.
    The flipped line ends with the step's receipt:
-   `./scripts-run src/scripts/step_receipt --range <first commit>^..HEAD`
+   `step_receipt.ts --range <first commit>^..HEAD`
    (class, raise-only via `--raise`; what the depth table would skip).
    CI flags a tick without one, and refuses it once depth is lowered.
 

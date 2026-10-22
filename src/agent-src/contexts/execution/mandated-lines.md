@@ -153,7 +153,7 @@ Commit: authorized "commit this" (this turn), scope = parser fix · 2 files stag
 
 ## Honest scope — what this does not claim
 
-**Enforced by:** partially. `src/scripts/lint_mandated_lines.ts` is the
+**Enforced by:** partially. `node_modules/@event4u/agent-config/src/scripts/lint_mandated_lines.ts` is the
 deterministic half and it checks only what a **run report** can be checked for:
 a report claiming a behaviour change carries an intent line, and a report
 describing an outward action carries an authorization line. It cannot check that
@@ -175,6 +175,6 @@ counter and is the first thing to look at before adding a sixth line.
 
 ## See also
 
-- [`docs/contracts/settings-classes.md`](../../../docs/contracts/settings-classes.md) — a sibling contract in the same shape: prose that a gate reads.
+- `docs/contracts/settings-classes.md` (agent-config repository) — a sibling contract in the same shape: prose that a gate reads.
 - [`verify-before-complete`](../../rules/verify-before-complete.md) — the evidence gate the pre-send sweep runs beside.
-- `src/scripts/lint_mandated_lines.ts` — the deterministic half.
+- `node_modules/@event4u/agent-config/src/scripts/lint_mandated_lines.ts` — the deterministic half.

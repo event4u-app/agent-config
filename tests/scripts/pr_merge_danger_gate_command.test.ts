@@ -70,7 +70,7 @@ const MERGE_STEP = [
 
 describe('a needs-council merge rests on a checked record for the merging head', () => {
     it('§ 9a writes the clearance through merge_clearance, from the session record', () => {
-        expect(GATE).toContain('./scripts-run src/scripts/merge_clearance write --pr <N>');
+        expect(GATE).toContain('merge_clearance.ts write --pr <N>');
         expect(GATE).toContain('--session <council-session-json>');
         expect(GATE).toMatch(/never on the run's own reading of the replies/u);
     });

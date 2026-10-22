@@ -13,7 +13,7 @@ when authoring or pre-review verification fires.
    `src/agent-src/`, `src/domains/<pack>/`)
 2. **Do NOT auto-condense.** Continue working.
 3. **Before commit/push:** Check whether any projection is out of date
-   (`bash src/scripts/condense.sh --changed` — `dist != rewrite(src)`). If files
+   (`bash node_modules/@event4u/agent-config/src/scripts/condense.sh --changed` — `dist != rewrite(src)`). If files
    are listed, ask the user:
    ```
    > 📦 {N} dist/agent-src files are out of date before commit.
@@ -25,7 +25,7 @@ when authoring or pre-review verification fires.
    nothing has to be marked afterwards.
 
 For new non-.md files (`.php`, configs):
-`bash src/scripts/condense.sh --sync` copies them automatically.
+`bash node_modules/@event4u/agent-config/src/scripts/condense.sh --sync` copies them automatically.
 
 **Key change:** Condensation happens once before commit/push — not after every edit.
 This avoids interruptions when work is still in progress.
@@ -66,9 +66,9 @@ disable-model-invocation: true
 **Creating a new command:**
 
 1. Create `src/agent-src/commands/{name}.md` (use template)
-2. Run `./scripts-run src/scripts/skill_linter` — must be 0 FAIL
+2. Run `skill_linter.ts` — must be 0 FAIL
 3. Condense via `/condense`, which writes to `dist/agent-src/commands/`
-4. Run `./scripts-run src/scripts/condense --generate-tools` — creates Claude symlink automatically
+4. Run `condense.ts --generate-tools` — creates Claude symlink automatically
 
 **Never** create `.claude/skills/{name}/SKILL.md` manually for commands — always use the symlink workflow.
 
@@ -91,8 +91,8 @@ Commands have `disable-model-invocation: true` in their frontmatter.
 |---|---|
 | Edit existing file | Edit in `src/`, condense to `dist/agent-src/` |
 | Create new `.md` | Create in `src/`, condense to `dist/agent-src/` |
-| Create new non-`.md` | Create in `src/`, run `bash src/scripts/condense.sh --sync` |
-| Create new command | Create in `src/agent-src/commands/`, sync, `./scripts-run src/scripts/condense --generate-tools` |
+| Create new non-`.md` | Create in `src/`, run `bash node_modules/@event4u/agent-config/src/scripts/condense.sh --sync` |
+| Create new command | Create in `src/agent-src/commands/`, sync, `condense.ts --generate-tools` |
 | Delete a file | Delete from `src/` and `dist/agent-src/` |
-| Check which projections are out of date | `bash src/scripts/condense.sh --changed` |
-| Verify everything is in sync | `bash src/scripts/condense.sh --check` |
+| Check which projections are out of date | `bash node_modules/@event4u/agent-config/src/scripts/condense.sh --changed` |
+| Verify everything is in sync | `bash node_modules/@event4u/agent-config/src/scripts/condense.sh --check` |

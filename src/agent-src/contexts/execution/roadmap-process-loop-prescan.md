@@ -172,7 +172,7 @@ change in § 3a.
 
 ### 3c. Capability screen — can the agent do this at all?
 
-**Rewritten by [ADR-237](../../../docs/decisions/ADR-237-end-to-end-execution-authority.md),
+**Rewritten by ADR-237 (agent-config repository: `docs/decisions/ADR-237-end-to-end-execution-authority.md`),
 which supersedes ADR-235.** This section used to be a *preflight refusal*: a run
 with no "runnable" open step created no branch and wrote nothing. That is gone.
 The invocation is a delegation, so the question is no longer *is this step

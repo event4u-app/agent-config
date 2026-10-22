@@ -3,8 +3,8 @@
 The shared vocabulary of the four analysis doors — `analyze:reference`,
 `analyze:and-optimize`, `analyze:pr` and `analyze:inbox` — loaded on demand by
 each of them. The decision behind the family and every default named here is
-[`ADR-288`](../../../../docs/decisions/ADR-288-analysis-family-one-engine-four-doors.md);
-the mechanics are code under `src/scripts/analysis_*.ts`. This file is the
+`ADR-288` (agent-config repository: `docs/decisions/ADR-288-analysis-family-one-engine-four-doors.md`);
+the mechanics are code under `node_modules/@event4u/agent-config/src/scripts/analysis_*.ts`. This file is the
 lookup surface, not a contract: ADR-118 forbids a loop-design contract, so the
 caps live in each door's `limits:` block.
 
@@ -33,7 +33,7 @@ Every door prints, before any read:
 Scope: <repo|module|subdir> <name> at <path> (anchor: <…>)
 ```
 
-Resolved by `src/scripts/analysis_target.ts`. Inside a module the scope names
+Resolved by `node_modules/@event4u/agent-config/src/scripts/analysis_target.ts`. Inside a module the scope names
 the module and `project_root` stays the outer project, with or without a marker
 in the module's own `agents/`.
 
@@ -86,9 +86,9 @@ a substitute for it.
 ## Stages a door runs from the shell
 
 ```bash
-./scripts-run src/scripts/analysis_target                 # the scope line
-./scripts-run src/scripts/analysis_validate --run <run-dir> --root <project-root> <emitted file>…
-./scripts-run src/scripts/analysis_run_record --run <run-dir>   # checks run.json
+analysis_target.ts                 # the scope line
+analysis_validate.ts --run <run-dir> --root <project-root> <emitted file>…
+analysis_run_record.ts --run <run-dir>   # checks run.json
 ```
 
 `analysis_validate` moves an `emitted` run to `validated` or names each failure;
@@ -111,7 +111,7 @@ A loop with no `executed` or `read` evidence tied to a changed conclusion is
 
 - **seat** — answers a question; never edits, runs or fetches.
 - **synthesizer** — folds the seats' answers, names dissent.
-- **gate judge** — decides the one-more-round offer (`src/scripts/analysis_gate.ts`).
+- **gate judge** — decides the one-more-round offer (`node_modules/@event4u/agent-config/src/scripts/analysis_gate.ts`).
 
 Quorum is two seats from two providers; anything less is `single-voice`, said
 in the run and never counted as a clearance. On safety or data-integrity

@@ -29,7 +29,7 @@ Descriptions are the trigger surface; tune them like a model, not like prose:
 1. Draft 2-3 candidate descriptions for the skill.
 2. Ensure `evals/triggers.json` has should- AND should-not-trigger queries
    (grow beyond the 5+5 stub when optimizing — more queries = a real test split).
-3. Run the helper: `npx tsx src/scripts/optimize_skill_description.ts
+3. Run the helper: `optimize_skill_description.ts
    --skill <id> --candidate "…" [--candidate "…"] [--live]` — it splits the
    queries deterministically into train/held-out, scores every candidate
    (deterministic token-overlap proxy by default; `--live` = haiku judge,
@@ -145,7 +145,7 @@ shape the gate might forbid.
 One clause is enough — `worktree-lifecycle` carries "safe cleanup that refuses
 while unique unmerged commits exist", which tells a router both what the skill
 does and what it will not do. Verified by
-`./scripts-run src/scripts/lint_skill_descriptions`.
+`lint_skill_descriptions.ts`.
 
 ## Upstream-version-notes section (optional pattern, wrapped fast-moving tools)
 

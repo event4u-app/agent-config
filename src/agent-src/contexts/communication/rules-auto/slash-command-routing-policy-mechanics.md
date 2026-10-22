@@ -4,7 +4,7 @@ Lookup table for the `slash-command-routing-policy` rule. Lists the
 locked clusters and their sub-commands so the rule itself can stay at
 its current LOC while still reflecting the full surface. Source of
 truth for the cluster names is
-[`docs/contracts/command-clusters.md`](../../../../docs/contracts/command-clusters.md);
+`docs/contracts/command-clusters.md` (agent-config repository);
 this file mirrors that contract for runtime lookup. Linter:
 `scripts/check_cluster_patterns.ts` (verifies dispatcher shape).
 
@@ -63,7 +63,7 @@ this file mirrors that contract for runtime lookup. Linter:
 
 ## Why colon is canonical
 
-Locked by [ADR-003](../../../../docs/decisions/ADR-003-flat-cluster-subs-and-colon-syntax.md)
+Locked by ADR-003 (agent-config repository: `docs/decisions/ADR-003-flat-cluster-subs-and-colon-syntax.md`)
 (2026-05-07) alongside the flat-cluster + composite-sub-name shape.
 
 - **Single token in autocompleters.** `roadmap:process-phase` completes

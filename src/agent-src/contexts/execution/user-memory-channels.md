@@ -18,12 +18,12 @@ behaviour was to detect it and throw it away. It now has a second
 destination: `~/.event4u/agent-config/user/observations.jsonl`, the global
 observation buffer from ADR-138's sibling phase — mirroring, one level up,
 the project-local `.agent-user.observations.jsonl` contract in
-[`agent-user-schema.md § Observation buffer`](../../../docs/contracts/agent-user-schema.md#observation-buffer).
+`agent-user-schema.md § Observation buffer` (agent-config repository: `docs/contracts/agent-user-schema.md`).
 
 **The project-scoped rule in Phase 3 (CONSOLIDATE) is unchanged.** No user
 fact enters `agents/memory/` curated YAML through this or any other path —
 the second channel has its own store
-(`src/scripts/_lib/user_global_observations.ts`), its own closed `field`
+(`node_modules/@event4u/agent-config/src/scripts/_lib/user_global_observations.ts`), its own closed `field`
 allowlist, and its own human gate (`/agents:user review` /
 `/agents:user accept`). Curated project memory keeps refusing user-scoped
 facts exactly as before this phase.
@@ -73,7 +73,7 @@ than at review, and from reusing the existing redaction gate verbatim:
   birthdays · financial figures · health / legal / therapy status ·
   demographics · external-source identifiers — refused when the
   observation is captured, per
-  [`agent-user-schema.md § Explicit exclusions`](../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
+  `agent-user-schema.md § Explicit exclusions` (agent-config repository: `docs/contracts/agent-user-schema.md`).
 - **Hidden unicode.** Every write routes through
   `knowledge_global_redaction.redaction_scan`, including its
   `hidden_unicode` class (the ADR-103 zero-width-smuggling detector) — the
@@ -105,14 +105,14 @@ exactly the case where a repo has no managed `agents/` folder to write
 project-scoped facts into at all.
 
 **Check ORIENT step 2's premise before CONSOLIDATE writes anywhere.**
-Resolve [`detect_managed_agents_folder`](../../../src/scripts/_lib/managed_agents_folder.ts)
+Resolve `detect_managed_agents_folder` (`node_modules/@event4u/agent-config/src/scripts/_lib/managed_agents_folder.ts`)
 against the project root once, during ORIENT:
 
 - `managed` → CONSOLIDATE proceeds exactly as written below; nothing in
   this section changes.
 - `unmanaged` / `not-a-project` → a project-scoped fact has nowhere local
   to land. Route it through
-  [`routeProjectObservation`](../../../src/scripts/_lib/user_global_observations.ts)
+  `routeProjectObservation` (`node_modules/@event4u/agent-config/src/scripts/_lib/user_global_observations.ts`)
   instead of writing to `agents/memory/intake/` (which would either fail
   or, worse, scaffold an unmanaged `agents/` directory as an unintended
   side effect). This attaches a `context` object
@@ -120,7 +120,7 @@ against the project root once, during ORIENT:
   `seen_in[]` recurrence tally to the fact and appends it to the SAME
   global buffer Phase 2 uses — never a second store, never a
   project-indexed directory (the council's round-2 namespace refusal; see
-  [`agent-user-schema.md § Project attribution`](../../../docs/contracts/agent-user-schema.md#project-attribution-road-to-global-user-memory-phase-3)).
+  `agent-user-schema.md § Project attribution` (agent-config repository: `docs/contracts/agent-user-schema.md`)).
 
 **This is the only generalisation path.** A fact recurring in a
 *different* unmanaged project (Jaccard similarity ≥ `MERGE_THRESHOLD`,
