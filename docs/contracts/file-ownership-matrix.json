@@ -13561,13 +13561,6 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/09-validate-and-write.md",
-      "target": ".agent-src.uncondensed/skills/existing-ui-audit/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/09-validate-and-write.md",
       "target": ".agent-src.uncondensed/skills/existing-ui-audit/references/steps/09-validate-and-write.md",
       "type": "WRITE",
       "via": "self",

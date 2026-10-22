@@ -203,8 +203,7 @@ export function triggerTextFromFlatLines(lines: readonly string[]): string[] {
  * only candidate depth whose gain clears the bar at the smallest depth (10 adds
  * 2.7 more, 20 another 6.5, neither of them the SMALLEST qualifying depth).
  * With the widened tokenizer that ships, recall@5 is 0.622 and recall@8 0.684
- * (+6.2 points), so the same bar still selects 8. Both readings:
- * `agents/evidence/analysis/skill-ranker-tokenizer-unicode-2026-10.md`.
+ * (+6.2 points), so the same bar still selects 8.
  *
  * Three more rows per call is the cost; each carries a description capped at
  * 200 characters, so the ceiling it buys is bounded and paid only when the
