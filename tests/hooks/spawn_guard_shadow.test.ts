@@ -497,3 +497,22 @@ describe('spawn-guard-shadow — rate window', () => {
         expect(shadowLines().at(-1)!.rate_window).toBe('clear');
     });
 });
+
+describe('spawn-guard-shadow — payload bodies never reach the ledger (ratification r1)', () => {
+    it('prompts, results, messages and the raw agent id are absent from every ledger file', () => {
+        const env = (event: string, hook: string, tool: string, input: Record<string, unknown>, response?: Record<string, unknown>) => ({
+            event,
+            platform: 'claude',
+            payload: { hook_event_name: hook, tool_name: tool, session_id: SESSION, tool_input: input, ...(response ? { tool_response: response } : {}) },
+        });
+        processEnvelope(env('pre_tool_use', 'PreToolUse', 'Agent', { name: 'w1', prompt: 'BODY-CANARY-PROMPT' }), root);
+        processEnvelope(env('post_tool_use', 'PostToolUse', 'Agent', { name: 'w1', prompt: 'BODY-CANARY-PROMPT' }, { agentId: 'RAW-AGENT-ID-77', content: 'BODY-CANARY-RESULT' }), root);
+        processEnvelope(env('pre_tool_use', 'PreToolUse', 'SendMessage', { to: 'w1', recipient_kind: 'name', message: 'BODY-CANARY-MESSAGE' }), root);
+        const dir = path.join(root, LEDGER_DIR);
+        const all = fs.existsSync(dir)
+            ? fs.readdirSync(dir, { recursive: true }).map(String).filter((f) => fs.statSync(path.join(dir, f)).isFile()).map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n')
+            : '';
+        expect(all).toContain('subagent_named');
+        expect(all).not.toMatch(/BODY-CANARY|RAW-AGENT-ID-77/);
+    });
+});
