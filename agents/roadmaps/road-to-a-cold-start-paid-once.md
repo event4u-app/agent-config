@@ -393,7 +393,7 @@ waits:
 
 ## Phase 5 — Council seats that do not boot a workstation
 
-- [ ] **5.1 Probe a lighter seat launch per CLI version** in
+- [x] **5.1 Probe a lighter seat launch per CLI version** in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/cli_agency_bounds.ts -->
       `src/scripts/ai_council/cli_agency_bounds.ts`: the safe-mode flag (keeps
       subscription login, skips instruction files, hooks, plugins, MCP and auto
       memory per the host documentation) and the setting-sources flag without
@@ -401,6 +401,7 @@ waits:
       `~/.claude/rules` loaded. The bare flag is excluded: it drops subscription
       login.
       verify: `npx vitest run tests/scripts/ai_council/cli_agency_bounds.test.ts -t light-launch-is-probed-per-version --reporter=verbose` -> /✓.*light-launch-is-probed-per-version/
+      Done 2026-10-22 on Claude Code 2.1.308, subscription login: the seat argv's first call carried 145,587 tokens and saw a user rule; `--safe-mode` 2,790 and `--setting-sources project,local` 3,548, neither saw it, both kept the login. Rows in `LIGHT_LAUNCH_PROBES` and `spawn-burst-baseline-2026-10.md` § Step 5.1; the Anthropic seat now launches with the selected flag only on the probed version (commits eaf5811486, b63871b61f). n = 1 per arm.
 - [ ] **5.2 Non-blind multi-round questions continue the seat session** inside
       the TTL — the first provider's resume flag, the second's `exec resume`.
       Blind rounds keep fresh sessions by construction; resuming one would leak
