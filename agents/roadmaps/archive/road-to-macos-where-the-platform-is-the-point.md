@@ -68,7 +68,8 @@ run on the way to `main`.
       into the PR tier.
       verify: the council record exists under `agents/evidence/council/` and the
       tier set in 1.3 matches its verdict.
-- [ ] **1.3 Wire the tier.** A `platform-scope` job runs 1.1; the macOS legs
+- [x] **1.3 Wire the tier.** **Run 39709319417:** this PR touches `tests.yml`, so `full` —
+      all 10 macOS legs ran; the workflow-step test covers `tier`, `full`, label and every event. A `platform-scope` job runs 1.1; the macOS legs
       outside the decided tier run on a PR only when it says `full` or the PR
       carries `ci:macos`; `push: main` and `workflow_dispatch` are unchanged.
       verify: on this PR's CI (which touches `tests.yml`, so `full`) every macOS
@@ -93,7 +94,8 @@ run on the way to `main`.
       every `github.event.pull_request.*` expression guarded so it evaluates on a
       merge-group event; required checks keep running unconditionally there.
       verify: `grep -l "merge_group" .github/workflows/consistency.yml .github/workflows/standing-payload-delta.yml` -> 0
-- [ ] **3.2 One always-run `tests-result` aggregate job** (`needs:` all Tests jobs,
+- [x] **3.2 One always-run `tests-result` aggregate job** (run 39709319417: `Tests result` green
+      with every needed job green; red on run 39706826749 when four node shards failed) (`needs:` all Tests jobs,
       `if: always()`, red when any needed job failed or was cancelled) so a
       future required-set change pins one stable name instead of shard names.
       verify: this PR's CI reports a `Tests result` check that is green only with
@@ -125,7 +127,7 @@ run on the way to `main`.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A docs-only PR requests only the decided macOS tier; a PR touching a
+- [x] AC-1 — A docs-only PR requests only the decided macOS tier; a PR touching a
       platform path requests every macOS leg; `push: main` requests all 13.
 - [x] AC-2 — Both required workflows declare `merge_group`, and the admin stub
       records it.
