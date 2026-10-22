@@ -29,6 +29,14 @@ import {
 const IDENTITY = `${EXPECTED_REPOSITORY}/${EXPECTED_WORKFLOW_REF}@refs/heads/main`;
 const PAYLOAD_TYPE = 'application/vnd.in-toto+json';
 
+/** A statement naming this package's publish workflow — what a real release signs. */
+function statement(workflowPath = EXPECTED_WORKFLOW_REF): string {
+    return JSON.stringify({
+        _type: 'https://in-toto.io/Statement/v1',
+        predicate: { buildDefinition: { externalParameters: { workflow: { path: workflowPath, repository: EXPECTED_REPOSITORY } } } },
+    });
+}
+
 // A generous hook timeout, because these fixtures are `mkdtempSync` and
 // nothing else: measured on a machine running several parallel lanes, the
 // default 30 s hook budget expired inside `beforeEach` itself while every one
@@ -110,10 +118,24 @@ describe('verify_attestation_signature', () => {
     });
 
     // skip-reason: openssl is absent, so no certificate can be minted.
-    it.skipIf(!HAVE_OPENSSL)('accepts a genuine signature over the payload', async () => {
-        const doc = signed('{"_type":"https://in-toto.io/Statement/v1"}');
+    it.skipIf(!HAVE_OPENSSL)('accepts a genuine signature over a payload naming the publish workflow', async () => {
+        const doc = signed(statement());
         if (doc === null) return expect.unreachable(NO_CERT);
         expect(await verify_attestation_signature(doc)).toBeNull();
+    });
+
+    // skip-reason: openssl is absent, so no certificate can be minted.
+    it.skipIf(!HAVE_OPENSSL)('refuses a genuine signature over a payload that names another workflow', async () => {
+        const doc = signed(statement('.github/workflows/other.yml'), IDENTITY, 'mismatch');
+        if (doc === null) return expect.unreachable(NO_CERT);
+        expect(await verify_attestation_signature(doc)).toMatch(/signed payload does not name/);
+    });
+
+    // skip-reason: openssl is absent, so no certificate can be minted.
+    it.skipIf(!HAVE_OPENSSL)('refuses a SAN that only contains the workflow identity as a substring', async () => {
+        const doc = signed(statement(), `https://evil.example/?x=${IDENTITY}`, 'substring');
+        if (doc === null) return expect.unreachable(NO_CERT);
+        expect(await verify_attestation_signature(doc)).toMatch(/signing certificate names/);
     });
 
     // skip-reason: openssl is absent, so no certificate can be minted.
@@ -139,7 +161,7 @@ describe('verify_attestation_signature', () => {
 
     // skip-reason: openssl is absent, so no certificate can be minted.
     it.skipIf(!HAVE_OPENSSL)('KNOWN LIMITATION — a self-signed certificate passes, because no trust root is checked', async () => {
-        const doc = signed('{"ok":true}', IDENTITY, 'selfsigned');
+        const doc = signed(statement(), IDENTITY, 'selfsigned');
         if (doc === null) return expect.unreachable(NO_CERT);
         // This is not a bug in the function; it is the `dsse-trust-root`
         // blocker, asserted so the limit cannot be forgotten and so the test
