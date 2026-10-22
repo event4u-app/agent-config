@@ -543,11 +543,23 @@ function _readPullRequest(ref: string): UpstreamReading {
 /** The official MCP registry routinely takes 15-20 s to answer a search; a 20 s cap cut it off. */
 export const UPSTREAM_READ_TIMEOUT_S = 45;
 
-export function read_url(kind: string, ref: string, maxSeconds: number = UPSTREAM_READ_TIMEOUT_S): UpstreamReading {
+export function read_url(
+    kind: string,
+    ref: string,
+    maxSeconds: number = UPSTREAM_READ_TIMEOUT_S,
+    schemes: readonly string[] = ['https'],
+): UpstreamReading {
     if (_which('curl') === null) {
         return { ok: false, reason: 'curl not on PATH' };
     }
-    const proc = spawnSync('curl', ['-sL', '--max-time', String(maxSeconds), '-w', '\n%{http_code}', ref], {
+    // The ref is a repo-authored ledger value: only an https URL is fetched,
+    // redirects stay on https, and `--` keeps a leading `-` from being an option.
+    const scheme = /^([a-z]+):\/\//i.exec(ref)?.[1]?.toLowerCase();
+    if (scheme === undefined || !schemes.includes(scheme)) {
+        return { ok: false, reason: `refusing a ref outside ${schemes.join('/')}: ${ref}` };
+    }
+    const proto = `=${schemes.join(',')}`;
+    const proc = spawnSync('curl', ['-sL', '--proto', proto, '--proto-redir', proto, '--max-time', String(maxSeconds), '-w', '\n%{http_code}', '--', ref], {
         encoding: 'utf8',
         timeout: (maxSeconds + 5) * 1000,
     });
