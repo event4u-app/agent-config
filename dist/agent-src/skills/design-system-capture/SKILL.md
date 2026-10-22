@@ -298,7 +298,7 @@ handoff shape emitted alongside `design-system.json`
   — when the artifact is a mock — an explicit "prototype, not production code"
   warning so a consumer never ships the reference verbatim.
 
-**React stacks with the host's canvas:** the host's own `/design-sync` projects
+**React stacks with the host's canvas:** the host's own `/design-sync` (a host feature, not shipped by this package) projects
 the components; run `/design-system:sync plan` first and do not hand-build the
 bundle. This floor stays the artifact for a manual projection — every non-React
 stack, or a host without the sync.

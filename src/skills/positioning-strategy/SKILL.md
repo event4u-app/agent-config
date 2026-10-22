@@ -146,7 +146,7 @@ skill — that is `messaging-architecture`'s job.
 
 Each claim about the segment, the category or the named alternative carries
 its source — an interview, the competitor's own page, an analyst — under the
-rule `/research:deep` states: a cited live source, never model memory,
+rule [`/research:deep`](../../domains/product-discovery/research/deep/command.md) states: a cited live source, never model memory,
 `[uncertain]` for the rest. A position built on an unsourced belief is
 opposable to nothing.
 

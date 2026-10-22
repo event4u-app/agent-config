@@ -65,7 +65,7 @@ Walk the diff with the following gates:
   [`release-comms`](../release-comms/SKILL.md) for the prose).
 - Rollback path tested at least mentally; named in step 4.
 
-Cells without evidence block the launch.
+Cells without evidence block the launch — surface the gap, do not hand-wave.
 
 ### 2b. Epistemics block — the diagnostic report (contract-backed)
 
@@ -216,4 +216,4 @@ team's monitoring stack.
   output block, citable.
 - Do NOT let any stage own itself — every stage names a role from
   the **team** spine slot.
-- Do NOT hand off to a receiver who has not signed off.
+- Do NOT hand the artefact to a receiver who has not signed off on ops handoff.
