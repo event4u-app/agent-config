@@ -111,12 +111,13 @@ the judge-one-tier-up ladder (`src/agent-src/contexts/subagent-configuration.md:
   `model_requested` fails validation. No new field.
   verify: a validator test refuses that record; a fixture dispatch writes all four.
   Done 2026-10-22 (commit aa74c70c5f): the validator refuses `tier_chosen` without `model_requested` (`_lib_orchestration_record.test.ts` › refuses tier_chosen without model_requested); the `orchestration-record` hook writes all four from the dispatch's `model` argument, the served id and the head's transcript tail (`orchestration_record_hook.test.ts` › a fixture dispatch writes all four). Live check first: a `model: haiku` dispatch from this session had been recorded with all four null, because the hook never read `tool_input.model`. On this host most dispatches launch async, so `model_served` stays null for them — the ack carries no usage — and only the request half is recorded.
-- [ ] **1.2 The nudge names the argument, not the word.** When the ladder resolves a slice to
+- [x] **1.2 The nudge names the argument, not the word.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/delegation_nudge_hook.ts --> When the ladder resolves a slice to
   `lite`, the nudge names the per-call model value from `TIER_TO_CLAUDE_MODEL` and the slice
   kind that earned it; it never auto-spawns and never names a tier the table did not produce.
   Runs only on a green 0.2.
   verify: a nudge fixture for a read-only fan-out slice names the mapped model value and
   dispatches nothing.
+  Done 2026-10-22 (commit 1f48d0ff15): the nudge's tier now comes from `inferSliceTier` over a deterministic slice kind read off the prompt; only a read-only fan-out earns `lite`, and its line names `model: "haiku"` and the kind. It used to say "lite tier recommended" for every delegable prompt from a hardcoded default — a tier the table never produced; an unknown kind now says `inherit` and names no model. Test: `delegation_nudge_hook.test.ts` › a read-only fan-out nudge names the mapped model value and dispatches nothing.
 - [ ] **1.3 A `lite` leg does not climb by itself.** It never spawns, and a slice it cannot
   finish returns to the head with a named reason; the head re-dispatches one tier up per the
   existing verify-fail cascade. The escalation is a record, not a retry inside the leg.
