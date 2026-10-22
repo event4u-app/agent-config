@@ -13,6 +13,7 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import type { Finding } from './analysis_emit.js';
+import { EVIDENCE_TIERS } from './analysis_ledger.js';
 import { RESEARCH_BRIEF } from './network_sources.js';
 import { resolveAnalysisTarget, scopeLine } from './analysis_target.js';
 
@@ -40,6 +41,11 @@ export function foldLanes(lanes: readonly Lane[]): Finding[] {
                 continue;
             }
             if (!seen.sources.includes(lane.source)) seen.sources.push(lane.source);
+            // The strongest evidence of any lane stands, and an owner or a block a
+            // later lane knew about is not dropped — it decides where the finding lands.
+            if (EVIDENCE_TIERS.indexOf(f.tier) < EVIDENCE_TIERS.indexOf(seen.finding.tier)) seen.finding.tier = f.tier;
+            if (seen.finding.owner === undefined && f.owner !== undefined) seen.finding.owner = f.owner;
+            if (seen.finding.blocked_until === undefined && f.blocked_until !== undefined) seen.finding.blocked_until = f.blocked_until;
             for (const step of f.steps) {
                 if (!seen.finding.steps.some((s) => s.text === step.text)) seen.finding.steps.push(step);
             }
