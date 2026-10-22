@@ -648,7 +648,14 @@ export function file_sha256(p: string): string | null {
 function edited_since_install(target: string, rec: LedgerDigest | undefined): boolean {
   if (rec === undefined) return false;
   const on_disk = file_sha256(target);
-  return on_disk !== null && on_disk !== rec.installed_sha256;
+  if (on_disk !== null) return on_disk !== rec.installed_sha256;
+  // Unreadable bytes are an unknown edit state, so a real file is kept and
+  // reported. A dangling symlink holds no bytes to lose and may still go.
+  try {
+    return !fs.lstatSync(target).isSymbolicLink();
+  } catch {
+    return false;
+  }
 }
 
 /** Parse a tool entry's `digests` map; a malformed record contributes nothing. */
