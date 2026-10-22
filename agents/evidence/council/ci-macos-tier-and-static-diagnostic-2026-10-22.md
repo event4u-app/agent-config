@@ -2,7 +2,7 @@
 
 <!-- evidence-type: analysis -->
 
-- **Prompt:** `ci-macos-tier-and-static-diagnostic-2026-10-22.question.md` (beside this file), sent verbatim.
+- **Prompt:** `ci-macos-tier-and-static-diagnostic-2026-10-22.question.md` (beside this file), sent verbatim; its evidence-type marker was added after the run.
 - **Members:** anthropic, openai — CLI seats, subscription-authed, nothing billed; 1 round; quorum 2/2.
 - **Run:** `council_cli run … --rounds 1 --confirm --invocation agent`; raw response kept local at
   `agents/runtime/council/responses/ci-macos-tier-2026-10-22.md` (gitignored, auto-pruned).
