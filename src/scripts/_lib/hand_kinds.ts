@@ -44,6 +44,22 @@ export function isHandKind(raw: unknown): raw is HandKind {
     return typeof raw === 'string' && _KINDS.has(raw);
 }
 
+/** Leading-verb shapes, most specific first: "propose tests" is not "propose findings" or "draft". */
+const KIND_FROM_PROMPT: ReadonlyArray<readonly [RegExp, HandKind]> = [
+    [/^\s*(?:propose|suggest|draft|write)\s+(?:unit\s+)?test(?:s|\s+cases?|\s+candidates?)?\b/i, 'test-candidates'],
+    [/^\s*(?:propose|list)\s+(?:review\s+)?findings?\b/i, 'finding-proposal'],
+    [/^\s*(?:classify|categori[sz]e|label)\b/i, 'classify'],
+    [/^\s*extract\b/i, 'extract'],
+    [/^\s*summari[sz]e\b/i, 'summarise-given-text'],
+    [/^\s*draft\b/i, 'draft-candidate'],
+];
+
+/** The hand kind a slice names, or null; deterministic, so a nudge can only cite a kind it matched. */
+export function handKindFromPrompt(text: string): HandKind | null {
+    for (const [re, kind] of KIND_FROM_PROMPT) if (re.test(text)) return kind;
+    return null;
+}
+
 export function isHeadOnlyKind(raw: unknown): raw is HeadOnlyKind {
     return typeof raw === 'string' && _HEAD_ONLY.has(raw);
 }

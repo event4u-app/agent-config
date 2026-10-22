@@ -103,6 +103,7 @@ import { classifyLadder, type LadderRung } from "../_lib/judgment_ladder.js";
 import { resolveSessionRole } from "../_lib/session_role.js";
 import { resolveSubagentRouting, type Tier } from "../_lib/subagent_routing.js";
 import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
+import { handKindFromPrompt, type HandKind } from "../_lib/hand_kinds.js";
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
 // Severity is taken from the EXIT CODE, not from the `decision` field in the
@@ -385,9 +386,20 @@ export function buildNudgeLine(
   sliceCount: number,
   tier: Tier,
   sliceKind?: SliceType,
+  handKind?: HandKind,
 ): string {
   const unit = sliceCount === 1 ? "slice" : "slices";
   const rungLabel = rung === null ? "rung-?" : `rung-${rung}`;
+  // A pointer only: nothing is sent, and the return is a proposal the head verifies.
+  if (rung === 0.5 && handKind !== undefined) {
+    return (
+      `<delegation-nudge>rung-0.5: free rung. This slice is a typed \`${handKind}\` task and an unpaid ` +
+      "route is admissible — you may send it as ONE call via " +
+      `\`./scripts-run src/scripts/ask_transport --kind ${handKind} --content-class public-artifact "<slice>"\` ` +
+      `(public-artifact text only; project content stays on a paid route). The return is a proposal: ` +
+      `verify it before acting on it. Nothing was sent for you — ${classification.reason}.</delegation-nudge>`
+    );
+  }
   // Rung 0.5 (token-economy-dispatch 4.3): cite the sub-spawn ask path —
   // never a spawn recommendation for a question-shaped slice.
   if (rung === 0.5) {
@@ -452,9 +464,12 @@ export interface NudgeResult {
   tier: Tier;
   /** The slice kind the tier was read from (`unknown` → `inherit`). */
   sliceKind: SliceType;
+  /** Set only for a rung-0.5 slice of a typed hand kind with an admissible unpaid route. */
+  handKind?: HandKind;
   /** The judgment-ladder rung this verdict resolved to (2.4) — 1 or 2 in
    *  production today: classifyPrompt returns null for every non-subagent
-   *  verdict including rung 0.5 (the carrier stays silent on questions);
+   *  verdict including rung 0.5 (the carrier stays silent on questions),
+   *  except a typed hand slice whose unpaid route an injected check admits;
    *  buildNudgeLine's 0.5 branch is vocabulary for orchestrator-facing
    *  surfaces and direct callers. */
   rung: LadderRung;
@@ -466,10 +481,20 @@ export interface NudgeResult {
  * verdict out of this concern's scope, activation gate closed, or an
  * internal error — all degrade to the same silent outcome).
  */
+export interface ClassifyOptions {
+  /**
+   * Whether an unpaid route would admit this kind. Injected so the verdict does
+   * not depend on what is configured; absent means no route, so the free rung
+   * stays silent.
+   */
+  freeRouteAdmissible?: (kind: HandKind) => boolean;
+}
+
 export function classifyPrompt(
   prompt: string,
   workspace_root: string,
   hostId: string | null | undefined,
+  opts: ClassifyOptions = {},
 ): NudgeResult | null {
   try {
     const { signals, sliceCountForLine } = extractTaskSignals(prompt);
@@ -516,6 +541,21 @@ export function classifyPrompt(
         sliceKind: "unknown",
         rung: ladder.rung,
       };
+    }
+    // The one rung-0.5 exception to silence: a typed hand kind with an admissible
+    // unpaid route, which moves paid work off the head rather than adding a line.
+    if (ladder.rung === 0.5 && opts.freeRouteAdmissible !== undefined) {
+      const handKind = handKindFromPrompt(prompt);
+      if (handKind !== null && opts.freeRouteAdmissible(handKind)) {
+        return {
+          classification: { delegable: false, action: "ask", mode: null, reason: ladder.reason },
+          sliceCount: 0,
+          tier: recommendSliceTier(downshift, separate_quota_pool),
+          sliceKind: "unknown",
+          rung: ladder.rung,
+          handKind,
+        };
+      }
     }
     if (ladder.verdict !== "subagent") {
       return null; // rung-0 script, rung-0.5 ask-transport, or ∅ user-ask/in-session
@@ -593,7 +633,14 @@ export function main(): number {
     `${JSON.stringify({
       decision: "warn",
       reason: `delegation-nudge: rung-${result.rung} verdict (${result.sliceCount} slices, ${result.tier} tier)`,
-      additional_context: buildNudgeLine(result.rung, result.classification, result.sliceCount, result.tier, result.sliceKind),
+      additional_context: buildNudgeLine(
+        result.rung,
+        result.classification,
+        result.sliceCount,
+        result.tier,
+        result.sliceKind,
+        result.handKind,
+      ),
     })}\n`,
   );
   return EXIT_WARN;
