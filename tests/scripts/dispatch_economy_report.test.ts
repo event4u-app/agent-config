@@ -170,3 +170,45 @@ describe('buildReport', () => {
         expect(report.rules_efficiency.low_quota_signal).toBeNull();
     });
 });
+
+// road-to-free-hands-a-paid-head-checks 6.1 — a billing-class axis on ask_economy,
+// so paid billable tokens avoided can be read, net of the head's verification tokens.
+describe('ask_economy billing axis (free-hands 6.1)', () => {
+    const ask = (o: Record<string, unknown>): string =>
+        JSON.stringify({ ts: '2026-08-10T10:00:00Z', orchestration: { route_taken: 'ask', ...o } });
+
+    it('splits ask lines by billing class and reads tokens avoided net of verification', () => {
+        const auditDir = path.join(tmp, 'audit-billing');
+        fs.mkdirSync(auditDir, { recursive: true });
+        fs.writeFileSync(
+            path.join(auditDir, '2026-08.jsonl'),
+            [
+                ask({ route_billing: 'free-quota', dispatch_tokens: 1000, verify_tokens: 300, outcome: 'DONE' }),
+                ask({ route_billing: 'free-quota', dispatch_tokens: 500, verify_tokens: 100 }),
+                ask({ route_billing: 'per-token', dispatch_tokens: 800 }),
+                ask({ dispatch_tokens: 50 }),
+                JSON.stringify({
+                    orchestration: { route_taken: 'subagent', escalated: true, origin: 'dispatch-economy-2026', route_billing: 'free-quota' },
+                }),
+            ].join('\n') + '\n',
+        );
+        const root = path.join(tmp, 'empty-projects');
+        fs.mkdirSync(root, { recursive: true });
+        const r = buildReport({ root, auditDir, maxAgeDays: 3650, now: new Date('2026-08-11T00:00:00Z') }).ask_economy;
+        expect(r.ask_lines).toBe(4);
+        expect(r.by_billing['free-quota']).toEqual({ ask_lines: 2, adopted: 1, escalated: 1, dispatch_tokens: 1500, verify_tokens: 400 });
+        expect(r.by_billing['per-token']).toEqual({ ask_lines: 1, adopted: 0, escalated: 0, dispatch_tokens: 800, verify_tokens: 0 });
+        expect(r.by_billing['undeclared']?.ask_lines).toBe(1);
+        expect(r.paid_tokens_avoided).toBe(1500);
+        expect(r.head_verify_tokens).toBe(400);
+        expect(r.net_paid_tokens_avoided).toBe(1100);
+    });
+
+    it('reports no relief at all, not zero, when no unpaid route served an ask', () => {
+        const root = path.join(tmp, 'empty-projects');
+        fs.mkdirSync(root, { recursive: true });
+        const r = buildReport({ root, auditDir: path.join(tmp, 'no-audit'), maxAgeDays: 14 }).ask_economy;
+        expect(r.by_billing).toEqual({});
+        expect(r.net_paid_tokens_avoided).toBeNull();
+    });
+});

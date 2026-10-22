@@ -1,0 +1,7 @@
+{
+    "mutation": "iban-checksum-disabled",
+    "module": "src/scripts/_lib/egress_rules.ts",
+    "find": "    return rest === 1;\n}",
+    "replace": "    return true;\n}",
+    "killed_by": "iban-checksum-refuses-a-wrong-check-digit"
+}

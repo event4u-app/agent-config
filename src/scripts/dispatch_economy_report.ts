@@ -48,6 +48,7 @@ import {
     weightedInputUnits,
     type TranscriptRecord,
 } from './_lib/cc_transcript.js';
+import { UNPAID_BILLING_CLASSES } from './ai_council/seat_policy.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 // src/scripts/dispatch_economy_report.ts → parents[1] is the repo root (same
@@ -87,6 +88,14 @@ export interface RoleFloor {
     median_ratio_finite: number | null;
 }
 
+export interface BillingBucket {
+    ask_lines: number;
+    adopted: number;
+    escalated: number;
+    dispatch_tokens: number;
+    verify_tokens: number;
+}
+
 export interface RulesEfficiency {
     envelopes_with_pair: number;
     median_quota: number | null;
@@ -107,6 +116,14 @@ export interface Report {
         ask_lines: number;
         adopted: number;
         escalated: number;
+        /** Per `route_billing` class of the line; a line without one counts as `undeclared`. */
+        by_billing: Record<string, BillingBucket>;
+        /** Paid tokens an unpaid route served instead; null when no unpaid route served an ask. */
+        paid_tokens_avoided: number | null;
+        /** The paid head's tokens spent verifying those returns. */
+        head_verify_tokens: number | null;
+        /** The figure claim `free-hands-limit-relief` reads: avoided minus verification. */
+        net_paid_tokens_avoided: number | null;
         threshold_escalation_kill: number;
         /** null until asks exist; the registered verdict is a review-window call. */
         escalation_kill_signal: boolean | null;
@@ -177,6 +194,9 @@ interface AuditOrchestration {
     escalated?: unknown;
     return_channel_chars?: unknown;
     origin?: unknown;
+    route_billing?: unknown;
+    dispatch_tokens?: unknown;
+    verify_tokens?: unknown;
 }
 
 function isFiniteNonNegInt(v: unknown): v is number {
@@ -277,11 +297,24 @@ export function buildReport(opts: {
     let askLines = 0;
     let askAdopted = 0;
     let askEscalated = 0;
+    const byBilling: Record<string, BillingBucket> = {};
+    const bucket = (o: AuditOrchestration): BillingBucket => {
+        const k = typeof o.route_billing === 'string' && o.route_billing !== '' ? o.route_billing : 'undeclared';
+        byBilling[k] ??= { ask_lines: 0, adopted: 0, escalated: 0, dispatch_tokens: 0, verify_tokens: 0 };
+        return byBilling[k];
+    };
     const returnChars: number[] = [];
     for (const o of orchestrations) {
         if (o.route_taken === 'ask') {
             askLines += 1;
-            if (o.outcome === 'DONE') askAdopted += 1;
+            const b = bucket(o);
+            b.ask_lines += 1;
+            if (o.outcome === 'DONE') {
+                askAdopted += 1;
+                b.adopted += 1;
+            }
+            if (isFiniteNonNegInt(o.dispatch_tokens)) b.dispatch_tokens += o.dispatch_tokens;
+            if (isFiniteNonNegInt(o.verify_tokens)) b.verify_tokens += o.verify_tokens;
         }
         // Ask->spawn escalation is recorded on the CALLER's follow-up SPAWN
         // line (route_taken=subagent, escalated=true, origin-tagged) — the
@@ -290,6 +323,7 @@ export function buildReport(opts: {
         // unmeasurable by construction (review finding, 2026-08-10).
         if (o.route_taken === 'subagent' && o.escalated === true && o.origin === 'dispatch-economy-2026') {
             askEscalated += 1;
+            bucket(o).escalated += 1;
         }
         if (isFiniteNonNegInt(o.return_channel_chars)) {
             returnChars.push(o.return_channel_chars);
@@ -323,6 +357,10 @@ export function buildReport(opts: {
         median_ratio_finite: median(reviewerRatios),
     };
 
+    const unpaid = UNPAID_BILLING_CLASSES.map((c) => byBilling[c]).filter((b): b is BillingBucket => b !== undefined && b.ask_lines > 0);
+    const avoided = unpaid.length === 0 ? null : unpaid.reduce((a, b) => a + b.dispatch_tokens, 0);
+    const verifyTokens = unpaid.length === 0 ? null : unpaid.reduce((a, b) => a + b.verify_tokens, 0);
+
     const t = registration.metrics.dispatch_floor.thresholds;
     const lowQuota = registration.metrics.rules_efficiency.thresholds.low_quota_signal;
     const medianQuota = median(quotas);
@@ -353,6 +391,10 @@ export function buildReport(opts: {
             ask_lines: askLines,
             adopted: askAdopted,
             escalated: askEscalated,
+            by_billing: byBilling,
+            paid_tokens_avoided: avoided,
+            head_verify_tokens: verifyTokens,
+            net_paid_tokens_avoided: avoided === null || verifyTokens === null ? null : avoided - verifyTokens,
             threshold_escalation_kill: registration.metrics.ask_economy.thresholds.escalation_kill,
             escalation_kill_signal:
                 askLines === 0
@@ -407,6 +449,9 @@ export function renderText(r: Report): string {
     lines.push('ask_economy:');
     lines.push(
         `  ask lines=${r.ask_economy.ask_lines} · adopted=${r.ask_economy.adopted} · escalated=${r.ask_economy.escalated} · escalation-kill signal (> ${r.ask_economy.threshold_escalation_kill}): ${r.ask_economy.escalation_kill_signal === null ? 'no data' : String(r.ask_economy.escalation_kill_signal)}`,
+    );
+    lines.push(
+        `  by billing: ${Object.entries(r.ask_economy.by_billing).map(([k, b]) => `${k}=${b.ask_lines}`).join(' · ') || 'no data'} · paid tokens avoided net of verification: ${fmtTokens(r.ask_economy.net_paid_tokens_avoided)}`,
     );
     lines.push('');
     for (const n of r.notes) lines.push(`note: ${n}`);

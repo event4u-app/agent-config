@@ -3425,8 +3425,8 @@ gates:
 
   - id: check_egress_mutations
     argv: []
-    min_scanned: 3
-    corpus: "every mutation recipe under `src/config/egress-mutations/` — 3 on 2026-10-20 (class precedence, a credential token that restores, a raw value in the count record). The floor is the three; the IBAN-checksum recipe joins when road-to-one-detector-and-the-senders-we-own 2.3 lands identifier rows."
+    min_scanned: 4
+    corpus: "every mutation recipe under `src/config/egress-mutations/` — 4 on 2026-10-22 (class precedence, a credential token that restores, a raw value in the count record, the IBAN checksum disabled). The floor is the four."
     status: enforced
     ci_invocation: .github/workflows/rule-backstops.yml
     canary:

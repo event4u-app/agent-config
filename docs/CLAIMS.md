@@ -1280,6 +1280,27 @@ is the named exception in the claim itself.
 - status: unbacked
 - last_verified:
 
+### claim: free-jury-effective-independence
+- claim: On the same run that measures `free-jury-judge-agreement`, the family-diverse panel's errors are independent enough that its Kish effective number of judges is at least half its seat count (n_eff / k >= 0.5).
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-22 (road-to-free-hands-a-paid-head-checks step 4.3), BEFORE any jury run and with the statistic committed in the same change, so the bar cannot have been fitted to a reading. STATISTIC: `juryIndependence` in `src/scripts/ai_council/jury_aggregate.ts` -- a judge's error on an item is its label differing from the known disposition; phi is the pairwise correlation of two judges' error vectors; phi-bar is the mean of the defined pairs, floored at 0; n_eff = k / (1 + (k - 1) * phi-bar). A perfectly correlated synthetic panel yields n_eff = 1, asserted in `tests/scripts/ai_council/jury_aggregate.test.ts`. BAR: n_eff / k >= 0.5. RELATION TO THE KAPPA CLAIM: reported BESIDE it, never in place of it -- `free-jury-judge-agreement`'s bar (Cohen's kappa >= 0.60) is unchanged, and a panel can clear one bar and miss the other. PANEL: at most five judges, enforced by the same module, because past five the effective count stops growing. CORPUS: the same public-artifact corpus and the same run as the kappa claim; a reading taken on a different run is not this claim. FALSIFICATION: n_eff / k below 0.5 on a run whose panel composition, corpus slice and swap seed are recorded. UNDEFINED PAIRS: a judge whose errors do not vary gives no phi; a run where every pair is undefined reports no n_eff and settles nothing. UNDERPOWERED is neither a pass nor a null. ROLE BOUND, independent of the result: ADR-257 -- an unpaid route may score, never carry a verdict; a passing n_eff lifts nothing.
+- status: unbacked
+- last_verified:
+
+### claim: free-hands-limit-relief
+- claim: Routing typed rung-0.5 asks to free routes avoids more paid billable tokens per week than the paid head spends verifying their returns.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-22 (road-to-free-hands-a-paid-head-checks step 6.1), BEFORE any free call is routed and before the route that could make one exists. MEASURE: per calendar week, the paid billable tokens of the rung-0.5 asks that a free route served (the tokens the paid fallback would have spent, read from the `billing_class` axis of the `ask_economy` metric in `src/config/dispatch-economy-metrics.json`), MINUS the paid head's own tokens spent verifying those free returns (the orchestration record's verification-token field of step 3.3). BAR: the weekly net is greater than zero, in each of the weeks of the Phase 6 shadow. A gross saving with no subtraction is not this claim: the owner's constraint is that paid limits last longer, and tokens the head spends again on checking the hands are not saved. FALSIFICATION: a net at or below zero in the shadow window. UNDERPOWERED (fewer free-served asks than the shadow cap of decision A5 needs per kind) is neither a pass nor a null. NOT LICENSED, whatever the result: any statement about quality -- that is `free-hands-quality-held`, and neither claim backs the other.
+- status: unbacked
+- last_verified:
+
+### claim: free-hands-quality-held
+- claim: Free-routed rung-0.5 asks escalate or fail the head's verification no more often than paid-routed asks, within five percentage points, and below the registered escalation kill.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-22 (road-to-free-hands-a-paid-head-checks step 6.1), BEFORE any free call. MEASURE: per task kind, the escalation-plus-verify-fail rate of free-routed asks against that of paid-routed asks, both read from the `ask_economy` metric split by its `billing_class` axis and from the orchestration record's `verified` field; a `skipped` verify on a free return counts as an escalation. BAR, both halves: (1) free rate <= paid rate + 5 percentage points, and (2) free rate < 0.3, the escalation kill already registered on `ask_economy`. A kind that clears both may flip (step 6.3); a kind that later breaches the kill reverts. FALSIFICATION: either half missed for a kind on a window meeting the A5 sample. UNDERPOWERED is neither a pass nor a null and backs no flip. NOT LICENSED: any statement about limit relief, which is `free-hands-limit-relief`.
+- status: unbacked
+- last_verified:
+
 ### claim: obligation-settle-shadow-bar
 - claim: PRE-REGISTERED, unmeasured. Whether the `obligation-settle` turn-end detector may be armed — i.e. whether its shadow readings show it would have refused only turns that genuinely left a mechanically-dischargeable obligation unmet.
 - kind: quant

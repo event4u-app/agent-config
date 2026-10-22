@@ -77,3 +77,29 @@ describe('select_chairman', () => {
         expect(s.annotation).toBe('Chairman: host (no non-panel member available)');
     });
 });
+
+// road-to-free-hands-a-paid-head-checks 4.1 — synthesis stays on paid seats.
+describe('select_chairman — an unpaid seat never chairs (free-hands 4.1)', () => {
+    const withFree = [
+        { name: 'groq', tier: 9, billing: 'free-quota' },
+        { name: 'openai', tier: null, billing: 'per-token' },
+        { name: 'google', tier: null },
+    ];
+
+    it('member mode → host fallback naming the refusal when the member is free', () => {
+        const s = select_chairman('member', 'groq', new Set(['anthropic']), withFree);
+        expect(s.member).toBeNull();
+        expect(s.annotation).toMatch(/^Chairman: host \(member 'groq' refused: .*unpaid_head_role/);
+    });
+
+    it('auto skips a free seat even when it carries the highest tier', () => {
+        const s = select_chairman('auto', null, new Set(['anthropic']), withFree);
+        expect(s.member).toBe('openai');
+    });
+
+    it('auto → host fallback when every non-panel member is unpaid', () => {
+        const s = select_chairman('auto', null, new Set(['openai', 'google']), withFree);
+        expect(s.member).toBeNull();
+        expect(s.annotation).toBe('Chairman: host (no paid non-panel member available)');
+    });
+});
