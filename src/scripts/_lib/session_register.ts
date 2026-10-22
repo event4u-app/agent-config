@@ -467,11 +467,11 @@ export function foreign_live_records(
  * decide which peers are safe to break, which is the judgement this gate
  * exists to remove.
  *
- * Fails CLOSED on an unreadable record: `read_live_records` drops a record it
+ * Fails OPEN on an unreadable record: `read_live_records` drops a record it
  * cannot parse, so a corrupt file reads as no session rather than as a live
- * one. That is the safe direction here only because the swap is also gated on
- * the lock and the age checks; on its own it would be the wrong one, and the
- * caller states which gate it is relying on.
+ * one, and the swap may proceed. On its own that is the wrong direction for
+ * this question; what protects a live session is the swap's other gates — the
+ * lock and the age checks — and the caller states which it relies on.
  */
 export function any_live_session(
     dir: string,
