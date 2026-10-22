@@ -8,6 +8,8 @@
 // only to keep the rule honest about which direction it errs in.
 import { describe, expect, it } from 'vitest';
 
+import { CLEARANCE_DIR, clearanceFileName } from '../../src/scripts/_lib/merge_clearance_record.js';
+
 import {
     censusDateStamp,
     citationKeys,
@@ -140,11 +142,22 @@ describe('classify — the three classes', () => {
 });
 
 describe('scanRootFor — which directories a gate enumerates', () => {
-    it('claims the four corpora a gate walks', () => {
+    it('claims the corpora a gate walks', () => {
         expect(scanRootFor('agents/evidence/reviews/x.findings.md')).toBe('reviews');
         expect(scanRootFor('agents/evidence/release-findings/16.2.0.json')).toBe('release-findings');
         expect(scanRootFor('agents/evidence/archived-skills/x.md')).toBe('archived-skills');
         expect(scanRootFor('agents/evidence/ratifications/x.md')).toBe('ratifications');
+    });
+
+    it('claims the directory the merge gate reads by a constructed path', () => {
+        // Finding 9c53412f1594: `merge_clearance check` builds
+        // `pr-<N>-<head>.md` and reads it, so no file there is ever CITED and
+        // a literal-reference scan classed all of them cold — the "safe to
+        // move" set, for files a merge gate needs. Derived from the gate's own
+        // constants so a moved directory or a new name shape follows it.
+        const rel = `${CLEARANCE_DIR}/${clearanceFileName(2388, '1db488224f57d626bd91b50bb502665f76202fea')}`;
+        expect(scanRootFor(rel)).toBe('merge-clearances');
+        expect(classify([], scanRootFor(rel), false)).toEqual({ temperature: 'hot', reason: 'scan-root' });
     });
 
     it('claims no directory a gate merely allows by prefix', () => {
