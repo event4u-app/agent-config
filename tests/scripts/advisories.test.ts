@@ -684,7 +684,7 @@ describe('R2 round 2 fixes (2026-10-21)', () => {
         const inv = markOwnActionsPrivate(root, { entries: [
             { ecosystem: 'GitHub Actions', name: 'myorg/internal-deploy', private: false },
             { ecosystem: 'GitHub Actions', name: 'actions/checkout', private: false },
-        ] });
+        ] }, fs.mkdtempSync(path.join(os.tmpdir(), 'adv-home-')));
         expect(inv.entries.map((e) => e.private)).toEqual([true, false]);
     });
 
@@ -722,8 +722,34 @@ describe('R2 round 3 fixes (2026-10-21)', () => {
             { ecosystem: 'npm', name: '@types/node', private: false },
             { ecosystem: 'Packagist', name: 'acme/billing', private: false },
             { ecosystem: 'Packagist', name: 'symfony/console', private: false },
-        ] });
+        ] }, fs.mkdtempSync(path.join(os.tmpdir(), 'adv-home-')));
         expect(inv.entries.map((e) => e.private)).toEqual([true, false, true, false]);
+    });
+
+    it('a scoped npm name is private once npm can authenticate to the public registry — a paid private package resolves from it too', () => {
+        const root = project('F1-fastify-hono');
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'adv-home-'));
+        const entries = () => [
+            { ecosystem: 'npm', name: '@vendorco/sdk', private: false },
+            { ecosystem: 'npm', name: 'lodash', private: false },
+        ];
+        expect(markOwnActionsPrivate(root, { entries: entries() }, home).entries.map((e) => e.private)).toEqual([false, false]);
+        fs.writeFileSync(path.join(home, '.npmrc'), '//registry.npmjs.org/:_authToken=${NPM_TOKEN}\n');
+        expect(markOwnActionsPrivate(root, { entries: entries() }, home).entries.map((e) => e.private)).toEqual([true, false]);
+        fs.rmSync(path.join(home, '.npmrc'));
+        fs.writeFileSync(path.join(root, '.npmrc'), '@vendorco:registry=https://npm.vendorco.example/\n');
+        expect(markOwnActionsPrivate(root, { entries: entries() }, home).entries.map((e) => e.private)).toEqual([true, false]);
+    });
+
+    it('a name private in one entry is private in every entry, so a declared range never sends what its lockfile hides', () => {
+        const root = project('F1-fastify-hono');
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'adv-home-'));
+        const inv = markOwnActionsPrivate(root, { entries: [
+            { ecosystem: 'npm', name: 'internal-utils', private: true },
+            { ecosystem: 'npm', name: 'internal-utils', private: false },
+            { ecosystem: 'Packagist', name: 'internal-utils', private: false },
+        ] }, home);
+        expect(inv.entries.map((e) => e.private)).toEqual([true, true, false]);
     });
 
     it('#6 — the issue fingerprint ignores the Checked line', () => {
