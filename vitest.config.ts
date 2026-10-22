@@ -115,8 +115,8 @@ export default defineConfig({
         //
         // `isolate-tmpdir.ts` points `TMPDIR` at a root this run owns and deletes,
         // so a test that never cleans up its `mkdtempSync` cannot flood the
-        // user's real temp directory — which once made every shell start block
-        // for 9-35 s. It must precede any worker fork, hence `globalSetup`.
+        // user's real temp directory and slow every shell start that scans it.
+        // It must precede any worker fork, hence `globalSetup`.
         globalSetup: ['tests/_lib/ensure-build-artefacts.ts', 'tests/_lib/isolate-tmpdir.ts'],
         // The python-free-env shim (tests/_lib/python-free-env.ts) is DISABLED:
         // the py2ts test-layer purge converted every live python↔tsx parity

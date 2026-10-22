@@ -71,47 +71,23 @@ function plantGate(work: string): void {
 // --- Layer 1: CLI contract on the real repo --------------------------------
 
 describe('check_no_external_sources — CLI contract (real repo)', () => {
-    // 180 s, not the 10 s default. This test runs a repo-wide CLI in a spawned
-    // subprocess, and Vitest 5 raised the default worker count the 10 s was
-    // calibrated under — every one of the 18 CI failures on that upgrade was a
-    // timeout, never an assertion. Targeted rather than a global raise: the 10 s
-    // default still guards ~24k fast tests, and a real hang here still fails.
-    //
-    // Raised from 60 s on 2026-10-13, on a measurement rather than a hunch. The
-    // 60 s was calibrated against a smaller tree; the gate now walks 13,062
-    // tracked files and takes 17.3 s on an unloaded developer machine, and a
-    // macOS CI shard overshot at 61.0 s — a margin of 1.7 %. The budget is not
-    // tracking the thing it bounds: the tree grows, the number did not, so the
-    // test reds for an unrelated PR and the next reader learns nothing from it.
-    // 180 s is ~10x the measured single-process cost, which leaves headroom for
-    // a loaded shared runner AND for further growth. What the case actually
-    // asserts is that the CLI runs at all (`status` is not null), so a real
-    // hang still fails it — raising the budget costs no sensitivity here.
+    // A repo-wide CLI in a spawned subprocess: its run time grows with the
+    // tracked tree and with runner load, so the budget is generous rather than
+    // tight. The case asserts only that the CLI runs at all (`status` is not
+    // null), so a real hang still fails it and the large budget costs no
+    // sensitivity. Targeted rather than a global raise: the default still
+    // guards the fast tests.
+    const CLI_BUDGET_MS = 180_000;
+
     it('text report runs deterministically', () => {
         const a = spawnSync(TSX_BIN, [TS_SCRIPT], big(REPO_ROOT));
         expect(a.status).not.toBeNull();
-    }, 180_000);
+    }, CLI_BUDGET_MS);
 
-    // 180 s, not the 10 s default. This test runs a repo-wide CLI in a spawned
-    // subprocess, and Vitest 5 raised the default worker count the 10 s was
-    // calibrated under — every one of the 18 CI failures on that upgrade was a
-    // timeout, never an assertion. Targeted rather than a global raise: the 10 s
-    // default still guards ~24k fast tests, and a real hang here still fails.
-    //
-    // Raised from 60 s on 2026-10-13, on a measurement rather than a hunch. The
-    // 60 s was calibrated against a smaller tree; the gate now walks 13,062
-    // tracked files and takes 17.3 s on an unloaded developer machine, and a
-    // macOS CI shard overshot at 61.0 s — a margin of 1.7 %. The budget is not
-    // tracking the thing it bounds: the tree grows, the number did not, so the
-    // test reds for an unrelated PR and the next reader learns nothing from it.
-    // 180 s is ~10x the measured single-process cost, which leaves headroom for
-    // a loaded shared runner AND for further growth. What the case actually
-    // asserts is that the CLI runs at all (`status` is not null), so a real
-    // hang still fails it — raising the budget costs no sensitivity here.
     it('json report runs deterministically', () => {
         const a = spawnSync(TSX_BIN, [TS_SCRIPT, '--json'], big(REPO_ROOT));
         expect(a.status).not.toBeNull();
-    }, 180_000);
+    }, CLI_BUDGET_MS);
 });
 
 // --- Layer 2: synthetic hit fixture ----------------------------------------

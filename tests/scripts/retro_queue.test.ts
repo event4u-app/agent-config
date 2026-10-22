@@ -3,6 +3,7 @@ import * as fs from 'node:fs';
 import { createRequire, syncBuiltinESMExports } from 'node:module';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -594,7 +595,10 @@ describe('retro_queue — path C, the daily sweep', () => {
             payload: { cwd: main },
         });
         const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_') && k !== 'AGENT_CONFIG_REPLAY'));
-        const r = spawnSync('npx', ['tsx', path.resolve('src/scripts/session_register_hook.ts')], {
+        // The repo-local tsx, never `npx`, which may reach the network to resolve it.
+        const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+        const tsx = path.join(repo, 'node_modules', '.bin', 'tsx');
+        const r = spawnSync(tsx, [path.join(repo, 'src/scripts/session_register_hook.ts')], {
             input: envelope,
             encoding: 'utf8',
             env,
