@@ -88,9 +88,9 @@ today's workflows instead of August's.
 - [x] **2.2 ADR-223 revisit record.** An addendum records that trigger (b) fired
       on 2026-09-11, what 1.3 measured for trigger (a), and the outcome of this
       round: placement changes only, the required set untouched.
-      verify: `./scripts-run src/scripts/adr_cite_check ADR-223` no longer
-      reports the trigger state as indeterminate, or the addendum names why it
-      still is.
+      The checker parses only dated triggers, so it keeps reporting both event
+      triggers as indeterminate; the amendment names that, and the checker sees it:
+      verify: `./scripts-run src/scripts/adr_cite_check ADR-223` -> /AMENDED/
 - [x] **2.3 `ci_status` shape sets name workflows that exist.** Drop or replace
       `Python Version Sweep` and assert in a test that every name in
       `REQUIRED_CHECKS_BY_SHAPE` is the `name:` of a workflow under
