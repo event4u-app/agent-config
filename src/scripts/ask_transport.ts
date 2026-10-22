@@ -54,6 +54,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { ExternalAIClient } from './ai_council/clients.js';
 import { classifyContentClass, DEFAULT_CONTENT_CLASS, type ContentClass } from './ai_council/content_ceiling.js';
 import { handSystemPrompt, parseHandReturn } from './ai_council/hand_schemas.js';
+import { chooseRoute, routeCandidateFromMember } from './ai_council/route_chooser.js';
 import { isHandKind, type HandKind } from './_lib/hand_kinds.js';
 import { buildOrchestrationLine } from './_lib/orchestration_record.js';
 import { DEFAULT_DIR } from './orchestration_record.js';
@@ -170,16 +171,19 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
     } catch {
         return _finish(null, 'none', opts); // disabled / unreadable config → ∅
     }
-    const memberName = (m: ExternalAIClient): string => {
-        const c = m as { name?: string; provider?: string };
-        return c.name || c.provider || 'unknown';
-    };
-    const pick =
-        opts.member !== undefined ? members.find((m) => memberName(m) === opts.member) : members[0];
+    // `--member` narrows the candidates; it never bypasses the chooser's checks.
+    const routed = members.map((m) => ({ member: m, route: routeCandidateFromMember(m) }));
+    const pool = opts.member !== undefined ? routed.filter((r) => r.route.name === opts.member) : routed;
+    const choice = chooseRoute({
+        kind: opts.kind ?? null,
+        contentClass: opts.contentClass ?? DEFAULT_CONTENT_CLASS,
+        candidates: pool.map((r) => r.route),
+    });
+    const pick = choice.route === null ? undefined : pool.find((r) => r.route === choice.route)?.member;
     if (pick === undefined) {
         return _finish(null, opts.member ?? 'none', opts);
     }
-    const provider = memberName(pick);
+    const provider = choice.route!.name;
 
     const system = opts.kind !== undefined ? handSystemPrompt(opts.kind) : (opts.systemPrompt ?? DEFAULT_SYSTEM);
     try {
