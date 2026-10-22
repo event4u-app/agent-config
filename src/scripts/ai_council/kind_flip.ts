@@ -33,7 +33,8 @@ export const MIN_SHADOW_PER_KIND = Math.floor(SHADOW_CALL_CAP / HAND_KINDS.lengt
 /** Free-routed asks a flipped kind needs before its live rate may revert it. */
 export const REVERT_MIN_SAMPLE = 30;
 
-export const KIND_FLIPS_RELPATH = path.join('agents', 'runtime', 'state', 'hand-kind-flips.json');
+import { KIND_FLIPS_RELPATH } from './kind_flip_state.js';
+export { isKindFlipped, KIND_FLIPS_RELPATH } from './kind_flip_state.js';
 
 export interface FlipVerdict {
     readonly ready: boolean;
@@ -117,10 +118,6 @@ function _write(stateRoot: string, store: Store): void {
     fs.renameSync(tmp, target);
 }
 
-/** Unreadable or absent state is "not flipped". */
-export function isKindFlipped(stateRoot: string, kind: HandKind): boolean {
-    return _read(stateRoot).kinds[kind]?.route === 'free';
-}
 
 function _flipLine(kind: HandKind, day: string, s: KindShadowStats): string {
     return (

@@ -201,3 +201,19 @@ describe('free-hands 3.4 wiring — the nudge asks the council config whether a 
         expect(freeRouteAvailable(writeConfig(': not yaml ::'))).toBe(false);
     });
 });
+
+describe('free-hands 6.3 wiring — the nudge names the free rung only for a flipped kind', () => {
+    it('an unflipped kind names no free rung even with an admissible route; a flipped one does', async () => {
+        const { freeRungFor } = await import('../../../src/scripts/ai_council/free_rung.js');
+        const { KIND_FLIPS_RELPATH } = await import('../../../src/scripts/ai_council/kind_flip.js');
+        const cfg = writeConfig(routeMember(PROOF));
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'free-rung-'));
+        tmpdirs.push(root);
+        expect(freeRungFor(root, 'classify', cfg)).toBe(false);
+        fs.mkdirSync(path.dirname(path.join(root, KIND_FLIPS_RELPATH)), { recursive: true });
+        fs.writeFileSync(path.join(root, KIND_FLIPS_RELPATH), JSON.stringify({ kinds: { classify: { route: 'free' } } }));
+        expect(freeRungFor(root, 'classify', cfg)).toBe(true);
+        expect(freeRungFor(root, 'extract', cfg)).toBe(false);
+        expect(freeRungFor(root, 'classify', null)).toBe(false);
+    });
+});

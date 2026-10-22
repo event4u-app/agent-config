@@ -105,7 +105,7 @@ import { resolveSubagentRouting, type Tier } from "../_lib/subagent_routing.js";
 import { isSyntheticPrompt } from "../_lib/prompt_shape.js";
 import { handKindFromPrompt, type HandKind } from "../_lib/hand_kinds.js";
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
-import { councilConfigPath, freeRouteAvailable } from "../ai_council/free_rung.js";
+import { councilConfigPath, freeRungFor } from "../ai_council/free_rung.js";
 
 // Severity is taken from the EXIT CODE, not from the `decision` field in the
 // stdout payload — mirrors `language_mirror_hook.ts`'s own note (found the
@@ -627,10 +627,7 @@ export function main(): number {
   const hostId = typeof platform === "string" && platform ? platform : null;
   // Read lazily: the council config is opened only on a rung-0.5 hand-kind slice.
   const result = classifyPrompt(prompt, root, hostId, {
-    freeRouteAdmissible: () => {
-      const p = councilConfigPath();
-      return p !== null && freeRouteAvailable(p);
-    },
+    freeRouteAdmissible: (kind) => freeRungFor(root, kind, councilConfigPath()),
   });
   if (!result) {
     return EXIT_ALLOW; // anti-canary default: no verdict → no output

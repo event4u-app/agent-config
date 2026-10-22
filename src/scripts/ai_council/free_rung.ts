@@ -13,7 +13,9 @@ import * as fs from 'node:fs';
 import { parse as parseYaml } from 'yaml';
 
 import { resolve_with_fallback } from '../_lib/user_global_paths.js';
+import type { HandKind } from '../_lib/hand_kinds.js';
 import { parseRouteFields, resolveRouteTransport } from './free_route.js';
+import { isKindFlipped } from './kind_flip_state.js';
 
 const COUNCIL_CONFIG_ENV = 'AI_COUNCIL_CONFIG';
 const COUNCIL_CONFIG_REL = 'settings/.ai-council.yml';
@@ -51,4 +53,9 @@ export function councilConfigPath(): string | null {
     const override = process.env[COUNCIL_CONFIG_ENV];
     if (override) return override.startsWith('~/') ? `${process.env['HOME'] ?? ''}${override.slice(1)}` : override;
     return resolve_with_fallback(COUNCIL_CONFIG_REL, { env: null });
+}
+
+/** The free rung exists for `kind` only once the kind has flipped (6.3) and a route is declared. */
+export function freeRungFor(stateRoot: string, kind: HandKind, configPath: string | null): boolean {
+    return isKindFlipped(stateRoot, kind) && configPath !== null && freeRouteAvailable(configPath);
 }
