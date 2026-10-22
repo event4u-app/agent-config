@@ -1,4 +1,4 @@
-<!-- evidence-type: council-question -->
+<!-- evidence-type: analysis -->
 
 # Three design decisions for the remaining steps of PR #2583's roadmaps
 

@@ -1,4 +1,4 @@
-<!-- evidence-type: council-question -->
+<!-- evidence-type: analysis -->
 
 # Decision 2, second round — admit a keyless route for the free-hands shadow?
 
