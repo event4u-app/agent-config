@@ -5,4 +5,3 @@
 - Document business rules and data flows
 - Document inter-domain dependencies
 - **Output:** `agents/evidence/analysis/domains/{domain}.md` (one per domain)
-- **No such layer**: write `agents/evidence/analysis/domains/not-applicable.md` naming why — the exit checks the output exists, and an absent layer is a finding, not a skipped step.

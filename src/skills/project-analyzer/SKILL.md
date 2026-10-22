@@ -39,7 +39,7 @@ A **project analysis** is a systematic walkthrough of the entire codebase that:
 
 It orchestrates other skills and commands to produce a comprehensive picture.
 
-The order is held by [`procedure.yaml`](procedure.yaml). Run the analysis phases one at a time, in order, and start a step only after the one before it has met its exit. A `judgement` exit is sequenced, not verified: state what you decided before moving on.
+[`procedure.yaml`](procedure.yaml) holds the order: run phases one at a time, each only after the previous met its exit. A `judgement` exit is sequenced, not verified: state your decision first. Phase 3–6 without its layer writes `not-applicable.md` (Phase 6: `service-map.md`) saying why — an absent layer is a finding, not a skip.
 
 1. [Phase 1: Project overview](references/steps/01-project-overview.md) — exit: `check: analysis-overview-matches-manifests`
 2. [Phase 2: Architecture](references/steps/02-architecture.md) — exit: `exists: agents/evidence/analysis/architecture`
