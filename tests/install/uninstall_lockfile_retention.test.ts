@@ -6,8 +6,10 @@
  * `uninstall_purge_containment.test.ts` proves the deletion FUNCTION can run
  * twice — a `purge: false` call leaves the inventory a later `purge: true`
  * call reads. It says so itself, and it says what it does not prove: the CLI
- * flow around that function. An end-to-end run on 2026-10-16 measured the
- * difference and it is not cosmetic:
+ * flow around that function. An end-to-end run on 2026-10-16 showed the
+ * difference is not cosmetic. The figures below are the author's own
+ * observation from that run, kept as context; no artifact records them, and
+ * the cases in this file are what pins the behaviour:
  *
  *     uninstall --global          -> plain_rc=0, lockfile deleted
  *     uninstall --global --purge  -> purge_after_rc=1, files_left=892
