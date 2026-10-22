@@ -33,7 +33,7 @@ export const MIN_SHADOW_PER_KIND = Math.floor(SHADOW_CALL_CAP / HAND_KINDS.lengt
 /** Free-routed asks a flipped kind needs before its live rate may revert it. */
 export const REVERT_MIN_SAMPLE = 30;
 
-import { KIND_FLIPS_RELPATH } from './kind_flip_state.js';
+import { isKindFlipped, KIND_FLIPS_RELPATH } from './kind_flip_state.js';
 export { isKindFlipped, KIND_FLIPS_RELPATH } from './kind_flip_state.js';
 
 export interface FlipVerdict {
