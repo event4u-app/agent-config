@@ -361,6 +361,11 @@ describe('tokens — dtcg-2025 object values', () => {
         ['a non-finite component', { colorSpace: 'srgb', components: [0, 'x', 0] }, /component 1 must be a finite number/],
         ['an alpha above one', { colorSpace: 'srgb', components: [0, 0, 0], alpha: 3 }, /alpha 3 is outside 0-1/],
         ['an unknown unit', { value: 2, unit: 'em' }, /unit "em"/],
+        [
+            'a composite (shadow) object, unsupported by design',
+            { color: '#000000', offsetX: { value: 0, unit: 'px' }, offsetY: { value: 1, unit: 'px' }, blur: { value: 2, unit: 'px' } },
+            /neither a DTCG colour nor a dimension\/duration/,
+        ],
     ])('dtcg-2025: %s is a hard error naming the token, exit 1', (_label, value, message) => {
         const r = gen({ primitive: { x: { bad: { $type: 'color', $value: value } } } });
         expect(r.status).toBe(1);
@@ -504,6 +509,13 @@ describe('tokens — palette-tag', () => {
         const found = JSON.parse(runTs(['validate', '--dir', dir, '--json']).stdout) as Finding[];
         expect('palette' in found[0]!).toBe(false);
         expect('id' in found[0]!).toBe(false);
+    });
+
+    it('palette-tag: --tokens without --json is a usage error, never a silently untagged report', () => {
+        const { dir, tokens } = setup('.a { color: #fe0101; }\n');
+        const r = runTs(['validate', '--dir', dir, '--tokens', tokens]);
+        expect(r.status).toBe(2);
+        expect(r.stderr).toMatch(/--tokens: only applies together with --json/);
     });
 
     it('palette-tag: an unreadable token file fails with exit 1 and names the file', () => {
