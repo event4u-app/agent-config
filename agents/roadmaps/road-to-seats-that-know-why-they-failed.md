@@ -87,7 +87,7 @@ shape.
   carrying rate text and for a payment-required status pass.
 - [ ] **2.3 `Retry-After` is capped** at the 1.3 bound; above it nothing sleeps and the cause is
   named (an uncapped wait is a known weakness of S1, K3).
-  verify: `Retry-After: 86400` causes no sleep and a named cause.
+  verify: a day-long `Retry-After` header causes no sleep and a named cause.
 
 ## Phase 3 — Cooldown across runs (M2 woken)
 
