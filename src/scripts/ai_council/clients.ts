@@ -49,6 +49,7 @@ import * as path from 'node:path';
 import { vendorPrefix } from '../_lib/egress_rules.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { boundFor, lightLaunchFor } from './cli_agency_bounds.js';
+import { seatResumeArgs, type SeatSession } from './seat_resume.js';
 import { councilEgress } from './council_egress.js';
 import {
     curlJsonPost as _curlJsonPost,
@@ -1232,6 +1233,9 @@ export abstract class CliClient extends ExternalAIClient {
     protected _cli_calls_path: string | null;
     /** Attribution label for every booking this client makes. */
     protected _consumer: string;
+    /** The session the last answered call ran in; `resumeNext` continues it once, non-blind only. */
+    lastSession: SeatSession | null = null;
+    resumeNext: SeatSession | null = null;
 
     static _AUTH_FAILURE_PATTERNS: readonly string[] = [
         'authentication',
@@ -1504,6 +1508,7 @@ export abstract class CliClient extends ExternalAIClient {
 
         // 2. build command + spawn.
         const cmd = this._build_command(system_prompt, user_prompt, max_tokens);
+        this.resumeNext = null;
         const stdinPayload = this._stdin_payload(system_prompt, user_prompt);
         // The final egress check, immediately before the request is written
         // (road-to-one-detector-and-the-senders-we-own 3.3): nothing is spawned
@@ -1626,6 +1631,8 @@ export abstract class CliClient extends ExternalAIClient {
             meta['cli'] = true;
         }
         response.metadata = meta;
+        const sid = meta['session_id'];
+        if (typeof sid === 'string' && sid !== '' && !response.error) this.lastSession = { id: sid, at_ms: Date.now() };
         return response;
     }
 
@@ -1712,6 +1719,7 @@ export class AnthropicCliClient extends CliClient {
         void max_tokens;
         return [
             this.binary,
+            ...seatResumeArgs(this.name, this.resumeNext, { blind: false, now_ms: Date.now() }),
             '--print',
             // The seat never needs the user environment; only a version the light
             // launch was probed on gets the flag (`LIGHT_LAUNCH_PROBES`).
@@ -1858,7 +1866,7 @@ export class OpenAICliClient extends CliClient {
         // the payload itself is assembled in `_stdin_payload`.
         const modelArgs =
             this.model === OPENAI_CLI_VENDOR_DEFAULT ? [] : ['--model', this.model];
-        return [this.binary, 'exec', '--json', '--skip-git-repo-check', ...boundFor('openai'), ...modelArgs, '-'];
+        return [this.binary, 'exec', ...seatResumeArgs(this.name, this.resumeNext, { blind: false, now_ms: Date.now() }), '--json', '--skip-git-repo-check', ...boundFor('openai'), ...modelArgs, '-'];
     }
 
     /**

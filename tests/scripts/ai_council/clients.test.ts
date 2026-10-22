@@ -2271,3 +2271,36 @@ describe('a timeout stays a timeout, and a parse failure is not replayed', () =>
         expect(isFallbackEligible(classifyCliFailure('parse_failed'))).toBe(false);
     });
 });
+
+describe('cold-start 5.2 — a non-blind follow-up continues the seat session inside the TTL', () => {
+    const okClaude = (): SubprocessResult => ({ returncode: 0, stdout: JSON.stringify({ result: 'ok', session_id: 'sess-1', usage: {} }), stderr: '' }) as SubprocessResult;
+
+    it('blind-round-never-resumes: a blind round keeps a fresh session even inside the TTL', async () => {
+        const { seatResumeArgs } = await import('../../../src/scripts/ai_council/seat_resume.js');
+        const session = { id: 'sess-1', at_ms: 1_000 };
+        expect(seatResumeArgs('anthropic', session, { blind: true, now_ms: 1_001 })).toEqual([]);
+        expect(seatResumeArgs('openai', session, { blind: true, now_ms: 1_001 })).toEqual([]);
+        expect(seatResumeArgs('anthropic', session, { blind: false, now_ms: 1_001 })).toEqual(['--resume', 'sess-1']);
+        expect(seatResumeArgs('openai', session, { blind: false, now_ms: 1_001 })).toEqual(['resume', 'sess-1']);
+    });
+
+    it('an expired or absent session, or an unprobed provider, starts fresh', async () => {
+        const { seatResumeArgs, SEAT_RESUME_TTL_MS } = await import('../../../src/scripts/ai_council/seat_resume.js');
+        expect(seatResumeArgs('anthropic', { id: 's', at_ms: 0 }, { blind: false, now_ms: SEAT_RESUME_TTL_MS })).toEqual([]);
+        expect(seatResumeArgs('anthropic', null, { blind: false, now_ms: 1 })).toEqual([]);
+        expect(seatResumeArgs('gemini', { id: 's', at_ms: 0 }, { blind: false, now_ms: 1 })).toEqual([]);
+    });
+
+    it('the claude seat records its session and resumes it only when the caller marks the call non-blind', () => {
+        const { client, calls } = stubCli(AnthropicCliClient, okClaude);
+        client.ask('sys', 'first', 100);
+        expect(client.lastSession?.id).toBe('sess-1');
+        client.ask('sys', 'second', 100);
+        expect(calls[1]!.cmd).not.toContain('--resume');
+        client.resumeNext = client.lastSession;
+        client.ask('sys', 'repair', 100);
+        expect(calls[2]!.cmd.slice(0, 4)).toEqual([calls[2]!.cmd[0], '--resume', 'sess-1', '--print']);
+        client.ask('sys', 'after', 100);
+        expect(calls[3]!.cmd).not.toContain('--resume');
+    });
+});

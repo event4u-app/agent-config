@@ -1508,3 +1508,25 @@ describe('render — handoff section (Phase 4.1)', () => {
         expect(out).toContain('**Constraints:** none recorded.');
     });
 });
+
+describe('cold-start 5.2 — the stance repair continues the seat session', () => {
+    class SessionMock extends CapturingMock {
+        lastSession: { id: string; at_ms: number } | null = null;
+        resumeNext: { id: string; at_ms: number } | null = null;
+        resumedWith: (string | null)[] = [];
+        override ask(system_prompt: string, user_prompt: string): CouncilResponse {
+            this.resumedWith.push(this.resumeNext?.id ?? null);
+            this.resumeNext = null;
+            const r = super.ask(system_prompt, user_prompt);
+            this.lastSession = { id: `s${this.prompts.length}`, at_ms: Date.now() };
+            return r;
+        }
+    }
+    const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'A or B?' });
+
+    it('the repair resumes the session that wrote the reply; the multi-round debate does not', () => {
+        const a = new SessionMock('anthropic', 'm', ['I prefer A.', 'I still prefer A.', 'STANCE: A | CONFIDENCE: high | DEALBREAKER: no']);
+        consult([a], q, null, { rounds: 2, stance_tally: true, on_stance_repair: () => true });
+        expect(a.resumedWith).toEqual([null, null, 's2']);
+    });
+});
