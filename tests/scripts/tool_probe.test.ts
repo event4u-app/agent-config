@@ -4,6 +4,7 @@
 // Every case is driven by a REAL executable stub in a real temp dir; nothing
 // mocks `node:child_process`. The five states are exercised end-to-end through
 // `probeTool()`, which must classify and never throw.
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -135,11 +136,17 @@ describe.skipIf(!POSIX || SLEEP === undefined)('probeTool — case 5: deadline e
         // `sleep` is invoked by absolute path: the fixture PATH deliberately
         // contains only BIN_DIR, so a bare `sleep` would exit 127 and the case
         // would silently test `broken` instead of `timeout`.
+        // The first exec of a freshly written file can cost more than the
+        // 250 ms deadline on macOS (measured ~340 ms: the first-launch scan),
+        // which kills attempt 1 before it records itself. One warm-up exec,
+        // which the stub answers before touching the counter, pays that cost
+        // outside the measured window.
         const counter = path.join(ROOT, 'slow-attempts.log');
-        stub(
+        const target = stub(
             'slow-backend',
-            `#!/bin/sh\nprintf 'x\\n' >> "${counter}"\nexec ${String(SLEEP)} 5\n`,
+            `#!/bin/sh\n[ -n "$TOOL_PROBE_WARMUP" ] && exit 0\nprintf 'x\\n' >> "${counter}"\nexec ${String(SLEEP)} 5\n`,
         );
+        execFileSync(target, [], { env: { TOOL_PROBE_WARMUP: '1' }, stdio: 'ignore' });
 
         const result = probeTool(descriptorFor('slow-backend', { timeout_ms: 250 }));
 
