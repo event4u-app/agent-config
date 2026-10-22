@@ -44,6 +44,15 @@ export function sortEntries(entries: readonly LockEntry[]): LockEntry[] {
     );
 }
 
+/**
+ * One path segment: `release` joins `host` and `name` into a recursive delete,
+ * so a lock row from a synced dotfile or a corrupted write must not be able to
+ * climb out of the store with `..` or a separator.
+ */
+function isSegment(s: string): boolean {
+    return s !== '' && s !== '.' && s !== '..' && !/[/\\\0]/.test(s);
+}
+
 export function loadLock(file: string): Lock {
     try {
         const data = JSON.parse(fs.readFileSync(file, 'utf-8')) as Partial<Lock>;
@@ -51,7 +60,8 @@ export function loadLock(file: string): Lock {
         const entries = data.entries.filter(
             (e): e is LockEntry =>
                 !!e && typeof e.host === 'string' && typeof e.name === 'string' &&
-                typeof e.root === 'string' && typeof e.sha256 === 'string',
+                typeof e.root === 'string' && typeof e.sha256 === 'string' &&
+                isSegment(e.host) && isSegment(e.name),
         );
         return { schema_version: 1, entries: sortEntries(entries) };
     } catch {
@@ -110,10 +120,12 @@ export function release(
         const dest = path.join(e.root, e.name);
         let ours = true;
         try {
-            // Only a symlink this package placed is ours to remove. A real
-            // directory under the same name is somebody else's, and the lock
-            // being stale does not make it ours.
-            ours = fs.lstatSync(dest).isSymbolicLink();
+            // Only a symlink this package placed is ours to remove: one that
+            // points into the store. A real directory, or a link elsewhere, is
+            // somebody else's, and the lock being stale does not make it ours.
+            ours =
+                fs.lstatSync(dest).isSymbolicLink() &&
+                path.resolve(path.dirname(dest), fs.readlinkSync(dest)).startsWith(path.resolve(storeDir) + path.sep);
         } catch {
             ours = true; // already gone; dropping the row is the repair
         }
