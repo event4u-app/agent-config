@@ -596,7 +596,7 @@ stay green (93 files).
   the decision-revisit gate's reserved set gives to the owner, not to a council.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-21 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
