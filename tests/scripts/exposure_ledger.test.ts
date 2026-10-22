@@ -89,6 +89,7 @@ describe('a seeded multi-route run', () => {
                     members,
                     contentClass: 'public-artifact',
                     auditDir: null,
+                    flips: () => true,
                     egress: resetCouncilEgress({ identifiers: true }),
                     exposure: { ledger, exposes: { files: [`src/f${i}.ts`], symbols: [`fn${i}`] }, trackedFiles: tracked },
                 },

@@ -37,6 +37,10 @@
  * makes it *present*, which is the difference between a check an agent could
  * have run and one it did not need to.
  *
+ * It also carries the cross-model canary's red-streak line when one is
+ * recorded (`canary_liveness.ts`): session start must show it, and a concern
+ * of its own would cost more of the hook bundle than one file read here.
+ *
  * Advisory, always. It never blocks, and a resolution failure degrades to
  * silence rather than to a claim — a hook that guessed here would reproduce the
  * defect it exists to remove.
@@ -46,6 +50,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { readCanaryStatusLine } from './_lib/canary_status.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import {
     COUNCIL_CONFIG_ENV,
@@ -149,15 +154,18 @@ export function run(stdin: string, options: { env?: Record<string, string | unde
     if (slot !== 'session_start') {
         return EXIT_ALLOW;
     }
-    const a = resolveAvailability(_workspaceRoot(envelope), options.env ?? process.env);
-    if (a === null) {
+    const root = _workspaceRoot(envelope);
+    const a = resolveAvailability(root, options.env ?? process.env);
+    const canary = readCanaryStatusLine(root);
+    if (a === null && canary === null) {
         return EXIT_ALLOW;
     }
+    const facts = [a === null ? null : buildFact(a), canary].filter((f): f is string => f !== null);
     process.stdout.write(
         `${JSON.stringify({
             decision: 'allow',
-            reason: `council-availability: ${a.configured ? 'configured' : 'not configured'}`,
-            context: buildFact(a),
+            reason: `council-availability: ${a === null ? 'unresolved' : a.configured ? 'configured' : 'not configured'}`,
+            context: facts.join('\n'),
         })}\n`,
     );
     return EXIT_ALLOW;

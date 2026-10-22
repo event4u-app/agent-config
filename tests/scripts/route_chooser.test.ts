@@ -115,12 +115,12 @@ describe('askOnce routes by the chooser, never by list order', () => {
     const paidMember = member('paid1', {}, '{"label":"y","confidence":0.5}');
 
     it('a typed public-artifact call goes to the free route', async () => {
-        const r = await askOnce('q', { members: [paidMember, freeMember], kind: 'classify', contentClass: 'public-artifact', auditDir: null });
+        const r = await askOnce('q', { members: [paidMember, freeMember], kind: 'classify', contentClass: 'public-artifact', auditDir: null, flips: () => true });
         expect(r?.member).toBe('free1');
     });
 
     it('a project-content call skips the free route although it is listed first', async () => {
-        const r = await askOnce('q', { members: [freeMember, paidMember], kind: 'classify', contentClass: 'project-content', auditDir: null });
+        const r = await askOnce('q', { members: [freeMember, paidMember], kind: 'classify', contentClass: 'project-content', auditDir: null, flips: () => true });
         expect(r?.member).toBe('paid1');
     });
 

@@ -118,7 +118,7 @@ describe('askHand — the outbound payload', () => {
                 spec: 'Write a helper for acme-billing that formats invoice ids.',
                 linking: [{ type: 'PROJECT', value: 'acme-billing' }],
             },
-            { members: [member], contentClass: 'public-artifact', auditDir: null, egress: resetCouncilEgress({ identifiers: true }) },
+            { members: [member], contentClass: 'public-artifact', auditDir: null, flips: () => true, egress: resetCouncilEgress({ identifiers: true }) },
         );
         expect(r).not.toBeNull();
         expect(sent.join('\n')).not.toContain('acme-billing');
