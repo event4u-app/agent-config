@@ -22,7 +22,8 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 
-import { tierDownshiftVerdict, type LegResult, type LegUsage, type Price } from '../../../src/scripts/_lib/tier_downshift_verdict.js';
+import { parsePriceRows, type PriceRow } from '../../../src/scripts/_lib/price_freshness.js';
+import { tierDownshiftVerdict, type LegResult, type LegUsage } from '../../../src/scripts/_lib/tier_downshift_verdict.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..', '..', '..');
@@ -147,15 +148,8 @@ async function runLeg(spec: Spec, rep: number, arm: 'lite' | 'inherit'): Promise
     };
 }
 
-function readPrices(): Record<string, Price> {
-    const text = fs.readFileSync(path.resolve(HERE, '..', 'pricing.yaml'), 'utf8');
-    const prices: Record<string, Price> = {};
-    for (const block of text.split('  - tier: ').slice(1)) {
-        const tier = block.split('\n')[0]!.trim();
-        const num = (k: string): number => Number(block.match(new RegExp(`\\n\\s+${k}: ([0-9.]+)`))?.[1] ?? NaN);
-        prices[tier] = { input: num('input'), output: num('output'), cache_write: num('cache_write'), cache_read: num('cache_read') };
-    }
-    return prices;
+function readPrices(): PriceRow[] {
+    return parsePriceRows(fs.readFileSync(path.resolve(HERE, '..', 'pricing.yaml'), 'utf8'));
 }
 
 function flag(name: string): string | undefined {
@@ -201,7 +195,7 @@ async function main(): Promise<void> {
             .filter(Boolean)
             .map((l) => JSON.parse(l) as Row & { error?: string })
             .filter((r) => !r.error);
-        console.log(JSON.stringify(tierDownshiftVerdict(rows, readPrices()), null, 2));
+        console.log(JSON.stringify(tierDownshiftVerdict(rows, readPrices(), new Date()), null, 2));
         return;
     }
     console.error('usage: run.ts run [--reps N] [--concurrency C] [--results F] | verdict [--results F]');
