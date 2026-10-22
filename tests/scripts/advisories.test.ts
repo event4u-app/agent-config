@@ -720,6 +720,15 @@ describe('R2 round 3 fixes (2026-10-21)', () => {
         expect(yml).toMatch(/grep -v '\^Checked '/);
     });
 
+    it('the daily runner publishes nothing on a public repository — every step after the visibility probe is gated', async () => {
+        const { parse } = await import('yaml');
+        const yml = fs.readFileSync(path.join(__dirname, '..', '..', 'src', 'agent-src', 'templates', 'github-workflows', 'advisories-daily.yml'), 'utf-8');
+        const steps = (parse(yml) as { jobs: { advisories: { steps: Array<{ id?: string; if?: string; run?: string }> } } }).jobs.advisories.steps;
+        expect(steps[0]!.id).toBe('visibility');
+        expect(steps[0]!.run).toContain('.private');
+        for (const s of steps.slice(1)) expect(s.if).toBe("steps.visibility.outputs.private == 'true'");
+    });
+
     it('#10 — a pin below a security release keeps its fix past the pre-announcement window', async () => {
         const now = new Date('2026-10-21T00:00:00Z');
         const xml = `<feed><entry><title>PHP 8.3.28 Released!</title><published>2026-09-01T00:00:00Z</published><content>security fixes</content></entry></feed>`;
