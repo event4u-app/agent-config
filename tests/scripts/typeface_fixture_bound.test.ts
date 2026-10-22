@@ -23,8 +23,20 @@ interface FixtureFamily {
     decision: string;
 }
 
+/**
+ * Set while the 2026-10-16 amendment that admitted these binaries is suspended
+ * pending an owner decision. While `lifted_by` is null the binaries must be
+ * ABSENT and only their pinned identity (upstream path + SHA-256) stays.
+ */
+interface Suspension {
+    since: string;
+    record: string;
+    lifted_by: string | null;
+}
+
 interface FixtureManifest {
     admitted_by: string;
+    suspended?: Suspension;
     families: FixtureFamily[];
 }
 
@@ -33,6 +45,15 @@ function boundFindings(root: string, manifest: FixtureManifest, trackedPaths: re
     const findings: string[] = [];
     if (!fs.existsSync(path.join(root, manifest.admitted_by))) {
         findings.push(`admitted_by names a record that does not exist: ${manifest.admitted_by}`);
+    }
+    const susp = manifest.suspended;
+    if (susp !== undefined) {
+        if (!fs.existsSync(path.join(root, susp.record))) {
+            findings.push(`suspended.record names a record that does not exist: ${susp.record}`);
+        }
+        if (susp.lifted_by !== null && !fs.existsSync(path.join(root, susp.lifted_by))) {
+            findings.push(`suspended.lifted_by names a record that does not exist: ${susp.lifted_by}`);
+        }
     }
     const listed = new Set<string>();
     for (const fam of manifest.families) {
@@ -45,6 +66,11 @@ function boundFindings(root: string, manifest: FixtureManifest, trackedPaths: re
         const licensePath = path.join(root, FIXTURE_DIR, fam.dir, fam.license_file);
         if (!fs.existsSync(licensePath)) findings.push(`${fam.dir}: license text ${fam.license_file} is missing`);
         const fontPath = path.join(root, rel);
+        if (manifest.suspended !== undefined && manifest.suspended.lifted_by === null) {
+            if (fs.existsSync(fontPath)) findings.push(`${fam.dir}: ${fam.file} is present while the amendment is suspended`);
+            if (!/^[0-9a-f]{64}$/.test(fam.sha256)) findings.push(`${fam.dir}: no pinned SHA-256 to restore it by`);
+            continue;
+        }
         if (!fs.existsSync(fontPath)) {
             findings.push(`${fam.dir}: ${fam.file} is missing`);
             continue;
@@ -52,8 +78,13 @@ function boundFindings(root: string, manifest: FixtureManifest, trackedPaths: re
         const digest = createHash('sha256').update(fs.readFileSync(fontPath)).digest('hex');
         if (digest !== fam.sha256) findings.push(`${fam.dir}: ${fam.file} does not match its recorded SHA-256`);
     }
+    const held = susp !== undefined && susp.lifted_by === null;
     for (const p of trackedPaths) {
         if (!TYPEFACE_EXT.test(p)) continue;
+        if (held) {
+            findings.push(`typeface binary present while the amendment is suspended: ${p}`);
+            continue;
+        }
         if (!p.startsWith(`${FIXTURE_DIR}/`)) findings.push(`typeface binary outside the fixture set: ${p}`);
         else if (!listed.has(p)) findings.push(`typeface binary with no admitting entry: ${p}`);
     }
@@ -88,13 +119,32 @@ describe('typeface fixtures stay inside their bound', () => {
     });
 
     it('refuses a typeface binary that no entry admits', () => {
-        const findings = boundFindings(REPO_ROOT, readManifest(), [
+        // Read as the bound applies once the suspension is lifted.
+        const findings = boundFindings(REPO_ROOT, { ...readManifest(), suspended: undefined }, [
             ...onDiskTypefaces(),
             `${FIXTURE_DIR}/drive-by/DriveBy-Regular.otf`,
             'docs/media/Brand.woff2',
         ]);
         expect(findings).toContain(`typeface binary with no admitting entry: ${FIXTURE_DIR}/drive-by/DriveBy-Regular.otf`);
         expect(findings).toContain('typeface binary outside the fixture set: docs/media/Brand.woff2');
+    });
+});
+
+describe('while the amendment is suspended the binaries stay out of the tree', () => {
+    // The 2026-10-16 amendment narrowed an owner-reserved licensing lock; the
+    // 2026-10-22 council split on whether it was the council's to take, which
+    // escalates to the owner. Until an owner record lifts it, no typeface
+    // binary may sit in the repository, and the pinned identity is what lets a
+    // lift restore the exact files.
+    it('the shipped manifest is suspended and names its record', () => {
+        const m = readManifest();
+        expect(m.suspended?.lifted_by).toBeNull();
+        expect(fs.existsSync(path.join(REPO_ROOT, m.suspended?.record ?? '/nonexistent'))).toBe(true);
+    });
+
+    it('refuses a binary that reappears while suspended', () => {
+        const findings = boundFindings(REPO_ROOT, readManifest(), [`${FIXTURE_DIR}/lato/Lato-Regular.ttf`]);
+        expect(findings).toContain(`typeface binary present while the amendment is suspended: ${FIXTURE_DIR}/lato/Lato-Regular.ttf`);
     });
 });
 

@@ -13,6 +13,12 @@ Whether `type-design` path A, handed **only a rendered image of one word**, can
 reconstruct the rest of a real family's `latin-basic` alphabet closely enough to
 count as a reconstruction rather than as a different font.
 
+> **Held, 2026-10-22 — not edited.** The population's three binaries are out
+> of the tree while the 2026-10-16 amendment that admitted them is suspended
+> pending an owner decision (`agents/evidence/council/typeface-lock-amendment-routing-20261022.md`). Nothing below changes;
+> the benchmark cannot run until the suspension is lifted and the pinned files
+> are restored byte-identical.
+
 ## Population
 
 The three families under `tests/fixtures/fonts/` (`fixtures.json`, pinned
