@@ -9,7 +9,8 @@
  * Usage:
  *   ./scripts-run src/scripts/orchestration_record \
  *     --spawn-count 1 --token-delta -72000 --provenance measured \
- *     --tier-chosen lite --tier-source inferred --task-class read-only-fanout \
+ *     --tier-chosen lite --model-requested haiku --tier-source inferred --task-class read-only-fanout \
+ *     [--model-served claude-haiku-5-5] [--session-tier high] \
  *     [--rules-applied a,b] [--tiers sonnet,opus] [--agent-combo implementer,judge] [--wall-clock-ms 18500] [--dispatch-outcome DONE] \
  *     [--first-pass-success true|false] [--escalated true|false] \
  *     [--init-tokens 1200] [--payload-hash <hex8-64>] [--lookup-class definition|references|string-existence|report-run] \
@@ -154,6 +155,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         wall_clock_ms: int(flags, 'wall-clock-ms'),
         dispatch_tokens: int(flags, 'dispatch-tokens'),
         session_tier: str(flags, 'session-tier'),
+        model_requested: str(flags, 'model-requested'),
+        model_served: str(flags, 'model-served'),
         dispatch_outcome: str(flags, 'dispatch-outcome') as DispatchOutcome | undefined,
         verify_mode: str(flags, 'verify-mode') as VerifyMode | undefined,
         first_pass_success: bool(flags, 'first-pass-success'),

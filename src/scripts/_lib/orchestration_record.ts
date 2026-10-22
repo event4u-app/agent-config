@@ -428,8 +428,13 @@ function modelDivergent(
 ): boolean | null {
     if (typeof requested !== 'string' || typeof served !== 'string') return null;
     if (!requested || !served) return null;
+    // A dispatch argument names a family alias (`haiku`), the host serves a
+    // full id of it; any other requested spelling is compared exactly.
+    if (MODEL_FAMILY_ALIASES.includes(requested)) return !served.toLowerCase().includes(requested);
     return requested !== served;
 }
+
+const MODEL_FAMILY_ALIASES: readonly string[] = ['haiku', 'sonnet', 'opus', 'fable'];
 
 /**
  * Build + validate the audit-log-v1 line. Returns `{line, errors}`; when
@@ -470,6 +475,9 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
 
     if (input.tier_chosen != null && !TIERS_CHOSEN.includes(input.tier_chosen)) {
         errors.push(`tier_chosen must be one of ${TIERS_CHOSEN.join(' | ')} (or omitted)`);
+    }
+    if (input.tier_chosen != null && (typeof input.model_requested !== 'string' || !input.model_requested)) {
+        errors.push('tier_chosen needs model_requested: a tier the dispatch did not carry is not checkable');
     }
     if (input.tier_source != null && !TIER_SOURCES.includes(input.tier_source)) {
         errors.push(`tier_source must be one of ${TIER_SOURCES.join(' | ')} (or omitted)`);
