@@ -14,7 +14,14 @@ relates:
 
 # Road to gateway harvest — what the runtime layer could carry, parked behind the freeze (Source B)
 
-> **Arrivals:** 2 — latest `inbox-2026-09-n` (2026-09-05); earlier: the untracked round of 2026-08-03 that created this roadmap.
+> **Arrivals:** 4 — latest `inbox-2026-10-x` and `inbox-2026-10-y` (2026-10-22, one round each);
+> earlier: `inbox-2026-09-n` (2026-09-05), the untracked round of 2026-08-03 that created this roadmap.
+>
+> **Executing elsewhere since 2026-10-22:** M1 and M9 are planned in
+> `road-to-free-hands-a-paid-head-checks` (Phases 2 and 5), M2 in
+> `road-to-seats-that-know-why-they-failed` (Phase 3). The owner question this file has held
+> since 2026-09-07 — whether to spend the M1 slot — is posed there as blockers
+> `free-route-admission` and `project-content-ceiling`. M4-M8 stay parked here.
 
 > **FREEZE LIFTED 2026-08-05.** The ADR-211 harvest freeze that parked this
 > roadmap was anchored on external adoption; that anchoring is struck by
