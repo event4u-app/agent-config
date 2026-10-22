@@ -13,6 +13,10 @@
  * stayed green (R2 review 2026-10-19, finding 7). The contract below is the
  * sentence instead of the neighbourhood: the door must say, in one clause,
  * that it PRINTS the scope line and that it does so BEFORE it reads.
+ *
+ * A DRIFT PIN between the procedure text and the code, not evidence that a
+ * door does this at run time: these cases read markdown. The behavioural half
+ * is the resolver/writer unit suite named above.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

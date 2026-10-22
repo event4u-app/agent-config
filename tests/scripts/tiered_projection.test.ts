@@ -12,14 +12,9 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import {
-
-
-    _tier_b_advisory,
-} from '../../src/scripts/install.js';
-// The feature itself lives in `_lib/mcp_bridge.ts`; `install.ts` forwards the
-// names above. Both surfaces are exercised: the forwarded ones here, and
-// `applyTieredPrune` — the branch install.ts actually calls — below.
+import { _tier_b_advisory } from '../../src/scripts/install.js';
+// The advisory lives in `_lib/mcp_bridge.ts` (`tierBAdvisory`); `install.ts`
+// forwards it under the name above, which is the surface exercised here.
 
 import { computeTiers } from '../../src/scripts/compute_skill_tiers.js';
 import { loadContentTree } from '../../src/cli/mcp/content.js';
@@ -105,7 +100,7 @@ describe('_tier_b_advisory — Phase 2.3, a recommendation and never a write', (
         // key. The invariant this case is named for is that BOTH levers are
         // offered and neither is taken silently — so it follows the surviving
         // second lever rather than dropping the assertion with the key.
-        expect(line).toContain('MCP server');
+        expect(line).toMatch(/• or reach them through the MCP server, which serves every skill by name/);
         expect(line).toContain('neither applied for you');
     });
 

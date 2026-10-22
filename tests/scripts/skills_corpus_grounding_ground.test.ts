@@ -185,12 +185,12 @@ describe('decision_engine — ground (async) on a real fixture', () => {
 // The first example `corpus-grounding` documents is `search` WITHOUT
 // `--domain`, which routes through `detect_domain` and therefore compiles one
 // `u`-flag RegExp per keyword in every manifest's `detect` block. Two of the
-// six shipped manifests carry a keyword whose escaped form is not a valid
-// `u`-flag escape, so the documented example cannot return rows there.
+// six shipped manifests once carried a keyword whose escaped form was not a
+// valid `u`-flag escape, so the documented example returned no rows there.
 //
-// `every-manifest-control` records that reading; `every-manifest` is the
-// obligation. Both run the same sweep so a regression in either direction is
-// visible from one place.
+// `every-manifest` is the obligation over the real corpora. The escaping
+// case below pins the fix on the characters that used to break compilation,
+// so a regression shows there as well as here.
 
 const SHIPPED_MANIFESTS = [
     'accessibility-auditor',

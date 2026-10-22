@@ -2,16 +2,8 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-
-/**
- * The repository's own `tsx`, not `npx tsx`. Both cases below spawn with
- * `cwd: tmp`, a scratch directory with no `node_modules`, so `npx` resolved
- * nothing locally and asked the registry — a registry round-trip inside a test
- * about a hook's default-off behaviour. It was invisible until the suite's
- * network guard turned it into a 30 s timeout.
- */
-const TSX_BIN = path.resolve('node_modules', '.bin', 'tsx');
 
 import {
     buildSettingsClassIndex,
@@ -28,6 +20,20 @@ import {
     readLearnValue,
     runLearn,
 } from '../../src/scripts/memory_learn_hook.js';
+
+/**
+ * The repository's own `tsx`, not `npx tsx`. Both cases below spawn with
+ * `cwd: tmp`, a scratch directory with no `node_modules`, so `npx` resolved
+ * nothing locally and asked the registry — a registry round-trip inside a test
+ * about a hook's default-off behaviour. It was invisible until the suite's
+ * network guard turned it into a 30 s timeout. Resolved from this file, not
+ * the process cwd.
+ */
+const TSX_BIN = path.resolve(
+    path.dirname(fileURLToPath(import.meta.url)),
+    '../../node_modules/.bin',
+    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
+);
 
 let tmp: string;
 

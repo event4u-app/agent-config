@@ -12,6 +12,10 @@
  * Found by the R2 completion review of 2026-10-19 (round b, finding 1), which
  * read the step record still saying "No door writes it yet" beside a closed
  * AC-9 — the criterion that would have surfaced it.
+ *
+ * A DRIFT PIN between the procedure text and the code, not evidence that a
+ * door does this at run time: these cases read markdown. The behavioural half
+ * is the resolver/writer unit suite named above.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';

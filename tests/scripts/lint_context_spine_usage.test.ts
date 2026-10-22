@@ -1,9 +1,9 @@
 // Tests for src/scripts/lint_context_spine_usage.ts (py2ts Phase 4 / Wave 4b).
 //
 // No pytest suite exists. Differential checks over the public helpers
-// (frontmatter/body split, spine extraction, slot-citation detection) plus a
-// golden-parity layer that runs python3 vs tsx on the REAL REPO,
-// byte-identical stdout + stderr + exit (skipped without python3).
+// (frontmatter/body split, spine extraction, slot-citation detection) and the
+// brand-voice slot cases. There is no python3 parity layer: the Python source
+// has been retired.
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -31,8 +31,6 @@ describe('lint_context_spine_usage — behavioural spec', () => {
         expect(mod.VALID_SLOTS.length).toBeGreaterThan(0);
     });
 });
-
-// --- Golden parity on the REAL REPO -----------------------------------------
 
 // road-to-a-brand-the-tree-can-check 4.2 / 4.4 — the brand-voice slot is the
 // first slot whose frontmatter is machine-read; it is validated as data.

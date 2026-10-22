@@ -97,7 +97,7 @@ describe('hooks_status — collect', () => {
         fs.writeFileSync(
             path.join(home, '.claude', 'settings.json'),
             JSON.stringify({
-                hooks: { SessionStart: [{ hooks: [{ type: 'command', command: 'x dispatch:hook --platform claude --event session_start' }] }] },
+                hooks: { SessionStart: [{ hooks: [{ type: 'command', command: `x ${MANAGED_SIGNATURE} --event session_start` }] }] },
             }),
         );
         const claude = byPlatform(
