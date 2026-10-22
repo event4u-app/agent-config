@@ -106,10 +106,11 @@ the judge-one-tier-up ladder (`src/agent-src/contexts/subagent-configuration.md:
 
 ## Phase 1 — The tier rides on the dispatch (T2, T3)
 
-- [ ] **1.1 Every suite-recorded dispatch carries the four fields** `tier_chosen`,
+- [x] **1.1 Every suite-recorded dispatch carries the four fields** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/orchestration_record_hook.ts --> `tier_chosen`,
   `session_tier`, `model_requested`, `model_served`; a record with `tier_chosen` and no
   `model_requested` fails validation. No new field.
   verify: a validator test refuses that record; a fixture dispatch writes all four.
+  Done 2026-10-22 (commit aa74c70c5f): the validator refuses `tier_chosen` without `model_requested` (`_lib_orchestration_record.test.ts` › refuses tier_chosen without model_requested); the `orchestration-record` hook writes all four from the dispatch's `model` argument, the served id and the head's transcript tail (`orchestration_record_hook.test.ts` › a fixture dispatch writes all four). Live check first: a `model: haiku` dispatch from this session had been recorded with all four null, because the hook never read `tool_input.model`. On this host most dispatches launch async, so `model_served` stays null for them — the ack carries no usage — and only the request half is recorded.
 - [ ] **1.2 The nudge names the argument, not the word.** When the ladder resolves a slice to
   `lite`, the nudge names the per-call model value from `TIER_TO_CLAUDE_MODEL` and the slice
   kind that earned it; it never auto-spawns and never names a tier the table did not produce.
