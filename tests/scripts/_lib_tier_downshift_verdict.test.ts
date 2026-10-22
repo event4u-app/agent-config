@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
     ESCALATION_KILL,
     MIN_PAIRS,
+    QUALITY_MARGIN_PP,
     kindTierAfter,
     tierDownshiftVerdict,
     type LegResult,
@@ -78,13 +79,40 @@ describe('tierDownshiftVerdict', () => {
 });
 
 describe('tierDownshiftVerdict — no discordant pair is not certainty', () => {
-    it('bounds the difference by the rule of three when no pair disagrees', () => {
+    it('bounds a clean run by the exact binomial bound, not by zero', () => {
         const v = tierDownshiftVerdict(pairs(60, () => true, () => true), PRICES);
-        expect(v.ci_half_width_pp).toBeCloseTo(5, 5);
+        // Clopper–Pearson, one-sided 95 %, 0 of 60: 1 - 0.05^(1/60).
+        expect(v.upper_bound_pp).toBeCloseTo((1 - 0.05 ** (1 / 60)) * 100, 6);
         expect(v.quality).toBe('held');
         const small = tierDownshiftVerdict(pairs(40, () => true, () => true), PRICES);
-        expect(small.ci_half_width_pp).toBeCloseTo(7.5, 5);
+        expect(small.upper_bound_pp).toBeCloseTo((1 - 0.05 ** (1 / 40)) * 100, 6);
         expect(small.quality).toBe('underpowered');
+    });
+});
+
+describe('tierDownshiftVerdict — one more failure never reads as better evidence', () => {
+    it('never holds 1 discordant failure where 0 is refused, at any pair count', () => {
+        for (let n = MIN_PAIRS; n <= 120; n++) {
+            const zero = tierDownshiftVerdict(pairs(n, () => true, () => true), PRICES);
+            const one = tierDownshiftVerdict(pairs(n, (i) => i !== 0, () => true), PRICES);
+            if (zero.quality !== 'held') expect(one.quality, `n=${n}`).not.toBe('held');
+            expect(one.upper_bound_pp!, `n=${n}`).toBeGreaterThan(zero.upper_bound_pp!);
+        }
+    });
+
+    it('holds only strictly below the margin', () => {
+        for (let n = MIN_PAIRS; n <= 120; n++) {
+            for (const fails of [0, 1, 2]) {
+                const v = tierDownshiftVerdict(pairs(n, (i) => i >= fails, () => true), PRICES);
+                if (v.quality === 'held') expect(v.upper_bound_pp!, `n=${n} fails=${fails}`).toBeLessThan(QUALITY_MARGIN_PP);
+            }
+        }
+    });
+
+    it('a failure of the inherit arm alone never makes lite look worse', () => {
+        const base = tierDownshiftVerdict(pairs(80, () => true, () => true), PRICES);
+        const inheritFails = tierDownshiftVerdict(pairs(80, () => true, (i) => i !== 0), PRICES);
+        expect(inheritFails.upper_bound_pp!).toBeLessThanOrEqual(base.upper_bound_pp!);
     });
 });
 

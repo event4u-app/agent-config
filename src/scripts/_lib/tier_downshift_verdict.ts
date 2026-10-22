@@ -16,6 +16,12 @@ export const ESCALATION_KILL = 0.3;
 export const PAIR_CAP = 60;
 /** Below this many complete pairs no rate is read at all. */
 export const MIN_PAIRS = 30;
+/**
+ * One-sided error of every bound read here. 0.05 is the level the
+ * pre-registered verdict already used: the rule of three it replaces is the
+ * one-sided 95 % bound for zero events.
+ */
+export const BOUND_ALPHA = 0.05;
 
 export type Arm = 'lite' | 'inherit';
 
@@ -68,8 +74,15 @@ export interface TierDownshiftVerdict {
     inherit: ArmSummary;
     /** lite minus inherit fail-or-escalate rate, in percentage points. */
     diff_pp: number | null;
-    /** Half-width of the 95 % interval of the paired difference, in percentage points. */
-    ci_half_width_pp: number | null;
+    /**
+     * One-sided upper bound of the paired difference, in percentage points: the
+     * exact (Clopper–Pearson) bound on the rate of pairs only lite failed. The
+     * pairs only inherit failed can only lower the true difference, so leaving
+     * them out keeps the bound conservative and monotone in lite's failures.
+     */
+    upper_bound_pp: number | null;
+    /** One-sided lower bound of the paired difference, in percentage points. */
+    lower_bound_pp: number | null;
     escalation_rate_lite: number | null;
     quality: QualityVerdict;
     cost: CostVerdict;
@@ -79,6 +92,46 @@ export interface TierDownshiftVerdict {
 }
 
 const FAMILIES = ['haiku', 'sonnet', 'opus', 'fable'] as const;
+
+/** P(X <= k) for X ~ Binomial(n, p), summed in log space so large n stays finite. */
+function binomCdf(k: number, n: number, p: number): number {
+    if (k < 0) return 0;
+    if (k >= n) return 1;
+    if (p <= 0) return 1;
+    if (p >= 1) return 0;
+    let logC = 0;
+    let sum = 0;
+    for (let i = 0; i <= k; i++) {
+        if (i > 0) logC += Math.log(n - i + 1) - Math.log(i);
+        sum += Math.exp(logC + i * Math.log(p) + (n - i) * Math.log1p(-p));
+    }
+    return Math.min(sum, 1);
+}
+
+/** Bisection on a monotone function of p; 200 halvings is below double precision. */
+function solve(f: (p: number) => number, target: number, decreasing: boolean): number {
+    let lo = 0;
+    let hi = 1;
+    for (let i = 0; i < 200; i++) {
+        const mid = (lo + hi) / 2;
+        const above = f(mid) > target;
+        if (above === decreasing) lo = mid;
+        else hi = mid;
+    }
+    return (lo + hi) / 2;
+}
+
+/** Exact one-sided upper bound on a binomial rate after `k` events in `n` trials. */
+export function clopperPearsonUpper(k: number, n: number, alpha = BOUND_ALPHA): number {
+    if (k >= n) return 1;
+    return solve((p) => binomCdf(k, n, p), alpha, true);
+}
+
+/** Exact one-sided lower bound on a binomial rate after `k` events in `n` trials. */
+export function clopperPearsonLower(k: number, n: number, alpha = BOUND_ALPHA): number {
+    if (k <= 0) return 0;
+    return solve((p) => 1 - binomCdf(k - 1, n, p), alpha, false);
+}
 
 function priceFor(model: string, prices: Record<string, Price>): Price | null {
     const m = model.toLowerCase();
@@ -153,7 +206,8 @@ export function tierDownshiftVerdict(rows: readonly LegResult[], prices: Record<
     const n = pairs.length;
 
     let diffPp: number | null = null;
-    let halfWidthPp: number | null = null;
+    let upperPp: number | null = null;
+    let lowerPp: number | null = null;
     let escalationRate: number | null = null;
     if (n > 0) {
         // Paired difference of the fail-or-escalate indicator: only discordant pairs move it.
@@ -165,27 +219,23 @@ export function tierDownshiftVerdict(rows: readonly LegResult[], prices: Record<
             if (lf && !inf) b++;
             if (!lf && inf) c++;
         }
-        const diff = (b - c) / n;
-        const variance = (b + c - (b - c) ** 2 / n) / (n * n);
-        diffPp = diff * 100;
-        halfWidthPp = 1.96 * Math.sqrt(Math.max(variance, 0)) * 100;
-        // No discordant pair gives a zero-width interval; the rule of three bounds
-        // an unseen disagreement rate at 3/n instead.
-        if (b + c === 0) halfWidthPp = (3 / n) * 100;
+        diffPp = ((b - c) / n) * 100;
+        upperPp = clopperPearsonUpper(b, n) * 100;
+        lowerPp = (clopperPearsonLower(b, n) - clopperPearsonUpper(c, n)) * 100;
         escalationRate = lite.escalated / n;
     }
 
     let quality: QualityVerdict;
-    if (n < MIN_PAIRS || diffPp === null || halfWidthPp === null || escalationRate === null) {
+    if (n < MIN_PAIRS || diffPp === null || upperPp === null || lowerPp === null || escalationRate === null) {
         quality = 'underpowered';
         notes.push(`${n} complete pairs, below the floor of ${MIN_PAIRS}`);
-    } else if (escalationRate >= ESCALATION_KILL || diffPp - halfWidthPp > QUALITY_MARGIN_PP) {
+    } else if (escalationRate >= ESCALATION_KILL || lowerPp > QUALITY_MARGIN_PP) {
         quality = 'breached';
-    } else if (diffPp + halfWidthPp <= QUALITY_MARGIN_PP) {
+    } else if (upperPp < QUALITY_MARGIN_PP) {
         quality = 'held';
     } else {
         quality = 'underpowered';
-        notes.push('the interval straddles the 5 pp margin');
+        notes.push(`the upper bound ${upperPp.toFixed(2)} pp is not below the ${QUALITY_MARGIN_PP} pp margin`);
     }
 
     let cost: CostVerdict;
@@ -200,7 +250,8 @@ export function tierDownshiftVerdict(rows: readonly LegResult[], prices: Record<
         lite,
         inherit,
         diff_pp: diffPp,
-        ci_half_width_pp: halfWidthPp,
+        upper_bound_pp: upperPp,
+        lower_bound_pp: lowerPp,
         escalation_rate_lite: escalationRate,
         quality,
         cost,
