@@ -216,6 +216,16 @@ describe('adoption_status — a detector that notices an answer, not a calendar'
     });
 });
 
+describe('adoption_status — a ledger ref is fetched only as an https URL', () => {
+    it('refuses an option-shaped, file or plain-http ref without running curl', () => {
+        for (const ref of ['-o/tmp/x', 'file:///etc/passwd', 'http://169.254.169.254/']) {
+            const r = as_.read_url('listing-page', ref, 1);
+            expect(r.ok, ref).toBe(false);
+            expect(r.ok ? '' : r.reason, ref).toMatch(/^refusing a ref outside https/);
+        }
+    });
+});
+
 describe('adoption_status — an upstream read waits as long as a slow registry needs', () => {
     // The official MCP registry answered its search in 15-20 s on 2026-10-17; a 20 s cap
     // reported it unreachable. The wait must clear that with room to spare.
@@ -240,8 +250,8 @@ describe('adoption_status — an upstream read waits as long as a slow registry 
                     server.stdout.once('data', (d: Buffer) => resolve(d.toString().trim())),
                 );
                 const url = `http://127.0.0.1:${port}/listing`;
-                expect(as_.read_url('listing-page', url, 1).ok).toBe(false);
-                expect(as_.read_url('listing-page', url, 5)).toEqual({ ok: true, state: 'listed' });
+                expect(as_.read_url('listing-page', url, 1, ['http']).ok).toBe(false);
+                expect(as_.read_url('listing-page', url, 5, ['http'])).toEqual({ ok: true, state: 'listed' });
             } finally {
                 server.kill();
             }
