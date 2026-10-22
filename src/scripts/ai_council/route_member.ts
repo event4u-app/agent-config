@@ -17,7 +17,7 @@ import {
     type RouteBilling,
     type SelfHostedProbe,
 } from './free_route.js';
-import { SELF_HOSTED_PROBE } from './self_hosted_probe.js';
+import { SELF_HOSTED_PROBE, type ProbeRoute } from './self_hosted_probe.js';
 import { keyResolves } from './status_surface.js';
 
 export type RouteMemberResult =
@@ -43,7 +43,12 @@ export function routeMemberFor(
     const gate = firstPartyGate(route.base_url, model, stateRoot ?? resolve_project_root(null)[0], now);
     if (gate !== null) return { absent: { member: name, reason: 'policy_model_mismatch', detail: gate } };
     const ref = typeof cfg['api_key_ref'] === 'string' ? cfg['api_key_ref'] : null;
-    const t = resolveRouteTransport({ name, route, model, contentClass, keyPresent: keyResolves(ref), probe });
+    // A keyed loopback route can only be proven with its key on the probe call.
+    const keyedProbe: SelfHostedProbe = (r, m) => {
+        const withKey: ProbeRoute = { ...r, api_key_ref: ref };
+        return probe(withKey, m);
+    };
+    const t = resolveRouteTransport({ name, route, model, contentClass, keyPresent: keyResolves(ref), probe: keyedProbe });
     if (!t.available) {
         return { absent: { member: name, reason: t.absentReason ?? 'unavailable', detail: t.reason ?? 'route unavailable' } };
     }

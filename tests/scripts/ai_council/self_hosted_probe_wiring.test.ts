@@ -5,8 +5,12 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
+const seen: unknown[] = [];
 vi.mock('../../../src/scripts/ai_council/self_hosted_probe.js', () => ({
-    SELF_HOSTED_PROBE: () => ({ weights: 'local', outbound: false }),
+    SELF_HOSTED_PROBE: (route: unknown) => {
+        seen.push(route);
+        return { weights: 'local', outbound: false };
+    },
 }));
 
 import { parseRouteFields } from '../../../src/scripts/ai_council/free_route.js';
@@ -29,5 +33,11 @@ describe('self-hosted probe wiring', () => {
         const t = resolvedTransportFor('local', { binary: null, api_key_ref: null, route: parsed.route, model: 'local-model' }, undefined, 'project-content');
         expect(t.available).toBe(true);
         expect(t.billing).toBe('self-hosted');
+    });
+
+    it('a member with a key reference hands it to the probe, so a keyed loopback route can be proven', () => {
+        seen.length = 0;
+        routeMemberFor('local', { ...CFG, api_key_ref: 'env:LOCAL_ROUTE_KEY' }, 'project-content');
+        expect((seen.at(-1) as { api_key_ref?: string }).api_key_ref).toBe('env:LOCAL_ROUTE_KEY');
     });
 });
