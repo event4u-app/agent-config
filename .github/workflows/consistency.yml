@@ -1,6 +1,12 @@
 name: Consistency
 
 on:
+  # Merge-queue ready, not merge-queue enabled: inert until an admin turns a
+  # queue on (stubs/road-to-main-protection-ruleset-changes). PR-only steps are
+  # already guarded by `github.event_name == 'pull_request'` or an empty
+  # `github.base_ref`, the same path workflow_dispatch takes.
+  merge_group:
+    types: [checks_requested]
   pull_request:
     # `labeled`/`unlabeled` are here for the kernel-rule bundle override.
     # `check_kernel_rule_bundle` reads the override label from the event

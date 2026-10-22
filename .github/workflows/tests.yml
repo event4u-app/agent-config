@@ -1,6 +1,12 @@
 name: Tests
 
 on:
+  # Merge-queue ready, not merge-queue enabled: inert until an admin turns a
+  # queue on (stubs/road-to-main-protection-ruleset-changes). PR-only steps are
+  # already guarded by `github.event_name == 'pull_request'` or an empty
+  # `github.base_ref`, the same path workflow_dispatch takes.
+  merge_group:
+    types: [checks_requested]
   pull_request:
     branches: [main, master]
     paths:
@@ -61,6 +67,13 @@ jobs:
     # 9 tests/shard the fs contention that hurt at the un-sharded
     # -P 8 setting is no longer a concern.
     #
+    # macOS runs it as ONE unsharded job. GitHub-hosted macOS is capped at 5
+    # concurrent jobs and every macOS job in this workflow queues for a slot
+    # (PR #2569: 5.7-33 min); four 1-2 min shards bought four queue entries.
+    # The -P 8 contention note above is the risk this trades against, so the
+    # job's runtime is recorded in docs/contracts/ci-cost-budget.md and the
+    # shards come back if it costs more than the slots it frees.
+    #
     # Release-PR skip: docs/contracts/release-pr-gating.md § Cut surface —
     # a release PR (head branch `release/X.Y.Z`) touches only that
     # contract's allowlist, which admits no install script and no test
@@ -71,15 +84,19 @@ jobs:
     # is the kept surface for release PRs; push: main + workflow_dispatch
     # stay unconditional.
     if: ${{ !startsWith(github.head_ref, 'release/') }}
-    name: Install Script Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
+    name: Install Script Tests (${{ matrix.os }}, ${{ matrix.slice }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-26.04, macos-26]
-        shard: [1, 2, 3, 4]
+        include:
+          - { os: ubuntu-26.04, slice: shard 1/4, shard: '1/4' }
+          - { os: ubuntu-26.04, slice: shard 2/4, shard: '2/4' }
+          - { os: ubuntu-26.04, slice: shard 3/4, shard: '3/4' }
+          - { os: ubuntu-26.04, slice: shard 4/4, shard: '4/4' }
+          - { os: macos-26, slice: unsharded, shard: '' }
     env:
-      SHARD: ${{ matrix.shard }}/4
+      SHARD: ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -97,7 +114,7 @@ jobs:
       - name: Install dependencies (provides node_modules/.bin/tsx for the installer)
         run: npm ci --no-audit --no-fund --prefer-offline
 
-      - name: Run install.sh integration tests (shard ${{ matrix.shard }}/4)
+      - name: Run install.sh integration tests (${{ matrix.slice }})
         run: bash tests/test_install.sh --parallel 9
 
   install-aux-tests:
@@ -827,3 +844,35 @@ jobs:
   # firing on every PR touching scripts/**, even ones that never
   # went near install_global (measured ~60-90 s wasted wall-clock
   # on the Windows leg per such PR).
+
+  tests-result:
+    # One stable check name over the whole matrix. A required-set change can pin
+    # this instead of shard/OS names, which a matrix edit renames silently
+    # (docs/contracts/branch-protection-policy.md § why shard names are not
+    # required). Not required today; the ruleset write stays with
+    # stubs/road-to-main-protection-ruleset-changes. Skipped legs pass — they are
+    # skipped by their own `if:` (release PRs), not lost.
+    name: Tests result
+    runs-on: ubuntu-26.04
+    if: always()
+    needs:
+      - install-tests
+      - install-aux-tests
+      - node-tests
+      - static-checks
+      - golden-tests
+      - svg-witness-tests
+      - collector-lifecycle
+      - workspace-tests
+    steps:
+      - name: Every needed job passed or was skipped by its own condition
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "needed job results: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in
+              success|skipped) ;;
+              *) echo "::error::a needed Tests job ended '$r'"; exit 1 ;;
+            esac
+          done
