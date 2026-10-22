@@ -155,6 +155,16 @@ describe('check_test_weakening — NET counts, which is the whole gate', () => {
                 [],
             ).signals,
         ).toHaveLength(1);
+        // A reason in another hunk is not the line above, and an empty reason is no reason.
+        expect(
+            analyse(
+                d('tests/a.test.ts', '+// skip-reason: unrelated\n@@ -40,1 +40,1 @@\n+it.skipIf(c)(\'x\', () => {});\n'),
+                [],
+            ).signals,
+        ).toHaveLength(1);
+        expect(
+            analyse(d('tests/a.test.ts', '+it.skipIf(c)(\'x\', () => {}); // skip-reason:\n'), []).signals,
+        ).toHaveLength(1);
         // Diff-only: editing an existing site nets zero, removing one is never a signal.
         expect(
             analyse(d('tests/a.test.ts', '-it.skipIf(a)(\'x\', () => {});\n+it.skipIf(b)(\'x\', () => {});\n'), [])
@@ -302,6 +312,14 @@ describe('a comment line is prose, never an assertion', () => {
                 removed: ['        expect(a).toBe(1); // the door keeps its name'],
                 added: [],
             }).assertionsLost,
+        ).toBe(1);
+    });
+
+    it('a PHPUnit group-skip docblock annotation is still a gained suppression', () => {
+        // Assembled at runtime so this file does not itself carry the annotation.
+        const annotation = ['     * @group', 'skip'].join(' ');
+        expect(
+            weakeningSignal({ path: 'tests/a.test.ts', removed: [], added: [annotation] }).suppressionsGained,
         ).toBe(1);
     });
 
