@@ -388,6 +388,57 @@ describe('AC-2 — a suppressed run writes nothing', () => {
     }, 60_000);
 });
 
+// --- delivery — 17.0.0 finding 12d039c88b71 -----------------------------------
+
+describe('delivery — a host-spawned run reaches the session context', () => {
+    // A host spawns a hook with both streams piped, so a TTY test silenced the
+    // notice in exactly the context it exists for, and stderr at exit 0 is not
+    // a channel a session_start host injects. The hook now speaks the
+    // dispatcher's warn protocol on stdout, which emitFor turns into
+    // additionalContext at host exit 0.
+    it('with piped streams and a session envelope, emits one warn record carrying the notice', () => {
+        const root = install('1.0.0');
+        const home = path.join(tmp, 'home');
+        probeState(home, { last_seen_version: '2.0.0' });
+        const r = spawnSync(path.join(REPO_ROOT, 'scripts-run'), ['src/scripts/update_notice_hook'], {
+            cwd: tmp,
+            input: JSON.stringify({ session_id: 'host-session', hook_event_name: 'SessionStart' }),
+            encoding: 'utf-8',
+            stdio: ['pipe', 'pipe', 'pipe'],
+            env: {
+                ...process.env,
+                CI: '',
+                GITHUB_ACTIONS: '',
+                AGENT_CONFIG_NO_UPDATE_CHECK: '',
+                EVENT4U_CONFIG_HOME: home,
+                AGENT_CONFIG_PACKAGE_ROOT: root,
+            },
+        });
+        expect(r.status, r.stderr).toBe(2);
+        const records = r.stdout.split('\n').filter((l) => l.trim() !== '');
+        expect(records).toHaveLength(1);
+        const record = JSON.parse(records[0] as string) as Record<string, unknown>;
+        expect(record['decision']).toBe('warn');
+        expect(String(record['additional_context'])).toContain('2.0.0');
+        expect(String(record['reason'])).toContain('2.0.0');
+        expect(r.stderr).not.toContain('2.0.0');
+    }, 60_000);
+
+    it('without a session envelope and without a TTY it still says nothing', () => {
+        const root = install('1.0.0');
+        const home = path.join(tmp, 'home');
+        probeState(home, { last_seen_version: '2.0.0' });
+        const r = spawnSync(path.join(REPO_ROOT, 'scripts-run'), ['src/scripts/update_notice_hook'], {
+            cwd: tmp,
+            input: '{}',
+            encoding: 'utf-8',
+            env: { ...process.env, CI: '', GITHUB_ACTIONS: '', EVENT4U_CONFIG_HOME: home, AGENT_CONFIG_PACKAGE_ROOT: root },
+        });
+        expect(r.status).toBe(0);
+        expect(r.stdout).toBe('');
+    }, 60_000);
+});
+
 // --- the curated-head parser -------------------------------------------------
 
 describe('parseCuratedHead', () => {
