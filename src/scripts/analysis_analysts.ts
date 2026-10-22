@@ -200,7 +200,12 @@ export function parseHandoff(text: string, file: string): Handoff {
 export function readExternalDrops(
     projectRoot: string,
     roundId: string,
+    /** The run's pinned commit; a drop pinned elsewhere is skipped, never read as current. */
+    expectedPin?: string,
 ): { handoffs: Handoff[]; skipped: Array<{ file: string; reason: string }> } {
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/u.test(roundId) || roundId.includes('..')) {
+        throw new AnalystError(`round id ${JSON.stringify(roundId)} is not a single folder name`);
+    }
     const dir = path.join(projectRoot, DROPS_REL, roundId);
     if (!fs.existsSync(dir)) return { handoffs: [], skipped: [] };
     const handoffs: Handoff[] = [];
@@ -208,7 +213,11 @@ export function readExternalDrops(
     for (const file of fs.readdirSync(dir).sort()) {
         if (!file.endsWith('.md') || file.endsWith('.annex.md')) continue;
         try {
-            handoffs.push(parseHandoff(fs.readFileSync(path.join(dir, file), 'utf8'), file));
+            const h = parseHandoff(fs.readFileSync(path.join(dir, file), 'utf8'), file);
+            if (expectedPin !== undefined && h.pin !== expectedPin) {
+                throw new AnalystError(`${file}: pinned to ${h.pin}, the run is pinned to ${expectedPin}`);
+            }
+            handoffs.push(h);
         } catch (err) {
             skipped.push({ file, reason: err instanceof Error ? err.message : String(err) });
         }

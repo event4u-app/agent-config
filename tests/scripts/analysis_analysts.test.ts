@@ -164,6 +164,18 @@ describe('handoff-v1 drops', () => {
         expect(drops.skipped.map((s) => s.file).sort()).toEqual(['notes.md', 'old.md']);
     });
 
+    it('refuses a round id that climbs out of the drops folder', () => {
+        expect(() => readExternalDrops(root, '../../etc')).toThrow(/single folder name/);
+    });
+
+    it('skips a drop pinned to another commit than the run', () => {
+        dropExternal('round-3', 'stale.md', handoff({ handoff: 'v1', phase: 'seed', loop: '1', pin: 'old111' }));
+        dropExternal('round-3', 'live.md', handoff({ handoff: 'v1', phase: 'seed', loop: '1', pin: 'abc123' }));
+        const drops = readExternalDrops(root, 'round-3', 'abc123');
+        expect(drops.handoffs.map((h) => h.file)).toEqual(['live.md']);
+        expect(drops.skipped.map((s) => s.reason)).toEqual(['stale.md: pinned to old111, the run is pinned to abc123']);
+    });
+
     it('reads no drop folder as no drops', () => {
         expect(readExternalDrops(root, 'absent')).toEqual({ handoffs: [], skipped: [] });
     });
