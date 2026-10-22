@@ -1,5 +1,7 @@
 # Council question — two CI placement decisions (2026-10-22)
 
+<!-- evidence-type: analysis -->
+
 Repository: event4u/agent-config (a governed rule/skill suite; GitHub Actions CI).
 Context: PR CI time-to-green is 20-57 min. The required checks are two
 (`Sync + Generate Tools Consistency`, `Standing payload delta + budget gate`); no

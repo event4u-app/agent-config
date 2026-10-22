@@ -1,6 +1,6 @@
 # Council record — macOS PR tier and the Static Checks diagnostic (2026-10-22)
 
-<!-- evidence-type: council -->
+<!-- evidence-type: analysis -->
 
 - **Prompt:** `ci-macos-tier-and-static-diagnostic-2026-10-22.question.md` (beside this file), sent verbatim.
 - **Members:** anthropic, openai — CLI seats, subscription-authed, nothing billed; 1 round; quorum 2/2.
