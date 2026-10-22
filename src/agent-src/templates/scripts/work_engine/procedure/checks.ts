@@ -223,6 +223,15 @@ function nameForms(name: string): string[] {
     return [...forms];
 }
 
+/**
+ * True when `form` appears as a whole word: a substring match lets `react`
+ * pass on "reactive" and `vue` on "revue", which is prose that names nothing.
+ */
+function namesWord(lowerText: string, form: string): boolean {
+    const escaped = form.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return new RegExp(`(?<![a-z0-9])${escaped}(?![a-z0-9])`).test(lowerText);
+}
+
 const overviewMatchesManifests: ProcedureCheck = (ctx) => {
     let text: string;
     try {
@@ -234,7 +243,7 @@ const overviewMatchesManifests: ProcedureCheck = (ctx) => {
     const forms = manifestNames(ctx).flatMap(nameForms);
     if (forms.length === 0) return ok;
     const lower = text.toLowerCase();
-    return forms.some((f) => lower.includes(f))
+    return forms.some((f) => namesWord(lower, f))
         ? ok
         : fail(`${OVERVIEW} names none of the dependencies package.json or composer.json declare`);
 };
