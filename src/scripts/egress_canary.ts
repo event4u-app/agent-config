@@ -38,9 +38,9 @@ export interface Canary {
  * assembled from parts so the rule table stays the one place that spells one.
  */
 export const CANARIES: readonly Canary[] = [
-    { id: 'anthropic-key', class: 'credential', value: `${'s' + 'k-' + 'ant-' + 'api03-'}${'CANARYx7Qm2LwZp9Rt4Vn8Kd3Hs6Jf1Bg5'.repeat(2)}AA` },
-    { id: 'github-pat', class: 'credential', value: 'gh' + 'p_' + 'CANARY0a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5' },
-    { id: 'huggingface-token', class: 'credential', value: 'h' + 'f_' + 'CANARYabcdefghijklmnopqrstuvwxyzABCD' },
+    { id: 'anthropic-key', class: 'credential', value: `${'s' + 'k-' + 'ant-' + 'api03-'}${'CANARYx7Qm2LwZp9Rt4Vn8Kd3Hs6Jf1Bg5'.repeat(2)}AA` }, // secret-allow: synthetic canary, assembled from parts, opens nothing
+    { id: 'github-pat', class: 'credential', value: 'gh' + 'p_' + 'CANARY0a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5' }, // secret-allow: synthetic canary, assembled from parts, opens nothing
+    { id: 'huggingface-token', class: 'credential', value: 'h' + 'f_' + 'CANARYabcdefghijklmnopqrstuvwxyzABCD' }, // secret-allow: synthetic canary, assembled from parts, opens nothing
     { id: 'aws-access-key', class: 'credential', value: 'AK' + 'IA' + 'CANARY7Q2W3E4R5T' },
     { id: 'email', class: 'personal', value: 'max.mustermann.canary' + '@' + 'galawork-kunde.de' },
     { id: 'iban', class: 'personal', value: 'DE89' + '3704' + '0044' + '0532' + '0130' + '00' },
