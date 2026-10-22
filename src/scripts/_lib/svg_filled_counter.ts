@@ -8,9 +8,10 @@
  * paints. Measured on the repo's Chromium: two same-direction circles of radius
  * 250 and 160 painted 196,282 px, the ring they should be 115,940.
  *
- * The check flattens each subpath to a polygon, and reports a subpath whose
- * every vertex lies inside another subpath of the same path when the two share
- * a winding sign. It is advisory (decision A8): `warning`, never `error`, until
+ * The check flattens each subpath to a polygon, sums the winding signs of the
+ * subpaths that contain a subpath's every vertex, and reports the subpath when
+ * that sum is nonzero and shares its own sign — it sits in a painted region and
+ * deepens it instead of cutting it out. It is advisory (decision A8): `warning`, never `error`, until
  * the false-positive census of step 3.3 says otherwise.
  *
  * Limits, stated rather than guessed around: a transform does not change a
@@ -224,8 +225,9 @@ function inside(pt: Pt, poly: readonly Pt[]): boolean {
 }
 
 /**
- * Every `<path>` painted under `nonzero` whose subpath sits inside another of
- * its subpaths with the same winding. One entry per inner subpath.
+ * Every `<path>` painted under `nonzero` whose subpath sits in a painted region
+ * of the same path and winds with it. One entry per inner subpath; `outer` is
+ * the smallest subpath containing it.
  */
 export function filledCounters(elements: readonly SvgElement[]): FilledCounter[] {
     const out: FilledCounter[] = [];
@@ -249,15 +251,22 @@ export function filledCounters(elements: readonly SvgElement[]): FilledCounter[]
         for (let inner = 0; inner < polys.length; inner++) {
             const ia = areas[inner] as number;
             if (Math.abs(ia) < 1e-9) continue;
+            // The winding number around the inner contour, from every subpath
+            // that contains it — not from one outer, or an island inside a
+            // counter reads as a filled counter.
+            let around = 0;
+            let nearest = -1;
             for (let outer = 0; outer < polys.length; outer++) {
                 if (outer === inner) continue;
                 const oa = areas[outer] as number;
-                if (Math.abs(oa) <= Math.abs(ia) || Math.sign(oa) !== Math.sign(ia)) continue;
+                if (Math.abs(oa) <= Math.abs(ia)) continue;
                 const op = polys[outer] as Pt[];
-                if ((polys[inner] as Pt[]).every((p) => inside(p, op))) {
-                    out.push({ element: el, inner: inner + 1, outer: outer + 1 });
-                    break;
-                }
+                if (!(polys[inner] as Pt[]).every((p) => inside(p, op))) continue;
+                around += Math.sign(oa);
+                if (nearest < 0 || Math.abs(oa) < Math.abs(areas[nearest] as number)) nearest = outer;
+            }
+            if (around !== 0 && Math.sign(around) === Math.sign(ia)) {
+                out.push({ element: el, inner: inner + 1, outer: nearest + 1 });
             }
         }
     }

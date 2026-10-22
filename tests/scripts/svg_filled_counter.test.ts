@@ -61,6 +61,17 @@ describe('svg-structure-filled-counter', () => {
         expect(filledCounters(parseElements(svg('M0 0H100V100H0Z M20 20V80H80V20Z')))).toEqual([]);
         // The same "O" with the inner square wound the same way — the counter fills.
         expect(filledCounters(parseElements(svg('M0 0H100V100H0Z M20 20H80V80H20Z')))).toHaveLength(1);
+        // A bullseye: outer clockwise, counter counter-clockwise, island clockwise
+        // inside the counter. The island's winding number is +1 — painted, as meant.
+        expect(
+            filledCounters(parseElements(svg('M0 0H100V100H0Z M10 10V90H90V10Z M30 30H70V70H30Z'))),
+        ).toEqual([]);
+        // The same bullseye with the counter wound wrongly still flags the counter.
+        expect(
+            filledCounters(parseElements(svg('M0 0H100V100H0Z M10 10H90V90H10Z M30 30V70H70V30Z'))).map(
+                (h) => h.inner,
+            ),
+        ).toEqual([2]);
         // An unfilled outline is not a fill problem.
         expect(
             filledCounters(
