@@ -11,7 +11,10 @@ import { compare_versions, parse_version } from './version_order';
 
 /** `impactMap` is `undefined` when it could not be fetched and `null` when the release carries none. */
 export function pin_advice_lines(pin: string, latest: string, impactMap: unknown, label: 'latest' | 'target' = 'latest'): string[] {
-    if (compare_versions(latest, pin) !== 1) return [];
+    const order = compare_versions(latest, pin);
+    // An unparsable pin or candidate is said, not read as "nothing newer".
+    if (order === null) return [`Pinned at ${pin}; ${label} ${latest} — one of the two is not a version this check can read.`];
+    if (order !== 1) return [];
     const head = `Pinned at ${pin}; ${label} is ${latest}.`;
     const tail = 'Moving the pin is a team decision: `agent-config update` rewrites it, this check never does.';
     if (impactMap === undefined) {
