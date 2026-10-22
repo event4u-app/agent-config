@@ -3,7 +3,7 @@ complexity: structural
 status: ready
 execution:
   mode: autonomous
-estate_offset_exempt: "Round inbox-2026-10-w verified at 5dcfa13a6 that tests.yml still shards vitest by file count (`--shard=N/4`, :304; no `sequence.sequencer` in vitest.config.ts) while its own comment (:293-301) records shard 3/4 at 2.3x its siblings since 2026-08-18; PR #2569 measured the ubuntu shards at 269/318/468/325 s. The 2026-08 ci-economy round measured the imbalance and never adopted duration balancing, and its source round had proposed it — this is the second arrival with no recorded reason for dropping it. The diagnostic hook-latency comparison (continue-on-error, :465-503) still runs inside Static Checks. No active roadmap owns any of these."
+estate_offset_exempt: "Round inbox-2026-10-w verified at 5dcfa13a6 that tests.yml still shards vitest by file count (`--shard=N/4`, :304; no `sequence.sequencer` in vitest.config.ts) while its own comment (:293-301) records shard 3/4 at 2.3x its siblings since 2026-08-18; PR #2569 measured the ubuntu shards at 269/318/468/325 s. The 2026-08 ci-economy round measured the imbalance and never adopted duration balancing, and its source round had proposed it — this is the second arrival with no recorded reason for dropping it. The diagnostic hook-latency comparison (continue-on-error, :465-503) still runs inside Static Checks. No active roadmap owns any of these. Parking it in later/ would leave the second arrival unanswered again; folding it into road-to-macos-where-the-platform-is-the-point would mix balancing what runs with deciding which legs run, which that file explicitly does not own."
 relates:
   - slug: road-to-a-required-check-that-does-not-rerun-the-gates
     relation: disjoint
