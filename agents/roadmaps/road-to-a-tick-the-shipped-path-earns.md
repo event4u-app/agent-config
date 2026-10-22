@@ -275,10 +275,15 @@ the bench harnesses and `pricing.yaml`.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 The three #2585 blockers carry the owner's dated decision, and no locked-class row outside the baseline carries a non-owner resolver (1.1, 2.2).
-- [ ] AC-2 No consumer-facing default changed by #2585 ships without a holding claim or carrier (1.2, 1.3).
-- [ ] AC-3 Both lints red on the D1 fixtures and green on the estate (2.1–2.3).
+- [x] AC-1 The three #2585 blockers carry the owner's dated decision, and no locked-class row outside the baseline carries a non-owner resolver (1.1, 2.2). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
+  1.1 and 2.2 done 2026-10-23.
+- [x] AC-2 No consumer-facing default changed by #2585 ships without a holding claim or carrier (1.2, 1.3). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
+  1.2 and 1.3 done 2026-10-23.
+- [x] AC-3 Both lints red on the D1 fixtures and green on the estate (2.1–2.3). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
+  2.1–2.3 done 2026-10-23; four rows and twenty blockers baselined.
 - [ ] AC-4 The reach check reds the three D2 cases on replay and enforces after one shadow release (3.2, 3.3).
-- [ ] AC-5 The tier claims are re-decided on a run whose pin reproduces its corpus (4.1, 4.2).
+- [x] AC-5 The tier claims are re-decided on a run whose pin reproduces its corpus (4.1, 4.2). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
+  4.1 and 4.2 done 2026-10-23; both claims underpowered.
 - [ ] AC-6 Every D5 repair is red at its base and green after (Phase 5).
-- [ ] AC-7 The #2585 replay is published with its reopened count (6.1).
+- [x] AC-7 The #2585 replay is published with its reopened count (6.1). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
+  6.1 done 2026-10-23.
