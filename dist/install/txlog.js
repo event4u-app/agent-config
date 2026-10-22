@@ -6,13 +6,17 @@
  * nothing is un-written automatically. No PID lockfile (per Phase-A4
  * decision 8).
  *
- * WHAT ACTUALLY WRITES THIS FILE, as of 2026-09-15: two call sites.
- * `src/server/routes/install.ts`'s recovery-dismiss handler appends a
- * `rollback` marker with an empty path and a null hash; `src/scripts/install.ts`
- * — the surviving headless writer, per-file, through `_log_tx_entry` — appends
- * a `write` or `skip` entry per copied/skipped path during
- * `_copy_dir_dereferencing_symlinks`. Both call `appendTxLog` directly, so the
+ * WHAT ACTUALLY WRITES THIS FILE: `src/server/routes/install.ts`'s
+ * recovery-dismiss handler appends a `rollback` marker with an empty path and a
+ * null hash; `src/scripts/install.ts`, through `_log_tx_entry`, appends a
+ * `write` or `skip` entry per path it copies, preserves or stages a sidecar
+ * for, and a `write` entry per deployed Claude rule the host-form rewrite and
+ * the thinning pass rewrite after the copy. All call `appendTxLog`, so the
  * entry shape is identical by construction rather than by convention.
+ *
+ * WHAT READS IT: recovery (the active log only) and `./loggedWrites.ts`, which
+ * reads every `write` digest in the active log AND its rotated siblings as
+ * proof that bytes on disk are the installer's own output.
  *
  * Rotation: 10 MB OR 30 days, whichever first. Rotated copies move to
  * `install-log.<ISO>.jsonl.gz` siblings; recovery never scans them.

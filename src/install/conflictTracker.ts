@@ -28,18 +28,14 @@ import {
     decideDeployWrite,
     foreignSidecarMessage,
     isLedgerMigration,
+    logProofApplies,
     migrationPreservedMessage,
     preservedFileMessage,
     sidecarPathFor,
     type DeployWriteDecision,
 } from './preserve.js';
-import { loggedWriteDigests, wroteTheseBytes } from './loggedWrites.js';
-import {
-    classifyOwnership,
-    ledgerListedPaths,
-    recordedHashesWithLedger,
-    type RecordedHashes,
-} from './recordedOwnership.js';
+import { loggedWriteDigests, wroteTheseBytes, type LoggedWrites } from './loggedWrites.js';
+import { ledgerListedPaths, recordedHashesWithLedger, type RecordedHashes } from './recordedOwnership.js';
 
 /**
  * The bytes a run would write to one target, named rather than computed.
@@ -95,6 +91,8 @@ export interface ConflictState {
      * compare a file against a listing this very run had just produced.
      */
     ledgerFiles: ReadonlySet<string> | null;
+    /** The transaction log's writes, read lazily once per run for the same reason. */
+    logged: LoggedWrites | null;
     preserved: string[];
     /**
      * Targets this run preserved on the migration branch.
@@ -154,6 +152,7 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
         root: null,
         recorded: null,
         ledgerFiles: null,
+        logged: null,
         preserved: [],
         migrated: new Set(),
         staged: new Map(),
@@ -337,6 +336,7 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
             conflictState.root = root;
             conflictState.recorded = null;
             conflictState.ledgerFiles = null;
+            conflictState.logged = null;
             conflictState.preserved = [];
             conflictState.migrated = new Set();
             conflictState.staged = new Map();
@@ -351,23 +351,22 @@ export function createConflictTracker(host: ConflictTrackerHost): ConflictTracke
         resolve(target: string, force: boolean, would: WouldWrite): DeployWriteDecision {
             const exists = pathExists(target);
             const recordedSha256 = exists ? recordedHashFor(target) : undefined;
-            const onDiskSha256 = exists ? sha256OfFile(target) : null;
-            // The log is read only where the ledger alone would not write:
-            // a tree whose files all match their recorded digests never opens it.
-            const loggedWrite =
-                exists &&
-                !force &&
-                onDiskSha256 !== null &&
-                classifyOwnership(recordedSha256, onDiskSha256) !== 'recorded-unchanged' &&
-                wroteTheseBytes(target, onDiskSha256, loggedWriteDigests());
-            const base = {
+            const unproven = {
                 exists,
                 recordedSha256,
-                onDiskSha256,
+                onDiskSha256: exists ? sha256OfFile(target) : null,
                 force,
                 ledgerListed: exists && ledgerLists(target),
-                loggedWrite,
+                recordedIsStaged:
+                    typeof recordedSha256 === 'string' && recordedSha256 === recordedHashFor(sidecarPathFor(target)),
             };
+            // The log is opened only where the record alone would preserve
+            // without cause, and read once per run: this run's own appends
+            // cannot prove a file it has not reached yet.
+            const loggedWrite =
+                logProofApplies(unproven) &&
+                wroteTheseBytes(target, unproven.onDiskSha256 as string, (conflictState.logged ??= loggedWriteDigests()));
+            const base = { ...unproven, loggedWrite };
             // The packaged digest costs a temp write and a tag, so it is
             // computed only for the targets that can consume it. On a tree
             // where every ledger-listed path carries a digest — which is every

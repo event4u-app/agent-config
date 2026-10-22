@@ -152,6 +152,8 @@ describe('_check_txlog_clean', () => {
         const { _copy_dir_dereferencing_symlinks } = await import('../../../src/scripts/install.js');
         const fakeHome = mkdtempSync(join(tmpdir(), 'txlog-fires-home-'));
         process.env['HOME'] = fakeHome;
+        // The installer's log follows the config home, which the hermetic setup sets.
+        process.env['EVENT4U_CONFIG_HOME'] = join(fakeHome, '.event4u', 'agent-config');
         const src = join(tmp, 'src');
         mkdirSync(src, { recursive: true });
         writeFileSync(join(src, 'file.md'), '# x\n');
@@ -167,6 +169,7 @@ describe('_check_txlog_clean', () => {
         // checked against the log a real headless install produced) could
         // only ever read `unknown`. It now reads `ok` on real evidence.
         const prevHome = process.env['HOME'];
+        const prevConfigHome = process.env['EVENT4U_CONFIG_HOME'];
         let fakeHome = '';
         try {
             const real = await realHeadlessInstallLog();
@@ -178,6 +181,7 @@ describe('_check_txlog_clean', () => {
             } else {
                 process.env['HOME'] = prevHome;
             }
+            process.env['EVENT4U_CONFIG_HOME'] = prevConfigHome;
             if (fakeHome) rmSync(fakeHome, { recursive: true, force: true });
         }
     });
@@ -188,6 +192,7 @@ describe('_check_txlog_clean', () => {
         // hand-writing the JSONL). Appending an `abort` tail now exercises the
         // real writer's output, not a synthetic stand-in for it.
         const prevHome = process.env['HOME'];
+        const prevConfigHome = process.env['EVENT4U_CONFIG_HOME'];
         let fakeHome = '';
         try {
             const real = await realHeadlessInstallLog();
@@ -209,6 +214,7 @@ describe('_check_txlog_clean', () => {
             } else {
                 process.env['HOME'] = prevHome;
             }
+            process.env['EVENT4U_CONFIG_HOME'] = prevConfigHome;
             if (fakeHome) rmSync(fakeHome, { recursive: true, force: true });
         }
     });

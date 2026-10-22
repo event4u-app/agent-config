@@ -21,9 +21,9 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { mkdirp, pathExists, resolvePath, sha256OfFile } from './fsPrimitives.js';
-import { EXIT_COMPLETED_WITH_CONFLICTS, conflictSummaryMessage, decideDeployWrite, foreignSidecarMessage, isLedgerMigration, migrationPreservedMessage, preservedFileMessage, sidecarPathFor, } from './preserve.js';
+import { EXIT_COMPLETED_WITH_CONFLICTS, conflictSummaryMessage, decideDeployWrite, foreignSidecarMessage, isLedgerMigration, logProofApplies, migrationPreservedMessage, preservedFileMessage, sidecarPathFor, } from './preserve.js';
 import { loggedWriteDigests, wroteTheseBytes } from './loggedWrites.js';
-import { classifyOwnership, ledgerListedPaths, recordedHashesWithLedger, } from './recordedOwnership.js';
+import { ledgerListedPaths, recordedHashesWithLedger } from './recordedOwnership.js';
 /**
  * Build a tracker bound to one installer's reporting surface.
  *
@@ -38,6 +38,7 @@ export function createConflictTracker(host) {
         root: null,
         recorded: null,
         ledgerFiles: null,
+        logged: null,
         preserved: [],
         migrated: new Set(),
         staged: new Map(),
@@ -211,6 +212,7 @@ export function createConflictTracker(host) {
             conflictState.root = root;
             conflictState.recorded = null;
             conflictState.ledgerFiles = null;
+            conflictState.logged = null;
             conflictState.preserved = [];
             conflictState.migrated = new Set();
             conflictState.staged = new Map();
@@ -224,22 +226,20 @@ export function createConflictTracker(host) {
         resolve(target, force, would) {
             const exists = pathExists(target);
             const recordedSha256 = exists ? recordedHashFor(target) : undefined;
-            const onDiskSha256 = exists ? sha256OfFile(target) : null;
-            // The log is read only where the ledger alone would not write:
-            // a tree whose files all match their recorded digests never opens it.
-            const loggedWrite = exists &&
-                !force &&
-                onDiskSha256 !== null &&
-                classifyOwnership(recordedSha256, onDiskSha256) !== 'recorded-unchanged' &&
-                wroteTheseBytes(target, onDiskSha256, loggedWriteDigests());
-            const base = {
+            const unproven = {
                 exists,
                 recordedSha256,
-                onDiskSha256,
+                onDiskSha256: exists ? sha256OfFile(target) : null,
                 force,
                 ledgerListed: exists && ledgerLists(target),
-                loggedWrite,
+                recordedIsStaged: typeof recordedSha256 === 'string' && recordedSha256 === recordedHashFor(sidecarPathFor(target)),
             };
+            // The log is opened only where the record alone would preserve
+            // without cause, and read once per run: this run's own appends
+            // cannot prove a file it has not reached yet.
+            const loggedWrite = logProofApplies(unproven) &&
+                wroteTheseBytes(target, unproven.onDiskSha256, (conflictState.logged ??= loggedWriteDigests()));
+            const base = { ...unproven, loggedWrite };
             // The packaged digest costs a temp write and a tag, so it is
             // computed only for the targets that can consume it. On a tree
             // where every ledger-listed path carries a digest — which is every

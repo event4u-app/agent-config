@@ -4001,10 +4001,10 @@ var require_resolve_block_map = __commonJS({
       let offset = bm.offset;
       let commentEnd = null;
       for (const collItem of bm.items) {
-        const { start, key, sep: sep10, value } = collItem;
+        const { start, key, sep: sep11, value } = collItem;
         const keyProps = resolveProps.resolveProps(start, {
           indicator: "explicit-key-ind",
-          next: key ?? sep10?.[0],
+          next: key ?? sep11?.[0],
           offset,
           onError,
           parentIndent: bm.indent,
@@ -4018,7 +4018,7 @@ var require_resolve_block_map = __commonJS({
             else if ("indent" in key && key.indent !== bm.indent)
               onError(offset, "BAD_INDENT", startColMsg);
           }
-          if (!keyProps.anchor && !keyProps.tag && !sep10) {
+          if (!keyProps.anchor && !keyProps.tag && !sep11) {
             commentEnd = keyProps.end;
             if (keyProps.comment) {
               if (map.comment)
@@ -4042,7 +4042,7 @@ var require_resolve_block_map = __commonJS({
         ctx.atKey = false;
         if (utilMapIncludes.mapIncludes(ctx, map.items, keyNode))
           onError(keyStart, "DUPLICATE_KEY", "Map keys must be unique");
-        const valueProps = resolveProps.resolveProps(sep10 ?? [], {
+        const valueProps = resolveProps.resolveProps(sep11 ?? [], {
           indicator: "map-value-ind",
           next: value,
           offset: keyNode.range[2],
@@ -4058,7 +4058,7 @@ var require_resolve_block_map = __commonJS({
             if (ctx.options.strict && keyProps.start < valueProps.found.offset - 1024)
               onError(keyNode.range, "KEY_OVER_1024_CHARS", "The : indicator must be at most 1024 chars after the start of an implicit block mapping key");
           }
-          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : composeEmptyNode(ctx, offset, sep10, null, valueProps, onError);
+          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : composeEmptyNode(ctx, offset, sep11, null, valueProps, onError);
           if (ctx.schema.compat)
             utilFlowIndentCheck.flowIndentCheck(bm.indent, value, onError);
           offset = valueNode.range[2];
@@ -4149,7 +4149,7 @@ var require_resolve_end = __commonJS({
       let comment = "";
       if (end) {
         let hasSpace = false;
-        let sep10 = "";
+        let sep11 = "";
         for (const token of end) {
           const { source, type } = token;
           switch (type) {
@@ -4163,13 +4163,13 @@ var require_resolve_end = __commonJS({
               if (!comment)
                 comment = cb;
               else
-                comment += sep10 + cb;
-              sep10 = "";
+                comment += sep11 + cb;
+              sep11 = "";
               break;
             }
             case "newline":
               if (comment)
-                sep10 += source;
+                sep11 += source;
               hasSpace = true;
               break;
             default:
@@ -4212,18 +4212,18 @@ var require_resolve_flow_collection = __commonJS({
       let offset = fc.offset + fc.start.source.length;
       for (let i = 0; i < fc.items.length; ++i) {
         const collItem = fc.items[i];
-        const { start, key, sep: sep10, value } = collItem;
+        const { start, key, sep: sep11, value } = collItem;
         const props = resolveProps.resolveProps(start, {
           flow: fcName,
           indicator: "explicit-key-ind",
-          next: key ?? sep10?.[0],
+          next: key ?? sep11?.[0],
           offset,
           onError,
           parentIndent: fc.indent,
           startOnNewline: false
         });
         if (!props.found) {
-          if (!props.anchor && !props.tag && !sep10 && !value) {
+          if (!props.anchor && !props.tag && !sep11 && !value) {
             if (i === 0 && props.comma)
               onError(props.comma, "UNEXPECTED_TOKEN", `Unexpected , in ${fcName}`);
             else if (i < fc.items.length - 1)
@@ -4277,8 +4277,8 @@ var require_resolve_flow_collection = __commonJS({
             }
           }
         }
-        if (!isMap && !sep10 && !props.found) {
-          const valueNode = value ? composeNode(ctx, value, props, onError) : composeEmptyNode(ctx, props.end, sep10, null, props, onError);
+        if (!isMap && !sep11 && !props.found) {
+          const valueNode = value ? composeNode(ctx, value, props, onError) : composeEmptyNode(ctx, props.end, sep11, null, props, onError);
           coll.items.push(valueNode);
           offset = valueNode.range[2];
           if (isBlock(value))
@@ -4290,7 +4290,7 @@ var require_resolve_flow_collection = __commonJS({
           if (isBlock(key))
             onError(keyNode.range, "BLOCK_IN_FLOW", blockMsg);
           ctx.atKey = false;
-          const valueProps = resolveProps.resolveProps(sep10 ?? [], {
+          const valueProps = resolveProps.resolveProps(sep11 ?? [], {
             flow: fcName,
             indicator: "map-value-ind",
             next: value,
@@ -4301,8 +4301,8 @@ var require_resolve_flow_collection = __commonJS({
           });
           if (valueProps.found) {
             if (!isMap && !props.found && ctx.options.strict) {
-              if (sep10)
-                for (const st of sep10) {
+              if (sep11)
+                for (const st of sep11) {
                   if (st === valueProps.found)
                     break;
                   if (st.type === "newline") {
@@ -4319,7 +4319,7 @@ var require_resolve_flow_collection = __commonJS({
             else
               onError(valueProps.start, "MISSING_CHAR", `Missing , or : between ${fcName} items`);
           }
-          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : valueProps.found ? composeEmptyNode(ctx, valueProps.end, sep10, null, valueProps, onError) : null;
+          const valueNode = value ? composeNode(ctx, value, valueProps, onError) : valueProps.found ? composeEmptyNode(ctx, valueProps.end, sep11, null, valueProps, onError) : null;
           if (valueNode) {
             if (isBlock(value))
               onError(valueNode.range, "BLOCK_IN_FLOW", blockMsg);
@@ -4499,7 +4499,7 @@ var require_resolve_block_scalar = __commonJS({
           chompStart = i + 1;
       }
       let value = "";
-      let sep10 = "";
+      let sep11 = "";
       let prevMoreIndented = false;
       for (let i = 0; i < contentStart; ++i)
         value += lines[i][0].slice(trimIndent) + "\n";
@@ -4516,24 +4516,24 @@ var require_resolve_block_scalar = __commonJS({
           indent = "";
         }
         if (type === Scalar.Scalar.BLOCK_LITERAL) {
-          value += sep10 + indent.slice(trimIndent) + content;
-          sep10 = "\n";
+          value += sep11 + indent.slice(trimIndent) + content;
+          sep11 = "\n";
         } else if (indent.length > trimIndent || content[0] === "	") {
-          if (sep10 === " ")
-            sep10 = "\n";
-          else if (!prevMoreIndented && sep10 === "\n")
-            sep10 = "\n\n";
-          value += sep10 + indent.slice(trimIndent) + content;
-          sep10 = "\n";
+          if (sep11 === " ")
+            sep11 = "\n";
+          else if (!prevMoreIndented && sep11 === "\n")
+            sep11 = "\n\n";
+          value += sep11 + indent.slice(trimIndent) + content;
+          sep11 = "\n";
           prevMoreIndented = true;
         } else if (content === "") {
-          if (sep10 === "\n")
+          if (sep11 === "\n")
             value += "\n";
           else
-            sep10 = "\n";
+            sep11 = "\n";
         } else {
-          value += sep10 + content;
-          sep10 = " ";
+          value += sep11 + content;
+          sep11 = " ";
           prevMoreIndented = false;
         }
       }
@@ -4715,25 +4715,25 @@ var require_resolve_flow_scalar = __commonJS({
       if (!match)
         return source;
       let res = match[1];
-      let sep10 = " ";
+      let sep11 = " ";
       let pos = first.lastIndex;
       line.lastIndex = pos;
       while (match = line.exec(source)) {
         if (match[1] === "") {
-          if (sep10 === "\n")
-            res += sep10;
+          if (sep11 === "\n")
+            res += sep11;
           else
-            sep10 = "\n";
+            sep11 = "\n";
         } else {
-          res += sep10 + match[1];
-          sep10 = " ";
+          res += sep11 + match[1];
+          sep11 = " ";
         }
         pos = line.lastIndex;
       }
       const last = /[ \t]*(.*)/sy;
       last.lastIndex = pos;
       match = last.exec(source);
-      return res + sep10 + (match?.[1] ?? "");
+      return res + sep11 + (match?.[1] ?? "");
     }
     function doubleQuotedValue(source, onError) {
       let res = "";
@@ -5543,14 +5543,14 @@ var require_cst_stringify = __commonJS({
         }
       }
     }
-    function stringifyItem({ start, key, sep: sep10, value }) {
+    function stringifyItem({ start, key, sep: sep11, value }) {
       let res = "";
       for (const st of start)
         res += st.source;
       if (key)
         res += stringifyToken(key);
-      if (sep10)
-        for (const st of sep10)
+      if (sep11)
+        for (const st of sep11)
           res += st.source;
       if (value)
         res += stringifyToken(value);
@@ -6717,18 +6717,18 @@ var require_parser = __commonJS({
         if (this.type === "map-value-ind") {
           const prev = getPrevProps(this.peek(2));
           const start = getFirstKeyStartProps(prev);
-          let sep10;
+          let sep11;
           if (scalar.end) {
-            sep10 = scalar.end;
-            sep10.push(this.sourceToken);
+            sep11 = scalar.end;
+            sep11.push(this.sourceToken);
             delete scalar.end;
           } else
-            sep10 = [this.sourceToken];
+            sep11 = [this.sourceToken];
           const map = {
             type: "block-map",
             offset: scalar.offset,
             indent: scalar.indent,
-            items: [{ start, key: scalar, sep: sep10 }]
+            items: [{ start, key: scalar, sep: sep11 }]
           };
           this.onKeyLine = true;
           this.stack[this.stack.length - 1] = map;
@@ -6881,15 +6881,15 @@ var require_parser = __commonJS({
                 } else if (isFlowToken(it.key) && !includesToken(it.sep, "newline")) {
                   const start2 = getFirstKeyStartProps(it.start);
                   const key = it.key;
-                  const sep10 = it.sep;
-                  sep10.push(this.sourceToken);
+                  const sep11 = it.sep;
+                  sep11.push(this.sourceToken);
                   delete it.key;
                   delete it.sep;
                   this.stack.push({
                     type: "block-map",
                     offset: this.offset,
                     indent: this.indent,
-                    items: [{ start: start2, key, sep: sep10 }]
+                    items: [{ start: start2, key, sep: sep11 }]
                   });
                 } else if (start.length > 0) {
                   it.sep = it.sep.concat(start, this.sourceToken);
@@ -7083,13 +7083,13 @@ var require_parser = __commonJS({
             const prev = getPrevProps(parent);
             const start = getFirstKeyStartProps(prev);
             fixFlowSeqItems(fc);
-            const sep10 = fc.end.splice(1, fc.end.length);
-            sep10.push(this.sourceToken);
+            const sep11 = fc.end.splice(1, fc.end.length);
+            sep11.push(this.sourceToken);
             const map = {
               type: "block-map",
               offset: fc.offset,
               indent: fc.indent,
-              items: [{ start, key: fc, sep: sep10 }]
+              items: [{ start, key: fc, sep: sep11 }]
             };
             this.onKeyLine = true;
             this.stack[this.stack.length - 1] = map;
@@ -10096,10 +10096,16 @@ function isLedgerMigration(inputs) {
   if (inputs.onDiskSha256 === null) return false;
   return classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256) === "unknown";
 }
+function logProofApplies(inputs) {
+  if (!inputs.exists || inputs.force || inputs.onDiskSha256 === null) return false;
+  const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
+  if (ownership === "recorded-modified") return inputs.recordedIsStaged === true;
+  return ownership === "unknown" && isLedgerMigration({ ...inputs, loggedWrite: false });
+}
 function decideDeployWrite(inputs) {
   if (!inputs.exists) return "write";
   if (inputs.force) return "write";
-  if (inputs.loggedWrite === true) return "write";
+  if (inputs.loggedWrite === true && logProofApplies(inputs)) return "write";
   const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
   if (ownership === "recorded-modified") return "preserve";
   if (ownership === "unknown" && isLedgerMigration(inputs)) {
@@ -10127,7 +10133,7 @@ function foreignSidecarMessage(target, sidecar) {
 // src/install/loggedWrites.ts
 import { gunzipSync } from "node:zlib";
 import { existsSync as existsSync5, readdirSync as readdirSync5, readFileSync as readFileSync10, realpathSync as realpathSync3, statSync as statSync4 } from "node:fs";
-import { basename as basename3, dirname as dirname4, join as join12, resolve as resolve4 } from "node:path";
+import { basename as basename3, dirname as dirname4, join as join12, relative as relative2, resolve as resolve4, sep as sep3 } from "node:path";
 
 // src/install/paths.ts
 import { homedir as homedir6, tmpdir } from "node:os";
@@ -10157,66 +10163,83 @@ function getLogPath(home) {
 
 // src/install/loggedWrites.ts
 var WRITE_MARKER = '"kind":"write"';
-var cache = null;
+var fileCache = /* @__PURE__ */ new Map();
+var dirRealpaths = /* @__PURE__ */ new Map();
+function canonicalPath(p) {
+  const abs = resolve4(p);
+  const dir = dirname4(abs);
+  let real = dirRealpaths.get(dir);
+  if (real === void 0) {
+    try {
+      real = realpathSync3(dir);
+    } catch {
+      real = dir;
+    }
+    dirRealpaths.set(dir, real);
+  }
+  return join12(real, basename3(abs));
+}
 function logFiles(logPath) {
   const dir = dirname4(logPath);
   if (!existsSync5(dir)) return [];
   const stem = basename3(logPath).replace(/\.jsonl$/, "");
   try {
-    return readdirSync5(dir).filter((n) => n.startsWith(stem) && (n.endsWith(".jsonl") || n.endsWith(".jsonl.gz"))).map((n) => join12(dir, n));
+    return readdirSync5(dir).filter((n) => n.startsWith(stem) && (n.endsWith(".jsonl") || n.endsWith(".jsonl.gz"))).map((n) => join12(dir, n)).sort();
   } catch {
     return [];
   }
 }
-function readLog(file) {
+function writesIn(file) {
+  let stamp;
+  try {
+    const st = statSync4(file);
+    stamp = `${st.size}:${Math.trunc(st.mtimeMs)}`;
+  } catch {
+    return [];
+  }
+  const cached = fileCache.get(file);
+  if (cached !== void 0 && cached.stamp === stamp) return cached.entries;
+  let text = "";
   try {
     const raw = readFileSync10(file);
-    return (file.endsWith(".gz") ? gunzipSync(raw) : raw).toString("utf8");
+    text = (file.endsWith(".gz") ? gunzipSync(raw) : raw).toString("utf8");
   } catch {
-    return "";
+    text = "";
   }
+  const entries = [];
+  for (const line of text.split("\n")) {
+    if (!line.includes(WRITE_MARKER)) continue;
+    let entry;
+    try {
+      entry = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    if (typeof entry.path !== "string" || typeof entry.sha256 !== "string" || entry.sha256 === "") continue;
+    entries.push([canonicalPath(entry.path), entry.sha256]);
+  }
+  fileCache.set(file, { stamp, entries });
+  return entries;
 }
 function loggedWriteDigests(logPath = getLogPath()) {
-  const files = logFiles(logPath).sort();
-  const key = files.map((f) => {
-    try {
-      const st = statSync4(f);
-      return `${f}:${st.size}:${st.mtimeMs}`;
-    } catch {
-      return `${f}:-`;
-    }
-  }).join("|");
-  if (cache !== null && cache.key === key) return cache.writes;
   const writes = /* @__PURE__ */ new Map();
-  for (const file of files) {
-    for (const line of readLog(file).split("\n")) {
-      if (!line.includes(WRITE_MARKER)) continue;
-      let entry;
-      try {
-        entry = JSON.parse(line);
-      } catch {
-        continue;
-      }
-      if (typeof entry.path !== "string" || typeof entry.sha256 !== "string" || entry.sha256 === "") continue;
-      const target = resolve4(entry.path);
+  for (const file of logFiles(logPath)) {
+    for (const [target, sha] of writesIn(file)) {
       let set = writes.get(target);
       if (set === void 0) writes.set(target, set = /* @__PURE__ */ new Set());
-      set.add(entry.sha256);
+      set.add(sha);
     }
   }
-  cache = { key, writes };
   return writes;
 }
+function onlyDeployed(anchor, currentFiles, log) {
+  return (target) => {
+    const rel = relative2(resolve4(anchor), resolve4(target)).split(sep3).join("/");
+    if (currentFiles.has(rel)) log(target);
+  };
+}
 function wroteTheseBytes(target, onDiskSha256, writes) {
-  const plain = resolve4(target);
-  if (writes.get(plain)?.has(onDiskSha256) === true) return true;
-  let real;
-  try {
-    real = realpathSync3(target);
-  } catch {
-    return false;
-  }
-  return real !== plain && writes.get(real)?.has(onDiskSha256) === true;
+  return writes.get(canonicalPath(target))?.has(onDiskSha256) === true;
 }
 
 // src/install/conflictTracker.ts
@@ -10225,6 +10248,7 @@ function createConflictTracker(host) {
     root: null,
     recorded: null,
     ledgerFiles: null,
+    logged: null,
     preserved: [],
     migrated: /* @__PURE__ */ new Set(),
     staged: /* @__PURE__ */ new Map()
@@ -10323,6 +10347,7 @@ function createConflictTracker(host) {
       conflictState.root = root;
       conflictState.recorded = null;
       conflictState.ledgerFiles = null;
+      conflictState.logged = null;
       conflictState.preserved = [];
       conflictState.migrated = /* @__PURE__ */ new Set();
       conflictState.staged = /* @__PURE__ */ new Map();
@@ -10336,16 +10361,16 @@ function createConflictTracker(host) {
     resolve(target, force, would) {
       const exists = pathExists(target);
       const recordedSha256 = exists ? recordedHashFor(target) : void 0;
-      const onDiskSha256 = exists ? sha256OfFile(target) : null;
-      const loggedWrite = exists && !force && onDiskSha256 !== null && classifyOwnership(recordedSha256, onDiskSha256) !== "recorded-unchanged" && wroteTheseBytes(target, onDiskSha256, loggedWriteDigests());
-      const base = {
+      const unproven = {
         exists,
         recordedSha256,
-        onDiskSha256,
+        onDiskSha256: exists ? sha256OfFile(target) : null,
         force,
         ledgerListed: exists && ledgerLists(target),
-        loggedWrite
+        recordedIsStaged: typeof recordedSha256 === "string" && recordedSha256 === recordedHashFor(sidecarPathFor(target))
       };
+      const loggedWrite = logProofApplies(unproven) && wroteTheseBytes(target, unproven.onDiskSha256, conflictState.logged ??= loggedWriteDigests());
+      const base = { ...unproven, loggedWrite };
       const migrating = isLedgerMigration(base);
       const decision = decideDeployWrite(
         migrating ? { ...base, packagedSha256: wouldWriteDigest(target, would) } : base
@@ -11534,8 +11559,8 @@ function atomicAppendLine(target, line) {
   } catch {
     existing = "";
   }
-  const sep10 = existing.length > 0 && !existing.endsWith("\n") ? "\n" : "";
-  atomicWriteFile(target, `${existing}${sep10}${line}
+  const sep11 = existing.length > 0 && !existing.endsWith("\n") ? "\n" : "";
+  atomicWriteFile(target, `${existing}${sep11}${line}
 `);
 }
 function randSuffix() {
@@ -23629,7 +23654,7 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
         warn,
         res,
         preserved_now,
-        (p) => _log_tx_entry("write", p)
+        onlyDeployed(anchor, current_files, (p) => _log_tx_entry("write", p))
       );
       deployClaudeCarrier({
         packageRoot: package_root,
@@ -23639,7 +23664,7 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
         warn,
         userPin: state.FULL_PIN,
         wantsThin: installerThinsHost(tool_id, { packageRoot: package_root }),
-        thin: (bodyLinkRoot) => describeThinInstalledLayer(thinInstalledRuleLayer({ rulesDir: path38.join(anchor, "rules"), packageRoot: package_root, preserved: preserved_now, bodyLinkRoot, onWrite: (p) => _log_tx_entry("write", p) }))
+        thin: (bodyLinkRoot) => describeThinInstalledLayer(thinInstalledRuleLayer({ rulesDir: path38.join(anchor, "rules"), packageRoot: package_root, preserved: preserved_now, bodyLinkRoot, onWrite: onlyDeployed(anchor, current_files, (p) => _log_tx_entry("write", p)) }))
       });
       if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root, void 0, { thisDeploy: /* @__PURE__ */ new Map([[anchor, current_files]]) })) info(l);
     }

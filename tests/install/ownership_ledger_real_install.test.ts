@@ -27,7 +27,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { loggedWriteDigests, wroteTheseBytes } from '../../src/install/loggedWrites.js';
+import { canonicalPath, loggedWriteDigests, wroteTheseBytes } from '../../src/install/loggedWrites.js';
 import { SIDECAR_SUFFIX } from '../../src/install/preserve.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -345,11 +345,17 @@ describe('pre-ledger upgrade — the transaction log proves an untouched file is
             // logged its bytes; unlogged, the final bytes would prove nothing.
             const home = mkTmp('own-ledger-home-');
             const bare = mkTmp('own-ledger-bare-');
+            // A rule the user wrote in source form: the rewrite pass walks it
+            // too, and the log must not vouch for it.
+            const dir = path.join(home, '.claude', 'rules');
+            fs.mkdirSync(dir, { recursive: true });
+            const own = path.join(dir, 'zz-my-own-rule.md');
+            fs.writeFileSync(own, '---\ntype: auto\ntriggers:\n  - keyword: mine\n---\n\n# mine\n');
             const first = install(home, bare, 'claude-code');
             expect(first.status, first.out).toBe(0);
             const writes = loggedWriteDigests(path.join(home, '.event4u', 'agent-config', 'install-log.jsonl'));
-            const dir = path.join(home, '.claude', 'rules');
-            const rules = fs.readdirSync(dir).filter((n) => n.endsWith('.md'));
+            expect(writes.has(canonicalPath(own)), 'a user-authored rule was logged as ours').toBe(false);
+            const rules = fs.readdirSync(dir).filter((n) => n.endsWith('.md') && n !== 'zz-my-own-rule.md');
             expect(rules.length).toBeGreaterThan(0);
             const unproven = rules.filter((n) => {
                 const p = path.join(dir, n);

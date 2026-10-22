@@ -48,6 +48,9 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { _claude_paths_plan } from './claudePathsPlan.js';
+// Re-exported for `install.ts`, which sits past the source-size ceiling and so
+// reaches it through the namespace it already imports instead of a new line.
+export { onlyDeployed } from './loggedWrites.js';
 import { parseFrontmatter } from './ruleInScope.js';
 
 /**

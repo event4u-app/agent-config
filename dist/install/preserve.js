@@ -89,11 +89,29 @@ export function isLedgerMigration(inputs) {
     return classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256) === 'unknown';
 }
 /**
+ * May the transaction-log proof decide this target? Only where the verdict
+ * would otherwise be a preservation the record cannot justify: a ledger-listed
+ * file with no digest (the migration branch), or a `recorded-modified` file
+ * whose recorded digest is a staged one. Everywhere else the log is not read —
+ * the ledger alone already decides, and a genuine edit must stay preserved.
+ */
+export function logProofApplies(inputs) {
+    if (!inputs.exists || inputs.force || inputs.onDiskSha256 === null)
+        return false;
+    const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
+    if (ownership === 'recorded-modified')
+        return inputs.recordedIsStaged === true;
+    // `loggedWrite` is cleared because `isLedgerMigration` excludes a proven
+    // target, and this asks whether the target is a candidate BEFORE the proof.
+    return ownership === 'unknown' && isLedgerMigration({ ...inputs, loggedWrite: false });
+}
+/**
  * Decide whether the writer may replace one managed file.
  *
  * A target that does not exist is written. A forced run writes. A target whose
- * bytes the transaction log records this installer writing there is written —
- * there is no edit to lose. Otherwise the recorded-ownership verdict decides:
+ * bytes the transaction log records this installer writing there is written
+ * where {@link logProofApplies} — there is no edit to lose. Otherwise the
+ * recorded-ownership verdict decides:
  * `recorded-modified` preserves, and `recorded-unchanged` writes.
  *
  * The `unknown` arm is the one worth stating out loud. No recorded digest
@@ -119,7 +137,7 @@ export function decideDeployWrite(inputs) {
         return 'write';
     if (inputs.force)
         return 'write';
-    if (inputs.loggedWrite === true)
+    if (inputs.loggedWrite === true && logProofApplies(inputs))
         return 'write';
     const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
     if (ownership === 'recorded-modified')
