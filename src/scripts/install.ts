@@ -3010,14 +3010,14 @@ function _deploy_global_content(
                 info,
                 warn,
                 res,
-                preserved_now,
+                preserved_now, (p) => _log_tx_entry('write', p),
             );
             // Steps 1.1 and 1.4 of road-to-an-installed-layer-that-is-thinned;
             // both modules' headers carry the reasoning.
             deployClaudeCarrier({
                 packageRoot: package_root, rulesDir: path.join(anchor, 'rules'), quiet: state.QUIET, info, warn, userPin: state.FULL_PIN,
                 wantsThin: installerThinsHost(tool_id, { packageRoot: package_root }),
-                thin: (bodyLinkRoot) => describeThinInstalledLayer(thinInstalledRuleLayer({ rulesDir: path.join(anchor, 'rules'), packageRoot: package_root, preserved: preserved_now, bodyLinkRoot })),
+                thin: (bodyLinkRoot) => describeThinInstalledLayer(thinInstalledRuleLayer({ rulesDir: path.join(anchor, 'rules'), packageRoot: package_root, preserved: preserved_now, bodyLinkRoot, onWrite: (p) => _log_tx_entry('write', p) })),
             });
             if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root, undefined, { thisDeploy: new Map([[anchor, current_files]]) })) info(l);
         }

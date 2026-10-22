@@ -134,8 +134,9 @@ export function rewriteAndReport(
     warn: (m: string) => void,
     wrappers?: { wrapped: readonly string[]; reserved: readonly string[]; foreign?: readonly string[] },
     preserved: ReadonlySet<string> = new Set(),
+    onWrite?: (target: string) => void,
 ): ClaudeRuleRewriteResult {
-    const result = rewriteClaudeRules(rulesDir, preserved);
+    const result = rewriteClaudeRules(rulesDir, preserved, onWrite);
     // The flat-command wrapper report rides along rather than sitting at the
     // call site: `install.ts` is thousands of lines past
     // `check_source_size_budget`'s ceiling, and this module is the one place
@@ -248,10 +249,14 @@ export function renderClaudeRule(sourceText: string): {
  * disappearing from the frontmatter.
  *
  * Returns counts rather than printing. The caller owns the reporting surface.
+ * `onWrite` receives each rewritten path, so the installer can log it: the
+ * transaction log is read back as proof the bytes on disk are ours, and a
+ * write it never saw would leave every rewritten rule unprovable.
  */
 export function rewriteClaudeRules(
     rulesDir: string,
     preserved: ReadonlySet<string> = new Set(),
+    onWrite?: (target: string) => void,
 ): ClaudeRuleRewriteResult {
     const result: ClaudeRuleRewriteResult = { rewritten: 0, scoped: [], dropped: [], failed: [] };
     let entries: string[];
@@ -299,6 +304,7 @@ export function rewriteClaudeRules(
                 });
                 continue;
             }
+            onWrite?.(full);
             result.rewritten += 1;
         }
         const stem = name.slice(0, -3);

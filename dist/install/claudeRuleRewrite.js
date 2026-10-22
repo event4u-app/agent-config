@@ -109,8 +109,8 @@ export function _withPreservedKeys(rendered, original) {
  * extraction and never up through a baseline raise. So the caller gets one call
  * and a list of strings.
  */
-export function rewriteAndReport(rulesDir, quiet, info, warn, wrappers, preserved = new Set()) {
-    const result = rewriteClaudeRules(rulesDir, preserved);
+export function rewriteAndReport(rulesDir, quiet, info, warn, wrappers, preserved = new Set(), onWrite) {
+    const result = rewriteClaudeRules(rulesDir, preserved, onWrite);
     // The flat-command wrapper report rides along rather than sitting at the
     // call site: `install.ts` is thousands of lines past
     // `check_source_size_budget`'s ceiling, and this module is the one place
@@ -205,8 +205,11 @@ export function renderClaudeRule(sourceText) {
  * disappearing from the frontmatter.
  *
  * Returns counts rather than printing. The caller owns the reporting surface.
+ * `onWrite` receives each rewritten path, so the installer can log it: the
+ * transaction log is read back as proof the bytes on disk are ours, and a
+ * write it never saw would leave every rewritten rule unprovable.
  */
-export function rewriteClaudeRules(rulesDir, preserved = new Set()) {
+export function rewriteClaudeRules(rulesDir, preserved = new Set(), onWrite) {
     const result = { rewritten: 0, scoped: [], dropped: [], failed: [] };
     let entries;
     try {
@@ -258,6 +261,7 @@ export function rewriteClaudeRules(rulesDir, preserved = new Set()) {
                 });
                 continue;
             }
+            onWrite?.(full);
             result.rewritten += 1;
         }
         const stem = name.slice(0, -3);

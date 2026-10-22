@@ -10091,7 +10091,7 @@ function recordedHashesWithLedger(root, env) {
 var SIDECAR_SUFFIX = ".agent-config.new";
 var EXIT_COMPLETED_WITH_CONFLICTS = 3;
 function isLedgerMigration(inputs) {
-  if (!inputs.exists || inputs.force) return false;
+  if (!inputs.exists || inputs.force || inputs.loggedWrite === true) return false;
   if (inputs.ledgerListed !== true) return false;
   if (inputs.onDiskSha256 === null) return false;
   return classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256) === "unknown";
@@ -10099,6 +10099,7 @@ function isLedgerMigration(inputs) {
 function decideDeployWrite(inputs) {
   if (!inputs.exists) return "write";
   if (inputs.force) return "write";
+  if (inputs.loggedWrite === true) return "write";
   const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
   if (ownership === "recorded-modified") return "preserve";
   if (ownership === "unknown" && isLedgerMigration(inputs)) {
@@ -10121,6 +10122,101 @@ function conflictSummaryMessage(count) {
 }
 function foreignSidecarMessage(target, sidecar) {
   return `Refusing to replace ${sidecar}: it already exists with different content and this install cannot show it wrote it. Package content for ${target} was NOT staged. Move or delete that file and re-run, or rerun with --force to replace the managed file instead.`;
+}
+
+// src/install/loggedWrites.ts
+import { gunzipSync } from "node:zlib";
+import { existsSync as existsSync5, readdirSync as readdirSync5, readFileSync as readFileSync10, realpathSync as realpathSync3, statSync as statSync4 } from "node:fs";
+import { basename as basename3, dirname as dirname4, join as join12, resolve as resolve4 } from "node:path";
+
+// src/install/paths.ts
+import { homedir as homedir6, tmpdir } from "node:os";
+import { join as join11 } from "node:path";
+var INSTALL_ROOT_SUBPATH = ".event4u/agent-config";
+var INSTALL_LOG_FILENAME = "install-log.jsonl";
+function resolveHome(home) {
+  if (home && home.length > 0) {
+    return home;
+  }
+  const fromOs = homedir6();
+  if (!fromOs) {
+    throw new Error(
+      "Cannot resolve home directory \u2014 both $HOME (POSIX) and $USERPROFILE (Windows) are unset."
+    );
+  }
+  return fromOs;
+}
+function getInstallRoot(home) {
+  return join11(resolveHome(home), INSTALL_ROOT_SUBPATH);
+}
+function getLogPath(home) {
+  const configHome = home ? void 0 : process.env["EVENT4U_CONFIG_HOME"];
+  if (configHome) return join11(configHome, INSTALL_LOG_FILENAME);
+  return join11(getInstallRoot(home), INSTALL_LOG_FILENAME);
+}
+
+// src/install/loggedWrites.ts
+var WRITE_MARKER = '"kind":"write"';
+var cache = null;
+function logFiles(logPath) {
+  const dir = dirname4(logPath);
+  if (!existsSync5(dir)) return [];
+  const stem = basename3(logPath).replace(/\.jsonl$/, "");
+  try {
+    return readdirSync5(dir).filter((n) => n.startsWith(stem) && (n.endsWith(".jsonl") || n.endsWith(".jsonl.gz"))).map((n) => join12(dir, n));
+  } catch {
+    return [];
+  }
+}
+function readLog(file) {
+  try {
+    const raw = readFileSync10(file);
+    return (file.endsWith(".gz") ? gunzipSync(raw) : raw).toString("utf8");
+  } catch {
+    return "";
+  }
+}
+function loggedWriteDigests(logPath = getLogPath()) {
+  const files = logFiles(logPath).sort();
+  const key = files.map((f) => {
+    try {
+      const st = statSync4(f);
+      return `${f}:${st.size}:${st.mtimeMs}`;
+    } catch {
+      return `${f}:-`;
+    }
+  }).join("|");
+  if (cache !== null && cache.key === key) return cache.writes;
+  const writes = /* @__PURE__ */ new Map();
+  for (const file of files) {
+    for (const line of readLog(file).split("\n")) {
+      if (!line.includes(WRITE_MARKER)) continue;
+      let entry;
+      try {
+        entry = JSON.parse(line);
+      } catch {
+        continue;
+      }
+      if (typeof entry.path !== "string" || typeof entry.sha256 !== "string" || entry.sha256 === "") continue;
+      const target = resolve4(entry.path);
+      let set = writes.get(target);
+      if (set === void 0) writes.set(target, set = /* @__PURE__ */ new Set());
+      set.add(entry.sha256);
+    }
+  }
+  cache = { key, writes };
+  return writes;
+}
+function wroteTheseBytes(target, onDiskSha256, writes) {
+  const plain = resolve4(target);
+  if (writes.get(plain)?.has(onDiskSha256) === true) return true;
+  let real;
+  try {
+    real = realpathSync3(target);
+  } catch {
+    return false;
+  }
+  return real !== plain && writes.get(real)?.has(onDiskSha256) === true;
 }
 
 // src/install/conflictTracker.ts
@@ -10239,12 +10335,16 @@ function createConflictTracker(host) {
      */
     resolve(target, force, would) {
       const exists = pathExists(target);
+      const recordedSha256 = exists ? recordedHashFor(target) : void 0;
+      const onDiskSha256 = exists ? sha256OfFile(target) : null;
+      const loggedWrite = exists && !force && onDiskSha256 !== null && classifyOwnership(recordedSha256, onDiskSha256) !== "recorded-unchanged" && wroteTheseBytes(target, onDiskSha256, loggedWriteDigests());
       const base = {
         exists,
-        recordedSha256: exists ? recordedHashFor(target) : void 0,
-        onDiskSha256: exists ? sha256OfFile(target) : null,
+        recordedSha256,
+        onDiskSha256,
         force,
-        ledgerListed: exists && ledgerLists(target)
+        ledgerListed: exists && ledgerLists(target),
+        loggedWrite
       };
       const migrating = isLedgerMigration(base);
       const decision = decideDeployWrite(
@@ -10302,9 +10402,9 @@ function createConflictTracker(host) {
 
 // src/install/manifestFiles.ts
 var YAML3 = __toESM(require_dist(), 1);
-import { existsSync as existsSync5, readFileSync as readFileSync10 } from "node:fs";
-import { homedir as homedir6 } from "node:os";
-import { isAbsolute as isAbsolute3, join as join12, resolve as resolve5 } from "node:path";
+import { existsSync as existsSync6, readFileSync as readFileSync11 } from "node:fs";
+import { homedir as homedir7 } from "node:os";
+import { isAbsolute as isAbsolute3, join as join14, resolve as resolve6 } from "node:path";
 function fileEntry(p, kind, hashContent) {
   return { path: p, kind, sha256: hashContent ? sha256OfFile(p) : null };
 }
@@ -10327,28 +10427,28 @@ function filesByToolFromBridges(tools, projectRoot, scope, bridgeMarker) {
   for (const toolId of [...tools].sort()) {
     const marker = bridgeMarker(toolId, scope);
     if (!marker) continue;
-    const markerPath = isAbsolute3(marker) ? marker : join12(projectRoot, marker);
+    const markerPath = isAbsolute3(marker) ? marker : join14(projectRoot, marker);
     out[toolId] = [fileEntry(markerPath, "bridge", false)];
   }
   return out;
 }
 function expanduser6(p) {
-  if (p === "~") return homedir6();
+  if (p === "~") return homedir7();
   if (p.startsWith("~/") || process.platform === "win32" && p.startsWith("~\\")) {
-    return join12(homedir6(), p.slice(2));
+    return join14(homedir7(), p.slice(2));
   }
   return p;
 }
 function resolveRecorded(raw, projectRoot) {
   const expanded = expanduser6(raw);
-  return isAbsolute3(expanded) ? resolve5(expanded) : resolve5(projectRoot, expanded);
+  return isAbsolute3(expanded) ? resolve6(expanded) : resolve6(projectRoot, expanded);
 }
 function readRecordedByTool(manifestPath, projectRoot) {
   const out = /* @__PURE__ */ new Map();
-  if (!existsSync5(manifestPath)) return out;
+  if (!existsSync6(manifestPath)) return out;
   let doc;
   try {
-    doc = YAML3.parse(readFileSync10(manifestPath, "utf8"));
+    doc = YAML3.parse(readFileSync11(manifestPath, "utf8"));
   } catch {
     return out;
   }
@@ -10402,7 +10502,7 @@ function reconcileToolFiles(fresh, prior, preserved) {
   const seen = /* @__PURE__ */ new Set();
   for (const entry of fresh) {
     const raw = entry["path"];
-    if (typeof raw === "string") seen.add(resolve5(expanduser6(raw)));
+    if (typeof raw === "string") seen.add(resolve6(expanduser6(raw)));
   }
   const out = [...fresh];
   for (const file of prior.files) {
@@ -10418,7 +10518,7 @@ function preservedIndex(preservedTargets, staged) {
   for (const target of preservedTargets) {
     const sidecar = sidecarPathFor(target);
     const sha = staged.get(sidecar) ?? null;
-    out.set(resolve5(target), {
+    out.set(resolve6(target), {
       sha256: sha,
       sidecar: sha === null ? null : { path: sidecar, kind: "sidecar", sha256: sha }
     });
@@ -11393,17 +11493,17 @@ import {
   fsyncSync,
   mkdirSync as mkdirSync6,
   openSync as openSync3,
-  readFileSync as readFileSync16,
+  readFileSync as readFileSync17,
   renameSync as renameSync6,
   unlinkSync as unlinkSync6,
   writeSync
 } from "node:fs";
-import { dirname as dirname7, join as join19 } from "node:path";
+import { dirname as dirname8, join as join21 } from "node:path";
 function atomicWriteFile(target, data, options = {}) {
   const mode = options.mode ?? 420;
-  const parent = dirname7(target);
+  const parent = dirname8(target);
   mkdirSync6(parent, { recursive: true });
-  const tmp = join19(parent, `.tmp.${process.pid}.${randSuffix()}`);
+  const tmp = join21(parent, `.tmp.${process.pid}.${randSuffix()}`);
   let fd = null;
   try {
     fd = openSync3(tmp, "w", mode);
@@ -11430,7 +11530,7 @@ function atomicWriteFile(target, data, options = {}) {
 function atomicAppendLine(target, line) {
   let existing = "";
   try {
-    existing = readFileSync16(target, "utf8");
+    existing = readFileSync17(target, "utf8");
   } catch {
     existing = "";
   }
@@ -13081,8 +13181,8 @@ function ruleFileArrives(sourcePath, scope) {
   if (!sourcePath.endsWith(".md")) {
     return true;
   }
-  const basename9 = path25.basename(sourcePath);
-  if (COMPAT_ALWAYS_EXCLUDED.includes(basename9)) {
+  const basename10 = path25.basename(sourcePath);
+  if (COMPAT_ALWAYS_EXCLUDED.includes(basename10)) {
     return false;
   }
   return rule_in_scope(sourcePath, scope.workspaces, scope.packs, scope.roles ?? null);
@@ -13293,8 +13393,8 @@ function _withPreservedKeys(rendered, original) {
   }
   return ["---", ...keep, "---", "", rendered].join("\n");
 }
-function rewriteAndReport(rulesDir, quiet, info2, warn2, wrappers, preserved = /* @__PURE__ */ new Set()) {
-  const result = rewriteClaudeRules(rulesDir, preserved);
+function rewriteAndReport(rulesDir, quiet, info2, warn2, wrappers, preserved = /* @__PURE__ */ new Set(), onWrite) {
+  const result = rewriteClaudeRules(rulesDir, preserved, onWrite);
   if (wrappers && !quiet) {
     if (wrappers.wrapped.length > 0) {
       info2(
@@ -13348,7 +13448,7 @@ function renderClaudeRule(sourceText) {
   lines.push(pyRstrip(body) + "\n");
   return { text: lines.join("\n"), globs: plan.globs, dropped: plan.dropped };
 }
-function rewriteClaudeRules(rulesDir, preserved = /* @__PURE__ */ new Set()) {
+function rewriteClaudeRules(rulesDir, preserved = /* @__PURE__ */ new Set(), onWrite) {
   const result = { rewritten: 0, scoped: [], dropped: [], failed: [] };
   let entries;
   try {
@@ -13386,6 +13486,7 @@ function rewriteClaudeRules(rulesDir, preserved = /* @__PURE__ */ new Set()) {
         });
         continue;
       }
+      onWrite?.(full);
       result.rewritten += 1;
     }
     const stem = name.slice(0, -3);
@@ -14041,6 +14142,7 @@ function thinInstalledRuleLayer(opts) {
     try {
       if (next !== installed) {
         fs33.writeFileSync(target, next, "utf-8");
+        opts.onWrite?.(target);
         rewritten += 1;
       }
       thinned += 1;
@@ -14483,8 +14585,8 @@ function installerThinsHost(_hostId, _opts = {}) {
 }
 
 // src/install/wizard-plan.ts
-import { homedir as homedir14 } from "node:os";
-import { isAbsolute as isAbsolute7, join as join37, resolve as resolve19 } from "node:path";
+import { homedir as homedir15 } from "node:os";
+import { isAbsolute as isAbsolute7, join as join39, resolve as resolve20 } from "node:path";
 var USER_SCOPE_PATHS = {
   "claude-code": "~/.claude/",
   "claude-desktop": "~/Library/Application Support/Claude/",
@@ -14570,7 +14672,7 @@ function dryRunTargetLines(global, tools, projectTarget) {
   for (const tool of tools) {
     const anchor = USER_SCOPE_PATHS[tool];
     if (anchor === void 0) continue;
-    out += `      ${tool} \u2192 ${anchor.startsWith("~/") ? join37(homedir14(), anchor.slice(2)) : anchor}
+    out += `      ${tool} \u2192 ${anchor.startsWith("~/") ? join39(homedir15(), anchor.slice(2)) : anchor}
 `;
   }
   out += "  phases:      project payload sync \u2014 skipped (global installs write user-scope paths only)\n";
@@ -21370,33 +21472,9 @@ var SCOPE_DETECT_AI_DIRS = [
   ".kilocode"
 ];
 
-// src/install/paths.ts
-import { homedir as homedir15, tmpdir as tmpdir3 } from "node:os";
-import { join as join40 } from "node:path";
-var INSTALL_ROOT_SUBPATH = ".event4u/agent-config";
-var INSTALL_LOG_FILENAME = "install-log.jsonl";
-function resolveHome(home) {
-  if (home && home.length > 0) {
-    return home;
-  }
-  const fromOs = homedir15();
-  if (!fromOs) {
-    throw new Error(
-      "Cannot resolve home directory \u2014 both $HOME (POSIX) and $USERPROFILE (Windows) are unset."
-    );
-  }
-  return fromOs;
-}
-function getInstallRoot(home) {
-  return join40(resolveHome(home), INSTALL_ROOT_SUBPATH);
-}
-function getLogPath(home) {
-  return join40(getInstallRoot(home), INSTALL_LOG_FILENAME);
-}
-
 // src/install/txlog.ts
 import { createGzip } from "node:zlib";
-import { createReadStream, createWriteStream, existsSync as existsSync17, readFileSync as readFileSync35, renameSync as renameSync8, statSync as statSync13, unlinkSync as unlinkSync8 } from "node:fs";
+import { createReadStream, createWriteStream, existsSync as existsSync18, readFileSync as readFileSync36, renameSync as renameSync8, statSync as statSync14, unlinkSync as unlinkSync8 } from "node:fs";
 import { pipeline } from "node:stream/promises";
 var ROTATION_MAX_BYTES = 10 * 1024 * 1024;
 var ROTATION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1e3;
@@ -21407,12 +21485,12 @@ function appendTxLog(logPath, entry) {
   atomicAppendLine(logPath, JSON.stringify(entry));
 }
 function shouldRotate(logPath, now = /* @__PURE__ */ new Date()) {
-  if (!existsSync17(logPath)) {
+  if (!existsSync18(logPath)) {
     return false;
   }
   let size = 0;
   try {
-    size = statSync13(logPath).size;
+    size = statSync14(logPath).size;
   } catch {
     return false;
   }
@@ -21426,7 +21504,7 @@ function shouldRotate(logPath, now = /* @__PURE__ */ new Date()) {
   return now.getTime() - firstTs >= ROTATION_MAX_AGE_MS;
 }
 function rotateLogSync(logPath) {
-  if (!existsSync17(logPath)) {
+  if (!existsSync18(logPath)) {
     return;
   }
   const stamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
@@ -21445,7 +21523,7 @@ async function gzipInPlace(source) {
 }
 function readFirstTimestamp(logPath) {
   try {
-    const raw = readFileSync35(logPath, "utf8");
+    const raw = readFileSync36(logPath, "utf8");
     const firstLine = raw.split("\n", 1)[0] ?? "";
     const parsed = tryParseEntry(firstLine);
     if (parsed === null) return null;
@@ -23550,7 +23628,8 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
         info,
         warn,
         res,
-        preserved_now
+        preserved_now,
+        (p) => _log_tx_entry("write", p)
       );
       deployClaudeCarrier({
         packageRoot: package_root,
@@ -23560,7 +23639,7 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
         warn,
         userPin: state.FULL_PIN,
         wantsThin: installerThinsHost(tool_id, { packageRoot: package_root }),
-        thin: (bodyLinkRoot) => describeThinInstalledLayer(thinInstalledRuleLayer({ rulesDir: path38.join(anchor, "rules"), packageRoot: package_root, preserved: preserved_now, bodyLinkRoot }))
+        thin: (bodyLinkRoot) => describeThinInstalledLayer(thinInstalledRuleLayer({ rulesDir: path38.join(anchor, "rules"), packageRoot: package_root, preserved: preserved_now, bodyLinkRoot, onWrite: (p) => _log_tx_entry("write", p) }))
       });
       if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root, void 0, { thisDeploy: /* @__PURE__ */ new Map([[anchor, current_files]]) })) info(l);
     }
