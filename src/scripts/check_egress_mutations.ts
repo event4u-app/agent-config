@@ -84,18 +84,32 @@ export function readRecipes(root: string): Recipe[] {
 }
 
 async function loadEngine(root: string, mutate?: Recipe): Promise<EngineMods> {
+    // The copies sit in one flat directory, so the engine's import closure must
+    // be exactly ENGINE_MODULES; a sibling import would not resolve there and
+    // would read as "invariant fails on the unmutated engine".
+    const copied = new Set(ENGINE_MODULES.map((rel) => path.basename(rel).replace(/\.ts$/, '.js')));
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'egress-mutation-'));
-    for (const rel of ENGINE_MODULES) {
-        let src = fs.readFileSync(path.join(root, rel), 'utf-8');
-        if (mutate !== undefined && rel === mutate.module) src = src.replace(mutate.find, () => mutate.replace);
-        fs.writeFileSync(path.join(tmp, path.basename(rel)), src);
+    try {
+        for (const rel of ENGINE_MODULES) {
+            let src = fs.readFileSync(path.join(root, rel), 'utf-8');
+            for (const m of src.matchAll(/from\s+'(\.\.?\/[^']+)'/g)) {
+                const spec = m[1] as string;
+                if (!spec.startsWith('./') || !copied.has(spec.slice(2))) {
+                    throw new Error(`${rel} imports ${spec}, which is outside the copied engine modules — add it to ENGINE_MODULES`);
+                }
+            }
+            if (mutate !== undefined && rel === mutate.module) src = src.replace(mutate.find, () => mutate.replace);
+            fs.writeFileSync(path.join(tmp, path.basename(rel)), src);
+        }
+        const at = (name: string): string => pathToFileURL(path.join(tmp, name)).href;
+        return {
+            rules: (await import(at('egress_rules.ts'))) as EngineMods['rules'],
+            token: (await import(at('egress_token.ts'))) as EngineMods['token'],
+            text: (await import(at('egress_text.ts'))) as EngineMods['text'],
+        };
+    } finally {
+        fs.rmSync(tmp, { recursive: true, force: true });
     }
-    const at = (name: string): string => pathToFileURL(path.join(tmp, name)).href;
-    return {
-        rules: (await import(at('egress_rules.ts'))) as EngineMods['rules'],
-        token: (await import(at('egress_token.ts'))) as EngineMods['token'],
-        text: (await import(at('egress_text.ts'))) as EngineMods['text'],
-    };
 }
 
 const holds = (inv: (m: EngineMods) => boolean, m: EngineMods): boolean => {
