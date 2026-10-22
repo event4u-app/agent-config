@@ -15,8 +15,8 @@
  * rules was deleted by a command whose README line advertises a *surgical*
  * uninstall.
  *
- * `tests/install/` held 47 files at that commit and **none** of them was
- * uninstall- or purge-shaped, so the behaviour had never been pinned in either
+ * By the author's own count at that commit, none of the files in
+ * `tests/install/` was uninstall- or purge-shaped, so the behaviour had never been pinned in either
  * direction. That absence is why the defect survived: the inventory that makes
  * reaping safe has existed since the 2026-06 Zed fix
  * (`_lib/global_deploy_inventory.ts`, whose own docstring states "Never deletes
@@ -250,7 +250,7 @@ describe('uninstall --purge — containment', () => {
 
         const res = purge(fx);
 
-        expect(res.stdout).toMatch(/refus|no recorded|inventory/i);
+        expect(res.stdout).toMatch(/refusing to purge .* no recorded inventory for this anchor; nothing was deleted/);
         // The caller decides the exit code from this flag, never from the
         // message's wording.
         expect(JSON.parse(res.stdout.trim().split('\n').at(-1) as string)[2]).toBe(true);

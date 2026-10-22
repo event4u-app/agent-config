@@ -45,6 +45,10 @@ describe('a default global install reaches the skills it did not write', () => {
                 EVENT4U_CONFIG_HOME: path.join(home, '.event4u', 'agent-config'),
                 AGENT_CONFIG_NO_UI: '1',
                 CI: '1',
+                // A maintainer's inventory/lock overrides must not steer a
+                // real install out of the injected HOME.
+                AGENT_CONFIG_DEPLOY_INVENTORY: undefined,
+                AGENT_CONFIG_INSTALLED_TOOLS: undefined,
             },
         });
         expect(r.status, `install failed:\n${r.stdout}\n${r.stderr}`).toBe(0);

@@ -80,6 +80,8 @@ describe('doctor artifact-location — a fixture consumer monorepo', () => {
                 HOME: home,
                 EVENT4U_CONFIG_HOME: path.join(home, '.event4u', 'agent-config'),
                 AGENT_CONFIG_NO_UI: '1',
+                AGENT_CONFIG_DEPLOY_INVENTORY: undefined,
+                AGENT_CONFIG_INSTALLED_TOOLS: undefined,
             },
         });
         const payload = JSON.parse(r.stdout) as { checks?: { id: string; status: string; message: string }[] };
