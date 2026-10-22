@@ -56,7 +56,7 @@ import { emitFor, type PermissionDecision, type Severity } from "./host_semantic
 import { _concern_permission_verdict, _payload_tool_name, _permission_for } from "./permission_gate.js";
 export { _concern_permission_verdict, _payload_tool_input, _payload_tool_name, _permission_for, _working_tree_root } from "./permission_gate.js";
 import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
-import { attributeRefusal, egressInjection, egressViewFor, runEgressStage, strictEgressVerdict } from "./egress_stage.js";
+import { attributeRefusal, egressInjection, egressViewFor, runEgressStage, withStrictDisclosure, withStrictRefusal } from "./egress_stage.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js';
 export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
@@ -1398,15 +1398,7 @@ export function main(argv?: string[]): number {
       payload_stubs: stubs_served,
     });
   }
-  // `strict` refuses a prompt that carries a credential and discloses one a
-  // tool result carried (strictEgressVerdict). Applied after the concerns so
-  // their verdicts and records stand unchanged.
-  const strict = strictEgressVerdict(String(envelope["event"] ?? args.event), egress);
-  if (strict?.kind === "refuse") {
-    rcs.push(EXIT_BLOCK);
-    concern_messages.push({ rc: EXIT_BLOCK, text: strict.message, def: { name: "egress-stage", severity: "blocking" } });
-  }
-  const final_rc = _reduce(rcs);
+  const final_rc = _reduce(withStrictRefusal(String(envelope["event"] ?? args.event), egress, rcs, concern_messages));
   writeConcernTimings(String(envelope["event"] ?? ""), String(envelope["platform"] ?? ""), timing_samples);
   _write_feedback(envelope, session_id, feedback_entries, final_rc, started_at);
   _record_rule_trips(envelope, feedback_entries);
@@ -1427,18 +1419,14 @@ export function main(argv?: string[]): number {
     concern_messages,
     final_rc,
   );
-  const emission = emitFor(
+  const emission = withStrictDisclosure(String(envelope["event"] ?? args.event), egress, emitFor(
     args.platform,
     args.event,
     _severity_for(final_rc) as Severity,
     decidingReasons,
     final_rc,
     _permission_for(args.event, envelope, final_rc, permission_verdicts),
-  );
-  if (strict?.kind === "disclose") {
-    emission.stdout = _with_system_message(emission.stdout, strict.message);
-    emission.stderr += `${strict.message}\n`;
-  }
+  ));
   if (emission.stdout) {
     process.stdout.write(emission.stdout);
   }
@@ -1446,20 +1434,6 @@ export function main(argv?: string[]): number {
     process.stderr.write(emission.stderr);
   }
   return emission.exit;
-}
-
-/** `stdout` with a user-visible `systemMessage` added; a non-JSON stdout is kept and the message follows as its own object. */
-function _with_system_message(stdout: string, message: string): string {
-  const text = stdout.trim();
-  try {
-    const parsed: unknown = text === "" ? {} : JSON.parse(text);
-    if (parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)) {
-      return `${JSON.stringify({ ...(parsed as Record<string, unknown>), systemMessage: message })}\n`;
-    }
-  } catch {
-    // not one JSON object
-  }
-  return `${stdout}${JSON.stringify({ systemMessage: message })}\n`;
 }
 
 function _isDir(p: string): boolean {

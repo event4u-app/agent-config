@@ -21,6 +21,7 @@ import type { EgressClass } from "../_lib/egress_rules.js";
 import type { TokenScope } from "../_lib/egress_token.js";
 import { isEnvKillSwitchActive } from "../_lib/env_kill_switch.js";
 import { type EgressEngine, loadEgressEngine } from "./egress_engine_loader.js";
+import { EXIT_BLOCK } from "./exit_codes.js";
 import { BODY_KEYS, type JsonObject, type JsonValue } from "./payload_stub.js";
 import { is_replay_mode } from "./state_io.js";
 
@@ -455,6 +456,50 @@ export function strictEgressVerdict(event: string, result: EgressStageResult): S
       `egress strict: a tool result carried a credential (${types.join(", ")}) that this host cannot withhold, ` +
       "so it reached the model provider. Treat it as exposed and rotate it.",
   };
+}
+
+/**
+ * `rcs` with `strict`'s prompt refusal pushed (and its message onto `messages`).
+ * The dispatcher applies it after the concerns, so their verdicts and records
+ * stand unchanged.
+ */
+export function withStrictRefusal(
+  event: string,
+  result: EgressStageResult,
+  rcs: number[],
+  messages: Array<{ readonly rc: number; readonly text: string; readonly def: Record<string, unknown> }>,
+): number[] {
+  const strict = strictEgressVerdict(event, result);
+  if (strict?.kind === "refuse") {
+    rcs.push(EXIT_BLOCK);
+    messages.push({ rc: EXIT_BLOCK, text: strict.message, def: { name: "egress-stage", severity: "blocking" } });
+  }
+  return rcs;
+}
+
+/** `emission` with `strict`'s tool-result disclosure added: a user-visible `systemMessage` and a stderr line. */
+export function withStrictDisclosure<E extends { stdout: string; stderr: string }>(
+  event: string,
+  result: EgressStageResult,
+  emission: E,
+): E {
+  const strict = strictEgressVerdict(event, result);
+  if (strict?.kind !== "disclose") return emission;
+  return { ...emission, stdout: withSystemMessage(emission.stdout, strict.message), stderr: `${emission.stderr}${strict.message}\n` };
+}
+
+/** `stdout` with a user-visible `systemMessage` added; a non-JSON stdout is kept and the message follows as its own object. */
+function withSystemMessage(stdout: string, message: string): string {
+  const text = stdout.trim();
+  try {
+    const parsed: unknown = text === "" ? {} : JSON.parse(text);
+    if (parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return `${JSON.stringify({ ...(parsed as Record<string, unknown>), systemMessage: message })}\n`;
+    }
+  } catch {
+    // not one JSON object
+  }
+  return `${stdout}${JSON.stringify({ systemMessage: message })}\n`;
 }
 
 export type PublishedState = "asserted" | "replaced" | "gated" | "uncovered";
