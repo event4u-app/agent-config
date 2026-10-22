@@ -127,7 +127,7 @@ the judge-one-tier-up ladder (`src/agent-src/contexts/subagent-configuration.md:
 
 ## Phase 2 — Measure, then flip per slice kind (T1, T4)
 
-- [ ] **2.1 Two claims filed before any paired run:**
+- [x] **2.1 Two claims filed before any paired run:** <!-- receipt: class=R0 · shadow · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
   `tier-downshift-quality-held` — verify-fail plus escalation rate of `lite` legs is at most the
   inherit legs' rate + 5 pp, and below the 0.3 escalation kill;
   `tier-downshift-limit-relief` — price-weighted billable tokens per *verified* slice, using
@@ -135,6 +135,7 @@ the judge-one-tier-up ladder (`src/agent-src/contexts/subagent-configuration.md:
   escalated re-run charged to the `lite` arm. Underpowered means neither is backed.
   verify: both rows exist in `docs/CLAIMS.md` with bars before the first paired run, and
   `check_claims` is green.
+  Done 2026-10-22 (commit e61a0db79c): both rows `unbacked` in `docs/CLAIMS.md`, `build_proof` run in the same change, `check_claims` green (117 entries).
 - [ ] **2.2 Paired run.** Read-only fan-out slices only (the one kind both tables already put
   at `lite`); each slice runs once per arm, both verified; capped at decision A2.
   verify: the ledger shows two arms with a verify result for every slice.
