@@ -57,3 +57,113 @@ describe('flip readiness — all four conditions, or shadow', () => {
         expect(noFailure.missing).toEqual(['failure_observed']);
     });
 });
+
+// Council 2026-10-22 decision 1: the hook records only the precondition and the
+// join keys; the report rebuilds each spawn's full verdict from the ledger and
+// the stopped worker's transcript, labelled `reconstructed`.
+import {
+    freshColdStartByType,
+    reconstructSpawnVerdicts,
+    summariseReconstruction,
+    type DefinitionFacts,
+    type LedgerLine,
+    type WorkerTranscript,
+} from '../../src/scripts/worker_reuse_shadow_report.js';
+
+describe('reconstructed reuse verdicts', () => {
+    const S = 'session-1';
+    const at = (s: number): string => new Date(T0 + s * 1000).toISOString();
+    const stamp = { head: 'abc', cwd_key: 'cwd1', epoch: 7 };
+    const defs: Record<string, DefinitionFacts> = { 'ac-researcher': { reuse: 'continuity', tier: 'lite' } };
+    function worker(ref: string, nameKey: string, startS: number, stopS: number): LedgerLine[] {
+        return [
+            { event: 'subagent_start', ts: at(startS), ref, session_id: S, agent_type: 'ac-researcher' },
+            { event: 'subagent_stop', ts: at(stopS), ref, session_id: S, agent_type: 'ac-researcher', ...stamp },
+            { event: 'subagent_named', ts: at(stopS + 0.1), ref, name_key: nameKey, session_id: S },
+        ];
+    }
+    function spawnAt(s: number, extra: Partial<LedgerLine> = {}): LedgerLine {
+        return { event: 'spawn_guard_shadow', ts: at(s), tool: 'Agent', dispatch_kind: 'spawn', agent_type: 'ac-researcher', name_key: 'n2', ...stamp, ...extra };
+    }
+    const smallTranscript: WorkerTranscript = { calls: [{ ts: at(2), context_tokens: 4_000 }], compact_ts: [] };
+
+    it('positive control: a warm, small, same-workspace continuity worker yields would_resume', () => {
+        const lines = [...worker('ref1', 'n1', 0, 5), spawnAt(10), { event: 'subagent_start', ts: at(10.1), ref: 'ref2', session_id: S, agent_type: 'ac-researcher' }];
+        const out = reconstructSpawnVerdicts({
+            lines,
+            transcripts: new Map([['ref1', smallTranscript]]),
+            definitions: defs,
+            fresh_cold_start_by_type: { 'ac-researcher': 9_000 },
+        });
+        expect(out).toHaveLength(1);
+        expect(out[0]).toMatchObject({ verdict: 'would_resume', name: 'n1', basis: 'reconstructed' });
+    });
+
+    it('a worker over the observed fresh cold start, past its TTL, or in another epoch is refused with the reason', () => {
+        const lines = [...worker('ref1', 'n1', 0, 5), spawnAt(400, { epoch: 8, session_id: S }), { event: 'subagent_start', ts: at(400.1), ref: 'ref2', session_id: S, agent_type: 'ac-researcher' }];
+        const out = reconstructSpawnVerdicts({
+            lines,
+            transcripts: new Map([['ref1', smallTranscript]]),
+            definitions: defs,
+            fresh_cold_start_by_type: { 'ac-researcher': 3_000 },
+        });
+        expect(out[0]).toMatchObject({ verdict: 'fresh', reasons: ['cache_ttl_expired', 'transcript_over_cold_start', 'workspace_changed', 'policy_epoch_changed'] });
+        // skill_set_signature is approximated by the epoch, so an epoch change also reads as a workspace change.
+    });
+
+    it('no observed fresh cold start refuses as no_observed_cold_start, never a constant', () => {
+        const lines = [...worker('ref1', 'n1', 0, 5), spawnAt(10, { session_id: S })];
+        const out = reconstructSpawnVerdicts({ lines, transcripts: new Map([['ref1', smallTranscript]]), definitions: defs, fresh_cold_start_by_type: {} });
+        expect(out[0]).toMatchObject({ verdict: 'fresh', reasons: ['no_observed_cold_start'] });
+    });
+
+    it('an incomplete join is rejected with the missing field named, never read as fresh', () => {
+        const lines = [...worker('ref1', 'n1', 0, 5), spawnAt(10, { session_id: S })];
+        const out = reconstructSpawnVerdicts({ lines, transcripts: new Map(), definitions: defs, fresh_cold_start_by_type: { 'ac-researcher': 9_000 } });
+        expect(out[0]).toMatchObject({ verdict: 'incomplete_join', missing: ['worker_transcript'] });
+        const noType = reconstructSpawnVerdicts({ lines: [spawnAt(10, { agent_type: null })], transcripts: new Map(), definitions: defs, fresh_cold_start_by_type: {} });
+        expect(noType[0]).toMatchObject({ verdict: 'incomplete_join', missing: ['agent_type', 'session_id'] });
+        const s = summariseReconstruction([...out, ...noType]);
+        expect(s.incomplete_joins).toBe(2);
+        expect(s.incomplete_by_field).toEqual({ agent_type: 1, session_id: 1, worker_transcript: 1 });
+        expect(s.window.agent_calls).toBe(0);
+    });
+
+    it('a worker still open at the spawn, or from another session, is not a candidate', () => {
+        const open: LedgerLine[] = [...worker('ref1', 'n1', 0, 5), { event: 'subagent_start', ts: at(8), ref: 'ref1', session_id: S, agent_type: 'ac-researcher' }];
+        const other = worker('ref9', 'n9', 0, 5).map((l) => ({ ...l, session_id: 'other' }));
+        const out = reconstructSpawnVerdicts({
+            lines: [...open, ...other, spawnAt(10, { session_id: S })],
+            transcripts: new Map([['ref1', smallTranscript], ['ref9', smallTranscript]]),
+            definitions: defs,
+            fresh_cold_start_by_type: { 'ac-researcher': 9_000 },
+        });
+        expect(out[0]).toMatchObject({ verdict: 'fresh', reasons: ['no_candidate'] });
+    });
+
+    it('a definition without reuse: continuity, and a compacted transcript, refuse', () => {
+        const lines = [...worker('ref1', 'n1', 0, 5), spawnAt(10, { session_id: S })];
+        const out = reconstructSpawnVerdicts({
+            lines,
+            transcripts: new Map([['ref1', { calls: smallTranscript.calls, compact_ts: [at(3)] }]]),
+            definitions: {},
+            fresh_cold_start_by_type: { 'ac-researcher': 9_000 },
+        });
+        expect(out[0]).toMatchObject({ verdict: 'fresh', reasons: ['compacted', 'not_continuity'] });
+    });
+
+    it('fresh cold start per definition is the median of ordinal-1 runs only', () => {
+        const m = freshColdStartByType(
+            [
+                { ref: 'a', ordinal: 1, calls: 1, first_call_written_or_uncached: 100, first_call_cache_read_share: 0 },
+                { ref: 'b', ordinal: 1, calls: 1, first_call_written_or_uncached: 300, first_call_cache_read_share: 0 },
+                { ref: 'a', ordinal: 2, calls: 1, first_call_written_or_uncached: 5, first_call_cache_read_share: 0 },
+            ],
+            [
+                { event: 'subagent_start', ts: at(0), ref: 'a', agent_type: 'x' },
+                { event: 'subagent_start', ts: at(1), ref: 'b', agent_type: 'x' },
+            ],
+        );
+        expect(m).toEqual({ x: 200 });
+    });
+});
