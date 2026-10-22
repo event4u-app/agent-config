@@ -50,12 +50,11 @@ exceeds the remaining window, stop entering CI-fix loops and merge everything
 already green first. Pre-greening several PRs ahead of their merge is forbidden
 under window pressure.
 
-**No mechanical window remains, and that is the change.** Until 2026-09-04 the
-run read a freshness bound off the authorization ledger and paused when it
-closed. The owner removed the enforcing gate (ADR-254) after it was measured
-refusing authorizations that had in fact been given, so there is no constant to
-read and no expiry to schedule against. Authorization is carried by the
-conversation and by `non-destructive-by-default`, not by a clock.
+**No mechanical window remains.** Until 2026-09-04 the run paused when the
+authorization ledger's freshness bound closed; the owner removed that gate
+(ADR-254) after it refused authorizations that had been given. There is no
+expiry to schedule against: authorization is carried by the conversation and
+`non-destructive-by-default`, not by a clock.
 
 The per-session ledger is still written, and is still read-only to this run:
 
@@ -129,9 +128,8 @@ merge_clearance.ts write --pr <N> \
 
 `write` also leaves the prompt and every seat reply beside the record
 (`pr-<N>-<head>.prompt.txt`, `.replies.json`); commit all three. `--check`
-re-derives every seat from those replies, so a record without them, or with a
-retyped reading, does not clear. Every reply counts: a seat re-asked until it
-clears keeps its worst reading.
+re-derives each seat from those replies, so a missing reply or a retyped
+reading does not clear, and a seat re-asked until it clears keeps its worst.
 
 A `needs-council` clearance only clears the merge. Deploy, release and every
 other Hard-Floor action keep their own confirmation.
@@ -240,7 +238,7 @@ force.
 
 On queue empty or terminal-only, `all` writes
 `agents/evidence/pr-drain-run-summary.md` <!-- ref-ignore --> (created by the
-run, so it does not exist until one has happened): one row per PR with queue
+run): one row per PR with queue
 position, the `base_ref@base_sha` it was prepared against — without it a
 "prepared" row records nothing checkable, since mergeability is a fact about a
 base and not about a queue —
@@ -253,11 +251,10 @@ gets a row; none is summarised away. The disposition set is closed:
 `merged <sha>` · `superseded-closed` · `blocked-external` · `twice-exhausted` ·
 `unauthorized` · `arrived-after-cutoff`
 
-`unauthorized` replaces `window-expired`, and the swap is one-for-one on
-purpose. `window-expired` named a clock ADR-254 removed on 2026-09-04, so no run
-can produce that row any more, and a closed set holding an unproducible member
-is a set nobody can check a run against. `unauthorized` names what actually
-happens in its place — § 7's pause and § 6's straggler batch, the two ways a PR
+`unauthorized` replaces `window-expired` one-for-one: that row named a clock
+ADR-254 removed on 2026-09-04, so no run can produce it, and a closed set with
+an unproducible member cannot be checked. `unauthorized` names what happens in
+its place — § 7's pause and § 6's straggler batch, the two ways a PR
 ends this run prepared and unmerged.
 
 ## Retro scope
@@ -289,5 +286,5 @@ seat found it dangerous**, ahead of the rest, so it cannot read as one more
 `needs-owner` hand-over. The entry shape is the one
 `ratification-artifact` § When the user decides (agent-config repository: `docs/contracts/ratification-artifact.md`)
 already gives — the council's reading, the dissent, the exact change, what it
-risks and how it is undone — reused per PR, not restated as a second contract.
+risks and how it is undone — reused per PR.
 A run with nothing held prints no block.

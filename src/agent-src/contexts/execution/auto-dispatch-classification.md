@@ -269,7 +269,7 @@ budgeted (consume part of the N=3 autonomous budget) and opt-in. Not in v1.
   its injected line cites the resolved rung, scoped to the dispatch rungs
   (1/2); a rung-0/3/4 verdict stays silent on this carrier.
 
-Each has a sibling `*.test.ts` in agent-config's own test suite covering every rung, the
+Each has a sibling `*.test.ts` in agent-config's tests covering every rung, the
 rung-3 degrade path, the recursive-dispatch guard and every ∅ case.
 
 ## Related

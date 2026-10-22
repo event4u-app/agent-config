@@ -22,7 +22,7 @@ command already does.
    non-draft roadmaps directly under `agents/roadmaps/`; `later/`, `skipped/`,
    `archive/` and `stubs/` are out of scope.
 2. **Order the queue — finish before start.** Run
-   `roadmap_drain_queue.ts` (`--json` for the record) and
+   `node_modules/@event4u/agent-config/src/scripts/roadmap_drain_queue.ts` (`--json` for the record) and
    take its order; never build the queue in prose. It answers *can this started
    roadmap still move?*, not *how far along is it?*:
    `resume` (a dead session's claimed roadmap — continue in its worktree) →

@@ -25,7 +25,7 @@ is harmless: no confirmation, no grants.
 
 **`/roadmap:process-full` is the exception, per
 ADR-237 (agent-config repository: `docs/decisions/ADR-237-end-to-end-execution-authority.md`):
-the invocation IS the confirmation.** There is no separate acceptance round
+the invocation IS the confirmation.** No acceptance round
 and no contract screen to wait on — the user asked for the finished PR, and
 the grants in § 3 activate on the invocation itself, whatever
 `execution.mode` says or fails to say. **A missing `execution:` block does

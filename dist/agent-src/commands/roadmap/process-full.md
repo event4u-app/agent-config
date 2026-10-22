@@ -40,14 +40,11 @@ Run the canonical loop in
 with the **scope delta below**.
 
 **Claim before the first edit, every mode:** `agent-config sessions:claim <slug>`.
-`REFUSED` stops the run for this roadmap and names who holds it — never
-`--force` to get past a live peer. A lane brief already carries its lane claim
-(§ Lanes), so a lane does not claim again.
-
-**Count every step:** run `agent-config sessions:claim <slug> --step` before
-starting each step. Exit 3 is the loop's executable bound — over its iteration
-cap the run ends `exhausted`, with the open count not falling it ends
-`stagnated` (halt 5's budget, decided by code); open steps stay open.
+`REFUSED` stops this roadmap and names the holder — never `--force` past a live
+peer. A lane's brief already holds its claim (§ Lanes). **Then run
+`sessions:claim <slug> --step` before each step:** exit 3 is halt 5's
+executable bound (`exhausted` over the cap, `stagnated` when the open count
+stalls); open steps stay open.
 
 ## Scope delta
 
@@ -172,8 +169,7 @@ stops the run):
 2. **Council-off + genuine ambiguity** (only outside an accepted contract with council available).
 3. **Security-sensitive** surface reached.
 4. **Scope-out-of-roadmap** work discovered.
-5. **Test / quality red** that cannot be cleared within the N=3 budget —
-   including that budget's executable form, `sessions:claim --step` exit 3.
+5. **Test / quality red** that cannot be cleared within the N=3 budget.
 
 **Halt 6, `--all` halts** — read [`process-full-all`](../../contexts/execution/process-full-all.md#full-is-full--halt-detail).
 
@@ -275,8 +271,6 @@ NO BATCH FLIP AT THE ARCHIVE COMMIT. NO "I'LL DO IT AT THE END."
 - **No silent stop at an authoring annotation.** Encountering
   "gated on Phase N", "deferred", "optional", or any equivalent
   phase-internal annotation is **not** a halt condition. Continue.
-- **No silent batch flip.** Each step's checkbox flips in the same
-  reply that lands its work — never deferred to the archive commit.
 - **Phase quality pipeline runs at every phase boundary** when cadence
   is `per_phase` or `per_step`. `end_of_roadmap` skips per-phase and
   runs only at the final archival check.

@@ -27,7 +27,7 @@ well as every `CLAUDE.md`
 (`agents/evidence/investigations/host-continuation-observations-2026-10.md`).
 So for such a worker the brief is the only path to the floor. A skip whose
 `safety_floor` does not carry the generated floor (`render_floor()`, from
-`src/scripts/_lib/subagent_floor.ts`) verbatim is refused — an empty or
+`node_modules/@event4u/agent-config/src/scripts/_lib/subagent_floor.ts`) verbatim is refused — an empty or
 arbitrary string included — and the worker loads its instructions instead, with
 a warning. `user_constraints` ride verbatim for every worker, with
 no trimming, no deduplication and no cap — rule (a) below.
