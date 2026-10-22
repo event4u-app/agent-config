@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **631**
-- Edges (incl. self-WRITE): **2402**
+- Edges (incl. self-WRITE): **2404**
 
 ## READ_ONLY edges
 
@@ -967,6 +967,7 @@
 | `.agent-src.uncondensed/skills/design-system-capture/SKILL.md` | `.agent-src.uncondensed/skills/design-system-capture/references/import-procedure.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-system-capture/SKILL.md` | `.agent-src.uncondensed/skills/design-system-capture/references/snapshot-preference-order.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-system-capture/SKILL.md` | `.agent-src.uncondensed/skills/storybook-workshop/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/design-system-capture/references/design-system-json.md` | `.agent-src.uncondensed/rules/untrusted-input-defense.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-system-capture/references/design-system-json.md` | `.agent-src.uncondensed/skills/existing-ui-audit/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-system-capture/references/import-procedure.md` | `.agent-src.uncondensed/skills/design-system-capture/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/design-system-capture/references/import-procedure.md` | `.agent-src.uncondensed/skills/design-system-capture/references/design-system-json.md` | `body_link` | 1 |
@@ -1038,6 +1039,7 @@
 | `.agent-src.uncondensed/skills/existing-ui-audit/references/steps/03-detect-design-tokens.md` | `.agent-src.uncondensed/rules/brand-source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/existing-ui-audit/references/steps/04b-live-storybook-read.md` | `.agent-src.uncondensed/skills/storybook-workshop/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/existing-ui-audit/references/steps/06-match-candidates.md` | `.agent-src.uncondensed/rules/design-fidelity.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/existing-ui-audit/references/steps/09-validate-and-write.md` | `.agent-src.uncondensed/skills/existing-ui-audit/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/expansion-playbook/SKILL.md` | `.agent-src.uncondensed/skills/churn-prevention/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/expansion-playbook/SKILL.md` | `.agent-src.uncondensed/skills/forecast-accuracy/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/expansion-playbook/SKILL.md` | `.agent-src.uncondensed/skills/onboarding-design/SKILL.md` | `body_link` | 1 |
