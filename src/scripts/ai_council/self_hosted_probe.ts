@@ -13,9 +13,15 @@
  *    connection to a non-loopback address is outbound. Without `lsof`, a
  *    listener, or a completed call, it is unmeasured (`null`).
  *
- * Limits a reader should not mistake for coverage: sampling can miss a
- * connection shorter than one `lsof` round trip, and only the listening PIDs
- * are watched — a child process the server spawns is not.
+ * Limits a reader should not mistake for coverage: `outbound: false` is
+ * evidence, not proof. Sampling cannot see a connection opened and closed
+ * between two `lsof` rounds, and only the listening PIDs are watched — a child
+ * process the server spawns is not.
+ *
+ * A route that carries a resolvable `api_key_ref` sends the key as a header
+ * read from a file in a private temp directory, never on a command line.
+ * Results are memoised only when definite, and only for
+ * `SELF_HOSTED_PROBE_TTL_MS`, so a swapped proxy is re-probed.
  *
  * Kept out of `free_route.ts`, which sits in the hook bundle: only callers
  * outside the bundle pass this probe. Every command goes through the injected
@@ -27,7 +33,11 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { resolve_api_key } from './config.js';
 import type { RouteSpec, SelfHostedProbe, SelfHostedProbeResult } from './free_route.js';
+
+/** A route as the probe reads it; `api_key_ref` is optional and only read for the call. */
+export type ProbeRoute = RouteSpec & { readonly api_key_ref?: string | null };
 
 export interface ProbeRunResult {
     readonly status: number;
@@ -41,8 +51,14 @@ export interface SelfHostedProbeDeps {
     start(cmd: string, args: readonly string[]): number | null;
     fileSize(path: string): number | null;
     readText(path: string): string | null;
+    writeText(path: string, text: string): void;
+    /** Removes a file or a directory tree; never throws on absence. */
     remove(path: string): void;
-    tmpFile(): string;
+    /** A freshly created, empty, owner-only directory. */
+    tmpDir(): string;
+    /** The key an `api_key_ref` names, or `null` when it does not resolve. */
+    resolveKey(ref: string): string | null;
+    readonly env: Readonly<Record<string, string | undefined>>;
     readonly home: string;
     now(): number;
     sleep(ms: number): void;
@@ -52,6 +68,8 @@ const UNPROVEN: SelfHostedProbeResult = { weights: 'unknown', outbound: null };
 const MIN_WEIGHTS_BYTES = 50 * 1024 * 1024;
 const QUERY_TIMEOUT_S = 5;
 const CALL_TIMEOUT_S = 60;
+/** How long a definite probe answer is reused before the route is probed again. */
+export const SELF_HOSTED_PROBE_TTL_MS = 10 * 60 * 1000;
 
 type Weights = SelfHostedProbeResult['weights'];
 
@@ -79,6 +97,11 @@ function _expandHome(deps: SelfHostedProbeDeps, p: string): string {
     return p.startsWith('~/') ? path.join(deps.home, p.slice(2)) : p;
 }
 
+function _ollamaModelsDir(deps: SelfHostedProbeDeps): string {
+    const override = (deps.env['OLLAMA_MODELS'] ?? '').trim();
+    return override !== '' ? _expandHome(deps, override) : path.join(deps.home, '.ollama', 'models');
+}
+
 function _ollamaWeights(deps: SelfHostedProbeDeps, origin: string, model: string): Weights | null {
     const show = _json(deps, ['-X', 'POST', '-H', 'content-type: application/json', '-d', JSON.stringify({ model }), `${origin}/api/show`]);
     if (show === null) return null;
@@ -89,7 +112,7 @@ function _ollamaWeights(deps: SelfHostedProbeDeps, origin: string, model: string
         if (m === null) continue;
         const ref = m[1] as string;
         const digest = /^sha256[:-]([0-9a-f]+)$/i.exec(ref);
-        if (digest !== null) return _weightsAt(deps, path.join(deps.home, '.ollama', 'models', 'blobs', `sha256-${digest[1]}`));
+        if (digest !== null) return _weightsAt(deps, path.join(_ollamaModelsDir(deps), 'blobs', `sha256-${digest[1]}`));
         if (ref.startsWith('/') || ref.startsWith('~/')) return _weightsAt(deps, _expandHome(deps, ref));
     }
     return 'unknown';
@@ -163,7 +186,17 @@ function _completed(text: string | null): boolean {
     }
 }
 
-function _outbound(deps: SelfHostedProbeDeps, route: RouteSpec, url: URL, model: string): boolean | null {
+function _authHeaderArgs(deps: SelfHostedProbeDeps, route: ProbeRoute, dir: string): string[] {
+    const ref = route.api_key_ref;
+    if (typeof ref !== 'string' || ref === '') return [];
+    const key = deps.resolveKey(ref);
+    if (key === null || key === '') return [];
+    const file = path.join(dir, 'auth.header');
+    deps.writeText(file, `Authorization: Bearer ${key}\n`);
+    return ['-H', `@${file}`];
+}
+
+function _outbound(deps: SelfHostedProbeDeps, route: ProbeRoute, url: URL, model: string): boolean | null {
     const port = url.port !== '' ? url.port : url.protocol === 'https:' ? '443' : '80';
     const listen = deps.run('lsof', ['-nP', `-iTCP:${port}`, '-sTCP:LISTEN', '-t'], 5000);
     if (listen === null) return null;
@@ -172,15 +205,17 @@ function _outbound(deps: SelfHostedProbeDeps, route: RouteSpec, url: URL, model:
     const pidList = pids.join(',');
     let seen = _sample(deps, pidList);
     if (seen === null) return null;
-    const out = deps.tmpFile();
-    const body = JSON.stringify({ model, max_tokens: 8, messages: [{ role: 'user', content: 'Reply with OK.' }] });
-    const pid = deps.start('curl', [
-        '-s', '--max-time', String(CALL_TIMEOUT_S), '-o', out,
-        '-H', 'content-type: application/json', '-d', body, `${route.base_url}/chat/completions`,
-    ]);
-    if (pid === null) return null;
-    const deadline = deps.now() + (CALL_TIMEOUT_S + 5) * 1000;
+    const dir = deps.tmpDir();
     try {
+        const out = path.join(dir, 'out.json');
+        const body = JSON.stringify({ model, max_tokens: 8, messages: [{ role: 'user', content: 'Reply with OK.' }] });
+        const pid = deps.start('curl', [
+            '-s', '--max-time', String(CALL_TIMEOUT_S), '-o', out,
+            '-H', 'content-type: application/json', ..._authHeaderArgs(deps, route, dir),
+            '-d', body, `${route.base_url}/chat/completions`,
+        ]);
+        if (pid === null) return null;
+        const deadline = deps.now() + (CALL_TIMEOUT_S + 5) * 1000;
         while (_running(deps, pid)) {
             const s = _sample(deps, pidList);
             if (s === null) return null;
@@ -196,7 +231,7 @@ function _outbound(deps: SelfHostedProbeDeps, route: RouteSpec, url: URL, model:
         seen = seen || last;
         return _completed(deps.readText(out)) ? seen : null;
     } finally {
-        deps.remove(out);
+        deps.remove(dir);
     }
 }
 
@@ -207,7 +242,7 @@ export function makeSelfHostedProbe(deps: SelfHostedProbeDeps): SelfHostedProbe 
             const url = new URL(route.base_url);
             const weights = _weights(deps, url.origin, model);
             if (weights !== 'local') return { weights, outbound: null };
-            return { weights, outbound: _outbound(deps, route, url, model) };
+            return { weights, outbound: _outbound(deps, route as ProbeRoute, url, model) };
         } catch {
             return UNPROVEN;
         }
@@ -247,10 +282,21 @@ export const NODE_PROBE_DEPS: SelfHostedProbeDeps = {
             return null;
         }
     },
-    remove(p) {
-        fs.rmSync(p, { force: true });
+    writeText(p, text) {
+        fs.writeFileSync(p, text, { encoding: 'utf-8', mode: 0o600, flag: 'wx' });
     },
-    tmpFile: () => path.join(os.tmpdir(), `self-hosted-probe-${process.pid}-${Date.now()}.json`),
+    remove(p) {
+        fs.rmSync(p, { force: true, recursive: true });
+    },
+    tmpDir: () => fs.mkdtempSync(path.join(os.tmpdir(), 'self-hosted-probe-')),
+    resolveKey(ref) {
+        try {
+            return resolve_api_key(ref);
+        } catch {
+            return null;
+        }
+    },
+    env: process.env,
     home: os.homedir(),
     now: () => Date.now(),
     sleep: (ms) => {
@@ -258,15 +304,24 @@ export const NODE_PROBE_DEPS: SelfHostedProbeDeps = {
     },
 };
 
-const _memo = new Map<string, SelfHostedProbeResult>();
-const _probe = makeSelfHostedProbe(NODE_PROBE_DEPS);
+/** A definite answer: remote weights, or local weights with outbound measured. */
+function _definite(r: SelfHostedProbeResult): boolean {
+    return r.weights === 'remote' || (r.weights === 'local' && r.outbound !== null);
+}
 
-/** The production probe, memoised per route and model for the life of the process. */
-export const SELF_HOSTED_PROBE: SelfHostedProbe = (route, model) => {
-    const key = `${route.base_url}\0${model}`;
-    const hit = _memo.get(key);
-    if (hit !== undefined) return hit;
-    const result = _probe(route, model);
-    _memo.set(key, result);
-    return result;
-};
+/** Memoise definite answers per route and model for `ttlMs`; anything unmeasured is probed again. */
+export function makeMemoisedProbe(probe: SelfHostedProbe, now: () => number, ttlMs = SELF_HOSTED_PROBE_TTL_MS): SelfHostedProbe {
+    const memo = new Map<string, { readonly result: SelfHostedProbeResult; readonly until: number }>();
+    return (route, model) => {
+        const key = `${route.base_url}\0${model}`;
+        const hit = memo.get(key);
+        if (hit !== undefined && now() < hit.until) return hit.result;
+        memo.delete(key);
+        const result = probe(route, model);
+        if (_definite(result)) memo.set(key, { result, until: now() + ttlMs });
+        return result;
+    };
+}
+
+/** The production probe. */
+export const SELF_HOSTED_PROBE: SelfHostedProbe = makeMemoisedProbe(makeSelfHostedProbe(NODE_PROBE_DEPS), () => Date.now());
