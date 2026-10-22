@@ -53,10 +53,15 @@ export function routeQuestions(questions: readonly Question[]): Routed {
             routed.pause.push(q);
             continue;
         }
+        // A gated action needs this-turn user confirmation whatever the class,
+        // so the gate is read before the class can route the item elsewhere.
+        if (q.gates !== undefined) {
+            routed.preAction[q.gates].push(q);
+            continue;
+        }
         const mode = DEFAULT_RESOLUTION_MODES[q.ownership];
         if (mode === 'agent') routed.agent.push(q);
         else if (mode === 'council') routed.council.push(q);
-        else if (q.gates !== undefined) routed.preAction[q.gates].push(q);
         else {
             if (q.recommendation === undefined || q.recommendation.trim() === '') {
                 throw new QuestionError(`${q.id}: an owner item in the end batch needs a recommendation`);
