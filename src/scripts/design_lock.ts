@@ -42,6 +42,10 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             if (v === undefined) throw new Error(`argument ${a}: expected one argument`);
             return v;
         };
+        if ((a === '--design-md' || a === '--baseline' || a === '--write-baseline') && argv[i + 1] === undefined) {
+            process.stderr.write(`design_lock: argument ${a}: expected one argument\n`);
+            return 2;
+        }
         if (a === '--design-md') designMd = take();
         else if (a === '--baseline') baseline = take();
         else if (a === '--write-baseline') writeBaseline = take();
@@ -68,8 +72,18 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 0;
     }
     if (baseline !== null) {
-        const known = JSON.parse(fs.readFileSync(baseline, 'utf-8')) as Array<{ file: string; value: string }>;
-        findings = newDrift(findings, known);
+        let known: unknown;
+        try {
+            known = JSON.parse(fs.readFileSync(baseline, 'utf-8'));
+        } catch (err) {
+            process.stderr.write(`design_lock: --baseline ${baseline} is unreadable (${err instanceof Error ? err.message : String(err)})\n`);
+            return 2;
+        }
+        if (!Array.isArray(known)) {
+            process.stderr.write(`design_lock: --baseline ${baseline} is not a JSON array of findings\n`);
+            return 2;
+        }
+        findings = newDrift(findings, known as Array<{ file: string; value: string }>);
     }
     if (json) process.stdout.write(`${JSON.stringify({ findings }, null, 2)}\n`);
     else {

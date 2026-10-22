@@ -56,4 +56,21 @@ describe('design lock carrier', () => {
         expect(r.status).toBe(0);
         expect(r.stdout).toContain('2 value(s) outside a declared Lock');
     });
+
+    it('an unreadable or non-array baseline is an argument error (2), never a crash', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ds-lock-base-'));
+        fs.writeFileSync(path.join(dir, 'DESIGN.md'), DESIGN_MD);
+        fs.writeFileSync(path.join(dir, 'cta.css'), CSS);
+        fs.writeFileSync(path.join(dir, 'bad.json'), '{ not json');
+        fs.writeFileSync(path.join(dir, 'obj.json'), '{"file":"x"}');
+        for (const base of ['bad.json', 'obj.json', 'absent.json']) {
+            const r = spawnSync(path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx'), [path.join(REPO_ROOT, 'src/scripts/design_lock.ts'), '--baseline', base, 'cta.css'], {
+                cwd: dir,
+                encoding: 'utf-8',
+                timeout: 60_000,
+            });
+            expect(r.status, `${base}: ${r.stderr}`).toBe(2);
+            expect(r.stderr).toContain(`--baseline ${base}`);
+        }
+    }, 120_000);
 });
