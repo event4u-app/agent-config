@@ -105,6 +105,13 @@ describe('analysis run core', () => {
         expect(() => spendTokens(runDir, rec, 1)).toThrow(RunError);
     });
 
+    it('refuses a negative spend and a run id that is not one folder', () => {
+        const { runDir, record } = createRun(root, { pins: {}, tokenCap: 1000 });
+        expect(() => spendTokens(runDir, record, -500)).toThrow(/non-negative/);
+        expect(() => createRun(root, { runId: '../escape', pins: {}, tokenCap: 1 })).toThrow(/single folder name/);
+        expect(fs.existsSync(path.join(root, '..', 'escape'))).toBe(false);
+    });
+
     it('publishes once per key, whatever the path order', () => {
         const { runDir, record } = createRun(root, { pins: {}, tokenCap: 100 });
         const key = publicationKey(record.run_id, ['b.md', 'a.md'], 'sha1');

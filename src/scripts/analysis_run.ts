@@ -114,6 +114,9 @@ export function createRun(
         throw new RunError('tokenCap must be a positive number');
     }
     const runId = options.runId ?? newRunId();
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(runId) || runId.includes('..')) {
+        throw new RunError(`run id ${JSON.stringify(runId)} is not a single folder name`);
+    }
     const runDir = path.join(runsDir(projectRoot), runId);
     if (fs.existsSync(path.join(runDir, RUN_STATE_FILE))) {
         throw new RunError(`run ${runId} already exists`);
@@ -166,7 +169,8 @@ export function reached(record: RunRecord, target: ForwardState): boolean {
 /**
  * Runs `effect` and moves to `target` — unless the record already reached it,
  * in which case nothing runs. This is what makes a re-invocation after a kill
- * resume instead of repeating a stage.
+ * resume instead of repeating a completed stage; a kill after `effect` and
+ * before the transition is saved repeats that one stage.
  */
 export function runStage(
     runDir: string,
@@ -205,7 +209,13 @@ export function publicationKey(runId: string, paths: readonly string[], baseSha:
     return createHash('sha256').update(body).digest('hex');
 }
 
-/** Performs a publication at most once per key across kills and re-runs. */
+/**
+ * Performs a publication at most once per key across re-runs that complete.
+ * The key is saved AFTER the effect, so a kill between the two repeats the
+ * effect on resume: across kills this is at-least-once, and an effect that
+ * must not repeat carries its own idempotence check (as `publish()` does with
+ * `findOpenPr`).
+ */
 export function publishOnce(
     runDir: string,
     record: RunRecord,
@@ -223,6 +233,9 @@ export function publishOnce(
 export function spendTokens(runDir: string, record: RunRecord, tokens: number): RunRecord {
     if (isTerminal(record.state)) {
         throw new RunError(`cannot spend on a run in ${record.state}`);
+    }
+    if (!Number.isFinite(tokens) || tokens < 0) {
+        throw new RunError(`token spend must be a non-negative number, got ${String(tokens)}`);
     }
     const spent = record.budget.spent_tokens + tokens;
     const next: RunRecord = { ...record, budget: { ...record.budget, spent_tokens: spent } };
