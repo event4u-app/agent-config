@@ -8,7 +8,8 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { resetCouncilEgress } from '../../src/scripts/ai_council/council_egress.js';
-import { CREDENTIAL_ENV_ROWS, EGRESS_RULES, credentialEnvNames, unmappedCredentialEnv } from '../../src/scripts/_lib/egress_rules.js';
+import { CREDENTIAL_ENV_ROWS, credentialEnvNames, unmappedCredentialEnv } from '../../src/scripts/_lib/egress_credential_env.js';
+import { EGRESS_RULES } from '../../src/scripts/_lib/egress_rules.js';
 
 const ALNUM = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 function randomBody(n: number, alphabet = ALNUM): string {

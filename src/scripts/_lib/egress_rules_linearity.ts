@@ -26,6 +26,9 @@ export const LINEARITY: Readonly<Record<string, string>> = {
     'xai-api-key': PREFIX_RUN,
     'perplexity-api-key': PREFIX_RUN,
     'groq-api-key': PREFIX_RUN,
+    'huggingface-token': PREFIX_RUN,
+    'nvidia-api-key': PREFIX_RUN,
+    'replicate-api-token': PREFIX_RUN,
     'jwt':
         'One attempt per base64url run: the lookbehind admits a start only at the run boundary, and the lookahead-plus-backreference consumes the run up to its first eyJ atomically, so the engine never retries a later eyJ in the same run. That loses nothing: every eyJ in one run reaches the same run end, so the first one, which has the most characters after it, matches whenever any later one would. An attempt spans at most three dot-separated runs, so each character is read a bounded number of times.',
     'stripe-secret-key': PREFIX_RUN,
