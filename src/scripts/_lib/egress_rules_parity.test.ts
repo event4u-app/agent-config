@@ -186,6 +186,14 @@ describe('old-versus-new parity of the credential rows', () => {
 });
 
 describe('documented ceilings', () => {
+    // Pairs the list with its per-case expectations in both directions, so the
+    // scaffolding is checked today (both empty) and a ceiling cannot be added
+    // without saying exactly what it may lose, nor an expectation left behind.
+    it('every ceiling case has exactly one stated expectation, and no expectation is orphaned', () => {
+        const listed = DETECTION_CEILINGS.flatMap((c) => c.cases.map((id) => `${c.rule}|${id}`)).sort();
+        expect(Object.keys(CEILING_EXPECT).sort()).toEqual(listed);
+    });
+
     it('every ceiling names a credential rule, at least one case and a reason', () => {
         const rules = new Set(EGRESS_RULES.map((r) => r.rule));
         for (const c of DETECTION_CEILINGS) {
