@@ -98,9 +98,11 @@ export function readCustomProperties(css: string, into: CssClosure): void {
             selector = '';
         } else {
             selector += ch;
-            const m = /^\s*(--[A-Za-z0-9_-]+)\s*:\s*([^;{}]*)$/.exec(selector);
+            // Tested only at a declaration's end: per character, an undelimited
+            // run in untrusted CSS made this quadratic.
             const next = text[i + 1];
-            if (m !== null && (next === ';' || next === '}')) {
+            const m = next === ';' || next === '}' ? /^\s*(--[A-Za-z0-9_-]+)\s*:\s*([^;{}]*)$/.exec(selector) : null;
+            if (m !== null) {
                 const dark = stack.length > 0 && stack[stack.length - 1] === true;
                 (dark ? into.dark : into.light).set(m[1] as string, (m[2] as string).trim());
             }
