@@ -1389,3 +1389,10 @@ is the named exception in the claim itself.
 - evidence: PRE-REGISTERED 2026-10-22 (`road-to-a-tier-the-dispatch-carries` step 2.1), on the same paired run as `tier-downshift-quality-held`. METRIC: per arm, the sum over its slices of billable input weighted as the tree already weights cache (cache read 0.1x, five-minute cache write 1.25x, uncached 1x) plus output, each leg's tokens priced at its served model's per-token rate, divided by the number of slices that passed verification in that arm; a `lite` slice that escalated adds its re-run's cost to the `lite` arm. DIRECTION: the `lite` arm's cost per verified slice is lower. No percentage target is set (that roadmap's K10). UNDERPOWERED under the same condition as the quality claim; a cheaper arm that fails `tier-downshift-quality-held` backs nothing.
 - status: unbacked
 - last_verified: 2026-10-22
+
+### claim: advisor-pairing-held
+- claim: PRE-REGISTERED, unmeasured. A `lite` executor with a `high` advisor verifies bounded implementation slices as often as `medium` alone, within the same margin, at a lower price-weighted cost per verified slice.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-22 (`road-to-a-tier-the-dispatch-carries` step 3.2), BEFORE any paired run, and only after step 3.1 observed a worker path for the advisor on Claude Code 2.1.308. ARMS: each bounded implementation slice runs once as a `lite` executor dispatched with a `high` advisor, once as a `medium` executor with none, both verified by the same deterministic check. BARS: the two of `tier-downshift-quality-held` and `tier-downshift-limit-relief` unchanged — fail-or-escalate within +5 pp and below the 0.3 escalation kill; cost per verified slice lower, with every advisor consultation and every escalated re-run charged to the advisor arm (3.1 observed the advisor's input billed uncached). SAMPLE: at most 60 pairs, floor 30. UNDERPOWERED below the floor or when the interval straddles the margin; then nothing is backed. A backed claim opens its own adoption roadmap; this one adopts nothing.
+- status: unbacked
+- last_verified: 2026-10-22
