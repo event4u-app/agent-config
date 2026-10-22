@@ -34,6 +34,14 @@ relates:
 > alive with memory released, so the full package context is not loaded again
 > on every spawn — because the providers now refuse too many requests in a
 > short window. Turns 2 and 3 asked for the analysis and the plan.
+>
+> **Owner turn of 2026-10-22 (`inbox-2026-10-z`), answered here:** start minimal setups and
+> targeted workers — sessions or agents carrying only the rules and skills they need, the rest
+> loaded on demand — so subagent runs cost fewer tokens. The highest-yield answers in the tree
+> are this file's 2.5 (instruction skip) and 5.1 (lighter council seat launch); they are
+> recommended ahead of the Phase 3 shadow window. No step changes. A per-task profile engine and
+> headless sessions as the default worker form stay killed (K3, K4); the tier half of the same
+> turn is `road-to-a-tier-the-dispatch-carries`.
 
 ## Goal
 

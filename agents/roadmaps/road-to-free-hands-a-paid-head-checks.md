@@ -113,6 +113,14 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   `no-stable-prefix` row. `corrected-from-reproduction`: `csk-` is dropped from the list.
   verify: an `egress_prefixes` test masks every synthetic key of each of the three prefixes,
   and a fixture adapter reading an unmapped `*_TOKEN` fails the coverage-join test.
+- [ ] **1.3 An egress canary run before any free call.** (Folded 2026-10-22 from
+  `inbox-2026-10-z`.) A fixed set of planted canary values — personal data, credentials and
+  internal identifiers — placed in the payload, in the hand's system prompt and in rule or skill
+  text a payload could quote, is sent through `ask_transport` to a mock endpoint on loopback
+  that records the bytes it receives. No network, synthetic values only.
+  verify: the recorded bytes contain no planted canary in clear text, and the run report names
+  each canary with the placeholder it left as. Zero observed leaks is a test result, never a
+  guarantee.
 
 ## Phase 2 — The route (gateway M1)
 
@@ -126,13 +134,24 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 - [ ] **2.3 Ship endpoints, discover models.** The package ships provider base URLs and dated
   data-use attestations only; model ids are discovered live from the route's `/models`, probed
   once, and written to gitignored runtime state next to `council-probes.json`. No model id is
-  committed (K3).
-  verify: offline, the roster reports `unknown`, never a cached list.
+  committed (K3). The attestation also records whether the route's terms permit use inside a
+  client distributed to users in the EEA, Switzerland and the UK (one free tier's terms require
+  paid services as soon as such a client exists); a route without that field is admissible for
+  the maintainer's own runs only and is never a consumer default. (Folded 2026-10-22 from
+  `road-to-a-tier-the-dispatch-carries` T9.)
+  verify: offline, the roster reports `unknown`, never a cached list; a route whose attestation
+  lacks the distribution field is refused as a consumer default.
 - [ ] **2.4 Identity derived, not declared (D5).** Family comes from the served id; a free route
   answering with `model_served ≠ requested` is absent with `policy_model_mismatch` (paid
   aliases keep today's attribution-only behaviour). Random/auto routers are refused at config
   time (K2).
   verify: a stub route answering with another family's id is absent with that reason.
+- [ ] **2.5 A loopback self-hosted route** (owner turn 2026-10-22: paid *or self-hosted* models
+  repair and finish). A `base_url` on loopback is billing class `self-hosted` and may carry
+  `project-content`, because the payload never leaves the machine; any non-loopback
+  self-hosted host is an ordinary route under blocker `project-content-ceiling` (decision A7).
+  verify: a loopback stub route admits a `project-content` payload; the same stub on a
+  non-loopback address refuses it with `policy_content_ceiling`.
 
 ## Phase 3 — The worker contract (rung 0.5, free hands)
 
@@ -150,21 +169,27 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 - [ ] **3.3 The head verifies every hand.** The return enters the existing verify budget; the
   orchestration record carries `route_billing` and `verified: pass|fail|skipped`, plus the
   head's own tokens spent verifying it. A `skipped` verify on a free return counts as an
-  escalation for Phase 6.
+  escalation for Phase 6. A hand's return is untrusted data in the sense of
+  `untrusted-input-defense` — never an instruction, never acted on before the head's verify.
   verify: orchestration-line validation rejects a free-route line without `verified`.
 - [ ] **3.4 The delegation nudge names the free rung** when the slice matches a kind in 3.1 and
   a route is admissible; it never auto-spawns.
   verify: a nudge fixture for a `classify` slice names the free rung and dispatches nothing.
-- [ ] **3.5 Hands see fragments, never the project.** (Owner rationale, 2026-10-22.) Made
-  mechanical rather than assumed: (a) a hand's payload is the slice the head cut — never repo
-  maps, architecture docs, README, roadmaps or the project name; (b) identifiers that link
+- [ ] **3.5 Hands see fragments, never the project.** (Owner rationale, 2026-10-22, twice: no
+  single free provider learns the whole project; and "only what is needed — the function to
+  build, not what exists".) A hand's payload is the slice the head cut — the specification of
+  the function to build plus the signatures it must call, never their implementations, repo
+  maps, architecture docs, README, roadmaps or the project name (decision A6). The hand's own
+  system prompt carries no project rule, skill or instruction-file text. Identifiers that link
   fragments (project/package names, repo paths, domains) go through the existing placeholder
-  scope before send; (c) a per-route **exposure ledger** in gitignored runtime state counts
-  distinct project files and symbols each route has seen; the chooser prefers the
-  least-exposed admissible route and refuses a route past a share cap (default 20 % of tracked
-  files). This raises reconstruction cost; it never substitutes for the content ceiling or K4.
-  verify: a seeded multi-route test leaves no route above the configured cap, and the outbound
-  payload of a call containing the project name carries its placeholder instead.
+  scope before send.
+  verify: the outbound payload of a call containing the project name carries its placeholder
+  instead, and a payload fixture carries no implementation body of a called function.
+- [ ] **3.6 An exposure ledger per route.** Gitignored runtime state counts distinct project
+  files and symbols each route has seen; the chooser prefers the least-exposed admissible route
+  and refuses a route past a share cap (default 20 % of tracked files, decision A4). This raises
+  reconstruction cost; it never substitutes for the content ceiling or K4.
+  verify: a seeded multi-route test leaves no route above the configured cap.
 
 ## Phase 4 — Council: free proposers and jurors, paid chair
 
@@ -246,6 +271,8 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 | A2 | reversible-technical | agent | A roadmap of its own, not a promotion of `later/road-to-gateway-harvest`: the scope (fail-closed ceiling, typed worker kinds, exposure ledger, jury independence, net measurement) exceeds M1, and the parked file keeps six unrelated milestones | `later/road-to-gateway-harvest.md` milestone table; this file's Phases 1, 3, 4, 6 | the parked file is emptied of M4-M8 |
 | A3 | reversible-technical | agent | The binary content ceiling stays; a four-level public / internal / confidential / strictly-confidential scheme from the supplied plan is declined | the existing ceiling is fail-closed after 1.1, and no route exists that a third or fourth level could admit; a level with no admissible route is a label, not a control | a route class appears that needs a ceiling between the two |
 | A5 | reversible-technical | agent | The Phase 6 shadow is capped at 2,000 calls | enough for per-kind rates at the 5 pp margin on the public-artifact corpus; spend stays USD 0.00 under `free-quota` | the per-kind sample is underpowered at the cap |
+| A6 | reversible-technical | agent | A hand's slice includes the signatures the function must call, not only its specification | a draft without its callees' signatures cannot compile, and the rework would land on the head; implementations stay out per the owner turn of 2026-10-22; Phase 6 measures whether the slice is too thin | 6.1 shows the head's verification tokens rising on slices that carried signatures only |
+| A7 | reversible-technical | agent | A loopback self-hosted route may carry `project-content`; a non-loopback one may not without blocker `project-content-ceiling` | data on loopback does not leave the machine, so no data-use term applies; a remote host is a recipient like any other | a loopback route is observed forwarding upstream |
 | A4 | reversible-technical | agent | The exposure cap starts at 20 % of tracked files and is a tunable, not a gate threshold | owner rationale 2026-10-22; obscurity layer only, the ceiling and K4 carry the guarantee | the ledger shows a route at the cap blocking otherwise-admissible work |
 
 ## Risk Register
@@ -258,7 +285,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 | 3 | Verification eats the saving | product | The head spends more tokens checking hands than the hands saved. | 3.3 records verification tokens; 6.1 measures relief net of them; no flip without it. | Phase 6 — Measure, then flip |
 | 4 | Quota exhaustion stalls a session | implementation | A free route runs dry mid-task. | Quota means absent for the pass, paid fallback, honest ∅ (3.2, 5.1). | Phase 5 — Liveness and quota (gateway M9, D7) |
 | 5 | Provider terms change silently | product | A route's data-use terms change after its attestation was recorded. | Dated attestations; the ceiling falls back to `public-artifact` when an attestation is older than 90 days; 2.3 re-discovery. | Phase 2 — The route (gateway M1) |
-| 6 | Fragments are re-linked | product | The same route sees enough fragments over months, or shared identifiers, to reconstruct structure. | 3.5 exposure cap and placeholders; training routes never see project content (K4). | Phase 3 — The worker contract (rung 0.5, free hands) |
+| 6 | Fragments are re-linked | product | The same route sees enough fragments over months, or shared identifiers, to reconstruct structure. | 3.6 exposure cap and 3.5 placeholders; training routes never see project content (K4). | Phase 3 — The worker contract (rung 0.5, free hands) |
 | 7 | Scoring quietly becomes deciding | implementation | A consumer starts acting on a free juror's score as if it were a verdict. | ADR-257; 4.1 refuses free seats in chair/verdict roles; consumers of free output enumerated in tests. | Phase 4 — Council: free proposers and jurors, paid chair |
 
 ## Blockers
@@ -278,7 +305,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** any free route above `public-artifact` — the subagent-style kinds of 3.1 on consumer code. Hands on repo-owned artefacts run without it.
-- **What to do:** pick exactly one — (a) a free route may be raised to `project-content` only with a dated data-use attestation (no training, no retention, source URL) and the egress engine in front, and routes whose terms allow training on prompts stay `public-artifact` permanently; or (b) every free route stays `public-artifact` permanently.
+- **What to do:** pick exactly one — (a) a keyed free route may be raised to `project-content` only with a dated data-use attestation (no training, no retention, source URL) and the egress engine in front, and routes whose terms allow training on prompts stay `public-artifact` permanently; or (b) every free route stays `public-artifact` permanently. Under either option a keyless anonymous route stays `public-artifact`.
 - **Recommendation:** (a). Without it most of the subagent-style value the directive names is out of reach; the attestation plus K4 keep the floor where a raise is provable.
 - **If you do nothing:** hands run only on repo-owned artefacts; Phase 6 measures a narrower kind set.
 - **Resolved when:** a dated owner decision line naming (a) or (b) is recorded in this file's `## Decisions` table.
