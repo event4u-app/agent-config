@@ -180,8 +180,9 @@ describe('release settings delta — control', () => {
         expect(h.tally_at_tag).toEqual(h.tally);
         for (const p of h.pairs) {
             for (const r of p.removed) {
-                expect(`${p.to}/${r.key}`).toBe(`${p.to}/${r.key}`);
-                expect(r.classification_at_tag).toBe(r.classification);
+                // Labelled, so a disagreement names the release and the key.
+                expect(`${p.to}/${r.key}=${String(r.classification_at_tag)}`)
+                    .toBe(`${p.to}/${r.key}=${r.classification}`);
             }
         }
 
@@ -242,7 +243,7 @@ describe('release settings delta — the released surface', () => {
         expect(a.version).toBe('9.9.9');
     });
 
-    it('single-writer: the committed file is written by the cut and nothing else', () => {
+    it('single-writer: the committed file is written by the cut and nothing else', (t) => {
         const committed = readReleasedSurface();
         // It is a real surface, not a stub: more than 50 entries, keys sorted,
         // no descriptions, sorted tombstone lists. It is NOT compared with a
@@ -300,7 +301,9 @@ describe('release settings delta — the released surface', () => {
         } catch {
             // No git history reachable (an exported tree, a shallow fetch that
             // does not reach the file). The writer-set assertion above still
-            // holds; this half simply has nothing to read.
+            // holds; this half has nothing to read, and says so as a skip.
+            // skip-reason: no git history to read.
+            t.skip('no git history reachable for the history half');
             return;
         }
         for (const sha of log.split('\n').filter(Boolean)) {
