@@ -808,7 +808,9 @@ export interface ReviewPlan {
  * `scope` keeps only changed files under one of the given path prefixes, and
  * names itself in the coverage record so a reader sees what was out of reach;
  * `maxChunks` lifts the per-run ceiling for a run that is meant to finish. CI
- * passes neither and keeps the ceiling.
+ * passes neither and keeps the ceiling. A scoped run is advisory only: it
+ * refuses `--enforce`, its coverage label says `scoped`, and
+ * `check_finding_dispositions` refuses a ledger whose coverage records a scope.
  */
 export interface PlanOptions {
     scope?: readonly string[];
@@ -1146,6 +1148,13 @@ export function main(argv: string[]): 0 | 2 {
     const baseRef = (baseIdx >= 0 ? argv[baseIdx + 1] : undefined) ?? 'origin/main';
     const scopeIdx = argv.indexOf('--scope');
     const scope = scopeIdx >= 0 ? (argv[scopeIdx + 1] ?? '').split(',').map((p) => p.trim()).filter((p) => p !== '') : undefined;
+    // A scoped run reads only the prefixes its author picked, so it cannot
+    // produce an ENFORCED verdict that reads as a review of the whole span
+    // (finding cc59a3fd0ca7). It stays available as a local, advisory run.
+    if (scope !== undefined && enforce) {
+        process.stderr.write('self-review-gate: --scope narrows the review to chosen paths and cannot be combined with --enforce\n');
+        return 2;
+    }
     const maxIdx = argv.indexOf('--max-chunks');
     const maxChunks = maxIdx >= 0 ? Number(argv[maxIdx + 1]) : undefined;
     if (maxChunks !== undefined && !(Number.isInteger(maxChunks) && maxChunks > 0)) {

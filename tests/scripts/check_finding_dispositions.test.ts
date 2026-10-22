@@ -406,6 +406,34 @@ function ledgerDir(body: unknown, version = '1.0.0'): string {
     return dir;
 }
 
+describe('a scoped self-review is not release evidence', () => {
+    // Findings cc59a3fd0ca7 / 9229106e0826: a run narrowed with --scope counts
+    // only the prefixes its author picked, so its record cannot stand for the span.
+    const body = (scope: unknown) => ({
+        schema_version: 1,
+        release: '1.0.0',
+        coverage: { chunks: 2, filesReviewed: 9, filesTotal: 9, unreviewed: [], ...(scope === undefined ? {} : { scope }) },
+        findings: [],
+        no_findings_reason: 'the review ran over the span and reported nothing',
+    });
+
+    it('refuses a ledger whose coverage records a scope, and names it', () => {
+        const r = runGate(ledgerDir(body(['src/scripts'])), '1.0.0');
+        expect(r.code).toBe(1);
+        expect(r.out).toContain('scoped to src/scripts');
+    });
+
+    it('accepts the same ledger from a whole-span run', () => {
+        expect(runGate(ledgerDir(body(undefined)), '1.0.0').code).toBe(0);
+    });
+
+    it('labels a scoped run as scoped even when it read every in-scope file', () => {
+        expect(coverageLabel({ filesReviewed: 9, filesTotal: 9, scope: ['src/scripts', 'hooks'] })).toBe(
+            'self-review was scoped to `src/scripts`, `hooks` and read 9 of 9 changed files within it (scoped — not the whole span)',
+        );
+    });
+});
+
 /**
  * An empty ledger must say why it is empty.
  *

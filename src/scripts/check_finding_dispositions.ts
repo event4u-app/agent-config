@@ -81,7 +81,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-import { coverageLabel } from './_lib/review_coverage.js';
+import { coverageLabel, coverageScope } from './_lib/review_coverage.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -997,6 +997,20 @@ function main(argv: readonly string[]): number {
             return 1;
         }
         throw exc;
+    }
+
+    // A scoped self-review read only the prefixes its author chose, so its
+    // record is not release evidence for the whole span (findings cc59a3fd0ca7,
+    // 9229106e0826). The scope rides in the ledger's coverage block from
+    // `self_review_gate --findings-out`; a ledger carrying one is refused.
+    const scopedTo = coverageScope(ledger.coverage);
+    if (scopedTo !== null) {
+        process.stderr.write(
+            `❌  ${path.relative(REPO_ROOT, ledgerPath)}: the recorded self-review was scoped to ` +
+                `${scopedTo.join(', ')} — a run narrowed to prefixes its author chose is not evidence for ` +
+                `${release}. Re-run the self-review over the whole span (no --scope) and ingest that.\n`,
+        );
+        return 1;
     }
 
     const problems = missing_dispositions(ledger.findings, release);

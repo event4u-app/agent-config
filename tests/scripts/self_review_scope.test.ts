@@ -62,3 +62,11 @@ describe('coverage of a scoped run', () => {
         expect(coverageBlock({ chunks: 1, filesReviewed: 3, filesTotal: 3, unreviewed: [] })).not.toContain('Scoped to');
     });
 });
+
+describe('a scoped run is never an enforced verdict', () => {
+    it('refuses --scope together with --enforce', () => {
+        // Finding cc59a3fd0ca7: a scoped, enforced, clean run read as a review of
+        // the whole span. Refused before any plan is built or anything is spent.
+        expect(main(['--dry-run', '--scope', 'src/scripts', '--enforce'])).toBe(2);
+    });
+});
