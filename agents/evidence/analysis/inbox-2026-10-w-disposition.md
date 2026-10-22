@@ -1,5 +1,7 @@
 # Inbox round inbox-2026-10-w — disposition
 
+<!-- evidence-type: analysis -->
+
 > **Source:** `agents/tmp.old/inbox-2026-10-w/` — one transcript (3 turns), two
 > supplied CI-speed plans (plan A English, plan B German), one topic. Both plans
 > pinned at `main@95dbe28`; every claim re-verified against `main@5dcfa13a6`
@@ -24,7 +26,7 @@ executable; the toggle stays the owner's).
 |---|---|---|
 | Plan A M1-M24 | still-true, 22 · corrected, 2 | 118 enforced gates, not 113 (5 rows default to enforced); `reportScanned` already exists with 111 callers and `assertScanned` 219, not 41 |
 | Plan A D1-D7 | still-true | D3's premise "strict off" confirmed live on ruleset `17749383` |
-| Plan B § 1 timings | still-true | PR #2569 Actions jobs API: ubuntu jobs started within 63 s, macOS 5.7-33 min |
+| Plan B § 1 timings | still-true | PR #2569 Actions jobs API: ubuntu jobs started within 0 s-5m23s (first misread as 63 s; corrected from `ci-time-to-green-2026-10.md`), macOS 5.7-33 min |
 | Plan B § 1 "existing optimizations" | still-true | concurrency, npm cache, 2×4 shards all present |
 
 Found by this run, not in either plan: `ci_status.ts:35-46` requires a

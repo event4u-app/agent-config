@@ -38,7 +38,8 @@ today's workflows instead of August's.
 - `src/scripts/ci_time_ratio.ts:133,150` uses `gh run list` `createdAt,updatedAt`
   — run span only, no per-job queue. Nothing reads job `started_at − created_at`.
 - `gh api repos/…/actions/runs/39644704455/jobs` (PR #2569 Tests) shows every
-  ubuntu job starting within 2-63 s of creation and macOS jobs waiting 5.7 to
+  ubuntu job starting within 0 s-5m23s of creation (corrected by 1.2's reading;
+  first read here as 2-63 s) and macOS jobs waiting 5.7 to
   33 minutes; the run's longest job is ~12.5 min, its span ~40 min.
 - ADR-223 (`docs/decisions/ADR-223-no-required-check-demotion-on-cost-grounds.md:10-18`):
   trigger (a) per-OS failure attribution — no instrument (:88); trigger (b)
@@ -53,7 +54,7 @@ today's workflows instead of August's.
 
 ## Phase 1 — The instrument
 
-- [ ] **1.1 `ci_time_to_green` script.** Reads the Actions runs + jobs API (via
+- [x] **1.1 `ci_time_to_green` script.** Reads the Actions runs + jobs API (via
       `gh api`) for a time window or a PR head SHA and writes
       `agents/reports/ci-time-to-green.json` plus a markdown table: per job queue
       (`started_at − created_at`) and execution; per run span; per head SHA
@@ -62,11 +63,11 @@ today's workflows instead of August's.
       in the CLI shell.
       verify: unit tests over a recorded jobs fixture assert queue/exec seconds,
       OS split and the required-vs-all distinction.
-- [ ] **1.2 First reading.** Run it over the last 7 days and commit the summary as
+- [x] **1.2 First reading.** Run it over the last 7 days and commit the summary as
       `agents/evidence/analysis/ci-time-to-green-2026-10.md` with p50/p90 per OS
       and event, and PR #2569 reproduced as a named row.
       verify: `grep -c "39644704455" agents/evidence/analysis/ci-time-to-green-2026-10.md` -> /^[1-9]/
-- [ ] **1.3 Per-OS failure attribution — ADR-223 trigger (a)'s instrument.** A
+- [x] **1.3 Per-OS failure attribution — ADR-223 trigger (a)'s instrument.** A
       `ci_os_attribution` script walks ≥ 500 recent `Tests` runs and counts runs
       where a macOS job failed while its ubuntu twin passed (and vice versa),
       naming the jobs. Result committed to
@@ -76,7 +77,7 @@ today's workflows instead of August's.
 
 ## Phase 2 — The contract describes today
 
-- [ ] **2.1 Re-run the cost-contract pass.** `ci-cost-budget.md` rows re-measured
+- [x] **2.1 Re-run the cost-contract pass.** `ci-cost-budget.md` rows re-measured
       from CI (Phase 1 reading + the required job's per-gate timings), the
       `svg-witness-tests` row added, the job-count sentence corrected, the
       collector-lifecycle row taken from CI, and a separate, labelled
@@ -84,13 +85,13 @@ today's workflows instead of August's.
       never compared. `keep-beta-until` moved to a date tied to the scheduled
       report in 3.1.
       verify: `grep -c "keep-beta-until: 2026-10-06" docs/contracts/ci-cost-budget.md` -> /^0$/
-- [ ] **2.2 ADR-223 revisit record.** An addendum records that trigger (b) fired
+- [x] **2.2 ADR-223 revisit record.** An addendum records that trigger (b) fired
       on 2026-09-11, what 1.3 measured for trigger (a), and the outcome of this
       round: placement changes only, the required set untouched.
       verify: `./scripts-run src/scripts/adr_cite_check ADR-223` no longer
       reports the trigger state as indeterminate, or the addendum names why it
       still is.
-- [ ] **2.3 `ci_status` shape sets name workflows that exist.** Drop or replace
+- [x] **2.3 `ci_status` shape sets name workflows that exist.** Drop or replace
       `Python Version Sweep` and assert in a test that every name in
       `REQUIRED_CHECKS_BY_SHAPE` is the `name:` of a workflow under
       `.github/workflows/`.
@@ -98,12 +99,15 @@ today's workflows instead of August's.
 
 ## Phase 3 — It stays measured
 
-- [ ] **3.1 Weekly scheduled report.** A workflow runs `ci_time_to_green` weekly
+- [x] **3.1 Weekly scheduled report.** A workflow runs `ci_time_to_green` weekly
       and on `workflow_dispatch`, writes the table to the job summary, uploads the
       JSON, and emits a `::warning` when p50 or p90 regresses > 25 % against the
       previous committed reading. It opens no issues and posts nothing.
       verify: `grep -n "schedule" .github/workflows/ci-time-to-green.yml` -> 0
-- [ ] **3.2 Hand the reading to the parked merge-queue blocker.** Record on
+      (Executed as a `tests.yml`-only reading against its own baseline,
+      `agents/reports/ci-time-to-green-tests.json`: `GITHUB_TOKEN`'s ~1,000
+      requests an hour cannot read a week of every workflow.)
+- [x] **3.2 Hand the reading to the parked merge-queue blocker.** Record on
       `later/road-to-merge-surface-zero` B2 that the per-PR wall-time
       measurement it waits for now exists, with the evidence path.
       verify: `grep -n "ci-time-to-green-2026-10" agents/roadmaps/later/road-to-merge-surface-zero.md` -> 0
@@ -130,9 +134,9 @@ today's workflows instead of August's.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Queue and execution time per job, OS and event are reproducible from
+- [x] AC-1 — Queue and execution time per job, OS and event are reproducible from
       one command, and a committed reading exists.
-- [ ] AC-2 — ADR-223 carries a recorded revisit with a measured trigger (a)
+- [x] AC-2 — ADR-223 carries a recorded revisit with a measured trigger (a)
       reading.
-- [ ] AC-3 — `ci-cost-budget.md` lists every `tests.yml` job and is not past its
+- [x] AC-3 — `ci-cost-budget.md` lists every `tests.yml` job and is not past its
       own review date.

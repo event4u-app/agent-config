@@ -5,6 +5,18 @@ review_by: 2026-09-25
 
 # Stub: road to the `main` protection-ruleset changes (required checks + merge queue)
 
+> **Arrivals:** 4 — latest `inbox-2026-10-w` (2026-10-21, CI-speed round); earlier:
+> `inbox-2026-10-f` (2026-10-06), two feedback rounds (9.10.0, test economy
+> 2026-08-10). Codenames only.
+>
+> **Posed to the owner (2026-10-22):** the in-repo precondition is now done —
+> `merge_group` is declared on both required workflows and on `tests.yml`, and
+> `tests.yml` has one always-run `Tests result` check (see the table below). Enable
+> the merge queue on ruleset `17749383` (and, optionally, add `Tests result` to the
+> required set) — yes, or no and why? Measured cost of not having it: every merge
+> re-runs the full `Tests` matrix on `push: main`, and PR jobs queue for macOS p50
+> 5m34s / p90 25m09s (`agents/evidence/analysis/ci-time-to-green-2026-10.md`).
+
 > **Stub — not active work.** Holds the two repo-admin transfers made out of
 > [`road-to-inbox-harvest-2026-08-b-ci-economy.md`](../road-to-inbox-harvest-2026-08-b-ci-economy.md)
 > Phase 4 by the autonomous drain run of 2026-08-20. Both were decided
@@ -63,6 +75,9 @@ Read, not described — `gh api repos/event4u-app/agent-config/rulesets/17749383
 | `strict_required_status_checks_policy` | `true` |
 | Ruleset entries of type `merge_queue` | **0** |
 | Files under `.github/` declaring `merge_group` | **0** |
+| ↳ re-read 2026-10-22 (`road-to-macos-where-the-platform-is-the-point` 3.1) | **3** — `consistency.yml`, `standing-payload-delta.yml`, `tests.yml` |
+| Required-checks entries (re-read 2026-10-22, live) | **2** — `Sync + Generate Tools Consistency`, `Standing payload delta + budget gate`; `strict` **false** |
+| Stable aggregate for `Tests` | `Tests result` (always-run, `needs:` every Tests job) |
 
 These are the before-values a future reader diffs against, so movement is
 distinguishable from noise.

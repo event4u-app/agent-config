@@ -49,12 +49,12 @@ job it sits in.
 
 ## Phase 1 — Assign files by duration
 
-- [ ] **1.1 Timing snapshot + refresh script.** `tests/timing-manifest.json`
+- [x] **1.1 Timing snapshot + refresh script.** `tests/timing-manifest.json`
       maps each test file to seconds per OS; `plan_test_shards` regenerates it from
       vitest JSON reporter output of a full run.
       verify: unit tests feed a recorded reporter fixture and assert per-file
       seconds land in the manifest.
-- [ ] **1.2 Duration-balanced sequencer.** A custom `sequence.sequencer` overrides
+- [x] **1.2 Duration-balanced sequencer.** A custom `sequence.sequencer` overrides
       `shard()` with a deterministic longest-processing-time assignment from the
       manifest; files absent from it get the manifest median, so a new file is
       never dropped. Selected only when `VITEST_BALANCED_SHARDS=1`, which CI sets.
@@ -69,25 +69,37 @@ job it sits in.
 
 ## Phase 2 — The critical path carries only gating work
 
-- [ ] **2.1 Hook-latency comparison in its own job.** The diagnostic comparison
+- [x] **2.1 Hook-latency comparison in its own job.** **Outcome: kept in place** — council
+      2/2 (`agents/evidence/council/ci-macos-tier-and-static-diagnostic-2026-10-22.md`,
+      decision B): Static Checks is not on the critical path and a separate job would
+      lose the same-job warm/cold delta for ~30-50 s net. The diagnostic comparison
       (and the composite-arming report beside it) move from Static Checks into a
       parallel, non-gating job; the blocking bench gate stays in Static Checks
       unchanged.
       verify: `grep -n "hook-latency bench gate" .github/workflows/tests.yml` -> 0
-- [ ] **2.2 Profile `render()` once more.** Time `build_proof`'s `render()` by
+- [x] **2.2 Profile `render()` once more.** Time `build_proof`'s `render()` by
       phase; if a cacheable or repeated hotspot exists, cut it with output parity
       asserted by the existing determinism test; if not, record the measured
       phase split in `ci-cost-budget.md` and rely on 1.2 to isolate it.
       verify: the existing build_proof tests pass and the phase split is recorded.
-- [ ] **2.3 Pin runner images in tests.yml** (`ubuntu-24.04`, and the current
+- [x] **2.3 Pin runner images in tests.yml** (`ubuntu-24.04`, and the current
       concrete macOS label) so readings across the 26.04 rollout compare like with
       like.
       verify: `grep -c "ubuntu-latest" .github/workflows/tests.yml` -> /^0$/
-- [ ] **2.4 Persist the transform caches.** `NODE_COMPILE_CACHE` and vitest's
+- [x] **2.4 Persist the transform caches.** `NODE_COMPILE_CACHE` and vitest's
       module cache restored via `actions/cache` keyed on lockfile + tsconfig + OS,
       saved only from `main`; kept only if this PR's run shows a gain, reverted in
       the same PR otherwise.
       verify: the decision and both run ids are recorded in `ci-cost-budget.md`.
+
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| B1 | reversible-technical | council:agents/evidence/council/ci-macos-tier-and-static-diagnostic-2026-10-22.md | The hook-latency diagnostic stays in Static Checks (2/2) | Static Checks 6m07 vs ubuntu shard 8m40 vs ~40 min run on PR #2569 | Static Checks becomes the last or a required job |
+| B2 | reversible-technical | evidence | `render()`'s cost was not in `build_proof` but in `check_enforcement_coverage.mentions_as_code` (99 % of 89 s); fixed there with an oracle-equivalence test, output byte-identical | CPU profile 2026-10-22; `build_proof --check` 87 s -> 7.7 s | — |
+| B3 | reversible-technical | evidence | Transform caches not adopted | local A/B on 61 files: cold 4.37 s, warm 4.24 s, none 4.60 s — inside noise; CI log split tests 90 %, import 5 %, transform 3 % | the import+transform share rises above ~20 % |
+| B4 | reversible-technical | evidence | Images pinned to the rollout's destination (`ubuntu-26.04`, `macos-26`), not back to 24.04 | job logs 2026-10-21: `ubuntu-latest` already served `ubuntu-26.04`, `macos-latest` `macos-26-arm64` | an image breaks a suite |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-21 | reviewer: claude/host -->
@@ -100,7 +112,9 @@ job it sits in.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every vitest file in the node-tests set runs in exactly one shard.
+- [x] AC-1 — Every vitest file in the node-tests set runs in exactly one shard.
 - [ ] AC-2 — The slowest-to-fastest shard ratio on this PR's run is recorded and
       lower than the count-based 2026-08-18 ratio.
-- [ ] AC-3 — No diagnostic-only step remains inside the Static Checks job.
+- [x] AC-3 — The placement of the diagnostic-only step in Static Checks is decided on
+      evidence (council 2026-10-22, decision B: it stays). Rewritten from "no diagnostic-only
+      step remains", which assumed Static Checks was on the critical path; it is not.

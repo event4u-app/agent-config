@@ -3,7 +3,7 @@ complexity: structural
 status: ready
 execution:
   mode: autonomous
-estate_offset_exempt: "Round inbox-2026-10-w verified at 5dcfa13a6 that tests.yml requests 13 macOS jobs on every PR and every push to main (26 jobs, tests.yml:75-769) against GitHub's 5-concurrent macOS ceiling, and that on PR #2569 every ubuntu job started within 63 s while macOS jobs waited 5.7-33 min. The in-repo half of the merge-queue transfer (merge_group on every required workflow, which the admin stub road-to-main-protection-ruleset-changes names as the fixed precondition) is still 0 of 2. No active roadmap owns macOS placement; the stub owns only the ruleset write, which this file does not perform."
+estate_offset_exempt: "Round inbox-2026-10-w verified at 5dcfa13a6 that tests.yml requests 13 macOS jobs on every PR and every push to main (26 jobs, tests.yml:75-769) against GitHub's 5-concurrent macOS ceiling, and that over 7 days PR jobs queued p50 29 s / p90 3m34s on ubuntu against 5m34s / 25m09s on macOS (agents/evidence/analysis/ci-time-to-green-2026-10.md). The in-repo half of the merge-queue transfer (merge_group on every required workflow, which the admin stub road-to-main-protection-ruleset-changes names as the fixed precondition) is still 0 of 2. No active roadmap owns macOS placement; the stub owns only the ruleset write, which this file does not perform."
 relates:
   - slug: road-to-main-protection-ruleset-changes
     relation: extends
@@ -41,7 +41,8 @@ run on the way to `main`.
 - macOS legs per run (`tests.yml`): install-tests ×4 (:75-80), install-aux (:112),
   node-tests ×4 (:223), golden (:540), svg-witness (:594), collector-lifecycle
   (macOS-only, :658), workspace (:769) — 13.
-- PR #2569 Tests (Actions API): macOS jobs started 5.7-33 min after creation;
+- PR #2569 Tests (Actions API): macOS jobs started 5.7-33 min after creation,
+  ubuntu up to 5m23s;
   the four macOS install shards ran 58 s-2 min each but took four queue entries.
 - ADR-223 forbids demoting a **required** check on cost grounds. No macOS job is
   required (`branch-protection-policy.md:55`, live ruleset: two checks, `strict`
@@ -51,7 +52,7 @@ run on the way to `main`.
 
 ## Phase 1 — Decide the PR tier on evidence
 
-- [ ] **1.1 In-repo path classifier.** `ci_platform_scope` reads the PR's changed
+- [x] **1.1 In-repo path classifier.** `ci_platform_scope` reads the PR's changed
       paths (`git diff --name-only` against the merge base; no third-party
       changed-files action) and prints `macos=full|tier`: `full` when any path is
       under the platform-sensitive set (`src/install/**`, `setup.sh`, `scripts/install*`,
@@ -59,7 +60,7 @@ run on the way to `main`.
       `package.json`, `package-lock.json`), and when the classifier cannot decide.
       verify: unit tests cover a docs-only diff (`tier`), an installer diff
       (`full`), an empty diff (`full`) and an unreadable base (`full`).
-- [ ] **1.2 Council decision on the tier set.** Put the per-OS attribution reading
+- [x] **1.2 Council decision on the tier set.** Put the per-OS attribution reading
       (road-to-ci-time-that-counts-the-queue 1.3) and the proposed PR tier
       (install, install-aux, collector-lifecycle, workspace on macOS; node, golden,
       svg-witness macOS legs on `full`, label `ci:macos`, and every `push: main`)
@@ -84,7 +85,7 @@ run on the way to `main`.
 
 ## Phase 3 — Merge-queue ready, not merge-queue enabled
 
-- [ ] **3.1 `merge_group` on both required workflows.** `consistency.yml` and
+- [x] **3.1 `merge_group` on both required workflows.** `consistency.yml` and
       `standing-payload-delta.yml` (and `tests.yml`) declare `merge_group`, with
       every `github.event.pull_request.*` expression guarded so it evaluates on a
       merge-group event; required checks keep running unconditionally there.
@@ -94,7 +95,7 @@ run on the way to `main`.
       future required-set change pins one stable name instead of shard names.
       verify: this PR's CI reports a `Tests result` check that is green only with
       every needed job green.
-- [ ] **3.3 Record the in-repo half on the admin stub.** Update the stub's live-state
+- [x] **3.3 Record the in-repo half on the admin stub.** Update the stub's live-state
       table (`merge_group` declarations, the aggregate check name) and its arrival
       count; the ruleset write stays with its named producer.
       verify: `grep -n "Arrivals" agents/roadmaps/stubs/road-to-main-protection-ruleset-changes.md` -> 0
@@ -106,7 +107,7 @@ run on the way to `main`.
 | C1-C5, C7 | deterministic | evidence | Not decisions: frontmatter, `relates` notes, source block, goal and a phase heading describing merge-queue readiness; no operation | `closure_scan` keyword matches on "merge" | any of them gains an imperative |
 | C6 | deterministic | evidence | Not a decision: `git diff --name-only` is a read | step 1.1 | — |
 | C8 | reversible-technical | agent | Declaring `merge_group` in workflows is a reversible file edit and inert until an admin enables a queue; enabling it stays with the admin stub | live ruleset `17749383` has no `merge_queue` rule | the step is widened to write the ruleset |
-| D1 | critical-technical | agent | Procedure: which macOS legs a PR requests is put to the council at step 1.2 on the attribution reading; this row is replaced by `council:<record>` there | ADR-223 governs required checks only; no macOS job is required | the attribution reading changes |
+| D1 | critical-technical | council:agents/evidence/council/ci-macos-tier-and-static-diagnostic-2026-10-22.md | Option 2, 2/2: on a `tier` PR macOS runs install, install-aux, collector-lifecycle, workspace; node, golden, svg-witness macOS legs on `full`, `ci:macos`, every `push: main`; observed rollout with job-summary trace | attribution: 10 of 5365 twin pairs macOS-only red, all node-tests | one macOS-only red on `push: main` from a `tier` PR |
 | D2 | destructive-owned | evidence | Out of scope here: enabling the merge queue and changing the required set were transferred to the admin stub by council disposition B | stub `road-to-main-protection-ruleset-changes`, council disposition B | — |
 
 ## Risk Register
@@ -123,7 +124,7 @@ run on the way to `main`.
 
 - [ ] AC-1 — A docs-only PR requests only the decided macOS tier; a PR touching a
       platform path requests every macOS leg; `push: main` requests all 13.
-- [ ] AC-2 — Both required workflows declare `merge_group`, and the admin stub
+- [x] AC-2 — Both required workflows declare `merge_group`, and the admin stub
       records it.
-- [ ] AC-3 — The macOS tier set is backed by a recorded council verdict citing the
+- [x] AC-3 — The macOS tier set is backed by a recorded council verdict citing the
       per-OS attribution reading.
