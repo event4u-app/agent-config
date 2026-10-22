@@ -88,7 +88,9 @@ describe('skillRanking — stopword blocks', () => {
         // blocks may overlap, but a German entry must never be the only thing
         // standing between a prompt and an English content word that carries
         // routing signal. `request` and `review` are two such words.
-        for (const contentWord of ['request', 'review', 'merge', 'deploy', 'render']) {
+        // The English half of a German homograph is one: `mit` (the licence),
+        // `bin` and `dir` (paths), `man` (pages), `war` and `des` (formats).
+        for (const contentWord of ['request', 'review', 'merge', 'deploy', 'render', 'mit', 'bin', 'dir', 'man', 'war', 'des']) {
             expect(STOPWORDS.has(contentWord)).toBe(false);
         }
     });
