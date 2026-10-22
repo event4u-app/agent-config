@@ -84,6 +84,8 @@ describe('loadLazyConcernUncached', () => {
             t.skip('dist/hooks/chat_history.chunk.cjs is not built');
             return;
         }
+        // A built chunk ships with the digest sidecar the loader checks.
+        expect(fs.existsSync(`${chunk}.sha256`)).toBe(true);
         const selfUrl = pathToFileURL(path.join(REPO_ROOT, 'dist', 'hooks', 'dispatch.js')).href;
         _resetLazyConcernCache();
         expect(typeof loadLazyConcernUncached(CHAT_HISTORY, selfUrl, true)).toBe('function');
