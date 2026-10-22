@@ -42,6 +42,9 @@ import {
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const HISTORY_FIXTURE = path.join(REPO_ROOT, 'tests', 'fixtures', 'settings_removal_history.json');
+// Commits that modified the released-surface fixture outside a cut. Closed:
+// the single-writer test pins the length, so a new entry is a visible edit.
+const HISTORICAL_NON_CUT_WRITES = ['3a9b54d4c7e20bee6476b2ca83e38949b93c779e'] as const;
 
 interface Commitish {
     type: string;
@@ -292,30 +295,66 @@ describe('release settings delta — the released surface', () => {
         // History: every commit that MODIFIES the file also moves the package
         // version. The commit that ADDS it is excluded — the file has to
         // arrive before a cut can rewrite it, and that arrival is this change.
+        //
+        // One recorded exception and its repair, each matched exactly once:
+        // #2449 added `egress.placeholders.mode` to a file stamped 16.5.0,
+        // whose schema never had the key. The repair is recognised by its
+        // exact blob transition — wrong blob back to the blob before #2449 —
+        // because a squash merge gives it a sha nobody can name in advance.
+        // Not a general "restoring a released state is allowed" rule: the two
+        // blobs are pinned to the one offender.
+        const git = (args: string[]): string =>
+            execFileSync('git', args, { cwd: REPO_ROOT, encoding: 'utf8' }).trim();
+        // Set by the full-history CI step: missing history is then a failure,
+        // not a reason to skip.
+        const requireHistory = process.env['RELEASE_SURFACE_REQUIRE_HISTORY'] === '1';
+        expect(HISTORICAL_NON_CUT_WRITES).toHaveLength(1);
+        const [offender] = HISTORICAL_NON_CUT_WRITES;
         let log: string;
         try {
-            log = execFileSync(
-                'git',
-                ['log', '--format=%H', '--diff-filter=M', '--', SETTINGS_SURFACE_FIXTURE_REL],
-                { cwd: REPO_ROOT, encoding: 'utf8' },
-            );
-        } catch {
-            // No git history reachable (an exported tree, a shallow fetch that
-            // does not reach the file). The writer-set assertion above still
-            // holds; this half has nothing to read, and says so as a skip.
+            // Reaching the offender's parent is the condition, not the
+            // repository's shallow flag: a grafted local clone can be shallow
+            // and still hold every commit this check reads.
+            git(['cat-file', '-e', `${offender}^^{commit}`]);
+            log = git(['log', '--format=%H', '--diff-filter=M', '--', SETTINGS_SURFACE_FIXTURE_REL]);
+        } catch (e) {
+            // History does not reach back that far (an exported tree, a
+            // shallow fetch). The writer-set assertion above still holds;
+            // this half has nothing to read, unless the caller demanded it,
+            // and says so as a skip.
+            if (requireHistory) throw e;
             // skip-reason: no git history to read.
             t.skip('no git history reachable for the history half');
             return;
         }
+        const blobAt = (rev: string): string => {
+            try {
+                return git(['rev-parse', `${rev}:${SETTINGS_SURFACE_FIXTURE_REL}`]);
+            } catch {
+                return '';
+            }
+        };
+        const wrongBlob = blobAt(offender);
+        const restoredBlob = blobAt(`${offender}^`);
+        expect(wrongBlob).not.toBe('');
+        expect(restoredBlob).not.toBe('');
+        const nonCut: string[] = [];
+        let offenderSeen = 0;
+        let repairSeen = 0;
         for (const sha of log.split('\n').filter(Boolean)) {
-            const touched = execFileSync('git', ['show', '--name-only', '--format=', sha], {
-                cwd: REPO_ROOT,
-                encoding: 'utf8',
-            })
-                .split('\n')
-                .filter(Boolean);
-            expect(`${sha}:${String(touched.includes('package.json'))}`).toBe(`${sha}:true`);
+            const touched = git(['show', '--name-only', '--format=', sha]).split('\n').filter(Boolean);
+            if (touched.includes('package.json')) continue;
+            if (sha === offender) {
+                offenderSeen += 1;
+            } else if (blobAt(`${sha}^`) === wrongBlob && blobAt(sha) === restoredBlob) {
+                repairSeen += 1;
+            } else {
+                nonCut.push(sha);
+            }
         }
+        expect(nonCut).toEqual([]);
+        expect(offenderSeen).toBe(1);
+        expect(repairSeen).toBe(1);
     });
 });
 
