@@ -53,6 +53,12 @@ describe('flow text enforces what the frontmatter pins', () => {
         expect(commandText).toContain('### Step 5 — Pull request (execute mode only)');
     });
 
+    it('plan mode creates no branch and no worktree; execute mode creates them only after a confirmation naming them', () => {
+        expect(commandText).not.toContain('branch/worktree creation is authorized by invoking this command');
+        expect(commandText).toMatch(/Plan mode stays in the current checkout: no branch, no worktree/u);
+        expect(commandText).toMatch(/only after this turn's confirmation names that branch and that path/u);
+    });
+
     it('pre-registered target metric gates loop 1', () => {
         expect(commandText).toContain('Pre-registered target metric — required before loop 1');
         expect(commandText).toContain('target metric not pre-registered');
