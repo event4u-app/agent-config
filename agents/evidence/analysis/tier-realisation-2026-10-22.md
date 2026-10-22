@@ -69,3 +69,20 @@ The carrier is honoured on this host: the per-call argument overrides a definiti
 
 **Bounds.** n = 1 on one host version. A host build that ignores the argument would show
 `served ≠ requested` here; re-run this row on every host version before trusting it.
+
+## Step 3.1 (tier roadmap) — can a dispatched worker run with an advisor?
+
+The host binary carries a hidden `--advisor <model>` flag, an `advisorModel` setting and
+`CLAUDE_CODE_ENABLE_EXPERIMENTAL_ADVISOR_TOOL`, and the string "Advisor will not activate on
+the main model (advisor is less capable); subagents may still use it". One print-mode child
+session on **2.1.308**, head `sonnet`, `--advisor opus`, the experimental variable set,
+dispatched `ac-researcher` once with `model: haiku` and asked it to consult its advisor.
+
+| Host | Worker served | Advisor in the worker's transcript | Advisor model usage (the session's `modelUsage`) |
+|---|---|---|---|
+| 2.1.308 | `claude-haiku-5-5` (12 calls) | yes — `advisor_tool`, one `advisor_tool_result`, five `advisor_message` | `claude-opus-5-5`: 26,109 input tokens, **none cached**, 1,683 output |
+
+A worker path exists on this host, so K12 does not close the phase. The advisor's input is
+billed uncached on every consultation in this probe; that price belongs to the executor arm in
+3.2, which charges it to the `lite`+advisor arm. n = 1, one host version, and the surface is
+experimental — re-probe on every host version before reading it.
