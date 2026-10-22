@@ -71,8 +71,10 @@ export function assuranceOverrideLimitation(version: string, repoRoot: string): 
         // A malformed ledger is the disposition gate's finding, not this line's.
         return null;
     }
+    // Printed into public release notes: one line, no markdown, bounded. Whether
+    // it names a committed directive is check_finding_dispositions' to refuse.
     const override = typeof ledger.assurance_override === 'string'
-        ? ledger.assurance_override.trim()
+        ? ledger.assurance_override.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/[`*[\]<>|#!]/g, '').trim().slice(0, 200)
         : '';
     if (override === '' || String(ledger.assurance ?? '').trim() !== 'unreviewed') {
         return null;

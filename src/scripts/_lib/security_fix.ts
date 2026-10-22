@@ -273,7 +273,7 @@ export function branchName(f: Finding): string {
  */
 export function prField(value: string | null | undefined): string {
     if (value === null || value === undefined) return '?';
-    const flat = value.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/[`*_[\]<>|#!]/g, '').trim();
+    const flat = value.replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/[`*[\]<>|#!]/g, '').trim();
     return flat === '' ? '?' : flat.slice(0, 120);
 }
 
