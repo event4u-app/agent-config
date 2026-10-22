@@ -532,7 +532,7 @@ waits:
   the owner's constraint.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-23 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -541,7 +541,7 @@ waits:
 | 3 | Stale assumptions or rules in a long-lived worker | product | A resumed worker carries an earlier task's premises or a replaced rule set. | Conditions (a), (f), (h); capsule `assumptions[]` at every handoff. | Phase 3 — One decision function, recorded in shadow |
 | 4 | Cheaper but worse | product | A resumed worker verifies less well than a fresh one and the saving hides it. | `resume-non-inferiority` keeps the reuse half in shadow on a miss (6.2). | Phase 6 — Prove it or record the null, then hand off |
 | 5 | Skipping project instructions drops an obligation | implementation | A worker without the instruction hierarchy misses a constraint that only arrived through it. | 2.5 ships it on only with the kernel-and-constraints fixture and a net, not gross, delta. | Phase 2 — Workers that load what their role needs |
-| 6 | A denial blocks legitimate work after the flip | product | The blocking guard refuses an `Agent` call that was needed. | ≤ 1 % tolerance, reverse trigger, `emergency.orchestration_halt`. Re-reviewed 2026-10-22: `flipReadiness` encodes the four conditions and refuses a flip on any unmeasured one; the 1 MiB tail read must be indexed or measured first. | Phase 3 — One decision function, recorded in shadow |
+| 6 | A denial blocks legitimate work after the flip | product | The blocking guard refuses an `Agent` call that was needed. | ≤ 1 % tolerance, reverse trigger, `emergency.orchestration_halt`. Re-reviewed 2026-10-22: `flipReadiness` encodes the four conditions and refuses a flip on any unmeasured one; the 1 MiB tail read must be indexed or measured first. Re-reviewed 2026-10-23: the register is indexed (40786bb420); the filed window returns `ready: false` on all four conditions, and condition (c) is undecided (D15), so no flip is near. | Phase 3 — One decision function, recorded in shadow |
 | 7 | Subscription limits count differently from the API | implementation | The token arithmetic of the API documentation may not hold for a subscription window. | Nothing assumes it; `rate-limit-stops-per-drain` counts stops, not tokens. | Phase 6 — Prove it or record the null, then hand off |
 
 ## Acceptance Criteria

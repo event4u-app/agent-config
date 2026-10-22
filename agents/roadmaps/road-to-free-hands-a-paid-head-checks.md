@@ -325,7 +325,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 | A14 | reversible-technical | council:agents/evidence/council/subagent-system-2583-rest-decisions-20261022.md | The keyless first-party route is catalogued maintainer-only with distribution `unknown`, first-party models enforced at discovery and member build (decision 2, round 1 split, round 2 2/2 (a)); the shadow verifies `classify` and `extract` deterministically on a manufactured public-artifact corpus with a blind 10 % paid-head audit, `summarise-given-text` stays unmeasured (decision 3, 2/2 (c)) | both rounds' prompts committed beside the evidence file | the route exposes no first-party flag, or the audit disagrees with the deterministic verifier |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-23 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -333,7 +333,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 | 2 | Free answers look right and are wrong | product | A hand returns a plausible proposal the head accepts without catching the error. | 3.3 makes verification mandatory and counted; 6.1 quality bar; per-kind flip in 6.3. | Phase 3 — The worker contract (rung 0.5, free hands) |
 | 3 | Verification eats the saving | product | The head spends more tokens checking hands than the hands saved. | 3.3 records verification tokens; 6.1 measures relief net of them; no flip without it. | Phase 6 — Measure, then flip |
 | 4 | Quota exhaustion stalls a session | implementation | A free route runs dry mid-task. | Quota means absent for the pass, paid fallback, honest ∅ (3.2, 5.1). | Phase 5 — Liveness and quota (gateway M9, D7) |
-| 5 | Provider terms change silently | product | A route's data-use terms change after its attestation was recorded. | Dated attestations; the ceiling falls back to `public-artifact` when an attestation is older than 90 days; 2.3 re-discovery. | Phase 2 — The route (gateway M1) |
+| 5 | Provider terms change silently | product | A route's data-use terms change after its attestation was recorded. | Dated attestations; the ceiling falls back to `public-artifact` when an attestation is older than 90 days; 2.3 re-discovery. Re-reviewed 2026-10-23: the one attested route covers first-party models only, so discovery and member build refuse any model the route lists as community-served. | Phase 2 — The route (gateway M1) |
 | 6 | Fragments are re-linked | product | The same route sees enough fragments over months, or shared identifiers, to reconstruct structure. | 3.6 exposure cap and 3.5 placeholders; training routes never see project content (K4). | Phase 3 — The worker contract (rung 0.5, free hands) |
 | 7 | Scoring quietly becomes deciding | implementation | A consumer starts acting on a free juror's score as if it were a verdict. | ADR-257; 4.1 refuses free seats in chair/verdict roles; consumers of free output enumerated in tests. | Phase 4 — Council: free proposers and jurors, paid chair |
 
