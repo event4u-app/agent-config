@@ -90,8 +90,12 @@ export type AuthSource = 'cli-subscription' | 'cli-api-key' | 'key-file' | 'env-
  * `subscription` — covered by a flat-rate plan the user already pays; the USD
  * cost gate does not apply (`cli_call_budget` guards the quota instead).
  * `per-token` — metered spend; the full `cost_budget` applies.
+ * `free-quota` — a `base_url` route whose free terms carry a dated proof; USD 0.
+ * `self-hosted` — a loopback route whose probe showed local weights; USD 0.
+ *
+ * `classifyBilling` never returns the last two: only a route resolution can.
  */
-export type BillingClass = 'subscription' | 'per-token';
+export type BillingClass = 'subscription' | 'per-token' | 'free-quota' | 'self-hosted';
 
 /** Version string when parseable, the literal `'unknown'` when not, `null` when unprobed. */
 export type HostVersion = string | 'unknown' | null;

@@ -83,7 +83,9 @@ import { classifyContentClass, DEFAULT_CONTENT_CLASS, DEFAULT_SEAT_CEILING, type
 import {
     disabledSeats as _disabledSeats,
     resolvedTransportFor as _resolvedTransportFor,
+    routeStatusLines as _routeStatusLines,
 } from './ai_council/status_surface.js';
+import { routeMemberFor } from './ai_council/route_member.js';
 import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
 import {
     _emitQuorumEvent,
@@ -684,14 +686,12 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             continue;
         }
         total_enabled += 1;
-        // road-to-always-on-orchestration Phase 3.1: the single reconciled
-        // entry point — composes `resolve_mode` (which layer decided the
-        // mode) with `resolveTransport` (what `auto` expands to on THIS
-        // machine). The hand-rolled `mode === 'api' | 'cli' | 'manual'`
-        // switch this replaces had no `'auto'` case, so every invocation
-        // broke the moment the loader default flipped `api` → `auto`
-        // (`config.ts::_build_defaults`) — every member fell through to the
-        // final `else` below and killed the whole pass.
+        const routed = routeMemberFor(name, cfg, opts.content_class ?? DEFAULT_CONTENT_CLASS, overrides[name] as string | undefined);
+        if (routed !== null) {
+            if ('absent' in routed) { record_absent(routed.absent); _stderr(`[council] SKIP ${name}: ${routed.absent.detail}\n`); } else members.push(routed.client);
+            continue;
+        }
+        // Composes `resolve_mode` with what `auto` expands to on THIS machine.
         const api_key_present = _member_api_key_present(cfg);
         const resolved = resolveMemberTransport({
             provider: name,
@@ -765,23 +765,10 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
         }
         const model = (overrides[name] as string | undefined) || (cfg['model'] as string | undefined) || null;
         if (resolved.transport === 'api' && _API_PROVIDERS.has(name)) {
-            // m2 fix (independent-review finding) — `resolveMemberTransport`'s
-            // `auto` chain treats "a key-file or env-key auth record exists
-            // for this provider" as sufficient to resolve transport=`api`
-            // (its own default `apiKeyPresent` read off the environment
-            // report, used whenever the member config carries no explicit
-            // `api_key_ref` at all — see `_member_api_key_present` above,
-            // which returns `undefined`, not `false`, in exactly that case).
-            // But gemini/xai/perplexity's OWN construction contract is
-            // stricter: `_construct_api_member` requires an EXPLICIT
-            // `api_key_ref` for those three and refuses the legacy-fallback
-            // path other providers get, throwing `CouncilDisabledError`. A
-            // generic env var (e.g. `GEMINI_API_KEY` set for an unrelated
-            // tool) satisfying the permissive auto-chain read while
-            // `api_key_ref` was never wired into the council config is
-            // exactly this mismatch — previously an UNCAUGHT throw here
-            // killed the entire pass. Same catch-and-skip shape the CLI
-            // branch below already uses for its own construction failure.
+            // The `auto` chain resolves `api` on any detected key, but gemini,
+            // xai and perplexity require an EXPLICIT `api_key_ref` and throw
+            // `CouncilDisabledError` without one. A generic env var set for an
+            // unrelated tool must skip the seat, not kill the pass.
             try {
                 members.push(
                     _construct_api_member(name, model, {
@@ -2255,6 +2242,7 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
                                 absent_reason: t.absentReason,
                                 policy_exclusion: m.policy_exclusion,
                                 content_ceiling: m.content_ceiling,
+                                route: m.route?.base_url ?? null,
                             },
                         ];
                     }),
@@ -2309,6 +2297,7 @@ export function cmd_status(args: Args, opts: { env?: Record<string, string | und
             }
             _stdout(`  content ceiling  ${name}: ${member.content_ceiling}\n`);
         }
+        for (const line of _routeStatusLines(enabledMembers)) _stdout(`${line}\n`);
         // 1.2: a disabled seat was invisible here — `enabled` members only.
         for (const [name, reason] of Object.entries(_disabledSeats(cfg))) {
             _stdout(`  disabled seat    ${name}: ${reason}\n`);

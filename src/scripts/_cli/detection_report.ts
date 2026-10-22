@@ -418,6 +418,13 @@ export function renderSpendDisclosure(report: DetectionReport): string {
     if (free.length > 0) {
         segments.push(`${free.length} manual (no provider call): ${free.map((r) => r.provider).join(', ')}`);
     }
+    const unmetered = billed.filter((r) => r.billing === 'free-quota' || r.billing === 'self-hosted');
+    if (unmetered.length > 0) {
+        segments.push(
+            `${unmetered.length} unmetered route(s): ` +
+                unmetered.map((r) => `${r.provider}→${r.billing}`).join(', '),
+        );
+    }
 
     return `council spend disclosure · ${segments.join(' · ')}${excludedTail}`;
 }
