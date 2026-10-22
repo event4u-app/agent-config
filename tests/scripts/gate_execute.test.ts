@@ -243,6 +243,20 @@ describe('gates --execute — class 1 runs only inside the standing budget', () 
         expect(fs.readFileSync(ledger(), 'utf-8')).toContain('"estimated_usd":50');
     });
 
+    it('an unbounded paid run says so in its report, and a bounded one does not', () => {
+        writeRoadmap('road-to-x.md', roadmap('paid-eval', PAID_FIELDS));
+        const r = execute(roadmapRoot, 'paid-eval', WHEN, { confirm: true });
+        expect(r.outcome).toBe('resolved');
+        expect(r.report).toContain('no spend ceiling is configured');
+        expect(r.report).toContain('roadmap.gate_budget.max_cost_per_run_usd');
+
+        writeCaps(100, 1000);
+        writeRoadmap('road-to-y.md', roadmap('paid-eval-2', PAID_FIELDS));
+        const bounded = execute(roadmapRoot, 'paid-eval-2', WHEN, { confirm: true });
+        expect(bounded.outcome).toBe('resolved');
+        expect(bounded.report).not.toContain('no spend ceiling is configured');
+    });
+
     it('without --confirm it still refuses, with no caps configured', () => {
         // The twin, and the load-bearing half: removing the ceiling must not
         // have removed the authorisation. If this ever goes green the change

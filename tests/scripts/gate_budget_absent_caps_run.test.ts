@@ -62,6 +62,13 @@ describe('no cap configured — the gate runs', () => {
         expect(v).toMatchObject({ ok: true, estimateUsd: 1_000, rollingUsd: 500 });
     });
 
+    it('marks a verdict with no cap as unbounded, and one under a cap as bounded', () => {
+        expect(evaluateGateBudget({ caps: null, records: [], estimateUsd: 4.5, now: NOW })).toMatchObject({ ok: true, unbounded: true });
+        expect(
+            evaluateGateBudget({ caps: { maxCostPerRunUsd: 10, maxCostPerRolling7dUsd: null }, records: [], estimateUsd: 4.5, now: NOW }),
+        ).toMatchObject({ ok: true, unbounded: false });
+    });
+
     it('is ok with no caps and NO estimate', () => {
         // A missing estimate refuses only because a cap exists that nothing
         // can be compared against. With no cap there is no comparison to fail.

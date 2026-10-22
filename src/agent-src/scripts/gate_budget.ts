@@ -239,7 +239,8 @@ export type GateBudgetRefusal =
     | 'over_rolling_7d';
 
 export type GateBudgetVerdict =
-    | { ok: true; estimateUsd: number | null; rollingUsd: number }
+    /** `unbounded`: no cap is configured, so nothing sized this spend (ADR-279) — the caller discloses it. */
+    | { ok: true; estimateUsd: number | null; rollingUsd: number; unbounded: boolean }
     | { ok: false; reason: GateBudgetRefusal; detail: string };
 
 /**
@@ -267,7 +268,7 @@ export function evaluateGateBudget(opts: {
     // `rollingUsd` is still computed and reported — recording spend never
     // depended on bounding it.
     if (perRunCap === null && rollingCap === null) {
-        return { ok: true, estimateUsd, rollingUsd: rollingSpendUsd(records, now) };
+        return { ok: true, estimateUsd, rollingUsd: rollingSpendUsd(records, now), unbounded: true };
     }
     // A missing estimate refuses only because a cap exists that nothing can be
     // compared against. With no cap there is no comparison to fail, which is
@@ -302,5 +303,5 @@ export function evaluateGateBudget(opts: {
                 `($${rollingCap.toFixed(2)})`,
         };
     }
-    return { ok: true, estimateUsd, rollingUsd: spent };
+    return { ok: true, estimateUsd, rollingUsd: spent, unbounded: false };
 }

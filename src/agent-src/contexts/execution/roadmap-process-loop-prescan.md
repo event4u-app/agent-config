@@ -193,6 +193,14 @@ report.
    updates, conflict resolution, project-local dependencies, and paid calls
    inside whatever `cost.budgets` windows are configured — none configured,
    none applies (ADR-279). If yes → **run it**.
+
+   **Unbounded spend is disclosed, never silent.** When `cost.budgets.daily`,
+   `weekly` and `monthly` are all `0` (the shipped default), the run's **first
+   output line** says so before any paid call: `no spend ceiling configured —
+   paid calls in this run are unbounded; set cost.budgets.daily (or weekly /
+   monthly) to bound them`. The end summary repeats it with the count of paid
+   calls the run made. A consumer who never set a budget learns it from the run,
+   not from this file.
 3. **Is it on the EXCLUDED list?** Merging to a production trunk, deploying,
    production data / secrets / IAM / DNS, bulk deletion outside the roadmap's
    scope, an irreversible external action beyond the PR itself. Those keep their
@@ -205,7 +213,13 @@ report.
 
 **A `## Blockers` entry is evidence, never a verdict.** A `Class: 3` label on an
 action the agent can perform is a **defect in the roadmap**, and the run repairs
-the label rather than obeying it — recording what it did and why. Class `0`/`1`
+the label rather than obeying it — recording what it did and why. **A relabel is
+an owner-facing event, not run-internal bookkeeping:** the run names every
+`Class: 3` it relabelled — the blocker id, the original label verbatim, the new
+class and the one-line reason — in a `Relabelled owner blockers` block of the
+PR body **and** of its end summary, so the owner sees each one before the
+change can merge. A relabel the PR body does not list did not happen; a relabel
+of an EXCLUDED action (step 3) is never allowed. Class `0`/`1`
 entries carry a `Run:` the agent executes, exactly as before. Class `2`
 (consent-once) is pre-cleared for the duration of a `process-full` run when the
 consent it wants is one the invocation already gave; a `2` asking for something

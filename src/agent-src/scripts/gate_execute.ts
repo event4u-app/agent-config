@@ -302,7 +302,7 @@ function execute(
     // no cap set, so there was no cap for the missing estimate to fail
     // against. A receipt needs a number, and inventing 0 would understate the
     // ledger, so that path runs and reports that nothing was receipted.
-    let budgeted: { estimateUsd: number | null } | null = null;
+    let budgeted: { estimateUsd: number | null; unbounded: boolean } | null = null;
     if (cls === '1') {
         const verdict = evaluateGateBudget({
             caps: readGateBudgetCaps(load_agent_settings({ cwd: repoRoot })),
@@ -320,7 +320,7 @@ function execute(
                 code: 0,
             };
         }
-        budgeted = { estimateUsd: verdict.estimateUsd };
+        budgeted = { estimateUsd: verdict.estimateUsd, unbounded: verdict.unbounded };
     }
 
     const command = commandOf(blocker);
@@ -431,6 +431,10 @@ function execute(
                     'estimate and no cap is configured, so there is no figure to record.\n'
                   : `Receipt appended to ${LEDGER_REL} ` +
                     `($${budgeted.estimateUsd.toFixed(2)} estimated).\n`) +
+            (budgeted !== null && budgeted.unbounded
+                ? 'Note: no spend ceiling is configured (ADR-279), so this paid run was unbounded. ' +
+                  'Set roadmap.gate_budget.max_cost_per_run_usd (or max_cost_per_rolling_7d_usd) to bound the next one.\n'
+                : '') +
             // The dashboard is derived from the file this just rewrote, so it
             // is now stale. Saying so is the same follow-up `renderResumed`
             // already prints for its own file-move suggestion.
