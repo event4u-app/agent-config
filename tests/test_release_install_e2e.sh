@@ -404,6 +404,12 @@ section_consumer_ci_settle() {
         | grep -m1 -E '^[^`|]*ci:settle <n>$' || true)"
     [[ -n "$emitted" ]] || die "consumer-ci-settle: the packed /fix ci command names no ci:settle line"
     invocation="${emitted% <n>}"
+    # Executed below through bash -c, so only the known launcher shapes pass:
+    # a doc line carrying `;`, `$(…)` or `&&` must never reach a shell.
+    case "$invocation" in
+        "npm exec --no -- agent-config ci:settle" | "npx --no-install agent-config ci:settle" | "agent-config ci:settle") ;;
+        *) die "consumer-ci-settle: the packed /fix ci line is not an allowlisted invocation: $invocation" ;;
+    esac
     ok "emitted invocation: $invocation"
 
     local nodebin="$TMP_ROOT/node-only-bin" bin
