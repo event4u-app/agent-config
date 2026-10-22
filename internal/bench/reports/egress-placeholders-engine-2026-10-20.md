@@ -10,12 +10,15 @@ are the frozen corpus. Nothing was sent anywhere.
 **Falsification, before any reading counted.** The recall scorer, given a
 replacer blind to the `github-pat` row, read 0 % for that type; the idempotence
 scorer, given a replacer that grows its output, counted 10 of 10 mismatches. Both
-planted defects were rejected, so the readings below were taken.
+planted defects were rejected, so the readings below were taken. The blind
+replacer is a weak mutation: it drops the row only from the early-return
+`detect` call and still calls the full `replaceValues`, so it proves the scorer
+reads a skipped document as a miss, not that the engine without the row misses.
 
 | Endpoint | Bar | Reading | Verdict |
 |---|---|---|---|
 | (a) recall, every credential row on W2 | ≥ 99 % per row | 17 rows at 100 % (100/100); `generic-assignment` **75 %** (75/100) | **fails for `generic-assignment`**, passes for the 17 vendor-shaped rows |
-| (b) precision on W4, credential rows | false positives under 1 % of files | 34 of 11,628 tracked text files carry a vendor-shaped credential span (0.29 %), every one a test, a fixture, a council prompt or a gate manifest quoting a shape | passes |
+| (b) precision on W4, credential rows | false positives under 1 % of files | 34 of 11,628 tracked text files carry a vendor-shaped credential span (0.29 %), every one a test, a fixture, a council prompt or a gate manifest quoting a shape. `generic-assignment` hits are excluded from this count (`falsePositiveFiles` in `run.ts`), so the bar covers the 17 vendor-shaped rows, not every credential row | passes for the 17 vendor-shaped rows |
 | (c) idempotence, `replace(replace(x)) == replace(x)` | zero tolerance | 0 mismatches over 1,800 documents | passes |
 | (f) engine latency, 64 KiB input | p95 under 20 ms on the CI runner class | p50 7.85 ms, p95 8.78 ms, 200 runs — **on darwin-arm64, Node v26.7.0** (the `node` field of the JSON record), not the CI runner class | passes on this machine; the CI-class reading is not taken |
 
