@@ -52,7 +52,13 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { gitEnv } from './_lib/git_env.js';
 import { splitMarkdownRow } from './_lib/md_table.js';
 import { completionReviewDisabled } from './_lib/planning_settings.js';
-import { REVIEW_ROUND_CAP, checkReviewRound, countReviewPasses, type RecordedPasses } from './_lib/review_round.js';
+import { REVIEW_ROUND_CAP, checkReviewRound, type RecordedPasses } from './_lib/review_round.js';
+import {
+    branchReviewArtifactsWith,
+    checkRebindCoverageWith,
+    recordedReviewPassesWith,
+    type ReviewHistoryDeps,
+} from './_lib/review_round_history.js';
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
 import {
     computeReviewScope,
@@ -1060,116 +1066,22 @@ function evaluate(input: EvalInput): Violation[] {
     return violations;
 }
 
-/**
- * Every review-artefact version committed at `rel` — followed across renames —
- * and at every other `*.findings.md` this branch touched, read for
- * {@link countReviewPasses}.
- *
- * Keyed on the BRANCH, not on one path (finding 4e47471d7760): counting only
- * `git log -- <rel>` let a rename, or a fresh artefact under a new name, restart
- * the count at 1 and sidestep {@link REVIEW_ROUND_CAP}. `siblings` is every
- * findings artefact the branch range wrote, deleted ones included.
- */
+/** The gate's parsers, handed to the history readers in `_lib/review_round_history.ts`. */
+const HISTORY: ReviewHistoryDeps = { git: gitTry, markerOf: (t) => parseArtifact(t).marker, fixRefOf: extractFixRef, isCodePath };
+
+/** Every review pass recorded at `rel`, its renames and the branch's other findings artefacts. */
 export function recordedReviewPasses(repo: string, rel: string, siblings: readonly string[] = []): RecordedPasses {
-    const markers: Array<Marker | null> = [];
-    const seen = new Set<string>();
-    const read = (logArgs: string[]): void => {
-        const log = gitTry(repo, ['log', '--format=%H', '--name-only', ...logArgs]);
-        let sha: string | null = null;
-        for (const line of log.stdout.split('\n').map((l) => l.trim())) {
-            if (/^[0-9a-f]{40}$/.test(line)) {
-                sha = line;
-                continue;
-            }
-            if (line === '' || sha === null || !line.endsWith('.md')) continue;
-            const key = `${sha}:${line}`;
-            if (seen.has(key)) continue;
-            seen.add(key);
-            const shown = gitTry(repo, ['show', key]);
-            markers.push(shown.ok ? parseArtifact(shown.stdout).marker : null);
-        }
-    };
-    read(['--', rel]);
-    read(['--follow', '--', rel]);
-    for (const other of siblings) {
-        if (other !== rel) read(['--', other]);
-    }
-    return countReviewPasses(markers);
+    return recordedReviewPassesWith(HISTORY, repo, rel, siblings);
 }
 
-/**
- * Every `*.findings.md` under the artefact directory that a commit of this
- * branch (reachable from `HEAD`, not from `base`) added, changed, renamed or
- * deleted. An unresolvable base is an empty list — the path's own history
- * still counts.
- */
+/** Every `*.findings.md` under the artefact directory this branch touched. */
 export function branchReviewArtifacts(repo: string, base: string, artifactDir: string): string[] {
-    const dir = artifactDir.split(path.sep).join('/').replace(/\/+$/, '');
-    const log = gitTry(repo, ['log', '--format=', '--name-only', '--no-renames', `${base}..HEAD`, '--', dir]);
-    return [...new Set(log.stdout.split('\n').map((l) => l.trim()).filter((l) => l.endsWith('.findings.md')))];
+    return branchReviewArtifactsWith(HISTORY, repo, base, artifactDir);
 }
 
-/**
- * A re-bind may carry a review pass forward only over code the pass accounts
- * for (finding b84f74c7bd2f).
- *
- * A pass is keyed by its `prompt_hash` (or `legacy`), so re-binding the header
- * with the same key keeps the round — but it used to keep the VERDICT too, so an
- * honest-null of one scope re-bound to changed code certified code no reviewer
- * saw. Now every branch commit after the commit that first recorded this pass,
- * that touches a code path, must be cited by a `fixed` row of this artefact —
- * the fixes the review asked for. Any other code commit needs a new reviewer
- * pass (a new `prompt_hash`, the next round). Merge commits and commits the base
- * already has are not this branch's code.
- */
-export function checkRebindCoverage(
-    repo: string,
-    base: string,
-    artifactAbs: string,
-    current: Marker,
-    rows: readonly FindingRow[],
-): Violation[] {
-    const rel = path.relative(repo, artifactAbs).split(path.sep).join('/');
-    const key = current.promptHash ?? 'legacy';
-    const log = gitTry(repo, ['log', '--format=%H', '--follow', '--', rel]);
-    let first: string | null = null;
-    for (const sha of log.stdout.split('\n').map((l) => l.trim()).filter(Boolean)) {
-        const shown = gitTry(repo, ['show', `${sha}:${rel}`]);
-        const m = shown.ok ? parseArtifact(shown.stdout).marker : null;
-        if (m !== null && (m.promptHash ?? 'legacy') === key) {
-            first = sha; // log is newest-first, so the last match is the oldest
-        }
-    }
-    if (first === null) {
-        return [];
-    }
-    const cited = rows
-        .filter((r) => r.status === 'fixed')
-        .map((r) => extractFixRef(r.reasonRef))
-        .filter((t): t is string => t !== null);
-    const after = gitTry(repo, ['rev-list', '--no-merges', `${first}..HEAD`, `^${base}`]);
-    const uncovered: string[] = [];
-    for (const sha of after.stdout.split('\n').map((l) => l.trim()).filter(Boolean)) {
-        const files = gitTry(repo, ['diff-tree', '--no-commit-id', '--name-only', '-r', sha]);
-        const touchesCode = files.stdout.split('\n').map((l) => l.trim()).filter(Boolean).some(isCodePath);
-        if (touchesCode && !cited.some((c) => sha.startsWith(c))) {
-            uncovered.push(sha.slice(0, 12));
-        }
-    }
-    if (uncovered.length === 0) {
-        return [];
-    }
-    return [
-        {
-            kind: 'rebind-over-unreviewed-code',
-            file: artifactAbs,
-            detail:
-                `this pass (${key === 'legacy' ? 'no prompt_hash' : `prompt_hash ${key.slice(0, 12)}…`}) was first ` +
-                `recorded at ${first.slice(0, 12)}, and ${String(uncovered.length)} later code commit(s) are not ` +
-                `fixes this artefact cites: ${uncovered.join(', ')}. A re-bind keeps the round, never the verdict — ` +
-                'dispatch a new reviewer pass (new prompt_hash, next round) over the changed code (contract §2.1).',
-        },
-    ];
+/** A re-bind keeps the round, never the verdict (finding b84f74c7bd2f). */
+export function checkRebindCoverage(repo: string, base: string, artifactAbs: string, current: Marker, rows: readonly FindingRow[]): Violation[] {
+    return checkRebindCoverageWith(HISTORY, repo, base, artifactAbs, current, rows);
 }
 
 /** Contract §2.5 — the artifact's FIRST-add commit must precede every fix commit. */

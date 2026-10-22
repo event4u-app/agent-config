@@ -6,8 +6,10 @@
  * A `fixed` row cites a commit by SHA. A rebase rewrites both the commit that
  * first added the findings file and the fix commit, so the cited fix is no
  * longer a descendant of the add (`fix-before-artifact`), and in a transport
- * clone the old fix is not even reachable (`unresolvable-fix-ref`). The gate is
- * right both times; this file pins that it says so.
+ * clone the old fix is not even reachable (`unresolvable-fix-ref`). The rebased
+ * fix commit is a code commit the record no longer cites, so the re-bind check
+ * (finding b84f74c7bd2f) adds `rebind-over-unreviewed-code` both times. The gate
+ * is right each time; this file pins that it says so.
  */
 
 import { afterEach, describe, expect, it } from 'vitest';
@@ -32,7 +34,7 @@ describe('the completion-review gate around a rebase', () => {
         const { dir } = reviewedBranch(made);
         rebaseOntoMovedBase(dir);
         const r = runGate(dir);
-        expect(r.kinds).toEqual(['fix-before-artifact']);
+        expect(r.kinds).toEqual(['fix-before-artifact', 'rebind-over-unreviewed-code']);
         expect(r.status).toBe(1);
     });
 
@@ -41,7 +43,7 @@ describe('the completion-review gate around a rebase', () => {
         rebaseOntoMovedBase(dir);
         const clone = transportClone(dir, made);
         const r = runGate(clone);
-        expect(r.kinds).toEqual(['unresolvable-fix-ref']);
+        expect(r.kinds).toEqual(['unresolvable-fix-ref', 'rebind-over-unreviewed-code']);
         expect(r.violations[0]?.detail).toContain(fixSha);
         expect(r.status).toBe(1);
     });

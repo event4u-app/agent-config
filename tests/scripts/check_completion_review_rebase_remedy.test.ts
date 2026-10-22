@@ -33,7 +33,7 @@ describe('a review taken before a rebase is re-bound after it', () => {
     it('is red after the rebase and green once re-bound to the post-rebase fix', () => {
         const { dir, fixSha } = reviewedBranch(made);
         rebaseOntoMovedBase(dir);
-        expect(runGate(dir).kinds).toEqual(['fix-before-artifact']);
+        expect(runGate(dir).kinds).toEqual(['fix-before-artifact', 'rebind-over-unreviewed-code']);
 
         const newFix = postRebaseFix(dir);
         expect(newFix).not.toBe(fixSha);
@@ -58,8 +58,9 @@ describe('a review taken before a rebase is re-bound after it', () => {
         rebaseOntoMovedBase(dir);
         // Re-binding with the old SHA writes the same bytes: the record already says it.
         expect(fs.readFileSync(path.join(dir, ART), 'utf8')).toBe(artifact(dir, [fixedRow(fixSha)]));
-        expect(runGate(dir).kinds).toEqual(['fix-before-artifact']);
-        expect(runGate(transportClone(dir, made)).kinds).toEqual(['unresolvable-fix-ref']);
+        // The rebased fix is also an uncited code commit (finding b84f74c7bd2f).
+        expect(runGate(dir).kinds).toEqual(['fix-before-artifact', 'rebind-over-unreviewed-code']);
+        expect(runGate(transportClone(dir, made)).kinds).toEqual(['unresolvable-fix-ref', 'rebind-over-unreviewed-code']);
     });
 
     it('the re-binding is its own commit, and the rebase itself left the record untouched', () => {
