@@ -116,6 +116,28 @@ scale, about 100k tokens per council seat launch with almost nothing cached. It
 is not a figure to subtract from. Phase 5 should take a fresh, larger reading
 before any comparison.
 
+## Step 5.1 — a lighter council seat launch, probed 2026-10-22
+
+Three print-mode calls on Claude Code **2.1.308 (Claude Code)**, subscription
+login (no API key in the environment), in an empty scratch directory, each the
+seat argv (`--print --output-format json --tools "" --append-system-prompt`)
+with model `haiku` and one question: does your context contain a rule titled
+"Secret-in-VCS Guard"?
+
+| Arm | Extra flag | First-call input (uncached + write + read) | Saw the user rule |
+|---|---|---:|---|
+| seat today | — | 145,587 | yes |
+| safe mode | `--safe-mode` | 2,790 | no |
+| no user source | `--setting-sources project,local` | 3,548 | no |
+
+Both lighter arms kept the subscription login and dropped the user rule layer;
+the seat's first call fell to about 2 % of today's. Against the 1.3 baseline
+(median 102,612 written tokens per seat launch, n = 4) this is the same order:
+almost everything a seat writes on its first call is the user environment.
+n = 1 per arm, one host version. The rows live in
+`LIGHT_LAUNCH_PROBES` (`src/scripts/ai_council/cli_agency_bounds.ts`), which
+hands a flag only to the version it was probed on.
+
 ## Re-running
 
 The burst and council seat rows came from a one-off reading that was not

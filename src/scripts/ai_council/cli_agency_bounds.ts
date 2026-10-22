@@ -207,6 +207,82 @@ export function analystBoundFor(member: string): readonly string[] {
 }
 
 /**
+ * A lighter seat launch: a flag that keeps the subscription login but skips the
+ * user environment (instruction files, user rules, hooks, plugins, MCP) a seat
+ * never needs. A seat booting that environment pays it on every call and every
+ * round.
+ *
+ * Each row is one probe of one flag on one binary version, against the same
+ * seat argv without it. A version that was not probed gets no flag: the probe is
+ * the only evidence the binary accepts it and keeps the login.
+ */
+export interface LightLaunchProbe {
+    readonly member: string;
+    readonly binary: string;
+    readonly flag: readonly string[];
+    /** What that CLI's own `--version` printed on `probed_on`. */
+    readonly probed_version: string;
+    readonly probed_on: string;
+    /** First-call input tokens (uncached + cache write + cache read) with the flag. */
+    readonly first_call_tokens: number;
+    /** The same seat argv and question without the flag, same run. */
+    readonly baseline_first_call_tokens: number;
+    /** Whether the probe question saw a rule from `~/.claude/rules`. */
+    readonly user_rules_loaded: boolean;
+    /** The call answered with no API key in the environment. */
+    readonly keeps_subscription_login: boolean;
+    /** At most one row per member is the launch a seat uses. */
+    readonly selected: boolean;
+    readonly rationale: string;
+}
+
+export const LIGHT_LAUNCH_PROBES: readonly LightLaunchProbe[] = [
+    {
+        member: 'anthropic',
+        binary: 'claude',
+        flag: ['--safe-mode'],
+        probed_version: '2.1.308 (Claude Code)',
+        probed_on: '2026-10-22',
+        first_call_tokens: 2_790,
+        baseline_first_call_tokens: 145_587,
+        user_rules_loaded: false,
+        keeps_subscription_login: true,
+        selected: true,
+        rationale:
+            'Skips instruction files, hooks, plugins, MCP and auto memory while auth and the model stay. Chosen over ' +
+            '`--setting-sources` because a seat also has no use for hooks or plugins, and it answers the same question ' +
+            'from the same oracle argv (`--tools ""`).',
+    },
+    {
+        member: 'anthropic',
+        binary: 'claude',
+        flag: ['--setting-sources', 'project,local'],
+        probed_version: '2.1.308 (Claude Code)',
+        probed_on: '2026-10-22',
+        first_call_tokens: 3_548,
+        baseline_first_call_tokens: 145_587,
+        user_rules_loaded: false,
+        keeps_subscription_login: true,
+        selected: false,
+        rationale:
+            'Drops the user setting source and with it the user rule layer, but keeps project and local settings, so ' +
+            'project hooks and instructions still reach a seat spawned inside a repository.',
+    },
+];
+
+/**
+ * The light-launch flag a seat uses for this member on this binary version, or
+ * `[]` when that version was never probed.
+ */
+export function lightLaunchFor(member: string, version: string | null): readonly string[] {
+    if (version === null) return [];
+    const probe = LIGHT_LAUNCH_PROBES.find(
+        (p) => p.selected && p.member === member && p.probed_version === version.trim(),
+    );
+    return probe?.flag ?? [];
+}
+
+/**
  * Documented flags that LIFT an agency bound.
  *
  * A bound is only a bound if the argv cannot also carry the flag that removes
