@@ -2,14 +2,10 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
 import * as sv from '../../src/skills/corpus-grounding/scripts/schema_validator.js';
-
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
-const SCRIPTS = path.join(REPO_ROOT, 'src', 'skills', 'corpus-grounding', 'scripts');
 
 const tmpDirs: string[] = [];
 function mkTmp(): string {
@@ -117,5 +113,15 @@ describe('schema_validator — load_manifest + resolve_data_path', () => {
         const d = mkTmp();
         const m = { _manifest_dir: d };
         expect(sv.resolve_data_path(m, 'corpus.csv')).toBe(path.join(fs.realpathSync.native(d), 'corpus.csv'));
+    });
+
+    it('resolve_data_path refuses a symlink inside the pack that points out of it', () => {
+        const d = mkTmp();
+        const outside = mkTmp();
+        fs.writeFileSync(path.join(outside, 'rules.js'), 'export function evaluate() {}\n');
+        fs.symlinkSync(path.join(outside, 'rules.js'), path.join(d, 'rules.js'));
+        expect(() => sv.resolve_data_path({ _manifest_dir: d }, 'rules.js')).toThrow(
+            "corpus path resolves outside the manifest directory: 'rules.js'",
+        );
     });
 });
