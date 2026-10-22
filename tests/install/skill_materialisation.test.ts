@@ -243,6 +243,41 @@ describe('4.5 — only its own entries', () => {
         expect(fs.existsSync(path.join(f.skillsRoot, 'x'))).toBe(true);
     });
 
+    it('a lock row whose name or host climbs out of the store is not a row', () => {
+        const f = fixture();
+        const outside = path.join(f.tmp, 'outside');
+        fs.mkdirSync(outside, { recursive: true });
+        fs.writeFileSync(path.join(outside, 'keep.txt'), 'x');
+        fs.mkdirSync(path.dirname(f.lock), { recursive: true });
+        fs.writeFileSync(
+            f.lock,
+            JSON.stringify({
+                schema_version: 1,
+                entries: [
+                    { host: '..', name: 'outside', root: f.skillsRoot, sha256: 'd' },
+                    { host: 'claude-code', name: '../../outside', root: f.skillsRoot, sha256: 'd' },
+                ],
+            }),
+        );
+        expect(loadLock(f.lock).entries).toEqual([]);
+        release(f.lock, f.skillsRoot, ['outside', '../../outside'], f.store);
+        expect(fs.existsSync(path.join(outside, 'keep.txt'))).toBe(true);
+    });
+
+    it('keeps a locked entry whose host side is a link that does not point into the store', () => {
+        const f = fixture();
+        const elsewhere = path.join(f.tmp, 'elsewhere');
+        fs.mkdirSync(elsewhere, { recursive: true });
+        saveLock(f.lock, {
+            schema_version: 1,
+            entries: [{ host: 'claude-code', name: 'x', root: f.skillsRoot, sha256: 'deadbeef' }],
+        });
+        fs.symlinkSync(elsewhere, path.join(f.skillsRoot, 'x'));
+        const res = release(f.lock, f.skillsRoot, ['x'], f.store);
+        expect(res.kept_foreign).toEqual(['x']);
+        expect(fs.lstatSync(path.join(f.skillsRoot, 'x')).isSymbolicLink()).toBe(true);
+    });
+
     it('removes nothing for a lock written under a different root', () => {
         const f = fixture();
         payloadSkill(f, 'alpha');
