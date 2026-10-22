@@ -235,6 +235,7 @@ export function classify_necessity(
     prompt: string,
     lens = 'analysis',
     _invocation: Invocation = 'agent',
+    opts: { readonly ratePressure?: boolean } = {},
 ): ClassificationResult {
     const text = _pyStrip(prompt || '');
     if (!text) {
@@ -298,6 +299,12 @@ export function classify_necessity(
         verdict = 'unnecessary';
         rationale =
             `Lens \`${lens}\` is strict (expensive deliberation); ` +
+            `borderline with zero \`necessary\` markers → unnecessary.`;
+    } else if (opts.ratePressure === true && verdict === 'borderline' && n_hits === 0) {
+        // Inside a host rate window every lens applies the strict bar.
+        verdict = 'unnecessary';
+        rationale =
+            'A recent host rate marker applies the strict bar; ' +
             `borderline with zero \`necessary\` markers → unnecessary.`;
     }
 

@@ -16,8 +16,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { project_settings_path, resolve_project_root } from './_lib/agent_settings.js';
-import { load_agent_settings } from './_lib/agent_settings.js';
+import { load_agent_settings, project_settings_path, resolve_project_root } from './_lib/agent_settings.js';
+import { recentHostMarker } from './_lib/quota_parked.js';
 import { detectEnvironment, type EnvironmentReport } from './_lib/environment_detector.js';
 
 import {
@@ -1890,7 +1890,7 @@ function _necessity_gate(opts: {
     if (!enabled || mode === 'off') {
         return [true, 0, null];
     }
-    const result = classify_necessity(opts.prompt, opts.lens, opts.invocation as never);
+    const result = classify_necessity(opts.prompt, opts.lens, opts.invocation as never, { ratePressure: recentHostMarker(REPO_ROOT) });
     const caps = _provider_caps_snapshot(opts.ai_cfg);
     const hashed = (opts.original_ask || '') || opts.prompt;
 
