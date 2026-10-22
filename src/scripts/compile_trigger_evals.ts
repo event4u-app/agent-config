@@ -97,8 +97,9 @@ export function readCorpus(skillsRoot: string): LabelledQuery[] {
         let doc: unknown;
         try {
             doc = JSON.parse(fs.readFileSync(file, 'utf8'));
-        } catch {
-            continue;
+        } catch (err) {
+            // A skipped file shrinks the compiled set with no trace; refuse instead.
+            throw new Error(`compile_trigger_evals: ${path.relative(skillsRoot, file)} is not valid JSON (${err instanceof Error ? err.message : String(err)})`);
         }
         if (!isObj(doc)) continue;
 
@@ -209,8 +210,9 @@ function refuseTrackedOutput(outDir: string): void {
     if (rel.startsWith('..') || path.isAbsolute(rel)) return;
     const probe = path.join(abs, '.compile-probe');
     const res = spawnSync('git', ['-C', REPO_ROOT, 'check-ignore', '-q', probe], { encoding: 'utf8' });
-    // 0 = ignored, 1 = not ignored, 128 = not a repository (then nothing can be committed).
-    if (res.status === 1) {
+    // 0 = ignored, 1 = not ignored, 128 = not a repository (then nothing can be
+    // committed). Anything else — git missing, killed — cannot say, so refuses.
+    if (res.status !== 0 && res.status !== 128) {
         throw new Error(
             `compile_trigger_evals: ${rel} is inside the repository and not gitignored. ` +
                 'Compiled cases are never committed (AC-3) — use a gitignored path such as ' +
@@ -228,8 +230,14 @@ function refuseTrackedOutput(outDir: string): void {
 export function compileCorpus(skillsRoot: string, outDir: string): CompiledCase[] {
     refuseTrackedOutput(outDir);
     const cases: CompiledCase[] = [];
+    const owner = new Map<string, string>();
     for (const q of readCorpus(skillsRoot)) {
         const dir = path.join(slug(q.skill), slug(q.id));
+        const prior = owner.get(dir);
+        if (prior !== undefined) {
+            throw new Error(`compile_trigger_evals: ${q.skill}/${q.id} and ${prior} both compile to ${dir}`);
+        }
+        owner.set(dir, `${q.skill}/${q.id}`);
         const abs = path.join(outDir, dir);
         fs.mkdirSync(path.join(abs, 'graders'), { recursive: true });
         fs.writeFileSync(path.join(abs, 'prompt.md'), promptBody(q.query));

@@ -181,6 +181,21 @@ describe('compileCorpus — one case per query, 2.1', () => {
         }
     });
 
+    it('refuses a corpus file that does not parse instead of shrinking the set', () => {
+        const corpus = writeFixtureCorpus();
+        fs.writeFileSync(path.join(corpus, 'alpha-skill', 'evals', 'triggers.json'), '{ not json');
+        expect(() => readCorpus(corpus)).toThrow(/alpha-skill.*not valid JSON/);
+    });
+
+    it('refuses two ids that compile to the same case directory', () => {
+        const corpus = writeFixtureCorpus();
+        fs.writeFileSync(
+            path.join(corpus, 'alpha-skill', 'evals', 'triggers.json'),
+            JSON.stringify({ queries: [{ id: 'a b', q: 'x', trigger: true }, { id: 'a/b', q: 'y', trigger: false }] }),
+        );
+        expect(() => compileCorpus(corpus, tmp())).toThrow(/both compile to/);
+    });
+
     it('writes nothing outside the output directory', () => {
         const corpus = writeFixtureCorpus();
         const before = fs.readdirSync(corpus).sort();
