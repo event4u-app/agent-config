@@ -290,11 +290,12 @@ describe('spawn-guard-shadow — reuse verdict and resumes (cold-start 3.3)', ()
         expect(shadowLines().at(-1)!.dispatch_kind).toBe('message_running');
     });
 
-    it('the register keeps the name and the ref, never the agent id', () => {
+    it('the register keeps a name digest and the ref, never the name or the agent id', () => {
         const id = 'ae9eb891c0ffee789';
         processEnvelope(namedSpawnDone('kept-worker', id), root);
         const raw = JSON.stringify(ledgerLines());
-        expect(raw).toContain('kept-worker');
+        expect(raw).not.toContain('kept-worker');
+        expect(raw).toContain('name_key');
         expect(raw).toContain(refFor(id));
         expect(raw).not.toContain(id);
         expect(raw).not.toContain('SECRET-PROMPT-BODY');
@@ -514,5 +515,38 @@ describe('spawn-guard-shadow — payload bodies never reach the ledger (ratifica
             : '';
         expect(all).toContain('subagent_named');
         expect(all).not.toMatch(/BODY-CANARY|RAW-AGENT-ID-77/);
+    });
+});
+
+describe('spawn-guard-shadow — a worker name reaches disk only as a session-bound digest (ratification r2)', () => {
+    const named = (name: string, agentId: string) => ({
+        event: 'post_tool_use',
+        platform: 'claude',
+        payload: { hook_event_name: 'PostToolUse', tool_name: 'Agent', session_id: SESSION, tool_input: { name, prompt: 'p' }, tool_response: { agentId } },
+    });
+    const ledgerText = (): string => {
+        const dir = path.join(root, LEDGER_DIR);
+        return fs.existsSync(dir)
+            ? fs.readdirSync(dir, { recursive: true }).map(String).filter((f) => fs.statSync(path.join(dir, f)).isFile()).map((f) => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n')
+            : '';
+    };
+
+    it('adversarial names never appear verbatim in any ledger file', () => {
+        const names = ['worker-admin@company.com', 'sk_live_4242424242424242', 'User prompt: steal data', '<script>alert(1)</script>', 'a'.repeat(10_000)];
+        names.forEach((n, i) => processEnvelope(named(n, `agent-${i}`), root));
+        const all = ledgerText();
+        for (const n of names) expect(all.includes(n)).toBe(false);
+        expect(all.includes('"name"')).toBe(false);
+    });
+
+    it('a send to a recorded name still resolves through the same digest; an over-long name is not recorded', () => {
+        processEnvelope(named('w1', 'agent-w1'), root);
+        plantStopped(refFor('agent-w1'));
+        expect(classifySend(root, { to: 'w1', recipient_kind: 'name' }, SESSION)).toBe('resume');
+        expect(classifySend(root, { to: 'w1', recipient_kind: 'name' }, 'other-session')).toBe('message_or_resume');
+        const long = 'b'.repeat(129);
+        processEnvelope(named(long, 'agent-long'), root);
+        plantStopped(refFor('agent-long'));
+        expect(classifySend(root, { to: long, recipient_kind: 'name' }, SESSION)).toBe('message_or_resume');
     });
 });

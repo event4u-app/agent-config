@@ -49,8 +49,9 @@
  * Step 4 establishes whether `agent_id` reaches a PreToolUse payload.
  *
  * PRIVACY BY CONSTRUCTION: counts, candidate verdicts, and a reuse verdict whose
- * only free string is a worker's durable name from the register — never read
- * from the tool input. No prompt, no message, no recipient, no agent id.
+ * only free string is a worker's durable name from the register. A name read
+ * from the tool input reaches disk only as a session-bound digest. No prompt, no
+ * message, no recipient, no agent id.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -146,7 +147,17 @@ function stoppedInSession(root: string, ref: string, sessionId: string, now: Dat
  * The ref a named spawn of this session left in the register, read from the
  * same bounded tails as a stop; null when this session named no such worker.
  */
+/** Longer names are neither recorded nor resolved: a name is an address, not a payload. */
+export const NAME_MAX = 128;
+
+/** Domain-separated digest of (session, name); the only form a tool-input name takes on disk. */
+function nameKey(sessionId: string, name: string): string {
+    return refFor(`subagent-name\0${sessionId}\0${name}`);
+}
+
 function refForName(root: string, name: string, sessionId: string, now: Date): string | null {
+    if (name.length > NAME_MAX) return null;
+    const key = nameKey(sessionId, name);
     let found: string | null = null;
     const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
     for (const month of [prev.toISOString().slice(0, 7), now.toISOString().slice(0, 7)]) {
@@ -154,7 +165,7 @@ function refForName(root: string, name: string, sessionId: string, now: Date): s
             if (!line.includes('subagent_named')) continue;
             try {
                 const rec = JSON.parse(line) as Record<string, unknown>;
-                if (rec['event'] === 'subagent_named' && rec['name'] === name && rec['session_id'] === sessionId && typeof rec['ref'] === 'string') {
+                if (rec['event'] === 'subagent_named' && rec['name_key'] === key && typeof rec['ref'] === 'string') {
                     found = rec['ref'];
                 }
             } catch {
@@ -189,16 +200,16 @@ export function classifySend(
 
 /**
  * On a completed named spawn, record which ledger ref the name now addresses.
- * A name is the only address that may reach disk; the agent id is hashed first.
+ * Neither the name nor the agent id reaches disk in clear; both are digested first.
  */
 export function recordNamedSpawn(root: string, payload: JsonObject, sessionId: string | null, nowIso: string): void {
     const input = isObject(payload['tool_input']) ? payload['tool_input'] : {};
     const result = isObject(payload['tool_response']) ? payload['tool_response'] : {};
     const name = input['name'];
     const agentId = result['agentId'];
-    if (typeof name !== 'string' || name === '' || typeof agentId !== 'string' || agentId === '') return;
+    if (typeof name !== 'string' || name === '' || name.length > NAME_MAX || typeof agentId !== 'string' || agentId === '') return;
     if (sessionId === null) return;
-    appendLedgerLine(root, nowIso, { event: 'subagent_named', ts: nowIso, ref: refFor(agentId), name, session_id: sessionId });
+    appendLedgerLine(root, nowIso, { event: 'subagent_named', ts: nowIso, ref: refFor(agentId), name_key: nameKey(sessionId, name), session_id: sessionId });
 }
 
 /**
