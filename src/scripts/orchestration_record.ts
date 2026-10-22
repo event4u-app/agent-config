@@ -19,6 +19,9 @@
  *     [--rules-carried 32] [--rules-used 5] \
  *     [--work-tokens 41000] [--floor-provenance measured|estimated] \
  *     [--capsule-emitted true|false] [--capsule-entries 9] \
+ *     [--hand-kind classify] [--schema-valid true|false] \
+ *     [--route-billing free-quota|self-hosted|per-token|subscription] \
+ *     [--verified pass|fail|skipped] [--verify-tokens 320] [--work-id <ask work id>] \
  *     [--dir <audit-dir>] [--dry-run]
  *
  * Read by `src/scripts/orchestration_savings_report.ts`.
@@ -30,6 +33,7 @@ import * as path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import type { LookupClass } from './_lib/auto_dispatch.js';
+import type { HandKind, RouteBilling, VerifyVerdict } from './_lib/hand_kinds.js';
 import {
     buildOrchestrationLine,
     type Provenance,
@@ -176,6 +180,11 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         floor_provenance: str(flags, 'floor-provenance') as Provenance | undefined,
         capsule_emitted: bool(flags, 'capsule-emitted'),
         capsule_entries: int(flags, 'capsule-entries'),
+        hand_kind: str(flags, 'hand-kind') as HandKind | undefined,
+        schema_valid: bool(flags, 'schema-valid'),
+        route_billing: str(flags, 'route-billing') as RouteBilling | undefined,
+        verified: str(flags, 'verified') as VerifyVerdict | undefined,
+        verify_tokens: int(flags, 'verify-tokens'),
         phase: str(flags, 'phase') as LinePhase | undefined,
         outcome: str(flags, 'outcome') as LineOutcome | undefined,
         confidence_band: str(flags, 'confidence-band') as Band | undefined,

@@ -28,6 +28,18 @@ export type HeadOnlyKind = (typeof HEAD_ONLY_KINDS)[number];
 const _KINDS: ReadonlySet<string> = new Set<string>(HAND_KINDS);
 const _HEAD_ONLY: ReadonlySet<string> = new Set<string>(HEAD_ONLY_KINDS);
 
+/** How a route is paid for; the two unpaid classes are the hands whose every return the head must verify. */
+export const ROUTE_BILLINGS = ['free-quota', 'self-hosted', 'per-token', 'subscription'] as const;
+export type RouteBilling = (typeof ROUTE_BILLINGS)[number];
+
+export function isUnpaid(billing: RouteBilling): boolean {
+    return billing === 'free-quota' || billing === 'self-hosted';
+}
+
+/** The head's verdict on one hand's return; `skipped` is recorded, never silent. */
+export const VERIFY_VERDICTS = ['pass', 'fail', 'skipped'] as const;
+export type VerifyVerdict = (typeof VERIFY_VERDICTS)[number];
+
 export function isHandKind(raw: unknown): raw is HandKind {
     return typeof raw === 'string' && _KINDS.has(raw);
 }

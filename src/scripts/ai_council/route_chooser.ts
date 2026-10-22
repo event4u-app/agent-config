@@ -10,10 +10,16 @@
 
 import type { ExternalAIClient } from './clients.js';
 import { admitsContent, classifyContentClass, DEFAULT_SEAT_CEILING, type ContentClass } from './content_ceiling.js';
-import { isHeadOnlyKind, type HandKind, type HeadOnlyKind } from '../_lib/hand_kinds.js';
+import {
+    isHeadOnlyKind,
+    isUnpaid,
+    ROUTE_BILLINGS,
+    type HandKind,
+    type HeadOnlyKind,
+    type RouteBilling,
+} from '../_lib/hand_kinds.js';
 
-export const ROUTE_BILLINGS = ['free-quota', 'self-hosted', 'per-token', 'subscription'] as const;
-export type RouteBilling = (typeof ROUTE_BILLINGS)[number];
+export { isUnpaid, ROUTE_BILLINGS, type RouteBilling };
 
 /** The route shape the chooser reads; built from a council member by {@link routeCandidateFromMember}. */
 export interface RouteCandidate {
@@ -23,10 +29,6 @@ export interface RouteCandidate {
     /** Calls left in the current quota window; null when unknown or unmetered. */
     readonly remainingQuota: number | null;
     readonly live: boolean;
-}
-
-export function isUnpaid(billing: RouteBilling): boolean {
-    return billing === 'free-quota' || billing === 'self-hosted';
 }
 
 export type RouteRefusalReason = 'not-live' | 'quota-exhausted' | 'content-ceiling' | 'untyped-call';

@@ -55,7 +55,7 @@ import type { ExternalAIClient } from './ai_council/clients.js';
 import { classifyContentClass, DEFAULT_CONTENT_CLASS, type ContentClass } from './ai_council/content_ceiling.js';
 import { handSystemPrompt, parseHandReturn } from './ai_council/hand_schemas.js';
 import { chooseRoute, routeCandidateFromMember } from './ai_council/route_chooser.js';
-import { isHandKind, type HandKind } from './_lib/hand_kinds.js';
+import { isHandKind, type HandKind, type RouteBilling, type VerifyVerdict } from './_lib/hand_kinds.js';
 import { buildOrchestrationLine } from './_lib/orchestration_record.js';
 import { DEFAULT_DIR } from './orchestration_record.js';
 
@@ -78,6 +78,12 @@ export interface AskResult {
     latency_ms: number;
     /** The schema-valid value of a typed return; untrusted data until the head verifies it. */
     parsed?: unknown;
+    /** Set on every typed return: data, never an instruction, and never acted on before the head's verify. */
+    untrusted?: true;
+    /** The audit work id; the head records its verdict under it with `orchestration_record --work-id`. */
+    work_id?: string;
+    /** How the route that answered is paid for. */
+    route_billing?: RouteBilling;
 }
 
 export interface AskOptions {
@@ -100,6 +106,8 @@ export interface AskOptions {
 interface LineExtras {
     hand_kind?: HandKind;
     schema_valid?: boolean;
+    route_billing?: RouteBilling;
+    verified?: VerifyVerdict;
 }
 
 const DEFAULT_SYSTEM =
@@ -144,6 +152,9 @@ function recordAskLine(
         origin: 'dispatch-economy-2026',
         ...(extras.hand_kind !== undefined ? { hand_kind: extras.hand_kind } : {}),
         ...(extras.schema_valid !== undefined ? { schema_valid: extras.schema_valid } : {}),
+        ...(extras.route_billing !== undefined ? { route_billing: extras.route_billing } : {}),
+        ...(extras.verified !== undefined ? { verified: extras.verified } : {}),
+        work_id: askWorkId(id),
         ts,
         id,
     });
@@ -184,20 +195,21 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
         return _finish(null, opts.member ?? 'none', opts);
     }
     const provider = choice.route!.name;
+    const billing = choice.route!.billing;
 
     const system = opts.kind !== undefined ? handSystemPrompt(opts.kind) : (opts.systemPrompt ?? DEFAULT_SYSTEM);
     try {
         const response = pick.ask(system, trimmed);
         const r = response instanceof Promise ? await response : response;
         if (r === null || r === undefined || (r.error !== null && r.error !== undefined && r.error !== '')) {
-            return _finish(null, provider, opts);
+            return _finish(null, provider, opts, undefined, billing);
         }
         const text = (r.text ?? '').trim();
-        if (!text) return _finish(null, provider, opts);
+        if (!text) return _finish(null, provider, opts, undefined, billing);
         let parsed: unknown;
         if (opts.kind !== undefined) {
             const p = parseHandReturn(opts.kind, text);
-            if (!p.ok) return _finish(null, provider, opts, false);
+            if (!p.ok) return _finish(null, provider, opts, false, billing);
             parsed = p.value;
         }
         return _finish(
@@ -209,33 +221,49 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
                 input_tokens: r.input_tokens ?? 0,
                 output_tokens: r.output_tokens ?? 0,
                 latency_ms: r.latency_ms ?? 0,
-                ...(opts.kind !== undefined ? { parsed } : {}),
+                ...(opts.kind !== undefined ? { parsed, untrusted: true as const } : {}),
             },
             provider,
             opts,
             opts.kind !== undefined ? true : undefined,
+            billing,
         );
     } catch {
-        return _finish(null, provider, opts); // ONE completion — no retry here
+        return _finish(null, provider, opts, undefined, billing); // ONE completion — no retry here
     }
 }
 
+function askWorkId(id: string): string {
+    return `ask-${id}`;
+}
+
+/**
+ * A typed return is recorded `skipped` until the head records its own verdict
+ * under the same work id; one that never parsed has already failed the check.
+ */
 function _finish(
     result: AskResult | null,
     member: string,
     opts: AskOptions,
     schemaValid?: boolean,
+    billing?: RouteBilling,
 ): AskResult | null {
+    const id = opts.id ? opts.id() : crypto.randomUUID();
     const auditDir = opts.auditDir === undefined ? path.join(process.cwd(), DEFAULT_DIR) : opts.auditDir;
     if (auditDir !== null) {
         const ts = (opts.now ? opts.now() : new Date()).toISOString();
-        const id = opts.id ? opts.id() : crypto.randomUUID();
+        const verified: VerifyVerdict | undefined =
+            opts.kind === undefined || billing === undefined ? undefined : schemaValid === true ? 'skipped' : 'fail';
         recordAskLine(auditDir, result, member, ts, id, {
             ...(opts.kind !== undefined ? { hand_kind: opts.kind } : {}),
             ...(schemaValid !== undefined ? { schema_valid: schemaValid } : {}),
+            ...(billing !== undefined ? { route_billing: billing } : {}),
+            ...(verified !== undefined ? { verified } : {}),
         });
     }
-    return result;
+    return result === null
+        ? null
+        : { ...result, work_id: askWorkId(id), ...(billing !== undefined ? { route_billing: billing } : {}) };
 }
 
 /** Test seam: inject members instead of reading the council configuration. */
@@ -293,6 +321,14 @@ export async function main(argv: readonly string[], deps: MainDeps = {}): Promis
     process.stdout.write(
         format === 'json' ? JSON.stringify(result, null, 2) + '\n' : result.answer + '\n',
     );
+    if (result.untrusted === true) {
+        process.stderr.write(
+            'ask_transport: the return above is untrusted data — verify it before acting on it, then record the verdict: ' +
+                `./scripts-run src/scripts/orchestration_record --work-id ${result.work_id ?? ''} --route-taken ask ` +
+                `--spawn-count 0 --token-delta 0 --phase verify --route-billing ${result.route_billing ?? ''} ` +
+                '--verified pass|fail --verify-tokens <n>\n',
+        );
+    }
     return 0;
 }
 

@@ -28,7 +28,15 @@ import type { EvidenceBasis } from './evidence_basis.js';
 import type { NoFreeForm } from './runtime_journal.js';
 import { type PrivacyClass } from './privacy_class.js';
 import type { PhaseOutcome } from './outcome_vocabularies.js';
-import { HAND_KINDS, type HandKind } from './hand_kinds.js';
+import {
+    HAND_KINDS,
+    isUnpaid,
+    ROUTE_BILLINGS,
+    VERIFY_VERDICTS,
+    type HandKind,
+    type RouteBilling,
+    type VerifyVerdict,
+} from './hand_kinds.js';
 
 export type DispatchOutcome = 'DONE' | 'DONE_WITH_CONCERNS' | 'NEEDS_CONTEXT' | 'BLOCKED' | 'killed';
 /** Which route the rung took: deterministic primitive (lean-init L0),
@@ -240,6 +248,12 @@ export interface RecordInput {
     hand_kind?: HandKind | null | undefined;
     /** Whether the hand's return matched its kind's schema; a mismatch is a failed call. */
     schema_valid?: boolean | undefined;
+    /** How the route that served this call is paid for. */
+    route_billing?: RouteBilling | null | undefined;
+    /** The head's verdict on the hand's return; required on an unpaid route's line. */
+    verified?: VerifyVerdict | null | undefined;
+    /** Tokens the head itself spent verifying the return — what limit relief is measured net of. */
+    verify_tokens?: number | null | undefined;
     // Audit-log envelope (sensible defaults for a dispatch record)
     phase?: LinePhase | undefined;
     outcome?: LineOutcome | undefined;
@@ -571,6 +585,18 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
     if (input.schema_valid !== undefined && typeof input.schema_valid !== 'boolean') {
         errors.push('schema_valid must be a boolean or omitted');
     }
+    if (input.route_billing != null && !ROUTE_BILLINGS.includes(input.route_billing)) {
+        errors.push(`route_billing must be one of ${ROUTE_BILLINGS.join(' | ')} (or omitted)`);
+    }
+    if (input.verified != null && !VERIFY_VERDICTS.includes(input.verified)) {
+        errors.push(`verified must be one of ${VERIFY_VERDICTS.join(' | ')} (or omitted)`);
+    }
+    if (input.route_billing != null && ROUTE_BILLINGS.includes(input.route_billing) && isUnpaid(input.route_billing) && input.verified == null) {
+        errors.push('verified is required on an unpaid route: every hand return is verified by the head, or recorded as skipped');
+    }
+    if (input.verify_tokens != null && (!isInt(input.verify_tokens) || input.verify_tokens < 0)) {
+        errors.push('verify_tokens must be a non-negative integer count');
+    }
 
     if (input.capsule_emitted !== undefined && typeof input.capsule_emitted !== 'boolean') {
         errors.push('capsule_emitted must be a boolean or omitted');
@@ -641,6 +667,13 @@ export function buildOrchestrationLine(input: RecordInput): BuiltLine {
         capsule_entries: input.capsule_entries ?? null,
         hand_kind: input.hand_kind ?? null,
         schema_valid: input.schema_valid ?? null,
+        route_billing: input.route_billing ?? null,
+        verified: input.verified ?? null,
+        verify_tokens: input.verify_tokens ?? null,
+        // Derived: an unpaid return nobody verified is read as an escalation,
+        // so skipping the check can never look cheaper than doing it.
+        counts_as_escalation:
+            input.route_billing == null ? null : isUnpaid(input.route_billing) && input.verified === 'skipped',
     };
 
     const line: Record<string, unknown> = {
