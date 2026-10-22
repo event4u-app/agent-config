@@ -17,8 +17,13 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
+    dispatchJuryBlind,
     juryAggregate,
+    juryIndependence,
     juryPairwise,
+    jurorPrompt,
+    MAX_JURY_JUDGES,
+    validateJuryPanel,
     type JuryScore,
 } from '../../../src/scripts/ai_council/jury_aggregate.js';
 import type { PairwiseVerdict } from '../../../src/scripts/ai_council/judge_position_bias.js';
@@ -179,6 +184,104 @@ describe('3.2 — the position-swap path is exercised, not merely available', ()
         expect(r.present).toBe(false);
         expect(r.absentReason).toBe('single_family');
         expect(r.resolution).toBeNull();
+    });
+});
+
+// road-to-free-hands-a-paid-head-checks 4.1 — jurors answer in parallel and blind.
+describe('free-hands 4.1 — jurors answer blind and in parallel', () => {
+    const jurors = [
+        { judge: 'j1', family: 'anthropic', billing: 'subscription' },
+        { judge: 'j2', family: 'openai', billing: 'free-quota' },
+        { judge: 'j3', family: 'mistral', billing: 'free-quota' },
+    ];
+    const answerOf = (j: string): string => `ANSWER-OF-${j}-score-7`;
+
+    it('no juror prompt contains another juror answer, and every juror is asked before any answers', async () => {
+        const prompts = new Map<string, string>();
+        const pending: Array<() => void> = [];
+        const out = dispatchJuryBlind('Score the item 1-10.', 'item body', jurors, (j, prompt) => {
+            prompts.set(j.judge, prompt);
+            return new Promise<string>((resolve) => pending.push(() => resolve(answerOf(j.judge))));
+        });
+        await Promise.resolve();
+        expect(pending).toHaveLength(3);
+        for (const release of pending) release();
+        const r = await out;
+        expect(r.refused).toBeNull();
+        expect(r.answers.map((a) => a.answer)).toEqual(jurors.map((j) => answerOf(j.judge)));
+        for (const [judge, prompt] of prompts) {
+            expect(prompt).toBe(jurorPrompt('Score the item 1-10.', 'item body'));
+            for (const other of jurors) {
+                if (other.judge !== judge) expect(prompt).not.toContain(answerOf(other.judge));
+            }
+        }
+    });
+});
+
+// road-to-free-hands-a-paid-head-checks 4.2 — K10: more judges buy no independence past five.
+describe('free-hands 4.2 — a panel is capped at five judges', () => {
+    const six = ['anthropic', 'openai', 'google', 'mistral', 'xai', 'deepseek'].map((f, i) => ({ judge: `j${String(i)}`, family: f }));
+
+    it('a panel config with six judges is refused with the cap as the reason', () => {
+        expect(MAX_JURY_JUDGES).toBe(5);
+        const v = validateJuryPanel({ judges: six });
+        expect('error' in v && v.error).toMatch(/6 judges exceed the cap of 5/);
+        expect('panel' in validateJuryPanel({ judges: six.slice(0, 5) })).toBe(true);
+    });
+
+    it('the aggregator and the dispatcher refuse a six-judge panel too', async () => {
+        const r = juryAggregate(six.map((j) => s(j.judge, j.family, 5)));
+        expect(r.present).toBe(false);
+        expect(!r.present && r.absentReason).toBe('panel_over_cap');
+        let asked = 0;
+        const d = await dispatchJuryBlind('t', 'i', six, () => {
+            asked += 1;
+            return Promise.resolve('x');
+        });
+        expect(d.refused).toMatch(/cap of 5/);
+        expect(asked).toBe(0);
+    });
+});
+
+// road-to-free-hands-a-paid-head-checks 4.3 — n_eff beside κ, on one run.
+describe('free-hands 4.3 — effective independence is measured, not proxied by family count', () => {
+    const gold = ['a', 'b', 'a', 'b', 'a', 'b', 'a', 'b'];
+    const flip = (labels: string[], at: readonly number[]): string[] =>
+        labels.map((l, i) => (at.includes(i) ? (l === 'a' ? 'b' : 'a') : l));
+
+    it('a perfectly correlated panel yields n_eff = 1', () => {
+        const wrongAt = [0, 3, 5];
+        const r = juryIndependence(gold, [
+            { judge: 'j1', labels: flip(gold, wrongAt) },
+            { judge: 'j2', labels: flip(gold, wrongAt) },
+            { judge: 'j3', labels: flip(gold, wrongAt) },
+        ]);
+        expect(r.phiBar).toBeCloseTo(1, 10);
+        expect(r.nEff).toBeCloseTo(1, 10);
+        expect(r.nEffRatio).toBeCloseTo(1 / 3, 10);
+        expect(r.kappa).toHaveLength(3);
+    });
+
+    it('uncorrelated errors yield n_eff = k, and κ is reported on the same run', () => {
+        // Pairwise φ = 0: four errors each over eight items, every pair sharing exactly two.
+        const r = juryIndependence(gold, [
+            { judge: 'j1', labels: flip(gold, [0, 1, 2, 3]) },
+            { judge: 'j2', labels: flip(gold, [0, 1, 4, 5]) },
+            { judge: 'j3', labels: flip(gold, [0, 2, 4, 6]) },
+        ]);
+        expect(r.phiBar).toBeCloseTo(0, 10);
+        expect(r.nEff).toBeCloseTo(3, 10);
+        expect(r.kappa.map((k) => k.judge)).toEqual(['j1', 'j2', 'j3']);
+        for (const k of r.kappa) expect(Number.isFinite(k.kappa)).toBe(true);
+    });
+
+    it('a judge that never errs gives no φ, and an all-undefined panel reports no n_eff rather than k', () => {
+        const r = juryIndependence(gold, [
+            { judge: 'j1', labels: [...gold] },
+            { judge: 'j2', labels: [...gold] },
+        ]);
+        expect(r.undefinedPairs).toBe(1);
+        expect(r.nEff).toBeNull();
     });
 });
 

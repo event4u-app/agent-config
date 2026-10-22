@@ -17,11 +17,15 @@
 // one-advisor-per-provider invariant), so every enabled member that did not
 // deliberate is provider-different from every deliberator by construction.
 
+import { seatRoleRefusal } from './seat_policy.js';
+
 export interface ChairmanCandidate {
     /** Member name (== provider key in this engine). */
     name: string;
     /** Optional capability rank from `members.<name>.tier`; higher = stronger. */
     tier: number | null;
+    /** The seat's billing class; an unpaid one never chairs (ADR-257). Absent = paid. */
+    billing?: string | null;
 }
 
 export interface ChairmanSelection {
@@ -56,6 +60,13 @@ export function select_chairman(
                 annotation: `Chairman: host (member ${_q(member)} unavailable — host fallback)`,
             };
         }
+        const refusal = seatRoleRefusal('synthesis', candidates.find((c) => c.name === member)?.billing, member);
+        if (refusal !== null) {
+            return {
+                member: null,
+                annotation: `Chairman: host (member ${_q(member)} refused: ${refusal.reason} — ${refusal.message})`,
+            };
+        }
         if (deliberated.has(member)) {
             // A member that argued in the debate cannot independently judge it.
             return {
@@ -67,12 +78,16 @@ export function select_chairman(
     }
     // mode === 'auto' — provider-family difference primary (non-deliberating ⇒
     // provider-different by construction here); tier tie-break; config-order final.
-    const pool = candidates.filter((c) => !deliberated.has(c.name));
-    if (pool.length === 0) {
+    const nonPanel = candidates.filter((c) => !deliberated.has(c.name));
+    if (nonPanel.length === 0) {
         return {
             member: null,
             annotation: 'Chairman: host (no non-panel member available)',
         };
+    }
+    const pool = nonPanel.filter((c) => seatRoleRefusal('synthesis', c.billing) === null);
+    if (pool.length === 0) {
+        return { member: null, annotation: 'Chairman: host (no paid non-panel member available)' };
     }
     let best = pool[0] as ChairmanCandidate;
     for (const c of pool.slice(1)) {

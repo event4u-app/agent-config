@@ -17,9 +17,13 @@ import {
     type AbsentReason,
 } from '../../../src/scripts/ai_council/transport_resolver.js';
 import {
+    COUNCIL_ROLES,
+    HEAD_ROLES,
     POLICY_EXCLUSIONS,
     classifyPolicyExclusion,
     isPolicyExclusion,
+    isUnpaidBilling,
+    seatRoleRefusal,
 } from '../../../src/scripts/ai_council/seat_policy.js';
 import {
     admitsContent,
@@ -234,5 +238,43 @@ describe('2.1/2.2 — council:status prints the policy reason and the ceiling', 
         expect(t['absent_reason']).toBe('policy_privacy');
         expect(t['policy_exclusion']).toBe('policy_privacy');
         expect(t['content_ceiling']).toBe('public-artifact');
+    });
+});
+
+// road-to-free-hands-a-paid-head-checks 4.1 — ADR-257: a route this package
+// did not pay for may propose and may score, never chair, synthesise or carry
+// a verdict. The refusal is named, and an unreadable billing value fails closed.
+describe('free-hands 4.1 — an unpaid seat never holds a head role', () => {
+    it('refuses a free seat as chair with a named reason', () => {
+        const r = seatRoleRefusal('chair', 'free-quota', 'groq');
+        expect(r?.reason).toBe('unpaid_head_role');
+        expect(r?.message).toMatch(/groq.*free-quota.*chair.*ADR-257/);
+    });
+
+    it('refuses free and self-hosted seats in every head role', () => {
+        for (const role of HEAD_ROLES) {
+            for (const billing of ['free-quota', 'self-hosted']) {
+                expect(seatRoleRefusal(role, billing)?.reason).toBe('unpaid_head_role');
+            }
+        }
+        expect([...HEAD_ROLES].sort()).toEqual(['chair', 'synthesis', 'verdict']);
+    });
+
+    it('admits a free seat as proposer and juror', () => {
+        for (const role of COUNCIL_ROLES.filter((r) => !HEAD_ROLES.has(r))) {
+            expect(seatRoleRefusal(role, 'free-quota')).toBeNull();
+        }
+    });
+
+    it('leaves paid seats and seats with no declared billing unchanged', () => {
+        for (const billing of ['subscription', 'per-token', undefined, null]) {
+            expect(seatRoleRefusal('chair', billing)).toBeNull();
+        }
+    });
+
+    it('an unrecognised billing value is refused a head role (fail closed)', () => {
+        expect(seatRoleRefusal('verdict', 'free')?.reason).toBe('unpaid_head_role');
+        expect(isUnpaidBilling('per-token')).toBe(false);
+        expect(isUnpaidBilling('mystery')).toBe(true);
     });
 });
