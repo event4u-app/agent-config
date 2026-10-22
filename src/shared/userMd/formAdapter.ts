@@ -17,7 +17,7 @@
  * save via `userIdentitySchema`.
  */
 
-import { userStyleAvoidSchema, type UserIdentity } from './schema.js';
+import { userStyleAvoidEntrySchema, type UserIdentity } from './schema.js';
 
 /**
  * Defaults for a fresh form. Matches `src/templates/agent-user.yml`:
@@ -55,10 +55,16 @@ function pickRoles(value: unknown): string[] {
     return value.filter((v): v is string => typeof v === 'string' && v.trim() !== '');
 }
 
+// Filtered per entry because a whole-list parse erased every entry on the next
+// save when one was invalid. The cap is not applied here: an over-cap list
+// survives so the server-side save rejects it with an error instead.
 function pickAvoid(value: unknown): UserIdentity['style']['avoid'] {
-    if (value === undefined) return undefined;
-    const parsed = userStyleAvoidSchema.safeParse(value);
-    return parsed.success ? parsed.data : undefined;
+    if (!Array.isArray(value)) return undefined;
+    const kept = value.flatMap((entry) => {
+        const parsed = userStyleAvoidEntrySchema.safeParse(entry);
+        return parsed.success ? [parsed.data] : [];
+    });
+    return kept.length === 0 ? undefined : kept;
 }
 
 function pickNotes(value: unknown): string | undefined {
