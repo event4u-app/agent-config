@@ -306,7 +306,7 @@ release ledger. The residue items are closed the same way.
       `site/src/content/docs/getting-started/introduction.md` and
       `site/src/content/docs/architecture/overview.md` still say "zero runtime",
       and `check_claims` does not scan `site/`.
-      verify: `check_claims` scans `site/` and the phrase appears there zero times.
+      verify: the claims gate scans `site/`, and the phrase appears there zero times.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
