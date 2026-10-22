@@ -17,13 +17,15 @@
  * above {@link MAX_FILE_BYTES} are skipped and reported, so a hostile tree can
  * neither escape the scanned root nor make the scan unbounded.
  *
- * Exit codes: 0 = the scan ran (findings are advisory; zero account-surface
- * files is reported, since a repository may have no login code) · 2 = usage.
+ * Exit codes: 0 = the scan ran over at least one account-surface file
+ * (findings are advisory) · 1 = zero account-surface files matched — not a
+ * pass, since a scan that read nothing has not seen a safe login, so a
+ * repository with no login code reads 1 and its caller says why · 2 = usage.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
 
@@ -296,6 +298,21 @@ function main(argv: string[]): number {
     return 0;
 }
 
-if (process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+/**
+ * True when this module is the process entry. Compared as resolved URLs, then
+ * as real paths: a raw `file://` string misses spaces, percent-encoding and
+ * symlinked paths (macOS `/var`), and a missed match exits 0 having run nothing.
+ */
+function isCliEntry(): boolean {
+    if (process.argv[1] === undefined) return false;
+    try {
+        return import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href ||
+            fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(path.resolve(process.argv[1]));
+    } catch {
+        return false;
+    }
+}
+
+if (isCliEntry()) {
     process.exit(main(process.argv.slice(2)));
 }
