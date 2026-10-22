@@ -65,6 +65,12 @@ at all; they are the false-negative test for any score that reads CI alone, and 
 them (#2406, #2399) are only recognisable from a **later** PR — a signal a merge-time
 retro cannot have and the daily sweep can.
 
+> **Correction, 2026-10-22 (release finding `f86f3987f0e8`).** Six of the
+> twelve show no red head, not four: the table above also marks #2417 and
+> #2401 `worth` with `red` = 0, both as fix PRs for a defect an earlier merge
+> shipped. The labels and the table are unchanged; only the count in the
+> sentence was wrong, and a CI-only score has six false negatives to miss here.
+
 ## 2. Gold set — 30 sessions
 
 The 30 most recently updated session end-of-life files in the main checkout

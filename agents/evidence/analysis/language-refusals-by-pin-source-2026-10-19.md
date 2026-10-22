@@ -32,6 +32,13 @@ taken through the transcripts instead, as the step's 2026-10-17 note required.
 
 ## Split
 
+> **Read § Correction (2026-10-20) before using this table** (note added
+> 2026-10-22, release finding `d901df059acc`). The classifier below had no
+> category for a cross-session message, and the one pin record traced showed
+> exactly that, not a command body. So "90 % misfires" and the 65-refusal
+> "opened by a command" class are a classification of this run, not a measured
+> rate or an established cause.
+
 | pin-setting turn (last real) | immediate turn | pin → reply | refusals | reading |
 |---|---|---|---:|---|
 | none — session opened by a command | task notification | en → de | 52 | misfire |

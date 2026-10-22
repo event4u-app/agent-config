@@ -56,8 +56,12 @@ have no such bias.
 **What the reading says.** A typical session starts two subagents within ten
 seconds and three within a minute. The p90 session starts five within a minute,
 and the worst session starts ten. In short windows, bursts are small compared
-with the open counts the guard sees. So most of the pressure comes from
-dispatches that stay open, not from many spawns in a few seconds.
+with the open counts the guard sees. So the open counts are not explained by
+short bursts; whether they are dispatches that stay open or records whose stop
+never arrived, this data cannot tell, because both read as open until the
+reaper. (Corrected 2026-10-22, release finding `f4e315c3fb4e`: this read "most
+of the pressure comes from dispatches that stay open", a cause the upper bound
+above does not support.)
 
 ## Ledger re-starts — a pointer for step 1.4, not an observation
 

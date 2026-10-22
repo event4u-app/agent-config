@@ -65,7 +65,7 @@ Read that verdict honestly: arm A is already at the ceiling, so this reading sho
 
 ## Limits
 
-- **Sample size.** 20/20 bounds the true per-trial failure rate below roughly 14% at 95% confidence (rule of three: 3/20). Both arms carry that same bound, so any difference smaller than that is invisible here.
+- **Sample size.** 20/20 bounds the true per-trial failure rate below roughly 14% at 95% confidence (one-sided exact bound, 1 − 0.05^(1/20) ≈ 13.9%; corrected 2026-10-22, release finding `37490179b70e` — this read "rule of three: 3/20", which is a different method and gives 15%). Both arms carry that same bound, so any difference smaller than that is invisible here.
 - **One model, one host version** (`claude-sonnet-5-5` via Claude Code 2.1.304). No second provider was run.
 - **Delivery differs from production.** The line is prepended to the user prompt, not delivered as hook `additionalContext` beside a real tool result. The tokens sit in the prompt text, not in a tool result.
 - **Single sample per cell**, no repeats; the model's sampling noise per cell is not measured.

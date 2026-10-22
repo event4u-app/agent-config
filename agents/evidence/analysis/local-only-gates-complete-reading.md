@@ -537,6 +537,18 @@ checked after it: all twenty exit 0 and leave the tree clean, and none calls
 2026-10-15 re-reading recorded, so the window reaches one gate further to
 `lint_model_tier_coverage`.
 
+> **Correction, 2026-10-22 (release finding `e88d5329c9a1`).** "Exit 0" is
+> not "clean" for `lint_hook_concern_budget`. Without `--strict` it is
+> warn-only by design (`hard_fail = DEFAULT_HARD_FAIL || strict`,
+> `src/scripts/lint_hook_concern_budget.ts`), and it printed three `error:`
+> lines here — `block-no-verify`, `block-kernel-rule-writes` and
+> `block-plumbing-writes` are `fail_closed` but not in
+> `hooks.concern_budget.tier1_concerns` — while exiting 0; re-run on
+> 2026-10-22 it still does. The step wired here
+> (`standing-payload-delta.yml`, no `--strict`) therefore records those
+> findings and cannot fail on them. Counting it `wire` with no caveat
+> overstated what the step enforces.
+
 | Gate | Argv | Exit | Seconds |
 |---|---|---|---|
 | `lint_command_flow_coverage` | `--quiet` | 0 | 0.24 |
@@ -803,8 +815,10 @@ backlog with its class written down". That is done here.
 
 **Nothing was declared and no number moved by this.** All three are still
 counted by `check_ci_local_parity`, `local_only:` still holds seven entries, and
-the parity baseline falls by five — the five gates that gained a caller — not by
-eight.
+the parity baseline falls by one — `lint_motion_authority_drift`, the one gate
+that gained a caller — from 23 to 22. (Corrected 2026-10-22, release finding
+`9f8399a273fa`: this read "falls by five — the five gates that gained a caller
+— not by eight", written before CI moved four of the five to `machine`.)
 
 ### What 2.2 leaves, and what closes with it
 
@@ -822,6 +836,9 @@ and `sync_pr_branch`.
 it reads generated tool directories a checkout and CI answer differently.
 
 AC-2 is therefore met: every `wire`-class gate has a pull-request caller, and
-the parity baseline is lower by the count that gained one. Step 2.2 closes with
+the parity baseline is lower by the count that gained one. That reading depends
+on the `machine` class as recorded in this drain — seven of the fourteen were
+moved there in this section — so it is a statement about the classification,
+not a count of gates CI now runs. Step 2.2 closes with
 it. The sentence this section replaces said the opposite, and it is corrected
 rather than deleted — it was true of 2.2f's tree.
