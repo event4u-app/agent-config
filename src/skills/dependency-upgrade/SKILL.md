@@ -199,7 +199,7 @@ When upgrading multiple packages:
 
 For security patches:
 
-- **Prioritize** — security upgrades should be fast-tracked.
+- **Prioritize** — fast-track security upgrades.
 - **Check `composer audit`** / `npm audit` regularly.
 - **Patch versions** (e.g., 2.1.3 → 2.1.4) are usually safe to apply immediately.
 - **Still run tests** — even security patches can break things.
@@ -211,7 +211,7 @@ Before adding a **new** dependency (not just upgrading), run a security audit:
 ### Composer (PHP)
 
 ```bash
-# Check for known vulnerabilities in current dependencies
+# Known vulnerabilities in installed packages
 composer audit
 
 # After adding a new package, re-check
@@ -251,7 +251,7 @@ When `composer require` or `npm install` fails with conflicts:
 
 ## Post-update malware & behavior audit
 
-CVE scanning (above) catches *known-vulnerable* versions. It does **not** catch a **compromised update**: a trusted package with a legitimate history ships a normal-looking version bump that quietly adds data-exfiltration or other harmful behavior. This is how the biggest supply-chain attacks landed — event-stream (wallet stealer as a new transitive dep), ua-parser-js (`preinstall` miner + credential stealer), @solana/web3.js (key exfil hidden inside expected network calls), chalk/debug + 16 (browser crypto-drainer, 2B weekly downloads), the self-propagating Shai-Hulud worm (added a `.github/workflows` + secret-scanning `postinstall`), xz-utils (backdoor in the released tarball, not the git repo). Routine updates slip through because the version looks normal and install runs scripts across the whole transitive tree silently — this is the exact [`lethal-trifecta-guard`](../../rules/lethal-trifecta-guard.md) egress shape.
+CVE scanning (above) catches *known-vulnerable* versions. It does **not** catch a **compromised update**: a trusted package with a legitimate history ships a normal-looking version bump that quietly adds data-exfiltration or other harmful behavior. This is how the biggest supply-chain attacks landed — event-stream (wallet stealer as a new transitive dep), ua-parser-js (`preinstall` miner + credential stealer), @solana/web3.js (key exfil hidden inside expected network calls), chalk/debug + 16 (browser crypto-drainer), the self-propagating Shai-Hulud worm (added a `.github/workflows` + secret-scanning `postinstall`), xz-utils (backdoor in the released tarball, not the git repo). Routine updates slip through because the version looks normal and install runs scripts across the whole transitive tree silently — this is the exact [`lethal-trifecta-guard`](../../rules/lethal-trifecta-guard.md) egress shape.
 
 **Run this audit during/after any add or upgrade, then surface findings to the user and hold pending confirmation** (per [`active-remediation`](../../rules/active-remediation.md) — a live supply-chain risk is surfaced, never silently accepted):
 
@@ -343,7 +343,7 @@ source that reported it.
 - Don't upgrade multiple major versions at once — one major version per upgrade cycle.
 - The model tends to skip reading the CHANGELOG — breaking changes hide in minor releases too.
 - Always run the full test suite after upgrading, not just the affected tests.
-- Lock file conflicts after upgrade are expected — resolve by re-running the package manager's update (`composer update`, `npm update`, `poetry update`).
+- Lock file conflicts after upgrade are expected — re-run the package manager's update (`composer update`, `npm update`, `poetry update`).
 
 ## Do NOT
 
