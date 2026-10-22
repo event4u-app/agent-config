@@ -29,14 +29,14 @@
       "10": 69.127,
       "20": 75.904
     },
-    "false_activation_at_k": 14.821,
-    "context_cost_tokens": 230.9,
+    "false_activation_at_k": 14.774,
+    "context_cost_tokens": 231,
     "token_target_met": true,
     "benefit_unconditional": 60.392,
     "benefit_conditional_on_activation": 80.847,
     "adjudicated_deliveries": 496,
-    "unadjudicated_deliveries": 5554,
-    "tie_decided_cut_pp": 80.915
+    "unadjudicated_deliveries": 5564,
+    "tie_decided_cut_pp": 80.945
   },
   "set_compatibility": {
     "shared_prompts": 15,
@@ -145,7 +145,7 @@
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "cases": 1305,
-    "prompts": 1289
+    "cases": 1307,
+    "prompts": 1291
   }
 }
