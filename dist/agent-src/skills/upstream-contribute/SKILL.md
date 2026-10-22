@@ -9,7 +9,7 @@ scope:
 execution:
   type: assisted
   handler: internal
-  allowed_tools: ["Bash(./agent-config:*)"]
+  allowed_tools: ["Bash(./agent-config proposal:check:*)", "Bash(./agent-config self-repair:release:*)", "Bash(./agent-config doctor:*)"]
 workspaces:
   - agent-config-maintainer
 packs:
@@ -58,7 +58,7 @@ A SECOND ROUTE WOULD BE A SECOND SET OF GUARANTEES.
 payload floor over every object it pushes, the may-not-modify deny list, the
 route ladder (pull request, then issue, then a local record) and an approval
 bound to the digest of the exact bytes. The per-turn Hard-Floor word is the
-person's: `--approve <digest>` IS the confirmation. A checkbox in a skill
+person's: they run `--approve <digest>` themselves. A checkbox in a skill
 carries none of them, which is why this skill asks a *worth it* question and
 nothing else.
 
@@ -241,9 +241,11 @@ Outside a checkout the package CI runs after the issue or pull request exists.
 ./agent-config self-repair:release <fingerprint> --approve <digest>
 ```
 
-Running that command IS the user's word, and it is a Hard-Floor action under
-`non-destructive-by-default`. No autonomy setting, standing instruction or
-earlier consent substitutes for it.
+The user runs that command; the agent prints it and never runs the `--approve`
+form itself. The digest only proves the bytes are unchanged since the dry run —
+it is not consent, and the agent can read it as easily as the user. Sending is
+a Hard-Floor action under `non-destructive-by-default`. No autonomy setting,
+standing instruction or earlier consent substitutes for it.
 
 A byte changed since the dry run voids the approval. The ladder picks the
 vehicle: a pull request only when the release runs from a checkout of this
