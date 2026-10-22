@@ -10,7 +10,8 @@
  *
  * DETERMINISTIC BY EXCLUSION, NOT BY CHANCE. A receipt, lock or install log is
  * never read: each carries an install time. The scratch root is replaced by
- * `<HOME>` before a hook command is recorded, and the host's own version is not
+ * `<HOME>` and the measured checkout by `<PACKAGE_ROOT>` before a hook command
+ * is recorded, and the host's own version is not
  * read, because it belongs to the machine and not to the commit. What remains is
  * a function of the package tree, so two runs at one commit are byte-equal.
  *
@@ -96,7 +97,7 @@ export function readRuleLayer(host: string, scope: LayerFixture['scope'], dir: s
     };
 }
 
-export function readHookCommands(home: string): string[] {
+export function readHookCommands(home: string, packageRoot?: string): string[] {
     const settings = path.join(home, '.claude', 'settings.json');
     if (!fs.existsSync(settings)) return [];
     const parsed = JSON.parse(fs.readFileSync(settings, 'utf-8')) as {
@@ -107,7 +108,9 @@ export function readHookCommands(home: string): string[] {
         for (const group of parsed.hooks?.[event] ?? []) {
             for (const h of group.hooks ?? []) {
                 if (typeof h.command !== 'string') continue;
-                out.push(`${event}${group.matcher ? ` [${group.matcher}]` : ''}: ${h.command.split(home).join('<HOME>')}`);
+                let command = h.command.split(home).join('<HOME>');
+                if (packageRoot !== undefined) command = command.split(packageRoot).join('<PACKAGE_ROOT>');
+                out.push(`${event}${group.matcher ? ` [${group.matcher}]` : ''}: ${command}`);
             }
         }
     }
@@ -158,7 +161,7 @@ export function measureHost(host: string, packageRoot: string, version: string):
         const installed = readRuleLayer(host, 'installed', path.join(home, rel), `<HOME>/${rel}`);
         const machine = readMachineEvidence(packageRoot, { HOME: home, EVENT4U_CONFIG_HOME: env['EVENT4U_CONFIG_HOME'] });
         const form = decideLayerForm(withMachineEvidence(gatherShippedEvidence(packageRoot, version)(host), machine));
-        return { host, installed, hookCommands: readHookCommands(home), form };
+        return { host, installed, hookCommands: readHookCommands(home, packageRoot), form };
     } finally {
         fs.rmSync(scratch, { recursive: true, force: true });
     }
@@ -190,8 +193,9 @@ export function renderBaseline(b: Baseline): string {
         '`./scripts-run src/scripts/layer_baseline_report`. Every row below names that commit.',
         '',
         'Excluded so that two runs at one commit are byte-equal: the install receipt, lock and',
-        'log (each carries an install time), the scratch root (recorded as `<HOME>`), and the',
-        "host's own version (a property of the machine, not of the commit).",
+        'log (each carries an install time), the scratch root (recorded as `<HOME>`), the',
+        'measured checkout (recorded as `<PACKAGE_ROOT>`), and the host\'s own version (a',
+        'property of the machine, not of the commit).',
         '',
         '| host | scope | dir | files | bytes | full | stub | file-set digest | resolved form |',
         '|---|---|---|---|---|---|---|---|---|',
