@@ -67,7 +67,10 @@ export const RECORD_DIRNAME = 'codex-resident-set';
 export const POLICY_REL = path.join('agents', 'openai.yaml');
 
 /**
- * The host's documented skills-context budget, in characters.
+ * The skills-context budget assumed for this host, in characters. Not a
+ * documented figure: it is the census's fallback for a context window it cannot
+ * read, so a host with a larger window fits more and this unlists more than it
+ * has to — the safe direction, never the exact one.
  *
  * Mirrors `CODEX_UNKNOWN_WINDOW_BUDGET_CHARS` in `report_skill_host_census.ts`
  * rather than importing it, because that module is a CLI whose main-guard fires
@@ -88,7 +91,8 @@ export interface CodexCatalogueEntry {
 /** A behaviour this model had to pin down that the host states as prose. */
 export interface CodexResidentAssumption {
     id: 'entry-cost-is-name-plus-description' | 'per-entry-overhead' | 'fill-order-alphabetical';
-    provenance: 'upstream-prose' | 'first-party-observation';
+    /** `estimate`: a number this package chose because nothing states one. */
+    provenance: 'upstream-prose' | 'first-party-observation' | 'estimate';
     why: string;
 }
 
@@ -114,7 +118,7 @@ const ASSUMPTIONS: readonly CodexResidentAssumption[] = [
     },
     {
         id: 'per-entry-overhead',
-        provenance: 'upstream-prose',
+        provenance: 'estimate',
         why:
             'Each entry also costs separators and a newline. The host quantifies none of it, so ' +
             'the default here is 5 characters per entry and the resulting resident set is therefore ' +

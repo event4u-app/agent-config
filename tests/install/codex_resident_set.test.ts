@@ -86,7 +86,8 @@ describe('codex resident set — the split', () => {
     it('names the per-entry overhead as an assumption, not a measurement', () => {
         const r = computeCodexResidentSet([]);
         const overhead = r.assumptions.find((a) => a.id === 'per-entry-overhead');
-        expect(overhead?.provenance).toBe('upstream-prose');
+        // The host states no overhead at all, so the 5 is this package's estimate.
+        expect(overhead?.provenance).toBe('estimate');
         const order = r.assumptions.find((a) => a.id === 'fill-order-alphabetical');
         expect(order?.provenance).toBe('first-party-observation');
     });
