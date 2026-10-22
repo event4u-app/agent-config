@@ -328,6 +328,13 @@ describe('detector C by edited-path class — road-to-agent-throughput-recovery 
         expect(editPathClass([])).toBe('unknown');
     });
 
+    it('with the session root known, only root-level agents/ and docs/ markdown is docs', () => {
+        expect(editPathClass(['/repo/agents/x.md', 'docs/a.md'], '/repo')).toBe('docs-md');
+        for (const p of ['/repo/src/agents/x.md', '/repo/node_modules/pkg/docs/y.md', '/repo/tests/fixtures/docs/z.md', '/elsewhere/docs/a.md', 'src/agents/x.md']) {
+            expect(editPathClass([p], '/repo'), p).toBe('code');
+        }
+    });
+
     it('splits every C fire into exactly one class, and the rows sum to the fires', () => {
         writeSession('aaaaaaaa-1', [
             userEntry('write the roadmap'),

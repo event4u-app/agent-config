@@ -221,11 +221,23 @@ export const EDIT_PATH_CLASSES = ['docs-md', 'code', 'mixed', 'unknown'] as cons
 export type EditPathClass = (typeof EDIT_PATH_CLASSES)[number];
 
 const _DOCS_MD_RE = /(?:^|\/)(?:agents|docs)\/.*\.md$/i;
+const _ROOT_DOCS_MD_RE = /^(?:agents|docs)\/.*\.md$/i;
 
-/** `docs-md` when every edited path is `agents/**` or `docs/**` markdown. */
-export function editPathClass(paths: readonly string[]): EditPathClass {
+/**
+ * `docs-md` when every edited path is `agents/**` or `docs/**` markdown at the
+ * repository root. With the session's `root` known an absolute path is judged
+ * relative to it, so `src/agents/x.md` or `node_modules/p/docs/y.md` is not
+ * docs; without it the segment match is the only reading available.
+ */
+export function editPathClass(paths: readonly string[], root?: string): EditPathClass {
     if (paths.length === 0) return 'unknown';
-    const docs = paths.filter((p) => _DOCS_MD_RE.test(p)).length;
+    const isDocs = (p: string): boolean => {
+        if (root === undefined) return _DOCS_MD_RE.test(p);
+        const prefix = root.endsWith('/') ? root : `${root}/`;
+        if (p.startsWith('/')) return p.startsWith(prefix) && _ROOT_DOCS_MD_RE.test(p.slice(prefix.length));
+        return _ROOT_DOCS_MD_RE.test(p);
+    };
+    const docs = paths.filter(isDocs).length;
     if (docs === paths.length) return 'docs-md';
     return docs === 0 ? 'code' : 'mixed';
 }
@@ -335,6 +347,9 @@ export function measure(store: string, limit: number): Counts {
         // trade taken: the closing reply the two instruments score stays
         // identical, which is the property the rest of this script rests on.
         let pendingTexts: string[] = [];
+        // The session's working directory as the transcript records it — the
+        // root `editPathClass` judges an absolute edited path against.
+        let sessionRoot: string | undefined;
         // Per-SESSION, because that is the only ordinal a reader can use to find
         // the turn again. `c.turns` is the corpus-wide running total, and
         // labelling it "turn" in a per-session pointer sends the reader to the
@@ -359,6 +374,7 @@ export function measure(store: string, limit: number): Counts {
                     pendingCalls
                         .filter((call) => _EDIT_TOOL_NAMES.has(call.name) && call.path !== undefined)
                         .map((call) => call.path as string),
+                    sessionRoot,
                 );
                 c.unverified_by_path_class[cls] += 1;
                 c.unverified_sites.push({ session: sessionId, turn: sessionTurn, path_class: cls });
@@ -403,6 +419,7 @@ export function measure(store: string, limit: number): Counts {
             } catch {
                 continue;
             }
+            if (sessionRoot === undefined && typeof entry['cwd'] === 'string' && entry['cwd'] !== '') sessionRoot = entry['cwd'];
 
             const u = _userTurnText(entry);
             if (u !== null) {
