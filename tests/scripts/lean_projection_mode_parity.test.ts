@@ -20,7 +20,7 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { _reset_template_defaults_cache } from '../../src/scripts/_lib/agent_settings.js';
-import { leanProjectionModeRaw } from '../../src/scripts/_lib/hook_settings.js';
+import { _lean_projection_settings_for as gateDeliveryHosts } from '../../src/scripts/check_rule_projection_integrity.js';
 import {
     resolveLeanProjection,
     type ResolvedLeanProjection,
@@ -116,11 +116,11 @@ describe('resolveLeanProjection — no settings layer moves the answer (ADR-293)
         write(root, ['agents', 'settings', '.agent-settings.yml'],
             'lean_projection:\n  mode: eager-all\n');
         expect(resolve(root).mode).toBe('delivery');
-        // `leanProjectionModeRaw` is the OTHER reader — the one two CLI gates
-        // still use. It opens `<root>/.agent-settings.yml` and nothing else, so
-        // it finds nothing here, exactly as before. Pinned so the two readers
-        // cannot quietly start disagreeing again.
-        expect(leanProjectionModeRaw(root)).toBe('');
+        // The CLI gates used to keep their own reader of this key. It is gone
+        // (finding 3b0993429472); the gate's delivery set comes from the same
+        // record, so with no record under `root` it has no delivery host, and
+        // the settings file written above does not give it one.
+        expect(gateDeliveryHosts(root).hosts).toEqual([]);
     });
 
     it('the LEGACY root file no longer moves it', () => {

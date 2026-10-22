@@ -28,7 +28,11 @@ import {
 } from '../../src/scripts/condense.js';
 import { is_thin_entry, thin_entry } from '../../src/scripts/project_thin_rules.js';
 import { thinnedTreeFindings } from '../../src/scripts/check_rule_projection_integrity.js';
-import { compareTrees, parityScopeNotice } from '../../src/scripts/check_host_tree_parity.js';
+import {
+    compareTrees,
+    generateParityFixtures,
+    parityScopeNotice,
+} from '../../src/scripts/check_host_tree_parity.js';
 
 const RULES = ['alpha-rule.md', 'beta-rule.md'] as const;
 
@@ -404,5 +408,36 @@ describe('1.4 — the parity gate never reports a vacuous comparison as a pass',
 
     it('an empty delivery set leaves all three subjects', () => {
         expect(parityScopeNotice([])).toBeNull();
+    });
+});
+
+// Finding 3b0993429472 (17.0.0 review): the parity gate seeded its two fixtures
+// with `lean_projection.*` settings and read its delivery set from the same key.
+// ADR-293 removed the key and `condense` stopped reading it, so both fixtures
+// projected the full form and the gate compared two eager-all trees — a pass
+// with no subject. The thinning fixture is now driven by the package-owned
+// record, and a leftover settings value moves nothing.
+describe('the parity gate drives its fixtures from the form record, never from settings (ADR-293)', () => {
+    it('the thinning fixture actually thins the delivery host', () => {
+        const root = path.join(tmp, 'src-root');
+        seed(root, 'lean_projection:\n  mode: eager-all\n  hosts: [cursor]\n');
+        seedForm(root, { 'claude-code': 'delivery' });
+        const fx = generateParityFixtures(root, path.join(tmp, 'parity'));
+        expect(fx.configured).toEqual(['claude-code']);
+        const eager = treeContents(fx.eagerRoot, path.join('.claude', 'rules'));
+        const thinned = treeContents(fx.testRoot, path.join('.claude', 'rules'));
+        expect(Object.keys(thinned).sort()).toEqual([...RULES].sort());
+        for (const name of RULES) {
+            expect(is_thin_entry(thinned[name] ?? '')).toBe(true);
+            expect(is_thin_entry(eager[name] ?? '')).toBe(false);
+        }
+        expect(compareTrees(fx.eagerRoot, fx.testRoot, fx.configured)).toEqual([]);
+    });
+
+    it('a tree with no form record has no delivery host, whatever its settings say', () => {
+        const root = path.join(tmp, 'no-record');
+        seed(root, 'lean_projection:\n  mode: delivery\n  hosts: [cursor, cline]\n');
+        const fx = generateParityFixtures(root, path.join(tmp, 'parity-none'));
+        expect(fx.configured).toEqual([]);
     });
 });
