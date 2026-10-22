@@ -137,11 +137,12 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   `PROVIDER_KEY_FILE` (`_lib/environment_detector.ts`).
   verify: adding a provider is one edit; a partial entry fails all three lookups together.
   Done 2026-10-22 (commit 09507c1510): `PROVIDER_TABLE` and `providerRow` in `_lib/environment_detector.ts`; tests › one provider table.
-- [ ] **2.2 `base_url` member** for OpenAI-compatible routes. Billing class `free-quota` only
+- [x] **2.2 `base_url` member** for OpenAI-compatible routes. Billing class `free-quota` only <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_cli/detection_report.ts -->
   with proof (keyless endpoint or documented free tier, dated URL), else `per-token` inside
   the USD gate; any 402 is `policy_unproven_cost`, never a silent paid fallback.
   verify: config test — undeclared proof yields `per-token`; `council:status` names route + class.
-- [ ] **2.3 Ship endpoints, discover models.** The package ships provider base URLs and dated
+  Done 2026-10-22 (commits d0d9dd44af, b64e3ef140): `free_route_member.test.ts` › `undeclared proof yields per-token`, `council:status output names route + class`, `HTTP 402 resolves to policy_unproven_cost and is n…`; `docs/contracts/ai-council-config.md` describes route members.
+- [x] **2.3 Ship endpoints, discover models.** The package ships provider base URLs and dated <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/continuity-surface.json -->
   data-use attestations only; model ids are discovered live from the route's `/models`, probed
   once, and written to gitignored runtime state next to `council-probes.json`. No model id is
   committed (K3). The attestation also records whether the route's terms permit use inside a
@@ -151,12 +152,14 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   `road-to-a-tier-the-dispatch-carries` T9.)
   verify: offline, the roster reports `unknown`, never a cached list; a route whose attestation
   lacks the distribution field is refused as a consumer default.
-- [ ] **2.4 Identity derived, not declared (D5).** Family comes from the served id; a free route
+  Done 2026-10-22 (commit e750d31083): `free_route_catalog.test.ts` › `offline, the roster reports unknown, never…` and `a route whose attestation lacks the distribution…`. No shipped row carries a dated attestation yet, so no route is a consumer default today — a recorded empty, not a filled table.
+- [x] **2.4 Identity derived, not declared (D5).** Family comes from the served id; a free route <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_route.ts -->
   answering with `model_served ≠ requested` is absent with `policy_model_mismatch` (paid
   aliases keep today's attribution-only behaviour). Random/auto routers are refused at config
   time (K2).
   verify: a stub route answering with another family's id is absent with that reason.
-- [ ] **2.5 A loopback self-hosted route** (owner turn 2026-10-22: paid *or self-hosted* models
+  Done 2026-10-22 (commit 996fd9aa4e): `free_route_identity.test.ts` › `a stub route answering with another family's id is absent with pol…`; random/auto routers refused at config time.
+- [x] **2.5 A loopback self-hosted route** (owner turn 2026-10-22: paid *or self-hosted* models <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_route.ts -->
   repair and finish; read as a *hand*, decision A8). Not a free route, so blocker
   `free-route-admission` does not gate it. Loopback is a precondition, never the proof (A7,
   K12): billing class `self-hosted` may carry `project-content` only after a per-model probe
@@ -165,30 +168,35 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   verify: a loopback stub whose probe reports local weights admits a `project-content`
   payload; the same stub reporting a remote model, and on a non-loopback address, both refuse
   it with `policy_content_ceiling`.
+  Done 2026-10-22 (commits d0d9dd44af, 15d021b4a2): `self_hosted_route.test.ts`, six cases including the three in the verify line. The production probe is `UNPROVEN_PROBE`, so a self-hosted route carries `public-artifact` only until a real per-model probe ships — fail-closed by construction. No self-hosted server runs on the maintainer's host to build that probe against; listed as residue in the PR.
 
 ## Phase 3 — The worker contract (rung 0.5, free hands)
 
-- [ ] **3.1 Typed task kinds.** `ask_transport --kind <k>` with a closed set: `classify`,
+- [x] **3.1 Typed task kinds.** `ask_transport --kind <k>` with a closed set: `classify`, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/hand_kinds.ts -->
   `extract`, `summarise-given-text`, `draft-candidate`, `test-candidates`,
   `finding-proposal`. Each kind has a JSON output schema; a return that does not parse is a
   failed call, not a partial answer.
   verify: schema-invalid stub output exits 3 and is logged.
-- [ ] **3.2 Route chooser replaces `members[0]` (D3).** Inputs: task kind, declared content
+  Done 2026-10-22 (commit 550ac29e61): `ask_transport_hand_kinds.test.ts` › `schema-invalid stub output exits 3 and is logged`.
+- [x] **3.2 Route chooser replaces `members[0]` (D3).** Inputs: task kind, declared content <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/route_chooser.ts -->
   class, route ceiling, remaining quota, liveness. Order: admissible free route → paid fallback
   → honest ∅. Head-only kinds (plan, decide, chair, final review, anything that writes) never
   reach the chooser.
   verify: table test over kind × class × quota; a `project-content` payload never lands on a
   `public-artifact` route.
-- [ ] **3.3 The head verifies every hand.** The return enters the existing verify budget; the
+  Done 2026-10-22 (commits 177c6a89eb, dde028435e): `route_chooser.test.ts` — 75-row kind × class × quota table, `a project-content payload never lands on a public-artifact route, even when it is the only one`; `askOnce` picks through `chooseRoute`.
+- [x] **3.3 The head verifies every hand.** The return enters the existing verify budget; the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/hand_kinds.ts -->
   orchestration record carries `route_billing` and `verified: pass|fail|skipped`, plus the
   head's own tokens spent verifying it. A `skipped` verify on a free return counts as an
   escalation for Phase 6. A hand's return is untrusted data in the sense of
   `untrusted-input-defense` — never an instruction, never acted on before the head's verify.
   verify: orchestration-line validation rejects a free-route line without `verified`.
-- [ ] **3.4 The delegation nudge names the free rung** when the slice matches a kind in 3.1 and
+  Done 2026-10-22 (commit 619b597a8e): `hand_verification.test.ts` › `rejects an unpaid-route line without verified`; a typed return is recorded `untrusted: true` and `skipped` until the head runs `orchestration_record --verified`.
+- [x] **3.4 The delegation nudge names the free rung** when the slice matches a kind in 3.1 and <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/delegation_nudge_hook.ts -->
   a route is admissible; it never auto-spawns.
   verify: a nudge fixture for a `classify` slice names the free rung and dispatches nothing.
-- [ ] **3.5 Hands see fragments, never the project.** (Owner rationale, 2026-10-22, twice: no
+  Done 2026-10-22 (commits 7857d7fd86, 0358a034ab): `delegation_nudge_free_rung.test.ts` › `a classify slice with an admissible route names the free rung and dispatches nothing`; the hook asks `free_rung.freeRouteAvailable` against the user-global council config, read lazily, without pulling the council loader into the hook bundle.
+- [x] **3.5 Hands see fragments, never the project.** (Owner rationale, 2026-10-22, twice: no <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/hand_payload.ts -->
   single free provider learns the whole project; and "only what is needed — the function to
   build, not what exists".) A hand's payload is the slice the head cut — the specification of
   the function to build plus the signatures it must call, never their implementations, repo
@@ -198,27 +206,32 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   scope before send.
   verify: the outbound payload of a call containing the project name carries its placeholder
   instead, and a payload fixture carries no implementation body of a called function.
-- [ ] **3.6 An exposure ledger per route.** Gitignored runtime state counts distinct project
+  Done 2026-10-22 (commit 3064cf4394): `hand_payload.test.ts` › `carries no implementation body of a called function`, `a call whose slice names the project sends its placeholder instead`; sabotage of the replacement turned 2 tests red.
+- [x] **3.6 An exposure ledger per route.** Gitignored runtime state counts distinct project <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/continuity-surface.json -->
   files and symbols each route has seen; the chooser prefers the least-exposed admissible route
   and refuses a route past a share cap (default 20 % of tracked files, decision A4). This raises
   reconstruction cost; it never substitutes for the content ceiling or K4.
   verify: a seeded multi-route test leaves no route above the configured cap.
+  Done 2026-10-22 (commit 34a1ca4623): `exposure_ledger.test.ts` › `leaves no route above the cap` (3 routes, 100 files, 90 calls, 60 served); cap is the constant 0.2. Open question carried to the PR: the cap applies to paid routes too.
 
 ## Phase 4 — Council: free proposers and jurors, paid chair
 
-- [ ] **4.1 Free seats as proposer and juror only** (ADR-257). Chair, synthesis and verdict stay
+- [x] **4.1 Free seats as proposer and juror only** (ADR-257). Chair, synthesis and verdict stay <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/chairman.ts -->
   on paid seats; `seat_policy` refuses a free seat in those roles with a named reason. Jurors
   answer in parallel and blind — no juror sees another's answer before synthesis.
   verify: a `seat_policy` test refuses a free seat as chair with a named reason, and a juror
   prompt fixture contains no other juror's answer.
-- [ ] **4.2 Panel size capped at five judges** (S3: ≈ 90 % of achievable independence at five);
+  Done 2026-10-22 (commits 78f7126f48, 2bc7ce4980): `seat_policy_and_ceiling.test.ts` refuses a free seat as chair with a named reason; chair candidates carry route billing.
+- [x] **4.2 Panel size capped at five judges** (S3: ≈ 90 % of achievable independence at five); <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/chairman.ts -->
   prefer different architectures over more seats.
   verify: a config with six judges is refused with the cap as the reason.
-- [ ] **4.3 Independence measured (D6).** Next to κ, compute pairwise error φ and Kish
+  Done 2026-10-22 (commit 78f7126f48): a six-judge config is refused with the cap as the reason.
+- [x] **4.3 Independence measured (D6).** Next to κ, compute pairwise error φ and Kish <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/chairman.ts -->
   n_eff = k / (1 + (k−1)·φ̄) on the same run; pre-register `free-jury-effective-independence`
   (bar: n_eff/k ≥ 0.5) before any run. The κ claim's bar is unchanged; n_eff is reported, not
   substituted.
   verify: a synthetic perfectly-correlated panel yields n_eff = 1.
+  Done 2026-10-22 (commits 78f7126f48, 25df57a814): `jury_aggregate.test.ts` — a perfectly correlated panel yields n_eff = 1; `free-jury-effective-independence` pre-registered.
 
 ## Phase 5 — Liveness and quota (gateway M9, D7)
 
@@ -240,13 +253,14 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 
 ## Phase 6 — Measure, then flip
 
-- [ ] **6.1 Billing axis (D10) and two pre-registered claims before any free call:**
+- [x] **6.1 Billing axis (D10) and two pre-registered claims before any free call:** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/dispatch-economy-metrics.json -->
   `free-hands-limit-relief` — paid billable tokens avoided per week on rung 0.5, **minus the
   head's verification tokens from 3.3**; `free-hands-quality-held` — escalation + verify-fail
   rate of free-routed asks ≤ paid-routed asks + 5 pp, and below the registered 0.3 kill.
   Underpowered means neither claim is backed.
   verify: both claim rows exist in `docs/CLAIMS.md` with bars before the first free call, and
   `check_claims` is green.
+  Done 2026-10-22 (commits 449f03cff0, 25df57a814): both claims in `docs/CLAIMS.md` with bars, `check_claims` exit 0; the ask line now writes `route_billing` and `verify_tokens` (3.3), so the axis has a source.
 - [ ] **6.2 Shadow:** a free route answers in parallel, the paid answer is used, both are
   verified; the call budget recorded in decision A5, public-artifact corpus first.
   verify: the shadow ledger shows a free and a paid answer with a verify result for every call.
@@ -256,9 +270,10 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 
 ## Phase 7 — Breadth for consumers
 
-- [ ] **7.1 `llm-provider-knowledge` gains a free-tier class:** docs roots, data-use page,
+- [x] **7.1 `llm-provider-knowledge` gains a free-tier class:** docs roots, data-use page, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/skill-body-budget.json -->
   region caveat — no model ids, no limits copied. Answers "set up a free LLM API" for consumers.
   verify: the skill's linter passes and the skill names no model id.
+  Done 2026-10-22 (commit f89826b92a): skill linter 1 pass, 0 fail; no model id named. The skill-body budget moved 7,434 → 8,465 with its raise entry.
 
 ## Kill register
 
@@ -329,10 +344,16 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 An undeclared payload is refused by a `public-artifact` seat (1.1).
-- [ ] AC-2 Bare `hf_` / `nvapi-` / `r8_` are masked 50/50 (1.2).
+- [x] AC-1 An undeclared payload is refused by a `public-artifact` seat (1.1).
+  Done 2026-10-22: 1.1, `ec9df20078`.
+- [x] AC-2 Bare `hf_` / `nvapi-` / `r8_` are masked 50/50 (1.2).
+  Done 2026-10-22: 1.2, `06777113cc`, `9725442e47`.
 - [ ] AC-3 A free route serves a typed rung-0.5 call, chosen by kind, class and quota (3.2).
-- [ ] AC-4 No free route holds a head role (4.1, K1).
-- [ ] AC-5 n_eff is reported beside κ on every jury run (4.3).
+  Built 2026-10-22, open: served end to end by a loopback stub through `askOnce` → `chooseRoute` (3.2). No free route is configured on the maintainer's host — adding one needs an account or key outside this run — so no live free call has been served.
+- [x] AC-4 No free route holds a head role (4.1, K1).
+  Done 2026-10-22: 4.1, `seat_policy_and_ceiling.test.ts`.
+- [x] AC-5 n_eff is reported beside κ on every jury run (4.3).
+  Done 2026-10-22: 4.3, `jury_aggregate.test.ts`.
 - [ ] AC-6 Both Phase 6 claims are filed before the first free call, and limit relief is reported net of verification tokens; every flip cites them.
-- [ ] AC-7 The canary's uniform zero is classified before Phase 5 is designed (0.1).
+- [x] AC-7 The canary's uniform zero is classified before Phase 5 is designed (0.1).
+  Done 2026-10-22: 0.1, `15d00c9420`, before Phase 5 was designed.
