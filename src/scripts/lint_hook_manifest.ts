@@ -878,8 +878,9 @@ function _check_no_concern_rewrites(manifest: YamlObject, errors: string[]): voi
 /**
  * The execution view is granted by the dispatcher's closed list, never
  * requested. Refused: a concern declaring `payload_view: execution` off the
- * list, a blocking concern the list omits (it would be served tokens instead
- * of the value it guards), and a listed concern that is not blocking.
+ * list, a concern that can refuse a call (blocking, `effect: permission` or
+ * `fail_closed: true`) the list omits (it would be served tokens instead of
+ * the value it guards), and a listed concern that is not blocking.
  */
 function _check_execution_view_grants(manifest: YamlObject, errors: string[]): void {
   const concernsRaw = manifest["concerns"];
@@ -901,6 +902,11 @@ function _check_execution_view_grants(manifest: YamlObject, errors: string[]): v
       errors.push(
         `concerns.${name}: execution-view-not-granted — severity: blocking but missing from ` +
           `EXECUTION_VIEW_GRANTS; under protect it would be served placeholder tokens instead of the values it guards`,
+      );
+    } else if (!granted && (spec["effect"] === "permission" || spec["fail_closed"] === true)) {
+      errors.push(
+        `concerns.${name}: execution-view-not-granted — can refuse a call (effect: permission or fail_closed: true) ` +
+          `but is missing from EXECUTION_VIEW_GRANTS; it would decide on placeholder tokens`,
       );
     } else if (granted && !blocking) {
       errors.push(

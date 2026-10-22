@@ -29,8 +29,11 @@
  * every sentence is written in `_lib/update_notice.ts` or read from the
  * CHANGELOG of the package already installed.
  *
- * It is fail-open on every path and returns 0 on every path, including an
- * unreadable state file, an unwritable state directory and a missing changelog.
+ * It is fail-open on every path: it returns 0 on every path that says nothing,
+ * including an unreadable state file, an unwritable state directory and a
+ * missing changelog, and returns the dispatcher's warn code with one warn
+ * record on stdout when it has a notice, so the line reaches the session
+ * context instead of an unread stderr.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -251,6 +254,19 @@ function packageRootOf(): string {
     return path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 }
 
+/** Dispatcher-internal warn: emitFor turns it into host exit 0 plus additionalContext. */
+const EXIT_WARN = 2;
+
+/**
+ * A host spawns this concern with both streams piped, so a TTY test would
+ * silence it in the one context it exists for (17.0.0 finding 12d039c88b71).
+ * A session envelope is the interactive signal here: it names a session a
+ * person is in. Without one, the TTY test still decides.
+ */
+export function hookIsInteractive(sessionId: string | null, isTty: boolean): boolean {
+    return isTty || sessionId !== null;
+}
+
 export function main(argv?: string[]): number {
     void argv;
     const raw = readHookStdin();
@@ -258,28 +274,34 @@ export function main(argv?: string[]): number {
     try {
         const packageRoot = packageRootOf();
         const mode = readUpdateMode();
+        const sessionId = sessionIdFromEnvelope(raw);
+        const lines: string[] = [];
         // The throttle stamp is a WRITE, so it comes after the decision that
         // this context may be written in at all — AC-2 asks for zero writes
-        // under CI, a non-TTY, a source checkout and the opt-out.
+        // under CI, a non-interactive run, a source checkout and the opt-out.
         const deps: NoticeDeps = {
             packageRoot,
-            sessionId: sessionIdFromEnvelope(raw),
+            sessionId,
             env: process.env,
-            isTty: Boolean(process.stderr.isTTY) || Boolean(process.stdout.isTTY),
+            isTty: hookIsInteractive(sessionId, Boolean(process.stderr.isTTY) || Boolean(process.stdout.isTTY)),
             mode,
             probeStatePath: user_global_paths.resolve_with_fallback(STATE_FILENAME),
             noticeStatePath: user_global_paths.write_target(NOTICE_STATE_FILENAME),
             throttlePath: user_global_paths.write_target(NOTICE_THROTTLE_FILENAME),
             registerDir: global_register_dir(),
-            err: process.stderr,
+            err: { write: (text: string) => void lines.push(text) },
         };
         noticeOncePerDay(deps);
-        return 0;
+        const text = lines.join('').trimEnd();
+        if (text === '') return 0;
+        // stderr at exit 0 is not a channel a session_start host injects; the
+        // dispatcher's warn record on stdout is (additionalContext).
+        process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: text, additional_context: text })}\n`);
+        return EXIT_WARN;
     } catch {
         return 0;
     }
 }
-
 
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {

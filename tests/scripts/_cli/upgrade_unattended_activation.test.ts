@@ -14,7 +14,12 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { activation_blocked_reason } from '../../../src/scripts/_cli/upgrade_unattended.js';
+import {
+    PROVENANCE_TRUST_ROOT_PINNED,
+    TRUST_ROOT_BLOCKED,
+    activation_blocked_reason,
+    live_session_blocked_reason,
+} from '../../../src/scripts/_cli/upgrade_unattended.js';
 import { iso_now, write_record } from '../../../src/scripts/_lib/session_register.js';
 
 let home: string;
@@ -41,22 +46,22 @@ function record(session_id: string, worktree: string, last_seen: string) {
     };
 }
 
-describe('activation_blocked_reason', () => {
+describe('live_session_blocked_reason', () => {
     it('returns null when no session is registered anywhere on the machine', () => {
-        expect(activation_blocked_reason({ EVENT4U_CONFIG_HOME: home })).toBeNull();
+        expect(live_session_blocked_reason({ EVENT4U_CONFIG_HOME: home })).toBeNull();
     });
 
     it('returns null when the only records have aged past their TTL', () => {
         fs.mkdirSync(dir, { recursive: true });
         const old = new Date(Date.now() - 48 * 3600 * 1000);
         write_record(dir, record('stale', '/repo/a', iso_now(old)));
-        expect(activation_blocked_reason({ EVENT4U_CONFIG_HOME: home })).toBeNull();
+        expect(live_session_blocked_reason({ EVENT4U_CONFIG_HOME: home })).toBeNull();
     });
 
     it('refuses while a session is live, naming the hooks it would break', () => {
         fs.mkdirSync(dir, { recursive: true });
         write_record(dir, record('live-one', '/repo/a', iso_now()));
-        const reason = activation_blocked_reason({ EVENT4U_CONFIG_HOME: home });
+        const reason = live_session_blocked_reason({ EVENT4U_CONFIG_HOME: home });
         expect(reason).not.toBeNull();
         expect(reason).toMatch(/running session/i);
     });
@@ -64,14 +69,33 @@ describe('activation_blocked_reason', () => {
     it('refuses for a session registered from a DIFFERENT repository', () => {
         fs.mkdirSync(dir, { recursive: true });
         write_record(dir, record('peer', '/an/unrelated/checkout', iso_now()));
-        expect(activation_blocked_reason({ EVENT4U_CONFIG_HOME: home })).not.toBeNull();
+        expect(live_session_blocked_reason({ EVENT4U_CONFIG_HOME: home })).not.toBeNull();
     });
 
     it('stops refusing once the live record is removed', () => {
         fs.mkdirSync(dir, { recursive: true });
         write_record(dir, record('live-one', '/repo/a', iso_now()));
-        expect(activation_blocked_reason({ EVENT4U_CONFIG_HOME: home })).not.toBeNull();
+        expect(live_session_blocked_reason({ EVENT4U_CONFIG_HOME: home })).not.toBeNull();
         fs.rmSync(path.join(dir, 'live-one.json'));
-        expect(activation_blocked_reason({ EVENT4U_CONFIG_HOME: home })).toBeNull();
+        expect(live_session_blocked_reason({ EVENT4U_CONFIG_HOME: home })).toBeNull();
+    });
+});
+
+describe('activation_blocked_reason — the production gate (release 17 review 42b65fb8e62b / 5366bd270efc)', () => {
+    it('the shipped build has no pinned provenance trust root', () => {
+        expect(PROVENANCE_TRUST_ROOT_PINNED).toBe(false);
+    });
+
+    it('refuses with no session live, because the provenance check has no trust root', () => {
+        const reason = activation_blocked_reason({ EVENT4U_CONFIG_HOME: home });
+        expect(reason).toBe(TRUST_ROOT_BLOCKED);
+        expect(reason).toMatch(/trust root/i);
+    });
+
+    it('once a trust root is pinned, defers to the live-session register in both directions', () => {
+        expect(activation_blocked_reason({ EVENT4U_CONFIG_HOME: home }, true)).toBeNull();
+        fs.mkdirSync(dir, { recursive: true });
+        write_record(dir, record('live-one', '/repo/a', iso_now()));
+        expect(activation_blocked_reason({ EVENT4U_CONFIG_HOME: home }, true)).toMatch(/running session/i);
     });
 });

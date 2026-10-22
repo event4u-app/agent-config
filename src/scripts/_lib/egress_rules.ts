@@ -98,6 +98,20 @@ export function looksLikeSecretValue(value: string): boolean {
     return shannonEntropy(value) >= GENERIC_MIN_ENTROPY;
 }
 
+// A value closed by its own quote on the same line is one value, whitespace and
+// all (groups 1 and 2); anything else keeps the old whitespace-free run (group
+// 3). Capturing only the first run of `password = "Tr0ub4dorXyz9 correct horse"`
+// sent the rest of the credential on (council, 2026-10-22, finding 39ef3dba582a).
+const GENERIC_VALUE = `(?:"([^"\\n]*)"|'([^'\\n]*)'|['"]?([^'"\\s]{8,})['"]?)`;
+
+// A quoted value is a secret when it is secret-shaped as a whole or any of its
+// words is: the trigger is the same word the old row examined, or a later one,
+// and the span is the whole quoted value either way.
+function genericValueIsSecret(value: string, group: number | 'whole-match'): boolean {
+    if (looksLikeSecretValue(value)) return true;
+    return group !== 3 && value.split(/\s+/).some(looksLikeSecretValue);
+}
+
 /**
  * The keyword names a credential assignment is spelled with (`password =`,
  * `api_key:`). They carry no vendor literal, so each consumer reads the ones it
@@ -351,12 +365,12 @@ export const EGRESS_RULES: readonly EgressRule[] = [
         pattern: assignmentPattern(
             {
                 keywords: ['password', 'passwd', 'pwd', 'secret', 'apiKey', 'accessToken', 'authToken'],
-                value: `['"]?([^'"\\s]{8,})['"]?`,
+                value: GENERIC_VALUE,
             },
             'dgi',
         ),
-        valueGroup: 1,
-        validator: looksLikeSecretValue,
+        valueGroup: [1, 2, 3],
+        validator: genericValueIsSecret,
     },
 ];
 

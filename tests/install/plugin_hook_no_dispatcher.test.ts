@@ -8,7 +8,7 @@
 // plugin's hooks only. The managed settings.json block carries the byte-same
 // command (dedupe depends on it), and its no-dispatcher branch stays silent:
 // that carrier is Phase 3's, where silence on a full layer is the decided
-// behaviour.
+// behaviour. PreToolUse refuses on both carriers (finding c72572abf2e4).
 
 import { spawnSync } from 'node:child_process';
 import { closeSync, mkdtempSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -82,12 +82,26 @@ describe('plugin hook command — no dispatcher reachable', () => {
         for (const guard of ['block-no-verify', 'block-kernel-rule-writes', 'block-plumbing-writes']) {
             expect(outLines[0]).toContain(guard);
         }
+        expect(outLines[0]).toContain('every tool call is refused');
     });
 
-    it('a non-SessionStart event prints the stderr line only — no context line per tool call', () => {
-        const res = run('PreToolUse', path.join(ws, 'plugin'));
+    it('a non-SessionStart, non-PreToolUse event prints the stderr line only — no context line', () => {
+        const res = run('Stop', path.join(ws, 'plugin'));
         expect(res.status).toBe(0);
         expect(res.stderr.split('\n').filter((l) => l !== '')).toHaveLength(1);
+        expect(res.stdout).toBe('');
+    });
+
+    // 17.0.0 finding c72572abf2e4: the plugin carrier used to exit 0 here, so the
+    // fail_closed guards were off on a plugin-only install. It now refuses like
+    // the settings carrier, with one stderr line and no context line.
+    it('PreToolUse refuses on the plugin carrier too — the fail_closed guards cannot run', () => {
+        const res = run('PreToolUse', path.join(ws, 'plugin'));
+        expect(res.status).toBe(2);
+        const errLines = res.stderr.split('\n').filter((l) => l !== '');
+        expect(errLines).toHaveLength(1);
+        expect(errLines[0]).toContain('so this tool call is refused');
+        expect(errLines[0]).toContain('disable the agent-config plugin');
         expect(res.stdout).toBe('');
     });
 

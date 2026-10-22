@@ -53,9 +53,11 @@ agent-config doctor             # PATH, hook wiring, duplicate surfaces, bridge 
 release would pass the unattended gates — at least 72 h old, not deprecated,
 an `engines.node` this machine satisfies, an npm provenance attestation, and no
 release in range that needs consumer action. Without `--dry-run` it still
-installs nothing today: swapping a global install under a running session
-breaks that session's hooks, and nothing yet can tell whether a session is
-running. `agent-config upgrade --skip <version>` keeps one release out of every
+installs nothing today: the provenance check verifies the attestation's
+signature against the certificate the bundle carries, but not who issued that
+certificate (no pinned Sigstore/Fulcio trust root), so it cannot tell a real
+attestation from a forged one. Unattended installs stay off until that root is
+pinned; after that, a running session on the machine still blocks the swap. `agent-config upgrade --skip <version>` keeps one release out of every
 unattended run. In a project that pins `agent_config_version`,
 `agent-config update --check` lists what lies between the pin and latest; it
 never moves the pin.

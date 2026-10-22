@@ -617,7 +617,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `decision_engine.ask_timeout_seconds` | C | `30` | how long a fired gate waits before falling back | derivable — the same non-interactive probe: where nobody can answer there is nothing to wait for |
 | `update_check.enabled` | C | `true` | a background safety check; disabling it pins the user to known-vulnerable code | consent |
 | `advisories.mode` | C | `notify` | a notice at every first session start of a day; turning it on for an install that never asked is a flip the agent may not make | consent |
-| `advisories.egress` | C | `query` | decides which package names and versions leave the machine on a refresh | policy |
+| `advisories.egress` | C | `none` | decides which package names and versions leave the machine on a refresh | policy |
 | `advisories.kev` | C | `on` | decides whether a refresh reads the CISA known-exploited catalog that raises a tier | policy |
 | `update.mode` | C | `notify` | a standing authorisation to replace the user's global install; `auto` is something they cannot un-see happening | consent |
 | `worktrees.cleanup` | C | `notify` | a standing authorisation to delete worktree directories on the proven-merged set; `auto` removes them unasked (ADR-295) | consent |

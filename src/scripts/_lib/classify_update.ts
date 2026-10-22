@@ -42,8 +42,15 @@ export interface ClassifyUpdateInput {
     readonly engines: unknown;
     readonly publishedAt: string | null;
     readonly deprecated: unknown;
-    /** True only when the registry document carried a provenance attestation. */
+    /** True only when the registry document carried a provenance attestation — a PRESENCE reading. */
     readonly provenance: boolean | null;
+    /**
+     * True only when the attestation is checked against a pinned trust root
+     * (Sigstore/Fulcio) before anything installs. Without it the attestation
+     * and the impact map are both the candidate publisher's own assertions,
+     * so absent or `false` never resolves to `auto`.
+     */
+    readonly provenanceTrustRoot?: boolean;
     readonly settings: {
         readonly mode?: UpdateMode | undefined;
         readonly projectPin?: string | null;
@@ -84,6 +91,27 @@ function read_impact_range(map: unknown, installed: string, candidate: string): 
         security = security || (entry as Record<string, unknown>)['security'] === true;
     }
     return { forged: null, worst, security };
+}
+
+/**
+ * The majors crossed by `(installed, candidate]` whose `M.0.0` release the map
+ * holds no entry for.
+ *
+ * The map says nothing about a release it omits, so an omitted MAJOR is an
+ * unknown, never a declared no-impact: a breaking release whose impact was
+ * never recorded must not install by itself. The producer records every
+ * major, `none` included (`consumer_impact.with_release_impact`), so a real
+ * no-action major is present and only an unrecorded one lands here.
+ */
+function unrecorded_majors(map: Record<string, unknown>, installed: string, candidate: string): number[] {
+    const from = parse_version(installed);
+    const to = parse_version(candidate);
+    if (from === null || to === null) return [];
+    const missing: number[] = [];
+    for (let major = from.major + 1; major <= to.major; major++) {
+        if (!Object.prototype.hasOwnProperty.call(map, `${major}.0.0`)) missing.push(major);
+    }
+    return missing;
 }
 
 /**
@@ -157,7 +185,15 @@ export function classifyUpdate(input: ClassifyUpdateInput): UpdateVerdict {
     const notify: string[] = [];
     if (range?.worst === 'notice') notify.push('a release in range carries a notice');
     if (security) notify.push('security fix in range');
+    if (range !== null && range.forged === null) {
+        for (const major of unrecorded_majors(input.impactMap as Record<string, unknown>, input.installed, input.candidate)) {
+            uncertain.push(`impact of major ${major} is not recorded`);
+        }
+    }
     if (input.provenance !== true) uncertain.push('provenance attestation missing');
+    else if (input.provenanceTrustRoot !== true) {
+        uncertain.push('provenance is not checked against a trust root, so the publisher-supplied attestation and impact map cannot authorize an install');
+    }
     if (input.settings.projectPin) uncertain.push(`project pins ${input.settings.projectPin}`);
     else if (input.origin === 'project-pin') uncertain.push('install is pinned by the project');
     if (input.origin === 'unknown') uncertain.push('install origin unknown');

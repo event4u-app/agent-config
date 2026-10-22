@@ -35,5 +35,5 @@ export const LINEARITY: Readonly<Record<string, string>> = {
     'db-connection-uri':
         'One attempt per scheme-character run: the lookbehind admits a start only at the run boundary, and the lookahead-plus-backreference consumes the run up to its first word-boundary letter atomically. Every such start in one run reaches the same :// at the same run end, so the first one matches whenever any later one would, and nothing the unbounded scheme matched is lost. The userinfo classes exclude : and /, so each userinfo run is read by one attempt per side.',
     'generic-assignment':
-        'Starts only at a keyword; the whitespace runs end at the first non-space and the value run at the first quote or space, and a match moves the global scan past the value, so no character is read by more than one successful attempt and a failed attempt stops at the first character after the whitespace.',
+        'Starts only at a keyword; the whitespace runs end at the first non-space; the three value alternatives are anchored at the same position, a quoted one ends at its own quote or the line end and the bare one at the first quote or space, so none can backtrack into another; a match moves the global scan past the value, so no character is read by more than one successful attempt and a failed attempt stops within the line after the whitespace.',
 };

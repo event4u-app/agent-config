@@ -122,13 +122,13 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
         // runs the dispatcher as a child so a missing verdict can be refused
         // (see _pre_tool_use_exit_guard).
         //
-        // With no dispatcher, PreToolUse refuses (exit 2) on the settings
-        // carrier (finding bb6ab0f5f37d): every fail_closed guard would
+        // With no dispatcher, PreToolUse refuses (exit 2) on both carriers
+        // (findings bb6ab0f5f37d, c72572abf2e4): every fail_closed guard would
         // otherwise pass silently, which an upgrade swap was measured doing
-        // 487 times in 4,190 invocations. The plugin carrier keeps the warning
-        // and exit 0 — a plugin-only install has no package to enforce with,
-        // and the session-start context line names the guards that are off
-        // (council 2026-10-21). Every other event stays exit 0.
+        // 487 times in 4,190 invocations. A plugin-only install has no package
+        // to enforce with, so it refuses until one is installed; the 17.0.0
+        // release council ruled a fail-open plugin carrier unshippable. Every
+        // other event stays exit 0.
         // NOTE: the CLI fallback carries MANAGED_SIGNATURE — keep it, or
         // previously installed managed entries orphan on refresh.
         const dispatchArgs =
@@ -156,8 +156,8 @@ export const NO_DISPATCHER_STDERR =
 
 export const NO_DISPATCHER_CONTEXT =
     'agent-config hooks are NOT running in this session: the plugin found no dispatcher, so no ' +
-    'concern runs, the fail_closed guards block-no-verify, block-kernel-rule-writes and ' +
-    'block-plumbing-writes included.';
+    'concern runs and every tool call is refused until one is installed, because the fail_closed guards ' +
+    'block-no-verify, block-kernel-rule-writes and block-plumbing-writes cannot run.';
 
 /**
  * The no-dispatcher branch, keyed on CLAUDE_PLUGIN_ROOT — set by the host for
@@ -170,6 +170,8 @@ export const NO_DISPATCHER_CONTEXT =
  * because commandHead() splits on the last `;`.
  */
 function _no_dispatcher_notice(native: string): string {
+    // PreToolUse refuses instead, and its refusal line carries the same facts.
+    if (native === 'PreToolUse') return '';
     const context = native === 'SessionStart' ? ` echo '${NO_DISPATCHER_CONTEXT}';` : '';
     return `[ -n "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_STDERR}' >&2;${context} }; `;
 }
@@ -178,16 +180,17 @@ export const NO_DISPATCHER_REFUSAL =
     'agent-config: no hook dispatcher reachable, so this tool call is refused: the fail_closed guards ' +
     'block-no-verify, block-kernel-rule-writes and block-plumbing-writes cannot run. Repair in a terminal: ' +
     'npm i -g @event4u/agent-config then npx -y @event4u/agent-config init. To drop the hooks instead: ' +
-    'agent-config uninstall, or delete the agent-config entries from ~/.claude/settings.json.';
+    'agent-config uninstall, delete the agent-config entries from ~/.claude/settings.json, or disable the ' +
+    'agent-config plugin.';
 
 /**
- * How the no-dispatcher branch ends. PreToolUse on the settings carrier
- * refuses; the plugin carrier and every other event exit 0. Single-quoted
- * literal like the notices: no `'`, no `;`.
+ * How the no-dispatcher branch ends. PreToolUse refuses on both carriers;
+ * every other event exits 0. Single-quoted literal like the notices: no `'`,
+ * no `;`.
  */
 function _no_dispatcher_exit(native: string): string {
     if (native !== 'PreToolUse') return 'exit 0;';
-    return `[ -z "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_REFUSAL}' >&2; exit 2; }; exit 0;`;
+    return `echo '${NO_DISPATCHER_REFUSAL}' >&2; exit 2;`;
 }
 
 export const DISPATCHER_FAILED_REFUSAL =

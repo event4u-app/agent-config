@@ -19,6 +19,17 @@ features keep the schema intact.
 **Status.** Internal-locked. Changes require a contract version bump and
 a revision entry in the consuming roadmap.
 
+**What a council run sends to its members.** Every member is a third-party
+model provider. Credentials the rule table detects are replaced with
+placeholders before any member call, in every mode. Personal identifiers are
+not: the table has no identifier rows, so e-mail addresses, phone numbers and IBANs in a
+council prompt are sent to every member unreplaced, under every
+`egress.placeholders.mode`, including `protect` and `strict`. Whether
+identifiers are replaced by default once rows exist is the owner's decision D8.
+Keep personal data out of a council question, or write it as a placeholder
+yourself. Detail and evidence: `docs/contracts/egress-placeholders-v1.md`
+§ council channel.
+
 ## File location
 
 The council is configured **once per user**, not per project. The config

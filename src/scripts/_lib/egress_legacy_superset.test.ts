@@ -13,7 +13,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { CLASS_SPELLED_PREFIXES, CREDENTIAL_PREFIXES, EGRESS_RULES } from './egress_rules.js';
+import { CLASS_SPELLED_PREFIXES, CREDENTIAL_PREFIXES, detect, EGRESS_RULES, looksLikeSecretValue } from './egress_rules.js';
 import { FUZZY, scan as workspaceScan, scrub as workspaceScrub } from './workspace_secrets.js';
 import { redact_low_impact_entry } from '../ai_council/redact_low_impact_entry.js';
 import { REDACTION_PATTERNS as memoryRedactions } from '../check_memory.js';
@@ -200,8 +200,28 @@ const ASSIGN_INPUTS: readonly string[] = KEYWORDS.flatMap((k) =>
 );
 
 describe('legacy superset: the shapes with no vendor literal (2.7)', () => {
+    // The generic row left its frozen spelling on purpose: the frozen shape kept
+    // only the first word of a quoted multi-word credential (council 2026-10-22,
+    // 39ef3dba582a). It is held to the frozen BEHAVIOUR instead, and every span
+    // the frozen shape produced must still be covered.
+    it('the generic row covers every span its frozen spelling produced', () => {
+        const row = EGRESS_RULES.find((r) => r.rule === 'generic-assignment');
+        expect(row).toBeDefined();
+        const corpus = [...ASSIGN_INPUTS, ...ASSIGN_VALUES.map((v) => `password = "${v} two words"`)];
+        const lost: string[] = [];
+        for (const t of corpus) {
+            const spans = detect(t, row === undefined ? [] : [row]);
+            for (const m of t.matchAll(new RegExp(OLD_SHAPES.rowGeneric.source, OLD_SHAPES.rowGeneric.flags))) {
+                const [start, end] = m.indices?.[1] ?? [0, 0];
+                if (!looksLikeSecretValue(t.slice(start, end))) continue;
+                if (!spans.some((sp) => sp.start <= start && end <= sp.end)) lost.push(t);
+            }
+        }
+        expect(corpus.length).toBeGreaterThan(0);
+        expect(lost).toEqual([]);
+    });
+
     it('the exposed regexes are the frozen spellings, byte for byte', () => {
-        sameRegex(EGRESS_RULES.find((r) => r.rule === 'generic-assignment')?.pattern, OLD_SHAPES.rowGeneric);
         sameRegex(FUZZY.find(([name]) => name === 'kv_secret')?.[1], OLD_SHAPES.workspaceFuzzy);
         sameRegex(memoryRedactions.find(([, label]) => label === 'inline credential')?.[0], OLD_SHAPES.memory);
         sameRegex(fencePatterns.find((p) => p.id === 'secret-literal')?.pattern, OLD_SHAPES.fences);

@@ -32,6 +32,7 @@ import {
     renderFinder,
 } from '../../src/scripts/_lib/codex_skill_finder.js';
 
+import { recordDeployedSkills } from '../_lib/codex_inventory.js';
 const tmp: string[] = [];
 const savedEnv = process.env['EVENT4U_CONFIG_HOME'];
 afterEach(() => {
@@ -149,7 +150,10 @@ describe('the finder entry — installed with the resident set', () => {
         const home = scratch();
         process.env['EVENT4U_CONFIG_HOME'] = path.join(home, '.event4u', 'agent-config');
         const codex = path.join(home, '.codex', 'skills');
-        for (let i = 0; i < 120; i++) writeSkill(codex, `skill-${String(i).padStart(3, '0')}`, 'd'.repeat(150));
+        const names = Array.from({ length: 120 }, (_, i) => `skill-${String(i).padStart(3, '0')}`);
+        for (const n of names) writeSkill(codex, n, 'd'.repeat(150));
+        // A package deploy records what it wrote; the resident set only touches those.
+        recordDeployedSkills(home, 'codex', '~/.codex/', names);
         return home;
     }
 

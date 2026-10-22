@@ -12,8 +12,8 @@ description: >-
 
 This plugin is a **bootstrap shim** kept so the marketplace listing stays
 discoverable. Its hooks run only alongside a global npm install of the package (never a project-local one) —
-on a plugin-only install no hook runs, so the `fail_closed` guards (`block-no-verify`, `block-kernel-rule-writes`,
-`block-plumbing-writes`) are **off**; the session start says so once. Content ships as a file projection.
+on a plugin-only install no hook runs and every tool call is **refused**, because the `fail_closed` guards (`block-no-verify`,
+`block-kernel-rule-writes`, `block-plumbing-writes`) cannot run. Content ships as a file projection.
 
 ## Install (canonical, one command)
 

@@ -248,8 +248,14 @@ describe('release impact map', () => {
         ).toEqual({ impact: 'notice', security: true });
     });
 
-    it('omits a release whose span is none throughout', () => {
-        expect(with_release_impact({}, '2.0.0', [c(''), c('Consumer-Impact: none')])).toEqual({});
+    it('omits a non-major release whose span is none throughout', () => {
+        expect(with_release_impact({}, '2.1.0', [c(''), c('Consumer-Impact: none')])).toEqual({});
+    });
+
+    it('records a major even when its span is none, so absence can mean unrecorded', () => {
+        expect(with_release_impact({}, '2.0.0', [c(''), c('Consumer-Impact: none')])).toEqual({
+            '2.0.0': { impact: 'none' },
+        });
     });
 
     it('keeps earlier entries and adds the new non-none one', () => {

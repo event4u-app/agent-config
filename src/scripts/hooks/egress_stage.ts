@@ -419,6 +419,44 @@ export function attributeRefusal(concernName: string, refused: boolean, text: st
   return refused && text.startsWith(WITHHELD_PREFIX) ? `${concernName}: BLOCKED — reason ${text}` : text;
 }
 
+/**
+ * What `strict` does about a credential the host cannot have replaced on the
+ * wire (council 2026-10-22, 533e105fccc9: a mode named strict must not send a
+ * detected secret silently). A prompt is refused — the host drops a refused
+ * prompt before it is sent. A tool result has already been produced, so the
+ * user is told, prominently, that it went to the provider. Types only, never a
+ * value.
+ */
+export interface StrictVerdict {
+  readonly kind: "refuse" | "disclose";
+  readonly message: string;
+}
+
+export function strictEgressVerdict(event: string, result: EgressStageResult): StrictVerdict | null {
+  if (result.mode !== "strict" || isEnvKillSwitchActive(EGRESS_STAGE_KILL_SWITCH)) return null;
+  const typesIn = (field: EgressField): string[] => [
+    ...new Set(result.counts.filter((c) => c.field === field && c.class === "credential" && c.count > 0).map((c) => c.type)),
+  ];
+  if (event === "user_prompt_submit") {
+    const types = typesIn("prompt");
+    if (types.length === 0) return null;
+    return {
+      kind: "refuse",
+      message:
+        `egress strict: the prompt was not sent — it carries a credential (${types.join(", ")}). ` +
+        "Remove the value and resubmit; reference it by name instead.",
+    };
+  }
+  const types = typesIn("result");
+  if (types.length === 0) return null;
+  return {
+    kind: "disclose",
+    message:
+      `egress strict: a tool result carried a credential (${types.join(", ")}) that this host cannot withhold, ` +
+      "so it reached the model provider. Treat it as exposed and rotate it.",
+  };
+}
+
 export type PublishedState = "asserted" | "replaced" | "gated" | "uncovered";
 
 /**

@@ -380,11 +380,18 @@ read that fails, is `protect` — never a silent `off`.
 | `off` | no | no | no |
 | `observe` | yes | no — every concern sees exactly what it saw without the stage | no |
 | `protect` | yes | yes, to every concern off the grant list | no, until the host rewrite is built |
-| `strict` | yes | as `protect` | no, until the host rewrite is built |
+| `strict` | yes | as `protect` | no, until the host rewrite is built — but a detected credential is never sent silently (below) |
 
-`strict` differs from `protect` only once the host rewrite and the prompt gate
-exist; until then the two behave identically, and that is stated rather than
-implied by the name. `observe` never changes a view.
+`strict` never sends a credential it detected without saying so (council
+2026-10-22, 533e105fccc9). A prompt that carries one is **refused**: the
+dispatcher returns the host's block code on `user_prompt_submit`, and the host
+drops the prompt before it is sent. A tool result that carries one has already
+been produced and is not withheld, so the user is **told**: a `systemMessage`
+names the credential types (never a value) and says the result reached the
+provider. Program output, database rows and other tool results are therefore
+disclosed, not prevented, until the host rewrite exists
+(`tests/scripts/hooks/egress_prevention_gaps.test.ts`). `protect` does neither.
+`observe` never changes a view.
 
 A thrown kill switch (`AGENT_CONFIG_NO_EGRESS_STAGE`) turns the stage off
 whatever the settings say, and `publishedEgressState` then reports every channel

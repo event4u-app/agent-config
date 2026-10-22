@@ -11482,15 +11482,16 @@ function build_claude_hook_matrix(manifest_path2) {
   return matrix;
 }
 var NO_DISPATCHER_STDERR = "agent-config: no hook dispatcher reachable, so no agent-config hook runs in this session. Hooks need the npm package where they can reach it: npm i -g @event4u/agent-config (then npx -y @event4u/agent-config init)";
-var NO_DISPATCHER_CONTEXT = "agent-config hooks are NOT running in this session: the plugin found no dispatcher, so no concern runs, the fail_closed guards block-no-verify, block-kernel-rule-writes and block-plumbing-writes included.";
+var NO_DISPATCHER_CONTEXT = "agent-config hooks are NOT running in this session: the plugin found no dispatcher, so no concern runs and every tool call is refused until one is installed, because the fail_closed guards block-no-verify, block-kernel-rule-writes and block-plumbing-writes cannot run.";
 function _no_dispatcher_notice(native) {
+  if (native === "PreToolUse") return "";
   const context = native === "SessionStart" ? ` echo '${NO_DISPATCHER_CONTEXT}';` : "";
   return `[ -n "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_STDERR}' >&2;${context} }; `;
 }
-var NO_DISPATCHER_REFUSAL = "agent-config: no hook dispatcher reachable, so this tool call is refused: the fail_closed guards block-no-verify, block-kernel-rule-writes and block-plumbing-writes cannot run. Repair in a terminal: npm i -g @event4u/agent-config then npx -y @event4u/agent-config init. To drop the hooks instead: agent-config uninstall, or delete the agent-config entries from ~/.claude/settings.json.";
+var NO_DISPATCHER_REFUSAL = "agent-config: no hook dispatcher reachable, so this tool call is refused: the fail_closed guards block-no-verify, block-kernel-rule-writes and block-plumbing-writes cannot run. Repair in a terminal: npm i -g @event4u/agent-config then npx -y @event4u/agent-config init. To drop the hooks instead: agent-config uninstall, delete the agent-config entries from ~/.claude/settings.json, or disable the agent-config plugin.";
 function _no_dispatcher_exit(native) {
   if (native !== "PreToolUse") return "exit 0;";
-  return `[ -z "$CLAUDE_PLUGIN_ROOT" ] && { echo '${NO_DISPATCHER_REFUSAL}' >&2; exit 2; }; exit 0;`;
+  return `echo '${NO_DISPATCHER_REFUSAL}' >&2; exit 2;`;
 }
 var DISPATCHER_FAILED_REFUSAL = "agent-config: the hook dispatcher did not return a verdict, so this tool call is refused: the fail_closed guards could not decide. If an agent-config upgrade is running, retry once it has finished.";
 function _pre_tool_use_exit_guard() {
@@ -11808,6 +11809,32 @@ function codexSkillRoots(home) {
     (a) => fs21.existsSync(path20.join(a, "skills"))
   );
 }
+var CODEX_ROOT_TOOL_IDS = ["codex", "antigravity"];
+function realOrResolved(p) {
+  try {
+    return fs21.realpathSync(p);
+  } catch {
+    return path20.resolve(p);
+  }
+}
+function inventoryOwnedSkills(anchor, home, inventory = load_inventory()) {
+  const out = /* @__PURE__ */ new Set();
+  const tools = inventory["tools"] ?? {};
+  const want = realOrResolved(anchor);
+  for (const id of CODEX_ROOT_TOOL_IDS) {
+    const entry = tools[id];
+    if (!entry || typeof entry.anchor !== "string" || !Array.isArray(entry.files)) continue;
+    const raw = entry.anchor;
+    const expanded = raw === "~" ? home : raw.startsWith("~/") ? path20.join(home, raw.slice(2)) : raw;
+    if (realOrResolved(expanded) !== want) continue;
+    for (const rel of entry.files) {
+      if (typeof rel !== "string") continue;
+      const m = /^skills\/([^/]+)\/SKILL\.md$/.exec(rel.split(path20.sep).join("/"));
+      if (m) out.add(m[1]);
+    }
+  }
+  return out;
+}
 function ownedCatalogue(skillsDir, owned) {
   const out = [];
   for (const name of owned) {
@@ -11899,21 +11926,30 @@ function applyCodexResidentSet(home, report) {
   try {
     const roots = codexSkillRoots(home);
     if (roots.length === 0) return;
+    const inventory = load_inventory();
+    const listedHere = (skillsDir) => fs21.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs21.existsSync(path20.join(skillsDir, d.name, "SKILL.md"))).map((d) => d.name);
+    const ownedIn = new Map(roots.map((a) => [a, inventoryOwnedSkills(a, home, inventory)]));
     const firstRootOf = /* @__PURE__ */ new Map();
     const catalogue = [];
+    let foreignCost = 0;
     for (const anchor of roots) {
       const skillsDir = path20.join(anchor, "skills");
-      const owned = fs21.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs21.existsSync(path20.join(skillsDir, d.name, "SKILL.md"))).map((d) => d.name);
-      for (const e of ownedCatalogue(skillsDir, owned)) {
+      const owned = ownedIn.get(anchor);
+      const here = listedHere(skillsDir);
+      for (const e of ownedCatalogue(skillsDir, here.filter((n) => !owned.has(n)))) {
+        foreignCost += e.name.length + e.descriptionChars + DEFAULT_PER_ENTRY_OVERHEAD_CHARS;
+      }
+      for (const e of ownedCatalogue(skillsDir, here.filter((n) => owned.has(n)))) {
         if (firstRootOf.has(e.name)) continue;
         firstRootOf.set(e.name, anchor);
         catalogue.push(e);
       }
     }
     const finderCost = FINDER_NAME.length + finderDescription(catalogue.length).length + DEFAULT_PER_ENTRY_OVERHEAD_CHARS;
-    let split = computeCodexResidentSet(catalogue);
+    const available = Math.max(0, CODEX_BUDGET_CHARS - foreignCost);
+    let split = computeCodexResidentSet(catalogue, { budgetChars: available });
     if (split.nonResident.length > 0) {
-      split = computeCodexResidentSet(catalogue, { budgetChars: CODEX_BUDGET_CHARS - finderCost });
+      split = computeCodexResidentSet(catalogue, { budgetChars: Math.max(0, available - finderCost) });
     }
     const resident = new Set(split.resident);
     const finder = ensureCodexFinder(
@@ -11926,8 +11962,8 @@ function applyCodexResidentSet(home, report) {
     let reenabled = 0;
     let foreign = 0;
     for (const anchor of roots) {
-      const skillsDir = path20.join(anchor, "skills");
-      const here = fs21.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory() && d.name !== FINDER_NAME && fs21.existsSync(path20.join(skillsDir, d.name, "SKILL.md"))).map((d) => d.name);
+      const owned = ownedIn.get(anchor);
+      const here = listedHere(path20.join(anchor, "skills")).filter((n) => owned.has(n));
       const nonResident = unlistAllowed ? here.filter((n) => !resident.has(n) || firstRootOf.get(n) !== anchor) : [];
       const res = ensureCodexResidentSet(anchor, recordPath(anchor), nonResident);
       disabled += res.disabled.length;
@@ -13081,8 +13117,8 @@ function ruleFileArrives(sourcePath, scope) {
   if (!sourcePath.endsWith(".md")) {
     return true;
   }
-  const basename9 = path25.basename(sourcePath);
-  if (COMPAT_ALWAYS_EXCLUDED.includes(basename9)) {
+  const basename10 = path25.basename(sourcePath);
+  if (COMPAT_ALWAYS_EXCLUDED.includes(basename10)) {
     return false;
   }
   return rule_in_scope(sourcePath, scope.workspaces, scope.packs, scope.roles ?? null);
@@ -14274,16 +14310,64 @@ function snapshotStampedLayer(rulesDir, dest) {
     fs35.writeFileSync(path34.join(dest, name), text);
   }
 }
+var LOCK_DIRNAME = ".install.lock";
+var LOCK_STALE_MS = 10 * 60 * 1e3;
+var LOCK_WAIT_MS = 120 * 1e3;
+var LOCK_POLL_MS = 100;
+function sleepSync(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+function acquireLock(runtimeRoot, waitMs) {
+  const lock = path34.join(runtimeRoot, LOCK_DIRNAME);
+  const deadline = Date.now() + waitMs;
+  for (; ; ) {
+    try {
+      fs35.mkdirSync(lock);
+      fs35.writeFileSync(path34.join(lock, "owner"), `${process.pid}
+`);
+      return () => fs35.rmSync(lock, { recursive: true, force: true });
+    } catch (e) {
+      if (e.code !== "EEXIST") throw e;
+    }
+    try {
+      if (Date.now() - fs35.statSync(lock).mtimeMs > LOCK_STALE_MS) {
+        fs35.rmSync(lock, { recursive: true, force: true });
+        continue;
+      }
+    } catch {
+      continue;
+    }
+    if (Date.now() >= deadline) {
+      throw new Error(`stageRuntime: another install is staging the runtime (${lock}); retry once it has finished`);
+    }
+    sleepSync(LOCK_POLL_MS);
+  }
+}
 function sweepStale(runtimeRoot, keep) {
   for (const name of fs35.readdirSync(runtimeRoot)) {
-    const stale = name.startsWith("v-") && name !== keep || name.startsWith(".stage-") || name.startsWith(".current-");
+    const stale = name.startsWith("v-") && !keep.has(name) || name.startsWith(".stage-") || name.startsWith(".current-");
     if (stale) fs35.rmSync(path34.join(runtimeRoot, name), { recursive: true, force: true });
+  }
+}
+function currentTarget(current) {
+  try {
+    return path34.basename(fs35.readlinkSync(current));
+  } catch {
+    return null;
   }
 }
 function stageRuntime(opts) {
   const runtimeRoot = path34.resolve(opts.runtimeRoot);
-  const packageRoot = path34.resolve(opts.packageRoot);
   fs35.mkdirSync(runtimeRoot, { recursive: true });
+  const release = acquireLock(runtimeRoot, opts._lockWaitMs ?? LOCK_WAIT_MS);
+  try {
+    return stageLocked(opts, runtimeRoot);
+  } finally {
+    release();
+  }
+}
+function stageLocked(opts, runtimeRoot) {
+  const packageRoot = path34.resolve(opts.packageRoot);
   const version = readVersion(packageRoot);
   const nonce = `${process.pid}-${randomBytes6(4).toString("hex")}`;
   const stage = path34.join(runtimeRoot, `.stage-${nonce}`);
@@ -14305,15 +14389,18 @@ function stageRuntime(opts) {
   const versionDir = `v-${version.replace(/[^A-Za-z0-9._-]/g, "_")}-${nonce}`;
   fs35.renameSync(stage, path34.join(runtimeRoot, versionDir));
   const current = currentRuntimeDir(runtimeRoot);
+  const previous = currentTarget(current);
   const link = path34.join(runtimeRoot, `.current-${nonce}`);
   if (process.platform === "win32") {
     fs35.symlinkSync(path34.join(runtimeRoot, versionDir), link, "junction");
-    fs35.rmSync(current, { recursive: true, force: true });
+    const aside = path34.join(runtimeRoot, `.current-old-${nonce}`);
+    if (fs35.existsSync(current)) fs35.renameSync(current, aside);
+    fs35.renameSync(link, current);
   } else {
     fs35.symlinkSync(versionDir, link);
+    fs35.renameSync(link, current);
   }
-  fs35.renameSync(link, current);
-  sweepStale(runtimeRoot, versionDir);
+  sweepStale(runtimeRoot, new Set(previous === null ? [versionDir] : [versionDir, previous]));
   return {
     currentDir: current,
     version,
@@ -19115,7 +19202,7 @@ var settingsSchema = external_exports.object({
   egress: external_exports.object({
     placeholders: external_exports.object({
       mode: external_exports.enum(["off", "observe", "protect", "strict"]).default("off").describe(
-        "Dispatcher egress stage (docs/contracts/egress-placeholders-v1.md). off (default) = nothing. observe = detect and count listed values in prompts and tool bodies, types and counts only, and change nothing a hook concern sees. protect = also give every recording and advisory concern a copy with each value replaced by a placeholder token, so local stores keep tokens; guards still see the original. strict = as protect until the host rewrite exists. No mode yet changes what reaches the model; the rule table holds credential rules only. Project layers only."
+        "Dispatcher egress stage (docs/contracts/egress-placeholders-v1.md). off (default) = nothing. observe = detect and count listed values in prompts and tool bodies, types and counts only, and change nothing a hook concern sees. protect = also give every recording and advisory concern a copy with each value replaced by a placeholder token, so local stores keep tokens; guards still see the original. strict = as protect, and a detected credential is never sent silently: a prompt carrying one is refused, and a tool result carrying one is reported to the user as sent to the provider (it cannot be withheld until the host rewrite exists). No mode yet replaces a value on the wire; the rule table holds credential rules only. Project layers only."
       )
     }).default({})
   }).default({}),
@@ -19203,13 +19290,13 @@ var settingsSchema = external_exports.object({
     mode: external_exports.enum(["off", "notify"]).default("notify").describe(
       "Whether the first session start of a day prints the advisory findings that need action today. notify (default) reads the local cache only \u2014 a session start never touches the network; off prints nothing, and agent-config audit:deps show still works."
     ),
-    egress: external_exports.enum(["none", "query"]).default("query").describe(
-      "What leaves the machine when agent-config audit:deps refresh runs. query (default) sends names and versions of public packages to api.osv.dev and reads endoflife.date and the PHP and Node release feeds; a private package name is never sent, and a native npm or composer audit, which sends the lockfile package list to the registry that tool is configured for, runs only for a lockfile with no private package. none sends nothing, and findings read unknown rather than clear."
+    egress: external_exports.enum(["none", "query"]).default("none").describe(
+      "What leaves the machine when agent-config audit:deps refresh runs. none (default, and what an absent key resolves to) sends nothing, and findings read unknown rather than clear. query is the opt-in: it sends names and versions of public packages to api.osv.dev and reads endoflife.date and the PHP and Node release feeds; a private package name is never sent, and a native npm or composer audit, which sends the lockfile package list to the registry that tool is configured for, runs only for a lockfile with no private package. The private-name check covers only the npm scope, Composer vendor and GitHub owner of the project itself, so any other private name would be sent."
     ),
     kev: external_exports.enum(["off", "on"]).default("on").describe(
       "Whether a refresh reads the CISA known-exploited catalog. on (default) downloads the whole catalog and matches it locally, so nothing about the project is sent, and a finding in it is raised one tier in a runtime scope; off leaves tiers to the other sources. Runs only where egress is query."
     )
-  }).default({ mode: "notify", egress: "query", kev: "on" }),
+  }).default({ mode: "notify", egress: "none", kev: "on" }),
   update: external_exports.object({
     mode: external_exports.enum(["off", "notify", "ask", "auto"]).default("notify").describe(
       "What the agent may do about a newer release. notify tells you and installs nothing (the default, and what an absent key resolves to); ask behaves as notify until the ring-0 exit ships a prompt; auto installs a staged release at a session start when every gate passes and no other session is live; off says nothing at all. Read from the user-global layer only \u2014 a repository cannot set how your global install updates itself."

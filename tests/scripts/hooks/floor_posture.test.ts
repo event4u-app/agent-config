@@ -4,7 +4,8 @@
  * When the trampoline reaches neither a bundle, the runtime nor the CLI it exits 0, so
  * every hook — the floor included — silently does not run. These tests pin
  * that the doctor names that state "floor not running" rather than leaving it
- * indistinguishable from a quiet session, and that it reports, never writes.
+ * indistinguishable from a quiet session, that `--strict` fails on it, and that
+ * it reports, never writes.
  */
 import * as path from 'node:path';
 
@@ -128,6 +129,19 @@ describe('floor posture — reaches the doctor', () => {
         const table = doctor._render_table(off);
         expect(table).toContain('Floor posture');
         expect(table).toContain('floor not running');
-        expect(doctor._final_exit_code(off, true)).toBe(doctor._final_exit_code(payload, true));
+    });
+
+    it('floor-not-running fails --strict, and only --strict', async () => {
+        const doctor = await import('../../../src/scripts/hooks_doctor.js');
+        const { _load_yaml } = await import('../../../src/scripts/hooks/dispatch_hook.js');
+        const manifest = _load_yaml(path.join(process.cwd(), 'src', 'scripts', 'hook_manifest.yaml'));
+        const payload = doctor.collect(process.cwd(), manifest);
+        const clean = { ...payload, platforms: [], trampolines: [], concerns: [] };
+        const off = { ...clean, floor_posture: readFloorPosture(deps({})) };
+        const on = { ...clean, floor_posture: readFloorPosture(deps({}, { onPath: ['agent-config'] })) };
+        expect(on.floor_posture.runtime).toBe('cli');
+        expect(doctor._final_exit_code(on, true)).toBe(0);
+        expect(doctor._final_exit_code(off, true)).toBe(1);
+        expect(doctor._final_exit_code(off, false)).toBe(0);
     });
 });

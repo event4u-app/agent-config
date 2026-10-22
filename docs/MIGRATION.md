@@ -93,6 +93,21 @@ used to end silently, and `uninstall --global --purge` deletes only what this
 package recorded writing rather than whole host configuration roots. The
 migration for each is in that row.
 
+Three default changes that are not breaking under the convention but change
+what you get without asking:
+
+- **MCP `suggest_skill_for_task` returns 8 rows by default, not 5**, and each
+  row now carries the skill's own description (up to 200 characters), so a
+  call without `limit` returns a larger response than in 16.x. Pass
+  `limit: 5` to keep the old row count.
+- **`advisories.egress` defaults to `none`.** `agent-config audit:deps refresh`
+  sends nothing until a project sets `advisories.egress: query`; without it,
+  findings read `unknown`. Set the key in a project that wants the online
+  check.
+- **`agent-config upgrade --unattended` installs nothing**, dry run or not,
+  until the provenance check verifies the attestation certificate against a
+  pinned Sigstore/Fulcio trust root. Upgrade with `agent-config upgrade`.
+
 ## 16.2.0 — `doctor --json` reads the forge, and `--no-forge` opts out
 
 💡 advisory · ✋ manual only if you scripted `doctor` as an offline diagnostic.

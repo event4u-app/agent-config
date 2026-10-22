@@ -175,14 +175,19 @@ export function release_impact_entry(commits: readonly ImpactCommit[]): ImpactEn
     return security ? { impact, security: true } : { impact };
 }
 
-/** Add `version`'s entry to the map; a release that is `none` throughout adds nothing. */
+/**
+ * Add `version`'s entry to the map; a non-major release that is `none`
+ * throughout adds nothing. A major (`M.0.0`) is always recorded, `none`
+ * included: `classifyUpdate` reads an absent major as UNRECORDED and refuses
+ * to auto-install across it.
+ */
 export function with_release_impact(
     map: ImpactMap,
     version: string,
     commits: readonly ImpactCommit[],
 ): ImpactMap {
     const entry = release_impact_entry(commits);
-    if (entry.impact === 'none' && !entry.security) return { ...map };
+    if (entry.impact === 'none' && !entry.security && !/^\d+\.0\.0$/.test(version)) return { ...map };
     return { ...map, [version]: entry };
 }
 

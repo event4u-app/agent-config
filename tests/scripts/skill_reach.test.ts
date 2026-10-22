@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { applyCodexResidentSet } from '../../src/scripts/_lib/codex_resident_set.js';
+import { recordDeployedSkills } from '../_lib/codex_inventory.js';
 import { FINDER_NAME } from '../../src/scripts/_lib/codex_skill_finder.js';
 import {
     checkSkillReach,
@@ -192,6 +193,12 @@ describe('second host: an unlisted skill is reached only through the finder (sec
         const saved = process.env['EVENT4U_CONFIG_HOME'];
         process.env['EVENT4U_CONFIG_HOME'] = path.join(home, '.event4u', 'agent-config');
         try {
+            recordDeployedSkills(
+                home,
+                'codex',
+                '~/.codex/',
+                Array.from({ length: 80 }, (_, i) => `s-${String(i).padStart(3, '0')}`),
+            );
             applyCodexResidentSet(home, () => undefined);
             const ok = checkSkillReach({ home, packageRoot: pkg });
             expect(ok.message).toMatch(/codex \(~\/\.codex\/skills\): installed \d+ \(described \d+ · name-only 0 · unlisted 0\)/);

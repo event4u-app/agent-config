@@ -18,6 +18,7 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { parse as parseYaml } from "yaml";
 
 import { parseTokens } from "../../../src/scripts/_lib/egress_token.js";
 import {
@@ -235,6 +236,24 @@ describe("the execution view is granted, never requested", () => {
     for (const name of ["chat-history", "journal-record", "tool-result-bytes", "rtk-wrap"]) {
       expect(egressViewFor({ name, script: "src/scripts/chat_history.ts" })).toBe("placeholder");
     }
+  });
+
+  // The reverse direction (council 2026-10-22, 8b2484eb1292): every concern the
+  // shipped manifest lets refuse a call — `severity: blocking`, `effect:
+  // permission` or `fail_closed: true` — is served the execution view for the
+  // script it actually runs, so no guard decides on placeholder tokens.
+  it("every concern in the shipped manifest that can refuse a call is served the execution view", () => {
+    const manifest = parseYaml(fs.readFileSync(path.join(REPO_ROOT, "src", "scripts", "hook_manifest.yaml"), "utf8")) as {
+      concerns: Record<string, Record<string, unknown>>;
+    };
+    const deciders = Object.entries(manifest.concerns).filter(
+      ([, c]) => c["severity"] === "blocking" || c["effect"] === "permission" || c["fail_closed"] === true,
+    );
+    expect(deciders.length).toBeGreaterThan(0);
+    const starved = deciders
+      .filter(([name, c]) => egressViewFor({ name, script: c["script"] as string }) !== "execution")
+      .map(([name]) => name);
+    expect(starved).toStrictEqual([]);
   });
 });
 

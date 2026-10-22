@@ -72,6 +72,9 @@ function deps(world: World, over: Partial<UnattendedDeps> & { doc?: unknown; fet
         // case overrides it. Its own refusing direction is asserted in
         // upgrade_unattended_provenance.test.ts rather than here.
         verifyProvenance: async () => null,
+        // A pinned trust root is assumed here so the other gates are reachable;
+        // its refusing direction is the case below.
+        provenanceTrustRoot: true,
         run: world.run,
         readInstalled: () => world.lock,
         readBinary: () => world.binary,
@@ -92,6 +95,15 @@ function deps(world: World, over: Partial<UnattendedDeps> & { doc?: unknown; fet
         ...over,
     };
 }
+
+describe('upgrade --unattended — provenance without a trust root (release 17 review e272e779dba9)', () => {
+    it('refuses and installs nothing when the attestation is not checked against a trust root', async () => {
+        const w = new World();
+        expect(await run_unattended(deps(w, { provenanceTrustRoot: false }))).toBe(EXIT_REFUSED);
+        expect(w.lock).toBe('16.5.0');
+        expect(out).toMatch(/trust root/);
+    });
+});
 
 describe('upgrade --unattended — the happy path', () => {
     it('installs the exact candidate on the global surfaces and releases the lock', async () => {

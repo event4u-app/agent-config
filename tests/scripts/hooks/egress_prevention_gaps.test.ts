@@ -8,10 +8,12 @@
  * of the host-carrier roadmap that closes it.
  *
  * These assertions describe the gap as it stands, so they PASS while the gap is
- * open: the stage detects the credential, and the dispatcher, even in `strict`,
- * hands the host nothing that changes what goes to the provider. The closing step
- * inverts the second assertion for its fixture. Values are built at runtime and
- * every assertion is a boolean or a count.
+ * open: the stage detects the credential, and the dispatcher in `protect` hands
+ * the host nothing that changes what goes to the provider. The closing step
+ * inverts that assertion for its fixture. `strict` does not send a detected
+ * credential silently (council 2026-10-22, 533e105fccc9): a prompt carrying one
+ * is refused, and a tool result carrying one is disclosed to the user as sent.
+ * Values are built at runtime and every assertion is a boolean or a count.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -90,10 +92,13 @@ function writeManifest(target: string): void {
     );
 }
 
-function dispatch(fixture: GapFixture): { status: number | null; stdout: string; ws: string } {
+function dispatch(
+    fixture: GapFixture,
+    mode: 'protect' | 'strict' = 'protect',
+): { status: number | null; stdout: string; stderr: string; ws: string } {
     const ws = path.join(tmp, 'ws');
     fs.mkdirSync(ws, { recursive: true });
-    fs.writeFileSync(path.join(ws, '.agent-settings.yml'), 'egress:\n  placeholders:\n    mode: strict\n');
+    fs.writeFileSync(path.join(ws, '.agent-settings.yml'), `egress:\n  placeholders:\n    mode: ${mode}\n`);
     const manifest = path.join(tmp, 'manifest.yaml');
     writeManifest(manifest);
     const env: NodeJS.ProcessEnv = { ...process.env };
@@ -104,7 +109,7 @@ function dispatch(fixture: GapFixture): { status: number | null; stdout: string;
         [TS_SCRIPT, '--platform', 'claude', '--event', fixture.event, '--native-event', fixture.native_event, '--manifest', manifest],
         { cwd: ws, input: JSON.stringify(fixture.payload), encoding: 'utf8', env },
     );
-    return { status: r.status, stdout: r.stdout, ws };
+    return { status: r.status, stdout: r.stdout, stderr: r.stderr, ws };
 }
 
 const NAMES = Object.keys(VALUES);
@@ -185,7 +190,7 @@ describe('egress prevention gaps', () => {
             expect(credentials).toBeGreaterThan(0);
         });
 
-        it(`${name}: today nothing the dispatcher returns changes what reaches the provider`, () => {
+        it(`${name}: in protect, nothing the dispatcher returns changes what reaches the provider`, () => {
             const f = load(name);
             const { status, stdout, ws } = dispatch(f);
             expect(status).toBe(0);
@@ -200,7 +205,7 @@ describe('egress prevention gaps', () => {
             expect(lines.length).toBe(1);
             const [line] = lines;
             expect(line?.event).toBe(f.event);
-            expect(line?.mode).toBe('strict');
+            expect(line?.mode).toBe('protect');
             const counted = (line?.counts ?? []).filter((c) => c.class === 'credential').reduce((n, c) => n + c.count, 0);
             expect(counted).toBeGreaterThan(0);
             // What the host reads: no rewrite field anywhere, and no block.
@@ -208,6 +213,23 @@ describe('egress prevention gaps', () => {
             const keys = keysDeep(out);
             for (const field of REWRITE_FIELDS) expect(keys.has(field)).toBe(false);
             expect(out['decision']).not.toBe('block');
+        });
+
+        it(`${name}: strict never sends the detected credential silently`, () => {
+            const f = load(name);
+            const { status, stdout, stderr } = dispatch(f, 'strict');
+            if (f.event === 'user_prompt_submit') {
+                // Refused: the host's block code, which drops the prompt before it is sent.
+                expect(status).toBe(2);
+                expect(stderr.includes('egress strict: the prompt was not sent')).toBe(true);
+            } else {
+                expect(status).toBe(0);
+                const message = hostOutput(stdout)['systemMessage'];
+                expect(typeof message === 'string' && message.startsWith('egress strict:')).toBe(true);
+                expect(String(message).includes('reached the model provider')).toBe(true);
+            }
+            expect(stdout.includes(VALUES[name] as string)).toBe(false);
+            expect(stderr.includes(VALUES[name] as string)).toBe(false);
         });
     }
 });

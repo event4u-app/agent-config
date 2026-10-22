@@ -4,16 +4,18 @@
 // clears that cache, and an interrupted upgrade never leaves pointers resolving
 // into a half-written stage.
 
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { spawn } from 'node:child_process';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, readlinkSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     CLAUDE_LAYER_DIRNAME,
     currentRuntimeDir,
+    LOCK_DIRNAME,
     removeStagedRuntime,
     stageRuntime,
 } from '../../src/install/stagedRuntime.js';
@@ -98,8 +100,8 @@ describe('removeStagedRuntime — what uninstall --purge removes', () => {
     });
 });
 
-describe('stageRuntime — one version on disk (1.2)', () => {
-    it('an interrupted stage leaves the previous version resolvable, and the next stage leaves one version', () => {
+describe('stageRuntime — an interrupted stage (1.2)', () => {
+    it('an interrupted stage leaves the previous version resolvable, and the next stage sweeps what it left', () => {
         const runtime = path.join(tmp, 'machine', 'runtime');
         stageRuntime({ packageRoot: npxPackage('1.0.0'), runtimeRoot: runtime, nodePath: process.execPath });
 
@@ -114,7 +116,88 @@ describe('stageRuntime — one version on disk (1.2)', () => {
         stageRuntime({ packageRoot: v2, runtimeRoot: runtime, nodePath: process.execPath });
         expect(readFileSync(path.join(current, 'dist', 'hooks', 'dispatch.js'), 'utf8')).toContain('2.0.0');
         const entries = readdirSync(runtime).filter((e) => e !== 'current');
-        expect(entries.filter((e) => e.startsWith('v-'))).toHaveLength(1);
         expect(entries.filter((e) => e.startsWith('.stage-') || e.startsWith('.current-'))).toEqual([]);
+        expect(entries.filter((e) => e.startsWith(LOCK_DIRNAME))).toEqual([]);
     });
+});
+
+// 17.0.0 finding 064424ba17b9: the sweep deleted every other v-*, .stage-* and
+// .current-* with no lock, so two installs at once could delete each other's
+// stage or freshly renamed version, and a hook running out of the previous
+// version lost its files.
+describe('stageRuntime — concurrent installs (064424ba17b9)', () => {
+    const versions = (runtime: string): string[] => readdirSync(runtime).filter((e) => e.startsWith('v-')).sort();
+    const target = (runtime: string): string => readlinkSync(currentRuntimeDir(runtime));
+
+    it('keeps the version `current` pointed at before the swap, and only that one besides the new one', () => {
+        const runtime = path.join(tmp, 'machine', 'runtime');
+        stageRuntime({ packageRoot: npxPackage('1.0.0'), runtimeRoot: runtime, nodePath: process.execPath });
+        const first = target(runtime);
+        stageRuntime({ packageRoot: npxPackage('2.0.0'), runtimeRoot: runtime, nodePath: process.execPath });
+        const second = target(runtime);
+        expect(versions(runtime)).toEqual([first, second].sort());
+        expect(readFileSync(path.join(runtime, first, 'dist', 'hooks', 'dispatch.js'), 'utf8')).toContain('1.0.0');
+        stageRuntime({ packageRoot: npxPackage('3.0.0'), runtimeRoot: runtime, nodePath: process.execPath });
+        const third = target(runtime);
+        expect(versions(runtime)).toEqual([second, third].sort());
+    });
+
+    it('waits for a live lock and refuses rather than sweep under another install', () => {
+        const runtime = path.join(tmp, 'machine', 'runtime');
+        stageRuntime({ packageRoot: npxPackage('1.0.0'), runtimeRoot: runtime, nodePath: process.execPath });
+        const before = target(runtime);
+        // Another install in flight: it holds the lock and has a stage on disk.
+        mkdirSync(path.join(runtime, LOCK_DIRNAME));
+        mkdirSync(path.join(runtime, '.stage-other-install'));
+        expect(() =>
+            stageRuntime({ packageRoot: npxPackage('2.0.0'), runtimeRoot: runtime, nodePath: process.execPath, _lockWaitMs: 200 }),
+        ).toThrow(/another install/);
+        expect(existsSync(path.join(runtime, '.stage-other-install'))).toBe(true);
+        expect(target(runtime)).toBe(before);
+        expect(readdirSync(runtime).filter((e) => e.startsWith('.stage-'))).toEqual(['.stage-other-install']);
+    });
+
+    it('takes over a lock left by an install that died', () => {
+        const runtime = path.join(tmp, 'machine', 'runtime');
+        mkdirSync(path.join(runtime, LOCK_DIRNAME), { recursive: true });
+        const old = new Date(Date.now() - 60 * 60 * 1000);
+        utimesSync(path.join(runtime, LOCK_DIRNAME), old, old);
+        stageRuntime({ packageRoot: npxPackage('1.0.0'), runtimeRoot: runtime, nodePath: process.execPath, _lockWaitMs: 200 });
+        expect(readFileSync(path.join(currentRuntimeDir(runtime), 'dist', 'hooks', 'dispatch.js'), 'utf8')).toContain('1.0.0');
+        expect(existsSync(path.join(runtime, LOCK_DIRNAME))).toBe(false);
+    });
+
+    it('four installs started together all finish and leave `current` resolving', async () => {
+        const runtime = path.join(tmp, 'machine', 'runtime');
+        const repo = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+        const mod = pathToFileURL(path.join(repo, 'src', 'install', 'stagedRuntime.ts')).href;
+        const pkgs = ['1.0.0', '2.0.0', '3.0.0', '4.0.0'].map((v) => {
+            const root = path.join(tmp, `pkg-${v}`);
+            write(path.join(root, 'package.json'), JSON.stringify({ name: '@event4u/agent-config', version: v }));
+            write(path.join(root, 'dist', 'hooks', 'dispatch.js'), `// dispatcher ${v}\n`);
+            for (let i = 0; i < 200; i += 1) write(path.join(root, 'dist', 'agent-src', 'rules', `r${i}.md`), `# ${v} ${i}\n`);
+            return root;
+        });
+        const runs = pkgs.map(
+            (root) =>
+                new Promise<number>((resolve) => {
+                    const child = spawn(
+                        process.execPath,
+                        [
+                            '--import',
+                            'tsx',
+                            '-e',
+                            `import(${JSON.stringify(mod)}).then((m) => m.stageRuntime({ packageRoot: ${JSON.stringify(root)}, runtimeRoot: ${JSON.stringify(runtime)}, nodePath: process.execPath }))`,
+                        ],
+                        { cwd: repo, stdio: 'ignore' },
+                    );
+                    child.on('exit', (code) => resolve(code ?? 1));
+                }),
+        );
+        expect(await Promise.all(runs)).toEqual([0, 0, 0, 0]);
+        const current = currentRuntimeDir(runtime);
+        expect(readFileSync(path.join(current, 'dist', 'hooks', 'dispatch.js'), 'utf8')).toMatch(/dispatcher [1-4]\.0\.0/);
+        expect(readdirSync(path.join(current, 'dist', 'agent-src', 'rules'))).toHaveLength(200);
+        expect(readdirSync(runtime).filter((e) => e.startsWith('.stage-') || e.startsWith('.current-'))).toEqual([]);
+    }, 120_000);
 });

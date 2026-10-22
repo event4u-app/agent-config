@@ -66,6 +66,12 @@ export interface UnattendedInput {
     readonly candidate: RegistryCandidate;
     readonly origin: InstallOrigin;
     readonly skipped: readonly string[];
+    /**
+     * True only when the caller checks the attestation against a pinned
+     * trust root before installing. Absent reads as `false`, and `false`
+     * never installs (`classifyUpdate`).
+     */
+    readonly provenanceTrustRoot?: boolean;
     readonly env: {
         readonly ci: boolean;
         readonly noUpdateCheck: boolean;
@@ -92,6 +98,7 @@ export function unattended_decision(input: UnattendedInput): UnattendedDecision 
         publishedAt: input.candidate.publishedAt,
         deprecated: input.candidate.deprecated,
         provenance: input.candidate.provenance,
+        provenanceTrustRoot: input.provenanceTrustRoot === true,
         settings: { mode: 'auto', projectPin: null, minReleaseAgeHours: UNATTENDED_MIN_RELEASE_AGE_HOURS },
     });
     return verdict.action === 'auto'
