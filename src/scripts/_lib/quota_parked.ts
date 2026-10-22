@@ -122,6 +122,27 @@ export function findQuotaParked(repoRoot: string, sessionId: string): QuotaParke
     return null;
 }
 
+/** The plan's rolling rate window; a host marker older than this no longer describes it. */
+export const HOST_RATE_WINDOW_MS = 5 * 3_600_000;
+
+/** True when a host-sourced marker was parked inside the rate window ending at `nowMs`. */
+export function recentHostMarker(repoRoot: string, nowMs: number = Date.now(), windowMs: number = HOST_RATE_WINDOW_MS): boolean {
+    let names: string[];
+    try {
+        names = fs.readdirSync(path.join(repoRoot, QUOTA_PARKED_DIR_REL));
+    } catch {
+        return false;
+    }
+    for (const name of names) {
+        if (!name.endsWith('.json')) continue;
+        const m = readMarker(path.join(repoRoot, QUOTA_PARKED_DIR_REL, name));
+        if (m === null || m.source !== 'host') continue;
+        const at = Date.parse(m.parked_at);
+        if (Number.isFinite(at) && nowMs - at >= 0 && nowMs - at < windowMs) return true;
+    }
+    return false;
+}
+
 function readMarker(file: string): QuotaParkedMarker | null {
     try {
         const raw: unknown = JSON.parse(fs.readFileSync(file, 'utf8'));

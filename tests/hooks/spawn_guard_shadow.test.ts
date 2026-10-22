@@ -10,6 +10,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { writeQuotaParked } from '../../src/scripts/_lib/quota_parked.js';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -477,5 +478,22 @@ describe('spawn-guard-shadow — a quiet line is falsifiable (R2 round 2, findin
         const line = ledgerLines()[0]!;
         expect(line.concurrent_open).toBe(0);
         expect(line.stale_open_excluded).toBe(1);
+    });
+});
+
+// road-to-a-cold-start-paid-once 4.5: a recent host-sourced rate marker turns
+// a new spawn's shadow verdict into would_wait; still never a deny.
+describe('spawn-guard-shadow — rate window', () => {
+    it('recent-rate-marker-yields-would-wait', () => {
+        writeQuotaParked(root, 'sess-host', ['anthropic'], () => new Date(), 'host');
+        expect(processEnvelope(agentCall('ac-worker'), root)).toBe(0);
+        expect(shadowLines().at(-1)!.rate_window).toBe('would_wait');
+    });
+
+    it('an old host marker, or a council-sourced one, does not', () => {
+        writeQuotaParked(root, 'sess-old', ['anthropic'], () => new Date(Date.now() - 6 * 3_600_000), 'host');
+        writeQuotaParked(root, 'run-council', ['anthropic'], () => new Date(), 'council');
+        processEnvelope(agentCall('ac-worker'), root);
+        expect(shadowLines().at(-1)!.rate_window).toBe('clear');
     });
 });

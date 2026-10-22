@@ -57,6 +57,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { probeHostCapabilities } from '../_lib/host_capability.js';
+import { recentHostMarker } from '../_lib/quota_parked.js';
 import { shadowReuseVerdict, type ReuseContext, type WorkerState } from '../_lib/worker_reuse.js';
 import {
     LEDGER_DIR,
@@ -347,6 +348,8 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string, deps:
             dispatch_kind: sendKind ?? 'spawn',
             resume_admission: platform !== null && RESUME_ADMISSION_OBSERVED.has(platform) ? 'counted' : 'unobserved',
             ...(reuse === null ? {} : { reuse }),
+            // A recent host-sourced rate marker: a new spawn would have waited.
+            ...(isResume ? {} : { rate_window: recentHostMarker(consumerRoot) ? 'would_wait' : 'clear' }),
             // Shadow posture is a property of this file, not of a setting —
             // there is no code path here that can deny.
             posture: 'shadow',
