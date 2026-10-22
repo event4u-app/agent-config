@@ -1,0 +1,247 @@
+{
+  "_note": "Run 39644704455 is trimmed from the live jobs API (PR #2569 Tests, all green). Run 900 is synthetic, shaped like the same API, with one job per outcome cell and a re-run attempt 2.",
+  "runs": {
+    "39644704455": [
+      {
+        "id": 119377082171,
+        "run_id": 39644704455,
+        "name": "Static Checks (ESLint · typecheck · prepack)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T17:32:30Z",
+        "started_at": "2026-10-21T17:32:32Z",
+        "completed_at": "2026-10-21T17:38:39Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 1
+      },
+      {
+        "id": 119377082335,
+        "run_id": 39644704455,
+        "name": "Golden Tests (macos-latest)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T17:32:30Z",
+        "started_at": "2026-10-21T17:52:22Z",
+        "completed_at": "2026-10-21T17:53:37Z",
+        "labels": [
+          "macos-latest"
+        ],
+        "run_attempt": 1
+      },
+      {
+        "id": 119377082370,
+        "run_id": 39644704455,
+        "name": "Collector Lifecycle (macos-latest — the macOS row only)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T17:32:30Z",
+        "started_at": "2026-10-21T17:41:51Z",
+        "completed_at": "2026-10-21T17:47:26Z",
+        "labels": [
+          "macos-latest"
+        ],
+        "run_attempt": 1
+      },
+      {
+        "id": 119377082443,
+        "run_id": 39644704455,
+        "name": "Node Tests (ubuntu-latest, shard 3/4)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T17:32:30Z",
+        "started_at": "2026-10-21T17:32:32Z",
+        "completed_at": "2026-10-21T17:41:12Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 1
+      },
+      {
+        "id": 119377082596,
+        "run_id": 39644704455,
+        "name": "Golden Tests (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T17:32:30Z",
+        "started_at": "2026-10-21T17:32:45Z",
+        "completed_at": "2026-10-21T17:34:15Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 1
+      },
+      {
+        "id": 119377082768,
+        "run_id": 39644704455,
+        "name": "Node Tests (macos-latest, shard 3/4)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T17:32:30Z",
+        "started_at": "2026-10-21T17:39:45Z",
+        "completed_at": "2026-10-21T17:52:12Z",
+        "labels": [
+          "macos-latest"
+        ],
+        "run_attempt": 1
+      }
+    ],
+    "900": [
+      {
+        "id": 1,
+        "run_id": 900,
+        "name": "Node Tests (macos-latest, shard 3/4)",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-20T10:00:00Z",
+        "started_at": "2026-10-20T10:01:00Z",
+        "completed_at": "2026-10-20T10:09:00Z",
+        "labels": [
+          "macos-latest"
+        ],
+        "run_attempt": 1
+      },
+      {
+        "id": 2,
+        "run_id": 900,
+        "name": "Node Tests (ubuntu-latest, shard 3/4)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-20T10:00:00Z",
+        "started_at": "2026-10-20T10:01:00Z",
+        "completed_at": "2026-10-20T10:09:00Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 1
+      },
+      {
+        "id": 3,
+        "run_id": 900,
+        "name": "Golden Tests (macos-latest)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-20T10:00:00Z",
+        "started_at": "2026-10-20T10:01:00Z",
+        "completed_at": "2026-10-20T10:09:00Z",
+        "labels": [
+          "macos-latest"
+        ],
+        "run_attempt": 1
+      },
+      {
+        "id": 4,
+        "run_id": 900,
+        "name": "Golden Tests (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-20T10:00:00Z",
+        "started_at": "2026-10-20T10:01:00Z",
+        "completed_at": "2026-10-20T10:09:00Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 1
+      },
+      {
+        "id": 5,
+        "run_id": 900,
+        "name": "Install Script Tests (macos-latest, shard 1/4)",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-20T10:00:00Z",
+        "started_at": "2026-10-20T10:01:00Z",
+        "completed_at": "2026-10-20T10:09:00Z",
+        "labels": [
+          "macos-latest"
+        ],
+        "run_attempt": 1
+      },
+      {
+        "id": 6,
+        "run_id": 900,
+        "name": "Install Script Tests (ubuntu-latest, shard 1/4)",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-20T10:00:00Z",
+        "started_at": "2026-10-20T10:01:00Z",
+        "completed_at": "2026-10-20T10:09:00Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 1
+      },
+      {
+        "id": 7,
+        "run_id": 900,
+        "name": "Workspace Tests (macos-latest)",
+        "status": "completed",
+        "conclusion": "cancelled",
+        "created_at": "2026-10-20T10:00:00Z",
+        "started_at": "2026-10-20T10:01:00Z",
+        "completed_at": "2026-10-20T10:09:00Z",
+        "labels": [
+          "macos-latest"
+        ],
+        "run_attempt": 1
+      },
+      {
+        "id": 8,
+        "run_id": 900,
+        "name": "Workspace Tests (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-20T10:00:00Z",
+        "started_at": "2026-10-20T10:01:00Z",
+        "completed_at": "2026-10-20T10:09:00Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 1
+      },
+      {
+        "id": 9,
+        "run_id": 900,
+        "name": "Collector Lifecycle (macos-latest — the macOS row only)",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-20T10:00:00Z",
+        "started_at": "2026-10-20T10:01:00Z",
+        "completed_at": "2026-10-20T10:09:00Z",
+        "labels": [
+          "macos-latest"
+        ],
+        "run_attempt": 1
+      },
+      {
+        "id": 10,
+        "run_id": 900,
+        "name": "Node Tests (macos-latest, shard 3/4)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-20T10:00:00Z",
+        "started_at": "2026-10-20T10:01:00Z",
+        "completed_at": "2026-10-20T10:09:00Z",
+        "labels": [
+          "macos-latest"
+        ],
+        "run_attempt": 2
+      },
+      {
+        "id": 11,
+        "run_id": 900,
+        "name": "Node Tests (ubuntu-latest, shard 3/4)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-20T10:00:00Z",
+        "started_at": "2026-10-20T10:01:00Z",
+        "completed_at": "2026-10-20T10:09:00Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 2
+      }
+    ]
+  }
+}

@@ -1,0 +1,262 @@
+{
+  "_note": "Run 39644704455 and its six jobs are trimmed from the live jobs API (PR #2569 Tests, 2026-10-21). The Consistency, Standing Payload Delta and the red SHA aaaa... runs are synthetic, shaped like the same API.",
+  "runs": [
+    {
+      "id": 39644704455,
+      "name": "Tests",
+      "event": "pull_request",
+      "head_sha": "2302af8a4fd831c4b7000308fdc81142117aafca",
+      "created_at": "2026-10-21T17:32:29Z",
+      "updated_at": "2026-10-21T18:12:37Z",
+      "run_started_at": "2026-10-21T17:32:29Z",
+      "status": "completed",
+      "conclusion": "success",
+      "path": ".github/workflows/tests.yml",
+      "run_attempt": 1
+    },
+    {
+      "id": 39644700001,
+      "name": "Consistency",
+      "event": "pull_request",
+      "head_sha": "2302af8a4fd831c4b7000308fdc81142117aafca",
+      "created_at": "2026-10-21T17:32:28Z",
+      "updated_at": "2026-10-21T17:44:10Z",
+      "run_started_at": "2026-10-21T17:32:28Z",
+      "status": "completed",
+      "conclusion": "success",
+      "path": ".github/workflows/consistency.yml",
+      "run_attempt": 1
+    },
+    {
+      "id": 39644700002,
+      "name": "Standing Payload Delta",
+      "event": "pull_request",
+      "head_sha": "2302af8a4fd831c4b7000308fdc81142117aafca",
+      "created_at": "2026-10-21T17:32:30Z",
+      "updated_at": "2026-10-21T17:36:00Z",
+      "run_started_at": "2026-10-21T17:32:30Z",
+      "status": "completed",
+      "conclusion": "success",
+      "path": ".github/workflows/standing-payload-delta.yml",
+      "run_attempt": 1
+    },
+    {
+      "id": 39644800001,
+      "name": "Tests",
+      "event": "pull_request",
+      "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "created_at": "2026-10-21T19:00:00Z",
+      "updated_at": "2026-10-21T19:20:00Z",
+      "run_started_at": "2026-10-21T19:00:00Z",
+      "status": "completed",
+      "conclusion": "failure",
+      "path": ".github/workflows/tests.yml",
+      "run_attempt": 1
+    },
+    {
+      "id": 39644800002,
+      "name": "Consistency",
+      "event": "pull_request",
+      "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "created_at": "2026-10-21T19:00:00Z",
+      "updated_at": "2026-10-21T19:10:00Z",
+      "run_started_at": "2026-10-21T19:00:00Z",
+      "status": "completed",
+      "conclusion": "success",
+      "path": ".github/workflows/consistency.yml",
+      "run_attempt": 1
+    },
+    {
+      "id": 39644800003,
+      "name": "Standing Payload Delta",
+      "event": "pull_request",
+      "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "created_at": "2026-10-21T19:00:00Z",
+      "updated_at": "2026-10-21T19:05:00Z",
+      "run_started_at": "2026-10-21T19:00:00Z",
+      "status": "completed",
+      "conclusion": "success",
+      "path": ".github/workflows/standing-payload-delta.yml",
+      "run_attempt": 1
+    }
+  ],
+  "jobs": {
+    "39644704455": [
+      {
+        "id": 119377082171,
+        "run_id": 39644704455,
+        "name": "Static Checks (ESLint · typecheck · prepack)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T17:32:30Z",
+        "started_at": "2026-10-21T17:32:32Z",
+        "completed_at": "2026-10-21T17:38:39Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 1,
+        "head_sha": "2302af8a4fd831c4b7000308fdc81142117aafca"
+      },
+      {
+        "id": 119377082335,
+        "run_id": 39644704455,
+        "name": "Golden Tests (macos-latest)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T17:32:30Z",
+        "started_at": "2026-10-21T17:52:22Z",
+        "completed_at": "2026-10-21T17:53:37Z",
+        "labels": [
+          "macos-latest"
+        ],
+        "run_attempt": 1,
+        "head_sha": "2302af8a4fd831c4b7000308fdc81142117aafca"
+      },
+      {
+        "id": 119377082370,
+        "run_id": 39644704455,
+        "name": "Collector Lifecycle (macos-latest — the macOS row only)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T17:32:30Z",
+        "started_at": "2026-10-21T17:41:51Z",
+        "completed_at": "2026-10-21T17:47:26Z",
+        "labels": [
+          "macos-latest"
+        ],
+        "run_attempt": 1,
+        "head_sha": "2302af8a4fd831c4b7000308fdc81142117aafca"
+      },
+      {
+        "id": 119377082465,
+        "run_id": 39644704455,
+        "name": "Node Tests (ubuntu-latest, shard 1/4)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T17:32:30Z",
+        "started_at": "2026-10-21T17:32:32Z",
+        "completed_at": "2026-10-21T17:37:51Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 1,
+        "head_sha": "2302af8a4fd831c4b7000308fdc81142117aafca"
+      },
+      {
+        "id": 119377082596,
+        "run_id": 39644704455,
+        "name": "Golden Tests (ubuntu-latest)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T17:32:30Z",
+        "started_at": "2026-10-21T17:32:45Z",
+        "completed_at": "2026-10-21T17:34:15Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 1,
+        "head_sha": "2302af8a4fd831c4b7000308fdc81142117aafca"
+      },
+      {
+        "id": 119377082852,
+        "run_id": 39644704455,
+        "name": "Node Tests (macos-latest, shard 1/4)",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T17:32:30Z",
+        "started_at": "2026-10-21T18:04:01Z",
+        "completed_at": "2026-10-21T18:12:36Z",
+        "labels": [
+          "macos-latest"
+        ],
+        "run_attempt": 1,
+        "head_sha": "2302af8a4fd831c4b7000308fdc81142117aafca"
+      }
+    ],
+    "39644700001": [
+      {
+        "id": 1,
+        "run_id": 39644700001,
+        "name": "Sync + Generate Tools Consistency",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T17:32:28Z",
+        "started_at": "2026-10-21T17:32:31Z",
+        "completed_at": "2026-10-21T17:44:09Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 1,
+        "head_sha": "2302af8a4fd831c4b7000308fdc81142117aafca"
+      }
+    ],
+    "39644700002": [
+      {
+        "id": 2,
+        "run_id": 39644700002,
+        "name": "Standing payload delta + budget gate",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T17:32:30Z",
+        "started_at": "2026-10-21T17:32:40Z",
+        "completed_at": "2026-10-21T17:35:59Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 1,
+        "head_sha": "2302af8a4fd831c4b7000308fdc81142117aafca"
+      }
+    ],
+    "39644800001": [
+      {
+        "id": 3,
+        "run_id": 39644800001,
+        "name": "Node Tests (macos-latest, shard 1/4)",
+        "status": "completed",
+        "conclusion": "failure",
+        "created_at": "2026-10-21T19:00:00Z",
+        "started_at": "2026-10-21T19:10:00Z",
+        "completed_at": "2026-10-21T19:20:00Z",
+        "labels": [
+          "macos-latest"
+        ],
+        "run_attempt": 1,
+        "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "39644800002": [
+      {
+        "id": 4,
+        "run_id": 39644800002,
+        "name": "Sync + Generate Tools Consistency",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T19:00:00Z",
+        "started_at": "2026-10-21T19:00:05Z",
+        "completed_at": "2026-10-21T19:10:00Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 1,
+        "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ],
+    "39644800003": [
+      {
+        "id": 5,
+        "run_id": 39644800003,
+        "name": "Standing payload delta + budget gate",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-10-21T19:00:00Z",
+        "started_at": "2026-10-21T19:00:05Z",
+        "completed_at": "2026-10-21T19:04:00Z",
+        "labels": [
+          "ubuntu-latest"
+        ],
+        "run_attempt": 1,
+        "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    ]
+  }
+}

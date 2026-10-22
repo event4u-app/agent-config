@@ -87,6 +87,7 @@ reason `unclassified` exists and the reason this paragraph does.
 | `memory_lookup.ts` | `ingested-corpus` | `stdout-write` | **covered** | imports the sanitize floor |
 | `merge_clearance.ts` | `remote-subprocess` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `network_sources.ts` | `network-fetch` | `file-write` | **covered** | imports the sanitize floor |
+| `plan_test_shards.ts` | `remote-subprocess` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `probe_depth_shadow.ts` | `remote-subprocess` | `stdout-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `rdp_gate_classify.ts` | `network-fetch` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `rdp_quality_eval.ts` | `network-fetch` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
@@ -101,7 +102,7 @@ reason `unclassified` exists and the reason this paragraph does.
 | `update_prices.ts` | `node-http-request` | `file-write` | **covered** | imports the sanitize floor |
 | `worktree_cleanup_check.ts` | `remote-subprocess` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 
-37 read surface(s): 11 covered, 23 uncovered, 3 unclassified.
+38 read surface(s): 11 covered, 24 uncovered, 3 unclassified.
 <!-- END read-surface-table -->
 ## The second layer — structural hiding in fetched markup
 

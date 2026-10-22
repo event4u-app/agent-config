@@ -6,6 +6,11 @@ probe: none
 
 # Stub: a CI wait that ends without a verdict has to be re-armed by hand
 
+> **Arrivals:** 2 — latest `inbox-2026-10-w` (2026-10-21) asked for
+> `ci_settle --scope required|merge-relevant|all` so agents stop waiting on the
+> macOS queue; earlier: PR #2495 observation (2026-10-19). Held by
+> `road-to-agent-throughput-recovery` 3.2 (council D9); not decided here.
+
 > **Stub — not active work.** Surfaced on PR #2495 (2026-10-19), whose own
 > subject was unrelated. Filed rather than fixed because the right shape
 > depends on step 3.2 of `road-to-agent-throughput-recovery`, which owns the CI

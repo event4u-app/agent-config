@@ -1549,6 +1549,11 @@ gates:
   - id: check_static_parity
     argv: ["--quiet"]
     min_scanned: 20
+    # Asserted in tests.yml collector-lifecycle from the run that job already
+    # makes; its paths filter covers src/** and tests/**, i.e. every change that
+    # can move this gate's scan count. The census re-runs it here only if that
+    # assertion disappears.
+    floor_asserted_in: .github/workflows/tests.yml
     corpus: "test files that spell the dispatcher module name, discovered by grep over tests/ and src/. The count is deliberately not written here — it moves with the suite, and four different figures for it appeared across the rounds of this change (R2 round-5 finding 12). The floor is 20, not 1: this gate's silent-failure shape is a discovery COLLAPSE — a grep that stops matching would run two suites of one file each and report them identical, which is the 'gate that scans nothing exits green' case in its most convincing disguise."
     status: enforced
     no_canary_reason: >-

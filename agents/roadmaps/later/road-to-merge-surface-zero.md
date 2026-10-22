@@ -507,6 +507,13 @@ it.
   every required workflow (currently zero across the workflow set) plus measured
   per-PR CI wall-time to size throughput. An unmeasured queue on a multi-shard
   pipeline can lengthen the backlog rather than shorten it. Status: open.
+  **Both prerequisites now exist (2026-10-22, recorded here, B2 itself unchanged):**
+  `merge_group` is declared on both required workflows and `tests.yml`
+  (`road-to-macos-where-the-platform-is-the-point` 3.1), and per-PR CI wall-time
+  incl. queue is measured — PR time-to-all-green p50 21m17s / p90 51m44s, macOS
+  queue p50 5m34s / p90 25m09s (`agents/evidence/analysis/ci-time-to-green-2026-10.md`);
+  `.github/workflows/ci-time-to-green.yml` re-reads `tests.yml` weekly. The ruleset
+  write stays with `stubs/road-to-main-protection-ruleset-changes`.
 - **B4 — the post-merge writer is owner-reserved, and five steps depend on it.**
   AI council 2/2 (2026-08-25): a workflow that pushes a commit to `main` is
   privileged trunk mutation, a different risk class from the rest of this
