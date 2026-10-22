@@ -57,7 +57,7 @@ import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 export const RISK_REGISTER_GATE_ACTIVATION = '2026-08-04';
 
 export const MARKER_RE =
-    /^<!--\s*risk-review:\s*v1\s*\|\s*reviewed:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*reviewer:\s*(.+?)\s*-->\s*$/;
+    /^<!--\s*risk-review:\s*v1\s*\|\s*(reviewed|generated):\s*(\d{4}-\d{2}-\d{2})\s*\|\s*reviewer:\s*(.+?)\s*-->\s*$/;
 const HONEST_NULL_RE = /^\*\*Honest-null:\*\*(.*)$/;
 const CHECKBOX_RE = /^\s*- \[( |x|~|-)\]/;
 const PHASE_HEADING_RE = /^##\s+(Phase|Milestone)\b.*$/;
@@ -155,16 +155,21 @@ export function isSubstantialChange(oldText: string, newText: string): boolean {
 export interface Marker {
     reviewed: string;
     reviewer: string;
+    /** Set on the `generated:` form: a generator drafted the register and nobody reviewed it yet. */
+    unreviewed?: true;
 }
 
 /** Parse the § 1.1 marker line; null when malformed. */
 export function parseMarker(line: string): Marker | null {
     const m = MARKER_RE.exec(line.trim());
     if (!m) return null;
-    const reviewed = m[1] as string;
-    const reviewer = (m[2] as string).trim();
+    const generated = m[1] === 'generated';
+    const reviewed = m[2] as string;
+    const reviewer = (m[3] as string).trim();
     if (reviewer === '') return null;
-    return { reviewed, reviewer };
+    // `none` and `generated:` imply each other, so neither form can attest a review that did not happen.
+    if (generated !== (reviewer === 'none')) return null;
+    return generated ? { reviewed, reviewer, unreviewed: true } : { reviewed, reviewer };
 }
 
 /** § 1.3 — exact honest-null grammar: `**Honest-null:** … because: <non-empty>.` */

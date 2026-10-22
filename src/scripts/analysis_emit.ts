@@ -101,7 +101,7 @@ function roadmapBody(input: EmitInput, findings: readonly Finding[], status: 're
         '',
         ...phases,
         '## Risk Register',
-        `<!-- risk-review: v1 | reviewed: ${input.date} | reviewer: claude/host -->`,
+        `<!-- risk-review: v1 | generated: ${input.date} | reviewer: none -->`,
         '',
         '| Rank | Item | Risk type | Description | Mitigation | Anchored under |',
         '|------|------|-----------|-------------|------------|----------------|',

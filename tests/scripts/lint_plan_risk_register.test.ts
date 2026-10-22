@@ -209,6 +209,16 @@ describe('lint_plan_risk_register — marker / honest-null / anchor helpers', ()
         expect(m).toEqual({ reviewed: '2026-08-04', reviewer: 'claude/host+council' });
     });
 
+    it('parseMarker reads the generated form as unreviewed, and refuses a generated stamp that names a reviewer', () => {
+        expect(mod.parseMarker('<!-- risk-review: v1 | generated: 2026-10-17 | reviewer: none -->')).toEqual({
+            reviewed: '2026-10-17',
+            reviewer: 'none',
+            unreviewed: true,
+        });
+        expect(mod.parseMarker('<!-- risk-review: v1 | generated: 2026-10-17 | reviewer: claude/host -->')).toBeNull();
+        expect(mod.parseMarker('<!-- risk-review: v1 | reviewed: 2026-10-17 | reviewer: none -->')).toBeNull();
+    });
+
     it('parseMarker rejects field-order swaps', () => {
         expect(mod.parseMarker('<!-- risk-review: v1 | reviewer: x | reviewed: 2026-08-04 -->')).toBeNull();
     });

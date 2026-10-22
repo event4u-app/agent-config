@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { INTAKE_LIMIT, emitRound, type Finding } from '../../src/scripts/analysis_emit.js';
+import { checkContent } from '../../src/scripts/lint_plan_risk_register.js';
 
 const NEW_A: Finding = {
     id: 'f-scope',
@@ -45,6 +46,15 @@ describe('emitting a round locally', () => {
         expect(rm?.body).toContain('`run-20261017-ab12cd`');
         expect(r.estate_delta).toBe(1);
         expect(r.status_note).toBeNull();
+    });
+
+    it('stamps the register it drafted as generated and unreviewed, never as reviewed by a named reviewer', () => {
+        const body = emitRound({ ...BASE, findings: [NEW_A] }).roadmaps[0]?.body ?? '';
+        const marker = body.split('\n').find((l) => l.includes('risk-review:')) ?? '';
+        expect(marker).toBe('<!-- risk-review: v1 | generated: 2026-10-17 | reviewer: none -->');
+        expect(body).not.toMatch(/reviewed: \d{4}-\d{2}-\d{2}/);
+        const res = checkContent('road-to-analysis-round-ab12cd.md', body);
+        expect(res.violations.filter((v) => /marker/.test(v.kind))).toEqual([]);
     });
 
     it('lands an owned finding as a step plus an Arrivals line on its owner, not a new roadmap', () => {
