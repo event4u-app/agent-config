@@ -123,8 +123,9 @@ export interface Finding {
  *
  * A body AT or BELOW its ceiling passes, always — shrinking is the direction
  * this gate wants and it never objects to it. A body above its ceiling passes
- * only when `raised` carries an entry naming that skill, that new size and a
- * non-empty reason: a rise somebody wrote down is a decision, a rise nobody
+ * only when `raised` carries an entry naming that skill, the current ceiling as
+ * its `old`, a `new` that covers the size and a non-empty reason: a rise
+ * somebody wrote down is a decision, a rise nobody
  * wrote down is the drift.
  *
  * A skill with no ceiling is NOT a finding — a new skill gets its ceiling on
@@ -143,10 +144,12 @@ export function compare(bodies: Record<string, number>, budget: Budget): Finding
         const ceiling = budget.ceilings[skill];
         if (ceiling === undefined) continue;
         if (actual <= ceiling) continue;
-        const raises = raisesFor.get(skill) ?? [];
-        const match = raises.find((r) => r.new >= actual);
+        const raises = (raisesFor.get(skill) ?? []).filter((r) => r.new >= actual);
+        // A raise licenses growth from the ceiling it was written against and
+        // no other: an earlier generous entry is not a standing allowance.
+        const match = raises.find((r) => r.old === ceiling);
         if (match === undefined) {
-            findings.push({ skill, ceiling, actual, reason: 'grew-without-a-raise' });
+            findings.push({ skill, ceiling, actual, reason: raises.length > 0 ? 'raise-does-not-match' : 'grew-without-a-raise' });
             continue;
         }
         if (typeof match.reason !== 'string' || match.reason.trim() === '') {
@@ -168,7 +171,10 @@ export function compare(bodies: Record<string, number>, budget: Budget): Finding
 export function nextCeilings(bodies: Record<string, number>, budget: Budget): Record<string, number> {
     const out: Record<string, number> = { ...budget.ceilings };
     const covered = new Map<string, number>();
-    for (const r of budget.raised) covered.set(r.skill, Math.max(covered.get(r.skill) ?? 0, r.new));
+    for (const r of budget.raised) {
+        if (r.old !== budget.ceilings[r.skill]) continue;
+        covered.set(r.skill, Math.max(covered.get(r.skill) ?? 0, r.new));
+    }
     for (const [skill, actual] of Object.entries(bodies)) {
         const current = out[skill];
         if (current === undefined) {
