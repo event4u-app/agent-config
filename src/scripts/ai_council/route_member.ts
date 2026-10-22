@@ -5,6 +5,7 @@
  * therefore must not import the loader back.
  */
 
+import { resolve_project_root } from '../_lib/agent_settings.js';
 import { PROVIDER_TABLE } from '../_lib/environment_detector.js';
 import { resolve_api_key } from './config.js';
 import type { ContentClass } from './content_ceiling.js';
@@ -30,7 +31,7 @@ export function routeMemberFor(
     contentClass: ContentClass,
     modelOverride?: string,
     probe: SelfHostedProbe = SELF_HOSTED_PROBE,
-    stateRoot: string = process.cwd(),
+    stateRoot?: string,
     now: Date = new Date(),
 ): RouteMemberResult | null {
     const parsed = parseRouteFields(name, cfg, Object.hasOwn(PROVIDER_TABLE, name));
@@ -38,7 +39,8 @@ export function routeMemberFor(
     const route = parsed.route;
     if (route === null) return null;
     const model = modelOverride || (typeof cfg['model'] === 'string' ? cfg['model'] : '');
-    const gate = firstPartyGate(route.base_url, model, stateRoot, now);
+    // The root discovery writes under, so a run from a subdirectory reads the same roster.
+    const gate = firstPartyGate(route.base_url, model, stateRoot ?? resolve_project_root(null)[0], now);
     if (gate !== null) return { absent: { member: name, reason: 'policy_model_mismatch', detail: gate } };
     const ref = typeof cfg['api_key_ref'] === 'string' ? cfg['api_key_ref'] : null;
     const t = resolveRouteTransport({ name, route, model, contentClass, keyPresent: keyResolves(ref), probe });
@@ -65,8 +67,8 @@ export const FIRST_PARTY_ROSTER_MAX_AGE_MS = 24 * 60 * 60 * 1000;
  * reason to be absent, so an unknown provenance never reaches the route.
  */
 function firstPartyGate(baseUrl: string, model: string, stateRoot: string, now: Date): string | null {
-    const strip = (u: string): string => u.replace(/\/+$/, '');
-    const row = ROUTE_CATALOG.find((r) => r.first_party_list !== undefined && strip(r.base_url) === strip(baseUrl));
+    const key = routeIdentity(baseUrl);
+    const row = ROUTE_CATALOG.find((r) => r.first_party_list !== undefined && routeIdentity(r.base_url) === key);
     if (row === undefined) return null;
     const roster = readRouteRoster(stateRoot, row.id);
     if (roster.status !== 'known') return `${row.id}: no discovered first-party roster (${roster.reason})`;
@@ -75,4 +77,17 @@ function firstPartyGate(baseUrl: string, model: string, stateRoot: string, now: 
     }
     if (!roster.models.includes(model)) return `${row.id}: ${model} is not in the route's first-party roster`;
     return null;
+}
+
+/**
+ * Host and path, scheme dropped: an `http` or mixed-case spelling of a
+ * catalogued route is the same route to the gate, so it cannot step around it.
+ */
+export function routeIdentity(url: string): string {
+    try {
+        const u = new URL(url);
+        return `${u.host}${u.pathname.replace(/\/+$/, '')}`;
+    } catch {
+        return url.trim().toLowerCase().replace(/\/+$/, '');
+    }
 }

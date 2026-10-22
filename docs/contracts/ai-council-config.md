@@ -1445,10 +1445,23 @@ model list marking `community: true|false`) is attested for first-party models
 only: discovery keeps only the ids that list marks `community: false` and reads
 `unknown` when the list cannot be read, and a member on that route is absent
 with `policy_model_mismatch` unless its model is in a first-party roster
-discovered within the last day. Model ids come
+discovered within the last day. The gate matches the member's `base_url`
+by host and path, case-insensitively and with the scheme and trailing slashes
+dropped, so an `http` or mixed-case spelling is the same route. Model ids come
 from one GET of `<base_url>/models` into
 `agents/runtime/state/council-route-models.json`; a failed probe clears the
 entry, so an offline route reads `unknown`.
+
+The roster is written by
+`./scripts-run src/scripts/ai_council/free_route_catalog discover [--root <dir>]`,
+which discovers every catalogued row carrying `first_party_list`, prints one
+`<id>: known|unknown` line per row and exits 1 when any stays `unknown`. The
+roster is keyed by the catalogue `id` (`pollinations`), not the member name,
+and lives under the repository root — the root `resolve_project_root` finds,
+the one the council's other runtime state uses — which is also where the gate
+reads it, so a council run from a subdirectory sees the same roster. Run it
+again within a day of a run that uses the route; an older roster makes the
+member absent.
 
 Liveness is a streak per route and model (`route_liveness.ts`, state in
 `agents/runtime/state/council-route-liveness.json`). A `rate_limited`,

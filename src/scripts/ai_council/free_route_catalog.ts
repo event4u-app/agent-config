@@ -16,7 +16,9 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
+import { resolve_project_root } from '../_lib/agent_settings.js';
 import { isRealDate } from './free_route.js';
 
 export interface RouteAttestation {
@@ -224,4 +226,52 @@ export async function discoverRouteModels(routeKey: string, baseUrl: string, opt
     store[routeKey] = { base_url: baseUrl, models, observed_at };
     _writeStore(opts.repoRoot, store);
     return { status: 'known', models, observed_at };
+}
+
+export interface CatalogMainDeps {
+    readonly fetchImpl?: typeof fetch;
+    readonly stdout?: (line: string) => void;
+    readonly now?: Date;
+}
+
+const USAGE = 'usage: free_route_catalog discover [--root <dir>]';
+
+/**
+ * `discover [--root <dir>]` — the production path that writes the first-party
+ * roster `route_member.ts` gates on. Every catalogued row with a
+ * `first_party_list` is discovered under its catalogue id, beneath the same
+ * repository root the gate resolves. Exit 1 when any roster stays unknown.
+ */
+export async function main(argv: readonly string[], deps: CatalogMainDeps = {}): Promise<number> {
+    const out = deps.stdout ?? ((line: string) => process.stdout.write(`${line}\n`));
+    const [cmd, ...rest] = argv;
+    const rootAt = rest.indexOf('--root');
+    const rootArg = rootAt === -1 ? null : (rest[rootAt + 1] ?? '');
+    if (cmd !== 'discover' || rootArg === '' || rest.length !== (rootAt === -1 ? 0 : 2)) {
+        out(USAGE);
+        return 2;
+    }
+    const [repoRoot] = resolve_project_root(rootArg);
+    let unknown = 0;
+    for (const row of ROUTE_CATALOG) {
+        if (row.first_party_list === undefined) continue;
+        const roster = await discoverRouteModels(row.id, row.base_url, {
+            repoRoot,
+            firstPartyListUrl: row.first_party_list,
+            ...(deps.fetchImpl ? { fetchImpl: deps.fetchImpl } : {}),
+            ...(deps.now ? { now: deps.now } : {}),
+        });
+        if (roster.status === 'known') {
+            out(`${row.id}: known (${roster.models.length} first-party models, observed ${roster.observed_at})`);
+        } else {
+            unknown += 1;
+            out(`${row.id}: unknown (${roster.reason})`);
+        }
+    }
+    out(`roster: ${path.join(repoRoot, ROUTE_MODELS_RELPATH)}`);
+    return unknown === 0 ? 0 : 1;
+}
+
+if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+    void main(process.argv.slice(2)).then((code) => process.exit(code));
 }
