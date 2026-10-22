@@ -306,19 +306,22 @@ describe('release settings delta — the released surface', () => {
         // Set by the full-history CI step: missing history is then a failure,
         // not a reason to skip.
         const requireHistory = process.env['RELEASE_SURFACE_REQUIRE_HISTORY'] === '1';
+        expect(HISTORICAL_NON_CUT_WRITES).toHaveLength(1);
+        const [offender] = HISTORICAL_NON_CUT_WRITES;
         let log: string;
         try {
-            if (git(['rev-parse', '--is-shallow-repository']) === 'true') throw new Error('shallow');
+            // Reaching the offender's parent is the condition, not the
+            // repository's shallow flag: a grafted local clone can be shallow
+            // and still hold every commit this check reads.
+            git(['cat-file', '-e', `${offender}^^{commit}`]);
             log = git(['log', '--format=%H', '--diff-filter=M', '--', SETTINGS_SURFACE_FIXTURE_REL]);
         } catch (e) {
-            // No full history (an exported tree, a shallow fetch). The
-            // writer-set assertion above still holds; this half has nothing
-            // to read — unless the caller demanded history.
+            // History does not reach back that far (an exported tree, a
+            // shallow fetch). The writer-set assertion above still holds;
+            // this half has nothing to read, unless the caller demanded it.
             if (requireHistory) throw e;
             return;
         }
-        expect(HISTORICAL_NON_CUT_WRITES).toHaveLength(1);
-        const [offender] = HISTORICAL_NON_CUT_WRITES;
         const blobAt = (rev: string): string => {
             try {
                 return git(['rev-parse', `${rev}:${SETTINGS_SURFACE_FIXTURE_REL}`]);
