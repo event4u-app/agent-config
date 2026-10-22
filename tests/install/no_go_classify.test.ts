@@ -144,6 +144,17 @@ describe('classifyNoGo — what it refuses to guess', () => {
         expect(kindOf('Not every change needs to touch `docs/`')).toBe('prose');
     });
 
+    it('stays prose when a temporal or conditional conjunction introduces the token', () => {
+        // The token names the PRECONDITION the bullet prescribes, so a deny row
+        // over it would block the very step the bullet asks for.
+        expect(kindOf('Never commit without reading `docs/spec.md`')).toBe('prose');
+        expect(kindOf('Never commit before running `scripts/check.sh`')).toBe('prose');
+        expect(kindOf('Never delete a branch after merging `release/`')).toBe('prose');
+        expect(kindOf('Never edit anything until reviewing `docs/adr/`')).toBe('prose');
+        // The bare prohibition still builds its row.
+        expect(kindOf('Never commit `secrets/`')).toBe('path');
+    });
+
     it('stays prose on a dotted identifier that is not a path', () => {
         // Both halves measured: the open regex accepted the first group, and
         // the replacement that excluded all-lowercase single-dot tokens

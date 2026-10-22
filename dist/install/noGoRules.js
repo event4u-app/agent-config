@@ -73,7 +73,7 @@ const NEGATIONS = [
  * bullet recommends. A separator between the verb and the token means the token
  * belongs to a different clause, so the verdict is prose.
  */
-const CLAUSE_BREAK = /(?:^|\s)[-–—](?:\s|$)|[;:,()]|\b(?:instead|use|using|prefer|except|unless|but|rather|need|needs|needed|necessary|required|optional|if|when|while|other than)\b/i;
+const CLAUSE_BREAK = /(?:^|\s)[-–—](?:\s|$)|[;:,()]|\b(?:instead|use|using|prefer|except|unless|but|rather|need|needs|needed|necessary|required|optional|if|when|while|without|before|after|until|other than)\b/i;
 /**
  * Words between the negation and the verb that INVERT what the negation does.
  *
