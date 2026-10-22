@@ -232,12 +232,16 @@ describe('pending breaking-changes rows reach the curated head', () => {
         expect(pendingBreakingLine('# Breaking\n')).toBeNull();
     });
 
-    it('names the three fail_closed guards in the head rendered from the real index', () => {
+    it('names the three fail_closed guards in the head rendered from the real index', (t) => {
         const real = fs.readFileSync(path.join(import.meta.dirname, '..', '..', 'BREAKING_CHANGES.md'), 'utf-8');
         const line = pendingBreakingLine(real);
         // Only meaningful while the #2455 row is still pending; once a release
         // moves it into the by-major table that release has already named it.
-        if (line === null || !line.includes('fail_closed')) return;
+        // skip-reason: reported as SKIPPED, never a silent green with nothing asserted.
+        if (line === null || !line.includes('fail_closed')) {
+            t.skip('the #2455 row is no longer pending');
+            return;
+        }
         const head = render_release_head({ 'Default changes + migration': line }).join('\n');
         for (const guard of ['block-no-verify', 'block-kernel-rule-writes', 'block-plumbing-writes']) {
             expect(head).toContain(guard);

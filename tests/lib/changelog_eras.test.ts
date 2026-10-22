@@ -10,6 +10,8 @@ const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..',
 
 // ─── drift gate (mirror of tests/test_changelog_eras.py) ──────────────────────
 
+const NO_TAG = 'no release tag reachable: a shallow or tagless clone cannot check shipped entries';
+
 describe('changelog era drift gate (live CHANGELOG.md)', () => {
     it('test_changelog_has_current_era', () => {
         const lines = eras.read_changelog_lines();
@@ -145,17 +147,20 @@ describe('changelog era drift gate (live CHANGELOG.md)', () => {
      * shipped is not unreleased, whatever it is filed under.
      *
      * Degrades rather than guesses. A checkout with no tags, or one where git
-     * cannot answer, asserts nothing here — the release gates read tags with
+     * cannot answer, reports the case as skipped — the release gates read tags with
      * their own completeness checks, and a test that invented an answer from an
      * incomplete tag list would red every shallow CI job over history it cannot
      * see.
      */
-    it('unreleased-holds-only-unreleased', () => {
+    it('unreleased-holds-only-unreleased', (t) => {
         const entries = eras.unreleased_entry_headlines(eras.read_changelog_lines());
         const newest = eras.newest_release_tag(ROOT);
         if (newest === null) {
-            // Non-vacuous even here: the parser must still find the section.
+            // The parser must still find the section; the history half is
+            // reported as skipped rather than passing on nothing.
             expect(Array.isArray(entries)).toBe(true);
+            // skip-reason: no release tag reachable (a shallow or tagless clone).
+            t.skip(NO_TAG);
             return;
         }
         const shipped = entries.filter(
@@ -170,12 +175,16 @@ describe('changelog era drift gate (live CHANGELOG.md)', () => {
         ).toEqual([]);
     });
 
-    it('is sensitive — an entry the newest tag contains IS detected', () => {
+    it('is sensitive — an entry the newest tag contains IS detected', (t) => {
         // The drain's own newest entry, whose commit 16.4.0 contains. Asserted
         // against the same predicate the case above uses, so a predicate that
         // started answering `false` for everything cannot leave both green.
         const newest = eras.newest_release_tag(ROOT);
-        if (newest === null) return;
+        if (newest === null) {
+            // skip-reason: no release tag reachable (a shallow or tagless clone).
+            t.skip(NO_TAG);
+            return;
+        }
         expect(
             eras.entry_is_contained_in_tag(
                 '**46 settings keys are retired; an install that never changed them sees no',
@@ -185,9 +194,13 @@ describe('changelog era drift gate (live CHANGELOG.md)', () => {
         ).toBe(true);
     });
 
-    it('is sensitive the other way — a headline no commit ever wrote is not shipped', () => {
+    it('is sensitive the other way — a headline no commit ever wrote is not shipped', (t) => {
         const newest = eras.newest_release_tag(ROOT);
-        if (newest === null) return;
+        if (newest === null) {
+            // skip-reason: no release tag reachable (a shallow or tagless clone).
+            t.skip(NO_TAG);
+            return;
+        }
         expect(
             eras.entry_is_contained_in_tag(
                 '**a headline that has never appeared in this changelog, 7f3a9c**',
@@ -203,9 +216,13 @@ describe('changelog era drift gate (live CHANGELOG.md)', () => {
      * not only the predicate the two cases above exercise. A guard proven on
      * its predicate alone could still be reading the wrong region of the file.
      */
-    it('a fixture staging one already-shipped entry is refused', () => {
+    it('a fixture staging one already-shipped entry is refused', (t) => {
         const newest = eras.newest_release_tag(ROOT);
-        if (newest === null) return;
+        if (newest === null) {
+            // skip-reason: no release tag reachable (a shallow or tagless clone).
+            t.skip(NO_TAG);
+            return;
+        }
         const saved = path.join(ROOT, 'CHANGELOG.md');
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'unreleased-fixture-'));
         const fixture = path.join(dir, 'CHANGELOG.md');
@@ -239,9 +256,13 @@ describe('changelog era drift gate (live CHANGELOG.md)', () => {
         }
     });
 
-    it('the same fixture with a genuinely new entry passes', () => {
+    it('the same fixture with a genuinely new entry passes', (t) => {
         const newest = eras.newest_release_tag(ROOT);
-        if (newest === null) return;
+        if (newest === null) {
+            // skip-reason: no release tag reachable (a shallow or tagless clone).
+            t.skip(NO_TAG);
+            return;
+        }
         const saved = path.join(ROOT, 'CHANGELOG.md');
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'unreleased-fixture-ok-'));
         const fixture = path.join(dir, 'CHANGELOG.md');
