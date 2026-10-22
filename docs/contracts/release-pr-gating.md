@@ -86,8 +86,9 @@ hold:
      § Era splits) when the current era crosses its line cap on an
      era-boundary release.
    - `agents/evidence/release-findings/*.json` — an optional
-     finding-disposition ledger, committed by hand; since 2026-10-22 no gate
-     waits for it (owner: main is already reviewed)
+     finding-disposition ledger, committed by hand. No release workflow waits
+     for it (owner, 2026-10-22: main is already reviewed); the consistency
+     coverage guard still requires any committed ledger to be valid
    - `agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md`
      — the per-release evidence-temperature census written by
      `taskfiles/content.yml` § `release-prepare`, step 2 of `task release`.

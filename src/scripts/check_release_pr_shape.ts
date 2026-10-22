@@ -42,7 +42,8 @@ const ALLOWLIST_GLOBS = [
     'src/domains/*/README.md',
     'docs/archive/CHANGELOG-pre-*.md',
     // Finding-disposition ledger — optional, committed by hand; a release PR
-    // may carry one, and since 2026-10-22 no gate waits for it.
+    // may carry one. No release workflow waits for it (2026-10-22); the
+    // consistency coverage guard still requires any committed ledger to be valid.
     'agents/evidence/release-findings/*.json',
     // Evidence-temperature census — `taskfiles/content.yml` § release-prepare
     // writes one per release, so without this entry the pipeline generates a
