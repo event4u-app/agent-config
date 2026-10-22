@@ -44,6 +44,9 @@ export function finderDescription(count: number): string {
     );
 }
 
+/** The one name shape the index carries, on both the writing and the reading side. */
+const SKILL_NAME_RE = /^[a-z0-9][a-z0-9-]*$/;
+
 /** One unlisted skill and the root whose copy the entry points at. */
 export interface FinderTarget {
     name: string;
@@ -53,7 +56,10 @@ export interface FinderTarget {
 
 /** The SKILL.md the host lists. Pure; sorted, so two installs write identical bytes. */
 export function renderFinder(targets: readonly FinderTarget[]): string {
-    const sorted = [...targets].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    // Names and headings come from readdir and become text the model follows:
+    // only the shape `readFinderIndex` accepts is written, never a newline.
+    const safe = targets.filter((t) => SKILL_NAME_RE.test(t.name) && !/[\r\n]/.test(t.skillsDir));
+    const sorted = [...safe].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
     const byDir = new Map<string, string[]>();
     for (const t of sorted) {
         const list = byDir.get(t.skillsDir) ?? [];
@@ -118,7 +124,7 @@ export function readFinderIndex(file: string): FinderTarget[] {
         if (dir === null || line.trim() === '') continue;
         for (const n of line.split(',')) {
             const name = n.trim();
-            if (/^[a-z0-9][a-z0-9-]*$/.test(name)) out.push({ name, skillsDir: dir });
+            if (SKILL_NAME_RE.test(name)) out.push({ name, skillsDir: dir });
         }
     }
     return out;
@@ -171,7 +177,9 @@ function ours(anchor: string, recordFile: string): boolean {
     const file = finderFile(anchor);
     if (!fs.existsSync(path.dirname(file))) return true;
     const rec = readRecord(recordFile, anchor);
-    if (rec === null || !fs.existsSync(file)) return false;
+    if (rec === null) return false;
+    // Our record and no file: ours was deleted, and writing it again is the repair.
+    if (!fs.existsSync(file)) return true;
     return sha256(fs.readFileSync(file, 'utf-8')) === rec.sha256;
 }
 

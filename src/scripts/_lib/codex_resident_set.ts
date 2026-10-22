@@ -416,6 +416,19 @@ export function applyCodexResidentSet(home: string, report: (msg: string) => voi
         }
         const resident = new Set(split.resident);
 
+        // 5.2's S3: an unlisted skill is not reached unless something listed
+        // routes to it. The finder lives in the first root and indexes every
+        // non-resident name at the root whose copy the host would have used.
+        // Written FIRST: when it cannot be (a foreign entry holds its path),
+        // nothing is unlisted, because an unlisted skill with no finder is
+        // unreachable — an over-budget listing is the lesser failure.
+        const finder = ensureCodexFinder(
+            roots[0]!,
+            finderRecordPath(roots[0]!),
+            split.nonResident.map((name) => ({ name, skillsDir: path.join(firstRootOf.get(name)!, 'skills') })),
+        );
+        const unlistAllowed = finder !== 'foreign';
+
         let disabled = 0;
         let reenabled = 0;
         let foreign = 0;
@@ -427,26 +440,19 @@ export function applyCodexResidentSet(home: string, report: (msg: string) => voi
                 .map((d) => d.name);
             // Disabled here when it is not resident at all, OR when it is
             // resident but some earlier root already carries its description.
-            const nonResident = here.filter((n) => !resident.has(n) || firstRootOf.get(n) !== anchor);
+            const nonResident = unlistAllowed ? here.filter((n) => !resident.has(n) || firstRootOf.get(n) !== anchor) : [];
             const res = ensureCodexResidentSet(anchor, recordPath(anchor), nonResident);
             disabled += res.disabled.length;
             reenabled += res.reenabled.length;
             foreign += res.skipped_foreign.length;
         }
-        // 5.2's S3: an unlisted skill is not reached unless something listed
-        // routes to it. The finder lives in the first root and indexes every
-        // non-resident name at the root whose copy the host would have used.
-        const finder = ensureCodexFinder(
-            roots[0]!,
-            finderRecordPath(roots[0]!),
-            split.nonResident.map((name) => ({ name, skillsDir: path.join(firstRootOf.get(name)!, 'skills') })),
-        );
         report(
             `codex: resident set across ${roots.length} root(s) — ${split.resident.length} listed ` +
                 `(${split.listingChars} of ${split.budgetChars} chars), ` +
                 `${disabled} newly unlisted, ${reenabled} relisted` +
                 (foreign > 0 ? `, ${foreign} existing policy file(s) untouched` : '') +
-                `, finder ${finder}`,
+                `, finder ${finder}` +
+                (unlistAllowed ? '' : ' — nothing unlisted, because no finder could route to it'),
         );
     } catch (e) {
         report(`codex: resident set skipped — ${String(e)}`);
