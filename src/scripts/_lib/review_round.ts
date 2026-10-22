@@ -107,7 +107,14 @@ export function checkReviewRound(
                 continue;
             }
             const cited = /\S+\.owner-report\.md/.exec(row.reasonRef)?.[0];
-            if (cited === undefined || !fs.existsSync(path.join(repo, cited))) {
+            // Confined to the artefact's own directory inside the repository:
+            // an absolute or `..` path, or another review's report, proves
+            // nothing about THIS round.
+            const sameDir =
+                cited !== undefined &&
+                !path.isAbsolute(cited) &&
+                path.posix.dirname(path.posix.normalize(cited)) === path.posix.dirname(rel);
+            if (cited === undefined || !sameDir || !fs.existsSync(path.join(repo, cited))) {
                 violations.push({
                     kind: 'cap-deferral-without-owner-report',
                     file: artifactAbs,
