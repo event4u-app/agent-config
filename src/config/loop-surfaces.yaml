@@ -94,18 +94,21 @@ surfaces:
       - src/domains/meta/README.md
 
   # bound_kind was `code` until 2026-10-14, pointing at MAX_ITERATIONS and
-  # STALL_WINDOW in _lib/continuation_ladder.ts. The only caller of that ladder,
-  # the run-continuation concern, was withdrawn on its own kill date, so the code
-  # bound had already stopped bounding anything; the owner then decided to
-  # remove the module. What bounds the loop now is prose: a roadmap's finite
-  # step list closes it (`count_open`), and a failure that repeats with budget
-  # left ends it as `stagnated` — both stated in the command. Reported, never
-  # red, which is the honest weight of a bound nothing executes.
+  # STALL_WINDOW in _lib/continuation_ladder.ts, whose only caller (the
+  # run-continuation concern) had been withdrawn; the owner then removed the
+  # module. From 2026-10-14 to 2026-10-22 the row was `prose` and its `cap`
+  # pointed at `count_open` — the SUCCESS condition, not an iteration cap — so
+  # an autonomous drain had no executable bound. The bound is code again, through a different mechanism: the
+  # run calls `agent-config sessions:claim <slug> --step` before each step, and
+  # `_lib/process_loop_bound.ts` refuses (exit 3) past an iteration cap scaled
+  # to the open count the run began with, or after a window of ticks in which
+  # the open count did not fall. Still agent-invoked — the command obliges the
+  # call — but the cap and the stall are decided by code, not prose.
   roadmap_process_loop:
     kind: prose
-    bound_kind: prose
-    cap: src/domains/product-basic/roadmap/process-full/command.md:count_open
-    no_progress: src/agent-src/contexts/execution/process-full-delivery.md:stagnated
+    bound_kind: code
+    cap: src/scripts/_lib/process_loop_bound.ts:processLoopIterationCap
+    no_progress: src/scripts/_lib/process_loop_bound.ts:PROCESS_LOOP_STALL_WINDOW
     success_stop: >-
       count_open == 0 with the PR open. `blocked` is never presented as
       completion and no checkbox is flipped to reach it.

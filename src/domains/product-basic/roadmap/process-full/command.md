@@ -44,6 +44,11 @@ with the **scope delta below**.
 `--force` to get past a live peer. A lane brief already carries its lane claim
 (§ Lanes), so a lane does not claim again.
 
+**Count every step:** run `agent-config sessions:claim <slug> --step` before
+starting each step. Exit 3 is the loop's executable bound — over its iteration
+cap the run ends `exhausted`, with the open count not falling it ends
+`stagnated` (halt 5's budget, decided by code); open steps stay open.
+
 ## Scope delta
 
 - **Execution mode:** read `execution.mode` from frontmatter. Under
@@ -167,7 +172,8 @@ stops the run):
 2. **Council-off + genuine ambiguity** (only outside an accepted contract with council available).
 3. **Security-sensitive** surface reached.
 4. **Scope-out-of-roadmap** work discovered.
-5. **Test / quality red** that cannot be cleared within the N=3 budget.
+5. **Test / quality red** that cannot be cleared within the N=3 budget —
+   including that budget's executable form, `sessions:claim --step` exit 3.
 
 **Halt 6, `--all` halts** — read [`process-full-all`](../../contexts/execution/process-full-all.md#full-is-full--halt-detail).
 
