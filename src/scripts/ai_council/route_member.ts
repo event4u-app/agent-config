@@ -8,12 +8,15 @@
 import { resolve_project_root } from '../_lib/agent_settings.js';
 import { PROVIDER_TABLE } from '../_lib/environment_detector.js';
 import { resolve_api_key } from './config.js';
-import type { ContentClass } from './content_ceiling.js';
+import { classifyContentClass, DEFAULT_SEAT_CEILING, type ContentClass } from './content_ceiling.js';
+import type { ExternalAIClient } from './clients.js';
 import { FreeRouteClient } from './free_route_client.js';
 import { readRouteRoster, ROUTE_CATALOG } from './free_route_catalog.js';
 import {
     parseRouteFields,
     resolveRouteTransport,
+    routeCeiling,
+    type SelfHostedProbeResult,
     type RouteBilling,
     type SelfHostedProbe,
 } from './free_route.js';
@@ -44,9 +47,10 @@ export function routeMemberFor(
     if (gate !== null) return { absent: { member: name, reason: 'policy_model_mismatch', detail: gate } };
     const ref = typeof cfg['api_key_ref'] === 'string' ? cfg['api_key_ref'] : null;
     // A keyed loopback route can only be proven with its key on the probe call.
+    let probed: SelfHostedProbeResult | undefined;
     const keyedProbe: SelfHostedProbe = (r, m) => {
         const withKey: ProbeRoute = { ...r, api_key_ref: ref };
-        return probe(withKey, m);
+        return (probed = probe(withKey, m));
     };
     const t = resolveRouteTransport({ name, route, model, contentClass, keyPresent: keyResolves(ref), probe: keyedProbe });
     if (!t.available) {
@@ -59,8 +63,20 @@ export function routeMemberFor(
             base_url: route.base_url,
             api_key: ref === null ? null : resolve_api_key(ref, `ai_council.members.${name}`),
             billing: t.billing as RouteBilling,
+            content_ceiling: routeCeiling(route, probed),
         }),
     };
+}
+
+/** A built seat carries the ceiling its config declares; a route client keeps its own. */
+export function stampSeatCeilings(members: readonly ExternalAIClient[], membersCfg: Record<string, unknown>): void {
+    for (const m of members) {
+        const seat = m as unknown as Record<string, unknown>;
+        if (m instanceof FreeRouteClient || seat['content_ceiling'] !== undefined) continue;
+        const cfg = membersCfg[m.name];
+        const declared = typeof cfg === 'object' && cfg !== null ? (cfg as Record<string, unknown>)['content_ceiling'] : undefined;
+        seat['content_ceiling'] = classifyContentClass(declared, DEFAULT_SEAT_CEILING);
+    }
 }
 
 /** A first-party roster older than this no longer says which models are first-party. */

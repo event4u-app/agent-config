@@ -162,6 +162,7 @@ export const SHADOW_WAIT_MS = 30_000;
 /** The model a `base_url` route member calls; null for a provider member. */
 function routeModel(member: ExternalAIClient): string | null {
     const m = member as unknown as Record<string, unknown>;
+    if (!isUnpaid(routeCandidateFromMember(member).billing)) return null;
     return typeof m['base_url'] === 'string' && typeof m['model'] === 'string' && m['model'] !== '' ? m['model'] : null;
 }
 

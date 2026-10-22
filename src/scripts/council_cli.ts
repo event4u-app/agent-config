@@ -86,7 +86,7 @@ import {
     resolvedTransportFor as _resolvedTransportFor,
     routeStatusLines as _routeStatusLines,
 } from './ai_council/status_surface.js';
-import { routeMemberFor } from './ai_council/route_member.js';
+import { routeMemberFor, stampSeatCeilings } from './ai_council/route_member.js';
 import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
 import {
     _emitQuorumEvent,
@@ -886,6 +886,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                 'prints the resolved path.',
         );
     }
+    stampSeatCeilings(members, members_cfg);
     wireCouncilFallback(fallback_out, ai, {
         repoRoot: REPO_ROOT, isDict: _isDict, membersCfg: members_cfg, overrides,
         hasApiRung: (p) => _API_PROVIDERS.has(p),
