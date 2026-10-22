@@ -47,6 +47,10 @@ export interface FileDiff {
     readonly path: string;
     readonly added: readonly string[];
     readonly removed: readonly string[];
+    /** Per added line: the line above it in the new file is the previous added line. */
+    readonly addedFollows?: readonly boolean[];
+    /** Per removed line: the line above it in the old file is the previous removed line. */
+    readonly removedFollows?: readonly boolean[];
 }
 
 /**
@@ -63,10 +67,17 @@ export function parseUnifiedDiff(diff: string): FileDiff[] {
     let oldPath: string | null = null;
     let added: string[] = [];
     let removed: string[] = [];
+    let addedFollows: boolean[] = [];
+    let removedFollows: boolean[] = [];
+    // Whether the last line seen in each file's sequence was a changed one.
+    let lastNew = false;
+    let lastOld = false;
     const flush = (): void => {
-        if (path !== null) out.push({ path, added, removed });
+        if (path !== null) out.push({ path, added, removed, addedFollows, removedFollows });
         added = [];
         removed = [];
+        addedFollows = [];
+        removedFollows = [];
     };
     for (const line of diff.split('\n')) {
         if (line.startsWith('diff --git ')) {
@@ -92,10 +103,22 @@ export function parseUnifiedDiff(diff: string): FileDiff[] {
             path = p === '/dev/null' ? oldPath : p.replace(/^b\//, '');
             continue;
         }
-        if (line.startsWith('@@')) continue;
+        if (line.startsWith('@@')) {
+            lastNew = lastOld = false;
+            continue;
+        }
         if (path === null) continue;
-        if (line.startsWith('+')) added.push(line.slice(1));
-        else if (line.startsWith('-')) removed.push(line.slice(1));
+        if (line.startsWith('+')) {
+            added.push(line.slice(1));
+            addedFollows.push(lastNew);
+            lastNew = true;
+        } else if (line.startsWith('-')) {
+            removed.push(line.slice(1));
+            removedFollows.push(lastOld);
+            lastOld = true;
+        } else {
+            lastNew = lastOld = false;
+        }
     }
     flush();
     return out;
@@ -160,23 +183,28 @@ const COMMENT_LINE = /^\s*(\/\/|\/\*|\*|#|--)/;
  * Counted apart from `SUPPRESSION` because it is legitimate far more often — a
  * tool that is absent, a live flag that is off — and because it is also the
  * shape that hid a happy path nothing ever ran. So an ADDED one is a
- * suppression unless the same added line, or the added line right above it,
- * carries `skip-reason:`. Diff-only by design: the sites already in the tree
- * are never re-counted.
+ * suppression unless the same added line, or the added line directly above it
+ * in the file, carries a non-empty `skip-reason:`. Diff-only by design: the
+ * sites already in the tree are never re-counted.
  */
 const CONDITIONAL_SKIP = /\.\s*(skipIf|runIf)\s*\(/;
-const SKIP_REASON = /\bskip-reason:/;
+const SKIP_REASON = /\bskip-reason:\s*\S/;
 
-function unreasonedConditionalSkips(added: readonly string[]): number {
+/** `follows[i]` false means the previous list entry is not the line above (another hunk). */
+function unreasonedConditionalSkips(added: readonly string[], follows?: readonly boolean[]): number {
     let n = 0;
     added.forEach((line, i) => {
         if (!CONDITIONAL_SKIP.test(line) || DIFF_LINE_AS_DATA.test(line)) return;
         if (COMMENT_LINE.test(line)) return;
-        if (SKIP_REASON.test(line) || SKIP_REASON.test(added[i - 1] ?? '')) return;
+        const above = follows?.[i] === false ? '' : (added[i - 1] ?? '');
+        if (SKIP_REASON.test(line) || SKIP_REASON.test(above)) return;
         n += 1;
     });
     return n;
 }
+
+/** A suppression that only exists inside a comment: a PHPUnit docblock annotation. */
+const DOCBLOCK_SUPPRESSION = /@group\s+skip/;
 
 /** Counted evidence about one test file's diff. */
 export interface WeakeningSignal {
@@ -198,15 +226,20 @@ export interface WeakeningSignal {
  */
 export function weakeningSignal(file: FileDiff): WeakeningSignal {
     const count = (lines: readonly string[], re: RegExp): number =>
-        lines.filter((l) => re.test(l) && !DIFF_LINE_AS_DATA.test(l) && !COMMENT_LINE.test(l)).length;
+        lines.filter(
+            (l) =>
+                re.test(l) &&
+                !DIFF_LINE_AS_DATA.test(l) &&
+                (!COMMENT_LINE.test(l) || (re === SUPPRESSION && DOCBLOCK_SUPPRESSION.test(l))),
+        ).length;
     return {
         path: file.path,
         assertionsLost: count(file.removed, ASSERTION) - count(file.added, ASSERTION),
         suppressionsGained:
             count(file.added, SUPPRESSION) +
-            unreasonedConditionalSkips(file.added) -
+            unreasonedConditionalSkips(file.added, file.addedFollows) -
             count(file.removed, SUPPRESSION) -
-            unreasonedConditionalSkips(file.removed),
+            unreasonedConditionalSkips(file.removed, file.removedFollows),
     };
 }
 
