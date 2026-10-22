@@ -136,14 +136,16 @@ the judge-one-tier-up ladder (`src/agent-src/contexts/subagent-configuration.md:
   verify: both rows exist in `docs/CLAIMS.md` with bars before the first paired run, and
   `check_claims` is green.
   Done 2026-10-22 (commit e61a0db79c): both rows `unbacked` in `docs/CLAIMS.md`, `build_proof` run in the same change, `check_claims` green (117 entries).
-- [ ] **2.2 Paired run.** Read-only fan-out slices only (the one kind both tables already put
+- [x] **2.2 Paired run.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/tier_downshift_verdict.ts --> Read-only fan-out slices only (the one kind both tables already put
   at `lite`); each slice runs once per arm, both verified; capped at decision A2.
   verify: the ledger shows two arms with a verify result for every slice.
-- [ ] **2.3 Flip per kind.** A kind that clears both bars gets `lite` as its default
+  Done 2026-10-22: 60 read-only fan-out slices, each once per arm in a print-mode child session (subscription, no metered API), against a pinned snapshot; both arms verified 60/60, `lite` cost 0.00152 USD per verified slice against 0.01548 on inherit (`sonnet`). Harness `internal/bench/tier-downshift/run.ts`, verdict as code `src/scripts/_lib/tier_downshift_verdict.ts` (tests `_lib_tier_downshift_verdict.test.ts`), rows `internal/bench/tier-downshift/results.jsonl`, report `agents/evidence/analysis/tier-downshift-paired-run-2026-10-22.md`. Held exactly at the 5 pp margin by the rule of three.
+- [x] **2.3 Flip per kind.** <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/tier_downshift_verdict.ts --> A kind that clears both bars gets `lite` as its default
   dispatch; then — and only then — `ac-researcher` declares `model_tier: lite` (T1). A later
   breach of the kill reverts the kind and records the reversion in the claim row.
   verify: a seeded breach above the kill reverts the kind; `ac-researcher.md` changes in the
   same commit as the backed claim, never before.
+  Done 2026-10-22: both claims `backed` and `ac-researcher` → `model_tier: lite` in one commit; the test `ac-researcher-tier-follows-the-claim` fails whenever the definition and the claims disagree (seen red by setting `lite` before the backing); `kindTierAfter` reverts a lite kind on a seeded breach (`_lib_tier_downshift_verdict.test.ts` › a seeded breach above the kill reverts a kind already on lite).
 
 ## Phase 3 — Advisor pairing, measured or closed (T6)
 
@@ -175,10 +177,11 @@ them from day one; only 4.4 waits, on its blocker.
 - [x] **4.3 Into `road-to-a-cold-start-paid-once`:** a dated note that the owner's minimal-setup
   turn is answered by its 2.5 and 5.1, recommended ahead of its Phase 3 shadow window.
   verify: the note exists with the date and both step ids.
-- [ ] **4.4 Into `road-to-one-detector-and-the-senders-we-own`:** the decision line of blocker
+- [x] **4.4 Into `road-to-one-detector-and-the-senders-we-own`:** <!-- receipt: class=R0 · shadow · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural --> the decision line of blocker
   `realistic-fakes-for-hands`, either way. The question itself is already pointed to from that
   file's N4.
   verify: the line is in that file's decisions table with a date.
+  Done 2026-10-22: D11 in that file and A7 here, option (a), dated; resolved by council 2/2 under the run's delegation and listed for the owner, not by an owner line.
 - [x] **4.5 Into the free-hands file's 1.3:** an egress canary run — planted values in payload,
   system prompt and quotable rule text, sent to a loopback mock endpoint — before any free call.
   verify: the 1.3 step exists in that file.
@@ -217,6 +220,7 @@ them from day one; only 4.4 waits, on its blocker.
 | A4 | reversible-technical | agent | The ChatGPT plan's twelve-phase runtime is declined wholesale, its measurement-first ordering kept | K1–K7; its own section 9 asked for an A/B against today's runtime first, which is Phase 0 and 2 here | — |
 | A6 | reversible-technical | agent | No hysteresis or turn-by-turn model switching of the main session | the head never switches its own model (the user owns it, `delegation-policy` scope); a per-call tier on a dispatch switches nothing mid-session, so the cache cost a switching router must amortise does not arise | the host adds a per-turn model override for the main session |
 | A5 | reversible-technical | agent | Only the read-only fan-out kind enters the first paired run | the one kind both tier tables already assign to `lite` with deterministic verification (`model-recommendations.md:52`) | the kind's sample is too small at the cap |
+| A7 | product-owned | council:agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md | Blocker `realistic-fakes-for-hands`: option (a) — keep N4, values leave as tokens; T5 becomes a pre-registered comparison triggered at a 5 pp verify-fail gap. Council 2/2, 2026-10-22, applied as the default under the run's delegation; the owner may overturn it | tokens leak the least; (b) would add a second substitution path before the identifier half of the detector exists | the T5 trigger fires and a privacy review clears independently generated fakes |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
@@ -231,7 +235,7 @@ them from day one; only 4.4 waits, on its blocker.
 ## Blockers
 
 ### blocker: realistic-fakes-for-hands
-- **Status:** open
+- **Status:** resolved — council 2/2 chose (a) on 2026-10-22 (`agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md`), applied as the default under the run's delegation and listed for the owner, who may overturn it; recorded as A7 here and D11 in the one-detector file
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** step 4.4 only. Phases 0–3 run without it.

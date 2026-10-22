@@ -283,6 +283,8 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 | A6 | reversible-technical | agent | A hand's slice includes the signatures the function must call, not only its specification | a draft without its callees' signatures cannot compile, and the rework would land on the head; implementations stay out per the owner turn of 2026-10-22; Phase 6 measures whether the slice is too thin | 6.1 shows the head's verification tokens rising on slices that carried signatures only |
 | A7 | reversible-technical | agent | A loopback self-hosted route may carry `project-content` only after a per-model probe shows local weights; without it, and on any non-loopback host, it may not without blocker `project-content-ceiling` | loopback is a precondition, not proof: a local runtime can serve a cloud-hosted model through its local API, and any localhost proxy forwards upstream; a model whose weights are on this machine has no data-use term to check | a probed-local route is observed forwarding upstream, or the probe cannot tell local from remote weights for a runtime in use |
 | A8 | reversible-technical | agent | 2.5 reads the owner turn's self-hosted *finisher* as a *hand* that may see project content — a reinterpretation, stated as one | a local model as head or finisher would miss the quality bar the paid head holds; as a hand its output is still checked by the paid head | the owner restates self-hosted as finisher, or Phase 6 shows a self-hosted hand's drafts raising the head's verification tokens |
+| A9 | product-owned | council:agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md | Blocker `free-route-admission`: option (a) — OpenAI-compatible `base_url` routes are admitted as hands and jurors under ADR-257, keyless first, USD 0.00 under `free-quota`, shadow capped at 2,000 calls, termination on the Phase 6 bars or three consecutive `model_unservable`. Council 2/2, 2026-10-22, applied as the default under the run's delegation; the owner may overturn it | the bounds contain the experiment and (b) produces no evidence; residue named by both seats: a payload already sent cannot be recalled, so fragmentation and classification hold before the first call | a privacy or correlation violation in the shadow, or the owner overturns it |
+| A10 | product-owned | council:agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md | Blocker `project-content-ceiling`: option (b) — every free route stays `public-artifact` permanently; no attestation raises one. Council 2/2, 2026-10-22, applied as the default under the run's delegation; the owner may overturn it | the owner's directive limits free endpoints to work that does not touch data protection; an attestation documents a provider's policy and enforces nothing | `project-content` is narrowed to exclude customer, personal and proprietary data and a fail-closed egress path with refreshed provider assurance is independently validated |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
@@ -300,7 +302,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 ## Blockers
 
 ### blocker: free-route-admission
-- **Status:** open
+- **Status:** resolved — council 2/2 chose (a) on 2026-10-22 (`agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md`), applied as the default under the run's delegation and listed for the owner, who may overturn it; recorded as A9
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** Phases 2-7, except 2.5 (a self-hosted route is not a free route). Phases 0 and 1 run without it.
@@ -310,7 +312,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 - **Resolved when:** a dated owner decision line naming (a) or (b) is recorded in this file's `## Decisions` table.
 
 ### blocker: project-content-ceiling
-- **Status:** open
+- **Status:** resolved — council 2/2 chose (b) on 2026-10-22 (`agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md`), applied as the default under the run's delegation and listed for the owner, who may overturn it; recorded as A10
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** any free route above `public-artifact` — the subagent-style kinds of 3.1 on consumer code. Hands on repo-owned artefacts run without it.
