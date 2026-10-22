@@ -309,6 +309,8 @@ export interface RotationSuiteOutcome {
     minPrecision: number;
     minRecall: number;
     passed: boolean;
+    /** False when a live suite's router returned no usage on any call: no answer was scored. */
+    answered: boolean;
     resultPath: string;
 }
 
@@ -356,13 +358,15 @@ export async function run_rotation(opts: RotationOptions = {}): Promise<Rotation
             result.metrics.recall >= floor.minRecall;
         const resultPath = path.join(outDir, `${skillName}.json`);
         write_result(result, resultPath);
+        const answered = dryRun || result.input_tokens + result.output_tokens > 0;
         outcomes.push({
             skill: skillName,
             precision: result.metrics.precision,
             recall: result.metrics.recall,
             minPrecision: floor.minPrecision,
             minRecall: floor.minRecall,
-            passed,
+            passed: passed && answered,
+            answered,
             resultPath,
         });
     }
@@ -434,6 +438,13 @@ export async function main(argv?: string[]): Promise<number> {
     );
     for (const o of summary.outcomes) {
         const mark = o.passed ? '✅' : '❌';
+        if (!o.answered) {
+            process.stdout.write(
+                `  ${mark} ${o.skill} · NO ANSWER — the router returned no usage on any call ` +
+                    `(a transport or account error, not a routing score) · ${o.resultPath}\n`,
+            );
+            continue;
+        }
         process.stdout.write(
             `  ${mark} ${o.skill} · precision ${o.precision} (floor ${o.minPrecision}) · ` +
                 `recall ${o.recall} (floor ${o.minRecall}) · ${o.resultPath}\n`,
