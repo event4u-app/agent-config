@@ -102,8 +102,8 @@ export interface RetroOutput {
  * `held` — every record naming it reached a terminal status and none is back
  *   in the queue. The fix landed and the defect has not returned.
  * `recurred` — at least one record naming it is active again. Either it was
- *   never closed, or something reopened it (a revert, per
- *   {@link reopenOnRevert}).
+ *   never closed, or something reopened it ({@link reopenOnRevert} can, when
+ *   called — see its note on what does not call it yet).
  *
  * The verdict is read from record STATUS, never from the occurrence count:
  * occurrences accumulate across a record's whole life, so a high count on a
@@ -204,6 +204,11 @@ export function readRecurrence(root: string, target: string): Recurrence {
  * Returns the fingerprints it reopened, sorted. A no-op when the facts carry no
  * measured revert — `missing` is not `false`, so an unread revert fact reopens
  * nothing rather than guessing in either direction.
+ *
+ * Not yet wired: neither `composeRetro`, `recordRetro` nor `main` calls it, so
+ * today a reverted fix stays `actioned` and `readRecurrence` can still say
+ * `held`. Wiring needs the reverted fix's own target, which the PR facts do not
+ * carry; the candidate's `asset_target` names the new learning's target.
  */
 export function reopenOnRevert(
     root: string,
