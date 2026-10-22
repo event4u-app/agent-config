@@ -1444,6 +1444,14 @@ from one GET of `<base_url>/models` into
 `agents/runtime/state/council-route-models.json`; a failed probe clears the
 entry, so an offline route reads `unknown`.
 
+Liveness is a streak per route and model (`route_liveness.ts`, state in
+`agents/runtime/state/council-route-liveness.json`). A `rate_limited`,
+`quota_exhausted` or `server_error` answer marks the route absent for the pass
+and never counts against the model; three consecutive `model_unservable`
+answers (HTTP 410, or 404 naming the model) retire the model from the
+discovered roster, and the chooser reads it as not live until a later
+discovery serves it again. An answered call resets the streak.
+
 ## Precedence
 
 Resolution order for every member-level setting (mode, model, key):
