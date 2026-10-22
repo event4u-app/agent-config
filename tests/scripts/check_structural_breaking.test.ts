@@ -284,6 +284,13 @@ describe('check_structural_breaking — pack-file-deletion', () => {
         expect(r.stdout + r.stderr).toContain('src/packs/demo/pack.yaml');
     });
 
+    it('a deleted per-domain manifest is reported', () => {
+        seedAndDelete('src/domains/demo/pack.yaml', 'chore: drop the demo domain');
+        const r = run();
+        expect(r.status, r.stdout + r.stderr).toBe(1);
+        expect(r.stdout + r.stderr).toContain('src/domains/demo/pack.yaml');
+    });
+
     it('the same deletion with a breaking annotation is cleared', () => {
         // The negative control. Without it both cases above would pass against
         // a detector that returns 1 for every diff.
