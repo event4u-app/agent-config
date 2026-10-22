@@ -9,6 +9,7 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
+| road-to-17-0-follow-ups | active | draft | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
 | road-to-a-cold-start-paid-once | active | ready | On a host where a re-task is observed to be cheaper than a fresh spawn, the orchestrator re-tasks a warm … |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | active | ready | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
 | road-to-a-release-that-says-whether-it-needs-you | active | ready | This package's version number carries consumer impact, so "install it when it is safe, ask when it matters" is a … |
