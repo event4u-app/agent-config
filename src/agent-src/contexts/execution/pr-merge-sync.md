@@ -67,6 +67,28 @@ stops.
 § 4 both consume `<base>`, and § 8's kill switch "the base advanced by an actor
 other than this run" is undetectable without a base SHA to compare against.
 
+**Same-repository heads only.** Preparing a PR runs its own code with the
+maintainer's `gh` credentials: § 2 checks the head out and § 3 regenerates
+generated files with the repo's own task, which on a fork's head is a script
+the fork's author wrote. So a PR whose head lives in another repository —
+`isCrossRepository: true`, or a `headRepositoryOwner.login` that is not the
+base repository's owner — never enters the manifest. It is not checked out, not
+synced, not regenerated and not pushed; it gets the summary row
+`blocked-external` with the reason "cross-repository head — not prepared by
+this run", and a maintainer who wants it merged brings the change onto a branch
+of this repository first. A PR whose `isCrossRepository` cannot be read is
+treated as cross-repository.
+
+**Ref names are data, checked before use.** A head branch name is the PR
+author's choice, and git allows `$`, `(`, `)`, backticks, `;` and `|` in it;
+the base name comes from the same forge record. Each must match
+`^[A-Za-z0-9._/-]+$`, and the number must be a plain decimal. A PR whose head
+or base name fails is skipped with the row `blocked-external` and the reason
+"ref name outside the safe charset", and is never substituted into a command.
+A name that passes still goes into a command as one single-quoted argument —
+`'origin/<base>'`, `'--branch=<head-branch>'` — or as one element of an argv
+array, never bare and never inside double quotes.
+
 `--limit 100` caps the manifest. A queue above 100 open PRs is drained
 **partially**, and the run must say so rather than reporting completion — the
 § 6 bound reads "initial manifest + one batch", and the manifest is what the
@@ -109,9 +131,13 @@ update_strategy` limits `show`'s exit to the strategy, so a `commit_format` or
 ```bash
 git fetch origin
 gh pr checkout <N>
-agent-config git:convention show --key update_strategy --base origin/<base>   # value, source, state
-agent-config git:convention sync --base origin/<base>
+agent-config git:convention show --key update_strategy --base 'origin/<base>'   # value, source, state
+agent-config git:convention sync --base 'origin/<base>'
 ```
+
+`<N>` and `<base>` are the manifest's values, already checked against the safe
+charset in [§ Manifest fields](#manifest-fields); a PR whose head is in another
+repository never reaches this block.
 
 A `git.update_strategy` whose state is `malformed`, `invalid`, `discarded` or
 `unresolvable` is not a strategy — `show` exits `1` on it and the script
@@ -148,9 +174,9 @@ Read its exit and its line together:
   up-to-date branch before merging:
 
   ```bash
-  gh api repos/{owner}/{repo}/branches/<base>/protection \
+  gh api 'repos/{owner}/{repo}/branches/<base>/protection' \
     --jq .required_status_checks.strict 2>&1; echo "exit=$?"
-  gh api repos/{owner}/{repo}/rules/branches/<base> \
+  gh api 'repos/{owner}/{repo}/rules/branches/<base>' \
     --jq '.[] | select(.type == "required_status_checks") | .parameters.strict_required_status_checks_policy'; echo "exit=$?"
   ```
 
@@ -244,7 +270,7 @@ only remaining hunks are exactly the generated-artefact churn § 3 tells you to
 regenerate. Exclude those paths before deciding:
 
 ```bash
-git diff origin/<base>...HEAD --stat -- . \
+git diff 'origin/<base>...HEAD' --stat -- . \
   ':(exclude)agents/roadmaps-progress.md' \
   ':(exclude)docs/catalog.md' ':(exclude)agents/index.md'
 ```
