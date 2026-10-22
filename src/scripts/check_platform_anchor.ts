@@ -562,6 +562,12 @@ export function main(argv: readonly string[] = process.argv.slice(2), source = l
             files.push(a);
         }
     }
+    // The ref reaches `git diff` and `git ls-tree` as a positional argument, so
+    // one starting with `-` would be read as an option.
+    if (baseRef !== null && baseRef.startsWith('-')) {
+        process.stderr.write(`check_platform_anchor: --base-ref ${printable(baseRef)} is not a ref\n`);
+        return 1;
+    }
 
     let changed: string[];
     if (filesFlagSeen) {
