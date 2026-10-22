@@ -37,11 +37,14 @@
  *     [--system "<system prompt>"] [--member <name>] [--format text|json] \
  *     [--content-class public-artifact|project-content] \
  *     [--kind classify|extract|summarise-given-text|draft-candidate|test-candidates|finding-proposal] \
- *     [--no-record] [--dir <audit-dir>]
+ *     [--callee-file <path>]... [--no-record] [--dir <audit-dir>]
  *
  * `--kind` makes the call a typed hand: the system prompt is the kind's schema
  * and nothing else (so `--system` is refused beside it), and a return that does
  * not match the schema is a failed call (exit 3, logged), never a partial answer.
+ * The question becomes the slice's specification; each `--callee-file` adds only
+ * the signature of the function in it, and the project's own names, paths and
+ * domains are replaced by placeholders before the call.
  *
  * Exit codes: 0 answer produced · 2 usage error · 3 honest-∅ (no transport, or a
  * typed return that does not parse).
@@ -53,6 +56,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import type { ExternalAIClient } from './ai_council/clients.js';
 import { classifyContentClass, DEFAULT_CONTENT_CLASS, type ContentClass } from './ai_council/content_ceiling.js';
+import { councilEgress, type CouncilEgress } from './ai_council/council_egress.js';
+import { buildHandPayload, projectLinkingIdentifiers, type HandSlice } from './ai_council/hand_payload.js';
 import { handSystemPrompt, parseHandReturn } from './ai_council/hand_schemas.js';
 import { chooseRoute, routeCandidateFromMember } from './ai_council/route_chooser.js';
 import { isHandKind, type HandKind, type RouteBilling, type VerifyVerdict } from './_lib/hand_kinds.js';
@@ -266,6 +271,22 @@ function _finish(
         : { ...result, work_id: askWorkId(id), ...(billing !== undefined ? { route_billing: billing } : {}) };
 }
 
+export interface AskHandOptions extends Omit<AskOptions, 'kind' | 'systemPrompt'> {
+    /** The run's placeholder scope; default: the council egress state. */
+    egress?: CouncilEgress;
+}
+
+/**
+ * A typed hand call over a slice: the payload is built from the specification
+ * and callee signatures only, with linking identifiers replaced, and the system
+ * prompt is the kind's schema.
+ */
+export async function askHand(slice: HandSlice, opts: AskHandOptions = {}): Promise<AskResult | null> {
+    const { egress, ...rest } = opts;
+    const payload = buildHandPayload(slice, egress ?? councilEgress());
+    return askOnce(payload.user, { ...rest, kind: slice.kind });
+}
+
 /** Test seam: inject members instead of reading the council configuration. */
 export interface MainDeps {
     members?: ExternalAIClient[];
@@ -280,6 +301,7 @@ export async function main(argv: readonly string[], deps: MainDeps = {}): Promis
     let dir: string | undefined;
     let contentClass: ContentClass = DEFAULT_CONTENT_CLASS;
     let kindRaw: string | undefined;
+    const calleeFiles: string[] = [];
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i] ?? '';
         if (a === '--system') system = argv[++i];
@@ -289,6 +311,7 @@ export async function main(argv: readonly string[], deps: MainDeps = {}): Promis
         else if (a === '--dir') dir = argv[++i];
         else if (a === '--content-class') contentClass = classifyContentClass(argv[++i]);
         else if (a === '--kind') kindRaw = argv[++i] ?? '';
+        else if (a === '--callee-file') calleeFiles.push(argv[++i] ?? '');
         else if (!a.startsWith('--')) prompt = prompt ? `${prompt} ${a}` : a;
     }
     if (!prompt.trim()) {
@@ -303,6 +326,10 @@ export async function main(argv: readonly string[], deps: MainDeps = {}): Promis
         process.stderr.write('ask_transport: --system cannot be combined with --kind; a hand sees only its kind schema\n');
         return 2;
     }
+    if (calleeFiles.length > 0 && kindRaw === undefined) {
+        process.stderr.write('ask_transport: --callee-file needs --kind; only a typed hand gets a slice\n');
+        return 2;
+    }
     const opts: AskOptions = {
         ...(system !== undefined ? { systemPrompt: system } : {}),
         ...(member !== undefined ? { member } : {}),
@@ -311,7 +338,23 @@ export async function main(argv: readonly string[], deps: MainDeps = {}): Promis
         ...(kindRaw !== undefined && isHandKind(kindRaw) ? { kind: kindRaw } : {}),
         ...(deps.members !== undefined ? { members: deps.members } : {}),
     };
-    const result = await askOnce(prompt, opts);
+    let result: AskResult | null;
+    if (opts.kind !== undefined) {
+        let callees: string[];
+        try {
+            callees = calleeFiles.map((f) => fs.readFileSync(f, 'utf8'));
+        } catch {
+            process.stderr.write('ask_transport: a --callee-file could not be read\n');
+            return 2;
+        }
+        const { kind, systemPrompt: _unused, ...rest } = opts;
+        result = await askHand(
+            { kind, spec: prompt, callees, linking: projectLinkingIdentifiers(process.cwd()) },
+            rest,
+        );
+    } else {
+        result = await askOnce(prompt, opts);
+    }
     if (result === null) {
         process.stderr.write(
             'ask_transport: ∅ — no transport resolved, the single completion failed, or a typed return did not match its schema (no retry by design)\n',
