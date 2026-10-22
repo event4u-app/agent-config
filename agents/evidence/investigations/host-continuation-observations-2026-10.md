@@ -338,3 +338,26 @@ and consistent with the user-level rule layer being dropped as well.
 agents held `Read` and `skipper` found the codeword by reading the file, so the
 token delta is the observation, not the answer text. Most of the delta is the
 operator's user-level layer, as in 1.7.
+
+## Addendum 2026-10-22 (second) — `StopFailure` fires, and where its class lives (steps 1.9, 4.3)
+
+Step 1.9 left `StopFailure` **not reached**: no limit was hit. It was reached on Claude Code
+**2.1.308** by a different failure — a print-mode session in an empty scratch project with
+`HTTPS_PROXY` pointed at a closed loopback port and a `StopFailure` command hook bound through
+`--settings`. The hook received:
+
+| Field | Value |
+|---|---|
+| `hook_event_name` | `StopFailure` |
+| `error` | `server_error` |
+| `last_assistant_message` | `API Error: Connection refused — a firewall or proxy may be blocking it (ECONNREFUSED)` |
+| also present | `session_id`, `transcript_path`, `cwd`, `prompt_id`, `effort` |
+
+So the event fires on an API failure and carries its error class in `error`. The `rate_limit`
+class itself is still unobserved — no step forces a limit — so a binding reads
+`error === "rate_limit"` and treats every other class as not a rate signal.
+
+| Field | Observed value | Host version | Date |
+|---|---|---|---|
+| `StopFailure` fires on an API failure; class in `error` | yes (`server_error`) | 2.1.308 | 2026-10-22 |
+| `StopFailure` with `error: rate_limit` | not reached | 2.1.308 | 2026-10-22 |

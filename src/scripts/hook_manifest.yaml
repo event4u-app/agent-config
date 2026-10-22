@@ -1422,6 +1422,15 @@ concerns:
     # addresses, because a send names the worker and the ledger keys its id.
     tools: [Agent, Task, SendMessage]
     needs_payload_bodies: [input, result]
+  # The host's StopFailure with error class rate_limit writes the quota_parked
+  # marker tagged host-sourced; record-only, and every other class writes
+  # nothing (road-to-a-cold-start-paid-once 4.3).
+  host-rate-marker:
+    script: src/scripts/hooks/host_rate_marker_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    effect: telemetry
   # road-to-source-first-frontend Phase 3 Steps 1-2 — source-first gate, SHADOW
   # ONLY, per docs/contracts/concern-activation-policy.md. On every
   # capture-shaped tool call it appends one `source_first_gate_shadow` line
@@ -1627,6 +1636,7 @@ platforms:
     # binary (2.1.229 — see the evidence page cited on the alias rows below).
     subagent_start:   [subagent-ledger, journal-record]
     subagent_stop:    [subagent-ledger, journal-record]
+    agent_error:      [host-rate-marker]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
   # on top of the Claude Code CLI. Same lifecycle vocabulary, same
@@ -1783,6 +1793,10 @@ native_event_aliases:
     # agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md.
     SubagentStart:     subagent_start
     SubagentStop:      subagent_stop
+    # StopFailure fires on an API failure and carries its class in `error`
+    # (observed on 2.1.308 with `server_error`); lowered onto the agent-level
+    # crash slot, which no concern bound before. Claude-only: measured nowhere else.
+    StopFailure:       agent_error
   # Cowork shares Claude Code's PascalCase event vocabulary verbatim
   # (Cowork is Claude Code under the hood). Native names are duplicated
   # here rather than aliased so dispatcher logs / feedback carry the

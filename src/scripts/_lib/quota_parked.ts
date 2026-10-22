@@ -42,6 +42,8 @@ export interface QuotaParkedMarker {
     /** Providers whose plan quota was exhausted, sorted and deduplicated. */
     readonly providers: string[];
     readonly parked_at: string;
+    /** Who established the exhaustion: the council's own seat gate, or the host's `StopFailure`. */
+    readonly source: 'council' | 'host';
 }
 
 /** Filesystem-safe path for a run's marker. Mirrors `billing_grant.grantFile`. */
@@ -65,6 +67,7 @@ export function writeQuotaParked(
     runId: string,
     providers: readonly string[],
     now: () => Date = () => new Date(),
+    source: 'council' | 'host' = 'council',
 ): QuotaParkedMarker {
     const file = markerFile(repoRoot, runId);
     const existing = readMarker(file);
@@ -73,6 +76,7 @@ export function writeQuotaParked(
         run_id: runId,
         providers: merged,
         parked_at: existing?.parked_at ?? now().toISOString(),
+        source: existing?.source ?? source,
     };
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, `${JSON.stringify(marker, null, 2)}\n`, 'utf8');
@@ -126,7 +130,8 @@ function readMarker(file: string): QuotaParkedMarker | null {
         if (typeof o['run_id'] !== 'string' || typeof o['parked_at'] !== 'string') return null;
         if (!Array.isArray(o['providers'])) return null;
         const providers = o['providers'].filter((p): p is string => typeof p === 'string');
-        return { run_id: o['run_id'], providers, parked_at: o['parked_at'] };
+        const source = o['source'] === 'host' ? 'host' : 'council';
+        return { run_id: o['run_id'], providers, parked_at: o['parked_at'], source };
     } catch {
         return null;
     }
