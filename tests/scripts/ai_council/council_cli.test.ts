@@ -1525,3 +1525,30 @@ describe('mid-flight fallback — end to end from a config file', () => {
         expect(responses[0]!.metadata['fallback_from']).toBeUndefined();
     });
 });
+
+// road-to-free-hands-a-paid-head-checks 1.1: the council path never passed a
+// seat's ceiling or the payload's class to the resolver, so a seat configured
+// `public-artifact` received consumer content.
+describe('build_members — the content ceiling reaches the resolver', () => {
+    function publicSeat(): Record<string, unknown> {
+        return {
+            ai_council: {
+                enabled: true,
+                mode: 'cli',
+                members: {
+                    anthropic: { enabled: true, model: 'claude-sonnet-4-5', binary: process.execPath, content_ceiling: 'public-artifact' },
+                },
+            },
+        };
+    }
+
+    it('an undeclared payload never reaches a public-artifact seat', () => {
+        const skipped: Record<string, unknown>[] = [];
+        expect(() => build_members(publicSeat(), { skipped })).toThrow();
+        expect(JSON.stringify(skipped)).toContain('policy_content_ceiling');
+    });
+
+    it('a declared public-artifact payload does', () => {
+        expect(build_members(publicSeat(), { content_class: 'public-artifact' })).toHaveLength(1);
+    });
+});

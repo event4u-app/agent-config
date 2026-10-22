@@ -35,6 +35,7 @@
  * Usage:
  *   ./scripts-run src/scripts/ask_transport "is X true in file Y?" \
  *     [--system "<system prompt>"] [--member <name>] [--format text|json] \
+ *     [--content-class public-artifact|project-content] \
  *     [--no-record] [--dir <audit-dir>]
  *
  * Exit codes: 0 answer produced · 2 usage error · 3 honest-∅ (no transport).
@@ -45,6 +46,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import type { ExternalAIClient } from './ai_council/clients.js';
+import { classifyContentClass, DEFAULT_CONTENT_CLASS, type ContentClass } from './ai_council/content_ceiling.js';
 import { buildOrchestrationLine } from './_lib/orchestration_record.js';
 import { DEFAULT_DIR } from './orchestration_record.js';
 
@@ -78,6 +80,8 @@ export interface AskOptions {
     /** Injected clock/id (tests). */
     now?: () => Date;
     id?: () => string;
+    /** The class of the prompt; `project-content` unless the caller declares a repo-owned artefact. */
+    contentClass?: ContentClass;
 }
 
 const DEFAULT_SYSTEM =
@@ -87,10 +91,10 @@ const DEFAULT_SYSTEM =
     'what is missing. Never invent facts.';
 
 /** Lazily import the council CLI surface so tests with injected members never load it. */
-async function defaultMembers(): Promise<ExternalAIClient[]> {
+async function defaultMembers(contentClass: ContentClass): Promise<ExternalAIClient[]> {
     const mod = await import('./council_cli.js');
     const settings = mod.load_settings();
-    return mod.build_members(settings);
+    return mod.build_members(settings, { content_class: contentClass });
 }
 
 function recordAskLine(auditDir: string, result: AskResult | null, member: string, ts: string, id: string): void {
@@ -136,7 +140,7 @@ export async function askOnce(prompt: string, opts: AskOptions = {}): Promise<As
 
     let members: ExternalAIClient[];
     try {
-        members = opts.members ?? (await defaultMembers());
+        members = opts.members ?? (await defaultMembers(opts.contentClass ?? DEFAULT_CONTENT_CLASS));
     } catch {
         return _finish(null, 'none', opts); // disabled / unreadable config → ∅
     }
@@ -194,6 +198,7 @@ export async function main(argv: readonly string[]): Promise<number> {
     let format: 'text' | 'json' = 'text';
     let record = true;
     let dir: string | undefined;
+    let contentClass: ContentClass = DEFAULT_CONTENT_CLASS;
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i] ?? '';
         if (a === '--system') system = argv[++i];
@@ -201,6 +206,7 @@ export async function main(argv: readonly string[]): Promise<number> {
         else if (a === '--format') format = argv[++i] === 'json' ? 'json' : 'text';
         else if (a === '--no-record') record = false;
         else if (a === '--dir') dir = argv[++i];
+        else if (a === '--content-class') contentClass = classifyContentClass(argv[++i]);
         else if (!a.startsWith('--')) prompt = prompt ? `${prompt} ${a}` : a;
     }
     if (!prompt.trim()) {
@@ -211,6 +217,7 @@ export async function main(argv: readonly string[]): Promise<number> {
         ...(system !== undefined ? { systemPrompt: system } : {}),
         ...(member !== undefined ? { member } : {}),
         auditDir: record ? (dir ?? path.join(process.cwd(), DEFAULT_DIR)) : null,
+        contentClass,
     };
     const result = await askOnce(prompt, opts);
     if (result === null) {

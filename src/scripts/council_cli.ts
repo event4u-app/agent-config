@@ -79,6 +79,7 @@ import {
 import { AuthCache, select_solo_member } from './ai_council/solo_dispatch.js';
 import { InvalidModeError, resolve_global_mode } from './ai_council/modes.js';
 import { classifyCliFailure, resolveMemberTransport, type AbsentReason } from './ai_council/transport_resolver.js';
+import { classifyContentClass, DEFAULT_CONTENT_CLASS, DEFAULT_SEAT_CEILING, type ContentClass } from './ai_council/content_ceiling.js';
 import {
     disabledSeats as _disabledSeats,
     resolvedTransportFor as _resolvedTransportFor,
@@ -519,6 +520,11 @@ interface BuildMembersOptions {
      */
     environment_report?: EnvironmentReport | null;
     /**
+     * The class of what this pass sends. Omitted → `project-content`, so a seat
+     * whose ceiling is `public-artifact` is dropped as absent.
+     */
+    content_class?: ContentClass;
+    /**
      * Recorded provider observations. Supplied ⇒ presence is gated on the
      * qualification ladder; omitted ⇒ not evaluated at all, and presence keeps
      * its constructibility-only meaning. Why omission is the safe default:
@@ -694,6 +700,8 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
             memberSettings: cfg,
             globalMode: global_mode ?? null,
             binaryOverride: (cfg['binary'] as string | null) ?? null,
+            seatCeiling: classifyContentClass(cfg['content_ceiling'], DEFAULT_SEAT_CEILING),
+            contentClass: opts.content_class ?? DEFAULT_CONTENT_CLASS,
             // `exactOptionalPropertyTypes` rejects an explicit `undefined` —
             // see `resolveMemberTransport`'s own forwarding call for the
             // same pattern.

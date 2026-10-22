@@ -147,10 +147,18 @@ describe('2.2 — one binary content ceiling per seat', () => {
         expect(admitsContent('project-content', 'public-artifact').admitted).toBe(true);
     });
 
-    it('an undeclared content class runs no check at all', () => {
-        // Every pre-2.2 caller passes no content class; behaviour is identical.
+    // road-to-free-hands-a-paid-head-checks 1.1 (D2): an undeclared payload is
+    // project-content, so a public-artifact seat refuses it; a default seat,
+    // whose ceiling is project-content, is unchanged.
+    it('an undeclared content class is project-content: a public-artifact seat refuses it', () => {
         const r = resolve({ seatCeiling: 'public-artifact' });
-        expect(r.available).toBe(true);
+        expect(r.available).toBe(false);
+        expect(r.absentReason).toBe('policy_content_ceiling');
+    });
+
+    it('an undeclared content class leaves every default seat unchanged', () => {
+        expect(resolve({}).available).toBe(true);
+        expect(resolve({ seatCeiling: 'project-content' }).available).toBe(true);
     });
 
     it('an unrecognised ceiling narrows rather than widens', () => {
