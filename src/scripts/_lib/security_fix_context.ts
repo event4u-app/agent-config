@@ -84,11 +84,14 @@ export function readRoutingContext(root: string, f: Finding, opts: { exec?: Exec
     // Only a bot PR that moves THIS package to a fixing version counts: a bump to
     // a still-vulnerable release, or a PR for a package whose name merely
     // contains this one, would leave the vulnerability in place.
-    const prs = f.fixed === null ? null : exec('gh', ['pr', 'list', '--state', 'open', '--search', `${f.package} in:title`, '--json', 'number,author,title'], root);
+    // The package name comes from an advisory source: quoted and stripped of
+    // quotes and whitespace, it cannot add a search qualifier of its own.
+    const term = f.package.replace(/["\s]/g, '');
+    const prs = f.fixed === null ? null : exec('gh', ['pr', 'list', '--state', 'open', '--search', `"${term}" in:title`, '--json', 'number,author,title'], root);
     if (prs !== null) {
         try {
             const list = JSON.parse(prs) as Array<{ number?: number; author?: { login?: string }; title?: string }>;
-            const bot = list.find((p) => /dependabot|renovate/i.test(p.author?.login ?? '') && botPrFixes(p.title ?? '', f.package, f.fixed));
+            const bot = list.find((p) => isDependencyBot(p.author?.login ?? '') && botPrFixes(p.title ?? '', f.package, f.fixed));
             if (bot && typeof bot.number === 'number') openBotPr = bot.number;
         } catch {
             /* unreadable list: no bot PR is known, which is the conservative reading */
@@ -112,6 +115,15 @@ export function readRoutingContext(root: string, f: Finding, opts: { exec?: Exec
  * version at or above the fix: "bump fastify from 5.12.4 to 5.12.5",
  * "Update dependency fastify to v5.12.5".
  */
+/**
+ * The two dependency bots, by their exact login: `gh` reports an app author as
+ * `app/<slug>`, the REST form is `<slug>[bot]`. A substring match would let any
+ * account named like a bot (`not-dependabot`) stand in for one.
+ */
+export function isDependencyBot(login: string): boolean {
+    return /^(?:app\/)?(?:dependabot|renovate)(?:\[bot\])?$/i.test(login);
+}
+
 export function botPrFixes(title: string, pkg: string, fixed: string | null): boolean {
     if (fixed === null) return false;
     const esc = pkg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

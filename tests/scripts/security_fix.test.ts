@@ -27,7 +27,7 @@ import {
     suspiciousPaths,
     track,
 } from '../../src/scripts/_lib/security_fix.js';
-import { botPrFixes, readRoutingContext } from '../../src/scripts/_lib/security_fix_context.js';
+import { botPrFixes, isDependencyBot, readRoutingContext } from '../../src/scripts/_lib/security_fix_context.js';
 
 const FIX = path.join(__dirname, '..', 'fixtures', 'security-fixes');
 let tmp = '';
@@ -222,6 +222,25 @@ function realGitOnly(cmd: string, args: string[], cwd: string): string | null {
         return null;
     }
 }
+
+describe('release review wave 3 — bot PR detection', () => {
+    it('only the exact bot logins count as the dependency bot', () => {
+        for (const ok of ['app/dependabot', 'dependabot[bot]', 'app/renovate', 'renovate[bot]']) expect(isDependencyBot(ok)).toBe(true);
+        for (const no of ['not-dependabot', 'dependabot-fan', 'evil/renovate', '']) expect(isDependencyBot(no)).toBe(false);
+    });
+
+    it('an impostor PR is not the bot PR, and the package name is quoted in the search', () => {
+        const seen: string[][] = [];
+        const exec = (cmd: string, args: string[]): string | null => {
+            if (cmd !== 'gh') return null;
+            seen.push(args);
+            return JSON.stringify([{ number: 7, author: { login: 'not-dependabot' }, title: 'Bump fastify from 5.12.4 to 5.12.5' }]);
+        };
+        const c = readRoutingContext(tmp, finding({ package: 'fastify author:x' }), { exec });
+        expect(c.openBotPr).toBeNull();
+        expect(seen[0]).toContain('"fastifyauthor:x" in:title');
+    });
+});
 
 describe('R2 review fixes (2026-10-21)', () => {
     it('#7 — a direct dependency gets a range bump, not the transitive plan', () => {
