@@ -11,7 +11,7 @@
  * mutable and unaudited; it is transport, not a record). Every blocking
  * finding in the ledger (see `isBlocking`) must carry a complete disposition
  * `{status: fixed|false_positive|accepted_risk, commit (when fixed),
- * rationale, verified_by}`; the release workflow is red while one does not.
+ * rationale, verified_by}` when the gate is run.
  *
  * Modes:
  *   --release X.Y.Z [--dir <ledger dir>]      validate the committed ledger
@@ -24,50 +24,27 @@
  *       self_review_gate --findings-out) into the ledger with an empty
  *       disposition, so validation is red until a human fills it.
  *
- * ABSENCE IS NOT EVIDENCE OF ZERO. An absent ledger used to exit 0 for any
- * version, so a RELEASED version whose findings were never ingested read as
- * "no findings" — the failure this paragraph exists to stop. When the ledger
- * file is missing the gate now asks whether the version has SHIPPED:
+ * AN ABSENT LEDGER IS NOT A FAILURE (owner, 2026-10-22). A release waits for
+ * no review ledger, because every commit on main is already reviewed and
+ * merged; the 17.0.0 cut stopped for a day on a ledger whose self-review never
+ * finished. An absent file reads as an empty ledger, shipped or not, and no
+ * workflow runs this gate any more — it is an advisory tool.
  *
- *   released        a tag for the version exists locally, or the remote says
- *                   the release exists  ->  an absent ledger is a FAILURE (1)
- *   unreleased      the local tag list is COMPLETE and lacks it, or the remote
- *                   says so  ->  normal in-flight state, absent ledger is fine
- *   undeterminable  the tag list cannot settle it and no remote answered  ->
- *                   exit 2. Refusing beats passing: a silent green here is the
- *                   very inversion this split exists to remove
- *
- * THE SOURCE IS THE TAG / RELEASE, AND DELIBERATELY NOT `CHANGELOG.md`. The
- * changelog heading is written by the release PR itself — gh pr diff 1836 shows
- * "+## [14.16.0](...)" inside the release commit — so on branch release/X the
- * changelog claims X is released before X exists. Reading it would redden every
- * in-flight release branch over a file nobody could yet have written, which is
- * the exact behaviour this split is here to preserve. The tag is created at
- * publish, after merge, so it cannot make that mistake.
- *
- * A local tag MISS is not authoritative on its own: actions/checkout fetches
- * depth 1 and no tags by default, and the one workflow that runs this gate does
- * not override either, so in CI the local tag list is EMPTY. See releaseStatus
- * for the asymmetry and the remote fallback.
- *
- * AN EMPTY LEDGER MUST SAY WHY IT IS EMPTY. The released/unreleased split above
- * closed the missing-file half; it left the other half open, because
- * `findings: []` still passed while asserting nothing. A writer could satisfy
+ * AN EMPTY LEDGER MUST SAY WHY IT IS EMPTY. A ledger that exists is a record,
+ * and `findings: []` used to pass while asserting nothing. A writer could satisfy
  * the gate by creating an empty file, which is the same silence wearing the
  * shape of a record. `no_findings_reason` is now required whenever the file
  * exists and the array is empty — see empty_ledger_problem for what the reason
  * has to distinguish.
  *
  * A future reader changing allowEmpty below is the person this is addressed to:
- * the EMPTY_VALID waiver now covers only an EXPLAINED empty ledger and an
- * unreleased version. It covers neither a released version with no ledger nor an
- * empty ledger with no reason.
+ * the EMPTY_VALID waiver covers an absent ledger and an EXPLAINED empty one. It
+ * does not cover an empty ledger with no reason.
  *
- * Exit codes: 0 complete · 1 missing/incomplete dispositions (an absent ledger
- * for a RELEASED version and an unexplained empty ledger are both among them) ·
- * 2 usage error, schema error, or an
- * undeterminable release status. Deliberately NOT fail-open: this script never calls a model;
- * a broken ledger file is a hard error, not a neutral skip.
+ * Exit codes: 0 complete or no ledger · 1 missing/incomplete dispositions (an
+ * unexplained empty ledger among them) · 2 usage error or schema error.
+ * Deliberately NOT fail-open: this script never calls a model; a broken ledger
+ * file is a hard error, not a neutral skip.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -883,30 +860,9 @@ function main(argv: readonly string[]): number {
         return 0;
     }
 
-    if (!fs.existsSync(ledgerPath)) {
-        const status = resolve_release_status(release);
-        if (status === 'released') {
-            process.stderr.write(
-                `❌  ${release} has shipped and carries no findings ledger at `
-                    + `${path.relative(REPO_ROOT, ledgerPath)}.\n`
-                    + '    Absence is not evidence of zero — the release PR\'s self-review may have\n'
-                    + '    reported findings that were never ingested. Recover the machine block and:\n'
-                    + `    ./scripts-run src/scripts/check_finding_dispositions --ingest <findings.json> --release ${release}\n`,
-            );
-            return 1;
-        }
-        if (status === 'undeterminable') {
-            process.stderr.write(
-                `❌  cannot determine whether ${release} has shipped: this checkout tag list is`
-                    + ' incomplete (shallow or tagless) and no remote answered.\n'
-                    + '    Refusing to pass on an absent ledger without knowing — that silent green is\n'
-                    + '    the defect this check replaces. Fetch tags (actions/checkout fetch-tags: true)\n'
-                    + '    or make the gh CLI available.\n',
-            );
-            return 2;
-        }
-    }
-
+    // An absent ledger is not a failure, shipped or not: a release waits for no
+    // review ledger, because everything on main is already reviewed and merged
+    // (owner, 2026-10-22). It reads as an empty ledger below.
     let ledger: Ledger = { schema_version: 1, release, findings: [] };
     if (fs.existsSync(ledgerPath)) {
         try {

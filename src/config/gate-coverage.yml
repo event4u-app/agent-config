@@ -907,7 +907,6 @@ gates:
 
   - id: check_finding_dispositions
     argv: []
-    ci_invocation: .github/workflows/consistency.yml
     min_scanned: 0
     corpus: "recorded findings in the ledger for the CURRENT package version (agents/evidence/release-findings/<package.json version>.json)"
     status: enforced
@@ -927,12 +926,10 @@ gates:
       row rather than a weakening of it. The corpus is one release's finding
       count, and zero findings is a legitimate state — 14.17.0 and 14.18.0 both
       legitimately record zero, because their self-review never completed. What
-      this row buys is therefore not a floor: it is `ci_invocation`. Before it,
-      the gate had exactly one caller, on a `release/*` head branch that is
-      deleted after the merge, and its removal would have been noticed by
-      nothing — which is how two releases shipped with no ledger. The row now
-      fails if `.github/workflows/consistency.yml` stops calling the gate, or
-      calls it with arguments this manifest does not reproduce.
+      this row buys is a scan count for a tool, not a release gate: since
+      2026-10-22 no workflow calls it and no release waits for a ledger,
+      because everything on main is already reviewed and merged (owner). The
+      row keeps the bare invocation honest for whoever runs it by hand.
 
   - id: check_review_schema
     argv: []

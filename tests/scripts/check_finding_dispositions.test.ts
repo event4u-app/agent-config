@@ -449,6 +449,17 @@ describe('exit codes — a present-but-empty ledger is not the same state as an 
         expect(runGate(dir, '1.0.0').code).toBe(0);
     });
 
+    it('absent for a SHIPPED version exits 0 and still reports its scan — a release waits for no ledger', () => {
+        // 16.5.0 is tagged in this repository, so the released probe answers
+        // from the local tag list and no network is touched. Since 2026-10-22
+        // a release needs no review ledger (owner): the gate runs in the
+        // coverage guard on every push, and a red here would red main.
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cfd-absent-'));
+        const r = runGate(dir, '16.5.0');
+        expect(r.code, r.out).toBe(0);
+        expect(r.out).toMatch(/^scanned: 0$/m);
+    });
+
     it('present + empty + NO reason exits 1 — red before this change, green after it regresses', () => {
         const dir = ledgerDir({ schema_version: 1, release: '1.0.0', findings: [] });
         const r = runGate(dir, '1.0.0');
