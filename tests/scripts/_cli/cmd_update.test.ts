@@ -198,3 +198,55 @@ describe('cmd_update — apply (in-place pin rewrite)', () => {
         expect(() => JSON.parse(fs.readFileSync(tState, 'utf8'))).not.toThrow();
     });
 });
+
+// ---------------------------------------------------------------------------
+// global lockfile — `update` moves the pin, never the global install
+// ---------------------------------------------------------------------------
+
+function seedLock(lock: string, version: string): string {
+    const body =
+        'schema_version: 1\n' +
+        'install_layout_version: 1\n' +
+        `agent_config_version: "${version}"\n` +
+        'installed_at: "2026-10-01T00:00:00Z"\n' +
+        'tools:\n' +
+        '  - claude-code\n';
+    fs.writeFileSync(lock, body);
+    return body;
+}
+
+describe('cmd_update — global lockfile', () => {
+    it('leaves an older global lock untouched and names `agent-config upgrade`', () => {
+        const b = freshBox();
+        seedSettings(b.root);
+        const before = seedLock(b.lock, '5.0.0');
+        const t = runTs(['--to', '7.2.0', '--offline'], b);
+        expect(t.status).toBe(0);
+        // The lock records what the global install deployed; a pin flip deploys nothing.
+        expect(fs.readFileSync(b.lock, 'utf8')).toBe(before);
+        expect(t.stdout).toContain('global install is 5.0.0');
+        expect(t.stdout).toContain('agent-config upgrade');
+        expect(t.stdout).not.toContain('Refreshed global lockfile');
+    });
+
+    it('stays silent about the global install when it is already at or past the pin', () => {
+        for (const recorded of ['7.2.0', '9.0.0']) {
+            const b = freshBox();
+            seedSettings(b.root);
+            const before = seedLock(b.lock, recorded);
+            const t = runTs(['--to', '7.2.0', '--offline'], b);
+            expect(t.status).toBe(0);
+            expect(fs.readFileSync(b.lock, 'utf8')).toBe(before);
+            expect(t.stdout).not.toContain('agent-config upgrade');
+        }
+    });
+
+    it('never creates a global lock when none exists', () => {
+        const b = freshBox();
+        seedSettings(b.root);
+        const t = runTs(['--to', '7.2.0', '--offline'], b);
+        expect(t.status).toBe(0);
+        expect(fs.existsSync(b.lock)).toBe(false);
+        expect(t.stdout).not.toContain('agent-config upgrade');
+    });
+});

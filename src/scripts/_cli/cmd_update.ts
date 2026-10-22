@@ -542,7 +542,7 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
         cache_warmer(latest);
     }
     _refresh_state(latest, latest, state_path);
-    _refresh_global_lockfile(latest, out);
+    _report_global_install(latest, out);
     return 0;
 }
 
@@ -556,30 +556,28 @@ function _relativeToOr(target: string, base: string): string {
 }
 
 /**
- * Update the global `installed.lock` if it exists.
+ * Name `agent-config upgrade` when the global install is older than the pin.
  *
- * Resolution prefers `~/.event4u/agent-config/installed.lock` and falls back to
- * the legacy `~/.config/agent-config/installed.lock`.
- *
- * Phase 1.6 — the lockfile is only present when the user has run a global
- * install; we never create one here, but we keep it in lockstep when `update`
- * flips the pin. Atomic write goes through `installed_lock.write_lockfile`.
+ * Read-only by design: `installed.lock` records what the global install
+ * deployed, and `upgrade` (plus its `--check` and unattended paths) reads it as
+ * the installed version. This command used to rewrite it to the pin, so after
+ * `update` the lock claimed a version no `npm install -g` had installed and
+ * `upgrade --check` reported "up to date" over the old binary.
  */
-function _refresh_global_lockfile(version: string, out: OutSink): void {
-    const read_path = installed_lock.lockfile_path();
-    const write_path = installed_lock.lockfile_write_path();
-    const existing = installed_lock.read_lockfile(read_path);
+function _report_global_install(version: string, out: OutSink): void {
+    const existing = installed_lock.read_lockfile(installed_lock.lockfile_path());
     if (existing === null) {
         return;
     }
     const recorded = (existing as unknown as Record<string, unknown>)['agent_config_version'];
-    const tools = [...(existing.tools ?? [])];
-    if (recorded === version && read_path === write_path) {
-        _print(out, `ℹ️  ${write_path} already records ${version}.`);
+    if (typeof recorded !== 'string' || !update_check._is_newer(version, _normalize(recorded))) {
         return;
     }
-    installed_lock.write_lockfile(version, tools, { path: write_path });
-    _print(out, `✅  Refreshed global lockfile at ${write_path}.`);
+    _print(
+        out,
+        `ℹ️  The global install is ${_normalize(recorded)}; this pin does not change it. ` +
+            `Run \`agent-config upgrade\` to install ${version} globally.`,
+    );
 }
 
 /** Read `version` from the package's own `package.json`. */
