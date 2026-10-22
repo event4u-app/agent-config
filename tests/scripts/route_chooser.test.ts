@@ -80,6 +80,16 @@ describe('routeCandidateFromMember — the wiring point to the member list', () 
         });
     });
 
+    it('reads a base_url route member’s `billing` field the same way', () => {
+        const m = { name: 'route1', billable: false, billing: 'free-quota' };
+        expect(routeCandidateFromMember(m as unknown as ExternalAIClient)).toMatchObject({
+            billing: 'free-quota',
+            ceiling: 'public-artifact',
+        });
+        const local = { name: 'local1', billable: false, billing: 'self-hosted' };
+        expect(routeCandidateFromMember(local as unknown as ExternalAIClient).ceiling).toBe('public-artifact');
+    });
+
     it('a member declaring nothing keeps today’s seat: paid, project-content, live', () => {
         const m = { name: 'anthropic', billable: false };
         expect(routeCandidateFromMember(m as unknown as ExternalAIClient)).toEqual({

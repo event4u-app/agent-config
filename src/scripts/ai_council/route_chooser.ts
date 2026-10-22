@@ -108,13 +108,16 @@ const _BILLINGS: ReadonlySet<string> = new Set<string>(ROUTE_BILLINGS);
 /**
  * A council member as a route. Members built today carry none of the route
  * fields, so they map to a paid, project-content, live route — exactly the seat
- * they were. A member that declares `billing_class: free-quota` is pinned to
+ * they were. A member whose billing is `free-quota` is pinned to
  * `public-artifact` whatever ceiling it declares: every free route stays there.
+ * A `self-hosted` member that declares no ceiling gets `public-artifact` too;
+ * only a declared, probed `content_ceiling` raises it.
  */
 export function routeCandidateFromMember(member: ExternalAIClient): RouteCandidate {
     const m = member as unknown as Record<string, unknown>;
     const name = (typeof m['name'] === 'string' && m['name']) || (typeof m['provider'] === 'string' && m['provider']) || 'unknown';
-    const declared = m['billing_class'];
+    // A base_url route member names its class `billing`; other members may say `billing_class`.
+    const declared = m['billing_class'] ?? m['billing'];
     const billing: RouteBilling =
         typeof declared === 'string' && _BILLINGS.has(declared)
             ? (declared as RouteBilling)
