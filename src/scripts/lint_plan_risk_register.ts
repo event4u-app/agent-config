@@ -42,6 +42,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 
 import { isAcceptanceCriteriaHeading } from './_lib/ac_heading.js';
+import { asOfMs } from './_lib/as_of.js';
 import { workspaceIdentity } from './_lib/git_common_dir.js';
 import { gitEnv } from './_lib/git_env.js';
 import { splitMarkdownRow } from './_lib/md_table.js';
@@ -639,12 +640,12 @@ function _stampIntroducedAt(
     return sameDay ?? introduced;
 }
 
-/** The latest calendar day anywhere on earth now (UTC+14), so no author's real today reads as future. */
-function _latestToday(now: number = Date.now()): string {
+/** The latest calendar day anywhere on earth at the as-of instant (UTC+14), so no author's real today reads as future. */
+function _latestToday(now: number = asOfMs()): string {
     return new Date(now + 14 * 3_600_000).toISOString().slice(0, 10);
 }
 
-export type FileStatus ='ok' | 'draft-exempt' | 'grandfathered' | 'fail';
+export type FileStatus = 'ok' | 'draft-exempt' | 'grandfathered' | 'fail';
 
 export interface FileResult {
     file: string;
