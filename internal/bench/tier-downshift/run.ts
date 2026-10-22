@@ -24,7 +24,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { tierDownshiftVerdict, type LegResult, type LegUsage, type Price } from '../../../src/scripts/_lib/tier_downshift_verdict.js';
+import { parsePriceRows, type PriceRow } from '../../../src/scripts/_lib/price_freshness.js';
+import { tierDownshiftVerdict, type LegResult, type LegUsage } from '../../../src/scripts/_lib/tier_downshift_verdict.js';
 import { benchSelfTest, lastAssistantText, resolveBenchTree, type BenchTree } from '../pinned_tree.js';
 import { CORPUS_DIRS, generateCorpus, type Slice } from './corpus.js';
 
@@ -128,15 +129,8 @@ async function runLeg(t: BenchTree, slice: Slice, arm: 'lite' | 'inherit'): Prom
     };
 }
 
-function readPrices(): Record<string, Price> {
-    const text = fs.readFileSync(PRICING, 'utf8');
-    const prices: Record<string, Price> = {};
-    for (const block of text.split('  - tier: ').slice(1)) {
-        const tier = block.split('\n')[0]!.trim();
-        const num = (k: string): number => Number(block.match(new RegExp(`\\n\\s+${k}: ([0-9.]+)`))?.[1] ?? NaN);
-        prices[tier] = { input: num('input'), output: num('output'), cache_write: num('cache_write'), cache_read: num('cache_read') };
-    }
-    return prices;
+function readPrices(): PriceRow[] {
+    return parsePriceRows(fs.readFileSync(PRICING, 'utf8'));
 }
 
 function flag(name: string): string | undefined {
@@ -202,7 +196,7 @@ async function main(): Promise<void> {
         const t = tree();
         const rows = readRows(results).filter((r) => !r.error);
         selfTest(t, corpus, rows);
-        console.log(JSON.stringify({ commit: t.commit, ...tierDownshiftVerdict(rows, readPrices()) }, null, 2));
+        console.log(JSON.stringify({ commit: t.commit, ...tierDownshiftVerdict(rows, readPrices(), new Date()) }, null, 2));
         return;
     }
     console.error(

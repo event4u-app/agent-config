@@ -5,8 +5,11 @@
  * inherited tier, both verified by the same deterministic check.
  *
  * Pure: the bars are constants here, the rows come from the caller, and an
- * underpowered run backs nothing in either direction.
+ * underpowered run backs nothing in either direction. A price row that
+ * `price_freshness` refuses prices nothing, which leaves the cost verdict
+ * underpowered rather than read at a stale rate.
  */
+import { type PriceRow, selectPrice } from './price_freshness.js';
 
 /** Quality bar: the lite arm's fail-or-escalate rate may exceed inherit's by at most this. */
 export const QUALITY_MARGIN_PP = 5;
@@ -31,14 +34,6 @@ export interface LegUsage {
     cache_read: number;
     cache_write: number;
     output: number;
-}
-
-/** USD per million tokens for one model family. */
-export interface Price {
-    input: number;
-    output: number;
-    cache_write: number;
-    cache_read: number;
 }
 
 export interface LegResult {
@@ -91,8 +86,6 @@ export interface TierDownshiftVerdict {
     notes: string[];
 }
 
-const FAMILIES = ['haiku', 'sonnet', 'opus', 'fable'] as const;
-
 /** P(X <= k) for X ~ Binomial(n, p), summed in log space so large n stays finite. */
 function binomCdf(k: number, n: number, p: number): number {
     if (k < 0) return 0;
@@ -133,25 +126,26 @@ export function clopperPearsonLower(k: number, n: number, alpha = BOUND_ALPHA): 
     return solve((p) => 1 - binomCdf(k - 1, n, p), alpha, false);
 }
 
-function priceFor(model: string, prices: Record<string, Price>): Price | null {
-    const m = model.toLowerCase();
-    const family = FAMILIES.find((f) => m.includes(f));
-    return family ? (prices[family] ?? null) : null;
+interface PriceContext {
+    rows: readonly PriceRow[];
+    asOf: Date;
 }
 
-function legCost(model: string, usage: LegUsage, prices: Record<string, Price>, notes: string[]): number {
-    const p = priceFor(model, prices);
-    if (p === null) {
-        notes.push(`no price for served model ${model}; its leg is priced at 0 and the cost verdict is underpowered`);
+function legCost(model: string, usage: LegUsage, prices: PriceContext, notes: string[]): number {
+    const pick = selectPrice(prices.rows, model, prices.asOf);
+    if ('refusal' in pick) {
+        const note = `${pick.refusal}; its leg is not priced and the cost verdict is underpowered`;
+        if (!notes.includes(note)) notes.push(note);
         return Number.NaN;
     }
+    const p = pick.price;
     return (
         (usage.input * p.input + usage.cache_read * p.cache_read + usage.cache_write * p.cache_write + usage.output * p.output) /
         1_000_000
     );
 }
 
-function summarise(legs: LegResult[], prices: Record<string, Price>, notes: string[]): ArmSummary {
+function summarise(legs: LegResult[], prices: PriceContext, notes: string[]): ArmSummary {
     let cost = 0;
     let verified = 0;
     let failedOrEscalated = 0;
@@ -182,8 +176,9 @@ function summarise(legs: LegResult[], prices: Record<string, Price>, notes: stri
  * Read the paired run. A slice counts only when both arms ran it once; extra
  * or one-sided rows are noted and left out rather than guessed at.
  */
-export function tierDownshiftVerdict(rows: readonly LegResult[], prices: Record<string, Price>): TierDownshiftVerdict {
+export function tierDownshiftVerdict(rows: readonly LegResult[], priceRows: readonly PriceRow[], asOf: Date): TierDownshiftVerdict {
     const notes: string[] = [];
+    const prices: PriceContext = { rows: priceRows, asOf };
     const bySlice = new Map<string, Partial<Record<Arm, LegResult>>>();
     for (const r of rows) {
         const entry = bySlice.get(r.slice_id) ?? {};
