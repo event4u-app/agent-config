@@ -583,7 +583,7 @@ tasks:
             gh pr view --json title,body --jq '"# " + .title + "\n\n" + .body' 2>/dev/null || true
           fi
           printf '\n\n'
-          git log --format=%B "$base"..HEAD 2>/dev/null || true
+          git log --format=%B --end-of-options "$base"..HEAD 2>/dev/null || true
         })
         # Level with the base and no PR yet is the ordinary start of a change,
         # not an unusable invocation — do not surface the checker's exit 2.
