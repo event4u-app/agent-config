@@ -129,11 +129,17 @@ export function frontmatterKeys(text: string): string[] {
     return out;
 }
 
-/** The first host's documented skill keys, from the committed key list. */
+/**
+ * A host's documented skill keys, from the committed key list. Throws when the
+ * host has no row: an empty set would classify every skill on that host as
+ * reachable, which is the one answer an unknown must never produce.
+ */
 export function loadHostKeys(packageRoot: string, host = 'claude-code'): Set<string> {
     const file = path.join(packageRoot, 'src', 'config', 'host-skill-frontmatter-keys.json');
     const data = JSON.parse(fs.readFileSync(file, 'utf-8')) as { hosts: Array<{ host: string; keys: string[] }> };
-    return new Set(data.hosts.find((h) => h.host === host)?.keys ?? []);
+    const row = data.hosts.find((h) => h.host === host);
+    if (row === undefined) throw new Error(`no row for host ${host} in ${file}`);
+    return new Set(row.keys);
 }
 
 function skillNames(root: string): string[] {
@@ -238,7 +244,14 @@ export function checkSkillReach(
     if (skillNames(projectionRoot).length === 0) {
         return { id, status: 'skipped', message: `no skill projection at ${projectionRoot}`, remedy: '' };
     }
-    const hostKeys = loadHostKeys(packageRoot);
+    let hostKeys: Set<string>;
+    let specKeys: Set<string>;
+    try {
+        hostKeys = loadHostKeys(packageRoot);
+        specKeys = loadHostKeys(packageRoot, 'agent-skills-spec');
+    } catch (e) {
+        return { id, status: 'skipped', message: `host skill-key list unusable: ${(e as Error).message}`, remedy: '' };
+    }
     const mcp = opts.mcp ?? false;
 
     // AC-1 reads "every host with native skills", so the check reports a row
@@ -268,7 +281,7 @@ export function checkSkillReach(
                 projectionRoot,
                 hostRoot: codexRoot,
                 settingsPath: '',
-                hostKeys: loadHostKeys(packageRoot, 'agent-skills-spec'),
+                hostKeys: specKeys,
                 mcp,
                 // 4.1: a skill outside the resident set carries a policy file
                 // that takes it out of the listing. `off` is the bucket's own

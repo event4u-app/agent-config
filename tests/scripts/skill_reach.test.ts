@@ -101,6 +101,16 @@ describe('skill reach (road-to-skills-that-arrive-when-called 2.2)', () => {
     it('skips when the package carries no projection', () => {
         expect(checkSkillReach({ home: scratch(), packageRoot: scratch() }).status).toBe('skipped');
     });
+
+    it('a host with no key-list row is an error, never an empty set that reads as reach', () => {
+        expect(() => loadHostKeys(REPO_ROOT, 'no-such-host')).toThrow(/no row for host no-such-host/);
+        const pkg = scratch();
+        fs.mkdirSync(path.join(pkg, 'dist', 'agent-src', 'skills', 'a'), { recursive: true });
+        fs.writeFileSync(path.join(pkg, 'dist', 'agent-src', 'skills', 'a', 'SKILL.md'), '---\nname: a\n---\n');
+        const check = checkSkillReach({ home: scratch(), packageRoot: pkg });
+        expect(check.status).toBe('skipped');
+        expect(check.message).toContain('host skill-key list unusable');
+    });
 });
 
 describe('degraded is never called reach (2.3)', () => {
