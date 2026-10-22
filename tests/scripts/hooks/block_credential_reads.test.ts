@@ -78,6 +78,14 @@ describe('the tool and command surface', () => {
         }
     });
 
+    it("refuses another process's environment, not only self's", () => {
+        // The host process's environment is the same secret leak as this
+        // shell's: the parent by variable, and any process by numeric pid.
+        for (const cmd of ['cat /proc/$PPID/environ', 'cat /proc/1234/environ', 'tr "\\0" "\\n" < /proc/1/environ']) {
+            expect(run('Bash', { command: cmd }), cmd).toBe(1);
+        }
+    });
+
     it('refuses the bypasses council round 4c named', () => {
         for (const cmd of [
             'cp .env /dev/stdout',

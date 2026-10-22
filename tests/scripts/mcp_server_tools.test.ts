@@ -11,7 +11,7 @@
 // determinism asserted on the TS side alone.
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { REPO_ROOT, makeTmpDir } from './_mcp_server.js';
 
@@ -1005,6 +1005,15 @@ function sortKeys(v: unknown): unknown {
 // two implementations of one contract, and a consumer that learned the shape on
 // one must not have to relearn it on the other.
 describe('suggest_skill_for_task — the row a model chooses from', () => {
+    // The resolver also reads the user's HOME catalogue; an empty HOME keeps a
+    // machine that has its own skills from ranking rows this fixture never wrote.
+    beforeEach(() => {
+        vi.stubEnv('HOME', tmp());
+    });
+    afterEach(() => {
+        vi.unstubAllEnvs();
+    });
+
     function catalogue(): string {
         const root = tmp();
         const write = (name: string, description: string, body: string): void => {
@@ -1030,10 +1039,8 @@ describe('suggest_skill_for_task — the row a model chooses from', () => {
         expect(out.status).toBe('ok');
         const rows = out.suggestions as Record<string, unknown>[];
         expect(rows.length).toBeGreaterThan(0);
-        // Looked up by NAME rather than read off row 0: the resolver also reads
-        // the user's own HOME catalogue, so a machine that has one would rank
-        // rows this fixture never wrote. The fixture's own row is the part that
-        // is a property of the code under test.
+        // Looked up by NAME rather than read off row 0, so the case stays a
+        // property of the fixture's own row even if another root is ranked.
         expect(rows.find((r) => r.skill === 'merge-conflicts')).toMatchObject({
             skill: 'merge-conflicts',
             description: 'Resolve merge conflicts; use git-workflow for rebase strategy.',
