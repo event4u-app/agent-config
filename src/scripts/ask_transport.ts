@@ -66,7 +66,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { ExternalAIClient } from './ai_council/clients.js';
 import { classifyContentClass, DEFAULT_CONTENT_CLASS, type ContentClass } from './ai_council/content_ceiling.js';
 import { councilEgress, type CouncilEgress } from './ai_council/council_egress.js';
-import { buildHandPayload, projectLinkingIdentifiers, type HandSlice } from './ai_council/hand_payload.js';
+import { buildHandPayload, HandPayloadError, projectLinkingIdentifiers, type HandSlice } from './ai_council/hand_payload.js';
 import { handSystemPrompt, parseHandReturn } from './ai_council/hand_schemas.js';
 import { chooseRouteChain, routeCandidateFromMember } from './ai_council/route_chooser.js';
 import {
@@ -561,17 +561,23 @@ export async function main(argv: readonly string[], deps: MainDeps = {}): Promis
             files: calleeFiles.map((f) => path.relative(root, path.resolve(f))),
             symbols: callees.flatMap((c) => calleeName(c)),
         };
-        result = await askHand(
-            { kind, spec: prompt, callees, linking: projectLinkingIdentifiers(root) },
-            {
-                ...rest,
-                exposure: {
-                    ledger: ExposureLedger.load(path.join(root, EXPOSURE_LEDGER_RELPATH)),
-                    exposes,
-                    trackedFiles: trackedFileCount(root),
+        try {
+            result = await askHand(
+                { kind, spec: prompt, callees, linking: projectLinkingIdentifiers(root) },
+                {
+                    ...rest,
+                    exposure: {
+                        ledger: ExposureLedger.load(path.join(root, EXPOSURE_LEDGER_RELPATH)),
+                        exposes,
+                        trackedFiles: trackedFileCount(root),
+                    },
                 },
-            },
-        );
+            );
+        } catch (e) {
+            if (!(e instanceof HandPayloadError)) throw e;
+            process.stderr.write(`ask_transport: ${e.message}\n`);
+            return 2;
+        }
     } else {
         result = await askOnce(prompt, opts);
     }
