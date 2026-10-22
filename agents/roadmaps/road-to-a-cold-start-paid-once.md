@@ -270,13 +270,14 @@ waits:
       the Iron Law becomes a field a function reads.
       verify: `npx vitest run tests/scripts/subagent_contract.test.ts -t judges-are-never-reusable --reporter=verbose` -> /✓.*judges-are-never-reusable/
       Done 2026-10-18: `production-validator` is the only judging definition in `src/subagents/` (judges and reviewers are skills, not definitions) and declares `reuse: never`; the test fails any judging definition that does not.
-- [ ] **2.5 Skipping project instructions ships on only when both hold:** the
+- [x] **2.5 Skipping project instructions ships on only when both hold:** the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/subagent_native_fields.ts -->
       1.7 net delta is at least 10 % of the median cold start, and a fixture
       shows the dispatch for a skipping worker carries the kernel floor and the
       user's constraints verbatim (`subagent-spawn-contract.md:154-156`). Either
       missing, it ships off with the reading attached.
       verify: `npx vitest run tests/scripts/_lib_subagent_spawn.test.ts -t skipping-worker-carries-kernel-and-constraints --reporter=verbose` -> /✓.*skipping-worker-carries-kernel-and-constraints/
       Partial 2026-10-21, left open: both conditions now hold. The 1.7 net delta is about 58 % against the 10 % bar. `composeSpawnBrief` carries the safety floor and the user's constraints verbatim for a skipping worker, and it refuses a skip that has no floor to carry; it went red before green in `_lib_subagent_spawn.test.ts`. The ship-on edit itself — `omit_project_instructions: true` on `ac-worker` / `ac-researcher` — is not made. 1.7 observed the flag only in the `--agents` JSON spelling, and the definition files project it through frontmatter as `omitClaudeMd`, a path never observed. Switching it on through that path would read an unobserved capability.
+      Done 2026-10-22: the frontmatter path was observed on Claude Code 2.1.308 — a paired probe (`omitClaudeMd: true` in `.claude/agents/<name>.md` on one side) wrote 2,620 tokens on the skipping definition's first call against 144,138 (observation file § Addendum 2026-10-22). `ac-worker` and `ac-researcher` now declare `omit_project_instructions: true`; `production-validator` does not. Commit d5afdea316; test `package-workers-skip-project-instructions` in `tests/scripts/subagent_contract.test.ts`, red before green.
 - [x] **2.6 Correct the fork premise** in `SKILL.md:119-121` from the 1.6 row —
       the premise only; the ordering and the council's cut of "always fork"
       (`SKILL.md:123-125`) stay.
@@ -435,11 +436,12 @@ waits:
       owner's answer** to the recycling roadmap's posed question on that file,
       with this plan's Phase 3 as the evidence the answer reads.
       verify: `grep -c 'road-to-a-cold-start-paid-once' agents/roadmaps/later/road-to-worker-generation-recycling.md` -> /^[1-9][0-9]*$/
-- [ ] **6.5 Hand the skip reading to the installed-layer owner.** If 2.5 shipped
+- [x] **6.5 Hand the skip reading to the installed-layer owner.** If 2.5 shipped <!-- receipt: class=R0 · shadow · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       on, the per-spawn reading gets the third row its own text anticipates
       (`per-spawn-standing-2026-10.md:96-104`); if off, the 1.7 reading is
       linked there as the reason.
       verify: `grep -c 'host-continuation-observations-2026-10' agents/evidence/analysis/per-spawn-standing-2026-10.md` -> /^[1-9][0-9]*$/
+      Done 2026-10-22: 2.5 shipped on, so the per-spawn reading gained its third row and a paragraph citing both skip observations; no byte figure was invented for it.
 
 ## Blockers
 
