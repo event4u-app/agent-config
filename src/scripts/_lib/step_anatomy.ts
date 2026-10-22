@@ -46,6 +46,8 @@ export interface StepReading {
     toolRequests: number;
     /** Characters of roadmap text the step's Read calls returned. */
     roadmapReadBytes: number;
+    /** Distinct non-roadmap paths the interval edited. */
+    editedPaths: number;
 }
 
 type Entry = Record<string, unknown>;
@@ -246,16 +248,18 @@ export function readSteps(file: string, causeOf: CauseOf): StepReading[] {
             }
             const closed = closedStep(tool, b['input']);
             if (closed !== null) {
+                const changed = [...paths].filter((p) => !ROADMAP_FILE.test(p));
                 out.push({
                     session,
                     roadmap: closed.roadmap,
                     step: closed.step,
                     totalMs: at - startAt,
                     ms: acc,
-                    riskClass: classifyPaths([...paths].filter((p) => !ROADMAP_FILE.test(p))).cls,
+                    riskClass: classifyPaths(changed).cls,
                     toolCalls: calls,
                     toolRequests: requests.size,
                     roadmapReadBytes: roadmapBytes,
+                    editedPaths: changed.length,
                 });
                 acc = emptyMs();
                 startAt = at;
@@ -265,6 +269,43 @@ export function readSteps(file: string, causeOf: CauseOf): StepReading[] {
                 roadmapBytes = 0;
             }
         }
+    }
+    return out;
+}
+
+/**
+ * Below this, an interval that edited nothing but the roadmap is a TICK in a
+ * batch, not a step: a session or subagent that closes several boxes in a row
+ * gives the work to the first close and a few seconds of bookkeeping to each
+ * one after it. A minute is far above that bookkeeping and far below any step
+ * that did work of its own without editing (a measurement, a verification).
+ */
+export const BATCH_TICK_MAX_MS = 60_000;
+
+/**
+ * The orchestrated view: each batch tick folded into the step it trails in the
+ * same transcript. Time, calls and roadmap reads move with it, so the classes
+ * still sum to the total; the step id becomes `a+b`. The raw view is unchanged
+ * — this is a second reading, not a correction of the first.
+ */
+export function foldBatchTicks(readings: readonly StepReading[]): StepReading[] {
+    const out: StepReading[] = [];
+    for (const r of readings) {
+        const prev = out[out.length - 1];
+        if (prev !== undefined && prev.session === r.session && r.editedPaths === 0 && r.totalMs < BATCH_TICK_MAX_MS) {
+            const ms = Object.fromEntries(STEP_CLASSES.map((c) => [c, prev.ms[c] + r.ms[c]])) as Record<StepClass, number>;
+            out[out.length - 1] = {
+                ...prev,
+                step: `${prev.step}+${r.step}`,
+                totalMs: prev.totalMs + r.totalMs,
+                ms,
+                toolCalls: prev.toolCalls + r.toolCalls,
+                toolRequests: prev.toolRequests + r.toolRequests,
+                roadmapReadBytes: prev.roadmapReadBytes + r.roadmapReadBytes,
+            };
+            continue;
+        }
+        out.push({ ...r, ms: { ...r.ms } });
     }
     return out;
 }
@@ -294,9 +335,28 @@ export interface StepAnatomySummary {
     /** Per change class: steps, p50 / p90 minutes per step, and mean tool-call batch size. */
     byRisk: Record<RiskClass, { steps: number; p50Min: number; p90Min: number; meanBatch: number }>;
     sumErrors: string[];
+    /**
+     * The same corpus after {@link foldBatchTicks}: the per-step figure a goal
+     * should be read against, since the raw p50 is dominated by batch ticks.
+     */
+    orchestrated: {
+        steps: number;
+        p50Min: number;
+        p90Min: number;
+        byRisk: Record<RiskClass, { steps: number; p50Min: number; p90Min: number; meanBatch: number }>;
+    };
 }
 
 export function summariseSteps(readings: readonly StepReading[]): StepAnatomySummary {
+    const raw = summariseRaw(readings);
+    const folded = summariseRaw(foldBatchTicks(readings));
+    return {
+        ...raw,
+        orchestrated: { steps: folded.steps, p50Min: folded.p50Min, p90Min: folded.p90Min, byRisk: folded.byRisk },
+    };
+}
+
+function summariseRaw(readings: readonly StepReading[]): Omit<StepAnatomySummary, 'orchestrated'> {
     const total = readings.reduce((a, r) => a + r.totalMs, 0);
     const round = (x: number, p = 2): number => Math.round(x * 10 ** p) / 10 ** p;
     const byClass = Object.fromEntries(

@@ -72,7 +72,10 @@
             "read_at": "2026-10-16",
             "reason": "road-to-agent-throughput-recovery step 0.2 — the two regressions `--against-baseline` has reported since 2026-10-01 (`agents/evidence/analysis/turnaround-reading-2026-10-01.md:100` left them 'for whoever owns that number next') get an owner. This entry records the reading and the ownership; it raises and lowers no baseline.",
             "owned_by": "road-to-agent-throughput-recovery",
-            "owned_figures": ["blocking_share", "context_floor_max"],
+            "owned_figures": [
+                "blocking_share",
+                "context_floor_max"
+            ],
             "invocation": "./scripts-run src/scripts/probe_turnaround --store ~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config --limit 10 --against-baseline",
             "invocation_note": "Run from a lane worktree, so `--store` points at the main checkout's store; the bare command would read the worktree's own (empty) project directory and exit 1 on `empty_corpus: \"fail\"`.",
             "corpus": {
@@ -142,15 +145,95 @@
             "reading": {
                 "step_p50_minutes": 4.2,
                 "step_p90_minutes": 33.6,
-                "share_by_class": { "model": 0.303, "change": 0.028, "verify": 0.039, "ceremony": 0.095, "wait": 0.535, "refusal": 0.0, "unknown": 0.0 },
-                "steps_by_change_class": { "R0": 4, "R1": 5, "R2": 30, "R3": 36 },
-                "p50_minutes_by_change_class": { "R0": 2.1, "R1": 2.7, "R2": 7.7, "R3": 0.1 }
+                "share_by_class": {
+                    "model": 0.303,
+                    "change": 0.028,
+                    "verify": 0.039,
+                    "ceremony": 0.095,
+                    "wait": 0.535,
+                    "refusal": 0.0,
+                    "unknown": 0.0
+                },
+                "steps_by_change_class": {
+                    "R0": 4,
+                    "R1": 5,
+                    "R2": 30,
+                    "R3": 36
+                },
+                "p50_minutes_by_change_class": {
+                    "R0": 2.1,
+                    "R1": 2.7,
+                    "R2": 7.7,
+                    "R3": 0.1
+                }
             },
             "limits": "A step runs from the previous close in the same transcript, so a subagent that ticks several boxes in a row gives the work to the first and near-zero intervals with no edited path to the rest; those classify R3 by upward resolution, which is why the R3 p50 is 0.1 min and the R3 count is high. The anatomy measures time inside the transcript that closes the step; the orchestrating session's review rounds, PR and CI wait around a subagent's step are not in it.",
             "directions": {
                 "step_p50_minutes": "DOWN",
                 "ceremony_share": "DOWN"
-            }
+            },
+            "superseded_by": "the 2026-10-22 reading below. This reading's p50 is dominated by batch-tick artefacts its own `limits` names (36 of 75 steps classed R3 at a p50 of 0.1 min), so it cannot show a later improvement; and its corpus line mixes units — 75 is a count of closed STEPS, 79 a count of step-closing TRANSCRIPTS. Kept as written; the Goal is not read against it."
+        },
+        {
+            "read_at": "2026-10-22",
+            "reason": "17.0.0 release finding 474a586cabe8: the 2026-10-21 per-step baseline rests on an interval definition its own `limits` calls distorted. The instrument now also reports the ORCHESTRATED view (`_lib/step_anatomy.ts::foldBatchTicks`): an interval that edited nothing but the roadmap and lasted under BATCH_TICK_MAX_MS (60 s) is folded into the step it trails in the same transcript, so a subagent ticking several boxes in a row counts as one step with all its time. The raw view is reported beside it, unchanged.",
+            "owned_by": "road-to-a-step-that-costs-what-it-changes",
+            "invocation": "./scripts-run src/scripts/probe_turnaround --steps --json --limit 326 --store <every ~/.claude/projects store of this repository, comma-separated: the main checkout's and each worktree's>",
+            "invocation_note": "326 is the number of transcripts across those stores modified in the 7 days before the reading, subagent transcripts under <session>/subagents/ included — the 2026-10-21 rule, re-applied. The window moved by one day, so this is a re-reading on the same method, not a reproduction of the same corpus.",
+            "corpus": {
+                "window": "the 7 days to 2026-10-22, every store of this repository, measuring session excluded",
+                "transcripts": 326,
+                "step_closing_transcripts": 37,
+                "step_closing_subagent_transcripts": 33,
+                "closed_steps": 91,
+                "orchestrated_steps": 68,
+                "note": "Units kept apart on purpose: 326 transcripts were read, 37 of them close at least one step (33 are subagent files), and those 37 close 91 steps, which fold to 68 orchestrated steps (23 batch ticks)."
+            },
+            "reading": {
+                "orchestrated_step_p50_minutes": 7.6,
+                "orchestrated_step_p90_minutes": 58.1,
+                "orchestrated_steps_by_change_class": {
+                    "R0": 5,
+                    "R1": 5,
+                    "R2": 37,
+                    "R3": 21
+                },
+                "orchestrated_p50_minutes_by_change_class": {
+                    "R0": 3.1,
+                    "R1": 2.7,
+                    "R2": 7.7,
+                    "R3": 10.4
+                },
+                "raw_step_p50_minutes": 4.6,
+                "raw_step_p90_minutes": 49.4,
+                "raw_steps_by_change_class": {
+                    "R0": 5,
+                    "R1": 5,
+                    "R2": 37,
+                    "R3": 44
+                },
+                "raw_p50_minutes_by_change_class": {
+                    "R0": 3.1,
+                    "R1": 2.7,
+                    "R2": 7.7,
+                    "R3": 0.1
+                },
+                "share_by_class": {
+                    "model": 0.3117,
+                    "change": 0.0329,
+                    "verify": 0.044,
+                    "ceremony": 0.1076,
+                    "wait": 0.5035,
+                    "refusal": 0.0001,
+                    "unknown": 0.0002
+                }
+            },
+            "limits": "Folding moves a tick's time into the step it trails; it does not recover time an orchestrating session spent around a subagent's step (review rounds, PR and CI wait), which no transcript that closes the step contains. The 60 s bound is stated in BATCH_TICK_MAX_MS with its reason. A no-edit step that did work of its own for longer than that stays a step.",
+            "directions": {
+                "orchestrated_step_p50_minutes": "DOWN",
+                "ceremony_share": "DOWN"
+            },
+            "goal_reading": "The Goal's speed threshold (D14 (1): ≤ 0.5 × the 0.2 baseline p50) is read on the ORCHESTRATED view on both sides — this reading as the baseline, and every post-flip drain through the same `orchestrated` block. The ratio is unchanged; the definition of a step is the one the instrument now applies to both readings, fixed before any post-flip reading exists."
         }
     ]
 }
