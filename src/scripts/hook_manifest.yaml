@@ -1794,7 +1794,9 @@ native_event_aliases:
     SubagentStart:     subagent_start
     SubagentStop:      subagent_stop
     # StopFailure fires on an API failure and carries its class in `error`
-    # (observed on 2.1.308 with `server_error`); lowered onto the agent-level
+    # (observed on 2.1.308 with `server_error`; `rate_limit` is the host's
+    # documented value for the plan limit and has not been observed live, so a
+    # different spelling would leave the marker unwritten); lowered onto the agent-level
     # crash slot, which no concern bound before. Claude-only: measured nowhere else.
     StopFailure:       agent_error
   # Cowork shares Claude Code's PascalCase event vocabulary verbatim
