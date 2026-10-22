@@ -14,6 +14,7 @@ import {
     readNeedsCouncilLine,
     readSeatReply,
     renderClearance,
+    seatsFromSession,
     sha256,
     type Seat,
     UNTRUSTED_DIFF_BEGIN,
@@ -118,6 +119,35 @@ describe('seat readings', () => {
         ]);
         expect(readNeedsCouncilLine('verdict: needs-owner (1 trigger(s): governance-surface)')).toBeNull();
         expect(readNeedsCouncilLine('verdict: routine')).toBeNull();
+        // A malformed id or a count that disagrees is unreadable, not a shorter list.
+        expect(readNeedsCouncilLine('verdict: needs-council (2 trigger(s): ci-workflow, Security Surface)')).toBeNull();
+        expect(readNeedsCouncilLine('verdict: needs-council (3 trigger(s): ci-workflow, security-surface)')).toBeNull();
+    });
+
+    it('a provider that answered through two models keeps its worst reading, not its last', () => {
+        const seats = seatsFromSession({
+            responses: [
+                { provider: 'anthropic', model: 'model-a', text: DANGER },
+                { provider: 'anthropic', model: 'model-b', text: CLEAR },
+                { provider: 'openai', model: 'model-c', text: CLEAR },
+            ],
+        }) as Seat[];
+        expect(new Map(seats.map((s) => [s.provider, s.reading]))).toEqual(
+            new Map([
+                ['anthropic', 'dangerous'],
+                ['openai', 'clear'],
+            ]),
+        );
+    });
+
+    it('a retry by the same model after an error still counts as its final reply', () => {
+        const seats = seatsFromSession({
+            responses: [
+                { provider: 'openai', model: 'model-c', text: '', error: 'timeout' },
+                { provider: 'openai', model: 'model-c', text: CLEAR },
+            ],
+        }) as Seat[];
+        expect(seats.map((s) => s.reading)).toEqual(['clear']);
     });
 });
 

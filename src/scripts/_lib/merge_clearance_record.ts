@@ -195,7 +195,15 @@ export function deriveOutcome(seats: readonly Pick<Seat, 'provider' | 'reading'>
     return clearing.size >= requiredProviders ? 'cleared' : 'not-cleared';
 }
 
-/** The seats a council session record holds: the last reply per provider is its final one. */
+/**
+ * The seats a council session record holds, one per provider.
+ *
+ * The last reply per provider AND model is that model's final one, so a retry
+ * after an error still counts. A provider answering through more than one model
+ * is then reduced to its worst final reading — `dangerous` first, then any other
+ * non-clearing one — never to whichever model replied last: a `DANGEROUS: yes`
+ * followed by another model's `no` must not read as clear.
+ */
 export function seatsFromSession(session: unknown): Seat[] | string {
     if (session === null || typeof session !== 'object' || !Array.isArray((session as { responses?: unknown }).responses)) {
         return 'the session record has no `responses` list';
@@ -213,7 +221,7 @@ export function seatsFromSession(session: unknown): Seat[] | string {
             return `provider ${r.provider} names no valid model (${String(r.model)})`;
         }
         const text = typeof r.text === 'string' ? r.text : '';
-        last.set(r.provider, {
+        last.set(`${r.provider}\u0000${r.model}`, {
             provider: r.provider,
             model: r.model,
             replySha256: sha256(text),
@@ -223,19 +231,28 @@ export function seatsFromSession(session: unknown): Seat[] | string {
     if (last.size === 0) {
         return 'the session record holds no reply';
     }
-    return [...last.values()];
+    const rank = (s: Seat): number => (s.reading === 'dangerous' ? 2 : s.reading === 'clear' ? 0 : 1);
+    const perProvider = new Map<string, Seat>();
+    for (const seat of last.values()) {
+        const held = perProvider.get(seat.provider);
+        if (held === undefined || rank(seat) >= rank(held)) perProvider.set(seat.provider, seat);
+    }
+    return [...perProvider.values()];
 }
 
 /** The triggers a classifier verdict line names, or `null` when it is not `needs-council`. */
 export function readNeedsCouncilLine(line: string): string[] | null {
-    const m = /^verdict: needs-council \((?:\d+ trigger\(s\): )?([^)]*)\)$/u.exec(line.trim());
+    const m = /^verdict: needs-council \((?:(\d+) trigger\(s\): )?([^)]*)\)$/u.exec(line.trim());
     if (m === null) {
         return null;
     }
-    const triggers = (m[1] ?? '')
-        .split(/[,:]\s*/u)
-        .map((t) => t.trim())
-        .filter((t) => TRIGGER_RE.test(t));
+    // Two shapes: `N trigger(s): a, b` lists ids only; `id: detail` names one.
+    // A malformed id or a count that disagrees is unreadable, never dropped:
+    // a silently shortened list is a record of fewer triggers than fired.
+    const body = m[2] ?? '';
+    const triggers = m[1] !== undefined ? body.split(/,\s*/u).map((t) => t.trim()) : [body.split(':')[0]!.trim()];
+    if (!triggers.every((t) => TRIGGER_RE.test(t))) return null;
+    if (m[1] !== undefined && Number(m[1]) !== triggers.length) return null;
     return triggers;
 }
 
