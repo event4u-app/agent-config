@@ -30,6 +30,7 @@ import { SourceError, resolveSource, type SourceRef } from './source_adapters.js
 export const DEGRADED_NO_NETWORK = 'degraded: no-network';
 export const DEFAULT_MAX_BYTES = 2 * 1024 * 1024;
 export const DEFAULT_MAX_REDIRECTS = 3;
+export const DEFAULT_TIMEOUT_MS = 30_000;
 export const MAX_QUOTE_WORDS = 15;
 
 export const RESEARCH_BRIEF = [
@@ -46,6 +47,8 @@ export interface NetworkOptions {
     hostAllowlistForTests?: readonly string[];
     maxBytes?: number;
     maxRedirects?: number;
+    /** Wall-clock cap on one request (body read included) and on one git call. */
+    timeoutMs?: number;
 }
 
 export interface UrlSourceRef {
@@ -58,19 +61,41 @@ export interface UrlSourceRef {
     degraded: typeof DEGRADED_NO_NETWORK | null;
 }
 
-function ipv4Private(a: string): boolean {
-    const [p, q] = a.split('.').map(Number) as [number, number];
-    return p === 0 || p === 10 || p === 127 || (p === 169 && q === 254) || (p === 172 && q >= 16 && q <= 31) || (p === 192 && q === 168) || (p === 100 && q >= 64 && q <= 127);
+function ipv4Private([p, q, r]: readonly number[]): boolean {
+    return (
+        p === 0 || p === 10 || p === 127 || (p as number) >= 224 ||
+        (p === 169 && q === 254) || (p === 172 && (q as number) >= 16 && (q as number) <= 31) || (p === 192 && q === 168) ||
+        (p === 100 && (q as number) >= 64 && (q as number) <= 127) || (p === 192 && q === 0 && r === 0) || (p === 198 && (q === 18 || q === 19))
+    );
 }
 
-/** Loopback, private, link-local, unique-local and unspecified addresses, v4 and v6. */
+/** The 16 bytes of an IPv6 address, an embedded dotted quad included. */
+function ipv6Bytes(a: string): number[] {
+    const quad = /(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(a);
+    const hex = quad === null ? a : `${a.slice(0, quad.index)}${((Number(quad[1]) << 8) | Number(quad[2])).toString(16)}:${((Number(quad[3]) << 8) | Number(quad[4])).toString(16)}`;
+    const [head, tail] = hex.split('::') as [string, string | undefined];
+    const groups = (s: string | undefined): string[] => (s === undefined || s === '' ? [] : s.split(':'));
+    const h = groups(head);
+    const t = groups(tail);
+    const words = [...h, ...Array<string>(tail === undefined ? 0 : 8 - h.length - t.length).fill('0'), ...t].map((g) => parseInt(g, 16));
+    return words.flatMap((w) => [w >> 8, w & 0xff]);
+}
+
+/**
+ * Loopback, private, link-local, unique-local, reserved and unspecified addresses,
+ * v4 and v6 — an IPv6 address that embeds an IPv4 one (mapped, compatible, NAT64,
+ * 6to4) is judged by the IPv4 address it reaches.
+ */
 export function isPrivateAddress(address: string): boolean {
     const a = address.toLowerCase();
-    if (isIP(a) === 4) return ipv4Private(a);
-    if (a === '::1' || a === '::') return true;
-    const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(a);
-    if (mapped !== null) return ipv4Private(mapped[1] as string);
-    return /^f[cd]/.test(a) || /^fe[89ab]/.test(a);
+    if (isIP(a) === 4) return ipv4Private(a.split('.').map(Number));
+    if (isIP(a) !== 6) return true;
+    const b = ipv6Bytes(a);
+    const zero = (from: number, to: number): boolean => b.slice(from, to).every((x) => x === 0);
+    if (zero(0, 10) && ((b[10] === 0xff && b[11] === 0xff) || (b[10] === 0 && b[11] === 0))) return ipv4Private(b.slice(12));
+    if (b[0] === 0x00 && b[1] === 0x64 && b[2] === 0xff && b[3] === 0x9b && zero(4, 12)) return ipv4Private(b.slice(12));
+    if (b[0] === 0x20 && b[1] === 0x02) return ipv4Private(b.slice(2, 6));
+    return (b[0] as number) >= 0xfc && (b[0] !== 0xfe || (b[1] as number) >= 0x80);
 }
 
 /** Throws unless `raw` is an http(s) URL without credentials whose host resolves only to public addresses. */
@@ -119,7 +144,11 @@ export async function fetchUrlSource(raw: string, opts: NetworkOptions): Promise
     let current = raw;
     for (let hop = 0; hop <= maxRedirects; hop += 1) {
         const url = await validateSourceUrl(current, opts);
-        const res = await fetch(url, { redirect: 'manual', headers: { accept: 'text/*, application/json' } });
+        const res = await fetch(url, {
+            redirect: 'manual',
+            headers: { accept: 'text/*, application/json' },
+            signal: AbortSignal.timeout(opts.timeoutMs ?? DEFAULT_TIMEOUT_MS),
+        });
         if (res.status >= 300 && res.status < 400) {
             const location = res.headers.get('location');
             if (location === null) throw new SourceError(`${url.host}: redirect without a location`);
@@ -140,6 +169,8 @@ export async function fetchUrlSource(raw: string, opts: NetworkOptions): Promise
  */
 export async function cloneRepoSource(raw: string, workDir: string, opts: NetworkOptions & { pinSha?: string }): Promise<SourceRef> {
     if (!opts.network) throw new SourceError(`${raw}: ${DEGRADED_NO_NETWORK} — a repository needs the network`);
+    // Passed to git as an argument: anything but a full SHA could be read as an option.
+    if (opts.pinSha !== undefined && !/^[0-9a-f]{40}$/.test(opts.pinSha)) throw new SourceError(`${raw}: pin ${opts.pinSha} is not a 40-hex commit SHA`);
     const local = raw.startsWith('file://') && opts.allowPrivateHosts === true;
     if (!local) await validateSourceUrl(raw, opts);
     const dest = path.join(workDir, 'source');
@@ -151,6 +182,7 @@ export async function cloneRepoSource(raw: string, workDir: string, opts: Networ
         execFileSync('git', ['-c', 'core.hooksPath=/dev/null', '-c', 'protocol.ext.allow=never', '-c', 'http.followRedirects=false', ...args], {
             cwd,
             stdio: 'pipe',
+            timeout: opts.timeoutMs ?? DEFAULT_TIMEOUT_MS,
             env: { ...env, GIT_TERMINAL_PROMPT: '0' },
         });
     };
