@@ -371,7 +371,7 @@ waits:
       writer, widened from council-only to host-sourced. Still record-only, per
       `quota_parked.ts:25-31`.
       verify: `npx vitest run tests/scripts/quota_parked.test.ts -t host-stop-failure-writes-marker --reporter=verbose` -> /✓.*host-stop-failure-writes-marker/
-      Done 2026-10-22 (commits 8dedad4f8a, 5df71aacd6): a forced `StopFailure` on 2.1.308 carries `error: server_error`/`rate_limit` (addendum in `host-continuation-observations-2026-10.md`); `StopFailure` is aliased onto `agent_error` for claude, the `host-rate-marker` concern writes `quota_parked` with `source: host` on `rate_limit` only, and exits 0 on every path.
+      Done 2026-10-22 (commits 8dedad4f8a, 5df71aacd6): a forced `StopFailure` on 2.1.308 carries `error: server_error`; `rate_limit` was not reached (addendum in `host-continuation-observations-2026-10.md`); `StopFailure` is aliased onto `agent_error` for claude, the `host-rate-marker` concern writes `quota_parked` with `source: host` on `rate_limit` only, and exits 0 on every path.
 - [x] **4.4 Split the transient branch by error class** in
       `subagent-steering.md:34-40`: `rate_limit` causes no same-turn
       re-dispatch, the slice parks until a recovery signal, then re-runs the
@@ -557,7 +557,7 @@ waits:
       per refusal reason (a)–(h); no prose rule re-implements it.
       Done 2026-10-22: `decideWorkerReuse` › `one-fixture-per-refusal-reason`; `shadowReuseVerdict` agrees with it on every single-reason fixture.
 - [x] **AC-4** No agent id is written to disk; workers are addressed by name.
-      Done 2026-10-22: `no-agent-id-reaches-disk`; the `subagent_named` line stores `refFor(agentId)` and the name, never the id.
+      Done 2026-10-22: `no-agent-id-reaches-disk`; the `subagent_named` line stores `refFor(agentId)` and `name_key`, a digest of session and name, never the id.
 - [x] **AC-5** A definition declared `reuse: never` is never resumed or forked
       from an implementer (fixture).
       Done 2026-10-22: the `not_continuity` fixture (`reuse: 'never'`) and the refusal-order test in `_lib_worker_reuse.test.ts`.

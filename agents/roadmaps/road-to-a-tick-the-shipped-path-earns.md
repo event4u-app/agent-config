@@ -174,32 +174,40 @@ the bench harnesses and `pricing.yaml`.
 
 ## Phase 5 — Repairs, red first (D5)
 
-- [ ] **5.1 Hand payload:** one named declaration per callee via the code-graph extractor, or
+- [x] **5.1 Hand payload:** one named declaration per callee via the code-graph extractor, or
   refuse unless exactly one top-level declaration remains; assert after extraction that no
   block body survives. Fixtures: two functions, `export default`, trailing comment, Python with
   imports, PHP namespace.
   verify: each fixture is red at the base commit and sends signatures only after.
-- [ ] **5.2 Ceiling on members:** `FreeRouteClient` and built seats carry `content_ceiling`
+      Done 2026-10-23 (`57c3ba1445`): `signatureOf` drops comments, imports and PHP/Python preambles, then refuses unless one declaration remains and no block body survives; 7 fixture cases red at base (`hand_payload.test.ts`).
+- [x] **5.2 Ceiling on members:** `FreeRouteClient` and built seats carry `content_ceiling`
   from `routeCeiling` or seat config; an unknown `base_url` member defaults to
   `public-artifact`; a probed self-hosted route reaches `ask_transport`.
   verify: an injected base_url member without a ceiling refuses a `project-content` payload.
-- [ ] **5.3 Shadow takes a `HandSlice`,** builds the payload, records exposure, requires a
+      Done 2026-10-23 (`4ff3a8d307`): `FreeRouteClient` and built seats carry `content_ceiling`; a `base_url` member without one defaults to `public-artifact`; paid `base_url` seats stay out of route liveness. 4 of 4 red at base.
+- [x] **5.3 Shadow takes a `HandSlice`,** builds the payload, records exposure, requires a
   non-route paid side.
   verify: a shadow fixture's outbound body equals `buildHandPayload`'s output.
-- [ ] **5.4 Any `route !== null` member is ineligible** for chair, synthesis and verdict.
+      Done 2026-10-23 (`788b0029e3`): `shadowAsk(slice)` builds one `buildHandPayload` payload for both sides, records exposure only on a real route call, refuses a route on the paid side.
+- [x] **5.4 Any `route !== null` member is ineligible** for chair, synthesis and verdict.
   verify: a base_url member without `billing_proof` is refused as chair with a named reason.
-- [ ] **5.5 `resumeNext` is cleared in a `finally`** around the stance-repair round, and the real
+      Done 2026-10-23 (`89af384370`): `seatRoleRefusal` refuses chair, synthesis and verdict to any route member (`route_head_role`), whatever billing it reports.
+- [x] **5.5 `resumeNext` is cleared in a `finally`** around the stance-repair round, and the real
   `blind` flag reaches `ask`.
   verify: a quota-gated stance repair followed by a blind chairman call carries no resume flag.
-- [ ] **5.6 A host marker sets its own `source` and refreshes `parked_at`.**
+      Done 2026-10-23 (`dd2860f4d1`): the stance-repair round clears `resumeNext` in a `finally`; `CliClient.blind` replaces both hard-coded `blind: false`.
+- [x] **5.6 A host marker sets its own `source` and refreshes `parked_at`.**
   verify: a council marker followed by a host `StopFailure` reads `would_wait`.
+      Done 2026-10-23 (`d4b84753c0`): a host park writes `source: host` and a fresh `parked_at`; net −2 B in the hook bundle.
 - [ ] **5.7 `StopFailure` binding gated** on the oldest host version recorded as accepting it;
   record that version or gate in the generator.
   verify: the generator emits no `StopFailure` key for a host row below the recorded version.
-- [ ] **5.8 Corrections:** cold-start 4.3 says `server_error` observed, `rate_limit` unobserved;
+  Open 2026-10-23: the binding is the `StopFailure: agent_error` alias in `src/scripts/hook_manifest.yaml`, a ratification-gated file, and the one recorded observation is 2.1.308; the gate needs that manifest edit and its ratification.
+- [x] **5.8 Corrections:** cold-start 4.3 says `server_error` observed, `rate_limit` unobserved;
   AC-4 says `name_key`; the egress setting description names identifier rows; each
   ratification record commits its seats' answers or a verdict digest beside the prompt.
   verify: the four texts read as stated.
+      Done 2026-10-23: cold-start 4.3 and AC-4 corrected; the egress setting names identifier rows (`docs/settings-reference.md` regenerated); both 2583 ratification records pin their seat answers by SHA-256. Left: the same stale sentence in the `egress_stage.ts` header, a hook-bundle source.
 
 ## Phase 6 — Re-read #2585 and publish the count
 

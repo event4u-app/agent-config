@@ -63,3 +63,12 @@ Non-blocking findings the seats named, all in non-gated consumer code, and what 
 - **The `worker_resume` live probe has two effects under one flag** (anthropic): setting the
   agent-teams variable also enables the reuse precondition and the state stamps. Both are
   digested and advisory; release notes should say so.
+
+## Seat answers
+
+The raw responses are gitignored and pruned after the retention window, so each is pinned here
+by its SHA-256; a kept copy reproduces the digest or it is not the answer the verdict rests on.
+
+| Round | Response file (`agents/runtime/council/responses/`) | SHA-256 |
+|---|---|---|
+| 1 | `subagent-system-2583-rest-ratification-r1-20261022.md` | `11cb7e60736a8f66d1c045e18dce7e2dea6c227f33f743f7d0e83173283f2d4f` |
