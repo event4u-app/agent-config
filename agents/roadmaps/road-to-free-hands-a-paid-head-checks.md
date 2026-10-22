@@ -1,5 +1,6 @@
 ---
 complexity: structural
+status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -14,7 +15,7 @@ relates:
     note: "Phase 5 here consumes that roadmap's closed failure vocabulary (rate_limited / quota_exhausted / model_unservable) instead of inventing a second one."
   - slug: road-to-one-detector-and-the-senders-we-own
     relation: disjoint
-    note: "Step 1.2 adds three prefix rows to the existing egress rule table; it does not touch the detector unification that roadmap owns."
+    note: "Step 1.2 adds three prefix rows to the existing egress rule table; it does not touch the detector unification that roadmap owns. Step 1.3's personal-data and identifier canaries read that roadmap's step 2.3 identifier rows and report not-detectable until it lands; no ordering edge, so not a depends row."
   - slug: road-to-workflows-that-cannot-exfiltrate
     relation: disjoint
     note: "The workflow-security floors found in the same analysis ship there, independently of any free route."
@@ -117,10 +118,13 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   `inbox-2026-10-z`.) A fixed set of planted canary values — personal data, credentials and
   internal identifiers — placed in the payload, in the hand's system prompt and in rule or skill
   text a payload could quote, is sent through `ask_transport` to a mock endpoint on loopback
-  that records the bytes it receives. No network, synthetic values only.
-  verify: the recorded bytes contain no planted canary in clear text, and the run report names
-  each canary with the placeholder it left as. Zero observed leaks is a test result, never a
-  guarantee.
+  that records the bytes it receives. No network, synthetic values only. `ask_transport` gets
+  the final check, not replacement (`egress-placeholders-v1.md`), so a credential canary is
+  refused, not replaced. Identifier canaries need the rows of
+  `road-to-one-detector-and-the-senders-we-own` 2.3; until then they report `not-detectable`.
+  verify: no planted canary in clear text; the report names each canary as replaced (with its
+  placeholder), refused (with its reason) or `not-detectable`. Zero observed leaks is a test
+  result, never a guarantee.
 
 ## Phase 2 — The route (gateway M1)
 
@@ -147,11 +151,14 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   time (K2).
   verify: a stub route answering with another family's id is absent with that reason.
 - [ ] **2.5 A loopback self-hosted route** (owner turn 2026-10-22: paid *or self-hosted* models
-  repair and finish). A `base_url` on loopback is billing class `self-hosted` and may carry
-  `project-content`, because the payload never leaves the machine; any non-loopback
-  self-hosted host is an ordinary route under blocker `project-content-ceiling` (decision A7).
-  verify: a loopback stub route admits a `project-content` payload; the same stub on a
-  non-loopback address refuses it with `policy_content_ceiling`.
+  repair and finish; read as a *hand*, decision A8). Not a free route, so blocker
+  `free-route-admission` does not gate it. Loopback is a precondition, never the proof (A7,
+  K12): billing class `self-hosted` may carry `project-content` only after a per-model probe
+  shows local weights and no outbound connection during a probe call. Unprobed, or on a
+  non-loopback host, it is an ordinary route under blocker `project-content-ceiling`.
+  verify: a loopback stub whose probe reports local weights admits a `project-content`
+  payload; the same stub reporting a remote model, and on a non-loopback address, both refuse
+  it with `policy_content_ceiling`.
 
 ## Phase 3 — The worker contract (rung 0.5, free hands)
 
@@ -262,6 +269,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 | K9 | Vendoring the external catalogue's data or README | licence + drift; endpoints are discovered |
 | K10 | More than five judges for "more agreement" | n_eff saturates (S3) |
 | K11 | Rotating accounts or keys to stretch a provider's free limit | only legitimately held keys; a route's own limits are honoured, never evaded |
+| K12 | Treating a cloud-served model behind localhost as `self-hosted` | a loopback address says where the socket is, not where the model runs (A7) |
 
 ## Decisions
 
@@ -271,9 +279,10 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 | A2 | reversible-technical | agent | A roadmap of its own, not a promotion of `later/road-to-gateway-harvest`: the scope (fail-closed ceiling, typed worker kinds, exposure ledger, jury independence, net measurement) exceeds M1, and the parked file keeps six unrelated milestones | `later/road-to-gateway-harvest.md` milestone table; this file's Phases 1, 3, 4, 6 | the parked file is emptied of M4-M8 |
 | A3 | reversible-technical | agent | The binary content ceiling stays; a four-level public / internal / confidential / strictly-confidential scheme from the supplied plan is declined | the existing ceiling is fail-closed after 1.1, and no route exists that a third or fourth level could admit; a level with no admissible route is a label, not a control | a route class appears that needs a ceiling between the two |
 | A5 | reversible-technical | agent | The Phase 6 shadow is capped at 2,000 calls | enough for per-kind rates at the 5 pp margin on the public-artifact corpus; spend stays USD 0.00 under `free-quota` | the per-kind sample is underpowered at the cap |
-| A6 | reversible-technical | agent | A hand's slice includes the signatures the function must call, not only its specification | a draft without its callees' signatures cannot compile, and the rework would land on the head; implementations stay out per the owner turn of 2026-10-22; Phase 6 measures whether the slice is too thin | 6.1 shows the head's verification tokens rising on slices that carried signatures only |
-| A7 | reversible-technical | agent | A loopback self-hosted route may carry `project-content`; a non-loopback one may not without blocker `project-content-ceiling` | data on loopback does not leave the machine, so no data-use term applies; a remote host is a recipient like any other | a loopback route is observed forwarding upstream |
 | A4 | reversible-technical | agent | The exposure cap starts at 20 % of tracked files and is a tunable, not a gate threshold | owner rationale 2026-10-22; obscurity layer only, the ceiling and K4 carry the guarantee | the ledger shows a route at the cap blocking otherwise-admissible work |
+| A6 | reversible-technical | agent | A hand's slice includes the signatures the function must call, not only its specification | a draft without its callees' signatures cannot compile, and the rework would land on the head; implementations stay out per the owner turn of 2026-10-22; Phase 6 measures whether the slice is too thin | 6.1 shows the head's verification tokens rising on slices that carried signatures only |
+| A7 | reversible-technical | agent | A loopback self-hosted route may carry `project-content` only after a per-model probe shows local weights; without it, and on any non-loopback host, it may not without blocker `project-content-ceiling` | loopback is a precondition, not proof: a local runtime can serve a cloud-hosted model through its local API, and any localhost proxy forwards upstream; a model whose weights are on this machine has no data-use term to check | a probed-local route is observed forwarding upstream, or the probe cannot tell local from remote weights for a runtime in use |
+| A8 | reversible-technical | agent | 2.5 reads the owner turn's self-hosted *finisher* as a *hand* that may see project content — a reinterpretation, stated as one | a local model as head or finisher would miss the quality bar the paid head holds; as a hand its output is still checked by the paid head | the owner restates self-hosted as finisher, or Phase 6 shows a self-hosted hand's drafts raising the head's verification tokens |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
@@ -294,7 +303,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 - **Status:** open
 - **Owner:** maintainer
 - **Class:** 3 — human-only
-- **Blocks:** Phases 2-7. Phases 0 and 1 run without it.
+- **Blocks:** Phases 2-7, except 2.5 (a self-hosted route is not a free route). Phases 0 and 1 run without it.
 - **What to do:** pick exactly one — (a) admit OpenAI-compatible `base_url` routes as free hands and jurors under ADR-257, first a keyless endpoint, spend ceiling USD 0.00 enforced by billing class `free-quota`, shadow capped at 2,000 calls, termination on the Phase 6 bars or three consecutive `model_unservable` per route; or (b) keep the slot unspent and park Phases 2-7 in `later/` with this question recorded as the wake condition.
 - **Recommendation:** (a). It answers the four things the 2026-09-07 refusal asked a new request to name (seat, call count, spend ceiling, termination rule), and it is the only path to the owner's 2026-09-05 free-jury goal and the 2026-10-22 directive.
 - **If you do nothing:** the free-route question arrives a fifth time; `free-jury-judge-agreement` stays unbacked with no route to back it.
