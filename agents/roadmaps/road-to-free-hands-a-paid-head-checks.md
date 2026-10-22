@@ -270,6 +270,12 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   verified; the call budget recorded in decision A5, public-artifact corpus first.
   verify: the shadow ledger shows a free and a paid answer with a verify result for every call.
   Built 2026-10-22 (e7f38f239a), waits on its window: `free_hand_shadow.test.ts` ledgers both answers with a verify result. No free route is configured and no production caller runs `shadowAsk`, so no shadow call has happened.
+  Wired and harnessed 2026-10-22, window not run:
+    - `ask_transport` now calls `shadowAsk` for a typed public-artifact ask served by a paid route when an unpaid route is admissible and the ledger is under 2,000 (a45480aaf4, `ask_transport_shadow.test.ts`, 7 tests, the content-class guard seen red when removed).
+    - Building the harness found that a `base_url` member never reached `build_members`: the settings block dropped `base_url`, `billing_proof` and `content_ceiling` (fixed e9312bad3d, `free_route_member.test.ts`, red before green).
+    - PREREG committed alone first (1bc9c41c5d, `internal/bench/free-hands-shadow-PREREG.md`): manufactured corpus, classify (9 classes × 37) and extract (333 skill `name` fields), seed, verifier version, the registered bars unchanged, blind 10 % paid-head audit. `summarise-given-text` and the other kinds stay unmeasured (council decision 3, A14).
+    - Harness `internal/bench/free-hands-shadow/` (d1489529b8, `free_hands_shadow_harness.test.ts`, 12 tests against loopback stubs). It refuses to start unless every paid seat resolves to a first-party subscription CLI with no API-billing variable set.
+  The live window did not run: the host's permission classifier refused sending repository content to the external keyless route from this session ("Traffic Redirection"). Closes when an operator runs `AI_COUNCIL_CONFIG=<copy of council.example.yml> ./scripts-run internal/bench/free-hands-shadow/run.ts`, then `run.ts audit` and `run.ts report`, and files the evidence.
 - [x] **6.3 Flip per kind**, only for kinds that clear both bars; a kind that later breaches the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/continuity-surface.json -->
   escalation kill reverts automatically and the reversion is recorded in the claim row.
   verify: a seeded breach above the kill flips the kind back to the paid route.
@@ -361,6 +367,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   Done 2026-10-22: 1.2, `06777113cc`, `9725442e47`.
 - [ ] AC-3 A free route serves a typed rung-0.5 call, chosen by kind, class and quota (3.2).
   Built 2026-10-22, open: served end to end by a loopback stub through `askOnce` → `chooseRoute` (3.2). No free route is configured on the maintainer's host — adding one needs an account or key outside this run — so no live free call has been served.
+  2026-10-22, second pass: a keyless first-party route is catalogued and attested (2.3), the settings path now builds it (e9312bad3d), and `run.ts --ac3-demo` serves one typed classify ask on it through the production chooser and verifies it deterministically (tested against stubs). The live call was refused by the host's permission classifier for this session. Closes on the first live `--ac3-demo` run by an operator.
 - [x] AC-4 No free route holds a head role (4.1, K1).
   Done 2026-10-22: 4.1, `seat_policy_and_ceiling.test.ts`.
 - [x] AC-5 n_eff is reported beside κ on every jury run (4.3).
