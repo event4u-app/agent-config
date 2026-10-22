@@ -83,7 +83,11 @@ export function readProjectTreeForms(packageRoot: string): Map<string, ProjectTr
         if (!isRecord(row)) continue;
         const form = row['form'];
         if (typeof form !== 'string' || !FORMS.includes(form)) continue;
-        if (!isRecord(row['measured'])) continue;
+        // At least one measured figure, each a non-empty string: `{}` records no measurement.
+        const measured = row['measured'];
+        if (!isRecord(measured)) continue;
+        const figures = Object.values(measured);
+        if (figures.length === 0 || !figures.every((v) => typeof v === 'string' && v.trim() !== '')) continue;
         out.set(host, { form: form as LeanProjectionMode, basis: typeof row['basis'] === 'string' ? row['basis'] : 'unrecorded' });
     }
     return out;
