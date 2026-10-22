@@ -158,7 +158,28 @@ function yn(b: boolean): string {
     return b ? 'reached' : '**not reached**';
 }
 
+/**
+ * The Reading's first two bullets, checked against the cells. They are prose,
+ * and `--check` compares the file only against a regenerated copy carrying the
+ * same prose, so a flipped cell would otherwise leave a report that contradicts
+ * its own table.
+ */
+export function readingContradictions(rows: readonly Row[]): string[] {
+    const out: string[] = [];
+    for (const r of rows) {
+        const where = `${r.ip.id} (${r.staged ? 'staged' : 'unstaged'})`;
+        if (r.staged && !(r.launcher && r.stripped)) out.push(`${where}: staged, yet a PATH did not reach the dispatcher`);
+        if (!r.staged && r.stripped) out.push(`${where}: unstaged, yet the stripped PATH reached the dispatcher`);
+        if (!r.staged && r.launcher !== (r.ip.id === 'npm-global')) out.push(`${where}: launcher PATH ${yn(r.launcher)}`);
+    }
+    return out;
+}
+
 export function renderReport(rows: readonly Row[]): string {
+    const contradictions = readingContradictions(rows);
+    if (contradictions.length > 0) {
+        throw new Error(`hook_carrier_census: the Reading no longer matches the cells — ${contradictions.join('; ')}`);
+    }
     const command = build_claude_hook_matrix(path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'))['SessionStart'] ?? '';
     const lines = [
         '<!-- evidence-type: analysis -->',

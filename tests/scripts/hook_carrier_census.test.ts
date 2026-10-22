@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { REPORT_REL, renderReport, runCensus } from '../../src/scripts/hook_carrier_census.js';
+import { REPORT_REL, readingContradictions, renderReport, runCensus } from '../../src/scripts/hook_carrier_census.js';
 import { recordProblems, type InjectionRecord } from '../../src/scripts/_lib/injection_effect.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -26,6 +26,14 @@ describe('hook_carrier_census (road-to-a-hook-carrier-that-is-never-silent 0.1)'
                 if (row.ip.id !== 'npm-global') expect(row.launcher).toBe(false);
             }
         }
+    }, 120_000);
+
+    it('a flipped cell makes the generator refuse rather than print a Reading its table contradicts', () => {
+        const rows = runCensus();
+        expect(readingContradictions(rows)).toEqual([]);
+        const flipped = rows.map((r) => (r.staged && r.ip.id === 'npx' ? { ...r, stripped: false } : r));
+        expect(readingContradictions(flipped)).toEqual(['npx (staged): staged, yet a PATH did not reach the dispatcher']);
+        expect(() => renderReport(flipped)).toThrow(/Reading no longer matches/);
     }, 120_000);
 });
 
