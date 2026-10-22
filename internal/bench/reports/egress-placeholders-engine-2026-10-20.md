@@ -17,7 +17,7 @@ planted defects were rejected, so the readings below were taken.
 | (a) recall, every credential row on W2 | ≥ 99 % per row | 17 rows at 100 % (100/100); `generic-assignment` **75 %** (75/100) | **fails for `generic-assignment`**, passes for the 17 vendor-shaped rows |
 | (b) precision on W4, credential rows | false positives under 1 % of files | 34 of 11,628 tracked text files carry a vendor-shaped credential span (0.29 %), every one a test, a fixture, a council prompt or a gate manifest quoting a shape | passes |
 | (c) idempotence, `replace(replace(x)) == replace(x)` | zero tolerance | 0 mismatches over 1,800 documents | passes |
-| (f) engine latency, 64 KiB input | p95 under 20 ms on the CI runner class | p50 7.85 ms, p95 8.78 ms, 200 runs — **on darwin-arm64, Node v25**, not the CI runner class | passes on this machine; the CI-class reading is not taken |
+| (f) engine latency, 64 KiB input | p95 under 20 ms on the CI runner class | p50 7.85 ms, p95 8.78 ms, 200 runs — **on darwin-arm64, Node v26.7.0** (the `node` field of the JSON record), not the CI runner class | passes on this machine; the CI-class reading is not taken |
 
 **The `generic-assignment` miss is one carrier.** Its pattern wants the operator
 right after the keyword, so a JSON key (`"api_key": "…"`) — the closing quote
@@ -43,4 +43,8 @@ so it is not done inside this measurement.
 **On ordering.** The PREREG and the first Phase 2–3 code reached `main` in one
 squash commit (`7cd7564eb`, #2366); the order the PREREG requires was checked on
 that PR's branch history before the squash, and is not recoverable from `main`
-alone.
+alone. The pre-squash commits, as `gh pr view 2366 --json commits` lists them:
+the PREREG is `054666bdb` (committed 2026-10-15T05:27:42Z), preceded only by the
+contract `f0e2cf21a`, and the first code commit is `eb0320703`
+(05:31:04Z). Those are commit timestamps the author's clock set, so this pins
+the order the branch recorded, not an independently witnessed one.
