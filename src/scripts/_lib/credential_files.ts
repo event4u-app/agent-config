@@ -9,11 +9,18 @@
  * decided from the path alone, never from content — the guard runs before the
  * file is opened.
  *
- * What a path-text guard cannot see, and so does not catch: a glob or an
- * expansion that names the file only after the shell runs (`cat .e*`,
- * `cat .e[n]v`, `$(echo .env)`), a recursive search that never names it, and
- * an interpreter that prints the environment (`node -e 'console.log(process.env)'`,
- * `python -c …`). Those reach the egress stage as tool output, not here.
+ * A glob or a brace list is judged by what it can expand to: `cat .e*`,
+ * `cat .e[n]v`, `cat ~/.aws/cred*` and `cat .{env,txt}` refuse, because some
+ * credential name matches them (council 2026-10-22, a925125389fd). A segment
+ * made only of wildcards (`grep foo src/*`) is not judged: it names no file,
+ * and refusing it would refuse every directory read.
+ *
+ * What a path-text guard cannot see, and so does not catch: an expansion the
+ * shell computes from something else (`$(echo .env)` is judged as its own
+ * `echo`, but `cat $F` is not), a recursive search or a pure-wildcard glob
+ * that never names the file, and an interpreter that prints the environment
+ * (`node -e 'console.log(process.env)'`, `python -c …`). Those reach the egress
+ * stage as tool output, not here.
  *
  * Pure: no I/O. The one import is `node:path`'s POSIX normaliser.
  */
@@ -239,13 +246,104 @@ export function credentialMention(text: string, host: PathHost = HOST): Verdict 
 }
 
 function mentionIn(text: string, host: PathHost): Verdict {
-    for (const raw of text.split(/[\s'"<>|;&()`=,]+/)) {
-        if (raw === '') continue;
-        const candidates = raw.startsWith('-') ? [raw, raw.replace(/^-+[A-Za-z]?/, '')] : [raw];
-        for (const c of candidates) {
-            const cls = c === '' ? null : credentialFileClass(c, host);
-            if (cls !== null) return named(cls, c);
+    for (const expanded of braceExpansions(text)) {
+        for (const raw of expanded.split(/[\s'"<>|;&()`=,]+/)) {
+            if (raw === '') continue;
+            const candidates = raw.startsWith('-') ? [raw, raw.replace(/^-+[A-Za-z]?/, '')] : [raw];
+            for (const c of candidates) {
+                if (c === '') continue;
+                const cls = credentialFileClass(c, host) ?? globCredentialClass(c, host);
+                if (cls !== null) return named(cls, c);
+            }
         }
+    }
+    return null;
+}
+
+const BRACE_LIMIT = 64;
+
+/**
+ * `text` with each simple `{a,b}` list expanded, as the shell expands it before
+ * the command runs; the text itself first. Nested lists expand from the inside
+ * out, and the result is capped so a hostile word cannot multiply without bound.
+ */
+export function braceExpansions(text: string): string[] {
+    const out: string[] = [text];
+    for (let i = 0; i < out.length && out.length < BRACE_LIMIT; i += 1) {
+        const m = /\{([^{}]*,[^{}]*)\}/.exec(out[i] as string);
+        if (m === null) continue;
+        const cur = out[i] as string;
+        for (const alt of (m[1] as string).split(',')) {
+            if (out.length >= BRACE_LIMIT) break;
+            out.push(cur.slice(0, m.index) + alt + cur.slice(m.index + m[0].length));
+        }
+    }
+    return out;
+}
+
+const GLOB_META = /[*?[]/;
+const PURE_WILDCARD = /^[*?]+$/;
+
+/**
+ * Concrete paths that hold credentials by kind, as path tails. A glob is judged
+ * by whether it can expand to one of them; each probe's class is still decided
+ * by `credentialFileClass`, never assumed here.
+ */
+const PROBE_TAILS: readonly string[] = [
+    '.env', '.envrc', '.env.local', '.env.production', '.env.development', '.env.test',
+    'id_rsa', 'id_dsa', 'id_ecdsa', 'id_ed25519',
+    'private.key', 'private.pem', 'key.pem', 'id_rsa.pem',
+    ...KEY_EXTENSIONS.map((ext) => `x${ext}`),
+    ...CREDENTIAL_TAILS.map(([tail]) => tail),
+];
+
+function globSegmentRegex(seg: string): RegExp {
+    let re = '';
+    for (let i = 0; i < seg.length; i += 1) {
+        const ch = seg[i] as string;
+        if (ch === '*') re += '[^/]*';
+        else if (ch === '?') re += '[^/]';
+        else if (ch === '[') {
+            const end = seg.indexOf(']', i + 2);
+            if (end === -1) {
+                re += '\\[';
+                continue;
+            }
+            let body = seg.slice(i + 1, end);
+            if (body.startsWith('!')) body = `^${body.slice(1)}`;
+            re += `[${body.replace(/\\/g, '\\\\')}]`;
+            i = end;
+        } else re += ch.replace(/[.+^${}()|\\\]]/g, '\\$&');
+    }
+    return new RegExp(`^${re}$`, 'i');
+}
+
+/** A glob segment matches a name as the shell would: a leading dot is matched only by a literal dot. */
+function segmentMatches(glob: string, name: string): boolean {
+    if (name.startsWith('.') && !glob.startsWith('.')) return false;
+    return globSegmentRegex(glob).test(name);
+}
+
+/**
+ * The credential class of a path the shell would expand from a glob, or null.
+ * The literal directory before the first wildcard segment is kept, and each
+ * probe tail is tried against the glob segments that follow it.
+ */
+export function globCredentialClass(rawPath: string, host: PathHost = HOST): CredentialFileClass | null {
+    const p = separated(rawPath.trim(), host).replace(/\/+$/, '');
+    if (!GLOB_META.test(p)) return null;
+    const segs = p.split('/');
+    const first = segs.findIndex((seg) => GLOB_META.test(seg));
+    const rest = segs.slice(first);
+    if (rest.filter((seg) => GLOB_META.test(seg)).every((seg) => PURE_WILDCARD.test(seg))) return null;
+    const prefix = segs.slice(0, first);
+    for (const probe of PROBE_TAILS) {
+        const tail = probe.split('/');
+        if (tail.length < rest.length) continue;
+        const aligned = tail.slice(tail.length - rest.length);
+        if (!rest.every((seg, k) => segmentMatches(seg, aligned[k] as string))) continue;
+        const cls = credentialFileClass([...prefix, ...aligned].join('/'), 'posix');
+        if (cls !== null) return cls;
     }
     return null;
 }

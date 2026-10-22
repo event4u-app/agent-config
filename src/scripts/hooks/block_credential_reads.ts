@@ -31,10 +31,12 @@
  * guard is never the reason an unrelated call fails. Not caught, and recorded
  * as the residue `tests/fixtures/egress-prevention-gaps/` names: a program that
  * reads the file itself (`node -e "…readFileSync('.env')"`), a value printed by
- * a running process, a secret typed by the user — and a search or glob that
- * never names the file (`Grep path=.`, `grep -r KEY .`, `rg KEY`, `cat .e*`).
+ * a running process, a secret typed by the user — and a search that never
+ * names the file (`Grep path=.`, `grep -r KEY .`, `rg KEY`, `grep KEY src/*`).
  * The last returns the file's lines as tool output, which is the
  * `program-output` fixture's channel: the stage sees it, this guard does not.
+ * A glob or brace list that CAN expand to a credential name (`cat .e*`,
+ * `cat ~/.aws/cred*`, `cat .{env,txt}`, a Grep `glob: '.env*'`) is refused.
  *
  * Kill switch: `AGENT_CONFIG_ALLOW_CREDENTIAL_READS=1`.
  *
@@ -53,6 +55,7 @@ import {
     CREDENTIAL_CLASS_LABEL,
     credentialBasename,
     credentialFileClass,
+    globCredentialClass,
     HOST,
     segmentVerdict,
     type CredentialFileClass,
@@ -68,7 +71,7 @@ type JsonObject = { [k: string]: JsonValue };
 export const KILL_SWITCH = 'AGENT_CONFIG_ALLOW_CREDENTIAL_READS';
 
 const PATH_KEYS: ReadonlySet<string> = new Set([
-    'file_path', 'path', 'target_file', 'filename', 'filePath', 'notebook_path', 'paths', 'files', 'file_paths',
+    'file_path', 'path', 'target_file', 'filename', 'filePath', 'notebook_path', 'paths', 'files', 'file_paths', 'glob',
 ]);
 
 /** Every string held under a path key, at any depth and inside arrays. */
@@ -100,7 +103,7 @@ export function verdictFor(toolName: string, input: JsonObject, host: PathHost =
     const tool = toolName.trim().toLowerCase();
     if (!NON_READING_TOOLS.has(tool)) {
         for (const v of pathValues(input, false, [])) {
-            const cls = credentialFileClass(v, host);
+            const cls = credentialFileClass(v, host) ?? globCredentialClass(v, host);
             if (cls !== null) return { class: cls, what: `\`${credentialBasename(v)}\`` };
         }
     }

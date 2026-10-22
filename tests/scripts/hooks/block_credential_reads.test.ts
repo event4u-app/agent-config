@@ -267,6 +267,41 @@ describe('the tool and command surface', () => {
         expect(r?.what).toBe('`.env`');
     });
 
+    it('refuses a glob or brace whose expansion can name a credential file (council 2026-10-22, a925125389fd)', () => {
+        for (const cmd of [
+            'cat .en*',
+            'cat .e[n]v',
+            'cat .e?v',
+            'cat app/.env.*',
+            'cat ~/.aws/cred*',
+            'cat ~/.a*/credentials',
+            'cat ~/.ssh/id_*',
+            'head certs/*.key',
+            'cat .{env,txt}',
+            'cat ~/.aws/{config,credentials}',
+            'cat .*rc',
+        ]) {
+            expect(run('Bash', { command: cmd }), cmd).toBe(1);
+        }
+        expect(run('Read', { file_path: '.en*' })).toBe(1);
+        expect(run('Grep', { pattern: 'KEY', glob: '.env*' })).toBe(1);
+        expect(run('Grep', { pattern: 'KEY', glob: '*.ts' })).toBe(0);
+    });
+
+    it('passes globs that cannot name a credential file', () => {
+        for (const cmd of [
+            'cat *.md',
+            'cat src/*.ts',
+            'grep -n foo src/*',
+            'cat docs/*.txt',
+            'cat ~/.aws/conf*',
+            'ls .en*',
+            'cat {a,b}.md',
+        ]) {
+            expect(run('Bash', { command: cmd }), cmd).toBe(0);
+        }
+    });
+
     it('passes the legitimate neighbours of those bypasses', () => {
         for (const cmd of [
             'cp .env.example .env',
