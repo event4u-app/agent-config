@@ -639,7 +639,12 @@ function _stampIntroducedAt(
     return sameDay ?? introduced;
 }
 
-export type FileStatus = 'ok' | 'draft-exempt' | 'grandfathered' | 'fail';
+/** The latest calendar day anywhere on earth now (UTC+14), so no author's real today reads as future. */
+function _latestToday(now: number = Date.now()): string {
+    return new Date(now + 14 * 3_600_000).toISOString().slice(0, 10);
+}
+
+export type FileStatus ='ok' | 'draft-exempt' | 'grandfathered' | 'fail';
 
 export interface FileResult {
     file: string;
@@ -700,6 +705,16 @@ export function checkFile(absPath: string): FileResult {
         };
     }
     const violations = [...content.violations];
+    // A stamp after today would cover every commit made until that date as
+    // "reviewed" — the same-day residual of contract § 1 holds for today only.
+    if (content.reviewed !== null && content.reviewed > _latestToday()) {
+        violations.push({
+            file: absPath,
+            line: 1,
+            kind: 'future_review',
+            detail: `\`reviewed: ${content.reviewed}\` is later than today — stamp the day the review happened`,
+        });
+    }
     // A file with uncommitted modifications has no committed baseline for the
     // current content, so staleness is not judgeable — see
     // hasUncommittedChanges. The committed-history case below is unchanged.
