@@ -1,0 +1,141 @@
+{
+  "corpora": {
+    "w1": {
+      "source": "tests/fixtures/egress-detection/w1-identifiers.json",
+      "seed": 20261019,
+      "documents": 1200
+    },
+    "w1x": {
+      "generated": true,
+      "seed": 20261022,
+      "per_type": 120,
+      "documents": 960
+    }
+  },
+  "falsification": {
+    "dropping_restore": {
+      "documents": 1200,
+      "exact_restores": 0,
+      "passes_bar": false
+    },
+    "non_idempotent_replace": {
+      "documents": 1200,
+      "idempotence_mismatches": 1200,
+      "passes_bar": false
+    }
+  },
+  "w1": {
+    "CARD": {
+      "documents": 200,
+      "replaced": 200,
+      "fullyReplaced": 200,
+      "exactRestore": 200,
+      "idempotenceMismatches": 0,
+      "freshScopeMismatches": 0
+    },
+    "EMAIL": {
+      "documents": 200,
+      "replaced": 200,
+      "fullyReplaced": 200,
+      "exactRestore": 200,
+      "idempotenceMismatches": 0,
+      "freshScopeMismatches": 0
+    },
+    "IBAN": {
+      "documents": 200,
+      "replaced": 200,
+      "fullyReplaced": 200,
+      "exactRestore": 200,
+      "idempotenceMismatches": 0,
+      "freshScopeMismatches": 0
+    },
+    "PHONE": {
+      "documents": 400,
+      "replaced": 400,
+      "fullyReplaced": 400,
+      "exactRestore": 400,
+      "idempotenceMismatches": 0,
+      "freshScopeMismatches": 0
+    },
+    "TAXID": {
+      "documents": 200,
+      "replaced": 200,
+      "fullyReplaced": 200,
+      "exactRestore": 200,
+      "idempotenceMismatches": 0,
+      "freshScopeMismatches": 0
+    }
+  },
+  "w1x": {
+    "CARD": {
+      "documents": 120,
+      "replaced": 240,
+      "fullyReplaced": 120,
+      "exactRestore": 120,
+      "idempotenceMismatches": 0,
+      "freshScopeMismatches": 0
+    },
+    "EMAIL": {
+      "documents": 120,
+      "replaced": 270,
+      "fullyReplaced": 120,
+      "exactRestore": 120,
+      "idempotenceMismatches": 0,
+      "freshScopeMismatches": 0
+    },
+    "IBAN": {
+      "documents": 120,
+      "replaced": 240,
+      "fullyReplaced": 120,
+      "exactRestore": 120,
+      "idempotenceMismatches": 0,
+      "freshScopeMismatches": 0
+    },
+    "MIXED": {
+      "documents": 120,
+      "replaced": 1080,
+      "fullyReplaced": 120,
+      "exactRestore": 120,
+      "idempotenceMismatches": 0,
+      "freshScopeMismatches": 0
+    },
+    "PHONE": {
+      "documents": 120,
+      "replaced": 240,
+      "fullyReplaced": 120,
+      "exactRestore": 120,
+      "idempotenceMismatches": 0,
+      "freshScopeMismatches": 0
+    },
+    "PHONE_NANP": {
+      "documents": 120,
+      "replaced": 240,
+      "fullyReplaced": 120,
+      "exactRestore": 120,
+      "idempotenceMismatches": 0,
+      "freshScopeMismatches": 0
+    },
+    "SSN": {
+      "documents": 120,
+      "replaced": 240,
+      "fullyReplaced": 120,
+      "exactRestore": 120,
+      "idempotenceMismatches": 0,
+      "freshScopeMismatches": 0
+    },
+    "TAXID": {
+      "documents": 120,
+      "replaced": 240,
+      "fullyReplaced": 120,
+      "exactRestore": 120,
+      "idempotenceMismatches": 0,
+      "freshScopeMismatches": 0
+    }
+  },
+  "verdict": {
+    "w1": true,
+    "w1x": true
+  },
+  "node": "v26.7.0",
+  "platform": "darwin-arm64"
+}
