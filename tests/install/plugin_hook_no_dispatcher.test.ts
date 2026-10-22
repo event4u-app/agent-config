@@ -91,12 +91,15 @@ describe('plugin hook command — no dispatcher reachable', () => {
         expect(res.stdout).toBe('');
     });
 
-    it('without CLAUDE_PLUGIN_ROOT the branch stays silent (settings carrier, Phase 3)', () => {
-        for (const native of ['SessionStart', 'PreToolUse']) {
-            const res = run(native, undefined);
-            expect(res.status).toBe(0);
-            expect(res.stdout).toBe('');
-            expect(res.stderr).toBe('');
-        }
+    it('without CLAUDE_PLUGIN_ROOT SessionStart stays silent and PreToolUse refuses (settings carrier)', () => {
+        const start = run('SessionStart', undefined);
+        expect(start.status).toBe(0);
+        expect(start.stdout).toBe('');
+        expect(start.stderr).toBe('');
+        // 17.0.0 finding bb6ab0f5f37d: the guards cannot run, so the call is refused.
+        const tool = run('PreToolUse', undefined);
+        expect(tool.status).toBe(2);
+        expect(tool.stdout).toBe('');
+        expect(tool.stderr).toContain('so this tool call is refused');
     });
 });

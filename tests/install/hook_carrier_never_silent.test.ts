@@ -6,6 +6,7 @@
 
 import { spawnSync } from 'node:child_process';
 import {
+    chmodSync,
     closeSync,
     existsSync,
     mkdirSync,
@@ -22,7 +23,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { build_claude_hook_matrix, THINNED_DEAD_CARRIER_LINE } from '../../src/scripts/_lib/claude_settings_hooks.js';
+import { build_claude_hook_matrix, DISPATCHER_FAILED_REFUSAL, NO_DISPATCHER_REFUSAL, THINNED_DEAD_CARRIER_LINE } from '../../src/scripts/_lib/claude_settings_hooks.js';
 import { absoluteBodyLinkPrefix } from '../../src/scripts/_lib/thin_rules.js';
 import {
     describeCarrierProbe,
@@ -127,12 +128,112 @@ describe('2.1 — the staged dispatcher ahead of PATH', () => {
         }
     });
 
-    it('a project-local install still wins where present', () => {
+    // 17.0.0 finding feaebdef733b: a cloned repository can commit any of these
+    // paths, so none of them may run ahead of — or instead of — the package.
+    function plantProjectDispatchers(): void {
+        const planted = FIXTURE_DISPATCHER.replace("' + process.env.FIXTURE_TAG + '", 'planted');
+        write(path.join(project, 'node_modules', '@event4u', 'agent-config', 'dist', 'hooks', 'dispatch.js'), planted);
+        write(path.join(project, 'dist', 'hooks', 'dispatch.js'), planted);
+        write(path.join(project, 'src', 'scripts', 'hook_manifest.yaml'), 'schema_version: 1\n');
+        mkdirSync(path.join(project, 'node_modules'), { recursive: true });
+        write(path.join(project, 'agent-config'), '#!/bin/sh\necho FIXTURE-DISPATCH planted-wrapper\n');
+        chmodSync(path.join(project, 'agent-config'), 0o755);
+    }
+
+    it('a dispatcher planted in the project never runs while the staged runtime is reachable', () => {
         stageRuntime({ packageRoot: fixturePackage(path.join(tmp, 'pkg'), true), runtimeRoot: runtimeRoot(), nodePath: process.execPath });
-        const local = path.join(project, 'node_modules', '@event4u', 'agent-config', 'dist', 'hooks', 'dispatch.js');
-        write(local, FIXTURE_DISPATCHER.replace("' + process.env.FIXTURE_TAG + '", 'project-local'));
-        const res = run('SessionStart', path.dirname(process.execPath));
-        expect(res.stdout).toContain('FIXTURE-DISPATCH project-local');
+        plantProjectDispatchers();
+        for (const native of Object.keys(MATRIX)) {
+            const res = run(native, `${path.dirname(process.execPath)}:${project}`, { FIXTURE_TAG: 'staged' });
+            expect(res.stdout, native).toContain('FIXTURE-DISPATCH staged');
+            expect(res.stdout, native).not.toContain('planted');
+        }
+    });
+
+    it('a dispatcher planted in the project never runs when nothing else is reachable either', () => {
+        plantProjectDispatchers();
+        const res = run('PreToolUse', `${path.dirname(process.execPath)}:${project}`);
+        expect(res.stdout).not.toContain('planted');
+        expect(res.status).toBe(2);
+    });
+});
+
+// 17.0.0 finding bb6ab0f5f37d: with no dispatcher every fail_closed guard used
+// to pass silently through exit 0.
+describe('no dispatcher reachable — PreToolUse refuses on the settings carrier', () => {
+    it('refuses a tool call, naming the guards and the repair', () => {
+        const res = run('PreToolUse');
+        expect(res.status).toBe(2);
+        expect(res.stderr).toContain(NO_DISPATCHER_REFUSAL);
+    });
+
+    it('keeps every other event at exit 0', () => {
+        for (const native of Object.keys(MATRIX).filter((n) => n !== 'PreToolUse')) {
+            expect(run(native).status, native).toBe(0);
+        }
+    });
+
+    it('keeps the plugin carrier at exit 0 with its warning — a plugin-only install has no package to enforce with', () => {
+        const res = run('PreToolUse', '', { CLAUDE_PLUGIN_ROOT: path.join(tmp, 'plugin') });
+        expect(res.status).toBe(0);
+        expect(res.stderr).toContain('no hook dispatcher reachable');
+        expect(res.stderr).not.toContain(NO_DISPATCHER_REFUSAL);
+    });
+
+    it('does not take an agent-config on PATH that resolves into the project', () => {
+        mkdirSync(path.join(project, 'bin'), { recursive: true });
+        write(path.join(project, 'bin', 'agent-config'), '#!/bin/sh\necho FIXTURE-DISPATCH project-path\n');
+        chmodSync(path.join(project, 'bin', 'agent-config'), 0o755);
+        const res = run('PreToolUse', path.join(project, 'bin'));
+        expect(res.stdout).not.toContain('project-path');
+        expect(res.status).toBe(2);
+    });
+
+    it('takes an agent-config on PATH outside the project', () => {
+        const bin = path.join(tmp, 'global-bin');
+        mkdirSync(bin, { recursive: true });
+        write(path.join(bin, 'agent-config'), '#!/bin/sh\necho FIXTURE-DISPATCH global "$@"\n');
+        chmodSync(path.join(bin, 'agent-config'), 0o755);
+        const res = run('PreToolUse', bin);
+        expect(res.stdout).toContain('FIXTURE-DISPATCH global dispatch:hook --platform claude');
+        expect(res.status).toBe(0);
+    });
+});
+
+// A dispatcher that is reached but returns no verdict — vanished mid-upgrade
+// (127) or crashed on a half-written tree (1) — used to let the tool call
+// through, because Claude Code refuses only on exit 2.
+describe('PreToolUse treats only 0 and 2 as a verdict', () => {
+    function globalCli(body: string): string {
+        const bin = path.join(tmp, 'global-bin');
+        write(path.join(bin, 'agent-config'), `#!/bin/sh\n${body}\n`);
+        chmodSync(path.join(bin, 'agent-config'), 0o755);
+        return bin;
+    }
+
+    it.each([1, 126, 127])('refuses when the dispatcher exits %i', (code) => {
+        const res = run('PreToolUse', globalCli(`exit ${code}`));
+        expect(res.status).toBe(2);
+        expect(res.stderr).toContain(DISPATCHER_FAILED_REFUSAL);
+    });
+
+    it('passes a dispatcher refusal through unchanged', () => {
+        const res = run('PreToolUse', globalCli('echo "blocked by guard" >&2; exit 2'));
+        expect(res.status).toBe(2);
+        expect(res.stderr).toContain('blocked by guard');
+        expect(res.stderr).not.toContain(DISPATCHER_FAILED_REFUSAL);
+    });
+
+    it('passes a dispatcher allow through, from the staged runtime too', () => {
+        expect(run('PreToolUse', globalCli('exit 0')).status).toBe(0);
+        stageRuntime({ packageRoot: fixturePackage(path.join(tmp, 'pkg'), true), runtimeRoot: runtimeRoot(), nodePath: process.execPath });
+        const res = run('PreToolUse', '', { FIXTURE_TAG: 'staged' });
+        expect(res.status).toBe(0);
+        expect(res.stdout).toContain('FIXTURE-DISPATCH staged --platform claude --event pre_tool_use');
+    });
+
+    it('keeps other events on the dispatcher exit code, unguarded', () => {
+        expect(run('PostToolUse', globalCli('exit 1')).status).toBe(1);
     });
 });
 
@@ -221,14 +322,16 @@ describe('3.1 / 3.2 — silence only where it is free', () => {
         markClaudeLayer(runtimeRoot(), { thinned: true, rulesDir: layer });
     }
 
-    it('a full layer with no dispatcher prints nothing', () => {
+    it('a full layer with no dispatcher prints nothing on the events that may pass', () => {
         stageRuntime({ packageRoot: fixturePackage(path.join(tmp, 'pkg'), false), runtimeRoot: runtimeRoot(), nodePath: process.execPath });
-        for (const native of ['SessionStart', 'PreToolUse']) {
+        for (const native of ['SessionStart', 'PostToolUse', 'Stop']) {
             const res = run(native);
-            expect(res.status).toBe(0);
-            expect(res.stdout).toBe('');
-            expect(res.stderr).toBe('');
+            expect(res.status, native).toBe(0);
+            expect(res.stdout, native).toBe('');
+            expect(res.stderr, native).toBe('');
         }
+        // PreToolUse refuses instead — pinned in the no-dispatcher block above.
+        expect(run('PreToolUse').status).toBe(2);
     });
 
     it('a thinned layer with no dispatcher prints one line, exits 0, and restores the full layer', () => {

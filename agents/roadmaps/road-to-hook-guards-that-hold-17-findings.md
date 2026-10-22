@@ -37,7 +37,7 @@ dispositioned in the ledger.
 
 ## Phase 2 — trusted staged runtime before project code (finding `feaebdef733b`)
 
-- [ ] **2.1 The Claude hook command reaches the package-owned staged runtime
+- [x] **2.1 The Claude hook command reaches the package-owned staged runtime
       before any project-tree `dispatch.js`.** Today it execs
       `$CLAUDE_PROJECT_DIR/node_modules/@event4u/agent-config/dist/hooks/dispatch.js`
       or `$CLAUDE_PROJECT_DIR/dist/hooks/dispatch.js` first, so a cloned
@@ -50,7 +50,7 @@ dispositioned in the ledger.
 
 ## Phase 3 — a missing dispatcher denies `pre_tool_use` (finding `bb6ab0f5f37d`)
 
-- [ ] **3.1 The non-plugin hook wrapper fails closed for `pre_tool_use`.** The
+- [x] **3.1 The non-plugin hook wrapper fails closed for `pre_tool_use`.** The
       written command ends in `command -v "$BIN" … || exit 0`, so with no
       reachable dispatcher every guard is skipped silently. A `pre_tool_use`
       event with no dispatcher denies with a message naming the missing binary
