@@ -183,3 +183,19 @@ the call count, paid and free pass rates, verify-fail and escalation rates, the
 rate-limit and billing counts, each bar met / null / underpowered, audit
 agreement, spend (USD 0.00 on both arms by construction, tokens reported), the
 `kind_flip` readiness reading, and the byproduct list — headed `manufactured`.
+
+## Amendment — 2026-10-23, before any scored call
+
+Committed after an independent review of the harness and before the first shadow call; no
+datum existed when it was written. It changes run mechanics only — no corpus, verifier, bar,
+audit share or label moves.
+
+1. **Retry instead of skip.** An item counts as done only once a shadow row was ledgered for it;
+   an item that produced none (the free route not admissible, the paid arm empty) is retried on
+   the next run. The original text skipped every item already in the run ledger, which made a
+   kind with exactly 333 items unable to reach 333 after one transient miss.
+2. **A failure streak stop.** Ten consecutive free failures of any class end the run
+   (`FREE_FAILURE_STREAK_MAX`), so a dead route does not spend a paid call every 31 s. Pacing,
+   back-off and streaks are derived from the run ledger, so a restart honours them.
+3. **Refuse rather than remove.** Where a paid-billing variable is set, the paid head and the
+   audit refuse to start instead of starting with the variable removed — the stricter of the two.
