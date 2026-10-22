@@ -138,6 +138,10 @@ agent-config worktree:cleanup inventory [repo] [--json|--plan]
 agent-config worktree:cleanup apply [repo]   # removes the safe set only
 ```
 
+`apply` runs only on the user's explicit ask (`/worktree cleanup --apply`) or
+under `worktrees.cleanup: auto`, which the user sets (ADR-295) — never on the
+agent's own initiative.
+
 `safe` requires all of: on a branch, merged into the trunk, clean, inside a
 conventional worktree root (`.claude/worktrees/` or `.worktrees/`), and no git
 activity for 48 h. `review` keeps its disqualifying reason so the next sweep

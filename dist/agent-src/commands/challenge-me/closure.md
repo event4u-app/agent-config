@@ -90,8 +90,10 @@ OWNER-RESERVED — OR SPLITS ON, OR CANNOT REACH QUORUM ON — REACHES THE OWNER
 The batched question asks per item: (1) is it owner-reserved under the test in
 `decision-revisit-gate` § Who decides — does the option lower a recorded
 security, privacy or data-handling floor, create an undelegated external,
-irreversible or spend commitment, or amend governance; (2) which option; (3)
-what evidence would change it. An option set whose **floor-preserving option is
+irreversible or spend commitment, or amend governance — or can it not be
+bounded from tree evidence, which reserves it too; (2) which option; (3)
+what evidence would change it. A "not reserved" verdict must cite the tree
+evidence that bounds the item; one that cites none reaches the owner. An option set whose **floor-preserving option is
 on the table** is council-decidable — only *choosing* the lowering is reserved.
 A split on the choice (not on ownership) is broken by the option that reveals,
 spends or weakens less, with the dissent recorded; it is not a reason to ask.
