@@ -34,6 +34,17 @@ describe('generic-assignment: a quoted multi-word value is replaced whole', () =
         });
     }
 
+    // Ratification review 2026-10-22 (openai seat): the old row stopped at an
+    // inner quote and validated the run before it, so a secret-shaped run glued
+    // to a low-entropy tail by the other quote character must still be caught.
+    for (const [outer, inner] of [['"', "'"], ["'", '"']] as const) {
+        it(`a secret-shaped run before an inner ${inner} in a ${outer}-quoted value is still a secret`, () => {
+            const value = `${run(20, 4)}${inner}${'a'.repeat(64)}`;
+            const out = scrub(`password = ${outer}${value}${outer}`);
+            expect(out).toBe(`password = ${outer}<SECRET>${outer}`);
+        });
+    }
+
     it('nothing after the closing quote is taken', () => {
         const out = scrub(`password = "${run(20, 1)} two words" # comment`);
         expect(out).toBe('password = "<SECRET>" # comment');

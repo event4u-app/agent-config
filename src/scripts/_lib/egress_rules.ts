@@ -105,11 +105,14 @@ export function looksLikeSecretValue(value: string): boolean {
 const GENERIC_VALUE = `(?:"([^"\\n]*)"|'([^'\\n]*)'|['"]?([^'"\\s]{8,})['"]?)`;
 
 // A quoted value is a secret when it is secret-shaped as a whole or any of its
-// words is: the trigger is the same word the old row examined, or a later one,
-// and the span is the whole quoted value either way.
+// runs is: the trigger is the same run the old row examined, or a later one,
+// and the span is the whole quoted value either way. Runs split on quotes as
+// well as whitespace, because the old row stopped at an inner quote: a
+// secret-shaped run glued to a low-entropy tail by the other quote character
+// would otherwise pass (ratification review 2026-10-22).
 function genericValueIsSecret(value: string, group: number | 'whole-match'): boolean {
     if (looksLikeSecretValue(value)) return true;
-    return group !== 3 && value.split(/\s+/).some(looksLikeSecretValue);
+    return group !== 3 && value.split(/[\s'"]+/).some(looksLikeSecretValue);
 }
 
 /**
