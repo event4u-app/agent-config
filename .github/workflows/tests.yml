@@ -57,6 +57,52 @@ permissions:
   contents: read
 
 jobs:
+  platform-scope:
+    # Which macOS legs this run requests (council 2026-10-22, decision A,
+    # agents/evidence/council/ci-macos-tier-and-static-diagnostic-2026-10-22.md).
+    # A pull request whose diff cannot reach platform behaviour runs node-tests,
+    # golden and svg-witness on ubuntu only; install, install-aux,
+    # collector-lifecycle and workspace keep their macOS legs regardless. Every
+    # other event, label `ci:macos`, and any diff ci_platform_scope cannot read
+    # or calls platform-sensitive get both OSes. The decision is written to the
+    # job summary so a skipped macOS leg that later fails on `push: main` is
+    # traceable to the PR that skipped it — the escape threshold the council set.
+    name: Platform scope
+    runs-on: ubuntu-26.04
+    outputs:
+      os_list: ${{ steps.scope.outputs.os_list }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: '22'
+      - name: Classify the diff
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          LABELED: ${{ contains(github.event.pull_request.labels.*.name, 'ci:macos') }}
+        run: |
+          scope=full
+          if [ "$EVENT" = "pull_request" ] && [ "$LABELED" != "true" ]; then
+            scope="$(node --experimental-strip-types src/scripts/ci_platform_scope.ts --base "origin/$BASE_REF" | sed -n 's/^macos=//p')"
+          fi
+          if [ "$scope" = "tier" ]; then
+            echo 'os_list=["ubuntu-26.04"]' >> "$GITHUB_OUTPUT"
+          else
+            echo 'os_list=["ubuntu-26.04","macos-26"]' >> "$GITHUB_OUTPUT"
+          fi
+          {
+            echo "### Platform scope: macOS ${scope}"
+            echo "event=${EVENT} label ci:macos=${LABELED}"
+            if [ "$scope" = "tier" ]; then
+              echo "Skipped on macOS: node-tests ×4, golden, svg-witness (they run on push: main)."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
   install-tests:
     # test_install.sh runs each of 35 tests in its own mktemp dir,
     # invoking install.sh which symlinks hundreds of skill/rule/command
@@ -218,6 +264,7 @@ jobs:
     # explicit build:cli + build:ui + build triple was a no-op duplicate;
     # collapsed to a single build invocation.
     name: Node Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
+    needs: platform-scope
     runs-on: ${{ matrix.os }}
     # Release-PR skip per docs/contracts/release-pr-gating.md § Cut surface.
     # The allowlist DOES admit five paths under src/ — pack and domain
@@ -237,7 +284,7 @@ jobs:
         # EXCLUDED here, because vitest shards by file COUNT not duration and
         # would otherwise clump the golden files into one > 2 min bucket.
         # ESLint / typecheck / prepack are whole-tree gates → shard 1 only.
-        os: [ubuntu-26.04, macos-26]
+        os: ${{ fromJSON(needs.platform-scope.outputs.os_list) }}
         shard: [1, 2, 3, 4]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -558,12 +605,13 @@ jobs:
     # clusters in one job oversubscribed the fork pool and produced flaky
     # spawn-timeout failures — each cluster gets its own runner.
     name: Golden Tests (${{ matrix.os }})
+    needs: platform-scope
     runs-on: ${{ matrix.os }}
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-26.04, macos-26]
+        os: ${{ fromJSON(needs.platform-scope.outputs.os_list) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -612,12 +660,13 @@ jobs:
     # pass — is covered by `absent-path-reads-unverified`, which needs no
     # browser and therefore stays in the sharded matrix with everything else.
     name: SVG Witness Tests (${{ matrix.os }})
+    needs: platform-scope
     runs-on: ${{ matrix.os }}
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-26.04, macos-26]
+        os: ${{ fromJSON(needs.platform-scope.outputs.os_list) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -856,6 +905,7 @@ jobs:
     runs-on: ubuntu-26.04
     if: always()
     needs:
+      - platform-scope
       - install-tests
       - install-aux-tests
       - node-tests
