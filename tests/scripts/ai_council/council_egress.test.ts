@@ -60,6 +60,7 @@ class FakeClient extends ExternalAIClient {
 const call = (client: FakeClient, user_prompt: string, system = 'You review.'): CouncilResponse =>
     callMember(client, { user_prompt, max_tokens: 64 }, {}, () => system, (e) => String(e));
 
+const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..', '..');
 const IDENTIFIER_TYPES = new Set(EGRESS_RULES.filter((r) => r.class === 'identifier').map((r) => r.type));
 const hasIdentifierRows = ['EMAIL', 'IBAN', 'PHONE'].every((t) => IDENTIFIER_TYPES.has(t));
 
@@ -81,12 +82,26 @@ describe('council bundle: span replacement through the engine (3.3)', () => {
         expect(out).toMatch(/^export GITHUB=__TOKEN_1_/m);
     });
 
-    // skip-reason: the rule table carries no EMAIL, IBAN or PHONE identifier rows yet, so protect has nothing to replace them with
-    it.skipIf(!hasIdentifierRows)('the F1 sample leaves with five placeholders in protect', () => {
+    // No identifier row exists, so the council path protects no identifier in any
+    // mode, and the governing contracts must say so (council 2026-10-22,
+    // df976d7150dd + 59aa8198a673). The former five-placeholder proof was a
+    // skipped test standing behind a claim; this one runs. Adding an EMAIL, IBAN
+    // or PHONE row reds the first assertion: that change owes the five-placeholder
+    // proof back and the disclosures below rewritten.
+    it('protect replaces no identifier while the table has none, and the contracts disclose it', () => {
+        expect(hasIdentifierRows).toBe(false);
         const out = redact(F1, new CouncilEgress({ identifiers: true }));
-        expect(parseTokens(out)).toHaveLength(5);
-        for (const v of [EMAIL, IBAN, PHONE, DB_PASSWORD, PAT]) expect(out).not.toContain(v);
+        for (const v of [EMAIL, IBAN, PHONE]) expect(out).toContain(v);
+        for (const v of [DB_PASSWORD, PAT]) expect(out).not.toContain(v);
+        expect(parseTokens(out)).toHaveLength(2);
         expect(out.split('\n')).toContain(CODE_LINE);
+        const read = (rel: string): string => fs.readFileSync(path.join(REPO_ROOT, rel), 'utf8');
+        expect(read('docs/contracts/egress-placeholders-v1.md')).toContain(
+            'an\ne-mail, an IBAN or a phone number still leaves it unchanged',
+        );
+        expect(read('docs/contracts/ai-council-config.md')).toContain(
+            'e-mail addresses, phone numbers and IBANs in a\ncouncil prompt are sent to every member unreplaced',
+        );
     });
 
     it('identifiers are left, and not refused, under the shipped default (D8)', () => {

@@ -11,10 +11,13 @@
  *
  * Credentials are replaced whatever the settings say: the bundle masked every
  * credential line before this module existed, so replacing the value instead of
- * the line changes how much is lost, not whether. Identifiers are replaced — and
- * checked — only when `egress.placeholders.mode` is `protect` or `strict`;
- * whether any identifier is replaced by default for consumers is the owner's
- * decision D8, which this module does not take.
+ * the line changes how much is lost, not whether. Identifiers would be replaced
+ * — and checked — only when `egress.placeholders.mode` is `protect` or `strict`,
+ * but the rule table has no identifier rows yet, so today an e-mail, a phone
+ * number or an IBAN reaches every member unreplaced in every mode; the council
+ * contract (`docs/contracts/ai-council-config.md`) says so. Whether any
+ * identifier is replaced by default for consumers is the owner's decision D8,
+ * which this module does not take.
  */
 
 import {
@@ -80,7 +83,7 @@ export class CouncilEgress {
     readonly scope = new TokenScope();
     private readonly replaced = new Set<string>();
 
-    /** `identifiers`: replace and check the identifier class too (mode `protect` or `strict`). */
+    /** `identifiers`: replace and check the identifier class too (mode `protect` or `strict`); a no-op while the table has no identifier row. */
     constructor(private readonly opts: { readonly identifiers: boolean } = { identifiers: false }) {}
 
     /**
