@@ -144,6 +144,26 @@ describe("reap_stale", () => {
     expect(exists(path.join(anchor, "skills", "my-own-zed-skill", "SKILL.md"))).toBe(true);
   });
 
+  it("test_reap_keeps_a_recorded_file_whose_bytes_cannot_be_read", () => {
+    const anchor = tp("anchor");
+    const file = path.join(anchor, "skills", "locked", "SKILL.md");
+    mkdirp(path.dirname(file));
+    write_file(file, "installed");
+    const data = record("zedish", anchor, ["skills/locked/SKILL.md"]);
+    const entry = (data.tools as Record<string, Record<string, unknown>>)["zedish"]!;
+    entry["digests"] = { "skills/locked/SKILL.md": { installed_sha256: "0".repeat(64) } };
+    fs.chmodSync(file, 0o000);
+    try {
+      if (inv.file_sha256(file) !== null) return; // running as root: the bytes stay readable
+      const retained: string[] = [];
+      expect(inv.reap_stale("zedish", anchor, new Set(), data, false, retained)).toEqual([]);
+      expect(retained).toEqual([file]);
+      expect(exists(file)).toBe(true);
+    } finally {
+      fs.chmodSync(file, 0o644);
+    }
+  });
+
   it("test_reap_skips_when_no_prior_record", () => {
     const anchor = tp("anchor");
     mkdirp(path.join(anchor, "skills"));
