@@ -67,7 +67,9 @@ export function outputShapeOf(shape: Record<string, string>, name: string): 'rep
  * silent host-key rewrite 1.3's snapshot exists to catch.
  */
 export function renderForkContext(md: string): string {
-    const m = /^---\r?\n([\s\S]*?)(\r?\n)---/.exec(md);
+    // The closing fence is a whole `---` line: `----` or `--- x` inside the
+    // frontmatter must not end it early.
+    const m = /^---\r?\n([\s\S]*?)(\r?\n)---(?=\r?\n|$)/.exec(md);
     if (m === null) return md;
     const body = m[1]!;
     if (/^context:[ \t]/m.test(body)) return md;
@@ -77,7 +79,7 @@ export function renderForkContext(md: string): string {
 
 /** Does this projection carry the host's fork key? */
 export function hasForkContext(md: string): boolean {
-    const m = /^---\r?\n([\s\S]*?)\r?\n---/.exec(md);
+    const m = /^---\r?\n([\s\S]*?)\r?\n---(?=\r?\n|$)/.exec(md);
     return m !== null && /^context:[ \t]*fork[ \t]*$/m.test(m[1]!);
 }
 
@@ -95,7 +97,10 @@ export interface PilotProblem {
  */
 export function pilotProblems(cfg: ForkPilotConfig, shape: Record<string, string>): PilotProblem[] {
     const out: PilotProblem[] = [];
-    if (cfg.names.length > cfg.max_names) {
+    // A missing cap reads as NaN, and `n > NaN` is false: no cap is a problem, not a pass.
+    if (!Number.isInteger(cfg.max_names) || cfg.max_names < 0) {
+        out.push({ name: '(set)', message: `max_names is not a non-negative integer (${String(cfg.max_names)})` });
+    } else if (cfg.names.length > cfg.max_names) {
         out.push({ name: '(set)', message: `${cfg.names.length} names exceeds max_names ${cfg.max_names}` });
     }
     if (new Set(cfg.names).size !== cfg.names.length) {
