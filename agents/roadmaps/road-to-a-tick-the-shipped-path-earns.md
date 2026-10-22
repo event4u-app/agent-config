@@ -214,10 +214,11 @@ the bench harnesses and `pricing.yaml`.
 - [ ] **6.1 Replay every tick of #2585** through 2.2, 2.3, 3.2 and 4.1; reopen what fails; publish
   `ticked / reopened / reason` in `agents/evidence/analysis/`.
   verify: the analysis lists every ticked step id of #2585 with a verdict.
-- [ ] **6.2 Fingerprint the `main` residue** (second reviewer P0.3): each gate red on clean
+- [x] **6.2 Fingerprint the `main` residue** (second reviewer P0.3): each gate red on clean
   `origin/main` is recorded with job, SHA, toolchain and failure class, so a new red cannot hide
   under an old one.
   verify: the fingerprint file names every residue gate listed in #2588 with a SHA.
+      Done 2026-10-23: `agents/evidence/analysis/main-residue-fingerprint-2026-10-23.md`, ten gates on `origin/main@ad30b6dfec`, one of them new since 17.0.0.
 
 ## Kill register
 

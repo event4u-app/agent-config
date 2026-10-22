@@ -122,7 +122,8 @@ export interface Finding {
 
 /** The unreached public symbols this block's tests take from its subjects. */
 export function checkStep(tree: ReachTree, reach: Reach, file: string, step: string, block: string): Finding | null {
-    if (/built, not wired/i.test(block)) {
+    // Quoted, the phrase is talk about the rule; bare, it is the step's own status.
+    if (/built, not wired/i.test(block.replace(/`[^`]*`/g, ''))) {
         return { file, step, reason: 'ticked while it says `built, not wired` — such a step stays `[ ]`' };
     }
     const { subjects, tests, entries } = namedPaths(tree, block);
