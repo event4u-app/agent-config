@@ -168,7 +168,7 @@ the fixed vocabulary only: `routes-to`, `renders`, `includes`, `reads`, `migrate
 `persists`, `relates`, plus `injects` (new, DI). A route handler is always attributed per
 handler, never per file.
 
-- [ ] **4.1 Shared extractors.** Five parameterised mechanisms in `providers/shared/`:
+- [x] **4.1 Shared extractors.** Five parameterised mechanisms in `providers/shared/`:
       attribute / decorator / annotation routes, call-form routes, file-system routes (on
       3.4), table mapping, template roots (on 3.2).
       verify: each shared extractor has a unit test with a positive and a negative case.

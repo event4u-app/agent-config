@@ -26,6 +26,10 @@ export const EMPTY_PROBE: ProjectProbe = { manifests: new Map(), markers: new Se
 export interface ProviderInput {
     files: readonly SourceFile[];
     baseNodes: readonly CodeNode[];
+    /** The graph's edges so far, read-only (import bindings, for resolving a handler name). */
+    baseEdges: readonly CodeEdge[];
+    /** Every project path under the provider's roots, code or not (templates). */
+    paths: readonly string[];
     resolution: ResolutionConfig;
     /** Package roots the provider was detected in; `''` is the repository root. */
     roots: readonly string[];

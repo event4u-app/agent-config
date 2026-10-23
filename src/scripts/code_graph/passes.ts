@@ -59,15 +59,30 @@ const conventionProviders: GraphPass = {
     applies: (ctx) => activeProviders(ctx.probe).length > 0,
     run: (ctx) => {
         const out: PassResult = { nodes: [], edges: [], contests: [], failures: [], providers: [] };
+        const known = new Set(ctx.nodes.map((n) => n.id));
         for (const { provider, roots } of activeProviders(ctx.probe)) {
             out.providers?.push({ id: provider.id, roots });
             try {
-                const files = roots.includes('') ? ctx.files : ctx.files.filter((f) => roots.some((r) => f.path.startsWith(`${r}/`)));
-                const r = provider.build({ files, baseNodes: ctx.nodes, resolution: ctx.resolution, roots });
+                const under = (p: string): boolean => roots.includes('') || roots.some((r) => p.startsWith(`${r}/`));
+                const files = ctx.files.filter((f) => under(f.path));
+                const allPaths = ctx.probe.paths.length > 0 ? ctx.probe.paths : ctx.files.map((f) => f.path);
+                const r = provider.build({
+                    files,
+                    baseNodes: ctx.nodes,
+                    baseEdges: ctx.edges,
+                    paths: allPaths.filter(under),
+                    resolution: ctx.resolution,
+                    roots,
+                });
                 if (r.nodes.length === 0 && r.edges.length === 0) continue;
                 if (r.contest) out.contests?.push({ key: provider.id, test: r.contest });
                 for (const e of r.edges) out.edges.push({ ...e, provider_id: provider.id });
-                for (const n of r.nodes) out.nodes.push(n);
+                // Two providers may declare the same table or template node; the first wins.
+                for (const n of r.nodes) {
+                    if (known.has(n.id)) continue;
+                    known.add(n.id);
+                    out.nodes.push(n);
+                }
             } catch (e) {
                 out.failures?.push({ pass: `convention-providers:${provider.id}`, reason: (e as Error).message });
             }
