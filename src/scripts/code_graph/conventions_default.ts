@@ -201,7 +201,8 @@ export function conventionsDefault(input: DefaultInput): { nodes: CodeNode[]; ed
             const r = fsRoutePath(p, pageDirs);
             if (!r) continue;
             const id = `${p}#route:${r.verb} ${r.route}`;
-            if (seen.has(id)) continue;
+            // A provider that knows this framework may already have drawn the page.
+            if (seen.has(id) || nodeIds.has(id)) continue;
             seen.add(id);
             ensureFile(p);
             nodes.push({ id, label: `${r.verb} ${r.route}`, kind: 'route', source_file: p, source_location: [] });
