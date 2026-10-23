@@ -7,6 +7,7 @@ import type { FileRole } from '../map_model.js';
 import type { ActiveProviderRecord } from '../types.js';
 import { expressProvider } from './express.js';
 import { laravelProvider } from './laravel.js';
+import { nestjsProvider } from './nestjs.js';
 import { nextjsProvider } from './nextjs.js';
 import { reactRouterProvider } from './react-router.js';
 import type { ConventionProvider, ProjectProbe } from './types.js';
@@ -15,7 +16,7 @@ export type { ConventionProvider, ProjectProbe, ProviderInput, ProviderResult } 
 export { EMPTY_PROBE } from './types.js';
 
 /** Registration order is execution order; ids are unique. */
-export const PROVIDERS: readonly ConventionProvider[] = [laravelProvider, expressProvider, reactRouterProvider, nextjsProvider];
+export const PROVIDERS: readonly ConventionProvider[] = [laravelProvider, expressProvider, reactRouterProvider, nextjsProvider, nestjsProvider];
 
 /** Every marker basename a registered provider asks the probe to record. */
 export const PROBE_MARKERS: ReadonlySet<string> = new Set(PROVIDERS.flatMap((p) => p.markers ?? []));
