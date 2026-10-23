@@ -5,10 +5,14 @@
  */
 import type { FileRole } from '../map_model.js';
 import type { ActiveProviderRecord } from '../types.js';
+import { djangoProvider } from './django.js';
 import { expressProvider } from './express.js';
+import { fastapiProvider } from './fastapi.js';
+import { flaskProvider } from './flask.js';
 import { goHttpProvider } from './go_http.js';
 import { laravelProvider } from './laravel.js';
 import { springProvider } from './spring.js';
+import { sqlalchemyProvider } from './sqlalchemy.js';
 import { symfonyProvider } from './symfony.js';
 import { wordpressProvider } from './wordpress.js';
 import type { ConventionProvider, ProjectProbe } from './types.js';
@@ -25,6 +29,10 @@ export const PROVIDERS: readonly ConventionProvider[] = [
     goHttpProvider,
     symfonyProvider,
     wordpressProvider,
+    fastapiProvider,
+    flaskProvider,
+    djangoProvider,
+    sqlalchemyProvider,
 ];
 
 /** Every marker basename a registered provider asks the probe to record. */
