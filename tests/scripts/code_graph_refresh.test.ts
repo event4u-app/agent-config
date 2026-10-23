@@ -91,7 +91,7 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         const out = path.join(tmp, 'graph.json');
         const lock = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock');
         fs.mkdirSync(lock, { recursive: true });
-        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: process.pid, started_at: Date.now(), token: 't' }));
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: process.pid, started_at: Date.now(), nonce: 't' }));
         const r = runCli(['refresh', '--root', tmp, '--out', out, '--single-flight']);
         expect(r.status).toBe(0);
         expect(r.stdout).toMatch(/another refresh is running/);

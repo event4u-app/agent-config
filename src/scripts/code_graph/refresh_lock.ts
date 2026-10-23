@@ -14,7 +14,7 @@
  * hook-taken lock, which carries no owner record — when it is older than
  * {@link STALE_LOCK_MS}, matching the shell block's own `-mmin -5` rule. A live
  * owner is never reclaimed on age, and a release removes the lock only while
- * the owner record still carries the releaser's token, so a holder that was
+ * the owner record still carries the releaser's nonce, so a holder that was
  * reclaimed cannot delete its successor's lock on the way out.
  */
 import { randomBytes } from 'node:crypto';
@@ -29,7 +29,7 @@ export const STALE_LOCK_MS = 5 * 60 * 1000;
 interface Owner {
     pid: number;
     started_at: number;
-    token: string;
+    nonce: string;
 }
 
 const ownerPath = (lock: string): string => `${lock}.owner.json`;
@@ -47,8 +47,8 @@ function pidAlive(pid: number): boolean {
 function readOwner(lock: string): Owner | null {
     try {
         const o = JSON.parse(fs.readFileSync(ownerPath(lock), 'utf-8')) as Partial<Owner>;
-        return typeof o.pid === 'number' && typeof o.started_at === 'number' && typeof o.token === 'string'
-            ? { pid: o.pid, started_at: o.started_at, token: o.token }
+        return typeof o.pid === 'number' && typeof o.started_at === 'number' && typeof o.nonce === 'string'
+            ? { pid: o.pid, started_at: o.started_at, nonce: o.nonce }
             : null;
     } catch {
         return null;
@@ -80,10 +80,10 @@ export function acquire(root: string): (() => void) | null {
             fs.rmSync(lock, { recursive: true, force: true });
             continue;
         }
-        const token = randomBytes(16).toString('hex');
-        fs.writeFileSync(ownerPath(lock), JSON.stringify({ pid: process.pid, started_at: Date.now(), token }));
+        const nonce = randomBytes(16).toString('hex');
+        fs.writeFileSync(ownerPath(lock), JSON.stringify({ pid: process.pid, started_at: Date.now(), nonce }));
         return () => {
-            if (readOwner(lock)?.token !== token) return;
+            if (readOwner(lock)?.nonce !== nonce) return;
             fs.rmSync(ownerPath(lock), { force: true });
             fs.rmSync(lock, { recursive: true, force: true });
         };

@@ -43,7 +43,7 @@ describe('refresh lock — single flight', () => {
 
     it('reclaims a lock whose owner process is gone', () => {
         fs.mkdirSync(lock, { recursive: true });
-        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: Date.now(), token: 't' }));
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: Date.now(), nonce: 't' }));
         expect(isStale(lock)).toBe(true);
         expect(acquire(root)).not.toBeNull();
     });
@@ -52,7 +52,7 @@ describe('refresh lock — single flight', () => {
         fs.mkdirSync(lock, { recursive: true });
         fs.writeFileSync(
             `${lock}.owner.json`,
-            JSON.stringify({ pid: process.pid, started_at: Date.now() - 10 * STALE_LOCK_MS, token: 't' }),
+            JSON.stringify({ pid: process.pid, started_at: Date.now() - 10 * STALE_LOCK_MS, nonce: 't' }),
         );
         expect(isStale(lock)).toBe(false);
         expect(acquire(root)).toBeNull();
@@ -63,7 +63,7 @@ describe('refresh lock — single flight', () => {
         // The old holder is presumed dead and its lock reclaimed by a successor.
         fs.writeFileSync(
             `${lock}.owner.json`,
-            JSON.stringify({ pid: deadPid(), started_at: Date.now(), token: 'old-token-rewritten' }),
+            JSON.stringify({ pid: deadPid(), started_at: Date.now(), nonce: 'old-nonce-rewritten' }),
         );
         const releaseNew = acquire(root);
         expect(releaseNew).not.toBeNull();
