@@ -4,58 +4,23 @@
  */
 import type { CodeGraph } from './types.js';
 
+/** One space-separated string per vocabulary: this module ships in the hook bundle, paid on every dispatch. */
+const words = (s: string): ReadonlySet<string> => new Set(s.split(' '));
+
 /** Mirrors `Relation` in types.ts. `tests` is derived by the build pass (3.2),
  * not extracted, and is validated on exactly the same terms as the rest. */
-const RELATIONS = new Set([
-    'calls',
-    'imports',
-    'uses',
-    'inherits',
-    'member',
-    'tests',
-    'routes-to',
-    'renders',
-    'includes',
-    'reads',
-    'migrates',
-    'persists',
-    'relates',
-    'documents',
-]);
+const RELATIONS = words(
+    'calls imports uses inherits member tests routes-to renders includes reads migrates persists relates documents',
+);
 const CONFIDENCES = new Set(['EXTRACTED', 'INFERRED', 'AMBIGUOUS']);
 /** Mirrors `ResolvedVia` in types.ts — the full union, including the four
  * values no build emits yet (2.3 and Phase 3 add them). */
-const RESOLVED_VIA = new Set([
-    'same-file',
-    'import-specifier',
-    'path-alias',
-    'psr4',
-    'route-table',
-    'directive-scan',
-    'schema-call',
-    'eloquent-relation',
-    'compiler-index',
-    'test-import',
-    'name-lookup',
-    'dynamic',
-    // Adapted from a consumer's own graph file; see `foreign.ts`.
-    'foreign',
-]);
+// `foreign`: adapted from a consumer's own graph file; see `foreign.ts`.
+const RESOLVED_VIA = words(
+    'same-file import-specifier path-alias psr4 route-table directive-scan schema-call eloquent-relation compiler-index test-import name-lookup dynamic foreign',
+);
 const PROVIDERS = new Set(['native', 'foreign', 'scip']);
-const KINDS = new Set([
-    'file',
-    'class',
-    'interface',
-    'trait',
-    'function',
-    'method',
-    'constant',
-    'type',
-    'enum',
-    'skipped',
-    'route',
-    'table',
-]);
+const KINDS = words('file class interface trait function method constant type enum skipped route table');
 
 export interface ValidateResult {
     ok: boolean;
