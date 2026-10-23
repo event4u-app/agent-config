@@ -343,8 +343,14 @@ jobs:
       #
       # The guard makes it free when the image already ships ffmpeg, which is
       # not assumed either way here.
+      #
+      # Bounded and non-fatal: the apt install hung twice on 2026-10-22 until
+      # the run was cancelled. Without ffmpeg the stitch cases skip with their
+      # reason, so a stalled mirror costs those cases, never the shard.
       - name: FFmpeg (stitch suite decodes real video; skipped where present)
         if: runner.os == 'Linux'
+        timeout-minutes: 4
+        continue-on-error: true
         run: command -v ffmpeg >/dev/null 2>&1 || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; }
 
       # ── Root TS CLI + UI ───────────────────────────────────────────
