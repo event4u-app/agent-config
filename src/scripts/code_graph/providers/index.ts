@@ -5,6 +5,7 @@
  */
 import type { FileRole } from '../map_model.js';
 import type { ActiveProviderRecord } from '../types.js';
+import { djangoProvider } from './django.js';
 import { expressProvider } from './express.js';
 import { fastapiProvider } from './fastapi.js';
 import { flaskProvider } from './flask.js';
@@ -20,6 +21,7 @@ export const PROVIDERS: readonly ConventionProvider[] = [
     expressProvider,
     fastapiProvider,
     flaskProvider,
+    djangoProvider,
 ];
 
 /** Every marker basename a registered provider asks the probe to record. */
