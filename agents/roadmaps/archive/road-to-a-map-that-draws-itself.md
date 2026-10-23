@@ -88,13 +88,13 @@ target** here, never a reason to withhold the capability.
   gitignored `agents/map/`, while the index stays in `agents/runtime/state/`. It carries the
   per-dependency justification ADR-124 requires for the packages of 2.6 and the vendored viewer of
   3.1. The owner asked for the map in `agents/` (directive above).
-  verify: `./scripts-run src/scripts/adr_cite_check ADR-124` lists the amendment.
+  verify: `./scripts-run src/scripts/adr_cite_check ADR-124` -> /ADR-297/
 - [x] **0.2 Layout contract row.** `docs/contracts/agents-layout.md` gains
   `map/ | both | local-only (gitignored) | rebuildable | code-graph map`; `map` joins
   `ALLOWED_SOURCE_DIRS` and `src/config/gitignore-block.txt` in the same change.
   verify: the layout lint is green on a fixture with `agents/map/`.
 - [x] **0.3 Correct the stale claim (D11).** Rewrite `comparison.yaml:103` to what is true now.
-  verify: `grep -c "permanently defaulted off" docs/comparison.yaml` → 0.
+  verify: `grep -c "permanently defaulted off" docs/comparison.yaml` -> /^0$/
 - [x] **0.4 Name check.** `/map` against the material hosts' built-in commands; fall back to
   `/code-map` on a collision. The CLI stays in its family: `agent-config code-graph map`.
   Result: no collision — `map` is absent from `src/scripts/_lib/claude_builtin_names.ts`, the
