@@ -31,7 +31,9 @@ Gather in parallel:
 - Check for: `artisan`, `Makefile`, `Taskfile.yml`, `docker-compose.yml`
 - Check for: `phpstan.neon`, `ecs.php`, `rector.php`, `config-dev/`
 - Check for: `.github/workflows/`, `CODEOWNERS`, `.editorconfig`
-- Check for module roots (resolve via `scripts/_lib/agent_settings.ts::enumerate_modules()`; Laravel shape: `app/Modules/`), multi-tenant indicators (`customer_database`)
+- Check for module roots (resolve via `scripts/_lib/agent_settings.ts::enumerate_modules()`; Laravel shape: `app/Modules/`)
+- Probe the database connections the project declares (`config/database.php` `connections`, `DB_CONNECTION*` keys in `.env.example`, `$connection` properties on models); more than one connection used by models is a multi-database / multi-tenant indicator — name the connections as found, never assume their names
+- Build or refresh the code map: `agent-config code-graph map`. Structure (areas, hubs, cycles, request paths) is read from `agents/map/MAP.md` below, not re-derived by hand <!-- ref-ignore -->
 - Read: `AGENTS.md`, `.github/copilot-instructions.md` (if exist)
 
 **Assurance dimensions — do NOT hand-detect these.** Run
@@ -137,6 +139,7 @@ full pass, so "continue" is dominant and asking is a routine confirmation.
 Analyze the directory structure:
 
 - Map top-level directories with file counts
+- Read `agents/map/MAP.md` first: its areas, infrastructure files, cycles and request paths ARE the structure section — link to it rather than restating it <!-- ref-ignore -->
 - Identify pattern: MVC, modules, services, repositories, DTOs
 - Count: Models, Controllers, Services, Jobs, Commands, Events, Policies
 - Detect: multi-tenancy, API versioning, queue usage
@@ -150,13 +153,14 @@ ARCHITECTURE:
 
   Pattern:      {Modular MVC + Service Layer + Repository}
   API:          {Versioned REST (/api/v1/, /api/v2/)}
-  Multi-Tenant: {✅ Dual-DB (api_database + customer_database) | ❌}
+  Databases:    {connections the models use, as probed — e.g. "2 (mysql, tenant)" | 1}
+  Map:          agents/map/MAP.md ({n} areas · largest {name})
 
 ───────────────────────────────────────────────
 CODE INVENTORY:
 ───────────────────────────────────────────────
 
-  Models:        {count}  (api_database: {n}, customer_database: {n})
+  Models:        {count}  (per connection, when more than one is in use)
   Controllers:   {count}
   Services:      {count}
   Repositories:  {count}
@@ -288,9 +292,8 @@ Write all remaining analysis files that haven't been created yet:
 - `agents/evidence/analysis/architecture/database.md` — schema, connections, multi-tenancy
 - `agents/evidence/analysis/architecture/api.md` — versioning, routes, middleware, auth
 - `agents/evidence/analysis/architecture/infrastructure.md` — Docker, CI/CD, deployment
-- `agents/evidence/analysis/architecture/patterns.md` — design patterns used
-- `agents/evidence/analysis/models/api-database.md` — all api_database models
-- `agents/evidence/analysis/models/customer-database.md` — all customer_database models
+- `agents/evidence/analysis/architecture/patterns.md` — design patterns used; for module and area structure, link `agents/map/MAP.md` instead of restating it <!-- ref-ignore -->
+- `agents/evidence/analysis/models/<connection>.md` — one per database connection the probe found, all models on it
 - `agents/evidence/analysis/modules/{module}.md` — one per module
 - `agents/evidence/analysis/testing/test-map.md` — test suites, coverage, strategy
 

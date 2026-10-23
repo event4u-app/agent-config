@@ -51,6 +51,7 @@ __pycache__/
 /.tmp/
 /agents/tmp/
 /agents/tmp.old/
+/agents/map/
 
 # Evidence-discipline ephemeral session cache (Evidence Reports, raw probe /
 # introspection dumps, absence-search logs). Overwritten each task; never

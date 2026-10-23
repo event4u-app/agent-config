@@ -2,10 +2,10 @@
 model_tier: medium
 name: project
 disable-model-invocation: true
-argument-hint: "[analyze|health]"
+argument-hint: "[analyze|health|map]"
 pack: engineering-base
-intent: "Project dispatcher — full analysis or quick health check"
-routes_to: [project-analyze, project-health]
+intent: "Project dispatcher — full analysis, quick health check, or the project map"
+routes_to: [project-analyze, project-health, project-map]
 replaces: []
 visibility: internal
 description: Project orchestrator — routes to analyze (full audit) and health (read-only status check)
@@ -35,6 +35,7 @@ Top-level orchestrator for the `/project` family — project-wide inspection.
 |---|---|---|
 | `/project analyze` | `commands/project/analyze.md` | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
 | `/project health` | `commands/project/health.md` | Quick health check — status of docs, modules, contexts, roadmaps; creates nothing |
+| `/project map` | `commands/project/map.md` | Draw the code map into `agents/map/` — areas, files, links; offline, gitignored |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
@@ -50,6 +51,7 @@ Sub-command names match the locked contract in
 
    > 1. analyze — full project audit (writes missing contexts)
    > 2. health — read-only status check (creates nothing)
+   > 3. map — draw the code map into `agents/map/`
 
 ## Rules
 

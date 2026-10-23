@@ -9,7 +9,7 @@
  */
 
 /** Launch set — the stacks this suite's consumers actually run. */
-export type Lang = 'php' | 'typescript' | 'javascript';
+export type Lang = 'php' | 'typescript' | 'javascript' | 'python' | 'go' | 'java';
 
 /** Same scale as `discovery_graph.ts::EdgeConfidence` (reused, not forked). */
 export type EdgeConfidence = 'EXTRACTED' | 'INFERRED' | 'AMBIGUOUS';
@@ -28,7 +28,29 @@ export type EdgeConfidence = 'EXTRACTED' | 'INFERRED' | 'AMBIGUOUS';
  * extractor per-file and pure: the predicate needs only the two paths, and no
  * grammar can see whether a file is a test.
  */
-export type Relation = 'calls' | 'imports' | 'uses' | 'inherits' | 'member' | 'tests';
+/**
+ * The last seven are the framework links the Laravel overlay reads by rule
+ * (`laravel_overlay.ts`): a route to its handler, a method to the view it
+ * renders, a view to the view it includes, code to the translation or config
+ * file it reads, a migration to its table, a model to its table, a model to
+ * the model an Eloquent relation names.
+ */
+export type Relation =
+    | 'calls'
+    | 'imports'
+    | 'uses'
+    | 'inherits'
+    | 'member'
+    | 'tests'
+    | 'routes-to'
+    | 'renders'
+    | 'includes'
+    | 'reads'
+    | 'migrates'
+    | 'persists'
+    | 'relates'
+    /** A Markdown document links to, or names, the file (`docs_layer.ts`). */
+    | 'documents';
 
 /**
  * HOW an edge's target was arrived at — the mechanism, not the confidence.
@@ -64,6 +86,14 @@ export type ResolvedVia =
     | 'path-alias'
     | 'psr4'
     | 'route-table'
+    /** A Blade directive, a `view()` / `__()` / `config()` call, or a Markdown link naming a file. */
+    | 'directive-scan'
+    /** A `Schema::create|table` call, or a model whose table one of them creates. */
+    | 'schema-call'
+    /** `$this->hasMany(Other::class)` and its siblings inside a model. */
+    | 'eloquent-relation'
+    /** Stated by a compiler-grade SCIP index the project ships (`scip_reader.ts`). */
+    | 'compiler-index'
     | 'test-import'
     | 'name-lookup'
     | 'dynamic'
@@ -96,7 +126,9 @@ export type EdgeProvider =
      * the latter. The field exists precisely so a mixed graph can be told
      * apart, and a consumer-shipped graph is the first case where it is.
      */
-    | 'foreign';
+    | 'foreign'
+    /** Read from the project's own SCIP index, merged into the native build. */
+    | 'scip';
 
 /**
  * The two mechanisms that are GUESSES rather than statements.
@@ -114,16 +146,14 @@ export type EdgeProvider =
  * from it and tagging that `test-import` made a wrong target trustworthy to
  * every consumer of the filter. One set, two readers, and the build pass can no
  * longer disagree with the query tier about what a guess is.
+ *
+ * The accepted-edge filter is a DENYLIST, so a new value is accepted by
+ * default — which is exactly backwards for `foreign`. It must be listed here
+ * or a consumer's graph would silently answer the gate verbs as if this
+ * package had resolved its edges. (Kept out of the literal: esbuild carries a
+ * comment inside an expression into the hook bundle.)
  */
-export const GUESS_RESOLVED_VIA: ReadonlySet<ResolvedVia> = new Set<ResolvedVia>([
-    'name-lookup',
-    'dynamic',
-    // The accepted-edge filter is a DENYLIST, so a new value is accepted by
-    // default — which is exactly backwards for this one. `foreign` must be
-    // listed here or a consumer's graph would silently answer the gate verbs
-    // as if this package had resolved its edges.
-    'foreign',
-]);
+export const GUESS_RESOLVED_VIA: ReadonlySet<ResolvedVia> = new Set<ResolvedVia>(['name-lookup', 'dynamic', 'foreign']);
 
 /** Does this edge's target rest on a stated fact rather than a guess? */
 export function isStatedResolution(resolved_via: ResolvedVia): boolean {
@@ -147,7 +177,21 @@ export interface CodeNode {
      * to one by name. `const Widget = class {}` is emitted as `class` for
      * exactly that reason.
      */
-    kind: 'file' | 'class' | 'interface' | 'trait' | 'function' | 'method' | 'constant' | 'type' | 'enum' | 'skipped';
+    kind:
+        | 'file'
+        | 'class'
+        | 'interface'
+        | 'trait'
+        | 'function'
+        | 'method'
+        | 'constant'
+        | 'type'
+        | 'enum'
+        | 'skipped'
+        /** A declared route, `<VERB> <path>` (Laravel overlay). */
+        | 'route'
+        /** A database table a migration creates (Laravel overlay). */
+        | 'table';
     source_file: string;
     /** 1-based [startLine, startCol, endLine, endCol]; [] for synthetic nodes. */
     source_location: readonly number[];
@@ -220,7 +264,16 @@ export interface CodeGraph {
      * query verb could reach it: `affected` and `path` resolve their seeds
      * against real nodes. It was 257 of 660 edges on this engine's own source.
      */
-    suppressed_edge_counts: { dynamic_no_candidate: number };
+    suppressed_edge_counts: {
+        dynamic_no_candidate: number;
+        /**
+         * A fluent call on Laravel's route builder (`->middleware()`,
+         * `->prefix()`) that name lookup had bound to an unrelated in-repo
+         * method of the same name. Present only when it is non-zero, so a
+         * graph without routes keeps its bytes.
+         */
+        route_builder_call?: number;
+    };
     nodes: CodeNode[];
     edges: CodeEdge[];
 }
@@ -250,13 +303,19 @@ export interface CodeGraph {
  * `--update` resolve imports the old (name-lookup) way for every unchanged
  * file — a silently mixed graph. `readSidecar` refuses a version mismatch, so
  * the bump is what makes that impossible rather than merely unlikely.
+ *
+ * Bumped 4 → 5 by `road-to-a-map-that-draws-itself` 1.3: same-file
+ * same-name declarations now carry `@2`, `@3` suffixes, so a cache written
+ * at v4 holds ids a v5 build would not produce.
  */
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 /** Deterministic per-file byte cap — files above this become a SKIPPED node. */
 export const MAX_FILE_BYTES = 1_000_000;
 
 /** file-extension → language, launch set only. */
+// `.vue`: a component's `<script>` is TypeScript or JavaScript; extract.ts blanks the
+// template and style around it. (Outside the literal: esbuild keeps comments inside one.)
 export const EXT_LANG: Readonly<Record<string, Lang>> = {
     '.php': 'php',
     '.ts': 'typescript',
@@ -267,6 +326,10 @@ export const EXT_LANG: Readonly<Record<string, Lang>> = {
     '.jsx': 'javascript',
     '.mjs': 'javascript',
     '.cjs': 'javascript',
+    '.py': 'python',
+    '.go': 'go',
+    '.java': 'java',
+    '.vue': 'typescript',
 };
 
 /** Grammar wasm filename per language (in `tree-sitter-wasms/out/`). */
@@ -274,6 +337,9 @@ export const GRAMMAR_WASM: Readonly<Record<Lang, string>> = {
     php: 'tree-sitter-php.wasm',
     typescript: 'tree-sitter-typescript.wasm',
     javascript: 'tree-sitter-javascript.wasm',
+    python: 'tree-sitter-python.wasm',
+    go: 'tree-sitter-go.wasm',
+    java: 'tree-sitter-java.wasm',
 };
 
 /** The single ABI version the pinned grammar set is built against. */

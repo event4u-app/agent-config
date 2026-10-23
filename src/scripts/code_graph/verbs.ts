@@ -105,6 +105,13 @@ export const REFERENCE_RELATIONS: ReadonlySet<CodeEdge['relation']> = new Set<Co
     'uses',
     'inherits',
     'tests',
+    'routes-to',
+    'renders',
+    'includes',
+    'reads',
+    'migrates',
+    'persists',
+    'relates',
 ]);
 
 export function isReferenceEdge(e: CodeEdge): boolean {

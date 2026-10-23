@@ -13,9 +13,12 @@
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
 import { extractFile, type FileExtract, type RawEdge } from './extract.js';
+import { buildLaravelOverlay } from './laravel_overlay.js';
+import { grammarWasmPath } from './loader.js';
 import {
     ALIAS_VIA,
     aliasRulesFrom,
@@ -27,6 +30,8 @@ import {
     resolveAlias,
     resolvePsr4,
 } from './resolution_tiers.js';
+import { DOC_EXTS, docsLayer } from './docs_layer.js';
+import { readScipIndex, type ScipDocument, scipEdges, supersededByScip } from './scip_reader.js';
 import { emitSqliteTwin } from './sqlite_store.js';
 import {
     type CodeEdge,
@@ -34,6 +39,7 @@ import {
     type EdgeConfidence,
     EXPECTED_GRAMMAR_ABI,
     EXT_LANG,
+    GRAMMAR_WASM,
     isStatedResolution,
     type Lang,
     type ResolvedVia,
@@ -51,6 +57,10 @@ const IGNORE_DIRS = new Set([
     'coverage',
     '.cache',
     'storage',
+    '__pycache__',
+    'venv',
+    'site-packages',
+    'target',
 ]);
 
 export interface SourceFile {
@@ -62,7 +72,12 @@ export interface SourceFile {
 // ── deterministic file discovery (path-confined) ─────────────────────────────
 
 /** Recursively list launch-set source files under `root`, path-confined. */
-export function discoverFiles(root: string): string[] {
+const CODE_EXTS: ReadonlySet<string> = new Set(Object.keys(EXT_LANG));
+
+/** Generated output under the project root: the engine never reads its own artefacts back. */
+const GENERATED_DIRS: ReadonlySet<string> = new Set(['agents/map', 'agents/runtime']);
+
+export function discoverFiles(root: string, exts: ReadonlySet<string> = CODE_EXTS): string[] {
     const abs = path.resolve(root);
     // Resolve the root itself first: a repo checked out under a symlinked
     // path (e.g. macOS /tmp → /private/tmp) must still confine correctly —
@@ -85,12 +100,14 @@ export function discoverFiles(root: string): string[] {
             const full = path.join(dir, e.name);
             if (e.isSymbolicLink()) continue; // never follow symlinks
             if (e.isDirectory()) {
-                if (!IGNORE_DIRS.has(e.name) && !e.name.startsWith('.')) walk(full);
+                if (IGNORE_DIRS.has(e.name) || e.name.startsWith('.')) continue;
+                if (GENERATED_DIRS.has(path.relative(abs, full).split(path.sep).join('/'))) continue;
+                walk(full);
                 continue;
             }
             if (!e.isFile()) continue;
             const ext = path.extname(e.name).toLowerCase();
-            if (!(ext in EXT_LANG)) continue;
+            if (!exts.has(ext)) continue;
             let real: string;
             try {
                 real = fs.realpathSync(full);
@@ -207,6 +224,49 @@ function resolveSpecifier(fromFile: string, spec: string, fileIds: ReadonlySet<s
     return null;
 }
 
+/**
+ * The file(s) a Python, Java or Go import names, or `[]` when the tree does not
+ * hold it (a standard-library or third-party module).
+ *
+ *   python  `pkg.mod` → `pkg/mod.py` or `pkg/mod/__init__.py` (any source root,
+ *           unique suffix match); `.mod` / `..mod` relative to the importer.
+ *   java    `a.b.C` → `a/b/C.java` (unique suffix match).
+ *   go      `example.com/x/mod` → every non-test `.go` file of the most specific
+ *           directory whose path ends the import path — a Go import names a
+ *           package, and a package is all of its files.
+ *
+ * A suffix that matches two files is refused rather than guessed.
+ */
+export function resolveLangModule(lang: Lang, fromFile: string, spec: string, fileIds: readonly string[]): string[] {
+    const unique = (suffixes: string[]): string[] => {
+        const hits = fileIds.filter((f) => suffixes.some((s) => f === s || f.endsWith(`/${s}`)));
+        return hits.length === 1 ? hits : [];
+    };
+    if (lang === 'python') {
+        const rel = /^(\.+)(.*)$/.exec(spec);
+        if (rel) {
+            let dir = idDirname(fromFile);
+            for (let i = 1; i < (rel[1] as string).length; i++) dir = idDirname(dir);
+            const sub = (rel[2] as string).split('.').filter(Boolean).join('/');
+            const base = sub ? (dir && dir !== '.' ? `${dir}/${sub}` : sub) : dir;
+            return [`${base}.py`, `${base}/__init__.py`].filter((c) => fileIds.includes(c)).slice(0, 1);
+        }
+        const p = spec.split('.').join('/');
+        return unique([`${p}.py`, `${p}/__init__.py`]);
+    }
+    if (lang === 'java') return unique([`${spec.split('.').join('/')}.java`]);
+    if (lang === 'go') {
+        const goFiles = fileIds.filter((f) => f.endsWith('.go') && !f.endsWith('_test.go'));
+        let best = '';
+        for (const f of goFiles) {
+            const d = idDirname(f);
+            if ((spec === d || spec.endsWith(`/${d}`)) && d.length > best.length) best = d;
+        }
+        return best ? goFiles.filter((f) => idDirname(f) === best).sort() : [];
+    }
+    return [];
+}
+
 function push(map: Map<string, string[]>, k: string, v: string): void {
     const arr = map.get(k);
     if (arr) {
@@ -247,6 +307,8 @@ export function buildGraph(
     files: readonly SourceFile[],
     extracts: readonly FileExtract[],
     resolution: ResolutionConfig = EMPTY_RESOLUTION_CONFIG,
+    scip: readonly ScipDocument[] = [],
+    docs: readonly SourceFile[] = [],
 ): CodeGraph {
     const nodes = extracts.flatMap((e) => e.nodes);
     const nodeIds = new Set(nodes.map((n) => n.id));
@@ -318,6 +380,9 @@ export function buildGraph(
     const nodeKind = new Map(nodes.map((n) => [n.id, n.kind as string]));
     const fileIds = new Set(nodes.filter((n) => n.kind === 'file').map((n) => n.id));
     const scopes = new Map<string, FileScope>();
+    const fileIdList = [...fileIds].sort();
+    /** Go imports name a package of several files; the binding takes the first, these carry the rest. */
+    const extraImports: Array<{ source: string; target: string }> = [];
     for (const ex of extracts) {
         const locals = new Map<string, string[]>();
         for (const n of ex.nodes) if (n.kind !== 'file') push(locals, n.label, n.id);
@@ -352,6 +417,26 @@ export function buildGraph(
                     sym.classByName.get(k(ex.lang, r.targetName)) ??
                     (sym.byName.get(k(ex.lang, r.targetName)) ?? []).find((id) => id.includes('#') && !id.includes('::'));
                 if (hit) imports.set(local, { target: hit, exact: false, via: 'name-lookup' });
+                continue;
+            }
+            if (ex.lang === 'python' || ex.lang === 'java' || ex.lang === 'go') {
+                const hits = resolveLangModule(ex.lang, ex.file, spec, fileIdList);
+                const first = hits[0];
+                if (first === undefined) {
+                    imports.set(local, {
+                        target: r.importKind === 'named' ? `external:${spec}#${r.targetName}` : `external:${spec}`,
+                        exact: true,
+                        via: 'import-specifier',
+                    });
+                    continue;
+                }
+                const member = `${first}#${r.targetName}`;
+                imports.set(local, {
+                    target: r.importKind === 'named' && nodeKind.has(member) ? member : first,
+                    exact: true,
+                    via: 'import-specifier',
+                });
+                for (const extra of hits.slice(1)) extraImports.push({ source: ex.file, target: extra });
                 continue;
             }
             // TIER 0: a relative specifier — the file says where it points.
@@ -469,6 +554,16 @@ export function buildGraph(
             });
         }
         for (const r of ex.rawEdges) resolveRawEdge(r, ex);
+    }
+    for (const x of extraImports) {
+        emit({
+            source: x.source,
+            target: x.target,
+            relation: 'imports',
+            confidence: 'EXTRACTED',
+            resolved_via: 'import-specifier',
+            provider: 'native',
+        });
     }
 
     function resolveRawEdge(r: RawEdge, ex: FileExtract): void {
@@ -659,6 +754,40 @@ export function buildGraph(
         });
     }
 
+    // Framework links no import states (routes, views, tables); rule-read,
+    // emitted only when the target exists. Also drops the base edges it
+    // proves false: a fluent `->middleware()` bound by name to some
+    // unrelated in-repo `middleware()`.
+    const overlay = buildLaravelOverlay(files, nodes, resolution);
+    let routeBuilderCalls = 0;
+    if (overlay.nodes.length > 0 || overlay.edges.length > 0) {
+        const kept = edges.filter((e) => !overlay.dropEdge(e));
+        routeBuilderCalls = edges.length - kept.length;
+        // Element-wise: a spread of ~200k edges overflows the call stack.
+        edges.length = 0;
+        for (const e of kept) edges.push(e);
+        for (const e of overlay.edges) edges.push(e);
+        for (const n of overlay.nodes) nodes.push(n);
+    }
+
+    if (docs.length > 0) {
+        const allFiles = new Set([...files.map((f) => f.path), ...docs.map((d) => d.path)]);
+        const layer = docsLayer(docs, allFiles);
+        for (const n of layer.nodes) nodes.push(n);
+        for (const e of layer.edges) edges.push(e);
+    }
+
+    // A project's own SCIP index states references the compiler resolved;
+    // each one supersedes the native name guess it duplicates.
+    if (scip.length > 0) {
+        const stated = scipEdges(scip, nodes);
+        const dropped = supersededByScip(stated, nodes);
+        const kept = edges.filter((e) => !dropped(e));
+        edges.length = 0;
+        for (const e of kept) edges.push(e);
+        for (const e of stated) edges.push(e);
+    }
+
     // deterministic ordering
     nodes.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     edges.sort((a, b) => {
@@ -669,7 +798,10 @@ export function buildGraph(
 
     const counts = { EXTRACTED: 0, INFERRED: 0, AMBIGUOUS: 0 };
     for (const e of edges) counts[e.confidence] += 1;
-    const suppressed = { dynamic_no_candidate: suppressedKeys.size };
+    const suppressed: CodeGraph['suppressed_edge_counts'] = {
+        dynamic_no_candidate: suppressedKeys.size,
+        ...(routeBuilderCalls > 0 ? { route_builder_call: routeBuilderCalls } : {}),
+    };
 
     const languages = [...new Set(extracts.map((e) => e.lang))].sort() as Lang[];
 
@@ -680,6 +812,18 @@ export function buildGraph(
         h.update('\0');
         h.update(createHash('sha256').update(f.source, 'utf-8').digest('hex'));
         h.update('\n');
+    }
+
+    for (const d of [...docs].sort((a, b) => (a.path < b.path ? -1 : 1))) {
+        h.update(`doc\0${d.path}\0`);
+        h.update(createHash('sha256').update(d.source, 'utf-8').digest('hex'));
+        h.update('\n');
+    }
+    // The SCIP index is an input like any source file: a new index must not
+    // read as the same graph.
+    for (const d of [...scip].sort((a, b) => (a.path < b.path ? -1 : 1))) {
+        h.update(`scip\0${d.path}\0`);
+        for (const o of d.occurrences) h.update(`${o.line}:${o.definition ? 1 : 0}:${o.symbol}\n`);
     }
 
     return {
@@ -820,7 +964,45 @@ function contentHash(s: string): string {
  * source of truth: a full build reproduces the identical graph. */
 interface ExtractSidecar {
     version: number;
+    /** `extractorFingerprint()` at write time — see there. */
+    fingerprint?: string;
     files: Record<string, { hash: string; extract: FileExtract }>;
+}
+
+const _BUILD_DIR = path.dirname(fileURLToPath(import.meta.url));
+let _fingerprint: string | null = null;
+
+/**
+ * What a cached per-file extract was produced BY: schema × package version ×
+ * extractor source × every grammar's bytes. Keyed on the schema alone, an
+ * upgrade that changed how a file is extracted kept serving the old facts on
+ * `--update` for every file whose content had not moved. Hashing the extractor
+ * source rather than trusting a hand-bumped constant means a change nobody
+ * remembered to version still invalidates the cache.
+ */
+export function extractorFingerprint(): string {
+    if (_fingerprint !== null) return _fingerprint;
+    const h = createHash('sha256');
+    h.update(`schema:${SCHEMA_VERSION}\n`);
+    try {
+        const pkg = JSON.parse(fs.readFileSync(path.join(_BUILD_DIR, '..', '..', '..', 'package.json'), 'utf-8')) as {
+            version?: string;
+        };
+        h.update(`package:${pkg.version ?? '?'}\n`);
+    } catch {
+        h.update('package:?\n');
+    }
+    for (const f of ['extract.ts', 'extract.js']) {
+        const p = path.join(_BUILD_DIR, f);
+        if (fs.existsSync(p)) h.update(fs.readFileSync(p));
+    }
+    for (const lang of Object.keys(GRAMMAR_WASM).sort() as Lang[]) {
+        const p = grammarWasmPath(lang);
+        h.update(`grammar:${lang}\n`);
+        if (fs.existsSync(p)) h.update(fs.readFileSync(p));
+    }
+    _fingerprint = h.digest('hex').slice(0, 16);
+    return _fingerprint;
 }
 
 /** Exported so `refresh` (cli.ts) can locate/seed/promote the sidecar next to
@@ -829,10 +1011,10 @@ export function sidecarPath(cachePath: string): string {
     return cachePath.replace(/\.json$/, '.extracts.json');
 }
 
-function readSidecar(p: string): ExtractSidecar | null {
+function readSidecar(p: string, fingerprint: string): ExtractSidecar | null {
     try {
         const s = JSON.parse(fs.readFileSync(p, 'utf-8')) as ExtractSidecar;
-        return s.version === SCHEMA_VERSION ? s : null;
+        return s.version === SCHEMA_VERSION && s.fingerprint === fingerprint ? s : null;
     } catch {
         return null;
     }
@@ -848,7 +1030,7 @@ function readSidecar(p: string): ExtractSidecar | null {
 export async function buildFromRepo(
     root: string,
     cachePath: string | null,
-    opts: { update?: boolean } = {},
+    opts: { update?: boolean; fingerprint?: string } = {},
 ): Promise<BuildResult> {
     const abs = path.resolve(root);
     const fullPaths = discoverFiles(abs);
@@ -864,9 +1046,10 @@ export async function buildFromRepo(
         files.push({ path: rel, source });
     }
 
-    const prior = opts.update && cachePath ? readSidecar(sidecarPath(cachePath)) : null;
+    const fingerprint = opts.fingerprint ?? extractorFingerprint();
+    const prior = opts.update && cachePath ? readSidecar(sidecarPath(cachePath), fingerprint) : null;
     const priorFiles = prior?.files ?? {};
-    const nextSidecar: ExtractSidecar = { version: SCHEMA_VERSION, files: {} };
+    const nextSidecar: ExtractSidecar = { version: SCHEMA_VERSION, fingerprint, files: {} };
     const extracts: FileExtract[] = [];
     let reExtracted = 0;
     let reused = 0;
@@ -886,7 +1069,24 @@ export async function buildFromRepo(
         nextSidecar.files[f.path] = { hash, extract };
     }
 
-    const graph = buildGraph(files, extracts, readResolutionConfig(root));
+    const scipPath = path.join(abs, 'index.scip');
+    let scip: ScipDocument[] = [];
+    if (fs.existsSync(scipPath)) {
+        try {
+            scip = readScipIndex(fs.readFileSync(scipPath));
+        } catch (e) {
+            process.stderr.write(`code-graph: index.scip not read — ${(e as Error).message}\n`);
+        }
+    }
+    const docs: SourceFile[] = [];
+    for (const full of discoverFiles(abs, DOC_EXTS)) {
+        try {
+            docs.push({ path: toPosixRel(abs, full), source: fs.readFileSync(full, 'utf-8') });
+        } catch {
+            continue;
+        }
+    }
+    const graph = buildGraph(files, extracts, readResolutionConfig(root), scip, docs);
     const json = serializeGraph(graph);
     if (cachePath) {
         write_atomic(cachePath, json);

@@ -187,3 +187,39 @@ describe('the index across a two-branch merge', () => {
         expect(tracked).toBe('');
     }, 60_000);
 });
+
+describe('the map follows the index (road-to-a-map-that-draws-itself 5.1)', () => {
+    /** Like `rig`, but the fake records WHICH code-graph verb ran. */
+    function verbRig(withMap: boolean): string {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-map-rig-'));
+        fs.mkdirSync(path.join(dir, 'agents', 'runtime', 'state'), { recursive: true });
+        fs.writeFileSync(path.join(dir, CACHE_REL), '{}');
+        if (withMap) fs.mkdirSync(path.join(dir, 'agents', 'map'));
+        fs.writeFileSync(
+            path.join(dir, 'agent-config'),
+            '#!/bin/sh\nif [ "$1" != "code-graph" ]; then exit 0; fi\necho "$2" >> "$PWD/verbs.log"\n',
+            { mode: 0o755 },
+        );
+        return dir;
+    }
+    const verbs = (dir: string): string[] => {
+        const log = path.join(dir, 'verbs.log');
+        return fs.existsSync(log) ? fs.readFileSync(log, 'utf-8').split('\n').filter(Boolean) : [];
+    };
+
+    it('redraws the map after the refresh when the project has one', () => {
+        const dir = verbRig(true);
+        runHook(path.join(stage, 'post-commit'), dir);
+        settle(dir);
+        spawnSync('sleep', ['0.3']);
+        expect(verbs(dir)).toEqual(['refresh', 'map']);
+    }, 30_000);
+
+    it('never draws a map nobody asked for', () => {
+        const dir = verbRig(false);
+        runHook(path.join(stage, 'post-commit'), dir);
+        settle(dir);
+        spawnSync('sleep', ['0.3']);
+        expect(verbs(dir)).toEqual(['refresh']);
+    }, 30_000);
+});
