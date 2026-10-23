@@ -1,5 +1,5 @@
 ---
-model_tier: low
+model_tier: lite
 name: project-map
 pack: engineering-base
 visibility: internal
