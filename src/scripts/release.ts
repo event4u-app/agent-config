@@ -36,8 +36,9 @@
  *                            the PR's own consistency check fails — PR #226).
  *     5. Commit + push     — `release: X.Y.Z`, push branch, open PR.
  *     6. Wait for CI       — `gh pr checks --watch` (skippable with --no-wait).
- *     7. Findings ledger   — VERIFY it is on the branch and dispositioned, and
- *                            STOP otherwise; `self-review-gate.yml` builds it.
+ *     7. No review gate    — a release waits for no review ledger: every commit
+ *                            on main is already reviewed and merged (owner,
+ *                            2026-10-22). The self-review stays advisory.
  *     8. Merge             — `gh pr merge --merge --delete-branch`.
  *     9. Tag main          — fast-forward main, tag the merge commit, push the
  *                            tag (triggers publish-npm.yml, except under --ci).
@@ -128,7 +129,6 @@ import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import type { CommitRecord, ImpactTrailers } from './_lib/consumer_impact.js';
 import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, is_breaking_commit, parse_commit_log, parse_impact_trailers, write_impact_map } from './_lib/consumer_impact.js';
 import { preflightPosition } from './_lib/release_position.js';
-import { settleFindingsLedger } from './_lib/release_findings_ingest.js';
 import { TAG_TRIGGERED_WORKFLOWS, dispatchTagWorkflows } from './_lib/release_tag_dispatch.js';
 import {
     RELEASE_HEAD_DEFAULT,
@@ -1041,12 +1041,8 @@ function execute(
         _step(6, total, 'Skip waiting for checks (--no-wait)');
     }
 
-    // Step 7 — the findings ledger: verify, never produce; the module says why.
-    settleFindingsLedger({
-        run, die, repoRoot: REPO_ROOT, remote: REMOTE, trunk: MAIN_BRANCH,
-        step: (m) => { _step(7, total, m); }, write: (s) => process.stdout.write(s),
-        resolvePr: () => Number((pr_info ?? _pr_for_branch(branch))?.['number'] ?? NaN) || null,
-    }, plan.target, branch, pr_merged);
+    // Step 7 — kept as a numbered line so the step anchors stay stable.
+    _step(7, total, 'No review gate — main is already reviewed and merged');
     // Step 8 — merge
     if (pr_merged) {
         _step(8, total, `PR #${pr_info!['number']} already merged — skip`);
