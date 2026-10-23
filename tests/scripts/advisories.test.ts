@@ -703,10 +703,11 @@ describe('R2 round 2 fixes (2026-10-21)', () => {
         const root = project('F1-fastify-hono');
         const sp = statePath(root)!;
         fs.mkdirSync(path.dirname(sp), { recursive: true });
-        const state = { schema: 1, root, at: new Date().toISOString(), fingerprint: 'x', inventory: [], findings: [{ key: 'K|fastify|5.12.4', id: 'K', tier: 'T1' }], reports: [], ledger: emptyLedger(), acceptances: [], notice: null, silent_since: {},
-            remediations: { 'K|fastify|5.12.4': { key: 'K|fastify|5.12.4', state: 'fixed-in-trunk', owner_session: null, branch: null, pr: null, merge_sha: 'abc1234', stamps: { 'fixed-in-trunk': new Date(Date.now() - 30 * 3600000).toISOString() }, note: null } } };
+        // Midday UTC: reminders reset per UTC day, so t + 1 h must stay on t's day.
+        const t = new Date(`${new Date().toISOString().slice(0, 10)}T12:00:00Z`);
+        const state = { schema: 1, root, at: t.toISOString(), fingerprint: 'x', inventory: [], findings: [{ key: 'K|fastify|5.12.4', id: 'K', tier: 'T1' }], reports: [], ledger: emptyLedger(), acceptances: [], notice: null, silent_since: {},
+            remediations: { 'K|fastify|5.12.4': { key: 'K|fastify|5.12.4', state: 'fixed-in-trunk', owner_session: null, branch: null, pr: null, merge_sha: 'abc1234', stamps: { 'fixed-in-trunk': new Date(t.getTime() - 30 * 3600000).toISOString() }, note: null } } };
         fs.writeFileSync(sp, JSON.stringify(state));
-        const t = new Date();
         expect(sessionNotice(root, t)).not.toBeNull();
         expect(sessionNotice(root, new Date(t.getTime() + 3600000))).toBeNull();
     });
