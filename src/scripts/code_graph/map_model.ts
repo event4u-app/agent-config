@@ -956,7 +956,11 @@ export const OUTCOME_HALF_LIFE_DAYS = 14;
 export function outcomeScores(m: MapModel, events: readonly OutcomeEvent[]): Array<[number, number]> {
     if (events.length === 0) return [];
     const idx = new Map(m.files.map((f, i) => [f.path, i] as const));
-    const newest = Math.max(...events.map((e) => Date.parse(e.at)).filter((t) => Number.isFinite(t)));
+    let newest = -Infinity;
+    for (const e of events) {
+        const t = Date.parse(e.at);
+        if (Number.isFinite(t) && t > newest) newest = t;
+    }
     const score = new Map<number, number>();
     for (const e of events) {
         const i = idx.get(e.path);
