@@ -188,13 +188,15 @@ export function run(
 }
 
 function selfTest(): number {
+    // Assembled at run time, so prepack's import scan does not read fixture text as a shipped import.
+    const from = (spec: string): string => `from '${spec}';`;
     const files: Record<string, string> = {
         'src/config/production-entries.json': JSON.stringify({ entries: ['src/main.ts'], entry_sources: [] }),
-        'src/main.ts': "import { wired } from './lib.js';\nwired();\n",
+        'src/main.ts': `import { wired } ${from('./lib.js')}\nwired();\n`,
         'src/lib.ts': 'export function wired() {}\nexport function unwired() {}\n',
-        'src/cli.ts': "import { unwired } from './lib.js';\nunwired();\n",
-        'tests/lib.test.ts': "import { wired, unwired } from '../src/lib.js';\n",
-        'tests/wired.test.ts': "import { wired } from '../src/lib.js';\n",
+        'src/cli.ts': `import { unwired } ${from('./lib.js')}\nunwired();\n`,
+        'tests/lib.test.ts': `import { wired, unwired } ${from('../src/lib.js')}\n`,
+        'tests/wired.test.ts': `import { wired } ${from('../src/lib.js')}\n`,
     };
     const tree: ReachTree = { list: () => Object.keys(files), read: (rel) => files[rel] ?? null };
     const reach = productionReach(tree);
