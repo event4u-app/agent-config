@@ -7,6 +7,8 @@
  * A provider stays a parameter table plus the semantics only it knows; the
  * mechanics live here once (road-to-graph-providers-for-every-stack 4.1).
  */
+import * as path from 'node:path';
+
 import type { SourceFile } from '../../build.js';
 import type { CodeEdge, CodeNode, ResolvedVia } from '../../types.js';
 import type { ProviderInput, ProviderResult } from '../types.js';
@@ -161,4 +163,21 @@ export function makeKit(input: ProviderInput): Kit {
         },
         result: () => ({ nodes, edges }),
     };
+}
+
+/**
+ * The one symbol named `name` declared by a file in `file`'s own directory with
+ * the same extension — what a language whose package is its directory (Go, a
+ * Java package) sees without an import. Null when none or several declare it.
+ */
+export function packageSymbol(kit: Kit, file: string, name: string, kinds: readonly CodeNode['kind'][]): string | null {
+    const dir = path.posix.dirname(file);
+    const ext = path.posix.extname(file);
+    const hits: string[] = [];
+    for (const n of kit.nodeById.values()) {
+        if (n.label !== name || !kinds.includes(n.kind)) continue;
+        if (path.posix.dirname(n.source_file) !== dir || path.posix.extname(n.source_file) !== ext) continue;
+        hits.push(n.id);
+    }
+    return hits.length === 1 ? (hits[0] as string) : null;
 }

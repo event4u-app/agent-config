@@ -6,7 +6,9 @@
 import type { FileRole } from '../map_model.js';
 import type { ActiveProviderRecord } from '../types.js';
 import { expressProvider } from './express.js';
+import { goHttpProvider } from './go_http.js';
 import { laravelProvider } from './laravel.js';
+import { springProvider } from './spring.js';
 import type { ConventionProvider, ProjectProbe } from './types.js';
 
 export type { ConventionProvider, ProjectProbe, ProviderInput, ProviderResult } from './types.js';
@@ -14,7 +16,7 @@ export { EMPTY_PROBE } from './types.js';
 export { CATALOG, type CatalogRow, catalogRow, type CoverageStatus } from './catalog.js';
 
 /** Registration order is execution order; ids are unique. */
-export const PROVIDERS: readonly ConventionProvider[] = [laravelProvider, expressProvider];
+export const PROVIDERS: readonly ConventionProvider[] = [laravelProvider, expressProvider, springProvider, goHttpProvider];
 
 /** Every marker basename a registered provider asks the probe to record. */
 export const PROBE_MARKERS: ReadonlySet<string> = new Set(PROVIDERS.flatMap((p) => p.markers ?? []));
