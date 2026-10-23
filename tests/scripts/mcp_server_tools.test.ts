@@ -94,9 +94,13 @@ describe('tools — allowlist + registry', () => {
                 // refuses a seed it cannot resolve exactly rather than scoring
                 // free text.
                 'graph_node',
+                // road-to-a-map-that-draws-itself 5.2 — the map's two readers:
+                // whether a map exists and how fresh, and one area of it.
+                'graph_map_status',
+                'graph_area',
             ]),
         );
-        expect(Object.keys(ALLOWLIST).length).toBe(26);
+        expect(Object.keys(ALLOWLIST).length).toBe(28);
         for (const tool of Object.values(ALLOWLIST)) {
             expect(tool.description.trim()).toBeTruthy();
             expect(tool.input_schema.type).toBe('object');

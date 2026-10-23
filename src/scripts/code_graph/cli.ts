@@ -48,7 +48,7 @@
  * 2 usage · 3 internal.
  *
  *   map      [--root P] [--out DIR] [--open]  draw the project map into
- *            [--no-verify]                     agents/map/ (ADR-297); renders it
+ *            [--no-verify] [--diff <rev>]      agents/map/ (ADR-297); renders it
  *                                               at three widths when Playwright
  *                                               is present
  *
@@ -739,13 +739,20 @@ async function cmdMap(argv: string[]): Promise<number> {
         return 1;
     }
     const out = flag(argv, '--out');
-    const r = await buildMap(root, out ? { outDir: path.resolve(out) } : {});
+    const diffRev = flag(argv, '--diff');
+    const r = await buildMap(root, {
+        ...(out ? { outDir: path.resolve(out) } : {}),
+        ...(diffRev !== null ? { diffRev } : {}),
+    });
     const rel = path.relative(process.cwd(), r.outDir) || '.';
     const largest = r.model.areas.find((a) => a.kind === 'area');
     process.stdout.write(
         `✅  code-graph map — ${r.meta.summary}\n` +
             `    graph: ${r.graphBuilt ? 'rebuilt' : 'reused'} · state ${r.meta.state} · commit ${r.meta.commit}\n` +
             (largest ? `    largest area: ${largest.name} (${largest.files.length} files)\n` : '') +
+            (r.model.diff
+                ? `    diff ${r.model.diff.rev}: ${r.model.diff.changed.length} changed · ${r.model.diff.impacted.length} linked into them · ${r.model.diff.areas.length} area(s) touched\n`
+                : '') +
             `    wrote: ${r.written.length} files under ${rel}/ — open ${path.join(rel, 'index.html')}\n`,
     );
     let rc = 0;

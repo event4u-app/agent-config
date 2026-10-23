@@ -34,6 +34,7 @@
             tests: 'Covered by tests',
             externals: 'External dependencies',
             requestPaths: 'Request paths',
+            change: function (rev, c, i) { return 'This change (' + rev + '): ' + c + ' changed, ' + i + ' linked into a change'; },
             reachedBy: 'Reached by routes',
             guesses: 'Guessed links',
             state: 'Graph state',
@@ -74,6 +75,7 @@
             tests: 'Abgedeckt durch Tests',
             externals: 'Externe Abhängigkeiten',
             requestPaths: 'Request-Pfade',
+            change: function (rev, c, i) { return 'Diese Änderung (' + rev + '): ' + c + ' geändert, ' + i + ' hängen daran'; },
             reachedBy: 'Erreicht über Routen',
             guesses: 'Geratene Verbindungen',
             state: 'Graph-Stand',
@@ -111,6 +113,15 @@
     var byWeight = function (a, b) { return b[1] - a[1] || a[0] - b[0]; };
     inOf.forEach(function (l) { l.sort(byWeight); });
     outOf.forEach(function (l) { l.sort(byWeight); });
+
+    var changedSet = {};
+    var impactedSet = {};
+    var touchedArea = {};
+    if (model.diff) {
+        model.diff.changed.forEach(function (i) { changedSet[i] = true; });
+        model.diff.impacted.forEach(function (i) { impactedSet[i] = true; });
+        model.diff.areas.forEach(function (a) { touchedArea[a[0]] = true; });
+    }
 
     function hue(i) { return Math.round((i * 137.508) % 360); }
     function areaColor(i, alpha) {
@@ -284,6 +295,16 @@
                 ctx.lineWidth = 2.5;
                 ctx.strokeStyle = cssVar('--accent');
                 ctx.stroke();
+            } else if ((n.kind === 'area' && touchedArea[n.idx]) || (n.kind === 'file' && changedSet[n.idx])) {
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = cssVar('--change');
+                ctx.stroke();
+            } else if (n.kind === 'file' && impactedSet[n.idx]) {
+                ctx.setLineDash([3, 2]);
+                ctx.lineWidth = 1.5;
+                ctx.strokeStyle = cssVar('--change');
+                ctx.stroke();
+                ctx.setLineDash([]);
             }
             ctx.globalAlpha = 1;
             drawn.push({ kind: n.kind, idx: n.idx, x: n.sx, y: n.sy, r: Math.max(r, 8) });
@@ -436,6 +457,20 @@
         panel.appendChild(el('h2', null, data.meta.title));
         panel.appendChild(el('div', { class: 'meta' }, data.meta.summary));
         panel.appendChild(el('p', { class: 'meta' }, t('hint')));
+        if (model.diff) {
+            panel.appendChild(el('h3', null, t('change')(model.diff.rev, model.diff.changed.length, model.diff.impacted.length)));
+            var dl = el('ul', { class: 'plist' });
+            model.diff.areas.slice(0, 20).forEach(function (a) {
+                var b = el('button', { type: 'button' });
+                b.appendChild(swatch(a[0]));
+                b.appendChild(document.createTextNode(areas[a[0]].name + ' · ' + a[1] + ' / ' + a[2]));
+                b.addEventListener('click', function () { openArea(a[0]); });
+                var li = el('li');
+                li.appendChild(b);
+                dl.appendChild(li);
+            });
+            panel.appendChild(dl);
+        }
         panel.appendChild(el('h3', null, t('areas') + ' (' + areas.length + ')'));
         var list = el('ul', { class: 'plist' });
         areas.forEach(function (a, i) {

@@ -9,6 +9,7 @@
     --grey-node: #b4b8c1;
     --accent: #2f5bd3;
     --focus: #2f5bd3;
+    --change: #d1495b;
 }
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme='light']) {
@@ -22,6 +23,7 @@
         --grey-node: #555b66;
         --accent: #8aa8ff;
         --focus: #8aa8ff;
+        --change: #ff7a8a;
     }
 }
 :root[data-theme='dark'] {
@@ -35,6 +37,7 @@
     --grey-node: #555b66;
     --accent: #8aa8ff;
     --focus: #8aa8ff;
+    --change: #ff7a8a;
 }
 * {
     box-sizing: border-box;

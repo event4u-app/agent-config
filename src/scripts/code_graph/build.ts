@@ -672,9 +672,11 @@ export function buildGraph(
     if (overlay.nodes.length > 0 || overlay.edges.length > 0) {
         const kept = edges.filter((e) => !overlay.dropEdge(e));
         routeBuilderCalls = edges.length - kept.length;
+        // Element-wise: a spread of ~200k edges overflows the call stack.
         edges.length = 0;
-        edges.push(...kept, ...overlay.edges);
-        nodes.push(...overlay.nodes);
+        for (const e of kept) edges.push(e);
+        for (const e of overlay.edges) edges.push(e);
+        for (const n of overlay.nodes) nodes.push(n);
     }
 
     // deterministic ordering

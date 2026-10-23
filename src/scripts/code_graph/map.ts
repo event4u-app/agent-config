@@ -103,14 +103,43 @@ async function loadOrBuildGraph(root: string, cachePath: string): Promise<{ grap
     return { graph, built: true };
 }
 
+/**
+ * Files changed between `rev` and HEAD, plus uncommitted ones — the same reading
+ * `affected --since` uses, kept here so the map does not import the CLI. A rev
+ * beginning with `-` is refused: it would reach git as an option.
+ */
+export function diffFiles(root: string, rev: string): string[] | null {
+    if (rev.startsWith('-')) return null;
+    try {
+        const run = (args: string[]): string[] =>
+            execFileSync('git', ['-C', root, ...args], {
+                env: hardenedSpawnEnv(),
+                encoding: 'utf-8',
+                stdio: ['ignore', 'pipe', 'ignore'],
+            })
+                .split('\n')
+                .map((s) => s.trim())
+                .filter(Boolean);
+        return [...new Set([...run(['diff', '--name-only', rev]), ...run(['diff', '--name-only', '--cached', rev])])].sort();
+    } catch {
+        return null;
+    }
+}
+
 export async function buildMap(
     root: string,
-    opts: { outDir?: string; cachePath?: string } = {},
+    opts: { outDir?: string; cachePath?: string; diffRev?: string } = {},
 ): Promise<MapBuildResult> {
     const outDir = opts.outDir ?? path.join(root, MAP_DIR_REL);
     const cachePath = opts.cachePath ?? path.join(root, NATIVE_CACHE_REL);
     const { graph, built } = await loadOrBuildGraph(root, cachePath);
-    const model = buildMapModel(graph, { entryFiles: declaredEntryFiles(root) });
+    let diff: { rev: string; changed: string[] } | undefined;
+    if (opts.diffRev !== undefined) {
+        const changed = diffFiles(root, opts.diffRev);
+        if (changed === null) throw new Error(`cannot resolve rev '${opts.diffRev}' in ${path.basename(root)}`);
+        diff = { rev: opts.diffRev, changed };
+    }
+    const model = buildMapModel(graph, { entryFiles: declaredEntryFiles(root), ...(diff ? { diff } : {}) });
     const meta: MapMeta = {
         title: `Map of ${path.basename(root)}`,
         commit: gitHead(root),
@@ -185,6 +214,26 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
     ].join('\n');
 
     const sections: Array<[string, string]> = [];
+
+    if (m.diff) {
+        const d = m.diff;
+        sections.push([
+            'This change',
+            [
+                `## This change (\`${md(d.rev)}\`..working tree)`,
+                '',
+                `${d.changed.length} changed file(s) on the map, ${d.impacted.length} more with a trusted link into them` +
+                    (d.outsideGraph.length ? `, ${d.outsideGraph.length} changed path(s) the graph does not hold` : '') +
+                    '. It touches these areas:',
+                '',
+                '| Area | Changed | Linked into a change |',
+                '|---|---|---|',
+                ...d.areas.slice(0, m.thresholds.listCap).map(([a, c, i]) => `| ${m.areas[a]?.id ?? ''} ${md(m.areas[a]?.name ?? '')} | ${c} | ${i} |`),
+                ...(d.areas.length === 0 ? ['| — none — | | |'] : []),
+                '',
+            ].join('\n'),
+        ]);
+    }
 
     const AREA_ROWS = 25;
     const areaRows = m.areas.slice(0, AREA_ROWS).map((a) => {
@@ -474,4 +523,92 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '</html>',
         '',
     ].join('\n');
+}
+
+/** The map a previous `code-graph map` wrote, or null when there is none. */
+export function readMap(root: string): { meta: MapMeta; model: MapModel } | null {
+    const p = path.join(root, MAP_DIR_REL, 'map.json');
+    try {
+        return JSON.parse(fs.readFileSync(p, 'utf-8')) as { meta: MapMeta; model: MapModel };
+    } catch {
+        return null;
+    }
+}
+
+export interface AreaReport {
+    id: string;
+    name: string;
+    kind: string;
+    files: Array<{ path: string; role: string; usedBy: number; uses: number }>;
+    hubs: string[];
+    cohesion: number;
+    testShare: number;
+    folderMismatch: number;
+    dependsOn: Array<{ path: string; area: string; links: number }>;
+    usedByAreas: Array<{ area: string; links: number }>;
+    page: string | null;
+}
+
+/**
+ * One area, found by id (`a3`), by exact name, or by a file it contains —
+ * exact matches only, so the answer is always about the area that was named.
+ */
+export function areaReport(m: MapModel, query: string): AreaReport | { refusal: string; candidates: string[] } {
+    let i = m.areas.findIndex((a) => a.id === query || a.name === query);
+    if (i < 0) {
+        const f = m.files.findIndex((x) => x.path === query);
+        if (f >= 0) i = m.files[f]?.area ?? -1;
+        if (f >= 0 && i < 0) {
+            return { refusal: `${query} belongs to no area (role ${m.files[f]?.role ?? '?'})`, candidates: [] };
+        }
+    }
+    if (i < 0) {
+        const q = query.toLowerCase();
+        const candidates = m.areas
+            .filter((a) => a.name.toLowerCase().includes(q))
+            .slice(0, 10)
+            .map((a) => `${a.id} ${a.name}`);
+        return { refusal: `no area is exactly '${query}'`, candidates };
+    }
+    const a = m.areas[i] as MapModel['areas'][number];
+    const inArea = new Set(a.files);
+    const out = new Map<number, number>();
+    const inbound = new Map<number, number>();
+    for (const [s, t, w] of m.edges) {
+        if (inArea.has(s) && !inArea.has(t)) out.set(t, (out.get(t) ?? 0) + w);
+        if (inArea.has(t) && !inArea.has(s)) {
+            const sa = m.files[s]?.area ?? -1;
+            if (sa >= 0) inbound.set(sa, (inbound.get(sa) ?? 0) + w);
+        }
+    }
+    const cap = m.thresholds.listCap;
+    const files = [...a.files]
+        .sort((x, y) => (m.files[y]?.inFiles ?? 0) - (m.files[x]?.inFiles ?? 0) || x - y)
+        .map((x) => {
+            const r = m.files[x];
+            return { path: r?.path ?? '', role: r?.role ?? '', usedBy: r?.inFiles ?? 0, uses: r?.outFiles ?? 0 };
+        });
+    return {
+        id: a.id,
+        name: a.name,
+        kind: a.kind,
+        files: files.slice(0, 60),
+        hubs: files.slice(0, 5).map((x) => x.path),
+        cohesion: a.cohesion,
+        testShare: a.testShare,
+        folderMismatch: a.folderMismatch,
+        dependsOn: [...out.entries()]
+            .sort((x, y) => y[1] - x[1] || x[0] - y[0])
+            .slice(0, cap)
+            .map(([t, w]) => {
+                const r = m.files[t];
+                const ai = r?.area ?? -1;
+                return { path: r?.path ?? '', area: ai >= 0 ? (m.areas[ai]?.id ?? '') : (r?.role ?? ''), links: w };
+            }),
+        usedByAreas: [...inbound.entries()]
+            .sort((x, y) => y[1] - x[1] || x[0] - y[0])
+            .slice(0, cap)
+            .map(([ai, w]) => ({ area: `${m.areas[ai]?.id ?? ''} ${m.areas[ai]?.name ?? ''}`, links: w })),
+        page: a.files.length >= AREA_PAGE_MIN_FILES ? path.posix.join('agents', 'map', 'areas', `${a.id}.md`) : null,
+    };
 }

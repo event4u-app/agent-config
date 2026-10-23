@@ -208,14 +208,14 @@ Pulled forward from `later/road-to-a-graph-that-wins` 1.2.
 
 ## Phase 5 — Reach: freshness, MCP, review
 
-- [ ] **5.1 Refresh.** The detached git-hook refresh (`src/scripts/install-hooks.sh`)
+- [x] **5.1 Refresh.** The detached git-hook refresh (`src/scripts/install-hooks.sh`)
   regenerates the map when `agents/map/` exists, under the same lock, budget and atomic rename.
-- [ ] **5.2 MCP.** `graph_area` (one area's files, edges, hubs) and `graph_map_status` (state,
+- [x] **5.2 MCP.** `graph_area` (one area's files, edges, hubs) and `graph_map_status` (state,
   counts, path to `MAP.md`) beside the six existing `graph_*` tools; the catalog is regenerated
   and its counts machine-checked.
-- [ ] **5.3 Diff view.** `map --diff <rev>` marks changed files and their `impact` neighbourhood
+- [x] **5.3 Diff view.** `map --diff <rev>` marks changed files and their `impact` neighbourhood
   and adds a "this change touches areas …" block to `MAP.md`.
-- [ ] **5.4 Context hook unchanged by default.** It keeps carrying state, not instructions;
+- [x] **5.4 Context hook unchanged by default.** It keeps carrying state, not instructions;
   pointing it at `MAP.md` is decided by 8.3.
 
 ## Phase 6 — Breadth: languages, SCIP, docs, this repo

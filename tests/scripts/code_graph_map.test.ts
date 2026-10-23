@@ -1,10 +1,11 @@
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
-import { buildMap, embedJson, MAP_TOKEN_BUDGET } from '../../src/scripts/code_graph/map.js';
+import { buildMap, diffFiles, embedJson, MAP_TOKEN_BUDGET } from '../../src/scripts/code_graph/map.js';
 import { buildMapModel, staticRole } from '../../src/scripts/code_graph/map_model.js';
 import { labelProblems } from '../../src/scripts/code_graph/map_verify.js';
 
@@ -179,5 +180,30 @@ describe('the canvas label check (3.6)', () => {
         expect(labelProblems([{ x: 180, y: 10, w: 40, h: 14 }], 200, 100).outside).toBe(1);
         expect(labelProblems([inside, { x: 30, y: 15, w: 40, h: 14 }], 200, 100).overlapping).toBe(1);
         expect(labelProblems([inside, { x: 60, y: 10, w: 40, h: 14 }], 200, 100).overlapping).toBe(0);
+    });
+});
+
+describe('the diff view (5.3)', () => {
+    const git = (...args: string[]): void => {
+        execFileSync('git', ['-C', root, ...args], { stdio: 'ignore' });
+    };
+
+    it('marks the changed file, what links into it, and the areas the change touches', async () => {
+        git('init', '-q');
+        git('-c', 'user.email=t@example.com', '-c', 'user.name=t', 'add', '-A');
+        git('-c', 'user.email=t@example.com', '-c', 'user.name=t', 'commit', '-qm', 'seed');
+        fs.appendFileSync(path.join(root, 'src', 'billing', 'f2.ts'), '// touched\n');
+        const r = await buildMap(root, { diffRev: 'HEAD' });
+        const d = r.model.diff;
+        expect(d).toBeDefined();
+        const paths = (xs: number[]): string[] => xs.map((i) => r.model.files[i]?.path ?? '');
+        expect(paths(d?.changed ?? [])).toEqual(['src/billing/f2.ts']);
+        expect(paths(d?.impacted ?? [])).toContain('src/billing/f0.ts');
+        expect(d?.areas[0]?.[0]).toBe(r.model.files.find((f) => f.path === 'src/billing/f2.ts')?.area);
+        expect(fs.readFileSync(path.join(root, 'agents', 'map', 'MAP.md'), 'utf-8')).toContain('## This change (`HEAD`..working tree)');
+    });
+
+    it('refuses a rev that would reach git as an option', () => {
+        expect(diffFiles(root, '--output=/tmp/x')).toBeNull();
     });
 });

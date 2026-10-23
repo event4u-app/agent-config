@@ -62,6 +62,7 @@ import {
     testsFor,
     untested,
 } from '../code_graph/verbs.js';
+import { areaReport, readMap } from '../code_graph/map.js';
 import type { BuiltinTool } from './tools.js';
 
 /** The `no graph here` answer, in one place so all five agree on its shape. */
@@ -372,6 +373,68 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
                 staleness,
                 ...graphPathVerb(g, from, to, num(args, 'budget', 1500)),
             }));
+        },
+    },
+    graph_map_status: {
+        name: 'graph_map_status',
+        side_effect: 'ro',
+        description:
+            'Whether this project has a map (`agent-config code-graph map`), how big it is and how ' +
+            'fresh: graph state, the commit it was drawn at, file / area / link counts and the path ' +
+            'to MAP.md. Read it before orienting in an unfamiliar repository.',
+        input_schema: { type: 'object', properties: {}, additionalProperties: false },
+        handler: async (_args, root) => {
+            const staleness = graphState(root);
+            const map = readMap(root);
+            if (!map) {
+                return {
+                    status: 'unavailable',
+                    staleness,
+                    map: 'absent',
+                    hint: 'run `agent-config code-graph map` to draw it into agents/map/',
+                };
+            }
+            const m = map.model;
+            return {
+                status: 'ok',
+                staleness,
+                map: 'present',
+                drawn_at_commit: map.meta.commit,
+                graph_state_when_drawn: map.meta.state,
+                files: m.files.length,
+                areas: m.areas.length,
+                trusted_links: m.analyses.trustedEdges,
+                guess_share: m.analyses.guessShare,
+                request_paths: m.analyses.requestPathsTotal,
+                largest_areas: m.areas.slice(0, 5).map((a) => `${a.id} ${a.name} (${a.files.length})`),
+                map_md: 'agents/map/MAP.md',
+                index_html: 'agents/map/index.html',
+            };
+        },
+    },
+    graph_area: {
+        name: 'graph_area',
+        side_effect: 'ro',
+        description:
+            'One area of the project map: its files (most used first), hubs, cohesion, what it ' +
+            'depends on outside itself and which areas depend on it. Name the area by id (`a3`), ' +
+            'by exact name, or by a file it contains; anything else is refused with candidates.',
+        input_schema: {
+            type: 'object',
+            required: ['area'],
+            properties: {
+                area: { type: 'string', description: 'Area id (`a3`), exact area name, or a repo-relative file path.' },
+            },
+            additionalProperties: false,
+        },
+        handler: async (args, root) => {
+            const q = str(args, 'area');
+            if (q === '') return { status: 'error', error: 'area must be a non-empty string' };
+            const map = readMap(root);
+            if (!map) return { status: 'unavailable', error: 'no map — run `agent-config code-graph map`' };
+            const r = areaReport(map.model, q);
+            if ('refusal' in r) return { status: 'refused', refusal: r.refusal, candidates: r.candidates };
+            return { status: 'ok', drawn_at_commit: map.meta.commit, ...r };
         },
     },
 };

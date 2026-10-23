@@ -115,6 +115,7 @@ export interface MapModel {
     areas: MapArea[];
     /** Area→area weights `[a, b, weight]`, a < b. */
     areaEdges: Array<[number, number, number]>;
+    diff?: MapDiff;
     analyses: {
         hubs: number[];
         surprises: Array<[number, number, number]>;
@@ -135,6 +136,20 @@ export interface MapInputs {
     /** Repo-relative paths declared as entry points (manifests, route files). */
     entryFiles?: readonly string[];
     seed?: number;
+    /** `map --diff <rev>`: the rev and the files it changed. */
+    diff?: { rev: string; changed: readonly string[] };
+}
+
+/** What a diff touches on the map: the reviewer's view of the same picture. */
+export interface MapDiff {
+    rev: string;
+    changed: number[];
+    /** Files with a trusted link into a changed file (one hop), not themselves changed. */
+    impacted: number[];
+    /** `[area, changed files in it, impacted files in it]`, most changed first. */
+    areas: Array<[number, number, number]>;
+    /** Changed paths the graph does not hold (deleted, or not a source file). */
+    outsideGraph: string[];
 }
 
 const DEFAULT_SEED = 42;
@@ -486,6 +501,38 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         };
     });
 
+    let diff: MapDiff | undefined;
+    if (inputs.diff) {
+        const changed = new Set<number>();
+        const outsideGraph: string[] = [];
+        for (const p of [...inputs.diff.changed].sort(byPath)) {
+            const i = idx.get(p);
+            if (i === undefined) outsideGraph.push(p);
+            else changed.add(i);
+        }
+        const impacted = new Set<number>();
+        for (const [s, t] of edges) if (changed.has(t) && !changed.has(s)) impacted.add(s);
+        const perArea = new Map<number, [number, number]>();
+        const bumpArea = (f: number, k: 0 | 1): void => {
+            const a = areaOf[f] as number;
+            if (a < 0) return;
+            const v = perArea.get(a) ?? [0, 0];
+            v[k] += 1;
+            perArea.set(a, v);
+        };
+        for (const f of changed) bumpArea(f, 0);
+        for (const f of impacted) bumpArea(f, 1);
+        diff = {
+            rev: inputs.diff.rev,
+            changed: [...changed].sort((a, b) => a - b),
+            impacted: [...impacted].sort((a, b) => a - b),
+            areas: [...perArea.entries()]
+                .map(([a, [c, i]]) => [a, c, i] as [number, number, number])
+                .sort((x, y) => y[1] - x[1] || y[2] - x[2] || x[0] - y[0]),
+            outsideGraph,
+        };
+    }
+
     return {
         version: MAP_MODEL_VERSION,
         thresholds: {
@@ -502,6 +549,7 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         guessEdges,
         areas,
         areaEdges,
+        ...(diff ? { diff } : {}),
         analyses: {
             hubs,
             surprises,

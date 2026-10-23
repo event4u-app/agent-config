@@ -20,12 +20,22 @@ import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
+import { buildMap } from '../../src/scripts/code_graph/map.js';
 import { GRAPH_TOOLS } from '../../src/scripts/mcp_server/graph_tools.js';
 import { ALLOWLIST, ToolCache } from '../../src/scripts/mcp_server/tools.js';
 import { TELEMETRY_FILENAME, TELEMETRY_REL_DIR } from '../../src/scripts/mcp_server/telemetry.js';
 import catalog from '../../src/scripts/mcp_server/consumer_tool_catalog.json' with { type: 'json' };
 
-const NAMES = ['graph_impact', 'graph_tests_for', 'graph_dead', 'graph_query', 'graph_path', 'graph_node'] as const;
+const NAMES = [
+    'graph_impact',
+    'graph_tests_for',
+    'graph_dead',
+    'graph_query',
+    'graph_path',
+    'graph_node',
+    'graph_map_status',
+    'graph_area',
+] as const;
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -70,12 +80,13 @@ describe('4.1 — the graph tools are registered', () => {
         expect(Object.keys(GRAPH_TOOLS).sort()).toStrictEqual([...NAMES].sort());
     });
 
-    it('the catalogue carries 37 tools, and all the graph tools are among them', () => {
-        // 36 → 37 with `graph_node` (road-to-a-graph-that-feeds-the-gate 3.1).
+    it('the catalogue carries 39 tools, and all the graph tools are among them', () => {
+        // 36 → 37 with `graph_node` (road-to-a-graph-that-feeds-the-gate 3.1);
+        // 37 → 39 with `graph_map_status` + `graph_area` (road-to-a-map-that-draws-itself 5.2).
         // The catalogue is generated from ALLOWLIST by `build_mcp_catalog`, so
         // this count moves only when a real tool is registered.
         const tools = (catalog as { tools: { name: string; implemented_on: string[] }[] }).tools;
-        expect(tools).toHaveLength(37);
+        expect(tools).toHaveLength(39);
         const byName = new Map(tools.map((t) => [t.name, t]));
         for (const n of NAMES) {
             expect(byName.get(n), `${n} missing from the catalogue`).toBeDefined();
@@ -91,7 +102,7 @@ describe('4.1 — the graph tools are registered', () => {
         // has no "read-only subprocess" value, and understating the mechanism is
         // the failure a capability enum exists to prevent.
         expect(ALLOWLIST['graph_impact']?.side_effect).toBe('shell');
-        for (const n of ['graph_tests_for', 'graph_dead', 'graph_query', 'graph_path', 'graph_node']) {
+        for (const n of ['graph_tests_for', 'graph_dead', 'graph_query', 'graph_path', 'graph_node', 'graph_map_status', 'graph_area']) {
             expect(ALLOWLIST[n]?.side_effect, `${n} should be read-only`).toBe('ro');
         }
     });
@@ -147,6 +158,12 @@ describe('4.1 — a fixture session, dispatched through the real ToolCache', () 
         const i = await cache.dispatch('graph_impact', { diff: 'HEAD~1' }, root);
         expect(i['status']).toBe('error');
         expect(i['error']).toMatch(/cannot resolve rev/);
+
+        // No map in this rig: both map readers answer, and say so.
+        const ms = await cache.dispatch('graph_map_status', {}, root);
+        expect(ms['map']).toBe('absent');
+        const ar = await cache.dispatch('graph_area', { area: 'a1' }, root);
+        expect(ar['status']).toBe('unavailable');
 
         const rows = telemetryRows(root);
         const dispatched = rows.filter((r) => NAMES.includes(r['tool_name'] as (typeof NAMES)[number]));
@@ -255,5 +272,34 @@ describe('4.2 — the stdio install hint', () => {
         const c = catalog as { install_hint_stdio: string; description: string };
         expect(c.install_hint_stdio).toBe('agent-config mcp-server');
         expect(c.description).toContain('assumes `agent-config` is on PATH');
+    });
+});
+
+describe('5.2 — the map readers over the wire', () => {
+    it('reports no map until one is drawn, then answers status and one area exactly', async () => {
+        const root = await consumerRig();
+        const cache = new ToolCache();
+
+        const before = await cache.dispatch('graph_map_status', {}, root);
+        expect(before['status']).toBe('unavailable');
+        expect(before['map']).toBe('absent');
+
+        await buildMap(root);
+        const after = await cache.dispatch('graph_map_status', {}, root);
+        expect(after['status']).toBe('ok');
+        expect(after['map_md']).toBe('agents/map/MAP.md');
+        expect(after['files']).toBeGreaterThan(0);
+
+        const byFile = await cache.dispatch('graph_area', { area: 'src/service.ts' }, root);
+        if (byFile['status'] === 'ok') {
+            expect((byFile['files'] as Array<{ path: string }>).map((f) => f.path)).toContain('src/service.ts');
+        } else {
+            // A file the map holds outside every area is refused with the reason, never guessed.
+            expect(byFile['status']).toBe('refused');
+            expect(String(byFile['refusal'])).toMatch(/belongs to no area/);
+        }
+
+        const unknown = await cache.dispatch('graph_area', { area: 'no such area' }, root);
+        expect(unknown['status']).toBe('refused');
     });
 });
