@@ -38,6 +38,13 @@ export const HOOK_CHUNKS = Object.freeze([
         outfile: 'dist/hooks/chat_history.chunk.cjs',
         external: Object.freeze(['yaml']),
     }),
+    // Bound on `instructions_loaded` alone, which the host fires once per
+    // loaded file — a chunk keeps that one narrow event off every other
+    // dispatch's parse.
+    Object.freeze({
+        entry: 'src/scripts/hooks/instructions_observer_hook.ts',
+        outfile: 'dist/hooks/instructions_observer.chunk.cjs',
+    }),
 ]);
 
 /**

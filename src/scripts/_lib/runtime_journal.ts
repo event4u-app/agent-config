@@ -248,18 +248,18 @@ export const RECORDED_EVENTS: ReadonlySet<string> = new Set([
     'stop',
     'pre_compact',
     'agent_error',
-    'subagent_start',
-    'subagent_stop',
+    'subagent_start', 'subagent_stop',
+    'instructions_loaded',
 ]);
 
 /**
- * Members deliberately NOT recorded, each with the reason — silence about an
- * event is not coverage.
+ * Members deliberately NOT recorded, each with the reason — silence is not coverage.
+ * "Recorded" means accepted, not bound: see the manifest's `instructions_loaded` row.
  *
- * **Currently empty, and the emptiness is the finding.** All ten members of the
- * vocabulary are recordable: the journal stores what the dispatcher hands it
+ * **Currently empty, and the emptiness is the finding.** All eleven members of
+ * the vocabulary are recordable: the journal stores what the dispatcher hands it
  * and has no per-event exclusion. The value of the partition is therefore not
- * what it excludes today but that an eleventh member cannot arrive without a
+ * what it excludes today but that a twelfth member cannot arrive without a
  * decision — the coverage test fails until it is placed in one set or the
  * other, with a reason if it lands here.
  */

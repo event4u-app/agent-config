@@ -118,8 +118,8 @@ export const EVENT_VOCABULARY: ReadonlySet<string> = new Set([
   "stop",
   "pre_compact",
   "agent_error",
-  "subagent_start",
-  "subagent_stop",
+  "subagent_start", "subagent_stop",
+  "instructions_loaded",
 ]);
 
 const _SEVERITY_BY_EXIT: Record<number, string> = {

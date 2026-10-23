@@ -68,6 +68,10 @@ export const LAZY_CONCERNS: Readonly<Record<string, { readonly chunk: string; re
             chunk: 'chat_history.chunk.cjs',
             source: path.join('..', 'chat_history'),
         }),
+        'src/scripts/hooks/instructions_observer_hook.ts': Object.freeze({
+            chunk: 'instructions_observer.chunk.cjs',
+            source: 'instructions_observer_hook',
+        }),
     });
 
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;

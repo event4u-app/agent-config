@@ -46,19 +46,20 @@
  * the observer has written since. A failure that also prevents writing the mark
  * — the machine root itself unwritable — leaves none.
  *
- * NOT YET BOUND. No manifest row runs this concern, and it is not in the
- * dispatcher's concern registry, so it adds nothing to the hook bundle until
- * its binding lands; the binding needs bundle headroom it does not have today.
+ * BOUND ON `claude` ALONE, FROM ITS OWN CHUNK. The manifest runs it on
+ * `instructions_loaded`; the dispatcher loads it through `LAZY_CONCERNS`, so its
+ * body is not inlined into the dispatch bundle. The binding itself is: one
+ * registry row and the event name, 237 bytes (`hook-bundle-budget.json`).
  *
  * KILL SWITCH. `AGENT_CONFIG_INSTRUCTIONS_OBSERVER=off` makes it a no-op without
- * a reinstall; once the binding above lands, removing that one
- * `instructions_loaded` row from `hook_manifest.yaml` and reinstalling removes
- * it entirely. Either is the
+ * a reinstall; removing the one `instructions_loaded` row from
+ * `hook_manifest.yaml` and reinstalling removes it entirely. Either is the
  * response to hook failures, duplicate events, a session-start regression or an
  * unexplained test break.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { event4u_root } from '../_lib/user_global_paths.js';
 import { captureInstructionsLoaded, isSessionFile } from '../_lib/instructions_loaded_event.js';
@@ -168,3 +169,21 @@ export function main(): number {
         return EXIT_ALLOW;
     }
 }
+
+// The spawn fallback runs this file as a script, so it needs an entry; inside a
+// bundle or chunk every module shares one `import.meta.url`, so it must never fire there.
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+function _isCliEntry(): boolean {
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
+        return false;
+    }
+    if (process.argv[1] === undefined) return false;
+    const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
+    if (import.meta.url === argvUrl) return true;
+    try {
+        return fs.realpathSync(fileURLToPath(import.meta.url)) === fs.realpathSync(path.resolve(process.argv[1]));
+    } catch {
+        return false;
+    }
+}
+if (_isCliEntry()) process.exit(main());

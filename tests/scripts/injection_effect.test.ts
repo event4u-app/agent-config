@@ -112,7 +112,8 @@ describe('the committed record and the live manifest', () => {
         const platforms = loadPlatforms(REPO_ROOT);
         expect(boundSlotCount(platforms, 'copilot')).toBe(0);
         expect(Object.keys(platforms['copilot'] ?? {}).sort()).toEqual(['ask', 'fallback_only']);
-        expect(boundSlotCount(platforms, 'claude')).toBe(10);
+        // 11 since `instructions_loaded` (road-to-a-setup-that-decides-itself 1.1).
+        expect(boundSlotCount(platforms, 'claude')).toBe(11);
         expect(boundSlotCount(platforms, 'cowork')).toBe(8);
     });
 
