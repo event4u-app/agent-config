@@ -761,10 +761,10 @@ async function cmdMap(argv: string[]): Promise<number> {
     let rc = 0;
     if (argv.includes('--no-verify')) {
         // A check from an earlier map must not sit beside this one as if it were about it.
-        fs.rmSync(path.join(r.outDir, 'render-check.json'), { force: true });
+        fs.rmSync(path.join(r.outDir, 'map-render.json'), { force: true });
     } else {
         const check = await verifyMap(path.join(r.outDir, 'index.html'));
-        fs.writeFileSync(path.join(r.outDir, 'render-check.json'), `${JSON.stringify(check, null, 2)}\n`);
+        fs.writeFileSync(path.join(r.outDir, 'map-render.json'), `${JSON.stringify(check, null, 2)}\n`);
         const problems = check.viewports
             .flatMap((v) => [
                 ...(v.pageErrors ? [`${v.name}: ${v.pageErrors} page error(s)`] : []),
