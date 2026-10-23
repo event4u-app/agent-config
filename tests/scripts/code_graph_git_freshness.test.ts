@@ -118,6 +118,25 @@ describe('post-merge and post-rewrite refresh', () => {
         expect(calls(dir)).toEqual([EXPECTED]);
     }, 30_000);
 
+    it.each(['post-commit', 'post-checkout', 'post-merge', 'post-rewrite'])(
+        '%s never holds up git: a slow, failing refresh leaves the hook exiting 0 at once',
+        (hook) => {
+            const dir = rig(true);
+            // Only the refresh hangs; the chat-history checkpoint ahead of it is synchronous by design.
+            fs.writeFileSync(
+                path.join(dir, 'agent-config'),
+                '#!/bin/sh\nif [ "$1" = "code-graph" ]; then sleep 5; exit 7; fi\nexit 0\n',
+                { mode: 0o755 },
+            );
+            const args = hook === 'post-checkout' ? ['a', 'b', '1'] : hook === 'post-rewrite' ? ['rebase'] : ['0'];
+            const t0 = Date.now();
+            const r = spawnSync('bash', [path.join(stage, hook), ...args], { cwd: dir, encoding: 'utf-8' });
+            expect(r.status).toBe(0);
+            expect(Date.now() - t0).toBeLessThan(3000);
+        },
+        30_000,
+    );
+
     it('skips an amend, which post-commit already covered', () => {
         const dir = rig(true);
         runHook('post-rewrite', dir, ['amend']);
