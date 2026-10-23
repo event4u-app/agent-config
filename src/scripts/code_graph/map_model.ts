@@ -16,7 +16,7 @@ import Graph from 'graphology';
 import louvain from 'graphology-communities-louvain';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 
-import { providerRole } from './providers/index.js';
+import { catalogRow, type CoverageStatus, providerRole } from './providers/index.js';
 import type { ActiveProviderRecord, CodeGraph, ResolvedVia } from './types.js';
 import { isStatedResolution } from './types.js';
 
@@ -58,6 +58,16 @@ export interface MapFile {
     externals: string[];
     /** Test files that cover this file (`tests` relation). */
     tests: number[];
+    /** Convention providers that drew an edge into or out of this file; absent when none did. */
+    linkedBy?: string[];
+}
+
+/** A convention provider active in the graph, with its catalog status. */
+export interface MapProvider {
+    id: string;
+    name: string;
+    status: CoverageStatus | 'uncatalogued';
+    roots: string[];
 }
 
 export interface MapArea {
@@ -119,6 +129,8 @@ export interface MapModel {
     areaEdges: Array<[number, number, number]>;
     diff?: MapDiff;
     artefacts?: MapArtefacts;
+    /** Convention providers active in the graph; absent when none was. */
+    providers?: MapProvider[];
     /** Set by the map writer, not by `buildMapModel`: they need IO. */
     drift?: AreaDrift;
     prOverlap?: PrOverlap;
@@ -511,6 +523,22 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
     const trustedTotal = edges.reduce((n, e) => n + e[2], 0);
     const guessTotal = guessEdges.reduce((n, e) => n + e[2], 0);
 
+    const linkedBy = new Map<number, Set<string>>();
+    const sourceFileOf = new Map(graph.nodes.map((n) => [n.id, n.source_file] as const));
+    const fileIndexOf = (id: string): number | undefined => {
+        const f = sourceFileOf.get(id);
+        return f === undefined ? undefined : idx.get(f);
+    };
+    for (const e of graph.edges) {
+        if (!e.provider_id) continue;
+        for (const i of [fileIndexOf(e.source), fileIndexOf(e.target)]) {
+            if (i === undefined) continue;
+            const set = linkedBy.get(i) ?? new Set<string>();
+            set.add(e.provider_id);
+            linkedBy.set(i, set);
+        }
+    }
+
     const symbolsPerFile = 40;
     const files: MapFile[] = paths.map((p, i) => {
         const syms = (symbolsOf.get(p) ?? []).sort((a, b) => a[2] - b[2] || byPath(a[0], b[0]));
@@ -525,7 +553,12 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
             symbolsOmitted: Math.max(0, syms.length - symbolsPerFile),
             externals: [...(externals.get(i) ?? [])].sort(byPath),
             tests: [...(testsOf.get(i) ?? [])].sort((a, b) => a - b),
+            ...(linkedBy.has(i) ? { linkedBy: [...(linkedBy.get(i) as Set<string>)].sort() } : {}),
         };
+    });
+    const providers: MapProvider[] = (graph.providers ?? []).map((p) => {
+        const row = catalogRow(p.id);
+        return { id: p.id, name: row?.name ?? p.id, status: row?.status ?? 'uncatalogued', roots: p.roots };
     });
 
     let diff: MapDiff | undefined;
@@ -604,6 +637,7 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         guessEdges,
         areas,
         areaEdges,
+        ...(providers.length > 0 ? { providers } : {}),
         ...(diff ? { diff } : {}),
         ...(artefacts ? { artefacts } : {}),
         analyses: {

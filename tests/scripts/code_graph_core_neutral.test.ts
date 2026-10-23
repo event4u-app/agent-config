@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
+import { CATALOG } from '../../src/scripts/code_graph/providers/catalog.js';
 import { PROVIDERS } from '../../src/scripts/code_graph/providers/index.js';
 import {
     GUESS_RESOLVED_VIA,
@@ -42,6 +43,22 @@ describe('the graph core names no framework (ADR-298)', () => {
         for (const p of PROVIDERS) {
             expect(fs.existsSync(path.join(TESTS_DIR, `code_graph_provider_${p.id}.test.ts`)), p.id).toBe(true);
         }
+    });
+
+    it('gives every registered provider a catalog row with an honest status, and nothing more', () => {
+        for (const p of PROVIDERS) {
+            const row = CATALOG.find((r) => r.id === p.id);
+            expect(row, p.id).toBeDefined();
+            expect(['partial', 'verified', 'deep']).toContain(row?.status);
+            expect(row?.relations.length, p.id).toBeGreaterThan(0);
+        }
+        for (const row of CATALOG.filter((r) => r.status !== 'planned')) {
+            expect(PROVIDERS.some((p) => p.id === row.id), row.id).toBe(true);
+            const fixture = row.fixture?.split(' ')[0] ?? '';
+            expect(fs.existsSync(path.resolve(__dirname, '../..', fixture)), `${row.id}: ${fixture}`).toBe(true);
+        }
+        const ids = CATALOG.map((r) => r.id);
+        expect(new Set(ids).size).toBe(ids.length);
     });
 
     it('registers each provider id once', () => {

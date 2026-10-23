@@ -218,7 +218,7 @@ handler, never per file.
       needs a registered real-repository reading. Languages and frameworks not covered appear
       with status `planned`.
       verify: the core-neutrality test asserts one catalog row per registered provider.
-- [ ] **6.2 The map and MCP say which provider drew an edge.** `map.json` / `MAP.md` list the
+- [x] **6.2 The map and MCP say which provider drew an edge.** `map.json` / `MAP.md` list the
       active providers with their catalog status; the viewer's node inspector names the
       provider of each convention edge; `graph_map_status` returns the provider list.
       verify: a map test asserts MAP.md lists the active providers of a Laravel fixture.

@@ -11,6 +11,7 @@ import type { ConventionProvider, ProjectProbe } from './types.js';
 
 export type { ConventionProvider, ProjectProbe, ProviderInput, ProviderResult } from './types.js';
 export { EMPTY_PROBE } from './types.js';
+export { CATALOG, type CatalogRow, catalogRow, type CoverageStatus } from './catalog.js';
 
 /** Registration order is execution order; ids are unique. */
 export const PROVIDERS: readonly ConventionProvider[] = [laravelProvider, expressProvider];

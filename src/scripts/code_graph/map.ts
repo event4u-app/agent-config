@@ -379,6 +379,12 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
             `areas under ${m.thresholds.smallArea} files fold into "small parts" · an area above ` +
             `${Math.round(m.thresholds.maxAreaShare * 100)} % is split once · lists capped at ${m.thresholds.listCap}.`,
         '',
+        m.providers && m.providers.length > 0
+            ? `Convention providers: ${m.providers
+                  .map((p) => `${md(p.name)} (${p.status}${p.roots.some((r) => r !== '') ? `, ${p.roots.map((r) => code(r || '.')).join(', ')}` : ''})`)
+                  .join(' · ')} — plus the framework-neutral default.`
+            : 'Convention providers: none detected — only the framework-neutral default ran.',
+        '',
         '',
     ].join('\n');
 

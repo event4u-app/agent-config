@@ -405,6 +405,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
                 trusted_links: m.analyses.trustedEdges,
                 guess_share: m.analyses.guessShare,
                 request_paths: m.analyses.requestPathsTotal,
+                providers: (m.providers ?? []).map((p) => `${p.id} (${p.status})`),
                 largest_areas: m.areas.slice(0, 5).map((a) => `${a.id} ${a.name} (${a.files.length})`),
                 map_md: 'agents/map/MAP.md',
                 index_html: 'agents/map/index.html',

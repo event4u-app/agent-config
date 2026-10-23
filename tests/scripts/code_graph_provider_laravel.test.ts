@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
+import { renderMapMd } from '../../src/scripts/code_graph/map.js';
 import { buildMapModel } from '../../src/scripts/code_graph/map_model.js';
 import type { CodeGraph } from '../../src/scripts/code_graph/types.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
@@ -207,5 +208,17 @@ describe('the request path on the map (4.4)', () => {
         const tablesOf = (route: string): string[] | undefined => m.analyses.requestPaths.find((x) => x.route === route)?.tables;
         expect(tablesOf('GET /library/books')).toEqual(['books']);
         expect(tablesOf('GET /library/chapters')).toEqual(['book_chapters']);
+    });
+});
+
+describe('the map names the provider (6.2)', () => {
+    it('lists the active provider with its catalog status and marks the files it linked', () => {
+        const m = buildMapModel(graph);
+        expect(m.providers).toEqual([{ id: 'laravel', name: 'Laravel', status: 'verified', roots: [''] }]);
+        const routes = m.files.find((f) => f.path === 'routes/web.php');
+        expect(routes?.linkedBy).toEqual(['laravel']);
+        expect(m.files.find((f) => f.path === 'app/Support/Permission.php')?.linkedBy).toBeUndefined();
+        const md = renderMapMd(m, { title: 'Map', commit: 'x', state: 'fresh', summary: '' });
+        expect(md).toContain('Convention providers: Laravel (verified) — plus the framework-neutral default.');
     });
 });
