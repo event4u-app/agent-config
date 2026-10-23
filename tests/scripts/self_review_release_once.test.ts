@@ -5,9 +5,11 @@
  * WHY THIS EXISTS. `release/*` branches cannot carry reviewable code:
  * `check_release_pr_shape` admits only the version-bump allowlist plus the
  * findings ledger. So a second review there re-reads an unchanged diff and
- * returns new opinions rather than new defects, and `ingest-release-ledger`
- * appends them. Dispositions can only be recorded by a commit; a commit is a
- * push; a push starts another review. There is no exit state.
+ * returns new opinions rather than new defects. Until 2026-10-22 a job
+ * appended them to the ledger, and dispositions could only be recorded by a
+ * commit; a commit is a push; a push starts another review. There was no exit
+ * state. That job is gone with every release review gate, and the skip stays
+ * because a second review of an unchanged diff still buys nothing.
  *
  * MEASURED on `release/16.0.0`, 2026-09-12: the cut's ingest carried 39
  * findings, nine blocking ones were adjudicated and pushed, and the review that
