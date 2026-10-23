@@ -6,7 +6,7 @@ visibility: internal
 sub: map
 cluster: project
 skills: [code-intelligence]
-description: Draw the project map into agents/map/ — areas, files, links, offline
+description: Draw the code map into agents/map/
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."

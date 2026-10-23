@@ -379,10 +379,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
     graph_map_status: {
         name: 'graph_map_status',
         side_effect: 'ro',
-        description:
-            'Whether this project has a map (`agent-config code-graph map`), how big it is and how ' +
-            'fresh: graph state, the commit it was drawn at, file / area / link counts and the path ' +
-            'to MAP.md. Read it before orienting in an unfamiliar repository.',
+        description: 'Is there a code map (agents/map/)? Its freshness, counts and MAP.md path.',
         input_schema: { type: 'object', properties: {}, additionalProperties: false },
         handler: async (_args, root) => {
             const staleness = graphState(root);
@@ -416,15 +413,12 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
     graph_area: {
         name: 'graph_area',
         side_effect: 'ro',
-        description:
-            'One area of the project map: its files (most used first), hubs, cohesion, what it ' +
-            'depends on outside itself and which areas depend on it. Name the area by id (`a3`), ' +
-            'by exact name, or by a file it contains; anything else is refused with candidates.',
+        description: 'One code-map area by id, exact name or member file: files, hubs, dependencies. Else refused.',
         input_schema: {
             type: 'object',
             required: ['area'],
             properties: {
-                area: { type: 'string', description: 'Area id (`a3`), exact area name, or a repo-relative file path.' },
+                area: { type: 'string' },
             },
             additionalProperties: false,
         },

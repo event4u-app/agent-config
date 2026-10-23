@@ -604,10 +604,10 @@ are excluded.
 | command | [`profile-activate`](../dist/agent-src/commands/profile/activate.md) | cluster: profile | Activate a session profile — surface only the named profile/pack closure plus core artefacts, no persistence |
 | command | [`profile-deactivate`](../dist/agent-src/commands/profile/deactivate.md) | cluster: profile | Deactivate the session profile — clear the overlay (or drop named packs) so the full surface returns |
 | command | [`profile-show`](../dist/agent-src/commands/profile/show.md) | cluster: profile | Show the active session profile — active packs and surfaced/hidden command+skill counts (observability surface) |
-| command | [`project`](../dist/agent-src/commands/project.md) | cluster: project | Project orchestrator — routes to analyze (full audit), health (read-only status check) and map (code map) |
+| command | [`project`](../dist/agent-src/commands/project.md) | cluster: project | Project orchestrator — routes to analyze (full audit) and health (read-only status check) |
 | command | [`project-analyze`](../dist/agent-src/commands/project/analyze.md) | cluster: project | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
 | command | [`project-health`](../dist/agent-src/commands/project/health.md) | cluster: project | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |
-| command | [`project-map`](../dist/agent-src/commands/project/map.md) | cluster: project | Draw the project map into agents/map/ — areas, files, links, offline |
+| command | [`project-map`](../dist/agent-src/commands/project/map.md) | cluster: project | Draw the code map into agents/map/ |
 | command | [`refine-ticket`](../dist/agent-src/commands/refine-ticket.md) |  | Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt |
 | command | [`research`](../dist/agent-src/commands/research.md) | cluster: research | Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans. |
 | command | [`research-deep`](../dist/agent-src/commands/research/deep.md) | cluster: research | Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths. |
