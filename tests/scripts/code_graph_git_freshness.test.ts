@@ -139,6 +139,29 @@ describe('post-checkout refresh', () => {
     }, 30_000);
 });
 
+describe('post-merge and post-rewrite refresh', () => {
+    it('refreshes after a merge — a fast-forward `git pull` fires post-merge and nothing else', () => {
+        const dir = rig(true);
+        runHook(path.join(stage, 'post-merge'), dir, ['0']);
+        settle(dir);
+        expect(refreshCount(dir)).toBe(1);
+    }, 30_000);
+
+    it('refreshes after a finished rebase', () => {
+        const dir = rig(true);
+        runHook(path.join(stage, 'post-rewrite'), dir, ['rebase']);
+        settle(dir);
+        expect(refreshCount(dir)).toBe(1);
+    }, 30_000);
+
+    it('skips an amend, which post-commit already covered', () => {
+        const dir = rig(true);
+        runHook(path.join(stage, 'post-rewrite'), dir, ['amend']);
+        settle(dir, 800);
+        expect(refreshCount(dir)).toBe(0);
+    }, 30_000);
+});
+
 describe('the index across a two-branch merge', () => {
     it('merges with no conflict markers, because git never tracks the index', () => {
         // 1.3 asks for a union merge driver for the index. There is nothing for

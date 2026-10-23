@@ -619,8 +619,14 @@ echo "✅  Auto-sync block appended to post-merge / post-checkout hooks." >&2
 #
 # road-to-a-graph-that-is-shipped 1.3. A code graph goes stale the moment a
 # commit lands, and the only thing that knew were the reader — after it had
-# already answered from a stale index. These two hooks close that without a
+# already answered from a stale index. These hooks close that without a
 # resident process: git tells us HEAD moved, and a detached child rebuilds.
+#
+# Four hooks, because HEAD moves through four doors (measured with a probe
+# repo): a commit fires post-commit, a branch switch post-checkout, a
+# fast-forward `git pull` ONLY post-merge, and a rebase post-checkout at its
+# START and post-rewrite at its end. Without the last two, `git pull` left the
+# graph stale and a rebase refreshed against an intermediate HEAD.
 #
 # Four properties, each load-bearing:
 #
@@ -657,6 +663,14 @@ if [ "${3:-1}" = "0" ]; then
 fi
 EOF
     fi
+    if [ "$name" = "post-rewrite" ]; then
+        cat >> "$HOOKS_DIR/$name" << 'EOF'
+# An amend already fired post-commit; only a finished rebase is news here.
+if [ "${1:-}" != "rebase" ]; then
+    exit 0
+fi
+EOF
+    fi
     cat >> "$HOOKS_DIR/$name" << 'EOF'
 cg_cache="agents/runtime/state/code-graph-v1.json"
 cg_lock="agents/runtime/state/code-graph-refresh.lock"
@@ -688,4 +702,6 @@ EOF
 
 append_code_graph_refresh_block "post-commit"
 append_code_graph_refresh_block "post-checkout"
-echo "✅  Code-graph refresh block appended to post-commit / post-checkout hooks." >&2
+append_code_graph_refresh_block "post-merge"
+append_code_graph_refresh_block "post-rewrite"
+echo "✅  Code-graph refresh block appended to post-commit / post-checkout / post-merge / post-rewrite hooks." >&2
