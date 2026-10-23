@@ -7,6 +7,7 @@ import type { FileRole } from '../map_model.js';
 import type { ActiveProviderRecord } from '../types.js';
 import { expressProvider } from './express.js';
 import { fastapiProvider } from './fastapi.js';
+import { flaskProvider } from './flask.js';
 import { laravelProvider } from './laravel.js';
 import type { ConventionProvider, ProjectProbe } from './types.js';
 
@@ -18,6 +19,7 @@ export const PROVIDERS: readonly ConventionProvider[] = [
     laravelProvider,
     expressProvider,
     fastapiProvider,
+    flaskProvider,
 ];
 
 /** Every marker basename a registered provider asks the probe to record. */
