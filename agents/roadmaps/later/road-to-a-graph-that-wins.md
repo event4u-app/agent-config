@@ -97,9 +97,13 @@ tracked.
 
 ## Phase 1 — Reach, scoped (each language with fixture + corpus class)
 - [ ] 1.1 Wire from the shipped bundle: vue, python, go, java (php/ts/js are wired).
+      **Moved 2026-10-23 to `road-to-a-map-that-draws-itself` 6.1 (grammars) and 4.2 (Blade
+      directive scan); flipped here when that roadmap lands them.**
       Blade via a directive scanner (`@include/@extends/@component/@livewire`, `<x-…>`),
       `resolved_via: directive-scan`; a compiled grammar is optional and later.
 - [ ] 1.2 Relations `route` (route table → handler) and `depends_on` (manifests); the
+      **Laravel half moved 2026-10-23 to `road-to-a-map-that-draws-itself` Phase 4;
+      `depends_on` stays here.**
       Laravel overlay statically: routes → `Controller@method`, Blade → view nodes,
       Eloquent relation methods → model edges, migrations → table nodes.
       verify: fixture app; `path "GET /invoices" "Invoice"` resolves route → controller →

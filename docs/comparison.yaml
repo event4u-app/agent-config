@@ -100,11 +100,11 @@ rows:
       already do, and you cannot tell which channels actually work because the
       capability was claimed rather than measured.
 
-  - claim: "A code-intelligence engine was built natively, measured against plain disciplined grep, and then permanently defaulted off when it lost — the retrieval null (recall 0.365 vs grep 0.797 on graph-shaped questions) is published, and a deprecation date is on it."
-    our_evidence: "internal/bench/reports/code-graph-vs-grep.md#Verdict — NULL, decisively"
-    their_evidence: "Code-graph / semantic-index retrieval is shipped as a headline capability across this category; a published measurement against a plain-grep control — let alone one that retires the feature the vendor built — is not a standard artifact."
+  - claim: "A code-intelligence engine was built natively and measured against plain disciplined grep, with the losing first run (recall 0.365 vs grep 0.797 on graph-shaped questions) published beside the repaired engine's pre-registered re-runs, which end in TIE on every graph-shaped class — so it ships as an on-demand tool with its measurements, never as a claimed win."
+    our_evidence: "internal/bench/reports/code-graph-vs-grep-inrepo-v2-rerun-2026-09-08.md#TIE, not WIN"
+    their_evidence: "Code-graph / semantic-index retrieval is shipped as a headline capability across this category; a published measurement against a plain-grep control — including the run the vendor's own engine lost — is not a standard artifact."
     checkable: true
     failure_mode: >-
       You adopt an indexing engine on the promise that structure beats search,
-      and nobody ever measured it against the search it replaces — so the index
-      keeps costing build time and staleness risk for retrieval that got worse.
+      and nobody ever measured it against the search it replaces — so you cannot
+      tell whether the index earns its build time and staleness risk.

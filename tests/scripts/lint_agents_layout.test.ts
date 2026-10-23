@@ -98,6 +98,8 @@ describe('lint_agents_layout — ported pytest suite (helpers)', () => {
                 '.event4u-bridge.yml',
                 '.gitkeep',
                 'knowledge',
+                // The code-graph map, local-only and rebuildable (ADR-297).
+                'map',
                 'memory',
                 // Consumer-scoped because the drafting skill runs consumer-side:
                 // learning-to-rule-or-skill writes agents/proposals/<id>.md there

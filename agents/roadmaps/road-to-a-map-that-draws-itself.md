@@ -83,21 +83,23 @@ target** here, never a reason to withhold the capability.
 
 ## Phase 0 — Records first, so nothing below fights the tree
 
-- [ ] **0.1 ADR: derived views may live in `agents/map/`.** A new ADR amends ADR-124 Class A's
+- [x] **0.1 ADR: derived views may live in `agents/map/`.** A new ADR amends ADR-124 Class A's
   state clause: a Class-A engine may also write *human-facing derived views* to a registered,
   gitignored `agents/map/`, while the index stays in `agents/runtime/state/`. It carries the
   per-dependency justification ADR-124 requires for the packages of 2.6 and the vendored viewer of
   3.1. The owner asked for the map in `agents/` (directive above).
   verify: `./scripts-run src/scripts/adr_cite_check ADR-124` lists the amendment.
-- [ ] **0.2 Layout contract row.** `docs/contracts/agents-layout.md` gains
+- [x] **0.2 Layout contract row.** `docs/contracts/agents-layout.md` gains
   `map/ | both | local-only (gitignored) | rebuildable | code-graph map`; `map` joins
   `ALLOWED_SOURCE_DIRS` and `src/config/gitignore-block.txt` in the same change.
   verify: the layout lint is green on a fixture with `agents/map/`.
-- [ ] **0.3 Correct the stale claim (D11).** Rewrite `comparison.yaml:103` to what is true now.
+- [x] **0.3 Correct the stale claim (D11).** Rewrite `comparison.yaml:103` to what is true now.
   verify: `grep -c "permanently defaulted off" docs/comparison.yaml` → 0.
-- [ ] **0.4 Name check.** `/map` against the material hosts' built-in commands; fall back to
+- [x] **0.4 Name check.** `/map` against the material hosts' built-in commands; fall back to
   `/code-map` on a collision. The CLI stays in its family: `agent-config code-graph map`.
-- [ ] **0.5 Mark the pulled rows.** In `later/road-to-a-graph-that-wins`, 1.1 and 1.2 are marked
+  Result: no collision — `map` is absent from `src/scripts/_lib/claude_builtin_names.ts`, the
+  pinned host fixtures and the package's own command names; `/map` stays.
+- [x] **0.5 Mark the pulled rows.** In `later/road-to-a-graph-that-wins`, 1.1 and 1.2 are marked
   moved to this roadmap.
 
 ## Phase 1 — The engine tells the truth in a consumer project

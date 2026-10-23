@@ -152,6 +152,12 @@
 /agents/runtime/state/code-graph-v1.sqlite3
 /agents/runtime/state/code-graph-refresh.lock/
 
+# Agent config — the code-graph map (`agent-config code-graph map`): a
+# derived, rebuildable view of the index under agents/runtime/state/, rewritten
+# on every refresh. Local-only by default (ADR-297); a project that wants to
+# commit its map removes this line.
+/agents/map/
+
 # Agent config — Tier 1 hook + wizard runtime state (machine-generated,
 # regenerated on demand, never committed). Holds the dispatcher lock,
 # per-rule hook state (context-hygiene, verify-before-complete,
