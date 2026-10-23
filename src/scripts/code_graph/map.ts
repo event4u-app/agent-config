@@ -23,7 +23,15 @@ import { write_atomic } from '../_lib/fs_atomic.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo } from './build.js';
 import { computeVerdict, graphState, NATIVE_CACHE_REL } from './detect.js';
-import { buildMapModel, type FileRole, type MapModel } from './map_model.js';
+import {
+    areaDrift,
+    buildMapModel,
+    type FileRole,
+    type MapModel,
+    type OutcomeEvent,
+    outcomeScores,
+    prOverlap,
+} from './map_model.js';
 import type { CodeGraph } from './types.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -120,15 +128,29 @@ async function artefactGraph(root: string): Promise<MapInputsArtefacts | null> {
 }
 type MapInputsArtefacts = NonNullable<Parameters<typeof buildMapModel>[1]>['artefacts'];
 
+function isGitRepo(root: string): boolean {
+    try {
+        execFileSync('git', ['-C', root, 'rev-parse', '--is-inside-work-tree'], {
+            env: hardenedSpawnEnv(),
+            stdio: ['ignore', 'ignore', 'ignore'],
+        });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 /** The graph the map is drawn from: built when absent, updated when behind. */
 async function loadOrBuildGraph(root: string, cachePath: string): Promise<{ graph: CodeGraph; built: boolean }> {
     const verdict = computeVerdict(root, cachePath).verdict;
     // `edited` — an uncommitted change to an indexed file — reads FRESH to the
     // commit-based verdict, and a map drawn from it would show the old code.
-    if (verdict === 'FRESH' && fs.existsSync(cachePath) && graphState(root, cachePath) === 'fresh') {
+    // Outside a git repository there is nothing to compare against at all, so
+    // freshness is unknowable and the incremental build decides per file.
+    if (verdict === 'FRESH' && fs.existsSync(cachePath) && isGitRepo(root) && graphState(root, cachePath) === 'fresh') {
         return { graph: JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as CodeGraph, built: false };
     }
-    const { graph } = await buildFromRepo(root, cachePath, { update: verdict === 'STALE' });
+    const { graph } = await buildFromRepo(root, cachePath, { update: fs.existsSync(cachePath) });
     return { graph, built: true };
 }
 
@@ -155,9 +177,47 @@ export function diffFiles(root: string, rev: string): string[] | null {
     }
 }
 
+/** Where `code-graph outcome` records which files a session found useful — local, never sent anywhere. */
+export const OUTCOMES_REL = path.join('agents', 'runtime', 'state', 'map-outcomes.jsonl');
+
+export function readOutcomes(root: string): OutcomeEvent[] {
+    try {
+        return fs
+            .readFileSync(path.join(root, OUTCOMES_REL), 'utf-8')
+            .split('\n')
+            .filter(Boolean)
+            .map((l) => JSON.parse(l) as OutcomeEvent)
+            .filter((e) => typeof e.path === 'string' && (e.outcome === 'useful' || e.outcome === 'dead-end'));
+    } catch {
+        return [];
+    }
+}
+
+export function recordOutcome(root: string, file: string, outcome: OutcomeEvent['outcome'], at: Date = new Date()): void {
+    const p = path.join(root, OUTCOMES_REL);
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    const rel = path.relative(root, path.resolve(file));
+    fs.appendFileSync(p, `${JSON.stringify({ path: rel.split(path.sep).join('/'), outcome, at: at.toISOString() })}\n`);
+}
+
+/** Open PRs and their files via `gh`; null when `gh` is absent or refuses. */
+export function openPrs(root: string): Array<{ number: number; title: string; files: string[] }> | null {
+    try {
+        const out = execFileSync(
+            'gh',
+            ['pr', 'list', '--state', 'open', '--limit', '50', '--json', 'number,title,files'],
+            { cwd: root, env: hardenedSpawnEnv(), encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 30_000 },
+        );
+        const rows = JSON.parse(out) as Array<{ number: number; title: string; files?: Array<{ path: string }> }>;
+        return rows.map((r) => ({ number: r.number, title: r.title, files: (r.files ?? []).map((f) => f.path) }));
+    } catch {
+        return null;
+    }
+}
+
 export async function buildMap(
     root: string,
-    opts: { outDir?: string; cachePath?: string; diffRev?: string } = {},
+    opts: { outDir?: string; cachePath?: string; diffRev?: string; prs?: boolean } = {},
 ): Promise<MapBuildResult> {
     const outDir = opts.outDir ?? path.join(root, MAP_DIR_REL);
     const cachePath = opts.cachePath ?? path.join(root, NATIVE_CACHE_REL);
@@ -174,6 +234,17 @@ export async function buildMap(
         ...(diff ? { diff } : {}),
         ...(artefacts ? { artefacts } : {}),
     });
+    const previous = readMapAt(outDir);
+    if (previous) {
+        const drift = areaDrift(previous.model, model);
+        if (drift) model.drift = drift;
+    }
+    const scores = outcomeScores(model, readOutcomes(root));
+    if (scores.length) model.outcomes = scores;
+    if (opts.prs) {
+        const prs = openPrs(root);
+        if (prs) model.prOverlap = prOverlap(model, prs);
+    }
     const meta: MapMeta = {
         title: `Map of ${path.basename(root)}`,
         commit: gitHead(root),
@@ -249,6 +320,41 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
     ].join('\n');
 
     const sections: Array<[string, string]> = [];
+    const areaLabel = (i: number): string => `${m.areas[i]?.id ?? ''} ${md(m.areas[i]?.name ?? '')}`;
+
+    if (m.drift) {
+        const d = m.drift;
+        sections.push([
+            'Since the last map',
+            [
+                '## Since the last map',
+                '',
+                ...d.changed.slice(0, 10).map(([a, g, l]) => `- ${areaLabel(a)}: +${g} / −${l} files`),
+                ...d.appeared.slice(0, 10).map((a) => `- new: ${areaLabel(a)}`),
+                ...d.split.slice(0, 10).map(([name, parts]) => `- split: \`${md(name)}\` → ${parts.map(areaLabel).join(', ')}`),
+                ...d.merged.slice(0, 10).map(([a, names]) => `- merged into ${areaLabel(a)}: ${names.map((n) => `\`${md(n)}\``).join(', ')}`),
+                ...d.vanished.slice(0, 10).map((name) => `- gone: \`${md(name)}\``),
+                '',
+            ].join('\n'),
+        ]);
+    }
+
+    if (m.prOverlap) {
+        const o = m.prOverlap;
+        sections.push([
+            'Open PRs',
+            [
+                '## Open PRs by area',
+                '',
+                `${o.prs.length} open PR(s). Two PRs in the same area are a merge-order risk — advisory only.`,
+                '',
+                ...(o.conflicts.length
+                    ? o.conflicts.slice(0, m.thresholds.listCap).map(([a, b, areas]) => `- #${a} and #${b} share ${areas.map(areaLabel).join(', ')}`)
+                    : ['- no two open PRs touch the same area']),
+                '',
+            ].join('\n'),
+        ]);
+    }
 
     if (m.diff) {
         const d = m.diff;
@@ -586,7 +692,11 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
 
 /** The map a previous `code-graph map` wrote, or null when there is none. */
 export function readMap(root: string): { meta: MapMeta; model: MapModel } | null {
-    const p = path.join(root, MAP_DIR_REL, 'map.json');
+    return readMapAt(path.join(root, MAP_DIR_REL));
+}
+
+function readMapAt(dir: string): { meta: MapMeta; model: MapModel } | null {
+    const p = path.join(dir, 'map.json');
     try {
         return JSON.parse(fs.readFileSync(p, 'utf-8')) as { meta: MapMeta; model: MapModel };
     } catch {

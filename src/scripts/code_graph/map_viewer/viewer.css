@@ -10,6 +10,8 @@
     --accent: #2f5bd3;
     --focus: #2f5bd3;
     --change: #d1495b;
+    --good: #2e8b57;
+    --contested: #d98b1d;
 }
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme='light']) {
@@ -24,6 +26,8 @@
         --accent: #8aa8ff;
         --focus: #8aa8ff;
         --change: #ff7a8a;
+        --good: #5fd39a;
+        --contested: #ffb347;
     }
 }
 :root[data-theme='dark'] {
@@ -38,6 +42,8 @@
     --accent: #8aa8ff;
     --focus: #8aa8ff;
     --change: #ff7a8a;
+    --good: #5fd39a;
+    --contested: #ffb347;
 }
 * {
     box-sizing: border-box;

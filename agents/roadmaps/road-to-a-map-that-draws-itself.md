@@ -240,13 +240,16 @@ Pulled forward from `later/road-to-a-graph-that-wins` 1.2.
 
 ## Phase 7 — The map learns and serves the workflow
 
-- [ ] **7.1 Local outcome overlay.** A file a session cites as useful or as a dead end gets a
+- [x] **7.1 Local outcome overlay.** A file a session cites as useful or as a dead end gets a
   local, time-decayed score in `agents/runtime/state/`, drawn as a ring. Never committed, never
   sent anywhere.
-- [ ] **7.2 Merge-order hint.** For open PRs, the areas each one touches; two PRs sharing an area
+  Result: `agent-config code-graph outcome <path> useful|dead-end` appends to
+  `agents/runtime/state/map-outcomes.jsonl`; the decay (half-life 14 days) is measured from the
+  newest event, not the clock, so the same log draws the same map on any day.
+- [x] **7.2 Merge-order hint.** For open PRs, the areas each one touches; two PRs sharing an area
   are flagged as a merge-order risk. Advisory only.
-- [ ] **7.3 Area drift.** `MAP.md` states which areas grew, split or merged since the last build.
-- [ ] **7.4 `/project analyze` stops duplicating (D9).** It links to the map for structure and
+- [x] **7.3 Area drift.** `MAP.md` states which areas grew, split or merged since the last build.
+- [x] **7.4 `/project analyze` stops duplicating (D9).** It links to the map for structure and
   turns the dual-database shape into a stack-probe result.
 
 ## Phase 8 — Measurement, inside the change

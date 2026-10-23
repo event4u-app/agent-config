@@ -74,6 +74,9 @@ export interface SourceFile {
 /** Recursively list launch-set source files under `root`, path-confined. */
 const CODE_EXTS: ReadonlySet<string> = new Set(Object.keys(EXT_LANG));
 
+/** Generated output under the project root: the engine never reads its own artefacts back. */
+const GENERATED_DIRS: ReadonlySet<string> = new Set(['agents/map', 'agents/runtime']);
+
 export function discoverFiles(root: string, exts: ReadonlySet<string> = CODE_EXTS): string[] {
     const abs = path.resolve(root);
     // Resolve the root itself first: a repo checked out under a symlinked
@@ -97,7 +100,9 @@ export function discoverFiles(root: string, exts: ReadonlySet<string> = CODE_EXT
             const full = path.join(dir, e.name);
             if (e.isSymbolicLink()) continue; // never follow symlinks
             if (e.isDirectory()) {
-                if (!IGNORE_DIRS.has(e.name) && !e.name.startsWith('.')) walk(full);
+                if (IGNORE_DIRS.has(e.name) || e.name.startsWith('.')) continue;
+                if (GENERATED_DIRS.has(path.relative(abs, full).split(path.sep).join('/'))) continue;
+                walk(full);
                 continue;
             }
             if (!e.isFile()) continue;

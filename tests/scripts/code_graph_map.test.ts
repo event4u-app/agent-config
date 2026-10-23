@@ -5,8 +5,8 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
-import { buildMap, diffFiles, embedJson, MAP_TOKEN_BUDGET } from '../../src/scripts/code_graph/map.js';
-import { buildMapModel, staticRole } from '../../src/scripts/code_graph/map_model.js';
+import { buildMap, diffFiles, embedJson, MAP_TOKEN_BUDGET, recordOutcome } from '../../src/scripts/code_graph/map.js';
+import { areaDrift, buildMapModel, outcomeScores, prOverlap, staticRole } from '../../src/scripts/code_graph/map_model.js';
 import { labelProblems } from '../../src/scripts/code_graph/map_verify.js';
 
 let root: string;
@@ -234,5 +234,74 @@ describe('the artefact layer (6.4)', () => {
     it('is absent for a project that is not an agent-config source tree', async () => {
         const r = await buildMap(root);
         expect(r.model.artefacts).toBeUndefined();
+    });
+});
+
+describe('the map learns and serves the workflow (Phase 7)', () => {
+    it('reports no drift for an unchanged tree, so a rebuild keeps its bytes', async () => {
+        const first = await buildMap(root);
+        const again = await buildMap(root);
+        expect(again.model.drift).toBeUndefined();
+        expect(JSON.stringify(again.model)).toBe(JSON.stringify(first.model));
+    });
+
+    it('names an area that grew since the last map', async () => {
+        await buildMap(root);
+        for (let i = 6; i < 9; i++) {
+            write(`src/billing/f${i}.ts`, "import { g0 } from './f0.js';\nimport { g1 } from './f1.js';\n" + `export const h${i} = (): number => g0() + g1();\n`);
+        }
+        const r = await buildMap(root);
+        const grew = r.model.drift?.changed.find(([a]) => r.model.areas[a]?.files.some((f) => r.model.files[f]?.path === 'src/billing/f7.ts'));
+        expect(grew?.[1]).toBeGreaterThan(0);
+        expect(fs.readFileSync(path.join(root, 'agents', 'map', 'MAP.md'), 'utf-8')).toContain('## Since the last map');
+    });
+
+    it('detects a split and a merge by file membership', async () => {
+        const { graph } = await buildFromRepo(root, null);
+        const m = buildMapModel(graph);
+        const billing = m.areas.findIndex((a) => a.files.some((f) => m.files[f]?.path === 'src/billing/f0.ts'));
+        const auth = m.areas.findIndex((a) => a.files.some((f) => m.files[f]?.path === 'src/auth/f0.ts'));
+        const merged = JSON.parse(JSON.stringify(m)) as typeof m;
+        const billingFiles = merged.areas[billing]?.files ?? [];
+        merged.areas[auth]?.files.push(...billingFiles);
+        merged.areas.splice(billing, 1);
+        const asMerge = areaDrift(m, merged);
+        expect(asMerge?.merged.length).toBe(1);
+        const asSplit = areaDrift(merged, m);
+        expect(asSplit?.split.length).toBe(1);
+    });
+
+    it('flags two open PRs that touch the same area, advisory only', async () => {
+        const { graph } = await buildFromRepo(root, null);
+        const m = buildMapModel(graph);
+        const o = prOverlap(m, [
+            { number: 2, title: 'b', files: ['src/billing/f1.ts'] },
+            { number: 1, title: 'a', files: ['src/billing/f0.ts', 'README.md'] },
+            { number: 3, title: 'c', files: ['src/auth/f0.ts'] },
+        ]);
+        expect(o.prs.map((p) => p.number)).toEqual([1, 2, 3]);
+        expect(o.conflicts.map(([a, b]) => [a, b])).toEqual([[1, 2]]);
+    });
+
+    it('decays an outcome against the newest event, not the clock', async () => {
+        const { graph } = await buildFromRepo(root, null);
+        const m = buildMapModel(graph);
+        const i = m.files.findIndex((f) => f.path === 'src/billing/f0.ts');
+        const j = m.files.findIndex((f) => f.path === 'src/auth/f0.ts');
+        const scores = outcomeScores(m, [
+            { path: 'src/billing/f0.ts', outcome: 'useful', at: '2026-01-15T00:00:00Z' },
+            { path: 'src/auth/f0.ts', outcome: 'dead-end', at: '2026-01-01T00:00:00Z' },
+        ]);
+        expect(scores).toEqual([
+            [Math.min(i, j), i < j ? 1 : -0.5],
+            [Math.max(i, j), i < j ? -0.5 : 1],
+        ]);
+    });
+
+    it('records an outcome locally and draws it on the next map', async () => {
+        recordOutcome(root, path.join(root, 'src', 'billing', 'f0.ts'), 'useful');
+        const r = await buildMap(root);
+        const i = r.model.files.findIndex((f) => f.path === 'src/billing/f0.ts');
+        expect(r.model.outcomes).toEqual([[i, 1]]);
     });
 });

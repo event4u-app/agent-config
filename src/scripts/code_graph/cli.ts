@@ -49,6 +49,7 @@
  *
  *   map      [--root P] [--out DIR] [--open]  draw the project map into
  *            [--no-verify] [--diff <rev>]      agents/map/ (ADR-297); renders it
+ *            [--prs]                           (open PRs by area, via gh)
  *                                               at three widths when Playwright
  *                                               is present
  *
@@ -79,7 +80,7 @@ import {
     pickSource,
 } from './detect.js';
 import { suggestVerb } from './intent.js';
-import { buildMap } from './map.js';
+import { buildMap, recordOutcome } from './map.js';
 import { verifyMap } from './map_verify.js';
 import {
     affected,
@@ -743,6 +744,7 @@ async function cmdMap(argv: string[]): Promise<number> {
     const r = await buildMap(root, {
         ...(out ? { outDir: path.resolve(out) } : {}),
         ...(diffRev !== null ? { diffRev } : {}),
+        ...(argv.includes('--prs') ? { prs: true } : {}),
     });
     const rel = path.relative(process.cwd(), r.outDir) || '.';
     const largest = r.model.areas.find((a) => a.kind === 'area');
@@ -783,6 +785,23 @@ async function cmdMap(argv: string[]): Promise<number> {
 }
 
 /**
+ * `outcome <path> useful|dead-end` — record, locally, that a session found a
+ * file useful or a dead end. The map draws the time-decayed result as a ring;
+ * nothing leaves the machine and nothing is committed.
+ */
+function cmdOutcome(argv: string[]): number {
+    const [file, outcome] = argv.filter((a) => !a.startsWith('--') && !isFlagValue(argv, a));
+    if (!file || (outcome !== 'useful' && outcome !== 'dead-end')) {
+        process.stderr.write('usage: code_graph/cli.ts outcome <path> useful|dead-end [--root P]\n');
+        return 2;
+    }
+    const root = resolveRoot(argv);
+    recordOutcome(root, file, outcome);
+    process.stdout.write(`recorded: ${file} ${outcome}\n`);
+    return 0;
+}
+
+/**
  * `suggest-verb "<question>"` (Phase 9 D3) — print the `code_graph` verb a
  * pure regex table thinks best answers a free-text structure question. A
  * standalone hint only: never resolves a graph, never runs a query itself.
@@ -812,9 +831,10 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'dead') return cmdDead(argv.slice(1));
         if (sub === 'suggest-verb') return cmdSuggestVerb(argv.slice(1));
         if (sub === 'map') return await cmdMap(argv.slice(1));
+        if (sub === 'outcome') return cmdOutcome(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|tests-for|untested|dead|suggest-verb|map> [options]\n',
+                'impact|tests-for|untested|dead|suggest-verb|map|outcome> [options]\n',
         );
         return 2;
     } catch (e) {

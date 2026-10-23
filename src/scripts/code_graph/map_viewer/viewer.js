@@ -38,6 +38,9 @@
             requestPaths: 'Request paths',
             change: function (rev, c, i) { return 'This change (' + rev + '): ' + c + ' changed, ' + i + ' linked into a change'; },
             reachedBy: 'Reached by routes',
+            outcome: 'Session outcome (local, decayed)',
+            drift: 'Since the last map',
+            prs: 'Open PRs sharing an area',
             guesses: 'Guessed links',
             state: 'Graph state',
             cohesion: 'Cohesion',
@@ -81,6 +84,9 @@
             requestPaths: 'Request-Pfade',
             change: function (rev, c, i) { return 'Diese Änderung (' + rev + '): ' + c + ' geändert, ' + i + ' hängen daran'; },
             reachedBy: 'Erreicht über Routen',
+            outcome: 'Sitzungsergebnis (lokal, abklingend)',
+            drift: 'Seit der letzten Karte',
+            prs: 'Offene PRs im selben Bereich',
             guesses: 'Geratene Verbindungen',
             state: 'Graph-Stand',
             cohesion: 'Zusammenhalt',
@@ -126,6 +132,9 @@
         model.diff.impacted.forEach(function (i) { impactedSet[i] = true; });
         model.diff.areas.forEach(function (a) { touchedArea[a[0]] = true; });
     }
+
+    var outcomeOf = {};
+    (model.outcomes || []).forEach(function (o) { outcomeOf[o[0]] = o[1]; });
 
     function hue(i) { return Math.round((i * 137.508) % 360); }
     function areaColor(i, alpha) {
@@ -303,6 +312,10 @@
                 ctx.lineWidth = 2.5;
                 ctx.strokeStyle = cssVar('--change');
                 ctx.stroke();
+            } else if (n.kind === 'file' && outcomeOf[n.idx] !== undefined) {
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = outcomeOf[n.idx] > 0 ? cssVar('--good') : cssVar('--contested');
+                ctx.stroke();
             } else if (n.kind === 'file' && impactedSet[n.idx]) {
                 ctx.setLineDash([3, 2]);
                 ctx.lineWidth = 1.5;
@@ -416,6 +429,7 @@
                 [t('area'), f.area >= 0 ? areas[f.area].name : '—'],
                 [t('role'), STR[lang].roles[f.role]],
                 [t('guesses'), String(f.guesses)],
+                [t('outcome'), outcomeOf[state.file] === undefined ? '—' : String(outcomeOf[state.file])],
                 [t('state'), data.meta.state]
             ]);
             fileList(t('usedBy'), inOf[state.file].map(function (x) { return x[0]; }), 30);
@@ -462,6 +476,24 @@
         panel.appendChild(el('h2', null, data.meta.title));
         panel.appendChild(el('div', { class: 'meta' }, data.meta.summary));
         panel.appendChild(el('p', { class: 'meta' }, t('hint')));
+        if (model.drift) {
+            panel.appendChild(el('h3', null, t('drift')));
+            var dr = el('ul', { class: 'plist' });
+            model.drift.changed.slice(0, 10).forEach(function (c) { dr.appendChild(el('li', { class: 'fdir' }, areas[c[0]].name + ' +' + c[1] + ' / −' + c[2])); });
+            model.drift.appeared.slice(0, 10).forEach(function (a) { dr.appendChild(el('li', { class: 'fdir' }, '+ ' + areas[a].name)); });
+            model.drift.split.slice(0, 10).forEach(function (s) { dr.appendChild(el('li', { class: 'fdir' }, s[0] + ' → ' + s[1].length)); });
+            model.drift.merged.slice(0, 10).forEach(function (m) { dr.appendChild(el('li', { class: 'fdir' }, m[1].join(' + ') + ' → ' + areas[m[0]].name)); });
+            model.drift.vanished.slice(0, 10).forEach(function (v) { dr.appendChild(el('li', { class: 'fdir' }, '− ' + v)); });
+            panel.appendChild(dr);
+        }
+        if (model.prOverlap && model.prOverlap.conflicts.length) {
+            panel.appendChild(el('h3', null, t('prs')));
+            var pl = el('ul', { class: 'plist' });
+            model.prOverlap.conflicts.slice(0, 15).forEach(function (c) {
+                pl.appendChild(el('li', { class: 'fdir' }, '#' + c[0] + ' · #' + c[1] + ' → ' + c[2].map(function (a) { return areas[a].name; }).join(', ')));
+            });
+            panel.appendChild(pl);
+        }
         if (model.diff) {
             panel.appendChild(el('h3', null, t('change')(model.diff.rev, model.diff.changed.length, model.diff.impacted.length)));
             var dl = el('ul', { class: 'plist' });

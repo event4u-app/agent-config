@@ -118,6 +118,10 @@ export interface MapModel {
     areaEdges: Array<[number, number, number]>;
     diff?: MapDiff;
     artefacts?: MapArtefacts;
+    /** Set by the map writer, not by `buildMapModel`: they need IO. */
+    drift?: AreaDrift;
+    prOverlap?: PrOverlap;
+    outcomes?: Array<[number, number]>;
     analyses: {
         hubs: number[];
         surprises: Array<[number, number, number]>;
@@ -834,4 +838,136 @@ function tarjan(n: number, edges: Array<[number, number, number]>): number[][] {
         }
     }
     return out;
+}
+
+/** How the areas moved since the previous map (7.3). */
+export interface AreaDrift {
+    /** `[area, files gained, files lost]` for areas that kept their identity but changed size. */
+    changed: Array<[number, number, number]>;
+    /** New areas with no predecessor. */
+    appeared: number[];
+    /** A previous area (by name) whose files now sit in two or more areas. */
+    split: Array<[string, number[]]>;
+    /** A new area that took a large share of two or more previous areas (by name). */
+    merged: Array<[number, string[]]>;
+    /** Previous areas (by name) whose files are now in no area at all. */
+    vanished: string[];
+}
+
+/**
+ * Area membership compared with the previous map, by file path — area ids are
+ * positional and mean nothing across builds. An area "kept its identity" when
+ * its best predecessor holds half or more of its files; a share of 30 % or more
+ * counts as taking part in a split or a merge. Null when nothing moved, so a
+ * rebuild of an unchanged tree writes the same bytes.
+ */
+export function areaDrift(prev: MapModel, next: MapModel): AreaDrift | null {
+    const areaFilesByPath = (m: MapModel): Array<{ name: string; files: Set<string> }> =>
+        m.areas.map((a) => ({ name: a.name, files: new Set(a.files.map((f) => m.files[f]?.path ?? '')) }));
+    const before = areaFilesByPath(prev);
+    const after = areaFilesByPath(next);
+    const overlap = (a: Set<string>, b: Set<string>): number => {
+        let n = 0;
+        for (const x of a) if (b.has(x)) n += 1;
+        return n;
+    };
+    const drift: AreaDrift = { changed: [], appeared: [], split: [], merged: [], vanished: [] };
+    after.forEach((a, i) => {
+        const shares = before
+            .map((b) => ({ name: b.name, n: overlap(a.files, b.files), size: b.files.size }))
+            .filter((x) => x.n > 0)
+            .sort((x, y) => y.n - x.n || (x.name < y.name ? -1 : 1));
+        const big = shares.filter((x) => x.n >= 0.3 * x.size);
+        if (big.length >= 2) {
+            drift.merged.push([i, big.map((x) => x.name)]);
+            return;
+        }
+        const best = shares[0];
+        if (!best || best.n < 0.5 * a.files.size) {
+            drift.appeared.push(i);
+            return;
+        }
+        const gained = a.files.size - best.n;
+        const lost = best.size - best.n;
+        if (gained > 0 || lost > 0) drift.changed.push([i, gained, lost]);
+    });
+    for (const b of before) {
+        const parts = after
+            .map((a, i) => ({ i, n: overlap(b.files, a.files) }))
+            .filter((x) => x.n >= 0.3 * b.files.size);
+        if (parts.length >= 2) drift.split.push([b.name, parts.map((x) => x.i)]);
+        if (after.every((a) => overlap(b.files, a.files) === 0)) drift.vanished.push(b.name);
+    }
+    const moved = drift.changed.length + drift.appeared.length + drift.split.length + drift.merged.length + drift.vanished.length;
+    return moved === 0 ? null : drift;
+}
+
+/** Open pull requests by the areas their files fall in (7.2). */
+export interface PrOverlap {
+    prs: Array<{ number: number; title: string; areas: number[] }>;
+    /** `[pr a, pr b, shared areas]` — a merge-order risk, advisory only. */
+    conflicts: Array<[number, number, number[]]>;
+}
+
+export function prOverlap(
+    m: MapModel,
+    prs: ReadonlyArray<{ number: number; title: string; files: readonly string[] }>,
+): PrOverlap {
+    const idx = new Map(m.files.map((f, i) => [f.path, i] as const));
+    const rows = [...prs]
+        .sort((a, b) => a.number - b.number)
+        .map((p) => {
+            const areas = new Set<number>();
+            for (const f of p.files) {
+                const i = idx.get(f);
+                const a = i === undefined ? -1 : (m.files[i]?.area ?? -1);
+                if (a >= 0) areas.add(a);
+            }
+            return { number: p.number, title: p.title, areas: [...areas].sort((x, y) => x - y) };
+        });
+    const conflicts: Array<[number, number, number[]]> = [];
+    for (let i = 0; i < rows.length; i++) {
+        for (let j = i + 1; j < rows.length; j++) {
+            const a = rows[i] as (typeof rows)[number];
+            const b = rows[j] as (typeof rows)[number];
+            const shared = a.areas.filter((x) => b.areas.includes(x));
+            if (shared.length) conflicts.push([a.number, b.number, shared]);
+        }
+    }
+    return { prs: rows, conflicts };
+}
+
+/** One recorded outcome: a session found `path` useful (+1) or a dead end (-1). */
+export interface OutcomeEvent {
+    path: string;
+    outcome: 'useful' | 'dead-end';
+    /** ISO timestamp. */
+    at: string;
+}
+
+/** Half-life of an outcome, in days. */
+export const OUTCOME_HALF_LIFE_DAYS = 14;
+
+/**
+ * A time-decayed score per file (7.1), decayed relative to the NEWEST event in
+ * the log rather than to the clock, so the same log yields the same scores on
+ * any day. `[file, score]`, rounded, zero scores dropped.
+ */
+export function outcomeScores(m: MapModel, events: readonly OutcomeEvent[]): Array<[number, number]> {
+    if (events.length === 0) return [];
+    const idx = new Map(m.files.map((f, i) => [f.path, i] as const));
+    const newest = Math.max(...events.map((e) => Date.parse(e.at)).filter((t) => Number.isFinite(t)));
+    const score = new Map<number, number>();
+    for (const e of events) {
+        const i = idx.get(e.path);
+        const t = Date.parse(e.at);
+        if (i === undefined || !Number.isFinite(t)) continue;
+        const age = (newest - t) / 86_400_000;
+        const w = 0.5 ** (age / OUTCOME_HALF_LIFE_DAYS) * (e.outcome === 'useful' ? 1 : -1);
+        score.set(i, (score.get(i) ?? 0) + w);
+    }
+    return [...score.entries()]
+        .map(([i, s]) => [i, Math.round(s * 100) / 100] as [number, number])
+        .filter(([, s]) => s !== 0)
+        .sort((a, b) => a[0] - b[0]);
 }
