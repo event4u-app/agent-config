@@ -14,13 +14,14 @@ import { nextjsProvider } from './nextjs.js';
 import { reactRouterProvider } from './react-router.js';
 import { sveltekitProvider } from './sveltekit.js';
 import type { ConventionProvider, ProjectProbe } from './types.js';
+import { typeormProvider } from './typeorm.js';
 import { vueRouterProvider } from './vue-router.js';
 
 export type { ConventionProvider, ProjectProbe, ProviderInput, ProviderResult } from './types.js';
 export { EMPTY_PROBE } from './types.js';
 
 /** Registration order is execution order; ids are unique. */
-export const PROVIDERS: readonly ConventionProvider[] = [laravelProvider, expressProvider, reactRouterProvider, nextjsProvider, nestjsProvider, angularProvider, vueRouterProvider, nuxtProvider, sveltekitProvider];
+export const PROVIDERS: readonly ConventionProvider[] = [laravelProvider, expressProvider, reactRouterProvider, nextjsProvider, nestjsProvider, angularProvider, vueRouterProvider, nuxtProvider, sveltekitProvider, typeormProvider];
 
 /** Every marker basename a registered provider asks the probe to record. */
 export const PROBE_MARKERS: ReadonlySet<string> = new Set(PROVIDERS.flatMap((p) => p.markers ?? []));
