@@ -62,6 +62,12 @@
             "max_bytes": 12000,
             "registered_at": "2026-10-23",
             "derivation": "Measured 11,097 bytes on 2026-10-23 (the observe-only `InstructionsLoaded` capture, its classifier, and the CLI entry the spawn fallback needs). The ceiling is that reading plus about 10 %, rounded, with no growth queued. Bound on `instructions_loaded` alone, so a chunk keeps it off every other dispatch's parse; the observer body ships here, never in the dispatch bundle. The binding that reaches it (one registry row and the event name in three vocabularies, 237 bytes) does sit in the bundle and is the 2026-10-23 raise of `max_bytes` recorded in `raise_log`. Like `chat_history` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the capture."
+        },
+        {
+            "entry": "src/scripts/hooks/code_graph_refresh_hook.ts",
+            "max_bytes": 12500,
+            "registered_at": "2026-10-23",
+            "derivation": "Measured 11,522 bytes on 2026-10-23 (the session-start code-graph refresh concern, the refresh-lock staleness check it shares with `code-graph refresh --single-flight`, and the hardened spawn environment). The ceiling is that reading plus about 8 %, rounded, with no growth queued. Bound on `session_start` alone; a chunk keeps it off every other dispatch's parse, and the dispatch bundle carries only its `LAZY_CONCERNS` row. Like `chat_history` it carries a concern, so a missing chunk falls back to the spawn path and costs latency, never the refresh."
         }
     ],
     "chunks_note": "A chunk is loaded only when a caller needs it, so its bytes are not paid by every dispatch; its ceiling exists so that the move out of dispatch.js stays a measured place rather than an unmeasured one. The gate builds each chunk with the exact esbuild segment `build:hook-chunks` uses for its entry.",

@@ -45,6 +45,10 @@ export const HOOK_CHUNKS = Object.freeze([
         entry: 'src/scripts/hooks/instructions_observer_hook.ts',
         outfile: 'dist/hooks/instructions_observer.chunk.cjs',
     }),
+    Object.freeze({
+        entry: 'src/scripts/hooks/code_graph_refresh_hook.ts',
+        outfile: 'dist/hooks/code_graph_refresh.chunk.cjs',
+    }),
 ]);
 
 /**

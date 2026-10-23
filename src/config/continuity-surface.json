@@ -96,8 +96,8 @@
             "id": "code-graph-refresh.lock",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
-            "reason": "A concurrency lock guarding the code-graph refresh so two checkouts do not rebuild the index at once. Held for the duration of one refresh; it carries no state anyone reads afterwards.",
-            "locus": "src/scripts/install-hooks.sh:634"
+            "reason": "A concurrency lock guarding the code-graph refresh so two checkouts do not rebuild the index at once, taken by the git-hook block and by `code-graph refresh --single-flight`. Its sibling `.owner.json` names the holding pid so a crashed holder's lock can be reclaimed. Held for the duration of one refresh; it carries no state anyone reads afterwards.",
+            "locus": "src/scripts/code_graph/refresh_lock.ts:20"
         },
         {
             "id": "code-graph-v1.json",
