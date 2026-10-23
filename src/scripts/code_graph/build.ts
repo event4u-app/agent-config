@@ -55,6 +55,10 @@ const IGNORE_DIRS = new Set([
     'coverage',
     '.cache',
     'storage',
+    '__pycache__',
+    'venv',
+    'site-packages',
+    'target',
 ]);
 
 export interface SourceFile {
@@ -211,6 +215,49 @@ function resolveSpecifier(fromFile: string, spec: string, fileIds: ReadonlySet<s
     return null;
 }
 
+/**
+ * The file(s) a Python, Java or Go import names, or `[]` when the tree does not
+ * hold it (a standard-library or third-party module).
+ *
+ *   python  `pkg.mod` → `pkg/mod.py` or `pkg/mod/__init__.py` (any source root,
+ *           unique suffix match); `.mod` / `..mod` relative to the importer.
+ *   java    `a.b.C` → `a/b/C.java` (unique suffix match).
+ *   go      `example.com/x/mod` → every non-test `.go` file of the most specific
+ *           directory whose path ends the import path — a Go import names a
+ *           package, and a package is all of its files.
+ *
+ * A suffix that matches two files is refused rather than guessed.
+ */
+export function resolveLangModule(lang: Lang, fromFile: string, spec: string, fileIds: readonly string[]): string[] {
+    const unique = (suffixes: string[]): string[] => {
+        const hits = fileIds.filter((f) => suffixes.some((s) => f === s || f.endsWith(`/${s}`)));
+        return hits.length === 1 ? hits : [];
+    };
+    if (lang === 'python') {
+        const rel = /^(\.+)(.*)$/.exec(spec);
+        if (rel) {
+            let dir = idDirname(fromFile);
+            for (let i = 1; i < (rel[1] as string).length; i++) dir = idDirname(dir);
+            const sub = (rel[2] as string).split('.').filter(Boolean).join('/');
+            const base = sub ? (dir && dir !== '.' ? `${dir}/${sub}` : sub) : dir;
+            return [`${base}.py`, `${base}/__init__.py`].filter((c) => fileIds.includes(c)).slice(0, 1);
+        }
+        const p = spec.split('.').join('/');
+        return unique([`${p}.py`, `${p}/__init__.py`]);
+    }
+    if (lang === 'java') return unique([`${spec.split('.').join('/')}.java`]);
+    if (lang === 'go') {
+        const goFiles = fileIds.filter((f) => f.endsWith('.go') && !f.endsWith('_test.go'));
+        let best = '';
+        for (const f of goFiles) {
+            const d = idDirname(f);
+            if ((spec === d || spec.endsWith(`/${d}`)) && d.length > best.length) best = d;
+        }
+        return best ? goFiles.filter((f) => idDirname(f) === best).sort() : [];
+    }
+    return [];
+}
+
 function push(map: Map<string, string[]>, k: string, v: string): void {
     const arr = map.get(k);
     if (arr) {
@@ -322,6 +369,9 @@ export function buildGraph(
     const nodeKind = new Map(nodes.map((n) => [n.id, n.kind as string]));
     const fileIds = new Set(nodes.filter((n) => n.kind === 'file').map((n) => n.id));
     const scopes = new Map<string, FileScope>();
+    const fileIdList = [...fileIds].sort();
+    /** Go imports name a package of several files; the binding takes the first, these carry the rest. */
+    const extraImports: Array<{ source: string; target: string }> = [];
     for (const ex of extracts) {
         const locals = new Map<string, string[]>();
         for (const n of ex.nodes) if (n.kind !== 'file') push(locals, n.label, n.id);
@@ -356,6 +406,26 @@ export function buildGraph(
                     sym.classByName.get(k(ex.lang, r.targetName)) ??
                     (sym.byName.get(k(ex.lang, r.targetName)) ?? []).find((id) => id.includes('#') && !id.includes('::'));
                 if (hit) imports.set(local, { target: hit, exact: false, via: 'name-lookup' });
+                continue;
+            }
+            if (ex.lang === 'python' || ex.lang === 'java' || ex.lang === 'go') {
+                const hits = resolveLangModule(ex.lang, ex.file, spec, fileIdList);
+                const first = hits[0];
+                if (first === undefined) {
+                    imports.set(local, {
+                        target: r.importKind === 'named' ? `external:${spec}#${r.targetName}` : `external:${spec}`,
+                        exact: true,
+                        via: 'import-specifier',
+                    });
+                    continue;
+                }
+                const member = `${first}#${r.targetName}`;
+                imports.set(local, {
+                    target: r.importKind === 'named' && nodeKind.has(member) ? member : first,
+                    exact: true,
+                    via: 'import-specifier',
+                });
+                for (const extra of hits.slice(1)) extraImports.push({ source: ex.file, target: extra });
                 continue;
             }
             // TIER 0: a relative specifier — the file says where it points.
@@ -473,6 +543,16 @@ export function buildGraph(
             });
         }
         for (const r of ex.rawEdges) resolveRawEdge(r, ex);
+    }
+    for (const x of extraImports) {
+        emit({
+            source: x.source,
+            target: x.target,
+            relation: 'imports',
+            confidence: 'EXTRACTED',
+            resolved_via: 'import-specifier',
+            provider: 'native',
+        });
     }
 
     function resolveRawEdge(r: RawEdge, ex: FileExtract): void {

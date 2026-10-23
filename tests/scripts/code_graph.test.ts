@@ -80,7 +80,7 @@ async function buildFixture() {
 }
 
 describe('ABI smoke — pinned grammars load + parse', () => {
-    for (const lang of ['php', 'typescript', 'javascript'] as const) {
+    for (const lang of ['php', 'typescript', 'javascript', 'python', 'go', 'java'] as const) {
         it(`loads ${lang} at the pinned ABI ${EXPECTED_GRAMMAR_ABI}`, async () => {
             const L = await loadLanguage(lang);
             expect(L.version).toBe(EXPECTED_GRAMMAR_ABI);

@@ -220,8 +220,12 @@ Pulled forward from `later/road-to-a-graph-that-wins` 1.2.
 
 ## Phase 6 — Breadth: languages, SCIP, docs, this repo
 
-- [ ] **6.1 Grammars** (from `later/road-to-a-graph-that-wins` 1.1): python, go, java, vue —
-  each vendored with a fixture and a golden graph.
+- [x] **6.1 Grammars** (from `later/road-to-a-graph-that-wins` 1.1): python, go, java, vue —
+  each vendored with a fixture and a golden graph. *Corrected in execution:* Python, Go and
+  Java are vendored (ABI 14, +1.14 MB, packed-binary manifest rows); Vue needs no grammar — a
+  component's template is blanked and its `<script>` parsed with the TypeScript grammar, line
+  numbers kept. Imports resolve by module path (Python, Java: unique suffix; Go: every non-test
+  file of the package), refused when two files match.
 - [ ] **6.2 SCIP reader (D6).** Read `index.scip` in-process without a native dependency as a
   provider whose edges carry `resolved_via: 'compiler-index'`; a SCIP edge outranks a native
   guess for the same pair.

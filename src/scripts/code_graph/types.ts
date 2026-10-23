@@ -9,7 +9,7 @@
  */
 
 /** Launch set — the stacks this suite's consumers actually run. */
-export type Lang = 'php' | 'typescript' | 'javascript';
+export type Lang = 'php' | 'typescript' | 'javascript' | 'python' | 'go' | 'java';
 
 /** Same scale as `discovery_graph.ts::EdgeConfidence` (reused, not forked). */
 export type EdgeConfidence = 'EXTRACTED' | 'INFERRED' | 'AMBIGUOUS';
@@ -320,6 +320,12 @@ export const EXT_LANG: Readonly<Record<string, Lang>> = {
     '.jsx': 'javascript',
     '.mjs': 'javascript',
     '.cjs': 'javascript',
+    '.py': 'python',
+    '.go': 'go',
+    '.java': 'java',
+    // A single-file component's `<script>` is TypeScript or JavaScript; the
+    // extractor blanks the template and style around it (extract.ts).
+    '.vue': 'typescript',
 };
 
 /** Grammar wasm filename per language (in `tree-sitter-wasms/out/`). */
@@ -327,6 +333,9 @@ export const GRAMMAR_WASM: Readonly<Record<Lang, string>> = {
     php: 'tree-sitter-php.wasm',
     typescript: 'tree-sitter-typescript.wasm',
     javascript: 'tree-sitter-javascript.wasm',
+    python: 'tree-sitter-python.wasm',
+    go: 'tree-sitter-go.wasm',
+    java: 'tree-sitter-java.wasm',
 };
 
 /** The single ABI version the pinned grammar set is built against. */

@@ -20,6 +20,7 @@ import {
     MAX_FILE_BYTES,
     type Relation,
 } from './types.js';
+import { extractGo, extractJava, extractPython } from './extract_more.js';
 import { getParser, nodeHasError, type TsNode } from './loader.js';
 
 export type CallStyle = 'new' | 'free' | 'this' | 'self' | 'static' | 'parent' | 'scoped' | 'dynamic';
@@ -89,7 +90,7 @@ export interface FileExtract {
     parseError: boolean;
 }
 
-function loc(n: TsNode): number[] {
+export function loc(n: TsNode): number[] {
     return [
         n.startPosition.row + 1,
         n.startPosition.column + 1,
@@ -98,7 +99,7 @@ function loc(n: TsNode): number[] {
     ];
 }
 
-function namedChildren(n: TsNode): TsNode[] {
+export function namedChildren(n: TsNode): TsNode[] {
     const out: TsNode[] = [];
     for (let i = 0; i < n.namedChildCount; i += 1) {
         const c = n.namedChild(i);
@@ -117,7 +118,7 @@ function firstNamed(n: TsNode, types: ReadonlySet<string>): TsNode | null {
     return null;
 }
 
-function nameField(n: TsNode): string | null {
+export function nameField(n: TsNode): string | null {
     const nm = n.childForFieldName('name');
     if (nm) return nm.text;
     return null;
@@ -140,7 +141,7 @@ function baseName(raw: string): string {
  * visits deterministically.
  */
 const takenIds = new WeakMap<FileExtract, Map<string, number>>();
-function uniq(out: FileExtract, base: string): string {
+export function uniq(out: FileExtract, base: string): string {
     let seen = takenIds.get(out);
     if (!seen) {
         seen = new Map();
@@ -655,6 +656,27 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
 }
 
 /**
+ * A Vue single-file component reduced to its `<script>` blocks: every
+ * character outside them becomes a space and every newline stays, so the
+ * TypeScript grammar parses the script and every location still points at
+ * the line in the `.vue` file.
+ */
+export function vueScript(source: string): string {
+    const keep = new Array<boolean>(source.length).fill(false);
+    for (const m of source.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) {
+        const start = (m.index as number) + m[0].indexOf('>') + 1;
+        const end = start + (m[1] as string).length;
+        for (let i = start; i < end; i++) keep[i] = true;
+    }
+    let out = '';
+    for (let i = 0; i < source.length; i++) {
+        const c = source[i] as string;
+        out += keep[i] || c === '\n' ? c : ' ';
+    }
+    return out;
+}
+
+/**
  * Extract one file. `source` is the file's UTF-8 content; `relPath` is the
  * repo-relative POSIX path used to build collision-free node ids.
  */
@@ -671,10 +693,13 @@ export async function extractFile(relPath: string, source: string, lang: Lang): 
         return out;
     }
     const parser = await getParser(lang);
-    const tree = parser.parse(source);
+    const tree = parser.parse(relPath.endsWith('.vue') ? vueScript(source) : source);
     try {
         out.parseError = nodeHasError(tree.rootNode);
         if (lang === 'php') extractPhp(tree.rootNode, relPath, out);
+        else if (lang === 'python') extractPython(tree.rootNode, relPath, out);
+        else if (lang === 'java') extractJava(tree.rootNode, relPath, out);
+        else if (lang === 'go') extractGo(tree.rootNode, relPath, out);
         else extractTsJs(tree.rootNode, relPath, out);
     } finally {
         tree.delete(); // delete the tree, never the cached parser (loader.ts)
