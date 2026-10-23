@@ -71,7 +71,7 @@ afterEach(() => {
     delete process.env['AGENT_CONFIG_CODE_GRAPH_REFRESH'];
 });
 
-describe.skipIf(process.platform === 'win32')('code-graph-refresh session concern', () => {
+describe('code-graph-refresh session concern', () => {
     it('spawns one detached single-flight refresh for an opted-in project', () => {
         const cli = optedIn();
         expect(refreshFor(root, fakeSpawn)).toBe('spawned');
@@ -138,19 +138,16 @@ describe.skipIf(process.platform === 'win32')('code-graph-refresh session concer
         expect(resolveCli(root, dir)).toBeNull();
     });
 
-    it.skipIf(process.getuid?.() === 0)('never falls through an uninspectable inner repository to an opted-in outer one', () => {
+    it('never falls through an uninspectable level to an opted-in outer repository', () => {
         optedIn();
+        // `inner` is a FILE, so inspecting `inner/.git` fails with ENOTDIR — an
+        // error other than absence, and one that holds for root as well.
         const inner = path.join(root, 'vendor', 'inner');
-        fs.mkdirSync(path.join(inner, '.git'), { recursive: true });
-        // Without search permission on `inner`, `inner/.git` cannot be inspected (EACCES).
-        fs.chmodSync(inner, 0o600);
-        try {
-            expect(repoRoot(inner)).toBeNull();
-            expect(refreshFor(inner, fakeSpawn)).toBe('not-opted-in');
-            expect(calls).toHaveLength(0);
-        } finally {
-            fs.chmodSync(inner, 0o755);
-        }
+        fs.mkdirSync(path.dirname(inner), { recursive: true });
+        fs.writeFileSync(inner, '');
+        expect(repoRoot(inner)).toBeNull();
+        expect(refreshFor(inner, fakeSpawn)).toBe('not-opted-in');
+        expect(calls).toHaveLength(0);
     });
 
     it('does not pile onto a refresh that already holds the lock', () => {
