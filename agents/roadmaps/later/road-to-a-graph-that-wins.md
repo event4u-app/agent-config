@@ -60,19 +60,32 @@ it is not restated here, so there is one copy of it and it cannot drift.
 
 | Role | Repository | SHA pin | Filled |
 |---|---|---|---|
-| benchmark subject 1 | `event4u-app/data-helpers` (public, MIT) | pinned at registration (2.1) | 2026-10-06, owner |
-| benchmark subject 2 | `event4u-app/capisco` — **admissible only once public under MIT**; until then not cloned and no trace tracked | pinned at registration (2.1) | 2026-10-06, owner (conditional) |
+| benchmark subject 1 | `event4u-app/unopim` — fork of `unopim/unopim` (public, MIT) | pinned at registration (2.1) | 2026-10-23, owner |
+| benchmark subject 2 | `event4u-app/larasend` — fork of `savvyagents/larasend` (public, MIT) | pinned at registration (2.1) | 2026-10-23, owner |
 
-**Owner deviations from the fitness list, 2026-10-06** (programme blocker b4 of
-`road-to-leading-every-row`, `/roadmap:resolve-blockers`). Both subjects are the
-owner's own repositories and neither is a Laravel application: `data-helpers` is a
-framework-agnostic PHP package for Laravel and Symfony (PHPUnit tests, no routes or
-migrations), `capisco` a TypeScript runtime. So the route-trace and model → table
-parts of suite C do not apply to these subjects and are measured where a subject
-has them; callers, change impact, tests-for and the agentic suite F apply in full.
-The owner stated that `capisco` will get an MIT licence; until it is public, its
-row is a name and not a subject, because the traces of both arms are tracked in
-this public repository.
+**Owner choice, 2026-10-23 — replaces the 2026-10-06 rows.** The earlier rows named
+`event4u-app/data-helpers` and `event4u-app/capisco`. Neither is a Laravel application,
+so route-trace and model → table could not be measured on them, and `capisco` is
+private. The owner replaced both with two public Laravel applications under MIT,
+**forked into `event4u-app`** so a pinned SHA survives an upstream deletion, rename or
+force-push. A fork is never edited; a newer upstream state enters only as a new,
+registered pin.
+
+Measured 2026-10-23 on shallow clones, excluding `vendor/` and `node_modules/`
+(`Route::` calls; a resource route counts once although it expands to several):
+
+| Subject | `Route::` calls | Migrations | Eloquent relations | Test files | Frontend |
+|---|---|---|---|---|---|
+| unopim | 483 | 157 | 98 | 805 | Vue inline in Blade (167 files), 24 modular packages |
+| larasend | 93 | 31 | 64 | 45 | Vue SFC 169 · TS 37 |
+
+The pair splits the job on purpose. `unopim` meets the fitness list in full and puts
+routes outside `routes/`, in module packages, which the route overlay has to find.
+`larasend` is little known (about 500 stars against 11k), which lowers the chance that
+suite F measures recall of training data rather than localisation. **Owner deviation:**
+`larasend` falls short of the ≥ 200 routes in the fitness list; suite C's route-trace
+counts are reported per subject rather than pooled, so its smaller route table cannot
+dilute `unopim`'s.
 
 A benchmark subject is a **test subject**, not an idea source: ADR-260 § 5 states
 that `source-confidentiality` governs harvest provenance and does not apply here,
