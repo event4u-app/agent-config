@@ -1,3 +1,5 @@
+<!-- evidence-type: analysis -->
+
 # Ratification review — binding the InstructionsLoaded observer (road-to-a-setup-that-decides-itself step 1.1)
 
 You are an independent reviewer for a change in the `event4u/agent-config` repository. The change edits files on the ratification gate's hook-plumbing list (`src/scripts/hook_manifest.yaml`, its compiled `hook_manifest.json`, `src/scripts/hooks/dispatch_hook.ts`, `src/config/hook-bundle-budget.json`, `src/config/hook-token-budget.json`), so it needs a two-provider verdict under ADR-268 § 4: an agent may change the hook plumbing but may not ratify its own change.
