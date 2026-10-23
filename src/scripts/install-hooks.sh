@@ -632,11 +632,13 @@ echo "✅  Auto-sync block appended to post-merge / post-checkout hooks." >&2
 #
 #   · BACKGROUND. The refresh is `&`-detached with stdout/stderr closed, so a
 #     commit never waits on a parse. Git's own runtime is unchanged.
-#   · SINGLE-FLIGHT. `mkdir` is atomic on every POSIX filesystem, so of two
-#     concurrent commits exactly one creates the lock and exactly one refresh
-#     runs. This is Risk 3 in the roadmap's register — "git hooks pile up
-#     rebuilds" — and a lock file written with `>` would not have closed it,
-#     because two processes can both truncate-and-write the same path.
+#   · SINGLE-FLIGHT. `refresh --single-flight` takes the engine's own mkdir
+#     lock (code_graph/refresh_lock.ts), the one the session-start concern and
+#     a manual `map` take too, so of two concurrent commits exactly one
+#     rebuilds. This is Risk 3 in the roadmap's register — "git hooks pile up
+#     rebuilds". The hook used to hold its own shell lock; a ratification round
+#     of 2026-10-23 found two lock protocols racing on one directory, so there
+#     is now one, and its stale-lock reclaim is mutex-guarded and re-checked.
 #   · BUDGETED. `--budget-seconds` is the engine's own wall-clock ceiling; a
 #     child that exceeds it is SIGKILLed and the OLD cache is left untouched
 #     (cli.ts's refresh contract). Kill register K7 — never block on a stale
@@ -645,9 +647,8 @@ echo "✅  Auto-sync block appended to post-merge / post-checkout hooks." >&2
 #     exists. Building a graph for someone who never asked for one is the pure
 #     cost Risk 1 names; refreshing one they built is the service.
 #
-# The lock is a directory under the gitignored runtime state, so a crashed
-# child leaves a stale lock that the next refresh clears by age rather than
-# blocking forever.
+# `--map` redraws agents/map/ under the same lock, only for a project that has
+# one (ADR-297).
 
 append_code_graph_refresh_block() {
     local name="$1"
@@ -672,29 +673,9 @@ fi
 EOF
     fi
     cat >> "$HOOKS_DIR/$name" << 'EOF'
-cg_cache="agents/runtime/state/code-graph-v1.json"
-cg_lock="agents/runtime/state/code-graph-refresh.lock"
-if [ -f "$cg_cache" ] && [ -x ./agent-config ]; then
-    # Clear a lock left by a killed child: older than the largest budget any
-    # caller passes, so it cannot race a refresh that is legitimately running.
-    if [ -d "$cg_lock" ]; then
-        if [ -z "$(find "$cg_lock" -maxdepth 0 -mmin -5 2>/dev/null)" ]; then
-            rmdir "$cg_lock" 2>/dev/null || true
-        fi
-    fi
-    # Atomic: exactly one of N concurrent hooks wins this, and the losers do
-    # nothing rather than queueing a second rebuild behind the first.
-    if mkdir "$cg_lock" 2>/dev/null; then
-        (
-            trap 'rmdir "$cg_lock" 2>/dev/null || true' EXIT
-            ./agent-config code-graph refresh --budget-seconds 60 >/dev/null 2>&1 || true
-            # The map follows the index it is drawn from, but only for a
-            # project that asked for one: no agents/map/, no map (ADR-297).
-            if [ -d agents/map ]; then
-                ./agent-config code-graph map --no-verify --no-build >/dev/null 2>&1 || true
-            fi
-        ) >/dev/null 2>&1 &
-    fi
+if [ -f agents/runtime/state/code-graph-v1.json ] && [ -x ./agent-config ]; then
+    ./agent-config code-graph refresh --single-flight --map --budget-seconds 60 \
+        </dev/null >/dev/null 2>&1 &
 fi
 exit 0
 EOF

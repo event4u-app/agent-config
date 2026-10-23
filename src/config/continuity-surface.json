@@ -96,7 +96,7 @@
             "id": "code-graph-refresh.lock",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
-            "reason": "A concurrency lock guarding the code-graph refresh so two checkouts do not rebuild the index at once, taken by the git-hook block and by `code-graph refresh --single-flight`. Its sibling `.owner.json` names the holding pid so a crashed holder's lock can be reclaimed. Held for the duration of one refresh; it carries no state anyone reads afterwards.",
+            "reason": "A concurrency lock guarding the code-graph refresh so two checkouts do not rebuild the index at once, taken by `code-graph refresh --single-flight` (which the git hooks and the session concern run) and by `code-graph map`. Its sibling `.owner.json` names the holding pid so a crashed holder's lock can be reclaimed, and a sibling `.reclaim` directory is the short-lived mutex a reclaim holds. Held for the duration of one refresh; it carries no state anyone reads afterwards.",
             "locus": "src/scripts/code_graph/refresh_lock.ts:24"
         },
         {

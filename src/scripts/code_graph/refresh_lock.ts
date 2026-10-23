@@ -1,20 +1,18 @@
 /**
- * Single-flight lock for `code-graph refresh --single-flight`.
+ * Single-flight lock for `code-graph refresh --single-flight` and `map`.
  *
- * The lock is the SAME directory the git-hook refresh block in
- * `install-hooks.sh` takes with `mkdir`, so a refresh started by a hook and
- * one started by the `code-graph-refresh` session concern exclude each other.
+ * Every producer goes through {@link acquire}: the git-hook refresh block in
+ * `install-hooks.sh` and the `code-graph-refresh` session concern both run
+ * `refresh --single-flight`, so there is one locking protocol, not two.
  * `mkdir` is the primitive because it is atomic on every POSIX filesystem.
  *
- * Ownership is recorded in a SIBLING file, never inside the directory: the
- * shell block clears a stale lock with `rmdir`, which fails on a non-empty
- * directory and would leave that lock held forever.
+ * Ownership is recorded in a SIBLING file, never inside the directory, so the
+ * directory is empty and a single `rmdir`-style removal clears it.
  *
- * A lock is reclaimed only when its owner process is gone, or — for a
- * hook-taken lock, which carries no owner record — when it is older than
- * {@link STALE_LOCK_MS}, matching the shell block's own `-mmin -5` rule. A live
- * owner is never reclaimed on age, and a release removes the lock only while
- * the owner record still carries the releaser's nonce, so a holder that was
+ * A lock is reclaimed only on positive evidence that its owner is gone (see
+ * {@link isStale}); an owner-less lock — a torn owner write — counts as stale
+ * only past {@link STALE_LOCK_MS}. A release removes the lock only while the
+ * owner record still carries the releaser's nonce, so a holder that was
  * reclaimed cannot delete its successor's lock on the way out.
  */
 import { randomBytes } from 'node:crypto';
@@ -81,29 +79,55 @@ export function isStale(lock: string, now: number = Date.now()): boolean {
     }
 }
 
-/** Take the lock, or return null when another refresh holds it. */
-export function acquire(root: string): (() => void) | null {
+function take(lock: string): () => void {
+    const nonce = randomBytes(16).toString('hex');
+    fs.writeFileSync(ownerPath(lock), JSON.stringify({ pid: process.pid, started_at: Date.now(), nonce }));
+    return () => {
+        const owner = readOwner(lock);
+        if (typeof owner === 'string' || owner.nonce !== nonce) return;
+        fs.rmSync(ownerPath(lock), { force: true });
+        fs.rmSync(lock, { recursive: true, force: true });
+    };
+}
+
+/**
+ * Take the lock, or return null when another refresh holds it.
+ *
+ * A stale lock is removed only while holding a second mkdir mutex, and only
+ * after staleness is checked AGAIN under it. A reclaimer that judged the lock
+ * stale and was then overtaken finds the successor's live lock on that second
+ * check and declines, so it can never delete a lock created after it looked.
+ * A reclaim mutex left by a crash inside that short section is never cleared
+ * automatically: stale locks then stay held, which costs freshness, never safety.
+ * `afterStaleCheck` exists for the interleaving test only.
+ */
+export function acquire(root: string, afterStaleCheck?: () => void): (() => void) | null {
     const lock = path.join(root, LOCK_REL);
     fs.mkdirSync(path.dirname(lock), { recursive: true });
-    for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+        fs.mkdirSync(lock);
+        return take(lock);
+    } catch (e) {
+        if (errno(e) !== 'EEXIST' || !isStale(lock)) return null;
+    }
+    afterStaleCheck?.();
+    const mutex = `${lock}.reclaim`;
+    try {
+        fs.mkdirSync(mutex);
+    } catch {
+        return null;
+    }
+    try {
+        if (!isStale(lock)) return null;
+        fs.rmSync(ownerPath(lock), { force: true });
+        fs.rmSync(lock, { recursive: true, force: true });
         try {
             fs.mkdirSync(lock);
-        } catch (e) {
-            if ((e as NodeJS.ErrnoException).code !== 'EEXIST' || attempt > 0 || !isStale(lock)) return null;
-            // Two reclaimers can interleave here and both build. That costs a
-            // duplicate build, never a torn cache: each build publishes by rename.
-            fs.rmSync(ownerPath(lock), { force: true });
-            fs.rmSync(lock, { recursive: true, force: true });
-            continue;
+        } catch {
+            return null;
         }
-        const nonce = randomBytes(16).toString('hex');
-        fs.writeFileSync(ownerPath(lock), JSON.stringify({ pid: process.pid, started_at: Date.now(), nonce }));
-        return () => {
-            const owner = readOwner(lock);
-            if (typeof owner === 'string' || owner.nonce !== nonce) return;
-            fs.rmSync(ownerPath(lock), { force: true });
-            fs.rmSync(lock, { recursive: true, force: true });
-        };
+        return take(lock);
+    } finally {
+        fs.rmSync(mutex, { recursive: true, force: true });
     }
-    return null;
 }

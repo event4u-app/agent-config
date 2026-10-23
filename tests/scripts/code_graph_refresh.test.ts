@@ -107,6 +107,16 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         expect(fs.existsSync(path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock'))).toBe(false);
     });
 
+    it('a manual `map` waits its turn instead of writing beside a running refresh', () => {
+        const lock = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock');
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: process.pid, started_at: Date.now(), nonce: 't' }));
+        const r = runCli(['map', '--root', tmp, '--no-verify']);
+        expect(r.status).toBe(1);
+        expect(r.stderr).toMatch(/a refresh is redrawing the map/);
+        expect(fs.existsSync(path.join(tmp, 'agents', 'map'))).toBe(false);
+    });
+
     it('--map draws no map for a project that never asked for one', () => {
         const out = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-v1.json');
         expect(runCli(['refresh', '--root', tmp, '--map']).status).toBe(0);

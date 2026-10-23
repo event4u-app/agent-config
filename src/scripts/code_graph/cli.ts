@@ -776,7 +776,9 @@ async function cmdRefresh(argv: string[]): Promise<number> {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
         return 1;
     }
-    const release = argv.includes('--single-flight') ? acquireRefreshLock(root) : () => {};
+    // `--map` writes the same files a manual `map` does, so it is never drawn unlocked.
+    const locked = argv.includes('--single-flight') || argv.includes('--map');
+    const release = locked ? acquireRefreshLock(root) : () => {};
     if (release === null) {
         process.stdout.write('another refresh is running — nothing to do\n');
         return 0;
@@ -796,7 +798,7 @@ async function cmdRefresh(argv: string[]): Promise<number> {
         }
         if (rc === HEAD_MOVED) return 1;
         if (rc === 0 && argv.includes('--map') && mapIsBehind(root, out)) {
-            return await cmdMap(['--root', root, '--no-build', '--no-verify']);
+            return await drawMap(['--root', root, '--no-build', '--no-verify']);
         }
         return rc;
     } finally {
@@ -860,6 +862,22 @@ async function cmdMap(argv: string[]): Promise<number> {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
         return 1;
     }
+    // A background refresh may be redrawing the same files; two writers would interleave them.
+    const release = acquireRefreshLock(root);
+    if (release === null) {
+        process.stderr.write('code-graph: a refresh is redrawing the map right now — try again in a moment\n');
+        return 1;
+    }
+    try {
+        return await drawMap(argv);
+    } finally {
+        release();
+    }
+}
+
+/** The map itself; callers hold the refresh lock. */
+async function drawMap(argv: string[]): Promise<number> {
+    const root = resolveRoot(argv);
     const out = flag(argv, '--out');
     const diffRev = flag(argv, '--diff');
     const r = await buildMap(root, {
