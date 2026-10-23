@@ -13,6 +13,7 @@
  */
 import * as path from 'node:path';
 
+import type { SourceFile } from '../../build.js';
 import type { CodeNode } from '../../types.js';
 import { type Kit, lineIndex } from './kit.js';
 
@@ -199,6 +200,8 @@ export interface TemplateRootSpec {
     extensions: readonly string[];
     /** Rewrite a name before lookup (`a.b` → `a/b`). */
     normalize?: (name: string) => string;
+    /** Further template directories for one file, repo-relative (a folder its own source declares). */
+    rootsFor?: (file: SourceFile) => readonly string[];
 }
 
 export function templateRoots(kit: Kit, spec: TemplateRootSpec): number {
@@ -212,7 +215,8 @@ export function templateRoots(kit: Kit, spec: TemplateRootSpec): number {
             const name = spec.normalize ? spec.normalize(raw) : raw;
             const hasExt = /\.[A-Za-z0-9]+$/.test(path.posix.basename(name));
             const hits = new Set<string>();
-            for (const root of kit.roots.flatMap((r) => spec.roots.map((t) => path.posix.join(r, t)))) {
+            const dirs = [...kit.roots.flatMap((r) => spec.roots.map((t) => path.posix.join(r, t))), ...(spec.rootsFor?.(f) ?? [])];
+            for (const root of new Set(dirs)) {
                 for (const c of hasExt ? [path.posix.join(root, name)] : spec.extensions.map((x) => path.posix.join(root, `${name}${x}`))) {
                     if (inventory.has(c)) hits.add(c);
                 }
