@@ -1,12 +1,12 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-10-21T13:10:53.937Z",
-    "git_sha": "d262df67e27014251d366b945f03541800c621f7",
-    "run_url": null,
-    "conditions": "Refresh for the 112 -> 114 cli_help_command_count move: worktree:cleanup and audit:deps register in the same PR that adds them. Re-measured via the pinned method (registry enumeration in src/cli/registry.ts): 114. mcp_public_tool_count carried forward unchanged at 26 (no MCP surface touched).",
+    "recorded_at": "2026-10-23T12:08:41.266Z",
+    "git_sha": "ffe878edc5db4369dd5d2a4ff5547059a297fb6f",
+    "run_url": "https://github.com/event4u-app/agent-config/actions/runs/39950189088",
+    "conditions": "Refresh for the 26 -> 28 mcp_public_tool_count move: the project-map work added two map tools over MCP without refreshing this record. Both values taken from the packed-artifact evaluation of release PR #2599 (clean container, linked run). cli_help_command_count unchanged at 114.",
     "measurements": {
         "cli_help_command_count": 114,
-        "mcp_public_tool_count": 26
+        "mcp_public_tool_count": 28
     }
 }
