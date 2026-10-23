@@ -123,6 +123,20 @@ describe('fs-route (3.4)', () => {
         expect(fsRoutePath('kit/src/routes/blog/+page.svelte', dirs)).toEqual({ verb: 'PAGE', route: '/blog' });
     });
 
+    it('leaves a module whose routes a provider already declared', () => {
+        const page = 'app/api/items/route.ts';
+        const r = conventionsDefault({
+            files: [],
+            paths: ['app/page.tsx', page],
+            nodes: [
+                { id: page, label: page, kind: 'file', source_file: page, source_location: [] },
+                { id: `${page}#route:ROUTE GET /api/items`, label: 'ROUTE GET /api/items', kind: 'route', source_file: page, source_location: [] },
+            ],
+            edges: [],
+        });
+        expect(r.nodes.filter((n) => n.kind === 'route').map((n) => n.label)).toEqual(['PAGE /']);
+    });
+
     it('draws route nodes for a pages tree and none for a routes folder of PHP files', async () => {
         const root = tree({
             'pages/index.tsx': 'export default function Home() { return null; }\n',

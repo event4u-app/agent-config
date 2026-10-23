@@ -197,9 +197,11 @@ export function conventionsDefault(input: DefaultInput): { nodes: CodeNode[]; ed
     if (on['fs-route']) {
         const pageDirs = pageDirectories(input.paths);
         const seen = new Set<string>();
+        // A provider that knows the framework already declared this module's routes.
+        const routedFiles = new Set(input.nodes.filter((n) => n.kind === 'route').map((n) => n.source_file));
         for (const p of input.paths) {
             const r = fsRoutePath(p, pageDirs);
-            if (!r) continue;
+            if (!r || routedFiles.has(p)) continue;
             const id = `${p}#route:${r.verb} ${r.route}`;
             // A provider that knows this framework may already have drawn the page.
             if (seen.has(id) || nodeIds.has(id)) continue;

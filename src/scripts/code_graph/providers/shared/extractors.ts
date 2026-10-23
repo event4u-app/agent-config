@@ -130,7 +130,7 @@ export function fsRoutes(kit: Kit, spec: FsRouteSpec): number {
     let count = 0;
     for (const p of kit.paths) {
         const r = spec.route(p);
-        if (!r) continue;
+        if (!r || routedFiles.has(p)) continue;
         kit.fileNode(p);
         const id = kit.route(p, r.verb, r.path, 1);
         kit.emit(id, p, 'routes-to', 'route-table');
@@ -179,7 +179,15 @@ export function tableMapping(kit: Kit, spec: TableMappingSpec): number {
             if (!cls || cls.kind !== 'class') continue;
             const start = cls.source_location[0] as number;
             const end = (cls.source_location[2] ?? start) as number;
-            const region = lines.slice(Math.max(0, Math.min(line, start) - 1 - 4), end).join('\n');
+            // Up to four lines of decorators above the class — but never past the
+            // end of the class before it, whose own table name would be read.
+            let floor = 0;
+            for (const n of kit.nodeById.values()) {
+                if (n.kind !== 'class' || n.source_file !== f.path || n.id === cls.id) continue;
+                const nEnd = (n.source_location[2] ?? n.source_location[0]) as number;
+                if (nEnd < start && nEnd > floor) floor = nEnd;
+            }
+            const region = lines.slice(Math.max(floor, Math.min(line, start) - 1 - 4), end).join('\n');
             const explicit = spec.tableName ? spec.tableName.exec(region)?.groups?.['name'] : undefined;
             const name = explicit ?? spec.convention?.(cls.label);
             if (!name) continue;

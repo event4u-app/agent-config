@@ -123,6 +123,23 @@ describe('tableMapping', () => {
     });
 });
 
+describe('tableMapping on adjacent entities', () => {
+    it('never reads the table name of the class above', () => {
+        const src = '@Entity\n@Table(name = "first_t")\nclass First {\n}\n@Entity\nclass Second {\n}\n';
+        const k = kitFor({ 'E.java': src }, [sym('E.java', 'First', 'class', 3, 4), sym('E.java', 'Second', 'class', 6, 7)]);
+        tableMapping(k, {
+            exts: ['.java'],
+            entity: /@Entity\b/g,
+            tableName: /@Table\(\s*name\s*=\s*"(?<name>[^"]+)"/,
+            convention: snakePlural,
+        });
+        expect(k.result().edges.map((e) => `${e.source} ${e.target}`).sort()).toEqual([
+            'E.java#First table:first_t',
+            'E.java#Second table:seconds',
+        ]);
+    });
+});
+
 describe('templateRoots', () => {
     it('resolves a rendered name to the one template under a root, and refuses two', () => {
         const src = 'def a():\n    return render_template("home.html")\n\ndef b():\n    return render_template("dup.html")\n';
