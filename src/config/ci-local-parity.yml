@@ -189,7 +189,7 @@ ci_only:
     reason: "requires `--version X.Y.Z` and derives evidence from a release span; exits 2 without one, so a local run gates nothing"
   - id: check_finding_dispositions
     class: release
-    reason: "adjudicates the release-PR self-review findings ledger, whose input JSON is produced by the self-review workflow job"
+    reason: "adjudicates a self-review findings ledger by hand; since 2026-10-22 no release workflow waits for this check and an absent ledger passes (owner: main is already reviewed); the consistency coverage guard still executes it, so any committed ledger must remain valid"
   - id: report_skill_activation
     class: release
     reason: "declared for the reason `sweep_source_surfaces` is, and with the same nuance: it is not unreachable locally, it is outside the `task ci` closure on purpose. `src/config/release-gate-locality.yml` gives its release-validation job a `local:` command with `verify: true`, so `task release:verify` runs it before a release PR exists — and that is the only run that measures anything, because the transcript store the census reads is keyed on the directory it runs in and does not exist on a runner. Adding it to `task ci` would put an advisory report that gates on nothing into every local run"

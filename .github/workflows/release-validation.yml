@@ -16,8 +16,8 @@ name: Release Validation
 #                               (release-truth Phase 1; whitespace-normalized)
 #   5. highlight-plausibility — curated head cannot say `_none_` against a
 #                               populated span category (release-truth Phase 2)
-#   6. finding-dispositions   — blocking self-review findings carry committed
-#                               dispositions (release-truth Phase 3)
+#   (finding-dispositions was removed on 2026-10-22: a release waits for no
+#   review ledger, because everything on main is already reviewed — owner.)
 #
 # Plus the job that closes the 9.8.0 skip-class (a release shipped
 # without src/install/ across two minors; caught only after publish
@@ -67,7 +67,6 @@ on:
       - '.augment-plugin/plugin.json'
       - 'src/scripts/install.ts'  # what release-install-e2e exercises
       - 'src/scripts/release.ts'
-      - 'agents/evidence/release-findings/**'  # `finding-dispositions` reads it
       - 'tests/test_release_install_e2e.sh'
       - '.github/workflows/release-validation.yml'
   workflow_dispatch:
@@ -366,41 +365,6 @@ jobs:
           # fresh `init` bootstraps onto a stale pin. release.ts set_template_pin
           # keeps it in lockstep; this gate is the backstop on the release PR.
           ./scripts-run src/scripts/check_template_pin_drift
-
-  finding-dispositions:
-    # Release-truth Phase 3: the release is red while any blocking/high
-    # self-review finding lacks a machine-readable disposition in the
-    # committed ledger (agents/evidence/release-findings/<version>.json).
-    # Deterministic — no model call, never fail-open: the gate comment's
-    # machine block only TRIGGERS the demand; the committed file is the
-    # record (council 2026-08-03: a PR comment is mutable, not a record).
-    if: ${{ github.event_name == 'pull_request' && startsWith(github.head_ref, 'release/') }}
-    name: Blocking review findings dispositioned
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install Node deps
-        run: |
-          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
-            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
-
-      - name: Check disposition ledger against recorded + reported findings
-        env:
-          GH_TOKEN: ${{ github.token }}
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          set -euo pipefail
-          version="${HEAD_REF#release/}"
-          ./scripts-run src/scripts/check_finding_dispositions \
-            --release "$version" --pr "${{ github.event.pull_request.number }}"
 
   audit-gate:
     if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}
