@@ -403,6 +403,126 @@ An entry belongs under a dated release section, not here — see
 > that forces a new era split (`# Era: 17.2.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [17.1.0](https://github.com/event4u-app/agent-config/compare/17.0.0...17.1.0) (2026-10-23)
+
+### Release highlights
+
+- **Behaviour changes:** _none_
+- **Default changes + migration:** Breaking, pending in `BREAKING_CHANGES.md` and shipped by this release: **Three `fail_closed` hook guards run where they were silent.** The installed claude hook command now reaches a dispatcher staged under `~/.event4u/agent-config/runtime/` after a project-local install and before `PATH` ([`3f8c98e`](https://github.com/event4u-app/agent-config/commit/3f8c98e74), #2455). On machines installed through `npx`, or hosts launched with a bare `PATH`, every hook command used to end in a silent `exit 0`; there `block-no-verify` (refuses `git … --no-verify` and `core.hooksPath` overrides), `block-kernel-rule-writes` and `block-plumbing-writes` (refuse agent writes to this package's kernel rules and hook plumbing) now run and may refuse a tool call for the first time. Classed breaking by the AI council, 2026-10-19 (`agents/evidence/council/hook-carrier-release-note-class-20261019.md`). **`uninstall --global --purge` stops being a recursive delete of the host anchor.** Old scope: `fs.rmSync(anchor, { recursive: true })` on whole host configuration roots — `~/.claude/`, `~/.codex/`, `~/.config/zed/` — so everything under them went, whoever wrote it. New scope: only the anchor-relative paths this package's own deploy inventory recorded writing; the anchor itself is never removed, directories are pruned only when left empty, a recorded symlink is unlinked rather than followed, and a purge with no readable inventory for that anchor exits 1 having deleted nothing. A second change in the same area: a plain `uninstall --global` now keeps the lockfile while recorded content is still on disk, where it used to delete it.
+- **Security and correctness:** pace free-hands shadow calls from the last free reply (c28d888); record the id a keyless route actually serves (9235bdc); a pre-ledger global refresh updates untouched files instead of preserving thousands (#2590) (601abd8); put the SC2016 directive on the node command it covers (029da1a); pin the aging-hour notice case to midday UTC (0d2efc5); assemble the reach self-test fixtures so prepack reads no shipped import (839a4d5); +26 more.
+- **Honest nulls:** _none_
+- **Known limitations:** a pre-ledger global refresh updates untouched files instead of preserving thousands (#2590) (src/scripts/install.ts declares a residual) (601abd8); a release waits for no review ledger (#2591) (src/scripts/_lib/release_findings_ingest.ts declares a residual) (e1dde82).
+
+> **Governance mix:** governance-only 24 vs consumer-only 2 (mixed 39, maintenance 15; taxonomy 1.1.0; range ad30b6dfecd0..e1b086677d04).
+
+### Features
+
+* **bench:** rerun the tier pair on a pinned tree; both tier claims underpowered ([479bcf0](https://github.com/event4u-app/agent-config/commit/479bcf0c2428d83dca4c21b71471415cbea5cec8))
+* **gate:** a ticked step's tested symbols must reach a production entry ([1fd70d8](https://github.com/event4u-app/agent-config/commit/1fd70d8160dffa8a8cce04912493b405329189f9))
+* **bench:** refuse to price with a stale or older-generation price row ([fe4fa4b](https://github.com/event4u-app/agent-config/commit/fe4fa4bcd7b9bffaba49a233b18a6e82bdcfcc7b))
+* **bench:** bind bench evidence to the commit whose bytes it measured ([9972c55](https://github.com/event4u-app/agent-config/commit/9972c5575f64f8469a05da6e35307e2a1f38b202))
+* **lint:** the owner lock reaches the roadmap decision and blocker lints ([b5bb1a5](https://github.com/event4u-app/agent-config/commit/b5bb1a5e83f2b0f4d9a386c8912b21026a5d4000))
+* **bench:** free-hands shadow harness over the production ask path ([d148952](https://github.com/event4u-app/agent-config/commit/d1489529b8fff772175854d5ec269aea1b7349cc))
+* **bench:** paired quality run for egress placeholders, PREREG (e) ([d5f7f45](https://github.com/event4u-app/agent-config/commit/d5f7f453d9ff94d0e7e1e0fe79fdc9aa5d5a1608))
+* **spawn-guard:** reconstruct the reuse verdict per spawn at report time ([bc48e93](https://github.com/event4u-app/agent-config/commit/bc48e93a918a3c5c19d3e0d36307e1434b79e3d1))
+* **council:** catalogue a keyless first-party route, maintainer-only ([e9009ba](https://github.com/event4u-app/agent-config/commit/e9009baac5f06db9e978e638bc2c5690489ca33b))
+* **spawn-guard:** live worker_resume probe and reconstruction stamps ([4671ab7](https://github.com/event4u-app/agent-config/commit/4671ab758cb2ec6d3505f5121e2785d2eacd0c3c))
+* **hooks:** field-level payload projection for advisory concerns ([e2e04d1](https://github.com/event4u-app/agent-config/commit/e2e04d1aa3f3fcfc6508532d5f82cb93a329927c))
+* **egress:** the IBAN table names its registry release ([ce7783b](https://github.com/event4u-app/agent-config/commit/ce7783bd9f788291df6141bc5052cf5fec874aa4))
+* **council:** a real self-hosted probe for loopback routes ([7b4054e](https://github.com/event4u-app/agent-config/commit/7b4054e5f94b0585384486fe8b3e65e48165bfc6))
+* **ask:** shadow public-artifact typed asks on a free route ([a45480a](https://github.com/event4u-app/agent-config/commit/a45480aaf451d68775c90d22d0956719278bf2ba))
+* **spawn-guard:** index the worker register instead of reading a ledger tail ([40786bb](https://github.com/event4u-app/agent-config/commit/40786bb420c2b52732664c04fd4d098a9f595ea9))
+
+### Bug Fixes
+
+* **bench:** pace free-hands shadow calls from the last free reply ([c28d888](https://github.com/event4u-app/agent-config/commit/c28d888b6e003db06a642a43db9ccbab829dbaa9))
+* **free-route:** record the id a keyless route actually serves ([9235bdc](https://github.com/event4u-app/agent-config/commit/9235bdc342cf360b36c2a318d67df759d6d3e153))
+* **install:** a pre-ledger global refresh updates untouched files instead of preserving thousands (#2590) ([601abd8](https://github.com/event4u-app/agent-config/commit/601abd83d6a9817435d481267c85c8a69d1b1ae8))
+* **ci:** put the SC2016 directive on the node command it covers ([029da1a](https://github.com/event4u-app/agent-config/commit/029da1a4b509efcc873fb716db4a84338d271e5d))
+* **tests:** pin the aging-hour notice case to midday UTC ([0d2efc5](https://github.com/event4u-app/agent-config/commit/0d2efc5a820bca0a8626e56e933c1b1a35e5ae22))
+* **gate:** assemble the reach self-test fixtures so prepack reads no shipped import ([839a4d5](https://github.com/event4u-app/agent-config/commit/839a4d564c4dd21aaf9d2da4805fd071ac32f69e))
+* **release:** a release waits for no review ledger (#2591) ([e1dde82](https://github.com/event4u-app/agent-config/commit/e1dde822d02de813349b49c23b73317bfa43b27c))
+* **tests:** the identity fixture carries the content ceiling too ([6a35ab8](https://github.com/event4u-app/agent-config/commit/6a35ab8a244b33b3351f0e46a4bac1220ac8d7e2))
+* **tests:** free route fixtures carry the content ceiling the client now requires ([bdaeb97](https://github.com/event4u-app/agent-config/commit/bdaeb972e0ade5281287c6a88c4c493b568de6e8))
+* **config:** the egress chunk raise names only the rows it carries ([8d8f84b](https://github.com/event4u-app/agent-config/commit/8d8f84b41055d3dd70114221ae38569a8982adc0))
+* **bench:** read the store precision bar as PREREG (b) states it ([7c33852](https://github.com/event4u-app/agent-config/commit/7c33852caccbac7097d7d80381a8e0de96d2533b))
+* **redaction:** store rows tag a digit run only where its shape is evidence ([50aa48d](https://github.com/event4u-app/agent-config/commit/50aa48d3019e0555d1948df2957c1e2e997ee67a))
+* **docs:** correct four texts the #2585 review found stale, pin ratification answers ([140eb36](https://github.com/event4u-app/agent-config/commit/140eb36adc4b1f6396d3edb2a4c811f55ca734a5))
+* **hooks:** a host rate marker sets its own source and parked_at ([d4b8475](https://github.com/event4u-app/agent-config/commit/d4b84753c0c7cc111f19d8971f81fa8f6dcdb2b6))
+* **council:** a stance repair never leaves a resume flag behind ([dd2860f](https://github.com/event4u-app/agent-config/commit/dd2860f4d189f1deb3476d6dac05e7c6eb1d6d38))
+* **council:** a base_url route member never holds a head role ([89af384](https://github.com/event4u-app/agent-config/commit/89af38437035c1daf0d3a153739374986d332b05))
+* **council:** shadow calls send the hand payload, not the raw prompt ([788b002](https://github.com/event4u-app/agent-config/commit/788b0029e34a6c419eaae1d58b45c2834efda263))
+* **council:** route members carry their content ceiling ([4ff3a8d](https://github.com/event4u-app/agent-config/commit/4ff3a8d307bb047c2282c6c6f15dd70a3326f883))
+* **council:** refuse a callee that holds more than one declaration ([57c3ba1](https://github.com/event4u-app/agent-config/commit/57c3ba14458288485b9cb503d4514d71f98ad5ce))
+* **tier-verdict:** read quality from an exact one-sided Clopper-Pearson bound ([f7383bd](https://github.com/event4u-app/agent-config/commit/f7383bd7b16f06fd78e87fb4b8d9863830320795))
+* **update:** leave the global installed.lock to the global install ([2a01a5f](https://github.com/event4u-app/agent-config/commit/2a01a5f785ba11698bc047f4e3da95e6d77e5fb8))
+* **ci:** silence the deliberate SC2016 in the egress latency step ([d104626](https://github.com/event4u-app/agent-config/commit/d10462685e34a131cfbe4c63bf5d80c6e1660480))
+* **report:** close the reconstruction review findings and add the secondary (c) reading ([607fe33](https://github.com/event4u-app/agent-config/commit/607fe33bbc05b3b430d32995dc1ab21016ffcc5b))
+* **bench:** free-hands shadow harness — retry, streak stop, window-scoped report ([1f6b85f](https://github.com/event4u-app/agent-config/commit/1f6b85f691a4f58a11f566a3c5e40df611cc67fe))
+* **council:** hand a route member's key reference to the self-hosted probe ([73e7bf8](https://github.com/event4u-app/agent-config/commit/73e7bf85592539ac3621b4d04b9a6c608679caa8))
+* **hooks:** close the review findings on the ledger index and the projection ([3158fc5](https://github.com/event4u-app/agent-config/commit/3158fc5e741b3af321db9abba0d9730c9b5bd188))
+* **bench:** exclude unparsed sessions and re-read the warm-worker claims ([5de579f](https://github.com/event4u-app/agent-config/commit/5de579f5a7af78cf737cb92dd811514d945ee9a3))
+* **council:** give the first-party route gate a roster writer, a shared root and a normalised match ([3b1ebcc](https://github.com/event4u-app/agent-config/commit/3b1ebcc71f0563f92e62c895f40ca611137f6a15))
+* **council:** harden the self-hosted probe memo, scratch dir, models dir and auth ([96ed61d](https://github.com/event4u-app/agent-config/commit/96ed61de0d61546c9bc771e138a09c2cd72cdd83))
+* **ask:** bound the shadow wait and record free exposure only when called ([32fc497](https://github.com/event4u-app/agent-config/commit/32fc4978c8dec8087464b669742e7a0e3387cddb))
+* **spawn-guard:** close the ratification's three non-blocking findings ([667ec17](https://github.com/event4u-app/agent-config/commit/667ec17701e61628a3c07f8da1269ac8083dd19e))
+* **council:** forward base_url route fields through the settings block ([e9312ba](https://github.com/event4u-app/agent-config/commit/e9312bad3de02a155e182b1c44dc137920cc74dd))
+
+### Reverts
+
+* **subagents:** package workers load project instructions and ac-researcher inherits again ([e3f32ac](https://github.com/event4u-app/agent-config/commit/e3f32ac44a414d4e2bc25491c0ccf283004e0b3b))
+
+### Documentation
+
+* **roadmaps:** record the owner round and the council answers of 2026-10-23 ([f255228](https://github.com/event4u-app/agent-config/commit/f255228f48439cf83733535896162ccf537ca35f))
+* **roadmap:** give the two new verify clauses an expectation ([948233e](https://github.com/event4u-app/agent-config/commit/948233effddd60a6275eb04ec0034f2fbc6795a1))
+* **evidence:** ratify the raise_log correction, council round 3 of 2026-10-23 ([cb7da1f](https://github.com/event4u-app/agent-config/commit/cb7da1f8c2d747df7563999cd286a54c9eaa1ccd))
+* **roadmap:** close AC-1, 2, 3, 5 and 7 of the tick roadmap ([16824c0](https://github.com/event4u-app/agent-config/commit/16824c000193e87fd0a002e5fa99ed319056db43))
+* **roadmap:** receipts on the last six ticks ([59ec06d](https://github.com/event4u-app/agent-config/commit/59ec06df41184cea1df56fa1c082dcf094966071))
+* **roadmap:** tick Phase 4, 1.4 and 6.1; receipts on every new tick ([7f9509f](https://github.com/event4u-app/agent-config/commit/7f9509fdc03c080407cce6e52b4dce50bfd4f2f0))
+* **evidence:** replay every #2585 tick and fingerprint the main residue ([f3de42e](https://github.com/event4u-app/agent-config/commit/f3de42eff643a023ad3b14edc4460e8f97d04691))
+* **bench:** record the PREREG (b) store reading, 0.55 % of tree files ([342cc7a](https://github.com/event4u-app/agent-config/commit/342cc7a374b1b52dd6dea4544f335dc2c5565f3b))
+* **roadmap:** keep step 2.2 under the step cap ([2c28cc8](https://github.com/event4u-app/agent-config/commit/2c28cc826830d13f1810450cfba7927917c5dcf1))
+* **roadmap:** shorten the one-detector 2.5 reopen note under the step cap ([a336969](https://github.com/event4u-app/agent-config/commit/a3369697781104026a0122fc48de41f7072b25b0))
+* **roadmap:** road to a tick the shipped path earns, from inbox round 2026-10-aa ([9023428](https://github.com/event4u-app/agent-config/commit/90234285623d0727fc23e5cbd4fd568f4c6c40a3))
+* **readme:** move the downloads badge beside the artefact counts ([6a0c9ea](https://github.com/event4u-app/agent-config/commit/6a0c9ea156785fc861bedcf8af9488120d0eefb5))
+* **roadmaps:** owner rows read 'owner'; step notes trimmed under the word cap ([656a135](https://github.com/event4u-app/agent-config/commit/656a13553994a8b04b6271217d30412689ad1089))
+* **roadmaps:** risk registers re-reviewed 2026-10-23; owned digest regenerated ([5831666](https://github.com/event4u-app/agent-config/commit/5831666901f4b7f8dea0ee4b1f2d57ea98b4eff0))
+* **roadmaps:** archive the completed tier roadmap; risk registers re-reviewed ([5e46c8a](https://github.com/event4u-app/agent-config/commit/5e46c8a49afd6f320139044221a39d54d00df950))
+* **roadmaps:** cold-start 3.5, 6.2, AC-2 and AC-8 close; 3.6 stays open, evaluated ([b6f7142](https://github.com/event4u-app/agent-config/commit/b6f7142204ccbbfbc447ee8b0dfeb3fd2462feab))
+* **bench:** amend the free-hands PREREG before the first scored call ([4449316](https://github.com/event4u-app/agent-config/commit/44493165ebbeee3673ae2ad6ff4c9de6c6494fc2))
+* **council:** condition (c) split twice; keep it and add a second reading ([df1947a](https://github.com/event4u-app/agent-config/commit/df1947a2542d7f650a9004308ce5c16157f09d80))
+* **claims:** dated verdicts for the four cold-start claims ([c8028f5](https://github.com/event4u-app/agent-config/commit/c8028f5b27a72d096e4652268dda8121374ec2d7))
+* **evidence:** file the reconstructed reuse window and the warm-worker readings ([d38df92](https://github.com/event4u-app/agent-config/commit/d38df921bf13401c08ee0e7d6e539b75f22ef25b))
+* **roadmaps:** free-hands 6.2 and AC-3 — wired, harnessed, live run pending an operator ([b5d61ac](https://github.com/event4u-app/agent-config/commit/b5d61acb36fe602c8e1a9c2edb432ebd6cff3681))
+* **ratification:** gated hook plumbing of the #2583 rest, 2/2 ratified ([bc07604](https://github.com/event4u-app/agent-config/commit/bc07604dd44faae97d7bd4c93802506cca8d220c))
+* **roadmaps:** track the block-credential-reads false positive on filter expressions ([e157166](https://github.com/event4u-app/agent-config/commit/e1571668041fe58eb53a36758fe10db21fcd8da2))
+* **roadmaps:** record the indexed register, the real probe, the attested route and AC-6 (c)/(e) ([a9da06f](https://github.com/event4u-app/agent-config/commit/a9da06f81a39658c7a12bc049f9a096d889d07b1))
+* **bench:** pre-register the free-hands shadow window ([1bc9c41](https://github.com/event4u-app/agent-config/commit/1bc9c41c5dcc2ae4f6713c093e583072dd6d9936))
+* **evidence:** accepted evidence-type marker on the two council prompts ([45b288d](https://github.com/event4u-app/agent-config/commit/45b288d451141188177676fa80c0a8fcbd0cd3e4))
+* **roadmaps:** owner decisions O1–O6 and the council's three design calls ([a3c9cce](https://github.com/event4u-app/agent-config/commit/a3c9cce472ab21658f98f8f9a4acbd4240c7811b))
+
+### Tests
+
+* **advisories:** pin the aging-hour case to midday UTC ([5412135](https://github.com/event4u-app/agent-config/commit/54121352fa8924dcf174764f84cc644d9e05824f))
+* **bench:** worker-resume harness over a roadmap citation audit ([e382a41](https://github.com/event4u-app/agent-config/commit/e382a419691d38140987e17846c74c329831c61c))
+* **bench:** measure PREREG (c) round trip on the identifier class ([86e8f46](https://github.com/event4u-app/agent-config/commit/86e8f467889c438cb1682efd38416e431254b078))
+
+### Build
+
+* **dist:** project the host-capability manifest context ([ecd24af](https://github.com/event4u-app/agent-config/commit/ecd24af6bde6dc8a89b1dd619c8bc049063643ef))
+* **install:** regenerate the install bundle for the worker_resume probe ([7318dff](https://github.com/event4u-app/agent-config/commit/7318dffac580b546e42506905fe211b49aa54b09))
+
+### CI
+
+* **bench:** read PREREG (f) egress engine latency on the CI runner class ([7f23bb3](https://github.com/event4u-app/agent-config/commit/7f23bb3813bfc736087c1604369f863bae73070e))
+
+### Chores
+
+* **roadmap:** regenerate the owned digest for the new roadmap ([de05ef7](https://github.com/event4u-app/agent-config/commit/de05ef770947d5603418f3d20c2317529b85cf84))
+
+Tests: 32215 (+213 since 17.0.0)
+
 # Era: pre-4.0.0 — archived
 
 > All entries from `3.2.0` and `3.3.0` live in
