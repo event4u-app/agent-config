@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **752 artefacts** in this package.
+Maintainer-facing index of all **753 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -439,7 +439,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (209)
+## Commands (210)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -589,9 +589,10 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`profile-activate`](../src/domains/meta/profile/activate/command.md) | cluster: profile | Activate a session profile — surface only the named profile/pack closure plus core artefacts, no persistence |
 | command | [`profile-deactivate`](../src/domains/meta/profile/deactivate/command.md) | cluster: profile | Deactivate the session profile — clear the overlay (or drop named packs) so the full surface returns |
 | command | [`profile-show`](../src/domains/meta/profile/show/command.md) | cluster: profile | Show the active session profile — active packs and surfaced/hidden command+skill counts (observability surface) |
-| command | [`project`](../src/domains/engineering-base/project/command.md) | cluster: project | Project orchestrator — routes to analyze (full audit) and health (read-only status check) |
+| command | [`project`](../src/domains/engineering-base/project/command.md) | cluster: project | Project orchestrator — routes to analyze (full audit), health (read-only status check) and map (code map) |
 | command | [`project-analyze`](../src/domains/engineering-base/project/analyze/command.md) | cluster: project | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
 | command | [`project-health`](../src/domains/engineering-base/project/health/command.md) | cluster: project | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |
+| command | [`project-map`](../src/domains/engineering-base/project/map/command.md) | cluster: project | Draw the project map into agents/map/ — areas, files, links, offline |
 | command | [`refine-ticket`](../src/domains/product-basic/refine-ticket/command.md) |  | Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt |
 | command | [`research`](../src/domains/product-discovery/research/command.md) | cluster: research | Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans. |
 | command | [`research-deep`](../src/domains/product-discovery/research/deep/command.md) | cluster: research | Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths. |
