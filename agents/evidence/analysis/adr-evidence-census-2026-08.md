@@ -24,8 +24,8 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 
 | Axis | Value | Records |
 |---|---|---|
-| `evidence.strength` | `E0` | 85 |
-| `evidence.strength` | `E1` | 82 |
+| `evidence.strength` | `E0` | 84 |
+| `evidence.strength` | `E1` | 83 |
 | `evidence.strength` | `E2` | 53 |
 | `evidence.strength` | `E3` | 25 |
 | `evidence.strength` | `E4` | 0 |
@@ -275,7 +275,7 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `docs/decisions/ADR-295-worktree-removal-on-the-proven-set.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: human · evidence: E1 |
 | `docs/decisions/ADR-296-advisory-session-notice-declared.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-296-advisory-session-notice-declared.md:34, ADR-296-advisory-session-notice-declared.md:55, ADR-296-advisory-session-notice-declared.md:99, ADR-296-advisory-session-notice-declared.md:100<br>measurement @ ADR-296-advisory-session-notice-declared.md:92 | provenance: agentic · evidence: E1 |
 | `docs/decisions/ADR-297-derived-views-in-agents-map.md` | `unknown` | `E2` — repeated or comparative measurement | `incomplete` | measurement @ ADR-297-derived-views-in-agents-map.md:44, ADR-297-derived-views-in-agents-map.md:67, ADR-297-derived-views-in-agents-map.md:80<br>repeated @ ADR-297-derived-views-in-agents-map.md:68 | provenance: human · evidence: E1 |
-| `docs/decisions/ADR-298-framework-neutral-graph-core.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: human · evidence: E1 |
+| `docs/decisions/ADR-298-framework-neutral-graph-core.md` | `unknown` | `E1` — one dated local observation | `incomplete` | measurement @ ADR-298-framework-neutral-graph-core.md:61 | provenance: human · evidence: E1 |
 | `docs/decisions/ADR-rule-kernel-and-router.md` | `unknown` | `E1` — one dated local observation | `incomplete` | measurement @ ADR-rule-kernel-and-router.md:55, ADR-rule-kernel-and-router.md:107, ADR-rule-kernel-and-router.md:112, ADR-rule-kernel-and-router.md:113, ADR-rule-kernel-and-router.md:117 | provenance: — · evidence: — |
 | `docs/adrs/cost/0001-hard-stop-hook.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: — · evidence: — |
 | `docs/adrs/memory/0001-consumer-side-snapshot.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: — · evidence: — |
