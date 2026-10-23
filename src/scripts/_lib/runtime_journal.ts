@@ -250,16 +250,23 @@ export const RECORDED_EVENTS: ReadonlySet<string> = new Set([
     'agent_error',
     'subagent_start',
     'subagent_stop',
+    'instructions_loaded',
 ]);
 
 /**
  * Members deliberately NOT recorded, each with the reason — silence about an
  * event is not coverage.
  *
- * **Currently empty, and the emptiness is the finding.** All ten members of the
- * vocabulary are recordable: the journal stores what the dispatcher hands it
+ * "Recorded" means the journal accepts the event when `journal-record` runs on
+ * it, not that the manifest binds it there. `instructions_loaded` is the case in
+ * point: it is recordable, and the manifest binds only its own observer to it,
+ * because the host fires it once per loaded file and that capture lives under
+ * `runtime/arrivals/`.
+ *
+ * **Currently empty, and the emptiness is the finding.** All eleven members of
+ * the vocabulary are recordable: the journal stores what the dispatcher hands it
  * and has no per-event exclusion. The value of the partition is therefore not
- * what it excludes today but that an eleventh member cannot arrive without a
+ * what it excludes today but that a twelfth member cannot arrive without a
  * decision — the coverage test fails until it is placed in one set or the
  * other, with a reason if it lands here.
  */

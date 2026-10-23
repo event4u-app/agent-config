@@ -194,7 +194,7 @@ describe('collector_record — closed enums carry no payload', () => {
     });
 
     it('the three enums are non-empty and closed', () => {
-        expect(COLLECTOR_EVENTS.length).toBe(10);
+        expect(COLLECTOR_EVENTS.length).toBe(11);
         expect(COLLECTOR_OUTCOMES.length).toBe(3);
         expect(COLLECTOR_PLATFORMS.length).toBeGreaterThan(0);
     });

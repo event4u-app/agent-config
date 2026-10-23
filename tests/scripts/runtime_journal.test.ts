@@ -88,10 +88,11 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('event vocabulary coverage (AC-1)', () => {
-    it('the vocabulary still has exactly ten members', () => {
+    it('the vocabulary still has exactly eleven members', () => {
         // Pinned because the roadmap corrects a source claim of nine. A journal
-        // sized to the wrong number drops an event on day one.
-        expect(EVENT_VOCABULARY.size).toBe(10);
+        // sized to the wrong number drops an event on day one. Eleven since
+        // `instructions_loaded` (road-to-a-setup-that-decides-itself 1.1).
+        expect(EVENT_VOCABULARY.size).toBe(11);
     });
 
     it('every member is either recorded or explicitly not-recorded with a reason', () => {

@@ -109,6 +109,10 @@ const MANIFEST_PATH = path.join(REPO_ROOT, "src", "scripts", "hook_manifest.yaml
 // spike — see agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md.
 // Only `claude` and `cowork` alias them today; every other platform simply
 // never sends them, which the alias table already expresses by omission.
+//
+// `instructions_loaded` (road-to-a-setup-that-decides-itself step 1.1) fires
+// once per instruction file the host loads, asynchronously. Only `claude`
+// aliases it; its one concern is the observe-only arrival capture.
 export const EVENT_VOCABULARY: ReadonlySet<string> = new Set([
   "session_start",
   "session_end",
@@ -120,6 +124,7 @@ export const EVENT_VOCABULARY: ReadonlySet<string> = new Set([
   "agent_error",
   "subagent_start",
   "subagent_stop",
+  "instructions_loaded",
 ]);
 
 const _SEVERITY_BY_EXIT: Record<number, string> = {

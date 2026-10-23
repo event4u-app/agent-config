@@ -1364,6 +1364,19 @@ concerns:
   #
   # Never blocks, never warns: exit 0 on every path including a malformed
   # payload or an unwritable disk. fail_closed: false.
+  # road-to-a-setup-that-decides-itself step 1.1 — the instructions-loaded
+  # observer. CAPTURE ONLY: one classified line per loaded file into
+  # `<machine root>/runtime/arrivals/<session>.jsonl`, the input of the arrival
+  # record the computed layer form reads. Emits nothing to the model; exit 0 on
+  # every path. Loaded from its own conditional chunk, never inlined.
+  # Kill switch: `AGENT_CONFIG_INSTRUCTIONS_OBSERVER=off`, or remove the
+  # `instructions_loaded` row under `platforms.claude` and reinstall.
+  instructions-observer:
+    script: src/scripts/hooks/instructions_observer_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    effect: telemetry
   subagent-ledger:
     script: src/scripts/hooks/subagent_ledger_hook.ts
     args: []
@@ -1640,6 +1653,8 @@ platforms:
     subagent_start:   [subagent-ledger, journal-record]
     subagent_stop:    [subagent-ledger, journal-record]
     agent_error:      [host-rate-marker]
+    # Observe-only; the host runs this event asynchronously, once per loaded file.
+    instructions_loaded: [instructions-observer]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
   # on top of the Claude Code CLI. Same lifecycle vocabulary, same
@@ -1796,6 +1811,9 @@ native_event_aliases:
     # agents/evidence/investigations/subagent-lifecycle-phase0-host-pin.md.
     SubagentStart:     subagent_start
     SubagentStop:      subagent_stop
+    # Present on the installed binary (exact-token count 9):
+    # agents/evidence/investigations/standing-context-40k-host-and-machine-probes.md § 1.
+    InstructionsLoaded: instructions_loaded
     # StopFailure fires on an API failure and carries its class in `error`
     # (observed on 2.1.308 with `server_error`; `rate_limit` is the host's
     # documented value for the plan limit and has not been observed live, so a
