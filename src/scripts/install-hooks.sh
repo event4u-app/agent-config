@@ -677,7 +677,7 @@ if [ -f "$cg_cache" ] && [ -x ./agent-config ]; then
             # The map follows the index it is drawn from, but only for a
             # project that asked for one: no agents/map/, no map (ADR-297).
             if [ -d agents/map ]; then
-                ./agent-config code-graph map --no-verify >/dev/null 2>&1 || true
+                ./agent-config code-graph map --no-verify --no-build >/dev/null 2>&1 || true
             fi
         ) >/dev/null 2>&1 &
     fi

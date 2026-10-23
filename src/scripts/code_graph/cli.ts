@@ -745,6 +745,7 @@ async function cmdMap(argv: string[]): Promise<number> {
         ...(out ? { outDir: path.resolve(out) } : {}),
         ...(diffRev !== null ? { diffRev } : {}),
         ...(argv.includes('--prs') ? { prs: true } : {}),
+        ...(argv.includes('--no-build') ? { noBuild: true } : {}),
     });
     const rel = path.relative(process.cwd(), r.outDir) || '.';
     const largest = r.model.areas.find((a) => a.kind === 'area');
@@ -758,7 +759,10 @@ async function cmdMap(argv: string[]): Promise<number> {
             `    wrote: ${r.written.length} files under ${rel}/ — open ${path.join(rel, 'index.html')}\n`,
     );
     let rc = 0;
-    if (!argv.includes('--no-verify')) {
+    if (argv.includes('--no-verify')) {
+        // A check from an earlier map must not sit beside this one as if it were about it.
+        fs.rmSync(path.join(r.outDir, 'render-check.json'), { force: true });
+    } else {
         const check = await verifyMap(path.join(r.outDir, 'index.html'));
         fs.writeFileSync(path.join(r.outDir, 'render-check.json'), `${JSON.stringify(check, null, 2)}\n`);
         const problems = check.viewports
@@ -796,7 +800,12 @@ function cmdOutcome(argv: string[]): number {
         return 2;
     }
     const root = resolveRoot(argv);
-    recordOutcome(root, file, outcome);
+    try {
+        recordOutcome(root, file, outcome);
+    } catch (e) {
+        process.stderr.write(`code-graph: ${(e as Error).message}\n`);
+        return 2;
+    }
     process.stdout.write(`recorded: ${file} ${outcome}\n`);
     return 0;
 }

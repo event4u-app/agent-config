@@ -124,16 +124,16 @@
     inOf.forEach(function (l) { l.sort(byWeight); });
     outOf.forEach(function (l) { l.sort(byWeight); });
 
-    var changedSet = {};
-    var impactedSet = {};
-    var touchedArea = {};
+    var changedSet = Object.create(null);
+    var impactedSet = Object.create(null);
+    var touchedArea = Object.create(null);
     if (model.diff) {
         model.diff.changed.forEach(function (i) { changedSet[i] = true; });
         model.diff.impacted.forEach(function (i) { impactedSet[i] = true; });
         model.diff.areas.forEach(function (a) { touchedArea[a[0]] = true; });
     }
 
-    var outcomeOf = {};
+    var outcomeOf = Object.create(null);
     (model.outcomes || []).forEach(function (o) { outcomeOf[o[0]] = o[1]; });
 
     function hue(i) { return Math.round((i * 137.508) % 360); }
@@ -230,7 +230,7 @@
         var s = size();
         ctx.clearRect(0, 0, s.w, s.h);
         var nodes = currentNodes();
-        var pos = {};
+        var pos = Object.create(null);
         nodes.forEach(function (n) {
             var p = toScreen(n.x, n.y);
             n.sx = p[0];
@@ -281,7 +281,7 @@
         // Nodes.
         var grey = cssVar('--grey-node');
         var dimOthers = state.file >= 0 && state.level === 'area';
-        var linked = {};
+        var linked = Object.create(null);
         if (dimOthers) {
             linked[state.file] = true;
             inOf[state.file].forEach(function (x) { linked[x[0]] = true; });
@@ -521,7 +521,7 @@
         });
         panel.appendChild(list);
         panel.appendChild(el('h3', null, t('groups')));
-        var groups = {};
+        var groups = Object.create(null);
         files.forEach(function (f, i) { if (f.area < 0) (groups[f.role] = groups[f.role] || []).push(i); });
         Object.keys(groups).sort().forEach(function (role) {
             fileList(STR[lang].roles[role], groups[role], 15);
@@ -531,7 +531,7 @@
     function renderFolders() {
         panel.appendChild(el('h2', null, t('lensFolders')));
         panel.appendChild(el('p', { class: 'meta' }, t('folderHint')));
-        var byDir = {};
+        var byDir = Object.create(null);
         files.forEach(function (f, i) { (byDir[dir(f.path)] = byDir[dir(f.path)] || []).push(i); });
         Object.keys(byDir).sort().forEach(function (d) {
             var list = byDir[d];

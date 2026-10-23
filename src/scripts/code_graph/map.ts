@@ -27,6 +27,7 @@ import {
     areaDrift,
     buildMapModel,
     type FileRole,
+    MAP_MODEL_VERSION,
     type MapModel,
     type OutcomeEvent,
     outcomeScores,
@@ -141,13 +142,23 @@ function isGitRepo(root: string): boolean {
 }
 
 /** The graph the map is drawn from: built when absent, updated when behind. */
-async function loadOrBuildGraph(root: string, cachePath: string): Promise<{ graph: CodeGraph; built: boolean }> {
+async function loadOrBuildGraph(
+    root: string,
+    cachePath: string,
+    noBuild: boolean,
+): Promise<{ graph: CodeGraph; built: boolean }> {
     const verdict = computeVerdict(root, cachePath).verdict;
     // `edited` — an uncommitted change to an indexed file — reads FRESH to the
     // commit-based verdict, and a map drawn from it would show the old code.
     // Outside a git repository there is nothing to compare against at all, so
     // freshness is unknowable and the incremental build decides per file.
     if (verdict === 'FRESH' && fs.existsSync(cachePath) && isGitRepo(root) && graphState(root, cachePath) === 'fresh') {
+        return { graph: JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as CodeGraph, built: false };
+    }
+    // `--no-build` (the git hook): the budgeted `refresh` before it owns the
+    // build; an unbudgeted one here would hold the refresh lock indefinitely.
+    if (noBuild) {
+        if (!fs.existsSync(cachePath)) throw new Error('no graph to draw (--no-build)');
         return { graph: JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as CodeGraph, built: false };
     }
     const { graph } = await buildFromRepo(root, cachePath, { update: fs.existsSync(cachePath) });
@@ -181,22 +192,33 @@ export function diffFiles(root: string, rev: string): string[] | null {
 export const OUTCOMES_REL = path.join('agents', 'runtime', 'state', 'map-outcomes.jsonl');
 
 export function readOutcomes(root: string): OutcomeEvent[] {
+    let text: string;
     try {
-        return fs
-            .readFileSync(path.join(root, OUTCOMES_REL), 'utf-8')
-            .split('\n')
-            .filter(Boolean)
-            .map((l) => JSON.parse(l) as OutcomeEvent)
-            .filter((e) => typeof e.path === 'string' && (e.outcome === 'useful' || e.outcome === 'dead-end'));
+        text = fs.readFileSync(path.join(root, OUTCOMES_REL), 'utf-8');
     } catch {
         return [];
     }
+    // Line by line: one malformed line costs that line, not the whole log.
+    const out: OutcomeEvent[] = [];
+    for (const line of text.split('\n')) {
+        if (!line) continue;
+        try {
+            const e = JSON.parse(line) as Partial<OutcomeEvent> | null;
+            if (e && typeof e.path === 'string' && typeof e.at === 'string' && (e.outcome === 'useful' || e.outcome === 'dead-end')) {
+                out.push({ path: e.path, outcome: e.outcome, at: e.at });
+            }
+        } catch {
+            /* skip the line */
+        }
+    }
+    return out;
 }
 
 export function recordOutcome(root: string, file: string, outcome: OutcomeEvent['outcome'], at: Date = new Date()): void {
     const p = path.join(root, OUTCOMES_REL);
     fs.mkdirSync(path.dirname(p), { recursive: true });
-    const rel = path.relative(root, path.resolve(file));
+    const rel = path.relative(fs.realpathSync(root), fs.realpathSync(path.resolve(file)));
+    if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) throw new Error(`not a file inside ${root}: ${file}`);
     fs.appendFileSync(p, `${JSON.stringify({ path: rel.split(path.sep).join('/'), outcome, at: at.toISOString() })}\n`);
 }
 
@@ -217,11 +239,22 @@ export function openPrs(root: string): Array<{ number: number; title: string; fi
 
 export async function buildMap(
     root: string,
-    opts: { outDir?: string; cachePath?: string; diffRev?: string; prs?: boolean } = {},
+    opts: { outDir?: string; cachePath?: string; diffRev?: string; prs?: boolean; noBuild?: boolean } = {},
 ): Promise<MapBuildResult> {
     const outDir = opts.outDir ?? path.join(root, MAP_DIR_REL);
+    // A chosen --out directory is only ever written into when it is empty or
+    // already holds a map: the writer clears stale area pages, and that must
+    // never reach a directory of someone else's Markdown.
+    if (
+        opts.outDir !== undefined &&
+        fs.existsSync(outDir) &&
+        fs.readdirSync(outDir).length > 0 &&
+        !fs.existsSync(path.join(outDir, 'map.json'))
+    ) {
+        throw new Error(`refusing to write a map into ${outDir}: it is not empty and holds no map.json`);
+    }
     const cachePath = opts.cachePath ?? path.join(root, NATIVE_CACHE_REL);
-    const { graph, built } = await loadOrBuildGraph(root, cachePath);
+    const { graph, built } = await loadOrBuildGraph(root, cachePath, opts.noBuild === true);
     let diff: { rev: string; changed: string[] } | undefined;
     if (opts.diffRev !== undefined) {
         const changed = diffFiles(root, opts.diffRev);
@@ -292,9 +325,23 @@ const ROLE_ORDER: readonly FileRole[] = [
     'isolated',
 ];
 
-/** Escape a value for a Markdown table cell or inline text. */
+/**
+ * Plain text from the scanned repository (a directory or area name) in
+ * Markdown: every character Markdown or a table would read as syntax is
+ * escaped, so a name can never become a link, a heading or emphasis.
+ */
 function md(s: string): string {
-    return s.replace(/[|`<>\\]/g, (c) => `\\${c}`).replace(/\r?\n/g, ' ');
+    return s.replace(/[\\`*_[\]#<>|!]/g, (c) => `\\${c}`).replace(/\r?\n/g, ' ');
+}
+
+/**
+ * A name inside a code span. A backslash does not escape inside one, so a
+ * backtick in the name would close the span early and let the rest render as
+ * Markdown; it becomes `'` instead. `|` keeps its escape, which GFM tables
+ * honour even inside code.
+ */
+function code(s: string): string {
+    return `\`${s.replace(/`/g, "'").replace(/\|/g, '\\|').replace(/\r?\n/g, ' ')}\``;
 }
 
 /**
@@ -331,9 +378,9 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
                 '',
                 ...d.changed.slice(0, 10).map(([a, g, l]) => `- ${areaLabel(a)}: +${g} / −${l} files`),
                 ...d.appeared.slice(0, 10).map((a) => `- new: ${areaLabel(a)}`),
-                ...d.split.slice(0, 10).map(([name, parts]) => `- split: \`${md(name)}\` → ${parts.map(areaLabel).join(', ')}`),
-                ...d.merged.slice(0, 10).map(([a, names]) => `- merged into ${areaLabel(a)}: ${names.map((n) => `\`${md(n)}\``).join(', ')}`),
-                ...d.vanished.slice(0, 10).map((name) => `- gone: \`${md(name)}\``),
+                ...d.split.slice(0, 10).map(([name, parts]) => `- split: ${code(name)} → ${parts.map(areaLabel).join(', ')}`),
+                ...d.merged.slice(0, 10).map(([a, names]) => `- merged into ${areaLabel(a)}: ${names.map((n) => `${code(n)}`).join(', ')}`),
+                ...d.vanished.slice(0, 10).map((name) => `- gone: ${code(name)}`),
                 '',
             ].join('\n'),
         ]);
@@ -361,7 +408,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
         sections.push([
             'This change',
             [
-                `## This change (\`${md(d.rev)}\`..working tree)`,
+                `## This change (${code(d.rev)}..working tree)`,
                 '',
                 `${d.changed.length} changed file(s) on the map, ${d.impacted.length} more with a trusted link into them` +
                     (d.outsideGraph.length ? `, ${d.outsideGraph.length} changed path(s) the graph does not hold` : '') +
@@ -381,7 +428,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
         const top = [...a.files]
             .sort((x, y) => (f[y]?.inFiles ?? 0) - (f[x]?.inFiles ?? 0) || x - y)
             .slice(0, 3)
-            .map((x) => `\`${md(path.posix.basename(f[x]?.path ?? ''))}\``)
+            .map((x) => `${code(path.posix.basename(f[x]?.path ?? ''))}`)
             .join(', ');
         const page = a.files.length >= AREA_PAGE_MIN_FILES ? `[${a.id}](areas/${a.id}.md)` : a.id;
         return `| ${page} | ${md(a.name)} | ${a.files.length} | ${pct(a.cohesion)} | ${pct(a.testShare)} | ${pct(a.folderMismatch)} | ${top} |`;
@@ -413,7 +460,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
             '',
             `Files used by more than ${m.thresholds.infraInDegree} other files. They are drawn apart and do not decide areas.`,
             '',
-            ...(infra.length ? infra.map(([x]) => `- \`${md(x.path)}\` — used by ${x.inFiles} files`) : ['- none']),
+            ...(infra.length ? infra.map(([x]) => `- ${code(x.path)} — used by ${x.inFiles} files`) : ['- none']),
             '',
         ].join('\n'),
     ]);
@@ -427,7 +474,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
             '',
             ...(m.analyses.surprises.length
                 ? m.analyses.surprises.map(
-                      ([s, t]) => `- \`${md(f[s]?.path ?? '')}\` → \`${md(f[t]?.path ?? '')}\``,
+                      ([s, t]) => `- ${code(f[s]?.path ?? '')} → ${code(f[t]?.path ?? '')}`,
                   )
                 : ['- none']),
             '',
@@ -442,7 +489,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
             `${m.analyses.cyclesTotal} file-level cycle(s); the largest ${m.analyses.cycles.length} shown, up to 8 files each.`,
             '',
             ...(m.analyses.cycles.length
-                ? m.analyses.cycles.map((c) => `- ${c.map((x) => `\`${md(f[x]?.path ?? '')}\``).join(' · ')}`)
+                ? m.analyses.cycles.map((c) => `- ${c.map((x) => `${code(f[x]?.path ?? '')}`).join(' · ')}`)
                 : ['- none']),
             '',
         ].join('\n'),
@@ -469,9 +516,9 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
                     const chain = [
                         handlerFile.replace(/\.php$/, '') === r.handlerSymbol ? handlerFile : `${handlerFile}::${r.handlerSymbol}`,
                         ...r.views.map((v) => path.posix.basename(f[v]?.path ?? '')),
-                        ...r.tables.map((t) => `table \`${md(t)}\``),
+                        ...r.tables.map((t) => `table ${code(t)}`),
                     ];
-                    return `- \`${md(r.route)}\` → ${chain.map((c) => (c.startsWith('table') ? c : `\`${md(c)}\``)).join(' → ')}`;
+                    return `- ${code(r.route)} → ${chain.map((c) => (c.startsWith('table') ? c : `${code(c)}`)).join(' → ')}`;
                 }),
                 '',
             ].join('\n'),
@@ -495,7 +542,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
                         .join(' · ') +
                     '. Most referenced:',
                 '',
-                ...top.map(([n, c]) => `- \`${md(a.nodes[n]?.[0] ?? '')}\` — ${c}`),
+                ...top.map(([n, c]) => `- ${code(a.nodes[n]?.[0] ?? '')} — ${c}`),
                 '',
             ].join('\n'),
         ]);
@@ -508,7 +555,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
             '## Entry points',
             '',
             ...(entries.length
-                ? entries.slice(0, m.thresholds.listCap).map((x) => `- \`${md(x.path)}\``)
+                ? entries.slice(0, m.thresholds.listCap).map((x) => `- ${code(x.path)}`)
                 : ['- none declared']),
             ...(entries.length > m.thresholds.listCap ? [`- … ${entries.length - m.thresholds.listCap} more`] : []),
             '',
@@ -539,7 +586,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
             '## External dependencies',
             '',
             ...(m.analyses.externals.length
-                ? m.analyses.externals.map(([spec, n]) => `- \`${md(spec)}\` — imported by ${n} files`)
+                ? m.analyses.externals.map(([spec, n]) => `- ${code(spec)} — imported by ${n} files`)
                 : ['- none']),
             '',
         ].join('\n'),
@@ -597,7 +644,7 @@ export function renderAreaMd(m: MapModel, i: number, meta: MapMeta): string {
         '|---|---|---|---|',
         ...files.slice(0, 60).map((x) => {
             const r = f[x];
-            return r ? `| \`${md(r.path)}\` | ${r.role} | ${r.inFiles} | ${r.outFiles} |` : '';
+            return r ? `| ${code(r.path)} | ${r.role} | ${r.inFiles} | ${r.outFiles} |` : '';
         }),
         ...(files.length > 60 ? [`| … ${files.length - 60} more | | | |`] : []),
         '',
@@ -607,7 +654,7 @@ export function renderAreaMd(m: MapModel, i: number, meta: MapMeta): string {
             ? deps.map(([t, w]) => {
                   const r = f[t];
                   const where = r && r.area >= 0 ? m.areas[r.area]?.id ?? '' : r?.role ?? '';
-                  return `- \`${md(r?.path ?? '')}\` (${where}) — ${w} link(s)`;
+                  return `- ${code(r?.path ?? '')} (${where}) — ${w} link(s)`;
               })
             : ['- nothing']),
         '',
@@ -698,7 +745,23 @@ export function readMap(root: string): { meta: MapMeta; model: MapModel } | null
 function readMapAt(dir: string): { meta: MapMeta; model: MapModel } | null {
     const p = path.join(dir, 'map.json');
     try {
-        return JSON.parse(fs.readFileSync(p, 'utf-8')) as { meta: MapMeta; model: MapModel };
+        const parsed = JSON.parse(fs.readFileSync(p, 'utf-8')) as { meta?: MapMeta; model?: Partial<MapModel> } | null;
+        const m = parsed?.model;
+        // A map from another model version, or a stray file, reads as "no map"
+        // rather than crashing a reader that trusts its shape.
+        if (
+            !parsed?.meta ||
+            !m ||
+            m.version !== MAP_MODEL_VERSION ||
+            !Array.isArray(m.files) ||
+            !Array.isArray(m.areas) ||
+            !Array.isArray(m.edges) ||
+            typeof m.analyses !== 'object' ||
+            m.analyses === null
+        ) {
+            return null;
+        }
+        return parsed as { meta: MapMeta; model: MapModel };
     } catch {
         return null;
     }

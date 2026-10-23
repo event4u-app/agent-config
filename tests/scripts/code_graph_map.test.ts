@@ -5,7 +5,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
-import { buildMap, diffFiles, embedJson, MAP_TOKEN_BUDGET, recordOutcome } from '../../src/scripts/code_graph/map.js';
+import { buildMap, diffFiles, embedJson, MAP_TOKEN_BUDGET, readMap, readOutcomes, recordOutcome } from '../../src/scripts/code_graph/map.js';
 import { areaDrift, buildMapModel, outcomeScores, prOverlap, staticRole } from '../../src/scripts/code_graph/map_model.js';
 import { labelProblems } from '../../src/scripts/code_graph/map_verify.js';
 
@@ -303,5 +303,37 @@ describe('the map learns and serves the workflow (Phase 7)', () => {
         const r = await buildMap(root);
         const i = r.model.files.findIndex((f) => f.path === 'src/billing/f0.ts');
         expect(r.model.outcomes).toEqual([[i, 1]]);
+    });
+});
+
+describe('review findings, pinned', () => {
+    it('refuses an --out directory that holds someone else\'s files', async () => {
+        const foreign = path.join(root, 'docs');
+        write('docs/areas/keep.md', '# mine\n');
+        await expect(buildMap(root, { outDir: foreign })).rejects.toThrow(/not empty and holds no map\.json/);
+        expect(fs.existsSync(path.join(foreign, 'areas', 'keep.md'))).toBe(true);
+    });
+
+    it('reads a map of another shape as no map at all', async () => {
+        write('agents/map/map.json', '{}');
+        expect(readMap(root)).toBeNull();
+        write('agents/map/map.json', JSON.stringify({ meta: {}, model: { version: 999, files: [], areas: [], edges: [], analyses: {} } }));
+        expect(readMap(root)).toBeNull();
+        // ...and the next build over it draws instead of crashing on drift.
+        await expect(buildMap(root)).resolves.toBeDefined();
+    });
+
+    it('keeps a backtick in a file name from breaking out of its code span', async () => {
+        write('src/billing/we`ird.ts', "import { g0 } from './f0.js';\nexport const w = (): number => g0();\n");
+        await buildMap(root);
+        const page = fs.readdirSync(path.join(root, 'agents', 'map', 'areas')).map((f) => fs.readFileSync(path.join(root, 'agents', 'map', 'areas', f), 'utf-8')).join('\n');
+        expect(page).toContain("`src/billing/we'ird.ts`");
+        expect(page).not.toContain('we`ird');
+    });
+
+    it('records an outcome only for a file inside the root, and skips malformed log lines', () => {
+        expect(() => recordOutcome(root, path.join(os.tmpdir()), 'useful')).toThrow(/not a file inside/);
+        write('agents/runtime/state/map-outcomes.jsonl', 'null\n{not json\n{"path":"src/a.ts","outcome":"useful","at":"2026-01-01T00:00:00Z"}\n');
+        expect(readOutcomes(root)).toEqual([{ path: 'src/a.ts', outcome: 'useful', at: '2026-01-01T00:00:00Z' }]);
     });
 });
