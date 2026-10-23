@@ -96,6 +96,12 @@ export type ResolvedVia =
     | 'orm-relation'
     /** A dependency-injection declaration naming the injected class. */
     | 'di-binding'
+    /** A string literal equal to exactly one file's path (the default pass). */
+    | 'literal-path'
+    /** A dotted name equal to exactly one template's path (the default pass). */
+    | 'literal-dotted'
+    /** A page module whose path is its route (the default pass). */
+    | 'fs-route'
     /** Stated by a compiler-grade SCIP index the project ships (`scip_reader.ts`). */
     | 'compiler-index'
     | 'test-import'
@@ -162,6 +168,9 @@ const STATED_LIST = [
     'di-binding',
     'compiler-index',
     'test-import',
+    'literal-path',
+    'literal-dotted',
+    'fs-route',
 ] as const satisfies readonly ResolvedVia[];
 const GUESS_LIST = ['name-lookup', 'dynamic', 'foreign'] as const satisfies readonly ResolvedVia[];
 export type UnclassifiedResolvedVia = Exclude<ResolvedVia, (typeof STATED_LIST)[number] | (typeof GUESS_LIST)[number]>;

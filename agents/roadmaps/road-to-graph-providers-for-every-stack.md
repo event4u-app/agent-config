@@ -138,24 +138,24 @@ content. Fixture L's 56.6 % → 11.3 % and 340/340 are re-measured in 0.2, not t
 
 ## Phase 3 — The default, for every project, without a framework name
 
-- [ ] **3.1 `conventions-default` pass, mechanism `literal-path`.** A string literal equal to
+- [x] **3.1 `conventions-default` pass, mechanism `literal-path`.** A string literal equal to
       a repo-relative path, or one relative to its file (with extension inference), links to
       that file — only when exactly one file matches. `resolved_via: 'literal-path'`,
       INFERRED, never over an import or provider edge for the same pair.
       verify: a fixture test asserts one edge for a unique literal path and none for a two-match literal.
-- [ ] **3.2 Mechanism `literal-dotted`.** `a.b.c` or `a/b.ext` in a call argument links to
+- [x] **3.2 Mechanism `literal-dotted`.** `a.b.c` or `a/b.ext` in a call argument links to
       `<root>/a/b/c.<ext>` where `<root>` already holds files of that extension, single
       match only. Covers template names across frameworks without naming one.
       verify: a fixture test resolves a dotted template name and refuses an ambiguous one.
-- [ ] **3.3 Mechanism `manifest`.** Entry points from `package.json` (`main`, `bin`,
+- [x] **3.3 Mechanism `manifest`.** Entry points from `package.json` (`main`, `bin`,
       `exports`), `composer.json` `bin`, `pyproject.toml` `[project.scripts]`, Maven / Gradle
       main class; they become map entries.
       verify: a fixture test turns `package.json` `bin` and `pyproject.toml` scripts into map entries.
-- [ ] **3.4 Mechanism `fs-route`.** Page modules under `pages/`, `app/`, `routes/`,
+- [x] **3.4 Mechanism `fs-route`.** Page modules under `pages/`, `app/`, `routes/`,
       `src/routes/` become route nodes with paths derived from file paths, only when the
       directory holds page-shaped modules.
       verify: a fixture test derives route nodes from a `pages/` tree and none from a utility `routes/` folder.
-- [ ] **3.5 Each mechanism measured and switchable.** Per-mechanism edge counts and a sampled
+- [x] **3.5 Each mechanism measured and switchable.** Per-mechanism edge counts and a sampled
       precision on this repository and Fixture L go into the evidence file; a mechanism under
       the bar recorded there is off by default, not the pass.
       verify: the evidence file names a precision figure per mechanism.

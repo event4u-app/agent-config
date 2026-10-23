@@ -57,3 +57,24 @@ no Laravel marker (`tests/fixtures/persistence/**`, `internal/bench/scale-histor
 Hook bundle after the trust allowlist: 1,550,446 B against the 1,550,500 B ceiling. The
 trust lists live once in `types.ts` and the schema gate reads them; the optional
 `provider_id` type check was left out of `validate.ts` to stay inside the budget.
+
+## The default pass (Phase 3)
+
+Edges per mechanism, and a precision sample read by hand against the source line. A
+mechanism under the 90 % bar is off by default.
+
+| Mechanism | This repository | Fixture L | Precision sample | Default |
+|---|---|---|---|---|
+| `literal-path` | 433 | 102 | 25 / 25 (repository) · 20 / 20 (Fixture L) | on |
+| `literal-dotted` | — | 6 | 3 / 6 — `trans('common.sort')`, a translation key, matched a view of the same name | **off** |
+| `fs-route` | 9 | 0 | 9 / 9 | on |
+
+Two corrections from the first reading, before the sample above: a literal inside a
+backtick span is usually a mention in a comment and is no longer read; and a literal may
+name code, a document or a template, never a data file or a dotfile (the first run drew 832
+JSON, YAML and dotfile nodes into the map, among them a worktree's `.git` file).
+On Fixture L most `literal-path` edges are `export {X} from './y'` re-exports, which the
+extractor does not turn into edges — the default pass closes that gap as a side effect.
+
+Fixture L after Phase 3: 255 unconnected (11.4 %), 340 / 340 routes. Hook bundle:
+1,550,498 B against 1,550,500 B.

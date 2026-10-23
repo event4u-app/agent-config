@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
-import { buildFromRepo } from './build.js';
+import { buildFromRepo, readProjectProbe } from './build.js';
 import { computeVerdict, graphState, NATIVE_CACHE_REL } from './detect.js';
 import {
     areaDrift,
@@ -72,32 +72,48 @@ function gitHead(root: string): string {
 }
 
 /**
- * Entry points a manifest declares: `package.json` `bin` / `main` / `module`,
- * `composer.json` `bin`. Route files and `public/index.php` are recognised by
- * path in `staticRole`; this only adds what a manifest names explicitly.
+ * Entry points the project's manifests declare, in every package root:
+ * `package.json` `bin` / `main` / `module` / `exports`, `composer.json` `bin`,
+ * `pyproject.toml` `[project.scripts]`, a Maven `<mainClass>`. Framework entry
+ * files are a provider's role (`roleOf`); this only adds what a manifest names.
  */
 export function declaredEntryFiles(root: string): string[] {
     const out = new Set<string>();
-    const add = (v: unknown): void => {
-        if (typeof v !== 'string') return;
-        out.add(path.posix.normalize(v.replace(/^\.\//, '')));
-    };
-    try {
-        const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf-8')) as Record<string, unknown>;
-        const bin = pkg['bin'];
-        if (typeof bin === 'string') add(bin);
-        else if (bin && typeof bin === 'object') for (const v of Object.values(bin)) add(v);
-        add(pkg['main']);
-        add(pkg['module']);
-    } catch {
-        /* no package.json */
-    }
-    try {
-        const composer = JSON.parse(fs.readFileSync(path.join(root, 'composer.json'), 'utf-8')) as Record<string, unknown>;
-        const bin = composer['bin'];
-        if (Array.isArray(bin)) for (const v of bin) add(v);
-    } catch {
-        /* no composer.json */
+    for (const [rel, text] of readProjectProbe(root).manifests) {
+        const dir = path.posix.dirname(rel);
+        const add = (v: unknown): void => {
+            if (typeof v !== 'string' || v.includes('*') || /^[a-z]+:/i.test(v)) return;
+            out.add(path.posix.normalize(path.posix.join(dir, v.replace(/^\.\//, ''))));
+        };
+        const base = path.posix.basename(rel);
+        try {
+            if (base === 'package.json') {
+                const pkg = JSON.parse(text) as Record<string, unknown>;
+                const leaves = (v: unknown): void => {
+                    if (typeof v === 'string') add(v);
+                    else if (v && typeof v === 'object') for (const x of Object.values(v)) leaves(x);
+                };
+                leaves(pkg['bin']);
+                add(pkg['main']);
+                add(pkg['module']);
+                leaves(pkg['exports']);
+            } else if (base === 'composer.json') {
+                const bin = (JSON.parse(text) as Record<string, unknown>)['bin'];
+                if (Array.isArray(bin)) for (const v of bin) add(v);
+            } else if (base === 'pyproject.toml') {
+                const section = /^\[project\.scripts\]\s*$([\s\S]*?)(?=^\[|(?![\s\S]))/m.exec(text)?.[1] ?? '';
+                for (const m of section.matchAll(/=\s*["']([\w.]+):[\w.]+["']/g)) {
+                    const mod = (m[1] as string).replace(/\./g, '/');
+                    add(`${mod}.py`);
+                    add(`src/${mod}.py`);
+                }
+            } else if (base === 'pom.xml') {
+                const main = /<mainClass>\s*([\w.]+)\s*<\/mainClass>/.exec(text)?.[1];
+                if (main) add(`src/main/java/${main.replace(/\./g, '/')}.java`);
+            }
+        } catch {
+            /* an unreadable manifest declares nothing */
+        }
     }
     return [...out].sort();
 }

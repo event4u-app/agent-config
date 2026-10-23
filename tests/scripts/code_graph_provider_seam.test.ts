@@ -63,7 +63,7 @@ describe('project probe and detection by markers', () => {
 
 describe('the ordered pass list', () => {
     it('runs convention providers, then docs, then SCIP', () => {
-        expect(PASSES.map((p) => p.id)).toEqual(['convention-providers', 'docs', 'scip']);
+        expect(PASSES.map((p) => p.id)).toEqual(['convention-providers', 'conventions-default', 'docs', 'scip']);
     });
 
     it('reports a throwing pass and leaves the graph as the other passes made it', () => {

@@ -17,9 +17,11 @@ export interface ProjectProbe {
     manifests: ReadonlyMap<string, string>;
     /** Repo-relative paths of marker files that carry no text worth reading (an entry script). */
     markers: ReadonlySet<string>;
+    /** Every project path, sorted, code or not (templates, assets); empty when unknown. */
+    paths: readonly string[];
 }
 
-export const EMPTY_PROBE: ProjectProbe = { manifests: new Map(), markers: new Set() };
+export const EMPTY_PROBE: ProjectProbe = { manifests: new Map(), markers: new Set(), paths: [] };
 
 export interface ProviderInput {
     files: readonly SourceFile[];

@@ -8,6 +8,7 @@
  * supersedes the name guesses it duplicates.
  */
 import type { SourceFile } from './build.js';
+import { conventionsDefault } from './conventions_default.js';
 import { docsLayer } from './docs_layer.js';
 import { activeProviders, type ProjectProbe } from './providers/index.js';
 import type { ResolutionConfig } from './resolution_tiers.js';
@@ -75,12 +76,24 @@ const conventionProviders: GraphPass = {
     },
 };
 
+const defaults: GraphPass = {
+    id: 'conventions-default',
+    applies: (ctx) => ctx.files.length > 0,
+    run: (ctx) => {
+        const paths = ctx.probe.paths.length > 0 ? ctx.probe.paths : [...ctx.files, ...ctx.docs].map((f) => f.path).sort();
+        return conventionsDefault({ files: ctx.files, paths, nodes: ctx.nodes, edges: ctx.edges });
+    },
+};
+
 const docs: GraphPass = {
     id: 'docs',
     applies: (ctx) => ctx.docs.length > 0,
     run: (ctx) => {
         const allFiles = new Set([...ctx.files.map((f) => f.path), ...ctx.docs.map((d) => d.path)]);
-        return docsLayer(ctx.docs, allFiles);
+        const layer = docsLayer(ctx.docs, allFiles);
+        // An earlier pass may already have drawn a document as a link target.
+        const known = new Set(ctx.nodes.map((n) => n.id));
+        return { nodes: layer.nodes.filter((n) => !known.has(n.id)), edges: layer.edges };
     },
 };
 
@@ -93,7 +106,7 @@ const scip: GraphPass = {
     },
 };
 
-export const PASSES: readonly GraphPass[] = [conventionProviders, docs, scip];
+export const PASSES: readonly GraphPass[] = [conventionProviders, defaults, docs, scip];
 
 export interface PassReport {
     /** Edges removed by a keyed contest, per key (a provider id); only non-zero keys appear. */

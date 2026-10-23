@@ -134,9 +134,13 @@ export function readProjectProbe(root: string): ProjectProbe {
     const abs = path.resolve(root);
     const manifests = new Map<string, string>();
     const markers = new Set<string>();
-    for (const full of walkFiles(abs, (n) => MANIFEST_NAME.test(n) || PROBE_MARKERS.has(n))) {
+    const paths: string[] = [];
+    for (const full of walkFiles(abs, () => true)) {
         const rel = toPosixRel(abs, full);
-        if (PROBE_MARKERS.has(path.basename(full))) {
+        paths.push(rel);
+        const name = path.basename(full);
+        if (!MANIFEST_NAME.test(name) && !PROBE_MARKERS.has(name)) continue;
+        if (PROBE_MARKERS.has(name)) {
             markers.add(rel);
             continue;
         }
@@ -146,7 +150,7 @@ export function readProjectProbe(root: string): ProjectProbe {
             continue;
         }
     }
-    return { manifests, markers };
+    return { manifests, markers, paths };
 }
 
 function toPosixRel(root: string, full: string): string {
@@ -820,6 +824,14 @@ export function buildGraph(
         h.update(createHash('sha256').update(d.source, 'utf-8').digest('hex'));
         h.update('\n');
     }
+    // Manifests and markers decide which providers run: a changed manifest is
+    // a changed input even when no source file moved.
+    for (const [p, text] of [...probe.manifests].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+        h.update(`manifest\0${p}\0`);
+        h.update(createHash('sha256').update(text, 'utf-8').digest('hex'));
+        h.update('\n');
+    }
+    for (const p of [...probe.markers].sort()) h.update(`marker\0${p}\n`);
     // The SCIP index is an input like any source file: a new index must not
     // read as the same graph.
     for (const d of [...scip].sort((a, b) => (a.path < b.path ? -1 : 1))) {
