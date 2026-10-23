@@ -11,10 +11,10 @@
  * directory), with a run-local council file — never the user-global one:
  *
  *   cp internal/bench/free-hands-shadow/council.example.yml /tmp/fhs-council.yml
- *   AI_COUNCIL_CONFIG=/tmp/fhs-council.yml ./scripts-run internal/bench/free-hands-shadow/run.ts
- *   AI_COUNCIL_CONFIG=/tmp/fhs-council.yml ./scripts-run internal/bench/free-hands-shadow/run.ts --ac3-demo
- *   ./scripts-run internal/bench/free-hands-shadow/run.ts audit [--audit-model haiku]
- *   ./scripts-run internal/bench/free-hands-shadow/run.ts report [--out internal/bench/reports/free-hands-shadow.md]
+ *   AI_COUNCIL_CONFIG=/tmp/fhs-council.yml ./scripts-run internal/bench/free-hands-shadow/run
+ *   AI_COUNCIL_CONFIG=/tmp/fhs-council.yml ./scripts-run internal/bench/free-hands-shadow/run --ac3-demo
+ *   ./scripts-run internal/bench/free-hands-shadow/run audit [--audit-model haiku]
+ *   ./scripts-run internal/bench/free-hands-shadow/run report [--out internal/bench/reports/free-hands-shadow.md]
  *
  * The example file (`council.example.yml`, next to this one) is:
  *
@@ -336,6 +336,7 @@ async function callOnce(
             },
             ...(flips !== undefined ? { flips } : {}),
             egress: deps.egress ?? corpusEgress(),
+            now: deps.now,
         },
     );
     const after = readShadowLedger(deps.root);
@@ -360,9 +361,12 @@ async function callOnce(
     return { result, row, shadow };
 }
 
-/** Wait until the next free call may start: the pacing floor or the back-off, whichever is longer, from the last ledgered start. */
-async function pace(deps: HarnessDeps, starts: readonly { started_at: string }[], minIntervalMs: number, backoffMs: number): Promise<void> {
-    const last = starts.reduce((t, r) => Math.max(t, Date.parse(r.started_at)), 0);
+/**
+ * Wait until the next free call may start: the pacing floor or the back-off, whichever is longer, from the later of the
+ * last ledgered start and the last free answer. The keyless route counts its one-reply-per-30-s window from the reply.
+ */
+async function pace(deps: HarnessDeps, starts: readonly { started_at: string; shadow_ts?: string | null }[], minIntervalMs: number, backoffMs: number): Promise<void> {
+    const last = starts.reduce((t, r) => Math.max(t, Date.parse(r.started_at), r.shadow_ts ? Date.parse(r.shadow_ts) : 0), 0);
     const wait = last === 0 ? 0 : last + Math.max(minIntervalMs, backoffMs) - deps.now().getTime();
     if (wait > 0) await deps.sleep(wait);
 }
@@ -419,7 +423,7 @@ export async function runWindow(deps: HarnessDeps, opts: WindowOptions = {}): Pr
         appendJsonl(file, header);
     }
     const rows = [...ledger.rows];
-    const starts: { started_at: string }[] = [...ledger.rows, ...ledger.demos];
+    const starts: { started_at: string; shadow_ts?: string | null }[] = [...ledger.rows, ...ledger.demos];
     // Only a ledgered shadow row completes an item; one that wrote none is retried.
     const done = new Set(rows.filter((r) => r.shadowed).map((r) => r.id));
     const count = (k?: MeasuredKind): number => rows.filter((r) => r.shadowed && (k === undefined || r.kind === k)).length;

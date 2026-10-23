@@ -294,6 +294,20 @@ describe('the window stops, backs off and resumes from its own ledger', () => {
         expect((await stats()).paid - before.paid).toBe(FREE_FAILURE_STREAK_MAX + 1);
     });
 
+    it('pacing counts from the end of the last free answer, not only from its start', async () => {
+        // The keyless route allows one reply per 30 s per IP, counted from the reply (live 402 FREE_LIMIT, 2026-10-23).
+        const clock: Clock = { t: Date.parse('2026-10-22T10:00:00Z'), sleeps: [] };
+        await runWindow(deps({}, clock), { perKind: 1, kinds: ['classify'] });
+        const file = path.join(tmp, 'agents', 'runtime', 'bench', 'free-hands-shadow', 'run.jsonl');
+        const lines = fs.readFileSync(file, 'utf8').trimEnd().split('\n');
+        const last = JSON.parse(lines[lines.length - 1] as string) as { started_at: string; shadow_ts: string };
+        last.shadow_ts = new Date(Date.parse(last.started_at) + 10_000).toISOString();
+        lines[lines.length - 1] = JSON.stringify(last);
+        fs.writeFileSync(file, `${lines.join('\n')}\n`);
+        await runWindow(deps({}, clock), { perKind: 2, kinds: ['classify'] });
+        expect(clock.sleeps).toEqual([41_000]);
+    });
+
     it('pacing holds across restarts and counts the --ac3-demo call', async () => {
         const clock: Clock = { t: Date.parse('2026-10-22T10:00:00Z'), sleeps: [] };
         await ac3Demo(deps({}, clock), { minIntervalMs: 31_000 });
