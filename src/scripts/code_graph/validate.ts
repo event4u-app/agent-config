@@ -6,7 +6,21 @@ import type { CodeGraph } from './types.js';
 
 /** Mirrors `Relation` in types.ts. `tests` is derived by the build pass (3.2),
  * not extracted, and is validated on exactly the same terms as the rest. */
-const RELATIONS = new Set(['calls', 'imports', 'uses', 'inherits', 'member', 'tests']);
+const RELATIONS = new Set([
+    'calls',
+    'imports',
+    'uses',
+    'inherits',
+    'member',
+    'tests',
+    'routes-to',
+    'renders',
+    'includes',
+    'reads',
+    'migrates',
+    'persists',
+    'relates',
+]);
 const CONFIDENCES = new Set(['EXTRACTED', 'INFERRED', 'AMBIGUOUS']);
 /** Mirrors `ResolvedVia` in types.ts — the full union, including the four
  * values no build emits yet (2.3 and Phase 3 add them). */
@@ -16,6 +30,9 @@ const RESOLVED_VIA = new Set([
     'path-alias',
     'psr4',
     'route-table',
+    'directive-scan',
+    'schema-call',
+    'eloquent-relation',
     'test-import',
     'name-lookup',
     'dynamic',
@@ -34,6 +51,8 @@ const KINDS = new Set([
     'type',
     'enum',
     'skipped',
+    'route',
+    'table',
 ]);
 
 export interface ValidateResult {

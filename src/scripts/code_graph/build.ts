@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
 import { extractFile, type FileExtract, type RawEdge } from './extract.js';
+import { buildLaravelOverlay } from './laravel_overlay.js';
 import { grammarWasmPath } from './loader.js';
 import {
     ALIAS_VIA,
@@ -662,6 +663,20 @@ export function buildGraph(
         });
     }
 
+    // Framework links no import states (routes, views, tables); rule-read,
+    // emitted only when the target exists. Also drops the base edges it
+    // proves false: a fluent `->middleware()` bound by name to some
+    // unrelated in-repo `middleware()`.
+    const overlay = buildLaravelOverlay(files, nodes, resolution);
+    let routeBuilderCalls = 0;
+    if (overlay.nodes.length > 0 || overlay.edges.length > 0) {
+        const kept = edges.filter((e) => !overlay.dropEdge(e));
+        routeBuilderCalls = edges.length - kept.length;
+        edges.length = 0;
+        edges.push(...kept, ...overlay.edges);
+        nodes.push(...overlay.nodes);
+    }
+
     // deterministic ordering
     nodes.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     edges.sort((a, b) => {
@@ -672,7 +687,10 @@ export function buildGraph(
 
     const counts = { EXTRACTED: 0, INFERRED: 0, AMBIGUOUS: 0 };
     for (const e of edges) counts[e.confidence] += 1;
-    const suppressed = { dynamic_no_candidate: suppressedKeys.size };
+    const suppressed: CodeGraph['suppressed_edge_counts'] = {
+        dynamic_no_candidate: suppressedKeys.size,
+        ...(routeBuilderCalls > 0 ? { route_builder_call: routeBuilderCalls } : {}),
+    };
 
     const languages = [...new Set(extracts.map((e) => e.lang))].sort() as Lang[];
 

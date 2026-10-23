@@ -166,6 +166,9 @@ function resolveRoot(argv: string[]): string {
  */
 function legacyCacheNotice(root: string): string {
     const legacy = cacheFor(REPO_ROOT);
+    // Only an installed package is a wrong home for a cache; a source checkout
+    // of this repository legitimately keeps its own.
+    if (!REPO_ROOT.split(path.sep).includes('node_modules')) return '';
     if (path.resolve(REPO_ROOT) === path.resolve(root) || !fs.existsSync(legacy)) return '';
     return `    note: a stale cache from an older version sits inside the package: ${legacy} — safe to delete\n`;
 }

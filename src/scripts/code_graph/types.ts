@@ -28,7 +28,27 @@ export type EdgeConfidence = 'EXTRACTED' | 'INFERRED' | 'AMBIGUOUS';
  * extractor per-file and pure: the predicate needs only the two paths, and no
  * grammar can see whether a file is a test.
  */
-export type Relation = 'calls' | 'imports' | 'uses' | 'inherits' | 'member' | 'tests';
+/**
+ * The last seven are the framework links the Laravel overlay reads by rule
+ * (`laravel_overlay.ts`): a route to its handler, a method to the view it
+ * renders, a view to the view it includes, code to the translation or config
+ * file it reads, a migration to its table, a model to its table, a model to
+ * the model an Eloquent relation names.
+ */
+export type Relation =
+    | 'calls'
+    | 'imports'
+    | 'uses'
+    | 'inherits'
+    | 'member'
+    | 'tests'
+    | 'routes-to'
+    | 'renders'
+    | 'includes'
+    | 'reads'
+    | 'migrates'
+    | 'persists'
+    | 'relates';
 
 /**
  * HOW an edge's target was arrived at — the mechanism, not the confidence.
@@ -64,6 +84,12 @@ export type ResolvedVia =
     | 'path-alias'
     | 'psr4'
     | 'route-table'
+    /** A Blade directive or a `view()` / `__()` / `config()` call naming a file. */
+    | 'directive-scan'
+    /** A `Schema::create|table` call, or a model whose table one of them creates. */
+    | 'schema-call'
+    /** `$this->hasMany(Other::class)` and its siblings inside a model. */
+    | 'eloquent-relation'
     | 'test-import'
     | 'name-lookup'
     | 'dynamic'
@@ -147,7 +173,21 @@ export interface CodeNode {
      * to one by name. `const Widget = class {}` is emitted as `class` for
      * exactly that reason.
      */
-    kind: 'file' | 'class' | 'interface' | 'trait' | 'function' | 'method' | 'constant' | 'type' | 'enum' | 'skipped';
+    kind:
+        | 'file'
+        | 'class'
+        | 'interface'
+        | 'trait'
+        | 'function'
+        | 'method'
+        | 'constant'
+        | 'type'
+        | 'enum'
+        | 'skipped'
+        /** A declared route, `<VERB> <path>` (Laravel overlay). */
+        | 'route'
+        /** A database table a migration creates (Laravel overlay). */
+        | 'table';
     source_file: string;
     /** 1-based [startLine, startCol, endLine, endCol]; [] for synthetic nodes. */
     source_location: readonly number[];
@@ -220,7 +260,16 @@ export interface CodeGraph {
      * query verb could reach it: `affected` and `path` resolve their seeds
      * against real nodes. It was 257 of 660 edges on this engine's own source.
      */
-    suppressed_edge_counts: { dynamic_no_candidate: number };
+    suppressed_edge_counts: {
+        dynamic_no_candidate: number;
+        /**
+         * A fluent call on Laravel's route builder (`->middleware()`,
+         * `->prefix()`) that name lookup had bound to an unrelated in-repo
+         * method of the same name. Present only when it is non-zero, so a
+         * graph without routes keeps its bytes.
+         */
+        route_builder_call?: number;
+    };
     nodes: CodeNode[];
     edges: CodeEdge[];
 }

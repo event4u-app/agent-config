@@ -499,8 +499,9 @@ describe('3.1 — graph_node answers about one node, or refuses', () => {
         // Pinned against the union in types.ts, which erases at compile time —
         // an enum that silently lost a value would reject a legal filter.
         const declared = fs.readFileSync(path.join(CODE_GRAPH_DIR, 'types.ts'), 'utf-8');
-        const union = /export type Relation = ([^;]+);/.exec(declared)?.[1] ?? '';
+        const union = /export type Relation =\s*([^;]+);/.exec(declared)?.[1] ?? '';
         const vocab = [...union.matchAll(/'([a-z-]+)'/g)].map((m) => m[1] as string).sort();
+        expect(vocab.length).toBeGreaterThan(0);
         expect([...(props['relation']?.enum ?? [])].sort()).toStrictEqual(vocab);
     });
 });

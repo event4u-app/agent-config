@@ -33,6 +33,8 @@
             symbols: 'Symbols',
             tests: 'Covered by tests',
             externals: 'External dependencies',
+            requestPaths: 'Request paths',
+            reachedBy: 'Reached by routes',
             guesses: 'Guessed links',
             state: 'Graph state',
             cohesion: 'Cohesion',
@@ -71,6 +73,8 @@
             symbols: 'Symbole',
             tests: 'Abgedeckt durch Tests',
             externals: 'Externe Abhängigkeiten',
+            requestPaths: 'Request-Pfade',
+            reachedBy: 'Erreicht über Routen',
             guesses: 'Geratene Verbindungen',
             state: 'Graph-Stand',
             cohesion: 'Zusammenhalt',
@@ -352,6 +356,25 @@
         panel.appendChild(ul);
         if (list.length > cap) panel.appendChild(el('div', { class: 'more' }, t('more')(list.length - cap)));
     }
+    // route → handler → views · models → tables, one line per route.
+    function requestPathList(title, list) {
+        if (!list.length) return;
+        panel.appendChild(el('h3', null, title + ' (' + list.length + ')'));
+        var ul = el('ul', { class: 'plist' });
+        list.slice(0, 40).forEach(function (r) {
+            var li = el('li');
+            li.appendChild(el('code', null, r.route));
+            var parts = [];
+            if (r.handler >= 0) parts.push(base(files[r.handler].path) + (r.handlerSymbol ? '::' + r.handlerSymbol : ''));
+            r.views.forEach(function (v) { parts.push(base(files[v].path)); });
+            r.models.forEach(function (v) { parts.push(base(files[v].path)); });
+            r.tables.forEach(function (tb) { parts.push('⊞ ' + tb); });
+            li.appendChild(el('span', { class: 'fdir' }, parts.length ? '→ ' + parts.join(' → ') : '→ ' + t('none')));
+            ul.appendChild(li);
+        });
+        panel.appendChild(ul);
+        if (list.length > 40) panel.appendChild(el('div', { class: 'more' }, t('more')(list.length - 40)));
+    }
     function kv(pairs) {
         var dl = el('dl', { class: 'kv' });
         pairs.forEach(function (p) { dl.appendChild(el('dt', null, p[0])); dl.appendChild(el('dd', null, p[1])); });
@@ -373,6 +396,8 @@
             fileList(t('usedBy'), inOf[state.file].map(function (x) { return x[0]; }), 30);
             fileList(t('uses'), outOf[state.file].map(function (x) { return x[0]; }), 30);
             fileList(t('tests'), f.tests, 20);
+            requestPathList(t('requestPaths'), (model.analyses.requestPaths || []).filter(function (r) { return r.file === state.file; }));
+            requestPathList(t('reachedBy'), (model.analyses.requestPaths || []).filter(function (r) { return r.handler === state.file; }));
             panel.appendChild(el('h3', null, t('symbols') + ' (' + (f.symbols.length + f.symbolsOmitted) + ')'));
             var ul = el('ul', { class: 'plist' });
             f.symbols.forEach(function (s) {

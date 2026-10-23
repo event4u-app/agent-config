@@ -80,6 +80,19 @@ export interface MapArea {
     neighbours: number[];
 }
 
+/** One declared route and what its handler reaches (Laravel overlay). */
+export interface RequestPath {
+    route: string;
+    /** Index of the routes file. */
+    file: number;
+    /** Index of the handler's file, or -1 when the route names no resolvable handler. */
+    handler: number;
+    handlerSymbol: string;
+    views: number[];
+    models: number[];
+    tables: string[];
+}
+
 export interface MapThresholds {
     seed: number;
     /** In-degree above which a code file is held out as infrastructure. */
@@ -112,6 +125,9 @@ export interface MapModel {
         guessShare: number;
         trustedEdges: number;
         guessEdgeCount: number;
+        requestPaths: RequestPath[];
+        requestPathsTotal: number;
+        requestPathsResolved: number;
     };
 }
 
@@ -256,16 +272,19 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
 
     // 3. Roles: names first, then the two edge-dependent ones.
     const roles: FileRole[] = paths.map((p) => staticRole(p, entries));
+    // A layout every view extends couples views exactly the way a utility
+    // couples code, so views are eligible for the hold-out too.
+    const holdable = (r: FileRole | undefined): boolean => r === 'code' || r === 'view';
     const codeInDegrees = paths
-        .map((_, i) => (roles[i] === 'code' ? (inFiles[i] as number) : 0))
+        .map((_, i) => (holdable(roles[i]) ? (inFiles[i] as number) : 0))
         .filter((d) => d > 0)
         .sort((a, b) => a - b);
     // p99, floored at 10 so a small project never loses a file to the hold-out.
     const infraInDegree = Math.max(10, quantile(codeInDegrees, 0.99));
     for (let i = 0; i < paths.length; i++) {
-        if (roles[i] !== 'code') continue;
+        if (!holdable(roles[i])) continue;
         if ((inFiles[i] as number) > infraInDegree) roles[i] = 'infra';
-        else if (inFiles[i] === 0 && outFiles[i] === 0) roles[i] = 'isolated';
+        else if (roles[i] === 'code' && inFiles[i] === 0 && outFiles[i] === 0) roles[i] = 'isolated';
     }
 
     // 4. Areas: seeded Louvain over the coupled roles.
@@ -445,6 +464,8 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         .sort((a, b) => b[1] - a[1] || byPath(a[0], b[0]))
         .slice(0, 25) as Array<[string, number]>;
 
+    const requestPaths = collectRequestPaths(graph, idx);
+
     const trustedTotal = edges.reduce((n, e) => n + e[2], 0);
     const guessTotal = guessEdges.reduce((n, e) => n + e[2], 0);
 
@@ -491,8 +512,70 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
             guessShare: trustedTotal + guessTotal === 0 ? 0 : round(guessTotal / (trustedTotal + guessTotal)),
             trustedEdges: trustedTotal,
             guessEdgeCount: guessTotal,
+            requestPaths: requestPaths.slice(0, 200),
+            requestPathsTotal: requestPaths.length,
+            requestPathsResolved: requestPaths.filter((r) => r.handler >= 0).length,
         },
     };
+}
+
+/**
+ * Route → handler → the views it renders, the models it touches and their
+ * tables. Read off the overlay's edges only; a route whose handler did not
+ * resolve keeps `handler: -1` rather than a guess.
+ */
+function collectRequestPaths(graph: CodeGraph, idx: ReadonlyMap<string, number>): RequestPath[] {
+    const nodeById = new Map(graph.nodes.map((n) => [n.id, n] as const));
+    const out = new Map<string, CodeGraph['edges']>();
+    for (const e of graph.edges) {
+        const list = out.get(e.source) ?? [];
+        list.push(e);
+        out.set(e.source, list);
+    }
+    const tableOf = new Map<string, string[]>();
+    for (const e of graph.edges) {
+        if (e.relation !== 'persists') continue;
+        const t = nodeById.get(e.target);
+        if (t) tableOf.set(e.source, [...(tableOf.get(e.source) ?? []), t.label]);
+    }
+    const fileIdx = (id: string): number => {
+        const n = nodeById.get(id);
+        return n ? (idx.get(n.source_file) ?? -1) : -1;
+    };
+    const paths: RequestPath[] = [];
+    for (const n of graph.nodes) {
+        if (n.kind !== 'route') continue;
+        const target = (out.get(n.id) ?? []).find((e) => e.relation === 'routes-to')?.target;
+        const views = new Set<number>();
+        const models = new Set<number>();
+        const tables = new Set<string>();
+        if (target) {
+            // The handler method's own links, plus what its file imports:
+            // a controller names its models in `use` lines, not in calls the
+            // extractor can bind.
+            const handlerFile = nodeById.get(target)?.source_file;
+            const reach = [...(out.get(target) ?? []), ...(handlerFile ? (out.get(handlerFile) ?? []) : [])];
+            for (const e of reach) {
+                if (!isStatedResolution(e.resolved_via as ResolvedVia)) continue;
+                if (e.relation === 'renders') views.add(fileIdx(e.target));
+                const modelTables = tableOf.get(e.target);
+                if (modelTables) {
+                    models.add(fileIdx(e.target));
+                    for (const t of modelTables) tables.add(t);
+                }
+            }
+        }
+        paths.push({
+            route: n.label,
+            file: idx.get(n.source_file) ?? -1,
+            handler: target ? fileIdx(target) : -1,
+            handlerSymbol: target ? (nodeById.get(target)?.label ?? '') : '',
+            views: [...views].filter((v) => v >= 0).sort((a, b) => a - b),
+            models: [...models].filter((v) => v >= 0).sort((a, b) => a - b),
+            tables: [...tables].sort(),
+        });
+    }
+    return paths.sort((a, b) => (a.route < b.route ? -1 : a.route > b.route ? 1 : a.file - b.file));
 }
 
 function topDir(p: string): string {

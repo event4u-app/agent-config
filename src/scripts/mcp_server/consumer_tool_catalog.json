@@ -325,7 +325,14 @@
               "uses",
               "inherits",
               "member",
-              "tests"
+              "tests",
+              "routes-to",
+              "renders",
+              "includes",
+              "reads",
+              "migrates",
+              "persists",
+              "relates"
             ],
             "description": "Restrict to one relation. Omit for all of them."
           }

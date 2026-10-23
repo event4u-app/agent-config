@@ -119,7 +119,21 @@ function str(args: Record<string, unknown>, key: string): string {
  * drift. An enum that silently lost a value would turn a legal filter into a
  * rejected argument.
  */
-const RELATIONS = ['calls', 'imports', 'uses', 'inherits', 'member', 'tests'] as const;
+const RELATIONS = [
+    'calls',
+    'imports',
+    'uses',
+    'inherits',
+    'member',
+    'tests',
+    'routes-to',
+    'renders',
+    'includes',
+    'reads',
+    'migrates',
+    'persists',
+    'relates',
+] as const;
 
 function num(args: Record<string, unknown>, key: string, dflt: number): number {
     const v = args[key];

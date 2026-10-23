@@ -188,19 +188,23 @@ the engine.
 
 Pulled forward from `later/road-to-a-graph-that-wins` 1.2.
 
-- [ ] **4.1 Routes.** `Route::<verb>(path, [X::class, 'm'])`, with `use`-aliases resolved through
+- [x] **4.1 Routes.** `Route::<verb>(path, [X::class, 'm'])`, with `use`-aliases resolved through
   the existing PSR-4 tier, produces route nodes and `routes-to` edges (`resolved_via:
   'route-table'`). Groups contribute middleware and prefix; closures and string handlers are
   counted, not guessed.
-- [ ] **4.2 Views.** `view('a.b')` / `View::make` → `resources/views/a/b.blade.php`; Blade
+- [x] **4.2 Views.** `view('a.b')` / `View::make` → `resources/views/a/b.blade.php`; Blade
   `@extends/@include/@includeIf/@each/@component` and `<x-…>` → view edges (`resolved_via:
   'directive-scan'`).
-- [ ] **4.3 Data.** `Schema::create|table('t')` → table nodes; models → tables by `$table` or by
+- [x] **4.3 Data.** `Schema::create|table('t')` → table nodes; models → tables by `$table` or by
   convention; Eloquent relation methods → model edges.
-- [ ] **4.4 The request path on the map.** Overlay "route → controller → view / model → table"
+- [x] **4.4 The request path on the map.** Overlay "route → controller → view / model → table"
   with its own legend. Guard: fluent calls on a route builder (`->middleware()`) never resolve to
   an in-repo method of the same name.
   verify: on the Laravel fixture the route resolves through the controller to its view and table, and isolated files are below 20 %.
+  Result (Fixture L at its pin): files with no trusted edge 56.6 % → 11.3 %; 340/340 routes reach
+  a handler; 509 Blade includes, 127 renders, 47 tables, 62 Eloquent relations; one false
+  `->middleware()` edge dropped. 4.2 also reads `__()` / `trans()` / `config()` to their files
+  (*corrected in execution:* without it every translation file stayed unconnected).
 
 ## Phase 5 — Reach: freshness, MCP, review
 

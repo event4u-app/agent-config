@@ -258,6 +258,36 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
         ].join('\n'),
     ]);
 
+    const rp = m.analyses.requestPaths.filter((r) => r.handler >= 0);
+    if (m.analyses.requestPathsTotal > 0) {
+        // GET routes that render a view first: the page a reader recognises.
+        const rank = (r: (typeof rp)[number]): number =>
+            (r.route.startsWith('GET ') ? 0 : 2) + (r.views.length > 0 ? 0 : 1);
+        const withChain = rp
+            .filter((r) => r.views.length + r.tables.length > 0)
+            .sort((a, b) => rank(a) - rank(b) || (a.route < b.route ? -1 : a.route > b.route ? 1 : 0));
+        sections.push([
+            'Request paths',
+            [
+                '## Request paths',
+                '',
+                `${m.analyses.requestPathsTotal} declared routes; ${m.analyses.requestPathsResolved} reach a handler in this tree. ` +
+                    'Route → handler → views it renders · tables its models persist:',
+                '',
+                ...(withChain.length ? withChain : rp).slice(0, 10).map((r) => {
+                    const handlerFile = path.posix.basename(f[r.handler]?.path ?? '');
+                    const chain = [
+                        handlerFile.replace(/\.php$/, '') === r.handlerSymbol ? handlerFile : `${handlerFile}::${r.handlerSymbol}`,
+                        ...r.views.map((v) => path.posix.basename(f[v]?.path ?? '')),
+                        ...r.tables.map((t) => `table \`${md(t)}\``),
+                    ];
+                    return `- \`${md(r.route)}\` → ${chain.map((c) => (c.startsWith('table') ? c : `\`${md(c)}\``)).join(' → ')}`;
+                }),
+                '',
+            ].join('\n'),
+        ]);
+    }
+
     const entries = f.filter((x) => x.role === 'entry');
     sections.push([
         'Entry points',
