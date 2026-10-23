@@ -130,7 +130,7 @@ export function fsRoutes(kit: Kit, spec: FsRouteSpec): number {
     let count = 0;
     for (const p of kit.paths) {
         const r = spec.route(p);
-        if (!r || routedFiles.has(p)) continue;
+        if (!r) continue;
         kit.fileNode(p);
         const id = kit.route(p, r.verb, r.path, 1);
         kit.emit(id, p, 'routes-to', 'route-table');

@@ -172,36 +172,36 @@ handler, never per file.
       attribute / decorator / annotation routes, call-form routes, file-system routes (on
       3.4), table mapping, template roots (on 3.2).
       verify: each shared extractor has a unit test with a positive and a negative case.
-- [ ] **4.2 JavaScript / TypeScript:** React Router, Next.js (app and pages router, route
+- [x] **4.2 JavaScript / TypeScript:** React Router, Next.js (app and pages router, route
       handlers, layouts), Express, NestJS (controllers, providers → `injects`), Angular
       (route arrays, component templates), Vue Router / Nuxt, SvelteKit.
       verify: each named framework has a provider fixture test with positive and negative oracles.
-- [ ] **4.3 Python:** FastAPI, Flask (decorator routes, Jinja templates), Django (`urls.py`
+- [x] **4.3 Python:** FastAPI, Flask (decorator routes, Jinja templates), Django (`urls.py`
       → views, `render` templates, `Meta.db_table` / model tables, migrations), SQLAlchemy
       `__tablename__`.
       verify: each named framework has a provider fixture test with positive and negative oracles.
-- [ ] **4.4 Java:** Spring Boot (`@*Mapping` routes, `@Entity` / `@Table`, repositories →
+- [x] **4.4 Java:** Spring Boot (`@*Mapping` routes, `@Entity` / `@Table`, repositories →
       entities, `@Autowired` → `injects`).
       verify: the Spring Boot fixture test passes its positive and negative oracles.
-- [ ] **4.5 PHP:** Symfony (`#[Route]`, Twig render, Doctrine `#[ORM\Table]`), WordPress
+- [x] **4.5 PHP:** Symfony (`#[Route]`, Twig render, Doctrine `#[ORM\Table]`), WordPress
       (`add_action` / `add_filter` → callback as a `HOOK <name>` route, `get_template_part`).
       verify: the Symfony and WordPress fixture tests pass their positive and negative oracles.
-- [ ] **4.6 Go:** net/http, Gin, Echo, chi route registrations → handlers.
+- [x] **4.6 Go:** net/http, Gin, Echo, chi route registrations → handlers.
       verify: the Go router fixture test passes its positive and negative oracles.
-- [ ] **4.7 TypeScript ORM:** TypeORM `@Entity`.
+- [x] **4.7 TypeScript ORM:** TypeORM `@Entity`.
       verify: `npx vitest run tests/scripts/code_graph_providers` -> 0
 
 ## Phase 5 — C# and Ruby
 
-- [ ] **5.1 Measure the payload first.** Packed tarball delta of vendoring the C# and Ruby
+- [x] **5.1 Measure the payload first.** Packed tarball delta of vendoring the C# and Ruby
       grammars against `src/config/pack-size-budget.json`; record it. Over the regression
       line → council decision before 5.2, recorded in Decisions.
       verify: the evidence file records the packed delta and the budget line it was compared against.
-- [ ] **5.2 C# extraction.** Vendor `tree-sitter-c_sharp.wasm` with its SHA-256 in the
+- [x] **5.2 C# extraction.** Vendor `tree-sitter-c_sharp.wasm` with its SHA-256 in the
       grammars README; an extractor for namespaces, classes, interfaces, methods, `using`,
       inheritance, calls, in the shape `extract_more.ts` emits.
       verify: a C# fixture produces class, method, import and call edges in the extractor test.
-- [ ] **5.3 ASP.NET Core provider.** `[Http*]` / `[Route]` attributes and minimal-API
+- [x] **5.3 ASP.NET Core provider.** `[Http*]` / `[Route]` attributes and minimal-API
       `Map*` calls → handlers; EF Core `DbSet<T>` / `[Table]` → tables; Razor views rendered
       by name.
       verify: the ASP.NET Core fixture test passes its positive and negative oracles.
