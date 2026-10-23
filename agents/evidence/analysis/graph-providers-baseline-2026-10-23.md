@@ -46,3 +46,14 @@ runs only in the fixture packages whose `composer.json` requires `laravel/framew
 `illuminate/*` package, or that carry an `artisan` file, and only on their files.
 `schema-call` edges 13 → 6 and table nodes 8 → 3: the removed ones sat in fixture trees with
 no Laravel marker (`tests/fixtures/persistence/**`, `internal/bench/scale-history/**`).
+
+## After Phase 2 (schema 6)
+
+| Tree | Unconnected | Routes resolved | Edges |
+|---|---|---|---|
+| Fixture L | 255 (11.4 %) | 340 / 340 | 105,477 (+1,415: a method now `uses` the models its body names) |
+| synthetic | 0 | — | 11 (unchanged) |
+
+Hook bundle after the trust allowlist: 1,550,446 B against the 1,550,500 B ceiling. The
+trust lists live once in `types.ts` and the schema gate reads them; the optional
+`provider_id` type check was left out of `validate.ts` to stay inside the budget.

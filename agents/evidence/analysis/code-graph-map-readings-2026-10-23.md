@@ -42,11 +42,11 @@ by a fixture that must produce it and one that must not.
 | Project root (1.1) | flagless build from a nested dir indexes the fixture | the package tree is never written | `code_graph_consumer_root.test.ts` |
 | Unique ids (1.3) | `#Outcome@2`, getter/setter `@2`, nested `walk@2` | duplicate id rejected by `validateGraph` | `code_graph_unique_ids.test.ts` |
 | Cache key (1.5) | same fingerprint reuses every extract | changed fingerprint re-extracts all | `code_graph_unique_ids.test.ts` |
-| `routes-to` (4.1) | `use`-alias, sub-namespace alias, group prefix, resource | same-named `index` in another namespace; closure and string handlers get no target | `code_graph_laravel_overlay.test.ts` |
-| Fluent builder guard (4.4) | — | `->middleware()` never binds to an in-repo `middleware()` | `code_graph_laravel_overlay.test.ts` |
-| `renders` / `includes` (4.2) | `view()`, `@extends`, `@include`, `<x-…>` | a view name built at runtime | `code_graph_laravel_overlay.test.ts` |
-| `reads` (4.2) | `__('group.key')` to every locale file, `config('app.x')` | — (config with two candidate files is skipped by rule) | `code_graph_laravel_overlay.test.ts` |
-| `migrates` / `persists` / `relates` (4.3) | convention and `$table`, `hasMany` | — | `code_graph_laravel_overlay.test.ts` |
+| `routes-to` (4.1) | `use`-alias, sub-namespace alias, group prefix, resource | same-named `index` in another namespace; closure and string handlers get no target | `code_graph_provider_laravel.test.ts` |
+| Fluent builder guard (4.4) | — | `->middleware()` never binds to an in-repo `middleware()` | `code_graph_provider_laravel.test.ts` |
+| `renders` / `includes` (4.2) | `view()`, `@extends`, `@include`, `<x-…>` | a view name built at runtime | `code_graph_provider_laravel.test.ts` |
+| `reads` (4.2) | `__('group.key')` to every locale file, `config('app.x')` | — (config with two candidate files is skipped by rule) | `code_graph_provider_laravel.test.ts` |
+| `migrates` / `persists` / `relates` (4.3) | convention and `$table`, `hasMany` | — | `code_graph_provider_laravel.test.ts` |
 | Python / Java / Go imports (6.1) | module-path resolution, Go package to every file | stdlib → `external:`; a Java suffix matching two files resolves to nothing; Go test files excluded | `code_graph_more_languages.test.ts` |
 | Vue (6.1) | script-block import resolves | template markup never parsed as code; line numbers kept | `code_graph_more_languages.test.ts` |
 | `compiler-index` (6.2) | a SCIP reference becomes an edge | the native dynamic guess it duplicates is dropped; a truncated index throws | `code_graph_scip.test.ts` |

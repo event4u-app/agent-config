@@ -34,12 +34,12 @@ export interface ProviderResult {
     edges: CodeEdge[];
     /** Base edges the provider proves false; applied only when it drew something. */
     contest?: (e: CodeEdge) => boolean;
-    /** Name of the suppressed-edge counter the contested edges are reported under. */
-    contestKey?: string;
 }
 
 export interface ConventionProvider {
     id: string;
+    /** Basenames of marker files whose presence the probe should record (an entry script). */
+    markers?: readonly string[];
     /** Package roots this provider applies to; empty when it does not. */
     detect(probe: ProjectProbe): string[];
     build(input: ProviderInput): ProviderResult;

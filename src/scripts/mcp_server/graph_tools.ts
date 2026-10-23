@@ -134,6 +134,7 @@ const RELATIONS = [
     'migrates',
     'persists',
     'relates',
+    'injects',
     'documents',
 ] as const;
 

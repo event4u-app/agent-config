@@ -437,8 +437,38 @@ export function buildLaravelOverlay(
             const file = classFile(fq);
             const target = file ? `${file}#${shortName(fq)}` : null;
             if (!target || !nodeById.has(target)) continue;
-            emit(enclosing(d.file.path, at(m.index as number)), target, 'relates', 'eloquent-relation');
+            emit(enclosing(d.file.path, at(m.index as number)), target, 'relates', 'orm-relation');
             stats.relations += 1;
+        }
+    }
+
+    // Which models a method names. A controller imports its models once per
+    // file, so a route's tables are read per handler from these edges rather
+    // than from the file's `use` lines (which attribute every model of the file
+    // to every route the file serves).
+    const modelIds = new Set<string>();
+    for (const [id, d] of classDecl) {
+        const name = id.split('#')[1] as string;
+        if (modelNames.has(d.parent) && !MODEL_BASES.has(name) && nodeById.has(id)) modelIds.add(id);
+    }
+    if (modelIds.size > 0) {
+        for (const f of php) {
+            if (blade(f.path)) continue;
+            const scope = phpScope(f.source);
+            const lines = f.source.split('\n');
+            for (const n of symbolsByFile.get(f.path) ?? []) {
+                if (n.kind !== 'method') continue;
+                const [s0, , e0] = n.source_location as [number, number, number, number];
+                const body = lines.slice(s0 - 1, e0).join('\n');
+                const own = n.id.split('::')[0];
+                for (const token of new Set([...body.matchAll(/\b([A-Z]\w*)\b/g)].map((m) => m[1] as string))) {
+                    const fq = qualify(token, scope);
+                    const file = classFile(fq);
+                    const target = file ? `${file}#${shortName(fq)}` : null;
+                    if (!target || target === own || !modelIds.has(target)) continue;
+                    emit(n.id, target, 'uses', scope.uses.has(token) ? 'import-specifier' : 'psr4');
+                }
+            }
         }
     }
 
@@ -489,10 +519,11 @@ function laravelRole(p: string): FileRole | undefined {
 
 export const laravelProvider: ConventionProvider = {
     id: 'laravel',
+    markers: ['artisan'],
     detect: detectLaravel,
     build: ({ files, baseNodes, resolution }) => {
         const o = buildLaravelOverlay(files, baseNodes, resolution);
-        return { nodes: o.nodes, edges: o.edges, contest: o.dropEdge, contestKey: 'route_builder_call' };
+        return { nodes: o.nodes, edges: o.edges, contest: o.dropEdge };
     },
     roleOf: laravelRole,
 };

@@ -14,7 +14,7 @@
  * still reads. A malformed buffer throws; the caller treats that as "no SCIP".
  */
 import type { CodeEdge, CodeNode } from './types.js';
-import { GUESS_RESOLVED_VIA } from './types.js';
+import { isStatedResolution } from './types.js';
 
 export interface ScipOccurrence {
     /** 0-based start line. */
@@ -192,7 +192,7 @@ export function supersededByScip(scip: readonly CodeEdge[], nodes: readonly Code
         named.set(e.source, set);
     }
     return (e: CodeEdge): boolean => {
-        if (!GUESS_RESOLVED_VIA.has(e.resolved_via)) return false;
+        if (isStatedResolution(e.resolved_via)) return false;
         const set = named.get(e.source);
         if (!set) return false;
         const target = label.get(e.target) ?? e.target.replace(/^symbol:/, '');

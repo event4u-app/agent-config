@@ -115,22 +115,22 @@ content. Fixture L's 56.6 % → 11.3 % and 340/340 are re-measured in 0.2, not t
 
 ## Phase 2 — Names, trust and provenance (schema 6)
 
-- [ ] **2.1 Generic names.** `'eloquent-relation'` → `'orm-relation'`;
+- [x] **2.1 Generic names.** `'eloquent-relation'` → `'orm-relation'`;
       `suppressed_edge_counts.route_builder_call` → `contested_by_provider: { <id>: n }`;
       comments in `types.ts` / `map_model.ts` drop framework names. Every provider edge
       carries `provider_id`. `SCHEMA_VERSION` 5 → 6; the sidecar refusal makes old caches
       rebuild.
       verify: `grep -rc 'eloquent-relation' src/scripts/code_graph/types.ts` -> /^0$/
-- [ ] **2.2 Trust is an allowlist.** `STATED_RESOLVED_VIA` lists every stated mechanism
+- [x] **2.2 Trust is an allowlist.** `STATED_RESOLVED_VIA` lists every stated mechanism
       explicitly; `isStatedResolution` reads it, so an unlisted value is a guess. All four
       readers switch; the foreign-graph test still refuses a foreign-only graph.
       verify: a test adds an unknown mechanism and asserts it is not stated.
-- [ ] **2.3 The core stays neutral, enforced by a test.** `code_graph_core_neutral.test.ts`:
+- [x] **2.3 The core stays neutral, enforced by a test.** `code_graph_core_neutral.test.ts`:
       the core files (`build`, `passes`, `map_model`, `map`, `types`, `validate`, `query`,
       `verbs`) contain no provider id from the registry and import providers only through
       `providers/index.ts`; every registered provider has an oracle test file.
       verify: `npx vitest run tests/scripts/code_graph_core_neutral.test.ts` -> 0
-- [ ] **2.4 Request paths per handler (C7).** A route's tables come from the handler
+- [x] **2.4 Request paths per handler (C7).** A route's tables come from the handler
       method's own edges and from models the handler body names, not from every edge of its
       file.
       verify: a two-route controller fixture where each action uses a different model shows

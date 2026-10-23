@@ -17,7 +17,7 @@ import louvain from 'graphology-communities-louvain';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 
 import { providerRole } from './providers/index.js';
-import type { CodeGraph, ResolvedVia } from './types.js';
+import type { ActiveProviderRecord, CodeGraph, ResolvedVia } from './types.js';
 import { isStatedResolution } from './types.js';
 
 export const MAP_MODEL_VERSION = 1;
@@ -82,7 +82,7 @@ export interface MapArea {
     neighbours: number[];
 }
 
-/** One declared route and what its handler reaches (Laravel overlay). */
+/** One declared route and what its handler reaches (a convention provider). */
 export interface RequestPath {
     route: string;
     /** Index of the routes file. */
@@ -209,13 +209,13 @@ const CONFIG_BASENAME =
  * The role a path has before any edge is looked at. `infra` and `isolated`
  * depend on edges and are decided later; everything here is a name fact.
  */
-export function staticRole(p: string, entries: ReadonlySet<string>): FileRole {
+export function staticRole(p: string, entries: ReadonlySet<string>, active?: readonly ActiveProviderRecord[]): FileRole {
     if (/\.mdx?$/i.test(p)) return 'doc';
     if (isTestPath(p)) return 'test';
     const base = path.posix.basename(p);
     // A provider's view role outranks the neutral rules below; any other role it
     // gives sits where an entry would.
-    const byProvider = providerRole(p);
+    const byProvider = providerRole(p, active);
     if (byProvider === 'view') return 'view';
     if (/(^|\/)(database\/)?migrations\//.test(p)) return 'migration';
     if (/(^|\/)(resources\/)?lang\//.test(p)) return 'translation';
@@ -311,7 +311,8 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
     }
 
     // 3. Roles: names first, then the two edge-dependent ones.
-    const roles: FileRole[] = paths.map((p) => staticRole(p, entries));
+    const active = graph.providers ?? [];
+    const roles: FileRole[] = paths.map((p) => staticRole(p, entries, active));
     // A layout every view extends couples views exactly the way a utility
     // couples code, so views are eligible for the hold-out too.
     const holdable = (r: FileRole | undefined): boolean => r === 'code' || r === 'view';
@@ -653,17 +654,16 @@ function collectRequestPaths(graph: CodeGraph, idx: ReadonlyMap<string, number>)
         const models = new Set<number>();
         const tables = new Set<string>();
         if (target) {
-            // The handler method's own links, plus what its file imports:
-            // a controller names its models in `use` lines, not in calls the
-            // extractor can bind.
-            const handlerFile = nodeById.get(target)?.source_file;
-            const reach = [...(out.get(target) ?? []), ...(handlerFile ? (out.get(handlerFile) ?? []) : [])];
-            for (const e of reach) {
+            // The handler's own links only: what this route's code renders and
+            // names. Its file's links would hand every model the controller
+            // imports to every route the controller serves.
+            for (const e of out.get(target) ?? []) {
                 if (!isStatedResolution(e.resolved_via as ResolvedVia)) continue;
                 if (e.relation === 'renders') views.add(fileIdx(e.target));
-                const modelTables = tableOf.get(e.target);
+                const model = tableOf.has(e.target) ? e.target : e.target.split('::')[0];
+                const modelTables = model ? tableOf.get(model) : undefined;
                 if (modelTables) {
-                    models.add(fileIdx(e.target));
+                    models.add(fileIdx(model as string));
                     for (const t of modelTables) tables.add(t);
                 }
             }

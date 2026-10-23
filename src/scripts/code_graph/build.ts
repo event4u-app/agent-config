@@ -19,7 +19,7 @@ import { write_atomic } from '../_lib/fs_atomic.js';
 import { extractFile, type FileExtract, type RawEdge } from './extract.js';
 import { grammarWasmPath } from './loader.js';
 import { type PassReport, runPasses } from './passes.js';
-import { EMPTY_PROBE, type ProjectProbe } from './providers/index.js';
+import { EMPTY_PROBE, PROBE_MARKERS, type ProjectProbe } from './providers/index.js';
 import {
     ALIAS_VIA,
     aliasRulesFrom,
@@ -128,17 +128,15 @@ function walkFiles(root: string, accept: (name: string) => boolean): string[] {
 
 /** Manifests a provider may read to detect a stack, by basename. */
 const MANIFEST_NAME = /^(?:composer\.json|package\.json|pyproject\.toml|requirements[\w.-]*\.txt|pom\.xml|build\.gradle(?:\.kts)?|go\.mod|[\w.-]+\.csproj|Gemfile)$/;
-/** Marker files whose presence, not content, is the signal. */
-const MARKER_NAME = /^(?:artisan|manage\.py)$/;
 
 /** The project's manifests and marker files, for provider detection (ADR-298). */
 export function readProjectProbe(root: string): ProjectProbe {
     const abs = path.resolve(root);
     const manifests = new Map<string, string>();
     const markers = new Set<string>();
-    for (const full of walkFiles(abs, (n) => MANIFEST_NAME.test(n) || MARKER_NAME.test(n))) {
+    for (const full of walkFiles(abs, (n) => MANIFEST_NAME.test(n) || PROBE_MARKERS.has(n))) {
         const rel = toPosixRel(abs, full);
-        if (MARKER_NAME.test(path.basename(full))) {
+        if (PROBE_MARKERS.has(path.basename(full))) {
             markers.add(rel);
             continue;
         }
@@ -801,7 +799,9 @@ export function buildGraph(
     for (const e of edges) counts[e.confidence] += 1;
     const suppressed: CodeGraph['suppressed_edge_counts'] = {
         dynamic_no_candidate: suppressedKeys.size,
-        ...passes.suppressed,
+        ...(Object.keys(passes.suppressed).length > 0
+            ? { contested_by_provider: Object.fromEntries(Object.entries(passes.suppressed).sort()) }
+            : {}),
     };
 
     const languages = [...new Set(extracts.map((e) => e.lang))].sort() as Lang[];
@@ -834,6 +834,7 @@ export function buildGraph(
         grammar_abi: EXPECTED_GRAMMAR_ABI,
         edge_confidence_counts: counts,
         suppressed_edge_counts: suppressed,
+        ...(passes.providers.length > 0 ? { providers: passes.providers } : {}),
         nodes,
         edges,
     };
@@ -909,6 +910,7 @@ export function serializeGraph(g: CodeGraph): string {
         'grammar_abi',
         'edge_confidence_counts',
         'suppressed_edge_counts',
+        'providers',
         'nodes',
         'edges',
     ];
@@ -937,13 +939,14 @@ export function serializeGraph(g: CodeGraph): string {
         // byte what it was before this field existed.
         if (e.ambiguity_reason) base['ambiguity_reason'] = e.ambiguity_reason;
         if (e.candidates) base['candidates'] = e.candidates;
+        if (e.provider_id) base['provider_id'] = e.provider_id;
         return base;
     };
     const ordered: Record<string, unknown> = {};
     for (const k of key_order) {
         if (k === 'nodes') ordered[k] = g.nodes.map(node);
         else if (k === 'edges') ordered[k] = g.edges.map(edge);
-        else ordered[k] = g[k];
+        else if (g[k] !== undefined) ordered[k] = g[k];
     }
     return JSON.stringify(ordered, null, 2) + '\n';
 }

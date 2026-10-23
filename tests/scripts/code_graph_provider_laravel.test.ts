@@ -39,6 +39,8 @@ beforeAll(async () => {
             "Route::get('/ping', function () { return 'pong'; });",
             "Route::get('/legacy', 'LegacyController@show');",
             "Route::resource('photos', C\\PhotoController::class);",
+            "Route::get('/library/books', [C\\LibraryController::class, 'books']);",
+            "Route::get('/library/chapters', [C\\LibraryController::class, 'chapters']);",
             '',
         ].join('\n'),
     );
@@ -58,6 +60,11 @@ beforeAll(async () => {
     write(
         'app/Http/Controllers/PhotoController.php',
         "<?php\nnamespace App\\Http\\Controllers;\nclass PhotoController {\n    public function index() { return 1; }\n    public function store() { return 2; }\n}\n",
+    );
+    // Two actions, two models: each route must carry only its own table.
+    write(
+        'app/Http/Controllers/LibraryController.php',
+        "<?php\nnamespace App\\Http\\Controllers;\nuse App\\Models\\Book;\nuse App\\Models\\Chapter;\nclass LibraryController {\n    public function books() {\n        return Book::all();\n    }\n    public function chapters() {\n        return Chapter::all();\n    }\n}\n",
     );
     // An unrelated in-repo `middleware()`: name lookup used to bind the
     // routes file's fluent `->middleware()` to it.
@@ -132,7 +139,7 @@ describe('routes (4.1)', () => {
             (e) => e.target === 'app/Support/Permission.php#Permission::middleware' && e.relation === 'calls',
         );
         expect(bad).toEqual([]);
-        expect(graph.suppressed_edge_counts.route_builder_call ?? 0).toBeGreaterThan(0);
+        expect(graph.suppressed_edge_counts.contested_by_provider?.['laravel'] ?? 0).toBeGreaterThan(0);
     });
 });
 
@@ -172,6 +179,14 @@ describe('data (4.3)', () => {
         expect(has('app/Models/Book.php#Book::chapters', 'relates', 'app/Models/Chapter.php#Chapter')).toBe(true);
     });
 
+    it('stamps every edge it draws with its provider id and records itself on the graph', () => {
+        const routed = graph.edges.filter((e) => e.relation === 'routes-to');
+        expect(routed.length).toBeGreaterThan(0);
+        expect(routed.every((e) => e.provider_id === 'laravel')).toBe(true);
+        expect(graph.edges.some((e) => e.relation === 'calls' && e.provider_id)).toBe(false);
+        expect(graph.providers).toEqual([{ id: 'laravel', roots: [''] }]);
+    });
+
     it('keeps the graph schema-valid with the new relations and kinds', () => {
         expect(validateGraph(JSON.parse(JSON.stringify(graph))).ok).toBe(true);
     });
@@ -185,5 +200,12 @@ describe('the request path on the map (4.4)', () => {
         expect(m.files[r?.handler ?? -1]?.path).toBe('app/Http/Controllers/BookController.php');
         expect(r?.views.map((v) => m.files[v]?.path)).toEqual(['resources/views/books/index.blade.php']);
         expect(r?.tables).toEqual(['books']);
+    });
+
+    it('gives each route of one controller only the tables its own handler names', () => {
+        const m = buildMapModel(graph);
+        const tablesOf = (route: string): string[] | undefined => m.analyses.requestPaths.find((x) => x.route === route)?.tables;
+        expect(tablesOf('GET /library/books')).toEqual(['books']);
+        expect(tablesOf('GET /library/chapters')).toEqual(['book_chapters']);
     });
 });

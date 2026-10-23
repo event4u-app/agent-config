@@ -12,7 +12,7 @@ import { docsLayer } from './docs_layer.js';
 import { activeProviders, type ProjectProbe } from './providers/index.js';
 import type { ResolutionConfig } from './resolution_tiers.js';
 import { type ScipDocument, scipEdges, supersededByScip } from './scip_reader.js';
-import type { CodeEdge, CodeNode } from './types.js';
+import type { ActiveProviderRecord, CodeEdge, CodeNode } from './types.js';
 
 export interface PassContext {
     files: readonly SourceFile[];
@@ -43,6 +43,8 @@ export interface PassResult {
     contests?: Contest[];
     /** Failures inside the pass that did not stop it (one provider of several). */
     failures?: PassFailure[];
+    /** Convention providers that applied, for the graph's record. */
+    providers?: ActiveProviderRecord[];
 }
 
 export interface GraphPass {
@@ -55,14 +57,15 @@ const conventionProviders: GraphPass = {
     id: 'convention-providers',
     applies: (ctx) => activeProviders(ctx.probe).length > 0,
     run: (ctx) => {
-        const out: PassResult = { nodes: [], edges: [], contests: [], failures: [] };
+        const out: PassResult = { nodes: [], edges: [], contests: [], failures: [], providers: [] };
         for (const { provider, roots } of activeProviders(ctx.probe)) {
+            out.providers?.push({ id: provider.id, roots });
             try {
                 const files = roots.includes('') ? ctx.files : ctx.files.filter((f) => roots.some((r) => f.path.startsWith(`${r}/`)));
                 const r = provider.build({ files, baseNodes: ctx.nodes, resolution: ctx.resolution, roots });
                 if (r.nodes.length === 0 && r.edges.length === 0) continue;
-                if (r.contest) out.contests?.push({ key: r.contestKey, test: r.contest });
-                for (const e of r.edges) out.edges.push(e);
+                if (r.contest) out.contests?.push({ key: provider.id, test: r.contest });
+                for (const e of r.edges) out.edges.push({ ...e, provider_id: provider.id });
                 for (const n of r.nodes) out.nodes.push(n);
             } catch (e) {
                 out.failures?.push({ pass: `convention-providers:${provider.id}`, reason: (e as Error).message });
@@ -93,9 +96,10 @@ const scip: GraphPass = {
 export const PASSES: readonly GraphPass[] = [conventionProviders, docs, scip];
 
 export interface PassReport {
-    /** Edges removed by a keyed contest, per key; only non-zero keys appear. */
+    /** Edges removed by a keyed contest, per key (a provider id); only non-zero keys appear. */
     suppressed: Record<string, number>;
     failures: PassFailure[];
+    providers: ActiveProviderRecord[];
 }
 
 /** Run every applicable pass in order, mutating `nodes` / `edges` in place. */
@@ -105,7 +109,7 @@ export function runPasses(
     edges: CodeEdge[],
     passes: readonly GraphPass[] = PASSES,
 ): PassReport {
-    const report: PassReport = { suppressed: {}, failures: [] };
+    const report: PassReport = { suppressed: {}, failures: [], providers: [] };
     for (const pass of passes) {
         const ctx: PassContext = { ...base, nodes, edges };
         let result: PassResult;
@@ -117,6 +121,7 @@ export function runPasses(
             continue;
         }
         report.failures.push(...(result.failures ?? []));
+        report.providers.push(...(result.providers ?? []));
         for (const c of result.contests ?? []) {
             const kept = edges.filter((e) => !c.test(e));
             const removed = edges.length - kept.length;

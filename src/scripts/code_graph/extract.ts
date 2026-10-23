@@ -11,7 +11,7 @@
  *               receivers resolved against the parsed class hierarchy.
  *   AMBIGUOUS — dynamic method calls, facades, scoped calls to an unresolved
  *               name: kept with candidates, never dropped. This is the
- *               expected majority for dynamic-dispatch code (Laravel etc.).
+ *               expected majority for dynamic-dispatch code (PHP frameworks etc.).
  */
 import {
     type CodeNode,
