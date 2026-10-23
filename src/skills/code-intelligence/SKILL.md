@@ -39,7 +39,7 @@ code-graph and no appetite to build one — plain `grep`/read is right there.
 ## Procedure
 
 0. **Orient first, when the question is "where does X live" rather than "who
-   calls X".** If `agents/map/MAP.md` exists, read it: it names the project's
+   calls X".** If `agents/map/MAP.md` exists, read it: it names the project's <!-- ref-ignore -->
    areas (files grouped by coupling), its infrastructure files and its cycles.
    No map yet? `agent-config code-graph map` builds one in seconds. Then query.
 1. **Detect the source.** `agent-config code-graph detect` — is a fresh consumer
@@ -250,7 +250,7 @@ paragraph claiming "the same five answers" directly after a list of four:
 | `graph_query` | `query` |
 | `graph_path` | `path` |
 | `graph_node` | no CLI verb — one symbol's location, in-edges, out-edges and degree |
-| `graph_map_status` | whether `agents/map/` exists, its counts and freshness |
+| `graph_map_status` | whether `agents/map/` exists, its counts and freshness | <!-- ref-ignore -->
 | `graph_area` | one area of the map: files, hubs, what it depends on |
 
 `untested` has no tool of its own; it is a flag on `graph_impact`, because the
