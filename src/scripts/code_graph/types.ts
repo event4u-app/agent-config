@@ -146,16 +146,14 @@ export type EdgeProvider =
  * from it and tagging that `test-import` made a wrong target trustworthy to
  * every consumer of the filter. One set, two readers, and the build pass can no
  * longer disagree with the query tier about what a guess is.
+ *
+ * The accepted-edge filter is a DENYLIST, so a new value is accepted by
+ * default — which is exactly backwards for `foreign`. It must be listed here
+ * or a consumer's graph would silently answer the gate verbs as if this
+ * package had resolved its edges. (Kept out of the literal: esbuild carries a
+ * comment inside an expression into the hook bundle.)
  */
-export const GUESS_RESOLVED_VIA: ReadonlySet<ResolvedVia> = new Set<ResolvedVia>([
-    'name-lookup',
-    'dynamic',
-    // The accepted-edge filter is a DENYLIST, so a new value is accepted by
-    // default — which is exactly backwards for this one. `foreign` must be
-    // listed here or a consumer's graph would silently answer the gate verbs
-    // as if this package had resolved its edges.
-    'foreign',
-]);
+export const GUESS_RESOLVED_VIA: ReadonlySet<ResolvedVia> = new Set<ResolvedVia>(['name-lookup', 'dynamic', 'foreign']);
 
 /** Does this edge's target rest on a stated fact rather than a guess? */
 export function isStatedResolution(resolved_via: ResolvedVia): boolean {
@@ -316,6 +314,8 @@ export const SCHEMA_VERSION = 5;
 export const MAX_FILE_BYTES = 1_000_000;
 
 /** file-extension → language, launch set only. */
+// `.vue`: a component's `<script>` is TypeScript or JavaScript; extract.ts blanks the
+// template and style around it. (Outside the literal: esbuild keeps comments inside one.)
 export const EXT_LANG: Readonly<Record<string, Lang>> = {
     '.php': 'php',
     '.ts': 'typescript',
@@ -329,8 +329,6 @@ export const EXT_LANG: Readonly<Record<string, Lang>> = {
     '.py': 'python',
     '.go': 'go',
     '.java': 'java',
-    // A single-file component's `<script>` is TypeScript or JavaScript; the
-    // extractor blanks the template and style around it (extract.ts).
     '.vue': 'typescript',
 };
 

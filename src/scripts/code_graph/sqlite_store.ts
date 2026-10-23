@@ -166,7 +166,7 @@ export function emitSqliteTwin(graph: CodeGraph, serialized: string, jsonPath: s
         fs.rmSync(tmp, { force: true });
         // Said once, on stderr: a silent `false` here is how the index went
         // unwritten on every real repository without anyone noticing.
-        process.stderr.write(`code-graph: SQLite index not written — ${(e as Error).message}\n`);
+        process.stderr.write(`code-graph: index not written: ${(e as Error).message}\n`);
         return false;
     }
 }
