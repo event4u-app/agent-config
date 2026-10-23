@@ -674,6 +674,11 @@ if [ -f "$cg_cache" ] && [ -x ./agent-config ]; then
         (
             trap 'rmdir "$cg_lock" 2>/dev/null || true' EXIT
             ./agent-config code-graph refresh --budget-seconds 60 >/dev/null 2>&1 || true
+            # The map follows the index it is drawn from, but only for a
+            # project that asked for one: no agents/map/, no map (ADR-297).
+            if [ -d agents/map ]; then
+                ./agent-config code-graph map --no-verify --no-build >/dev/null 2>&1 || true
+            fi
         ) >/dev/null 2>&1 &
     fi
 fi

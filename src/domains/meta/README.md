@@ -7,9 +7,9 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 307
+- **artefacts**: 308
 
-## Commands (160)
+## Commands (161)
 
 - **`agent-design`** — Design orchestrator — routes audit/render/review to the Class-A commands and the six intervention verbs to fe-design with a declared operation
 - **`agent-handoff`** — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
@@ -112,6 +112,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`project`** — Project orchestrator — routes to analyze (full audit) and health (read-only status check)
 - **`project-analyze`** — Full project analysis — detect stack, inventory modules, audit docs, create missing contexts
 - **`project-health`** — Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything
+- **`project-map`** — Draw the code map into agents/map/
 - **`refine-ticket`** — Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt
 - **`research`** — Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans.
 - **`research-deep`** — Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths.

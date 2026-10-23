@@ -20,6 +20,7 @@ import {
     MAX_FILE_BYTES,
     type Relation,
 } from './types.js';
+import { extractGo, extractJava, extractPython } from './extract_more.js';
 import { getParser, nodeHasError, type TsNode } from './loader.js';
 
 export type CallStyle = 'new' | 'free' | 'this' | 'self' | 'static' | 'parent' | 'scoped' | 'dynamic';
@@ -89,7 +90,7 @@ export interface FileExtract {
     parseError: boolean;
 }
 
-function loc(n: TsNode): number[] {
+export function loc(n: TsNode): number[] {
     return [
         n.startPosition.row + 1,
         n.startPosition.column + 1,
@@ -98,7 +99,7 @@ function loc(n: TsNode): number[] {
     ];
 }
 
-function namedChildren(n: TsNode): TsNode[] {
+export function namedChildren(n: TsNode): TsNode[] {
     const out: TsNode[] = [];
     for (let i = 0; i < n.namedChildCount; i += 1) {
         const c = n.namedChild(i);
@@ -117,7 +118,7 @@ function firstNamed(n: TsNode, types: ReadonlySet<string>): TsNode | null {
     return null;
 }
 
-function nameField(n: TsNode): string | null {
+export function nameField(n: TsNode): string | null {
     const nm = n.childForFieldName('name');
     if (nm) return nm.text;
     return null;
@@ -129,6 +130,26 @@ function baseName(raw: string): string {
     const s = raw.trim().replace(/^\\+/, '');
     const parts = s.split(/[\\.]/);
     return parts[parts.length - 1] ?? s;
+}
+
+/**
+ * Ids are `${file}#${name}`, so two same-named declarations in one file — a
+ * `type X` beside a `const X`, a getter and its setter, two nested helpers both
+ * called `walk` — used to share one id. The SQLite twin's PRIMARY KEY then
+ * refused the insert and the index was silently never written. The second and
+ * later declarations get `@2`, `@3`, … in declaration order, which the walk
+ * visits deterministically.
+ */
+const takenIds = new WeakMap<FileExtract, Map<string, number>>();
+export function uniq(out: FileExtract, base: string): string {
+    let seen = takenIds.get(out);
+    if (!seen) {
+        seen = new Map();
+        takenIds.set(out, seen);
+    }
+    const n = (seen.get(base) ?? 0) + 1;
+    seen.set(base, n);
+    return n === 1 ? base : `${base}@${n}`;
 }
 
 // ── PHP ──────────────────────────────────────────────────────────────────────
@@ -163,7 +184,7 @@ function extractPhp(root: TsNode, file: string, out: FileExtract): void {
                         : n.type === 'interface_declaration'
                           ? 'interface'
                           : 'trait';
-                const id = `${file}#${nm}`;
+                const id = uniq(out, `${file}#${nm}`);
                 out.nodes.push({ id, label: nm, kind, source_file: file, source_location: loc(n) });
                 out.rawEdges.push({ sourceId: fileId, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
                 // extends / implements
@@ -198,7 +219,7 @@ function extractPhp(root: TsNode, file: string, out: FileExtract): void {
             case 'method_declaration':
             case 'function_definition': {
                 const nm = nameField(n) ?? '<anon>';
-                const id = classId ? `${classId}::${nm}` : `${file}#${nm}`;
+                const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
                 out.nodes.push({
                     id,
                     label: nm,
@@ -377,14 +398,14 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                         : n.type === 'type_alias_declaration'
                           ? 'type'
                           : 'enum';
-                const id = `${file}#${nm}`;
+                const id = uniq(out, `${file}#${nm}`);
                 out.nodes.push({ id, label: nm, kind, source_file: file, source_location: loc(n) });
                 out.rawEdges.push({ sourceId: fileId, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
                 return;
             }
             case 'class_declaration': {
                 const nm = nameField(n) ?? '<anon>';
-                const id = `${file}#${nm}`;
+                const id = uniq(out, `${file}#${nm}`);
                 out.nodes.push({ id, label: nm, kind: 'class', source_file: file, source_location: loc(n) });
                 out.rawEdges.push({ sourceId: fileId, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
                 const heritage = firstNamed(n, new Set(['class_heritage']));
@@ -399,7 +420,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
             }
             case 'method_definition': {
                 const nm = nameField(n) ?? '<anon>';
-                const id = classId ? `${classId}::${nm}` : `${file}#${nm}`;
+                const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
                 out.nodes.push({ id, label: nm, kind: 'method', source_file: file, source_location: loc(n) });
                 out.rawEdges.push({
                     sourceId: classId ?? fileId,
@@ -413,7 +434,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
             }
             case 'function_declaration': {
                 const nm = nameField(n) ?? '<anon>';
-                const id = `${file}#${nm}`;
+                const id = uniq(out, `${file}#${nm}`);
                 out.nodes.push({ id, label: nm, kind: 'function', source_file: file, source_location: loc(n) });
                 out.rawEdges.push({ sourceId: fileId, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
                 const body = n.childForFieldName('body');
@@ -457,7 +478,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                         // none of them is a declaration this graph can id.
                         if (topLevel && nmNode?.type === 'identifier') {
                             const nm = nmNode.text;
-                            const id = classId ? `${classId}::${nm}` : `${file}#${nm}`;
+                            const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
                             out.nodes.push({
                                 id,
                                 label: nm,
@@ -482,7 +503,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                         continue;
                     }
                     const nm = nameField(d) ?? '<anon>';
-                    const id = classId ? `${classId}::${nm}` : `${file}#${nm}`;
+                    const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
                     out.nodes.push({
                         id,
                         label: nm,
@@ -519,7 +540,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                 const value = n.childForFieldName('value');
                 const nm = nameField(n) ?? '<anon>';
                 if (value && (value.type === 'arrow_function' || value.type === 'function_expression')) {
-                    const id = classId ? `${classId}::${nm}` : `${file}#${nm}`;
+                    const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
                     out.nodes.push({
                         id,
                         label: nm,
@@ -635,6 +656,27 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
 }
 
 /**
+ * A Vue single-file component reduced to its `<script>` blocks: every
+ * character outside them becomes a space and every newline stays, so the
+ * TypeScript grammar parses the script and every location still points at
+ * the line in the `.vue` file.
+ */
+export function vueScript(source: string): string {
+    const keep = new Array<boolean>(source.length).fill(false);
+    for (const m of source.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) {
+        const start = (m.index as number) + m[0].indexOf('>') + 1;
+        const end = start + (m[1] as string).length;
+        for (let i = start; i < end; i++) keep[i] = true;
+    }
+    let out = '';
+    for (let i = 0; i < source.length; i++) {
+        const c = source[i] as string;
+        out += keep[i] || c === '\n' ? c : ' ';
+    }
+    return out;
+}
+
+/**
  * Extract one file. `source` is the file's UTF-8 content; `relPath` is the
  * repo-relative POSIX path used to build collision-free node ids.
  */
@@ -651,10 +693,13 @@ export async function extractFile(relPath: string, source: string, lang: Lang): 
         return out;
     }
     const parser = await getParser(lang);
-    const tree = parser.parse(source);
+    const tree = parser.parse(relPath.endsWith('.vue') ? vueScript(source) : source);
     try {
         out.parseError = nodeHasError(tree.rootNode);
         if (lang === 'php') extractPhp(tree.rootNode, relPath, out);
+        else if (lang === 'python') extractPython(tree.rootNode, relPath, out);
+        else if (lang === 'java') extractJava(tree.rootNode, relPath, out);
+        else if (lang === 'go') extractGo(tree.rootNode, relPath, out);
         else extractTsJs(tree.rootNode, relPath, out);
     } finally {
         tree.delete(); // delete the tree, never the cached parser (loader.ts)

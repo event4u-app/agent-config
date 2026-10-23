@@ -62,6 +62,7 @@ const ALLOWED_SOURCE_DIRS: ReadonlySet<string> = new Set([
     'evidence',
     'features',
     'knowledge',    // * consumer
+    'map',          // * consumer — code-graph map, local-only, gitignored (ADR-297)
     'memory',       // * consumer
     'notes',        // legacy; new files go to evidence/notes/
     'reports',      // legacy; new files go to evidence/reports/ (see agents-layout.md)
@@ -91,6 +92,7 @@ const CONSUMER_EXPECTED_ENTRIES: ReadonlySet<string> = new Set([
     '.gitkeep',
     // Optional but legitimate consumer entries (will not trigger warnings)
     'knowledge',
+    'map',
     'memory',
     'proposals',
     'roadmaps',

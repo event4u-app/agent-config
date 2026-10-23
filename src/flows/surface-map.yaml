@@ -58,6 +58,7 @@ commands:
     - project
     - project/analyze
     - project/health
+    - project/map
     - refine-ticket
 
   implementation:

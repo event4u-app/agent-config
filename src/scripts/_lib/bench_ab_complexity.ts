@@ -62,7 +62,15 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { getParser, type TsNode } from '../code_graph/loader.js';
-import { EXT_LANG, type Lang } from '../code_graph/types.js';
+import { EXT_LANG } from '../code_graph/types.js';
+
+/**
+ * The languages whose node vocabulary below was read off a real parse. The
+ * engine indexes more; a language without a probed vocabulary would score 0
+ * silently, so it is not scored at all.
+ */
+type Lang = 'javascript' | 'typescript' | 'php';
+const SCORED: ReadonlySet<string> = new Set<Lang>(['javascript', 'typescript', 'php']);
 
 export interface FunctionComplexity {
     /** Declared name, or `<anon>` for an unnamed closure/arrow. */
@@ -349,7 +357,11 @@ function logicalOperands(root: TsNode, lang: Lang): TsNode[] {
 
 export function langForPath(relPath: string): Lang | null {
     const ext = path.extname(relPath).toLowerCase();
-    return (EXT_LANG as Record<string, Lang | undefined>)[ext] ?? null;
+    // `.vue` maps to typescript for the engine only after its template is
+    // blanked; scored raw here it would read markup as code.
+    if (ext === '.vue') return null;
+    const lang = (EXT_LANG as Record<string, string | undefined>)[ext];
+    return lang !== undefined && SCORED.has(lang) ? (lang as Lang) : null;
 }
 
 /** Cognitive complexity of every function unit in one source string. */

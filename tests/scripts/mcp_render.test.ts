@@ -223,10 +223,3 @@ function _pyDumpSorted(obj: unknown, depth = 0): string {
         '}'
     );
 }
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'mcp_render.ts');
-const TSX_BIN = path.join(
-    REPO_ROOT,
-    'node_modules',
-    '.bin',
-    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
-);

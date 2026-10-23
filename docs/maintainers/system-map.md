@@ -5,6 +5,12 @@
 > (or the same maintainer in six months) can orient without reading 121 ADRs.
 > Requested by both 8.11 external reviews ("a 'how the whole system fits
 > together' document that does not presuppose reading every contract").
+>
+> **The generated companion:** `agent-config code-graph map` draws this tree's code
+> (areas, links, cycles) and its artifact layer (skills, rules, commands, ADRs and
+> their `routes_to` / `supersedes` relations) into the gitignored `agents/map/` —
+> open `agents/map/index.html`, or read `agents/map/MAP.md`. This page explains
+> the design; the map shows what the tree actually is today.
 
 ## The one chain that explains everything
 

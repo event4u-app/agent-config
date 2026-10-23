@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **751 public artefacts** shipped by
+Consumer-facing catalog of all **752 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -454,7 +454,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (209)
+## Commands (210)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -607,6 +607,7 @@ are excluded.
 | command | [`project`](../dist/agent-src/commands/project.md) | cluster: project | Project orchestrator — routes to analyze (full audit) and health (read-only status check) |
 | command | [`project-analyze`](../dist/agent-src/commands/project/analyze.md) | cluster: project | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
 | command | [`project-health`](../dist/agent-src/commands/project/health.md) | cluster: project | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |
+| command | [`project-map`](../dist/agent-src/commands/project/map.md) | cluster: project | Draw the code map into agents/map/ |
 | command | [`refine-ticket`](../dist/agent-src/commands/refine-ticket.md) |  | Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt |
 | command | [`research`](../dist/agent-src/commands/research.md) | cluster: research | Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans. |
 | command | [`research-deep`](../dist/agent-src/commands/research/deep.md) | cluster: research | Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths. |
