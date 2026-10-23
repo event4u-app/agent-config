@@ -198,7 +198,10 @@ export function pemMaskEnd(text: string, span: SpanBounds): number | null {
 
 // IBAN length per country (ISO 13616 registry), packed as `CCnn` pairs. A country
 // missing here leaves its IBANs unmasked, so the table errs towards inclusion.
-const IBAN_LENGTHS =
+// Checked 2026-10-22 against the registry's Release 103: all 89 countries and
+// lengths agree. The test pins this release to the table's digest.
+export const IBAN_REGISTRY_RELEASE = 103;
+export const IBAN_LENGTHS =
     'AD24AE23AL28AT20AZ28BA20BE16BG22BH22BI27BR29BY28CH21CR22CY28CZ24DE22DJ27DK18DO28EE20EG29ES24FI18FK18FO18FR27GB22GE22GI23GL18GR27GT28HN28HR21HU28IE22IL23IQ23IS26IT27JO30KW30KZ20LB28LC32LI21LT20LU20LV21LY25MC27MD24ME22MK19MN20MR27MT31MU30NI28NL18NO15OM23PK24PL28PS29PT25QA29RO24RS22RU33SA24SC31SD18SE24SI19SK24SM27SO23ST25SV28TL23TN24TR26UA29VA22VG24XK20YE30';
 
 export function isValidIban(value: string): boolean {

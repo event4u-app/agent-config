@@ -37,7 +37,9 @@ host, never a configuration decision (always-on orchestration, Phase 1):
 2. A live environment probe merged on top: `agent_teams` resolves `true`
    when `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is set in the process
    environment — the one host fact this repo can observe about Claude
-   Code's experimental multi-instance Agent Teams feature.
+   Code's experimental multi-instance Agent Teams feature. On `claude` the
+   same flag also sets `worker_resume`: the by-name re-task was observed
+   there only under it (cold-start 1.4, 2.1.306; council 2026-10-22).
 3. `SAFE_DEFAULT` (all `false`) for an unrecognized host or an unset probe.
 
 `resolveHostCapabilities(hostId, override?)` still accepts an optional
@@ -92,7 +94,7 @@ SAFE DEGRADATION, NOT BECAUSE ANYTHING WAS MEASURED.
 
 The seven booleans look alike and are not. `HOST_CAPABILITY_REGISTRY` holds
 exactly one row today, so on every other host **all six** fields are the safe
-default — and `agent_teams` is the only field any live check touches. The name
+default — and `agent_teams` (plus `worker_resume` on `claude`) is the only field any live check touches. The name
 `probeHostCapabilities` says "detected" about values that were mostly asserted
 at authoring time.
 
@@ -136,7 +138,7 @@ A prober that decides for itself what counts as evidence is the inference
 | `status_polling` | a **completed poll returning a state the parent did not already hold**. A poll that returns what the parent knew is not an observation of polling |
 | `separate_quota_pool` | a **child leg continuing across a parent quota condition** — the parent constrained, the child proceeding |
 | `worker_respawn` | **one task continuing across a killed and re-spawned worker, same task id.** Never inferred from the fact that spawning and killing both exist separately |
-| `worker_resume` | **a finished leg re-tasked by name whose next `SubagentStart` carries the same ledger `ref`, and whose first call in that run reads more than half its input from cache.** Never inferred from the host documenting a resume or message tool |
+| `worker_resume` | **a finished leg re-tasked by name whose next `SubagentStart` carries the same ledger `ref`, and whose first call in that run reads more than half its input from cache.** Never inferred from the host documenting a resume or message tool. On `claude` the agent-teams flag stands in for this row: the by-name re-task was observed only under it (2.1.306), so the live probe sets the field from the flag (council 2026-10-22) |
 | `fork_shares_cache` | **a fork whose first call reads more than half its input from cache and whose tool list equals the parent's.** Never inferred from documentation |
 | `structured_ask` | **the host's delivered tool surface, in a real session, carrying (or not carrying) a question-picker tool.** The delivered surface is the observation — never the vendor's documentation, and never another host by analogy. A `false` written from an observed surface is "checked, absent"; omitting the field is "never looked" |
 | `reads_project_mcp_config` | **a server named only in the project-scope config appearing in that host's own tool list.** Never inferred from the host documenting MCP support, which does not say which scope it reads |

@@ -152,7 +152,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   `road-to-a-tier-the-dispatch-carries` T9.)
   verify: offline, the roster reports `unknown`, never a cached list; a route whose attestation
   lacks the distribution field is refused as a consumer default.
-  Done 2026-10-22 (e750d31083): `free_route_catalog.test.ts`; no shipped row is attested yet.
+  Done 2026-10-22 (e750d31083, e9009baac5, c0090499d7): one keyless row attested, distribution `unknown`, first-party only (A14).
 - [x] **2.4 Identity derived, not declared (D5).** Family comes from the served id; a free route <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/ai_council/free_route.ts -->
   answering with `model_served ≠ requested` is absent with `policy_model_mismatch` (paid
   aliases keep today's attribution-only behaviour). Random/auto routers are refused at config
@@ -168,7 +168,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   verify: a loopback stub whose probe reports local weights admits a `project-content`
   payload; the same stub reporting a remote model, and on a non-loopback address, both refuse
   it with `policy_content_ceiling`.
-  Done 2026-10-22 (commits d0d9dd44af, 15d021b4a2): `self_hosted_route.test.ts`, six cases. The production probe is `UNPROVEN_PROBE`, so self-hosted stays `public-artifact` until a real probe ships (residue in the PR).
+  Done 2026-10-22 (d0d9dd44af, 15d021b4a2, 7b4054e5f9, d5905363e8): real probe in production callers; not exercised live (no local model server).
 
 ## Phase 3 — The worker contract (rung 0.5, free hands)
 
@@ -267,7 +267,9 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 - [ ] **6.2 Shadow:** a free route answers in parallel, the paid answer is used, both are
   verified; the call budget recorded in decision A5, public-artifact corpus first.
   verify: the shadow ledger shows a free and a paid answer with a verify result for every call.
-  Built 2026-10-22 (e7f38f239a), waits on its window: `free_hand_shadow.test.ts` ledgers both answers with a verify result. No free route is configured and no production caller runs `shadowAsk`, so no shadow call has happened.
+  Built 2026-10-22 (e7f38f239a): `free_hand_shadow.test.ts` ledgers both answers with a verify result.
+  Wired and harnessed 2026-10-22, window not run: `ask_transport` calls `shadowAsk` (a45480aaf4, 32fc4978c8); the settings block now builds `base_url` members (e9312bad3d); PREREG 1bc9c41c5d (amended 6dc334d39c before any call); harness `internal/bench/free-hands-shadow/` (d1489529b8, 033fe5fbfb). The host's permission classifier refused sending repository content to the external route from this session. Closes when an operator runs the harness and files the evidence.
+  Window running since 2026-10-23 (owner approval after a payload audit); two live-route defects fixed red-first first (A16; pacing from the reply).
 - [x] **6.3 Flip per kind**, only for kinds that clear both bars; a kind that later breaches the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/continuity-surface.json -->
   escalation kill reverts automatically and the reversion is recorded in the claim row.
   verify: a seeded breach above the kill flips the kind back to the paid route.
@@ -309,11 +311,17 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 | A6 | reversible-technical | agent | A hand's slice includes the signatures the function must call, not only its specification | a draft without its callees' signatures cannot compile, and the rework would land on the head; implementations stay out per the owner turn of 2026-10-22; Phase 6 measures whether the slice is too thin | 6.1 shows the head's verification tokens rising on slices that carried signatures only |
 | A7 | reversible-technical | agent | A loopback self-hosted route may carry `project-content` only after a per-model probe shows local weights; without it, and on any non-loopback host, it may not without blocker `project-content-ceiling` | loopback is a precondition, not proof: a local runtime can serve a cloud-hosted model through its local API, and any localhost proxy forwards upstream; a model whose weights are on this machine has no data-use term to check | a probed-local route is observed forwarding upstream, or the probe cannot tell local from remote weights for a runtime in use |
 | A8 | reversible-technical | agent | 2.5 reads the owner turn's self-hosted *finisher* as a *hand* that may see project content — a reinterpretation, stated as one | a local model as head or finisher would miss the quality bar the paid head holds; as a hand its output is still checked by the paid head | the owner restates self-hosted as finisher, or Phase 6 shows a self-hosted hand's drafts raising the head's verification tokens |
-| A9 | product-owned | council:agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md | Blocker `free-route-admission`: option (a) — OpenAI-compatible `base_url` routes are admitted as hands and jurors under ADR-257, keyless first, USD 0.00 under `free-quota`, shadow capped at 2,000 calls, termination on the Phase 6 bars or three consecutive `model_unservable`. Council 2/2, 2026-10-22, applied as the default under the run's delegation; the owner may overturn it | the bounds contain the experiment and (b) produces no evidence; residue named by both seats: a payload already sent cannot be recalled, so fragmentation and classification hold before the first call | a privacy or correlation violation in the shadow, or the owner overturns it |
-| A10 | product-owned | council:agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md | Blocker `project-content-ceiling`: option (b) — every free route stays `public-artifact` permanently; no attestation raises one. Council 2/2, 2026-10-22, applied as the default under the run's delegation; the owner may overturn it | the owner's directive limits free endpoints to work that does not touch data protection; an attestation documents a provider's policy and enforces nothing | `project-content` is narrowed to exclude customer, personal and proprietary data and a fail-closed egress path with refreshed provider assurance is independently validated |
+| A9 | product-owned | owner | Blocker `free-route-admission`: option (a) — OpenAI-compatible `base_url` routes are admitted as hands and jurors under ADR-257, keyless first, USD 0.00 under `free-quota`, shadow capped at 2,000 calls, termination on the Phase 6 bars or three consecutive `model_unservable`. Owner decision O2, dated 2026-10-23, confirms the council's 2/2 default of 2026-10-22 | the bounds contain the experiment and (b) produces no evidence; residue named by both seats: a payload already sent cannot be recalled, so fragmentation and classification hold before the first call | a privacy or correlation violation in the shadow, or the owner overturns it |
+| A10 | product-owned | owner | Blocker `project-content-ceiling`: option (b) — every free route stays `public-artifact` permanently; no attestation raises one. Owner decision O3, dated 2026-10-23, confirms the council's 2/2 default of 2026-10-22 | the owner's directive limits free endpoints to work that does not touch data protection; an attestation documents a provider's policy and enforces nothing | `project-content` is narrowed to exclude customer, personal and proprietary data and a fail-closed egress path with refreshed provider assurance is independently validated |
+| A11 | product-owned | owner | The exposure cap of A4 (20 % of tracked files) applies to paid routes too (owner decision O4, dated 2026-10-23) | 3.6 already applies it to every route; the owner settled the exemption question 3.6 listed | the cap blocks paid work the content ceiling already admits |
+| A12 | product-owned | owner | The 6.3 thresholds stand: 333 shadow calls per kind before a flip; a revert only after 30 free-routed asks and only on the 0.3 kill; a reverted kind stays reverted until a person clears its record (owner decision O5, dated 2026-10-23) | `kind_flip.ts`: `MIN_SHADOW_PER_KIND` = 333, `REVERT_MIN_SAMPLE` = 30, `ESCALATION_KILL` = 0.3, a reverted kind is skipped by `applyFlips` | a per-kind sample proves the 333 floor underpowered at the 5 pp margin |
+| A13 | product-owned | owner | A deliberately created measurement window is admissible when it consists of real, useful work and its evidence file labels it `manufactured` (owner decision O6, dated 2026-10-23) | the shadow window cannot fill from organic traffic before the 2,000-call cap matters | — |
+| A14 | reversible-technical | council:agents/evidence/council/subagent-system-2583-rest-decisions-20261022.md | The keyless first-party route is catalogued maintainer-only with distribution `unknown`, first-party models enforced at discovery and member build (decision 2, round 1 split, round 2 2/2 (a)); the shadow verifies `classify` and `extract` deterministically on a manufactured public-artifact corpus with a blind 10 % paid-head audit, `summarise-given-text` stays unmeasured (decision 3, 2/2 (c)) | both rounds' prompts committed beside the evidence file | the route exposes no first-party flag, or the audit disagrees with the deterministic verifier |
+| A15 | reversible-technical | council:agents/evidence/council/subagent-system-2583-rest-owner-residue-20261023.md | `ask_transport` is maintainer tooling: the delegation nudge cites it only inside this repository's checkout, and the free-hands routes are recorded as maintainer-only | Council 2026-10-23, 2/2 for option (1), council-decidable; a consumer `agent-config ask` would send project content to a user-configured external route, which is owner-reserved | the owner asks for a consumer entry point |
+| A16 | reversible-technical | owner | Discovery resolves a listed id once: a first-party entry with declared aliases gets one minimal probe call, and when the route serves under one of those aliases the roster records the served id; an undeclared served id leaves the roster. The client's exact identity match is unchanged. Owner answer 2026-10-23 after a split council | Live 2026-10-23: `text.pollinations.ai` lists `openai-fast` and serves `gpt-oss-20b`, a declared alias, so every free call was absent with `policy_model_mismatch`. Council split 1:1 (`agents/evidence/council/subagent-system-2583-rest-owner-residue-20261023.md`) | the route rotates the served id between declared aliases within a roster's day |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-23 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -321,14 +329,14 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 | 2 | Free answers look right and are wrong | product | A hand returns a plausible proposal the head accepts without catching the error. | 3.3 makes verification mandatory and counted; 6.1 quality bar; per-kind flip in 6.3. | Phase 3 — The worker contract (rung 0.5, free hands) |
 | 3 | Verification eats the saving | product | The head spends more tokens checking hands than the hands saved. | 3.3 records verification tokens; 6.1 measures relief net of them; no flip without it. | Phase 6 — Measure, then flip |
 | 4 | Quota exhaustion stalls a session | implementation | A free route runs dry mid-task. | Quota means absent for the pass, paid fallback, honest ∅ (3.2, 5.1). | Phase 5 — Liveness and quota (gateway M9, D7) |
-| 5 | Provider terms change silently | product | A route's data-use terms change after its attestation was recorded. | Dated attestations; the ceiling falls back to `public-artifact` when an attestation is older than 90 days; 2.3 re-discovery. | Phase 2 — The route (gateway M1) |
+| 5 | Provider terms change silently | product | A route's data-use terms change after its attestation was recorded. | Dated attestations; the ceiling falls back to `public-artifact` when an attestation is older than 90 days; 2.3 re-discovery. Re-reviewed 2026-10-23: the one attested route covers first-party models only, so discovery and member build refuse any model the route lists as community-served. | Phase 2 — The route (gateway M1) |
 | 6 | Fragments are re-linked | product | The same route sees enough fragments over months, or shared identifiers, to reconstruct structure. | 3.6 exposure cap and 3.5 placeholders; training routes never see project content (K4). | Phase 3 — The worker contract (rung 0.5, free hands) |
 | 7 | Scoring quietly becomes deciding | implementation | A consumer starts acting on a free juror's score as if it were a verdict. | ADR-257; 4.1 refuses free seats in chair/verdict roles; consumers of free output enumerated in tests. | Phase 4 — Council: free proposers and jurors, paid chair |
 
 ## Blockers
 
 ### blocker: free-route-admission
-- **Status:** resolved — council 2/2 chose (a) on 2026-10-22 (`agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md`), applied as the default under the run's delegation and listed for the owner, who may overturn it; recorded as A9
+- **Status:** resolved — the owner chose (a) on 2026-10-23 (decision O2), confirming the council's 2/2 recommendation of 2026-10-22 (`agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md`); recorded as A9
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** Phases 2-7, except 2.5 (a self-hosted route is not a free route). Phases 0 and 1 run without it.
@@ -338,7 +346,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
 - **Resolved when:** a dated owner decision line naming (a) or (b) is recorded in this file's `## Decisions` table.
 
 ### blocker: project-content-ceiling
-- **Status:** resolved — council 2/2 chose (b) on 2026-10-22 (`agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md`), applied as the default under the run's delegation and listed for the owner, who may overturn it; recorded as A10
+- **Status:** resolved — the owner chose (b) on 2026-10-23 (decision O3), confirming the council's 2/2 recommendation of 2026-10-22 (`agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md`); recorded as A10
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** any free route above `public-artifact` — the subagent-style kinds of 3.1 on consumer code. Hands on repo-owned artefacts run without it.
@@ -355,6 +363,7 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   Done 2026-10-22: 1.2, `06777113cc`, `9725442e47`.
 - [ ] AC-3 A free route serves a typed rung-0.5 call, chosen by kind, class and quota (3.2).
   Built 2026-10-22, open: served end to end by a loopback stub through `askOnce` → `chooseRoute` (3.2). No free route is configured on the maintainer's host — adding one needs an account or key outside this run — so no live free call has been served.
+  2026-10-22, second pass: a keyless first-party route is catalogued and attested (2.3), the settings path now builds it (e9312bad3d), and `run.ts --ac3-demo` serves one typed classify ask on it through the production chooser and verifies it deterministically (tested against stubs). The live call was refused by the host's permission classifier for this session. Closes on the first live `--ac3-demo` run by an operator.
 - [x] AC-4 No free route holds a head role (4.1, K1).
   Done 2026-10-22: 4.1, `seat_policy_and_ceiling.test.ts`.
 - [x] AC-5 n_eff is reported beside κ on every jury run (4.3).

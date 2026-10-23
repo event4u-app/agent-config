@@ -85,13 +85,16 @@ describe('phone parity with the legacy store regex', () => {
         }
     });
 
-    it('compact US numbers, which the legacy regex never tagged, are tagged now', () => {
+    it('compact US numbers tag only next to a phone word: a bare 10-digit int is not a phone', () => {
         for (const v of [j('212555', '0142'), j('1212555', '0142')]) {
             expect(legacyTags(`x ${v}`)).toBe(false);
             for (const redact of [ingestRedact, crossRepoRedact]) {
-                const counters: Record<string, number> = {};
-                redact(`x ${v}`, counters);
-                expect(counters['PHONE'], v).toBe(1);
+                const bare: Record<string, number> = {};
+                redact(`x ${v}`, bare);
+                expect(bare['PHONE'], v).toBeUndefined();
+                const worded: Record<string, number> = {};
+                redact(`call ${v}`, worded);
+                expect(worded['PHONE'], v).toBe(1);
             }
         }
     });
@@ -108,3 +111,41 @@ describe('phone parity with the legacy store regex', () => {
     });
 });
 
+
+/**
+ * Store-rule precision (road-to-a-tick-the-shipped-path-earns 4.4): shapes the
+ * tree carries in ordinary code that the context-free store rows tagged.
+ */
+describe('store rows leave code-shaped digits alone', () => {
+    const HEX = 'a3f9c2e1b07d4f6e8a2c';
+    const UNTOUCHED: ReadonlyArray<readonly [string, string]> = [
+        ['int32 max', j('const MAX = ', '2147', '483647', ';')],
+        ['int32 max, bare', j('2147', '483647')],
+        ['dotted quad after a plus', j('route ', '+192', '.168', '.100', '.200')],
+        ['dotted quad on a diff line', j('@@ -1 +1 @@\n-127.0.0.1\n', '+192', '.168', '.100', '.200', '\n')],
+        ['digit-led hex SHA, card-shaped head', j('4111', '1111', '1111', '1111', HEX)],
+        ['digit-led hex SHA, phone-shaped head', j('0301', '2345', '67', HEX)],
+        ['digit-led hex SHA, US-shaped head', j('2125', '5501', '42', HEX)],
+        ['digit-led hex SHA after a commit word', j('commit ', '4111', '1111', '1111', '1111', HEX, ' fixes it')],
+        ['digits ending a hex token', j(HEX, '4111', '1111', '1111', '1111')],
+        ['a decimal fraction', j('y = 0.', '0514', '4599', '29', ' * b')],
+        ['a slash list of record numbers', j('ADR-', '046/', '047/', '048')],
+        ['an abbreviated diff index line', j('index ', 'ed2a931e0..', '0705', '6353', '1 100644')],
+    ];
+    describe.each([
+        ['knowledge_ingest', (t: string, c: Record<string, number>) => ingestRedact(t, c)[0]],
+        ['cross_repo_retrieve', (t: string, c: Record<string, number>) => crossRepoRedact(t, c)[0]],
+    ] as const)('%s', (_name, redact) => {
+        it.each(UNTOUCHED)('%s', (_label, text) => {
+            const counters: Record<string, number> = {};
+            expect(redact(text, counters) === text).toBe(true);
+            expect(counters).toEqual({});
+        });
+
+        it('a grouped international number on a diff line is still a phone', () => {
+            const counters: Record<string, number> = {};
+            redact(j('@@ -1 +1 @@\n', '+49 30 ', '1234 5678', '\n'), counters);
+            expect(counters['PHONE']).toBe(1);
+        });
+    });
+});

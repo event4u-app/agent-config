@@ -71,3 +71,14 @@ Named by the seats as gaps this change does not close:
   need one.
 - **Evidence prose drift**: the round-3 prompt quoted the dispatch bundle at 1,548,222 B; the gate
   at that revision read 1,548,460 B (ceiling 1,550,000 B).
+
+## Seat answers
+
+The raw responses are gitignored and pruned after the retention window, so each is pinned here
+by its SHA-256; a kept copy reproduces the digest or it is not the answer the verdict rests on.
+
+| Round | Response file (`agents/runtime/council/responses/`) | SHA-256 |
+|---|---|---|
+| 1 | `subagent-system-2583-ratification-r1-20261022.md` | `47227d8409391c431e188f6ee32d3c6b0a9c1438974706b32747a8636154a720` |
+| 2 | `subagent-system-2583-ratification-r2-20261022.md` | `69f2df4746df0e7d168f61213bdaef9acd4a4aaf66ca7fba5b14b1df0f6b499b` |
+| 3 | `subagent-system-2583-ratification-r3-20261022.md` | `d85cefd89749e983b52d585ebece98c0661423c5b9a64be36e86f503a408a35e` |

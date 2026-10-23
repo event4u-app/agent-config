@@ -6,6 +6,7 @@
 
 import { curlJsonPost, type JsonPost } from './api_transport.js';
 import { CouncilResponse, ExternalAIClient } from './clients.js';
+import type { ContentClass } from './content_ceiling.js';
 import { familyOf, servedMatches, type RouteBilling } from './free_route.js';
 import { policyExclusionReason, type PolicyExclusion } from './seat_policy.js';
 
@@ -15,6 +16,7 @@ export interface FreeRouteClientOptions {
     readonly base_url: string;
     readonly api_key: string | null;
     readonly billing: RouteBilling;
+    readonly content_ceiling: ContentClass;
     readonly post?: JsonPost;
 }
 
@@ -27,6 +29,7 @@ export interface FreeRouteClientOptions {
 export class FreeRouteClient extends ExternalAIClient {
     readonly base_url: string;
     readonly billing: RouteBilling;
+    readonly content_ceiling: ContentClass;
     private readonly _apiKey: string | null;
     private readonly _post: JsonPost;
 
@@ -36,6 +39,7 @@ export class FreeRouteClient extends ExternalAIClient {
         this.model = opts.model;
         this.base_url = opts.base_url.replace(/\/+$/, '');
         this.billing = opts.billing;
+        this.content_ceiling = opts.content_ceiling;
         this.billable = opts.billing === 'per-token';
         this._apiKey = opts.api_key;
         this._post = opts.post ?? curlJsonPost;

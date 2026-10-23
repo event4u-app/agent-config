@@ -61,12 +61,15 @@ import { probeHostCapabilities } from '../_lib/host_capability.js';
 import { recentHostMarker } from '../_lib/quota_parked.js';
 import { shadowReuseVerdict, type ReuseContext, type WorkerState } from '../_lib/worker_reuse.js';
 import {
-    LEDGER_DIR,
     appendLedgerLine,
     openRecordStats,
+    readIndexEntry,
     readOpenRecords,
     refFor,
     resolveConsumerRoot,
+    stateStamp,
+    stopIndexKey,
+    writeIndexEntry,
 } from './subagent_ledger_hook.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW } from './exit_codes.js';
@@ -104,76 +107,12 @@ export const RESUME_TOOL_NAMES: ReadonlySet<string> = new Set(['SendMessage']);
  */
 export type SendKind = 'resume' | 'message_running' | 'message_or_resume';
 
-/** Bytes read from the end of each monthly ledger file when looking for a stop. */
-export const STOP_SCAN_BYTES = 1024 * 1024;
-
-function tailOf(file: string): string {
-    let fd: number;
-    try {
-        fd = fs.openSync(file, 'r');
-    } catch {
-        return '';
-    }
-    try {
-        const size = fs.fstatSync(fd).size;
-        const length = Math.min(size, STOP_SCAN_BYTES);
-        const buf = Buffer.alloc(length);
-        fs.readSync(fd, buf, 0, length, size - length);
-        return buf.toString('utf8');
-    } finally {
-        fs.closeSync(fd);
-    }
-}
-
-function stoppedInSession(root: string, ref: string, sessionId: string, now: Date): boolean {
-    const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
-    for (const month of [now.toISOString().slice(0, 7), prev.toISOString().slice(0, 7)]) {
-        for (const line of tailOf(path.join(root, LEDGER_DIR, `${month}.jsonl`)).split('\n')) {
-            if (!line.includes(ref)) continue;
-            try {
-                const rec = JSON.parse(line) as Record<string, unknown>;
-                if (rec['event'] === 'subagent_stop' && rec['ref'] === ref && rec['session_id'] === sessionId) {
-                    return true;
-                }
-            } catch {
-                // The first line of a tail is usually cut; a torn line is no evidence.
-            }
-        }
-    }
-    return false;
-}
-
-/**
- * The ref a named spawn of this session left in the register, read from the
- * same bounded tails as a stop; null when this session named no such worker.
- */
 /** Longer names are neither recorded nor resolved: a name is an address, not a payload. */
 export const NAME_MAX = 128;
 
 /** Domain-separated digest of (session, name); the only form a tool-input name takes on disk. */
 function nameKey(sessionId: string, name: string): string {
     return refFor(`subagent-name\0${sessionId}\0${name}`);
-}
-
-function refForName(root: string, name: string, sessionId: string, now: Date): string | null {
-    if (name.length > NAME_MAX) return null;
-    const key = nameKey(sessionId, name);
-    let found: string | null = null;
-    const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
-    for (const month of [prev.toISOString().slice(0, 7), now.toISOString().slice(0, 7)]) {
-        for (const line of tailOf(path.join(root, LEDGER_DIR, `${month}.jsonl`)).split('\n')) {
-            if (!line.includes('subagent_named')) continue;
-            try {
-                const rec = JSON.parse(line) as Record<string, unknown>;
-                if (rec['event'] === 'subagent_named' && rec['name_key'] === key && typeof rec['ref'] === 'string') {
-                    found = rec['ref'];
-                }
-            } catch {
-                // A torn line is no evidence.
-            }
-        }
-    }
-    return found;
 }
 
 /**
@@ -192,10 +131,15 @@ export function classifySend(
     const recipient = input['to'];
     if (typeof recipient !== 'string' || recipient === '') return 'message_or_resume';
     if (sessionId === null || sessionId === '') return 'message_or_resume';
-    const ref = input['recipient_kind'] === 'name' ? refForName(root, recipient, sessionId, now) : refFor(recipient);
-    if (ref === null) return 'message_or_resume';
+    const ref =
+        input['recipient_kind'] !== 'name'
+            ? refFor(recipient)
+            : recipient.length > NAME_MAX
+              ? null
+              : readIndexEntry(root, nameKey(sessionId, recipient), now);
+    if (!ref) return 'message_or_resume';
     if (readOpenRecords(root).has(ref)) return 'message_running';
-    return stoppedInSession(root, ref, sessionId, now) ? 'resume' : 'message_or_resume';
+    return readIndexEntry(root, stopIndexKey(sessionId, ref), now) === null ? 'message_or_resume' : 'resume';
 }
 
 /**
@@ -208,8 +152,10 @@ export function recordNamedSpawn(root: string, payload: JsonObject, sessionId: s
     const name = input['name'];
     const agentId = result['agentId'];
     if (typeof name !== 'string' || name === '' || name.length > NAME_MAX || typeof agentId !== 'string' || agentId === '') return;
-    if (sessionId === null) return;
-    appendLedgerLine(root, nowIso, { event: 'subagent_named', ts: nowIso, ref: refFor(agentId), name_key: nameKey(sessionId, name), session_id: sessionId });
+    if (!sessionId) return;
+    const key = nameKey(sessionId, name);
+    appendLedgerLine(root, nowIso, { event: 'subagent_named', ts: nowIso, ref: refFor(agentId), name_key: key, session_id: sessionId });
+    writeIndexEntry(root, nowIso, key, refFor(agentId));
 }
 
 /**
@@ -318,6 +264,18 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string, deps:
         const sessionRaw = payload['session_id'] ?? envelope['session_id'];
         const sessionId = typeof sessionRaw === 'string' ? sessionRaw : null;
         const sendKind: SendKind | null = isResume ? classifySend(consumerRoot, toolInput, sessionId) : null;
+        // A spawn's definition and requested name (as its session digest), so a
+        // report can join the request to the named worker a reuse would address.
+        const reqName = toolInput['name'];
+        const spawnFacts = isResume
+            ? {}
+            : {
+                  ...stateStamp(payload['cwd']),
+                  agent_type: typeof toolInput['subagent_type'] === 'string' ? toolInput['subagent_type'] : null,
+                  ...(typeof reqName === 'string' && reqName && reqName.length <= NAME_MAX && sessionId
+                      ? { name_key: nameKey(sessionId, reqName) }
+                      : {}),
+              };
         // Only the verdict's label and reason codes reach disk — never the tool input.
         const reuse = isResume
             ? null
@@ -357,6 +315,7 @@ export function processEnvelope(envelope: JsonValue, consumerRoot: string, deps:
                 ? {}
                 : { candidates: verdicts.map((v) => ({ label: v.label, would_deny: v.would_deny, on: v.on })) }),
             dispatch_kind: sendKind ?? 'spawn',
+            ...spawnFacts,
             resume_admission: platform !== null && RESUME_ADMISSION_OBSERVED.has(platform) ? 'counted' : 'unobserved',
             ...(reuse === null ? {} : { reuse }),
             // A recent host-sourced rate marker: a new spawn would have waited.

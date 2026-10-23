@@ -1422,6 +1422,9 @@ concerns:
     # addresses, because a send names the worker and the ledger keys its id.
     tools: [Agent, Task, SendMessage]
     needs_payload_bodies: [input, result]
+    # Each body narrowed to the addressing fields it reads: never a prompt,
+    # a message or a result body (ratification 2026-10-22, condition 4).
+    payload_fields: [name, subagent_type, to, recipient_kind, agentId]
   # The host's StopFailure with error class rate_limit writes the quota_parked
   # marker tagged host-sourced; record-only, and every other class writes
   # nothing (road-to-a-cold-start-paid-once 4.3).

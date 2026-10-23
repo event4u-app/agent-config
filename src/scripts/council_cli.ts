@@ -86,7 +86,7 @@ import {
     resolvedTransportFor as _resolvedTransportFor,
     routeStatusLines as _routeStatusLines,
 } from './ai_council/status_surface.js';
-import { routeMemberFor } from './ai_council/route_member.js';
+import { routeMemberFor, stampSeatCeilings } from './ai_council/route_member.js';
 import { evaluateQuorum, type QuorumResult } from './ai_council/quorum.js';
 import {
     _emitQuorumEvent,
@@ -886,6 +886,7 @@ function build_members(settings: Dict, opts: BuildMembersOptions = {}): External
                 'prints the resolved path.',
         );
     }
+    stampSeatCeilings(members, members_cfg);
     wireCouncilFallback(fallback_out, ai, {
         repoRoot: REPO_ROOT, isDict: _isDict, membersCfg: members_cfg, overrides,
         hasApiRung: (p) => _API_PROVIDERS.has(p),
@@ -1350,7 +1351,7 @@ export function chairman_candidates(membersRaw: Dict): ChairmanCandidate[] {
         candidates.push({
             name,
             tier: typeof md['tier'] === 'number' ? (md['tier'] as number) : null,
-            ...(billing !== null ? { billing } : {}),
+            ...(billing !== null ? { billing, route: true } : {}),
         });
     }
     return candidates;
@@ -1439,12 +1440,13 @@ function _maybe_run_chairman(
     // `model_unservable` being eligible and by the retry's spend gate, and the
     // annotation below still reports FAILED rather than degrading silently.
     // `consult` builds its own ledger: this is a separate invocation.
-    const out = consult([client], synthQ, budget, {
-        table,
-        project: project as never,
-        original_ask: args.original_ask,
-        cli_fallback,
-    });
+    if (client instanceof CliClient) client.blind = blind;
+    let out: CouncilResponse[];
+    try {
+        out = consult([client], synthQ, budget, { table, project: project as never, original_ask: args.original_ask, cli_fallback });
+    } finally {
+        if (client instanceof CliClient) client.blind = false;
+    }
     const r = out[0] ?? null;
     if (r === null || r.error !== null || r.text.trim() === '') {
         return {

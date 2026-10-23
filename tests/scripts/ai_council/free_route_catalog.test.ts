@@ -13,6 +13,7 @@ import {
     consumerDefaultRoutes,
     consumerDefaultVerdict,
     discoverRouteModels,
+    main as catalogMain,
     readRouteRoster,
     ROUTE_CATALOG,
     ROUTE_MODELS_RELPATH,
@@ -61,7 +62,7 @@ const NOW = new Date('2026-10-22T12:00:00Z');
 
 describe('2.3 — ship endpoints and attestations, never model ids', () => {
     it('no shipped catalogue row carries a model id', () => {
-        const allowed = new Set(['id', 'base_url', 'keyless', 'attestation']);
+        const allowed = new Set(['id', 'base_url', 'keyless', 'attestation', 'first_party_list']);
         for (const row of ROUTE_CATALOG) {
             expect(Object.keys(row).filter((k) => !allowed.has(k))).toEqual([]);
             expect(JSON.stringify(row)).not.toMatch(/"model/);
@@ -130,5 +131,158 @@ describe('2.3 — model ids are discovered live and kept in runtime state', () =
         expect(roster.status).toBe('unknown');
         expect(readRouteRoster(root, 'hands').status).toBe('unknown');
         expect(readRouteRoster(tmpRoot(), 'never-probed').status).toBe('unknown');
+    });
+});
+
+describe('keyless first-party route (council 2026-10-22, decision 2, round 2: option a)', () => {
+    async function mockKeyless(
+        ids: string[],
+        list: unknown,
+        listStatus = 200,
+        served: Record<string, string> = {},
+    ): Promise<{ base: string; list: string }> {
+        const server = http.createServer((req, res) => {
+            if (req.url === '/openai/chat/completions' && req.method === 'POST') {
+                let body = '';
+                req.on('data', (c) => (body += c));
+                req.on('end', () => {
+                    const asked = (JSON.parse(body) as { model: string }).model;
+                    if (!(asked in served)) {
+                        res.writeHead(404);
+                        res.end();
+                        return;
+                    }
+                    res.writeHead(200, { 'content-type': 'application/json' });
+                    res.end(JSON.stringify({ model: served[asked], choices: [{ message: { role: 'assistant', content: 'ok' } }] }));
+                });
+                return;
+            }
+            if (req.url === '/openai/models') {
+                res.writeHead(200, { 'content-type': 'application/json' });
+                res.end(JSON.stringify({ object: 'list', data: ids.map((id) => ({ id, object: 'model' })) }));
+                return;
+            }
+            if (req.url === '/models') {
+                res.writeHead(listStatus, { 'content-type': 'application/json' });
+                res.end(JSON.stringify(list));
+                return;
+            }
+            res.writeHead(404);
+            res.end();
+        });
+        await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+        cleanups.push(() => server.close());
+        const port = (server.address() as AddressInfo).port;
+        return { base: `http://127.0.0.1:${port}/openai`, list: `http://127.0.0.1:${port}/models` };
+    }
+
+    it('the catalogue carries the keyless route with a dated attestation that keeps it maintainer-only', () => {
+        const row = ROUTE_CATALOG.find((r) => r.id === 'pollinations')!;
+        expect(row.keyless).toBe(true);
+        expect(row.base_url).toBe('https://text.pollinations.ai/openai');
+        expect(row.first_party_list).toBe('https://text.pollinations.ai/models');
+        expect(row.attestation).toMatchObject({ checked: '2026-10-22', trains_on_prompts: false, client_distribution_eea_ch_uk: 'unknown' });
+        expect(row.attestation!.retention).toMatch(/transient/);
+        const v = consumerDefaultVerdict(row, NOW);
+        expect(v.admissible).toBe(false);
+        expect(v.reason).toMatch(/maintainer/);
+    });
+
+    it('discovery keeps only ids the route lists as first-party, by name or alias', async () => {
+        const root = tmpRoot();
+        const { base, list } = await mockKeyless(['fp-a', 'fp-b-alias', 'community-c', 'unlisted-d'], [
+            { name: 'fp-a', community: false },
+            { name: 'fp-b', aliases: ['fp-b-alias'], community: false },
+            { name: 'community-c', community: true },
+        ]);
+        const roster = await discoverRouteModels('poll', base, { repoRoot: root, now: NOW, firstPartyListUrl: list });
+        expect(roster).toEqual({ status: 'known', models: ['fp-a', 'fp-b-alias'], observed_at: NOW.toISOString() });
+    });
+
+    it('a listed id the route serves under one of its declared aliases is recorded as the served id', async () => {
+        const root = tmpRoot();
+        const { base, list } = await mockKeyless(
+            ['openai-fast'],
+            [{ name: 'openai-fast', aliases: ['gpt-oss', 'gpt-oss-20b'], community: false }],
+            200,
+            { 'openai-fast': 'gpt-oss-20b', 'gpt-oss-20b': 'gpt-oss-20b' },
+        );
+        const roster = await discoverRouteModels('poll', base, { repoRoot: root, now: NOW, firstPartyListUrl: list });
+        expect(roster).toEqual({ status: 'known', models: ['gpt-oss-20b'], observed_at: NOW.toISOString() });
+        expect(readRouteRoster(root, 'poll')).toMatchObject({ status: 'known', models: ['gpt-oss-20b'] });
+    });
+
+    it('a listed id the route serves under an undeclared id leaves the roster', async () => {
+        const root = tmpRoot();
+        const { base, list } = await mockKeyless(
+            ['fp-a', 'fp-b'],
+            [
+                { name: 'fp-a', aliases: ['fp-a-1'], community: false },
+                { name: 'fp-b', community: false },
+            ],
+            200,
+            { 'fp-a': 'someone-else', 'fp-b': 'fp-b' },
+        );
+        const roster = await discoverRouteModels('poll', base, { repoRoot: root, now: NOW, firstPartyListUrl: list });
+        expect(roster).toEqual({ status: 'known', models: ['fp-b'], observed_at: NOW.toISOString() });
+    });
+
+    it('a first-party list that cannot be read fails closed: the roster is unknown', async () => {
+        const root = tmpRoot();
+        const { base, list } = await mockKeyless(['fp-a'], { error: 'down' }, 503);
+        const roster = await discoverRouteModels('poll', base, { repoRoot: root, now: NOW, firstPartyListUrl: list });
+        expect(roster.status).toBe('unknown');
+        const malformed = await mockKeyless(['fp-a'], { not: 'a list' });
+        expect((await discoverRouteModels('poll', malformed.base, { repoRoot: root, now: NOW, firstPartyListUrl: malformed.list })).status).toBe('unknown');
+    });
+});
+
+describe('discover entry: the production path that writes the roster the gate reads', () => {
+    /** Loopback stand-in for every catalogued first-party route; the injected fetch rewrites the host to it. */
+    async function stub(listStatus = 200): Promise<typeof fetch> {
+        const server = http.createServer((req, res) => {
+            if (req.url === '/openai/models') {
+                res.writeHead(200, { 'content-type': 'application/json' });
+                res.end(JSON.stringify({ object: 'list', data: [{ id: 'fp-a' }, { id: 'community-c' }] }));
+                return;
+            }
+            if (req.url === '/models') {
+                res.writeHead(listStatus, { 'content-type': 'application/json' });
+                res.end(JSON.stringify([{ name: 'fp-a', community: false }, { name: 'community-c', community: true }]));
+                return;
+            }
+            res.writeHead(404);
+            res.end();
+        });
+        await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+        cleanups.push(() => server.close());
+        const local = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+        return ((url: string | URL | Request, init?: RequestInit) =>
+            fetch(String(url).replace(/^https:\/\/[^/]+/, local), init)) as typeof fetch;
+    }
+
+    it('discovers every catalogued first-party row under its catalogue id and prints the roster', async () => {
+        const root = tmpRoot();
+        const out: string[] = [];
+        const code = await catalogMain(['discover', '--root', root], { fetchImpl: await stub(), stdout: (l) => out.push(l), now: NOW });
+        expect(code).toBe(0);
+        for (const row of ROUTE_CATALOG.filter((r) => r.first_party_list !== undefined)) {
+            expect(readRouteRoster(root, row.id)).toEqual({ status: 'known', models: ['fp-a'], observed_at: NOW.toISOString() });
+            expect(out.join('\n')).toMatch(new RegExp(`${row.id}: known`));
+        }
+        expect(readRouteRoster(root, 'groq').status).toBe('unknown');
+    });
+
+    it('a first-party list that cannot be read reports unknown and exits non-zero', async () => {
+        const root = tmpRoot();
+        const out: string[] = [];
+        const code = await catalogMain(['discover', '--root', root], { fetchImpl: await stub(503), stdout: (l) => out.push(l), now: NOW });
+        expect(code).toBe(1);
+        expect(readRouteRoster(root, 'pollinations').status).toBe('unknown');
+        expect(out.join('\n')).toMatch(/pollinations: unknown/);
+    });
+
+    it('an unknown subcommand is a usage error', async () => {
+        expect(await catalogMain(['nope'], { stdout: () => undefined })).toBe(2);
     });
 });
