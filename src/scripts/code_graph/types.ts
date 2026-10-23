@@ -9,7 +9,7 @@
  */
 
 /** Launch set — the stacks this suite's consumers actually run. */
-export type Lang = 'php' | 'typescript' | 'javascript' | 'python' | 'go' | 'java';
+export type Lang = 'php' | 'typescript' | 'javascript' | 'python' | 'go' | 'java' | 'csharp';
 
 /** Same scale as `discovery_graph.ts::EdgeConfidence` (reused, not forked). */
 export type EdgeConfidence = 'EXTRACTED' | 'INFERRED' | 'AMBIGUOUS';
@@ -361,6 +361,7 @@ export const EXT_LANG: Readonly<Record<string, Lang>> = {
     '.py': 'python',
     '.go': 'go',
     '.java': 'java',
+    '.cs': 'csharp',
     '.vue': 'typescript',
 };
 
@@ -372,6 +373,7 @@ export const GRAMMAR_WASM: Readonly<Record<Lang, string>> = {
     python: 'tree-sitter-python.wasm',
     go: 'tree-sitter-go.wasm',
     java: 'tree-sitter-java.wasm',
+    csharp: 'tree-sitter-c_sharp.wasm',
 };
 
 /** The single ABI version the pinned grammar set is built against. */

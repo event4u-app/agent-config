@@ -55,6 +55,15 @@
       "grammar_id": "java",
       "abi": 14,
       "why": "The Java grammar (road-to-a-map-that-draws-itself 6.1). Same reason as the php entry: the engine indexes .java files in a consumer install with no manual parser step."
+    },
+    {
+      "path": "src/vendor/grammars/tree-sitter-c_sharp.wasm",
+      "sha256": "6266a7e32d68a3459104d994dc848df15d5672b0ea8e86d327274b694f8e6991",
+      "size": 3978594,
+      "kind": "tree-sitter-wasm-grammar",
+      "grammar_id": "c_sharp",
+      "abi": 13,
+      "why": "The C# grammar (road-to-graph-providers-for-every-stack 5.2). Same reason as the php entry: the engine indexes .cs files in a consumer install with no manual parser step. ABI 13, not 14: tree-sitter-wasms@0.1.13 compiles this one grammar at ABI 13, which the pinned web-tree-sitter loads, so the loader pins it per language."
     }
   ]
 }

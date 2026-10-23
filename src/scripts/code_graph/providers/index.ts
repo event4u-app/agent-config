@@ -6,6 +6,7 @@
 import type { FileRole } from '../map_model.js';
 import type { ActiveProviderRecord } from '../types.js';
 import { angularProvider } from './angular.js';
+import { aspnetcoreProvider } from './aspnetcore.js';
 import { djangoProvider } from './django.js';
 import { expressProvider } from './express.js';
 import { fastapiProvider } from './fastapi.js';
@@ -49,6 +50,7 @@ export const PROVIDERS: readonly ConventionProvider[] = [
     nuxtProvider,
     sveltekitProvider,
     typeormProvider,
+    aspnetcoreProvider,
 ];
 
 /** Every marker basename a registered provider asks the probe to record. */

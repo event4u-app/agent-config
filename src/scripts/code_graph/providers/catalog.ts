@@ -233,8 +233,21 @@ export const CATALOG: readonly CatalogRow[] = [
         usage: 'ORM of the TypeScript providers above; not a web framework',
         limits: 'Custom naming strategies, EntitySchema and string relation targets are not followed.',
     },
+    {
+        id: 'aspnetcore',
+        name: 'ASP.NET Core',
+        language: 'C#',
+        markers: 'a *.csproj with the Web SDK or a Microsoft.AspNetCore package reference',
+        relations: ['routes-to', 'persists', 'renders', 'injects'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/aspnetcore',
+        usage: SO,
+        limits: 'MapControllerRoute tables, a view name held in a variable and primary constructors are not followed.',
+    },
     ...(
         [
+            ['ruby', 'Ruby', 'Ruby'],
+            ['rails', 'Ruby on Rails', 'Ruby'],
             ['kotlin', 'Kotlin', 'Kotlin'],
             ['rust', 'Rust', 'Rust'],
             ['c-cpp', 'C / C++', 'C / C++'],
