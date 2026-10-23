@@ -17,8 +17,9 @@ import { fileURLToPath } from 'node:url';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
 import { extractFile, type FileExtract, type RawEdge } from './extract.js';
-import { buildLaravelOverlay } from './laravel_overlay.js';
 import { grammarWasmPath } from './loader.js';
+import { type PassReport, runPasses } from './passes.js';
+import { EMPTY_PROBE, type ProjectProbe } from './providers/index.js';
 import {
     ALIAS_VIA,
     aliasRulesFrom,
@@ -30,8 +31,8 @@ import {
     resolveAlias,
     resolvePsr4,
 } from './resolution_tiers.js';
-import { DOC_EXTS, docsLayer } from './docs_layer.js';
-import { readScipIndex, type ScipDocument, scipEdges, supersededByScip } from './scip_reader.js';
+import { DOC_EXTS } from './docs_layer.js';
+import { readScipIndex, type ScipDocument } from './scip_reader.js';
 import { emitSqliteTwin } from './sqlite_store.js';
 import {
     type CodeEdge,
@@ -78,6 +79,10 @@ const CODE_EXTS: ReadonlySet<string> = new Set(Object.keys(EXT_LANG));
 const GENERATED_DIRS: ReadonlySet<string> = new Set(['agents/map', 'agents/runtime']);
 
 export function discoverFiles(root: string, exts: ReadonlySet<string> = CODE_EXTS): string[] {
+    return walkFiles(root, (name) => exts.has(path.extname(name).toLowerCase()));
+}
+
+function walkFiles(root: string, accept: (name: string) => boolean): string[] {
     const abs = path.resolve(root);
     // Resolve the root itself first: a repo checked out under a symlinked
     // path (e.g. macOS /tmp → /private/tmp) must still confine correctly —
@@ -106,8 +111,7 @@ export function discoverFiles(root: string, exts: ReadonlySet<string> = CODE_EXT
                 continue;
             }
             if (!e.isFile()) continue;
-            const ext = path.extname(e.name).toLowerCase();
-            if (!exts.has(ext)) continue;
+            if (!accept(e.name)) continue;
             let real: string;
             try {
                 real = fs.realpathSync(full);
@@ -120,6 +124,31 @@ export function discoverFiles(root: string, exts: ReadonlySet<string> = CODE_EXT
     };
     walk(abs);
     return out.sort();
+}
+
+/** Manifests a provider may read to detect a stack, by basename. */
+const MANIFEST_NAME = /^(?:composer\.json|package\.json|pyproject\.toml|requirements[\w.-]*\.txt|pom\.xml|build\.gradle(?:\.kts)?|go\.mod|[\w.-]+\.csproj|Gemfile)$/;
+/** Marker files whose presence, not content, is the signal. */
+const MARKER_NAME = /^(?:artisan|manage\.py)$/;
+
+/** The project's manifests and marker files, for provider detection (ADR-298). */
+export function readProjectProbe(root: string): ProjectProbe {
+    const abs = path.resolve(root);
+    const manifests = new Map<string, string>();
+    const markers = new Set<string>();
+    for (const full of walkFiles(abs, (n) => MANIFEST_NAME.test(n) || MARKER_NAME.test(n))) {
+        const rel = toPosixRel(abs, full);
+        if (MARKER_NAME.test(path.basename(full))) {
+            markers.add(rel);
+            continue;
+        }
+        try {
+            manifests.set(rel, fs.readFileSync(full, 'utf-8'));
+        } catch {
+            continue;
+        }
+    }
+    return { manifests, markers };
 }
 
 function toPosixRel(root: string, full: string): string {
@@ -309,6 +338,8 @@ export function buildGraph(
     resolution: ResolutionConfig = EMPTY_RESOLUTION_CONFIG,
     scip: readonly ScipDocument[] = [],
     docs: readonly SourceFile[] = [],
+    probe: ProjectProbe = EMPTY_PROBE,
+    report?: { passes?: PassReport },
 ): CodeGraph {
     const nodes = extracts.flatMap((e) => e.nodes);
     const nodeIds = new Set(nodes.map((n) => n.id));
@@ -754,39 +785,9 @@ export function buildGraph(
         });
     }
 
-    // Framework links no import states (routes, views, tables); rule-read,
-    // emitted only when the target exists. Also drops the base edges it
-    // proves false: a fluent `->middleware()` bound by name to some
-    // unrelated in-repo `middleware()`.
-    const overlay = buildLaravelOverlay(files, nodes, resolution);
-    let routeBuilderCalls = 0;
-    if (overlay.nodes.length > 0 || overlay.edges.length > 0) {
-        const kept = edges.filter((e) => !overlay.dropEdge(e));
-        routeBuilderCalls = edges.length - kept.length;
-        // Element-wise: a spread of ~200k edges overflows the call stack.
-        edges.length = 0;
-        for (const e of kept) edges.push(e);
-        for (const e of overlay.edges) edges.push(e);
-        for (const n of overlay.nodes) nodes.push(n);
-    }
-
-    if (docs.length > 0) {
-        const allFiles = new Set([...files.map((f) => f.path), ...docs.map((d) => d.path)]);
-        const layer = docsLayer(docs, allFiles);
-        for (const n of layer.nodes) nodes.push(n);
-        for (const e of layer.edges) edges.push(e);
-    }
-
-    // A project's own SCIP index states references the compiler resolved;
-    // each one supersedes the native name guess it duplicates.
-    if (scip.length > 0) {
-        const stated = scipEdges(scip, nodes);
-        const dropped = supersededByScip(stated, nodes);
-        const kept = edges.filter((e) => !dropped(e));
-        edges.length = 0;
-        for (const e of kept) edges.push(e);
-        for (const e of stated) edges.push(e);
-    }
+    // Everything after resolution: convention providers, docs, SCIP (passes.ts).
+    const passes = runPasses({ files, docs, scip, resolution, probe }, nodes, edges);
+    if (report) report.passes = passes;
 
     // deterministic ordering
     nodes.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
@@ -800,7 +801,7 @@ export function buildGraph(
     for (const e of edges) counts[e.confidence] += 1;
     const suppressed: CodeGraph['suppressed_edge_counts'] = {
         dynamic_no_candidate: suppressedKeys.size,
-        ...(routeBuilderCalls > 0 ? { route_builder_call: routeBuilderCalls } : {}),
+        ...passes.suppressed,
     };
 
     const languages = [...new Set(extracts.map((e) => e.lang))].sort() as Lang[];
@@ -1086,7 +1087,9 @@ export async function buildFromRepo(
             continue;
         }
     }
-    const graph = buildGraph(files, extracts, readResolutionConfig(root), scip, docs);
+    const report: { passes?: PassReport } = {};
+    const graph = buildGraph(files, extracts, readResolutionConfig(root), scip, docs, readProjectProbe(abs), report);
+    for (const f of report.passes?.failures ?? []) process.stderr.write(`code-graph: pass ${f.pass} failed — ${f.reason}\n`);
     const json = serializeGraph(graph);
     if (cachePath) {
         write_atomic(cachePath, json);

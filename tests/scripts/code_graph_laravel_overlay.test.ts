@@ -22,7 +22,10 @@ const has = (source: string, relation: string, target: string): boolean =>
 
 beforeAll(async () => {
     root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-laravel-')));
-    write('composer.json', JSON.stringify({ autoload: { 'psr-4': { 'App\\': 'app/' } } }));
+    write(
+        'composer.json',
+        JSON.stringify({ require: { 'laravel/framework': '^11.0' }, autoload: { 'psr-4': { 'App\\': 'app/' } } }),
+    );
     write(
         'routes/web.php',
         [

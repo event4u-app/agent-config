@@ -33,3 +33,16 @@ counting rule.
 | this repository | 10,452 | 1,890 (18.1 %) | 0 | 0 | 226,306 |
 | Fixture L | 2,235 | 256 (11.5 %) | 340 | 340 | 104,062 |
 | synthetic | 5 | 0 (0 %) | 0 | 0 | 11 |
+
+## After Phase 1 (the seam)
+
+| Tree | graph.json | map.json | MAP.md |
+|---|---|---|---|
+| Fixture L | `884ac13eed081cd4` (identical) | `43cba985d3852183` (identical) | `18b3422667576c95` (identical) |
+| synthetic | `b36b3f4e23f4d686` (identical) | `4758f8372cd83ad7` (identical) | `bb5fe0c80b919222` (identical) |
+
+This repository: Laravel was previously applied to every PHP file. With marker detection it
+runs only in the fixture packages whose `composer.json` requires `laravel/framework` or an
+`illuminate/*` package, or that carry an `artisan` file, and only on their files.
+`schema-call` edges 13 → 6 and table nodes 8 → 3: the removed ones sat in fixture trees with
+no Laravel marker (`tests/fixtures/persistence/**`, `internal/bench/scale-history/**`).

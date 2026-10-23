@@ -15,9 +15,13 @@
  * rule cannot settle — a closure handler, a view name built at runtime — is
  * counted in `stats`, never guessed.
  */
-import type { SourceFile } from './build.js';
-import { resolvePsr4, type ResolutionConfig } from './resolution_tiers.js';
-import type { CodeEdge, CodeNode } from './types.js';
+import * as path from 'node:path';
+
+import type { SourceFile } from '../build.js';
+import type { FileRole } from '../map_model.js';
+import { resolvePsr4, type ResolutionConfig } from '../resolution_tiers.js';
+import type { CodeEdge, CodeNode } from '../types.js';
+import type { ConventionProvider, ProjectProbe } from './types.js';
 
 export interface LaravelOverlayStats {
     routes: number;
@@ -452,3 +456,43 @@ export function buildLaravelOverlay(
 
     return { nodes, edges, dropEdge, stats };
 }
+
+/** A composer manifest that pulls in the framework or any of its components. */
+function requiresLaravel(manifest: string): boolean {
+    try {
+        const j = JSON.parse(manifest) as { require?: Record<string, string>; 'require-dev'?: Record<string, string> };
+        const names = [...Object.keys(j.require ?? {}), ...Object.keys(j['require-dev'] ?? {})];
+        return names.some((n) => n === 'laravel/framework' || n.startsWith('illuminate/'));
+    } catch {
+        return false;
+    }
+}
+
+function detectLaravel(probe: ProjectProbe): string[] {
+    const roots = new Set<string>();
+    const dirOf = (p: string): string => {
+        const d = path.posix.dirname(p);
+        return d === '.' ? '' : d;
+    };
+    for (const [p, text] of probe.manifests) {
+        if (path.posix.basename(p) === 'composer.json' && requiresLaravel(text)) roots.add(dirOf(p));
+    }
+    for (const p of probe.markers) if (path.posix.basename(p) === 'artisan') roots.add(dirOf(p));
+    return [...roots].sort();
+}
+
+function laravelRole(p: string): FileRole | undefined {
+    if (path.posix.basename(p).endsWith('.blade.php') || p.startsWith('resources/views/') || p.includes('/resources/views/')) return 'view';
+    if (p.startsWith('routes/') || p === 'public/index.php' || p === 'artisan') return 'entry';
+    return undefined;
+}
+
+export const laravelProvider: ConventionProvider = {
+    id: 'laravel',
+    detect: detectLaravel,
+    build: ({ files, baseNodes, resolution }) => {
+        const o = buildLaravelOverlay(files, baseNodes, resolution);
+        return { nodes: o.nodes, edges: o.edges, contest: o.dropEdge, contestKey: 'route_builder_call' };
+    },
+    roleOf: laravelRole,
+};

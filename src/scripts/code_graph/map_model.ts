@@ -16,6 +16,7 @@ import Graph from 'graphology';
 import louvain from 'graphology-communities-louvain';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 
+import { providerRole } from './providers/index.js';
 import type { CodeGraph, ResolvedVia } from './types.js';
 import { isStatedResolution } from './types.js';
 
@@ -212,12 +213,15 @@ export function staticRole(p: string, entries: ReadonlySet<string>): FileRole {
     if (/\.mdx?$/i.test(p)) return 'doc';
     if (isTestPath(p)) return 'test';
     const base = path.posix.basename(p);
-    if (base.endsWith('.blade.php') || p.startsWith('resources/views/') || p.includes('/resources/views/')) return 'view';
+    // A provider's view role outranks the neutral rules below; any other role it
+    // gives sits where an entry would.
+    const byProvider = providerRole(p);
+    if (byProvider === 'view') return 'view';
     if (/(^|\/)(database\/)?migrations\//.test(p)) return 'migration';
     if (/(^|\/)(resources\/)?lang\//.test(p)) return 'translation';
     if (p.startsWith('config/') || CONFIG_BASENAME.test(base)) return 'config';
-    if (entries.has(p) || p.startsWith('routes/') || p === 'public/index.php' || p === 'artisan') return 'entry';
-    return 'code';
+    if (entries.has(p)) return 'entry';
+    return byProvider ?? 'code';
 }
 
 

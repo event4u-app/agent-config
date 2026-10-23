@@ -81,32 +81,37 @@ content. Fixture L's 56.6 % → 11.3 % and 340/340 are re-measured in 0.2, not t
 
 ## Phase 1 — The seam, byte-identical
 
-- [ ] **1.1 An ordered pass registry.** `code_graph/passes.ts` holds `GraphPass { id,
+- [x] **1.1 An ordered pass registry.** `code_graph/passes.ts` holds `GraphPass { id,
       applies(ctx), run(ctx) → { nodes, edges, contest?, stats } }`, registered in today's
       order: `convention-providers` → `docs` → `scip`. Passes receive read-only views;
       the orchestrator applies results. A throwing pass is recorded in the build result
       with its reason and the build continues.
       verify: a test registers a throwing pass and asserts the visible failure plus an
       otherwise identical graph.
-- [ ] **1.2 A convention-provider registry with marker detection.** `code_graph/providers/`
+- [x] **1.2 A convention-provider registry with marker detection.** `code_graph/providers/`
       with `index.ts` (registry) and `ConventionProvider { id, detect(probe), build(...),
       roleOf?(path), entryFiles?(files) }`. `ProjectProbe` reads manifests per package root
       (`composer.json`, `package.json`, `pyproject.toml`, `requirements*.txt`, `pom.xml`,
       `build.gradle*`, `go.mod`, `*.csproj`, `Gemfile`), so a monorepo activates providers
       per package and several at once.
       verify: a test with a two-package monorepo fixture activates one provider per package.
-- [ ] **1.3 Laravel moves behind the seam unchanged.** `laravel_overlay.ts` →
-      `providers/laravel.ts`; `detect` = `laravel/framework` in a `composer.json`, or an
-      `artisan` file at a package root. Logic and its tests unchanged; `build.ts` imports
-      only `passes.ts`.
+- [x] **1.3 Laravel moves behind the seam unchanged.** `laravel_overlay.ts` →
+      `providers/laravel.ts`; `detect` = `laravel/framework` or an `illuminate/*` package in
+      a `composer.json`, or an `artisan` file, per package root; a provider sees only the
+      files under its roots. Logic unchanged; the overlay test's fixture gains the
+      `laravel/framework` marker (`corrected-from-reproduction`: without a marker it no
+      longer runs, which is the point). `build.ts` imports only `passes.ts`.
       verify: `grep -ciE 'laravel' src/scripts/code_graph/build.ts` -> /^0$/
-- [ ] **1.4 The map asks providers for roles.** `staticRole` keeps the neutral rules
+- [x] **1.4 The map asks providers for roles.** `staticRole` keeps the neutral rules
       (docs, tests, migrations, translations, config, manifest entries) and asks the active
       providers' `roleOf` / `entryFiles` for the rest.
       verify: `grep -cE 'blade|resources/views|artisan' src/scripts/code_graph/map_model.ts` -> /^0$/
-- [ ] **1.5 Byte identity proven.** Graph and map bytes equal the 0.2 baseline on all three
-      trees; every existing code-graph test green unchanged.
-      verify: the three checksums match the evidence file.
+- [x] **1.5 Byte identity proven.** Graph and map bytes equal the 0.2 baseline on Fixture L
+      and the synthetic tree; every existing code-graph test green. This repository's graph
+      differs by its own new sources and by Laravel edges that fixture trees without a
+      Laravel marker no longer get (`corrected-from-reproduction`: a byte-identical repository
+      graph would mean detection by suffix still ran), counted in the evidence file.
+      verify: the Fixture L and synthetic checksums match the evidence file.
 
 ## Phase 2 — Names, trust and provenance (schema 6)
 
