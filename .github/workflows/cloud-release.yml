@@ -109,16 +109,47 @@ jobs:
           retention-days: 30
 
       - name: Attach artefacts to GitHub Release
-        # `overwrite_files` defaults to `true` in v2, so re-running this
-        # workflow for an already-released tag is idempotent (assets are
-        # replaced, not rejected as duplicates) — load-bearing for
-        # release.yml's --ci path, which dispatches this workflow
-        # explicitly and could race with a native tag-push trigger when a
-        # RELEASE_PR_TOKEN PAT is configured.
-        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64  # v3.0.3
-        with:
-          tag_name: ${{ steps.tag.outputs.name }}
-          files: artefacts/*
-          fail_on_unmatched_files: true
+        # ~306 assets, one content-creating request each, sit near GitHub's
+        # secondary rate limit (~80/min): 17.2.0 tripped it, and a re-run was
+        # worse, because overwrite-on-upload deletes every asset before
+        # re-uploading it. So: skip an asset already attached at the same size
+        # (a re-run, or the release.yml --ci dispatch racing the tag push,
+        # then costs one listing), pace uploads under the per-minute budget,
+        # and back off when the limit fires anyway.
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.name }}
+        run: |
+          set -euo pipefail
+          # The tag push starts this workflow; release.ts creates the Release
+          # one step later, so wait for it rather than create a competing one.
+          for i in $(seq 1 30); do
+            gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 && break
+            [ "$i" = 30 ] && { echo "::error::release $TAG never appeared"; exit 1; }
+            sleep 20
+          done
+          declare -A have
+          while IFS=$'\t' read -r name size; do
+            [ -n "$name" ] && have["$name"]="$size"
+          done < <(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" \
+            --json assets --jq '.assets[] | select(.state == "uploaded") | "\(.name)\t\(.size)"')
+          uploaded=0 skipped=0
+          for f in artefacts/*; do
+            name="$(basename "$f")"
+            if [ "${have[$name]:-}" = "$(stat -c %s "$f")" ]; then
+              skipped=$((skipped + 1)); continue
+            fi
+            for attempt in 1 2 3 4 5 6; do
+              if out="$(gh release upload "$TAG" "$f" --clobber --repo "$GITHUB_REPOSITORY" 2>&1)"; then
+                break
+              fi
+              if [ "$attempt" = 6 ] || ! grep -qi 'rate limit' <<<"$out"; then
+                echo "::error::upload of $name failed: $out"; exit 1
+              fi
+              echo "rate limited on $name (attempt $attempt) — waiting $((attempt * 60)) s"
+              sleep $((attempt * 60))
+            done
+            uploaded=$((uploaded + 1))
+            sleep 1
+          done
+          echo "attached $uploaded asset(s), $skipped already present at the same size"
