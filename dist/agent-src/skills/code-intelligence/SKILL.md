@@ -45,10 +45,10 @@ code-graph and no appetite to build one — plain `grep`/read is right there.
 1. **Detect the source.** `agent-config code-graph detect` — is a fresh consumer
    `graph.json` or native cache present? (A consumer-shipped fresh index wins;
    the native engine covers stale-or-absent — ADR-124 § 2.)
-2. **Build if absent and worthwhile.** No graph + a repo in the launch set
-   (PHP / TS / JS)? `agent-config code-graph build` (deterministic, LLM-free,
-   ~seconds). Skip for a one-off question in an unsupported stack — grep
-   instead.
+2. **Build if absent and worthwhile.** No graph + a repo in a parsed language
+   (PHP, TypeScript, JavaScript, Python, Go, Java; Vue through its script
+   block)? `agent-config code-graph build` (deterministic, LLM-free, ~seconds).
+   Skip for a one-off question in an unsupported stack — grep instead.
 3. **Query.** Pick the verb:
    - `agent-config code-graph query <symbol>` — direct relations of a symbol.
    - `agent-config code-graph affected <symbol>` — reverse: who calls /
@@ -82,6 +82,15 @@ Every answer built with this skill MUST:
 
 ## Gotcha
 
+- **Framework links come from providers, and the map says which ran.** Routes,
+  templates, tables and injections that no import states are drawn by a
+  convention provider selected from the project's manifests (ADR-298);
+  `MAP.md` and `graph_map_status` name the active ones with their coverage
+  status (`partial` = synthetic oracles only, `verified` = also read on a real
+  repository — `src/scripts/code_graph/providers/catalog.ts`). A stack with no
+  provider still gets the framework-neutral default (single-match literal paths,
+  file-system page routes), so an empty route list there means "not covered",
+  not "no routes".
 - **A stale graph lies confidently.** If `detect` reports the index is N commits
   behind, rebuild (`agent-config code-graph build --update`) before trusting
   relationship answers, or say the answer is from a stale index.

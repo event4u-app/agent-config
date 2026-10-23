@@ -78,3 +78,45 @@ extractor does not turn into edges — the default pass closes that gap as a sid
 
 Fixture L after Phase 3: 255 unconnected (11.4 %), 340 / 340 routes. Hook bundle:
 1,550,498 B against 1,550,500 B.
+
+## Final readings (Phase 7)
+
+Fixture L after every phase: 255 unconnected files (11.4 %, baseline 11.5 %), 340 / 340
+routes resolved, one fluent route-builder call contested by the Laravel provider and
+removed. The synthetic tree gains one `literal-path` edge (its HTML template) and nothing
+else. This repository activates all 19 providers, each through a fixture package under
+`tests/fixtures/`; its graph changes by the schema rename, the default-pass edges and those
+fixture packages' provider edges.
+
+Provider oracles (positive and negative per relation claimed; each provider's core
+mechanism was neutralised once and an oracle went red before it was restored):
+
+| Test file | Passed |
+|---|---|
+| angular | 9 / 9 |
+| aspnetcore | 8 / 8 |
+| django | 13 / 13 |
+| express | 6 / 6 |
+| fastapi | 8 / 8 |
+| flask | 8 / 8 |
+| go-http | 10 / 10 |
+| laravel | 16 / 16 |
+| nestjs | 7 / 7 |
+| nextjs | 10 / 10 |
+| nuxt | 6 / 6 |
+| react-router | 9 / 9 |
+| spring | 9 / 9 |
+| sqlalchemy | 8 / 8 |
+| sveltekit | 8 / 8 |
+| symfony | 12 / 12 |
+| typeorm | 8 / 8 |
+| vue-router | 7 / 7 |
+| wordpress | 11 / 11 |
+
+## Grammar payload (5.1)
+
+Pristine built tarball, `npm pack --dry-run --json --ignore-scripts` after `npm run build`:
+base 15.683 MB · with the C# grammar 15.937 MB · with C# and Ruby 16.103 MB, against the
+built regression line 15.949 MB (14.4989 × 1.10). C# shipped; Ruby and Rails (5.4) wait for
+the budget decision recorded in the roadmap. The vendored C# grammar is ABI 13; the loader
+pins the ABI per language (`csharp: 13`), still an exact match.

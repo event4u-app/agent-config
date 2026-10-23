@@ -212,7 +212,7 @@ handler, never per file.
 
 ## Phase 6 — Catalog and transparency
 
-- [ ] **6.1 Coverage catalog.** `providers/catalog.ts`: per provider id, language, detected
+- [x] **6.1 Coverage catalog.** `providers/catalog.ts`: per provider id, language, detected
       markers, relations claimed, status `detected | partial | verified | deep`, fixture path,
       usage source and year. A provider with only synthetic oracles is `partial`; `verified`
       needs a registered real-repository reading. Languages and frameworks not covered appear
@@ -222,17 +222,19 @@ handler, never per file.
       active providers with their catalog status; the viewer's node inspector names the
       provider of each convention edge; `graph_map_status` returns the provider list.
       verify: a map test asserts MAP.md lists the active providers of a Laravel fixture.
-- [ ] **6.3 Docs follow the code.** The `code-intelligence` skill, `docs/maintainers/system-map.md`
-      if it names the overlay, and the CHANGELOG describe providers, the default and the
-      catalog.
+- [x] **6.3 Docs follow the code.** The `code-intelligence` skill describes providers, the
+      default and the catalog. `docs/maintainers/system-map.md` does not name the overlay, so
+      it needs no edit; the CHANGELOG is written by the release generator from the commits
+      (`## [Unreleased]` stays empty by its own contract), so no hand entry
+      (`corrected-from-reproduction`).
       verify: `grep -c 'providers' src/skills/code-intelligence/SKILL.md` -> /[1-9]/
 
 ## Phase 7 — Readings and close
 
-- [ ] **7.1 Parity on Fixture L.** Unconnected-file share and route coverage at least the 0.2
+- [x] **7.1 Parity on Fixture L.** Unconnected-file share and route coverage at least the 0.2
       baseline; the negative oracle (fluent route-builder calls never bind in-repo) holds.
       verify: the evidence file records both Fixture L readings at or above the 0.2 baseline.
-- [ ] **7.2 Readings for the default and every provider fixture** recorded in the evidence
+- [x] **7.2 Readings for the default and every provider fixture** recorded in the evidence
       file; this repository's graph changes only by the schema rename and default-pass
       edges, each counted.
       verify: the evidence file lists every catalog provider with its oracle result.
@@ -263,6 +265,9 @@ handler, never per file.
 | E5 | reversible-technical | evidence | WordPress is in, its hooks modelled as `HOOK <name>` route nodes (the draft's open E10) | It is in the 2025 top 20 the draft used; PHP is parsed; hooks are the entry points it dispatches | hook nodes mislead the map |
 | E6 | reversible-technical | agent | Detection by project markers per package root, never by file suffix | `.php` does not mean Laravel; monorepos mix stacks | a framework has no manifest marker |
 | E7 | reversible-technical | agent | One PR for the whole roadmap; Phase 1 lands byte-identical before the schema bump inside it | Owner instruction 2026-10-23 (`/roadmap:process-full`, update the PR) | — |
+| E8 | reversible-technical | evidence | The C# grammar ships at ABI 13 with a per-language exact ABI pin in the loader | The pinned `tree-sitter-wasms` carries C# at ABI 13 only; the other six stay at 14 | an ABI-14 C# build is vendored |
+| E9 | product-owned | owner (pending) | Ruby grammar + Rails provider (5.4) vs the built pack-size line: C# + Ruby measure 16.103 MB against 15.949 MB | AI council 2026-10-23 split — one seat: ship and record a new built measurement; the other: carry 5.4 until a budget decision. A split escalates to the owner | — |
+| E10 | reversible-technical | evidence | `literal-dotted` is off by default | 3 / 6 precision on Fixture L (translation keys matched views) | a provider-free precision reading above 90 % |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-23 | reviewer: claude/host -->
@@ -277,13 +282,13 @@ handler, never per file.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No file in the graph core names a framework or imports a provider directly; the
+- [x] AC-1 — No file in the graph core names a framework or imports a provider directly; the
       neutrality test enforces it.
-- [ ] AC-2 — Fixture L's unconnected-file share and route coverage are at least the 0.2
+- [x] AC-2 — Fixture L's unconnected-file share and route coverage are at least the 0.2
       baseline after the move.
-- [ ] AC-3 — The default pass runs on every project and draws only single-match edges, each
+- [x] AC-3 — The default pass runs on every project and draws only single-match edges, each
       mechanism with a recorded precision.
-- [ ] AC-4 — Every framework in E3 / E4 / E5 has a provider with positive and negative
+- [x] AC-4 — Every framework in E3 / E4 / E5 has a provider with positive and negative
       oracles green, and a catalog row with an honest status.
-- [ ] AC-5 — An unknown `resolved_via` value is treated as a guess by every reader.
-- [ ] AC-6 — A route's tables are those its own handler reaches.
+- [x] AC-5 — An unknown `resolved_via` value is treated as a guess by every reader.
+- [x] AC-6 — A route's tables are those its own handler reaches.
