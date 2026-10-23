@@ -403,6 +403,76 @@ An entry belongs under a dated release section, not here — see
 > that forces a new era split (`# Era: 17.2.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [17.2.0](https://github.com/event4u-app/agent-config/compare/17.1.0...17.2.0) (2026-10-23)
+
+### Release highlights
+
+- **Behaviour changes:** _none_
+- **Default changes + migration:** Breaking, pending in `BREAKING_CHANGES.md` and shipped by this release: **Three `fail_closed` hook guards run where they were silent.** The installed claude hook command now reaches a dispatcher staged under `~/.event4u/agent-config/runtime/` after a project-local install and before `PATH` ([`3f8c98e`](https://github.com/event4u-app/agent-config/commit/3f8c98e74), #2455). On machines installed through `npx`, or hosts launched with a bare `PATH`, every hook command used to end in a silent `exit 0`; there `block-no-verify` (refuses `git … --no-verify` and `core.hooksPath` overrides), `block-kernel-rule-writes` and `block-plumbing-writes` (refuse agent writes to this package's kernel rules and hook plumbing) now run and may refuse a tool call for the first time. Classed breaking by the AI council, 2026-10-19 (`agents/evidence/council/hook-carrier-release-note-class-20261019.md`). **`uninstall --global --purge` stops being a recursive delete of the host anchor.** Old scope: `fs.rmSync(anchor, { recursive: true })` on whole host configuration roots — `~/.claude/`, `~/.codex/`, `~/.config/zed/` — so everything under them went, whoever wrote it. New scope: only the anchor-relative paths this package's own deploy inventory recorded writing; the anchor itself is never removed, directories are pruned only when left empty, a recorded symlink is unlinked rather than followed, and a purge with no readable inventory for that anchor exits 1 having deleted nothing. A second change in the same area: a plain `uninstall --global` now keeps the lockfile while recorded content is still on disk, where it used to delete it.
+- **Security and correctness:** keep the binding inside the size ratchet and the built-path test unskipped (4201565); land the nightly evaluator record through a pull request (75dae15); name the map's render result map-render.json, clear of the design-sync artefact name (9868be2); fit the two map tools into the kernel payload band and dispose of their state (4f362af); keep Playwright out of the bundles and regenerate what the map moved (dc896f4); close the independent review's findings on the map (8956a5b); +2 more.
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+> **Governance mix:** governance-only 10 vs consumer-only 7 (mixed 19, maintenance 2; taxonomy 1.1.0; range 81949b9dba26..ffe878edc5db).
+
+### Features
+
+* **hooks:** bind the InstructionsLoaded observer on claude ([8bb7fe6](https://github.com/event4u-app/agent-config/commit/8bb7fe6dce33e743d112eb3faba1d6d5cebd0b74))
+* **code-graph:** the map remembers, compares and flags merge risks ([77bf99c](https://github.com/event4u-app/agent-config/commit/77bf99c53ca7c4e761ffc472cc3ebef60660f621))
+* **code-graph:** draw this repository's artefact layer on its own map ([9f2c328](https://github.com/event4u-app/agent-config/commit/9f2c328edffbb550aa7425df522d4d88875a03f6))
+* **code-graph:** link documents to the files they name ([153ddef](https://github.com/event4u-app/agent-config/commit/153ddef9e1e03652e676e8fb0f203e44feab68af))
+* **code-graph:** read a project's SCIP index into the graph ([f80d8ce](https://github.com/event4u-app/agent-config/commit/f80d8cea56d4b13642fad0f5af7b7cda66675853))
+* **code-graph:** index Python, Go, Java and Vue ([2ff8f31](https://github.com/event4u-app/agent-config/commit/2ff8f3159c29e145455b0c7b10cb909faa739d93))
+* **code-graph:** keep the map fresh, readable over MCP, and diffable ([936cad9](https://github.com/event4u-app/agent-config/commit/936cad9e938117a67e701f29356ee2e00d18d732))
+* **code-graph:** read Laravel's conventions into the graph ([e69e6e5](https://github.com/event4u-app/agent-config/commit/e69e6e5c2290c9d73174d5800057cc33ffa446e0))
+* **code-graph:** draw the project map into agents/map/ ([213a10c](https://github.com/event4u-app/agent-config/commit/213a10c043785ea3af947a35f94b90d8f0d4f62f))
+
+### Bug Fixes
+
+* **ci:** keep the binding inside the size ratchet and the built-path test unskipped ([4201565](https://github.com/event4u-app/agent-config/commit/4201565a647fe075d69646c42ff39d07af70176f))
+* **ci:** land the nightly evaluator record through a pull request ([75dae15](https://github.com/event4u-app/agent-config/commit/75dae15a18edde57fcfbdb8fcb23c2d536bf855c))
+* **code-graph:** name the map's render result map-render.json, clear of the design-sync artefact name ([9868be2](https://github.com/event4u-app/agent-config/commit/9868be25d59ce85c5f5814b20c6bb63ae1b48292))
+* **ci:** fit the two map tools into the kernel payload band and dispose of their state ([4f362af](https://github.com/event4u-app/agent-config/commit/4f362af254c9d39bd8869499b3e5b88848b39050))
+* **ci:** record the map's runtime dependencies and tighten its verify clauses ([9705541](https://github.com/event4u-app/agent-config/commit/97055419e6447ed882e00a8b9d4e6bda53baf273))
+* **ci:** keep Playwright out of the bundles and regenerate what the map moved ([dc896f4](https://github.com/event4u-app/agent-config/commit/dc896f4749f07eea8bcd159e8cf25cb1857402eb))
+* **code-graph:** close the independent review's findings on the map ([8956a5b](https://github.com/event4u-app/agent-config/commit/8956a5b970b55fe22957918f1fb9c422757c326f))
+* **project-map:** use the lite model tier, the schema's lowest band ([c4833a9](https://github.com/event4u-app/agent-config/commit/c4833a9c6989a52a952b310e9707bf8725dbfeaa))
+* **code-graph:** keep the hook bundle under its ceiling ([2356031](https://github.com/event4u-app/agent-config/commit/2356031a2f56b87a3f53717bc5b49db51096e0de))
+* **code-graph:** index the consumer project and actually write its index ([e15e45c](https://github.com/event4u-app/agent-config/commit/e15e45c7ce13de2cda7c486652d546cbca972e7e))
+
+### Documentation
+
+* **roadmap:** name unopim and larasend as the code-graph benchmark subjects ([eb4599e](https://github.com/event4u-app/agent-config/commit/eb4599e460609ab0437ec0afb9bf4a9074972e73))
+* **evidence:** re-ratify the binding after the CI-fix delta (round 5) ([12cbfa6](https://github.com/event4u-app/agent-config/commit/12cbfa68d33b0a293e0772b266c924c0b0ea3835))
+* **roadmap:** claim the observer's concern in the estate and type the council prompts ([ae8d5a9](https://github.com/event4u-app/agent-config/commit/ae8d5a993b9324bdf47e0c2fe9944e973f0049d7))
+* **evidence:** ratification record for the InstructionsLoaded binding ([ae1162c](https://github.com/event4u-app/agent-config/commit/ae1162c0e43cac457f666afe4cc98f641c45399e))
+* **roadmap:** close step 1.1 and its ratification-quorum blocker ([bc66921](https://github.com/event4u-app/agent-config/commit/bc66921a44fa6a74312a4d5938442431e1524404))
+* **roadmaps:** archive road-to-a-map-that-draws-itself — every step and criterion closed ([d40e797](https://github.com/event4u-app/agent-config/commit/d40e797f990afadf94b79a243ce0b83108718c55))
+* **adr:** register agents/map/ for derived views and correct the stale graph claim ([66f75c5](https://github.com/event4u-app/agent-config/commit/66f75c5cd02d4506afbd60c7c92685d70572283b))
+* **roadmaps:** plan a project map the code-graph engine draws itself ([06f332a](https://github.com/event4u-app/agent-config/commit/06f332a2550a1797b050d046d43f9a1dd6a7e7cf))
+
+### CI
+
+* **tests:** bound the FFmpeg install and let a stall skip the stitch cases ([1d0f01b](https://github.com/event4u-app/agent-config/commit/1d0f01b4cb3f0940a226d0a96a94ebeb2948e954))
+
+### Chores
+
+* **hooks:** record the admission of the instructions-observer concern ([a5ee675](https://github.com/event4u-app/agent-config/commit/a5ee675245df43e7279ee0ef485c98867ab5d99b))
+* **plugin:** regenerate hooks/hooks.json in matrix order ([339b306](https://github.com/event4u-app/agent-config/commit/339b3062cc73ef2995f2b493d5ea627c850c3d27))
+* **ci:** regenerate the ADR index and lower the source-size ratchet to the live total ([7c11522](https://github.com/event4u-app/agent-config/commit/7c11522b49c1dac1199e142ed17c8b6e9fa06f22))
+* **adr:** regenerate the evidence census for ADR-297's provenance kind ([18b7d11](https://github.com/event4u-app/agent-config/commit/18b7d113e811f17c1115010676e49c6d0c8e9849))
+* **tokens:** trim the map's surfaces, then re-anchor the two that still grew ([5d61dab](https://github.com/event4u-app/agent-config/commit/5d61dab35e0540492109a4b9233b198e9df6bc3c))
+* **index:** regenerate the catalog for project map ([1522e30](https://github.com/event4u-app/agent-config/commit/1522e30103815b03c1a777cb4a24c234e3995f7e))
+* **proof:** regenerate after the merge with main ([c4d0a11](https://github.com/event4u-app/agent-config/commit/c4d0a1133339e081f738a2f3df353d649110449c))
+* **sync:** project the map command, the code-intelligence step and the analyze changes ([5651955](https://github.com/event4u-app/agent-config/commit/5651955b72866023bde89afc1e85a0001a944a93))
+
+### Other
+
+* **code-graph:** record the map's costs and the orientation benchmark ([84c2421](https://github.com/event4u-app/agent-config/commit/84c24216f474eab896d4f8979b2353b37f81e4b6))
+* **code-graph:** pre-register the orientation benchmark and add the map cost probe ([1fdc013](https://github.com/event4u-app/agent-config/commit/1fdc013f9038ee50495bfe1ab0c3e75ecd90b3b3))
+
+Tests: 32297 (+82 since 17.1.0)
+
 ## [17.1.0](https://github.com/event4u-app/agent-config/compare/17.0.0...17.1.0) (2026-10-23)
 
 ### Release highlights
