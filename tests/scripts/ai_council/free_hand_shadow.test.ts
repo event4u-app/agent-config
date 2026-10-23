@@ -9,6 +9,10 @@ import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { CouncilResponse, type ExternalAIClient } from '../../../src/scripts/ai_council/clients.js';
+import { resetCouncilEgress } from '../../../src/scripts/ai_council/council_egress.js';
+import { ExposureLedger } from '../../../src/scripts/ai_council/exposure_ledger.js';
+import { FreeRouteClient } from '../../../src/scripts/ai_council/free_route_client.js';
+import { buildHandPayload, type HandSlice } from '../../../src/scripts/ai_council/hand_payload.js';
 import {
     readShadowLedger,
     SHADOW_CALL_CAP,
@@ -46,7 +50,7 @@ function member(name: string, billing: string, text: string, error: string | nul
 const PAID_ANSWER = '{"label":"paid","confidence":0.9}';
 const FREE_ANSWER = '{"label":"free","confidence":0.4}';
 const passAll: HeadVerify = () => ({ verdict: 'pass', tokens: 7 });
-const base = { kind: 'classify' as const, contentClass: 'public-artifact' as const };
+const base = { contentClass: 'public-artifact' as const };
 
 describe('shadowAsk', () => {
     it('uses the paid answer and ledgers a free and a paid answer, each with a verify result', async () => {
@@ -54,7 +58,7 @@ describe('shadowAsk', () => {
         const paid = member('paid1', 'per-token', PAID_ANSWER, null, 120);
         const free = member('free1', 'free-quota', FREE_ANSWER);
         for (let i = 0; i < 3; i++) {
-            const r = await shadowAsk('q', { ...base, paid, free, verify: passAll, stateRoot: root });
+            const r = await shadowAsk({ kind: 'classify', spec: 'q' }, { ...base, paid, free, verify: passAll, stateRoot: root });
             expect(r.answer?.answer).toBe(PAID_ANSWER);
         }
         const rows = readShadowLedger(root);
@@ -73,8 +77,8 @@ describe('shadowAsk', () => {
             seen.push(side);
             return { verdict: 'pass', tokens: 7 };
         };
-        await shadowAsk('q', { ...base, paid: member('p', 'per-token', PAID_ANSWER), free: member('f', 'free-quota', 'prose'), verify, stateRoot: root });
-        await shadowAsk('q', { ...base, paid: member('p', 'per-token', PAID_ANSWER), free: member('f', 'free-quota', '', 'HTTP 429: slow'), verify, stateRoot: root });
+        await shadowAsk({ kind: 'classify', spec: 'q' }, { ...base, paid: member('p', 'per-token', PAID_ANSWER), free: member('f', 'free-quota', 'prose'), verify, stateRoot: root });
+        await shadowAsk({ kind: 'classify', spec: 'q' }, { ...base, paid: member('p', 'per-token', PAID_ANSWER), free: member('f', 'free-quota', '', 'HTTP 429: slow'), verify, stateRoot: root });
         const rows = readShadowLedger(root);
         expect(rows.map((r) => [r.free.verified, r.free.outcome])).toEqual([
             ['fail', 'ok'],
@@ -87,13 +91,13 @@ describe('shadowAsk', () => {
         const root = tmpRoot();
         const paid = member('p', 'per-token', PAID_ANSWER);
         const metered = member('m', 'per-token', FREE_ANSWER);
-        expect((await shadowAsk('q', { ...base, paid, free: metered, verify: passAll, stateRoot: root })).skipped).toBe('free-side-metered');
+        expect((await shadowAsk({ kind: 'classify', spec: 'q' }, { ...base, paid, free: metered, verify: passAll, stateRoot: root })).skipped).toBe('free-side-metered');
         const free = member('f', 'free-quota', FREE_ANSWER);
-        expect((await shadowAsk('q', { ...base, contentClass: 'project-content', paid, free, verify: passAll, stateRoot: root })).skipped).toBe('content-ceiling');
+        expect((await shadowAsk({ kind: 'classify', spec: 'q' }, { ...base, contentClass: 'project-content', paid, free, verify: passAll, stateRoot: root })).skipped).toBe('content-ceiling');
         const file = path.join(root, SHADOW_LEDGER_RELPATH);
         fs.mkdirSync(path.dirname(file), { recursive: true });
         fs.writeFileSync(file, '{}\n'.repeat(SHADOW_CALL_CAP));
-        const r = await shadowAsk('q', { ...base, paid, free, verify: passAll, stateRoot: root });
+        const r = await shadowAsk({ kind: 'classify', spec: 'q' }, { ...base, paid, free, verify: passAll, stateRoot: root });
         expect(r.skipped).toBe('cap-reached');
         expect(r.answer?.answer).toBe(PAID_ANSWER);
         expect([metered.calls, free.calls]).toEqual([0, 0]);
@@ -101,9 +105,79 @@ describe('shadowAsk', () => {
 
     it('the ledger carries no prompt and no answer text', async () => {
         const root = tmpRoot();
-        await shadowAsk('the secret question', { ...base, paid: member('p', 'per-token', PAID_ANSWER), free: member('f', 'free-quota', FREE_ANSWER), verify: passAll, stateRoot: root });
+        await shadowAsk({ kind: 'classify', spec: 'the secret question' }, { ...base, paid: member('p', 'per-token', PAID_ANSWER), free: member('f', 'free-quota', FREE_ANSWER), verify: passAll, stateRoot: root });
         const raw = fs.readFileSync(path.join(root, SHADOW_LEDGER_RELPATH), 'utf8');
         expect(raw).not.toMatch(/secret|label|confidence/);
+    });
+});
+
+describe('shadowAsk — the hand contract (D5)', () => {
+    const slice: HandSlice = {
+        kind: 'classify',
+        spec: 'Label the failure acme-billing raised.',
+        callees: ['export function total(rows: Row[]): number {\n    return rows.reduce((s, r) => s + r.amount, 0);\n}'],
+        linking: [{ type: 'PROJECT', value: 'acme-billing' }],
+    };
+
+    function capturing(name: string, billing: string, text: string, sent: string[][]): ExternalAIClient {
+        const m = member(name, billing, text);
+        const ask = m.ask.bind(m);
+        m.ask = ((system: string, user: string) => {
+            sent.push([system, user]);
+            return ask(system, user);
+        }) as ExternalAIClient['ask'];
+        return m;
+    }
+
+    it('the outbound body of both sides equals buildHandPayload output', async () => {
+        const root = tmpRoot();
+        const egress = resetCouncilEgress({ identifiers: true });
+        const paidSent: string[][] = [];
+        const freeSent: string[][] = [];
+        await shadowAsk(slice, {
+            ...base,
+            paid: capturing('p', 'per-token', PAID_ANSWER, paidSent),
+            free: capturing('f', 'free-quota', FREE_ANSWER, freeSent),
+            verify: passAll,
+            stateRoot: root,
+            egress,
+        });
+        const expected = buildHandPayload(slice, egress);
+        expect(freeSent).toEqual([[expected.system, expected.user]]);
+        expect(paidSent).toEqual([[expected.system, expected.user]]);
+        expect(freeSent[0]![1]).not.toContain('acme-billing');
+        expect(freeSent[0]![1]).not.toContain('reduce');
+    });
+
+    it('records the exposure against the free route only when it is called', async () => {
+        const root = tmpRoot();
+        const ledger = ExposureLedger.load(path.join(root, 'exposure.json'));
+        const exposes = { files: ['src/total.ts'], symbols: ['total'] };
+        await shadowAsk(slice, { ...base, paid: member('p', 'per-token', PAID_ANSWER), free: member('f', 'free-quota', FREE_ANSWER), verify: passAll, stateRoot: root, exposure: { ledger, exposes } });
+        expect(ledger.seen('f')).toEqual({ files: 1, symbols: 1 });
+        expect(ledger.seen('p')).toEqual({ files: 0, symbols: 0 });
+    });
+
+    it('refuses a route member as the paid side and calls nothing', async () => {
+        const root = tmpRoot();
+        const sent: unknown[] = [];
+        const route = new FreeRouteClient({
+            name: 'metered-route',
+            model: 'm',
+            base_url: 'https://router.example/v1',
+            api_key: null,
+            billing: 'per-token',
+            content_ceiling: 'public-artifact',
+            post: (...args) => {
+                sent.push(args);
+                return {};
+            },
+        });
+        const free = member('f', 'free-quota', FREE_ANSWER);
+        const r = await shadowAsk(slice, { ...base, paid: route, free, verify: passAll, stateRoot: root });
+        expect(r.skipped).toBe('paid-side-route');
+        expect(r.answer).toBeNull();
+        expect([sent.length, free.calls]).toEqual([0, 0]);
     });
 });
 
@@ -112,8 +186,8 @@ describe('shadowReport', () => {
         const root = tmpRoot();
         const verify: HeadVerify = (_k, v) => ({ verdict: (v as { label: string }).label === 'bad' ? 'fail' : 'pass', tokens: 5 });
         const paid = member('p', 'per-token', PAID_ANSWER, null, 100);
-        await shadowAsk('q', { ...base, paid, free: member('f', 'free-quota', FREE_ANSWER), verify, stateRoot: root, now: () => new Date('2026-10-20T10:00:00Z') });
-        await shadowAsk('q', { ...base, paid, free: member('f', 'free-quota', '{"label":"bad","confidence":0.1}'), verify, stateRoot: root, now: () => new Date('2026-10-21T10:00:00Z') });
+        await shadowAsk({ kind: 'classify', spec: 'q' }, { ...base, paid, free: member('f', 'free-quota', FREE_ANSWER), verify, stateRoot: root, now: () => new Date('2026-10-20T10:00:00Z') });
+        await shadowAsk({ kind: 'classify', spec: 'q' }, { ...base, paid, free: member('f', 'free-quota', '{"label":"bad","confidence":0.1}'), verify, stateRoot: root, now: () => new Date('2026-10-21T10:00:00Z') });
         const [row] = shadowReport(readShadowLedger(root));
         expect(row).toMatchObject({ kind: 'classify', n: 2, free_rate: 0.5, paid_rate: 0, tokens_avoided: 100, verify_tokens: 10, net: 90 });
         expect(row!.weeks).toEqual([{ week: '2026-W43', net: 90 }]);

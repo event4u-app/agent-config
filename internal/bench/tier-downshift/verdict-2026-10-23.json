@@ -1,0 +1,30 @@
+{
+  "commit": "fe4fa4bcd7b9bffaba49a233b18a6e82bdcfcc7b",
+  "pairs": 60,
+  "lite": {
+    "slices": 60,
+    "failed_or_escalated": 1,
+    "escalated": 0,
+    "verified": 59,
+    "cost_usd": 0.047793345,
+    "cost_per_verified_usd": 0.0008100566949152542
+  },
+  "inherit": {
+    "slices": 60,
+    "failed_or_escalated": 0,
+    "escalated": 0,
+    "verified": 60,
+    "cost_usd": 0.5914518999999999,
+    "cost_per_verified_usd": 0.009857531666666666
+  },
+  "diff_pp": 1.6666666666666667,
+  "upper_bound_pp": 7.663999493450444,
+  "lower_bound_pp": -4.784839038314829,
+  "escalation_rate_lite": 0,
+  "quality": "underpowered",
+  "cost": "underpowered",
+  "flip": false,
+  "notes": [
+    "the upper bound 7.66 pp is not below the 5 pp margin"
+  ]
+}

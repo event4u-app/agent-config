@@ -1,0 +1,41 @@
+{
+  "seed": 20261022,
+  "model": "sonnet",
+  "pairs_completed": 60,
+  "per_arm": {
+    "A": {
+      "pass": 60,
+      "n": 60
+    },
+    "B": {
+      "pass": 60,
+      "n": 60
+    }
+  },
+  "by_family": {
+    "review": {
+      "A": 48,
+      "B": 48,
+      "n": 48
+    },
+    "coding": {
+      "A": 12,
+      "B": 12,
+      "n": 12
+    }
+  },
+  "verdict": {
+    "kind": "underpowered",
+    "discordant": 0,
+    "wins": 0,
+    "losses": 0,
+    "p": 1,
+    "magnitude_mean": 0,
+    "at_floor": false,
+    "reason": "0 discordant trial(s) is below the derived floor of 5: the smallest attainable one-sided p is 1.0000, so no result here can clear 0.05. This is NOT a null result — it is an absent measurement, and it belongs in no pass-rate denominator."
+  },
+  "min_discordant": 5,
+  "floor_warning": null,
+  "bar_reading": "undecided",
+  "no_loss_upper_bound_rule_of_three": 0.05
+}

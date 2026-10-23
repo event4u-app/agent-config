@@ -1,0 +1,22 @@
+# Run-local council file for internal/bench/free-hands-shadow/run.ts.
+# Copy it outside the tree and point AI_COUNCIL_CONFIG at the copy; never
+# install it as the user-global council config.
+enabled: true
+cost_budget:
+  max_total_usd: 0
+members:
+  anthropic:
+    enabled: true
+    model: haiku
+    # Ignored by the loader (reported as an ignored transport key). run.ts pins
+    # invocation_mode cli and refuses any paid seat that is not a subscription CLI.
+    mode: cli
+  hands:
+    enabled: true
+    # Replaced at start by the first id of the discovered first-party roster.
+    model: discovered-at-run-start
+    base_url: "https://text.pollinations.ai/openai"
+    billing_proof:
+      kind: keyless
+      url: "https://pollinations.ai/privacy"
+      checked: "2026-10-22"

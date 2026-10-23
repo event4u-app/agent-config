@@ -160,7 +160,7 @@ export function isUnpaidBilling(billing: string | null | undefined): boolean {
 }
 
 export interface RoleRefusal {
-    readonly reason: 'unpaid_head_role';
+    readonly reason: 'unpaid_head_role' | 'route_head_role';
     readonly message: string;
 }
 
@@ -168,7 +168,14 @@ export function seatRoleRefusal(
     role: CouncilRole,
     billing: string | null | undefined,
     seat = 'this seat',
+    route = false,
 ): RoleRefusal | null {
+    if (HEAD_ROLES.has(role) && route) {
+        return {
+            reason: 'route_head_role',
+            message: `${seat} is a base_url route and may not hold the ${role} role, whatever billing it reports (ADR-257)`,
+        };
+    }
     if (!HEAD_ROLES.has(role) || !isUnpaidBilling(billing)) return null;
     return {
         reason: 'unpaid_head_role',

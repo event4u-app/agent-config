@@ -16,8 +16,8 @@
  * `load_settings` does not hand `build_members` the config FILE — it hands it
  * this block. So a key the loader validates and this projection drops is
  * enforced at load and invisible at runtime. That has now happened to
- * `quorum`, to `quorum_min_present`, and to `fallback.api_on_quota` in turn;
- * each carries its own comment below. A new key belongs in BOTH places or in
+ * `quorum`, to `quorum_min_present`, to `fallback.api_on_quota`, and to a
+ * member's `base_url` route fields in turn; each carries its own comment below. A new key belongs in BOTH places or in
  * neither.
  */
 
@@ -47,6 +47,13 @@ export function synthesizeAiCouncilBlock(cfg: CouncilConfig): Dict {
         // byte-identical to pre-Phase-4 output when nobody opted in.
         if (m.prompt_cache_ttl !== '5m') {
             entry['prompt_cache_ttl'] = m.prompt_cache_ttl;
+        }
+        // Dropping these turned every configured `base_url` route into an
+        // unknown provider at `build_members`, so no free route was ever built.
+        if (m.route) {
+            entry['base_url'] = m.route.base_url;
+            entry['content_ceiling'] = m.route.declared_ceiling;
+            if (m.route.proof !== null) entry['billing_proof'] = { ...m.route.proof };
         }
         members[name] = entry;
     }

@@ -98,17 +98,121 @@ function pythonHeaderEnd(src: string): number {
     return -1;
 }
 
+/** `//` and `/* *\/` comments blanked, strings kept. */
+function stripComments(src: string): string {
+    let out = '';
+    for (let i = 0; i < src.length; i++) {
+        const c = src[i] as string;
+        const next = src[i + 1];
+        if (c === '/' && (next === '/' || next === '*')) {
+            const close = next === '/' ? src.indexOf('\n', i) : src.indexOf('*/', i + 2);
+            i = close === -1 ? src.length : next === '/' ? close - 1 : close + 1;
+            out += ' ';
+            continue;
+        }
+        if (c === '"' || c === "'" || c === '`') {
+            const from = i;
+            for (i++; i < src.length && src[i] !== c; i++) if (src[i] === '\\') i++;
+            out += src.slice(from, i + 1);
+            continue;
+        }
+        out += c;
+    }
+    return out;
+}
+
+/** Imports, namespaces and file pragmas: statements around a declaration, never one. */
+const PREAMBLE = [
+    /^<\?php\b/,
+    /^(?:import|export)\s+(?:type\s+)?(?:[^;'"`]*?\s+from\s+)?(['"])[^'"\n]*\1\s*;?/,
+    /^(?:const|let|var)\s+[\w{}\s,]+=\s*require\((['"])[^'"\n]*\1\)\s*;?/,
+    /^(?:namespace|use)\s+[\w\\:{},\s]+?(?:\s+as\s+\w+)?\s*;/,
+    /^declare\s*\([^)]*\)\s*;/,
+    /^(['"])use strict\1\s*;?/,
+];
+
+/** Top-level statements of a brace-language source, preamble dropped. */
+function braceStatements(source: string): string[] {
+    let src = stripComments(source).trim();
+    for (let hit = true; hit; ) {
+        hit = false;
+        for (const re of PREAMBLE) {
+            const m = re.exec(src);
+            if (m !== null) {
+                src = src.slice(m[0].length).trimStart();
+                hit = true;
+            }
+        }
+    }
+    const out: string[] = [];
+    let depth = 0;
+    let from = 0;
+    const cut = (to: number): void => {
+        const stmt = src.slice(from, to).trim();
+        if (stmt !== '' && stmt !== ';') out.push(stmt);
+        from = to;
+    };
+    for (let i = 0; i < src.length; i++) {
+        const c = src[i];
+        if (c === '"' || c === "'" || c === '`') {
+            for (i++; i < src.length && src[i] !== c; i++) if (src[i] === '\\') i++;
+        } else if (c === '(' || c === '[' || c === '{') depth++;
+        else if (c === ')' || c === ']' || c === '}') {
+            depth--;
+            if (c === '}' && depth === 0) {
+                const rest = /^(\s*)(\S?)/.exec(src.slice(i + 1)) as RegExpExecArray;
+                const n = rest[2] as string;
+                if (n === ';') cut(i + 1 + (rest[1] as string).length + 1);
+                else if (n === '' || ((rest[1] as string).includes('\n') && !/[.{)=|&,?:]/.test(n))) cut(i + 1);
+            }
+        } else if (c === ';' && depth === 0) cut(i + 1);
+    }
+    cut(src.length);
+    return out;
+}
+
+/** The one Python `def` of a source, imports and decorators dropped. */
+function pythonDeclaration(source: string): string {
+    const lines = source.split('\n');
+    const starts: number[] = [];
+    let depth = 0;
+    lines.forEach((line, n) => {
+        const atTop = depth === 0 && /^\S/.test(line) && !line.startsWith('#');
+        for (const c of line) {
+            if (c === '(' || c === '[' || c === '{') depth++;
+            else if (c === ')' || c === ']' || c === '}') depth--;
+        }
+        if (atTop && !/^(?:import\s|from\s+\S+\s+import\s|@)/.test(line)) starts.push(n);
+    });
+    const first = starts[0];
+    if (starts.length !== 1 || first === undefined || !/^(?:async\s+)?def\s/.test(lines[first] as string)) {
+        throw new HandPayloadError('a callee must hold exactly one top-level function; send that declaration alone');
+    }
+    return lines.slice(first).join('\n');
+}
+
+const STATEMENT_IN_BLOCK = /\breturn\b|\bthrow\b|\bif\s*\(|(?<![=!<>])=(?![=>])/;
+
 /**
- * A function's signature without its body. Brace languages lose the final
- * top-level block (a return-type literal before it survives); an expression
- * arrow loses everything from its arrow; a Python `def` keeps its header line.
+ * A function's signature without its body. A callee must hold exactly one
+ * top-level declaration once imports, namespaces and comments are dropped,
+ * else it is refused. Brace languages lose the final top-level block (a
+ * return-type literal before it survives); an expression arrow loses
+ * everything from its arrow; a Python `def` keeps its header line.
  */
 export function signatureOf(source: string): string {
-    const src = source.trim();
-    if (/^(?:async\s+)?def\s/.test(src)) {
+    if (/^(?:async\s+)?def\s+\w+\s*\(/m.test(source)) {
+        const src = pythonDeclaration(source);
         const end = pythonHeaderEnd(src);
-        return end === -1 ? src : src.slice(0, end + 1);
+        const sig = end === -1 ? src.trim() : src.slice(0, end + 1);
+        if (sig.includes('\n') && /\breturn\b/.test(sig)) throw new HandPayloadError('a body survived signature extraction');
+        return sig;
     }
+    const stmts = braceStatements(source);
+    if (stmts.length !== 1) {
+        throw new HandPayloadError('a callee must hold exactly one top-level declaration; send that declaration alone');
+    }
+    const src = stmts[0] as string;
     const { blocks, arrows } = scanTopLevel(src);
     const tailEnd = src.replace(/[\s;]+$/u, '').length - 1;
     const last = blocks[blocks.length - 1];
@@ -119,7 +223,11 @@ export function signatureOf(source: string): string {
     } else if (arrows[0] !== undefined) {
         head = src.slice(0, arrows[0]).trimEnd();
     }
-    return `${head.replace(/[\s;]+$/u, '')};`;
+    const sig = `${head.replace(/[\s;]+$/u, '')};`;
+    for (const b of scanTopLevel(sig).blocks) {
+        if (STATEMENT_IN_BLOCK.test(sig.slice(b.start + 1, b.end))) throw new HandPayloadError('a body survived signature extraction');
+    }
+    return sig;
 }
 
 function escapeRegExp(s: string): string {

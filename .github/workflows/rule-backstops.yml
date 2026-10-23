@@ -180,6 +180,12 @@ jobs:
       - name: step receipts (every newly ticked roadmap step names its class)
         run: ./scripts-run src/scripts/check_step_receipts --base origin/main
 
+      # A tick whose tested code no production entry reaches is a step closed on a
+      # path that never ships. Diff-scoped like the receipts; report-only for one
+      # release, then enforcing.
+      - name: step production reach (a ticked step's tested symbols ship)
+        run: ./scripts-run src/scripts/check_step_production_reach --base origin/main
+
       # A `[~]` carried to a follow-up is validated once, when the parent is
       # archived, by a sweep that then never sees the pair again — so the
       # receiver could be deleted afterwards with nothing going red. This walks

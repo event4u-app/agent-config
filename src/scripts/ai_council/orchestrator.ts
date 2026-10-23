@@ -502,16 +502,13 @@ export function consult(
             // Non-blind: the seat is asked about its own reply, so it continues the session that wrote it.
             const seat = member as Partial<Pick<CliClient, 'lastSession' | 'resumeNext'>>;
             if (seat.lastSession !== undefined) seat.resumeNext = seat.lastSession;
-            const rr = _run_round([member], repairQ, resolvedBudget, spent, {
-                table,
-                on_overrun,
-                project,
-                original_ask,
-                advisor_plans,
-                cli_fallback,
-                fallback_ledger,
-                fallback_twins,
-            });
+            let rr: CouncilResponse[];
+            try {
+                const round = { table, on_overrun, project, original_ask, advisor_plans, cli_fallback, fallback_ledger, fallback_twins };
+                rr = _run_round([member], repairQ, resolvedBudget, spent, round);
+            } finally {
+                if (seat.resumeNext !== undefined) seat.resumeNext = null; // a quota gate or refusal returns before the seat clears it
+            }
             const rep = rr[0];
             if (rep !== undefined) {
                 opts.on_stance_repair_result?.(rep);

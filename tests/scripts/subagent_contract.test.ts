@@ -153,27 +153,23 @@ describe('subagent-v1 reuse and loading fields', () => {
         expect(validate(data, schema).some((e) => e.path === '$.reuse')).toBe(true);
     });
 
-    // 2.5: on once the 1.7 net delta cleared its bar and the frontmatter
-    // spelling was observed honoured (2.1.308). A judge keeps the hierarchy.
-    it('package-workers-skip-project-instructions', () => {
-        for (const name of ['ac-worker', 'ac-researcher']) {
+    // A skipping worker loses the consumer's CLAUDE.md and rules until a
+    // carrier on the host's own Agent path exists (tick-the-shipped-path 2.4).
+    it('package-workers-load-project-instructions-until-a-carrier-exists', () => {
+        for (const name of ['ac-worker', 'ac-researcher', 'production-validator']) {
             const data = _frontmatterOf(path.join(_AGENTS, `${name}.md`));
-            expect(data.omit_project_instructions).toBe(true);
-            expect(nativeFieldLines(data as Record<string, unknown>)).toContain('omitClaudeMd: true\n');
+            expect(data.omit_project_instructions).not.toBe(true);
+            expect(nativeFieldLines(data as Record<string, unknown>)).not.toContain('omitClaudeMd: true\n');
         }
-        const validator = _frontmatterOf(path.join(_AGENTS, 'production-validator.md'));
-        expect(validator.omit_project_instructions).not.toBe(true);
     });
 
-    // road-to-a-tier-the-dispatch-carries 2.3: the definition follows the
-    // backed claims, never precedes them.
-    it('ac-researcher-tier-follows-the-claim', () => {
-        const claims = fs.readFileSync(path.join(_REPO, 'docs', 'CLAIMS.md'), 'utf-8');
-        const backed = (id: string): boolean =>
-            new RegExp(`### claim: ${id}\\n(?:- .*\\n)*?- status: backed\\n`).test(claims);
-        const both = backed('tier-downshift-quality-held') && backed('tier-downshift-limit-relief');
-        const tier = _frontmatterOf(path.join(_AGENTS, 'ac-researcher.md')).model_tier;
-        expect(tier === 'lite').toBe(both);
+    // The tier claims back exact-lookup fan-out; a definition that keeps web
+    // synthesis never ships below the session tier (tick-the-shipped-path 1.3).
+    it('ac-researcher-with-web-tools-is-never-lite', () => {
+        const data = _frontmatterOf(path.join(_AGENTS, 'ac-researcher.md'));
+        const tools = (data.tools ?? []) as string[];
+        expect(tools.some((t) => t === 'WebFetch' || t === 'WebSearch')).toBe(true);
+        expect(data.model_tier).not.toBe('lite');
     });
 
     it('package-workers-preload-nothing', () => {
