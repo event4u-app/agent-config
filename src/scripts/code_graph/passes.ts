@@ -116,7 +116,6 @@ const docs: GraphPass = {
         const layer = docsLayer(ctx.docs, allFiles);
         // An earlier pass may already have drawn a document as a link target.
         const known = new Set(ctx.nodes.map((n) => n.id));
-        const drawn = new Set<string>();
         return { nodes: layer.nodes.filter((n) => !known.has(n.id)), edges: layer.edges };
     },
 };
