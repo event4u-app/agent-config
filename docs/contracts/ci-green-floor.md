@@ -35,7 +35,7 @@ keep-beta-reason: >-
 > **2026-09-04**, so promoting this one now would make a stable contract depend
 > on a beta one. **What has to happen before promotion:** `branch-protection-policy.md`
 > is promoted or its own window is resolved, and the two advisory rows below
-> that carry pending maintainer work — `cloud-release.yml`'s rate-limit fix and
+> that carry pending maintainer work — `cloud-release.yml`'s rate-limit fix (shipped, two green releases outstanding) and
 > `deploy-mcp-worker.yml`'s auth alignment, each with a stated promotion
 > criterion — reach a recorded outcome, **and the resulting classification is
 > written into this contract** rather than left implicit in CI history. That is
@@ -106,7 +106,7 @@ documented rationale (link to the file header or roadmap step) so
 | Workflow | Rationale | Promotion criterion |
 |---|---|---|
 | `bench-drift.yml` | Performance bench — informational only until the bench-stability roadmap completes. | Three consecutive green weekly runs after the bench is stabilised. |
-| `cloud-release.yml` | Release artefact publish — Hard-Floor adjacent fix pending. See [`02-deployment-failures.md`](../../agents/evidence/audits/2026-05-ci-triage/02-deployment-failures.md) § Finding 1. | Maintainer ships the rate-limit fix; smoke probe stays green for two consecutive releases. |
+| `cloud-release.yml` | Release artefact publish — the rate-limit fix shipped after 17.2.0 tripped it again (paced, size-skipping upload with backoff); awaiting its promotion criterion. See [`02-deployment-failures.md`](../../agents/evidence/audits/2026-05-ci-triage/02-deployment-failures.md) § Finding 1. | Maintainer ships the rate-limit fix; smoke probe stays green for two consecutive releases. |
 | `deploy-mcp-worker.yml` | MCP worker deploy — auth contract regression pending. See [`02-deployment-failures.md`](../../agents/evidence/audits/2026-05-ci-triage/02-deployment-failures.md) § Finding 2. | Maintainer aligns the smoke probe with the Worker auth gate; passes for two consecutive deploys. |
 | `sync-visibility.yml` | `workflow_dispatch`-only mutator. GitHub registers a phantom 0-job failure on every push to main — documented in the workflow header. **Phantom, not advisory** — `task ci:status` filters it. | n/a; the filter is the fix. |
 | `check-visibility-drift.yml` | PR-paths + schedule + dispatch. Same GitHub Actions quirk produces phantom 0-job failures on push to main. **Phantom, not advisory.** | n/a; the filter is the fix. |

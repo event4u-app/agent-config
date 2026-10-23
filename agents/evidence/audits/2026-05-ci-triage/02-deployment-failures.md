@@ -79,6 +79,14 @@ doesn't" — typical secondary-rate-limit shape.
 The agent recommends option 1 for the smallest diff. The maintainer
 decides.
 
+### Outcome — 2026-10-23
+
+Recurred on tag `17.2.0` (306 assets), and a re-run hit the limit again because
+`overwrite_files` deletes each asset before re-uploading it. Shipped a variant of
+option 2: the upload step skips assets already attached at the same size, paces
+uploads under the per-minute budget, and backs off on a rate-limit error. Individual
+skill ZIPs stay on the release.
+
 ### Out of scope of this roadmap
 
 This roadmap (`road-to-adoption-proof-and-ci-green.md`) **does not
