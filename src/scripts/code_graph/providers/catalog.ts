@@ -79,6 +79,28 @@ export const CATALOG: readonly CatalogRow[] = [
         usage: 'Go is in the top ten languages of GitHub Octoverse; its routers are not in the web-framework survey',
         limits: 'chi r.Route nesting, http.HandlerFunc(f) and handler variables are not followed.',
     },
+    {
+        id: 'symfony',
+        name: 'Symfony',
+        language: 'PHP',
+        markers: 'composer.json requires symfony/framework-bundle or symfony/symfony',
+        relations: ['routes-to', 'renders', 'persists', 'migrates', 'relates', 'injects'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/symfony',
+        usage: 'Below the survey top 20; the second PHP framework on the owner stack (Decision E4)',
+        limits: 'Twig includes are not read (templates are not code files); a route with several methods is declared once.',
+    },
+    {
+        id: 'wordpress',
+        name: 'WordPress',
+        language: 'PHP',
+        markers: 'wp-config.php; composer core packages or a wordpress-plugin / -theme package type',
+        relations: ['routes-to', 'renders'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/wordpress',
+        usage: SO,
+        limits: 'Hooks are entry nodes HOOK <name> / SHORTCODE <name>; a plugin or theme with no composer.json is not detected.',
+    },
     ...(
         [
             ['kotlin', 'Kotlin', 'Kotlin'],

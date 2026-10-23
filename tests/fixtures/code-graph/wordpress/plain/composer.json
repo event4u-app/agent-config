@@ -1,0 +1,6 @@
+{
+    "name": "acme/lib",
+    "require": {
+        "php": ">=8.1"
+    }
+}
