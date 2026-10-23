@@ -74,6 +74,33 @@ describe('refresh lock — single flight', () => {
         expect(fs.existsSync(lock)).toBe(false);
     });
 
+    it.skipIf(process.getuid?.() === 0)('never reclaims a lock whose owner record cannot be read', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: 0, nonce: 't' }));
+        fs.chmodSync(`${lock}.owner.json`, 0o000);
+        const old = (Date.now() - STALE_LOCK_MS - 1000) / 1000;
+        fs.utimesSync(lock, old, old);
+        try {
+            expect(isStale(lock)).toBe(false);
+            expect(acquire(root)).toBeNull();
+            expect(fs.existsSync(lock)).toBe(true);
+        } finally {
+            fs.chmodSync(`${lock}.owner.json`, 0o644);
+        }
+    });
+
+    it.skipIf(process.getuid?.() === 0)('never reclaims a lock that cannot be inspected', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        const parent = path.dirname(lock);
+        // Without search permission on its parent, the lock cannot be stat-ed (EACCES).
+        fs.chmodSync(parent, 0o600);
+        try {
+            expect(isStale(lock)).toBe(false);
+        } finally {
+            fs.chmodSync(parent, 0o755);
+        }
+    });
+
     it('treats an owner-less lock (the git-hook block) by age alone', () => {
         fs.mkdirSync(lock, { recursive: true });
         expect(acquire(root)).toBeNull();

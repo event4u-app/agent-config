@@ -44,24 +44,40 @@ function pidAlive(pid: number): boolean {
     }
 }
 
-function readOwner(lock: string): Owner | null {
+const errno = (e: unknown): string | undefined => (e as NodeJS.ErrnoException).code;
+
+/** The owner record; `'none'` when there is no file or no valid record; `'unreadable'` on any other error. */
+function readOwner(lock: string): Owner | 'none' | 'unreadable' {
+    let raw: string;
     try {
-        const o = JSON.parse(fs.readFileSync(ownerPath(lock), 'utf-8')) as Partial<Owner>;
-        return typeof o.pid === 'number' && typeof o.started_at === 'number' && typeof o.nonce === 'string'
-            ? { pid: o.pid, started_at: o.started_at, nonce: o.nonce }
-            : null;
-    } catch {
-        return null;
+        raw = fs.readFileSync(ownerPath(lock), 'utf-8');
+    } catch (e) {
+        return errno(e) === 'ENOENT' ? 'none' : 'unreadable';
     }
+    try {
+        const o = JSON.parse(raw) as Partial<Owner>;
+        if (typeof o.pid === 'number' && typeof o.started_at === 'number' && typeof o.nonce === 'string') {
+            return { pid: o.pid, started_at: o.started_at, nonce: o.nonce };
+        }
+    } catch {
+        /* a torn write; fall through to the age rule */
+    }
+    return 'none';
 }
 
+/**
+ * True only on positive evidence: the owner's process is gone, the lock has
+ * vanished, or an owner-less lock is provably older than the threshold. A lock
+ * or owner record that cannot be inspected is treated as live.
+ */
 export function isStale(lock: string, now: number = Date.now()): boolean {
     const owner = readOwner(lock);
-    if (owner) return !pidAlive(owner.pid);
+    if (owner === 'unreadable') return false;
+    if (owner !== 'none') return !pidAlive(owner.pid);
     try {
         return now - fs.statSync(lock).mtimeMs > STALE_LOCK_MS;
-    } catch {
-        return true;
+    } catch (e) {
+        return errno(e) === 'ENOENT';
     }
 }
 
@@ -83,7 +99,8 @@ export function acquire(root: string): (() => void) | null {
         const nonce = randomBytes(16).toString('hex');
         fs.writeFileSync(ownerPath(lock), JSON.stringify({ pid: process.pid, started_at: Date.now(), nonce }));
         return () => {
-            if (readOwner(lock)?.nonce !== nonce) return;
+            const owner = readOwner(lock);
+            if (typeof owner === 'string' || owner.nonce !== nonce) return;
             fs.rmSync(ownerPath(lock), { force: true });
             fs.rmSync(lock, { recursive: true, force: true });
         };
