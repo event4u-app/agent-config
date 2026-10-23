@@ -5,15 +5,23 @@
  */
 import type { FileRole } from '../map_model.js';
 import type { ActiveProviderRecord } from '../types.js';
+import { angularProvider } from './angular.js';
 import { djangoProvider } from './django.js';
 import { expressProvider } from './express.js';
 import { fastapiProvider } from './fastapi.js';
 import { flaskProvider } from './flask.js';
 import { goHttpProvider } from './go_http.js';
 import { laravelProvider } from './laravel.js';
+import { nestjsProvider } from './nestjs.js';
+import { nextjsProvider } from './nextjs.js';
+import { nuxtProvider } from './nuxt.js';
+import { reactRouterProvider } from './react-router.js';
 import { springProvider } from './spring.js';
 import { sqlalchemyProvider } from './sqlalchemy.js';
+import { sveltekitProvider } from './sveltekit.js';
 import { symfonyProvider } from './symfony.js';
+import { typeormProvider } from './typeorm.js';
+import { vueRouterProvider } from './vue-router.js';
 import { wordpressProvider } from './wordpress.js';
 import type { ConventionProvider, ProjectProbe } from './types.js';
 
@@ -33,6 +41,14 @@ export const PROVIDERS: readonly ConventionProvider[] = [
     flaskProvider,
     djangoProvider,
     sqlalchemyProvider,
+    reactRouterProvider,
+    nextjsProvider,
+    nestjsProvider,
+    angularProvider,
+    vueRouterProvider,
+    nuxtProvider,
+    sveltekitProvider,
+    typeormProvider,
 ];
 
 /** Every marker basename a registered provider asks the probe to record. */
