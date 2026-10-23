@@ -208,12 +208,6 @@ refresh` first, or use grep and say so. This is a freshness obligation, not an
 ordering claim; the rule's query-first ordering still governs which source to
 reach for.
 
-For routine upkeep, opt the project in once: `agent-config code-graph
-auto-refresh on`. From then on every agent session start spawns a background
-`refresh --single-flight --map` (the `code-graph-refresh` concern, POSIX hosts),
-which also redraws `agents/map/` when the project has one. That freshness is
-eventual: until it lands, `behind:N` still means behind.
-
 ## The four gate verbs — a diff, not a symbol (2026-09-08)
 
 `query` / `affected` / `path` / `explain` answer a question about a SYMBOL.
