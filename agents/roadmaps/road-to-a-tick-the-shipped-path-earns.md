@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
-estate_growth_exempt: "One active roadmap and one open blocker (delegated-owner-defaults). The blocker is the owner's own Iron Law (ownership_classes.ts: product-owned is locked to the owner) meeting a run delegation that applied council answers to locked-class decisions; only the owner can say whether a delegation may ever do that."
+estate_growth_exempt: "One active roadmap and one blocker (delegated-owner-defaults, resolved 2026-10-23 by the owner, A8). The blocker was the owner's own Iron Law (ownership_classes.ts: product-owned is locked to the owner) meeting a run delegation that applied council answers to locked-class decisions; only the owner can say whether a delegation may ever do that."
 estate_offset_exempt: "No active roadmap owns whether a ticked step is true on the shipped path: road-to-a-step-that-costs-what-it-changes owns how much ceremony a step pays (receipts, depth), not whether its verify reaches production; the enforcement-coverage gate resolves rules to validators, not steps to callers. Archiving an unrelated finished file to buy the slot would hide the growth this key exists to show."
 relates:
   - slug: road-to-a-step-that-costs-what-it-changes
@@ -126,6 +126,8 @@ the bench harnesses and `pricing.yaml`.
   Bound: both carriers live in the hook bundle (`dist/hooks/dispatch.js`), which sits at
   1,549,951 of 1,550,000 B; a ceiling raise is ratification-gated and was refused to the agent in
   #2588. If no carrier fits under the ceiling, the step stays open and 1.2 stays reverted.
+  Decided 2026-10-23 (A9): the carrier is a lazy chunk, and the dispatch ceiling rises only by a
+  measured loader stub, ratified on its own.
 
 ## Phase 3 — A tick reaches production (D2)
 
@@ -250,6 +252,8 @@ the bench harnesses and `pricing.yaml`.
 | A5 | reversible-technical | agent | A1 is applied as: every phase lands in #2588, the PR that already carries O1–O6 | #2585 merged before this file existed; #2588 is its open follow-up and the owner asked for this roadmap in it | the owner splits #2588 |
 | A6 | reversible-technical | agent | Pre-#2585 locked-class rows with a council resolver are baselined, not rewritten | K1: rewriting four other roadmaps' decisions is a backlog re-audit; a baseline keeps them visible and refuses a fifth | the owner rules on blocker `delegated-owner-defaults` |
 | A7 | reversible-technical | agent | The tier quality bound is an exact one-sided 95 % Clopper–Pearson interval | the pre-registered rule of three used the same level; one-sided 97.5 % makes a 60-pair run unable ever to hold (5.96 % with zero failures) | a later PREREG fixes another level before its run |
+| A8 | product-owned | owner | Blocker `delegated-owner-defaults`, option (a): a run delegation never resolves a locked class (product-, business-, destructive-owned). A council answer on one is recorded as a recommendation; work behind it is built only dormant (no default, no configured route, no network) until the owner decides. Owner answer 2026-10-23 | Council 2026-10-23, anthropic + openai, 2/2 for (a); the seats split only on whether the question was owner-reserved, so it went to the owner (`agents/evidence/council/subagent-system-2583-rest-owner-residue-20261023.question.md`) | the owner writes a dated delegation naming blocker ids |
+| A9 | reversible-technical | council:agents/evidence/council/subagent-system-2583-rest-owner-residue-20261023.md | The 2.4 carrier ships as a lazily loaded hook chunk with its own ceiling; the dispatch ceiling is not raised in advance, and only a measured loader stub may raise it, with its own ratification | Council 2026-10-23, 2/2 for option (3), both council-decidable: a speculative raise defeats a shrink-only ceiling when the chunk mechanism already exists | the loader stub plus chunk measure larger than an inline carrier |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-23 | reviewer: claude/host -->
@@ -264,7 +268,7 @@ the bench harnesses and `pricing.yaml`.
 ## Blockers
 
 ### blocker: delegated-owner-defaults
-- **Status:** open
+- **Status:** resolved 2026-10-23 — owner chose (a), Decisions row A8
 - **Owner:** maintainer
 - **Class:** 3 — human-only
 - **Blocks:** nothing in Phases 1–6; it decides whether 2.2/2.3 ship with an exception.
