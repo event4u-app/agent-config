@@ -66,14 +66,14 @@ content. Fixture L's 56.6 % → 11.3 % and 340/340 are re-measured in 0.2, not t
 
 ## Phase 0 — Record and baseline
 
-- [ ] **0.1 ADR-298: the graph core is framework-neutral; providers sit behind a registry.**
+- [x] **0.1 ADR-298: the graph core is framework-neutral; providers sit behind a registry.**
       States the three rulings, the provider kinds (pass, convention provider, default),
       detection by project markers, the fixed relation vocabulary, the explicit trust
       allowlist, and the coverage rule. Reopens E6 and replaces K13 of
       `road-to-a-map-that-draws-itself` with its own `revisit-if` (a provider needs a hook
       the interface lacks; or a framework crosses the usage line in the next survey).
       verify: `./scripts-run src/scripts/adr_cite_check ADR-298` -> 0
-- [ ] **0.2 Baseline before any code moves.** Build the graph and the map on this repository,
+- [x] **0.2 Baseline before any code moves.** Build the graph and the map on this repository,
       on Fixture L and on one synthetic non-PHP tree; record the checksums, Fixture L's
       unconnected-file share and route coverage in
       `agents/evidence/analysis/graph-providers-baseline-2026-10-23.md`.
