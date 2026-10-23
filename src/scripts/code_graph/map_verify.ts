@@ -13,7 +13,32 @@
  */
 import { pathToFileURL } from 'node:url';
 
-import type { chromium as Chromium } from '@playwright/test';
+/**
+ * The slice of Playwright this check drives, declared here rather than
+ * imported: the package is a devDependency, and even a type-only import of it
+ * makes this module look like it needs one at runtime.
+ */
+interface PwLocator {
+    first(): PwLocator;
+    count(): Promise<number>;
+    click(): Promise<void>;
+}
+interface PwPage {
+    on(event: 'pageerror', fn: () => void): void;
+    on(event: 'request', fn: (r: { url(): string }) => void): void;
+    goto(url: string): Promise<unknown>;
+    waitForFunction(fn: () => boolean): Promise<unknown>;
+    evaluate<T>(fn: () => T): Promise<T>;
+    locator(selector: string): PwLocator;
+    close(): Promise<void>;
+}
+interface PwBrowser {
+    newPage(opts: { viewport: { width: number; height: number } }): Promise<PwPage>;
+    close(): Promise<void>;
+}
+interface PwChromium {
+    launch(): Promise<PwBrowser>;
+}
 
 export const MAP_VIEWPORTS = [
     { name: 'desktop', width: 1440, height: 900 },
@@ -56,13 +81,17 @@ export function labelProblems(boxes: readonly Box[], width: number, height: numb
 }
 
 export async function verifyMap(htmlPath: string): Promise<MapRenderCheck> {
-    let chromium: typeof Chromium;
+    let chromium: PwChromium;
     try {
-        ({ chromium } = await import('@playwright/test'));
+        // Through a variable: a literal specifier lets every bundle that reaches
+        // this module (the MCP server does, via cli.ts) try to inline a
+        // devDependency it does not ship.
+        const specifier = '@playwright/test';
+        ({ chromium } = (await import(specifier)) as { chromium: PwChromium });
     } catch {
         return { verification: 'unverified', reason: '@playwright/test is not installed (a devDependency)', viewports: [] };
     }
-    let browser: Awaited<ReturnType<typeof chromium.launch>>;
+    let browser: PwBrowser;
     try {
         browser = await chromium.launch();
     } catch (e) {

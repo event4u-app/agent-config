@@ -71,7 +71,9 @@ describe('node ids are unique per file (D3)', () => {
         expect(r.errors.join(' ')).toMatch(/duplicate: a\.ts#X/);
     });
 
-    it.runIf(isSqliteAvailableSync())('the SQLite twin is written once ids are unique', async () => {
+    // Node 22.6, the package floor, ships node:sqlite, so this is never skipped.
+    it('the SQLite twin is written once ids are unique', async () => {
+        expect(isSqliteAvailableSync()).toBe(true);
         const out = path.join(dir, 'agents', 'runtime', 'state', 'code-graph-v1.json');
         await buildFromRepo(dir, out);
         expect(fs.existsSync(sqliteTwinPath(out))).toBe(true);
