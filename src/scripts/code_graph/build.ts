@@ -30,6 +30,7 @@ import {
     resolveAlias,
     resolvePsr4,
 } from './resolution_tiers.js';
+import { readScipIndex, type ScipDocument, scipEdges, supersededByScip } from './scip_reader.js';
 import { emitSqliteTwin } from './sqlite_store.js';
 import {
     type CodeEdge,
@@ -298,6 +299,7 @@ export function buildGraph(
     files: readonly SourceFile[],
     extracts: readonly FileExtract[],
     resolution: ResolutionConfig = EMPTY_RESOLUTION_CONFIG,
+    scip: readonly ScipDocument[] = [],
 ): CodeGraph {
     const nodes = extracts.flatMap((e) => e.nodes);
     const nodeIds = new Set(nodes.map((n) => n.id));
@@ -759,6 +761,17 @@ export function buildGraph(
         for (const n of overlay.nodes) nodes.push(n);
     }
 
+    // A project's own SCIP index states references the compiler resolved;
+    // each one supersedes the native name guess it duplicates.
+    if (scip.length > 0) {
+        const stated = scipEdges(scip, nodes);
+        const dropped = supersededByScip(stated, nodes);
+        const kept = edges.filter((e) => !dropped(e));
+        edges.length = 0;
+        for (const e of kept) edges.push(e);
+        for (const e of stated) edges.push(e);
+    }
+
     // deterministic ordering
     nodes.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
     edges.sort((a, b) => {
@@ -783,6 +796,13 @@ export function buildGraph(
         h.update('\0');
         h.update(createHash('sha256').update(f.source, 'utf-8').digest('hex'));
         h.update('\n');
+    }
+
+    // The SCIP index is an input like any source file: a new index must not
+    // read as the same graph.
+    for (const d of [...scip].sort((a, b) => (a.path < b.path ? -1 : 1))) {
+        h.update(`scip\0${d.path}\0`);
+        for (const o of d.occurrences) h.update(`${o.line}:${o.definition ? 1 : 0}:${o.symbol}\n`);
     }
 
     return {
@@ -1028,7 +1048,16 @@ export async function buildFromRepo(
         nextSidecar.files[f.path] = { hash, extract };
     }
 
-    const graph = buildGraph(files, extracts, readResolutionConfig(root));
+    const scipPath = path.join(abs, 'index.scip');
+    let scip: ScipDocument[] = [];
+    if (fs.existsSync(scipPath)) {
+        try {
+            scip = readScipIndex(fs.readFileSync(scipPath));
+        } catch (e) {
+            process.stderr.write(`code-graph: index.scip not read — ${(e as Error).message}\n`);
+        }
+    }
+    const graph = buildGraph(files, extracts, readResolutionConfig(root), scip);
     const json = serializeGraph(graph);
     if (cachePath) {
         write_atomic(cachePath, json);

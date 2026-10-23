@@ -90,6 +90,8 @@ export type ResolvedVia =
     | 'schema-call'
     /** `$this->hasMany(Other::class)` and its siblings inside a model. */
     | 'eloquent-relation'
+    /** Stated by a compiler-grade SCIP index the project ships (`scip_reader.ts`). */
+    | 'compiler-index'
     | 'test-import'
     | 'name-lookup'
     | 'dynamic'
@@ -122,7 +124,9 @@ export type EdgeProvider =
      * the latter. The field exists precisely so a mixed graph can be told
      * apart, and a consumer-shipped graph is the first case where it is.
      */
-    | 'foreign';
+    | 'foreign'
+    /** Read from the project's own SCIP index, merged into the native build. */
+    | 'scip';
 
 /**
  * The two mechanisms that are GUESSES rather than statements.

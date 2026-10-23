@@ -292,7 +292,7 @@ function resolveGraph(argv: string[]): { g: LoadedGraph; note: string } | { err:
     }
     const picked = pickSource(detectSources(root, cacheFor(root)));
     if (!picked) return { err: 'no code-graph source found — run `code_graph build` or ship a graph.json' };
-    if (picked.kind === 'scip') return { err: `${picked.note ?? 'SCIP detected'} — pass --graph <json> or install peer tooling` };
+    if (picked.kind === 'scip') return { err: `${picked.note ?? 'SCIP detected'} — run \`code-graph build\` to merge it into the native graph` };
     const staleNote = picked.stale ? ` ⚠ index is ${picked.commits_behind ?? 'N'} commit(s) behind — rebuild before trusting` : '';
     return { g: loadGraph(picked.path, `${picked.kind}:${path.relative(root, picked.path)}`), note: staleNote };
 }

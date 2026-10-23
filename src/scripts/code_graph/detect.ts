@@ -3,9 +3,9 @@
  * query use, and is it fresh?" across three sources:
  *
  *   consumer  — a `graph.json`-shaped artifact the consumer repo ships
- *   scip      — an `index.scip` / `*.scip` (presence only; peer tooling
- *               required — an owned SCIP reader is YAGNI-gated until a
- *               consumer actually ships one)
+ *   scip      — an `index.scip`, read into the native build as a provider of
+ *               compiler-stated edges (`scip_reader.ts`); never queried on
+ *               its own
  *   native    — the suite's own gitignored cache
  *
  * Precedence (ADR-124 § 2): a fresh consumer index wins (interop courtesy);
@@ -156,7 +156,17 @@ export function detectSources(root: string, nativeCache: string): SourceVerdict[
         /* ignore */
     }
     const scip = scipCandidates.find((p) => fs.existsSync(p));
-    if (scip) out.push({ kind: 'scip', path: scip, present: true, note: 'SCIP detected — peer tooling required (no owned reader)' });
+    if (scip) {
+        const read = path.basename(scip) === 'index.scip';
+        out.push({
+            kind: 'scip',
+            path: scip,
+            present: true,
+            note: read
+                ? 'SCIP index — merged into the native build as compiler-stated edges'
+                : 'SCIP file — only index.scip is read into the native build',
+        });
+    }
 
     // native cache
     if (fs.existsSync(nativeCache)) out.push({ kind: 'native', path: nativeCache, present: true, ...freshness(abs, nativeCache, null) });

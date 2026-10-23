@@ -33,13 +33,14 @@ const RESOLVED_VIA = new Set([
     'directive-scan',
     'schema-call',
     'eloquent-relation',
+    'compiler-index',
     'test-import',
     'name-lookup',
     'dynamic',
     // Adapted from a consumer's own graph file; see `foreign.ts`.
     'foreign',
 ]);
-const PROVIDERS = new Set(['native', 'foreign']);
+const PROVIDERS = new Set(['native', 'foreign', 'scip']);
 const KINDS = new Set([
     'file',
     'class',

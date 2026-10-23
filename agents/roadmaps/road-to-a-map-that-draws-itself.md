@@ -226,9 +226,11 @@ Pulled forward from `later/road-to-a-graph-that-wins` 1.2.
   component's template is blanked and its `<script>` parsed with the TypeScript grammar, line
   numbers kept. Imports resolve by module path (Python, Java: unique suffix; Go: every non-test
   file of the package), refused when two files match.
-- [ ] **6.2 SCIP reader (D6).** Read `index.scip` in-process without a native dependency as a
+- [x] **6.2 SCIP reader (D6).** Read `index.scip` in-process without a native dependency as a
   provider whose edges carry `resolved_via: 'compiler-index'`; a SCIP edge outranks a native
-  guess for the same pair.
+  guess for the same pair. Result: `scip_reader.ts`, a hand-written decoder for the
+  documents / occurrences subset (E8: well under 300 lines, no protobuf runtime); edges carry
+  `provider: 'scip'`; a superseded native guess is dropped; the index enters the checksum.
 - [ ] **6.3 Docs layer.** Deterministic Markdown link and backticked-path extraction: a document
   that names a file gets an edge to it. No model, no PDF or image extraction.
 - [ ] **6.4 This repository's own map.** On an agent-config source tree, the artefact graph
