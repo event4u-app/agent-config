@@ -31,8 +31,8 @@ export const sqlalchemyProvider: ConventionProvider = {
                 mapped.set(cls.id, { node: cls, source: f.source });
                 kit.emit(cls.id, kit.table(m[2] as string, f.path, cls.source_location[0] as number), 'persists', 'schema-call');
             }
-            for (const n of kit.nodeById.values()) {
-                if (n.source_file !== f.path || n.kind !== 'class' || mapped.has(n.id)) continue;
+            for (const n of kit.nodesInFile(f.path)) {
+                if (n.kind !== 'class' || mapped.has(n.id)) continue;
                 const head = /^\s*class\s+\w+\s*\(([^)]*)\)/.exec(spanText(f.source, n))?.[1] ?? '';
                 if (!/\btable\s*=\s*True\b/.test(head)) continue;
                 mapped.set(n.id, { node: n, source: f.source });

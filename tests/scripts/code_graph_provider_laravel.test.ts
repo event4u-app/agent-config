@@ -222,3 +222,33 @@ describe('the map names the provider (6.2)', () => {
         expect(md).toContain('Convention providers: Laravel (verified) — plus the framework-neutral default.');
     });
 });
+
+describe('per package root (review fix)', () => {
+    it('draws a Laravel app under a subdirectory with its own PSR-4 map', async () => {
+        const mono = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-laravel-mono-')));
+        const put = (rel: string, body: string): void => {
+            fs.mkdirSync(path.dirname(path.join(mono, rel)), { recursive: true });
+            fs.writeFileSync(path.join(mono, rel), body);
+        };
+        try {
+            put('backend/composer.json', JSON.stringify({ require: { 'laravel/framework': '^11.0' }, autoload: { 'psr-4': { 'App\\': 'app/' } } }));
+            put('backend/routes/web.php', "<?php\nuse App\\Http\\BookController;\nRoute::get('/books', [BookController::class, 'index']);\n");
+            put(
+                'backend/app/Http/BookController.php',
+                "<?php\nnamespace App\\Http;\nclass BookController {\n    public function index() {\n        throw new \\Exception('Book not found');\n        return view('books.index');\n    }\n}\n",
+            );
+            put('backend/resources/views/books/index.blade.php', '<ul></ul>\n');
+            put('backend/app/Book.php', '<?php\nnamespace App;\nclass Book extends Model {}\n');
+            const g = (await buildFromRepo(mono, null)).graph;
+            expect(g.providers).toEqual([{ id: 'laravel', roots: ['backend'] }]);
+            const route = 'backend/routes/web.php#route:GET /books';
+            const handler = 'backend/app/Http/BookController.php#BookController::index';
+            expect(g.edges.some((e) => e.source === route && e.relation === 'routes-to' && e.target === handler)).toBe(true);
+            expect(g.edges.some((e) => e.source === handler && e.relation === 'renders' && e.target === 'backend/resources/views/books/index.blade.php')).toBe(true);
+            // 'Book not found' is a string, not a reference to the Book model.
+            expect(g.edges.some((e) => e.source === handler && e.relation === 'uses' && e.target === 'backend/app/Book.php#Book')).toBe(false);
+        } finally {
+            fs.rmSync(mono, { recursive: true, force: true });
+        }
+    });
+});

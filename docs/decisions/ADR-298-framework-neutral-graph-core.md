@@ -56,8 +56,9 @@ languages and frameworks, over a default that serves every project.
    suffix; several may be active at once. A pass that fails is reported and the build
    continues.
 3. **A default runs for every project.** A framework-neutral pass links what only a string
-   states — literal paths, dotted template names, manifest entry points, file-system routes
-   — and only on a single match, as INFERRED, never over a stronger edge.
+   states — literal paths and file-system routes, with manifest entry points read by the map —
+   and only on a single match, as INFERRED, never over a stronger edge. Dotted template names
+   are implemented but off by default: they measured under the 90 % precision bar.
 4. **Coverage follows usage, proof follows the provider.** Dedicated providers exist for
    the most common frameworks (the list is the roadmap's decision table). A fixture with a
    positive and a negative oracle is what proves a provider; it is no longer what permits

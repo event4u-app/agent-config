@@ -97,8 +97,8 @@ export const djangoProvider: ConventionProvider = {
             changed = false;
             for (const f of py) {
                 if (!isDjangoFile(f.source)) continue;
-                for (const n of kit.nodeById.values()) {
-                    if (n.source_file !== f.path || n.kind !== 'class' || models.has(n.id)) continue;
+                for (const n of kit.nodesInFile(f.path)) {
+                    if (n.kind !== 'class' || models.has(n.id)) continue;
                     const bases = classBases(f.source, n);
                     const isModel = bases.some((b) => {
                         if (/^(?:models\.)?Model$/.test(b)) return true;

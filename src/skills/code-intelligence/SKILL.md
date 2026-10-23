@@ -46,7 +46,7 @@ code-graph and no appetite to build one — plain `grep`/read is right there.
    `graph.json` or native cache present? (A consumer-shipped fresh index wins;
    the native engine covers stale-or-absent — ADR-124 § 2.)
 2. **Build if absent and worthwhile.** No graph + a repo in a parsed language
-   (PHP, TypeScript, JavaScript, Python, Go, Java; Vue through its script
+   (PHP, TypeScript, JavaScript, Python, Go, Java, C#; Vue through its script
    block)? `agent-config code-graph build` (deterministic, LLM-free, ~seconds).
    Skip for a one-off question in an unsupported stack — grep instead.
 3. **Query.** Pick the verb:

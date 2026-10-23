@@ -28,6 +28,7 @@ function kitFor(files: Record<string, string>, nodes: CodeNode[], paths: string[
         baseNodes: nodes,
         baseEdges: edges,
         paths,
+        manifests: new Map(),
         resolution: EMPTY_RESOLUTION_CONFIG,
         roots: [''],
     });
@@ -63,6 +64,13 @@ describe('annotationRoutes', () => {
 
     it('routes a decorator to the function below it', () => {
         const k = kitFor({ 'main.py': src }, nodes);
+        annotationRoutes(k, { exts: ['.py'], route: /@\w+\.(?<verb>get|post)\(\s*["'](?<path>[^"']*)["']/g });
+        expect(routes(k)).toEqual([['GET /items', ['main.py#items']]]);
+    });
+
+    it('ignores a decorator inside a line comment', () => {
+        const commented = 'from x import app\n\n# @app.get("/old")\n@app.get("/items")\ndef items():\n    return []\n';
+        const k = kitFor({ 'main.py': commented }, [sym('main.py', 'items', 'function', 5, 6)]);
         annotationRoutes(k, { exts: ['.py'], route: /@\w+\.(?<verb>get|post)\(\s*["'](?<path>[^"']*)["']/g });
         expect(routes(k)).toEqual([['GET /items', ['main.py#items']]]);
     });

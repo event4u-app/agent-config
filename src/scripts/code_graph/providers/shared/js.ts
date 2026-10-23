@@ -26,14 +26,14 @@ export function resolveModule(kit: Kit, file: string, spec: string): string | nu
     if (!spec.startsWith('./') && !spec.startsWith('../')) return null;
     const base = path.posix.join(path.posix.dirname(file), spec);
     if (base.startsWith('..')) return null;
-    const known = (p: string): boolean => kit.fileIds.has(p) || kit.nodeById.has(p) || kit.paths.includes(p);
+    const known = (p: string): boolean => kit.fileIds.has(p) || kit.nodeById.has(p) || kit.hasPath(p);
     if (/\.[A-Za-z0-9]+$/.test(path.posix.basename(base)) && known(base)) return base;
     for (const c of [...MODULE_EXTS.map((x) => `${base}${x}`), ...MODULE_EXTS.map((x) => `${base}/index${x}`)]) if (known(c)) return c;
     return null;
 }
 
 function symbolIn(kit: Kit, file: string, name: string): string | null {
-    for (const n of kit.nodeById.values()) if (n.source_file === file && n.label === name && n.kind !== 'method' && n.kind !== 'file') return n.id;
+    for (const n of kit.nodesInFile(file)) if (n.label === name && n.kind !== 'method' && n.kind !== 'file') return n.id;
     return null;
 }
 
@@ -153,7 +153,7 @@ export function routeObjects(kit: Kit, spec: RouteObjectSpec): number {
 }
 
 function symbolsOf(kit: Kit, file: string, kind: CodeNode['kind']): CodeNode[] {
-    return [...kit.nodeById.values()].filter((n) => n.source_file === file && n.kind === kind);
+    return kit.nodesInFile(file).filter((n) => n.kind === kind);
 }
 
 /** The parameter list of the first `constructor(` in `text`, balanced. */
@@ -237,9 +237,9 @@ export function exportedVerbRoutes(kit: Kit, file: string, routePath: string): n
     return count;
 }
 
-/** `p` relative to the first of `roots` it lies under, with that root; null when under none. */
+/** `p` relative to the deepest of `roots` it lies under, with that root; null when under none. */
 export function underRoot(roots: readonly string[], p: string): { root: string; rel: string } | null {
-    for (const root of roots) {
+    for (const root of [...roots].sort((a, b) => b.length - a.length)) {
         if (root === '') return { root, rel: p };
         if (p.startsWith(`${root}/`)) return { root, rel: p.slice(root.length + 1) };
     }

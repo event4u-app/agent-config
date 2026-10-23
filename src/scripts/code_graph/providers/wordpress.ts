@@ -76,8 +76,8 @@ function callback(kit: Kit, file: string, src: string, at: number, line: number,
 /** The one class node whose short name and declaring file's namespace spell `fq`. */
 function classByNamespace(kit: Kit, fq: string): string | null {
     const short = shortName(fq);
-    const hits = [...kit.nodeById.values()].filter((n) => {
-        if (n.kind !== 'class' || n.label !== short) return false;
+    const hits = kit.nodesNamed(short).filter((n) => {
+        if (n.kind !== 'class') return false;
         const f = kit.files.find((x) => x.path === n.source_file);
         const ns = f ? phpScope(f.source).namespace : '';
         return (ns ? `${ns}\\${short}` : short) === fq;

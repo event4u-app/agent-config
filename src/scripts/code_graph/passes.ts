@@ -60,6 +60,7 @@ const conventionProviders: GraphPass = {
     run: (ctx) => {
         const out: PassResult = { nodes: [], edges: [], contests: [], failures: [], providers: [] };
         const known = new Set(ctx.nodes.map((n) => n.id));
+        const drawn = new Set<string>();
         for (const { provider, roots } of activeProviders(ctx.probe)) {
             out.providers?.push({ id: provider.id, roots });
             try {
@@ -71,12 +72,19 @@ const conventionProviders: GraphPass = {
                     baseNodes: ctx.nodes,
                     baseEdges: ctx.edges,
                     paths: allPaths.filter(under),
+                    manifests: new Map([...ctx.probe.manifests].filter(([p]) => under(p))),
                     resolution: ctx.resolution,
                     roots,
                 });
                 if (r.nodes.length === 0 && r.edges.length === 0) continue;
                 if (r.contest) out.contests?.push({ key: provider.id, test: r.contest });
-                for (const e of r.edges) out.edges.push({ ...e, provider_id: provider.id });
+                // Two providers may draw the same edge; the first keeps it.
+                for (const e of r.edges) {
+                    const key = `${e.source}\0${e.relation}\0${e.target}`;
+                    if (drawn.has(key)) continue;
+                    drawn.add(key);
+                    out.edges.push({ ...e, provider_id: provider.id });
+                }
                 // Two providers may declare the same table or template node; the first wins.
                 for (const n of r.nodes) {
                     if (known.has(n.id)) continue;
@@ -108,6 +116,7 @@ const docs: GraphPass = {
         const layer = docsLayer(ctx.docs, allFiles);
         // An earlier pass may already have drawn a document as a link target.
         const known = new Set(ctx.nodes.map((n) => n.id));
+        const drawn = new Set<string>();
         return { nodes: layer.nodes.filter((n) => !known.has(n.id)), edges: layer.edges };
     },
 };

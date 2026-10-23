@@ -17,7 +17,7 @@
  */
 import { jvmRoots } from './shared/detect.js';
 import { joinRoute, tableMapping } from './shared/extractors.js';
-import { type Kit, lineIndex, makeKit, packageSymbol } from './shared/kit.js';
+import { escapeRe, type Kit, lineIndex, makeKit, packageSymbol } from './shared/kit.js';
 import type { ConventionProvider } from './types.js';
 
 const VERB_MAPPING = /@(?<verb>Get|Post|Put|Delete|Patch)Mapping\b(?:\s*\(\s*(?:(?:value|path)\s*=\s*)?(?:\{\s*)?"(?<path>[^"]*)")?/g;
@@ -100,16 +100,16 @@ function injections(kit: Kit): void {
             const target = resolveType(kit, f.path, m.groups?.['type'] as string);
             if (cls && target && target !== cls.id) kit.emit(cls.id, target, 'injects', 'di-binding');
         }
-        for (const n of kit.nodeById.values()) {
-            if (n.source_file !== f.path || n.kind !== 'class') continue;
+        for (const n of kit.nodesInFile(f.path)) {
+            if (n.kind !== 'class') continue;
             const ctorId = kit.methodOf(n.id, n.label);
             const ctor = ctorId ? kit.nodeById.get(ctorId) : undefined;
             if (!ctor) continue;
             const start = n.source_location[0] as number;
             const head = lines.slice(start - 1, (ctor.source_location[0] as number) - 1).join('\n');
             const ctorText = lines.slice((ctor.source_location[0] as number) - 1, ctor.source_location[2] as number).join('\n');
-            if (!STEREOTYPE.test(head.split(new RegExp(`\\bclass\\s+${n.label}\\b`))[0] ?? '') && !/@Autowired\b/.test(ctorText)) continue;
-            const params = new RegExp(`\\b${n.label}\\s*\\((?<params>[^)]*)\\)`).exec(ctorText)?.groups?.['params'] ?? '';
+            if (!STEREOTYPE.test(head.split(new RegExp(`\\bclass\\s+${escapeRe(n.label)}\\b`))[0] ?? '') && !/@Autowired\b/.test(ctorText)) continue;
+            const params = new RegExp(`\\b${escapeRe(n.label)}\\s*\\((?<params>[^)]*)\\)`).exec(ctorText)?.groups?.['params'] ?? '';
             for (const param of params.split(',')) {
                 const type = /(?:^|\s)(?<type>[A-Z]\w*)(?:<[^>]*>)?\s+\w+\s*$/.exec(param.replace(/@\w+(?:\([^)]*\))?/g, '').trim())?.groups?.['type'];
                 const target = type ? resolveType(kit, f.path, type) : null;

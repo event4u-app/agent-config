@@ -46,9 +46,13 @@ export function annotationRoutes(kit: Kit, spec: AnnotationRouteSpec): number {
             ? [...f.source.matchAll(spec.prefix)].map((m) => ({ line: at(m.index as number), path: m.groups?.['path'] ?? '' }))
             : [];
         for (const m of f.source.matchAll(spec.route)) {
-            const line = at(m.index as number);
+            const index = m.index as number;
+            // A decorator inside a line comment is prose, not a route. A docblock
+            // line (` * @Route`) is not skipped: annotation-routed frameworks read it.
+            const lineStart = f.source.lastIndexOf('\n', index - 1) + 1;
+            if (/\/\/|^\s*#(?!\[)/.test(f.source.slice(lineStart, index))) continue;
+            const line = at(index);
             const handler = kit.nextSymbol(f.path, line, ['method', 'function']);
-            if (handler && handler.kind === 'class') continue;
             const cls = handler ? kit.classAt(f.path, handler.source_location[0] as number) : null;
             const reach = spec.prefixReach ?? 6;
             const clsLine = cls ? (cls.source_location[0] as number) : -1;
@@ -182,8 +186,8 @@ export function tableMapping(kit: Kit, spec: TableMappingSpec): number {
             // Up to four lines of decorators above the class — but never past the
             // end of the class before it, whose own table name would be read.
             let floor = 0;
-            for (const n of kit.nodeById.values()) {
-                if (n.kind !== 'class' || n.source_file !== f.path || n.id === cls.id) continue;
+            for (const n of kit.nodesInFile(f.path)) {
+                if (n.kind !== 'class' || n.id === cls.id) continue;
                 const nEnd = (n.source_location[2] ?? n.source_location[0]) as number;
                 if (nEnd < start && nEnd > floor) floor = nEnd;
             }

@@ -36,8 +36,8 @@ export const fastapiProvider: ConventionProvider = {
                 }
             }
             if (!f.source.includes('Depends(')) continue;
-            for (const n of kit.nodeById.values()) {
-                if (n.source_file !== f.path || (n.kind !== 'function' && n.kind !== 'method')) continue;
+            for (const n of kit.nodesInFile(f.path)) {
+                if (n.kind !== 'function' && n.kind !== 'method') continue;
                 for (const m of paramsOf(f.source, n).matchAll(/\bDepends\(\s*([A-Za-z_]\w*)\s*[,)]/g)) {
                     const target = kit.resolveName(f.path, m[1] as string);
                     if (target && target !== n.id) kit.emit(n.id, target, 'injects', 'di-binding');

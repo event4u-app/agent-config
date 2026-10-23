@@ -85,7 +85,7 @@ describe('packageSymbol', () => {
         source_location: [1, 1, 1, 1],
     });
     const kitOf = (nodes: CodeNode[]) =>
-        makeKit({ files: [], baseNodes: nodes, baseEdges: [], paths: [], resolution: {} as never, roots: [''] });
+        makeKit({ files: [], baseNodes: nodes, baseEdges: [], paths: [], manifests: new Map(), resolution: {} as never, roots: [''] });
 
     it('finds the one symbol of that name in the same directory and extension', () => {
         const kit = kitOf([node('a/x.go#F'), node('b/y.go#F'), node('a/z.ts#F')]);

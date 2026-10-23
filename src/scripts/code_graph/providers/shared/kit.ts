@@ -13,6 +13,11 @@ import type { SourceFile } from '../../build.js';
 import type { CodeEdge, CodeNode, ResolvedVia } from '../../types.js';
 import type { ProviderInput, ProviderResult } from '../types.js';
 
+/** A string matched literally inside a `RegExp` built from a symbol name. */
+export function escapeRe(s: string): string {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /** Line-start offsets, so many `lineAt` lookups stay linear. */
 export function lineIndex(src: string): (index: number) => number {
     const starts = [0];
@@ -41,6 +46,12 @@ export interface Kit {
     filesWithExt(...exts: string[]): SourceFile[];
     /** Make sure a file node exists for a non-code target (a template). */
     fileNode(p: string): void;
+    /** Every base node declared in `file` (indexed once; never a scan of the whole graph). */
+    nodesInFile(file: string): readonly CodeNode[];
+    /** Every base node with this label (indexed once). */
+    nodesNamed(label: string): readonly CodeNode[];
+    /** Whether a project path is in the inventory (indexed once). */
+    hasPath(p: string): boolean;
     emit(source: string, target: string, relation: CodeEdge['relation'], via: ResolvedVia): void;
     /** Declare a route node in `file`; returns its id (`<file>#route:<VERB> <path>`, `@n` when repeated). */
     route(file: string, verb: string, routePath: string, line: number): string;
@@ -71,6 +82,19 @@ export function makeKit(input: ProviderInput): Kit {
     const seenEdge = new Set<string>();
     const seenNode = new Set<string>();
     const routeOrdinal = new Map<string, number>();
+    let byFile: Map<string, CodeNode[]> | null = null;
+    let byLabel: Map<string, CodeNode[]> | null = null;
+    let pathSet: Set<string> | null = null;
+    const index = (key: (n: CodeNode) => string): Map<string, CodeNode[]> => {
+        const m = new Map<string, CodeNode[]>();
+        for (const n of input.baseNodes) {
+            const k = key(n);
+            const list = m.get(k);
+            if (list) list.push(n);
+            else m.set(k, [n]);
+        }
+        return m;
+    };
 
     const symbolsByFile = new Map<string, CodeNode[]>();
     for (const n of input.baseNodes) {
@@ -106,6 +130,9 @@ export function makeKit(input: ProviderInput): Kit {
         nodeById,
         paths: input.paths,
         roots: input.roots,
+        nodesInFile: (file) => (byFile ??= index((n) => n.source_file)).get(file) ?? [],
+        nodesNamed: (label) => (byLabel ??= index((n) => n.label)).get(label) ?? [],
+        hasPath: (p) => (pathSet ??= new Set(input.paths)).has(p),
         filesWithExt: (...exts) => files.filter((f) => exts.some((x) => f.path.endsWith(x))),
         fileNode(p) {
             if (nodeById.has(p) || seenNode.has(p)) return;
@@ -174,8 +201,8 @@ export function packageSymbol(kit: Kit, file: string, name: string, kinds: reado
     const dir = path.posix.dirname(file);
     const ext = path.posix.extname(file);
     const hits: string[] = [];
-    for (const n of kit.nodeById.values()) {
-        if (n.label !== name || !kinds.includes(n.kind)) continue;
+    for (const n of kit.nodesNamed(name)) {
+        if (!kinds.includes(n.kind)) continue;
         if (path.posix.dirname(n.source_file) !== dir || path.posix.extname(n.source_file) !== ext) continue;
         hits.push(n.id);
     }

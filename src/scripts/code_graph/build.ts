@@ -31,6 +31,7 @@ import {
     resolveAlias,
     resolvePsr4,
 } from './resolution_tiers.js';
+import { templateBase } from './conventions_default.js';
 import { DOC_EXTS } from './docs_layer.js';
 import { readScipIndex, type ScipDocument } from './scip_reader.js';
 import { emitSqliteTwin } from './sqlite_store.js';
@@ -845,6 +846,10 @@ export function buildGraph(
         h.update('\n');
     }
     for (const p of [...probe.markers].sort()) h.update(`marker\0${p}\n`);
+    // Template files are no source, yet their presence decides `renders` and
+    // default-pass edges: they are inputs too. Other non-code paths (caches,
+    // logs, assets) are not read and stay out of the identity.
+    for (const p of probe.paths) if (templateBase(p) !== null) h.update(`template\0${p}\n`);
     // The SCIP index is an input like any source file: a new index must not
     // read as the same graph.
     for (const d of [...scip].sort((a, b) => (a.path < b.path ? -1 : 1))) {

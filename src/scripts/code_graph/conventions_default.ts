@@ -2,13 +2,16 @@
  * The default convention pass (ADR-298): runs for every project, names no
  * framework, and links only what a string can state about a file.
  *
- *   literal-path    './x' · 'views/a.html'      code --reads-->     the one code, doc or template file it names
+ *   literal-path    './x' · 'views/a.html'      code --reads-->     the one code or template file it names
  *   literal-dotted  render('a.b')               code --renders-->   the one template at a/b.<template ext>
  *   fs-route        pages/a/[id].tsx            route --routes-to-> the page module
  *
  * Every edge is INFERRED, drawn only on a single match, and never where an
  * edge between the same two files already exists — an import, a provider's
- * edge or an earlier literal outranks it.
+ * edge or an earlier literal outranks it. The two axes are independent
+ * (`types.ts`): the confidence is INFERRED because a convention connects the
+ * pair, while the mechanism is a statement — the literal names that exact file
+ * — so these edges count as stated for the map and the gate verbs.
  */
 import * as path from 'node:path';
 
@@ -70,7 +73,7 @@ export interface DefaultStats {
     'fs-route': number;
 }
 
-function templateBase(p: string): string | null {
+export function templateBase(p: string): string | null {
     for (const ext of TEMPLATE_EXTS) if (p.endsWith(ext) && p.length > ext.length) return p.slice(0, -ext.length);
     return null;
 }

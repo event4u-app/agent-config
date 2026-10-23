@@ -30,6 +30,8 @@ export interface ProviderInput {
     baseEdges: readonly CodeEdge[];
     /** Every project path under the provider's roots, code or not (templates). */
     paths: readonly string[];
+    /** The manifests under the provider's roots, by repo-relative path → text. */
+    manifests: ReadonlyMap<string, string>;
     resolution: ResolutionConfig;
     /** Package roots the provider was detected in; `''` is the repository root. */
     roots: readonly string[];

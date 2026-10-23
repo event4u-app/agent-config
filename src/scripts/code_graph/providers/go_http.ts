@@ -68,7 +68,7 @@ function resolveHandler(kit: Kit, file: string, rest: string, imported: Map<stri
     if (!name) return null;
     const [head, member] = name.split('.') as [string, string | undefined];
     if (!member) {
-        const local = [...kit.nodeById.values()].find((n) => n.source_file === file && n.kind === 'function' && n.label === head);
+        const local = kit.nodesInFile(file).find((n) => n.kind === 'function' && n.label === head);
         return local ? local.id : packageSymbol(kit, file, head, ['function']);
     }
     const spec = imported.get(head);

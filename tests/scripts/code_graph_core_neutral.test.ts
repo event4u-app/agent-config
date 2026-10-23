@@ -18,10 +18,14 @@ const CORE_DIR = path.resolve(__dirname, '../../src/scripts/code_graph');
 const TESTS_DIR = path.resolve(__dirname);
 
 /** Every top-level module of the engine: the core. `providers/` is the only place a framework may be named. */
-const coreFiles = fs
-    .readdirSync(CORE_DIR, { withFileTypes: true })
-    .filter((e) => e.isFile() && e.name.endsWith('.ts'))
-    .map((e) => path.join(CORE_DIR, e.name));
+const coreFiles = [
+    ...fs
+        .readdirSync(CORE_DIR, { withFileTypes: true })
+        .filter((e) => e.isFile() && e.name.endsWith('.ts'))
+        .map((e) => path.join(CORE_DIR, e.name)),
+    // The MCP query surface is core too: it serves every stack.
+    path.resolve(__dirname, '../../src/scripts/mcp_server/graph_tools.ts'),
+];
 
 describe('the graph core names no framework (ADR-298)', () => {
     it('has core modules to check', () => {

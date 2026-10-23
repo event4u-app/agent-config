@@ -73,6 +73,18 @@ describe('literal-path (3.1)', () => {
     });
 });
 
+describe('graph identity (review fix)', () => {
+    it('changes when a template appears, and not when a cache file does', async () => {
+        const root = tree({ 'src/a.ts': "export const t = load('templates/home.html');\n" });
+        const before = (await buildFromRepo(root, null)).graph.source_checksum;
+        fs.writeFileSync(path.join(root, 'build.log'), 'x');
+        expect((await buildFromRepo(root, null)).graph.source_checksum).toBe(before);
+        fs.mkdirSync(path.join(root, 'templates'));
+        fs.writeFileSync(path.join(root, 'templates/home.html'), '<h1/>');
+        expect((await buildFromRepo(root, null)).graph.source_checksum).not.toBe(before);
+    });
+});
+
 describe('literal-dotted (3.2)', () => {
     const file = (p: string): CodeNode => ({ id: p, label: p, kind: 'file', source_file: p, source_location: [] });
     const run = (src: string, paths: string[], on: boolean) =>

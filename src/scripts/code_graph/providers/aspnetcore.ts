@@ -19,7 +19,7 @@ import * as path from 'node:path';
 import type { CodeNode } from '../types.js';
 import { dotnetRoots } from './shared/detect.js';
 import { callRoutes, joinRoute, lastArgName } from './shared/extractors.js';
-import { type Kit, lineIndex, makeKit } from './shared/kit.js';
+import { escapeRe, type Kit, lineIndex, makeKit } from './shared/kit.js';
 import type { ConventionProvider } from './types.js';
 
 const ATTR =
@@ -83,7 +83,7 @@ function attributeRoutes(kit: Kit): void {
     }
 }
 
-function minimalApi(kit: Kit): void {
+function minimalApi(kit: Kit, types: Map<string, CodeNode>): void {
     callRoutes(kit, {
         exts: ['.cs'],
         call: /\b\w+\s*\.\s*Map(?<verb>Get|Post|Put|Patch|Delete)\(\s*"(?<path>[^"]*)"\s*,(?=(?<rest>[\s\S]{0,300}))/g,
@@ -92,12 +92,10 @@ function minimalApi(kit: Kit): void {
             if (!name) return null;
             const [head, member] = name.split('.') as [string, string | undefined];
             if (member) {
-                const cls = uniqueTypes(kit).get(head);
+                const cls = types.get(head);
                 return cls ? kit.methodOf(cls.id, member) : null;
             }
-            const local = [...kit.nodeById.values()].filter(
-                (n) => n.source_file === file && n.label === head && (n.kind === 'method' || n.kind === 'function'),
-            );
+            const local = kit.nodesInFile(file).filter((n) => n.label === head && (n.kind === 'method' || n.kind === 'function'));
             return local.length === 1 ? (local[0] as CodeNode).id : null;
         },
     });
@@ -158,7 +156,7 @@ function injection(kit: Kit, types: Map<string, CodeNode>): void {
         const lines = (sourceOf.get(n.source_file) ?? '').split('\n');
         const start = n.source_location[0] as number;
         const decl = lines.slice(start - 1, (n.source_location[2] as number) ?? start).join('\n');
-        const params = new RegExp(`\\b${n.label}\\s*\\(([^)]*)\\)`).exec(decl)?.[1] ?? '';
+        const params = new RegExp(`\\b${escapeRe(n.label)}\\s*\\(([^)]*)\\)`).exec(decl)?.[1] ?? '';
         for (const p of params.split(',')) {
             const t = /(?:^|\s)(?:[\w.]+\.)?(?<type>[A-Za-z_]\w*)\s*(?:<[^>]*>)?\??\s+\w+\s*(?:=.*)?$/.exec(p.trim())?.groups?.['type'];
             const target = t ? types.get(t) : undefined;
@@ -174,7 +172,7 @@ export const aspnetcoreProvider: ConventionProvider = {
         const kit = makeKit(input);
         const types = uniqueTypes(kit);
         attributeRoutes(kit);
-        minimalApi(kit);
+        minimalApi(kit, types);
         entities(kit, types);
         views(kit);
         injection(kit, types);

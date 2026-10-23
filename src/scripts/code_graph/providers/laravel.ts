@@ -19,7 +19,7 @@ import * as path from 'node:path';
 
 import type { SourceFile } from '../build.js';
 import type { FileRole } from '../map_model.js';
-import { resolvePsr4, type ResolutionConfig } from '../resolution_tiers.js';
+import { psr4RulesFrom, resolvePsr4, type ResolutionConfig } from '../resolution_tiers.js';
 import type { CodeEdge, CodeNode } from '../types.js';
 import type { ConventionProvider, ProjectProbe } from './types.js';
 
@@ -176,6 +176,8 @@ export function buildLaravelOverlay(
     files: readonly SourceFile[],
     baseNodes: readonly CodeNode[],
     resolution: ResolutionConfig,
+    /** The package root with a trailing slash (`''` at the repository root). */
+    prefix = '',
 ): LaravelOverlay {
     const stats: LaravelOverlayStats = {
         routes: 0,
@@ -229,7 +231,8 @@ export function buildLaravelOverlay(
     const viewFile = (name: string): string | null => {
         if (name.includes('::')) return null;
         const rel = name.replace(/\./g, '/');
-        for (const c of [`resources/views/${rel}.blade.php`, `resources/views/${rel}.php`, `resources/views/${rel}/index.blade.php`]) {
+        const views = `${prefix}resources/views/`;
+        for (const c of [`${views}${rel}.blade.php`, `${views}${rel}.php`, `${views}${rel}/index.blade.php`]) {
             if (fileIds.has(c)) return c;
         }
         return null;
@@ -238,7 +241,7 @@ export function buildLaravelOverlay(
 
     // Routes.
     let routeOrdinal = new Map<string, number>();
-    for (const f of php.filter((x) => x.path.startsWith('routes/'))) {
+    for (const f of php.filter((x) => x.path.startsWith(`${prefix}routes/`))) {
         const src = f.source;
         const at = lineIndex(src);
         const scope = phpScope(src);
@@ -459,7 +462,12 @@ export function buildLaravelOverlay(
             for (const n of symbolsByFile.get(f.path) ?? []) {
                 if (n.kind !== 'method') continue;
                 const [s0, , e0] = n.source_location as [number, number, number, number];
-                const body = lines.slice(s0 - 1, e0).join('\n');
+                // Strings and comments name words, not classes: `'User not found'` is no reference.
+                const body = lines
+                    .slice(s0 - 1, e0)
+                    .join('\n')
+                    .replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*|#[^\n[]*$/gm, ' ')
+                    .replace(/'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g, "''");
                 const own = n.id.split('::')[0];
                 for (const token of new Set([...body.matchAll(/\b([A-Z]\w*)\b/g)].map((m) => m[1] as string))) {
                     const fq = qualify(token, scope);
@@ -472,7 +480,7 @@ export function buildLaravelOverlay(
         }
     }
 
-    const routesFiles = new Set(php.filter((x) => x.path.startsWith('routes/')).map((x) => x.path));
+    const routesFiles = new Set(php.filter((x) => x.path.startsWith(`${prefix}routes/`)).map((x) => x.path));
     const dropEdge = (e: CodeEdge): boolean => {
         if (e.relation !== 'calls' || e.resolved_via === 'same-file') return false;
         const src = nodeById.get(e.source);
@@ -521,9 +529,32 @@ export const laravelProvider: ConventionProvider = {
     id: 'laravel',
     markers: ['artisan'],
     detect: detectLaravel,
-    build: ({ files, baseNodes, resolution }) => {
-        const o = buildLaravelOverlay(files, baseNodes, resolution);
-        return { nodes: o.nodes, edges: o.edges, contest: o.dropEdge };
+    build: ({ files, baseNodes, resolution, roots, manifests }) => {
+        // One overlay per package root: a Laravel app under `backend/` keeps its
+        // routes, views and PSR-4 map there, not at the repository root.
+        const nodes = new Map<string, CodeNode>();
+        const edges = new Map<string, CodeEdge>();
+        const contests: Array<(e: CodeEdge) => boolean> = [];
+        for (const root of roots) {
+            const prefix = root === '' ? '' : `${root}/`;
+            let config = resolution;
+            if (root !== '') {
+                let composer: unknown = null;
+                try {
+                    composer = JSON.parse(manifests.get(`${prefix}composer.json`) ?? 'null');
+                } catch {
+                    composer = null;
+                }
+                const own = psr4RulesFrom(composer).map((r) => ({ ...r, dirs: r.dirs.map((d) => `${prefix}${d}`) }));
+                config = { ...resolution, psr4: [...own, ...resolution.psr4] };
+            }
+            const scoped = root === '' ? files : files.filter((f) => f.path.startsWith(prefix));
+            const o = buildLaravelOverlay(scoped, baseNodes, config, prefix);
+            for (const n of o.nodes) if (!nodes.has(n.id)) nodes.set(n.id, n);
+            for (const e of o.edges) edges.set(`${e.source}\0${e.relation}\0${e.target}`, e);
+            contests.push(o.dropEdge);
+        }
+        return { nodes: [...nodes.values()], edges: [...edges.values()], contest: (e) => contests.some((c) => c(e)) };
     },
     roleOf: laravelRole,
 };
