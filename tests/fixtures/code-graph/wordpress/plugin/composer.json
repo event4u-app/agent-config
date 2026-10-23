@@ -1,0 +1,7 @@
+{
+    "name": "acme/widget",
+    "type": "wordpress-plugin",
+    "require": {
+        "php": ">=8.1"
+    }
+}
