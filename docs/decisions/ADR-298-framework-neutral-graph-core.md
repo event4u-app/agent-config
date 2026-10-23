@@ -17,7 +17,7 @@ provenance:
 evidence:
   strength: E1
   basis:
-    - agents/roadmaps/road-to-graph-providers-for-every-stack.md
+    - agents/roadmaps/archive/road-to-graph-providers-for-every-stack.md
     - docs/decisions/ADR-124-embedded-engine-doctrine.md
     - agents/roadmaps/archive/road-to-a-map-that-draws-itself.md
 review_trigger: >-
@@ -89,4 +89,4 @@ languages and frameworks, over a default that serves every project.
 ## References
 
 - ADR-124 § 1 — Class-A engine doctrine, unchanged.
-- `agents/roadmaps/road-to-graph-providers-for-every-stack.md` — the rulings and the plan.
+- `agents/roadmaps/archive/road-to-graph-providers-for-every-stack.md` — the rulings and the plan.

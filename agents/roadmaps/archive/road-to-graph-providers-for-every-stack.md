@@ -205,10 +205,17 @@ handler, never per file.
       `Map*` calls → handlers; EF Core `DbSet<T>` / `[Table]` → tables; Razor views rendered
       by name.
       verify: the ASP.NET Core fixture test passes its positive and negative oracles.
-- [ ] **5.4 Ruby extraction and the Rails provider.** Vendor the Ruby grammar; extract
+- [~] **5.4 Ruby extraction and the Rails provider.** Vendor the Ruby grammar; extract <!-- deferred-resolution: carried-to=road-to-graph-providers-for-every-stack-carried -->
       classes, modules, methods, `require`, inheritance, calls; Rails `routes.rb`
       (`get`, `resources`) → controller actions, ActiveRecord models → tables, views.
       verify: the Rails fixture test passes its positive and negative oracles.
+      **Carried 2026-10-23** to `road-to-graph-providers-for-every-stack-carried` (steps 1.1,
+      1.2, blocker `built-pack-budget-for-grammars`). Criterion: the step above, verbatim.
+      Options weighed: (A) re-anchor the built pack figure for C# and carry Ruby; (B) ship
+      Ruby too and re-anchor for both; (C) drop C# and carry both. Verdict: AI council round 2,
+      both seats (A) — Rails is second tier, ASP.NET Core top tier; the re-anchor itself is
+      owner-reserved (2026-10-17 precedent). Dissent: round 1 split on shipping Ruby. Closes
+      when the carried roadmap's AC-1 is met.
 
 ## Phase 6 — Catalog and transparency
 
@@ -266,7 +273,7 @@ handler, never per file.
 | E6 | reversible-technical | agent | Detection by project markers per package root, never by file suffix | `.php` does not mean Laravel; monorepos mix stacks | a framework has no manifest marker |
 | E7 | reversible-technical | agent | One PR for the whole roadmap; Phase 1 lands byte-identical before the schema bump inside it | Owner instruction 2026-10-23 (`/roadmap:process-full`, update the PR) | — |
 | E8 | reversible-technical | evidence | The C# grammar ships at ABI 13 with a per-language exact ABI pin in the loader | The pinned `tree-sitter-wasms` carries C# at ABI 13 only; the other six stay at 14 | an ABI-14 C# build is vendored |
-| E9 | product-owned | owner (pending) | Ruby grammar + Rails provider (5.4) vs the built pack-size line: C# + Ruby measure 16.103 MB against 15.949 MB | AI council 2026-10-23 split — one seat: ship and record a new built measurement; the other: carry 5.4 until a budget decision. A split escalates to the owner | — |
+| E9 | product-owned | council + owner | Ruby + Rails (5.4) carried to `road-to-graph-providers-for-every-stack-carried`; re-anchoring the built pack figure for C# (CI measured 16.035 MB against 15.949 MB) is the owner's call | AI council round 1 split; round 2 (new CI evidence) both seats: re-anchor for C#, carry Ruby. The re-anchor is owner-reserved under the 2026-10-17 precedent | the owner declines the re-anchor (then C# moves to the carried roadmap) |
 | E10 | reversible-technical | evidence | `literal-dotted` is off by default | 3 / 6 precision on Fixture L (translation keys matched views) | a provider-free precision reading above 90 % |
 
 ## Risk Register

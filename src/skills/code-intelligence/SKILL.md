@@ -45,10 +45,9 @@ code-graph and no appetite to build one — plain `grep`/read is right there.
 1. **Detect the source.** `agent-config code-graph detect` — is a fresh consumer
    `graph.json` or native cache present? (A consumer-shipped fresh index wins;
    the native engine covers stale-or-absent — ADR-124 § 2.)
-2. **Build if absent and worthwhile.** No graph + a repo in a parsed language
-   (PHP, TypeScript, JavaScript, Python, Go, Java, C#; Vue through its script
-   block)? `agent-config code-graph build` (deterministic, LLM-free, ~seconds).
-   Skip for a one-off question in an unsupported stack — grep instead.
+2. **Build if absent and worthwhile.** No graph + PHP, TS/JS, Python, Go, Java
+   or C#? `agent-config code-graph build` (deterministic, LLM-free, ~seconds).
+   Unsupported stack, one-off ask — grep.
 3. **Query.** Pick the verb:
    - `agent-config code-graph query <symbol>` — direct relations of a symbol.
    - `agent-config code-graph affected <symbol>` — reverse: who calls /
@@ -82,34 +81,27 @@ Every answer built with this skill MUST:
 
 ## Gotcha
 
-- **Framework links come from providers, and the map says which ran.** Routes,
-  templates, tables and injections that no import states are drawn by a
-  convention provider selected from the project's manifests (ADR-298);
-  `MAP.md` and `graph_map_status` name the active ones with their coverage
-  status (`partial` = synthetic oracles only, `verified` = also read on a real
-  repository — `src/scripts/code_graph/providers/catalog.ts`). A stack with no
-  provider still gets the framework-neutral default (single-match literal paths,
-  file-system page routes), so an empty route list there means "not covered",
-  not "no routes".
+- **No provider, no framework links.** `MAP.md` names the active providers;
+  without one, missing routes mean "not covered", not "none".
 - **A stale graph lies confidently.** If `detect` reports the index is N commits
   behind, rebuild (`agent-config code-graph build --update`) before trusting
   relationship answers, or say the answer is from a stale index.
 - **Dynamic dispatch is honestly ambiguous — where there is anything to be
   ambiguous ABOUT.** A `$obj->m()` whose name matches a method declared
-  somewhere in the repo is `AMBIGUOUS` and carries those candidates: the engine
-  being honest, not broken — do not "resolve" them yourself by guessing. A
+  somewhere in the repo is `AMBIGUOUS` and carries those candidates: honest,
+  not broken — never "resolve" them by guessing. A
   dynamic call whose name matches **no** in-repo method (`xs.push()`,
   `map.get()`) is not emitted at all, and the count is published as
   `suppressed_edge_counts.dynamic_no_candidate`. It used to be 39 % of this
-  engine's own graph, pointing at `symbol:push`, which is not a node and which
-  no query verb could reach.
+  engine's own graph, pointing at `symbol:push` — no node, unreachable by any
+  query verb.
 - **The AMBIGUOUS share is a property of the code, not a constant.** Measured
   2026-09-04 over the three roots the v2 benchmark uses: `AMBIGUOUS` is 0 of 495
-  edges under the package's own graph-engine root, 0 of 181 under `src/shared`, and 121 of
+  edges under the graph-engine root, 0 of 181 under `src/shared`, and 121 of
   4,002 (3.0 %) under its council root — class-free TypeScript has
-  almost no in-repo method to be ambiguous between. A Laravel codebase, where
-  facades and injected services dispatch onto real in-repo methods, is the
-  opposite case. Read the counts in the graph rather than a remembered ratio.
+  few in-repo methods to confuse. A Laravel codebase (facades,
+  injected services dispatching onto in-repo methods) is the opposite. Read the
+  graph's counts, not a remembered ratio.
 
 ## Measured twice, and it has not won (v2, 2026-08-29)
 
