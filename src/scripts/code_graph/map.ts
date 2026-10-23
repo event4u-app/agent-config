@@ -93,6 +93,33 @@ export function declaredEntryFiles(root: string): string[] {
     return [...out].sort();
 }
 
+/**
+ * The artefact relation graph, but only when `root` IS this package's source
+ * tree: the discovery graph reads the package it ships in, so for any other
+ * root it would describe the wrong repository.
+ */
+async function artefactGraph(root: string): Promise<MapInputsArtefacts | null> {
+    const pkgRoot = path.resolve(_HERE, '..', '..', '..');
+    if (path.resolve(root) !== pkgRoot || !fs.existsSync(path.join(root, 'src', 'skills'))) return null;
+    try {
+        const dg = await import('../discovery_graph.js');
+        const manifest = dg.loadManifest(null) as { artefacts: Array<{ path: string; name?: string; slug?: string; category?: string }> };
+        const graph = dg.getGraph(null, false);
+        const meta = new Map<string, { path: string; category: string | null }>();
+        for (const a of manifest.artefacts) {
+            for (const key of [a.name, a.slug, a.path]) if (key) meta.set(key, { path: a.path, category: a.category ?? null });
+        }
+        return {
+            nodes: graph.nodes.map((id) => ({ id, path: meta.get(id)?.path ?? null, category: meta.get(id)?.category ?? null })),
+            edges: graph.edges.map((e) => ({ from: e.from, to: e.to, rel: e.rel })),
+        };
+    } catch (e) {
+        process.stderr.write(`code-graph map: artefact layer skipped — ${(e as Error).message.split('\n')[0]}\n`);
+        return null;
+    }
+}
+type MapInputsArtefacts = NonNullable<Parameters<typeof buildMapModel>[1]>['artefacts'];
+
 /** The graph the map is drawn from: built when absent, updated when behind. */
 async function loadOrBuildGraph(root: string, cachePath: string): Promise<{ graph: CodeGraph; built: boolean }> {
     const verdict = computeVerdict(root, cachePath).verdict;
@@ -141,7 +168,12 @@ export async function buildMap(
         if (changed === null) throw new Error(`cannot resolve rev '${opts.diffRev}' in ${path.basename(root)}`);
         diff = { rev: opts.diffRev, changed };
     }
-    const model = buildMapModel(graph, { entryFiles: declaredEntryFiles(root), ...(diff ? { diff } : {}) });
+    const artefacts = await artefactGraph(root);
+    const model = buildMapModel(graph, {
+        entryFiles: declaredEntryFiles(root),
+        ...(diff ? { diff } : {}),
+        ...(artefacts ? { artefacts } : {}),
+    });
     const meta: MapMeta = {
         title: `Map of ${path.basename(root)}`,
         commit: gitHead(root),
@@ -340,6 +372,29 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
         ]);
     }
 
+    if (m.artefacts) {
+        const a = m.artefacts;
+        const inbound = new Map<number, number>();
+        for (const [, to] of a.edges) inbound.set(to, (inbound.get(to) ?? 0) + 1);
+        const top = [...inbound.entries()].sort((x, y) => y[1] - x[1] || x[0] - y[0]).slice(0, 8);
+        sections.push([
+            'Artefact layer',
+            [
+                '## Artefact layer',
+                '',
+                `This is an agent-config source tree, so its skills, rules, commands and ADRs are drawn as a second layer: ` +
+                    Object.entries(a.relationCounts)
+                        .sort()
+                        .map(([rel, n]) => `${n} \`${rel}\``)
+                        .join(' · ') +
+                    '. Most referenced:',
+                '',
+                ...top.map(([n, c]) => `- \`${md(a.nodes[n]?.[0] ?? '')}\` — ${c}`),
+                '',
+            ].join('\n'),
+        ]);
+    }
+
     const entries = f.filter((x) => x.role === 'entry');
     sections.push([
         'Entry points',
@@ -506,6 +561,7 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '<div class="toolbar">',
         '<button type="button" id="lens-areas" aria-pressed="true"></button>',
         '<button type="button" id="lens-folders" aria-pressed="false"></button>',
+        '<button type="button" id="lens-artefacts" aria-pressed="false" hidden></button>',
         '<button type="button" id="t-infra" aria-pressed="true"></button>',
         '<button type="button" id="t-guess" aria-pressed="false"></button>',
         '<button type="button" id="t-tests" aria-pressed="true"></button>',

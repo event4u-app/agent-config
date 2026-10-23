@@ -96,9 +96,9 @@ mistakes are corrected by shape, not by effort: symbol-level oracle truth, and e
 tracked.
 
 ## Phase 1 — Reach, scoped (each language with fixture + corpus class)
-- [ ] 1.1 Wire from the shipped bundle: vue, python, go, java (php/ts/js are wired).
-      **Moved 2026-10-23 to `road-to-a-map-that-draws-itself` 6.1 (grammars) and 4.2 (Blade
-      directive scan); flipped here when that roadmap lands them.**
+- [x] 1.1 Wire from the shipped bundle: vue, python, go, java (php/ts/js are wired).
+      **Delivered 2026-10-23 by `road-to-a-map-that-draws-itself` 6.1 (python, go, java vendored;
+      vue through its script block) and 4.2 (Blade directive scan).**
       Blade via a directive scanner (`@include/@extends/@component/@livewire`, `<x-…>`),
       `resolved_via: directive-scan`; a compiled grammar is optional and later.
 - [ ] 1.2 Relations `route` (route table → handler) and `depends_on` (manifests); the

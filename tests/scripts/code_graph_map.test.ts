@@ -207,3 +207,32 @@ describe('the diff view (5.3)', () => {
         expect(diffFiles(root, '--output=/tmp/x')).toBeNull();
     });
 });
+
+describe('the artefact layer (6.4)', () => {
+    it('keeps the declared relations, drops pack and workspace membership, and maps artefacts to files', async () => {
+        const { graph } = await buildFromRepo(root, null);
+        const m = buildMapModel(graph, {
+            artefacts: {
+                nodes: [
+                    { id: 'billing-skill', path: 'src/billing/f0.ts', category: 'skill' },
+                    { id: 'auth-rule', path: null, category: 'rule' },
+                ],
+                edges: [
+                    { from: 'auth-rule', to: 'billing-skill', rel: 'routes_to' },
+                    { from: 'billing-skill', to: 'pack:core', rel: 'member_of' },
+                ],
+            },
+        });
+        const a = m.artefacts;
+        expect(a?.relationCounts).toEqual({ routes_to: 1 });
+        expect(a?.edges).toHaveLength(1);
+        const billing = a?.nodes.find((n) => n[0] === 'billing-skill');
+        expect(billing && m.files[billing[1]]?.path).toBe('src/billing/f0.ts');
+        expect(a?.nodes.find((n) => n[0] === 'auth-rule')?.[1]).toBe(-1);
+    });
+
+    it('is absent for a project that is not an agent-config source tree', async () => {
+        const r = await buildMap(root);
+        expect(r.model.artefacts).toBeUndefined();
+    });
+});

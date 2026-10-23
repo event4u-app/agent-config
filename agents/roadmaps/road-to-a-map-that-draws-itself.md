@@ -235,7 +235,7 @@ Pulled forward from `later/road-to-a-graph-that-wins` 1.2.
   that names a file gets an edge to it. No model, no PDF or image extraction. Result on this
   repo: 5,844 Markdown files, 26,163 `documents` edges; code files with no trusted link 119 → 96.
   `map` now rebuilds on an `edited` graph state too, so it never draws uncommitted code stale.
-- [ ] **6.4 This repository's own map.** On an agent-config source tree, the artefact graph
+- [x] **6.4 This repository's own map.** On an agent-config source tree, the artefact graph
   (D13) renders as a second layer; `docs/maintainers/system-map.md` links to it.
 
 ## Phase 7 — The map learns and serves the workflow

@@ -117,6 +117,7 @@ export interface MapModel {
     /** Area→area weights `[a, b, weight]`, a < b. */
     areaEdges: Array<[number, number, number]>;
     diff?: MapDiff;
+    artefacts?: MapArtefacts;
     analyses: {
         hubs: number[];
         surprises: Array<[number, number, number]>;
@@ -139,6 +140,20 @@ export interface MapInputs {
     seed?: number;
     /** `map --diff <rev>`: the rev and the files it changed. */
     diff?: { rev: string; changed: readonly string[] };
+    /** On an agent-config source tree: the artefact relation graph (skills, rules, ADRs). */
+    artefacts?: {
+        nodes: ReadonlyArray<{ id: string; path: string | null; category: string | null }>;
+        edges: ReadonlyArray<{ from: string; to: string; rel: string }>;
+    };
+}
+
+/** The artefact layer: artefacts as map files, related by their declared fields. */
+export interface MapArtefacts {
+    /** `[name, file index or -1, category]`. */
+    nodes: Array<[string, number, string]>;
+    /** `[from node, to node, relation]`, indexes into `nodes`. */
+    edges: Array<[number, number, string]>;
+    relationCounts: Record<string, number>;
 }
 
 /** What a diff touches on the map: the reviewer's view of the same picture. */
@@ -536,6 +551,34 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         };
     }
 
+    let artefacts: MapArtefacts | undefined;
+    if (inputs.artefacts) {
+        // Membership edges (pack, workspace) say where an artefact ships, not
+        // what it relates to, and outnumber the rest ten to one.
+        const RELS = new Set(['supersedes', 'superseded_by', 'routes_to', 'references_adr']);
+        const byId = new Map<string, number>();
+        const nodesOut: Array<[string, number, string]> = [];
+        const node = (id: string): number => {
+            const known = byId.get(id);
+            if (known !== undefined) return known;
+            const meta = inputs.artefacts?.nodes.find((n) => n.id === id);
+            const p = meta?.path ?? (idx.has(id) ? id : null);
+            nodesOut.push([id, p !== null ? (idx.get(p) ?? -1) : -1, meta?.category ?? (p ? 'file' : '')]);
+            byId.set(id, nodesOut.length - 1);
+            return nodesOut.length - 1;
+        };
+        const edgesOut: Array<[number, number, string]> = [];
+        const relationCounts: Record<string, number> = {};
+        for (const e of [...inputs.artefacts.edges].sort((a, b) =>
+            a.from < b.from ? -1 : a.from > b.from ? 1 : a.to < b.to ? -1 : a.to > b.to ? 1 : a.rel < b.rel ? -1 : 1,
+        )) {
+            if (!RELS.has(e.rel)) continue;
+            edgesOut.push([node(e.from), node(e.to), e.rel]);
+            relationCounts[e.rel] = (relationCounts[e.rel] ?? 0) + 1;
+        }
+        artefacts = { nodes: nodesOut, edges: edgesOut, relationCounts };
+    }
+
     return {
         version: MAP_MODEL_VERSION,
         thresholds: {
@@ -553,6 +596,7 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         areas,
         areaEdges,
         ...(diff ? { diff } : {}),
+        ...(artefacts ? { artefacts } : {}),
         analyses: {
             hubs,
             surprises,

@@ -23,6 +23,8 @@
             groups: 'Not in an area',
             lensAreas: 'Areas',
             lensFolders: 'Folders',
+            lensArtefacts: 'Artefacts',
+            artefactHint: 'Skills, rules, commands and ADRs, related by the fields they declare (routes_to, supersedes, ADR references). Most referenced first.',
             folderHint: 'Each file carries the colour of its area: a folder of many colours is one whose layout and coupling disagree.',
             search: 'Search files and areas',
             files: function (n) { return n === 1 ? '1 file' : n + ' files'; },
@@ -64,6 +66,8 @@
             groups: 'Ohne Bereich',
             lensAreas: 'Bereiche',
             lensFolders: 'Ordner',
+            lensArtefacts: 'Artefakte',
+            artefactHint: 'Skills, Rules, Commands und ADRs, verbunden über ihre deklarierten Felder (routes_to, supersedes, ADR-Verweise). Meistreferenzierte zuerst.',
             folderHint: 'Jede Datei trägt die Farbe ihres Bereichs: Ein bunter Ordner ist einer, dessen Ablage und Kopplung auseinanderlaufen.',
             search: 'Dateien und Bereiche suchen',
             files: function (n) { return n === 1 ? '1 Datei' : n + ' Dateien'; },
@@ -454,6 +458,7 @@
             return;
         }
         if (state.lens === 'folders') { renderFolders(); return; }
+        if (state.lens === 'artefacts') { renderArtefacts(); return; }
         panel.appendChild(el('h2', null, data.meta.title));
         panel.appendChild(el('div', { class: 'meta' }, data.meta.summary));
         panel.appendChild(el('p', { class: 'meta' }, t('hint')));
@@ -519,9 +524,41 @@
         });
     }
 
+    function renderArtefacts() {
+        var a = model.artefacts;
+        panel.appendChild(el('h2', null, t('lensArtefacts')));
+        panel.appendChild(el('p', { class: 'meta' }, t('artefactHint')));
+        var inbound = a.nodes.map(function () { return []; });
+        var outbound = a.nodes.map(function () { return []; });
+        a.edges.forEach(function (e) { inbound[e[1]].push(e); outbound[e[0]].push(e); });
+        var order = a.nodes.map(function (_, i) { return i; }).filter(function (i) { return inbound[i].length + outbound[i].length > 0; });
+        order.sort(function (x, y) { return inbound[y].length - inbound[x].length || (a.nodes[x][0] < a.nodes[y][0] ? -1 : 1); });
+        order.slice(0, 150).forEach(function (i) {
+            var n = a.nodes[i];
+            var details = el('details');
+            details.appendChild(el('summary', null, n[0] + (n[2] ? ' · ' + n[2] : '') + ' · ' + inbound[i].length + ' ←'));
+            var ul = el('ul', { class: 'plist' });
+            if (n[1] >= 0) {
+                var open = el('button', { type: 'button' }, files[n[1]].path);
+                open.addEventListener('click', function () { state.lens = 'areas'; syncLens(); openFile(n[1]); });
+                var li0 = el('li'); li0.appendChild(open); ul.appendChild(li0);
+            }
+            outbound[i].concat(inbound[i]).slice(0, 30).forEach(function (e) {
+                var out = e[0] === i;
+                ul.appendChild(el('li', { class: 'fdir' }, (out ? '→ ' + e[2] + ' ' : '← ' + e[2] + ' ') + a.nodes[out ? e[1] : e[0]][0]));
+            });
+            details.appendChild(ul);
+            panel.appendChild(details);
+        });
+        if (order.length > 150) panel.appendChild(el('div', { class: 'more' }, t('more')(order.length - 150)));
+    }
+
     function syncLens() {
         document.getElementById('lens-areas').setAttribute('aria-pressed', String(state.lens === 'areas'));
         document.getElementById('lens-folders').setAttribute('aria-pressed', String(state.lens === 'folders'));
+        var la = document.getElementById('lens-artefacts');
+        la.hidden = !model.artefacts;
+        la.setAttribute('aria-pressed', String(state.lens === 'artefacts'));
     }
 
     function renderCrumbs() {
@@ -632,6 +669,9 @@
     document.getElementById('lens-folders').addEventListener('click', function () {
         state.lens = 'folders'; state.file = -1; state.area = -1; state.level = 'overview'; syncLens(); refresh();
     });
+    document.getElementById('lens-artefacts').addEventListener('click', function () {
+        state.lens = 'artefacts'; state.file = -1; state.area = -1; state.level = 'overview'; syncLens(); refresh();
+    });
     toggle('t-infra', 'showInfra');
     toggle('t-guess', 'showGuesses');
     toggle('t-tests', 'showTests');
@@ -665,6 +705,7 @@
         searchInput.setAttribute('aria-label', t('search'));
         document.getElementById('lens-areas').textContent = t('lensAreas');
         document.getElementById('lens-folders').textContent = t('lensFolders');
+        document.getElementById('lens-artefacts').textContent = t('lensArtefacts');
         document.getElementById('t-infra').textContent = t('infra');
         document.getElementById('t-guess').textContent = t('guessToggle');
         document.getElementById('t-tests').textContent = t('testsToggle');
