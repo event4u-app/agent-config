@@ -17,7 +17,7 @@ provenance:
 evidence:
   strength: E1
   basis:
-    - agents/roadmaps/road-to-a-map-that-draws-itself.md
+    - agents/roadmaps/archive/road-to-a-map-that-draws-itself.md
     - docs/decisions/ADR-124-embedded-engine-doctrine.md
 review_trigger: >-
   Reopen if a derived view under agents/map/ is found carrying anything that is
@@ -101,4 +101,4 @@ upgrades.
 ## References
 
 - ADR-124 § 1 — the Class-A row this amends.
-- `agents/roadmaps/road-to-a-map-that-draws-itself.md` — Phase 0.
+- `agents/roadmaps/archive/road-to-a-map-that-draws-itself.md` — Phase 0.
