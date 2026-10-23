@@ -156,26 +156,21 @@ export type EdgeProvider =
  * `use Two\Mailer` with no `composer.json` binds by base name, and a `tests`
  * edge derived from it made a wrong target trustworthy to every consumer.
  */
-const STATED_LIST = [
-    'same-file',
-    'import-specifier',
-    'path-alias',
-    'psr4',
-    'route-table',
-    'directive-scan',
-    'schema-call',
-    'orm-relation',
-    'di-binding',
-    'compiler-index',
-    'test-import',
-    'literal-path',
-    'literal-dotted',
-    'fs-route',
-] as const satisfies readonly ResolvedVia[];
-const GUESS_LIST = ['name-lookup', 'dynamic', 'foreign'] as const satisfies readonly ResolvedVia[];
-export type UnclassifiedResolvedVia = Exclude<ResolvedVia, (typeof STATED_LIST)[number] | (typeof GUESS_LIST)[number]>;
-export const STATED_RESOLVED_VIA: ReadonlySet<string> = new Set(STATED_LIST);
-export const GUESS_RESOLVED_VIA: ReadonlySet<ResolvedVia> = new Set(GUESS_LIST);
+// One space-separated string per list: this module ships in the hook bundle,
+// where an array literal costs a line per entry. `Words` splits it in the type.
+const STATED_WORDS =
+    'same-file import-specifier path-alias psr4 route-table directive-scan schema-call orm-relation di-binding compiler-index test-import literal-path literal-dotted fs-route' as const;
+const GUESS_WORDS = 'name-lookup dynamic foreign' as const;
+type Words<S extends string> = S extends `${infer H} ${infer T}` ? H | Words<T> : S;
+/** Mechanisms in neither list; must be `never` (a test asserts it). */
+export type UnclassifiedResolvedVia = Exclude<ResolvedVia, Words<typeof STATED_WORDS> | Words<typeof GUESS_WORDS>>;
+/** Words that are no mechanism at all; must be `never` too. */
+export type UnknownTrustWord = Exclude<Words<typeof STATED_WORDS> | Words<typeof GUESS_WORDS>, ResolvedVia>;
+/** Fails to compile while either list is incomplete or carries a stray word. */
+export type TrustListsComplete = [UnclassifiedResolvedVia | UnknownTrustWord] extends [never] ? true : never;
+export const TRUST_LISTS_COMPLETE: TrustListsComplete = true;
+export const STATED_RESOLVED_VIA: ReadonlySet<string> = new Set(STATED_WORDS.split(' '));
+export const GUESS_RESOLVED_VIA: ReadonlySet<ResolvedVia> = new Set(GUESS_WORDS.split(' ') as ResolvedVia[]);
 
 /** Does this edge's target rest on a stated fact? Anything not listed as stated is a guess. */
 export function isStatedResolution(resolved_via: ResolvedVia): boolean {

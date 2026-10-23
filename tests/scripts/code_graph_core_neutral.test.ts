@@ -9,6 +9,7 @@ import {
     type ResolvedVia,
     STATED_RESOLVED_VIA,
     type UnclassifiedResolvedVia,
+    type UnknownTrustWord,
 } from '../../src/scripts/code_graph/types.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
 
@@ -67,7 +68,8 @@ describe('trust is an allowlist', () => {
 
     it('the schema gate accepts exactly the mechanisms the trust table classifies', () => {
         const allClassified: [UnclassifiedResolvedVia] extends [never] ? true : false = true;
-        expect(allClassified).toBe(true);
+        const noStrayWord: [UnknownTrustWord] extends [never] ? true : false = true;
+        expect(allClassified && noStrayWord).toBe(true);
         for (const via of [...STATED_RESOLVED_VIA, ...GUESS_RESOLVED_VIA]) expect(validateGraph(minimal(via)).ok, via).toBe(true);
         expect(validateGraph(minimal('from-a-plugin')).ok).toBe(false);
     });
