@@ -135,8 +135,28 @@ describe('2.3 — model ids are discovered live and kept in runtime state', () =
 });
 
 describe('keyless first-party route (council 2026-10-22, decision 2, round 2: option a)', () => {
-    async function mockKeyless(ids: string[], list: unknown, listStatus = 200): Promise<{ base: string; list: string }> {
+    async function mockKeyless(
+        ids: string[],
+        list: unknown,
+        listStatus = 200,
+        served: Record<string, string> = {},
+    ): Promise<{ base: string; list: string }> {
         const server = http.createServer((req, res) => {
+            if (req.url === '/openai/chat/completions' && req.method === 'POST') {
+                let body = '';
+                req.on('data', (c) => (body += c));
+                req.on('end', () => {
+                    const asked = (JSON.parse(body) as { model: string }).model;
+                    if (!(asked in served)) {
+                        res.writeHead(404);
+                        res.end();
+                        return;
+                    }
+                    res.writeHead(200, { 'content-type': 'application/json' });
+                    res.end(JSON.stringify({ model: served[asked], choices: [{ message: { role: 'assistant', content: 'ok' } }] }));
+                });
+                return;
+            }
             if (req.url === '/openai/models') {
                 res.writeHead(200, { 'content-type': 'application/json' });
                 res.end(JSON.stringify({ object: 'list', data: ids.map((id) => ({ id, object: 'model' })) }));
@@ -177,6 +197,34 @@ describe('keyless first-party route (council 2026-10-22, decision 2, round 2: op
         ]);
         const roster = await discoverRouteModels('poll', base, { repoRoot: root, now: NOW, firstPartyListUrl: list });
         expect(roster).toEqual({ status: 'known', models: ['fp-a', 'fp-b-alias'], observed_at: NOW.toISOString() });
+    });
+
+    it('a listed id the route serves under one of its declared aliases is recorded as the served id', async () => {
+        const root = tmpRoot();
+        const { base, list } = await mockKeyless(
+            ['openai-fast'],
+            [{ name: 'openai-fast', aliases: ['gpt-oss', 'gpt-oss-20b'], community: false }],
+            200,
+            { 'openai-fast': 'gpt-oss-20b', 'gpt-oss-20b': 'gpt-oss-20b' },
+        );
+        const roster = await discoverRouteModels('poll', base, { repoRoot: root, now: NOW, firstPartyListUrl: list });
+        expect(roster).toEqual({ status: 'known', models: ['gpt-oss-20b'], observed_at: NOW.toISOString() });
+        expect(readRouteRoster(root, 'poll')).toMatchObject({ status: 'known', models: ['gpt-oss-20b'] });
+    });
+
+    it('a listed id the route serves under an undeclared id leaves the roster', async () => {
+        const root = tmpRoot();
+        const { base, list } = await mockKeyless(
+            ['fp-a', 'fp-b'],
+            [
+                { name: 'fp-a', aliases: ['fp-a-1'], community: false },
+                { name: 'fp-b', community: false },
+            ],
+            200,
+            { 'fp-a': 'someone-else', 'fp-b': 'fp-b' },
+        );
+        const roster = await discoverRouteModels('poll', base, { repoRoot: root, now: NOW, firstPartyListUrl: list });
+        expect(roster).toEqual({ status: 'known', models: ['fp-b'], observed_at: NOW.toISOString() });
     });
 
     it('a first-party list that cannot be read fails closed: the roster is unknown', async () => {

@@ -172,7 +172,8 @@ export interface DiscoverOptions {
     readonly firstPartyListUrl?: string;
 }
 
-async function firstPartyIds(url: string, opts: DiscoverOptions): Promise<Set<string>> {
+/** First-party names and aliases, each mapped to the full alias set of its entry. */
+async function firstPartyIds(url: string, opts: DiscoverOptions): Promise<Map<string, ReadonlySet<string>>> {
     const res = await (opts.fetchImpl ?? fetch)(url, {
         headers: { accept: 'application/json' },
         signal: AbortSignal.timeout(opts.timeoutMs ?? 15_000),
@@ -180,15 +181,39 @@ async function firstPartyIds(url: string, opts: DiscoverOptions): Promise<Set<st
     if (!res.ok) throw new Error(`first-party list HTTP ${res.status}`);
     const body = (await res.json()) as unknown;
     if (!Array.isArray(body)) throw new Error('first-party list is not a list');
-    const ids = new Set<string>();
+    const ids = new Map<string, ReadonlySet<string>>();
     for (const m of body) {
         if (m === null || typeof m !== 'object') continue;
         const e = m as Record<string, unknown>;
         if (e['community'] !== false) continue;
-        if (typeof e['name'] === 'string') ids.add(e['name']);
-        if (Array.isArray(e['aliases'])) for (const a of e['aliases']) if (typeof a === 'string') ids.add(a);
+        const names = [e['name'], ...(Array.isArray(e['aliases']) ? e['aliases'] : [])].filter((n): n is string => typeof n === 'string');
+        const entry = new Set(names);
+        for (const n of names) ids.set(n, entry);
     }
     return ids;
+}
+
+/**
+ * The id a route answers under when asked for `model`, from one minimal call; '' when the call
+ * gives no answer. A route may list one id and serve under another, and the client keeps an
+ * answer only on an exact match, so the roster must hold the id the route actually serves.
+ */
+async function servedIdOf(baseUrl: string, model: string, opts: DiscoverOptions): Promise<string> {
+    try {
+        const headers: Record<string, string> = { 'content-type': 'application/json', accept: 'application/json' };
+        if (opts.apiKey) headers['authorization'] = `Bearer ${opts.apiKey}`;
+        const res = await (opts.fetchImpl ?? fetch)(`${baseUrl.replace(/\/+$/, '')}/chat/completions`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ model, max_tokens: 16, messages: [{ role: 'user', content: 'Reply with: ok' }] }),
+            signal: AbortSignal.timeout(opts.timeoutMs ?? 15_000),
+        });
+        if (!res.ok) return '';
+        const served = ((await res.json()) as { model?: unknown }).model;
+        return typeof served === 'string' ? served : '';
+    } catch {
+        return '';
+    }
 }
 
 /**
@@ -213,7 +238,15 @@ export async function discoverRouteModels(routeKey: string, baseUrl: string, opt
             .filter((id): id is string => typeof id === 'string' && id !== '');
         if (opts.firstPartyListUrl) {
             const fp = await firstPartyIds(opts.firstPartyListUrl, opts);
-            models = models.filter((id) => fp.has(id));
+            const resolved: string[] = [];
+            for (const id of models.filter((m) => fp.has(m))) {
+                const aliases = fp.get(id) as ReadonlySet<string>;
+                const served = aliases.size > 1 ? await servedIdOf(baseUrl, id, opts) : '';
+                // No answer keeps the listed id; an id outside the entry's declared aliases is a substitution.
+                if (served === '' || served === id) resolved.push(id);
+                else if (aliases.has(served)) resolved.push(served);
+            }
+            models = [...new Set(resolved)];
         }
     } catch (exc) {
         if (routeKey in store) {
