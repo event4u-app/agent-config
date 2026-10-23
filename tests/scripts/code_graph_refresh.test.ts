@@ -146,6 +146,31 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         }
     }, 60_000);
 
+    it('guards HEAD through a --root symlinked into a repository subdirectory', () => {
+        execFileSync('git', ['-C', tmp, 'init', '-q'], { stdio: 'ignore' });
+        execFileSync('git', ['-C', tmp, '-c', 'user.email=t@example.com', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 's'], {
+            stdio: 'ignore',
+        });
+        // Neither the link nor any lexical ancestor of it holds `.git`; only its target's parent does.
+        const link = `${tmp}-link`;
+        fs.symlinkSync(path.join(tmp, 'src'), link);
+        const out = path.join(tmp, 'graph.json');
+        const mover = spawn(
+            'sh',
+            ['-c', `while true; do git -C "${tmp}" -c user.email=t@example.com -c user.name=t commit -q --allow-empty -m m; sleep 0.05; done`],
+            { stdio: 'ignore' },
+        );
+        try {
+            const r = runCli(['refresh', '--root', link, '--out', out]);
+            expect(r.status).toBe(1);
+            expect(r.stderr).toMatch(/HEAD moved/);
+            expect(fs.existsSync(out)).toBe(false);
+        } finally {
+            mover.kill('SIGKILL');
+            fs.rmSync(link, { force: true });
+        }
+    }, 60_000);
+
     it('discards a build when the repository HEAD cannot be read on either side', () => {
         // A `.git` that git cannot read: every HEAD probe fails, before and after.
         fs.writeFileSync(path.join(tmp, '.git'), 'gitdir: /nonexistent/never\n');

@@ -669,14 +669,28 @@ function git(root: string, ...args: string[]): string | null {
 }
 
 /**
- * HEAD; `''` when no ancestor of `root` holds `.git`; `null` when one does and
- * HEAD cannot be read. "Not a repository" is read from the filesystem, never
- * from a git probe, so a failing git can only ever produce `null`.
+ * HEAD; `''` when no ancestor of the CANONICAL root holds `.git`; `null` when
+ * one does and HEAD cannot be read, or when the root or an ancestor cannot be
+ * inspected. "Not a repository" is read from the filesystem, never from a git
+ * probe, and is walked from the realpath so a symlinked root cannot hide the
+ * repository git itself would find.
  */
 function headOf(root: string): string | null {
-    for (let dir = path.resolve(root); ; dir = path.dirname(dir)) {
-        if (fs.existsSync(path.join(dir, '.git'))) return git(root, 'rev-parse', 'HEAD');
+    let dir: string;
+    try {
+        dir = fs.realpathSync(root);
+    } catch {
+        return null;
+    }
+    for (;;) {
+        try {
+            fs.lstatSync(path.join(dir, '.git'));
+            return git(dir, 'rev-parse', 'HEAD');
+        } catch (e) {
+            if ((e as NodeJS.ErrnoException).code !== 'ENOENT') return null;
+        }
         if (path.dirname(dir) === dir) return '';
+        dir = path.dirname(dir);
     }
 }
 

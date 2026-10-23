@@ -60,9 +60,14 @@ export type RefreshOutcome =
     | 'no-cli'
     | 'spawned';
 
-/** The nearest ancestor of `start` holding `.git` (a dir, or a worktree's file). */
+/** The nearest ancestor of `start`'s realpath holding `.git` (a dir, or a worktree's file). */
 export function repoRoot(start: string): string | null {
-    let dir = path.resolve(start);
+    let dir: string;
+    try {
+        dir = fs.realpathSync(start);
+    } catch {
+        return null;
+    }
     for (;;) {
         if (fs.existsSync(path.join(dir, '.git'))) return dir;
         const up = path.dirname(dir);
