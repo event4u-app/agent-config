@@ -18,11 +18,13 @@ tools required.
 
 The install records itself in `~/.event4u/agent-config/installed.lock`
 (schema_version, agent_config_version, installed_at, tools[]; the legacy
-`~/.config/agent-config/installed.lock` is read as a fallback). `npx
-@event4u/agent-config update` keeps that manifest in lockstep
-with the project pin in `.agent-settings.yml`. A version-mismatched
-re-run of `init` is refused with exit code 1 until you `update` or
-pass `--force`.
+`~/.config/agent-config/installed.lock` is read as a fallback). Only the
+global install writes it — `agent-config upgrade` moves it forward. `npx
+@event4u/agent-config update` moves the project pin in `.agent-settings.yml`
+and leaves the manifest alone; when the pin is newer than the global
+install it names `agent-config upgrade`. A re-run of `init` from a package
+older than the recorded version is refused with exit code 1 unless you pass
+`--force`.
 
 To commit a specific tool's config into a project repo, use:
 
