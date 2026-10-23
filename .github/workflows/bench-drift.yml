@@ -88,8 +88,8 @@ jobs:
       - name: Egress engine latency (PREREG f, warn-only)
         continue-on-error: true
         run: |
-          # shellcheck disable=SC2016
           npx tsx internal/bench/egress-engine/run.ts --json /tmp/egress-engine.json > /dev/null
+          # shellcheck disable=SC2016
           node -e 'const r = require("/tmp/egress-engine.json"); const l = r.latency_ms; console.log(`egress-engine latency: p50=${l.p50.toFixed(3)} ms p95=${l.p95.toFixed(3)} ms bytes=${l.bytes} platform=${r.platform} node=${r.node} cpus=${require("node:os").cpus().length} model=${require("node:os").cpus()[0].model}`)' \
             | tee -a "$GITHUB_STEP_SUMMARY"
 
