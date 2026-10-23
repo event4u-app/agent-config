@@ -138,6 +138,21 @@ describe.skipIf(process.platform === 'win32')('code-graph-refresh session concer
         expect(resolveCli(root, dir)).toBeNull();
     });
 
+    it.skipIf(process.getuid?.() === 0)('never falls through an uninspectable inner repository to an opted-in outer one', () => {
+        optedIn();
+        const inner = path.join(root, 'vendor', 'inner');
+        fs.mkdirSync(path.join(inner, '.git'), { recursive: true });
+        // Without search permission on `inner`, `inner/.git` cannot be inspected (EACCES).
+        fs.chmodSync(inner, 0o600);
+        try {
+            expect(repoRoot(inner)).toBeNull();
+            expect(refreshFor(inner, fakeSpawn)).toBe('not-opted-in');
+            expect(calls).toHaveLength(0);
+        } finally {
+            fs.chmodSync(inner, 0o755);
+        }
+    });
+
     it('does not pile onto a refresh that already holds the lock', () => {
         optedIn();
         fs.mkdirSync(path.join(root, LOCK_REL));

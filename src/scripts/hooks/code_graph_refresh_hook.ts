@@ -60,7 +60,12 @@ export type RefreshOutcome =
     | 'no-cli'
     | 'spawned';
 
-/** The nearest ancestor of `start`'s realpath holding `.git` (a dir, or a worktree's file). */
+/**
+ * The nearest ancestor of `start`'s realpath holding `.git` (a dir, or a
+ * worktree's file). Only ENOENT walks upward: a `.git` that cannot be
+ * inspected ends the search, so an unreadable inner repository is never
+ * skipped in favour of an outer one.
+ */
 export function repoRoot(start: string): string | null {
     let dir: string;
     try {
@@ -69,7 +74,12 @@ export function repoRoot(start: string): string | null {
         return null;
     }
     for (;;) {
-        if (fs.existsSync(path.join(dir, '.git'))) return dir;
+        try {
+            fs.lstatSync(path.join(dir, '.git'));
+            return dir;
+        } catch (e) {
+            if ((e as NodeJS.ErrnoException).code !== 'ENOENT') return null;
+        }
         const up = path.dirname(dir);
         if (up === dir) return null;
         dir = up;
