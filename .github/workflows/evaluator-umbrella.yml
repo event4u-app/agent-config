@@ -54,10 +54,12 @@ jobs:
     name: Packed-artifact evaluation (clean container)
     runs-on: ubuntu-latest
     permissions:
-      # `write` only so the scheduled run can commit the measurement record
-      # back to the default branch. Every other trigger leaves the record
-      # untouched — the record step is gated on `event_name == 'schedule'`.
+      # `write` only so the scheduled run can push the measurement record to
+      # its own branch and open a pull request for it. Every other trigger
+      # leaves the record untouched — the record step is gated on
+      # `event_name == 'schedule'`.
       contents: write
+      pull-requests: write
     container:
       # Clean Node container — the point is the PACKED artifact evaluated
       # outside the checkout's toolchain assumptions.
@@ -65,7 +67,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
-          # persist-credentials KEPT: git push origin "HEAD:${GITHUB_REF_NAME}" at :118 pushes with the ambient credential.
+          # persist-credentials KEPT: the nightly record step force-pushes its own branch with the ambient credential.
           persist-credentials: true
 
       # This job runs INSIDE a container, so the checkout is owned by a
@@ -106,6 +108,12 @@ jobs:
       # (road-to-gates-that-can-fail Phase 5; council route 2026-08-02 —
       # committed artifact over an auto-managed issue or a notification channel
       # a single maintainer would mute).
+      #
+      # Through a pull request, never a direct push: the default branch's
+      # ruleset requires a PR and two status checks, so `git push HEAD:main`
+      # was declined on every nightly (GH013) and the record never landed.
+      # One fixed branch, force-pushed, and at most one open PR for it — the
+      # next nightly refreshes the same PR instead of opening another.
       - name: Commit the measurement record (nightly only)
         if: github.event_name == 'schedule'
         # The job runs in a container, where the default shell is dash and
@@ -113,6 +121,8 @@ jobs:
         # line on every nightly. node:22-bullseye carries bash, and the step
         # above already shells out to it.
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           record=agents/evidence/metrics/evaluator-measurements.json
@@ -123,5 +133,18 @@ jobs:
           git config user.name  'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add "$record"
+          branch=chore/evaluator-nightly-record
+          git checkout -B "$branch"
           git commit -m 'chore(evaluator): refresh the nightly measurement record'
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          git push --force origin "HEAD:refs/heads/${branch}"
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}"
+          auth=(-H "Authorization: Bearer ${GH_TOKEN}" -H 'Accept: application/vnd.github+json')
+          open="$(curl -fsS "${auth[@]}" "${api}/pulls?state=open&head=${GITHUB_REPOSITORY_OWNER}:${branch}")"
+          if printf '%s' "$open" | grep -q '"number"'; then
+            echo "pull request for ${branch} already open — refreshed by the force-push"
+            exit 0
+          fi
+          curl -fsS "${auth[@]}" -X POST "${api}/pulls" \
+            -d "{\"title\":\"chore(evaluator): refresh the nightly measurement record\",\"head\":\"${branch}\",\"base\":\"${GITHUB_REF_NAME}\",\"body\":\"Opened by the nightly evaluator umbrella run ${GITHUB_RUN_ID}. The diff is the drift against the last recorded measurement.\"}" \
+            >/dev/null
+          echo "opened a pull request for ${branch}"
