@@ -26,6 +26,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-corpus-refresh-cadence-shape | active | draft | The maintainer has answered whether four grounding corpora sharing one `last_checked` stamp is a deliberate cadence or an accident of … |
 | road-to-decision-closure | active | draft | Every roadmap enters execution as an execution contract: every foreseeable decision closed, the closing done council-first, the owner reached only … |
 | road-to-free-hands-a-paid-head-checks | active | ready | The paid host model stays the head: it plans, cuts slices, chooses the route, verifies every return and decides. |
+| road-to-graph-providers-for-every-stack | active | — | The code graph's core names no framework. |
 | road-to-hook-guards-that-hold-17-findings | active | draft | 17.0.0 is cut only when the three `fail_closed` hook guards (`block-no-verify`, `block-kernel-rule-writes`, `block-plumbing-writes`) refuse what they claim on every install … |
 | road-to-host-inputs-the-installer-honours | active | ready | What the installer writes and what `doctor` reports about the host is computed from the inputs the host itself uses. |
 | road-to-one-detector-and-the-senders-we-own | active | ready | On every request this package writes to a model provider itself, no value of a listed type leaves in plaintext, … |
