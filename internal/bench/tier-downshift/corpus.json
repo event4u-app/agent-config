@@ -1,302 +1,305 @@
-[
-  {
-    "id": "count-ts-src/scripts/hooks",
-    "question": "How many files ending in .ts are directly inside src/scripts/hooks (not in subdirectories)? Answer with the number only.",
-    "answer": "73"
-  },
-  {
-    "id": "count-ts-src/scripts/_lib",
-    "question": "How many files ending in .ts are directly inside src/scripts/_lib (not in subdirectories)? Answer with the number only.",
-    "answer": "461"
-  },
-  {
-    "id": "count-ts-src/scripts/ai_council",
-    "question": "How many files ending in .ts are directly inside src/scripts/ai_council (not in subdirectories)? Answer with the number only.",
-    "answer": "86"
-  },
-  {
-    "id": "count-ts-src/shared",
-    "question": "How many files ending in .ts are directly inside src/shared (not in subdirectories)? Answer with the number only.",
-    "answer": "13"
-  },
-  {
-    "id": "count-ts-src/server/schemas",
-    "question": "How many files ending in .ts are directly inside src/server/schemas (not in subdirectories)? Answer with the number only.",
-    "answer": "1"
-  },
-  {
-    "id": "owner-isAcceptanceCriteriaHeading",
-    "question": "Which file in src/scripts/_lib declares `export function isAcceptanceCriteriaHeading(`? Answer with the file name only (for example foo.ts).",
-    "answer": "ac_heading.ts"
-  },
-  {
-    "id": "owner-rungForReceiptStage",
-    "question": "Which file in src/scripts/_lib declares `export function rungForReceiptStage(`? Answer with the file name only (for example foo.ts).",
-    "answer": "activation_ladder.ts"
-  },
-  {
-    "id": "owner-corpusShapeProblems",
-    "question": "Which file in src/scripts/_lib declares `export function corpusShapeProblems(`? Answer with the file name only (for example foo.ts).",
-    "answer": "activation_payload.ts"
-  },
-  {
-    "id": "owner-buildActivationReceipt",
-    "question": "Which file in src/scripts/_lib declares `export function buildActivationReceipt(`? Answer with the file name only (for example foo.ts).",
-    "answer": "activation_receipt_producer.ts"
-  },
-  {
-    "id": "owner-isActivationState",
-    "question": "Which file in src/scripts/_lib declares `export function isActivationState(`? Answer with the file name only (for example foo.ts).",
-    "answer": "activation_states.ts"
-  },
-  {
-    "id": "owner-readAdrFrontmatter",
-    "question": "Which file in src/scripts/_lib declares `export function readAdrFrontmatter(`? Answer with the file name only (for example foo.ts).",
-    "answer": "adr_frontmatter.ts"
-  },
-  {
-    "id": "owner-categoryFamily",
-    "question": "Which file in src/scripts/_lib declares `export function categoryFamily(`? Answer with the file name only (for example foo.ts).",
-    "answer": "adversarial_bench_score.ts"
-  },
-  {
-    "id": "owner-evaluateCouncilBench",
-    "question": "Which file in src/scripts/_lib declares `export function evaluateCouncilBench(`? Answer with the file name only (for example foo.ts).",
-    "answer": "adversarial_council_gate.ts"
-  },
-  {
-    "id": "owner-unsupportedLockfiles",
-    "question": "Which file in src/scripts/_lib declares `export function unsupportedLockfiles(`? Answer with the file name only (for example foo.ts).",
-    "answer": "advisory_inventory.ts"
-  },
-  {
-    "id": "owner-readAdvisorySettings",
-    "question": "Which file in src/scripts/_lib declares `export function readAdvisorySettings(`? Answer with the file name only (for example foo.ts).",
-    "answer": "advisory_notice.ts"
-  },
-  {
-    "id": "owner-assertAllowed",
-    "question": "Which file in src/scripts/_lib declares `export function assertAllowed(`? Answer with the file name only (for example foo.ts).",
-    "answer": "advisory_sources.ts"
-  },
-  {
-    "id": "owner-mergeFindings",
-    "question": "Which file in src/scripts/_lib declares `export function mergeFindings(`? Answer with the file name only (for example foo.ts).",
-    "answer": "advisory_verdicts.ts"
-  },
-  {
-    "id": "owner-project_settings_path",
-    "question": "Which file in src/scripts/_lib declares `export function project_settings_path(`? Answer with the file name only (for example foo.ts).",
-    "answer": "agent_settings.ts"
-  },
-  {
-    "id": "owner-_setRootsForTest",
-    "question": "Which file in src/scripts/_lib declares `export function _setRootsForTest(`? Answer with the file name only (for example foo.ts).",
-    "answer": "agent_src.ts"
-  },
-  {
-    "id": "owner-globalProfileWriteTarget",
-    "question": "Which file in src/scripts/_lib declares `export function globalProfileWriteTarget(`? Answer with the file name only (for example foo.ts).",
-    "answer": "agent_user_profile.ts"
-  },
-  {
-    "id": "owner-_setUserGlobalAgentsDir",
-    "question": "Which file in src/scripts/_lib declares `export function _setUserGlobalAgentsDir(`? Answer with the file name only (for example foo.ts).",
-    "answer": "agents_overlay.ts"
-  },
-  {
-    "id": "owner-eval_prompt",
-    "question": "Which file in src/scripts/_lib declares `export function eval_prompt(`? Answer with the file name only (for example foo.ts).",
-    "answer": "anchor_eval.ts"
-  },
-  {
-    "id": "owner-evaluateSegment",
-    "question": "Which file in src/scripts/_lib declares `export function evaluateSegment(`? Answer with the file name only (for example foo.ts).",
-    "answer": "arith_claims.ts"
-  },
-  {
-    "id": "owner-isRankingMetric",
-    "question": "Which file in src/scripts/_lib declares `export function isRankingMetric(`? Answer with the file name only (for example foo.ts).",
-    "answer": "arm_ranking.ts"
-  },
-  {
-    "id": "owner-readObserverLines",
-    "question": "Which file in src/scripts/_lib declares `export function readObserverLines(`? Answer with the file name only (for example foo.ts).",
-    "answer": "arrival_record.ts"
-  },
-  {
-    "id": "owner-mapReferenceMaturity",
-    "question": "Which file in src/scripts/_lib declares `export function mapReferenceMaturity(`? Answer with the file name only (for example foo.ts).",
-    "answer": "artifact_maturity.ts"
-  },
-  {
-    "id": "owner-headCommitDate",
-    "question": "Which file in src/scripts/_lib declares `export function headCommitDate(`? Answer with the file name only (for example foo.ts).",
-    "answer": "as_of.ts"
-  },
-  {
-    "id": "owner-unresolvedAgainst",
-    "question": "Which file in src/scripts/_lib declares `export function unresolvedAgainst(`? Answer with the file name only (for example foo.ts).",
-    "answer": "asset_delivery_ledger.ts"
-  },
-  {
-    "id": "owner-renderSlug",
-    "question": "Which file in src/scripts/_lib declares `export function renderSlug(`? Answer with the file name only (for example foo.ts).",
-    "answer": "asset_render_record.ts"
-  },
-  {
-    "id": "owner-isProducerConstantField",
-    "question": "Which file in src/scripts/_lib declares `export function isProducerConstantField(`? Answer with the file name only (for example foo.ts).",
-    "answer": "audit_field_provenance.ts"
-  },
-  {
-    "id": "owner-authorityState",
-    "question": "Which file in src/scripts/_lib declares `export function authorityState(`? Answer with the file name only (for example foo.ts).",
-    "answer": "authority_path.ts"
-  },
-  {
-    "id": "owner-classifyTask",
-    "question": "Which file in src/scripts/_lib declares `export function classifyTask(`? Answer with the file name only (for example foo.ts).",
-    "answer": "auto_dispatch.ts"
-  },
-  {
-    "id": "owner-extractSurfacesAtRef",
-    "question": "Which file in src/scripts/_lib declares `export function extractSurfacesAtRef(`? Answer with the file name only (for example foo.ts).",
-    "answer": "base_ref_payload.ts"
-  },
-  {
-    "id": "owner-materialiseSubtree",
-    "question": "Which file in src/scripts/_lib declares `export function materialiseSubtree(`? Answer with the file name only (for example foo.ts).",
-    "answer": "base_tree.ts"
-  },
-  {
-    "id": "owner-prompt_tokens",
-    "question": "Which file in src/scripts/_lib declares `export function prompt_tokens(`? Answer with the file name only (for example foo.ts).",
-    "answer": "bench_ab_activation.ts"
-  },
-  {
-    "id": "owner-hash_file",
-    "question": "Which file in src/scripts/_lib declares `export function hash_file(`? Answer with the file name only (for example foo.ts).",
-    "answer": "bench_ab_cache.ts"
-  },
-  {
-    "id": "owner-langForPath",
-    "question": "Which file in src/scripts/_lib declares `export function langForPath(`? Answer with the file name only (for example foo.ts).",
-    "answer": "bench_ab_complexity.ts"
-  },
-  {
-    "id": "owner-pinnedSpecFor",
-    "question": "Which file in src/scripts/_lib declares `export function pinnedSpecFor(`? Answer with the file name only (for example foo.ts).",
-    "answer": "bench_ab_pinned_repo.ts"
-  },
-  {
-    "id": "owner-classifyProbeExit",
-    "question": "Which file in src/scripts/_lib declares `export function classifyProbeExit(`? Answer with the file name only (for example foo.ts).",
-    "answer": "bench_ab_safety_tier.ts"
-  },
-  {
-    "id": "owner-score_task",
-    "question": "Which file in src/scripts/_lib declares `export function score_task(`? Answer with the file name only (for example foo.ts).",
-    "answer": "bench_ab_scoring.ts"
-  },
-  {
-    "id": "imports-block_config_weakening.ts",
-    "question": "How many lines of src/scripts/hooks/block_config_weakening.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "8"
-  },
-  {
-    "id": "imports-block_credential_reads.ts",
-    "question": "How many lines of src/scripts/hooks/block_credential_reads.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "7"
-  },
-  {
-    "id": "imports-block_kernel_rule_writes.ts",
-    "question": "How many lines of src/scripts/hooks/block_kernel_rule_writes.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "8"
-  },
-  {
-    "id": "imports-block_no_verify.ts",
-    "question": "How many lines of src/scripts/hooks/block_no_verify.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "5"
-  },
-  {
-    "id": "imports-block_plumbing_writes.ts",
-    "question": "How many lines of src/scripts/hooks/block_plumbing_writes.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "7"
-  },
-  {
-    "id": "imports-block_speaking_inbox_dir.ts",
-    "question": "How many lines of src/scripts/hooks/block_speaking_inbox_dir.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "6"
-  },
-  {
-    "id": "imports-bundle_integrity.ts",
-    "question": "How many lines of src/scripts/hooks/bundle_integrity.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "7"
-  },
-  {
-    "id": "imports-category_a.ts",
-    "question": "How many lines of src/scripts/hooks/category_a.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "2"
-  },
-  {
-    "id": "imports-chain_nudge_hook.ts",
-    "question": "How many lines of src/scripts/hooks/chain_nudge_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "5"
-  },
-  {
-    "id": "imports-code_graph_context_hook.ts",
-    "question": "How many lines of src/scripts/hooks/code_graph_context_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "7"
-  },
-  {
-    "id": "imports-comment_discipline_hook.ts",
-    "question": "How many lines of src/scripts/hooks/comment_discipline_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "7"
-  },
-  {
-    "id": "imports-concern_registry.ts",
-    "question": "How many lines of src/scripts/hooks/concern_registry.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "63"
-  },
-  {
-    "id": "imports-delegation_nudge_hook.ts",
-    "question": "How many lines of src/scripts/hooks/delegation_nudge_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "13"
-  },
-  {
-    "id": "imports-design_pass_hook.ts",
-    "question": "How many lines of src/scripts/hooks/design_pass_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "11"
-  },
-  {
-    "id": "imports-design_slop_hook.ts",
-    "question": "How many lines of src/scripts/hooks/design_slop_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "8"
-  },
-  {
-    "id": "imports-dispatch_entry.ts",
-    "question": "How many lines of src/scripts/hooks/dispatch_entry.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "3"
-  },
-  {
-    "id": "imports-dispatch_hook.ts",
-    "question": "How many lines of src/scripts/hooks/dispatch_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "27"
-  },
-  {
-    "id": "imports-dispatch_issues.ts",
-    "question": "How many lines of src/scripts/hooks/dispatch_issues.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "3"
-  },
-  {
-    "id": "imports-edit_shape_hook.ts",
-    "question": "How many lines of src/scripts/hooks/edit_shape_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "9"
-  },
-  {
-    "id": "imports-egress_engine_loader.ts",
-    "question": "How many lines of src/scripts/hooks/egress_engine_loader.ts start with the word \"import \" at column 0? Answer with the number only.",
-    "answer": "6"
-  }
-]
+{
+  "commit": "fe4fa4bcd7b9bffaba49a233b18a6e82bdcfcc7b",
+  "slices": [
+    {
+      "id": "count-ts-src/scripts/hooks",
+      "question": "How many files ending in .ts are directly inside src/scripts/hooks (not in subdirectories)? Answer with the number only.",
+      "answer": "74"
+    },
+    {
+      "id": "count-ts-src/scripts/_lib",
+      "question": "How many files ending in .ts are directly inside src/scripts/_lib (not in subdirectories)? Answer with the number only.",
+      "answer": "470"
+    },
+    {
+      "id": "count-ts-src/scripts/ai_council",
+      "question": "How many files ending in .ts are directly inside src/scripts/ai_council (not in subdirectories)? Answer with the number only.",
+      "answer": "102"
+    },
+    {
+      "id": "count-ts-src/shared",
+      "question": "How many files ending in .ts are directly inside src/shared (not in subdirectories)? Answer with the number only.",
+      "answer": "13"
+    },
+    {
+      "id": "count-ts-src/server/schemas",
+      "question": "How many files ending in .ts are directly inside src/server/schemas (not in subdirectories)? Answer with the number only.",
+      "answer": "1"
+    },
+    {
+      "id": "owner-isAcceptanceCriteriaHeading",
+      "question": "Which file in src/scripts/_lib declares `export function isAcceptanceCriteriaHeading(`? Answer with the file name only (for example foo.ts).",
+      "answer": "ac_heading.ts"
+    },
+    {
+      "id": "owner-rungForReceiptStage",
+      "question": "Which file in src/scripts/_lib declares `export function rungForReceiptStage(`? Answer with the file name only (for example foo.ts).",
+      "answer": "activation_ladder.ts"
+    },
+    {
+      "id": "owner-corpusShapeProblems",
+      "question": "Which file in src/scripts/_lib declares `export function corpusShapeProblems(`? Answer with the file name only (for example foo.ts).",
+      "answer": "activation_payload.ts"
+    },
+    {
+      "id": "owner-buildActivationReceipt",
+      "question": "Which file in src/scripts/_lib declares `export function buildActivationReceipt(`? Answer with the file name only (for example foo.ts).",
+      "answer": "activation_receipt_producer.ts"
+    },
+    {
+      "id": "owner-isActivationState",
+      "question": "Which file in src/scripts/_lib declares `export function isActivationState(`? Answer with the file name only (for example foo.ts).",
+      "answer": "activation_states.ts"
+    },
+    {
+      "id": "owner-readAdrFrontmatter",
+      "question": "Which file in src/scripts/_lib declares `export function readAdrFrontmatter(`? Answer with the file name only (for example foo.ts).",
+      "answer": "adr_frontmatter.ts"
+    },
+    {
+      "id": "owner-categoryFamily",
+      "question": "Which file in src/scripts/_lib declares `export function categoryFamily(`? Answer with the file name only (for example foo.ts).",
+      "answer": "adversarial_bench_score.ts"
+    },
+    {
+      "id": "owner-evaluateCouncilBench",
+      "question": "Which file in src/scripts/_lib declares `export function evaluateCouncilBench(`? Answer with the file name only (for example foo.ts).",
+      "answer": "adversarial_council_gate.ts"
+    },
+    {
+      "id": "owner-unsupportedLockfiles",
+      "question": "Which file in src/scripts/_lib declares `export function unsupportedLockfiles(`? Answer with the file name only (for example foo.ts).",
+      "answer": "advisory_inventory.ts"
+    },
+    {
+      "id": "owner-readAdvisorySettings",
+      "question": "Which file in src/scripts/_lib declares `export function readAdvisorySettings(`? Answer with the file name only (for example foo.ts).",
+      "answer": "advisory_notice.ts"
+    },
+    {
+      "id": "owner-assertAllowed",
+      "question": "Which file in src/scripts/_lib declares `export function assertAllowed(`? Answer with the file name only (for example foo.ts).",
+      "answer": "advisory_sources.ts"
+    },
+    {
+      "id": "owner-mergeFindings",
+      "question": "Which file in src/scripts/_lib declares `export function mergeFindings(`? Answer with the file name only (for example foo.ts).",
+      "answer": "advisory_verdicts.ts"
+    },
+    {
+      "id": "owner-project_settings_path",
+      "question": "Which file in src/scripts/_lib declares `export function project_settings_path(`? Answer with the file name only (for example foo.ts).",
+      "answer": "agent_settings.ts"
+    },
+    {
+      "id": "owner-_setRootsForTest",
+      "question": "Which file in src/scripts/_lib declares `export function _setRootsForTest(`? Answer with the file name only (for example foo.ts).",
+      "answer": "agent_src.ts"
+    },
+    {
+      "id": "owner-globalProfileWriteTarget",
+      "question": "Which file in src/scripts/_lib declares `export function globalProfileWriteTarget(`? Answer with the file name only (for example foo.ts).",
+      "answer": "agent_user_profile.ts"
+    },
+    {
+      "id": "owner-_setUserGlobalAgentsDir",
+      "question": "Which file in src/scripts/_lib declares `export function _setUserGlobalAgentsDir(`? Answer with the file name only (for example foo.ts).",
+      "answer": "agents_overlay.ts"
+    },
+    {
+      "id": "owner-eval_prompt",
+      "question": "Which file in src/scripts/_lib declares `export function eval_prompt(`? Answer with the file name only (for example foo.ts).",
+      "answer": "anchor_eval.ts"
+    },
+    {
+      "id": "owner-evaluateSegment",
+      "question": "Which file in src/scripts/_lib declares `export function evaluateSegment(`? Answer with the file name only (for example foo.ts).",
+      "answer": "arith_claims.ts"
+    },
+    {
+      "id": "owner-isRankingMetric",
+      "question": "Which file in src/scripts/_lib declares `export function isRankingMetric(`? Answer with the file name only (for example foo.ts).",
+      "answer": "arm_ranking.ts"
+    },
+    {
+      "id": "owner-readObserverLines",
+      "question": "Which file in src/scripts/_lib declares `export function readObserverLines(`? Answer with the file name only (for example foo.ts).",
+      "answer": "arrival_record.ts"
+    },
+    {
+      "id": "owner-mapReferenceMaturity",
+      "question": "Which file in src/scripts/_lib declares `export function mapReferenceMaturity(`? Answer with the file name only (for example foo.ts).",
+      "answer": "artifact_maturity.ts"
+    },
+    {
+      "id": "owner-headCommitDate",
+      "question": "Which file in src/scripts/_lib declares `export function headCommitDate(`? Answer with the file name only (for example foo.ts).",
+      "answer": "as_of.ts"
+    },
+    {
+      "id": "owner-unresolvedAgainst",
+      "question": "Which file in src/scripts/_lib declares `export function unresolvedAgainst(`? Answer with the file name only (for example foo.ts).",
+      "answer": "asset_delivery_ledger.ts"
+    },
+    {
+      "id": "owner-renderSlug",
+      "question": "Which file in src/scripts/_lib declares `export function renderSlug(`? Answer with the file name only (for example foo.ts).",
+      "answer": "asset_render_record.ts"
+    },
+    {
+      "id": "owner-isProducerConstantField",
+      "question": "Which file in src/scripts/_lib declares `export function isProducerConstantField(`? Answer with the file name only (for example foo.ts).",
+      "answer": "audit_field_provenance.ts"
+    },
+    {
+      "id": "owner-authorityState",
+      "question": "Which file in src/scripts/_lib declares `export function authorityState(`? Answer with the file name only (for example foo.ts).",
+      "answer": "authority_path.ts"
+    },
+    {
+      "id": "owner-classifyTask",
+      "question": "Which file in src/scripts/_lib declares `export function classifyTask(`? Answer with the file name only (for example foo.ts).",
+      "answer": "auto_dispatch.ts"
+    },
+    {
+      "id": "owner-extractSurfacesAtRef",
+      "question": "Which file in src/scripts/_lib declares `export function extractSurfacesAtRef(`? Answer with the file name only (for example foo.ts).",
+      "answer": "base_ref_payload.ts"
+    },
+    {
+      "id": "owner-materialiseSubtree",
+      "question": "Which file in src/scripts/_lib declares `export function materialiseSubtree(`? Answer with the file name only (for example foo.ts).",
+      "answer": "base_tree.ts"
+    },
+    {
+      "id": "owner-prompt_tokens",
+      "question": "Which file in src/scripts/_lib declares `export function prompt_tokens(`? Answer with the file name only (for example foo.ts).",
+      "answer": "bench_ab_activation.ts"
+    },
+    {
+      "id": "owner-hash_file",
+      "question": "Which file in src/scripts/_lib declares `export function hash_file(`? Answer with the file name only (for example foo.ts).",
+      "answer": "bench_ab_cache.ts"
+    },
+    {
+      "id": "owner-langForPath",
+      "question": "Which file in src/scripts/_lib declares `export function langForPath(`? Answer with the file name only (for example foo.ts).",
+      "answer": "bench_ab_complexity.ts"
+    },
+    {
+      "id": "owner-pinnedSpecFor",
+      "question": "Which file in src/scripts/_lib declares `export function pinnedSpecFor(`? Answer with the file name only (for example foo.ts).",
+      "answer": "bench_ab_pinned_repo.ts"
+    },
+    {
+      "id": "owner-classifyProbeExit",
+      "question": "Which file in src/scripts/_lib declares `export function classifyProbeExit(`? Answer with the file name only (for example foo.ts).",
+      "answer": "bench_ab_safety_tier.ts"
+    },
+    {
+      "id": "owner-score_task",
+      "question": "Which file in src/scripts/_lib declares `export function score_task(`? Answer with the file name only (for example foo.ts).",
+      "answer": "bench_ab_scoring.ts"
+    },
+    {
+      "id": "imports-block_config_weakening.ts",
+      "question": "How many lines of src/scripts/hooks/block_config_weakening.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "8"
+    },
+    {
+      "id": "imports-block_credential_reads.ts",
+      "question": "How many lines of src/scripts/hooks/block_credential_reads.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "7"
+    },
+    {
+      "id": "imports-block_kernel_rule_writes.ts",
+      "question": "How many lines of src/scripts/hooks/block_kernel_rule_writes.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "8"
+    },
+    {
+      "id": "imports-block_no_verify.ts",
+      "question": "How many lines of src/scripts/hooks/block_no_verify.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "5"
+    },
+    {
+      "id": "imports-block_plumbing_writes.ts",
+      "question": "How many lines of src/scripts/hooks/block_plumbing_writes.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "7"
+    },
+    {
+      "id": "imports-block_speaking_inbox_dir.ts",
+      "question": "How many lines of src/scripts/hooks/block_speaking_inbox_dir.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "6"
+    },
+    {
+      "id": "imports-bundle_integrity.ts",
+      "question": "How many lines of src/scripts/hooks/bundle_integrity.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "7"
+    },
+    {
+      "id": "imports-category_a.ts",
+      "question": "How many lines of src/scripts/hooks/category_a.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "2"
+    },
+    {
+      "id": "imports-chain_nudge_hook.ts",
+      "question": "How many lines of src/scripts/hooks/chain_nudge_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "5"
+    },
+    {
+      "id": "imports-code_graph_context_hook.ts",
+      "question": "How many lines of src/scripts/hooks/code_graph_context_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "7"
+    },
+    {
+      "id": "imports-comment_discipline_hook.ts",
+      "question": "How many lines of src/scripts/hooks/comment_discipline_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "7"
+    },
+    {
+      "id": "imports-concern_registry.ts",
+      "question": "How many lines of src/scripts/hooks/concern_registry.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "64"
+    },
+    {
+      "id": "imports-delegation_nudge_hook.ts",
+      "question": "How many lines of src/scripts/hooks/delegation_nudge_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "15"
+    },
+    {
+      "id": "imports-design_pass_hook.ts",
+      "question": "How many lines of src/scripts/hooks/design_pass_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "11"
+    },
+    {
+      "id": "imports-design_slop_hook.ts",
+      "question": "How many lines of src/scripts/hooks/design_slop_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "8"
+    },
+    {
+      "id": "imports-dispatch_entry.ts",
+      "question": "How many lines of src/scripts/hooks/dispatch_entry.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "3"
+    },
+    {
+      "id": "imports-dispatch_hook.ts",
+      "question": "How many lines of src/scripts/hooks/dispatch_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "27"
+    },
+    {
+      "id": "imports-dispatch_issues.ts",
+      "question": "How many lines of src/scripts/hooks/dispatch_issues.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "3"
+    },
+    {
+      "id": "imports-edit_shape_hook.ts",
+      "question": "How many lines of src/scripts/hooks/edit_shape_hook.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "9"
+    },
+    {
+      "id": "imports-egress_engine_loader.ts",
+      "question": "How many lines of src/scripts/hooks/egress_engine_loader.ts start with the word \"import \" at column 0? Answer with the number only.",
+      "answer": "6"
+    }
+  ]
+}

@@ -1189,9 +1189,10 @@ export abstract class CliClient extends ExternalAIClient {
     protected _cli_calls_path: string | null;
     /** Attribution label for every booking this client makes. */
     protected _consumer: string;
-    /** The session the last answered call ran in; `resumeNext` continues it once, non-blind only. */
+    /** The session the last answered call ran in; `resumeNext` continues it once, never while `blind`. */
     lastSession: SeatSession | null = null;
     resumeNext: SeatSession | null = null;
+    blind = false;
 
     static _AUTH_FAILURE_PATTERNS: readonly string[] = [
         'authentication',
@@ -1675,7 +1676,7 @@ export class AnthropicCliClient extends CliClient {
         void max_tokens;
         return [
             this.binary,
-            ...seatResumeArgs(this.name, this.resumeNext, { blind: false, now_ms: Date.now() }),
+            ...seatResumeArgs(this.name, this.resumeNext, { blind: this.blind, now_ms: Date.now() }),
             '--print',
             // The seat never needs the user environment; only a version the light
             // launch was probed on gets the flag (`LIGHT_LAUNCH_PROBES`).
@@ -1822,7 +1823,7 @@ export class OpenAICliClient extends CliClient {
         // the payload itself is assembled in `_stdin_payload`.
         const modelArgs =
             this.model === OPENAI_CLI_VENDOR_DEFAULT ? [] : ['--model', this.model];
-        const resume = seatResumeArgs(this.name, this.resumeNext, { blind: false, now_ms: Date.now() });
+        const resume = seatResumeArgs(this.name, this.resumeNext, { blind: this.blind, now_ms: Date.now() });
         const bound = resume.length === 0 ? boundFor('openai') : resumeBound(boundFor('openai'));
         return [this.binary, 'exec', ...resume, '--json', '--skip-git-repo-check', ...bound, ...modelArgs, '-'];
     }

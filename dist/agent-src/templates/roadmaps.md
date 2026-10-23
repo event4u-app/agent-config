@@ -731,7 +731,11 @@ that was never a judgement call.
     (ADR-268 § 10). `resolved by` is one of `evidence`, `agent`,
     `independent:<session or model>`, `council:<record>`, `team:<record>`,
     `owner` — the prefixed forms carry their record, because a resolver
-    with no record is a claim rather than a resolution.
+    with no record is a claim rather than a resolution. The three locked
+    classes (`product-owned`, `business-owned`, `destructive-owned`) take
+    `owner` only; a council answer on one is recorded with `owner` and a
+    decision cell starting `proposed`. A resolved human-only blocker needs
+    a dated `owner` row naming it.
 
     `revisit if` names the condition that reopens the row. Execution reads
     the table **before any step**, and a closed decision is re-asked only

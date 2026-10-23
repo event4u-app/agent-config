@@ -60,7 +60,9 @@ export function markerFile(repoRoot: string, runId: string): string {
  *
  * Idempotent on the timestamp: a second park inside one run keeps the original
  * `parked_at` and merges the provider set, so "when did this run first hit the
- * cliff" survives a round that parks twice.
+ * cliff" survives a round that parks twice. A host park is the exception: it
+ * sets its own `source` and refreshes `parked_at`, since the host's rate window
+ * starts at its own signal, not at an earlier council park.
  */
 export function writeQuotaParked(
     repoRoot: string,
@@ -71,12 +73,13 @@ export function writeQuotaParked(
 ): QuotaParkedMarker {
     const file = markerFile(repoRoot, runId);
     const existing = readMarker(file);
+    const host = source === 'host';
     const merged = [...new Set([...(existing?.providers ?? []), ...providers])].sort();
     const marker: QuotaParkedMarker = {
         run_id: runId,
         providers: merged,
-        parked_at: existing?.parked_at ?? now().toISOString(),
-        source: existing?.source ?? source,
+        parked_at: (host ? null : existing?.parked_at) ?? now().toISOString(),
+        source: host ? source : (existing?.source ?? source),
     };
     fs.mkdirSync(path.dirname(file), { recursive: true });
     fs.writeFileSync(file, `${JSON.stringify(marker, null, 2)}\n`, 'utf8');
@@ -106,20 +109,7 @@ export function clearQuotaParked(repoRoot: string, runId: string): void {
  * per parked run, so the scan is cheap by construction.
  */
 export function findQuotaParked(repoRoot: string, sessionId: string): QuotaParkedMarker | null {
-    const direct = readMarker(markerFile(repoRoot, sessionId));
-    if (direct !== null) return direct;
-    let names: string[];
-    try {
-        names = fs.readdirSync(path.join(repoRoot, QUOTA_PARKED_DIR_REL));
-    } catch {
-        return null;
-    }
-    for (const name of names) {
-        if (!name.endsWith('.json')) continue;
-        const m = readMarker(path.join(repoRoot, QUOTA_PARKED_DIR_REL, name));
-        if (m !== null && m.run_id === sessionId) return m;
-    }
-    return null;
+    return readMarker(markerFile(repoRoot, sessionId)) ?? allMarkers(repoRoot).find((m) => m.run_id === sessionId) ?? null;
 }
 
 /** The plan's rolling rate window; a host marker older than this no longer describes it. */
@@ -127,20 +117,19 @@ export const HOST_RATE_WINDOW_MS = 5 * 3_600_000;
 
 /** True when a host-sourced marker was parked inside the rate window ending at `nowMs`. */
 export function recentHostMarker(repoRoot: string, nowMs: number = Date.now(), windowMs: number = HOST_RATE_WINDOW_MS): boolean {
-    let names: string[];
+    return allMarkers(repoRoot).some((m) => {
+        const age = nowMs - Date.parse(m.parked_at);
+        return m.source === 'host' && age >= 0 && age < windowMs;
+    });
+}
+
+function allMarkers(repoRoot: string): QuotaParkedMarker[] {
+    const dir = path.join(repoRoot, QUOTA_PARKED_DIR_REL);
     try {
-        names = fs.readdirSync(path.join(repoRoot, QUOTA_PARKED_DIR_REL));
+        return fs.readdirSync(dir).flatMap((n) => (n.endsWith('.json') ? (readMarker(path.join(dir, n)) ?? []) : []));
     } catch {
-        return false;
+        return [];
     }
-    for (const name of names) {
-        if (!name.endsWith('.json')) continue;
-        const m = readMarker(path.join(repoRoot, QUOTA_PARKED_DIR_REL, name));
-        if (m === null || m.source !== 'host') continue;
-        const at = Date.parse(m.parked_at);
-        if (Number.isFinite(at) && nowMs - at >= 0 && nowMs - at < windowMs) return true;
-    }
-    return false;
 }
 
 function readMarker(file: string): QuotaParkedMarker | null {

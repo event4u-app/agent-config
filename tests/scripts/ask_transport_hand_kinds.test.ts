@@ -120,6 +120,16 @@ describe('ask_transport --kind (CLI)', () => {
         expect(o['schema_valid']).toBe(false);
     });
 
+    it('a --callee-file holding two declarations is refused (exit 2) and nothing is sent', async () => {
+        const file = path.join(tmp, 'two.ts');
+        fs.writeFileSync(file, 'function a(): number {\n    return 1;\n}\nfunction b(): number {\n    return 2;\n}\n');
+        let calls = 0;
+        const member = { name: 'anthropic', ask: () => { calls++; return null; } } as unknown as ExternalAIClient;
+        const rc = await main(['--kind', 'draft-candidate', '--no-record', '--callee-file', file, 'write c()'], { members: [member] });
+        expect(rc).toBe(2);
+        expect(calls).toBe(0);
+    });
+
     it('an unknown kind is a usage error (exit 2), not a call', async () => {
         const rc = await main(['--kind', 'plan', '--no-record', 'make a plan'], { members: [stub('{}')] });
         expect(rc).toBe(2);

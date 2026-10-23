@@ -270,7 +270,7 @@ waits:
       the Iron Law becomes a field a function reads.
       verify: `npx vitest run tests/scripts/subagent_contract.test.ts -t judges-are-never-reusable --reporter=verbose` -> /✓.*judges-are-never-reusable/
       Done 2026-10-18: `production-validator` is the only judging definition in `src/subagents/` (judges and reviewers are skills, not definitions) and declares `reuse: never`; the test fails any judging definition that does not.
-- [x] **2.5 Skipping project instructions ships on only when both hold:** the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/subagent_native_fields.ts -->
+- [ ] **2.5 Skipping project instructions ships on only when both hold:** the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/subagent_native_fields.ts -->
       1.7 net delta is at least 10 % of the median cold start, and a fixture
       shows the dispatch for a skipping worker carries the kernel floor and the
       user's constraints verbatim (`subagent-spawn-contract.md:154-156`). Either
@@ -278,6 +278,7 @@ waits:
       verify: `npx vitest run tests/scripts/_lib_subagent_spawn.test.ts -t skipping-worker-carries-kernel-and-constraints --reporter=verbose` -> /✓.*skipping-worker-carries-kernel-and-constraints/
       Partial 2026-10-21, left open: both conditions now hold. The 1.7 net delta is about 58 % against the 10 % bar. `composeSpawnBrief` carries the safety floor and the user's constraints verbatim for a skipping worker, and it refuses a skip that has no floor to carry; it went red before green in `_lib_subagent_spawn.test.ts`. The ship-on edit itself — `omit_project_instructions: true` on `ac-worker` / `ac-researcher` — is not made. 1.7 observed the flag only in the `--agents` JSON spelling, and the definition files project it through frontmatter as `omitClaudeMd`, a path never observed. Switching it on through that path would read an unobserved capability.
       Done 2026-10-22: the frontmatter path was observed on Claude Code 2.1.308 — a paired probe (`omitClaudeMd: true` in `.claude/agents/<name>.md` on one side) wrote 2,620 tokens on the skipping definition's first call against 144,138 (observation file § Addendum 2026-10-22). `ac-worker` and `ac-researcher` now declare `omit_project_instructions: true`; `production-validator` does not. Commit d5afdea316; test `package-workers-skip-project-instructions` in `tests/scripts/subagent_contract.test.ts`, red before green.
+      Reopened 2026-10-23 (road-to-a-tick-the-shipped-path-earns 1.2): the fixture is on `composeSpawnBrief`, which no production path calls; a host Agent dispatch carried the floor but not the consumer's CLAUDE.md or rules. The ship-on edit is reverted until that roadmap's 2.4 carrier exists on the host's own Agent path.
 - [x] **2.6 Correct the fork premise** in `SKILL.md:119-121` from the 1.6 row —
       the premise only; the ordering and the council's cut of "always fork"
       (`SKILL.md:123-125`) stay.
@@ -335,11 +336,11 @@ waits:
       generation chain the recycling roadmap wanted, reached at task boundaries.
       verify: `npx vitest run tests/scripts/_lib_worker_reuse.test.ts -t retired-worker-briefs-successor-from-capsule --reporter=verbose` -> /✓.*retired-worker-briefs-successor-from-capsule/
       Done 2026-10-16: `briefSuccessor`. (b) also retires, per 4.4 and risk 2; (a) and (g) spawn plain fresh; a missing or invalid capsule falls back to stop-loss.
-- [ ] **3.5 File the shadow window** — at least 100 `Agent` calls or two
+- [x] **3.5 File the shadow window** — at least 100 `Agent` calls or two <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
       weeks, the would-resume distribution and the refusal reasons. A window in
       which every reuse was refused is a valid null.
       verify: `ls agents/evidence/analysis/` -> /worker-reuse-shadow-window/
-      Built 2026-10-22, waits on its window: `src/scripts/worker_reuse_shadow_report.ts` summarises the window (calls, would-resume names, refusal reasons, resumes, valid null). Read on the maintainer's ledger the same day: 0 reuse-bearing lines, because the recording guard (3.3) is not installed yet. Closes when the report over ≥ 100 `Agent` calls or two weeks is filed as `agents/evidence/analysis/worker-reuse-shadow-window-<date>.md`.
+      Done 2026-10-23: `agents/evidence/analysis/worker-reuse-shadow-window-2026-10-22.md` — 107 spawns, 85 complete joins, **0 `would_resume`** (reconstructed at report time, D14). A valid null for the policy as implemented; condition (c) waits for a later window by owner decision (D15).
 - [ ] **3.6 Flip only under the policy's four conditions**
       (`concern-activation-policy.md:67-85`), with a council ratification
       artefact and the reverse trigger shipped in the same change. Blocking form:
@@ -348,7 +349,7 @@ waits:
       honoured; otherwise documentation says the resume count is observed, not
       enforced.
       verify: `ls agents/evidence/ratifications/` -> /worker-reuse-guard-flip/
-      Built 2026-10-22, not flipped: `flipReadiness` in the same module encodes the four conditions — failure observed, false-positive rate measured and ≤ 1 %, economics measured and favourable, window met — and returns `ready: false` while any is unmeasured (`tests/scripts/worker_reuse_shadow_report.test.ts`). The blocking form and its ratification wait on 3.5's window. Owed before a flip: an indexed register, or a measured miss rate for the 1 MiB ledger tail read (ratification 2026-10-22).
+      Evaluated 2026-10-23, not flipped: `flipReadiness` misses all four conditions (no would-resume; 85 complete calls over 0.02 days). The 1 MiB tail read is indexed (40786bb420). Closes when a window under a decided (c) returns `ready: true`; blocking form, ratification and reverse trigger then land together.
 
 ## Phase 4 — Rate pressure that waits instead of spawning
 
@@ -370,7 +371,7 @@ waits:
       writer, widened from council-only to host-sourced. Still record-only, per
       `quota_parked.ts:25-31`.
       verify: `npx vitest run tests/scripts/quota_parked.test.ts -t host-stop-failure-writes-marker --reporter=verbose` -> /✓.*host-stop-failure-writes-marker/
-      Done 2026-10-22 (commits 8dedad4f8a, 5df71aacd6): a forced `StopFailure` on 2.1.308 carries `error: server_error`/`rate_limit` (addendum in `host-continuation-observations-2026-10.md`); `StopFailure` is aliased onto `agent_error` for claude, the `host-rate-marker` concern writes `quota_parked` with `source: host` on `rate_limit` only, and exits 0 on every path.
+      Done 2026-10-22 (commits 8dedad4f8a, 5df71aacd6): a forced `StopFailure` on 2.1.308 carries `error: server_error`; `rate_limit` was not reached (addendum in `host-continuation-observations-2026-10.md`); `StopFailure` is aliased onto `agent_error` for claude, the `host-rate-marker` concern writes `quota_parked` with `source: host` on `rate_limit` only, and exits 0 on every path.
 - [x] **4.4 Split the transient branch by error class** in
       `subagent-steering.md:34-40`: `rate_limit` causes no same-turn
       re-dispatch, the slice parks until a recovery signal, then re-runs the
@@ -432,11 +433,11 @@ waits:
       of the same class, margin from decision D6.
       verify: `grep -c 'warm-worker-cold-start-relief' docs/CLAIMS.md` -> /^[1-9][0-9]*$/
       Done 2026-10-16: four `unbacked` pre-registrations, D6 margin set at -5 pp, `build_proof` run in the same change.
-- [ ] **6.2 Dated verdicts.** Each claim carries a verdict, positive or null; a
+- [x] **6.2 Dated verdicts.** Each claim carries a verdict, positive or null; a <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
       sample that never fills is a publishable outcome. A cheaper resume that
       fails non-inferiority keeps the reuse half in shadow.
       verify: `grep -c 'resume-non-inferiority' docs/CLAIMS.md` -> /^[1-9][0-9]*$/
-      Waits on its window 2026-10-22: the four claims stay `unbacked`. Their instruments now exist (shadow window report, host rate marker, seat resume); none has a sample yet, and a verdict written before one would be invented.
+      Done 2026-10-23 (926483b4c5, manufactured window, O6): relief **backed** (0.170), non-inferiority **backed** (+10.9 pp), fresh-spawns and rate-limit **underpowered** with revisit conditions. Evidence `agents/evidence/analysis/warm-worker-claims-2026-10-22.md`.
 - [x] **6.3 Correct D3** in the recycling roadmap's Context, citing the
       per-spawn reading.
       verify: `grep -c 'per-spawn-standing-2026-10' agents/roadmaps/later/road-to-worker-generation-recycling.md` -> /^[1-9][0-9]*$/
@@ -491,6 +492,9 @@ waits:
 | D10 | deterministic | evidence | Twelve `verify:` filters (1.1, 2.1–2.5, 3.3, 4.3–4.5, 5.2, 5.3) name test titles that do not exist yet in existing files; each step writes its own titled test, and its `-> /✓.*title/` expectation fails on a run where the filter skipped everything | `closure_scan` 2026-10-14 listed them as `unfalsifiable-verify` because the titles are absent today | a step lands without its titled test |
 | D11 | product-owned | owner | The recycling roadmap's Phase 2 closes as an unmeasured null, superseded in form by this plan's Phase 3; its Phase 0-1 capsule stays the handoff format | Owner answer 2026-10-14 to blocker `recycling-question-gets-its-answer` (option d); five arrivals without the Phase 1 sample filling | a host ships a mid-task respawn primitive |
 | D12 | product-owned | owner | `WRITABLE_HOST_ENV` gains a third row writing `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS` from `subagents.max_parallel`, via an ADR addendum next to the 2026-09-30 decision (step 4.1) | Owner answer 2026-10-14 to blocker `third-writable-host-env-row` (option a); the row bounds concurrency, never whether a call happens; the guard saw ≥ 8 open dispatches in 96 of 325 records | the host stops honouring the variable, or a resume path is shown to bypass it |
+| D13 | product-owned | owner | A deliberately created measurement window is admissible when it consists of real, useful work and its evidence file labels it `manufactured` (owner decision O6, dated 2026-10-23) | the shadow window and the four 6.1 claims cannot fill from organic traffic in a run | — |
+| D14 | reversible-technical | council:agents/evidence/council/subagent-system-2583-rest-decisions-20261022.md | `worker_resume` is a live probe on `claude` under the agent-teams flag; the hook records the precondition and join keys (`name_key`, `agent_type`, commit, directory digest, install epoch at stop and spawn); the 3.5 report reconstructs the full verdict at report time, labelled `reconstructed`, and rejects incomplete joins (decision 1, 2/2 (a)) | the dispatch bundle had 1,113 B of headroom against conditions (b)–(h) needing transcript, commit and package state | reconstruction diverges from the live function, or a transcript is gone before its report runs |
+| D15 | reversible-technical | owner | Owner answer 2026-10-23 after a split council (`agents/evidence/council/subagent-system-2583-rest-condition-c-20261023.md`): option (d). Condition (c) stays unchanged in `decideWorkerReuse`; the report adds a pre-registered second reading `c_like_for_like` (transcript against the fresh first call's total input) for information only, and a decision on (c) waits for a later window not used to choose it. Council split 1:1 in both rounds; the owner confirmed the default nearest the status quo | (c) compares a whole transcript with written-or-uncached tokens; it refused all 64 resumes the claims read as cheaper and no worse | a later window shows the second reading admitting resumes that verify worse, or the owner decides (c) directly |
 | D9 | reversible-technical | evidence | The 429 split ships as a rule change with its council ratification artefact (4.4); flipping the guard ships with a ratification artefact under the four conditions (3.6) | Both change council-decided or consumer-visible behaviour | — |
 
 ## What this roadmap deliberately does not do
@@ -525,7 +529,7 @@ waits:
   the owner's constraint.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-23 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -534,7 +538,7 @@ waits:
 | 3 | Stale assumptions or rules in a long-lived worker | product | A resumed worker carries an earlier task's premises or a replaced rule set. | Conditions (a), (f), (h); capsule `assumptions[]` at every handoff. | Phase 3 — One decision function, recorded in shadow |
 | 4 | Cheaper but worse | product | A resumed worker verifies less well than a fresh one and the saving hides it. | `resume-non-inferiority` keeps the reuse half in shadow on a miss (6.2). | Phase 6 — Prove it or record the null, then hand off |
 | 5 | Skipping project instructions drops an obligation | implementation | A worker without the instruction hierarchy misses a constraint that only arrived through it. | 2.5 ships it on only with the kernel-and-constraints fixture and a net, not gross, delta. | Phase 2 — Workers that load what their role needs |
-| 6 | A denial blocks legitimate work after the flip | product | The blocking guard refuses an `Agent` call that was needed. | ≤ 1 % tolerance, reverse trigger, `emergency.orchestration_halt`. Re-reviewed 2026-10-22: `flipReadiness` encodes the four conditions and refuses a flip on any unmeasured one; the 1 MiB tail read must be indexed or measured first. | Phase 3 — One decision function, recorded in shadow |
+| 6 | A denial blocks legitimate work after the flip | product | The blocking guard refuses an `Agent` call that was needed. | ≤ 1 % tolerance, reverse trigger, `emergency.orchestration_halt`. Re-reviewed 2026-10-22: `flipReadiness` encodes the four conditions and refuses a flip on any unmeasured one; the 1 MiB tail read must be indexed or measured first. Re-reviewed 2026-10-23: the register is indexed (40786bb420); the filed window returns `ready: false` on all four conditions, and condition (c) waits for a later window by owner decision (D15), so no flip is near. | Phase 3 — One decision function, recorded in shadow |
 | 7 | Subscription limits count differently from the API | implementation | The token arithmetic of the API documentation may not hold for a subscription window. | Nothing assumes it; `rate-limit-stops-per-drain` counts stops, not tokens. | Phase 6 — Prove it or record the null, then hand off |
 
 ## Acceptance Criteria
@@ -543,16 +547,17 @@ waits:
       observation protocol, and a host without `worker_resume: true` changes no
       behaviour.
       Done 2026-10-22: every capability row is dated in `host-continuation-observations-2026-10.md`; `host-without-resume-records-fresh-before-reading-any-worker` (`tests/scripts/_lib_worker_reuse.test.ts`).
-- [ ] **AC-2** The owner's governing constraint holds: the plan reduces requests
+- [x] **AC-2** The owner's governing constraint holds: the plan reduces requests <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
       and concurrent cold starts in a short window, not only tokens —
       `rate-limit-stops-per-drain` and `fresh-spawns-per-drain` carry dated
       verdicts beside the token claim.
       Built, waits on its window 2026-10-22: both claims are pre-registered (6.1); the host marker (4.3) and the shadow `rate_window` field (4.5) are the instruments. No drain has run since they landed, so no verdict is written.
+      Done 2026-10-23: both carry dated verdicts beside the token claim (6.2) — `rate-limit-stops-per-drain` and `fresh-spawns-per-drain` underpowered with their revisit conditions, `warm-worker-cold-start-relief` backed.
 - [x] **AC-3** Every reuse decision comes from one pure function, with a fixture
       per refusal reason (a)–(h); no prose rule re-implements it.
       Done 2026-10-22: `decideWorkerReuse` › `one-fixture-per-refusal-reason`; `shadowReuseVerdict` agrees with it on every single-reason fixture.
 - [x] **AC-4** No agent id is written to disk; workers are addressed by name.
-      Done 2026-10-22: `no-agent-id-reaches-disk`; the `subagent_named` line stores `refFor(agentId)` and the name, never the id.
+      Done 2026-10-22: `no-agent-id-reaches-disk`; the `subagent_named` line stores `refFor(agentId)` and `name_key`, a digest of session and name, never the id.
 - [x] **AC-5** A definition declared `reuse: never` is never resumed or forked
       from an implementer (fixture).
       Done 2026-10-22: the `not_continuity` fixture (`reuse: 'never'`) and the refusal-order test in `_lib_worker_reuse.test.ts`.
@@ -562,9 +567,10 @@ waits:
       count, the host's spawn cap and whether resumes are inside it — no claim
       the host caps resumes without a row.
       Done 2026-10-22: `subagent-configuration.md` and the `max_parallel` description say the host cap bounds new spawns only (4.2); the shadow line separates `dispatch_kind: spawn | resume`.
-- [ ] **AC-8** The guard's shadow window is filed before any flip, and every
+- [x] **AC-8** The guard's shadow window is filed before any flip, and every <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
       claim in 6.1 carries a dated verdict, positive or null.
       Built, waits on its window 2026-10-22: `worker_reuse_shadow_report.ts` files the window and `flipReadiness` refuses a flip before it; the 6.1 claims are unbacked until the window fills.
+      Done 2026-10-23: the window is filed (3.5) and the guard was not flipped (3.6); every 6.1 claim carries a dated verdict (6.2).
 - [x] **AC-9** No settings key, no CLI namespace and no schema file beyond the
       opened subagent schema were added.
       Done 2026-10-22: no settings key, CLI namespace or schema file was added; the new concern `host-rate-marker` is a hook registration.

@@ -149,7 +149,7 @@ export function routeCandidateFromMember(member: ExternalAIClient): RouteCandida
     const ceiling: ContentClass =
         billing === 'free-quota'
             ? 'public-artifact'
-            : classifyContentClass(m['content_ceiling'], isUnpaid(billing) ? 'public-artifact' : DEFAULT_SEAT_CEILING);
+            : classifyContentClass(m['content_ceiling'], isUnpaid(billing) || typeof m['base_url'] === 'string' ? 'public-artifact' : DEFAULT_SEAT_CEILING);
     const quota = m['remaining_quota'];
     return {
         name,

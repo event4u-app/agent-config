@@ -127,6 +127,7 @@ tasks:
       - task: lint-output-slop
       - task: lint-code-comments
       - task: check-step-receipts
+      - task: check-step-production-reach
       - task: lint-deferral-integrity
       - task: lint-never-silent
       - task: lint-example-fences

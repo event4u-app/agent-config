@@ -14,7 +14,7 @@ import {
     classifyCliFailure,
     isFallbackEligible,
 } from '../../../src/scripts/ai_council/transport_resolver.js';
-import { build_members, cmd_status } from '../../../src/scripts/council_cli.js';
+import { build_members, cmd_status, load_settings } from '../../../src/scripts/council_cli.js';
 
 const tmpdirs: string[] = [];
 function writeConfig(body: string): string {
@@ -120,6 +120,7 @@ describe('2.2 — a 402 is an unproven cost, never a paid fallback', () => {
             base_url: 'https://route.example.test/v1',
             api_key: null,
             billing: 'free-quota',
+            content_ceiling: 'public-artifact',
             post: () => {
                 throw new Error('HTTP 402: {"error":"payment required"}');
             },
@@ -138,6 +139,7 @@ describe('2.2 — a 402 is an unproven cost, never a paid fallback', () => {
             base_url: 'https://route.example.test/v1',
             api_key: null,
             billing: 'free-quota',
+            content_ceiling: 'public-artifact',
             post: (_url, headers) => {
                 seen.push(headers);
                 return { model: 'm', choices: [{ message: { content: 'ok' } }] };
@@ -165,6 +167,14 @@ describe('2.2 — a 402 is an unproven cost, never a paid fallback', () => {
         expect(members).toHaveLength(1);
         expect(members[0]).toBeInstanceOf(FreeRouteClient);
         expect(members[0]?.billable).toBe(false);
+    });
+
+    it('a route configured in the council file reaches build_members through load_settings', () => {
+        const settings = load_settings(undefined, { ai_council_path: writeConfig(routeMember(PROOF)) });
+        const members = build_members(settings, { content_class: 'public-artifact' });
+        expect(members).toHaveLength(1);
+        expect(members[0]).toBeInstanceOf(FreeRouteClient);
+        expect((members[0] as FreeRouteClient).billing).toBe('free-quota');
     });
 
     it('build_members drops a free route for an undeclared (project-content) payload', () => {

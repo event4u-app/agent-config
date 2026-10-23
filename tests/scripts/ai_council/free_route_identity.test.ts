@@ -14,6 +14,7 @@ function stubRoute(servedId: string, requested = 'llama-3.3-70b-instruct'): Free
         base_url: 'https://route.example.test/v1',
         api_key: null,
         billing: 'free-quota',
+        content_ceiling: 'public-artifact',
         post: () => ({ model: servedId, choices: [{ message: { content: 'an answer' } }] }),
     });
 }

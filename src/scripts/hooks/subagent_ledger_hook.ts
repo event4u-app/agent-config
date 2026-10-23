@@ -107,6 +107,7 @@
  * undercount landed precisely in parallel fan-out, the mode this instrument
  * exists to measure.
  */
+import { execFileSync } from 'node:child_process';
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -501,6 +502,78 @@ export function appendLedgerLine(root: string, ts: string, line: Record<string, 
 }
 
 /**
+ * The register's index: one file per key under `index/<YYYY-MM>/`, so a reader
+ * answers "did this session stop that leg" or "which ref does this name
+ * address" with one stat or read instead of scanning a ledger tail that heavy
+ * traffic can push the answer out of. Keys are digests only (`refFor` over a
+ * domain-separated string), so no session id, agent id or name is a file name.
+ */
+const INDEX_SUBDIR = 'index';
+
+export function writeIndexEntry(root: string, ts: string, key: string, value: string): void {
+    if (is_replay_mode()) return;
+    const dir = path.join(root, LEDGER_DIR, INDEX_SUBDIR, ts.slice(0, 7));
+    fs.mkdirSync(dir, { recursive: true });
+    const tmp = path.join(dir, `.${key}.${process.pid}.tmp`);
+    try {
+        fs.writeFileSync(tmp, value, 'utf8');
+        fs.renameSync(tmp, path.join(dir, key));
+    } finally {
+        fs.rmSync(tmp, { force: true });
+    }
+}
+
+/** The entry for `key` in this month or the previous one; null when neither holds it. */
+export function readIndexEntry(root: string, key: string, now: Date): string | null {
+    const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+    for (const month of [now.toISOString().slice(0, 7), prev.toISOString().slice(0, 7)]) {
+        try {
+            return fs.readFileSync(path.join(root, LEDGER_DIR, INDEX_SUBDIR, month, key), 'utf8');
+        } catch {
+            // Not in this month.
+        }
+    }
+    return null;
+}
+
+/** The commit the checkout containing `dir` is on; null outside a repository or on any failure. */
+export function headOf(dir: string): string | null {
+    try {
+        // An inherited GIT_DIR / GIT_WORK_TREE would override `-C`.
+        const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
+        return execFileSync('git', ['-C', dir, 'rev-parse', 'HEAD'], { encoding: 'utf8', timeout: 2000, stdio: ['ignore', 'pipe', 'ignore'], env }).trim() || null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * What a reuse decision compares between a worker's stop and a later spawn,
+ * stamped at both so a report can reconstruct it after the fact: the commit,
+ * a digest of the directory, and the install epoch (the running bundle's
+ * mtime, which changes whenever the package is rebuilt or reinstalled).
+ */
+export function stateStamp(cwd: unknown): { head: string | null; cwd_key: string | null; epoch: number | null } {
+    let epoch: number | null = null;
+    try {
+        epoch = fs.statSync(fileURLToPath(import.meta.url)).mtimeMs;
+    } catch {
+        // No file behind the module; the epoch stays unknown.
+    }
+    return typeof cwd === 'string' && cwd
+        ? { head: headOf(cwd), cwd_key: refFor(cwd), epoch }
+        : { head: null, cwd_key: null, epoch };
+}
+
+export function stopIndexKey(sessionId: string, ref: string): string {
+    return refFor(`subagent-stop\0${sessionId}\0${ref}`);
+}
+
+export function recordStopIndex(root: string, ts: string, sessionId: string, ref: string): void {
+    writeIndexEntry(root, ts, stopIndexKey(sessionId, ref), '');
+}
+
+/**
  * Candidate wall-clock stop-loss arms — Phase 3 Step 3, shadow only.
  *
  * Recorded retrospectively rather than fired: a `subagent_stop` knows the real
@@ -750,7 +823,14 @@ function handleStop(root: string, payload: JsonObject, nowIso: string, sessionId
         // candidate was, this says whether it was aimed at the envelope.
         envelope_field_hits: parse.field_hits,
         concurrent_open: countOpen(root),
+        ...stateStamp(payload['cwd']),
     });
+    // After the line, and on its own: a failed index write must not cost the stop record.
+    try {
+        if (sessionId !== null) recordStopIndex(root, nowIso, sessionId, ref);
+    } catch {
+        // The guard then reads this stop as unplaced, the safe reading.
+    }
 }
 
 /** Process an ALREADY-PARSED dispatcher envelope. Always returns EXIT_ALLOW. */

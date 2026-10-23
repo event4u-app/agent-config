@@ -5,6 +5,8 @@
  * identifier census over `src/`, and assertions compare by boolean so a failure
  * never prints a planted value.
  */
+import { createHash } from 'node:crypto';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -12,6 +14,8 @@ import {
     detect,
     EGRESS_RULES,
     emailAllowlistDigest,
+    IBAN_LENGTHS,
+    IBAN_REGISTRY_RELEASE,
     IDENTIFIER_RULES,
     isValidGermanTaxId,
     isValidIban,
@@ -173,6 +177,20 @@ describe('identifier rows — table invariants', () => {
 
 // Council round 5 (2026-10-22) refused on a valid Omani IBAN passing unmasked:
 // a country missing from the length table is a silent miss, not a checksum failure.
+describe('identifier rows — the IBAN table names its registry release', () => {
+    // Release 103 lists 89 IBAN countries. A table edit changes the digest, and
+    // this test then fails until the release line is re-checked and re-pinned,
+    // so a stale table cannot pass as a pinned one (ratification 2026-10-22).
+    const PINNED = { release: 103, countries: 89, sha256: '0eb634a364ca9ba6b2f5541d3fcd18ff63300e5a027c634f0b8db83af5e994be' };
+
+    it('carries the release it was checked against, and the table is the one pinned for it', () => {
+        expect(IBAN_REGISTRY_RELEASE).toBe(PINNED.release);
+        expect(IBAN_LENGTHS.length % 4).toBe(0);
+        expect(IBAN_LENGTHS.length / 4).toBe(PINNED.countries);
+        expect(createHash('sha256').update(IBAN_LENGTHS).digest('hex')).toBe(PINNED.sha256);
+    });
+});
+
 describe('identifier rows — every registry country masks', () => {
     const LENGTHS: Record<string, number> = {
         BI: 27, DJ: 27, FK: 18, HN: 28, LY: 25, MN: 20, NI: 28, OM: 23, RU: 33, SD: 18, SO: 23, YE: 30,

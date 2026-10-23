@@ -72,6 +72,17 @@ release ledger. The residue items are closed the same way.
       verify: the section describes the staged-runtime-first order that the
       installer writes, and names project-local resolution only where it still
       applies.
+- [ ] **1.8 Residue — `block-credential-reads` refuses commands that read no
+      credential.** Observed 2026-10-22 on the feat/subagent-system-2583-rest run:
+      a `gh … --json … -q '.licenseInfo.key'` jq path and a `grep` whose pattern
+      contains an escaped `.key` were both refused as "a private key", and a
+      command printing the process environment as a whole was refused as
+      intended. The guard matches a token ending in `.key` anywhere in the
+      command, including filter expressions and search patterns that open no file.
+      The guard is a security floor, so the narrowing lands with its threat pass
+      and a ratification round.
+      verify: a test where `.key` appears only inside a jq filter or a grep
+      pattern is allowed, and reading an actual `*.key` file is still refused.
 
 ## Phase 2 — council, review and billing
 

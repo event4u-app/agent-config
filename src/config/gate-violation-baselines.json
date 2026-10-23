@@ -150,6 +150,12 @@
       "landed": "2026-10-06",
       "falsifier": "./scripts-run src/scripts/report_installed_rule_links --kinds all --host augment  # the `kind: contexts` line prints the live count and this entry as its baseline",
       "note": "Links inside installed contexts that point at nothing the install carries, of 447 deployable links. Recorded for augment because it is the only host whose plan deploys `contexts/`; Claude Code's reading for the kind is `not installed`, which is an absence, not a zero. Counted for the first time on 2026-10-06. REPORT-ONLY (road-to-installed-links-of-every-kind D2). Shrink-only: lower it when a repair lands."
+    },
+    "lint_roadmap_blockers:owner-close": {
+      "count": 20,
+      "landed": "2026-10-22",
+      "falsifier": "./scripts-run src/scripts/lint_roadmap_blockers  # the owner-close ratchet line names the current count; it fails when the count RISES above this entry",
+      "note": "Resolved human-only blockers (no `Class:`, or class 3) that no `## Decisions` row resolved by `owner`, dated, names. Revealed by road-to-a-tick-the-shipped-path-earns 2.3, which brings the owner Iron Law of ownership_classes.ts to the blocker lint: a class-3 blocker closes only on an owner decision. Measured at introduction over the active tree: 20 entries, all resolved before the rule existed. Ratcheted rather than hard-failed for that roadmap's K1: re-auditing the historic estate is a backlog gate that reds the world and gets weakened; a new resolved class-3 blocker without its owner row reds immediately because headroom is zero. Lowered one entry at a time by adding the owner row (with its date) when a roadmap is touched anyway, or by the roadmap leaving the active tree."
     }
   },
   "retired": {

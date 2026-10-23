@@ -901,6 +901,11 @@ tasks:
     desc: "Report a roadmap step this diff ticks without a `<!-- receipt: -->` marker, or with a lowered-depth claim the diff does not allow — the record a lowered ceremony depth is audited against. Report-only while the depth table is shadow, failing from the flip on. Diff-scoped against origin/main"
     cmd: ./scripts-run src/scripts/check_step_receipts --base origin/main
 
+  check-step-production-reach:
+    silent: true
+    desc: "Report a roadmap step this diff ticks whose tested symbols no production entry reaches, or that is ticked while it says `built, not wired`. Report-only for one release (road-to-a-tick-the-shipped-path-earns 3.3), enforcing after. Diff-scoped against origin/main"
+    cmd: ./scripts-run src/scripts/check_step_production_reach --base origin/main
+
   lint-deferral-integrity:
     silent: true
     desc: "Fail when a deferral carried out of an archived roadmap has lost its receiver — deleted, renamed, re-parented, skipped, or archived with open steps. Walks from the archived parent, which is the durable record, because the archival sweep validates a carry exactly once and never sees the pair again"

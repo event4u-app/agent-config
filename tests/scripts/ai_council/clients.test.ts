@@ -2303,6 +2303,20 @@ describe('cold-start 5.2 — a non-blind follow-up continues the seat session in
         client.ask('sys', 'after', 100);
         expect(calls[3]!.cmd).not.toContain('--resume');
     });
+
+    it('a blind call carries no resume flag even when one is pending (D5)', () => {
+        const { client, calls } = stubCli(AnthropicCliClient, okClaude);
+        client.ask('sys', 'first', 100);
+        client.resumeNext = client.lastSession;
+        client.blind = true;
+        client.ask('sys', 'blind chairman', 100);
+        expect(calls[1]!.cmd).not.toContain('--resume');
+        const codex = stubCli(OpenAICliClient, okClaude);
+        codex.client.resumeNext = { id: 'th-1', at_ms: Date.now() };
+        codex.client.blind = true;
+        codex.client.ask('sys', 'blind chairman', 100);
+        expect(codex.calls[0]!.cmd).not.toContain('resume');
+    });
 });
 
 describe('cold-start 5.2 — the codex seat', () => {

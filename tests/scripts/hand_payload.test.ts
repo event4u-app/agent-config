@@ -41,6 +41,56 @@ describe('signatureOf — the signature a hand may call, never the body', () => 
     });
 });
 
+describe('signatureOf — whole-file callees (D5)', () => {
+    const LEAKS = /\breturn\b|array_sum|reduce|json\.load/;
+
+    it('refuses two top-level functions instead of leaking the first body', () => {
+        const two = 'function a(x: number): number {\n    return x + 1;\n}\n\nfunction b(x: number): number {\n    return x * 2;\n}\n';
+        expect(() => signatureOf(two)).toThrow(HandPayloadError);
+    });
+
+    it('refuses a declaration followed by an `export default` statement', () => {
+        expect(() => signatureOf(`${TOTAL_IMPL}\n\nexport default total;\n`)).toThrow(HandPayloadError);
+    });
+
+    it('keeps an `export default function` to its signature', () => {
+        const sig = signatureOf('export default function total(rows: Row[]): number {\n    return rows.reduce((s, r) => s + r.amount, 0);\n}\n');
+        expect(sig).toBe('export default function total(rows: Row[]): number;');
+    });
+
+    it('drops a trailing comment instead of leaking the body before it', () => {
+        const sig = signatureOf(`${TOTAL_IMPL}\n// keep in sync with average()\n`);
+        expect(sig).toBe('export function total(rows: Row[]): number;');
+    });
+
+    it('drops Python imports and sends the def header only', () => {
+        const py = 'import json\nfrom pathlib import Path\n\n\ndef load(path: str) -> dict:\n    return json.load(open(path))\n';
+        const sig = signatureOf(py);
+        expect(sig).toBe('def load(path: str) -> dict:');
+        expect(sig).not.toMatch(LEAKS);
+    });
+
+    it('drops a PHP open tag, namespace and use lines and sends the signature only', () => {
+        const php = '<?php\n\nnamespace App\\Billing;\n\nuse App\\Models\\Row;\n\nfunction total(array $rows): int {\n    return array_sum(array_map(fn ($r) => $r->amount, $rows));\n}\n';
+        const sig = signatureOf(php);
+        expect(sig).toBe('function total(array $rows): int;');
+        expect(sig).not.toMatch(LEAKS);
+    });
+
+    it('refuses a Python file with two defs', () => {
+        expect(() => signatureOf('def a():\n    return 1\n\ndef b():\n    return 2\n')).toThrow(HandPayloadError);
+    });
+
+    it('a whole-file callee never reaches the payload with a body', () => {
+        expect(() =>
+            buildHandPayload(
+                { kind: 'draft-candidate', spec: 'Write average(rows).', callees: [`${TOTAL_IMPL}\n${TOTAL_IMPL.replace('total', 'sum2')}`] },
+                resetCouncilEgress({ identifiers: true }),
+            ),
+        ).toThrow(HandPayloadError);
+    });
+});
+
 describe('buildHandPayload — the slice the head cut, and nothing else', () => {
     it('carries no implementation body of a called function', () => {
         const p = buildHandPayload(

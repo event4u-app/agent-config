@@ -26,6 +26,8 @@ export interface ChairmanCandidate {
     tier: number | null;
     /** The seat's billing class; an unpaid one never chairs (ADR-257). Absent = paid. */
     billing?: string | null;
+    /** A `base_url` route member; it never chairs, whatever its billing. */
+    route?: boolean;
 }
 
 export interface ChairmanSelection {
@@ -60,7 +62,8 @@ export function select_chairman(
                 annotation: `Chairman: host (member ${_q(member)} unavailable — host fallback)`,
             };
         }
-        const refusal = seatRoleRefusal('synthesis', candidates.find((c) => c.name === member)?.billing, member);
+        const c = candidates.find((x) => x.name === member);
+        const refusal = seatRoleRefusal('synthesis', c?.billing, member, c?.route === true);
         if (refusal !== null) {
             return {
                 member: null,
@@ -85,7 +88,7 @@ export function select_chairman(
             annotation: 'Chairman: host (no non-panel member available)',
         };
     }
-    const pool = nonPanel.filter((c) => seatRoleRefusal('synthesis', c.billing) === null);
+    const pool = nonPanel.filter((c) => seatRoleRefusal('synthesis', c.billing, c.name, c.route === true) === null);
     if (pool.length === 0) {
         return { member: null, annotation: 'Chairman: host (no paid non-panel member available)' };
     }

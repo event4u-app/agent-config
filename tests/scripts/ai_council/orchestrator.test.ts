@@ -1529,4 +1529,20 @@ describe('cold-start 5.2 — the stance repair continues the seat session', () =
         consult([a], q, null, { rounds: 2, stance_tally: true, on_stance_repair: () => true });
         expect(a.resumedWith).toEqual([null, null, 's2']);
     });
+
+    it('a quota-gated stance repair leaves no resume flag behind for the next call (D5)', () => {
+        class QuotaGated extends SessionMock {
+            override ask(system_prompt: string, user_prompt: string): CouncilResponse {
+                if (this.prompts.length >= 1) {
+                    // The real CLI seat returns before it clears resumeNext when its daily cap is spent.
+                    return new CouncilResponse({ provider: this.name, model: this.model, text: '', error: 'cli_quota_exhausted' });
+                }
+                return super.ask(system_prompt, user_prompt);
+            }
+        }
+        const a = new QuotaGated('anthropic', 'm', ['I prefer A.']);
+        consult([a], q, null, { rounds: 1, stance_tally: true, on_stance_repair: () => true });
+        expect(a.lastSession?.id).toBe('s1');
+        expect(a.resumeNext).toBeNull();
+    });
 });

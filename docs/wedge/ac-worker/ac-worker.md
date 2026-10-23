@@ -3,7 +3,6 @@ name: ac-worker
 description: Implementation worker for one bounded slice — edits files inside the paths it is given and names the check that proves the slice; the dispatcher runs it. Re-taskable while warm; never commits or pushes.
 tools: Read, Grep, Glob, Edit, Write
 model: inherit
-omitClaudeMd: true
 ---
 
 <!-- agent-config:prompt-defense-preamble — injected into every projected

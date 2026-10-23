@@ -27,7 +27,9 @@ function table(...rows: string[]): string {
 describe('lint_decision_classes — the ownership vocabulary', () => {
     it('accepts each of the eight ownership classes', () => {
         for (const cls of OWNERSHIP_CLASSES) {
-            const text = table(`| D1 | ${cls} | agent | pick x | file:1 | never |`);
+            // A locked class needs the owner as resolver (roadmap_owner_lock.test.ts).
+            const resolver = ['product-owned', 'business-owned', 'destructive-owned'].includes(cls) ? 'owner' : 'agent';
+            const text = table(`| D1 | ${cls} | ${resolver} | pick x | file:1 | never |`);
             expect(checkFile('r.md', text)).toEqual([]);
         }
     });

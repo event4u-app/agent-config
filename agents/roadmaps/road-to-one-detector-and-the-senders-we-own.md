@@ -126,7 +126,7 @@ is open.
 | D8 | product-owned | owner | Whether any class is replaced by default for consumers | Consumer-facing default; this roadmap ships every replacement path behind `egress.placeholders.mode: off` and decides nothing for consumers | asked at `road-to-placeholders-on-the-wire` blocker `default-mode-for-consumers` |
 | D9 | reversible-technical | council:one-detector-bundle-budget-20261018 | The engine leaves the dispatch bundle as a conditional chunk with its own ceiling, and the linearity prose leaves the engine; an unavailable engine withholds every body in `protect` and `strict`, records the miss in `observe`, is never loaded in `off` | Measured 2026-10-18: 3,155 B of bundle headroom against 12–15 KB of queued engine work; the SVG rule set set the chunk precedent. Two-provider council (anthropic, openai), 2/2, options C and B, with the per-mode failure table, a schema handshake and a chunk budget as conditions; the prompt is `agents/evidence/council/one-detector-bundle-budget-20261018.question.md` | the chunk load costs a measurable latency in a non-`off` mode, or a host installs `dispatch.js` without its siblings |
 | D10 | reversible-technical | council:resolve-blockers-batch-20261019 | Native deny rows are offered by `hooks:doctor` and never written (option 2 of `native-deny-is-a-host-setting-write`) | 2/2 seats: option 1 adds a second exception to the published no-host-setting-write commitment (clause 5) and an ongoing obligation to the host settings schema; option 2 reaches the same rows without either | a guard bypass is demonstrated on a deny-capable host, or the owner widens the published exception |
-| D11 | product-owned | council:agents/evidence/council/subagent-system-2583-owner-blockers-20261022.md | N4 stands: values leave as `__TYPE_n_fp__` tokens on every route, including free hands; the quality question of `road-to-a-tier-the-dispatch-carries` T5 is a pre-registered comparison run only if hands' verify-fail rate on token-bearing payloads exceeds the paid arm by more than 5 pp (blocker `realistic-fakes-for-hands`, option (a)). Council 2/2, 2026-10-22, applied as the default under the run's delegation; owner-reserved, so the owner may overturn it in review | tokens leak the least and the comparison measures quality before a transformation is added; a fake IBAN can be someone's real IBAN | the T5 comparison crosses 5 pp and a privacy review shows fakes are generated independently of source values |
+| D11 | product-owned | owner | N4 stands: values leave as `__TYPE_n_fp__` tokens on every route, including free hands; the quality question of `road-to-a-tier-the-dispatch-carries` T5 is a pre-registered comparison run only if hands' verify-fail rate on token-bearing payloads exceeds the paid arm by more than 5 pp (blocker `realistic-fakes-for-hands`, option (a)). Owner decision O1, dated 2026-10-23, confirms the council's 2/2 default of 2026-10-22 | tokens leak the least and the comparison measures quality before a transformation is added; a fake IBAN can be someone's real IBAN | the T5 comparison crosses 5 pp and a privacy review shows fakes are generated independently of source values |
 
 ## Phase 0 — Contract, census, pre-registration (no product code)
 
@@ -386,7 +386,7 @@ read cannot leak through any later bug.
       triple base64 is a counted `pastLayerBound` miss; the size and time bounds
       count too (a third layer and the JSON decoder each seen red). Not yet read
       by a sender — 3.3 wires it.
-- [x] **2.5 Invisible characters do not hide a value.** Reuse the strip-then- <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/confusables.ts -->
+- [ ] **2.5 Invisible characters do not hide a value.** Reuse the strip-then- <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/confusables.ts -->
       rescan step and its fixtures (`src/scripts/_lib/knowledge_global_redaction.ts`,
       `tests/fixtures/global-knowledge-redaction/`).
       An evasion corpus beside them — inserted spaces, alternate casing, line
@@ -398,6 +398,8 @@ read cannot leak through any later bug.
       spans mapped back) with the evasion corpus pinned; its homoglyph fixture is
       an e-mail, so it lands after 2.3.
       **Done 2026-10-22:** landed with 2.3 (`2b758dcf56`); the zero-width and homoglyph fixtures are detected and the evasion corpus prints its miss count.
+      Reopened 2026-10-23, built, not wired: `detectNormalized` has no production importer (tick-the-shipped-path 1.4).
+
 - [x] **2.6 A mutation suite kills the invariants.** Disabling the IBAN checksum, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/egress-mutations/iban-checksum-disabled.json -->
       changing class precedence, logging a raw value or letting a credential
       token restore anywhere turns a named test red.
@@ -596,7 +598,7 @@ stay green (93 files).
   the decision-revisit gate's reserved set gives to the owner, not to a council.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-23 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -657,6 +659,7 @@ stay green (93 files).
       squash commit, so the ordering is a fact of that PR's branch, not of
       `main`.)*
       *(2026-10-22: the identifier half of (a) and (b) is published — 100 % recall per type on the seeded corpus, 20 of 14,274 tracked files, 0 of 400 negatives — in `internal/bench/reports/egress-placeholders-detection-2026-10-19.md`. Still open: (c) on identifiers, the paired quality run (e), which needs model calls on real review tasks, and (f) on the CI runner class.)*
+      *(2026-10-22, second run: (c) on identifiers **passes** — 0 restore and 0 idempotence mismatches in every type on the frozen W1 corpus and a seeded W1x corpus (SSN, North American phone, mixed documents, `_v2` variants), each scorer first rejecting a planted defect; `internal/bench/reports/egress-placeholders-identifier-roundtrip-2026-10-22.md`, commit 86e8f46788. (e) published as **underpowered**: 60 pairs, 120 subscription CLI calls, both arms 60/60, 0 discordant pairs against a derived floor of 5, so no regression and no pass; the rule of three caps an unseen loss rate at 5 pp; the tasks are synthetic and hit a ceiling; `internal/bench/reports/egress-placeholders-paired-quality-2026-10-22.md`, commit d5f7f453d9. (f) on the CI runner class is read by the warn-only Bench Drift step added in 7f23bb3813.)*
 
 ## Lineage
 

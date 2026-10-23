@@ -6,6 +6,7 @@
  * does is measurement, and a measurement that can change the run is not a
  * measurement.
  */
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -15,12 +16,20 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     CANDIDATES,
-    STOP_SCAN_BYTES,
     classifySend,
     evaluateCandidates,
     processEnvelope,
 } from '../../src/scripts/hooks/spawn_guard_shadow_hook.js';
-import { LEDGER_DIR, OPEN_SUBDIR, refFor } from '../../src/scripts/hooks/subagent_ledger_hook.js';
+import {
+    LEDGER_DIR,
+    OPEN_SUBDIR,
+    headOf,
+    processEnvelope as processLedgerEnvelope,
+    readIndexEntry,
+    recordStopIndex,
+    refFor,
+    writeIndexEntry,
+} from '../../src/scripts/hooks/subagent_ledger_hook.js';
 import type { ReuseContext, WorkerState } from '../../src/scripts/_lib/worker_reuse.js';
 
 let root: string;
@@ -51,7 +60,7 @@ function plantOpen(ref: string, depth: number): void {
     );
 }
 
-/** A finished leg as the ledger records it: a subagent_stop line for its ref. */
+/** A finished leg as the ledger records it: a subagent_stop line for its ref, and its stop index entry. */
 const SESSION = 'sess-current';
 
 function plantStopped(ref: string, sessionId: string | null = SESSION, at: Date = new Date()): void {
@@ -63,6 +72,15 @@ function plantStopped(ref: string, sessionId: string | null = SESSION, at: Date 
         `${JSON.stringify({ event: 'subagent_stop', ts, ref, session_id: sessionId, agent_type: 'general-purpose' })}\n`,
         'utf8',
     );
+    if (sessionId !== null) recordStopIndex(root, ts, sessionId, ref);
+}
+
+/** Bury everything written so far under more ledger traffic than the old 1 MiB tail window. */
+function buryUnderTraffic(): void {
+    const file = path.join(root, LEDGER_DIR, `${new Date().toISOString().slice(0, 7)}.jsonl`);
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    const filler = `${JSON.stringify({ event: 'subagent_start', ref: 'x'.repeat(12), pad: 'p'.repeat(200) })}\n`;
+    fs.appendFileSync(file, filler.repeat(Math.ceil((2 * 1024 * 1024) / filler.length)), 'utf8');
 }
 
 function shadowLines(): Array<Record<string, unknown>> {
@@ -78,6 +96,19 @@ function ledgerLines(): Array<Record<string, unknown>> {
         for (const line of fs.readFileSync(path.join(dir, name), 'utf8').split('\n')) {
             if (line.trim()) out.push(JSON.parse(line) as Record<string, unknown>);
         }
+    }
+    return out;
+}
+
+/** Every file name and file body under `dir`, recursively. */
+function walk(dir: string): string[] {
+    if (!fs.existsSync(dir)) return [];
+    const out: string[] = [];
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        out.push(entry.name);
+        if (entry.isDirectory()) out.push(...walk(full));
+        else out.push(fs.readFileSync(full, 'utf8'));
     }
     return out;
 }
@@ -219,9 +250,20 @@ describe('spawn-guard-shadow — reuse verdict and resumes (cold-start 3.3)', ()
         expect(ledgerLines()[1]!.reuse).toEqual({ verdict: 'fresh', name: null, reasons: ['compacted'] });
     });
 
-    it('production default on claude: no worker_resume in the row, so every spawn records host_resume_unobserved', () => {
-        processEnvelope(agentCall('ac-worker'), root);
-        expect(ledgerLines()[0]!.reuse).toEqual({ verdict: 'fresh', name: null, reasons: ['host_resume_unobserved'] });
+    it('production default on claude without the agent-teams flag: every spawn records host_resume_unobserved', () => {
+        const prev = process.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'];
+        delete process.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'];
+        try {
+            processEnvelope(agentCall('ac-worker'), root);
+            expect(ledgerLines()[0]!.reuse).toEqual({ verdict: 'fresh', name: null, reasons: ['host_resume_unobserved'] });
+            // With the flag the precondition holds and the register is what is missing.
+            process.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'] = '1';
+            processEnvelope(agentCall('ac-worker'), root);
+            expect(ledgerLines()[1]!.reuse).toEqual({ verdict: 'fresh', name: null, reasons: ['worker_register_unrecorded'] });
+        } finally {
+            if (prev === undefined) delete process.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'];
+            else process.env['CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS'] = prev;
+        }
     });
 
     it('a send to a finished worker is a resume, counted against the same candidates as a spawn', () => {
@@ -334,15 +376,64 @@ describe('spawn-guard-shadow — reuse verdict and resumes (cold-start 3.3)', ()
         expect(classifySend(root, { to: id, recipient_kind: 'agent' }, SESSION)).toBe('message_running');
     });
 
-    it('reads only a bounded tail of each ledger file', () => {
+    it('indexed register: a same-session stop is found under any amount of later ledger traffic', () => {
+        // The 1 MiB tail read missed this case (ratification 2026-10-22, condition 2).
         const id = 'a7dda5d30ffee4bb4';
         plantStopped(refFor(id));
-        // Bury the stop under more than the scan window of unrelated lines.
-        const dir = path.join(root, LEDGER_DIR);
-        const file = path.join(dir, `${new Date().toISOString().slice(0, 7)}.jsonl`);
-        const filler = `${JSON.stringify({ event: 'subagent_start', ref: 'x'.repeat(12), pad: 'p'.repeat(200) })}\n`;
-        fs.appendFileSync(file, filler.repeat(Math.ceil((STOP_SCAN_BYTES + 1024) / filler.length)), 'utf8');
-        expect(classifySend(root, { to: id, recipient_kind: 'agent' }, SESSION)).toBe('message_or_resume');
+        buryUnderTraffic();
+        expect(classifySend(root, { to: id, recipient_kind: 'agent' }, SESSION)).toBe('resume');
+    });
+
+    it('indexed register: a named spawn is still addressable under any amount of later ledger traffic', () => {
+        const id = 'ae9eb891c0ffeeabc';
+        processEnvelope(namedSpawnDone('busy-worker', id), root);
+        plantStopped(refFor(id));
+        buryUnderTraffic();
+        expect(classifySend(root, { to: 'busy-worker', recipient_kind: 'name' }, SESSION)).toBe('resume');
+    });
+
+    it('the ledger hook’s own stop writes the index the guard reads', () => {
+        const id = 'a1b2c3d4e5f60718';
+        const envelope = (event: string) => ({
+            schema_version: 1,
+            platform: 'claude',
+            event,
+            payload: { session_id: SESSION, agent_id: id, agent_type: 'general-purpose' },
+        });
+        processLedgerEnvelope(envelope('subagent_start'), root);
+        expect(classifySend(root, { to: id, recipient_kind: 'agent' }, SESSION)).toBe('message_running');
+        processLedgerEnvelope(envelope('subagent_stop'), root);
+        buryUnderTraffic();
+        expect(classifySend(root, { to: id, recipient_kind: 'agent' }, SESSION)).toBe('resume');
+        expect(classifySend(root, { to: id, recipient_kind: 'agent' }, 'sess-other')).toBe('message_or_resume');
+        // The index holds digests only: no session id and no agent id in any name or content.
+        const indexRaw = JSON.stringify(walk(path.join(root, LEDGER_DIR, 'index')));
+        expect(indexRaw).not.toContain(id);
+        expect(indexRaw).not.toContain(SESSION);
+    });
+
+    it('a named spawn request records the name only as a session-bound digest, with its definition', () => {
+        processEnvelope(
+            {
+                schema_version: 1,
+                platform: 'claude',
+                event: 'pre_tool_use',
+                payload: {
+                    session_id: SESSION,
+                    tool_name: 'Agent',
+                    tool_input: { subagent_type: 'ac-worker', name: 'ledger-worker', prompt: 'SECRET-PROMPT-BODY' },
+                },
+            },
+            root,
+        );
+        const line = shadowLines()[0]!;
+        expect(line.agent_type).toBe('ac-worker');
+        expect(typeof line.name_key).toBe('string');
+        expect(JSON.stringify(line)).not.toContain('ledger-worker');
+        // The same digest a completed spawn of that name leaves, so the report can join them.
+        processEnvelope(namedSpawnDone('ledger-worker', 'a0000000000000001'), root);
+        const named = ledgerLines().find((l) => l.event === 'subagent_named')!;
+        expect(named.name_key).toBe(line.name_key);
     });
 
     it('malformed send input is recorded as unplaced and never throws', () => {
@@ -497,6 +588,15 @@ describe('spawn-guard-shadow — rate window', () => {
         processEnvelope(agentCall('ac-worker'), root);
         expect(shadowLines().at(-1)!.rate_window).toBe('clear');
     });
+
+    it('a council marker followed by a host StopFailure marker on the same run reads would_wait (D5)', () => {
+        writeQuotaParked(root, 'sess-both', ['openai'], () => new Date(Date.now() - 6 * 3_600_000), 'council');
+        const host = writeQuotaParked(root, 'sess-both', ['anthropic'], () => new Date(), 'host');
+        expect(host.source).toBe('host');
+        expect(Date.now() - Date.parse(host.parked_at)).toBeLessThan(60_000);
+        processEnvelope(agentCall('ac-worker'), root);
+        expect(shadowLines().at(-1)!.rate_window).toBe('would_wait');
+    });
 });
 
 describe('spawn-guard-shadow — payload bodies never reach the ledger (ratification r1)', () => {
@@ -548,5 +648,102 @@ describe('spawn-guard-shadow — a worker name reaches disk only as a session-bo
         processEnvelope(named(long, 'agent-long'), root);
         plantStopped(refFor('agent-long'));
         expect(classifySend(root, { to: long, recipient_kind: 'name' }, SESSION)).toBe('message_or_resume');
+    });
+});
+
+describe('spawn-guard-shadow — state stamped for reconstruction (council 2026-10-22, decision 1)', () => {
+    const git = (cwd: string, ...args: string[]): string =>
+        execFileSync('git', ['-c', 'user.email=t@example.com', '-c', 'user.name=t', '-C', cwd, ...args], { encoding: 'utf8' }).trim();
+
+    function repo(): { dir: string; sha: string } {
+        const dir = fs.mkdtempSync(path.join(root, 'repo-'));
+        git(dir, 'init', '-q');
+        git(dir, 'commit', '-q', '--allow-empty', '-m', 'c');
+        return { dir, sha: git(dir, 'rev-parse', 'HEAD') };
+    }
+
+    it('reads the commit a checkout is on: a repository, a subdirectory, a worktree, or none', () => {
+        const { dir, sha } = repo();
+        fs.mkdirSync(path.join(dir, 'sub'));
+        expect(headOf(dir)).toBe(sha);
+        expect(headOf(path.join(dir, 'sub'))).toBe(sha);
+        const wt = path.join(root, 'wt');
+        git(dir, 'worktree', 'add', '-q', '-b', 'side', wt);
+        git(wt, 'commit', '-q', '--allow-empty', '-m', 'side');
+        expect(headOf(wt)).toBe(git(wt, 'rev-parse', 'HEAD'));
+        expect(headOf(wt)).not.toBe(sha);
+        expect(headOf(fs.mkdtempSync(path.join(os.tmpdir(), 'nogit-')))).toBeNull();
+    });
+
+    it('a stop and a spawn both carry the commit, a digest of the directory and the install epoch', () => {
+        const { dir, sha } = repo();
+        processLedgerEnvelope(
+            { schema_version: 1, platform: 'claude', event: 'subagent_stop', payload: { session_id: SESSION, agent_id: 'a1b2c3d4e5f60719', cwd: dir } },
+            root,
+        );
+        processEnvelope(
+            { schema_version: 1, platform: 'claude', event: 'pre_tool_use', payload: { session_id: SESSION, cwd: dir, tool_name: 'Agent', tool_input: { subagent_type: 'ac-worker' } } },
+            root,
+        );
+        const stop = ledgerLines().find((l) => l.event === 'subagent_stop')!;
+        const spawn = shadowLines()[0]!;
+        for (const line of [stop, spawn]) {
+            expect(line.head).toBe(sha);
+            expect(line.cwd_key).toBe(refFor(dir));
+            expect(typeof line.epoch).toBe('number');
+            expect(JSON.stringify(line)).not.toContain(dir);
+        }
+        expect(spawn.epoch).toBe(stop.epoch);
+    });
+});
+
+describe('spawn-guard-shadow — ratification 2026-10-22 rest r1, non-blocking findings', () => {
+    it('a named spawn with an empty session id writes no register entry', () => {
+        processEnvelope(namedSpawnDone('w-empty', 'a0000000000000002', ''), root);
+        expect(ledgerLines().filter((l) => l.event === 'subagent_named')).toEqual([]);
+        expect(walk(path.join(root, LEDGER_DIR, 'index'))).toEqual([]);
+    });
+
+    it('an index entry is replaced whole, leaving no temporary file behind', () => {
+        const ts = new Date().toISOString();
+        writeIndexEntry(root, ts, 'k1', 'first-value');
+        writeIndexEntry(root, ts, 'k1', 'second');
+        expect(readIndexEntry(root, 'k1', new Date())).toBe('second');
+        const names = fs.readdirSync(path.join(root, LEDGER_DIR, 'index', ts.slice(0, 7)));
+        expect(names).toEqual(['k1']);
+    });
+});
+
+describe('spawn-guard-shadow — review findings of 2026-10-23', () => {
+    it('an index that cannot be written never costs the stop line', () => {
+        // A file where the index directory should be makes every index write throw.
+        fs.mkdirSync(path.join(root, LEDGER_DIR), { recursive: true });
+        fs.writeFileSync(path.join(root, LEDGER_DIR, 'index'), 'not a directory');
+        processLedgerEnvelope(
+            { schema_version: 1, platform: 'claude', event: 'subagent_stop', payload: { session_id: SESSION, agent_id: 'a1b2c3d4e5f6071a' } },
+            root,
+        );
+        expect(ledgerLines().filter((l) => l.event === 'subagent_stop')).toHaveLength(1);
+    });
+
+    it('an inherited GIT_DIR does not redirect the commit a directory is on', () => {
+        const git = (cwd: string, ...args: string[]): string =>
+            execFileSync('git', ['-c', 'user.email=t@example.com', '-c', 'user.name=t', '-C', cwd, ...args], { encoding: 'utf8' }).trim();
+        const a = fs.mkdtempSync(path.join(root, 'a-'));
+        const b = fs.mkdtempSync(path.join(root, 'b-'));
+        for (const d of [a, b]) {
+            git(d, 'init', '-q');
+            git(d, 'commit', '-q', '--allow-empty', '-m', d);
+        }
+        const expected = git(a, 'rev-parse', 'HEAD');
+        expect(git(b, 'rev-parse', 'HEAD')).not.toBe(expected);
+        const prev = process.env['GIT_DIR'];
+        process.env['GIT_DIR'] = path.join(b, '.git');
+        try {
+            expect(headOf(a)).toBe(expected);
+        } finally {
+            if (prev === undefined) delete process.env['GIT_DIR'];
+            else process.env['GIT_DIR'] = prev;
+        }
     });
 });

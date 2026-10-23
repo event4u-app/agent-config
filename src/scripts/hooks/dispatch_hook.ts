@@ -55,7 +55,7 @@ import {
 import { emitFor, type PermissionDecision, type Severity } from "./host_semantics.js";
 import { _concern_permission_verdict, _payload_tool_name, _permission_for } from "./permission_gate.js";
 export { _concern_permission_verdict, _payload_tool_input, _payload_tool_name, _permission_for, _working_tree_root } from "./permission_gate.js";
-import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
+import { _concern_body_classes, applyPayloadFields, planPayloadShapes } from "./payload_stub.js";
 import { attributeRefusal, egressInjection, egressViewFor, runEgressStage } from "./egress_stage.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js';
@@ -1299,7 +1299,7 @@ export function main(argv?: string[]): number {
     if (!_concern_matches_tool(concern, tool_name)) {
       continue;
     }
-    const concern_envelope = shapes.shapeFor(keep_classes, egressViewFor(concern));
+    const concern_envelope = applyPayloadFields(concern, shapes.shapeFor(keep_classes, egressViewFor(concern)));
     const stubs_served = shapes.stubsFor(keep_classes);
     // What was actually SERVED, not what was declared. Recording the
     // declaration made the record wrong in both directions on a body-less

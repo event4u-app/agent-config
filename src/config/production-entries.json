@@ -1,0 +1,18 @@
+{
+  "$comment": "Production entries for check_step_production_reach (road-to-a-tick-the-shipped-path-earns 3.1). `entries` are modules a host or a consumer runs directly. `entry_sources` are files that name runnable scripts by path (`src/scripts/<name>`, with or without `.ts`); every script they name is an entry too. Projected subagent definitions are markdown read by the host, not imported, so they are not entries here: a step about one names its generator with `production entry: <path>`.",
+  "entries": [
+    "src/scripts/hooks/dispatch_hook.ts",
+    "src/cli/agent-config.ts",
+    "src/server/app.ts"
+  ],
+  "entry_sources": [
+    "src/scripts/_dispatch.bash",
+    "Taskfile.yml",
+    "taskfiles/*.yml",
+    "hooks/hooks.json",
+    ".github/workflows/*.yml",
+    "src/agent-src/commands/**/*.md",
+    "src/domains/**/*.md",
+    "src/skills/**/SKILL.md"
+  ]
+}

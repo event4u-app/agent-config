@@ -19,6 +19,7 @@ import { DEFAULT_SEAT_CEILING, type ContentClass } from './content_ceiling.js';
 import { resolve_api_key } from './config.js';
 import { resolveRouteTransport, type RouteSpec } from './free_route.js';
 import type { PolicyExclusion } from './seat_policy.js';
+import { SELF_HOSTED_PROBE } from './self_hosted_probe.js';
 import { resolveMemberTransport } from './transport_resolver.js';
 
 interface SeatLike {
@@ -57,6 +58,7 @@ export function resolvedTransportFor(
             model: member.model ?? '',
             contentClass: contentClass ?? null,
             keyPresent: keyResolves(member.api_key_ref),
+            probe: SELF_HOSTED_PROBE,
         });
         return { ...resolved, configuredMode: 'api' };
     }

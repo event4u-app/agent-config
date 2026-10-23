@@ -9,6 +9,7 @@
  * Bounds, each failing toward not calling the free side:
  *   - the free side must be unpaid (`free-quota` or `self-hosted`); a metered
  *     "free" route would spend, so it is never shadowed;
+ *   - the paid side must not be a `base_url` route, which counts as paid without being one;
  *   - the payload must be `public-artifact`, the ceiling every free route sits at;
  *   - at most `SHADOW_CALL_CAP` rows (decision A5); past it the paid side still
  *     answers and nothing else is called.
@@ -26,7 +27,11 @@ import { pathToFileURL } from 'node:url';
 
 import type { ExternalAIClient } from './clients.js';
 import { admitsContent, type ContentClass } from './content_ceiling.js';
-import { handSystemPrompt, parseHandReturn } from './hand_schemas.js';
+import { councilEgress, type CouncilEgress } from './council_egress.js';
+import type { Exposure, ExposureLedger } from './exposure_ledger.js';
+import { FreeRouteClient } from './free_route_client.js';
+import { buildHandPayload, type HandPayload, type HandSlice } from './hand_payload.js';
+import { parseHandReturn } from './hand_schemas.js';
 import { routeCandidateFromMember } from './route_chooser.js';
 import { classifyRouteOutcome, recordRouteOutcome, type RouteOutcome } from './route_liveness.js';
 import { isUnpaid, type HandKind, type RouteBilling, type VerifyVerdict } from '../_lib/hand_kinds.js';
@@ -63,7 +68,6 @@ export type HeadVerify = (
 ) => { verdict: VerifyVerdict; tokens: number } | Promise<{ verdict: VerifyVerdict; tokens: number }>;
 
 export interface ShadowAskOptions {
-    readonly kind: HandKind;
     readonly contentClass: ContentClass;
     readonly paid: ExternalAIClient;
     readonly free: ExternalAIClient;
@@ -71,9 +75,13 @@ export interface ShadowAskOptions {
     /** Root of the gitignored state the ledger and route liveness live in. */
     readonly stateRoot: string;
     readonly now?: () => Date;
+    /** The run's placeholder scope; default: the council egress state. */
+    readonly egress?: CouncilEgress;
+    /** Recorded against the free route when, and only when, it is asked. */
+    readonly exposure?: { readonly ledger: ExposureLedger; readonly exposes: Exposure };
 }
 
-export type ShadowSkip = 'free-side-metered' | 'paid-side-unpaid' | 'content-ceiling' | 'cap-reached';
+export type ShadowSkip = 'free-side-metered' | 'paid-side-unpaid' | 'paid-side-route' | 'content-ceiling' | 'cap-reached';
 
 export interface ShadowAnswer {
     readonly answer: string;
@@ -94,9 +102,9 @@ interface Called {
     readonly tokens: number;
 }
 
-async function _call(member: ExternalAIClient, kind: HandKind, prompt: string): Promise<Called> {
+async function _call(member: ExternalAIClient, kind: HandKind, payload: HandPayload): Promise<Called> {
     try {
-        const raw = member.ask(handSystemPrompt(kind), prompt);
+        const raw = member.ask(payload.system, payload.user);
         const r = raw instanceof Promise ? await raw : raw;
         const outcome = classifyRouteOutcome(r?.error ?? null);
         const text = (r?.text ?? '').trim();
@@ -147,26 +155,30 @@ function _routeModel(member: ExternalAIClient): string | null {
     return typeof m['base_url'] === 'string' && typeof m['model'] === 'string' && m['model'] !== '' ? m['model'] : null;
 }
 
-export async function shadowAsk(prompt: string, opts: ShadowAskOptions): Promise<ShadowResult> {
+export async function shadowAsk(slice: HandSlice, opts: ShadowAskOptions): Promise<ShadowResult> {
+    const kind = slice.kind;
     const paidRoute = routeCandidateFromMember(opts.paid);
     const freeRoute = routeCandidateFromMember(opts.free);
+    if (isUnpaid(paidRoute.billing)) return { answer: null, row: null, skipped: 'paid-side-unpaid' };
+    if (opts.paid instanceof FreeRouteClient) return { answer: null, row: null, skipped: 'paid-side-route' };
+    const payload = buildHandPayload(slice, opts.egress ?? councilEgress());
     const usePaid = async (skipped: ShadowSkip): Promise<ShadowResult> => {
-        const c = await _call(opts.paid, opts.kind, prompt);
+        const c = await _call(opts.paid, kind, payload);
         return { answer: c.parsed.ok ? { answer: c.text, parsed: c.parsed.value } : null, row: null, skipped };
     };
-    if (isUnpaid(paidRoute.billing)) return { answer: null, row: null, skipped: 'paid-side-unpaid' };
     if (!isUnpaid(freeRoute.billing)) return usePaid('free-side-metered');
     if (!admitsContent(freeRoute.ceiling, opts.contentClass).admitted) return usePaid('content-ceiling');
     if (_rowCount(opts.stateRoot) >= SHADOW_CALL_CAP) return usePaid('cap-reached');
 
-    const [p, f] = await Promise.all([_call(opts.paid, opts.kind, prompt), _call(opts.free, opts.kind, prompt)]);
+    opts.exposure?.ledger.record(freeRoute.name, opts.exposure.exposes);
+    const [p, f] = await Promise.all([_call(opts.paid, kind, payload), _call(opts.free, kind, payload)]);
     const model = _routeModel(opts.free);
     if (model !== null) recordRouteOutcome(opts.stateRoot, freeRoute.name, model, f.outcome);
     const row: ShadowRow = {
         ts: (opts.now ?? (() => new Date()))().toISOString(),
-        kind: opts.kind,
-        paid: await _side(opts.paid, p, opts.kind, 'paid', opts.verify),
-        free: await _side(opts.free, f, opts.kind, 'free', opts.verify),
+        kind,
+        paid: await _side(opts.paid, p, kind, 'paid', opts.verify),
+        free: await _side(opts.free, f, kind, 'free', opts.verify),
     };
     _append(opts.stateRoot, row);
     return { answer: p.parsed.ok ? { answer: p.text, parsed: p.parsed.value } : null, row };
