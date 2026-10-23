@@ -6,8 +6,10 @@
  *   validate [--graph P]                       schema-gate a graph.json
  *   detect   [--root P] [--format json]        three-state freshness verdict
  *   refresh  [--root P] [--out P] [--budget-seconds N]
- *                                               build --update (STALE) / no-op
- *                                               (FRESH) / full build (ABSENT)
+ *            [--single-flight] [--map]          build --update (STALE) / no-op
+ *                                               (FRESH) / full build (ABSENT);
+ *                                               a result built while HEAD moved
+ *                                               is discarded and retried once
  *
  * `detect --format json` (Phase 2, road-to-reachable-code-memory) emits a
  * single-line, stable-key-order JSON verdict on stdout — no timestamps, safe
@@ -81,6 +83,7 @@ import {
 } from './detect.js';
 import { suggestVerb } from './intent.js';
 import { buildMap, recordOutcome } from './map.js';
+import { acquire as acquireRefreshLock } from './refresh_lock.js';
 import { verifyMap } from './map_verify.js';
 import {
     affected,
@@ -655,6 +658,17 @@ function cleanupTemp(tmpOut: string): void {
  * itself uses. Any other outcome (timeout, non-zero exit, missing output)
  * cleans up the temp files and leaves `out` untouched.
  */
+function headOf(root: string): string | null {
+    try {
+        return execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], env: hardenedSpawnEnv() }).trim();
+    } catch {
+        return null;
+    }
+}
+
+/** Returned by {@link runBudgetedBuild} when HEAD moved while the child built. */
+const HEAD_MOVED = -1;
+
 function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeconds: number): number {
     if (!(budgetSeconds > 0)) {
         // Node's own `timeout` option treats 0 as "no limit" — a genuinely
@@ -682,6 +696,7 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
     const [cmd, cmdArgs] = fs.existsSync(TSX_BIN)
         ? [TSX_BIN, [_HERE, ...args]]
         : [process.execPath, [...process.execArgv, _HERE, ...args]];
+    const headBefore = headOf(root);
     const res = spawnSync(cmd, cmdArgs, {
         env: hardenedSpawnEnv(),
         stdio: 'ignore',
@@ -705,6 +720,13 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
         process.stderr.write('code-graph: refresh produced no output — old cache kept\n');
         return 3;
     }
+    // A checkout or rebase that lands mid-build leaves a graph of a tree that
+    // existed only in passing; publishing it would label mixed content fresh.
+    if (headOf(root) !== headBefore) {
+        cleanupTemp(tmpOut);
+        process.stderr.write('code-graph: HEAD moved during the refresh — result discarded\n');
+        return HEAD_MOVED;
+    }
     fs.renameSync(tmpOut, out); // same-dir → atomic; real cache only ever changes here
     const tmpSidecar = sidecarPath(tmpOut);
     if (fs.existsSync(tmpSidecar)) fs.renameSync(tmpSidecar, sidecarPath(out));
@@ -712,7 +734,12 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
     return 0;
 }
 
-function cmdRefresh(argv: string[]): number {
+/**
+ * `--single-flight` takes the lock the git-hook refresh block takes and exits 0
+ * when another refresh holds it. `--map` redraws `agents/map/` afterwards, only
+ * when the project already has one and it is older than the cache.
+ */
+async function cmdRefresh(argv: string[]): Promise<number> {
     const root = resolveRoot(argv);
     const out = flag(argv, '--out') ?? cacheFor(root);
     const budgetSeconds = budgetSecondsOf(argv);
@@ -720,12 +747,41 @@ function cmdRefresh(argv: string[]): number {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
         return 1;
     }
-    const v = computeVerdict(root, out);
-    if (v.verdict === 'FRESH') {
-        process.stdout.write('fresh — nothing to do\n');
+    const release = argv.includes('--single-flight') ? acquireRefreshLock(root) : () => {};
+    if (release === null) {
+        process.stdout.write('another refresh is running — nothing to do\n');
         return 0;
     }
-    return runBudgetedBuild(root, out, v.verdict === 'STALE', budgetSeconds);
+    try {
+        let rc = HEAD_MOVED;
+        // One retry: a second move inside one build window means the tree is
+        // still in motion, and the next hook or session start will refresh it.
+        for (let attempt = 0; attempt < 2 && rc === HEAD_MOVED; attempt++) {
+            const v = computeVerdict(root, out);
+            if (v.verdict === 'FRESH') {
+                process.stdout.write('fresh — nothing to do\n');
+                rc = 0;
+                break;
+            }
+            rc = runBudgetedBuild(root, out, v.verdict === 'STALE', budgetSeconds);
+        }
+        if (rc === HEAD_MOVED) return 1;
+        if (rc === 0 && argv.includes('--map') && mapIsBehind(root, out)) {
+            return await cmdMap(['--root', root, '--no-build', '--no-verify']);
+        }
+        return rc;
+    } finally {
+        release();
+    }
+}
+
+function mapIsBehind(root: string, cache: string): boolean {
+    try {
+        return fs.statSync(path.join(root, 'agents', 'map', 'map.json')).mtimeMs < fs.statSync(cache).mtimeMs;
+    } catch {
+        // No map → never draw one unbidden; a map dir without map.json → redraw.
+        return fs.existsSync(path.join(root, 'agents', 'map')) && fs.existsSync(cache);
+    }
 }
 
 /**
@@ -831,7 +887,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'build') return await cmdBuild(argv.slice(1));
         if (sub === 'validate') return cmdValidate(argv.slice(1));
         if (sub === 'detect') return cmdDetect(argv.slice(1));
-        if (sub === 'refresh') return cmdRefresh(argv.slice(1));
+        if (sub === 'refresh') return await cmdRefresh(argv.slice(1));
         if (sub === 'query' || sub === 'explain' || sub === 'affected' || sub === 'path')
             return cmdQuery(sub, argv.slice(1));
         if (sub === 'impact') return cmdImpact(argv.slice(1));

@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -86,6 +86,65 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         const leftovers = fs.readdirSync(tmp).filter((f) => f.includes('refresh-tmp'));
         expect(leftovers).toEqual([]);
     });
+
+    it('--single-flight backs off while another refresh holds the lock', () => {
+        const out = path.join(tmp, 'graph.json');
+        const lock = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock');
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: process.pid, started_at: Date.now() }));
+        const r = runCli(['refresh', '--root', tmp, '--out', out, '--single-flight']);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toMatch(/another refresh is running/);
+        expect(fs.existsSync(out)).toBe(false);
+        // Without the flag the same call builds — the lock, not something else, held it back.
+        expect(runCli(['refresh', '--root', tmp, '--out', out]).status).toBe(0);
+        expect(fs.existsSync(out)).toBe(true);
+    });
+
+    it('--single-flight releases the lock when it is done', () => {
+        const out = path.join(tmp, 'graph.json');
+        expect(runCli(['refresh', '--root', tmp, '--out', out, '--single-flight']).status).toBe(0);
+        expect(fs.existsSync(path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock'))).toBe(false);
+    });
+
+    it('--map draws no map for a project that never asked for one', () => {
+        const out = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-v1.json');
+        expect(runCli(['refresh', '--root', tmp, '--map']).status).toBe(0);
+        expect(fs.existsSync(out)).toBe(true);
+        expect(fs.existsSync(path.join(tmp, 'agents', 'map'))).toBe(false);
+    });
+
+    it('--map redraws an existing map that is older than the cache', () => {
+        fs.mkdirSync(path.join(tmp, 'agents', 'map'), { recursive: true });
+        const r = runCli(['refresh', '--root', tmp, '--map']);
+        expect(r.status, r.stderr).toBe(0);
+        expect(fs.existsSync(path.join(tmp, 'agents', 'map', 'map.json'))).toBe(true);
+    });
+
+    it('discards a graph built while HEAD moved, and keeps the old cache', () => {
+        const git = (...a: string[]): void => {
+            execFileSync('git', ['-C', tmp, ...a], { stdio: 'ignore' });
+        };
+        git('init', '-q');
+        git('config', 'user.email', 't@example.com');
+        git('config', 'user.name', 't');
+        git('add', '-A');
+        git('commit', '-qm', 'seed');
+        const out = path.join(tmp, 'graph.json');
+        // Keep HEAD moving for the whole refresh window: every build attempt
+        // straddles at least one commit.
+        const mover = spawn('sh', ['-c', `while true; do git -C "${tmp}" commit -q --allow-empty -m m; sleep 0.05; done`], {
+            stdio: 'ignore',
+        });
+        try {
+            const r = runCli(['refresh', '--root', tmp, '--out', out]);
+            expect(r.status).toBe(1);
+            expect(r.stderr).toMatch(/HEAD moved during the refresh — result discarded/);
+            expect(fs.existsSync(out)).toBe(false);
+        } finally {
+            mover.kill('SIGKILL');
+        }
+    }, 60_000);
 
     it('budget exceeded with an EXISTING cache → old cache byte-identical', () => {
         const out = path.join(tmp, 'graph.json');
