@@ -43,15 +43,35 @@ describe('refresh lock — single flight', () => {
 
     it('reclaims a lock whose owner process is gone', () => {
         fs.mkdirSync(lock, { recursive: true });
-        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: Date.now() }));
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: Date.now(), token: 't' }));
         expect(isStale(lock)).toBe(true);
         expect(acquire(root)).not.toBeNull();
     });
 
-    it('respects a live owner', () => {
+    it('never reclaims a live owner, however old its lock', () => {
         fs.mkdirSync(lock, { recursive: true });
-        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: process.pid, started_at: Date.now() }));
+        fs.writeFileSync(
+            `${lock}.owner.json`,
+            JSON.stringify({ pid: process.pid, started_at: Date.now() - 10 * STALE_LOCK_MS, token: 't' }),
+        );
+        expect(isStale(lock)).toBe(false);
         expect(acquire(root)).toBeNull();
+    });
+
+    it('a reclaimed holder releasing late does not delete its successor', () => {
+        const releaseOld = acquire(root);
+        // The old holder is presumed dead and its lock reclaimed by a successor.
+        fs.writeFileSync(
+            `${lock}.owner.json`,
+            JSON.stringify({ pid: deadPid(), started_at: Date.now(), token: 'old-token-rewritten' }),
+        );
+        const releaseNew = acquire(root);
+        expect(releaseNew).not.toBeNull();
+        releaseOld?.();
+        expect(fs.existsSync(lock)).toBe(true);
+        expect(acquire(root)).toBeNull();
+        releaseNew?.();
+        expect(fs.existsSync(lock)).toBe(false);
     });
 
     it('treats an owner-less lock (the git-hook block) by age alone', () => {

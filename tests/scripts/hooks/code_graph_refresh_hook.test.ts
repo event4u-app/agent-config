@@ -1,11 +1,11 @@
-import type { spawn } from 'node:child_process';
+import { execFileSync, type spawn } from 'node:child_process';
 import { EventEmitter } from 'node:events';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { LOCK_REL } from '../../../src/scripts/code_graph/refresh_lock.js';
+import { AUTO_REFRESH_REL, LOCK_REL } from '../../../src/scripts/code_graph/refresh_lock.js';
 import {
     CACHE_REL,
     REFRESH_ARGS,
@@ -14,7 +14,16 @@ import {
     resolveCli,
 } from '../../../src/scripts/hooks/code_graph_refresh_hook.js';
 
+/**
+ * A directory holding only `git`: the tests narrow PATH, the concern needs git to
+ * check tracking, and the real git directory may also hold an installed agent-config.
+ */
+const GIT_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-refresh-git-'));
+fs.symlinkSync(execFileSync('sh', ['-c', 'command -v git'], { encoding: 'utf-8' }).trim(), path.join(GIT_DIR, 'git'));
+
 let root: string;
+let outside: string;
+let savedPath: string | undefined;
 let calls: { cmd: string; args: readonly string[]; opts: Record<string, unknown> }[];
 
 /** Records the spawn instead of starting a process. */
@@ -26,28 +35,46 @@ const fakeSpawn = ((cmd: string, args: readonly string[], opts: Record<string, u
 }) as unknown as typeof spawn;
 
 function writeCli(dir: string): string {
+    fs.mkdirSync(dir, { recursive: true });
     const cli = path.join(dir, 'agent-config');
     fs.writeFileSync(cli, '#!/bin/sh\nexit 0\n', { mode: 0o755 });
     return cli;
 }
 
+const git = (...a: string[]): void => {
+    execFileSync('git', ['-C', root, ...a], { stdio: 'ignore' });
+};
+
+/** An opted-in project with a locally built (untracked) cache and a trusted CLI on PATH. */
+function optedIn(): string {
+    fs.writeFileSync(path.join(root, CACHE_REL), '{}');
+    fs.writeFileSync(path.join(root, AUTO_REFRESH_REL), '{}');
+    const cli = writeCli(path.join(outside, 'bin'));
+    process.env['PATH'] = [path.join(outside, 'bin'), GIT_DIR].join(path.delimiter);
+    return cli;
+}
+
 beforeEach(() => {
     root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-refresh-hook-')));
-    fs.mkdirSync(path.join(root, '.git'));
+    outside = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-refresh-path-')));
+    git('init', '-q');
+    fs.writeFileSync(path.join(root, '.gitignore'), '/agents/runtime/\n');
     fs.mkdirSync(path.join(root, 'agents', 'runtime', 'state'), { recursive: true });
     calls = [];
+    savedPath = process.env['PATH'];
     delete process.env['AGENT_CONFIG_CODE_GRAPH_REFRESH'];
 });
 afterEach(() => {
     fs.rmSync(root, { recursive: true, force: true });
+    fs.rmSync(outside, { recursive: true, force: true });
+    process.env['PATH'] = savedPath;
     delete process.env['AGENT_CONFIG_CODE_GRAPH_REFRESH'];
 });
 
 describe.skipIf(process.platform === 'win32')('code-graph-refresh session concern', () => {
-    it('spawns one detached single-flight refresh when a cache exists', () => {
-        fs.writeFileSync(path.join(root, CACHE_REL), '{}');
-        const cli = writeCli(root);
-        expect(refreshFor(path.join(root), fakeSpawn)).toBe('spawned');
+    it('spawns one detached single-flight refresh for an opted-in project', () => {
+        const cli = optedIn();
+        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
         expect(calls).toHaveLength(1);
         expect(calls[0]?.cmd).toBe(cli);
         expect(calls[0]?.args).toEqual([...REFRESH_ARGS, '--root', root]);
@@ -55,8 +82,7 @@ describe.skipIf(process.platform === 'win32')('code-graph-refresh session concer
     });
 
     it('resolves the repository root from a subdirectory cwd', () => {
-        fs.writeFileSync(path.join(root, CACHE_REL), '{}');
-        writeCli(root);
+        optedIn();
         const sub = path.join(root, 'src', 'deep');
         fs.mkdirSync(sub, { recursive: true });
         expect(repoRoot(sub)).toBe(root);
@@ -64,43 +90,65 @@ describe.skipIf(process.platform === 'win32')('code-graph-refresh session concer
         expect(calls[0]?.opts['cwd']).toBe(root);
     });
 
+    it('does nothing without the explicit opt-in, even with a cache', () => {
+        optedIn();
+        fs.rmSync(path.join(root, AUTO_REFRESH_REL));
+        expect(refreshFor(root, fakeSpawn)).toBe('not-opted-in');
+        expect(calls).toHaveLength(0);
+    });
+
     it('never builds a graph nobody asked for', () => {
-        writeCli(root);
+        optedIn();
+        fs.rmSync(path.join(root, CACHE_REL));
         expect(refreshFor(root, fakeSpawn)).toBe('no-cache');
         expect(calls).toHaveLength(0);
     });
 
-    it('does not pile onto a refresh that already holds the lock', () => {
-        fs.writeFileSync(path.join(root, CACHE_REL), '{}');
+    it('refuses an opt-in and a cache the REPOSITORY committed', () => {
+        optedIn();
+        git('add', '-f', AUTO_REFRESH_REL, CACHE_REL);
+        expect(refreshFor(root, fakeSpawn)).toBe('tracked');
+        expect(calls).toHaveLength(0);
+    });
+
+    it('never executes an agent-config the repository ships', () => {
+        optedIn();
+        process.env['PATH'] = GIT_DIR;
         writeCli(root);
+        writeCli(path.join(root, 'node_modules', '.bin'));
+        expect(refreshFor(root, fakeSpawn)).toBe('no-cli');
+        expect(calls).toHaveLength(0);
+    });
+
+    it('skips relative PATH entries and PATH dirs that resolve into the repository', () => {
+        const repoBin = path.join(root, 'bin');
+        writeCli(repoBin);
+        const linkToRepoBin = path.join(outside, 'link');
+        fs.symlinkSync(repoBin, linkToRepoBin);
+        expect(resolveCli(root, ['bin', '.', linkToRepoBin, repoBin].join(path.delimiter))).toBeNull();
+        const trusted = writeCli(path.join(outside, 'trusted'));
+        expect(resolveCli(root, [repoBin, path.join(outside, 'trusted')].join(path.delimiter))).toBe(trusted);
+    });
+
+    it('refuses a PATH binary that is a symlink into the repository', () => {
+        const planted = writeCli(path.join(root, 'tools'));
+        const dir = path.join(outside, 'innocent');
+        fs.mkdirSync(dir);
+        fs.symlinkSync(planted, path.join(dir, 'agent-config'));
+        expect(resolveCli(root, dir)).toBeNull();
+    });
+
+    it('does not pile onto a refresh that already holds the lock', () => {
+        optedIn();
         fs.mkdirSync(path.join(root, LOCK_REL));
         expect(refreshFor(root, fakeSpawn)).toBe('locked');
         expect(calls).toHaveLength(0);
     });
 
     it('honours the kill switch', () => {
-        fs.writeFileSync(path.join(root, CACHE_REL), '{}');
-        writeCli(root);
+        optedIn();
         process.env['AGENT_CONFIG_CODE_GRAPH_REFRESH'] = 'off';
         expect(refreshFor(root, fakeSpawn)).toBe('disabled');
         expect(calls).toHaveLength(0);
-    });
-
-    it('does nothing when no CLI can be found', () => {
-        fs.writeFileSync(path.join(root, CACHE_REL), '{}');
-        expect(resolveCli(root, '')).toBeNull();
-    });
-
-    it('prefers the project CLI, then node_modules/.bin, then PATH', () => {
-        const bin = path.join(root, 'bin');
-        fs.mkdirSync(bin);
-        const onPath = writeCli(bin);
-        expect(resolveCli(root, bin)).toBe(onPath);
-        const nm = path.join(root, 'node_modules', '.bin');
-        fs.mkdirSync(nm, { recursive: true });
-        const local = writeCli(nm);
-        expect(resolveCli(root, bin)).toBe(local);
-        const own = writeCli(root);
-        expect(resolveCli(root, bin)).toBe(own);
     });
 });

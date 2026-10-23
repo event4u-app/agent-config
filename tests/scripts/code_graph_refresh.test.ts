@@ -91,7 +91,7 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         const out = path.join(tmp, 'graph.json');
         const lock = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock');
         fs.mkdirSync(lock, { recursive: true });
-        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: process.pid, started_at: Date.now() }));
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: process.pid, started_at: Date.now(), token: 't' }));
         const r = runCli(['refresh', '--root', tmp, '--out', out, '--single-flight']);
         expect(r.status).toBe(0);
         expect(r.stdout).toMatch(/another refresh is running/);
@@ -139,12 +139,23 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         try {
             const r = runCli(['refresh', '--root', tmp, '--out', out]);
             expect(r.status).toBe(1);
-            expect(r.stderr).toMatch(/HEAD moved during the refresh — result discarded/);
+            expect(r.stderr).toMatch(/HEAD moved \(or could not be read\) during the refresh — result discarded/);
             expect(fs.existsSync(out)).toBe(false);
         } finally {
             mover.kill('SIGKILL');
         }
     }, 60_000);
+
+    it('auto-refresh on / status / off writes and removes the local opt-in', () => {
+        const marker = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-auto-refresh.json');
+        expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/auto-refresh: off/);
+        expect(runCli(['auto-refresh', 'on', '--root', tmp]).status).toBe(0);
+        expect(fs.existsSync(marker)).toBe(true);
+        expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/auto-refresh: on/);
+        expect(runCli(['auto-refresh', 'off', '--root', tmp]).status).toBe(0);
+        expect(fs.existsSync(marker)).toBe(false);
+        expect(runCli(['auto-refresh', 'sideways', '--root', tmp]).status).toBe(2);
+    });
 
     it('budget exceeded with an EXISTING cache → old cache byte-identical', () => {
         const out = path.join(tmp, 'graph.json');

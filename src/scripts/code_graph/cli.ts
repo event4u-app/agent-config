@@ -10,6 +10,8 @@
  *                                               (FRESH) / full build (ABSENT);
  *                                               a result built while HEAD moved
  *                                               is discarded and retried once
+ *   auto-refresh on|off|status [--root P]      opt this project in to the
+ *                                               session-start background refresh
  *
  * `detect --format json` (Phase 2, road-to-reachable-code-memory) emits a
  * single-line, stable-key-order JSON verdict on stdout — no timestamps, safe
@@ -83,7 +85,7 @@ import {
 } from './detect.js';
 import { suggestVerb } from './intent.js';
 import { buildMap, recordOutcome } from './map.js';
-import { acquire as acquireRefreshLock } from './refresh_lock.js';
+import { AUTO_REFRESH_REL, acquire as acquireRefreshLock } from './refresh_lock.js';
 import { verifyMap } from './map_verify.js';
 import {
     affected,
@@ -658,12 +660,18 @@ function cleanupTemp(tmpOut: string): void {
  * itself uses. Any other outcome (timeout, non-zero exit, missing output)
  * cleans up the temp files and leaves `out` untouched.
  */
-function headOf(root: string): string | null {
+function git(root: string, ...args: string[]): string | null {
     try {
-        return execFileSync('git', ['-C', root, 'rev-parse', 'HEAD'], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], env: hardenedSpawnEnv() }).trim();
+        return execFileSync('git', ['-C', root, ...args], { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'], env: hardenedSpawnEnv() }).trim();
     } catch {
         return null;
     }
+}
+
+/** HEAD, `''` outside a git work tree, `null` when a work tree's HEAD cannot be read. */
+function headOf(root: string): string | null {
+    if (git(root, 'rev-parse', '--is-inside-work-tree') !== 'true') return '';
+    return git(root, 'rev-parse', 'HEAD');
 }
 
 /** Returned by {@link runBudgetedBuild} when HEAD moved while the child built. */
@@ -722,9 +730,10 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
     }
     // A checkout or rebase that lands mid-build leaves a graph of a tree that
     // existed only in passing; publishing it would label mixed content fresh.
-    if (headOf(root) !== headBefore) {
+    // An unreadable HEAD is not evidence it held still, so it fails the same way.
+    if (headBefore === null || headOf(root) !== headBefore) {
         cleanupTemp(tmpOut);
-        process.stderr.write('code-graph: HEAD moved during the refresh — result discarded\n');
+        process.stderr.write('code-graph: HEAD moved (or could not be read) during the refresh — result discarded\n');
         return HEAD_MOVED;
     }
     fs.renameSync(tmpOut, out); // same-dir → atomic; real cache only ever changes here
@@ -775,6 +784,42 @@ async function cmdRefresh(argv: string[]): Promise<number> {
     }
 }
 
+/**
+ * `auto-refresh on|off|status` — the explicit, local, per-project opt-in the
+ * `code-graph-refresh` session concern requires before it starts anything
+ * (ratification round of 2026-10-23: an existing cache is not consent).
+ */
+function cmdAutoRefresh(argv: string[]): number {
+    const root = resolveRoot(argv);
+    const action = argv.find((a) => !a.startsWith('--') && !isFlagValue(argv, a)) ?? 'status';
+    const marker = path.join(root, AUTO_REFRESH_REL);
+    if (action === 'on') {
+        fs.mkdirSync(path.dirname(marker), { recursive: true });
+        fs.writeFileSync(marker, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`);
+        process.stdout.write(
+            'auto-refresh on — each agent session start refreshes the graph, and agents/map/ when it exists,\n' +
+                'in the background (POSIX hosts). `code-graph auto-refresh off` stops it.\n' +
+                (fs.existsSync(cacheFor(root)) ? '' : 'No graph yet: `code-graph build` or `code-graph map` creates one.\n'),
+        );
+        return 0;
+    }
+    if (action === 'off') {
+        fs.rmSync(marker, { force: true });
+        process.stdout.write('auto-refresh off\n');
+        return 0;
+    }
+    if (action !== 'status') {
+        process.stderr.write('usage: code_graph/cli.ts auto-refresh on|off|status [--root P]\n');
+        return 2;
+    }
+    process.stdout.write(
+        `auto-refresh: ${fs.existsSync(marker) ? 'on' : 'off'}\n` +
+            `graph: ${computeVerdict(root, cacheFor(root)).verdict}\n` +
+            `map: ${fs.existsSync(path.join(root, 'agents', 'map')) ? 'present' : 'absent'}\n`,
+    );
+    return 0;
+}
+
 function mapIsBehind(root: string, cache: string): boolean {
     try {
         return fs.statSync(path.join(root, 'agents', 'map', 'map.json')).mtimeMs < fs.statSync(cache).mtimeMs;
@@ -812,7 +857,10 @@ async function cmdMap(argv: string[]): Promise<number> {
             (r.model.diff
                 ? `    diff ${r.model.diff.rev}: ${r.model.diff.changed.length} changed · ${r.model.diff.impacted.length} linked into them · ${r.model.diff.areas.length} area(s) touched\n`
                 : '') +
-            `    wrote: ${r.written.length} files under ${rel}/ — open ${path.join(rel, 'index.html')}\n`,
+            `    wrote: ${r.written.length} files under ${rel}/ — open ${path.join(rel, 'index.html')}\n` +
+            (fs.existsSync(path.join(root, AUTO_REFRESH_REL))
+                ? ''
+                : '    keep it current at every agent session start: agent-config code-graph auto-refresh on\n'),
     );
     let rc = 0;
     if (argv.includes('--no-verify')) {
@@ -897,9 +945,10 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'suggest-verb') return cmdSuggestVerb(argv.slice(1));
         if (sub === 'map') return await cmdMap(argv.slice(1));
         if (sub === 'outcome') return cmdOutcome(argv.slice(1));
+        if (sub === 'auto-refresh') return cmdAutoRefresh(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|tests-for|untested|dead|suggest-verb|map|outcome> [options]\n',
+                'impact|tests-for|untested|dead|suggest-verb|map|outcome|auto-refresh> [options]\n',
         );
         return 2;
     } catch (e) {

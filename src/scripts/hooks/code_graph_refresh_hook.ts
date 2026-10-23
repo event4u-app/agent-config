@@ -11,25 +11,37 @@
  * would collide with husky, lefthook and `core.hooksPath` (council, 2026-10-23,
  * two of two seats).
  *
- * WHAT IT DOES. If a graph cache already exists and no refresh holds the lock,
- * it spawns a detached `agent-config code-graph refresh --single-flight --map`
- * and returns. The child rebuilds only when the cache is not fresh, discards a
- * result built while HEAD moved, and redraws the map only for a project that
- * already has one. Freshness is eventual: the session's first graph read may
- * still see the old cache, and `code-graph-context` keeps saying so.
+ * WHAT IT DOES. It spawns a detached
+ * `agent-config code-graph refresh --single-flight --map` and returns. The
+ * child rebuilds only when the cache is not fresh, discards a result built
+ * while HEAD moved, and redraws the map only for a project that has one.
+ * Freshness is eventual: the session's first graph read may still see the old
+ * cache, and `code-graph-context` keeps saying so.
  *
- * NEVER BUILDS UNBIDDEN, same rule as the git hooks: no cache, no spawn.
- * Silent and exit 0 on every path. POSIX only — on Windows the CLI shim is a
- * `.cmd`, which needs a shell to spawn, so this concern does nothing there.
- * Kill switch: `AGENT_CONFIG_CODE_GRAPH_REFRESH=off`.
+ * WHEN IT DOES NOTHING — the conditions a ratification round of 2026-10-23
+ * (two of two seats, refused the first cut) made load-bearing:
+ *   · the project never ran `code-graph auto-refresh on`. An existing cache is
+ *     not consent: a repository can commit one.
+ *   · the opt-in marker or the cache is TRACKED by git. Both live under the
+ *     gitignored runtime dir; a tracked copy came from the repository, not
+ *     from this developer.
+ *   · no `agent-config` on PATH that resolves OUTSIDE the repository. The
+ *     executable is never taken from the repository — not its root, not its
+ *     `node_modules/.bin`, not a relative PATH entry — the same trust rule the
+ *     host hook shim applies before it runs the dispatcher.
+ *   · a live refresh holds the lock, the host is Windows (the CLI shim is a
+ *     `.cmd` that needs a shell), replay mode, or the kill switch
+ *     `AGENT_CONFIG_CODE_GRAPH_REFRESH=off`.
+ *
+ * Silent and exit 0 on every path.
  */
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
-import { LOCK_REL, isStale } from '../code_graph/refresh_lock.js';
+import { AUTO_REFRESH_REL, LOCK_REL, isStale } from '../code_graph/refresh_lock.js';
 import { EXIT_ALLOW } from './exit_codes.js';
 import { readHookStdin } from './hook_stdin.js';
 import { is_replay_mode } from './state_io.js';
@@ -37,7 +49,16 @@ import { is_replay_mode } from './state_io.js';
 export const CACHE_REL = path.join('agents', 'runtime', 'state', 'code-graph-v1.json');
 export const REFRESH_ARGS = ['code-graph', 'refresh', '--single-flight', '--map', '--budget-seconds', '60'];
 
-export type RefreshOutcome = 'disabled' | 'unsupported' | 'replay' | 'no-cache' | 'locked' | 'no-cli' | 'spawned';
+export type RefreshOutcome =
+    | 'disabled'
+    | 'unsupported'
+    | 'replay'
+    | 'not-opted-in'
+    | 'no-cache'
+    | 'tracked'
+    | 'locked'
+    | 'no-cli'
+    | 'spawned';
 
 /** The nearest ancestor of `start` holding `.git` (a dir, or a worktree's file). */
 export function repoRoot(start: string): string | null {
@@ -50,20 +71,49 @@ export function repoRoot(start: string): string | null {
     }
 }
 
-function executable(p: string): boolean {
-    try {
-        fs.accessSync(p, fs.constants.X_OK);
-        return fs.statSync(p).isFile();
-    } catch {
-        return false;
-    }
+function within(child: string, parent: string): boolean {
+    const rel = path.relative(parent, child);
+    return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
 }
 
-/** The project's own CLI first, then its local install, then PATH. */
+/**
+ * The first `agent-config` on PATH whose real location lies outside `root`.
+ * Relative PATH entries are skipped: they resolve against the repository.
+ */
 export function resolveCli(root: string, envPath: string = process.env['PATH'] ?? ''): string | null {
-    const local = [path.join(root, 'agent-config'), path.join(root, 'node_modules', '.bin', 'agent-config')];
-    const onPath = envPath.split(path.delimiter).filter(Boolean).map((d) => path.join(d, 'agent-config'));
-    return [...local, ...onPath].find(executable) ?? null;
+    let realRoot: string;
+    try {
+        realRoot = fs.realpathSync(root);
+    } catch {
+        return null;
+    }
+    for (const dir of envPath.split(path.delimiter)) {
+        if (!path.isAbsolute(dir)) continue;
+        const candidate = path.join(dir, 'agent-config');
+        try {
+            fs.accessSync(candidate, fs.constants.X_OK);
+            const real = fs.realpathSync(candidate);
+            if (!fs.statSync(real).isFile() || within(real, realRoot) || within(path.resolve(dir), realRoot)) continue;
+            return candidate;
+        } catch {
+            /* not here */
+        }
+    }
+    return null;
+}
+
+/** True when git tracks any of `rels` under `root` (or git cannot answer). */
+function anyTracked(root: string, rels: readonly string[]): boolean {
+    try {
+        const out = execFileSync('git', ['-C', root, 'ls-files', '--', ...rels], {
+            encoding: 'utf-8',
+            stdio: ['ignore', 'pipe', 'ignore'],
+            env: hardenedSpawnEnv(),
+        });
+        return out.trim() !== '';
+    } catch {
+        return true;
+    }
 }
 
 export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn): RefreshOutcome {
@@ -71,7 +121,9 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn): RefreshO
     if (process.platform === 'win32') return 'unsupported';
     if (is_replay_mode()) return 'replay';
     const root = repoRoot(cwd);
-    if (root === null || !fs.existsSync(path.join(root, CACHE_REL))) return 'no-cache';
+    if (root === null || !fs.existsSync(path.join(root, AUTO_REFRESH_REL))) return 'not-opted-in';
+    if (!fs.existsSync(path.join(root, CACHE_REL))) return 'no-cache';
+    if (anyTracked(root, [AUTO_REFRESH_REL, CACHE_REL])) return 'tracked';
     const lock = path.join(root, LOCK_REL);
     if (fs.existsSync(lock) && !isStale(lock)) return 'locked';
     const cli = resolveCli(root);
