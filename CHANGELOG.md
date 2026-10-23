@@ -403,6 +403,28 @@ An entry belongs under a dated release section, not here — see
 > that forces a new era split (`# Era: 17.2.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [17.2.1](https://github.com/event4u-app/agent-config/compare/17.2.0...17.2.1) (2026-10-23)
+
+### Release highlights
+
+- **Behaviour changes:** _none_
+- **Default changes + migration:** Breaking, pending in `BREAKING_CHANGES.md` and shipped by this release: **Three `fail_closed` hook guards run where they were silent.** The installed claude hook command now reaches a dispatcher staged under `~/.event4u/agent-config/runtime/` after a project-local install and before `PATH` ([`3f8c98e`](https://github.com/event4u-app/agent-config/commit/3f8c98e74), #2455). On machines installed through `npx`, or hosts launched with a bare `PATH`, every hook command used to end in a silent `exit 0`; there `block-no-verify` (refuses `git … --no-verify` and `core.hooksPath` overrides), `block-kernel-rule-writes` and `block-plumbing-writes` (refuse agent writes to this package's kernel rules and hook plumbing) now run and may refuse a tool call for the first time. Classed breaking by the AI council, 2026-10-19 (`agents/evidence/council/hook-carrier-release-note-class-20261019.md`). **`uninstall --global --purge` stops being a recursive delete of the host anchor.** Old scope: `fs.rmSync(anchor, { recursive: true })` on whole host configuration roots — `~/.claude/`, `~/.codex/`, `~/.config/zed/` — so everything under them went, whoever wrote it. New scope: only the anchor-relative paths this package's own deploy inventory recorded writing; the anchor itself is never removed, directories are pruned only when left empty, a recorded symlink is unlinked rather than followed, and a purge with no readable inventory for that anchor exits 1 having deleted nothing. A second change in the same area: a plain `uninstall --global` now keeps the lockfile while recorded content is still on disk, where it used to delete it.
+- **Security and correctness:** _none_
+- **Honest nulls:** _none_
+- **Known limitations:** _none_
+
+> **Governance mix:** governance-only 1 vs consumer-only 0 (mixed 0, maintenance 1; taxonomy 1.1.0; range 4e79c57090c8..36c8616ea2f4).
+
+### Documentation
+
+* **ci:** record the shipped cloud-release rate-limit fix ([b3d4b2f](https://github.com/event4u-app/agent-config/commit/b3d4b2f6d7334d8c78ee48bdb098efb30808703f))
+
+### CI
+
+* **cloud-release:** pace the asset upload and skip what is already attached ([91d4b73](https://github.com/event4u-app/agent-config/commit/91d4b73ebab6b68a53581092354803014dbf0c0c))
+
+Tests: 32297 (+0 since 17.2.0)
+
 ## [17.2.0](https://github.com/event4u-app/agent-config/compare/17.1.0...17.2.0) (2026-10-23)
 
 ### Release highlights
