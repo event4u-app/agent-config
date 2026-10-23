@@ -256,8 +256,16 @@ describe('kernel server standing cost — the Phase 0.2 figures', () => {
     // Headroom is now 14 tokens, not 70. Anyone planning the 27th tool should
     // read that number as "trim first", and anyone widening a description here
     // should expect this assertion to fire.
-    it('has 26 allowlisted tools', () => {
-        expect(names.length).toBe(26);
+    //
+    // RE-MEASURED 2026-10-23 (`road-to-a-map-that-draws-itself` 6.2): 26 -> 28
+    // tools, `graph_map_status` and `graph_area`, plus eight new relations in
+    // `graph_node`'s enum. Untrimmed that put the payload at 5,010, over the
+    // ceiling, and this assertion caught it. Trimmed rather than widened, as the
+    // note above asks: redundant prose in `chat_history_read` and
+    // `memory_lookup` ("Read-only" already rides on the annotation) came out.
+    // After the trim: descriptions 2,050 and payload 4,820, headroom 80.
+    it('has 28 allowlisted tools', () => {
+        expect(names.length).toBe(28);
     });
 
     it('costs about 2,035 tokens in descriptions alone', () => {

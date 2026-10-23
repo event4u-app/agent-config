@@ -38,7 +38,7 @@
     "character-consistency": 8555,
     "check-refs": 4188,
     "churn-prevention": 8014,
-    "code-intelligence": 16492,
+    "code-intelligence": 16998,
     "code-refactoring": 13717,
     "code-review": 16261,
     "command-routing": 6040,
@@ -681,6 +681,12 @@
       "old": 7434,
       "new": 8465,
       "reason": "A § Free tiers table (where a free tier's quota, data-use and region terms are read live, plus the never-send-project-data-to-a-training-tier line) so the skill answers 'set up a free LLM API' without copying any model id or limit. road-to-free-hands-a-paid-head-checks 7.1."
+    },
+    {
+      "skill": "code-intelligence",
+      "old": 16492,
+      "new": 16998,
+      "reason": "road-to-a-map-that-draws-itself (ADR-297): step 0 sends an orientation question to agents/map/MAP.md before any graph query, and the MCP table gains rows for graph_map_status and graph_area. Both are the skill's routing surface for the new map; trimming them would hide the tools the roadmap added."
     }
   ]
 }

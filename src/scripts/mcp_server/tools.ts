@@ -1298,15 +1298,11 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
         name: 'chat_history_read',
         side_effect: 'ro',
         description:
-            "Read recent entries back from the consumer project's " +
-            'chat-history JSONL ' +
-            '(`agents/runtime/.agent-chat-history`; ' +
-            '`agents/.agent-chat-history` accepted for back-compat). Use ' +
-            'to recover context from an earlier session — decisions, ' +
-            'notes, phase markers — at the start of a new task. ' +
-            'Read-only. Returns the resolved file path plus a list of ' +
-            'matching entries (newest last). Combine `session`, `last`, ' +
-            'and `entry_type` to narrow the result.',
+            'Read recent entries from the chat-history JSONL ' +
+            '(`agents/runtime/.agent-chat-history`; legacy ' +
+            '`agents/.agent-chat-history` accepted) to recover decisions, ' +
+            'notes and phase markers from an earlier session. Returns the ' +
+            'resolved path and matching entries, newest last.',
         input_schema: {
             type: 'object',
             properties: {
@@ -1328,9 +1324,7 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
                 path: {
                     type: 'string',
                     description:
-                        'Optional history-file path override; defaults to ' +
-                        'the standard chat-history location under the ' +
-                        'project root.',
+                        'History-file override; default is the standard location.',
                 },
                 around: {
                     type: 'integer',
@@ -1359,12 +1353,9 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
                     enum: ['index', 'full'],
                     default: 'full',
                     description:
-                        "'index' returns compact rows (ref, t tag, ~100-char " +
-                        'preview, tokens_estimate) instead of full entries — ' +
-                        'scan first, then re-read the refs you need via ' +
-                        '`around` or a narrowed filter. History entries are ' +
-                        "large, so index mode pays off here. 'full' " +
-                        '(default) returns complete entries.',
+                        "'index' returns compact rows (ref, t tag, preview, " +
+                        'tokens_estimate) — scan, then re-read refs via ' +
+                        "`around` or a filter. 'full' (default) returns whole entries.",
                 },
             },
             additionalProperties: false,
@@ -1375,18 +1366,13 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
         name: 'memory_lookup',
         side_effect: 'ro',
         description:
-            'Retrieve engineering-memory entries for one or more memory ' +
-            'types, optionally narrowed to specific anchor paths. Use ' +
-            'before editing a security-sensitive or historically buggy ' +
-            'file to surface prior incidents, ownership, and patterns ' +
-            'tied to it. WORKFLOW: call with detail:"index" FIRST — each ' +
-            'row carries id, title and tokens_estimate (the cost of ' +
-            'fetching it) — then fetch full bodies via memory_get ONLY ' +
-            'for the ids you will actually use, batching multiple ids ' +
-            'into one call. Reads `agents/memory/<type>/*.yml` plus the ' +
-            '`agents/memory/intake/*.jsonl` signal log. Read-only. ' +
-            'Returns the v1 retrieval envelope: a `status` field plus ' +
-            'per-type `slices` carrying the matched entries.',
+            'Engineering-memory entries for one or more types, optionally ' +
+            'narrowed to anchor paths — use before editing a ' +
+            'security-sensitive or historically buggy file. Call with ' +
+            'detail:"index" FIRST (rows carry id, title, tokens_estimate), ' +
+            'then memory_get only the ids you will use, batched. Reads ' +
+            '`agents/memory/<type>/*.yml` and `agents/memory/intake/*.jsonl`. ' +
+            'Returns a `status` plus per-type `slices`.',
         input_schema: {
             type: 'object',
             properties: {
@@ -1426,12 +1412,9 @@ export const ALLOWLIST: Record<string, BuiltinTool> = {
                     type: 'integer',
                     minimum: 1,
                     description:
-                        'Optional token budget. When set, entries are ' +
-                        'rendered as one-line compact rows (id, type, ' +
-                        'confidence, `line`) and the row set is hard-cut at ' +
-                        'token_budget × 4 chars; omitted hits appear as a ' +
-                        'top-level `truncation` hint naming a concrete next ' +
-                        'step. Absent → the envelope is unchanged.',
+                        'Optional: render compact rows (id, type, confidence, ' +
+                        '`line`) hard-cut at token_budget × 4 chars; omitted ' +
+                        'hits yield a top-level `truncation` hint.',
                 },
             },
             required: ['types'],
