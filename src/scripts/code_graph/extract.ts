@@ -131,6 +131,26 @@ function baseName(raw: string): string {
     return parts[parts.length - 1] ?? s;
 }
 
+/**
+ * Ids are `${file}#${name}`, so two same-named declarations in one file — a
+ * `type X` beside a `const X`, a getter and its setter, two nested helpers both
+ * called `walk` — used to share one id. The SQLite twin's PRIMARY KEY then
+ * refused the insert and the index was silently never written. The second and
+ * later declarations get `@2`, `@3`, … in declaration order, which the walk
+ * visits deterministically.
+ */
+const takenIds = new WeakMap<FileExtract, Map<string, number>>();
+function uniq(out: FileExtract, base: string): string {
+    let seen = takenIds.get(out);
+    if (!seen) {
+        seen = new Map();
+        takenIds.set(out, seen);
+    }
+    const n = (seen.get(base) ?? 0) + 1;
+    seen.set(base, n);
+    return n === 1 ? base : `${base}@${n}`;
+}
+
 // ── PHP ──────────────────────────────────────────────────────────────────────
 
 function extractPhp(root: TsNode, file: string, out: FileExtract): void {
@@ -163,7 +183,7 @@ function extractPhp(root: TsNode, file: string, out: FileExtract): void {
                         : n.type === 'interface_declaration'
                           ? 'interface'
                           : 'trait';
-                const id = `${file}#${nm}`;
+                const id = uniq(out, `${file}#${nm}`);
                 out.nodes.push({ id, label: nm, kind, source_file: file, source_location: loc(n) });
                 out.rawEdges.push({ sourceId: fileId, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
                 // extends / implements
@@ -198,7 +218,7 @@ function extractPhp(root: TsNode, file: string, out: FileExtract): void {
             case 'method_declaration':
             case 'function_definition': {
                 const nm = nameField(n) ?? '<anon>';
-                const id = classId ? `${classId}::${nm}` : `${file}#${nm}`;
+                const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
                 out.nodes.push({
                     id,
                     label: nm,
@@ -377,14 +397,14 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                         : n.type === 'type_alias_declaration'
                           ? 'type'
                           : 'enum';
-                const id = `${file}#${nm}`;
+                const id = uniq(out, `${file}#${nm}`);
                 out.nodes.push({ id, label: nm, kind, source_file: file, source_location: loc(n) });
                 out.rawEdges.push({ sourceId: fileId, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
                 return;
             }
             case 'class_declaration': {
                 const nm = nameField(n) ?? '<anon>';
-                const id = `${file}#${nm}`;
+                const id = uniq(out, `${file}#${nm}`);
                 out.nodes.push({ id, label: nm, kind: 'class', source_file: file, source_location: loc(n) });
                 out.rawEdges.push({ sourceId: fileId, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
                 const heritage = firstNamed(n, new Set(['class_heritage']));
@@ -399,7 +419,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
             }
             case 'method_definition': {
                 const nm = nameField(n) ?? '<anon>';
-                const id = classId ? `${classId}::${nm}` : `${file}#${nm}`;
+                const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
                 out.nodes.push({ id, label: nm, kind: 'method', source_file: file, source_location: loc(n) });
                 out.rawEdges.push({
                     sourceId: classId ?? fileId,
@@ -413,7 +433,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
             }
             case 'function_declaration': {
                 const nm = nameField(n) ?? '<anon>';
-                const id = `${file}#${nm}`;
+                const id = uniq(out, `${file}#${nm}`);
                 out.nodes.push({ id, label: nm, kind: 'function', source_file: file, source_location: loc(n) });
                 out.rawEdges.push({ sourceId: fileId, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
                 const body = n.childForFieldName('body');
@@ -457,7 +477,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                         // none of them is a declaration this graph can id.
                         if (topLevel && nmNode?.type === 'identifier') {
                             const nm = nmNode.text;
-                            const id = classId ? `${classId}::${nm}` : `${file}#${nm}`;
+                            const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
                             out.nodes.push({
                                 id,
                                 label: nm,
@@ -482,7 +502,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                         continue;
                     }
                     const nm = nameField(d) ?? '<anon>';
-                    const id = classId ? `${classId}::${nm}` : `${file}#${nm}`;
+                    const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
                     out.nodes.push({
                         id,
                         label: nm,
@@ -519,7 +539,7 @@ function extractTsJs(root: TsNode, file: string, out: FileExtract): void {
                 const value = n.childForFieldName('value');
                 const nm = nameField(n) ?? '<anon>';
                 if (value && (value.type === 'arrow_function' || value.type === 'function_expression')) {
-                    const id = classId ? `${classId}::${nm}` : `${file}#${nm}`;
+                    const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
                     out.nodes.push({
                         id,
                         label: nm,

@@ -13,9 +13,11 @@
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
 import { extractFile, type FileExtract, type RawEdge } from './extract.js';
+import { grammarWasmPath } from './loader.js';
 import {
     ALIAS_VIA,
     aliasRulesFrom,
@@ -34,6 +36,7 @@ import {
     type EdgeConfidence,
     EXPECTED_GRAMMAR_ABI,
     EXT_LANG,
+    GRAMMAR_WASM,
     isStatedResolution,
     type Lang,
     type ResolvedVia,
@@ -820,7 +823,45 @@ function contentHash(s: string): string {
  * source of truth: a full build reproduces the identical graph. */
 interface ExtractSidecar {
     version: number;
+    /** `extractorFingerprint()` at write time — see there. */
+    fingerprint?: string;
     files: Record<string, { hash: string; extract: FileExtract }>;
+}
+
+const _BUILD_DIR = path.dirname(fileURLToPath(import.meta.url));
+let _fingerprint: string | null = null;
+
+/**
+ * What a cached per-file extract was produced BY: schema × package version ×
+ * extractor source × every grammar's bytes. Keyed on the schema alone, an
+ * upgrade that changed how a file is extracted kept serving the old facts on
+ * `--update` for every file whose content had not moved. Hashing the extractor
+ * source rather than trusting a hand-bumped constant means a change nobody
+ * remembered to version still invalidates the cache.
+ */
+export function extractorFingerprint(): string {
+    if (_fingerprint !== null) return _fingerprint;
+    const h = createHash('sha256');
+    h.update(`schema:${SCHEMA_VERSION}\n`);
+    try {
+        const pkg = JSON.parse(fs.readFileSync(path.join(_BUILD_DIR, '..', '..', '..', 'package.json'), 'utf-8')) as {
+            version?: string;
+        };
+        h.update(`package:${pkg.version ?? '?'}\n`);
+    } catch {
+        h.update('package:?\n');
+    }
+    for (const f of ['extract.ts', 'extract.js']) {
+        const p = path.join(_BUILD_DIR, f);
+        if (fs.existsSync(p)) h.update(fs.readFileSync(p));
+    }
+    for (const lang of Object.keys(GRAMMAR_WASM).sort() as Lang[]) {
+        const p = grammarWasmPath(lang);
+        h.update(`grammar:${lang}\n`);
+        if (fs.existsSync(p)) h.update(fs.readFileSync(p));
+    }
+    _fingerprint = h.digest('hex').slice(0, 16);
+    return _fingerprint;
 }
 
 /** Exported so `refresh` (cli.ts) can locate/seed/promote the sidecar next to
@@ -829,10 +870,10 @@ export function sidecarPath(cachePath: string): string {
     return cachePath.replace(/\.json$/, '.extracts.json');
 }
 
-function readSidecar(p: string): ExtractSidecar | null {
+function readSidecar(p: string, fingerprint: string): ExtractSidecar | null {
     try {
         const s = JSON.parse(fs.readFileSync(p, 'utf-8')) as ExtractSidecar;
-        return s.version === SCHEMA_VERSION ? s : null;
+        return s.version === SCHEMA_VERSION && s.fingerprint === fingerprint ? s : null;
     } catch {
         return null;
     }
@@ -848,7 +889,7 @@ function readSidecar(p: string): ExtractSidecar | null {
 export async function buildFromRepo(
     root: string,
     cachePath: string | null,
-    opts: { update?: boolean } = {},
+    opts: { update?: boolean; fingerprint?: string } = {},
 ): Promise<BuildResult> {
     const abs = path.resolve(root);
     const fullPaths = discoverFiles(abs);
@@ -864,9 +905,10 @@ export async function buildFromRepo(
         files.push({ path: rel, source });
     }
 
-    const prior = opts.update && cachePath ? readSidecar(sidecarPath(cachePath)) : null;
+    const fingerprint = opts.fingerprint ?? extractorFingerprint();
+    const prior = opts.update && cachePath ? readSidecar(sidecarPath(cachePath), fingerprint) : null;
     const priorFiles = prior?.files ?? {};
-    const nextSidecar: ExtractSidecar = { version: SCHEMA_VERSION, files: {} };
+    const nextSidecar: ExtractSidecar = { version: SCHEMA_VERSION, fingerprint, files: {} };
     const extracts: FileExtract[] = [];
     let reExtracted = 0;
     let reused = 0;

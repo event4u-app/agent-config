@@ -60,6 +60,10 @@ export function validateGraph(g: unknown): ValidateResult {
         if (typeof n !== 'object' || n === null) return push(`node[${i}] not an object`);
         const nn = n as Record<string, unknown>;
         if (typeof nn['id'] !== 'string') push(`node[${i}].id must be a string`);
+        // A duplicate id makes the SQLite twin's PRIMARY KEY refuse the whole
+        // index, and two nodes behind one id make every answer about either
+        // of them ambiguous — so it is a schema error, not a warning.
+        else if (ids.has(nn['id'])) push(`node[${i}].id is a duplicate: ${nn['id']}`);
         else ids.add(nn['id']);
         if (!KINDS.has(nn['kind'] as string)) push(`node[${i}].kind invalid: ${String(nn['kind'])}`);
         if (typeof nn['source_file'] !== 'string') push(`node[${i}].source_file must be a string`);

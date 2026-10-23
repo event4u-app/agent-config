@@ -250,8 +250,12 @@ export interface CodeGraph {
  * `--update` resolve imports the old (name-lookup) way for every unchanged
  * file — a silently mixed graph. `readSidecar` refuses a version mismatch, so
  * the bump is what makes that impossible rather than merely unlikely.
+ *
+ * Bumped 4 → 5 by `road-to-a-map-that-draws-itself` 1.3: same-file
+ * same-name declarations now carry `@2`, `@3` suffixes, so a cache written
+ * at v4 holds ids a v5 build would not produce.
  */
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 /** Deterministic per-file byte cap — files above this become a SKIPPED node. */
 export const MAX_FILE_BYTES = 1_000_000;

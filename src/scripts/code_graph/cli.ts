@@ -62,9 +62,17 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { resolve_project_root } from '../_lib/agent_settings.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo, isTestFile, sidecarPath } from './build.js';
-import { computeVerdict, detectSources, type GraphState, graphState, pickSource } from './detect.js';
+import {
+    computeVerdict,
+    detectSources,
+    type GraphState,
+    graphState,
+    NATIVE_CACHE_REL,
+    pickSource,
+} from './detect.js';
 import { suggestVerb } from './intent.js';
 import {
     affected,
@@ -94,7 +102,16 @@ import {
 
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
-export const DEFAULT_CACHE = path.join(REPO_ROOT, 'agents', 'runtime', 'state', 'code-graph-v1.json');
+/**
+ * The cache belongs to the project it describes: `<root>/agents/runtime/state/`,
+ * the path MCP, the context hook and `detect` already read. Anchoring it to
+ * the package tree put a consumer's graph inside `node_modules`, where `npm ci`
+ * deleted it, two projects sharing an install overwrote each other, and MCP
+ * answered "no graph" right after the CLI reported a fresh one.
+ */
+export function cacheFor(root: string): string {
+    return path.join(root, NATIVE_CACHE_REL);
+}
 /** Local `tsx` binary — `refresh` spawns `build` as a child of THIS file
  * through it, so a budget-exceeded kill only ever terminates the child. */
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
@@ -106,47 +123,49 @@ function flag(argv: string[], name: string): string | null {
 }
 
 /**
- * Resolve the repository to operate on. `--root` > `AGENT_CONFIG_PROJECT_ROOT` >
- * this module's own tree.
- *
- * The middle rung is the whole point, and its absence was a confused deputy:
- * `_dispatch.bash` parses `--root` GLOBALLY, strips it from argv, and exports
- * `AGENT_CONFIG_PROJECT_ROOT` (`:1655`) — then this engine read neither and fell
- * back to its own module path. So `agent-config code-graph build --root <other
- * repo>` silently indexed THIS package. The dispatcher made the decision and the
- * engine substituted its own, which is why every consumer-facing invocation was
- * wrong about which repository it had just read.
+ * Resolve the repository to operate on: `--root` > the shared project-root
+ * resolver (`AGENT_CONFIG_PROJECT_ROOT`, then the anchor walk from `cwd`, then
+ * `cwd`). The package tree is never a fallback — in a consumer it is
+ * `node_modules/@event4u/agent-config`, and indexing it answered every
+ * question about the wrong repository.
  *
  * `realpathSync` rather than `resolve` alone: a symlinked root must normalise to
- * what will actually be walked, or the path a caller sees in the output is not
- * the path that was indexed. Fail-loud on a root that does not exist — a silent
- * fallback to the package tree is the defect this function exists to remove, and
- * reintroducing it for a typo'd path would be the same bug wearing a smaller
- * hat.
- *
- * Deliberately NOT touching `DEFAULT_CACHE`, which is anchored to `REPO_ROOT`
- * for the same reason and is a separate decision: it is a WRITE path, with its
- * own ownership, cleanup, concurrency and multi-repo namespacing questions.
- * Council 2026-08-22, both seats, explicitly out of scope here.
+ * what will actually be walked. A root that does not exist is returned
+ * unresolved, so the caller's existence check prints the path it was given.
  */
 function resolveRoot(argv: string[]): string {
     const explicit = flag(argv, '--root');
-    const fromDispatcher = process.env['AGENT_CONFIG_PROJECT_ROOT'];
-    const candidate =
-        explicit ?? (fromDispatcher !== undefined && fromDispatcher !== '' ? fromDispatcher : REPO_ROOT);
+    let candidate: string;
+    if (explicit !== null) {
+        candidate = explicit;
+    } else {
+        try {
+            candidate = resolve_project_root(null)[0];
+        } catch {
+            candidate = process.env['AGENT_CONFIG_PROJECT_ROOT'] ?? process.cwd();
+        }
+    }
     try {
         return fs.realpathSync(path.resolve(candidate));
     } catch {
-        // Returned unresolved on purpose: every caller checks existence and
-        // prints the path it was given, which is more useful in the error than
-        // a normalised form of a path that does not exist.
         return path.resolve(candidate);
     }
 }
 
+/**
+ * A cache an older version wrote inside the package directory is named once
+ * per build, so a consumer can delete it. Never deleted here: the path is
+ * outside the project the user pointed the verb at.
+ */
+function legacyCacheNotice(root: string): string {
+    const legacy = cacheFor(REPO_ROOT);
+    if (path.resolve(REPO_ROOT) === path.resolve(root) || !fs.existsSync(legacy)) return '';
+    return `    note: a stale cache from an older version sits inside the package: ${legacy} — safe to delete\n`;
+}
+
 async function cmdBuild(argv: string[]): Promise<number> {
     const root = resolveRoot(argv);
-    const out = argv.includes('--out') ? flag(argv, '--out') : DEFAULT_CACHE;
+    const out = argv.includes('--out') ? flag(argv, '--out') : cacheFor(root);
     if (!fs.existsSync(root)) {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
         return 1;
@@ -160,7 +179,8 @@ async function cmdBuild(argv: string[]): Promise<number> {
             `    edges: EXTRACTED ${c.EXTRACTED} · INFERRED ${c.INFERRED} · AMBIGUOUS ${c.AMBIGUOUS}\n` +
             `    resolved_via: ${resolvedViaHistogram(graph)}\n` +
             (update ? `    incremental: ${reExtracted} re-extracted · ${reused} reused\n` : '') +
-            (out ? `    cache: ${path.relative(REPO_ROOT, out)}\n` : ''),
+            (out ? `    cache: ${path.relative(root, out)}\n` : '') +
+            legacyCacheNotice(root),
     );
     return 0;
 }
@@ -186,7 +206,8 @@ function resolvedViaHistogram(graph: CodeGraph): string {
 }
 
 function cmdValidate(argv: string[]): number {
-    const p = flag(argv, '--graph') ?? DEFAULT_CACHE;
+    const root = resolveRoot(argv);
+    const p = flag(argv, '--graph') ?? cacheFor(root);
     if (!fs.existsSync(p)) {
         process.stderr.write(`code-graph: graph not found: ${p}\n`);
         return 1;
@@ -215,12 +236,12 @@ function cmdValidate(argv: string[]): number {
     // content-addressed cache key, so agreement here means the twin was emitted
     // from THIS graph and not merely from a graph.
     const twinState = twinChecksumState(p, (parsed as CodeGraph).source_checksum);
-    const rel = path.relative(REPO_ROOT, p);
+    const rel = path.relative(root, p);
     if (twinState.kind === 'mismatch') {
         process.stderr.write(
             `❌  SQLite twin disagrees with the canonical JSON: twin ${twinState.twin} ≠ json ${twinState.json}\n` +
                 '    The twin is derived and disposable — delete it and re-run `code-graph build`.\n' +
-                `    ${path.relative(REPO_ROOT, sqliteTwinPath(p))}\n`,
+                `    ${path.relative(root, sqliteTwinPath(p))}\n`,
         );
         return 1;
     }
@@ -257,13 +278,13 @@ function resolveGraph(argv: string[]): { g: LoadedGraph; note: string } | { err:
     const root = resolveRoot(argv);
     if (explicit) {
         if (!fs.existsSync(explicit)) return { err: `graph not found: ${explicit}` };
-        return { g: loadGraph(explicit, path.relative(REPO_ROOT, explicit)), note: '' };
+        return { g: loadGraph(explicit, path.relative(root, explicit)), note: '' };
     }
-    const picked = pickSource(detectSources(root, DEFAULT_CACHE));
+    const picked = pickSource(detectSources(root, cacheFor(root)));
     if (!picked) return { err: 'no code-graph source found — run `code_graph build` or ship a graph.json' };
     if (picked.kind === 'scip') return { err: `${picked.note ?? 'SCIP detected'} — pass --graph <json> or install peer tooling` };
     const staleNote = picked.stale ? ` ⚠ index is ${picked.commits_behind ?? 'N'} commit(s) behind — rebuild before trusting` : '';
-    return { g: loadGraph(picked.path, `${picked.kind}:${path.relative(REPO_ROOT, picked.path)}`), note: staleNote };
+    return { g: loadGraph(picked.path, `${picked.kind}:${path.relative(root, picked.path)}`), note: staleNote };
 }
 
 function render(r: QueryResult, staleNote: string): number {
@@ -376,8 +397,8 @@ function isFlagValue(argv: string[], token: string): boolean {
  *
  * `answeredBy` is `resolveGraph`'s own picked path when it has one. Without it
  * the two disagreed on the case `resolveRoot`'s docstring exists for: with
- * `--root <other repo>` the verb answers from `DEFAULT_CACHE` (anchored to the
- * package tree) while `graphState` looked under the OTHER root, so the printed
+ * `--root <other repo>` the verb answered from a cache anchored to the
+ * package tree while `graphState` looked under the OTHER root, so the printed
  * staleness described a cache the answer never came from. An independent review
  * found the `--graph` half fixed and this half open.
  */
@@ -579,17 +600,17 @@ function cmdDetect(argv: string[]): number {
     if (flag(argv, '--format') === 'json') {
         // Machine-readable three-state verdict (Phase 2). Existing human-text
         // output below is unchanged for existing consumers.
-        process.stdout.write(`${JSON.stringify(computeVerdict(root, DEFAULT_CACHE))}\n`);
+        process.stdout.write(`${JSON.stringify(computeVerdict(root, cacheFor(root)))}\n`);
         return 0;
     }
-    const verdicts = detectSources(root, DEFAULT_CACHE);
+    const verdicts = detectSources(root, cacheFor(root));
     if (!verdicts.length) {
         process.stdout.write('no code-graph source detected\n');
         return 1;
     }
     for (const v of verdicts) {
         const fresh = v.stale === undefined ? '' : v.stale ? ` · STALE${v.commits_behind !== undefined ? ` (${v.commits_behind} behind)` : ''}` : ' · fresh';
-        process.stdout.write(`${v.kind.padEnd(9)} ${path.relative(REPO_ROOT, v.path)}${fresh}${v.note ? ` · ${v.note}` : ''}\n`);
+        process.stdout.write(`${v.kind.padEnd(9)} ${path.relative(root, v.path)}${fresh}${v.note ? ` · ${v.note}` : ''}\n`);
     }
     const picked = pickSource(verdicts);
     if (picked) process.stdout.write(`→ query would use: ${picked.kind}\n`);
@@ -644,7 +665,13 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
         }
     }
     const args = ['build', '--root', root, '--out', tmpOut, ...(update ? ['--update'] : [])];
-    const res = spawnSync(TSX_BIN, [_HERE, ...args], {
+    // A hoisted consumer install has no `tsx` under the package's own
+    // `node_modules`; re-entering through this process's own loader flags works
+    // wherever the parent itself started.
+    const [cmd, cmdArgs] = fs.existsSync(TSX_BIN)
+        ? [TSX_BIN, [_HERE, ...args]]
+        : [process.execPath, [...process.execArgv, _HERE, ...args]];
+    const res = spawnSync(cmd, cmdArgs, {
         env: hardenedSpawnEnv(),
         stdio: 'ignore',
         timeout: Math.round(budgetSeconds * 1000),
@@ -670,13 +697,13 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
     fs.renameSync(tmpOut, out); // same-dir → atomic; real cache only ever changes here
     const tmpSidecar = sidecarPath(tmpOut);
     if (fs.existsSync(tmpSidecar)) fs.renameSync(tmpSidecar, sidecarPath(out));
-    process.stdout.write(`✅  code-graph refreshed — cache: ${path.relative(REPO_ROOT, out)}\n`);
+    process.stdout.write(`✅  code-graph refreshed — cache: ${path.relative(root, out)}\n`);
     return 0;
 }
 
 function cmdRefresh(argv: string[]): number {
     const root = resolveRoot(argv);
-    const out = flag(argv, '--out') ?? DEFAULT_CACHE;
+    const out = flag(argv, '--out') ?? cacheFor(root);
     const budgetSeconds = budgetSecondsOf(argv);
     if (!fs.existsSync(root)) {
         process.stderr.write(`code-graph: root not found: ${root}\n`);

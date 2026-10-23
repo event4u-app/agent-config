@@ -104,22 +104,22 @@ target** here, never a reason to withhold the capability.
 
 Nothing in Phases 2-7 is worth building while D1-D5 stand.
 
-- [ ] **1.1 Project root (D1).** `resolveRoot` delegates to the shared project-root resolver:
+- [x] **1.1 Project root (D1).** `resolveRoot` delegates to the shared project-root resolver:
   `--root` → env → anchor walk → `cwd`. The package tree is never a fallback. Covers every verb,
   the MCP tools and the context hook.
   verify: in a fixture consumer, a flagless `build` reports the fixture's file count.
-- [ ] **1.2 Cache location (D2).** The default cache is
+- [x] **1.2 Cache location (D2).** The default cache is
   `<project>/agents/runtime/state/code-graph-v1.json`, the path MCP and `detect.ts` already read.
   A one-time notice names any cache left inside the package directory.
   verify: after build, `graph_query` answers; nothing is written under the package directory.
-- [ ] **1.3 Unique ids (D3).** A same-file collision gets a deterministic suffix by declaration
+- [x] **1.3 Unique ids (D3).** A same-file collision gets a deterministic suffix by declaration
   order (`#walk`, `#walk@2`); `validateGraph` rejects duplicate ids; goldens regenerate once with a
   `SCHEMA_VERSION` bump.
   verify: duplicate-id count 0 on this repo and on the Laravel fixture; the twin exists after `build`.
-- [ ] **1.4 Twin in one transaction (D4)** and a visible failure: emission runs inside
+- [x] **1.4 Twin in one transaction (D4)** and a visible failure: emission runs inside
   `BEGIN … COMMIT`, and a failed emission prints one line with its reason.
   verify: twin emission ≤ 2 s on this repo's graph; `query` takes the index path.
-- [ ] **1.5 Cache key (D5).** The sidecar version becomes
+- [x] **1.5 Cache key (D5).** The sidecar version becomes
   `schema × package version × extractor fingerprint × grammar fingerprint`; a mismatch
   re-extracts everything once.
   verify: a changed extractor fingerprint in a test forces `reExtracted == files`.

@@ -110,6 +110,9 @@ export function emitSqliteTwin(graph: CodeGraph, serialized: string, jsonPath: s
                     'CREATE INDEX nodes_label ON nodes(label);' +
                     'CREATE INDEX nodes_source_file ON nodes(source_file);',
             );
+            // One transaction: in autocommit mode every row was its own fsync'd
+            // commit, ~30 s on this repository's graph against ~0.5 s batched.
+            db.exec('BEGIN');
             const meta = db.prepare('INSERT INTO meta (key, value) VALUES (?, ?)');
             meta.run('source_checksum', graph.source_checksum);
             meta.run('json_size', String(stat.size));
@@ -152,14 +155,18 @@ export function emitSqliteTwin(graph: CodeGraph, serialized: string, jsonPath: s
                     e.provider,
                 );
             }
+            db.exec('COMMIT');
             stampUserVersion(db, GRAPH_STORE_VERSION);
         } finally {
             db.close();
         }
         fs.renameSync(tmp, twin);
         return true;
-    } catch {
+    } catch (e) {
         fs.rmSync(tmp, { force: true });
+        // Said once, on stderr: a silent `false` here is how the index went
+        // unwritten on every real repository without anyone noticing.
+        process.stderr.write(`code-graph: SQLite index not written — ${(e as Error).message}\n`);
         return false;
     }
 }
