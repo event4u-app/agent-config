@@ -17,7 +17,7 @@ depends on what that host exposes. We say so plainly rather than imply
 
 | Host | Compile-time rules | Lifecycle slots bound |
 |---|---|---|
-| Claude Code (plugin) | ✅ | 10 |
+| Claude Code (plugin) | ✅ | 11 |
 | Cowork | ✅ | 8 |
 | Augment | ✅ native rules | 5 |
 | Cursor | ✅ `.cursor/rules/*.mdc` | 5 |

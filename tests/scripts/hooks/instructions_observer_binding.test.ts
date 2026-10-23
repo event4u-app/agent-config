@@ -129,24 +129,36 @@ describe('a real dispatch of InstructionsLoaded', () => {
  * decided by what the layout leaves reachable: with no observer source on disk
  * the spawn fallback has nothing to run, so a capture line proves the chunk.
  */
-// POSIX only: the build runs the package script through `/bin/sh`, and a skip on
-// each case would still run the shared `beforeAll`.
-describe.skipIf(process.platform === 'win32')('the built bundle', () => {
+/** The flags `build:hooks` passes besides the banner; asserted against the script so the two cannot drift. */
+const BUILD_HOOKS_FLAGS =
+    'esbuild src/scripts/hooks/dispatch_entry.ts --bundle --platform=node --format=esm --target=node20 ' +
+    '--define:__AGENT_CONFIG_BUNDLE__=true --outfile=dist/hooks/dispatch.js';
+
+describe('the built bundle', () => {
     let build = '';
 
     beforeAll(async () => {
         build = fs.mkdtempSync(path.join(os.tmpdir(), 'il-build-'));
         const pkg = JSON.parse(fs.readFileSync(path.join(REPO, 'package.json'), 'utf-8')) as { scripts: Record<string, string> };
         // Cut at the digest step, not at the first `&&`: the banner holds `&&` of its own.
-        // Single-quoted for the shell, so a temp dir with spaces or metacharacters stays one argument.
-        const outfile = `'${path.join(build, 'dispatch.js').replace(/'/g, `'\\''`)}'`;
-        const esbuild = pkg.scripts['build:hooks']!.split(' && node src/scripts/write_bundle_digest.mjs')[0]!.replace(
-            '--outfile=dist/hooks/dispatch.js',
-            `--outfile=${outfile}`,
-        );
-        const env = { ...process.env, PATH: `${path.join(REPO, 'node_modules', '.bin')}${path.delimiter}${process.env['PATH'] ?? ''}` };
-        const b = spawnSync('/bin/sh', ['-c', esbuild], { cwd: REPO, encoding: 'utf-8', env });
-        expect(b.status, b.stderr).toBe(0);
+        const script = pkg.scripts['build:hooks']!.split(' && node src/scripts/write_bundle_digest.mjs')[0]!;
+        const banner = /--banner:js="([^"]*)"/.exec(script)?.[1];
+        expect(banner, 'build:hooks carries a --banner:js').toBeDefined();
+        expect(script.replace(/ --banner:js="[^"]*"/, '')).toBe(BUILD_HOOKS_FLAGS);
+        // The esbuild API, not a shell: no quoting of the temp path, and no POSIX-only `sh`.
+        const { buildSync } = await import('esbuild');
+        buildSync({
+            absWorkingDir: REPO,
+            entryPoints: ['src/scripts/hooks/dispatch_entry.ts'],
+            bundle: true,
+            platform: 'node',
+            format: 'esm',
+            target: 'node20',
+            define: { __AGENT_CONFIG_BUNDLE__: 'true' },
+            outfile: path.join(build, 'dispatch.js'),
+            banner: { js: banner! },
+            logLevel: 'error',
+        });
         const { buildChunk } = (await import('../../../src/scripts/hook_chunks.mjs')) as {
             buildChunk: (root: string, entry: string, outfile: string) => void;
         };
@@ -167,12 +179,19 @@ describe.skipIf(process.platform === 'win32')('the built bundle', () => {
      * data files from `src/` at runtime, so the tree must be there; only the
      * observer source must not be.
      */
+    /** A directory junction needs no privilege on Windows; a file link does, so files are copied there. */
+    function link(target: string, at: string): void {
+        if (fs.statSync(target).isDirectory()) fs.symlinkSync(target, at, 'junction');
+        else if (process.platform === 'win32') fs.copyFileSync(target, at);
+        else fs.symlinkSync(target, at);
+    }
+
     function mirrorWithout(from: string, to: string, omit: string): void {
         fs.mkdirSync(to, { recursive: true });
         const [head, ...rest] = omit.split('/');
         for (const entry of fs.readdirSync(from)) {
             if (entry !== head) {
-                fs.symlinkSync(path.join(from, entry), path.join(to, entry));
+                link(path.join(from, entry), path.join(to, entry));
             } else if (rest.length > 0) {
                 mirrorWithout(path.join(from, entry), path.join(to, entry), rest.join('/'));
             }
@@ -189,9 +208,9 @@ describe.skipIf(process.platform === 'win32')('the built bundle', () => {
             fs.copyFileSync(path.join(build, f), path.join(hooks, f));
         }
         fs.copyFileSync(path.join(REPO, 'package.json'), path.join(root, 'package.json'));
-        fs.symlinkSync(path.join(REPO, 'node_modules'), path.join(root, 'node_modules'));
+        link(path.join(REPO, 'node_modules'), path.join(root, 'node_modules'));
         if (opts.source) {
-            fs.symlinkSync(path.join(REPO, 'src'), path.join(root, 'src'));
+            link(path.join(REPO, 'src'), path.join(root, 'src'));
         } else {
             mirrorWithout(path.join(REPO, 'src'), path.join(root, 'src'), OBSERVER.replace(/^src\//, ''));
         }

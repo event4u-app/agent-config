@@ -248,20 +248,13 @@ export const RECORDED_EVENTS: ReadonlySet<string> = new Set([
     'stop',
     'pre_compact',
     'agent_error',
-    'subagent_start',
-    'subagent_stop',
+    'subagent_start', 'subagent_stop',
     'instructions_loaded',
 ]);
 
 /**
- * Members deliberately NOT recorded, each with the reason — silence about an
- * event is not coverage.
- *
- * "Recorded" means the journal accepts the event when `journal-record` runs on
- * it, not that the manifest binds it there. `instructions_loaded` is the case in
- * point: it is recordable, and the manifest binds only its own observer to it,
- * because the host fires it once per loaded file and that capture lives under
- * `runtime/arrivals/`.
+ * Members deliberately NOT recorded, each with the reason — silence is not coverage.
+ * "Recorded" means accepted, not bound: see the manifest's `instructions_loaded` row.
  *
  * **Currently empty, and the emptiness is the finding.** All eleven members of
  * the vocabulary are recordable: the journal stores what the dispatcher hands it

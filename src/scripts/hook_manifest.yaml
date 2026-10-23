@@ -1654,6 +1654,8 @@ platforms:
     subagent_stop:    [subagent-ledger, journal-record]
     agent_error:      [host-rate-marker]
     # Observe-only; the host runs this event asynchronously, once per loaded file.
+    # `journal-record` is deliberately not bound here: the event is recordable
+    # (RECORDED_EVENTS), but its capture lives under runtime/arrivals/.
     instructions_loaded: [instructions-observer]
 
   # Cowork — the Claude desktop app's local-agent-mode runtime, built
