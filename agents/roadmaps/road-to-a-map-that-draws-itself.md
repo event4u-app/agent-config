@@ -256,16 +256,21 @@ Pulled forward from `later/road-to-a-graph-that-wins` 1.2.
 
 Measurements ship with the change and decide defaults. They do not decide whether the map exists.
 
-- [ ] **8.1 Cost readings** on this repo, the Laravel fixture and a synthetic large tree: engine
+- [x] **8.1 Cost readings** on this repo, the Laravel fixture and a synthetic large tree: engine
   build, twin emission, map build, HTML bytes, `query` p50/p95 on the index path. Recorded in an
   evidence report.
-- [ ] **8.2 Correctness oracles.** Per relation added in Phases 1, 4 and 6: a positive fixture
+- [x] **8.2 Correctness oracles.** Per relation added in Phases 1, 4 and 6: a positive fixture
   and a negative one (two same-named methods in two namespaces; a fluent `->middleware()`). A
   missing edge is preferred to a wrong one.
-- [ ] **8.3 Orientation benchmark.** Pre-registered beside the existing graph-vs-grep reports:
+- [x] **8.3 Orientation benchmark.** Pre-registered beside the existing graph-vs-grep reports:
   "which area owns X", "what does area A depend on", "what does route R touch". Arm A grep/read,
   arm B grep/read + `MAP.md` + `graph_area`. On a win the skill routes orientation to `MAP.md`; on
   a tie the map stays on demand. Published either way.
+  Result: **TIE** (6/6 correct in both arms; median tool calls 3.5 → 3 against a bar of ≤ 2.8) —
+  the map stays on demand and the hook unchanged. The run surfaced an inherited-`$table` defect
+  in the Laravel overlay, fixed in the same PR. Readings and oracles:
+  `agents/evidence/analysis/code-graph-map-readings-2026-10-23.md`; report:
+  `internal/bench/reports/orientation-map-vs-grep-2026-10-23.md`.
 
 ## Kill register
 
@@ -312,15 +317,15 @@ Measurements ship with the change and decide defaults. They do not decide whethe
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — In a fixture consumer, a flagless `agent-config code-graph build` indexes the fixture, writes the cache under the fixture, and MCP `graph_query` answers from it (D1, D2).
-- [ ] AC-2 — 0 duplicate node ids on this repo and on the Laravel fixture; the SQLite twin exists, is emitted in ≤ 2 s here, and `query` uses the index path (D3, D4).
-- [ ] AC-3 — A changed extractor fingerprint forces a full re-extraction (D5).
-- [ ] AC-4 — `agent-config code-graph map` writes `agents/map/{index.html,MAP.md,map.json,areas/}`; the layout lint is green; the files are gitignored.
-- [ ] AC-5 — Two builds of the same tree produce byte-identical `map.json`, `MAP.md` and `index.html`.
-- [ ] AC-6 — `index.html` contains no external URL, opens offline, and renders at desktop / 375 / 320 px with zero page errors where Playwright is present.
-- [ ] AC-7 — No area exceeds 25 % of files on either fixture; thresholds are printed in `MAP.md`.
-- [ ] AC-8 — The hostile-label fixture renders as text, never as markup.
-- [ ] AC-9 — On the Laravel fixture the map shows route → controller → view / model → table, and isolated files fall below 20 %.
-- [ ] AC-10 — `comparison.yaml` makes no claim about the graph that the tree contradicts.
-- [ ] AC-11 — `graph_area` and `graph_map_status` are in the MCP catalog with machine-checked counts.
-- [ ] AC-12 — The 8.1 readings are recorded; 8.3 is pre-registered before its first run and published whichever way it lands.
+- [x] AC-1 — In a fixture consumer, a flagless `agent-config code-graph build` indexes the fixture, writes the cache under the fixture, and MCP `graph_query` answers from it (D1, D2).
+- [x] AC-2 — 0 duplicate node ids on this repo and on the Laravel fixture; the SQLite twin exists, is emitted in ≤ 2 s here, and `query` uses the index path (D3, D4).
+- [x] AC-3 — A changed extractor fingerprint forces a full re-extraction (D5).
+- [x] AC-4 — `agent-config code-graph map` writes `agents/map/{index.html,MAP.md,map.json,areas/}`; the layout lint is green; the files are gitignored.
+- [x] AC-5 — Two builds of the same tree produce byte-identical `map.json`, `MAP.md` and `index.html`.
+- [x] AC-6 — `index.html` contains no external URL, opens offline, and renders at desktop / 375 / 320 px with zero page errors where Playwright is present.
+- [x] AC-7 — No area exceeds 25 % of files on either fixture; thresholds are printed in `MAP.md`.
+- [x] AC-8 — The hostile-label fixture renders as text, never as markup.
+- [x] AC-9 — On the Laravel fixture the map shows route → controller → view / model → table, and isolated files fall below 20 %.
+- [x] AC-10 — `comparison.yaml` makes no claim about the graph that the tree contradicts.
+- [x] AC-11 — `graph_area` and `graph_map_status` are in the MCP catalog with machine-checked counts.
+- [x] AC-12 — The 8.1 readings are recorded; 8.3 is pre-registered before its first run and published whichever way it lands.

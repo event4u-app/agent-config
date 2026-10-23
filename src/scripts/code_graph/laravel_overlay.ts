@@ -403,11 +403,27 @@ export function buildLaravelOverlay(
             }
         }
     }
+    // `$table` is inherited: a model whose ancestor names its table persists
+    // there, and the naming convention applies only when no ancestor names one.
+    const byShortName = new Map<string, { source: string; parent: string }>();
+    for (const [id, d] of classDecl) byShortName.set(id.split('#')[1] as string, { source: d.file.source, parent: d.parent });
+    const inheritedTable = (name: string): string | undefined => {
+        const seen = new Set<string>();
+        for (let cur: string | undefined = name; cur && !seen.has(cur); ) {
+            seen.add(cur);
+            const decl = byShortName.get(cur);
+            if (!decl) return undefined;
+            const own = /protected\s+\$table\s*=\s*['"](\w+)['"]/.exec(decl.source)?.[1];
+            if (own) return own;
+            cur = decl.parent;
+        }
+        return undefined;
+    };
     for (const [id, d] of [...classDecl.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
         const name = id.split('#')[1] as string;
         if (!modelNames.has(d.parent) || MODEL_BASES.has(name) || !nodeById.has(id)) continue;
         stats.models += 1;
-        const explicit = /protected\s+\$table\s*=\s*['"](\w+)['"]/.exec(d.file.source)?.[1];
+        const explicit = inheritedTable(name);
         const table = explicit ?? (d.abstract ? null : snakePlural(name));
         const tableId = table ? tableNodes.get(table) : undefined;
         if (tableId) emit(id, tableId, 'persists', 'schema-call');

@@ -72,8 +72,15 @@ beforeAll(async () => {
     );
     write(
         'database/migrations/2024_01_01_000000_create_books.php',
-        "<?php\nreturn new class {\n    public function up() {\n        Schema::create('books', function ($t) {});\n        Schema::create('book_chapters', function ($t) {});\n    }\n};\n",
+        "<?php\nreturn new class {\n    public function up() {\n        Schema::create('books', function ($t) {});\n        Schema::create('book_chapters', function ($t) {});\n        Schema::create('entities', function ($t) {});\n        Schema::create('shelves', function ($t) {});\n    }\n};\n",
     );
+    // Single-table inheritance: the abstract parent names the table, the
+    // children inherit it — the convention (`shelves`) must not win.
+    write(
+        'app/Models/Entity.php',
+        "<?php\nnamespace App\\Models;\nuse Illuminate\\Database\\Eloquent\\Model;\nabstract class Entity extends Model {\n    protected $table = 'entities';\n}\n",
+    );
+    write('app/Models/Shelf.php', "<?php\nnamespace App\\Models;\nclass Shelf extends Entity {\n}\n");
     write('config/app.php', "<?php\nreturn ['name' => 'x'];\n");
     write('lang/en/books.php', "<?php\nreturn ['title' => 'Books'];\n");
     write('lang/de/books.php', "<?php\nreturn ['title' => 'Bücher'];\n");
@@ -151,6 +158,11 @@ describe('data (4.3)', () => {
         expect(has('database/migrations/2024_01_01_000000_create_books.php', 'migrates', 'table:books')).toBe(true);
         expect(has('app/Models/Book.php#Book', 'persists', 'table:books')).toBe(true);
         expect(has('app/Models/Chapter.php#Chapter', 'persists', 'table:book_chapters')).toBe(true);
+    });
+
+    it('follows an inherited $table instead of the naming convention', () => {
+        expect(has('app/Models/Shelf.php#Shelf', 'persists', 'table:entities')).toBe(true);
+        expect(has('app/Models/Shelf.php#Shelf', 'persists', 'table:shelves')).toBe(false);
     });
 
     it('links an Eloquent relation method to the related model', () => {
