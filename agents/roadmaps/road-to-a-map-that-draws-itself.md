@@ -231,8 +231,10 @@ Pulled forward from `later/road-to-a-graph-that-wins` 1.2.
   guess for the same pair. Result: `scip_reader.ts`, a hand-written decoder for the
   documents / occurrences subset (E8: well under 300 lines, no protobuf runtime); edges carry
   `provider: 'scip'`; a superseded native guess is dropped; the index enters the checksum.
-- [ ] **6.3 Docs layer.** Deterministic Markdown link and backticked-path extraction: a document
-  that names a file gets an edge to it. No model, no PDF or image extraction.
+- [x] **6.3 Docs layer.** Deterministic Markdown link and backticked-path extraction: a document
+  that names a file gets an edge to it. No model, no PDF or image extraction. Result on this
+  repo: 5,844 Markdown files, 26,163 `documents` edges; code files with no trusted link 119 → 96.
+  `map` now rebuilds on an `edited` graph state too, so it never draws uncommitted code stale.
 - [ ] **6.4 This repository's own map.** On an agent-config source tree, the artefact graph
   (D13) renders as a second layer; `docs/maintainers/system-map.md` links to it.
 

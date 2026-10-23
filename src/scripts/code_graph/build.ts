@@ -30,6 +30,7 @@ import {
     resolveAlias,
     resolvePsr4,
 } from './resolution_tiers.js';
+import { DOC_EXTS, docsLayer } from './docs_layer.js';
 import { readScipIndex, type ScipDocument, scipEdges, supersededByScip } from './scip_reader.js';
 import { emitSqliteTwin } from './sqlite_store.js';
 import {
@@ -71,7 +72,9 @@ export interface SourceFile {
 // ── deterministic file discovery (path-confined) ─────────────────────────────
 
 /** Recursively list launch-set source files under `root`, path-confined. */
-export function discoverFiles(root: string): string[] {
+const CODE_EXTS: ReadonlySet<string> = new Set(Object.keys(EXT_LANG));
+
+export function discoverFiles(root: string, exts: ReadonlySet<string> = CODE_EXTS): string[] {
     const abs = path.resolve(root);
     // Resolve the root itself first: a repo checked out under a symlinked
     // path (e.g. macOS /tmp → /private/tmp) must still confine correctly —
@@ -99,7 +102,7 @@ export function discoverFiles(root: string): string[] {
             }
             if (!e.isFile()) continue;
             const ext = path.extname(e.name).toLowerCase();
-            if (!(ext in EXT_LANG)) continue;
+            if (!exts.has(ext)) continue;
             let real: string;
             try {
                 real = fs.realpathSync(full);
@@ -300,6 +303,7 @@ export function buildGraph(
     extracts: readonly FileExtract[],
     resolution: ResolutionConfig = EMPTY_RESOLUTION_CONFIG,
     scip: readonly ScipDocument[] = [],
+    docs: readonly SourceFile[] = [],
 ): CodeGraph {
     const nodes = extracts.flatMap((e) => e.nodes);
     const nodeIds = new Set(nodes.map((n) => n.id));
@@ -761,6 +765,13 @@ export function buildGraph(
         for (const n of overlay.nodes) nodes.push(n);
     }
 
+    if (docs.length > 0) {
+        const allFiles = new Set([...files.map((f) => f.path), ...docs.map((d) => d.path)]);
+        const layer = docsLayer(docs, allFiles);
+        for (const n of layer.nodes) nodes.push(n);
+        for (const e of layer.edges) edges.push(e);
+    }
+
     // A project's own SCIP index states references the compiler resolved;
     // each one supersedes the native name guess it duplicates.
     if (scip.length > 0) {
@@ -798,6 +809,11 @@ export function buildGraph(
         h.update('\n');
     }
 
+    for (const d of [...docs].sort((a, b) => (a.path < b.path ? -1 : 1))) {
+        h.update(`doc\0${d.path}\0`);
+        h.update(createHash('sha256').update(d.source, 'utf-8').digest('hex'));
+        h.update('\n');
+    }
     // The SCIP index is an input like any source file: a new index must not
     // read as the same graph.
     for (const d of [...scip].sort((a, b) => (a.path < b.path ? -1 : 1))) {
@@ -1057,7 +1073,15 @@ export async function buildFromRepo(
             process.stderr.write(`code-graph: index.scip not read — ${(e as Error).message}\n`);
         }
     }
-    const graph = buildGraph(files, extracts, readResolutionConfig(root), scip);
+    const docs: SourceFile[] = [];
+    for (const full of discoverFiles(abs, DOC_EXTS)) {
+        try {
+            docs.push({ path: toPosixRel(abs, full), source: fs.readFileSync(full, 'utf-8') });
+        } catch {
+            continue;
+        }
+    }
+    const graph = buildGraph(files, extracts, readResolutionConfig(root), scip, docs);
     const json = serializeGraph(graph);
     if (cachePath) {
         write_atomic(cachePath, json);

@@ -20,6 +20,7 @@ const RELATIONS = new Set([
     'migrates',
     'persists',
     'relates',
+    'documents',
 ]);
 const CONFIDENCES = new Set(['EXTRACTED', 'INFERRED', 'AMBIGUOUS']);
 /** Mirrors `ResolvedVia` in types.ts — the full union, including the four

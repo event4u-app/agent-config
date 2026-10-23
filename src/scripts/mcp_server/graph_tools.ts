@@ -134,6 +134,7 @@ const RELATIONS = [
     'migrates',
     'persists',
     'relates',
+    'documents',
 ] as const;
 
 function num(args: Record<string, unknown>, key: string, dflt: number): number {

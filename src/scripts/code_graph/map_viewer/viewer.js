@@ -55,7 +55,7 @@
             hint: 'Click an area to open it. Click a file to inspect it. Esc goes back.',
             roles: {
                 code: 'code', test: 'test', entry: 'entry point', view: 'view', migration: 'migration',
-                translation: 'translation', config: 'config', infra: 'infrastructure', isolated: 'isolated'
+                translation: 'translation', config: 'config', doc: 'documentation', infra: 'infrastructure', isolated: 'isolated'
             }
         },
         de: {
@@ -96,7 +96,7 @@
             hint: 'Bereich anklicken zum Öffnen, Datei anklicken zum Ansehen. Esc geht zurück.',
             roles: {
                 code: 'Code', test: 'Test', entry: 'Einstiegspunkt', view: 'View', migration: 'Migration',
-                translation: 'Übersetzung', config: 'Konfiguration', infra: 'Infrastruktur', isolated: 'isoliert'
+                translation: 'Übersetzung', config: 'Konfiguration', doc: 'Dokumentation', infra: 'Infrastruktur', isolated: 'isoliert'
             }
         }
     };

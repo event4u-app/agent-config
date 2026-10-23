@@ -48,7 +48,9 @@ export type Relation =
     | 'reads'
     | 'migrates'
     | 'persists'
-    | 'relates';
+    | 'relates'
+    /** A Markdown document links to, or names, the file (`docs_layer.ts`). */
+    | 'documents';
 
 /**
  * HOW an edge's target was arrived at — the mechanism, not the confidence.
@@ -84,7 +86,7 @@ export type ResolvedVia =
     | 'path-alias'
     | 'psr4'
     | 'route-table'
-    /** A Blade directive or a `view()` / `__()` / `config()` call naming a file. */
+    /** A Blade directive, a `view()` / `__()` / `config()` call, or a Markdown link naming a file. */
     | 'directive-scan'
     /** A `Schema::create|table` call, or a model whose table one of them creates. */
     | 'schema-call'

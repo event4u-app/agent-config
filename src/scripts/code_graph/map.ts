@@ -96,7 +96,9 @@ export function declaredEntryFiles(root: string): string[] {
 /** The graph the map is drawn from: built when absent, updated when behind. */
 async function loadOrBuildGraph(root: string, cachePath: string): Promise<{ graph: CodeGraph; built: boolean }> {
     const verdict = computeVerdict(root, cachePath).verdict;
-    if (verdict === 'FRESH' && fs.existsSync(cachePath)) {
+    // `edited` — an uncommitted change to an indexed file — reads FRESH to the
+    // commit-based verdict, and a map drawn from it would show the old code.
+    if (verdict === 'FRESH' && fs.existsSync(cachePath) && graphState(root, cachePath) === 'fresh') {
         return { graph: JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as CodeGraph, built: false };
     }
     const { graph } = await buildFromRepo(root, cachePath, { update: verdict === 'STALE' });
@@ -182,6 +184,7 @@ const ROLE_ORDER: readonly FileRole[] = [
     'migration',
     'translation',
     'config',
+    'doc',
     'infra',
     'isolated',
 ];

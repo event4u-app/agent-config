@@ -29,6 +29,7 @@ export type FileRole =
     | 'migration'
     | 'translation'
     | 'config'
+    | 'doc'
     | 'infra'
     | 'isolated';
 
@@ -189,6 +190,7 @@ const CONFIG_BASENAME =
  * depend on edges and are decided later; everything here is a name fact.
  */
 export function staticRole(p: string, entries: ReadonlySet<string>): FileRole {
+    if (/\.mdx?$/i.test(p)) return 'doc';
     if (isTestPath(p)) return 'test';
     const base = path.posix.basename(p);
     if (base.endsWith('.blade.php') || p.startsWith('resources/views/') || p.includes('/resources/views/')) return 'view';
@@ -468,6 +470,7 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         migration: 0,
         translation: 0,
         config: 0,
+        doc: 0,
         infra: 0,
         isolated: 0,
     } as Record<FileRole, number>;
