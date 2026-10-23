@@ -38,6 +38,10 @@ code-graph and no appetite to build one — plain `grep`/read is right there.
 
 ## Procedure
 
+0. **Orient first, when the question is "where does X live" rather than "who
+   calls X".** If `agents/map/MAP.md` exists, read it: it names the project's
+   areas (files grouped by coupling), its infrastructure files and its cycles.
+   No map yet? `agent-config code-graph map` builds one in seconds. Then query.
 1. **Detect the source.** `agent-config code-graph detect` — is a fresh consumer
    `graph.json` or native cache present? (A consumer-shipped fresh index wins;
    the native engine covers stale-or-absent — ADR-124 § 2.)

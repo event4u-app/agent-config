@@ -63,13 +63,26 @@ that has no row for it.
 
 | Dependency | Why a lighter option does not suffice |
 |---|---|
-| `graphology` (MIT, pure JS, exact pin) | The graph container the two algorithms below operate on. A hand-rolled adjacency structure would have to re-implement its iteration and attribute API just to feed them. |
-| `graphology-communities-louvain` (MIT, pure JS, exact pin) | Seeded Louvain modularity clustering is the area definition. A correct, deterministic implementation with a seeded RNG is ~600 lines of numerics; re-deriving it adds risk without adding capability. |
-| `graphology-layout-forceatlas2` (MIT, pure JS, exact pin) | The precomputed layout that lets the viewer open without browser physics (the reference tool's stack-overflow failure). Run synchronously, iteration-bounded, from a seeded start, so the output is byte-reproducible. |
-| Vendored map viewer (`src/vendor/map-viewer/`) | The HTML must work offline with zero external URLs, so the renderer is inlined. It is a small, hand-written canvas renderer owned by this repository rather than a third-party bundle, so no licence notice is carried. |
+| `graphology` (MIT, pure JS) | The graph container the two algorithms below operate on. A hand-rolled adjacency structure would have to re-implement its iteration and attribute API just to feed them. |
+| `graphology-communities-louvain` (MIT, pure JS) | Seeded Louvain modularity clustering is the area definition. A correct, deterministic implementation with a seeded RNG is ~600 lines of numerics; re-deriving it adds risk without adding capability. |
+| `graphology-layout-forceatlas2` (MIT, pure JS) | The precomputed layout that lets the viewer open without browser physics (the reference tool's stack-overflow failure). Run synchronously, iteration-bounded, from a seeded start, so the output is byte-reproducible. |
+| Map viewer (`src/scripts/code_graph/map_viewer/`) — **not a dependency** | The HTML must work offline with zero external URLs, so the renderer is inlined. It is a small canvas renderer written in this repository rather than a vendored third-party bundle, so no package and no licence notice is added. |
 
 All three packages carry no install script and no native step; they are runtime
-dependencies because a consumer builds its own map.
+dependencies because a consumer builds its own map. They take caret floors at a
+settled `.0` patch like every other runtime dependency (`check_dependency_floors`);
+the lockfile pins the exact versions, and the map's byte-identical output is a
+property of one installed set, tested per build rather than promised across
+upgrades.
+
+## Evidence
+
+- The map was built on this repository (4,589 files, 110 areas, ~2 s on top of the
+  engine) and rendered at 1440 / 375 / 320 px with zero page errors, zero network
+  requests and no label cut off or overlapping (`agent-config code-graph map`,
+  render check `verified`, 2026-10-23).
+- `tests/scripts/code_graph_map.test.ts` pins determinism, the offline page, the
+  hostile-name escaping and the absence of host paths in every artefact.
 
 ## Consequences
 

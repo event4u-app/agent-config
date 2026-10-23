@@ -131,53 +131,57 @@ Nothing in Phases 2-7 is worth building while D1-D5 stand.
 `src/scripts/code_graph/map_model.ts`, a pure function `graph → MapModel`, golden-tested like
 the engine.
 
-- [ ] **2.1 File layer.** Symbol edges fold into file→file edges with weight = count. Only
+- [x] **2.1 File layer.** Symbol edges fold into file→file edges with weight = count. Only
   accepted mechanisms are drawn; guess edges are counted per file pair as a dashed overlay;
   pseudo-targets become a per-file list of external dependencies, not nodes.
-- [ ] **2.2 Roles, stack-aware.** Every file gets exactly one role: `code`, `test`, `entry`,
+- [x] **2.2 Roles, stack-aware.** Every file gets exactly one role: `code`, `test`, `entry`,
   `view`, `migration`, `translation`, `config`, `infra` (2.3) or `isolated`. "Isolated" is never
   called "dead" on the map.
-- [ ] **2.3 Infrastructure hold-out.** Code files whose in-degree exceeds the repository's p99
+- [x] **2.3 Infrastructure hold-out.** Code files whose in-degree exceeds the repository's p99
   (threshold printed) are drawn as infrastructure and do not decide areas.
-- [ ] **2.4 Areas.** Seeded Louvain over `code` + `test`; test→test edges are dropped from
+- [x] **2.4 Areas.** Seeded Louvain over `code` + `test`; test→test edges are dropped from
   clustering so a test joins what it tests; areas under 3 files fold into a per-directory bucket;
   an area above 25 % is split once more.
-- [ ] **2.5 Two lenses.** *Areas* (coupling) and *Folders* (directory tree); per area, the share
+- [x] **2.5 Two lenses.** *Areas* (coupling) and *Folders* (directory tree); per area, the share
   of files outside the hub's directory. Area names are deterministic (hub directory + hub file).
-- [ ] **2.6 Dependencies and layout.** Exact-pinned `graphology`,
+- [x] **2.6 Dependencies and layout.** Exact-pinned `graphology`,
   `graphology-communities-louvain`, `graphology-layout-forceatlas2` (MIT, pure JS), justified in
   0.1. One global layout for the overview and one local layout per area, from a seeded start.
   verify: two builds of the same tree → identical `map.json` bytes.
-- [ ] **2.7 Analyses.** Hubs, cross-area edges ranked by surprise, import cycles (Tarjan on the
+- [x] **2.7 Analyses.** Hubs, cross-area edges ranked by surprise, import cycles (Tarjan on the
   file layer), per-area cohesion and test share. Every list is capped and the cap printed.
 
 ## Phase 3 — First visible slice: HTML, MAP.md, command
 
-- [ ] **3.1 One file, offline.** `agents/map/index.html` inlines the data, the CSS and a
-  vendored prebuilt viewer (`src/vendor/map-viewer/`, notice in `CREDITS.md`, path in
-  `REUSE.toml`, refresh procedure in its README — the grammar pattern). A test asserts zero
-  `http(s)://` script or style references.
-- [ ] **3.2 Three levels.** Areas (default) → an area's files plus grey outside neighbours → a
+- [x] **3.1 One file, offline.** `agents/map/index.html` inlines the data, the CSS and the
+  viewer. A test asserts zero `http(s)://` script or style references.
+  *Corrected in execution:* the viewer is a small canvas renderer written here
+  (`src/scripts/code_graph/map_viewer/`) rather than a vendored third-party bundle, so no
+  package, notice or refresh procedure is added; the page pins its inline script and style by
+  hash in a `default-src 'none'` Content-Security-Policy, which makes "offline" enforced.
+- [x] **3.2 Three levels.** Areas (default) → an area's files plus grey outside neighbours → a
   file's symbols in the panel. The full symbol graph is never drawn at once.
-- [ ] **3.3 Panel and controls.** Path, area, role, in/out counts with clickable lists, symbols,
+- [x] **3.3 Panel and controls.** Path, area, role, in/out counts with clickable lists, symbols,
   covering tests, guess-edge count, state token (`fresh` / `behind:N`); breadcrumb, search, area
   legend, toggles (infrastructure, guesses, tests), light / dark / system, keyboard order,
   `prefers-reduced-motion`, German and English strings.
-- [ ] **3.4 Rendering rules.** Labels placed by a collision check and flipped near the right
+- [x] **3.4 Rendering rules.** Labels placed by a collision check and flipped near the right
   edge; dimmed nodes shrink; edges keep contrast in light mode; paths show the file name over the
   ellipsised directory; narrow screens label only hubs in the overview.
-- [ ] **3.5 Hostile-input safety.** Every label escaped; the embedded JSON escapes every `<`; no
+- [x] **3.5 Hostile-input safety.** Every label escaped; the embedded JSON escapes every `<`; no
   inline handlers; no absolute host path in title or data; no source string literal enters the
   data. Fixture labels `"`, `<!--`, `<script` and `/Users/<name>/` are part of the golden test.
-- [ ] **3.6 Canvas-aware render check.** With Playwright present, `agent-config ui:render` at
+- [x] **3.6 Canvas-aware render check.** With Playwright present, `agent-config ui:render` at
   desktop, 375 px and 320 px, plus a check from the viewer's own label boxes that no label leaves
   the canvas and no two overlap. Without Playwright: `verification: unverified`.
-- [ ] **3.7 `MAP.md` and area pages.** Header: commit, state token, counts, seed, thresholds.
+- [x] **3.7 `MAP.md` and area pages.** Header: commit, state token, counts, seed, thresholds.
   Sections: areas, infrastructure, surprises, cycles, entry points, isolated files by role,
   external dependencies, guess share. Budget 2,000 tokens; overflow says what it cut. One
   `areas/<area>.md` per area of 5 or more files.
-- [ ] **3.8 Entry points.** `agent-config code-graph map [--root P] [--open]` and a `/map`
-  command in `engineering-base`, on demand, no standing payload. The `code-intelligence` skill
+- [x] **3.8 Entry points.** `agent-config code-graph map [--root P] [--open]` and a `/map`
+  command in `engineering-base`, on demand, no standing payload. *Corrected in execution:*
+  the command is `/project map`, a sub of the existing `project` cluster, so no new atomic
+  command is added. The `code-intelligence` skill
   gains an "orient first" step naming `MAP.md`.
 
 ## Phase 4 — Laravel overlay: the map becomes true for the owner's stack

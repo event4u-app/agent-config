@@ -47,6 +47,11 @@
  * 0 ok · 1 not-found / validation-failed / refresh-budget-exceeded ·
  * 2 usage · 3 internal.
  *
+ *   map      [--root P] [--out DIR] [--open]  draw the project map into
+ *            [--no-verify]                     agents/map/ (ADR-297); renders it
+ *                                               at three widths when Playwright
+ *                                               is present
+ *
  *   suggest-verb "<question>"                  (Phase 9 D3) print the verb
  *                                               (query/affected/path/explain)
  *                                               a regex table thinks best
@@ -74,6 +79,8 @@ import {
     pickSource,
 } from './detect.js';
 import { suggestVerb } from './intent.js';
+import { buildMap } from './map.js';
+import { verifyMap } from './map_verify.js';
 import {
     affected,
     explain,
@@ -718,6 +725,54 @@ function cmdRefresh(argv: string[]): number {
 }
 
 /**
+ * `map` — draw the project map into `agents/map/` (ADR-297): `index.html`,
+ * `MAP.md`, one page per area and the `map.json` they are rendered from.
+ * Builds or updates the graph first when it is absent or behind.
+ */
+async function cmdMap(argv: string[]): Promise<number> {
+    const root = resolveRoot(argv);
+    if (!fs.existsSync(root)) {
+        process.stderr.write(`code-graph: root not found: ${root}\n`);
+        return 1;
+    }
+    const out = flag(argv, '--out');
+    const r = await buildMap(root, out ? { outDir: path.resolve(out) } : {});
+    const rel = path.relative(process.cwd(), r.outDir) || '.';
+    const largest = r.model.areas.find((a) => a.kind === 'area');
+    process.stdout.write(
+        `✅  code-graph map — ${r.meta.summary}\n` +
+            `    graph: ${r.graphBuilt ? 'rebuilt' : 'reused'} · state ${r.meta.state} · commit ${r.meta.commit}\n` +
+            (largest ? `    largest area: ${largest.name} (${largest.files.length} files)\n` : '') +
+            `    wrote: ${r.written.length} files under ${rel}/ — open ${path.join(rel, 'index.html')}\n`,
+    );
+    let rc = 0;
+    if (!argv.includes('--no-verify')) {
+        const check = await verifyMap(path.join(r.outDir, 'index.html'));
+        fs.writeFileSync(path.join(r.outDir, 'render-check.json'), `${JSON.stringify(check, null, 2)}\n`);
+        const problems = check.viewports
+            .flatMap((v) => [
+                ...(v.pageErrors ? [`${v.name}: ${v.pageErrors} page error(s)`] : []),
+                ...(v.externalRequests ? [`${v.name}: ${v.externalRequests} network request(s)`] : []),
+                ...(v.horizontalScroll ? [`${v.name}: horizontal scroll`] : []),
+                ...v.views.filter((x) => x.outside || x.overlapping).map((x) => `${v.name}/${x.view}: ${x.outside} label(s) cut off, ${x.overlapping} overlapping`),
+            ])
+            .join('; ');
+        process.stdout.write(
+            `    render check: ${check.verification}` +
+                (check.reason ? ` — ${check.reason}` : '') +
+                (problems ? ` — ${problems}` : check.verification === 'verified' ? ` — ${check.viewports.map((v) => v.name).join(', ')}` : '') +
+                '\n',
+        );
+        if (check.verification === 'failed') rc = 1;
+    }
+    if (argv.includes('--open')) {
+        const { default: open } = await import('open');
+        await open(path.join(r.outDir, 'index.html'));
+    }
+    return rc;
+}
+
+/**
  * `suggest-verb "<question>"` (Phase 9 D3) — print the `code_graph` verb a
  * pure regex table thinks best answers a free-text structure question. A
  * standalone hint only: never resolves a graph, never runs a query itself.
@@ -746,9 +801,10 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'untested') return cmdUntested(argv.slice(1));
         if (sub === 'dead') return cmdDead(argv.slice(1));
         if (sub === 'suggest-verb') return cmdSuggestVerb(argv.slice(1));
+        if (sub === 'map') return await cmdMap(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|tests-for|untested|dead|suggest-verb> [options]\n',
+                'impact|tests-for|untested|dead|suggest-verb|map> [options]\n',
         );
         return 2;
     } catch (e) {
