@@ -10,6 +10,7 @@ import { expressProvider } from './express.js';
 import { fastapiProvider } from './fastapi.js';
 import { flaskProvider } from './flask.js';
 import { laravelProvider } from './laravel.js';
+import { sqlalchemyProvider } from './sqlalchemy.js';
 import type { ConventionProvider, ProjectProbe } from './types.js';
 
 export type { ConventionProvider, ProjectProbe, ProviderInput, ProviderResult } from './types.js';
@@ -22,6 +23,7 @@ export const PROVIDERS: readonly ConventionProvider[] = [
     fastapiProvider,
     flaskProvider,
     djangoProvider,
+    sqlalchemyProvider,
 ];
 
 /** Every marker basename a registered provider asks the probe to record. */
