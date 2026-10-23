@@ -70,6 +70,17 @@ languages and frameworks, over a default that serves every project.
    proven (`detected | partial | verified | deep`); `verified` needs a registered
    real-repository reading.
 
+## Evidence
+
+- The coupling this removes, reproduced at `main@4502d328f`: the fixed import and call in
+  `build.ts`, the Laravel path rules in `map_model.ts`, the Laravel names in `types.ts` /
+  `validate.ts`, and the hard-wired docs and SCIP passes (context table of the roadmap).
+- After the seam, Fixture L and a synthetic tree built byte-identical graphs and maps; at the
+  end Fixture L reads 340 / 340 routes and 11.4 % unconnected files against a baseline of
+  11.5 % (`agents/evidence/analysis/graph-providers-baseline-2026-10-23.md`).
+- `tests/scripts/code_graph_core_neutral.test.ts` enforces decision 1, and each registered
+  provider has a fixture test with positive and negative oracles.
+
 ## Consequences
 
 - Adding a framework is a provider module, its fixture and a catalog row — no edit to the
