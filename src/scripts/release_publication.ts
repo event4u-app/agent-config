@@ -229,15 +229,6 @@ export function _failed_checks_report(names: readonly string[]): string {
             'gate output lists the deriving commits (release-truth Phase 2).',
         );
     }
-    if (names.includes('Blocking review findings dispositioned')) {
-        lines.push(
-            '',
-            'Dispositions: a blocking/high self-review finding has no committed',
-            'disposition. Ingest + adjudicate it in',
-            'agents/evidence/release-findings/<version>.json (release-truth Phase 3):',
-            '  ./scripts-run src/scripts/check_finding_dispositions --ingest <findings.json>',
-        );
-    }
     lines.push('', 'After fixing, resume with: task release -- --resume --yes', '');
     return lines.join('\n');
 }

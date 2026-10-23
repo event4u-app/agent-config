@@ -83,12 +83,12 @@ dispositioned in the ledger.
 
 ## Phase 6 — a review that completed, and a ledger with nothing open
 
-- [ ] **6.1 Cut 17.0.0 and run a fresh self-review to completion.** The CI
+- [-] **6.1 Cut 17.0.0 and run a fresh self-review to completion.** — **cancelled by the owner, 2026-10-22:** a release waits for no review; everything on main is already reviewed and merged. The release gates were removed (`fix/release-without-review-gate`) and 17.0.0 shipped without a self-review. The CI
       review runs NEUTRAL without API credit, and the local run reached 6 of 71
       requests at the per-run ceiling. Run until every chunk of the span is
       reviewed, and record coverage with the ledger.
       verify: the review log names no `UNREVIEWED` path for the span.
-- [ ] **6.2 Disposition every finding of that review.** `fixed` with its
+- [-] **6.2 Disposition every finding of that review.** — **cancelled by the owner, 2026-10-22:** a release waits for no review; everything on main is already reviewed and merged. The release gates were removed (`fix/release-without-review-gate`) and 17.0.0 shipped without a self-review. `fixed` with its
       commit, `false_positive` with the reason, `accepted_risk` only by the
       owner; the release proceeds only on an empty undispositioned list.
       verify: `./scripts-run src/scripts/check_finding_dispositions --release 17.0.0` -> 0
@@ -111,5 +111,5 @@ dispositioned in the ledger.
 - [ ] AC-3 — A `pre_tool_use` invocation with no reachable dispatcher refuses
       instead of exiting 0, also during an `upgrade` swap.
 - [ ] AC-4 — The admin-token workflow can only deploy from `main`.
-- [ ] AC-5 — 17.0.0 ships with a completed self-review and no undispositioned
+- [-] AC-5 — **cancelled by the owner, 2026-10-22:** a release waits for no review; everything on main is already reviewed and merged. The release gates were removed (`fix/release-without-review-gate`) and 17.0.0 shipped without a self-review. Original criterion: 17.0.0 ships with a completed self-review and no undispositioned
       finding in its ledger.

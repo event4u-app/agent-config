@@ -106,13 +106,6 @@ jobs:
     script: src/scripts/check_template_pin_drift.ts
     guard: ~
 
-  finding-dispositions:
-    local: './scripts-run src/scripts/check_finding_dispositions --release ${VERSION}'
-    verify: false
-    reason: 'NEEDS_PR: the unrecorded-findings half reads live PR review comments. The missing-dispositions half does run locally and is what the `local` command covers.'
-    script: src/scripts/check_finding_dispositions.ts
-    guard: ~
-
   audit-gate:
     local: 'npm audit --omit=dev --audit-level=high'
     verify: true

@@ -41,9 +41,9 @@ const ALLOWLIST_GLOBS = [
     'src/domains/*/pack.yaml',
     'src/domains/*/README.md',
     'docs/archive/CHANGELOG-pre-*.md',
-    // Finding-disposition ledger (release-truth Phase 3) — a release PR must
-    // be able to carry the dispositions of its own self-review findings; the
-    // finding-dispositions gate is red until blocking ones are recorded here.
+    // Finding-disposition ledger — optional, committed by hand; a release PR
+    // may carry one. No release workflow waits for it (2026-10-22); the
+    // consistency coverage guard still requires any committed ledger to be valid.
     'agents/evidence/release-findings/*.json',
     // Evidence-temperature census — `taskfiles/content.yml` § release-prepare
     // writes one per release, so without this entry the pipeline generates a
