@@ -57,6 +57,28 @@ export const CATALOG: readonly CatalogRow[] = [
         usage: SO,
         limits: 'A router mounted under a prefix in another file (app.use) is not followed.',
     },
+    {
+        id: 'spring',
+        name: 'Spring Boot',
+        language: 'Java',
+        markers: 'pom.xml / build.gradle names spring-boot',
+        relations: ['routes-to', 'persists', 'relates', 'injects'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/spring',
+        usage: SO,
+        limits: '@Entity(name) is not read; a method @RequestMapping without method= is skipped; Kotlin is not covered.',
+    },
+    {
+        id: 'go-http',
+        name: 'Go routers (net/http, Gin, Echo, chi)',
+        language: 'Go',
+        markers: 'a go.mod',
+        relations: ['routes-to'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/go-http',
+        usage: 'Go is in the top ten languages of GitHub Octoverse; its routers are not in the web-framework survey',
+        limits: 'chi r.Route nesting, http.HandlerFunc(f) and handler variables are not followed.',
+    },
     ...(
         [
             ['kotlin', 'Kotlin', 'Kotlin'],
