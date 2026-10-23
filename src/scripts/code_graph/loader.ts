@@ -146,16 +146,24 @@ async function _init(): Promise<void> {
     }
 }
 
+/**
+ * Grammars the pinned `tree-sitter-wasms` compiles at another ABI than the rest.
+ * The C# grammar ships at ABI 13, which the pinned runtime still loads; the pin
+ * stays exact per language, so a drift is still caught.
+ */
+export const GRAMMAR_ABI_PIN: Readonly<Partial<Record<Lang, number>>> = { csharp: 13 };
+
 /** Load (and cache) a grammar; asserts the ABI matches the pinned expectation. */
 export async function loadLanguage(lang: Lang): Promise<TsLanguage> {
     const cached = _langCache.get(lang);
     if (cached) return cached;
     await _init();
     const language = await _Parser().Language.load(grammarWasmPath(lang));
-    if (language.version !== EXPECTED_GRAMMAR_ABI) {
+    const pinned = GRAMMAR_ABI_PIN[lang] ?? EXPECTED_GRAMMAR_ABI;
+    if (language.version !== pinned) {
         throw new Error(
             `code-graph: grammar ABI drift for ${lang} — got ${language.version}, ` +
-                `pinned ${EXPECTED_GRAMMAR_ABI}. Re-pin web-tree-sitter/tree-sitter-wasms ` +
+                `pinned ${pinned}. Re-pin web-tree-sitter/tree-sitter-wasms ` +
                 `and re-run the ABI smoke test.`,
         );
     }

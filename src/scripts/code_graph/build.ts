@@ -265,10 +265,19 @@ function resolveSpecifier(fromFile: string, spec: string, fileIds: ReadonlySet<s
  *   go      `example.com/x/mod` → every non-test `.go` file of the most specific
  *           directory whose path ends the import path — a Go import names a
  *           package, and a package is all of its files.
+ *   csharp  `using A.B` → the one file declaring namespace `A.B` (`namespaces`).
+ *           A namespace declared by several files is left to name lookup: it
+ *           binds no file, since a `using` names no single one.
  *
  * A suffix that matches two files is refused rather than guessed.
  */
-export function resolveLangModule(lang: Lang, fromFile: string, spec: string, fileIds: readonly string[]): string[] {
+export function resolveLangModule(
+    lang: Lang,
+    fromFile: string,
+    spec: string,
+    fileIds: readonly string[],
+    namespaces: ReadonlyMap<string, readonly string[]> = new Map(),
+): string[] {
     const unique = (suffixes: string[]): string[] => {
         const hits = fileIds.filter((f) => suffixes.some((s) => f === s || f.endsWith(`/${s}`)));
         return hits.length === 1 ? hits : [];
@@ -295,6 +304,7 @@ export function resolveLangModule(lang: Lang, fromFile: string, spec: string, fi
         }
         return best ? goFiles.filter((f) => idDirname(f) === best).sort() : [];
     }
+    if (lang === 'csharp') return [...(namespaces.get(spec) ?? [])];
     return [];
 }
 
@@ -416,6 +426,8 @@ export function buildGraph(
     const fileIdList = [...fileIds].sort();
     /** Go imports name a package of several files; the binding takes the first, these carry the rest. */
     const extraImports: Array<{ source: string; target: string }> = [];
+    const namespaceFiles = new Map<string, string[]>();
+    for (const ex of extracts) for (const ns of ex.namespaces ?? []) push(namespaceFiles, ns, ex.file);
     for (const ex of extracts) {
         const locals = new Map<string, string[]>();
         for (const n of ex.nodes) if (n.kind !== 'file') push(locals, n.label, n.id);
@@ -452,8 +464,9 @@ export function buildGraph(
                 if (hit) imports.set(local, { target: hit, exact: false, via: 'name-lookup' });
                 continue;
             }
-            if (ex.lang === 'python' || ex.lang === 'java' || ex.lang === 'go') {
-                const hits = resolveLangModule(ex.lang, ex.file, spec, fileIdList);
+            if (ex.lang === 'csharp' && (namespaceFiles.get(spec)?.length ?? 0) > 1) continue;
+            if (ex.lang === 'python' || ex.lang === 'java' || ex.lang === 'go' || ex.lang === 'csharp') {
+                const hits = resolveLangModule(ex.lang, ex.file, spec, fileIdList, namespaceFiles);
                 const first = hits[0];
                 if (first === undefined) {
                     imports.set(local, {

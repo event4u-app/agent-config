@@ -20,7 +20,7 @@ import {
     MAX_FILE_BYTES,
     type Relation,
 } from './types.js';
-import { extractGo, extractJava, extractPython } from './extract_more.js';
+import { extractCSharp, extractGo, extractJava, extractPython } from './extract_more.js';
 import { getParser, nodeHasError, type TsNode } from './loader.js';
 
 export type CallStyle = 'new' | 'free' | 'this' | 'self' | 'static' | 'parent' | 'scoped' | 'dynamic';
@@ -88,6 +88,8 @@ export interface FileExtract {
     /** local class id → its declared parent/interface names (2nd-pass inherits). */
     inherits: Array<{ classId: string; parentName: string }>;
     parseError: boolean;
+    /** C#: the namespaces the file declares, for `using` resolution in the build pass. */
+    namespaces?: string[];
 }
 
 export function loc(n: TsNode): number[] {
@@ -700,6 +702,7 @@ export async function extractFile(relPath: string, source: string, lang: Lang): 
         else if (lang === 'python') extractPython(tree.rootNode, relPath, out);
         else if (lang === 'java') extractJava(tree.rootNode, relPath, out);
         else if (lang === 'go') extractGo(tree.rootNode, relPath, out);
+        else if (lang === 'csharp') extractCSharp(tree.rootNode, relPath, out);
         else extractTsJs(tree.rootNode, relPath, out);
     } finally {
         tree.delete(); // delete the tree, never the cached parser (loader.ts)
