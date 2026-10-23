@@ -109,6 +109,23 @@ export interface DeployWriteInputs {
      * `null` when the file could not be read.
      */
     readonly onDiskSha256: string | null;
+    /**
+     * True when the install transaction log records this installer writing
+     * exactly the bytes now on disk to this path (`./loggedWrites.ts`).
+     * Absent means false. Decides only where {@link logProofApplies} says so.
+     */
+    readonly loggedWrite?: boolean;
+    /**
+     * True when the recorded digest is the one this installer STAGED beside the
+     * target as a sidecar, rather than bytes it wrote to the target itself.
+     *
+     * The ledger records a preserved target under the staged digest, so such a
+     * target reads `recorded-modified` without anyone having edited it. Only
+     * then may the log override the record: a recorded digest of bytes we DID
+     * write diverging from disk is a real edit — including a user restoring an
+     * older shipped version on purpose, which the log would also match.
+     */
+    readonly recordedIsStaged?: boolean;
     /** True when the run carries `--force`. */
     readonly force: boolean;
 }
@@ -135,18 +152,36 @@ export interface DeployWriteInputs {
  * behaviour stands rather than being changed on a case nobody reasoned about.
  */
 export function isLedgerMigration(inputs: Omit<DeployWriteInputs, 'packagedSha256'>): boolean {
-    if (!inputs.exists || inputs.force) return false;
+    if (!inputs.exists || inputs.force || inputs.loggedWrite === true) return false;
     if (inputs.ledgerListed !== true) return false;
     if (inputs.onDiskSha256 === null) return false;
     return classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256) === 'unknown';
 }
 
 /**
+ * May the transaction-log proof decide this target? Only where the verdict
+ * would otherwise be a preservation the record cannot justify: a ledger-listed
+ * file with no digest (the migration branch), or a `recorded-modified` file
+ * whose recorded digest is a staged one. Everywhere else the log is not read —
+ * the ledger alone already decides, and a genuine edit must stay preserved.
+ */
+export function logProofApplies(inputs: Omit<DeployWriteInputs, 'packagedSha256' | 'loggedWrite'>): boolean {
+    if (!inputs.exists || inputs.force || inputs.onDiskSha256 === null) return false;
+    const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
+    if (ownership === 'recorded-modified') return inputs.recordedIsStaged === true;
+    // `loggedWrite` is cleared because `isLedgerMigration` excludes a proven
+    // target, and this asks whether the target is a candidate BEFORE the proof.
+    return ownership === 'unknown' && isLedgerMigration({ ...inputs, loggedWrite: false });
+}
+
+/**
  * Decide whether the writer may replace one managed file.
  *
- * A target that does not exist is written. A forced run writes. Otherwise the
- * recorded-ownership verdict decides: `recorded-modified` preserves, and
- * `recorded-unchanged` writes.
+ * A target that does not exist is written. A forced run writes. A target whose
+ * bytes the transaction log records this installer writing there is written
+ * where {@link logProofApplies} — there is no edit to lose. Otherwise the
+ * recorded-ownership verdict decides:
+ * `recorded-modified` preserves, and `recorded-unchanged` writes.
  *
  * The `unknown` arm is the one worth stating out loud. No recorded digest
  * means no divergence to measure — a tree with no manifest, a global anchor
@@ -169,6 +204,7 @@ export function isLedgerMigration(inputs: Omit<DeployWriteInputs, 'packagedSha25
 export function decideDeployWrite(inputs: DeployWriteInputs): DeployWriteDecision {
     if (!inputs.exists) return 'write';
     if (inputs.force) return 'write';
+    if (inputs.loggedWrite === true && logProofApplies(inputs)) return 'write';
     const ownership = classifyOwnership(inputs.recordedSha256, inputs.onDiskSha256);
     if (ownership === 'recorded-modified') return 'preserve';
     if (ownership === 'unknown' && isLedgerMigration(inputs)) {

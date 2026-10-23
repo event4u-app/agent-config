@@ -69,12 +69,21 @@ export function getInstallRoot(home?: string): string {
 }
 
 /**
- * Absolute path to the active transaction log:
- * `~/.event4u/agent-config/install-log.jsonl`.
+ * Absolute path to the active transaction log: `install-log.jsonl` in
+ * `$EVENT4U_CONFIG_HOME` when that is set and no explicit `home` is given,
+ * otherwise in `~/.event4u/agent-config/`.
  *
  * Phase A4 writers append here on every successful atomic rename.
+ *
+ * Without the variable, the hermetic test environment — which sets only that
+ * variable — appended every test install to the real user's log, and the log
+ * is now read back as ownership proof. A history written under the other root
+ * before a user switched roots is not read; the failure direction is "no
+ * proof", which preserves.
  */
 export function getLogPath(home?: string): string {
+    const configHome = home ? undefined : process.env['EVENT4U_CONFIG_HOME'];
+    if (configHome) return join(configHome, INSTALL_LOG_FILENAME);
     return join(getInstallRoot(home), INSTALL_LOG_FILENAME);
 }
 

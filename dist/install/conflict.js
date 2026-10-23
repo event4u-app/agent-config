@@ -16,7 +16,8 @@
  */
 import { existsSync } from 'node:fs';
 import { sha256File } from './plan.js';
-import { isLedgerMigration } from './preserve.js';
+import { loggedWriteDigests, wroteTheseBytes } from './loggedWrites.js';
+import { isLedgerMigration, logProofApplies, sidecarPathFor } from './preserve.js';
 import { classifyOwnership, ledgerListedPaths, recordedHashesWithLedger, } from './recordedOwnership.js';
 /**
  * Decide what to do with a single planned target.
@@ -161,8 +162,10 @@ export const CONFLICT_BATCH_THRESHOLD = 5;
  *
  * `recorded` is injectable for tests; by default it is read from the
  * manifest at `plan.root`, with the user-scoped ownership ledger laid over it.
+ * `logged` likewise; by default it is the install transaction log, opened only
+ * for an entry `logProofApplies` to.
  */
-export function computeConflicts(plan, recordedOverride) {
+export function computeConflicts(plan, recordedOverride, loggedOverride) {
     // Force returns before the manifest is read. As a default parameter the
     // map was built at call entry and discarded on the next line, so every
     // force-mode plan paid a read and a YAML parse for nothing.
@@ -173,6 +176,7 @@ export function computeConflicts(plan, recordedOverride) {
     // digests never reaches the branch that needs this, and an unconditional
     // read would charge every plan for an answer most of them discard.
     let ledgerFiles = null;
+    let logged;
     const ledgerLists = (p) => {
         ledgerFiles ??= ledgerListedPaths();
         return ledgerFiles.has(p);
@@ -197,6 +201,24 @@ export function computeConflicts(plan, recordedOverride) {
             const ownership = classifyOwnership(recorded.get(entry.path), onDisk);
             if (ownership === 'recorded-unchanged')
                 continue;
+            // The writer's transaction-log proof, under the writer's own
+            // condition (`logProofApplies`): where it holds and the log records
+            // these bytes, the writer replaces the file, so the preview must
+            // not name it.
+            const recordedSha = recorded.get(entry.path);
+            const unproven = {
+                exists: true,
+                recordedSha256: recordedSha,
+                onDiskSha256: onDisk,
+                force: false,
+                ledgerListed: ledgerLists(entry.path),
+                recordedIsStaged: typeof recordedSha === 'string' && recordedSha === recorded.get(sidecarPathFor(entry.path)),
+            };
+            if (logProofApplies(unproven)) {
+                logged ??= loggedOverride ?? loggedWriteDigests();
+                if (wroteTheseBytes(entry.path, onDisk, logged))
+                    continue;
+            }
             if (ownership === 'unknown' && plan.policy.knownPaths.has(entry.path))
                 continue;
             // CANDIDACY, not the verdict, and it is computed BEFORE the
