@@ -146,6 +146,16 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         }
     }, 60_000);
 
+    it('discards a build when the repository HEAD cannot be read on either side', () => {
+        // A `.git` that git cannot read: every HEAD probe fails, before and after.
+        fs.writeFileSync(path.join(tmp, '.git'), 'gitdir: /nonexistent/never\n');
+        const out = path.join(tmp, 'graph.json');
+        const r = runCli(['refresh', '--root', tmp, '--out', out]);
+        expect(r.status).toBe(1);
+        expect(r.stderr).toMatch(/could not be read/);
+        expect(fs.existsSync(out)).toBe(false);
+    });
+
     it('auto-refresh on / status / off writes and removes the local opt-in', () => {
         const marker = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-auto-refresh.json');
         expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/auto-refresh: off/);

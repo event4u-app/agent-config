@@ -668,10 +668,16 @@ function git(root: string, ...args: string[]): string | null {
     }
 }
 
-/** HEAD, `''` outside a git work tree, `null` when a work tree's HEAD cannot be read. */
+/**
+ * HEAD; `''` when no ancestor of `root` holds `.git`; `null` when one does and
+ * HEAD cannot be read. "Not a repository" is read from the filesystem, never
+ * from a git probe, so a failing git can only ever produce `null`.
+ */
 function headOf(root: string): string | null {
-    if (git(root, 'rev-parse', '--is-inside-work-tree') !== 'true') return '';
-    return git(root, 'rev-parse', 'HEAD');
+    for (let dir = path.resolve(root); ; dir = path.dirname(dir)) {
+        if (fs.existsSync(path.join(dir, '.git'))) return git(root, 'rev-parse', 'HEAD');
+        if (path.dirname(dir) === dir) return '';
+    }
 }
 
 /** Returned by {@link runBudgetedBuild} when HEAD moved while the child built. */
