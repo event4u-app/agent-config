@@ -8,7 +8,7 @@ intent: "Project dispatcher — full analysis, quick health check, or the projec
 routes_to: [project-analyze, project-health, project-map]
 replaces: []
 visibility: internal
-description: Project orchestrator — routes to analyze (full audit), health (read-only status check) and map (code map)
+description: Project orchestrator — routes to analyze (full audit) and health (read-only status check)
 cluster: project
 type: orchestrator
 suggestion:
