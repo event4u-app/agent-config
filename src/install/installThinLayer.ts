@@ -109,6 +109,11 @@ export interface ThinInstalledLayerOptions {
      * the staged runtime, which outlives a cleared package-manager cache.
      */
     readonly bodyLinkRoot?: string | null;
+    /**
+     * Called with each path this pass rewrote — the installer logs it, because
+     * the transaction log is read back as proof the bytes on disk are ours.
+     */
+    readonly onWrite?: (target: string) => void;
 }
 
 /**
@@ -212,6 +217,7 @@ export function thinInstalledRuleLayer(opts: ThinInstalledLayerOptions): ThinIns
         try {
             if (next !== installed) {
                 fs.writeFileSync(target, next, 'utf-8');
+                opts.onWrite?.(target);
                 rewritten += 1;
             }
             thinned += 1;

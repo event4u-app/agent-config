@@ -167,7 +167,7 @@ printed only).
 | `installed.lock` | `installed_lock.py` | global lockfile (carries `install_layout_version`) |
 | `.agent-settings.yml` | `install.py` | global layer of the three-layer settings merge |
 | `.agent-user.yml` | `install.py` | user personal settings |
-| `install-log.jsonl` | `src/install/` (TS) | transaction log (TS engine only) |
+| `install-log.jsonl` | `src/install/` (TS) | transaction log (TS engine only), one `write` entry with the SHA-256 of every byte the installer writes to a deployed path — the copy and the claude-code rewrite and thinning passes. Read back by `src/install/loggedWrites.ts` (active log plus rotated `.jsonl` / `.jsonl.gz` siblings) as ownership proof: a ledger-listed file with no digest, or one recorded under the digest staged beside it, whose bytes match a logged write to that path is replaced instead of preserved. A file recorded under bytes the installer wrote to it stays preserved when it diverges, logged or not. Follows `EVENT4U_CONFIG_HOME` |
 | `deployed-files.json` | `src/install/ownershipLedger.ts` | the user-scoped ownership ledger: per tool, the deployed `files` and (schema 2, additive) per-file `installed_sha256` / `packaged_sha256`. Written on every global deploy, whatever directory the install ran from; read by the writer, the reaper and `doctor` |
 
 ### User-scope hook trampolines (explicit-flag only)
