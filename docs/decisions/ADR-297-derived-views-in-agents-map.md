@@ -11,7 +11,7 @@ type: structural
 reopen_policy: unclassified
 protected_dimensions: none
 provenance:
-  kind: owner
+  kind: human
   decision_makers: [owner]
   human_directed: true
 evidence:

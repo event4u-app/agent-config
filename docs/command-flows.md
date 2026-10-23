@@ -45,6 +45,7 @@ _Explore, plan, estimate, refine, and investigate before building. The "what sho
 - `project` — Project orchestrator — routes to analyze (full audit) and health (read-only status check)
 - `project-analyze` — Full project analysis — detect stack, inventory modules, audit docs, create missing contexts
 - `project-health` — Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything
+- `project-map` — Draw the code map into agents/map/
 - `refine-ticket` — Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates…
 
 ### Implementation
