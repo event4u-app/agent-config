@@ -27,6 +27,7 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { canonicalPath, loggedWriteDigests, wroteTheseBytes } from '../../src/install/loggedWrites.js';
 import { SIDECAR_SUFFIX } from '../../src/install/preserve.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -280,6 +281,107 @@ describe('ownership record — a global install from anywhere keeps a user edit'
             const fourth = install(home, bare);
             expect(fourth.status, fourth.out).toBe(0);
             expect(digestOf(retired)).toBeNull();
+        },
+    );
+});
+
+describe('pre-ledger upgrade — the transaction log proves an untouched file is ours', () => {
+    /**
+     * The tree an upgrade from a pre-ledger version meets: `target` holds an
+     * OLDER package version, the inventory lists it without a digest, and —
+     * when `logged` — the install log records the old installer writing exactly
+     * those bytes there, as `install.ts::_log_tx_entry` always has.
+     */
+    function preLedgerTree(home: string, target: string, olderBytes: string, logged: boolean): void {
+        fs.writeFileSync(target, olderBytes);
+        const inv = JSON.parse(fs.readFileSync(inventoryPath(home), 'utf8')) as {
+            tools: Record<string, { digests?: unknown }>;
+        };
+        for (const entry of Object.values(inv.tools)) delete entry.digests;
+        fs.writeFileSync(inventoryPath(home), `${JSON.stringify(inv, null, 2)}\n`);
+        if (!logged) return;
+        const log = path.join(home, '.event4u', 'agent-config', 'install-log.jsonl');
+        const entry = { ts: '2026-10-12T10:43:39.335Z', kind: 'write', path: target, sha256: sha(olderBytes) };
+        fs.appendFileSync(log, `${JSON.stringify(entry)}\n`);
+    }
+
+    it(
+        '1.4 an untouched older version is updated, not preserved, and its stale sidecar is reaped',
+        { timeout: 600_000 },
+        () => {
+            const home = mkTmp('own-ledger-home-');
+            const bare = mkTmp('own-ledger-bare-');
+            const first = install(home, bare);
+            expect(first.status, first.out).toBe(0);
+            const target = aDeployedRule(home);
+            const shipped = digestOf(target);
+            const olderBytes = `${fs.readFileSync(target, 'utf8')}\nolder package version\n`;
+            const sidecar = `${target}${SIDECAR_SUFFIX}`;
+
+            // Control: without the log record nothing proves ownership — preserved.
+            preLedgerTree(home, target, olderBytes, false);
+            const unproven = install(home, bare);
+            expect(unproven.status, unproven.out).toBe(3);
+            expect(digestOf(target)).toBe(sha(olderBytes));
+            expect(digestOf(sidecar)).toBe(shipped);
+
+            // The log proves the bytes are ours: written, and the sidecar the
+            // preserving run staged and recorded is reaped on the same run.
+            const log = path.join(home, '.event4u', 'agent-config', 'install-log.jsonl');
+            const entry = { ts: '2026-10-12T10:43:39.335Z', kind: 'write', path: target, sha256: sha(olderBytes) };
+            fs.appendFileSync(log, `${JSON.stringify(entry)}\n`);
+            const proven = install(home, bare);
+            expect(proven.status, proven.out).toBe(0);
+            expect(digestOf(target)).toBe(shipped);
+            expect(digestOf(sidecar), 'stale sidecar left behind').toBeNull();
+        },
+    );
+
+    it(
+        '1.6 every rule the claude-code passes rewrite after the copy is still provable from the log',
+        { timeout: 600_000 },
+        () => {
+            // The host-form rewrite and the thinning pass write AFTER the copy
+            // logged its bytes; unlogged, the final bytes would prove nothing.
+            const home = mkTmp('own-ledger-home-');
+            const bare = mkTmp('own-ledger-bare-');
+            // A rule the user wrote in source form: the rewrite pass walks it
+            // too, and the log must not vouch for it.
+            const dir = path.join(home, '.claude', 'rules');
+            fs.mkdirSync(dir, { recursive: true });
+            const own = path.join(dir, 'zz-my-own-rule.md');
+            fs.writeFileSync(own, '---\ntype: auto\ntriggers:\n  - keyword: mine\n---\n\n# mine\n');
+            const first = install(home, bare, 'claude-code');
+            expect(first.status, first.out).toBe(0);
+            const writes = loggedWriteDigests(path.join(home, '.event4u', 'agent-config', 'install-log.jsonl'));
+            expect(writes.has(canonicalPath(own)), 'a user-authored rule was logged as ours').toBe(false);
+            const rules = fs.readdirSync(dir).filter((n) => n.endsWith('.md') && n !== 'zz-my-own-rule.md');
+            expect(rules.length).toBeGreaterThan(0);
+            const unproven = rules.filter((n) => {
+                const p = path.join(dir, n);
+                return !wroteTheseBytes(p, digestOf(p) as string, writes);
+            });
+            expect(unproven).toEqual([]);
+        },
+    );
+
+    it(
+        '1.5 a logged file edited AFTER the logged write is still preserved',
+        { timeout: 600_000 },
+        () => {
+            const home = mkTmp('own-ledger-home-');
+            const bare = mkTmp('own-ledger-bare-');
+            const first = install(home, bare);
+            expect(first.status, first.out).toBe(0);
+            const target = aDeployedRule(home);
+            const olderBytes = `${fs.readFileSync(target, 'utf8')}\nolder package version\n`;
+            preLedgerTree(home, target, olderBytes, true);
+            const edited = `${olderBytes}my own note\n`;
+            fs.writeFileSync(target, edited);
+
+            const second = install(home, bare);
+            expect(digestOf(target), `edit overwritten:\n${second.out}`).toBe(sha(edited));
+            expect(second.status).toBe(3);
         },
     );
 });

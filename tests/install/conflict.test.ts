@@ -15,6 +15,8 @@ import {
     parseJsonLenient,
     resolveFileConflict,
 } from '../../src/install/conflict.js';
+import { canonicalPath } from '../../src/install/loggedWrites.js';
+import { sidecarPathFor } from '../../src/install/preserve.js';
 import type {
     ConflictEntry,
     ConflictPolicy,
@@ -311,6 +313,51 @@ describe('conflict — computeConflicts', () => {
             expect(computeConflicts(p, new Map())).toHaveLength(1);
             const recorded = new Map([[e.path, hex('installed-v1')]]);
             expect(computeConflicts(p, recorded)).toEqual([]);
+        });
+
+        it('drops a file recorded under its STAGED digest whose bytes the log records us writing', () => {
+            // A preserving run records the target under the digest staged
+            // beside it, so an untouched file reads as recorded-modified. The
+            // log proves the bytes on disk are ours; anything else stays reported.
+            const e = entry('a.md', 'planned-v2');
+            writeFileSync(e.path, 'installed-v1');
+            const p = plan({ claude: [e] });
+            const recorded = new Map([
+                [e.path, hex('planned-v2')],
+                [sidecarPathFor(e.path), hex('planned-v2')],
+            ]);
+            const ours = new Map([[canonicalPath(e.path), new Set([hex('installed-v1')])]]);
+            expect(computeConflicts(p, recorded, ours)).toEqual([]);
+            const other = new Map([[canonicalPath(e.path), new Set([hex('installed-v0')])]]);
+            expect(computeConflicts(p, recorded, other)[0]?.ownership).toBe('recorded-modified');
+            const elsewhere = new Map([[canonicalPath(join(root, 'b.md')), new Set([hex('installed-v1')])]]);
+            expect(computeConflicts(p, recorded, elsewhere)).toHaveLength(1);
+        });
+
+        it('keeps reporting a genuine edit even when the log matches its bytes', () => {
+            // Recorded under bytes we WROTE (no staged sidecar): a user who
+            // restored an older shipped version made an edit, logged or not.
+            const e = entry('a.md', 'planned-v2');
+            writeFileSync(e.path, 'installed-v1');
+            const p = plan({ claude: [e] });
+            const recorded = new Map([[e.path, hex('installed-v2')]]);
+            const ours = new Map([[canonicalPath(e.path), new Set([hex('installed-v1')])]]);
+            expect(computeConflicts(p, recorded, ours)[0]?.ownership).toBe('recorded-modified');
+        });
+
+        it('never opens the log for a file the record alone decides', () => {
+            const unknown = entry('a.md', 'planned');
+            writeFileSync(unknown.path, 'on-disk');
+            const unchanged = entry('b.md', 'planned-v2');
+            writeFileSync(unchanged.path, 'installed-v1');
+            const p = plan({ claude: [unknown, unchanged] });
+            const recorded = new Map([[unchanged.path, hex('installed-v1')]]);
+            const untouchable = {
+                get: () => {
+                    throw new Error('log read');
+                },
+            } as unknown as Map<string, Set<string>>;
+            expect(computeConflicts(p, recorded, untouchable).map((c) => c.path)).toEqual([unknown.path]);
         });
 
         it('does not over-fire: a bridge-shaped null digest stays unknown, not modified', () => {

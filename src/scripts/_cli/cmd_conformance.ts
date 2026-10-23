@@ -39,6 +39,7 @@ import * as YAML from 'yaml';
 
 import * as installed_tools from '../_lib/installed_tools.js';
 import { atomicAppendLine } from '../../install/atomic.js';
+import { getLogPath } from '../../install/paths.js';
 import { readRecentEntries } from '../../install/txlog.js';
 import { detectToolPresence } from '../../install/detect.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
@@ -120,13 +121,13 @@ export function conformanceLogPath(): string {
     return path.join(os.homedir(), '.event4u', 'agent-config', 'conformance-log.jsonl');
 }
 
-/** Default install txlog path (kept in sync with `src/install/txlog.ts` docs). */
+/** Install txlog path — the one the installer writes, via `getLogPath()`. */
 export function installLogPath(): string {
     const override = process.env['AGENT_CONFIG_INSTALL_LOG'];
     if (override && override.trim().length > 0) {
         return override;
     }
-    return path.join(os.homedir(), '.event4u', 'agent-config', 'install-log.jsonl');
+    return getLogPath();
 }
 
 // ---------------------------------------------------------------------------

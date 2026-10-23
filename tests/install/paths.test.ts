@@ -6,6 +6,7 @@
  */
 
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
@@ -50,6 +51,13 @@ describe('install/paths — getLogPath', () => {
         const log = getLogPath('/home/matze');
         expect(log).toContain(INSTALL_LOG_FILENAME);
         expect(log).toContain(INSTALL_ROOT_SUBPATH.split('/')[0]);
+    });
+
+    it('follows EVENT4U_CONFIG_HOME when no explicit home is given', () => {
+        const configHome = process.env['EVENT4U_CONFIG_HOME'];
+        expect(configHome, 'the hermetic setup sets EVENT4U_CONFIG_HOME').toBeTruthy();
+        expect(getLogPath()).toBe(join(configHome as string, INSTALL_LOG_FILENAME));
+        expect(getLogPath('/home/matze').startsWith('/home/matze')).toBe(true);
     });
 
     it('exposes the active-log filename as a stable constant', () => {

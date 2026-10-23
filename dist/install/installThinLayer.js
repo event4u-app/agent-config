@@ -157,6 +157,7 @@ export function thinInstalledRuleLayer(opts) {
         try {
             if (next !== installed) {
                 fs.writeFileSync(target, next, 'utf-8');
+                opts.onWrite?.(target);
                 rewritten += 1;
             }
             thinned += 1;
