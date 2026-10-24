@@ -13,7 +13,7 @@ contributors whose skills, rules or commands were merged.
 | `design-intelligence` (`ui-styling`-derived assets) | "claudekit" | Apache-2.0 | [`LICENSE.apache-2.0.txt`](src/skills/design-intelligence/LICENSE.apache-2.0.txt) + modified-file markers per §4b |
 | `corpus-grounding`, `design-tokens`, `react-shadcn-ui`, `tailwind-engineer` (derived slices) | see per-skill notices | MIT / Apache-2.0 | ADR-061 — the per-skill attribution notice is authoritative |
 | `src/scripts/cost/budget.mjs`, `src/scripts/cost/track.mjs` | ruvnet/ruflo — `plugins/ruflo-cost-tracker` | MIT | full notice below; transformation record in [`provenance/borrows.jsonl`](provenance/borrows.jsonl) and [`docs/THIRD-PARTY-NOTICES.md`](docs/THIRD-PARTY-NOTICES.md) |
-| `src/vendor/grammars/*.wasm` (3 compiled tree-sitter grammars) | `tree-sitter/tree-sitter-{php,typescript,javascript}`, packaged by `tree-sitter-wasms` (Unlicense) | MIT | full notice below; provenance and refresh procedure in [`src/vendor/grammars/README.md`](src/vendor/grammars/README.md) |
+| `src/vendor/grammars/*.wasm` (8 compiled tree-sitter grammars) | `tree-sitter/tree-sitter-{php,typescript,javascript,python,go,java,c-sharp,ruby}`, packaged by `tree-sitter-wasms` (Unlicense) | MIT | full notice below; provenance and refresh procedure in [`src/vendor/grammars/README.md`](src/vendor/grammars/README.md) |
 
 #### MIT notice — ruvnet/ruflo
 
@@ -49,7 +49,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #### MIT notice — tree-sitter grammars
 
-Reproduced in full for the same reason as the notice above: the three
+Reproduced in full for the same reason as the notice above: the eight
 WebAssembly grammars under `src/vendor/grammars/` are **verbatim, unmodified
 binary copies**, which is the clearest possible case of "copies or substantial
 portions of the Software". They ship in the npm package (`package.json` →

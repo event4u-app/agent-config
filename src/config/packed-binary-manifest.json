@@ -64,6 +64,15 @@
       "grammar_id": "c_sharp",
       "abi": 13,
       "why": "The C# grammar (road-to-graph-providers-for-every-stack 5.2). Same reason as the php entry: the engine indexes .cs files in a consumer install with no manual parser step. ABI 13, not 14: tree-sitter-wasms@0.1.13 compiles this one grammar at ABI 13, which the pinned web-tree-sitter loads, so the loader pins it per language."
+    },
+    {
+      "path": "src/vendor/grammars/tree-sitter-ruby.wasm",
+      "sha256": "93a5022855314cdb45458c7bb026a24a0ebc3a5ff6439e542e881f14dfa13a39",
+      "size": 2106447,
+      "kind": "tree-sitter-wasm-grammar",
+      "grammar_id": "ruby",
+      "abi": 14,
+      "why": "The Ruby grammar (road-to-graph-providers-for-every-stack-carried 1.1). Same reason as the php entry: the engine indexes .rb files in a consumer install with no manual parser step."
     }
   ]
 }

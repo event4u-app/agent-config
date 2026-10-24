@@ -26,12 +26,12 @@ review of PR #2603 measured on real projects and that the PR did not close.
 
 ## Phase 1 — Ruby and Rails
 
-- [ ] **1.1 Vendor the Ruby grammar and extract Ruby.** `tree-sitter-ruby.wasm` with its
+- [x] **1.1 Vendor the Ruby grammar and extract Ruby.** `tree-sitter-ruby.wasm` with its
       SHA-256 in the grammars README and a packed-binary manifest row; `ruby` language,
       `.rb` extension; extraction of classes, modules, `def`, `require` / `require_relative`
       imports, `<` inheritance and calls, in the shape `extract_more.ts` emits.
       verify: a Ruby fixture produces class, method, import and call edges in the extractor test.
-- [ ] **1.2 The Rails provider.** `config/routes.rb` `get '/x', to: 'users#index'` and
+- [x] **1.2 The Rails provider.** `config/routes.rb` `get '/x', to: 'users#index'` and
       `resources :users` (the actions the controller defines) → controller actions;
       `class User < ApplicationRecord` → `table:users` (`self.table_name` wins); `has_many` /
       `belongs_to` / `has_one` → `relates`; an action renders
@@ -71,7 +71,8 @@ catalog together with the numbers that justify it.
 ## Blockers
 
 ### blocker: built-pack-budget-for-grammars
-- **Status:** open
+- **Status:** resolved
+- **Resolution:** decided by the owner on 2026-10-24 — admit Ruby under the existing line, no re-anchor. The C# re-anchor of PR #2603 moved the line to 17.640 MB (16.036 MB × 1.1); the built tarball measured 16.190 MB before the Ruby grammar and 16.358 MB with it (`check_pack_size`, BUILT surface), so the addition fits without touching `src/config/pack-size-budget.json`.
 - **Class:** 3
 - **Owner:** user
 - **Ownership:** product-owned
@@ -93,7 +94,7 @@ catalog together with the numbers that justify it.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Ruby files produce nodes and edges, and a Rails fixture's routes, tables,
+- [x] AC-1 — Ruby files produce nodes and edges, and a Rails fixture's routes, tables,
       relations and views resolve with positive and negative oracles green.
 - [x] AC-2 — The four Phase-2 residues each have a fixture oracle that was seen red
       before its fix and is green after.

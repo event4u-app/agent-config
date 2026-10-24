@@ -53,7 +53,7 @@ function evaluate(over: Partial<Parameters<typeof evaluateEntry>[0]> = {}): Retu
 }
 
 describe('the manifest itself', () => {
-    it('names exactly the seven vendored grammars, one row each', () => {
+    it('names exactly the eight vendored grammars, one row each', () => {
         expect(manifest.entries.map((e) => e.path).sort()).toEqual([
             'src/vendor/grammars/tree-sitter-c_sharp.wasm',
             'src/vendor/grammars/tree-sitter-go.wasm',
@@ -61,6 +61,7 @@ describe('the manifest itself', () => {
             'src/vendor/grammars/tree-sitter-javascript.wasm',
             'src/vendor/grammars/tree-sitter-php.wasm',
             'src/vendor/grammars/tree-sitter-python.wasm',
+            'src/vendor/grammars/tree-sitter-ruby.wasm',
             'src/vendor/grammars/tree-sitter-typescript.wasm',
         ]);
         expect(duplicatePaths(manifest)).toEqual([]);
