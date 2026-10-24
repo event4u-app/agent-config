@@ -270,7 +270,7 @@ waits:
       the Iron Law becomes a field a function reads.
       verify: `npx vitest run tests/scripts/subagent_contract.test.ts -t judges-are-never-reusable --reporter=verbose` -> /✓.*judges-are-never-reusable/
       Done 2026-10-18: `production-validator` is the only judging definition in `src/subagents/` (judges and reviewers are skills, not definitions) and declares `reuse: never`; the test fails any judging definition that does not.
-- [ ] **2.5 Skipping project instructions ships on only when both hold:** the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/subagent_native_fields.ts -->
+- [x] **2.5 Skipping project instructions ships on only when both hold:** the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/subagent_native_fields.ts -->
       1.7 net delta is at least 10 % of the median cold start, and a fixture
       shows the dispatch for a skipping worker carries the kernel floor and the
       user's constraints verbatim (`subagent-spawn-contract.md:154-156`). Either
