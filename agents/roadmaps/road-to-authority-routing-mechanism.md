@@ -586,6 +586,17 @@ what the gate attests."*
       `agents/evidence/analysis/gate-invocation-envelope-20261024.md`.
       Record: `agents/evidence/council/gate-invocation-envelope-20261024.md`
       and its `.question.md`.
+      **First exploratory fixture under D27, run the same day: the file channel
+      is refuted, and the pipe holds only because the validator stops reading.**
+      A `setsid` grandchild wrote a forged `pass` after the producer's group was
+      killed. A regular-file channel accepted it in 10 of 10 runs. A
+      validator-owned pipe that the validator stops collecting from accepted it
+      in 0 of 10. The same pipe collected until EOF accepted it in 10 of 10, and
+      that control is what shows the harness can see the forgery. So the
+      accepted-byte boundary is the validator's stop point, and it is a time
+      boundary. Darwin and one Node version only, so it is not normative.
+      Evidence: `agents/evidence/analysis/gate-channel-escape-20261024.md` and
+      its probe `gate-channel-escape-probe.mjs`.
       currently pinned red on the trunk: invariant (must always hold),
       snapshot (a point-in-time reading, refreshable), tolerance (a bounded
       range with an accepted-risk waiver, per `ratification-artifact.md`'s
