@@ -72,7 +72,11 @@ written down where the hooks are generated.
       the foreign-file test red with the carry-over removed. After round 9: a
       failed second rename restores the old generation (tested with an injected
       rename), `map-render.json` is defined as part of a generation and dropped
-      on redraw, and the brief absent-directory window is documented.
+      on redraw, and the brief absent-directory window is documented. After
+      round 10: `buildMap` enforces a single writer itself — one redraw per
+      process, none while another process holds the refresh lock (it joins a
+      lock this process already holds, the CLI path) — and a failed restore
+      names where the old generation is. Each guard red when neutralised.
 
 ## Phase 3 — The development hooks stay in the development checkout
 

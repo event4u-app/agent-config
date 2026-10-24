@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -169,6 +169,44 @@ describe('agents/map/ artefacts (Phase 3)', () => {
         expect(() => swapIn(next, live, prev, flaky)).toThrow(/rename failed/);
         expect(fs.readFileSync(path.join(live, 'map.json'), 'utf-8')).toBe('old\n');
         expect(fs.existsSync(prev)).toBe(false);
+    });
+
+    it('names where the old generation is when the restore fails too', () => {
+        const live = path.join(root, 'live');
+        const next = path.join(root, 'next');
+        const prev = path.join(root, 'prev');
+        fs.mkdirSync(live);
+        fs.mkdirSync(next);
+        let calls = 0;
+        const failing = ((from: fs.PathLike, to: fs.PathLike): void => {
+            calls += 1;
+            if (calls >= 2) throw new Error('rename failed');
+            fs.renameSync(from, to);
+        }) as typeof fs.renameSync;
+        expect(() => swapIn(next, live, prev, failing)).toThrow(/restore failed too; the previous generation is at .*prev/);
+        expect(fs.existsSync(prev)).toBe(true);
+    });
+
+    it('two redraws in one process never interleave: the second is refused', async () => {
+        await buildMap(root);
+        const results = await Promise.allSettled([buildMap(root), buildMap(root)]);
+        expect(results.map((r) => r.status).sort()).toEqual(['fulfilled', 'rejected']);
+        const rejected = results.find((r) => r.status === 'rejected') as PromiseRejectedResult;
+        expect(String(rejected.reason)).toMatch(/already running in this process/);
+        expect(JSON.parse(fs.readFileSync(path.join(root, 'agents', 'map', 'map.json'), 'utf-8')).meta).toBeTruthy();
+    });
+
+    it('refuses to redraw while another process holds the refresh lock', async () => {
+        const lock = path.join(root, 'agents', 'runtime', 'state', 'code-graph-refresh.lock');
+        fs.mkdirSync(lock, { recursive: true });
+        const other = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)'], { stdio: 'ignore' });
+        try {
+            fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: other.pid, started_at: Date.now(), nonce: 'n' }));
+            await expect(buildMap(root)).rejects.toThrow(/another process holds the code-graph refresh lock/);
+            expect(fs.existsSync(path.join(root, 'agents', 'map'))).toBe(false);
+        } finally {
+            other.kill('SIGKILL');
+        }
     });
 
     it('drops the previous render check, which described the previous generation', async () => {

@@ -22,6 +22,7 @@ import { fileURLToPath } from 'node:url';
 import { write_atomic } from '../_lib/fs_atomic.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo } from './build.js';
+import { acquire as acquireRefreshLock, heldByThisProcess } from './refresh_lock.js';
 import { computeVerdict, graphState, NATIVE_CACHE_REL } from './detect.js';
 import {
     areaDrift,
@@ -249,6 +250,23 @@ export async function buildMap(
         _afterWrite?: (rel: string) => void;
     } = {},
 ): Promise<MapBuildResult> {
+    // Single writer, enforced here rather than trusted to callers: one redraw per
+    // process at a time, and none while another process holds the refresh lock.
+    if (drawing) throw new Error('a map redraw is already running in this process');
+    const release = heldByThisProcess(root) ? (): void => {} : acquireRefreshLock(root);
+    if (release === null) throw new Error('another process holds the code-graph refresh lock');
+    drawing = true;
+    try {
+        return await drawGeneration(root, opts);
+    } finally {
+        drawing = false;
+        release();
+    }
+}
+
+let drawing = false;
+
+async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1] = {}): Promise<MapBuildResult> {
     const outDir = opts.outDir ?? path.join(root, MAP_DIR_REL);
     // A chosen --out directory is only ever written into when it is empty or
     // already holds a map: the writer clears stale area pages, and that must
@@ -359,7 +377,14 @@ export function swapIn(next: string, live: string, prev: string, rename: typeof 
     try {
         rename(next, live);
     } catch (e) {
-        if (hadLive) rename(prev, live);
+        if (!hadLive) throw e;
+        try {
+            rename(prev, live);
+        } catch {
+            throw new Error(`map swap failed and the restore failed too; the previous generation is at ${prev}`, {
+                cause: e,
+            });
+        }
         throw e;
     }
     if (hadLive) fs.rmSync(prev, { recursive: true, force: true });

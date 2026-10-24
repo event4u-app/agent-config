@@ -90,6 +90,12 @@ function take(lock: string): () => void {
     };
 }
 
+/** True when this process holds the lock (the CLI took it before calling in). */
+export function heldByThisProcess(root: string): boolean {
+    const owner = readOwner(path.join(root, LOCK_REL));
+    return typeof owner !== 'string' && owner.pid === process.pid;
+}
+
 /**
  * Take the lock, or return null when another refresh holds it.
  *
