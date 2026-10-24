@@ -198,7 +198,7 @@ plan AC improvements automatically when a source repository updates.
       registry, the index and the local lineage ledger, and fails on a reader.
       verify: the test passes, and fails when a fixture import of the registry is added to
       one of those modules.
-- [ ] **6.4 Measure.** Record disk per project before and after Phase 1, refresh time
+- [x] **6.4 Measure.** Record disk per project before and after Phase 1, refresh time <!-- receipt: class=R0 · shadow · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       added by the index (target ≤ 3 %), `where-used` latency on the fixture estate
       (target < 200 ms), and zero writes into the foreign fixture, in an evidence file.
       verify: `agents/evidence/analysis/graph-home-measurement-2026-10.md` exists with an
