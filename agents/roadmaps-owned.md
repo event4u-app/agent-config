@@ -152,6 +152,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-primary-goal-that-is-asked-for | stubs | — | road to a primary goal that is asked for |
 | road-to-a-proposal-that-can-be-adopted | stubs | — | eleven prepared proposals arrived and none was adoptable as written |
 | road-to-a-visibility-sync-that-can-write | stubs | — | road to a visibility sync that can actually write |
+| road-to-a-weekly-lineage-watch | stubs | — | a weekly lineage watch on the maintainer's machine |
 | road-to-adopt-and-reset-flags-with-a-specification | stubs | — | `adopt` and `reset` have a routing and no behaviour |
 | road-to-adr-134-expiry | stubs | — | ADR-134 expires 2026-09-15, and ADR-133's freeze re-arms with it |
 | road-to-adr-number-uniqueness | stubs | — | road to an ADR number that cannot be claimed twice |
@@ -209,6 +210,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-language-pin-short-lead | stubs | — | a short typed lead makes the language pin follow the PASTE, in both directions |
 | road-to-lapsed-beta-baseline-clearance | stubs | — | the lapsed-beta baseline has a clearance date and nothing owns it |
 | road-to-legacy-target-onboarding-ratchet | stubs | — | Road to legacy target onboarding via ratchets — stub |
+| road-to-lineage-backfill-confirmation | stubs | — | confirm the lineage backfill drafts |
 | road-to-live-trigger-eval | stubs | — | road to the live trigger-eval reading |
 | road-to-main-protection-ruleset-changes | stubs | — | road to the `main` protection-ruleset changes (required checks + merge queue) |
 | road-to-make-it-stick-telemetry | stubs | — | "make it stick" needs telemetry that does not exist |

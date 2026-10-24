@@ -27,6 +27,8 @@ function run(args: string[], cwd: string): { status: number; stdout: string } {
 beforeEach(() => {
     project = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-consumer-')));
     fs.mkdirSync(path.join(project, '.git'));
+    // A project home (ADR-299): a root without `agents/` keeps its graph in the user-global home.
+    fs.mkdirSync(path.join(project, 'agents'));
     fs.mkdirSync(path.join(project, 'app', 'deep'), { recursive: true });
     fs.writeFileSync(path.join(project, 'app', 'a.ts'), "import { b } from './b.js';\nexport const a = (): number => b();\n");
     fs.writeFileSync(path.join(project, 'app', 'b.ts'), 'export function b(): number { return 1; }\n');

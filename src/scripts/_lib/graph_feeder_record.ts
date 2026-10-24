@@ -49,7 +49,8 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { detectSources, type GraphState, NATIVE_CACHE_REL, pickSource } from '../code_graph/detect.js';
+import { detectSources, type GraphState, pickSource } from '../code_graph/detect.js';
+import { projectHome } from '../code_graph/graph_home.js';
 import { loadGraph } from '../code_graph/query.js';
 import { untested } from '../code_graph/verbs.js';
 
@@ -288,7 +289,7 @@ export function graphUntestedVerdict(
     // there is no usable source is cost for nothing.
     let picked;
     try {
-        picked = pickSource(detectSources(root, path.join(root, NATIVE_CACHE_REL)));
+        picked = pickSource(detectSources(root, projectHome(root).cachePath));
     } catch {
         return none;
     }

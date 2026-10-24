@@ -264,8 +264,16 @@ describe('kernel server standing cost — the Phase 0.2 figures', () => {
     // note above asks: redundant prose in `chat_history_read` and
     // `memory_lookup` ("Read-only" already rides on the annotation) came out.
     // After the trim: descriptions 2,050 and payload 4,820, headroom 80.
-    it('has 28 allowlisted tools', () => {
-        expect(names.length).toBe(28);
+    //
+    // RE-MEASURED 2026-10-24 (`road-to-a-graph-that-follows-you` 5.1/5.3): 28 ->
+    // 29 tools with `graph_estate`, plus an optional `project` on the eight
+    // other graph tools. Untrimmed the payload read 5,208; the `project`
+    // property went in without a description (its meaning is stated once, in
+    // `graph_estate`), and the graph tools' own descriptions were tightened
+    // without dropping a claim. After the trim: descriptions 2,032 and payload
+    // 4,896, headroom 4 — the next tool trims first.
+    it('has 29 allowlisted tools', () => {
+        expect(names.length).toBe(29);
     });
 
     it('costs about 2,035 tokens in descriptions alone', () => {

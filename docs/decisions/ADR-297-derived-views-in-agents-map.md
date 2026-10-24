@@ -5,6 +5,7 @@ date: 2026-10-23
 decision: derived-views-in-agents-map
 supersedes: —
 superseded_by: —
+amended_by: ADR-299
 amends: ADR-124
 phase: road-to-a-map-that-draws-itself · step 0.1
 type: structural

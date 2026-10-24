@@ -22,10 +22,13 @@ import {
     collectPersonaSources,
     findOrphanCitations,
     lintLedgerText,
+    lintMechanismsText,
     parseLedgerText,
     stripLineSuffix,
+    validateMechanismRecord,
     validateRecord,
     type HarvestRecord,
+    type MechanismRecord,
 } from '../../src/scripts/lint_harvest_provenance.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -222,6 +225,81 @@ describe('citations', () => {
     });
 });
 
+describe('mechanisms.jsonl — the source-free decision ledger (step 8.2)', () => {
+    const ADAPT: MechanismRecord = {
+        mechanism_id: 'assertion-level-citation-registry',
+        verdict: 'adapt',
+        realised_in: ['provenance/README.md:12'],
+        decided_at: '2026-08-13',
+    };
+    const rules = (raw: unknown, root: string): string[] => validateMechanismRecord(raw, 1, root).map((f) => f.rule);
+
+    it('accepts an adapt row whose realised_in exists', () => {
+        expect(validateMechanismRecord(ADAPT, 1, makeRepo())).toEqual([]);
+    });
+
+    it('adopt|adapt need realised_in — absent is a verdict finding', () => {
+        const { realised_in: _drop, ...bare } = ADAPT;
+        void _drop;
+        expect(rules({ ...bare, verdict: 'adopt' }, makeRepo())).toContain('verdict-requirement');
+    });
+
+    it('adopt|adapt need every realised_in path to exist', () => {
+        expect(rules({ ...ADAPT, realised_in: ['src/gone.md'] }, makeRepo())).toEqual(['dead-row']);
+    });
+
+    it('reject needs a reason', () => {
+        const root = makeRepo();
+        const reject = { mechanism_id: 'x', verdict: 'reject', decided_at: '2026-08-13' };
+        expect(rules(reject, root)).toEqual(['verdict-requirement']);
+        expect(rules({ ...reject, reason: 'contradicts the de-inflation rule' }, root)).toEqual([]);
+    });
+
+    it('gap|deferred need a roadmap that exists, or the literal open', () => {
+        const root = makeRepo({ 'agents/roadmaps/road-to-x.md': '# x\n' });
+        const gap = { mechanism_id: 'x', verdict: 'gap', decided_at: '2026-08-13' };
+        expect(rules(gap, root)).toEqual(['verdict-requirement']);
+        expect(rules({ ...gap, roadmap: 'open' }, root)).toEqual([]);
+        expect(rules({ ...gap, verdict: 'deferred', roadmap: 'agents/roadmaps/road-to-x.md' }, root)).toEqual([]);
+        expect(rules({ ...gap, roadmap: 'agents/roadmaps/road-to-gone.md' }, root)).toEqual(['dead-row']);
+    });
+
+    it('rejects a source id, a pin or a locator — the tracked side stays source-free', () => {
+        const root = makeRepo();
+        for (const field of ['source_id', 'pin', 'locator', 'source_ref']) {
+            const found = validateMechanismRecord({ ...ADAPT, [field]: 'x' }, 1, root);
+            expect(found.map((f) => f.rule), field).toEqual(['schema']);
+            expect(found[0]?.message).toMatch(/source-free/);
+        }
+    });
+
+    it('rejects an unknown verdict and a missing field', () => {
+        const root = makeRepo();
+        expect(rules({ ...ADAPT, verdict: 'maybe' }, root)).toEqual(['schema']);
+        expect(rules({ mechanism_id: 'x', verdict: 'adopt' }, root)).toContain('schema');
+    });
+
+    it('lets a later row supersede an earlier one — repeats are history, not duplicates', () => {
+        const root = makeRepo();
+        const text = jsonl({ mechanism_id: 'x', verdict: 'gap', roadmap: 'open', decided_at: '2026-08-01' }, { ...ADAPT, mechanism_id: 'x' });
+        const { records, findings } = lintMechanismsText(text, root);
+        expect(findings).toEqual([]);
+        expect(records).toHaveLength(2);
+    });
+
+    it('a harvest citation resolves against either ledger', () => {
+        const root = makeRepo({
+            'provenance/README.md': '# ledger\n',
+            'src/rules/demo.md': '<!-- harvest:only-in-mechanisms -->\n<!-- harvest:assertion-level-citation-registry -->\n',
+        });
+        const citations = collectCitations(root);
+        expect(findOrphanCitations(citations, [VALID]).map((f) => f.message)).toEqual([
+            expect.stringContaining('only-in-mechanisms'),
+        ]);
+        expect(findOrphanCitations(citations, [VALID], [{ ...ADAPT, mechanism_id: 'only-in-mechanisms' }])).toEqual([]);
+    });
+});
+
 describe('persona sources — the three states', () => {
     const persona = (fm: string) => `---\nid: p\nrole: P\n${fm}---\n\n# P\n`;
 
@@ -314,6 +392,7 @@ describe('CLI smoke — the real repo ledger', () => {
         // check" from "everything checked" hides a broken gate.
         expect(res.stdout).toMatch(/ledger row\(s\) OK/);
         expect(res.stdout).toMatch(/citation\(s\) resolved across \d+ scanned root\(s\)/);
+        expect(res.stdout).toMatch(/\d+ mechanism row\(s\) OK/);
     });
 
     it('exits 2 on an unrecognized argument', () => {
