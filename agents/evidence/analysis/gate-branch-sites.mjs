@@ -65,8 +65,10 @@ export function scan(read) {
             if (t.startsWith('//') || t.startsWith('*')) return;
             const hit = VOCABULARY.find((s) => s.re.test(t));
             if (hit === undefined) return;
-            const covering = ranges.filter((r) => r.file === rel && n >= r.from && n <= r.to).map((r) => r.id);
-            report.push({ check: c.check, line: n, kind: hit.kind, covering: [...new Set(covering)], text: t.slice(0, 110) });
+            const hits = ranges.filter((r) => r.file === rel && n >= r.from && n <= r.to);
+            const span = hits.length === 0 ? 0 : Math.min(...hits.map((r) => r.to - r.from));
+            const narrowest = [...new Set(hits.filter((r) => r.to - r.from === span).map((r) => r.id))];
+            report.push({ check: c.check, line: n, kind: hit.kind, covering: [...new Set(hits.map((r) => r.id))], narrowest, text: t.slice(0, 110) });
         });
     }
     const branchIds = new Set(inv.checks.flatMap((c) => c.branches.map((b) => `${c.check} ${b.id}`)));
@@ -83,8 +85,9 @@ export function scan(read) {
         const branch = d.kind.split(':')[1];
         if (branch !== undefined && !branchIds.has(`${r.check} ${branch}`)) failures.push(`disposition of ${r.check}:${r.line} names unknown branch ${branch}`);
     }
-    // A hard exit site (a non-zero return, exit or exit code) inside branches
-    // that all declare a non-blocking effect contradicts the inventory: the
+    // A hard exit site (a non-zero return, exit or exit code) whose NARROWEST
+    // covering branch declares a non-blocking effect contradicts the inventory,
+    // even when a wider wrapping branch is blocking: the
     // code can fail the run where the inventory says it cannot. The reverse is
     // not decidable here, because most findings are pushed and the exit is
     // aggregated, so it is reported as a coverage count, never claimed.
@@ -94,9 +97,9 @@ export function scan(read) {
     const HARD = ['return-nonzero', 'exit-nonzero', 'exit-code'];
     const confirmed = new Set();
     for (const r of report) {
-        const bs = r.covering.map((id) => effectOf[`${r.check} ${id}`]).filter((b) => b !== undefined);
+        const bs = r.narrowest.map((id) => effectOf[`${r.check} ${id}`]).filter((b) => b !== undefined);
         if (HARD.includes(r.kind) || r.kind === 'throw') for (const id of r.covering) confirmed.add(`${r.check} ${id}`);
-        if (HARD.includes(r.kind) && bs.length > 0 && bs.every(nonBlocking)) failures.push(`effect contradicts code: ${r.check}:${r.line} ${r.kind} lies only in non-blocking branch(es) ${r.covering.join(', ')}`);
+        if (HARD.includes(r.kind) && bs.length > 0 && bs.every(nonBlocking)) failures.push(`effect contradicts code: ${r.check}:${r.line} ${r.kind} lies in non-blocking branch(es) ${r.narrowest.join(', ')}, its narrowest cover`);
     }
     const blockingIds = Object.entries(effectOf).filter(([, b]) => !nonBlocking(b) && b.effect !== 'warning-exit-nonzero-only-with-flag').map(([k]) => k);
     const effectCoverage = { blocking: blockingIds.length, confirmedByHardSite: blockingIds.filter((k) => confirmed.has(k)).length };
@@ -140,7 +143,18 @@ function selfTest() {
         if (!ok) bad += 1;
         console.log(`${ok ? 'ok  ' : 'FAIL'} a non-blocking effect over a hard exit site is refused`);
     }
-    console.log(`\nself-test: ${VOCABULARY.length + 2 - bad}/${VOCABULARY.length + 2} case(s) behaved`);
+    {
+        const read = (rel) => {
+            if (rel !== INVENTORY) return realRead(rel);
+            const j = JSON.parse(realRead(rel));
+            j.checks.find((c) => c.check === 'check_composite_arming').branches.find((b) => b.id === 'c16-rethrow').effect = 'warning-exit-zero';
+            return JSON.stringify(j);
+        };
+        const ok = scan(read).failures.some((f) => f.includes('check_composite_arming') && f.includes('c16-rethrow'));
+        if (!ok) bad += 1;
+        console.log(`${ok ? 'ok  ' : 'FAIL'} a non-blocking narrowest branch is refused even inside a wider blocking one`);
+    }
+    console.log(`\nself-test: ${VOCABULARY.length + 3 - bad}/${VOCABULARY.length + 3} case(s) behaved`);
     process.exit(bad === 0 ? 0 : 1);
 }
 

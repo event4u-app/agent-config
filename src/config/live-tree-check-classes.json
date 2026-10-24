@@ -1,0 +1,354 @@
+{
+  "_doc": "Provisional classification of every invocation of the 16 live-tree checks Phase 7 of road-to-authority-routing-mechanism classifies (step 7.2). Each entry names the aspects active in that invocation mode with their class, whether a non-zero exit fails the caller, and, where an invariant does not block, the demotion and its reason. tests/scripts/check_persistence_classification.test.ts holds the workflows and taskfiles to it, so no invocation is weakened or added silently.",
+  "provisional": true,
+  "revisable": "Provisional default of D48 in road-to-authority-routing-mechanism: the classes are those of the 7.1 ledger at revision 22 (unchanged through revision 24), which is not promoted while step 7.1 is parked. When that ledger is promoted or a class changes, regenerate these entries from it.",
+  "source": "agents/evidence/analysis/gate-classification-ledger-20261024.md",
+  "checks": [
+    "check_gate_completeness",
+    "lint_ticked_unmet_criteria",
+    "check_rule_invariants",
+    "check_augment_description_cap",
+    "check_trigger_evals",
+    "lint_subagent_determinism",
+    "lint_rule_enforcement_declaration",
+    "check_token_quality_golden",
+    "check_council_layout",
+    "check_knowledge_cards",
+    "check_public_links",
+    "lint_agents_layout",
+    "lint_eval_freshness",
+    "lint_readme_jargon",
+    "lint_readme_serial_comma",
+    "check_composite_arming"
+  ],
+  "invocations": [
+    {
+      "check": "check_gate_completeness",
+      "file": "taskfiles/ci-fast.yml",
+      "where": "check-gate-completeness",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R1.a": "invariant",
+        "R1.b": "invariant"
+      }
+    },
+    {
+      "check": "lint_ticked_unmet_criteria",
+      "file": ".github/workflows/rule-backstops.yml",
+      "where": "No criterion is ticked over its own \"NOT met\"",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R2.a": "invariant"
+      }
+    },
+    {
+      "check": "lint_ticked_unmet_criteria",
+      "file": "taskfiles/ci-fast.yml",
+      "where": "lint-ticked-unmet-criteria",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R2.a": "invariant"
+      }
+    },
+    {
+      "check": "check_rule_invariants",
+      "file": "taskfiles/ci-fast.yml",
+      "where": "check-rule-invariants",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R3.a": "invariant"
+      }
+    },
+    {
+      "check": "check_augment_description_cap",
+      "file": ".github/workflows/standing-payload-delta.yml",
+      "where": "Drain 3.2c — auto-rule description cap",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R4.a": "invariant"
+      }
+    },
+    {
+      "check": "check_augment_description_cap",
+      "file": "taskfiles/ci-fast.yml",
+      "where": "check-augment-description-cap",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R4.a": "invariant"
+      }
+    },
+    {
+      "check": "check_trigger_evals",
+      "file": "taskfiles/ci-fast.yml",
+      "where": "check-trigger-evals",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R5.a": "invariant",
+        "R5.b": "invariant"
+      }
+    },
+    {
+      "check": "lint_subagent_determinism",
+      "file": ".github/workflows/standing-payload-delta.yml",
+      "where": "Drain 3.2 — knowledge cards, subagent determinism, trigger-eval presence",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R6.a": "invariant"
+      }
+    },
+    {
+      "check": "lint_subagent_determinism",
+      "file": "taskfiles/ci-fast.yml",
+      "where": "lint-subagent-determinism",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R6.a": "invariant"
+      }
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "file": "taskfiles/ci-fast.yml",
+      "where": "lint-rule-enforcement-declaration",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R7.a": "invariant"
+      }
+    },
+    {
+      "check": "check_token_quality_golden",
+      "file": ".github/workflows/standing-payload-delta.yml",
+      "where": "Drain 3.2d — token-quality golden set is structurally valid",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R8.a": "invariant",
+        "R8.b": "observation"
+      }
+    },
+    {
+      "check": "check_token_quality_golden",
+      "file": "taskfiles/engine.yml",
+      "where": "check-token-quality-golden",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R8.a": "invariant",
+        "R8.b": "observation"
+      }
+    },
+    {
+      "check": "check_council_layout",
+      "file": ".github/workflows/standing-payload-delta.yml",
+      "where": "Drain 3.2f — council output-path convention",
+      "flags": [
+        "--quiet"
+      ],
+      "blocking": true,
+      "aspects": {
+        "R9.a": "invariant"
+      }
+    },
+    {
+      "check": "check_council_layout",
+      "file": "taskfiles/content.yml",
+      "where": "check-council-layout",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R9.a": "invariant"
+      }
+    },
+    {
+      "check": "check_knowledge_cards",
+      "file": ".github/workflows/standing-payload-delta.yml",
+      "where": "Drain 3.2 — knowledge cards, subagent determinism, trigger-eval presence",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R10.a": "invariant",
+        "R10.b": "invariant",
+        "R10.c": "invariant",
+        "R10.e": "invariant",
+        "R10.f": "invariant",
+        "R10.j": "invariant"
+      }
+    },
+    {
+      "check": "check_knowledge_cards",
+      "file": "taskfiles/ci-fast.yml",
+      "where": "check-knowledge-cards",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R10.a": "invariant",
+        "R10.b": "invariant",
+        "R10.c": "invariant",
+        "R10.e": "invariant",
+        "R10.f": "invariant",
+        "R10.j": "invariant"
+      }
+    },
+    {
+      "check": "check_public_links",
+      "file": ".github/workflows/standing-payload-delta.yml",
+      "where": "Drain 3.2e — public links and contract stability frontmatter",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R11.a": "invariant",
+        "R11.b": "invariant",
+        "R11.c": "invariant",
+        "R11.d": "invariant",
+        "R11.e": "observation",
+        "R11.g": "invariant"
+      }
+    },
+    {
+      "check": "check_public_links",
+      "file": "taskfiles/ci-fast.yml",
+      "where": "check-public-links",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R11.a": "invariant",
+        "R11.b": "invariant",
+        "R11.c": "invariant",
+        "R11.d": "invariant",
+        "R11.e": "observation",
+        "R11.g": "invariant"
+      }
+    },
+    {
+      "check": "lint_agents_layout",
+      "file": "taskfiles/content.yml",
+      "where": "lint-agents-layout",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R12.a": "invariant",
+        "R12.c": "observation"
+      }
+    },
+    {
+      "check": "lint_agents_layout",
+      "file": "taskfiles/content.yml",
+      "where": "lint-agents-layout-strict",
+      "flags": [
+        "--strict"
+      ],
+      "blocking": true,
+      "aspects": {
+        "R12.a": "invariant",
+        "R12.c": "observation",
+        "R12.d": "invariant"
+      }
+    },
+    {
+      "check": "lint_eval_freshness",
+      "file": "taskfiles/ci-fast.yml",
+      "where": "lint-eval-freshness",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R13.a": "invariant"
+      }
+    },
+    {
+      "check": "lint_readme_jargon",
+      "file": ".github/workflows/standing-payload-delta.yml",
+      "where": "Drain 3.2b — README jargon density, README serial comma",
+      "flags": [
+        "--quiet"
+      ],
+      "blocking": true,
+      "aspects": {
+        "R14.a": "invariant"
+      }
+    },
+    {
+      "check": "lint_readme_jargon",
+      "file": "taskfiles/ci-fast.yml",
+      "where": "lint-readme-jargon",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R14.a": "invariant"
+      }
+    },
+    {
+      "check": "lint_readme_serial_comma",
+      "file": ".github/workflows/standing-payload-delta.yml",
+      "where": "Drain 3.2b — README jargon density, README serial comma",
+      "flags": [
+        "--quiet"
+      ],
+      "blocking": true,
+      "aspects": {
+        "R15.a": "invariant"
+      }
+    },
+    {
+      "check": "lint_readme_serial_comma",
+      "file": "taskfiles/ci-fast.yml",
+      "where": "lint-readme-serial-comma",
+      "flags": [],
+      "blocking": true,
+      "aspects": {
+        "R15.a": "invariant"
+      }
+    },
+    {
+      "check": "check_composite_arming",
+      "file": ".github/workflows/rule-backstops.yml",
+      "where": "composite arming predicate refuses (self-test)",
+      "flags": [
+        "--self-test"
+      ],
+      "blocking": true,
+      "aspects": {
+        "R16.e": "invariant"
+      }
+    },
+    {
+      "check": "check_composite_arming",
+      "file": ".github/workflows/tests.yml",
+      "where": "report the composite arming state (never gates)",
+      "flags": [
+        "--store"
+      ],
+      "blocking": false,
+      "aspects": {
+        "R16.a": "observation",
+        "R16.b": "invariant",
+        "R16.c": "observation",
+        "R16.d": "observation"
+      },
+      "demoted": [
+        "R16.b"
+      ],
+      "demotion_reason": "The step reports the arming state and never gates (its continue-on-error is deliberate): one CI run writes one reading, so a malformed store is surfaced in the log rather than failing the job. R16.b still gates in the --self-test invocations, whose fixture cases include a malformed store."
+    },
+    {
+      "check": "check_composite_arming",
+      "file": "taskfiles/content.yml",
+      "where": "check-composite-arming-self-test",
+      "flags": [
+        "--self-test"
+      ],
+      "blocking": true,
+      "aspects": {
+        "R16.e": "invariant"
+      }
+    }
+  ]
+}
