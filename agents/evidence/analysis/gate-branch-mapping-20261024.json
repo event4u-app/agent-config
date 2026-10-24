@@ -241,5 +241,23 @@
    "c16-not-armable-sessions": "R16.a",
    "c16-unusable-dropped": "R16.a"
   }
+ },
+ "resolutions": {
+  "lint_ticked_unmet_criteria c2-duplicate-historical": {
+   "decision": "R2.a",
+   "reason": "Revision 9 widened R2.a's property to name exemption-list well-formedness (no duplicate key, no entry matching nothing), so the duplicate-key branch is a finding about the same in-source list R2.a classifies."
+  },
+  "check_public_links c11-resolve-outside-root": {
+   "decision": "op:scope-exclusion",
+   "reason": "A link resolving outside the repository cannot point into docs/contracts by construction; skipping it bounds R11.a's scope (stated on R11.a) rather than passing a run that measured nothing, so it gets its own category."
+  },
+  "check_trigger_evals c6-unreadable-json": {
+   "decision": "R5.b",
+   "reason": "One implemented catch reports one finding text for both a read failure and a parse failure, so there is one implemented assertion: the trigger file is readable valid JSON. Under the governing definition the ledger classifies the code as it is; splitting it would classify code that does not exist. That an I/O failure reads as a finding is a defect carried to 7.2."
+  },
+  "lint_eval_freshness c13-manifest-unreadable": {
+   "decision": "R13.a",
+   "reason": "One implemented branch reports unreadable, invalid JSON and literal null alike, so the implemented assertion is that an in-scope manifest is a readable JSON object, part of R13.a. Same reasoning as c6-unreadable-json: classify the code as it is; the I/O-versus-content conflation is a defect carried to 7.2."
+  }
  }
 }

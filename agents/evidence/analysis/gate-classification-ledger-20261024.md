@@ -190,6 +190,25 @@ without a matching ledger update, 7.1 reopens. It is a measurement, not a CI
 gate. Nothing runs it automatically, and 7.2 has to run it before relying on
 any row.
 
+**Phase 7 start manifest (revision 10).** openai, round 14: closure over the
+current set is not closure over the historical one. Phase 7 start manifest: measured at `bbe5b73be4f06faa528d494a271d2c8b21e28bb2`, recorded in `7a7a55b2d8947d2c2e26ff59862bc8e9fac3f573`.
+
+The 2026-10-10 round measured the population on a clean `origin/main`
+worktree at the first commit, and its record landed in the second, unchanged
+since. The reconciler checks three things against git, not against this file:
+
+- the record equals the version that landed;
+- every one of its 16 checks existed at the measured commit;
+- every one still exists under the same path today, so none was renamed,
+  merged or removed.
+
+`R1.c` was counted as a binding row from revision 3 to revision 8 and withdrawn
+in revision 9. The withdrawal and its reason sit on the row itself.
+
+**Ledger table, pinned (revision 10).** A row edited after the independent
+review would otherwise pass silently. The reconciler hashes the table rows. The
+recorded value is the ledger table: sha256 `5d6fca5aa20eef9bdfad29fe56845631d2d87e31cfb18ee06cb196931938631e`.
+
 **Helpers, pinned as a closure (revision 9).** openai, round 13: the checks
 import helpers, and the per-file pins below covered none of them. The
 reconciler recomputes the transitive closure of relative imports from the 16
@@ -225,9 +244,9 @@ than listed.
 | `.github/workflows/rule-backstops.yml` | `015473465df2afb82e32ada7fce9d458d6c17055` |
 | `.github/workflows/tests.yml` | `0e1e0c9882919e10ff783780315a84b5e5f5dea3` |
 | `agents/evidence/analysis/gate-branch-inventory-20261024.json` | `119214ea142393c7254cae40e080153728e10fb0` |
-| `agents/evidence/analysis/gate-branch-mapping-20261024.json` | `74d63e9e0a9626a0b2101d2bdcf4588c109d7114` |
+| `agents/evidence/analysis/gate-branch-mapping-20261024.json` | `c296fd9f02c1f0e83688da3f596cbb19e079665e` |
 | `agents/evidence/analysis/gate-branch-mapping-review-20261024.json` | `46227ecdae464df420e5aec60910a1b7a497e686` |
-| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `75ce06ec9f9d3ec0b54c25de98250ddab02bd09e` |
+| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `a55c5676efa6d5ea400398765e1714a53a0b3072` |
 | `agents/evidence/analysis/gate-ledger-executions.mjs` | `b330f3e9671d4d9e58baf9e1a59e32bc473b3756` |
 
 
