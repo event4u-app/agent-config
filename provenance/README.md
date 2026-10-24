@@ -243,3 +243,16 @@ The source side lives under the user-global runtime, `runtime/lineage/` below
 `agents/settings/contexts/skills-provenance.yml` (read, never written);
 `code-graph lineage check` validates it. Neither runs in CI — the key is local.
 Every write refuses a target inside a git work tree.
+
+### Reading both halves
+
+| Verb | Answers from | What it says |
+|---|---|---|
+| `lineage of <id\|path>` | tracked | the decision, and each `realised_in` as ok or BROKEN (moved or gone) |
+| `lineage gaps` | tracked | `gap` and `deferred` mechanisms nothing has closed since, with their owner |
+| `lineage rejected` | tracked | the latest rejections, with reason and reopen condition |
+| `lineage from <source>` | local + key | the mechanisms one source fed, pins and locators opened |
+| `map --lineage` | tracked | `agents/map/lineage.md`, mechanisms by verdict — never a source |
+| `map --lineage --sources` | local + key | the source view, written under the user-global home only |
+| `lineage backfill --draft` | tree tokens + key | drafts from Provenance blocks into the gitignored `agents/.harvest-local/`; no row written |
+| `lineage watch [--dry-run]` | local + key | for sources switched on with `watch enable`: an upstream delta as one local report and one stub of mechanism ids and sealed locators; refused under CI |

@@ -275,7 +275,7 @@ owner's machine; what the repository tracks is source-free.
 
 ## Phase 10 — The upstream delta watch, local and dry-run first
 
-- [ ] **10.1 One watch run.** `code-graph lineage watch --dry-run` per source whose
+- [x] **10.1 One watch run.** `code-graph lineage watch --dry-run` per source whose <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/lineage_watch.ts -->
       watch flag the owner switched on with `lineage watch enable` (off by default,
       council O7): `git ls-remote`; equal to the newest pin → stop; otherwise a shallow
       fetch, a diff restricted to the edges' locators plus a top-level listing diff,
@@ -283,7 +283,7 @@ owner's machine; what the repository tracks is source-free.
       verify: a local fixture upstream with three commits (one touching a locator, one new
       module, one unrelated) reports exactly one `reverify` and one `candidate`; an
       unchanged source costs one `ls-remote`.
-- [ ] **10.2 Output is stubs, never code.** A non-dry run writes its report to the
+- [x] **10.2 Output is stubs, never code.** A non-dry run writes its report to the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/lineage_watch.ts -->
       user-global home and roadmap stubs under `agents/roadmaps/stubs/` naming mechanism
       ids and a fresh `ENC1` locator only — no source id — one report per run, grouped by
       mechanism rather than per commit. It implements and merges nothing, and refuses to
