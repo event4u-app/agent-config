@@ -113,6 +113,24 @@ describe('code-graph projects list|add|remove|prune', () => {
         expect(Object.values(readRegistry().projects).map((e) => e.root).sort()).toEqual([goneNew, keep].sort());
     });
 
+    it('list flags a root missing for 30 days and leaves it registered until prune (6.2)', async () => {
+        const old = repo('old-gone');
+        const fresh = repo('fresh-gone');
+        for (const p of [old, fresh]) recordProject(p);
+        updateRegistry((reg) => {
+            for (const e of Object.values(reg.projects)) if (e.root === old) e.last_seen = new Date(Date.now() - 31 * 86_400_000).toISOString();
+        });
+        fs.rmSync(old, { recursive: true });
+        fs.rmSync(fresh, { recursive: true });
+        const list = await cg('projects', 'list');
+        const lines = list.stdout.split('\n');
+        expect(lines.find((l) => l.includes(old))).toMatch(/STALE \(missing 30\+ days/);
+        expect(lines.find((l) => l.includes(fresh))).toMatch(/· missing$/);
+        expect(Object.keys(readRegistry().projects)).toHaveLength(2);
+        expect((await cg('projects', 'prune')).rc).toBe(0);
+        expect(Object.values(readRegistry().projects).map((e) => e.root)).toEqual([fresh]);
+    });
+
     it('rejects an unknown verb', async () => {
         expect((await cg('projects', 'crawl')).rc).toBe(2);
     });

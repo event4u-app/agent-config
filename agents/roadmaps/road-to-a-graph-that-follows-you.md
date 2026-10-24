@@ -184,7 +184,7 @@ plan AC improvements automatically when a source repository updates.
 
 ## Phase 6 — Limits and the first measurement
 
-- [ ] **6.1 Storage budget.** `code-graph projects` honours a budget (default 2048 MB,
+- [x] **6.1 Storage budget.** `code-graph projects` honours a budget (default 2048 MB, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/cli.ts -->
       stored in the registry) and evicts the least-recently-used global-home graphs —
       a query updates recency, a registry scan does not — never a graph under a repo's
       own `agents/`, never a pinned one, never one whose refresh lock is held (council O4).
