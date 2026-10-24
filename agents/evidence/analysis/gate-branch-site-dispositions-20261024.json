@@ -1,0 +1,113 @@
+{
+ "note": "Disposition of each site the mechanical scanner finds outside every inventoried branch's `where` range (exact containment, no tolerance). A kind before the colon; the inventoried branch it belongs to after it, where there is one.",
+ "dispositions": {
+  "lint_ticked_unmet_criteria:238": {
+   "kind": "collector",
+   "reason": "recursive file walk; collects paths to scan, reports nothing"
+  },
+  "lint_ticked_unmet_criteria:240": {
+   "kind": "collector",
+   "reason": "file walk; collects a path to scan"
+  },
+  "lint_ticked_unmet_criteria:252": {
+   "kind": "aggregate:c2-hit",
+   "reason": "spreads the hits scanText found; each hit is inventoried as c2-hit"
+  },
+  "check_rule_invariants:250": {
+   "kind": "usage:c3-unknown-arg",
+   "reason": "_argparse_error helper; its callers are inventoried as c3-unknown-arg and c3-root-missing-value"
+  },
+  "check_rule_invariants:279": {
+   "kind": "could-not-run:c3-json-read-or-parse",
+   "reason": "the catch-all internal-error return (exit 3) behind c3-json-* and c3-selftest-src-unreadable"
+  },
+  "check_trigger_evals:267": {
+   "kind": "collector",
+   "reason": "lists triggers.json candidates to scan"
+  },
+  "check_trigger_evals:350": {
+   "kind": "usage:c6-unknown-arg",
+   "reason": "_argparse_error helper; callers inventoried as c6-unknown-arg, c6-today-missing-value, c6-bad-today"
+  },
+  "check_trigger_evals:385": {
+   "kind": "aggregate:c6-report",
+   "reason": "spreads the per-file findings of _check_one into the list c6-report exits on"
+  },
+  "lint_rule_enforcement_declaration:329": {
+   "kind": "aggregate:c7-undeclared-new",
+   "reason": "the exit 1 over findings already inventoried as c7-undeclared-new, c7-gap-not-in-body, c7-baseline-stale, c7-baseline-shrink"
+  },
+  "check_council_layout:79": {
+   "kind": "collector",
+   "reason": "sorted rglob; collects paths"
+  },
+  "check_knowledge_cards:287": {
+   "kind": "aggregate:c10-G1-tier-missing",
+   "reason": "spreads _check_global_card's G1\u2013G6 findings, each inventoried (c10-G*)"
+  },
+  "check_knowledge_cards:388": {
+   "kind": "aggregate:c10-G1-tier-missing",
+   "reason": "second call site of _check_global_card; same G1\u2013G6 findings"
+  },
+  "check_knowledge_cards:523": {
+   "kind": "collector",
+   "reason": "date parser output, not a finding"
+  },
+  "check_knowledge_cards:589": {
+   "kind": "silent-pass:c10-C5-git-missing",
+   "reason": "_git rethrows a spawn error (ENOENT etc.); its only caller, the C5 ancestry loop at lines 340-353, catches it at line 351 with an empty handler, so the ancestry half of C5 is skipped silently"
+  },
+  "check_knowledge_cards:641": {
+   "kind": "collector",
+   "reason": "collects source_version values"
+  },
+  "check_knowledge_cards:656": {
+   "kind": "collector",
+   "reason": "collects observed_at values"
+  },
+  "check_knowledge_cards:713": {
+   "kind": "could-not-run:c10-freshness-relative-throw",
+   "reason": "_relativeToStrict throw, the documented relative_to crash"
+  },
+  "check_knowledge_cards:760": {
+   "kind": "collector",
+   "reason": "lists card files"
+  },
+  "check_knowledge_cards:866": {
+   "kind": "usage:c10-unknown-arg",
+   "reason": "_topError helper; callers inventoried as c10-unknown-arg, c10-missing-value, c10-bad-int"
+  },
+  "check_public_links:316": {
+   "kind": "aggregate:c11-report",
+   "reason": "spreads scan_file's violations into the list c11-report exits on"
+  },
+  "lint_agents_layout:258": {
+   "kind": "aggregate:c12-flat-file",
+   "reason": "exit 1 over the unknown entries inventoried as c12-flat-file and c12-unknown-dir"
+  },
+  "lint_agents_layout:270": {
+   "kind": "aggregate:c12-consumer-warning",
+   "reason": "the --strict exit after consumer warnings, inventoried as c12-consumer-warning (R12.d)"
+  },
+  "lint_eval_freshness:117": {
+   "kind": "collector",
+   "reason": "lists manifest paths"
+  },
+  "lint_readme_jargon:164": {
+   "kind": "aggregate:c14-over-budget",
+   "reason": "accumulates hits; c14-over-budget fails when they exceed the bound"
+  },
+  "lint_readme_serial_comma:111": {
+   "kind": "aggregate:c15-serial-comma",
+   "reason": "accumulates hits; c15-serial-comma reports them"
+  },
+  "check_council_layout:175": {
+   "kind": "could-not-run:c9-dead-scope",
+   "reason": "the DeadScopeError catch returns 1: the dead-scope exit inventoried as c9-dead-scope, one line before its recorded range"
+  },
+  "check_public_links:347": {
+   "kind": "aggregate:c11-beta-marker",
+   "reason": "the exit 1 when warnings exist and --strict is set: the strict half of c11-beta-marker (R11.f)"
+  }
+ }
+}

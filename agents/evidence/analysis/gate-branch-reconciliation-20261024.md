@@ -7,7 +7,20 @@ a committed copy that differs byte-for-byte from a fresh regeneration. One row p
 is the invocation mode the destination aspect is classified under (`—` for a branch that asserts nothing), the destination is a
 binding aspect with its class or a declared non-assertion category, and the verdict is the independent mapping review's.
 
-Totals: 198 branches · 97 to binding aspects · 101 to non-assertion categories {"op:could-not-run":56,"op:informational":7,"op:usage":22,"op:unreachable":1,"op:silent-pass":4,"op:aggregate":7,"op:write":2,"op:presentation":1,"op:scope-exclusion":1} · 49 binding aspects {"invariant":41,"snapshot":0,"tolerance":0,"observation":8}.
+A branch whose code serves two aspects in two modes is written as two rows, one per (mode, aspect), so every row is one assertion under one mode.
+
+**Reproduce from a clean checkout** (node and git only, no install), from inside any clone: `C=$(git log -1 --format=%H -- agents/evidence/analysis/gate-branch-reconciliation-20261024.md) && D=$(mktemp -d) && git worktree add --detach "$D" "$C" && cd "$D" && node agents/evidence/analysis/gate-ledger-reconcile.mjs && node agents/evidence/analysis/gate-branch-sites.mjs && node agents/evidence/analysis/gate-ledger-reconcile.mjs --branches | cmp - agents/evidence/analysis/gate-branch-reconciliation-20261024.md`. `C` is the commit that last wrote this file; the two independent reruns used `a91350838a72e555d569036fc4152e0b541344a1` and `907b83bd6678e4a6a03ae81591dc4f0e84da5cef`.
+
+**Invalidation.** The reconciler reports the verdict stale, and 7.1 reopens for the affected rows, when any pinned check, helper closure, invocation wiring, inventory, mapping, review, site disposition, reconciler, this artefact or the ledger table changes, or when a later finding shows an omitted or mis-destined branch (`agents/evidence/analysis/gate-7-2-reliance-rules-20261024.md`).
+
+Totals: 198 branches (200 rows) · 97 branches to binding aspects · 101 to non-assertion categories {"op:could-not-run":56,"op:informational":7,"op:usage":22,"op:unreachable":1,"op:silent-pass":4,"op:aggregate":7,"op:write":2,"op:presentation":1,"op:scope-exclusion":1} · 49 binding aspects {"invariant":41,"snapshot":0,"tolerance":0,"observation":8}.
+
+**Unsure review verdicts and their recorded decisions:**
+
+- `lint_ticked_unmet_criteria c2-duplicate-historical` → `R2.a`: Revision 9 widened R2.a's property to name exemption-list well-formedness (no duplicate key, no entry matching nothing), so the duplicate-key branch is a finding about the same in-source list R2.a classifies.
+- `check_public_links c11-resolve-outside-root` → `op:scope-exclusion`: A link resolving outside the repository cannot point into docs/contracts by construction; skipping it bounds R11.a's scope (stated on R11.a) rather than passing a run that measured nothing, so it gets its own category.
+- `check_trigger_evals c6-unreadable-json` → `R5.b`: One implemented catch reports one finding text for both a read failure and a parse failure, so there is one implemented assertion: the trigger file is readable valid JSON. Under the governing definition the ledger classifies the code as it is; splitting it would classify code that does not exist. That an I/O failure reads as a finding is a defect carried to 7.2.
+- `lint_eval_freshness c13-manifest-unreadable` → `R13.a`: One implemented branch reports unreadable, invalid JSON and literal null alike, so the implemented assertion is that an in-scope manifest is a readable JSON object, part of R13.a. Same reasoning as c6-unreadable-json: classify the code as it is; the I/O-versus-content conflation is a defect carried to 7.2.
 
 | Check | Branch | Where | Mode | Destination | Review |
 |---|---|---|---|---|---|
@@ -172,14 +185,16 @@ Totals: 198 branches · 97 to binding aspects · 101 to non-assertion categories
 | `check_public_links` | `c11-target-not-found` | src/scripts/check_public_links.ts:180-186 | default | R11.a invariant | agree |
 | `check_public_links` | `c11-target-no-stability` | src/scripts/check_public_links.ts:191-197 | default | R11.b invariant | agree |
 | `check_public_links` | `c11-experimental` | src/scripts/check_public_links.ts:201-207 | default | R11.c invariant | agree |
-| `check_public_links` | `c11-beta-marker` | src/scripts/check_public_links.ts:213-219 | default + --strict | R11.e observation + R11.f invariant | agree |
+| `check_public_links` | `c11-beta-marker` | src/scripts/check_public_links.ts:213-219 | default | R11.e observation | agree |
+| `check_public_links` | `c11-beta-marker` | src/scripts/check_public_links.ts:213-219 | --strict | R11.f invariant | agree |
 | `check_public_links` | `c11-resolve-outside-root` | src/scripts/check_public_links.ts:131 | — | op:scope-exclusion | unsure, resolved |
 | `check_public_links` | `c11-report` | src/scripts/check_public_links.ts:319-345 | — | op:aggregate | agree |
 | `lint_agents_layout` | `c12-dead-scope` | src/scripts/lint_agents_layout.ts:238-240 | — | op:could-not-run | agree |
 | `lint_agents_layout` | `c12-rethrow` | src/scripts/lint_agents_layout.ts:242 | — | op:could-not-run | agree |
 | `lint_agents_layout` | `c12-flat-file` | src/scripts/lint_agents_layout.ts:177-183, | default | R12.a invariant | agree |
 | `lint_agents_layout` | `c12-unknown-dir` | src/scripts/lint_agents_layout.ts:188-192, | default | R12.a invariant | agree |
-| `lint_agents_layout` | `c12-consumer-warning` | src/scripts/lint_agents_layout.ts:214, | consumer mode, default + consumer mode, --strict | R12.c observation + R12.d invariant | agree |
+| `lint_agents_layout` | `c12-consumer-warning` | src/scripts/lint_agents_layout.ts:214, | consumer mode, default | R12.c observation | agree |
+| `lint_agents_layout` | `c12-consumer-warning` | src/scripts/lint_agents_layout.ts:214, | consumer mode, --strict | R12.d invariant | agree |
 | `lint_eval_freshness` | `c13-help` | src/scripts/lint_eval_freshness.ts:301-303 | — | op:usage | agree |
 | `lint_eval_freshness` | `c13-unknown-arg` | src/scripts/lint_eval_freshness.ts:311-315 | — | op:usage | agree |
 | `lint_eval_freshness` | `c13-dead-scope` | src/scripts/lint_eval_freshness.ts:340-342 | — | op:could-not-run | agree |
