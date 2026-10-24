@@ -83,6 +83,12 @@ closing the over-match recorded on it, because a deleted TypeScript property
 would otherwise number a release. The `BREAKING_CHANGES.md` disclaimer that
 called the column non-normative is replaced.
 
+The cut's settings rule (`SETTINGS_REMOVAL_RULE`, the owner's answer to
+blocker `what-a-minor-may-remove`) is not amended here. It still refuses a
+removal below a major without a named proof, so the migration exception
+reaches the proposed bump but not the cut; how the cut recognises an automatic
+migration is open as blocker `adr-300-exception-at-the-cut`.
+
 ## Alternatives considered
 
 - **(b)** keep the trailer advisory and the punctuation rule — decided by the

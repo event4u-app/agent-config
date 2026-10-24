@@ -365,6 +365,38 @@ output. It is the classifier and the data behind it.
   `CONTRIBUTING.md` calls patches, and the classifier in Phase 4 has an
   `impactMap` that is correct for nothing before the first trailered release.
 
+### blocker: adr-300-exception-at-the-cut
+
+- **Status:** open. Found 2026-10-24 by this PR's CI: ADR-300's migration
+  exception reaches the bump `task release` proposes, but the cut also enforces
+  `SETTINGS_REMOVAL_RULE` — the owner's answer to blocker
+  `what-a-minor-may-remove`, stated verbatim in seven files and the loader's
+  warning, and applied by `belowMajorRefusalLines` in
+  `src/scripts/_lib/release_settings_surface.ts`. That rule refuses any removal
+  below a major unless `MINOR_REMOVAL_PROOFS` names a consumer-neutral proof, so
+  a release the new rule numbers as a minor because its key removal was
+  declared `automatic` is still refused at the cut. It fails safe (the cut
+  refuses; nothing ships wrongly numbered), but the two owner rules disagree.
+- **Owner:** repository owner — the transition amends an owner rule.
+- **Blocks:** the settings-key half of step 2.1's migration exception at the
+  cut; nothing else in this file.
+- **What to do:** pick how the cut recognises an automatic migration:
+  (a) a `RENAMED_KEYS` alias or a `REMOVED_KEYS` tombstone with a migration
+  counts, when the span declares `Consumer-Impact: automatic`, and the rule
+  sentence is amended in all eight locations; (b) only a `RENAMED_KEYS` alias
+  counts (a rename the loader migrates), tombstoned removals stay majors;
+  (c) leave the cut as it is — the exception binds the proposed bump only and
+  an automatic removal still needs its proof or a major.
+- **Resolved when:** an owner decision row in `## Decisions` names this
+  blocker, and the cut and the rule sentence say the same thing as
+  `CONTRIBUTING.md` § Versioning policy.
+- **Recommendation:** (b) — a loader-migrated rename is the one case where
+  "automatic" is mechanically true; a tombstone only ignores the key, which
+  17.0.0's own row classed `action`.
+- **If you do nothing:** a release whose only break is an automatically
+  migrated key removal is refused at the cut until it is cut as a major or its
+  proof is named — the pre-ADR-300 behaviour for that one shape.
+
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
