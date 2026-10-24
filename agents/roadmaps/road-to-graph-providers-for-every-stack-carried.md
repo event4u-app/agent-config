@@ -66,7 +66,12 @@ catalog together with the numbers that justify it.
       wraps a long path without orphaning its colour dot or clipping the name (the #2595
       finding), and the 3D orb spreads areas over the sphere instead of one cap, without
       the area spheres overlapping at 375 px.
-      verify: the map test over a Laravel fixture puts the route file in a controller's area and no view partial heads an area; the viewer render check passes at 375 px and desktop width.
+      The default pass's mechanisms (`literal-path`, `literal-dotted`, `fs-route`) are
+      INFERRED edges but sit in `STATED_RESOLVED_VIA`, so they weigh as trusted in the map,
+      in build-derived edges and in the query verbs; they either earn that on real clones
+      (a path that only appears in a comment, a log line or a message string draws no
+      trusted edge) or move to the guess list.
+      verify: the map test over a Laravel fixture puts the route file in a controller's area and no view partial heads an area; the viewer render check passes at 375 px and desktop width; a negative fixture with a path only in a comment and a log string yields no trusted edge.
 
 ## Blockers
 
