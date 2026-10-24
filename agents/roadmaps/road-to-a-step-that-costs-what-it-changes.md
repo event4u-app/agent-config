@@ -137,7 +137,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 
 ## Phase 3 — Load what the step needs
 
-- [ ] **3.1 Progressive disclosure for the five run procedures.** Done 2026-10-24: all five cores ≤ 15 KB (loop 14,991, merge 14,965, D17's revisit-if met, fences and the clearance check stay in the core); eleven branch files under the 16,000-char ceiling; `procedure-core-budget.json` ratchets all five. Each keeps a
+- [x] **3.1 Progressive disclosure for the five run procedures.** Done 2026-10-24: all five cores ≤ 15 KB (loop 14,991, merge 14,965, D17's revisit-if met, fences and the clearance check stay in the core); eleven branch files under the 16,000-char ceiling; `procedure-core-budget.json` ratchets all five. Each keeps a
       core path ≤ 15 KB; branches (conflicts, council, red CI, archive) move to
       references loaded on that branch.
       verify: core sizes in a ratchet; the run-loop fixtures pass unchanged.
@@ -252,7 +252,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The Phase 0 reading is committed after its pre-registered thresholds.
+- [x] AC-1 — The Phase 0 reading is committed after its pre-registered thresholds.
 - [ ] AC-2 — No R3 change ran below today's depth; receipts show it.
 - [ ] AC-3 — Over five drains after the flip, p50 step wall-clock ≤ 50 % of the Phase 0 baseline and the escape rate on lowered classes ≤ the 0.2 threshold.
 - [ ] AC-4 — Required CI red-after-merge rate over the same drains is not above the Phase 0 window.
