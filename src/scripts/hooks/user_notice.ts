@@ -12,6 +12,12 @@
  * message to the user", read off the 2.1.310 binary on 2026-10-24. It is the
  * only host this package has verified a user-addressed field on, so the set
  * below is one host wide; an unlisted host gets nothing rather than a guess.
+ *
+ * loss_class: ephemeral-lossy
+ *
+ * A notice longer than USER_NOTICE_MAX_CHARS loses its tail, deliberately: the
+ * text is for the user's UI and never reaches the model, and a notice is a few
+ * lines by contract, so nothing recovers the cut part.
  */
 
 import * as fs from 'node:fs';
@@ -30,6 +36,25 @@ export const USER_NOTICE_HOSTS: ReadonlySet<string> = new Set(['claude']);
 
 export function hostShowsUserNotice(platform: unknown): boolean {
     return typeof platform === 'string' && USER_NOTICE_HOSTS.has(platform);
+}
+
+/** The notices one dispatch collected, and the concerns they came from, in manifest order. */
+export interface NoticeBatch {
+    readonly texts: string[];
+    readonly from: string[];
+}
+
+/** Only a `notification` concern may address the user: no other effect was reviewed for it. */
+export function collectUserNotice(
+    batch: NoticeBatch,
+    concern: Record<string, unknown>,
+    reply: Record<string, unknown>,
+    clean: (text: string) => string,
+): void {
+    const notice = reply[USER_NOTICE_KEY];
+    if (concern['effect'] !== 'notification' || typeof notice !== 'string' || !notice.trim()) return;
+    batch.texts.push(clean(notice.trim()).slice(0, USER_NOTICE_MAX_CHARS));
+    batch.from.push(String(concern['name']));
 }
 
 /**

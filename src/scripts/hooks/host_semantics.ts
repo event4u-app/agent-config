@@ -35,7 +35,7 @@
  */
 
 import { blockExitFor, DEFAULT_SURFACE, loadHostLowering, surfaceRow, verifiedPlatforms } from "./host_lowering.js";
-import { hostShowsUserNotice } from "./user_notice.js";
+import { hostShowsUserNotice, writeNoticeReceipts, type NoticeBatch } from "./user_notice.js";
 
 /** Internal severity, mirroring dispatch_hook's EXIT_ALLOW / BLOCK / WARN. */
 export type Severity = "allow" | "warn" | "block";
@@ -182,6 +182,25 @@ export function withUserNotice(
     }
     reply["systemMessage"] = join(reply["systemMessage"], text, "\n");
     return `${JSON.stringify(reply)}\n`;
+}
+
+/**
+ * The dispatcher's whole stdout: `withUserNotice` over its parts, and a receipt
+ * for each notice that is actually in the result — a dropped notice leaves
+ * none, so its concern says it again instead of counting it as shown. The
+ * notice rides only on exit 0, because the host parses stdout only then.
+ */
+export function composeStdout(
+    platform: string,
+    event: string,
+    context: string,
+    emission: Emission,
+    notices: NoticeBatch,
+    sessionId: string,
+): string {
+    const out = withUserNotice(platform, event, context, emission.stdout, emission.exit === 0 ? notices.texts.join("\n") : "");
+    if (notices.from.length > 0 && out !== context + emission.stdout) writeNoticeReceipts(notices.from, sessionId);
+    return out;
 }
 
 /**

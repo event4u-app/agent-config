@@ -52,8 +52,8 @@ import {
   setHookStdinOverride,
   clearHookStdinOverride,
 } from "./hook_stdin.js";
-import { emitFor, withUserNotice, type PermissionDecision, type Severity } from "./host_semantics.js";
-import { USER_NOTICE_KEY, USER_NOTICE_MAX_CHARS, writeNoticeReceipts } from "./user_notice.js";
+import { composeStdout, emitFor, type PermissionDecision, type Severity } from "./host_semantics.js";
+import { collectUserNotice, type NoticeBatch } from "./user_notice.js";
 import { _concern_permission_verdict, _payload_tool_name, _permission_for } from "./permission_gate.js";
 export { _concern_permission_verdict, _payload_tool_input, _payload_tool_name, _permission_for, _working_tree_root } from "./permission_gate.js";
 import { _concern_body_classes, applyPayloadFields, planPayloadShapes } from "./payload_stub.js";
@@ -1265,9 +1265,7 @@ export function main(argv?: string[]): number {
   // stdout-injection; harmless surfacing elsewhere). All other events keep
   // the swallow-stdout contract unchanged.
   const context_blocks: string[] = [];
-  // User-addressed text (`hooks/user_notice.ts`), shown by the host, never model context.
-  const user_notices: string[] = [];
-  const notice_from: string[] = [];
+  const notices: NoticeBatch = { texts: [], from: [] }; // `hooks/user_notice.ts`, never model context
   // Per-concern message for the host emission (P0.1). Kept OUT of
   // feedback_entries on purpose: that record is written to disk with a
   // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
@@ -1380,13 +1378,7 @@ export function main(argv?: string[]): number {
     ) {
       context_blocks.push(injected((reply["context"] as string).trim()));
     }
-    // Only a `notification` concern may address the user: the effect says it
-    // tells a human something, and no other effect was reviewed for that.
-    const notice = reply[USER_NOTICE_KEY];
-    if (concern["effect"] === "notification" && typeof notice === "string" && notice.trim()) {
-      user_notices.push(injected(notice.trim()).slice(0, USER_NOTICE_MAX_CHARS));
-      notice_from.push(String(concern["name"]));
-    }
+    collectUserNotice(notices, concern, reply, injected);
     feedback_entries.push({
       concern: String(concern["name"]),
       exit_code: rc,
@@ -1413,8 +1405,6 @@ export function main(argv?: string[]): number {
   writeConcernTimings(String(envelope["event"] ?? ""), String(envelope["platform"] ?? ""), timing_samples);
   _write_feedback(envelope, session_id, feedback_entries, final_rc, started_at);
   _record_rule_trips(envelope, feedback_entries);
-  const context_out =
-    context_blocks.length > 0 && final_rc === EXIT_ALLOW ? context_blocks.join("\n\n") + "\n" : "";
 
   // P0.1 host-semantics translation. The internal ladder (0/1/2) is written to
   // the feedback dir verbatim above — that record is unchanged. What leaves the
@@ -1437,22 +1427,9 @@ export function main(argv?: string[]): number {
     final_rc,
     _permission_for(args.event, envelope, final_rc, permission_verdicts),
   );
-  // The notice is emitted only on exit 0 because the host parses stdout only then.
-  const stdout_out = withUserNotice(
-    args.platform,
-    args.event,
-    context_out,
-    emission.stdout,
-    emission.exit === 0 ? user_notices.join("\n") : "",
-  );
-  if (stdout_out) {
-    process.stdout.write(stdout_out);
-  }
-  // Receipts only for notices that are in the output — a dropped notice leaves
-  // none, so its concern says it again instead of counting it as shown.
-  if (notice_from.length > 0 && stdout_out !== context_out + emission.stdout) {
-    writeNoticeReceipts(notice_from, session_id);
-  }
+  const context_out = context_blocks.length > 0 && final_rc === EXIT_ALLOW ? context_blocks.join("\n\n") + "\n" : "";
+  const stdout_out = composeStdout(args.platform, args.event, context_out, emission, notices, session_id);
+  if (stdout_out) process.stdout.write(stdout_out);
   if (emission.stderr) {
     process.stderr.write(emission.stderr);
   }
