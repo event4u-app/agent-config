@@ -690,12 +690,17 @@ function budgetSecondsOf(argv: string[]): number {
 /** Best-effort removal of a temp build output, its sidecar, its SQLite twin and
  * the twin's own half-written temp. Never throws — cleanup failure must not mask
  * the real result (budget-exceeded / error). */
-function cleanupTemp(tmpOut: string): void {
+export function cleanupTemp(tmpOut: string): void {
     const twin = sqliteTwinPath(tmpOut);
-    const twinTemps = fs
-        .readdirSync(path.dirname(tmpOut))
-        .filter((f) => f.startsWith(`${path.basename(twin)}.tmp-`))
-        .map((f) => path.join(path.dirname(tmpOut), f));
+    let twinTemps: string[] = [];
+    try {
+        twinTemps = fs
+            .readdirSync(path.dirname(tmpOut))
+            .filter((f) => f.startsWith(`${path.basename(twin)}.tmp-`))
+            .map((f) => path.join(path.dirname(tmpOut), f));
+    } catch {
+        /* the directory is gone, so nothing in it is left to remove */
+    }
     for (const p of [tmpOut, sidecarPath(tmpOut), twin, ...twinTemps]) {
         try {
             fs.unlinkSync(p);

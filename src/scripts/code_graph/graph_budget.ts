@@ -5,15 +5,17 @@
  * repository's own `agents/` is the project's, not this machine's cache.
  * Eviction is least-recently-QUERIED first: a query touches its home's
  * `.last-query` marker, a build or refresh records it in the registry, and a
- * registry scan changes neither. A pinned project's homes and a home whose
- * refresh lock is held are never evicted, so a budget can stay exceeded.
+ * registry scan changes neither. A pinned project's homes, a home whose
+ * refresh lock is held, and a home written to within a stale-lock window or
+ * holding a temp output are never evicted, so a budget can stay exceeded. The
+ * last guard exists because a plain `code-graph build` takes no lock.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { readRegistry, updateRegistry } from '../_lib/project_registry.js';
 import { graphHome, graphsRoot } from './graph_home.js';
-import { isStale } from './refresh_lock.js';
+import { isStale, STALE_LOCK_MS } from './refresh_lock.js';
 
 const MB = 1024 * 1024;
 const LAST_QUERY = '.last-query';
@@ -35,26 +37,37 @@ export function touchHome(root: string): void {
     }
 }
 
-function dirBytes(dir: string): number {
-    let total = 0;
+interface Walk {
+    bytes: number;
+    /** Newest mtime of anything below the home except the query marker. */
+    newest: number;
+    /** A build's or refresh's temp output is present. */
+    temp: boolean;
+}
+
+const TEMP_RE = /\.refresh-tmp-|\.tmp-/;
+
+function walk(dir: string, top: boolean, acc: Walk = { bytes: 0, newest: 0, temp: false }): Walk {
     let entries: fs.Dirent[];
     try {
         entries = fs.readdirSync(dir, { withFileTypes: true });
     } catch {
-        return 0;
+        return acc;
     }
     for (const e of entries) {
         const p = path.join(dir, e.name);
-        if (e.isDirectory()) total += dirBytes(p);
-        else {
-            try {
-                total += fs.lstatSync(p).size;
-            } catch {
-                /* vanished */
-            }
+        if (TEMP_RE.test(e.name)) acc.temp = true;
+        let st: fs.Stats;
+        try {
+            st = fs.lstatSync(p);
+        } catch {
+            continue;
         }
+        if (!(top && e.name === LAST_QUERY)) acc.newest = Math.max(acc.newest, st.mtimeMs);
+        if (e.isDirectory()) walk(p, false, acc);
+        else acc.bytes += st.size;
     }
-    return total;
+    return acc;
 }
 
 export interface HomeUsage {
@@ -64,6 +77,8 @@ export interface HomeUsage {
     used_at: number;
     pinned: boolean;
     locked: boolean;
+    /** Written within the last {@link STALE_LOCK_MS}, or holding a temp output: a build may be mid-write. */
+    busy: boolean;
     project: string | null;
 }
 
@@ -82,6 +97,7 @@ export function homeUsage(): HomeUsage[] {
         for (const [dir, at] of Object.entries(e.homes)) owner.set(dir, { id, pinned: e.pinned, at: Date.parse(at) || 0 });
     }
     const out: HomeUsage[] = [];
+    const now = Date.now();
     for (const name of names) {
         const dir = path.join(base, name);
         let st: fs.Stats;
@@ -99,12 +115,14 @@ export function homeUsage(): HomeUsage[] {
         }
         const o = owner.get(dir);
         const lock = path.join(dir, 'state', 'code-graph-refresh.lock');
+        const w = walk(dir, true);
         out.push({
             dir,
-            bytes: dirBytes(dir),
+            bytes: w.bytes,
             used_at: Math.max(queried, o?.at ?? 0) || st.mtimeMs,
             pinned: o?.pinned ?? false,
             locked: fs.existsSync(lock) && !isStale(lock),
+            busy: w.temp || now - w.newest < STALE_LOCK_MS,
             project: o?.id ?? null,
         });
     }
@@ -123,7 +141,7 @@ export function enforceBudget(keep?: string): { evicted: HomeUsage[]; total: num
     const evicted: HomeUsage[] = [];
     for (const h of [...homes].sort((a, b) => a.used_at - b.used_at)) {
         if (total <= budget) break;
-        if (h.pinned || h.locked || h.dir === keep) continue;
+        if (h.pinned || h.locked || h.busy || h.dir === keep) continue;
         fs.rmSync(h.dir, { recursive: true, force: true });
         total -= h.bytes;
         evicted.push(h);

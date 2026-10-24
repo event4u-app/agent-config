@@ -215,7 +215,7 @@ function cmdEvict(): number {
     const over = r.total > r.budget;
     process.stdout.write(
         `${r.evicted.length} evicted · ${(r.total / (1024 * 1024)).toFixed(1)} of ${(r.budget / (1024 * 1024)).toFixed(1)} MB` +
-            (over ? ' — still over: the rest is pinned or lock-held' : '') +
+            (over ? ' — still over: the rest is pinned, lock-held or being written' : '') +
             '\n',
     );
     return 0;

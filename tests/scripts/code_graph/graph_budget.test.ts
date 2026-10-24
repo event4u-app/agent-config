@@ -4,7 +4,7 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { readRegistry, recordProject, updateRegistry } from '../../../src/scripts/_lib/project_registry.js';
-import { main } from '../../../src/scripts/code_graph/cli.js';
+import { cleanupTemp, main } from '../../../src/scripts/code_graph/cli.js';
 import { enforceBudget, homeUsage, touchHome } from '../../../src/scripts/code_graph/graph_budget.js';
 import { graphHome, graphsRoot } from '../../../src/scripts/code_graph/graph_home.js';
 import { acquire } from '../../../src/scripts/code_graph/refresh_lock.js';
@@ -34,6 +34,7 @@ function seeded(name: string, ageDays: number): { root: string; dir: string } {
     fs.writeFileSync(home.cachePath, Buffer.alloc(400 * 1024, 1));
     const at = new Date(Date.now() - ageDays * 86_400_000);
     recordProject(root, { usedHome: home.dir }, { now: at });
+    for (const p of [home.cachePath, home.stateDir, home.dir]) fs.utimesSync(p, at, at);
     return { root, dir: home.dir };
 }
 
@@ -94,5 +95,39 @@ describe('storage budget (6.1)', () => {
         enforceBudget();
         expect(fs.existsSync(graphHome(proj).cachePath)).toBe(true);
         expect(homeUsage().every((h) => h.dir.startsWith(graphsRoot()))).toBe(true);
+    });
+
+    it('never evicts a home a build is writing into, even without the refresh lock', () => {
+        const writing = seeded('writing', 40);
+        const temp = seeded('temp', 39);
+        const idle = seeded('idle', 38);
+        fs.writeFileSync(path.join(writing.dir, 'state', 'code-graph-v1.json.sqlite3.tmp-1'), Buffer.alloc(10, 1));
+        const stale = path.join(temp.dir, 'state', '.code-graph-v1.json.refresh-tmp-1-ab.json');
+        fs.writeFileSync(stale, '');
+        const old = new Date(Date.now() - 39 * 86_400_000);
+        fs.utimesSync(stale, old, old);
+        fs.utimesSync(path.join(temp.dir, 'state'), old, old);
+        updateRegistry((reg) => {
+            reg.budget_mb = 0.1;
+        });
+        expect(enforceBudget().evicted.map((h) => h.dir)).toEqual([idle.dir]);
+        expect(fs.existsSync(writing.dir)).toBe(true);
+        expect(fs.existsSync(temp.dir)).toBe(true);
+    });
+
+    it('never evicts the home it was asked to keep', () => {
+        const kept = seeded('kept', 60);
+        const other = seeded('other', 10);
+        updateRegistry((reg) => {
+            reg.budget_mb = 0.1;
+        });
+        expect(enforceBudget(kept.dir).evicted.map((h) => h.dir)).toEqual([other.dir]);
+        expect(fs.existsSync(kept.dir)).toBe(true);
+    });
+});
+
+describe('cleanupTemp', () => {
+    it('never throws, even when the temp output\'s directory is gone', () => {
+        expect(() => cleanupTemp(path.join(tmp, 'vanished', '.out.refresh-tmp-1-ab.json'))).not.toThrow();
     });
 });
