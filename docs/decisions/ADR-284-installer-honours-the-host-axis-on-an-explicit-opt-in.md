@@ -250,7 +250,7 @@ the grade is a measurement of the sources, not a claim of confidence.
 - `docs/decisions/ADR-228-global-install-does-not-emit-paths.md` — scoped
   supersession, limb 1 only.
 - `docs/decisions/ADR-020-*` — the global-only install shape decision 3 rests on.
-- `agents/roadmaps/road-to-an-installed-layer-that-is-thinned.md` — Phase 1,
+- `agents/roadmaps/later/road-to-an-installed-layer-that-is-thinned.md` — Phase 1,
   step 3.3, and decisions D2, D3, D4, D5.
 - `src/scripts/_lib/lean_projection_mode.ts` — `installerThinsHost`, the
   predicate, and the `eager-all` fail-safe constant.

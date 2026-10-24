@@ -1,6 +1,11 @@
 ---
 complexity: structural
-status: draft
+status: later
+review_by: 2026-11-24
+entry_condition:
+  what: "the ratification platform anchor settings act (owner-questions OQ-3), and a free slot among the five active roadmaps"
+  when: "when one of the five active roadmaps completes"
+  who: owner
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -369,7 +374,7 @@ owner-owned residue remains, closure completes with zero owner interaction.
       `src/scripts/_lib/kernel_rules.ts`. Both clauses negative for the fifth time.
       **Hand-over, part 1 - where the paragraph goes.** Anchor file
       `src/rules/ask-when-uncertain.md`, section `## How to ask`, immediately after line 39,
-      whose full text today is ``Numbered options (per [`user-interaction`](user-interaction.md)). Short.``
+      whose full text today is ``Numbered options (per [`user-interaction`](../user-interaction.md)). Short.``
       The paragraph below discharges BOTH of the blocker's resolution clauses at once: it names
       the per-host primitive, and it makes
       `grep -niE 'AskUserQuestion|native|primitive' src/rules/ask-when-uncertain.md` non-empty.
@@ -444,7 +449,7 @@ so. One question per turn on either shape - the Iron Law above does not change w
       `grep -rln granted_by src tests` exits **1** with no output at `9f2b9fb4a`, which is
       today's head of `origin/main`, so the grant object still exists only as an ADR
       specification. The sibling's 2.1, 2.2 and 3.1 all still read `[ ]` in
-      `agents/roadmaps/road-to-typed-grants-that-persist.md`. One thing DID change and it is
+      `agents/roadmaps/later/road-to-typed-grants-that-persist.md`. One thing DID change and it is
       recorded because it widens the blocker rather than narrowing it: `F8` is now **two**
       steps' fixture, not one. The 2026-10-01 council disposition (`## Decisions` row `DC-1`)
       moved 5.1's three interrupt classes to the sibling and left 5.1 verifying `F8`, so
@@ -586,7 +591,7 @@ is inlined instead.
 - **Blocks:** nothing further. It blocked Phase 0, which rewrites `decision_resolution`'s Iron
   Law and so changes which decisions reach the owner at all.
 - **What to do:** nothing. Resolved 2026-09-08 with its sibling
-  `adr-266-acceptance` in `agents/roadmaps/road-to-typed-grants-that-persist.md` — one owner
+  `adr-266-acceptance` in `agents/roadmaps/later/road-to-typed-grants-that-persist.md` — one owner
   act, recorded on both files because either could be read alone.
 - **Recommendation:** none outstanding.
 - **If you do nothing:** nothing — the ownership axis is decided. `critical-technical` is no
@@ -716,7 +721,7 @@ is inlined instead.
   terms that sibling slowness is not a trigger. The allocation stands.
   The **second holds as of 2026-10-01**:
   `DC-1` in `## Decisions` is that record. This entry is read by executing its condition —
-  `grep -n 'DC-1' agents/roadmaps/road-to-decision-closure.md` returns the row — never by
+  `grep -n 'DC-1' agents/roadmaps/later/road-to-decision-closure.md` returns the row — never by
   trusting this field.
 
 ## Fixtures
@@ -783,7 +788,7 @@ resumed with the grant and decisions intact.
       neither is: `F1` is a detector fixture rather than a roadmap under `agents/roadmaps/`,
       so `process-full` has nothing to execute over it; and the only agent that could run it
       is the one that would then report its own result, which
-      [`evaluator-independence`](../../src/rules/evaluator-independence.md) forbids as
+      [`evaluator-independence`](../../../src/rules/evaluator-independence.md) forbids as
       self-commissioned evidence. Closing AC-5 needs a harness that runs the fixture and a
       party other than the runner that reads the transcript. Neither is this file's to build.
       **Re-verified 2026-10-01, by running the census rather than citing the previous note.**

@@ -21,7 +21,7 @@ evidence:
     - src/install/installThinLayer.ts
     - tests/lib/agent_settings.test.ts
     - tests/scripts/install_thin_layer.test.ts
-    - agents/roadmaps/road-to-an-installed-layer-that-is-thinned.md
+    - agents/roadmaps/later/road-to-an-installed-layer-that-is-thinned.md
 review_trigger: >-
   Reopened if `lean_projection` gains a key whose correct scope is per-project
   rather than per-machine, or if a consumer is observed wanting a different
@@ -143,7 +143,7 @@ is a separate, owner-reserved question and is untouched here — it is blocker
   `hosts: ["cursor"]`, raw explicit `"delivery"`. The before reading is the
   load-bearing one — it is the template answering a question the user had
   already answered differently.
-- `agents/roadmaps/road-to-an-installed-layer-that-is-thinned.md` — step 1.1,
+- `agents/roadmaps/later/road-to-an-installed-layer-that-is-thinned.md` — step 1.1,
   which this unblocks, and blocker `default-flip-of-the-installed-layer`, which
   it does not touch.
 
@@ -157,5 +157,5 @@ consumer install has been observed before and after.
 - ADR-219, ADR-271 — the two prior repairs of the same filter.
 - ADR-267 — confines thinning to the projector; this ADR does not extend that,
   it only makes the mode readable where it is written.
-- `agents/roadmaps/road-to-an-installed-layer-that-is-thinned.md` — step 1.1 and
+- `agents/roadmaps/later/road-to-an-installed-layer-that-is-thinned.md` — step 1.1 and
   blocker `default-flip-of-the-installed-layer`.

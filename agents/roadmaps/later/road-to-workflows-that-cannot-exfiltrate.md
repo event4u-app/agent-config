@@ -1,6 +1,11 @@
 ---
 complexity: lightweight
-status: ready
+status: later
+review_by: 2026-11-24
+entry_condition:
+  what: "a free slot among the five active roadmaps (owner WIP limit, 2026-10-24)"
+  when: "when one of the five active roadmaps completes"
+  who: owner
 execution:
   mode: phase-checkpoints
 owner: maintainer

@@ -1,6 +1,11 @@
 ---
 complexity: lightweight
-status: draft
+status: later
+review_by: 2026-11-24
+entry_condition:
+  what: "a free slot among the five active roadmaps (owner WIP limit, 2026-10-24)"
+  when: "when one of the five active roadmaps completes"
+  who: owner
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Owner-requested follow-up (2026-10-12) for the three design limits the 16.5.0 release review recorded as accepted risk. No active roadmap owns the SVG witness any more — road-to-svg-review-followups and road-to-svg-from-a-live-session are archived — so there is nothing to merge into; parking was rejected because every phase is executable today; it lands as a draft, so the count half reads +0 and only the one-in-one-out half needs this claim."

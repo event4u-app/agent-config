@@ -1,6 +1,11 @@
 ---
 complexity: structural
-status: ready
+status: later
+review_by: 2026-11-24
+entry_condition:
+  what: "the human-run 7.2 gateway probe (owner-questions OQ-4), and a free slot among the five active roadmaps"
+  when: "when one of the five active roadmaps completes"
+  who: owner
 execution:
   mode: phase-checkpoints
 depends:
