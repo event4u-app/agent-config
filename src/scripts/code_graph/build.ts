@@ -17,8 +17,9 @@ import { fileURLToPath } from 'node:url';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
 import { extractFile, type FileExtract, type RawEdge } from './extract.js';
-import { buildLaravelOverlay } from './laravel_overlay.js';
 import { grammarWasmPath } from './loader.js';
+import { type PassReport, runPasses } from './passes.js';
+import { EMPTY_PROBE, PROBE_MARKERS, type ProjectProbe } from './providers/index.js';
 import {
     ALIAS_VIA,
     aliasRulesFrom,
@@ -30,8 +31,9 @@ import {
     resolveAlias,
     resolvePsr4,
 } from './resolution_tiers.js';
-import { DOC_EXTS, docsLayer } from './docs_layer.js';
-import { readScipIndex, type ScipDocument, scipEdges, supersededByScip } from './scip_reader.js';
+import { templateBase } from './conventions_default.js';
+import { DOC_EXTS } from './docs_layer.js';
+import { readScipIndex, type ScipDocument } from './scip_reader.js';
 import { emitSqliteTwin } from './sqlite_store.js';
 import {
     type CodeEdge,
@@ -78,6 +80,10 @@ const CODE_EXTS: ReadonlySet<string> = new Set(Object.keys(EXT_LANG));
 const GENERATED_DIRS: ReadonlySet<string> = new Set(['agents/map', 'agents/runtime']);
 
 export function discoverFiles(root: string, exts: ReadonlySet<string> = CODE_EXTS): string[] {
+    return walkFiles(root, (name) => exts.has(path.extname(name).toLowerCase()));
+}
+
+function walkFiles(root: string, accept: (name: string) => boolean): string[] {
     const abs = path.resolve(root);
     // Resolve the root itself first: a repo checked out under a symlinked
     // path (e.g. macOS /tmp → /private/tmp) must still confine correctly —
@@ -106,8 +112,7 @@ export function discoverFiles(root: string, exts: ReadonlySet<string> = CODE_EXT
                 continue;
             }
             if (!e.isFile()) continue;
-            const ext = path.extname(e.name).toLowerCase();
-            if (!exts.has(ext)) continue;
+            if (!accept(e.name)) continue;
             let real: string;
             try {
                 real = fs.realpathSync(full);
@@ -120,6 +125,33 @@ export function discoverFiles(root: string, exts: ReadonlySet<string> = CODE_EXT
     };
     walk(abs);
     return out.sort();
+}
+
+/** Manifests a provider may read to detect a stack, by basename. */
+const MANIFEST_NAME = /^(?:composer\.json|package\.json|pyproject\.toml|requirements[\w.-]*\.txt|pom\.xml|build\.gradle(?:\.kts)?|go\.mod|[\w.-]+\.csproj|Gemfile)$/;
+
+/** The project's manifests and marker files, for provider detection (ADR-298). */
+export function readProjectProbe(root: string): ProjectProbe {
+    const abs = path.resolve(root);
+    const manifests = new Map<string, string>();
+    const markers = new Set<string>();
+    const paths: string[] = [];
+    for (const full of walkFiles(abs, () => true)) {
+        const rel = toPosixRel(abs, full);
+        paths.push(rel);
+        const name = path.basename(full);
+        if (!MANIFEST_NAME.test(name) && !PROBE_MARKERS.has(name)) continue;
+        if (PROBE_MARKERS.has(name)) {
+            markers.add(rel);
+            continue;
+        }
+        try {
+            manifests.set(rel, fs.readFileSync(full, 'utf-8'));
+        } catch {
+            continue;
+        }
+    }
+    return { manifests, markers, paths };
 }
 
 function toPosixRel(root: string, full: string): string {
@@ -234,10 +266,19 @@ function resolveSpecifier(fromFile: string, spec: string, fileIds: ReadonlySet<s
  *   go      `example.com/x/mod` → every non-test `.go` file of the most specific
  *           directory whose path ends the import path — a Go import names a
  *           package, and a package is all of its files.
+ *   csharp  `using A.B` → the one file declaring namespace `A.B` (`namespaces`).
+ *           A namespace declared by several files is left to name lookup: it
+ *           binds no file, since a `using` names no single one.
  *
  * A suffix that matches two files is refused rather than guessed.
  */
-export function resolveLangModule(lang: Lang, fromFile: string, spec: string, fileIds: readonly string[]): string[] {
+export function resolveLangModule(
+    lang: Lang,
+    fromFile: string,
+    spec: string,
+    fileIds: readonly string[],
+    namespaces: ReadonlyMap<string, readonly string[]> = new Map(),
+): string[] {
     const unique = (suffixes: string[]): string[] => {
         const hits = fileIds.filter((f) => suffixes.some((s) => f === s || f.endsWith(`/${s}`)));
         return hits.length === 1 ? hits : [];
@@ -264,6 +305,7 @@ export function resolveLangModule(lang: Lang, fromFile: string, spec: string, fi
         }
         return best ? goFiles.filter((f) => idDirname(f) === best).sort() : [];
     }
+    if (lang === 'csharp') return [...(namespaces.get(spec) ?? [])];
     return [];
 }
 
@@ -309,6 +351,8 @@ export function buildGraph(
     resolution: ResolutionConfig = EMPTY_RESOLUTION_CONFIG,
     scip: readonly ScipDocument[] = [],
     docs: readonly SourceFile[] = [],
+    probe: ProjectProbe = EMPTY_PROBE,
+    report?: { passes?: PassReport },
 ): CodeGraph {
     const nodes = extracts.flatMap((e) => e.nodes);
     const nodeIds = new Set(nodes.map((n) => n.id));
@@ -383,6 +427,8 @@ export function buildGraph(
     const fileIdList = [...fileIds].sort();
     /** Go imports name a package of several files; the binding takes the first, these carry the rest. */
     const extraImports: Array<{ source: string; target: string }> = [];
+    const namespaceFiles = new Map<string, string[]>();
+    for (const ex of extracts) for (const ns of ex.namespaces ?? []) push(namespaceFiles, ns, ex.file);
     for (const ex of extracts) {
         const locals = new Map<string, string[]>();
         for (const n of ex.nodes) if (n.kind !== 'file') push(locals, n.label, n.id);
@@ -419,8 +465,9 @@ export function buildGraph(
                 if (hit) imports.set(local, { target: hit, exact: false, via: 'name-lookup' });
                 continue;
             }
-            if (ex.lang === 'python' || ex.lang === 'java' || ex.lang === 'go') {
-                const hits = resolveLangModule(ex.lang, ex.file, spec, fileIdList);
+            if (ex.lang === 'csharp' && (namespaceFiles.get(spec)?.length ?? 0) > 1) continue;
+            if (ex.lang === 'python' || ex.lang === 'java' || ex.lang === 'go' || ex.lang === 'csharp') {
+                const hits = resolveLangModule(ex.lang, ex.file, spec, fileIdList, namespaceFiles);
                 const first = hits[0];
                 if (first === undefined) {
                     imports.set(local, {
@@ -754,39 +801,9 @@ export function buildGraph(
         });
     }
 
-    // Framework links no import states (routes, views, tables); rule-read,
-    // emitted only when the target exists. Also drops the base edges it
-    // proves false: a fluent `->middleware()` bound by name to some
-    // unrelated in-repo `middleware()`.
-    const overlay = buildLaravelOverlay(files, nodes, resolution);
-    let routeBuilderCalls = 0;
-    if (overlay.nodes.length > 0 || overlay.edges.length > 0) {
-        const kept = edges.filter((e) => !overlay.dropEdge(e));
-        routeBuilderCalls = edges.length - kept.length;
-        // Element-wise: a spread of ~200k edges overflows the call stack.
-        edges.length = 0;
-        for (const e of kept) edges.push(e);
-        for (const e of overlay.edges) edges.push(e);
-        for (const n of overlay.nodes) nodes.push(n);
-    }
-
-    if (docs.length > 0) {
-        const allFiles = new Set([...files.map((f) => f.path), ...docs.map((d) => d.path)]);
-        const layer = docsLayer(docs, allFiles);
-        for (const n of layer.nodes) nodes.push(n);
-        for (const e of layer.edges) edges.push(e);
-    }
-
-    // A project's own SCIP index states references the compiler resolved;
-    // each one supersedes the native name guess it duplicates.
-    if (scip.length > 0) {
-        const stated = scipEdges(scip, nodes);
-        const dropped = supersededByScip(stated, nodes);
-        const kept = edges.filter((e) => !dropped(e));
-        edges.length = 0;
-        for (const e of kept) edges.push(e);
-        for (const e of stated) edges.push(e);
-    }
+    // Everything after resolution: convention providers, docs, SCIP (passes.ts).
+    const passes = runPasses({ files, docs, scip, resolution, probe }, nodes, edges);
+    if (report) report.passes = passes;
 
     // deterministic ordering
     nodes.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
@@ -800,7 +817,9 @@ export function buildGraph(
     for (const e of edges) counts[e.confidence] += 1;
     const suppressed: CodeGraph['suppressed_edge_counts'] = {
         dynamic_no_candidate: suppressedKeys.size,
-        ...(routeBuilderCalls > 0 ? { route_builder_call: routeBuilderCalls } : {}),
+        ...(Object.keys(passes.suppressed).length > 0
+            ? { contested_by_provider: Object.fromEntries(Object.entries(passes.suppressed).sort()) }
+            : {}),
     };
 
     const languages = [...new Set(extracts.map((e) => e.lang))].sort() as Lang[];
@@ -819,6 +838,18 @@ export function buildGraph(
         h.update(createHash('sha256').update(d.source, 'utf-8').digest('hex'));
         h.update('\n');
     }
+    // Manifests and markers decide which providers run: a changed manifest is
+    // a changed input even when no source file moved.
+    for (const [p, text] of [...probe.manifests].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
+        h.update(`manifest\0${p}\0`);
+        h.update(createHash('sha256').update(text, 'utf-8').digest('hex'));
+        h.update('\n');
+    }
+    for (const p of [...probe.markers].sort()) h.update(`marker\0${p}\n`);
+    // Template files are no source, yet their presence decides `renders` and
+    // default-pass edges: they are inputs too. Other non-code paths (caches,
+    // logs, assets) are not read and stay out of the identity.
+    for (const p of probe.paths) if (templateBase(p) !== null) h.update(`template\0${p}\n`);
     // The SCIP index is an input like any source file: a new index must not
     // read as the same graph.
     for (const d of [...scip].sort((a, b) => (a.path < b.path ? -1 : 1))) {
@@ -833,6 +864,7 @@ export function buildGraph(
         grammar_abi: EXPECTED_GRAMMAR_ABI,
         edge_confidence_counts: counts,
         suppressed_edge_counts: suppressed,
+        ...(passes.providers.length > 0 ? { providers: passes.providers } : {}),
         nodes,
         edges,
     };
@@ -908,6 +940,7 @@ export function serializeGraph(g: CodeGraph): string {
         'grammar_abi',
         'edge_confidence_counts',
         'suppressed_edge_counts',
+        'providers',
         'nodes',
         'edges',
     ];
@@ -936,13 +969,14 @@ export function serializeGraph(g: CodeGraph): string {
         // byte what it was before this field existed.
         if (e.ambiguity_reason) base['ambiguity_reason'] = e.ambiguity_reason;
         if (e.candidates) base['candidates'] = e.candidates;
+        if (e.provider_id) base['provider_id'] = e.provider_id;
         return base;
     };
     const ordered: Record<string, unknown> = {};
     for (const k of key_order) {
         if (k === 'nodes') ordered[k] = g.nodes.map(node);
         else if (k === 'edges') ordered[k] = g.edges.map(edge);
-        else ordered[k] = g[k];
+        else if (g[k] !== undefined) ordered[k] = g[k];
     }
     return JSON.stringify(ordered, null, 2) + '\n';
 }
@@ -1086,7 +1120,9 @@ export async function buildFromRepo(
             continue;
         }
     }
-    const graph = buildGraph(files, extracts, readResolutionConfig(root), scip, docs);
+    const report: { passes?: PassReport } = {};
+    const graph = buildGraph(files, extracts, readResolutionConfig(root), scip, docs, readProjectProbe(abs), report);
+    for (const f of report.passes?.failures ?? []) process.stderr.write(`code-graph: pass ${f.pass} failed — ${f.reason}\n`);
     const json = serializeGraph(graph);
     if (cachePath) {
         write_atomic(cachePath, json);

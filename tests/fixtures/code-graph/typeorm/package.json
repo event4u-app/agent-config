@@ -1,0 +1,1 @@
+{ "name": "fixture-typeorm", "private": true, "dependencies": { "typeorm": "^0.3.20" } }

@@ -29,6 +29,7 @@
             search: 'Search files and areas',
             files: function (n) { return n === 1 ? '1 file' : n + ' files'; },
             role: 'Role',
+            linkedBy: 'Linked by provider',
             area: 'Area',
             usedBy: 'Used by',
             uses: 'Uses',
@@ -75,6 +76,7 @@
             search: 'Dateien und Bereiche suchen',
             files: function (n) { return n === 1 ? '1 Datei' : n + ' Dateien'; },
             role: 'Rolle',
+            linkedBy: 'Verbunden durch Provider',
             area: 'Bereich',
             usedBy: 'Verwendet von',
             uses: 'Verwendet',
@@ -428,6 +430,7 @@
             kv([
                 [t('area'), f.area >= 0 ? areas[f.area].name : '—'],
                 [t('role'), STR[lang].roles[f.role]],
+                [t('linkedBy'), f.linkedBy ? f.linkedBy.join(', ') : '—'],
                 [t('guesses'), String(f.guesses)],
                 [t('outcome'), outcomeOf[state.file] === undefined ? '—' : String(outcomeOf[state.file])],
                 [t('state'), data.meta.state]

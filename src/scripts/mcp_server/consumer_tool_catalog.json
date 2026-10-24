@@ -372,6 +372,7 @@
               "migrates",
               "persists",
               "relates",
+              "injects",
               "documents"
             ],
             "description": "Restrict to one relation. Omit for all of them."

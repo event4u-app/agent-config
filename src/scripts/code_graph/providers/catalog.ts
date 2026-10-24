@@ -1,0 +1,290 @@
+/**
+ * The coverage catalog (ADR-298 § 6): for every provider, what it resolves and
+ * how far that is proven — so nothing reads as supported because it is
+ * detected. Stacks not covered yet stand here as `planned`, never silently
+ * absent.
+ *
+ *   detected  markers recognised, no relation resolved
+ *   partial   relations resolved and proven by synthetic positive and negative oracles
+ *   verified  partial, plus a reading on a real repository
+ *   deep      verified across every relation the framework has (none yet)
+ *   planned   on the coverage list, not built; the generic default still runs
+ */
+import type { Relation } from '../types.js';
+
+export type CoverageStatus = 'detected' | 'partial' | 'verified' | 'deep' | 'planned';
+
+export interface CatalogRow {
+    /** The registered provider id, or a planned id. */
+    id: string;
+    /** What a person calls it. */
+    name: string;
+    language: string;
+    /** How it is detected (manifest entries or marker files). */
+    markers: string;
+    relations: readonly Relation[];
+    status: CoverageStatus;
+    /** The synthetic fixture its oracles run on. */
+    fixture: string | null;
+    /** The usage reading that put it on the coverage list. */
+    usage: string;
+    /** What it does not follow, said plainly. */
+    limits?: string;
+}
+
+const SO = 'Stack Overflow Developer Survey, web frameworks (year as recorded in the supplied plans; not re-read in this run)';
+
+export const CATALOG: readonly CatalogRow[] = [
+    {
+        id: 'laravel',
+        name: 'Laravel',
+        language: 'PHP',
+        markers: 'composer.json requires laravel/framework or an illuminate/* package; an artisan file',
+        relations: ['routes-to', 'renders', 'includes', 'reads', 'migrates', 'persists', 'relates', 'uses'],
+        status: 'verified',
+        fixture: 'tests/scripts/code_graph_provider_laravel.test.ts (inline tree)',
+        usage: SO,
+        limits: 'Routes only under the package root routes/ directory; closures and string handlers get no target.',
+    },
+    {
+        id: 'express',
+        name: 'Express',
+        language: 'JavaScript / TypeScript',
+        markers: 'package.json depends on express',
+        relations: ['routes-to'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/express',
+        usage: SO,
+        limits: 'A router mounted under a prefix in another file (app.use) is not followed.',
+    },
+    {
+        id: 'spring',
+        name: 'Spring Boot',
+        language: 'Java',
+        markers: 'pom.xml / build.gradle names spring-boot',
+        relations: ['routes-to', 'persists', 'relates', 'injects'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/spring',
+        usage: SO,
+        limits: '@Entity(name) is not read; a method @RequestMapping without method= is skipped; Kotlin is not covered.',
+    },
+    {
+        id: 'go-http',
+        name: 'Go routers (net/http, Gin, Echo, chi)',
+        language: 'Go',
+        markers: 'a go.mod',
+        relations: ['routes-to'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/go-http',
+        usage: 'Go is in the top ten languages of GitHub Octoverse; its routers are not in the web-framework survey',
+        limits: 'chi r.Route nesting, http.HandlerFunc(f) and handler variables are not followed.',
+    },
+    {
+        id: 'symfony',
+        name: 'Symfony',
+        language: 'PHP',
+        markers: 'composer.json requires symfony/framework-bundle or symfony/symfony',
+        relations: ['routes-to', 'renders', 'persists', 'migrates', 'relates', 'injects'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/symfony',
+        usage: 'Below the survey top 20; the second PHP framework on the owner stack (Decision E4)',
+        limits: 'Twig includes are not read (templates are not code files); a route with several methods is declared once.',
+    },
+    {
+        id: 'wordpress',
+        name: 'WordPress',
+        language: 'PHP',
+        markers: 'wp-config.php; composer core packages or a wordpress-plugin / -theme package type',
+        relations: ['routes-to', 'renders'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/wordpress',
+        usage: SO,
+        limits: 'Hooks are entry nodes HOOK <name> / SHORTCODE <name>; a plugin or theme with no composer.json is not detected.',
+    },
+    {
+        id: 'fastapi',
+        name: 'FastAPI',
+        language: 'Python',
+        markers: 'fastapi in pyproject.toml or requirements',
+        relations: ['routes-to', 'injects'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/fastapi',
+        usage: SO,
+        limits: 'include_router(prefix=) from another file and add_api_route are not followed.',
+    },
+    {
+        id: 'flask',
+        name: 'Flask',
+        language: 'Python',
+        markers: 'flask in pyproject.toml or requirements',
+        relations: ['routes-to', 'renders'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/flask',
+        usage: SO,
+        limits: 'register_blueprint(url_prefix=) and add_url_rule are not followed.',
+    },
+    {
+        id: 'django',
+        name: 'Django',
+        language: 'Python',
+        markers: 'django in a manifest, or manage.py',
+        relations: ['routes-to', 'renders', 'persists', 'relates', 'migrates'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/django',
+        usage: SO,
+        limits: 'include() prefixes and class-based view template_name are not followed.',
+    },
+    {
+        id: 'sqlalchemy',
+        name: 'SQLAlchemy / SQLModel',
+        language: 'Python',
+        markers: 'sqlalchemy, flask-sqlalchemy or sqlmodel',
+        relations: ['persists', 'relates'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/sqlalchemy',
+        usage: 'ORM of the Python providers above; not a web framework',
+        limits: 'Imperative Table(...), implicit Flask-SQLAlchemy names and relationship(lambda) are not drawn.',
+    },
+    {
+        id: 'react-router',
+        name: 'React Router',
+        language: 'JavaScript / TypeScript',
+        markers: 'package.json depends on react-router or react-router-dom',
+        relations: ['routes-to'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/react-router',
+        usage: SO,
+        limits: 'Nested children paths are not joined to the parent path.',
+    },
+    {
+        id: 'nextjs',
+        name: 'Next.js',
+        language: 'JavaScript / TypeScript',
+        markers: 'package.json depends on next',
+        relations: ['routes-to', 'includes'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/nextjs',
+        usage: SO,
+        limits: 'export { h as GET } re-exports are not followed.',
+    },
+    {
+        id: 'nestjs',
+        name: 'NestJS',
+        language: 'JavaScript / TypeScript',
+        markers: 'package.json depends on @nestjs/core',
+        relations: ['routes-to', 'injects'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/nestjs',
+        usage: SO,
+        limits: '@Controller({ path }), path arrays, @Inject(token) and a global prefix are not followed.',
+    },
+    {
+        id: 'angular',
+        name: 'Angular',
+        language: 'JavaScript / TypeScript',
+        markers: 'package.json depends on @angular/core',
+        relations: ['routes-to', 'renders', 'injects'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/angular',
+        usage: SO,
+        limits: 'loadChildren, child path joining and inline templates are not followed.',
+    },
+    {
+        id: 'vue-router',
+        name: 'Vue Router',
+        language: 'JavaScript / TypeScript',
+        markers: 'package.json depends on vue-router',
+        relations: ['routes-to'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/vue-router',
+        usage: SO,
+        limits: 'Named views, alias imports and child paths are not followed.',
+    },
+    {
+        id: 'nuxt',
+        name: 'Nuxt',
+        language: 'JavaScript / TypeScript',
+        markers: 'package.json depends on nuxt',
+        relations: ['routes-to'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/nuxt',
+        usage: SO,
+        limits: 'definePageMeta path overrides are not read.',
+    },
+    {
+        id: 'sveltekit',
+        name: 'SvelteKit',
+        language: 'JavaScript / TypeScript',
+        markers: 'package.json depends on @sveltejs/kit',
+        relations: ['routes-to', 'includes'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/sveltekit',
+        usage: SO,
+        limits: '+page.server.ts, layout resets and a custom routes directory are not followed.',
+    },
+    {
+        id: 'typeorm',
+        name: 'TypeORM',
+        language: 'TypeScript',
+        markers: 'package.json depends on typeorm',
+        relations: ['persists', 'relates', 'migrates'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/typeorm',
+        usage: 'ORM of the TypeScript providers above; not a web framework',
+        limits: 'Custom naming strategies, EntitySchema and string relation targets are not followed.',
+    },
+    {
+        id: 'aspnetcore',
+        name: 'ASP.NET Core',
+        language: 'C#',
+        markers: 'a *.csproj with the Web SDK or a Microsoft.AspNetCore package reference',
+        relations: ['routes-to', 'persists', 'renders', 'injects'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/aspnetcore',
+        usage: SO,
+        limits: 'MapControllerRoute tables, a view name held in a variable and primary constructors are not followed.',
+    },
+    ...(
+        [
+            ['ruby', 'Ruby', 'Ruby'],
+            ['rails', 'Ruby on Rails', 'Ruby'],
+            ['kotlin', 'Kotlin', 'Kotlin'],
+            ['rust', 'Rust', 'Rust'],
+            ['c-cpp', 'C / C++', 'C / C++'],
+            ['swift', 'Swift', 'Swift'],
+            ['dart', 'Dart', 'Dart'],
+            ['sql', 'SQL schema files', 'SQL'],
+            ['react-native', 'React Native / Expo', 'JavaScript / TypeScript'],
+            ['flutter', 'Flutter', 'Dart'],
+            ['swiftui', 'SwiftUI', 'Swift'],
+            ['jetpack-compose', 'Jetpack Compose', 'Kotlin'],
+            ['blazor', 'Blazor', 'C#'],
+            ['astro', 'Astro', 'JavaScript / TypeScript'],
+            ['fastify', 'Fastify', 'JavaScript / TypeScript'],
+            ['hono', 'Hono', 'JavaScript / TypeScript'],
+            ['remix', 'Remix', 'JavaScript / TypeScript'],
+            ['drupal', 'Drupal', 'PHP'],
+            ['quarkus', 'Quarkus', 'Java'],
+            ['micronaut', 'Micronaut', 'Java'],
+            ['prisma', 'Prisma', 'Prisma schema'],
+            ['drizzle', 'Drizzle', 'TypeScript'],
+            ['infrastructure', 'Docker, Kubernetes, Terraform, CI', 'YAML / HCL'],
+        ] as const
+    ).map(
+        ([id, name, language]): CatalogRow => ({
+            id,
+            name,
+            language,
+            markers: '—',
+            relations: [],
+            status: 'planned',
+            fixture: null,
+            usage: 'coverage list in road-to-graph-providers-for-every-stack (kill register K7)',
+        }),
+    ),
+];
+
+/** The catalog row for a provider id, if any. */
+export function catalogRow(id: string): CatalogRow | undefined {
+    return CATALOG.find((r) => r.id === id);
+}

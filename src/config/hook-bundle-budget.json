@@ -4,7 +4,7 @@
     "registered_at": "2026-10-01",
     "owner": "maintainer",
     "review_by": "2027-10-01",
-    "max_bytes": 1550500,
+    "max_bytes": 1551000,
     "max_bytes_derivation": "Measured 1,514,715 bytes on origin/main at 213d87055 (the gate's own reading, APFS-cloned node_modules so no worktree path artefacts). The ceiling is that reading plus ~2.3 % of headroom, rounded to 1,550,000, on the same doctrine as the 2026-10-01 registration: a bundle is rebuilt from source on every run, so an esbuild minor that renames symbols moves the figure by hundreds of bytes with no change to this tree, and a ceiling one byte above the reading would red on that. Composition is healthy at this reading and was checked rather than assumed: one YAML package (258,833 bytes) and 1,238,525 bytes of own source, so the growth is own code, not a re-entered dependency. The 1,564,211-byte pre-swap regression this roadmap closed still cannot reappear under it. RAISED to 1,550,500 on 2026-10-23 for the InstructionsLoaded binding (237 bytes against 51 of headroom); the reasoning and the measured alternative are the last `raise_log` entry, so this paragraph describes the 1,550,000 registration and the raise is recorded there rather than restated.",
     "shrink_only": true,
     "shrink_only_note": "A RAISE needs a recorded reason in `raise_log` below naming what was added and why it could not be avoided. Enforced since road-to-a-ratification-fence-that-follows-its-imports 3.2: the gate reads `max_bytes` at the base revision, and a working value above it fails unless `raise_log` gained an entry whose `to` equals the new value. A lowering needs no entry. This file is also on the ratification gate's watched set, so a raise carries a record as well as a log entry.",
@@ -36,6 +36,15 @@
             "what_was_added": "The `InstructionsLoaded` binding: one `LAZY_CONCERNS` row for the observer (its 11,097-byte body ships in its own chunk, never in this bundle) and the event name in the three vocabularies the bundle carries (dispatcher, collector, journal). Measured 1,550,186 bytes with the binding by the gate; the same esbuild invocation on the base and on this branch differs by 237 bytes, so the base sat at 1,549,949 — 51 bytes of headroom.",
             "why_it_could_not_be_avoided": "D8 (council, 2026-10-18) asked for room before a raise. Room was tried and measured: moving `session-eol` (27,708 B in-bundle, `stop` alone) into a chunk freed 29,948 B (same esbuild invocation, with and without the move) but produced a 259,330-byte chunk (`yaml` external) required on every `stop` — about 8.5 times the bytes that event parses today, to buy 186. The observer itself was already moved out. What remains in the bundle is the row and three event-name strings, which no chunk can carry.",
             "what_would_have_caught_it": "Nothing earlier: the base sat 51 bytes under the ceiling, so any new event in the vocabulary would have tripped it. Sized to this binding plus about 300 bytes; step 3.3's promotion is sized when it is built."
+        },
+        {
+            "date": "2026-10-24",
+            "from": 1550500,
+            "to": 1551000,
+            "by": "agent, feat/code-graph-auto-refresh (PR #2604) merged onto docs/inbox-2026-10-ac-roadmap (PR #2603) on the owner's instruction to target #2603",
+            "what_was_added": "One `LAZY_CONCERNS` row for the `code-graph-refresh` session concern (its 12,726-byte body ships in its own chunk). Each branch fit alone: #2603 measured 1,550,498 B, #2604 added 153 B to a base that sat 356 B under. Merged, the gate measured 1,550,617 B — 117 over.",
+            "why_it_could_not_be_avoided": "Room was tried and measured, as D8 asks: moving `handoff-context` (10,433 B in-bundle, `session_start` alone) into a chunk would free about 10 KB but produces a 581,613-byte chunk inlined, 319,233 bytes with `yaml` external — required on every `session_start` to buy 117 bytes, the same trade the 2026-10-23 entry refused for `session-eol`. Shortening the row's strings saves under 20 bytes. What remains is the row, which no chunk can carry. Sized to the merged measurement plus about 380 bytes.",
+            "what_would_have_caught_it": "Measuring the two branches together before the merge: two lanes that each fit a ceiling with a few hundred bytes to spare do not fit it together, and #2603 had already spent its last 2 bytes by dropping a provider_id type check in validate.ts."
         }
     ],
     "chunks": [

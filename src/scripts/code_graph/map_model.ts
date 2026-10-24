@@ -16,7 +16,8 @@ import Graph from 'graphology';
 import louvain from 'graphology-communities-louvain';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 
-import type { CodeGraph, ResolvedVia } from './types.js';
+import { catalogRow, type CoverageStatus, providerRole } from './providers/index.js';
+import type { ActiveProviderRecord, CodeGraph, ResolvedVia } from './types.js';
 import { isStatedResolution } from './types.js';
 
 export const MAP_MODEL_VERSION = 1;
@@ -57,6 +58,16 @@ export interface MapFile {
     externals: string[];
     /** Test files that cover this file (`tests` relation). */
     tests: number[];
+    /** Convention providers that drew an edge into or out of this file; absent when none did. */
+    linkedBy?: string[];
+}
+
+/** A convention provider active in the graph, with its catalog status. */
+export interface MapProvider {
+    id: string;
+    name: string;
+    status: CoverageStatus | 'uncatalogued';
+    roots: string[];
 }
 
 export interface MapArea {
@@ -81,7 +92,7 @@ export interface MapArea {
     neighbours: number[];
 }
 
-/** One declared route and what its handler reaches (Laravel overlay). */
+/** One declared route and what its handler reaches (a convention provider). */
 export interface RequestPath {
     route: string;
     /** Index of the routes file. */
@@ -118,6 +129,8 @@ export interface MapModel {
     areaEdges: Array<[number, number, number]>;
     diff?: MapDiff;
     artefacts?: MapArtefacts;
+    /** Convention providers active in the graph; absent when none was. */
+    providers?: MapProvider[];
     /** Set by the map writer, not by `buildMapModel`: they need IO. */
     drift?: AreaDrift;
     prOverlap?: PrOverlap;
@@ -208,16 +221,19 @@ const CONFIG_BASENAME =
  * The role a path has before any edge is looked at. `infra` and `isolated`
  * depend on edges and are decided later; everything here is a name fact.
  */
-export function staticRole(p: string, entries: ReadonlySet<string>): FileRole {
+export function staticRole(p: string, entries: ReadonlySet<string>, active?: readonly ActiveProviderRecord[]): FileRole {
     if (/\.mdx?$/i.test(p)) return 'doc';
     if (isTestPath(p)) return 'test';
     const base = path.posix.basename(p);
-    if (base.endsWith('.blade.php') || p.startsWith('resources/views/') || p.includes('/resources/views/')) return 'view';
+    // A provider's view role outranks the neutral rules below; any other role it
+    // gives sits where an entry would.
+    const byProvider = providerRole(p, active);
+    if (byProvider === 'view') return 'view';
     if (/(^|\/)(database\/)?migrations\//.test(p)) return 'migration';
     if (/(^|\/)(resources\/)?lang\//.test(p)) return 'translation';
     if (p.startsWith('config/') || CONFIG_BASENAME.test(base)) return 'config';
-    if (entries.has(p) || p.startsWith('routes/') || p === 'public/index.php' || p === 'artisan') return 'entry';
-    return 'code';
+    if (entries.has(p)) return 'entry';
+    return byProvider ?? 'code';
 }
 
 
@@ -307,7 +323,8 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
     }
 
     // 3. Roles: names first, then the two edge-dependent ones.
-    const roles: FileRole[] = paths.map((p) => staticRole(p, entries));
+    const active = graph.providers ?? [];
+    const roles: FileRole[] = paths.map((p) => staticRole(p, entries, active));
     // A layout every view extends couples views exactly the way a utility
     // couples code, so views are eligible for the hold-out too.
     const holdable = (r: FileRole | undefined): boolean => r === 'code' || r === 'view';
@@ -506,6 +523,22 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
     const trustedTotal = edges.reduce((n, e) => n + e[2], 0);
     const guessTotal = guessEdges.reduce((n, e) => n + e[2], 0);
 
+    const linkedBy = new Map<number, Set<string>>();
+    const sourceFileOf = new Map(graph.nodes.map((n) => [n.id, n.source_file] as const));
+    const fileIndexOf = (id: string): number | undefined => {
+        const f = sourceFileOf.get(id);
+        return f === undefined ? undefined : idx.get(f);
+    };
+    for (const e of graph.edges) {
+        if (!e.provider_id) continue;
+        for (const i of [fileIndexOf(e.source), fileIndexOf(e.target)]) {
+            if (i === undefined) continue;
+            const set = linkedBy.get(i) ?? new Set<string>();
+            set.add(e.provider_id);
+            linkedBy.set(i, set);
+        }
+    }
+
     const symbolsPerFile = 40;
     const files: MapFile[] = paths.map((p, i) => {
         const syms = (symbolsOf.get(p) ?? []).sort((a, b) => a[2] - b[2] || byPath(a[0], b[0]));
@@ -520,7 +553,12 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
             symbolsOmitted: Math.max(0, syms.length - symbolsPerFile),
             externals: [...(externals.get(i) ?? [])].sort(byPath),
             tests: [...(testsOf.get(i) ?? [])].sort((a, b) => a - b),
+            ...(linkedBy.has(i) ? { linkedBy: [...(linkedBy.get(i) as Set<string>)].sort() } : {}),
         };
+    });
+    const providers: MapProvider[] = (graph.providers ?? []).map((p) => {
+        const row = catalogRow(p.id);
+        return { id: p.id, name: row?.name ?? p.id, status: row?.status ?? 'uncatalogued', roots: p.roots };
     });
 
     let diff: MapDiff | undefined;
@@ -599,6 +637,7 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         guessEdges,
         areas,
         areaEdges,
+        ...(providers.length > 0 ? { providers } : {}),
         ...(diff ? { diff } : {}),
         ...(artefacts ? { artefacts } : {}),
         analyses: {
@@ -649,17 +688,16 @@ function collectRequestPaths(graph: CodeGraph, idx: ReadonlyMap<string, number>)
         const models = new Set<number>();
         const tables = new Set<string>();
         if (target) {
-            // The handler method's own links, plus what its file imports:
-            // a controller names its models in `use` lines, not in calls the
-            // extractor can bind.
-            const handlerFile = nodeById.get(target)?.source_file;
-            const reach = [...(out.get(target) ?? []), ...(handlerFile ? (out.get(handlerFile) ?? []) : [])];
-            for (const e of reach) {
+            // The handler's own links only: what this route's code renders and
+            // names. Its file's links would hand every model the controller
+            // imports to every route the controller serves.
+            for (const e of out.get(target) ?? []) {
                 if (!isStatedResolution(e.resolved_via as ResolvedVia)) continue;
                 if (e.relation === 'renders') views.add(fileIdx(e.target));
-                const modelTables = tableOf.get(e.target);
+                const model = tableOf.has(e.target) ? e.target : e.target.split('::')[0];
+                const modelTables = model ? tableOf.get(model) : undefined;
                 if (modelTables) {
-                    models.add(fileIdx(e.target));
+                    models.add(fileIdx(model as string));
                     for (const t of modelTables) tables.add(t);
                 }
             }
