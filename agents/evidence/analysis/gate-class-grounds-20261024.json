@@ -1,0 +1,36 @@
+{
+  "_doc": "Structured grounds the independent branch inventory cannot supply. `modes`: the invocation flag a row speaks of; each is checked against the check's source and against the predicates of every branch that reaches the row. `waivers`: a row whose semantic class differs from its derived behaviour; a waiver is reported as waived, never as satisfaction, and is refused unless: its milestone is an open step of a roadmap that exists (a ticked step lapses it); its issue text occurs in the named file; its approver is `owner` with a directive tracked in git that names the row; and its expiry is a real, unexpired date. `structured`: the baseline (snapshot) or bound, risk owner and expiry (tolerance) such a row carries in addition to blocking behaviour; no such row exists.",
+  "modes": {
+    "R8.c": "--require-complete",
+    "R10.d": "--check-urls",
+    "R10.g": "--strict",
+    "R10.i": "--global",
+    "R10.k": "--global",
+    "R10.l": "--global",
+    "R10.m": "--global",
+    "R10.n": "--global",
+    "R10.o": "--global",
+    "R11.f": "--strict",
+    "R12.d": "--strict"
+  },
+  "waivers": {
+    "R16.d": {
+      "semantic": "observation",
+      "behaviour": "invariant",
+      "branch": "c16-store-unreadable",
+      "reason": "The contract says an absent store is 'not measured yet' and never a build failure; the script currently exits 1 (check_composite_arming.ts:286-293). Reconciling that exit is an entry condition of 7.2.",
+      "milestone": {
+        "roadmap": "agents/roadmaps/road-to-authority-routing-mechanism.md",
+        "step": "7.2"
+      },
+      "issue_ref": {
+        "file": "agents/evidence/analysis/gate-7-2-reliance-rules-20261024.md",
+        "text": "row 16's exit-1 divergence reconciled"
+      },
+      "approver": null,
+      "directive": null,
+      "expiry": null
+    }
+  },
+  "structured": {}
+}
