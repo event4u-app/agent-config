@@ -30,7 +30,12 @@ const VERSION = '17.3.0';
 const TARBALL_SHA512 =
     '106450d8a0a9a00305694c101ac148fa8c76d9a8b6d3df703518640b1481f8837bdd1fc038bcced6239c7096d2d5cdd3598035b7651c77968bc7450161aaa823';
 
-type Doc = { attestations: Array<{ predicateType: string; bundle: Record<string, any> }> };
+/** The fields of a bundle the forging cases rewrite; the rest is carried through untouched. */
+interface Bundle {
+    dsseEnvelope: { payload: string; payloadType: string; signatures: Array<{ sig: string }> };
+    verificationMaterial: { certificate: { rawBytes: string } };
+}
+type Doc = { attestations: Array<{ predicateType: string; bundle: Bundle }> };
 const real = (): Doc => JSON.parse(fs.readFileSync(FIXTURE, 'utf-8')) as Doc;
 const slsa = (doc: Doc) => doc.attestations.find((a) => a.predicateType === SLSA_PROVENANCE_V1)!;
 
@@ -65,7 +70,7 @@ describe('verify_release_provenance', () => {
 
     it('refuses a provenance payload edited after signing', async () => {
         const doc = real();
-        const env = slsa(doc).bundle['dsseEnvelope'];
+        const env = slsa(doc).bundle.dsseEnvelope;
         const text = Buffer.from(env.payload, 'base64').toString('utf-8').replace('publish-npm.yml', 'publish-npx.yml');
         env.payload = Buffer.from(text).toString('base64');
         expect(await verify(doc)).toMatch(/does not verify/);
@@ -78,14 +83,14 @@ describe('verify_release_provenance', () => {
         const doc = real();
         const b = slsa(doc).bundle;
         const forged = mintSelfSigned(`https://github.com/event4u-app/agent-config/.github/workflows/publish-npm.yml@refs/tags/${VERSION}`);
-        const payload = Buffer.from(b['dsseEnvelope'].payload, 'base64');
-        const type = b['dsseEnvelope'].payloadType as string;
+        const payload = Buffer.from(b.dsseEnvelope.payload, 'base64');
+        const type = b.dsseEnvelope.payloadType as string;
         const pae = Buffer.concat([
             Buffer.from(`DSSEv1 ${Buffer.byteLength(type)} ${type} ${payload.length} `),
             payload,
         ]);
-        b['dsseEnvelope'].signatures[0].sig = crypto.sign('sha256', pae, crypto.createPrivateKey(forged.keyPem)).toString('base64');
-        b['verificationMaterial'].certificate.rawBytes = forged.certDer.toString('base64');
+        b.dsseEnvelope.signatures[0]!.sig = crypto.sign('sha256', pae, crypto.createPrivateKey(forged.keyPem)).toString('base64');
+        b.verificationMaterial.certificate.rawBytes = forged.certDer.toString('base64');
         expect(await verify(doc)).toMatch(/does not verify/);
     });
 
