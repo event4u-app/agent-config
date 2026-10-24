@@ -206,7 +206,7 @@ describe('subagent-constraints concern — the user layer', () => {
         expect(digest).toContain('PLANTED-RULE-LAW-3b7a');
         expect(digest).not.toContain('PROSE-NOT-CARRIED');
         expect(digest).toMatch(/User files: user:CLAUDE\.md \(full\), user:EXTRA\.md \(full\)\./);
-        expect(digest).toContain('User rules (Iron Law blocks): 1 full, 0 cut, as headed below; 0 empty; 0 omitted.');
+        expect(digest).toContain('User rules (Iron Law blocks): 1 full, 0 first block only, 0 cut, as headed below; 0 empty; 0 omitted.');
         expect(digest).toContain('--- rule my-house-rule ---');
         expect(reply('ac-plain')).toBeNull();
     });
@@ -340,7 +340,7 @@ describe('subagent-constraints concern — the user layer', () => {
         const digest = reply();
         // D17 superseded round 4's all-blocks order: the first block outranks the files, the later ones are cut.
         for (const id of FLOOR_RULE_IDS) {
-            expect(digest).toContain(`FIRST-${id}: ${'A'.repeat(60)}\n[cut here]`);
+            expect(digest).toContain(`FIRST-${id}: ${'A'.repeat(60)}\n[later law blocks not carried]`);
             expect(digest).not.toContain(`SECOND-${id}`);
         }
     });
@@ -354,7 +354,7 @@ describe('subagent-constraints concern — the user layer', () => {
         const digest = reply();
         expect(Buffer.byteLength(replyLine(digest), 'utf-8')).toBeLessThanOrEqual(EMISSION_MAX_BYTES);
         for (const id of FLOOR_RULE_IDS) expect(digest).toContain(`FLOOR-${id}: ${'N'.repeat(225 - id.length)}`);
-        expect(digest).toMatch(/User rules \(Iron Law blocks\): \d+ full, \d+ cut, \d+ empty, \d+ omitted\./);
+        expect(digest).toMatch(/User rules \(Iron Law blocks\): \d+ full, \d+ first block only, \d+ cut, \d+ empty, \d+ omitted\./);
     });
 
     // Owner directive D17 (2026-10-24, answer "2"): a floor rule is carried by its first law block,
@@ -374,11 +374,40 @@ describe('subagent-constraints concern — the user layer', () => {
         const digest = reply();
         expect(Buffer.byteLength(replyLine(digest), 'utf-8')).toBeLessThanOrEqual(EMISSION_MAX_BYTES);
         for (const id of present) {
-            expect(digest).toContain(`--- rule ${id} ---\nFIRST-${id}: ${'A'.repeat(110)}\n[cut here]`);
+            expect(digest).toContain(`--- rule ${id} ---\nFIRST-${id}: ${'A'.repeat(110)}\n[later law blocks not carried]`);
             expect(digest).not.toContain(`LATER-${id}`);
         }
         expect(digest).toContain(USER_LINE);
         expect(digest).toContain(PLANTED);
-        expect(digest).toMatch(new RegExp(`User rules \\(Iron Law blocks\\): (\\d+ full, ${present.length} cut|.*${present.length} cut)`));
+        expect(digest).toContain(`${present.length} first block only`);
+    });
+
+    // Round-6 ratification finding: a floor rule's first block is placed whole or not at all, and
+    // the digest tells a rule carried by its first block apart from one cut mid-text or left out.
+    it('never cuts a floor rule mid-block: an oversized first block is omitted and listed', () => {
+        writeRule('non-destructive-by-default', `HUGE-FIRST: ${'H'.repeat(12_000)}`);
+        writeRule('scope-control', 'SMALL-FIRST: STAY IN SCOPE.');
+        const digest = reply();
+        expect(Buffer.byteLength(replyLine(digest), 'utf-8')).toBeLessThanOrEqual(EMISSION_MAX_BYTES);
+        expect(digest).not.toContain('HUGE-FIRST');
+        expect(digest).toContain('SMALL-FIRST: STAY IN SCOPE.');
+        expect(digest).toMatch(/omitted: non-destructive-by-default/);
+    });
+
+    it('when the first blocks overflow, the later floor rules are omitted whole and named', () => {
+        for (const id of FLOOR_RULE_IDS) writeRule(id, `FIRST-${id}: ${'F'.repeat(400)}`);
+        const digest = reply();
+        expect(Buffer.byteLength(replyLine(digest), 'utf-8')).toBeLessThanOrEqual(EMISSION_MAX_BYTES);
+        let carried = 0;
+        for (const id of FLOOR_RULE_IDS) {
+            if (digest.includes(`--- rule ${id} ---`)) {
+                expect(digest).toContain(`--- rule ${id} ---\nFIRST-${id}: ${'F'.repeat(400)}`);
+                carried += 1;
+            }
+        }
+        expect(carried).toBeGreaterThan(0);
+        expect(carried).toBeLessThan(FLOOR_RULE_IDS.length);
+        expect(digest).not.toContain('[cut here]');
+        expect(digest).toContain(`omitted: ${FLOOR_RULE_IDS[carried]}`);
     });
 });

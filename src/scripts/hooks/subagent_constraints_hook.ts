@@ -101,6 +101,8 @@ export const FLOOR_RULE_IDS: readonly string[] = [
 const AGENT_TYPE = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/;
 const REPLY_OVERHEAD = Buffer.byteLength(`${JSON.stringify({ additional_context: '' })}\n`, 'utf-8');
 const CUT = '\n[cut here]';
+/** Closes a floor rule carried by its first law block (decision D17). */
+const LATER = '\n[later law blocks not carried]';
 /** A file with less room than this left is listed as omitted rather than shown as a stub. */
 const MIN_SHOWN = 120;
 /** Escaped-byte bounds on the fixed part, so bodies keep most of the room. */
@@ -221,7 +223,7 @@ interface Found {
     readonly rank: number;
     /** Order within a rank, for room and for print alike. */
     readonly sub: number;
-    /** A floor rule with law blocks after its first: shown at most cut, never full. */
+    /** A floor rule with law blocks after its first: shown as `first-block`, never `full`. */
     readonly partial?: boolean;
     readonly layer: 'project' | 'user' | 'rule';
 }
@@ -290,7 +292,7 @@ function userLayer(configDir: string): Found[] {
         if (text === null) return;
         const blocks = ruleLawBlocks(text);
         const partial = blocks.length > 1;
-        found.push({ label: id, body: `${blocks[0] ?? ''}${partial ? CUT : ''}`, rank: 0, sub: pos, layer: 'rule', ...(partial ? { partial } : {}) });
+        found.push({ label: id, body: `${blocks[0] ?? ''}${partial ? LATER : ''}`, rank: 0, sub: pos, layer: 'rule', ...(partial ? { partial } : {}) });
     });
     for (const file of ruleFiles(rulesDir, new Set(FLOOR_RULE_IDS.map((id) => `${id}.md`)))) {
         const id = path.relative(rulesDir, file).split(path.sep).join('/').replace(/\.md$/, '');
@@ -381,7 +383,7 @@ export function instructionDigest(
             const more = omitted.length - keep;
             const names = `${omitted.slice(0, keep).join(', ')}${more > 0 ? `${keep > 0 ? ', ' : ''}${more} more not named` : ''}`;
             return (
-                `User rules (Iron Law blocks): ${count('full')} full, ${count('cut')} cut, as headed below; ` +
+                `User rules (Iron Law blocks): ${count('full')} full, ${count('first-block')} first block only, ${count('cut')} cut, as headed below; ` +
                 `${count('empty')} empty; ${omitted.length} omitted${omitted.length > 0 ? `: ${names}` : ''}.`
             );
         };
@@ -396,12 +398,18 @@ export function instructionDigest(
             const members = idx(layer);
             if (members.length === 0) return '';
             const n = (st: string): number => (all ? members.length : members.filter((i) => status[i] === st).length);
-            return `${name}: ${n('full')} full, ${n('cut')} cut, ${n('empty')} empty, ${n('omitted')} omitted.`;
+            const first = layer === 'rule' ? `${n('first-block')} first block only, ` : '';
+            return `${name}: ${n('full')} full, ${first}${n('cut')} cut, ${n('empty')} empty, ${n('omitted')} omitted`;
         };
-        return [line('project', 'Files'), line('user', 'User files'), line('rule', 'User rules (Iron Law blocks)')]
+        const rules = line('rule', 'User rules (Iron Law blocks)');
+        const floorLeft = all ? '' : floorOmitted.length > 0 ? `; floor rules omitted: ${floorOmitted.join(', ')}` : '';
+        return [line('project', 'Files'), line('user', 'User files'), rules === '' ? '' : `${rules}${floorLeft}`]
             .filter((l) => l !== '')
+            .map((l) => `${l}.`)
             .join('\n');
     };
+    // Floor rules that did not fit, named in the count-only form when the room after them allows.
+    let floorOmitted: string[] = [];
     const shown: string[] = found.map(() => '');
     let room = maxBytes - REPLY_OVERHEAD - escBytes(`${head}\n`) - escBytes(counted(true));
     // The named form is upper-bounded with every not-yet-placed file as `omitted`, the longest status.
@@ -411,21 +419,51 @@ export function instructionDigest(
     // Project files go nearest first; every other rank keeps its `sub` order.
     const subOf = (i: number): number => ((found[i] as Found).layer === 'project' ? -i : (found[i] as Found).sub);
     const allocation = found.map((_, i) => i).sort((x, y) => (found[x] as Found).rank - (found[y] as Found).rank || subOf(x) - subOf(y));
+    const floorQueue = allocation.filter((j) => (found[j] as Found).rank === 0 && (found[j] as Found).body !== '');
+    const namesCost = (names: string[]): number => (names.length === 0 ? 0 : escBytes(`; floor rules omitted: ${names.join(', ')}`));
+    let floorSettled = false;
+    const settleFloor = (): void => {
+        if (floorSettled) return;
+        floorSettled = true;
+        const left = found.flatMap((f, i) => (f.rank === 0 && status[i] === 'omitted' && f.body !== '' ? [f.label] : []));
+        for (let keep = left.length; keep > 0; keep -= 1) {
+            const names = [...left.slice(0, keep), ...(keep < left.length ? [`${left.length - keep} more`] : [])];
+            const cost = escBytes(`; floor rules omitted: ${names.join(', ')}`);
+            if (cost <= room) {
+                floorOmitted = names;
+                room -= cost;
+                return;
+            }
+        }
+    };
     for (const i of allocation) {
         const f = found[i] as Found;
         if (f.rank > 0 && !useNamed && i === allocation.find((j) => (found[j] as Found).rank > 0)) {
+            settleFloor();
             const extra = namedBound() - escBytes(counted(true));
-            if (extra <= room) {
+            // An omitted floor rule keeps the count-only form, which names it; the named form may count it.
+            if (floorOmitted.length === 0 && extra <= room) {
                 useNamed = true;
                 room -= extra;
             }
         }
         if (f.body === '') continue;
         const frame = escBytes(frameOf(f));
+        // A floor law block is placed whole or not at all: a cut law reads as a different law.
+        // Placing one must leave room to name every floor rule not yet placed, so an omitted
+        // floor rule is always named rather than counted.
+        if (f.rank === 0) {
+            const after = floorQueue.filter((j) => j !== i && status[j] === 'omitted').map((j) => (found[j] as Found).label);
+            if (frame + escBytes(f.body) + namesCost(after) > room) continue;
+            shown[i] = f.body;
+            status[i] = f.partial === true ? 'first-block' : 'full';
+            room -= frame + escBytes(f.body);
+            continue;
+        }
         if (room - frame < MIN_SHOWN) continue;
         if (escBytes(f.body) <= room - frame) {
             shown[i] = f.body;
-            status[i] = f.partial === true ? 'cut' : 'full';
+            status[i] = 'full';
         } else {
             shown[i] = `${fitEscaped(f.body, room - frame - escBytes(CUT))}${CUT}`;
             status[i] = 'cut';
@@ -438,9 +476,12 @@ export function instructionDigest(
     };
     const printSub = (i: number): number => ((found[i] as Found).layer === 'project' ? i : (found[i] as Found).sub);
     const printed = found.map((_, i) => i).sort((a, b) => printRank(a) - printRank(b) || printSub(a) - printSub(b));
-    const sections = printed.map((i) => (status[i] === 'full' || status[i] === 'cut' ? `${frameOf(found[i] as Found)}${shown[i] as string}` : ''));
+    const sections = printed.map((i) => (status[i] === 'full' || status[i] === 'cut' || status[i] === 'first-block' ? `${frameOf(found[i] as Found)}${shown[i] as string}` : ''));
     // The serialized line is the final authority: whatever the parts measured, the reply never exceeds maxBytes.
-    if (!useNamed && allocation.every((j) => (found[j] as Found).rank === 0)) useNamed = namedBound() - escBytes(counted(true)) <= room;
+    settleFloor();
+    if (!useNamed && floorOmitted.length === 0 && allocation.every((j) => (found[j] as Found).rank === 0)) {
+        useNamed = namedBound() - escBytes(counted(true)) <= room;
+    }
     return fitEscaped(`${head}\n${useNamed ? named() : counted()}${sections.join('')}`, maxBytes - REPLY_OVERHEAD);
 }
 
