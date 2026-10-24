@@ -1,0 +1,337 @@
+/**
+ * Promote the claude rule layer after proof, never at install
+ * (road-to-a-setup-that-decides-itself step 3.3).
+ *
+ * An install writes the full layer, exactly as before. A LATER session whose
+ * evidence satisfies the layer-form decision thins it for the sessions after
+ * it: the `layer-promote` concern calls {@link sessionLayerStep} on
+ * `session_start`. Nothing here thins the session that is running — its rules
+ * are already loaded — which is also why a promotion can never change what the
+ * session that took the decision reads.
+ *
+ * OFF UNTIL STEP 5.3. `src/config/layer-form-promotion.json` ships
+ * `enabled: false`, and an unreadable switch reads as off. Step 5.3 flips it on
+ * a non-inferior pre-registered comparison and cites the result there; until
+ * then the decision still runs in `doctor` as a shadow and nothing on disk
+ * moves. The switch is package-owned and shipped, never a settings key.
+ *
+ * DEMOTION RUNS WHATEVER THE SWITCH SAYS. A thinned layer whose arrival record —
+ * taken after the promotion — shows a standing law missing is restored from
+ * the staged snapshot and the machine is demoted, as a dead carrier demotes it
+ * in the shell branch of `claude_settings_hooks`. Only files carrying the
+ * package stamp are overwritten, missing ones are added, none is removed.
+ * Restoring is the safe direction, so no switch may stand in front of it.
+ *
+ * THE OWNERSHIP LEDGER FOLLOWS THE BYTES. The installer decides whether a file
+ * was edited by comparing it with the digest it recorded. A layer rewritten
+ * after the install would read as edited everywhere, and the next install would
+ * preserve every stub as a user modification. Each file this module rewrites
+ * has its recorded digest moved to the new bytes, so the next install sees
+ * its own file and writes the full layer again — "a fresh install writes the
+ * full layer" stays true after a promotion. A file whose bytes already
+ * differed from the record before the pass is a user edit and is left alone.
+ *
+ * LATENCY. The budget is the shipped `any_hook_event` p95 of
+ * `hook-latency-budget.json`. A promotion is attempted only when the time
+ * already spent plus the last measured thin pass (or {@link DEFAULT_THIN_ESTIMATE_MS}
+ * before the first one) fits inside it; otherwise it is left to a later session.
+ */
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
+import * as global_deploy_inventory from '../scripts/_lib/global_deploy_inventory.js';
+import { read_lockfile, lockfile_path } from '../scripts/_lib/installed_lock.js';
+import { arrivalEvidence, arrivalsDirUnder, latestArrivalRecord, readObserverLines } from '../scripts/_lib/arrival_record.js';
+import { decideLayerForm, gatherShippedEvidence, ruleForm, type LayerFormDecision, type NeverThinned } from '../scripts/_lib/layer_form_decision.js';
+import { readMachineEvidence, withMachineEvidence } from '../scripts/_lib/layer_form_evidence.js';
+import { readConsequenceClass } from '../scripts/_lib/rule_consequence_class.js';
+import { thinInstalledRuleLayer } from './installThinLayer.js';
+import {
+    CLAUDE_LAYER_DIRNAME,
+    DEMOTED_MARKER,
+    PACKAGE_STAMP_LINE,
+    THINNED_MARKER,
+    currentRuntimeDir,
+    markClaudeLayer,
+    readCarrierState,
+    runtimeRootFor,
+} from './stagedRuntime.js';
+
+export const PROMOTION_SWITCH_REL = path.join('src', 'config', 'layer-form-promotion.json');
+export const PROMOTION_RECORD = 'promotion.json';
+export const LATENCY_BUDGET_REL = path.join('src', 'config', 'hook-latency-budget.json');
+/** Measured 11 ms for the thin pass over 121 rules (tsx, warm, 2026-10-24); the default is that plus margin. */
+export const DEFAULT_THIN_ESTIMATE_MS = 50;
+const FALLBACK_BUDGET_MS = 250;
+const LEDGER_TOOL = 'claude-code';
+
+export type SessionLayerAction = 'none' | 'promoted' | 'demoted' | 'skipped';
+
+export interface SessionLayerOutcome {
+    readonly action: SessionLayerAction;
+    readonly reason: string;
+}
+
+export interface PromotionRecord {
+    readonly promoted_at: string;
+    readonly version: string;
+    readonly last_thin_ms: number;
+}
+
+function readJson(file: string): Record<string, unknown> | null {
+    try {
+        const raw = JSON.parse(fs.readFileSync(file, 'utf8')) as unknown;
+        return typeof raw === 'object' && raw !== null && !Array.isArray(raw) ? (raw as Record<string, unknown>) : null;
+    } catch {
+        return null;
+    }
+}
+
+/** `true` only when the shipped switch says exactly `enabled: true`. */
+export function promotionEnabled(packageRoot: string): boolean {
+    return readJson(path.join(packageRoot, PROMOTION_SWITCH_REL))?.['enabled'] === true;
+}
+
+export function readPromotionRecord(runtimeRoot: string): PromotionRecord | null {
+    const o = readJson(path.join(runtimeRoot, PROMOTION_RECORD));
+    if (o === null || typeof o['promoted_at'] !== 'string') return null;
+    return {
+        promoted_at: o['promoted_at'],
+        version: typeof o['version'] === 'string' ? o['version'] : 'unknown',
+        last_thin_ms: typeof o['last_thin_ms'] === 'number' ? o['last_thin_ms'] : DEFAULT_THIN_ESTIMATE_MS,
+    };
+}
+
+export function latencyBudgetMs(packageRoot: string): number {
+    const budgets = readJson(path.join(packageRoot, LATENCY_BUDGET_REL))?.['budgets_ms'] as Record<string, unknown> | undefined;
+    const p95 = (budgets?.['any_hook_event'] as Record<string, unknown> | undefined)?.['p95_ci'];
+    return typeof p95 === 'number' && p95 > 0 ? p95 : FALLBACK_BUDGET_MS;
+}
+
+function versionOf(dir: string): string | null {
+    const v = readJson(path.join(dir, 'package.json'))?.['version'];
+    return typeof v === 'string' && v.trim() !== '' ? v.trim() : null;
+}
+
+/** The version the global install recorded — the install that wrote the layer on disk. */
+function layerVersion(env: NodeJS.ProcessEnv): string | null {
+    const v = read_lockfile(lockfile_path(env))?.agent_config_version;
+    return typeof v === 'string' && v.trim() !== '' ? v.trim().replace(/^v+/, '') : null;
+}
+
+/** The decision for the claude layer on this machine, with the two version facts filled in. */
+export function decideClaudeLayer(packageRoot: string, env: NodeJS.ProcessEnv): LayerFormDecision {
+    const payload = versionOf(packageRoot);
+    const shipped = gatherShippedEvidence(packageRoot, payload ?? 'unknown')('claude-code');
+    const input = withMachineEvidence(shipped, readMachineEvidence(packageRoot, env));
+    return decideLayerForm({ ...input, payloadVersion: payload, layerVersion: layerVersion(env) });
+}
+
+/**
+ * Ledger records for the claude anchor, or `null` when the ledger holds no
+ * entry for this rules directory — then nothing proves which bytes are ours,
+ * and nothing is rewritten.
+ */
+function ledgerFor(
+    rulesDir: string,
+    env: NodeJS.ProcessEnv,
+): { inventory: global_deploy_inventory.Inventory; file: string; recorded: Map<string, global_deploy_inventory.LedgerDigest> } | null {
+    const file = global_deploy_inventory.inventory_path(env);
+    const inventory = global_deploy_inventory.load_inventory(file);
+    const anchor = path.dirname(rulesDir);
+    const recorded = global_deploy_inventory.recorded_digests(LEDGER_TOOL, anchor, inventory);
+    return recorded.size === 0 ? null : { inventory, file, recorded };
+}
+
+function relOf(rulesDir: string, file: string): string {
+    return `${path.basename(rulesDir)}/${path.basename(file)}`;
+}
+
+/** Move the recorded digest of each rewritten file to its new bytes, and save the ledger. */
+function rerecord(rulesDir: string, files: readonly string[], env: NodeJS.ProcessEnv): void {
+    const ledger = ledgerFor(rulesDir, env);
+    if (ledger === null || files.length === 0) return;
+    const tools = ledger.inventory['tools'] as Record<string, Record<string, unknown>>;
+    const digests = tools[LEDGER_TOOL]?.['digests'] as Record<string, unknown> | undefined;
+    if (digests === undefined) return;
+    for (const file of files) {
+        const rel = relOf(rulesDir, file);
+        const onDisk = global_deploy_inventory.file_sha256(file);
+        if (onDisk === null || !(rel in digests)) continue;
+        digests[rel] = { installed_sha256: onDisk, packaged_sha256: onDisk };
+    }
+    global_deploy_inventory.save_inventory(ledger.inventory, ledger.file);
+}
+
+/**
+ * Files the thin pass must skip: user edits — bytes that differ from what the
+ * install recorded — and every rule {@link ruleForm} keeps `full`.
+ */
+function keptWhole(
+    rulesDir: string,
+    recorded: ReadonlyMap<string, global_deploy_inventory.LedgerDigest>,
+    decision: LayerFormDecision,
+    never: NeverThinned,
+): Set<string> {
+    const out = new Set<string>();
+    let names: string[] = [];
+    try {
+        names = fs.readdirSync(rulesDir).filter((n) => n.endsWith('.md'));
+    } catch {
+        return out;
+    }
+    for (const name of names) {
+        const file = path.join(rulesDir, name);
+        const rec = recorded.get(relOf(rulesDir, file));
+        const edited = rec !== undefined && global_deploy_inventory.file_sha256(file) !== rec.installed_sha256;
+        if (edited || ruleForm(name.slice(0, -3), decision, never) === 'full') out.add(path.resolve(file));
+    }
+    return out;
+}
+
+/**
+ * The rules a thinned layer still carries whole (step 3.1): the consequence
+ * class and the `safety-floor` tier, read from the staged package. The thin pass
+ * would reduce them to stub-plus-law; the decision's contract is `full`.
+ */
+export function neverThinned(packageRoot: string): NeverThinned {
+    const safetyFloor = new Set<string>();
+    const dir = path.join(packageRoot, 'dist', 'agent-src', 'rules');
+    let names: string[] = [];
+    try {
+        names = fs.readdirSync(dir).filter((n) => n.endsWith('.md'));
+    } catch {
+        // No bodies to read a tier from: the thin pass reads the same directory and finds nothing either.
+    }
+    for (const name of names) {
+        const text = fs.readFileSync(path.join(dir, name), 'utf8');
+        const end = text.indexOf('\n---', 3);
+        if (text.startsWith('---') && end > 0 && /^tier:\s*["']?safety-floor["']?\s*$/m.test(text.slice(0, end))) {
+            safetyFloor.add(name.slice(0, -3));
+        }
+    }
+    return { consequenceClass: new Set(Object.keys(readConsequenceClass(packageRoot).members)), safetyFloor };
+}
+
+/**
+ * Restore the staged full layer into `rulesDir`: overwrite only stamped files,
+ * add missing ones, remove none — the shell branch's rule. Returns the files
+ * written, or `null` when the snapshot is missing.
+ */
+export function restoreStagedLayer(packageRoot: string, rulesDir: string): string[] | null {
+    const snapshot = path.join(packageRoot, CLAUDE_LAYER_DIRNAME);
+    let names: string[];
+    try {
+        names = fs.readdirSync(snapshot).filter((n) => n.endsWith('.md')).sort();
+    } catch {
+        return null;
+    }
+    const written: string[] = [];
+    for (const name of names) {
+        const target = path.join(rulesDir, name);
+        if (fs.existsSync(target) && !fs.readFileSync(target, 'utf8').split(/\r?\n/).includes(PACKAGE_STAMP_LINE)) continue;
+        const tmp = `${target}.ac-restore`;
+        fs.copyFileSync(path.join(snapshot, name), tmp);
+        fs.renameSync(tmp, target);
+        written.push(target);
+    }
+    return written;
+}
+
+function thinnedDir(runtimeRoot: string): string | null {
+    try {
+        const first = fs.readFileSync(path.join(runtimeRoot, THINNED_MARKER), 'utf8').split('\n')[0]?.trim() ?? '';
+        return first === '' ? null : first;
+    } catch {
+        return null;
+    }
+}
+
+/** Does the arrival record taken after the promotion show a standing law missing? */
+function standingLawMissingSince(runtimeRoot: string, packageRoot: string, env: NodeJS.ProcessEnv, since: string | null): boolean {
+    const lines = readObserverLines(arrivalsDirUnder(runtimeRoot)).filter((l) => since === null || l.ts > since);
+    const evidence = arrivalEvidence(latestArrivalRecord(lines), readMachineEvidence(packageRoot, env).standingLaws);
+    return evidence !== null && !evidence.standingLawsLoaded;
+}
+
+export interface SessionLayerOptions {
+    readonly env?: NodeJS.ProcessEnv;
+    /** The installed claude rule directory; defaults to `$HOME/.claude/rules`. */
+    readonly rulesDir?: string;
+    /** Monotonic clock in ms; the concern passes the time it started. */
+    readonly now?: () => number;
+    readonly startedAt?: number;
+    readonly date?: () => Date;
+}
+
+/**
+ * One session's step: demote a thinned layer an arrival record contradicts,
+ * or promote a full one the decision says may be thinned. Never throws.
+ */
+export function sessionLayerStep(opts: SessionLayerOptions = {}): SessionLayerOutcome {
+    const env = opts.env ?? process.env;
+    const now = opts.now ?? (() => performance.now());
+    const started = opts.startedAt ?? now();
+    try {
+        const runtimeRoot = runtimeRootFor(env);
+        let packageRoot: string;
+        try {
+            packageRoot = fs.realpathSync(currentRuntimeDir(runtimeRoot));
+        } catch {
+            return { action: 'none', reason: 'no-staged-runtime' };
+        }
+        const home = env['HOME'] ?? os.homedir();
+        const state = readCarrierState(runtimeRoot);
+
+        if (state.layer === 'thinned') {
+            const record = readPromotionRecord(runtimeRoot);
+            if (!standingLawMissingSince(runtimeRoot, packageRoot, env, record?.promoted_at ?? null)) {
+                return { action: 'none', reason: 'thinned-holds' };
+            }
+            const rulesDir = thinnedDir(runtimeRoot) ?? opts.rulesDir ?? path.join(home, '.claude', 'rules');
+            const written = restoreStagedLayer(packageRoot, rulesDir);
+            if (written === null) return { action: 'none', reason: 'snapshot-missing' };
+            rerecord(rulesDir, written, env);
+            fs.renameSync(path.join(runtimeRoot, THINNED_MARKER), path.join(runtimeRoot, DEMOTED_MARKER));
+            return { action: 'demoted', reason: 'arrival-standing-law-missing' };
+        }
+        if (state.layer === 'demoted') return { action: 'none', reason: 'demoted' };
+        if (!promotionEnabled(packageRoot)) return { action: 'none', reason: 'promotion-disabled' };
+
+        const decision = decideClaudeLayer(packageRoot, env);
+        if (decision.form !== 'thinned') return { action: 'none', reason: decision.reason };
+
+        const rulesDir = opts.rulesDir ?? path.join(home, '.claude', 'rules');
+        const ledger = ledgerFor(rulesDir, env);
+        if (ledger === null) return { action: 'none', reason: 'no-ledger' };
+        const estimate = readPromotionRecord(runtimeRoot)?.last_thin_ms ?? DEFAULT_THIN_ESTIMATE_MS;
+        if (now() - started + estimate > latencyBudgetMs(packageRoot)) return { action: 'skipped', reason: 'over-latency-budget' };
+
+        const rewritten: string[] = [];
+        const t0 = now();
+        const res = thinInstalledRuleLayer({
+            rulesDir,
+            packageRoot,
+            bodyLinkRoot: packageRoot,
+            preserved: keptWhole(rulesDir, ledger.recorded, decision, neverThinned(packageRoot)),
+            onWrite: (target) => rewritten.push(target),
+        });
+        const thinMs = Math.max(1, Math.round(now() - t0));
+        if (res.failed.length > 0) {
+            rerecord(rulesDir, restoreStagedLayer(packageRoot, rulesDir) ?? [], env);
+            return { action: 'none', reason: 'thin-failed' };
+        }
+        rerecord(rulesDir, rewritten, env);
+        markClaudeLayer(runtimeRoot, { thinned: true, rulesDir });
+        const record: PromotionRecord = {
+            promoted_at: (opts.date ?? (() => new Date()))().toISOString(),
+            version: versionOf(packageRoot) ?? 'unknown',
+            last_thin_ms: thinMs,
+        };
+        fs.writeFileSync(path.join(runtimeRoot, PROMOTION_RECORD), `${JSON.stringify(record, null, 2)}\n`);
+        return { action: 'promoted', reason: decision.reason };
+    } catch {
+        return { action: 'none', reason: 'error' };
+    }
+}
