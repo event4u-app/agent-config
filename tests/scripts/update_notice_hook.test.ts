@@ -16,8 +16,16 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 
 import { parseCuratedHead, updateNotice, type NoticeInput } from '../../src/scripts/_lib/update_notice.js';
-import { USER_NOTICE_HOSTS, USER_NOTICE_KEY } from '../../src/scripts/hooks/user_notice.js';
-import { CONCERN, readNoticeState, readUpdateMode, runNotice, type NoticeDeps } from '../../src/scripts/update_notice_hook.js';
+import { USER_NOTICE_HOSTS, USER_NOTICE_KEY, type NoticeReceipt } from '../../src/scripts/hooks/user_notice.js';
+import {
+    CONCERN,
+    noticeOncePerDay,
+    readNoticeState,
+    readUpdateMode,
+    runNotice,
+    writeNoticeState,
+    type NoticeDeps,
+} from '../../src/scripts/update_notice_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
@@ -127,6 +135,68 @@ describe('3.1 — a session_start concern beside wrapper-freshness', () => {
         const reply = JSON.parse(out[0] as string) as Record<string, string>;
         expect(Object.keys(reply)).toEqual([USER_NOTICE_KEY]);
         expect(reply[USER_NOTICE_KEY]).toContain('agent-config 2.0.0 is available (installed: 1.0.0).');
+    });
+
+    // Through the host the concern cannot see whether its reply reached the
+    // user; the dispatcher's receipt can. Nothing counts as shown without one.
+    describe('a notice through the host counts as shown only on a receipt for its session', () => {
+        function hostDeps(root: string, sessionId: string, receipt: NoticeReceipt | null, out: string[]): NoticeDeps {
+            return {
+                ...deps({ packageRoot: root, sessionId }),
+                notice: { write: (t) => void out.push(t) },
+                receipt: () => receipt,
+            };
+        }
+        function setupUpgraded(): string {
+            const root = install('2.0.0');
+            writeNoticeState(path.join(tmp, 'state', 'update-notice.json'), { staged: null, last_seen_installed: '1.0.0' });
+            return root;
+        }
+        const statePath = (): string => path.join(tmp, 'state', 'update-notice.json');
+        const now = (): string => new Date().toISOString();
+
+        it('without a receipt the post-update line stays due and is said again next session', () => {
+            const root = setupUpgraded();
+            const first: string[] = [];
+            noticeOncePerDay(hostDeps(root, 's1', null, first));
+            expect(first.join('')).toContain('agent-config is now 2.0.0 (was 1.0.0).');
+            expect(readNoticeState(statePath())).toEqual({
+                staged: null,
+                last_seen_installed: '1.0.0',
+                pending: { session_id: 's1', installed: '2.0.0' },
+            });
+            const second: string[] = [];
+            noticeOncePerDay(hostDeps(root, 's2', null, second));
+            expect(second.join('')).toContain('agent-config is now 2.0.0 (was 1.0.0).');
+        });
+
+        it('a receipt for the pending session confirms it and throttles the rest of the day', () => {
+            const root = setupUpgraded();
+            noticeOncePerDay(hostDeps(root, 's1', null, []));
+            const later: string[] = [];
+            expect(noticeOncePerDay(hostDeps(root, 's2', { session_id: 's1', at: now() }, later))).toBeNull();
+            expect(later).toEqual([]);
+            expect(readNoticeState(statePath())).toEqual({ staged: null, last_seen_installed: '2.0.0' });
+        });
+
+        it('a receipt for another session confirms nothing', () => {
+            const root = setupUpgraded();
+            noticeOncePerDay(hostDeps(root, 's1', null, []));
+            const stale = new Date(Date.now() - 3 * 86_400_000).toISOString();
+            const again: string[] = [];
+            noticeOncePerDay(hostDeps(root, 's2', { session_id: 'someone-else', at: stale }, again));
+            expect(again.join('')).toContain('agent-config is now 2.0.0 (was 1.0.0).');
+            expect(readNoticeState(statePath()).last_seen_installed).toBe('1.0.0');
+        });
+
+        it('the confirmation takes effect on the next decision too, not only on the throttle path', () => {
+            const root = setupUpgraded();
+            noticeOncePerDay(hostDeps(root, 's1', null, []));
+            const stale = new Date(Date.now() - 3 * 86_400_000).toISOString();
+            const next: string[] = [];
+            noticeOncePerDay(hostDeps(root, 's2', { session_id: 's1', at: stale }, next));
+            expect(next.join('')).not.toContain('agent-config is now');
+        });
     });
 
     it('end to end, a claude envelope yields a user_notice reply on stdout', () => {

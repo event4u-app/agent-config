@@ -39,7 +39,7 @@ function dispatch(
     platform: string,
     concerns: Record<string, FixtureConcern>,
     event = 'session_start',
-): { status: number | null; stdout: string } {
+): { status: number | null; stdout: string; receipts: Record<string, string> } {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'user-notice-'));
     tmpDirs.push(dir);
     const names = Object.keys(concerns);
@@ -69,9 +69,18 @@ function dispatch(
         input: JSON.stringify({ session_id: 'user-notice-test' }),
         encoding: 'utf8',
         timeout: 120_000,
-        env: { ...process.env, AGENT_CONFIG_PACKAGE_ROOT: REPO_ROOT },
+        env: { ...process.env, AGENT_CONFIG_PACKAGE_ROOT: REPO_ROOT, EVENT4U_CONFIG_HOME: path.join(dir, 'home') },
     });
-    return { status: r.status, stdout: r.stdout ?? '' };
+    return { status: r.status, stdout: r.stdout ?? '', receipts: receiptsIn(path.join(dir, 'home')) };
+}
+
+function receiptsIn(home: string): Record<string, string> {
+    const out: Record<string, string> = {};
+    if (!fs.existsSync(home)) return out;
+    for (const f of fs.readdirSync(home)) {
+        if (f.endsWith('.delivered')) out[f] = (JSON.parse(fs.readFileSync(path.join(home, f), 'utf-8')) as { session_id: string }).session_id;
+    }
+    return out;
 }
 
 describe('the user channel through the dispatcher', () => {
@@ -131,10 +140,23 @@ describe('the user channel through the dispatcher', () => {
         expect(r.stdout).not.toContain('fixture notice');
     }, 120_000);
 
-    // `update-notice` records that it reported once it has replied. That is only
-    // true if nothing on its slot can withhold the reply: on a slot with no host
-    // refusal code the emission always exits 0, so even a refusing concern
-    // beside it leaves the notice delivered.
+    // The receipt is the only thing a concern may count a notice as shown by.
+    it('a notice put into the output leaves a receipt naming the session; a dropped one leaves none', () => {
+        const shown = dispatch('claude', { 'notice-a': { effect: 'notification' } });
+        expect(shown.receipts).toEqual({ 'user-notice-notice-a.delivered': 'user-notice-test' });
+        expect(dispatch('copilot', { 'notice-a': { effect: 'notification' } }).receipts).toEqual({});
+        const refused = dispatch(
+            'claude',
+            {
+                guard: { effect: 'permission', severity: 'blocking', script: 'tests/hooks/fixtures/concern_exits_3.ts' },
+                'notice-a': { effect: 'notification' },
+            },
+            'pre_tool_use',
+        );
+        expect(refused.receipts).toEqual({});
+        expect(dispatch('claude', { 'context-a': { effect: 'context' } }).receipts).toEqual({});
+    }, 120_000);
+
     it('on session_start a refusing concern beside the notice does not withhold it', () => {
         const r = dispatch('claude', {
             guard: { effect: 'permission', severity: 'blocking', script: 'tests/hooks/fixtures/concern_exits_3.ts' },

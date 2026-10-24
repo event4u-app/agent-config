@@ -53,7 +53,7 @@ import {
   clearHookStdinOverride,
 } from "./hook_stdin.js";
 import { emitFor, withUserNotice, type PermissionDecision, type Severity } from "./host_semantics.js";
-import { USER_NOTICE_KEY, USER_NOTICE_MAX_CHARS } from "./user_notice.js";
+import { USER_NOTICE_KEY, USER_NOTICE_MAX_CHARS, writeNoticeReceipts } from "./user_notice.js";
 import { _concern_permission_verdict, _payload_tool_name, _permission_for } from "./permission_gate.js";
 export { _concern_permission_verdict, _payload_tool_input, _payload_tool_name, _permission_for, _working_tree_root } from "./permission_gate.js";
 import { _concern_body_classes, applyPayloadFields, planPayloadShapes } from "./payload_stub.js";
@@ -1267,6 +1267,7 @@ export function main(argv?: string[]): number {
   const context_blocks: string[] = [];
   // User-addressed text (`hooks/user_notice.ts`), shown by the host, never model context.
   const user_notices: string[] = [];
+  const notice_from: string[] = [];
   // Per-concern message for the host emission (P0.1). Kept OUT of
   // feedback_entries on purpose: that record is written to disk with a
   // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
@@ -1384,6 +1385,7 @@ export function main(argv?: string[]): number {
     const notice = reply[USER_NOTICE_KEY];
     if (concern["effect"] === "notification" && typeof notice === "string" && notice.trim()) {
       user_notices.push(injected(notice.trim()).slice(0, USER_NOTICE_MAX_CHARS));
+      notice_from.push(String(concern["name"]));
     }
     feedback_entries.push({
       concern: String(concern["name"]),
@@ -1445,6 +1447,11 @@ export function main(argv?: string[]): number {
   );
   if (stdout_out) {
     process.stdout.write(stdout_out);
+  }
+  // Receipts only for notices that are in the output — a dropped notice leaves
+  // none, so its concern says it again instead of counting it as shown.
+  if (notice_from.length > 0 && stdout_out !== context_out + emission.stdout) {
+    writeNoticeReceipts(notice_from, session_id);
   }
   if (emission.stderr) {
     process.stderr.write(emission.stderr);

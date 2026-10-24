@@ -48,7 +48,7 @@ import { parse_version } from './_lib/version_order.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { is_replay_mode } from './hooks/state_io.js';
-import { hostShowsUserNotice, USER_NOTICE_KEY } from './hooks/user_notice.js';
+import { hostShowsUserNotice, readNoticeReceipt, USER_NOTICE_KEY, type NoticeReceipt } from './hooks/user_notice.js';
 
 export const CONCERN = 'update-notice';
 export const NOTICE_STATE_FILENAME = 'update-notice.json';
@@ -74,6 +74,13 @@ export const NOTICE_STATE_SCHEMA = 1;
 export interface NoticeState {
     readonly staged: string | null;
     readonly last_seen_installed: string | null;
+    /**
+     * A notice handed to the dispatcher's user channel and not yet confirmed:
+     * the session it was handed over in, and the installed version it reported.
+     * It becomes `last_seen_installed` only when the dispatcher's receipt names
+     * that session (`hooks/user_notice.ts`); until then the notice is due again.
+     */
+    readonly pending?: { readonly session_id: string; readonly installed: string };
 }
 
 export function readNoticeState(statePath: string | null): NoticeState {
@@ -83,10 +90,20 @@ export function readNoticeState(statePath: string | null): NoticeState {
         const o = raw !== null && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
         if (o['schema'] !== undefined && o['schema'] !== NOTICE_STATE_SCHEMA) return { staged: null, last_seen_installed: null };
         const str = (v: unknown): string | null => (typeof v === 'string' && parse_version(v.trim()) !== null ? v.trim() : null);
-        return { staged: str(o['staged']), last_seen_installed: str(o['last_seen_installed']) };
+        const p = o['pending'] as Record<string, unknown> | null | undefined;
+        const installed = str(p?.['installed']);
+        const pending =
+            typeof p?.['session_id'] === 'string' && installed !== null ? { session_id: p['session_id'], installed } : undefined;
+        return { staged: str(o['staged']), last_seen_installed: str(o['last_seen_installed']), ...(pending ? { pending } : {}) };
     } catch {
         return { staged: null, last_seen_installed: null };
     }
+}
+
+/** The state with a pending notice promoted, when the dispatcher's receipt names its session. */
+export function confirmDelivered(state: NoticeState, receipt: NoticeReceipt | null): NoticeState {
+    if (state.pending === undefined || receipt === null || receipt.session_id !== state.pending.session_id) return state;
+    return { staged: state.staged, last_seen_installed: state.pending.installed };
 }
 
 export function writeNoticeState(statePath: string, state: NoticeState): void {
@@ -167,6 +184,8 @@ export interface NoticeDeps {
      * nothing goes to stderr, which every host discards.
      */
     readonly notice?: { write(text: string): void };
+    /** The dispatcher's delivery receipt for this concern, read only on the `notice` path. */
+    readonly receipt?: () => NoticeReceipt | null;
 }
 
 /**
@@ -180,7 +199,7 @@ export function runNotice(deps: NoticeDeps, apply = true): NoticeOutcome {
 
     const probe = deps.probeStatePath === null ? {} : readJson(deps.probeStatePath);
     const seen = probe['last_seen_version'];
-    const state = readNoticeState(deps.noticeStatePath);
+    const state = confirmDelivered(readNoticeState(deps.noticeStatePath), deps.receipt?.() ?? null);
 
     const outcome = updateNotice({
         installed,
@@ -207,16 +226,18 @@ export function runNotice(deps: NoticeDeps, apply = true): NoticeOutcome {
         return outcome;
     }
 
-    // Recording the version as reported right after replying is sound only
-    // because this concern is bound where no host refusal exists: there the
-    // dispatcher always exits 0 and never withholds a notice (pinned by
-    // tests/hooks/user_notice_dispatch.test.ts). A block-capable binding would
-    // need the write to wait for delivery.
+    // Through the host, a notice counts as shown only once the dispatcher's
+    // receipt names this session; until then it stays pending and is said again.
     if (deps.notice !== undefined) {
         if (outcome.lines.length > 0) deps.notice.write(JSON.stringify({ [USER_NOTICE_KEY]: outcome.lines.join('\n') }));
-    } else {
-        for (const line of outcome.lines) deps.err.write(`[update] ${line}\n`);
+        writeNoticeState(deps.noticeStatePath, {
+            staged: outcome.stage,
+            last_seen_installed: state.last_seen_installed,
+            ...(outcome.lines.length > 0 ? { pending: { session_id: deps.sessionId ?? '', installed } } : {}),
+        });
+        return outcome;
     }
+    for (const line of outcome.lines) deps.err.write(`[update] ${line}\n`);
     writeNoticeState(deps.noticeStatePath, { staged: outcome.stage, last_seen_installed: installed });
     return outcome;
 }
@@ -230,6 +251,18 @@ export function runNotice(deps: NoticeDeps, apply = true): NoticeOutcome {
 export function noticeOncePerDay(deps: NoticeDeps): NoticeOutcome | null {
     const dry = runNotice(deps, false);
     if (dry.suppressed !== null && !RECONCILE_REASONS.has(dry.suppressed)) return null;
+    if (deps.notice !== undefined) {
+        // Through the host the day throttle is a DELIVERED notice today, so a
+        // notice the dispatcher dropped is said again at the next session.
+        const receipt = deps.receipt?.() ?? null;
+        if (receipt !== null && localDay(new Date(receipt.at)) === localDay(new Date())) {
+            const stored = readNoticeState(deps.noticeStatePath);
+            const confirmed = confirmDelivered(stored, receipt);
+            if (confirmed !== stored) writeNoticeState(deps.noticeStatePath, confirmed);
+            return null;
+        }
+        return runNotice(deps);
+    }
     if (ranToday(deps.throttlePath)) return null;
     const outcome = runNotice(deps);
     stampToday(deps.throttlePath);
@@ -285,7 +318,7 @@ export function main(argv?: string[]): number {
             sessionId: envelopeField(raw, 'session_id'),
             env: process.env,
             isTty: viaHost || Boolean(process.stderr.isTTY) || Boolean(process.stdout.isTTY),
-            ...(viaHost ? { notice: process.stdout } : {}),
+            ...(viaHost ? { notice: process.stdout, receipt: () => readNoticeReceipt(CONCERN) } : {}),
             mode,
             probeStatePath: user_global_paths.resolve_with_fallback(STATE_FILENAME),
             noticeStatePath: user_global_paths.write_target(NOTICE_STATE_FILENAME),

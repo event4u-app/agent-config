@@ -14,6 +14,11 @@
  * below is one host wide; an unlisted host gets nothing rather than a guess.
  */
 
+import * as fs from 'node:fs';
+
+import { write_atomic } from '../_lib/fs_atomic.js';
+import { write_target } from '../_lib/user_global_paths.js';
+
 /** The concern reply key a notification concern puts its user-facing text under. */
 export const USER_NOTICE_KEY = 'user_notice';
 
@@ -25,4 +30,41 @@ export const USER_NOTICE_HOSTS: ReadonlySet<string> = new Set(['claude']);
 
 export function hostShowsUserNotice(platform: unknown): boolean {
     return typeof platform === 'string' && USER_NOTICE_HOSTS.has(platform);
+}
+
+/**
+ * A delivery receipt: the dispatcher writes one per concern whose notice it
+ * actually put into host output, naming the session. A concern that must not
+ * count a notice as shown until it was handed to the host reads it on its next
+ * run; anything the dispatcher dropped leaves no receipt, so the concern says
+ * it again.
+ */
+export interface NoticeReceipt {
+    readonly session_id: string;
+    readonly at: string;
+}
+
+function receiptPath(concern: string): string {
+    return write_target(`user-notice-${concern}.delivered`);
+}
+
+export function writeNoticeReceipts(concerns: readonly string[], sessionId: string): void {
+    for (const concern of new Set(concerns)) {
+        try {
+            write_atomic(receiptPath(concern), JSON.stringify({ session_id: sessionId, at: new Date().toISOString() }));
+        } catch {
+            // no receipt → the concern repeats its notice, which is the safe direction
+        }
+    }
+}
+
+export function readNoticeReceipt(concern: string): NoticeReceipt | null {
+    try {
+        const o = JSON.parse(fs.readFileSync(receiptPath(concern), 'utf-8')) as Record<string, unknown>;
+        return typeof o['session_id'] === 'string' && typeof o['at'] === 'string'
+            ? { session_id: o['session_id'], at: o['at'] }
+            : null;
+    } catch {
+        return null;
+    }
 }
