@@ -7368,7 +7368,7 @@ var require_dist = __commonJS({
 });
 
 // src/scripts/install.ts
-import { spawn, spawnSync as spawnSync3 } from "node:child_process";
+import { spawn, spawnSync as spawnSync4 } from "node:child_process";
 import * as crypto5 from "node:crypto";
 import * as fs39 from "node:fs";
 import * as os14 from "node:os";
@@ -11510,6 +11510,7 @@ function build_command_bundles(package_root, dest_dir, force = false, curation =
 
 // src/scripts/_lib/claude_settings_hooks.ts
 var YAML4 = __toESM(require_dist(), 1);
+import { spawnSync } from "node:child_process";
 import * as fs19 from "node:fs";
 import * as path18 from "node:path";
 
@@ -11589,9 +11590,34 @@ var SettingsLockError = class extends Error {
     this.name = "SettingsLockError";
   }
 };
-function build_claude_hook_matrix(manifest_path2) {
+function parse_host_version(raw) {
+  const m = /^\s*(\d+)\.(\d+)\.(\d+)/.exec(raw ?? "");
+  return m === null ? null : [Number(m[1]), Number(m[2]), Number(m[3])];
+}
+function claude_host_version() {
+  const res = spawnSync("claude", ["--version"], { encoding: "utf-8", timeout: 5e3, stdio: ["ignore", "pipe", "ignore"] });
+  return res.status === 0 && typeof res.stdout === "string" && res.stdout.trim() !== "" ? res.stdout.trim() : null;
+}
+function _below(have, need) {
+  for (let i = 0; i < 3; i++) {
+    if ((have[i] ?? 0) !== (need[i] ?? 0)) return (have[i] ?? 0) < (need[i] ?? 0);
+  }
+  return false;
+}
+function min_host_versions(manifest_path2) {
+  return _gates(_yaml_parse(fs19.readFileSync(manifest_path2, "utf8")) ?? {});
+}
+function _gates(manifest) {
+  const all = manifest["native_event_min_host_version"] ?? {};
+  const out = {};
+  for (const [k, v] of Object.entries(all["claude"] ?? {})) out[k] = String(v);
+  return out;
+}
+function build_claude_hook_matrix(manifest_path2, opts = {}) {
   const raw = fs19.readFileSync(manifest_path2, "utf8");
   const manifest = _yaml_parse(raw) ?? {};
+  const have = parse_host_version(opts.hostVersion);
+  const gates = _gates(manifest);
   const hook_spec = manifest["schema_version"] ?? 1;
   const platforms = manifest["platforms"] ?? {};
   const claude_events = (platforms["claude"] ?? {}) || {};
@@ -11600,6 +11626,8 @@ function build_claude_hook_matrix(manifest_path2) {
   const matrix = {};
   for (const [native, ac_raw] of Object.entries(aliases)) {
     const ac_event = String(ac_raw);
+    const need = parse_host_version(gates[native]);
+    if (have !== null && need !== null && _below(have, need)) continue;
     const concerns = claude_events[ac_event];
     if (!concerns || Array.isArray(concerns) && concerns.length === 0) continue;
     const dispatchArgs = `--platform claude --event ${ac_event} --native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
@@ -11666,7 +11694,7 @@ function _with_lock(settings_path, fn) {
     fs19.rmSync(lockPath, { force: true });
   }
 }
-function ensure_managed_hooks(settings_path, matrix) {
+function ensure_managed_hooks(settings_path, matrix, withheld = []) {
   return _with_lock(settings_path, () => {
     const settings = _read_settings(settings_path);
     const before = JSON.stringify(settings);
@@ -11681,6 +11709,14 @@ function ensure_managed_hooks(settings_path, matrix) {
       const next = [...user_groups, managed_group];
       if (JSON.stringify(next) !== JSON.stringify(existing)) touched.push(native);
       hooks[native] = next;
+    }
+    for (const native of withheld) {
+      if (native in matrix || !Array.isArray(hooks[native])) continue;
+      const user_groups = hooks[native].filter((g) => !_is_managed_group(g));
+      if (user_groups.length === hooks[native].length) continue;
+      touched.push(native);
+      if (user_groups.length > 0) hooks[native] = user_groups;
+      else delete hooks[native];
     }
     settings["hooks"] = hooks;
     const after = JSON.stringify(settings);
@@ -14296,7 +14332,7 @@ function resolveGlobalRuleScope(inputs) {
 }
 
 // src/install/stagedRuntime.ts
-import { spawnSync } from "node:child_process";
+import { spawnSync as spawnSync2 } from "node:child_process";
 import { randomBytes as randomBytes6 } from "node:crypto";
 import * as fs35 from "node:fs";
 import { createRequire as createRequire3 } from "node:module";
@@ -14488,7 +14524,7 @@ function probeHookCommand(command, env = process.env) {
     for (const key of ["HOME", "USERPROFILE", "EVENT4U_CONFIG_HOME"]) {
       if (env[key] !== void 0) childEnv[key] = env[key];
     }
-    const res = spawnSync("/bin/sh", ["-c", probeCommand], {
+    const res = spawnSync2("/bin/sh", ["-c", probeCommand], {
       cwd: project,
       stdio: [fd, "pipe", "pipe"],
       encoding: "utf-8",
@@ -21707,7 +21743,7 @@ function render_native_model_md(text, tier) {
 }
 
 // src/scripts/_cli/cmd_migrate.ts
-import { spawnSync as spawnSync2 } from "node:child_process";
+import { spawnSync as spawnSync3 } from "node:child_process";
 import * as fs38 from "node:fs";
 import * as path37 from "node:path";
 import process3 from "node:process";
@@ -22106,7 +22142,7 @@ function _load_state_migrator() {
     if (opts.backup === false) {
       args.push("--no-backup");
     }
-    const r = spawnSync2(command, args, { encoding: "utf8" });
+    const r = spawnSync3(command, args, { encoding: "utf8" });
     if (r.status !== 0) {
       throw new Error(
         `v0\u2192v1 state migration failed (exit ${r.status ?? "null"}): ${(r.stderr ?? "").trim()}`
@@ -23710,7 +23746,7 @@ function _smoke_test_hooks(project_root, package_root) {
     const inv = _resolve_tsx_invocation(dispatcher, dispatcherArgs);
     let res;
     try {
-      res = spawnSync3(inv.command, inv.args, {
+      res = spawnSync4(inv.command, inv.args, {
         input: "{}",
         encoding: "utf-8",
         cwd: project_root,
@@ -24644,10 +24680,11 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
     if (tool_id === "claude-code") {
       try {
         const manifest = path38.join(package_root, "src", "scripts", "hook_manifest.yaml");
-        const matrix = build_claude_hook_matrix(manifest);
+        const matrix = build_claude_hook_matrix(manifest, { hostVersion: claude_host_version() });
         const res = ensure_managed_hooks(
           path38.join(anchor2, "settings.json"),
-          matrix
+          matrix,
+          Object.keys(min_host_versions(manifest))
         );
         if (!state.QUIET) {
           if (res.changed) {
@@ -25490,7 +25527,7 @@ function _server_info_path() {
 function _pid_is_agent_config(pid) {
   let res;
   try {
-    res = spawnSync3("ps", ["-p", String(pid), "-o", "command="], {
+    res = spawnSync4("ps", ["-p", String(pid), "-o", "command="], {
       encoding: "utf-8",
       timeout: 5e3
     });
@@ -25656,7 +25693,7 @@ function _wizard_run_sync(cmd, env, cli) {
 function _openBrowser(url) {
   try {
     const opener = process4.platform === "darwin" ? ["open", [url]] : process4.platform === "win32" ? ["cmd", ["/c", "start", "", url]] : ["xdg-open", [url]];
-    spawnSync3(opener[0], opener[1], { stdio: "ignore" });
+    spawnSync4(opener[0], opener[1], { stdio: "ignore" });
   } catch {
   }
 }
