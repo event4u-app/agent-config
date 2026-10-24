@@ -74,11 +74,12 @@ Measured on real clones on 2026-10-24; Flask blueprints across files and tsconfi
 - **Resolved when:** the chosen option is recorded in this entry or in `src/config/pack-size-budget.json`, and Status reads resolved.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-23 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The budget re-anchor becomes routine | product | Each grammar re-anchors the line and the gate stops constraining payload | The blocker asks for an itemised, owner-decided measurement per addition | Phase 1 — Ruby and Rails |
+| 2 | A residue fix shifts edges other projects rely on | implementation | A wider resolver (include prefixes, C# names, service hops) adds wrong edges on projects that resolved correctly before | Every step names a fixture oracle seen red first, and the existing provider suites stay green; re-measure the review's real clones before closing | Phase 2 — Accuracy residue from the PR #2603 review |
 
 ## Acceptance Criteria
 
