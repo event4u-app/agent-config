@@ -38,6 +38,8 @@ const ALLOWED_FLAT_FILES: ReadonlySet<string> = new Set([
     // Generated owned-roadmap digest; beside the dashboard because inside
     // `roadmaps/` every active-roadmap glob would read it as a roadmap.
     'roadmaps-owned.md',
+    // Owner decision queue; one file so questions never ride in their own PR.
+    'owner-questions.md',
     '.gitkeep',
     '.event4u-bridge.yml',
     '.agent-tools.yml',
