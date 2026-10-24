@@ -136,7 +136,7 @@ export const REDACTION_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
     // Key=value secret with a clear credential-word prefix. The value must
     // be a single token (no spaces, no "/" — skips filepaths and URLs).
     [
-        /\b(api[_-]?key|auth[_-]?token|access[_-]?token|bearer|secret|password|passwd|private[_-]?key)\b\s*[:=]\s*[A-Za-z0-9+/=_\-]{8,}(?![/.\w])/i,
+        /\b(api[_-]?key|auth[_-]?token|access[_-]?token|bearer|secret|password|passwd|private[_-]?key)\b\s*(?::|=(?![=>]))\s*[A-Za-z0-9+/=_\-]{8,}(?![/.\w])/i,
         'inline credential',
     ],
     [/https?:\/\/[^\s"'/]*:[^\s"'/]*@/, 'url with credentials'],

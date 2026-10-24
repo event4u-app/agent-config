@@ -31,7 +31,7 @@ written down where the hooks are generated.
 
 ## Phase 1 — A comparison is not an assignment
 
-- [ ] **1.1 Repair the shared assignment head.** `assignmentSource` in
+- [x] **1.1 Repair the shared assignment head.** `assignmentSource` in
       `src/scripts/_lib/egress_rules.ts` ends every credential-assignment pattern in
       `[:=]`, so `token === 'string'` and `token == x` read as an assignment whose value
       is `==`; the council bundle then replaces that value and refuses every payload
@@ -40,7 +40,13 @@ written down where the hooks are generated.
       verify: `npx vitest run tests/scripts/_lib` with new cases — `token === 'x'`,
       `token == x`, `token => x` yield no span; `token = "abc"`, `token: abc`,
       `api_key=abc` still do; red with the old head restored.
-- [ ] **1.2 Prove it on the surface that failed.** Run the council bundle's egress over
+      *Done 2026-10-24:* head is `(?::|=(?![=>]))`; the comparison cases were red
+      before the fix, the assignment cases green before and after. The four
+      exposed legacy spellings pinned in `egress_legacy_superset.test.ts` and the
+      consumer template literal in `check_memory.ts` follow the same head — the
+      pin is the change, not a loosening. Defect-pattern search: `[:=]` heads
+      outside `assignmentSource` occur only in those frozen test spellings.
+- [x] **1.2 Prove it on the surface that failed.** Run the council bundle's egress over
       the line that blocked the round.
       verify: `CouncilEgress.replace` + `check` over `typeof o.token === 'string'` returns
       no refusal; a test pins it.
