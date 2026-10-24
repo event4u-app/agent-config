@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
-estate_growth_exempt: "One active roadmap and one blocker (delegated-owner-defaults, resolved 2026-10-23 by the owner, A8). The blocker was the owner's own Iron Law (ownership_classes.ts: product-owned is locked to the owner) meeting a run delegation that applied council answers to locked-class decisions; only the owner can say whether a delegation may ever do that."
+estate_growth_exempt: "One active roadmap and one blocker (delegated-owner-defaults, resolved 2026-10-23 by the owner, A8). The blocker was the owner's own Iron Law (ownership_classes.ts: product-owned is locked to the owner) meeting a run delegation that applied council answers to locked-class decisions; only the owner can say whether a delegation may ever do that. Step 2.4 adds one hook concern, `subagent-constraints`, the constraint carrier this file's step asks for; no existing concern does its job, and decision A9 fixed its form as a lazily loaded concern."
 estate_offset_exempt: "No active roadmap owns whether a ticked step is true on the shipped path: road-to-a-step-that-costs-what-it-changes owns how much ceremony a step pays (receipts, depth), not whether its verify reaches production; the enforcement-coverage gate resolves rules to validators, not steps to callers. Archiving an unrelated finished file to buy the slot would hide the growth this key exists to show."
 relates:
   - slug: road-to-a-step-that-costs-what-it-changes
@@ -116,7 +116,7 @@ the bench harnesses and `pricing.yaml`.
   `## Decisions` table has a row naming the blocker id with resolver `owner` and a date.
   verify: 2.1's blocker case red → green.
       Done 2026-10-23: a resolved class-3 blocker with no dated `owner` row naming it reds the new `lint_roadmap_blockers:owner-close` ratchet; 20 historic entries baselined (K1), headroom zero.
-- [ ] **2.4 A constraint carrier for skipping workers (D2a, unblocks cold-start 2.5).** The
+- [x] **2.4 A constraint carrier for skipping workers (D2a, unblocks cold-start 2.5).** The
   consumer's constraints reach a worker that skips instruction files on the host's own Agent
   path — a `SubagentStart` injection of the floor plus a bounded digest of the project's
   instruction files, or a dispatch rule the delegation nudge enforces — with a fixture on that
@@ -145,7 +145,7 @@ the bench harnesses and `pricing.yaml`.
   verify: replaying #2585's ticks reds cold-start 2.5, one-detector 2.5 and free-hands 3.2;
   `--self-test` covers a wired and an unwired fixture.
       Done 2026-10-23 in report mode: reach is symbol-level, because module-level reach passed one-detector 2.5 through one constant. The #2585 replay lists 15 ticks, cold-start 2.5, one-detector 2.5 and free-hands 3.2 among them; registered in `rule-backstops.yml` and `task ci`.
-- [ ] **3.3 Shadow first, then enforce.** One release in report mode (exit 0, list printed),
+- [x] **3.3 Shadow first, then enforce.** One release in report mode (exit 0, list printed),
   then enforcing, like the receipts check. False positives are allow-listed per step with a
   reason, never globally.
   verify: the flip commit cites the shadow report with its hit list.
@@ -206,7 +206,7 @@ the bench harnesses and `pricing.yaml`.
 - [x] **5.6 A host marker sets its own `source` and refreshes `parked_at`.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   verify: a council marker followed by a host `StopFailure` reads `would_wait`.
       Done 2026-10-23 (`d4b84753c0`): a host park writes `source: host` and a fresh `parked_at`; net −2 B in the hook bundle.
-- [ ] **5.7 `StopFailure` binding gated** on the oldest host version recorded as accepting it;
+- [x] **5.7 `StopFailure` binding gated** on the oldest host version recorded as accepting it;
   record that version or gate in the generator.
   verify: the generator emits no `StopFailure` key for a host row below the recorded version.
   Open 2026-10-23: the binding is the `StopFailure: agent_error` alias in `src/scripts/hook_manifest.yaml`, a ratification-gated file, and the one recorded observation is 2.1.308; the gate needs that manifest edit and its ratification.
@@ -285,9 +285,9 @@ the bench harnesses and `pricing.yaml`.
   1.2 and 1.3 done 2026-10-23.
 - [x] AC-3 Both lints red on the D1 fixtures and green on the estate (2.1–2.3). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   2.1–2.3 done 2026-10-23; four rows and twenty blockers baselined.
-- [ ] AC-4 The reach check reds the three D2 cases on replay and enforces after one shadow release (3.2, 3.3).
+- [x] AC-4 The reach check reds the three D2 cases on replay and enforces after one shadow release (3.2, 3.3).
 - [x] AC-5 The tier claims are re-decided on a run whose pin reproduces its corpus (4.1, 4.2). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   4.1 and 4.2 done 2026-10-23; both claims underpowered.
-- [ ] AC-6 Every D5 repair is red at its base and green after (Phase 5).
+- [x] AC-6 Every D5 repair is red at its base and green after (Phase 5).
 - [x] AC-7 The #2585 replay is published with its reopened count (6.1). <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   6.1 done 2026-10-23.

@@ -27,6 +27,8 @@
   "reread-guard": 1024,
   "reread-guard_reason": "one advisory line naming the earlier read / ranged alternative (roadmap 6.1)",
   "memory-recall": 768,
+  "subagent-constraints": 4096,
+  "subagent-constraints_reason": "road-to-a-tick-the-shipped-path-earns 2.4: the constraint carrier for a subagent whose definition sets omitClaudeMd. One fire per such subagent start, into the SUBAGENT's context, never the parent turn's: a digest of the project's CLAUDE.md files whose whole serialized reply line, JSON escaping included, is capped at EMISSION_MAX_BYTES in hooks/subagent_constraints_hook.ts, this same number. Room goes to the file nearest the project first, and every file found is named with whether it was shown in full, cut or omitted. Silent for every subagent whose definition loads the instruction files.",
   "memory-recall_reason": "ONE memory pointer per fire: the slug, one authored why-now clause, the absolute path, and the memory's OWN frontmatter description, truncated so the emission is provably under this number (`CAP_BYTES` in hooks/memory_recall_hook.ts is the same constant, enforced at emission by buildEmission rather than left to the bench to notice). Registered BELOW the 1024 default deliberately, for the reason `skill-route` gives for its 512: this row is the ceiling that keeps the concern a POINTER. A memory file in this store runs 1.5-6 kB, so a later change that starts injecting bodies fails the build instead of quietly multiplying the hottest slot in the manifest by ten. Measured emission over the four seeded rules on the real store: 356-768 B, one of the four hitting the cap and truncating its description (`hook-latency-gate-has-runner-variance`, whose own description is 517 B).",
   "session-eol": 1024,
   "session-eol_reason": "one recycle-advisory line, once per session past the committed threshold (road-to-token-economy-recycling 3.2); recording itself emits nothing",
@@ -69,9 +71,10 @@
    "session_start",
    "session_end",
    "pre_compact",
-   "agent_error"
+   "agent_error",
+   "subagent_start"
   ],
-  "excluded_slots_rationale": "session_start is excluded BY THE STEP: it is the one-shot restore slot that legitimately carries hot-context, handoff-context and the canary contract, and capping it against a per-turn number would evict exactly the payloads it exists to deliver. The other three are not per-turn events at all.",
+  "excluded_slots_rationale": "session_start is excluded BY THE STEP: it is the one-shot restore slot that legitimately carries hot-context, handoff-context and the canary contract, and capping it against a per-turn number would evict exactly the payloads it exists to deliver. session_end, pre_compact and agent_error are not per-turn events at all. subagent_start (added 2026-10-24, road-to-a-tick-the-shipped-path-earns 2.4) injects into the SUBAGENT's context, not the parent turn's, so charging it to the parent's turn would drop a constraint carrier to pay for bytes the parent never received.",
   "ceiling_bytes": 59392,
   "ceiling_derivation": "NOT a fresh number, and deliberately so: it is the arithmetic consequence of the per_slot_sum_caps_bytes rows already registered above — 16384 + (2048 + 2048) x 10 + 2048. A tighter per-turn ceiling would contradict per-slot rows that are already the committed decision, and a looser one would let the composition exceed what every part was capped at. Tightening it is a decision about those rows, taken there, in a PR.",
   "gate_on_ceiling": false,
