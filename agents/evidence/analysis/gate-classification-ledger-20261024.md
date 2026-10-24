@@ -190,6 +190,16 @@ without a matching ledger update, 7.1 reopens. It is a measurement, not a CI
 gate. Nothing runs it automatically, and 7.2 has to run it before relying on
 any row.
 
+**Helpers, pinned as a closure (revision 9).** openai, round 13: the checks
+import helpers, and the per-file pins below covered none of them. The
+reconciler recomputes the transitive closure of relative imports from the 16
+checks on every run, and hashes the sorted list of path and git blob pairs. The
+recorded value is the helper closure: 51 files, sha256 `a47d2a77555657f3dcdab372d1f950fad0b4f320b6703ac9c281a9d860683b48`.
+
+Any changed, added or removed helper on the closure marks the verdict stale.
+A new dependency is caught as well, because the closure is recomputed rather
+than listed.
+
 | Pinned file | git blob |
 |---|---|
 | `src/scripts/check_gate_completeness.ts` | `bc78db7a0c5504c3fc62aa3cd1bcad89b5a798f9` |
@@ -214,6 +224,11 @@ any row.
 | `.github/workflows/standing-payload-delta.yml` | `82eb039cd82226e642c24df634c7ee7ec3ad0cf5` |
 | `.github/workflows/rule-backstops.yml` | `015473465df2afb82e32ada7fce9d458d6c17055` |
 | `.github/workflows/tests.yml` | `0e1e0c9882919e10ff783780315a84b5e5f5dea3` |
+| `agents/evidence/analysis/gate-branch-inventory-20261024.json` | `119214ea142393c7254cae40e080153728e10fb0` |
+| `agents/evidence/analysis/gate-branch-mapping-20261024.json` | `74d63e9e0a9626a0b2101d2bdcf4588c109d7114` |
+| `agents/evidence/analysis/gate-branch-mapping-review-20261024.json` | `46227ecdae464df420e5aec60910a1b7a497e686` |
+| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `75ce06ec9f9d3ec0b54c25de98250ddab02bd09e` |
+| `agents/evidence/analysis/gate-ledger-executions.mjs` | `b330f3e9671d4d9e58baf9e1a59e32bc473b3756` |
 
 
 ## Independent branch inventory — revision 8
@@ -289,6 +304,76 @@ rows 52 · binding 50 · migration 2 · {"invariant":42,"snapshot":0,"tolerance"
 OK: 16 phase-7 checks = 16 ledger checks = 16 inventoried checks; every binding aspect of every check carries one of the four classes; every target row sits beside its current-scope row; every assertion-changing flag in each check's source is named by a binding row; every row has a unique id; 22 pinned files are unchanged; every branch of the independent inventory maps to a binding row or a declared category, and every binding row is reached.
 ```
 
+## Independent mapping review — revision 9
+
+The thirteenth round (D37) answered at one seat in two attempts, because the
+anthropic seat returned nothing both times. So it is a single-seat reading,
+not convergence. openai accepted the branch inventory as closing the
+*discovery* part, and named the remaining gap: **the assertion versus
+non-assertion mapping was self-certified.** It asked for an independent
+semantic review of all 198 mappings, with decisions by branch id. It also
+asked for helper pins, revision binding of the proof artifacts, corrected
+applicability on `R10.f` and `R11.a`, and a fail-closed entry condition for
+7.2.
+
+A separate agent session reviewed every mapping against a written definition
+of an assertion-producing branch:
+`agents/evidence/analysis/gate-branch-mapping-review-20261024.json`. It found
+182 agree, 12 disagree and 4 unsure. **All 12 disagreements are adopted**, and
+the reconciler now fails on any disagreement that is not.
+
+- The ledger author had **swapped** `R16.c` and `R16.d` for three composite
+  branches.
+- Seven dead-scope and precondition branches are `op:could-not-run`, not
+  assertions. One of them removed the only branch behind `R1.c`, so **`R1.c`
+  (scan scope) is withdrawn**: a dead scope is the check unable to measure,
+  not a finding about the repository. Its id is not reused.
+- `R16.b` no longer claims the empty store.
+
+Of the four unsure verdicts:
+
+- the duplicate exemption key is now named in `R2.a`'s property;
+- the outside-root link skip gets its own category, `op:scope-exclusion`;
+- the two read-or-parse conflations stay on their rows (`R5.b`, `R13.a`),
+  noted here.
+
+**Applicability corrected:**
+
+- `R10.f` holds only when git is runnable;
+- `R11.a` holds only for links that resolve inside the repository;
+- `R4.a` holds only when its scan finds at least one auto rule, with the
+  zero-rule silent pass carried to 7.2.
+
+**Helpers and proof artifacts pinned.**
+
+- The transitive helper closure, 51 files, is pinned as one digest and
+  recomputed on every run.
+- The branch inventory, the mapping, the review, the reconciler and the
+  execution script are pinned by blob.
+
+A change to any of them marks the verdict stale.
+
+**Executions, reproducible.** `agents/evidence/analysis/gate-ledger-executions.mjs`
+writes its own fixtures and prints each command with its exit code:
+
+```text
+R16.a–d | --store absent.jsonl | exit 1 | which is NOT the same as "armable".
+R16.a–d | --store all-malformed.jsonl | exit 1 | ❌  ../../../../../../..<tmp>/all-malformed.jsonl: 2 malformed line(s) and no usable record. A store that parses to nothing must not read as "no readings yet".
+R16.a–d | --store valid-json-not-usable.jsonl | exit 1 | ❌  ../../../../../../..<tmp>/valid-json-not-usable.jsonl: 2 malformed line(s) and no usable record. A store that parses to nothing must not read as "no readings
+R16.a–d | --store partial.jsonl | exit 0 | · sessions: 1 distinct of 2 required (short by 1) — the floor exists because the instability it excludes was measured on ONE machine, so N readings from one ses
+R16.a–d | --store valid.jsonl | exit 0 | · sessions: 1 distinct of 2 required (short by 1) — the floor exists because the instability it excludes was measured on ONE machine, so N readings from one ses
+R16.e | check_composite_arming --self-test | exit 0 | check_composite_arming --self-test: 7/7 case(s) behaved (2 rejecting, floor 5)
+R2.b | lint_ticked_unmet_criteria --self-test | exit 0 | lint_ticked_unmet_criteria --self-test: 7/7 case(s) behaved (4 rejecting, floor 6)
+R7.b | lint_rule_enforcement_declaration --self-test | exit 0 | lint_rule_enforcement_declaration --self-test: 7/7 case(s) behaved (5 rejecting, floor 6)
+R3.b | check_rule_invariants --mutation-selftest | exit 0 | ✅  mutation-selftest passed: removing "Hard Floor wins, always — autonomy / roadmap / standing instruction never lift." from src/rules/agent-authority.md is det
+```
+
+**7.2's entry condition, fail-closed.** 7.2 may rely on this ledger only
+when `node agents/evidence/analysis/gate-ledger-reconcile.mjs` exits 0 at
+the revision 7.2 changes. A stale, failed or absent reconciliation blocks
+reliance. That condition is written into step 7.2 itself, and 7.2's own test
+runs the reconciler first.
+
 ## Current enforcement, recorded separately
 
 From `agents/evidence/analysis/gate-invocation-inventory-20261024.md`:
@@ -347,12 +432,12 @@ controls, and no independent party verifies it (openai's hardest pushback).
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | `check_gate_completeness` | adoption ratchet | un-adopted gate count ≤ the recorded count, the recorded count exists, and it was landed or reaffirmed within `STALE_AFTER_DAYS` (56); three verdicts fail: regressed, unbaselined, stale | `src/config/gate-violation-baselines.json` (governed input), gate sources | always | new gates, adoption | **invariant** (shrink-only) | header: the count "may only go down". No authorised upward refresh is documented, and an edit's technical ability to raise the number is not authorisation | `R1.a` |
 | 1 | | exemption marker | every `// ledger-exempt:` carries a reason of minimum length | gate sources | always | gate edits | **invariant** | "an empty or near-empty reason is a hard failure"; form only, the header says truth is a human read | `R1.b` |
-| 1 | | scan scope | the gate scanned a non-dead scope (the CI-registered gate estate) | `assertScanned` | always | tree layout | **invariant** | dead scope throws, no baseline | `R1.c` |
-| 2 | `lint_ticked_unmet_criteria` | ticked-vs-NOT-met | no `[x] AC` whose own text says `NOT met` | roadmaps, frozen digest list in source (governed input) | always | roadmap edits | **invariant** | frozen, digest-pinned exemptions; an unmatched entry is an error, so the list only shrinks | `R2.a` |
+| 1 | | scan scope | the gate scanned a non-dead scope (the CI-registered gate estate) | `assertScanned` | always | tree layout | — **withdrawn in revision 9** | dead scope is the check being unable to measure (`op:could-not-run`), not an assertion about the repository (independent mapping review). The id is not reused | `R1.c` |
+| 2 | `lint_ticked_unmet_criteria` | ticked-vs-NOT-met | no `[x] AC` whose own text says `NOT met`, and the in-source exemption list is well formed (no duplicate key, no entry that matches nothing) | roadmaps, frozen digest list in source (governed input) | always | roadmap edits | **invariant** | frozen, digest-pinned exemptions; an unmatched entry is an error, so the list only shrinks | `R2.a` |
 | 2 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | only with `--self-test`; no caller found | edits to the checker | **invariant** | a fixed fixture table, no baseline (fixed-policy) | `R2.b` |
 | 3 | `check_rule_invariants` | kernel strings present | each string of `tests/golden/invariants.json` is in the kernel rule's source and its `dist/` projection | `tests/golden/invariants.json` (governed input), `src/rules/`, `dist/agent-src/rules/` | needs the projection built | a rule reworded; the expectation file edited | **invariant** | no baseline; the expectation file is the contract and shares edit authority with the rules (weak independence) | `R3.a` |
 | 3 | | mutation self-test — `--mutation-selftest` | removing the first invariant string in memory makes the check fail | `tests/golden/invariants.json` | only with `--mutation-selftest`; no caller found | the expectation file | **invariant** | the header: guards the checker against a silently-green normalisation bug (repository-consistency) | `R3.b` |
-| 4 | `check_augment_description_cap` | description length | every `type: auto` rule description ≤ `DESC_CAP` | `src/rules/*.md` | always | rule edits | **invariant** | fixed cap | `R4.a` |
+| 4 | `check_augment_description_cap` | description length | every `type: auto` rule description ≤ `DESC_CAP` | `src/rules/*.md` | when the scan root contains at least one `type: auto` rule; with none the check exits 0 having scanned nothing (`op:silent-pass`, a defect carried to 7.2) | rule edits | **invariant** | fixed cap | `R4.a` |
 | 5 | `check_trigger_evals` | freshness | `last_eval` present and not more than 90 days before the run date (a future date computes a negative age and is accepted) | `triggers.json`; clock `asOf()` (pinnable through `AC_AS_OF` or `--today`), local calendar date of the runner | always | the calendar | **invariant, time-qualified** | D24. Window 90 d. Day 90 passes, day 91 fails (`age > 90`). No grace. The runner's local time zone decides the date. The class covers the property as computed. Rejecting future dates is a possible tightening, recorded and not assumed | `R5.a` |
 | 5 | | structure | non-empty queries, each `q` and boolean `trigger`, both classes present | same | always | edits | **invariant** | fixed rule | `R5.b` |
 | 6 | `lint_subagent_determinism` | schema consts | five determinism rules on `src/subagents/*.md` | same | always | edits | **invariant** | fixed rules | `R6.a` |
@@ -368,7 +453,7 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 10 | | C3 local pointer | a local pointer path exists | same + the tree | always | card or tree edits | **invariant** | error | `R10.c` |
 | 10 | | C3 live URL | the URL answers | same + network | only with `--check-urls` | the remote site | **observation** | network-dependent and opt-in; not reproducible offline | `R10.d` |
 | 10 | | C4 trust tag | `trust` present; `type: anti-hallucination` | same | always | card edits | **invariant** | error | `R10.e` |
-| 10 | | C5 evidence consistency | distinct `source_version`s form a git-ancestry chain; `observed_at` span ≤ 7 days | same + git history | always | card edits, history | **invariant** | error. The span compares recorded timestamps, not the clock | `R10.f` |
+| 10 | | C5 evidence consistency | distinct `source_version`s form a git-ancestry chain; `observed_at` span ≤ 7 days | same + git history | when git is runnable; without git the ancestry half is skipped silently (`op:silent-pass`) | card edits, history | **invariant** | error. The span compares recorded timestamps, not the clock | `R10.f` |
 | 10 | | C6 strict sources | `source=<path:line>` references exist and are non-empty | same + the tree | only with `--strict` | tree edits | **invariant** in that mode | error when enabled | `R10.g` |
 | 10 | | freshness | newest `observed_at` older than `--freshness-days` | same + clock | only with the flag; default 0 = off | the calendar | **observation** | "Honest freshness signal (NOT a failure)" | `R10.h` |
 | 10 | | G1 tier — `--global` | a global-store card carries a valid `tier` | the user-global card store | only with `--global`; no caller found | card edits | **invariant** in that mode | `_check_global_card` error | `R10.i` |
@@ -378,7 +463,7 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 10 | | G5 ownership fields — `--global` | the footer carries `source_repo`, `owner`, `review_after`, `promotion_reason` | same | only with `--global` | card edits | **invariant** in that mode | error per missing field | `R10.n` |
 | 10 | | G6 no prohibited card — `--global` | no card with `sensitivity: prohibited` is in the global store | same | only with `--global` | card edits | **invariant** in that mode | error | `R10.o` |
 | 10 | | E1 experience-card keys | a card with `kind: experience` carries every key of `REQUIRED_CARD_FIELDS` | `agents/knowledge/*.md` (experience arm) | always, for experience cards | card edits | **invariant** | error; C1–C6 apply to the external arm only | `R10.j` |
-| 11 | `check_public_links` | link target exists | a link from the public surface into `docs/contracts/` resolves to a file | README, AGENTS.md, architecture doc, contract frontmatter | always | doc edits | **invariant** | error severity, exit 1 | `R11.a` |
+| 11 | `check_public_links` | link target exists | a link from the public surface into `docs/contracts/` resolves to a file | README, AGENTS.md, architecture doc, contract frontmatter | for links that resolve inside the repository; a link resolving outside it is skipped (`op:scope-exclusion`) | doc edits | **invariant** | error severity, exit 1 | `R11.a` |
 | 11 | | target declares stability | the linked contract carries `stability:` frontmatter | same | always | contract edits | **invariant** | error severity, exit 1 | `R11.b` |
 | 11 | | no experimental link | the public surface never links to an `experimental` contract | same | always | doc edits | **invariant** | error severity, exit 1 | `R11.c` |
 | 11 | | contract file declares stability | a contract file itself carries `stability:` frontmatter, as `STABILITY.md` requires | `docs/contracts/` | always | contract edits | **invariant** | error severity, exit 1 | `R11.d` |
@@ -393,23 +478,24 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 14 | `lint_readme_jargon` | above-fold density | ≤ 3 watchlist hits in README lines 1–120 | README.md | always | README edits | **invariant** (numeric bound) | no named risk owner, so not a tolerance | `R14.a` |
 | 15 | `lint_readme_serial_comma` | serial comma | no serial comma in README prose | README.md | always | README edits | **invariant** | fixed rule | `R15.a` |
 | 16 | `check_composite_arming` | arming verdict | ≥ 10 usable composite readings from ≥ 2 sessions | the composite store | a valid store exists | new readings | **observation** | "'not yet' is a successful measurement, never a build failure" | `R16.a` |
-| 16 | | store yields a usable record | a store that exists parses to at least one usable reading; an empty store also fails (dead scope) (a line with a string `session` and a `composite_ms` key) | the composite store | the store exists | a corrupt append | **invariant** | exit 1 when malformed lines leave no usable record (`malformed > 0 && readings.length === 0`). Corrected in revision 6: revision 3 said "every line parses", which the code does not require | `R16.b` |
+| 16 | | store yields a usable record | a store with content parses to at least one usable reading (an empty store is `op:could-not-run`, not this row) (a line with a string `session` and a `composite_ms` key) | the composite store | the store exists | a corrupt append | **invariant** | exit 1 when malformed lines leave no usable record (`malformed > 0 && readings.length === 0`). Corrected in revision 6: revision 3 said "every line parses", which the code does not require | `R16.b` |
 | 16 | | partial malformation | malformed lines next to usable ones are counted and named per line | same | the store exists | a corrupt append | **observation** | the gate ledger records each dropped line as `precondition_unmet` and the run continues | `R16.c` |
 | 16 | | store absent | the store file exists | same | no store file | bootstrap | **observation** | its own contract: no readings yet is "not measured yet" and never a build failure. Runtime metadata, not a class: `not-evaluated: evidence-missing`. Current behaviour diverges: the script exits 1, which is owed to 7.2. A future transition to invariant after a bootstrap deadline needs that deadline first (D31) and is not part of this verdict | `R16.d` |
 | 16 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | `taskfiles/content.yml:386`, `rule-backstops.yml:321` | edits to the checker | **invariant** | fixed fixture table (fixed-policy). `--publish` is a write mode that writes a distribution report and asserts nothing, so it carries no class | `R16.e` |
 
-## Totals — revision 8
+## Totals — revision 9
 
-52 aspect rows over 16 checks. Two target-scope rows are migration notes, so
-there are **50 classified aspects**, each in one of the four classes:
+52 aspect rows over 16 checks. Two target-scope rows are migration notes and
+one row (`R1.c`) is withdrawn, so there are **49 classified aspects**, each in one of the four classes:
 
-- **invariant 42**:
+- **invariant 41**:
   - four self-test or mutation-test modes;
   - ten hold only in a named invocation mode: `--require-complete`, `--strict`
     on three checks (one of them only in consumer mode), and `--global` for G1
     to G6;
   - one is time-qualified (trigger freshness);
   - the adoption ratchet carries a staleness window.
+  - `R4.a`, `R10.f` and `R11.a` carry a narrowed applicability.
 - **observation 8**:
   - token-golden default coverage;
   - C3 live URL;

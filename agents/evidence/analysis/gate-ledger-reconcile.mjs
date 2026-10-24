@@ -4,6 +4,7 @@
 // exits 1 on any failed condition, so a reader re-runs it instead of trusting
 // the ledger author's count. Run with node, no arguments.
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,6 +17,7 @@ const LEDGER = 'agents/evidence/analysis/gate-classification-ledger-20261024.md'
 const INVENTORY = 'agents/evidence/analysis/gate-invocation-inventory-20261024.md';
 const BRANCHES = 'agents/evidence/analysis/gate-branch-inventory-20261024.json';
 const MAPPING = 'agents/evidence/analysis/gate-branch-mapping-20261024.json';
+const REVIEW = 'agents/evidence/analysis/gate-branch-mapping-review-20261024.json';
 const CLASSES = ['invariant', 'snapshot', 'tolerance', 'observation'];
 
 function section(text, heading) {
@@ -46,8 +48,9 @@ for (const line of section(read(LEDGER), '## The ledger — revision 3').split('
     const classCell = c[7] ?? '';
     const cls = CLASSES.find((k) => new RegExp(`\\*\\*${k}`).test(classCell)) ?? null;
     const migration = /— target/.test(c[2]);
+    const withdrawn = /withdrawn/.test(classCell);
     const id = (line.match(/`(R\d+\.[a-z])`\s*\|\s*$/) ?? [])[1] ?? null;
-    ledgerRows.push({ check: current, aspect: c[2], cls, migration, raw: line, id });
+    ledgerRows.push({ check: current, aspect: c[2], cls, migration, withdrawn, raw: line, id });
 }
 
 const inventoryChecks = section(read(INVENTORY), '## The inventory')
@@ -67,6 +70,31 @@ const pins = section(read(LEDGER), '## Row ids and invalidation')
     .map((l) => l.match(/^\| `([^`]+)` \| `([0-9a-f]{40})` \|$/))
     .filter((m) => m !== null);
 if (pins.length === 0) failures.push('no source pins found');
+function importClosure(entries) {
+    const seen = new Set();
+    const queue = [...entries];
+    while (queue.length > 0) {
+        const f = queue.pop();
+        if (seen.has(f)) continue;
+        seen.add(f);
+        const src = read(f);
+        for (const m of src.matchAll(/(?:from|import)\s*\(?\s*["'](\.{1,2}\/[^"']+)["']/g)) {
+            let t = path.normalize(path.join(path.dirname(f), m[1])).replace(/\.js$/, '.ts');
+            if (!fs.existsSync(path.join(ROOT, t)) && fs.existsSync(path.join(ROOT, t.replace(/\.ts$/, '.mts')))) t = t.replace(/\.ts$/, '.mts');
+            if (fs.existsSync(path.join(ROOT, t))) queue.push(t);
+        }
+    }
+    return [...seen].filter((f) => !entries.includes(f)).sort();
+}
+const helperFiles = importClosure(phase7.map((c) => `src/scripts/${c}.ts`));
+const closureDigest = createHash('sha256')
+    .update(helperFiles.map((f) => `${f} ${execFileSync('git', ['hash-object', path.join(ROOT, f)], { encoding: 'utf8' }).trim()}`).join('\n'))
+    .digest('hex');
+const closurePin = section(read(LEDGER), '## Row ids and invalidation').match(/helper closure: (\d+) files, sha256 `([0-9a-f]{64})`/);
+if (closurePin === null) failures.push('no helper-closure pin found');
+else if (Number(closurePin[1]) !== helperFiles.length || closurePin[2] !== closureDigest) {
+    failures.push(`STALE: the transitive helper closure changed (${closurePin[1]} files ${closurePin[2].slice(0, 9)} → ${helperFiles.length} files ${closureDigest.slice(0, 9)})`);
+}
 for (const [, file, blob] of pins) {
     const now = execFileSync('git', ['hash-object', path.join(ROOT, file)], { encoding: 'utf8' }).trim();
     if (now !== blob) failures.push(`STALE: ${file} changed since the verdict was pinned (${blob.slice(0, 9)} → ${now.slice(0, 9)})`);
@@ -79,7 +107,7 @@ const ledgerChecks = set(ledgerRows.map((r) => r.check));
 if (!same(set(phase7), ledgerChecks)) failures.push('ledger checks differ from the phase-7 inventory');
 if (!same(set(phase7), set(inventoryChecks))) failures.push('invocation inventory checks differ from the phase-7 inventory');
 
-const binding = ledgerRows.filter((r) => !r.migration);
+const binding = ledgerRows.filter((r) => !r.migration && !r.withdrawn);
 for (const r of binding) if (r.cls === null) failures.push(`unclassified binding aspect: ${r.check} / ${r.aspect}`);
 for (const r of ledgerRows.filter((x) => x.migration)) {
     const hasCurrent = binding.some((b) => b.check === r.check && b.aspect.replace('— current', '').trim() === r.aspect.replace('— target', '').trim());
@@ -139,6 +167,16 @@ for (const c of branchInv.checks) {
         }
     }
 }
+// The independent mapping review is binding where it disagreed: each disagree
+// verdict must be adopted in the current mapping.
+const review = JSON.parse(read(REVIEW)).reviews;
+const verdicts = {};
+for (const v of review) verdicts[v.verdict] = (verdicts[v.verdict] ?? 0) + 1;
+if (review.length !== branchCount) failures.push(`mapping review covers ${review.length} branches, inventory has ${branchCount}`);
+for (const v of review.filter((x) => x.verdict === 'disagree')) {
+    const now = mapping[v.check]?.[v.branch];
+    if (now !== v.suggested) failures.push(`review disagreement not adopted: ${v.check} ${v.branch} is ${now}, review says ${v.suggested}`);
+}
 for (const id of rowIds) if (!reached.has(id)) failures.push(`binding row ${id} is reached by no branch in the independent inventory`);
 for (const [check, m] of Object.entries(mapping)) {
     const known = new Set((branchInv.checks.find((c) => c.check === check)?.branches ?? []).map((b) => b.id));
@@ -154,11 +192,12 @@ for (const check of phase7) {
 }
 console.log('\ncheck | flags in source | assertion-changing flags | each named by a binding row');
 for (const r of modeRows) console.log(r);
-console.log(`\nbranches ${branchCount} · mapped to rows ${branchCount - Object.values(perCategory).reduce((a, b) => a + b, 0)} · ${JSON.stringify(perCategory)} · binding rows reached ${reached.size}/${rowIds.size}`);
+console.log(`\nindependent mapping review: ${JSON.stringify(verdicts)}; every disagreement adopted unless listed below`);
+console.log(`branches ${branchCount} · mapped to rows ${branchCount - Object.values(perCategory).reduce((a, b) => a + b, 0)} · ${JSON.stringify(perCategory)} · binding rows reached ${reached.size}/${rowIds.size}`);
 const tally = Object.fromEntries(CLASSES.map((k) => [k, binding.filter((r) => r.cls === k).length]));
-console.log(`\nrows ${ledgerRows.length} · binding ${binding.length} · migration ${ledgerRows.length - binding.length} · ${JSON.stringify(tally)}`);
+console.log(`\nrows ${ledgerRows.length} · binding ${binding.length} · non-binding ${ledgerRows.length - binding.length} (migration notes and withdrawn rows) · ${JSON.stringify(tally)}`);
 if (failures.length > 0) {
     console.log(`\nFAILED (${failures.length}):\n- ${failures.join('\n- ')}`);
     process.exit(1);
 }
-console.log('\nOK: 16 phase-7 checks = 16 ledger checks = 16 inventoried checks; every binding aspect of every check carries one of the four classes; every target row sits beside its current-scope row; every assertion-changing flag in each check\'s source is named by a binding row; every row has a unique id; ' + pins.length + ' pinned files are unchanged; every branch of the independent inventory maps to a binding row or a declared category, and every binding row is reached.');
+console.log('\nOK: 16 phase-7 checks = 16 ledger checks = 16 inventoried checks; every binding aspect of every check carries one of the four classes; every target row sits beside its current-scope row; every assertion-changing flag in each check\'s source is named by a binding row; every row has a unique id; ' + pins.length + ' pinned files and the ' + helperFiles.length + '-file helper closure are unchanged; every branch of the independent inventory maps to a binding row or a declared category, and every binding row is reached.');

@@ -1,0 +1,1588 @@
+{
+  "reviews": [
+    {
+      "check": "check_gate_completeness",
+      "branch": "c1-dead-scope",
+      "mapped_to": "R1.c",
+      "verdict": "disagree",
+      "suggested": "op:could-not-run",
+      "reason": "Dead scope (no registered gate script found) is the tool being unable to measure, which the definition excludes; every other dead-scope branch (c5,c6,c7,c9,c11,c12,c13) is op:could-not-run. Row R1.c itself classifies a non-measurement as an invariant and should not exist as an assertion row."
+    },
+    {
+      "check": "check_gate_completeness",
+      "branch": "c1-rethrow",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_gate_completeness",
+      "branch": "c1-out-of-scope",
+      "mapped_to": "op:informational",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:informational fits (warning-exit-zero)."
+    },
+    {
+      "check": "check_gate_completeness",
+      "branch": "c1-ledger-fail-malformed",
+      "mapped_to": "R1.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R1.b describes."
+    },
+    {
+      "check": "check_gate_completeness",
+      "branch": "c1-ledger-usage",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_gate_completeness",
+      "branch": "c1-ledger-unaccounted",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_gate_completeness",
+      "branch": "c1-malformed",
+      "mapped_to": "R1.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Lists the malformed markers and returns 1; same property as c1-ledger-fail-malformed (both R1.b), not a mere aggregate since it is where the markers are named."
+    },
+    {
+      "check": "check_gate_completeness",
+      "branch": "c1-ratchet-resolution",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_gate_completeness",
+      "branch": "c1-unadopted-list",
+      "mapped_to": "op:informational",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:informational fits (warning-exit-zero)."
+    },
+    {
+      "check": "check_gate_completeness",
+      "branch": "c1-ratchet-ok-msg",
+      "mapped_to": "op:informational",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Exit-0 verdict line; note it also covers the \"improved\" verdict (count below baseline, baseline not lowered) which passes, so R1.a shrink-only is not enforced on the downside."
+    },
+    {
+      "check": "check_gate_completeness",
+      "branch": "c1-ratchet-regressed",
+      "mapped_to": "R1.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R1.a describes."
+    },
+    {
+      "check": "check_gate_completeness",
+      "branch": "c1-ratchet-stale",
+      "mapped_to": "R1.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R1.a describes."
+    },
+    {
+      "check": "check_gate_completeness",
+      "branch": "c1-ratchet-unbaselined",
+      "mapped_to": "R1.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R1.a describes."
+    },
+    {
+      "check": "lint_ticked_unmet_criteria",
+      "branch": "c2-selftest-recurse",
+      "mapped_to": "R2.b",
+      "verdict": "disagree",
+      "suggested": "op:usage",
+      "reason": "Refusing to recurse when GATE_SELF_TEST_CHILD=1 is an invocation guard (exit 2), not a finding about the fixture table that R2.b describes."
+    },
+    {
+      "check": "lint_ticked_unmet_criteria",
+      "branch": "c2-selftest",
+      "mapped_to": "R2.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Fixture table misbehaviour is R2.b; note the same exit 1 also fires when the tsx child cannot run, which is could-not-run folded into the assertion."
+    },
+    {
+      "check": "lint_ticked_unmet_criteria",
+      "branch": "c2-root-missing-value",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_ticked_unmet_criteria",
+      "branch": "c2-unknown-arg",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_ticked_unmet_criteria",
+      "branch": "c2-duplicate-historical",
+      "mapped_to": "R2.a",
+      "verdict": "unsure",
+      "suggested": "R2.a",
+      "reason": "Assertion-producing (duplicate keys in the in-source exemption list), but no ledger row names exemption-list well-formedness; R2.a covers it only via its evidence column."
+    },
+    {
+      "check": "lint_ticked_unmet_criteria",
+      "branch": "c2-hit",
+      "mapped_to": "R2.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R2.a describes."
+    },
+    {
+      "check": "lint_ticked_unmet_criteria",
+      "branch": "c2-historical-exempt",
+      "mapped_to": "op:informational",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:informational fits (warning-exit-zero)."
+    },
+    {
+      "check": "lint_ticked_unmet_criteria",
+      "branch": "c2-stale-historical",
+      "mapped_to": "R2.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "R2.a evidence explicitly says an unmatched entry is an error; note it only runs on the default root."
+    },
+    {
+      "check": "lint_ticked_unmet_criteria",
+      "branch": "c2-dead-scope",
+      "mapped_to": "op:unreachable",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Correctly unreachable because allowEmpty is passed. But the inventory has no branch for what allowEmpty does instead: zero roadmap files exits 0 without measuring (EMPTY_VALID) — a silent pass that is missing from the inventory."
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-help",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (exit-code-only)."
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-root-missing-value",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-unknown-arg",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-json-not-array",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-json-malformed-entry",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-json-read-or-parse",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-watchlist-dead",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-missing-file",
+      "mapped_to": "R3.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R3.a describes."
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-missing-string",
+      "mapped_to": "R3.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R3.a describes."
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-selftest-empty",
+      "mapped_to": "R3.b",
+      "verdict": "disagree",
+      "suggested": "op:could-not-run",
+      "reason": "No invariant to mutate means the self-test cannot run; it says nothing about whether removal is detected (the R3.b property)."
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-selftest-baseline-broken",
+      "mapped_to": "R3.b",
+      "verdict": "disagree",
+      "suggested": "op:could-not-run",
+      "reason": "Precondition failure: first invariant absent from src, so the mutation cannot be performed. The repo fact itself (string missing) is R3.a's property, not R3.b's."
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-selftest-src-unreadable",
+      "mapped_to": "R3.b",
+      "verdict": "disagree",
+      "suggested": "op:could-not-run",
+      "reason": "Unreadable src file, exit 3 internal error — identical in nature to c3-json-read-or-parse which is mapped op:could-not-run."
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-selftest-mutation-noop",
+      "mapped_to": "R3.b",
+      "verdict": "disagree",
+      "suggested": "op:could-not-run",
+      "reason": "Defensive \"mutation did not apply\" guard: the self-test could not set up its mutation; it does not measure detection. (op:unreachable is also defensible.)"
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-selftest-undetected",
+      "mapped_to": "R3.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R3.b describes."
+    },
+    {
+      "check": "check_rule_invariants",
+      "branch": "c3-selftest-load-errors",
+      "mapped_to": "R3.b",
+      "verdict": "disagree",
+      "suggested": "op:could-not-run",
+      "reason": "Same invariants.json load/parse/malformed errors as c3-json-not-array/-malformed-entry/-read-or-parse (all op:could-not-run), exit 3; mapping the selftest-path copy to R3.b is inconsistent."
+    },
+    {
+      "check": "check_augment_description_cap",
+      "branch": "c4-over-cap",
+      "mapped_to": "R4.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R4.a describes."
+    },
+    {
+      "check": "check_augment_description_cap",
+      "branch": "c4-read-throw",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_augment_description_cap",
+      "branch": "c4-empty-scope-pass",
+      "mapped_to": "op:silent-pass",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Correctly flagged: no dead-scope guard, zero auto-rules passes silently."
+    },
+    {
+      "check": "lint_subagent_determinism",
+      "branch": "c5-dead-scope",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_subagent_determinism",
+      "branch": "c5-rethrow",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "lint_subagent_determinism",
+      "branch": "c5-no-frontmatter",
+      "mapped_to": "R6.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R6.a describes."
+    },
+    {
+      "check": "lint_subagent_determinism",
+      "branch": "c5-schema-version",
+      "mapped_to": "R6.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R6.a describes."
+    },
+    {
+      "check": "lint_subagent_determinism",
+      "branch": "c5-visible",
+      "mapped_to": "R6.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R6.a describes."
+    },
+    {
+      "check": "lint_subagent_determinism",
+      "branch": "c5-tools-dupes",
+      "mapped_to": "R6.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R6.a describes."
+    },
+    {
+      "check": "lint_subagent_determinism",
+      "branch": "c5-name-stem",
+      "mapped_to": "R6.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R6.a describes."
+    },
+    {
+      "check": "lint_subagent_determinism",
+      "branch": "c5-name-dup",
+      "mapped_to": "R6.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R6.a describes."
+    },
+    {
+      "check": "lint_subagent_determinism",
+      "branch": "c5-report",
+      "mapped_to": "op:aggregate",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:aggregate fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_subagent_determinism",
+      "branch": "c5-read-throw",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-help",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (exit-code-only)."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-today-missing-value",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-unknown-arg",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-bad-today",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-asof-pin-error",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-asof-wallclock-warn",
+      "mapped_to": "op:informational",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:informational fits (warning-exit-zero)."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-dead-scope",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-rethrow",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-unreadable-json",
+      "mapped_to": "R5.b",
+      "verdict": "unsure",
+      "suggested": "R5.b or op:could-not-run",
+      "reason": "One branch conflates an IO read failure (could-not-run by the definition) with invalid JSON syntax (a structural finding about the file). Also inconsistent with c10-unreadable (op:could-not-run) and c3-json-read-or-parse (op:could-not-run)."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-last-eval-missing",
+      "mapped_to": "R5.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R5.a describes."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-last-eval-stale",
+      "mapped_to": "R5.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R5.a describes."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-queries-empty",
+      "mapped_to": "R5.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R5.b describes."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-query-no-q",
+      "mapped_to": "R5.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R5.b describes."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-query-trigger-type",
+      "mapped_to": "R5.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R5.b describes."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-split-list-empty",
+      "mapped_to": "R5.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R5.b describes."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-split-item-empty",
+      "mapped_to": "R5.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R5.b describes."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-no-shape",
+      "mapped_to": "R5.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R5.b describes."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-one-class",
+      "mapped_to": "R5.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R5.b describes."
+    },
+    {
+      "check": "check_trigger_evals",
+      "branch": "c6-report",
+      "mapped_to": "op:aggregate",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:aggregate fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "branch": "c7-selftest",
+      "mapped_to": "R7.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R7.b describes."
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "branch": "c7-dead-root",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "branch": "c7-write-baseline",
+      "mapped_to": "op:write",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:write fits (exit-code-only)."
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "branch": "c7-baseline-missing",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "branch": "c7-undeclared-new",
+      "mapped_to": "R7.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R7.a describes."
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "branch": "c7-baselined-undeclared",
+      "mapped_to": "op:informational",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:informational fits (warning-exit-zero)."
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "branch": "c7-gap-not-in-body",
+      "mapped_to": "R7.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R7.a describes."
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "branch": "c7-baseline-stale",
+      "mapped_to": "R7.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R7.a describes."
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "branch": "c7-baseline-shrink",
+      "mapped_to": "R7.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R7.a describes."
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "branch": "c7-dead-scope",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "branch": "c7-rethrow",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "branch": "c7-ledger-unaccounted",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "branch": "c7-read-throw",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-scope-invalid",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-unknown-arg",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-help",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (exit-code-only)."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-corpus-unreadable",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-router-unreadable",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-corpus-null-throw",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-corpus-id",
+      "mapped_to": "R8.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.a describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-tasks-not-list",
+      "mapped_to": "R8.a",
+      "verdict": "disagree",
+      "suggested": "op:could-not-run",
+      "reason": "validate() records the structural error but task_count is then 0, so assertScanned throws first and main returns 2 with the dead-scope message (check_token_quality_golden.ts:363-374). The R8.a finding is never reported; the observable outcome is c8-dead-scope."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-dead-scope",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-rethrow",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-task-element-throw",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-id-format",
+      "mapped_to": "R8.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.a describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-id-duplicate",
+      "mapped_to": "R8.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.a describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-rules-empty",
+      "mapped_to": "R8.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.a describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-rule-unknown",
+      "mapped_to": "R8.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.a describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-nofire-kernel",
+      "mapped_to": "R8.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.a describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-nofire-fires",
+      "mapped_to": "R8.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.a describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-tag-not-fired",
+      "mapped_to": "R8.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.a describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-scenario",
+      "mapped_to": "R8.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.a describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-prompt",
+      "mapped_to": "R8.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.a describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-label-status",
+      "mapped_to": "R8.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.a describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-labelled-todo-rubric",
+      "mapped_to": "R8.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.a describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-labelled-no-anchor",
+      "mapped_to": "R8.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.a describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-structural-exit",
+      "mapped_to": "op:aggregate",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:aggregate fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-uncovered-warn",
+      "mapped_to": "R8.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.b describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-missing-scenario-warn",
+      "mapped_to": "R8.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.b describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-scaffold-notice",
+      "mapped_to": "R8.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.b describes."
+    },
+    {
+      "check": "check_token_quality_golden",
+      "branch": "c8-require-complete",
+      "mapped_to": "R8.c",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R8.c describes."
+    },
+    {
+      "check": "check_council_layout",
+      "branch": "c9-dead-scope",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_council_layout",
+      "branch": "c9-rethrow",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_council_layout",
+      "branch": "c9-root-stray",
+      "mapped_to": "R9.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R9.a describes."
+    },
+    {
+      "check": "check_council_layout",
+      "branch": "c9-noncanonical",
+      "mapped_to": "R9.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R9.a describes."
+    },
+    {
+      "check": "check_council_layout",
+      "branch": "c9-report",
+      "mapped_to": "op:aggregate",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:aggregate fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-help",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (exit-code-only)."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-unknown-arg",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-missing-value",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-bad-int",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-no-dir",
+      "mapped_to": "op:silent-pass",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Correctly flagged silent pass: absent agents/knowledge exits 0 \"nothing to check\"."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-no-cards",
+      "mapped_to": "op:silent-pass",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Correctly flagged silent pass (explicit allowEmpty)."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-unreadable",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Unreadable card is could-not-run by the definition; note it is reported per card in the same error list as findings (exit 1), unlike c6-unreadable-json/c13-manifest-unreadable which the mapping put in rows."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-unreadable-freshness-throw",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-C1-size",
+      "mapped_to": "R10.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.a describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-E1-required",
+      "mapped_to": "R10.j",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.j describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-C4-trust",
+      "mapped_to": "R10.e",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.e describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-C4-type-wrong",
+      "mapped_to": "R10.e",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.e describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-C4-type-missing",
+      "mapped_to": "R10.e",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.e describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-C2-pointer",
+      "mapped_to": "R10.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.b describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-C3-url-status",
+      "mapped_to": "R10.d",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.d describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-C3-url-unreachable",
+      "mapped_to": "R10.d",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "R10.d; note \"unparseable child output\" is a measurement failure reported as a URL finding."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-C3-local",
+      "mapped_to": "R10.c",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.c describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-C5-ancestry",
+      "mapped_to": "R10.f",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "R10.f; note a git timeout or unknown object (status null) is reported as an ancestry violation, i.e. a measurement failure surfaces as a finding."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-C5-git-missing",
+      "mapped_to": "op:silent-pass",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Correctly flagged: git unavailable skips the ancestry check with no finding."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-C5-span",
+      "mapped_to": "R10.f",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.f describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-C6-source",
+      "mapped_to": "R10.g",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.g describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-G1-tier-missing",
+      "mapped_to": "R10.i",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.i describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-G1-tier-invalid",
+      "mapped_to": "R10.i",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.i describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-G4-sens-missing",
+      "mapped_to": "R10.m",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.m describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-G4-sens-invalid",
+      "mapped_to": "R10.m",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.m describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-G6-prohibited",
+      "mapped_to": "R10.o",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.o describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-G2-no-footer",
+      "mapped_to": "R10.k",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.k describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-G2-field",
+      "mapped_to": "R10.k",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.k describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-G5-field",
+      "mapped_to": "R10.n",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.n describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-G3-redaction",
+      "mapped_to": "R10.l",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.l describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-freshness-warn",
+      "mapped_to": "R10.h",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R10.h describes."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-freshness-relative-throw",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-asof-pin-throw",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-asof-wallclock-warn",
+      "mapped_to": "op:informational",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:informational fits (warning-exit-zero)."
+    },
+    {
+      "check": "check_knowledge_cards",
+      "branch": "c10-report",
+      "mapped_to": "op:aggregate",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:aggregate fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_public_links",
+      "branch": "c11-help",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (exit-code-only)."
+    },
+    {
+      "check": "check_public_links",
+      "branch": "c11-unknown-arg",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_public_links",
+      "branch": "c11-dead-scope",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_public_links",
+      "branch": "c11-rethrow",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_public_links",
+      "branch": "c11-internal-error",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_public_links",
+      "branch": "c11-list",
+      "mapped_to": "op:presentation",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:presentation fits (exit-code-only)."
+    },
+    {
+      "check": "check_public_links",
+      "branch": "c11-self-no-stability",
+      "mapped_to": "R11.d",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R11.d describes."
+    },
+    {
+      "check": "check_public_links",
+      "branch": "c11-contexts-link",
+      "mapped_to": "R11.g",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R11.g describes."
+    },
+    {
+      "check": "check_public_links",
+      "branch": "c11-target-not-found",
+      "mapped_to": "R11.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R11.a describes."
+    },
+    {
+      "check": "check_public_links",
+      "branch": "c11-target-no-stability",
+      "mapped_to": "R11.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R11.b describes."
+    },
+    {
+      "check": "check_public_links",
+      "branch": "c11-experimental",
+      "mapped_to": "R11.c",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R11.c describes."
+    },
+    {
+      "check": "check_public_links",
+      "branch": "c11-beta-marker",
+      "mapped_to": "R11.e+R11.f",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R11.e+R11.f describes."
+    },
+    {
+      "check": "check_public_links",
+      "branch": "c11-resolve-outside-root",
+      "mapped_to": "op:silent-pass",
+      "verdict": "unsure",
+      "suggested": "none fits (scope exclusion)",
+      "reason": "Not a run-level silent pass (op:silent-pass is \"exits 0 without measuring anything\"); it skips one link that by construction cannot target docs/contracts. Not assertion-producing; the eight categories have no scope-exclusion slot."
+    },
+    {
+      "check": "check_public_links",
+      "branch": "c11-report",
+      "mapped_to": "op:aggregate",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:aggregate fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_agents_layout",
+      "branch": "c12-dead-scope",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_agents_layout",
+      "branch": "c12-rethrow",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "lint_agents_layout",
+      "branch": "c12-flat-file",
+      "mapped_to": "R12.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R12.a describes."
+    },
+    {
+      "check": "lint_agents_layout",
+      "branch": "c12-unknown-dir",
+      "mapped_to": "R12.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R12.a describes."
+    },
+    {
+      "check": "lint_agents_layout",
+      "branch": "c12-consumer-warning",
+      "mapped_to": "R12.c+R12.d",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R12.c+R12.d describes."
+    },
+    {
+      "check": "lint_eval_freshness",
+      "branch": "c13-help",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (exit-code-only)."
+    },
+    {
+      "check": "lint_eval_freshness",
+      "branch": "c13-unknown-arg",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_eval_freshness",
+      "branch": "c13-dead-scope",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_eval_freshness",
+      "branch": "c13-rethrow",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "lint_eval_freshness",
+      "branch": "c13-manifest-unreadable",
+      "mapped_to": "R13.a",
+      "verdict": "unsure",
+      "suggested": "R13.a or op:could-not-run",
+      "reason": "Conflates unreadable manifest (could-not-run) with invalid JSON / literal null (a finding about the file). R13.a (\"last_eval present with sha_at_eval == upstream.sha\") does not name parseability; inconsistent with c10-unreadable."
+    },
+    {
+      "check": "lint_eval_freshness",
+      "branch": "c13-no-last-eval",
+      "mapped_to": "R13.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R13.a describes."
+    },
+    {
+      "check": "lint_eval_freshness",
+      "branch": "c13-sha-mismatch",
+      "mapped_to": "R13.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R13.a describes."
+    },
+    {
+      "check": "lint_eval_freshness",
+      "branch": "c13-report",
+      "mapped_to": "op:aggregate",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:aggregate fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_readme_jargon",
+      "branch": "c14-readme-missing",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_readme_jargon",
+      "branch": "c14-rethrow",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "lint_readme_jargon",
+      "branch": "c14-over-budget",
+      "mapped_to": "R14.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R14.a describes."
+    },
+    {
+      "check": "lint_readme_serial_comma",
+      "branch": "c15-readme-missing",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "lint_readme_serial_comma",
+      "branch": "c15-rethrow",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "lint_readme_serial_comma",
+      "branch": "c15-serial-comma",
+      "mapped_to": "R15.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R15.a describes."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-selftest",
+      "mapped_to": "R16.e",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R16.e describes."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-store-missing-value",
+      "mapped_to": "op:usage",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:usage fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-store-unreadable",
+      "mapped_to": "R16.c",
+      "verdict": "disagree",
+      "suggested": "R16.d",
+      "reason": "Store absent/unreadable is exactly row R16.d (\"store absent\"). R16.c is partial malformation. Mapping swapped with c16-ledger-skip / c16-malformed-warn. (By the definition it is arguably op:could-not-run; R16.d itself calls it runtime metadata, not a class.)"
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-ledger-skip",
+      "mapped_to": "R16.d",
+      "verdict": "disagree",
+      "suggested": "R16.c",
+      "reason": "Malformed lines recorded as precondition_unmet in the ledger is verbatim R16.c's evidence (\"the gate ledger records each dropped line as precondition_unmet\"). R16.d is store absent."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-ledger-throw",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-accounting-mismatch",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (error-exit-nonzero)."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-all-malformed",
+      "mapped_to": "R16.b",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R16.b describes."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-dead-scope",
+      "mapped_to": "R16.b",
+      "verdict": "disagree",
+      "suggested": "op:could-not-run",
+      "reason": "Empty store (zero records, zero malformed lines) is dead scope / evidence-missing, not malformation; the definition excludes it. R16.b's row text folds \"empty store also fails (dead scope)\" into a malformation invariant, which is the ledger's error, consistent with the c1-dead-scope finding."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-rethrow",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-publish",
+      "mapped_to": "op:write",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:write fits (exit-code-only)."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-publish-write-throw",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Not assertion-producing; op:could-not-run fits (throw)."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-malformed-warn",
+      "mapped_to": "R16.d",
+      "verdict": "disagree",
+      "suggested": "R16.c",
+      "reason": "Malformed lines ignored while usable records exist = R16.c \"partial malformation\". R16.d is store absent."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-not-armable-readings",
+      "mapped_to": "R16.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R16.a describes."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-not-armable-sessions",
+      "mapped_to": "R16.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R16.a describes."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-unusable-dropped",
+      "mapped_to": "R16.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Branch reports the property row R16.a describes."
+    }
+  ]
+}
