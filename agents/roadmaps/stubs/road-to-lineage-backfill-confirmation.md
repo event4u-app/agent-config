@@ -13,9 +13,11 @@ review_by: 2027-01-24
 ## Scope
 
 Run `code-graph lineage backfill --draft` on the maintainer's machine, read the
-drafts in `agents/.harvest-local/`, and confirm or drop them batch by batch. Each
-confirmed draft becomes one `provenance/lineage.jsonl` row with its sealed pin; an
-unclear draft stays out.
+drafts in `agents/.harvest-local/lineage-backfill/`, and confirm or drop them batch
+by batch. Each confirmed draft becomes one source-free decision row in
+`provenance/mechanisms.jsonl` plus one local edge, with its sealed pin, in the
+user-global `runtime/lineage/edges.jsonl` (council O5 keeps the source side off the
+tree); an unclear draft stays out.
 
 ## Trigger
 

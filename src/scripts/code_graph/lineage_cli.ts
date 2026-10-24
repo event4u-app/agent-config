@@ -22,6 +22,7 @@ import {
     readLedger,
     writePrivateFile,
 } from '../_lib/lineage_ledger.js';
+import { BACKFILL_DIR_REL, isIgnored, scanTree, writeBackfill } from '../_lib/lineage_backfill.js';
 import { LINEAGE_VIEW_REL, renderSourceLineage, renderTrackedLineage } from '../_lib/lineage_map.js';
 import { gaps, lineageFrom, lineageOf, readDecisions, rejected } from '../_lib/lineage_query.js';
 import { buildLocalImport } from '../_lib/lineage_seed.js';
@@ -197,7 +198,29 @@ function cmdMap(io: Io, argv: readonly string[]): number {
     return 0;
 }
 
-const USAGE = 'usage: code-graph lineage <check|import|of|gaps|rejected|from|map> [args] [--root P]\n';
+function cmdBackfill(io: Io, argv: readonly string[]): number {
+    if (!argv.includes('--draft')) {
+        io.err('code-graph lineage backfill: only --draft exists — the backfill proposes drafts and never writes a ledger row\n');
+        return 2;
+    }
+    if (!isIgnored(io.root, BACKFILL_DIR_REL)) {
+        io.err(`code-graph lineage backfill: ${BACKFILL_DIR_REL}/ is not ignored by git in ${io.root} — decrypted identities would become trackable\n`);
+        return 2;
+    }
+    const keys = needKeys(io, 'backfill');
+    if (keys === null) return 2;
+    const result = scanTree(io.root, keys);
+    const out = writeBackfill(io.root, result);
+    for (const u of result.unclear) io.out(`unclear ${u}\n`);
+    for (const u of result.undecryptable) io.out(`undecryptable ${u}\n`);
+    io.out(
+        `code-graph lineage backfill: ${String(result.drafts.length)} draft(s), ${String(result.unclear.length)} unclear, ` +
+            `${String(result.undecryptable.length)} undecryptable — written to ${out}; no ledger row written\n`,
+    );
+    return 0;
+}
+
+const USAGE = 'usage: code-graph lineage <check|import|of|gaps|rejected|from|map|backfill> [args] [--root P]\n';
 
 export async function main(argv: readonly string[], deps: LineageDeps = {}): Promise<number> {
     const env = deps.env ?? process.env;
@@ -219,6 +242,7 @@ export async function main(argv: readonly string[], deps: LineageDeps = {}): Pro
         if (verb === 'rejected') return cmdRejected(io);
         if (verb === 'from') return cmdFrom(io, argv[1]);
         if (verb === 'map') return cmdMap(io, argv);
+        if (verb === 'backfill') return cmdBackfill(io, argv);
     } catch (e) {
         if (e instanceof LineageError) {
             io.err(`code-graph lineage: ${e.message}\n`);
