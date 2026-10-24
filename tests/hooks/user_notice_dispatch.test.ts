@@ -14,7 +14,9 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { withUserNotice } from '../../src/scripts/hooks/host_semantics.js';
+import { parse as parseYaml } from 'yaml';
+
+import { isBlockCapable, withUserNotice } from '../../src/scripts/hooks/host_semantics.js';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const ENTRY = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'dispatch_entry.ts');
@@ -128,6 +130,36 @@ describe('the user channel through the dispatcher', () => {
         expect(r.status).not.toBe(0);
         expect(r.stdout).not.toContain('fixture notice');
     }, 120_000);
+
+    // `update-notice` records that it reported once it has replied. That is only
+    // true if nothing on its slot can withhold the reply: on a slot with no host
+    // refusal code the emission always exits 0, so even a refusing concern
+    // beside it leaves the notice delivered.
+    it('on session_start a refusing concern beside the notice does not withhold it', () => {
+        const r = dispatch('claude', {
+            guard: { effect: 'permission', severity: 'blocking', script: 'tests/hooks/fixtures/concern_exits_3.ts' },
+            'notice-a': { effect: 'notification' },
+        });
+        expect(r.status).toBe(0);
+        expect((JSON.parse(r.stdout) as Record<string, string>)['systemMessage']).toBe('fixture notice for the user');
+    }, 120_000);
+
+    it('update-notice is bound only on slots where no host refusal can withhold its notice', () => {
+        const manifest = parseYaml(fs.readFileSync(path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'), 'utf-8')) as {
+            platforms: Record<string, Record<string, unknown>>;
+        };
+        const slots: string[] = [];
+        for (const [host, events] of Object.entries(manifest.platforms)) {
+            for (const [event, concerns] of Object.entries(events)) {
+                if (Array.isArray(concerns) && concerns.includes('update-notice')) slots.push(`${host}:${event}`);
+            }
+        }
+        expect(slots.length).toBeGreaterThan(0);
+        for (const slot of slots) {
+            const [host, event] = slot.split(':') as [string, string];
+            expect(isBlockCapable(host, event), slot).toBe(false);
+        }
+    });
 
     // The concern learns its host from the envelope the dispatcher builds out of
     // its own `--platform`, not from anything the host payload claims.

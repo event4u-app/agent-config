@@ -207,6 +207,11 @@ export function runNotice(deps: NoticeDeps, apply = true): NoticeOutcome {
         return outcome;
     }
 
+    // Recording the version as reported right after replying is sound only
+    // because this concern is bound where no host refusal exists: there the
+    // dispatcher always exits 0 and never withholds a notice (pinned by
+    // tests/hooks/user_notice_dispatch.test.ts). A block-capable binding would
+    // need the write to wait for delivery.
     if (deps.notice !== undefined) {
         if (outcome.lines.length > 0) deps.notice.write(JSON.stringify({ [USER_NOTICE_KEY]: outcome.lines.join('\n') }));
     } else {
