@@ -89,6 +89,12 @@ describe('lint_agents_layout — ported pytest suite (helpers)', () => {
         expect(mod.ALLOWED_FLAT_FILES.has('.event4u-bridge.yml')).toBe(true);
     });
 
+    it('test_owner_question_queue_is_allowed_flat_file', () => {
+        const agents = path.join(tmp, 'agents');
+        seed(agents, ['owner-questions.md']);
+        expect(mod.find_violations(agents)).toEqual([]);
+    });
+
     it('test_consumer_expected_entries_contract_set', () => {
         // Full consumer-scope allowlist per docs/contracts/agents-layout.md
         // (road-to-agents-dir-and-gitignore-hygiene Phase 2.4).
