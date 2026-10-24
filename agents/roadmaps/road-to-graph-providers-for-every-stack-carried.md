@@ -59,19 +59,14 @@ catalog together with the numbers that justify it.
       view name as a string (`return "owners/findOwners"`) renders that template
       (spring-petclinic: 0 of 17 views).
       verify: a fixture with handler → service → repository → model shows the table on the request path, and the Spring fixture renders a string-returned view.
-- [ ] **2.4 The map's areas are truthful and readable.** `routes/web.php` joins the
-      controllers it routes to instead of forming an area of its own, and shared view
-      partials stop gluing areas together (BookStack: `breadcrumbs.blade.php` is the
-      largest area, 227 files, up from 179). The viewer shows them legibly: the area list
-      wraps a long path without orphaning its colour dot or clipping the name (the #2595
-      finding), and the 3D orb spreads areas over the sphere instead of one cap, without
-      the area spheres overlapping at 375 px.
-      The default pass's mechanisms (`literal-path`, `literal-dotted`, `fs-route`) are
-      INFERRED edges but sit in `STATED_RESOLVED_VIA`, so they weigh as trusted in the map,
-      in build-derived edges and in the query verbs; they either earn that on real clones
-      (a path that only appears in a comment, a log line or a message string draws no
-      trusted edge) or move to the guess list.
-      verify: the map test over a Laravel fixture puts the route file in a controller's area and no view partial heads an area; the viewer render check passes at 375 px and desktop width; a negative fixture with a path only in a comment and a log string yields no trusted edge.
+- [ ] **2.4 Map areas and trust weights are truthful.** `routes/web.php` joins the
+      controllers it routes to, and shared view partials stop gluing areas (BookStack:
+      `breadcrumbs.blade.php` heads 227 files). The area list wraps long paths without
+      orphaning the colour dot or clipping (#2595); the orb spreads areas over the sphere
+      without overlap at 375 px. `literal-path`, `literal-dotted` and `fs-route` edges are
+      INFERRED yet listed in `STATED_RESOLVED_VIA`: they earn that on real clones or move
+      to the guess list.
+      verify: a Laravel map fixture puts the route file in a controller's area with no partial heading one; the viewer render check passes at 375 px; a path only in a comment or log string yields no trusted edge.
 
 ## Blockers
 
