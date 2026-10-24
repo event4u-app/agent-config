@@ -175,6 +175,47 @@ from running each check per mode. anthropic asks for a per-row schema with
 `expected_exit`, `current_exit`, `divergence` and `last_verified`, maintained
 by CI. That is a 7.2 item and is carried there.
 
+## Row ids and invalidation — revision 7
+
+**Row ids.** Every row carries a stable id `R<check>.<letter>`. Ids are never
+reassigned. A new row takes the next unused letter of its check, and a removed
+row's id is not reused. The reconciler fails on a missing or duplicate id.
+
+**Invalidation.** The verdict holds only for the source and wiring it was built
+against. The reconciler compares each pinned file's current git blob with the
+pin below. A mismatch makes it fail with the verdict **stale** until the ledger
+is reviewed against the change and the pins are renewed. This is the
+kill-switch both seats asked for: if a check's code, flags or wiring changes
+without a matching ledger update, 7.1 reopens. It is a measurement, not a CI
+gate. Nothing runs it automatically, and 7.2 has to run it before relying on
+any row.
+
+| Pinned file | git blob |
+|---|---|
+| `src/scripts/check_gate_completeness.ts` | `bc78db7a0c5504c3fc62aa3cd1bcad89b5a798f9` |
+| `src/scripts/lint_ticked_unmet_criteria.ts` | `a76509077375541f45c2b97ed5082875206ba538` |
+| `src/scripts/check_rule_invariants.ts` | `be18948528d6db67e5c32e9433e95303e0cf28db` |
+| `src/scripts/check_augment_description_cap.ts` | `fcb99809b15f46a1d7e922e007ead14b1eab90ec` |
+| `src/scripts/check_trigger_evals.ts` | `708f44ee039768315e7e1dc3621efb38018e4c42` |
+| `src/scripts/lint_subagent_determinism.ts` | `eb3a64d19aab5ddf89e15f7e43ef7281eddf8660` |
+| `src/scripts/lint_rule_enforcement_declaration.ts` | `4595dd8e8255d10e6bd1ddbf645dce0913d191a0` |
+| `src/scripts/check_token_quality_golden.ts` | `cac8368a811fee4deb566fd714292968d1caa4bb` |
+| `src/scripts/check_council_layout.ts` | `1ddc4bff01118f6077365a168f0c415e6d77d265` |
+| `src/scripts/check_knowledge_cards.ts` | `ceb804c2938856b00dd18235f0129902661572d9` |
+| `src/scripts/check_public_links.ts` | `d0fda1f358b52e9c089ad0c7bc3099af75d04262` |
+| `src/scripts/lint_agents_layout.ts` | `6faa5027d9c3d34d1b54c2d10ff2472d4d1a720e` |
+| `src/scripts/lint_eval_freshness.ts` | `4321c87b3b20a3253118c913560a6b9baaf595a7` |
+| `src/scripts/lint_readme_jargon.ts` | `d0ffe1974b02cceea8cc0d0961e598fbd5e6c9b2` |
+| `src/scripts/lint_readme_serial_comma.ts` | `825b1fe415522c322af4436355348f17d05655a2` |
+| `src/scripts/check_composite_arming.ts` | `899e5d1fa56011a583aca46a846b2c26451e288f` |
+| `taskfiles/ci-fast.yml` | `aedb0b222ef39622a6dc66abe6d94f95eaad46b7` |
+| `taskfiles/content.yml` | `2c8f8c7528cef2d24f4085bb00757d90f9d85e99` |
+| `taskfiles/engine.yml` | `be2c6e7b78ca288fd5f137037d29a83c04487786` |
+| `.github/workflows/standing-payload-delta.yml` | `82eb039cd82226e642c24df634c7ee7ec3ad0cf5` |
+| `.github/workflows/rule-backstops.yml` | `015473465df2afb82e32ada7fce9d458d6c17055` |
+| `.github/workflows/tests.yml` | `0e1e0c9882919e10ff783780315a84b5e5f5dea3` |
+
+
 ## Current enforcement, recorded separately
 
 From `agents/evidence/analysis/gate-invocation-inventory-20261024.md`:
@@ -228,53 +269,53 @@ Revision 2 also dropped revision 1's *proves or asserts* column. Every row's
 script **computes** its property from files the same repository authority
 controls, and no independent party verifies it (openai's hardest pushback).
 
-| # | Check | Aspect | Property measured (from source) | Inputs / trust dependencies | Applicability / invocation mode | What makes it vary | Class | Evidence for the class |
-|---|---|---|---|---|---|---|---|---|
-| 1 | `check_gate_completeness` | adoption ratchet | un-adopted gate count ≤ the recorded count | `src/config/gate-violation-baselines.json` (governed input), gate sources | always | new gates, adoption | **invariant** (shrink-only) | header: the count "may only go down". No authorised upward refresh is documented, and an edit's technical ability to raise the number is not authorisation |
-| 1 | | exemption marker | every `// ledger-exempt:` carries a reason of minimum length | gate sources | always | gate edits | **invariant** | "an empty or near-empty reason is a hard failure"; form only, the header says truth is a human read |
-| 1 | | scan scope | the gate scanned a non-dead scope (the CI-registered gate estate) | `assertScanned` | always | tree layout | **invariant** | dead scope throws, no baseline |
-| 2 | `lint_ticked_unmet_criteria` | ticked-vs-NOT-met | no `[x] AC` whose own text says `NOT met` | roadmaps, frozen digest list in source (governed input) | always | roadmap edits | **invariant** | frozen, digest-pinned exemptions; an unmatched entry is an error, so the list only shrinks |
-| 2 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | only with `--self-test`; no caller found | edits to the checker | **invariant** | a fixed fixture table, no baseline (fixed-policy) |
-| 3 | `check_rule_invariants` | kernel strings present | each string of `tests/golden/invariants.json` is in the kernel rule's source and its `dist/` projection | `tests/golden/invariants.json` (governed input), `src/rules/`, `dist/agent-src/rules/` | needs the projection built | a rule reworded; the expectation file edited | **invariant** | no baseline; the expectation file is the contract and shares edit authority with the rules (weak independence) |
-| 3 | | mutation self-test — `--mutation-selftest` | removing the first invariant string in memory makes the check fail | `tests/golden/invariants.json` | only with `--mutation-selftest`; no caller found | the expectation file | **invariant** | the header: guards the checker against a silently-green normalisation bug (repository-consistency) |
-| 4 | `check_augment_description_cap` | description length | every `type: auto` rule description ≤ `DESC_CAP` | `src/rules/*.md` | always | rule edits | **invariant** | fixed cap |
-| 5 | `check_trigger_evals` | freshness | `last_eval` present and not more than 90 days before the run date (a future date computes a negative age and is accepted) | `triggers.json`; clock `asOf()` (pinnable through `AC_AS_OF` or `--today`), local calendar date of the runner | always | the calendar | **invariant, time-qualified** | D24. Window 90 d. Day 90 passes, day 91 fails (`age > 90`). No grace. The runner's local time zone decides the date. The class covers the property as computed. Rejecting future dates is a possible tightening, recorded and not assumed |
-| 5 | | structure | non-empty queries, each `q` and boolean `trigger`, both classes present | same | always | edits | **invariant** | fixed rule |
-| 6 | `lint_subagent_determinism` | schema consts | five determinism rules on `src/subagents/*.md` | same | always | edits | **invariant** | fixed rules |
-| 7 | `lint_rule_enforcement_declaration` | declaration | a rule outside the legacy list declares `enforced_by:`; `none` states its gap in the body | `src/rules/`, `src/config/rule-enforcement-baseline.json` (governed input) | always | rule additions | **invariant** (shrink-only list) | list "may only shrink"; a stale entry must leave in the same change; declaration only, not that the backstop works |
-| 7 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | only with `--self-test`; no caller found | edits to the checker | **invariant** | fixed fixture table (fixed-policy). `--write-baseline` is a write mode that rewrites the baseline file and asserts nothing, so it carries no class |
-| 8 | `check_token_quality_golden` | structure | unknown rule ids, bad scenarios, a labelled task without anchors | golden YAML, `dist/router.json` | always, every mode | edits | **invariant** | "Structural errors … always fail" |
-| 8 | | coverage and stubs — default mode | uncovered rules and stub tasks | same | invocation without `--require-complete` | labelling work | **observation** | "REPORTED, not a failure, by default" |
-| 8 | | coverage and stubs — `--require-complete` | no stub, no uncovered rule, required scenarios present, for the given `--scope` | same | invocation with `--require-complete` (the operator-completion gate) | labelling work | **invariant** in that mode | the header names it the completion gate, which fails on any remaining stub |
-| 9 | `check_council_layout` | placement — current | council artefacts only in canonical or allowlisted directories, over **every path on disk** under `agents/` (`fs.readdirSync`), untracked files included | `agents/` on disk | always | untracked local files as well as edits | **invariant** over the disk scope it measures today | fixed rule. This is the row 7.2 may rely on until the scope fix lands |
-| 9 | | placement — target | the same property over the **index**: the paths `git ls-files -- agents/` lists, so a staged addition is in, a staged deletion is out, and a rename counts at its new path. Only path names are checked, so partially staged content cannot change the result | git index | after the scope fix | edits | **invariant** | the canonical scope both seats asked for. No enforcement decision may rely on this row before the fix is verified |
-| 10 | `check_knowledge_cards` | C1 size | a card ≤ 150 lines | `agents/knowledge/*.md` (external arm) | always | card edits | **invariant** | error |
-| 10 | | C2 pointer present | `links.authoritative` in frontmatter | same | always | card edits | **invariant** | error |
-| 10 | | C3 local pointer | a local pointer path exists | same + the tree | always | card or tree edits | **invariant** | error |
-| 10 | | C3 live URL | the URL answers | same + network | only with `--check-urls` | the remote site | **observation** | network-dependent and opt-in; not reproducible offline |
-| 10 | | C4 trust tag | `trust` present; `type: anti-hallucination` | same | always | card edits | **invariant** | error |
-| 10 | | C5 evidence consistency | distinct `source_version`s form a git-ancestry chain; `observed_at` span ≤ 7 days | same + git history | always | card edits, history | **invariant** | error. The span compares recorded timestamps, not the clock |
-| 10 | | C6 strict sources | `source=<path:line>` references exist and are non-empty | same + the tree | only with `--strict` | tree edits | **invariant** in that mode | error when enabled |
-| 10 | | freshness | newest `observed_at` older than `--freshness-days` | same + clock | only with the flag; default 0 = off | the calendar | **observation** | "Honest freshness signal (NOT a failure)" |
-| 10 | | global-store cards — `--global` | the extra checks ADR-100 sets for the user-global card store (`_check_global_card`) | the global store | only with `--global`; no caller found | card edits | **invariant** | errors added to the same error list (fixed-policy) |
-| 11 | `check_public_links` | link target exists | a link from the public surface into `docs/contracts/` resolves to a file | README, AGENTS.md, architecture doc, contract frontmatter | always | doc edits | **invariant** | error severity, exit 1 |
-| 11 | | target declares stability | the linked contract carries `stability:` frontmatter | same | always | contract edits | **invariant** | error severity, exit 1 |
-| 11 | | no experimental link | the public surface never links to an `experimental` contract | same | always | doc edits | **invariant** | error severity, exit 1 |
-| 11 | | contract file declares stability | a contract file itself carries `stability:` frontmatter, as `STABILITY.md` requires | `docs/contracts/` | always | contract edits | **invariant** | error severity, exit 1 |
-| 11 | | beta marker — default mode | a link to a `beta` contract carries a visible `(beta)` or `[beta]` marker | same | invocation without `--strict` | doc edits | **observation** | warning severity, exit 0 |
-| 11 | | beta marker — `--strict` | same property | same | invocation with `--strict` | doc edits | **invariant** in that mode | warnings fail with `--strict` |
-| 12 | `lint_agents_layout` | top-level allowlist — current | every top-level entry under `agents/` on disk is allowlisted (`fs.readdirSync`), untracked entries included | `agents/` on disk, `ALLOWED_SOURCE_DIRS` in source | always | untracked local entries as well as edits | **invariant** over the disk scope it measures today | fixed allowlist; the row 7.2 may rely on until the fix |
-| 12 | | top-level allowlist — target | the same property over the top-level entries of the paths `git ls-files -- agents/` lists (index scope, as row 9) | git index | after the scope fix | edits | **invariant** | no enforcement decision relies on it before the fix is verified |
-| 12 | | legacy entries — default mode | entries scheduled for migration are reported as warnings | `agents/` on disk | invocation without `--strict` (`taskfiles/content.yml:342`) | migrations | **observation** | warnings exit 0 without `--strict` |
-| 12 | | legacy entries — `--strict` | no entry scheduled for migration remains | same | invocation with `--strict` (`taskfiles/content.yml:347`) | migrations | **invariant** in that mode | `if (strict) return 1` after the warnings |
-| 13 | `lint_eval_freshness` | eval attached | `upstream.last_eval` present with `sha_at_eval == upstream.sha` | manifests | in scope when a skill ships triggers and a pinned corpus | corpus SHA bumps | **invariant** | SHA equality, no clock |
-| 14 | `lint_readme_jargon` | above-fold density | ≤ 3 watchlist hits in README lines 1–120 | README.md | always | README edits | **invariant** (numeric bound) | no named risk owner, so not a tolerance |
-| 15 | `lint_readme_serial_comma` | serial comma | no serial comma in README prose | README.md | always | README edits | **invariant** | fixed rule |
-| 16 | `check_composite_arming` | arming verdict | ≥ 10 usable composite readings from ≥ 2 sessions | the composite store | a valid store exists | new readings | **observation** | "'not yet' is a successful measurement, never a build failure" |
-| 16 | | store yields a usable record | a store with content parses to at least one usable reading (a line with a string `session` and a `composite_ms` key) | the composite store | the store exists | a corrupt append | **invariant** | exit 1 when malformed lines leave no usable record (`malformed > 0 && readings.length === 0`). Corrected in revision 6: revision 3 said "every line parses", which the code does not require |
-| 16 | | partial malformation | malformed lines next to usable ones are counted and named per line | same | the store exists | a corrupt append | **observation** | the gate ledger records each dropped line as `precondition_unmet` and the run continues |
-| 16 | | store absent | the store file exists | same | no store file | bootstrap | **observation** | its own contract: no readings yet is "not measured yet" and never a build failure. Runtime metadata, not a class: `not-evaluated: evidence-missing`. Current behaviour diverges: the script exits 1, which is owed to 7.2. A future transition to invariant after a bootstrap deadline needs that deadline first (D31) and is not part of this verdict |
-| 16 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | `taskfiles/content.yml:386`, `rule-backstops.yml:321` | edits to the checker | **invariant** | fixed fixture table (fixed-policy). `--publish` is a write mode that writes a distribution report and asserts nothing, so it carries no class |
+| # | Check | Aspect | Property measured (from source) | Inputs / trust dependencies | Applicability / invocation mode | What makes it vary | Class | Evidence for the class | Row id |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | `check_gate_completeness` | adoption ratchet | un-adopted gate count ≤ the recorded count | `src/config/gate-violation-baselines.json` (governed input), gate sources | always | new gates, adoption | **invariant** (shrink-only) | header: the count "may only go down". No authorised upward refresh is documented, and an edit's technical ability to raise the number is not authorisation | `R1.a` |
+| 1 | | exemption marker | every `// ledger-exempt:` carries a reason of minimum length | gate sources | always | gate edits | **invariant** | "an empty or near-empty reason is a hard failure"; form only, the header says truth is a human read | `R1.b` |
+| 1 | | scan scope | the gate scanned a non-dead scope (the CI-registered gate estate) | `assertScanned` | always | tree layout | **invariant** | dead scope throws, no baseline | `R1.c` |
+| 2 | `lint_ticked_unmet_criteria` | ticked-vs-NOT-met | no `[x] AC` whose own text says `NOT met` | roadmaps, frozen digest list in source (governed input) | always | roadmap edits | **invariant** | frozen, digest-pinned exemptions; an unmatched entry is an error, so the list only shrinks | `R2.a` |
+| 2 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | only with `--self-test`; no caller found | edits to the checker | **invariant** | a fixed fixture table, no baseline (fixed-policy) | `R2.b` |
+| 3 | `check_rule_invariants` | kernel strings present | each string of `tests/golden/invariants.json` is in the kernel rule's source and its `dist/` projection | `tests/golden/invariants.json` (governed input), `src/rules/`, `dist/agent-src/rules/` | needs the projection built | a rule reworded; the expectation file edited | **invariant** | no baseline; the expectation file is the contract and shares edit authority with the rules (weak independence) | `R3.a` |
+| 3 | | mutation self-test — `--mutation-selftest` | removing the first invariant string in memory makes the check fail | `tests/golden/invariants.json` | only with `--mutation-selftest`; no caller found | the expectation file | **invariant** | the header: guards the checker against a silently-green normalisation bug (repository-consistency) | `R3.b` |
+| 4 | `check_augment_description_cap` | description length | every `type: auto` rule description ≤ `DESC_CAP` | `src/rules/*.md` | always | rule edits | **invariant** | fixed cap | `R4.a` |
+| 5 | `check_trigger_evals` | freshness | `last_eval` present and not more than 90 days before the run date (a future date computes a negative age and is accepted) | `triggers.json`; clock `asOf()` (pinnable through `AC_AS_OF` or `--today`), local calendar date of the runner | always | the calendar | **invariant, time-qualified** | D24. Window 90 d. Day 90 passes, day 91 fails (`age > 90`). No grace. The runner's local time zone decides the date. The class covers the property as computed. Rejecting future dates is a possible tightening, recorded and not assumed | `R5.a` |
+| 5 | | structure | non-empty queries, each `q` and boolean `trigger`, both classes present | same | always | edits | **invariant** | fixed rule | `R5.b` |
+| 6 | `lint_subagent_determinism` | schema consts | five determinism rules on `src/subagents/*.md` | same | always | edits | **invariant** | fixed rules | `R6.a` |
+| 7 | `lint_rule_enforcement_declaration` | declaration | a rule outside the legacy list declares `enforced_by:`; `none` states its gap in the body | `src/rules/`, `src/config/rule-enforcement-baseline.json` (governed input) | always | rule additions | **invariant** (shrink-only list) | list "may only shrink"; a stale entry must leave in the same change; declaration only, not that the backstop works | `R7.a` |
+| 7 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | only with `--self-test`; no caller found | edits to the checker | **invariant** | fixed fixture table (fixed-policy). `--write-baseline` is a write mode that rewrites the baseline file and asserts nothing, so it carries no class | `R7.b` |
+| 8 | `check_token_quality_golden` | structure | unknown rule ids, bad scenarios, a labelled task without anchors | golden YAML, `dist/router.json` | always, every mode | edits | **invariant** | "Structural errors … always fail" | `R8.a` |
+| 8 | | coverage and stubs — default mode | uncovered rules and stub tasks | same | invocation without `--require-complete` | labelling work | **observation** | "REPORTED, not a failure, by default" | `R8.b` |
+| 8 | | coverage and stubs — `--require-complete` | no stub, no uncovered rule, required scenarios present, for the given `--scope` | same | invocation with `--require-complete` (the operator-completion gate) | labelling work | **invariant** in that mode | the header names it the completion gate, which fails on any remaining stub | `R8.c` |
+| 9 | `check_council_layout` | placement — current | council artefacts only in canonical or allowlisted directories, over **every path on disk** under `agents/` (`fs.readdirSync`), untracked files included | `agents/` on disk | always | untracked local files as well as edits | **invariant** over the disk scope it measures today | fixed rule. This is the row 7.2 may rely on until the scope fix lands | `R9.a` |
+| 9 | | placement — target | the same property over the **index**: the paths `git ls-files -- agents/` lists, so a staged addition is in, a staged deletion is out, and a rename counts at its new path. Only path names are checked, so partially staged content cannot change the result | git index | after the scope fix | edits | **invariant** | the canonical scope both seats asked for. No enforcement decision may rely on this row before the fix is verified | `R9.b` |
+| 10 | `check_knowledge_cards` | C1 size | a card ≤ 150 lines | `agents/knowledge/*.md` (external arm) | always | card edits | **invariant** | error | `R10.a` |
+| 10 | | C2 pointer present | `links.authoritative` in frontmatter | same | always | card edits | **invariant** | error | `R10.b` |
+| 10 | | C3 local pointer | a local pointer path exists | same + the tree | always | card or tree edits | **invariant** | error | `R10.c` |
+| 10 | | C3 live URL | the URL answers | same + network | only with `--check-urls` | the remote site | **observation** | network-dependent and opt-in; not reproducible offline | `R10.d` |
+| 10 | | C4 trust tag | `trust` present; `type: anti-hallucination` | same | always | card edits | **invariant** | error | `R10.e` |
+| 10 | | C5 evidence consistency | distinct `source_version`s form a git-ancestry chain; `observed_at` span ≤ 7 days | same + git history | always | card edits, history | **invariant** | error. The span compares recorded timestamps, not the clock | `R10.f` |
+| 10 | | C6 strict sources | `source=<path:line>` references exist and are non-empty | same + the tree | only with `--strict` | tree edits | **invariant** in that mode | error when enabled | `R10.g` |
+| 10 | | freshness | newest `observed_at` older than `--freshness-days` | same + clock | only with the flag; default 0 = off | the calendar | **observation** | "Honest freshness signal (NOT a failure)" | `R10.h` |
+| 10 | | global-store cards — `--global` | the extra checks ADR-100 sets for the user-global card store (`_check_global_card`) | the global store | only with `--global`; no caller found | card edits | **invariant** | errors added to the same error list (fixed-policy) | `R10.i` |
+| 11 | `check_public_links` | link target exists | a link from the public surface into `docs/contracts/` resolves to a file | README, AGENTS.md, architecture doc, contract frontmatter | always | doc edits | **invariant** | error severity, exit 1 | `R11.a` |
+| 11 | | target declares stability | the linked contract carries `stability:` frontmatter | same | always | contract edits | **invariant** | error severity, exit 1 | `R11.b` |
+| 11 | | no experimental link | the public surface never links to an `experimental` contract | same | always | doc edits | **invariant** | error severity, exit 1 | `R11.c` |
+| 11 | | contract file declares stability | a contract file itself carries `stability:` frontmatter, as `STABILITY.md` requires | `docs/contracts/` | always | contract edits | **invariant** | error severity, exit 1 | `R11.d` |
+| 11 | | beta marker — default mode | a link to a `beta` contract carries a visible `(beta)` or `[beta]` marker | same | invocation without `--strict` | doc edits | **observation** | warning severity, exit 0 | `R11.e` |
+| 11 | | beta marker — `--strict` | same property | same | invocation with `--strict` | doc edits | **invariant** in that mode | warnings fail with `--strict` | `R11.f` |
+| 12 | `lint_agents_layout` | top-level allowlist — current | every top-level entry under `agents/` on disk is allowlisted (`fs.readdirSync`), untracked entries included | `agents/` on disk, `ALLOWED_SOURCE_DIRS` in source | always | untracked local entries as well as edits | **invariant** over the disk scope it measures today | fixed allowlist; the row 7.2 may rely on until the fix | `R12.a` |
+| 12 | | top-level allowlist — target | the same property over the top-level entries of the paths `git ls-files -- agents/` lists (index scope, as row 9) | git index | after the scope fix | edits | **invariant** | no enforcement decision relies on it before the fix is verified | `R12.b` |
+| 12 | | legacy entries — default mode | entries scheduled for migration are reported as warnings | `agents/` on disk | invocation without `--strict` (`taskfiles/content.yml:342`) | migrations | **observation** | warnings exit 0 without `--strict` | `R12.c` |
+| 12 | | legacy entries — `--strict` | no entry scheduled for migration remains | same | invocation with `--strict` (`taskfiles/content.yml:347`) | migrations | **invariant** in that mode | `if (strict) return 1` after the warnings | `R12.d` |
+| 13 | `lint_eval_freshness` | eval attached | `upstream.last_eval` present with `sha_at_eval == upstream.sha` | manifests | in scope when a skill ships triggers and a pinned corpus | corpus SHA bumps | **invariant** | SHA equality, no clock | `R13.a` |
+| 14 | `lint_readme_jargon` | above-fold density | ≤ 3 watchlist hits in README lines 1–120 | README.md | always | README edits | **invariant** (numeric bound) | no named risk owner, so not a tolerance | `R14.a` |
+| 15 | `lint_readme_serial_comma` | serial comma | no serial comma in README prose | README.md | always | README edits | **invariant** | fixed rule | `R15.a` |
+| 16 | `check_composite_arming` | arming verdict | ≥ 10 usable composite readings from ≥ 2 sessions | the composite store | a valid store exists | new readings | **observation** | "'not yet' is a successful measurement, never a build failure" | `R16.a` |
+| 16 | | store yields a usable record | a store with content parses to at least one usable reading (a line with a string `session` and a `composite_ms` key) | the composite store | the store exists | a corrupt append | **invariant** | exit 1 when malformed lines leave no usable record (`malformed > 0 && readings.length === 0`). Corrected in revision 6: revision 3 said "every line parses", which the code does not require | `R16.b` |
+| 16 | | partial malformation | malformed lines next to usable ones are counted and named per line | same | the store exists | a corrupt append | **observation** | the gate ledger records each dropped line as `precondition_unmet` and the run continues | `R16.c` |
+| 16 | | store absent | the store file exists | same | no store file | bootstrap | **observation** | its own contract: no readings yet is "not measured yet" and never a build failure. Runtime metadata, not a class: `not-evaluated: evidence-missing`. Current behaviour diverges: the script exits 1, which is owed to 7.2. A future transition to invariant after a bootstrap deadline needs that deadline first (D31) and is not part of this verdict | `R16.d` |
+| 16 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | `taskfiles/content.yml:386`, `rule-backstops.yml:321` | edits to the checker | **invariant** | fixed fixture table (fixed-policy). `--publish` is a write mode that writes a distribution report and asserts nothing, so it carries no class | `R16.e` |
 
 ## Totals — revision 6
 

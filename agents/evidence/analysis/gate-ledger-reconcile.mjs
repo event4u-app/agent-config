@@ -3,6 +3,7 @@
 // Phase 7 start inventory and the invocation inventory. Prints a matrix and
 // exits 1 on any failed condition, so a reader re-runs it instead of trusting
 // the ledger author's count. Run with node, no arguments.
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -43,7 +44,8 @@ for (const line of section(read(LEDGER), '## The ledger — revision 3').split('
     const classCell = c[7] ?? '';
     const cls = CLASSES.find((k) => new RegExp(`\\*\\*${k}`).test(classCell)) ?? null;
     const migration = /— target/.test(c[2]);
-    ledgerRows.push({ check: current, aspect: c[2], cls, migration, raw: line });
+    const id = (line.match(/`(R\d+\.[a-z])`\s*\|\s*$/) ?? [])[1] ?? null;
+    ledgerRows.push({ check: current, aspect: c[2], cls, migration, raw: line, id });
 }
 
 const inventoryChecks = section(read(INVENTORY), '## The inventory')
@@ -52,6 +54,21 @@ const inventoryChecks = section(read(INVENTORY), '## The inventory')
     .map((l) => checkName(cells(l)[1]));
 
 const failures = [];
+
+const ids = ledgerRows.map((r) => r.id);
+for (const r of ledgerRows) if (r.id === null) failures.push(`row without an id: ${r.check} / ${r.aspect}`);
+const dupIds = ids.filter((x, i) => x !== null && ids.indexOf(x) !== i);
+for (const d of new Set(dupIds)) failures.push(`duplicate row id ${d}`);
+
+const pins = section(read(LEDGER), '## Row ids and invalidation')
+    .split('\n')
+    .map((l) => l.match(/^\| `([^`]+)` \| `([0-9a-f]{40})` \|$/))
+    .filter((m) => m !== null);
+if (pins.length === 0) failures.push('no source pins found');
+for (const [, file, blob] of pins) {
+    const now = execFileSync('git', ['hash-object', path.join(ROOT, file)], { encoding: 'utf8' }).trim();
+    if (now !== blob) failures.push(`STALE: ${file} changed since the verdict was pinned (${blob.slice(0, 9)} → ${now.slice(0, 9)})`);
+}
 const set = (xs) => new Set(xs);
 const same = (a, b) => a.size === b.size && [...a].every((x) => b.has(x));
 
@@ -103,4 +120,4 @@ if (failures.length > 0) {
     console.log(`\nFAILED (${failures.length}):\n- ${failures.join('\n- ')}`);
     process.exit(1);
 }
-console.log('\nOK: 16 phase-7 checks = 16 ledger checks = 16 inventoried checks; every binding aspect of every check carries one of the four classes; every target row sits beside its current-scope row; every assertion-changing flag in each check\'s source is named by a binding row.');
+console.log('\nOK: 16 phase-7 checks = 16 ledger checks = 16 inventoried checks; every binding aspect of every check carries one of the four classes; every target row sits beside its current-scope row; every assertion-changing flag in each check\'s source is named by a binding row; every row has a unique id; ' + pins.length + ' pinned files are unchanged.');
