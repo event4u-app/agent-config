@@ -16,7 +16,7 @@
  * beside it so the arms are commensurable on one table.
  *
  * WHAT EACH ARM PUTS IN CONTEXT, read off the two consumers of the mode rather
- * than assumed. `condense.ts:1124` calls `writesThinFiles(mode)`, so `thin` and
+ * than assumed. `condense.ts:1102` calls `writesThinFiles(mode)`, so `thin` and
  * `delivery` project pointer stubs where `eager-all` projects bodies;
  * `hooks/rule_inject_hook.ts:230` calls `deliversBodies(mode)`, so only
  * `delivery` binds the concern that injects matched bodies back at prompt time.

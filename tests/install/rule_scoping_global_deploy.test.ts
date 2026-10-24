@@ -27,7 +27,7 @@ import {
 } from '../../src/scripts/install.js';
 import { expandWizardSources, RULE_SOURCE_REL } from '../../src/install/wizard-plan.js';
 import { buildInstallPlan, type ConflictPolicy } from '../../src/install/plan.js';
-import { consumerRuleWorkspaces } from '../../src/scripts/_lib/scoped_projection.js';
+import { RULE_PACKS_AUTO, consumerRuleWorkspaces, resolve_rule_pack_scope } from '../../src/scripts/_lib/scoped_projection.js';
 import {
     COMPAT_ALWAYS_EXCLUDED,
     LEGACY_ALL,
@@ -291,14 +291,14 @@ describe('scope resolution fails safe', () => {
         expect(warnings.join('')).not.toContain('legacy-all');
     });
 
-    it('derives the workspace axis even with no projection block, and leaves packs inactive', () => {
-        // Before ADR-293 step 4.6 this read `workspaces: null`. A rule is not a
-        // setting, so a settings file that happens to omit a section cannot
-        // switch the workspace scope off; the pack axis is still a setting and
-        // stays inactive, which is the half that did not change.
+    it('derives both axes even with no projection block', () => {
+        // Before ADR-293 step 4.6 this read `workspaces: null`, and before step
+        // 4.9 (owner directive 2026-10-24) `packs: null`. A rule is not a
+        // setting, so a settings file that omits a section switches neither
+        // scope off: the pack axis is the derived active-pack set now.
         writeGlobalSettings({ personal: { autonomy: 'on' } });
         const scope = _resolve_global_rule_scope(REPO);
-        expect(scope.packs).toBeNull();
+        expect(scope.packs).toEqual(resolve_rule_pack_scope(RULE_PACKS_AUTO, REPO));
         expect(scope.workspaces).toEqual(consumerRuleWorkspaces(REPO));
         expect(scope.workspaces?.length).toBeGreaterThan(0);
     });

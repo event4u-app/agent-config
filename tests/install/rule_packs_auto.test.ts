@@ -84,7 +84,7 @@ describe('ruleScopeFromSettings with rule_packs: auto', () => {
         expect(ruleScopeFromSettings(SETTINGS).packs).toBeNull();
     });
 
-    it('leaves the shipped default inactive', () => {
+    it('an explicit empty list keeps the axis inactive during the legacy window (step 4.9)', () => {
         expect(ruleScopeFromSettings({ projection: { rule_packs: [] } }, REPO).packs).toBeNull();
     });
 });
