@@ -3408,6 +3408,23 @@ gates:
       this gate is not a ratchet — any hit exits 1 at any headroom, so one
       planted criterion reddens it whatever else the tree contains.
 
+  - id: check_live_tree_check_classes
+    argv: []
+    min_scanned: 20
+    corpus: "the invocations classified in src/config/live-tree-check-classes.json — 28 on 2026-10-24, the calls of the 16 Phase 7 live-tree checks in three workflows and three taskfiles. The floor is 20 because an invocation is removed only together with its classification, while a reader that stopped finding steps or tasks would drop to a handful."
+    status: enforced
+    ci_invocation: .github/workflows/rule-backstops.yml
+    no_canary_reason: >-
+      The gate reads six fixed wiring files rather than a corpus a planted file
+      can join, so a create-only canary is never scanned. Its sensitivity is
+      proven by `--self-test`, which makes a blocking workflow step
+      continue-on-error and drops a classified invocation, and requires both
+      to be refused.
+    note: >-
+      road-to-authority-routing-mechanism 7.2. This is the production consumer
+      of the provisional classification: without it the classes were a file
+      only a test read.
+
   - id: lint_blocker_citations
     argv: []
     min_scanned: 100

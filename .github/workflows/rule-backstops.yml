@@ -784,5 +784,11 @@ jobs:
       - name: No criterion is ticked over its own "NOT met"
         run: ./scripts-run src/scripts/lint_ticked_unmet_criteria
 
+      # road-to-authority-routing-mechanism 7.2: the live-tree check
+      # classification is enforced here, so an invariant whose invocation is
+      # made non-blocking, or a new unclassified invocation, fails the run.
+      - name: Live-tree check invocations match their classification
+        run: ./scripts-run src/scripts/check_live_tree_check_classes
+
       - name: Every blocker citation resolves to a file and a line
         run: ./scripts-run src/scripts/lint_blocker_citations

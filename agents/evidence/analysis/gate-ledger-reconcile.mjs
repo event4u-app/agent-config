@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
-const FILES = {
+export const FILES = {
     phase7: 'agents/evidence/council/live-tree-check-classification-20261010.md',
     ledger: 'agents/evidence/analysis/gate-classification-ledger-20261024.md',
     inventory: 'agents/evidence/analysis/gate-invocation-inventory-20261024.md',
@@ -20,6 +20,7 @@ const FILES = {
     mapping: 'agents/evidence/analysis/gate-branch-mapping-20261024.json',
     review: 'agents/evidence/analysis/gate-branch-mapping-review-20261024.json',
     grounds: 'agents/evidence/analysis/gate-class-grounds-20261024.json',
+    wiringReview: 'agents/evidence/analysis/gate-wiring-review-20261024.md',
 };
 const BRANCH_MATRIX = 'agents/evidence/analysis/gate-branch-reconciliation-20261024.md';
 const MODE_FLAGS = ['--self-test', '--mutation-selftest', '--require-complete', '--strict', '--global', '--check-urls', '--freshness-days'];
@@ -34,11 +35,18 @@ const NO_ASSERTION = {
     notAFlag: ['--is-ancestor', '--record-composite'],
 };
 
-function realIo() {
+export function realIo() {
     const git = (args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim();
     return {
         read: (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8'),
         exists: (rel) => fs.existsSync(path.join(ROOT, rel)),
+        blobAt: (commit, rel) => {
+            try {
+                return execFileSync('git', ['rev-parse', `${commit}:${rel}`], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+            } catch {
+                return null;
+            }
+        },
         blob: (rel) => git(['hash-object', path.join(ROOT, rel)]),
         existsAt: (commit, rel) => {
             try {
@@ -58,7 +66,7 @@ function realIo() {
         },
         showAt: (commit, rel) => {
             try {
-                return execFileSync('git', ['show', `${commit}:${rel}`], { cwd: ROOT, encoding: 'utf8' });
+                return execFileSync('git', ['show', `${commit}:${rel}`], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1e9 });
             } catch {
                 return null;
             }
@@ -72,23 +80,36 @@ function realIo() {
 // run fails. A row in a flag mode ("in that mode") counts a flag-only failure as
 // blocking; a default-mode row counts it as non-blocking. `exit-code-only`
 // blocks only with a non-zero exit code.
+// The declared precedence of the class predicates (A2).
+export const PREDICATE_ORDER = ['observation', 'tolerance', 'snapshot', 'invariant'];
 export const BLOCKING_EFFECTS = ['error-exit-nonzero', 'throw', 'exit-code-only'];
 export const NON_BLOCKING_EFFECTS = ['warning-exit-zero'];
 export const FLAG_EFFECT = 'warning-exit-nonzero-only-with-flag';
 // Flags are compared as exact tokens, never as substrings.
 const flagTokens = (text) => new Set(text.match(/(?<![\w-])--[a-z][a-z0-9-]*(?![\w-])/g) ?? []);
 
-function section(text, heading) {
+// Wiring is pinned as whole files (round 29, A5): Taskfile.yml, every taskfile
+// it includes, and the workflows that run Phase 7 checks. A change to any of
+// them since the attested base needs a row in the wiring review record, whose
+// own blob is pinned like any other input.
+export const WIRING_WORKFLOWS = ['.github/workflows/standing-payload-delta.yml', '.github/workflows/rule-backstops.yml', '.github/workflows/tests.yml'];
+export const ATTESTED_BASE = 'a9a9ecd98d';
+export function wiringFiles(read) {
+    const included = [...read('Taskfile.yml').matchAll(/taskfile:\s*\.?\/?(taskfiles\/[\w-]+\.yml)/g)].map((m) => m[1]);
+    return ['Taskfile.yml', ...[...new Set(included)].sort(), ...WIRING_WORKFLOWS];
+}
+
+export function section(text, heading) {
     const start = text.indexOf(heading);
     if (start < 0) throw new Error(`missing section ${heading}`);
     const next = text.indexOf('\n## ', start + heading.length);
     return text.slice(start, next < 0 ? undefined : next);
 }
-const cells = (line) => line.split('|').slice(1, -1).map((c) => c.trim());
+export const cells = (line) => line.split('|').slice(1, -1).map((c) => c.trim());
 const checkName = (cell) => (cell.match(/`([a-z_]+)`/) ?? [])[1] ?? null;
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
 
-function tableSection(ledger) {
+export function tableSection(ledger) {
     return section(ledger, '## The ledger — revision 3');
 }
 
@@ -164,6 +185,28 @@ export function reconcile(io) {
     for (const f of [...Object.values(FILES), 'agents/evidence/analysis/gate-ledger-reconcile.mjs']) {
         if (f !== FILES.ledger && f !== FILES.phase7 && !pinned.has(f)) failures.push(`unpinned input: ${f}`);
     }
+    // Wiring (A5): every wiring file is blob-pinned, and every one that changed
+    // since the attested base has a review row naming that exact change.
+    const reviewRows = [...io.read(FILES.wiringReview).matchAll(/^\| `([^`]+)` \| `([0-9a-f]{40})` \| `([0-9a-f]{40})` \| (phase-7|non-phase-7|both) \|/gm)];
+    for (const f of wiringFiles((x) => io.read(x))) {
+        if (!pins.some((m) => m[1] === f)) failures.push(`unpinned wiring file: ${f}`);
+        if (!io.exists(f)) {
+            failures.push(`wiring file missing: ${f}`);
+            continue;
+        }
+        const base = io.blobAt(ATTESTED_BASE, f);
+        const now = io.blob(f);
+        if (base !== now && !reviewRows.some((m) => m[1] === f && m[2] === base && m[3] === now)) failures.push(`wiring review: ${f} changed since ${ATTESTED_BASE} (${String(base).slice(0, 9)} → ${now.slice(0, 9)}) with no review row for that change`);
+    }
+    // A6: once a candidate has been promoted, every pinned input must still be
+    // byte-identical to the candidate commit the renewal suite ran on.
+    const promoted = pinSection.match(/promoted candidate: commit `([0-9a-f]{40})`, tree `([0-9a-f]{40})`/);
+    if (promoted !== null) {
+        for (const f of [...pins.map((m) => m[1]), ...wiringFiles((x) => io.read(x))]) {
+            const at = io.blobAt(promoted[1], f);
+            if (at !== io.blob(f)) failures.push(`promotion broken: ${f} changed after candidate ${promoted[1].slice(0, 9)} was tested (${String(at).slice(0, 9)} → ${io.blob(f).slice(0, 9)})`);
+        }
+    }
     const helperFiles = importClosure(io, phase7.map((c) => `src/scripts/${c}.ts`));
     const closureDigest = sha256(helperFiles.map((f) => `${f} ${io.blob(f)}`).join('\n'));
     const closurePin = pinSection.match(/helper closure: (\d+) files, sha256 `([0-9a-f]{64})`/);
@@ -177,7 +220,7 @@ export function reconcile(io) {
     // digest, so no single pin can be renewed without renewing the set line in
     // the same diff; the individual pins still say which input is stale.
     // Rollback restores the last attested set, never selected pins.
-    const recordedSet = sha256([...pins.map((m) => `${m[1]} ${m[2]}`).sort(), `table ${tablePin?.[1] ?? ''}`, `closure ${closurePin?.[1] ?? ''} ${closurePin?.[2] ?? ''}`].join('\n'));
+    const recordedSet = sha256([...pins.map((m) => `${m[1]} ${m[2]}`)].sort().concat([ `table ${tablePin?.[1] ?? ''}`, `closure ${closurePin?.[1] ?? ''} ${closurePin?.[2] ?? ''}`]).join('\n'));
     const setPin = pinSection.match(/attested set: sha256 `([0-9a-f]{64})`/);
     if (setPin === null) failures.push('no attested-set pin found');
     else if (setPin[1] !== recordedSet) failures.push(`pin set broken: a pin line changed without its attested-set line (${setPin[1].slice(0, 9)} → ${process.env.GATE_FULL_DIGEST ? recordedSet : recordedSet.slice(0, 9)})`);
@@ -250,8 +293,13 @@ export function reconcile(io) {
     const aspects = [];
     for (const r of binding) {
         const mode = modes[r.id] ?? null;
-        const proseMode = /in that mode/.test(cells(r.raw)[7] ?? '');
-        if (proseMode !== (mode !== null)) failures.push(`mode: ${r.id} ${proseMode ? 'says "in that mode" but has no structured mode' : `has structured mode ${mode} but its class cell names no mode`}`);
+        // The row's own cells name its mode: the aspect (`— \`--x\``), the
+        // applicability (`with \`--x\``), or the class cell (`in that mode`).
+        const rc = cells(r.raw);
+        const proseFlag = (rc[2] ?? '').match(/— `(--[a-z][a-z-]*)`/)?.[1] ?? (rc[5] ?? '').match(/with `(--[a-z][a-z-]*)`/)?.[1] ?? null;
+        const proseMode = proseFlag !== null || /in that mode/.test(rc[7] ?? '');
+        if (proseMode !== (mode !== null)) failures.push(`mode: ${r.id} ${proseMode ? `names a mode${proseFlag ? ` (${proseFlag})` : ''} in its cells but has no structured mode` : `has structured mode ${mode} but its cells name no mode`}`);
+        else if (proseFlag !== null && mode !== proseFlag) failures.push(`mode: ${r.id}'s cells name ${proseFlag} but its structured mode is ${mode}`);
         if (mode !== null && !io.read(`src/scripts/${r.check}.ts`).includes(`'${mode}'`) && !io.read(`src/scripts/${r.check}.ts`).includes(`"${mode}"`)) failures.push(`mode: ${r.id} names ${mode}, absent from ${r.check}`);
         const blocking = [];
         const nonBlocking = [];
@@ -271,15 +319,26 @@ export function reconcile(io) {
                 else failures.push(`class predicate: ${r.id} is reached by ${b.id} with unknown effect ${b.effect}`);
             }
         }
-        const derived = blocking.length > 0 && nonBlocking.length === 0 ? 'invariant' : nonBlocking.length > 0 && blocking.length === 0 ? 'observation' : blocking.length > 0 ? 'mixed' : 'unreached';
+        // A2: every class predicate is evaluated without the recorded class.
+        // The winner is the first match in the declared precedence; zero
+        // matches (mixed or unreached behaviour) leaves the aspect
+        // unclassifiable, which is refused.
+        const f = grounds.structured?.[r.id] ?? {};
+        const blockingOnly = blocking.length > 0 && nonBlocking.length === 0;
+        const hasBaseline = typeof f.baseline === 'string' && io.exists(f.baseline);
+        const hasTolerance = typeof f.bound === 'string' && typeof f.risk_owner === 'string' && typeof f.expiry === 'string';
+        const matches = {
+            observation: nonBlocking.length > 0 && blocking.length === 0 && !hasBaseline && !hasTolerance,
+            tolerance: blockingOnly && hasTolerance,
+            snapshot: blockingOnly && hasBaseline,
+            invariant: blockingOnly && !hasBaseline && !hasTolerance,
+        };
+        const matched = PREDICATE_ORDER.filter((c) => matches[c]);
+        const derived = matched[0] ?? (blocking.length > 0 && nonBlocking.length > 0 ? 'mixed' : 'unreached');
         const waiver = grounds.waivers?.[r.id];
         let verdict = null;
-        if (r.cls === 'snapshot' || r.cls === 'tolerance') {
-            const f = grounds.structured?.[r.id] ?? {};
-            const fields = r.cls === 'snapshot' ? typeof f.baseline === 'string' && io.exists(f.baseline) : typeof f.bound === 'string' && typeof f.risk_owner === 'string' && typeof f.expiry === 'string';
-            if (!fields) failures.push(`class predicate: ${r.id} is recorded ${r.cls} without its structured fields in ${FILES.grounds}`);
-            else if (derived !== 'invariant') failures.push(`class predicate: ${r.id} is recorded ${r.cls} but its reaching branches derive ${derived}, not blocking behaviour`);
-            else verdict = 'derived';
+        if (matched.length === 0 && waiver === undefined) {
+            failures.push(`class predicate: ${r.id} matches no class predicate (${derived}; blocking: ${blocking.join(', ') || 'none'}; non-blocking: ${nonBlocking.join(', ') || 'none'})`);
         } else if (derived === r.cls) {
             verdict = 'derived';
         } else if (waiver !== undefined) {
@@ -304,10 +363,38 @@ export function reconcile(io) {
         } else {
             failures.push(`class predicate: ${r.id} is recorded ${r.cls} but its reaching branches derive ${derived} (blocking: ${blocking.join(', ') || 'none'}; non-blocking: ${nonBlocking.join(', ') || 'none'})`);
         }
-        aspects.push({ id: r.id, check: r.check, recorded: r.cls, mode: mode ?? 'default', derived, blocking, nonBlocking, verdict: verdict ?? 'REFUSED' });
+        aspects.push({ id: r.id, check: r.check, recorded: r.cls, mode: mode ?? 'default', derived, matched, blocking, nonBlocking, verdict: verdict ?? 'REFUSED' });
     }
     for (const id of Object.keys(grounds.waivers ?? {})) if (!aspects.some((a) => a.id === id && a.derived !== a.recorded)) failures.push(`stale waiver ${id}: the row no longer diverges`);
     for (const id of Object.keys(modes)) if (!binding.some((r) => r.id === id)) failures.push(`mode names ${id}, which is not a binding row`);
+    // Mode overlaps (round 27): every branch that reaches rows in more than one
+    // mode, or whose predicates name a flag other than its rows' modes, needs a
+    // precedence entry that covers its rows, modes and flag tokens exactly.
+    const overlaps = grounds.overlaps ?? {};
+    const seenOverlap = new Set();
+    for (const c of branchInv.checks) {
+        for (const b of c.branches) {
+            const target = String(mapping[c.check]?.[b.id] ?? '');
+            if (target.startsWith('op:') || target === '') continue;
+            const rows = target.split('+');
+            const rowModes = rows.map((id) => modes[id] ?? 'default');
+            const tokens = [...flagTokens((b.predicates ?? []).join(' '))];
+            const foreign = tokens.filter((t) => !rowModes.includes(t));
+            if (new Set(rowModes).size < 2 && foreign.length === 0) continue;
+            if (rows.length === 1 && foreign.length > 0 && rowModes[0] === 'default' && !MODE_FLAGS.some((f) => foreign.includes(f))) continue;
+            const key = `${c.check} ${b.id}`;
+            seenOverlap.add(key);
+            const e = overlaps[key];
+            if (e === undefined) {
+                failures.push(`overlap: ${key} reaches ${rows.join(', ')} in modes ${rowModes.join(', ')} with flags ${tokens.join(' ') || 'none'} and has no precedence entry`);
+                continue;
+            }
+            const declared = Object.entries(e).filter(([k]) => k !== 'excluded' && k !== 'parameters');
+            const ok = declared.length === rows.length && rows.every((id, i) => e[rowModes[i]] === id) && tokens.every((t) => (t in e && t !== 'excluded' && t !== 'parameters') || (e.excluded ?? []).includes(t) || (e.parameters ?? []).includes(t)) && [...(e.excluded ?? []), ...(e.parameters ?? [])].every((t) => tokens.includes(t));
+            if (!ok) failures.push(`overlap: ${key}'s precedence entry does not cover its rows ${rows.join(', ')}, modes ${rowModes.join(', ')} and flags ${tokens.join(' ')} exactly`);
+        }
+    }
+    for (const key of Object.keys(overlaps)) if (!seenOverlap.has(key)) failures.push(`stale overlap entry ${key}: the branch no longer overlaps`);
     for (const key of Object.keys(grounds.flag_branches ?? {})) {
         const [check, bid] = key.split(' ');
         const b = branchInv.checks.find((c) => c.check === check)?.branches.find((x) => x.id === bid);
@@ -407,7 +494,10 @@ export function reconcile(io) {
         scope: { phase7Commit: manifest?.[1] ?? null, checks: phase7.length, bindingAspects: binding.length, branches: branchCount, classes: tally },
         state,
         reasons: failures,
-        consumable: state === 'valid',
+        promoted: promoted === null ? null : { commit: promoted[1], tree: promoted[2] },
+        // A valid candidate is not consumable until a council round has attested
+        // it and its promotion line is recorded (D38, A6).
+        consumable: state === 'valid' && promoted !== null,
     };
     return { failures, report, matrix, artefact, status, aspects };
 }
@@ -496,8 +586,9 @@ function selfTest() {
         ['an observation row reached by a blocking branch', json(FILES.branches, (j) => { j.checks.find((c) => c.check === 'check_knowledge_cards').branches.find((b) => b.id === 'c10-freshness-warn').effect = 'error-exit-nonzero'; return j; }), /class predicate: R10\.h is recorded observation but its reaching branches derive invariant/],
         ['an exit-code-only branch that exits 0 does not block', json(FILES.branches, (j) => { const b = j.checks.find((c) => c.check === 'check_augment_description_cap').branches.find((x) => x.id === 'c4-over-cap'); b.effect = 'exit-code-only'; b.exit_code = 0; return j; }), /class predicate: R4\.a is recorded invariant but its reaching branches derive observation/],
         ['an invariant row reached only by a non-blocking branch', json(FILES.branches, (j) => { j.checks.find((c) => c.check === 'check_augment_description_cap').branches.find((b) => b.id === 'c4-over-cap').effect = 'warning-exit-zero'; return j; }), /class predicate: R4\.a is recorded invariant but its reaching branches derive observation/],
-        ['a flag-mode row loses its structured mode', json(FILES.grounds, (j) => { delete j.modes['R11.f']; return j; }), /mode: R11\.f says "in that mode" but has no structured mode/],
-        ['a structured mode the class cell does not name', mutated(io, FILES.ledger, (t) => t.replace('| **invariant** in that mode | warnings fail with `--strict` |', '| **invariant** | warnings fail with `--strict` |')), /mode: R11\.f has structured mode --strict but its class cell names no mode/],
+        ['a flag-mode row loses its structured mode', json(FILES.grounds, (j) => { delete j.modes['R11.f']; return j; }), /mode: R11\.f names a mode \(--strict\) in its cells but has no structured mode/],
+        ['a structured mode the cells of its row do not name', mutated(io, FILES.ledger, (t) => t.replace('| only with `--freshness-days` > 0; default 0 = off |', '| always |')), /mode: R10\.h has structured mode --freshness-days but its cells name no mode/],
+        ['a structured mode other than the flag the cells name', json(FILES.grounds, (j) => { j.modes['R2.b'] = '--strict'; return j; }), /mode: R2\.b's cells name --self-test but its structured mode is --strict/],
         ['a mode matched only as a substring does not count', json(FILES.branches, (j) => { const b = j.checks.find((c) => c.check === 'check_public_links').branches.find((x) => x.id === 'c11-beta-marker'); b.predicates = b.predicates.map((p) => p.replaceAll('--strict', '--strictly')); return j; }), /mode: R11\.f is the --strict mode but reaching branch c11-beta-marker names no --strict token/],
         ['a flag-only branch without a structured flag is refused', json(FILES.grounds, (j) => { delete j.flag_branches['check_public_links c11-beta-marker']; return j; }), /flag-only branch c11-beta-marker has no structured flag/],
         ['a flag branch declaring another flag does not block the mode row', json(FILES.grounds, (j) => { j.flag_branches['check_public_links c11-beta-marker'] = '--list'; return j; }), /class predicate: R11\.f is recorded invariant but its reaching branches derive observation/],
@@ -512,8 +603,16 @@ function selfTest() {
         ['a waiver whose issue text is absent is refused', approved((w) => ({ ...w, issue_ref: { ...w.issue_ref, text: 'a reconciliation nobody recorded anywhere' } })), /issue text not found in its file/],
         ['a mixed derivation is never waivable', (() => { const g = withDirective(withWaiver({ ...WAIVER, behaviour: 'mixed', approver: 'owner', directive: DIRECTIVE, expiry: '2099-12-31' })); return { ...g, read: (rel) => (rel === FILES.mapping ? JSON.stringify((() => { const j = JSON.parse(io.read(rel)); j.mapping.check_knowledge_cards['c10-E1-required'] = 'R10.h'; return j; })()) : g.read(rel)) }; })(), /derived mixed is never waivable/],
         ['a waiver for a row that does not diverge', json(FILES.grounds, (j) => { j.waivers['R4.a'] = { semantic: 'invariant', behaviour: 'observation', branch: 'c4-over-cap', owed_to: '7.2' }; return j; }), /stale waiver R4\.a/],
+        ['an overlapping branch without a precedence entry is refused', json(FILES.grounds, (j) => { delete j.overlaps['check_public_links c11-beta-marker']; return j; }), /overlap: check_public_links c11-beta-marker reaches R11\.e, R11\.f .* has no precedence entry/],
+        ['a precedence entry that swaps the modes is refused', json(FILES.grounds, (j) => { j.overlaps['lint_agents_layout c12-consumer-warning'] = { default: 'R12.d', '--strict': 'R12.c', excluded: [] }; return j; }), /overlap: lint_agents_layout c12-consumer-warning's precedence entry does not cover/],
+        ['an undeclared flag in an overlapping branch is refused', json(FILES.grounds, (j) => { j.overlaps['check_public_links c11-beta-marker'].excluded = []; return j; }), /overlap: check_public_links c11-beta-marker's precedence entry does not cover/],
+        ['a wiring change without a review row is refused', mutated(io, FILES.wiringReview, (t) => t.split('\n').filter((l) => !l.startsWith('| `taskfiles/ci-fast.yml`')).join('\n')), /wiring review: taskfiles\/ci-fast\.yml changed since/],
+        ['a new included taskfile must be pinned', mutated(io, 'Taskfile.yml', (t) => t.replace('includes:\n', 'includes:\n  extra:\n    taskfile: ./taskfiles/extra.yml\n')), /unpinned wiring file: taskfiles\/extra\.yml/],
+        ['structured fields for two classes resolve by the declared precedence', json(FILES.grounds, (j) => { j.structured['R4.a'] = { baseline: FILES.grounds, bound: '3', risk_owner: 'x', expiry: '2099-12-31' }; return j; }), /class predicate: R4\.a is recorded invariant but its reaching branches derive tolerance/],
+        ['an aspect that matches no class predicate is refused', json(FILES.mapping, (j) => { j.mapping.check_augment_description_cap['c4-over-cap'] = 'op:informational'; return j; }), /class predicate: R4\.a matches no class predicate|binding row R4\.a is reached by no branch/],
+        ['a pinned input changed after the promoted candidate breaks the promotion', mutated(io, FILES.ledger, (t) => t.replace('## Row ids and invalidation — revision 7\n', '## Row ids and invalidation — revision 7\n\npromoted candidate: commit `a9a9ecd98d3380ce50269fafac45f7b2ab4d8225`, tree `f4a60738c844a3e261fa588b466e29c0d34c46b7`.\n')), /promotion broken: src\/scripts\/check_composite_arming\.ts changed after candidate/],
         ['a pin line renewed without its attested-set line', mutated(io, FILES.ledger, (t) => t.replace('`672ce60e22f56fd483b31ed84b13266a90b821c0`', '`' + '1'.repeat(40) + '`')), /pin set broken/],
-        ['a snapshot without its structured baseline', mutated(io, FILES.ledger, (t) => t.replace(/(\| `check_augment_description_cap` \|[^\n]*?)\*\*invariant\*\*/, '$1**snapshot**')), /class predicate: R4\.a is recorded snapshot without its structured fields/],
+        ['a snapshot without its structured baseline', mutated(io, FILES.ledger, (t) => t.replace(/(\| `check_augment_description_cap` \|[^\n]*?)\*\*invariant\*\*/, '$1**snapshot**')), /class predicate: R4\.a is recorded snapshot but its reaching branches derive invariant/],
         ['negated prose in an evidence cell changes no class', mutated(io, FILES.ledger, (t) => t.replace('| fixed cap |', '| does not fail; errors are informational; no contract |')), { none: /class predicate: R4\.a/ }],
         ['an unknown flag appears in a check', mutated(io, 'src/scripts/lint_readme_jargon.ts', (t) => `${t}\nconst x = '--surprise';\n`), /unclassified invocation mode: lint_readme_jargon --surprise/],
     ];
@@ -541,29 +640,32 @@ function printMatrix() {
     process.exit(failures.length === 0 ? 0 : 1);
 }
 
-if (process.argv.includes('--self-test')) selfTest();
-else if (process.argv.includes('--matrix')) printMatrix();
-else if (process.argv.includes('--branches')) {
-    process.stdout.write(reconcile(realIo()).artefact);
-} else if (process.argv.includes('--aspects')) {
-    const { aspects, failures } = reconcile(realIo());
-    console.log('| Row | Check | Recorded | Mode | Blocking branches | Non-blocking branches | Derived | Verdict |');
-    console.log('|---|---|---|---|---|---|---|---|');
-    for (const a of aspects) console.log(`| ${a.id} | \`${a.check}\` | ${a.recorded} | ${a.mode} | ${a.blocking.join(', ') || '—'} | ${a.nonBlocking.join(', ') || '—'} | ${a.derived} | ${a.verdict} |`);
-    const refused = aspects.filter((a) => a.verdict === 'REFUSED').length;
-    console.log(`\naspects ${aspects.length} · derived ${aspects.filter((a) => a.verdict === 'derived').length} · waived ${aspects.filter((a) => a.verdict === 'waived').length} · refused ${refused}`);
-    process.exit(failures.length === 0 && refused === 0 ? 0 : 1);
-} else if (process.argv.includes('--status')) {
-    const { status } = reconcile(realIo());
-    process.stdout.write(`${JSON.stringify(status, null, 2)}\n`);
-    process.exit(status.state === 'valid' ? 0 : status.state === 'quarantined' ? 3 : 1);
-}
-else {
-    const { failures, report, status } = reconcile(realIo());
-    for (const l of report) console.log(l);
-    if (failures.length > 0) {
-        console.log(`\n${status.state.toUpperCase()} (${failures.length}):\n- ${failures.join('\n- ')}`);
-        process.exit(status.state === 'quarantined' ? 3 : 1);
+const isEntry = process.argv[1] !== undefined && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isEntry) {
+    if (process.argv.includes('--self-test')) selfTest();
+    else if (process.argv.includes('--matrix')) printMatrix();
+    else if (process.argv.includes('--branches')) {
+        process.stdout.write(reconcile(realIo()).artefact);
+    } else if (process.argv.includes('--aspects')) {
+        const { aspects, failures } = reconcile(realIo());
+        console.log('| Row | Check | Recorded | Mode | Blocking branches | Non-blocking branches | Derived | Verdict |');
+        console.log('|---|---|---|---|---|---|---|---|');
+        for (const a of aspects) console.log(`| ${a.id} | \`${a.check}\` | ${a.recorded} | ${a.mode} | ${a.blocking.join(', ') || '—'} | ${a.nonBlocking.join(', ') || '—'} | ${a.derived} | ${a.verdict} |`);
+        const refused = aspects.filter((a) => a.verdict === 'REFUSED').length;
+        console.log(`\naspects ${aspects.length} · derived ${aspects.filter((a) => a.verdict === 'derived').length} · waived ${aspects.filter((a) => a.verdict === 'waived').length} · refused ${refused}`);
+        process.exit(failures.length === 0 && refused === 0 ? 0 : 1);
+    } else if (process.argv.includes('--status')) {
+        const { status } = reconcile(realIo());
+        process.stdout.write(`${JSON.stringify(status, null, 2)}\n`);
+        process.exit(status.consumable ? 0 : status.state === 'valid' ? 4 : status.state === 'quarantined' ? 3 : 1);
     }
-    console.log('\nOK: the Phase 7 manifest matches its landed record and git history; the ledger, the invocation inventory and the manifest name the same 16 checks; every binding aspect carries one of the four classes; every assertion-changing flag is named; every branch of the independent inventory maps to a binding row or a declared category and every binding row is reached; every independent review verdict is honoured; every pin is current.');
+    else {
+        const { failures, report, status } = reconcile(realIo());
+        for (const l of report) console.log(l);
+        if (failures.length > 0) {
+            console.log(`\n${status.state.toUpperCase()} (${failures.length}):\n- ${failures.join('\n- ')}`);
+            process.exit(status.state === 'quarantined' ? 3 : 1);
+        }
+        console.log('\nOK: the Phase 7 manifest matches its landed record and git history; the ledger, the invocation inventory and the manifest name the same 16 checks; every binding aspect carries one of the four classes; every assertion-changing flag is named; every branch of the independent inventory maps to a binding row or a declared category and every binding row is reached; every independent review verdict is honoured; every pin is current.');
+    }
 }

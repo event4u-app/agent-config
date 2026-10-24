@@ -414,16 +414,21 @@ what the gate attests."*
       experimental collector slice stays in `src/scripts/_lib/gate_collector_experimental.ts`. Phase 8
       stays gated on `external-bootstrap-boundary-for-phases-2-3`. Prior text:
       `git show ca807bba41:agents/roadmaps/later/road-to-authority-routing-mechanism.md`.
+      To close it: the closed bar A1–A8 (D50) is implemented at revision 24.
+      Renew the pin set as one candidate, run
+      `gate-renewal-suite.mjs --candidate`, have it reviewed by risk, then
+      record the promotion line.
 
-- [ ] **7.2 Implement the classification**: an invariant stays a required
+- [x] **7.2 Implement the classification**: an invariant stays a required
       gate; a snapshot is refreshed by the agent per 7.1's rule, never
       silently; an observation is demoted to non-blocking. No check is
       silently weakened — a demotion is recorded with its reason, inline,
       per [`active-remediation`](../../../src/rules/active-remediation.md).
-      **Reliance on 7.1 (D37–D39):** fail-closed. It holds only while
-      `node agents/evidence/analysis/gate-ledger-reconcile.mjs` exits 0 on the
-      candidate merge result. Suspend, re-attestation, owner and rollback
-      rules are in `agents/evidence/analysis/gate-7-2-reliance-rules-20261024.md`.
+      **Basis (D48):** the provisional, revisable classes in
+      `src/config/live-tree-check-classes.json`, read per invocation by
+      `src/scripts/_lib/gate_invocations.ts` and enforced in CI by
+      `src/scripts/check_live_tree_check_classes.ts`, so an invariant whose
+      invocation stops blocking fails the run.
       verify: `npx vitest run tests/scripts/check_persistence_classification.test.ts` -> 0
 
 *Exit: every live-tree check pinned red at Phase 7 start carries a
@@ -650,6 +655,8 @@ before 8.3 gates anything.*
 | D46 | business-owned | owner | **Option 1: correct the behaviour now.** `check_composite_arming` exits 0 when the composite store is absent (*"not measured yet"*, never a build failure, as R16.d's contract says); a present store that fails its readings still exits non-zero. No waiver is approved. Directive: `agents/evidence/owner-directives/2026-10-24-7-1-r16d-behaviour.md`. Councils 24 and 25 routed the choice to the owner and both recommended this option over a time-bounded waiver (2) and a contract amendment to invariant (3). | AI council 2026-10-24, rounds 24–25, 2/2: `agents/evidence/council/gate-classification-item4-r3-20261024.md`, `gate-classification-item4-r4-20261024.md`. | R16.d's contract or `check_composite_arming`'s absent-store exit changes |
 | D47 | contested-technical | council:2026-10-24 design, twenty-sixth round, 2/2 present, peer review — convergent, **renewal refused** | After D46's fix (`check_composite_arming` exits 0 on an absent store, still 1 on an unreadable, malformed or empty one, with tests seen red), check 16 was re-inventoried by a separate session and its three new mappings reviewed 3/3 agree; 49 of 49 aspects derive their class. The renewal round D38 allows returned *do not renew* and item 4 *not met*, 2/2. Its findings were: substring mode matching, effects not checked against code, no operational state or rollback for D46, and an unexamined wiring change in the unit. Ledger revision 22 answers each: exact flag tokens with structured flags; effect-versus-code contradiction refusal with stated coverage (63 of 167 blocking branches code-confirmed); D46 revert triggers; scoped wiring pins. The pins stay unrenewed until a further renewal round. | AI council 2026-10-24, $0.00. Record and verbatim prompt: `agents/evidence/council/gate-classification-renewal-20261024.md` and its `.question.md`. | a renewal round attests the cumulative diff, or it names a further defect |
 | D48 | business-owned | owner | **7.1 is parked, with a revisable fail-closed default.** Throughput over ceremony: eight partial PRs and 37 decisions on one step exceed the timebox. 7.2 consumes ledger revision 22; an aspect without a code-confirmed effect stays blocking. No further council round on 7.1. | Directive: `agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`. | a demonstrated misclassification in revision 22, or the owner reopens 7.1 |
+| D49 | contested-technical | council:2026-10-24 design, twenty-seventh round, 2/2 present, peer review — convergent, **renewal refused again** | The second renewal round, on revision 22, returned *do not renew* and item 4 *not met*, 2/2. Whole-file wiring hashes would attest the unexamined `check_step_production_reach --enforce` change, and only the derived labels were shown exclusive, not the runtime modes. Revision 23 answered with step-scoped wiring pins, an `overlaps` precedence table, structured modes for five more rows, a narrowest-branch contradiction rule and the independence prompts committed. Round 28 refused those step-scoped pins as heuristic. | AI council 2026-10-24, $0.00. Records and verbatim prompts: `agents/evidence/council/gate-classification-renewal-r2-20261024.md` and `gate-classification-renewal-r3-20261024.md`, each with its `.question.md`. | superseded by D50's closed bar |
+| D50 | contested-technical | council:2026-10-24 design, twenty-ninth round, 2/2 present on the second run (the first run's anthropic answer was blocked by its safety classifier), peer review — **converged on a closed bar** | Attempt 4 changed strategy and asked for a closed acceptance list instead of a verdict. Converged: whole-file wiring pins with a hashed review of non-Phase-7 changes; renewal atomic over the units; a runtime truth table for the two multi-mode branches required for 7.1; the 104 aggregated-exit branches not a 7.1 requirement. The bar is A1–A8: diff manifest, oracle-free classifier partition, grounds provenance, mode truth table, whole-file wiring, candidate promotion, mutation matrix, atomic rollback. Implemented at ledger revision 24, each check seen red; the pins are not renewed. | AI council 2026-10-24, $0.00. Record and verbatim prompt: `agents/evidence/council/gate-classification-renewal-acceptance-20261024.md` and its `.question.md`. | A1–A8 change, or a named error or coverage defect is demonstrated |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-21 | reviewer: claude/host -->

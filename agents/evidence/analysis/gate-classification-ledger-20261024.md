@@ -220,7 +220,7 @@ Any changed, added or removed helper on the closure marks the verdict stale.
 **The pins as one attested set (revision 19).** Round 24 asked that the inputs
 be attested as one immutable unit, not pin by pin. The reconciler hashes the
 recorded pin lines, the recorded table digest and the recorded closure digest.
-The recorded value is the attested set: sha256 `99a2eb7a09124973749f92cb4e3a40914ff77b72da9dd177fae0a52e5a67aa41`.
+The recorded value is the attested set: sha256 `107500cc38617cd83381a283324b593ed5be0c28729e71731fe9f750ccbfc38c`.
 
 A pin line changed without this line is refused as a broken set, not as a stale
 pin. A renewal therefore replaces the whole set in one diff, and rollback
@@ -249,12 +249,6 @@ than listed.
 | `src/scripts/lint_readme_jargon.ts` | `d0ffe1974b02cceea8cc0d0961e598fbd5e6c9b2` |
 | `src/scripts/lint_readme_serial_comma.ts` | `825b1fe415522c322af4436355348f17d05655a2` |
 | `src/scripts/check_composite_arming.ts` | `899e5d1fa56011a583aca46a846b2c26451e288f` |
-| `taskfiles/ci-fast.yml` | `aedb0b222ef39622a6dc66abe6d94f95eaad46b7` |
-| `taskfiles/content.yml` | `2c8f8c7528cef2d24f4085bb00757d90f9d85e99` |
-| `taskfiles/engine.yml` | `be2c6e7b78ca288fd5f137037d29a83c04487786` |
-| `.github/workflows/standing-payload-delta.yml` | `82eb039cd82226e642c24df634c7ee7ec3ad0cf5` |
-| `.github/workflows/rule-backstops.yml` | `015473465df2afb82e32ada7fce9d458d6c17055` |
-| `.github/workflows/tests.yml` | `0e1e0c9882919e10ff783780315a84b5e5f5dea3` |
 | `agents/evidence/analysis/gate-branch-inventory-20261024.json` | `119214ea142393c7254cae40e080153728e10fb0` |
 | `agents/evidence/analysis/gate-branch-mapping-20261024.json` | `c296fd9f02c1f0e83688da3f596cbb19e079665e` |
 | `agents/evidence/analysis/gate-branch-mapping-review-20261024.json` | `46227ecdae464df420e5aec60910a1b7a497e686` |
@@ -267,6 +261,28 @@ than listed.
 | `agents/evidence/analysis/gate-phase7-harness.mjs` | `672ce60e22f56fd483b31ed84b13266a90b821c0` |
 | `agents/evidence/analysis/gate-invocation-inventory-20261024.md` | `1f3ff61036ccbd9ba42f9acd4eec5b5c2697b4f9` |
 | `agents/evidence/analysis/gate-class-grounds-20261024.json` | `3ae580599ebaa4d88a1aa7145c7c9364165f61a1` |
+| `Taskfile.yml` | `42fb51998a3069fd9d78af2e0b94e016b9778372` |
+| `taskfiles/bench-ab.yml` | `4d4aee8eaba288f2ff2ecfd9f6afdb39c684a5c0` |
+| `taskfiles/bench-ui.yml` | `07c2a71d5e3568f760f9ec1da66f40b141008d30` |
+| `taskfiles/ci-fast.yml` | `aedb0b222ef39622a6dc66abe6d94f95eaad46b7` |
+| `taskfiles/content.yml` | `2c8f8c7528cef2d24f4085bb00757d90f9d85e99` |
+| `taskfiles/dev.yml` | `ecde3261b4c09b48991f1c3bd4fcdb28c272c92c` |
+| `taskfiles/engine.yml` | `be2c6e7b78ca288fd5f137037d29a83c04487786` |
+| `taskfiles/mcp.yml` | `8285c13dde4339de534a06cf080807d5e52046ee` |
+| `taskfiles/release.yml` | `598ff67a23516fd3daf73238dd93657e0e2bfc78` |
+| `taskfiles/value.yml` | `cd2ece6e510d1bad1e03bb54b1bafbb436587d1d` |
+| `.github/workflows/standing-payload-delta.yml` | `82eb039cd82226e642c24df634c7ee7ec3ad0cf5` |
+| `.github/workflows/rule-backstops.yml` | `015473465df2afb82e32ada7fce9d458d6c17055` |
+| `.github/workflows/tests.yml` | `0e1e0c9882919e10ff783780315a84b5e5f5dea3` |
+| `agents/evidence/analysis/gate-wiring-review-20261024.md` | `bcb96b497545a23bee48a25bc23ec6d388b418d6` |
+
+**Wiring, pinned as whole files (revision 24).** Round 28 rejected the
+step-scoped pins of revision 23 as heuristic. Round 29 (D50, A5) converged on
+whole-file pins. Those pins cover `Taskfile.yml`, every taskfile it includes and
+the three Phase 7 workflows, all at revision 16. A hashed review record covers
+every change since then:
+`agents/evidence/analysis/gate-wiring-review-20261024.md`.
+
 
 
 ## Independent branch inventory — revision 8
@@ -853,6 +869,51 @@ named defect.
 
 The pins are not renewed. That needs another council round on the cumulative
 diff.
+
+## Round 27's findings — revision 23
+
+Round 27 was the second renewal round on this target
+(`agents/evidence/council/gate-classification-renewal-r2-20261024.md`). It
+returned **do not renew** and **item 4 not met**, both 2/2. Attempt 3 changes
+the strategy: it re-cuts the renewal unit rather than defending it.
+
+| Finding | Revision 23 |
+|---|---|
+| Whole-file wiring hashes attest an unexamined change (`--enforce`) | The wiring files are pinned by the **digest of their Phase 7 steps only**. These are YAML blocks around a line that names one of the 16 checks, or names a task whose block names one. `Taskfile.yml` is added, because it orders the Phase 7 tasks and was never pinned. The `--enforce` line lies in no Phase 7 step, so it is outside the unit. Since revision 16 only one Phase 7 step changed: the `tests.yml` arming comment. Three self-test cases cover a change outside a step, a change inside one, and a dropped Taskfile task. The first was seen red. |
+| Item 4: label exclusivity shown, but not runtime mode exclusivity; no precedence for overlapping modes | A **precedence table** (`overlaps`) is required for every branch that reaches rows in more than one mode, or whose predicates name a flag other than its rows' modes. It names the row each mode selects, the excluded flags and the tuning parameters. A run with the flag is in the flag's mode. The table must cover the branch's rows, modes and flag tokens exactly. There are 6 entries. Three self-test cases (missing, swapped, undeclared flag) were seen red. |
+| (found by that check) Self-test rows were not modes | R2.b, R3.b, R7.b and R16.e name `--self-test` or `--mutation-selftest` in their aspect, and R10.h names `--freshness-days` in its applicability. None of the five had a structured mode. A row's mode is now read from its aspect, applicability or class cell, and must equal the structured mode. There are now 16 structured modes, and two self-test cases cover it. |
+| The scanner misses a contradiction when a wider blocking branch also covers the site | The contradiction rule reads the **narrowest** covering branch. A self-test case was seen red under the old every-branch rule. |
+| Independence asserted, not shown | The two sessions' prompts are committed in `gate-check16-reinventory-prompts-20261024.md`. The record states what that shows (each session's input boundary) and what it cannot (obedience; both are on the same provider). |
+
+Not changed, with reasons:
+
+- Code confirmation stays at 63 of 167 blocking branches, which is a stated
+  limit of syntactic scanning.
+- The absent-store exit 0 is the owner's choice (D46). anthropic's
+  *"misclassified as non-blocking"* reopens an owner decision, which this lane
+  does not do.
+
+`--aspects`: 49 derived, 0 waived, 0 refused. Self-test 43/44. The one red case
+is the clean baseline, which reports the unrenewed pins.
+
+## The closed bar A1–A8 implemented — revision 24
+
+Round 29 (D50) fixed a closed bar of eight items. All eight are implemented,
+and each new check was seen red under sabotage:
+
+| Item | What implements it |
+|---|---|
+| A1 | `gate-renewal-suite.mjs --manifest`: 43 pinned inputs, each assigned to unit A, B or C, with the exact ledger-row diff since revision 16 |
+| A2 | The reconciler evaluates every class predicate without the recorded class and takes exactly one winner by the declared precedence; 49 of 49 |
+| A3 | `--provenance`: every structured field changed since revision 16 links to its ledger row and source line, or to its review verdict |
+| A4 | `tests/scripts/gate_multimode_truth_table.test.ts`: 19 runtime cases across both multi-mode branches |
+| A5 | Whole-file wiring pins: `Taskfile.yml`, its 9 included taskfiles and 3 workflows; the review record is `gate-wiring-review-20261024.md` |
+| A6 | `--candidate <rev>` runs the suite on a clean HEAD. `--status` is consumable only with a promotion line, and an input changed after promotion breaks it |
+| A7 | `--matrix`: six isolated mutations, each must fail a gate that is green unmutated |
+| A8 | `--rollback-check`: one checkout restores all pinned inputs to revision 16, and the base reconciler then reports valid |
+
+The pins are not renewed. The record reads **quarantined** until a candidate
+with renewed pins passes `--candidate` and is promoted.
 
 ## Source-to-record completeness, mechanically — revision 14
 

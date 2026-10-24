@@ -2,6 +2,11 @@
 
 # Step 7.2 — entry, suspend, re-attestation and owner rules
 
+**Superseded for 7.2 by D48 (owner directive, 2026-10-24).** Step 7.1 is
+parked. 7.2 consumes ledger revision 22 under a provisional default, which is
+held per invocation in `src/config/live-tree-check-classes.json`. The rules
+below apply again once the parked step promotes the ledger.
+
 The conditions under which step 7.2 of `road-to-authority-routing-mechanism`
 may rely on step 7.1's classification ledger. They were set by rounds D37 to
 D39, and the step points here.
@@ -81,3 +86,11 @@ The invocation inventory, 7.2's first item, is done:
   checks, and no Phase 7 check's invocation changed. Renewing these pins attests
   only that no Phase 7 invocation moved. It does not attest the
   `check_step_production_reach` enforcement, which its own roadmap owns.
+- *Consumption reads `consumable` (round 29, A6).* 7.2 consumes the ledger
+  only when `gate-ledger-reconcile.mjs --status` exits 0, which means
+  `consumable: true`. That requires a valid record **and** a promotion line:
+  the commit and tree of a candidate on which the renewal suite
+  (`gate-renewal-suite.mjs --candidate`) ran clean, recorded after a council
+  round attested it. Exit 4 means a valid but unpromoted candidate, exit 3
+  stale pins, exit 1 invalid. An input that changes after promotion breaks the
+  promotion, and the record is then invalid.
