@@ -393,6 +393,38 @@ the revision 7.2 changes. A stale, failed or absent reconciliation blocks
 reliance. That condition is written into step 7.2 itself, and 7.2's own test
 runs the reconciler first.
 
+## The twelve review disagreements, disposed — revision 11
+
+Round 15 (D39): anthropic would not accept *"honours every review verdict"*
+without seeing the disagreements and how each one ended. Here is all of them.
+The reviewer is the separate session, and its suggestion was adopted in
+**12 of 12**. Not one was resolved in favour of the ledger author's original
+mapping. The reconciler enforces this: an adopted disagreement that is
+reverted fails the run (self-test case *a review disagreement is reverted*).
+
+| Check | Branch | Author mapped | Reviewer suggested | Now | Reviewer reason |
+|---|---|---|---|---|---|
+| `check_gate_completeness` | `c1-dead-scope` | `R1.c` | `op:could-not-run` | `op:could-not-run` | Dead scope (no registered gate script found) is the tool being unable to measure, which the definition excludes; every other dead-scope branch (c5,c6,c7,c9,c11,c12,c13) i… |
+| `lint_ticked_unmet_criteria` | `c2-selftest-recurse` | `R2.b` | `op:usage` | `op:usage` | Refusing to recurse when GATE_SELF_TEST_CHILD=1 is an invocation guard (exit 2), not a finding about the fixture table that R2.b describes. |
+| `check_rule_invariants` | `c3-selftest-empty` | `R3.b` | `op:could-not-run` | `op:could-not-run` | No invariant to mutate means the self-test cannot run; it says nothing about whether removal is detected (the R3.b property). |
+| `check_rule_invariants` | `c3-selftest-baseline-broken` | `R3.b` | `op:could-not-run` | `op:could-not-run` | Precondition failure: first invariant absent from src, so the mutation cannot be performed. The repo fact itself (string missing) is R3.a's property, not R3.b's. |
+| `check_rule_invariants` | `c3-selftest-src-unreadable` | `R3.b` | `op:could-not-run` | `op:could-not-run` | Unreadable src file, exit 3 internal error — identical in nature to c3-json-read-or-parse which is mapped op:could-not-run. |
+| `check_rule_invariants` | `c3-selftest-mutation-noop` | `R3.b` | `op:could-not-run` | `op:could-not-run` | Defensive "mutation did not apply" guard: the self-test could not set up its mutation; it does not measure detection. (op:unreachable is also defensible.) |
+| `check_rule_invariants` | `c3-selftest-load-errors` | `R3.b` | `op:could-not-run` | `op:could-not-run` | Same invariants.json load/parse/malformed errors as c3-json-not-array/-malformed-entry/-read-or-parse (all op:could-not-run), exit 3; mapping the selftest-path copy to R3… |
+| `check_token_quality_golden` | `c8-tasks-not-list` | `R8.a` | `op:could-not-run` | `op:could-not-run` | validate() records the structural error but task_count is then 0, so assertScanned throws first and main returns 2 with the dead-scope message (check_token_quality_golden… |
+| `check_composite_arming` | `c16-store-unreadable` | `R16.c` | `R16.d` | `R16.d` | Store absent/unreadable is exactly row R16.d ("store absent"). R16.c is partial malformation. Mapping swapped with c16-ledger-skip / c16-malformed-warn. (By the definitio… |
+| `check_composite_arming` | `c16-ledger-skip` | `R16.d` | `R16.c` | `R16.c` | Malformed lines recorded as precondition_unmet in the ledger is verbatim R16.c's evidence ("the gate ledger records each dropped line as precondition_unmet"). R16.d is st… |
+| `check_composite_arming` | `c16-dead-scope` | `R16.b` | `op:could-not-run` | `op:could-not-run` | Empty store (zero records, zero malformed lines) is dead scope / evidence-missing, not malformation; the definition excludes it. R16.b's row text folds "empty store also … |
+| `check_composite_arming` | `c16-malformed-warn` | `R16.d` | `R16.c` | `R16.c` | Malformed lines ignored while usable records exist = R16.c "partial malformation". R16.d is store absent. |
+
+Four of the twelve corrected author errors that changed a row's meaning:
+
+- the swapped composite rows (`R16.c` and `R16.d`), three branches;
+- the dead-scope branch behind `R1.c`, which led to `R1.c`'s withdrawal.
+
+The other eight moved precondition and invocation-guard branches out of rows
+and into `op:could-not-run` or `op:usage`.
+
 ## Current enforcement, recorded separately
 
 From `agents/evidence/analysis/gate-invocation-inventory-20261024.md`:
