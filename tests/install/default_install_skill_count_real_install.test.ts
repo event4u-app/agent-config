@@ -11,8 +11,10 @@
  *
  * So this case runs the real bash orchestrator into a throwaway HOME, counts the
  * catalog skills that actually arrived, and holds three numbers equal: the
- * installed count, the predicate's `projected`, and the `N of M` the ledger
- * publishes. Directories the install writes that are not catalog skills (command
+ * installed count on a host without a listing lever (augment), the predicate's
+ * `projected`, and the `N of M` the ledger publishes. Since step 4.7 of
+ * road-to-a-setup-that-decides-itself, claude-code receives every catalog skill
+ * and scopes by visibility; the case asserts that too. Directories the install writes that are not catalog skills (command
  * wrappers) are excluded by name, never by count.
  *
  * HOME and EVENT4U_CONFIG_HOME are injected, never inherited, per
@@ -54,12 +56,12 @@ function publishedFigure(): { projected: number; total: number } {
     return { projected: Number(m?.[1]), total: Number(m?.[2]) };
 }
 
-describe('default-install-context-cost — a real global claude-code install', () => {
-    it('installs exactly the projected catalog skills the ledger publishes', () => {
+describe('default-install-context-cost — a real global install, per host (step 4.7)', () => {
+    it('a host without a listing lever gets the projected skills the ledger publishes; claude-code gets all', () => {
         const home = mkTmp('skillcount-home-');
         const cwd = mkTmp('skillcount-cwd-');
 
-        const r = spawnSync('bash', [ORCHESTRATOR, '--global', '--tools=claude-code', '--yes', '--quiet'], {
+        const r = spawnSync('bash', [ORCHESTRATOR, '--global', '--tools=claude-code,augment', '--yes', '--quiet'], {
             cwd,
             encoding: 'utf8',
             timeout: 240_000,
@@ -76,15 +78,16 @@ describe('default-install-context-cost — a real global claude-code install', (
         expect(r.status, `install failed:\n${r.stdout}\n${r.stderr}`).toBe(0);
 
         const catalog = new Set([...iter_skills()].map((f) => path.basename(path.dirname(f))));
-        const installed = fs
-            .readdirSync(path.join(home, '.claude', 'skills'))
-            .filter((name) => catalog.has(name));
+        const arrived = (dir: string): string[] => fs.readdirSync(path.join(home, dir, 'skills')).filter((name) => catalog.has(name));
 
         const predicate = stats();
         const published = publishedFigure();
 
         expect(catalog.size).toBe(predicate.total);
-        expect(installed.length).toBe(predicate.projected);
+        // augment has no listing lever: the profile's packs decide.
+        expect(arrived('.augment').length).toBe(predicate.projected);
+        // claude-code scopes by visibility (skillOverrides): every catalog skill ships.
+        expect(arrived('.claude').length).toBe(predicate.total);
         expect(published).toStrictEqual({ projected: predicate.projected, total: predicate.total });
     }, 300_000);
 });

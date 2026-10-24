@@ -152,7 +152,7 @@ export type ByteSource =
 export const HOST_SURFACES: readonly HostSurface[] = [
     {
         host: 'augment', surface: '.augment/rules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:2454',
+        writer: 'src/scripts/condense.ts:2435',
         anchor: '\'.augment/rules\',',
         note: 'copies by default; symlinks under `augment.rules_use_symlinks`',
     },

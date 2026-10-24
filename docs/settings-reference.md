@@ -256,12 +256,6 @@ explanation lives now that the file no longer carries it as comments.
 | `project.improvement_pr_branch_prefix` | A | string | `"improve/agent-"` |  | Branch-name prefix for improvement PRs the agent opens against project.upstream_repo (e.g. "improve/agent-add-react-skill"). Pick a prefix your repo conventions allow. |
 | `project.upstream_repo` | C | string | `""` |  | GitHub slug (owner/repo) the upstream-contribute skill targets when you ask the agent to push a learning back to the shared agent-config package. Empty = improvement PRs are disabled. |
 
-## projection
-
-| Key | Class | Type | Default | Allowed values | What it does |
-|---|---|---|---|---|---|
-| `projection.mode` | C | string | `"legacy-all"` | `legacy-all` · `scoped` | Whether the per-tool projector writes EVERY artefact into the host-tool trees (.claude/ .cursor/ .windsurf/) or only the active profile + packs' artefacts (ADR-040, docs/contracts/capability-packs.md). legacy-all = (default, non-breaking) project the full surface exactly as 5.x did. scoped = project only the active profile's packs unioned with the runtime.active_packs overlay, expanded over the requires graph — opt in with `agent-config use --profile=<id>`. A failed scoped projection restores the full tree. |
-
 ## quality
 
 | Key | Class | Type | Default | Allowed values | What it does |

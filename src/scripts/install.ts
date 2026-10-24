@@ -103,7 +103,6 @@ import * as gitignore_block from './_lib/gitignore_block.js';
 // that exit into the installer a consumer loads (`check_installer_import_purity`
 // catches exactly this). The lib has no entry and no exit.
 import * as catalogue from './_lib/skill_catalogue.js';
-import { isInteractiveSession, type SessionProbe } from '../shared/interactiveContext.js';
 import * as claude_desktop_bundler from './_lib/claude_desktop_bundler.js';
 import * as claude_settings_hooks from './_lib/claude_settings_hooks.js';
 import { applyHostListingPolicies } from './_lib/skill_listing_overrides.js';
@@ -3165,7 +3164,7 @@ const _prune_lab_modules = scoped_projection.prune_lab_modules;
 
 // --- Scoped-projection prune (road-to-credible-install Phase 2) ----------
 //
-// `projection.mode: scoped` narrows a GLOBAL deploy to the active profile's
+// The scoped prune narrows a GLOBAL deploy, on hosts without a listing lever, to the active profile's
 // packs (workspaces `engineering` + `agent-config-maintainer` by default,
 // unioned with a `runtime.active_packs` overlay, expanded over the packs.yml
 // `requires` graph). Mirrors the core-only lab prune above — same
@@ -3215,30 +3214,20 @@ function _resolve_global_settings_path(): string | null {
 }
 
 /**
- * Resolve the effective `projection.mode` + `runtime.active_packs` overlay
- * for THIS global install.
- *
- * An EXISTING global settings file (any prior install, wizard-written or
- * hand-edited) is authoritative: a missing `projection.mode` key, an
- * unreadable file, or an explicit non-`scoped` value ALL resolve to
- * `legacy-all` — the upgrade-compat contract (an install that never opted in
- * stays unscoped). Only when NO global settings file exists yet — before the
- * wizard's `/api/v1/wizard/finish` route has ever written one on this
- * machine — does resolution fall through to the packaged template's own
- * default, the value a fresh install is about to receive.
+ * The `runtime.active_packs` overlay for THIS global install: the existing global
+ * settings file, else the packaged template a fresh install receives. Scope is
+ * no longer a setting (step 4.7 of road-to-a-setup-that-decides-itself, owner
+ * answer OQ-1): `scopesByProfile(tool)` decides per host, and a leftover
+ * `projection.mode` is named as removed by the settings loader.
  */
-function _resolve_scoped_projection(
-    package_root: string,
-): { mode: mcp_bridge.ProjectionMode; active_packs: string[] } {
+function _resolve_scoped_projection(package_root: string): { active_packs: string[] } {
     const doc = _resolve_global_settings_doc() ?? _load_default_settings(package_root);
-    const projection = _isPlainObject(doc['projection']) ? (doc['projection'] as Record<string, unknown>) : {};
-    const mode = mcp_bridge.projectionModeOf(projection['mode']);
     const runtime = _isPlainObject(doc['runtime']) ? (doc['runtime'] as Record<string, unknown>) : {};
     const active_packs_raw = runtime['active_packs'];
     const active_packs = Array.isArray(active_packs_raw)
         ? active_packs_raw.filter((v): v is string => typeof v === 'string')
         : [];
-    return { mode, active_packs };
+    return { active_packs };
 }
 
 /**
@@ -3397,28 +3386,20 @@ function install_global(
         }
     }
 
-    // Scoped-projection prune (road-to-credible-install Phase 2 default
-    // flip): when the GLOBAL settings governing this install resolve to
-    // `projection.mode: scoped` (fresh installs; an EXISTING install without
-    // the key, or with any other value, stays untouched — see
-    // `_resolve_scoped_projection`), drop every skill/command artefact whose
-    // `packs:` frontmatter carries no intersection with the active pack set.
-    // A failed resolution (corrupt packs.yml, any thrown error) is caught
-    // here and restores the full tree — never a partial or crashed prune.
+    // Per-host scope (step 4.7, owner answer OQ-1): a host with a listing lever
+    // keeps every artefact and scopes by visibility; every other host drops each
+    // skill/command whose `packs:` miss the active profile's packs. A failed
+    // resolution (corrupt packs.yml, any thrown error) restores the full tree.
     try {
-        const { mode, active_packs } = _resolve_scoped_projection(package_root);
-        if (mode === 'scoped') {
-            const packs_registry = _load_packs_registry(package_root);
-            const active_ids = _compute_active_pack_ids(packs_registry, active_packs);
-            let scoped_pruned: number;
-            [scoped_pruned, deploy_results] = _prune_scoped_modules(deploy_results, active_ids);
-            if (!state.QUIET) {
-                info(
-                    `🧹 Scoped install: pruned ${scoped_pruned} non-active-pack artefact(s) ` +
-                        `(active packs: ${[...active_ids].sort().join(', ') || '(none)'}). ` +
-                        'Set projection.mode: legacy-all in .agent-settings.yml to restore the full surface.',
-                );
-            }
+        const { active_packs } = _resolve_scoped_projection(package_root);
+        const active_ids = _compute_active_pack_ids(_load_packs_registry(package_root), active_packs);
+        let scoped_pruned: number;
+        [scoped_pruned, deploy_results] = scoped_projection.prune_scoped_modules_per_host(deploy_results, active_ids);
+        if (!state.QUIET && scoped_pruned > 0) {
+            info(
+                `🧹 Scoped install: pruned ${scoped_pruned} non-active-pack artefact(s) on hosts without a listing lever ` +
+                    `(active packs: ${[...active_ids].sort().join(', ') || '(none)'}). Add a pack to runtime.active_packs to keep it.`,
+            );
         }
     } catch (e) {
         if (!state.QUIET) {
@@ -3548,15 +3529,6 @@ function install_global(
             for (const line of _catalogue_truncation_warnings(deploy_results, project_root)) {
                 warn(line);
             }
-            const notice = _scoped_migration_notice(deploy_results, project_root, package_root, {
-                env: process.env,
-                stdinTty: process.stdin.isTTY === true,
-                stdoutTty: process.stdout.isTTY === true,
-            });
-            if (notice.length > 0) {
-                process.stdout.write('\n');
-                for (const line of notice) info(line);
-            }
         } catch {
             // A measurement must never sink an install that otherwise worked.
         }
@@ -3607,64 +3579,6 @@ export function _catalogue_truncation_warnings(
         if (warning !== null) lines.push(warning);
     }
     return lines;
-}
-
-/**
- * The scoped-projection migration notice for an EXISTING install.
- *
- * Shape decided by AI council 2026-08-15 (2/2 converged, both members present):
- * option B — the existing warning PLUS an interactive notice that persists
- * NOTHING and names the manual edit and the GUI route. `projection.mode` is
- * settings class C, so no agent may write it; a notice that offered a CLI
- * write would send the reader to a command guaranteed to refuse them.
- *
- * Eligibility and delivery are separate on purpose. A non-interactive run can
- * be fully eligible; it simply gets the warning and no notice, and the two
- * outcomes stay distinguishable instead of collapsing into "nothing printed".
- *
- * Known and accepted: with nothing persisted, a qualifying install sees this
- * on every deploy. The council named that as the strongest argument for doing
- * nothing at all, and it does not outweigh making a measured, silent
- * capability loss an explicit human decision.
- */
-export function _scoped_migration_notice(
-    deploy_results: Record<string, DeployResult>,
-    project_root: string | null,
-    package_root: string,
-    probe: SessionProbe,
-): string[] {
-    if (!isInteractiveSession(probe)) return [];
-
-    const log_candidates = [
-        path.join(user_global_paths.event4u_root(), 'state', 'skill-catalogue.jsonl'),
-        ...(project_root ? [path.join(project_root, catalogue.OBSERVATION_LOG)] : []),
-    ];
-    const limits = catalogue.knownHostLimits(log_candidates.flatMap((p) => catalogue.readObservationLog(p)));
-    if (limits.size === 0) return [];
-
-    const resolved = _resolve_scoped_projection(package_root);
-    const settings_path =
-        _resolve_global_settings_path() ??
-        path.join(user_global_paths.event4u_root(), 'settings', SETTINGS_FILE);
-
-    for (const tool_id of Object.keys(deploy_results).sort()) {
-        const [, , status] = deploy_results[tool_id] as DeployResult;
-        if (status !== 'deployed') continue;
-        const anchor_raw = USER_SCOPE_PATHS[tool_id];
-        if (!anchor_raw) continue;
-
-        const volume = catalogue.measureCatalogueVolume(tool_id, expanduser(anchor_raw));
-        const eligibility = catalogue.migrationEligibility(
-            tool_id,
-            resolved.mode,
-            volume.skillEntries,
-            limits,
-        );
-        if (eligibility.eligible) {
-            return catalogue.migrationPromptLines(tool_id, eligibility, settings_path);
-        }
-    }
-    return [];
 }
 
 const SETTINGS_SURFACE_REL = path.join('state', 'settings-surface.json');

@@ -8595,9 +8595,6 @@ function registerMcpHosts(mergeJsonFile, projectRoot, force, packageRoot, tools,
     (into[toolId] ??= []).push(...keys);
   }
 }
-function projectionModeOf(raw) {
-  return raw === "scoped" ? "scoped" : "legacy-all";
-}
 function resolveTierB(packageRoot) {
   const p = path5.join(packageRoot, "agents", "runtime", "state", "skill-tiers.json");
   if (!fs5.existsSync(p)) return null;
@@ -8995,6 +8992,15 @@ function prune_scoped_modules(deploy_results, active_ids) {
   const artefacts = Object.values(deploy_results).flatMap(([, , , paths]) => paths).filter((p) => path7.basename(p) === "SKILL.md" || p.split(path7.sep).includes("commands") && path7.extname(p) === ".md");
   const kept = declared_skill_closure(artefacts, active_ids);
   return prune_modules_by(deploy_results, (p) => is_pruned_under_scoped(p, active_ids, kept));
+}
+var LISTING_LEVER_HOSTS = /* @__PURE__ */ new Set(["claude-code", "codex"]);
+function scopesByProfile(toolId) {
+  return !LISTING_LEVER_HOSTS.has(toolId);
+}
+function prune_scoped_modules_per_host(deploy_results, active_ids) {
+  const scoped = Object.fromEntries(Object.entries(deploy_results).filter(([tool]) => scopesByProfile(tool)));
+  const [pruned, after] = prune_scoped_modules(scoped, active_ids);
+  return [pruned, { ...deploy_results, ...after }];
 }
 function prune_lab_modules(deploy_results, lab_ids) {
   return prune_modules_by(deploy_results, (p) => is_lab_artefact(p, lab_ids));
@@ -11158,40 +11164,6 @@ function catalogueLimitWarning(volume, limit) {
   if (volume.skillEntries < limit.projectedSkills) return null;
   return `${volume.host}: deploying ${volume.skillEntries} skills. This host reported dropping ${limit.droppedEntries} entries from the model-visible list when last measured (${limit.observedAt}, at ${limit.projectedSkills} skills) \u2014 that much never reaches the model. Explain: \`agent-config exec capture_skill_catalogue --limits\``;
 }
-function migrationEligibility(host, resolvedMode, currentSkillCount, limits) {
-  if (resolvedMode === "scoped") return { eligible: false, reason: "already-scoped" };
-  const limit = limits.get(host);
-  if (limit === void 0) return { eligible: false, reason: "no-observation-for-host" };
-  if (limit.projectedSkills === null) return { eligible: false, reason: "observation-not-comparable" };
-  if (limit.droppedEntries <= 0) return { eligible: false, reason: "no-truncation-observed" };
-  if (currentSkillCount < limit.projectedSkills) {
-    return { eligible: false, reason: "below-observed-skill-volume" };
-  }
-  return {
-    eligible: true,
-    reason: "eligible",
-    droppedEntries: limit.droppedEntries,
-    observedAt: limit.observedAt
-  };
-}
-function migrationPromptLines(host, eligibility, settingsPath) {
-  return [
-    `${host}: ${eligibility.droppedEntries} catalogue entries never reach the model.`,
-    `Measured on this machine (${eligibility.observedAt}). This install is on \`legacy-all\`,`,
-    "which ships everything and lets the host drop what does not fit \u2014 silently.",
-    "",
-    "Scoping the projection to your active packs is the alternative. Nothing here",
-    "changes it for you: `projection.mode` is yours to set, by hand or in the GUI.",
-    "",
-    `  edit  ${settingsPath}`,
-    "        projection:",
-    "          mode: scoped",
-    "",
-    "  or    agent-config config      (Settings \u2192 projection)",
-    "",
-    "Keeping `legacy-all` is a legitimate choice \u2014 this is a notification, not a gate."
-  ];
-}
 function readObservationLog(logPath) {
   if (!fs17.existsSync(logPath)) return [];
   const out = [];
@@ -11205,33 +11177,6 @@ function readObservationLog(logPath) {
     }
   }
   return out;
-}
-
-// src/shared/interactiveContext.ts
-var CI_ENV_KEYS = ["CI", "GITHUB_ACTIONS", "AGENT_CONFIG_CI"];
-function _flagSet(env, key) {
-  const raw = (env[key] ?? "").trim();
-  return raw !== "" && raw !== "0";
-}
-function nonInteractiveReason(probe) {
-  for (const key of CI_ENV_KEYS) {
-    if (_flagSet(probe.env, key)) {
-      return "ci";
-    }
-  }
-  if (_flagSet(probe.env, "AGENT_CONFIG_NO_UI")) {
-    return "no-ui-requested";
-  }
-  if (!probe.stdinTty || !probe.stdoutTty) {
-    return "not-a-tty";
-  }
-  if (probe.headless === true) {
-    return "headless";
-  }
-  return null;
-}
-function isInteractiveSession(probe) {
-  return nonInteractiveReason(probe) === null;
 }
 
 // src/scripts/_lib/claude_desktop_bundler.ts
@@ -12433,12 +12378,6 @@ function resolvePackageRoot(fromUrlOrPath, legacyHops = 3) {
 // src/shared/settingsCarveOut.ts
 var SETTINGS_CARVE_OUT = [
   {
-    key: "projection.mode",
-    reader: "src/scripts/install.ts:3409 _resolve_scoped_projection",
-    absentResolvesTo: "legacy-all",
-    reason: "The template fallback applies only when NO global settings file exists. Once a file exists, an absent key means legacy-all by documented contract, so an existing install is never silently narrowed on upgrade."
-  },
-  {
     key: "discipline_profile",
     reader: "work_engine/_lib/agent_settings.ts:1263",
     absentResolvesTo: "essential, unconditionally",
@@ -12454,7 +12393,7 @@ var SETTINGS_CARVE_OUT = [
     key: "profile.id",
     reader: "src/scripts/config/profiles.ts:221 resolve_profile",
     absentResolvesTo: "the id `developer`, but a DEGRADED profile \u2014 packs: [], personas: [], hints: []",
-    reason: "Exactly the projection.mode shape: the template default is honoured only when no settings file exists. With a file present the id resolves but its profile body does not load, so the install silently loses every pack and persona."
+    reason: "The shape the removed projection.mode key had: the template default is honoured only when no settings file exists. With a file present the id resolves but its profile body does not load, so the install silently loses every pack and persona."
   },
   {
     key: "quality.local_auto_run",
@@ -12593,6 +12532,8 @@ var REMOVED_KEYS = /* @__PURE__ */ new Map([
   ["lean_projection.hosts", "THINNABLE_HOSTS in _lib/lean_projection_mode.ts and the per-host row in src/config/host-injection-effect.json; no reader of this key remains"],
   ["projection.rule_workspaces", "consumerRuleWorkspaces() in _lib/scoped_projection.ts, which derives the consumer workspace set from src/config/discovery/packs.yml \u2014 every id minus `agent-config-maintainer` \u2014 so a new pack reaches consumers without a settings edit"],
   // 2026-10-24 — road-to-a-setup-that-decides-itself step 4.9 (owner directive, D14)
+  // 2026-10-24 — step 4.7 (owner answer OQ-1)
+  ["projection.mode", "per host: a host with a listing lever gets every skill, every other host the active profile packs"],
   ["projection.rule_packs", "the active-pack set; install rule scoping honours an explicit value one release window"]
 ]);
 var _warnedRemovedKeys = /* @__PURE__ */ new Set();
@@ -21029,7 +20970,6 @@ var replyMethod = _enum(["replies_endpoint", "create_review_comment", "auto"]);
 var confidenceBand = _enum(["off", "low", "medium", "high"]);
 var onBlock = _enum(["stop", "ask", "warn"]);
 var modelAutoSwitch = _enum(["auto", "suggest", "off"]);
-var projectionMode = _enum(["legacy-all", "scoped"]);
 var projectAudience = _enum(["self", "internal", "client", "public"]);
 var deliveryMerge = _enum(["off", "on-green"]);
 var prTopology = _enum(["single", "stacked"]);
@@ -21044,11 +20984,6 @@ var settingsSchema = object({
       "Which experience you run \u2014 the audience identity that selects your default skill / command surface, README entry-path, and persona pre-selection (ADR-010, docs/contracts/profile-system.md). Six seed profiles: developer \xB7 content_creator \xB7 founder \xB7 agency \xB7 finance \xB7 ops. This is the first wizard question. In 6.0.0-A it records the choice only; pack-scoped surfacing (projection-time filtering, ADR-040) activates in 6.0.0-B behind a staged, opt-in rollout. Switch later with `agent-config use --profile=<id>`."
     )
   }).prefault({ id: "developer" }),
-  projection: object({
-    mode: projectionMode.default("legacy-all").describe(
-      "Whether the per-tool projector writes EVERY artefact into the host-tool trees (.claude/ .cursor/ .windsurf/) or only the active profile + packs' artefacts (ADR-040, docs/contracts/capability-packs.md). legacy-all = (default, non-breaking) project the full surface exactly as 5.x did. scoped = project only the active profile's packs unioned with the runtime.active_packs overlay, expanded over the requires graph \u2014 opt in with `agent-config use --profile=<id>`. A failed scoped projection restores the full tree."
-    )
-  }).prefault({ mode: "legacy-all" }),
   rule_loading_tier: ruleLoadingTier.default("balanced").describe(
     "Master switch for which rule tiers load and how cautiously the agent spends tokens. minimal = only the 9 kernel rules (cheapest, fewest guardrails). balanced = kernel + tier-1 (recommended default). full = kernel + tier-1 + tier-2 (most guardrails, highest token cost). custom = roll your own in agents/overrides/. LEGACY: superseded by discipline_profile \u2014 when that key is set it wins (mapping: minimal\u2192off, balanced\u2192essential, full\u2192full)."
   ),
@@ -24746,12 +24681,10 @@ function _resolve_global_settings_path() {
 }
 function _resolve_scoped_projection(package_root) {
   const doc = _resolve_global_settings_doc() ?? _load_default_settings(package_root);
-  const projection = isPlainObject(doc["projection"]) ? doc["projection"] : {};
-  const mode = projectionModeOf(projection["mode"]);
   const runtime = isPlainObject(doc["runtime"]) ? doc["runtime"] : {};
   const active_packs_raw = runtime["active_packs"];
   const active_packs = Array.isArray(active_packs_raw) ? active_packs_raw.filter((v) => typeof v === "string") : [];
-  return { mode, active_packs };
+  return { active_packs };
 }
 function _resolve_global_rule_scope(package_root) {
   return resolveGlobalRuleScope({
@@ -24844,17 +24777,14 @@ function install_global(tools, force, project_root = null, core_only = false) {
     }
   }
   try {
-    const { mode, active_packs } = _resolve_scoped_projection(package_root);
-    if (mode === "scoped") {
-      const packs_registry = _load_packs_registry(package_root);
-      const active_ids = _compute_active_pack_ids(packs_registry, active_packs);
-      let scoped_pruned;
-      [scoped_pruned, deploy_results] = _prune_scoped_modules(deploy_results, active_ids);
-      if (!state.QUIET) {
-        info(
-          `\u{1F9F9} Scoped install: pruned ${scoped_pruned} non-active-pack artefact(s) (active packs: ${[...active_ids].sort().join(", ") || "(none)"}). Set projection.mode: legacy-all in .agent-settings.yml to restore the full surface.`
-        );
-      }
+    const { active_packs } = _resolve_scoped_projection(package_root);
+    const active_ids = _compute_active_pack_ids(_load_packs_registry(package_root), active_packs);
+    let scoped_pruned;
+    [scoped_pruned, deploy_results] = prune_scoped_modules_per_host(deploy_results, active_ids);
+    if (!state.QUIET && scoped_pruned > 0) {
+      info(
+        `\u{1F9F9} Scoped install: pruned ${scoped_pruned} non-active-pack artefact(s) on hosts without a listing lever (active packs: ${[...active_ids].sort().join(", ") || "(none)"}). Add a pack to runtime.active_packs to keep it.`
+      );
     }
   } catch (e) {
     if (!state.QUIET) {
@@ -24957,15 +24887,6 @@ function install_global(tools, force, project_root = null, core_only = false) {
       for (const line of _catalogue_truncation_warnings(deploy_results, project_root)) {
         warn(line);
       }
-      const notice = _scoped_migration_notice(deploy_results, project_root, package_root, {
-        env: process4.env,
-        stdinTty: process4.stdin.isTTY === true,
-        stdoutTty: process4.stdout.isTTY === true
-      });
-      if (notice.length > 0) {
-        process4.stdout.write("\n");
-        for (const line of notice) info(line);
-      }
     } catch {
     }
   }
@@ -24998,34 +24919,6 @@ function _catalogue_truncation_warnings(deploy_results, project_root) {
     if (warning !== null) lines.push(warning);
   }
   return lines;
-}
-function _scoped_migration_notice(deploy_results, project_root, package_root, probe) {
-  if (!isInteractiveSession(probe)) return [];
-  const log_candidates = [
-    path38.join(event4u_root(), "state", "skill-catalogue.jsonl"),
-    ...project_root ? [path38.join(project_root, OBSERVATION_LOG)] : []
-  ];
-  const limits = knownHostLimits(log_candidates.flatMap((p) => readObservationLog(p)));
-  if (limits.size === 0) return [];
-  const resolved = _resolve_scoped_projection(package_root);
-  const settings_path = _resolve_global_settings_path() ?? path38.join(event4u_root(), "settings", SETTINGS_FILE);
-  for (const tool_id of Object.keys(deploy_results).sort()) {
-    const [, , status] = deploy_results[tool_id];
-    if (status !== "deployed") continue;
-    const anchor_raw = USER_SCOPE_PATHS2[tool_id];
-    if (!anchor_raw) continue;
-    const volume = measureCatalogueVolume(tool_id, expanduser8(anchor_raw));
-    const eligibility = migrationEligibility(
-      tool_id,
-      resolved.mode,
-      volume.skillEntries,
-      limits
-    );
-    if (eligibility.eligible) {
-      return migrationPromptLines(tool_id, eligibility, settings_path);
-    }
-  }
-  return [];
 }
 var SETTINGS_SURFACE_REL = path38.join("state", "settings-surface.json");
 var SETTINGS_DELTA_REL = path38.join("state", "settings-delta.json");
@@ -26221,7 +26114,6 @@ export {
   _resolve_scoped_projection,
   _resolve_settings_read,
   _rule_filter_for_source,
-  _scoped_migration_notice,
   _team_setup_hint_line,
   _tier_b_advisory,
   _tools_was_all,

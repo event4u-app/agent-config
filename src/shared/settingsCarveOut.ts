@@ -41,15 +41,6 @@ export interface CarveOutKey {
 
 export const SETTINGS_CARVE_OUT: readonly CarveOutKey[] = [
     {
-        key: 'projection.mode',
-        reader: 'src/scripts/install.ts:3409 _resolve_scoped_projection',
-        absentResolvesTo: 'legacy-all',
-        reason:
-            'The template fallback applies only when NO global settings file exists. '
-            + 'Once a file exists, an absent key means legacy-all by documented contract, '
-            + 'so an existing install is never silently narrowed on upgrade.',
-    },
-    {
         key: 'discipline_profile',
         reader: 'work_engine/_lib/agent_settings.ts:1263',
         absentResolvesTo: 'essential, unconditionally',
@@ -73,7 +64,7 @@ export const SETTINGS_CARVE_OUT: readonly CarveOutKey[] = [
         absentResolvesTo:
             'the id `developer`, but a DEGRADED profile — packs: [], personas: [], hints: []',
         reason:
-            'Exactly the projection.mode shape: the template default is honoured only when '
+            'The shape the removed projection.mode key had: the template default is honoured only when '
             + 'no settings file exists. With a file present the id resolves but its profile '
             + 'body does not load, so the install silently loses every pack and persona.',
     },

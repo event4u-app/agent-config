@@ -478,6 +478,35 @@ export function prune_scoped_modules(
 }
 
 /**
+ * Hosts that scope skills by VISIBILITY rather than by presence (step 4.7 of
+ * road-to-a-setup-that-decides-itself; ADR-289 and its 2026-10-20 amendment):
+ * claude-code lists what fits its budget and sets the rest `name-only` through
+ * `skillOverrides`; codex keeps a resident listed set and reaches the rest
+ * through the package-written finder index. Every artefact ships there. Every
+ * other host has no such lever, so the active profile's packs decide.
+ */
+export const LISTING_LEVER_HOSTS: ReadonlySet<string> = new Set(['claude-code', 'codex']);
+
+/** Whether a global deploy to `toolId` is pruned to the active profile's packs. */
+export function scopesByProfile(toolId: string): boolean {
+    return !LISTING_LEVER_HOSTS.has(toolId);
+}
+
+/**
+ * The global install's skill/command scope, decided per host: lever hosts keep
+ * every artefact, the rest go through {@link prune_scoped_modules}. Replaces the
+ * removed `projection.mode` key, which applied one answer to every host.
+ */
+export function prune_scoped_modules_per_host(
+    deploy_results: Record<string, DeployTuple>,
+    active_ids: ReadonlySet<string>,
+): [number, Record<string, DeployTuple>] {
+    const scoped = Object.fromEntries(Object.entries(deploy_results).filter(([tool]) => scopesByProfile(tool)));
+    const [pruned, after] = prune_scoped_modules(scoped, active_ids);
+    return [pruned, { ...deploy_results, ...after }];
+}
+
+/**
  * Remove lab-tier skills/commands from a completed deploy (core-only).
  *
  * road-to-install-contract-stability Phase 2 Step 2. Thin wrapper over

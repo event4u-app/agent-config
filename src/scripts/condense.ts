@@ -1509,19 +1509,6 @@ function _read_model_auto_switch(): string {
     return 'suggest';
 }
 
-function _read_projection_mode(): string {
-    const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
-    const proj = data['projection'];
-    const value =
-        typeof proj === 'object' && proj !== null && !Array.isArray(proj)
-            ? (proj as Record<string, unknown>)['mode']
-            : null;
-    if (typeof value === 'string' && ['legacy-all', 'scoped'].includes(value.trim().toLowerCase())) {
-        return value.trim().toLowerCase();
-    }
-    return 'legacy-all';
-}
-
 function _domains_slug_prefix(pack_id: string): string {
     const manifest = path.join(MODULE_STATE.PROJECT_ROOT, 'src', 'domains', pack_id, 'pack.yaml');
     if (!_isFile(manifest)) {
@@ -1553,15 +1540,9 @@ function _skill_path_to_name(manifest_path: string): string {
 }
 void _skill_path_to_name;
 
+/** The maintainer projection is never scoped: `projection.mode` is removed (setup 4.7). */
 function _resolve_active_predicates(): [ReadonlySet<string> | null, ReadonlySet<string> | null] {
-    if (_read_projection_mode() !== 'scoped') {
-        return [null, null];
-    }
-    // The `config` package twins (packs / session_profiles / profiles) are not
-    // ported (out of scope — scoped mode is opt-in and not exercised by golden
-    // parity). Throw a clear error if a consumer enables it, mirroring an
-    // unmet import.
-    throw new Error('projection.mode=scoped requires the config package (not ported in condense.ts)');
+    return [null, null];
 }
 
 function _model_tier(skill_md: string): string | null {

@@ -34,40 +34,16 @@ agent_config_version: ""
 profile:
   id: developer
 
-# --- Pack-scoped projection (ADR-040, 6.0.0-B) ---
+# --- Projection scope (no keys) ---
 #
-# Whether the per-tool projector writes EVERY artefact into the host-tool
-# trees (.claude/ .cursor/ .windsurf/) or only the active profile + packs'
-# artefacts. See docs/decisions/ADR-040 and docs/contracts/capability-packs.md.
-#
-# scoped     = (DEFAULT for new installs — road-to-credible-install Phase 2,
-#              2026-07-27) project only the active profile's `packs` unioned
-#              with the runtime.active_packs overlay, expanded over the
-#              `requires` graph. With the default `profile.id: developer`
-#              this ships the engineering surface only; the full catalog is
-#              one explicit opt-in away (`legacy-all` below, or
-#              `agent-config use --profile=<id>` / packs overlay).
-# legacy-all = project the full surface, exactly as 5.x did. EXISTING
-#              installs keep their recorded setting on upgrade (this file is
-#              never rewritten by `npm update`); a missing key also still
-#              means legacy-all, so only fresh installs get the scoped
-#              default. See MIGRATION.md for the flip note.
-#
-# Scoping is controlled by THIS key alone — never inferred from profile.id.
-# A failed scoped projection restores the full tree. The committed plugin
-# marketplace (.claude-plugin/) and the Augment tree (.augment/) always
-# project the full set.
-projection:
-  mode: scoped
-  # Rule scope is DERIVED, not configured, since ADR-293 step 4.6: a consumer
-  # install scopes rules to every workspace `src/config/discovery/packs.yml`
-  # declares except `agent-config-maintainer`, so maintainer-only rules never
-  # project to a consumer and a new pack reaches consumers the day it lands.
-  # The `projection.rule_workspaces` key that carried this list is removed.
-  # The rule layer's pack axis is DERIVED as well since step 4.9 of
-  # road-to-a-setup-that-decides-itself (owner directive 2026-10-24): a rule
-  # whose `packs:` miss the active-pack set does not project. The
-  # key that selected it is removed.
+# What reaches the host trees is decided by the package, not by a setting
+# (road-to-a-setup-that-decides-itself, ADR-293). Skills and commands: a host
+# with a listing lever (claude-code, codex) gets every artefact and scopes by
+# visibility; every other host gets the active profile's packs, unioned with
+# runtime.active_packs (step 4.7, owner answer 2026-10-24). Rules: the
+# workspace axis is derived from the pack vocabulary (step 4.6) and the pack
+# axis from the active-pack set (step 4.9). The three projection keys that
+# selected scope (mode, workspaces, packs) are removed.
 
 # --- Discipline profile (successor knob, opt-in until the evidence gates pass) ---
 #
