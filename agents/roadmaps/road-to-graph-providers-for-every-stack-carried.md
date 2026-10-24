@@ -53,7 +53,7 @@ catalog together with the numbers that justify it.
 - [x] **2.2 C# files join the graph.** `using` directives and namespace-qualified names
       bind to the declaring file (eShopOnWeb: 64.5 % of C# files without an edge).
       verify: a C# fixture with two namespaces produces cross-file import and call edges in the extractor test.
-- [ ] **2.3 Request paths reach tables and views.** A route whose handler calls a service
+- [x] **2.3 Request paths reach tables and views.** A route whose handler calls a service
       or repository that persists a model reaches that model's table (BookStack,
       djangoproject.com: 0 tables on request paths), and a Spring controller that returns a
       view name as a string (`return "owners/findOwners"`) renders that template
