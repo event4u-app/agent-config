@@ -110,7 +110,7 @@ None of this is rebuilt here.
 
 ## Phase 2 — A safety envelope on the verb that already exists
 
-- [ ] **2.1 `upgrade --unattended`, no new verb.** ADR-041 is accepted; this
+- [x] **2.1 `upgrade --unattended`, no new verb.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/sigstore/npm_keys.json --> ADR-041 is accepted; this
       is a flag on `cmd_upgrade.ts`. It refuses unless every gate passes: a
       72 h release age, a provenance check against the OIDC publish
       (`publish-npm.yml:62`), a `deprecated` check in the same fetch, and the
@@ -150,7 +150,7 @@ None of this is rebuilt here.
       rather than quietly dropped: `upgrade_unattended.ts` claimed the
       signature half was `npm audit signatures` "in the install step", and
       `install_steps` never ran an audit.
-      **Open: D15 chose (a) on 2026-10-24; its implementation is next.**
+      **Closed 2026-10-24 (D15 implemented):** pinned sigstore roots, both attestations, the tarball sha512 bound to the bytes installed; tested against the real 17.3.0 attestation (`tests/lib/sigstore_provenance.test.ts`), a self-signed certificate refused.
 - [x] **2.2 Single-flight.** A lock with a TTL and an owner PID under
       `~/.event4u/agent-config/`; the previous version read from
       `installed_lock.ts:42-45`.

@@ -185,7 +185,7 @@ release ledger. The residue items are closed the same way.
       mutation should go through the engine.
       verify: the bench report's credential rows are produced by the engine's own
       detector, shown by a bench test.
-- [ ] **3.9 Residue — pin a trust root before unattended upgrade.** Unattended
+- [x] **3.9 Residue — pin a trust root before unattended upgrade.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/sigstore/npm_keys.json --> Unattended
       upgrade stays blocked until a Fulcio trust root is pinned
       (`src/scripts/_cli/upgrade_unattended.ts`). The choice is the open blocker
       `dsse-trust-root` in
@@ -193,6 +193,7 @@ release ledger. The residue items are closed the same way.
       tracks the 17.0.0 consequence and does not decide it twice.
       verify: unattended upgrade runs only when the trust-root-pinned check
       passes, and a self-signed certificate is refused by a test.
+      Closed 2026-10-24 by D15 of that roadmap: `tests/lib/sigstore_provenance.test.ts`.
 
 ## Phase 4 — gates and lints
 

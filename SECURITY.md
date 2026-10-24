@@ -109,6 +109,36 @@ session start; a value the machine inferred about itself is never treated as a
 consent. See [`ADR-233`](docs/decisions/ADR-233-org-pack-provenance-class.md)
 and [`docs/contracts/settings-classes.md`](docs/contracts/settings-classes.md).
 
+## Unattended upgrades — what is verified before anything installs
+
+`agent-config upgrade --unattended` installs a release only after verifying it
+against sigstore trust material **pinned in the installed package**
+(`src/config/sigstore/`, digests recorded in `trust-material.json`), never
+fetched at run time:
+
+- the tarball is downloaded once, and its sha512 must equal the registry's
+  `dist.integrity` and the subject digest of **both** attestations; that same
+  file is what `npm install -g` installs;
+- the SLSA provenance attestation must chain to the pinned Fulcio root, carry a
+  verified Rekor entry and certificate-transparency timestamp, and be signed by
+  `token.actions.githubusercontent.com` for exactly
+  `event4u-app/agent-config/.github/workflows/publish-npm.yml` at the tag of the
+  version being installed;
+- the npm publish attestation must verify against npm's pinned
+  `npm:attestations` keys.
+
+Anything that does not verify is refused, with the reason printed; there is no
+fallback to a weaker check. A manual `agent-config upgrade` is unchanged by
+this and does not run these checks.
+
+**Rotation and recovery.** When sigstore or npm rotate the keys these checks
+rely on, an installed version can no longer verify releases signed under the
+new material, and its unattended upgrade refuses — it never fetches new roots
+because a candidate release asks it to. Recovery is a manual
+`agent-config upgrade`; the release it installs carries refreshed material
+(re-extracted from a newer `@sigstore/tuf` seed set, with source and digests
+updated together in `trust-material.json`).
+
 ## Security architecture reference
 
 The package threat model, linter coverage, and known gaps are documented in
