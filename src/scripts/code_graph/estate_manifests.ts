@@ -5,10 +5,12 @@
  * purpose: the index needs package names, not a resolver, and a malformed
  * manifest costs its own rows rather than the refresh.
  */
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { readProjectProbe } from './build.js';
+import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { MANIFEST_NAME, readProjectProbe, walkedPath } from './build.js';
 
 export type Ecosystem = 'npm' | 'composer' | 'pypi' | 'go' | 'cargo' | 'rubygems';
 
@@ -165,16 +167,55 @@ function dedupe<T>(rows: T[]): T[] {
     });
 }
 
+const isManifest = (name: string): boolean => name === 'Cargo.toml' || MANIFEST_NAME.test(name);
+const ROOT_MANIFESTS = ['package.json', 'composer.json', 'pyproject.toml', 'requirements.txt', 'go.mod', 'Cargo.toml', 'Gemfile'];
+
+/**
+ * Manifest paths from git's index, plus an untracked one at the root, then the
+ * discovery walk's own directory filter. A refresh already walked the tree
+ * once; this keeps the index from walking it a second time (6.4 measured the
+ * walk, and then git's untracked scan, as most of the index's cost). `null`
+ * outside a repository.
+ */
+function manifestPathsFromGit(root: string): string[] | null {
+    let out: string;
+    try {
+        out = execFileSync('git', ['-C', root, 'ls-files', '-z', '--cached'], {
+            env: hardenedSpawnEnv(),
+            encoding: 'utf-8',
+            stdio: ['ignore', 'pipe', 'ignore'],
+            maxBuffer: 64 * 1024 * 1024,
+        });
+    } catch {
+        return null;
+    }
+    const rels = new Set(out.split('\0').filter((rel) => rel && isManifest(path.posix.basename(rel)) && walkedPath(rel)));
+    for (const name of ROOT_MANIFESTS) if (fs.existsSync(path.join(root, name))) rels.add(name);
+    return [...rels];
+}
+
 export function manifestFacts(root: string): ManifestFacts {
     const facts: ManifestFacts = { declares: [], publishes: [] };
-    const probe = readProjectProbe(root);
-    const texts = new Map(probe.manifests);
-    for (const rel of probe.paths) {
-        if (path.posix.basename(rel) !== 'Cargo.toml') continue;
-        try {
-            texts.set(rel, fs.readFileSync(path.join(root, rel), 'utf-8'));
-        } catch {
-            /* unreadable: no rows */
+    const texts = new Map<string, string>();
+    const fromGit = manifestPathsFromGit(root);
+    if (fromGit !== null) {
+        for (const rel of fromGit) {
+            try {
+                texts.set(rel, fs.readFileSync(path.join(root, rel), 'utf-8'));
+            } catch {
+                /* deleted in the working tree: no rows */
+            }
+        }
+    } else {
+        const probe = readProjectProbe(root);
+        for (const [rel, text] of probe.manifests) texts.set(rel, text);
+        for (const rel of probe.paths) {
+            if (path.posix.basename(rel) !== 'Cargo.toml') continue;
+            try {
+                texts.set(rel, fs.readFileSync(path.join(root, rel), 'utf-8'));
+            } catch {
+                /* unreadable: no rows */
+            }
         }
     }
     for (const [rel, text] of [...texts.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))) parse(rel, text, facts);

@@ -193,7 +193,7 @@ plan AC improvements automatically when a source repository updates.
 - [x] **6.2 Stale roots are marked, never silently dropped.** A registered root missing <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       for 30 days is flagged by `list` and removed only by `prune`.
       verify: a test with a back-dated `last_seen` and a deleted root.
-- [ ] **6.3 Egress never reads the index.** A test greps the telemetry, council,
+- [x] **6.3 Egress never reads the index.** A test greps the telemetry, council, <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       self-repair release, advisories report and map export code paths for imports of the
       registry, the index and the local lineage ledger, and fails on a reader.
       verify: the test passes, and fails when a fixture import of the registry is added to

@@ -13,6 +13,7 @@
  *   unique-name  A references a name exactly one estate symbol declares — a guess
  *   mention      A references B's name without declaring it — a guess
  */
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -20,7 +21,7 @@ import { readRegistry, registryDir, type RegistryOptions } from '../_lib/project
 import { isSqliteAvailableSync, loadSqliteSync } from '../_lib/sqlite_guard.js';
 import { isTestFile } from './build.js';
 import { type ManifestFacts, manifestFacts } from './estate_manifests.js';
-import { twinIsCurrent, sqliteTwinPath } from './sqlite_store.js';
+import { openGraphIndex, sqliteTwinPath, twinIsCurrent } from './sqlite_store.js';
 import type { CodeGraph } from './types.js';
 
 export type XVia = 'package' | 'unique-name' | 'mention';
@@ -51,25 +52,30 @@ export function indexPath(opts: RegistryOptions = {}): string {
  * exportedness (`dead` refuses for the same reason), so a top-level symbol is
  * the closest stated fact; a member (`A::m`) never counts.
  */
-function isTopLevel(id: string, kind: string, file: string): boolean {
-    return EXPORT_KINDS.has(kind) && !id.includes('::') && id.split('#').length === 2 && !isTestFile(file);
+function isTopLevel(id: string, kind: string): boolean {
+    return EXPORT_KINDS.has(kind) && !id.includes('::') && id.split('#').length === 2;
 }
 
+/** `targets` are distinct edge targets with how many edges point at each. */
 function factsFrom(
     nodes: Iterable<{ id: string; label: string; kind: string | null; source_file: string | null }>,
-    targets: Iterable<string>,
+    targets: Iterable<readonly [string, number]>,
 ): GraphFacts {
     const exports = new Map<string, { name: string; kind: string }>();
+    const testFile = new Map<string, boolean>();
     for (const n of nodes) {
-        if (n.kind && isTopLevel(n.id, n.kind, n.source_file ?? '')) exports.set(n.id, { name: n.label, kind: n.kind });
+        const file = n.source_file ?? '';
+        let isTest = testFile.get(file);
+        if (isTest === undefined) testFile.set(file, (isTest = isTestFile(file)));
+        if (n.kind && !isTest && isTopLevel(n.id, n.kind)) exports.set(n.id, { name: n.label, kind: n.kind });
     }
     const imports = new Map<string, number>();
     const refs = new Set<string>();
-    for (const t of targets) {
+    for (const [t, n] of targets) {
         if (t.startsWith('external:')) {
             const hash = t.indexOf('#');
             const pkg = t.slice('external:'.length, hash < 0 ? undefined : hash);
-            if (pkg) imports.set(pkg, (imports.get(pkg) ?? 0) + 1);
+            if (pkg) imports.set(pkg, (imports.get(pkg) ?? 0) + n);
         } else if (t.startsWith('symbol:')) {
             refs.add(t.slice('symbol:'.length));
         }
@@ -87,9 +93,11 @@ function factsFrom(
  */
 export function graphFacts(cachePath: string, graph: CodeGraph | null = null): GraphFacts | null {
     if (graph) {
+        const counts = new Map<string, number>();
+        for (const e of graph.edges) counts.set(e.target, (counts.get(e.target) ?? 0) + 1);
         return factsFrom(
             graph.nodes.map((n) => ({ id: n.id, label: n.label, kind: n.kind, source_file: n.source_file })),
-            graph.edges.map((e) => e.target),
+            counts,
         );
     }
     if (twinIsCurrent(cachePath)) {
@@ -97,15 +105,22 @@ export function graphFacts(cachePath: string, graph: CodeGraph | null = null): G
             const { DatabaseSync } = loadSqliteSync('code_graph.estate_index');
             const db = new DatabaseSync(sqliteTwinPath(cachePath), { readOnly: true });
             try {
-                const nodes = db.prepare('SELECT id, label, kind, source_file FROM nodes').all() as Array<{
+                const kinds = [...EXPORT_KINDS].map((k) => `'${k}'`).join(', ');
+                const nodes = db.prepare(`SELECT id, label, kind, source_file FROM nodes WHERE kind IN (${kinds}) AND instr(id, '::') = 0`).all() as Array<{
                     id: string;
                     label: string;
                     kind: string | null;
                     source_file: string | null;
                 }>;
                 const targets = (
-                    db.prepare("SELECT target FROM edges WHERE target LIKE 'external:%' OR target LIKE 'symbol:%'").all() as Array<{ target: string }>
-                ).map((r) => r.target);
+                    db
+                        // Ranges, not LIKE: they use the `edges_target` index.
+                        .prepare(
+                            'SELECT target, COUNT(*) AS n FROM edges WHERE ' +
+                                "(target >= 'external:' AND target < 'external;') OR (target >= 'symbol:' AND target < 'symbol;') GROUP BY target",
+                        )
+                        .all() as Array<{ target: string; n: number }>
+                ).map((r) => [r.target, Number(r.n)] as const);
                 return factsFrom(nodes, targets);
             } finally {
                 db.close();
@@ -125,7 +140,7 @@ export function graphFacts(cachePath: string, graph: CodeGraph | null = null): G
 // repeated on every export row was a third of the file (measured on the 4.4
 // fixture estate), and the size budget is 2 % of the graphs summarised.
 const SCHEMA =
-    'CREATE TABLE IF NOT EXISTS projects (key INTEGER PRIMARY KEY, id TEXT NOT NULL UNIQUE, name TEXT NOT NULL, root TEXT NOT NULL, indexed_at TEXT NOT NULL);' +
+    'CREATE TABLE IF NOT EXISTS projects (key INTEGER PRIMARY KEY, id TEXT NOT NULL UNIQUE, name TEXT NOT NULL, root TEXT NOT NULL, indexed_at TEXT NOT NULL, facts_key TEXT);' +
     'CREATE TABLE IF NOT EXISTS declares (project INTEGER NOT NULL, ecosystem TEXT NOT NULL, package TEXT NOT NULL, manifest TEXT NOT NULL);' +
     'CREATE TABLE IF NOT EXISTS publishes (project INTEGER NOT NULL, ecosystem TEXT NOT NULL, package TEXT NOT NULL);' +
     'CREATE TABLE IF NOT EXISTS exports (project INTEGER NOT NULL, kind INTEGER NOT NULL, name TEXT NOT NULL);' +
@@ -169,15 +184,16 @@ export function writeProjectRows(
     root: string,
     facts: ManifestFacts & GraphFacts,
     opts: RegistryOptions = {},
+    factsKey: string | null = null,
 ): void {
     const db = openWritable(opts);
     try {
         db.exec('BEGIN IMMEDIATE');
         try {
             db.prepare(
-                'INSERT INTO projects (id, name, root, indexed_at) VALUES (?, ?, ?, ?) ' +
-                    'ON CONFLICT(id) DO UPDATE SET name = excluded.name, root = excluded.root, indexed_at = excluded.indexed_at',
-            ).run(id, path.basename(root), root, (opts.now ?? new Date()).toISOString());
+                'INSERT INTO projects (id, name, root, indexed_at, facts_key) VALUES (?, ?, ?, ?, ?) ' +
+                    'ON CONFLICT(id) DO UPDATE SET name = excluded.name, root = excluded.root, indexed_at = excluded.indexed_at, facts_key = excluded.facts_key',
+            ).run(id, path.basename(root), root, (opts.now ?? new Date()).toISOString(), factsKey);
             const key = (db.prepare('SELECT key FROM projects WHERE id = ?').get(id) as { key: number }).key;
             for (const t of PER_PROJECT) db.prepare(`DELETE FROM ${t} WHERE project = ?`).run(key);
             const dec = db.prepare('INSERT INTO declares VALUES (?, ?, ?, ?)');
@@ -196,7 +212,10 @@ export function writeProjectRows(
             db.exec('ROLLBACK');
             throw e;
         }
-        db.exec('VACUUM');
+        // Replacing rows leaves free pages; compact only once they are a real share.
+        const free = (db.prepare('PRAGMA freelist_count').get() as { freelist_count: number }).freelist_count;
+        const pages = (db.prepare('PRAGMA page_count').get() as { page_count: number }).page_count;
+        if (free > 32 && free * 4 > pages) db.exec('VACUUM');
     } finally {
         db.close();
     }
@@ -227,12 +246,44 @@ export function dropProjectRows(id: string, opts: RegistryOptions = {}): void {
 export function indexAfterRefresh(id: string, root: string, cachePath: string, graph: CodeGraph | null, opts: RegistryOptions = {}): boolean {
     try {
         if (!readRegistry(opts).index || !isSqliteAvailableSync()) return false;
+        const manifests = manifestFacts(root);
+        // A refresh that changed neither the graph nor a manifest rewrites nothing:
+        // the graph's own content checksum plus the manifest rows decide.
+        const sum = graphChecksum(cachePath, graph);
+        const key = sum === null ? null : createHash('sha256').update(`${sum}\0${root}\0${JSON.stringify(manifests)}`).digest('hex');
+        if (key !== null && storedFactsKey(id, opts) === key) return true;
         const g = graphFacts(cachePath, graph);
         if (!g) return false;
-        writeProjectRows(id, root, { ...manifestFacts(root), ...g }, opts);
+        writeProjectRows(id, root, { ...manifests, ...g }, opts, key);
         return true;
     } catch {
         return false;
+    }
+}
+
+function graphChecksum(cachePath: string, graph: CodeGraph | null): string | null {
+    if (graph) return graph.source_checksum || null;
+    const index = openGraphIndex(cachePath);
+    if (!index) return null;
+    try {
+        return index.sourceChecksum || null;
+    } finally {
+        index.close();
+    }
+}
+
+function storedFactsKey(id: string, opts: RegistryOptions): string | null {
+    const file = indexPath(opts);
+    if (!fs.existsSync(file)) return null;
+    const { DatabaseSync } = loadSqliteSync('code_graph.estate_index');
+    const db = new DatabaseSync(file, { readOnly: true });
+    try {
+        const row = db.prepare('SELECT facts_key FROM projects WHERE id = ?').get(id) as { facts_key: string | null } | undefined;
+        return row?.facts_key ?? null;
+    } catch {
+        return null;
+    } finally {
+        db.close();
     }
 }
 

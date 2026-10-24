@@ -129,6 +129,29 @@ describe('packages and exports per project (4.2)', () => {
     }, 120_000);
 });
 
+describe('an unchanged refresh rewrites nothing', () => {
+    it('keeps the rows and their indexed_at when neither graph nor manifests changed', async () => {
+        const e = makeEstate(tmp, 1);
+        expect(await cg('projects', 'index', 'on')).toBe(0);
+        expect(await cg('build', '--root', e.core)).toBe(0);
+        const at = (): string => {
+            const db = openEstate()!;
+            try {
+                return db.projects().find((p) => p.root === e.core)!.indexed_at;
+            } finally {
+                db.close();
+            }
+        };
+        const first = at();
+        await new Promise((r) => setTimeout(r, 5));
+        expect(await cg('build', '--root', e.core)).toBe(0);
+        expect(at()).toBe(first);
+        fs.writeFileSync(path.join(e.core, 'package.json'), JSON.stringify({ name: '@estate/core', dependencies: { zod: '^3.0.0' } }));
+        expect(await cg('build', '--root', e.core)).toBe(0);
+        expect(at()).not.toBe(first);
+    }, 60_000);
+});
+
 describe('cross-project edges, honestly labelled (4.3)', () => {
     it('a path dependency is a package edge; a name only one project declares is a unique-name guess; a shared name is none', async () => {
         const e = makeEstate(tmp, 2);
