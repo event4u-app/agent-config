@@ -505,6 +505,12 @@ interface MainOptions {
     project_root?: string | null;
     out?: OutSink;
     err?: OutSink;
+    /**
+     * Install this exact version instead of `latest`. Programmatic only — set by
+     * `agent-config update`, which must install the version it is about to pin;
+     * the command line keeps `update --to` as the one way to name a version.
+     */
+    version?: string;
 }
 
 export async function main(argv: string[] | null = null, options: MainOptions = {}): Promise<number> {
@@ -549,7 +555,7 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
         return 0;
     }
 
-    const target = `${PACKAGE_NAME}@latest`;
+    const target = `${PACKAGE_NAME}@${options.version ?? 'latest'}`;
     const npm_cmd: string[] = ['npm', 'install', '-g', target];
     // --no-ui: the setup wizard is an onboarding surface, not an upgrade
     // step — its foreground server used to block the upgrade until Ctrl-C.

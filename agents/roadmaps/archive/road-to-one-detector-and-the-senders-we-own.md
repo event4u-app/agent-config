@@ -387,7 +387,7 @@ read cannot leak through any later bug.
       triple base64 is a counted `pastLayerBound` miss; the size and time bounds
       count too (a third layer and the JSON decoder each seen red). Not yet read
       by a sender — 3.3 wires it.
-- [ ] **2.5 Invisible characters do not hide a value.** Reuse the strip-then- <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/confusables.ts -->
+- [x] **2.5 Invisible characters do not hide a value.** Reuse the strip-then- <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/confusables.ts -->
       rescan step and its fixtures (`src/scripts/_lib/knowledge_global_redaction.ts`,
       `tests/fixtures/global-knowledge-redaction/`). An evasion corpus beside them —
       inserted spaces, alternate casing, line wrapping, code fences, Markdown links,
@@ -641,7 +641,7 @@ stay green (93 files).
       `uncovered`; a grep for `anonymi[sz]` over `src/` and `docs/` finds it only
       in the screenshot-hygiene and council-blinding features, never in the
       egress contract, threat row j or this feature's code.)*
-- [ ] AC-6 — The bars of 0.3 were committed before any Phase 2–3 data, and the
+- [x] AC-6 — The bars of 0.3 were committed before any Phase 2–3 data, and the
       measured result is published against them whatever it is; the grammar of
       3.1 is the spelling that bar selected.
       *(2026-10-20: (d) was published 2026-10-15 and selected the grammar 3.1

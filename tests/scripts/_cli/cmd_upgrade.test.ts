@@ -79,11 +79,6 @@ function parseSeam(raw: string): SeamResult {
     return { out: m[1] ?? '', err: m[2] ?? '', exit: m[3] ?? '' };
 }
 
-/** Normalize the machine-specific resolved `agent-config` binary path. */
-function normBin(s: string): string {
-    return s.replace(/\S*agent-config global/g, '<BIN> global');
-}
-
 let tsHarnessPath: string;
 let harnessDir: string;
 
@@ -175,6 +170,25 @@ describe('upgrade --dry-run / apply', () => {
     it('apply with latest unavailable still proceeds against @latest tag', () => {
         // Non-check path ignores `latest` for the npm target (always @latest).
         expect(expectSeamStable('1.0.0', '', 0, []).exit).toBe('0');
+    });
+
+    // `agent-config update` passes the version it is about to pin, so the
+    // global install lands on exactly that version rather than on `latest`.
+    it('installs exactly the version a caller names, never @latest', async () => {
+        const { main } = await import('../../../src/scripts/_cli/cmd_upgrade.js');
+        const calls: string[][] = [];
+        let out = '';
+        const rc = await main(['--dry-run'], {
+            version: '7.2.0',
+            installed: '5.0.0',
+            fetcher: () => '9.0.0',
+            runner: (cmd: string[]) => (calls.push(cmd), 0),
+            out: { write: (t: string) => void (out += t) },
+            err: { write: () => undefined },
+        });
+        expect(rc).toBe(0);
+        expect(out).toContain('npm install -g @event4u/agent-config@7.2.0');
+        expect(out).not.toContain('@latest');
     });
 });
 

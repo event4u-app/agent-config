@@ -21,6 +21,12 @@
  *   Downgrades are allowed; the pin is a project decision.
  * - (no flag) — pin to the registry's `latest` tag.
  *
+ * The global install moves first. Only the CLI follows the pin (`pin_resolver`
+ * re-execs through npx); hooks, rules and skills run from the global install. So
+ * when `installed.lock` records an older version than the target, this runs
+ * `agent-config upgrade` to exactly that version and writes the pin only once it
+ * succeeded — offline, where it cannot, the pin is refused instead.
+ *
  * Write target: the **deepest** `.agent-settings.yml` in the project cascade
  * that already carries the `agent_config_version` key. When no file carries
  * it, the repo-root file is created/edited. Comments and key ordering are
@@ -405,6 +411,10 @@ interface MainOptions {
     state_path?: string | null;
     out?: OutSink;
     err?: OutSink;
+    /** The version the global install recorded in `installed.lock`, or `null` when there is none. */
+    global_version?: () => string | null;
+    /** Install exactly this version globally; returns the exit code. */
+    upgrader?: (version: string, out: OutSink, err: OutSink) => Promise<number>;
 }
 
 interface Args {
@@ -526,6 +536,29 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
         return 0;
     }
 
+    // The pin only steers the CLI (`pin_resolver` re-execs through npx); hooks,
+    // rules and skills run from the global install. A pin ahead of it would
+    // leave the project naming one version while every session runs another,
+    // so the global install moves first, and the pin only once it has.
+    const global = (options.global_version ?? _global_install_version)();
+    if (global !== null && update_check._is_newer(latest, global)) {
+        if (offline) {
+            _print(
+                err,
+                `❌  agent-config: the global install is ${global} and cannot be upgraded to ${latest} offline; ` +
+                    'the pin is unchanged. Run `agent-config update` again with registry access.',
+            );
+            return 1;
+        }
+        _print(out, `→ The global install is ${global}; installing ${latest} first so the pin matches what runs.`);
+        const upgrader = options.upgrader ?? _upgrade_global;
+        const rc = await upgrader(latest, out, err);
+        if (rc !== 0) {
+            _print(err, `❌  agent-config: the global upgrade to ${latest} failed (exit ${rc}); the pin is unchanged.`);
+            return 1;
+        }
+    }
+
     const pin_file = _find_pin_file(cwd);
     const changed = _write_pin(pin_file, latest);
     const rel = _relativeToOr(pin_file, cwd);
@@ -542,7 +575,6 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
         cache_warmer(latest);
     }
     _refresh_state(latest, latest, state_path);
-    _report_global_install(latest, out);
     return 0;
 }
 
@@ -556,28 +588,24 @@ function _relativeToOr(target: string, base: string): string {
 }
 
 /**
- * Name `agent-config upgrade` when the global install is older than the pin.
+ * The version the global install recorded, or `null` when there is no global
+ * install to keep in step with.
  *
- * Read-only by design: `installed.lock` records what the global install
- * deployed, and `upgrade` (plus its `--check` and unattended paths) reads it as
- * the installed version. This command used to rewrite it to the pin, so after
- * `update` the lock claimed a version no `npm install -g` had installed and
- * `upgrade --check` reported "up to date" over the old binary.
+ * Read-only by design: `installed.lock` is written by the global install itself.
+ * This command once rewrote it to the pin, so the lock claimed a version no
+ * `npm install -g` had installed and `upgrade --check` reported "up to date"
+ * over the old binary.
  */
-function _report_global_install(version: string, out: OutSink): void {
+function _global_install_version(): string | null {
     const existing = installed_lock.read_lockfile(installed_lock.lockfile_path());
-    if (existing === null) {
-        return;
-    }
-    const recorded = (existing as unknown as Record<string, unknown>)['agent_config_version'];
-    if (typeof recorded !== 'string' || !update_check._is_newer(version, _normalize(recorded))) {
-        return;
-    }
-    _print(
-        out,
-        `ℹ️  The global install is ${_normalize(recorded)}; this pin does not change it. ` +
-            `Run \`agent-config upgrade\` to install ${version} globally.`,
-    );
+    const recorded = (existing as unknown as Record<string, unknown> | null)?.['agent_config_version'];
+    return typeof recorded === 'string' && recorded.trim() !== '' ? _normalize(recorded) : null;
+}
+
+/** `agent-config upgrade`, in process, to exactly `version`. */
+async function _upgrade_global(version: string, out: OutSink, err: OutSink): Promise<number> {
+    const upgrade = await import('./cmd_upgrade.js');
+    return upgrade.main([], { version, out, err });
 }
 
 /** Read `version` from the package's own `package.json`. */

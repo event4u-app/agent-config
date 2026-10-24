@@ -8,9 +8,6 @@ depends:
 estate_offset_exempt: "No active, parked or stub roadmap owns what a host carries from a session to a model provider. The archived owners of the neighbouring surfaces are closed — road-to-hooks-on-every-host (slot bindings, whose dated verified blocks this roadmap reads) and road-to-per-turn-hook-economy (payload shaping, whose planner this roadmap extends) — and reopening either would make its closed acceptance criteria read open. Nothing can be offset without retiring live work."
 estate_growth_exempt: "Second of a two-roadmap set from one inbox round; grows active_roadmaps by one and open_blockers by three. All three blockers are decisions the plans themselves posed and no tree fact settles: whether to build a request gateway (owner, priced by host features it disables), how identifier values may rest between hook processes (council, a privacy-floor trade-off), and whether any class is replaced by default for consumers (owner, a consumer-facing default)."
 relates:
-  - slug: road-to-one-detector-and-the-senders-we-own
-    relation: depends
-    note: "Consumes its rule table, token grammar, contract and sender census; nothing here re-implements detection."
   - slug: road-to-hooks-on-every-host
     relation: disjoint
     note: "Archived. Its dated verified blocks in host_lowering.yaml are read before any non-claude row gains a rewrite axis; none is edited without its own probe."

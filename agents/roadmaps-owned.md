@@ -27,7 +27,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-decision-closure | active | draft | Every roadmap enters execution as an execution contract: every foreseeable decision closed, the closing done council-first, the owner reached only … |
 | road-to-hook-guards-that-hold-17-findings | active | draft | 17.0.0 is cut only when the three `fail_closed` hook guards (`block-no-verify`, `block-kernel-rule-writes`, `block-plumbing-writes`) refuse what they claim on every install … |
 | road-to-host-inputs-the-installer-honours | active | ready | What the installer writes and what `doctor` reports about the host is computed from the inputs the host itself uses. |
-| road-to-one-detector-and-the-senders-we-own | active | ready | On every request this package writes to a model provider itself, no value of a listed type leaves in plaintext, … |
 | road-to-placeholders-on-the-wire | active | ready | On Claude Code at a probed version, a tool result carrying a listed value reaches the model as a token … |
 | road-to-seats-that-know-why-they-failed | active | ready | Every failure of a council seat carries a class before it gets a reaction, and the class picks the reaction: … |
 | road-to-self-modification-that-a-council-must-pass | active | ready | A change the package makes to what governs it lands on a council's verdict about that exact change. |

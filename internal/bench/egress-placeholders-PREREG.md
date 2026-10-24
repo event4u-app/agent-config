@@ -1,7 +1,7 @@
 # PREREG — egress placeholders: detection, round trip, model fidelity, quality, latency
 
 > Pre-registration for step 0.3 of
-> [`road-to-one-detector-and-the-senders-we-own`](../../agents/roadmaps/road-to-one-detector-and-the-senders-we-own.md).
+> [`road-to-one-detector-and-the-senders-we-own`](../../agents/roadmaps/archive/road-to-one-detector-and-the-senders-we-own.md).
 > Committed alone, **before** any commit under that roadmap's Phases 2–3 and
 > before any artefact under `internal/bench/reports/egress-placeholders-*`
 > exists. Vocabulary: `docs/contracts/egress-placeholders-v1.md`.
