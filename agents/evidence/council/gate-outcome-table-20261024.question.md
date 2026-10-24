@@ -3,7 +3,9 @@
 <!-- The prompt given to the council on 2026-10-24 (fourth round that day),
      committed verbatim so the verdict beside it can be checked against what
      was actually asked. It tells the seats the asking agent drafted the table
-     and would implement the result. -->
+     and would implement the result. One addition after sending: the
+     `ref-ignore` marker on the "Ordering rationale" line, which the reference
+     checker reads as two rule links. -->
 
 # Step 7.1: is this the outcome table and accepted-byte boundary the last round said a normative v0 waits for?
 
@@ -109,7 +111,7 @@ and the first rule that matches decides the outcome:
 | P17 | the tree was dirty at the start | `incomplete` | `dirty-tree` |
 | P18 | none of the above | `complete` | — |
 
-Ordering rationale. `invalid` rules come before `incomplete` rules because
+Ordering rationale. `invalid` rules come before `incomplete` rules because <!-- ref-ignore -->
 evidence of a malformed or contradictory stream is a stronger finding than
 evidence of a short one. A stream that was cut short **and** carries a duplicate
 reports the duplicate. P8 sits with `invalid` because the producer exceeded what
