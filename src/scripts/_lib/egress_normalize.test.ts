@@ -12,9 +12,12 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { CONFUSABLE_FOREIGN, LATIN_TWIN } from './confusables.js';
-import { detectNormalized, HIDDEN_UNICODE_RE, normalizeForDetection } from './egress_normalize.js';
+import { CONFUSABLE_FOREIGN } from './confusables.js';
+import { detectNormalized, HIDDEN_UNICODE_RE, LATIN_TWIN, normalizeForDetection } from './egress_normalize.js';
 import { detect } from './egress_rules.js';
+import { tallyText } from './egress_text.js';
+import { parseTokens, replaceValues, TokenScope } from './egress_token.js';
+import { CouncilEgress } from '../ai_council/council_egress.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const FIXTURES = path.join(REPO, 'tests', 'fixtures', 'global-knowledge-redaction');
@@ -48,6 +51,41 @@ describe('the smuggling fixtures', () => {
         for (const cp of LATIN_TWIN.keys()) expect(CONFUSABLE_FOREIGN.has(cp), cp.toString(16)).toBe(true);
         const n = normalizeForDetection('a​bа');
         expect([n.text, n.hidden, n.folded]).toEqual(['aba', 1, 1]);
+    });
+});
+
+describe('the senders read through the normalisation', () => {
+    // The two fixtures each hide one value: a key broken by a zero-width space and
+    // an address with a Cyrillic letter. Plain `detect` sees neither (above).
+    const hiddenKey = read('zerowidth-secret.md');
+    const homoglyph = read('homoglyph-email.md');
+    const keyBytes = (text: string): string => {
+        const s = detectNormalized(text).find((x) => x.type === 'APIKEY');
+        return text.slice(s!.start, s!.end);
+    };
+
+    it('replaceValues removes the disguised key bytes and mints a token for them', () => {
+        const out = replaceValues(hiddenKey, new TokenScope());
+        expect(out.includes(keyBytes(hiddenKey))).toBe(false);
+        expect(parseTokens(out).some((t) => t.type === 'APIKEY')).toBe(true);
+    });
+
+    it('replaceValues replaces the homoglyph address', () => {
+        const out = replaceValues(homoglyph, new TokenScope());
+        expect(parseTokens(out).some((t) => t.type === 'EMAIL')).toBe(true);
+    });
+
+    it('tallyText counts both disguised values', () => {
+        expect(tallyText(hiddenKey).found.some((f) => f.type === 'APIKEY')).toBe(true);
+        expect(tallyText(homoglyph).found.some((f) => f.type === 'EMAIL')).toBe(true);
+    });
+
+    it('the council replaces both, and its final check refuses a body that still carries one', () => {
+        const egress = new CouncilEgress({ identifiers: true });
+        expect(egress.replace(hiddenKey).includes(keyBytes(hiddenKey))).toBe(false);
+        expect(parseTokens(egress.replace(homoglyph)).some((t) => t.type === 'EMAIL')).toBe(true);
+        expect(new CouncilEgress({ identifiers: true }).check(hiddenKey)?.reason).toBe('high-confidence-finding');
+        expect(new CouncilEgress({ identifiers: true }).check(homoglyph)?.reason).toBe('high-confidence-finding');
     });
 });
 

@@ -5,7 +5,8 @@
 
 import { createHmac, randomBytes } from 'node:crypto';
 
-import { detect, EGRESS_RULES, type EgressClass, type EgressSpan, replaceSpans } from './egress_rules.js';
+import { detectNormalized } from './egress_normalize.js';
+import { EGRESS_RULES, type EgressClass, type EgressSpan, replaceSpans } from './egress_rules.js';
 
 export const TOKEN_FP_LENGTH = 6;
 
@@ -243,7 +244,7 @@ function replacementSpans(text: string, detected: readonly EgressSpan[]): Egress
  */
 export function replaceValues(text: string, scope: TokenScope): string {
     const owned = parseTokens(text).filter((t) => scope.owns(text.slice(t.start, t.end)));
-    const detected = detect(text).filter((s) => !owned.some((t) => t.start <= s.start && s.end <= t.end));
+    const detected = detectNormalized(text).filter((s) => !owned.some((t) => t.start <= s.start && s.end <= t.end));
     const spans = replacementSpans(text, detected);
     // Mint in text order first: replaceSpans substitutes right to left, and minting
     // inside its callback would number the last value 1.
