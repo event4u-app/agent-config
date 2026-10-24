@@ -1,0 +1,2482 @@
+{
+  "checks": [
+    {
+      "check": "check_gate_completeness",
+      "non_flag_inputs": [
+        "Taskfile.yml (and included task files) via load_tasks/local_closure from check_ci_local_parity — defines the registered gate set for task roots ci+consistency",
+        "src/scripts/<id>.ts existence and content per registered gate (ledger import / '// ledger-exempt:' marker)",
+        "src/config/gate-violation-baselines.json (working tree) via checkRatchet",
+        "env GATE_BASELINE_TARGET_REF — when set, baseline is read from that git ref (git object store) instead of the working tree",
+        "clock (current UTC date) — baseline staleness age in checkRatchet",
+        "import.meta.url / process.argv[1] realpath (CLI-entry guard; module import does not run main)"
+      ],
+      "branches": [
+        {
+          "check": "check_gate_completeness",
+          "id": "c1-dead-scope",
+          "where": "src/scripts/check_gate_completeness.ts:155-156",
+          "finding": "assertScanned throws DeadScopeError when 0 registered gates with a script were classified; caught, printed, returns 1",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "registered gate set from Taskfile closure is empty OR every registered id lacks src/scripts/<id>.ts"
+          ]
+        },
+        {
+          "check": "check_gate_completeness",
+          "id": "c1-rethrow",
+          "where": "src/scripts/check_gate_completeness.ts:158",
+          "finding": "any non-DeadScopeError thrown by assertScanned is rethrown (uncaught -> process crash)",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "assertScanned throws something other than DeadScopeError (not expected in practice)"
+          ]
+        },
+        {
+          "check": "check_gate_completeness",
+          "id": "c1-out-of-scope",
+          "where": "src/scripts/check_gate_completeness.ts:129",
+          "finding": "registered task id whose src/scripts/<id>.ts does not exist is recorded in the ledger as out_of_scope 'manifest_absent' and printed by ledger.report (not counted as a failure)",
+          "effect": "warning-exit-zero",
+          "exit_code": null,
+          "predicates": [
+            "a task reachable from ci/consistency roots has no src/scripts/<id>.ts file"
+          ]
+        },
+        {
+          "check": "check_gate_completeness",
+          "id": "c1-ledger-fail-malformed",
+          "where": "src/scripts/check_gate_completeness.ts:135",
+          "finding": "ledger records fail for a gate whose ledger-exempt marker reason is shorter than 20 chars (feeds c1-malformed exit)",
+          "effect": "error-exit-nonzero",
+          "exit_code": null,
+          "predicates": [
+            "a registered gate source has a line-anchored '// ledger-exempt:' marker with trimmed reason < 20 chars AND no gate_ledger import"
+          ]
+        },
+        {
+          "check": "check_gate_completeness",
+          "id": "c1-ledger-usage",
+          "where": "src/scripts/_lib/gate_ledger.ts:173,204,212 (via check_gate_completeness.ts:124,129,135,137)",
+          "finding": "GateLedger LedgerUsageError on duplicate plan/resolve (helper; registeredGateIds is a sorted Set so not expected)",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "duplicate gate id in plan or double resolution (not expected: ids come from a Set)"
+          ]
+        },
+        {
+          "check": "check_gate_completeness",
+          "id": "c1-ledger-unaccounted",
+          "where": "src/scripts/check_gate_completeness.ts:182 (GateLedger.report -> finalize, _lib/gate_ledger.ts:238)",
+          "finding": "UnaccountedTargetsError if any planned gate reached no outcome (helper; not expected since every id is resolved in the loop)",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "a planned id not resolved (not expected)"
+          ]
+        },
+        {
+          "check": "check_gate_completeness",
+          "id": "c1-malformed",
+          "where": "src/scripts/check_gate_completeness.ts:186-194",
+          "finding": "lists exemption markers with no usable reason (< 20 chars) and returns 1, before the ratchet is consulted",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "at least one registered gate classified malformed_exemption"
+          ]
+        },
+        {
+          "check": "check_gate_completeness",
+          "id": "c1-ratchet-resolution",
+          "where": "src/scripts/check_gate_completeness.ts:197 (checkRatchet -> _lib/gate_baseline.ts loadBaselinesAt throws BaselineResolutionError)",
+          "finding": "baseline target ref or blob cannot be resolved; uncaught throw",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "env GATE_BASELINE_TARGET_REF set and non-empty",
+            "ref or baseline blob unresolvable in git"
+          ]
+        },
+        {
+          "check": "check_gate_completeness",
+          "id": "c1-unadopted-list",
+          "where": "src/scripts/check_gate_completeness.ts:203-207",
+          "finding": "prints the list of un-adopted (unledgered) gates to stdout",
+          "effect": "warning-exit-zero",
+          "exit_code": null,
+          "predicates": [
+            "--quiet not passed",
+            "unledgered count > 0",
+            "ratchet status != within (i.e. improved, regressed, stale or unbaselined)"
+          ]
+        },
+        {
+          "check": "check_gate_completeness",
+          "id": "c1-ratchet-ok-msg",
+          "where": "src/scripts/check_gate_completeness.ts:211-214",
+          "finding": "ratchet verdict ok (within / improved / unbaselined with 0) printed as a warning line, returns 0; 'improved' message says baseline should be lowered",
+          "effect": "warning-exit-zero",
+          "exit_code": 0,
+          "predicates": [
+            "--quiet not passed (message suppressed with --quiet, exit still 0)",
+            "unledgered count <= baseline and not stale, OR no baseline entry and 0 unledgered"
+          ]
+        },
+        {
+          "check": "check_gate_completeness",
+          "id": "c1-ratchet-regressed",
+          "where": "src/scripts/check_gate_completeness.ts:216-217",
+          "finding": "unledgered count above the recorded baseline (regressed) -> returns 1",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "baseline entry exists for check_gate_completeness",
+            "unledgered count > baseline count"
+          ]
+        },
+        {
+          "check": "check_gate_completeness",
+          "id": "c1-ratchet-stale",
+          "where": "src/scripts/check_gate_completeness.ts:216-217",
+          "finding": "count equals baseline but baseline anchor (landed/reaffirmed) older than STALE_AFTER_DAYS -> returns 1 (listed separately from regressed: same line, different verdict)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "baseline entry exists",
+            "unledgered count == baseline count",
+            "clock: days since landed/reaffirmed.date > STALE_AFTER_DAYS"
+          ]
+        },
+        {
+          "check": "check_gate_completeness",
+          "id": "c1-ratchet-unbaselined",
+          "where": "src/scripts/check_gate_completeness.ts:216-217",
+          "finding": "no baseline entry for the gate and unledgered count > 0 -> returns 1 (separate verdict on same line)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "no check_gate_completeness entry in the governing baseline file (or file missing)",
+            "unledgered count > 0"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "lint_ticked_unmet_criteria",
+      "non_flag_inputs": [
+        "every *.md under <root>/agents/roadmaps (recursive, archive included); unreadable dir yields empty set",
+        "HISTORICAL frozen exemption list (in-file constant) keyed by file+criterion+SHA-256 of the block",
+        "whether root equals the default repo root (stale-exemption check only runs on the repository's own tree)",
+        "env GATE_SELF_TEST_CHILD=1 (blocks --self-test recursion)",
+        "--self-test spawns node_modules/.bin/tsx children over temp dirs (os.tmpdir) — filesystem and tsx binary presence"
+      ],
+      "branches": [
+        {
+          "check": "lint_ticked_unmet_criteria",
+          "id": "c2-selftest-recurse",
+          "where": "src/scripts/lint_ticked_unmet_criteria.ts:332-333",
+          "finding": "--self-test invoked inside a self-test child refuses to recurse",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "--self-test",
+            "env GATE_SELF_TEST_CHILD=1"
+          ]
+        },
+        {
+          "check": "lint_ticked_unmet_criteria",
+          "id": "c2-selftest",
+          "where": "src/scripts/lint_ticked_unmet_criteria.ts:335 (runSelfTest, _lib/gate_self_test.ts:98,128)",
+          "finding": "self-test helper: exit 1 if case floor (6 cases / 4 rejecting) unmet or any fixture misbehaves or throws; 0 otherwise",
+          "effect": "exit-code-only",
+          "exit_code": 1,
+          "predicates": [
+            "--self-test",
+            "GATE_SELF_TEST_CHILD not '1'",
+            "some fixture case did not behave (or tsx child could not run -> status null -> 1)"
+          ]
+        },
+        {
+          "check": "lint_ticked_unmet_criteria",
+          "id": "c2-root-missing-value",
+          "where": "src/scripts/lint_ticked_unmet_criteria.ts:340-341",
+          "finding": "--root given without a value",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "--root as last argument"
+          ]
+        },
+        {
+          "check": "lint_ticked_unmet_criteria",
+          "id": "c2-unknown-arg",
+          "where": "src/scripts/lint_ticked_unmet_criteria.ts:346-347",
+          "finding": "unknown argument",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "any argument other than --self-test / --root <v>"
+          ]
+        },
+        {
+          "check": "lint_ticked_unmet_criteria",
+          "id": "c2-duplicate-historical",
+          "where": "src/scripts/lint_ticked_unmet_criteria.ts:390-397",
+          "finding": "duplicate file+criterion keys in the HISTORICAL exemption list; returns 1 before hits are reported",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "in-file HISTORICAL constant contains two entries with the same file and criterion (source-code state, independent of flags/root)"
+          ]
+        },
+        {
+          "check": "lint_ticked_unmet_criteria",
+          "id": "c2-hit",
+          "where": "src/scripts/lint_ticked_unmet_criteria.ts:221 (push), 400-408 report, 419-420 exit",
+          "finding": "a '- [x] AC-<n>' criterion block whose text (fences skipped, inline code and HTML comments masked) contains literal 'NOT met' and is not digest-exempt",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "a roadmap .md under agents/roadmaps contains a ticked AC block with unmasked 'NOT met'",
+            "block not matching a HISTORICAL entry by file+criterion+sha256"
+          ]
+        },
+        {
+          "check": "lint_ticked_unmet_criteria",
+          "id": "c2-historical-exempt",
+          "where": "src/scripts/lint_ticked_unmet_criteria.ts:221 (push to historical), 360-362 print",
+          "finding": "grandfathered criterion printed as 'exempt (grandfathered)' informational line",
+          "effect": "warning-exit-zero",
+          "exit_code": null,
+          "predicates": [
+            "a ticked AC block with 'NOT met' whose file, criterion and SHA-256 match a HISTORICAL entry"
+          ]
+        },
+        {
+          "check": "lint_ticked_unmet_criteria",
+          "id": "c2-stale-historical",
+          "where": "src/scripts/lint_ticked_unmet_criteria.ts:374 (compute), 409-418 report, 419-420 exit",
+          "finding": "a HISTORICAL entry matched no exempt hit in the scanned tree (block edited/moved/deleted)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "root resolves to the default repository root (no --root, or --root equal to it)",
+            "a HISTORICAL entry's file+criterion was not matched by a digest-exempt hit"
+          ]
+        },
+        {
+          "check": "lint_ticked_unmet_criteria",
+          "id": "c2-dead-scope",
+          "where": "src/scripts/lint_ticked_unmet_criteria.ts:351 (reportScanned)",
+          "finding": "reportScanned/assertScanned dead-scope throw — unreachable because allowEmpty is supplied (listed for completeness)",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "never (allowEmpty reason provided)"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "check_rule_invariants",
+      "non_flag_inputs": [
+        "<root>/tests/golden/invariants.json (array of {rule,file,dist,strings}; _meta element skipped)",
+        "each entry's src rule file and dist projection file under <root>",
+        "--self-test variant reads the first entry's src file"
+      ],
+      "branches": [
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-help",
+          "where": "src/scripts/check_rule_invariants.ts:237-240",
+          "finding": "prints usage and exits 0",
+          "effect": "exit-code-only",
+          "exit_code": 0,
+          "predicates": [
+            "-h or --help"
+          ]
+        },
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-root-missing-value",
+          "where": "src/scripts/check_rule_invariants.ts:229 -> 249-250",
+          "finding": "--root without a value: usage error",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "--root as last argument"
+          ]
+        },
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-unknown-arg",
+          "where": "src/scripts/check_rule_invariants.ts:242 -> 249-250",
+          "finding": "unrecognized argument: usage error",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "any argument other than --root, --root=, --mutation-selftest, -h, --help"
+          ]
+        },
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-json-not-array",
+          "where": "src/scripts/check_rule_invariants.ts:75 -> caught 276-279",
+          "finding": "invariants.json top level is not an array -> internal error",
+          "effect": "error-exit-nonzero",
+          "exit_code": 3,
+          "predicates": [
+            "tests/golden/invariants.json parses to a non-array"
+          ]
+        },
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-json-malformed-entry",
+          "where": "src/scripts/check_rule_invariants.ts:90 -> caught 276-279",
+          "finding": "an entry lacks string rule/file/dist or has non-string/empty strings -> internal error",
+          "effect": "error-exit-nonzero",
+          "exit_code": 3,
+          "predicates": [
+            "malformed entry in invariants.json"
+          ]
+        },
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-json-read-or-parse",
+          "where": "src/scripts/check_rule_invariants.ts:72-73 -> caught 276-279",
+          "finding": "invariants.json missing/unreadable or invalid JSON -> internal error (separate cause from the two above)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 3,
+          "predicates": [
+            "tests/golden/invariants.json missing, unreadable or not JSON"
+          ]
+        },
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-watchlist-dead",
+          "where": "src/scripts/check_rule_invariants.ts:267 (assertWatchlistResolves throws DeadScopeError) -> 276-279",
+          "finding": "none of the entries' src/dist files exist (or entry list empty) -> internal error",
+          "effect": "error-exit-nonzero",
+          "exit_code": 3,
+          "predicates": [
+            "no --mutation-selftest",
+            "every listed file/dist path is absent, or invariants.json has zero entries"
+          ]
+        },
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-missing-file",
+          "where": "src/scripts/check_rule_invariants.ts:108 (checkEntry, file unread)",
+          "finding": "a src or dist target file is unreadable/absent: every invariant string of the entry reported missing for that target",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "no --mutation-selftest",
+            "at least one listed file exists (watchlist passes) but this target does not"
+          ]
+        },
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-missing-string",
+          "where": "src/scripts/check_rule_invariants.ts:114 (checkEntry), exit at 275",
+          "finding": "a whitespace-normalised invariant string is absent from the src rule or its dist projection",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "no --mutation-selftest",
+            "target file content lacks normalize(string)"
+          ]
+        },
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-selftest-empty",
+          "where": "src/scripts/check_rule_invariants.ts:177-178",
+          "finding": "mutation selftest: no invariants defined",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--mutation-selftest",
+            "first entry missing or has no strings"
+          ]
+        },
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-selftest-baseline-broken",
+          "where": "src/scripts/check_rule_invariants.ts:185-188",
+          "finding": "mutation selftest: first invariant not present in its src file",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--mutation-selftest",
+            "first entry's src file lacks its first string"
+          ]
+        },
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-selftest-src-unreadable",
+          "where": "src/scripts/check_rule_invariants.ts:182 -> caught 276-279",
+          "finding": "mutation selftest: first entry's src file unreadable -> internal error",
+          "effect": "error-exit-nonzero",
+          "exit_code": 3,
+          "predicates": [
+            "--mutation-selftest",
+            "first entry's src file missing"
+          ]
+        },
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-selftest-mutation-noop",
+          "where": "src/scripts/check_rule_invariants.ts:191-193",
+          "finding": "mutation selftest: removing the string did not remove it (defensive)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--mutation-selftest",
+            "split/join leaves the needle (not expected)"
+          ]
+        },
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-selftest-undetected",
+          "where": "src/scripts/check_rule_invariants.ts:204-208",
+          "finding": "mutation selftest: checkEntry failed to report the removed invariant",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--mutation-selftest",
+            "checker regression"
+          ]
+        },
+        {
+          "check": "check_rule_invariants",
+          "id": "c3-selftest-load-errors",
+          "where": "src/scripts/check_rule_invariants.ts:174 (loadEntries) -> 276-279",
+          "finding": "mutation selftest path hits the same invariants.json load/parse/malformed errors -> internal error",
+          "effect": "error-exit-nonzero",
+          "exit_code": 3,
+          "predicates": [
+            "--mutation-selftest",
+            "invariants.json missing, not JSON, not array or malformed"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "check_augment_description_cap",
+      "non_flag_inputs": [
+        "top-level *.md files under src/rules/ (or the --root dir); unreadable dir yields empty list",
+        "frontmatter 'type' and 'description' of each rule file",
+        "note: unknown arguments are ignored; '--root' with no value is ignored and falls back to src/rules"
+      ],
+      "branches": [
+        {
+          "check": "check_augment_description_cap",
+          "id": "c4-over-cap",
+          "where": "src/scripts/check_augment_description_cap.ts:128 (push), 138-151 report+exit",
+          "finding": "a type:auto rule's frontmatter description is longer than 150 chars",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "a rule file under the scan root has frontmatter type: auto",
+            "its description (quotes stripped) length > 150"
+          ]
+        },
+        {
+          "check": "check_augment_description_cap",
+          "id": "c4-read-throw",
+          "where": "src/scripts/check_augment_description_cap.ts:120",
+          "finding": "readFileSync on a listed *.md entry throws (e.g. a directory named *.md or unreadable file); uncaught",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "an entry ending in .md under the scan root is not a readable file"
+          ]
+        },
+        {
+          "check": "check_augment_description_cap",
+          "id": "c4-empty-scope-pass",
+          "where": "src/scripts/check_augment_description_cap.ts:136,154-155",
+          "finding": "no dead-scope guard: zero auto-rules (missing or empty root) prints 'scanned: 0' and passes (listed as a distinct exit path, not a failure)",
+          "effect": "exit-code-only",
+          "exit_code": 0,
+          "predicates": [
+            "scan root missing/empty or contains no type: auto rule"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "lint_subagent_determinism",
+      "non_flag_inputs": [
+        "src/subagents/*.md (non-underscore-prefixed) — existence of the directory and file contents",
+        "frontmatter parsed by validate_frontmatter.parse_frontmatter",
+        "note: only --quiet is read; other arguments are ignored"
+      ],
+      "branches": [
+        {
+          "check": "lint_subagent_determinism",
+          "id": "c5-dead-scope",
+          "where": "src/scripts/lint_subagent_determinism.ts:79-80",
+          "finding": "assertScanned DeadScopeError: zero subagent files (dir missing or empty) -> could-not-run",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "src/subagents missing or contains no non-underscore .md"
+          ]
+        },
+        {
+          "check": "lint_subagent_determinism",
+          "id": "c5-rethrow",
+          "where": "src/scripts/lint_subagent_determinism.ts:82",
+          "finding": "non-DeadScopeError from assertScanned rethrown",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "not expected in practice"
+          ]
+        },
+        {
+          "check": "lint_subagent_determinism",
+          "id": "c5-no-frontmatter",
+          "where": "src/scripts/lint_subagent_determinism.ts:91",
+          "finding": "file has no parseable frontmatter object",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "a subagent file whose frontmatter is absent, unparseable, or not a mapping"
+          ]
+        },
+        {
+          "check": "lint_subagent_determinism",
+          "id": "c5-schema-version",
+          "where": "src/scripts/lint_subagent_determinism.ts:97",
+          "finding": "schema_version is not 'subagent-v1'",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "frontmatter schema_version != 'subagent-v1'"
+          ]
+        },
+        {
+          "check": "lint_subagent_determinism",
+          "id": "c5-visible",
+          "where": "src/scripts/lint_subagent_determinism.ts:106",
+          "finding": "discovery.visible is not exactly false",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "discovery missing, not an object, or visible !== false"
+          ]
+        },
+        {
+          "check": "lint_subagent_determinism",
+          "id": "c5-tools-dupes",
+          "where": "src/scripts/lint_subagent_determinism.ts:120",
+          "finding": "tools array contains duplicate entries",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "tools is an array with a repeated value"
+          ]
+        },
+        {
+          "check": "lint_subagent_determinism",
+          "id": "c5-name-stem",
+          "where": "src/scripts/lint_subagent_determinism.ts:126",
+          "finding": "name is not a string equal to the filename stem",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "frontmatter name missing, non-string, or differs from basename"
+          ]
+        },
+        {
+          "check": "lint_subagent_determinism",
+          "id": "c5-name-dup",
+          "where": "src/scripts/lint_subagent_determinism.ts:130",
+          "finding": "duplicate subagent name across files (projection-path collision)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "two files whose name equals their stem share the same name (only reachable on case-insensitive or otherwise colliding stems)"
+          ]
+        },
+        {
+          "check": "lint_subagent_determinism",
+          "id": "c5-report",
+          "where": "src/scripts/lint_subagent_determinism.ts:137-142",
+          "finding": "aggregate: any finding above prints the sorted list to stdout and returns 1",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "findings non-empty"
+          ]
+        },
+        {
+          "check": "lint_subagent_determinism",
+          "id": "c5-read-throw",
+          "where": "src/scripts/lint_subagent_determinism.ts:88",
+          "finding": "readFileSync of a listed subagent entry throws; uncaught",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "a listed .md entry is unreadable or a directory"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "check_trigger_evals",
+      "non_flag_inputs": [
+        "src/skills/* directory entries (count drives dead-scope guard)",
+        "src/skills/*/evals/triggers.json contents (last_eval, queries / should_trigger / should_not_trigger)",
+        "clock via _lib/as_of asOf() when --today absent: env AC_AS_OF pin, else env CI set -> git HEAD commit date (git log), else wall clock (with WARN on stderr). Note: --as-of on argv is rejected by this script's parser (exit 2), so the argv rung is unreachable"
+      ],
+      "branches": [
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-help",
+          "where": "src/scripts/check_trigger_evals.ts:335-336",
+          "finding": "prints usage and exits 0",
+          "effect": "exit-code-only",
+          "exit_code": 0,
+          "predicates": [
+            "-h or --help"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-today-missing-value",
+          "where": "src/scripts/check_trigger_evals.ts:327 -> 348-350",
+          "finding": "--today with no value: argparse-style usage error",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "--today as last argument"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-unknown-arg",
+          "where": "src/scripts/check_trigger_evals.ts:338 -> 348-350",
+          "finding": "unrecognized argument (includes --as-of)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "any argument other than --today, --today=, --quiet, -h, --help"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-bad-today",
+          "where": "src/scripts/check_trigger_evals.ts:357-359",
+          "finding": "--today value is not a valid YYYY-MM-DD calendar date",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "--today <v> or --today=<v> with non-empty invalid date"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-asof-pin-error",
+          "where": "src/scripts/check_trigger_evals.ts:356 (asOf -> _lib/as_of.ts:119 AsOfPinError)",
+          "finding": "AC_AS_OF environment pin unparseable; uncaught throw",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "no --today (or --today= empty string)",
+            "env AC_AS_OF set, non-blank and not a parseable date"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-asof-wallclock-warn",
+          "where": "src/scripts/check_trigger_evals.ts:356 (asOf -> _lib/as_of.ts resolveAsOf warn)",
+          "finding": "unpinned run: WARN on stderr that the wall clock was used and the verdict is not reproducible",
+          "effect": "warning-exit-zero",
+          "exit_code": null,
+          "predicates": [
+            "no --today",
+            "AC_AS_OF unset/blank",
+            "CI unset/false OR git HEAD commit date unavailable"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-dead-scope",
+          "where": "src/scripts/check_trigger_evals.ts:376-377",
+          "finding": "zero src/skills/* directories -> DeadScopeError, could-not-run",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "src/skills missing or has no directory/symlink entries"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-rethrow",
+          "where": "src/scripts/check_trigger_evals.ts:379",
+          "finding": "non-DeadScopeError rethrown",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "not expected in practice"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-unreadable-json",
+          "where": "src/scripts/check_trigger_evals.ts:138",
+          "finding": "triggers.json cannot be read or parsed as JSON",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "a triggers.json file is unreadable or invalid JSON"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-last-eval-missing",
+          "where": "src/scripts/check_trigger_evals.ts:147",
+          "finding": "last_eval missing, not a string, or not a valid ISO calendar date (also fires when top level is not an object)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "triggers.json top-level last_eval absent/invalid or JSON top level not an object"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-last-eval-stale",
+          "where": "src/scripts/check_trigger_evals.ts:151-154",
+          "finding": "last_eval older than 90 days relative to the reference date",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "valid last_eval",
+            "reference date (--today or asOf clock) minus last_eval > 90 days"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-queries-empty",
+          "where": "src/scripts/check_trigger_evals.ts:165-166",
+          "finding": "queries present but not a non-empty list (returns early, skipping class check)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "object has key 'queries' whose value is not an array or is empty"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-query-no-q",
+          "where": "src/scripts/check_trigger_evals.ts:172",
+          "finding": "a queries entry is not an object or has falsy q",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "queries shape",
+            "entry not a mapping or q empty/falsy"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-query-trigger-type",
+          "where": "src/scripts/check_trigger_evals.ts:177",
+          "finding": "a queries entry's trigger is not a boolean",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "queries shape",
+            "entry has truthy q but non-boolean trigger"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-split-list-empty",
+          "where": "src/scripts/check_trigger_evals.ts:190",
+          "finding": "should_trigger or should_not_trigger missing/not a list/empty (per key)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "split shape (either key present)",
+            "one of the two keys absent, non-array or empty"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-split-item-empty",
+          "where": "src/scripts/check_trigger_evals.ts:198",
+          "finding": "a split-list item (string or {q}) is not a non-empty query string",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "split shape",
+            "item q non-string or whitespace-only"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-no-shape",
+          "where": "src/scripts/check_trigger_evals.ts:206-207",
+          "finding": "neither queries nor should_trigger/should_not_trigger present (returns early)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "top level not an object, or object lacks all three keys"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-one-class",
+          "where": "src/scripts/check_trigger_evals.ts:211-214",
+          "finding": "only one class represented (zero should-trigger or zero should-not-trigger valid entries)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "valid-entry positive count == 0 or negative count == 0 after shape parsing (not reached on early returns)"
+          ]
+        },
+        {
+          "check": "check_trigger_evals",
+          "id": "c6-report",
+          "where": "src/scripts/check_trigger_evals.ts:388-393",
+          "finding": "aggregate: any error above printed under 'trigger-set regression(s)' and returns 1",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "errors non-empty"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "lint_rule_enforcement_declaration",
+      "non_flag_inputs": [
+        "<root>/src/rules/*.md — existence of the dir and each rule's frontmatter enforced_by + body text",
+        "<root>/src/config/rule-enforcement-baseline.json (string array)",
+        "kernel-rule membership via _lib/kernel_rules.is_kernel_rule (kernel set definition read by that helper)",
+        "--self-test spawns node_modules/.bin/tsx over temp dirs under os.tmpdir()",
+        "note: no usage-error path exists despite the header's 'exit 2 = usage'; unknown arguments are ignored and '--root' without a value is ignored"
+      ],
+      "branches": [
+        {
+          "check": "lint_rule_enforcement_declaration",
+          "id": "c7-selftest",
+          "where": "src/scripts/lint_rule_enforcement_declaration.ts:270 (runSelfTest, _lib/gate_self_test.ts:98,128)",
+          "finding": "self-test helper: exit 1 when case floor (6/4) unmet or any of 7 fixture cases misbehaves; no recursion guard",
+          "effect": "exit-code-only",
+          "exit_code": 1,
+          "predicates": [
+            "--self-test (takes precedence over every other flag)",
+            "a fixture case misbehaved, or tsx child could not run"
+          ]
+        },
+        {
+          "check": "lint_rule_enforcement_declaration",
+          "id": "c7-dead-root",
+          "where": "src/scripts/lint_rule_enforcement_declaration.ts:281-283",
+          "finding": "src/rules is not a directory under the scan root -> dead scan root",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "<root>/src/rules missing or not a directory (applies with and without --write-baseline)"
+          ]
+        },
+        {
+          "check": "lint_rule_enforcement_declaration",
+          "id": "c7-write-baseline",
+          "where": "src/scripts/lint_rule_enforcement_declaration.ts:286-294",
+          "finding": "--write-baseline writes the current undeclared set to the baseline file and exits 0 (no checks run)",
+          "effect": "exit-code-only",
+          "exit_code": 0,
+          "predicates": [
+            "--write-baseline",
+            "rules dir exists"
+          ]
+        },
+        {
+          "check": "lint_rule_enforcement_declaration",
+          "id": "c7-baseline-missing",
+          "where": "src/scripts/lint_rule_enforcement_declaration.ts:298-303",
+          "finding": "baseline file missing, unparseable, or not an array of strings",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "no --write-baseline",
+            "src/config/rule-enforcement-baseline.json absent/invalid"
+          ]
+        },
+        {
+          "check": "lint_rule_enforcement_declaration",
+          "id": "c7-undeclared-new",
+          "where": "src/scripts/lint_rule_enforcement_declaration.ts:150-151 (push+ledger.fail), report 325-329",
+          "finding": "a rule not in the baseline has no enforced_by declaration (absent or empty list)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "rule frontmatter lacks enforced_by (or empty)",
+            "rule filename not in baseline"
+          ]
+        },
+        {
+          "check": "lint_rule_enforcement_declaration",
+          "id": "c7-baselined-undeclared",
+          "where": "src/scripts/lint_rule_enforcement_declaration.ts:143",
+          "finding": "legacy baselined rule without declaration is recorded out_of_scope 'declared_exemption' in the ledger report (not a failure)",
+          "effect": "warning-exit-zero",
+          "exit_code": null,
+          "predicates": [
+            "rule lacks enforced_by",
+            "filename in baseline"
+          ]
+        },
+        {
+          "check": "lint_rule_enforcement_declaration",
+          "id": "c7-gap-not-in-body",
+          "where": "src/scripts/lint_rule_enforcement_declaration.ts:169-170, report 325-329",
+          "finding": "rule declares 'none' or 'instruction-only…' in enforced_by but its body never mentions 'enforced_by: none' or 'instruction-only'",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "enforced_by contains 'none' or an entry starting 'instruction-only'",
+            "body lacks the gap phrase",
+            "rule is not a kernel rule (is_kernel_rule false)"
+          ]
+        },
+        {
+          "check": "lint_rule_enforcement_declaration",
+          "id": "c7-baseline-stale",
+          "where": "src/scripts/lint_rule_enforcement_declaration.ts:179-183",
+          "finding": "baseline entry names a rule file that no longer exists",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "baseline entry not among src/rules/*.md"
+          ]
+        },
+        {
+          "check": "lint_rule_enforcement_declaration",
+          "id": "c7-baseline-shrink",
+          "where": "src/scripts/lint_rule_enforcement_declaration.ts:187-190",
+          "finding": "baseline entry's rule now declares enforced_by and must be removed from the baseline",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "baseline entry exists as a rule",
+            "that rule now has a non-empty enforced_by"
+          ]
+        },
+        {
+          "check": "lint_rule_enforcement_declaration",
+          "id": "c7-dead-scope",
+          "where": "src/scripts/lint_rule_enforcement_declaration.ts:317-319",
+          "finding": "reportScanned DeadScopeError: rules dir has zero *.md files",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "src/rules exists but contains no .md files"
+          ]
+        },
+        {
+          "check": "lint_rule_enforcement_declaration",
+          "id": "c7-rethrow",
+          "where": "src/scripts/lint_rule_enforcement_declaration.ts:321",
+          "finding": "non-DeadScopeError from reportScanned rethrown",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "not expected"
+          ]
+        },
+        {
+          "check": "lint_rule_enforcement_declaration",
+          "id": "c7-ledger-unaccounted",
+          "where": "src/scripts/lint_rule_enforcement_declaration.ts:323 (GateLedger.report)",
+          "finding": "GateLedger helper throws (UnaccountedTargetsError / LedgerUsageError) — not expected since every planned rule is resolved",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "helper invariant violated (not expected)"
+          ]
+        },
+        {
+          "check": "lint_rule_enforcement_declaration",
+          "id": "c7-read-throw",
+          "where": "src/scripts/lint_rule_enforcement_declaration.ts:126,137",
+          "finding": "readdirSync/readFileSync of a rule entry throws (e.g. directory named *.md); uncaught",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "unreadable entry ending in .md under src/rules"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "check_token_quality_golden",
+      "non_flag_inputs": [
+        "internal/bench/corpora/token-quality-golden.yaml (fixed path under repo root)",
+        "dist/router.json (kernel / tier_1 / tier_2 entries, triggers, workspaces) — generated by task sync"
+      ],
+      "branches": [
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-scope-invalid",
+          "where": "src/scripts/check_token_quality_golden.ts:324-326",
+          "finding": "--scope value missing or not consumer|maintainer|all",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--scope with absent or invalid value"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-unknown-arg",
+          "where": "src/scripts/check_token_quality_golden.ts:331-333",
+          "finding": "unknown argument",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "argument not in --json, --require-complete, -h, --help, --scope <v> (checked left to right, so it fires before a later -h)"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-help",
+          "where": "src/scripts/check_token_quality_golden.ts:335-339",
+          "finding": "prints usage and exits 0",
+          "effect": "exit-code-only",
+          "exit_code": 0,
+          "predicates": [
+            "-h or --help reached before any unknown argument"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-corpus-unreadable",
+          "where": "src/scripts/check_token_quality_golden.ts:346-348",
+          "finding": "corpus YAML missing or unparseable",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "internal/bench/corpora/token-quality-golden.yaml absent or invalid YAML"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-router-unreadable",
+          "where": "src/scripts/check_token_quality_golden.ts:351-353",
+          "finding": "dist/router.json missing or not JSON",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "dist/router.json absent/invalid"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-corpus-null-throw",
+          "where": "src/scripts/check_token_quality_golden.ts:188-189 (validate on a null/scalar corpus)",
+          "finding": "corpus YAML parses to null/undefined (empty file) -> property access TypeError, uncaught (unsure: inferred, no guard present)",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "corpus file is empty or parses to null"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-corpus-id",
+          "where": "src/scripts/check_token_quality_golden.ts:190",
+          "finding": "corpus_id is not 'token-quality-golden'",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "corpus_id mismatch"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-tasks-not-list",
+          "where": "src/scripts/check_token_quality_golden.ts:193 (then task_count 0 -> dead scope 370-374)",
+          "finding": "tasks is not a list (structural error; task_count 0 makes assertScanned fire first and return 2)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "corpus.tasks not an array"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-dead-scope",
+          "where": "src/scripts/check_token_quality_golden.ts:373-374",
+          "finding": "zero golden tasks (empty or non-list tasks) -> DeadScopeError, exit 2",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "task_count == 0"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-rethrow",
+          "where": "src/scripts/check_token_quality_golden.ts:376",
+          "finding": "non-DeadScopeError rethrown",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "not expected"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-task-element-throw",
+          "where": "src/scripts/check_token_quality_golden.ts:215 (task.id on a null task element)",
+          "finding": "a tasks entry that is null -> TypeError, uncaught (unsure: inferred)",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "tasks list contains a null element"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-id-format",
+          "where": "src/scripts/check_token_quality_golden.ts:217",
+          "finding": "task id missing or not matching tq-<area>-NN",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "task id not a string matching ^tq-[a-z0-9-]+-\\d+$"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-id-duplicate",
+          "where": "src/scripts/check_token_quality_golden.ts:219",
+          "finding": "duplicate task id",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "two tasks share a valid id"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-rules-empty",
+          "where": "src/scripts/check_token_quality_golden.ts:225",
+          "finding": "task rules missing or empty",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "task.rules not a non-empty array"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-rule-unknown",
+          "where": "src/scripts/check_token_quality_golden.ts:228",
+          "finding": "tagged rule id not a string or not in the router's rule universe (always full universe)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "rule id absent from dist/router.json kernel/tier_1/tier_2"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-nofire-kernel",
+          "where": "src/scripts/check_token_quality_golden.ts:244",
+          "finding": "no_fire set on a task tagging a kernel rule",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "task.no_fire === true",
+            "prompt is a string",
+            "tagged rule is in router.kernel"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-nofire-fires",
+          "where": "src/scripts/check_token_quality_golden.ts:246-249",
+          "finding": "no_fire task but the rule does fire on the prompt/context/command",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "task.no_fire === true",
+            "non-kernel rule",
+            "task_fires_rule true (trigger match or triggerless routed rule)"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-tag-not-fired",
+          "where": "src/scripts/check_token_quality_golden.ts:251-254",
+          "finding": "tagged rule has no router trigger exercised by prompt/context_files/command",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "no_fire not true",
+            "prompt is a string",
+            "non-kernel rule with triggers none of which match"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-scenario",
+          "where": "src/scripts/check_token_quality_golden.ts:260",
+          "finding": "scenario missing or not one of single|multi-turn|conflicting-rule|corner-case",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "invalid task.scenario"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-prompt",
+          "where": "src/scripts/check_token_quality_golden.ts:266",
+          "finding": "prompt missing or blank",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "task.prompt not a non-blank string"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-label-status",
+          "where": "src/scripts/check_token_quality_golden.ts:271",
+          "finding": "label_status not stub|labelled",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "invalid task.label_status"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-labelled-todo-rubric",
+          "where": "src/scripts/check_token_quality_golden.ts:283",
+          "finding": "labelled task has TODO/empty/non-string rubric",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "label_status labelled",
+            "expected.rubric non-string, blank, or starting with 'todo'"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-labelled-no-anchor",
+          "where": "src/scripts/check_token_quality_golden.ts:286",
+          "finding": "labelled task has no expected.must_include anchor",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "label_status labelled",
+            "expected.must_include missing or empty"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-structural-exit",
+          "where": "src/scripts/check_token_quality_golden.ts:405,419-420,428",
+          "finding": "aggregate: any structural error printed (text mode, or included in --json output) and returns 2",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "report.errors non-empty"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-uncovered-warn",
+          "where": "src/scripts/check_token_quality_golden.ts:413-415",
+          "finding": "in-scope rules not covered by any task (warning only without --require-complete)",
+          "effect": "warning-exit-zero",
+          "exit_code": null,
+          "predicates": [
+            "no --json",
+            "uncovered rules in the --scope universe (default all)"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-missing-scenario-warn",
+          "where": "src/scripts/check_token_quality_golden.ts:416-418",
+          "finding": "a required scenario (multi-turn, conflicting-rule, corner-case) has no task (warning only without --require-complete)",
+          "effect": "warning-exit-zero",
+          "exit_code": null,
+          "predicates": [
+            "no --json",
+            "required scenario count 0"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-scaffold-notice",
+          "where": "src/scripts/check_token_quality_golden.ts:421-422",
+          "finding": "structurally valid but incomplete (stubs, uncovered or missing scenarios) — informational, exit 0 without --require-complete",
+          "effect": "warning-exit-zero",
+          "exit_code": 0,
+          "predicates": [
+            "no --json",
+            "no structural errors",
+            "incomplete",
+            "no --require-complete"
+          ]
+        },
+        {
+          "check": "check_token_quality_golden",
+          "id": "c8-require-complete",
+          "where": "src/scripts/check_token_quality_golden.ts:429-434",
+          "finding": "--require-complete and set is incomplete: any stub, any in-scope uncovered rule, or any missing required scenario",
+          "effect": "warning-exit-nonzero-only-with-flag",
+          "exit_code": 2,
+          "predicates": [
+            "--require-complete",
+            "no structural errors",
+            "stubs > 0 OR uncovered in --scope universe OR missing required scenario"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "check_council_layout",
+      "non_flag_inputs": [
+        "current working directory — 'agents' is resolved relative to cwd, not the repo root",
+        "full recursive listing of ./agents (file names and directory placement)",
+        "note: only --quiet is read; other arguments ignored"
+      ],
+      "branches": [
+        {
+          "check": "check_council_layout",
+          "id": "c9-dead-scope",
+          "where": "src/scripts/check_council_layout.ts:103 (assertScanned throw) -> 172-175",
+          "finding": "./agents missing (or not a dir, or empty) relative to cwd -> DeadScopeError, could-not-run",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "cwd has no agents/ directory, or agents/ has zero descendants"
+          ]
+        },
+        {
+          "check": "check_council_layout",
+          "id": "c9-rethrow",
+          "where": "src/scripts/check_council_layout.ts:172",
+          "finding": "non-DeadScopeError rethrown",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "not expected"
+          ]
+        },
+        {
+          "check": "check_council_layout",
+          "id": "c9-root-stray",
+          "where": "src/scripts/check_council_layout.ts:121-126",
+          "finding": "a file named council-* or .council-* directly under agents/",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "agents/<council-*> regular file at the top level"
+          ]
+        },
+        {
+          "check": "check_council_layout",
+          "id": "c9-noncanonical",
+          "where": "src/scripts/check_council_layout.ts:150-155",
+          "finding": "a council-* file in a subdirectory that is not runtime/council/{questions,responses,sessions}, not under a top-level dir starting with 'audits' or 'runtime', not under evidence/council or evidence/audits, and not evidence/reviews/council-<slug>.findings.md",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "council-* file nested under agents/ outside the canonical/exempt/evidence allowlist"
+          ]
+        },
+        {
+          "check": "check_council_layout",
+          "id": "c9-report",
+          "where": "src/scripts/check_council_layout.ts:177-186",
+          "finding": "aggregate: findings printed to stdout and returns 1",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "findings non-empty"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "check_knowledge_cards",
+      "non_flag_inputs": [
+        "card directory: default <repo>/agents/knowledge (top-level *.md except README.md); with --global and no --dir: <EVENT4U_CONFIG_HOME or ~/.event4u…>/knowledge via _lib/knowledge_global.global_store_dir",
+        "env EVENT4U_CONFIG_HOME and the user's home directory (global store location, --global only)",
+        "card contents (frontmatter kind/trust/type/links.authoritative/tier/sensitivity, source_version, observed_at, source=<path:line> lines, provenance footer)",
+        "filesystem existence of local authoritative pointers (relative to repo root) and of source=<path> files (--strict)",
+        "git: 'git merge-base --is-ancestor' between distinct SHA-like source_version values (cwd = repo root); git absent -> check skipped",
+        "network: HTTP HEAD on http(s) authoritative pointers (--check-urls only), via a spawned node child with 5s request / 15s process timeout",
+        "clock via _lib/as_of asOf() (env AC_AS_OF, else CI+git HEAD commit date, else wall clock with WARN) — only for --freshness-days > 0",
+        "src/scripts/external_sources_denylist.json (G3 redaction denylist patterns, --global only)",
+        "note: the header advertises exit 3 for internal errors but no such path exists; uncaught throws end the process with node's default non-zero code"
+      ],
+      "branches": [
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-help",
+          "where": "src/scripts/check_knowledge_cards.ts:834-836",
+          "finding": "prints usage+description, exits 0",
+          "effect": "exit-code-only",
+          "exit_code": 0,
+          "predicates": [
+            "-h or --help"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-unknown-arg",
+          "where": "src/scripts/check_knowledge_cards.ts:838 -> 863-866",
+          "finding": "unrecognized argument (includes --as-of)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "argument not among --dir, --dir=, --strict, --check-urls, --freshness-days(=), --global, -h, --help"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-missing-value",
+          "where": "src/scripts/check_knowledge_cards.ts:846 -> 863-866",
+          "finding": "--dir or --freshness-days given without a value",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "--dir or --freshness-days as last argument"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-bad-int",
+          "where": "src/scripts/check_knowledge_cards.ts:854 -> 863-866",
+          "finding": "--freshness-days value is not an integer",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "--freshness-days <non-integer>"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-no-dir",
+          "where": "src/scripts/check_knowledge_cards.ts:452-454",
+          "finding": "card directory does not exist: 'nothing to check', exit 0",
+          "effect": "exit-code-only",
+          "exit_code": 0,
+          "predicates": [
+            "resolved card dir absent (default agents/knowledge, --dir, or global store)"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-no-cards",
+          "where": "src/scripts/check_knowledge_cards.ts:470-472",
+          "finding": "directory has no *.md cards besides README: 'nothing to check', exit 0 (assertScanned has allowEmpty so never throws)",
+          "effect": "exit-code-only",
+          "exit_code": 0,
+          "predicates": [
+            "card dir exists with zero non-README *.md"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-unreadable",
+          "where": "src/scripts/check_knowledge_cards.ts:201",
+          "finding": "card file cannot be read",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "a listed *.md (file or symlink) is unreadable (e.g. dangling symlink)"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-unreadable-freshness-throw",
+          "where": "src/scripts/check_knowledge_cards.ts:407 (_readTextReplace in _freshness_warnings)",
+          "finding": "same unreadable card re-read for freshness throws, uncaught (masks c10-unreadable)",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "--freshness-days > 0",
+            "a listed card is unreadable"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-C1-size",
+          "where": "src/scripts/check_knowledge_cards.ts:213",
+          "finding": "C1: non-experience card exceeds 150 lines",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "card kind != experience (default external)",
+            "line count > 150"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-E1-required",
+          "where": "src/scripts/check_knowledge_cards.ts:264",
+          "finding": "E1: experience card missing a required top-level frontmatter key from REQUIRED_CARD_FIELDS (one finding per missing field)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "frontmatter kind: experience",
+            "one of id/scope/trigger_context/strategy/falsifier/confidence/contradictions/supersedes/expiry/epistemic_type not declared as an unindented key"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-C4-trust",
+          "where": "src/scripts/check_knowledge_cards.ts:294",
+          "finding": "C4: missing trust field",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "kind != experience",
+            "frontmatter trust empty/absent"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-C4-type-wrong",
+          "where": "src/scripts/check_knowledge_cards.ts:298",
+          "finding": "C4: type present but not anti-hallucination",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "kind != experience",
+            "type set and != anti-hallucination"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-C4-type-missing",
+          "where": "src/scripts/check_knowledge_cards.ts:301",
+          "finding": "C4: type field missing",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "kind != experience",
+            "type absent/empty"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-C2-pointer",
+          "where": "src/scripts/check_knowledge_cards.ts:307",
+          "finding": "C2: no links.authoritative pointer (leaf-key 'authoritative:' match)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "kind != experience",
+            "no frontmatter line starting 'authoritative:'"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-C3-url-status",
+          "where": "src/scripts/check_knowledge_cards.ts:315",
+          "finding": "C3: URL HEAD returned status >= 400",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "kind != experience",
+            "pointer is http(s)",
+            "--check-urls",
+            "network: HEAD response status >= 400"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-C3-url-unreachable",
+          "where": "src/scripts/check_knowledge_cards.ts:318",
+          "finding": "C3: URL unreachable (error, timeout, or unparseable child output)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "kind != experience",
+            "pointer is http(s)",
+            "--check-urls",
+            "network error / timeout / child killed"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-C3-local",
+          "where": "src/scripts/check_knowledge_cards.ts:325",
+          "finding": "C3: local pointer path does not exist (relative paths resolved against repo root)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "kind != experience",
+            "pointer not http(s)",
+            "path missing on disk"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-C5-ancestry",
+          "where": "src/scripts/check_knowledge_cards.ts:345-348",
+          "finding": "C5: two consecutive distinct SHA-like source_version values not in a linear git ancestry in either direction",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "kind != experience",
+            "> 1 distinct source_version, all matching 7-40 hex",
+            "git available",
+            "merge-base --is-ancestor non-zero both ways (incl. unknown objects, or 5s timeout -> status null -> 1)"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-C5-git-missing",
+          "where": "src/scripts/check_knowledge_cards.ts:351-353",
+          "finding": "git spawn error (ENOENT etc.): ancestry check silently skipped (no finding)",
+          "effect": "exit-code-only",
+          "exit_code": null,
+          "predicates": [
+            "git not runnable"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-C5-span",
+          "where": "src/scripts/check_knowledge_cards.ts:363-366",
+          "finding": "C5: observed_at dates span more than 7 days",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "kind != experience",
+            ">= 2 observed_at dates, all valid calendar dates",
+            "max - min > 7 days"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-C6-source",
+          "where": "src/scripts/check_knowledge_cards.ts:381",
+          "finding": "C6: source=<path:line> reference points to a missing or empty file (per line)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--strict",
+            "kind != experience",
+            "line with source=<path>:<n> whose path (under repo root) is absent or size 0"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-G1-tier-missing",
+          "where": "src/scripts/check_knowledge_cards.ts:126",
+          "finding": "G1: global card missing tier",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--global",
+            "tier empty/absent (both kinds)"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-G1-tier-invalid",
+          "where": "src/scripts/check_knowledge_cards.ts:128",
+          "finding": "G1: tier not one of the valid tiers",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--global",
+            "tier not in knowledge_global.TIERS"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-G4-sens-missing",
+          "where": "src/scripts/check_knowledge_cards.ts:134",
+          "finding": "G4: global card missing sensitivity",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--global",
+            "sensitivity empty/absent"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-G4-sens-invalid",
+          "where": "src/scripts/check_knowledge_cards.ts:136-138",
+          "finding": "G4: sensitivity not a valid value",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--global",
+            "sensitivity not in knowledge_global.SENSITIVITIES"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-G6-prohibited",
+          "where": "src/scripts/check_knowledge_cards.ts:145-148",
+          "finding": "G6: sensitivity 'prohibited' card present in the global store",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--global",
+            "sensitivity == prohibited"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-G2-no-footer",
+          "where": "src/scripts/check_knowledge_cards.ts:155",
+          "finding": "G2: provenance footer missing",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--global",
+            "parse_provenance_footer returns empty"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-G2-field",
+          "where": "src/scripts/check_knowledge_cards.ts:159",
+          "finding": "G2: provenance footer missing first_seen/promoted_at/last_verified/tier/seen_in (per field)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--global",
+            "footer present but field falsy"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-G5-field",
+          "where": "src/scripts/check_knowledge_cards.ts:164",
+          "finding": "G5: provenance footer missing source_repo/owner/review_after/promotion_reason (per field)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--global",
+            "footer present but field falsy"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-G3-redaction",
+          "where": "src/scripts/check_knowledge_cards.ts:175-178",
+          "finding": "G3: confidential pattern (secret/email/internal host/external-source name/hidden unicode etc.) found by redaction_scan (per violation)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "--global",
+            "redaction_scan(text) returns violations (patterns include src/scripts/external_sources_denylist.json)"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-freshness-warn",
+          "where": "src/scripts/check_knowledge_cards.ts:427-428, printed 482-484",
+          "finding": "lead-only warning: newest observed_at older than --freshness-days (not a failure)",
+          "effect": "warning-exit-zero",
+          "exit_code": null,
+          "predicates": [
+            "--freshness-days N > 0",
+            "card has observed_at dates, all valid",
+            "clock (asOf) minus newest > N days"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-freshness-relative-throw",
+          "where": "src/scripts/check_knowledge_cards.ts:425 -> 713",
+          "finding": "absolute card path outside repo root makes the relative_to replica throw, uncaught (documented latent crash)",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "--freshness-days > 0",
+            "card dir absolute and outside repo root (e.g. --dir /elsewhere or --global store)",
+            "a card is stale"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-asof-pin-throw",
+          "where": "src/scripts/check_knowledge_cards.ts:569 (asOf -> _lib/as_of.ts AsOfPinError)",
+          "finding": "AC_AS_OF unparseable; uncaught throw",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "--freshness-days > 0",
+            "a card with valid observed_at dates",
+            "env AC_AS_OF set to an unparseable value"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-asof-wallclock-warn",
+          "where": "src/scripts/check_knowledge_cards.ts:569 (asOf -> resolveAsOf warn)",
+          "finding": "WARN on stderr that the wall clock was used (non-reproducible)",
+          "effect": "warning-exit-zero",
+          "exit_code": null,
+          "predicates": [
+            "--freshness-days > 0",
+            "a card with valid observed_at dates",
+            "AC_AS_OF unset",
+            "CI unset or git HEAD date unavailable"
+          ]
+        },
+        {
+          "check": "check_knowledge_cards",
+          "id": "c10-report",
+          "where": "src/scripts/check_knowledge_cards.ts:491-495",
+          "finding": "aggregate: any card error printed to stdout, returns 1",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "all_errors non-empty"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "check_public_links",
+      "non_flag_inputs": [
+        "docs/contracts/*.md (top-level files) and their 'stability:' frontmatter",
+        "public surface files README.md, AGENTS.md, docs/architecture.md (each skipped silently if absent)",
+        "link targets resolved relative to the public file and repo root (path arithmetic only; target existence decided by membership in the contracts map)"
+      ],
+      "branches": [
+        {
+          "check": "check_public_links",
+          "id": "c11-help",
+          "where": "src/scripts/check_public_links.ts:259-261",
+          "finding": "prints usage, exits 0",
+          "effect": "exit-code-only",
+          "exit_code": 0,
+          "predicates": [
+            "-h or --help (before any unknown arg)"
+          ]
+        },
+        {
+          "check": "check_public_links",
+          "id": "c11-unknown-arg",
+          "where": "src/scripts/check_public_links.ts:263-264",
+          "finding": "unrecognized argument",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "argument other than --list, --json, --strict, -h, --help"
+          ]
+        },
+        {
+          "check": "check_public_links",
+          "id": "c11-dead-scope",
+          "where": "src/scripts/check_public_links.ts:286-287",
+          "finding": "zero contract files in docs/contracts -> DeadScopeError, exit 1",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "docs/contracts missing or has no *.md files (applies also with --list)"
+          ]
+        },
+        {
+          "check": "check_public_links",
+          "id": "c11-rethrow",
+          "where": "src/scripts/check_public_links.ts:289 -> 377-380",
+          "finding": "non-DeadScopeError rethrown, caught by the entry wrapper as internal error exit 3",
+          "effect": "error-exit-nonzero",
+          "exit_code": 3,
+          "predicates": [
+            "not expected"
+          ]
+        },
+        {
+          "check": "check_public_links",
+          "id": "c11-internal-error",
+          "where": "src/scripts/check_public_links.ts:377-380",
+          "finding": "any exception escaping main (e.g. unreadable contract or public file) -> internal error, exit 3",
+          "effect": "error-exit-nonzero",
+          "exit_code": 3,
+          "predicates": [
+            "a readFileSync of a contract or public file throws (permissions, race)",
+            "CLI entry (not when imported)"
+          ]
+        },
+        {
+          "check": "check_public_links",
+          "id": "c11-list",
+          "where": "src/scripts/check_public_links.ts:291-297",
+          "finding": "--list prints contract stability table and exits 0 without checking",
+          "effect": "exit-code-only",
+          "exit_code": 0,
+          "predicates": [
+            "--list",
+            "contracts scanned > 0"
+          ]
+        },
+        {
+          "check": "check_public_links",
+          "id": "c11-self-no-stability",
+          "where": "src/scripts/check_public_links.ts:307-313",
+          "finding": "a contract file (other than STABILITY.md) lacks stability frontmatter (self-violation, error)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "no --list",
+            "docs/contracts/<x>.md without frontmatter or without 'stability: <word>' line"
+          ]
+        },
+        {
+          "check": "check_public_links",
+          "id": "c11-contexts-link",
+          "where": "src/scripts/check_public_links.ts:163-170",
+          "finding": "public file links to an agents/contexts/*.md target (message names agents/settings/contexts; the check is on agents/contexts — replicated quirk)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "no --list",
+            "a public file contains a markdown link resolving to agents/contexts/<...>.md"
+          ]
+        },
+        {
+          "check": "check_public_links",
+          "id": "c11-target-not-found",
+          "where": "src/scripts/check_public_links.ts:180-186",
+          "finding": "link into docs/contracts/*.md whose target is not a top-level contract file",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "no --list",
+            "link resolves to docs/contracts/...md not present in the contracts map (and not STABILITY.md)"
+          ]
+        },
+        {
+          "check": "check_public_links",
+          "id": "c11-target-no-stability",
+          "where": "src/scripts/check_public_links.ts:191-197",
+          "finding": "linked contract has no stability frontmatter",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "no --list",
+            "linked contract stability null"
+          ]
+        },
+        {
+          "check": "check_public_links",
+          "id": "c11-experimental",
+          "where": "src/scripts/check_public_links.ts:201-207",
+          "finding": "public surface links to an experimental contract",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "no --list",
+            "linked contract stability: experimental"
+          ]
+        },
+        {
+          "check": "check_public_links",
+          "id": "c11-beta-marker",
+          "where": "src/scripts/check_public_links.ts:213-219",
+          "finding": "link to a beta contract without '(beta)' or '[beta]' on the same line (warning severity)",
+          "effect": "warning-exit-nonzero-only-with-flag",
+          "exit_code": 1,
+          "predicates": [
+            "no --list",
+            "linked contract stability: beta",
+            "line lacks (beta)/[beta]",
+            "exit 1 only with --strict (and no errors); otherwise exit 0"
+          ]
+        },
+        {
+          "check": "check_public_links",
+          "id": "c11-resolve-outside-root",
+          "where": "src/scripts/check_public_links.ts:131 (thrown) -> 154-156 (caught, skipped)",
+          "finding": "link resolving outside the repo root is silently skipped (no finding)",
+          "effect": "exit-code-only",
+          "exit_code": null,
+          "predicates": [
+            "relative href escaping the repo root"
+          ]
+        },
+        {
+          "check": "check_public_links",
+          "id": "c11-report",
+          "where": "src/scripts/check_public_links.ts:319-345",
+          "finding": "aggregate: violations printed (text or --json) and exit 1 if any error-severity violation",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "no --list",
+            "any error-severity violation"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "lint_agents_layout",
+      "non_flag_inputs": [
+        "current working directory (agents/ is resolved relative to cwd; project root = cwd)",
+        "top-level entries of ./agents (names, file vs directory)",
+        "source-repo detection in cwd: existence of .agent-src.uncondensed/, dist/agent-src/, or packages/*/.agent-src.uncondensed/ (switches source-repo vs consumer mode)",
+        "note: flags parsed by membership; unknown arguments are ignored"
+      ],
+      "branches": [
+        {
+          "check": "lint_agents_layout",
+          "id": "c12-dead-scope",
+          "where": "src/scripts/lint_agents_layout.ts:238-240",
+          "finding": "./agents missing or empty relative to cwd -> DeadScopeError, printed on stdout, exit 1",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "cwd has no agents/ directory or it has zero entries"
+          ]
+        },
+        {
+          "check": "lint_agents_layout",
+          "id": "c12-rethrow",
+          "where": "src/scripts/lint_agents_layout.ts:242",
+          "finding": "non-DeadScopeError rethrown",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "not expected"
+          ]
+        },
+        {
+          "check": "lint_agents_layout",
+          "id": "c12-flat-file",
+          "where": "src/scripts/lint_agents_layout.ts:177-183, report 247-258",
+          "finding": "regular file at agents/ root not in ALLOWED_FLAT_FILES (both modes)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "a top-level file under agents/ not whitelisted"
+          ]
+        },
+        {
+          "check": "lint_agents_layout",
+          "id": "c12-unknown-dir",
+          "where": "src/scripts/lint_agents_layout.ts:188-192, report 247-258",
+          "finding": "top-level directory not in ALLOWED_SOURCE_DIRS (source-repo mode only)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "source-repo mode detected in cwd",
+            "a top-level agents/ directory not whitelisted"
+          ]
+        },
+        {
+          "check": "lint_agents_layout",
+          "id": "c12-consumer-warning",
+          "where": "src/scripts/lint_agents_layout.ts:214, printed 261-268",
+          "finding": "consumer mode: entry outside the consumer-target shape (directory, or whitelisted flat file not in CONSUMER_EXPECTED_ENTRIES, or non-file/non-dir entry) — warning, printed unless --quiet",
+          "effect": "warning-exit-nonzero-only-with-flag",
+          "exit_code": 1,
+          "predicates": [
+            "consumer mode (no source-repo markers in cwd)",
+            "no flat-file violation (else c12-flat-file returns first)",
+            "entry not in CONSUMER_EXPECTED_ENTRIES and not an unknown flat file",
+            "exit 1 only with --strict; exit 0 otherwise"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "lint_eval_freshness",
+      "non_flag_inputs": [
+        "src/skills/* directories (count drives dead-scope guard)",
+        "src/skills/<skill>/data/manifest.json (upstream.sha, upstream.last_eval.sha_at_eval)",
+        "existence of src/skills/<skill>/evals/triggers.json (scopes a skill in)",
+        "note: no clock input despite the name — freshness is SHA equality, not age"
+      ],
+      "branches": [
+        {
+          "check": "lint_eval_freshness",
+          "id": "c13-help",
+          "where": "src/scripts/lint_eval_freshness.ts:301-303",
+          "finding": "prints usage, exits 0 (fires even if other unknown args precede it)",
+          "effect": "exit-code-only",
+          "exit_code": 0,
+          "predicates": [
+            "-h or --help anywhere in argv"
+          ]
+        },
+        {
+          "check": "lint_eval_freshness",
+          "id": "c13-unknown-arg",
+          "where": "src/scripts/lint_eval_freshness.ts:311-315",
+          "finding": "unrecognized argument(s), reported together",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "any argument other than --quiet/-h/--help",
+            "no -h/--help present"
+          ]
+        },
+        {
+          "check": "lint_eval_freshness",
+          "id": "c13-dead-scope",
+          "where": "src/scripts/lint_eval_freshness.ts:340-342",
+          "finding": "zero skill directories under src/skills -> DeadScopeError, exit 1",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "src/skills missing or has no directories"
+          ]
+        },
+        {
+          "check": "lint_eval_freshness",
+          "id": "c13-rethrow",
+          "where": "src/scripts/lint_eval_freshness.ts:344",
+          "finding": "non-DeadScopeError rethrown",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "not expected"
+          ]
+        },
+        {
+          "check": "lint_eval_freshness",
+          "id": "c13-manifest-unreadable",
+          "where": "src/scripts/lint_eval_freshness.ts:217",
+          "finding": "manifest.json unreadable or invalid JSON (also JSON literal null)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "skill ships evals/triggers.json",
+            "data/manifest.json unreadable, invalid JSON, or 'null'"
+          ]
+        },
+        {
+          "check": "lint_eval_freshness",
+          "id": "c13-no-last-eval",
+          "where": "src/scripts/lint_eval_freshness.ts:233-237",
+          "finding": "in-scope skill (triggers + upstream object with truthy sha) has no upstream.last_eval object",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "skill ships evals/triggers.json",
+            "manifest.upstream is an object with truthy sha",
+            "upstream.last_eval missing or not an object"
+          ]
+        },
+        {
+          "check": "lint_eval_freshness",
+          "id": "c13-sha-mismatch",
+          "where": "src/scripts/lint_eval_freshness.ts:242-246",
+          "finding": "last_eval.sha_at_eval differs from upstream.sha (corpus moved since last eval)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "in-scope skill",
+            "last_eval object present",
+            "sha_at_eval != upstream.sha"
+          ]
+        },
+        {
+          "check": "lint_eval_freshness",
+          "id": "c13-report",
+          "where": "src/scripts/lint_eval_freshness.ts:348-353",
+          "finding": "aggregate: errors printed to stderr, exit 1",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "errors non-empty"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "lint_readme_jargon",
+      "non_flag_inputs": [
+        "current working directory — README.md is resolved relative to cwd",
+        "README.md first 120 lines (after stripping HTML comments, fenced code, URLs)",
+        "note: only --quiet is read; other arguments ignored"
+      ],
+      "branches": [
+        {
+          "check": "lint_readme_jargon",
+          "id": "c14-readme-missing",
+          "where": "src/scripts/lint_readme_jargon.ts:141-145",
+          "finding": "README.md not found as a regular file under cwd (assertWatchlistResolves DeadScopeError)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "cwd has no README.md regular file"
+          ]
+        },
+        {
+          "check": "lint_readme_jargon",
+          "id": "c14-rethrow",
+          "where": "src/scripts/lint_readme_jargon.ts:147",
+          "finding": "non-DeadScopeError rethrown",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "not expected"
+          ]
+        },
+        {
+          "check": "lint_readme_jargon",
+          "id": "c14-over-budget",
+          "where": "src/scripts/lint_readme_jargon.ts:172-188",
+          "finding": "more than 3 case-insensitive whole-word watchlist jargon hits above the fold (lines 1..120)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "README.md lines 1-120 (noise-stripped) contain > 3 matches of kernel/contract/iron law/projection/manifest/lint/ADR/soak/drift/gate/harness"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "lint_readme_serial_comma",
+      "non_flag_inputs": [
+        "current working directory — README.md is resolved relative to cwd",
+        "README.md full text (prose lines after masking fences, HTML comments, table rows, inline code spans, URLs)",
+        "note: only --quiet is read; other arguments ignored"
+      ],
+      "branches": [
+        {
+          "check": "lint_readme_serial_comma",
+          "id": "c15-readme-missing",
+          "where": "src/scripts/lint_readme_serial_comma.ts:134-138",
+          "finding": "README.md not found as a regular file under cwd (assertWatchlistResolves DeadScopeError)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "cwd has no README.md regular file"
+          ]
+        },
+        {
+          "check": "lint_readme_serial_comma",
+          "id": "c15-rethrow",
+          "where": "src/scripts/lint_readme_serial_comma.ts:140",
+          "finding": "non-DeadScopeError rethrown",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "not expected"
+          ]
+        },
+        {
+          "check": "lint_readme_serial_comma",
+          "id": "c15-serial-comma",
+          "where": "src/scripts/lint_readme_serial_comma.ts:145-155",
+          "finding": "a comma followed by whitespace and a whole-word 'and'/'or' in a prose line (serial/Oxford comma)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "README.md prose line (not fenced, not HTML comment, not a table row) matching /,[ \\t]+(and|or)\\b/i after masking"
+          ]
+        }
+      ]
+    },
+    {
+      "check": "check_composite_arming",
+      "non_flag_inputs": [
+        "composite store: default <repo>/agents/evidence/hook-composite-readings.jsonl (JSONL lines with session + composite_ms); overridden by --store",
+        "--publish writes <repo>/agents/evidence/reports/per-turn-composite-distribution.md (output side effect, not an input)",
+        "--self-test spawns node_modules/.bin/tsx children and writes a temp dir under os.tmpdir()",
+        "note: unknown arguments are ignored"
+      ],
+      "branches": [
+        {
+          "check": "check_composite_arming",
+          "id": "c16-selftest",
+          "where": "src/scripts/check_composite_arming.ts:276 (runSelfTest, _lib/gate_self_test.ts:98,128)",
+          "finding": "self-test helper: exit 1 when case floor (5 cases / 2 rejecting) unmet or any of 7 cases misbehaves; no recursion guard",
+          "effect": "exit-code-only",
+          "exit_code": 1,
+          "predicates": [
+            "--self-test (checked before every other flag)",
+            "a case misbehaved or a tsx child could not run"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-store-missing-value",
+          "where": "src/scripts/check_composite_arming.ts:279-281",
+          "finding": "--store given without a path",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "--store as last argument"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-store-unreadable",
+          "where": "src/scripts/check_composite_arming.ts:286-293",
+          "finding": "store file absent/unreadable: 'not measured yet', exit 1",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "store path (default or --store) cannot be read"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-ledger-skip",
+          "where": "src/scripts/check_composite_arming.ts:317, printed by ledger.report 320",
+          "finding": "each non-blank store line that is not JSON with a string session and a composite_ms key is recorded as a skipped target (precondition_unmet) in the ledger report",
+          "effect": "warning-exit-zero",
+          "exit_code": null,
+          "predicates": [
+            "store contains a malformed non-blank line"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-ledger-throw",
+          "where": "src/scripts/check_composite_arming.ts:303-320 (GateLedger plan/complete/skip/report)",
+          "finding": "GateLedger helper throws (LedgerUsageError / UnaccountedTargetsError) — not expected, line ids are unique and all resolved",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "helper invariant violated (not expected)"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-accounting-mismatch",
+          "where": "src/scripts/check_composite_arming.ts:322-328",
+          "finding": "ledger's parseable-line count disagrees with parseStore's reading count (defensive, coverage-ignored)",
+          "effect": "error-exit-nonzero",
+          "exit_code": 2,
+          "predicates": [
+            "parser and ledger disagree (not expected)"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-all-malformed",
+          "where": "src/scripts/check_composite_arming.ts:330-335",
+          "finding": "store has malformed lines and zero usable records",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "malformed > 0",
+            "parsed readings == 0"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-dead-scope",
+          "where": "src/scripts/check_composite_arming.ts:350-352",
+          "finding": "store present but has zero records (empty / only blank lines) -> DeadScopeError, exit 1",
+          "effect": "error-exit-nonzero",
+          "exit_code": 1,
+          "predicates": [
+            "store readable",
+            "no non-blank lines (malformed == 0, readings == 0)"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-rethrow",
+          "where": "src/scripts/check_composite_arming.ts:354",
+          "finding": "non-DeadScopeError rethrown",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "not expected"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-publish",
+          "where": "src/scripts/check_composite_arming.ts:359-364",
+          "finding": "--publish writes the distribution report (including a NOT ARMABLE YET section when applicable) and exits 0 regardless of the verdict",
+          "effect": "exit-code-only",
+          "exit_code": 0,
+          "predicates": [
+            "--publish",
+            "store has >= 1 reading"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-publish-write-throw",
+          "where": "src/scripts/check_composite_arming.ts:361-362",
+          "finding": "mkdir/write of the report fails; uncaught",
+          "effect": "throw",
+          "exit_code": null,
+          "predicates": [
+            "--publish",
+            "agents/evidence/reports not writable"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-malformed-warn",
+          "where": "src/scripts/check_composite_arming.ts:367-369",
+          "finding": "some malformed lines ignored while usable records exist",
+          "effect": "warning-exit-zero",
+          "exit_code": 0,
+          "predicates": [
+            "no --publish",
+            "malformed > 0",
+            "readings > 0"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-not-armable-readings",
+          "where": "src/scripts/check_composite_arming.ts:110-113, printed 378-382",
+          "finding": "NOT YET: fewer than 10 usable (numeric composite_ms) readings — reported, exit 0",
+          "effect": "warning-exit-zero",
+          "exit_code": 0,
+          "predicates": [
+            "no --publish",
+            "usable readings < 10"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-not-armable-sessions",
+          "where": "src/scripts/check_composite_arming.ts:116-121, printed 378-382",
+          "finding": "NOT YET: fewer than 2 distinct sessions among usable readings — reported, exit 0",
+          "effect": "warning-exit-zero",
+          "exit_code": 0,
+          "predicates": [
+            "no --publish",
+            "distinct sessions among usable readings < 2"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-unusable-dropped",
+          "where": "src/scripts/check_composite_arming.ts:380 (and renderDistribution 148-154)",
+          "finding": "readings with composite_ms null/non-number are dropped as unusable and named in the NOT YET line / report",
+          "effect": "warning-exit-zero",
+          "exit_code": 0,
+          "predicates": [
+            "a record with composite_ms null or non-numeric",
+            "verdict not armable (text mode) or --publish"
+          ]
+        }
+      ]
+    }
+  ]
+}
