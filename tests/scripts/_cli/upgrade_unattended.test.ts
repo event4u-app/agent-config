@@ -47,7 +47,7 @@ class World {
         this.cmds.push(cmd);
         const injected = this.fault?.(cmd, this) ?? null;
         if (injected !== null) return injected;
-        if (cmd[0] === 'npm') this.binary = (cmd[3] as string).split('@').pop() as string;
+        if (cmd[0] === 'npm') this.binary = /(\d+\.\d+\.\d+)(?:\.tgz)?$/.exec(cmd[3] as string)?.[1] ?? '';
         if (cmd[1] === 'global') this.lock = this.binary;
         return { rc: 0, stderr: '' };
     };
@@ -64,6 +64,14 @@ beforeEach(() => {
 });
 afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
+/** Stands in for the file verify_provenance_default writes; the run removes its directory. */
+function verifiedTarball(): string {
+    const file = path.join(tmp, 'verified', 'agent-config-16.6.0.tgz');
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, '');
+    return file;
+}
+
 function deps(world: World, over: Partial<UnattendedDeps> & { doc?: unknown; fetched?: Packument } = {}): UnattendedDeps {
     const fetched: Packument = over.fetched ?? { ok: true, doc: over.doc ?? packument() };
     return {
@@ -71,7 +79,7 @@ function deps(world: World, over: Partial<UnattendedDeps> & { doc?: unknown; fet
         // These cases exercise the other gates; provenance passes unless a
         // case overrides it. Its own refusing direction is asserted in
         // upgrade_unattended_provenance.test.ts rather than here.
-        verifyProvenance: async () => null,
+        verifyProvenance: async () => ({ ok: true, tarball: verifiedTarball() }),
         run: world.run,
         readInstalled: () => world.lock,
         readBinary: () => world.binary,
@@ -94,11 +102,12 @@ function deps(world: World, over: Partial<UnattendedDeps> & { doc?: unknown; fet
 }
 
 describe('upgrade --unattended — the happy path', () => {
-    it('installs the exact candidate on the global surfaces and releases the lock', async () => {
+    it('installs the verified tarball on the global surfaces, removes it, and releases the lock', async () => {
         const w = new World();
         expect(await run_unattended(deps(w))).toBe(0);
         expect(w.lock).toBe('16.6.0');
-        expect(w.cmds[0]).toEqual(['npm', 'install', '-g', '@event4u/agent-config@16.6.0']);
+        expect(w.cmds[0]).toEqual(['npm', 'install', '-g', path.join(tmp, 'verified', 'agent-config-16.6.0.tgz')]);
+        expect(fs.existsSync(path.join(tmp, 'verified'))).toBe(false);
         expect(fs.existsSync(path.join(tmp, 'state', 'upgrade-unattended.lock'))).toBe(false);
     });
 
@@ -216,12 +225,12 @@ describe('upgrade --unattended — every failure restores the previous version (
         ['offline', { fetched: { ok: false, reason: 'getaddrinfo ENOTFOUND registry.npmjs.org' } }, null],
         ['registry 403', { fetched: { ok: false, reason: 'HTTP 403' } }, null],
         ['registry 404', { fetched: { ok: false, reason: 'HTTP 404' } }, null],
-        ['npm 404 on the tarball', {}, (cmd, w) => (cmd[0] === 'npm' && w.binary === '16.5.0' && cmd[3]!.endsWith('16.6.0') ? { rc: 1, stderr: 'npm error code E404' } : null)],
+        ['npm 404 on the tarball', {}, (cmd, w) => (cmd[0] === 'npm' && w.binary === '16.5.0' && cmd[3]!.includes('16.6.0') ? { rc: 1, stderr: 'npm error code E404' } : null)],
         [
             'disk full mid-extract',
             {},
             (cmd, w) => {
-                if (cmd[0] === 'npm' && cmd[3]!.endsWith('16.6.0')) {
+                if (cmd[0] === 'npm' && cmd[3]!.includes('16.6.0')) {
                     w.binary = 'half-written';
                     return { rc: 1, stderr: 'npm error code ENOSPC' };
                 }
@@ -237,7 +246,7 @@ describe('upgrade --unattended — every failure restores the previous version (
             'SIGTERM delivered to this process after npm finished',
             {},
             (cmd, w) => {
-                if (cmd[0] === 'npm' && cmd[3]!.endsWith('16.6.0')) w.term = true;
+                if (cmd[0] === 'npm' && cmd[3]!.includes('16.6.0')) w.term = true;
                 return null;
             },
         ],
@@ -254,7 +263,7 @@ describe('upgrade --unattended — every failure restores the previous version (
                 return null;
             },
         ],
-        ['EACCES', {}, (cmd) => (cmd[0] === 'npm' && cmd[3]!.endsWith('16.6.0') ? { rc: 243, stderr: 'npm error code EACCES' } : null)],
+        ['EACCES', {}, (cmd) => (cmd[0] === 'npm' && cmd[3]!.includes('16.6.0') ? { rc: 243, stderr: 'npm error code EACCES' } : null)],
     ];
     for (const [name, over, fault] of faults) {
         it(`${name}: the installed version after equals the version before, with a reason printed`, async () => {
