@@ -187,3 +187,111 @@ jobs:
               echo "❌  Publish failed (see logs)"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
+
+  # The official MCP Registry entry renews on every plain X.Y.Z release
+  # (road-to-listings-a-release-keeps-current Phase 2). A separate job, so a
+  # re-dispatch of a tag already on npm still reaches the registry — the npm
+  # job skips its install on that path — and so a registry failure turns red
+  # without touching a package that is already published.
+  publish-mcp-registry:
+    name: Publish to the MCP Registry
+    needs: publish-npm
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write  # mcp-publisher login github-oidc; no secret
+    env:
+      # Pinned with its checksum from the release's registry_<v>_checksums.txt.
+      MCP_PUBLISHER_VERSION: '1.8.1'
+      MCP_PUBLISHER_SHA256: 'a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc'
+      MCP_SERVER_NAME: 'io.github.event4u-app/agent-config'
+    steps:
+      - name: Resolve tag and channel
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            tag="${{ inputs.tag }}"
+          else
+            tag="${GITHUB_REF_NAME}"
+          fi
+          echo "name=$tag" >> "$GITHUB_OUTPUT"
+          # A prerelease never becomes the registry's latest entry.
+          if [[ "$tag" == *-* ]]; then
+            echo "stable=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "stable=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Skip if this version is already in the registry
+        if: steps.tag.outputs.stable == 'true'
+        id: registry
+        run: |
+          tag="${{ steps.tag.outputs.name }}"
+          body="$(curl -fsS --max-time 60 --get \
+            --data-urlencode "search=${MCP_SERVER_NAME}" \
+            --data-urlencode "version=${tag}" \
+            'https://registry.modelcontextprotocol.io/v0/servers')"
+          if jq -e --arg n "$MCP_SERVER_NAME" --arg v "$tag" \
+              '[.servers[]? | (.server // .) | select(.name == $n) | .version] | index($v) != null' \
+              <<< "$body" >/dev/null; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check out released tag
+        if: steps.tag.outputs.stable == 'true' && steps.registry.outputs.present != 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Set up Node
+        if: steps.tag.outputs.stable == 'true' && steps.registry.outputs.present != 'true'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Build and lint server.json
+        if: steps.tag.outputs.stable == 'true' && steps.registry.outputs.present != 'true'
+        run: |
+          npm ci --no-audit --no-fund --prefer-offline
+          ./scripts-run src/scripts/build_discovery_manifest --write --strict
+          ./scripts-run src/scripts/build_mcp_registry_manifest --write --strict
+          ./scripts-run src/scripts/lint_mcp_registry_manifest
+
+      - name: Install mcp-publisher (pinned, checksum-verified)
+        if: steps.tag.outputs.stable == 'true' && steps.registry.outputs.present != 'true'
+        run: |
+          archive="mcp-publisher_linux_amd64.tar.gz"
+          curl -fsSL -o "$archive" \
+            "https://github.com/modelcontextprotocol/registry/releases/download/v${MCP_PUBLISHER_VERSION}/${archive}"
+          echo "${MCP_PUBLISHER_SHA256}  ${archive}" | sha256sum -c -
+          tar xzf "$archive" mcp-publisher
+
+      - name: Publish server.json to the MCP Registry
+        if: steps.tag.outputs.stable == 'true' && steps.registry.outputs.present != 'true'
+        run: |
+          ./mcp-publisher login github-oidc
+          cd dist/mcp
+          "$GITHUB_WORKSPACE/mcp-publisher" publish
+
+      - name: Job summary
+        if: always()
+        run: |
+          tag="${{ steps.tag.outputs.name }}"
+          {
+            echo "## MCP Registry publish"
+            echo
+            if [ "${{ steps.tag.outputs.stable }}" != "true" ]; then
+              echo "⏭️  \`${tag}\` is a prerelease — the registry is not updated."
+            elif [ "${{ steps.registry.outputs.present }}" = "true" ]; then
+              echo "⏭️  skipping: \`${MCP_SERVER_NAME}@${tag}\` is already in the registry."
+            elif [ "${{ job.status }}" = "success" ]; then
+              echo "✅  Published \`${MCP_SERVER_NAME}@${tag}\` — it counts as listed only once a live read finds it."
+            else
+              echo "❌  Registry publish failed; npm is unaffected (see logs)."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
