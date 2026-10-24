@@ -246,9 +246,12 @@ than listed.
 | `agents/evidence/analysis/gate-branch-inventory-20261024.json` | `119214ea142393c7254cae40e080153728e10fb0` |
 | `agents/evidence/analysis/gate-branch-mapping-20261024.json` | `c296fd9f02c1f0e83688da3f596cbb19e079665e` |
 | `agents/evidence/analysis/gate-branch-mapping-review-20261024.json` | `46227ecdae464df420e5aec60910a1b7a497e686` |
-| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `b834ff3aba3229a9a768bd76b951471eb99413e9` |
+| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `a3977560739862ee16a043fe884655c8e3f8eb79` |
 | `agents/evidence/analysis/gate-ledger-executions.mjs` | `b330f3e9671d4d9e58baf9e1a59e32bc473b3756` |
-| `agents/evidence/analysis/gate-branch-reconciliation-20261024.md` | `aa8f785bfe9573a17b3b9bb734fc6b680db118d1` |
+| `agents/evidence/analysis/gate-branch-reconciliation-20261024.md` | `9fcb55761625706068156579e69c12d59e68bc9b` |
+| `agents/evidence/analysis/gate-ledger-rerun-20261024.md` | `fc0c90dfbb56c2820e2669ad67fac1a969bd9782` |
+| `agents/evidence/analysis/gate-branch-site-dispositions-20261024.json` | `668181e7f5c563f1064a0b824f28f03c0239b8ad` |
+| `agents/evidence/analysis/gate-branch-sites.mjs` | `234eb91b758bb2e5d500621c7b17de1e8ad1b1cd` |
 
 
 ## Independent branch inventory — revision 8
@@ -393,6 +396,59 @@ when `node agents/evidence/analysis/gate-ledger-reconcile.mjs` exits 0 at
 the revision 7.2 changes. A stale, failed or absent reconciliation blocks
 reliance. That condition is written into step 7.2 itself, and 7.2's own test
 runs the reconciler first.
+
+## Source-to-record completeness, mechanically — revision 14
+
+Round 18 (D42) was 2/2 and convergent. Both seats said the rerun proves that
+the generated record matches its inputs, and not that the inputs represent the
+source completely. What they named as missing:
+
+- a mechanically separate, source-derived enumeration compared against the
+  records with zero difference;
+- atomic rows for the two compound branches;
+- the four `unsure` rationales inside the package;
+- the exact clean-checkout command;
+- an immutable id for the rerun report;
+- an explicit invalidation rule.
+
+**The mechanical enumeration.** `agents/evidence/analysis/gate-branch-sites.mjs`
+uses no model. It scans the 16 check scripts by syntax alone for every line
+that can turn a run into a finding or a non-zero end:
+
+- a non-zero `return`;
+- a `process.exit`;
+- a `throw`;
+- a `push` into a reported list.
+
+Each such site must lie inside the `where` of a branch the independent
+inventory recorded, or it needs a disposition that names one. At this
+revision there are **159 sites**:
+
+- 134 lie inside inventoried branches;
+- 25 lie outside, each with a disposition in
+  `agents/evidence/analysis/gate-branch-site-dispositions-20261024.json`:
+  - 9 collectors (file and value lists that report nothing);
+  - 10 aggregates (spreads or exits over findings inventoried elsewhere);
+  - 3 usage helpers whose call sites are inventoried;
+  - 2 could-not-run throws;
+  - 1 silent pass.
+
+**No site is a branch the inventory lacks.** A disposition that names an
+unknown branch fails the scan, and so does a disposition with no site behind
+it. Seen red: an inserted `return 7` was refused as an undisposed site. The
+reconciler now requires this scan to pass (self-test case 13).
+
+**Atomic rows.** `c11-beta-marker` and `c12-consumer-warning` each serve two
+aspects in two modes. The artefact now writes them as two rows apiece, so it
+has 200 rows for 198 branches, and every row is one assertion under one mode.
+
+**Inside the package.** The artefact itself now carries:
+
+- the four `unsure` decisions with their reasons;
+- the exact clean-checkout command;
+- the invalidation rule.
+
+The rerun report is pinned by blob.
 
 ## The branch-level reconciliation — revision 13
 

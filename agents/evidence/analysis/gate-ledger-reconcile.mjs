@@ -47,6 +47,14 @@ function realIo() {
                 return false;
             }
         },
+        sites: () => {
+            try {
+                execFileSync('node', [path.join(ROOT, 'agents/evidence/analysis/gate-branch-sites.mjs')], { cwd: ROOT, stdio: 'ignore' });
+                return true;
+            } catch {
+                return false;
+            }
+        },
         showAt: (commit, rel) => {
             try {
                 return execFileSync('git', ['show', `${commit}:${rel}`], { cwd: ROOT, encoding: 'utf8' });
@@ -249,12 +257,13 @@ export function reconcile(io) {
             const target = mapping[c.check]?.[x.id] ?? '';
             const v = review.find((r) => r.check === c.check && r.branch === x.id);
             const verdict = v === undefined ? 'none' : v.verdict === 'unsure' ? 'unsure, resolved' : v.verdict === 'disagree' ? 'disagree, adopted' : 'agree';
-            let mode = '—';
-            let kind = target;
-            if (!target.startsWith('op:')) {
-                const rows = target.split('+').map((id) => binding.find((r) => r.id === id));
-                kind = rows.map((r) => `${r?.id} ${r?.cls}`).join(' + ');
-                mode = rows.map((r) => {
+            if (target.startsWith('op:')) {
+                branchLines.push(`| \`${c.check}\` | \`${x.id}\` | ${String(x.where).split(' ')[0]} | — | ${target} | ${verdict} |`);
+                continue;
+            }
+            for (const id of target.split('+')) {
+                const r = binding.find((row) => row.id === id);
+                const mode = [r].map((r) => {
                     const c2 = cells(r?.raw ?? '');
                     const aspect = c2[2] ?? '';
                     const applic = c2[5] ?? '';
@@ -264,9 +273,9 @@ export function reconcile(io) {
                         MODE_FLAGS.find((f) => applic.includes(`only with \`${f}\``) || applic.includes(`invocation with \`${f}\``)) ??
                         'default';
                     return /consumer mode/.test(applic) ? `consumer mode, ${named}` : named;
-                }).join(' + ');
+                })[0];
+                branchLines.push(`| \`${c.check}\` | \`${x.id}\` | ${String(x.where).split(' ')[0]} | ${mode} | ${r?.id} ${r?.cls} | ${verdict} |`);
             }
-            branchLines.push(`| \`${c.check}\` | \`${x.id}\` | ${String(x.where).split(' ')[0]} | ${mode} | ${kind} | ${verdict} |`);
         }
     }
     const tally = Object.fromEntries(CLASSES.map((k) => [k, binding.filter((r) => r.cls === k).length]));
@@ -275,14 +284,16 @@ export function reconcile(io) {
     report.push(`branches ${branchCount} · mapped to rows ${branchCount - Object.values(perCategory).reduce((a, b) => a + b, 0)} · ${JSON.stringify(perCategory)} · binding rows reached ${reached.size}/${binding.length}`);
     report.push(`rows ${ledgerRows.length} · binding ${binding.length} · non-binding ${ledgerRows.length - binding.length} (migration notes and withdrawn rows) · ${JSON.stringify(tally)}`);
     report.push(`pins: ${pins.length} files, ${helperFiles.length}-file helper closure, ledger table`);
-    const artefact = renderBranchMatrix(branchLines, { branchCount, toRows: branchCount - Object.values(perCategory).reduce((a, b) => a + b, 0), perCategory, tally, binding: binding.length });
+    const artefact = renderBranchMatrix(branchLines, resolutions, { branchCount, toRows: branchCount - Object.values(perCategory).reduce((a, b) => a + b, 0), perCategory, tally, binding: binding.length });
+    if (io.sites !== undefined && !io.sites()) failures.push('the mechanical site scanner (gate-branch-sites.mjs) does not pass');
     const committed = io.exists(BRANCH_MATRIX) ? io.read(BRANCH_MATRIX) : null;
     if (committed === null) failures.push(`branch reconciliation artefact missing: ${BRANCH_MATRIX}`);
     else if (committed !== artefact) failures.push('STALE: the committed branch reconciliation differs from a fresh regeneration');
     return { failures, report, matrix, artefact };
 }
 
-function renderBranchMatrix(lines, t) {
+function renderBranchMatrix(lines, resolutions, t) {
+    const unsure = Object.entries(resolutions).map(([k, v]) => `- \`${k}\` → \`${v.decision}\`: ${v.reason}`);
     return [
         '<!-- evidence-type: analysis -->',
         '',
@@ -293,7 +304,17 @@ function renderBranchMatrix(lines, t) {
         'is the invocation mode the destination aspect is classified under (`—` for a branch that asserts nothing), the destination is a',
         'binding aspect with its class or a declared non-assertion category, and the verdict is the independent mapping review\'s.',
         '',
-        `Totals: ${t.branchCount} branches · ${t.toRows} to binding aspects · ${t.branchCount - t.toRows} to non-assertion categories ${JSON.stringify(t.perCategory)} · ${t.binding} binding aspects ${JSON.stringify(t.tally)}.`,
+        'A branch whose code serves two aspects in two modes is written as two rows, one per (mode, aspect), so every row is one assertion under one mode.',
+        '',
+        '**Reproduce from a clean checkout** (node and git only, no install): `git worktree add --detach <dir> <commit> && cd <dir> && node agents/evidence/analysis/gate-ledger-reconcile.mjs && node agents/evidence/analysis/gate-branch-sites.mjs && node agents/evidence/analysis/gate-ledger-reconcile.mjs --branches | cmp - agents/evidence/analysis/gate-branch-reconciliation-20261024.md`.',
+        '',
+        '**Invalidation.** The reconciler reports the verdict stale, and 7.1 reopens for the affected rows, when any pinned check, helper closure, invocation wiring, inventory, mapping, review, site disposition, reconciler, this artefact or the ledger table changes, or when a later finding shows an omitted or mis-destined branch (`agents/evidence/analysis/gate-7-2-reliance-rules-20261024.md`).',
+        '',
+        `Totals: ${t.branchCount} branches (${lines.length} rows) · ${t.toRows} branches to binding aspects · ${t.branchCount - t.toRows} to non-assertion categories ${JSON.stringify(t.perCategory)} · ${t.binding} binding aspects ${JSON.stringify(t.tally)}.`,
+        '',
+        '**Unsure review verdicts and their recorded decisions:**',
+        '',
+        ...unsure,
         '',
         '| Check | Branch | Where | Mode | Destination | Review |',
         '|---|---|---|---|---|---|',
@@ -337,6 +358,7 @@ function selfTest() {
         ['a row\'s applicability is edited after review', mutated(io, FILES.ledger, (t) => t.replace('| when git is runnable;', '| always;')), /ledger row changed/],
         ['a branch is mapped to the withdrawn row', json(FILES.mapping, (j) => { j.mapping.check_gate_completeness['c1-dead-scope'] = 'R1.c'; return j; }), /not a binding row|disagreement not adopted/],
         ['a line of the committed branch reconciliation is edited', mutated(io, BRANCH_MATRIX, (t) => t.replace('| op:usage |', '| R1.a invariant |')), /committed branch reconciliation differs/],
+        ['the mechanical site scanner finds an undisposed site', { ...io, sites: () => false }, /site scanner/],
         ['an unknown flag appears in a check', mutated(io, 'src/scripts/lint_readme_jargon.ts', (t) => `${t}\nconst x = '--surprise';\n`), /unclassified invocation mode: lint_readme_jargon --surprise/],
     ];
     let bad = 0;
