@@ -188,10 +188,10 @@ the end, and every constraint fixture keeps its order.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — G1 linearises to inner-stage inbox → process-full → one push, one
+- [x] AC-1 — G1 linearises to inner-stage inbox → process-full → one push, one
       PR, one settle, with exactly one order line.
-- [ ] AC-2 — Every constraint fixture (G2, G3, G4, G9, G10) keeps its order.
-- [ ] AC-3 — A single-stage input produces no order line (G11).
-- [ ] AC-4 — An inner-stage publish makes no remote call, and a
+- [x] AC-2 — Every constraint fixture (G2, G3, G4, G9, G10) keeps its order.
+- [x] AC-3 — A single-stage input produces no order line (G11).
+- [x] AC-4 — An inner-stage publish makes no remote call, and a
       `wait_for_ci: false` settle makes no settle call.
-- [ ] AC-5 — The auto-rule budget baseline is unchanged.
+- [x] AC-5 — The auto-rule budget baseline is unchanged.

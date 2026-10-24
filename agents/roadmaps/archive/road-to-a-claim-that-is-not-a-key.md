@@ -239,12 +239,12 @@ external sends (step 1.2, 2026-10-24):
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Each D1 prompt activates `security-sensitive-stop` (G1).
-- [ ] AC-2 — The incident query grounds to `delegated-action`, and no composite
+- [x] AC-1 — Each D1 prompt activates `security-sensitive-stop` (G1).
+- [x] AC-2 — The incident query grounds to `delegated-action`, and no composite
       query prints `Evidence gap: none` while dropping a class (G2).
-- [ ] AC-3 — `/audit agents` reports every recognised registration missing from
+- [x] AC-3 — `/audit agents` reports every recognised registration missing from
       the inventory, every write tool with a subject argument, and `unknown` for
       unrecognised frameworks (G3).
-- [ ] AC-4 — A comment from a non-collaborator is never applied by
+- [x] AC-4 — A comment from a non-collaborator is never applied by
       `/fix:pr-comments` Auto or the loop (G7).
-- [ ] AC-5 — The auto-rule budget baseline is unchanged.
+- [x] AC-5 — The auto-rule budget baseline is unchanged.
