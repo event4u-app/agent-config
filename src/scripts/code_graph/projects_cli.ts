@@ -8,11 +8,13 @@
  *   projects add <path>                 register a project by hand
  *   projects remove <id|name|path>      drop one entry and its user-global graph homes
  *   projects prune                      drop the flagged entries
+ *   projects index on|off|status        the estate index switch (council O1, default off)
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { findProjects, type ProjectEntry, readRegistry, recordProject, updateRegistry } from '../_lib/project_registry.js';
+import { dropProjectRows, indexAfterRefresh, indexPath } from './estate_index.js';
 import { graphHome, graphsRoot } from './graph_home.js';
 import type { CodeGraph } from './types.js';
 
@@ -34,12 +36,14 @@ export function rootState(e: ProjectEntry, now: Date = new Date()): RootState {
 export function registerUse(root: string, graph: CodeGraph | null, commit: string | null): string | null {
     try {
         const home = graphHome(root);
-        return recordProject(root, {
+        const id = recordProject(root, {
             graph_home: home.dir,
             ...(commit ? { graph_commit: commit } : {}),
             ...(graph ? { languages: [...graph.languages], providers: (graph.providers ?? []).map((p) => p.id) } : {}),
             ...(home.kind === 'global' ? { usedHome: home.dir } : {}),
         });
+        indexAfterRefresh(id, fs.realpathSync(root), home.cachePath, graph);
+        return id;
     } catch {
         return null;
     }
@@ -113,6 +117,7 @@ function cmdRemove(ref: string | undefined): number {
         delete reg.projects[id];
     });
     const removed = removeGlobalHomes(entry);
+    dropProjectRows(id);
     process.stdout.write(`removed ${id}  ${entry.root}${removed.length ? ` · ${removed.length} graph home(s) deleted` : ''}\n`);
     return 0;
 }
@@ -130,9 +135,32 @@ function cmdPrune(): number {
     });
     for (const [id, e] of dropped) {
         removeGlobalHomes(e);
+        dropProjectRows(id);
         process.stdout.write(`pruned ${id}  ${e.root}\n`);
     }
     process.stdout.write(`${dropped.length} pruned\n`);
+    return 0;
+}
+
+function cmdIndex(action: string | undefined): number {
+    if (action === 'on' || action === 'off') {
+        updateRegistry((reg) => {
+            reg.index = action === 'on';
+        });
+        if (action === 'off') fs.rmSync(indexPath(), { force: true });
+        process.stdout.write(
+            action === 'on'
+                ? 'estate index on — each registered project is indexed on its next build or refresh. It names client projects by path and never leaves this machine.\n'
+                : 'estate index off — the index file is deleted and nothing is indexed.\n',
+        );
+        return 0;
+    }
+    if (action !== undefined && action !== 'status') {
+        process.stderr.write('usage: code-graph projects index on|off|status\n');
+        return 2;
+    }
+    const reg = readRegistry();
+    process.stdout.write(`estate index: ${reg.index ? 'on' : 'off'} · ${fs.existsSync(indexPath()) ? indexPath() : 'no index file'}\n`);
     return 0;
 }
 
@@ -143,6 +171,7 @@ export function projectsMain(argv: string[]): number {
     if (verb === 'add') return cmdAdd(positional[0]);
     if (verb === 'remove') return cmdRemove(positional[0]);
     if (verb === 'prune') return cmdPrune();
-    process.stderr.write('usage: code-graph projects list|add <path>|remove <id|name|path>|prune\n');
+    if (verb === 'index') return cmdIndex(positional[0]);
+    process.stderr.write('usage: code-graph projects list|add <path>|remove <id|name|path>|prune|index on|off|status\n');
     return 2;
 }
