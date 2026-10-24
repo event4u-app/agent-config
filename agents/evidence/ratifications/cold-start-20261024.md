@@ -1,14 +1,14 @@
 ---
 proposed_by: road-to-a-cold-start-paid-once step 2.5, owner directives D16, D17 and D18 of 2026-10-24
 implemented_by: claude-opus-5.5 session on drain/cold-start-20261024
-reviewed_by: AI council, 2 seats, provider-diverse (anthropic + openai), round 8 of 2026-10-24
+reviewed_by: AI council, 2 seats, provider-diverse (anthropic + openai), rounds 8 and 11 of 2026-10-24
 providers: [anthropic, openai]
 verdict: ratified
 seats:
   anthropic: ratified
   openai: ratified
 effective_after: merge
-subject: 45ed99aa4022cea8bc78e0e9efb9f390fdc8d91dc61e8ab7d63d7cc9834421a2
+subject: 06864a9b871a1fec33038eb14b1d5887e5dee83b9cc175f26d13127e2884d8d3
 ---
 
 <!-- evidence-type: ratification -->
@@ -20,7 +20,9 @@ subject: 45ed99aa4022cea8bc78e0e9efb9f390fdc8d91dc61e8ab7d63d7cc9834421a2
 `src/config/hook-bundle-budget.json` and `src/config/hook-token-budget.json`. The `subject:` digest
 covers all four, computed with
 `./scripts-run src/scripts/ratification_subject --files $(git diff --name-only origin/main...HEAD) --base-ref origin/main`
-at revision `63bf410d65`, the revision round 8 reviewed; no gated file changed after it. The header
+at revision `1d68436d65`. Round 8 ratified the change at `63bf410d65`; the branch then merged
+`origin/main`, which had changed two gated files, so the digest moved and rounds 9 to 11 reviewed
+the merged content of all four files; round 11 ratified it, and no gated file changed after it. The header
 is the output of `ratification_header --seat anthropic=ratified --seat openai=ratified`.
 
 ## What was ratified
@@ -43,9 +45,9 @@ is the output of `ratification_header --seat anthropic=ratified --seat openai=ra
 
 ## How it got here
 
-Eight rounds, CLI subscription seats (`anthropic/claude-sonnet-4-5`, `openai/codex-default`), USD
+Eleven rounds, CLI subscription seats (`anthropic/claude-sonnet-4-5`, `openai/codex-default`), USD
 0.00. Questions committed verbatim as
-`agents/evidence/council/cold-start-user-layer-ratification-r{1..8}-20261024.question.md`, each
+`agents/evidence/council/cold-start-user-layer-ratification-r{1..11}-20261024.question.md`, each
 written before its run and not edited after it. Every fix below landed with a test seen red first.
 
 - **Round 1, first attempt, no seat answered:** the council's local CLI call counter read
@@ -63,6 +65,12 @@ written before its run and not edited after it. Every fix below landed with a te
   precedence when first blocks themselves overflow was classified owner-reserved by both seats and
   decided as D18 ("1").
 - **Round 8, ratified 2/2.**
+- **Round 9 (merge re-bind), split:** one seat ratified; the other refused because the compiled
+  manifest was left out and `max_bytes_derivation` still called the 1,550,500 raise "the last
+  `raise_log` entry". The sentence now names the entry by its value.
+- **Round 10, split:** one seat ratified; the other refused on evidence alone (final YAML block,
+  binding and token row not shown). No tree change.
+- **Round 11, ratified 2/2** on the merged content, with the excerpts shown.
 
 ## Seat answers, pinned
 
@@ -88,9 +96,17 @@ SHA-256 of each seat's full answer text, as returned:
 | 7 | openai | refused | `76cd7c93b7effaf50f46e99bcb0fc364bd5e78e6c601f0e6f3bf35cacb58c56b` |
 | 8 | anthropic | ratified | `f30acf59ef8b332a74b4c5ba0c50f72f3333e8d555b24d012e89bd8f236c639a` |
 | 8 | openai | ratified | `6403e8ff272500c3b371e07de51161a62f933d34813055524fcdcf2823180074` |
+| 9 | anthropic | ratified | `361cb0f5b3dbd59ede444e314b63108dd681986b4f75ec09c38fcb54fdafa732` |
+| 9 | openai | refused | `762d62a012ab335b4c8000b7fed8742cd1a8f5589b47499259ef86d3c06a455e` |
+| 10 | anthropic | ratified | `31181305a2a8def73aa507c13a60e88cbcc8f0509233e9d84d7e22925c8579b7` |
+| 10 | openai | refused | `e54672f6aad8561f01906d493943c8781b2542a6fb769cf7aa88b582088ad211` |
+| 11 | anthropic | ratified | `8519e4716130afc4c4458629f042ffb88627fd4d2d1165c713a9ee3d1d337afa` |
+| 11 | openai | ratified | `f73cdcf22035938335b3fbeafd74c99b15f13830ce2e60184b664aa73c1e77db` |
 
-## Residual both round-8 seats named, non-blocking
+## Residuals the seats named, non-blocking
 
 The rules walk stops at 500 files without saying so: files past it are neither carried nor counted.
 Both seats called a "scan limited" marker a follow-up, not a condition. One seat also suggested a
 live host test at the 10,000-character line; the byte cap bounds the characters from above.
+
+Round 11: the dispatch bundle sits 218 bytes under its ceiling after the merge (measured by the base change); both seats called that bundle maintenance for a later change.
