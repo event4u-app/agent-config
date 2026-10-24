@@ -37,9 +37,9 @@ written down where the hooks are generated.
       is `==`; the council bundle then replaces that value and refuses every payload
       containing `==` (measured on 2026-10-23, round 2 of the ratification). An `=`
       followed by `=` or `>` is a comparison or an arrow, never an assignment.
-      verify: `npx vitest run tests/scripts/_lib` with new cases — `token === 'x'`,
-      `token == x`, `token => x` yield no span; `token = "abc"`, `token: abc`,
-      `api_key=abc` still do; red with the old head restored.
+      verify: `npx vitest run tests/scripts/ai_council/council_egress.test.ts` -> 0 — new
+      cases: `token === 'x'`, `token == x`, `token => x` yield no span; `token = "abc"`,
+      `token: abc`, `api_key=abc` still do; red with the old head restored.
       *Done 2026-10-24:* head is `(?::|=(?!==|=\s|>)=?)` — `===`, a spaced `==` and
       `=>` are not assignments; a shell `name==value` still is, with the second `=`
       read as operator (refined after ratification round 9, where one seat refused
@@ -51,8 +51,8 @@ written down where the hooks are generated.
       outside `assignmentSource` occur only in those frozen test spellings.
 - [x] **1.2 Prove it on the surface that failed.** Run the council bundle's egress over
       the line that blocked the round.
-      verify: `CouncilEgress.replace` + `check` over `typeof o.token === 'string'` returns
-      no refusal; a test pins it.
+      verify: `npx vitest run tests/scripts/ai_council/council_egress.test.ts -t "blocked the round"` -> 0
+      — `CouncilEgress.replace` + `check` over `typeof o.token === 'string'` returns no refusal.
 
 ## Phase 2 — The map is published as one generation
 
@@ -100,8 +100,8 @@ written down where the hooks are generated.
       `install-hooks.sh` states what the hooks execute, why that is acceptable in this
       checkout, and what the guard of 3.1 enforces — so the next reviewer reads the
       boundary instead of rediscovering it.
-      verify: `grep -n "TRUST MODEL" src/scripts/install-hooks.sh` names the boundary
-      and the guard.
+      verify: `grep -c "TRUST MODEL" src/scripts/install-hooks.sh` -> /^2$/ — the header
+      naming the boundary, and the guard's refusal pointing at it.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->
