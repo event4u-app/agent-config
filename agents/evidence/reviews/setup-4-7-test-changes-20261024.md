@@ -1,4 +1,4 @@
-<!-- evidence-type: review -->
+<!-- evidence-type: analysis -->
 
 # Independent test review — step 4.7 (`projection.mode` retired)
 
