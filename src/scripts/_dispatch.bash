@@ -227,7 +227,7 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   benchmark                  Report context-token reduction vs the full always-loaded
                              projection (from the pinned token baseline). Flags: --format
   code-graph                 Deterministic code-graph engine (ADR-124, Class A).
-                             Usage: code-graph build|validate|detect|query|explain|affected|path [options]
+                             Usage: code-graph build|refresh|map|validate|detect|query|explain|affected|path [options]
   sessions:list              List live agent sessions on this repository (shared
                              session register) PLUS the unmerged branches checked
                              out in other worktrees — the axis that needs no

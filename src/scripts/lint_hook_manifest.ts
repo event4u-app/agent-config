@@ -69,6 +69,7 @@ const DEFAULT_HOST_LOWERING = path.join(HOOKS_DIR, "host_lowering.yaml");
  * - `memory`       reads or writes the memory layer
  * - `notification` tells the human something and changes nothing else
  * - `formatting`   reshapes a command or a generated file
+ * - `execution`    starts a process that outlives the event it fired on
  */
 export const CONCERN_EFFECTS: ReadonlySet<string> = new Set([
   "permission",
@@ -78,6 +79,7 @@ export const CONCERN_EFFECTS: ReadonlySet<string> = new Set([
   "memory",
   "notification",
   "formatting",
+  "execution",
 ]);
 
 // Canonical event vocabulary — keep in lock-step with

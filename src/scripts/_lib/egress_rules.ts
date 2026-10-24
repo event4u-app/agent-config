@@ -133,12 +133,18 @@ export interface AssignmentShape {
     readonly gap?: string;
 }
 
-/** Source of a keyword-assignment shape: keyword group, operator, then the consumer's value. */
+/**
+ * Source of a keyword-assignment shape: keyword group, operator, then the consumer's value.
+ * Not an assignment: `===` (strict equality), `==` followed by whitespace (a spaced
+ * comparison) and `=>` (an arrow) — read as one, `token === 'x'` yielded the value `==` and
+ * the council bundle refused every later `==`. A shell `name==value` stays an assignment,
+ * and its second `=` belongs to the operator, so the value read is `value`, never a lone `=`.
+ */
 export function assignmentSource(shape: AssignmentShape): string {
     const alt = shape.keywords.map((k) => ASSIGNMENT_KEYWORDS[k]).join('|');
     const group = shape.capture === true ? `(${alt})` : `(?:${alt})`;
     const gap = shape.gap ?? '\\s*';
-    const head = `${shape.before ?? ''}${group}${shape.after ?? ''}${gap}[:=]`;
+    const head = `${shape.before ?? ''}${group}${shape.after ?? ''}${gap}(?::|=(?!==|=\\s|>)=?)`;
     return shape.value === undefined ? head : `${head}${gap}${shape.value}`;
 }
 

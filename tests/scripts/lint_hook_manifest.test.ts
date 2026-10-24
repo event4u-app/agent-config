@@ -365,8 +365,8 @@ describe("effect: — the census's field (Phase 2.2)", () => {
     // So 62 after that withdrawal, and 63 again since `block-credential-reads`
     // (road-to-one-detector-and-the-senders-we-own 1.1), and 64 since `host-rate-marker`
     // (road-to-a-cold-start-paid-once 4.3), and 65 since `instructions-observer`
-    // (road-to-a-setup-that-decides-itself 1.1).
-    expect(names.length).toBe(65);
+    // (road-to-a-setup-that-decides-itself 1.1), and 66 since `code-graph-refresh`.
+    expect(names.length).toBe(66);
     const missing = names.filter((n) => !CONCERN_EFFECTS.has(String(manifest.concerns[n]?.effect)));
     expect(missing).toStrictEqual([]);
     const mismatched = names.filter(

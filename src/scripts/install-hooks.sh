@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
 # Install git hooks for this repository.
 # Run once: bash src/scripts/install-hooks.sh
+#
+# TRUST MODEL. The hooks this writes execute code FROM THE CHECKOUT —
+# `./agent-config`, `./scripts-run`, `task`, `npm run build:cli` — on commit,
+# checkout, merge, rebase and push. That is acceptable in exactly one place:
+# this package's own development tree, whose code the developer already runs
+# (tests, `prepare`, the CLI itself). A globally installed `agent-config` would
+# be an older build of the same code, so the checkout's own is the right one
+# HERE. It is wrong anywhere else: run from a consumer's
+# `node_modules/@event4u/agent-config/`, this script would resolve the
+# CONSUMER's git directory and install these hooks into a repository whose
+# code nobody vetted for them. The guard below enforces the boundary — the
+# project root must be the git top-level AND its package.json must name
+# @event4u/agent-config — and consumer freshness travels through the
+# `code-graph-refresh` session concern instead, which never runs repository
+# code (road-to-code-graph-refresh-follow-ups 3.1 / 3.2).
 
 set -euo pipefail
 
@@ -8,6 +23,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # This installer lives at src/scripts/install-hooks.sh, so the repo root
 # (which owns .git/) is two levels up.
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+TOPLEVEL="$(git -C "$PROJECT_ROOT" rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -z "$TOPLEVEL" ] \
+    || [ "$(cd "$TOPLEVEL" && pwd -P)" != "$(cd "$PROJECT_ROOT" && pwd -P)" ] \
+    || ! grep -Eq '"name"[[:space:]]*:[[:space:]]*"@event4u/agent-config"' "$PROJECT_ROOT/package.json" 2>/dev/null; then
+    echo "❌  refusing to install the development git hooks: $PROJECT_ROOT is not the top level of an" >&2
+    echo "    @event4u/agent-config checkout. These hooks run code from the checkout (TRUST MODEL above)." >&2
+    exit 1
+fi
 # Resolve the SHARED hooks dir via git so this also works from a linked worktree
 # (where $PROJECT_ROOT/.git is a file, not a dir, and a literal .git/hooks path
 # would break under `set -e`). --git-common-dir points at the main .git even from
@@ -619,18 +643,26 @@ echo "✅  Auto-sync block appended to post-merge / post-checkout hooks." >&2
 #
 # road-to-a-graph-that-is-shipped 1.3. A code graph goes stale the moment a
 # commit lands, and the only thing that knew were the reader — after it had
-# already answered from a stale index. These two hooks close that without a
+# already answered from a stale index. These hooks close that without a
 # resident process: git tells us HEAD moved, and a detached child rebuilds.
+#
+# Four hooks, because HEAD moves through four doors (measured with a probe
+# repo): a commit fires post-commit, a branch switch post-checkout, a
+# fast-forward `git pull` ONLY post-merge, and a rebase post-checkout at its
+# START and post-rewrite at its end. Without the last two, `git pull` left the
+# graph stale and a rebase refreshed against an intermediate HEAD.
 #
 # Four properties, each load-bearing:
 #
 #   · BACKGROUND. The refresh is `&`-detached with stdout/stderr closed, so a
 #     commit never waits on a parse. Git's own runtime is unchanged.
-#   · SINGLE-FLIGHT. `mkdir` is atomic on every POSIX filesystem, so of two
-#     concurrent commits exactly one creates the lock and exactly one refresh
-#     runs. This is Risk 3 in the roadmap's register — "git hooks pile up
-#     rebuilds" — and a lock file written with `>` would not have closed it,
-#     because two processes can both truncate-and-write the same path.
+#   · SINGLE-FLIGHT. `refresh --single-flight` takes the engine's own mkdir
+#     lock (code_graph/refresh_lock.ts), the one the session-start concern and
+#     a manual `map` take too, so of two concurrent commits exactly one
+#     rebuilds. This is Risk 3 in the roadmap's register — "git hooks pile up
+#     rebuilds". The hook used to hold its own shell lock; a ratification round
+#     of 2026-10-23 found two lock protocols racing on one directory, so there
+#     is now one, and its stale-lock reclaim is mutex-guarded and re-checked.
 #   · BUDGETED. `--budget-seconds` is the engine's own wall-clock ceiling; a
 #     child that exceeds it is SIGKILLed and the OLD cache is left untouched
 #     (cli.ts's refresh contract). Kill register K7 — never block on a stale
@@ -639,9 +671,8 @@ echo "✅  Auto-sync block appended to post-merge / post-checkout hooks." >&2
 #     exists. Building a graph for someone who never asked for one is the pure
 #     cost Risk 1 names; refreshing one they built is the service.
 #
-# The lock is a directory under the gitignored runtime state, so a crashed
-# child leaves a stale lock that the next refresh clears by age rather than
-# blocking forever.
+# `--map` redraws agents/map/ under the same lock, only for a project that has
+# one (ADR-297).
 
 append_code_graph_refresh_block() {
     local name="$1"
@@ -657,30 +688,18 @@ if [ "${3:-1}" = "0" ]; then
 fi
 EOF
     fi
+    if [ "$name" = "post-rewrite" ]; then
+        cat >> "$HOOKS_DIR/$name" << 'EOF'
+# An amend already fired post-commit; only a finished rebase is news here.
+if [ "${1:-}" != "rebase" ]; then
+    exit 0
+fi
+EOF
+    fi
     cat >> "$HOOKS_DIR/$name" << 'EOF'
-cg_cache="agents/runtime/state/code-graph-v1.json"
-cg_lock="agents/runtime/state/code-graph-refresh.lock"
-if [ -f "$cg_cache" ] && [ -x ./agent-config ]; then
-    # Clear a lock left by a killed child: older than the largest budget any
-    # caller passes, so it cannot race a refresh that is legitimately running.
-    if [ -d "$cg_lock" ]; then
-        if [ -z "$(find "$cg_lock" -maxdepth 0 -mmin -5 2>/dev/null)" ]; then
-            rmdir "$cg_lock" 2>/dev/null || true
-        fi
-    fi
-    # Atomic: exactly one of N concurrent hooks wins this, and the losers do
-    # nothing rather than queueing a second rebuild behind the first.
-    if mkdir "$cg_lock" 2>/dev/null; then
-        (
-            trap 'rmdir "$cg_lock" 2>/dev/null || true' EXIT
-            ./agent-config code-graph refresh --budget-seconds 60 >/dev/null 2>&1 || true
-            # The map follows the index it is drawn from, but only for a
-            # project that asked for one: no agents/map/, no map (ADR-297).
-            if [ -d agents/map ]; then
-                ./agent-config code-graph map --no-verify --no-build >/dev/null 2>&1 || true
-            fi
-        ) >/dev/null 2>&1 &
-    fi
+if [ -f agents/runtime/state/code-graph-v1.json ] && [ -x ./agent-config ]; then
+    ./agent-config code-graph refresh --single-flight --map --budget-seconds 60 \
+        </dev/null >/dev/null 2>&1 &
 fi
 exit 0
 EOF
@@ -688,4 +707,6 @@ EOF
 
 append_code_graph_refresh_block "post-commit"
 append_code_graph_refresh_block "post-checkout"
-echo "✅  Code-graph refresh block appended to post-commit / post-checkout hooks." >&2
+append_code_graph_refresh_block "post-merge"
+append_code_graph_refresh_block "post-rewrite"
+echo "✅  Code-graph refresh block appended to post-commit / post-checkout / post-merge / post-rewrite hooks." >&2

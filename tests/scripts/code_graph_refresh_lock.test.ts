@@ -1,0 +1,198 @@
+import { spawn, spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
+import { acquire, isStale, LOCK_REL, MAX_LOCK_AGE_MS, STALE_LOCK_MS } from '../../src/scripts/code_graph/refresh_lock.js';
+
+let root: string;
+let lock: string;
+
+beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-refresh-lock-'));
+    lock = path.join(root, LOCK_REL);
+});
+afterEach(() => {
+    fs.rmSync(root, { recursive: true, force: true });
+});
+
+/** A pid that existed and has exited, so `kill(pid, 0)` reports ESRCH. */
+function deadPid(): number {
+    const r = spawnSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], { encoding: 'utf-8' });
+    return Number(r.stdout);
+}
+
+describe('refresh lock — single flight', () => {
+    it('admits one holder and refuses a second until released', () => {
+        const release = acquire(root);
+        expect(release).not.toBeNull();
+        expect(acquire(root)).toBeNull();
+        release?.();
+        expect(fs.existsSync(lock)).toBe(false);
+        expect(acquire(root)).not.toBeNull();
+    });
+
+    it('keeps its owner record OUTSIDE the lock directory, so the shell `rmdir` can still clear it', () => {
+        const release = acquire(root);
+        expect(fs.readdirSync(lock)).toEqual([]);
+        expect(fs.existsSync(`${lock}.owner.json`)).toBe(true);
+        release?.();
+        expect(fs.existsSync(`${lock}.owner.json`)).toBe(false);
+    });
+
+    it('reclaims a lock whose owner process is gone', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: Date.now(), nonce: 't', host: os.hostname() }));
+        expect(isStale(lock)).toBe(true);
+        expect(acquire(root)).not.toBeNull();
+    });
+
+    it('never reclaims a live same-host owner, however old its lock', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(
+            `${lock}.owner.json`,
+            JSON.stringify({ pid: process.pid, started_at: Date.now() - 10 * MAX_LOCK_AGE_MS, nonce: 't', host: os.hostname() }),
+        );
+        expect(isStale(lock)).toBe(false);
+        expect(acquire(root)).toBeNull();
+    });
+
+    it('never judges another host\'s owner by a local PID', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: Date.now(), nonce: 't', host: 'some-container' }));
+        expect(isStale(lock)).toBe(false);
+    });
+
+    it('believes another host\'s owner only up to the age cap — its PID cannot be probed', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(
+            `${lock}.owner.json`,
+            JSON.stringify({ pid: process.pid, started_at: Date.now() - MAX_LOCK_AGE_MS - 1000, nonce: 't', host: 'some-container' }),
+        );
+        expect(isStale(lock)).toBe(true);
+        expect(STALE_LOCK_MS).toBeLessThan(MAX_LOCK_AGE_MS);
+    });
+
+    it('judges an owner record without a host by age alone, never by a local PID', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        const write = (pid: number, started_at: number): void =>
+            fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid, started_at, nonce: 't' }));
+        write(deadPid(), Date.now());
+        expect(isStale(lock)).toBe(false);
+        write(process.pid, Date.now());
+        expect(isStale(lock)).toBe(false);
+        write(process.pid, Date.now() - MAX_LOCK_AGE_MS - 1000);
+        expect(isStale(lock)).toBe(true);
+    });
+
+    it('records this host on the lock it takes', () => {
+        const release = acquire(root);
+        expect(JSON.parse(fs.readFileSync(`${lock}.owner.json`, 'utf-8')).host).toBe(os.hostname());
+        release?.();
+    });
+
+    it('never removes a reclaim mutex it did not take — a leftover keeps the stale lock held', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: Date.now(), nonce: 't', host: os.hostname() }));
+        const mutex = `${lock}.reclaim`;
+        fs.mkdirSync(mutex);
+        const old = (Date.now() - 60 * 60 * 1000) / 1000;
+        fs.utimesSync(mutex, old, old);
+        expect(acquire(root)).toBeNull();
+        expect(fs.existsSync(mutex)).toBe(true);
+    });
+
+    it('across real processes contending for a stale lock, at most one holds it at a time', async () => {
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: 0, nonce: 'stale', host: os.hostname() }));
+        const log = path.join(root, 'holds.log');
+        const module = path.resolve(__dirname, '../../src/scripts/code_graph/refresh_lock.ts');
+        const script =
+            `import * as fs from 'node:fs';\n` +
+            `const { acquire } = await import(${JSON.stringify(module)});\n` +
+            `for (let i = 0; i < 40; i++) {\n` +
+            `  const release = acquire(${JSON.stringify(root)});\n` +
+            `  if (release) { fs.appendFileSync(${JSON.stringify(log)}, 'in ' + process.pid + '\\n');\n` +
+            `    const t = Date.now(); while (Date.now() - t < 15) {}\n` +
+            `    fs.appendFileSync(${JSON.stringify(log)}, 'out ' + process.pid + '\\n'); release(); }\n` +
+            `}\n`;
+        const file = path.join(root, 'contender.mts');
+        fs.writeFileSync(file, script);
+        const tsx = path.resolve(__dirname, '../../node_modules/.bin/tsx');
+        const runs = Array.from({ length: 4 }, () => spawn(tsx, [file], { stdio: 'ignore' }));
+        const codes = await Promise.all(
+            runs.map((c) => new Promise<number | null>((r) => c.on('exit', (code) => r(code)))),
+        );
+        // A contender that crashed would silently thin the contention.
+        expect(codes).toEqual([0, 0, 0, 0]);
+        const lines = fs.readFileSync(log, 'utf-8').trim().split('\n');
+        let inside = 0;
+        for (const l of lines) {
+            inside += l.startsWith('in ') ? 1 : -1;
+            expect(inside).toBeLessThanOrEqual(1);
+            expect(inside).toBeGreaterThanOrEqual(0);
+        }
+        expect(inside).toBe(0);
+        expect(lines.length).toBeGreaterThan(0);
+    }, 60_000);
+
+    it('a reclaimer overtaken after its stale check never deletes the successor’s lock', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: 0, nonce: 'stale', host: os.hostname() }));
+        let releaseA: (() => void) | null = null;
+        // B judges the lock stale; before it acts, A reclaims it and holds a live successor.
+        const releaseB = acquire(root, () => {
+            releaseA = acquire(root);
+        });
+        expect(releaseA).not.toBeNull();
+        expect(releaseB).toBeNull();
+        expect(fs.existsSync(lock)).toBe(true);
+        expect(JSON.parse(fs.readFileSync(`${lock}.owner.json`, 'utf-8')).pid).toBe(process.pid);
+        expect(fs.existsSync(`${lock}.reclaim`)).toBe(false);
+        (releaseA as unknown as () => void)();
+        expect(fs.existsSync(lock)).toBe(false);
+    });
+
+    it('a reclaimed holder releasing late does not delete its successor', () => {
+        const releaseOld = acquire(root);
+        // The old holder is presumed dead and its lock reclaimed by a successor.
+        fs.writeFileSync(
+            `${lock}.owner.json`,
+            JSON.stringify({ pid: deadPid(), started_at: Date.now(), nonce: 'old-nonce-rewritten', host: os.hostname() }),
+        );
+        const releaseNew = acquire(root);
+        expect(releaseNew).not.toBeNull();
+        releaseOld?.();
+        expect(fs.existsSync(lock)).toBe(true);
+        expect(acquire(root)).toBeNull();
+        releaseNew?.();
+        expect(fs.existsSync(lock)).toBe(false);
+    });
+
+    it('never reclaims a lock whose owner record cannot be read', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        // A directory where the record should be: reading it fails with EISDIR.
+        fs.mkdirSync(`${lock}.owner.json`);
+        const old = (Date.now() - STALE_LOCK_MS - 1000) / 1000;
+        fs.utimesSync(lock, old, old);
+        expect(isStale(lock)).toBe(false);
+        expect(acquire(root)).toBeNull();
+        expect(fs.existsSync(lock)).toBe(true);
+    });
+
+    it('never reclaims a lock that cannot be inspected', () => {
+        fs.mkdirSync(path.dirname(lock), { recursive: true });
+        // A self-referencing symlink: no owner record (ENOENT), and stat fails with ELOOP.
+        fs.symlinkSync(path.basename(lock), lock);
+        expect(isStale(lock)).toBe(false);
+    });
+
+    it('treats an owner-less lock (the git-hook block) by age alone', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        expect(acquire(root)).toBeNull();
+        const old = (Date.now() - STALE_LOCK_MS - 1000) / 1000;
+        fs.utimesSync(lock, old, old);
+        expect(acquire(root)).not.toBeNull();
+    });
+});
