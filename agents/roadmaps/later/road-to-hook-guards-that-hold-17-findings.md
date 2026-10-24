@@ -1,9 +1,14 @@
 ---
 complexity: lightweight
-status: draft
+status: later
 estate_offset_exempt: "The 17.0.0 cut is held on this roadmap by owner decision of 2026-10-21; nothing active is finished or parkable to offset it, and archiving an unrelated roadmap to make room would be a disposition taken for the gate rather than for its work."
 execution:
   mode: phase-checkpoints
+review_by: 2026-11-24
+entry_condition:
+  what: "a free slot among the five active roadmaps (owner WIP limit, 2026-10-24); the 17.0.0 hold in estate_offset_exempt is stale since 17.4.0 shipped"
+  when: "when one of the five active roadmaps completes"
+  who: owner
 ---
 # Road to hook guards that hold — what 17.0.0 needs before it is cut
 
