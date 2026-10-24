@@ -220,7 +220,7 @@ Any changed, added or removed helper on the closure marks the verdict stale.
 **The pins as one attested set (revision 19).** Round 24 asked that the inputs
 be attested as one immutable unit, not pin by pin. The reconciler hashes the
 recorded pin lines, the recorded table digest and the recorded closure digest.
-The recorded value is the attested set: sha256 `99a2eb7a09124973749f92cb4e3a40914ff77b72da9dd177fae0a52e5a67aa41`.
+The recorded value is the attested set: sha256 `38639fbb957eac6c5f18df79ee638fba8262c818680fe61046c504668145441e`.
 
 A pin line changed without this line is refused as a broken set, not as a stale
 pin. A renewal therefore replaces the whole set in one diff, and rollback
@@ -249,12 +249,6 @@ than listed.
 | `src/scripts/lint_readme_jargon.ts` | `d0ffe1974b02cceea8cc0d0961e598fbd5e6c9b2` |
 | `src/scripts/lint_readme_serial_comma.ts` | `825b1fe415522c322af4436355348f17d05655a2` |
 | `src/scripts/check_composite_arming.ts` | `899e5d1fa56011a583aca46a846b2c26451e288f` |
-| `taskfiles/ci-fast.yml` | `aedb0b222ef39622a6dc66abe6d94f95eaad46b7` |
-| `taskfiles/content.yml` | `2c8f8c7528cef2d24f4085bb00757d90f9d85e99` |
-| `taskfiles/engine.yml` | `be2c6e7b78ca288fd5f137037d29a83c04487786` |
-| `.github/workflows/standing-payload-delta.yml` | `82eb039cd82226e642c24df634c7ee7ec3ad0cf5` |
-| `.github/workflows/rule-backstops.yml` | `015473465df2afb82e32ada7fce9d458d6c17055` |
-| `.github/workflows/tests.yml` | `0e1e0c9882919e10ff783780315a84b5e5f5dea3` |
 | `agents/evidence/analysis/gate-branch-inventory-20261024.json` | `119214ea142393c7254cae40e080153728e10fb0` |
 | `agents/evidence/analysis/gate-branch-mapping-20261024.json` | `c296fd9f02c1f0e83688da3f596cbb19e079665e` |
 | `agents/evidence/analysis/gate-branch-mapping-review-20261024.json` | `46227ecdae464df420e5aec60910a1b7a497e686` |
@@ -267,6 +261,26 @@ than listed.
 | `agents/evidence/analysis/gate-phase7-harness.mjs` | `672ce60e22f56fd483b31ed84b13266a90b821c0` |
 | `agents/evidence/analysis/gate-invocation-inventory-20261024.md` | `1f3ff61036ccbd9ba42f9acd4eec5b5c2697b4f9` |
 | `agents/evidence/analysis/gate-class-grounds-20261024.json` | `3ae580599ebaa4d88a1aa7145c7c9364165f61a1` |
+
+**Wiring, pinned by its Phase 7 steps (revision 23).** Rounds 26 and 27 both
+refused a renewal that hashed whole wiring files. In those files, a change
+outside the 16 checks, such as `check_step_production_reach --enforce`, would
+have been attested without being examined. Each wiring file is now pinned by the
+digest of its Phase 7 steps only. A step is the YAML block around a line that
+names one of the 16 checks, or names a task whose block names one: a workflow
+step item, or a taskfile task. `Taskfile.yml` is added, because it orders the
+Phase 7 tasks and was not pinned before. The values below are the steps as they
+stood at revision 16, the last attested set.
+
+| Wiring file | Phase 7 steps |
+|---|---|
+| `Taskfile.yml` | Phase 7 steps, sha256 `c81b2f54de006c4411d635896d2ccaadb0ff81cbc4f42a6fe4c8495441144853` |
+| `taskfiles/ci-fast.yml` | Phase 7 steps, sha256 `ac1b2425882de47f51306ac5ce188fc99f61e44f507e6f012bf341e96f67fbc0` |
+| `taskfiles/content.yml` | Phase 7 steps, sha256 `62d9617826752cb5d212e152bc43be4d3d091d66c75a9d727708293eac43216a` |
+| `taskfiles/engine.yml` | Phase 7 steps, sha256 `2b685c0c20ef0437738110f4646f0640edcca8305c66753ceae627bf1fb043c3` |
+| `.github/workflows/standing-payload-delta.yml` | Phase 7 steps, sha256 `f762acea85ddaecb086cab535f0524ba74bf32feac7d23ed7a6c208e3f0b2557` |
+| `.github/workflows/rule-backstops.yml` | Phase 7 steps, sha256 `f7b763b3a6634297223782f946bca0b44333e0694f8640a78d70bc501a9868fa` |
+| `.github/workflows/tests.yml` | Phase 7 steps, sha256 `b27eddc52d0604abdc9c5e892272d3e65c175348bd841a1d4da6b4082a760608` |
 
 
 ## Independent branch inventory — revision 8
@@ -853,6 +867,32 @@ named defect.
 
 The pins are not renewed. That needs another council round on the cumulative
 diff.
+
+## Round 27's findings — revision 23
+
+Round 27 was the second renewal round on this target
+(`agents/evidence/council/gate-classification-renewal-r2-20261024.md`). It
+returned **do not renew** and **item 4 not met**, both 2/2. Attempt 3 changes
+the strategy: it re-cuts the renewal unit rather than defending it.
+
+| Finding | Revision 23 |
+|---|---|
+| Whole-file wiring hashes attest an unexamined change (`--enforce`) | The wiring files are pinned by the **digest of their Phase 7 steps only**. These are YAML blocks around a line that names one of the 16 checks, or names a task whose block names one. `Taskfile.yml` is added, because it orders the Phase 7 tasks and was never pinned. The `--enforce` line lies in no Phase 7 step, so it is outside the unit. Since revision 16 only one Phase 7 step changed: the `tests.yml` arming comment. Three self-test cases cover a change outside a step, a change inside one, and a dropped Taskfile task. The first was seen red. |
+| Item 4: label exclusivity shown, but not runtime mode exclusivity; no precedence for overlapping modes | A **precedence table** (`overlaps`) is required for every branch that reaches rows in more than one mode, or whose predicates name a flag other than its rows' modes. It names the row each mode selects, the excluded flags and the tuning parameters. A run with the flag is in the flag's mode. The table must cover the branch's rows, modes and flag tokens exactly. There are 6 entries. Three self-test cases (missing, swapped, undeclared flag) were seen red. |
+| (found by that check) Self-test rows were not modes | R2.b, R3.b, R7.b and R16.e name `--self-test` or `--mutation-selftest` in their aspect, and R10.h names `--freshness-days` in its applicability. None of the five had a structured mode. A row's mode is now read from its aspect, applicability or class cell, and must equal the structured mode. There are now 16 structured modes, and two self-test cases cover it. |
+| The scanner misses a contradiction when a wider blocking branch also covers the site | The contradiction rule reads the **narrowest** covering branch. A self-test case was seen red under the old every-branch rule. |
+| Independence asserted, not shown | The two sessions' prompts are committed in `gate-check16-reinventory-prompts-20261024.md`. The record states what that shows (each session's input boundary) and what it cannot (obedience; both are on the same provider). |
+
+Not changed, with reasons:
+
+- Code confirmation stays at 63 of 167 blocking branches, which is a stated
+  limit of syntactic scanning.
+- The absent-store exit 0 is the owner's choice (D46). anthropic's
+  *"misclassified as non-blocking"* reopens an owner decision, which this lane
+  does not do.
+
+`--aspects`: 49 derived, 0 waived, 0 refused. Self-test 43/44. The one red case
+is the clean baseline, which reports the unrenewed pins.
 
 ## Source-to-record completeness, mechanically — revision 14
 

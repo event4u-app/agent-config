@@ -1,9 +1,13 @@
 {
-  "_doc": "Structured grounds the independent branch inventory cannot supply. `modes`: the invocation flag a row speaks of; each is checked against the check's source and against the predicates of every branch that reaches the row. `waivers`: a row whose semantic class differs from its derived behaviour; a waiver is reported as waived, never as satisfaction, and is refused unless: its milestone is an open step of a roadmap that exists (a ticked step lapses it); its issue text occurs in the named file; its approver is `owner` with a directive tracked in git that names the row; and its expiry is a real, unexpired date. `structured`: the baseline (snapshot) or bound, risk owner and expiry (tolerance) such a row carries in addition to blocking behaviour; no such row exists. `flag_branches`: for each branch whose effect is a failure only with a flag, the one flag that makes it fail; it must occur as an exact token in the branch's predicates and as a literal in the check's source, and the branch blocks only for a row whose mode is that flag.",
+  "_doc": "Structured grounds the independent branch inventory cannot supply. `modes`: the invocation flag a row speaks of; each is checked against the check's source and against the predicates of every branch that reaches the row. `waivers`: a row whose semantic class differs from its derived behaviour; a waiver is reported as waived, never as satisfaction, and is refused unless: its milestone is an open step of a roadmap that exists (a ticked step lapses it); its issue text occurs in the named file; its approver is `owner` with a directive tracked in git that names the row; and its expiry is a real, unexpired date. `structured`: the baseline (snapshot) or bound, risk owner and expiry (tolerance) such a row carries in addition to blocking behaviour; no such row exists. `flag_branches`: for each branch whose effect is a failure only with a flag, the one flag that makes it fail; it must occur as an exact token in the branch's predicates and as a literal in the check's source, and the branch blocks only for a row whose mode is that flag. `overlaps`: the precedence table for every branch that reaches rows in more than one mode. It names the row each mode selects, the flags the branch's predicates name as exclusions, and the flags that only tune a threshold or scope (`parameters`). Precedence: a run with the flag is in the flag's mode and the flag row applies; without it the default row applies. A branch whose rows, modes or flag tokens are not exactly covered by its entry is refused.",
   "modes": {
+    "R2.b": "--self-test",
+    "R3.b": "--mutation-selftest",
+    "R7.b": "--self-test",
     "R8.c": "--require-complete",
     "R10.d": "--check-urls",
     "R10.g": "--strict",
+    "R10.h": "--freshness-days",
     "R10.i": "--global",
     "R10.k": "--global",
     "R10.l": "--global",
@@ -11,12 +15,53 @@
     "R10.n": "--global",
     "R10.o": "--global",
     "R11.f": "--strict",
-    "R12.d": "--strict"
+    "R12.d": "--strict",
+    "R16.e": "--self-test"
   },
   "flag_branches": {
     "check_token_quality_golden c8-require-complete": "--require-complete",
     "check_public_links c11-beta-marker": "--strict",
     "lint_agents_layout c12-consumer-warning": "--strict"
+  },
+  "overlaps": {
+    "check_public_links c11-beta-marker": {
+      "default": "R11.e",
+      "--strict": "R11.f",
+      "excluded": [
+        "--list"
+      ]
+    },
+    "lint_agents_layout c12-consumer-warning": {
+      "default": "R12.c",
+      "--strict": "R12.d",
+      "excluded": []
+    },
+    "check_rule_invariants c3-missing-file": {
+      "default": "R3.a",
+      "excluded": [
+        "--mutation-selftest"
+      ]
+    },
+    "check_rule_invariants c3-missing-string": {
+      "default": "R3.a",
+      "excluded": [
+        "--mutation-selftest"
+      ]
+    },
+    "check_token_quality_golden c8-scaffold-notice": {
+      "default": "R8.b",
+      "excluded": [
+        "--json",
+        "--require-complete"
+      ]
+    },
+    "check_token_quality_golden c8-require-complete": {
+      "--require-complete": "R8.c",
+      "excluded": [],
+      "parameters": [
+        "--scope"
+      ]
+    }
   },
   "waivers": {},
   "structured": {}
