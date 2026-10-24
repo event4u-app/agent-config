@@ -2,6 +2,11 @@
 
 # Step 7.2 — entry, suspend, re-attestation and owner rules
 
+**Superseded for 7.2 by D50 (owner directive, 2026-10-24).** Step 7.1 is
+parked. 7.2 runs on the provisional, revisable classes in
+`src/config/live-tree-check-classes.json`, not on a consumable ledger. The rules
+below apply again once the parked step promotes the ledger.
+
 The conditions under which step 7.2 of `road-to-authority-routing-mechanism`
 may rely on step 7.1's classification ledger. They were set by rounds D37 to
 D39, and the step points here.
