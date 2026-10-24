@@ -12,9 +12,14 @@
  * proof is that it happened to pass once against a live PR.
  */
 
+import { execFileSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
-import { decide, main, rowsWereEvaluated, type Facts } from '../../src/scripts/check_pr_ci_current.js';
+import { decide, main, relate, rowsWereEvaluated, type Facts } from '../../src/scripts/check_pr_ci_current.js';
 
 const SHA_A = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
 const SHA_B = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
@@ -178,3 +183,70 @@ describe('rowsWereEvaluated — what the ledger is allowed to call inspected', (
         expect(rowsWereEvaluated(facts({ relation: 'unknown' }))).toBe(true);
     });
 });
+
+describe('a rewrite of the own commits of the session', () => {
+    it('passes before a push and names the lease; blocks after one', () => {
+        const pre = decide(facts({ prHead: SHA_B, checksHead: SHA_B, relation: 'rewritten' }), { prePush: true });
+        expect(pre.exit).toBe(0);
+        expect(pre.message).toMatch(/--force-with-lease/);
+        expect(decide(facts({ prHead: SHA_B, checksHead: SHA_B, relation: 'rewritten' })).exit).toBe(1);
+        expect(rowsWereEvaluated(facts({ relation: 'rewritten' }))).toBe(false);
+    });
+
+    it('relate tells a reword from an Update branch merge and from changed content', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-ci-rewrite-'));
+        const g = (...args: string[]): string =>
+            execFileSync('git', ['-C', dir, ...args], {
+                encoding: 'utf8',
+                env: { ...process.env, GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@x', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@x' },
+            }).trim();
+        const commit = (file: string, body: string, msg: string): string => {
+            fs.writeFileSync(path.join(dir, file), body);
+            g('add', '-A');
+            g('commit', '-q', '-m', msg);
+            return g('rev-parse', 'HEAD');
+        };
+        try {
+            g('init', '-q', '-b', 'main');
+            commit('base.txt', 'base\n', 'base');
+            g('checkout', '-q', '-b', 'feat');
+            commit('a.txt', 'a\n', 'feat: WIP caps');
+            const pr = commit('b.txt', 'b\n', 'feat: second');
+
+            // Reword the first commit: same patches, new messages.
+            g('reset', '-q', '--hard', 'main');
+            g('cherry-pick', pr + '~1');
+            g('commit', '-q', '--amend', '-m', 'feat: work-in-progress caps');
+            g('cherry-pick', pr);
+            expect(relate(dir, g('rev-parse', 'HEAD'), pr)).toBe('rewritten');
+
+            // Changed content on the rewritten side is not a reword of the PR's commits.
+            g('reset', '-q', '--hard', 'main');
+            commit('a.txt', 'a changed\n', 'feat: caps');
+            commit('b.txt', 'b\n', 'feat: second');
+            expect(relate(dir, g('rev-parse', 'HEAD'), pr)).toBe('diverged');
+
+            // An Update branch press: the PR head gains a merge of main.
+            const local = g('rev-parse', 'HEAD');
+            g('checkout', '-q', 'main');
+            commit('m.txt', 'm\n', 'main moved');
+            g('checkout', '-q', '-b', 'pr-updated', pr);
+            g('merge', '-q', '--no-edit', 'main');
+            const updated = g('rev-parse', 'HEAD');
+            expect(relate(dir, local, updated)).toBe('diverged');
+
+            // A reword on one side, Update branch on the other, main merged on both:
+            // every PR-only patch has a local twin, but the PR-only merge may carry a
+            // conflict resolution, so it is never forced over.
+            g('checkout', '-q', '-b', 'reworded', 'main~1');
+            g('cherry-pick', pr + '~1');
+            g('commit', '-q', '--amend', '-m', 'feat: work-in-progress caps');
+            g('cherry-pick', pr);
+            g('merge', '-q', '--no-edit', 'main');
+            expect(relate(dir, g('rev-parse', 'HEAD'), updated)).toBe('diverged');
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    });
+});
+
