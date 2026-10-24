@@ -52,11 +52,15 @@ export const PROMOTION_RECORD = 'promotion.json';
 /**
  * The promotion lock: created exclusively before the thin pass, removed after
  * the promotion record. It names its owner (`<pid> <ms since epoch>`), so a
- * concurrent session can tell a pass still running — skip, touch nothing — from
- * one whose owner is gone or older than {@link PROMOTING_STALE_MS} — recover.
+ * concurrent session can tell a pass whose owner is alive — skip, touch
+ * nothing — from one whose owner is gone — recover.
  */
 export const PROMOTING_MARKER = 'promoting';
-/** Far beyond any real pass (11 ms measured, 250-ms budget); only a dead owner gets this old. */
+/**
+ * Only for a lock whose owner cannot be read: then its mtime decides, and
+ * nothing real is this old (11 ms measured, 250-ms budget). A lock naming a
+ * LIVE owner is never recovered, whatever its age — a timeout is not a fence.
+ */
 export const PROMOTING_STALE_MS = 30_000;
 function ownerAlive(pid) {
     try {
@@ -79,7 +83,7 @@ export function promotionLockLive(file, nowMs = Date.now()) {
     const [pid, at] = text.trim().split(/\s+/).map(Number);
     if (!Number.isInteger(pid) || !Number.isFinite(at))
         return nowMs - fs.statSync(file).mtimeMs < PROMOTING_STALE_MS;
-    return nowMs - at < PROMOTING_STALE_MS && ownerAlive(pid);
+    return ownerAlive(pid);
 }
 export const LATENCY_BUDGET_REL = path.join('src', 'config', 'hook-latency-budget.json');
 /** Measured 11 ms for the thin pass over 121 rules (tsx, warm, 2026-10-24); the default is that plus margin. */
@@ -367,12 +371,11 @@ export function sessionLayerStep(opts = {}) {
             failed = res.failed.length > 0;
         }
         finally {
-            if (failed) {
+            // Only while it still owns the lock: a recoverer that took it is restoring.
+            if (failed && stillOurs()) {
                 rerecord(rulesDir, restoreStagedLayer(packageRoot, rulesDir) ?? [], env);
-                if (stillOurs()) {
-                    markClaudeLayer(runtimeRoot, { thinned: false, rulesDir });
-                    fs.rmSync(lock, { force: true });
-                }
+                markClaudeLayer(runtimeRoot, { thinned: false, rulesDir });
+                fs.rmSync(lock, { force: true });
             }
         }
         if (failed)

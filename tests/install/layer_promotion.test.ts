@@ -327,7 +327,7 @@ describe('step 3.3 — promote after proof, never at install', () => {
         }
     });
 
-    it('a promotion still running in another session is left alone; a stale one is recovered', () => {
+    it('a lock whose owner is alive is left alone at any age; a dead owner is recovered', () => {
         const f = freshInstall();
         arrive(f, 'session-1', '2026-10-24T10:00:00Z', allRules(f));
         expect(step(f).action).toBe('promoted');
@@ -338,8 +338,12 @@ describe('step 3.3 — promote after proof, never at install', () => {
         expect(step(f)).toEqual({ action: 'none', reason: 'promotion-in-progress' });
         expect(stubCount(f)).toBe(stubs);
         expect(readCarrierState(f.runtimeRoot).layer).toBe('thinned');
-        // Same live owner, but older than any real pass: recovered.
-        fs.writeFileSync(lock, `${process.pid} ${Date.now() - 60_000}\n`);
+        // A live owner is never recovered, however old its lock: a timeout is not a fence.
+        fs.writeFileSync(lock, `${process.pid} ${Date.now() - 86_400_000}\n`);
+        expect(step(f)).toEqual({ action: 'none', reason: 'promotion-in-progress' });
+        expect(stubCount(f)).toBe(stubs);
+        // A dead owner is recovered, however fresh.
+        fs.writeFileSync(lock, `${DEAD_PID} ${Date.now()}\n`);
         expect(step(f)).toEqual({ action: 'none', reason: 'promotion-interrupted' });
         expect(stubCount(f)).toBe(0);
     });
@@ -365,6 +369,33 @@ describe('step 3.3 — promote after proof, never at install', () => {
         expect(step(f)).toEqual({ action: 'none', reason: 'promotion-interrupted' });
         expect(stubCount(f)).toBe(0);
         expect(ledgerMatchesDisk(f)).toBe(true);
+    });
+
+    it('a pass that fails after losing its lock restores nothing and writes no ledger', () => {
+        const f = freshInstall();
+        arrive(f, 'session-1', '2026-10-24T10:00:00Z', allRules(f));
+        const lock = path.join(f.runtimeRoot, PROMOTING_MARKER);
+        // A file a restore would overwrite: stamped, and recorded as ours.
+        const sentinel = path.join(f.rulesDir, 'scope-control.md');
+        fs.appendFileSync(sentinel, '\nsentinel\n');
+        const inv = inventory.load_inventory(f.ledgerPath);
+        const digests = (inv['tools'] as Record<string, { digests: Record<string, inventory.LedgerDigest> }>)['claude-code']!.digests;
+        const sha = inventory.file_sha256(sentinel) as string;
+        digests['rules/scope-control.md'] = { installed_sha256: sha, packaged_sha256: sha };
+        inventory.save_inventory(inv, f.ledgerPath);
+        const ledgerBefore = fs.readFileSync(f.ledgerPath, 'utf8');
+        // The pass will throw (no router to build stubs from) after another session took the lock.
+        fs.rmSync(path.join(f.stage, 'dist/router.json'));
+        let calls = 0;
+        const clock = (): number => {
+            calls += 1;
+            if (calls === 2) fs.writeFileSync(lock, `${DEAD_PID} 0\n`);
+            return 0;
+        };
+        expect(step(f, { now: clock, startedAt: 0 })).toEqual({ action: 'none', reason: 'error' });
+        expect(fs.readFileSync(sentinel, 'utf8')).toContain('sentinel');
+        expect(fs.readFileSync(f.ledgerPath, 'utf8')).toBe(ledgerBefore);
+        expect(fs.readFileSync(lock, 'utf8')).toBe(`${DEAD_PID} 0\n`);
     });
 
     it('the concern honours its kill switch and never throws without a staged runtime', () => {
