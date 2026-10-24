@@ -2,7 +2,8 @@
  * The upstream delta watch — one local run that turns an upstream move into findings.
  *
  * Per source the owner switched on (`watch: true`, off by default — council O7): one
- * `git ls-remote`; if HEAD equals the newest recorded pin, stop there. Otherwise a depth-1
+ * `git ls-remote`; if HEAD is the newest recorded pin (a full or short SHA, or a tag
+ * resolved through `ls-remote`), stop there. Otherwise a depth-1
  * fetch of both commits into a private cache under the user-global home, then two diffs —
  * the files under the edges' locators, and the top-level listing — classified as:
  *
@@ -85,6 +86,19 @@ function locatorPath(locator: string): string {
 
 const under = (file: string, loc: string): boolean => file === loc || file.startsWith(`${loc}/`);
 
+/** The commit a tag names on the remote, peeled through an annotated tag; null when absent. */
+function tagCommit(git: GitRunner, identity: string, tag: string): string | null {
+    if (tag.startsWith('-')) return null;
+    const refs = new Map<string, string>();
+    // The trailing glob is what makes ls-remote print the peeled `^{}` line; the exact match is below.
+    for (const line of git(['ls-remote', '--tags', identity, `refs/tags/${tag}*`]).split('\n')) {
+        const [sha, ref] = line.trim().split(/\s+/);
+        if (sha && ref) refs.set(ref, sha);
+    }
+    const sha = refs.get(`refs/tags/${tag}^{}`) ?? refs.get(`refs/tags/${tag}`) ?? null;
+    return sha !== null && /^[0-9a-f]{40,64}$/.test(sha) ? sha : null;
+}
+
 function watchOne(source: SourceRow, opts: WatchOptions): SourceReport {
     const { keys, git } = opts;
     const ledger = readLedger(opts.dir);
@@ -105,7 +119,14 @@ function watchOne(source: SourceRow, opts: WatchOptions): SourceReport {
     if (identity.startsWith('-')) return { ...base, status: 'error', pin, head: null, findings: [], note: 'identity is not a repository location' };
     const head = (git(['ls-remote', identity, 'HEAD']).split(/\s+/)[0] ?? '').trim();
     if (!/^[0-9a-f]{7,64}$/.test(head)) return { ...base, status: 'error', pin, head: null, findings: [], note: 'ls-remote returned no HEAD' };
-    if (head === pin) return { ...base, status: 'unchanged', pin, head, findings: [] };
+    const hexPin = /^[0-9a-f]{7,64}$/i.test(pin);
+    let pinRev = pin.toLowerCase();
+    if (!hexPin) {
+        const peeled = tagCommit(git, identity, pin);
+        if (peeled === null) return { ...base, status: 'error', pin, head, findings: [], note: `pin ${pin} is neither a commit nor a tag the remote has` };
+        pinRev = peeled;
+    }
+    if (head.startsWith(pinRev)) return { ...base, status: 'unchanged', pin, head, findings: [] };
 
     const cache = path.join(opts.dir, 'cache', source.source_id);
     // The cache is a repository of its own; what must sit outside every work tree is its container.
@@ -114,15 +135,22 @@ function watchOne(source: SourceRow, opts: WatchOptions): SourceReport {
         fs.mkdirSync(cache, { recursive: true, mode: 0o700 });
         git(['init', '-q'], cache);
     }
-    for (const rev of [head, pin]) git(['fetch', '-q', '--depth', '1', '--no-tags', identity, rev], cache);
+    git(['fetch', '-q', '--depth', '1', '--no-tags', identity, head], cache);
+    if (pinRev.length >= 40) git(['fetch', '-q', '--depth', '1', '--no-tags', identity, pinRev], cache);
+    else {
+        // A remote serves no object by an abbreviated name, so a short pin is found in HEAD's history.
+        const shallow = git(['rev-parse', '--is-shallow-repository'], cache).trim() === 'true';
+        git(['fetch', '-q', '--no-tags', ...(shallow ? ['--unshallow'] : []), identity, head], cache);
+        pinRev = git(['rev-parse', '--verify', '-q', `${pinRev}^{commit}`], cache).trim();
+    }
 
     const changed = new Map<string, string>();
-    for (const line of git(['diff', '--name-status', '-M', pin, head], cache).split('\n')) {
+    for (const line of git(['diff', '--name-status', '-M', pinRev, head], cache).split('\n')) {
         const [status, from] = line.split('\t');
         if (status && from) changed.set(from, status.charAt(0));
     }
     const listing = (rev: string): Set<string> => new Set(git(['ls-tree', '--name-only', rev], cache).split('\n').filter((x) => x !== ''));
-    const before = listing(pin);
+    const before = listing(pinRev);
     const after = listing(head);
 
     const latest = latestDecisions(opts.rows);

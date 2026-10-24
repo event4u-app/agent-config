@@ -183,6 +183,50 @@ describe('one watch run (10.1)', () => {
         expect(report[0]?.status).toBe('unchanged');
     });
 
+    function repin(f: Fixture, pin: string): void {
+        mergeIntoLedger(lineageDir({ EVENT4U_CONFIG_HOME: f.home }), {
+            sources: [],
+            edges: [{ source_id: f.id, mechanism_id: 'retry-budget', pin: encrypt(pin, KEY), locator: encrypt('src/retry.ts:1', KEY) }],
+        }, [KEY]);
+    }
+
+    it('a short-SHA pin matches its full HEAD and still diffs once upstream moves', async () => {
+        const still = fixture(false);
+        repin(still, still.pin.slice(0, 7));
+        await run(['watch', 'enable', still.id], still);
+        const same = runWatch({ dir: lineageDir({ EVENT4U_CONFIG_HOME: still.home }), keys: [KEY], rows: [], git: systemGit, env: {} });
+        expect(same[0]?.status).toBe('unchanged');
+
+        const moved = fixture();
+        repin(moved, moved.pin.slice(0, 10));
+        await run(['watch', 'enable', moved.id], moved);
+        const report = runWatch({ dir: lineageDir({ EVENT4U_CONFIG_HOME: moved.home }), keys: [KEY], rows: [], git: systemGit, env: {} });
+        expect(report[0]?.status, report[0]?.note).toBe('changed');
+        expect(report[0]?.findings.map((x) => x.class).sort()).toEqual(['candidate', 'reverify']);
+    });
+
+    it('a tag pin resolves through ls-remote, peeled, before it is compared and fetched', async () => {
+        const still = fixture(false);
+        sh(still.upstream, 'tag', '-a', 'v1.0.0', '-m', 'release', still.pin);
+        repin(still, 'v1.0.0');
+        await run(['watch', 'enable', still.id], still);
+        const same = runWatch({ dir: lineageDir({ EVENT4U_CONFIG_HOME: still.home }), keys: [KEY], rows: [], git: systemGit, env: {} });
+        expect(same[0]?.status, same[0]?.note).toBe('unchanged');
+
+        const moved = fixture();
+        sh(moved.upstream, 'tag', 'v1.0.0', moved.pin);
+        repin(moved, 'v1.0.0');
+        await run(['watch', 'enable', moved.id], moved);
+        const report = runWatch({ dir: lineageDir({ EVENT4U_CONFIG_HOME: moved.home }), keys: [KEY], rows: [], git: systemGit, env: {} });
+        expect(report[0]?.status, report[0]?.note).toBe('changed');
+        expect(report[0]?.findings.map((x) => x.class).sort()).toEqual(['candidate', 'reverify']);
+
+        repin(moved, 'v9.9.9');
+        const missing = runWatch({ dir: lineageDir({ EVENT4U_CONFIG_HOME: moved.home }), keys: [KEY], rows: [], git: systemGit, env: {} });
+        expect(missing[0]?.status).toBe('error');
+        expect(missing[0]?.note).toMatch(/v9\.9\.9/);
+    });
+
     it('a dry run writes no report and no stub', async () => {
         const f = fixture();
         await run(['watch', 'enable', f.id], f);
