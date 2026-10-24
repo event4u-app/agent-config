@@ -112,6 +112,27 @@ describe('a key block whose markers are disguised leaves whole', () => {
     });
 });
 
+describe('offsets around hidden and astral characters', () => {
+    const ZW = String.fromCodePoint(0x200b);
+    const ASTRAL = String.fromCodePoint(0x1f600);
+    const EMAIL = ['jane.doe', 'acme-kunde.de'].join('@');
+
+    it('a hidden character before, inside or after a value maps to an exact original slice', () => {
+        for (const text of [`${ASTRAL} ${ZW}${EMAIL} x`, `${ASTRAL} ${EMAIL.slice(0, 4)}${ZW}${EMAIL.slice(4)} x`, `${ASTRAL} ${EMAIL}${ZW} x`]) {
+            const spans = detectNormalized(text).filter((s) => s.type === 'EMAIL');
+            expect(spans.length, text).toBe(1);
+            const s = spans[0]!;
+            expect(0 <= s.start && s.start < s.end && s.end <= text.length).toBe(true);
+            expect(text.slice(s.start, s.end).replace(ZW, '')).toBe(EMAIL);
+        }
+    });
+
+    it('Greek and Cyrillic prose with no value in it detects nothing', () => {
+        const prose = ['Ελληνικά: αυτό είναι ένα κείμενο, όχι κλειδί.', 'Русский: это обычный текст — не пароль и не ключ.'];
+        for (const text of prose) expect(detectNormalized(text)).toEqual([]);
+    });
+});
+
 describe('evasion corpus — counted misses per mutation', () => {
     const EMAIL = j('jane.doe', '@acme-kunde.de');
     const IBAN = j('DE89', '3704', '0044', '0532', '0130', '00');
