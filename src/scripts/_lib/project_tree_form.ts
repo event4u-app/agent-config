@@ -28,11 +28,17 @@
  * rule this file would be a permanent bypass of the decision function rather
  * than a stand-in for it, which is the one risk the reviewing seat named.
  *
- * WHY ONE SEAT WAS ENOUGH TO BUILD ON, AND NOT ENOUGH TO CLOSE. The choice was
- * reviewed at a degraded quorum, so step 3.6 stays open and its blocker carries
- * the confirmation. Acting on it meanwhile is bounded by what the option does:
- * it changes no behaviour at all — it reproduces what the shipped template
- * produced — and every alternative did. The record lives with the roadmap.
+ * ON THE LIVE PATH, AND SCOPED BY TYPE (council 2/2, 2026-10-24). The full
+ * quorum confirmed the record and named two defects in how it met the tree: the
+ * precedence rule had no caller outside its test, and it decided by a reason
+ * STRING, so an installed-layer verdict could cross into the project tree. Now
+ * {@link shippedProjection} runs every row through {@link projectTreeForm}, and
+ * a verdict counts only when it carries `scope: 'project-tree'` — the installed
+ * user-global layer's verdict is refused whatever its reason. No producer of a
+ * project-tree verdict exists yet, so the live input is
+ * {@link noProjectTreeObservation} and the record stands; when one exists, it
+ * is passed here and nothing else changes. {@link KILL_SWITCH_ENV}`=full` forces
+ * the full form for every host, the operator rollback that needs no release.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -47,11 +53,22 @@ export interface ProjectTreeForm {
     readonly basis: string;
 }
 
-/** The shape this module needs from a decision verdict; the full type lives in `layer_form_decision.ts`. */
+/**
+ * A verdict about the PROJECT tree. `scope` is the provenance, carried in the
+ * type rather than inferred from `reason`: a verdict without it — the installed
+ * layer's, from `layer_form_decision.ts` — never decides a project tree.
+ */
 export interface FormVerdict {
     readonly form: 'full' | 'thinned';
     readonly reason: string;
+    readonly scope?: string;
 }
+
+/** Operator rollback: `full` forces the full form for every project tree. */
+export const KILL_SWITCH_ENV = 'AGENT_CONFIG_PROJECT_TREE_FORM';
+
+/** The live verdict source while no project-tree observer exists: none, so the record stands. */
+export const noProjectTreeObservation = (_host: string): FormVerdict | null => null;
 
 const FORMS: readonly string[] = ['eager-all', 'thin', 'delivery'];
 
@@ -96,39 +113,48 @@ export function readProjectTreeForms(packageRoot: string): Map<string, ProjectTr
 /**
  * The form the project tree is built with for `host`.
  *
- * `verdict` is the layer-form decision for this host where one exists. An
- * observed verdict — anything whose reason is not {@link UNOBSERVED_REASON} —
- * decides, and the record is not consulted. A host with no row and no observed
- * verdict gets the full form, which is what an absent key always meant.
+ * The kill switch wins over everything. Then an observed PROJECT-TREE verdict —
+ * `scope: 'project-tree'` and a reason other than {@link UNOBSERVED_REASON} —
+ * decides: `full` gives the full form, `thinned` keeps the measured row. Any
+ * other verdict is ignored and the record stands. A host with no row gets the
+ * full form, which is what an absent key always meant.
  */
 export function projectTreeForm(
     packageRoot: string,
     host: string,
     verdict: FormVerdict | null,
+    env: NodeJS.ProcessEnv = process.env,
+    forms: Map<string, ProjectTreeForm> = readProjectTreeForms(packageRoot),
 ): LeanProjectionMode {
-    if (verdict !== null && verdict.reason !== UNOBSERVED_REASON) {
-        return verdict.form === 'full' ? DEFAULT_LEAN_PROJECTION_MODE : (readProjectTreeForms(packageRoot).get(host)?.form ?? DEFAULT_LEAN_PROJECTION_MODE);
-    }
-    return readProjectTreeForms(packageRoot).get(host)?.form ?? DEFAULT_LEAN_PROJECTION_MODE;
+    if (env[KILL_SWITCH_ENV] === 'full') return DEFAULT_LEAN_PROJECTION_MODE;
+    const observed = verdict !== null && verdict.scope === 'project-tree' && verdict.reason !== UNOBSERVED_REASON;
+    if (observed && verdict.form === 'full') return DEFAULT_LEAN_PROJECTION_MODE;
+    return forms.get(host)?.form ?? DEFAULT_LEAN_PROJECTION_MODE;
 }
 
 /**
  * The `{ mode, hosts }` pair the projector asks for, derived from the record.
  *
  * The record is per host, the projector's API is one mode plus the host list it
- * applies to, and this is the one place the two shapes meet. `mode` is the
- * strongest form any row carries — `delivery` over `thin` over `eager-all` —
- * and `hosts` is every row carrying exactly that form. A tree with no record,
+ * applies to, and this is the one place the two shapes meet. Each row is
+ * resolved through {@link projectTreeForm}; `mode` is the strongest result —
+ * `delivery` over `thin` over `eager-all` — and `hosts` every row resolving to
+ * exactly that form. A tree with no record,
  * or with rows the reader refused, gets the full form and no hosts, which is
  * what an absent key always meant.
  */
-export function shippedProjection(packageRoot: string): { mode: LeanProjectionMode; hosts: string[] } {
-    const forms = readProjectTreeForms(packageRoot);
+export function shippedProjection(
+    packageRoot: string,
+    verdictFor: (host: string) => FormVerdict | null = noProjectTreeObservation,
+    env: NodeJS.ProcessEnv = process.env,
+): { mode: LeanProjectionMode; hosts: string[] } {
+    const rows = readProjectTreeForms(packageRoot);
+    const forms = new Map([...rows.keys()].map((host) => [host, projectTreeForm(packageRoot, host, verdictFor(host), env, rows)]));
     const rank: Record<string, number> = { 'eager-all': 0, thin: 1, delivery: 2 };
     let mode: LeanProjectionMode = DEFAULT_LEAN_PROJECTION_MODE;
-    for (const row of forms.values()) {
-        if ((rank[row.form] ?? 0) > (rank[mode] ?? 0)) mode = row.form;
+    for (const form of forms.values()) {
+        if ((rank[form] ?? 0) > (rank[mode] ?? 0)) mode = form;
     }
-    const hosts = [...forms.entries()].filter(([, row]) => row.form === mode).map(([host]) => host).sort();
+    const hosts = [...forms.entries()].filter(([, form]) => form === mode).map(([host]) => host).sort();
     return { mode, hosts: mode === DEFAULT_LEAN_PROJECTION_MODE ? [] : hosts };
 }
