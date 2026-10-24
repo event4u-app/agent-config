@@ -229,7 +229,9 @@ describe('subagent-constraints concern — the user layer', () => {
         for (let i = 0; i < 300; i++) writeRule(`rule-with-a-long-name-${i}`, `LAW ${i} "\\\u0001\t ${'x'.repeat(200)}`);
         fs.writeFileSync(path.join(config, 'CLAUDE.md'), '\u{1F600}"\\'.repeat(4_000));
         for (const cap of [200, 400, 800, 4_096, EMISSION_MAX_BYTES]) {
-            const d = instructionDigest(root, cap, config) as string;
+            const d = instructionDigest(root, cap, config);
+            // Below the room a diagnostic needs, nothing is better than a truncated digest.
+            if (d === null) continue;
             expect(Buffer.byteLength(replyLine(d), 'utf-8')).toBeLessThanOrEqual(cap);
             expect(d.isWellFormed()).toBe(true);
         }
@@ -409,5 +411,24 @@ describe('subagent-constraints concern — the user layer', () => {
         expect(carried).toBeLessThan(FLOOR_RULE_IDS.length);
         expect(digest).not.toContain('[cut here]');
         expect(digest).toContain(`omitted: ${FLOOR_RULE_IDS[carried]}`);
+    });
+
+    // Round-7 ratification finding: below the cap that fits every floor name, names are bounded and
+    // the rest counted; below the cap that fits the header and counts, the digest is a short
+    // diagnostic rather than a truncated inventory.
+    it('names omitted floor rules while they fit, counts the rest, and never truncates an inventory', () => {
+        for (const id of FLOOR_RULE_IDS) writeRule(id, `FIRST-${id}: ${'F'.repeat(400)}`);
+        const tight = instructionDigest(root, 1_400, config) as string;
+        expect(Buffer.byteLength(replyLine(tight), 'utf-8')).toBeLessThanOrEqual(1_400);
+        expect(tight).toMatch(/floor rules omitted: [a-z-]+(, [a-z-]+)*, \d+ more\./);
+        expect(instructionDigest(root, 200, config)).toBeNull();
+        for (const cap of [400, 800]) {
+            const d = instructionDigest(root, cap, config) as string;
+            expect(Buffer.byteLength(replyLine(d), 'utf-8')).toBeLessThanOrEqual(cap);
+            expect(d).not.toContain('[cut here]');
+            expect(d).toMatch(/did not fit|^A bounded digest/);
+            if (d.startsWith('A bounded digest')) expect(d).toMatch(/^User rules \(Iron Law blocks\): .*\.$/m);
+            else expect(d).not.toMatch(/User rules|Files:/);
+        }
     });
 });

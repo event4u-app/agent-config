@@ -451,7 +451,8 @@ export function instructionDigest(
         const frame = escBytes(frameOf(f));
         // A floor law block is placed whole or not at all: a cut law reads as a different law.
         // Placing one must leave room to name every floor rule not yet placed, so an omitted
-        // floor rule is always named rather than counted.
+        // floor rule is named whenever the cap holds every floor name; below that, the names
+        // that fit are given and the rest counted.
         if (f.rank === 0) {
             const after = floorQueue.filter((j) => j !== i && status[j] === 'omitted').map((j) => (found[j] as Found).label);
             if (frame + escBytes(f.body) + namesCost(after) > room) continue;
@@ -482,7 +483,15 @@ export function instructionDigest(
     if (!useNamed && floorOmitted.length === 0 && allocation.every((j) => (found[j] as Found).rank === 0)) {
         useNamed = namedBound() - escBytes(counted(true)) <= room;
     }
-    return fitEscaped(`${head}\n${useNamed ? named() : counted()}${sections.join('')}`, maxBytes - REPLY_OVERHEAD);
+    const fixed = `${head}\n${useNamed ? named() : counted()}`;
+    // Below the size of the header and its inventory, a short diagnostic replaces a truncated one.
+    if (escBytes(fixed) > maxBytes - REPLY_OVERHEAD) {
+        const note =
+            `The digest of the instruction files this subagent's definition omitted (omitClaudeMd) did not fit in ${maxBytes} bytes; ` +
+            "read the project's CLAUDE.md files and the user's CLAUDE.md and rules before relying on any instruction.";
+        return escBytes(note) <= maxBytes - REPLY_OVERHEAD ? note : null;
+    }
+    return fitEscaped(`${fixed}${sections.join('')}`, maxBytes - REPLY_OVERHEAD);
 }
 
 /** The reply line for one digest. */
