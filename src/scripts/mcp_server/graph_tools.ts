@@ -44,6 +44,8 @@ import * as path from 'node:path';
 import { changedFiles } from '../code_graph/cli.js';
 import { detectSources, graphState, pickSource } from '../code_graph/detect.js';
 import { graphHome } from '../code_graph/graph_home.js';
+import { advisoryImpact, whereUsed } from '../code_graph/estate_cli.js';
+import { openEstate } from '../code_graph/estate_index.js';
 import { resolveProjectRef } from '../code_graph/project_ref.js';
 import { readRegistry } from '../_lib/project_registry.js';
 import { resolvePath } from './path_util.js';
@@ -186,6 +188,11 @@ function num(args: Record<string, unknown>, key: string, dflt: number): number {
 function withProjectParam(tools: Record<string, BuiltinTool>): Record<string, BuiltinTool> {
     const out: Record<string, BuiltinTool> = {};
     for (const [name, t] of Object.entries(tools)) {
+        // The estate tool answers across every project already.
+        if (name === 'graph_estate') {
+            out[name] = t;
+            continue;
+        }
         const schema = t.input_schema as { properties?: Record<string, unknown> };
         out[name] = {
             ...t,
@@ -193,7 +200,7 @@ function withProjectParam(tools: Record<string, BuiltinTool>): Record<string, Bu
                 ...t.input_schema,
                 properties: {
                     ...(schema.properties ?? {}),
-                    project: { type: 'string', description: 'Another project: registered repo id, name or path. Default: this root.' },
+                    project: { type: 'string' },
                 },
             },
             handler: async (args, root) => {
@@ -214,8 +221,8 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         side_effect: 'shell',
         description:
             'What a diff can break: callers, dependents and test files reaching the ' +
-            'changed symbols. Walks only stated-fact edges, never a same-name guess, ' +
-            'and reports the guesses refused. Runs `git diff` for the rev.',
+            'changed symbols, over stated-fact edges only (refused guesses reported). ' +
+            'Runs `git diff` for the rev.',
         input_schema: {
             type: 'object',
             required: ['diff'],
@@ -248,13 +255,13 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         name: 'graph_tests_for',
         side_effect: 'ro',
         description:
-            'Which test files exercise a symbol, derived from a test file importing ' +
-            'it or its module. Empty means no test imports it — a finding, not an error.',
+            'Test files that exercise a symbol: a test file imports it or its module. ' +
+            'Empty means none does — a finding, not an error.',
         input_schema: {
             type: 'object',
             required: ['symbol'],
             properties: {
-                symbol: { type: 'string', description: 'Node id `<relpath>#<sym>`, label, or free text.' },
+                symbol: { type: 'string', description: 'Node id, label, or free text.' },
             },
             additionalProperties: false,
         },
@@ -270,16 +277,15 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         name: 'graph_dead',
         side_effect: 'ro',
         description:
-            'Symbols with no accepted reference that no declared entry point names. ' +
-            'REFUSES (status `refused`) while a source is unreadable: with no ' +
-            'exportedness recorded, an exported-but-unimported symbol is ' +
-            'indistinguishable from a dead one. Never a deletion recommendation.',
+            'Symbols no accepted reference and no declared entry point names. REFUSES ' +
+            '(status `refused`) while a source is unreadable: without recorded exportedness ' +
+            'an exported-but-unimported symbol looks dead. Never a deletion recommendation.',
         input_schema: {
             type: 'object',
             properties: {
                 entry_points: {
                     type: 'string',
-                    description: 'Path under this root to a newline-separated id/label list; `#` comments ok.',
+                    description: 'Path under this root: newline-separated ids or labels, `#` comments ok.',
                 },
                 accept_missing_exports: {
                     type: 'boolean',
@@ -346,15 +352,14 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         name: 'graph_query',
         side_effect: 'ro',
         description:
-            "A symbol's direct outgoing relations — calls, imports, uses, inherits — " +
-            'each line carrying its confidence and resolution mechanism. For "what ' +
-            'does this touch" before reading a file.',
+            "A symbol's direct outgoing relations (calls, imports, uses, inherits), each " +
+            'with its confidence and resolution mechanism: "what does this touch" before reading a file.',
         input_schema: {
             type: 'object',
             required: ['symbol'],
             properties: {
                 symbol: { type: 'string', description: 'Node id, label, or free text.' },
-                budget: { type: 'integer', minimum: 1, default: 1500, description: 'Token budget for lines.' },
+                budget: { type: 'integer', minimum: 1, default: 1500 },
             },
             additionalProperties: false,
         },
@@ -373,10 +378,9 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         name: 'graph_node',
         side_effect: 'ro',
         description:
-            'One symbol in full: where it is declared, what reaches it, what it ' +
-            'reaches, and how connected it is. Resolves EXACTLY (node id, then ' +
-            'label) and refuses anything it cannot — it never scores free text, ' +
-            'so an answer is always about the node you named.',
+            'One symbol in full: where it is declared, what reaches it, what it reaches, ' +
+            'how connected it is. Resolves EXACTLY (node id, then label) and refuses ' +
+            'anything else — never scores free text.',
         input_schema: {
             type: 'object',
             required: ['id'],
@@ -386,13 +390,13 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
                     type: 'string',
                     enum: ['in', 'out', 'both'],
                     default: 'both',
-                    description: 'Which edges to walk. `in` = who reaches it, `out` = what it reaches.',
+                    description: '`in` = who reaches it, `out` = what it reaches.',
                 },
                 depth: { type: 'integer', minimum: 1, maximum: 3, default: 1, description: 'Hop limit.' },
                 relation: {
                     type: 'string',
                     enum: RELATIONS,
-                    description: 'Restrict to one relation. Omit for all of them.',
+                    description: 'One relation only; omit for all.',
                 },
             },
             additionalProperties: false,
@@ -418,16 +422,15 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
         name: 'graph_path',
         side_effect: 'ro',
         description:
-            'The shortest relation chain between two symbols, direction preserved. ' +
-            'Answers "how does A reach B" without reading the files between. ' +
-            '`(no path found)` when unconnected is an answer.',
+            'The shortest relation chain between two symbols, direction kept: how A reaches ' +
+            'B without reading the files between. `(no path found)` is an answer.',
         input_schema: {
             type: 'object',
             required: ['from', 'to'],
             properties: {
                 from: { type: 'string', description: 'Start node id, label, or free text.' },
                 to: { type: 'string', description: 'Goal node id, label, or free text.' },
-                budget: { type: 'integer', minimum: 1, default: 1500, description: 'Token budget for lines.' },
+                budget: { type: 'integer', minimum: 1, default: 1500 },
             },
             additionalProperties: false,
         },
@@ -502,6 +505,37 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
             const r = areaReport(map.model, q, home.kind === 'project' ? undefined : home.mapDir);
             if ('refusal' in r) return { status: 'refused', refusal: r.refusal, candidates: r.candidates };
             return { status: 'ok', drawn_at_commit: map.meta.commit, ...r };
+        },
+    },
+    graph_estate: {
+        name: 'graph_estate',
+        side_effect: 'ro',
+        description:
+            'Estate index across registered projects: package users, where a name is used, advisory ' +
+            'reach. Other graph tools take `project`.',
+        input_schema: {
+            type: 'object',
+            required: ['query'],
+            properties: {
+                query: { type: 'string', enum: ['where-used', 'projects-using', 'advisory-impact'] },
+                name: { type: 'string' },
+            },
+            additionalProperties: false,
+        },
+        handler: async (args) => {
+            const q = str(args, 'query');
+            const name = str(args, 'name');
+            if (q !== 'advisory-impact' && name === '') return { status: 'error', error: `${q || 'query'} needs a name` };
+            const db = openEstate();
+            if (!db) return { status: 'unavailable', error: 'no estate index — `agent-config code-graph projects index on`, then refresh each project' };
+            try {
+                if (q === 'projects-using') return { status: 'ok', projects: db.projectsUsing(name) };
+                if (q === 'where-used') return { status: 'ok', ...whereUsed(db, name) };
+                if (q === 'advisory-impact') return { status: 'ok', impact: advisoryImpact(db, name === '' ? null : name) };
+                return { status: 'error', error: `unknown query: ${q}` };
+            } finally {
+                db.close();
+            }
         },
     },
 });

@@ -239,8 +239,7 @@
             "type": "string"
           },
           "project": {
-            "type": "string",
-            "description": "Another project: registered repo id, name or path. Default: this root."
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -251,7 +250,7 @@
     },
     {
       "name": "graph_dead",
-      "description": "Symbols with no accepted reference that no declared entry point names. REFUSES (status `refused`) while a source is unreadable: with no exportedness recorded, an exported-but-unimported symbol is indistinguishable from a dead one. Never a deletion recommendation.",
+      "description": "Symbols no accepted reference and no declared entry point names. REFUSES (status `refused`) while a source is unreadable: without recorded exportedness an exported-but-unimported symbol looks dead. Never a deletion recommendation.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -261,7 +260,7 @@
         "properties": {
           "entry_points": {
             "type": "string",
-            "description": "Path under this root to a newline-separated id/label list; `#` comments ok."
+            "description": "Path under this root: newline-separated ids or labels, `#` comments ok."
           },
           "accept_missing_exports": {
             "type": "boolean",
@@ -269,8 +268,38 @@
             "description": "Answer anyway, accepting the gap. Never a default."
           },
           "project": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "annotations": {
+        "readOnlyHint": true
+      }
+    },
+    {
+      "name": "graph_estate",
+      "description": "Estate index across registered projects: package users, where a name is used, advisory reach. Other graph tools take `project`.",
+      "side_effect": "ro",
+      "implemented_on": [
+        "stdio"
+      ],
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "query"
+        ],
+        "properties": {
+          "query": {
             "type": "string",
-            "description": "Another project: registered repo id, name or path. Default: this root."
+            "enum": [
+              "where-used",
+              "projects-using",
+              "advisory-impact"
+            ]
+          },
+          "name": {
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -281,7 +310,7 @@
     },
     {
       "name": "graph_impact",
-      "description": "What a diff can break: callers, dependents and test files reaching the changed symbols. Walks only stated-fact edges, never a same-name guess, and reports the guesses refused. Runs `git diff` for the rev.",
+      "description": "What a diff can break: callers, dependents and test files reaching the changed symbols, over stated-fact edges only (refused guesses reported). Runs `git diff` for the rev.",
       "side_effect": "shell",
       "implemented_on": [
         "stdio"
@@ -308,8 +337,7 @@
             "description": "Instead return changed symbols no test imports."
           },
           "project": {
-            "type": "string",
-            "description": "Another project: registered repo id, name or path. Default: this root."
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -329,8 +357,7 @@
         "type": "object",
         "properties": {
           "project": {
-            "type": "string",
-            "description": "Another project: registered repo id, name or path. Default: this root."
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -341,7 +368,7 @@
     },
     {
       "name": "graph_node",
-      "description": "One symbol in full: where it is declared, what reaches it, what it reaches, and how connected it is. Resolves EXACTLY (node id, then label) and refuses anything it cannot — it never scores free text, so an answer is always about the node you named.",
+      "description": "One symbol in full: where it is declared, what reaches it, what it reaches, how connected it is. Resolves EXACTLY (node id, then label) and refuses anything else — never scores free text.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -364,7 +391,7 @@
               "both"
             ],
             "default": "both",
-            "description": "Which edges to walk. `in` = who reaches it, `out` = what it reaches."
+            "description": "`in` = who reaches it, `out` = what it reaches."
           },
           "depth": {
             "type": "integer",
@@ -392,11 +419,10 @@
               "injects",
               "documents"
             ],
-            "description": "Restrict to one relation. Omit for all of them."
+            "description": "One relation only; omit for all."
           },
           "project": {
-            "type": "string",
-            "description": "Another project: registered repo id, name or path. Default: this root."
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -407,7 +433,7 @@
     },
     {
       "name": "graph_path",
-      "description": "The shortest relation chain between two symbols, direction preserved. Answers \"how does A reach B\" without reading the files between. `(no path found)` when unconnected is an answer.",
+      "description": "The shortest relation chain between two symbols, direction kept: how A reaches B without reading the files between. `(no path found)` is an answer.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -430,12 +456,10 @@
           "budget": {
             "type": "integer",
             "minimum": 1,
-            "default": 1500,
-            "description": "Token budget for lines."
+            "default": 1500
           },
           "project": {
-            "type": "string",
-            "description": "Another project: registered repo id, name or path. Default: this root."
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -446,7 +470,7 @@
     },
     {
       "name": "graph_query",
-      "description": "A symbol's direct outgoing relations — calls, imports, uses, inherits — each line carrying its confidence and resolution mechanism. For \"what does this touch\" before reading a file.",
+      "description": "A symbol's direct outgoing relations (calls, imports, uses, inherits), each with its confidence and resolution mechanism: \"what does this touch\" before reading a file.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -464,12 +488,10 @@
           "budget": {
             "type": "integer",
             "minimum": 1,
-            "default": 1500,
-            "description": "Token budget for lines."
+            "default": 1500
           },
           "project": {
-            "type": "string",
-            "description": "Another project: registered repo id, name or path. Default: this root."
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -480,7 +502,7 @@
     },
     {
       "name": "graph_tests_for",
-      "description": "Which test files exercise a symbol, derived from a test file importing it or its module. Empty means no test imports it — a finding, not an error.",
+      "description": "Test files that exercise a symbol: a test file imports it or its module. Empty means none does — a finding, not an error.",
       "side_effect": "ro",
       "implemented_on": [
         "stdio"
@@ -493,11 +515,10 @@
         "properties": {
           "symbol": {
             "type": "string",
-            "description": "Node id `<relpath>#<sym>`, label, or free text."
+            "description": "Node id, label, or free text."
           },
           "project": {
-            "type": "string",
-            "description": "Another project: registered repo id, name or path. Default: this root."
+            "type": "string"
           }
         },
         "additionalProperties": false

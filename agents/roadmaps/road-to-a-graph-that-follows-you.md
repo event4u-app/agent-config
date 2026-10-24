@@ -169,7 +169,7 @@ plan AC improvements automatically when a source repository updates.
       registry and `graphHome`. Default stays the server root.
       verify: a test under tests/scripts/mcp_server gains a case querying a second fixture project by
       id; every existing graph-tool test passes unchanged.
-- [ ] **5.2 `noGraph` points at what exists.** In a root without a graph, the answer
+- [x] **5.2 `noGraph` points at what exists.** In a root without a graph, the answer <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/mcp_server/graph_tools.ts -->
       lists matching registered projects instead of only "run build".
       verify: a test with a registry of two projects asserts both appear.
 - [ ] **5.3 Estate queries.** `code-graph estate where-used`, `projects-using`, and
@@ -336,6 +336,7 @@ owner's machine; what the repository tracks is source-free.
 | A-2.4a | reversible-technical | agent | Hooks in the dispatch bundle (context nudge, turn-end feeder, session-start refresh) resolve project homes only (`projectHome`), and `auto-refresh on` refuses a root without one; CLI and MCP use the full `graphHome` | routing the hooks through `graphHome` measured the dispatch bundle at 1,555,029 B against a 1,551,000 B ceiling and the refresh chunk at 21,569 B against 15,400 B (`check_hook_bundle_composition`); project-only routing measures 1,550,405 B and 15,260 B | a raise of the bundle ceiling is ratified, or a foreign-repository user asks for session-start nudges |
 | A-2.4b | reversible-technical | agent | Existing test fixtures that model a project gain an `agents/` directory instead of asserting the new user-global branch; the user-global branch is covered by the new graph_home and foreign-repository tests | the fixtures (map, refresh, refresh lock, consumer root, bench) are projects in intent; a bare temp dir is now a foreign root by definition (ADR-299) | — |
 | A-4.2 | reversible-technical | agent | "Exported symbols" are the top-level declarations outside test files (class, interface, trait, function, constant, type, enum — never a member): the graph records no exportedness. Rows key a project by an integer and an export kind by its index | `dead` refuses for the same missing exportedness; with text ids and kind names the 4.4 fixture estate measured 5.5 % of its graph JSON, with integer keys 1.35 % | the graph starts recording exportedness |
+| A-5.3 | reversible-technical | agent | `graph_estate` joins the MCP surface, and the kernel tools/list payload stays under its 4,900-token band by trimming, not widening: `project` carries no schema description (stated once in `graph_estate`), and the graph tool descriptions were tightened without dropping a claim | `tests/scripts/mcp_lite_tools.test.ts` read 5,208 tok untrimmed, 4,896 after | the band is re-derived, or a host is found ignoring an undescribed parameter |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->

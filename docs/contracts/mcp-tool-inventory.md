@@ -14,9 +14,9 @@ keep-beta-until: 2026-08-14
 
 ## Summary
 
-- **Total tools:** 39
-- **By transport:** stdio=28
-- **By side-effect:** fs-write=8, ro=27, shell=4
+- **Total tools:** 40
+- **By transport:** stdio=29
+- **By side-effect:** fs-write=8, ro=28, shell=4
 - **Discovery-only stubs (no implementation):** 11
 
 ## Tools
@@ -33,35 +33,36 @@ keep-beta-until: 2026-08-14
 | `conformance_check` | `ro` | stdio | [`consumer_tool_catalog.json:162`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L162) | [`tools.ts:1655`](../../src/scripts/mcp_server/tools.ts#L1655) |
 | `council_estimate` | `ro` | stdio | [`consumer_tool_catalog.json:178`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L178) | [`tools.ts:1693`](../../src/scripts/mcp_server/tools.ts#L1693) |
 | `doctor_report` | `ro` | stdio | [`consumer_tool_catalog.json:210`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L210) | [`tools.ts:1640`](../../src/scripts/mcp_server/tools.ts#L1640) |
-| `graph_area` | `ro` | stdio | [`consumer_tool_catalog.json:226`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L226) | [`graph_tools.ts:484`](../../src/scripts/mcp_server/graph_tools.ts#L484) |
-| `graph_dead` | `ro` | stdio | [`consumer_tool_catalog.json:253`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L253) | [`graph_tools.ts:269`](../../src/scripts/mcp_server/graph_tools.ts#L269) |
-| `graph_impact` | `shell` | stdio | [`consumer_tool_catalog.json:283`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L283) | [`graph_tools.ts:212`](../../src/scripts/mcp_server/graph_tools.ts#L212) |
-| `graph_map_status` | `ro` | stdio | [`consumer_tool_catalog.json:322`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L322) | [`graph_tools.ts:445`](../../src/scripts/mcp_server/graph_tools.ts#L445) |
-| `graph_node` | `ro` | stdio | [`consumer_tool_catalog.json:343`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L343) | [`graph_tools.ts:372`](../../src/scripts/mcp_server/graph_tools.ts#L372) |
-| `graph_path` | `ro` | stdio | [`consumer_tool_catalog.json:409`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L409) | [`graph_tools.ts:417`](../../src/scripts/mcp_server/graph_tools.ts#L417) |
-| `graph_query` | `ro` | stdio | [`consumer_tool_catalog.json:448`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L448) | [`graph_tools.ts:345`](../../src/scripts/mcp_server/graph_tools.ts#L345) |
-| `graph_tests_for` | `ro` | stdio | [`consumer_tool_catalog.json:482`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L482) | [`graph_tools.ts:247`](../../src/scripts/mcp_server/graph_tools.ts#L247) |
-| `lint_skills` | `ro` | stdio | [`consumer_tool_catalog.json:510`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L510) | [`tools.ts:1206`](../../src/scripts/mcp_server/tools.ts#L1206) |
-| `list_commands` | `ro` | stdio | [`consumer_tool_catalog.json:534`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L534) | [`tools.ts:1481`](../../src/scripts/mcp_server/tools.ts#L1481) |
-| `list_rules` | `ro` | stdio | [`consumer_tool_catalog.json:550`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L550) | [`tools.ts:1497`](../../src/scripts/mcp_server/tools.ts#L1497) |
-| `list_skills` | `ro` | stdio | [`consumer_tool_catalog.json:566`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L566) | [`tools.ts:1465`](../../src/scripts/mcp_server/tools.ts#L1465) |
-| `memory_get` | `ro` | stdio | [`consumer_tool_catalog.json:582`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L582) | [`tools.ts:1425`](../../src/scripts/mcp_server/tools.ts#L1425) |
-| `memory_lookup` | `ro` | stdio | [`consumer_tool_catalog.json:610`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L610) | [`tools.ts:1365`](../../src/scripts/mcp_server/tools.ts#L1365) |
-| `memory_signal` | `fs-write` | stdio | [`consumer_tool_catalog.json:665`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L665) | [`tools.ts:1540`](../../src/scripts/mcp_server/tools.ts#L1540) |
-| `memory_status` | `ro` | stdio | [`consumer_tool_catalog.json:699`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L699) | [`tools.ts:1450`](../../src/scripts/mcp_server/tools.ts#L1450) |
-| `mine_session` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:715`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L715) | _stub-only_ |
-| `read_resource_body` | `ro` | stdio | [`consumer_tool_catalog.json:722`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L722) | [`tools.ts:1514`](../../src/scripts/mcp_server/tools.ts#L1514) |
-| `roadmap_archive` | `fs-write` | stdio | [`consumer_tool_catalog.json:746`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L746) | [`tools.ts:1599`](../../src/scripts/mcp_server/tools.ts#L1599) |
-| `roadmap_progress` | `fs-write` | stdio | [`consumer_tool_catalog.json:762`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L762) | [`tools.ts:1575`](../../src/scripts/mcp_server/tools.ts#L1575) |
-| `run_quality_checks` | `shell` | _(stub)_ | [`consumer_tool_catalog.json:784`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L784) | _stub-only_ |
-| `run_tests` | `shell` | stdio | [`consumer_tool_catalog.json:791`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L791) | [`tools.ts:1723`](../../src/scripts/mcp_server/tools.ts#L1723) |
-| `skill_trigger_eval` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:816`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L816) | _stub-only_ |
-| `suggest_command` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:823`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L823) | _stub-only_ |
-| `suggest_skill_for_task` | `ro` | stdio | [`consumer_tool_catalog.json:830`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L830) | _stub-only_ |
-| `sync_agent_settings` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:860`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L860) | _stub-only_ |
-| `sync_gitignore` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:867`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L867) | _stub-only_ |
-| `telemetry_report` | `ro` | stdio | [`consumer_tool_catalog.json:874`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L874) | [`tools.ts:1670`](../../src/scripts/mcp_server/tools.ts#L1670) |
-| `update_form_request_messages` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:897`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L897) | _stub-only_ |
+| `graph_area` | `ro` | stdio | [`consumer_tool_catalog.json:226`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L226) | [`graph_tools.ts:487`](../../src/scripts/mcp_server/graph_tools.ts#L487) |
+| `graph_dead` | `ro` | stdio | [`consumer_tool_catalog.json:252`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L252) | [`graph_tools.ts:276`](../../src/scripts/mcp_server/graph_tools.ts#L276) |
+| `graph_estate` | `ro` | stdio | [`consumer_tool_catalog.json:281`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L281) | [`graph_tools.ts:510`](../../src/scripts/mcp_server/graph_tools.ts#L510) |
+| `graph_impact` | `shell` | stdio | [`consumer_tool_catalog.json:312`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L312) | [`graph_tools.ts:219`](../../src/scripts/mcp_server/graph_tools.ts#L219) |
+| `graph_map_status` | `ro` | stdio | [`consumer_tool_catalog.json:350`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L350) | [`graph_tools.ts:448`](../../src/scripts/mcp_server/graph_tools.ts#L448) |
+| `graph_node` | `ro` | stdio | [`consumer_tool_catalog.json:370`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L370) | [`graph_tools.ts:377`](../../src/scripts/mcp_server/graph_tools.ts#L377) |
+| `graph_path` | `ro` | stdio | [`consumer_tool_catalog.json:435`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L435) | [`graph_tools.ts:421`](../../src/scripts/mcp_server/graph_tools.ts#L421) |
+| `graph_query` | `ro` | stdio | [`consumer_tool_catalog.json:472`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L472) | [`graph_tools.ts:351`](../../src/scripts/mcp_server/graph_tools.ts#L351) |
+| `graph_tests_for` | `ro` | stdio | [`consumer_tool_catalog.json:504`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L504) | [`graph_tools.ts:254`](../../src/scripts/mcp_server/graph_tools.ts#L254) |
+| `lint_skills` | `ro` | stdio | [`consumer_tool_catalog.json:531`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L531) | [`tools.ts:1206`](../../src/scripts/mcp_server/tools.ts#L1206) |
+| `list_commands` | `ro` | stdio | [`consumer_tool_catalog.json:555`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L555) | [`tools.ts:1481`](../../src/scripts/mcp_server/tools.ts#L1481) |
+| `list_rules` | `ro` | stdio | [`consumer_tool_catalog.json:571`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L571) | [`tools.ts:1497`](../../src/scripts/mcp_server/tools.ts#L1497) |
+| `list_skills` | `ro` | stdio | [`consumer_tool_catalog.json:587`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L587) | [`tools.ts:1465`](../../src/scripts/mcp_server/tools.ts#L1465) |
+| `memory_get` | `ro` | stdio | [`consumer_tool_catalog.json:603`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L603) | [`tools.ts:1425`](../../src/scripts/mcp_server/tools.ts#L1425) |
+| `memory_lookup` | `ro` | stdio | [`consumer_tool_catalog.json:631`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L631) | [`tools.ts:1365`](../../src/scripts/mcp_server/tools.ts#L1365) |
+| `memory_signal` | `fs-write` | stdio | [`consumer_tool_catalog.json:686`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L686) | [`tools.ts:1540`](../../src/scripts/mcp_server/tools.ts#L1540) |
+| `memory_status` | `ro` | stdio | [`consumer_tool_catalog.json:720`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L720) | [`tools.ts:1450`](../../src/scripts/mcp_server/tools.ts#L1450) |
+| `mine_session` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:736`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L736) | _stub-only_ |
+| `read_resource_body` | `ro` | stdio | [`consumer_tool_catalog.json:743`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L743) | [`tools.ts:1514`](../../src/scripts/mcp_server/tools.ts#L1514) |
+| `roadmap_archive` | `fs-write` | stdio | [`consumer_tool_catalog.json:767`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L767) | [`tools.ts:1599`](../../src/scripts/mcp_server/tools.ts#L1599) |
+| `roadmap_progress` | `fs-write` | stdio | [`consumer_tool_catalog.json:783`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L783) | [`tools.ts:1575`](../../src/scripts/mcp_server/tools.ts#L1575) |
+| `run_quality_checks` | `shell` | _(stub)_ | [`consumer_tool_catalog.json:805`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L805) | _stub-only_ |
+| `run_tests` | `shell` | stdio | [`consumer_tool_catalog.json:812`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L812) | [`tools.ts:1723`](../../src/scripts/mcp_server/tools.ts#L1723) |
+| `skill_trigger_eval` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:837`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L837) | _stub-only_ |
+| `suggest_command` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:844`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L844) | _stub-only_ |
+| `suggest_skill_for_task` | `ro` | stdio | [`consumer_tool_catalog.json:851`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L851) | _stub-only_ |
+| `sync_agent_settings` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:881`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L881) | _stub-only_ |
+| `sync_gitignore` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:888`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L888) | _stub-only_ |
+| `telemetry_report` | `ro` | stdio | [`consumer_tool_catalog.json:895`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L895) | [`tools.ts:1670`](../../src/scripts/mcp_server/tools.ts#L1670) |
+| `update_form_request_messages` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:918`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L918) | _stub-only_ |
 
 ## Glossary
 

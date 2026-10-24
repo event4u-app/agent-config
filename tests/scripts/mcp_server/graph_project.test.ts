@@ -53,6 +53,8 @@ afterEach(() => {
 describe('a project parameter on the graph tools (5.1)', () => {
     it('every graph tool declares an optional `project`', () => {
         for (const t of Object.values(GRAPH_TOOLS)) {
+            // The estate tool answers across every project; it has no single one to select.
+            if (t.name === 'graph_estate') continue;
             const s = t.input_schema as { properties: Record<string, unknown>; required?: string[] };
             expect(s.properties['project'], t.name).toBeDefined();
             expect(s.required ?? [], t.name).not.toContain('project');

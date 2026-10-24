@@ -35,6 +35,7 @@ const NAMES = [
     'graph_node',
     'graph_map_status',
     'graph_area',
+    'graph_estate',
 ] as const;
 
 const dirs: string[] = [];
@@ -80,13 +81,14 @@ describe('4.1 — the graph tools are registered', () => {
         expect(Object.keys(GRAPH_TOOLS).sort()).toStrictEqual([...NAMES].sort());
     });
 
-    it('the catalogue carries 39 tools, and all the graph tools are among them', () => {
+    it('the catalogue carries 40 tools, and all the graph tools are among them', () => {
         // 36 → 37 with `graph_node` (road-to-a-graph-that-feeds-the-gate 3.1);
-        // 37 → 39 with `graph_map_status` + `graph_area` (road-to-a-map-that-draws-itself 5.2).
+        // 37 → 39 with `graph_map_status` + `graph_area` (road-to-a-map-that-draws-itself 5.2);
+        // 39 → 40 with `graph_estate` (road-to-a-graph-that-follows-you 5.3).
         // The catalogue is generated from ALLOWLIST by `build_mcp_catalog`, so
         // this count moves only when a real tool is registered.
         const tools = (catalog as { tools: { name: string; implemented_on: string[] }[] }).tools;
-        expect(tools).toHaveLength(39);
+        expect(tools).toHaveLength(40);
         const byName = new Map(tools.map((t) => [t.name, t]));
         for (const n of NAMES) {
             expect(byName.get(n), `${n} missing from the catalogue`).toBeDefined();
@@ -102,7 +104,7 @@ describe('4.1 — the graph tools are registered', () => {
         // has no "read-only subprocess" value, and understating the mechanism is
         // the failure a capability enum exists to prevent.
         expect(ALLOWLIST['graph_impact']?.side_effect).toBe('shell');
-        for (const n of ['graph_tests_for', 'graph_dead', 'graph_query', 'graph_path', 'graph_node', 'graph_map_status', 'graph_area']) {
+        for (const n of ['graph_tests_for', 'graph_dead', 'graph_query', 'graph_path', 'graph_node', 'graph_map_status', 'graph_area', 'graph_estate']) {
             expect(ALLOWLIST[n]?.side_effect, `${n} should be read-only`).toBe('ro');
         }
     });
@@ -164,6 +166,10 @@ describe('4.1 — a fixture session, dispatched through the real ToolCache', () 
         expect(ms['map']).toBe('absent');
         const ar = await cache.dispatch('graph_area', { area: 'a1' }, root);
         expect(ar['status']).toBe('unavailable');
+
+        // No estate index on this machine: the estate tool answers, and says so.
+        const es = await cache.dispatch('graph_estate', { query: 'projects-using', name: 'vitest' }, root);
+        expect(es['status']).toBe('unavailable');
 
         const rows = telemetryRows(root);
         const dispatched = rows.filter((r) => NAMES.includes(r['tool_name'] as (typeof NAMES)[number]));

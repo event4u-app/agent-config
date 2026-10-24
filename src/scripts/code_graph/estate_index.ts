@@ -295,6 +295,20 @@ export class EstateReader {
         return rows.map((r) => ({ ...r, declared_in: r.declared_in ? r.declared_in.split('\n').sort() : [], imports: Number(r.imports) }));
     }
 
+    /** Projects that reference `name` without resolving it — candidates for a symbol another project declares. */
+    referrers(name: string): Array<{ id: string; name: string; root: string }> {
+        return this.db
+            .prepare('SELECT DISTINCT p.id, p.name, p.root FROM refs r JOIN projects p ON p.key = r.project WHERE r.name = ? ORDER BY p.name, p.id')
+            .all(name) as Array<{ id: string; name: string; root: string }>;
+    }
+
+    /** Projects that publish package `pkg`. */
+    publishers(pkg: string): Array<{ id: string; name: string; root: string; ecosystem: string }> {
+        return this.db
+            .prepare('SELECT DISTINCT p.id, p.name, p.root, b.ecosystem FROM publishes b JOIN projects p ON p.key = b.project WHERE b.package = ? ORDER BY p.name, p.id')
+            .all(pkg) as Array<{ id: string; name: string; root: string; ecosystem: string }>;
+    }
+
     /** Projects that declare a top-level symbol named `name`. */
     exporters(name: string): Array<{ id: string; name: string; root: string; kind: string }> {
         const rows = this.db
