@@ -143,6 +143,29 @@ describe('SourceCodebook', () => {
     });
 });
 
+describe('SourceCodebook stable ids (road-to-a-graph-that-follows-you step 7.2)', () => {
+    const key = 'k'.repeat(32);
+
+    it('two codebooks with one id key agree on an id, across rounds and spellings', () => {
+        const a = new SourceCodebook(key, { idKey: key });
+        const b = new SourceCodebook(key, { idKey: key });
+        b.code('https://example.com/other');
+        const id = a.code('https://github.com/acme/widget');
+        expect(id).toMatch(/^src_[0-9a-f]{10}$/);
+        expect(b.code('git@github.com:acme/widget.git')).toBe(id);
+        const intake = a.intakeMarkdown();
+        const token = new RegExp(`${id}: (ENC1\\S+)`).exec(intake)?.[1] as string;
+        expect(decrypt(token, key)).toBe('https://github.com/acme/widget');
+        expect(intake).not.toContain('acme');
+    });
+
+    it('without an id key keeps per-round S-codes and labels them per-round', () => {
+        const book = new SourceCodebook(key);
+        expect(book.code('https://example.com/a')).toBe('S1');
+        expect(book.intakeMarkdown()).toMatch(/per-round/);
+    });
+});
+
 describe('a connected fixture run (step 4.2b verify)', () => {
     it('leaves one coded web row in the ledger and no source name in it', async () => {
         const book = new SourceCodebook('k'.repeat(32));
