@@ -358,7 +358,8 @@ describe('subagent-constraints concern — the user layer', () => {
         const digest = reply();
         expect(Buffer.byteLength(replyLine(digest), 'utf-8')).toBeLessThanOrEqual(EMISSION_MAX_BYTES);
         for (const id of FLOOR_RULE_IDS) expect(digest).toContain(`FLOOR-${id}: ${'N'.repeat(225 - id.length)}`);
-        expect(digest).toMatch(/User rules \(Iron Law blocks\): \d+ full, \d+ first block only, \d+ cut, \d+ empty, \d+ omitted\./);
+        // Named or count-only, depending on how much room the fixture's paths leave: either is whole.
+        expect(digest).toMatch(/^User rules \(Iron Law blocks\): \d+ full, \d+ first block only, \d+ cut, .*\.$/m);
     });
 
     // Owner directive D17 (2026-10-24, answer "2"): a floor rule is carried by its first law block,

@@ -33,7 +33,7 @@ is the output of `ratification_header --seat anthropic=ratified --seat openai=ra
   each rule under `<config dir>/rules/` by its Iron Law blocks. A user file can permit as well as
   forbid; the concern grants no tool, file or process permission and writes nothing, so
   `effect: context` stands. Both seats classified the change that way and approved it.
-- **Priority.** The first law block of each `FLOOR_RULE_IDS` rule (the three safety-floor rules,
+- **Priority.** The first law block of each rule in the concern's floor list (the three safety-floor rules,
   then the consequence-class rules alphabetically; owner decisions D17 and D18), placed whole or left
   out, later blocks not carried and marked; then the project files nearest first; then the user
   files; then every other rule. Only a count-only inventory is reserved ahead of the floor laws;
