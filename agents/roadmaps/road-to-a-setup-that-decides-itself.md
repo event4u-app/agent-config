@@ -304,7 +304,6 @@ with that file.
 - [x] **4.6c The settings-surface snapshot waits on the cut.**
   Two cases of `tests/scripts/consumer_matrix_settings_delta.test.ts` were red until the next cut wrote the released surface; the snapshot's only writer is `release.ts`. Landed 2026-10-24: `release: 17.0.0` (`14bd7c7db3`) carries the three removed keys under `removedKeys`; `npx vitest run tests/scripts/consumer_matrix_settings_delta.test.ts` -> 10/10 at `fb54c2052b`. Reasoning and the one test edit made before the cut: `agents/evidence/analysis/setup-4-6c-surface-snapshot.md`.
   verify: after the next cut, the case is green with no change to the test.
-<!-- blocked-by: projection-mode-removal-waits-on-second-host-reach -->
 - [ ] **4.7 `projection.mode` last.** Removed only after the skills roadmap's
   completeness question is answered; on hosts with a listing lever, scoping moves
   to visibility; elsewhere the active profile decides, reversing the template's
@@ -329,7 +328,7 @@ with that file.
 >
 > **Re-screened 2026-10-20, unchanged in substance and narrower in what is missing.** 0.1 and 0.2 have both landed, so the *today* arm and the corpus exist. What the *computed* arm still needs is a machine on which the decision function can return anything but `delivery-unobserved`, and that needs the 1.1 binding plus an observed effect row — neither of which a lane produces by working harder. 5.1 could be drafted today; it could not be FROZEN, because its own verify requires a council review and the `anthropic` seat's quota was exhausted on the day. So Phase 5 is left untouched rather than half-written: a pre-registration that cannot be frozen is a document that invites being edited after the first reading, which is the one thing a pre-registration exists to prevent.
 
-- [ ] **5.1 Pre-register.** Arms per host: today (0.1) vs computed (Phase 3).
+- [x] **5.1 Pre-register.** Arms per host: today (0.1) vs computed (Phase 3).
   Primary: host-graded and conformance cases with D2's margin fixed before the
   run; repeated runs; an evaluator independent of the implementation; interval
   reported. Critical: zero regressions on safety-floor, consequence-class and
@@ -342,6 +341,7 @@ with that file.
   session start, the host's size warning present or absent.
   verify: the pre-registration is hashed before the first run and reviewed by
   the council before it is frozen.
+  Landed 2026-10-24: `agents/evidence/analysis/setup-phase5-preregistration.md`, frozen at `fd44cd7ff7`, sha-256 `7edbb97e5a164255bcc291840086ec642fc1db6ac80fa098b884974abda75453`, council 2/2 `freeze` (D13).
 - [ ] **5.2 Run under the existing spend and independence rules.**
   verify: the result carries the claims gate's honesty label.
 - [ ] **5.3 Enable on the record.** 3.3's promotion is enabled for consumers only
@@ -407,7 +407,7 @@ with that file.
 
 <!-- asked: 2026-10-20 | record: docs/decisions/ADR-289-skills-owe-reach-not-presence.md -->
 
-- **Status:** open — raised 2026-10-20 by the Phase 4 drain lane on reading ADR-289's condition against the tree
+- **Status:** resolved — re-checked live 2026-10-24: `second-host-unlisted-reachability` is resolved with remedy (a) (AI council 2/2, 2026-10-20, in the archived skills roadmap) and `agent-config doctor --check skill-reach` counts `unreachable 0` on both hosts. Step 4.7 is unblocked and, per this entry, closes in its own change. Was: open — raised 2026-10-20 by the Phase 4 drain lane on reading ADR-289's condition against the tree
 - **Owner:** council
 - **Class:** 2
 - **Blocks:** step 4.7 and, through it, AC-1.
@@ -432,6 +432,7 @@ with that file.
 | D9 | reversible-technical | agent | 0.1's fixture is taken from a scratch-`HOME` global install, the only consumer scope (ADR-020). It excludes the install receipt, lock and log (each carries an install time), the scratch root (recorded as `<HOME>`) and the host's own version (a machine property, not a commit property) | Two full runs at `89e094819` compared byte-equal; at `d760ecbde` the same reader reproduces the step's 106 / 369,415 claude-code row | a field outside the exclusion set is found to vary between runs at one commit |
 | D11 | reversible-technical | council:agents/evidence/council/setup-project-tree-form-source-20261024.md | The project tree keeps `project-tree-form.json` as its source, with `projectTreeForm()` on the live path, verdict provenance carried as `scope: 'project-tree'` rather than read from a reason string, and `AGENT_CONFIG_PROJECT_TREE_FORM=full` as the rollback | AI council 2026-10-24, anthropic + openai, design mode, two rounds, 2/2 for (c), $0.00; supersedes the one-seat reading of 2026-10-20 | a project-tree observer exists and contradicts ADR-267, or parity, reachability or near-miss results regress |
 | D12 | reversible-technical | agent | 3.3's promotion is gated by a shipped switch (`layer-form-promotion.json`, off) that 5.3 flips, not by the absence of evidence alone; demotion is never gated; the ownership ledger is re-recorded on every rewrite | 5.3 enables promotion "on the record", which a decision function that could already return `thinned` on a fresh observed row would pre-empt; an un-re-recorded rewrite reads as a user edit to the next install (`decideDeployWrite`) | 5.3 lands, or the installer gains its own recognition of package-written stubs |
+| D13 | contested-technical | council:agents/evidence/council/setup-prereg-review-20261024.md | 5.1's primary reads the three present corpus sources; D2's 1 % candidate margin is replaced by zero tolerance on every source, because 239 non-critical matrix positives cannot power it (zero regressions bound at 1.25 %) — D2's own revisit condition | Council 2/2 twice on 2026-10-24: the endpoint (`setup-prereg-primary-endpoint-20261024.md`) and three review rounds, frozen 2/2 in round 3; stricter than D2, no computed-arm data seen | a host-graded case set is committed, or the frozen corpus or scorer changes |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->
@@ -461,6 +462,7 @@ with that file.
   has a reachable `auto` value that derives from the active-pack set, so
   retiring it is a different question from deriving a fixed list, and it needs
   its own step rather than being folded into one that did not ask about it.
+  Routed 2026-10-24: AI council 2/2 recommends a retirement step (derive the pack axis from the active-pack set, tombstone, one-window read, next major), and both seats classify it owner-reserved — removing a public settings key is a compatibility commitment. With the owner: `agents/evidence/council/setup-rule-packs-key-20261024.md`.
 - [x] AC-2 — 3.1 returns `full` whenever any of its conditions fails, and for
   every consequence-class and safety-floor rule under every input.
 - [ ] AC-3 — 5.2 reads non-inferior under D2, or consumers stay full and the
