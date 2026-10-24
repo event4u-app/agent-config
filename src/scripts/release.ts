@@ -128,6 +128,8 @@ import {
 import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import type { CommitRecord, ImpactTrailers } from './_lib/consumer_impact.js';
 import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, is_breaking_commit, parse_commit_log, parse_impact_trailers, write_impact_map } from './_lib/consumer_impact.js';
+import { span_bump } from './_lib/impact_bump.js';
+import { classify_surfaces, parse_name_status, removed_setting_keys, settings_key_paths, type MajorSurface } from './_lib/major_surface.js';
 import { preflightPosition } from './_lib/release_position.js';
 import { TAG_TRIGGERED_WORKFLOWS, dispatchTagWorkflows } from './_lib/release_tag_dispatch.js';
 import {
@@ -404,6 +406,7 @@ class Plan {
         // current era body has grown past CURRENT_ERA_BODY_CAP. null for
         // patch releases and for minor/major bumps where the era still fits.
         public readonly split_plan: SplitPlan | null = null,
+        public readonly surfaces: ReadonlySet<MajorSurface> = new Set(),
     ) {}
 }
 
@@ -460,17 +463,19 @@ function commit_from_record({ sha, subject, body }: CommitRecord): Commit {
     return new Commit(sha, m.groups!['type'] as string, scope, m.groups!['subject'] as string, breaking, trailers);
 }
 
-/** Derive the semver bump from commit types (for preview only). */
-function infer_bump(commits: readonly Commit[]): string {
-    if (commits.some((c) => c.breaking)) {
-        return 'major';
-    }
-    for (const [, level, types] of SECTIONS) {
-        if (level === 'minor' && commits.some((c) => types.includes(c.type))) {
-            return 'minor';
-        }
-    }
-    return 'patch';
+/** The major surfaces (`CONTRIBUTING.md` § Versioning policy) the span since `tag` touched. */
+function span_surfaces(tag: string | null): Set<MajorSurface> {
+    if (!tag) return new Set();
+    const entries = parse_name_status(git(['diff', '--name-status', `${tag}..HEAD`], { capture: true }));
+    const paths = settings_key_paths(entries);
+    const patch = paths.length > 0 ? git(['diff', `${tag}..HEAD`, '--', ...paths], { capture: true }) : '';
+    return classify_surfaces(entries, removed_setting_keys(patch));
+}
+
+/** The semver bump: the span's `Consumer-Impact:` trailers and touched surfaces decide it (ADR-300). */
+function infer_bump(commits: readonly Commit[], surfaces: ReadonlySet<MajorSurface> = new Set()): string {
+    const minor_types = SECTIONS.filter(([, level]) => level === 'minor').flatMap(([, , types]) => [...types]);
+    return span_bump({ commits, surfaces, has_minor_type: commits.some((c) => minor_types.includes(c.type)) });
 }
 
 function latest_tag(): string | null {
@@ -770,7 +775,7 @@ function print_preview(plan: Plan): void {
     process.stdout.write(`Previous tag:   ${plan.last_tag || '(none)'}\n`);
     process.stdout.write(`New tag:        ${plan.target}\n`);
     process.stdout.write(`Commits:        ${plan.commits.length} since ${plan.last_tag || 'start'}\n`);
-    const detected = plan.commits.length > 0 ? infer_bump(plan.commits) : 'patch';
+    const detected = plan.commits.length > 0 ? infer_bump(plan.commits, plan.surfaces) : 'patch';
     if (detected !== plan.bump) {
         process.stdout.write(
             `NOTE:           commits suggest a '${detected}' bump, ` +
@@ -1300,11 +1305,15 @@ function _parse_args(argv: readonly string[]): Args {
 }
 
 /** Override wins; otherwise auto-detect from commits (or 'patch' if empty). */
-function resolve_bump(override: string | null, commits: readonly Commit[]): string {
+function resolve_bump(
+    override: string | null,
+    commits: readonly Commit[],
+    surfaces: ReadonlySet<MajorSurface> = new Set(),
+): string {
     if (override) {
         return override;
     }
-    return infer_bump(commits);
+    return infer_bump(commits, surfaces);
 }
 
 /**
@@ -1484,7 +1493,8 @@ function main(argv: readonly string[] | null = null): number {
         return 0;
     }
 
-    const bump = resolve_bump(args.bump_override, commits);
+    const surfaces = span_surfaces(prev);
+    const bump = resolve_bump(args.bump_override, commits, surfaces);
 
     // An in-flight release is a STATE, never a flag — so the probe runs
     // unconditionally and `--resume` no longer decides what is being released.
@@ -1579,7 +1589,7 @@ function main(argv: readonly string[] | null = null): number {
     }
     const split: SplitPlan | null = decision.split;
 
-    const plan = new Plan(current, target, bump, commits, prev, body, full, split);
+    const plan = new Plan(current, target, bump, commits, prev, body, full, split, surfaces);
     print_preview(plan);
     if (args.resume) {
         process.stdout.write('(resume) probing existing state — completed steps will be skipped.\n');

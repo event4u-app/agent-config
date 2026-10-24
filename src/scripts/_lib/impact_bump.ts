@@ -1,11 +1,10 @@
 /**
- * The impact-driven bump rule, scored against the recorded history.
- *
- * Nothing in `release.ts` calls this: changing how releases are numbered is an
- * owner decision that has not been taken. Until it is, the rule only scores
- * historical rows, so the decision can be made on a measured replay.
+ * The impact-driven bump rule (ADR-300): `release.ts` numbers a release by the
+ * span's `Consumer-Impact:` trailers and the major surfaces its diff touched,
+ * and the replay below scores the same rule against the recorded history.
  */
-import { CONSUMER_IMPACT_VALUES, IMPACT_RANK, type ConsumerImpact } from './consumer_impact.js';
+import { CONSUMER_IMPACT_VALUES, IMPACT_RANK, type ConsumerImpact, type ImpactTrailers } from './consumer_impact.js';
+import type { MajorSurface } from './major_surface.js';
 
 export type Bump = 'major' | 'minor' | 'patch';
 
@@ -67,4 +66,35 @@ export function replay_majors(rows: readonly ImpactRow[]): Map<string, Bump> {
         );
     }
     return out;
+}
+
+export interface SpanBumpInput {
+    readonly commits: readonly { readonly breaking: boolean; readonly trailers: ImpactTrailers }[];
+    readonly has_minor_type: boolean;
+    readonly surfaces: ReadonlySet<MajorSurface>;
+}
+
+/**
+ * The bump for a release span.
+ *
+ * A breaking commit with no valid trailer stays a major: the trailer binds the
+ * bump only where an author declared it, and an absent or invalid declaration
+ * says nothing, so it falls back to the punctuation rather than downgrading.
+ * A settings-key removal is not a major when the span's strongest declared
+ * impact is `automatic` — the migration exception ADR-300 records — and is one
+ * in every other case, including a span that declares nothing.
+ */
+export function span_bump(input: SpanBumpInput): Bump {
+    if (input.commits.some((c) => c.breaking && !c.trailers.recorded)) return 'major';
+    let impact: ConsumerImpact = 'none';
+    for (const c of input.commits) {
+        if (c.trailers.recorded && IMPACT_RANK[c.trailers.impact] > IMPACT_RANK[impact]) impact = c.trailers.impact;
+    }
+    const touches_major_surface = [...input.surfaces].some((s) => s !== 'settings-keys' || impact !== 'automatic');
+    return impact_bump({
+        impact,
+        breaking: input.commits.some((c) => c.breaking),
+        has_minor_type: input.has_minor_type,
+        touches_major_surface,
+    });
 }

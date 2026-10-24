@@ -35,6 +35,7 @@ import {
     parse_version,
     bump_version,
     infer_bump,
+    commit_from_record,
     resolve_bump,
     nothing_to_release_ci,
     render_changelog_entry,
@@ -155,6 +156,20 @@ describe('infer_bump', () => {
     });
     it('empty is patch', () => {
         expect(infer_bump([])).toBe('patch');
+    });
+    // ADR-300 — the Consumer-Impact trailer binds the bump.
+    const rec = (subject: string, body = '') => commit_from_record({ sha: 'b'.repeat(40), subject, body });
+    it('an internal breaking subject declared none is a minor', () => {
+        expect(infer_bump([rec('refactor!: move internals', 'Consumer-Impact: none')])).toBe('minor');
+    });
+    it('a non-breaking commit declared action is a major', () => {
+        expect(infer_bump([rec('fix: tighten the guard', 'Consumer-Impact: action')])).toBe('major');
+    });
+    it('a span touching a major surface is a major', () => {
+        expect(infer_bump([rec('chore: drop a command', 'Consumer-Impact: none')], new Set(['command-removal']))).toBe('major');
+    });
+    it('a settings key removed with an automatic migration is not a major', () => {
+        expect(infer_bump([rec('feat!: retire a key', 'Consumer-Impact: automatic')], new Set(['settings-keys']))).toBe('minor');
     });
 });
 

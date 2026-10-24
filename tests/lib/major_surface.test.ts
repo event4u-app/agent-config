@@ -29,7 +29,7 @@ describe('parse_name_status', () => {
     });
 });
 
-describe('classify_surfaces — the three triggers a diff can decide', () => {
+describe('classify_surfaces — the triggers a diff can decide', () => {
     it('fires installer-layout when the installer tree gains or loses a file', () => {
         for (const path of [
             'src/install/wizard-plan.ts',
@@ -52,6 +52,22 @@ describe('classify_surfaces — the three triggers a diff can decide', () => {
         ]) {
             expect([...classify_surfaces([{ status: 'D', path }])]).toEqual(['rule-or-skill-removal']);
             expect([...classify_surfaces([{ status: 'A', path }])]).toEqual([]);
+        }
+    });
+
+    // Positive control pinned to a named span: 15.0.0 retired `/chat-history`
+    // and its sub-command, and these are the four deletions that span carries.
+    it('fires command-removal on the 15.0.0 deletions, in source and projection', () => {
+        for (const path of [
+            'src/domains/meta/chat-history/command.md',
+            'src/domains/meta/chat-history/import/command.md',
+            'dist/agent-src/commands/chat-history.md',
+            'dist/agent-src/commands/chat-history/import.md',
+            'src/agent-src/commands/gone.md',
+        ]) {
+            expect([...classify_surfaces([{ status: 'D', path }])]).toEqual(['command-removal']);
+            expect([...classify_surfaces([{ status: 'A', path }])]).toEqual([]);
+            expect([...classify_surfaces([{ status: 'M', path }])]).toEqual([]);
         }
     });
 
@@ -80,6 +96,7 @@ describe('classify_surfaces — the three triggers a diff can decide', () => {
             [
                 { status: 'A', path: 'templates/AGENTS.md' },
                 { status: 'D', path: 'src/skills/gone/SKILL.md' },
+                { status: 'D', path: 'src/domains/meta/gone/command.md' },
             ],
             ['memory.cadence'],
         );
@@ -146,9 +163,23 @@ describe('the paths that moved, pinned so the tables cannot go blind again', () 
     });
 
     it('matches the schema directory wherever it sits', () => {
-        expect(settings_key_paths([{ status: 'M', path: 'src/scripts/schemas/agent-settings.schema.json' }])).toEqual([
-            'src/scripts/schemas/agent-settings.schema.json',
+        expect(settings_key_paths([{ status: 'M', path: 'src/scripts/schemas/agent-settings.schema.yml' }])).toEqual([
+            'src/scripts/schemas/agent-settings.schema.yml',
         ]);
+    });
+
+    // The over-match recorded on `settings_key_paths`, closed when the surface
+    // clause was wired into `release.ts` (ADR-300): a TypeScript or JSON file is
+    // not read with a YAML key regex, because a deleted `enabled: true,` property
+    // there would number a release as a major.
+    it('selects only YAML files, never the TypeScript or JSON beside them', () => {
+        expect(
+            settings_key_paths([
+                { status: 'M', path: 'src/scripts/schemas/agent-settings.schema.json' },
+                { status: 'M', path: 'src/server/schemas/settings.ts' },
+                { status: 'M', path: 'tests/install/settings_surface_snapshot.test.ts' },
+            ]),
+        ).toEqual([]);
     });
 
     it('returns each settings path once and ignores everything else', () => {

@@ -89,5 +89,7 @@ already names is therefore shipping in that version, not still undecided.
 >
 > The **Consumer impact** column uses the `Consumer-Impact` values from
 > [CONTRIBUTING.md § Versioning policy](CONTRIBUTING.md). Each value is read from that row's Migration
-> text and was not judged again. Like the trailer, it is experimental and non-normative: it describes
-> what a release cost a consumer and does not decide how a release is numbered.
+> text and was not judged again. It describes what each of these releases cost a consumer; since
+> [ADR-300](docs/decisions/ADR-300-consumer-impact-binds-the-bump.md) the trailer decides how a release
+> is numbered, so a future `action` row is a major and a `none`, `automatic` or `notice` release
+> normally is not.
