@@ -7,7 +7,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     buildQueue,
     isTimeGated,
+    isTimeboxed,
     screenEstate,
+    sheetIds,
     screenRoadmap,
     type ClaimView,
     type RoadmapScreen,
@@ -331,5 +333,88 @@ describe('screenEstate', () => {
         fs.writeFileSync(path.join(dir, 'road-to-d.md'), roadmap({ done: 1, open: ['- [ ] x'], status: 'draft' }));
         fs.writeFileSync(path.join(dir, 'later', 'road-to-l.md'), roadmap({ done: 1, open: ['- [ ] x'] }));
         expect(screenEstate(root, TODAY).map((s) => s.slug)).toEqual(['road-to-a']);
+    });
+});
+
+describe('owner directive 2026-10-24 — timebox, WIP cap, session cap, owner sheet', () => {
+    it('timeboxes at the third partial delivery or two days after work began, not before', () => {
+        expect(isTimeboxed('- [ ] **1.1 x.** <!-- partial: 2 -->', TODAY)).toBe(false);
+        expect(isTimeboxed('- [ ] **1.1 x.** <!-- partial: 3 -->', TODAY)).toBe(true);
+        expect(isTimeboxed('- [ ] **1.1 x.** <!-- started: 2026-10-17 -->', TODAY)).toBe(true);
+        expect(isTimeboxed('- [ ] **1.1 x.** <!-- started: 2026-10-18 -->', TODAY)).toBe(false);
+        expect(isTimeboxed('- [ ] **1.1 x.**', TODAY)).toBe(false);
+    });
+
+    it('parks a timeboxed step as held, lists it, and keeps it off the owner batch', () => {
+        const s = screen(
+            'road-to-a',
+            roadmap({ done: 1, open: ['- [ ] **2.1 Eats the day.** <!-- partial: 4 -->', '- [ ] **2.2 Plain.**'] }),
+        );
+        expect(s.steps.map((st) => [st.cls, st.blocker])).toEqual([
+            ['held', 'timebox'],
+            ['runnable', null],
+        ]);
+        const q = buildQueue([s], NO_CLAIMS, TODAY);
+        expect(q.timeboxed.map((t) => t.roadmap)).toEqual(['road-to-a']);
+        expect(q.owner_questions).toEqual([]);
+    });
+
+    it('a step held by an owner blocker stays an owner question, whatever its markers', () => {
+        const s = screen(
+            'road-to-a',
+            roadmap({
+                done: 1,
+                open: ['- [ ] **2.1 Owner.** <!-- blocked-by: needs-owner --> <!-- partial: 5 -->'],
+                blockers: OWNER_BLOCKER,
+            }),
+        );
+        expect(s.steps[0]?.cls).toBe('owner');
+        expect(buildQueue([s], NO_CLAIMS, TODAY).timeboxed).toEqual([]);
+    });
+
+    it('does not start a sixth roadmap while five are started', () => {
+        const startedOnes = [1, 2, 3, 4, 5].map((n) =>
+            screen(`road-to-s${String(n)}`, roadmap({ done: 1, open: ['- [ ] **2.1 Owner.** <!-- blocked-by: needs-owner -->'], blockers: OWNER_BLOCKER })),
+        );
+        const fresh = screen('road-to-new', roadmap({ done: 0, open: ['- [ ] **1.1 Work.**'] }));
+        const five = buildQueue([...startedOnes, fresh], NO_CLAIMS, TODAY);
+        expect(five.started).toBe(5);
+        expect(five.queue.find((e) => e.slug === 'road-to-new')?.dispatchable).toBe(false);
+        expect(five.next).toBeNull();
+        expect(five.dispatch_hold).toMatch(/^WIP cap \(5\)/);
+        const four = buildQueue([...startedOnes.slice(0, 4), fresh], NO_CLAIMS, TODAY);
+        expect(four.next?.slug).toBe('road-to-new');
+    });
+
+    it('dispatches nothing with three other live sessions, and does with two', () => {
+        const a = screen('road-to-a', roadmap({ done: 1, open: ['- [ ] **2.1 Work.**'] }));
+        const live = (ids: string[]): ClaimView => ({
+            live: ids.map((id) => ({ session_id: id, roadmap_slug: `road-to-${id}` })),
+            dead: [],
+        });
+        const three = buildQueue([a], live(['x', 'y', 'z']), TODAY, 'me');
+        expect(three.next).toBeNull();
+        expect(three.dispatch_hold).toMatch(/^session cap \(3\)/);
+        expect(buildQueue([a], live(['x', 'y']), TODAY, 'me').next?.slug).toBe('road-to-a');
+        expect(buildQueue([a], live(['x', 'y', 'me']), TODAY, 'me').next?.slug).toBe('road-to-a');
+    });
+
+    it('lists the owner questions the sheet does not cite, and only those', () => {
+        const blockers = `${OWNER_BLOCKER}\n\n### blocker: second-owner\n- **Status:** open\n- **Owner:** owner — another call\n- **Blocks:** 2.2`;
+        const s = screen(
+            'road-to-a',
+            roadmap({
+                done: 1,
+                open: [
+                    '- [ ] **2.1 One.** <!-- blocked-by: needs-owner -->',
+                    '- [ ] **2.2 Two.** <!-- blocked-by: second-owner -->',
+                ],
+                blockers,
+            }),
+        );
+        const sheet = sheetIds('### OQ-1 — x\n- **Blocks:** step 2.1 (blocker `needs-owner`).');
+        const q = buildQueue([s], NO_CLAIMS, TODAY, null, { sheet });
+        expect(q.unsheeted.map((g) => g.blocker)).toEqual(['second-owner']);
+        expect(buildQueue([s], NO_CLAIMS, TODAY).unsheeted).toEqual([]);
     });
 });

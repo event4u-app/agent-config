@@ -40,6 +40,21 @@
  * roadmap lands in `decide` when nothing else is runnable. The step's own title
  * line is never read for a hold, because titles describe behaviour ("ships only
  * when both hold") rather than state.
+ *
+ * The owner directive of 2026-10-24
+ * (`agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`)
+ * adds four limits, all read from the files and the claims:
+ *
+ * - **Timebox.** A step carrying `<!-- partial: N -->` with N ≥ 3, or
+ *   `<!-- started: YYYY-MM-DD -->` two or more days before today, reads `held`
+ *   with blocker `timebox` and is listed under `timeboxed`: it is split, not
+ *   re-dispatched.
+ * - **Five started.** An unstarted roadmap is dispatchable only while fewer than
+ *   `WIP_CAP` roadmaps are started.
+ * - **Three sessions.** With `SESSION_CAP` or more other live sessions, nothing
+ *   is dispatched and `dispatch_hold` says why.
+ * - **One sheet.** An owner question whose blocker id `agents/owner-questions.md`
+ *   does not cite is listed under `unsheeted`.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -117,12 +132,34 @@ export interface GatedQuestion {
     steps: number;
 }
 
+export interface TimeboxedStep {
+    roadmap: string;
+    line: number;
+    text: string;
+}
+
+export interface QueuePolicy {
+    /** Blocker ids the owner sheet cites; `null` when the sheet is absent. */
+    sheet?: ReadonlySet<string> | null;
+    wipCap?: number;
+    sessionCap?: number;
+}
+
 export interface DrainQueue {
     today: string;
     queue: QueueEntry[];
     next: QueueEntry | null;
     owner_questions: GatedQuestion[];
     council_questions: GatedQuestion[];
+    timeboxed: TimeboxedStep[];
+    /** Owner questions the sheet does not cite; empty when no sheet was read. */
+    unsheeted: GatedQuestion[];
+    /** Active roadmaps with a ticked step and open work. */
+    started: number;
+    /** Other live sessions on the estate. */
+    live_sessions: number;
+    /** Why nothing is dispatched although something could be; `null` otherwise. */
+    dispatch_hold: string | null;
 }
 
 const ACTIVE_DIR = 'agents/roadmaps';
@@ -140,6 +177,15 @@ const USER_OWNER_RE = /^(maintainer|user|owner)\b/i;
 const WAIT_WORD_RE = /\b(window|soak|earliest|not before|opens?|waits?|until|after the next release)\b/i;
 const ISO_DATE_RE = /\b(20\d\d-\d\d-\d\d)\b/g;
 const TIER_ORDER: Readonly<Record<string, number>> = { lightweight: 0, bounded: 1, structural: 2 };
+const PARTIAL_RE = /<!--[ \t]*partial:[ \t]*(\d+)/i;
+const STARTED_RE = /<!--[ \t]*started:[ \t]*(20\d\d-\d\d-\d\d)/i;
+const SHEET_ID_RE = /`([a-z0-9][a-z0-9-]*)`/g;
+
+export const WIP_CAP = 5;
+export const SESSION_CAP = 3;
+export const PARTIAL_CAP = 3;
+export const STARTED_DAYS_CAP = 2;
+export const OWNER_SHEET_REL = 'agents/owner-questions.md';
 
 function frontmatterField(text: string, key: string): string {
     const fm = /^---\n([\s\S]*?)\n---/.exec(text);
@@ -180,6 +226,24 @@ function classOfBlocker(b: Blocker | undefined): StepClass {
     if (USER_OWNER_RE.test(b.owner)) return 'owner';
     // An absent Class means 3 — human-only — per the blocker contract.
     return b.cls === null || b.cls === '3' ? 'owner' : 'council';
+}
+
+/** Whole days from `from` to `to`, both ISO dates; NaN when either does not parse. */
+function daysBetween(from: string, to: string): number {
+    return (Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000;
+}
+
+/** The step has had its rounds: three partial deliveries, or two days since work began. */
+export function isTimeboxed(block: string, today: string): boolean {
+    const partial = Number(PARTIAL_RE.exec(block)?.[1] ?? '0');
+    if (partial >= PARTIAL_CAP) return true;
+    const started = STARTED_RE.exec(block)?.[1];
+    return started !== undefined && daysBetween(started, today) >= STARTED_DAYS_CAP;
+}
+
+/** Blocker ids the owner sheet cites in backticks. */
+export function sheetIds(text: string): Set<string> {
+    return new Set([...text.matchAll(SHEET_ID_RE)].map((m) => (m[1] ?? '').toLowerCase()));
 }
 
 /** A dated wait the run cannot outlast: a wait word and a date after today. */
@@ -282,6 +346,10 @@ export function screenRoadmap(
                 cls = 'runnable';
             }
         }
+        if (cls === 'runnable' && isTimeboxed(block, today)) {
+            cls = 'held';
+            held = 'timebox';
+        }
         counts[cls]++;
         steps.push({ line: i + 1, text: line.trim().slice(0, 160), cls, blocker: held });
     }
@@ -318,7 +386,10 @@ export function buildQueue(
     claims: ClaimView,
     today: string,
     ownSession: string | null = null,
+    policy: QueuePolicy = {},
 ): DrainQueue {
+    const wipCap = policy.wipCap ?? WIP_CAP;
+    const sessionCap = policy.sessionCap ?? SESSION_CAP;
     const liveClaim = new Map<string, string>();
     const laneAt = new Map<string, { worktree: string; branch: string | null }>();
     for (const r of claims.live) {
@@ -395,17 +466,31 @@ export function buildQueue(
     const startedCanMove = entries.some(
         (e) => e.bucket === 'resume' || e.bucket === 'close' || e.bucket === 'continue',
     );
+    // Pull, not push: a sixth roadmap is not started while five are.
+    const started = screens.filter((s) => s.done > 0 && s.open + s.acceptance_open > 0).length;
     for (const e of entries) {
-        if (e.bucket === 'start') e.dispatchable = !startedCanMove;
+        if (e.bucket === 'start') e.dispatchable = !startedCanMove && started < wipCap;
+    }
+    const others = new Set(claims.live.map((r) => r.session_id).filter((id) => id !== ownSession));
+    const sessionHold = others.size >= sessionCap;
+    let dispatch_hold: string | null = null;
+    if (sessionHold && entries.some((e) => e.dispatchable)) {
+        dispatch_hold = `session cap (${String(sessionCap)}): ${String(others.size)} other live session(s)`;
+    } else if (!entries.some((e) => e.dispatchable) && entries.some((e) => e.bucket === 'start') && started >= wipCap) {
+        dispatch_hold = `WIP cap (${String(wipCap)}): ${String(started)} roadmap(s) started`;
     }
 
     const owner_questions: GatedQuestion[] = [];
     const council_questions: GatedQuestion[] = [];
+    const timeboxed: TimeboxedStep[] = [];
     for (const s of screens) {
+        for (const st of s.steps) {
+            if (st.blocker === 'timebox') timeboxed.push({ roadmap: s.slug, line: st.line, text: st.text });
+        }
         if (liveClaim.has(s.slug)) continue;
         const per = new Map<string, { cls: StepClass; n: number }>();
         for (const st of s.steps) {
-            if (st.blocker === null || (st.cls !== 'owner' && st.cls !== 'council')) continue;
+            if (st.blocker === null || st.blocker === 'timebox' || (st.cls !== 'owner' && st.cls !== 'council')) continue;
             const cur = per.get(st.blocker) ?? { cls: st.cls, n: 0 };
             cur.n++;
             per.set(st.blocker, cur);
@@ -416,12 +501,18 @@ export function buildQueue(
         }
     }
 
+    const sheet = policy.sheet ?? null;
     return {
         today,
         queue: entries,
-        next: entries.find((e) => e.dispatchable) ?? null,
+        next: sessionHold ? null : (entries.find((e) => e.dispatchable) ?? null),
         owner_questions,
         council_questions,
+        timeboxed,
+        unsheeted: sheet === null ? [] : owner_questions.filter((q) => !sheet.has(q.blocker)),
+        started,
+        live_sessions: others.size,
+        dispatch_hold,
     };
 }
 
@@ -562,10 +653,19 @@ export function renderText(q: DrainQueue): string {
                 `${tail}${renderSalvage(e.salvage)}`,
         );
     }
-    out.push(`next: ${q.next === null ? 'none — nothing dispatchable' : `${q.next.slug} (${q.next.bucket})`}`);
+    out.push(`next: ${q.next === null ? `none — ${q.dispatch_hold ?? 'nothing dispatchable'}` : `${q.next.slug} (${q.next.bucket})`}`);
+    out.push(`started ${String(q.started)}/${String(WIP_CAP)} · other live sessions ${String(q.live_sessions)}/${String(SESSION_CAP)}`);
     out.push(`owner questions: ${q.owner_questions.length} · council questions: ${q.council_questions.length}`);
     for (const g of q.owner_questions) out.push(`  owner   ${g.roadmap}#${g.blocker}  (${g.steps} step(s))`);
     for (const g of q.council_questions) out.push(`  council ${g.roadmap}#${g.blocker}  (${g.steps} step(s))`);
+    if (q.unsheeted.length > 0) {
+        out.push(`not on the sheet (${OWNER_SHEET_REL}): ${String(q.unsheeted.length)}`);
+        for (const g of q.unsheeted) out.push(`  ${g.roadmap}#${g.blocker}`);
+    }
+    if (q.timeboxed.length > 0) {
+        out.push(`timeboxed — split, do not re-dispatch: ${String(q.timeboxed.length)}`);
+        for (const t of q.timeboxed) out.push(`  ${t.roadmap}:${String(t.line)}  ${t.text}`);
+    }
     return `${out.join('\n')}\n`;
 }
 
@@ -584,7 +684,13 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const root = argValue(argv, '--root') ?? process.cwd();
     const today = argValue(argv, '--today') ?? new Date().toISOString().slice(0, 10);
     const session = argValue(argv, '--session') ?? process.env['CLAUDE_CODE_SESSION_ID'] ?? null;
-    const q = buildQueue(screenEstate(root, today), readClaims(root), today, session);
+    let sheet: Set<string> | null = null;
+    try {
+        sheet = sheetIds(fs.readFileSync(path.join(root, OWNER_SHEET_REL), 'utf-8'));
+    } catch {
+        /* no sheet: nothing to compare against */
+    }
+    const q = buildQueue(screenEstate(root, today), readClaims(root), today, session, { sheet });
     for (const e of q.queue) {
         const wt = e.resume?.worktree ?? (e.claimed_by === 'a lane of this session' ? e.lane?.worktree : undefined);
         if (wt !== undefined) e.salvage = readSalvage(wt);

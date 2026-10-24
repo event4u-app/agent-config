@@ -43,12 +43,12 @@ paperwork is cut.
 
 ## Phase 1 — The directive on record, owner questions on one sheet
 
-- [ ] **1.1 Record the directive verbatim.** Write
+- [x] **1.1 Record the directive verbatim.** Write
       `agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`
       with the directive text, its provenance (drafted in an external chat at the
       owner's request, issued by the owner), and what it does not grant.
       verify: the file exists and quotes "Durchsatz vor Zeremonie".
-- [ ] **1.2 The queue names owner questions missing from the sheet.**
+- [x] **1.2 The queue names owner questions missing from the sheet.**
       `roadmap_drain_queue` reads blocker ids cited on `agents/owner-questions.md`
       and reports each owner-class question whose blocker id is absent as
       `not on the sheet`, with the count.
@@ -61,7 +61,7 @@ paperwork is cut.
 
 ## Phase 2 — A step cannot eat the day
 
-- [ ] **2.1 Timebox markers park a step.** A step carrying
+- [x] **2.1 Timebox markers park a step.** A step carrying
       `<!-- partial: N -->` with N ≥ 3, or `<!-- started: YYYY-MM-DD -->` two or
       more days before today, reads `held` with blocker `timebox` and is listed
       under `timeboxed` in the queue output.
@@ -81,7 +81,7 @@ paperwork is cut.
 
 ## Phase 3 — Work in progress is capped at five
 
-- [ ] **3.1 The queue starts nothing past five.** An unstarted roadmap is
+- [x] **3.1 The queue starts nothing past five.** An unstarted roadmap is
       dispatchable only while fewer than five active roadmaps are started — pull,
       not push.
       verify: a unit test with five started roadmaps leaves the `start` entry undispatchable.
@@ -113,7 +113,7 @@ paperwork is cut.
 
 ## Phase 5 — Parallelism and test cost
 
-- [ ] **5.1 Three live sessions, then no dispatch.** When three or more other
+- [x] **5.1 Three live sessions, then no dispatch.** When three or more other
       sessions hold live claims, the queue's `next` is empty with the reason
       `session cap (3)`.
       verify: a unit test with three live foreign claims yields no `next`.
