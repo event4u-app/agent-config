@@ -97,6 +97,7 @@ is open.
   rounds 5–6 and the branch ratification (2/2, three rounds); 3.3, 2.6, AC-1 and
   AC-2 closed with them. The identifier half of AC-6 (a) and (b) is published in
   `internal/bench/reports/egress-placeholders-detection-2026-10-19.md`.
+- **2026-10-24:** 2.5 wired into the senders (see 2.5).
 - **Next in order:** AC-6's paired quality run (e) and the CI-runner reading of (f).
 
 ## What this roadmap deliberately does not do
@@ -398,7 +399,16 @@ read cannot leak through any later bug.
       spans mapped back) with the evasion corpus pinned; its homoglyph fixture is
       an e-mail, so it lands after 2.3.
       **Done 2026-10-22:** landed with 2.3 (`2b758dcf56`); the zero-width and homoglyph fixtures are detected and the evasion corpus prints its miss count.
-      Reopened 2026-10-23, built, not wired: `detectNormalized` has no production importer (tick-the-shipped-path 1.4).
+      Reopened 2026-10-23: `detectNormalized` had no production importer (tick-the-shipped-path 1.4).
+      **Wired 2026-10-24:** `replaceValues` (`_lib/egress_token.ts`) and `tallyText`
+      (`_lib/egress_text.ts`) detect through it, so the egress stage and the injection
+      path read the engine chunk's normalised table; the council's `replace` and its
+      final `check` (`ai_council/council_egress.ts`) do too. `LATIN_TWIN` moved from
+      `confusables.ts` into `egress_normalize.ts` as a hex-encoded pair of strings, so
+      the chunk does not carry that module's script regexes: the engine chunk measures
+      31,907 B under its 32,000 ceiling, no raise. Four tests in
+      `egress_normalize.test.ts` › `the senders read through the normalisation` fail
+      with the three call sites reverted and pass with them.
 
 - [x] **2.6 A mutation suite kills the invariants.** Disabling the IBAN checksum, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/egress-mutations/iban-checksum-disabled.json -->
       changing class precedence, logging a raw value or letting a credential
