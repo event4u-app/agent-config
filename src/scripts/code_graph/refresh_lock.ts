@@ -38,7 +38,7 @@ interface Owner {
     pid: number;
     started_at: number;
     nonce: string;
-    /** Absent in records written before the host was stored; treated as this host. */
+    /** Absent in records written before the host was stored; such an owner is judged by age alone. */
     host?: string;
 }
 
@@ -115,8 +115,10 @@ export function isStale(lock: string, now: number = Date.now()): boolean {
     const owner = readOwner(lock);
     if (owner === 'unreadable') return false;
     if (owner !== 'none') {
-        // Another host's PID means nothing here: only age applies (see MAX_LOCK_AGE_MS).
-        if (owner.host && owner.host !== os.hostname()) return now - owner.started_at > MAX_LOCK_AGE_MS;
+        // Only an owner that NAMES this host is judged by its PID. Another host's
+        // PID means nothing here, and a record without a host cannot be placed,
+        // so both are judged by age alone (see MAX_LOCK_AGE_MS).
+        if (owner.host !== os.hostname()) return now - owner.started_at > MAX_LOCK_AGE_MS;
         return !pidAlive(owner.pid);
     }
     try {

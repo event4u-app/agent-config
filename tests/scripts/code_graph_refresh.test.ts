@@ -144,7 +144,7 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         fs.mkdirSync(lock, { recursive: true });
         // A grandchild re-parented to init: when it exits init reaps it, so no zombie keeps its PID alive.
         const holder = Number(execFileSync('sh', ['-c', 'sleep 1 >/dev/null 2>&1 & echo $!'], { encoding: 'utf8' }).trim());
-        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: holder, started_at: Date.now(), nonce: 't' }));
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: holder, started_at: Date.now(), nonce: 't', host: os.hostname() }));
         const r = runCli(['map', '--root', tmp, '--no-verify'], { AGENT_CONFIG_MAP_LOCK_WAIT_MS: '20000' });
         expect(r.status, r.stderr).toBe(0);
         expect(fs.existsSync(path.join(tmp, 'agents', 'map', 'map.json'))).toBe(true);

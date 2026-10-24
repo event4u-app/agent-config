@@ -43,7 +43,7 @@ describe('refresh lock — single flight', () => {
 
     it('reclaims a lock whose owner process is gone', () => {
         fs.mkdirSync(lock, { recursive: true });
-        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: Date.now(), nonce: 't' }));
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: Date.now(), nonce: 't', host: os.hostname() }));
         expect(isStale(lock)).toBe(true);
         expect(acquire(root)).not.toBeNull();
     });
@@ -74,6 +74,18 @@ describe('refresh lock — single flight', () => {
         expect(STALE_LOCK_MS).toBeLessThan(MAX_LOCK_AGE_MS);
     });
 
+    it('judges an owner record without a host by age alone, never by a local PID', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        const write = (pid: number, started_at: number): void =>
+            fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid, started_at, nonce: 't' }));
+        write(deadPid(), Date.now());
+        expect(isStale(lock)).toBe(false);
+        write(process.pid, Date.now());
+        expect(isStale(lock)).toBe(false);
+        write(process.pid, Date.now() - MAX_LOCK_AGE_MS - 1000);
+        expect(isStale(lock)).toBe(true);
+    });
+
     it('records this host on the lock it takes', () => {
         const release = acquire(root);
         expect(JSON.parse(fs.readFileSync(`${lock}.owner.json`, 'utf-8')).host).toBe(os.hostname());
@@ -82,7 +94,7 @@ describe('refresh lock — single flight', () => {
 
     it('never removes a reclaim mutex it did not take — a leftover keeps the stale lock held', () => {
         fs.mkdirSync(lock, { recursive: true });
-        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: Date.now(), nonce: 't' }));
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: Date.now(), nonce: 't', host: os.hostname() }));
         const mutex = `${lock}.reclaim`;
         fs.mkdirSync(mutex);
         const old = (Date.now() - 60 * 60 * 1000) / 1000;
@@ -93,7 +105,7 @@ describe('refresh lock — single flight', () => {
 
     it('across real processes contending for a stale lock, at most one holds it at a time', async () => {
         fs.mkdirSync(lock, { recursive: true });
-        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: 0, nonce: 'stale' }));
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: 0, nonce: 'stale', host: os.hostname() }));
         const log = path.join(root, 'holds.log');
         const module = path.resolve(__dirname, '../../src/scripts/code_graph/refresh_lock.ts');
         const script =
@@ -109,7 +121,11 @@ describe('refresh lock — single flight', () => {
         fs.writeFileSync(file, script);
         const tsx = path.resolve(__dirname, '../../node_modules/.bin/tsx');
         const runs = Array.from({ length: 4 }, () => spawn(tsx, [file], { stdio: 'ignore' }));
-        await Promise.all(runs.map((c) => new Promise((r) => c.on('exit', r))));
+        const codes = await Promise.all(
+            runs.map((c) => new Promise<number | null>((r) => c.on('exit', (code) => r(code)))),
+        );
+        // A contender that crashed would silently thin the contention.
+        expect(codes).toEqual([0, 0, 0, 0]);
         const lines = fs.readFileSync(log, 'utf-8').trim().split('\n');
         let inside = 0;
         for (const l of lines) {
@@ -117,12 +133,13 @@ describe('refresh lock — single flight', () => {
             expect(inside).toBeLessThanOrEqual(1);
             expect(inside).toBeGreaterThanOrEqual(0);
         }
+        expect(inside).toBe(0);
         expect(lines.length).toBeGreaterThan(0);
     }, 60_000);
 
     it('a reclaimer overtaken after its stale check never deletes the successor’s lock', () => {
         fs.mkdirSync(lock, { recursive: true });
-        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: 0, nonce: 'stale' }));
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: 0, nonce: 'stale', host: os.hostname() }));
         let releaseA: (() => void) | null = null;
         // B judges the lock stale; before it acts, A reclaims it and holds a live successor.
         const releaseB = acquire(root, () => {
@@ -142,7 +159,7 @@ describe('refresh lock — single flight', () => {
         // The old holder is presumed dead and its lock reclaimed by a successor.
         fs.writeFileSync(
             `${lock}.owner.json`,
-            JSON.stringify({ pid: deadPid(), started_at: Date.now(), nonce: 'old-nonce-rewritten' }),
+            JSON.stringify({ pid: deadPid(), started_at: Date.now(), nonce: 'old-nonce-rewritten', host: os.hostname() }),
         );
         const releaseNew = acquire(root);
         expect(releaseNew).not.toBeNull();
