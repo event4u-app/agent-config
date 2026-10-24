@@ -59,7 +59,9 @@ the act. Each opens a ledger row `submitted`, and only a live read moves it on.
       the badge and the legend's language and scope markers, open a PR whose
       title ends `🤖🤖🤖`, answer review inside that PR until it closes.
       verify: ledger row `1c` carries the PR number and a live state.
-- [ ] **2.2 awesome-copilot external plugin.** Precondition: the parent's 3.3
+- [ ] **2.2 The Copilot CLI's default plugin list.** Its repository name is on
+      the source-confidentiality denylist as a past idea source, so its ledger
+      row records the ref as an `ENC1:` token. Precondition: the parent's 3.3
       is in a release. File the external-plugin issue form with repo, path
       `.github/plugin`, release tag and its 40-character SHA.
       verify: the intake bot's comment on the issue is green; ledger row added.

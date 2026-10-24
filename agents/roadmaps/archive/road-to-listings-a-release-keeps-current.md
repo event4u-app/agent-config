@@ -232,7 +232,7 @@ changed upstream into a red.
 | 1 | Official MCP Registry | A | `mcp-publisher` via OIDC in `publish-npm.yml` | Phase 2; first live read in follow-up |
 | 2 | Gemini CLI Extensions gallery | A | root manifest + topic, daily crawl | Phase 3–4; push in follow-up |
 | 3 | awesome-mcp-servers, attempt 1c | B | PR, title ends `🤖🤖🤖` (the list's agent fast-track) | follow-up |
-| 4 | awesome-copilot | B | external-plugin issue form | follow-up |
+| 4 | the Copilot CLI's built-in default plugin list | B | external-plugin issue form | follow-up |
 | 5 | Docker MCP Catalog | B | PR in `docker/mcp-registry` | follow-up |
 | 6 | Cline MCP Marketplace | B | issue + 400×400 logo | follow-up |
 | 7 | Claude community marketplace | C | Console form | follow-up |
@@ -241,10 +241,10 @@ changed upstream into a red.
 | 10 | awesome-claude-code | C | web issue form; human submitters only | follow-up |
 | 11 | GitHub MCP Registry | C | read after rank 1; email request if absent | follow-up |
 
-Not planned: Smithery (needs a hosted endpoint and a login; later), OpenAI
-plugin portal (identity verification), ComposioHQ and VoltAgent lists (they take
-copied skills or subagent files, not a package), passive indexes (skills.sh,
-LobeHub, PulseMCP, mcp.directory — read once in the follow-up, nothing to submit).
+Not planned: a hosted-MCP directory that needs a public endpoint and a login
+(later), the OpenAI plugin portal (identity verification), and two community
+lists that take copied skills or subagent files rather than a package. Passive indexes (skills.sh,
+LobeHub, PulseMCP, mcp.directory) are read once in the follow-up; nothing to submit.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->

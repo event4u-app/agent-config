@@ -92,7 +92,7 @@ the owner, from [`owner-packets.md`](owner-packets.md).
 |---|---|---|---|
 | Gemini CLI Extensions gallery | A | root `gemini-extension.json` + repository topic `gemini-cli-extension`; daily crawl, no form | the topic is pushed (needs the repo-admin secret) |
 | `punkpeye/awesome-mcp-servers` — attempt 1c | B | PR, title ending `🤖🤖🤖` (the list's agent fast-track); becomes row `1c` | Glama badge renders a grade; owner go |
-| `github/awesome-copilot` | B | external-plugin issue form: repo, path `.github/plugin`, release tag, 40-char SHA | the discovery manifest is in a release; a clean Copilot install loads it; owner go |
+| the Copilot CLI's built-in default plugin list | B | external-plugin issue form: repo, path `.github/plugin`, release tag, 40-char SHA | the discovery manifest is in a release; a clean Copilot install loads it; owner go |
 | `docker/mcp-registry` | B | PR adding `servers/agent-config/` built from `internal/glama/Dockerfile` | owner go |
 | Cline MCP Marketplace | B | issue, `mcp-server-submission` template, `assets/logo-400.png` | owner go |
 | Cursor Marketplace | C | `cursor.com/marketplace/publish`, manual review | a Cursor manifest of the same discovery shape exists |
