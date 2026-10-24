@@ -196,7 +196,7 @@ with that file.
   verify: fixture where every condition holds — the layer on disk is unchanged
   and doctor prints `would-be: thinned`.
   Landed 2026-10-16: `agent-config doctor --check layer-form` prints the per-host shadow decision; live it reads `would-be: full (delivery-unobserved)` for all three thinnable hosts.
-- [ ] **3.3 Promote after proof, never at install.** A fresh install writes the
+- [x] **3.3 Promote after proof, never at install.** A fresh install writes the
   full layer, exactly as today. A later session whose arrival record satisfies
   3.1 promotes the layer for following sessions, in the `session_start` concern
   under a latency budget fixed from 0.1's measurement; a promotion that would
@@ -220,7 +220,7 @@ with that file.
   verify: receipt fixture with the field forces `full`; the settings schema has
   no matching key.
   Landed 2026-10-18: `src/install/userPin.ts` writes `user_pin` into `runtime/carrier.json` (the receipt the carrier probe already writes, which now keeps fields it does not own); `prepareClaudeCarrier` refuses to thin while it is there, and `withMachineEvidence` hands it to 3.1 for every host. Sticky across a plain `install` and upgrades; `uninstall` removes it with the runtime directory. Tests: `hook_carrier_never_silent.test.ts` (pin on a reached carrier, survives a probe rewrite and a plain install) and `layer_form_evidence.test.ts` (`user-pin` on all three thinnable hosts). `grep -c user_pin src/server/schemas/settings.ts` reads 0. Documented in `docs/installation.md`.
-- [ ] **3.6 The project tree uses the same function**, with the project's own
+- [x] **3.6 The project tree uses the same function**, with the project's own
   dispatcher as its carrier.
   verify: ADR-267's three corpus figures reproduce, and
   `./scripts-run src/scripts/check_host_tree_parity` -> 0
@@ -301,7 +301,7 @@ with that file.
   verify: `npx vitest run tests/scripts/_cli/cmd_doctor_rule_scope_drift.test.ts` -> 0
   — 4 passed, red before the fix on the drift case and red before the
   strengthening on the legacy-all case.
-- [ ] **4.6c The settings-surface snapshot waits on the cut.**
+- [x] **4.6c The settings-surface snapshot waits on the cut.**
   Two cases of `tests/scripts/consumer_matrix_settings_delta.test.ts` were red until the next cut wrote the released surface; the snapshot's only writer is `release.ts`. Landed 2026-10-24: `release: 17.0.0` (`14bd7c7db3`) carries the three removed keys under `removedKeys`; `npx vitest run tests/scripts/consumer_matrix_settings_delta.test.ts` -> 10/10 at `fb54c2052b`. Reasoning and the one test edit made before the cut: `agents/evidence/analysis/setup-4-6c-surface-snapshot.md`.
   verify: after the next cut, the case is green with no change to the test.
 <!-- blocked-by: projection-mode-removal-waits-on-second-host-reach -->
