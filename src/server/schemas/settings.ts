@@ -27,7 +27,6 @@ const replyMethod = z.enum(['replies_endpoint', 'create_review_comment', 'auto']
 const confidenceBand = z.enum(['off', 'low', 'medium', 'high']);
 const onBlock = z.enum(['stop', 'ask', 'warn']);
 const modelAutoSwitch = z.enum(['auto', 'suggest', 'off']);
-const projectionMode = z.enum(['legacy-all', 'scoped']);
 const projectAudience = z.enum(['self', 'internal', 'client', 'public']);
 const deliveryMerge = z.enum(['off', 'on-green']);
 const prTopology = z.enum(['single', 'stacked']);
@@ -43,11 +42,6 @@ export const settingsSchema = z.object({
             'Which experience you run — the audience identity that selects your default skill / command surface, README entry-path, and persona pre-selection (ADR-010, docs/contracts/profile-system.md). Six seed profiles: developer · content_creator · founder · agency · finance · ops. This is the first wizard question. In 6.0.0-A it records the choice only; pack-scoped surfacing (projection-time filtering, ADR-040) activates in 6.0.0-B behind a staged, opt-in rollout. Switch later with `agent-config use --profile=<id>`.',
         ),
     }).prefault({ id: 'developer' }),
-    projection: z.object({
-        mode: projectionMode.default('legacy-all').describe(
-            'Whether the per-tool projector writes EVERY artefact into the host-tool trees (.claude/ .cursor/ .windsurf/) or only the active profile + packs\' artefacts (ADR-040, docs/contracts/capability-packs.md). legacy-all = (default, non-breaking) project the full surface exactly as 5.x did. scoped = project only the active profile\'s packs unioned with the runtime.active_packs overlay, expanded over the requires graph — opt in with `agent-config use --profile=<id>`. A failed scoped projection restores the full tree.',
-        ),
-    }).prefault({ mode: 'legacy-all' }),
     rule_loading_tier: ruleLoadingTier.default('balanced').describe(
         'Master switch for which rule tiers load and how cautiously the agent spends tokens. minimal = only the 9 kernel rules (cheapest, fewest guardrails). balanced = kernel + tier-1 (recommended default). full = kernel + tier-1 + tier-2 (most guardrails, highest token cost). custom = roll your own in agents/overrides/. LEGACY: superseded by discipline_profile — when that key is set it wins (mapping: minimal→off, balanced→essential, full→full).',
     ),

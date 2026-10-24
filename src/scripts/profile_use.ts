@@ -42,8 +42,10 @@ export const VALID_PROFILES: readonly string[] = [
     'ops',
 ];
 
-// The `legacy-all` pseudo-profile: not an experience, but the projection
-// escape hatch — restores the full (5.x) surface without changing profile.id.
+// The `legacy-all` pseudo-profile restored the full surface by writing
+// `projection.mode`. Both are removed (step 4.7 of
+// road-to-a-setup-that-decides-itself, owner answer 2026-10-24): skill scope is
+// decided per host. The id is kept only to name the removal when someone asks.
 export const LEGACY_ALL = 'legacy-all';
 
 // Matches a top-level `profile:` block and the `id:` leaf under it. The id
@@ -51,12 +53,6 @@ export const LEGACY_ALL = 'legacy-all';
 // Mirrors the Python `re.compile(r"(?m)...")` named-group pattern.
 const _PROFILE_ID_RE = new RegExp(
     '^(profile:[ \\t]*\\n(?:[ \\t]+#[^\\n]*\\n|[ \\t]*\\n)*[ \\t]+id:[ \\t]*)([^\\n#]*)',
-    'm',
-);
-
-// Same shape for `projection:` → `mode:` (ADR-040 / road-to-6.0.0-B Step 8).
-const _PROJECTION_MODE_RE = new RegExp(
-    '^(projection:[ \\t]*\\n(?:[ \\t]+#[^\\n]*\\n|[ \\t]*\\n)*[ \\t]+mode:[ \\t]*)([^\\n#]*)',
     'm',
 );
 
@@ -91,23 +87,6 @@ function _set_profile_id(text: string, profile_id: string): [string, string | nu
     }
     // No profile block — append one. Keep a single trailing newline.
     const block = `\n# --- Profile (experience) ---\nprofile:\n  id: ${profile_id}\n`;
-    const sep = text.endsWith('\n') ? '' : '\n';
-    return [text + sep + block, null];
-}
-
-/** Return [new_text, previous_mode]. Append a block if none exists. */
-function _set_projection_mode(text: string, mode: string): [string, string | null] {
-    const m = _PROJECTION_MODE_RE.exec(text);
-    if (m) {
-        const head = m[1] as string;
-        const val = m[2] as string;
-        const previous = _stripValue(val);
-        const valStart = (m.index as number) + head.length;
-        const valEnd = valStart + val.length;
-        const new_text = text.slice(0, valStart) + mode + text.slice(valEnd);
-        return [new_text, previous];
-    }
-    const block = `\n# --- Pack-scoped projection (ADR-040) ---\nprojection:\n  mode: ${mode}\n`;
     const sep = text.endsWith('\n') ? '' : '\n';
     return [text + sep + block, null];
 }
@@ -150,56 +129,35 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const args = parse_args(argv);
 
     if (!args.profile) {
-        process.stderr.write(
-            '❌  `use` requires --profile=<id>. Valid: ' +
-                [...VALID_PROFILES, LEGACY_ALL].join(' · ') +
-                '\n',
-        );
+        process.stderr.write('❌  `use` requires --profile=<id>. Valid: ' + VALID_PROFILES.join(' · ') + '\n');
         return 2;
     }
 
     const profile_id = args.profile.trim();
-    if (profile_id !== LEGACY_ALL && !VALID_PROFILES.includes(profile_id)) {
+    if (profile_id === LEGACY_ALL) {
         process.stderr.write(
-            `❌  unknown profile \`${profile_id}\`. Valid: ` +
-                [...VALID_PROFILES, LEGACY_ALL].join(' · ') +
-                '\n',
+            '❌  `legacy-all` was removed: skill scope is decided per host now. claude-code and codex ' +
+                'receive every skill and scope by visibility; other hosts receive the active profile\'s ' +
+                'packs — add packs to runtime.active_packs to widen them.\n',
         );
+        return 2;
+    }
+    if (!VALID_PROFILES.includes(profile_id)) {
+        process.stderr.write(`❌  unknown profile \`${profile_id}\`. Valid: ` + VALID_PROFILES.join(' · ') + '\n');
         return 2;
     }
 
     const p = _resolve_write_path();
     const text = _exists(p) ? fs.readFileSync(p, 'utf-8') : '';
-
-    // `legacy-all` is the projection escape hatch — flip projection.mode only,
-    // leave the recorded experience (profile.id) untouched.
-    if (profile_id === LEGACY_ALL) {
-        const [new_text, prev_mode] = _set_projection_mode(text, 'legacy-all');
-        if (prev_mode === 'legacy-all' && _exists(p)) {
-            process.stdout.write(
-                `✅  Already in \`legacy-all\` projection (full surface) — no change (${p}).\n`,
-            );
-            return 0;
-        }
-        _mkdirParents(p);
-        fs.writeFileSync(p, new_text, 'utf-8');
-        process.stdout.write(`✅  Projection set to \`legacy-all\` (full surface) in ${p}.\n`);
-        process.stdout.write('ℹ️   Run `agent-config refresh` to re-project the full set.\n');
-        return 0;
-    }
-
-    // A real experience: record the profile AND opt into scoped projection.
-    const [text1, previous] = _set_profile_id(text, profile_id);
-    const [new_text] = _set_projection_mode(text1, 'scoped');
+    const [new_text, previous] = _set_profile_id(text, profile_id);
     _mkdirParents(p);
     fs.writeFileSync(p, new_text, 'utf-8');
 
     const arrow = previous ? `\`${previous}\` → \`${profile_id}\`` : `\`${profile_id}\``;
-    process.stdout.write(`✅  Experience set to ${arrow}; projection mode \`scoped\` in ${p}.\n`);
+    process.stdout.write(`✅  Experience set to ${arrow} in ${p}.\n`);
     process.stdout.write(
-        'ℹ️   Run `agent-config refresh` to re-project only this profile\'s ' +
-            'packs (plus any runtime overlay). `agent-config use ' +
-            `--profile=${LEGACY_ALL}\` restores the full surface.\n`,
+        'ℹ️   Run `agent-config refresh` to re-project: hosts without a listing lever receive this ' +
+            'profile\'s packs (plus any runtime overlay).\n',
     );
     return 0;
 }

@@ -87,7 +87,7 @@ function dedupableCount(userDir: string, sourceDir: string): { skipped: number; 
  * Why the real user scope misses the fixture condition. Version drift is the
  * benign half; the structural half is that `install.ts` stamps ownership
  * frontmatter into every installed rule (`_set_key(fm_lines, 'package', …)` at
- * install.ts:2723, `source_path` at install.ts:2725) while the in-repo
+ * install.ts:2722, `source_path` at install.ts:2724) while the in-repo
  * projection stamps nothing — so a provenance-only difference survives even a
  * perfect version alignment. Classifying the two apart is what turns "0/110"
  * from a puzzle into an answer: `provenanceOnly == total` means aligning
@@ -203,7 +203,7 @@ function main(argv: readonly string[]): number {
         lines.push('');
         lines.push('  -> Aligning versions would close the body diffs and leave the ownership');
         lines.push('     stamp, so the reachable twin count is 0, NOT the fixture\'s figure.');
-        lines.push('     install.ts:2723/2725 stamp package:/source_path: into every installed');
+        lines.push('     install.ts:2722/2725 stamp package:/source_path: into every installed');
         lines.push('     rule unconditionally; the in-repo projection stamps nothing. Two');
         lines.push('     writers, deliberately different output. Making this reachable was');
         lines.push('     DECIDED AGAINST on 2026-07-31 (real install-path risk, empty recipient');

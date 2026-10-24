@@ -160,6 +160,8 @@ export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     ['lean_projection.hosts', 'THINNABLE_HOSTS in _lib/lean_projection_mode.ts and the per-host row in src/config/host-injection-effect.json; no reader of this key remains'],
     ['projection.rule_workspaces', 'consumerRuleWorkspaces() in _lib/scoped_projection.ts, which derives the consumer workspace set from src/config/discovery/packs.yml — every id minus `agent-config-maintainer` — so a new pack reaches consumers without a settings edit'],
     // 2026-10-24 — road-to-a-setup-that-decides-itself step 4.9 (owner directive, D14)
+    // 2026-10-24 — step 4.7 (owner answer OQ-1)
+    ['projection.mode', 'per host: a host with a listing lever gets every skill, every other host the active profile packs'],
     ['projection.rule_packs', 'the active-pack set; install rule scoping honours an explicit value one release window'],
 ]);
 

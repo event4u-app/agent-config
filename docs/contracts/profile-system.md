@@ -53,8 +53,10 @@ profile:
 
 ### `packs` — base capability packs (6.0.0-B)
 
-`profile.packs` is the **base capability-pack set** the projector resolves
-when `projection.mode: scoped` (ADR-040). At projection time the selected set
+`profile.packs` is the **base capability-pack set** the installer resolves for
+every host without a listing lever (step 4.7 of
+`road-to-a-setup-that-decides-itself`; claude-code and codex receive every
+artefact and scope by visibility). At projection time the selected set
 is `profile.packs ∪ runtime.active_packs` (the session overlay), expanded over
 the `requires` graph ([`capability-packs.md`](capability-packs.md)); the
 overlay can only **widen**, so `packs` is the floor of the default surface.

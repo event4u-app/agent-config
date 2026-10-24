@@ -69,7 +69,7 @@ describe('profile_use — in-process differential', () => {
         expect(fs.existsSync(path.join(tmpDir, SETTINGS_REL))).toBe(false);
     });
 
-    it('fresh dir + --profile founder → appends both blocks', () => {
+    it('fresh dir + --profile founder → appends the profile block only (step 4.7: no projection mode)', () => {
         process.chdir(tmpDir);
         const stdout = captureStdout(() => {
             expect(main(['--profile', 'founder'])).toBe(0);
@@ -77,40 +77,20 @@ describe('profile_use — in-process differential', () => {
         const written = readWritten(tmpDir);
         expect(written).toContain('profile:');
         expect(written).toContain('id: founder');
-        expect(written).toContain('projection:');
-        expect(written).toContain('mode: scoped');
-        expect(stdout).toContain('Experience set to `founder`; projection mode `scoped`');
+        expect(written).not.toContain('projection:');
+        expect(stdout).toContain('Experience set to `founder` in');
     });
 
-    it('--profile=legacy-all on a settings file → flips projection only', () => {
+    it('--profile=legacy-all is removed (step 4.7): exit 2, file untouched', () => {
         process.chdir(tmpDir);
         fs.mkdirSync(path.join(tmpDir, 'agents', 'settings'), { recursive: true });
-        fs.writeFileSync(
-            path.join(tmpDir, SETTINGS_REL),
-            'profile:\n  id: founder\nprojection:\n  mode: scoped\n',
-            'utf-8',
-        );
-        const stdout = captureStdout(() => {
-            expect(main(['--profile=legacy-all'])).toBe(0);
+        const seed = 'profile:\n  id: founder\nprojection:\n  mode: scoped\n';
+        fs.writeFileSync(path.join(tmpDir, SETTINGS_REL), seed, 'utf-8');
+        const stderr = captureStderr(() => {
+            expect(main(['--profile=legacy-all'])).toBe(2);
         });
-        const written = readWritten(tmpDir);
-        expect(written).toContain('id: founder'); // profile.id untouched
-        expect(written).toContain('mode: legacy-all');
-        expect(stdout).toContain('Projection set to `legacy-all`');
-    });
-
-    it('legacy-all when already legacy-all → no-change message', () => {
-        process.chdir(tmpDir);
-        fs.mkdirSync(path.join(tmpDir, 'agents', 'settings'), { recursive: true });
-        fs.writeFileSync(
-            path.join(tmpDir, SETTINGS_REL),
-            'projection:\n  mode: legacy-all\n',
-            'utf-8',
-        );
-        const stdout = captureStdout(() => {
-            expect(main(['--profile', 'legacy-all'])).toBe(0);
-        });
-        expect(stdout).toContain('Already in `legacy-all` projection');
+        expect(stderr).toContain('`legacy-all` was removed');
+        expect(readWritten(tmpDir)).toBe(seed);
     });
 
     it('switching an existing profile shows the arrow transition', () => {
@@ -173,15 +153,13 @@ describe('profile_use — CLI subprocess (tsx, temp root)', () => {
         }
     }
 
-    it('fresh dir + --profile founder → writes both blocks + success stdout', () => {
+    it('fresh dir + --profile founder → writes the profile block + success stdout', () => {
         const r = runCli(['--profile', 'founder']);
         expect(r.status).toBe(0);
         expect(r.stderr).toBe('');
-        expect(r.stdout).toContain(
-            'Experience set to `founder`; projection mode `scoped` in <ROOT>/agents/settings/.agent-settings.yml',
-        );
+        expect(r.stdout).toContain('Experience set to `founder` in <ROOT>/agents/settings/.agent-settings.yml');
         expect(r.written).toContain('profile:\n  id: founder');
-        expect(r.written).toContain('projection:\n  mode: scoped');
+        expect(r.written).not.toContain('projection:');
     });
 
     it('--profile=content_creator (equals form) parses and writes', () => {
@@ -190,20 +168,12 @@ describe('profile_use — CLI subprocess (tsx, temp root)', () => {
         expect(r.written).toContain('id: content_creator');
     });
 
-    it('legacy-all on a seeded file → surgical projection-only edit', () => {
-        const r = runCli(['--profile', 'legacy-all'], 'profile:\n  id: founder\nprojection:\n  mode: scoped\n');
-        expect(r.status).toBe(0);
-        expect(r.stdout).toContain('Projection set to `legacy-all`');
-        expect(r.written).toContain('id: founder'); // profile.id untouched
-        expect(r.written).toContain('mode: legacy-all');
-        expect(r.written).not.toContain('mode: scoped');
-    });
-
-    it('legacy-all already-set → no-change message', () => {
-        const r = runCli(['--profile', 'legacy-all'], 'projection:\n  mode: legacy-all\n');
-        expect(r.status).toBe(0);
-        expect(r.stdout).toContain('Already in `legacy-all` projection');
-        expect(r.written).toBe('projection:\n  mode: legacy-all\n');
+    it('legacy-all → exit 2 with the removal message, file untouched', () => {
+        const seed = 'profile:\n  id: founder\nprojection:\n  mode: scoped\n';
+        const r = runCli(['--profile', 'legacy-all'], seed);
+        expect(r.status).toBe(2);
+        expect(r.stderr).toContain('`legacy-all` was removed');
+        expect(r.written).toBe(seed);
     });
 
     it('switch existing profile → arrow transition + edit', () => {

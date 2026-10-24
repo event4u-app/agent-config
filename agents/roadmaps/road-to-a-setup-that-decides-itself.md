@@ -304,16 +304,13 @@ with that file.
 - [x] **4.6c The settings-surface snapshot waits on the cut.**
   Two cases of `tests/scripts/consumer_matrix_settings_delta.test.ts` were red until the next cut wrote the released surface; the snapshot's only writer is `release.ts`. Landed 2026-10-24: `release: 17.0.0` (`14bd7c7db3`) carries the three removed keys under `removedKeys`; `npx vitest run tests/scripts/consumer_matrix_settings_delta.test.ts` -> 10/10 at `fb54c2052b`. Reasoning and the one test edit made before the cut: `agents/evidence/analysis/setup-4-6c-surface-snapshot.md`.
   verify: after the next cut, the case is green with no change to the test.
-- [ ] **4.7 `projection.mode` last.** Removed only after the skills roadmap's
+- [x] **4.7 `projection.mode` last.** Removed only after the skills roadmap's
   completeness question is answered; on hosts with a listing lever, scoping moves
   to visibility; elsewhere the active profile decides, reversing the template's
   "never inferred from profile.id" deliberately in the 4.1 ADR.
   verify: until then it is the only remaining key, documented as such.
-  The completeness question is answered (ADR-289, reach, 2026-10-18), with one
-  condition that binds this step: `projection.mode` stays until the reach
-  mechanism and its tests exist.
-  Routed to the owner 2026-10-24: the reach condition holds, but the removal is not default-neutral and both council seats classify it owner-reserved (`agents/evidence/council/setup-projection-mode-removal-20261024.md`).
   **Owner answered 2026-10-24 (owner-questions OQ-1): option 1** — remove it in the next major and retire the full-surface guarantee on hosts without a listing lever; `use --profile=legacy-all` is removed or redefined. Ships with #2644 in the same major.
+  Landed 2026-10-24: per-host scope (`prune_scoped_modules_per_host`), tombstone, `use --profile=legacy-all` exits 2. Verify: `npx vitest run tests/install/projection_mode_retired.test.ts` -> 0 (6 red before). Routing record: `agents/evidence/council/setup-projection-mode-removal-20261024.md`.
 - [x] **4.9 Retire `projection.rule_packs`.** Owner directive 2026-10-24 (D14): the rule
   layer's pack axis is derived from the active-pack set; tombstone; for one release window an
   explicitly written value wins; the eight rules the derivation drops are audited; `doctor` reports a

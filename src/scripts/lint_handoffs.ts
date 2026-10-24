@@ -674,8 +674,8 @@ export function scoped_dangle_follow_rate(
         null_branch:
             'Zero attempts over a LIVE window closes the question as a published ' +
             'null and the dangling links stay: a link to a pruned sibling is then ' +
-            'behaviour the consumer opted into by choosing `projection.mode: ' +
-            'scoped`, not a defect. A null over a DEAD window closes nothing and ' +
+            'behaviour of the per-host scope (a host without a listing lever ' +
+            'receives its profile packs), not a defect. A null over a DEAD window closes nothing and ' +
             'is not permitted to be reported as one — that is what the guard is ' +
             'for, and why `attempts` is null rather than 0 when the guard fails.',
         measured_branch:

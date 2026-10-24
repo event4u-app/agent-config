@@ -34,7 +34,7 @@ import * as path from 'node:path';
  * same question is worse than one surface being silent.
  *
  * `personas` was added 2026-08-21. Both lists had read four types while the
- * installer's `_CLAUDE_SKILL_BUNDLE` (`install.ts:1916-1921`) ships
+ * installer's `_CLAUDE_SKILL_BUNDLE` (`install.ts:1915-1921`) ships
  * rules · skills · commands · **personas** — so the one family this repository
  * actually delivered from both layers was the one neither surface looked at
  * (29 shared names on a freshly regenerated tree). The two lists stay
