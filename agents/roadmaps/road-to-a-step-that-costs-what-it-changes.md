@@ -108,7 +108,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       file shrank.
       verify: detector verdicts identical on a 30-session replay; Stop p95
       lower; the fallback path covered by a test.
-- [ ] **1.3 Read the current phase, `## Decisions` and `## Blockers` per step.** Contract changed 2026-10-21, verify pending: `--steps` counts roadmap text returned to `Read` and to shell reads per step (R2 finding 4 — an early tick on `Read` alone was withdrawn). Over 242 steps p50 0 KB, p90 33.7 KB; but the largest active roadmap had a step read 86.2 KB and the second 46.8 KB, over the target. The loop's § 5 step 1 now says: the step's own section by `grep -n` plus a ranged read, never the whole roadmap. Closes on the first drain over the largest roadmap reading < 40 KB per step.
+- [ ] **1.3 Read the current phase, `## Decisions` and `## Blockers` per step.** Contract changed 2026-10-21, verify pending: `--steps` counts roadmap text returned to `Read` and to shell reads per step (R2 finding 4 — an early tick on `Read` alone was withdrawn). Over 242 steps p50 0 KB, p90 33.7 KB; but the largest active roadmap had a step read 86.2 KB and the second 46.8 KB, over the target. The loop's § 5 step 1 now says: the step's own section by `grep -n` plus a ranged read, never the whole roadmap. Closes on the first drain over the largest roadmap reading < 40 KB per step; none since 2026-10-21 (2026-10-24).
       Other sections are read on demand. Decisions stay whole, as
       `roadmap-process-loop.md:162-173` requires.
       verify: a drain over the largest active roadmap reads < 40 KB of it per
@@ -137,7 +137,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
 
 ## Phase 3 — Load what the step needs
 
-- [ ] **3.1 Progressive disclosure for the five run procedures.** Partly done 2026-10-21 (D17): 198 KB of procedure became 76 KB of core plus eleven branch files, each under the 16,000-char depth ceiling; three cores are ≤ 15 KB, `roadmap-process-loop` (16,144) and `pr/merge` (15,698) are not; `procedure-core-budget.json` ratchets all five; the pinning tests read core plus branches. Each keeps a
+- [ ] **3.1 Progressive disclosure for the five run procedures.** Done 2026-10-24: all five cores ≤ 15 KB (loop 14,991, merge 14,965, D17's revisit-if met, fences and the clearance check stay in the core); eleven branch files under the 16,000-char ceiling; `procedure-core-budget.json` ratchets all five. Each keeps a
       core path ≤ 15 KB; branches (conflicts, council, red CI, archive) move to
       references loaded on that branch.
       verify: core sizes in a ratchet; the run-loop fixtures pass unchanged.
@@ -161,7 +161,7 @@ pre-registered in 0.2; and no R3 change runs below today's depth.
       flip commit itself waits until `probe_depth_shadow --flip-readiness`
       reads READY for a class: 30 shadow steps, at most one escape and no
       critical, counted only inside the flip scope (receipts carry
-      `scope=safe` from 2026-10-21 on). On 2026-10-21 it read 0 and 0.
+      `scope=safe` from 2026-10-21 on). On 2026-10-24 it read R0 7, R1 0, once undated `scope=safe` ticks counted.
       verify: the D18 owner row exists before the flip commit; that commit
       names the reading in `flip.reading`.
 - [ ] **4.2 Rule depth by class, behind an A/B.** R0/R1 steps receive the
