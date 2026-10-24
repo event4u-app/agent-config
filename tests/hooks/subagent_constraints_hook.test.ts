@@ -258,6 +258,8 @@ describe('subagent-constraints concern — the user layer', () => {
         );
         expect(new Set(FLOOR_RULE_IDS.slice(0, floor.length))).toEqual(new Set(floor));
         expect(new Set(FLOOR_RULE_IDS.slice(floor.length))).toEqual(new Set(members));
+        // D18: the order is policy — consequence-class rules alphabetically after the safety floor.
+        expect(FLOOR_RULE_IDS.slice(floor.length)).toEqual([...members].sort());
         expect(new Set(FLOOR_RULE_IDS).size).toBe(FLOOR_RULE_IDS.length);
     });
 
