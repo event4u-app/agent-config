@@ -8,7 +8,21 @@ and the run that applies it links its PR.
 
 ## Open
 
-None.
+### OQ-1 — Lower R0/R1 ceremony now, before 30 shadow steps
+
+- **Context:** the 2026-10-21 decision
+  (`agents/evidence/owner-directives/2026-10-21-review-cap-and-depth-flip.md`)
+  lowers R0/R1 depth on structurally safe paths only after a committed reading of
+  30 shadow steps; the reading stood at 0 on 2026-10-21. The 2026-10-24 directive
+  already cut council and evidence in the `full` row; review rounds and retro
+  stay full.
+- **Options:** (a) set the depth table `active` for R0/R1 on safe paths now,
+  relying on the sampled full-depth audit (1 in 4) and its automatic return to
+  full depth; (b) keep waiting for the 30-step reading.
+- **Recommendation:** (a) — reversible in one commit, and the audit rolls a
+  class back on its own.
+- **Blocks:** `road-to-a-step-that-costs-what-it-changes` steps 4.1 and 4.2
+  (blocker `class-depth-flip-reopens-the-risk-null`).
 
 ## Not owner questions — waits, or already settled in the tree
 
