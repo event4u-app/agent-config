@@ -2194,8 +2194,8 @@ export function generate_plugin_command_skills(): number {
     if (_isSymlink(pointer_file)) {
         fs.unlinkSync(pointer_file);
     }
-    if (!_isFile(pointer_file) || fs.readFileSync(pointer_file, 'utf-8') !== PLUGIN_POINTER_SKILL_BODY) {
-        fs.writeFileSync(pointer_file, PLUGIN_POINTER_SKILL_BODY);
+    for (const file of [pointer_file, path.join(MODULE_STATE.PROJECT_ROOT, '.github', 'plugin', 'skills', PLUGIN_POINTER_SLUG, 'SKILL.md')]) {
+        if (!_isFile(file) || fs.readFileSync(file, 'utf-8') !== PLUGIN_POINTER_SKILL_BODY) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, PLUGIN_POINTER_SKILL_BODY); }
     }
 
     // 2. Prune every other skill dir so the tree converges to shim shape
