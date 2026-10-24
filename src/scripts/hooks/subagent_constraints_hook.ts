@@ -383,16 +383,38 @@ export function instructionDigest(
         while (keep > 0 && escBytes(render()) > RULES_INVENTORY_MAX) keep -= 1;
         return render();
     };
-    const inventory = (): string => [projectInventory(), userInventory(), rulesInventory()].filter((l) => l !== '').join('\n');
-    const reserve = Math.max(escBytes(inventory()), 0) + (idx('rule').length > 0 ? RULES_INVENTORY_MAX - escBytes(rulesInventory()) : 0);
+    const named = (): string => [projectInventory(), userInventory(), rulesInventory()].filter((l) => l !== '').join('\n');
+    // The count-only form is all that is reserved ahead of the floor laws: it reports every
+    // omission in a few dozen bytes. `all` sizes it with every count at its layer's total.
+    const counted = (all = false): string => {
+        const line = (layer: Found['layer'], name: string): string => {
+            const members = idx(layer);
+            if (members.length === 0) return '';
+            const n = (st: string): number => (all ? members.length : members.filter((i) => status[i] === st).length);
+            return `${name}: ${n('full')} full, ${n('cut')} cut, ${n('empty')} empty, ${n('omitted')} omitted.`;
+        };
+        return [line('project', 'Files'), line('user', 'User files'), line('rule', 'User rules (Iron Law blocks)')]
+            .filter((l) => l !== '')
+            .join('\n');
+    };
     const shown: string[] = found.map(() => '');
-    let room = maxBytes - REPLY_OVERHEAD - escBytes(`${head}\n`) - reserve;
+    let room = maxBytes - REPLY_OVERHEAD - escBytes(`${head}\n`) - escBytes(counted(true));
+    // The named form is upper-bounded with every not-yet-placed file as `omitted`, the longest status.
+    const namedBound = (): number => escBytes(named()) + (idx('rule').length > 0 ? RULES_INVENTORY_MAX - escBytes(rulesInventory()) : 0);
+    let useNamed = false;
     const frameOf = (f: Found): string => `\n\n--- ${f.layer === 'rule' ? 'rule ' : ''}${f.label} ---\n`;
     // Project files go nearest first; every other rank keeps its `sub` order.
     const subOf = (i: number): number => ((found[i] as Found).layer === 'project' ? -i : (found[i] as Found).sub);
     const allocation = found.map((_, i) => i).sort((x, y) => (found[x] as Found).rank - (found[y] as Found).rank || subOf(x) - subOf(y));
     for (const i of allocation) {
         const f = found[i] as Found;
+        if (f.rank > 0 && !useNamed && i === allocation.find((j) => (found[j] as Found).rank > 0)) {
+            const extra = namedBound() - escBytes(counted(true));
+            if (extra <= room) {
+                useNamed = true;
+                room -= extra;
+            }
+        }
         if (f.body === '') continue;
         const frame = escBytes(frameOf(f));
         if (room - frame < MIN_SHOWN) continue;
@@ -413,7 +435,8 @@ export function instructionDigest(
     const printed = found.map((_, i) => i).sort((a, b) => printRank(a) - printRank(b) || printSub(a) - printSub(b));
     const sections = printed.map((i) => (status[i] === 'full' || status[i] === 'cut' ? `${frameOf(found[i] as Found)}${shown[i] as string}` : ''));
     // The serialized line is the final authority: whatever the parts measured, the reply never exceeds maxBytes.
-    return fitEscaped(`${head}\n${inventory()}${sections.join('')}`, maxBytes - REPLY_OVERHEAD);
+    if (!useNamed && allocation.every((j) => (found[j] as Found).rank === 0)) useNamed = namedBound() - escBytes(counted(true)) <= room;
+    return fitEscaped(`${head}\n${useNamed ? named() : counted()}${sections.join('')}`, maxBytes - REPLY_OVERHEAD);
 }
 
 /** The reply line for one digest. */

@@ -341,4 +341,16 @@ describe('subagent-constraints concern — the user layer', () => {
         for (const id of FLOOR_RULE_IDS) expect(digest).toContain(`SECOND-${id}: ${'B'.repeat(60)}`);
         expect(digest).toMatch(/Files, nearest last: CLAUDE\.md \((cut|omitted)\)/);
     });
+
+    // Round-5 ratification finding: only a count-only inventory is reserved ahead of the floor laws;
+    // named inventories take room after them, and give way to counts when there is none.
+    it('reserves only counts ahead of the floor laws, and names files only with room left over', () => {
+        for (const id of FLOOR_RULE_IDS) writeRule(id, `FLOOR-${id}: ${'N'.repeat(225 - id.length)}`);
+        for (let i = 0; i < 80; i++) writeRule(`an-ordinary-rule-with-a-name-${String(i).padStart(2, '0')}`, `ORD ${i}`);
+        fs.writeFileSync(path.join(config, 'CLAUDE.md'), `${USER_LINE}\n`);
+        const digest = reply();
+        expect(Buffer.byteLength(replyLine(digest), 'utf-8')).toBeLessThanOrEqual(EMISSION_MAX_BYTES);
+        for (const id of FLOOR_RULE_IDS) expect(digest).toContain(`FLOOR-${id}: ${'N'.repeat(225 - id.length)}`);
+        expect(digest).toMatch(/User rules \(Iron Law blocks\): \d+ full, \d+ cut, \d+ empty, \d+ omitted\./);
+    });
 });
