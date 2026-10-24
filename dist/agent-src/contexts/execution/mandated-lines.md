@@ -41,7 +41,7 @@ A LINE THAT IS OWED AND MISSING IS AN INCOMPLETE REPLY.
 A LINE THAT IS NOT OWED IS NOT EMITTED. SILENCE IS THE DEFAULT.
 ```
 
-## The five lines
+## The six lines
 
 Each is bound to a **decision point**, not to a topic. One sentence each.
 
@@ -95,7 +95,7 @@ stray file is authorized and still wrong.
 > Pending: the negative test for the tenant path is not written — the fixture
 > needs a second tenant and I did not create one.
 
-Unlike the other four this line gates nothing. It is a **disclosure**
+Unlike the first three this line gates nothing. It is a **disclosure**
 obligation: it makes a deliberate skip visible to the human who reviews the
 work, and it exists because this suite's work lands through reviewed pull
 requests, so the line has a recipient. A skip nobody was told about is
@@ -111,10 +111,26 @@ Names **the exact wrong construct searched for, and the count found.**
 A defect found in one place is presumed to recur until searched. The count is
 part of the line because "I checked" is not a finding and zero is a real answer.
 
+### 6. Order — when the executed order differs from the stated one
+
+Names **what moved and why**, one line, before the first moved stage runs.
+Silent when the order is unchanged — and the
+[`invocation-plan`](invocation-plan.md) skips a single sink-free stage
+entirely, so most replies never owe it.
+
+> Order: push, pr-open, ci-settle of inbox move after process-full —
+> process-full writes the same branch.
+
+Like the pending line it is a **disclosure**, not a gate: the reorder needs no
+permission, so the line carries no question. It is not the candidate-forms line
+the 2026-09-07 council kept out of this set — a different obligation that
+fires on a different decision point — and `lint_mandated_lines` does not check
+it.
+
 ## The pre-send sweep
 
-Before a reply that claims completion, check each line above against what the
-run **actually did**, and add any that is owed and missing.
+Before a reply that claims completion, check each of the six lines above
+against what the run **actually did**, and add any that is owed and missing.
 
 - Fire only when something is owed. A reply owing nothing passes untouched, and
   no line is emitted to prove the sweep ran.
@@ -131,7 +147,7 @@ run **actually did**, and add any that is owed and missing.
 
 This suite's [`direct-answers`](../../rules/direct-answers.md) Iron Law 3 treats
 long replies as a failure mode, and its anti-ceremony discipline says not to
-invent receipts solely to prove execution. Five mandated lines are in real
+invent receipts solely to prove execution. Six mandated lines are in real
 tension with both. Three constraints resolve it, and they are part of the
 contract:
 
@@ -143,7 +159,7 @@ contract:
    only property that made the mechanism work — that writing it can still stop
    the action.
 3. **Two or more owed lines merge into one block, in execution order**, with
-   minimal labels — one interruption rather than five.
+   minimal labels — one interruption rather than six.
 
 ```
 Intent (parser.ts): returns null on empty · test expects RangeError · spec says caller error
@@ -171,7 +187,8 @@ intent line has its three slots **disagree**. If disagreements are effectively
 never found, the line is decorating decisions already made and the set should
 shrink. If disagreements are found and the edit is then revised or stopped, the
 mechanism is doing the thing it was adopted for. That observation costs one
-counter and is the first thing to look at before adding a sixth line.
+counter and is the first thing to look at before adding a seventh line; the
+sixth, `Order`, is a disclosure and does not rest on the 4-of-4 mechanism.
 
 ## See also
 

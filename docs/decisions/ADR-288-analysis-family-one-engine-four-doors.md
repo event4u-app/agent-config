@@ -12,7 +12,8 @@ review_trigger: >-
   runs (a stage moves its door's metric by zero on more than half of them),
   when a probed analyst binary writes outside its read-only profile, when a
   fetch reaches private or authenticated content, or when ADR-118 is amended
-  so that a loop-design contract becomes permissible.
+  so that a loop-design contract becomes permissible — or when a composed
+  invocation publishes from an inner stage (Amendment 1).
 reopen_policy: directional
 protected_dimensions: [security_floor]
 provenance:
@@ -96,6 +97,9 @@ door invokes stages, never another door.** `analyze:inbox` as the final stage
 is a stage call, not a door chaining into a door.
 
 ### D5 — The default end state changes, and this record is where it changes
+
+> **Amended 2026-10-24** — "standalone" is defined for composed invocations;
+> see [Amendment 1](#amendment-1-2026-10-24--a-door-inside-a-composed-invocation).
 
 Every door except `analyze:pr` now ends in a **non-draft PR** carrying exactly
 the roadmaps the run emitted. `--mode=plan` and `--no-pr` stop after
@@ -209,6 +213,28 @@ block; no door runs until a condition. No loop-design contract is created under
 `docs/contracts/`: the specification lives in this record and in the on-demand
 context file `src/agent-src/contexts/execution/analysis-loop.md`
 (`docs/decisions/ADR-118-loop-engineering-boundaries.md:119`).
+
+## Amendment 1 (2026-10-24) — a door inside a composed invocation
+
+On the owner's direction (chat, 2026-10-24). D5 decided the **standalone**
+case and left the composed one undecided: an input such as "analyse the inbox,
+write the roadmap, then work it off with `/roadmap:process-full`, then update the
+PR" ran the inbox to its own end — push, PR, CI wait — and process-full then
+pushed the same branch again. The first CI run was cancelled by that push
+(`cancel-in-progress: true` in the test workflows), so its wait bought nothing.
+
+**The amendment:**
+
+> A door invoked as a non-terminal stage of a composed invocation stops at
+> `committed`; the terminal stage owns publication. "Standalone" in D5 means:
+> no later stage of the same invocation writes the same branch.
+
+The engine carries it as `stage: 'inner'` on the publish input
+(`src/scripts/analysis_publish.ts`): commit, record `committed`, return — no
+push, no PR, no settle. The order of stages is decided by the invocation plan
+(`src/agent-src/contexts/execution/invocation-plan.md`). D6's push bound is
+unchanged — an inner stage only spends fewer pushes than it is allowed — and
+D5–D7 are otherwise untouched. Nothing is superseded.
 
 ## Evidence
 

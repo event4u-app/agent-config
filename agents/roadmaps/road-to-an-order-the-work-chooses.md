@@ -72,7 +72,7 @@ the end, and every constraint fixture keeps its order.
 
 ## Phase 1 — The invocation plan, deterministic and testable
 
-- [ ] **1.1 A pure linearizer `src/scripts/_lib/invocation_plan.ts`.** Input:
+- [x] **1.1 A pure linearizer `src/scripts/_lib/invocation_plan.ts`.** Input:
       stages with an effect set, the object each effect touches, and the
       constraint markers C1–C5; output: the executed order, the coalesced sink
       list, and the one-line `Order: … — …` text only when the order differs.
@@ -80,7 +80,7 @@ the end, and every constraint fixture keeps its order.
       the structured stages, the function decides the order.
       verify: `tests/scripts/invocation_plan.test.ts` runs fixtures G1–G12
       (table in the 1.2 context), each seen red before the function exists.
-- [ ] **1.2 `src/agent-src/contexts/execution/invocation-plan.md`.** The
+- [x] **1.2 `src/agent-src/contexts/execution/invocation-plan.md`.** The
       procedure in one screen: split into stages → tag effects → classify
       C1–C5 (DE/EN markers) → apply R0–R5 → linearise → emit the order line
       only when it differs. Fires on ≥ 2 stages or one stage with a sink; a
@@ -90,11 +90,11 @@ the end, and every constraint fixture keeps its order.
       name — here, because `scope-control` is a kernel rule.
       verify: `check_context_paths` and the context lints green; the fixture
       table in the context names the same G ids the test runs.
-- [ ] **1.3 The sixth mandated line, `Order`.** `mandated-lines.md` gains it:
+- [x] **1.3 The sixth mandated line, `Order`.** `mandated-lines.md` gains it:
       what moved and why, one line, silent when the order is unchanged.
       verify: `lint_mandated_lines` suite green; the pre-send sweep lists six
       lines.
-- [ ] **1.4 Ordered plan is a candidate, not a schedule.** Signal 2 of
+- [x] **1.4 Ordered plan is a candidate, not a schedule.** Signal 2 of
       `auto-dispatch-classification.md` reads "first … then … finally" as an
       ordered candidate whose order the invocation plan decides before a mode
       is chosen. `auto_dispatch.ts` is untouched — it picks a mode, not an order.
@@ -102,22 +102,22 @@ the end, and every constraint fixture keeps its order.
 
 ## Phase 2 — Contracts that compose
 
-- [ ] **2.1 ADR-288 amendment.** "A door invoked as a non-terminal stage of a
+- [x] **2.1 ADR-288 amendment.** "A door invoked as a non-terminal stage of a
       composed invocation stops at `committed`; the terminal stage owns
       publication. 'Standalone' in D5 means: no later stage of the same
       invocation writes the same branch." Supersedes nothing else in D5–D7.
       verify: ADR index regenerated; `analyze_inbox_limits.test.ts` green.
-- [ ] **2.2 `analysis_publish` honours an inner stage.** `PublishInput` gains
+- [x] **2.2 `analysis_publish` honours an inner stage.** `PublishInput` gains
       `stage?: 'terminal' | 'inner'`; `inner` commits, records `committed`, and
       returns with no push, no PR and no settle.
       verify: a publish test with `stage: 'inner'` records zero pushes, zero PR
       creates and zero settles on the in-memory port, and the record ends at
       `committed`.
-- [ ] **2.3 `/analyze:inbox` names the composed-stage case** next to `--no-pr`
+- [x] **2.3 `/analyze:inbox` names the composed-stage case** next to `--no-pr`
       in § Where the work happens: a later stage of the same invocation that
       writes the branch makes this run an inner stage.
       verify: `analyze_inbox_limits.test.ts` and the command lint green.
-- [ ] **2.4 `/roadmap:process-full` takes delivery over.** As the terminal
+- [x] **2.4 `/roadmap:process-full` takes delivery over.** As the terminal
       stage of a composed invocation it updates the open PR on the branch if one
       exists, otherwise opens the first one — once, at its own end. "ONE ROADMAP,
       ONE PR" gains "ONE INVOCATION, ONE DELIVERY".
@@ -126,12 +126,12 @@ the end, and every constraint fixture keeps its order.
 
 ## Phase 3 — Engine fixes found on the way
 
-- [ ] **3.1 Publish settles inside the foreground ceiling.** The
+- [x] **3.1 Publish settles inside the foreground ceiling.** The
       `--timeout-min 28` at `analysis_publish.ts:345` goes; `ci_settle`'s own
       default applies.
       verify: a unit test asserts the port's settle argv carries no timeout
       above `FOREGROUND_CEILING_MIN`.
-- [ ] **3.2 `delivery.wait_for_ci` gets its reader.** `settleCi` takes the
+- [x] **3.2 `delivery.wait_for_ci` gets its reader.** `settleCi` takes the
       resolved setting; `false` ends at `pr-open` with a one-line reason and no
       `ciSettle` call.
       verify: settle test with `waitForCi: false` → record ends `pr-open`, the
@@ -139,7 +139,7 @@ the end, and every constraint fixture keeps its order.
 
 ## Phase 4 — Free text and mid-flight amendments
 
-- [ ] **4.1 An Amendment bucket.** `user-interrupt-priority` gains a fourth
+- [x] **4.1 An Amendment bucket.** `user-interrupt-priority` gains a fourth
       row: same mission, a stage added, removed or re-ordered → re-plan the
       remaining stages, emit the order line, continue. A different deliverable
       stays an Interrupt. The added characters are paid for inside the same
@@ -150,7 +150,7 @@ the end, and every constraint fixture keeps its order.
 
 ## Phase 5 — A reader for the superseded wait
 
-- [ ] **5.1 `probe_turnaround` reports `ci-wait-superseded`.** A `ci-wait`
+- [x] **5.1 `probe_turnaround` reports `ci-wait-superseded`.** A `ci-wait`
       whose PR receives another push from the same session afterwards is
       superseded; the probe prints the count and minutes beside the existing
       blocking causes. Reuses `classifyBlockingCall`; adds no capture.

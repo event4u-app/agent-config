@@ -281,6 +281,13 @@ export interface Turnaround {
     contextFloorMax: number;
     /** Blocking calls and seconds per cause; every cause present, `unknown` included. */
     blockingByCause: Record<BlockingCause, { calls: number; seconds: number }>;
+    /**
+     * Blocking `ci-wait` calls followed by another push in the same session:
+     * that push cancelled the run being waited on, so the wait bought nothing.
+     * A session is the unit because a transcript names a PR in the settle and a
+     * branch in the push, and nothing in it joins the two.
+     */
+    ciWaitSuperseded: { calls: number; seconds: number };
 }
 
 function emptyByCause(): Turnaround['blockingByCause'] {
@@ -302,6 +309,7 @@ const ZERO: Turnaround = {
     contextFloorMin: 0,
     contextFloorMax: 0,
     blockingByCause: emptyByCause(),
+    ciWaitSuperseded: { calls: 0, seconds: 0 },
 };
 
 function ms(iso: unknown): number | null {
@@ -389,6 +397,7 @@ export function measureDetailed(files: readonly string[]): {
     const pushSeconds: number[] = [];
     const activeNights = new Set<string>();
     const pauseNights = new Set<string>();
+    const superseded = { calls: 0, seconds: 0 };
 
     for (const file of files) {
         let sawFloor = false;
@@ -396,6 +405,8 @@ export function measureDetailed(files: readonly string[]): {
         let lastText: string | null = null;
         let pauseOpen = false;
         let pausedAt: number | null = null;
+        /** Blocking ci-waits of this session not yet followed by a push. */
+        let openWaits: number[] = [];
         for (const line of fs.readFileSync(file, 'utf8').split('\n')) {
             if (!line.trim()) continue;
             let e: Entry;
@@ -455,12 +466,9 @@ export function measureDetailed(files: readonly string[]): {
                         if (call !== undefined && isGitPushCall(call.tool, call.input)) pushSeconds.push(seconds);
                         if (seconds > BLOCKING_SECONDS) {
                             const tool = call?.tool ?? '';
-                            blockingCalls.push({
-                                tool,
-                                summary: summarise(tool, call?.input),
-                                cause: classifyBlockingCall(tool, call?.input),
-                                seconds,
-                            });
+                            const cause = classifyBlockingCall(tool, call?.input);
+                            blockingCalls.push({ tool, summary: summarise(tool, call?.input), cause, seconds });
+                            if (cause === 'ci-wait') openWaits.push(seconds);
                         }
                     }
                 }
@@ -500,6 +508,11 @@ export function measureDetailed(files: readonly string[]): {
                     emittedAt.set(id, at);
                     calledWith.set(id, { tool: String(b['name'] ?? ''), input: b['input'] });
                 }
+                if (openWaits.length > 0 && isGitPushCall(String(b['name'] ?? ''), b['input'])) {
+                    superseded.calls += openWaits.length;
+                    superseded.seconds += openWaits.reduce((x, y) => x + y, 0);
+                    openWaits = [];
+                }
             }
             if (n > 0 && typeof rid === 'string' && rid !== '') {
                 batch.set(rid, (batch.get(rid) ?? 0) + n);
@@ -537,6 +550,7 @@ export function measureDetailed(files: readonly string[]): {
         contextFloorMin: contextFloors.length === 0 ? 0 : Math.min(...contextFloors),
         contextFloorMax: contextFloors.length === 0 ? 0 : Math.max(...contextFloors),
         blockingByCause: byCause,
+        ciWaitSuperseded: { calls: superseded.calls, seconds: round(superseded.seconds, 1) },
     };
     pauses.pausedMinutes = Math.round(pauses.pausedMinutes);
     const throughput: Throughput = {
@@ -681,6 +695,7 @@ function render(t: Turnaround, store: string): string {
             const row = t.blockingByCause[c];
             return `    ${c.padEnd(14)}${String(row.calls)} call(s), ${String(Math.round(row.seconds / 60))} min`;
         }),
+        `    ${'ci-wait-superseded'.padEnd(20)}${String(t.ciWaitSuperseded.calls)} call(s), ${String(Math.round(t.ciWaitSuperseded.seconds / 60))} min  (of ci-wait; a later push in the same session cancelled the run)`,
         '',
     ].join('\n');
 }
