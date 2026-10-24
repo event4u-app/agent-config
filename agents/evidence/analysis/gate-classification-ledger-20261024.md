@@ -737,6 +737,49 @@ owner's answer and the attested renewal. The renewal is not made here (D38).
 
 aspects 49 · derived 48 · waived 0 · refused 1
 
+## Must-fix 5 closed, and the one residue — revision 20
+
+The twenty-fifth round (`agents/evidence/council/gate-classification-item4-r4-20261024.md`)
+found must-fixes 1, 3, 4, 6 and 7 **closed, 2/2**. It found must-fix 5
+**open, 2/2**:
+
+- `owed_to` was never read;
+- the issue check was a length test;
+- `2026-99-99` passed as an expiry.
+
+It refused renewal until must-fix 5 is closed and the owner has answered.
+
+Revision 20 closes must-fix 5. A waiver is now refused unless all four of these
+hold.
+
+1. **Milestone.** It names a roadmap that exists and a step that is open there.
+   Ticking the step lapses the waiver.
+2. **Issue.** Its issue text occurs verbatim in the named file. For R16.d that is
+   the 7.2 entry condition, *"row 16's exit-1 divergence reconciled"*, in
+   `gate-7-2-reliance-rules-20261024.md`.
+3. **Approver.** It is `owner`, with a directive that is tracked in git at `HEAD`
+   and names the row.
+4. **Expiry.** It is a real calendar date that has not passed.
+
+Six self-test cases cover the refusals. Self-test: 32/33. The one red case is
+the clean baseline, red for the two reasons below.
+
+**What no field can establish.** openai's strongest objection stands: *"a
+literal `owner` value"* in repository content cannot prove that the owner
+approved. Anyone with write access can author it. Binding approval to
+independently verifiable provenance, such as a protected or signed directive,
+is the second principal. It stays owner-reserved under
+`external-bootstrap-boundary-for-phases-2-3`. A waiver is therefore only as
+trustworthy as the directive's provenance, and the record says so.
+
+**The residue.**
+
+- **R16.d**, gate `7-1-r16d-waiver`: both seats route it to the owner. Both
+  recommend correcting the behaviour, so that an absent store is *"not measured
+  yet"* and exits 0 as the contract says, over a time-bounded waiver.
+- **The attested-set renewal.** It is one council round after the owner
+  answers. D38 forbids it before then.
+
 ## Source-to-record completeness, mechanically — revision 14
 
 Round 18 (D42) was 2/2 and convergent. Both seats said the rerun proves that

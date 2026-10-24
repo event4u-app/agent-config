@@ -280,9 +280,17 @@ export function reconcile(io) {
             if (!['invariant', 'observation'].includes(derived)) why.push(`derived ${derived} is never waivable`);
             if (waiver.semantic !== r.cls || waiver.behaviour !== derived) why.push('semantic/behaviour do not match the row');
             if (!blocking.concat(nonBlocking).includes(waiver.branch)) why.push(`branch ${waiver.branch} does not reach the row`);
-            if (typeof waiver.issue !== 'string' || waiver.issue.length < 20) why.push('no issue');
-            if (waiver.approver !== 'owner' || typeof waiver.directive !== 'string' || !io.exists(waiver.directive)) why.push('no owner approval with an existing directive');
-            if (typeof waiver.expiry !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(waiver.expiry) || waiver.expiry < today) why.push('no unexpired expiry');
+            const ms = waiver.milestone ?? {};
+            const roadmap = typeof ms.roadmap === 'string' && io.exists(ms.roadmap) ? io.read(ms.roadmap) : null;
+            const stepRe = (box) => new RegExp(`^\\s*- \\[${box}\\] \\*\\*${String(ms.step).replace('.', '\\.')}\\b`, 'm');
+            if (roadmap === null || typeof ms.step !== 'string') why.push('no milestone roadmap');
+            else if (stepRe('x').test(roadmap)) why.push(`milestone ${ms.step} is reached, so the waiver has lapsed`);
+            else if (!stepRe(' ').test(roadmap)) why.push(`milestone ${ms.step} is not an open step of ${ms.roadmap}`);
+            const ir = waiver.issue_ref ?? {};
+            if (typeof ir.file !== 'string' || typeof ir.text !== 'string' || ir.text.length < 20 || !io.exists(ir.file) || !io.read(ir.file).includes(ir.text)) why.push('issue text not found in its file');
+            if (waiver.approver !== 'owner' || typeof waiver.directive !== 'string' || io.showAt('HEAD', waiver.directive) === null || !io.read(waiver.directive).includes(r.id)) why.push('no owner approval: a directive tracked in git that names the row');
+            const real = typeof waiver.expiry === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(waiver.expiry) && !Number.isNaN(Date.parse(`${waiver.expiry}T00:00:00Z`)) && new Date(`${waiver.expiry}T00:00:00Z`).toISOString().slice(0, 10) === waiver.expiry;
+            if (!real || waiver.expiry < today) why.push('no real, unexpired expiry');
             if (why.length === 0) verdict = 'waived';
             else failures.push(`class predicate: ${r.id} is recorded ${r.cls}, derives ${derived}, and its waiver is refused: ${why.join('; ')}`);
         } else {
@@ -445,6 +453,11 @@ function mutated(io, file, edit) {
 function selfTest() {
     const io = realIo();
     const json = (file, edit) => mutated(io, file, (t) => JSON.stringify(edit(JSON.parse(t))));
+    // A synthetic, tracked owner directive naming R16.d, visible only to the
+    // self-test, so the waiver paths can be exercised before any real answer.
+    const DIRECTIVE = 'agents/evidence/owner-directives/self-test-r16d-waiver.md';
+    const withDirective = (base, tracked = true) => ({ ...base, exists: (rel) => rel === DIRECTIVE || base.exists(rel), read: (rel) => (rel === DIRECTIVE ? 'self-test directive: waive R16.d' : base.read(rel)), showAt: (rev, rel) => (rel === DIRECTIVE ? (tracked ? 'x' : null) : base.showAt(rev, rel)) });
+    const approved = (edit = (w) => w, tracked = true) => withDirective(json(FILES.grounds, (j) => { j.waivers['R16.d'] = edit({ ...j.waivers['R16.d'], approver: 'owner', directive: DIRECTIVE, expiry: '2099-12-31' }); return j; }), tracked);
     const cases = [
         ['baseline is clean', io, null],
         ['a Phase 7 check is dropped from the ledger', mutated(io, FILES.ledger, (t) => t.split('\n').filter((l) => !/`check_council_layout`/.test(l) && !/`R9\.[ab]`/.test(l)).join('\n')), /ledger checks differ|ledger row changed/],
@@ -460,7 +473,7 @@ function selfTest() {
         ['the mechanical site scanner finds an undisposed site', { ...io, sites: () => false }, /site scanner/],
         // The state cases start from the approved-waiver variant, so that the
         // owner-pending R16.d waiver does not decide them.
-        ['a stale pin quarantines rather than invalidates', (() => { const g = json(FILES.grounds, (j) => { Object.assign(j.waivers['R16.d'], { approver: 'owner', directive: 'agents/evidence/owner-directives/2026-10-24-7-1-closure-standard.md', expiry: '2099-12-31' }); return j; }); return { ...g, blob: (rel) => (rel === 'src/scripts/lint_readme_jargon.ts' ? '0'.repeat(40) : g.blob(rel)) }; })(), 'quarantined'],
+        ['a stale pin quarantines rather than invalidates', (() => { const g = approved(); return { ...g, blob: (rel) => (rel === 'src/scripts/lint_readme_jargon.ts' ? '0'.repeat(40) : g.blob(rel)) }; })(), 'quarantined'],
         ['a laundered mapping invalidates', json(FILES.mapping, (j) => { j.mapping.check_knowledge_cards['c10-E1-required'] = 'op:informational'; return j; }), 'invalid'],
         ['an observation row reached by a blocking branch', json(FILES.branches, (j) => { j.checks.find((c) => c.check === 'check_knowledge_cards').branches.find((b) => b.id === 'c10-freshness-warn').effect = 'error-exit-nonzero'; return j; }), /class predicate: R10\.h is recorded observation but its reaching branches derive invariant/],
         ['an invariant row reached only by a non-blocking branch', json(FILES.branches, (j) => { j.checks.find((c) => c.check === 'check_augment_description_cap').branches.find((b) => b.id === 'c4-over-cap').effect = 'warning-exit-zero'; return j; }), /class predicate: R4\.a is recorded invariant but its reaching branches derive observation/],
@@ -469,9 +482,13 @@ function selfTest() {
         ['a mode the reaching branch does not name', json(FILES.grounds, (j) => { j.modes['R11.f'] = '--global'; return j; }), /mode: R11\.f is the --global mode but reaching branch c11-beta-marker names no --global/],
         ['the waiver is removed', json(FILES.grounds, (j) => ({ ...j, waivers: {} })), /class predicate: R16\.d is recorded observation but its reaching branches derive invariant/],
         ['an unapproved waiver is refused', io, /R16\.d .* waiver is refused: no owner approval/],
-        ['an approved, unexpired waiver is reported waived, not derived', json(FILES.grounds, (j) => { Object.assign(j.waivers['R16.d'], { approver: 'owner', directive: 'agents/evidence/owner-directives/2026-10-24-7-1-closure-standard.md', expiry: '2099-12-31' }); return j; }), { none: /class predicate/ }],
-        ['an expired waiver is refused', json(FILES.grounds, (j) => { Object.assign(j.waivers['R16.d'], { approver: 'owner', directive: 'agents/evidence/owner-directives/2026-10-24-7-1-closure-standard.md', expiry: '2000-01-01' }); return j; }), /waiver is refused: no unexpired expiry/],
-        ['a mixed derivation is never waivable', (() => { const g = json(FILES.grounds, (j) => { Object.assign(j.waivers['R16.d'], { approver: 'owner', directive: 'agents/evidence/owner-directives/2026-10-24-7-1-closure-standard.md', expiry: '2099-12-31' }); return j; }); return { ...g, read: (rel) => (rel === FILES.mapping ? JSON.stringify((() => { const j = JSON.parse(io.read(rel)); j.mapping.check_composite_arming['c16-ledger-skip'] = 'R16.d'; return j; })()) : g.read(rel)) }; })(), /derived mixed is never waivable/],
+        ['an approved, unexpired waiver is reported waived, not derived', approved(), { none: /class predicate/ }],
+        ['an expired waiver is refused', approved((w) => ({ ...w, expiry: '2000-01-01' })), /waiver is refused: .*no real, unexpired expiry/],
+        ['an impossible expiry date is refused', approved((w) => ({ ...w, expiry: '2026-99-99' })), /waiver is refused: .*no real, unexpired expiry/],
+        ['a directive not tracked in git is refused', approved((w) => w, false), /waiver is refused: .*no owner approval/],
+        ['a waiver whose milestone step is ticked has lapsed', (() => { const g = approved(); return { ...g, read: (rel) => (rel === 'agents/roadmaps/road-to-authority-routing-mechanism.md' ? g.read(rel).replace('- [ ] **7.2 ', '- [x] **7.2 ') : g.read(rel)) }; })(), /milestone 7\.2 is reached, so the waiver has lapsed/],
+        ['a waiver whose issue text is absent is refused', approved((w) => ({ ...w, issue_ref: { ...w.issue_ref, text: 'a reconciliation nobody recorded anywhere' } })), /issue text not found in its file/],
+        ['a mixed derivation is never waivable', (() => { const g = approved(); return { ...g, read: (rel) => (rel === FILES.mapping ? JSON.stringify((() => { const j = JSON.parse(io.read(rel)); j.mapping.check_composite_arming['c16-ledger-skip'] = 'R16.d'; return j; })()) : g.read(rel)) }; })(), /derived mixed is never waivable/],
         ['a waiver for a row that does not diverge', json(FILES.grounds, (j) => { j.waivers['R4.a'] = { semantic: 'invariant', behaviour: 'observation', branch: 'c4-over-cap', owed_to: '7.2' }; return j; }), /stale waiver R4\.a/],
         ['a pin line renewed without its attested-set line', mutated(io, FILES.ledger, (t) => t.replace('`672ce60e22f56fd483b31ed84b13266a90b821c0`', '`' + '1'.repeat(40) + '`')), /pin set broken/],
         ['a snapshot without its structured baseline', mutated(io, FILES.ledger, (t) => t.replace(/(\| `check_augment_description_cap` \|[^\n]*?)\*\*invariant\*\*/, '$1**snapshot**')), /class predicate: R4\.a is recorded snapshot without its structured fields/],

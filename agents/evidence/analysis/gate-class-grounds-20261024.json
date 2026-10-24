@@ -1,5 +1,5 @@
 {
-  "_doc": "Structured grounds the independent branch inventory cannot supply. `modes`: the invocation flag a row speaks of; each is checked against the check's source and against the predicates of every branch that reaches the row. `waivers`: a row whose semantic class differs from its derived behaviour; a waiver is reported as waived, never as satisfaction, and is refused without an approver whose directive exists, an issue, and an unexpired expiry. `structured`: the baseline (snapshot) or bound, risk owner and expiry (tolerance) such a row carries in addition to blocking behaviour; no such row exists.",
+  "_doc": "Structured grounds the independent branch inventory cannot supply. `modes`: the invocation flag a row speaks of; each is checked against the check's source and against the predicates of every branch that reaches the row. `waivers`: a row whose semantic class differs from its derived behaviour; a waiver is reported as waived, never as satisfaction, and is refused unless: its milestone is an open step of a roadmap that exists (a ticked step lapses it); its issue text occurs in the named file; its approver is `owner` with a directive tracked in git that names the row; and its expiry is a real, unexpired date. `structured`: the baseline (snapshot) or bound, risk owner and expiry (tolerance) such a row carries in addition to blocking behaviour; no such row exists.",
   "modes": {
     "R8.c": "--require-complete",
     "R10.d": "--check-urls",
@@ -18,9 +18,15 @@
       "semantic": "observation",
       "behaviour": "invariant",
       "branch": "c16-store-unreadable",
-      "owed_to": "7.2",
       "reason": "The contract says an absent store is 'not measured yet' and never a build failure; the script currently exits 1 (check_composite_arming.ts:286-293). Reconciling that exit is an entry condition of 7.2.",
-      "issue": "road-to-authority-routing-mechanism 7.2 entry condition: row 16's exit-1 divergence reconciled",
+      "milestone": {
+        "roadmap": "agents/roadmaps/road-to-authority-routing-mechanism.md",
+        "step": "7.2"
+      },
+      "issue_ref": {
+        "file": "agents/evidence/analysis/gate-7-2-reliance-rules-20261024.md",
+        "text": "row 16's exit-1 divergence reconciled"
+      },
       "approver": null,
       "directive": null,
       "expiry": null
