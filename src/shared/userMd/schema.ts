@@ -11,7 +11,7 @@
  * the same Zod schema. ESLint forbids Node-only imports in this tree.
  */
 
-import { z } from 'zod';
+import * as z from 'zod';
 
 /** Hard cap on the optional `notes` block. Keeps the file loadable into every reply. */
 export const USER_IDENTITY_NOTES_MAX_CHARS = 8_000;

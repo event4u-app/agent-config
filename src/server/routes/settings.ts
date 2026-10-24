@@ -21,7 +21,7 @@ import type { Stats } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import type { ZodIssue } from 'zod';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { toJsonSchema7 } from '../../shared/zodJsonSchema.js';
 import { settingsSchema } from '../schemas/settings.js';
 import { parseYaml, mergeIntoTemplate, diffValues, deepMerge, renderSparseSettings, substituteTemplatePlaceholders, TEMPLATE_PLACEHOLDER_DEFAULTS } from '../io/yamlIO.js';
 import { sparseSettingsValues } from './wizard.js';
@@ -131,11 +131,7 @@ const SHARED_WRITE_MESSAGE =
 // the merged defaults will reject the first save.
 
 // Computed once — Zod → JSON Schema conversion is pure and the schema is static.
-const SETTINGS_JSON_SCHEMA = zodToJsonSchema(settingsSchema, {
-    name: 'AgentSettings',
-    $refStrategy: 'none',
-    target: 'jsonSchema7',
-});
+const SETTINGS_JSON_SCHEMA = toJsonSchema7(settingsSchema, 'AgentSettings');
 
 export interface SettingsRouteOptions {
     /** Write root — every PUT lands here as `.agent-settings.yml`. */

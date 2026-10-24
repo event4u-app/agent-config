@@ -143,8 +143,7 @@
         "preact": "^10.29.0",
         "web-tree-sitter": "0.24.7",
         "yaml": "^2.9.0",
-        "zod": "^3.25.0",
-        "zod-to-json-schema": "^3.25.0"
+        "zod": "^4.6.6"
     },
     "overrides": {
         "@hono/node-server": "^2.0.5"

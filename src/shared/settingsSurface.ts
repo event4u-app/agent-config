@@ -82,7 +82,7 @@ function unwrapRef(root: JsonSchemaNode): JsonSchemaNode {
 }
 
 /**
- * Flatten a `zodToJsonSchema` output into dotted leaf entries. Objects with
+ * Flatten a `toJsonSchema7` output into dotted leaf entries. Objects with
  * `properties` recurse; everything else (scalars, enums, arrays, free-form
  * maps) is a leaf. Deterministic key order (sorted) so snapshots diff
  * cleanly in git and across runs.

@@ -61,7 +61,7 @@ describe('flattenSurface', () => {
         });
     });
 
-    it('unwraps a $ref/definitions root (zod-to-json-schema named output)', () => {
+    it('unwraps a $ref/definitions root (toJsonSchema7 named output)', () => {
         const wrapped = { $ref: '#/definitions/S', definitions: { S: SCHEMA_V1 } };
         const s = flattenSurface(wrapped, '8.0.0');
         expect(Object.keys(s.entries)).toHaveLength(3);
