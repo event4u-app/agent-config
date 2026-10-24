@@ -11,7 +11,8 @@
 
 import * as path from 'node:path';
 
-import { checkLedger, hasLedger, lineageDir, readLedger } from '../_lib/lineage_ledger.js';
+import { checkLedger, hasLedger, LineageError, lineageDir, mergeIntoLedger, readLedger } from '../_lib/lineage_ledger.js';
+import { buildLocalImport } from '../_lib/lineage_seed.js';
 import { resolve_keys } from '../_lib/link_crypto.js';
 import type { EnvMap } from '../_lib/user_global_paths.js';
 
@@ -53,7 +54,32 @@ function cmdCheck(io: Io): number {
     return 0;
 }
 
-const USAGE = 'usage: code-graph lineage <check> [--root P]\n';
+/** Refuse, naming the setting, when no link key is configured. */
+export function needKeys(io: Io, verb: string): readonly string[] | null {
+    const keys = io.keys();
+    if (keys.length > 0) return keys;
+    io.err(
+        `code-graph lineage ${verb}: no link_encryption_key configured (secrets.link_encryption_key) — ` +
+            'the local ledger is sealed with it, so nothing is read or written without it\n',
+    );
+    return null;
+}
+
+function cmdImport(io: Io): number {
+    const keys = needKeys(io, 'import');
+    if (keys === null) return 2;
+    const { ledger, refused } = buildLocalImport(io.root, keys);
+    const dir = lineageDir(io.env);
+    const added = mergeIntoLedger(dir, ledger);
+    for (const r of refused) io.err(`code-graph lineage import: skipped ${r}\n`);
+    io.out(
+        `code-graph lineage import: ${String(added.sources)} new source(s), ${String(added.edges)} new edge(s) into ${dir}` +
+            `${refused.length > 0 ? ` · ${String(refused.length)} skipped` : ''}\n`,
+    );
+    return refused.length > 0 ? 1 : 0;
+}
+
+const USAGE = 'usage: code-graph lineage <check|import> [--root P]\n';
 
 export async function main(argv: readonly string[], deps: LineageDeps = {}): Promise<number> {
     const env = deps.env ?? process.env;
@@ -67,7 +93,16 @@ export async function main(argv: readonly string[], deps: LineageDeps = {}): Pro
         err: deps.stderr ?? ((s) => void process.stderr.write(s)),
     };
     const verb = argv[0];
-    if (verb === 'check') return cmdCheck(io);
+    try {
+        if (verb === 'check') return cmdCheck(io);
+        if (verb === 'import') return cmdImport(io);
+    } catch (e) {
+        if (e instanceof LineageError) {
+            io.err(`code-graph lineage: ${e.message}\n`);
+            return 2;
+        }
+        throw e;
+    }
     io.err(USAGE);
     return 2;
 }
