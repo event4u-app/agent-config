@@ -79,8 +79,12 @@ function trimPath(p: string): string {
         .replace(/\/+$/, '');
 }
 
-/** The credential-free form two spellings of one remote share. */
-export function canonicalOrigin(raw: string): string {
+/**
+ * The credential-free form two spellings of one remote share. A relative local
+ * path resolves against `base`, the repository root, because the process cwd
+ * is wherever the CLI happened to be started.
+ */
+export function canonicalOrigin(raw: string, base?: string): string {
     const url = raw.trim();
     const scp = /^(?:[^@/]+@)?([^:/]+):(?!\/\/)(.+)$/.exec(url);
     if (!url.includes('://') && scp && !/^[a-zA-Z]:[\\/]/.test(url)) {
@@ -92,7 +96,7 @@ export function canonicalOrigin(raw: string): string {
         const port = u.port && u.port !== DEFAULT_PORTS[u.protocol] ? `:${u.port}` : '';
         return `${u.hostname.toLowerCase()}${port}/${trimPath(decodeURIComponent(u.pathname))}`;
     } catch {
-        return `file:${trimPath(path.resolve(url))}`;
+        return `file:${trimPath(base === undefined ? path.resolve(url) : path.resolve(base, url))}`;
     }
 }
 
@@ -151,7 +155,7 @@ export function repoIdentity(root: string, env?: EnvMap | null, dir?: string): R
     let source: RepoIdentity['source'] = 'origin';
     let canonical: string;
     if (origin !== null) {
-        canonical = `origin:${canonicalOrigin(origin)}`;
+        canonical = `origin:${canonicalOrigin(origin, main)}`;
     } else {
         source = 'realpath';
         canonical = `path:${main}`;

@@ -51,6 +51,11 @@ describe('canonicalOrigin', () => {
         expect(canonicalOrigin('https://ghp_SECRET@github.com/Acme/widget')).toBe('github.com/Acme/widget');
     });
 
+    it('resolves a relative remote against the repository root, not the process cwd', () => {
+        const root = path.join(tmp, 'checkout');
+        expect(canonicalOrigin('../upstream.git', root)).toBe(`file:${path.join(tmp, 'upstream').replace(/^\/+/, '')}`);
+    });
+
     it('keeps a non-default port, because it names a different server', () => {
         expect(canonicalOrigin('https://git.example.com:8443/team/app.git')).toBe('git.example.com:8443/team/app');
     });
@@ -82,6 +87,12 @@ describe('repoIdentity', () => {
             ),
         );
         expect(ids.size).toBe(1);
+    });
+
+    it('gives a relative remote the id of the same remote spelled absolute', () => {
+        const relative = repoIdentity(repo('rel', '../upstream'), env).repoId;
+        const absolute = repoIdentity(repo('abs', path.join(tmp, 'upstream')), env).repoId;
+        expect(relative).toBe(absolute);
     });
 
     it('gives a URL carrying a token the same id as without', () => {

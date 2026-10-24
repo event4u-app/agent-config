@@ -174,7 +174,7 @@ export function recordProject(root: string, fields: ProjectFields = {}, opts: Re
         const { usedHome, ...rest } = fields;
         const next: ProjectEntry = {
             root: main,
-            remote: origin === null ? null : canonicalOrigin(origin),
+            remote: origin === null ? null : canonicalOrigin(origin, main),
             fingerprint: prev?.fingerprint ?? null,
             graph_home: prev?.graph_home ?? null,
             graph_commit: prev?.graph_commit ?? null,
