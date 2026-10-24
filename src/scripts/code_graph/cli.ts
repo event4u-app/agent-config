@@ -90,7 +90,9 @@ import { cliPackage, usableCli } from './refresh_cli.js';
 import {
     AUTO_REFRESH_REL,
     LOCK_REL,
+    STALE_LOCK_MS,
     acquire as acquireRefreshLock,
+    pidAlive,
     readRefreshRecords,
     reclaimMutexPath,
     recordRefresh,
@@ -649,14 +651,47 @@ function budgetSecondsOf(argv: string[]): number {
     return Number.isFinite(n) ? n : DEFAULT_BUDGET_SECONDS;
 }
 
-/** Best-effort removal of a temp build output + its sidecar. Never throws —
- * cleanup failure must not mask the real result (budget-exceeded / error). */
+/** Best-effort removal of a temp build output, its sidecar, its SQLite twin and
+ * the twin's own half-written temp. Never throws — cleanup failure must not mask
+ * the real result (budget-exceeded / error). */
 function cleanupTemp(tmpOut: string): void {
-    for (const p of [tmpOut, sidecarPath(tmpOut)]) {
+    const twin = sqliteTwinPath(tmpOut);
+    const twinTemps = fs
+        .readdirSync(path.dirname(tmpOut))
+        .filter((f) => f.startsWith(`${path.basename(twin)}.tmp-`))
+        .map((f) => path.join(path.dirname(tmpOut), f));
+    for (const p of [tmpOut, sidecarPath(tmpOut), twin, ...twinTemps]) {
         try {
             fs.unlinkSync(p);
         } catch {
             /* already absent, or never materialised — fine */
+        }
+    }
+}
+
+/**
+ * Remove what a refresh killed before its own cleanup left behind. A file is
+ * only an orphan when the pid in its name is gone AND it is older than a stale
+ * lock: the pid check alone would race a refresh that is starting right now.
+ */
+function sweepOrphanedTemps(out: string): void {
+    const dir = path.dirname(out);
+    const prefix = `.${path.basename(out)}.refresh-tmp-`;
+    let names: string[];
+    try {
+        names = fs.readdirSync(dir);
+    } catch {
+        return;
+    }
+    for (const name of names) {
+        if (!name.startsWith(prefix)) continue;
+        const pid = Number(name.slice(prefix.length).split('-')[0]);
+        if (!Number.isInteger(pid) || pid <= 0 || pidAlive(pid)) continue;
+        const full = path.join(dir, name);
+        try {
+            if (Date.now() - fs.statSync(full).mtimeMs > STALE_LOCK_MS) fs.unlinkSync(full);
+        } catch {
+            /* raced another sweeper — fine */
         }
     }
 }
@@ -736,6 +771,7 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
         return 1;
     }
     const dir = path.dirname(out);
+    sweepOrphanedTemps(out);
     const tmpOut = path.join(dir, `.${path.basename(out)}.refresh-tmp-${process.pid}-${randomBytes(4).toString('hex')}.json`);
     if (update) {
         const realSidecar = sidecarPath(out);
@@ -795,6 +831,12 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
     fs.renameSync(tmpOut, out); // same-dir → atomic; real cache only ever changes here
     const tmpSidecar = sidecarPath(tmpOut);
     if (fs.existsSync(tmpSidecar)) fs.renameSync(tmpSidecar, sidecarPath(out));
+    // The twin records the JSON's size and mtime; a rename keeps both, so the
+    // promoted twin matches the promoted JSON. Without a twin, the old one goes:
+    // it describes a JSON that no longer exists.
+    const tmpTwin = sqliteTwinPath(tmpOut);
+    if (fs.existsSync(tmpTwin)) fs.renameSync(tmpTwin, sqliteTwinPath(out));
+    else fs.rmSync(sqliteTwinPath(out), { force: true });
     process.stdout.write(`✅  code-graph refreshed — cache: ${path.relative(root, out)}\n`);
     return 0;
 }

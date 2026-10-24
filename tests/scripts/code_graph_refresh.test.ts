@@ -5,6 +5,8 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { computeVerdict } from '../../src/scripts/code_graph/detect.js';
+import { STALE_LOCK_MS } from '../../src/scripts/code_graph/refresh_lock.js';
+import { openGraphIndex } from '../../src/scripts/code_graph/sqlite_store.js';
 
 const CLI = path.resolve('src/scripts/code_graph/cli.ts');
 
@@ -96,6 +98,32 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         expect(r.status).toBe(0);
         expect(`${r.stdout}${r.stderr}`).toMatch(/fresh — nothing to do/);
         expect(fs.readFileSync(out, 'utf8')).toBe(before);
+    });
+
+    it('two refreshes leave exactly one SQLite twin, and it is the one the index path opens', () => {
+        const out = path.join(tmp, 'graph.json');
+        expect(runCli(['refresh', '--root', tmp, '--out', out]).status).toBe(0);
+        fs.writeFileSync(path.join(tmp, 'src', 'b.ts'), 'export const b = 2;\n', 'utf8');
+        expect(runCli(['refresh', '--root', tmp, '--out', out]).status).toBe(0);
+        const twins = fs.readdirSync(tmp).filter((f) => f.endsWith('.sqlite3') || f.includes('.sqlite3.tmp-'));
+        expect(twins).toEqual(['graph.sqlite3']);
+        const index = openGraphIndex(out);
+        expect(index).not.toBeNull();
+        index?.close();
+    });
+
+    it('a refresh sweeps the twin a killed refresh left behind, and keeps a live one', () => {
+        const out = path.join(tmp, 'graph.json');
+        const dead = path.join(tmp, '.graph.json.refresh-tmp-999999-deadbeef.sqlite3');
+        const live = path.join(tmp, `.graph.json.refresh-tmp-${process.pid}-cafebabe.sqlite3`);
+        fs.writeFileSync(dead, 'x');
+        fs.writeFileSync(live, 'x');
+        const old = (Date.now() - STALE_LOCK_MS - 60_000) / 1000;
+        fs.utimesSync(dead, old, old);
+        fs.utimesSync(live, old, old);
+        expect(runCli(['refresh', '--root', tmp, '--out', out]).status).toBe(0);
+        expect(fs.existsSync(dead)).toBe(false);
+        expect(fs.existsSync(live)).toBe(true);
     });
 
     it('budget exceeded → non-zero exit, NO cache written, no temp leftovers', () => {

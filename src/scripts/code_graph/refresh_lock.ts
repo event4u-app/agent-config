@@ -77,7 +77,7 @@ export function readRefreshRecords(root: string): Partial<Record<RefreshRecord['
     return out;
 }
 
-function pidAlive(pid: number): boolean {
+export function pidAlive(pid: number): boolean {
     try {
         process.kill(pid, 0);
         return true;
