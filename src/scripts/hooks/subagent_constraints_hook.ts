@@ -13,8 +13,9 @@
  * bounded digest of both layers.
  *
  * Room is handed out in a fixed priority, so a cut drops the least binding text
- * first: the Iron Law blocks of the safety-floor and consequence-class rules
- * ({@link FLOOR_RULE_IDS}), then the project's files nearest first, then the
+ * first: the first Iron Law block of each safety-floor and consequence-class rule
+ * ({@link FLOOR_RULE_IDS}; its later blocks are listed as cut, decision D17), then
+ * the project's files nearest first, then the
  * user's CLAUDE.md and the files it imports, then every other user rule's Iron
  * Law blocks. A rule is carried by its law blocks only, never its whole body;
  * every file found is named in an inventory with what became of it, or counted
@@ -220,6 +221,8 @@ interface Found {
     readonly rank: number;
     /** Order within a rank, for room and for print alike. */
     readonly sub: number;
+    /** A floor rule with law blocks after its first: shown at most cut, never full. */
+    readonly partial?: boolean;
     readonly layer: 'project' | 'user' | 'rule';
 }
 
@@ -285,7 +288,9 @@ function userLayer(configDir: string): Found[] {
     FLOOR_RULE_IDS.forEach((id, pos) => {
         const text = readText(path.join(rulesDir, `${id}.md`));
         if (text === null) return;
-        found.push({ label: id, body: ruleLawBlocks(text).join('\n\n'), rank: 0, sub: pos, layer: 'rule' });
+        const blocks = ruleLawBlocks(text);
+        const partial = blocks.length > 1;
+        found.push({ label: id, body: `${blocks[0] ?? ''}${partial ? CUT : ''}`, rank: 0, sub: pos, layer: 'rule', ...(partial ? { partial } : {}) });
     });
     for (const file of ruleFiles(rulesDir, new Set(FLOOR_RULE_IDS.map((id) => `${id}.md`)))) {
         const id = path.relative(rulesDir, file).split(path.sep).join('/').replace(/\.md$/, '');
@@ -420,7 +425,7 @@ export function instructionDigest(
         if (room - frame < MIN_SHOWN) continue;
         if (escBytes(f.body) <= room - frame) {
             shown[i] = f.body;
-            status[i] = 'full';
+            status[i] = f.partial === true ? 'cut' : 'full';
         } else {
             shown[i] = `${fitEscaped(f.body, room - frame - escBytes(CUT))}${CUT}`;
             status[i] = 'cut';

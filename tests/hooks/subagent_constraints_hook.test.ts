@@ -331,15 +331,18 @@ describe('subagent-constraints concern — the user layer', () => {
     });
 
     // Round-4 ratification finding: every law block of a floor rule outranks project and user text.
-    it('hands every law block of a floor rule room before the project and user files', () => {
+    it('hands the first law block of every floor rule room before the project and user files', () => {
         const multi = (id: string): string =>
             `---\npackage: fixture\n---\n\n# ${id}\n\n## Iron Law 1\n\n\`\`\`\nFIRST-${id}: ${'A'.repeat(60)}\n\`\`\`\n\n## Iron Law 2\n\n\`\`\`\nSECOND-${id}: ${'B'.repeat(60)}\n\`\`\`\n`;
         fs.mkdirSync(path.join(config, 'rules'), { recursive: true });
         for (const id of FLOOR_RULE_IDS) fs.writeFileSync(path.join(config, 'rules', `${id}.md`), multi(id));
         fs.writeFileSync(path.join(root, 'CLAUDE.md'), 'project filler line\n'.repeat(800));
         const digest = reply();
-        for (const id of FLOOR_RULE_IDS) expect(digest).toContain(`SECOND-${id}: ${'B'.repeat(60)}`);
-        expect(digest).toMatch(/Files, nearest last: CLAUDE\.md \((cut|omitted)\)/);
+        // D17 superseded round 4's all-blocks order: the first block outranks the files, the later ones are cut.
+        for (const id of FLOOR_RULE_IDS) {
+            expect(digest).toContain(`FIRST-${id}: ${'A'.repeat(60)}\n[cut here]`);
+            expect(digest).not.toContain(`SECOND-${id}`);
+        }
     });
 
     // Round-5 ratification finding: only a count-only inventory is reserved ahead of the floor laws;
@@ -352,5 +355,30 @@ describe('subagent-constraints concern — the user layer', () => {
         expect(Buffer.byteLength(replyLine(digest), 'utf-8')).toBeLessThanOrEqual(EMISSION_MAX_BYTES);
         for (const id of FLOOR_RULE_IDS) expect(digest).toContain(`FLOOR-${id}: ${'N'.repeat(225 - id.length)}`);
         expect(digest).toMatch(/User rules \(Iron Law blocks\): \d+ full, \d+ cut, \d+ empty, \d+ omitted\./);
+    });
+
+    // Owner directive D17 (2026-10-24, answer "2"): a floor rule is carried by its first law block,
+    // its later blocks are listed as cut, and the room that frees goes to the CLAUDE.md files.
+    it('carries every floor rule by its first law block and frees room for both CLAUDE.md files', () => {
+        const present = FLOOR_RULE_IDS.filter((id) => id !== 'low-impact-corpus-privacy-floor' && id !== 'source-confidentiality');
+        fs.mkdirSync(path.join(config, 'rules'), { recursive: true });
+        for (const id of present) {
+            fs.writeFileSync(
+                path.join(config, 'rules', `${id}.md`),
+                `---\npackage: fixture\n---\n\n# ${id}\n\n## Iron Law 1\n\n\`\`\`\nFIRST-${id}: ${'A'.repeat(110)}\n\`\`\`\n\n## Iron Law 2\n\n\`\`\`\nLATER-${id}: ${'B'.repeat(220)}\n\`\`\`\n`,
+            );
+        }
+        for (let i = 0; i < 77; i++) writeRule(`ordinary-${String(i).padStart(2, '0')}`, `ORDINARY ${i}: ${'o'.repeat(150)}`);
+        fs.writeFileSync(path.join(config, 'CLAUDE.md'), `${USER_LINE}\n`);
+        fs.writeFileSync(path.join(root, 'CLAUDE.md'), `${PLANTED}\n${'project line\n'.repeat(80)}`);
+        const digest = reply();
+        expect(Buffer.byteLength(replyLine(digest), 'utf-8')).toBeLessThanOrEqual(EMISSION_MAX_BYTES);
+        for (const id of present) {
+            expect(digest).toContain(`--- rule ${id} ---\nFIRST-${id}: ${'A'.repeat(110)}\n[cut here]`);
+            expect(digest).not.toContain(`LATER-${id}`);
+        }
+        expect(digest).toContain(USER_LINE);
+        expect(digest).toContain(PLANTED);
+        expect(digest).toMatch(new RegExp(`User rules \\(Iron Law blocks\\): (\\d+ full, ${present.length} cut|.*${present.length} cut)`));
     });
 });
