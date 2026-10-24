@@ -32,6 +32,65 @@ Vocabulary, from D24 and D21:
 
 Rows are per aspect, so one check can carry more than one class.
 
+## The governing definition — revision 4
+
+Both seats of the closure round on revision 3 (D33) asked for this before the
+verdict is relied on. anthropic made it the condition of acceptance. It binds
+every row below:
+
+> **A classification attaches to one currently implemented assertion under one
+> explicitly named invocation mode. It is semantic: it states what the
+> assertion means, independent of the exit status the script happens to return
+> today. Current enforcement is recorded separately, in the next section.
+> Proposed behaviour is non-binding migration metadata and is excluded from the
+> closure totals.**
+
+The definition has three consequences:
+
+- the two *target* rows of checks 9 and 12 are migration notes, not
+  classifications;
+- row 16's *store absent* is an observation by its own contract, while its
+  current exit 1 is a recorded divergence, not part of the class;
+- the mode-qualified rows of checks 8, 10 and 11 classify the assertion in that
+  mode only.
+
+**Which checks.** The population is the 16 checks the 2026-10-10 round measured
+red or classified on a clean `origin/main` worktree. Its record is
+`agents/evidence/council/live-tree-check-classification-20261010.md`, and the
+same 16 are re-listed in
+`agents/evidence/analysis/live-tree-check-remeasure-20261017.md`. That record is
+the Phase 7 start inventory openai asked to have cited.
+
+## Current enforcement, recorded separately
+
+From `agents/evidence/analysis/gate-invocation-inventory-20261024.md`:
+
+- eight checks block the required `Standing payload delta + budget gate` context
+  in their default mode (rows 4, 6, 8, 9, 10, 11, 14, 15);
+- seven block only the local `task ci` chain or the non-required
+  `Rule backstops` (rows 1, 2, 3, 5, 7, 12, 13);
+- `check_composite_arming` blocks nothing, because its store run is
+  `continue-on-error: true`.
+
+No observation aspect blocks at any caller found. Semantic class and current
+exit behaviour diverge in **one** place: row 16, *store absent*, exits 1. The
+divergence is recorded here and is not a reclassification.
+
+## Assurance level of each invariant
+
+The four classes do not change, but *invariant* covers three different
+guarantees (openai), so each invariant row carries one of these qualifiers:
+
+- **repository-consistency**: the check compares the tree against an
+  expectation the same authority can edit in the same change. These are row 1's
+  ratchet, row 2, row 3 and row 7. They are consistency checks, not
+  independently anchored invariants (anthropic).
+- **environment-dependent**:
+  - row 5 freshness (runner clock and time zone);
+  - the current-scope rows of checks 9 and 12 (the disk);
+  - row 10 C5 (git history depth).
+- **fixed-policy**: every other invariant row.
+
 ## The ledger — revision 3
 
 Revision 3 applies the 2026-10-24 round on revision 2 (D32). That round left exactly one closure blocker: the absent composite store carried a fifth value instead of a class. It is now an observation, and the missing-evidence state is runtime metadata only. Revision 3 also applies five refinements:
@@ -95,14 +154,14 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 16 | | store malformed | the store exists and every line parses | same | the store exists | a corrupt append | **invariant** | a corrupt store is a broken input contract (both seats); today exit 1 |
 | 16 | | store absent | the store file exists | same | no store file | bootstrap | **observation** | its own contract: no readings yet is "not measured yet" and never a build failure. Runtime metadata, not a class: `not-evaluated: evidence-missing`. Current behaviour diverges: the script exits 1, which is owed to 7.2. A future transition to invariant after a bootstrap deadline needs that deadline first (D31) and is not part of this verdict |
 
-## Totals — revision 3
+## Totals — revision 4
 
-37 aspect rows over 16 checks, every one in one of the four classes:
+37 aspect rows over 16 checks. Under the governing definition, the two target-scope rows are migration notes, so **35 classified aspects**, every one in one of the four classes:
 
-- **invariant 31**:
+- **invariant 29**, after excluding the two target-scope migration notes from the 31 invariant rows:
   - three hold only in a named invocation mode: `--require-complete`, and `--strict` on two checks;
   - one is time-qualified;
-  - two are target-scope rows (rows 9 and 12 over the git index), which no enforcement decision may rely on until the scope fix is verified; the two current-scope rows beside them are what 7.2 may rely on.
+  - the two target-scope rows of checks 9 and 12 are **not** counted. The current-scope rows beside them carry the classification.
 - **observation 6**:
   - token-golden default coverage;
   - C3 live URL;
@@ -117,7 +176,7 @@ No aspect carries a value outside the four classes. Runtime metadata such as `no
 
 The three D14 abstentions are resolved as follows:
 
-- `check_council_layout`: an invariant, for both the current scope and the target scope;
+- `check_council_layout`: an invariant over the disk scope it measures today;
 - `check_knowledge_cards`: eight aspects, of which six are invariants and two are observations;
 - `check_composite_arming`: two observations and one invariant.
 
@@ -137,7 +196,7 @@ The three D14 abstentions are resolved as follows:
 
 | Question | Needs |
 |---|---|
-| Fix rows 9 and 12 to scan tracked files plus staged additions | agent, under existing authority; it narrows a scope to the canonical one and weakens no rule. Owed before 7.2 relies on either check |
+| Which object rows 9 and 12 should inspect: the index, the checked-out commit, or the synthetic merge result. Moving from the disk to tracked paths stops detecting untracked entries, which is a reduction of detectable states (openai) and needs a justification | council, before 7.2 changes either check |
 | The bootstrap deadline after which an absent composite store fails | council (a reversible value) |
 | Any authority to raise the `check_gate_completeness` baseline, or any exception to a shrink-only list | owner-reserved second principal (`external-bootstrap-boundary-for-phases-2-3`); until then the lists are shrink-only invariants |
 | Demoting an observation aspect to non-blocking (7.2) | council, after the invocation-mode and consumer inventory; each demotion carries old behaviour, new behaviour, reason, consumers and a rollback condition |
