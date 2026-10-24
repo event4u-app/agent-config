@@ -1,12 +1,12 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-10-23T12:08:41.266Z",
-    "git_sha": "ffe878edc5db4369dd5d2a4ff5547059a297fb6f",
-    "run_url": "https://github.com/event4u-app/agent-config/actions/runs/39950189088",
-    "conditions": "Refresh for the 26 -> 28 mcp_public_tool_count move: the project-map work added two map tools over MCP without refreshing this record. Both values taken from the packed-artifact evaluation of release PR #2599 (clean container, linked run). cli_help_command_count unchanged at 114.",
+    "recorded_at": "2026-10-24T10:14:11.152Z",
+    "git_sha": "c1500bc436456d091b367999044e1430c59f210c",
+    "run_url": "https://github.com/event4u-app/agent-config/actions/runs/40084894454",
+    "conditions": "Refresh for the 28 -> 29 mcp_public_tool_count move: the code-graph estate work added `graph_estate` over MCP without refreshing this record. Value taken from the packed-artifact evaluation of release PR #2630 (clean container, linked run). cli_help_command_count unchanged at 114.",
     "measurements": {
         "cli_help_command_count": 114,
-        "mcp_public_tool_count": 28
+        "mcp_public_tool_count": 29
     }
 }
