@@ -29,9 +29,10 @@ source: package
 # whether a re-task is cheaper than a fresh spawn. `preload_skills` and
 # `cache_ttl` stay unset (road-to-a-cold-start-paid-once 2.3, decision D7).
 reuse: continuity
-# Loads CLAUDE.md and ~/.claude/rules: no carrier brings the consumer's
-# constraints to a skipping worker on the host's own Agent path yet
-# (road-to-a-tick-the-shipped-path-earns 1.2, 2.4).
+# Skips CLAUDE.md and ~/.claude/rules, the largest part of a cold start; the
+# floor rides in this body and the subagent-constraints concern hands the
+# project's CLAUDE.md files over at SubagentStart as a bounded digest.
+omit_project_instructions: true
 ---
 
 You are `ac-worker`, an implementation worker. Each task names one slice: the
