@@ -738,6 +738,28 @@ export function buildGraph(
             }
             return;
         }
+        // scoped `C::m()` whose class the file binds by a stated mechanism
+        // (an import, PSR-4, a local declaration, a C# namespace): the class
+        // is known, so a method it declares or inherits is the target, and the
+        // edge is exactly as trustworthy as the class binding.
+        if ((r.callStyle === 'scoped' || r.callStyle === 'dynamic') && r.scopeName) {
+            const cls = resolveInScope(ex.file, r.scopeName, 'any', ex.lang, true);
+            const kind = cls ? nodeKind.get(cls.target) : undefined;
+            if (cls && isStatedResolution(cls.via) && (kind === 'class' || kind === 'interface' || kind === 'enum')) {
+                const m = resolveHierMethod(cls.target, r.targetName);
+                if (m) {
+                    emit({
+                        source: r.sourceId,
+                        target: m,
+                        relation: 'calls',
+                        confidence: m.startsWith(`${cls.target}::`) ? cls.confidence : 'INFERRED',
+                        resolved_via: cls.via,
+                        provider: 'native',
+                    });
+                    return;
+                }
+            }
+        }
         // scoped (Class::m unresolved / facade) or dynamic ($obj->m) → AMBIGUOUS
         const cands = methodCandidates(r.targetName, ex.lang);
         if (r.callStyle === 'dynamic' && cands.length === 0) {

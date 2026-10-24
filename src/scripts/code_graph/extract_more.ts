@@ -113,11 +113,18 @@ export function extractPython(root: TsNode, file: string, out: FileExtract): voi
             case 'call': {
                 const fn = n.childForFieldName('function');
                 if (fn?.type === 'identifier') {
-                    out.rawEdges.push({ sourceId: scopeId, relation: 'calls', targetName: fn.text, confidenceHint: 'EXTRACTED', callStyle: 'free' });
+                    // `Order(...)` instantiates: a CapWords name is a class by Python convention.
+                    const isNew = /^[A-Z]/.test(fn.text);
+                    out.rawEdges.push({ sourceId: scopeId, relation: 'calls', targetName: fn.text, confidenceHint: 'EXTRACTED', callStyle: isNew ? 'new' : 'free' });
                 } else if (fn?.type === 'attribute') {
                     const obj = fn.childForFieldName('object');
                     const attr = text(fn.childForFieldName('attribute'));
                     const isSelf = obj?.type === 'identifier' && (obj.text === 'self' || obj.text === 'cls');
+                    let base = obj;
+                    while (base?.type === 'attribute') base = base.childForFieldName('object');
+                    // `Post.objects.count()` / `Service.run()` name a class at the root of the chain.
+                    const classRoot = base?.type === 'identifier' && /^[A-Z]/.test(base.text) ? base.text : null;
+                    if (classRoot) out.rawEdges.push({ sourceId: scopeId, relation: 'uses', targetName: classRoot, confidenceHint: 'EXTRACTED' });
                     out.rawEdges.push({
                         sourceId: scopeId,
                         relation: 'calls',
@@ -125,6 +132,7 @@ export function extractPython(root: TsNode, file: string, out: FileExtract): voi
                         confidenceHint: isSelf && classId ? 'INFERRED' : 'AMBIGUOUS',
                         callStyle: isSelf ? 'this' : 'dynamic',
                         ...(classId ? { enclosingClassId: classId } : {}),
+                        ...(classRoot && obj === base ? { scopeName: classRoot } : {}),
                     });
                 }
                 break;

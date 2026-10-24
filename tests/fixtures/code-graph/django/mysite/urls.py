@@ -1,6 +1,6 @@
 from django.urls import include, path, re_path
 
-from blog import views
+from blog import feed, views
 from blog.views import PostDetail
 
 urlpatterns = [
@@ -10,4 +10,6 @@ urlpatterns = [
     path("blog/", include("blog.urls")),
     path("v2/", include(("blog.urls", "blog"), namespace="v2")),
     path("inline/", lambda request: None),
+    path("feed/", feed.feed),
+    path("count/", feed.count),
 ]
