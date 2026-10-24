@@ -124,6 +124,7 @@ paperwork is cut.
       counts Bash calls running the council or vitest in the current session's
       transcript; the delivery summary prints them.
       verify: a unit test over a fixture transcript counts two council and three vitest calls.
+      production entry: src/scripts/probe_turnaround.ts
 
 ## Phase 6 — The evening report
 
@@ -132,6 +133,7 @@ paperwork is cut.
       open steps now against 24 h ago, `agents/evidence/` lines against `src/` +
       `tests/` lines, timeboxed steps, owner questions added.
       verify: a unit test over a temporary git repository reproduces each figure.
+      production entry: src/scripts/probe_turnaround.ts
 - [x] **6.2 The report is part of the drain's close.** `process-full-all.md` <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       names `--daily` as the evening report.
       verify: the file names `probe_turnaround --daily`.
