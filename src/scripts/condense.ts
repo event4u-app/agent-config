@@ -2191,10 +2191,10 @@ export function generate_plugin_command_skills(): number {
     const pointer_dir = path.join(MODULE_STATE.PLUGIN_SKILLS_DIR, PLUGIN_POINTER_SLUG);
     _mkdirp(pointer_dir);
     const pointer_file = path.join(pointer_dir, 'SKILL.md');
-    if (_isSymlink(pointer_file)) {
-        fs.unlinkSync(pointer_file);
-    }
     for (const file of [pointer_file, path.join(MODULE_STATE.PROJECT_ROOT, '.github', 'plugin', 'skills', PLUGIN_POINTER_SLUG, 'SKILL.md')]) {
+        if (_isSymlink(file)) {
+            fs.unlinkSync(file);
+        }
         if (!_isFile(file) || fs.readFileSync(file, 'utf-8') !== PLUGIN_POINTER_SKILL_BODY) { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, PLUGIN_POINTER_SKILL_BODY); }
     }
 
@@ -2226,7 +2226,7 @@ export function generate_plugin_command_skills(): number {
         }
     }
 
-    let msg = '  ✅  Plugin skills: bootstrap shim (1 pointer skill) in .claude-plugin/skills/';
+    let msg = '  ✅  Plugin skills: bootstrap shim (1 pointer skill) in .claude-plugin/skills/ and .github/plugin/skills/';
     if (removed_dirs) {
         msg += ` (${removed_dirs} content entries pruned)`;
     }

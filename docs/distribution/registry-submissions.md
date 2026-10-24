@@ -96,7 +96,7 @@ the owner, from [`owner-packets.md`](owner-packets.md).
 | Target | Tier | Route | Precondition |
 |---|---|---|---|
 | Gemini CLI Extensions gallery | A | root `gemini-extension.json` + repository topic `gemini-cli-extension`; daily crawl, no form | the topic is pushed (needs the repo-admin secret) |
-| the Copilot CLI's built-in default plugin list | B | external-plugin issue form: repo, path `.github/plugin`, release tag, 40-char SHA | owner go given 2026-10-24; a release carrying the self-contained plugin directory (a clean Copilot CLI 1.0.95 install of 17.3.0's `.github/plugin` loaded the server but not the skill; the repair loads both) |
+| the Copilot CLI's built-in default plugin list | B | external-plugin issue form: repo, path `.github/plugin`, release tag, 40-char SHA | owner go given 2026-10-24; a clean Copilot CLI install of `.github/plugin` from **the exact release being submitted** loads both the MCP server and the skill, re-run for every submitted release (17.3.0's loaded the server but not the skill; the repair loads both from a local install) |
 | Cline MCP Marketplace | B | issue, `mcp-server-submission` template, `assets/logo-400.png` | owner go given 2026-10-24; the template's required checkbox — Cline set the server up from the README alone — needs a real Cline run |
 | Cursor Marketplace | C | `cursor.com/marketplace/publish`, manual review | a Cursor manifest of the same discovery shape exists |
 | agentskill.sh | C | web "Analyze & Import" with the repo URL | — |
