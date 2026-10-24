@@ -1,19 +1,42 @@
 ---
 proposed_by: claude-opus-5.5 session ab54e45a (feat/code-graph-auto-refresh), on the owner's request of 2026-10-23
 implemented_by: claude-opus-5.5 session ab54e45a (feat/code-graph-auto-refresh)
-reviewed_by: AI council, 2 seats, provider-diverse (anthropic + openai), eight rounds of 2026-10-23
+reviewed_by: AI council, 2 seats, provider-diverse (anthropic + openai), thirteen rounds of 2026-10-23/24
 providers: [anthropic, openai]
-verdict: confirmed-non-expanding
+verdict: ratified
 seats:
-  anthropic: confirmed-non-expanding
-  openai: confirmed-non-expanding
+  anthropic: ratified
+  openai: ratified
 effective_after: merge
-subject: 94d93c8d87f005008fbe21bdecf9b756f4ce891302db17f3320576f94c5a98ba
+subject: 9257ae14ce72bcf05061afd16aba79687bd9cfa100e608980163fec635d2f712
 ---
 
 <!-- evidence-type: ratification -->
 
-# Code-graph auto-refresh — confirmed-non-expanding 2/2, after seven refusals
+# Code-graph auto-refresh — ratified 2/2 after thirteen rounds
+
+**Final state (rounds 9–13, 2026-10-24).** The header now answers for the change as it
+merges into PR #2603's branch: the auto-refresh (rounds 1–8 below), the three follow-ups,
+and a hook-bundle ceiling raise. The gated set against that base is
+`hook-bundle-budget.json`, `hook_manifest.yaml` + its compiled twin, and
+`_lib/egress_rules.ts`.
+
+| Round | anthropic | openai | What it found or decided |
+|---|---|---|---|
+| 9 | confirmed-non-expanding | refused | the egress head `=(?![=>])` lost the shell form `name==value`; `map-render.json` had no contract; no test for a failed second rename |
+| 10 | confirmed-non-expanding | refused | the map tests were missing from the prompt; `swapIn` had no protection against concurrent writers; rollback failure undefined |
+| 11 | ratified | ratified | head `(?::|=(?!==|=\s|>)=?)`; `buildMap` enforces a single writer (in-process and across processes via the refresh lock); a failed restore names the old generation's path |
+| 12 | ratified | ratified | raise 1,550,500 → 1,551,000 after the merge onto #2603 (each branch fit alone, together 117 B over; moving `handoff-context` out was measured at a 319–581 KB chunk per `session_start` and refused) — on the condition that #2603's dropped `provider_id` check comes back and the final size is recorded |
+| 13 | ratified | ratified | the condition carried out: the check restored, final 1,550,751 / 1,551,000 B in the raise_log |
+
+The three items the round-8 record left open are resolved in this PR
+(roadmap `road-to-code-graph-refresh-follow-ups`, archived): the egress false positive,
+one-generation map publication, and the development-hook install boundary with its
+trust model stated in `install-hooks.sh`. Windows hosts still get no session refresh.
+
+---
+
+## Rounds 1–8 (2026-10-23) — confirmed-non-expanding 2/2, after seven refusals
 
 `check_kernel_edit_ratified` gates three hook-plumbing surfaces on
 `feat/code-graph-auto-refresh`: `src/config/hook-bundle-budget.json` (a new chunk
