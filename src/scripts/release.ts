@@ -127,7 +127,7 @@ import {
 } from './_lib/release_highlights.js';
 import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import type { CommitRecord, ImpactTrailers } from './_lib/consumer_impact.js';
-import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, is_breaking_commit, parse_commit_log, parse_impact_trailers, write_impact_map } from './_lib/consumer_impact.js';
+import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, is_breaking_commit, parse_commit_log, parse_impact_trailers, release_impact_entry, write_impact_map } from './_lib/consumer_impact.js';
 import { span_bump } from './_lib/impact_bump.js';
 import { span_surfaces, type MajorSurface } from './_lib/major_surface.js';
 import { preflightPosition } from './_lib/release_position.js';
@@ -1546,7 +1546,7 @@ function main(argv: readonly string[] | null = null): number {
         mix: measure_mix_obligation(target, prev),
     });
     assert_major_migration_section(target, full, { previewOnly: args.dry_run });
-    assert_settings_surface_delta(target, { previewOnly: args.dry_run });
+    assert_settings_surface_delta(target, { previewOnly: args.dry_run, impact: release_impact_entry(commits).impact });
 
     // Era-split planning — gate on the POST-release view (2026-07-07 fix).
     // The drift test measures the era AFTER this release's section is

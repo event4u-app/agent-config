@@ -14,8 +14,9 @@ settings keys are part of its public contract**. Under the existing semver polic
 settings-key change legitimately trips a Major even when the day-to-day skill/rule surface is stable — so
 the cadence reflects an actively-evolving install/runtime surface, not instability in the content you use.
 A settings key may be removed or renamed in a minor release only when no consumer project can rely on it —
-default-neutral and derivable, proven by a named test; any other removal or rename ships only in a major,
-and a renamed key's alias is dropped only in a major.
+default-neutral and derivable, proven by a named test — or, for a rename, when its RENAMED_KEYS alias
+carries the value and the release declares Consumer-Impact: automatic; any other removal or rename ships
+only in a major, and a renamed key's alias is dropped only in a major.
 Each major below names what actually broke; majors with no consumer-facing break say so plainly.
 
 ## Install-ABI deprecation window

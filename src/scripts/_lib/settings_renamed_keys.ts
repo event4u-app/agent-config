@@ -9,8 +9,10 @@
  *
  * Release class: A settings key may be removed or renamed in a minor release
  * only when no consumer project can rely on it — default-neutral and
- * derivable, proven by a named test; any other removal or rename ships only in
- * a major, and a renamed key's alias is dropped only in a major. The new key
+ * derivable, proven by a named test — or, for a rename, when its RENAMED_KEYS
+ * alias carries the value and the release declares Consumer-Impact: automatic;
+ * any other removal or rename ships only in a major, and a renamed key's alias
+ * is dropped only in a major. The new key
  * always wins when one layer carries both: a reader who has already migrated
  * is not overridden by a stale line they forgot to delete.
  *
@@ -29,8 +31,9 @@ export type SettingsLayer = Record<string, unknown>;
  */
 export const SETTINGS_REMOVAL_RULE =
     'A settings key may be removed or renamed in a minor release only when no consumer project can ' +
-    'rely on it — default-neutral and derivable, proven by a named test; any other removal or rename ' +
-    "ships only in a major, and a renamed key's alias is dropped only in a major.";
+    'rely on it — default-neutral and derivable, proven by a named test — or, for a rename, when its ' +
+    'RENAMED_KEYS alias carries the value and the release declares Consumer-Impact: automatic; any other ' +
+    "removal or rename ships only in a major, and a renamed key's alias is dropped only in a major.";
 
 export const RENAMED_KEYS: ReadonlyMap<string, string> = new Map([
     ['planning.challenge_on_create', 'planning.closure_pass'],
