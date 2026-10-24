@@ -41,7 +41,10 @@ review of PR #2603 measured on real projects and that the PR did not close.
 ## Phase 2 — Accuracy residue from the PR #2603 review
 
 Measured on real clones on 2026-10-24; Flask blueprints across files and tsconfig
-`baseUrl` imports were fixed in that PR, these four were not.
+`baseUrl` imports were fixed in that PR, these were not. Each step closes by re-measuring
+the named clone; a provider measured on a real repository (Flask, Symfony, NestJS, Angular
+and Next.js already were in that review) moves from `partial` to `verified` in the coverage
+catalog together with the numbers that justify it.
 
 - [ ] **2.1 Django `include()` prefixes.** A route in an included `urls.py` carries the
       path of the `path("prefix/", include(...))` that includes it (djangoproject.com:
@@ -50,13 +53,20 @@ Measured on real clones on 2026-10-24; Flask blueprints across files and tsconfi
 - [ ] **2.2 C# files join the graph.** `using` directives and namespace-qualified names
       bind to the declaring file (eShopOnWeb: 64.5 % of C# files without an edge).
       verify: a C# fixture with two namespaces produces cross-file import and call edges in the extractor test.
-- [ ] **2.3 Request paths reach tables through services and repositories.** A route
-      whose handler calls a service or repository that persists a model reaches that
-      model's table (BookStack, djangoproject.com: 0 tables on request paths).
-      verify: a fixture with handler → service → repository → model shows the table on the request path.
-- [ ] **2.4 `routes/web.php` joins the communities it routes to.** On BookStack it forms
-      a community of its own instead of sitting with the controllers it routes to.
-      verify: the map test over a Laravel fixture puts the route file in a controller's community.
+- [ ] **2.3 Request paths reach tables and views.** A route whose handler calls a service
+      or repository that persists a model reaches that model's table (BookStack,
+      djangoproject.com: 0 tables on request paths), and a Spring controller that returns a
+      view name as a string (`return "owners/findOwners"`) renders that template
+      (spring-petclinic: 0 of 17 views).
+      verify: a fixture with handler → service → repository → model shows the table on the request path, and the Spring fixture renders a string-returned view.
+- [ ] **2.4 The map's areas are truthful and readable.** `routes/web.php` joins the
+      controllers it routes to instead of forming an area of its own, and shared view
+      partials stop gluing areas together (BookStack: `breadcrumbs.blade.php` is the
+      largest area, 227 files, up from 179). The viewer shows them legibly: the area list
+      wraps a long path without orphaning its colour dot or clipping the name (the #2595
+      finding), and the 3D orb spreads areas over the sphere instead of one cap, without
+      the area spheres overlapping at 375 px.
+      verify: the map test over a Laravel fixture puts the route file in a controller's area and no view partial heads an area; the viewer render check passes at 375 px and desktop width.
 
 ## Blockers
 
