@@ -24,6 +24,7 @@ import { isIP } from 'node:net';
 import * as path from 'node:path';
 
 import { encrypt } from './_lib/link_crypto.js';
+import { sourceId } from './_lib/source_id.js';
 import { sanitize_text } from './_lib/retrieval_sanitize.js';
 import { SourceError, resolveSource, type SourceRef } from './source_adapters.js';
 
@@ -207,26 +208,43 @@ export function quotedAnchor(text: string, needle: string): { line: number; quot
     return { line: i + 1, quote: words.slice(start, start + MAX_QUOTE_WORDS).join(' ') };
 }
 
-/** Codes source identities S1, S2, …; the identities leave only as ENC1 tokens in the round's intake.md. */
+/**
+ * Codes source identities; the identities leave only as ENC1 tokens in the round's intake.md.
+ * With an id key the codes are stable `src_…` ids (`_lib/source_id.ts`), equal across rounds;
+ * without one they are `S1, S2, …`, meaningful inside this round only.
+ */
 export class SourceCodebook {
     private readonly ids: string[] = [];
+    private readonly codes: string[] = [];
     private readonly tokens: string[] = [];
+    private readonly idKey: string | null;
 
-    constructor(private readonly key: string) {}
+    constructor(
+        private readonly key: string,
+        opts: { idKey?: string | null } = {},
+    ) {
+        this.idKey = opts.idKey ? opts.idKey : null;
+    }
 
     code(identity: string): string {
-        let i = this.ids.indexOf(identity);
+        const stable = this.idKey === null ? null : sourceId(identity, this.idKey);
+        let i = stable === null ? this.ids.indexOf(identity) : this.codes.indexOf(stable);
         if (i === -1) {
             this.ids.push(identity);
+            this.codes.push(stable ?? `S${String(this.ids.length)}`);
             this.tokens.push(encrypt(identity, this.key));
             i = this.ids.length - 1;
         }
-        return `S${String(i + 1)}`;
+        return this.codes[i] as string;
     }
 
     intakeMarkdown(): string {
-        const rows = this.tokens.map((token, i) => `- S${String(i + 1)}: ${token}`);
-        return ['# Sources', '', 'Identities are encrypted (`link_crypto`); tracked output names only the codes.', '', ...rows, ''].join('\n');
+        const rows = this.tokens.map((token, i) => `- ${this.codes[i] as string}: ${token}`);
+        const scope =
+            this.idKey === null
+                ? 'Codes are per-round (S1, S2, …) — no id key was available, so they do not match another round.'
+                : 'Codes are stable source ids (src_…), equal across rounds.';
+        return ['# Sources', '', 'Identities are encrypted (`link_crypto`); tracked output names only the codes.', scope, '', ...rows, ''].join('\n');
     }
 
     writeIntake(roundDir: string): void {

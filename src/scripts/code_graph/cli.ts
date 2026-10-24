@@ -12,6 +12,11 @@
  *                                               is discarded and retried once
  *   auto-refresh on|off|status [--root P]      opt this project in to the
  *                                               session-start background refresh
+ *   projects list|add|remove|prune             the user-global registry of
+ *                                               projects this machine works in
+ *                                               (ADR-299, `projects_cli.ts`)
+ *   estate where-used|projects-using|          estate questions from the local
+ *          advisory-impact                     index alone (`estate_cli.ts`)
  *
  * `detect --format json` (Phase 2, road-to-reachable-code-memory) emits a
  * single-line, stable-key-order JSON verdict on stdout — no timestamps, safe
@@ -29,8 +34,10 @@
  * completed temp output — on budget-exceeded, build failure, or the child
  * never producing output, the rename never happens and the OLD cache is left
  * byte-for-byte untouched. The cache itself (default
- * `agents/runtime/state/code-graph-v1.json`) is local-only and disposable —
- * gitignored, rebuildable from source at any time; never a source of truth.
+ * `agents/runtime/state/code-graph-v1.json`; for a root without `agents/` or a
+ * project install, the user-global `runtime/graphs/<repo id>/state/`, ADR-299)
+ * is local-only and disposable — gitignored, rebuildable from source at any
+ * time; never a source of truth.
  *
  *   impact    --diff <rev> [--depth N]      callers/dependents/test files
  *                                             reachable from the changed
@@ -46,16 +53,24 @@
  * three-state staleness — so a caller can tell "no callers" from "no callers I
  * would trust", and "dead" from "dead as of a graph 40 commits behind".
  *
+ * Every verb that reads a graph also takes `--project <id|name|path>`: a
+ * project in the user-global registry, resolved to its root and graph home
+ * (ADR-299). Only a registered project resolves.
+ *
  * Query subcommands (query/path/explain/affected) are added by the Phase-3
  * query tier. Deterministic, LLM-free, no network. Exit codes:
  * 0 ok · 1 not-found / validation-failed / refresh-budget-exceeded ·
  * 2 usage · 3 internal.
  *
  *   map      [--root P] [--out DIR] [--open]  draw the project map into
- *            [--no-verify] [--diff <rev>]      agents/map/ (ADR-297); renders it
+ *            [--no-verify] [--diff <rev>]      agents/map/ (ADR-297), or the
+ *                                               graph home's map/ (ADR-299); renders it
  *            [--prs]                           (open PRs by area, via gh)
  *                                               at three widths when Playwright
  *                                               is present
+ *   map --estate [--out DIR] [--no-verify]     one page of the registered projects
+ *                                               and their links, under the user-global
+ *                                               home; refused inside a git work tree
  *
  *   suggest-verb "<question>"                  (Phase 9 D3) print the verb
  *                                               (query/affected/path/explain)
@@ -81,16 +96,21 @@ import {
     detectSources,
     type GraphState,
     graphState,
-    NATIVE_CACHE_REL,
     pickSource,
 } from './detect.js';
+import { graphHome } from './graph_home.js';
 import { suggestVerb } from './intent.js';
+import { estateMain } from './estate_cli.js';
+import { estateMapMain } from './estate_map.js';
+import { touchHome } from './graph_budget.js';
+import { resolveProjectRef } from './project_ref.js';
+import { projectsMain, registerUse } from './projects_cli.js';
 import { buildMap, graphGeneration, mapGeneration, recordOutcome } from './map.js';
 import { cliPackage, usableCli } from './refresh_cli.js';
 import {
-    AUTO_REFRESH_REL,
-    LOCK_REL,
+    STALE_LOCK_MS,
     acquire as acquireRefreshLock,
+    pidAlive,
     readRefreshRecords,
     reclaimMutexPath,
     recordRefresh,
@@ -121,23 +141,33 @@ import {
     untested,
     type UntestedResult,
 } from './verbs.js';
+import { main as lineageMain } from './lineage_cli.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
 /**
- * The cache belongs to the project it describes: `<root>/agents/runtime/state/`,
- * the path MCP, the context hook and `detect` already read. Anchoring it to
+ * The cache belongs to the project it describes: `<root>/agents/runtime/state/`
+ * when the root has a project home, its user-global graph home otherwise
+ * (ADR-299) — the path MCP, the context hook and `detect` read. Anchoring it to
  * the package tree put a consumer's graph inside `node_modules`, where `npm ci`
  * deleted it, two projects sharing an install overwrote each other, and MCP
  * answered "no graph" right after the CLI reported a fresh one.
  */
 export function cacheFor(root: string): string {
-    return path.join(root, NATIVE_CACHE_REL);
+    return graphHome(root).cachePath;
+}
+/** A path relative to the root when it lies inside it; a graph home outside the root prints in full. */
+function shown(root: string, p: string): string {
+    const rel = path.relative(root, p);
+    return rel.startsWith('..') || path.isAbsolute(rel) ? p : rel;
 }
 /** Local `tsx` binary — `refresh` spawns `build` as a child of THIS file
  * through it, so a budget-exceeded kill only ever terminates the child. */
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const DEFAULT_BUDGET_SECONDS = 60;
+
+/** A refusal that names what the caller asked for wrongly; exits 1, not 3. */
+class UsageError extends Error {}
 
 function flag(argv: string[], name: string): string | null {
     const i = argv.indexOf(name);
@@ -157,8 +187,13 @@ function flag(argv: string[], name: string): string | null {
  */
 function resolveRoot(argv: string[]): string {
     const explicit = flag(argv, '--root');
+    const project = flag(argv, '--project');
     let candidate: string;
-    if (explicit !== null) {
+    if (project !== null) {
+        const r = resolveProjectRef(project);
+        if ('error' in r) throw new UsageError(r.error);
+        candidate = r.root;
+    } else if (explicit !== null) {
         candidate = explicit;
     } else {
         try {
@@ -197,6 +232,7 @@ async function cmdBuild(argv: string[]): Promise<number> {
     }
     const update = argv.includes('--update');
     const { graph, fileCount, reExtracted, reused } = await buildFromRepo(root, out, { update });
+    if (out === cacheFor(root)) registerUse(root, graph, git(root, 'rev-parse', 'HEAD'));
     const c = graph.edge_confidence_counts;
     process.stdout.write(
         `✅  code-graph ${update ? 'updated' : 'built'} — ${fileCount} files · ${graph.nodes.length} nodes · ${graph.edges.length} edges\n` +
@@ -204,7 +240,7 @@ async function cmdBuild(argv: string[]): Promise<number> {
             `    edges: EXTRACTED ${c.EXTRACTED} · INFERRED ${c.INFERRED} · AMBIGUOUS ${c.AMBIGUOUS}\n` +
             `    resolved_via: ${resolvedViaHistogram(graph)}\n` +
             (update ? `    incremental: ${reExtracted} re-extracted · ${reused} reused\n` : '') +
-            (out ? `    cache: ${path.relative(root, out)}\n` : '') +
+            (out ? `    cache: ${shown(root, out)}\n` : '') +
             legacyCacheNotice(root),
     );
     return 0;
@@ -261,12 +297,12 @@ function cmdValidate(argv: string[]): number {
     // content-addressed cache key, so agreement here means the twin was emitted
     // from THIS graph and not merely from a graph.
     const twinState = twinChecksumState(p, (parsed as CodeGraph).source_checksum);
-    const rel = path.relative(root, p);
+    const rel = shown(root, p);
     if (twinState.kind === 'mismatch') {
         process.stderr.write(
             `❌  SQLite twin disagrees with the canonical JSON: twin ${twinState.twin} ≠ json ${twinState.json}\n` +
                 '    The twin is derived and disposable — delete it and re-run `code-graph build`.\n' +
-                `    ${path.relative(root, sqliteTwinPath(p))}\n`,
+                `    ${shown(root, sqliteTwinPath(p))}\n`,
         );
         return 1;
     }
@@ -309,7 +345,8 @@ function resolveGraph(argv: string[]): { g: LoadedGraph; note: string } | { err:
     if (!picked) return { err: 'no code-graph source found — run `code_graph build` or ship a graph.json' };
     if (picked.kind === 'scip') return { err: `${picked.note ?? 'SCIP detected'} — run \`code-graph build\` to merge it into the native graph` };
     const staleNote = picked.stale ? ` ⚠ index is ${picked.commits_behind ?? 'N'} commit(s) behind — rebuild before trusting` : '';
-    return { g: loadGraph(picked.path, `${picked.kind}:${path.relative(root, picked.path)}`), note: staleNote };
+    touchHome(root);
+    return { g: loadGraph(picked.path, `${picked.kind}:${shown(root, picked.path)}`), note: staleNote };
 }
 
 function render(r: QueryResult, staleNote: string): number {
@@ -429,7 +466,8 @@ function isFlagValue(argv: string[], token: string): boolean {
  */
 function stateOf(argv: string[], answeredBy?: string): GraphState {
     const explicit = flag(argv, '--graph');
-    return graphState(resolveRoot(argv), explicit ?? answeredBy);
+    const root = resolveRoot(argv);
+    return graphState(root, explicit ?? answeredBy ?? cacheFor(root));
 }
 
 /** The two histogram lines + the staleness line, in one place so the four
@@ -635,7 +673,7 @@ function cmdDetect(argv: string[]): number {
     }
     for (const v of verdicts) {
         const fresh = v.stale === undefined ? '' : v.stale ? ` · STALE${v.commits_behind !== undefined ? ` (${v.commits_behind} behind)` : ''}` : ' · fresh';
-        process.stdout.write(`${v.kind.padEnd(9)} ${path.relative(root, v.path)}${fresh}${v.note ? ` · ${v.note}` : ''}\n`);
+        process.stdout.write(`${v.kind.padEnd(9)} ${shown(root, v.path)}${fresh}${v.note ? ` · ${v.note}` : ''}\n`);
     }
     const picked = pickSource(verdicts);
     if (picked) process.stdout.write(`→ query would use: ${picked.kind}\n`);
@@ -649,14 +687,52 @@ function budgetSecondsOf(argv: string[]): number {
     return Number.isFinite(n) ? n : DEFAULT_BUDGET_SECONDS;
 }
 
-/** Best-effort removal of a temp build output + its sidecar. Never throws —
- * cleanup failure must not mask the real result (budget-exceeded / error). */
-function cleanupTemp(tmpOut: string): void {
-    for (const p of [tmpOut, sidecarPath(tmpOut)]) {
+/** Best-effort removal of a temp build output, its sidecar, its SQLite twin and
+ * the twin's own half-written temp. Never throws — cleanup failure must not mask
+ * the real result (budget-exceeded / error). */
+export function cleanupTemp(tmpOut: string): void {
+    const twin = sqliteTwinPath(tmpOut);
+    let twinTemps: string[] = [];
+    try {
+        twinTemps = fs
+            .readdirSync(path.dirname(tmpOut))
+            .filter((f) => f.startsWith(`${path.basename(twin)}.tmp-`))
+            .map((f) => path.join(path.dirname(tmpOut), f));
+    } catch {
+        /* the directory is gone, so nothing in it is left to remove */
+    }
+    for (const p of [tmpOut, sidecarPath(tmpOut), twin, ...twinTemps]) {
         try {
             fs.unlinkSync(p);
         } catch {
             /* already absent, or never materialised — fine */
+        }
+    }
+}
+
+/**
+ * Remove what a refresh killed before its own cleanup left behind. A file is
+ * only an orphan when the pid in its name is gone AND it is older than a stale
+ * lock: the pid check alone would race a refresh that is starting right now.
+ */
+function sweepOrphanedTemps(out: string): void {
+    const dir = path.dirname(out);
+    const prefix = `.${path.basename(out)}.refresh-tmp-`;
+    let names: string[];
+    try {
+        names = fs.readdirSync(dir);
+    } catch {
+        return;
+    }
+    for (const name of names) {
+        if (!name.startsWith(prefix)) continue;
+        const pid = Number(name.slice(prefix.length).split('-')[0]);
+        if (!Number.isInteger(pid) || pid <= 0 || pidAlive(pid)) continue;
+        const full = path.join(dir, name);
+        try {
+            if (Date.now() - fs.statSync(full).mtimeMs > STALE_LOCK_MS) fs.unlinkSync(full);
+        } catch {
+            /* raced another sweeper — fine */
         }
     }
 }
@@ -736,6 +812,7 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
         return 1;
     }
     const dir = path.dirname(out);
+    sweepOrphanedTemps(out);
     const tmpOut = path.join(dir, `.${path.basename(out)}.refresh-tmp-${process.pid}-${randomBytes(4).toString('hex')}.json`);
     if (update) {
         const realSidecar = sidecarPath(out);
@@ -795,7 +872,13 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
     fs.renameSync(tmpOut, out); // same-dir → atomic; real cache only ever changes here
     const tmpSidecar = sidecarPath(tmpOut);
     if (fs.existsSync(tmpSidecar)) fs.renameSync(tmpSidecar, sidecarPath(out));
-    process.stdout.write(`✅  code-graph refreshed — cache: ${path.relative(root, out)}\n`);
+    // The twin records the JSON's size and mtime; a rename keeps both, so the
+    // promoted twin matches the promoted JSON. Without a twin, the old one goes:
+    // it describes a JSON that no longer exists.
+    const tmpTwin = sqliteTwinPath(tmpOut);
+    if (fs.existsSync(tmpTwin)) fs.renameSync(tmpTwin, sqliteTwinPath(out));
+    else fs.rmSync(sqliteTwinPath(out), { force: true });
+    process.stdout.write(`✅  code-graph refreshed — cache: ${shown(root, out)}\n`);
     return 0;
 }
 
@@ -844,6 +927,7 @@ async function cmdRefresh(argv: string[]): Promise<number> {
             record('failed', `build exited ${rc}`);
             return rc;
         }
+        if (out === cacheFor(root)) registerUse(root, null, git(root, 'rev-parse', 'HEAD'));
         if (argv.includes('--map') && mapIsBehind(root, out)) {
             const mrc = await drawMap(['--root', root, '--no-build', '--no-verify']);
             record(mrc === 0 ? 'refreshed-with-map' : 'map-failed', mrc === 0 ? undefined : `map exited ${mrc}`);
@@ -864,8 +948,18 @@ async function cmdRefresh(argv: string[]): Promise<number> {
 function cmdAutoRefresh(argv: string[]): number {
     const root = resolveRoot(argv);
     const action = argv.find((a) => !a.startsWith('--') && !isFlagValue(argv, a)) ?? 'status';
-    const marker = path.join(root, AUTO_REFRESH_REL);
+    const home = graphHome(root);
+    const marker = home.autoRefreshPath;
     if (action === 'on') {
+        if (home.kind === 'global') {
+            // The session concern serves project homes only; its chunk cannot carry the
+            // user-global resolver, so an opt-in here would be a promise nothing keeps.
+            process.stderr.write(
+                `code-graph: auto-refresh needs a project home (agents/ or a project install); ${root} has none.\n` +
+                    'Its graph lives in the user-global home — refresh it with `code-graph refresh`.\n',
+            );
+            return 1;
+        }
         fs.mkdirSync(path.dirname(marker), { recursive: true });
         fs.writeFileSync(marker, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`);
         const cli = usableCli(root);
@@ -896,10 +990,10 @@ function cmdAutoRefresh(argv: string[]): number {
     const cli = usableCli(root);
     const last = readRefreshRecords(root);
     const line = (r: (typeof last)['refresh']): string => (r ? `${r.outcome} at ${r.at}${r.detail ? ` (${r.detail})` : ''}` : 'never');
-    const mapDir = path.join(root, 'agents', 'map');
+    const mapDir = home.mapDir;
     const gen = graphGeneration(cacheFor(root));
     const drawnFrom = mapGeneration(mapDir);
-    const mutex = reclaimMutexPath(path.join(root, LOCK_REL));
+    const mutex = reclaimMutexPath(home.lockPath);
     process.stdout.write(
         `auto-refresh: ${fs.existsSync(marker) ? 'on' : 'off'}\n` +
             `cli: ${'reason' in cli ? (cli.reason === 'no-cli' ? 'none usable — nothing will run' : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'} — too old, nothing will run`) : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'}`}\n` +
@@ -908,7 +1002,7 @@ function cmdAutoRefresh(argv: string[]): number {
             `graph: ${computeVerdict(root, cacheFor(root)).verdict}\n` +
             `map: ${!fs.existsSync(mapDir) ? 'absent' : drawnFrom === null ? 'present (generation unknown — redrawn on the next refresh)' : drawnFrom === gen ? 'present, drawn from the current graph' : 'present, drawn from an older graph'}\n` +
             (fs.existsSync(mutex) && mutexAgeMs(mutex) > 60_000
-                ? `reclaim mutex: ${path.relative(root, mutex)} left by a crash — stale locks stay held until it is removed by hand\n`
+                ? `reclaim mutex: ${shown(root, mutex)} left by a crash — stale locks stay held until it is removed by hand\n`
                 : ''),
     );
     return 0;
@@ -928,7 +1022,7 @@ function mutexAgeMs(p: string): number {
  * copied or restored file carries wrongly. No map → never draw one unbidden.
  */
 function mapIsBehind(root: string, cache: string): boolean {
-    const mapDir = path.join(root, 'agents', 'map');
+    const mapDir = graphHome(root).mapDir;
     if (!fs.existsSync(mapDir)) return false;
     const gen = graphGeneration(cache);
     return gen !== null && mapGeneration(mapDir) !== gen;
@@ -940,6 +1034,7 @@ function mapIsBehind(root: string, cache: string): boolean {
  * Builds or updates the graph first when it is absent or behind.
  */
 async function cmdMap(argv: string[]): Promise<number> {
+    if (argv.includes('--estate')) return estateMapMain(argv);
     const root = resolveRoot(argv);
     if (!fs.existsSync(root)) {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
@@ -990,7 +1085,7 @@ async function drawMap(argv: string[]): Promise<number> {
                 ? `    diff ${r.model.diff.rev}: ${r.model.diff.changed.length} changed · ${r.model.diff.impacted.length} linked into them · ${r.model.diff.areas.length} area(s) touched\n`
                 : '') +
             `    wrote: ${r.written.length} files under ${rel}/ — open ${path.join(rel, 'index.html')}\n` +
-            (fs.existsSync(path.join(root, AUTO_REFRESH_REL))
+            (fs.existsSync(graphHome(root).autoRefreshPath)
                 ? ''
                 : '    keep it current at every agent session start: agent-config code-graph auto-refresh on\n'),
     );
@@ -1082,15 +1177,23 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'untested') return cmdUntested(argv.slice(1));
         if (sub === 'dead') return cmdDead(argv.slice(1));
         if (sub === 'suggest-verb') return cmdSuggestVerb(argv.slice(1));
+        if (sub === 'lineage' || (sub === 'map' && argv.includes('--lineage')))
+            return await lineageMain(sub === 'lineage' ? argv.slice(1) : ['map', ...argv.slice(1)]);
         if (sub === 'map') return await cmdMap(argv.slice(1));
         if (sub === 'outcome') return cmdOutcome(argv.slice(1));
         if (sub === 'auto-refresh') return cmdAutoRefresh(argv.slice(1));
+        if (sub === 'projects') return projectsMain(argv.slice(1));
+        if (sub === 'estate') return estateMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|tests-for|untested|dead|suggest-verb|map|outcome|auto-refresh> [options]\n',
+                'impact|tests-for|untested|dead|suggest-verb|map|outcome|auto-refresh|projects|estate|lineage> [options]\n',
         );
         return 2;
     } catch (e) {
+        if (e instanceof UsageError) {
+            process.stderr.write(`code-graph: ${e.message}\n`);
+            return 1;
+        }
         process.stderr.write(`code-graph: internal error: ${(e as Error).message}\n`);
         return 3;
     }

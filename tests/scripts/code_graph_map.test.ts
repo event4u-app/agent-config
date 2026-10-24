@@ -62,6 +62,8 @@ function fixture(): void {
 
 beforeEach(() => {
     root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-map-')));
+    // A project home (ADR-299): a root without `agents/` keeps its graph in the user-global home.
+    fs.mkdirSync(path.join(root, 'agents'));
     fixture();
 });
 afterEach(() => {

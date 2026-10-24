@@ -19,6 +19,7 @@ import * as path from 'node:path';
 
 import { load_agent_settings } from '../_lib/agent_settings.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { projectHome } from './graph_home.js';
 import { EXT_LANG } from './types.js';
 import { validateGraph } from './validate.js';
 
@@ -226,9 +227,6 @@ export function computeVerdict(root: string, nativeCache: string): VerdictJSON {
     };
 }
 
-/** Cache path a repository root's native graph lives at, repo-relative. */
-export const NATIVE_CACHE_REL = path.join('agents', 'runtime', 'state', 'code-graph-v1.json');
-
 /**
  * The four-state staleness token every consumer of the graph reports.
  *
@@ -328,10 +326,12 @@ function hasUncommittedIndexedEdit(root: string): boolean {
  * report `absent` while answering from that very file — the state of a cache
  * nobody asked about. Passing the graph the verb is actually reading makes the
  * printed staleness a statement about the answer rather than about a
- * convention.
+ * convention. The default is the project home only: the hooks that call this
+ * ship in the dispatch bundle, which cannot carry the user-global resolver, so
+ * a caller serving a user-global home passes `graphHome(root).cachePath`.
  */
 export function graphState(root: string, nativeCache?: string): GraphState {
-    const picked = pickSource(detectSources(root, nativeCache ?? path.join(root, NATIVE_CACHE_REL)));
+    const picked = pickSource(detectSources(root, nativeCache ?? projectHome(root).cachePath));
     if (!picked) return 'absent';
     if (picked.stale === true) {
         const behind = picked.commits_behind;
