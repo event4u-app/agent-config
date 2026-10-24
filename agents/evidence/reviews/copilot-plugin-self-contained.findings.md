@@ -1,12 +1,12 @@
 # Findings: copilot-plugin-self-contained
-<!-- completion-review: v1 | reviewed: 2026-10-24 | scope: 66308b23bb6297fedd7271f2920e66314a77b121c31c5f3409b60923d3038bf9 | diff: 48ec18b57584067a58be979bd297c48db617c1b1 | reviewer: r2-fresh-subagent-copilot-plugin-self-contained | prompt_hash: 3bcda7858813d0be5869b908dd88fa95ccabb4fdd14b219053d94ac2557703f4 | round: 1 -->
+<!-- completion-review: v1 | reviewed: 2026-10-24 | scope: da94aa08548893f09c214f7bde7759cef0551662508288b24c6cc51ebe61cb85 | diff: 6fce40f2b183cbed19127ef8241a61239532940f | reviewer: r2-fresh-subagent-copilot-plugin-self-contained | prompt_hash: 3bcda7858813d0be5869b908dd88fa95ccabb4fdd14b219053d94ac2557703f4 | round: 1 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-copilot-plugin-self-contained"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-24 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 48ec18b57584067a58be979bd297c48db617c1b1
-  scope_hash: 66308b23bb6297fedd7271f2920e66314a77b121c31c5f3409b60923d3038bf9
+  diff_sha: 6fce40f2b183cbed19127ef8241a61239532940f
+  scope_hash: da94aa08548893f09c214f7bde7759cef0551662508288b24c6cc51ebe61cb85
   roadmap: agents/roadmaps/later/road-to-listings-the-owner-submits.md
   roadmap_hash: a072404f8e18db86c27900c21d5fb7899b81e36b0b34d043125a4f6ce8a5fb76
   ac_hash: 6c2c44db4230ab0129bebde5691e26a90b2f30807a08e348951b7c1e6c7d9a82
