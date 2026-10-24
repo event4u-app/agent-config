@@ -56,7 +56,6 @@ import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import { nativeFieldLines } from './_lib/subagent_native_fields.js';
 import { project_settings_path, load_agent_settings } from './_lib/agent_settings.js';
 import { rule_is_compile_enabled } from './_lib/compile_time_toggles.js';
-import { resolve_rule_pack_scope } from './_lib/scoped_projection.js';
 import { info, success, flush_summary, resolve_level } from './_lib/script_output.js';
 import {
     TIER_TO_CLAUDE_MODEL as _TIER_TO_CLAUDE_MODEL,
@@ -948,14 +947,6 @@ export { _HRR_BANNER_MARKER };
 // (rule-router contract § Schema v2). Untagged rules fail safe: they ship.
 // ADR-040: projection-time filtering only, no runtime resolver.
 
-function _read_projection_raw(key: string): unknown {
-    const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
-    const proj = data['projection'];
-    return typeof proj === 'object' && proj !== null && !Array.isArray(proj)
-        ? (proj as Record<string, unknown>)[key]
-        : null;
-}
-
 /**
  * The MAINTAINER projection is never workspace-scoped — a constant since
  * ADR-293 step 4.6, not a settings read. `consumerRuleWorkspaces` subtracts
@@ -968,28 +959,15 @@ function _read_rule_workspaces(): string[] | null {
     return null;
 }
 
-/** `runtime.active_packs` overlay, empty when unset (fresh-install default). */
-function _read_runtime_active_packs(): string[] {
-    const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
-    const rt = data['runtime'];
-    const value =
-        typeof rt === 'object' && rt !== null && !Array.isArray(rt)
-            ? (rt as Record<string, unknown>)['active_packs']
-            : null;
-    return Array.isArray(value) ? value.map((v) => String(v)) : [];
-}
-
 /**
- * Pack scope for the rule layer. `rule_packs: auto` derives the active-pack
- * set (the same one the skill/command prune uses) instead of a hand-typed id
- * list; anything else keeps the historical list-or-inactive semantics.
+ * Pack scope for the MAINTAINER projection: inactive, a constant. The consumer
+ * pack axis is derived from the active-pack set since step 4.9 of
+ * road-to-a-setup-that-decides-itself, and `projection.rule_packs` is removed;
+ * this repository's own tree projects every pack's rules, exactly as an absent
+ * key always meant here — the same reasoning as {@link _read_rule_workspaces}.
  */
 function _read_rule_packs(): string[] | null {
-    return resolve_rule_pack_scope(
-        _read_projection_raw('rule_packs'),
-        MODULE_STATE.PROJECT_ROOT,
-        _read_runtime_active_packs(),
-    );
+    return null;
 }
 
 /**
