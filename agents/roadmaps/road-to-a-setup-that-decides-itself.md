@@ -304,7 +304,7 @@ with that file.
 - [x] **4.6c The settings-surface snapshot waits on the cut.**
   Two cases of `tests/scripts/consumer_matrix_settings_delta.test.ts` were red until the next cut wrote the released surface; the snapshot's only writer is `release.ts`. Landed 2026-10-24: `release: 17.0.0` (`14bd7c7db3`) carries the three removed keys under `removedKeys`; `npx vitest run tests/scripts/consumer_matrix_settings_delta.test.ts` -> 10/10 at `fb54c2052b`. Reasoning and the one test edit made before the cut: `agents/evidence/analysis/setup-4-6c-surface-snapshot.md`.
   verify: after the next cut, the case is green with no change to the test.
-- [ ] **4.7 `projection.mode` last.** Removed only after the skills roadmap's
+- [x] **4.7 `projection.mode` last.** Removed only after the skills roadmap's
   completeness question is answered; on hosts with a listing lever, scoping moves
   to visibility; elsewhere the active profile decides, reversing the template's
   "never inferred from profile.id" deliberately in the 4.1 ADR.
