@@ -41,7 +41,7 @@ describe('canonicalOrigin', () => {
             'git@github.com:Acme/widget.git',
             'git+ssh://git@github.com/Acme/widget.git',
         ];
-        expect(new Set(forms.map(canonicalOrigin))).toEqual(new Set(['github.com/Acme/widget']));
+        expect(new Set(forms.map((f) => canonicalOrigin(f)))).toEqual(new Set(['github.com/Acme/widget']));
     });
 
     it('strips userinfo, tokens and the query string', () => {
