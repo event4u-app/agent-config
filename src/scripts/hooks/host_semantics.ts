@@ -35,6 +35,7 @@
  */
 
 import { blockExitFor, DEFAULT_SURFACE, loadHostLowering, surfaceRow, verifiedPlatforms } from "./host_lowering.js";
+import { hostShowsUserNotice } from "./user_notice.js";
 
 /** Internal severity, mirroring dispatch_hook's EXIT_ALLOW / BLOCK / WARN. */
 export type Severity = "allow" | "warn" | "block";
@@ -131,6 +132,32 @@ export function claudeAdditionalContext(event: string, text: string): string {
     return `${JSON.stringify({
         hookSpecificOutput: { hookEventName, additionalContext: text },
     })}\n`;
+}
+
+/**
+ * Add a user-addressed notice to what the dispatcher writes on stdout.
+ *
+ * Claude Code parses stdout as JSON only when the whole of it is one object, so
+ * the notice cannot be appended beside plain `session_start` context: that
+ * context moves into `hookSpecificOutput.additionalContext`, which the same host
+ * documents for `SessionStart`, and the notice rides as `systemMessage`. On a
+ * host with no verified user channel the stdout is returned untouched, so the
+ * notice is dropped rather than written somewhere the model would read it.
+ */
+export function withUserNotice(platform: string, event: string, stdout: string, notice: string): string {
+    const text = notice.trim();
+    if (!text || !hostShowsUserNotice(platform) || !usesNativeEmission(platform)) return stdout;
+    const body = stdout.trim();
+    let reply: unknown = null;
+    try {
+        reply = JSON.parse(body);
+    } catch {
+        // plain session context
+    }
+    if (body && (typeof reply !== "object" || reply === null || Array.isArray(reply))) {
+        reply = { hookSpecificOutput: { hookEventName: nativeEventName(platform, event), additionalContext: body } };
+    }
+    return `${JSON.stringify({ ...(reply as object | null), systemMessage: text })}\n`;
 }
 
 /**
