@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
 depends:
@@ -14,6 +14,11 @@ relates:
   - slug: road-to-bytes-the-model-actually-receives
     relation: extends
     note: "Archived, every step closed, 1.4 included. Consumes its model-visible distribution (1.4) to pick the tool classes worth reducing, and its content key (2.2) for the repeated-Read reference."
+review_by: 2026-11-24
+entry_condition:
+  what: one of the five active roadmaps closes and frees a WIP slot (owner directive 2026-10-24, WIP limit 5)
+  when: at the next closed active roadmap; the owner's choice of which parked roadmap to pull
+  who: owner
 ---
 # Road to tool results that leave a handle
 
@@ -94,7 +99,7 @@ retention; concurrent write, read and cleanup.
       as row D6 before any store is built. Any census line it reads goes through
       `src/scripts/_lib/tool_result_census.ts` (`readCensusLine`), so a legacy
       `{bytes}` line counts as envelope bytes with delivered bytes unknown.
-      verify: `grep -c '^| D6 ' agents/roadmaps/road-to-tool-results-that-leave-a-handle.md` -> /^1$/
+      verify: `grep -c '^| D6 ' agents/roadmaps/later/road-to-tool-results-that-leave-a-handle.md` -> /^1$/
 - [x] **1.2 Classify content results exactly as pre-registered.** *Done
       2026-10-16: `classifyResult` + `contentProfile` in the report, a per-result
       `scanToolResultRecords` in `cc_transcript.ts` (command and timestamp kept),
@@ -114,7 +119,7 @@ retention; concurrent write, read and cleanup.
       `insufficient` in `agents/evidence/analysis/content-profile-selection-<date>.md`;
       the selection becomes row D14. No content class and no execution class
       selected → this roadmap closes on its second null (D10, D11).
-      verify: `grep -c '^| D14 ' agents/roadmaps/road-to-tool-results-that-leave-a-handle.md` -> /^1$/
+      verify: `grep -c '^| D14 ' agents/roadmaps/later/road-to-tool-results-that-leave-a-handle.md` -> /^1$/
 - [ ] **1.4 Measure the repeat share in the same window.** *Instrument built
       2026-10-16, reading still open: `repeatShare` in the report prints the
       share in the same `--profile content` run as 1.3; `scanToolResultRecords`
@@ -195,7 +200,7 @@ verdicts and conditions:
       (b) a reference to a byte-identical earlier delivery. A split again, or a
       repeat share and a selection that support neither, keeps the content profile
       unbuilt and is recorded as such. The choice becomes row D15.
-      verify: `grep -c '^| D15 ' agents/roadmaps/road-to-tool-results-that-leave-a-handle.md` -> /^1$/
+      verify: `grep -c '^| D15 ' agents/roadmaps/later/road-to-tool-results-that-leave-a-handle.md` -> /^1$/
 - [ ] **3.3 Content profile: build the chosen form, in observe mode.** The stand-in
       carries path, range, byte length, the sha256 of the delivered bytes and the
       handle — plus, under form (a) only, an outline of top-level symbols or

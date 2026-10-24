@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: ready
+status: later
 release_gate: next
 execution:
   mode: phase-checkpoints
@@ -22,6 +22,11 @@ relates:
   - slug: road-to-agent-throughput-recovery
     relation: disjoint
     note: "Owns throughput and CI wait. The supplied plan's P0 throughput items are owned there (D6)."
+review_by: 2026-11-24
+entry_condition:
+  what: one of the five active roadmaps closes and frees a WIP slot (owner directive 2026-10-24, WIP limit 5)
+  when: at the next closed active roadmap; the owner's choice of which parked roadmap to pull
+  who: owner
 ---
 # Road to breadth with depth
 

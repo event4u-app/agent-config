@@ -6,6 +6,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
+    LOCKED_RESOLVER_BASELINE,
     OWNERSHIP_CLASSES,
     decisionRowIds,
     checkFile,
@@ -196,5 +197,18 @@ describe('lint_decision_classes — the ready/resolved fixture pair', () => {
     it('decisionRowIds reads the first column of the table only', () => {
         const lines = readFixture('R2-ready-resolved.md').split('\n');
         expect([...decisionRowIds(lines)]).toEqual(['D1']);
+    });
+});
+
+describe('LOCKED_RESOLVER_BASELINE', () => {
+    const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+    it('names a decision row that exists at the path it cites', () => {
+        for (const entry of LOCKED_RESOLVER_BASELINE) {
+            const [rel, id] = entry.split('#') as [string, string];
+            const file = path.join(root, rel);
+            expect(fs.existsSync(file), `${rel} moved without its baseline entry`).toBe(true);
+            expect(decisionRowIds(fs.readFileSync(file, 'utf8').split('\n')).has(id), `${entry} has no ${id} row`).toBe(true);
+        }
     });
 });

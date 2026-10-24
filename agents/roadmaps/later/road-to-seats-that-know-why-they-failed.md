@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -13,6 +13,11 @@ relates:
   - slug: road-to-free-hands-a-paid-head-checks
     relation: disjoint
     note: "That roadmap consumes this one's closed failure vocabulary for route liveness and owns the base_url route; the jury seat the supplied plan proposed as P8 is executed there, not here."
+review_by: 2026-11-24
+entry_condition:
+  what: one of the five active roadmaps closes and frees a WIP slot (owner directive 2026-10-24, WIP limit 5)
+  when: at the next closed active roadmap; the owner's choice of which parked roadmap to pull
+  who: owner
 ---
 # Road to seats that know why they failed
 
