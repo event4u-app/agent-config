@@ -351,7 +351,6 @@ waits:
       enforced.
       verify: `ls agents/evidence/ratifications/` -> /worker-reuse-guard-flip/
       Evaluated 2026-10-23, not flipped: `flipReadiness` misses all four conditions (no would-resume; 85 complete calls over 0.02 days). The 1 MiB tail read is indexed (40786bb420). Closes when a window under a decided (c) returns `ready: true`; blocking form, ratification and reverse trigger then land together.
-      Re-evaluated 2026-10-24, not flipped: `worker_reuse_shadow_report` over 2026-10-22T20:44Z–2026-10-24T12:18Z read 70 `Agent` calls, 0 `would_resume`, every refusal `host_resume_unobserved`; all four conditions missing. The report passes the false-positive rate and both economics figures as null, so conditions 2 and 3 need a measurement before any window can read ready; condition 4's two-week floor falls on 2026-11-05 at the earliest.
 
 ## Phase 4 — Rate pressure that waits instead of spawning
 
