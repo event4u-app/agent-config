@@ -16,7 +16,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { findProjects, type ProjectEntry, readRegistry, recordProject, updateRegistry } from '../_lib/project_registry.js';
+import { findProjects, mainRoot, type ProjectEntry, readRegistry, recordProject, updateRegistry } from '../_lib/project_registry.js';
 import { dropProjectRows, indexAfterRefresh, indexPath } from './estate_index.js';
 import { enforceBudget, homeUsage } from './graph_budget.js';
 import { graphHome, graphsRoot } from './graph_home.js';
@@ -36,17 +36,30 @@ export function rootState(e: ProjectEntry, now: Date = new Date()): RootState {
 /**
  * Record that `root`'s graph was just built or refreshed. Best-effort: the
  * registry is bookkeeping, and a failure to write it never fails a build.
+ *
+ * A linked worktree shares its main checkout's repo id, so it records only its
+ * own home (for eviction and removal) and never the entry's graph home, commit,
+ * languages or estate row — a feature-branch build must not replace what the
+ * main checkout recorded.
  */
 export function registerUse(root: string, graph: CodeGraph | null, commit: string | null): string | null {
     try {
         const home = graphHome(root);
-        const id = recordProject(root, {
-            graph_home: home.dir,
-            ...(commit ? { graph_commit: commit } : {}),
-            ...(graph ? { languages: [...graph.languages], providers: (graph.providers ?? []).map((p) => p.id) } : {}),
-            ...(home.kind === 'global' ? { usedHome: home.dir } : {}),
-        });
-        indexAfterRefresh(id, fs.realpathSync(root), home.cachePath, graph);
+        const real = fs.realpathSync(root);
+        const worktree = mainRoot(real) !== real;
+        const usedHome = home.kind === 'global' ? { usedHome: home.dir } : {};
+        const id = recordProject(
+            root,
+            worktree
+                ? usedHome
+                : {
+                      graph_home: home.dir,
+                      ...(commit ? { graph_commit: commit } : {}),
+                      ...(graph ? { languages: [...graph.languages], providers: (graph.providers ?? []).map((p) => p.id) } : {}),
+                      ...usedHome,
+                  },
+        );
+        if (!worktree) indexAfterRefresh(id, real, home.cachePath, graph);
         if (home.kind === 'global') enforceBudget(home.dir);
         return id;
     } catch {

@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { readRegistry, recordProject, updateRegistry } from '../../../src/scripts/_lib/project_registry.js';
 import { main } from '../../../src/scripts/code_graph/cli.js';
+import { openEstate } from '../../../src/scripts/code_graph/estate_index.js';
 import { graphHome } from '../../../src/scripts/code_graph/graph_home.js';
 
 let tmp: string;
@@ -65,6 +66,31 @@ describe('registration by use (3.3)', () => {
         const r = repo('w2');
         expect((await cg('refresh', '--root', r)).rc).toBe(0);
         expect(Object.values(readRegistry().projects).map((e) => e.root)).toEqual([r]);
+    }, 60_000);
+});
+
+describe('a worktree build never replaces the main checkout (3.3)', () => {
+    it('keeps the registry graph home and the estate row root and name of the main checkout', async () => {
+        const main = repo('widget', 'https://github.com/Acme/widget.git');
+        expect((await cg('projects', 'index', 'on')).rc).toBe(0);
+        expect((await cg('build', '--root', main)).rc).toBe(0);
+        const wt = path.join(tmp, 'widget-feature');
+        execFileSync('git', ['-C', main, 'worktree', 'add', '-q', wt]);
+        expect((await cg('build', '--root', wt)).rc).toBe(0);
+
+        const entries = Object.entries(readRegistry().projects);
+        expect(entries).toHaveLength(1);
+        const [id, e] = entries[0]!;
+        expect(e.root).toBe(main);
+        expect(e.graph_home).toBe(graphHome(main).dir);
+        expect(Object.keys(e.homes)).toContain(graphHome(wt).dir);
+
+        const db = openEstate()!;
+        try {
+            expect(db.projects().map((p) => [p.id, p.name, p.root])).toEqual([[id, 'widget', main]]);
+        } finally {
+            db.close();
+        }
     }, 60_000);
 });
 
