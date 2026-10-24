@@ -21,7 +21,7 @@ evidence:
     - agents/evidence/council/resolve-blockers-batch-20261019.md
     - agents/evidence/analysis/impact-bump-out-of-sample-20261020.md
     - agents/evidence/council/adr-300-exception-at-the-cut-20261024.md
-    - agents/roadmaps/road-to-a-release-that-says-whether-it-needs-you.md
+    - agents/roadmaps/archive/road-to-a-release-that-says-whether-it-needs-you.md
     - CONTRIBUTING.md
     - BREAKING_CHANGES.md
 review_trigger: >-

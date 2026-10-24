@@ -449,16 +449,16 @@ direct check named in the revisit column.
 - [x] **AC-3** The new comparator returns `true` for
       `('16.6.0','16.6.0-next.3')` while the pinned `_is_newer` fixture still
       returns `false`.
-- [ ] **AC-4** Over a ≥ 40-case matrix, `classifyUpdate` returns `ask` for
-      every input whose `engines.node` is unsatisfied, and `auto` for **no**
-      input carrying an unknown, a missing provenance or a project pin.
-      Open for the owner (2026-10-18): the AI council split on whether this
-      text may be amended to the shipped `action` form — `anthropic` (3) leave
-      it with the owner, `openai` (1) amend with ordered wording. Both agree
-      the shipped behaviour is right. Record and the proposed wording:
-      `agents/evidence/council/release-impact-ac4-wording-20261018.md`.
-      Re-screened (2026-10-21): no owner ruling has landed since; the
-      criterion stays open and is not amended by the agent.
+- [x] **AC-4** Over a ≥ 40-case matrix, `classifyUpdate` applies these rules in order:
+      1. A suppressed check or an input without a newer candidate returns `none`.
+      2. Otherwise, an unsatisfied candidate `engines.node` returns `action`, never `ask` or `auto`.
+      3. No input carrying uncertainty — unknown data, missing provenance, or a project pin — returns `auto`.
+      Amended 2026-10-24 by the owner (answer "1", directive
+      `agents/evidence/owner-directives/2026-10-24-ac4-shipped-action-wording.md`) to the
+      ordered wording `openai` proposed in
+      `agents/evidence/council/release-impact-ac4-wording-20261018.md`; the original text
+      required `ask`. Verified: `npx vitest run tests/lib/classify_update.test.ts` → 69 passed
+      (matrix ≥ 40 asserted at :212, the ordered engines rule at :228).
 - [x] **AC-5** `classifyUpdate` performs no filesystem or network access,
       asserted by a test that calls it with a frozen input.
 - [x] **AC-6** The banner, `upgrade` and `update` produce byte-identical
