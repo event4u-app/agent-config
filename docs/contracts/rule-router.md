@@ -257,9 +257,10 @@ given subagent's rule set).
   projects to every role, exactly like an untagged `workspaces:`/`packs:`.
   Kernel rules (`type: always`) always project regardless of `roles:`.
 - **Consumer knob:** `projection.rule_roles` in `.agent-settings.yml` (a
-  string list), read by `ruleScopeFromSettings` the same way as
-  `projection.rule_workspaces` / `projection.rule_packs` — absent/empty =
-  no role filtering (today's behaviour, unchanged). `condense.ts`'s
+  string list), read by `ruleScopeFromSettings` — absent/empty = no role
+  filtering (today's behaviour, unchanged). The workspace and pack axes
+  beside it are derived, not read (ADR-293 step 4.6; step 4.9 of
+  `road-to-a-setup-that-decides-itself`). `condense.ts`'s
   maintainer-side projection (`generate_rule_symlinks` and friends) does
   not read this key — role scoping is a subagent-spawn-time concern, not
   a package-projection concern; `rule_in_scope`'s new `role_scope`
@@ -463,10 +464,10 @@ track ships a competing setting:
   `road-to-discipline-profile-tiering`). Thin projection, when un-deferred,
   folds under `essential` as an implementation detail; `lean_projection.mode`
   is then absorbed/retired. No new runtime toggles for this layer.
-- **Install-time (not a runtime setting):** consumer scoping via
-  `projection.rule_workspaces` / `projection.rule_packs` — default flips
-  `legacy-all` → scoped as a reviewed release decision after the
-  misclassification audit (done 2026-07-07) + measured before/after.
+- **Install-time (not a runtime setting):** consumer rule scoping is
+  derived — the workspace axis from the pack vocabulary (ADR-293 step 4.6),
+  the pack axis from the active-pack set (step 4.9 of
+  `road-to-a-setup-that-decides-itself`); neither is a settings key.
 - **Host-native (no setting):** Cursor/Windsurf glob auto-attach (§ above)
   is always on — deterministic, no compliance risk.
 

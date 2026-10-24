@@ -314,6 +314,12 @@ with that file.
   mechanism and its tests exist.
   Routed to the owner 2026-10-24: the reach condition holds, but the removal is not default-neutral and both council seats classify it owner-reserved (`agents/evidence/council/setup-projection-mode-removal-20261024.md`).
   **Owner answered 2026-10-24 (owner-questions OQ-1): option 1** — remove it in the next major and retire the full-surface guarantee on hosts without a listing lever; `use --profile=legacy-all` is removed or redefined. Ships with #2644 in the same major.
+- [x] **4.9 Retire `projection.rule_packs`.** Owner directive 2026-10-24 (D14): the rule
+  layer's pack axis is derived from the active-pack set; tombstone; for one release window an
+  explicitly written value wins; the eight rules the derivation drops are audited; `doctor` reports a
+  legacy value's difference from the derived set; ships in the next major (`Consumer-Impact: action`).
+  verify: `npx vitest run tests/install/rule_packs_retired.test.ts` -> 0
+  verify: `! grep -q rule_packs src/config/agent-settings.template.yml src/server/schemas/settings.ts` -> 0
 - [x] **4.8 Downgrade stays safe.** A machine downgraded to a release that still
   reads the keys resolves the absent key to its full form.
   verify: mixed-version fixture — removal release, then the previous release —
@@ -435,6 +441,7 @@ with that file.
 | D11 | reversible-technical | council:agents/evidence/council/setup-project-tree-form-source-20261024.md | The project tree keeps `project-tree-form.json` as its source, with `projectTreeForm()` on the live path, verdict provenance carried as `scope: 'project-tree'` rather than read from a reason string, and `AGENT_CONFIG_PROJECT_TREE_FORM=full` as the rollback | AI council 2026-10-24, anthropic + openai, design mode, two rounds, 2/2 for (c), $0.00; supersedes the one-seat reading of 2026-10-20 | a project-tree observer exists and contradicts ADR-267, or parity, reachability or near-miss results regress |
 | D12 | reversible-technical | agent | 3.3's promotion is gated by a shipped switch (`layer-form-promotion.json`, off) that 5.3 flips, not by the absence of evidence alone; demotion is never gated; the ownership ledger is re-recorded on every rewrite | 5.3 enables promotion "on the record", which a decision function that could already return `thinned` on a fresh observed row would pre-empt; an un-re-recorded rewrite reads as a user edit to the next install (`decideDeployWrite`) | 5.3 lands, or the installer gains its own recognition of package-written stubs |
 | D13 | contested-technical | council:agents/evidence/council/setup-prereg-review-20261024.md | 5.1's primary reads the three present corpus sources; D2's 1 % candidate margin is replaced by zero tolerance on every source, because 239 non-critical matrix positives cannot power it (zero regressions bound at 1.25 %) — D2's own revisit condition | Council 2/2 twice on 2026-10-24: the endpoint (`setup-prereg-primary-endpoint-20261024.md`) and three review rounds, frozen 2/2 in round 3; stricter than D2, no computed-arm data seen | a host-graded case set is committed, or the frozen corpus or scorer changes |
+| D14 | product-owned | owner | AC-1's remaining key `projection.rule_packs` is retired by step 4.9 under the council's conditions, in the next major | owner answer "1" of 2026-10-24 (`agents/evidence/owner-directives/2026-10-24-rule-packs-retirement.md`) to the question the council routed (`agents/evidence/council/setup-rule-packs-key-20261024.md`, 2/2, owner-reserved) | the eight-rule audit finds a rule that applies regardless of its pack |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->
@@ -464,7 +471,7 @@ with that file.
   has a reachable `auto` value that derives from the active-pack set, so
   retiring it is a different question from deriving a fixed list, and it needs
   its own step rather than being folded into one that did not ask about it.
-  Routed 2026-10-24: AI council 2/2 recommends a retirement step (derive the pack axis from the active-pack set, tombstone, one-window read, next major), and both seats classify it owner-reserved — removing a public settings key is a compatibility commitment. With the owner: `agents/evidence/council/setup-rule-packs-key-20261024.md`.
+  Decided 2026-10-24 by the owner (D14, answer "1"): step 4.9 retires it, under the council's conditions (`agents/evidence/council/setup-rule-packs-key-20261024.md`).
 - [x] AC-2 — 3.1 returns `full` whenever any of its conditions fails, and for
   every consequence-class and safety-floor rule under every input.
 - [ ] AC-3 — 5.2 reads non-inferior under D2, or consumers stay full and the

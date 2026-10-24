@@ -1281,9 +1281,9 @@ ${indent}`) + "'";
         return quotedString(value, ctx);
       }
       const indent = ctx.indent || (ctx.forceBlockIndent || containsDocumentMarker(value) ? "  " : "");
-      const literal2 = blockQuote === "literal" ? true : blockQuote === "folded" || type === Scalar.Scalar.BLOCK_FOLDED ? false : type === Scalar.Scalar.BLOCK_LITERAL ? true : !lineLengthOverLimit(value, lineWidth, indent.length);
+      const literal = blockQuote === "literal" ? true : blockQuote === "folded" || type === Scalar.Scalar.BLOCK_FOLDED ? false : type === Scalar.Scalar.BLOCK_LITERAL ? true : !lineLengthOverLimit(value, lineWidth, indent.length);
       if (!value)
-        return literal2 ? "|\n" : ">\n";
+        return literal ? "|\n" : ">\n";
       let chomp;
       let endStart;
       for (endStart = value.length; endStart > 0; --endStart) {
@@ -1332,7 +1332,7 @@ ${indent}`) + "'";
         if (onComment)
           onComment();
       }
-      if (!literal2) {
+      if (!literal) {
         const foldedValue = value.replace(/\n+/g, "\n$&").replace(/(?:^|\n)([\t ].*)(?:([\n\t ]*)\n(?![\n\t ]))?/g, "$1$2").replace(/\n+/g, `$&${indent}`);
         let literalFallback = false;
         const foldOptions = getFoldOptions(ctx, true);
@@ -12591,7 +12591,9 @@ var REMOVED_KEYS = /* @__PURE__ */ new Map([
   // 2026-10-20 — the projection keys (ADR-293, road-to-a-setup-that-decides-itself Phase 4)
   ["lean_projection.mode", "the computed layer-form decision (_lib/layer_form_decision.ts), plus `install --full` and src/config/layer-form-brakes.json as the two brakes. For one release window an installer converts a leftover `eager-all` into the install receipt pin and drops any other value, saying which (_lib/projection_key_migration.ts); the project tree reads the package-owned src/config/project-tree-form.json, never this key"],
   ["lean_projection.hosts", "THINNABLE_HOSTS in _lib/lean_projection_mode.ts and the per-host row in src/config/host-injection-effect.json; no reader of this key remains"],
-  ["projection.rule_workspaces", "consumerRuleWorkspaces() in _lib/scoped_projection.ts, which derives the consumer workspace set from src/config/discovery/packs.yml \u2014 every id minus `agent-config-maintainer` \u2014 so a new pack reaches consumers without a settings edit"]
+  ["projection.rule_workspaces", "consumerRuleWorkspaces() in _lib/scoped_projection.ts, which derives the consumer workspace set from src/config/discovery/packs.yml \u2014 every id minus `agent-config-maintainer` \u2014 so a new pack reaches consumers without a settings edit"],
+  // 2026-10-24 — road-to-a-setup-that-decides-itself step 4.9 (owner directive, D14)
+  ["projection.rule_packs", "the active-pack set; install rule scoping honours an explicit value one release window"]
 ]);
 var _warnedRemovedKeys = /* @__PURE__ */ new Set();
 function _readDotted(root, dotted) {
@@ -13209,12 +13211,10 @@ function _list(value) {
 function ruleScopeFromSettings(settings, packageRoot) {
   const derivedWorkspaces = packageRoot === void 0 ? null : consumerRuleWorkspaces(packageRoot);
   const proj = settings["projection"];
-  if (typeof proj !== "object" || proj === null || Array.isArray(proj)) {
-    return { ...LEGACY_ALL, workspaces: derivedWorkspaces };
-  }
-  const p = proj;
-  const packs = packageRoot === void 0 ? _list(p["rule_packs"]) : resolve_rule_pack_scope(
-    p["rule_packs"],
+  const p = typeof proj === "object" && proj !== null && !Array.isArray(proj) ? proj : {};
+  const legacy = legacyRulePacks(p);
+  const packs = packageRoot === void 0 ? legacy === void 0 ? null : _list(legacy) : resolve_rule_pack_scope(
+    legacy === void 0 ? RULE_PACKS_AUTO : legacy,
     packageRoot,
     _list(_runtimeActivePacks(settings)) ?? []
   );
@@ -13234,6 +13234,9 @@ function ruleScopeFromSettings(settings, packageRoot) {
     packs,
     roles: _list(p["rule_roles"])
   };
+}
+function legacyRulePacks(projection) {
+  return Object.prototype.hasOwnProperty.call(projection, "rule_packs") ? projection["rule_packs"] : void 0;
 }
 function _runtimeActivePacks(settings) {
   const rt = settings["runtime"];
@@ -17605,28 +17608,6 @@ var $ZodEnum = /* @__PURE__ */ $constructor("$ZodEnum", (inst, def) => {
     return payload;
   };
 });
-var $ZodLiteral = /* @__PURE__ */ $constructor("$ZodLiteral", (inst, def) => {
-  $ZodType.init(inst, def);
-  const values = new Set(def.values);
-  inst._zod.values = values;
-  defineLazyInternal(inst, "pattern", (zod) => {
-    const vals = zod.def.values;
-    return new RegExp(vals.length ? `^(${vals.map((o) => typeof o === "string" ? escapeRegex(o) : o ? escapeRegex(o.toString()) : String(o)).join("|")})$` : "^[^\\s\\S]$");
-  });
-  inst._zod.parse = (payload, _ctx) => {
-    const input = payload.value;
-    if (values.has(input)) {
-      return payload;
-    }
-    payload.issues.push({
-      code: "invalid_value",
-      values: def.values,
-      input,
-      inst
-    });
-    return payload;
-  };
-});
 var $ZodTransform = /* @__PURE__ */ $constructor("$ZodTransform", (inst, def) => {
   $ZodType.init(inst, def);
   inst._zod.optin = "optional";
@@ -20860,27 +20841,6 @@ function _enum(values, params) {
     ...util_exports.normalizeParams(params)
   });
 }
-var ZodLiteral = /* @__PURE__ */ $constructor("ZodLiteral", (inst, def) => {
-  $ZodLiteral.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json, params) => literalProcessor(inst, ctx, json, params);
-  inst.values = new Set(def.values);
-  Object.defineProperty(inst, "value", {
-    get() {
-      if (def.values.length > 1) {
-        throw new Error("This schema contains multiple valid literal values. Use `.values` instead.");
-      }
-      return def.values[0];
-    }
-  });
-});
-function literal(value, params) {
-  return new ZodLiteral({
-    type: "literal",
-    values: Array.isArray(value) ? value : [value],
-    ...util_exports.normalizeParams(params)
-  });
-}
 var ZodTransform = /* @__PURE__ */ $constructor("ZodTransform", (inst, def) => {
   _ensureDefaultMemoizer();
   $ZodTransform.init(inst, def);
@@ -21087,9 +21047,6 @@ var settingsSchema = object({
   projection: object({
     mode: projectionMode.default("legacy-all").describe(
       "Whether the per-tool projector writes EVERY artefact into the host-tool trees (.claude/ .cursor/ .windsurf/) or only the active profile + packs' artefacts (ADR-040, docs/contracts/capability-packs.md). legacy-all = (default, non-breaking) project the full surface exactly as 5.x did. scoped = project only the active profile's packs unioned with the runtime.active_packs overlay, expanded over the requires graph \u2014 opt in with `agent-config use --profile=<id>`. A failed scoped projection restores the full tree."
-    ),
-    rule_packs: union([literal("auto"), array(string2())]).default([]).describe(
-      'Scoping axis for the RULE layer beyond the derived workspace set, per pack ids (src/config/discovery/packs.yml). When set, a non-kernel rule also needs a packs frontmatter intersection to ship \u2014 e.g. deselecting frontend-design drops ui-audit-gate + design-fidelity. Opt-in, and an empty list is inactive; the workspace axis beside it is derived rather than configured (ADR-293 step 4.6). The literal "auto" derives the id list from the active-pack set (the same set the skill/command prune uses), so a domain safety floor stops shipping into installs that do not have the pack it guards; an explicit list stays supported and wins over the derivation.'
     )
   }).prefault({ mode: "legacy-all" }),
   rule_loading_tier: ruleLoadingTier.default("balanced").describe(
