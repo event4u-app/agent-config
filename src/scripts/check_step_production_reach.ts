@@ -12,8 +12,10 @@
  *
  * A step whose code is built but not wired stays `[ ]` with `built, not wired`; a
  * ticked step carrying that phrase is refused outright. `production entry: <path>`
- * in the block adds an entry for that step. Report mode exits 0 (3.3: one release
- * of shadow first); `--enforce` exits 1 on a finding.
+ * in the block adds an entry for that step. A false positive is exempted per
+ * step, never globally: `reach exempt: <reason>` in the block, the reason at
+ * least {@link MIN_EXEMPT_REASON} characters. Enforcing since 3.3, after report
+ * mode shipped in 17.1.0 through 17.4.0; without `--enforce` it only reports.
  *
  * Usage:
  *   ./scripts-run src/scripts/check_step_production_reach [--base <ref>] [--head <ref>] [--enforce] [--json]
@@ -120,11 +122,24 @@ export interface Finding {
     readonly reason: string;
 }
 
+export const MIN_EXEMPT_REASON = 12;
+
+/** The reason after `reach exempt:` outside backticks, `''` when bare, undefined when absent. */
+export function reachExemption(block: string): string | undefined {
+    const m = /reach exempt:[ \t]*([^\n]*)/i.exec(block.replace(/`[^`]*`/g, ''));
+    return m === null ? undefined : (m[1] as string).trim();
+}
+
 /** The unreached public symbols this block's tests take from its subjects. */
 export function checkStep(tree: ReachTree, reach: Reach, file: string, step: string, block: string): Finding | null {
     // Quoted, the phrase is talk about the rule; bare, it is the step's own status.
     if (/built, not wired/i.test(block.replace(/`[^`]*`/g, ''))) {
         return { file, step, reason: 'ticked while it says `built, not wired` — such a step stays `[ ]`' };
+    }
+    const exempt = reachExemption(block);
+    if (exempt !== undefined) {
+        if (exempt.length >= MIN_EXEMPT_REASON) return null;
+        return { file, step, reason: `\`reach exempt:\` needs a reason of at least ${MIN_EXEMPT_REASON} characters` };
     }
     const { subjects, tests, entries } = namedPaths(tree, block);
     const r = entries.length ? productionReach(tree, entries) : reach;
@@ -178,7 +193,8 @@ export function run(
             continue;
         }
         const f = checkStep(tree, reach, file, step, block);
-        if (f === null) ledger.complete(target);
+        if (f === null && reachExemption(block) !== undefined) ledger.skip(target, 'declared_exemption');
+        else if (f === null) ledger.complete(target);
         else {
             ledger.fail(target, f.reason);
             findings.push(f);
@@ -208,6 +224,11 @@ function selfTest(): number {
     }
     const declared = '- [x] **1.4 x** `src/lib.ts`, production entry: `src/cli.ts`\n  verify: `tests/lib.test.ts`';
     if (checkStep(tree, reach, 'r.md', '1.4', declared) !== null) failures.push('a declared production entry was not honoured');
+    const exempt = '- [x] **1.5 x** `src/lib.ts`, reach exempt: a maintainer bench, never shipped\n  verify: `tests/lib.test.ts`';
+    if (checkStep(tree, reach, 'r.md', '1.5', exempt) !== null) failures.push('a reasoned per-step exemption was not honoured');
+    if (checkStep(tree, reach, 'r.md', '1.6', '- [x] **1.6 x** `src/lib.ts`, reach exempt: fp\n  verify: `tests/lib.test.ts`') === null) {
+        failures.push('an exemption without a reason did not red');
+    }
     if (checkStep(tree, reach, 'r.md', '1.3', '- [x] **1.3 x** built, not wired') === null) {
         failures.push('a ticked built-not-wired step did not red');
     }
@@ -247,7 +268,7 @@ export function main(argv: readonly string[]): number {
     const enforce = argv.includes('--enforce');
     if (!argv.includes('--json')) {
         for (const f of result.findings) process.stdout.write(`${enforce ? '❌' : '⚠️ '}  ${f.file}: step ${f.step} — ${f.reason}\n`);
-        if (result.findings.length && !enforce) process.stdout.write('   Report only (shadow, step 3.3): nothing is refused yet.\n');
+        if (result.findings.length && !enforce) process.stdout.write('   Report only: run with --enforce to refuse.\n');
     }
     return enforce && result.findings.length ? 1 : 0;
 }
