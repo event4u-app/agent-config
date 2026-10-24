@@ -70,7 +70,8 @@ function realIo() {
 // inventory was produced without sight of the ledger, and its branch-to-row
 // mapping was independently reviewed; each branch's `effect` says whether the
 // run fails. A row in a flag mode ("in that mode") counts a flag-only failure as
-// blocking; a default-mode row counts it as non-blocking.
+// blocking; a default-mode row counts it as non-blocking. `exit-code-only`
+// blocks only with a non-zero exit code.
 export const BLOCKING_EFFECTS = ['error-exit-nonzero', 'throw', 'exit-code-only'];
 export const NON_BLOCKING_EFFECTS = ['warning-exit-zero'];
 export const FLAG_EFFECT = 'warning-exit-nonzero-only-with-flag';
@@ -258,8 +259,8 @@ export function reconcile(io) {
                 const preds = (b.predicates ?? []).join(' ');
                 if (mode !== null && !preds.includes(mode)) failures.push(`mode: ${r.id} is the ${mode} mode but reaching branch ${b.id} names no ${mode} in its predicates`);
                 if (b.effect === FLAG_EFFECT && !/--[a-z]/.test(preds)) failures.push(`mode: flag-only branch ${b.id} names no flag in its predicates`);
-                if (BLOCKING_EFFECTS.includes(b.effect) || (b.effect === FLAG_EFFECT && mode !== null && preds.includes(mode))) blocking.push(b.id);
-                else if (NON_BLOCKING_EFFECTS.includes(b.effect) || b.effect === FLAG_EFFECT) nonBlocking.push(b.id);
+                if ((BLOCKING_EFFECTS.includes(b.effect) && !(b.effect === 'exit-code-only' && b.exit_code === 0)) || (b.effect === FLAG_EFFECT && mode !== null && preds.includes(mode))) blocking.push(b.id);
+                else if (NON_BLOCKING_EFFECTS.includes(b.effect) || b.effect === FLAG_EFFECT || (b.effect === 'exit-code-only' && b.exit_code === 0)) nonBlocking.push(b.id);
                 else failures.push(`class predicate: ${r.id} is reached by ${b.id} with unknown effect ${b.effect}`);
             }
         }
@@ -453,18 +454,23 @@ function mutated(io, file, edit) {
 function selfTest() {
     const io = realIo();
     const json = (file, edit) => mutated(io, file, (t) => JSON.stringify(edit(JSON.parse(t))));
-    // A synthetic, tracked owner directive naming R16.d, visible only to the
-    // self-test, so the waiver paths can be exercised before any real answer.
-    const DIRECTIVE = 'agents/evidence/owner-directives/self-test-r16d-waiver.md';
-    const withDirective = (base, tracked = true) => ({ ...base, exists: (rel) => rel === DIRECTIVE || base.exists(rel), read: (rel) => (rel === DIRECTIVE ? 'self-test directive: waive R16.d' : base.read(rel)), showAt: (rev, rel) => (rel === DIRECTIVE ? (tracked ? 'x' : null) : base.showAt(rev, rel)) });
-    const approved = (edit = (w) => w, tracked = true) => withDirective(json(FILES.grounds, (j) => { j.waivers['R16.d'] = edit({ ...j.waivers['R16.d'], approver: 'owner', directive: DIRECTIVE, expiry: '2099-12-31' }); return j; }), tracked);
+    // The waiver paths are exercised on a synthetic divergence: R10.h's one
+    // reaching branch is made blocking in the test inputs only, so the
+    // observation row derives invariant. A synthetic, tracked owner directive
+    // naming R10.h is visible only to the self-test.
+    const DIRECTIVE = 'agents/evidence/owner-directives/self-test-r10h-waiver.md';
+    const diverged = (base) => ({ ...base, read: (rel) => (rel === FILES.branches ? JSON.stringify((() => { const j = JSON.parse(base.read(rel)); j.checks.find((c) => c.check === 'check_knowledge_cards').branches.find((x) => x.id === 'c10-freshness-warn').effect = 'error-exit-nonzero'; return j; })()) : base.read(rel)) });
+    const WAIVER = { semantic: 'observation', behaviour: 'invariant', branch: 'c10-freshness-warn', reason: 'self-test', milestone: { roadmap: 'agents/roadmaps/road-to-authority-routing-mechanism.md', step: '7.2' }, issue_ref: { file: 'agents/evidence/analysis/gate-7-2-reliance-rules-20261024.md', text: "row 16's exit-1 divergence reconciled" } };
+    const withWaiver = (w) => json(FILES.grounds, (j) => { j.waivers['R10.h'] = w; return j; });
+    const withDirective = (base, tracked = true) => ({ ...base, exists: (rel) => rel === DIRECTIVE || base.exists(rel), read: (rel) => (rel === DIRECTIVE ? 'self-test directive: waive R10.h' : base.read(rel)), showAt: (rev, rel) => (rel === DIRECTIVE ? (tracked ? 'x' : null) : base.showAt(rev, rel)) });
+    const approved = (edit = (w) => w, tracked = true) => diverged(withDirective(withWaiver(edit({ ...WAIVER, approver: 'owner', directive: DIRECTIVE, expiry: '2099-12-31' })), tracked));
     const cases = [
         ['baseline is clean', io, null],
         ['a Phase 7 check is dropped from the ledger', mutated(io, FILES.ledger, (t) => t.split('\n').filter((l) => !/`check_council_layout`/.test(l) && !/`R9\.[ab]`/.test(l)).join('\n')), /ledger checks differ|ledger row changed/],
         ['the Phase 7 record is altered', mutated(io, FILES.phase7, (t) => `${t}\n`), /differs from the version that landed/],
         ['an unsure review verdict loses its resolution', json(FILES.mapping, (j) => ({ ...j, resolutions: {} })), /unresolved review verdict/],
         ['a reviewed row branch is laundered into a category', json(FILES.mapping, (j) => { j.mapping.check_knowledge_cards['c10-E1-required'] = 'op:informational'; return j; }), /reviewed mapping changed without review/],
-        ['a review disagreement is reverted', json(FILES.mapping, (j) => { j.mapping.check_composite_arming['c16-store-unreadable'] = 'R16.c'; return j; }), /disagreement not adopted/],
+        ['a review disagreement is reverted', json(FILES.mapping, (j) => { j.mapping.lint_ticked_unmet_criteria['c2-selftest-recurse'] = 'R2.b'; return j; }), /disagreement not adopted/],
         ['a pinned source changes', { ...io, blob: (rel) => (rel === 'src/scripts/lint_readme_jargon.ts' ? '0'.repeat(40) : io.blob(rel)) }, /STALE: src\/scripts\/lint_readme_jargon\.ts/],
         ['a helper on the closure changes', { ...io, blob: (rel) => (rel === 'src/scripts/_lib/as_of.ts' ? '0'.repeat(40) : io.blob(rel)) }, /helper closure changed/],
         ['a row\'s applicability is edited after review', mutated(io, FILES.ledger, (t) => t.replace('| when git is runnable;', '| always;')), /ledger row changed/],
@@ -472,23 +478,24 @@ function selfTest() {
         ['a line of the committed branch reconciliation is edited', mutated(io, BRANCH_MATRIX, (t) => t.replace('| op:usage |', '| R1.a invariant |')), /committed branch reconciliation differs/],
         ['the mechanical site scanner finds an undisposed site', { ...io, sites: () => false }, /site scanner/],
         // The state cases start from the approved-waiver variant, so that the
-        // owner-pending R16.d waiver does not decide them.
+        // removed R16.d waiver path cannot decide them.
         ['a stale pin quarantines rather than invalidates', (() => { const g = approved(); return { ...g, blob: (rel) => (rel === 'src/scripts/lint_readme_jargon.ts' ? '0'.repeat(40) : g.blob(rel)) }; })(), 'quarantined'],
         ['a laundered mapping invalidates', json(FILES.mapping, (j) => { j.mapping.check_knowledge_cards['c10-E1-required'] = 'op:informational'; return j; }), 'invalid'],
         ['an observation row reached by a blocking branch', json(FILES.branches, (j) => { j.checks.find((c) => c.check === 'check_knowledge_cards').branches.find((b) => b.id === 'c10-freshness-warn').effect = 'error-exit-nonzero'; return j; }), /class predicate: R10\.h is recorded observation but its reaching branches derive invariant/],
+        ['an exit-code-only branch that exits 0 does not block', json(FILES.branches, (j) => { const b = j.checks.find((c) => c.check === 'check_augment_description_cap').branches.find((x) => x.id === 'c4-over-cap'); b.effect = 'exit-code-only'; b.exit_code = 0; return j; }), /class predicate: R4\.a is recorded invariant but its reaching branches derive observation/],
         ['an invariant row reached only by a non-blocking branch', json(FILES.branches, (j) => { j.checks.find((c) => c.check === 'check_augment_description_cap').branches.find((b) => b.id === 'c4-over-cap').effect = 'warning-exit-zero'; return j; }), /class predicate: R4\.a is recorded invariant but its reaching branches derive observation/],
         ['a flag-mode row loses its structured mode', json(FILES.grounds, (j) => { delete j.modes['R11.f']; return j; }), /mode: R11\.f says "in that mode" but has no structured mode/],
         ['a structured mode the class cell does not name', mutated(io, FILES.ledger, (t) => t.replace('| **invariant** in that mode | warnings fail with `--strict` |', '| **invariant** | warnings fail with `--strict` |')), /mode: R11\.f has structured mode --strict but its class cell names no mode/],
         ['a mode the reaching branch does not name', json(FILES.grounds, (j) => { j.modes['R11.f'] = '--global'; return j; }), /mode: R11\.f is the --global mode but reaching branch c11-beta-marker names no --global/],
-        ['the waiver is removed', json(FILES.grounds, (j) => ({ ...j, waivers: {} })), /class predicate: R16\.d is recorded observation but its reaching branches derive invariant/],
-        ['an unapproved waiver is refused', io, /R16\.d .* waiver is refused: no owner approval/],
+        ['a divergence without a waiver is refused', diverged(io), /class predicate: R10\.h is recorded observation but its reaching branches derive invariant/],
+        ['an unapproved waiver is refused', diverged(withWaiver({ ...WAIVER, approver: null, directive: null, expiry: '2099-12-31' })), /R10\.h .* waiver is refused: no owner approval/],
         ['an approved, unexpired waiver is reported waived, not derived', approved(), { none: /class predicate/ }],
         ['an expired waiver is refused', approved((w) => ({ ...w, expiry: '2000-01-01' })), /waiver is refused: .*no real, unexpired expiry/],
         ['an impossible expiry date is refused', approved((w) => ({ ...w, expiry: '2026-99-99' })), /waiver is refused: .*no real, unexpired expiry/],
         ['a directive not tracked in git is refused', approved((w) => w, false), /waiver is refused: .*no owner approval/],
         ['a waiver whose milestone step is ticked has lapsed', (() => { const g = approved(); return { ...g, read: (rel) => (rel === 'agents/roadmaps/road-to-authority-routing-mechanism.md' ? g.read(rel).replace('- [ ] **7.2 ', '- [x] **7.2 ') : g.read(rel)) }; })(), /milestone 7\.2 is reached, so the waiver has lapsed/],
         ['a waiver whose issue text is absent is refused', approved((w) => ({ ...w, issue_ref: { ...w.issue_ref, text: 'a reconciliation nobody recorded anywhere' } })), /issue text not found in its file/],
-        ['a mixed derivation is never waivable', (() => { const g = approved(); return { ...g, read: (rel) => (rel === FILES.mapping ? JSON.stringify((() => { const j = JSON.parse(io.read(rel)); j.mapping.check_composite_arming['c16-ledger-skip'] = 'R16.d'; return j; })()) : g.read(rel)) }; })(), /derived mixed is never waivable/],
+        ['a mixed derivation is never waivable', (() => { const g = withDirective(withWaiver({ ...WAIVER, behaviour: 'mixed', approver: 'owner', directive: DIRECTIVE, expiry: '2099-12-31' })); return { ...g, read: (rel) => (rel === FILES.mapping ? JSON.stringify((() => { const j = JSON.parse(io.read(rel)); j.mapping.check_knowledge_cards['c10-E1-required'] = 'R10.h'; return j; })()) : g.read(rel)) }; })(), /derived mixed is never waivable/],
         ['a waiver for a row that does not diverge', json(FILES.grounds, (j) => { j.waivers['R4.a'] = { semantic: 'invariant', behaviour: 'observation', branch: 'c4-over-cap', owed_to: '7.2' }; return j; }), /stale waiver R4\.a/],
         ['a pin line renewed without its attested-set line', mutated(io, FILES.ledger, (t) => t.replace('`672ce60e22f56fd483b31ed84b13266a90b821c0`', '`' + '1'.repeat(40) + '`')), /pin set broken/],
         ['a snapshot without its structured baseline', mutated(io, FILES.ledger, (t) => t.replace(/(\| `check_augment_description_cap` \|[^\n]*?)\*\*invariant\*\*/, '$1**snapshot**')), /class predicate: R4\.a is recorded snapshot without its structured fields/],

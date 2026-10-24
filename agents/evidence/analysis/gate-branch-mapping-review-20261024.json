@@ -1482,14 +1482,6 @@
     },
     {
       "check": "check_composite_arming",
-      "branch": "c16-store-unreadable",
-      "mapped_to": "R16.c",
-      "verdict": "disagree",
-      "suggested": "R16.d",
-      "reason": "Store absent/unreadable is exactly row R16.d (\"store absent\"). R16.c is partial malformation. Mapping swapped with c16-ledger-skip / c16-malformed-warn. (By the definition it is arguably op:could-not-run; R16.d itself calls it runtime metadata, not a class.)"
-    },
-    {
-      "check": "check_composite_arming",
       "branch": "c16-ledger-skip",
       "mapped_to": "R16.d",
       "verdict": "disagree",
@@ -1583,6 +1575,30 @@
       "verdict": "agree",
       "suggested": null,
       "reason": "Branch reports the property row R16.a describes."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-store-absent",
+      "mapped_to": "R16.d",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Lines 296-304 fire only when nothing exists at the store path. The branch prints NOT MEASURED YET and states that this is not a build failure, then returns 0. That is exactly the R16.d assertion (store absent means not measured yet, never a build failure), so it is an asserted observation rather than an op category."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-store-unreadable",
+      "mapped_to": "op:could-not-run",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Lines 305-311 run when the path exists but readFileSync throws, for example because the path is a directory. The check never gets any text to parse, so it measures nothing, and the exit 1 is a failure to run rather than a verdict on store content. R16.b does not fit: its exit 1 covers malformed lines that leave no usable record, which requires text that was read and parsed. The op:could-not-run definition explicitly includes unreadable input."
+    },
+    {
+      "check": "check_composite_arming",
+      "branch": "c16-armable",
+      "mapped_to": "R16.a",
+      "verdict": "agree",
+      "suggested": null,
+      "reason": "Lines 387-393 are the positive outcome of the arming verdict: the floor of usable readings from distinct sessions is met. That is the R16.a observation, and its not-yet branch belongs to the same row. Neither outcome fails the build; both exit 0, as R16.a declares."
     }
   ]
 }

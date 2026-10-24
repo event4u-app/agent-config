@@ -2304,176 +2304,207 @@
         {
           "check": "check_composite_arming",
           "id": "c16-selftest",
-          "where": "src/scripts/check_composite_arming.ts:276 (runSelfTest, _lib/gate_self_test.ts:98,128)",
-          "finding": "self-test helper: exit 1 when case floor (5 cases / 2 rejecting) unmet or any of 7 cases misbehaves; no recursion guard",
-          "effect": "exit-code-only",
+          "where": "src/scripts/check_composite_arming.ts:289",
+          "finding": "--self-test runs the 8 built-in cases via runSelfTest and returns its result: 1 (with ❌ lines) when the case count is below the 5/2-reject floor or any case misbehaves, 0 when all behave.",
+          "effect": "error-exit-nonzero",
           "exit_code": 1,
           "predicates": [
-            "--self-test (checked before every other flag)",
-            "a case misbehaved or a tsx child could not run"
+            "args includes --self-test",
+            "cases < 5 or reject cases < 2, or any case's exit disagrees with its expect (a throwing case counts as failed)"
           ]
         },
         {
           "check": "check_composite_arming",
           "id": "c16-store-missing-value",
-          "where": "src/scripts/check_composite_arming.ts:279-281",
-          "finding": "--store given without a path",
+          "where": "src/scripts/check_composite_arming.ts:290-295",
+          "finding": "--store given as the last argument with no path prints 'check_composite_arming: --store requires a path' to stderr and returns 2.",
           "effect": "error-exit-nonzero",
           "exit_code": 2,
           "predicates": [
-            "--store as last argument"
+            "no --self-test",
+            "args includes --store",
+            "args[indexOf('--store')+1] is undefined"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-store-absent",
+          "where": "src/scripts/check_composite_arming.ts:296-304",
+          "finding": "No file/dir at the store path prints '⏳ NOT MEASURED YET — no composite store at …' to stdout and returns 0.",
+          "effect": "warning-exit-zero",
+          "exit_code": 0,
+          "predicates": [
+            "store path resolved (default agents/evidence/hook-composite-readings.jsonl or --store value)",
+            "!fs.existsSync(store)"
           ]
         },
         {
           "check": "check_composite_arming",
           "id": "c16-store-unreadable",
-          "where": "src/scripts/check_composite_arming.ts:286-293",
-          "finding": "store file absent/unreadable: 'not measured yet', exit 1",
+          "where": "src/scripts/check_composite_arming.ts:305-311",
+          "finding": "Store path exists but readFileSync throws (e.g. it is a directory) — prints '❌ composite store at … exists but cannot be read as a file.' to stdout and returns 1.",
           "effect": "error-exit-nonzero",
           "exit_code": 1,
           "predicates": [
-            "store path (default or --store) cannot be read"
+            "fs.existsSync(store)",
+            "fs.readFileSync(store,'utf-8') throws"
           ]
         },
         {
           "check": "check_composite_arming",
           "id": "c16-ledger-skip",
-          "where": "src/scripts/check_composite_arming.ts:317, printed by ledger.report 320",
-          "finding": "each non-blank store line that is not JSON with a string session and a composite_ms key is recorded as a skipped target (precondition_unmet) in the ledger report",
+          "where": "src/scripts/check_composite_arming.ts:330-337",
+          "finding": "Each non-empty store line that is not JSON or lacks a string session / a composite_ms key is recorded as skipped 'precondition_unmet', and ledger.report() prints the ledger line plus a 'precondition_unmet ×N — …' line to stdout; the run continues.",
           "effect": "warning-exit-zero",
           "exit_code": null,
           "predicates": [
-            "store contains a malformed non-blank line"
+            "store read",
+            "at least one non-empty line fails JSON.parse or has typeof session !== 'string' or no 'composite_ms' key"
           ]
         },
         {
           "check": "check_composite_arming",
           "id": "c16-ledger-throw",
-          "where": "src/scripts/check_composite_arming.ts:303-320 (GateLedger plan/complete/skip/report)",
-          "finding": "GateLedger helper throws (LedgerUsageError / UnaccountedTargetsError) — not expected, line ids are unique and all resolved",
+          "where": "src/scripts/check_composite_arming.ts:318-337",
+          "finding": "GateLedger.plan/complete/skip can throw LedgerUsageError (duplicate or unplanned target) and report() throws UnaccountedTargetsError if any planned line got no outcome; none is caught in main, so it escapes the CLI (unreachable as written: line ids are unique and every planned line is resolved).",
           "effect": "throw",
           "exit_code": null,
           "predicates": [
-            "helper invariant violated (not expected)"
+            "duplicate line:N target planned, or a target resolved twice/unplanned, or a planned line left unresolved before report()"
           ]
         },
         {
           "check": "check_composite_arming",
           "id": "c16-accounting-mismatch",
-          "where": "src/scripts/check_composite_arming.ts:322-328",
-          "finding": "ledger's parseable-line count disagrees with parseStore's reading count (defensive, coverage-ignored)",
+          "where": "src/scripts/check_composite_arming.ts:338-346",
+          "finding": "If the ledger's count of parseable lines differs from parseStore's reading count, prints '❌ … the accounting and the parser disagree …' to stderr and returns 2 (c8-ignored; unreachable while both use identical predicates).",
           "effect": "error-exit-nonzero",
           "exit_code": 2,
           "predicates": [
-            "parser and ledger disagree (not expected)"
+            "parsedSeen !== readings.length"
           ]
         },
         {
           "check": "check_composite_arming",
           "id": "c16-all-malformed",
-          "where": "src/scripts/check_composite_arming.ts:330-335",
-          "finding": "store has malformed lines and zero usable records",
+          "where": "src/scripts/check_composite_arming.ts:347-353",
+          "finding": "Store has malformed lines and zero valid records — prints '❌ <store>: N malformed line(s) and no usable record …' to stderr and returns 1.",
           "effect": "error-exit-nonzero",
           "exit_code": 1,
           "predicates": [
             "malformed > 0",
-            "parsed readings == 0"
+            "readings.length === 0"
           ]
         },
         {
           "check": "check_composite_arming",
           "id": "c16-dead-scope",
-          "where": "src/scripts/check_composite_arming.ts:350-352",
-          "finding": "store present but has zero records (empty / only blank lines) -> DeadScopeError, exit 1",
+          "where": "src/scripts/check_composite_arming.ts:359-370",
+          "finding": "reportScanned throws DeadScopeError when zero readings were parsed (in practice an empty or whitespace-only store, since the all-malformed case returned earlier); caught, message printed to stderr with ❌, returns 1. Otherwise prints 'scanned: N'.",
           "effect": "error-exit-nonzero",
           "exit_code": 1,
           "predicates": [
-            "store readable",
-            "no non-blank lines (malformed == 0, readings == 0)"
+            "readings.length === 0",
+            "malformed === 0 (store empty/blank lines only)"
           ]
         },
         {
           "check": "check_composite_arming",
           "id": "c16-rethrow",
-          "where": "src/scripts/check_composite_arming.ts:354",
-          "finding": "non-DeadScopeError rethrown",
+          "where": "src/scripts/check_composite_arming.ts:366-372",
+          "finding": "Any non-DeadScopeError thrown by reportScanned (e.g. a stdout write error) is rethrown and escapes main.",
           "effect": "throw",
           "exit_code": null,
           "predicates": [
-            "not expected"
+            "reportScanned throws",
+            "!(err instanceof DeadScopeError)"
           ]
         },
         {
           "check": "check_composite_arming",
           "id": "c16-publish",
-          "where": "src/scripts/check_composite_arming.ts:359-364",
-          "finding": "--publish writes the distribution report (including a NOT ARMABLE YET section when applicable) and exits 0 regardless of the verdict",
+          "where": "src/scripts/check_composite_arming.ts:376-382",
+          "finding": "--publish writes agents/evidence/reports/per-turn-composite-distribution.md (distribution, per-session table, and a NOT ARMABLE YET section when not armable), prints '✅ wrote … (n=…, sessions=…)' and returns 0 regardless of armability; the malformed-line warning is not printed in this mode.",
           "effect": "exit-code-only",
           "exit_code": 0,
           "predicates": [
-            "--publish",
-            "store has >= 1 reading"
+            "store parsed to ≥1 reading",
+            "args includes --publish"
           ]
         },
         {
           "check": "check_composite_arming",
           "id": "c16-publish-write-throw",
-          "where": "src/scripts/check_composite_arming.ts:361-362",
-          "finding": "mkdir/write of the report fails; uncaught",
+          "where": "src/scripts/check_composite_arming.ts:377-379",
+          "finding": "fs.mkdirSync or fs.writeFileSync of the report throws (permissions, path collision) and the error escapes main uncaught.",
           "effect": "throw",
           "exit_code": null,
           "predicates": [
-            "--publish",
-            "agents/evidence/reports not writable"
+            "args includes --publish",
+            "mkdirSync or writeFileSync throws"
           ]
         },
         {
           "check": "check_composite_arming",
           "id": "c16-malformed-warn",
-          "where": "src/scripts/check_composite_arming.ts:367-369",
-          "finding": "some malformed lines ignored while usable records exist",
+          "where": "src/scripts/check_composite_arming.ts:384-386",
+          "finding": "Some lines were malformed but at least one record parsed — prints '⚠️ N malformed line(s) ignored (M parsed)' to stdout and continues to a 0 exit.",
           "effect": "warning-exit-zero",
           "exit_code": 0,
           "predicates": [
             "no --publish",
             "malformed > 0",
-            "readings > 0"
+            "readings.length > 0"
+          ]
+        },
+        {
+          "check": "check_composite_arming",
+          "id": "c16-armable",
+          "where": "src/scripts/check_composite_arming.ts:387-393",
+          "finding": "Floor met — prints '✅ ARMABLE — N usable reading(s) from S session(s) …' plus the A2.1 maintainer-act note and returns 0 at line 401 (unusable count is not mentioned on this path).",
+          "effect": "exit-code-only",
+          "exit_code": 0,
+          "predicates": [
+            "no --publish",
+            "usable >= 10",
+            "distinct sessions among usable >= 2"
           ]
         },
         {
           "check": "check_composite_arming",
           "id": "c16-not-armable-readings",
-          "where": "src/scripts/check_composite_arming.ts:110-113, printed 378-382",
-          "finding": "NOT YET: fewer than 10 usable (numeric composite_ms) readings — reported, exit 0",
+          "where": "src/scripts/check_composite_arming.ts:110-115, printed 394-401",
+          "finding": "Fewer than 10 usable (numeric composite_ms) readings — prints '⏳ NOT YET — …' and the bullet 'readings: X usable of 10 required (short by K)' (built at lines 110-115), returns 0.",
           "effect": "warning-exit-zero",
           "exit_code": 0,
           "predicates": [
             "no --publish",
-            "usable readings < 10"
+            "usable.length < 10"
           ]
         },
         {
           "check": "check_composite_arming",
           "id": "c16-not-armable-sessions",
-          "where": "src/scripts/check_composite_arming.ts:116-121, printed 378-382",
-          "finding": "NOT YET: fewer than 2 distinct sessions among usable readings — reported, exit 0",
+          "where": "src/scripts/check_composite_arming.ts:116-123, printed 394-401",
+          "finding": "Fewer than 2 distinct sessions among usable readings — prints '⏳ NOT YET — …' and the bullet 'sessions: X distinct of 2 required (short by K) — …' (built at lines 116-123), returns 0; can co-occur with the readings bullet.",
           "effect": "warning-exit-zero",
           "exit_code": 0,
           "predicates": [
             "no --publish",
-            "distinct sessions among usable readings < 2"
+            "distinct sessions of usable readings < 2"
           ]
         },
         {
           "check": "check_composite_arming",
           "id": "c16-unusable-dropped",
-          "where": "src/scripts/check_composite_arming.ts:380 (and renderDistribution 148-154)",
-          "finding": "readings with composite_ms null/non-number are dropped as unusable and named in the NOT YET line / report",
+          "where": "src/scripts/check_composite_arming.ts:394-397",
+          "finding": "Readings with null/absent composite_ms are excluded from the floor and named as ', N dropped as unusable' in the NOT YET line only (and in the --publish report), exiting 0; on the ARMABLE path they are not reported.",
           "effect": "warning-exit-zero",
           "exit_code": 0,
           "predicates": [
-            "a record with composite_ms null or non-numeric",
-            "verdict not armable (text mode) or --publish"
+            "no --publish",
+            "not armable",
+            "unusable > 0 (record has composite_ms key with null value)"
           ]
         }
       ]

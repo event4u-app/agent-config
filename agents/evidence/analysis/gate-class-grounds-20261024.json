@@ -13,24 +13,6 @@
     "R11.f": "--strict",
     "R12.d": "--strict"
   },
-  "waivers": {
-    "R16.d": {
-      "semantic": "observation",
-      "behaviour": "invariant",
-      "branch": "c16-store-unreadable",
-      "reason": "The contract says an absent store is 'not measured yet' and never a build failure; the script currently exits 1 (check_composite_arming.ts:286-293). Reconciling that exit is an entry condition of 7.2.",
-      "milestone": {
-        "roadmap": "agents/roadmaps/road-to-authority-routing-mechanism.md",
-        "step": "7.2"
-      },
-      "issue_ref": {
-        "file": "agents/evidence/analysis/gate-7-2-reliance-rules-20261024.md",
-        "text": "row 16's exit-1 divergence reconciled"
-      },
-      "approver": null,
-      "directive": null,
-      "expiry": null
-    }
-  },
+  "waivers": {},
   "structured": {}
 }

@@ -14,7 +14,8 @@ a check, its wiring, its helper closure or a proof artifact. 7.2's own
 test runs it first. Also owed before any enforcement change, per
 D33–D37:
 - the canonical scope for checks 9 and 12;
-- row 16's exit-1 divergence reconciled;
+- row 16's exit-1 divergence reconciled — done by D46 (owner, 2026-10-24):
+  an absent store now exits 0;
 - a rollback owner, triggers and a window;
 - the silent passes and promised-but-missing exit codes the branch
   inventory found.

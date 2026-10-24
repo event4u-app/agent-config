@@ -227,7 +227,7 @@
   "check_composite_arming": {
    "c16-selftest": "R16.e",
    "c16-store-missing-value": "op:usage",
-   "c16-store-unreadable": "R16.d",
+   "c16-store-unreadable": "op:could-not-run",
    "c16-ledger-skip": "R16.c",
    "c16-ledger-throw": "op:could-not-run",
    "c16-accounting-mismatch": "op:could-not-run",
@@ -239,7 +239,9 @@
    "c16-malformed-warn": "R16.c",
    "c16-not-armable-readings": "R16.a",
    "c16-not-armable-sessions": "R16.a",
-   "c16-unusable-dropped": "R16.a"
+   "c16-unusable-dropped": "R16.a",
+   "c16-store-absent": "R16.d",
+   "c16-armable": "R16.a"
   }
  },
  "resolutions": {
