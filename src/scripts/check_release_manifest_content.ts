@@ -4,7 +4,7 @@
  * `check_release_pr_shape`.
  *
  * The shape check lets a release PR carry `package.json`, `package-lock.json`
- * and the three plugin manifests, and it reads only their NAMES. Smoke is
+ * and the plugin and extension manifests, and it reads only their NAMES. Smoke is
  * skipped on release heads (`docs/contracts/release-pr-gating.md`), so an added
  * script, a new dependency or a changed `bin` path could ride a release PR with
  * no gate reading it. This compares each manifest against the base and fails on
@@ -27,6 +27,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { CONSUMER_IMPACT_VALUES } from './_lib/consumer_impact.js';
+import { PINNED_PACKAGE_ARG_RE } from './_lib/listing_manifests.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -43,7 +44,16 @@ export const VERSION_FIELDS: Readonly<Record<string, readonly Pattern[]>> = {
     '.claude-plugin/marketplace.json': [['version'], ['metadata', 'version'], ['plugins', '*', 'version']],
     '.augment-plugin/plugin.json': [['version']],
     '.augment-plugin/marketplace.json': [['version'], ['metadata', 'version'], ['plugins', '*', 'version']],
+    '.github/plugin/plugin.json': [['version'], ['mcpServers', 'agent-config', 'args', '*']],
+    'gemini-extension.json': [['version'], ['mcpServers', 'agent-config', 'args', '*']],
 };
+
+/**
+ * Patterns admitted only as a re-pin: an `npx` argument may move from one
+ * `@event4u/agent-config@X.Y.Z` to another, never to any other string — the
+ * arguments around it are the command a crawler runs.
+ */
+const PINNED_ARG_PATTERN: Pattern = ['mcpServers', 'agent-config', 'args', '*'];
 
 function _matches(p: readonly Segment[], pat: Pattern): boolean {
     if (p.length !== pat.length) return false;
@@ -137,7 +147,12 @@ export function manifestDifferences(file: string, base: string | null, head: str
             before = (before as Record<string, unknown> | undefined)?.[s];
             after = (after as Record<string, unknown> | undefined)?.[s];
         }
-        if (atVersion && typeof before === 'string' && typeof after === 'string') continue;
+        const pinOnly = _matches(p, PINNED_ARG_PATTERN);
+        const inShape =
+            typeof before === 'string' &&
+            typeof after === 'string' &&
+            (!pinOnly || (PINNED_PACKAGE_ARG_RE.test(before) && PINNED_PACKAGE_ARG_RE.test(after)));
+        if (atVersion && inShape) continue;
         out.push(`${file}: ${_render(p)} differs outside the version fields`);
     }
     return out;

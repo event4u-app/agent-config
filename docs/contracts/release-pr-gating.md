@@ -55,8 +55,8 @@ keep-beta-reason: >-
 > reads. Closing it needs a content check (version fields only in the npm and
 > plugin manifests). That check now exists: `check_release_manifest_content` runs
 > in the `release-shape` job right after the shape check, compares
-> `package.json`, `package-lock.json` and the three plugin manifests against the
-> base, and fails on any difference outside the version fields the release
+> `package.json`, `package-lock.json`, the three plugin manifests and the two
+> listing manifests against the base, and fails on any difference outside the version fields the release
 > writes — named per file, so a dependency's lockfile `version` is not waved
 > through as a release bump.
 
@@ -77,6 +77,11 @@ hold:
    - `.augment-plugin/marketplace.json` — both version-synced by `release.ts`
      § `set_augment_manifest_version`; both ship in the tarball, so a release
      PR must carry them
+   - `.github/plugin/plugin.json`
+   - `gemini-extension.json` — listing manifests outside the tarball; the
+     release rewrites their `version` and the `@event4u/agent-config@<version>`
+     pin in their `npx` arguments (`release_env.ts`
+     § `set_plugin_manifest_versions`)
    - `src/packs/*/pack.yaml`
    - `src/packs/*/README.md`
    - `src/domains/*/pack.yaml`
@@ -173,8 +178,8 @@ Skipped via `if: !startsWith(github.head_ref, 'release/')` guards on the heavy
 install/test jobs. The guard is on the BRANCH, not on paths — so the column
 below is the argument for why that is safe, not a condition the workflow
 evaluates. The argument rests on the allowlist in § Release-PR shape: it admits
-no install script and no test source. It DOES admit five manifests — the two npm
-ones and three plugin/marketplace files — and every job here consumes the npm
+no install script and no test source. It DOES admit seven manifests — the two npm
+ones, three plugin/marketplace files and two listing manifests — and every job here consumes the npm
 pair, if only because each runs `npm ci` against the lockfile.
 
 So no row can argue that nothing reads a manifest. What the rows argue instead is
@@ -227,7 +232,7 @@ the feature-PR floor by adding:
 | `smoke.yml` | `smoke-contracts` | Contract self-checks (kernel, router, hashes) |
 | `release-guard.yml` | `assert-version-matches-tag` | already gates `npm publish`; remains tag-trigger |
 | `migration-dry-run.yml` | (existing) | Migration plan dry-runs |
-| `release-validation.yml` (Phase B) | `release-shape` | shape detector — fails closed if diff exits the allowlist; then `check_release_manifest_content` — the five manifests differ from the base in version fields only |
+| `release-validation.yml` (Phase B) | `release-shape` | shape detector — fails closed if diff exits the allowlist; then `check_release_manifest_content` — the seven manifests differ from the base in version fields only |
 | `release-validation.yml` (Phase B) | `changelog-entry` | CHANGELOG carries an entry matching the head-branch version |
 | `release-validation.yml` (Phase B) | `version-consistency` | `package.json` / `marketplace.json` agree on the version (pack manifests carry no version field), and `check_template_pin_drift` holds the settings-template pin to it — the check § Cut surface's `smoke` row forward-references |
 | `release-validation.yml` (release-truth) | `surface-equality` | PR body equals the CHANGELOG entry (whitespace-normalized) — release.ts derives all four surfaces (PR body, changelog, GitHub release notes, annotated tag message) from the changelog section at the relevant head |

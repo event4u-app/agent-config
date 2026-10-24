@@ -44,6 +44,7 @@ import { releaseHoldPreflight } from './_lib/release_holds.js';
 import { SETTINGS_SURFACE_FIXTURE } from './_lib/release_settings_surface.js';
 import { die } from './release_publication.js';
 import { DERIVED_MARKER } from './_lib/release_highlights.js';
+import { listingManifestPaths } from './_lib/listing_manifests.js';
 import {
     AUGMENT_MARKETPLACE_JSON,
     AUGMENT_PLUGIN_JSON,
@@ -52,13 +53,14 @@ import {
     PACKAGE_JSON,
     PACKAGE_LOCK_JSON,
     PROJECT_TEMPLATE,
+    REPO_ROOT as ENV_REPO_ROOT,
 } from './release_env.js';
 
 /**
  * The files step 2 mutates on disk, diverted into memory for every scenario.
  *
  * The FakeWorld intercepts COMMANDS, not `fs` writes, and step 2's bump is
- * seven direct writes. Every scenario before 2026-09-03 passed `--resume` with
+ * ten direct writes. Every scenario before 2026-09-03 passed `--resume` with
  * `package.json` already at the target, so step 2 short-circuited and nothing
  * was ever written — the drill looked side-effect-free because no scenario had
  * reached the writing arm. The first `resume: false` scenario appended twelve
@@ -83,6 +85,7 @@ const _MUTATED_BY_STEP_2: readonly string[] = [
     MARKETPLACE_JSON,
     AUGMENT_PLUGIN_JSON,
     AUGMENT_MARKETPLACE_JSON,
+    ...listingManifestPaths(ENV_REPO_ROOT),
     PROJECT_TEMPLATE,
     SETTINGS_SURFACE_FIXTURE,
 ];

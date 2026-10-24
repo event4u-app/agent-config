@@ -1,10 +1,10 @@
 ---
 name: install-agent-config
 description: >-
-  Install or upgrade the event4u agent-config suite. This marketplace plugin
-  is a bootstrap shim — it ships hooks plus this pointer only; ALL skills,
-  rules, and commands are installed via `npx -y @event4u/agent-config init`.
-  Use when the user asks to install, set up, or upgrade agent-config, or
+  Governance rules, skills and commands for AI coding agents in Claude Code, Cursor, GitHub Copilot and Gemini CLI —
+  install or upgrade the full event4u agent-config suite. This marketplace plugin is a bootstrap shim — it ships hooks
+  plus this pointer only; ALL skills, rules, and commands are installed via `npx -y @event4u/agent-config init`.
+  Use when the user asks to install, set up, or upgrade agent-config, wants coding-agent rules or skills, or
   wonders why this plugin contains no other skills.
 ---
 

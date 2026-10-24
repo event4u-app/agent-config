@@ -152,8 +152,6 @@ const _HERE = fileURLToPath(import.meta.url);
 
 import {
     ArgparseExit,
-    AUGMENT_MARKETPLACE_JSON,
-    AUGMENT_PLUGIN_JSON,
     CHANGELOG,
     _set_changelog_reader,
     read_changelog_text,
@@ -169,7 +167,7 @@ import {
     REPO_ROOT,
     REPO_SLUG,
     SystemExitError,
-    set_augment_manifest_version,
+    set_plugin_manifest_versions,
     set_marketplace_version,
     set_template_pin,
     _rstrip,
@@ -939,8 +937,7 @@ function execute(
             set_package_version(PACKAGE_JSON, plan.target, plan.commits);
             set_lockfile_version(PACKAGE_LOCK_JSON, plan.target);
             set_marketplace_version(MARKETPLACE_JSON, plan.target);
-            set_augment_manifest_version(AUGMENT_PLUGIN_JSON, plan.target);
-            set_augment_manifest_version(AUGMENT_MARKETPLACE_JSON, plan.target);
+            set_plugin_manifest_versions(plan.target);
             set_template_pin(PROJECT_TEMPLATE, plan.target);
             writeReleasedSurface(plan.target);
             prepend_changelog(CHANGELOG, plan.changelog_entry);

@@ -24,6 +24,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { listingManifestPaths, setListingManifestVersion } from './_lib/listing_manifests.js';
+
 const _HERE = fileURLToPath(import.meta.url);
 
 // ---------------------------------------------------------------------------
@@ -293,6 +295,20 @@ function set_augment_manifest_version(p: string, version: string): void {
     fs.writeFileSync(p, jsonDumpsIndent(data, 2) + '\n', 'utf-8');
 }
 
+/**
+ * Every plugin and extension manifest the release keeps at the package
+ * version: the two `.augment-plugin/` twins and the two listing manifests that
+ * also pin the version inside their `npx` arguments. One entry point so
+ * `release.ts`, which sits past the source-size cap, spends one line on all four.
+ */
+function set_plugin_manifest_versions(version: string, root: string = REPO_ROOT): void {
+    set_augment_manifest_version(path.join(root, '.augment-plugin', 'plugin.json'), version);
+    set_augment_manifest_version(path.join(root, '.augment-plugin', 'marketplace.json'), version);
+    for (const p of listingManifestPaths(root)) {
+        setListingManifestVersion(p, version, (v) => jsonDumpsIndent(v, 2));
+    }
+}
+
 /** Update `metadata.version`; preserve 2-space indentation + UTF-8. */
 function set_marketplace_version(p: string, version: string): void {
     const data = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, unknown>;
@@ -374,6 +390,7 @@ export {
     commaGroup,
     jsonDumpsIndent,
     set_augment_manifest_version,
+    set_plugin_manifest_versions,
     set_marketplace_version,
     set_template_pin,
     pyLen,

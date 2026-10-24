@@ -66,6 +66,20 @@ function validRepo(tmp: string): void {
             plugins: [{ name: 'agent-config', version: '1.4.0', source: '.' }],
         }),
     );
+    // The listing manifests: version-synced like the twins, and their `npx`
+    // argument pins the same version.
+    for (const rel of ['.github/plugin/plugin.json', 'gemini-extension.json']) {
+        write(
+            path.join(tmp, rel),
+            JSON.stringify({
+                name: 'agent-config',
+                version: '1.4.0',
+                mcpServers: {
+                    'agent-config': { command: 'npx', args: ['-y', '@event4u/agent-config@1.4.0', 'mcp-server'] },
+                },
+            }),
+        );
+    }
 }
 
 function readMarketplace(tmp: string): Record<string, unknown> {

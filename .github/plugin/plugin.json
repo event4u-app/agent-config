@@ -1,12 +1,13 @@
 {
   "name": "agent-config",
-  "description": "A governed skill framework for AI agents — runtime execution, tooling, observability, feedback, and lifecycle management.",
-  "version": "1.0.0",
+  "description": "Discovery plugin for the event4u agent-config suite: a read-only MCP server plus one install-pointer skill. It is not the full suite and registers no hooks. Install the full suite (governed skills, rules, commands and hooks) with `npx -y @event4u/agent-config init`.",
+  "version": "17.2.1",
   "author": {
     "name": "event4u",
     "email": "dev@event4u.app"
   },
   "repository": "https://github.com/event4u-app/agent-config",
+  "license": "MIT",
   "keywords": [
     "governance",
     "skills",
@@ -15,6 +16,20 @@
     "guidelines",
     "laravel",
     "php",
-    "quality"
-  ]
+    "quality",
+    "mcp"
+  ],
+  "skills": [
+    "./.claude-plugin/skills/install-agent-config"
+  ],
+  "mcpServers": {
+    "agent-config": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@event4u/agent-config@17.2.1",
+        "mcp-server"
+      ]
+    }
+  }
 }
