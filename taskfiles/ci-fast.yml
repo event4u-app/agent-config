@@ -1647,6 +1647,15 @@ tasks:
       and a {{.QUIET_FLAG}} would exit 2 on an unknown argument.
     cmd: ./scripts-run src/scripts/lint_ticked_unmet_criteria
 
+  check-live-tree-check-classes:
+    silent: true
+    desc: >-
+      Every invocation of the 16 live-tree checks matches its class in
+      src/config/live-tree-check-classes.json: an invariant still blocks its
+      caller, an observation-only run does not, and a non-blocking invariant
+      carries a recorded demotion.
+    cmd: ./scripts-run src/scripts/check_live_tree_check_classes {{.QUIET_FLAG}}
+
   lint-blocker-citations:
     silent: true
     desc: >-
