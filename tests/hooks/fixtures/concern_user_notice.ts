@@ -14,6 +14,7 @@ try {
 }
 let reply: Record<string, string> = { user_notice: 'fixture notice for the user' };
 if (process.argv.includes('context')) reply = { context: 'fixture context block' };
+if (process.argv.includes('long')) reply = { user_notice: 'x'.repeat(1500) };
 if (process.argv.includes('echo-platform')) {
     const envelope = JSON.parse(raw || '{}') as Record<string, unknown>;
     reply = { user_notice: `platform=${String(envelope['platform'])}` };

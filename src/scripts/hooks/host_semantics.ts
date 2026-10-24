@@ -134,6 +134,10 @@ export function claudeAdditionalContext(event: string, text: string): string {
     })}\n`;
 }
 
+function isObject(v: unknown): v is Record<string, unknown> {
+    return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
 /**
  * Compose the dispatcher's stdout from its three parts: plain `session_start`
  * context, the native emission, and a user-addressed notice.
@@ -165,11 +169,15 @@ export function withUserNotice(
         } catch {
             return legacy;
         }
-        if (typeof reply !== "object" || reply === null || Array.isArray(reply)) return legacy;
+        if (!isObject(reply)) return legacy;
     }
+    // A field this merge would extend must already have the type it extends.
+    const hsoIn = reply["hookSpecificOutput"];
+    if (hsoIn !== undefined && !isObject(hsoIn)) return legacy;
+    if (![reply["systemMessage"], hsoIn?.["additionalContext"]].every((v) => v === undefined || typeof v === "string")) return legacy;
     const join = (a: unknown, b: string, sep: string): string => (typeof a === "string" && a ? `${a}${sep}${b}` : b);
     if (context.trim()) {
-        const hso = (reply["hookSpecificOutput"] ?? { hookEventName: nativeEventName(platform, event) }) as Record<string, unknown>;
+        const hso = hsoIn ?? { hookEventName: nativeEventName(platform, event) };
         reply["hookSpecificOutput"] = { ...hso, additionalContext: join(hso["additionalContext"], context.trim(), "\n\n") };
     }
     reply["systemMessage"] = join(reply["systemMessage"], text, "\n");

@@ -26,7 +26,18 @@ afterEach(() => {
     for (const d of tmpDirs.splice(0)) fs.rmSync(d, { recursive: true, force: true });
 });
 
-function dispatch(platform: string, concerns: Record<string, { effect: string; args?: string[] }>): { status: number | null; stdout: string } {
+interface FixtureConcern {
+    effect: string;
+    args?: string[];
+    script?: string;
+    severity?: string;
+}
+
+function dispatch(
+    platform: string,
+    concerns: Record<string, FixtureConcern>,
+    event = 'session_start',
+): { status: number | null; stdout: string } {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'user-notice-'));
     tmpDirs.push(dir);
     const names = Object.keys(concerns);
@@ -38,20 +49,20 @@ function dispatch(platform: string, concerns: Record<string, { effect: string; a
             'concerns:',
             ...names.flatMap((name) => [
                 `  ${name}:`,
-                `    script: ${FIXTURE}`,
+                `    script: ${concerns[name]?.script ?? FIXTURE}`,
                 `    args: [${(concerns[name]?.args ?? []).join(', ')}]`,
-                '    fail_closed: false',
-                '    severity: advisory',
+                `    fail_closed: ${String(concerns[name]?.severity === 'blocking')}`,
+                `    severity: ${concerns[name]?.severity ?? 'advisory'}`,
                 `    effect: ${concerns[name]?.effect ?? 'notification'}`,
             ]),
             'platforms:',
             `  ${platform}:`,
-            `    session_start: [${names.join(', ')}]`,
+            `    ${event}: [${names.join(', ')}]`,
             '',
         ].join('\n'),
         'utf8',
     );
-    const r = spawnSync(TSX_BIN, [ENTRY, '--platform', platform, '--event', 'session_start', '--manifest', manifest], {
+    const r = spawnSync(TSX_BIN, [ENTRY, '--platform', platform, '--event', event, '--manifest', manifest], {
         cwd: dir,
         input: JSON.stringify({ session_id: 'user-notice-test' }),
         encoding: 'utf8',
@@ -93,6 +104,31 @@ describe('the user channel through the dispatcher', () => {
         expect(reply.hookSpecificOutput?.['additionalContext']).toBe('fixture context block');
     }, 120_000);
 
+    it('several notices arrive in manifest order, each capped at 1,000 characters', () => {
+        const r = dispatch('claude', {
+            'notice-long': { effect: 'notification', args: ['long'] },
+            'notice-a': { effect: 'notification' },
+        });
+        const message = (JSON.parse(r.stdout) as Record<string, string>)['systemMessage'] as string;
+        const [first, second] = message.split('\n');
+        expect(first).toBe('x'.repeat(1000));
+        expect(second).toBe('fixture notice for the user');
+    }, 120_000);
+
+    // A host reads stdout only on exit 0, so a refusal carries no notice.
+    it('a refused call carries no notice', () => {
+        const r = dispatch(
+            'claude',
+            {
+                guard: { effect: 'permission', severity: 'blocking', script: 'tests/hooks/fixtures/concern_exits_3.ts' },
+                'notice-a': { effect: 'notification' },
+            },
+            'pre_tool_use',
+        );
+        expect(r.status).not.toBe(0);
+        expect(r.stdout).not.toContain('fixture notice');
+    }, 120_000);
+
     // The concern learns its host from the envelope the dispatcher builds out of
     // its own `--platform`, not from anything the host payload claims.
     it('the platform a concern reads is the one the dispatcher was invoked with', () => {
@@ -124,6 +160,17 @@ describe('withUserNotice', () => {
     it('never reinterprets an emission that is not one JSON object', () => {
         expect(withUserNotice('claude', 'stop', '', 'not json\n', 'hi')).toBe('not json\n');
         expect(withUserNotice('claude', 'stop', '', '[1]\n', 'hi')).toBe('[1]\n');
+    });
+
+    it('never overwrites a field of the wrong type — the old output stands', () => {
+        for (const emission of [
+            '{"hookSpecificOutput":"text"}\n',
+            '{"hookSpecificOutput":null}\n',
+            '{"hookSpecificOutput":{"additionalContext":7}}\n',
+            '{"systemMessage":{"x":1}}\n',
+        ]) {
+            expect(withUserNotice('claude', 'session_start', 'ctx\n', emission, 'hi')).toBe(`ctx\n${emission}`);
+        }
     });
 
     it('accepts plain context on session_start only', () => {
