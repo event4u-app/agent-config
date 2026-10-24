@@ -614,11 +614,11 @@ stay green (93 files).
   the decision-revisit gate's reserved set gives to the owner, not to a council.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-23 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Over-replacement breaks ordinary code and reviews | implementation | A fixture address, a commit identity or a card-shaped number becomes a token and the council reviews a damaged diff | Validators plus context plus allowlist in 2.3; the census as a pinned test; replacement is span-level, never line-level (3.3) | Phase 2 — One detector table (F2, F3) |
+| 1 | Over-replacement breaks ordinary code and reviews | implementation | A fixture address, a commit identity or a card-shaped number becomes a token and the council reviews a damaged diff | Validators plus context plus allowlist in 2.3; the census as a pinned test; replacement is span-level, never line-level (3.3). Re-reviewed 2026-10-24 when 2.5 put lookalike folding in front of every sender: Greek and Cyrillic prose with no value in it is pinned to detect nothing (`egress_normalize.test.ts`) | Phase 2 — One detector table (F2, F3) |
 | 2 | Moving seven consumers changes a verdict silently | implementation | A consumer that refused now masks, or the secret-leak gate's verdict drifts | 2.2 shares detection only; the drift matrix is green before and after, and the legacy-superset suite freezes every pre-move pattern against an adversarial corpus (re-reviewed 2026-10-18: the first move narrowed five consumers and the suite caught it) | Phase 2 — One detector table (F2, F3) |
 | 3 | The constraint is read as covering every channel | product | The owner's constraint is absolute; this roadmap proves it only where this package writes the bytes | The four states and `uncovered` are in the contract (0.1); N8 states the boundary; the claim is per channel | Phase 0 — Contract, census, pre-registration (no product code) |
 | 4 | Placeholders degrade review or coding quality | product | A model reasons worse over a value it cannot see | Paired comparison pre-registered in 0.3; a null or a loss is published and D8 keeps consumer defaults off | Phase 0 — Contract, census, pre-registration (no product code) |
