@@ -14,7 +14,7 @@
  * host path or anything else that differs between two builds of one commit.
  */
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -239,7 +239,15 @@ export function openPrs(root: string): Array<{ number: number; title: string; fi
 
 export async function buildMap(
     root: string,
-    opts: { outDir?: string; cachePath?: string; diffRev?: string; prs?: boolean; noBuild?: boolean } = {},
+    opts: {
+        outDir?: string;
+        cachePath?: string;
+        diffRev?: string;
+        prs?: boolean;
+        noBuild?: boolean;
+        /** Test seam: called after each artefact lands in the new generation. */
+        _afterWrite?: (rel: string) => void;
+    } = {},
 ): Promise<MapBuildResult> {
     const outDir = opts.outDir ?? path.join(root, MAP_DIR_REL);
     // A chosen --out directory is only ever written into when it is empty or
@@ -288,24 +296,63 @@ export async function buildMap(
         `${model.files.length} files · ${model.areas.length} areas · ` +
         `${model.analyses.trustedEdges} trusted links · guess share ${pct(model.analyses.guessShare)}`;
 
+    // One generation at a time: everything is written into a sibling directory,
+    // which then replaces the live one, so a reader never sees `map.json` of one
+    // build beside pages of another, and a failed redraw leaves the last one whole.
+    // The default map stages under the gitignored runtime dir, so a killed redraw
+    // leaves nothing in agents/ itself; a chosen --out stages beside itself.
+    const suffix = `${process.pid}-${randomBytes(4).toString('hex')}`;
+    const stage = opts.outDir === undefined ? path.join(root, 'agents', 'runtime', 'state') : path.dirname(outDir);
+    fs.mkdirSync(stage, { recursive: true });
+    const next = path.join(stage, `.map-next-${suffix}`);
+    const prev = path.join(stage, `.map-prev-${suffix}`);
     const written: string[] = [];
-    const write = (rel: string, content: string): void => {
-        const p = path.join(outDir, rel);
-        fs.mkdirSync(path.dirname(p), { recursive: true });
-        write_atomic(p, content);
-        written.push(rel);
-    };
-    const areasDir = path.join(outDir, 'areas');
-    if (fs.existsSync(areasDir)) {
-        for (const f of fs.readdirSync(areasDir)) if (f.endsWith('.md')) fs.rmSync(path.join(areasDir, f));
+    try {
+        const write = (rel: string, content: string): void => {
+            const p = path.join(next, rel);
+            fs.mkdirSync(path.dirname(p), { recursive: true });
+            write_atomic(p, content);
+            written.push(rel);
+            opts._afterWrite?.(rel);
+        };
+        write('map.json', `${JSON.stringify({ meta, model })}\n`);
+        write('MAP.md', renderMapMd(model, meta));
+        for (const [i, a] of model.areas.entries()) {
+            if (a.files.length >= AREA_PAGE_MIN_FILES) write(path.join('areas', `${a.id}.md`), renderAreaMd(model, i, meta));
+        }
+        write('index.html', renderHtml(model, meta));
+        carryForeignEntries(outDir, next);
+        swapIn(next, outDir, prev);
+    } finally {
+        fs.rmSync(next, { recursive: true, force: true });
     }
-    write('map.json', `${JSON.stringify({ meta, model })}\n`);
-    write('MAP.md', renderMapMd(model, meta));
-    for (const [i, a] of model.areas.entries()) {
-        if (a.files.length >= AREA_PAGE_MIN_FILES) write(path.join('areas', `${a.id}.md`), renderAreaMd(model, i, meta));
-    }
-    write('index.html', renderHtml(model, meta));
     return { outDir, model, meta, written, graphBuilt: built };
+}
+
+/** What a map generation consists of; anything else in the directory is someone else's. */
+const GENERATION_ENTRIES = new Set(['map.json', 'MAP.md', 'index.html', 'areas', 'map-render.json']);
+
+/** Copy entries the writer does not produce into the new generation, so the swap drops nothing. */
+function carryForeignEntries(live: string, next: string): void {
+    if (!fs.existsSync(live)) return;
+    for (const entry of fs.readdirSync(live)) {
+        if (GENERATION_ENTRIES.has(entry)) continue;
+        fs.cpSync(path.join(live, entry), path.join(next, entry), { recursive: true, verbatimSymlinks: true });
+    }
+}
+
+/** Replace `live` by `next` with two renames; on a failed second rename the old generation goes back. */
+function swapIn(next: string, live: string, prev: string): void {
+    fs.mkdirSync(path.dirname(live), { recursive: true });
+    const hadLive = fs.existsSync(live);
+    if (hadLive) fs.renameSync(live, prev);
+    try {
+        fs.renameSync(next, live);
+    } catch (e) {
+        if (hadLive) fs.renameSync(prev, live);
+        throw e;
+    }
+    if (hadLive) fs.rmSync(prev, { recursive: true, force: true });
 }
 
 function pct(x: number): string {

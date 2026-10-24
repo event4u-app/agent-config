@@ -123,6 +123,34 @@ describe('agents/map/ artefacts (Phase 3)', () => {
         expect(r.written.some((w) => w.startsWith('areas/'))).toBe(true);
     });
 
+    it('a redraw that fails part-way leaves the previous generation whole', async () => {
+        await buildMap(root);
+        const dir = path.join(root, 'agents', 'map');
+        const before = fs.readFileSync(path.join(dir, 'map.json'), 'utf-8');
+        write('src/added.ts', 'export const added = 1;\n');
+        let n = 0;
+        await expect(
+            buildMap(root, {
+                _afterWrite: () => {
+                    n += 1;
+                    if (n === 1) throw new Error('interrupted after the first file');
+                },
+            }),
+        ).rejects.toThrow(/interrupted/);
+        expect(fs.readFileSync(path.join(dir, 'map.json'), 'utf-8')).toBe(before);
+        // Nothing staged is left behind, in agents/ or in the runtime dir it stages under.
+        expect(fs.readdirSync(path.dirname(dir)).filter((e) => e !== 'map' && e.includes('map'))).toEqual([]);
+        expect(fs.readdirSync(path.join(root, 'agents', 'runtime', 'state')).filter((e) => e.startsWith('.map-'))).toEqual([]);
+    });
+
+    it('a redraw keeps files in the map directory that it did not write', async () => {
+        await buildMap(root);
+        const note = path.join(root, 'agents', 'map', 'NOTES.md');
+        fs.writeFileSync(note, 'kept\n');
+        await buildMap(root);
+        expect(fs.readFileSync(note, 'utf-8')).toBe('kept\n');
+    });
+
     it('two builds of the same tree are byte-identical', async () => {
         await buildMap(root);
         const read = (): string[] =>

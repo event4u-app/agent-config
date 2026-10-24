@@ -53,7 +53,7 @@ written down where the hooks are generated.
 
 ## Phase 2 — The map is published as one generation
 
-- [ ] **2.1 Write into a sibling directory, then swap.** `buildMap` in
+- [x] **2.1 Write into a sibling directory, then swap.** `buildMap` in
       `src/scripts/code_graph/map.ts` writes `map.json`, `MAP.md`, the area pages and
       `index.html` one file at a time into the live directory, so a reader opening it
       mid-redraw sees a mix. Write the whole generation into a sibling temp directory and
@@ -62,6 +62,11 @@ written down where the hooks are generated.
       verify: a test that interrupts a redraw after the first file (an injected throw)
       finds the previous generation intact; a test with a foreign file in the map
       directory finds it still there after a redraw; red with in-place writes restored.
+      *Done 2026-10-24:* the generation is staged under the gitignored
+      `agents/runtime/state/` (beside a chosen `--out`), swapped in by two renames
+      with the old generation restored if the second fails, and the stage is
+      removed on every path. The interruption test is red with in-place writes,
+      the foreign-file test red with the carry-over removed.
 
 ## Phase 3 — The development hooks stay in the development checkout
 
