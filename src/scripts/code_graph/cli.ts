@@ -123,6 +123,7 @@ import {
     untested,
     type UntestedResult,
 } from './verbs.js';
+import { main as lineageMain } from './lineage_cli.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
@@ -1127,6 +1128,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'map') return await cmdMap(argv.slice(1));
         if (sub === 'outcome') return cmdOutcome(argv.slice(1));
         if (sub === 'auto-refresh') return cmdAutoRefresh(argv.slice(1));
+        if (sub === 'lineage') return await lineageMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
                 'impact|tests-for|untested|dead|suggest-verb|map|outcome|auto-refresh> [options]\n',

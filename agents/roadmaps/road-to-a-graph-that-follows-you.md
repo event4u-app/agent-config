@@ -230,7 +230,7 @@ owner's machine; what the repository tracks is source-free.
       schema under `src/scripts/schemas/` with positive and negative fixtures.
       verify: the schema tests pass and a fixture row carrying a `source_id` field is
       rejected.
-- [ ] **8.2 Its linter.** `lint_harvest_provenance` also validates `mechanisms.jsonl`:
+- [x] **8.2 Its linter.** `lint_harvest_provenance` also validates `mechanisms.jsonl`: <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/lint_harvest_provenance.ts -->
       `adopt|adapt` need existing `realised_in` paths, `reject` needs a reason,
       `gap|deferred` need a roadmap or `open`, and every harvest citation marker
       resolves against `harvests.jsonl` or `mechanisms.jsonl`.
@@ -334,6 +334,8 @@ owner's machine; what the repository tracks is source-free.
 | O7 | reversible-technical | council:graph-follows-you-closure | Watch is off per source until the owner runs `lineage watch enable` | unanimous (2/2); a remote check is observable network activity and needs per-source consent | the weekly-watch stub shows enabled sources produce signal |
 | B-7.1 | reversible-technical | agent | The keyed id lives in `src/scripts/_lib/source_id.ts` (HMAC domain-separated by a fixed context string); `link_crypto source-id` calls it. A non-repository URL canonicalizes to host, port, path and query with scheme, credentials, fragment and trailing slash dropped; a non-URL reference is used trimmed | `canonicalize` returns null for anything that is not a repository, and an article or a paper still needs one id per source | a second consumer needs a different canonical form for the same URL kind |
 | B-7.2 | reversible-technical | agent | `SourceCodebook` takes the id key as an explicit option (`{ idKey }`) rather than switching on the encryption key it already holds, so existing callers keep their `S1…` codes unchanged and a caller opts into stable ids by passing the link key | the ENC1 key is always present in the constructor, so keying on it would have silently changed every existing codebook | a round producer wants stable ids by default |
+| B-8.2 | reversible-technical | agent | A mechanism id may repeat in the decision ledger — it is append-only and the latest row supersedes — and the linter ships with an empty, required `provenance/mechanisms.jsonl`, so an absent ledger is a finding, not a green run over nothing | 9.2 needs a later `adopt` to close an earlier `gap`, which a uniqueness rule would forbid | supersession needs an explicit pointer rather than order |
+| B-8.3 | reversible-technical | agent | A local source carries kind `unknown` when only an opaque reference is known, alongside `repo | url | video | paper`; `lineage check` also proves every sealed field decrypts when a key is configured | an opaque harvest ref names no kind, and writing one would be the invention 8.4 forbids for pins; a ledger sealed under a lost key should fail the check, not the first query | the owner backfills kinds for every opaque source |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->
