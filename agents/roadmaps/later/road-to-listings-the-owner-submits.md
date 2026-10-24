@@ -38,9 +38,12 @@ the parent's daily watcher reds any row that drifts from that.
 
 ## Phase 1 — Reads after the first release with the CI publish
 
-- [ ] **1.1 Official MCP Registry live.** Carries the parent's AC-2 — it
+- [x] **1.1 Official MCP Registry live.** Carries the parent's AC-2 — it
       stays unverified until this read. Read the registry query for the
       released version; set ledger row 4 `accepted` with the read date.
+      **Done 2026-10-24:** the 17.3.0 release published it with no owner act
+      (publish run 40066529500); the live search returns 17.3.0 as latest.
+      The parent's AC-2 holds.
       verify: the row-4 query returns a count above 0 for the version.
 - [ ] **1.2 GitHub MCP Registry.** One week after 1.1, search
       `github.com/mcp`; if absent, add an email request to the owner packet.
