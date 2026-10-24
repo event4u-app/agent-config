@@ -1,12 +1,12 @@
 # Findings: listings-a-release-keeps-current
-<!-- completion-review: v1 | reviewed: 2026-10-24 | scope: 02900ea383298afdfe43edad33797ede7b2fc4816318566fd88e724652765984 | diff: 53551c7d1be5fcefb30e6996bd0d8c4846ae6314 | reviewer: r2-fresh-subagent-listings-a-release-keeps-current | prompt_hash: c0df3cd4ebd804322755bdc701d3501fec1c13e5041b8400c36ef9f322a21557 | round: 1 -->
+<!-- completion-review: v1 | reviewed: 2026-10-24 | scope: 49c1d75e6b10b85eed1765c4e945ee2ea420f54a6b866b14e0a1017f5a511918 | diff: c3c3ae9dc577cad2408be8aa405f0682c83ead24 | reviewer: r2-fresh-subagent-listings-a-release-keeps-current | prompt_hash: c0df3cd4ebd804322755bdc701d3501fec1c13e5041b8400c36ef9f322a21557 | round: 1 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-listings-a-release-keeps-current"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-24 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 53551c7d1be5fcefb30e6996bd0d8c4846ae6314
-  scope_hash: 02900ea383298afdfe43edad33797ede7b2fc4816318566fd88e724652765984
+  diff_sha: c3c3ae9dc577cad2408be8aa405f0682c83ead24
+  scope_hash: 49c1d75e6b10b85eed1765c4e945ee2ea420f54a6b866b14e0a1017f5a511918
   roadmap: agents/roadmaps/archive/road-to-listings-a-release-keeps-current.md
   roadmap_hash: 39ddd9a959cb738f2122d5e417c489d02113446c3003af6eab6e94d9baeb515e
   ac_hash: 6fd6074c5c7b55d6f01cf355d235bad33786a8f84deb8e23364052fe14bdf99e
