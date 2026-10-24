@@ -313,6 +313,7 @@ with that file.
   The completeness question is answered (ADR-289, reach, 2026-10-18), with one
   condition that binds this step: `projection.mode` stays until the reach
   mechanism and its tests exist.
+  Routed to the owner 2026-10-24: the reach condition holds, but the removal is not default-neutral and both council seats classify it owner-reserved (`agents/evidence/council/setup-projection-mode-removal-20261024.md`).
 - [x] **4.8 Downgrade stays safe.** A machine downgraded to a release that still
   reads the keys resolves the absent key to its full form.
   verify: mixed-version fixture — removal release, then the previous release —
