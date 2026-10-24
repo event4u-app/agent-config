@@ -104,9 +104,9 @@ written down where the hooks are generated.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A council bundle containing `typeof o.token === 'string'` passes the egress
+- [x] AC-1 — A council bundle containing `typeof o.token === 'string'` passes the egress
       check, and a genuine `token = "…"` assignment is still replaced.
-- [ ] AC-2 — No reader of `agents/map/` can observe files from two generations, and a
+- [x] AC-2 — No reader of `agents/map/` can observe files from two generations, and a
       redraw keeps files it did not write.
-- [ ] AC-3 — The development hooks cannot be installed from a consumer's
+- [x] AC-3 — The development hooks cannot be installed from a consumer's
       `node_modules`, and the trust model they rely on is stated in the installer.
