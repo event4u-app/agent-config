@@ -42,6 +42,8 @@ beforeAll(async () => {
             "Route::resource('photos', C\\PhotoController::class);",
             "Route::get('/library/books', [C\\LibraryController::class, 'books']);",
             "Route::get('/library/chapters', [C\\LibraryController::class, 'chapters']);",
+            "Route::get('/shelves', [C\\ShelfController::class, 'index']);",
+            "Route::get('/shelves/recent', [C\\ShelfController::class, 'recent']);",
             '',
         ].join('\n'),
     );
@@ -66,6 +68,20 @@ beforeAll(async () => {
     write(
         'app/Http/Controllers/LibraryController.php',
         "<?php\nnamespace App\\Http\\Controllers;\nuse App\\Models\\Book;\nuse App\\Models\\Chapter;\nclass LibraryController {\n    public function books() {\n        return Book::all();\n    }\n    public function chapters() {\n        return Chapter::all();\n    }\n}\n",
+    );
+    // Handler → service → repository → model, three hops: once over static
+    // calls the file states, once through an untyped `$this->service`.
+    write(
+        'app/Http/Controllers/ShelfController.php',
+        "<?php\nnamespace App\\Http\\Controllers;\nuse App\\Services\\ShelfService;\nclass ShelfController {\n    public function __construct(private ShelfService $service) {}\n    public function index() {\n        return ShelfService::listAll();\n    }\n    public function recent() {\n        return $this->service->recentShelves();\n    }\n}\n",
+    );
+    write(
+        'app/Services/ShelfService.php',
+        "<?php\nnamespace App\\Services;\nuse App\\Repositories\\ShelfRepository;\nclass ShelfService {\n    public static function listAll() {\n        return ShelfRepository::everything();\n    }\n    public function recentShelves() {\n        return ShelfRepository::everything();\n    }\n}\n",
+    );
+    write(
+        'app/Repositories/ShelfRepository.php',
+        "<?php\nnamespace App\\Repositories;\nuse App\\Models\\Shelf;\nclass ShelfRepository {\n    public static function everything() {\n        return Shelf::all();\n    }\n}\n",
     );
     // An unrelated in-repo `middleware()`: name lookup used to bind the
     // routes file's fluent `->middleware()` to it.
@@ -208,6 +224,26 @@ describe('the request path on the map (4.4)', () => {
         const tablesOf = (route: string): string[] | undefined => m.analyses.requestPaths.find((x) => x.route === route)?.tables;
         expect(tablesOf('GET /library/books')).toEqual(['books']);
         expect(tablesOf('GET /library/chapters')).toEqual(['book_chapters']);
+    });
+
+    it('reaches the table through a service and a repository the handler calls', () => {
+        const m = buildMapModel(graph);
+        // `ShelfService::listAll()` binds through the file's `use` + PSR-4, not by name.
+        const call = graph.edges.find((e) => e.source === 'app/Http/Controllers/ShelfController.php#ShelfController::index' && e.relation === 'calls');
+        expect(call?.target).toBe('app/Services/ShelfService.php#ShelfService::listAll');
+        expect(call?.resolved_via).toBe('psr4');
+        const r = m.analyses.requestPaths.find((x) => x.route === 'GET /shelves');
+        expect(r?.tables).toEqual(['entities']);
+        expect(r?.inferredTables).toEqual([]);
+    });
+
+    it('keeps a table reached through an untyped receiver apart, as inferred', () => {
+        const m = buildMapModel(graph);
+        const r = m.analyses.requestPaths.find((x) => x.route === 'GET /shelves/recent');
+        expect(r?.tables).toEqual([]);
+        expect(r?.inferredTables).toEqual(['entities']);
+        const md = renderMapMd(m, { title: 'Map', commit: 'x', state: 'fresh', summary: '' });
+        expect(md).toContain('table `entities` (inferred)');
     });
 });
 

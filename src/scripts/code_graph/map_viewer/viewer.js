@@ -477,6 +477,7 @@
             r.views.forEach(function (v) { parts.push(base(files[v].path)); });
             r.models.forEach(function (v) { parts.push(base(files[v].path)); });
             r.tables.forEach(function (tb) { parts.push('⊞ ' + tb); });
+            (r.inferredTables || []).forEach(function (tb) { parts.push('⊞ ' + tb + ' ?'); });
             li.appendChild(el('span', { class: 'fdir' }, parts.length ? '→ ' + parts.join(' → ') : '→ ' + t('none')));
             ul.appendChild(li);
         });

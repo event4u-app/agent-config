@@ -103,6 +103,8 @@ export interface RequestPath {
     views: number[];
     models: number[];
     tables: string[];
+    /** Tables reached only through a call bound by name alone (a `dynamic` hop with one candidate). */
+    inferredTables: string[];
 }
 
 export interface MapThresholds {
@@ -662,6 +664,9 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
  * tables. Read off the overlay's edges only; a route whose handler did not
  * resolve keeps `handler: -1` rather than a guess.
  */
+/** How many calls deep a request path follows the handler: handler → service → repository → model. */
+const REQUEST_HOPS = 3;
+
 function collectRequestPaths(graph: CodeGraph, idx: ReadonlyMap<string, number>): RequestPath[] {
     const nodeById = new Map(graph.nodes.map((n) => [n.id, n] as const));
     const out = new Map<string, CodeGraph['edges']>();
@@ -687,19 +692,37 @@ function collectRequestPaths(graph: CodeGraph, idx: ReadonlyMap<string, number>)
         const views = new Set<number>();
         const models = new Set<number>();
         const tables = new Set<string>();
+        const inferred = new Set<string>();
         if (target) {
-            // The handler's own links only: what this route's code renders and
-            // names. Its file's links would hand every model the controller
-            // imports to every route the controller serves.
-            for (const e of out.get(target) ?? []) {
-                if (!isStatedResolution(e.resolved_via as ResolvedVia)) continue;
-                if (e.relation === 'renders') views.add(fileIdx(e.target));
-                const model = tableOf.has(e.target) ? e.target : e.target.split('::')[0];
-                const modelTables = model ? tableOf.get(model) : undefined;
-                if (modelTables) {
-                    models.add(fileIdx(model as string));
-                    for (const t of modelTables) tables.add(t);
+            // What the handler's own code reaches, up to REQUEST_HOPS calls
+            // deep: a service, its repository, the model. Only functions and
+            // methods are expanded — a class's links would hand every model it
+            // knows to every route it serves. A chain is stated when every hop
+            // is; one hop bound by name alone makes what it reaches inferred.
+            const best = new Map<string, boolean>([[target, true]]);
+            let frontier: Array<[string, boolean]> = [[target, true]];
+            for (let hop = 0; hop < REQUEST_HOPS && frontier.length > 0; hop++) {
+                const next: Array<[string, boolean]> = [];
+                for (const [id, stated] of frontier) {
+                    for (const e of out.get(id) ?? []) {
+                        const sure = isStatedResolution(e.resolved_via as ResolvedVia);
+                        if (!sure && !(e.resolved_via === 'dynamic' && nodeById.has(e.target))) continue;
+                        const chain = stated && sure;
+                        if (e.relation === 'renders' && chain) views.add(fileIdx(e.target));
+                        const model = tableOf.has(e.target) ? e.target : e.target.split('::')[0];
+                        const modelTables = model ? tableOf.get(model) : undefined;
+                        if (modelTables) {
+                            if (chain) models.add(fileIdx(model as string));
+                            for (const t of modelTables) (chain ? tables : inferred).add(t);
+                        }
+                        const kind = nodeById.get(e.target)?.kind;
+                        if (e.relation !== 'calls' || (kind !== 'method' && kind !== 'function')) continue;
+                        if (best.get(e.target) === true || best.get(e.target) === chain) continue;
+                        best.set(e.target, chain);
+                        next.push([e.target, chain]);
+                    }
                 }
+                frontier = next;
             }
         }
         paths.push({
@@ -710,6 +733,7 @@ function collectRequestPaths(graph: CodeGraph, idx: ReadonlyMap<string, number>)
             views: [...views].filter((v) => v >= 0).sort((a, b) => a - b),
             models: [...models].filter((v) => v >= 0).sort((a, b) => a - b),
             tables: [...tables].sort(),
+            inferredTables: [...inferred].filter((t) => !tables.has(t)).sort(),
         });
     }
     return paths.sort((a, b) => (a.route < b.route ? -1 : a.route > b.route ? 1 : a.file - b.file));
