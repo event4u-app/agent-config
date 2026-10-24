@@ -65,6 +65,8 @@ function realIo() {
     };
 }
 
+export const PREDICATE_ORDER = ['observation', 'tolerance', 'snapshot', 'invariant'];
+
 function section(text, heading) {
     const start = text.indexOf(heading);
     if (start < 0) throw new Error(`missing section ${heading}`);
@@ -133,7 +135,7 @@ export function reconcile(io) {
     const rowsDigest = sha256(ledgerRows.map((r) => r.raw).join('\n'));
     const tablePin = pinSection.match(/ledger table: sha256 `([0-9a-f]{64})`/);
     if (tablePin === null) failures.push('no ledger-table pin found');
-    else if (tablePin[1] !== rowsDigest) failures.push(`STALE: a ledger row changed since the table was pinned (${tablePin[1].slice(0, 9)} → ${rowsDigest.slice(0, 9)})`);
+    else if (tablePin[1] !== rowsDigest) failures.push(`STALE: a ledger row changed since the table was pinned (${tablePin[1].slice(0, 9)} → ${process.env.GATE_FULL_DIGEST ? rowsDigest : rowsDigest.slice(0, 9)})`);
 
     const pins = pinSection
         .split('\n')
@@ -162,15 +164,21 @@ export function reconcile(io) {
 
     const binding = ledgerRows.filter((r) => !r.migration && !r.withdrawn);
     for (const r of binding) if (r.cls === null) failures.push(`unclassified binding aspect: ${r.check} / ${r.aspect}`);
-    // Class predicates (round-20 item 4), checked against each row's own
-    // evidence cell: an observation states its non-blocking contract; a
-    // tolerance names a bound, a risk owner and an expiry; a snapshot names a
-    // baseline a governed act may move.
+    // Class predicates (round-20 item 4), applied in decision order to each
+    // binding aspect's own evidence cell; the first predicate that holds is the
+    // derived class, and it must equal the recorded one. An invariant therefore
+    // also proves that no earlier predicate holds. Every aspect is recorded.
+    const aspects = [];
     for (const r of binding) {
         const evidence = cells(r.raw)[8] ?? '';
-        if (r.cls === 'observation' && !/exit 0|exits 0|not a failure|never a build failure/i.test(evidence)) failures.push(`class predicate: ${r.id} is an observation but its evidence states no non-blocking contract`);
-        if (r.cls === 'tolerance' && !(/bound/i.test(evidence) && /risk owner/i.test(evidence) && /expir/i.test(evidence))) failures.push(`class predicate: ${r.id} is a tolerance without bound, risk owner and expiry`);
-        if (r.cls === 'snapshot' && !/baseline/i.test(evidence)) failures.push(`class predicate: ${r.id} is a snapshot without a baseline`);
+        const held = {
+            observation: /exit 0|exits 0|not a failure|never a build failure/i.test(evidence),
+            tolerance: /bound/i.test(evidence) && /risk owner/i.test(evidence) && /expir/i.test(evidence),
+            snapshot: /(?<![-\w])baseline\b/i.test(evidence.replace(/\bno baseline\b/gi, '')),
+        };
+        const derived = PREDICATE_ORDER.find((c) => c === 'invariant' || held[c]);
+        aspects.push({ id: r.id, check: r.check, recorded: r.cls, derived, held: PREDICATE_ORDER.filter((c) => held[c]) });
+        if (derived !== r.cls) failures.push(`class predicate: ${r.id} is recorded ${r.cls} but its evidence derives ${derived} (held: ${PREDICATE_ORDER.filter((c) => held[c]).join(', ') || 'none'})`);
     }
     for (const r of ledgerRows.filter((x) => x.migration)) {
         const hasCurrent = binding.some((b) => b.check === r.check && b.aspect.replace('— current', '').trim() === r.aspect.replace('— target', '').trim());
@@ -312,7 +320,7 @@ export function reconcile(io) {
         reasons: failures,
         consumable: state === 'valid',
     };
-    return { failures, report, matrix, artefact, status };
+    return { failures, report, matrix, artefact, status, aspects };
 }
 
 function renderBranchMatrix(lines, resolutions, t) {
@@ -384,6 +392,7 @@ function selfTest() {
         ['the mechanical site scanner finds an undisposed site', { ...io, sites: () => false }, /site scanner/],
         ['a stale pin quarantines rather than invalidates', { ...io, blob: (rel) => (rel === 'src/scripts/lint_readme_jargon.ts' ? '0'.repeat(40) : io.blob(rel)) }, 'quarantined'],
         ['a laundered mapping invalidates', json(FILES.mapping, (j) => { j.mapping.check_knowledge_cards['c10-E1-required'] = 'op:informational'; return j; }), 'invalid'],
+        ['an invariant row whose evidence states a permissive baseline', mutated(io, FILES.ledger, (t) => t.replace('| fixed fixture table (fixed-policy).', '| compared against a recorded baseline of known findings.')), /class predicate: R7\.b is recorded invariant but its evidence derives snapshot/],
         ['an observation row without a non-blocking contract', mutated(io, FILES.ledger, (t) => t.replace('| warning severity, exit 0 |', '| warning severity |')), /class predicate: R11\.e/],
         ['an unknown flag appears in a check', mutated(io, 'src/scripts/lint_readme_jargon.ts', (t) => `${t}\nconst x = '--surprise';\n`), /unclassified invocation mode: lint_readme_jargon --surprise/],
     ];
@@ -415,6 +424,14 @@ if (process.argv.includes('--self-test')) selfTest();
 else if (process.argv.includes('--matrix')) printMatrix();
 else if (process.argv.includes('--branches')) {
     process.stdout.write(reconcile(realIo()).artefact);
+} else if (process.argv.includes('--aspects')) {
+    const { aspects, failures } = reconcile(realIo());
+    console.log('| Row | Check | Recorded | Derived by decision order | Predicates that held |');
+    console.log('|---|---|---|---|---|');
+    for (const a of aspects) console.log(`| ${a.id} | \`${a.check}\` | ${a.recorded} | ${a.derived} | ${a.held.join(', ') || 'none'} |`);
+    const agree = aspects.filter((a) => a.derived === a.recorded).length;
+    console.log(`\naspects ${aspects.length} · derived = recorded ${agree} · mismatches ${aspects.length - agree}`);
+    process.exit(failures.length === 0 && agree === aspects.length ? 0 : 1);
 } else if (process.argv.includes('--status')) {
     const { status } = reconcile(realIo());
     process.stdout.write(`${JSON.stringify(status, null, 2)}\n`);

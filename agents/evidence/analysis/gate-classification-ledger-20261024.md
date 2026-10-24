@@ -207,7 +207,7 @@ in revision 9. The withdrawal and its reason sit on the row itself.
 
 **Ledger table, pinned (revision 10).** A row edited after the independent
 review would otherwise pass silently. The reconciler hashes the table rows. The
-recorded value is the ledger table: sha256 `2de7c81166b9af0e19c1f8f8ac1e42623f9c652b9e9f3d074fdfb39262d9b35a`.
+recorded value is the ledger table: sha256 `a36ea7fffc461b6c22ef98b663c7d7f97ba82b165e3c7e67412bd13d3f2d27a1`.
 
 **Helpers, pinned as a closure (revision 9).** openai, round 13: the checks
 import helpers, and the per-file pins below covered none of them. The
@@ -246,7 +246,7 @@ than listed.
 | `agents/evidence/analysis/gate-branch-inventory-20261024.json` | `119214ea142393c7254cae40e080153728e10fb0` |
 | `agents/evidence/analysis/gate-branch-mapping-20261024.json` | `c296fd9f02c1f0e83688da3f596cbb19e079665e` |
 | `agents/evidence/analysis/gate-branch-mapping-review-20261024.json` | `46227ecdae464df420e5aec60910a1b7a497e686` |
-| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `5874a3b72cf04c99a0aae9cc00f16bae6e9cb6bd` |
+| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `906f66045927abfba9889d382ed123db5fe35f81` |
 | `agents/evidence/analysis/gate-ledger-executions.mjs` | `b330f3e9671d4d9e58baf9e1a59e32bc473b3756` |
 | `agents/evidence/analysis/gate-branch-reconciliation-20261024.md` | `d25580a37bfe75418f0aa652fc9b31155f6c4356` |
 | `agents/evidence/analysis/gate-ledger-rerun-20261024.md` | `fc0c90dfbb56c2820e2669ad67fac1a969bd9782` |
@@ -502,6 +502,100 @@ JSON. The fields are the record path, the ledger blob, the artefact, the scope
 ledger **only** when the run on the candidate merge result reports
 `consumable: true`. Gate membership stays outside 7.1.
 
+## Item 4 per aspect — revision 16
+
+The twenty-first round (`agents/evidence/council/gate-classification-items-20261024.md`)
+split on item 4. The anthropic seat ruled it not met because the evidence offered
+only a summary verdict, with no record that each of the 49 binding aspects was
+checked. The openai seat ruled it met. The stricter reading is taken.
+
+Two changes close the shortfall.
+
+**The predicates now derive a class instead of vetoing one.** Before revision
+16, the reconciler checked only the non-invariant classes against their own
+predicates, and checked nothing on an invariant row. It now applies the
+predicates to every binding aspect's evidence cell in decision order:
+
+1. observation, a stated non-blocking contract;
+2. tolerance, a bound, a risk owner and an expiry;
+3. snapshot, a permissive baseline;
+4. invariant, the remainder.
+
+The first predicate that holds is the derived class, and it must equal the
+recorded class. The classes are therefore mutually exclusive by construction.
+An invariant now also proves that no earlier predicate holds.
+
+**What the first run found.** The first run flagged three invariants, `R2.b`,
+`R3.a` and `R7.b`, as deriving snapshot.
+
+- `R2.b` and `R3.a` say *"no baseline"*. That is a negated mention, and the
+  snapshot predicate now discounts it.
+- `R7.b` described a different mode, `--write-baseline`, in words that read as a
+  positive baseline claim. That mode asserts nothing and is dispositioned as
+  `op:write`. Its sentence now says only that, so the evidence cell describes R7.b
+  alone. The ledger-table pin is renewed for that one cell.
+
+A new self-test case plants a permissive baseline in an invariant's evidence and
+requires the refusal: 17/17. The reconciler pin is renewed for the code change.
+
+**The per-aspect record**, reproduced by
+`node agents/evidence/analysis/gate-ledger-reconcile.mjs --aspects`, which exits
+non-zero on any mismatch or any reconciliation failure:
+
+| Row | Check | Recorded | Derived by decision order | Predicates that held |
+|---|---|---|---|---|
+| R1.a | `check_gate_completeness` | invariant | invariant | none |
+| R1.b | `check_gate_completeness` | invariant | invariant | none |
+| R2.a | `lint_ticked_unmet_criteria` | invariant | invariant | none |
+| R2.b | `lint_ticked_unmet_criteria` | invariant | invariant | none |
+| R3.a | `check_rule_invariants` | invariant | invariant | none |
+| R3.b | `check_rule_invariants` | invariant | invariant | none |
+| R4.a | `check_augment_description_cap` | invariant | invariant | none |
+| R5.a | `check_trigger_evals` | invariant | invariant | none |
+| R5.b | `check_trigger_evals` | invariant | invariant | none |
+| R6.a | `lint_subagent_determinism` | invariant | invariant | none |
+| R7.a | `lint_rule_enforcement_declaration` | invariant | invariant | none |
+| R7.b | `lint_rule_enforcement_declaration` | invariant | invariant | none |
+| R8.a | `check_token_quality_golden` | invariant | invariant | none |
+| R8.b | `check_token_quality_golden` | observation | observation | observation |
+| R8.c | `check_token_quality_golden` | invariant | invariant | none |
+| R9.a | `check_council_layout` | invariant | invariant | none |
+| R10.a | `check_knowledge_cards` | invariant | invariant | none |
+| R10.b | `check_knowledge_cards` | invariant | invariant | none |
+| R10.c | `check_knowledge_cards` | invariant | invariant | none |
+| R10.d | `check_knowledge_cards` | invariant | invariant | none |
+| R10.e | `check_knowledge_cards` | invariant | invariant | none |
+| R10.f | `check_knowledge_cards` | invariant | invariant | none |
+| R10.g | `check_knowledge_cards` | invariant | invariant | none |
+| R10.h | `check_knowledge_cards` | observation | observation | observation |
+| R10.i | `check_knowledge_cards` | invariant | invariant | none |
+| R10.k | `check_knowledge_cards` | invariant | invariant | none |
+| R10.l | `check_knowledge_cards` | invariant | invariant | none |
+| R10.m | `check_knowledge_cards` | invariant | invariant | none |
+| R10.n | `check_knowledge_cards` | invariant | invariant | none |
+| R10.o | `check_knowledge_cards` | invariant | invariant | none |
+| R10.j | `check_knowledge_cards` | invariant | invariant | none |
+| R11.a | `check_public_links` | invariant | invariant | none |
+| R11.b | `check_public_links` | invariant | invariant | none |
+| R11.c | `check_public_links` | invariant | invariant | none |
+| R11.d | `check_public_links` | invariant | invariant | none |
+| R11.e | `check_public_links` | observation | observation | observation |
+| R11.f | `check_public_links` | invariant | invariant | none |
+| R11.g | `check_public_links` | invariant | invariant | none |
+| R12.a | `lint_agents_layout` | invariant | invariant | none |
+| R12.c | `lint_agents_layout` | observation | observation | observation |
+| R12.d | `lint_agents_layout` | invariant | invariant | none |
+| R13.a | `lint_eval_freshness` | invariant | invariant | none |
+| R14.a | `lint_readme_jargon` | invariant | invariant | none |
+| R15.a | `lint_readme_serial_comma` | invariant | invariant | none |
+| R16.a | `check_composite_arming` | observation | observation | observation |
+| R16.b | `check_composite_arming` | invariant | invariant | none |
+| R16.c | `check_composite_arming` | observation | observation | observation |
+| R16.d | `check_composite_arming` | observation | observation | observation |
+| R16.e | `check_composite_arming` | invariant | invariant | none |
+
+aspects 49 · derived = recorded 49 · mismatches 0
+
 ## Source-to-record completeness, mechanically — revision 14
 
 Round 18 (D42) was 2/2 and convergent. Both seats said the rerun proves that
@@ -750,7 +844,7 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 5 | | structure | non-empty queries, each `q` and boolean `trigger`, both classes present | same | always | edits | **invariant** | fixed rule | `R5.b` |
 | 6 | `lint_subagent_determinism` | schema consts | five determinism rules on `src/subagents/*.md` | same | always | edits | **invariant** | fixed rules | `R6.a` |
 | 7 | `lint_rule_enforcement_declaration` | declaration | a rule outside the legacy list declares `enforced_by:`; `none` states its gap in the body | `src/rules/`, `src/config/rule-enforcement-baseline.json` (governed input) | always | rule additions | **invariant** (shrink-only list) | list "may only shrink"; a stale entry must leave in the same change; declaration only, not that the backstop works | `R7.a` |
-| 7 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | only with `--self-test`; no caller found | edits to the checker | **invariant** | fixed fixture table (fixed-policy). `--write-baseline` is a write mode that rewrites the baseline file and asserts nothing, so it carries no class | `R7.b` |
+| 7 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | only with `--self-test`; no caller found | edits to the checker | **invariant** | fixed fixture table (fixed-policy). `--write-baseline` is a write mode (`op:write`) that asserts nothing, so it carries no class | `R7.b` |
 | 8 | `check_token_quality_golden` | structure | unknown rule ids, bad scenarios, a labelled task without anchors | golden YAML, `dist/router.json` | always, every mode | edits | **invariant** | "Structural errors … always fail" | `R8.a` |
 | 8 | | coverage and stubs — default mode | uncovered rules and stub tasks | same | invocation without `--require-complete` | labelling work | **observation** | "REPORTED, not a failure, by default" | `R8.b` |
 | 8 | | coverage and stubs — `--require-complete` | no stub, no uncovered rule, required scenarios present, for the given `--scope` | same | invocation with `--require-complete` (the operator-completion gate) | labelling work | **invariant** in that mode | the header names it the completion gate, which fails on any remaining stub | `R8.c` |
