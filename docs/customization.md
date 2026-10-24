@@ -587,8 +587,8 @@ The second line names the command for the install that is running:
 project whose `agent_config_version` pin is behind the registry's latest
 release, and no command at all for an ephemeral `npx` run, an install shape
 the check cannot classify, or a pinned project whose pin already names the
-latest release (or a newer one) — `update` moves the pin, not the running
-executable, so it has nothing to do there.
+latest release (or a newer one) — there the pin has nothing to move, and a
+global install behind it is `agent-config upgrade`'s to bring forward.
 
 ```
 ℹ️  agent-config 1.42.0 available (you have 1.38.0).

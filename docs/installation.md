@@ -21,8 +21,10 @@ The install records itself in `~/.event4u/agent-config/installed.lock`
 `~/.config/agent-config/installed.lock` is read as a fallback). Only the
 global install writes it — `agent-config upgrade` moves it forward. `npx
 @event4u/agent-config update` moves the project pin in `.agent-settings.yml`
-and leaves the manifest alone; when the pin is newer than the global
-install it names `agent-config upgrade`. A re-run of `init` from a package
+and leaves the manifest alone — but when the global install is older than
+the version it pins, it runs `agent-config upgrade` to that version FIRST and
+writes the pin only once that succeeded, because hooks, rules and skills run
+from the global install and only the CLI follows the pin. A re-run of `init` from a package
 older than the recorded version is refused with exit code 1 unless you pass
 `--force`.
 

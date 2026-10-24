@@ -216,17 +216,22 @@ function seedLock(lock: string, version: string): string {
 }
 
 describe('cmd_update — global lockfile', () => {
-    it('leaves an older global lock untouched and names `agent-config upgrade`', () => {
+    // The pin steers only the CLI; hooks, rules and skills run from the global
+    // install. A pin ahead of it is a project naming a version nothing runs, so
+    // offline — where the global install cannot move — the pin does not move
+    // either, and neither file is touched.
+    it('refuses offline when the global install is older, leaving pin and lock untouched', () => {
         const b = freshBox();
         seedSettings(b.root);
+        const settings = path.join(b.root, '.agent-settings.yml');
+        const pinBefore = fs.readFileSync(settings, 'utf8');
         const before = seedLock(b.lock, '5.0.0');
         const t = runTs(['--to', '7.2.0', '--offline'], b);
-        expect(t.status).toBe(0);
-        // The lock records what the global install deployed; a pin flip deploys nothing.
+        expect(t.status).toBe(1);
         expect(fs.readFileSync(b.lock, 'utf8')).toBe(before);
-        expect(t.stdout).toContain('global install is 5.0.0');
-        expect(t.stdout).toContain('agent-config upgrade');
-        expect(t.stdout).not.toContain('Refreshed global lockfile');
+        expect(fs.readFileSync(settings, 'utf8')).toBe(pinBefore);
+        expect(t.stderr).toContain('global install is 5.0.0');
+        expect(t.stderr).toContain('the pin is unchanged');
     });
 
     it('stays silent about the global install when it is already at or past the pin', () => {
@@ -248,5 +253,61 @@ describe('cmd_update — global lockfile', () => {
         expect(t.status).toBe(0);
         expect(fs.existsSync(b.lock)).toBe(false);
         expect(t.stdout).not.toContain('agent-config upgrade');
+    });
+});
+
+// ---------------------------------------------------------------------------
+// the global install moves first, the pin only once it has
+// ---------------------------------------------------------------------------
+
+describe('cmd_update — keeps the pin and the global install in step', () => {
+    async function run(global: string | null, upgradeRc = 0) {
+        const b = freshBox();
+        seedSettings(b.root);
+        const settings = path.join(b.root, '.agent-settings.yml');
+        const calls: Array<{ version: string; pinAtCall: string }> = [];
+        let out = '';
+        let err = '';
+        const { main } = await import('../../../src/scripts/_cli/cmd_update.js');
+        const rc = await main(['--to', '7.2.0'], {
+            cwd: b.root,
+            installed_version: '5.0.0',
+            version_checker: () => true,
+            cache_warmer: () => undefined,
+            state_path: path.join(b.home, 'update-check.json'),
+            global_version: () => global,
+            upgrader: async (version) => {
+                calls.push({ version, pinAtCall: fs.readFileSync(settings, 'utf8') });
+                return upgradeRc;
+            },
+            out: { write: (t: string) => void (out += t) },
+            err: { write: (t: string) => void (err += t) },
+        });
+        return { rc, calls, pin: fs.readFileSync(settings, 'utf8'), out, err };
+    }
+
+    it('installs the pinned version globally BEFORE writing the pin', async () => {
+        const r = await run('5.0.0');
+        expect(r.rc).toBe(0);
+        expect(r.calls).toHaveLength(1);
+        expect(r.calls[0]!.version).toBe('7.2.0');
+        expect(r.calls[0]!.pinAtCall).toContain('agent_config_version: "5.0.0"');
+        expect(r.pin).toContain('7.2.0');
+    });
+
+    it('leaves the pin unchanged when the global upgrade fails', async () => {
+        const r = await run('5.0.0', 1);
+        expect(r.rc).toBe(1);
+        expect(r.pin).toContain('agent_config_version: "5.0.0"');
+        expect(r.err).toContain('the pin is unchanged');
+    });
+
+    it('does not upgrade when the global install is at or past the target, or absent', async () => {
+        for (const global of ['7.2.0', '9.0.0', null]) {
+            const r = await run(global);
+            expect(r.rc).toBe(0);
+            expect(r.calls).toEqual([]);
+            expect(r.pin).toContain('7.2.0');
+        }
     });
 });
