@@ -47,7 +47,7 @@ describe('check_dependency_floors', () => {
         ).toEqual([]);
     });
 
-    it('RED: the shipped exception list is exactly one entry, and it carries its reason', () => {
+    it('RED: the shipped exception list is exactly the reviewed set, and each entry carries its reason', () => {
         // This assertion used to read `toEqual([])` and used `web-tree-sitter`
         // as its own negative example. ADR-259 (amended 2026-09-07) returned the
         // parser to `dependencies` under an ABI lock, so the shipped state
@@ -57,8 +57,19 @@ describe('check_dependency_floors', () => {
         // SECOND exception still reds this test, and an entry whose reason does
         // not name the ABI coupling reds it too — so the escape stays one
         // reviewed pin with a stated cause rather than a list that can grow.
-        expect(Object.keys(EXACT_PIN_EXCEPTIONS)).toEqual(['web-tree-sitter']);
+        //
+        // The second reviewed cause, 2026-10-24: the three sigstore modules are
+        // the trusted computing base of the unattended upgrade's provenance
+        // check, and the AI council's D15 made exact pins a condition of using
+        // them. The list is still pinned whole, and each entry still has to
+        // name its cause.
+        expect(Object.keys(EXACT_PIN_EXCEPTIONS).sort()).toEqual(
+            ['@sigstore/bundle', '@sigstore/protobuf-specs', '@sigstore/verify', 'web-tree-sitter'].sort(),
+        );
         expect(EXACT_PIN_EXCEPTIONS['web-tree-sitter']).toMatch(/ABI/);
+        for (const name of ['@sigstore/bundle', '@sigstore/protobuf-specs', '@sigstore/verify']) {
+            expect(EXACT_PIN_EXCEPTIONS[name]).toMatch(/provenance check|@sigstore\/verify/);
+        }
         // Excepted, so it passes — the refusal case moved to the test below,
         // which uses a package that is NOT listed.
         expect(evaluate({ 'web-tree-sitter': '0.24.7' })).toEqual([]);
