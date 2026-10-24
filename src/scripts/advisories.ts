@@ -63,6 +63,7 @@ import {
     emptyLedger,
     validateAcceptance,
 } from './_lib/advisory_verdicts.js';
+import { readRegistry, recordProject } from './_lib/project_registry.js';
 import { event4u_root } from './_lib/user_global_paths.js';
 import {
     advance,
@@ -363,25 +364,40 @@ export function markOwnActionsPrivate<T extends { entries: Array<{ ecosystem: st
     return inv;
 }
 
-/** The user-global index of project roots — roots and fingerprints only (5.4). */
+/**
+ * The project list is the shared user-global registry (`_lib/project_registry`,
+ * ADR-299): a sibling of the advisories machine dir, so an injected dir keeps
+ * its registry beside it. Roots and fingerprints only (5.4).
+ */
+function registryDirFor(mdir: string): string {
+    return path.join(path.dirname(mdir), 'projects');
+}
+
 function recordProjects(mdir: string, rows: Array<{ root: string; fingerprint: string }>, now: Date): void {
+    for (const r of rows) recordProject(r.root, { fingerprint: r.fingerprint }, { dir: registryDirFor(mdir), now });
+}
+
+/** The pre-registry `projects.json`, imported once and then moved aside. */
+function migrateLegacyProjects(mdir: string): void {
     const file = path.join(mdir, 'projects.json');
-    let doc: Record<string, { fingerprint: string; at: string }> = {};
+    let doc: Record<string, { fingerprint?: string; at?: string }>;
     try {
         doc = JSON.parse(fs.readFileSync(file, 'utf-8'));
     } catch {
-        doc = {};
+        return;
     }
-    for (const r of rows) doc[r.root] = { fingerprint: r.fingerprint, at: now.toISOString() };
-    writeJson(file, doc);
+    for (const [root, e] of Object.entries(doc ?? {})) {
+        const at = typeof e?.at === 'string' && !Number.isNaN(Date.parse(e.at)) ? new Date(e.at) : new Date();
+        recordProject(root, { fingerprint: typeof e?.fingerprint === 'string' ? e.fingerprint : null }, { dir: registryDirFor(mdir), now: at });
+    }
+    fs.renameSync(file, `${file}.migrated`);
 }
 
 export function knownProjects(mdir: string = machineDir()): string[] {
-    try {
-        return Object.keys(JSON.parse(fs.readFileSync(path.join(mdir, 'projects.json'), 'utf-8'))).filter((r) => fs.existsSync(r));
-    } catch {
-        return [];
-    }
+    migrateLegacyProjects(mdir);
+    return Object.values(readRegistry({ dir: registryDirFor(mdir) }).projects)
+        .map((e) => e.root)
+        .filter((r) => fs.existsSync(r));
 }
 
 // ---------------------------------------------------------------------------

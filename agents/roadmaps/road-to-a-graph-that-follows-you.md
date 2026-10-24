@@ -119,7 +119,7 @@ plan AC improvements automatically when a source repository updates.
 
 ## Phase 3 — One project registry
 
-- [ ] **3.1 A shared registry module.** `src/scripts/_lib/project_registry.ts` owns
+- [x] **3.1 A shared registry module.** `src/scripts/_lib/project_registry.ts` owns <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/project_registry.ts -->
       `event4u_root()/runtime/projects/registry.json`, keyed by repo id:
       root, remote, fingerprint, last seen, graph home, graph commit, languages,
       providers, pinned. Writes are atomic.
