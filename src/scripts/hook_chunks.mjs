@@ -49,6 +49,12 @@ export const HOOK_CHUNKS = Object.freeze([
         entry: 'src/scripts/hooks/code_graph_refresh_hook.ts',
         outfile: 'dist/hooks/code_graph_refresh.chunk.cjs',
     }),
+    // Bound on `subagent_start` alone; the digest reads instruction files with
+    // node built-ins only.
+    Object.freeze({
+        entry: 'src/scripts/hooks/subagent_constraints_hook.ts',
+        outfile: 'dist/hooks/subagent_constraints.chunk.cjs',
+    }),
     // `yaml` external for the reason given at `chat_history`: the concern
     // reads one user-global settings file with it.
     Object.freeze({
