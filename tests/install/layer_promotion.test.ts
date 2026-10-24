@@ -34,6 +34,7 @@ import { runLayerPromotion } from '../../src/scripts/hooks/layer_promotion_hook.
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const VERSION = '9.9.9';
+const DEAD_PID = 2 ** 22 + 12345;
 const AGENT = 'claude-code_2-1-299_agent';
 const LAWS: readonly string[] = Object.keys(
     (JSON.parse(fs.readFileSync(path.join(REPO, 'src/config/rule-consequence-class.json'), 'utf8')) as { members: object }).members,
@@ -310,7 +311,8 @@ describe('step 3.3 — promote after proof, never at install', () => {
             const stubs = stubCount(f);
             if (cut === 'markers') restoreAll(f);
             if (cut === 'partial') restoreAll(f, 2);
-            fs.writeFileSync(path.join(f.runtimeRoot, PROMOTING_MARKER), '1\n');
+            // An owner that is gone: no live process holds this pid.
+            fs.writeFileSync(path.join(f.runtimeRoot, PROMOTING_MARKER), `${DEAD_PID} ${Date.now()}\n`);
             if (cut === 'before-record') fs.rmSync(path.join(f.runtimeRoot, PROMOTION_RECORD));
             expect(stubs).toBeGreaterThan(0);
             arrive(f, 'session-2', new Date(Date.now() + 60_000).toISOString(), allRules(f));
@@ -323,6 +325,46 @@ describe('step 3.3 — promote after proof, never at install', () => {
             expect(step(f).action).toBe('promoted');
             expect(fs.existsSync(path.join(f.runtimeRoot, PROMOTING_MARKER))).toBe(false);
         }
+    });
+
+    it('a promotion still running in another session is left alone; a stale one is recovered', () => {
+        const f = freshInstall();
+        arrive(f, 'session-1', '2026-10-24T10:00:00Z', allRules(f));
+        expect(step(f).action).toBe('promoted');
+        const lock = path.join(f.runtimeRoot, PROMOTING_MARKER);
+        const stubs = stubCount(f);
+        // Live owner (this process), fresh: neither restore nor a second pass.
+        fs.writeFileSync(lock, `${process.pid} ${Date.now()}\n`);
+        expect(step(f)).toEqual({ action: 'none', reason: 'promotion-in-progress' });
+        expect(stubCount(f)).toBe(stubs);
+        expect(readCarrierState(f.runtimeRoot).layer).toBe('thinned');
+        // Same live owner, but older than any real pass: recovered.
+        fs.writeFileSync(lock, `${process.pid} ${Date.now() - 60_000}\n`);
+        expect(step(f)).toEqual({ action: 'none', reason: 'promotion-interrupted' });
+        expect(stubCount(f)).toBe(0);
+    });
+
+    it('two sessions never promote at once, and a pass whose lock was taken records nothing', () => {
+        const f = freshInstall();
+        arrive(f, 'session-1', '2026-10-24T10:00:00Z', allRules(f));
+        const lock = path.join(f.runtimeRoot, PROMOTING_MARKER);
+        fs.writeFileSync(lock, `${process.pid} ${Date.now()}\n`);
+        expect(step(f)).toEqual({ action: 'none', reason: 'promotion-in-progress' });
+        expect(stubCount(f)).toBe(0);
+        fs.rmSync(lock);
+        // Interleave: right after the thin pass, another session takes the lock.
+        let calls = 0;
+        const clock = (): number => {
+            calls += 1;
+            if (calls === 3) fs.writeFileSync(lock, `${DEAD_PID} 0\n`);
+            return 0;
+        };
+        expect(step(f, { now: clock, startedAt: 0 })).toEqual({ action: 'none', reason: 'promotion-preempted' });
+        expect(fs.existsSync(path.join(f.runtimeRoot, PROMOTION_RECORD))).toBe(false);
+        // The taker's recovery then converges the layer to full.
+        expect(step(f)).toEqual({ action: 'none', reason: 'promotion-interrupted' });
+        expect(stubCount(f)).toBe(0);
+        expect(ledgerMatchesDisk(f)).toBe(true);
     });
 
     it('the concern honours its kill switch and never throws without a staged runtime', () => {

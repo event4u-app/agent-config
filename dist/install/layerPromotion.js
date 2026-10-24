@@ -49,8 +49,38 @@ import { thinInstalledRuleLayer } from './installThinLayer.js';
 import { CLAUDE_LAYER_DIRNAME, DEMOTED_MARKER, PACKAGE_STAMP_LINE, THINNED_MARKER, currentRuntimeDir, markClaudeLayer, readCarrierState, runtimeRootFor, } from './stagedRuntime.js';
 export const PROMOTION_SWITCH_REL = path.join('src', 'config', 'layer-form-promotion.json');
 export const PROMOTION_RECORD = 'promotion.json';
-/** Present from before the thin pass until the promotion record is written; found at session start, it means the pass never finished. */
+/**
+ * The promotion lock: created exclusively before the thin pass, removed after
+ * the promotion record. It names its owner (`<pid> <ms since epoch>`), so a
+ * concurrent session can tell a pass still running — skip, touch nothing — from
+ * one whose owner is gone or older than {@link PROMOTING_STALE_MS} — recover.
+ */
 export const PROMOTING_MARKER = 'promoting';
+/** Far beyond any real pass (11 ms measured, 250-ms budget); only a dead owner gets this old. */
+export const PROMOTING_STALE_MS = 30_000;
+function ownerAlive(pid) {
+    try {
+        process.kill(pid, 0);
+        return true;
+    }
+    catch (e) {
+        return e.code === 'EPERM';
+    }
+}
+/** Is the lock at `file` held by a live, recent owner? An unreadable lock is treated as held. */
+export function promotionLockLive(file, nowMs = Date.now()) {
+    let text;
+    try {
+        text = fs.readFileSync(file, 'utf8');
+    }
+    catch {
+        return true;
+    }
+    const [pid, at] = text.trim().split(/\s+/).map(Number);
+    if (!Number.isInteger(pid) || !Number.isFinite(at))
+        return nowMs - fs.statSync(file).mtimeMs < PROMOTING_STALE_MS;
+    return nowMs - at < PROMOTING_STALE_MS && ownerAlive(pid);
+}
 export const LATENCY_BUDGET_REL = path.join('src', 'config', 'hook-latency-budget.json');
 /** Measured 11 ms for the thin pass over 121 rules (tsx, warm, 2026-10-24); the default is that plus margin. */
 export const DEFAULT_THIN_ESTIMATE_MS = 50;
@@ -258,11 +288,21 @@ export function sessionLayerStep(opts = {}) {
         const home = env['HOME'] ?? os.homedir();
         const promoting = path.join(runtimeRoot, PROMOTING_MARKER);
         if (fs.existsSync(promoting)) {
-            // An interrupted promotion: restore the snapshot and start again from full.
+            // A pass still running in another session is left alone.
+            if (promotionLockLive(promoting))
+                return { action: 'none', reason: 'promotion-in-progress' };
+            // Its owner is gone: claim the recovery by one rename, so two sessions never both restore.
+            const claim = `${promoting}.recover-${process.pid}`;
+            try {
+                fs.renameSync(promoting, claim);
+            }
+            catch {
+                return { action: 'none', reason: 'promotion-in-progress' };
+            }
             const rulesDir = thinnedDir(runtimeRoot) ?? opts.rulesDir ?? path.join(home, '.claude', 'rules');
             rerecord(rulesDir, restoreStagedLayer(packageRoot, rulesDir) ?? [], env);
             markClaudeLayer(runtimeRoot, { thinned: false, rulesDir });
-            fs.rmSync(promoting, { force: true });
+            fs.rmSync(claim, { force: true });
             return { action: 'none', reason: 'promotion-interrupted' };
         }
         const state = readCarrierState(runtimeRoot);
@@ -296,7 +336,22 @@ export function sessionLayerStep(opts = {}) {
         // Both markers go first. `promoting` makes an interrupted pass visible to
         // the next session, which restores it; `thinned` lets the shell branch
         // restore it on a dead carrier meanwhile. `promoting` goes last, after the record.
-        fs.writeFileSync(path.join(runtimeRoot, PROMOTING_MARKER), `${process.pid}\n`);
+        const lock = path.join(runtimeRoot, PROMOTING_MARKER);
+        const token = `${process.pid} ${Date.now()}\n`;
+        try {
+            fs.writeFileSync(lock, token, { flag: 'wx' });
+        }
+        catch {
+            return { action: 'none', reason: 'promotion-in-progress' };
+        }
+        const stillOurs = () => {
+            try {
+                return fs.readFileSync(lock, 'utf8') === token;
+            }
+            catch {
+                return false;
+            }
+        };
         markClaudeLayer(runtimeRoot, { thinned: true, rulesDir });
         const rewritten = [];
         const t0 = now();
@@ -314,13 +369,18 @@ export function sessionLayerStep(opts = {}) {
         finally {
             if (failed) {
                 rerecord(rulesDir, restoreStagedLayer(packageRoot, rulesDir) ?? [], env);
-                markClaudeLayer(runtimeRoot, { thinned: false, rulesDir });
-                fs.rmSync(path.join(runtimeRoot, PROMOTING_MARKER), { force: true });
+                if (stillOurs()) {
+                    markClaudeLayer(runtimeRoot, { thinned: false, rulesDir });
+                    fs.rmSync(lock, { force: true });
+                }
             }
         }
         if (failed)
             return { action: 'none', reason: 'thin-failed' };
         const thinMs = Math.max(1, Math.round(now() - t0));
+        // A recovery took the lock meanwhile: it is restoring, so this pass records nothing.
+        if (!stillOurs())
+            return { action: 'none', reason: 'promotion-preempted' };
         rerecord(rulesDir, rewritten, env);
         const record = {
             promoted_at: (opts.date ?? (() => new Date()))().toISOString(),
@@ -328,7 +388,7 @@ export function sessionLayerStep(opts = {}) {
             last_thin_ms: thinMs,
         };
         fs.writeFileSync(path.join(runtimeRoot, PROMOTION_RECORD), `${JSON.stringify(record, null, 2)}\n`);
-        fs.rmSync(path.join(runtimeRoot, PROMOTING_MARKER), { force: true });
+        fs.rmSync(lock, { force: true });
         return { action: 'promoted', reason: decision.reason };
     }
     catch {
