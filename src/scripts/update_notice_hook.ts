@@ -259,7 +259,8 @@ export function noticeOncePerDay(deps: NoticeDeps): NoticeOutcome | null {
             const stored = readNoticeState(deps.noticeStatePath);
             const confirmed = confirmDelivered(stored, receipt);
             if (confirmed !== stored) writeNoticeState(deps.noticeStatePath, confirmed);
-            return null;
+            // Another session's receipt never throttles a notice still pending.
+            if (confirmed.pending === undefined) return null;
         }
         return runNotice(deps);
     }

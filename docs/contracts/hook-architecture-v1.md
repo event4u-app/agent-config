@@ -136,6 +136,10 @@ notice is in the output, the dispatcher writes a delivery receipt,
 `<user-global root>/user-notice-<concern>.delivered` (`{session_id, at}`); a
 dropped notice leaves none. A concern that must not count a notice as shown
 until the host received it reads that receipt (`update-notice` does).
+`effect: notification` permits a concern its own user-global bookkeeping — a
+throttle stamp, what it last reported, what is still pending — and nothing that
+another module reads or that changes the installation; the receipt is the
+dispatcher's, not the concern's.
 
 ## Exit-code semantics
 

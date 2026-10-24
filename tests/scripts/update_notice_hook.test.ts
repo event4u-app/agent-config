@@ -189,6 +189,16 @@ describe('3.1 — a session_start concern beside wrapper-freshness', () => {
             expect(readNoticeState(statePath()).last_seen_installed).toBe('1.0.0');
         });
 
+        it('a same-day receipt for another session does not throttle a notice still pending', () => {
+            const root = setupUpgraded();
+            noticeOncePerDay(hostDeps(root, 's1', null, []));
+            const again: string[] = [];
+            const out = noticeOncePerDay(hostDeps(root, 's2', { session_id: 'other', at: now() }, again));
+            expect(out).not.toBeNull();
+            expect(again.join('')).toContain('agent-config is now 2.0.0 (was 1.0.0).');
+            expect(readNoticeState(statePath()).last_seen_installed).toBe('1.0.0');
+        });
+
         it('the confirmation takes effect on the next decision too, not only on the throttle path', () => {
             const root = setupUpgraded();
             noticeOncePerDay(hostDeps(root, 's1', null, []));
