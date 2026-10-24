@@ -76,6 +76,10 @@ export const LAZY_CONCERNS: Readonly<Record<string, { readonly chunk: string; re
             chunk: 'code_graph_refresh.chunk.cjs',
             source: 'code_graph_refresh_hook',
         }),
+        'src/scripts/hooks/subagent_constraints_hook.ts': Object.freeze({
+            chunk: 'subagent_constraints.chunk.cjs',
+            source: 'subagent_constraints_hook',
+        }),
         'src/scripts/update_notice_hook.ts': Object.freeze({
             chunk: 'update_notice.chunk.cjs',
             source: path.join('..', 'update_notice_hook'),

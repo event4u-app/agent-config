@@ -18,6 +18,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     MANAGED_SIGNATURE,
     build_claude_hook_matrix,
+    claude_host_version,
 } from '../../src/scripts/_lib/claude_settings_hooks.js';
 import {
     _resetHostLoweringCache,
@@ -65,7 +66,8 @@ describe('golden smoke — fresh global install is single-surface complete', () 
         const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8')) as {
             hooks?: Record<string, unknown[]>;
         };
-        const matrix = build_claude_hook_matrix(MANIFEST);
+        // The install asks the host for its version, so the expected matrix does too.
+        const matrix = build_claude_hook_matrix(MANIFEST, { hostVersion: claude_host_version() });
         const hooks = settings.hooks ?? {};
         expect(Object.keys(hooks).sort()).toEqual(Object.keys(matrix).sort());
         for (const ev of Object.keys(matrix)) {

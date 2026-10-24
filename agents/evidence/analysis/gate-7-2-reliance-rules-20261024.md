@@ -50,3 +50,12 @@ The invocation inventory, 7.2's first item, is done:
   proposed merge result of the 7.2 change, before it lands, and not
   against the current branch. That is how the sequencing rule avoids
   deadlock.
+- *Trust root (round 21).* The reconciler pins itself, the scanner, the
+  harness and the ledger table. A candidate that changes the validator and
+  its pin together would therefore pass a reconciler taken from the
+  candidate. So 7.2's consumption runs the reconciler **from the base
+  revision**, with `git show <base>:agents/evidence/analysis/…`, against the
+  candidate's tree. A candidate that changes any of these files is never
+  consumable on its own reading. It goes through the re-attestation above.
+  The files are the reconciler, the site scanner, the harness, the
+  vocabulary, the dispositions, or a pin line.

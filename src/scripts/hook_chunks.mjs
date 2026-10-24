@@ -49,6 +49,13 @@ export const HOOK_CHUNKS = Object.freeze([
         entry: 'src/scripts/hooks/code_graph_refresh_hook.ts',
         outfile: 'dist/hooks/code_graph_refresh.chunk.cjs',
     }),
+    // Bound on `subagent_start` alone. `yaml` external for the reason given at
+    // `chat_history`: the concern parses one definition's frontmatter with it.
+    Object.freeze({
+        entry: 'src/scripts/hooks/subagent_constraints_hook.ts',
+        outfile: 'dist/hooks/subagent_constraints.chunk.cjs',
+        external: Object.freeze(['yaml']),
+    }),
     // `yaml` external for the reason given at `chat_history`: the concern
     // reads one user-global settings file with it.
     Object.freeze({

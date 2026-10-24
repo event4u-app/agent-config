@@ -3058,10 +3058,10 @@ function _deploy_global_content(
         if (tool_id === 'claude-code') {
             try {
                 const manifest = path.join(package_root, 'src', 'scripts', 'hook_manifest.yaml');
-                const matrix = claude_settings_hooks.build_claude_hook_matrix(manifest);
+                const matrix = claude_settings_hooks.build_claude_hook_matrix(manifest, { hostVersion: claude_settings_hooks.claude_host_version() });
                 const res = claude_settings_hooks.ensure_managed_hooks(
                     path.join(anchor, 'settings.json'),
-                    matrix,
+                    matrix, Object.keys(claude_settings_hooks.min_host_versions(manifest)),
                 );
                 if (!state.QUIET) {
                     if (res.changed) {

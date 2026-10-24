@@ -207,7 +207,7 @@ in revision 9. The withdrawal and its reason sit on the row itself.
 
 **Ledger table, pinned (revision 10).** A row edited after the independent
 review would otherwise pass silently. The reconciler hashes the table rows. The
-recorded value is the ledger table: sha256 `e7fe0f2adae19b1314bb0dffe123390426bbe65ad7541458b0ed408cc83a368d`.
+recorded value is the ledger table: sha256 `a36ea7fffc461b6c22ef98b663c7d7f97ba82b165e3c7e67412bd13d3f2d27a1`.
 
 **Helpers, pinned as a closure (revision 9).** openai, round 13: the checks
 import helpers, and the per-file pins below covered none of them. The
@@ -216,6 +216,18 @@ checks on every run, and hashes the sorted list of path and git blob pairs. The
 recorded value is the helper closure: 51 files, sha256 `9243c1a7c1881c00581a25e5290d6eb8eaa0ecf8a2ea619209c69ae9137eae87`. Renewed once, on 2026-10-24, after a trunk merge changed `_lib/settings_removed_keys.ts` and `_lib/settings_renamed_keys.ts`. The re-attestation round answered 2/2 *no change* to any classified assertion: `agents/evidence/council/gate-ledger-pin-reattest-20261024.md`. The previous value was `a47d2a77…3b48`.
 
 Any changed, added or removed helper on the closure marks the verdict stale.
+
+**The pins as one attested set (revision 19).** Round 24 asked that the inputs
+be attested as one immutable unit, not pin by pin. The reconciler hashes the
+recorded pin lines, the recorded table digest and the recorded closure digest.
+The recorded value is the attested set: sha256 `99a2eb7a09124973749f92cb4e3a40914ff77b72da9dd177fae0a52e5a67aa41`.
+
+A pin line changed without this line is refused as a broken set, not as a stale
+pin. A renewal therefore replaces the whole set in one diff, and rollback
+restores the last attested set, never selected pins. This value covers the pins
+as they stand: the revision-16 attested values, plus the two new pins of
+revision 18. Round 25 attests that set's renewal.
+
 A new dependency is caught as well, because the closure is recomputed rather
 than listed.
 
@@ -246,12 +258,15 @@ than listed.
 | `agents/evidence/analysis/gate-branch-inventory-20261024.json` | `119214ea142393c7254cae40e080153728e10fb0` |
 | `agents/evidence/analysis/gate-branch-mapping-20261024.json` | `c296fd9f02c1f0e83688da3f596cbb19e079665e` |
 | `agents/evidence/analysis/gate-branch-mapping-review-20261024.json` | `46227ecdae464df420e5aec60910a1b7a497e686` |
-| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `21ab58e7177f98c7279e1c7109c81fdd7d1bca87` |
+| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `906f66045927abfba9889d382ed123db5fe35f81` |
 | `agents/evidence/analysis/gate-ledger-executions.mjs` | `b330f3e9671d4d9e58baf9e1a59e32bc473b3756` |
-| `agents/evidence/analysis/gate-branch-reconciliation-20261024.md` | `41d6f03204cd89695f3cc1b858b8a018f4d9fe9f` |
+| `agents/evidence/analysis/gate-branch-reconciliation-20261024.md` | `d25580a37bfe75418f0aa652fc9b31155f6c4356` |
 | `agents/evidence/analysis/gate-ledger-rerun-20261024.md` | `fc0c90dfbb56c2820e2669ad67fac1a969bd9782` |
 | `agents/evidence/analysis/gate-branch-site-dispositions-20261024.json` | `67a43f237b7be386b9630fac5396af31fb53eae2` |
-| `agents/evidence/analysis/gate-branch-sites.mjs` | `d0ac48d1e1357f005f9fff4510a03e19ae37331d` |
+| `agents/evidence/analysis/gate-branch-sites.mjs` | `d926f34aa02b93f428b5a5f521f56317167047f7` |
+| `agents/evidence/analysis/gate-phase7-harness.mjs` | `672ce60e22f56fd483b31ed84b13266a90b821c0` |
+| `agents/evidence/analysis/gate-invocation-inventory-20261024.md` | `1f3ff61036ccbd9ba42f9acd4eec5b5c2697b4f9` |
+| `agents/evidence/analysis/gate-class-grounds-20261024.json` | `3ae580599ebaa4d88a1aa7145c7c9364165f61a1` |
 
 
 ## Independent branch inventory — revision 8
@@ -396,6 +411,379 @@ when `node agents/evidence/analysis/gate-ledger-reconcile.mjs` exits 0 at
 the revision 7.2 changes. A stale, failed or absent reconciliation blocks
 reliance. That condition is written into step 7.2 itself, and 7.2's own test
 runs the reconciler first.
+
+## The closure standard and its eight items — revision 15
+
+On 2026-10-24 the owner chose **Option A** for 7.1's closure standard, by
+answering "1" (`agents/evidence/owner-directives/2026-10-24-7-1-closure-standard.md`,
+D44). Under it, the classification ledger, a fail-closed consumption gate and
+reopening triggers close 7.1. Round-20 items 2 and 3, the 330-row manifest and
+the 330→16 re-derivation, are not required. Items 1 and 4–8 are, and this
+section discharges each one with its test.
+
+**Item 1 — the execution universe and the red predicate, recorded and
+executable.** `agents/evidence/analysis/gate-phase7-harness.mjs`:
+
+- **Discovery.** Every `src/scripts/check_*.ts` and `lint_*.ts` at a
+  revision. `--universe bbe5b73be` lists **330**, the Phase 7 count.
+- **Invocation.** `./scripts-run src/scripts/<id>`, no arguments, from the
+  repository root, with a 240 s timeout.
+- **Predicate.** Decision order, first match wins:
+  1. no exit code (spawn failure or timeout) → `not-run`, never green;
+  2. exit 0 → `green`;
+  3. exit 2 with a usage line → `needs-argument`;
+  4. a missing generated projection (`dist/`, `.claude/`, `.augment/`) →
+     `needs-build`;
+  5. otherwise → `red`.
+- **Prerequisite.** Projections built, as in the Phase 7 measurement.
+
+Exercised on three checks today: `lint_readme_serial_comma` green,
+`check_composite_arming` red, `lint_subagent_determinism` green. The two
+exclusion branches of the predicate were not exercised in this run.
+
+**Item 4 — class predicates, mutually exclusive by decision order.** For one
+aspect under one mode, the first rule that holds gives the class:
+
+1. **observation.** The aspect's own contract leaves the run non-blocking:
+   exit 0, *"not a failure"*, *"never a build failure"*.
+2. **tolerance.** A stated bound, a named risk owner and an expiry.
+3. **snapshot.** Compared against a recorded baseline that a governed act
+   may move in the permissive direction.
+4. **invariant.** None of the above: the property must hold whenever the
+   aspect applies.
+
+The reconciler checks each row's own evidence cell against its class: an
+observation must state its non-blocking contract, a tolerance its bound, owner
+and expiry, a snapshot its baseline. Ambiguity fails the run and never
+defaults to a class (self-test case: an observation row with the exit-0
+contract removed is refused).
+
+Formalising the predicates found one misclassification. **`R10.d`, C3 live
+URL, was an observation; it is now an invariant in `--check-urls` mode.** With
+the flag, an unreachable URL is an error and the run exits 1. Network
+dependence is an environment property (assurance: environment-dependent), not
+a non-blocking contract.
+
+**Item 5 — a bounded emission inventory over a declared surface.**
+`gate-branch-sites.mjs` declares:
+
+- **Surface.** The 16 checks' own source text.
+- **Vocabulary.** A non-zero `return`, `process.exit(n)`,
+  `process.exitCode = n`, `throw`, and `push` into a reported list.
+- **Excluded surfaces.** Imported helpers: each helper failure a check can
+  surface is an inventoried branch naming the helper, and the closure is
+  pinned. Spawned subprocesses (`git`, `node`): their failures reach a check
+  only through the branches that handle them.
+
+Result: 159 sites, 132 inside inventoried branches, 27 disposed, 0
+undisposed. `--self-test` plants one site of each of the five types and
+requires each to be refused (6/6). `process.exitCode = main()` in
+`check_gate_completeness` is not a literal, and its values are the `return`
+sites of `main`, which are covered.
+
+**Item 6 — provenance: what was derived independently, and what was rerun.**
+
+| Artefact | Produced by | Independent of the ledger author? |
+|---|---|---|
+| Phase 7 population (16 of 330) | the 2026-10-10 measurement and council record, landed in `7a7a55b2` | yes, an earlier round; checked against git |
+| branch inventory (198 branches) | a separate session, without sight of the ledger | yes (same model, not another provider) |
+| mapping review (182/12/4) | a separate session | yes (same model) |
+| site scan (159 sites) | `gate-branch-sites.mjs`, no model | mechanical; vocabulary chosen by the ledger author |
+| ledger, mapping, dispositions, reconciler, harness | the ledger author | no |
+| two clean-checkout reruns | a separate session | *reruns*: they prove determinism, not independent derivation |
+
+**Item 7 — validity, quarantine and reopening.** `gate-ledger-reconcile.mjs`
+returns one of three states:
+
+- **valid** (exit 0): every check passes.
+- **quarantined** (exit 3): the only failures are stale pins. A source,
+  helper, wiring file, artefact or ledger-table change was not yet
+  re-attested. The record is not consumable, and 7.1 is not reopened.
+- **invalid** (exit 1): any other failure, such as an omitted or unmapped
+  branch, a review verdict not honoured, a class predicate violated, or an
+  undisposed site. **7.1 reopens.**
+
+A demonstrated misclassification, omission or coverage defect in the
+declared surface reopens 7.1. Proposing another analysis technique does
+neither. Self-test: a stale pin yields `quarantined`; a laundered mapping
+yields `invalid`.
+
+**Item 8 — the 7.1 consumption contract.**
+`node agents/evidence/analysis/gate-ledger-reconcile.mjs --status` prints
+JSON. The fields are the record path, the ledger blob, the artefact, the scope
+(Phase 7 commit, checks, binding aspects, branches, classes), `state`,
+`reasons` and `consumable`. Its exit code is 0, 3 or 1. 7.2 consumes the
+ledger **only** when the run on the candidate merge result reports
+`consumable: true`. Gate membership stays outside 7.1.
+
+## Item 4 per aspect — revision 16
+
+The twenty-first round (`agents/evidence/council/gate-classification-items-20261024.md`)
+split on item 4. The anthropic seat ruled it not met because the evidence offered
+only a summary verdict, with no record that each of the 49 binding aspects was
+checked. The openai seat ruled it met. The stricter reading is taken.
+
+Two changes close the shortfall.
+
+**The predicates now derive a class instead of vetoing one.** Before revision
+16, the reconciler checked only the non-invariant classes against their own
+predicates, and checked nothing on an invariant row. It now applies the
+predicates to every binding aspect's evidence cell in decision order:
+
+1. observation, a stated non-blocking contract;
+2. tolerance, a bound, a risk owner and an expiry;
+3. snapshot, a permissive baseline;
+4. invariant, the remainder.
+
+The first predicate that holds is the derived class, and it must equal the
+recorded class. The classes are therefore mutually exclusive by construction.
+An invariant now also proves that no earlier predicate holds.
+
+**What the first run found.** The first run flagged three invariants, `R2.b`,
+`R3.a` and `R7.b`, as deriving snapshot.
+
+- `R2.b` and `R3.a` say *"no baseline"*. That is a negated mention, and the
+  snapshot predicate now discounts it.
+- `R7.b` described a different mode, `--write-baseline`, in words that read as a
+  positive baseline claim. That mode asserts nothing and is dispositioned as
+  `op:write`. Its sentence now says only that, so the evidence cell describes R7.b
+  alone. The ledger-table pin is renewed for that one cell.
+
+A new self-test case plants a permissive baseline in an invariant's evidence and
+requires the refusal: 17/17. The reconciler pin is renewed for the code change.
+
+**The per-aspect record** is now the one in revision 17 below.
+
+## Item 4, a positive invariant predicate — revision 17
+
+The twenty-second round (`agents/evidence/council/gate-classification-item4-20261024.md`)
+re-attested both pin renewals of revision 16 **2/2** (*renew*). It split on item 4
+again, this time the other way:
+
+- **openai: not met.** `invariant` had no predicate and was an unconditional
+  fallback.
+- **anthropic: met.** It named the same weakness: *"deriving invariant by
+  absence … inverts the fail-safe direction."*
+
+The stricter reading is taken.
+
+`invariant` now has a positive predicate, `INVARIANT_EVIDENCE`. The evidence
+must name its fixed contract (fixed, frozen, no baseline, contract, equality,
+may only go down or shrink) or the failing outcome that enforces it (error,
+fail, exit 1, returns 1).
+
+An aspect where no predicate holds now derives `unclassifiable`, and the
+reconciler refuses it. It is never an invariant by default.
+
+The first run found three invariant cells that stated no enforcing fact:
+
+- `R10.l` said *"errors"*, and the predicate is now plural-aware.
+- `R3.b` and `R14.a` each gained the verified fact:
+  - `check_rule_invariants.ts:204-208` returns 1 on an undetected removal;
+  - `lint_readme_jargon.ts:172-188` returns 1 above `MAX_HITS = 3`.
+
+No class changed. A new self-test case removes an invariant's stated contract
+and requires the refusal: 18/18. Reverting the fallback in a scratch run turns
+that case red. Both pins are renewed for this diff, and that renewal goes to
+round 23 per D38.
+
+Revision 18 below supersedes that predicate. Its table is the current one.
+
+## Item 4 from structured fields, not prose — revision 18
+
+The twenty-third round (`agents/evidence/council/gate-classification-item4-r2-20261024.md`)
+ruled item 4 **not met, 2/2**. A keyword predicate over evidence prose cannot
+tell *"does not fail"* from *"fails"*. It shows that the ledger and its
+classifier agree, not that each aspect satisfies its class.
+
+Re-attestation of the revision-17 pins split: anthropic said *do not renew*,
+openai said *renew*. Under D38 a split renews nothing, so both pins stay at
+their revision-16 values. The record therefore reads **quarantined** until a
+round attests the cumulative diff.
+
+openai named the evidence that would change its verdict: *"structured fields
+… asserted contract, enforcement mechanism, and failing outcome"*. Revision 18
+removes every prose predicate. The classes now derive from structured fields
+that the ledger author did not write.
+
+- **invariant / observation.** These come from the `effect` of each branch that
+  reaches the row.
+  - The branch inventory was produced without sight of the ledger, and its
+    branch-to-row mapping was independently reviewed.
+  - Effects `error-exit-nonzero`, `throw` and `exit-code-only` block.
+    `warning-exit-zero` does not.
+  - `warning-exit-nonzero-only-with-flag` blocks only for a row the ledger marks
+    *"in that mode"*.
+  - Blocking-only derives invariant and non-blocking-only derives observation.
+    Both, neither, or an unknown effect is refused.
+- **snapshot / tolerance.** These need structured fields in
+  `agents/evidence/analysis/gate-class-grounds-20261024.json`: a baseline, or a
+  bound, a risk owner and an expiry. No such row exists, so a future one fails
+  closed until it carries them.
+- **A semantic class that differs from the behaviour.** This passes only as a
+  structured divergence owed to 7.2. There is exactly one, `R16.d`. Its contract
+  says *"never a build failure"*, but `check_composite_arming.ts:286-293` exits
+  1. Reconciling that exit is already a 7.2 entry condition. A divergence record
+  for a row that does not diverge is refused as stale.
+
+Prose is no longer the interface. A self-test case rewrites R4.a's evidence
+cell to *"does not fail; errors are informational; no contract"* and requires
+that **no** class-predicate failure follows. Six further cases require
+refusals:
+
+- an observation reached by a blocking branch;
+- an invariant reached only by a non-blocking branch;
+- a flag-mode row that loses its mode;
+- the divergence record removed;
+- a false divergence;
+- a snapshot without its baseline.
+
+All 21 non-baseline cases behave. The baseline case is red only because of the
+two unattested pins.
+
+A new input-coverage check requires a pin on every structured input. Its first
+run found the invocation inventory had **never been pinned**. That input and
+the new grounds file are pinned now, as new pins, not renewals.
+
+Revision 19 below supersedes that table.
+
+## Item 4: modes, waivers and the attested set — revision 19
+
+The twenty-fourth round (`agents/evidence/council/gate-classification-item4-r3-20261024.md`)
+ruled item 4 **not met, 2/2**, and *do not renew*, 2/2. It gave seven
+must-fixes.
+
+| # | Must-fix | Revision 19 |
+|---|---|---|
+| 1 | Mode is read from prose (`/in that mode/`) | A structured `modes` map in `gate-class-grounds-20261024.json` (11 rows) |
+| 2 | R16.d passes as a "divergence", which is not satisfaction | **Owner-reserved.** Both seats: fix R16.d's behaviour, or the owner amends item 4 to allow governed waivers. Routed to the owner as gate `7-1-r16d-waiver`. |
+| 3 | A waiver must read `waived`, never derived | Reported as `waived`, and counted apart |
+| 4 | No waiver for `mixed`, `unreached` or an unknown effect | Refused; self-test case |
+| 5 | A waiver needs an approver, an issue, an expiry and a milestone | Refused without approver `owner`, an existing directive, an issue and an unexpired ISO expiry |
+| 6 | Snapshot/tolerance metadata replaces behaviour | Now required in addition: such a row must also derive blocking behaviour |
+| 7 | Attest the inputs atomically | One attested-set digest over all recorded pin lines, the table and the closure |
+
+Must-fix 1 is checked in three ways:
+
+- each structured mode must occur as a literal in the check's source;
+- it must be named in the predicates of **every** branch that reaches the row,
+  which is independent text;
+- it must agree with the class cell.
+
+All 11 modes pass all three.
+
+On must-fix 7, a pin line changed without the set line is refused as a broken
+set, so rollback restores whole sets.
+
+The record is **invalid** until gate `7-1-r16d-waiver` is answered. R16.d's
+waiver has no approver, so it is refused. That is the fail-closed state.
+
+Self-test 28/29. The one red case is the clean baseline, which needs both the
+owner's answer and the attested renewal. The renewal is not made here (D38).
+
+`node agents/evidence/analysis/gate-ledger-reconcile.mjs --aspects`:
+
+| Row | Check | Recorded | Mode | Blocking branches | Non-blocking branches | Derived | Verdict |
+|---|---|---|---|---|---|---|---|
+| R1.a | `check_gate_completeness` | invariant | default | c1-ratchet-regressed, c1-ratchet-stale, c1-ratchet-unbaselined | — | invariant | derived |
+| R1.b | `check_gate_completeness` | invariant | default | c1-ledger-fail-malformed, c1-malformed | — | invariant | derived |
+| R2.a | `lint_ticked_unmet_criteria` | invariant | default | c2-duplicate-historical, c2-hit, c2-stale-historical | — | invariant | derived |
+| R2.b | `lint_ticked_unmet_criteria` | invariant | default | c2-selftest | — | invariant | derived |
+| R3.a | `check_rule_invariants` | invariant | default | c3-missing-file, c3-missing-string | — | invariant | derived |
+| R3.b | `check_rule_invariants` | invariant | default | c3-selftest-undetected | — | invariant | derived |
+| R4.a | `check_augment_description_cap` | invariant | default | c4-over-cap | — | invariant | derived |
+| R5.a | `check_trigger_evals` | invariant | default | c6-last-eval-missing, c6-last-eval-stale | — | invariant | derived |
+| R5.b | `check_trigger_evals` | invariant | default | c6-unreadable-json, c6-queries-empty, c6-query-no-q, c6-query-trigger-type, c6-split-list-empty, c6-split-item-empty, c6-no-shape, c6-one-class | — | invariant | derived |
+| R6.a | `lint_subagent_determinism` | invariant | default | c5-no-frontmatter, c5-schema-version, c5-visible, c5-tools-dupes, c5-name-stem, c5-name-dup | — | invariant | derived |
+| R7.a | `lint_rule_enforcement_declaration` | invariant | default | c7-undeclared-new, c7-gap-not-in-body, c7-baseline-stale, c7-baseline-shrink | — | invariant | derived |
+| R7.b | `lint_rule_enforcement_declaration` | invariant | default | c7-selftest | — | invariant | derived |
+| R8.a | `check_token_quality_golden` | invariant | default | c8-corpus-id, c8-id-format, c8-id-duplicate, c8-rules-empty, c8-rule-unknown, c8-nofire-kernel, c8-nofire-fires, c8-tag-not-fired, c8-scenario, c8-prompt, c8-label-status, c8-labelled-todo-rubric, c8-labelled-no-anchor | — | invariant | derived |
+| R8.b | `check_token_quality_golden` | observation | default | — | c8-uncovered-warn, c8-missing-scenario-warn, c8-scaffold-notice | observation | derived |
+| R8.c | `check_token_quality_golden` | invariant | --require-complete | c8-require-complete | — | invariant | derived |
+| R9.a | `check_council_layout` | invariant | default | c9-root-stray, c9-noncanonical | — | invariant | derived |
+| R10.a | `check_knowledge_cards` | invariant | default | c10-C1-size | — | invariant | derived |
+| R10.b | `check_knowledge_cards` | invariant | default | c10-C2-pointer | — | invariant | derived |
+| R10.c | `check_knowledge_cards` | invariant | default | c10-C3-local | — | invariant | derived |
+| R10.d | `check_knowledge_cards` | invariant | --check-urls | c10-C3-url-status, c10-C3-url-unreachable | — | invariant | derived |
+| R10.e | `check_knowledge_cards` | invariant | default | c10-C4-trust, c10-C4-type-wrong, c10-C4-type-missing | — | invariant | derived |
+| R10.f | `check_knowledge_cards` | invariant | default | c10-C5-ancestry, c10-C5-span | — | invariant | derived |
+| R10.g | `check_knowledge_cards` | invariant | --strict | c10-C6-source | — | invariant | derived |
+| R10.h | `check_knowledge_cards` | observation | default | — | c10-freshness-warn | observation | derived |
+| R10.i | `check_knowledge_cards` | invariant | --global | c10-G1-tier-missing, c10-G1-tier-invalid | — | invariant | derived |
+| R10.k | `check_knowledge_cards` | invariant | --global | c10-G2-no-footer, c10-G2-field | — | invariant | derived |
+| R10.l | `check_knowledge_cards` | invariant | --global | c10-G3-redaction | — | invariant | derived |
+| R10.m | `check_knowledge_cards` | invariant | --global | c10-G4-sens-missing, c10-G4-sens-invalid | — | invariant | derived |
+| R10.n | `check_knowledge_cards` | invariant | --global | c10-G5-field | — | invariant | derived |
+| R10.o | `check_knowledge_cards` | invariant | --global | c10-G6-prohibited | — | invariant | derived |
+| R10.j | `check_knowledge_cards` | invariant | default | c10-E1-required | — | invariant | derived |
+| R11.a | `check_public_links` | invariant | default | c11-target-not-found | — | invariant | derived |
+| R11.b | `check_public_links` | invariant | default | c11-target-no-stability | — | invariant | derived |
+| R11.c | `check_public_links` | invariant | default | c11-experimental | — | invariant | derived |
+| R11.d | `check_public_links` | invariant | default | c11-self-no-stability | — | invariant | derived |
+| R11.e | `check_public_links` | observation | default | — | c11-beta-marker | observation | derived |
+| R11.f | `check_public_links` | invariant | --strict | c11-beta-marker | — | invariant | derived |
+| R11.g | `check_public_links` | invariant | default | c11-contexts-link | — | invariant | derived |
+| R12.a | `lint_agents_layout` | invariant | default | c12-flat-file, c12-unknown-dir | — | invariant | derived |
+| R12.c | `lint_agents_layout` | observation | default | — | c12-consumer-warning | observation | derived |
+| R12.d | `lint_agents_layout` | invariant | --strict | c12-consumer-warning | — | invariant | derived |
+| R13.a | `lint_eval_freshness` | invariant | default | c13-manifest-unreadable, c13-no-last-eval, c13-sha-mismatch | — | invariant | derived |
+| R14.a | `lint_readme_jargon` | invariant | default | c14-over-budget | — | invariant | derived |
+| R15.a | `lint_readme_serial_comma` | invariant | default | c15-serial-comma | — | invariant | derived |
+| R16.a | `check_composite_arming` | observation | default | — | c16-not-armable-readings, c16-not-armable-sessions, c16-unusable-dropped | observation | derived |
+| R16.b | `check_composite_arming` | invariant | default | c16-all-malformed | — | invariant | derived |
+| R16.c | `check_composite_arming` | observation | default | — | c16-ledger-skip, c16-malformed-warn | observation | derived |
+| R16.d | `check_composite_arming` | observation | default | c16-store-unreadable | — | invariant | REFUSED |
+| R16.e | `check_composite_arming` | invariant | default | c16-selftest | — | invariant | derived |
+
+aspects 49 · derived 48 · waived 0 · refused 1
+
+## Must-fix 5 closed, and the one residue — revision 20
+
+The twenty-fifth round (`agents/evidence/council/gate-classification-item4-r4-20261024.md`)
+found must-fixes 1, 3, 4, 6 and 7 **closed, 2/2**. It found must-fix 5
+**open, 2/2**:
+
+- `owed_to` was never read;
+- the issue check was a length test;
+- `2026-99-99` passed as an expiry.
+
+It refused renewal until must-fix 5 is closed and the owner has answered.
+
+Revision 20 closes must-fix 5. A waiver is now refused unless all four of these
+hold.
+
+1. **Milestone.** It names a roadmap that exists and a step that is open there.
+   Ticking the step lapses the waiver.
+2. **Issue.** Its issue text occurs verbatim in the named file. For R16.d that is
+   the 7.2 entry condition, *"row 16's exit-1 divergence reconciled"*, in
+   `gate-7-2-reliance-rules-20261024.md`.
+3. **Approver.** It is `owner`, with a directive that is tracked in git at `HEAD`
+   and names the row.
+4. **Expiry.** It is a real calendar date that has not passed.
+
+Six self-test cases cover the refusals. Self-test: 32/33. The one red case is
+the clean baseline, red for the two reasons below.
+
+**What no field can establish.** openai's strongest objection stands: *"a
+literal `owner` value"* in repository content cannot prove that the owner
+approved. Anyone with write access can author it. Binding approval to
+independently verifiable provenance, such as a protected or signed directive,
+is the second principal. It stays owner-reserved under
+`external-bootstrap-boundary-for-phases-2-3`. A waiver is therefore only as
+trustworthy as the directive's provenance, and the record says so.
+
+**The residue.**
+
+- **R16.d**, gate `7-1-r16d-waiver`: both seats route it to the owner. Both
+  recommend correcting the behaviour, so that an absent store is *"not measured
+  yet"* and exits 0 as the contract says, over a time-bounded waiver.
+- **The attested-set renewal.** It is one council round after the owner
+  answers. D38 forbids it before then.
+- **Two more stale wiring pins.** The trunk merge of `5fac452056` changed
+  `taskfiles/ci-fast.yml` and `.github/workflows/rule-backstops.yml`. Both diffs
+  only switch `check_step_production_reach` to `--enforce`, and that script is
+  not one of the 16 Phase 7 checks. They join the same set renewal and move no
+  row.
 
 ## Source-to-record completeness, mechanically — revision 14
 
@@ -604,7 +992,8 @@ guarantees (openai), so each invariant row carries one of these qualifiers:
   - row 5 freshness (runner clock and time zone);
   - the current-scope rows of checks 9 and 12 (the disk, read relative to the working directory);
   - rows 14 and 15 (`README.md` relative to the working directory);
-  - row 10 C5 (git history depth, skipped without git).
+  - row 10 C5 (git history depth, skipped without git);
+  - row 10 C3 live URL in `--check-urls` mode (network).
 - **fixed-policy**: every other invariant row.
 
 ## The ledger — revision 3
@@ -638,13 +1027,13 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 2 | `lint_ticked_unmet_criteria` | ticked-vs-NOT-met | no `[x] AC` whose own text says `NOT met`, and the in-source exemption list is well formed (no duplicate key, no entry that matches nothing) | roadmaps, frozen digest list in source (governed input) | always | roadmap edits | **invariant** | frozen, digest-pinned exemptions; an unmatched entry is an error, so the list only shrinks | `R2.a` |
 | 2 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | only with `--self-test`; no caller found | edits to the checker | **invariant** | a fixed fixture table, no baseline (fixed-policy) | `R2.b` |
 | 3 | `check_rule_invariants` | kernel strings present | each string of `tests/golden/invariants.json` is in the kernel rule's source and its `dist/` projection | `tests/golden/invariants.json` (governed input), `src/rules/`, `dist/agent-src/rules/` | needs the projection built | a rule reworded; the expectation file edited | **invariant** | no baseline; the expectation file is the contract and shares edit authority with the rules (weak independence) | `R3.a` |
-| 3 | | mutation self-test — `--mutation-selftest` | removing the first invariant string in memory makes the check fail | `tests/golden/invariants.json` | only with `--mutation-selftest`; no caller found | the expectation file | **invariant** | the header: guards the checker against a silently-green normalisation bug (repository-consistency) | `R3.b` |
+| 3 | | mutation self-test — `--mutation-selftest` | removing the first invariant string in memory makes the check fail | `tests/golden/invariants.json` | only with `--mutation-selftest`; no caller found | the expectation file | **invariant** | the header: guards the checker against a silently-green normalisation bug (repository-consistency); an undetected removal returns 1 (`check_rule_invariants.ts:204-208`) | `R3.b` |
 | 4 | `check_augment_description_cap` | description length | every `type: auto` rule description ≤ `DESC_CAP` | `src/rules/*.md` | when the scan root contains at least one `type: auto` rule; with none the check exits 0 having scanned nothing (`op:silent-pass`, a defect carried to 7.2) | rule edits | **invariant** | fixed cap | `R4.a` |
 | 5 | `check_trigger_evals` | freshness | `last_eval` present and not more than 90 days before the run date (a future date computes a negative age and is accepted) | `triggers.json`; clock `asOf()` (pinnable through `AC_AS_OF` or `--today`), local calendar date of the runner | always | the calendar | **invariant, time-qualified** | D24. Window 90 d. Day 90 passes, day 91 fails (`age > 90`). No grace. The runner's local time zone decides the date. The class covers the property as computed. Rejecting future dates is a possible tightening, recorded and not assumed | `R5.a` |
 | 5 | | structure | non-empty queries, each `q` and boolean `trigger`, both classes present | same | always | edits | **invariant** | fixed rule | `R5.b` |
 | 6 | `lint_subagent_determinism` | schema consts | five determinism rules on `src/subagents/*.md` | same | always | edits | **invariant** | fixed rules | `R6.a` |
 | 7 | `lint_rule_enforcement_declaration` | declaration | a rule outside the legacy list declares `enforced_by:`; `none` states its gap in the body | `src/rules/`, `src/config/rule-enforcement-baseline.json` (governed input) | always | rule additions | **invariant** (shrink-only list) | list "may only shrink"; a stale entry must leave in the same change; declaration only, not that the backstop works | `R7.a` |
-| 7 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | only with `--self-test`; no caller found | edits to the checker | **invariant** | fixed fixture table (fixed-policy). `--write-baseline` is a write mode that rewrites the baseline file and asserts nothing, so it carries no class | `R7.b` |
+| 7 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | only with `--self-test`; no caller found | edits to the checker | **invariant** | fixed fixture table (fixed-policy). `--write-baseline` is a write mode (`op:write`) that asserts nothing, so it carries no class | `R7.b` |
 | 8 | `check_token_quality_golden` | structure | unknown rule ids, bad scenarios, a labelled task without anchors | golden YAML, `dist/router.json` | always, every mode | edits | **invariant** | "Structural errors … always fail" | `R8.a` |
 | 8 | | coverage and stubs — default mode | uncovered rules and stub tasks | same | invocation without `--require-complete` | labelling work | **observation** | "REPORTED, not a failure, by default" | `R8.b` |
 | 8 | | coverage and stubs — `--require-complete` | no stub, no uncovered rule, required scenarios present, for the given `--scope` | same | invocation with `--require-complete` (the operator-completion gate) | labelling work | **invariant** in that mode | the header names it the completion gate, which fails on any remaining stub | `R8.c` |
@@ -653,7 +1042,7 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 10 | `check_knowledge_cards` | C1 size | a card ≤ 150 lines | `agents/knowledge/*.md` (external arm) | always | card edits | **invariant** | error | `R10.a` |
 | 10 | | C2 pointer present | `links.authoritative` in frontmatter | same | always | card edits | **invariant** | error | `R10.b` |
 | 10 | | C3 local pointer | a local pointer path exists | same + the tree | always | card or tree edits | **invariant** | error | `R10.c` |
-| 10 | | C3 live URL | the URL answers | same + network | only with `--check-urls` | the remote site | **observation** | network-dependent and opt-in; not reproducible offline | `R10.d` |
+| 10 | | C3 live URL | the URL answers | same + network | only with `--check-urls` | the remote site | **invariant** in that mode | with `--check-urls` an unreachable or failing URL is an error (`C3: URL returned …` / `unreachable`) and the run exits 1. Reclassified in revision 15 from observation: network dependence is an environment property, not a non-blocking contract (class predicate 4, D45) | `R10.d` |
 | 10 | | C4 trust tag | `trust` present; `type: anti-hallucination` | same | always | card edits | **invariant** | error | `R10.e` |
 | 10 | | C5 evidence consistency | distinct `source_version`s form a git-ancestry chain; `observed_at` span ≤ 7 days | same + git history | when git is runnable; without git the ancestry half is skipped silently (`op:silent-pass`) | card edits, history | **invariant** | error. The span compares recorded timestamps, not the clock | `R10.f` |
 | 10 | | C6 strict sources | `source=<path:line>` references exist and are non-empty | same + the tree | only with `--strict` | tree edits | **invariant** in that mode | error when enabled | `R10.g` |
@@ -677,30 +1066,27 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 12 | | consumer shape — default mode | in **consumer mode only** (no source-repo markers in the working directory), entries outside the consumer-target shape are reported as warnings | `agents/` on disk | consumer mode, invocation without `--strict`; never in this repository, which is in source-repo mode | consumer layout | **observation** | warnings exit 0 without `--strict`. Corrected in revision 8: revision 6 described these as entries scheduled for migration in this repository | `R12.c` |
 | 12 | | consumer shape — `--strict` | no entry outside the consumer-target shape remains | same | consumer mode with `--strict`; in this repository's source-repo mode `--strict` changes nothing | consumer layout | **invariant** in that mode | `if (strict) return 1` after the consumer warnings | `R12.d` |
 | 13 | `lint_eval_freshness` | eval attached | `upstream.last_eval` present with `sha_at_eval == upstream.sha` | manifests | in scope when a skill ships triggers and a pinned corpus | corpus SHA bumps | **invariant** | SHA equality, no clock | `R13.a` |
-| 14 | `lint_readme_jargon` | above-fold density | ≤ 3 watchlist hits in README lines 1–120 | README.md | always | README edits | **invariant** (numeric bound) | no named risk owner, so not a tolerance | `R14.a` |
+| 14 | `lint_readme_jargon` | above-fold density | ≤ 3 watchlist hits in README lines 1–120 | README.md | always | README edits | **invariant** (numeric bound) | fixed cap `MAX_HITS = 3`, more hits return 1 (`lint_readme_jargon.ts:172-188`); no named risk owner, so not a tolerance | `R14.a` |
 | 15 | `lint_readme_serial_comma` | serial comma | no serial comma in README prose | README.md | always | README edits | **invariant** | fixed rule | `R15.a` |
 | 16 | `check_composite_arming` | arming verdict | ≥ 10 usable composite readings from ≥ 2 sessions | the composite store | a valid store exists | new readings | **observation** | "'not yet' is a successful measurement, never a build failure" | `R16.a` |
 | 16 | | store yields a usable record | a store with content parses to at least one usable reading (an empty store is `op:could-not-run`, not this row) (a line with a string `session` and a `composite_ms` key) | the composite store | the store exists | a corrupt append | **invariant** | exit 1 when malformed lines leave no usable record (`malformed > 0 && readings.length === 0`). Corrected in revision 6: revision 3 said "every line parses", which the code does not require | `R16.b` |
-| 16 | | partial malformation | malformed lines next to usable ones are counted and named per line | same | the store exists | a corrupt append | **observation** | the gate ledger records each dropped line as `precondition_unmet` and the run continues | `R16.c` |
+| 16 | | partial malformation | malformed lines next to usable ones are counted and named per line | same | the store exists | a corrupt append | **observation** | the gate ledger records each dropped line as `precondition_unmet`, the run continues, and with at least one usable record it exits 0 | `R16.c` |
 | 16 | | store absent | the store file exists | same | no store file | bootstrap | **observation** | its own contract: no readings yet is "not measured yet" and never a build failure. Runtime metadata, not a class: `not-evaluated: evidence-missing`. Current behaviour diverges: the script exits 1, which is owed to 7.2. A future transition to invariant after a bootstrap deadline needs that deadline first (D31) and is not part of this verdict | `R16.d` |
 | 16 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | `taskfiles/content.yml:386`, `rule-backstops.yml:321` | edits to the checker | **invariant** | fixed fixture table (fixed-policy). `--publish` is a write mode that writes a distribution report and asserts nothing, so it carries no class | `R16.e` |
 
-## Totals — revision 9
+## Totals — revision 15
 
 52 aspect rows over 16 checks. Two target-scope rows are migration notes and
 one row (`R1.c`) is withdrawn, so there are **49 classified aspects**, each in one of the four classes:
 
-- **invariant 41**:
+- **invariant 42**:
   - four self-test or mutation-test modes;
-  - ten hold only in a named invocation mode: `--require-complete`, `--strict`
-    on three checks (one of them only in consumer mode), and `--global` for G1
-    to G6;
+  - eleven hold only in a named invocation mode: `--require-complete`, `--strict` on three checks (one only in consumer mode), `--check-urls`, and `--global` for G1 to G6;
   - one is time-qualified (trigger freshness);
   - the adoption ratchet carries a staleness window.
   - `R4.a`, `R10.f` and `R11.a` carry a narrowed applicability.
-- **observation 8**:
+- **observation 7**:
   - token-golden default coverage;
-  - C3 live URL;
   - card freshness;
   - the beta marker in default mode;
   - the consumer-mode shape warning in default mode;

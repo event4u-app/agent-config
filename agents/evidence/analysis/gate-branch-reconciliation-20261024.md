@@ -13,7 +13,7 @@ A branch whose code serves two aspects in two modes is written as two rows, one 
 
 **Invalidation.** The reconciler reports the verdict stale, and 7.1 reopens for the affected rows, when any pinned check, helper closure, invocation wiring, inventory, mapping, review, site disposition, reconciler, this artefact or the ledger table changes, or when a later finding shows an omitted or mis-destined branch (`agents/evidence/analysis/gate-7-2-reliance-rules-20261024.md`).
 
-Totals: 198 branches (200 rows) · 97 branches to binding aspects · 101 to non-assertion categories {"op:could-not-run":56,"op:informational":7,"op:usage":22,"op:unreachable":1,"op:silent-pass":4,"op:aggregate":7,"op:write":2,"op:presentation":1,"op:scope-exclusion":1} · 49 binding aspects {"invariant":41,"snapshot":0,"tolerance":0,"observation":8}.
+Totals: 198 branches (200 rows) · 97 branches to binding aspects · 101 to non-assertion categories {"op:could-not-run":56,"op:informational":7,"op:usage":22,"op:unreachable":1,"op:silent-pass":4,"op:aggregate":7,"op:write":2,"op:presentation":1,"op:scope-exclusion":1} · 49 binding aspects {"invariant":42,"snapshot":0,"tolerance":0,"observation":7}.
 
 **Unsure review verdicts and their recorded decisions:**
 
@@ -153,8 +153,8 @@ Totals: 198 branches (200 rows) · 97 branches to binding aspects · 101 to non-
 | `check_knowledge_cards` | `c10-C4-type-wrong` | src/scripts/check_knowledge_cards.ts:298 | default | R10.e invariant | agree |
 | `check_knowledge_cards` | `c10-C4-type-missing` | src/scripts/check_knowledge_cards.ts:301 | default | R10.e invariant | agree |
 | `check_knowledge_cards` | `c10-C2-pointer` | src/scripts/check_knowledge_cards.ts:307 | default | R10.b invariant | agree |
-| `check_knowledge_cards` | `c10-C3-url-status` | src/scripts/check_knowledge_cards.ts:315 | --check-urls | R10.d observation | agree |
-| `check_knowledge_cards` | `c10-C3-url-unreachable` | src/scripts/check_knowledge_cards.ts:318 | --check-urls | R10.d observation | agree |
+| `check_knowledge_cards` | `c10-C3-url-status` | src/scripts/check_knowledge_cards.ts:315 | --check-urls | R10.d invariant | agree |
+| `check_knowledge_cards` | `c10-C3-url-unreachable` | src/scripts/check_knowledge_cards.ts:318 | --check-urls | R10.d invariant | agree |
 | `check_knowledge_cards` | `c10-C3-local` | src/scripts/check_knowledge_cards.ts:325 | default | R10.c invariant | agree |
 | `check_knowledge_cards` | `c10-C5-ancestry` | src/scripts/check_knowledge_cards.ts:345-348 | default | R10.f invariant | agree |
 | `check_knowledge_cards` | `c10-C5-git-missing` | src/scripts/check_knowledge_cards.ts:351-353 | — | op:silent-pass | agree |
