@@ -156,22 +156,13 @@ AT A MERGEABLE PR, NEVER AT AN OFFER TO GO CHECK ON ONE.
 ONE ROADMAP, ONE PR: NO PUSH, PR OR MERGE OF A ROADMAP BEFORE ITS LAST STEP
 IS DONE. LOCAL COMMITS IN LOGICAL CHUNKS STAY; DELIVERY FIXES AFTER THE PR
 OPENS ARE PUSHED TO THAT SAME PR.
-ONE INVOCATION, ONE DELIVERY: AS THE TERMINAL STAGE OF A COMPOSED INVOCATION
-THIS RUN TAKES DELIVERY OVER — IT UPDATES THE OPEN PR ON THE BRANCH, OR OPENS
-THE FIRST ONE, ONCE, AT ITS OWN END.
+ONE INVOCATION, ONE DELIVERY: AS A COMPOSED INVOCATION'S LAST STAGE, THIS RUN
+OPENS OR UPDATES THE ONE PR, ONCE, AT ITS END.
 NO PR OF A ROADMAP IS MERGED BEFORE ITS LANE REPORTS `complete`.
 A STARTED ROADMAP THAT CAN STILL MOVE IS FINISHED BEFORE ANY OTHER IS STARTED.
 ```
 
-**Composed invocations.** "Analyse the inbox, then work the roadmap off with
-`/roadmap:process-full`, then update the PR" is one invocation with one
-delivery. The earlier stage runs under ADR-288 Amendment 1 — *"a door invoked as
-a non-terminal stage of a composed invocation stops at `committed`; the terminal
-stage owns publication"* — so it leaves local commits and no PR, and this run
-pushes, opens or updates the PR and settles CI once for both. The order is
-decided by [`invocation-plan`](../../contexts/execution/invocation-plan.md):
-pipe the stages as JSON into `./scripts-run src/scripts/invocation_plan` and
-follow the order it prints (`--done <ids>` re-plans after an amendment).
+Composed invocations: order via [`invocation-plan`](../../contexts/execution/invocation-plan.md) and `./scripts-run src/scripts/invocation_plan`.
 
 The **five — and only five — live halt conditions** (exhaustive; nothing else
 stops the run):

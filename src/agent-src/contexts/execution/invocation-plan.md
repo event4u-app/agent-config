@@ -76,6 +76,11 @@ the first one, once. When a later stage fails or blocks, the deferred delivery
 still runs for what finished and says partial progress in its first line
 (`deliveryOnFailure`). Deferral never means nothing lands.
 
+Run it, rather than reasoning it out each time: pipe the stages as JSON into
+`./scripts-run src/scripts/invocation_plan` and follow the order it prints;
+`--done <ids>` re-plans after an amendment, `--failed <id>` returns the partial
+delivery.
+
 A mid-flight amendment — same mission, a stage added, removed or re-ordered — is
 re-planned over the remaining stages and the run continues
 ([`user-interrupt-priority`](../../rules/user-interrupt-priority.md), the

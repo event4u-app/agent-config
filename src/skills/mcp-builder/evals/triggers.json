@@ -1,0 +1,32 @@
+{
+    "skill": "mcp-builder",
+    "last_eval": "2026-10-24",
+    "description": "3 positives (1 de) + 3 near-misses. Near-misses are using or configuring an existing MCP server and reviewing a tool's authorization, the surfaces most often confused with building one.",
+    "queries": [
+        {
+            "q": "build an MCP server in TypeScript that exposes our ticket API as tools",
+            "trigger": true
+        },
+        {
+            "q": "write a FastMCP server with a search tool and an update tool",
+            "trigger": true
+        },
+        {
+            "q": "bau mir einen MCP-Server für unsere Kundendatenbank",
+            "trigger": true,
+            "language": "de"
+        },
+        {
+            "q": "connect the GitHub MCP server to Claude Code",
+            "trigger": false
+        },
+        {
+            "q": "which MCP servers do I have configured?",
+            "trigger": false
+        },
+        {
+            "q": "review who can call the delete endpoint",
+            "trigger": false
+        }
+    ]
+}

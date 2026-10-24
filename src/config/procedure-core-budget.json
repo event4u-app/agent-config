@@ -10,7 +10,10 @@
             "ceiling": 16091,
             "over_cap_reason": "The mandatory core (sections 1, 2, 3-0, 4, the section 5 step loop with the receipt, the 5b essentials, the halt list, the section 6 essentials) is about 12 KB, and the Iron-Law fences that must stay with their headings add about 3 KB; every further move costs a pointer line worth more than it saves. Under the 16,000-char depth ceiling, above the 15,000-byte target."
         },
-        "src/domains/product-basic/roadmap/process-full/command.md": { "ceiling": 14969 },
+        "src/domains/product-basic/roadmap/process-full/command.md": {
+            "ceiling": 15241,
+            "over_cap_reason": "The one-invocation-one-delivery line stays in the Iron Law fence: process-full is the terminal stage of a composed invocation and must own the single push, PR and settle; moved behind a pointer, a reader stopping at the core would deliver from an earlier stage again. The procedure itself lives in contexts/execution/invocation-plan.md; the line plus its one pointer are the 272-byte overshoot (road-to-an-order-the-work-chooses 2.4)."
+        },
         "src/domains/git/pr/create/command.md": { "ceiling": 14997 },
         "src/domains/git/pr/merge/command.md": {
             "ceiling": 15698,
