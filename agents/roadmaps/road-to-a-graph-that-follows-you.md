@@ -104,7 +104,7 @@ plan AC improvements automatically when a source repository updates.
       verify: tests — https, ssh and `.git` forms give one id; a URL with a token gives
       the same id as without; a moved clone keeps its id; a worktree shares the repo id
       and differs in instance.
-- [ ] **2.4 Route every reader and writer through it.** `cacheFor` in `cli.ts:135`,
+- [x] **2.4 Route every reader and writer through it.** `cacheFor` in `cli.ts:135`, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/code_graph_refresh_hook.ts -->
       `map.ts:313`/`:325`, the refresh lock and marker in `refresh_lock.ts`, `detect.ts`
       and `mcp_server/graph_tools.ts` read their paths from `graphHome`.
       verify: `npx vitest run tests/scripts/code_graph/graph_home.test.ts` -> /passed/ — a case
