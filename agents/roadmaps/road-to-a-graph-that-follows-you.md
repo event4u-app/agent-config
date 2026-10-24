@@ -86,7 +86,7 @@ plan AC improvements automatically when a source repository updates.
       project home plus a local *index*, never a merged graph; nothing in it leaves the
       machine; it is lazy per ADR-124; ADR-297's map location gains a fallback. The ADR
       also records the sealed-lineage decision of Phase 7-9.
-      verify: `./scripts-run src/scripts/adr/regenerate_index --check` -> 0 and the ADR
+      verify: `./scripts-run src/scripts/adr/regenerate_index --dir docs/decisions --check` -> 0 and the ADR
       is listed.
 - [ ] **2.2 One `graphHome(root)` resolver.** A module under `src/scripts/code_graph/`
       returning the state dir, map dir and lock dir for a root: `root/agents/` when that
@@ -332,6 +332,7 @@ owner's machine; what the repository tracks is source-free.
 | O5 | contested-technical | council:graph-follows-you-closure | Source-to-mechanism links, pins and locators stay in a local ledger; the repo tracks a source-free decision ledger (`provenance/mechanisms.jsonl`) | both members chose local-only: encrypted ids, relations and timestamps in public history stay correlatable forever. Dissent on routing only — one member classed it owner-reserved; the chosen option is the stricter one, so it strengthens the confidentiality floor | the owner wants source lineage auditable in CI |
 | O6 | contested-technical | council:graph-follows-you-closure | No tracked source view at all; the tracked lineage view shows mechanisms by verdict only | unanimous (2/2) — moot once O5 is local; a per-source list is more identifying than a count | O5 is reopened |
 | O7 | reversible-technical | council:graph-follows-you-closure | Watch is off per source until the owner runs `lineage watch enable` | unanimous (2/2); a remote check is observable network activity and needs per-source consent | the weekly-watch stub shows enabled sources produce signal |
+| A-2.1 | reversible-technical | agent | 2.1 verify names `--dir docs/decisions`: the generator defaults to `docs/adr/`, which does not exist here, and exits 2 for every argv; the CI step (`rule-backstops.yml`) runs the same command with `--dir docs/decisions` | `./scripts-run src/scripts/adr/regenerate_index --check` -> exit 2 `adr-dir not found: docs/adr` | the generator default moves to `docs/decisions` |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->

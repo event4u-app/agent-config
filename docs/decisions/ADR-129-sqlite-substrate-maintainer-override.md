@@ -5,6 +5,7 @@ date: 2026-07-27
 decision: sqlite-substrate-maintainer-override
 supersedes: 116
 superseded_by: —
+amended_by: ADR-299
 phase: road-to-reachable-code-memory · Phase 6
 review_trigger: >-
   A rollback trigger fires and sticks — the graph twin reverted to the JSON
