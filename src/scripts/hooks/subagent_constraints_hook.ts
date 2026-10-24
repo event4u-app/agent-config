@@ -17,7 +17,8 @@
  * ({@link FLOOR_RULE_IDS}), then the project's files nearest first, then the
  * user's CLAUDE.md and the files it imports, then every other user rule's Iron
  * Law blocks. A rule is carried by its law blocks only, never its whole body;
- * every file found is named in an inventory with what became of it.
+ * every file found is named in an inventory with what became of it, or counted
+ * where a bounded inventory has no room for its name.
  *
  * This deliberately overrides part of `omitClaudeMd` for the instruction files,
  * and a project or user file can permit as well as forbid, so the concern
@@ -350,9 +351,18 @@ export function instructionDigest(
         while (from < named.length - 1 && escBytes(render()) > INVENTORY_MAX) from += 1;
         return render();
     };
+    // Whole entries in load order; the ones that do not fit are counted, never cut mid-name.
     const userInventory = (): string => {
         const named = idx('user').map((i) => `${(found[i] as Found).label} (${status[i]})`);
-        return named.length === 0 ? '' : fitEscaped(`User files: ${named.join(', ')}.`, USER_INVENTORY_MAX);
+        if (named.length === 0) return '';
+        let keep = named.length;
+        const render = (): string => {
+            const more = named.length - keep;
+            const tail = more === 0 ? '' : keep === 0 ? `${more} not named` : `, ${more} more not named`;
+            return `User files: ${named.slice(0, keep).join(', ')}${tail}.`;
+        };
+        while (keep > 0 && escBytes(render()) > USER_INVENTORY_MAX) keep -= 1;
+        return render();
     };
     // Rule names grouped by what became of them; omitted names give way to a count first.
     // Shown rules carry their own heading below, so they are counted here and only omitted ones named.

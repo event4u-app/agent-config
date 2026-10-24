@@ -287,4 +287,22 @@ describe('subagent-constraints concern — the user layer', () => {
         expect(digest.split(IMPORTED).length - 1).toBe(1);
         expect(digest).toMatch(/User files: user:CLAUDE\.md \(full\), user:EXTRA\.md \(full\)\./);
     });
+
+    // Round-2 ratification finding: the user-file inventory names whole entries and counts the rest.
+    it('names whole user-file entries and counts the ones it cannot name', () => {
+        const refs: string[] = [];
+        for (let i = 0; i < 24; i++) {
+            const name = `an-imported-instruction-file-with-a-long-name-${String(i).padStart(2, '0')}.md`;
+            fs.writeFileSync(path.join(config, name), `import ${i}\n`);
+            refs.push(`@${name}`);
+        }
+        fs.writeFileSync(path.join(config, 'CLAUDE.md'), `${USER_LINE}\n${refs.join('\n')}\n`);
+        const line = reply().split('\n').find((l) => l.startsWith('User files:')) as string;
+        const m = /^User files: (.*?)(?:, (\d+) more not named)?\.$/.exec(line);
+        expect(m).not.toBeNull();
+        const named = (m?.[1] as string).split(', ');
+        for (const entry of named) expect(entry).toMatch(/^user:[^ ]+ \((full|cut|omitted|empty)\)$/);
+        expect(named.length + Number(m?.[2] ?? 0)).toBe(25);
+        expect(Number(m?.[2] ?? 0)).toBeGreaterThan(0);
+    });
 });
