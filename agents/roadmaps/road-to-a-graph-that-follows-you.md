@@ -64,7 +64,7 @@ plan AC improvements automatically when a source repository updates.
       sidecar, and make `cleanupTemp` remove the temp twin and its `.tmp-<pid>` file too.
       The renamed twin's recorded `json_size`/`json_mtime_ms` must match the promoted
       JSON — a rename preserves mtime, so assert it rather than assume it.
-      verify: `vitest run tests/scripts/code_graph` with a new case — two budgeted
+      verify: `npx vitest run tests/scripts/code_graph_refresh.test.ts` -> /passed/ with a new case — two budgeted
       refreshes leave exactly one `*.sqlite3` in the state dir and `openGraphIndex` opens it.
 - [x] **1.2 Sweep orphans a crashed refresh left.** On the next refresh, delete every <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/cli.ts -->
       `.*.refresh-tmp-*` file in the state dir whose owning pid is not alive and whose
@@ -86,7 +86,7 @@ plan AC improvements automatically when a source repository updates.
       project home plus a local *index*, never a merged graph; nothing in it leaves the
       machine; it is lazy per ADR-124; ADR-297's map location gains a fallback. The ADR
       also records the sealed-lineage decision of Phase 7-9.
-      verify: `./scripts-run src/scripts/adr/regenerate_index --check` exits 0 and the ADR
+      verify: `./scripts-run src/scripts/adr/regenerate_index --check` -> 0, and the ADR
       is listed.
 - [ ] **2.2 One `graphHome(root)` resolver.** A module under `src/scripts/code_graph/`
       returning the state dir, map dir and lock dir for a root: `root/agents/` when that
@@ -107,8 +107,9 @@ plan AC improvements automatically when a source repository updates.
 - [ ] **2.4 Route every reader and writer through it.** `cacheFor` in `cli.ts:135`,
       `map.ts:313`/`:325`, the refresh lock and marker in `refresh_lock.ts`, `detect.ts`
       and `mcp_server/graph_tools.ts` read their paths from `graphHome`.
-      verify: `grep -rn "NATIVE_CACHE_REL\|MAP_DIR_REL\|LOCK_REL" src/scripts --include=*.ts`
-      shows only `graph_home.ts` and constant definitions; a build in this repo yields
+      verify: `npx vitest run tests/scripts/code_graph/graph_home.test.ts` -> /passed/ — a case
+      greps `src/scripts` for the three constants and finds them only in `graph_home.ts`
+      and their definitions; a build in this repo yields
       byte-identical paths to today.
 - [ ] **2.5 Zero writes into a foreign repo.** End-to-end test: `git init` a fixture with
       one source file and no `agents/`, run `code-graph build` and `code-graph map`, then
@@ -157,7 +158,7 @@ plan AC improvements automatically when a source repository updates.
       the same name yield no `unique-name` edge.
 - [ ] **4.4 Size stays small.** The index stores packages and exports only, so it
       must stay under 2 % of the summed project graph JSON sizes.
-      verify: `vitest run tests/scripts/code_graph/estate_index.test.ts` — a case builds
+      verify: `npx vitest run tests/scripts/code_graph/estate_index.test.ts` -> /passed/ — a case builds
       the three-project fixture estate, divides `index.sqlite3` bytes by the summed graph
       JSON bytes, and fails above 0.02.
 
@@ -166,7 +167,7 @@ plan AC improvements automatically when a source repository updates.
 - [ ] **5.1 A `project` parameter on graph tools.** MCP graph tools and the CLI accept
       an optional project (repo id, registered name or path) and resolve it through the
       registry and `graphHome`. Default stays the server root.
-      verify: `tests/scripts/mcp_server` gains a case querying a second fixture project by
+      verify: a test under tests/scripts/mcp_server gains a case querying a second fixture project by
       id; every existing graph-tool test passes unchanged.
 - [ ] **5.2 `noGraph` points at what exists.** In a root without a graph, the answer
       lists matching registered projects instead of only "run build".
@@ -231,7 +232,7 @@ owner's machine; what the repository tracks is source-free.
       rejected.
 - [ ] **8.2 Its linter.** `lint_harvest_provenance` also validates `mechanisms.jsonl`:
       `adopt|adapt` need existing `realised_in` paths, `reject` needs a reason,
-      `gap|deferred` need a roadmap or `open`, and every `<!-- harvest:id -->` citation
+      `gap|deferred` need a roadmap or `open`, and every harvest citation marker
       resolves against `harvests.jsonl` or `mechanisms.jsonl`.
       verify: the linter's tests cover each rule; `check_no_external_sources` stays green.
 - [ ] **8.3 The local source ledger.** `event4u_root()/runtime/lineage/sources.jsonl`
@@ -245,7 +246,7 @@ owner's machine; what the repository tracks is source-free.
       stays, so every citation keeps resolving. The 9 `skills-provenance.yml` entries are
       imported into the local ledger with their sealed pins; the tracked yml is untouched.
       Opaque harvest refs become local `pin: unknown` edges, never invented pins.
-      verify: `mechanisms.jsonl` has 18 rows that pass 8.2; `docs/THIRD-PARTY-NOTICES.md`
+      verify: the tracked decision ledger has 18 rows that pass 8.2; `docs/THIRD-PARTY-NOTICES.md`
       is byte-identical.
 
 ## Phase 9 — Drawing the lineage and what is missing
