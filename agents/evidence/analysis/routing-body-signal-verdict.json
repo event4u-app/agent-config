@@ -11,10 +11,10 @@
   },
   "body_signal": {
     "verdict": "harmful",
-    "reason": "false activation +5.57 pp breaches the +2.0 pp guard",
+    "reason": "false activation +5.56 pp breaches the +2.0 pp guard",
     "k": 5,
-    "delta_recall_pp": 2.549,
-    "delta_false_activation_pp": 5.573,
+    "delta_recall_pp": 2.541,
+    "delta_false_activation_pp": 5.556,
     "p_value": 0.2637,
     "discordant_positive_pairs": {
       "gained": 111,
@@ -28,25 +28,25 @@
     },
     "arms": {
       "description": {
-        "positives": 667,
-        "positiveHits": 404,
-        "negatives": 646,
+        "positives": 669,
+        "positiveHits": 406,
+        "negatives": 648,
         "negativeHits": 96
       },
       "description+body": {
-        "positives": 667,
-        "positiveHits": 421,
-        "negatives": 646,
+        "positives": 669,
+        "positiveHits": 423,
+        "negatives": 648,
         "negativeHits": 132
       }
     },
     "recall_pp": {
-      "description": 60.57,
-      "description+body": 63.118
+      "description": 60.688,
+      "description+body": 63.229
     },
     "false_activation_pp": {
-      "description": 14.861,
-      "description+body": 20.433
+      "description": 14.815,
+      "description+body": 20.37
     }
   },
   "corpus": {
@@ -57,7 +57,7 @@
       "brand-asset-generation",
       "estimate-ticket"
     ],
-    "cases": 1313,
+    "cases": 1317,
     "catalogue_size": 301
   }
 }

@@ -1,32 +1,61 @@
 {
     "skill": "mcp-builder",
     "last_eval": "2026-10-24",
-    "description": "3 positives (1 de) + 3 near-misses. Near-misses are using or configuring an existing MCP server and reviewing a tool's authorization, the surfaces most often confused with building one.",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-24 when road-to-a-claim-that-is-not-a-key 4.2 added a per-tool authority block, which brought this skill into check_routing_coverage's touched-skill scope. Exemplars cover a TypeScript server, a FastMCP server, tool schema design, the evaluation set, and a German phrasing. Near-misses: wiring an existing server into a host (mcp), listing configured servers (mcp), and reviewing who may call an endpoint (authz-review). Counterexamples guard 'server' and 'tool' in unrelated senses.",
     "queries": [
         {
             "q": "build an MCP server in TypeScript that exposes our ticket API as tools",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar"
         },
         {
             "q": "write a FastMCP server with a search tool and an update tool",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "design the input schema and error handling for the tools of our MCP server",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "write the 10-question evaluation set for my MCP server",
+            "trigger": true,
+            "class": "exemplar"
         },
         {
             "q": "bau mir einen MCP-Server für unsere Kundendatenbank",
             "trigger": true,
+            "class": "exemplar",
             "language": "de"
         },
         {
             "q": "connect the GitHub MCP server to Claude Code",
-            "trigger": false
+            "trigger": false,
+            "class": "near-miss",
+            "note": "wiring an existing server into a host → mcp"
         },
         {
             "q": "which MCP servers do I have configured?",
-            "trigger": false
+            "trigger": false,
+            "class": "near-miss",
+            "note": "listing configured servers → mcp"
         },
         {
             "q": "review who can call the delete endpoint",
-            "trigger": false
+            "trigger": false,
+            "class": "near-miss",
+            "note": "authorization review of an endpoint → authz-review"
+        },
+        {
+            "q": "the nginx server returns 502 after the deploy",
+            "trigger": false,
+            "class": "counterexample"
+        },
+        {
+            "q": "which tool should I use to resize these images?",
+            "trigger": false,
+            "class": "counterexample"
         }
     ]
 }
