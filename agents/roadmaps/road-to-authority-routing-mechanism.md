@@ -429,7 +429,8 @@ the provisional file is then regenerated from it.
       **Basis (owner directive 2026-10-24):** the provisional, revisable classes in
       `src/config/live-tree-check-classes.json`. They are copied from the
       parked 7.1 ledger and regenerated when it is promoted. The test pins
-      every invocation's blocking to them.
+      every invocation's blocking to them, read by
+      `src/scripts/_lib/gate_invocations.ts`.
       verify: `npx vitest run tests/scripts/check_persistence_classification.test.ts` -> 0
 
 *Exit: every live-tree check pinned red at Phase 7 start carries a
