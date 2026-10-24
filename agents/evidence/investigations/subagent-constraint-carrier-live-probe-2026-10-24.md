@@ -1,4 +1,4 @@
-<!-- evidence-type: investigation -->
+<!-- evidence-type: analysis -->
 
 # A skipping worker receives a planted CLAUDE.md line through SubagentStart
 
