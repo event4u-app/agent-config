@@ -207,7 +207,7 @@ in revision 9. The withdrawal and its reason sit on the row itself.
 
 **Ledger table, pinned (revision 10).** A row edited after the independent
 review would otherwise pass silently. The reconciler hashes the table rows. The
-recorded value is the ledger table: sha256 `50221733d4caac00e5a02a9f77dfa6978efb25e89c447a1ccab701e2a12b5630`.
+recorded value is the ledger table: sha256 `a36ea7fffc461b6c22ef98b663c7d7f97ba82b165e3c7e67412bd13d3f2d27a1`.
 
 **Helpers, pinned as a closure (revision 9).** openai, round 13: the checks
 import helpers, and the per-file pins below covered none of them. The
@@ -246,13 +246,15 @@ than listed.
 | `agents/evidence/analysis/gate-branch-inventory-20261024.json` | `119214ea142393c7254cae40e080153728e10fb0` |
 | `agents/evidence/analysis/gate-branch-mapping-20261024.json` | `c296fd9f02c1f0e83688da3f596cbb19e079665e` |
 | `agents/evidence/analysis/gate-branch-mapping-review-20261024.json` | `46227ecdae464df420e5aec60910a1b7a497e686` |
-| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `05e8a87a596cbe08bedc32c7d8beeb2a729e8ea5` |
+| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `906f66045927abfba9889d382ed123db5fe35f81` |
 | `agents/evidence/analysis/gate-ledger-executions.mjs` | `b330f3e9671d4d9e58baf9e1a59e32bc473b3756` |
 | `agents/evidence/analysis/gate-branch-reconciliation-20261024.md` | `d25580a37bfe75418f0aa652fc9b31155f6c4356` |
 | `agents/evidence/analysis/gate-ledger-rerun-20261024.md` | `fc0c90dfbb56c2820e2669ad67fac1a969bd9782` |
 | `agents/evidence/analysis/gate-branch-site-dispositions-20261024.json` | `67a43f237b7be386b9630fac5396af31fb53eae2` |
 | `agents/evidence/analysis/gate-branch-sites.mjs` | `d926f34aa02b93f428b5a5f521f56317167047f7` |
 | `agents/evidence/analysis/gate-phase7-harness.mjs` | `672ce60e22f56fd483b31ed84b13266a90b821c0` |
+| `agents/evidence/analysis/gate-invocation-inventory-20261024.md` | `1f3ff61036ccbd9ba42f9acd4eec5b5c2697b4f9` |
+| `agents/evidence/analysis/gate-class-grounds-20261024.json` | `3ae580599ebaa4d88a1aa7145c7c9364165f61a1` |
 
 
 ## Independent branch inventory — revision 8
@@ -573,61 +575,119 @@ and requires the refusal: 18/18. Reverting the fallback in a scratch run turns
 that case red. Both pins are renewed for this diff, and that renewal goes to
 round 23 per D38.
 
+Revision 18 below supersedes that predicate. Its table is the current one.
+
+## Item 4 from structured fields, not prose — revision 18
+
+The twenty-third round (`agents/evidence/council/gate-classification-item4-r2-20261024.md`)
+ruled item 4 **not met, 2/2**. A keyword predicate over evidence prose cannot
+tell *"does not fail"* from *"fails"*. It shows that the ledger and its
+classifier agree, not that each aspect satisfies its class.
+
+Re-attestation of the revision-17 pins split: anthropic said *do not renew*,
+openai said *renew*. Under D38 a split renews nothing, so both pins stay at
+their revision-16 values. The record therefore reads **quarantined** until a
+round attests the cumulative diff.
+
+openai named the evidence that would change its verdict: *"structured fields
+… asserted contract, enforcement mechanism, and failing outcome"*. Revision 18
+removes every prose predicate. The classes now derive from structured fields
+that the ledger author did not write.
+
+- **invariant / observation.** These come from the `effect` of each branch that
+  reaches the row.
+  - The branch inventory was produced without sight of the ledger, and its
+    branch-to-row mapping was independently reviewed.
+  - Effects `error-exit-nonzero`, `throw` and `exit-code-only` block.
+    `warning-exit-zero` does not.
+  - `warning-exit-nonzero-only-with-flag` blocks only for a row the ledger marks
+    *"in that mode"*.
+  - Blocking-only derives invariant and non-blocking-only derives observation.
+    Both, neither, or an unknown effect is refused.
+- **snapshot / tolerance.** These need structured fields in
+  `agents/evidence/analysis/gate-class-grounds-20261024.json`: a baseline, or a
+  bound, a risk owner and an expiry. No such row exists, so a future one fails
+  closed until it carries them.
+- **A semantic class that differs from the behaviour.** This passes only as a
+  structured divergence owed to 7.2. There is exactly one, `R16.d`. Its contract
+  says *"never a build failure"*, but `check_composite_arming.ts:286-293` exits
+  1. Reconciling that exit is already a 7.2 entry condition. A divergence record
+  for a row that does not diverge is refused as stale.
+
+Prose is no longer the interface. A self-test case rewrites R4.a's evidence
+cell to *"does not fail; errors are informational; no contract"* and requires
+that **no** class-predicate failure follows. Six further cases require
+refusals:
+
+- an observation reached by a blocking branch;
+- an invariant reached only by a non-blocking branch;
+- a flag-mode row that loses its mode;
+- the divergence record removed;
+- a false divergence;
+- a snapshot without its baseline.
+
+All 21 non-baseline cases behave. The baseline case is red only because of the
+two unattested pins.
+
+A new input-coverage check requires a pin on every structured input. Its first
+run found the invocation inventory had **never been pinned**. That input and
+the new grounds file are pinned now, as new pins, not renewals.
+
 `node agents/evidence/analysis/gate-ledger-reconcile.mjs --aspects`:
 
-| Row | Check | Recorded | Derived by decision order | Predicates that held |
-|---|---|---|---|---|
-| R1.a | `check_gate_completeness` | invariant | invariant | invariant |
-| R1.b | `check_gate_completeness` | invariant | invariant | invariant |
-| R2.a | `lint_ticked_unmet_criteria` | invariant | invariant | invariant |
-| R2.b | `lint_ticked_unmet_criteria` | invariant | invariant | invariant |
-| R3.a | `check_rule_invariants` | invariant | invariant | invariant |
-| R3.b | `check_rule_invariants` | invariant | invariant | invariant |
-| R4.a | `check_augment_description_cap` | invariant | invariant | invariant |
-| R5.a | `check_trigger_evals` | invariant | invariant | invariant |
-| R5.b | `check_trigger_evals` | invariant | invariant | invariant |
-| R6.a | `lint_subagent_determinism` | invariant | invariant | invariant |
-| R7.a | `lint_rule_enforcement_declaration` | invariant | invariant | invariant |
-| R7.b | `lint_rule_enforcement_declaration` | invariant | invariant | invariant |
-| R8.a | `check_token_quality_golden` | invariant | invariant | invariant |
-| R8.b | `check_token_quality_golden` | observation | observation | observation, invariant |
-| R8.c | `check_token_quality_golden` | invariant | invariant | invariant |
-| R9.a | `check_council_layout` | invariant | invariant | invariant |
-| R10.a | `check_knowledge_cards` | invariant | invariant | invariant |
-| R10.b | `check_knowledge_cards` | invariant | invariant | invariant |
-| R10.c | `check_knowledge_cards` | invariant | invariant | invariant |
-| R10.d | `check_knowledge_cards` | invariant | invariant | invariant |
-| R10.e | `check_knowledge_cards` | invariant | invariant | invariant |
-| R10.f | `check_knowledge_cards` | invariant | invariant | invariant |
-| R10.g | `check_knowledge_cards` | invariant | invariant | invariant |
-| R10.h | `check_knowledge_cards` | observation | observation | observation, invariant |
-| R10.i | `check_knowledge_cards` | invariant | invariant | invariant |
-| R10.k | `check_knowledge_cards` | invariant | invariant | invariant |
-| R10.l | `check_knowledge_cards` | invariant | invariant | invariant |
-| R10.m | `check_knowledge_cards` | invariant | invariant | invariant |
-| R10.n | `check_knowledge_cards` | invariant | invariant | invariant |
-| R10.o | `check_knowledge_cards` | invariant | invariant | invariant |
-| R10.j | `check_knowledge_cards` | invariant | invariant | invariant |
-| R11.a | `check_public_links` | invariant | invariant | invariant |
-| R11.b | `check_public_links` | invariant | invariant | invariant |
-| R11.c | `check_public_links` | invariant | invariant | invariant |
-| R11.d | `check_public_links` | invariant | invariant | invariant |
-| R11.e | `check_public_links` | observation | observation | observation |
-| R11.f | `check_public_links` | invariant | invariant | invariant |
-| R11.g | `check_public_links` | invariant | invariant | invariant |
-| R12.a | `lint_agents_layout` | invariant | invariant | invariant |
-| R12.c | `lint_agents_layout` | observation | observation | observation |
-| R12.d | `lint_agents_layout` | invariant | invariant | invariant |
-| R13.a | `lint_eval_freshness` | invariant | invariant | invariant |
-| R14.a | `lint_readme_jargon` | invariant | invariant | invariant |
-| R15.a | `lint_readme_serial_comma` | invariant | invariant | invariant |
-| R16.a | `check_composite_arming` | observation | observation | observation, invariant |
-| R16.b | `check_composite_arming` | invariant | invariant | invariant |
-| R16.c | `check_composite_arming` | observation | observation | observation |
-| R16.d | `check_composite_arming` | observation | observation | observation, invariant |
-| R16.e | `check_composite_arming` | invariant | invariant | invariant |
+| Row | Check | Recorded | Mode | Blocking branches | Non-blocking branches | Derived | Verdict |
+|---|---|---|---|---|---|---|---|
+| R1.a | `check_gate_completeness` | invariant | default | c1-ratchet-regressed, c1-ratchet-stale, c1-ratchet-unbaselined | — | invariant | derived |
+| R1.b | `check_gate_completeness` | invariant | default | c1-ledger-fail-malformed, c1-malformed | — | invariant | derived |
+| R2.a | `lint_ticked_unmet_criteria` | invariant | default | c2-duplicate-historical, c2-hit, c2-stale-historical | — | invariant | derived |
+| R2.b | `lint_ticked_unmet_criteria` | invariant | default | c2-selftest | — | invariant | derived |
+| R3.a | `check_rule_invariants` | invariant | default | c3-missing-file, c3-missing-string | — | invariant | derived |
+| R3.b | `check_rule_invariants` | invariant | default | c3-selftest-undetected | — | invariant | derived |
+| R4.a | `check_augment_description_cap` | invariant | default | c4-over-cap | — | invariant | derived |
+| R5.a | `check_trigger_evals` | invariant | default | c6-last-eval-missing, c6-last-eval-stale | — | invariant | derived |
+| R5.b | `check_trigger_evals` | invariant | default | c6-unreadable-json, c6-queries-empty, c6-query-no-q, c6-query-trigger-type, c6-split-list-empty, c6-split-item-empty, c6-no-shape, c6-one-class | — | invariant | derived |
+| R6.a | `lint_subagent_determinism` | invariant | default | c5-no-frontmatter, c5-schema-version, c5-visible, c5-tools-dupes, c5-name-stem, c5-name-dup | — | invariant | derived |
+| R7.a | `lint_rule_enforcement_declaration` | invariant | default | c7-undeclared-new, c7-gap-not-in-body, c7-baseline-stale, c7-baseline-shrink | — | invariant | derived |
+| R7.b | `lint_rule_enforcement_declaration` | invariant | default | c7-selftest | — | invariant | derived |
+| R8.a | `check_token_quality_golden` | invariant | default | c8-corpus-id, c8-id-format, c8-id-duplicate, c8-rules-empty, c8-rule-unknown, c8-nofire-kernel, c8-nofire-fires, c8-tag-not-fired, c8-scenario, c8-prompt, c8-label-status, c8-labelled-todo-rubric, c8-labelled-no-anchor | — | invariant | derived |
+| R8.b | `check_token_quality_golden` | observation | default | — | c8-uncovered-warn, c8-missing-scenario-warn, c8-scaffold-notice | observation | derived |
+| R8.c | `check_token_quality_golden` | invariant | flag | c8-require-complete | — | invariant | derived |
+| R9.a | `check_council_layout` | invariant | default | c9-root-stray, c9-noncanonical | — | invariant | derived |
+| R10.a | `check_knowledge_cards` | invariant | default | c10-C1-size | — | invariant | derived |
+| R10.b | `check_knowledge_cards` | invariant | default | c10-C2-pointer | — | invariant | derived |
+| R10.c | `check_knowledge_cards` | invariant | default | c10-C3-local | — | invariant | derived |
+| R10.d | `check_knowledge_cards` | invariant | flag | c10-C3-url-status, c10-C3-url-unreachable | — | invariant | derived |
+| R10.e | `check_knowledge_cards` | invariant | default | c10-C4-trust, c10-C4-type-wrong, c10-C4-type-missing | — | invariant | derived |
+| R10.f | `check_knowledge_cards` | invariant | default | c10-C5-ancestry, c10-C5-span | — | invariant | derived |
+| R10.g | `check_knowledge_cards` | invariant | flag | c10-C6-source | — | invariant | derived |
+| R10.h | `check_knowledge_cards` | observation | default | — | c10-freshness-warn | observation | derived |
+| R10.i | `check_knowledge_cards` | invariant | flag | c10-G1-tier-missing, c10-G1-tier-invalid | — | invariant | derived |
+| R10.k | `check_knowledge_cards` | invariant | flag | c10-G2-no-footer, c10-G2-field | — | invariant | derived |
+| R10.l | `check_knowledge_cards` | invariant | flag | c10-G3-redaction | — | invariant | derived |
+| R10.m | `check_knowledge_cards` | invariant | flag | c10-G4-sens-missing, c10-G4-sens-invalid | — | invariant | derived |
+| R10.n | `check_knowledge_cards` | invariant | flag | c10-G5-field | — | invariant | derived |
+| R10.o | `check_knowledge_cards` | invariant | flag | c10-G6-prohibited | — | invariant | derived |
+| R10.j | `check_knowledge_cards` | invariant | default | c10-E1-required | — | invariant | derived |
+| R11.a | `check_public_links` | invariant | default | c11-target-not-found | — | invariant | derived |
+| R11.b | `check_public_links` | invariant | default | c11-target-no-stability | — | invariant | derived |
+| R11.c | `check_public_links` | invariant | default | c11-experimental | — | invariant | derived |
+| R11.d | `check_public_links` | invariant | default | c11-self-no-stability | — | invariant | derived |
+| R11.e | `check_public_links` | observation | default | — | c11-beta-marker | observation | derived |
+| R11.f | `check_public_links` | invariant | flag | c11-beta-marker | — | invariant | derived |
+| R11.g | `check_public_links` | invariant | default | c11-contexts-link | — | invariant | derived |
+| R12.a | `lint_agents_layout` | invariant | default | c12-flat-file, c12-unknown-dir | — | invariant | derived |
+| R12.c | `lint_agents_layout` | observation | default | — | c12-consumer-warning | observation | derived |
+| R12.d | `lint_agents_layout` | invariant | flag | c12-consumer-warning | — | invariant | derived |
+| R13.a | `lint_eval_freshness` | invariant | default | c13-manifest-unreadable, c13-no-last-eval, c13-sha-mismatch | — | invariant | derived |
+| R14.a | `lint_readme_jargon` | invariant | default | c14-over-budget | — | invariant | derived |
+| R15.a | `lint_readme_serial_comma` | invariant | default | c15-serial-comma | — | invariant | derived |
+| R16.a | `check_composite_arming` | observation | default | — | c16-not-armable-readings, c16-not-armable-sessions, c16-unusable-dropped | observation | derived |
+| R16.b | `check_composite_arming` | invariant | default | c16-all-malformed | — | invariant | derived |
+| R16.c | `check_composite_arming` | observation | default | — | c16-ledger-skip, c16-malformed-warn | observation | derived |
+| R16.d | `check_composite_arming` | observation | default | c16-store-unreadable | — | invariant | divergence owed to 7.2 |
+| R16.e | `check_composite_arming` | invariant | default | c16-selftest | — | invariant | derived |
 
-aspects 49 · derived = recorded 49 · mismatches 0
+aspects 49 · derived 48 · divergence owed to 7.2 1 · refused 0
 
 ## Source-to-record completeness, mechanically — revision 14
 

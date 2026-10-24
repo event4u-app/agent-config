@@ -1,0 +1,13 @@
+{
+  "_doc": "Structured grounds for the class predicates that the independent branch inventory cannot supply. `divergences`: a row whose semantic class differs from the behaviour its reaching branches show, owed to 7.2. `structured`: the baseline (snapshot) or bound, risk owner and expiry (tolerance) a row of those classes must carry; no such row exists today.",
+  "divergences": {
+    "R16.d": {
+      "semantic": "observation",
+      "behaviour": "invariant",
+      "branch": "c16-store-unreadable",
+      "owed_to": "7.2",
+      "reason": "The contract says an absent store is 'not measured yet' and never a build failure; the script currently exits 1 (check_composite_arming.ts:286-293). Reconciling that exit is an entry condition of 7.2."
+    }
+  },
+  "structured": {}
+}

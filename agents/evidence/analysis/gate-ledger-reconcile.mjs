@@ -19,6 +19,7 @@ const FILES = {
     branches: 'agents/evidence/analysis/gate-branch-inventory-20261024.json',
     mapping: 'agents/evidence/analysis/gate-branch-mapping-20261024.json',
     review: 'agents/evidence/analysis/gate-branch-mapping-review-20261024.json',
+    grounds: 'agents/evidence/analysis/gate-class-grounds-20261024.json',
 };
 const BRANCH_MATRIX = 'agents/evidence/analysis/gate-branch-reconciliation-20261024.md';
 const MODE_FLAGS = ['--self-test', '--mutation-selftest', '--require-complete', '--strict', '--global', '--check-urls', '--freshness-days'];
@@ -65,10 +66,14 @@ function realIo() {
     };
 }
 
-export const PREDICATE_ORDER = ['observation', 'tolerance', 'snapshot', 'invariant'];
-// An invariant's evidence names its fixed contract or the failing outcome that
-// enforces it. No predicate holding is unclassifiable, never invariant by default.
-export const INVARIANT_EVIDENCE = /\bfixed\b|\bfrozen\b|\bno baseline\b|\bcontract\b|\berrors?\b|\bfail|\bexit 1\b|returns? 1|may only (go down|shrink)|\bequality\b/i;
+// The class predicates read structured fields, never ledger prose. The branch
+// inventory was produced without sight of the ledger, and its branch-to-row
+// mapping was independently reviewed; each branch's `effect` says whether the
+// run fails. A row in a flag mode ("in that mode") counts a flag-only failure as
+// blocking; a default-mode row counts it as non-blocking.
+export const BLOCKING_EFFECTS = ['error-exit-nonzero', 'throw', 'exit-code-only'];
+export const NON_BLOCKING_EFFECTS = ['warning-exit-zero'];
+export const FLAG_EFFECT = 'warning-exit-nonzero-only-with-flag';
 
 function section(text, heading) {
     const start = text.indexOf(heading);
@@ -149,6 +154,13 @@ export function reconcile(io) {
         const now = io.blob(file);
         if (now !== blob) failures.push(`STALE: ${file} changed since the verdict was pinned (${blob.slice(0, 9)} → ${now.slice(0, 9)})`);
     }
+    // Every input except the ledger (table-pinned) and the Phase 7 record
+    // (checked against its landed version) must carry a pin, so a new input
+    // cannot enter unpinned.
+    const pinned = new Set(pins.map((m) => m[1]));
+    for (const f of [...Object.values(FILES), 'agents/evidence/analysis/gate-ledger-reconcile.mjs']) {
+        if (f !== FILES.ledger && f !== FILES.phase7 && !pinned.has(f)) failures.push(`unpinned input: ${f}`);
+    }
     const helperFiles = importClosure(io, phase7.map((c) => `src/scripts/${c}.ts`));
     const closureDigest = sha256(helperFiles.map((f) => `${f} ${io.blob(f)}`).join('\n'));
     const closurePin = pinSection.match(/helper closure: (\d+) files, sha256 `([0-9a-f]{64})`/);
@@ -167,23 +179,6 @@ export function reconcile(io) {
 
     const binding = ledgerRows.filter((r) => !r.migration && !r.withdrawn);
     for (const r of binding) if (r.cls === null) failures.push(`unclassified binding aspect: ${r.check} / ${r.aspect}`);
-    // Class predicates (round-20 item 4), applied in decision order to each
-    // binding aspect's own evidence cell; the first predicate that holds is the
-    // derived class, and it must equal the recorded one. An invariant therefore
-    // also proves that no earlier predicate holds. Every aspect is recorded.
-    const aspects = [];
-    for (const r of binding) {
-        const evidence = cells(r.raw)[8] ?? '';
-        const held = {
-            observation: /exit 0|exits 0|not a failure|never a build failure/i.test(evidence),
-            tolerance: /bound/i.test(evidence) && /risk owner/i.test(evidence) && /expir/i.test(evidence),
-            snapshot: /(?<![-\w])baseline\b/i.test(evidence.replace(/\bno baseline\b/gi, '')),
-            invariant: INVARIANT_EVIDENCE.test(evidence),
-        };
-        const derived = PREDICATE_ORDER.find((c) => held[c]) ?? 'unclassifiable';
-        aspects.push({ id: r.id, check: r.check, recorded: r.cls, derived, held: PREDICATE_ORDER.filter((c) => held[c]) });
-        if (derived !== r.cls) failures.push(`class predicate: ${r.id} is recorded ${r.cls} but its evidence derives ${derived} (held: ${PREDICATE_ORDER.filter((c) => held[c]).join(', ') || 'none'})`);
-    }
     for (const r of ledgerRows.filter((x) => x.migration)) {
         const hasCurrent = binding.some((b) => b.check === r.check && b.aspect.replace('— current', '').trim() === r.aspect.replace('— target', '').trim());
         if (!hasCurrent) failures.push(`target row without a current-scope row: ${r.check} / ${r.aspect}`);
@@ -228,6 +223,42 @@ export function reconcile(io) {
         }
     }
     for (const r of binding) if (!reached.has(r.id)) failures.push(`binding row ${r.id} is reached by no branch in the independent inventory`);
+
+    // Class predicates (round-20 item 4), derived per binding aspect from the
+    // effects of the branches that reach it. Blocking only → invariant;
+    // non-blocking only → observation; both or neither is refused. A snapshot
+    // or tolerance needs its structured fields. A semantic class that differs
+    // from the derived behaviour passes only as a recorded divergence owed to 7.2.
+    const grounds = JSON.parse(io.read(FILES.grounds));
+    const aspects = [];
+    for (const r of binding) {
+        const flagMode = /in that mode/.test(cells(r.raw)[7] ?? '');
+        const blocking = [];
+        const nonBlocking = [];
+        for (const c of branchInv.checks.filter((x) => x.check === r.check)) {
+            for (const b of c.branches) {
+                if (!String(mapping[c.check]?.[b.id] ?? '').split('+').includes(r.id)) continue;
+                if (BLOCKING_EFFECTS.includes(b.effect) || (b.effect === FLAG_EFFECT && flagMode)) blocking.push(b.id);
+                else if (NON_BLOCKING_EFFECTS.includes(b.effect) || b.effect === FLAG_EFFECT) nonBlocking.push(b.id);
+                else failures.push(`class predicate: ${r.id} is reached by ${b.id} with unknown effect ${b.effect}`);
+            }
+        }
+        const derived = blocking.length > 0 && nonBlocking.length === 0 ? 'invariant' : nonBlocking.length > 0 && blocking.length === 0 ? 'observation' : blocking.length > 0 ? 'mixed' : 'unreached';
+        const div = grounds.divergences?.[r.id];
+        let verdict = derived === r.cls ? 'derived' : null;
+        if (r.cls === 'snapshot' || r.cls === 'tolerance') {
+            const f = grounds.structured?.[r.id] ?? {};
+            const ok = r.cls === 'snapshot' ? typeof f.baseline === 'string' : typeof f.bound === 'string' && typeof f.risk_owner === 'string' && typeof f.expiry === 'string';
+            verdict = ok ? 'structured' : null;
+            if (!ok) failures.push(`class predicate: ${r.id} is recorded ${r.cls} without its structured fields in ${FILES.grounds}`);
+        } else if (verdict === null && div !== undefined && div.semantic === r.cls && div.behaviour === derived && blocking.concat(nonBlocking).includes(div.branch) && div.owed_to === '7.2') {
+            verdict = 'divergence owed to 7.2';
+        } else if (verdict === null) {
+            failures.push(`class predicate: ${r.id} is recorded ${r.cls} but its reaching branches derive ${derived} (blocking: ${blocking.join(', ') || 'none'}; non-blocking: ${nonBlocking.join(', ') || 'none'})`);
+        }
+        aspects.push({ id: r.id, check: r.check, recorded: r.cls, mode: flagMode ? 'flag' : 'default', derived, blocking, nonBlocking, verdict: verdict ?? 'REFUSED' });
+    }
+    for (const id of Object.keys(grounds.divergences ?? {})) if (!aspects.some((a) => a.id === id && a.verdict === 'divergence owed to 7.2')) failures.push(`stale divergence ${id}: the row no longer diverges or its record does not match`);
     for (const [check, m] of Object.entries(mapping)) {
         const known = new Set((branchInv.checks.find((c) => c.check === check)?.branches ?? []).map((b) => b.id));
         for (const bid of Object.keys(m)) if (!known.has(bid)) failures.push(`mapping names ${check} ${bid}, absent from the inventory`);
@@ -396,15 +427,19 @@ function selfTest() {
         ['the mechanical site scanner finds an undisposed site', { ...io, sites: () => false }, /site scanner/],
         ['a stale pin quarantines rather than invalidates', { ...io, blob: (rel) => (rel === 'src/scripts/lint_readme_jargon.ts' ? '0'.repeat(40) : io.blob(rel)) }, 'quarantined'],
         ['a laundered mapping invalidates', json(FILES.mapping, (j) => { j.mapping.check_knowledge_cards['c10-E1-required'] = 'op:informational'; return j; }), 'invalid'],
-        ['an invariant row whose evidence states a permissive baseline', mutated(io, FILES.ledger, (t) => t.replace('| fixed fixture table (fixed-policy).', '| compared against a recorded baseline of known findings.')), /class predicate: R7\.b is recorded invariant but its evidence derives snapshot/],
-        ['an invariant row whose evidence states no fixed contract or failing outcome', mutated(io, FILES.ledger, (t) => t.replace('| fixed cap |', '| a cap |')), /class predicate: R4\.a is recorded invariant but its evidence derives unclassifiable/],
-        ['an observation row without a non-blocking contract', mutated(io, FILES.ledger, (t) => t.replace('| warning severity, exit 0 |', '| warning severity |')), /class predicate: R11\.e/],
+        ['an observation row reached by a blocking branch', json(FILES.branches, (j) => { j.checks.find((c) => c.check === 'check_knowledge_cards').branches.find((b) => b.id === 'c10-freshness-warn').effect = 'error-exit-nonzero'; return j; }), /class predicate: R10\.h is recorded observation but its reaching branches derive invariant/],
+        ['an invariant row reached only by a non-blocking branch', json(FILES.branches, (j) => { j.checks.find((c) => c.check === 'check_augment_description_cap').branches.find((b) => b.id === 'c4-over-cap').effect = 'warning-exit-zero'; return j; }), /class predicate: R4\.a is recorded invariant but its reaching branches derive observation/],
+        ['a flag-mode row loses its mode', mutated(io, FILES.ledger, (t) => t.replace('| **invariant** in that mode | warnings fail with `--strict` |', '| **invariant** | warnings fail with `--strict` |')), /class predicate: R11\.f is recorded invariant but its reaching branches derive observation/],
+        ['the recorded divergence is removed', json(FILES.grounds, (j) => ({ ...j, divergences: {} })), /class predicate: R16\.d is recorded observation but its reaching branches derive invariant/],
+        ['a divergence is recorded for a row that does not diverge', json(FILES.grounds, (j) => { j.divergences['R4.a'] = { semantic: 'invariant', behaviour: 'observation', branch: 'c4-over-cap', owed_to: '7.2' }; return j; }), /stale divergence R4\.a/],
+        ['a snapshot without its structured baseline', mutated(io, FILES.ledger, (t) => t.replace(/(\| `check_augment_description_cap` \|[^\n]*?)\*\*invariant\*\*/, '$1**snapshot**')), /class predicate: R4\.a is recorded snapshot without its structured fields/],
+        ['negated prose in an evidence cell changes no class', mutated(io, FILES.ledger, (t) => t.replace('| fixed cap |', '| does not fail; errors are informational; no contract |')), { none: /class predicate/ }],
         ['an unknown flag appears in a check', mutated(io, 'src/scripts/lint_readme_jargon.ts', (t) => `${t}\nconst x = '--surprise';\n`), /unclassified invocation mode: lint_readme_jargon --surprise/],
     ];
     let bad = 0;
     for (const [name, caseIo, expect] of cases) {
         const { failures, status } = reconcile(caseIo);
-        const ok = expect === null ? failures.length === 0 && status.state === 'valid' : typeof expect === 'string' ? status.state === expect : failures.some((f) => expect.test(f));
+        const ok = expect === null ? failures.length === 0 && status.state === 'valid' : typeof expect === 'string' ? status.state === expect : expect instanceof RegExp ? failures.some((f) => expect.test(f)) : !failures.some((f) => expect.none.test(f));
         if (!ok) bad += 1;
         console.log(`${ok ? 'ok  ' : 'FAIL'} ${name}${ok ? '' : ` — got: ${failures.slice(0, 3).join(' | ') || 'no failure'}`}`);
     }
@@ -431,12 +466,12 @@ else if (process.argv.includes('--branches')) {
     process.stdout.write(reconcile(realIo()).artefact);
 } else if (process.argv.includes('--aspects')) {
     const { aspects, failures } = reconcile(realIo());
-    console.log('| Row | Check | Recorded | Derived by decision order | Predicates that held |');
-    console.log('|---|---|---|---|---|');
-    for (const a of aspects) console.log(`| ${a.id} | \`${a.check}\` | ${a.recorded} | ${a.derived} | ${a.held.join(', ') || 'none'} |`);
-    const agree = aspects.filter((a) => a.derived === a.recorded).length;
-    console.log(`\naspects ${aspects.length} · derived = recorded ${agree} · mismatches ${aspects.length - agree}`);
-    process.exit(failures.length === 0 && agree === aspects.length ? 0 : 1);
+    console.log('| Row | Check | Recorded | Mode | Blocking branches | Non-blocking branches | Derived | Verdict |');
+    console.log('|---|---|---|---|---|---|---|---|');
+    for (const a of aspects) console.log(`| ${a.id} | \`${a.check}\` | ${a.recorded} | ${a.mode} | ${a.blocking.join(', ') || '—'} | ${a.nonBlocking.join(', ') || '—'} | ${a.derived} | ${a.verdict} |`);
+    const refused = aspects.filter((a) => a.verdict === 'REFUSED').length;
+    console.log(`\naspects ${aspects.length} · derived ${aspects.filter((a) => a.verdict === 'derived').length} · divergence owed to 7.2 ${aspects.filter((a) => a.verdict.startsWith('divergence')).length} · refused ${refused}`);
+    process.exit(failures.length === 0 && refused === 0 ? 0 : 1);
 } else if (process.argv.includes('--status')) {
     const { status } = reconcile(realIo());
     process.stdout.write(`${JSON.stringify(status, null, 2)}\n`);
