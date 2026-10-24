@@ -168,6 +168,21 @@ describe('one watch run (10.1)', () => {
         expect(again[0]?.findings.find((x) => x.mechanism_id === 'retry-budget')?.class).toBe('reopen');
     });
 
+    it('a re-import that moves the pin is what the next watch compares against', async () => {
+        const f = fixture();
+        await run(['watch', 'enable', f.id], f);
+        const dir = lineageDir({ EVENT4U_CONFIG_HOME: f.home });
+        const head = sh(f.upstream, 'rev-parse', 'HEAD');
+        const added = mergeIntoLedger(dir, {
+            sources: [],
+            edges: [{ source_id: f.id, mechanism_id: 'retry-budget', pin: encrypt(head, KEY), locator: encrypt('src/retry.ts:1', KEY) }],
+        }, [KEY]);
+        expect(added.edges).toBe(1);
+        const report = runWatch({ dir, keys: [KEY], rows: [], git: systemGit, env: {} });
+        expect(report[0]?.pin).toBe(head);
+        expect(report[0]?.status).toBe('unchanged');
+    });
+
     it('a dry run writes no report and no stub', async () => {
         const f = fixture();
         await run(['watch', 'enable', f.id], f);

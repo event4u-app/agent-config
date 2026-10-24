@@ -115,11 +115,25 @@ export function writeLedger(dir: string, ledger: Ledger): void {
     writePrivateFile(path.join(dir, 'edges.jsonl'), jsonl(ledger.edges));
 }
 
+/** A sealed value's plaintext, or the token itself when no key opens it. */
+function opened(value: string | null, keys: readonly string[]): string | null {
+    if (value === null || !is_token(value) || keys.length === 0) return value;
+    try {
+        return decrypt(value, [...keys]);
+    } catch {
+        return value;
+    }
+}
+
 /**
  * Add sources and edges, keeping what is there: a known source keeps its watch flag and
- * license, an identical edge is not duplicated. Returns the counts actually added.
+ * license. Edges are append-only: an edge is added unless the newest recorded edge for the
+ * same source and mechanism already carries its pin and locator, so a moved pin, a new
+ * locator and an `unknown` edge that becomes pinned are all recorded. Sealed fields compare
+ * by plaintext under `keys` — every seal is freshly salted, so two tokens of one pin differ.
+ * Returns the counts actually added.
  */
-export function mergeIntoLedger(dir: string, add: Ledger): { sources: number; edges: number } {
+export function mergeIntoLedger(dir: string, add: Ledger, keys: readonly string[] = []): { sources: number; edges: number } {
     const cur = readLedger(dir);
     const known = new Set(cur.sources.map((s) => s.source_id));
     const sources = [...cur.sources];
@@ -131,12 +145,15 @@ export function mergeIntoLedger(dir: string, add: Ledger): { sources: number; ed
         addedSources += 1;
     }
     const edgeKey = (e: EdgeRow): string => `${e.source_id}\0${e.mechanism_id}`;
-    const seen = new Set(cur.edges.map(edgeKey));
+    const newest = new Map<string, { pin: string | null; locator: string | null }>();
+    const remember = (e: EdgeRow): void => void newest.set(edgeKey(e), { pin: opened(e.pin, keys), locator: opened(e.locator, keys) });
+    cur.edges.forEach(remember);
     const edges = [...cur.edges];
     let addedEdges = 0;
     for (const e of add.edges) {
-        if (seen.has(edgeKey(e))) continue;
-        seen.add(edgeKey(e));
+        const last = newest.get(edgeKey(e));
+        if (last !== undefined && last.pin === opened(e.pin, keys) && last.locator === opened(e.locator, keys)) continue;
+        remember(e);
         edges.push(e);
         addedEdges += 1;
     }

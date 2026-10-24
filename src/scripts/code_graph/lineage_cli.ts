@@ -87,7 +87,7 @@ function cmdImport(io: Io): number {
     if (keys === null) return 2;
     const { ledger, refused } = buildLocalImport(io.root, keys);
     const dir = lineageDir(io.env);
-    const added = mergeIntoLedger(dir, ledger);
+    const added = mergeIntoLedger(dir, ledger, keys);
     for (const r of refused) io.err(`code-graph lineage import: skipped ${r}\n`);
     io.out(
         `code-graph lineage import: ${String(added.sources)} new source(s), ${String(added.edges)} new edge(s) into ${dir}` +

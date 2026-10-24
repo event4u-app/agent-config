@@ -88,7 +88,8 @@ const under = (file: string, loc: string): boolean => file === loc || file.start
 function watchOne(source: SourceRow, opts: WatchOptions): SourceReport {
     const { keys, git } = opts;
     const ledger = readLedger(opts.dir);
-    const edges = ledger.edges.filter((e) => e.source_id === source.source_id);
+    // The ledger is append-only, so only a mechanism's newest edge speaks for it.
+    const edges = [...new Map(ledger.edges.filter((e) => e.source_id === source.source_id).map((e) => [e.mechanism_id, e])).values()];
     const mechanisms = [...new Set(edges.map((e) => e.mechanism_id))];
     const identity = decrypt(source.identity, [...keys]);
     const base = { source_id: source.source_id, identity, mechanisms };

@@ -9,7 +9,7 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { encrypt } from '../../src/scripts/_lib/link_crypto.js';
+import { decrypt, encrypt } from '../../src/scripts/_lib/link_crypto.js';
 import {
     assertOutsideWorkTree,
     checkLedger,
@@ -73,9 +73,24 @@ describe('the local lineage ledger', () => {
         const dir = lineageDir({ EVENT4U_CONFIG_HOME: tmp('lineage-home-') });
         const url = 'https://github.com/acme/widget';
         mergeIntoLedger(dir, { sources: [source(url, { watch: true })], edges: [] });
-        const added = mergeIntoLedger(dir, { sources: [source(url)], edges: [edge(url, 'x'), edge(url, 'x')] });
+        const added = mergeIntoLedger(dir, { sources: [source(url)], edges: [edge(url, 'x'), edge(url, 'x')] }, [KEY]);
         expect(added).toEqual({ sources: 0, edges: 1 });
         expect(readLedger(dir).sources[0]?.watch).toBe(true);
+    });
+
+    it('a re-import appends an edge whose pin or locator changed, and nothing when both are the same', () => {
+        const dir = lineageDir({ EVENT4U_CONFIG_HOME: tmp('lineage-home-') });
+        const url = 'https://github.com/acme/widget';
+        mergeIntoLedger(dir, { sources: [source(url)], edges: [edge(url, 'x', { pin: PIN_UNKNOWN, locator: null })] }, [KEY]);
+        expect(mergeIntoLedger(dir, { sources: [], edges: [edge(url, 'x', { pin: PIN_UNKNOWN, locator: null })] }, [KEY]).edges).toBe(0);
+        expect(mergeIntoLedger(dir, { sources: [], edges: [edge(url, 'x')] }, [KEY]).edges).toBe(1);
+        // A fresh ENC1 token of the same pin and locator is the same edge.
+        expect(mergeIntoLedger(dir, { sources: [], edges: [edge(url, 'x')] }, [KEY]).edges).toBe(0);
+        expect(mergeIntoLedger(dir, { sources: [], edges: [edge(url, 'x', { pin: encrypt('b'.repeat(40), KEY) })] }, [KEY]).edges).toBe(1);
+        expect(mergeIntoLedger(dir, { sources: [], edges: [edge(url, 'x', { locator: encrypt('src/b.ts', KEY), pin: encrypt('b'.repeat(40), KEY) })] }, [KEY]).edges).toBe(1);
+        const pins = readLedger(dir).edges.map((e) => (e.pin === PIN_UNKNOWN ? e.pin : decrypt(e.pin, [KEY])));
+        expect(pins).toEqual([PIN_UNKNOWN, 'a'.repeat(40), 'b'.repeat(40), 'b'.repeat(40)]);
+        expect(checkLedger(dir, [KEY])).toEqual([]);
     });
 
     it('flags a plaintext identity, an invented pin, an orphan edge and a wrong key', () => {
