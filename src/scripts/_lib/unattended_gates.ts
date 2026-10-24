@@ -30,9 +30,12 @@ export interface RegistryCandidate {
      * workflow produced the document. Tying it to this package's publish
      * workflow needs the bundle itself, which the packument only points at —
      * so the pointer travels with the candidate and the caller fetches it
-     * (`provenance_verify.provenance_matches_publish`).
+     * (`sigstore_provenance.verify_release_provenance`).
      */
     readonly attestationsUrl: string | null;
+    /** Where npm serves this version's tarball, and the integrity it records for it. */
+    readonly tarballUrl: string | null;
+    readonly integrity: string | null;
 }
 
 function asRecord(v: unknown): Record<string, unknown> | null {
@@ -58,6 +61,8 @@ export function read_candidate(packument: unknown): RegistryCandidate | null {
         provenance: typeof predicate === 'string' && predicate.startsWith('https://slsa.dev/provenance/'),
         impactMap: asRecord(manifest['agentConfig'])?.['impact'] ?? null,
         attestationsUrl: typeof attestations?.['url'] === 'string' ? (attestations['url'] as string) : null,
+        tarballUrl: typeof asRecord(manifest['dist'])?.['tarball'] === 'string' ? (asRecord(manifest['dist'])?.['tarball'] as string) : null,
+        integrity: typeof asRecord(manifest['dist'])?.['integrity'] === 'string' ? (asRecord(manifest['dist'])?.['integrity'] as string) : null,
     };
 }
 

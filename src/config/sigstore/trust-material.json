@@ -1,0 +1,9 @@
+{
+    "_comment": "Trust material the unattended upgrade verifies release provenance against (road-to-an-update-that-installs-itself-only-when-it-is-safe D15). Pinned, never refreshed at run time: a candidate release can never choose the roots it is checked against. Read by src/scripts/_lib/sigstore_provenance.ts, which refuses when a file's sha256 differs from the one recorded here. Refresh by re-extracting both targets from a newer @sigstore/tuf seeds.json and updating source and digests together; until a release carries new material, an unattended run refuses anything signed under a rotated root and `agent-config upgrade` by hand still works.",
+    "source": "@sigstore/tuf@5.0.0 seeds.json, mirror https://tuf-repo-cdn.sigstore.dev, extracted 2026-10-24",
+    "files": {
+        "trusted_root.json": "6494e21ea73fa7ee769f85f57d5a3e6a08725eae1e38c755fc3517c9e6bc0b66",
+        "npm_keys.json": "160677eb6e1c7083c89b166b20f8fe4e837fb71181506aff1991b80b89184f7d"
+    },
+    "npm_keys_live_check": "Equal on 2026-10-24 to https://registry.npmjs.org/-/npm/v1/keys: SHA256:jl3bwswu80PjjokCgh0o2w5c2U4LhQAE57gj9cz1kzA (expired 2025-01-29) and SHA256:DhQ8wR5APBvFHLF/+Tc+AYvPOdTpcIDqOhxsBHRwC7U (no expiry)."
+}
