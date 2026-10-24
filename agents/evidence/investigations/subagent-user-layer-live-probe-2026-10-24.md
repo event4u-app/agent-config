@@ -56,6 +56,7 @@ context: the user CLAUDE.md line, the user rule's Iron Law block and the project
 
 One host version, one run per arm, one small fixture layer. It shows the concern delivers the user
 layer on the host's path. It does not show how a full user layer fares: measured offline against a
-106-rule layer, the 9,728-byte cap carries every present safety-floor and consequence-class law
-first, cuts the project CLAUDE.md and omits the user CLAUDE.md and 76 other rules, each named in
-the inventory up to its bound.
+106-rule layer, the 9,728-byte cap carries the law blocks of 25 of the 29 present safety-floor and
+consequence-class rules (24 whole, 1 cut), names the other four first among the omitted, and omits
+the project CLAUDE.md, the user CLAUDE.md and 80 other rules, each named in the inventory up to its
+bound or counted.

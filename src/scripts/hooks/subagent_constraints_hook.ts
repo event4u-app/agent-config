@@ -220,11 +220,6 @@ interface Found {
     readonly rank: number;
     /** Order within a rank, for room and for print alike. */
     readonly sub: number;
-    /**
-     * A floor rule's law blocks after its first. The first block is handed room
-     * with the floor; these only once the project and user files have theirs.
-     */
-    readonly rest?: string;
     readonly layer: 'project' | 'user' | 'rule';
 }
 
@@ -290,9 +285,7 @@ function userLayer(configDir: string): Found[] {
     FLOOR_RULE_IDS.forEach((id, pos) => {
         const text = readText(path.join(rulesDir, `${id}.md`));
         if (text === null) return;
-        const blocks = ruleLawBlocks(text);
-        const rest = blocks.slice(1).join('\n\n');
-        found.push({ label: id, body: blocks[0] ?? '', rank: 0, sub: pos, layer: 'rule', ...(rest === '' ? {} : { rest }) });
+        found.push({ label: id, body: ruleLawBlocks(text).join('\n\n'), rank: 0, sub: pos, layer: 'rule' });
     });
     for (const file of ruleFiles(rulesDir, new Set(FLOOR_RULE_IDS.map((id) => `${id}.md`)))) {
         const id = path.relative(rulesDir, file).split(path.sep).join('/').replace(/\.md$/, '');
@@ -397,50 +390,28 @@ export function instructionDigest(
     const frameOf = (f: Found): string => `\n\n--- ${f.layer === 'rule' ? 'rule ' : ''}${f.label} ---\n`;
     // Project files go nearest first; every other rank keeps its `sub` order.
     const subOf = (i: number): number => ((found[i] as Found).layer === 'project' ? -i : (found[i] as Found).sub);
-    const byRank = found.map((_, i) => i).sort((x, y) => (found[x] as Found).rank - (found[y] as Found).rank || subOf(x) - subOf(y));
-    // A floor rule's later law blocks come after the project and user files and before every other rule.
-    const grants: Array<{ i: number; rest: boolean }> = [
-        ...byRank.filter((i) => (found[i] as Found).rank <= 2).map((i) => ({ i, rest: false })),
-        ...byRank.filter((i) => (found[i] as Found).rest !== undefined).map((i) => ({ i, rest: true })),
-        ...byRank.filter((i) => (found[i] as Found).rank > 2).map((i) => ({ i, rest: false })),
-    ];
-    const cutBytes = escBytes(CUT);
-    const pendingRest = new Set<number>();
-    for (const { i, rest } of grants) {
+    const allocation = found.map((_, i) => i).sort((x, y) => (found[x] as Found).rank - (found[y] as Found).rank || subOf(x) - subOf(y));
+    for (const i of allocation) {
         const f = found[i] as Found;
-        if (rest) {
-            if (!pendingRest.has(i)) continue;
-            const more = `\n\n${f.rest as string}`;
-            if (escBytes(more) > room + cutBytes) continue;
-            shown[i] = `${shown[i] as string}${more}`;
-            status[i] = 'full';
-            pendingRest.delete(i);
-            room -= escBytes(more) - cutBytes;
-            continue;
-        }
         if (f.body === '') continue;
         const frame = escBytes(frameOf(f));
         if (room - frame < MIN_SHOWN) continue;
-        const tail = f.rest === undefined ? 0 : cutBytes;
-        if (escBytes(f.body) + tail <= room - frame) {
+        if (escBytes(f.body) <= room - frame) {
             shown[i] = f.body;
-            status[i] = tail > 0 ? 'cut' : 'full';
-            if (tail > 0) pendingRest.add(i);
-            room -= frame + escBytes(f.body) + tail;
+            status[i] = 'full';
         } else {
-            shown[i] = `${fitEscaped(f.body, room - frame - cutBytes)}${CUT}`;
+            shown[i] = `${fitEscaped(f.body, room - frame - escBytes(CUT))}${CUT}`;
             status[i] = 'cut';
-            room -= frame + escBytes(shown[i] as string);
         }
+        room -= frame + escBytes(shown[i] as string);
     }
-    const textOf = (i: number): string => `${shown[i] as string}${pendingRest.has(i) ? CUT : ''}`;
     const printRank = (i: number): number => {
         const f = found[i] as Found;
         return f.layer === 'rule' ? (f.rank === 0 ? 0 : 3) : f.layer === 'user' ? 1 : 2;
     };
     const printSub = (i: number): number => ((found[i] as Found).layer === 'project' ? i : (found[i] as Found).sub);
     const printed = found.map((_, i) => i).sort((a, b) => printRank(a) - printRank(b) || printSub(a) - printSub(b));
-    const sections = printed.map((i) => (status[i] === 'full' || status[i] === 'cut' ? `${frameOf(found[i] as Found)}${textOf(i)}` : ''));
+    const sections = printed.map((i) => (status[i] === 'full' || status[i] === 'cut' ? `${frameOf(found[i] as Found)}${shown[i] as string}` : ''));
     // The serialized line is the final authority: whatever the parts measured, the reply never exceeds maxBytes.
     return fitEscaped(`${head}\n${inventory()}${sections.join('')}`, maxBytes - REPLY_OVERHEAD);
 }

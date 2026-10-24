@@ -329,4 +329,16 @@ describe('subagent-constraints concern — the user layer', () => {
         expect(listed + counted + 1).toBe(3);
         expect(inv).not.toMatch(/a-very-long-directory-name-(?!a-very|one|two)/);
     });
+
+    // Round-4 ratification finding: every law block of a floor rule outranks project and user text.
+    it('hands every law block of a floor rule room before the project and user files', () => {
+        const multi = (id: string): string =>
+            `---\npackage: fixture\n---\n\n# ${id}\n\n## Iron Law 1\n\n\`\`\`\nFIRST-${id}: ${'A'.repeat(60)}\n\`\`\`\n\n## Iron Law 2\n\n\`\`\`\nSECOND-${id}: ${'B'.repeat(60)}\n\`\`\`\n`;
+        fs.mkdirSync(path.join(config, 'rules'), { recursive: true });
+        for (const id of FLOOR_RULE_IDS) fs.writeFileSync(path.join(config, 'rules', `${id}.md`), multi(id));
+        fs.writeFileSync(path.join(root, 'CLAUDE.md'), 'project filler line\n'.repeat(800));
+        const digest = reply();
+        for (const id of FLOOR_RULE_IDS) expect(digest).toContain(`SECOND-${id}: ${'B'.repeat(60)}`);
+        expect(digest).toMatch(/Files, nearest last: CLAUDE\.md \((cut|omitted)\)/);
+    });
 });
