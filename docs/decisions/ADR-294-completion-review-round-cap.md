@@ -26,7 +26,7 @@ evidence:
   basis:
     - agents/evidence/owner-directives/2026-10-21-review-cap-and-depth-flip.md
     - agents/evidence/analysis/review-severity-by-round-2026-10-21.md
-    - agents/roadmaps/road-to-a-review-that-ends.md
+    - agents/roadmaps/later/road-to-a-review-that-ends.md
     - docs/contracts/plan-review-gates.md
     - src/scripts/check_completion_review.ts
 authority_basis: owner_intent
@@ -113,7 +113,7 @@ never a permission it grants.
   figures quoted in § Context.
 - **The contract the cap amends**, `docs/contracts/plan-review-gates.md` § 2.1
   and § 2.8, and the step-level record in
-  `agents/roadmaps/road-to-a-review-that-ends.md`.
+  `agents/roadmaps/later/road-to-a-review-that-ends.md`.
 - **The gate that enforces it**, readable rather than asserted:
   `src/scripts/_lib/review_round.ts` counts passes and applies the cap,
   `src/scripts/check_completion_review.ts` reads each committed version.
