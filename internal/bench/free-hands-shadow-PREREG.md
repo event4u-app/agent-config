@@ -1,7 +1,7 @@
 # PREREG — free-hands shadow: paid head serves, free hand shadows, both verified
 
 > Pre-registration for step 6.2 of
-> [`road-to-free-hands-a-paid-head-checks`](../../agents/roadmaps/road-to-free-hands-a-paid-head-checks.md),
+> [`road-to-free-hands-a-paid-head-checks`](../../agents/roadmaps/archive/road-to-free-hands-a-paid-head-checks.md),
 > under council decision 3 of 2026-10-22 (option (c), 2/2,
 > `agents/evidence/council/subagent-system-2583-rest-decisions-20261022.md`) and
 > owner decisions O5 (333 shadow calls per kind before a flip) and O6 (a

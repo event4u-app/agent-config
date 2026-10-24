@@ -62,11 +62,11 @@ export const CATALOG: readonly CatalogRow[] = [
         name: 'Spring Boot',
         language: 'Java',
         markers: 'pom.xml / build.gradle names spring-boot',
-        relations: ['routes-to', 'persists', 'relates', 'injects'],
+        relations: ['routes-to', 'persists', 'relates', 'injects', 'renders'],
         status: 'partial',
         fixture: 'tests/fixtures/code-graph/spring',
         usage: SO,
-        limits: '@Entity(name) is not read; a method @RequestMapping without method= is skipped; Kotlin is not covered.',
+        limits: '@Entity(name) is not read; a method @RequestMapping without method= is skipped; a view name built at runtime or held outside the file is not followed; Kotlin is not covered.',
     },
     {
         id: 'go-http',
@@ -132,7 +132,7 @@ export const CATALOG: readonly CatalogRow[] = [
         status: 'partial',
         fixture: 'tests/fixtures/code-graph/django',
         usage: SO,
-        limits: 'include() prefixes and class-based view template_name are not followed.',
+        limits: 'Class-based view template_name and include() of an attribute (admin.site.urls) are not followed.',
     },
     {
         id: 'sqlalchemy',

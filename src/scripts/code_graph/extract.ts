@@ -90,6 +90,8 @@ export interface FileExtract {
     parseError: boolean;
     /** C#: the namespaces the file declares, for `using` resolution in the build pass. */
     namespaces?: string[];
+    /** C#: the namespace each declared type sits in, by node id, for namespace-scope resolution. */
+    typeNamespaces?: Record<string, string>;
 }
 
 export function loc(n: TsNode): number[] {

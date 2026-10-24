@@ -73,8 +73,19 @@ describe('GitHub Copilot discovery plugin (.github/plugin/plugin.json)', () => {
     });
 
     it('declares only the install-pointer skill, which exists on disk', () => {
-        expect(manifest['skills']).toEqual(['./.claude-plugin/skills/install-agent-config']);
-        expect(fs.existsSync(path.join(REPO, '.claude-plugin/skills/install-agent-config/SKILL.md'))).toBe(true);
+        // A subdirectory install copies .github/plugin/ alone, so every path the
+        // manifest names must resolve inside it (a clean Copilot install of the
+        // 17.3.0 shape found the server and no skill).
+        expect(manifest['skills']).toEqual(['./skills/install-agent-config']);
+        const pluginDir = path.join(REPO, '.github', 'plugin');
+        for (const rel of manifest['skills'] as string[]) {
+            const resolved = path.resolve(pluginDir, rel);
+            expect(resolved.startsWith(pluginDir + path.sep)).toBe(true);
+            expect(fs.existsSync(path.join(resolved, 'SKILL.md'))).toBe(true);
+        }
+        expect(fs.readFileSync(path.join(pluginDir, 'skills', 'install-agent-config', 'SKILL.md'), 'utf-8')).toBe(
+            fs.readFileSync(path.join(REPO, '.claude-plugin', 'skills', 'install-agent-config', 'SKILL.md'), 'utf-8'),
+        );
     });
 
     it('says it is a discovery plugin, not the full suite, and names the full install', () => {

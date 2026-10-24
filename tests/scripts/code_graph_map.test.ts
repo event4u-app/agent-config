@@ -16,7 +16,7 @@ import {
     swapIn,
 } from '../../src/scripts/code_graph/map.js';
 import { areaDrift, buildMapModel, outcomeScores, prOverlap, staticRole } from '../../src/scripts/code_graph/map_model.js';
-import { labelProblems } from '../../src/scripts/code_graph/map_verify.js';
+import { labelProblems, ORB_MAX_CONCENTRATION, orbSpread } from '../../src/scripts/code_graph/map_verify.js';
 
 let root: string;
 
@@ -289,6 +289,22 @@ describe('the canvas label check (3.6)', () => {
         expect(labelProblems([{ x: 180, y: 10, w: 40, h: 14 }], 200, 100).outside).toBe(1);
         expect(labelProblems([inside, { x: 30, y: 15, w: 40, h: 14 }], 200, 100).overlapping).toBe(1);
         expect(labelProblems([inside, { x: 60, y: 10, w: 40, h: 14 }], 200, 100).overlapping).toBe(0);
+    });
+});
+
+describe('the orb spread check (carried 2.4)', () => {
+    const bubble = (x: number, r: number, u: number[], near = true) => ({ x, y: 0, r, near, u });
+    it('counts covering near-side bubbles, never a far-side one or two crowded dots', () => {
+        expect(orbSpread([bubble(0, 10, [0, 0, 1]), bubble(12, 10, [0, 0, 1])]).overlapping).toBe(1);
+        expect(orbSpread([bubble(0, 10, [0, 0, 1]), bubble(30, 10, [0, 0, 1])]).overlapping).toBe(0);
+        expect(orbSpread([bubble(0, 10, [0, 0, 1]), bubble(12, 10, [0, 0, -1], false)]).overlapping).toBe(0);
+        expect(orbSpread([bubble(0, 2, [0, 0, 1]), bubble(1, 2, [0, 0, 1])]).overlapping).toBe(0);
+    });
+    it('reads bubbles bunched in one cap as concentrated and an even spread as not', () => {
+        const cap = Array.from({ length: 8 }, (_, i) => bubble(i * 40, 5, [0.1 * Math.cos(i), 0.1 * Math.sin(i), 0.99]));
+        expect(orbSpread(cap).concentration).toBeGreaterThan(ORB_MAX_CONCENTRATION);
+        const even = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]].map((u, i) => bubble(i * 40, 5, u));
+        expect(orbSpread(even).concentration).toBe(0);
     });
 });
 

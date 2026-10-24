@@ -429,6 +429,19 @@ export function buildGraph(
     const extraImports: Array<{ source: string; target: string }> = [];
     const namespaceFiles = new Map<string, string[]>();
     for (const ex of extracts) for (const ns of ex.namespaces ?? []) push(namespaceFiles, ns, ex.file);
+    // C# name lookup is scoped by namespace, not by file: a type is visible
+    // from its own namespace, every enclosing one, and each `using`. Within
+    // that set a unique name IS the binding the compiler makes.
+    const csTypes = new Map<string, string[]>();
+    const csVisible = new Map<string, string[]>();
+    for (const ex of extracts) {
+        if (ex.lang !== 'csharp') continue;
+        for (const [id, ns] of Object.entries(ex.typeNamespaces ?? {})) push(csTypes, `${ns}\0${id.slice(id.indexOf('#') + 1)}`, id);
+        const seen = new Set<string>();
+        for (const ns of ex.namespaces ?? []) for (let p = ns; p; p = p.includes('.') ? p.slice(0, p.lastIndexOf('.')) : '') seen.add(p);
+        for (const r of ex.rawEdges) if (r.relation === 'imports' && r.importKind === 'namespace' && !r.localName && r.moduleSpecifier) seen.add(r.moduleSpecifier);
+        csVisible.set(ex.file, [...seen]);
+    }
     for (const ex of extracts) {
         const locals = new Map<string, string[]>();
         for (const n of ex.nodes) if (n.kind !== 'file') push(locals, n.label, n.id);
@@ -549,6 +562,11 @@ export function buildGraph(
                 // reported as ones.
                 via: bound.via,
             };
+        if (lang === 'csharp') {
+            const ids = new Set((csVisible.get(file) ?? []).flatMap((ns) => csTypes.get(`${ns}\0${name}`) ?? []));
+            const fit = [...ids].filter((id) => satisfies(nodeKind.get(id), want));
+            if (fit.length === 1) return { target: fit[0] as string, confidence: 'EXTRACTED', via: 'namespace-scope' };
+        }
         if (scopeOnly) return null;
         const wide =
             want === 'constructible'
@@ -654,6 +672,9 @@ export function buildGraph(
             // against a same-named declaration elsewhere in the repository is
             // the defect this roadmap removes, applied to a second relation.
             const hit = resolveInScope(ex.file, r.targetName, 'any', ex.lang, true);
+            // A C# type reference to a framework type (`List`, `Task`) names no
+            // project file, and a `symbol:` edge per mention would only be noise.
+            if (!hit && ex.lang === 'csharp') return;
             emit({
                 source: r.sourceId,
                 target: hit?.target ?? `symbol:${r.targetName}`,
@@ -716,6 +737,28 @@ export function buildGraph(
                 });
             }
             return;
+        }
+        // scoped `C::m()` whose class the file binds by a stated mechanism
+        // (an import, PSR-4, a local declaration, a C# namespace): the class
+        // is known, so a method it declares or inherits is the target, and the
+        // edge is exactly as trustworthy as the class binding.
+        if ((r.callStyle === 'scoped' || r.callStyle === 'dynamic') && r.scopeName) {
+            const cls = resolveInScope(ex.file, r.scopeName, 'any', ex.lang, true);
+            const kind = cls ? nodeKind.get(cls.target) : undefined;
+            if (cls && isStatedResolution(cls.via) && (kind === 'class' || kind === 'interface' || kind === 'enum')) {
+                const m = resolveHierMethod(cls.target, r.targetName);
+                if (m) {
+                    emit({
+                        source: r.sourceId,
+                        target: m,
+                        relation: 'calls',
+                        confidence: m.startsWith(`${cls.target}::`) ? cls.confidence : 'INFERRED',
+                        resolved_via: cls.via,
+                        provider: 'native',
+                    });
+                    return;
+                }
+            }
         }
         // scoped (Class::m unresolved / facade) or dynamic ($obj->m) → AMBIGUOUS
         const cands = methodCandidates(r.targetName, ex.lang);

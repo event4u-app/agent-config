@@ -38,9 +38,12 @@ the parent's daily watcher reds any row that drifts from that.
 
 ## Phase 1 — Reads after the first release with the CI publish
 
-- [ ] **1.1 Official MCP Registry live.** Carries the parent's AC-2 — it
+- [x] **1.1 Official MCP Registry live.** Carries the parent's AC-2 — it
       stays unverified until this read. Read the registry query for the
       released version; set ledger row 4 `accepted` with the read date.
+      **Done 2026-10-24:** the 17.3.0 release published it with no owner act
+      (publish run 40066529500); the live search returns 17.3.0 as latest.
+      The parent's AC-2 holds.
       verify: the row-4 query returns a count above 0 for the version.
 - [ ] **1.2 GitHub MCP Registry.** One week after 1.1, search
       `github.com/mcp`; if absent, add an email request to the owner packet.
@@ -66,6 +69,15 @@ the act. Each opens a ledger row `submitted`, and only a live read moves it on.
       row records the ref as an `ENC1:` token. Precondition: the parent's 3.3
       is in a release. File the external-plugin issue form with repo, path
       `.github/plugin`, release tag and its 40-character SHA.
+      **Install test 2026-10-24 (Copilot CLI 1.0.95, empty profile):** 17.3.0's
+      `.github/plugin` installed the MCP server and no skill, because a
+      subdirectory install copies that directory alone and the manifest
+      pointed outside it; a root install loaded both but copied 235 MB. The
+      repair puts the pointer skill inside the plugin directory, and a clean
+      local install of it then loaded both (8 KB). Before submitting, re-run
+      the clean install from the exact release tag being submitted
+      (`copilot plugin install event4u-app/agent-config:.github/plugin` with
+      an empty `HOME`); submit only if it loads both.
       verify: the intake bot's comment on the issue is green; ledger row added.
 - [ ] **2.3 Docker MCP Catalog.** A PR adding `servers/agent-config/` in a
       fork of `docker/mcp-registry`, with `source.dockerfile:

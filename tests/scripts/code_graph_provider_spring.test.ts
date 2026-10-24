@@ -46,6 +46,11 @@ describe('spring provider', () => {
             'DELETE /api/users/{id}',
             'GET /api/legacy',
             'GET /api/users',
+            'GET /owners/back',
+            'GET /owners/find',
+            'GET /owners/new',
+            'GET /owners/{id}',
+            'GET /status',
             'POST /api/users',
         ]);
         expect(graph.edges.some((e) => e.relation === 'routes-to' && e.target === `${P}/UserService.java#UserService::list`)).toBe(false);
@@ -72,9 +77,22 @@ describe('spring provider', () => {
         expect(out(`${P}/OrderService.java#OrderService`, 'injects')).toEqual([]);
     });
 
+    it('renders the template a @Controller method names by literal, constant or ModelAndView', () => {
+        expect(out(`${P}/OwnerController.java#OwnerController::initFind`, 'renders')).toEqual(['src/main/resources/templates/owners/findOwners.html']);
+        expect(out(`${P}/OwnerController.java#OwnerController::initCreate`, 'renders')).toEqual([
+            'src/main/resources/templates/owners/createOrUpdateOwnerForm.html',
+        ]);
+        expect(out(`${P}/OwnerController.java#OwnerController::show`, 'renders')).toEqual(['src/main/resources/templates/owners/ownerDetails.html']);
+    });
+
+    it('draws no render for a redirect, nor for a @RestController returning a body', () => {
+        expect(out(`${P}/OwnerController.java#OwnerController::back`, 'renders')).toEqual([]);
+        expect(out(`${P}/StatusController.java#StatusController::status`, 'renders')).toEqual([]);
+    });
+
     it('stamps its edges and keeps the graph valid', () => {
         const mine = graph.edges.filter((e) => ['routes-to', 'persists', 'relates', 'injects'].includes(e.relation));
-        expect(mine.length).toBe(11);
+        expect(mine.length).toBe(16);
         expect(mine.every((e) => e.provider_id === 'spring')).toBe(true);
         expect(validateGraph(JSON.parse(JSON.stringify(graph))).ok).toBe(true);
     });
