@@ -76,7 +76,7 @@ export const LOCKED_RESOLVER_BASELINE: ReadonlySet<string> = new Set([
     'agents/roadmaps/road-to-an-update-that-installs-itself-only-when-it-is-safe.md#D7',
     'agents/roadmaps/road-to-an-update-that-installs-itself-only-when-it-is-safe.md#D8',
     'agents/roadmaps/road-to-authority-routing-mechanism.md#D11',
-    'agents/roadmaps/road-to-placeholders-on-the-wire.md#D7',
+    'agents/roadmaps/later/road-to-placeholders-on-the-wire.md#D7',
 ]);
 
 /**

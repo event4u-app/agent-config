@@ -1,4 +1,5 @@
 ---
+status: later
 complexity: lightweight
 execution:
   mode: phase-checkpoints
@@ -6,6 +7,11 @@ owner: maintainer
 estate_offset_exempt: "Follow-up named by the PR #2604 reviews (2026-10-24) for the points that PR documents as limits rather than fixes. grep -rlF -e 'auto-refresh' -e 'refresh_lock' -e 'single-flight' over agents/roadmaps/*.md, later/ and stubs/: no roadmap owns graph freshness after session start, Windows spawning or a shared refresh coordinator."
 relates: []
 # relates: probe — grep -rlF -e 'auto-refresh' -e 'refresh_lock' over agents/roadmaps/*.md, later/, stubs/ (2026-10-24): no hit.
+review_by: 2026-11-24
+entry_condition:
+  what: one of the five active roadmaps closes and frees a WIP slot (owner directive 2026-10-24, WIP limit 5)
+  when: at the next closed active roadmap; the owner's choice of which parked roadmap to pull
+  who: owner
 ---
 # Road to code-graph refresh during a session
 

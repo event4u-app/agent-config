@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: later
 estate_offset_exempt: "Revision of the draft merged in #2359 (2ad637acb6), rewritten in place; no new file. Rejected instead: folding it into road-to-a-setup-that-decides-itself (that file owns the loading default, one of six measured costs) or road-to-local-gates-wired-while-they-are-green (it owns wiring gates, not lane waiting, misfires or decision asks), and archiving a neighbour, because none is finished."
 estate_growth_exempt: "2026-10-20: three blockers registered (two-fourteen-night-windows-not-yet-elapsed, openai-council-seat-oauth-grant-rejected, language-misfire-window-after-the-agent-message-fix). Each records a hold this drain verified against the tree rather than inherited, and none adds a roadmap: no new file, no promotion, no step. They replace prose holds that the drain queue could not read, so the estate's open-step count is unchanged and its blocked-step count becomes accurate. Earlier: promoted draft -> ready on the owner's instruction of 2026-10-15 to land inbox-2026-10-s as ready roadmaps; the promotion raises active_roadmaps by one and offsets nothing, because the only candidate dispositions (park in later/, merge into a dependency) were rejected in estate_offset_exempt."
 execution:
@@ -22,6 +22,11 @@ relates:
   - slug: road-to-roadmaps-finished-before-new-ones-start-carried
     relation: disjoint
     note: "Parked follow-up of the finish-first roadmap; it reads the next five drains for completion outcomes. Step 2.3 here re-decides the two-lane provision (D10) on cost and conflict figures; neither file re-plans the other."
+review_by: 2026-11-24
+entry_condition:
+  what: one of the five active roadmaps closes and frees a WIP slot (owner directive 2026-10-24, WIP limit 5)
+  when: at the next closed active roadmap; the owner's choice of which parked roadmap to pull
+  who: owner
 ---
 # Road to agent throughput recovery
 

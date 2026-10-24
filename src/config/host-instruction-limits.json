@@ -3,7 +3,7 @@
   "claude-code": {
     "limit": 150000,
     "kind": "reported",
-    "source": "agents/roadmaps/road-to-an-installed-layer-that-is-thinned.md:7 (`estate_offset_exempt`), and the same figure in the `Source:` header of that file and of road-to-a-rule-carrier-that-works-outside-the-repo and road-to-rule-triggers-and-links-that-hold. All three cite round `inbox-2026-10-c`, which reproduced the host's notice on a fresh install at 102 unconditional files / 338,225 characters.",
+    "source": "agents/roadmaps/later/road-to-an-installed-layer-that-is-thinned.md:7 (`estate_offset_exempt`), and the same figure in the `Source:` header of that file and of road-to-a-rule-carrier-that-works-outside-the-repo and road-to-rule-triggers-and-links-that-hold. All three cite round `inbox-2026-10-c`, which reproduced the host's notice on a fresh install at 102 unconditional files / 338,225 characters.",
     "note": "MARKED `reported`, NOT `vendor-published`, DELIBERATELY. The round that carries the primary record lived under `agents/tmp.old/inbox-2026-10-c/` and has since been pruned, so what this tree can still show is three roadmap headers citing it and not the notice itself. That is enough to record the figure and not enough to call it read from the host. Checked 2026-10-05: `ls agents/tmp.old/inbox-2026-10-c/` reports no such directory. Promote to `vendor-published` only against the host's own published material, never against another copy of this entry."
   },
   "cursor": {

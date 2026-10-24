@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
 depends: [road-to-a-setup-that-decides-itself]
@@ -22,6 +22,11 @@ relates:
   - slug: road-to-delivery-on-hook-hosts
     relation: disjoint
     note: Later. Owns `host-injection-effect.json`; step 2.4 here only reads its row and records the new exposure state.
+review_by: 2026-11-24
+entry_condition:
+  what: one of the five active roadmaps closes and frees a WIP slot (owner directive 2026-10-24, WIP limit 5)
+  when: at the next closed active roadmap; the owner's choice of which parked roadmap to pull
+  who: owner
 ---
 # Road to an installed layer that is thinned
 
