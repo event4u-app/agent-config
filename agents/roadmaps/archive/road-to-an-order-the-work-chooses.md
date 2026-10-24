@@ -88,12 +88,12 @@ the end, and every constraint fixture keeps its order.
       for — moving an authorised operation later, or merging two authorised
       sinks, is not a new operation and never authorises one the input did not
       name — here, because `scope-control` is a kernel rule.
-      verify: `./scripts-run src/scripts/check_context_paths` -> 0; the fixture
-      table in the context names the same G ids the test runs.
+      The fixture table in the context names the same G ids the test runs.
+      verify: `./scripts-run src/scripts/check_context_paths` -> 0
 - [x] **1.3 The sixth mandated line, `Order`.** `mandated-lines.md` gains it:
       what moved and why, one line, silent when the order is unchanged.
-      verify: `npx vitest run tests/scripts/lint_mandated_lines.test.ts` -> 0; the pre-send sweep lists six
-      lines.
+      The pre-send sweep lists six lines.
+      verify: `npx vitest run tests/scripts/lint_mandated_lines.test.ts` -> 0
 - [x] **1.4 Ordered plan is a candidate, not a schedule.** Signal 2 of
       `auto-dispatch-classification.md` reads "first … then … finally" as an
       ordered candidate whose order the invocation plan decides before a mode
