@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 owner: maintainer
-estate_growth_exempt: "One active roadmap and one blocker (delegated-owner-defaults, resolved 2026-10-23 by the owner, A8). The blocker was the owner's own Iron Law (ownership_classes.ts: product-owned is locked to the owner) meeting a run delegation that applied council answers to locked-class decisions; only the owner can say whether a delegation may ever do that."
+estate_growth_exempt: "One active roadmap and one blocker (delegated-owner-defaults, resolved 2026-10-23 by the owner, A8). The blocker was the owner's own Iron Law (ownership_classes.ts: product-owned is locked to the owner) meeting a run delegation that applied council answers to locked-class decisions; only the owner can say whether a delegation may ever do that. Step 2.4 adds one hook concern, `subagent-constraints`, the constraint carrier this file's step asks for; no existing concern does its job, and decision A9 fixed its form as a lazily loaded concern."
 estate_offset_exempt: "No active roadmap owns whether a ticked step is true on the shipped path: road-to-a-step-that-costs-what-it-changes owns how much ceremony a step pays (receipts, depth), not whether its verify reaches production; the enforcement-coverage gate resolves rules to validators, not steps to callers. Archiving an unrelated finished file to buy the slot would hide the growth this key exists to show."
 relates:
   - slug: road-to-a-step-that-costs-what-it-changes

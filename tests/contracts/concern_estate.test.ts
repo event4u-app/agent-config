@@ -36,12 +36,13 @@ describe('the block boundary is the whole point', () => {
         expect(countConcerns(manifest)).toBeGreaterThan(40);
     });
 
-    it('the proxy grep over-counts this manifest by exactly 16', () => {
+    it('the proxy grep over-counts this manifest by exactly 17', () => {
         // Pinned so the correction cannot silently drift back: if the manifest
         // grows a fourth top-level map, this number moves and the next author
-        // is told rather than left to rediscover it.
+        // is told rather than left to rediscover it. 16 until
+        // `native_event_min_host_version` added its `claude:` key.
         const proxy = manifest.split('\n').filter((l) => /^ {2}[a-z][a-z0-9_-]*:$/.test(l)).length;
-        expect(proxy - countConcerns(manifest)).toBe(16);
+        expect(proxy - countConcerns(manifest)).toBe(17);
     });
 });
 

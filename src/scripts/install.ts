@@ -3061,8 +3061,7 @@ function _deploy_global_content(
                 const matrix = claude_settings_hooks.build_claude_hook_matrix(manifest, { hostVersion: claude_settings_hooks.claude_host_version() });
                 const res = claude_settings_hooks.ensure_managed_hooks(
                     path.join(anchor, 'settings.json'),
-                    matrix,
-                    Object.keys(claude_settings_hooks.min_host_versions(manifest)),
+                    matrix, Object.keys(claude_settings_hooks.min_host_versions(manifest)),
                 );
                 if (!state.QUIET) {
                     if (res.changed) {
