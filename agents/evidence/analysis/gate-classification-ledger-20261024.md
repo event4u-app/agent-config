@@ -207,7 +207,7 @@ in revision 9. The withdrawal and its reason sit on the row itself.
 
 **Ledger table, pinned (revision 10).** A row edited after the independent
 review would otherwise pass silently. The reconciler hashes the table rows. The
-recorded value is the ledger table: sha256 `e7fe0f2adae19b1314bb0dffe123390426bbe65ad7541458b0ed408cc83a368d`.
+recorded value is the ledger table: sha256 `2de7c81166b9af0e19c1f8f8ac1e42623f9c652b9e9f3d074fdfb39262d9b35a`.
 
 **Helpers, pinned as a closure (revision 9).** openai, round 13: the checks
 import helpers, and the per-file pins below covered none of them. The
@@ -246,12 +246,13 @@ than listed.
 | `agents/evidence/analysis/gate-branch-inventory-20261024.json` | `119214ea142393c7254cae40e080153728e10fb0` |
 | `agents/evidence/analysis/gate-branch-mapping-20261024.json` | `c296fd9f02c1f0e83688da3f596cbb19e079665e` |
 | `agents/evidence/analysis/gate-branch-mapping-review-20261024.json` | `46227ecdae464df420e5aec60910a1b7a497e686` |
-| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `21ab58e7177f98c7279e1c7109c81fdd7d1bca87` |
+| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `5874a3b72cf04c99a0aae9cc00f16bae6e9cb6bd` |
 | `agents/evidence/analysis/gate-ledger-executions.mjs` | `b330f3e9671d4d9e58baf9e1a59e32bc473b3756` |
-| `agents/evidence/analysis/gate-branch-reconciliation-20261024.md` | `41d6f03204cd89695f3cc1b858b8a018f4d9fe9f` |
+| `agents/evidence/analysis/gate-branch-reconciliation-20261024.md` | `d25580a37bfe75418f0aa652fc9b31155f6c4356` |
 | `agents/evidence/analysis/gate-ledger-rerun-20261024.md` | `fc0c90dfbb56c2820e2669ad67fac1a969bd9782` |
 | `agents/evidence/analysis/gate-branch-site-dispositions-20261024.json` | `67a43f237b7be386b9630fac5396af31fb53eae2` |
-| `agents/evidence/analysis/gate-branch-sites.mjs` | `d0ac48d1e1357f005f9fff4510a03e19ae37331d` |
+| `agents/evidence/analysis/gate-branch-sites.mjs` | `d926f34aa02b93f428b5a5f521f56317167047f7` |
+| `agents/evidence/analysis/gate-phase7-harness.mjs` | `672ce60e22f56fd483b31ed84b13266a90b821c0` |
 
 
 ## Independent branch inventory — revision 8
@@ -396,6 +397,110 @@ when `node agents/evidence/analysis/gate-ledger-reconcile.mjs` exits 0 at
 the revision 7.2 changes. A stale, failed or absent reconciliation blocks
 reliance. That condition is written into step 7.2 itself, and 7.2's own test
 runs the reconciler first.
+
+## The closure standard and its eight items — revision 15
+
+On 2026-10-24 the owner chose **Option A** for 7.1's closure standard, by
+answering "1" (`agents/evidence/owner-directives/2026-10-24-7-1-closure-standard.md`,
+D44). Under it, the classification ledger, a fail-closed consumption gate and
+reopening triggers close 7.1. Round-20 items 2 and 3, the 330-row manifest and
+the 330→16 re-derivation, are not required. Items 1 and 4–8 are, and this
+section discharges each one with its test.
+
+**Item 1 — the execution universe and the red predicate, recorded and
+executable.** `agents/evidence/analysis/gate-phase7-harness.mjs`:
+
+- **Discovery.** Every `src/scripts/check_*.ts` and `lint_*.ts` at a
+  revision. `--universe bbe5b73be` lists **330**, the Phase 7 count.
+- **Invocation.** `./scripts-run src/scripts/<id>`, no arguments, from the
+  repository root, with a 240 s timeout.
+- **Predicate.** Decision order, first match wins:
+  1. no exit code (spawn failure or timeout) → `not-run`, never green;
+  2. exit 0 → `green`;
+  3. exit 2 with a usage line → `needs-argument`;
+  4. a missing generated projection (`dist/`, `.claude/`, `.augment/`) →
+     `needs-build`;
+  5. otherwise → `red`.
+- **Prerequisite.** Projections built, as in the Phase 7 measurement.
+
+Exercised on three checks today: `lint_readme_serial_comma` green,
+`check_composite_arming` red, `lint_subagent_determinism` green. The two
+exclusion branches of the predicate were not exercised in this run.
+
+**Item 4 — class predicates, mutually exclusive by decision order.** For one
+aspect under one mode, the first rule that holds gives the class:
+
+1. **observation.** The aspect's own contract leaves the run non-blocking:
+   exit 0, *"not a failure"*, *"never a build failure"*.
+2. **tolerance.** A stated bound, a named risk owner and an expiry.
+3. **snapshot.** Compared against a recorded baseline that a governed act
+   may move in the permissive direction.
+4. **invariant.** None of the above: the property must hold whenever the
+   aspect applies.
+
+The reconciler checks each row's own evidence cell against its class: an
+observation must state its non-blocking contract, a tolerance its bound, owner
+and expiry, a snapshot its baseline. Ambiguity fails the run and never
+defaults to a class (self-test case: an observation row with the exit-0
+contract removed is refused).
+
+Formalising the predicates found one misclassification. **`R10.d`, C3 live
+URL, was an observation; it is now an invariant in `--check-urls` mode.** With
+the flag, an unreachable URL is an error and the run exits 1. Network
+dependence is an environment property (assurance: environment-dependent), not
+a non-blocking contract.
+
+**Item 5 — a bounded emission inventory over a declared surface.**
+`gate-branch-sites.mjs` declares:
+
+- **Surface.** The 16 checks' own source text.
+- **Vocabulary.** A non-zero `return`, `process.exit(n)`,
+  `process.exitCode = n`, `throw`, and `push` into a reported list.
+- **Excluded surfaces.** Imported helpers: each helper failure a check can
+  surface is an inventoried branch naming the helper, and the closure is
+  pinned. Spawned subprocesses (`git`, `node`): their failures reach a check
+  only through the branches that handle them.
+
+Result: 159 sites, 132 inside inventoried branches, 27 disposed, 0
+undisposed. `--self-test` plants one site of each of the five types and
+requires each to be refused (6/6). `process.exitCode = main()` in
+`check_gate_completeness` is not a literal, and its values are the `return`
+sites of `main`, which are covered.
+
+**Item 6 — provenance: what was derived independently, and what was rerun.**
+
+| Artefact | Produced by | Independent of the ledger author? |
+|---|---|---|
+| Phase 7 population (16 of 330) | the 2026-10-10 measurement and council record, landed in `7a7a55b2` | yes, an earlier round; checked against git |
+| branch inventory (198 branches) | a separate session, without sight of the ledger | yes (same model, not another provider) |
+| mapping review (182/12/4) | a separate session | yes (same model) |
+| site scan (159 sites) | `gate-branch-sites.mjs`, no model | mechanical; vocabulary chosen by the ledger author |
+| ledger, mapping, dispositions, reconciler, harness | the ledger author | no |
+| two clean-checkout reruns | a separate session | *reruns*: they prove determinism, not independent derivation |
+
+**Item 7 — validity, quarantine and reopening.** `gate-ledger-reconcile.mjs`
+returns one of three states:
+
+- **valid** (exit 0): every check passes.
+- **quarantined** (exit 3): the only failures are stale pins. A source,
+  helper, wiring file, artefact or ledger-table change was not yet
+  re-attested. The record is not consumable, and 7.1 is not reopened.
+- **invalid** (exit 1): any other failure, such as an omitted or unmapped
+  branch, a review verdict not honoured, a class predicate violated, or an
+  undisposed site. **7.1 reopens.**
+
+A demonstrated misclassification, omission or coverage defect in the
+declared surface reopens 7.1. Proposing another analysis technique does
+neither. Self-test: a stale pin yields `quarantined`; a laundered mapping
+yields `invalid`.
+
+**Item 8 — the 7.1 consumption contract.**
+`node agents/evidence/analysis/gate-ledger-reconcile.mjs --status` prints
+JSON. The fields are the record path, the ledger blob, the artefact, the scope
+(Phase 7 commit, checks, binding aspects, branches, classes), `state`,
+`reasons` and `consumable`. Its exit code is 0, 3 or 1. 7.2 consumes the
+ledger **only** when the run on the candidate merge result reports
+`consumable: true`. Gate membership stays outside 7.1.
 
 ## Source-to-record completeness, mechanically — revision 14
 
@@ -604,7 +709,8 @@ guarantees (openai), so each invariant row carries one of these qualifiers:
   - row 5 freshness (runner clock and time zone);
   - the current-scope rows of checks 9 and 12 (the disk, read relative to the working directory);
   - rows 14 and 15 (`README.md` relative to the working directory);
-  - row 10 C5 (git history depth, skipped without git).
+  - row 10 C5 (git history depth, skipped without git);
+  - row 10 C3 live URL in `--check-urls` mode (network).
 - **fixed-policy**: every other invariant row.
 
 ## The ledger — revision 3
@@ -653,7 +759,7 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 10 | `check_knowledge_cards` | C1 size | a card ≤ 150 lines | `agents/knowledge/*.md` (external arm) | always | card edits | **invariant** | error | `R10.a` |
 | 10 | | C2 pointer present | `links.authoritative` in frontmatter | same | always | card edits | **invariant** | error | `R10.b` |
 | 10 | | C3 local pointer | a local pointer path exists | same + the tree | always | card or tree edits | **invariant** | error | `R10.c` |
-| 10 | | C3 live URL | the URL answers | same + network | only with `--check-urls` | the remote site | **observation** | network-dependent and opt-in; not reproducible offline | `R10.d` |
+| 10 | | C3 live URL | the URL answers | same + network | only with `--check-urls` | the remote site | **invariant** in that mode | with `--check-urls` an unreachable or failing URL is an error (`C3: URL returned …` / `unreachable`) and the run exits 1. Reclassified in revision 15 from observation: network dependence is an environment property, not a non-blocking contract (class predicate 4, D45) | `R10.d` |
 | 10 | | C4 trust tag | `trust` present; `type: anti-hallucination` | same | always | card edits | **invariant** | error | `R10.e` |
 | 10 | | C5 evidence consistency | distinct `source_version`s form a git-ancestry chain; `observed_at` span ≤ 7 days | same + git history | when git is runnable; without git the ancestry half is skipped silently (`op:silent-pass`) | card edits, history | **invariant** | error. The span compares recorded timestamps, not the clock | `R10.f` |
 | 10 | | C6 strict sources | `source=<path:line>` references exist and are non-empty | same + the tree | only with `--strict` | tree edits | **invariant** in that mode | error when enabled | `R10.g` |
@@ -681,26 +787,23 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 15 | `lint_readme_serial_comma` | serial comma | no serial comma in README prose | README.md | always | README edits | **invariant** | fixed rule | `R15.a` |
 | 16 | `check_composite_arming` | arming verdict | ≥ 10 usable composite readings from ≥ 2 sessions | the composite store | a valid store exists | new readings | **observation** | "'not yet' is a successful measurement, never a build failure" | `R16.a` |
 | 16 | | store yields a usable record | a store with content parses to at least one usable reading (an empty store is `op:could-not-run`, not this row) (a line with a string `session` and a `composite_ms` key) | the composite store | the store exists | a corrupt append | **invariant** | exit 1 when malformed lines leave no usable record (`malformed > 0 && readings.length === 0`). Corrected in revision 6: revision 3 said "every line parses", which the code does not require | `R16.b` |
-| 16 | | partial malformation | malformed lines next to usable ones are counted and named per line | same | the store exists | a corrupt append | **observation** | the gate ledger records each dropped line as `precondition_unmet` and the run continues | `R16.c` |
+| 16 | | partial malformation | malformed lines next to usable ones are counted and named per line | same | the store exists | a corrupt append | **observation** | the gate ledger records each dropped line as `precondition_unmet`, the run continues, and with at least one usable record it exits 0 | `R16.c` |
 | 16 | | store absent | the store file exists | same | no store file | bootstrap | **observation** | its own contract: no readings yet is "not measured yet" and never a build failure. Runtime metadata, not a class: `not-evaluated: evidence-missing`. Current behaviour diverges: the script exits 1, which is owed to 7.2. A future transition to invariant after a bootstrap deadline needs that deadline first (D31) and is not part of this verdict | `R16.d` |
 | 16 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | `taskfiles/content.yml:386`, `rule-backstops.yml:321` | edits to the checker | **invariant** | fixed fixture table (fixed-policy). `--publish` is a write mode that writes a distribution report and asserts nothing, so it carries no class | `R16.e` |
 
-## Totals — revision 9
+## Totals — revision 15
 
 52 aspect rows over 16 checks. Two target-scope rows are migration notes and
 one row (`R1.c`) is withdrawn, so there are **49 classified aspects**, each in one of the four classes:
 
-- **invariant 41**:
+- **invariant 42**:
   - four self-test or mutation-test modes;
-  - ten hold only in a named invocation mode: `--require-complete`, `--strict`
-    on three checks (one of them only in consumer mode), and `--global` for G1
-    to G6;
+  - eleven hold only in a named invocation mode: `--require-complete`, `--strict` on three checks (one only in consumer mode), `--check-urls`, and `--global` for G1 to G6;
   - one is time-qualified (trigger freshness);
   - the adoption ratchet carries a staleness window.
   - `R4.a`, `R10.f` and `R11.a` carry a narrowed applicability.
-- **observation 8**:
+- **observation 7**:
   - token-golden default coverage;
-  - C3 live URL;
   - card freshness;
   - the beta marker in default mode;
   - the consumer-mode shape warning in default mode;

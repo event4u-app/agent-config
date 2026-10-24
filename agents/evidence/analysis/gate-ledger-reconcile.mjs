@@ -162,6 +162,16 @@ export function reconcile(io) {
 
     const binding = ledgerRows.filter((r) => !r.migration && !r.withdrawn);
     for (const r of binding) if (r.cls === null) failures.push(`unclassified binding aspect: ${r.check} / ${r.aspect}`);
+    // Class predicates (round-20 item 4), checked against each row's own
+    // evidence cell: an observation states its non-blocking contract; a
+    // tolerance names a bound, a risk owner and an expiry; a snapshot names a
+    // baseline a governed act may move.
+    for (const r of binding) {
+        const evidence = cells(r.raw)[8] ?? '';
+        if (r.cls === 'observation' && !/exit 0|exits 0|not a failure|never a build failure/i.test(evidence)) failures.push(`class predicate: ${r.id} is an observation but its evidence states no non-blocking contract`);
+        if (r.cls === 'tolerance' && !(/bound/i.test(evidence) && /risk owner/i.test(evidence) && /expir/i.test(evidence))) failures.push(`class predicate: ${r.id} is a tolerance without bound, risk owner and expiry`);
+        if (r.cls === 'snapshot' && !/baseline/i.test(evidence)) failures.push(`class predicate: ${r.id} is a snapshot without a baseline`);
+    }
     for (const r of ledgerRows.filter((x) => x.migration)) {
         const hasCurrent = binding.some((b) => b.check === r.check && b.aspect.replace('— current', '').trim() === r.aspect.replace('— target', '').trim());
         if (!hasCurrent) failures.push(`target row without a current-scope row: ${r.check} / ${r.aspect}`);
@@ -289,7 +299,20 @@ export function reconcile(io) {
     const committed = io.exists(BRANCH_MATRIX) ? io.read(BRANCH_MATRIX) : null;
     if (committed === null) failures.push(`branch reconciliation artefact missing: ${BRANCH_MATRIX}`);
     else if (committed !== artefact) failures.push('STALE: the committed branch reconciliation differs from a fresh regeneration');
-    return { failures, report, matrix, artefact };
+    // Validity state (round-20 item 7): only stale pins quarantine the record;
+    // any other failure means it is not a valid classification and 7.1 reopens.
+    const stale = failures.filter((f) => f.startsWith('STALE'));
+    const state = failures.length === 0 ? 'valid' : stale.length === failures.length ? 'quarantined' : 'invalid';
+    const status = {
+        record: FILES.ledger,
+        ledgerBlob: io.blob(FILES.ledger),
+        artefact: BRANCH_MATRIX,
+        scope: { phase7Commit: manifest?.[1] ?? null, checks: phase7.length, bindingAspects: binding.length, branches: branchCount, classes: tally },
+        state,
+        reasons: failures,
+        consumable: state === 'valid',
+    };
+    return { failures, report, matrix, artefact, status };
 }
 
 function renderBranchMatrix(lines, resolutions, t) {
@@ -359,12 +382,15 @@ function selfTest() {
         ['a branch is mapped to the withdrawn row', json(FILES.mapping, (j) => { j.mapping.check_gate_completeness['c1-dead-scope'] = 'R1.c'; return j; }), /not a binding row|disagreement not adopted/],
         ['a line of the committed branch reconciliation is edited', mutated(io, BRANCH_MATRIX, (t) => t.replace('| op:usage |', '| R1.a invariant |')), /committed branch reconciliation differs/],
         ['the mechanical site scanner finds an undisposed site', { ...io, sites: () => false }, /site scanner/],
+        ['a stale pin quarantines rather than invalidates', { ...io, blob: (rel) => (rel === 'src/scripts/lint_readme_jargon.ts' ? '0'.repeat(40) : io.blob(rel)) }, 'quarantined'],
+        ['a laundered mapping invalidates', json(FILES.mapping, (j) => { j.mapping.check_knowledge_cards['c10-E1-required'] = 'op:informational'; return j; }), 'invalid'],
+        ['an observation row without a non-blocking contract', mutated(io, FILES.ledger, (t) => t.replace('| warning severity, exit 0 |', '| warning severity |')), /class predicate: R11\.e/],
         ['an unknown flag appears in a check', mutated(io, 'src/scripts/lint_readme_jargon.ts', (t) => `${t}\nconst x = '--surprise';\n`), /unclassified invocation mode: lint_readme_jargon --surprise/],
     ];
     let bad = 0;
     for (const [name, caseIo, expect] of cases) {
-        const { failures } = reconcile(caseIo);
-        const ok = expect === null ? failures.length === 0 : failures.some((f) => expect.test(f));
+        const { failures, status } = reconcile(caseIo);
+        const ok = expect === null ? failures.length === 0 && status.state === 'valid' : typeof expect === 'string' ? status.state === expect : failures.some((f) => expect.test(f));
         if (!ok) bad += 1;
         console.log(`${ok ? 'ok  ' : 'FAIL'} ${name}${ok ? '' : ` — got: ${failures.slice(0, 3).join(' | ') || 'no failure'}`}`);
     }
@@ -389,13 +415,17 @@ if (process.argv.includes('--self-test')) selfTest();
 else if (process.argv.includes('--matrix')) printMatrix();
 else if (process.argv.includes('--branches')) {
     process.stdout.write(reconcile(realIo()).artefact);
+} else if (process.argv.includes('--status')) {
+    const { status } = reconcile(realIo());
+    process.stdout.write(`${JSON.stringify(status, null, 2)}\n`);
+    process.exit(status.state === 'valid' ? 0 : status.state === 'quarantined' ? 3 : 1);
 }
 else {
-    const { failures, report } = reconcile(realIo());
+    const { failures, report, status } = reconcile(realIo());
     for (const l of report) console.log(l);
     if (failures.length > 0) {
-        console.log(`\nFAILED (${failures.length}):\n- ${failures.join('\n- ')}`);
-        process.exit(1);
+        console.log(`\n${status.state.toUpperCase()} (${failures.length}):\n- ${failures.join('\n- ')}`);
+        process.exit(status.state === 'quarantined' ? 3 : 1);
     }
     console.log('\nOK: the Phase 7 manifest matches its landed record and git history; the ledger, the invocation inventory and the manifest name the same 16 checks; every binding aspect carries one of the four classes; every assertion-changing flag is named; every branch of the independent inventory maps to a binding row or a declared category and every binding row is reached; every independent review verdict is honoured; every pin is current.');
 }
