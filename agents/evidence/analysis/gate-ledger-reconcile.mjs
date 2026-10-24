@@ -43,7 +43,7 @@ for (const line of section(read(LEDGER), '## The ledger — revision 3').split('
     const classCell = c[7] ?? '';
     const cls = CLASSES.find((k) => new RegExp(`\\*\\*${k}`).test(classCell)) ?? null;
     const migration = /— target/.test(c[2]);
-    ledgerRows.push({ check: current, aspect: c[2], cls, migration });
+    ledgerRows.push({ check: current, aspect: c[2], cls, migration, raw: line });
 }
 
 const inventoryChecks = section(read(INVENTORY), '## The inventory')
@@ -67,6 +67,27 @@ for (const r of ledgerRows.filter((x) => x.migration)) {
     if (!hasCurrent) failures.push(`target row without a current-scope row: ${r.check} / ${r.aspect}`);
 }
 
+// Every `--flag` literal in a check's own source is either declared here as
+// changing no assertion, or must be named by a binding ledger row of that
+// check. A flag in neither place is an unclassified invocation mode.
+const NO_ASSERTION = {
+    presentation: ['--quiet', '--json', '--list', '--help'],
+    input: ['--root', '--dir', '--today', '--store', '--scope'],
+    write: ['--write-baseline', '--publish'],
+    notAFlag: ['--is-ancestor', '--record-composite'],
+};
+const declared = new Set(Object.values(NO_ASSERTION).flat());
+const modeRows = [];
+for (const check of phase7) {
+    const src = read(`src/scripts/${check}.ts`);
+    const flags = [...new Set([...src.matchAll(/['"`](--[a-z][a-z-]*)/g)].map((m) => m[1]))].sort();
+    const rowsText = binding.filter((r) => r.check === check).map((r) => r.raw).join('\n');
+    const assertionFlags = flags.filter((f) => !declared.has(f));
+    const unmatched = assertionFlags.filter((f) => !rowsText.includes(f));
+    for (const f of unmatched) failures.push(`unclassified invocation mode: ${check} ${f}`);
+    modeRows.push(`${check} | ${flags.join(' ') || '—'} | ${assertionFlags.join(' ') || '—'} | ${unmatched.length === 0 ? 'yes' : 'NO'}`);
+}
+
 console.log('check | binding aspects | all classified | classes | migration notes');
 for (const check of phase7) {
     const rows = ledgerRows.filter((r) => r.check === check);
@@ -74,10 +95,12 @@ for (const check of phase7) {
     const counts = CLASSES.map((k) => [k, b.filter((r) => r.cls === k).length]).filter(([, n]) => n > 0).map(([k, n]) => `${k} ${n}`).join(', ');
     console.log(`${check} | ${b.length} | ${b.every((r) => r.cls !== null) ? 'yes' : 'NO'} | ${counts} | ${rows.length - b.length}`);
 }
+console.log('\ncheck | flags in source | assertion-changing flags | each named by a binding row');
+for (const r of modeRows) console.log(r);
 const tally = Object.fromEntries(CLASSES.map((k) => [k, binding.filter((r) => r.cls === k).length]));
 console.log(`\nrows ${ledgerRows.length} · binding ${binding.length} · migration ${ledgerRows.length - binding.length} · ${JSON.stringify(tally)}`);
 if (failures.length > 0) {
     console.log(`\nFAILED (${failures.length}):\n- ${failures.join('\n- ')}`);
     process.exit(1);
 }
-console.log('\nOK: 16 phase-7 checks = 16 ledger checks = 16 inventoried checks; every binding aspect of every check carries one of the four classes; every target row sits beside its current-scope row.');
+console.log('\nOK: 16 phase-7 checks = 16 ledger checks = 16 inventoried checks; every binding aspect of every check carries one of the four classes; every target row sits beside its current-scope row; every assertion-changing flag in each check\'s source is named by a binding row.');
