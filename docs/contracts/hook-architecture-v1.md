@@ -121,10 +121,16 @@ dispatcher forwards it only from a concern whose manifest `effect` is
 `notification`, capped at 1,000 characters, joined with `\n` in manifest order,
 and only on a host with a verified field that shows text to the user and adds
 nothing to model context — today `claude`, as `systemMessage`. On any other host
-it is dropped, never rerouted to a model-facing channel. On `claude`
-`session_start`, plain `context` that shares the reply moves into
-`hookSpecificOutput.additionalContext`, because the host parses stdout as JSON
-only when the whole of it is one object.
+it is dropped, never rerouted to a model-facing channel; that `systemMessage`
+does not reach the model was reproduced on Claude Code 2.1.310
+(`agents/evidence/analysis/system-message-probe-2026-10-24.md`). The host parses
+stdout as JSON only when the whole of it is one object, so with a notice present
+the dispatcher merges structures, never text: the native emission's object is
+kept, `session_start` plain `context` joins
+`hookSpecificOutput.additionalContext` (`\n\n`), and the notice is appended to
+any `systemMessage` already there (`\n`). Plain context on any other event, or
+an emission that is not one JSON object, is never reinterpreted — the notice is
+dropped and the output is what it would have been without it.
 
 ## Exit-code semantics
 

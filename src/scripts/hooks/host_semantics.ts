@@ -135,29 +135,45 @@ export function claudeAdditionalContext(event: string, text: string): string {
 }
 
 /**
- * Add a user-addressed notice to what the dispatcher writes on stdout.
+ * Compose the dispatcher's stdout from its three parts: plain `session_start`
+ * context, the native emission, and a user-addressed notice.
  *
- * Claude Code parses stdout as JSON only when the whole of it is one object, so
- * the notice cannot be appended beside plain `session_start` context: that
- * context moves into `hookSpecificOutput.additionalContext`, which the same host
- * documents for `SessionStart`, and the notice rides as `systemMessage`. On a
- * host with no verified user channel the stdout is returned untouched, so the
- * notice is dropped rather than written somewhere the model would read it.
+ * Without a notice — or on a host with no verified user field — this is the
+ * old output byte for byte: context, then emission. With one, the host parses
+ * stdout as JSON only when the whole of it is one object, so the parts are
+ * MERGED as structures, never concatenated as text: the emission's object is
+ * kept, context joins its `hookSpecificOutput.additionalContext`, and the
+ * notice joins `systemMessage`. Plain context is accepted on `session_start`
+ * only, and an emission that is not one JSON object is never reinterpreted —
+ * in either case the notice is dropped and the old output stands.
  */
-export function withUserNotice(platform: string, event: string, stdout: string, notice: string): string {
+export function withUserNotice(
+    platform: string,
+    event: string,
+    context: string,
+    emission: string,
+    notice: string,
+): string {
+    const legacy = context + emission;
     const text = notice.trim();
-    if (!text || !hostShowsUserNotice(platform) || !usesNativeEmission(platform)) return stdout;
-    const body = stdout.trim();
-    let reply: unknown = null;
-    try {
-        reply = JSON.parse(body);
-    } catch {
-        // plain session context
+    if (!text || !hostShowsUserNotice(platform) || !usesNativeEmission(platform)) return legacy;
+    if (context.trim() && event !== "session_start") return legacy;
+    let reply: Record<string, unknown> = {};
+    if (emission.trim()) {
+        try {
+            reply = JSON.parse(emission) as Record<string, unknown>;
+        } catch {
+            return legacy;
+        }
+        if (typeof reply !== "object" || reply === null || Array.isArray(reply)) return legacy;
     }
-    if (body && (typeof reply !== "object" || reply === null || Array.isArray(reply))) {
-        reply = { hookSpecificOutput: { hookEventName: nativeEventName(platform, event), additionalContext: body } };
+    const join = (a: unknown, b: string, sep: string): string => (typeof a === "string" && a ? `${a}${sep}${b}` : b);
+    if (context.trim()) {
+        const hso = (reply["hookSpecificOutput"] ?? { hookEventName: nativeEventName(platform, event) }) as Record<string, unknown>;
+        reply["hookSpecificOutput"] = { ...hso, additionalContext: join(hso["additionalContext"], context.trim(), "\n\n") };
     }
-    return `${JSON.stringify({ ...(reply as object | null), systemMessage: text })}\n`;
+    reply["systemMessage"] = join(reply["systemMessage"], text, "\n");
+    return `${JSON.stringify(reply)}\n`;
 }
 
 /**

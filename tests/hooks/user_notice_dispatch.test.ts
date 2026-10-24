@@ -92,19 +92,45 @@ describe('the user channel through the dispatcher', () => {
         expect(reply.hookSpecificOutput?.['hookEventName']).toBe('SessionStart');
         expect(reply.hookSpecificOutput?.['additionalContext']).toBe('fixture context block');
     }, 120_000);
+
+    // The concern learns its host from the envelope the dispatcher builds out of
+    // its own `--platform`, not from anything the host payload claims.
+    it('the platform a concern reads is the one the dispatcher was invoked with', () => {
+        const r = dispatch('claude', { 'notice-a': { effect: 'notification', args: ['echo-platform'] } });
+        expect((JSON.parse(r.stdout) as Record<string, string>)['systemMessage']).toBe('platform=claude');
+    }, 120_000);
 });
 
 describe('withUserNotice', () => {
-    it('leaves stdout untouched when there is nothing to say', () => {
-        expect(withUserNotice('claude', 'session_start', 'plain\n', '  ')).toBe('plain\n');
+    const EMISSION = '{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"from a warn"}}\n';
+
+    it('is the old output byte for byte when there is nothing to say', () => {
+        expect(withUserNotice('claude', 'session_start', 'plain\n', EMISSION, '  ')).toBe(`plain\n${EMISSION}`);
     });
 
-    it('merges into a JSON reply already on stdout', () => {
-        const out = withUserNotice('claude', 'stop', '{"hookSpecificOutput":{"hookEventName":"Stop","additionalContext":"x"}}\n', 'hi');
-        expect(JSON.parse(out)).toEqual({ hookSpecificOutput: { hookEventName: 'Stop', additionalContext: 'x' }, systemMessage: 'hi' });
+    it('merges context, an existing emission and a notice as structures', () => {
+        const out = withUserNotice('claude', 'session_start', 'plain context\n', EMISSION, 'hi');
+        expect(JSON.parse(out)).toEqual({
+            hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: 'from a warn\n\nplain context' },
+            systemMessage: 'hi',
+        });
+    });
+
+    it('appends to a systemMessage the emission already carries rather than replacing it', () => {
+        const out = withUserNotice('claude', 'stop', '', '{"systemMessage":"first"}\n', 'second');
+        expect(JSON.parse(out)).toEqual({ systemMessage: 'first\nsecond' });
+    });
+
+    it('never reinterprets an emission that is not one JSON object', () => {
+        expect(withUserNotice('claude', 'stop', '', 'not json\n', 'hi')).toBe('not json\n');
+        expect(withUserNotice('claude', 'stop', '', '[1]\n', 'hi')).toBe('[1]\n');
+    });
+
+    it('accepts plain context on session_start only', () => {
+        expect(withUserNotice('claude', 'stop', 'plain\n', '', 'hi')).toBe('plain\n');
     });
 
     it('drops the notice on a host without the field', () => {
-        expect(withUserNotice('cursor', 'session_start', '', 'hi')).toBe('');
+        expect(withUserNotice('cursor', 'session_start', '', '', 'hi')).toBe('');
     });
 });
