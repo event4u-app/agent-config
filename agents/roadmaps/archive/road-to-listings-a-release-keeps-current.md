@@ -124,7 +124,7 @@ yet are carried to
       read-only MCP server through `npx`, plus a context file of 15 lines or
       fewer that points at the full install. Not named `GEMINI.md`, which is a
       gitignored per-tool projection.
-      verify: `tests/scripts/listing_manifests.test.ts` asserts name, version,
+      verify: the check — `tests/scripts/listing_manifests.test.ts` asserts name, version,
       the pinned `mcp-server` argument and the context file's line cap.
 - [x] **3.2 Every plugin and extension manifest under the version gate (D8).**
       Add `.github/plugin/plugin.json` and `gemini-extension.json` to
@@ -143,13 +143,13 @@ yet are carried to
       `package.json`'s version, and names the full install in its description.
 - [x] **3.4 One square raster logo (D12).** Render `site/public/favicon.svg` to
       `assets/logo-400.png` at 400×400.
-      verify: `file assets/logo-400.png` reports `400 x 400`, and the image was
+      verify: the check — `file assets/logo-400.png` reports `400 x 400`, and the image was
       opened and inspected.
 - [x] **3.5 Make the pointer skill findable (D9).** Rewrite the install-pointer
       skill's description for what a person searches for (Claude Code, Cursor,
       GitHub Copilot, Gemini CLI); keep the shim honesty sentence. The source
       is `PLUGIN_POINTER_SKILL_BODY` in `src/scripts/condense.ts`.
-      verify: `task sync` and `task generate-tools` leave the projection
+      verify: the check — `task sync` and `task generate-tools` leave the projection
       byte-equal to that constant, and the skill linter reports the same seven
       findings on the shim as on `main` — this shim never passed the full-skill
       sections (it sits outside `--all`), and adding them would grow
@@ -163,12 +163,12 @@ yet are carried to
       topics file records it as considered and declined on 2026-10-16 because
       that plugin is deprecated, and E3 changes the Copilot plugin, not that
       one — same mechanism, no new evidence, so the earlier decision holds.
-      verify: `lint_topics_yaml` and `lint_positioning` pass with 17 topics.
+      verify: the check — `lint_topics_yaml` and `lint_positioning` pass with 17 topics.
 - [~] **4.2 Push it.** Needs the repo-admin secret (D7). Until then the
       weekly visibility-drift sweep on `main` reports the pending topic; this
       PR itself runs that check in advisory mode.
       <!-- deferred-resolution: carried-to=road-to-listings-the-owner-submits -->
-      verify: `gh repo view` lists `gemini-cli-extension`.
+      verify: the check — `gh repo view` lists `gemini-cli-extension`.
       **Resolution (AI council 2026-10-24, 2/2 anthropic + openai, no split):**
       criterion "push the new topic"; blocker `topic-push-secret`; options
       (A) carry to the follow-up, (B) keep this roadmap open, (C) restore to
@@ -215,7 +215,7 @@ changed upstream into a red.
       (D11). Not tracking rows: a target with no upstream yet would be reported
       `unread-never` on every run, and the ledger's own rule 2 opens a tracking
       row at submission.
-      verify: `adoption_status` still parses exactly the six tracking rows, and
+      verify: the check — `adoption_status` still parses exactly the six tracking rows, and
       the planned-targets table names all eleven targets.
 - [x] **6.2 Owner packets.** `docs/distribution/owner-packets.md` holds the
       field values for every Tier C form; no secret.

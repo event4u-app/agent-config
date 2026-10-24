@@ -83,7 +83,7 @@ the act. Each opens a ledger row `submitted`, and only a live read moves it on.
 
 - [ ] **4.1 Push the new topic.** Run the visibility sync once the
       secret exists.
-      verify: `gh repo view event4u-app/agent-config --json repositoryTopics`
+      verify: the check — `gh repo view event4u-app/agent-config --json repositoryTopics`
       lists `gemini-cli-extension`, and the Gemini gallery shows the
       extension within 48 hours (ledger row).
 
