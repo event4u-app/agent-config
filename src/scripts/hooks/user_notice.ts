@@ -28,6 +28,9 @@ import { write_target } from '../_lib/user_global_paths.js';
 /** The concern reply key a notification concern puts its user-facing text under. */
 export const USER_NOTICE_KEY = 'user_notice';
 
+/** The reply key naming this one notice, echoed into its receipt and never shown. */
+export const USER_NOTICE_ID_KEY = 'notice_id';
+
 /** Longest notice the dispatcher forwards, in Unicode code points; a notice is a few lines, never a document. */
 export const USER_NOTICE_MAX_CHARS = 1000;
 
@@ -43,7 +46,7 @@ export function hostShowsUserNotice(platform: unknown): boolean {
  * manifest order. One entry carries both, so the text that is emitted and the
  * concern that gets a receipt can never come apart.
  */
-export type NoticeBatch = Array<{ readonly concern: string; readonly text: string }>;
+export type NoticeBatch = Array<{ readonly concern: string; readonly text: string; readonly id: string }>;
 
 /**
  * Only a `notification` concern may address the user: no other effect was
@@ -59,18 +62,20 @@ export function collectUserNotice(
     const notice = reply[USER_NOTICE_KEY];
     if (concern['effect'] !== 'notification' || typeof notice !== 'string') return;
     const text = Array.from(clean(notice.trim())).slice(0, USER_NOTICE_MAX_CHARS).join('').trim();
-    if (text) batch.push({ concern: String(concern['name']), text });
+    const id = reply[USER_NOTICE_ID_KEY];
+    if (text) batch.push({ concern: String(concern['name']), text, id: typeof id === 'string' ? id.slice(0, 64) : '' });
 }
 
 /**
  * A delivery receipt: the dispatcher writes one per concern whose notice it
- * actually put into host output, naming the session. A concern that must not
- * count a notice as shown until it was handed to the host reads it on its next
- * run; anything the dispatcher dropped leaves no receipt, so the concern says
- * it again.
+ * actually put into host output, naming the session and the notice's own id.
+ * A concern that must not count a notice as shown until it was handed to the
+ * host reads it on its next run and matches the id it handed over; anything the
+ * dispatcher dropped leaves no receipt for that id, so the concern says it again.
  */
 export interface NoticeReceipt {
     readonly session_id: string;
+    readonly notice_id: string;
     readonly at: string;
 }
 
@@ -78,10 +83,10 @@ function receiptPath(concern: string): string {
     return write_target(`user-notice-${concern}.delivered`);
 }
 
-export function writeNoticeReceipts(concerns: readonly string[], sessionId: string): void {
-    for (const concern of new Set(concerns)) {
+export function writeNoticeReceipts(batch: NoticeBatch, sessionId: string): void {
+    for (const { concern, id } of batch) {
         try {
-            write_atomic(receiptPath(concern), JSON.stringify({ session_id: sessionId, at: new Date().toISOString() }));
+            write_atomic(receiptPath(concern), JSON.stringify({ session_id: sessionId, notice_id: id, at: new Date().toISOString() }));
         } catch {
             // no receipt → the concern repeats its notice, which is the safe direction
         }
@@ -91,8 +96,8 @@ export function writeNoticeReceipts(concerns: readonly string[], sessionId: stri
 export function readNoticeReceipt(concern: string): NoticeReceipt | null {
     try {
         const o = JSON.parse(fs.readFileSync(receiptPath(concern), 'utf-8')) as Record<string, unknown>;
-        return typeof o['session_id'] === 'string' && typeof o['at'] === 'string'
-            ? { session_id: o['session_id'], at: o['at'] }
+        return typeof o['session_id'] === 'string' && typeof o['notice_id'] === 'string' && typeof o['at'] === 'string'
+            ? { session_id: o['session_id'], notice_id: o['notice_id'], at: o['at'] }
             : null;
     } catch {
         return null;

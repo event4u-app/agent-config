@@ -32,6 +32,7 @@
  * It is fail-open on every path and returns 0 on every path, including an
  * unreadable state file, an unwritable state directory and a missing changelog.
  */
+import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -48,7 +49,7 @@ import { parse_version } from './_lib/version_order.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { is_replay_mode } from './hooks/state_io.js';
-import { hostShowsUserNotice, readNoticeReceipt, USER_NOTICE_KEY, type NoticeReceipt } from './hooks/user_notice.js';
+import { hostShowsUserNotice, readNoticeReceipt, USER_NOTICE_ID_KEY, USER_NOTICE_KEY, type NoticeReceipt } from './hooks/user_notice.js';
 
 export const CONCERN = 'update-notice';
 export const NOTICE_STATE_FILENAME = 'update-notice.json';
@@ -76,11 +77,13 @@ export interface NoticeState {
     readonly last_seen_installed: string | null;
     /**
      * A notice handed to the dispatcher's user channel and not yet confirmed:
-     * the session it was handed over in, and the installed version it reported.
-     * It becomes `last_seen_installed` only when the dispatcher's receipt names
-     * that session (`hooks/user_notice.ts`); until then the notice is due again.
+     * the session it was handed over in, the id it was handed over with, and the
+     * installed version it reported. It becomes `last_seen_installed` only when
+     * the dispatcher's receipt names that session AND that id
+     * (`hooks/user_notice.ts`) — an older receipt from the same session is a
+     * receipt for another notice. Until then the notice is due again.
      */
-    readonly pending?: { readonly session_id: string; readonly installed: string };
+    readonly pending?: { readonly session_id: string; readonly notice_id: string; readonly installed: string };
 }
 
 export function readNoticeState(statePath: string | null): NoticeState {
@@ -93,16 +96,19 @@ export function readNoticeState(statePath: string | null): NoticeState {
         const p = o['pending'] as Record<string, unknown> | null | undefined;
         const installed = str(p?.['installed']);
         const pending =
-            typeof p?.['session_id'] === 'string' && installed !== null ? { session_id: p['session_id'], installed } : undefined;
+            typeof p?.['session_id'] === 'string' && typeof p['notice_id'] === 'string' && installed !== null
+                ? { session_id: p['session_id'], notice_id: p['notice_id'], installed }
+                : undefined;
         return { staged: str(o['staged']), last_seen_installed: str(o['last_seen_installed']), ...(pending ? { pending } : {}) };
     } catch {
         return { staged: null, last_seen_installed: null };
     }
 }
 
-/** The state with a pending notice promoted, when the dispatcher's receipt names its session. */
+/** The state with a pending notice promoted, when the dispatcher's receipt names its session and its id. */
 export function confirmDelivered(state: NoticeState, receipt: NoticeReceipt | null): NoticeState {
-    if (state.pending === undefined || receipt === null || !receipt.session_id || receipt.session_id !== state.pending.session_id) return state;
+    const p = state.pending;
+    if (p === undefined || receipt === null || !receipt.notice_id || receipt.notice_id !== p.notice_id || receipt.session_id !== p.session_id) return state;
     return { staged: state.staged, last_seen_installed: state.pending.installed };
 }
 
@@ -227,13 +233,19 @@ export function runNotice(deps: NoticeDeps, apply = true): NoticeOutcome {
     }
 
     // Through the host, a notice counts as shown only once the dispatcher's
-    // receipt names this session; until then it stays pending and is said again.
+    // receipt names this session and this notice's id; until then it stays
+    // pending and is said again.
     if (deps.notice !== undefined) {
-        if (outcome.lines.length > 0) deps.notice.write(JSON.stringify({ [USER_NOTICE_KEY]: outcome.lines.join('\n') }));
+        const noticeId = randomUUID();
+        if (outcome.lines.length > 0) {
+            deps.notice.write(JSON.stringify({ [USER_NOTICE_KEY]: outcome.lines.join('\n'), [USER_NOTICE_ID_KEY]: noticeId }));
+        }
         writeNoticeState(deps.noticeStatePath, {
             staged: outcome.stage,
             last_seen_installed: state.last_seen_installed,
-            ...(outcome.lines.length > 0 && deps.sessionId ? { pending: { session_id: deps.sessionId, installed } } : {}),
+            ...(outcome.lines.length > 0 && deps.sessionId
+                ? { pending: { session_id: deps.sessionId, notice_id: noticeId, installed } }
+                : {}),
         });
         return outcome;
     }

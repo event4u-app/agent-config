@@ -199,7 +199,7 @@ export function composeStdout(
     sessionId: string,
 ): string {
     const out = withUserNotice(platform, event, context, emission.stdout, emission.exit === 0 ? notices.map((n) => n.text).join("\n") : "");
-    if (notices.length > 0 && out !== context + emission.stdout) writeNoticeReceipts(notices.map((n) => n.concern), sessionId);
+    if (notices.length > 0 && out !== context + emission.stdout) writeNoticeReceipts(notices, sessionId);
     return out;
 }
 

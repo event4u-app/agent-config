@@ -79,7 +79,7 @@ function receiptsIn(home: string): Record<string, string> {
     const out: Record<string, string> = {};
     if (!fs.existsSync(home)) return out;
     for (const f of fs.readdirSync(home)) {
-        if (f.endsWith('.delivered')) out[f] = (JSON.parse(fs.readFileSync(path.join(home, f), 'utf-8')) as { session_id: string }).session_id;
+        if (f.endsWith('.delivered')) out[f] = ((r: { session_id: string; notice_id: string }) => `${r.session_id}/${r.notice_id}`)(JSON.parse(fs.readFileSync(path.join(home, f), 'utf-8')));
     }
     return out;
 }
@@ -144,7 +144,7 @@ describe('the user channel through the dispatcher', () => {
     // The receipt is the only thing a concern may count a notice as shown by.
     it('a notice put into the output leaves a receipt naming the session; a dropped one leaves none', () => {
         const shown = dispatch('claude', { 'notice-a': { effect: 'notification' } });
-        expect(shown.receipts).toEqual({ 'user-notice-notice-a.delivered': 'user-notice-test' });
+        expect(shown.receipts).toEqual({ 'user-notice-notice-a.delivered': 'user-notice-test/fixture-id' });
         expect(dispatch('copilot', { 'notice-a': { effect: 'notification' } }).receipts).toEqual({});
         const refused = dispatch(
             'claude',
@@ -203,7 +203,7 @@ describe('collectUserNotice', () => {
         const clean = (t: string) => (t === 'secret' ? '   ' : t);
         collectUserNotice(batch, notification('erased'), { [USER_NOTICE_KEY]: 'secret' }, clean);
         collectUserNotice(batch, notification('kept'), { [USER_NOTICE_KEY]: 'visible' }, clean);
-        expect(batch).toEqual([{ concern: 'kept', text: 'visible' }]);
+        expect(batch).toEqual([{ concern: 'kept', text: 'visible', id: '' }]);
     });
 
     it('caps by code point and never splits a surrogate pair', () => {

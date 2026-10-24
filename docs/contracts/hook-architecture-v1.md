@@ -134,7 +134,7 @@ dropped and the output is what it would have been without it. The same holds
 when a field the merge would extend has the wrong type. For each concern whose
 notice is in the output, the dispatcher writes a receipt — evidence that the
 notice was put into the host's output, not that the user read it —
-`<user-global root>/user-notice-<concern>.delivered` (`{session_id, at}`); a
+`<user-global root>/user-notice-<concern>.delivered` (`{session_id, notice_id, at}`, the `notice_id` being whatever id the concern replied with, never shown); a
 dropped notice leaves none. A concern that must not count a notice as shown
 until the host received it reads that receipt (`update-notice` does).
 `effect: notification` permits a concern its own user-global bookkeeping — a

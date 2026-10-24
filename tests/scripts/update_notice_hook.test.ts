@@ -133,13 +133,13 @@ describe('3.1 — a session_start concern beside wrapper-freshness', () => {
         expect(err).toEqual([]);
         expect(out).toHaveLength(1);
         const reply = JSON.parse(out[0] as string) as Record<string, string>;
-        expect(Object.keys(reply)).toEqual([USER_NOTICE_KEY]);
+        expect(Object.keys(reply)).toEqual([USER_NOTICE_KEY, 'notice_id']);
         expect(reply[USER_NOTICE_KEY]).toContain('agent-config 2.0.0 is available (installed: 1.0.0).');
     });
 
     // Through the host the concern cannot see whether its reply reached the
     // user; the dispatcher's receipt can. Nothing counts as shown without one.
-    describe('a notice through the host counts as shown only on a receipt for its session', () => {
+    describe('a notice through the host counts as shown only on a receipt for its session and its id', () => {
         function hostDeps(root: string, sessionId: string, receipt: NoticeReceipt | null, out: string[]): NoticeDeps {
             return {
                 ...deps({ packageRoot: root, sessionId }),
@@ -154,56 +154,78 @@ describe('3.1 — a session_start concern beside wrapper-freshness', () => {
         }
         const statePath = (): string => path.join(tmp, 'state', 'update-notice.json');
         const now = (): string => new Date().toISOString();
+        const stale = (): string => new Date(Date.now() - 3 * 86_400_000).toISOString();
+        /** The id of the pending notice, i.e. the id a receipt for it would carry. */
+        const pendingId = (): string => readNoticeState(statePath()).pending?.notice_id ?? 'none';
 
         it('without a receipt the post-update line stays due and is said again next session', () => {
             const root = setupUpgraded();
             const first: string[] = [];
             noticeOncePerDay(hostDeps(root, 's1', null, first));
-            expect(first.join('')).toContain('agent-config is now 2.0.0 (was 1.0.0).');
+            const reply = JSON.parse(first.join('')) as Record<string, string>;
+            expect(reply[USER_NOTICE_KEY]).toContain('agent-config is now 2.0.0 (was 1.0.0).');
             expect(readNoticeState(statePath())).toEqual({
                 staged: null,
                 last_seen_installed: '1.0.0',
-                pending: { session_id: 's1', installed: '2.0.0' },
+                pending: { session_id: 's1', notice_id: reply['notice_id'], installed: '2.0.0' },
             });
             const second: string[] = [];
             noticeOncePerDay(hostDeps(root, 's2', null, second));
             expect(second.join('')).toContain('agent-config is now 2.0.0 (was 1.0.0).');
         });
 
-        it('a receipt for the pending session confirms it and throttles the rest of the day', () => {
+        it('a receipt for the pending session and id confirms it and throttles the rest of the day', () => {
             const root = setupUpgraded();
             noticeOncePerDay(hostDeps(root, 's1', null, []));
             const later: string[] = [];
-            expect(noticeOncePerDay(hostDeps(root, 's2', { session_id: 's1', at: now() }, later))).toBeNull();
+            const receipt = { session_id: 's1', notice_id: pendingId(), at: now() };
+            expect(noticeOncePerDay(hostDeps(root, 's2', receipt, later))).toBeNull();
             expect(later).toEqual([]);
             expect(readNoticeState(statePath())).toEqual({ staged: null, last_seen_installed: '2.0.0' });
         });
 
-        it('a receipt for another session confirms nothing', () => {
+        // A session that handed over two notices, the first shown and the second
+        // dropped, holds a receipt for the first only — the id tells them apart.
+        it('an older receipt from the same session confirms nothing about a newer notice', () => {
             const root = setupUpgraded();
             noticeOncePerDay(hostDeps(root, 's1', null, []));
-            const stale = new Date(Date.now() - 3 * 86_400_000).toISOString();
+            const olderId = pendingId();
+            noticeOncePerDay(hostDeps(root, 's1', null, []));
+            expect(pendingId()).not.toBe(olderId);
             const again: string[] = [];
-            noticeOncePerDay(hostDeps(root, 's2', { session_id: 'someone-else', at: stale }, again));
+            noticeOncePerDay(hostDeps(root, 's1', { session_id: 's1', notice_id: olderId, at: stale() }, again));
             expect(again.join('')).toContain('agent-config is now 2.0.0 (was 1.0.0).');
             expect(readNoticeState(statePath()).last_seen_installed).toBe('1.0.0');
         });
 
-        it('an empty session id is never pending and an empty receipt confirms nothing', () => {
-            const root = setupUpgraded();
-            noticeOncePerDay(hostDeps(root, '', null, []));
-            expect(readNoticeState(statePath()).pending).toBeUndefined();
-            writeNoticeState(statePath(), { staged: null, last_seen_installed: '1.0.0', pending: { session_id: 's1', installed: '2.0.0' } });
-            const again: string[] = [];
-            noticeOncePerDay(hostDeps(root, 's2', { session_id: '', at: now() }, again));
-            expect(again.join('')).toContain('agent-config is now 2.0.0 (was 1.0.0).');
-        });
-
-        it('a same-day receipt for another session does not throttle a notice still pending', () => {
+        it('a receipt for another session confirms nothing, even carrying the pending id', () => {
             const root = setupUpgraded();
             noticeOncePerDay(hostDeps(root, 's1', null, []));
             const again: string[] = [];
-            const out = noticeOncePerDay(hostDeps(root, 's2', { session_id: 'other', at: now() }, again));
+            noticeOncePerDay(hostDeps(root, 's2', { session_id: 'someone-else', notice_id: pendingId(), at: stale() }, again));
+            expect(again.join('')).toContain('agent-config is now 2.0.0 (was 1.0.0).');
+            expect(readNoticeState(statePath()).last_seen_installed).toBe('1.0.0');
+        });
+
+        it('an empty session id is never pending and a receipt without an id confirms nothing', () => {
+            const root = setupUpgraded();
+            noticeOncePerDay(hostDeps(root, '', null, []));
+            expect(readNoticeState(statePath()).pending).toBeUndefined();
+            writeNoticeState(statePath(), {
+                staged: null,
+                last_seen_installed: '1.0.0',
+                pending: { session_id: 's1', notice_id: '', installed: '2.0.0' },
+            });
+            const again: string[] = [];
+            noticeOncePerDay(hostDeps(root, 's2', { session_id: 's1', notice_id: '', at: now() }, again));
+            expect(again.join('')).toContain('agent-config is now 2.0.0 (was 1.0.0).');
+        });
+
+        it('a same-day receipt for another notice does not throttle a notice still pending', () => {
+            const root = setupUpgraded();
+            noticeOncePerDay(hostDeps(root, 's1', null, []));
+            const again: string[] = [];
+            const out = noticeOncePerDay(hostDeps(root, 's2', { session_id: 'other', notice_id: 'other-id', at: now() }, again));
             expect(out).not.toBeNull();
             expect(again.join('')).toContain('agent-config is now 2.0.0 (was 1.0.0).');
             expect(readNoticeState(statePath()).last_seen_installed).toBe('1.0.0');
@@ -212,9 +234,8 @@ describe('3.1 — a session_start concern beside wrapper-freshness', () => {
         it('the confirmation takes effect on the next decision too, not only on the throttle path', () => {
             const root = setupUpgraded();
             noticeOncePerDay(hostDeps(root, 's1', null, []));
-            const stale = new Date(Date.now() - 3 * 86_400_000).toISOString();
             const next: string[] = [];
-            noticeOncePerDay(hostDeps(root, 's2', { session_id: 's1', at: stale }, next));
+            noticeOncePerDay(hostDeps(root, 's2', { session_id: 's1', notice_id: pendingId(), at: stale() }, next));
             expect(next.join('')).not.toContain('agent-config is now');
         });
     });

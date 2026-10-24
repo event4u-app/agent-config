@@ -12,7 +12,7 @@ try {
 } catch {
     // ignore — draining is best-effort
 }
-let reply: Record<string, string> = { user_notice: 'fixture notice for the user' };
+let reply: Record<string, string> = { user_notice: 'fixture notice for the user', notice_id: 'fixture-id' };
 if (process.argv.includes('context')) reply = { context: 'fixture context block' };
 if (process.argv.includes('long')) reply = { user_notice: 'x'.repeat(1500) };
 if (process.argv.includes('echo-platform')) {
