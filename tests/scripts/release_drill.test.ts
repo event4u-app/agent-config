@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 
 import { describe, expect, it } from 'vitest';
 
+import { listingManifestPaths } from '../../src/scripts/_lib/listing_manifests.js';
 import { SETTINGS_SURFACE_FIXTURE } from '../../src/scripts/_lib/release_settings_surface.js';
 import { run_scenario, SCENARIOS } from '../../src/scripts/release_drill.js';
 import {
@@ -12,6 +13,7 @@ import {
     PACKAGE_JSON,
     PACKAGE_LOCK_JSON,
     PROJECT_TEMPLATE,
+    REPO_ROOT,
 } from '../../src/scripts/release_env.js';
 
 // The release step machinery (execute()) ran nowhere except live until
@@ -43,6 +45,7 @@ describe('release drill — execute() against the simulated world', () => {
             MARKETPLACE_JSON,
             AUGMENT_PLUGIN_JSON,
             AUGMENT_MARKETPLACE_JSON,
+            ...listingManifestPaths(REPO_ROOT),
             PROJECT_TEMPLATE,
             SETTINGS_SURFACE_FIXTURE,
         ].filter((f) => fs.existsSync(f));

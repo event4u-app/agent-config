@@ -5,7 +5,11 @@ review_by: 2026-12-24
 
 # Stub: road to bus-factor external actions
 
-> **Arrivals:** 2 — latest `inbox-2026-10-t` (2026-10-16): a round on this
+> **Arrivals:** 3 — latest `inbox-2026-10-ad` (2026-10-24): an owner request to
+> list the package everywhere an agent can. The registry publish leaves this
+> stub (it becomes a CI step in `road-to-listings-a-release-keeps-current`); the
+> awesome-list attempt 1c moves to `later/road-to-listings-the-owner-submits`
+> behind one owner go. The count before it read: 2 — latest `inbox-2026-10-t` (2026-10-16): a round on this
 > package's distribution surfaces re-reached all four transferred items (the
 > registry publish, the Packagist claim, the two directory forms and the
 > awesome-list resubmission) and recorded them here rather than planning them,

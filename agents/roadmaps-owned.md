@@ -99,6 +99,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-kernel-question-triangle | later | later | Road to the kernel question-triangle amendment — one line, human-applied |
 | road-to-language-and-tone-enforcer-claim | later | later | Road to the language-and-tone enforcer claim |
 | road-to-learning-you-can-see-carried | later | later | Every step road-to-learning-you-can-see deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-listings-the-owner-submits | later | later | Every target in the parent's register has a ledger row that a live read moved to `accepted`, or a recorded … |
 | road-to-live-app-verdict | later | later | Live-app Playwright as the canonical verdict source (verify-repair-loop) |
 | road-to-mcp-full-power | later | later | MCP Full Power — Glama leverage, coverage expansion, execution bridge |
 | road-to-merge-surface-zero | later | later | A correct PR cannot go red or conflicted because someone else merged first. |

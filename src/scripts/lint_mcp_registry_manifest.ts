@@ -27,6 +27,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
+import { REGISTRY_DESCRIPTION_MAX, SERVER_SCHEMA_URL } from './build_mcp_registry_manifest.js';
 
 const _HERE = path.resolve(fileURLToPath(import.meta.url));
 // ROOT = Path(__file__).resolve().parents[2]
@@ -286,6 +287,37 @@ function _validateSchema(data: Json, schema: JsonObject): SchemaError | null {
     return errors.length ? errors[0]! : null;
 }
 
+/**
+ * What the live registry rejects or mis-installs, checked before a release
+ * publishes it: the schema pin, the 100-character description cap, and the
+ * `mcp-server` argument without which a client starts the bare CLI.
+ */
+export function checkRegistryPayload(server: JsonObject): string | null {
+    if (server['$schema'] !== SERVER_SCHEMA_URL) {
+        return `$schema must be ${SERVER_SCHEMA_URL} (got ${String(server['$schema'])})`;
+    }
+    const description = server['description'];
+    if (typeof description !== 'string' || description.length === 0) {
+        return 'description is missing — set package.json agentConfig.registryDescription';
+    }
+    if (description.length > REGISTRY_DESCRIPTION_MAX) {
+        return `description is ${description.length} characters; the registry accepts at most ${REGISTRY_DESCRIPTION_MAX}`;
+    }
+    const packages = server['packages'];
+    const first = Array.isArray(packages) ? (packages[0] as JsonObject | undefined) : undefined;
+    const args = first?.['packageArguments'];
+    const startsServer =
+        Array.isArray(args) &&
+        args.some((a) => {
+            const arg = a as JsonObject;
+            return arg['type'] === 'positional' && arg['value'] === 'mcp-server';
+        });
+    if (!startsServer) {
+        return 'the npm package entry has no positional `mcp-server` argument, so a client would start the CLI';
+    }
+    return null;
+}
+
 function main(argv: readonly string[]): number {
     let args: Args;
     try {
@@ -368,6 +400,10 @@ function main(argv: readonly string[]): number {
             `server.json name (${String(server_payload['name'])}) != package.json mcpName ` +
                 `(${String(pkg_for_gate['mcpName'])})`,
         );
+    }
+    const registryProblem = checkRegistryPayload(server_payload);
+    if (registryProblem !== null) {
+        return _fail(`server.json: ${registryProblem}`);
     }
 
     if (!args.quiet) {

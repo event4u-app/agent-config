@@ -57,6 +57,20 @@ reads and reports `answered-closed`, `answered-merged`, `stalled`, `open`,
 `listed`, `not-listed` or `unreachable` per row. Without the flag it reads
 nothing, reports from this sheet only, and says so on stderr.
 
+A submission is done when the entry is live, not when it went out. So the same
+live read also names an **action** wherever the sheet and the upstream disagree
+in a way that needs a person: `sheet-behind` (a `pending` or `submitted` row
+whose upstream closed, merged or is now listed), `needs-response` (an open pull
+request with changes requested), `listing-lost` (an `accepted` listing that now
+reads `not-listed`) and `listing-stale` (the registry's latest version lags
+`package.json`). `--fail-on-action` exits 2 on any of them, and
+`release-adjacent-health.yml` runs it daily on `main`, so a drifted row turns
+red within a day without anyone opening a session. One unreachable read is
+never an action — an outage does not red the watcher — but an `accepted` or
+`submitted` row whose `Last read` is older than the re-read threshold while its
+upstream stays unreachable is `read-overdue`: row 3, behind a bot check, reds
+once a month until someone reads it through a headless browser.
+
 ## Tracking rows
 
 | # | Registry | Submission shape | Status | Upstream kind | Upstream ref | Last read | Date | Maintainer notes |
@@ -65,8 +79,30 @@ nothing, reports from this sheet only, and says so on stderr.
 | 1b | `punkpeye/awesome-mcp-servers` — attempt 2 | One-line entry; PR via `scripts/mcp_registry_submit.sh` | `rejected` | `github-pr` | `punkpeye/awesome-mcp-servers#9607` | 2026-10-17 | 2026-07-07 | Closed unmerged 2026-09-07 for inactivity ("The author has not responded or updated the PR since July 7, 2026"). Outstanding at closing: Glama listing badge and a permitted language emoji tag after the link. **This row read `submitted`, noted as still waiting on review, for 39 days after the close**; corrected 2026-10-16 from a live `gh pr view` (`CLOSED`, `closedAt: 2026-09-07`, `mergedAt: null`). Re-read 2026-10-17: unchanged. |
 | 2 | `mcp.so` | Directory form submission (web form, no programmatic API) | `accepted` | `listing-page` | <https://mcp.so/server/agent-config/event4u-app> | 2026-10-17 | 2026-06 | Server page live: HTTP 200, title "@event4u/agent Config MCP Server", links `event4u-app/agent-config`. `registries.md` recorded this form as submitted (maintainer-confirmed 2026-06) while this sheet said `pending`; the live page settles it. Re-read 2026-10-17: the ref now redirects (HTTP 301) to <https://mcp.so/servers/agent-config>, which answers HTTP 200 with the same title and links `event4u-app/agent-config`. |
 | 3 | `mcpservers.org` | Directory form submission (web form) | `accepted` | `listing-page` | <https://mcpservers.org/servers/event4u-app/agent-config> | 2026-10-17 | 2026-06 | Listed. Read 2026-10-17 with a headless Chromium (Playwright): the row's own URL answered HTTP 200, title "event4u Agent Config MCP Server | Awesome MCP Servers", page filed under Development and linking GitHub. A plain `curl` gets HTTP 403 from the site's Cloudflare bot check (2026-10-16 and 2026-10-17, any user agent), and the site root stays behind the challenge even in the headless browser — so `adoption_status --check-upstream` reports this row `unreachable`, and that is the curl route failing, not the listing. `registries.md` had recorded the form as submitted (maintainer-confirmed 2026-06) while this sheet said `pending`; the browser read settles it. |
-| 4 | Official MCP Registry (`registry.modelcontextprotocol.io`) | `server.json` publish via `mcp-publisher` CLI (GitHub-auth'd) | `pending` | `registry-query` | <https://registry.modelcontextprotocol.io/v0/servers?search=io.github.event4u-app> | 2026-10-17 | — | Not published: the 2026-10-16 query, and again the 2026-10-17 one, for `io.github.event4u-app` returned `"count":0`. Paperwork complete 2026-07-27: `mcpName` in package.json, `mcp-name:` README marker, `dist/mcp/server.json` emitted by `build:mcp-manifest`, version- and name-equality gated in `lint_mcp_registry_manifest`. **Blocker:** the publish needs the maintainer's interactive GitHub login. The registry's search answers slowly (15 s on 2026-10-17); `adoption_status` waited 20 s and could report the row `unreachable`, so its `curl` wait is now 45 s. |
+| 4 | Official MCP Registry (`registry.modelcontextprotocol.io`) | `server.json` publish via `mcp-publisher` CLI (GitHub-auth'd) | `pending` | `registry-query` | <https://registry.modelcontextprotocol.io/v0/servers?search=io.github.event4u-app> | 2026-10-17 | — | Not published: the 2026-10-16 query, and again the 2026-10-17 one, for `io.github.event4u-app` returned `"count":0`. Paperwork complete 2026-07-27: `mcpName` in package.json, `mcp-name:` README marker, `dist/mcp/server.json` emitted by `build:mcp-manifest`, version- and name-equality gated in `lint_mcp_registry_manifest`. **Route (2026-10-24):** CI-published on every plain `X.Y.Z` release by the `publish-mcp-registry` job in `publish-npm.yml` (`mcp-publisher login github-oidc`, no secret); the earlier blocker — an interactive maintainer login — no longer applies. The row stays `pending` until a live read after that release returns a count above 0. The registry's search answers slowly (15 s on 2026-10-17); `adoption_status` waited 20 s and could report the row `unreachable`, so its `curl` wait is now 45 s. |
 | 5 | `glama.ai` | Server page; score badge used by the awesome-list entry | `accepted` | `listing-page` | <https://glama.ai/mcp/servers/event4u-app/agent-config> | 2026-10-17 | 2026-06-08 | Server page live: HTTP 200, title "@event4u/agent-config by event4u-app". Moved here from `registries.md`, which recorded it listed on 2026-06-08. Re-read 2026-10-17: HTTP 200. |
+
+## Planned targets
+
+Targets this package can hold and has not submitted to yet, from
+`road-to-listings-a-release-keeps-current` (2026-10-24). A target gets a
+tracking row above only when it is submitted (rule 2 below) — until then it has
+no upstream to read, and a row here would be reported unread forever. Tier A is
+CI on release, Tier B is the agent after one owner go per named batch, Tier C is
+the owner, from [`owner-packets.md`](owner-packets.md).
+
+| Target | Tier | Route | Precondition |
+|---|---|---|---|
+| Gemini CLI Extensions gallery | A | root `gemini-extension.json` + repository topic `gemini-cli-extension`; daily crawl, no form | the topic is pushed (needs the repo-admin secret) |
+| `punkpeye/awesome-mcp-servers` — attempt 1c | B | PR, title ending `🤖🤖🤖` (the list's agent fast-track); becomes row `1c` | Glama badge renders a grade; owner go |
+| the Copilot CLI's built-in default plugin list | B | external-plugin issue form: repo, path `.github/plugin`, release tag, 40-char SHA | the discovery manifest is in a release; a clean Copilot install loads it; owner go |
+| `docker/mcp-registry` | B | PR adding `servers/agent-config/` built from `internal/glama/Dockerfile` | owner go |
+| Cline MCP Marketplace | B | issue, `mcp-server-submission` template, `assets/logo-400.png` | owner go |
+| Cursor Marketplace | C | `cursor.com/marketplace/publish`, manual review | a Cursor manifest of the same discovery shape exists |
+| agentskill.sh | C | web "Analyze & Import" with the repo URL | — |
+| `hesreallyhim/awesome-claude-code` | C | web issue form; the list accepts human submitters only | — |
+| GitHub MCP Registry | C | read after the official registry lists the package; email request if absent | row 4 `accepted` |
+| Claude community marketplace | gated | Console form | the Claude plugin stops being a shim — see below |
 
 Two attempts at the awesome list exist, 1a and 1b. Neither was declined on its
 content; both closed on upstream listing requirements (a Glama quality score,
@@ -131,30 +167,24 @@ The live read shows the listing exists. Nothing to submit.
 A headless-browser read on 2026-10-17 shows the listing exists. Nothing to
 submit.
 
-### Row 4 — Official MCP Registry — pending
+### Row 4 — Official MCP Registry — no owner act
 
-From a clean checkout of `main` at the released version:
+Published by CI on release (see row 4). The only remaining act is the live read
+after the first release that carries the `publish-mcp-registry` job; until that
+read, the row stays `pending`.
 
-```bash
-npm run build:mcp-manifest
-cd dist/mcp
-mcp-publisher login github
-mcp-publisher publish
-```
+## Claude plugin directories — gated, not a form
 
-`mcp-publisher publish` reads `./server.json` by default; confirm with
-`mcp-publisher publish --help` before running. Afterwards the
-`registry-query` URL in row 4 should return a count above 0.
-
-## The official plugin directory — gated, not a form
-
-The official Claude Code plugin directory is **not** a pending row, because the
-route is not open: `.claude-plugin/marketplace.json:8` describes the listing as
-a bootstrap shim, "**DEPRECATED as a content channel**", whose hooks do nothing
-without a separate npm install. A directory entry for a plugin that does not
-function on its own is not something to submit. Whether the marketplace
-listing should stop being a shim is an open product question about what the
-plugin is; this ledger records the gate and proposes no change to it.
+Two routes exist and they differ. The **official** Claude Code plugin directory
+takes no submissions at all. The **community** marketplace does take individual
+submissions through a Console form — so the route is open, and what keeps it
+from being a pending row is the plugin itself: `.claude-plugin/marketplace.json:8`
+describes the listing as a bootstrap shim, "**DEPRECATED as a content
+channel**", whose hooks do nothing without a separate npm install. A directory
+entry for a plugin that does not function on its own is not something to
+submit. Whether the Claude plugin should become a discovery plugin — as the
+Copilot manifest did on 2026-10-24 — is an open product question; this ledger
+records the gate and proposes no change to it.
 
 ## Adoption-tracking signal
 
