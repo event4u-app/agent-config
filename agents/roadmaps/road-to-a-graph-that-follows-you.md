@@ -177,7 +177,7 @@ plan AC improvements automatically when a source repository updates.
       tool. They read the index only, never a project graph JSON.
       verify: a fixture estate of three projects answers "who uses vitest" with the right
       two; a spy asserts no graph JSON is opened.
-- [ ] **5.4 Estate map page.** `code-graph map --estate` writes one page under the
+- [x] **5.4 Estate map page.** `code-graph map --estate` writes one page under the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/cli.ts -->
       user-global home: projects as nodes, `package` edges solid, guesses dashed. Refused
       when the output path is inside a git work tree.
       verify: render check via `map_verify`; a test asserts the in-repo refusal.

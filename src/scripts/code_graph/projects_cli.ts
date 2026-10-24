@@ -9,12 +9,16 @@
  *   projects remove <id|name|path>      drop one entry and its user-global graph homes
  *   projects prune                      drop the flagged entries
  *   projects index on|off|status        the estate index switch (council O1, default off)
+ *   projects budget [MB]                show or set the graph-home budget (default 2048)
+ *   projects pin|unpin <id|name|path>   keep a project's graph homes out of eviction
+ *   projects evict                      evict least recently queried homes down to the budget
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { findProjects, type ProjectEntry, readRegistry, recordProject, updateRegistry } from '../_lib/project_registry.js';
 import { dropProjectRows, indexAfterRefresh, indexPath } from './estate_index.js';
+import { enforceBudget, homeUsage } from './graph_budget.js';
 import { graphHome, graphsRoot } from './graph_home.js';
 import type { CodeGraph } from './types.js';
 
@@ -43,6 +47,7 @@ export function registerUse(root: string, graph: CodeGraph | null, commit: strin
             ...(home.kind === 'global' ? { usedHome: home.dir } : {}),
         });
         indexAfterRefresh(id, fs.realpathSync(root), home.cachePath, graph);
+        if (home.kind === 'global') enforceBudget(home.dir);
         return id;
     } catch {
         return null;
@@ -164,6 +169,58 @@ function cmdIndex(action: string | undefined): number {
     return 0;
 }
 
+function one(ref: string | undefined, verb: string): [string, ProjectEntry] | null {
+    if (!ref) {
+        process.stderr.write(`usage: code-graph projects ${verb} <id|name|path>\n`);
+        return null;
+    }
+    const hits = findProjects(readRegistry(), ref);
+    if (hits.length !== 1) {
+        process.stderr.write(`code-graph: '${ref}' matches ${hits.length} registered projects — use an id from \`projects list\`\n`);
+        return null;
+    }
+    return hits[0] as [string, ProjectEntry];
+}
+
+function cmdPin(ref: string | undefined, pinned: boolean): number {
+    const hit = one(ref, pinned ? 'pin' : 'unpin');
+    if (!hit) return 1;
+    updateRegistry((reg) => {
+        const e = reg.projects[hit[0]];
+        if (e) e.pinned = pinned;
+    });
+    process.stdout.write(`${pinned ? 'pinned' : 'unpinned'} ${hit[0]}  ${hit[1].root}\n`);
+    return 0;
+}
+
+function cmdBudget(value: string | undefined): number {
+    if (value !== undefined) {
+        const mb = Number(value);
+        if (!Number.isFinite(mb) || mb <= 0) {
+            process.stderr.write('usage: code-graph projects budget [MB] — a positive number\n');
+            return 2;
+        }
+        updateRegistry((reg) => {
+            reg.budget_mb = mb;
+        });
+    }
+    const used = homeUsage().reduce((n, h) => n + h.bytes, 0);
+    process.stdout.write(`graph-home budget: ${readRegistry().budget_mb} MB · in use ${(used / (1024 * 1024)).toFixed(1)} MB under ${graphsRoot()}\n`);
+    return 0;
+}
+
+function cmdEvict(): number {
+    const r = enforceBudget();
+    for (const h of r.evicted) process.stdout.write(`evicted ${h.dir} (${(h.bytes / (1024 * 1024)).toFixed(1)} MB)\n`);
+    const over = r.total > r.budget;
+    process.stdout.write(
+        `${r.evicted.length} evicted · ${(r.total / (1024 * 1024)).toFixed(1)} of ${(r.budget / (1024 * 1024)).toFixed(1)} MB` +
+            (over ? ' — still over: the rest is pinned or lock-held' : '') +
+            '\n',
+    );
+    return 0;
+}
+
 export function projectsMain(argv: string[]): number {
     const [verb, ...rest] = argv;
     const positional = rest.filter((a) => !a.startsWith('--'));
@@ -172,6 +229,9 @@ export function projectsMain(argv: string[]): number {
     if (verb === 'remove') return cmdRemove(positional[0]);
     if (verb === 'prune') return cmdPrune();
     if (verb === 'index') return cmdIndex(positional[0]);
-    process.stderr.write('usage: code-graph projects list|add <path>|remove <id|name|path>|prune|index on|off|status\n');
+    if (verb === 'budget') return cmdBudget(positional[0]);
+    if (verb === 'pin' || verb === 'unpin') return cmdPin(positional[0], verb === 'pin');
+    if (verb === 'evict') return cmdEvict();
+    process.stderr.write('usage: code-graph projects list|add|remove|prune|index|budget|pin|unpin|evict\n');
     return 2;
 }

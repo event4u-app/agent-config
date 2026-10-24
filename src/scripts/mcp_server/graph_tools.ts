@@ -46,6 +46,7 @@ import { detectSources, graphState, pickSource } from '../code_graph/detect.js';
 import { graphHome } from '../code_graph/graph_home.js';
 import { advisoryImpact, whereUsed } from '../code_graph/estate_cli.js';
 import { openEstate } from '../code_graph/estate_index.js';
+import { touchHome } from '../code_graph/graph_budget.js';
 import { resolveProjectRef } from '../code_graph/project_ref.js';
 import { readRegistry } from '../_lib/project_registry.js';
 import { resolvePath } from './path_util.js';
@@ -121,6 +122,7 @@ function withGraph<T extends Record<string, unknown>>(
 ): Record<string, unknown> {
     const picked = pickSource(detectSources(root, graphHome(root).cachePath));
     if (!picked || picked.kind === 'scip') return noGraph(root);
+    touchHome(root);
     const g = loadGraph(picked.path, `${picked.kind}:${shown(root, picked.path)}`);
     try {
         const out = fn(g);

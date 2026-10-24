@@ -102,6 +102,7 @@ import { graphHome } from './graph_home.js';
 import { suggestVerb } from './intent.js';
 import { estateMain } from './estate_cli.js';
 import { estateMapMain } from './estate_map.js';
+import { touchHome } from './graph_budget.js';
 import { resolveProjectRef } from './project_ref.js';
 import { projectsMain, registerUse } from './projects_cli.js';
 import { buildMap, graphGeneration, mapGeneration, recordOutcome } from './map.js';
@@ -343,6 +344,7 @@ function resolveGraph(argv: string[]): { g: LoadedGraph; note: string } | { err:
     if (!picked) return { err: 'no code-graph source found — run `code_graph build` or ship a graph.json' };
     if (picked.kind === 'scip') return { err: `${picked.note ?? 'SCIP detected'} — run \`code-graph build\` to merge it into the native graph` };
     const staleNote = picked.stale ? ` ⚠ index is ${picked.commits_behind ?? 'N'} commit(s) behind — rebuild before trusting` : '';
+    touchHome(root);
     return { g: loadGraph(picked.path, `${picked.kind}:${shown(root, picked.path)}`), note: staleNote };
 }
 
