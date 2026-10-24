@@ -169,7 +169,9 @@ delivery. The earlier stage runs under ADR-288 Amendment 1 — *"a door invoked 
 a non-terminal stage of a composed invocation stops at `committed`; the terminal
 stage owns publication"* — so it leaves local commits and no PR, and this run
 pushes, opens or updates the PR and settles CI once for both. The order is
-decided by [`invocation-plan`](../../contexts/execution/invocation-plan.md).
+decided by [`invocation-plan`](../../contexts/execution/invocation-plan.md):
+pipe the stages as JSON into `./scripts-run src/scripts/invocation_plan` and
+follow the order it prints (`--done <ids>` re-plans after an amendment).
 
 The **five — and only five — live halt conditions** (exhaustive; nothing else
 stops the run):
