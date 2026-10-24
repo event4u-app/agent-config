@@ -81,7 +81,7 @@ the bench harnesses and `pricing.yaml`.
   rows in #2588. Left: the two free-hands blocker `Status:` lines still say "council 2/2 chose …
   applied as the default under the run's delegation"; they are rewritten to name the owner
   decision and its date. Built code stays dormant (no route configured, no default).
-  verify: `grep -c "the owner chose" agents/roadmaps/road-to-free-hands-a-paid-head-checks.md` -> /^2$/
+  verify: `grep -c "the owner chose" agents/roadmaps/archive/road-to-free-hands-a-paid-head-checks.md` -> /^2$/
       Done 2026-10-23: both free-hands blocker `Status:` lines name the owner decisions O2/O3 of 2026-10-23; A7, A9, A10, D11 were already owner rows in #2588.
 - [x] **1.2 Revert the 2.5 ship-on edit (D2a).** `omit_project_instructions` off on `ac-worker` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/bench-drift.yml -->
   and `ac-researcher` until 2.3 lands; cold-start 2.5 back to open with the reason.
