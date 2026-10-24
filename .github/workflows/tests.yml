@@ -532,10 +532,11 @@ jobs:
         # discovered as a surprise when someone tries to arm the ceiling.
         if: always()
         # continue-on-error, deliberately: this step REPORTS, it does not gate. A
-        # bench run that failed before writing leaves no store, and the predicate
-        # correctly exits 1 on a store it cannot read (an empty store must not
-        # pass as "no readings yet"). That is the right behaviour for the
-        # predicate and the wrong reason to red this job.
+        # bench run that failed before writing leaves no store, which the
+        # predicate reports as "not measured yet" and exits 0 on (D46); the bench
+        # step above is what fails the job in that case. A store that exists but
+        # is unreadable, malformed or empty still exits 1, which is the right
+        # behaviour for the predicate and the wrong reason to red this job.
         continue-on-error: true
         run: ./scripts-run src/scripts/check_composite_arming --store "$RUNNER_TEMP/composite-reading.jsonl"
 

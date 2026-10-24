@@ -681,61 +681,7 @@ waiver has no approver, so it is refused. That is the fail-closed state.
 Self-test 28/29. The one red case is the clean baseline, which needs both the
 owner's answer and the attested renewal. The renewal is not made here (D38).
 
-`node agents/evidence/analysis/gate-ledger-reconcile.mjs --aspects`:
-
-| Row | Check | Recorded | Mode | Blocking branches | Non-blocking branches | Derived | Verdict |
-|---|---|---|---|---|---|---|---|
-| R1.a | `check_gate_completeness` | invariant | default | c1-ratchet-regressed, c1-ratchet-stale, c1-ratchet-unbaselined | — | invariant | derived |
-| R1.b | `check_gate_completeness` | invariant | default | c1-ledger-fail-malformed, c1-malformed | — | invariant | derived |
-| R2.a | `lint_ticked_unmet_criteria` | invariant | default | c2-duplicate-historical, c2-hit, c2-stale-historical | — | invariant | derived |
-| R2.b | `lint_ticked_unmet_criteria` | invariant | default | c2-selftest | — | invariant | derived |
-| R3.a | `check_rule_invariants` | invariant | default | c3-missing-file, c3-missing-string | — | invariant | derived |
-| R3.b | `check_rule_invariants` | invariant | default | c3-selftest-undetected | — | invariant | derived |
-| R4.a | `check_augment_description_cap` | invariant | default | c4-over-cap | — | invariant | derived |
-| R5.a | `check_trigger_evals` | invariant | default | c6-last-eval-missing, c6-last-eval-stale | — | invariant | derived |
-| R5.b | `check_trigger_evals` | invariant | default | c6-unreadable-json, c6-queries-empty, c6-query-no-q, c6-query-trigger-type, c6-split-list-empty, c6-split-item-empty, c6-no-shape, c6-one-class | — | invariant | derived |
-| R6.a | `lint_subagent_determinism` | invariant | default | c5-no-frontmatter, c5-schema-version, c5-visible, c5-tools-dupes, c5-name-stem, c5-name-dup | — | invariant | derived |
-| R7.a | `lint_rule_enforcement_declaration` | invariant | default | c7-undeclared-new, c7-gap-not-in-body, c7-baseline-stale, c7-baseline-shrink | — | invariant | derived |
-| R7.b | `lint_rule_enforcement_declaration` | invariant | default | c7-selftest | — | invariant | derived |
-| R8.a | `check_token_quality_golden` | invariant | default | c8-corpus-id, c8-id-format, c8-id-duplicate, c8-rules-empty, c8-rule-unknown, c8-nofire-kernel, c8-nofire-fires, c8-tag-not-fired, c8-scenario, c8-prompt, c8-label-status, c8-labelled-todo-rubric, c8-labelled-no-anchor | — | invariant | derived |
-| R8.b | `check_token_quality_golden` | observation | default | — | c8-uncovered-warn, c8-missing-scenario-warn, c8-scaffold-notice | observation | derived |
-| R8.c | `check_token_quality_golden` | invariant | --require-complete | c8-require-complete | — | invariant | derived |
-| R9.a | `check_council_layout` | invariant | default | c9-root-stray, c9-noncanonical | — | invariant | derived |
-| R10.a | `check_knowledge_cards` | invariant | default | c10-C1-size | — | invariant | derived |
-| R10.b | `check_knowledge_cards` | invariant | default | c10-C2-pointer | — | invariant | derived |
-| R10.c | `check_knowledge_cards` | invariant | default | c10-C3-local | — | invariant | derived |
-| R10.d | `check_knowledge_cards` | invariant | --check-urls | c10-C3-url-status, c10-C3-url-unreachable | — | invariant | derived |
-| R10.e | `check_knowledge_cards` | invariant | default | c10-C4-trust, c10-C4-type-wrong, c10-C4-type-missing | — | invariant | derived |
-| R10.f | `check_knowledge_cards` | invariant | default | c10-C5-ancestry, c10-C5-span | — | invariant | derived |
-| R10.g | `check_knowledge_cards` | invariant | --strict | c10-C6-source | — | invariant | derived |
-| R10.h | `check_knowledge_cards` | observation | default | — | c10-freshness-warn | observation | derived |
-| R10.i | `check_knowledge_cards` | invariant | --global | c10-G1-tier-missing, c10-G1-tier-invalid | — | invariant | derived |
-| R10.k | `check_knowledge_cards` | invariant | --global | c10-G2-no-footer, c10-G2-field | — | invariant | derived |
-| R10.l | `check_knowledge_cards` | invariant | --global | c10-G3-redaction | — | invariant | derived |
-| R10.m | `check_knowledge_cards` | invariant | --global | c10-G4-sens-missing, c10-G4-sens-invalid | — | invariant | derived |
-| R10.n | `check_knowledge_cards` | invariant | --global | c10-G5-field | — | invariant | derived |
-| R10.o | `check_knowledge_cards` | invariant | --global | c10-G6-prohibited | — | invariant | derived |
-| R10.j | `check_knowledge_cards` | invariant | default | c10-E1-required | — | invariant | derived |
-| R11.a | `check_public_links` | invariant | default | c11-target-not-found | — | invariant | derived |
-| R11.b | `check_public_links` | invariant | default | c11-target-no-stability | — | invariant | derived |
-| R11.c | `check_public_links` | invariant | default | c11-experimental | — | invariant | derived |
-| R11.d | `check_public_links` | invariant | default | c11-self-no-stability | — | invariant | derived |
-| R11.e | `check_public_links` | observation | default | — | c11-beta-marker | observation | derived |
-| R11.f | `check_public_links` | invariant | --strict | c11-beta-marker | — | invariant | derived |
-| R11.g | `check_public_links` | invariant | default | c11-contexts-link | — | invariant | derived |
-| R12.a | `lint_agents_layout` | invariant | default | c12-flat-file, c12-unknown-dir | — | invariant | derived |
-| R12.c | `lint_agents_layout` | observation | default | — | c12-consumer-warning | observation | derived |
-| R12.d | `lint_agents_layout` | invariant | --strict | c12-consumer-warning | — | invariant | derived |
-| R13.a | `lint_eval_freshness` | invariant | default | c13-manifest-unreadable, c13-no-last-eval, c13-sha-mismatch | — | invariant | derived |
-| R14.a | `lint_readme_jargon` | invariant | default | c14-over-budget | — | invariant | derived |
-| R15.a | `lint_readme_serial_comma` | invariant | default | c15-serial-comma | — | invariant | derived |
-| R16.a | `check_composite_arming` | observation | default | — | c16-not-armable-readings, c16-not-armable-sessions, c16-unusable-dropped | observation | derived |
-| R16.b | `check_composite_arming` | invariant | default | c16-all-malformed | — | invariant | derived |
-| R16.c | `check_composite_arming` | observation | default | — | c16-ledger-skip, c16-malformed-warn | observation | derived |
-| R16.d | `check_composite_arming` | observation | default | c16-store-unreadable | — | invariant | REFUSED |
-| R16.e | `check_composite_arming` | invariant | default | c16-selftest | — | invariant | derived |
-
-aspects 49 · derived 48 · waived 0 · refused 1
+Revision 21 below supersedes that table.
 
 ## Must-fix 5 closed, and the one residue — revision 20
 
@@ -784,6 +730,129 @@ trustworthy as the directive's provenance, and the record says so.
   only switch `check_step_production_reach` to `--enforce`, and that script is
   not one of the 16 Phase 7 checks. They join the same set renewal and move no
   row.
+
+## R16.d corrected, 49 of 49 derived — revision 21
+
+The owner answered D46 with option **1**: correct the behaviour
+(`agents/evidence/owner-directives/2026-10-24-7-1-r16d-behaviour.md`).
+
+**The fix.** `check_composite_arming` now exits 0 when no store exists, as
+*"not measured yet"*. A store that exists but cannot be read, a malformed store
+and an empty store still exit 1.
+
+`tests/scripts/composite_arming.test.ts` pins both halves:
+
+- the absent-store test was seen red before the fix;
+- the three present-but-failing tests go red when those branches are weakened
+  to exit 0, which shows the gate was corrected, not weakened.
+
+The script's self-test swaps its missing-store reject case for an accept case,
+and adds a reject case for an unreadable path. That keeps it at two reject cases.
+
+**The inventory, kept independent.** The fix changed check 16's branches and
+moved its line numbers. A separate session re-inventoried
+`check_composite_arming` from the source alone, without reading `agents/`:
+
+- `c16-store-absent` is new (`warning-exit-zero`);
+- `c16-store-unreadable` now means present but unreadable (`error-exit-nonzero`);
+- `c16-armable` is new: the positive arming outcome, exit 0.
+
+The mapping is:
+
+- `c16-store-absent` → R16.d;
+- `c16-store-unreadable` → `op:could-not-run`;
+- `c16-armable` → R16.a.
+
+A second separate session reviewed the three mappings: **3/3 agree**, recorded in
+the mapping review. The two not-armable branches keep the `evaluate` lines their
+own findings name in their ranges, and the site scanner is OK again (6/6).
+
+**A reconciler defect found on the way.** It counted `exit-code-only` as
+blocking even at exit 0, so the positive R16.a branch made R16.a read `mixed`.
+`exit-code-only` now blocks only with a non-zero exit code. A self-test case
+covers this, and it went red when the fix was reverted.
+
+**The waiver path.** R16.d's waiver is removed. The waiver self-tests now run on
+a synthetic divergence (R10.h, made blocking in the test inputs only). The 7.2
+entry condition *"row 16's exit-1 divergence reconciled"* is marked done.
+
+**State.** 49 of 49 aspects derive their class, with 0 waived and 0 refused.
+The record is **quarantined** only by stale pins. Ten inputs have moved since
+the revision-16 attested set. The one renewal round D38 allows attests them
+together.
+
+`node agents/evidence/analysis/gate-ledger-reconcile.mjs --aspects`:
+
+| Row | Check | Recorded | Mode | Blocking branches | Non-blocking branches | Derived | Verdict |
+|---|---|---|---|---|---|---|---|
+| R1.a | `check_gate_completeness` | invariant | default | c1-ratchet-regressed, c1-ratchet-stale, c1-ratchet-unbaselined | — | invariant | derived |
+| R1.b | `check_gate_completeness` | invariant | default | c1-ledger-fail-malformed, c1-malformed | — | invariant | derived |
+| R2.a | `lint_ticked_unmet_criteria` | invariant | default | c2-duplicate-historical, c2-hit, c2-stale-historical | — | invariant | derived |
+| R2.b | `lint_ticked_unmet_criteria` | invariant | default | c2-selftest | — | invariant | derived |
+| R3.a | `check_rule_invariants` | invariant | default | c3-missing-file, c3-missing-string | — | invariant | derived |
+| R3.b | `check_rule_invariants` | invariant | default | c3-selftest-undetected | — | invariant | derived |
+| R4.a | `check_augment_description_cap` | invariant | default | c4-over-cap | — | invariant | derived |
+| R5.a | `check_trigger_evals` | invariant | default | c6-last-eval-missing, c6-last-eval-stale | — | invariant | derived |
+| R5.b | `check_trigger_evals` | invariant | default | c6-unreadable-json, c6-queries-empty, c6-query-no-q, c6-query-trigger-type, c6-split-list-empty, c6-split-item-empty, c6-no-shape, c6-one-class | — | invariant | derived |
+| R6.a | `lint_subagent_determinism` | invariant | default | c5-no-frontmatter, c5-schema-version, c5-visible, c5-tools-dupes, c5-name-stem, c5-name-dup | — | invariant | derived |
+| R7.a | `lint_rule_enforcement_declaration` | invariant | default | c7-undeclared-new, c7-gap-not-in-body, c7-baseline-stale, c7-baseline-shrink | — | invariant | derived |
+| R7.b | `lint_rule_enforcement_declaration` | invariant | default | c7-selftest | — | invariant | derived |
+| R8.a | `check_token_quality_golden` | invariant | default | c8-corpus-id, c8-id-format, c8-id-duplicate, c8-rules-empty, c8-rule-unknown, c8-nofire-kernel, c8-nofire-fires, c8-tag-not-fired, c8-scenario, c8-prompt, c8-label-status, c8-labelled-todo-rubric, c8-labelled-no-anchor | — | invariant | derived |
+| R8.b | `check_token_quality_golden` | observation | default | — | c8-uncovered-warn, c8-missing-scenario-warn, c8-scaffold-notice | observation | derived |
+| R8.c | `check_token_quality_golden` | invariant | --require-complete | c8-require-complete | — | invariant | derived |
+| R9.a | `check_council_layout` | invariant | default | c9-root-stray, c9-noncanonical | — | invariant | derived |
+| R10.a | `check_knowledge_cards` | invariant | default | c10-C1-size | — | invariant | derived |
+| R10.b | `check_knowledge_cards` | invariant | default | c10-C2-pointer | — | invariant | derived |
+| R10.c | `check_knowledge_cards` | invariant | default | c10-C3-local | — | invariant | derived |
+| R10.d | `check_knowledge_cards` | invariant | --check-urls | c10-C3-url-status, c10-C3-url-unreachable | — | invariant | derived |
+| R10.e | `check_knowledge_cards` | invariant | default | c10-C4-trust, c10-C4-type-wrong, c10-C4-type-missing | — | invariant | derived |
+| R10.f | `check_knowledge_cards` | invariant | default | c10-C5-ancestry, c10-C5-span | — | invariant | derived |
+| R10.g | `check_knowledge_cards` | invariant | --strict | c10-C6-source | — | invariant | derived |
+| R10.h | `check_knowledge_cards` | observation | default | — | c10-freshness-warn | observation | derived |
+| R10.i | `check_knowledge_cards` | invariant | --global | c10-G1-tier-missing, c10-G1-tier-invalid | — | invariant | derived |
+| R10.k | `check_knowledge_cards` | invariant | --global | c10-G2-no-footer, c10-G2-field | — | invariant | derived |
+| R10.l | `check_knowledge_cards` | invariant | --global | c10-G3-redaction | — | invariant | derived |
+| R10.m | `check_knowledge_cards` | invariant | --global | c10-G4-sens-missing, c10-G4-sens-invalid | — | invariant | derived |
+| R10.n | `check_knowledge_cards` | invariant | --global | c10-G5-field | — | invariant | derived |
+| R10.o | `check_knowledge_cards` | invariant | --global | c10-G6-prohibited | — | invariant | derived |
+| R10.j | `check_knowledge_cards` | invariant | default | c10-E1-required | — | invariant | derived |
+| R11.a | `check_public_links` | invariant | default | c11-target-not-found | — | invariant | derived |
+| R11.b | `check_public_links` | invariant | default | c11-target-no-stability | — | invariant | derived |
+| R11.c | `check_public_links` | invariant | default | c11-experimental | — | invariant | derived |
+| R11.d | `check_public_links` | invariant | default | c11-self-no-stability | — | invariant | derived |
+| R11.e | `check_public_links` | observation | default | — | c11-beta-marker | observation | derived |
+| R11.f | `check_public_links` | invariant | --strict | c11-beta-marker | — | invariant | derived |
+| R11.g | `check_public_links` | invariant | default | c11-contexts-link | — | invariant | derived |
+| R12.a | `lint_agents_layout` | invariant | default | c12-flat-file, c12-unknown-dir | — | invariant | derived |
+| R12.c | `lint_agents_layout` | observation | default | — | c12-consumer-warning | observation | derived |
+| R12.d | `lint_agents_layout` | invariant | --strict | c12-consumer-warning | — | invariant | derived |
+| R13.a | `lint_eval_freshness` | invariant | default | c13-manifest-unreadable, c13-no-last-eval, c13-sha-mismatch | — | invariant | derived |
+| R14.a | `lint_readme_jargon` | invariant | default | c14-over-budget | — | invariant | derived |
+| R15.a | `lint_readme_serial_comma` | invariant | default | c15-serial-comma | — | invariant | derived |
+| R16.a | `check_composite_arming` | observation | default | — | c16-armable, c16-not-armable-readings, c16-not-armable-sessions, c16-unusable-dropped | observation | derived |
+| R16.b | `check_composite_arming` | invariant | default | c16-all-malformed | — | invariant | derived |
+| R16.c | `check_composite_arming` | observation | default | — | c16-ledger-skip, c16-malformed-warn | observation | derived |
+| R16.d | `check_composite_arming` | observation | default | — | c16-store-absent | observation | derived |
+| R16.e | `check_composite_arming` | invariant | default | c16-selftest | — | invariant | derived |
+
+aspects 49 · derived 49 · waived 0 · refused 0
+
+## Round 26's findings — revision 22
+
+Round 26 was the renewal round D38 allows
+(`agents/evidence/council/gate-classification-renewal-20261024.md`). It returned
+**do not renew** and **item 4 not met**, both 2/2. Revision 22 answers each
+named defect.
+
+| Finding | Revision 22 |
+|---|---|
+| Mode matched as a substring (`preds.includes(mode)`) and as any flag (`/--[a-z]/`) | Flags are compared as exact tokens. Each flag-only branch carries one structured flag in `flag_branches` (3 branches). The flag must be a token of its predicates and a literal in the check's source. The branch blocks only for a row whose mode is that flag. Three self-test cases cover a substring, a missing flag and a foreign flag; the substring case was seen red. |
+| Effects are trusted, not derived from code | The site scanner now refuses a hard exit site (non-zero return, exit or exit code) that lies only in branches declaring a non-blocking effect. There are 0 such contradictions, and a self-test case was seen red. It also reports how far the effects are code-confirmed: **63 of 167** blocking branches contain a hard exit or throw site. The other 104 report through an aggregated exit, which no syntactic scan can attribute. They rest on the independent session's reading, and the record says so rather than claiming a derivation. |
+| No operational state or rollback for D46 | The `⏳ NOT MEASURED YET` state is distinct, and two revert triggers are written into `gate-7-2-reliance-rules-20261024.md`. The `tests.yml` comment that still described exit 1 is corrected. |
+| The renewal unit carries the `--enforce` wiring change unexamined | The scope of those two wiring pins is stated: they attest that no Phase 7 invocation moved, and nothing about `check_step_production_reach`. |
+
+The pins are not renewed. That needs another council round on the cumulative
+diff.
 
 ## Source-to-record completeness, mechanically — revision 14
 
@@ -1071,7 +1140,7 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 16 | `check_composite_arming` | arming verdict | ≥ 10 usable composite readings from ≥ 2 sessions | the composite store | a valid store exists | new readings | **observation** | "'not yet' is a successful measurement, never a build failure" | `R16.a` |
 | 16 | | store yields a usable record | a store with content parses to at least one usable reading (an empty store is `op:could-not-run`, not this row) (a line with a string `session` and a `composite_ms` key) | the composite store | the store exists | a corrupt append | **invariant** | exit 1 when malformed lines leave no usable record (`malformed > 0 && readings.length === 0`). Corrected in revision 6: revision 3 said "every line parses", which the code does not require | `R16.b` |
 | 16 | | partial malformation | malformed lines next to usable ones are counted and named per line | same | the store exists | a corrupt append | **observation** | the gate ledger records each dropped line as `precondition_unmet`, the run continues, and with at least one usable record it exits 0 | `R16.c` |
-| 16 | | store absent | the store file exists | same | no store file | bootstrap | **observation** | its own contract: no readings yet is "not measured yet" and never a build failure. Runtime metadata, not a class: `not-evaluated: evidence-missing`. Current behaviour diverges: the script exits 1, which is owed to 7.2. A future transition to invariant after a bootstrap deadline needs that deadline first (D31) and is not part of this verdict | `R16.d` |
+| 16 | | store absent | the store file exists | same | no store file | bootstrap | **observation** | its own contract: no readings yet is "not measured yet" and never a build failure. Runtime metadata, not a class: `not-evaluated: evidence-missing`. Behaviour matches since D46 (owner, 2026-10-24): an absent store exits 0 as "not measured yet"; a store that exists but cannot be read still exits 1. A future transition to invariant after a bootstrap deadline needs that deadline first (D31) and is not part of this verdict | `R16.d` |
 | 16 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | `taskfiles/content.yml:386`, `rule-backstops.yml:321` | edits to the checker | **invariant** | fixed fixture table (fixed-policy). `--publish` is a write mode that writes a distribution report and asserts nothing, so it carries no class | `R16.e` |
 
 ## Totals — revision 15

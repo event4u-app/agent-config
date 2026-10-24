@@ -83,9 +83,26 @@ export function scan(read) {
         const branch = d.kind.split(':')[1];
         if (branch !== undefined && !branchIds.has(`${r.check} ${branch}`)) failures.push(`disposition of ${r.check}:${r.line} names unknown branch ${branch}`);
     }
+    // A hard exit site (a non-zero return, exit or exit code) inside branches
+    // that all declare a non-blocking effect contradicts the inventory: the
+    // code can fail the run where the inventory says it cannot. The reverse is
+    // not decidable here, because most findings are pushed and the exit is
+    // aggregated, so it is reported as a coverage count, never claimed.
+    const effectOf = {};
+    for (const c of inv.checks) for (const b of c.branches) effectOf[`${c.check} ${b.id}`] = b;
+    const nonBlocking = (b) => b.effect === 'warning-exit-zero' || (b.effect === 'exit-code-only' && b.exit_code === 0);
+    const HARD = ['return-nonzero', 'exit-nonzero', 'exit-code'];
+    const confirmed = new Set();
+    for (const r of report) {
+        const bs = r.covering.map((id) => effectOf[`${r.check} ${id}`]).filter((b) => b !== undefined);
+        if (HARD.includes(r.kind) || r.kind === 'throw') for (const id of r.covering) confirmed.add(`${r.check} ${id}`);
+        if (HARD.includes(r.kind) && bs.length > 0 && bs.every(nonBlocking)) failures.push(`effect contradicts code: ${r.check}:${r.line} ${r.kind} lies only in non-blocking branch(es) ${r.covering.join(', ')}`);
+    }
+    const blockingIds = Object.entries(effectOf).filter(([, b]) => !nonBlocking(b) && b.effect !== 'warning-exit-nonzero-only-with-flag').map(([k]) => k);
+    const effectCoverage = { blocking: blockingIds.length, confirmedByHardSite: blockingIds.filter((k) => confirmed.has(k)).length };
     const used = new Set(outside.map((r) => `${r.check}:${r.line}`));
     for (const k of Object.keys(dispositions)) if (!used.has(k)) failures.push(`stale disposition ${k}: no uncovered site there`);
-    return { report, failures, kinds, sites: report.length, inside: report.length - outside.length };
+    return { report, failures, kinds, sites: report.length, inside: report.length - outside.length, effectCoverage };
 }
 
 const realRead = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
@@ -112,17 +129,29 @@ function selfTest() {
         if (!ok) bad += 1;
         console.log(`${ok ? 'ok  ' : 'FAIL'} a planted ${v.kind} site is refused`);
     }
-    console.log(`\nself-test: ${VOCABULARY.length + 1 - bad}/${VOCABULARY.length + 1} case(s) behaved`);
+    {
+        const read = (rel) => {
+            if (rel !== INVENTORY) return realRead(rel);
+            const j = JSON.parse(realRead(rel));
+            j.checks.find((c) => c.check === 'check_composite_arming').branches.find((b) => b.id === 'c16-all-malformed').effect = 'warning-exit-zero';
+            return JSON.stringify(j);
+        };
+        const ok = scan(read).failures.some((f) => f.startsWith('effect contradicts code: check_composite_arming'));
+        if (!ok) bad += 1;
+        console.log(`${ok ? 'ok  ' : 'FAIL'} a non-blocking effect over a hard exit site is refused`);
+    }
+    console.log(`\nself-test: ${VOCABULARY.length + 2 - bad}/${VOCABULARY.length + 2} case(s) behaved`);
     process.exit(bad === 0 ? 0 : 1);
 }
 
 if (process.argv.includes('--self-test')) selfTest();
 else {
-    const { report, failures, kinds, sites, inside } = scan(realRead);
+    const { report, failures, kinds, sites, inside, effectCoverage } = scan(realRead);
     if (process.argv.includes('--list')) {
         for (const r of report) console.log(`${r.check}:${r.line} | ${r.kind} | ${r.covering.join(' ') || 'UNCOVERED'} | ${r.text}`);
     }
     console.log(`sites ${sites} · inside an inventoried branch ${inside} · outside, with a disposition ${sites - inside - failures.filter((f) => f.startsWith('undisposed')).length} ${JSON.stringify(kinds)}`);
+    console.log(`effects: ${effectCoverage.blocking} blocking branches, ${effectCoverage.confirmedByHardSite} confirmed by a hard exit or throw site in their range; the rest report through an aggregated exit and rest on the independent inventory's reading. Contradictions refused: a hard exit site only in non-blocking branches.`);
     if (failures.length > 0) {
         console.log(`FAILED (${failures.length}):\n- ${failures.join('\n- ')}`);
         process.exit(1);
