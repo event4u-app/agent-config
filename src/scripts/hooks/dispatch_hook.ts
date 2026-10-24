@@ -1265,7 +1265,7 @@ export function main(argv?: string[]): number {
   // stdout-injection; harmless surfacing elsewhere). All other events keep
   // the swallow-stdout contract unchanged.
   const context_blocks: string[] = [];
-  const notices: NoticeBatch = { texts: [], from: [] }; // `hooks/user_notice.ts`, never model context
+  const notices: NoticeBatch = []; // `hooks/user_notice.ts`, never model context
   // Per-concern message for the host emission (P0.1). Kept OUT of
   // feedback_entries on purpose: that record is written to disk with a
   // fixed-field schema (PII-exclusion-by-construction), and a concern's raw

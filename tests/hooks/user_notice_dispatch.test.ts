@@ -17,6 +17,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 
 import { isBlockCapable, withUserNotice } from '../../src/scripts/hooks/host_semantics.js';
+import { collectUserNotice, USER_NOTICE_KEY, type NoticeBatch } from '../../src/scripts/hooks/user_notice.js';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const ENTRY = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'dispatch_entry.ts');
@@ -189,6 +190,36 @@ describe('the user channel through the dispatcher', () => {
         const r = dispatch('claude', { 'notice-a': { effect: 'notification', args: ['echo-platform'] } });
         expect((JSON.parse(r.stdout) as Record<string, string>)['systemMessage']).toBe('platform=claude');
     }, 120_000);
+});
+
+describe('collectUserNotice', () => {
+    const notification = (name: string) => ({ name, effect: 'notification' });
+    const keep = (t: string) => t;
+
+    // The receipt list is the batch itself, so a concern whose text did not
+    // survive cleaning is not in it and cannot be given a receipt.
+    it('a notice cleaned to nothing is not kept, so only the surviving concern can be receipted', () => {
+        const batch: NoticeBatch = [];
+        const clean = (t: string) => (t === 'secret' ? '   ' : t);
+        collectUserNotice(batch, notification('erased'), { [USER_NOTICE_KEY]: 'secret' }, clean);
+        collectUserNotice(batch, notification('kept'), { [USER_NOTICE_KEY]: 'visible' }, clean);
+        expect(batch).toEqual([{ concern: 'kept', text: 'visible' }]);
+    });
+
+    it('caps by code point and never splits a surrogate pair', () => {
+        const batch: NoticeBatch = [];
+        collectUserNotice(batch, notification('n'), { [USER_NOTICE_KEY]: `${'x'.repeat(999)}🚀y` }, keep);
+        const text = batch[0]?.text ?? '';
+        expect(Array.from(text)).toHaveLength(1000);
+        expect(text.endsWith('🚀')).toBe(true);
+        expect(text.isWellFormed()).toBe(true);
+    });
+
+    it('ignores every effect but notification', () => {
+        const batch: NoticeBatch = [];
+        collectUserNotice(batch, { name: 'c', effect: 'context' }, { [USER_NOTICE_KEY]: 'hi' }, keep);
+        expect(batch).toEqual([]);
+    });
 });
 
 describe('withUserNotice', () => {

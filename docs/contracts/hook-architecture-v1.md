@@ -118,7 +118,7 @@ under the concurrency rules below.
 
 `user_notice` is the one user-addressed field (`hooks/user_notice.ts`). The
 dispatcher forwards it only from a concern whose manifest `effect` is
-`notification`, capped at 1,000 characters, joined with `\n` in manifest order,
+`notification`, cleaned, capped at 1,000 Unicode code points and kept only if something is left, joined with `\n` in manifest order,
 and only on a host with a verified field that shows text to the user and adds
 nothing to model context — today `claude`, as `systemMessage`. On any other host
 it is dropped, never rerouted to a model-facing channel; that `systemMessage`

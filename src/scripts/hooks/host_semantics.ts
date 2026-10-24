@@ -198,8 +198,8 @@ export function composeStdout(
     notices: NoticeBatch,
     sessionId: string,
 ): string {
-    const out = withUserNotice(platform, event, context, emission.stdout, emission.exit === 0 ? notices.texts.join("\n") : "");
-    if (notices.from.length > 0 && out !== context + emission.stdout) writeNoticeReceipts(notices.from, sessionId);
+    const out = withUserNotice(platform, event, context, emission.stdout, emission.exit === 0 ? notices.map((n) => n.text).join("\n") : "");
+    if (notices.length > 0 && out !== context + emission.stdout) writeNoticeReceipts(notices.map((n) => n.concern), sessionId);
     return out;
 }
 

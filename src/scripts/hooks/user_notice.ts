@@ -28,7 +28,7 @@ import { write_target } from '../_lib/user_global_paths.js';
 /** The concern reply key a notification concern puts its user-facing text under. */
 export const USER_NOTICE_KEY = 'user_notice';
 
-/** Longest notice the dispatcher forwards; a notice is a few lines, never a document. */
+/** Longest notice the dispatcher forwards, in Unicode code points; a notice is a few lines, never a document. */
 export const USER_NOTICE_MAX_CHARS = 1000;
 
 /** Hosts with a verified field that shows text to the user and not to the model. */
@@ -38,13 +38,18 @@ export function hostShowsUserNotice(platform: unknown): boolean {
     return typeof platform === 'string' && USER_NOTICE_HOSTS.has(platform);
 }
 
-/** The notices one dispatch collected, and the concerns they came from, in manifest order. */
-export interface NoticeBatch {
-    readonly texts: string[];
-    readonly from: string[];
-}
+/**
+ * The notices one dispatch kept, each with the concern it came from, in
+ * manifest order. One entry carries both, so the text that is emitted and the
+ * concern that gets a receipt can never come apart.
+ */
+export type NoticeBatch = Array<{ readonly concern: string; readonly text: string }>;
 
-/** Only a `notification` concern may address the user: no other effect was reviewed for it. */
+/**
+ * Only a `notification` concern may address the user: no other effect was
+ * reviewed for it. The text is cleaned, then capped by code point so a pair is
+ * never split, and kept only if something is left to show.
+ */
 export function collectUserNotice(
     batch: NoticeBatch,
     concern: Record<string, unknown>,
@@ -52,9 +57,9 @@ export function collectUserNotice(
     clean: (text: string) => string,
 ): void {
     const notice = reply[USER_NOTICE_KEY];
-    if (concern['effect'] !== 'notification' || typeof notice !== 'string' || !notice.trim()) return;
-    batch.texts.push(clean(notice.trim()).slice(0, USER_NOTICE_MAX_CHARS));
-    batch.from.push(String(concern['name']));
+    if (concern['effect'] !== 'notification' || typeof notice !== 'string') return;
+    const text = Array.from(clean(notice.trim())).slice(0, USER_NOTICE_MAX_CHARS).join('').trim();
+    if (text) batch.push({ concern: String(concern['name']), text });
 }
 
 /**
