@@ -158,39 +158,66 @@ export function stringLiteral(arg: string): string | null {
 }
 
 /**
+ * The module file a dotted import names (`a.b` → `a/b.py` or `a/b/__init__.py`),
+ * searched under each root and, for a relative import, beside `file`.
+ */
+export function resolveModule(file: string, dotted: string, roots: readonly string[], inventory: ReadonlySet<string>): string | null {
+    const dir = file.includes('/') ? file.slice(0, file.lastIndexOf('/')) : '';
+    const rel = /^\.+/.exec(dotted)?.[0].length ?? 0;
+    const parts = dotted.slice(rel).split('.').filter(Boolean);
+    let bases: string[];
+    if (rel > 0) {
+        const segs = dir ? dir.split('/') : [];
+        bases = [segs.slice(0, Math.max(0, segs.length - (rel - 1))).join('/')];
+    } else bases = [...roots];
+    for (const b of bases) {
+        const stem = [b, ...parts].filter(Boolean).join('/');
+        // `from . import x` names the package itself: its `__init__.py`.
+        const candidates = parts.length > 0 ? [`${stem}.py`, `${stem}/__init__.py`] : rel > 0 ? [stem ? `${stem}/__init__.py` : '__init__.py'] : [];
+        for (const c of candidates) if (inventory.has(c)) return c;
+    }
+    return null;
+}
+
+/** Every `from m import a, b as c` item, as the module text, the imported name and the local name. */
+function fromImports(src: string): Array<{ mod: string; name: string; local: string }> {
+    const out: Array<{ mod: string; name: string; local: string }> = [];
+    for (const m of src.matchAll(/^\s*from\s+([.\w]+)\s+import\s+\(?([^)\n]+)\)?/gm)) {
+        for (const item of (m[2] as string).split(',')) {
+            const [name, alias] = item.trim().split(/\s+as\s+/) as [string, string | undefined];
+            if (/^\w+$/.test(name)) out.push({ mod: m[1] as string, name, local: alias ?? name });
+        }
+    }
+    return out;
+}
+
+/**
  * Module files the file imports by name, by local name: `from a import b` and
  * `import a.b as b` map `b` to `a/b.py` (or `a/b/__init__.py`) when that file is in
  * `inventory`, searched under each root and, for a relative import, beside `file`.
  */
 export function importedModules(file: string, src: string, roots: readonly string[], inventory: ReadonlySet<string>): Map<string, string> {
     const out = new Map<string, string>();
-    const dir = file.includes('/') ? file.slice(0, file.lastIndexOf('/')) : '';
-    const find = (dotted: string): string | null => {
-        const rel = /^\.+/.exec(dotted)?.[0].length ?? 0;
-        const parts = dotted.slice(rel).split('.').filter(Boolean);
-        let bases: string[];
-        if (rel > 0) {
-            const segs = dir ? dir.split('/') : [];
-            bases = [segs.slice(0, Math.max(0, segs.length - (rel - 1))).join('/')];
-        } else bases = [...roots];
-        for (const b of bases) {
-            const stem = [b, ...parts].filter(Boolean).join('/');
-            for (const c of [`${stem}.py`, `${stem}/__init__.py`]) if (stem && inventory.has(c)) return c;
-        }
-        return null;
-    };
-    for (const m of src.matchAll(/^\s*from\s+([.\w]+)\s+import\s+\(?([^)\n]+)\)?/gm)) {
-        const mod = m[1] as string;
-        for (const item of (m[2] as string).split(',')) {
-            const [name, alias] = item.trim().split(/\s+as\s+/) as [string, string | undefined];
-            if (!/^\w+$/.test(name)) continue;
-            const hit = find(mod.endsWith('.') ? `${mod}${name}` : `${mod}.${name}`);
-            if (hit) out.set(alias ?? name, hit);
-        }
+    for (const { mod, name, local } of fromImports(src)) {
+        const hit = resolveModule(file, mod.endsWith('.') ? `${mod}${name}` : `${mod}.${name}`, roots, inventory);
+        if (hit) out.set(local, hit);
     }
     for (const m of src.matchAll(/^\s*import\s+([\w.]+)\s+as\s+(\w+)\s*$/gm)) {
-        const hit = find(m[1] as string);
+        const hit = resolveModule(file, m[1] as string, roots, inventory);
         if (hit) out.set(m[2] as string, hit);
+    }
+    return out;
+}
+
+/**
+ * Names the file imports out of a module it can resolve, by local name:
+ * `from app.main import bp as main_bp` maps `main_bp` to `{ file: 'app/main/__init__.py', name: 'bp' }`.
+ */
+export function importedNames(file: string, src: string, roots: readonly string[], inventory: ReadonlySet<string>): Map<string, { file: string; name: string }> {
+    const out = new Map<string, { file: string; name: string }>();
+    for (const { mod, name, local } of fromImports(src)) {
+        const hit = resolveModule(file, mod, roots, inventory);
+        if (hit) out.set(local, { file: hit, name });
     }
     return out;
 }

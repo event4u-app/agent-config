@@ -121,7 +121,7 @@ export const CATALOG: readonly CatalogRow[] = [
         status: 'partial',
         fixture: 'tests/fixtures/code-graph/flask',
         usage: SO,
-        limits: 'register_blueprint(url_prefix=) and add_url_rule are not followed.',
+        limits: 'add_url_rule and blueprints nested in blueprints are not followed.',
     },
     {
         id: 'django',

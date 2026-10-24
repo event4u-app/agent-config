@@ -44,15 +44,29 @@ describe('flask provider', () => {
         expect(graph.nodes.some((n) => n.kind === 'route' && n.label === 'GET /dash')).toBe(false);
     });
 
-    it('reads no route off a dict receiver, as a decorator or as a call', () => {
+    it('routes a Blueprint imported from the module that constructs it, absolute or relative', () => {
+        expect(routesTo('GET /explore')).toEqual(['app/main/routes.py#explore']);
+        expect(routesTo('GET /auth/login')).toEqual(['app/auth/routes.py#login']);
+        expect(routesTo('POST /auth/login')).toEqual(['app/auth/routes.py#login']);
+    });
+
+    it('applies the url_prefix a register_blueprint call in another file gives it', () => {
+        expect(graph.nodes.some((n) => n.kind === 'route' && n.label === 'GET /login')).toBe(false);
+    });
+
+    it('reads no route off a dict receiver, as a decorator or as a call, nor off an imported non-Blueprint', () => {
         expect(graph.nodes.filter((n) => n.kind === 'route').map((n) => n.label).sort()).toEqual([
             'DELETE /admin/gone',
             'GET /',
             'GET /admin/dash',
+            'GET /auth/login',
+            'GET /explore',
             'GET /submit',
             'POST /admin/shared',
+            'POST /auth/login',
             'POST /submit',
         ]);
+        expect(graph.edges.some((e) => e.relation === 'routes-to' && e.target === 'app/not_routes.py#nope')).toBe(false);
         expect(graph.edges.some((e) => e.relation === 'routes-to' && e.target === 'app/__init__.py#not_routed')).toBe(false);
     });
 
@@ -70,7 +84,7 @@ describe('flask provider', () => {
 
     it('stamps its edges and keeps the graph valid', () => {
         const mine = graph.edges.filter((e) => e.relation === 'routes-to' || e.relation === 'renders');
-        expect(mine.length).toBe(8);
+        expect(mine.length).toBe(11);
         expect(mine.every((e) => e.provider_id === 'flask')).toBe(true);
         expect(mine.filter((e) => e.relation === 'renders').every((e) => e.resolved_via === 'directive-scan')).toBe(true);
         expect(validateGraph(JSON.parse(JSON.stringify(graph))).ok).toBe(true);
