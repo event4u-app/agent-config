@@ -251,13 +251,13 @@ owner's machine; what the repository tracks is source-free.
 
 ## Phase 9 — Drawing the lineage and what is missing
 
-- [ ] **9.1 Lineage queries.** `code-graph lineage of`, `gaps` and `rejected` answer
+- [x] **9.1 Lineage queries.** `code-graph lineage of`, `gaps` and `rejected` answer <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/lineage_query.ts -->
       from the tracked ledger and resolve `realised_in` through the graph, so a moved or
       deleted file shows as a broken edge; `lineage from` (source → mechanisms) needs the
       local ledger and the key.
       verify: fixture tests for each verb, including a deleted `realised_in` path and
       `from` refusing without a local ledger.
-- [ ] **9.2 Gaps view.** `lineage gaps` = `gap` + `deferred` rows − `reject` rows
+- [x] **9.2 Gaps view.** `lineage gaps` = `gap` + `deferred` rows − `reject` rows <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/lineage_query.ts -->
       without a matching `reopen_if`, each shown with the roadmap that owns it or `open`.
       verify: a fixture where a later `adopt` closes a gap shows it no longer.
 - [ ] **9.3 Two map views.** The tracked map gains a lineage view of mechanisms by
@@ -339,6 +339,7 @@ owner's machine; what the repository tracks is source-free.
 | B-8.4 | reversible-technical | agent | A `skills-provenance.yml` entry becomes a local edge whose mechanism id is the skill name; those mechanisms get no tracked decision row, so the tracked ledger stays at the 18 harvest rows. An entry whose `source_enc` does not decrypt with the configured key is skipped and named, the rest imported, exit 1 | the yml records wrappers and methodologies, not harvested mechanisms, and 8.4 fixes the tracked count at 18; a guessed identity for an undecryptable entry is the fabrication the risk register names | a skill lineage needs a tracked verdict |
 | B-9.1 | reversible-technical | agent | `lineage of` takes a mechanism id or a path and resolves each `realised_in` twice: against the working tree of `--root`, which decides `broken` (exit 1), and against the code graph (`--graph`, default the project cache), which reports `indexed`, `not indexed` or `no graph built` | the docs layer gives every Markdown file a graph node, so the graph can say whether an edge is indexed, but a graph built before a file moved still lists it — only the disk can say it is gone | the graph carries a per-file freshness stamp |
 | B-9.2 | reversible-technical | agent | Latest decision wins (sorted by `decided_at`, file order breaking ties). A later adopt, adapt, already or plain reject closes a gap; a later reject that carries `reopen_if` keeps the mechanism listed with its condition | the verify names the adopt case only; a rejection that names its own reopen condition is still conditionally open, which is the one reading under which the step text subtracts only rejects without one | the owner wants conditional rejections out of the gaps view |
+| B-9.3 | reversible-technical | agent | The tracked view is `agents/map/lineage.md` (a foreign entry the map redraw carries over), written only when the repo already has `agents/` or `--out` is given; `map --lineage` routes through the same single `lineage` dispatch entry in `cli.ts`. The source view defaults to `runtime/lineage/map/sources.md` and checks the work-tree refusal before reading anything | Phase 2 routes the map directory through `graphHome`, so this lane names its own path rather than the map-dir constant; a lineage view must not create `agents/` in a foreign repository | Phase 2 lands and the view should follow `graphHome` |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->

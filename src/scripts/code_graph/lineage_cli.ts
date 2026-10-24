@@ -12,7 +12,17 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { checkLedger, hasLedger, LineageError, lineageDir, mergeIntoLedger, readLedger } from '../_lib/lineage_ledger.js';
+import {
+    assertOutsideWorkTree,
+    checkLedger,
+    hasLedger,
+    LineageError,
+    lineageDir,
+    mergeIntoLedger,
+    readLedger,
+    writePrivateFile,
+} from '../_lib/lineage_ledger.js';
+import { LINEAGE_VIEW_REL, renderSourceLineage, renderTrackedLineage } from '../_lib/lineage_map.js';
 import { gaps, lineageFrom, lineageOf, readDecisions, rejected } from '../_lib/lineage_query.js';
 import { buildLocalImport } from '../_lib/lineage_seed.js';
 import { resolve_keys } from '../_lib/link_crypto.js';
@@ -155,7 +165,39 @@ function cmdFrom(io: Io, query: string | undefined): number {
     return 0;
 }
 
-const USAGE = 'usage: code-graph lineage <check|import|of|gaps|rejected|from> [args] [--root P]\n';
+/**
+ * `map --lineage` (tracked view, verdicts only) or `map --lineage --sources` (local view).
+ * The tracked view is written only into a repo that already has `agents/`, so a foreign
+ * repository never gains a directory from it.
+ */
+function cmdMap(io: Io, argv: readonly string[]): number {
+    const outFlag = flag(argv, '--out');
+    if (argv.includes('--sources')) {
+        const out = path.resolve(outFlag ?? path.join(lineageDir(io.env), 'map', 'sources.md'));
+        assertOutsideWorkTree(out);
+        const dir = lineageDir(io.env);
+        if (!hasLedger(dir)) {
+            io.err(`code-graph lineage map --sources: no local lineage ledger at ${dir}\n`);
+            return 2;
+        }
+        const keys = needKeys(io, 'map --sources');
+        if (keys === null) return 2;
+        writePrivateFile(out, renderSourceLineage(readLedger(dir), keys, readDecisions(io.root)));
+        io.out(`code-graph lineage map: source view written to ${out}\n`);
+        return 0;
+    }
+    const out = path.resolve(outFlag ?? path.join(io.root, LINEAGE_VIEW_REL));
+    if (outFlag === undefined && !fs.existsSync(path.join(io.root, 'agents'))) {
+        io.err(`code-graph lineage map: ${io.root} has no agents/ directory — pass --out to choose where the view goes\n`);
+        return 2;
+    }
+    fs.mkdirSync(path.dirname(out), { recursive: true });
+    fs.writeFileSync(out, renderTrackedLineage(readDecisions(io.root)));
+    io.out(`code-graph lineage map: tracked view written to ${out}\n`);
+    return 0;
+}
+
+const USAGE = 'usage: code-graph lineage <check|import|of|gaps|rejected|from|map> [args] [--root P]\n';
 
 export async function main(argv: readonly string[], deps: LineageDeps = {}): Promise<number> {
     const env = deps.env ?? process.env;
@@ -176,6 +218,7 @@ export async function main(argv: readonly string[], deps: LineageDeps = {}): Pro
         if (verb === 'gaps') return cmdGaps(io);
         if (verb === 'rejected') return cmdRejected(io);
         if (verb === 'from') return cmdFrom(io, argv[1]);
+        if (verb === 'map') return cmdMap(io, argv);
     } catch (e) {
         if (e instanceof LineageError) {
             io.err(`code-graph lineage: ${e.message}\n`);
