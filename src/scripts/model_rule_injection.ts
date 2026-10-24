@@ -65,7 +65,7 @@ import {
     triggerlessRuleIds,
     type Router,
 } from './_lib/rule_injection.js';
-import { ruleBody } from './_lib/rule_law_section.js';
+import { lawText, ruleBody } from './_lib/rule_law_section.js';
 import {
     renderArmExperiment,
     runArmExperiment,
@@ -619,13 +619,19 @@ export function runEndpoints(corpusDir: string): EndpointResult[] {
     for (const c of positives) {
         const injection = buildInjection(REPO_ROOT, c.prompt, c.openFiles, null, new Set(), false);
         if (injection === null) continue;
-        for (const id of injection.rules) {
-            const projected = loadRuleBody(REPO_ROOT, id);
-            if (projected === null) {
+        for (const [id, form] of injection.manifest) {
+            if (form !== 'full' && form !== 'law') continue;
+            const raw = loadRuleBody(REPO_ROOT, id);
+            if (raw === null) {
                 unequal += 1;
                 continue;
             }
-            if (injection.body.includes(projected.trim())) {
+            // The delivered form, as in the mutation probe below: since step 1.4
+            // the concern emits `ruleBody` of the file, and since D1 a rule the
+            // budget cannot carry whole arrives as its law section. The raw file
+            // with its frontmatter is a substring no payload contains.
+            const projected = form === 'full' ? ruleBody(raw) : (lawText(ruleBody(raw)) ?? '');
+            if (projected !== '' && injection.body.includes(projected.trim())) {
                 deliveries += 1;
             } else {
                 unequal += 1;

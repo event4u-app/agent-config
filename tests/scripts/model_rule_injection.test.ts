@@ -196,6 +196,17 @@ describe('one matcher, offline and at runtime (step 0.5, AC-4)', () => {
     });
 });
 
+describe('a-delivery compares the delivered form, not the raw file', () => {
+    // Red from step 1.4 of the rule carrier until 2026-10-24: the concern emits
+    // `ruleBody` (no frontmatter) or a rule's law section, and the census still
+    // looked for the raw file, so it read 0 byte-equal on every delivery.
+    it('holds on the frozen corpus with every delivery counted', () => {
+        const r = runEndpoints(CORPUS).find((e) => e.id === 'a-delivery');
+        expect(r?.passed).toBe(true);
+        expect(r?.reading).toMatch(/^[1-9]\d* deliveries byte-equal, 0 not$/);
+    });
+});
+
 describe('b-recall publishes both units — road-to-a-rule-carrier 0.4', () => {
     // The endpoint's BAR is per rule ("no labelled rule left unreachable") and
     // the question a reader asks next is per prompt. Before 0.4 only the first
