@@ -59,20 +59,20 @@ plan AC improvements automatically when a source repository updates.
 
 ## Phase 1 — Stop the twin leak
 
-- [ ] **1.1 Promote or remove the refresh twin.** In `runBudgetedBuild`, rename
+- [x] **1.1 Promote or remove the refresh twin.** In `runBudgetedBuild`, rename <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/cli.ts -->
       `sqliteTwinPath(tmpOut)` to `sqliteTwinPath(out)` together with the JSON and the
       sidecar, and make `cleanupTemp` remove the temp twin and its `.tmp-<pid>` file too.
       The renamed twin's recorded `json_size`/`json_mtime_ms` must match the promoted
       JSON — a rename preserves mtime, so assert it rather than assume it.
       verify: `vitest run tests/scripts/code_graph` with a new case — two budgeted
       refreshes leave exactly one `*.sqlite3` in the state dir and `openGraphIndex` opens it.
-- [ ] **1.2 Sweep orphans a crashed refresh left.** On the next refresh, delete every
+- [x] **1.2 Sweep orphans a crashed refresh left.** On the next refresh, delete every <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/cli.ts -->
       `.*.refresh-tmp-*` file in the state dir whose owning pid is not alive and whose
       mtime is older than the refresh lock's stale threshold, so a SIGKILLed child cannot
       leak forever.
       verify: a test seeds two orphans (one live-pid, one dead-pid-and-old) and asserts
       only the dead one is removed.
-- [ ] **1.3 Drop the duplicate graph blob.** Stop writing `meta.graph_json`; keep the
+- [x] **1.3 Drop the duplicate graph blob.** Stop writing `meta.graph_json`; keep the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/bench_graph_feeder_latency.ts -->
       row tables, counts and `source_checksum`. `loadSerializedFromTwin` and its caller in
       `query.ts:146` fall back to reading the canonical JSON, which is the same bytes.
       Bump `GRAPH_STORE_VERSION` so an old twin is rebuilt, not misread.
