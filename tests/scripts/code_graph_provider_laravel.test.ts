@@ -114,10 +114,13 @@ beforeAll(async () => {
     write('resources/views/layouts/app.blade.php', '<html>@yield("content")</html>\n');
     write('resources/views/books/row.blade.php', '<li>{{ $book }}</li>\n');
     write('resources/views/components/alert.blade.php', '<div class="alert"></div>\n');
-    write('resources/views/users/list.blade.php', "@extends('layouts.app')\n");
+    write('resources/views/users/list.blade.php', "@extends('layouts.app')\n@include('shared.crumbs')\n");
+    // A partial three directories of views include: shared, not an area's centre.
+    write('resources/views/shared/crumbs.blade.php', '<nav>crumbs</nav>\n');
+    write('resources/views/shelves/index.blade.php', "@extends('layouts.app')\n@include('shared.crumbs')\n");
     write(
         'resources/views/books/index.blade.php',
-        "@extends('layouts.app')\n@section('content')\n@include('books.row')\n<x-alert />\n{{ __('books.title') }}\n@include('books.' . $kind)\n@endsection\n",
+        "@extends('layouts.app')\n@section('content')\n@include('books.row')\n@include('shared.crumbs')\n<x-alert />\n{{ __('books.title') }}\n@include('books.' . $kind)\n@endsection\n",
     );
     ({ graph } = await buildFromRepo(root, null));
 });
@@ -170,7 +173,8 @@ describe('views (4.2)', () => {
         expect(has(from, 'includes', 'resources/views/layouts/app.blade.php')).toBe(true);
         expect(has(from, 'includes', 'resources/views/books/row.blade.php')).toBe(true);
         expect(has(from, 'includes', 'resources/views/components/alert.blade.php')).toBe(true);
-        expect(graph.edges.filter((e) => e.source === from && e.relation === 'includes')).toHaveLength(3);
+        expect(has(from, 'includes', 'resources/views/shared/crumbs.blade.php')).toBe(true);
+        expect(graph.edges.filter((e) => e.source === from && e.relation === 'includes')).toHaveLength(4);
     });
 
     it('links translation and config reads to their files', () => {
@@ -244,6 +248,49 @@ describe('the request path on the map (4.4)', () => {
         expect(r?.inferredTables).toEqual(['entities']);
         const md = renderMapMd(m, { title: 'Map', commit: 'x', state: 'fresh', summary: '' });
         expect(md).toContain('table `entities` (inferred)');
+    });
+});
+
+describe('map areas (carried 2.4)', () => {
+    it('holds a partial that views of three directories include out of the areas', () => {
+        const m = buildMapModel(graph);
+        const crumbs = m.files.findIndex((f) => f.path === 'resources/views/shared/crumbs.blade.php');
+        expect(m.files[crumbs]?.role).toBe('infra');
+        expect(m.areas.some((a) => a.files.includes(crumbs))).toBe(false);
+    });
+
+    it('keeps a routes file that reaches two clusters from becoming their hub', () => {
+        const nodes: CodeGraph['nodes'] = [];
+        const edges: CodeGraph['edges'] = [];
+        const file = (id: string) => nodes.push({ id, label: id, kind: 'file', source_file: id, source_location: [] });
+        const link = (source: string, target: string, relation: CodeGraph['edges'][number]['relation'] = 'calls') =>
+            edges.push({ source, target, relation, confidence: 'EXTRACTED', resolved_via: 'import-specifier', provider: 'native' });
+        file('routes/api.php');
+        for (const g of ['A', 'B']) {
+            const ids = [1, 2, 3, 4].map((i) => `app/${g}/C${i}.php`);
+            ids.forEach(file);
+            ids.forEach((id, i) => link(id, ids[(i + 1) % ids.length] as string));
+            ids.forEach((id, i) => {
+                const route = `routes/api.php#route:GET /${g}${i}`;
+                nodes.push({ id: route, label: `GET /${g}${i}`, kind: 'route', source_file: 'routes/api.php', source_location: [] });
+                link(route, id, 'routes-to');
+            });
+        }
+        const m = buildMapModel({ nodes, edges } as CodeGraph);
+        const api = m.files.findIndex((f) => f.path === 'routes/api.php');
+        expect(m.areas.map((a) => a.name)).not.toContain('routes/api.php');
+        const area = m.areas.find((a) => a.files.includes(api));
+        expect(area?.files.map((i) => m.files[i]?.path).filter((p) => p !== 'routes/api.php').every((p) => p?.startsWith('app/A/'))).toBe(true);
+    });
+
+    it('puts the routes file in the area of the controllers it routes to, never at the centre of its own', () => {
+        const m = buildMapModel(graph);
+        const web = m.files.findIndex((f) => f.path === 'routes/web.php');
+        const area = m.areas.find((a) => a.files.includes(web));
+        expect(area).toBeDefined();
+        expect(area?.name).not.toBe('routes/web.php');
+        const controllers = area?.files.filter((i) => m.files[i]?.path.startsWith('app/Http/Controllers/')) ?? [];
+        expect(controllers.length).toBeGreaterThan(0);
     });
 });
 

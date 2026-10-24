@@ -36,6 +36,8 @@ export type FileRole =
 
 /** Roles whose files take part in clustering. */
 const CLUSTER_ROLES: ReadonlySet<FileRole> = new Set(['code', 'test', 'entry', 'view']);
+/** Directories of including views at which a view counts as a shared partial. */
+const SHARED_PARTIAL_DIRS = 3;
 
 /** Compact symbol: [name, kind, line]. */
 export type MapSymbol = [string, string, number];
@@ -341,9 +343,29 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         if ((inFiles[i] as number) > infraInDegree) roles[i] = 'infra';
         else if (roles[i] === 'code' && inFiles[i] === 0 && outFiles[i] === 0) roles[i] = 'isolated';
     }
+    // A partial that views of SHARED_PARTIAL_DIRS directories include is shared
+    // the way a utility is: kept in, it glues every page that shows it into one
+    // area and names that area after itself. Counted by including directory,
+    // not by in-degree, because a project's code dwarfs its views in the p99.
+    const includers = new Map<number, Set<string>>();
+    for (const [s, t] of edges) {
+        if (roles[s] !== 'view' || roles[t] !== 'view') continue;
+        const dirs = includers.get(t) ?? new Set<string>();
+        dirs.add(path.posix.dirname(paths[s] as string));
+        includers.set(t, dirs);
+    }
+    for (const [t, dirs] of includers) if (dirs.size >= SHARED_PARTIAL_DIRS) roles[t] = 'infra';
+    // A routes file links to every handler it routes, so in the clustering it
+    // is the hub of whatever it touches. It sits out the clustering and then
+    // joins the area most of its handlers landed in.
+    const routeFiles = new Set<number>();
+    for (const n of graph.nodes) {
+        const i = n.kind === 'route' ? idx.get(n.source_file) : undefined;
+        if (i !== undefined && CLUSTER_ROLES.has(roles[i] as FileRole)) routeFiles.add(i);
+    }
 
     // 4. Areas: seeded Louvain over the coupled roles.
-    const clusterable = (i: number): boolean => CLUSTER_ROLES.has(roles[i] as FileRole);
+    const clusterable = (i: number): boolean => CLUSTER_ROLES.has(roles[i] as FileRole) && !routeFiles.has(i);
     const undirected = new Map<string, number>();
     for (const [s, t, w] of edges) {
         if (!clusterable(s) || !clusterable(t)) continue;
@@ -417,6 +439,15 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
     drafts.forEach((d, ai) => {
         for (const f of d.files) areaOf[f] = ai;
     });
+    for (const rf of [...routeFiles].sort((a, b) => a - b)) {
+        const pull = new Map<number, number>();
+        for (const [s, t, w] of edges) if (s === rf && (areaOf[t] as number) >= 0) pull.set(areaOf[t] as number, (pull.get(areaOf[t] as number) ?? 0) + w);
+        const best = [...pull.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0]?.[0];
+        const ai = best ?? drafts.push({ files: [], kind: 'small-parts', hub: rf, name: `small parts · ${topDir(paths[rf] as string)}` }) - 1;
+        const d = drafts[ai] as Draft;
+        d.files = [...d.files, rf].sort((a, b) => byPath(paths[a] as string, paths[b] as string));
+        areaOf[rf] = ai;
+    }
 
     // 6. Area metrics, area→area weights, layouts.
     const areaWeights = new Map<string, number>();
