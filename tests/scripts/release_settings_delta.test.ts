@@ -32,6 +32,7 @@ import {
     type ReleasedSurface,
 } from '../../src/scripts/_lib/release_settings_surface.js';
 import { infer_bump } from '../../src/scripts/release.js';
+import { NO_IMPACT_TRAILERS, type ImpactTrailers } from '../../src/scripts/_lib/consumer_impact.js';
 import { REMOVED_KEYS } from '../../src/scripts/_lib/settings_removed_keys.js';
 import {
     _resetRenameWarnings,
@@ -49,6 +50,7 @@ const HISTORICAL_NON_CUT_WRITES = ['3a9b54d4c7e20bee6476b2ca83e38949b93c779e'] a
 interface Commitish {
     type: string;
     breaking: boolean;
+    trailers: ImpactTrailers;
 }
 
 type Classification = 'tombstoned' | 'renamed' | 'neither';
@@ -109,10 +111,11 @@ describe('release settings delta — control', () => {
         const key = 'quality.local_auto_run';
         const live = plantRemoval(released, key, '16.6.0');
 
-        // (a) The bump derivation sees commit SUBJECTS only. A `feat:` subject
-        //     over a settings removal proposes a minor, and would propose one
-        //     whatever the surface did.
-        const commits: Commitish[] = [{ type: 'feat', breaking: false }];
+        // (a) The bump derivation sees commit subjects, their Consumer-Impact
+        //     trailers and the surfaces of the span's diff (ADR-300) — never the
+        //     released settings surface. A `feat:` subject with no trailer over
+        //     a settings removal proposes a minor whatever that surface did.
+        const commits: Commitish[] = [{ type: 'feat', breaking: false, trailers: NO_IMPACT_TRAILERS }];
         expect(infer_bump(commits as never)).toBe('minor');
 
         // (b) Neither pre-existing assertion looks at settings. Both return
@@ -588,9 +591,88 @@ describe('release settings delta — the assertion', () => {
         expect(errLines.join('')).toContain(SETTINGS_REMOVAL_RULE);
     });
 
+    // ADR-300 at the cut, option (b) of blocker adr-300-exception-at-the-cut
+    // (council 2/2, 2026-10-24): a rename whose RENAMED_KEYS alias carries the
+    // value is the automatic migration the cut recognises, and only when the
+    // release declares it; a REMOVED_KEYS tombstone discards the value and
+    // still needs its proof or a major.
+    it('adr-300-at-the-cut: a declared automatic rename passes below a major, a tombstone does not', () => {
+        const base = readReleasedSurface();
+        const [baseMajor, baseMinor] = base.version.split('.').map(Number);
+        const minorTarget = `${baseMajor}.${baseMinor! + 1}.0`;
+        const key = 'quality.local_auto_run';
+        const live = plantRemoval(base, key, minorTarget);
+        const renamedTo = 'quality.local_auto_run_renamed';
+        const renamed: ReleasedSurface = {
+            ...live,
+            entries: { ...live.entries, [renamedTo]: { type: 'boolean', default: true } },
+            renamedKeys: [...live.renamedKeys, [key, renamedTo] as [string, string]],
+        };
+        const fr = classifySettingsDelta(base, renamed);
+        expect(belowMajorRefusalLines(base, renamed, fr, minorTarget, new Map(), REPO_ROOT, 'automatic')).toEqual([]);
+        for (const impact of ['none', 'notice', 'action'] as const) {
+            expect(belowMajorRefusalLines(base, renamed, fr, minorTarget, new Map(), REPO_ROOT, impact)[0]).toContain(key);
+        }
+
+        const tombstoned: ReleasedSurface = { ...live, removedKeys: [...live.removedKeys, key].sort() };
+        const ft = classifySettingsDelta(base, tombstoned);
+        expect(belowMajorRefusalLines(base, tombstoned, ft, minorTarget, new Map(), REPO_ROOT, 'automatic')[0]).toContain(key);
+
+        // A declared automatic release does not license dropping an alias.
+        const aliasDropped: ReleasedSurface = { ...base, version: minorTarget, renamedKeys: [] };
+        const fd = classifySettingsDelta(base, aliasDropped);
+        expect(
+            belowMajorRefusalLines(base, aliasDropped, fd, minorTarget, new Map(), REPO_ROOT, 'automatic').join('\n'),
+        ).toContain('rename alias dropped below a major');
+
+        // Through the assertion, which takes the release's declared impact.
+        const ok = capture((write) => {
+            const f = assert_settings_surface_delta(minorTarget, {
+                emit: () => renamed,
+                read: () => base,
+                write,
+                proofs: new Map(),
+                impact: 'automatic',
+            });
+            expect(f?.carried_removals.map((r) => r.key)).toEqual([key]);
+        });
+        expect(ok).not.toContain('no consumer-neutral proof');
+    });
+
+    // The value-carry proof every RENAMED_KEYS entry relies on when the cut
+    // admits it below a major: the old key's value arrives on the new path in
+    // the layer that wrote it, and a layer that already carries the new key keeps it.
+    it('every RENAMED_KEYS alias carries the value onto its new path', () => {
+        const write = (tree: Record<string, unknown>, dotted: string, value: unknown): void => {
+            const parts = dotted.split('.');
+            let cur = tree;
+            for (const part of parts.slice(0, -1)) cur = (cur[part] ??= {}) as Record<string, unknown>;
+            cur[parts[parts.length - 1] as string] = value;
+        };
+        const read = (tree: Record<string, unknown>, dotted: string): unknown =>
+            dotted.split('.').reduce<unknown>((c, p) => (c as Record<string, unknown> | undefined)?.[p], tree);
+        const origErr = process.stderr.write.bind(process.stderr);
+        (process.stderr as { write: unknown }).write = (): boolean => true;
+        try {
+            for (const [oldKey, newKey] of RENAMED_KEYS) {
+                _resetRenameWarnings();
+                const layer: Record<string, unknown> = {};
+                write(layer, oldKey, 'carried-value');
+                expect(read(applyRenamedKeys(layer), newKey), oldKey).toBe('carried-value');
+                const both: Record<string, unknown> = {};
+                write(both, oldKey, 'stale');
+                write(both, newKey, 'migrated');
+                expect(read(applyRenamedKeys(both), newKey), oldKey).toBe('migrated');
+            }
+        } finally {
+            process.stderr.write = origErr;
+            _resetRenameWarnings();
+        }
+    });
+
     it('wired: the planner calls the assertion where it calls the other two', () => {
         const src = fs.readFileSync(path.join(REPO_ROOT, 'src/scripts/release.ts'), 'utf8');
-        expect(src).toContain('assert_settings_surface_delta(target, { previewOnly: args.dry_run });');
+        expect(src).toContain('assert_settings_surface_delta(target, { previewOnly: args.dry_run, impact: release_impact_entry(commits).impact });');
         expect(src).toContain('writeReleasedSurface(plan.target);');
         // The committed file is on the release PR's allowlist, or the cut
         // writes a file its own shape step refuses.
@@ -614,8 +696,9 @@ describe('release settings delta — the assertion', () => {
  */
 const RULE =
     'A settings key may be removed or renamed in a minor release only when no consumer project can ' +
-    'rely on it — default-neutral and derivable, proven by a named test; any other removal or rename ' +
-    "ships only in a major, and a renamed key's alias is dropped only in a major.";
+    'rely on it — default-neutral and derivable, proven by a named test — or, for a rename, when its ' +
+    'RENAMED_KEYS alias carries the value and the release declares Consumer-Impact: automatic; any other ' +
+    "removal or rename ships only in a major, and a renamed key's alias is dropped only in a major.";
 
 const RULE_LOCATIONS = [
     'docs/releases.md',

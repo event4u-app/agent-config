@@ -2,19 +2,14 @@
  * Which of the surfaces `CONTRIBUTING.md` § Versioning policy lists as major a
  * release span touched, read mechanically from that span's diff.
  *
- * `impact_bump` takes `touches_major_surface` and nothing in the tree supplied
- * it: step 2.2 scored the impact half alone and recorded the surface half as
- * unscored, because "the record has no surface column, and inferring one would
- * re-judge history". A diff is not the record — it is the change itself — so
- * this module reads the axis from the change rather than from prose about it.
- *
- * Nothing in `release.ts` calls this, for the same reason nothing calls
- * `impact_bump`: how releases are numbered is the owner decision the
- * `impact-numbering-model` blocker holds open. This is measurement apparatus.
+ * `release.ts` feeds the result to `span_bump` (ADR-300). It was written first
+ * as measurement apparatus for the out-of-sample score of the
+ * `impact-numbering-model` blocker, which is why the tables below carry the
+ * historical roots every surface has lived at.
  */
 
-/** The three triggers at `CONTRIBUTING.md:331` that a diff can decide. */
-export const MAJOR_SURFACES = ['installer-layout', 'settings-keys', 'rule-or-skill-removal'] as const;
+/** The triggers at `CONTRIBUTING.md` § Versioning policy that a diff can decide. */
+export const MAJOR_SURFACES = ['installer-layout', 'settings-keys', 'rule-or-skill-removal', 'command-removal'] as const;
 export type MajorSurface = (typeof MAJOR_SURFACES)[number];
 
 /**
@@ -66,6 +61,18 @@ const RULE_OR_SKILL_PATHS: readonly RegExp[] = [
 ];
 
 /**
+ * Paths whose deletion removes a command: the per-domain source, the older
+ * flat source tree, and the projection. 15.0.0 removed `/chat-history` this
+ * way, which the major list did not name until ADR-300 added it.
+ */
+const COMMAND_PATHS: readonly RegExp[] = [
+    /^src\/domains\/.+\/command\.md$/,
+    /^src\/agent-src\/commands\//,
+    /^\.agent-src\/commands\//,
+    /^dist\/agent-src\/commands\//,
+];
+
+/**
  * Files whose removed `key:` lines are settings keys.
  *
  * Every row tolerates a leading directory because this table was wrong in its
@@ -84,33 +91,20 @@ export const SETTINGS_KEY_FILES: readonly RegExp[] = [
 ];
 
 /**
- * The diff's paths that are settings-key files, for the caller's `git diff -- <paths>`.
+ * The diff's YAML paths that are settings-key files, for the caller's
+ * `git diff -- <paths>`.
  *
- * KNOWN OVER-MATCH, recorded 2026-10-21 rather than silently narrowed. The last
- * two rows above match on a directory plus the word `settings` and take no
- * extension, so they also select non-YAML files whose contents
- * `removed_setting_keys` then reads with a YAML key regex: in the scored window
- * that is `src/server/schemas/settings.ts` (seven spans) and
- * `tests/install/settings_surface_snapshot.test.ts` (one). A deleted property in
- * either would be counted as a dropped settings key.
- *
- * Measured impact in that window: NONE. All 14 spans were re-run with the paths
- * filtered to `.yml`/`.yaml`; every span's fire/no-fire outcome and every
- * removed-key set is byte-identical either way, so no row of the out-of-sample
- * measurement depends on the over-match.
- *
- * Not narrowed here on purpose. The obvious guard — require a YAML extension —
- * is a change to this exported function's contract, and a committed test
- * deliberately asserts that a `…schemas/agent-settings.schema.json` path IS
- * selected. Rewriting that contract on a latent finding, in the change that
- * merely measured it, is wider than the finding warrants. Whoever wires the
- * surface clause under blocker option (a) should apply the guard and move that
- * test with it.
+ * Only `.yml` / `.yaml` paths are returned. The last two rows above match on a
+ * directory plus the word `settings`, which also selected TypeScript and JSON
+ * files (`src/server/schemas/settings.ts`, a settings snapshot test) whose
+ * deleted `enabled: true,` property `removed_setting_keys` would read as a
+ * dropped settings key. Measured harmless while nothing consumed it; closed
+ * when `release.ts` started numbering releases by it (ADR-300).
  */
 export function settings_key_paths(entries: readonly DiffEntry[]): string[] {
     const seen = new Set<string>();
     for (const entry of entries) {
-        if (matches(entry.path, SETTINGS_KEY_FILES)) seen.add(entry.path);
+        if (/\.ya?ml$/.test(entry.path) && matches(entry.path, SETTINGS_KEY_FILES)) seen.add(entry.path);
     }
     return [...seen];
 }
@@ -187,6 +181,7 @@ export function classify_surfaces(
         if (!is_create_or_delete(entry.status)) continue;
         if (matches(entry.path, INSTALLER_LAYOUT_PATHS)) out.add('installer-layout');
         if (entry.status === 'D' && matches(entry.path, RULE_OR_SKILL_PATHS)) out.add('rule-or-skill-removal');
+        if (entry.status === 'D' && matches(entry.path, COMMAND_PATHS)) out.add('command-removal');
     }
     if (removed_keys.length > 0) out.add('settings-keys');
     return out;
@@ -204,4 +199,13 @@ export function parse_name_status(raw: string): DiffEntry[] {
         out.push({ status, path });
     }
     return out;
+}
+
+/** The surfaces the span `<tag>..HEAD` touched; `git` runs one git command and returns its stdout. */
+export function span_surfaces(tag: string | null, git: (args: string[]) => string): Set<MajorSurface> {
+    if (!tag) return new Set();
+    const entries = parse_name_status(git(['diff', '--name-status', `${tag}..HEAD`]));
+    const paths = settings_key_paths(entries);
+    const patch = paths.length > 0 ? git(['diff', `${tag}..HEAD`, '--', ...paths]) : '';
+    return classify_surfaces(entries, removed_setting_keys(patch));
 }

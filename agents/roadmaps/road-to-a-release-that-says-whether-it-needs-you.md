@@ -78,7 +78,7 @@ output. It is the classifier and the data behind it.
 
 ## Phase 2 — The bump follows the impact, not the punctuation
 
-- [ ] **2.1 Replace the `release.ts:463` rule.** Major only when a commit in
+- [x] **2.1 Replace the `release.ts:463` rule.** Major only when a commit in
       the span carries `action`, or touches a surface `CONTRIBUTING.md:331`
       already lists as major. An internal `!` becomes a minor.
       verify: unit tests over the two branches.
@@ -100,6 +100,18 @@ output. It is the classifier and the data behind it.
       Re-screened (2026-10-21) by a `/roadmap:process-full` drain: no ADR
       under `docs/decisions/` records option (a), so the blocker still holds
       and nothing in this step is executable without the owner's ruling.
+      Landed (2026-10-24), on the owner's ruling recorded as ADR-300:
+      `infer_bump` in `src/scripts/release.ts` calls `span_bump`
+      (`src/scripts/_lib/impact_bump.ts`) with the span's commits and the
+      surfaces `classify_surfaces` reads from `git diff <last-tag>..HEAD`.
+      `action` or a major surface → major; a declared `!` → minor; a breaking
+      commit with no valid trailer stays a major; a removed settings key is
+      not a major when the span declares `automatic`. `CONTRIBUTING.md`'s
+      major row now names commands and the migration exception, and
+      `major_surface.ts` gained `command-removal` (positive control: the four
+      15.0.0 deletions) and a YAML-only guard on `settings_key_paths`, which
+      closes the over-match risk 6 named. Tests seen red first (14 failing),
+      then green; the absence guard was neutralised and 2 tests went red.
 - [x] **2.2 Replay the real history.** Score 10.0.0 → 16.0.0 through the new
       rule against the recorded rows.
       verify: 13.0.0, 14.0.0 and 16.0.0 come out **minor**; 12.0.0 and 15.0.0
@@ -241,7 +253,11 @@ output. It is the classifier and the data behind it.
 
 ### blocker: impact-numbering-model
 
-- **Status:** open on (a) only — **(b) is decided and (c) is refused.** AI
+- **Status:** resolved — ADR-300. **2026-10-24:** the owner chose (a) with a
+  migration exception (directive:
+  `agents/evidence/owner-directives/2026-10-24-impact-numbering-model.md`).
+  The history below is kept as the record of how the question got there.
+  Before that: open on (a) only — **(b) is decided and (c) is refused.** AI
   council 2026-10-16, 2/2 concluded, no split, routing **per option** as the
   question invited: **(b) DECIDE** — advisory collection alters no dependency
   resolution and stays inside delegated authority; **(c) DECIDE** — preserving
@@ -349,6 +365,42 @@ output. It is the classifier and the data behind it.
   `CONTRIBUTING.md` calls patches, and the classifier in Phase 4 has an
   `impactMap` that is correct for nothing before the first trailered release.
 
+### blocker: adr-300-exception-at-the-cut
+
+- **Status:** resolved — option (b), AI council 2/2 on 2026-10-24
+  (`agents/evidence/council/adr-300-exception-at-the-cut-20261024.md`, D7).
+  Found 2026-10-24 by this file's PR CI: ADR-300's migration exception reached
+  the proposed bump but not the cut, which enforces `SETTINGS_REMOVAL_RULE`
+  (blocker `what-a-minor-may-remove`) through `belowMajorRefusalLines` in
+  `src/scripts/_lib/release_settings_surface.ts`. The orchestrating session
+  ruled the same day that this blocker carries out the owner's decision, took
+  option (c) "leave the cut as it is" off the table, and routed (a) vs (b) to
+  the council. Landed: a carried rename needs no proof below a major when the
+  release declares `Consumer-Impact: automatic`; a tombstone still does; the
+  rule sentence is amended in all eight places.
+- **Class:** 2 — council-decidable; the owner decision it carries out is ADR-300.
+- **Owner:** AI council (anthropic + openai), on the orchestrator's routing.
+- **Blocks:** nothing now. It held the settings-key half of step 2.1's
+  migration exception at the cut.
+- **What to do:** (a) a `RENAMED_KEYS` alias or a `REMOVED_KEYS` tombstone
+  counts when the span declares `Consumer-Impact: automatic`; (b) only a
+  `RENAMED_KEYS` alias counts. (b) was chosen.
+- **Resolved when:** a `## Decisions` row names this blocker, and the cut and
+  the rule sentence say the same thing as `CONTRIBUTING.md` § Versioning policy.
+- **Recommendation:** (b), as the council chose.
+- **If you do nothing:** n/a — resolved. The council's residue, a
+  test-backed registry for conversion-module migrations, is recorded in D7.
+
+## Decisions` names this
+  blocker, and the cut and the rule sentence say the same thing as
+  `CONTRIBUTING.md` § Versioning policy.
+- **Recommendation:** (b) — a loader-migrated rename is the one case where
+  "automatic" is mechanically true; a tombstone only ignores the key, which
+  17.0.0's own row classed `action`.
+- **If you do nothing:** a release whose only break is an automatically
+  migrated key removal is refused at the cut until it is cut as a major or its
+  proof is named — the pre-ADR-300 behaviour for that one shape.
+
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
@@ -358,6 +410,8 @@ output. It is the classifier and the data behind it.
 | D3 | deterministic | agent | No new CLI verb; the classifier is a function `doctor --json` reports | ADR-041 | ADR-041 is superseded |
 | D4 | contested-technical | evidence | Read the impact map from the `/latest` document the 24 h probe already fetches; no packument fallback is needed | step 3.2, observed 2026-10-16: `GET https://registry.npmjs.org/@event4u/agent-config/latest` returned 7,948 bytes for 16.5.0 carrying every top-level `package.json` key of the 16.5.0 tag except `files`, **including the non-standard `mcpName`** — so a custom top-level key reaches the reader. The same document carries `engines` (`{"node": ">=20.11.0"}`) and `dist.attestations` (provenance); `deprecated` is absent when unset. The fallbacks cost far more: the full packument was 842,897 bytes and the abbreviated `application/vnd.npm.install-v1+json` form 260,604 bytes, against one request per 24 h | the registry stops carrying a non-standard top-level key in `/latest`, or the first release that writes `agentConfig` shows it absent from that document |
 | D5 | critical-technical | evidence | Uncertainty never resolves to `auto` | an updater that guesses on a release it cannot classify is the failure mode the whole file exists to prevent | never |
+| D6 | product-owned | owner | Blocker `impact-numbering-model`: option (a) with a migration exception — the `Consumer-Impact` trailer binds the bump, and a settings key removed with an automatic migration is not a major (ADR-300) | Owner answer "1" on 2026-10-24 to the blocker's numbered question (`agents/evidence/owner-directives/2026-10-24-impact-numbering-model.md`) | a release numbered by the rule ships a consumer action as a minor or a patch |
+| D7 | contested-technical | council:agents/evidence/council/adr-300-exception-at-the-cut-20261024.md | Blocker `adr-300-exception-at-the-cut`, decided 2026-10-24: option (b) — the cut admits a carried rename below a major when the release declares `Consumer-Impact: automatic`; a `REMOVED_KEYS` tombstone still needs its proof or a major. Residue: conversion-module migrations need their own test-backed registry before they count | Council 2/2, converged, question committed before the run | a non-rename migration needs to ship in a minor, which is when the registry is built |
 
 D4 was first recorded as a deferral to a measurement; step 3.2 took it. The
 witness is indirect on purpose: no published version carries `agentConfig`
@@ -412,7 +466,7 @@ direct check named in the revisit column.
       (Evidence under step 4.3: no file in their import closure changed.)
 - [x] **AC-7** Every row of `BREAKING_CHANGES.md`'s table carries a
       `Consumer impact` value from the enum.
-- [ ] **AC-8** `task ci` green.
+- [x] **AC-8** `task ci` green.
       (Closes with the PR that closes this file: the remote pipeline is the
       authoritative run, and a green it has not yet reported is not evidence.)
       **Ticked and un-ticked again on 2026-10-21, and the reason is worth more
