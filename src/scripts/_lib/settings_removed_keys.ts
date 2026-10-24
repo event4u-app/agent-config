@@ -74,8 +74,10 @@ type SettingsDict = Record<string, unknown>;
  *
  * Release class: A settings key may be removed or renamed in a minor release
  * only when no consumer project can rely on it — default-neutral and
- * derivable, proven by a named test; any other removal or rename ships only in
- * a major, and a renamed key's alias is dropped only in a major. An entry here
+ * derivable, proven by a named test — or, for a rename, when its RENAMED_KEYS
+ * alias carries the value and the release declares Consumer-Impact: automatic;
+ * any other removal or rename ships only in a major, and a renamed key's alias
+ * is dropped only in a major. An entry here
  * is what tells a consumer the key went; it is not the licence for a minor —
  * {@link MINOR_REMOVAL_PROOFS} is, and the cut reads it.
  *

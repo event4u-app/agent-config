@@ -21,6 +21,7 @@ const CONTROL_UNRELATED = 'tests/scripts/ai_council/synthesis_check.test.ts';
 /** Every file allowed to name a host sync artefact, and why. */
 const CARRIERS: Record<string, string> = {
     [CONTROL_UNRELATED]: 'unrelated council render-check (the control reading)',
+    'docs/archive/CHANGELOG-pre-17.4.0.md': 'archived release notes that shipped the sync command',
     'docs/guidelines/design-fidelity-routing.md': 'routing matrix row for .design-sync/',
     'src/rules/design-fidelity.md': 'path trigger + the mechanical leg sentence',
     'src/scripts/_lib/ui_surface.ts': 'the one handover shape list',
