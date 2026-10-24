@@ -137,11 +137,11 @@ plan AC improvements automatically when a source repository updates.
 
 ## Phase 4 — An estate index, not a merged graph
 
-- [ ] **4.1 Opt in per machine.** `code-graph projects index on|off` stores the switch
+- [x] **4.1 Opt in per machine.** `code-graph projects index on|off` stores the switch <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/estate_index.ts -->
       in the registry; off is the default, because the index carries client project
       paths. With it off, nothing below runs.
       verify: a test asserts that with the switch off a refresh writes no index file.
-- [ ] **4.2 Packages and exports per project.** When a registered project's graph is
+- [x] **4.2 Packages and exports per project.** When a registered project's graph is <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/estate_index.ts -->
       refreshed and the switch is on, write its rows into
       `runtime/projects/index.sqlite3`: declared packages from the manifests the
       providers already recognise (`package.json`, `composer.json`, `pyproject.toml`,
@@ -149,14 +149,14 @@ plan AC improvements automatically when a source repository updates.
       publishes, and its top-level exported symbols only.
       verify: fixture repos for npm and composer produce the expected rows; a project's
       rows are replaced, not appended, on its next refresh.
-- [ ] **4.3 Cross-project edges, honestly labelled.** `xedges` with `via` one of
+- [x] **4.3 Cross-project edges, honestly labelled.** `xedges` with `via` one of <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/estate_index.ts -->
       `package` (declared dependency on a package another registered project publishes),
       `unique-name` (exactly one exporting symbol estate-wide), `mention` (a registered
       project's name in code). Only `package` is a solid edge; the other two carry the
       graph's existing guess semantics.
       verify: fixtures — a real path dependency yields `package`; two projects exporting
       the same name yield no `unique-name` edge.
-- [ ] **4.4 Size stays small.** The index stores packages and exports only, so it
+- [x] **4.4 Size stays small.** The index stores packages and exports only, so it <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/estate_index.ts -->
       must stay under 2 % of the summed project graph JSON sizes.
       verify: `npx vitest run tests/scripts/code_graph/estate_index.test.ts` -> /passed/ — a case builds
       the three-project fixture estate, divides `index.sqlite3` bytes by the summed graph

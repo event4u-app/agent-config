@@ -51,6 +51,10 @@
  * three-state staleness — so a caller can tell "no callers" from "no callers I
  * would trust", and "dead" from "dead as of a graph 40 commits behind".
  *
+ * Every verb that reads a graph also takes `--project <id|name|path>`: a
+ * project in the user-global registry, resolved to its root and graph home
+ * (ADR-299). Only a registered project resolves.
+ *
  * Query subcommands (query/path/explain/affected) are added by the Phase-3
  * query tier. Deterministic, LLM-free, no network. Exit codes:
  * 0 ok · 1 not-found / validation-failed / refresh-budget-exceeded ·
@@ -91,6 +95,7 @@ import {
 } from './detect.js';
 import { graphHome } from './graph_home.js';
 import { suggestVerb } from './intent.js';
+import { resolveProjectRef } from './project_ref.js';
 import { projectsMain, registerUse } from './projects_cli.js';
 import { buildMap, graphGeneration, mapGeneration, recordOutcome } from './map.js';
 import { cliPackage, usableCli } from './refresh_cli.js';
@@ -152,6 +157,9 @@ function shown(root: string, p: string): string {
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const DEFAULT_BUDGET_SECONDS = 60;
 
+/** A refusal that names what the caller asked for wrongly; exits 1, not 3. */
+class UsageError extends Error {}
+
 function flag(argv: string[], name: string): string | null {
     const i = argv.indexOf(name);
     return i >= 0 && i + 1 < argv.length ? (argv[i + 1] as string) : null;
@@ -170,8 +178,13 @@ function flag(argv: string[], name: string): string | null {
  */
 function resolveRoot(argv: string[]): string {
     const explicit = flag(argv, '--root');
+    const project = flag(argv, '--project');
     let candidate: string;
-    if (explicit !== null) {
+    if (project !== null) {
+        const r = resolveProjectRef(project);
+        if ('error' in r) throw new UsageError(r.error);
+        candidate = r.root;
+    } else if (explicit !== null) {
         candidate = explicit;
     } else {
         try {
@@ -1158,6 +1171,10 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         );
         return 2;
     } catch (e) {
+        if (e instanceof UsageError) {
+            process.stderr.write(`code-graph: ${e.message}\n`);
+            return 1;
+        }
         process.stderr.write(`code-graph: internal error: ${(e as Error).message}\n`);
         return 3;
     }

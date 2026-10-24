@@ -44,6 +44,7 @@ import * as path from 'node:path';
 import { changedFiles } from '../code_graph/cli.js';
 import { detectSources, graphState, pickSource } from '../code_graph/detect.js';
 import { graphHome } from '../code_graph/graph_home.js';
+import { resolveProjectRef } from '../code_graph/project_ref.js';
 import { resolvePath } from './path_util.js';
 import { isTestFile } from '../code_graph/build.js';
 import {
@@ -150,7 +151,37 @@ function num(args: Record<string, unknown>, key: string, dflt: number): number {
     return typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : dflt;
 }
 
-export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
+/**
+ * Every graph tool takes an optional `project` (5.1): a registered repo id,
+ * name or path, resolved through the registry and its graph home. Without it
+ * the tool answers about the server root, exactly as before.
+ */
+function withProjectParam(tools: Record<string, BuiltinTool>): Record<string, BuiltinTool> {
+    const out: Record<string, BuiltinTool> = {};
+    for (const [name, t] of Object.entries(tools)) {
+        const schema = t.input_schema as { properties?: Record<string, unknown> };
+        out[name] = {
+            ...t,
+            input_schema: {
+                ...t.input_schema,
+                properties: {
+                    ...(schema.properties ?? {}),
+                    project: { type: 'string', description: 'Another project: registered repo id, name or path. Default: this root.' },
+                },
+            },
+            handler: async (args, root) => {
+                const ref = str(args, 'project');
+                if (ref === '') return t.handler(args, root);
+                const r = resolveProjectRef(ref);
+                if ('error' in r) return { status: 'error', error: r.error, candidates: r.candidates };
+                return t.handler(args, r.root);
+            },
+        };
+    }
+    return out;
+}
+
+export const GRAPH_TOOLS: Record<string, BuiltinTool> = withProjectParam({
     graph_impact: {
         name: 'graph_impact',
         side_effect: 'shell',
@@ -446,4 +477,4 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
             return { status: 'ok', drawn_at_commit: map.meta.commit, ...r };
         },
     },
-};
+});

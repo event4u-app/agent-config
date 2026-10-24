@@ -237,6 +237,10 @@
         "properties": {
           "area": {
             "type": "string"
+          },
+          "project": {
+            "type": "string",
+            "description": "Another project: registered repo id, name or path. Default: this root."
           }
         },
         "additionalProperties": false
@@ -263,6 +267,10 @@
             "type": "boolean",
             "default": false,
             "description": "Answer anyway, accepting the gap. Never a default."
+          },
+          "project": {
+            "type": "string",
+            "description": "Another project: registered repo id, name or path. Default: this root."
           }
         },
         "additionalProperties": false
@@ -298,6 +306,10 @@
             "type": "boolean",
             "default": false,
             "description": "Instead return changed symbols no test imports."
+          },
+          "project": {
+            "type": "string",
+            "description": "Another project: registered repo id, name or path. Default: this root."
           }
         },
         "additionalProperties": false
@@ -315,7 +327,12 @@
       ],
       "input_schema": {
         "type": "object",
-        "properties": {},
+        "properties": {
+          "project": {
+            "type": "string",
+            "description": "Another project: registered repo id, name or path. Default: this root."
+          }
+        },
         "additionalProperties": false
       },
       "annotations": {
@@ -376,6 +393,10 @@
               "documents"
             ],
             "description": "Restrict to one relation. Omit for all of them."
+          },
+          "project": {
+            "type": "string",
+            "description": "Another project: registered repo id, name or path. Default: this root."
           }
         },
         "additionalProperties": false
@@ -411,6 +432,10 @@
             "minimum": 1,
             "default": 1500,
             "description": "Token budget for lines."
+          },
+          "project": {
+            "type": "string",
+            "description": "Another project: registered repo id, name or path. Default: this root."
           }
         },
         "additionalProperties": false
@@ -441,6 +466,10 @@
             "minimum": 1,
             "default": 1500,
             "description": "Token budget for lines."
+          },
+          "project": {
+            "type": "string",
+            "description": "Another project: registered repo id, name or path. Default: this root."
           }
         },
         "additionalProperties": false
@@ -465,6 +494,10 @@
           "symbol": {
             "type": "string",
             "description": "Node id `<relpath>#<sym>`, label, or free text."
+          },
+          "project": {
+            "type": "string",
+            "description": "Another project: registered repo id, name or path. Default: this root."
           }
         },
         "additionalProperties": false
