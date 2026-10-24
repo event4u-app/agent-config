@@ -4,7 +4,7 @@
 # Ported from the retired Python 3.11 image (ADR-200 python-to-typescript
 # migration): the server is now the compiled CLI's native `mcp-server`
 # command (ADR-085 turnkey read-only stdio server). Ships:
-#   - dist/cli/            (compiled CLI — built in the builder stage)
+#   - dist/                (the whole tsc output — dist/cli plus the trees it imports)
 #   - node_modules/        (production dependencies only)
 #   - dist/agent-src/      (prompts + resources content; prebuilt in-repo)
 #   - docs/guidelines/     (guideline:// resource content)
@@ -40,7 +40,10 @@ RUN groupadd --system mcp \
 WORKDIR /app
 
 COPY --from=builder /build/node_modules ./node_modules
-COPY --from=builder /build/dist/cli ./dist/cli
+# The whole tsc output, not dist/cli alone: the CLI imports sibling trees
+# (dist/shared, …), and copying only dist/cli shipped an image that died on
+# ERR_MODULE_NOT_FOUND before answering initialize.
+COPY --from=builder /build/dist ./dist
 COPY dist/agent-src/ ./dist/agent-src/
 COPY docs/guidelines/ ./docs/guidelines/
 COPY package.json ./package.json
