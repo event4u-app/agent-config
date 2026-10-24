@@ -297,3 +297,23 @@ entries:
       archiving breaks inbound references: ADRs (`docs/decisions/ADR-0xx`),
       reports (`agents/reports/`), and sibling roadmaps all link the roadmap at
       its active path. "
+  - id: update-pin-without-global-install-split-state
+    status: active
+    confidence: high
+    source:
+      - maintainer-memory-index
+    owner: maintainer
+    last_validated: 2026-10-24
+    review_after_days: 90
+    verified_at_commit: a9eb77c296
+    semantic_verdict: still-true
+    semantic_verdict_at: 2026-10-24
+    key: src/scripts/_cli/cmd_update.ts
+    body: "A version pin must name what runs on every surface. `update` wrote the
+      project pin without touching the global install, but only the CLI
+      dispatcher (`pin_resolver.ts`) honours the pin; hooks, rules and skills
+      keep running from the global install, so a pin ahead of it was a silent
+      split state reported as success. Now `update` installs the pinned version
+      globally first or refuses, and `doctor` compares pin with global. Lesson:
+      narrowing what a command moves requires enumerating every consumer of the
+      state it stops moving."
