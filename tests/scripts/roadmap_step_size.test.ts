@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { oversizedSteps, staleHeld, stepSizeProblems, STEP_WORD_CAP } from '../../src/scripts/_lib/roadmap_step_size.js';
+import {
+    decisionCapWarnings,
+    oversizedSteps,
+    staleHeld,
+    stepSizeProblems,
+    STEP_WORD_CAP,
+} from '../../src/scripts/_lib/roadmap_step_size.js';
 
 const words = (n: number): string => Array.from({ length: n }, (_, i) => `w${String(i)}`).join(' ');
 
@@ -43,5 +49,25 @@ describe('roadmap step size', () => {
         const held = new Set(['road-to-x.md#1.2', 'road-to-x.md#1.1', 'road-to-other.md#9.9']);
         expect(staleHeld('road-to-x.md', roadmap(100), held)).toEqual(['road-to-x.md#1.1', 'road-to-x.md#1.2']);
         expect(staleHeld('road-to-x.md', roadmap(400), held)).toEqual(['road-to-x.md#1.1']);
+    });
+
+    it('a held step may shrink but never grow past its recorded size', () => {
+        const held = new Set(['road-to-x.md#1.2']);
+        const size = oversizedSteps('road-to-x.md', roadmap(400))[0]!.words;
+        const ceilings = new Map([['road-to-x.md#1.2', size]]);
+        expect(stepSizeProblems('road-to-x.md', roadmap(400), held, ceilings)).toEqual([]);
+        expect(stepSizeProblems('road-to-x.md', roadmap(300), held, ceilings)).toEqual([]);
+        const grown = stepSizeProblems('road-to-x.md', roadmap(450), held, ceilings);
+        expect(grown).toHaveLength(1);
+        expect(grown[0]).toMatch(/held step 1\.2 grew/);
+    });
+
+    it('warns on a step citing more than ten distinct decisions, not on ten', () => {
+        const ids = (n: number): string => Array.from({ length: n }, (_, i) => `D${String(i + 1)}`).join(', ');
+        const text = (n: number): string => `- [ ] **7.1 Classify.** Per ${ids(n)} and again D1.`;
+        expect(decisionCapWarnings('road-to-x.md', text(10))).toEqual([]);
+        expect(decisionCapWarnings('road-to-x.md', text(11))).toEqual([
+            'step 7.1 cites 11 decisions (cap 10) — cut wrong: split it, do not extend it',
+        ]);
     });
 });

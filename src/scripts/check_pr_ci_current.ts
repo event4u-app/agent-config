@@ -153,8 +153,13 @@ export interface Facts {
      *          a push would be rejected, and forcing over it is what
      *          git-history-discipline gates.
      * `diverged` neither contains the other. Never ok either.
+     * `rewritten` diverged, but every commit only the PR head carries is a
+     *          non-merge whose patch the local branch also carries: the session
+     *          reworded or rebased its own commits. Ok before a push, which then
+     *          needs `--force-with-lease` on the PR head; an Update branch press
+     *          brings a merge or foreign content and stays `diverged`.
      */
-    relation: 'equal' | 'ahead' | 'behind' | 'diverged' | 'unknown';
+    relation: 'equal' | 'ahead' | 'behind' | 'diverged' | 'rewritten' | 'unknown';
 }
 
 export interface DecideOptions {
@@ -188,6 +193,25 @@ export function decide(f: Facts, opts: DecideOptions = {}): Verdict {
                 `PR #${String(f.pr)} head ${f.prHead?.slice(0, 9) ?? '?'} is not reachable from the local ` +
                 `branch (${f.relation}) — the PR carries a commit this checkout does not have, which is what ` +
                 'a GitHub *Update branch* press looks like. Merge it in; never force over it.',
+            scanned: 2,
+        };
+    }
+    if (f.relation === 'rewritten') {
+        if (opts.prePush === true) {
+            return {
+                exit: 0,
+                message:
+                    `PR #${String(f.pr)} head ${f.prHead?.slice(0, 9) ?? '?'} carries only commits the local branch ` +
+                    'rewrote (same patches, no merge) — push with ' +
+                    `\`--force-with-lease=<branch>:${f.prHead ?? '<pr-head>'}\`, then re-run to verify.`,
+                scanned: 2,
+            };
+        }
+        return {
+            exit: 1,
+            message:
+                `PR #${String(f.pr)} head ${f.prHead?.slice(0, 9) ?? '?'} is the pre-rewrite branch — the PR does ` +
+                'NOT contain what is committed here until the rewrite is pushed.',
             scanned: 2,
         };
     }
@@ -271,7 +295,7 @@ export function decide(f: Facts, opts: DecideOptions = {}): Verdict {
 export function rowsWereEvaluated(f: Facts): boolean {
     if (f.unobservable !== null) return false;
     if (f.pr === null) return false;
-    return f.relation !== 'behind' && f.relation !== 'diverged' && f.relation !== 'ahead';
+    return f.relation !== 'behind' && f.relation !== 'diverged' && f.relation !== 'rewritten' && f.relation !== 'ahead';
 }
 
 /**
@@ -323,7 +347,17 @@ export function relate(
     const localReachable = run('git', ['merge-base', '--is-ancestor', local, pr], repo).ok;
     if (prReachable) return 'ahead';
     if (localReachable) return 'behind';
-    return 'diverged';
+    return isOwnRewrite(repo, local, pr) ? 'rewritten' : 'diverged';
+}
+
+/** Every commit only `pr` carries is a non-merge with a patch-equivalent commit on `local`. */
+export function isOwnRewrite(repo: string, local: string, pr: string): boolean {
+    const merges = run('git', ['rev-list', '--merges', `${local}..${pr}`], repo);
+    if (!merges.ok || merges.stdout.trim() !== '') return false;
+    const cherry = run('git', ['cherry', local, pr], repo);
+    if (!cherry.ok) return false;
+    const lines = cherry.stdout.split('\n').filter((l) => l.trim() !== '');
+    return lines.length > 0 && lines.every((l) => l.startsWith('- '));
 }
 
 /** Gather the facts `decide` consumes. Every failure becomes `unobservable`. */

@@ -25,7 +25,13 @@ import { asOf } from './_lib/as_of.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { granularity_problems } from './_lib/roadmap_granularity.js';
-import { loadStepSizeBaseline, staleHeld, stepSizeProblems } from './_lib/roadmap_step_size.js';
+import {
+    decisionCapWarnings,
+    loadStepSizeBaseline,
+    loadStepSizeCeilings,
+    staleHeld,
+    stepSizeProblems,
+} from './_lib/roadmap_step_size.js';
 import { screenRoadmap } from './roadmap_drain_queue.js';
 import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 
@@ -207,6 +213,12 @@ function _stepSizeBaseline(): Set<string> {
     return _stepSizeHeld;
 }
 
+let _stepSizeCeil: Map<string, number> | null = null;
+function _stepSizeCeilings(): Map<string, number> {
+    _stepSizeCeil ??= loadStepSizeCeilings(REPO_ROOT);
+    return _stepSizeCeil;
+}
+
 function lint_roadmap(
     p: string,
     horizon_weeks: number,
@@ -231,8 +243,9 @@ function lint_roadmap(
     // here rather than shipped as its own gate; `_lib/roadmap_granularity.ts`
     // carries the reason.
     problems.push(...granularity_problems(text));
-    problems.push(...stepSizeProblems(path.basename(p), text, _stepSizeBaseline()));
+    problems.push(...stepSizeProblems(path.basename(p), text, _stepSizeBaseline(), _stepSizeCeilings()));
     if (warnings) {
+        warnings.push(...decisionCapWarnings(path.basename(p), text));
         for (const key of staleHeld(path.basename(p), text, _stepSizeBaseline())) {
             warnings.push(`${key} fits under the step cap now — delete it from src/config/roadmap-step-size-baseline.json`);
         }
