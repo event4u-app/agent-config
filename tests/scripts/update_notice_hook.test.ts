@@ -16,6 +16,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { parse as parseYaml } from 'yaml';
 
 import { parseCuratedHead, updateNotice, type NoticeInput } from '../../src/scripts/_lib/update_notice.js';
+import { USER_NOTICE_HOSTS, USER_NOTICE_KEY } from '../../src/scripts/hooks/user_notice.js';
 import { CONCERN, readNoticeState, readUpdateMode, runNotice, type NoticeDeps } from '../../src/scripts/update_notice_hook.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
@@ -87,23 +88,70 @@ describe('3.1 — a session_start concern beside wrapper-freshness', () => {
         platforms: Record<string, Record<string, string[]>>;
     };
 
-    // A lifecycle hook that may start an install is an authority expansion,
-    // whatever its `severity` says. Until a round on blocker
-    // `concerns-refused-as-authority-expansion` re-registers it, the manifest
-    // must NOT bind it — this flips red on the commit that registers it, which
-    // is exactly the commit that must carry the new verdict.
-    it('is not registered in hook_manifest.yaml while the council refusal stands', () => {
-        expect(manifest.concerns[CONCERN]).toBeUndefined();
+    // Registered as a notification and nothing wider: it installs nothing (3.2)
+    // and its text reaches the user only through a host's UI-only field.
+    it('is registered as an advisory, fail-open notification', () => {
+        expect(manifest.concerns[CONCERN]).toMatchObject({
+            script: 'src/scripts/update_notice_hook.ts',
+            fail_closed: false,
+            severity: 'advisory',
+            effect: 'notification',
+        });
     });
 
-    it('is bound on no event of any host while the council refusal stands', () => {
+    // Bound only where the user channel exists, so it never runs on a host
+    // where it would say nothing — the reason round 10 refused it.
+    it('is bound on session_start of the hosts with a user channel, and nowhere else', () => {
         const bound: string[] = [];
         for (const [host, events] of Object.entries(manifest.platforms)) {
             for (const [event, concerns] of Object.entries(events)) {
                 if (Array.isArray(concerns) && concerns.includes(CONCERN)) bound.push(`${host}:${event}`);
             }
         }
-        expect(bound).toEqual([]);
+        expect(bound).toEqual([...USER_NOTICE_HOSTS].map((h) => `${h}:session_start`));
+    });
+
+    it('under a host with a user channel the lines go out as one user_notice reply and not to stderr', () => {
+        const root = install('1.0.0');
+        const err: string[] = [];
+        const out: string[] = [];
+        const d = deps({
+            packageRoot: root,
+            isTty: false,
+            probeStatePath: probeState(tmp, { last_seen_version: '2.0.0' }),
+            err: { write: (t) => void err.push(t) },
+        });
+        runNotice({ ...d, isTty: true, notice: { write: (t) => void out.push(t) } });
+        expect(err).toEqual([]);
+        expect(out).toHaveLength(1);
+        const reply = JSON.parse(out[0] as string) as Record<string, string>;
+        expect(Object.keys(reply)).toEqual([USER_NOTICE_KEY]);
+        expect(reply[USER_NOTICE_KEY]).toContain('agent-config 2.0.0 is available (installed: 1.0.0).');
+    });
+
+    it('end to end, a claude envelope yields a user_notice reply on stdout', () => {
+        const root = install('1.0.0');
+        const home = path.join(tmp, 'home');
+        probeState(home, { last_seen_version: '2.0.0' });
+        const env: NodeJS.ProcessEnv = { ...process.env, EVENT4U_CONFIG_HOME: home, AGENT_CONFIG_PACKAGE_ROOT: root };
+        delete env['CI'];
+        delete env['GITHUB_ACTIONS'];
+        delete env['AGENT_CONFIG_NO_UPDATE_CHECK'];
+        const run = (platform: string) =>
+            spawnSync(path.join(REPO_ROOT, 'scripts-run'), ['src/scripts/update_notice_hook'], {
+                cwd: tmp,
+                env,
+                input: JSON.stringify({ platform, event: 'session_start', session_id: 's1' }),
+                encoding: 'utf-8',
+            });
+        const viaClaude = run('claude');
+        expect(viaClaude.status).toBe(0);
+        expect((JSON.parse(viaClaude.stdout) as Record<string, string>)[USER_NOTICE_KEY]).toContain('2.0.0 is available');
+        fs.rmSync(path.join(home, 'update-notice.stamp'), { force: true });
+        // A host with no verified user channel is a non-interactive context: nothing said, nothing written.
+        const viaCopilot = run('copilot');
+        expect(viaCopilot.stdout).toBe('');
+        expect(fs.existsSync(path.join(home, 'update-notice.stamp'))).toBe(false);
     });
 
     it('costs file reads only — p95 over 20 runs stays far inside the 160 ms session_start baseline', () => {

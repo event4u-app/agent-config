@@ -48,6 +48,7 @@ import { parse_version } from './_lib/version_order.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
 import { readHookStdin } from './hooks/hook_stdin.js';
 import { is_replay_mode } from './hooks/state_io.js';
+import { hostShowsUserNotice, USER_NOTICE_KEY } from './hooks/user_notice.js';
 
 export const CONCERN = 'update-notice';
 export const NOTICE_STATE_FILENAME = 'update-notice.json';
@@ -138,11 +139,11 @@ function readText(p: string): string {
     }
 }
 
-function sessionIdFromEnvelope(raw: string): string | null {
+function envelopeField(raw: string, key: string): string | null {
     try {
         const doc: unknown = JSON.parse(raw);
-        const id = (doc as Record<string, unknown> | null)?.['session_id'];
-        return typeof id === 'string' && id.trim() !== '' ? id.trim() : null;
+        const value = (doc as Record<string, unknown> | null)?.[key];
+        return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
     } catch {
         return null;
     }
@@ -160,6 +161,12 @@ export interface NoticeDeps {
     readonly throttlePath: string;
     readonly registerDir: string;
     readonly err: { write(text: string): void };
+    /**
+     * The dispatcher's user channel (`hooks/user_notice.ts`), set only when the
+     * host shows a notice to the user. The lines then go there as one reply and
+     * nothing goes to stderr, which every host discards.
+     */
+    readonly notice?: { write(text: string): void };
 }
 
 /**
@@ -200,7 +207,11 @@ export function runNotice(deps: NoticeDeps, apply = true): NoticeOutcome {
         return outcome;
     }
 
-    for (const line of outcome.lines) deps.err.write(`[update] ${line}\n`);
+    if (deps.notice !== undefined) {
+        if (outcome.lines.length > 0) deps.notice.write(JSON.stringify({ [USER_NOTICE_KEY]: outcome.lines.join('\n') }));
+    } else {
+        for (const line of outcome.lines) deps.err.write(`[update] ${line}\n`);
+    }
     writeNoticeState(deps.noticeStatePath, { staged: outcome.stage, last_seen_installed: installed });
     return outcome;
 }
@@ -261,11 +272,15 @@ export function main(argv?: string[]): number {
         // The throttle stamp is a WRITE, so it comes after the decision that
         // this context may be written in at all — AC-2 asks for zero writes
         // under CI, a non-TTY, a source checkout and the opt-out.
+        // Every host runs this on pipes, so a TTY says nothing about whether the
+        // user will see the notice; a host with a verified user channel does.
+        const viaHost = hostShowsUserNotice(envelopeField(raw, 'platform'));
         const deps: NoticeDeps = {
             packageRoot,
-            sessionId: sessionIdFromEnvelope(raw),
+            sessionId: envelopeField(raw, 'session_id'),
             env: process.env,
-            isTty: Boolean(process.stderr.isTTY) || Boolean(process.stdout.isTTY),
+            isTty: viaHost || Boolean(process.stderr.isTTY) || Boolean(process.stdout.isTTY),
+            ...(viaHost ? { notice: process.stdout } : {}),
             mode,
             probeStatePath: user_global_paths.resolve_with_fallback(STATE_FILENAME),
             noticeStatePath: user_global_paths.write_target(NOTICE_STATE_FILENAME),

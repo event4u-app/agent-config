@@ -630,22 +630,25 @@ concerns:
     fail_closed: false
     severity: advisory
     effect: notification
-  # `update-notice` and `update-auto-invite` were registered here on
-  # 2026-10-20 and REMOVED the same day on a council verdict: both seats
-  # refused the change 2/2, convergent, no split
-  # (agents/evidence/council/lazy-concern-authority-expansion-20261020.md).
-  # The finding is not about the concerns' quality. `fail_closed: false` and
-  # `severity: advisory` describe failure and classification, not side
-  # effects, and `effect: notification` means the concern tells a human
-  # something and changes nothing else — so a session_start concern that may
-  # initiate `upgrade --unattended`, and a stop concern that may open a
-  # question with the user, are each an expansion of what lifecycle hooks are
-  # permitted to DECIDE. That the invoked command keeps all its own gates is
-  # true and beside the point: the gates constrain HOW an install happens,
-  # never WHO may start one. The ring-0 record is a rollout switch, not
-  # consent, so it postpones the expansion rather than bounding it.
-  # They return in their own change, declared as authority expansions and
-  # ratified on their own merits.
+  # Tells the user, at session start, that their global install is behind or
+  # has just moved. It installs nothing and starts nothing: a 2026-10-20
+  # council refused it 2/2 while it could spawn `upgrade --unattended`
+  # (agents/evidence/council/lazy-concern-authority-expansion-20261020.md),
+  # and that capability was removed rather than the effect widened (D13).
+  # Its writes are its own bookkeeping — a day stamp and the last version it
+  # reported, user-global, read by no other module (a CI assertion).
+  # Bound on `claude` alone: its text goes out through the user channel
+  # (`hooks/user_notice.ts`, `systemMessage`), which is UI-only, and claude is
+  # the one host with a verified field of that kind. Every other host keeps
+  # the CLI banner. Day-throttled, file reads only, loaded from its own chunk.
+  # Kill switches: `AGENT_CONFIG_NO_UPDATE_CHECK=1`, `update.mode: off`.
+  # `update-auto-invite` (step 4.3) is not registered.
+  update-notice:
+    script: src/scripts/update_notice_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    effect: notification
   # road-to-install-path-convergence Phase 4 — duplicate-surface probe.
   # Reads src/config/surface-matrix.yml, existence-checks declared duplicate
   # classes, nudges ONCE per day (state: agents/runtime/state/
@@ -1616,7 +1619,7 @@ platforms:
 
   claude:
     ask:              native
-    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, review-baseline, journal-record, rule-inject, code-graph-refresh]
+    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, update-notice, surface-probe, session-register, review-baseline, journal-record, rule-inject, code-graph-refresh]
     # `rule-inject` is bound here for ONE source: `compact`
     # (road-to-a-rule-carrier-that-works-outside-the-repo step 1.6). The concern
     # returns before reading anything on `startup`, `resume`, `clear` and
