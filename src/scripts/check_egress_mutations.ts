@@ -33,6 +33,7 @@ export const ENGINE_MODULES: readonly string[] = [
     'src/scripts/_lib/egress_rules.ts',
     'src/scripts/_lib/egress_token.ts',
     'src/scripts/_lib/egress_text.ts',
+    'src/scripts/_lib/egress_normalize.ts',
 ];
 
 export interface Recipe {

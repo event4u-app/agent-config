@@ -97,6 +97,7 @@ is open.
   rounds 5–6 and the branch ratification (2/2, three rounds); 3.3, 2.6, AC-1 and
   AC-2 closed with them. The identifier half of AC-6 (a) and (b) is published in
   `internal/bench/reports/egress-placeholders-detection-2026-10-19.md`.
+- **2026-10-24:** 2.5 wired into the senders (see 2.5); AC-6 (f) read on the CI runner class.
 - **Next in order:** AC-6's paired quality run (e) and the CI-runner reading of (f).
 
 ## What this roadmap deliberately does not do
@@ -388,17 +389,14 @@ read cannot leak through any later bug.
       by a sender — 3.3 wires it.
 - [ ] **2.5 Invisible characters do not hide a value.** Reuse the strip-then- <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/confusables.ts -->
       rescan step and its fixtures (`src/scripts/_lib/knowledge_global_redaction.ts`,
-      `tests/fixtures/global-knowledge-redaction/`).
-      An evasion corpus beside them — inserted spaces, alternate casing, line
-      wrapping, code fences, Markdown links, a value repeated or overlapping
-      another — reports each miss as a counted miss.
+      `tests/fixtures/global-knowledge-redaction/`). An evasion corpus beside them —
+      inserted spaces, alternate casing, line wrapping, code fences, Markdown links,
+      a value repeated or overlapping another — reports each miss as a counted miss.
       verify: the zero-width and homoglyph fixtures are detected by the table, and the evasion corpus prints its miss count per mutation.
-      **Built 2026-10-19 on the 2.3 branch, held with it:** `_lib/egress_normalize.ts`
-      (hidden set defined once, confusables folded through a new `LATIN_TWIN`,
-      spans mapped back) with the evasion corpus pinned; its homoglyph fixture is
-      an e-mail, so it lands after 2.3.
-      **Done 2026-10-22:** landed with 2.3 (`2b758dcf56`); the zero-width and homoglyph fixtures are detected and the evasion corpus prints its miss count.
-      Reopened 2026-10-23, built, not wired: `detectNormalized` has no production importer (tick-the-shipped-path 1.4).
+      **Done 2026-10-24:** `_lib/egress_normalize.ts` (`detectWithExtent`) is called by
+      `replaceValues`, `tallyText` and the council's `replace` and final `check`;
+      extents are read on the normalised text. Tests: `src/scripts/_lib/egress_normalize.test.ts`.
+      Ratified 2/2: `agents/evidence/ratifications/one-detector-20261024.md`.
 
 - [x] **2.6 A mutation suite kills the invariants.** Disabling the IBAN checksum, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/egress-mutations/iban-checksum-disabled.json -->
       changing class precedence, logging a raw value or letting a credential
@@ -598,11 +596,11 @@ stay green (93 files).
   the decision-revisit gate's reserved set gives to the owner, not to a council.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-23 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Over-replacement breaks ordinary code and reviews | implementation | A fixture address, a commit identity or a card-shaped number becomes a token and the council reviews a damaged diff | Validators plus context plus allowlist in 2.3; the census as a pinned test; replacement is span-level, never line-level (3.3) | Phase 2 — One detector table (F2, F3) |
+| 1 | Over-replacement breaks ordinary code and reviews | implementation | A fixture address, a commit identity or a card-shaped number becomes a token and the council reviews a damaged diff | Validators plus context plus allowlist in 2.3; the census as a pinned test; replacement is span-level, never line-level (3.3). Re-reviewed 2026-10-24 when 2.5 put lookalike folding in front of every sender: Greek and Cyrillic prose with no value in it is pinned to detect nothing (`egress_normalize.test.ts`) | Phase 2 — One detector table (F2, F3) |
 | 2 | Moving seven consumers changes a verdict silently | implementation | A consumer that refused now masks, or the secret-leak gate's verdict drifts | 2.2 shares detection only; the drift matrix is green before and after, and the legacy-superset suite freezes every pre-move pattern against an adversarial corpus (re-reviewed 2026-10-18: the first move narrowed five consumers and the suite caught it) | Phase 2 — One detector table (F2, F3) |
 | 3 | The constraint is read as covering every channel | product | The owner's constraint is absolute; this roadmap proves it only where this package writes the bytes | The four states and `uncovered` are in the contract (0.1); N8 states the boundary; the claim is per channel | Phase 0 — Contract, census, pre-registration (no product code) |
 | 4 | Placeholders degrade review or coding quality | product | A model reasons worse over a value it cannot see | Paired comparison pre-registered in 0.3; a null or a loss is published and D8 keeps consumer defaults off | Phase 0 — Contract, census, pre-registration (no product code) |
@@ -660,6 +658,7 @@ stay green (93 files).
       `main`.)*
       *(2026-10-22: the identifier half of (a) and (b) is published — 100 % recall per type on the seeded corpus, 20 of 14,274 tracked files, 0 of 400 negatives — in `internal/bench/reports/egress-placeholders-detection-2026-10-19.md`. Still open: (c) on identifiers, the paired quality run (e), which needs model calls on real review tasks, and (f) on the CI runner class.)*
       *(2026-10-22, second run: (c) on identifiers **passes** — 0 restore and 0 idempotence mismatches in every type on the frozen W1 corpus and a seeded W1x corpus (SSN, North American phone, mixed documents, `_v2` variants), each scorer first rejecting a planted defect; `internal/bench/reports/egress-placeholders-identifier-roundtrip-2026-10-22.md`, commit 86e8f46788. (e) published as **underpowered**: 60 pairs, 120 subscription CLI calls, both arms 60/60, 0 discordant pairs against a derived floor of 5, so no regression and no pass; the rule of three caps an unseen loss rate at 5 pp; the tasks are synthetic and hit a ceiling; `internal/bench/reports/egress-placeholders-paired-quality-2026-10-22.md`, commit d5f7f453d9. (f) on the CI runner class is read by the warn-only Bench Drift step added in 7f23bb3813.)*
+      *(2026-10-24: (f) on the CI runner class **passes** — 18 Bench Drift readings, p95 4.152–9.241 ms against the 20 ms bar on linux-x64, 4 vCPU, five CPU models; `internal/bench/reports/egress-placeholders-engine-ci-2026-10-24.md`. Every endpoint of 0.3 now has a published result: (a)–(d) and (f) pass, (e) is published underpowered.)*
 
 ## Lineage
 
