@@ -1300,7 +1300,8 @@ configuration. `orphan` — the name survives only in prose; nothing reads it.
 | `AGENT_CONFIG_HOOK_TIMINGS` | harness | Path to a JSONL sink the dispatcher APPENDS one per-concern timing row to per dispatch; unset, nothing is written and the cost is one `process.env` lookup. Set by `bench_hook_latency` for the length of a bench run. Not a kill switch — it disables nothing — and it is in this table anyway, because the table's contract is every `AGENT_CONFIG_*` the hook layer reads, and an operator who finds the name in a process listing needs a row to look it up in | `hooks/dispatch_hook.ts:860` |
 | `AGENT_CONFIG_INSTALLED_LOCK` | harness | Path override for the installed lockfile | `_lib/installed_lock.ts:56` |
 | `AGENT_CONFIG_INSTALLED_TOOLS` | harness | Path override for the installed-tools manifest | `_lib/installed_tools.ts:46` |
-| `AGENT_CONFIG_INSTRUCTIONS_OBSERVER` | maintainer | `=off` disarms the `InstructionsLoaded` observer without a reinstall. The observer is not yet bound to any host event (its binding waits on hook-bundle headroom), so today the switch has nothing to disarm | `hooks/instructions_observer_hook.ts:135` |
+| `AGENT_CONFIG_INSTRUCTIONS_OBSERVER` | maintainer | `=off` disarms the `InstructionsLoaded` observer without a reinstall. The observer is bound to `instructions_loaded` on claude since 2026-10-23 | `hooks/instructions_observer_hook.ts:137` |
+| `AGENT_CONFIG_LAYER_PROMOTE` | maintainer | `=off` stops the `layer-promote` session concern from demoting or promoting the claude rule layer; the layer stays as it is on disk | `hooks/layer_promotion_hook.ts:25` |
 | `AGENT_CONFIG_LEGACY_ANCHOR` | maintainer | Opts a settings read back onto the legacy anchor | `_lib/agent_settings.ts:449` |
 | `AGENT_CONFIG_MEMORY_DIR` | harness | Directory override for memory recall | `hooks/memory_recall_hook.ts:309` |
 | `AGENT_CONFIG_NO_EGRESS_STAGE` | maintainer | Turns the egress stage off whatever `egress.placeholders.mode` says: no detection, no count record, no placeholder view. Every egress channel then publishes `uncovered`, never a stale `replaced` (`docs/contracts/egress-placeholders-v1.md` § Settings) | `hooks/egress_stage.ts:28` |
@@ -1308,6 +1309,7 @@ configuration. `orphan` — the name survives only in prose; nothing reads it.
 | `AGENT_CONFIG_NO_PIN_REEXEC` | maintainer | Suppresses the pin re-exec | `_lib/pin_resolver.ts:43` |
 | `AGENT_CONFIG_NO_UPDATE_CHECK` | maintainer | `=1` suppresses the update-availability check | `_lib/update_check.ts:239` |
 | `AGENT_CONFIG_PACKAGE_ROOT` | harness | The package root the dispatcher hands each concern | `hooks/dispatch_hook.ts:647` |
+| `AGENT_CONFIG_PROJECT_TREE_FORM` | maintainer | `=full` forces the full rule-layer form for every project tree, over the shipped `project-tree-form.json` record and over any verdict — the operator rollback that needs no release | `_lib/project_tree_form.ts:129` |
 | `AGENT_CONFIG_PACKAGE_VERSION` | harness | Version stamped into telemetry | `hooks/telemetry_usage_hook.ts:177` |
 | `AGENT_CONFIG_PHP_SERVICE` | maintainer | Compose service the `php` shim runs in (default `php`) | `hooks/shims/php:84` |
 | `AGENT_CONFIG_PIN_REEXEC_DEPTH` | harness | Re-exec depth counter, set by the re-exec itself | `_lib/pin_resolver.ts:44` |
