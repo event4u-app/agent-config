@@ -1,6 +1,11 @@
 ---
 complexity: structural
-status: ready
+status: later
+review_by: 2026-11-24
+entry_condition:
+  what: "a free slot among the five active roadmaps (owner WIP limit, 2026-10-24)"
+  when: "when one of the five active roadmaps completes"
+  who: owner
 execution:
   mode: phase-checkpoints
 depends: [road-to-authority-routing-mechanism]
@@ -334,7 +339,7 @@ and its code reachable at the commit the record names. The open steps are 3.4,
       and one beside step C3 of the parked draft, name the new record. No
       step, blocker field or decision in either file is edited, and the deny
       is not touched here.
-      verify: `grep -l 'council-confirmed-self-modification' agents/roadmaps/road-to-typed-grants-that-persist.md agents/roadmaps/later/road-to-ac-deep-capabilities.md | wc -l` -> /^2$/
+      verify: `grep -l 'council-confirmed-self-modification' agents/roadmaps/later/road-to-typed-grants-that-persist.md agents/roadmaps/later/road-to-ac-deep-capabilities.md | wc -l` -> /^2$/
 - [x] **1.4 The sentences 1.2 wrote follow the amendment of 2026-10-07.**
       ADR-281 was amended (`f76e83e47`, § Amendment `:216-231`) so that a
       council verdict recommends passage and a favourable one is advisory until

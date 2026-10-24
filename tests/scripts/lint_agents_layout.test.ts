@@ -85,6 +85,12 @@ describe('lint_agents_layout — ported pytest suite (helpers)', () => {
         expect(mod.find_violations(path.join(tmp, 'does-not-exist'))).toEqual([]);
     });
 
+    it('test_owner_question_queue_is_allowed_flat_file', () => {
+        const agents = path.join(tmp, 'agents');
+        seed(agents, ['owner-questions.md']);
+        expect(mod.find_violations(agents)).toEqual([]);
+    });
+
     it('test_bridge_marker_is_allowed_flat_file', () => {
         expect(mod.ALLOWED_FLAT_FILES.has('.event4u-bridge.yml')).toBe(true);
     });
