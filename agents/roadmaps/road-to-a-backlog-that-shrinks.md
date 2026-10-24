@@ -53,7 +53,7 @@ paperwork is cut.
       and reports each owner-class question whose blocker id is absent as
       `not on the sheet`, with the count.
       verify: a unit test with one sheeted and one unsheeted owner blocker reports exactly the second.
-- [ ] **1.3 Runs put questions on the sheet, never in a question-only PR.**
+- [x] **1.3 Runs put questions on the sheet, never in a question-only PR.**
       `process-full-all.md` § Gated residue and `roadmap-process-loop` § 5
       step 4: an owner-owned question becomes a row on the sheet, the run takes
       the next step; a PR whose only change registers a question is not opened.
@@ -66,7 +66,7 @@ paperwork is cut.
       more days before today, reads `held` with blocker `timebox` and is listed
       under `timeboxed` in the queue output.
       verify: unit tests cover partial 2 (runnable), partial 3, started today−2 and started today−1.
-- [ ] **2.2 The run writes the markers and the result note.** `process-full-all.md`:
+- [x] **2.2 The run writes the markers and the result note.** `process-full-all.md`:
       a delivery that lands work on a step without ticking it sets `started:` once
       and increments `partial:`; a timeboxed step is condensed to result, open
       question and split, never extended.
@@ -90,23 +90,23 @@ paperwork is cut.
       `estate_offset_exempt` counts only if it cites an existing file under
       `agents/evidence/owner-directives/`.
       verify: the script's self-test carries a reject and an accept fixture for it.
-- [ ] **3.3 Inbox output fills owners or `later/`.** `/analyze:inbox` Phase 6: a
+- [x] **3.3 Inbox output fills owners or `later/`.** `/analyze:inbox` Phase 6: a
       surviving finding without an owner is written to `agents/roadmaps/later/`
       while five or more roadmaps are active, unless the operator asks for an
       active one.
       verify: the command file names the WIP cap of five.
-- [ ] **3.4 The owner chooses the five.** Add the ranked proposal (benefit and
+- [x] **3.4 The owner chooses the five.** Add the ranked proposal (benefit and
       nearness to finish) as one question on `agents/owner-questions.md`.
       verify: the sheet carries the WIP question with its options.
 
 ## Phase 4 — Ceremony by risk
 
-- [ ] **4.1 Depth table follows the directive.** `full` and `R2`: council only
+- [x] **4.1 Depth table follows the directive.** `full` and `R2`: council only
       for irreversible, release- or security-relevant questions; evidence is the
       PR body, an artefact only when it must be re-read (release, security,
       owner-reserved). R3 unchanged.
       verify: the table's `full.council` names "irreversible" and the step-receipt tests stay green.
-- [ ] **4.2 Lowering R0/R1 below the full row stays the owner's.** The flip
+- [x] **4.2 Lowering R0/R1 below the full row stays the owner's.** The flip
       threshold (30 shadow steps) is the owner's 2026-10-21 decision; reversing it
       is put on the sheet as one question, not done here.
       verify: `grep -c 2026-10-21-review-cap-and-depth-flip agents/owner-questions.md` -> /^[1-9]/
@@ -117,7 +117,7 @@ paperwork is cut.
       sessions hold live claims, the queue's `next` is empty with the reason
       `session cap (3)`.
       verify: a unit test with three live foreign claims yields no `next`.
-- [ ] **5.2 Related tests during work, the full suite at the gate.**
+- [x] **5.2 Related tests during work, the full suite at the gate.**
       `process-full-all.md` § Delivery says so, with the command.
       verify: the file names `vitest related`.
 - [ ] **5.3 Council and vitest calls per session.** `probe_turnaround --calls`

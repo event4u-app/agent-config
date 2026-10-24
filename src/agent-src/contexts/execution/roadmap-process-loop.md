@@ -181,6 +181,12 @@ For each open step in the working set (scope-bound — see wrapper):
 2. Analyze the codebase for what the step requires.
 3. Decide and act — implement. **No "should I implement this?" prompt.**
 4. **Open question handling:**
+   **Ceremony by risk** (owner directive 2026-10-24,
+   `agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`):
+   the council is called only for an irreversible, release- or security-relevant
+   question. Anything else the run decides and appends to `## Decisions`. An
+   owner-owned question becomes a row on `agents/owner-questions.md` and the run
+   takes the next step — never a pull request whose only change is the question.
    **Council on · second-model rung** — read [`roadmap-process-loop-run.md`](roadmap-process-loop-run.md#5-step-loop).
    - **Council off / not configured** → halt, surface once, wait.
      Resume on next turn. An execution contract cannot enable a

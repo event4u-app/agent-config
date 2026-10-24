@@ -44,6 +44,52 @@ answer verbatim, and the run that applies it links its PR.
   retirement (PR #2644), so consumers migrate once.
 - **Blocks:** step 4.7 and AC-1.
 
+### OQ-4 — Which five roadmaps stay active
+
+- **Context:** owner directive 2026-10-24, item 3: at most five active roadmaps,
+  the rest to `later/`, chosen by benefit and nearness to finish. 16 non-draft
+  roadmaps are active today; the drain queue no longer starts a sixth
+  (`road-to-a-backlog-that-shrinks` 3.1).
+- **Options:** (a) keep the five nearest to finish —
+  `road-to-an-update-that-installs-itself-only-when-it-is-safe` (18 done / 1 open),
+  `road-to-a-cold-start-paid-once` (34 / 2), `road-to-a-setup-that-decides-itself`
+  (24 / 3), `road-to-self-modification-that-a-council-must-pass` (21 / 5),
+  `road-to-an-installed-layer-that-is-thinned` (10 / 4) — and park the other
+  eleven in `later/`, among them `road-to-authority-routing-mechanism` (held by
+  OQ-1) and the zero-progress backlog `road-to-breadth-with-depth` (0 / 34);
+  (b) name a different five; (c) park nothing — only the start cap applies.
+- **Recommendation:** (a).
+- **Blocks:** the `later/` moves; until answered the queue finishes started
+  roadmaps and starts none.
+
+### OQ-5 — Lower R0/R1 ceremony now, before 30 shadow steps
+
+- **Context:** the 2026-10-21 decision
+  (`agents/evidence/owner-directives/2026-10-21-review-cap-and-depth-flip.md`)
+  lowers R0/R1 depth on structurally safe paths only after a committed reading of
+  30 shadow steps; the reading stood at 0 on 2026-10-21. The 2026-10-24 directive
+  already cut council and evidence in the `full` row; review rounds and retro
+  stay full.
+- **Options:** (a) set the depth table `active` for R0/R1 on safe paths now,
+  relying on the sampled full-depth audit (1 in 4) and its automatic return to
+  full depth; (b) keep waiting for the 30-step reading.
+- **Recommendation:** (a) — reversible in one commit, and the audit rolls a
+  class back on its own.
+- **Blocks:** `road-to-a-step-that-costs-what-it-changes` steps 4.1 and 4.2
+  (blocker `class-depth-flip-reopens-the-risk-null`).
+
+### OQ-6 — The `openai` council seat fails on an unrelated MCP grant
+
+- **Context:** the codex CLI exits before answering because the `linear-server`
+  MCP's OAuth refresh token was rejected; the council needs two providers for any
+  ratification, so every governance edit waits.
+- **Options:** (a) remove or re-authorise `linear-server` in the codex CLI
+  configuration on your machine; (b) ratify the waiting governance edit yourself
+  as the independent reviewer; (c) leave the seat down.
+- **Recommendation:** (a) — reversible, and it touches no council credential.
+- **Blocks:** `road-to-agent-throughput-recovery` steps 4.3 and 4.5 (blocker
+  `openai-council-seat-oauth-grant-rejected`).
+
 ## Answered
 
 | ID | Date | Question | Answer |
