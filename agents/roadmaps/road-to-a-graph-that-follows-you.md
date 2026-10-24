@@ -111,7 +111,7 @@ plan AC improvements automatically when a source repository updates.
       greps `src/scripts` for the three constants and finds them only in `graph_home.ts`
       and their definitions; a build in this repo yields
       byte-identical paths to today.
-- [ ] **2.5 Zero writes into a foreign repo.** End-to-end test: `git init` a fixture with
+- [x] **2.5 Zero writes into a foreign repo.** End-to-end test: `git init` a fixture with <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       one source file and no `agents/`, run `code-graph build` and `code-graph map`, then
       assert `git status --porcelain` is empty and the graph sits under the temp home.
       verify: the new test passes; it fails when `graphHome` is short-circuited to the

@@ -35,8 +35,9 @@ export function projectsDir(env?: EnvMap | null): string {
     return path.join(event4u_root(env), 'runtime', 'projects');
 }
 
-export function machineKeyPath(env?: EnvMap | null): string {
-    return path.join(projectsDir(env), 'machine.key');
+/** `dir` overrides the projects directory, for a caller (advisories) that carries its own. */
+export function machineKeyPath(env?: EnvMap | null, dir: string = projectsDir(env)): string {
+    return path.join(dir, 'machine.key');
 }
 
 /**
@@ -45,8 +46,8 @@ export function machineKeyPath(env?: EnvMap | null): string {
  * an empty file. A key that exists but is malformed throws: replacing it would
  * silently re-key every repository on the machine.
  */
-export function machineKey(env?: EnvMap | null): Buffer {
-    const p = machineKeyPath(env);
+export function machineKey(env?: EnvMap | null, dir?: string): Buffer {
+    const p = machineKeyPath(env, dir);
     const read = (): Buffer => {
         const hex = fs.readFileSync(p, 'utf-8').trim();
         if (!/^[0-9a-f]{64}$/.test(hex)) throw new Error(`malformed machine key: ${p}`);
@@ -131,8 +132,8 @@ function hmac(key: Buffer, value: string): string {
     return createHmac('sha256', key).update(value).digest('hex');
 }
 
-export function repoIdentity(root: string, env?: EnvMap | null): RepoIdentity {
-    const key = machineKey(env);
+export function repoIdentity(root: string, env?: EnvMap | null, dir?: string): RepoIdentity {
+    const key = machineKey(env, dir);
     const real = realpathOr(root);
     const common = git_common_dir(real);
     let linked = false;
