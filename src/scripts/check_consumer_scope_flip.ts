@@ -64,7 +64,11 @@ export interface FlipVerdict {
 
 export function verify_flip(repoRoot = '.'): FlipVerdict {
     const template = parseYaml(fs.readFileSync(path.join(repoRoot, TEMPLATE), 'utf-8')) as Record<string, unknown>;
-    const scope = ruleScopeFromSettings(template, repoRoot);
+    // The WORKSPACE axis only. The pack axis has its own owner decision (step 4.9
+    // of road-to-a-setup-that-decides-itself) and its own pinned drop list in
+    // `tests/install/rule_packs_auto.test.ts`; mixing it in here would read its
+    // eight pack-scoped rules as workspace-flip violations.
+    const scope = { ...ruleScopeFromSettings(template, repoRoot), packs: null };
     if (scope.workspaces === null) {
         throw new Error('the derived consumer workspace set is empty — packs.yml unreadable, nothing to verify');
     }

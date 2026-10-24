@@ -53,7 +53,7 @@ Reproduced on 2026-10-01:
   frontmatter only (`src/scripts/install.ts:1806-1814`, `:3073-3100`);
   `grep -c lean_projection src/scripts/install.ts` returns 0. Thinning happens
   only in `generate_rule_symlinks`, the maintainer projection
-  (`src/scripts/condense.ts:1118`, `:1182`).
+  (`src/scripts/condense.ts:1096`, `:1160`).
 - The round's real install into an empty `HOME` measured 102 unconditional
   files and 338,225 characters, the three largest being the three the host
   named. The maintainer machine's notice reported 120 files and 377.7k; the
