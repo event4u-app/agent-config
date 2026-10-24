@@ -60,6 +60,8 @@ import {
 
 export const PROMOTION_SWITCH_REL = path.join('src', 'config', 'layer-form-promotion.json');
 export const PROMOTION_RECORD = 'promotion.json';
+/** Present from before the thin pass until the promotion record is written; found at session start, it means the pass never finished. */
+export const PROMOTING_MARKER = 'promoting';
 export const LATENCY_BUDGET_REL = path.join('src', 'config', 'hook-latency-budget.json');
 /** Measured 11 ms for the thin pass over 121 rules (tsx, warm, 2026-10-24); the default is that plus margin. */
 export const DEFAULT_THIN_ESTIMATE_MS = 50;
@@ -299,6 +301,15 @@ export function sessionLayerStep(opts: SessionLayerOptions = {}): SessionLayerOu
             return { action: 'none', reason: 'no-staged-runtime' };
         }
         const home = env['HOME'] ?? os.homedir();
+        const promoting = path.join(runtimeRoot, PROMOTING_MARKER);
+        if (fs.existsSync(promoting)) {
+            // An interrupted promotion: restore the snapshot and start again from full.
+            const rulesDir = thinnedDir(runtimeRoot) ?? opts.rulesDir ?? path.join(home, '.claude', 'rules');
+            rerecord(rulesDir, restoreStagedLayer(packageRoot, rulesDir) ?? [], env);
+            markClaudeLayer(runtimeRoot, { thinned: false, rulesDir });
+            fs.rmSync(promoting, { force: true });
+            return { action: 'none', reason: 'promotion-interrupted' };
+        }
         const state = readCarrierState(runtimeRoot);
 
         if (state.layer === 'thinned') {
@@ -325,8 +336,10 @@ export function sessionLayerStep(opts: SessionLayerOptions = {}): SessionLayerOu
         const estimate = readPromotionRecord(runtimeRoot)?.last_thin_ms ?? DEFAULT_THIN_ESTIMATE_MS;
         if (now() - started + estimate > latencyBudgetMs(packageRoot)) return { action: 'skipped', reason: 'over-latency-budget' };
 
-        // The marker goes first, so a pass interrupted part-way leaves a layer the
-        // shell branch and the demotion above both recognise as thinned.
+        // Both markers go first. `promoting` makes an interrupted pass visible to
+        // the next session, which restores it; `thinned` lets the shell branch
+        // restore it on a dead carrier meanwhile. `promoting` goes last, after the record.
+        fs.writeFileSync(path.join(runtimeRoot, PROMOTING_MARKER), `${process.pid}\n`);
         markClaudeLayer(runtimeRoot, { thinned: true, rulesDir });
         const rewritten: string[] = [];
         const t0 = now();
@@ -344,6 +357,7 @@ export function sessionLayerStep(opts: SessionLayerOptions = {}): SessionLayerOu
             if (failed) {
                 rerecord(rulesDir, restoreStagedLayer(packageRoot, rulesDir) ?? [], env);
                 markClaudeLayer(runtimeRoot, { thinned: false, rulesDir });
+                fs.rmSync(path.join(runtimeRoot, PROMOTING_MARKER), { force: true });
             }
         }
         if (failed) return { action: 'none', reason: 'thin-failed' };
@@ -355,6 +369,7 @@ export function sessionLayerStep(opts: SessionLayerOptions = {}): SessionLayerOu
             last_thin_ms: thinMs,
         };
         fs.writeFileSync(path.join(runtimeRoot, PROMOTION_RECORD), `${JSON.stringify(record, null, 2)}\n`);
+        fs.rmSync(path.join(runtimeRoot, PROMOTING_MARKER), { force: true });
         return { action: 'promoted', reason: decision.reason };
     } catch {
         return { action: 'none', reason: 'error' };

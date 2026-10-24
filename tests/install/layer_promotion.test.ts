@@ -18,6 +18,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
     DEFAULT_THIN_ESTIMATE_MS,
+    PROMOTING_MARKER,
     PROMOTION_RECORD,
     neverThinned,
     PROMOTION_SWITCH_REL,
@@ -135,6 +136,17 @@ const ledgerMatchesDisk = (f: Fixture): boolean => {
     const rec = inventory.recorded_digests('claude-code', path.dirname(f.rulesDir), inventory.load_inventory(f.ledgerPath));
     return allRules(f).every((id) => rec.get(`rules/${id}.md`)?.installed_sha256 === inventory.file_sha256(path.join(f.rulesDir, `${id}.md`)));
 };
+/** Put back the stamped full bodies of all files (or all but `keep` stubs), as a pass cut short leaves them. */
+function restoreAll(f: Fixture, keep = 0): void {
+    let kept = 0;
+    for (const id of allRules(f)) {
+        const file = path.join(f.rulesDir, `${id}.md`);
+        if (!is_thin_entry(fs.readFileSync(file, 'utf8'))) continue;
+        if (kept++ < keep) continue;
+        fs.copyFileSync(path.join(f.stage, CLAUDE_LAYER_DIRNAME, `${id}.md`), file);
+    }
+}
+
 const step = (f: Fixture, extra: Partial<Parameters<typeof sessionLayerStep>[0]> = {}) =>
     sessionLayerStep({ env: f.env, date: () => new Date('2026-10-24T12:00:00Z'), ...extra });
 
@@ -286,6 +298,30 @@ describe('step 3.3 — promote after proof, never at install', () => {
             // After it: the layer is contradicted.
             arrive(f, 'after', new Date(marked + 60_000).toISOString(), lawless);
             expect(step(f)).toEqual({ action: 'demoted', reason: 'arrival-standing-law-missing' });
+        }
+    });
+
+    it('an interrupted promotion is restored to full by the next session, whatever its arrivals say', () => {
+        // Simulate termination at three points: after the markers, after some files, after the pass.
+        for (const cut of ['markers', 'partial', 'before-record'] as const) {
+            const f = freshInstall();
+            arrive(f, 'session-1', '2026-10-24T10:00:00Z', allRules(f));
+            expect(step(f).action).toBe('promoted');
+            const stubs = stubCount(f);
+            if (cut === 'markers') restoreAll(f);
+            if (cut === 'partial') restoreAll(f, 2);
+            fs.writeFileSync(path.join(f.runtimeRoot, PROMOTING_MARKER), '1\n');
+            if (cut === 'before-record') fs.rmSync(path.join(f.runtimeRoot, PROMOTION_RECORD));
+            expect(stubs).toBeGreaterThan(0);
+            arrive(f, 'session-2', new Date(Date.now() + 60_000).toISOString(), allRules(f));
+            expect(step(f)).toEqual({ action: 'none', reason: 'promotion-interrupted' });
+            expect(stubCount(f)).toBe(0);
+            expect(readCarrierState(f.runtimeRoot).layer).toBe('full');
+            expect(fs.existsSync(path.join(f.runtimeRoot, PROMOTING_MARKER))).toBe(false);
+            expect(ledgerMatchesDisk(f)).toBe(true);
+            // And the session after that converges: it promotes again.
+            expect(step(f).action).toBe('promoted');
+            expect(fs.existsSync(path.join(f.runtimeRoot, PROMOTING_MARKER))).toBe(false);
         }
     });
 
