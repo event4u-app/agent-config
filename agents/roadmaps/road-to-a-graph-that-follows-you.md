@@ -86,7 +86,7 @@ plan AC improvements automatically when a source repository updates.
       project home plus a local *index*, never a merged graph; nothing in it leaves the
       machine; it is lazy per ADR-124; ADR-297's map location gains a fallback. The ADR
       also records the sealed-lineage decision of Phase 7-9.
-      verify: `./scripts-run src/scripts/adr/regenerate_index --check` -> 0, and the ADR
+      verify: `./scripts-run src/scripts/adr/regenerate_index --check` -> 0 and the ADR
       is listed.
 - [ ] **2.2 One `graphHome(root)` resolver.** A module under `src/scripts/code_graph/`
       returning the state dir, map dir and lock dir for a root: `root/agents/` when that
