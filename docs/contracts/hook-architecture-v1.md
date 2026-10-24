@@ -132,7 +132,8 @@ any `systemMessage` already there (`\n`). Plain context on any other event, or
 an emission that is not one JSON object, is never reinterpreted — the notice is
 dropped and the output is what it would have been without it. The same holds
 when a field the merge would extend has the wrong type. For each concern whose
-notice is in the output, the dispatcher writes a delivery receipt,
+notice is in the output, the dispatcher writes a receipt — evidence that the
+notice was put into the host's output, not that the user read it —
 `<user-global root>/user-notice-<concern>.delivered` (`{session_id, at}`); a
 dropped notice leaves none. A concern that must not count a notice as shown
 until the host received it reads that receipt (`update-notice` does).

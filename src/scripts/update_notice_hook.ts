@@ -102,7 +102,7 @@ export function readNoticeState(statePath: string | null): NoticeState {
 
 /** The state with a pending notice promoted, when the dispatcher's receipt names its session. */
 export function confirmDelivered(state: NoticeState, receipt: NoticeReceipt | null): NoticeState {
-    if (state.pending === undefined || receipt === null || receipt.session_id !== state.pending.session_id) return state;
+    if (state.pending === undefined || receipt === null || !receipt.session_id || receipt.session_id !== state.pending.session_id) return state;
     return { staged: state.staged, last_seen_installed: state.pending.installed };
 }
 
@@ -233,7 +233,7 @@ export function runNotice(deps: NoticeDeps, apply = true): NoticeOutcome {
         writeNoticeState(deps.noticeStatePath, {
             staged: outcome.stage,
             last_seen_installed: state.last_seen_installed,
-            ...(outcome.lines.length > 0 ? { pending: { session_id: deps.sessionId ?? '', installed } } : {}),
+            ...(outcome.lines.length > 0 && deps.sessionId ? { pending: { session_id: deps.sessionId, installed } } : {}),
         });
         return outcome;
     }
@@ -313,7 +313,9 @@ export function main(argv?: string[]): number {
         // under CI, a non-TTY, a source checkout and the opt-out.
         // Every host runs this on pipes, so a TTY says nothing about whether the
         // user will see the notice; a host with a verified user channel does.
-        const viaHost = hostShowsUserNotice(envelopeField(raw, 'platform'));
+        // Through the host a notice is confirmed by a receipt naming its session,
+        // so without a session id there is nothing to confirm it by: say nothing.
+        const viaHost = envelopeField(raw, 'session_id') !== null && hostShowsUserNotice(envelopeField(raw, 'platform'));
         const deps: NoticeDeps = {
             packageRoot,
             sessionId: envelopeField(raw, 'session_id'),

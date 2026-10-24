@@ -189,6 +189,16 @@ describe('3.1 — a session_start concern beside wrapper-freshness', () => {
             expect(readNoticeState(statePath()).last_seen_installed).toBe('1.0.0');
         });
 
+        it('an empty session id is never pending and an empty receipt confirms nothing', () => {
+            const root = setupUpgraded();
+            noticeOncePerDay(hostDeps(root, '', null, []));
+            expect(readNoticeState(statePath()).pending).toBeUndefined();
+            writeNoticeState(statePath(), { staged: null, last_seen_installed: '1.0.0', pending: { session_id: 's1', installed: '2.0.0' } });
+            const again: string[] = [];
+            noticeOncePerDay(hostDeps(root, 's2', { session_id: '', at: now() }, again));
+            expect(again.join('')).toContain('agent-config is now 2.0.0 (was 1.0.0).');
+        });
+
         it('a same-day receipt for another session does not throttle a notice still pending', () => {
             const root = setupUpgraded();
             noticeOncePerDay(hostDeps(root, 's1', null, []));
