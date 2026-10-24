@@ -60,6 +60,13 @@ export const EXACT_PIN_EXCEPTIONS: Readonly<Record<string, string>> = {
         'which would make every grammar load throw rather than degrade — so the runtime ' +
         'and its grammars move together, in one reviewed change, or not at all. ' +
         'Refresh procedure: src/vendor/grammars/README.md.',
+    // The three sigstore modules are the trusted computing base of the
+    // unattended upgrade's provenance check (sigstore_provenance.ts): a
+    // patch release of any of them changes what "verified" means, so each
+    // version is reviewed rather than resolved. They move together.
+    '@sigstore/verify': 'Trusted computing base of the release provenance check; moves only in a reviewed change, with its two siblings.',
+    '@sigstore/bundle': 'Parses the bundle the provenance check verifies; pinned with @sigstore/verify for the same reason.',
+    '@sigstore/protobuf-specs': 'Decodes the pinned trust root and npm keys; pinned with @sigstore/verify for the same reason.',
 };
 
 /**

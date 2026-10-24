@@ -155,6 +155,10 @@ const ALLOWED_OWNERS: readonly string[] = [
     // looked; this is the answer. Fixing them here rather than by widening the
     // dedup rule is what keeps that rule strict.
     'someone', 'o',
+    // `someone-else/<repo>` is the wrong-repository fixture of the provenance
+    // tests; a committed council prompt quoting those tests verbatim was the
+    // measured false positive (2026-10-24). Same shape as the two above.
+    'someone-else',
     // Vendors whose tools this suite integrates or recommends (rule carve-out).
     'anthropics', 'anthropic', 'microsoft', 'github', 'modelcontextprotocol',
     'cloudflare', 'openai', 'nodejs', 'vitest-dev', 'vercel', 'tailwindlabs',

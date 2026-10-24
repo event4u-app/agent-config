@@ -22,17 +22,14 @@
  * registry, a live session) · `1` a step failed and the previous version was
  * restored · `4` a step failed and the restore did not reach the previous version.
  */
+import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import process from 'node:process';
 
-import {
-    EXPECTED_WORKFLOW_REF,
-    attestation_workflow_ref,
-    provenance_matches_publish,
-    verify_attestation_signature,
-} from '../_lib/provenance_verify.js';
+import { type ReleaseToVerify, verify_release_provenance } from '../_lib/sigstore_provenance.js';
 import { read_candidate, unattended_decision, type RegistryCandidate } from '../_lib/unattended_gates.js';
 import type { InstallOrigin } from '../_lib/classify_update.js';
 import * as installed_lock from '../_lib/installed_lock.js';
@@ -97,10 +94,13 @@ export interface StepResult {
 
 export type Packument = { readonly ok: true; readonly doc: unknown } | { readonly ok: false; readonly reason: string };
 
+/** A verified tarball on disk, the only thing the install step may install — or why there is none. */
+export type Provenance = { readonly ok: true; readonly tarball: string } | { readonly ok: false; readonly reason: string };
+
 export interface UnattendedDeps {
     readonly fetchPackument: () => Promise<Packument>;
-    /** Refusal reason when the attestation does not tie to this package's publish workflow, else `null`. */
-    readonly verifyProvenance: (candidate: RegistryCandidate) => Promise<string | null>;
+    /** Download the candidate, verify its attestations against it, and hand back the verified file. */
+    readonly verifyProvenance: (candidate: RegistryCandidate) => Promise<Provenance>;
     readonly run: (cmd: string[]) => StepResult;
     /** The version recorded in `installed.lock`; `''` when unknown. */
     readonly readInstalled: () => string;
@@ -243,9 +243,10 @@ function release_lock(deps: Pick<UnattendedDeps, 'lockPath' | 'pid'>): void {
 
 // --- the run -----------------------------------------------------------------
 
-function install_steps(version: string, deps: UnattendedDeps): string[][] {
+/** `spec` is the verified tarball for an upgrade, and `<package>@<version>` only for a restore. */
+function install_steps(spec: string, deps: UnattendedDeps): string[][] {
     return [
-        ['npm', 'install', '-g', `${PACKAGE_NAME}@${version}`],
+        ['npm', 'install', '-g', spec],
         [deps.agentConfigBin, 'global', '--no-ui'],
         ...deps.globalSettings.map((target) => [deps.agentConfigBin, 'settings:sync', '--path', target]),
     ];
@@ -263,7 +264,7 @@ function run_steps(steps: string[][], deps: UnattendedDeps, honourSignal = true)
 
 /** Restored means both the binary and `installed.lock` read the previous version again. */
 function restore(previous: string, deps: UnattendedDeps): number {
-    const back = run_steps(install_steps(previous, deps).slice(0, 2), deps, false);
+    const back = run_steps(install_steps(`${PACKAGE_NAME}@${previous}`, deps).slice(0, 2), deps, false);
     const lock = deps.readInstalled();
     const binary = deps.readBinary();
     if (back.ok && lock === previous && binary === previous) {
@@ -279,7 +280,10 @@ function restore(previous: string, deps: UnattendedDeps): number {
     return EXIT_RESTORE_FAILED;
 }
 
-async function decide(installed: string, deps: UnattendedDeps): Promise<{ candidate: RegistryCandidate } | { refused: string[] }> {
+async function decide(
+    installed: string,
+    deps: UnattendedDeps,
+): Promise<{ candidate: RegistryCandidate; tarball: string } | { refused: string[] }> {
     const fetched = await deps.fetchPackument();
     if (!fetched.ok) return { refused: [`registry unavailable: ${fetched.reason}`] };
     const candidate = read_candidate(fetched.doc);
@@ -292,85 +296,89 @@ async function decide(installed: string, deps: UnattendedDeps): Promise<{ candid
         env: { ...deps.env, now: deps.now().toISOString() },
     });
     if (!decision.install) return { refused: [...decision.reasons] };
-    // 2.1's open half. `decision` accepted an attestation that EXISTS and
-    // carries an SLSA predicate; that document is producible by any workflow
-    // in any repository with `id-token: write`, so it is checked here against
-    // the one workflow this package publishes from before anything installs.
+    // `decision` accepted an attestation that EXISTS and carries an SLSA
+    // predicate, which any workflow with `id-token: write` can produce; the
+    // tarball is verified here against pinned roots before anything installs.
     const provenance = await deps.verifyProvenance(candidate);
-    if (provenance !== null) return { refused: [provenance] };
-    return { candidate };
+    if (!provenance.ok) return { refused: [provenance.reason] };
+    return { candidate, tarball: provenance.tarball };
 }
 
+/** Largest tarball the unattended path downloads; a release is about 16 MB. */
+export const MAX_TARBALL_BYTES = 64 * 1024 * 1024;
+
 /**
- * Fetch the attestation bundle, require it to name this package's publish
- * workflow, and require its DSSE signature to verify. Returns a refusal
- * reason, or `null` when both hold.
+ * Download the candidate's tarball, check it against the packument's integrity
+ * and against both attestations, and write exactly those bytes to a private
+ * temp file — the file the install step installs. Returns that file, or why
+ * there is none.
  *
- * **This used to say the signature half was `npm audit signatures` "in the
- * install step". It was not, and never had been** — `install_steps` runs
- * `npm install -g`, `agent-config global` and `settings:sync`, and no audit.
- * The sentence described a composition nobody wrote, which is the worst shape
- * a security note can have, so it is replaced by what the code does rather
- * than corrected in place.
+ * The bytes verified and the bytes installed are one buffer: installing by
+ * `<package>@<version>` would let the registry serve different bytes to the
+ * second request than to the first.
  *
- * What runs now: the payload is tied to the workflow, the envelope's signature
- * is verified against the certificate the bundle carries, and that
- * certificate's SAN is required to name the same workflow. What does NOT run:
- * any check of who ISSUED that certificate. The residue is the
- * `dsse-trust-root` blocker on the roadmap, and
- * `verify_attestation_signature`'s header states it in full.
- *
- * A bundle that cannot be fetched REFUSES rather than passing. Unlike the live
- * session register, there is no second independent gate behind this one: an
- * unreachable attestation is exactly what an attacker serving a tarball
- * without one produces, so failing open here would hand back the property the
- * check exists to establish.
+ * Every URL comes from the packument, so each must be on the registry's own
+ * origin; a hostile answer would otherwise choose both the host fetched and the
+ * document verified. A fetch that fails REFUSES rather than passing: an
+ * unreachable attestation is exactly what an attacker serving a tarball without
+ * one produces.
  */
 export async function verify_provenance_default(
     candidate: RegistryCandidate,
     fetch_impl: typeof fetch = fetch,
-    timeoutMs = 10_000,
-): Promise<string | null> {
-    if (candidate.attestationsUrl === null) {
-        return `${candidate.version} carries no attestation bundle to verify`;
+    timeoutMs = 60_000,
+    verify: (release: ReleaseToVerify) => Promise<string | null> = (r) => verify_release_provenance(r),
+): Promise<Provenance> {
+    const v = candidate.version;
+    const registry = new URL(PACKUMENT_URL).origin;
+    const refuse = (reason: string): Provenance => ({ ok: false, reason: `${v}: ${reason}` });
+    for (const [what, url] of [
+        ['attestation bundle', candidate.attestationsUrl],
+        ['tarball', candidate.tarballUrl],
+    ] as const) {
+        if (url === null) return refuse(`the registry names no ${what} to verify`);
+        let origin = '';
+        try {
+            origin = new URL(url).origin;
+        } catch {
+            // an unparsable URL is refused below like a foreign one
+        }
+        if (origin !== registry) return refuse(`the ${what} url is not on ${registry}`);
     }
-    // The URL comes from the packument, so a hostile registry answer would
-    // otherwise choose both the host fetched and the document verified.
-    let origin: string;
+    const integrity = /^sha512-([A-Za-z0-9+/=]+)$/.exec(candidate.integrity ?? '');
+    if (integrity === null) return refuse('the registry records no sha512 integrity for the tarball');
+
+    const get = async (url: string): Promise<Response> => {
+        const resp = await fetch_impl(url, { signal: AbortSignal.timeout(timeoutMs), redirect: 'error' });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        return resp;
+    };
+    let attestations: unknown;
+    let bytes: Buffer;
     try {
-        origin = new URL(candidate.attestationsUrl).origin;
-    } catch {
-        origin = '';
-    }
-    if (origin !== new URL(PACKUMENT_URL).origin) {
-        return `${candidate.version}: attestation url is not on ${new URL(PACKUMENT_URL).origin}`;
-    }
-    let doc: unknown;
-    try {
-        const resp = await fetch_impl(candidate.attestationsUrl, {
-            signal: AbortSignal.timeout(timeoutMs),
-            headers: { accept: 'application/json' },
-            redirect: 'error',
-        });
-        if (!resp.ok) return `attestation fetch failed: HTTP ${resp.status}`;
-        doc = await resp.json();
+        attestations = await (await get(candidate.attestationsUrl as string)).json();
+        const resp = await get(candidate.tarballUrl as string);
+        if (Number(resp.headers.get('content-length') ?? 0) > MAX_TARBALL_BYTES) return refuse('the tarball is larger than allowed');
+        bytes = Buffer.from(await resp.arrayBuffer());
     } catch (err) {
-        return `attestation fetch failed: ${err instanceof Error ? err.message : String(err)}`;
+        return refuse(`download failed: ${err instanceof Error ? err.message : String(err)}`);
     }
-    if (!provenance_matches_publish(doc)) {
-        const named = attestation_workflow_ref(doc);
-        return named === null
-            ? `${candidate.version} has no readable provenance workflow in its attestation`
-            : `${candidate.version} was built by ${named}, not ${EXPECTED_WORKFLOW_REF}`;
+    if (bytes.length > MAX_TARBALL_BYTES) return refuse('the tarball is larger than allowed');
+    const digest = crypto.createHash('sha512').update(bytes).digest();
+    if (!digest.equals(Buffer.from(integrity[1] as string, 'base64'))) {
+        return refuse('the downloaded tarball does not match the integrity the registry records');
     }
-    // The payload says the right thing; this asks whether the payload is the
-    // one that was signed, and whether the certificate that signed it carries
-    // the same identity. It does NOT establish who issued that certificate —
-    // see `verify_attestation_signature`'s own note and the `dsse-trust-root`
-    // blocker, which is where the trust root is decided.
-    const signature = await verify_attestation_signature(doc);
-    if (signature !== null) return `${candidate.version}: ${signature}`;
-    return null;
+    const reason = await verify({ version: v, tarballSha512Hex: digest.toString('hex'), attestations });
+    if (reason !== null) return refuse(reason);
+
+    try {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'agent-config-upgrade-'));
+        const tarball = path.join(dir, `agent-config-${v}.tgz`);
+        fs.writeFileSync(tarball, bytes, { mode: 0o600, flag: 'wx' });
+        return { ok: true, tarball };
+    } catch (err) {
+        return refuse(`cannot write the verified tarball: ${err instanceof Error ? err.message : String(err)}`);
+    }
 }
 
 /** Contexts where even the registry fetch and the lock file are side effects nobody asked for. */
@@ -397,14 +405,16 @@ export async function run_unattended(deps: UnattendedDeps): Promise<number> {
         say(deps.err, `${PREFIX}: not installing — ${locked}.`);
         return EXIT_REFUSED;
     }
+    let verified: string | null = null;
     try {
         const verdict = await decide(previous, deps);
         if ('refused' in verdict) {
             say(deps.out, `ℹ️  ${PREFIX}: not installing (installed: ${previous}) — ${verdict.refused.join('; ')}.`);
             return EXIT_REFUSED;
         }
+        verified = verdict.tarball;
         const target = verdict.candidate.version;
-        const steps = install_steps(target, deps);
+        const steps = install_steps(verified, deps);
         if (deps.activationBlocked !== null) {
             const how = deps.dryRun ? 'dry run: a real run would not install' : 'not installing';
             say(deps.out, `ℹ️  ${PREFIX}: every gate passed for ${target}, but ${how} — ${deps.activationBlocked}.`);
@@ -422,10 +432,13 @@ export async function run_unattended(deps: UnattendedDeps): Promise<number> {
         }
         const what = `${ran.cmd.join(' ')} (exit ${ran.result.rc})`;
         if (/\bEACCES\b/.test(ran.result.stderr)) {
+            // The verified file is removed when this run ends, so the command a
+            // person can still run names the version instead.
+            const manual = ran.cmd === steps[0] ? ['npm', 'install', '-g', `${PACKAGE_NAME}@${target}`] : ran.cmd;
             say(
                 deps.err,
                 `❌  ${PREFIX}: permission denied on ${what}. agent-config never runs sudo; ` +
-                    `run this yourself with the right permissions: ${ran.cmd.join(' ')}`,
+                    `run this yourself with the right permissions: ${manual.join(' ')}`,
             );
             // Denied on the very first write, npm changed nothing; any later step leaves a mixed install.
             const untouched = ran.cmd === steps[0] && deps.readInstalled() === previous && deps.readBinary() === previous;
@@ -435,6 +448,7 @@ export async function run_unattended(deps: UnattendedDeps): Promise<number> {
         say(deps.err, `❌  ${PREFIX}: step failed: ${what} — restoring ${previous}.`);
         return restore(previous, deps);
     } finally {
+        if (verified !== null) fs.rmSync(path.dirname(verified), { recursive: true, force: true });
         release_lock(deps);
     }
 }
