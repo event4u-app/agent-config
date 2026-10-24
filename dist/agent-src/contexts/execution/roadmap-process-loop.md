@@ -19,15 +19,9 @@ agent-config roadmap:context --roadmap <slug>   # slug omitted on a bare invocat
 ```
 
 Run it **before resolving the roadmap**, on every invocation, and print its
-report in the pre-run summary (§ 2). Unconditional is the whole point: the live
-merge-state clause below fires only when a message would *describe* a roadmap
-as in-flight or merged, so a run that never makes such a claim has never looked.
-Measured on the population that motivated this: 4 of 24 active roadmaps were
-already closed in an open PR, and 2 of 22 six days later — the same sample
-halved inside a week, which is why the probe re-runs on a cadence (§ 5e) rather
-than once at branch time.
+report in the pre-run summary (§ 2); it re-runs on a cadence (§ 5e).
 
-**Probe readings** — read [`roadmap-process-loop-prescan.md`](roadmap-process-loop-prescan.md#context-probe--unconditionally-before-resolving-the-roadmap).
+**Probe readings, why unconditional** — read [`roadmap-process-loop-prescan.md`](roadmap-process-loop-prescan.md#context-probe--unconditionally-before-resolving-the-roadmap).
 
 Search both locations:
 
@@ -158,18 +152,13 @@ For each open step in the working set (scope-bound — see wrapper):
 0. **CI-step gate** — per
    [`roadmap-ci-steps-policy`](../../rules/roadmap-ci-steps-policy.md).
    When `quality.local_auto_run: false` and the step text matches a
-   CI-shaped literal (`task ci`, `task ci-fast`, `task ci-strict`,
-   `make ci`, `make test`, `npm/pnpm run check`, `yarn check`,
-   `composer test`, whole-suite `vendor/bin/phpunit`, whole-suite
-   `php artisan test`) **without** an inline
-   `<!-- carve-out: new-gate-verification -->` marker → flip the
-   checkbox to `[-]`, append
-   `<!-- skipped: quality.local_auto_run=false → remote CI is the gate -->`
-   on the same line, regenerate the dashboard, continue to the next
-   step. Never run the gate. Carve-out marker present → run normally
-   (new gate must be verified once locally). Setting `true` → run
-   normally. Full pattern table, carve-outs, linter contract, failure
-   modes: [`roadmap-ci-steps-mechanics`](roadmap-ci-steps-mechanics.md).
+   CI-shaped literal (`task ci`, `make test`, whole-suite runners — the
+   full table is in the mechanics) **without** an inline
+   `<!-- carve-out: new-gate-verification -->` marker → flip it to `[-]`,
+   append `<!-- skipped: quality.local_auto_run=false → remote CI is the gate -->`,
+   regenerate the dashboard, continue. Never run the gate. Marker present,
+   or setting `true` → run normally. Patterns, carve-outs, linter:
+   [`roadmap-ci-steps-mechanics`](roadmap-ci-steps-mechanics.md).
 1. **Bundled read — one parallel tool-call block.** The step's own
    section (`grep -n` its line, then a ranged read — never the whole
    roadmap), the immediately-relevant code files, and any
@@ -264,17 +253,10 @@ RESUME BY EVIDENCE, NEVER BY BOOKKEEPING.
 - Security-sensitive path ([`security-sensitive-stop`](../../rules/security-sensitive-stop.md))
 - Step reveals work outside the roadmap's scope
 - Test failure or quality red on `per_step`
-- Council off, no second-model rung, and true ambiguity — under an
-  **accepted execution contract**
-  ([§ 3](#3-pre-scan--execution-contract-or-commit-step-ask)) this halt
-  exists only when neither rung is available: the contract auto-enables
-  council for the run, so in-run open questions resolve silently
-  (`high_impact` / `user_required` classifications still escalate per
-  [`ask-when-uncertain`](../../rules/ask-when-uncertain.md)); with a
-  class-declared `second_model` the local rung runs first. With neither,
-  true ambiguity halts — never silent guessing, and never a
-  self-adversarial monologue in place of the missing observer (the
-  open-question handling in § 5 states that rung by rung).
+- Council off, no second-model rung, and true ambiguity — never silent
+  guessing, never a self-adversarial monologue. Under an accepted contract
+  this halt exists only when neither rung is available
+  ([contract and rungs](roadmap-process-loop-close.md#halt-under-an-accepted-contract)).
 
 An accepted execution contract **never lifts a Hard Floor** or any of
 the other halts above — it removes redundant *asks* (git shape,

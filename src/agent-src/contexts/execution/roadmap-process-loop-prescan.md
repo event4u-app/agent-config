@@ -7,6 +7,13 @@ when a run reaches that branch; the Iron-Law fences stay in the core.
 
 ### Context probe — unconditionally, before resolving the roadmap
 
+Unconditional is the whole point: the live merge-state clause below fires only
+when a message would *describe* a roadmap as in-flight or merged, so a run that
+never makes such a claim has never looked. Measured on the population that
+motivated this: 4 of 24 active roadmaps were already closed in an open PR, and
+2 of 22 six days later — the same sample halved inside a week, which is why the
+probe re-runs on a cadence (§ 5e) rather than once at branch time.
+
 The report carries open PRs with the files they change, remote branches carrying
 a roadmap slug, live sessions on both axes, `agents/tmp/` note names, sibling
 roadmaps on the same topic, and roadmap-to-PR file overlap. Two readings act:

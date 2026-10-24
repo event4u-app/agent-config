@@ -33,6 +33,48 @@ and the run that applies it links its PR.
   observation and states itself "not a question".
 - `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
 
+### OQ-4 — Cancel step-that-costs 1.1 (async telemetry concerns)
+
+- **Context:** the seven telemetry concerns cost 1.2 ms of ~68 ms dispatch;
+  running them async adds a second Node start per call.
+- **Options:** (a) cancel 1.1 as `[-]`; (b) keep it open.
+- **Recommendation:** (a) — the measured gain is below the added start cost.
+- **Blocks:** step 1.1 of `road-to-a-step-that-costs-what-it-changes`.
+
+### OQ-5 — Cancel step-that-costs 1.2 (stop ordinal from stored state)
+
+- **Context:** saves ~15 ms per turn but moves risk into the turn-end gate.
+- **Options:** (a) cancel 1.2 as `[-]`; (b) keep it open.
+- **Recommendation:** (a) — 15 ms per turn does not pay for a new failure mode
+  in the gate that refuses unfinished turns.
+- **Blocks:** step 1.2.
+
+### OQ-6 — How step-that-costs 4.2 narrows the rule load, and its paid A/B
+
+- **Context:** an R0/R1 step should load only the kernel plus path-matching
+  rules, but `~/.claude/rules` always loads, the roadmap forbids changing the
+  installed layer, and a settings key is excluded. The A/B (Haiku, 2 tasks ×
+  12 seeds) costs up to $3.5 per run.
+- **Options:** (a) wait until 4.1 reads READY (R0 7 of 30) and decide then;
+  (b) allow a narrowing mechanism outside those exclusions now and fund the A/B.
+- **Recommendation:** (a) — 4.1 gates it anyway, and the mechanism question is
+  cheaper with the flip data in hand.
+- **Blocks:** step 4.2.
+
+### OQ-7 — Self-modification: how an owner act binds a split council
+
+- **Context:** `road-to-self-modification-that-a-council-must-pass` steps 3.4,
+  4.1, 4.2, 5.2 and 6.2 are built (commits `1f9ab5fca`, `5ecf60b10`,
+  `0e262c5c2`, `ec866ae5b`) but every review split: across ~25 rounds the openai
+  seat refuses because no authenticated owner mechanism exists, which ADR-281 § 5
+  deliberately leaves to the owner's forge act.
+- **Options:** (a) land the four commits through the D11 forge bypass as the
+  owner act; (b) reopen D11 / ADR-281 § 5 and build an in-tree authenticated
+  owner acknowledgment first; (c) park the roadmap.
+- **Recommendation:** (a) — the design already assigns this act to the owner,
+  and more council rounds on unchanged designs would be verdict shopping.
+- **Blocks:** steps 3.4, 4.1, 4.2, 5.2, 6.2 and AC-2, AC-3, AC-5.
+
 ## Answered
 
 | ID | Date | Question | Answer |

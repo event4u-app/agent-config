@@ -22,10 +22,9 @@ packs:
 
 # /git-pr-merge
 
-Prepare an open pull request until it is genuinely mergeable — its base merged
-in, its conflicts resolved by class rather than by taste, its required checks
-green on the head that will actually be merged — and then merge it, if and only
-if the invocation authorised that.
+Prepare an open pull request until it is mergeable — base merged in, conflicts
+resolved by class, required checks green on the head to be merged — then merge
+it only if the invocation authorised that.
 
 ```
 THE MERGE STEP (§ 9) IS ACTIVE. THE OWNER AUTHORISED IT ON 2026-09-08 AND
@@ -52,10 +51,8 @@ A `needs-owner` PR IS NEVER SENT FOR CLEARANCE AND NEVER MERGES ON THIS COMMAND.
 
 ## Dispatch
 
-Every row below **prepares** first; the last column says whether it then
-merges. A row that merges reaches only the PRs its own manifest snapshotted
-(§ 1), and only once that PR's required checks are green on the head being
-merged (§ 5).
+Every row **prepares** first. A row that merges reaches only its own manifest
+(§ 1), once required checks are green on the head being merged (§ 5).
 
 | Invocation | Selects | Prepares | Merges |
 |---|---|---|---|
@@ -269,8 +266,7 @@ that changes either is `needs-owner` and never reaches this check. It exits 0 on
 re-derives to `cleared`, and that live head is the manifest head. A push after
 the clearance — this run's own included — moves the head and voids it: § 9a
 runs again on the new head. A non-zero exit is never overridden by the run's
-reading of the replies; the PR is held (below). A `routine` PR needs no check,
-and a `needs-owner` PR never reaches one.
+reading of the replies; the PR is held (below).
 
 **Method choice, drain summary** — read [`pr-merge-queue`](../../../../agent-src/contexts/execution/pr-merge-queue.md#merge-method-choice).
 
@@ -280,7 +276,7 @@ gh pr merge <N> --<detected-method> --delete-branch --match-head-commit <manifes
 
 `--match-head-commit` makes the forge refuse a head the manifest did not record.
 
-Detect the method once, at invocation, and reuse it for the whole queue:
+Detect the method once per invocation:
 
 ```bash
 gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed
@@ -299,10 +295,8 @@ invocation merged as a retro unit, in one call:
 ./scripts-run src/scripts/retro enqueue-merged --pr <N> [--pr <M> …]
 ```
 
-Depth row: `retro` in `src/config/step-depth-table.json`. The table is in
-`shadow` mode, so the retro runs per merge as above; the row records that an
-R0/R1 merge would batch it per drain. The § 9a danger gate has no row — it is
-not ceremony and no class lowers it.
+Depth row: `retro` in `src/config/step-depth-table.json` (in `shadow` mode it
+runs per merge). The § 9a danger gate has no row: no class lowers it.
 
 ### Held for you — one block, at the end of the run
 
@@ -310,10 +304,8 @@ not ceremony and no class lowers it.
 
 ## Rules
 
-- **Never merge a PR the invocation did not name.** The authorization is the
-  owner's own `/pr:merge` sentence and reaches exactly the manifest § 1
-  snapshotted from it; a PR that arrived afterwards needs its own go-ahead.
-  `--no-merge` is the explicit way to say stop before § 9.
+- **Never merge a PR the invocation did not name** — only § 1's manifest; a
+  later PR needs its own go-ahead.
 - **Never widen, patch, or rebuild-around the git guard.** Verification of the
   authorization window is read-only.
 - **The base comes in per `git.update_strategy`**: under `merge` it is merged
@@ -321,15 +313,14 @@ not ceremony and no class lowers it.
   (exit 3) and the rewrite stays the author's, under `git-history-discipline`.
 - **Never hand-merge a generated artefact**; regenerate it.
 - **Never resolve a conflict outside the four classes**; halt instead.
-- **Never call CI green off a local run**; re-verify on the pushed head.
+- **Never call CI green off a local run.**
 - **Never auto-revert a completed merge.**
 - **Mergeability is per-PR against a recorded base SHA**, never a property of
-  the queue: making PR *n* mergeable against base `M` says nothing about its
-  state once PR *n−1* advances the base.
+  the queue.
 
 ## See also
 
-- [`/git-pr-create`](../create/command.md) — opens the PR this command finishes.
-- [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) — delegates here for its delivery loop.
+- [`/git-pr-create`](../create/command.md) — opens the PR.
+- [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) — delegates its delivery loop here.
 - [`git-history-discipline`](../../../../rules/git-history-discipline.md) — never rewrite pushed history.
-- [`non-destructive-by-default`](../../../../rules/non-destructive-by-default.md) — the Hard Floor a merge sits under.
+- [`non-destructive-by-default`](../../../../rules/non-destructive-by-default.md) — the Hard Floor of a merge.
