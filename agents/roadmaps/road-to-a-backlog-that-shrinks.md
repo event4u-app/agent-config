@@ -85,7 +85,7 @@ paperwork is cut.
       dispatchable only while fewer than five active roadmaps are started — pull,
       not push.
       verify: a unit test with five started roadmaps leaves the `start` entry undispatchable.
-- [ ] **3.2 Above five, an exemption needs an owner record.** `check_estate_count`:
+- [x] **3.2 Above five, an exemption needs an owner record.** `check_estate_count`:
       while the active count at HEAD exceeds five, an added roadmap's
       `estate_offset_exempt` counts only if it cites an existing file under
       `agents/evidence/owner-directives/`.

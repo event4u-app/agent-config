@@ -72,6 +72,13 @@
  * Two properties of that third path are load-bearing. It is **diff-scoped**: the
  * line must be ADDED between base and HEAD, so a claim cannot be left in a file
  * to authorise every later change — the banking failure a stored baseline had.
+ * WORK IN PROGRESS IS CAPPED AT FIVE (owner directive 2026-10-24,
+ * `agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`).
+ * While more than `WIP_CAP` roadmaps are active, an added roadmap's
+ * `estate_offset_exempt` counts only when its reason cites an existing file under
+ * `agents/evidence/owner-directives/`: the agent may still propose growth, it can
+ * no longer authorise it. Only added files are read, so nothing in the tree goes red.
+ *
  * And it is deliberately **unbounded**, which the stored baseline could not
  * afford: a raise there had to land exactly on the measurement or the surplus was
  * inherited by the next change, where nobody could act on it. Here the next
@@ -156,6 +163,17 @@ import { SKILLS_POSIX, measureSkillEstate } from './_lib/skill_estate.js';
 import { CONCERN_MANIFEST_POSIX, countConcerns } from './_lib/concern_estate.js';
 import { exemptionFindings, unsearchedExemptions, type ExemptionFinding } from './_lib/exemption_shape.js';
 import { classifyDiff, growthClaims, type GrowthClaim, type OffsetLedger } from './_lib/estate_offsets.js';
+
+export const WIP_CAP = 5;
+const OWNER_RECORD_RE = /agents\/evidence\/owner-directives\/([A-Za-z0-9._-]+\.md)/g;
+
+/** The reason cites an owner-directive file that exists in this tree. */
+export function citesOwnerRecord(reason: string, repoRoot: string): boolean {
+    for (const m of reason.matchAll(OWNER_RECORD_RE)) {
+        if (fs.existsSync(path.join(repoRoot, 'agents/evidence/owner-directives', m[1] ?? ''))) return true;
+    }
+    return false;
+}
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
 
 const GATE = 'check_estate_count';
@@ -346,6 +364,8 @@ export interface EstateVerdict {
     exemptionFindings: ExemptionFinding[];
     /** Added exemptions quoting no owner search — reported, never gating (council 2026-10-16). */
     exemptionWarnings: ExemptionFinding[];
+    /** Added exemptions not honoured because the WIP cap is exceeded and no owner record is cited. */
+    wipUnrecorded: { file: string; reason: string }[];
     /**
      * Roadmaps carrying an unscheduled status — REPORTED, never gated.
      *
@@ -713,9 +733,12 @@ export function evaluate(
 
     const threshold = budget.one_in_one_out?.applies_above_active ?? null;
     const lintApplies = threshold === null || counts.active_roadmaps > threshold;
+    const overWip = counts.active_roadmaps > WIP_CAP;
+    const honoured = (offsets?.exempt ?? []).filter((e) => !overWip || citesOwnerRecord(e.reason, repoRoot));
+    const wipUnrecorded = (offsets?.exempt ?? []).filter((e) => !honoured.includes(e));
     let unpaid = 0;
     if (offsets !== null && lintApplies) {
-        const exemptFiles = new Set(offsets.exempt.map((e) => e.file));
+        const exemptFiles = new Set(honoured.map((e) => e.file));
         const chargeable = offsets.added.filter((f) => !exemptFiles.has(f));
         unpaid = Math.max(0, chargeable.length - offsets.offsets.length);
     }
@@ -733,7 +756,7 @@ export function evaluate(
     // the sanctioned act has no green path. `open_blockers` gets none: nothing in
     // the policy sanctions a new blocker, so it takes the claim path or nothing.
     const allowance: Record<MetricName, number> = {
-        active_roadmaps: offsets?.exempt.length ?? 0,
+        active_roadmaps: honoured.length,
         later_roadmaps: offsets?.parked.length ?? 0,
         open_blockers: 0,
         // The skill corpus gets NO allowance, and that is the whole point of the
@@ -796,6 +819,7 @@ export function evaluate(
         unpaid,
         exemptionFindings: findings,
         exemptionWarnings: offsets === null ? [] : unsearchedExemptions(offsets.exempt),
+        wipUnrecorded,
         draftRoadmaps: countDrafts(repoRoot),
         provisionalPromotion,
         // No floor is a FAILURE, not a skip, and it is the one place this gate
@@ -1021,6 +1045,41 @@ function selfTest(): number {
                             '---\nestate_offset_exempt: fixture — archiving road-to-0 was rejected, it is mid-flight\n---\n\n' +
                                 roadmap('N'),
                         ),
+                }),
+        },
+        {
+            name: 'exemption above the WIP cap without an owner record → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 6,
+                    base: 'main',
+                    after: (dir) =>
+                        write(
+                            dir,
+                            'agents/roadmaps/road-to-new.md',
+                            '---\nestate_offset_exempt: fixture — archiving road-to-0 was rejected, it is mid-flight\n---\n\n' +
+                                roadmap('N'),
+                        ),
+                }),
+        },
+        {
+            name: 'exemption above the WIP cap citing an owner record → accept',
+            expect: 'accept',
+            run: () =>
+                fixture({
+                    roadmaps: 6,
+                    base: 'main',
+                    after: (dir) => {
+                        write(dir, 'agents/evidence/owner-directives/2026-10-24-fixture.md', '# Owner directive\n');
+                        write(
+                            dir,
+                            'agents/roadmaps/road-to-new.md',
+                            '---\nestate_offset_exempt: fixture — archiving road-to-0 was rejected, it is mid-flight; ' +
+                                'authorised by agents/evidence/owner-directives/2026-10-24-fixture.md\n---\n\n' +
+                                roadmap('N'),
+                        );
+                    },
                 }),
         },
         {
@@ -1391,6 +1450,16 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                 '    archives, parks or merges one in the same change. If this addition genuinely\n' +
                 '    cannot be offset, add `estate_offset_exempt: <reason>` to its frontmatter —\n' +
                 '    that costs one reviewable line instead of a silent exception.\n',
+        );
+    }
+
+    for (const f of verdict.wipUnrecorded) {
+        process.stderr.write(
+            `❌  ${f.file}: estate_offset_exempt not honoured — ${String(verdict.counts.active_roadmaps)} roadmaps are active, the cap is ${String(WIP_CAP)}.\n` +
+                '    Owner directive 2026-10-24: above the cap a new roadmap is pulled only when an\n' +
+                '    active one closes. Archive or park one in this change, write the finding to\n' +
+                '    `agents/roadmaps/later/`, or cite the owner record that authorises it\n' +
+                '    (`agents/evidence/owner-directives/<file>.md`) in the exemption reason.\n',
         );
     }
 
