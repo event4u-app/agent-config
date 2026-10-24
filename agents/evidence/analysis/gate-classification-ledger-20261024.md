@@ -216,6 +216,18 @@ checks on every run, and hashes the sorted list of path and git blob pairs. The
 recorded value is the helper closure: 51 files, sha256 `9243c1a7c1881c00581a25e5290d6eb8eaa0ecf8a2ea619209c69ae9137eae87`. Renewed once, on 2026-10-24, after a trunk merge changed `_lib/settings_removed_keys.ts` and `_lib/settings_renamed_keys.ts`. The re-attestation round answered 2/2 *no change* to any classified assertion: `agents/evidence/council/gate-ledger-pin-reattest-20261024.md`. The previous value was `a47d2a77…3b48`.
 
 Any changed, added or removed helper on the closure marks the verdict stale.
+
+**The pins as one attested set (revision 19).** Round 24 asked that the inputs
+be attested as one immutable unit, not pin by pin. The reconciler hashes the
+recorded pin lines, the recorded table digest and the recorded closure digest.
+The recorded value is the attested set: sha256 `99a2eb7a09124973749f92cb4e3a40914ff77b72da9dd177fae0a52e5a67aa41`.
+
+A pin line changed without this line is refused as a broken set, not as a stale
+pin. A renewal therefore replaces the whole set in one diff, and rollback
+restores the last attested set, never selected pins. This value covers the pins
+as they stand: the revision-16 attested values, plus the two new pins of
+revision 18. Round 25 attests that set's renewal.
+
 A new dependency is caught as well, because the closure is recomputed rather
 than listed.
 
@@ -633,6 +645,42 @@ A new input-coverage check requires a pin on every structured input. Its first
 run found the invocation inventory had **never been pinned**. That input and
 the new grounds file are pinned now, as new pins, not renewals.
 
+Revision 19 below supersedes that table.
+
+## Item 4: modes, waivers and the attested set — revision 19
+
+The twenty-fourth round (`agents/evidence/council/gate-classification-item4-r3-20261024.md`)
+ruled item 4 **not met, 2/2**, and *do not renew*, 2/2. It gave seven
+must-fixes.
+
+| # | Must-fix | Revision 19 |
+|---|---|---|
+| 1 | Mode is read from prose (`/in that mode/`) | A structured `modes` map in `gate-class-grounds-20261024.json` (11 rows) |
+| 2 | R16.d passes as a "divergence", which is not satisfaction | **Owner-reserved.** Both seats: fix R16.d's behaviour, or the owner amends item 4 to allow governed waivers. Routed to the owner as gate `7-1-r16d-waiver`. |
+| 3 | A waiver must read `waived`, never derived | Reported as `waived`, and counted apart |
+| 4 | No waiver for `mixed`, `unreached` or an unknown effect | Refused; self-test case |
+| 5 | A waiver needs an approver, an issue, an expiry and a milestone | Refused without approver `owner`, an existing directive, an issue and an unexpired ISO expiry |
+| 6 | Snapshot/tolerance metadata replaces behaviour | Now required in addition: such a row must also derive blocking behaviour |
+| 7 | Attest the inputs atomically | One attested-set digest over all recorded pin lines, the table and the closure |
+
+Must-fix 1 is checked in three ways:
+
+- each structured mode must occur as a literal in the check's source;
+- it must be named in the predicates of **every** branch that reaches the row,
+  which is independent text;
+- it must agree with the class cell.
+
+All 11 modes pass all three.
+
+On must-fix 7, a pin line changed without the set line is refused as a broken
+set, so rollback restores whole sets.
+
+The record is **invalid** until gate `7-1-r16d-waiver` is answered. R16.d's
+waiver has no approver, so it is refused. That is the fail-closed state.
+
+Self-test 28/29. The one red case is the clean baseline, which needs both the
+owner's answer and the attested renewal. The renewal is not made here (D38).
+
 `node agents/evidence/analysis/gate-ledger-reconcile.mjs --aspects`:
 
 | Row | Check | Recorded | Mode | Blocking branches | Non-blocking branches | Derived | Verdict |
@@ -651,43 +699,43 @@ the new grounds file are pinned now, as new pins, not renewals.
 | R7.b | `lint_rule_enforcement_declaration` | invariant | default | c7-selftest | — | invariant | derived |
 | R8.a | `check_token_quality_golden` | invariant | default | c8-corpus-id, c8-id-format, c8-id-duplicate, c8-rules-empty, c8-rule-unknown, c8-nofire-kernel, c8-nofire-fires, c8-tag-not-fired, c8-scenario, c8-prompt, c8-label-status, c8-labelled-todo-rubric, c8-labelled-no-anchor | — | invariant | derived |
 | R8.b | `check_token_quality_golden` | observation | default | — | c8-uncovered-warn, c8-missing-scenario-warn, c8-scaffold-notice | observation | derived |
-| R8.c | `check_token_quality_golden` | invariant | flag | c8-require-complete | — | invariant | derived |
+| R8.c | `check_token_quality_golden` | invariant | --require-complete | c8-require-complete | — | invariant | derived |
 | R9.a | `check_council_layout` | invariant | default | c9-root-stray, c9-noncanonical | — | invariant | derived |
 | R10.a | `check_knowledge_cards` | invariant | default | c10-C1-size | — | invariant | derived |
 | R10.b | `check_knowledge_cards` | invariant | default | c10-C2-pointer | — | invariant | derived |
 | R10.c | `check_knowledge_cards` | invariant | default | c10-C3-local | — | invariant | derived |
-| R10.d | `check_knowledge_cards` | invariant | flag | c10-C3-url-status, c10-C3-url-unreachable | — | invariant | derived |
+| R10.d | `check_knowledge_cards` | invariant | --check-urls | c10-C3-url-status, c10-C3-url-unreachable | — | invariant | derived |
 | R10.e | `check_knowledge_cards` | invariant | default | c10-C4-trust, c10-C4-type-wrong, c10-C4-type-missing | — | invariant | derived |
 | R10.f | `check_knowledge_cards` | invariant | default | c10-C5-ancestry, c10-C5-span | — | invariant | derived |
-| R10.g | `check_knowledge_cards` | invariant | flag | c10-C6-source | — | invariant | derived |
+| R10.g | `check_knowledge_cards` | invariant | --strict | c10-C6-source | — | invariant | derived |
 | R10.h | `check_knowledge_cards` | observation | default | — | c10-freshness-warn | observation | derived |
-| R10.i | `check_knowledge_cards` | invariant | flag | c10-G1-tier-missing, c10-G1-tier-invalid | — | invariant | derived |
-| R10.k | `check_knowledge_cards` | invariant | flag | c10-G2-no-footer, c10-G2-field | — | invariant | derived |
-| R10.l | `check_knowledge_cards` | invariant | flag | c10-G3-redaction | — | invariant | derived |
-| R10.m | `check_knowledge_cards` | invariant | flag | c10-G4-sens-missing, c10-G4-sens-invalid | — | invariant | derived |
-| R10.n | `check_knowledge_cards` | invariant | flag | c10-G5-field | — | invariant | derived |
-| R10.o | `check_knowledge_cards` | invariant | flag | c10-G6-prohibited | — | invariant | derived |
+| R10.i | `check_knowledge_cards` | invariant | --global | c10-G1-tier-missing, c10-G1-tier-invalid | — | invariant | derived |
+| R10.k | `check_knowledge_cards` | invariant | --global | c10-G2-no-footer, c10-G2-field | — | invariant | derived |
+| R10.l | `check_knowledge_cards` | invariant | --global | c10-G3-redaction | — | invariant | derived |
+| R10.m | `check_knowledge_cards` | invariant | --global | c10-G4-sens-missing, c10-G4-sens-invalid | — | invariant | derived |
+| R10.n | `check_knowledge_cards` | invariant | --global | c10-G5-field | — | invariant | derived |
+| R10.o | `check_knowledge_cards` | invariant | --global | c10-G6-prohibited | — | invariant | derived |
 | R10.j | `check_knowledge_cards` | invariant | default | c10-E1-required | — | invariant | derived |
 | R11.a | `check_public_links` | invariant | default | c11-target-not-found | — | invariant | derived |
 | R11.b | `check_public_links` | invariant | default | c11-target-no-stability | — | invariant | derived |
 | R11.c | `check_public_links` | invariant | default | c11-experimental | — | invariant | derived |
 | R11.d | `check_public_links` | invariant | default | c11-self-no-stability | — | invariant | derived |
 | R11.e | `check_public_links` | observation | default | — | c11-beta-marker | observation | derived |
-| R11.f | `check_public_links` | invariant | flag | c11-beta-marker | — | invariant | derived |
+| R11.f | `check_public_links` | invariant | --strict | c11-beta-marker | — | invariant | derived |
 | R11.g | `check_public_links` | invariant | default | c11-contexts-link | — | invariant | derived |
 | R12.a | `lint_agents_layout` | invariant | default | c12-flat-file, c12-unknown-dir | — | invariant | derived |
 | R12.c | `lint_agents_layout` | observation | default | — | c12-consumer-warning | observation | derived |
-| R12.d | `lint_agents_layout` | invariant | flag | c12-consumer-warning | — | invariant | derived |
+| R12.d | `lint_agents_layout` | invariant | --strict | c12-consumer-warning | — | invariant | derived |
 | R13.a | `lint_eval_freshness` | invariant | default | c13-manifest-unreadable, c13-no-last-eval, c13-sha-mismatch | — | invariant | derived |
 | R14.a | `lint_readme_jargon` | invariant | default | c14-over-budget | — | invariant | derived |
 | R15.a | `lint_readme_serial_comma` | invariant | default | c15-serial-comma | — | invariant | derived |
 | R16.a | `check_composite_arming` | observation | default | — | c16-not-armable-readings, c16-not-armable-sessions, c16-unusable-dropped | observation | derived |
 | R16.b | `check_composite_arming` | invariant | default | c16-all-malformed | — | invariant | derived |
 | R16.c | `check_composite_arming` | observation | default | — | c16-ledger-skip, c16-malformed-warn | observation | derived |
-| R16.d | `check_composite_arming` | observation | default | c16-store-unreadable | — | invariant | divergence owed to 7.2 |
+| R16.d | `check_composite_arming` | observation | default | c16-store-unreadable | — | invariant | REFUSED |
 | R16.e | `check_composite_arming` | invariant | default | c16-selftest | — | invariant | derived |
 
-aspects 49 · derived 48 · divergence owed to 7.2 1 · refused 0
+aspects 49 · derived 48 · waived 0 · refused 1
 
 ## Source-to-record completeness, mechanically — revision 14
 

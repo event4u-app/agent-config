@@ -169,6 +169,16 @@ export function reconcile(io) {
         failures.push(`STALE: the transitive helper closure changed (${closurePin[1]} files ${closurePin[2].slice(0, 9)} → ${helperFiles.length} files ${closureDigest.slice(0, 9)})`);
     }
 
+    // The pins are attested as one set (round 24). The set digest covers the
+    // recorded pin lines, the recorded table digest and the recorded closure
+    // digest, so no single pin can be renewed without renewing the set line in
+    // the same diff; the individual pins still say which input is stale.
+    // Rollback restores the last attested set, never selected pins.
+    const recordedSet = sha256([...pins.map((m) => `${m[1]} ${m[2]}`).sort(), `table ${tablePin?.[1] ?? ''}`, `closure ${closurePin?.[1] ?? ''} ${closurePin?.[2] ?? ''}`].join('\n'));
+    const setPin = pinSection.match(/attested set: sha256 `([0-9a-f]{64})`/);
+    if (setPin === null) failures.push('no attested-set pin found');
+    else if (setPin[1] !== recordedSet) failures.push(`pin set broken: a pin line changed without its attested-set line (${setPin[1].slice(0, 9)} → ${process.env.GATE_FULL_DIGEST ? recordedSet : recordedSet.slice(0, 9)})`);
+
     const same = (a, b) => a.size === b.size && [...a].every((x) => b.has(x));
     const inventoryChecks = section(io.read(FILES.inventory), '## The inventory')
         .split('\n')
@@ -225,40 +235,63 @@ export function reconcile(io) {
     for (const r of binding) if (!reached.has(r.id)) failures.push(`binding row ${r.id} is reached by no branch in the independent inventory`);
 
     // Class predicates (round-20 item 4), derived per binding aspect from the
-    // effects of the branches that reach it. Blocking only → invariant;
-    // non-blocking only → observation; both or neither is refused. A snapshot
-    // or tolerance needs its structured fields. A semantic class that differs
-    // from the derived behaviour passes only as a recorded divergence owed to 7.2.
+    // effects of the branches that reach it, in the row's structured mode.
+    // Blocking only → invariant; non-blocking only → observation; mixed,
+    // unreached or an unknown effect is refused. A snapshot or tolerance needs
+    // blocking behaviour AND its structured fields. A semantic class that
+    // differs from the derived behaviour is reported `waived`, never satisfied,
+    // and only with an approver whose directive exists, an issue and an
+    // unexpired expiry.
     const grounds = JSON.parse(io.read(FILES.grounds));
+    const modes = grounds.modes ?? {};
     const aspects = [];
     for (const r of binding) {
-        const flagMode = /in that mode/.test(cells(r.raw)[7] ?? '');
+        const mode = modes[r.id] ?? null;
+        const proseMode = /in that mode/.test(cells(r.raw)[7] ?? '');
+        if (proseMode !== (mode !== null)) failures.push(`mode: ${r.id} ${proseMode ? 'says "in that mode" but has no structured mode' : `has structured mode ${mode} but its class cell names no mode`}`);
+        if (mode !== null && !io.read(`src/scripts/${r.check}.ts`).includes(`'${mode}'`) && !io.read(`src/scripts/${r.check}.ts`).includes(`"${mode}"`)) failures.push(`mode: ${r.id} names ${mode}, absent from ${r.check}`);
         const blocking = [];
         const nonBlocking = [];
         for (const c of branchInv.checks.filter((x) => x.check === r.check)) {
             for (const b of c.branches) {
                 if (!String(mapping[c.check]?.[b.id] ?? '').split('+').includes(r.id)) continue;
-                if (BLOCKING_EFFECTS.includes(b.effect) || (b.effect === FLAG_EFFECT && flagMode)) blocking.push(b.id);
+                const preds = (b.predicates ?? []).join(' ');
+                if (mode !== null && !preds.includes(mode)) failures.push(`mode: ${r.id} is the ${mode} mode but reaching branch ${b.id} names no ${mode} in its predicates`);
+                if (b.effect === FLAG_EFFECT && !/--[a-z]/.test(preds)) failures.push(`mode: flag-only branch ${b.id} names no flag in its predicates`);
+                if (BLOCKING_EFFECTS.includes(b.effect) || (b.effect === FLAG_EFFECT && mode !== null && preds.includes(mode))) blocking.push(b.id);
                 else if (NON_BLOCKING_EFFECTS.includes(b.effect) || b.effect === FLAG_EFFECT) nonBlocking.push(b.id);
                 else failures.push(`class predicate: ${r.id} is reached by ${b.id} with unknown effect ${b.effect}`);
             }
         }
         const derived = blocking.length > 0 && nonBlocking.length === 0 ? 'invariant' : nonBlocking.length > 0 && blocking.length === 0 ? 'observation' : blocking.length > 0 ? 'mixed' : 'unreached';
-        const div = grounds.divergences?.[r.id];
-        let verdict = derived === r.cls ? 'derived' : null;
+        const waiver = grounds.waivers?.[r.id];
+        let verdict = null;
         if (r.cls === 'snapshot' || r.cls === 'tolerance') {
             const f = grounds.structured?.[r.id] ?? {};
-            const ok = r.cls === 'snapshot' ? typeof f.baseline === 'string' : typeof f.bound === 'string' && typeof f.risk_owner === 'string' && typeof f.expiry === 'string';
-            verdict = ok ? 'structured' : null;
-            if (!ok) failures.push(`class predicate: ${r.id} is recorded ${r.cls} without its structured fields in ${FILES.grounds}`);
-        } else if (verdict === null && div !== undefined && div.semantic === r.cls && div.behaviour === derived && blocking.concat(nonBlocking).includes(div.branch) && div.owed_to === '7.2') {
-            verdict = 'divergence owed to 7.2';
-        } else if (verdict === null) {
+            const fields = r.cls === 'snapshot' ? typeof f.baseline === 'string' && io.exists(f.baseline) : typeof f.bound === 'string' && typeof f.risk_owner === 'string' && typeof f.expiry === 'string';
+            if (!fields) failures.push(`class predicate: ${r.id} is recorded ${r.cls} without its structured fields in ${FILES.grounds}`);
+            else if (derived !== 'invariant') failures.push(`class predicate: ${r.id} is recorded ${r.cls} but its reaching branches derive ${derived}, not blocking behaviour`);
+            else verdict = 'derived';
+        } else if (derived === r.cls) {
+            verdict = 'derived';
+        } else if (waiver !== undefined) {
+            const today = new Date().toISOString().slice(0, 10);
+            const why = [];
+            if (!['invariant', 'observation'].includes(derived)) why.push(`derived ${derived} is never waivable`);
+            if (waiver.semantic !== r.cls || waiver.behaviour !== derived) why.push('semantic/behaviour do not match the row');
+            if (!blocking.concat(nonBlocking).includes(waiver.branch)) why.push(`branch ${waiver.branch} does not reach the row`);
+            if (typeof waiver.issue !== 'string' || waiver.issue.length < 20) why.push('no issue');
+            if (waiver.approver !== 'owner' || typeof waiver.directive !== 'string' || !io.exists(waiver.directive)) why.push('no owner approval with an existing directive');
+            if (typeof waiver.expiry !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(waiver.expiry) || waiver.expiry < today) why.push('no unexpired expiry');
+            if (why.length === 0) verdict = 'waived';
+            else failures.push(`class predicate: ${r.id} is recorded ${r.cls}, derives ${derived}, and its waiver is refused: ${why.join('; ')}`);
+        } else {
             failures.push(`class predicate: ${r.id} is recorded ${r.cls} but its reaching branches derive ${derived} (blocking: ${blocking.join(', ') || 'none'}; non-blocking: ${nonBlocking.join(', ') || 'none'})`);
         }
-        aspects.push({ id: r.id, check: r.check, recorded: r.cls, mode: flagMode ? 'flag' : 'default', derived, blocking, nonBlocking, verdict: verdict ?? 'REFUSED' });
+        aspects.push({ id: r.id, check: r.check, recorded: r.cls, mode: mode ?? 'default', derived, blocking, nonBlocking, verdict: verdict ?? 'REFUSED' });
     }
-    for (const id of Object.keys(grounds.divergences ?? {})) if (!aspects.some((a) => a.id === id && a.verdict === 'divergence owed to 7.2')) failures.push(`stale divergence ${id}: the row no longer diverges or its record does not match`);
+    for (const id of Object.keys(grounds.waivers ?? {})) if (!aspects.some((a) => a.id === id && a.derived !== a.recorded)) failures.push(`stale waiver ${id}: the row no longer diverges`);
+    for (const id of Object.keys(modes)) if (!binding.some((r) => r.id === id)) failures.push(`mode names ${id}, which is not a binding row`);
     for (const [check, m] of Object.entries(mapping)) {
         const known = new Set((branchInv.checks.find((c) => c.check === check)?.branches ?? []).map((b) => b.id));
         for (const bid of Object.keys(m)) if (!known.has(bid)) failures.push(`mapping names ${check} ${bid}, absent from the inventory`);
@@ -425,15 +458,24 @@ function selfTest() {
         ['a branch is mapped to the withdrawn row', json(FILES.mapping, (j) => { j.mapping.check_gate_completeness['c1-dead-scope'] = 'R1.c'; return j; }), /not a binding row|disagreement not adopted/],
         ['a line of the committed branch reconciliation is edited', mutated(io, BRANCH_MATRIX, (t) => t.replace('| op:usage |', '| R1.a invariant |')), /committed branch reconciliation differs/],
         ['the mechanical site scanner finds an undisposed site', { ...io, sites: () => false }, /site scanner/],
-        ['a stale pin quarantines rather than invalidates', { ...io, blob: (rel) => (rel === 'src/scripts/lint_readme_jargon.ts' ? '0'.repeat(40) : io.blob(rel)) }, 'quarantined'],
+        // The state cases start from the approved-waiver variant, so that the
+        // owner-pending R16.d waiver does not decide them.
+        ['a stale pin quarantines rather than invalidates', (() => { const g = json(FILES.grounds, (j) => { Object.assign(j.waivers['R16.d'], { approver: 'owner', directive: 'agents/evidence/owner-directives/2026-10-24-7-1-closure-standard.md', expiry: '2099-12-31' }); return j; }); return { ...g, blob: (rel) => (rel === 'src/scripts/lint_readme_jargon.ts' ? '0'.repeat(40) : g.blob(rel)) }; })(), 'quarantined'],
         ['a laundered mapping invalidates', json(FILES.mapping, (j) => { j.mapping.check_knowledge_cards['c10-E1-required'] = 'op:informational'; return j; }), 'invalid'],
         ['an observation row reached by a blocking branch', json(FILES.branches, (j) => { j.checks.find((c) => c.check === 'check_knowledge_cards').branches.find((b) => b.id === 'c10-freshness-warn').effect = 'error-exit-nonzero'; return j; }), /class predicate: R10\.h is recorded observation but its reaching branches derive invariant/],
         ['an invariant row reached only by a non-blocking branch', json(FILES.branches, (j) => { j.checks.find((c) => c.check === 'check_augment_description_cap').branches.find((b) => b.id === 'c4-over-cap').effect = 'warning-exit-zero'; return j; }), /class predicate: R4\.a is recorded invariant but its reaching branches derive observation/],
-        ['a flag-mode row loses its mode', mutated(io, FILES.ledger, (t) => t.replace('| **invariant** in that mode | warnings fail with `--strict` |', '| **invariant** | warnings fail with `--strict` |')), /class predicate: R11\.f is recorded invariant but its reaching branches derive observation/],
-        ['the recorded divergence is removed', json(FILES.grounds, (j) => ({ ...j, divergences: {} })), /class predicate: R16\.d is recorded observation but its reaching branches derive invariant/],
-        ['a divergence is recorded for a row that does not diverge', json(FILES.grounds, (j) => { j.divergences['R4.a'] = { semantic: 'invariant', behaviour: 'observation', branch: 'c4-over-cap', owed_to: '7.2' }; return j; }), /stale divergence R4\.a/],
+        ['a flag-mode row loses its structured mode', json(FILES.grounds, (j) => { delete j.modes['R11.f']; return j; }), /mode: R11\.f says "in that mode" but has no structured mode/],
+        ['a structured mode the class cell does not name', mutated(io, FILES.ledger, (t) => t.replace('| **invariant** in that mode | warnings fail with `--strict` |', '| **invariant** | warnings fail with `--strict` |')), /mode: R11\.f has structured mode --strict but its class cell names no mode/],
+        ['a mode the reaching branch does not name', json(FILES.grounds, (j) => { j.modes['R11.f'] = '--global'; return j; }), /mode: R11\.f is the --global mode but reaching branch c11-beta-marker names no --global/],
+        ['the waiver is removed', json(FILES.grounds, (j) => ({ ...j, waivers: {} })), /class predicate: R16\.d is recorded observation but its reaching branches derive invariant/],
+        ['an unapproved waiver is refused', io, /R16\.d .* waiver is refused: no owner approval/],
+        ['an approved, unexpired waiver is reported waived, not derived', json(FILES.grounds, (j) => { Object.assign(j.waivers['R16.d'], { approver: 'owner', directive: 'agents/evidence/owner-directives/2026-10-24-7-1-closure-standard.md', expiry: '2099-12-31' }); return j; }), { none: /class predicate/ }],
+        ['an expired waiver is refused', json(FILES.grounds, (j) => { Object.assign(j.waivers['R16.d'], { approver: 'owner', directive: 'agents/evidence/owner-directives/2026-10-24-7-1-closure-standard.md', expiry: '2000-01-01' }); return j; }), /waiver is refused: no unexpired expiry/],
+        ['a mixed derivation is never waivable', (() => { const g = json(FILES.grounds, (j) => { Object.assign(j.waivers['R16.d'], { approver: 'owner', directive: 'agents/evidence/owner-directives/2026-10-24-7-1-closure-standard.md', expiry: '2099-12-31' }); return j; }); return { ...g, read: (rel) => (rel === FILES.mapping ? JSON.stringify((() => { const j = JSON.parse(io.read(rel)); j.mapping.check_composite_arming['c16-ledger-skip'] = 'R16.d'; return j; })()) : g.read(rel)) }; })(), /derived mixed is never waivable/],
+        ['a waiver for a row that does not diverge', json(FILES.grounds, (j) => { j.waivers['R4.a'] = { semantic: 'invariant', behaviour: 'observation', branch: 'c4-over-cap', owed_to: '7.2' }; return j; }), /stale waiver R4\.a/],
+        ['a pin line renewed without its attested-set line', mutated(io, FILES.ledger, (t) => t.replace('`672ce60e22f56fd483b31ed84b13266a90b821c0`', '`' + '1'.repeat(40) + '`')), /pin set broken/],
         ['a snapshot without its structured baseline', mutated(io, FILES.ledger, (t) => t.replace(/(\| `check_augment_description_cap` \|[^\n]*?)\*\*invariant\*\*/, '$1**snapshot**')), /class predicate: R4\.a is recorded snapshot without its structured fields/],
-        ['negated prose in an evidence cell changes no class', mutated(io, FILES.ledger, (t) => t.replace('| fixed cap |', '| does not fail; errors are informational; no contract |')), { none: /class predicate/ }],
+        ['negated prose in an evidence cell changes no class', mutated(io, FILES.ledger, (t) => t.replace('| fixed cap |', '| does not fail; errors are informational; no contract |')), { none: /class predicate: R4\.a/ }],
         ['an unknown flag appears in a check', mutated(io, 'src/scripts/lint_readme_jargon.ts', (t) => `${t}\nconst x = '--surprise';\n`), /unclassified invocation mode: lint_readme_jargon --surprise/],
     ];
     let bad = 0;
@@ -470,7 +512,7 @@ else if (process.argv.includes('--branches')) {
     console.log('|---|---|---|---|---|---|---|---|');
     for (const a of aspects) console.log(`| ${a.id} | \`${a.check}\` | ${a.recorded} | ${a.mode} | ${a.blocking.join(', ') || '—'} | ${a.nonBlocking.join(', ') || '—'} | ${a.derived} | ${a.verdict} |`);
     const refused = aspects.filter((a) => a.verdict === 'REFUSED').length;
-    console.log(`\naspects ${aspects.length} · derived ${aspects.filter((a) => a.verdict === 'derived').length} · divergence owed to 7.2 ${aspects.filter((a) => a.verdict.startsWith('divergence')).length} · refused ${refused}`);
+    console.log(`\naspects ${aspects.length} · derived ${aspects.filter((a) => a.verdict === 'derived').length} · waived ${aspects.filter((a) => a.verdict === 'waived').length} · refused ${refused}`);
     process.exit(failures.length === 0 && refused === 0 ? 0 : 1);
 } else if (process.argv.includes('--status')) {
     const { status } = reconcile(realIo());
