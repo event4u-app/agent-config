@@ -121,6 +121,18 @@ export async function verifyMap(htmlPath: string): Promise<MapRenderCheck> {
                 return { view, labels: r.boxes.length, ...labelProblems(r.boxes, r.width, r.height) };
             };
             const views = [await read('overview')];
+            // The orb, as it opens and turned half a revolution: the far side's labels
+            // must stay hidden and the near side's must still fit and not overlap.
+            const orb = page.locator('#dim');
+            if ((await orb.count()) > 0) {
+                await orb.click();
+                views.push(await read('overview-orb'));
+                await page.evaluate(() => {
+                    for (let i = 0; i < 21; i++) document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight' }));
+                });
+                views.push(await read('overview-orb-turned'));
+                await orb.click();
+            }
             const firstArea = page.locator('#panel .plist button').first();
             if ((await firstArea.count()) > 0) {
                 await firstArea.click();

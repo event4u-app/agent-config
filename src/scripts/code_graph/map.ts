@@ -853,6 +853,7 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '<button type="button" id="z-out">−</button>',
         '<button type="button" id="z-in">+</button>',
         '<button type="button" id="z-fit"></button>',
+        '<button type="button" id="dim" aria-pressed="false"></button>',
         '<button type="button" id="theme"></button>',
         '<button type="button" id="lang"></button>',
         '</div>',

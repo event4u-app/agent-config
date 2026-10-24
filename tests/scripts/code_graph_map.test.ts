@@ -242,6 +242,13 @@ describe('agents/map/ artefacts (Phase 3)', () => {
         expect(html).toMatch(/Content-Security-Policy" content="default-src 'none'; script-src 'sha256-/);
     });
 
+    it('offers the 3D view as a toggle that starts off, so the flat map stays the default', async () => {
+        await buildMap(root);
+        const html = fs.readFileSync(path.join(root, 'agents', 'map', 'index.html'), 'utf-8');
+        expect(html).toContain('<button type="button" id="dim" aria-pressed="false">');
+        expect(html).toContain('function orbPoint(');
+    });
+
     it('renders a hostile file name as data, never as markup', async () => {
         await buildMap(root);
         const html = fs.readFileSync(path.join(root, 'agents', 'map', 'index.html'), 'utf-8');

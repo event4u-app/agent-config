@@ -12,6 +12,8 @@
     --change: #d1495b;
     --good: #2e8b57;
     --contested: #d98b1d;
+    --orb-light: rgba(255, 255, 255, 0.95);
+    --orb-dark: rgba(214, 220, 232, 0.55);
 }
 @media (prefers-color-scheme: dark) {
     :root:not([data-theme='light']) {
@@ -28,6 +30,8 @@
         --change: #ff7a8a;
         --good: #5fd39a;
         --contested: #ffb347;
+        --orb-light: rgba(64, 72, 90, 0.55);
+        --orb-dark: rgba(20, 22, 26, 0.2);
     }
 }
 :root[data-theme='dark'] {
@@ -44,6 +48,8 @@
     --change: #ff7a8a;
     --good: #5fd39a;
     --contested: #ffb347;
+    --orb-light: rgba(64, 72, 90, 0.55);
+    --orb-dark: rgba(20, 22, 26, 0.2);
 }
 * {
     box-sizing: border-box;

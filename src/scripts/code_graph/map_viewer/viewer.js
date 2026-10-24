@@ -57,6 +57,8 @@
             zoomIn: 'Zoom in',
             zoomOut: 'Zoom out',
             reset: 'Fit',
+            dim3d: '3D',
+            dimHint: 'Show the map as an orb. Drag to turn it, Shift+drag to move it, arrow keys turn it too.',
             none: 'none',
             hint: 'Click an area to open it. Click a file to inspect it. Esc goes back.',
             roles: {
@@ -104,6 +106,8 @@
             zoomIn: 'Vergrößern',
             zoomOut: 'Verkleinern',
             reset: 'Einpassen',
+            dim3d: '3D',
+            dimHint: 'Karte als Kugel zeigen. Ziehen dreht sie, Shift+Ziehen verschiebt sie, die Pfeiltasten drehen ebenfalls.',
             none: 'keine',
             hint: 'Bereich anklicken zum Öffnen, Datei anklicken zum Ansehen. Esc geht zurück.',
             roles: {
@@ -170,6 +174,10 @@
     var searchInput = document.getElementById('search');
     var results = document.getElementById('results');
 
+    // The orb starts turned a little, so it reads as a sphere and not as a disc.
+    var ORB_YAW = 0.35;
+    var ORB_PITCH = -0.3;
+
     var state = {
         level: 'overview', // overview | area
         area: -1,
@@ -178,7 +186,9 @@
         showGuesses: false,
         showTests: true,
         lens: 'areas', // areas | folders
-        view: { scale: 1, x: 0, y: 0 }
+        view: { scale: 1, x: 0, y: 0 },
+        orb: false,
+        rot: { yaw: ORB_YAW, pitch: ORB_PITCH }
     };
     var drawn = []; // {kind, idx, x, y, r} in screen space, for hit tests
     window.__mapLabelBoxes = { boxes: [], width: 0, height: 0 };
@@ -202,6 +212,31 @@
         var pad = 48;
         var k = (Math.min(s.w, s.h) / 2 - pad) * state.view.scale;
         return [s.w / 2 + (x * k) + state.view.x, s.h / 2 + (y * k) + state.view.y];
+    }
+
+    // The orb: the precomputed 2D layout wrapped onto a sphere with the inverse
+    // Lambert azimuthal equal-area projection, so neighbours stay neighbours and
+    // no region is squeezed — the layout's centre faces the viewer, its rim
+    // wraps to the back. Nothing is simulated; the same layout, turned.
+    function orbPoint(x, y, reach) {
+        var rho = (Math.sqrt(x * x + y * y) / reach) * 1.9;
+        var len = Math.sqrt(x * x + y * y) || 1;
+        var f = Math.sqrt(Math.max(0, 1 - (rho * rho) / 4));
+        var px = (x / len) * rho * f;
+        var py = (y / len) * rho * f;
+        var pz = 1 - (rho * rho) / 2;
+        var cy = Math.cos(state.rot.yaw);
+        var sy = Math.sin(state.rot.yaw);
+        var x1 = px * cy + pz * sy;
+        var z1 = -px * sy + pz * cy;
+        var cp = Math.cos(state.rot.pitch);
+        var sp = Math.sin(state.rot.pitch);
+        return [x1, py * cp - z1 * sp, py * sp + z1 * cp];
+    }
+
+    function orbRadius() {
+        var s = size();
+        return (Math.min(s.w, s.h) / 2 - 48) * state.view.scale;
     }
 
     // Visible nodes for the current level.
@@ -233,12 +268,40 @@
         ctx.clearRect(0, 0, s.w, s.h);
         var nodes = currentNodes();
         var pos = Object.create(null);
-        nodes.forEach(function (n) {
-            var p = toScreen(n.x, n.y);
-            n.sx = p[0];
-            n.sy = p[1];
-            pos[n.kind + n.idx] = n;
-        });
+        if (state.orb) {
+            var reach = 0;
+            nodes.forEach(function (n) { reach = Math.max(reach, Math.sqrt(n.x * n.x + n.y * n.y)); });
+            reach = reach || 1;
+            var k = orbRadius();
+            var cx = s.w / 2 + state.view.x;
+            var cyy = s.h / 2 + state.view.y;
+            nodes.forEach(function (n) {
+                var p = orbPoint(n.x, n.y, reach);
+                n.sx = cx + p[0] * k;
+                n.sy = cyy + p[1] * k;
+                n.depth = p[2];
+                // Nearer is larger and opaque; the far side recedes.
+                n.r = n.r * (0.6 + 0.4 * (p[2] + 1) / 2);
+                pos[n.kind + n.idx] = n;
+            });
+            nodes.sort(function (a, b) { return a.depth - b.depth || a.idx - b.idx; });
+            var glow = ctx.createRadialGradient(cx - k * 0.35, cyy - k * 0.35, k * 0.1, cx, cyy, k);
+            glow.addColorStop(0, cssVar('--orb-light'));
+            glow.addColorStop(1, cssVar('--orb-dark'));
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(cx, cyy, k, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            nodes.forEach(function (n) {
+                var p = toScreen(n.x, n.y);
+                n.sx = p[0];
+                n.sy = p[1];
+                pos[n.kind + n.idx] = n;
+            });
+        }
+        // 1 on the near side and in 2D, fading to 0.15 on the far side of the orb.
+        function nearness(a) { return state.orb ? 0.15 + 0.85 * (a.depth + 1) / 2 : 1; }
 
         // Edges first.
         var edge = cssVar('--edge');
@@ -254,11 +317,13 @@
                 var hot = state.area === e[0] || state.area === e[1];
                 ctx.strokeStyle = hot ? strong : edge;
                 ctx.lineWidth = 0.5 + 4 * Math.sqrt(e[2] / maxW);
+                ctx.globalAlpha = Math.min(nearness(a), nearness(b));
                 ctx.beginPath();
                 ctx.moveTo(a.sx, a.sy);
                 ctx.lineTo(b.sx, b.sy);
                 ctx.stroke();
             });
+            ctx.globalAlpha = 1;
         } else {
             var drawEdges = function (list, dashed) {
                 ctx.setLineDash(dashed ? [4, 4] : []);
@@ -269,11 +334,13 @@
                     var hot = state.file === e[0] || state.file === e[1];
                     ctx.strokeStyle = hot ? strong : edge;
                     ctx.lineWidth = hot ? 1.8 : 0.8;
+                    ctx.globalAlpha = Math.min(nearness(a), nearness(b));
                     ctx.beginPath();
                     ctx.moveTo(a.sx, a.sy);
                     ctx.lineTo(b.sx, b.sy);
                     ctx.stroke();
                 });
+                ctx.globalAlpha = 1;
                 ctx.setLineDash([]);
             };
             drawEdges(model.edges, false);
@@ -301,7 +368,7 @@
                 var f = files[n.idx];
                 color = f.role === 'test' ? areaColor(state.area, 0.45) : f.role === 'infra' ? grey : areaColor(state.area, 1);
             }
-            ctx.globalAlpha = dim ? 0.35 : 1;
+            ctx.globalAlpha = (dim ? 0.35 : 1) * nearness(n);
             ctx.fillStyle = color;
             ctx.beginPath();
             ctx.arc(n.sx, n.sy, r, 0, Math.PI * 2);
@@ -326,10 +393,11 @@
                 ctx.setLineDash([]);
             }
             ctx.globalAlpha = 1;
-            drawn.push({ kind: n.kind, idx: n.idx, x: n.sx, y: n.sy, r: Math.max(r, 8) });
+            // The far side of the orb is seen through the near side: never a click target.
+            if (!state.orb || n.depth > 0) drawn.push({ kind: n.kind, idx: n.idx, x: n.sx, y: n.sy, r: Math.max(r, 8) });
         });
 
-        drawLabels(nodes, s);
+        drawLabels(state.orb ? nodes.filter(function (n) { return n.depth > 0.15; }) : nodes, s);
     }
 
     // Labels: biggest first, placed only where they fit, flipped near the right
@@ -618,7 +686,10 @@
         renderPanel();
         draw();
     }
-    function resetView() { state.view = { scale: 1, x: 0, y: 0 }; }
+    function resetView() {
+        state.view = { scale: 1, x: 0, y: 0 };
+        state.rot = { yaw: ORB_YAW, pitch: ORB_PITCH };
+    }
     function goHome() { state.level = 'overview'; state.area = -1; state.file = -1; resetView(); refresh(); }
     function openArea(i) { state.level = 'area'; state.area = i; state.file = -1; resetView(); refresh(); }
     function openFile(i) {
@@ -635,7 +706,10 @@
     // Input.
     var drag = null;
     canvas.addEventListener('pointerdown', function (e) {
-        drag = { x: e.clientX, y: e.clientY, vx: state.view.x, vy: state.view.y, moved: false };
+        drag = {
+            x: e.clientX, y: e.clientY, vx: state.view.x, vy: state.view.y,
+            yaw: state.rot.yaw, pitch: state.rot.pitch, turn: state.orb && !e.shiftKey, moved: false
+        };
         canvas.setPointerCapture(e.pointerId);
     });
     canvas.addEventListener('pointermove', function (e) {
@@ -643,8 +717,16 @@
         var dx = e.clientX - drag.x;
         var dy = e.clientY - drag.y;
         if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true;
-        if (drag.moved) { state.view.x = drag.vx + dx; state.view.y = drag.vy + dy; draw(); }
+        if (!drag.moved) return;
+        if (drag.turn) turnTo(drag.yaw + dx * 0.008, drag.pitch - dy * 0.008);
+        else { state.view.x = drag.vx + dx; state.view.y = drag.vy + dy; draw(); }
     });
+    // Pitch stops short of the poles, so "up" never flips under the pointer.
+    function turnTo(yaw, pitch) {
+        state.rot.yaw = yaw;
+        state.rot.pitch = Math.max(-1.4, Math.min(1.4, pitch));
+        draw();
+    }
     canvas.addEventListener('pointerup', function (e) {
         var wasDrag = drag && drag.moved;
         drag = null;
@@ -663,7 +745,14 @@
         state.view.scale = Math.min(12, Math.max(0.3, state.view.scale * f));
         draw();
     }
+    var TURN_KEYS = { ArrowLeft: [-0.15, 0], ArrowRight: [0.15, 0], ArrowUp: [0, 0.15], ArrowDown: [0, -0.15] };
     document.addEventListener('keydown', function (e) {
+        var step = TURN_KEYS[e.key];
+        if (step && state.orb && document.activeElement !== searchInput) {
+            e.preventDefault();
+            turnTo(state.rot.yaw + step[0], state.rot.pitch + step[1]);
+            return;
+        }
         if (e.key === 'Escape') {
             if (document.activeElement === searchInput && searchInput.value) { searchInput.value = ''; clear(results); return; }
             if (state.file >= 0) { state.file = -1; refresh(); } else if (state.area >= 0) goHome();
@@ -713,6 +802,13 @@
     document.getElementById('z-in').addEventListener('click', function () { zoom(1.25); });
     document.getElementById('z-out').addEventListener('click', function () { zoom(1 / 1.25); });
     document.getElementById('z-fit').addEventListener('click', function () { resetView(); draw(); });
+    var dimButton = document.getElementById('dim');
+    dimButton.addEventListener('click', function () {
+        state.orb = !state.orb;
+        dimButton.setAttribute('aria-pressed', String(state.orb));
+        resetView();
+        draw();
+    });
 
     var themes = ['system', 'light', 'dark'];
     var theme = 'system';
@@ -747,6 +843,8 @@
         document.getElementById('z-in').setAttribute('aria-label', t('zoomIn'));
         document.getElementById('z-out').setAttribute('aria-label', t('zoomOut'));
         document.getElementById('z-fit').textContent = t('reset');
+        document.getElementById('dim').textContent = t('dim3d');
+        document.getElementById('dim').setAttribute('title', t('dimHint'));
         document.getElementById('lang').textContent = t('lang');
         applyTheme();
     }
