@@ -78,7 +78,7 @@ output. It is the classifier and the data behind it.
 
 ## Phase 2 — The bump follows the impact, not the punctuation
 
-- [ ] **2.1 Replace the `release.ts:463` rule.** Major only when a commit in
+- [x] **2.1 Replace the `release.ts:463` rule.** Major only when a commit in
       the span carries `action`, or touches a surface `CONTRIBUTING.md:331`
       already lists as major. An internal `!` becomes a minor.
       verify: unit tests over the two branches.
@@ -466,7 +466,7 @@ direct check named in the revisit column.
       (Evidence under step 4.3: no file in their import closure changed.)
 - [x] **AC-7** Every row of `BREAKING_CHANGES.md`'s table carries a
       `Consumer impact` value from the enum.
-- [ ] **AC-8** `task ci` green.
+- [x] **AC-8** `task ci` green.
       (Closes with the PR that closes this file: the remote pipeline is the
       authoritative run, and a green it has not yet reported is not evidence.)
       **Ticked and un-ticked again on 2026-10-21, and the reason is worth more
