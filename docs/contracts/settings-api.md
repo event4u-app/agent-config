@@ -12,7 +12,8 @@ keep-beta-until: 2026-08-18
 >
 > Server-side validators live in `src/server/schemas/`; the JSON-Schema
 > emitted at `GET /api/v1/schema` is derived from those Zod modules via
-> `zod-to-json-schema` so client and server cannot drift.
+> Zod's native `z.toJSONSchema` (`src/shared/zodJsonSchema.ts`) so client
+> and server cannot drift.
 
 ## Conventions
 
