@@ -108,12 +108,39 @@ inferred from exit code only).
   "decision": "allow" | "block" | "warn",
   "reason": "human-readable, ≤ 200 chars",
   "additional_context": "optional — surfaces back to the model on platforms that support it",
+  "user_notice": "optional — shown to the user, never to the model; `effect: notification` concerns only",
   "state_writes": ["agents/runtime/state/chat-history.json", "…"]
 }
 ```
 
 `state_writes` is advisory; concerns still write the files themselves
 under the concurrency rules below.
+
+`user_notice` is the one user-addressed field (`hooks/user_notice.ts`). The
+dispatcher forwards it only from a concern whose manifest `effect` is
+`notification`, cleaned, capped at 1,000 Unicode code points and kept only if something is left, joined with `\n` in manifest order,
+and only on a host with a verified field that shows text to the user and adds
+nothing to model context — today `claude`, as `systemMessage`. On any other host
+it is dropped, never rerouted to a model-facing channel; that `systemMessage`
+does not reach the model was reproduced on Claude Code 2.1.310
+(`agents/evidence/analysis/system-message-probe-2026-10-24.md`). The host parses
+stdout as JSON only when the whole of it is one object, so with a notice present
+the dispatcher merges structures, never text: the native emission's object is
+kept, `session_start` plain `context` joins
+`hookSpecificOutput.additionalContext` (`\n\n`), and the notice is appended to
+any `systemMessage` already there (`\n`). Plain context on any other event, or
+an emission that is not one JSON object, is never reinterpreted — the notice is
+dropped and the output is what it would have been without it. The same holds
+when a field the merge would extend has the wrong type. For each concern whose
+notice is in the output, the dispatcher writes a receipt — evidence that the
+notice was put into the host's output, not that the user read it —
+`<user-global root>/user-notice-<concern>.delivered` (`{session_id, notice_id, at}`, the `notice_id` being whatever id the concern replied with, never shown); a
+dropped notice leaves none. The receipt is written after the dispatcher hands the output to its stdout stream, and not when that call throws; on a pipe the stream may still be flushing, so a receipt evidences the hand-over, not completed transmission — a host that dies in that window can leave a notice confirmed that it never displayed. A concern that must not count a notice as shown
+until the host received it reads that receipt (`update-notice` does).
+`effect: notification` permits a concern its own user-global bookkeeping — a
+throttle stamp, what it last reported, what is still pending — and nothing that
+another module reads or that changes the installation; the receipt is the
+dispatcher's, not the concern's.
 
 ## Exit-code semantics
 
