@@ -1,4 +1,4 @@
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -16,9 +16,30 @@ interface RunResult {
     stderr: string;
 }
 
-function runCli(args: string[]): RunResult {
+/**
+ * An environment whose `git` reports a new HEAD on every `rev-parse HEAD` and
+ * passes everything else to the real git: HEAD "moves" during every build,
+ * deterministically, instead of racing a commit loop that load can starve.
+ */
+function movingHeadEnv(): NodeJS.ProcessEnv {
+    const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'moving-head-'));
+    const real = execFileSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).trim();
+    fs.writeFileSync(
+        path.join(bin, 'git'),
+        '#!/bin/sh\n' +
+            'for a in "$@"; do if [ "$a" = "HEAD" ]; then\n' +
+            `  n=$(cat "${bin}/n" 2>/dev/null || echo 0); n=$((n + 1)); echo "$n" > "${bin}/n"\n` +
+            '  printf "%040d\\n" "$n"; exit 0\n' +
+            'fi; done\n' +
+            `exec "${real}" "$@"\n`,
+        { mode: 0o755 },
+    );
+    return { ...process.env, PATH: `${bin}${path.delimiter}${process.env['PATH'] ?? ''}` };
+}
+
+function runCli(args: string[], env: NodeJS.ProcessEnv = process.env): RunResult {
     try {
-        const stdout = execFileSync('npx', ['tsx', CLI, ...args], { encoding: 'utf8' });
+        const stdout = execFileSync('npx', ['tsx', CLI, ...args], { encoding: 'utf8', env });
         return { status: 0, stdout, stderr: '' };
     } catch (e) {
         const err = e as { status?: number; stdout?: string; stderr?: string };
@@ -141,19 +162,10 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         git('add', '-A');
         git('commit', '-qm', 'seed');
         const out = path.join(tmp, 'graph.json');
-        // Keep HEAD moving for the whole refresh window: every build attempt
-        // straddles at least one commit.
-        const mover = spawn('sh', ['-c', `while true; do git -C "${tmp}" commit -q --allow-empty -m m; sleep 0.05; done`], {
-            stdio: 'ignore',
-        });
-        try {
-            const r = runCli(['refresh', '--root', tmp, '--out', out]);
-            expect(r.status).toBe(1);
-            expect(r.stderr).toMatch(/HEAD moved \(or could not be read\) during the refresh — result discarded/);
-            expect(fs.existsSync(out)).toBe(false);
-        } finally {
-            mover.kill('SIGKILL');
-        }
+        const r = runCli(['refresh', '--root', tmp, '--out', out], movingHeadEnv());
+        expect(r.status).toBe(1);
+        expect(r.stderr).toMatch(/HEAD moved \(or could not be read\) during the refresh — result discarded/);
+        expect(fs.existsSync(out)).toBe(false);
     }, 60_000);
 
     it('guards HEAD through a --root symlinked into a repository subdirectory', () => {
@@ -165,18 +177,12 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         const link = `${tmp}-link`;
         fs.symlinkSync(path.join(tmp, 'src'), link);
         const out = path.join(tmp, 'graph.json');
-        const mover = spawn(
-            'sh',
-            ['-c', `while true; do git -C "${tmp}" -c user.email=t@example.com -c user.name=t commit -q --allow-empty -m m; sleep 0.05; done`],
-            { stdio: 'ignore' },
-        );
         try {
-            const r = runCli(['refresh', '--root', link, '--out', out]);
+            const r = runCli(['refresh', '--root', link, '--out', out], movingHeadEnv());
             expect(r.status).toBe(1);
             expect(r.stderr).toMatch(/HEAD moved/);
             expect(fs.existsSync(out)).toBe(false);
         } finally {
-            mover.kill('SIGKILL');
             fs.rmSync(link, { force: true });
         }
     }, 60_000);
