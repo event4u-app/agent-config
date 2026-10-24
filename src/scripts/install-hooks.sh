@@ -1,6 +1,21 @@
 #!/usr/bin/env bash
 # Install git hooks for this repository.
 # Run once: bash src/scripts/install-hooks.sh
+#
+# TRUST MODEL. The hooks this writes execute code FROM THE CHECKOUT —
+# `./agent-config`, `./scripts-run`, `task`, `npm run build:cli` — on commit,
+# checkout, merge, rebase and push. That is acceptable in exactly one place:
+# this package's own development tree, whose code the developer already runs
+# (tests, `prepare`, the CLI itself). A globally installed `agent-config` would
+# be an older build of the same code, so the checkout's own is the right one
+# HERE. It is wrong anywhere else: run from a consumer's
+# `node_modules/@event4u/agent-config/`, this script would resolve the
+# CONSUMER's git directory and install these hooks into a repository whose
+# code nobody vetted for them. The guard below enforces the boundary — the
+# project root must be the git top-level AND its package.json must name
+# @event4u/agent-config — and consumer freshness travels through the
+# `code-graph-refresh` session concern instead, which never runs repository
+# code (road-to-code-graph-refresh-follow-ups 3.1 / 3.2).
 
 set -euo pipefail
 
@@ -8,6 +23,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # This installer lives at src/scripts/install-hooks.sh, so the repo root
 # (which owns .git/) is two levels up.
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+TOPLEVEL="$(git -C "$PROJECT_ROOT" rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -z "$TOPLEVEL" ] \
+    || [ "$(cd "$TOPLEVEL" && pwd -P)" != "$(cd "$PROJECT_ROOT" && pwd -P)" ] \
+    || ! grep -Eq '"name"[[:space:]]*:[[:space:]]*"@event4u/agent-config"' "$PROJECT_ROOT/package.json" 2>/dev/null; then
+    echo "❌  refusing to install the development git hooks: $PROJECT_ROOT is not the top level of an" >&2
+    echo "    @event4u/agent-config checkout. These hooks run code from the checkout (TRUST MODEL above)." >&2
+    exit 1
+fi
 # Resolve the SHARED hooks dir via git so this also works from a linked worktree
 # (where $PROJECT_ROOT/.git is a file, not a dir, and a literal .git/hooks path
 # would break under `set -e`). --git-common-dir points at the main .git even from

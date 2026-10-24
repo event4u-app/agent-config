@@ -70,7 +70,7 @@ written down where the hooks are generated.
 
 ## Phase 3 — The development hooks stay in the development checkout
 
-- [ ] **3.1 Refuse to install anywhere but this package's own checkout.**
+- [x] **3.1 Refuse to install anywhere but this package's own checkout.**
       `src/scripts/install-hooks.sh` writes hooks that run `./agent-config`,
       `./scripts-run`, `task` and `npm` from the checkout. That is the trust model of
       this package's development tree — the developer already runs that code — and it is
@@ -82,7 +82,11 @@ written down where the hooks are generated.
       (`<consumer>/node_modules/@event4u/agent-config/src/scripts/install-hooks.sh`
       inside a git repo) and finds exit non-zero and no hook written; the existing render
       tests still pass; red with the guard removed.
-- [ ] **3.2 Write the trust model down where the hooks are generated.** The header of
+      *Done 2026-10-24:* `tests/scripts/install_hooks_boundary.test.ts` — a
+      consumer-shaped tree and a foreign checkout are refused with no hook
+      written; this checkout still renders. Both refusals red with the guard's
+      exit neutralised; the seven installer-dependent suites stay green.
+- [x] **3.2 Write the trust model down where the hooks are generated.** The header of
       `install-hooks.sh` states what the hooks execute, why that is acceptable in this
       checkout, and what the guard of 3.1 enforces — so the next reviewer reads the
       boundary instead of rediscovering it.
