@@ -15,17 +15,31 @@
  * - **validator health** — whether the validator itself handled every
  *   producer, decided by {@link assessRun} and {@link writeSummary}.
  *
- * The accepted-byte boundary. fd 3 is a pipe the validator owns. Bytes are
- * accepted while the collector is `collecting`. At the first terminal event
- * (producer exit, deadline) the collector moves to `draining`: the driver reads
- * the pipe synchronously until it would block, which accepts exactly the bytes
- * already in the kernel buffer at that moment, then moves to `stopped`. No read
- * is started after that, and later bytes are counted as ignored, never parsed.
- * A byte or line limit stops collection at once, with the exact prefix kept.
+ * The intended accepted-byte boundary. fd 3 is a pipe the validator owns.
+ * Bytes are accepted while the collector is `collecting`. At the first terminal
+ * event (producer exit, deadline) the collector moves to `draining`, the driver
+ * reads the pipe synchronously until a read returns nothing or throws, then
+ * moves to `stopped`; later bytes are counted as ignored, never parsed. The
+ * reducer is deterministic for a given event sequence; the driver that produces
+ * the sequence is not: the synchronous read goes through Node's undocumented
+ * `_handle.fd`, treats every read error as the end of the drain, and has never
+ * been exercised against a byte that was still buffered at `exit`. Byte and
+ * line limits are capacities: exactly the limit finishes normally, the next
+ * byte is an overflow, and the accepted prefix is exactly the capacity.
  *
- * What the boundary does NOT give: fd 3 is a bearer capability. A descendant
- * that inherited it and wrote before the stop is indistinguishable from the
- * producer. The claim is framing and bounded collection, not provenance.
+ * Two policies this slice chose and states rather than hides. Without a
+ * compatibility row, a non-zero exit next to a complete stream is the
+ * diagnostic `process-nonzero`, not a failure, because the stream is the
+ * result and many checks exit 1 to say "found something" which the records
+ * already report. In report-only mode an `invalid` or `incomplete` producer
+ * under a healthy validator leaves both exits at 0: the operational exit
+ * reports the validator, not the producers.
+ *
+ * What none of this gives: fd 3 is a bearer capability, so a descendant that
+ * inherited it and wrote before the stop is indistinguishable from the
+ * producer, and a schema-valid `pass` is not evidence the producer ran the
+ * check it names. The claim is framing and bounded collection, not provenance
+ * and not truthfulness.
  */
 import { spawn } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -99,7 +113,20 @@ export function initialCollector(limits: Limits): CollectorModel {
     return { phase: 'starting', limits, accepted: [], bytes: 0, lines: 0, outcome: null, ignoredAfterStop: 0, events: [] };
 }
 
+/**
+ * Both limits are capacities: a stream of exactly `maxBytes` bytes or exactly
+ * `maxLines` lines finishes normally, and only a byte beyond capacity is an
+ * overflow. The accepted prefix is then exactly the capacity.
+ */
 function acceptChunk(m: CollectorModel, chunk: Buffer): CollectorModel {
+    if (chunk.length > 0 && m.lines >= m.limits.maxLines) {
+        return {
+            ...m,
+            phase: 'stopped',
+            outcome: m.outcome ?? { kind: 'output-limited', limit: 'lines' },
+            ignoredAfterStop: m.ignoredAfterStop + chunk.length,
+        };
+    }
     const byteRoom = m.limits.maxBytes - m.bytes;
     let take = Math.min(chunk.length, byteRoom);
     let limit: 'bytes' | 'lines' | null = chunk.length > byteRoom ? 'bytes' : null;
@@ -552,9 +579,11 @@ function runStatus(health: Health, producers: readonly ProducerReport[]): RunSta
 }
 
 const OPERATIONAL_EXIT: Record<Health, 0 | 1 | 2> = { healthy: 0, degraded: 2, failed: 1 };
+const HEALTH_VALUES: readonly string[] = Object.keys(OPERATIONAL_EXIT);
 
 export function assessRun(producers: readonly ProducerReport[], health: Health = 'healthy', mode: unknown = 'report-only'): RunReport {
     const m = requireMode(mode);
+    if (!HEALTH_VALUES.includes(health)) throw new Error(`unknown health ${JSON.stringify(health)}`);
     for (const p of producers) {
         if (!PRODUCER_STATUSES.includes(p.status)) throw new Error(`unknown producer status ${JSON.stringify(p.status)} for ${p.id}`);
     }

@@ -87,6 +87,34 @@ describe('collectorReduce — the accepted-byte boundary as a pure state machine
         expect(m.outcome).toEqual({ kind: 'output-limited', limit: 'lines' });
     });
 
+    it('stops at the line limit when the last permitted line feed ends a chunk and more data follows', () => {
+        let m = collectorReduce(initialCollector({ ...lim, maxBytes: 100 }), { type: 'spawned' });
+        m = collectorReduce(m, { type: 'data', bytes: Buffer.from('1\n2\n3\n') });
+        expect(m.phase).toBe('collecting');
+        m = collectorReduce(m, { type: 'data', bytes: Buffer.from('4\n5\n') });
+        expect(Buffer.concat(m.accepted).toString()).toBe('1\n2\n3\n');
+        expect(m.outcome).toEqual({ kind: 'output-limited', limit: 'lines' });
+        expect(m.ignoredAfterStop).toBe(4);
+    });
+
+    it('lets a stream of exactly the permitted number of lines finish normally', () => {
+        let m = collectorReduce(initialCollector({ ...lim, maxBytes: 100 }), { type: 'spawned' });
+        m = collectorReduce(m, { type: 'data', bytes: Buffer.from('1\n2\n3\n') });
+        m = collectorReduce(m, { type: 'exit', code: 0, signal: null });
+        m = collectorReduce(m, { type: 'drain-complete' });
+        expect(m.outcome).toEqual({ kind: 'exited', code: 0 });
+        expect(Buffer.concat(m.accepted).toString()).toBe('1\n2\n3\n');
+    });
+
+    it('lets a stream of exactly the byte limit finish normally', () => {
+        let m = collectorReduce(initialCollector(lim), { type: 'spawned' });
+        m = collectorReduce(m, { type: 'data', bytes: Buffer.from('0123456789') });
+        expect(m.phase).toBe('collecting');
+        m = collectorReduce(m, { type: 'data', bytes: Buffer.from('X') });
+        expect(m.outcome).toEqual({ kind: 'output-limited', limit: 'bytes' });
+        expect(Buffer.concat(m.accepted).toString()).toBe('0123456789');
+    });
+
     it('maps a spawn failure to not-started and never collects', () => {
         let m = collectorReduce(initialCollector(lim), { type: 'spawn-error', code: 'ENOENT' });
         m = collectorReduce(m, { type: 'data', bytes: Buffer.from('x') });
@@ -325,6 +353,10 @@ describe('mode contract — report-only is explicit, and no incomplete state rea
             }
         }
         expect(seen).toBe(108);
+    });
+
+    it('rejects a health value outside its domain', () => {
+        expect(() => assessRun([], 'ok' as never)).toThrow(/health/);
     });
 
     it('rejects an unknown producer status instead of reading it as complete', () => {
