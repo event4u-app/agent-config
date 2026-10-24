@@ -19,6 +19,21 @@ import type { SourceFile } from './build.js';
 import type { CodeEdge, CodeNode, ResolvedVia } from './types.js';
 import { EXT_LANG, MAX_FILE_BYTES } from './types.js';
 
+/** A line that is a log, print or throw call up to this point: its literals are messages, not files. */
+const MESSAGE_CALL =
+    /(?:\bconsole\.\w+|\blog(?:ger|ging)?\.\w+|\bLog::\w+|\b(?:print|println|printf|echo|error_log)\b|\bthrow\s+new\s+\w+)\s*\(?/;
+
+/** `src` with comments and Python docstrings blanked to spaces, every offset and newline kept. */
+function maskComments(src: string, lang: string | undefined): string {
+    const blank = (m: string): string => m.replace(/[^\n]/g, ' ');
+    let out = src
+        .replace(/\/\*[\s\S]*?\*\//g, blank)
+        .replace(/(^|[^:'"\\])(\/\/[^\n]*)/g, (_m, pre: string, c: string) => pre + blank(c));
+    if (lang === 'python' || lang === 'php') out = out.replace(/(^|[ \t])(#[^\n]*)/gm, (_m, pre: string, c: string) => pre + blank(c));
+    if (lang === 'python') out = out.replace(/("""|''')[\s\S]*?\1/g, blank);
+    return out;
+}
+
 /** The text right before a JS/TS module specifier: `from`, `import`, `import(`, `require(`. */
 const IMPORT_POSITION = /(?:\bfrom|\bimport|\bimport\s*\(|\brequire\s*\()\s*$/;
 
@@ -177,8 +192,12 @@ export function conventionsDefault(input: DefaultInput): { nodes: CodeNode[]; ed
         const jsLike = lang === 'typescript' || lang === 'javascript';
         if (on['literal-path']) {
             // Single and double quotes only: a backtick span is usually a mention in a comment.
-            for (const m of f.source.matchAll(/(['"])([^'"`\s\\${}()<>|,;]{3,200})\1/g)) {
+            // Comments and docstrings are blanked first, so a path they mention is never read.
+            const code = maskComments(f.source, lang);
+            for (const m of code.matchAll(/(['"])([^'"`\s\\${}()<>|,;]{3,200})\1/g)) {
                 const lit = m[2] as string;
+                const lineStart = code.lastIndexOf('\n', m.index as number) + 1;
+                if (MESSAGE_CALL.test(code.slice(lineStart, m.index as number))) continue;
                 // A module specifier belongs to the import tier: resolved, it is an
                 // `imports` edge already; unresolved, it is an external module — a
                 // read in neither case.

@@ -46,20 +46,20 @@ the named clone; a provider measured on a real repository (Flask, Symfony, NestJ
 and Next.js already were in that review) moves from `partial` to `verified` in the coverage
 catalog together with the numbers that justify it.
 
-- [ ] **2.1 Django `include()` prefixes.** A route in an included `urls.py` carries the
+- [x] **2.1 Django `include()` prefixes.** A route in an included `urls.py` carries the
       path of the `path("prefix/", include(...))` that includes it (djangoproject.com:
       59 of 70 routes resolved, every included route without its prefix).
       verify: a Django fixture with a nested `include()` shows the joined route path in the provider test.
-- [ ] **2.2 C# files join the graph.** `using` directives and namespace-qualified names
+- [x] **2.2 C# files join the graph.** `using` directives and namespace-qualified names
       bind to the declaring file (eShopOnWeb: 64.5 % of C# files without an edge).
       verify: a C# fixture with two namespaces produces cross-file import and call edges in the extractor test.
-- [ ] **2.3 Request paths reach tables and views.** A route whose handler calls a service
+- [x] **2.3 Request paths reach tables and views.** A route whose handler calls a service
       or repository that persists a model reaches that model's table (BookStack,
       djangoproject.com: 0 tables on request paths), and a Spring controller that returns a
       view name as a string (`return "owners/findOwners"`) renders that template
       (spring-petclinic: 0 of 17 views).
       verify: a fixture with handler → service → repository → model shows the table on the request path, and the Spring fixture renders a string-returned view.
-- [ ] **2.4 Map areas and trust weights are truthful.** `routes/web.php` joins the
+- [x] **2.4 Map areas and trust weights are truthful.** `routes/web.php` joins the
       controllers it routes to, and shared view partials stop gluing areas (BookStack:
       `breadcrumbs.blade.php` heads 227 files). The area list wraps long paths without
       orphaning the colour dot or clipping (#2595); the orb spreads areas over the sphere
@@ -95,5 +95,5 @@ catalog together with the numbers that justify it.
 
 - [ ] AC-1 — Ruby files produce nodes and edges, and a Rails fixture's routes, tables,
       relations and views resolve with positive and negative oracles green.
-- [ ] AC-2 — The four Phase-2 residues each have a fixture oracle that was seen red
+- [x] AC-2 — The four Phase-2 residues each have a fixture oracle that was seen red
       before its fix and is green after.

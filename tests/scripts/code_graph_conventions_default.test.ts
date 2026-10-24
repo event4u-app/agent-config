@@ -42,6 +42,21 @@ describe('literal-path (3.1)', () => {
         expect(validateGraph(JSON.parse(JSON.stringify(graph))).ok).toBe(true);
     });
 
+    it('draws nothing for a path that only appears in a comment, a docstring or a log message', async () => {
+        const root = tree({
+            'src/a.ts':
+                "// see 'templates/home.html' for the layout\n/* old: 'templates/old.html' */\nconsole.log('templates/home.html');\n" +
+                "logger.info('reading', 'templates/old.html');\nthrow new Error('templates/home.html');\nexport const t = render('templates/kept.html');\n",
+            'src/b.py': "\"\"\"Loads 'templates/home.html'.\"\"\"\n# also 'templates/old.html'\nprint('templates/home.html')\nlogging.warning('templates/old.html')\n",
+            'src/c.php': "<?php\n// 'templates/home.html'\nLog::info('templates/old.html');\n",
+            'templates/home.html': '<h1>home</h1>\n',
+            'templates/old.html': '<h1>old</h1>\n',
+            'templates/kept.html': '<h1>kept</h1>\n',
+        });
+        const { graph } = await buildFromRepo(root, null);
+        expect(via(graph, 'literal-path')).toEqual(['src/a.ts -> templates/kept.html']);
+    });
+
     it('draws nothing when a literal matches two files', async () => {
         const root = tree({
             'src/a.ts': "export const t = open('./util');\n",

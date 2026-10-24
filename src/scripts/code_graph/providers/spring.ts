@@ -6,6 +6,8 @@
  *   @Entity class, @Table(name = "t") or the default      class --persists--> table:t
  *   interface R extends JpaRepository<E, Id>              R     --relates-->  E
  *   @Autowired field · constructor parameter              class --injects-->  the in-repo type
+ *   @Controller method `return "a/b"` · ModelAndView("a/b")
+ *       · a same-file `static final String` constant         method --renders--> templates/a/b.html
  *
  * The Java extractor spans a method or class from its first annotation, so a
  * mapping annotation belongs to the method whose span holds it; one outside
@@ -13,7 +15,10 @@
  * table is Spring Boot's default physical name: the entity class in snake_case
  * (`OrderLine` → `order_line`); `@Entity(name = "X")` is not read. A method-level
  * `@RequestMapping` without `method =` and a constructor of a class carrying no
- * stereotype annotation are not followed.
+ * stereotype annotation are not followed. A view name is read only in a
+ * `@Controller` file — a `@RestController` returns response bodies — and never
+ * from a `redirect:` / `forward:`; it renders the one template of that name
+ * under the Thymeleaf, FreeMarker, Mustache or JSP folders, or nothing.
  */
 import { jvmRoots } from './shared/detect.js';
 import { joinRoute, tableMapping } from './shared/extractors.js';
@@ -119,6 +124,37 @@ function injections(kit: Kit): void {
     }
 }
 
+const VIEW_ROOTS = ['src/main/resources/templates', 'src/main/webapp/WEB-INF/views', 'src/main/webapp/WEB-INF/jsp'];
+const VIEW_EXTS = ['.html', '.ftlh', '.ftl', '.mustache', '.jte', '.jsp'];
+const VIEW_NAME = /\b(?:return\s+|new\s+ModelAndView\s*\(\s*)(?:"(?<lit>[^"]*)"|(?<const>[A-Z][A-Z0-9_]*))\s*[;),]/g;
+const VIEW_CONSTANT = /\bstatic\s+final\s+String\s+(?<name>[A-Z][A-Z0-9_]*)\s*=\s*"(?<value>[^"]*)"/g;
+
+function views(kit: Kit): void {
+    const inventory = new Set(kit.paths);
+    for (const f of kit.filesWithExt('.java')) {
+        if (!/@Controller\b/.test(f.source)) continue;
+        const at = lineIndex(f.source);
+        const constants = new Map([...f.source.matchAll(VIEW_CONSTANT)].map((m) => [m.groups?.['name'] as string, m.groups?.['value'] as string]));
+        for (const m of f.source.matchAll(VIEW_NAME)) {
+            const name = m.groups?.['lit'] ?? constants.get(m.groups?.['const'] ?? '');
+            if (!name || /^(?:redirect|forward):/.test(name)) continue;
+            const method = methodAt(kit, f.path, at(m.index as number));
+            if (!method) continue;
+            const hits = new Set<string>();
+            for (const r of kit.roots)
+                for (const dir of VIEW_ROOTS)
+                    for (const ext of VIEW_EXTS) {
+                        const c = [r, dir, `${name.replace(/^\/+/, '')}${ext}`].filter(Boolean).join('/');
+                        if (inventory.has(c)) hits.add(c);
+                    }
+            if (hits.size !== 1) continue;
+            const target = [...hits][0] as string;
+            kit.fileNode(target);
+            kit.emit(method.id, target, 'renders', 'directive-scan');
+        }
+    }
+}
+
 export const springProvider: ConventionProvider = {
     id: 'spring',
     detect: (probe) => jvmRoots(probe, /spring-boot|org\.springframework\.boot/),
@@ -133,6 +169,7 @@ export const springProvider: ConventionProvider = {
         });
         repositories(kit);
         injections(kit);
+        views(kit);
         return kit.result();
     },
 };

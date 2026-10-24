@@ -633,7 +633,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
         const rank = (r: (typeof rp)[number]): number =>
             (r.route.startsWith('GET ') ? 0 : 2) + (r.views.length > 0 ? 0 : 1);
         const withChain = rp
-            .filter((r) => r.views.length + r.tables.length > 0)
+            .filter((r) => r.views.length + r.tables.length + (r.inferredTables?.length ?? 0) > 0)
             .sort((a, b) => rank(a) - rank(b) || (a.route < b.route ? -1 : a.route > b.route ? 1 : 0));
         sections.push([
             'Request paths',
@@ -641,7 +641,8 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
                 '## Request paths',
                 '',
                 `${m.analyses.requestPathsTotal} declared routes; ${m.analyses.requestPathsResolved} reach a handler in this tree. ` +
-                    'Route → handler → views it renders · tables its models persist:',
+                    'Route → handler → views it renders · tables its models persist, up to three calls deep ' +
+                    '(inferred: reached through a call bound by name alone):',
                 '',
                 ...(withChain.length ? withChain : rp).slice(0, 10).map((r) => {
                     const handlerFile = path.posix.basename(f[r.handler]?.path ?? '');
@@ -649,6 +650,7 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
                         handlerFile.replace(/\.php$/, '') === r.handlerSymbol ? handlerFile : `${handlerFile}::${r.handlerSymbol}`,
                         ...r.views.map((v) => path.posix.basename(f[v]?.path ?? '')),
                         ...r.tables.map((t) => `table ${code(t)}`),
+                        ...(r.inferredTables ?? []).map((t) => `table ${code(t)} (inferred)`),
                     ];
                     return `- ${code(r.route)} → ${chain.map((c) => (c.startsWith('table') ? c : `${code(c)}`)).join(' → ')}`;
                 }),

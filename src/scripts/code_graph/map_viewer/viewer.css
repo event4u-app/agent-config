@@ -209,6 +209,18 @@ aside h3 {
     background: transparent;
     padding: 2px 4px;
 }
+.plist button.aentry {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 6px;
+    align-items: start;
+}
+.aentry .swatch {
+    margin: 4px 0 0;
+}
+.alabel {
+    min-width: 0;
+}
 .plist button:hover {
     background: var(--bg);
 }

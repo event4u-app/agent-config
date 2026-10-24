@@ -42,6 +42,8 @@ beforeAll(async () => {
             "Route::resource('photos', C\\PhotoController::class);",
             "Route::get('/library/books', [C\\LibraryController::class, 'books']);",
             "Route::get('/library/chapters', [C\\LibraryController::class, 'chapters']);",
+            "Route::get('/shelves', [C\\ShelfController::class, 'index']);",
+            "Route::get('/shelves/recent', [C\\ShelfController::class, 'recent']);",
             '',
         ].join('\n'),
     );
@@ -66,6 +68,20 @@ beforeAll(async () => {
     write(
         'app/Http/Controllers/LibraryController.php',
         "<?php\nnamespace App\\Http\\Controllers;\nuse App\\Models\\Book;\nuse App\\Models\\Chapter;\nclass LibraryController {\n    public function books() {\n        return Book::all();\n    }\n    public function chapters() {\n        return Chapter::all();\n    }\n}\n",
+    );
+    // Handler → service → repository → model, three hops: once over static
+    // calls the file states, once through an untyped `$this->service`.
+    write(
+        'app/Http/Controllers/ShelfController.php',
+        "<?php\nnamespace App\\Http\\Controllers;\nuse App\\Services\\ShelfService;\nclass ShelfController {\n    public function __construct(private ShelfService $service) {}\n    public function index() {\n        return ShelfService::listAll();\n    }\n    public function recent() {\n        return $this->service->recentShelves();\n    }\n}\n",
+    );
+    write(
+        'app/Services/ShelfService.php',
+        "<?php\nnamespace App\\Services;\nuse App\\Repositories\\ShelfRepository;\nclass ShelfService {\n    public static function listAll() {\n        return ShelfRepository::everything();\n    }\n    public function recentShelves() {\n        return ShelfRepository::everything();\n    }\n}\n",
+    );
+    write(
+        'app/Repositories/ShelfRepository.php',
+        "<?php\nnamespace App\\Repositories;\nuse App\\Models\\Shelf;\nclass ShelfRepository {\n    public static function everything() {\n        return Shelf::all();\n    }\n}\n",
     );
     // An unrelated in-repo `middleware()`: name lookup used to bind the
     // routes file's fluent `->middleware()` to it.
@@ -98,10 +114,13 @@ beforeAll(async () => {
     write('resources/views/layouts/app.blade.php', '<html>@yield("content")</html>\n');
     write('resources/views/books/row.blade.php', '<li>{{ $book }}</li>\n');
     write('resources/views/components/alert.blade.php', '<div class="alert"></div>\n');
-    write('resources/views/users/list.blade.php', "@extends('layouts.app')\n");
+    write('resources/views/users/list.blade.php', "@extends('layouts.app')\n@include('shared.crumbs')\n");
+    // A partial three directories of views include: shared, not an area's centre.
+    write('resources/views/shared/crumbs.blade.php', '<nav>crumbs</nav>\n');
+    write('resources/views/shelves/index.blade.php', "@extends('layouts.app')\n@include('shared.crumbs')\n");
     write(
         'resources/views/books/index.blade.php',
-        "@extends('layouts.app')\n@section('content')\n@include('books.row')\n<x-alert />\n{{ __('books.title') }}\n@include('books.' . $kind)\n@endsection\n",
+        "@extends('layouts.app')\n@section('content')\n@include('books.row')\n@include('shared.crumbs')\n<x-alert />\n{{ __('books.title') }}\n@include('books.' . $kind)\n@endsection\n",
     );
     ({ graph } = await buildFromRepo(root, null));
 });
@@ -154,7 +173,8 @@ describe('views (4.2)', () => {
         expect(has(from, 'includes', 'resources/views/layouts/app.blade.php')).toBe(true);
         expect(has(from, 'includes', 'resources/views/books/row.blade.php')).toBe(true);
         expect(has(from, 'includes', 'resources/views/components/alert.blade.php')).toBe(true);
-        expect(graph.edges.filter((e) => e.source === from && e.relation === 'includes')).toHaveLength(3);
+        expect(has(from, 'includes', 'resources/views/shared/crumbs.blade.php')).toBe(true);
+        expect(graph.edges.filter((e) => e.source === from && e.relation === 'includes')).toHaveLength(4);
     });
 
     it('links translation and config reads to their files', () => {
@@ -208,6 +228,69 @@ describe('the request path on the map (4.4)', () => {
         const tablesOf = (route: string): string[] | undefined => m.analyses.requestPaths.find((x) => x.route === route)?.tables;
         expect(tablesOf('GET /library/books')).toEqual(['books']);
         expect(tablesOf('GET /library/chapters')).toEqual(['book_chapters']);
+    });
+
+    it('reaches the table through a service and a repository the handler calls', () => {
+        const m = buildMapModel(graph);
+        // `ShelfService::listAll()` binds through the file's `use` + PSR-4, not by name.
+        const call = graph.edges.find((e) => e.source === 'app/Http/Controllers/ShelfController.php#ShelfController::index' && e.relation === 'calls');
+        expect(call?.target).toBe('app/Services/ShelfService.php#ShelfService::listAll');
+        expect(call?.resolved_via).toBe('psr4');
+        const r = m.analyses.requestPaths.find((x) => x.route === 'GET /shelves');
+        expect(r?.tables).toEqual(['entities']);
+        expect(r?.inferredTables).toEqual([]);
+    });
+
+    it('keeps a table reached through an untyped receiver apart, as inferred', () => {
+        const m = buildMapModel(graph);
+        const r = m.analyses.requestPaths.find((x) => x.route === 'GET /shelves/recent');
+        expect(r?.tables).toEqual([]);
+        expect(r?.inferredTables).toEqual(['entities']);
+        const md = renderMapMd(m, { title: 'Map', commit: 'x', state: 'fresh', summary: '' });
+        expect(md).toContain('table `entities` (inferred)');
+    });
+});
+
+describe('map areas (carried 2.4)', () => {
+    it('holds a partial that views of three directories include out of the areas', () => {
+        const m = buildMapModel(graph);
+        const crumbs = m.files.findIndex((f) => f.path === 'resources/views/shared/crumbs.blade.php');
+        expect(m.files[crumbs]?.role).toBe('infra');
+        expect(m.areas.some((a) => a.files.includes(crumbs))).toBe(false);
+    });
+
+    it('keeps a routes file that reaches two clusters from becoming their hub', () => {
+        const nodes: CodeGraph['nodes'] = [];
+        const edges: CodeGraph['edges'] = [];
+        const file = (id: string) => nodes.push({ id, label: id, kind: 'file', source_file: id, source_location: [] });
+        const link = (source: string, target: string, relation: CodeGraph['edges'][number]['relation'] = 'calls') =>
+            edges.push({ source, target, relation, confidence: 'EXTRACTED', resolved_via: 'import-specifier', provider: 'native' });
+        file('routes/api.php');
+        for (const g of ['A', 'B']) {
+            const ids = [1, 2, 3, 4].map((i) => `app/${g}/C${i}.php`);
+            ids.forEach(file);
+            ids.forEach((id, i) => link(id, ids[(i + 1) % ids.length] as string));
+            ids.forEach((id, i) => {
+                const route = `routes/api.php#route:GET /${g}${i}`;
+                nodes.push({ id: route, label: `GET /${g}${i}`, kind: 'route', source_file: 'routes/api.php', source_location: [] });
+                link(route, id, 'routes-to');
+            });
+        }
+        const m = buildMapModel({ nodes, edges } as CodeGraph);
+        const api = m.files.findIndex((f) => f.path === 'routes/api.php');
+        expect(m.areas.map((a) => a.name)).not.toContain('routes/api.php');
+        const area = m.areas.find((a) => a.files.includes(api));
+        expect(area?.files.map((i) => m.files[i]?.path).filter((p) => p !== 'routes/api.php').every((p) => p?.startsWith('app/A/'))).toBe(true);
+    });
+
+    it('puts the routes file in the area of the controllers it routes to, never at the centre of its own', () => {
+        const m = buildMapModel(graph);
+        const web = m.files.findIndex((f) => f.path === 'routes/web.php');
+        const area = m.areas.find((a) => a.files.includes(web));
+        expect(area).toBeDefined();
+        expect(area?.name).not.toBe('routes/web.php');
+        const controllers = area?.files.filter((i) => m.files[i]?.path.startsWith('app/Http/Controllers/')) ?? [];
+        expect(controllers.length).toBeGreaterThan(0);
     });
 });
 
