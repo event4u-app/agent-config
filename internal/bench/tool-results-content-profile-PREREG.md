@@ -1,7 +1,7 @@
 # PREREG — content profile: which file-content results a handle may shorten
 
 > Pre-registration for the redesign of
-> [`road-to-tool-results-that-leave-a-handle`](../../agents/roadmaps/road-to-tool-results-that-leave-a-handle.md)
+> [`road-to-tool-results-that-leave-a-handle`](../../agents/roadmaps/later/road-to-tool-results-that-leave-a-handle.md)
 > (owner decision 2026-10-15, row D10 there). Committed **before** any reading of
 > the fresh window it names and before any code that classifies a result into
 > the content profile. A later change to anything below is a new registration,

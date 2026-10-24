@@ -9,34 +9,18 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
-| road-to-17-0-follow-ups | active | draft | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
 | road-to-a-cold-start-paid-once | active | ready | On a host where a re-task is observed to be cheaper than a fresh spawn, the orchestrator re-tasks a warm … |
-| road-to-a-hard-floor-the-shell-cannot-talk-past | active | ready | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
-| road-to-agent-throughput-recovery | active | ready | A night run carries more finished, merged work, and the reason it stopped is visible in one reading. |
-| road-to-an-installed-layer-that-is-thinned | active | ready | The layer a Claude install writes under `~/.claude/rules` is the thinned one, first as an opt-in and then as the … |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
-| road-to-authority-routing-mechanism | active | ready | A passing authorisation record always means the authority that produced it was the authority entitled to produce it: three authorities … |
-| road-to-breadth-with-depth | active | ready | The next release ships with the directive in the tree; with no rule, gate or analysis lens left that rejects … |
-| road-to-code-graph-refresh-during-a-session | active | — | The code graph and `agents/map/` stay current for the whole length of an agent session, on every host the suite … |
-| road-to-consumer-invocations-that-install | active | draft | Every executable instruction in shipped text that runs one of this package's scripts uses a form that works from a … |
-| road-to-corpus-refresh-cadence-shape | active | draft | The maintainer has answered whether four grounding corpora sharing one `last_checked` stamp is a deliberate cadence or an accident of … |
-| road-to-decision-closure | active | draft | Every roadmap enters execution as an execution contract: every foreseeable decision closed, the closing done council-first, the owner reached only … |
-| road-to-hook-guards-that-hold-17-findings | active | draft | 17.0.0 is cut only when the three `fail_closed` hook guards (`block-no-verify`, `block-kernel-rule-writes`, `block-plumbing-writes`) refuse what they claim on every install … |
-| road-to-host-inputs-the-installer-honours | active | ready | What the installer writes and what `doctor` reports about the host is computed from the inputs the host itself uses. |
-| road-to-placeholders-on-the-wire | active | ready | On Claude Code at a probed version, a tool result carrying a listed value reaches the model as a token … |
-| road-to-seats-that-know-why-they-failed | active | ready | Every failure of a council seat carries a class before it gets a reaction, and the class picks the reaction: … |
 | road-to-self-modification-that-a-council-must-pass | active | ready | A change the package makes to what governs it lands on a council's verdict about that exact change. |
-| road-to-svg-witness-provenance | active | draft | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |
-| road-to-tool-results-that-leave-a-handle | active | ready | A large tool result can reach the model shorter than the host produced it without losing anything: the bytes the … |
-| road-to-typed-grants-that-persist | active | draft | One grant object — ADR-260's `{op, target, scope, granted_by, span, expires}` — governs every irreversible operation, is honoured for the … |
-| road-to-workflows-that-cannot-exfiltrate | active | ready | A workflow in this repository cannot send repository data or a token to a host nobody allow-listed, cannot run a … |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
+| road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
 | road-to-a-byte-bound-and-a-public-figure | later | later | Two numbers this tree can now produce and cannot yet bound. |
 | road-to-a-canvas-the-code-owns | later | later | The repository is the only store of the design system. |
 | road-to-a-graph-that-feeds-the-gate | later | later | The code graph reaches the searches an agent actually runs and feeds a gate decision in shadow. |
 | road-to-a-graph-that-wins | later | later | Register before measuring; measure on repositories in the owner's stack that this repository does not own; publish both directions; and … |
+| road-to-a-hard-floor-the-shell-cannot-talk-past | later | later | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
 | road-to-a-menu-whose-precision-is-measured | later | later | Routing precision is a number with an interval on a labelled corpus large enough to carry one (≥ 100 prompts, … |
 | road-to-a-ranker-whose-ties-break-on-signal | later | later | When two skills score the same, the order between them comes from something the ranker measured, not from their names … |
 | road-to-a-release-record-that-says-what-it-reviewed-carried | later | later | Every step road-to-a-release-record-that-says-what-it-reviewed deferred is either done here or explicitly disposed of — a step that still cannot run is … |
@@ -49,19 +33,26 @@ and keep the full search — this file only adds candidates to it.
 | road-to-adversarial-verification-and-long-runs | later | later | Ask the owner stops being the quality and control loop. |
 | road-to-advisory-latency-measured | later | later | The two pre-registered latency claims — time-to-notice and time-to-remediation — carry a status that a measurement set, never a sentence: … |
 | road-to-agent-config-next | later | draft | When this roadmap is resumed, the reader can tell — from measurements that already exist rather than from this document's … |
+| road-to-agent-throughput-recovery | later | later | A night run carries more finished, merged work, and the reason it stopped is visible in one reading. |
+| road-to-an-installed-layer-that-is-thinned | later | later | The layer a Claude install writes under `~/.claude/rules` is the thinned one, first as an opt-in and then as the … |
 | road-to-an-intake-the-queue-can-carry | later | later | A finding that already has an owner lands as a step and an `Arrivals:` line on that owner instead of … |
 | road-to-an-obligation-row-that-names-its-writer-carried | later | later | Every step road-to-an-obligation-row-that-names-its-writer deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-authority-routing-mechanism | later | later | A passing authorisation record always means the authority that produced it was the authority entitled to produce it: three authorities … |
 | road-to-benchmark-obsolescence-lifecycle | later | later | Road to benchmark-obsolescence lifecycle — detect when the model outgrew the rule |
 | road-to-billing-cliff-detection | later | draft | An autonomous drain that crosses its Claude Code plan quota stops at the next clean boundary and asks, instead of … |
+| road-to-breadth-with-depth | later | later | The next release ships with the directive in the tree; with no rule, gate or analysis lens left that rejects … |
 | road-to-capability-native-execution | later | later | A domain skill states the semantic capability, evidence and policy constraints it needs. |
 | road-to-carrier-layer-convergence | later | later | Converge the two rule-carrier layers so a session receives each governed rule exactly once, with a defined binding text — … |
 | road-to-catalogue-host-fit | later | later | Road to catalogue host fit — a truncated entry is a skill that cannot route |
+| road-to-code-graph-refresh-during-a-session | later | later | The code graph and `agents/map/` stay current for the whole length of an agent session, on every host the suite … |
 | road-to-command-structure-followup | later | later | Follow-up to command-structure optimization — deferred cluster items |
 | road-to-composite-dispatch-topology | later | draft | A delegable task whose slices form a partial order — ordered stages containing parallel groups — can be planned as … |
 | road-to-composition-review-false-positive-rate | later | later | `lint_composition_review` ships advisory: it reports an artefact added without a `composition_review` record and exits 0. |
 | road-to-conformance-round7-followup | later | later | Road to conformance round 7 — Follow-up |
+| road-to-consumer-invocations-that-install | later | later | Every executable instruction in shipped text that runs one of this package's scripts uses a form that works from a … |
 | road-to-contract-integrity | later | later | Contract Integrity — product-clarity, complexity-governance, release-discipline |
 | road-to-corpus-knowledge-skills | later | later | Give the suite a reference layer with a production pipeline: a compiler that turns an already-ingested document corpus into a … |
+| road-to-corpus-refresh-cadence-shape | later | later | The maintainer has answered whether four grounding corpora sharing one `last_checked` stamp is a deliberate cadence or an accident of … |
 | road-to-cost-parity-2-state-aware-dispatch | later | later | Every ladder verdict carries a validated session-state snapshot — dispatch count, cumulative dispatched-token delta, context fill read from the surface … |
 | road-to-council-api-quota-source-split | later | later | Road to the quota-source split — one opt-in, split by which quota ran out |
 | road-to-council-topology-evidence-followups | later | later | Answer, with measurement rather than argument, whether multi-seat council topology improves decision quality enough to justify its cost — and … |
@@ -71,6 +62,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-database-erd-landing | later | later | The ER-diagram capability that already exists on `feat/schema-erd-diff` is on `main`, validated against the gates that exist today rather than … |
 | road-to-database-evolution-tactics | later | later | A schema change in this package is planned by escalating from the cheapest adequate strategy, and the plan states the … |
 | road-to-database-relational-modeling | later | later | An agent asked to design or extend a relational schema in this package has a procedure that starts from invariants … |
+| road-to-decision-closure | later | later | Every roadmap enters execution as an execution contract: every foreseeable decision closed, the closing done council-first, the owner reached only … |
 | road-to-deferred-rule-retriever | later | blocked-for-later | Road to deferred-rule retriever — command-invoked Class-A variant of the rejected MCP retrieval server |
 | road-to-delivery-on-hook-hosts | later | later | Every host other than Claude Code is measured for whether hook stdout on `user_prompt_submit` reaches the model's context; hosts where … |
 | road-to-discipline-profile-tiering-followup | later | later | Follow-up to discipline-profile tiering — full-tier disposition |
@@ -87,8 +79,10 @@ and keep the full search — this file only adds candidates to it.
 | road-to-grounding-corpus-catalog-parity | later | later | Road to grounding-corpus / catalog parity |
 | road-to-guided-journeys | later | later | Road to guided journeys & router family — dock the journey pattern onto the existing Flow layer (Source C) |
 | road-to-harvest-second-sweep-proposals | later | later | Second-Sweep surfaced proposals (parked) |
+| road-to-hook-guards-that-hold-17-findings | later | later | 17.0.0 is cut only when the three `fail_closed` hook guards (`block-no-verify`, `block-kernel-rule-writes`, `block-plumbing-writes`) refuse what they claim on every install … |
 | road-to-host-catalogue-contract | later | later | State, from a measurement rather than from this package's model of a host, what projection rule satisfies both: total payload … |
 | road-to-host-claims-the-tree-contradicts-carried | later | later | Every step road-to-host-claims-the-tree-contradicts deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-host-inputs-the-installer-honours | later | later | What the installer writes and what `doctor` reports about the host is computed from the inputs the host itself uses. |
 | road-to-inbox-harvest-2026-08-d-llm-distillation-comparison | later | blocked-for-later | Road to a measured answer on model-curated working memory |
 | road-to-install-path-convergence-followup | later | later | Follow-up to install-path convergence — delist decision checkpoint |
 | road-to-kernel-question-triangle | later | later | Road to the kernel question-triangle amendment — one line, human-applied |
@@ -104,6 +98,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-opencode-runtime-probe | later | later | the opencode runtime probe |
 | road-to-originality-gate-and-contributor-funnel | later | later | Every PR that adds or edits skills runs `lint_originality --changed` as a blocking CI gate, contributors can pre-check locally and … |
 | road-to-per-workspace-license-policy | later | blocked-for-later | Road to per-workspace license policy — heterogeneous monorepos derive per workspace, not per root |
+| road-to-placeholders-on-the-wire | later | later | On Claude Code at a probed version, a tool result carrying a listed value reaches the model as a token … |
 | road-to-plan-gates-measurement | later | later | Plan-gates measurement — Stage B threshold + 20-PR report |
 | road-to-plugin-runtime-borrowings | later | later | Road to plugin-runtime borrowings — seven mechanisms from an external host-plugin reference (Source A) |
 | road-to-policy-evaluation-core | later | blocked-for-later | Road to policy-evaluation core — deterministic Class-A slice of the rejected resident enforcement plane |
@@ -122,6 +117,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-roadmaps-finished-before-new-ones-start-carried | later | ready | Every step road-to-roadmaps-finished-before-new-ones-start deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-routing-assurance-live-floors | later | later | Road to routing assurance — the live-harness floors |
 | road-to-rule-triggers-and-links-that-hold | later | later | What an installed rule file declares and links to is true on the host that loads it. |
+| road-to-seats-that-know-why-they-failed | later | later | Every failure of a council seat carries a class before it gets a reaction, and the class picks the reaction: … |
 | road-to-skill-ecosystem-capability-queue | later | later | Road to the capability queue — everything capability-shaped, waiting on a capacity slot |
 | road-to-skill-ecosystem-executable-payloads | later | later | Road to executable skill payloads — a skill that only describes work cannot be measured doing it |
 | road-to-skill-ecosystem-security-and-conformance | later | later | Road to security and conformance surface — make three unenforced rules detectable |
@@ -132,16 +128,20 @@ and keep the full search — this file only adds candidates to it.
 | road-to-stacks-beyond-php | later | later | A Python, TypeScript or Go repository gets the discipline this tree gives a Laravel one, without a language-named copy of … |
 | road-to-supervised-telemetry-collector | later | later | One resident process runs on this machine under a named supervisor, on named platforms, storing a schema whose fields are … |
 | road-to-surface-consolidation | later | later | Cut the proactive command-suggestion surface from ~160 self-suggesting commands to the cluster-head journeys (+ genuine standalone entry points), fold the … |
+| road-to-svg-witness-provenance | later | later | The blocking SVG turn-end obligation is discharged only by a render the hook itself saw succeed. |
 | road-to-tell-detector-promotions | later | later | Road to the interaction-layer detector promotions |
 | road-to-ten-across-the-board | later | draft | Every rubric category in the declared manifest of `agents/evidence/ac-capability-scorecard.yaml` reaches `ten`, `measured-null`, or `max-boundary` under the six-dimension definition frozen in … |
 | road-to-thin-flip-under-anchor-scoring | later | later | Road to a Thin Flip Under Anchor-Scoring |
 | road-to-token-economy-cache-followup | later | later | Close the census-gated remainder of the parent: idempotency gates on the measured top repeat-slot concerns, plus the data-halves of the … |
 | road-to-token-economy-dispatch-followup | later | later | Follow-up to road-to-token-economy-dispatch — the data-window and blocker-gated remainder |
 | road-to-token-proof-and-story | later | later | When the flips ship, the release carries (a) a hardened, un-fakeable gate trail, (b) field-measured before/after numbers from real consumer-shaped … |
+| road-to-tool-results-that-leave-a-handle | later | later | A large tool result can reach the model shorter than the host produced it without losing anything: the bytes the … |
 | road-to-touched-files-that-pass-their-own-tools-carried | later | later | The one step road-to-touched-files-that-pass-their-own-tools deferred is either done here or explicitly disposed of — a step that still cannot run … |
 | road-to-trigger-eval-freshness-has-no-writer | later | later | `check_trigger_evals` either measures something a mechanism produces, or it stops claiming to. |
+| road-to-typed-grants-that-persist | later | later | One grant object — ADR-260's `{op, target, scope, granted_by, span, expires}` — governs every irreversible operation, is honoured for the … |
 | road-to-web-launch-readiness-benchmark | later | later | Road to web-launch-readiness — the benchmark and its verdict |
 | road-to-worker-generation-recycling | later | later | On subagent-capable hosts, a worker that reaches 80 % of its tier budget emits a structured state capsule and is … |
+| road-to-workflows-that-cannot-exfiltrate | later | later | A workflow in this repository cannot send repository data or a token to a host nobody allow-listed, cannot run a … |
 | road-to-zero-ceremony-host-primitives | later | later | Decide, on probe evidence and inside the governing ADR's own review window, whether tier→host-native-primitive emission is worth its maintenance surface … |
 | orchestrator-spawn-injection | stubs | — | orchestrator-side spawn injection |
 | road-to-a-census-that-refuses-a-partial-store | stubs | — | road to a census that refuses to publish from a partial store |

@@ -1089,7 +1089,7 @@ before the record is signed.
   ruleset-detection gap.** Re-measure rather than citing this table if the date is stale.
 
 - **Cross-link, with the gates kept separate:** `ratification-platform-anchor` in
-  `agents/roadmaps/road-to-typed-grants-that-persist.md` needs a visit to the same ruleset
+  `agents/roadmaps/later/road-to-typed-grants-that-persist.md` needs a visit to the same ruleset
   settings, so one admin session would move both. **It is not the same gate, and merging them
   would silently change this one.** Independent approval (`required_approving_review_count`
   is 0) and the unconditional `RepositoryRole` bypass are the anchor's criteria and are NOT

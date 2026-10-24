@@ -394,7 +394,7 @@ local_only:
       What moves it off this list: a PAT in a repository secret carrying
       `administration: read`, then the workflow step. That is a human action and
       is recorded as the open half of blocker `ratification-platform-anchor` in
-      `agents/roadmaps/road-to-typed-grants-that-persist.md`. Until then the gate
+      `agents/roadmaps/later/road-to-typed-grants-that-persist.md`. Until then the gate
       runs in `taskfiles/ci-fast.yml` — a real pre-push control, and not a CI one,
       which is the honest description of its reach.
 
