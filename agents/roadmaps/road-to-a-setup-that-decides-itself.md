@@ -317,8 +317,8 @@ with that file.
   layer's pack axis is derived from the active-pack set; tombstone; for one release window an
   explicitly written value wins; the eight rules the derivation drops are audited; `doctor` reports a
   legacy value's difference from the derived set; ships in the next major (`Consumer-Impact: action`).
-  verify: `npx vitest run tests/install/rule_packs_retired.test.ts` -> 0, red before the change;
-  `! grep -q rule_packs src/config/agent-settings.template.yml src/server/schemas/settings.ts` -> 0.
+  verify: `npx vitest run tests/install/rule_packs_retired.test.ts` -> 0
+  verify: `! grep -q rule_packs src/config/agent-settings.template.yml src/server/schemas/settings.ts` -> 0
 - [x] **4.8 Downgrade stays safe.** A machine downgraded to a release that still
   reads the keys resolves the absent key to its full form.
   verify: mixed-version fixture — removal release, then the previous release —
