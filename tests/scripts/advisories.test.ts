@@ -23,6 +23,7 @@ import {
 import {
     gapReport,
     issueBody,
+    knownProjects,
     markOwnActionsPrivate,
     suspiciousInBranch,
     noticeLines,
@@ -898,5 +899,43 @@ describe('R2 round 5 — a swapped action is not a pin', () => {
         expect(suspiciousInBranch(root, base, planned)).toEqual(planned);
         fs.writeFileSync(path.join(wf, 'ci.yml'), yml('actions/checkout@v4.2.2', '      - uses: attacker/x@main\n'));
         expect(suspiciousInBranch(root, base, planned)).toEqual(planned);
+    });
+});
+
+describe('the project list lives in the shared registry (road-to-a-graph-that-follows-you 3.2)', () => {
+    it('a refresh records its roots in runtime/projects/registry.json, and --all-projects reads them back', async () => {
+        const a = project('F1-fastify-hono', 'a');
+        const b = project('F1-fastify-hono', 'b');
+        const { fetcher } = replay('F1-fastify-hono');
+        await refreshMany([a, b], { now: new Date(), fetcher, machineDir: machine, force: true, egress: 'query', runner: () => ({ code: -1, stdout: '' }) });
+        expect(fs.existsSync(path.join(machine, 'projects.json'))).toBe(false);
+        const reg = JSON.parse(fs.readFileSync(path.join(tmp, 'projects', 'registry.json'), 'utf-8')) as { projects: Record<string, { root: string; fingerprint: string }> };
+        expect(Object.values(reg.projects).map((e) => e.root).sort()).toEqual([fs.realpathSync(a), fs.realpathSync(b)].sort());
+        expect(Object.values(reg.projects).every((e) => typeof e.fingerprint === 'string' && e.fingerprint !== '')).toBe(true);
+        expect(knownProjects(machine).sort()).toEqual([fs.realpathSync(a), fs.realpathSync(b)].sort());
+    });
+
+    it('--all-projects covers both clones of one origin', () => {
+        const a = project('F1-fastify-hono', 'clone-a');
+        const b = project('F1-fastify-hono', 'clone-b');
+        execFileSync('git', ['-C', a, 'remote', 'add', 'origin', 'https://github.com/Acme/widget.git']);
+        execFileSync('git', ['-C', b, 'remote', 'add', 'origin', 'git@github.com:Acme/widget.git']);
+        fs.mkdirSync(machine, { recursive: true });
+        fs.writeFileSync(path.join(machine, 'projects.json'), JSON.stringify({ [a]: { fingerprint: 'fa' }, [b]: { fingerprint: 'fb' } }));
+        expect(knownProjects(machine).sort()).toEqual([fs.realpathSync(a), fs.realpathSync(b)].sort());
+    });
+
+    it('a machine with only the old projects.json yields the same root list, migrated once', () => {
+        const a = project('F1-fastify-hono', 'a');
+        const b = project('F1-fastify-hono', 'b');
+        const gone = path.join(tmp, 'deleted-project');
+        fs.mkdirSync(machine, { recursive: true });
+        const old = { [a]: { fingerprint: 'fa', at: '2026-10-01T00:00:00.000Z' }, [gone]: { fingerprint: 'fg', at: '2026-10-01T00:00:00.000Z' }, [b]: { fingerprint: 'fb', at: '2026-10-01T00:00:00.000Z' } };
+        fs.writeFileSync(path.join(machine, 'projects.json'), JSON.stringify(old));
+        // The registry stores realpaths; the old file stored roots as given.
+        const legacy = Object.keys(old).filter((r) => fs.existsSync(r)).map((r) => fs.realpathSync(r));
+        expect(knownProjects(machine)).toEqual(legacy);
+        expect(fs.existsSync(path.join(machine, 'projects.json'))).toBe(false);
+        expect(knownProjects(machine)).toEqual(legacy);
     });
 });

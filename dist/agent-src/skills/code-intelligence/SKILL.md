@@ -253,6 +253,9 @@ paragraph claiming "the same five answers" directly after a list of four:
 | `graph_node` | no CLI verb — one symbol's location, in-edges, out-edges and degree |
 | `graph_map_status` | whether `agents/map/` exists, its counts and freshness | <!-- ref-ignore -->
 | `graph_area` | one area of the map: files, hubs, what it depends on |
+| `graph_estate` | `estate` — across registered projects, from the local index (opt-in: `projects index on`) |
+
+Every other tool takes `project` (a registered repo id, name or path).
 
 `untested` has no tool of its own; it is a flag on `graph_impact`, because the
 two answer the same question over the same diff and a separate tool would have

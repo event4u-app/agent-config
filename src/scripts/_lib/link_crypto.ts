@@ -58,6 +58,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { sourceId } from './source_id.js';
+
 export const MAGIC = 'ENC1';
 const _SALT_LEN = 16;
 const _NONCE_LEN = 16;
@@ -232,19 +234,19 @@ export class ValueError extends Error {}
 export function _cli(argv: readonly string[]): number {
     const prog = 'link_crypto';
     const cmd = argv[0];
-    const validCmds = new Set(['encrypt', 'decrypt', 'keygen', 'keystatus']);
+    const validCmds = new Set(['encrypt', 'decrypt', 'keygen', 'keystatus', 'source-id']);
 
     // argparse: subparser required → error when missing/invalid (exit 2).
     if (cmd === undefined || !validCmds.has(cmd)) {
-        const choices = "'encrypt', 'decrypt', 'keygen', 'keystatus'";
+        const choices = "'encrypt', 'decrypt', 'keygen', 'keystatus', 'source-id'";
         if (cmd === undefined) {
             process.stderr.write(
-                `usage: ${prog} [-h] {encrypt,decrypt,keygen,keystatus} ...\n` +
+                `usage: ${prog} [-h] {encrypt,decrypt,keygen,keystatus,source-id} ...\n` +
                     `${prog}: error: the following arguments are required: cmd\n`,
             );
         } else {
             process.stderr.write(
-                `usage: ${prog} [-h] {encrypt,decrypt,keygen,keystatus} ...\n` +
+                `usage: ${prog} [-h] {encrypt,decrypt,keygen,keystatus,source-id} ...\n` +
                     `${prog}: error: argument cmd: invalid choice: '${cmd}' (choose from ${choices})\n`,
             );
         }
@@ -292,6 +294,8 @@ export function _cli(argv: readonly string[]): number {
     }
     if (cmd === 'encrypt') {
         process.stdout.write(encrypt(v, keys[0] as string) + '\n');
+    } else if (cmd === 'source-id') {
+        process.stdout.write(sourceId(v, keys[0] as string) + '\n');
     } else {
         process.stdout.write(decrypt(v, keys) + '\n');
     }

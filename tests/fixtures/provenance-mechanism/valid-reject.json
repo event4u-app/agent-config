@@ -1,0 +1,1 @@
+{"mechanism_id": "five-safe-techniques-whitelist", "verdict": "reject", "decided_at": "2026-08-16", "reason": "a whitelist of prompt techniques contradicts the de-inflation guidance", "reopen_if": "the skill adopts an upstream structure"}

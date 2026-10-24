@@ -8,9 +8,9 @@ import { affected, loadGraph, query } from '../../src/scripts/code_graph/query.j
 import {
     emitSqliteTwin,
     GRAPH_STORE_VERSION,
-    loadSerializedFromTwin,
     sqliteTwinPath,
     twinCounts,
+    twinIsCurrent,
 } from '../../src/scripts/code_graph/sqlite_store.js';
 import type { CodeGraph } from '../../src/scripts/code_graph/types.js';
 import { isSqliteAvailableSync, loadSqliteSync, stampUserVersion } from '../../src/scripts/_lib/sqlite_guard.js';
@@ -45,18 +45,33 @@ describe.runIf(sqliteOk)('code-graph SQLite twin (ADR-129)', () => {
         expect(counts!.edges).toBeGreaterThan(0);
     });
 
-    it('answers are byte-identical on both stores', async () => {
+    it('the twin holds rows, not a second copy of the graph', async () => {
         await buildFromRepo(tmp, jsonPath);
-        const twinSerialized = loadSerializedFromTwin(jsonPath);
-        expect(twinSerialized).not.toBeNull();
-        expect(twinSerialized).toBe(fs.readFileSync(jsonPath, 'utf8'));
-        // full query round-trip on both paths
+        const { DatabaseSync } = loadSqliteSync('test');
+        const db = new DatabaseSync(sqliteTwinPath(jsonPath), { readOnly: true });
+        const keys = (db.prepare('SELECT key FROM meta').all() as { key: string }[]).map((r) => r.key);
+        db.close();
+        expect(keys).not.toContain('graph_json');
+        expect(twinIsCurrent(jsonPath)).toBe(true);
+    });
+
+    it('a current twin is not rewritten by a load', async () => {
+        await buildFromRepo(tmp, jsonPath);
+        const twin = sqliteTwinPath(jsonPath);
+        const old = (Date.now() - 60_000) / 1000;
+        fs.utimesSync(twin, old, old);
+        const before = fs.statSync(twin).mtimeMs;
+        loadGraph(jsonPath).close();
+        expect(fs.statSync(twin).mtimeMs).toBe(before);
+    });
+
+    it('answers are identical with and without the twin', async () => {
+        await buildFromRepo(tmp, jsonPath);
         const viaTwin = loadGraph(jsonPath);
         fs.rmSync(sqliteTwinPath(jsonPath));
         const viaJson = loadGraph(jsonPath);
-        // `graph` is nullable since 2.1 — it is null on the INDEXED path, which
-        // this fixture never takes: the corpus is far below
-        // INDEXED_READ_MIN_EDGES, so both loads materialize it.
+        // Both loads materialize the graph: the corpus is far below
+        // INDEXED_READ_MIN_EDGES.
         expect(viaTwin.graph).not.toBeNull();
         expect(viaJson.graph).not.toBeNull();
         expect(serializeGraph(viaTwin.graph as CodeGraph)).toBe(serializeGraph(viaJson.graph as CodeGraph));
@@ -69,14 +84,14 @@ describe.runIf(sqliteOk)('code-graph SQLite twin (ADR-129)', () => {
         // rewrite the JSON (different mtime/size) without re-emitting the twin
         const doctored = `${fs.readFileSync(jsonPath, 'utf8')}\n`;
         fs.writeFileSync(jsonPath, doctored, 'utf8');
-        expect(loadSerializedFromTwin(jsonPath)).toBeNull();
+        expect(twinIsCurrent(jsonPath)).toBe(false);
     });
 
     it('a corrupt twin is a non-event: dropped, JSON path answers', async () => {
         await buildFromRepo(tmp, jsonPath);
         const twin = sqliteTwinPath(jsonPath);
         fs.writeFileSync(twin, fs.readFileSync(twin).subarray(0, 100)); // truncate mid-byte
-        expect(loadSerializedFromTwin(jsonPath)).toBeNull();
+        expect(twinIsCurrent(jsonPath)).toBe(false);
         expect(fs.existsSync(twin)).toBe(false); // dropped for re-emission
         const g = loadGraph(jsonPath); // loads fine via JSON
         expect((g.graph as CodeGraph).nodes.length).toBeGreaterThan(0);
@@ -90,9 +105,9 @@ describe.runIf(sqliteOk)('code-graph SQLite twin (ADR-129)', () => {
         const db = new DatabaseSync(twin);
         stampUserVersion(db, GRAPH_STORE_VERSION + 99);
         db.close();
-        expect(loadSerializedFromTwin(jsonPath)).toBeNull();
+        expect(twinIsCurrent(jsonPath)).toBe(false);
         loadGraph(jsonPath); // JSON fallback + re-emit
-        expect(loadSerializedFromTwin(jsonPath)).not.toBeNull(); // twin healthy again
+        expect(twinIsCurrent(jsonPath)).toBe(true); // twin healthy again
     });
 
     it('rollback = delete the twin; nothing else changes', async () => {
@@ -107,11 +122,11 @@ describe.runIf(sqliteOk)('code-graph SQLite twin (ADR-129)', () => {
 describe('graceful degradation without node:sqlite', () => {
     it('emit returns false instead of throwing when unavailable (or true when available)', async () => {
         const r = await buildFromRepo(tmp, jsonPath);
-        const emitted = emitSqliteTwin(r.graph, r.json, jsonPath);
+        const emitted = emitSqliteTwin(r.graph, jsonPath);
         expect(typeof emitted).toBe('boolean');
         if (!sqliteOk) {
             expect(emitted).toBe(false);
-            expect(loadSerializedFromTwin(jsonPath)).toBeNull();
+            expect(twinIsCurrent(jsonPath)).toBe(false);
         }
     });
 });

@@ -98,9 +98,12 @@ describe('tools — allowlist + registry', () => {
                 // whether a map exists and how fresh, and one area of it.
                 'graph_map_status',
                 'graph_area',
+                // road-to-a-graph-that-follows-you 5.3 — estate questions,
+                // answered from the local estate index across registered projects.
+                'graph_estate',
             ]),
         );
-        expect(Object.keys(ALLOWLIST).length).toBe(28);
+        expect(Object.keys(ALLOWLIST).length).toBe(29);
         for (const tool of Object.values(ALLOWLIST)) {
             expect(tool.description.trim()).toBeTruthy();
             expect(tool.input_schema.type).toBe('object');
