@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { AUTO_REFRESH_REL, LOCK_REL } from '../../../src/scripts/code_graph/refresh_lock.js';
+import { AUTO_REFRESH_REL, LOCK_REL, readRefreshRecords } from '../../../src/scripts/code_graph/refresh_lock.js';
 import {
     CACHE_REL,
     REFRESH_ARGS,
@@ -34,10 +34,20 @@ const fakeSpawn = ((cmd: string, args: readonly string[], opts: Record<string, u
     return child;
 }) as unknown as typeof spawn;
 
-function writeCli(dir: string): string {
+/** A CLI inside an installed-package layout; `capable` adds the file the single-flight refresh ships. */
+function writeCli(dir: string, capable = true, version = '99.0.0'): string {
+    const pkg = path.join(path.dirname(dir), 'pkg');
+    fs.mkdirSync(path.join(pkg, 'dist', 'cli'), { recursive: true });
+    fs.writeFileSync(path.join(pkg, 'package.json'), JSON.stringify({ name: '@event4u/agent-config', version }));
+    if (capable) {
+        fs.mkdirSync(path.join(pkg, 'src', 'scripts', 'code_graph'), { recursive: true });
+        fs.writeFileSync(path.join(pkg, 'src', 'scripts', 'code_graph', 'refresh_lock.ts'), '');
+    }
+    const real = path.join(pkg, 'dist', 'cli', 'agent-config.js');
+    fs.writeFileSync(real, '#!/bin/sh\nexit 0\n', { mode: 0o755 });
     fs.mkdirSync(dir, { recursive: true });
     const cli = path.join(dir, 'agent-config');
-    fs.writeFileSync(cli, '#!/bin/sh\nexit 0\n', { mode: 0o755 });
+    fs.symlinkSync(real, cli);
     return cli;
 }
 
@@ -69,6 +79,34 @@ afterEach(() => {
     fs.rmSync(outside, { recursive: true, force: true });
     process.env['PATH'] = savedPath;
     delete process.env['AGENT_CONFIG_CODE_GRAPH_REFRESH'];
+});
+
+describe('which CLI may run, and what is recorded (PR #2604 review)', () => {
+    it('refuses a global CLI too old for the single-flight refresh, and records why', () => {
+        fs.writeFileSync(path.join(root, CACHE_REL), '{}');
+        fs.writeFileSync(path.join(root, AUTO_REFRESH_REL), '{}');
+        writeCli(path.join(outside, 'bin'), false, '17.0.0');
+        process.env['PATH'] = [path.join(outside, 'bin'), GIT_DIR].join(path.delimiter);
+        expect(refreshFor(root, fakeSpawn)).toBe('cli-too-old');
+        expect(calls).toEqual([]);
+        const last = readRefreshRecords(root);
+        expect(last['session-start']?.outcome).toBe('cli-too-old');
+        expect(last['session-start']?.detail).toMatch(/agent-config$/);
+    });
+
+    it('records a spawn with the CLI and version it started', () => {
+        optedIn();
+        expect(refreshFor(root, fakeSpawn)).toBe('spawned');
+        expect(readRefreshRecords(root)['session-start']?.detail).toMatch(/agent-config$/);
+    });
+
+    it('records no-cli instead of failing silently', () => {
+        fs.writeFileSync(path.join(root, CACHE_REL), '{}');
+        fs.writeFileSync(path.join(root, AUTO_REFRESH_REL), '{}');
+        process.env['PATH'] = GIT_DIR;
+        expect(refreshFor(root, fakeSpawn)).toBe('no-cli');
+        expect(readRefreshRecords(root)['session-start']?.outcome).toBe('no-cli');
+    });
 });
 
 describe('code-graph-refresh session concern', () => {
