@@ -258,4 +258,33 @@ describe('subagent-constraints concern — the user layer', () => {
         expect(new Set(FLOOR_RULE_IDS.slice(floor.length))).toEqual(new Set(members));
         expect(new Set(FLOOR_RULE_IDS).size).toBe(FLOOR_RULE_IDS.length);
     });
+
+    // Round-1 ratification findings: identity is the canonical path, discovery of a floor rule
+    // does not depend on the walk's file limit, and an import is read once whatever path names it.
+    it('classifies a floor rule by its canonical path, never by a nested file of the same name', () => {
+        for (const id of FLOOR_RULE_IDS) writeRule(id, `FLOOR-LAW-${id}: ${'NEVER CROSS THIS LINE. '.repeat(6)}`);
+        fs.mkdirSync(path.join(config, 'rules', 'aaa'), { recursive: true });
+        for (const id of FLOOR_RULE_IDS) {
+            fs.writeFileSync(path.join(config, 'rules', 'aaa', `${id}.md`), lawRule(id, `IMPOSTOR-${id}: ${'x'.repeat(400)}`));
+        }
+        const digest = reply();
+        for (const id of FLOOR_RULE_IDS) expect(digest).toContain(`FLOOR-LAW-${id}`);
+        expect(digest).not.toContain(`--- rule aaa/${FLOOR_RULE_IDS[0]} ---`);
+    });
+
+    it('reads every floor rule even when the rules tree holds more files than the walk takes', () => {
+        fs.mkdirSync(path.join(config, 'rules', '000-bulk'), { recursive: true });
+        for (let i = 0; i < 520; i++) fs.writeFileSync(path.join(config, 'rules', '000-bulk', `r${String(i).padStart(3, '0')}.md`), lawRule(`r${i}`, `BULK ${i}`));
+        writeRule('user-interrupt-priority', 'LAST-FLOOR-LAW-7e1: STOP, RUN THE NEW TASK, ASK BEFORE RESUMING.');
+        expect(reply()).toContain('LAST-FLOOR-LAW-7e1');
+    });
+
+    it('reads an imported file once, whichever path names it', () => {
+        fs.writeFileSync(path.join(config, 'EXTRA.md'), `${IMPORTED}\n`);
+        fs.symlinkSync(path.join(config, 'EXTRA.md'), path.join(config, 'ALIAS.md'));
+        fs.writeFileSync(path.join(config, 'CLAUDE.md'), `${USER_LINE}\n@EXTRA.md\n@./EXTRA.md\n@ALIAS.md\n`);
+        const digest = reply();
+        expect(digest.split(IMPORTED).length - 1).toBe(1);
+        expect(digest).toMatch(/User files: user:CLAUDE\.md \(full\), user:EXTRA\.md \(full\)\./);
+    });
 });

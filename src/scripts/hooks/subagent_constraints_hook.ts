@@ -22,8 +22,9 @@
  * This deliberately overrides part of `omitClaudeMd` for the instruction files,
  * and a project or user file can permit as well as forbid, so the concern
  * changes what such a subagent may decide; it grants no tool or file permission.
- * Each injection lands in its own subagent's context; how many subagents a turn
- * may start is not bounded here.
+ * A user file can contradict a floor law, and both are delivered as written; the
+ * digest carries no ruling between them. Each injection lands in its own
+ * subagent's context; how many subagents a turn may start is not bounded here.
  *
  * It reads the definition the host will run — `<project>/.claude/agents/<type>.md`,
  * then `<config dir>/agents/<type>.md` — rather than a list of agent names, so a
@@ -226,8 +227,8 @@ interface Found {
     readonly layer: 'project' | 'user' | 'rule';
 }
 
-/** Every `.md` under `dir`, recursively, sorted, at most {@link MAX_RULE_FILES}. */
-function ruleFiles(dir: string): string[] {
+/** Every `.md` under `dir`, recursively, sorted, at most {@link MAX_RULE_FILES}; `skip` names top-level files left out. */
+function ruleFiles(dir: string, skip: ReadonlySet<string> = new Set()): string[] {
     const out: string[] = [];
     const walk = (d: string): void => {
         let entries: fs.Dirent[];
@@ -240,47 +241,64 @@ function ruleFiles(dir: string): string[] {
             if (out.length >= MAX_RULE_FILES) return;
             const abs = path.join(d, e.name);
             if (e.isDirectory()) walk(abs);
-            else if (e.isFile() && e.name.endsWith('.md')) out.push(abs);
+            else if (e.isFile() && e.name.endsWith('.md') && !(d === dir && skip.has(e.name))) out.push(abs);
         }
     };
     walk(dir);
     return out;
 }
 
-/** The user layer: `<config dir>/CLAUDE.md`, the files it imports one level deep, and every rule's law. */
+/** `file` resolved through symlinks, or lexically when it cannot be. */
+function canonical(file: string): string {
+    try {
+        return fs.realpathSync(file);
+    } catch {
+        return path.resolve(file);
+    }
+}
+
+/**
+ * The user layer: `<config dir>/CLAUDE.md`, the files it imports one level deep
+ * (each read once, whatever path names it), and every rule's law.
+ *
+ * A floor rule is read from its canonical place, `<config dir>/rules/<id>.md`,
+ * before the walk and outside its file limit; a file elsewhere in the tree that
+ * shares its name is an ordinary rule under its own relative path.
+ */
 function userLayer(configDir: string): Found[] {
     const found: Found[] = [];
     const main = readText(path.join(configDir, 'CLAUDE.md'));
     if (main !== null) {
         found.push({ label: 'user:CLAUDE.md', body: clean(main), rank: 2, sub: 0, layer: 'user' });
-        const seen = new Set<string>([path.resolve(configDir, 'CLAUDE.md')]);
+        const seen = new Set<string>([canonical(path.join(configDir, 'CLAUDE.md'))]);
         for (const m of main.matchAll(IMPORT_LINE)) {
             const ref = m[1] as string;
             const abs = ref.startsWith('~/') ? path.join(os.homedir(), ref.slice(2)) : path.resolve(configDir, ref);
-            if (seen.has(abs)) continue;
-            seen.add(abs);
+            const key = canonical(abs);
+            if (seen.has(key)) continue;
             const text = readText(abs);
             if (text === null) continue;
+            seen.add(key);
             const rel = path.relative(configDir, abs);
-            const label = rel.startsWith('..') ? abs : rel;
+            const label = rel.startsWith('..') || path.isAbsolute(rel) ? abs : rel;
             found.push({ label: fitEscaped(`user:${label}`, LABEL_MAX), body: clean(text), rank: 2, sub: found.length, layer: 'user' });
         }
     }
-    const floor = new Map(FLOOR_RULE_IDS.map((id, i) => [id, i]));
     const rulesDir = path.join(configDir, 'rules');
-    for (const file of ruleFiles(rulesDir)) {
-        const id = path.basename(file, '.md');
+    const floorIds = new Set(FLOOR_RULE_IDS);
+    FLOOR_RULE_IDS.forEach((id, pos) => {
+        const text = readText(path.join(rulesDir, `${id}.md`));
+        if (text === null) return;
+        const blocks = ruleLawBlocks(text);
+        const rest = blocks.slice(1).join('\n\n');
+        found.push({ label: id, body: blocks[0] ?? '', rank: 0, sub: pos, layer: 'rule', ...(rest === '' ? {} : { rest }) });
+    });
+    for (const file of ruleFiles(rulesDir, new Set(FLOOR_RULE_IDS.map((id) => `${id}.md`)))) {
+        const id = path.relative(rulesDir, file).split(path.sep).join('/').replace(/\.md$/, '');
+        if (floorIds.has(id)) continue;
         const text = readText(file);
         if (text === null) continue;
-        const pos = floor.get(id);
-        const blocks = ruleLawBlocks(text);
-        const label = fitEscaped(path.relative(rulesDir, file).replace(/\.md$/, ''), LABEL_MAX);
-        if (pos === undefined) {
-            found.push({ label, body: blocks.join('\n\n'), rank: 3, sub: found.length, layer: 'rule' });
-        } else {
-            const rest = blocks.slice(1).join('\n\n');
-            found.push({ label, body: blocks[0] ?? '', rank: 0, sub: pos, layer: 'rule', ...(rest === '' ? {} : { rest }) });
-        }
+        found.push({ label: fitEscaped(id, LABEL_MAX), body: ruleLawBlocks(text).join('\n\n'), rank: 3, sub: found.length, layer: 'rule' });
     }
     return found;
 }
