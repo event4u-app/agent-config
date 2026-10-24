@@ -5448,6 +5448,13 @@
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/roadmap-process-loop-close.md",
+      "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/contexts/execution/roadmap-process-loop-close.md",
       "target": ".agent-src.uncondensed/rules/roadmap-progress-sync.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -5634,13 +5641,6 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
-    },
-    {
-      "source": ".agent-src.uncondensed/contexts/execution/roadmap-process-loop.md",
-      "target": ".agent-src.uncondensed/rules/ask-when-uncertain.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
     },
     {
       "source": ".agent-src.uncondensed/contexts/execution/roadmap-process-loop.md",

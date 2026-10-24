@@ -187,6 +187,7 @@
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-close.md` | `.agent-src.uncondensed/contexts/execution/decision-closure-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-close.md` | `.agent-src.uncondensed/contexts/execution/roadmap-execution-contract.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-close.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-close.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-close.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-close.md` | `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-prescan.md` | `.agent-src.uncondensed/contexts/authority/commit-mechanics.md` | `body_link` | 1 |
@@ -210,7 +211,6 @@
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-prescan.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-run.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop-set.md` | `body_link` | 1 |
-| `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/rules/roadmap-ci-steps-policy.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncondensed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
