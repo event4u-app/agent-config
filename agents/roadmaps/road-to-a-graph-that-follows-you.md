@@ -172,7 +172,7 @@ plan AC improvements automatically when a source repository updates.
 - [x] **5.2 `noGraph` points at what exists.** In a root without a graph, the answer <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/mcp_server/graph_tools.ts -->
       lists matching registered projects instead of only "run build".
       verify: a test with a registry of two projects asserts both appear.
-- [ ] **5.3 Estate queries.** `code-graph estate where-used`, `projects-using`, and
+- [x] **5.3 Estate queries.** `code-graph estate where-used`, `projects-using`, and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/cli.ts -->
       `advisory-impact` (advisory package × index × import edges), plus the matching MCP
       tool. They read the index only, never a project graph JSON.
       verify: a fixture estate of three projects answers "who uses vitest" with the right

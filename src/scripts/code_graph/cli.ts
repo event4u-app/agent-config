@@ -68,6 +68,9 @@
  *            [--prs]                           (open PRs by area, via gh)
  *                                               at three widths when Playwright
  *                                               is present
+ *   map --estate [--out DIR] [--no-verify]     one page of the registered projects
+ *                                               and their links, under the user-global
+ *                                               home; refused inside a git work tree
  *
  *   suggest-verb "<question>"                  (Phase 9 D3) print the verb
  *                                               (query/affected/path/explain)
@@ -98,6 +101,7 @@ import {
 import { graphHome } from './graph_home.js';
 import { suggestVerb } from './intent.js';
 import { estateMain } from './estate_cli.js';
+import { estateMapMain } from './estate_map.js';
 import { resolveProjectRef } from './project_ref.js';
 import { projectsMain, registerUse } from './projects_cli.js';
 import { buildMap, graphGeneration, mapGeneration, recordOutcome } from './map.js';
@@ -1022,6 +1026,7 @@ function mapIsBehind(root: string, cache: string): boolean {
  * Builds or updates the graph first when it is absent or behind.
  */
 async function cmdMap(argv: string[]): Promise<number> {
+    if (argv.includes('--estate')) return estateMapMain(argv);
     const root = resolveRoot(argv);
     if (!fs.existsSync(root)) {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
