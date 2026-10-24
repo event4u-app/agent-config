@@ -13,7 +13,7 @@ A branch whose code serves two aspects in two modes is written as two rows, one 
 
 **Invalidation.** The reconciler reports the verdict stale, and 7.1 reopens for the affected rows, when any pinned check, helper closure, invocation wiring, inventory, mapping, review, site disposition, reconciler, this artefact or the ledger table changes, or when a later finding shows an omitted or mis-destined branch (`agents/evidence/analysis/gate-7-2-reliance-rules-20261024.md`).
 
-Totals: 198 branches (200 rows) · 97 branches to binding aspects · 101 to non-assertion categories {"op:could-not-run":56,"op:informational":7,"op:usage":22,"op:unreachable":1,"op:silent-pass":4,"op:aggregate":7,"op:write":2,"op:presentation":1,"op:scope-exclusion":1} · 49 binding aspects {"invariant":42,"snapshot":0,"tolerance":0,"observation":7}.
+Totals: 200 branches (202 rows) · 98 branches to binding aspects · 102 to non-assertion categories {"op:could-not-run":57,"op:informational":7,"op:usage":22,"op:unreachable":1,"op:silent-pass":4,"op:aggregate":7,"op:write":2,"op:presentation":1,"op:scope-exclusion":1} · 49 binding aspects {"invariant":42,"snapshot":0,"tolerance":0,"observation":7}.
 
 **Unsure review verdicts and their recorded decisions:**
 
@@ -209,18 +209,20 @@ Totals: 198 branches (200 rows) · 97 branches to binding aspects · 101 to non-
 | `lint_readme_serial_comma` | `c15-readme-missing` | src/scripts/lint_readme_serial_comma.ts:134-138 | — | op:could-not-run | agree |
 | `lint_readme_serial_comma` | `c15-rethrow` | src/scripts/lint_readme_serial_comma.ts:140 | — | op:could-not-run | agree |
 | `lint_readme_serial_comma` | `c15-serial-comma` | src/scripts/lint_readme_serial_comma.ts:145-155 | default | R15.a invariant | agree |
-| `check_composite_arming` | `c16-selftest` | src/scripts/check_composite_arming.ts:276 | --self-test | R16.e invariant | agree |
-| `check_composite_arming` | `c16-store-missing-value` | src/scripts/check_composite_arming.ts:279-281 | — | op:usage | agree |
-| `check_composite_arming` | `c16-store-unreadable` | src/scripts/check_composite_arming.ts:286-293 | default | R16.d observation | disagree, adopted |
-| `check_composite_arming` | `c16-ledger-skip` | src/scripts/check_composite_arming.ts:317, | default | R16.c observation | disagree, adopted |
-| `check_composite_arming` | `c16-ledger-throw` | src/scripts/check_composite_arming.ts:303-320 | — | op:could-not-run | agree |
-| `check_composite_arming` | `c16-accounting-mismatch` | src/scripts/check_composite_arming.ts:322-328 | — | op:could-not-run | agree |
-| `check_composite_arming` | `c16-all-malformed` | src/scripts/check_composite_arming.ts:330-335 | default | R16.b invariant | agree |
-| `check_composite_arming` | `c16-dead-scope` | src/scripts/check_composite_arming.ts:350-352 | — | op:could-not-run | disagree, adopted |
-| `check_composite_arming` | `c16-rethrow` | src/scripts/check_composite_arming.ts:354 | — | op:could-not-run | agree |
-| `check_composite_arming` | `c16-publish` | src/scripts/check_composite_arming.ts:359-364 | — | op:write | agree |
-| `check_composite_arming` | `c16-publish-write-throw` | src/scripts/check_composite_arming.ts:361-362 | — | op:could-not-run | agree |
-| `check_composite_arming` | `c16-malformed-warn` | src/scripts/check_composite_arming.ts:367-369 | default | R16.c observation | disagree, adopted |
-| `check_composite_arming` | `c16-not-armable-readings` | src/scripts/check_composite_arming.ts:110-113, | default | R16.a observation | agree |
-| `check_composite_arming` | `c16-not-armable-sessions` | src/scripts/check_composite_arming.ts:116-121, | default | R16.a observation | agree |
-| `check_composite_arming` | `c16-unusable-dropped` | src/scripts/check_composite_arming.ts:380 | default | R16.a observation | agree |
+| `check_composite_arming` | `c16-selftest` | src/scripts/check_composite_arming.ts:289 | --self-test | R16.e invariant | agree |
+| `check_composite_arming` | `c16-store-missing-value` | src/scripts/check_composite_arming.ts:290-295 | — | op:usage | agree |
+| `check_composite_arming` | `c16-store-absent` | src/scripts/check_composite_arming.ts:296-304 | default | R16.d observation | agree |
+| `check_composite_arming` | `c16-store-unreadable` | src/scripts/check_composite_arming.ts:305-311 | — | op:could-not-run | agree |
+| `check_composite_arming` | `c16-ledger-skip` | src/scripts/check_composite_arming.ts:330-337 | default | R16.c observation | disagree, adopted |
+| `check_composite_arming` | `c16-ledger-throw` | src/scripts/check_composite_arming.ts:318-337 | — | op:could-not-run | agree |
+| `check_composite_arming` | `c16-accounting-mismatch` | src/scripts/check_composite_arming.ts:338-346 | — | op:could-not-run | agree |
+| `check_composite_arming` | `c16-all-malformed` | src/scripts/check_composite_arming.ts:347-353 | default | R16.b invariant | agree |
+| `check_composite_arming` | `c16-dead-scope` | src/scripts/check_composite_arming.ts:359-370 | — | op:could-not-run | disagree, adopted |
+| `check_composite_arming` | `c16-rethrow` | src/scripts/check_composite_arming.ts:366-372 | — | op:could-not-run | agree |
+| `check_composite_arming` | `c16-publish` | src/scripts/check_composite_arming.ts:376-382 | — | op:write | agree |
+| `check_composite_arming` | `c16-publish-write-throw` | src/scripts/check_composite_arming.ts:377-379 | — | op:could-not-run | agree |
+| `check_composite_arming` | `c16-malformed-warn` | src/scripts/check_composite_arming.ts:384-386 | default | R16.c observation | disagree, adopted |
+| `check_composite_arming` | `c16-armable` | src/scripts/check_composite_arming.ts:387-393 | default | R16.a observation | agree |
+| `check_composite_arming` | `c16-not-armable-readings` | src/scripts/check_composite_arming.ts:110-115, | default | R16.a observation | agree |
+| `check_composite_arming` | `c16-not-armable-sessions` | src/scripts/check_composite_arming.ts:116-123, | default | R16.a observation | agree |
+| `check_composite_arming` | `c16-unusable-dropped` | src/scripts/check_composite_arming.ts:394-397 | default | R16.a observation | agree |

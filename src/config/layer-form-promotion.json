@@ -1,0 +1,8 @@
+{
+    "_comment": "Whether a session may promote the claude rule layer to its thinned form (road-to-a-setup-that-decides-itself step 3.3). Package-owned and shipped, never a settings key: no consumer layer, no cascade. OFF until step 5.3, which enables it only on a non-inferior pre-registered comparison (5.2) and cites that result file in the enabling commit. While off, the layer-form decision still runs in `doctor --check layer-form` as a shadow and nothing on disk moves. Demotion of a thinned layer runs whatever this says. An unreadable file reads as off. Read by src/install/layerPromotion.ts (promotionEnabled).",
+    "schema_version": 1,
+    "registered_at": "2026-10-24",
+    "owner": "maintainer",
+    "enabled": false,
+    "enable_when": "step 5.3: a non-inferior 5.2 result under D2, cited by path in the enabling commit"
+}

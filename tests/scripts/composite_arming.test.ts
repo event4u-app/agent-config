@@ -27,6 +27,7 @@ import {
     MIN_READINGS,
     MIN_SESSIONS,
     evaluate,
+    main,
     parseStore,
     renderDistribution,
     selfTest,
@@ -193,4 +194,39 @@ describe('the store round-trips through a real file', () => {
     it('self-test passes', () => {
         expect(selfTest()).toBe(0);
     }, 120_000);
+});
+
+describe('R16.d — an absent store is "not measured yet", never a build failure', () => {
+    const withDir = (fn: (d: string) => void): void => {
+        const d = mkdtempSync(join(tmpdir(), 'arm-abs-'));
+        try {
+            fn(d);
+        } finally {
+            rmSync(d, { recursive: true, force: true });
+        }
+    };
+
+    it('an absent store exits 0', () => {
+        withDir((d) => expect(main(['--store', join(d, 'never-written.jsonl')])).toBe(0));
+    });
+
+    it('a store path that exists but cannot be read as a file still exits 1', () => {
+        withDir((d) => expect(main(['--store', d])).toBe(1));
+    });
+
+    it('a present store with only malformed lines still exits 1', () => {
+        withDir((d) => {
+            const f = join(d, 's.jsonl');
+            writeFileSync(f, 'not json\n{"also": "no session"}\n');
+            expect(main(['--store', f])).toBe(1);
+        });
+    });
+
+    it('a present but empty store still exits 1', () => {
+        withDir((d) => {
+            const f = join(d, 's.jsonl');
+            writeFileSync(f, '');
+            expect(main(['--store', f])).toBe(1);
+        });
+    });
 });
