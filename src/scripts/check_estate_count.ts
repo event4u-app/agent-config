@@ -72,11 +72,10 @@
  * Two properties of that third path are load-bearing. It is **diff-scoped**: the
  * line must be ADDED between base and HEAD, so a claim cannot be left in a file
  * to authorise every later change — the banking failure a stored baseline had.
- * WORK IN PROGRESS IS CAPPED AT FIVE (owner directive 2026-10-24,
- * `agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`).
+ * WORK IN PROGRESS IS CAPPED AT FIVE (owner directive of 2026-10-24).
  * While more than `WIP_CAP` roadmaps are active, an added roadmap's
  * `estate_offset_exempt` counts only when its reason cites an existing file under
- * `agents/evidence/owner-directives/`: the agent may still propose growth, it can
+ * `agents/evidence/owner-directives/` (an owner record): the agent may still propose growth, it can  code-comment-allow provenance-comment -- the path is this check's operand, not where the code came from
  * no longer authorise it. Only added files are read, so nothing in the tree goes red.
  *
  * And it is deliberately **unbounded**, which the stored baseline could not

@@ -120,19 +120,19 @@ paperwork is cut.
 - [x] **5.2 Related tests during work, the full suite at the gate.**
       `process-full-all.md` § Delivery says so, with the command.
       verify: the file names `vitest related`.
-- [ ] **5.3 Council and vitest calls per session.** `probe_turnaround --calls`
+- [x] **5.3 Council and vitest calls per session.** `probe_turnaround --calls`
       counts Bash calls running the council or vitest in the current session's
       transcript; the delivery summary prints them.
       verify: a unit test over a fixture transcript counts two council and three vitest calls.
 
 ## Phase 6 — The evening report
 
-- [ ] **6.1 One command, five figures.** `probe_turnaround --daily` prints, over
+- [x] **6.1 One command, five figures.** `probe_turnaround --daily` prints, over
       the last 24 h on `main`: closed steps (split by roadmap age over 7 days),
       open steps now against 24 h ago, `agents/evidence/` lines against `src/` +
       `tests/` lines, timeboxed steps, owner questions added.
       verify: a unit test over a temporary git repository reproduces each figure.
-- [ ] **6.2 The report is part of the drain's close.** `process-full-all.md`
+- [x] **6.2 The report is part of the drain's close.** `process-full-all.md`
       names `--daily` as the evening report.
       verify: the file names `probe_turnaround --daily`.
 

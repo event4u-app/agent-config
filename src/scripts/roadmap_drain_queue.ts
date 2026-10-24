@@ -41,9 +41,7 @@
  * line is never read for a hold, because titles describe behaviour ("ships only
  * when both hold") rather than state.
  *
- * The owner directive of 2026-10-24
- * (`agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`)
- * adds four limits, all read from the files and the claims:
+ * The owner directive of 2026-10-24 adds four limits, all read from the files and the claims:
  *
  * - **Timebox.** A step carrying `<!-- partial: N -->` with N ≥ 3, or
  *   `<!-- started: YYYY-MM-DD -->` two or more days before today, reads `held`
