@@ -75,6 +75,9 @@ the act. Each opens a ledger row `submitted`, and only a live read moves it on.
       stdio contract does not take. `task create` takes no Dockerfile flag, so
       generate with `--build=false --tools=false`, set `source.dockerfile` and
       the commit, then validate with `task build -- --tools agent-config`.
+      **Submitted 2026-10-24** as `docker/mcp-registry#6046` (ledger row `6`),
+      pinned to `184251b1`; `task validate` and `task build --tools` passed
+      locally, and the upstream CI waits on maintainer approval.
       verify: the PR's CI is green; ledger row added.
 - [ ] **2.4 Cline MCP Marketplace.** An issue with the
       `mcp-server-submission` template and `assets/logo-400.png`. Blocked on
