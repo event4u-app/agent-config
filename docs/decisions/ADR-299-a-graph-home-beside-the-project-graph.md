@@ -18,7 +18,7 @@ provenance:
 evidence:
   strength: E1
   basis:
-    - agents/roadmaps/road-to-a-graph-that-follows-you.md
+    - agents/roadmaps/archive/road-to-a-graph-that-follows-you.md
     - docs/decisions/ADR-124-embedded-engine-doctrine.md
     - docs/decisions/ADR-129-sqlite-substrate-maintainer-override.md
     - docs/decisions/ADR-297-derived-views-in-agents-map.md

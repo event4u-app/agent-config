@@ -11,7 +11,6 @@ and keep the full search — this file only adds candidates to it.
 |---|---|---|---|
 | road-to-17-0-follow-ups | active | draft | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
 | road-to-a-cold-start-paid-once | active | ready | On a host where a re-task is observed to be cheaper than a fresh spawn, the orchestrator re-tasks a warm … |
-| road-to-a-graph-that-follows-you | active | ready | An agent installed globally answers code-graph questions from any folder: inside a project that carries `agents/` exactly as today (shared … |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | active | ready | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
 | road-to-a-release-that-says-whether-it-needs-you | active | ready | This package's version number carries consumer impact, so "install it when it is safe, ask when it matters" is a … |
 | road-to-a-review-that-ends | active | ready | A completion review runs at most N rounds, N set by the owner — round 1 over the scope, each … |

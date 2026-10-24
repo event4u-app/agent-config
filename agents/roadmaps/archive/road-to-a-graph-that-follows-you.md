@@ -363,19 +363,19 @@ owner's machine; what the repository tracks is source-free.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — From a folder that is not a project, a global install answers "which of my
+- [x] AC-1 — From a folder that is not a project, a global install answers "which of my
       projects use package X" from the index (owner turn 1: "not always in projects").
-- [ ] AC-2 — A graph build in a repository without `agents/` leaves `git status` clean
+- [x] AC-2 — A graph build in a repository without `agents/` leaves `git status` clean
       (owner turn 1: "not always an `agents/` folder").
-- [ ] AC-3 — Inside a project with `agents/`, every graph path, map and tool answer is
+- [x] AC-3 — Inside a project with `agents/`, every graph path, map and tool answer is
       byte-identical to today, so sharing through the repo is unchanged (owner turn 1:
       "the project level, as now, to share it").
-- [ ] AC-4 — A refresh leaves exactly one twin and no orphan in the state dir.
-- [ ] AC-5 — No source identity or pin appears in plaintext in any tracked file;
+- [x] AC-4 — A refresh leaves exactly one twin and no orphan in the state dir.
+- [x] AC-5 — No source identity or pin appears in plaintext in any tracked file;
       `check_no_external_sources` is green (owner turn 2: "of course encrypted").
-- [ ] AC-6 — `lineage of` and `lineage gaps` answer from a tracked, source-free ledger
+- [x] AC-6 — `lineage of` and `lineage gaps` answer from a tracked, source-free ledger
       that records rejections and gaps, not only adoptions, and `lineage from` answers
       the source side on the owner's machine only (owner turn 2: "what we have from
       where", "what is still missing").
-- [ ] AC-7 — An upstream change on a pinned fixture source yields a roadmap stub and no
+- [x] AC-7 — An upstream change on a pinned fixture source yields a roadmap stub and no
       code change (owner turn 2: "plan improvements automatically on upstream updates").
