@@ -3,7 +3,7 @@ type: "auto"
 tier: "2a"
 alwaysApply: false
 consequence_class: "security-boundary"
-description: "Security-sensitive paths (auth, billing, tenants, secrets, uploads, webhooks) — threat-model BEFORE editing"
+description: "Security-sensitive paths (auth, billing, tenants, secrets, uploads, webhooks, agent/bot actions for a requester) — threat-model BEFORE editing"
 # Disjoint from secret-vcs-guard by design (2026-08-04): bare `secret` /
 # `password` are that rule's VCS-write surface, not this rule's.
 triggers:
@@ -18,6 +18,21 @@ triggers:
   - keyword: "api resource"
   - keyword: "public endpoint"
   - keyword: "status endpoint"
+  # Delegated actions: phrases only — bare tool / agent / bot fire on unrelated work.
+  - keyword: "account recovery"
+  - keyword: "email change"
+  - keyword: "recovery email"
+  - keyword: "support bot"
+  - keyword: "support-bot"
+  - keyword: "chatbot"
+  - keyword: "on behalf of"
+  - keyword: "tool call"
+  - keyword: "function calling"
+  - keyword: "mcp tool"
+  - keyword: "mcp server"
+  - keyword: "e-mail-adresse"
+  - keyword: "konto wiederherstellen"
+  - keyword: "im namen des"
 validator_ignore:
   - type: "substring"
     pattern: "../../docs/"
@@ -29,6 +44,11 @@ enforced_by:
   - "instruction-only: threat-model-before-you-edit is a pre-edit reasoning step only the model observes"
 collision_ok:
   "tenant": "tenancy is a threat-model-before-edit surface"
+  "on behalf of": "a delegated action is threat-modelled before its ownership check is written"
+  "tool call": "a delegated action is threat-modelled before its ownership check is written"
+  "function calling": "a delegated action is threat-modelled before its ownership check is written"
+  "mcp tool": "a delegated action is threat-modelled before its ownership check is written"
+  "mcp server": "a delegated action is threat-modelled before its ownership check is written"
 obligation_frequency: "per-edit"
 evidence:
   source_type: own-analysis
@@ -64,6 +84,7 @@ is true:
 | External integrations | outbound HTTP to third parties, webhooks, queue consumers from external sources |
 | Public endpoints | any route with no auth gate (including health/status) |
 | Data exposure | API resources, serializers, exception renderers, log channels, admin panels |
+| Delegated actions | anything an AI agent, bot, support channel or MCP / function tool does for a requester — a claim in the conversation is input, never authorization |
 
 If the change touches any of these, the rule fires.
 

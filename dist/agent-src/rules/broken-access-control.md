@@ -14,6 +14,12 @@ triggers:
   - keyword: "login"
   - keyword: "controller"
   - keyword: "findById"
+  - keyword: "on behalf of"
+  - keyword: "tool call"
+  - keyword: "function calling"
+  - keyword: "mcp tool"
+  - keyword: "mcp server"
+  - keyword: "support chatbot"
 routes_to:
   - "skill:authz-review"
   - "skill:threat-modeling"
@@ -24,6 +30,11 @@ collision_ok:
   "controller": "controllers return user data — the ownership/tenant check floor"
   "endpoint": "every data-returning endpoint needs the three negative tests"
   "tenant": "cross-tenant isolation is this rule's core subject"
+  "on behalf of": "a model-filled tool argument is a request-supplied ID"
+  "tool call": "a model-filled tool argument is a request-supplied ID"
+  "function calling": "a model-filled tool argument is a request-supplied ID"
+  "mcp tool": "a model-filled tool argument is a request-supplied ID"
+  "mcp server": "a model-filled tool argument is a request-supplied ID"
 obligation_frequency: "per-edit"
 evidence:
   source_type: external-standard
@@ -40,6 +51,7 @@ The most common — and most damaging — failure in real systems and AI-written
 ```
 AUTHENTICATED IS NOT AUTHORIZED. EVERY REQUEST-SUPPLIED ID/FILTER GETS A
 SERVER-DERIVED OWNERSHIP/TENANT CHECK BEFORE ANY DATA IS RETURNED.
+A TOOL ARGUMENT A MODEL FILLS IS A REQUEST-SUPPLIED ID.
 NO DATA-RETURNING ENDPOINT IS DONE WITHOUT THREE NEGATIVE TESTS:
 UNAUTHENTICATED → 401 · NOT-OWNER → 403/404 · CROSS-TENANT → 403/404 (404 HIDES EXISTENCE).
 ROLE DECIDES WHICH FIELDS — THE SERVER STRIPS THEM. THE FRONTEND HIDING A FIELD IS NOT PROTECTION.

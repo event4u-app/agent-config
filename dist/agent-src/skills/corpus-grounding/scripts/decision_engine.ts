@@ -631,6 +631,29 @@ export async function ground(
                     `grounding against default category '${category}'`,
             );
         }
+
+        // 1b — a description spanning two categories still grounds against one.
+        // Opt-in per manifest, because only the manifest knows which score
+        // separates a second real match from a shared common word; without it a
+        // composite description printed a clean gap while a class was dropped.
+        const composite_min = reasoning.composite_min_score;
+        if (typeof composite_min === 'number' && rows.length > 0) {
+            const wide = search_domain(manifest, query, cat_domain, 100);
+            const wide_rows = (wide.results as Row[] | null) || [];
+            const wide_scores = (wide.scores as (PyFloat | number)[] | null) || [];
+            const dropped = new Set<string>();
+            wide_rows.forEach((r, i) => {
+                const cls = r[cat_column];
+                const score = floatVal(wide_scores[i] ?? 0);
+                if (cls && pyStr(cls) !== category && score >= composite_min) dropped.add(pyStr(cls));
+            });
+            for (const cls of dropped) {
+                gaps.push(
+                    `one '${cat_domain}' row grounded this as '${category}', but the description also matches ` +
+                        `'${cls}' — that class was dropped; ground it separately`,
+                );
+            }
+        }
     }
 
     // 2 — reasoning rule for the category.
