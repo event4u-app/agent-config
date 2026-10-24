@@ -153,14 +153,17 @@ describe('subagent-v1 reuse and loading fields', () => {
         expect(validate(data, schema).some((e) => e.path === '$.reuse')).toBe(true);
     });
 
-    // A skipping worker loses the consumer's CLAUDE.md and rules until a
-    // carrier on the host's own Agent path exists (tick-the-shipped-path 2.4).
-    it('package-workers-load-project-instructions-until-a-carrier-exists', () => {
-        for (const name of ['ac-worker', 'ac-researcher', 'production-validator']) {
+    // 2.5: on again once the subagent-constraints concern carries the
+    // consumer's CLAUDE.md on the host's own SubagentStart (tick-the-shipped-path
+    // 2.4). A judge keeps the full hierarchy.
+    it('package-workers-skip-project-instructions', () => {
+        for (const name of ['ac-worker', 'ac-researcher']) {
             const data = _frontmatterOf(path.join(_AGENTS, `${name}.md`));
-            expect(data.omit_project_instructions).not.toBe(true);
-            expect(nativeFieldLines(data as Record<string, unknown>)).not.toContain('omitClaudeMd: true\n');
+            expect(data.omit_project_instructions).toBe(true);
+            expect(nativeFieldLines(data as Record<string, unknown>)).toContain('omitClaudeMd: true\n');
         }
+        const validator = _frontmatterOf(path.join(_AGENTS, 'production-validator.md'));
+        expect(validator.omit_project_instructions).not.toBe(true);
     });
 
     // The tier claims back exact-lookup fan-out; a definition that keeps web
