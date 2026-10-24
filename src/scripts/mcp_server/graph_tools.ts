@@ -45,6 +45,7 @@ import { changedFiles } from '../code_graph/cli.js';
 import { detectSources, graphState, pickSource } from '../code_graph/detect.js';
 import { graphHome } from '../code_graph/graph_home.js';
 import { resolveProjectRef } from '../code_graph/project_ref.js';
+import { readRegistry } from '../_lib/project_registry.js';
 import { resolvePath } from './path_util.js';
 import { isTestFile } from '../code_graph/build.js';
 import {
@@ -67,8 +68,34 @@ import {
 import { areaReport, graphGeneration, readMap } from '../code_graph/map.js';
 import type { BuiltinTool } from './tools.js';
 
-/** The `no graph here` answer, in one place so all five agree on its shape. */
+/**
+ * Registered projects whose graph exists, for a root that has none (5.2). Read
+ * from the local registry only; the graph files themselves are not opened.
+ */
+function projectsWithGraph(): Array<{ id: string; name: string; root: string }> {
+    const out: Array<{ id: string; name: string; root: string }> = [];
+    for (const [id, e] of Object.entries(readRegistry().projects)) {
+        if (!fs.existsSync(e.root) || !fs.existsSync(graphHome(e.root).cachePath)) continue;
+        out.push({ id, name: path.basename(e.root), root: e.root });
+        if (out.length === 20) break;
+    }
+    return out;
+}
+
+/** The `no graph here` answer, in one place so all the tools agree on its shape. */
 function noGraph(root: string): Record<string, unknown> {
+    const registered = projectsWithGraph();
+    if (registered.length) {
+        return {
+            status: 'unavailable',
+            staleness: 'absent',
+            error:
+                'no code-graph source under this root — pass `project` to ask one of the registered projects below, ' +
+                'or run `agent-config code-graph build` here',
+            root,
+            registered_projects: registered,
+        };
+    }
     return {
         status: 'unavailable',
         staleness: 'absent',

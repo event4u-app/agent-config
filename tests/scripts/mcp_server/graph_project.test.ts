@@ -110,3 +110,29 @@ describe('a project parameter on the graph tools (5.1)', () => {
         }
     }, 60_000);
 });
+
+describe('noGraph points at what exists (5.2)', () => {
+    it('a root without a graph lists the registered projects that have one', async () => {
+        const a = repo('alpha', 'export const a = 1;\n', false);
+        const b = repo('beta', 'export const b = 2;\n', true);
+        await build(a);
+        await build(b);
+        const empty = path.join(tmp, 'empty');
+        fs.mkdirSync(empty);
+        const r = await new ToolCache().dispatch('graph_query', { symbol: 'a' }, empty);
+        expect(r['status']).toBe('unavailable');
+        const listed = r['registered_projects'] as Array<{ id: string; name: string; root: string }>;
+        expect(listed.map((p) => p.root).sort()).toEqual([a, b].sort());
+        expect(listed.map((p) => p.id).sort()).toEqual([idOf(a), idOf(b)].sort());
+        expect(String(r['error'])).toMatch(/project/);
+    }, 60_000);
+
+    it('with an empty registry the answer is unchanged', async () => {
+        const empty = path.join(tmp, 'empty');
+        fs.mkdirSync(empty);
+        const r = await new ToolCache().dispatch('graph_query', { symbol: 'a' }, empty);
+        expect(r['status']).toBe('unavailable');
+        expect(r['registered_projects']).toBeUndefined();
+        expect(String(r['error'])).toMatch(/run `agent-config code-graph build`/);
+    });
+});

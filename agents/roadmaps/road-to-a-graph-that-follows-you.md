@@ -164,7 +164,7 @@ plan AC improvements automatically when a source repository updates.
 
 ## Phase 5 — Answering without a project
 
-- [ ] **5.1 A `project` parameter on graph tools.** MCP graph tools and the CLI accept
+- [x] **5.1 A `project` parameter on graph tools.** MCP graph tools and the CLI accept <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/cli.ts -->
       an optional project (repo id, registered name or path) and resolve it through the
       registry and `graphHome`. Default stays the server root.
       verify: a test under tests/scripts/mcp_server gains a case querying a second fixture project by
