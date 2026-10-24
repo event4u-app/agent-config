@@ -54,9 +54,48 @@ export interface MapRenderCheck {
         pageErrors: number;
         externalRequests: number;
         horizontalScroll: boolean;
-        views: Array<{ view: string; labels: number; outside: number; overlapping: number }>;
+        views: Array<{ view: string; labels: number; outside: number; overlapping: number; orb?: OrbSpread }>;
+        /** Area-list entries whose name is cut off, or whose colour dot sits on a line of its own. */
+        sidebar: { entries: number; clipped: number; orphanedDot: number };
     }>;
 }
+
+/**
+ * How the area bubbles of one orb view sit: overlapping near-side pairs, and how
+ * far they bunch into one cap — the length of the mean of their unit vectors on
+ * the sphere, 0 for an even spread and 1 for every bubble on one point.
+ */
+export interface OrbSpread {
+    bubbles: number;
+    concentration: number;
+    overlapping: number;
+}
+
+/** Near-side bubbles overlapping by more than a sliver count; far-side ones are seen through the near side. */
+export function orbSpread(nodes: ReadonlyArray<{ x: number; y: number; r: number; near: boolean; u?: number[] }>): OrbSpread {
+    const near = nodes.filter((n) => n.near);
+    let overlapping = 0;
+    for (let i = 0; i < near.length; i++)
+        for (let j = i + 1; j < near.length; j++) {
+            const a = near[i] as (typeof near)[number];
+            const b = near[j] as (typeof near)[number];
+            // The viewer shrinks a crowded bubble down to a dot (ORB_DOT px): two dots touching
+            // hide nothing, so only a pair where both still read as bubbles counts.
+            if (a.r <= ORB_DOT || b.r <= ORB_DOT) continue;
+            if (Math.hypot(a.x - b.x, a.y - b.y) < (a.r + b.r) * ORB_OVERLAP_TOLERANCE) overlapping += 1;
+        }
+    const sum = [0, 0, 0];
+    for (const n of nodes) for (let k = 0; k < 3; k++) sum[k] = (sum[k] as number) + (n.u?.[k] ?? 0);
+    const concentration = nodes.length ? Math.hypot(...(sum as [number, number, number])) / nodes.length : 0;
+    return { bubbles: nodes.length, concentration: Math.round(concentration * 100) / 100, overlapping };
+}
+
+/** The smallest radius the viewer shrinks a crowded orb bubble to (`viewer.js`). */
+const ORB_DOT = 2;
+/** Two bubbles overlap when their centres are closer than this share of their summed radii. */
+const ORB_OVERLAP_TOLERANCE = 0.9;
+/** Above this, the bubbles bunch into one cap. An even spread of 30 sits near 0.1; one hemisphere at 0.5. */
+export const ORB_MAX_CONCENTRATION = 0.35;
 
 interface Box {
     x: number;
@@ -112,14 +151,29 @@ export async function verifyMap(htmlPath: string): Promise<MapRenderCheck> {
             });
             await page.goto(url);
             await page.waitForFunction(() => (window as unknown as { __mapLabelBoxes?: unknown }).__mapLabelBoxes !== undefined);
-            const read = async (view: string): Promise<{ view: string; labels: number; outside: number; overlapping: number }> => {
+            const read = async (view: string): Promise<{ view: string; labels: number; outside: number; overlapping: number; orb?: OrbSpread }> => {
                 const r = (await page.evaluate(() => (window as unknown as { __mapLabelBoxes: { boxes: Box[]; width: number; height: number } }).__mapLabelBoxes)) as {
                     boxes: Box[];
                     width: number;
                     height: number;
                 };
-                return { view, labels: r.boxes.length, ...labelProblems(r.boxes, r.width, r.height) };
+                const bubbles = await page.evaluate(
+                    () => (window as unknown as { __mapOrbNodes?: Array<{ x: number; y: number; r: number; near: boolean; u?: number[] }> }).__mapOrbNodes ?? [],
+                );
+                return { view, labels: r.boxes.length, ...labelProblems(r.boxes, r.width, r.height), ...(bubbles.length ? { orb: orbSpread(bubbles) } : {}) };
             };
+            const sidebar = await page.evaluate(() => {
+                const entries = [...document.querySelectorAll('#panel .plist button')].filter((b) => b.querySelector('.swatch'));
+                let clipped = 0;
+                let orphanedDot = 0;
+                for (const b of entries) {
+                    const name = (b.querySelector('.fname') ?? b) as HTMLElement | null;
+                    const dot = b.querySelector('.swatch') as HTMLElement | null;
+                    if (name && name.scrollWidth > name.clientWidth + 1) clipped += 1;
+                    if (name && dot && dot.getBoundingClientRect().top > name.getBoundingClientRect().bottom) orphanedDot += 1;
+                }
+                return { entries: entries.length, clipped, orphanedDot };
+            });
             const views = [await read('overview')];
             // The orb, as it opens and turned half a revolution: the far side's labels
             // must stay hidden and the near side's must still fit and not overlap.
@@ -139,8 +193,17 @@ export async function verifyMap(htmlPath: string): Promise<MapRenderCheck> {
                 views.push(await read('largest-area'));
             }
             const horizontalScroll = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
-            out.viewports.push({ name: vp.name, pageErrors, externalRequests, horizontalScroll, views });
-            if (pageErrors || externalRequests || horizontalScroll || views.some((v) => v.outside || v.overlapping)) {
+            out.viewports.push({ name: vp.name, pageErrors, externalRequests, horizontalScroll, views, sidebar });
+            const orbBad = (o: OrbSpread | undefined): boolean =>
+                !!o && (o.overlapping > 0 || (o.bubbles >= 6 && o.concentration > ORB_MAX_CONCENTRATION));
+            if (
+                pageErrors ||
+                externalRequests ||
+                horizontalScroll ||
+                sidebar.clipped ||
+                sidebar.orphanedDot ||
+                views.some((v) => v.outside || v.overlapping || orbBad(v.orb))
+            ) {
                 out.verification = 'failed';
             }
             await page.close();

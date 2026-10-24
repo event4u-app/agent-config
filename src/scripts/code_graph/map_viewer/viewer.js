@@ -215,15 +215,18 @@
     }
 
     // The orb: the precomputed 2D layout wrapped onto a sphere with the inverse
-    // Lambert azimuthal equal-area projection, so neighbours stay neighbours and
-    // no region is squeezed — the layout's centre faces the viewer, its rim
-    // wraps to the back. Nothing is simulated; the same layout, turned.
-    function orbPoint(x, y, reach) {
-        var rho = (Math.sqrt(x * x + y * y) / reach) * 1.9;
-        var len = Math.sqrt(x * x + y * y) || 1;
+    // Lambert azimuthal equal-area projection — the layout's centre faces the
+    // viewer, its rim wraps to the back. A node's distance from the centre and
+    // its direction are both replaced by their RANK (`share`, `turn`, 0..1),
+    // order kept, so equal shares of nodes cover equal shares of the sphere.
+    // Raw coordinates put most areas on one cap: a force layout is dense in the
+    // middle and lopsided around it.
+    function orbPoint(share, turn) {
+        var rho = 2 * Math.sqrt(share) * 0.97;
+        var phi = turn * Math.PI * 2;
         var f = Math.sqrt(Math.max(0, 1 - (rho * rho) / 4));
-        var px = (x / len) * rho * f;
-        var py = (y / len) * rho * f;
+        var px = Math.cos(phi) * rho * f;
+        var py = Math.sin(phi) * rho * f;
         var pz = 1 - (rho * rho) / 2;
         var cy = Math.cos(state.rot.yaw);
         var sy = Math.sin(state.rot.yaw);
@@ -269,21 +272,39 @@
         var nodes = currentNodes();
         var pos = Object.create(null);
         if (state.orb) {
-            var reach = 0;
-            nodes.forEach(function (n) { reach = Math.max(reach, Math.sqrt(n.x * n.x + n.y * n.y)); });
-            reach = reach || 1;
+            var byReach = nodes.slice().sort(function (a, b) {
+                return (a.x * a.x + a.y * a.y) - (b.x * b.x + b.y * b.y) || a.idx - b.idx;
+            });
+            var share = Object.create(null);
+            byReach.forEach(function (n, i) { share[n.kind + n.idx] = (i + 0.5) / byReach.length; });
+            var turn = Object.create(null);
+            nodes.slice().sort(function (a, b) { return Math.atan2(a.y, a.x) - Math.atan2(b.y, b.x) || a.idx - b.idx; })
+                .forEach(function (n, i) { turn[n.kind + n.idx] = i / nodes.length; });
             var k = orbRadius();
+            // Bubble sizes are tuned for a 300 px orb; a phone's smaller orb shrinks them with it.
+            var fit = Math.min(1, k / 300);
             var cx = s.w / 2 + state.view.x;
             var cyy = s.h / 2 + state.view.y;
             nodes.forEach(function (n) {
-                var p = orbPoint(n.x, n.y, reach);
+                var p = orbPoint(share[n.kind + n.idx], turn[n.kind + n.idx]);
+                n.u = p;
                 n.sx = cx + p[0] * k;
                 n.sy = cyy + p[1] * k;
                 n.depth = p[2];
                 // Nearer is larger and opaque; the far side recedes.
-                n.r = n.r * (0.6 + 0.4 * (p[2] + 1) / 2);
+                n.r = n.r * fit * (0.6 + 0.4 * (p[2] + 1) / 2);
                 pos[n.kind + n.idx] = n;
             });
+            // No two near-side bubbles may cover each other: each is capped at a
+            // share of the gap to its nearest near-side neighbour.
+            var nearNodes = nodes.filter(function (n) { return n.depth > 0; });
+            if (nearNodes.length <= 400) {
+                nearNodes.forEach(function (n) {
+                    var gap = Infinity;
+                    nearNodes.forEach(function (o) { if (o !== n) gap = Math.min(gap, Math.hypot(o.sx - n.sx, o.sy - n.sy)); });
+                    if (gap < Infinity) n.r = Math.max(2, Math.min(n.r, gap * 0.45));
+                });
+            }
             nodes.sort(function (a, b) { return a.depth - b.depth || a.idx - b.idx; });
             var glow = ctx.createRadialGradient(cx - k * 0.35, cyy - k * 0.35, k * 0.1, cx, cyy, k);
             glow.addColorStop(0, cssVar('--orb-light'));
@@ -398,6 +419,10 @@
         });
 
         drawLabels(state.orb ? nodes.filter(function (n) { return n.depth > 0.15; }) : nodes, s);
+        // For the render check: the bubbles as drawn, with their side of the orb.
+        window.__mapOrbNodes = state.orb
+            ? nodes.map(function (n) { return { x: n.sx, y: n.sy, r: n.r, near: n.depth > 0, u: n.u }; })
+            : [];
     }
 
     // Labels: biggest first, placed only where they fit, flipped near the right
@@ -583,9 +608,13 @@
         panel.appendChild(el('h3', null, t('areas') + ' (' + areas.length + ')'));
         var list = el('ul', { class: 'plist' });
         areas.forEach(function (a, i) {
-            var b = el('button', { type: 'button' });
+            var b = el('button', { type: 'button', class: 'aentry', title: a.name + ' · ' + a.files.length });
             b.appendChild(swatch(i));
-            b.appendChild(document.createTextNode(a.name + ' · ' + a.files.length));
+            var label = el('span', { class: 'alabel' });
+            var path = a.kind === 'small-parts' ? null : a.name;
+            label.appendChild(el('span', { class: 'fname' }, (path ? base(path) : a.name) + ' · ' + a.files.length));
+            if (path && dir(path) !== '.') label.appendChild(el('span', { class: 'fdir' }, dir(path)));
+            b.appendChild(label);
             b.addEventListener('click', function () { openArea(i); });
             var li = el('li');
             li.appendChild(b);
