@@ -779,6 +779,11 @@ trustworthy as the directive's provenance, and the record says so.
   yet"* and exits 0 as the contract says, over a time-bounded waiver.
 - **The attested-set renewal.** It is one council round after the owner
   answers. D38 forbids it before then.
+- **Two more stale wiring pins.** The trunk merge of `5fac452056` changed
+  `taskfiles/ci-fast.yml` and `.github/workflows/rule-backstops.yml`. Both diffs
+  only switch `check_step_production_reach` to `--enforce`, and that script is
+  not one of the 16 Phase 7 checks. They join the same set renewal and move no
+  row.
 
 ## Source-to-record completeness, mechanically — revision 14
 
