@@ -182,3 +182,17 @@ describe('release-PR content gate on the listing manifests', () => {
         ]);
     });
 });
+
+describe('install-pointer skill — true for every plugin that ships it', () => {
+    const body = fs.readFileSync(path.join(REPO, '.claude-plugin', 'skills', 'install-agent-config', 'SKILL.md'), 'utf-8');
+
+    it('does not tell a Copilot user the plugin ships hooks', () => {
+        expect(body).not.toMatch(/ships hooks\s+plus this pointer only/);
+        expect(body).not.toMatch(/This plugin is a \*\*bootstrap shim\*\*/);
+    });
+
+    it('says what each plugin adds and that neither is the full suite', () => {
+        expect(body).toContain('the Copilot one a read-only MCP server');
+        expect(body).toContain('npx -y @event4u/agent-config init');
+    });
+});
