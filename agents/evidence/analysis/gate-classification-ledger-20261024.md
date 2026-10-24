@@ -246,7 +246,7 @@ than listed.
 | `agents/evidence/analysis/gate-branch-inventory-20261024.json` | `119214ea142393c7254cae40e080153728e10fb0` |
 | `agents/evidence/analysis/gate-branch-mapping-20261024.json` | `c296fd9f02c1f0e83688da3f596cbb19e079665e` |
 | `agents/evidence/analysis/gate-branch-mapping-review-20261024.json` | `46227ecdae464df420e5aec60910a1b7a497e686` |
-| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `a55c5676efa6d5ea400398765e1714a53a0b3072` |
+| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `6606902f92aa2fd92442628af856da16dac533a7` |
 | `agents/evidence/analysis/gate-ledger-executions.mjs` | `b330f3e9671d4d9e58baf9e1a59e32bc473b3756` |
 
 
@@ -392,6 +392,71 @@ when `node agents/evidence/analysis/gate-ledger-reconcile.mjs` exits 0 at
 the revision 7.2 changes. A stale, failed or absent reconciliation blocks
 reliance. That condition is written into step 7.2 itself, and 7.2's own test
 runs the reconciler first.
+
+## The complete reconciliation, as a matrix — revision 12
+
+Round 16 (D40): both seats said no, and named the same single missing item. A
+sample of six rows, of which one matched and five were inconclusive without
+helper code, cannot prove a universal criterion. What closes it is **a
+complete, independently reproducible inventory-to-ledger reconciliation**
+with revision identifiers and machine-produced totals, and with no `op:*`
+substitution left unexplained.
+
+`node agents/evidence/analysis/gate-ledger-reconcile.mjs --matrix` prints
+exactly that. Its header shows the HEAD revision and the git blob of every
+input. It then prints one row per Phase 7 check, and exits 0 only when the full
+reconciliation passes. The output at this revision:
+
+| # | Phase 7 check | Binding aspects and class | Not binding | Branches | → rows | → non-assertion categories | Review: agree / disagree adopted / unsure resolved |
+|---|---|---|---|---|---|---|---|
+| 1 | `check_gate_completeness` | R1.a invariant, R1.b invariant | R1.c | 13 | 5 | could-not-run 5, informational 3 | 12 / 1 adopted / 0 resolved |
+| 2 | `lint_ticked_unmet_criteria` | R2.a invariant, R2.b invariant | — | 9 | 4 | usage 3, informational 1, unreachable 1 | 7 / 1 adopted / 1 resolved |
+| 3 | `check_rule_invariants` | R3.a invariant, R3.b invariant | — | 15 | 3 | usage 3, could-not-run 9 | 10 / 5 adopted / 0 resolved |
+| 4 | `check_augment_description_cap` | R4.a invariant | — | 3 | 1 | could-not-run 1, silent-pass 1 | 3 / 0 adopted / 0 resolved |
+| 5 | `check_trigger_evals` | R5.a invariant, R5.b invariant | — | 19 | 10 | usage 4, could-not-run 3, informational 1, aggregate 1 | 18 / 0 adopted / 1 resolved |
+| 6 | `lint_subagent_determinism` | R6.a invariant | — | 10 | 6 | could-not-run 3, aggregate 1 | 10 / 0 adopted / 0 resolved |
+| 7 | `lint_rule_enforcement_declaration` | R7.a invariant, R7.b invariant | — | 13 | 5 | could-not-run 6, write 1, informational 1 | 13 / 0 adopted / 0 resolved |
+| 8 | `check_token_quality_golden` | R8.a invariant, R8.b observation, R8.c invariant | — | 28 | 17 | usage 3, could-not-run 7, aggregate 1 | 27 / 1 adopted / 0 resolved |
+| 9 | `check_council_layout` | R9.a invariant | R9.b | 5 | 2 | could-not-run 2, aggregate 1 | 5 / 0 adopted / 0 resolved |
+| 10 | `check_knowledge_cards` | R10.a invariant, R10.b invariant, R10.c invariant, R10.d observation, R10.e invariant, R10.f invariant, R10.g invariant, R10.h observation, R10.i invariant, R10.k invariant, R10.l invariant, R10.m invariant, R10.n invariant, R10.o invariant, R10.j invariant | — | 35 | 22 | usage 4, silent-pass 3, could-not-run 4, informational 1, aggregate 1 | 35 / 0 adopted / 0 resolved |
+| 11 | `check_public_links` | R11.a invariant, R11.b invariant, R11.c invariant, R11.d invariant, R11.e observation, R11.f invariant, R11.g invariant | — | 14 | 6 | usage 2, could-not-run 3, presentation 1, scope-exclusion 1, aggregate 1 | 13 / 0 adopted / 1 resolved |
+| 12 | `lint_agents_layout` | R12.a invariant, R12.c observation, R12.d invariant | R12.b | 5 | 3 | could-not-run 2 | 5 / 0 adopted / 0 resolved |
+| 13 | `lint_eval_freshness` | R13.a invariant | — | 8 | 3 | usage 2, could-not-run 2, aggregate 1 | 7 / 0 adopted / 1 resolved |
+| 14 | `lint_readme_jargon` | R14.a invariant | — | 3 | 1 | could-not-run 2 | 3 / 0 adopted / 0 resolved |
+| 15 | `lint_readme_serial_comma` | R15.a invariant | — | 3 | 1 | could-not-run 2 | 3 / 0 adopted / 0 resolved |
+| 16 | `check_composite_arming` | R16.a observation, R16.b invariant, R16.c observation, R16.d observation, R16.e invariant | — | 15 | 8 | usage 1, could-not-run 5, write 1 | 11 / 4 adopted / 0 resolved |
+
+How to read it:
+
+- **Classes attach to aspects, never to branches.** Every binding aspect
+  listed carries exactly one of the four classes. The `op:*` categories apply
+  to *branches*, the code paths the independent inventory found, and say why a
+  branch asserts nothing: usage, could-not-run, aggregate exit,
+  informational, write, presentation, silent pass, scope exclusion,
+  unreachable. An `op:*` value never stands in for an aspect's class.
+- **No `op:*` assignment is the author's alone.** The last column counts the
+  independent review per check. Every branch, including every one in an
+  `op:*` category, was either agreed by the separate reviewer or moved to the
+  reviewer's suggestion. The four `unsure` verdicts carry recorded decisions.
+  The reconciler fails if any of this is undone (self-test: 11 of 11 cases
+  refused).
+- **Totals are machine-produced:**
+  - 16 checks, which match the Phase 7 manifest at `bbe5b73be`;
+  - 49 binding aspects;
+  - 198 branches, of which 97 map to aspects and 101 to declared
+    non-assertion categories;
+  - every binding aspect reached by at least one branch.
+- **Full reviewer rationales** are in
+  `agents/evidence/analysis/gate-branch-mapping-review-20261024.json`, the
+  reviewer's own artefact, unedited. The table below truncates them at 170
+  characters.
+
+**The round-16 spot-check, recorded as it came out:** R4.a matched; R1.a,
+R5.a, R10.l, R12.c and R16.c could not be told from the excerpts, because the
+helpers that decide applicability (`checkRatchet`, `_days_between`, the
+`--global` wiring, consumer-mode detection, per-line ledger naming) were not
+shown. The sample is superseded as evidence by the complete reconciliation
+above. It is not counted as a 6/6 match.
 
 ## The twelve review disagreements, disposed — revision 11
 

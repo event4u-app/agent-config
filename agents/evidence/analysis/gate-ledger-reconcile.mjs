@@ -221,13 +221,30 @@ export function reconcile(io) {
         }
     }
 
+    const matrix = [];
+    for (const check of phase7) {
+        const rows = ledgerRows.filter((r) => r.check === check);
+        const b = rows.filter((r) => !r.migration && !r.withdrawn);
+        const branchesOf = branchInv.checks.find((c) => c.check === check)?.branches ?? [];
+        const toRows = branchesOf.filter((x) => !(mapping[check]?.[x.id] ?? '').startsWith('op:')).length;
+        const ops = {};
+        for (const x of branchesOf) {
+            const t = mapping[check]?.[x.id] ?? '';
+            if (t.startsWith('op:')) ops[t.slice(3)] = (ops[t.slice(3)] ?? 0) + 1;
+        }
+        const rv = review.filter((v) => v.check === check);
+        const count = (k) => rv.filter((v) => v.verdict === k).length;
+        matrix.push(
+            `| ${phase7.indexOf(check) + 1} | \`${check}\` | ${b.map((r) => `${r.id} ${r.cls}`).join(', ')} | ${rows.filter((r) => r.migration || r.withdrawn).map((r) => r.id).join(', ') || '—'} | ${branchesOf.length} | ${toRows} | ${Object.entries(ops).map(([k, n]) => `${k} ${n}`).join(', ') || '—'} | ${count('agree')} / ${count('disagree')} adopted / ${count('unsure')} resolved |`,
+        );
+    }
     const tally = Object.fromEntries(CLASSES.map((k) => [k, binding.filter((r) => r.cls === k).length]));
     report.push(`Phase 7 manifest: ${phase7.length} checks, record and paths verified against git`);
     report.push(`independent mapping review: ${JSON.stringify(verdicts)}`);
     report.push(`branches ${branchCount} · mapped to rows ${branchCount - Object.values(perCategory).reduce((a, b) => a + b, 0)} · ${JSON.stringify(perCategory)} · binding rows reached ${reached.size}/${binding.length}`);
     report.push(`rows ${ledgerRows.length} · binding ${binding.length} · non-binding ${ledgerRows.length - binding.length} (migration notes and withdrawn rows) · ${JSON.stringify(tally)}`);
     report.push(`pins: ${pins.length} files, ${helperFiles.length}-file helper closure, ledger table`);
-    return { failures, report };
+    return { failures, report, matrix };
 }
 
 function importClosure(io, entries) {
@@ -277,7 +294,21 @@ function selfTest() {
     process.exit(bad === 0 ? 0 : 1);
 }
 
+function printMatrix() {
+    const io = realIo();
+    const { failures, matrix } = reconcile(io);
+    const head = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim();
+    console.log(`revision: HEAD ${head}`);
+    for (const f of Object.values(FILES)) console.log(`input: ${f} blob ${io.blob(f)}`);
+    console.log('\n| # | Phase 7 check | Binding aspects and class | Not binding | Branches | → rows | → non-assertion categories | Review: agree / disagree adopted / unsure resolved |');
+    console.log('|---|---|---|---|---|---|---|---|');
+    for (const l of matrix) console.log(l);
+    console.log(`\nreconciliation: ${failures.length === 0 ? 'OK' : `FAILED (${failures.length})`}`);
+    process.exit(failures.length === 0 ? 0 : 1);
+}
+
 if (process.argv.includes('--self-test')) selfTest();
+else if (process.argv.includes('--matrix')) printMatrix();
 else {
     const { failures, report } = reconcile(realIo());
     for (const l of report) console.log(l);
