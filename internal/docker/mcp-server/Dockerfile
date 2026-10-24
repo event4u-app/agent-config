@@ -4,7 +4,7 @@
 # Ported from the retired Python 3.11 image (ADR-200 python-to-typescript
 # migration): the server is now the compiled CLI's native `mcp-server`
 # command (ADR-085 turnkey read-only stdio server). Ships:
-#   - dist/cli/            (compiled CLI — built in the builder stage)
+#   - dist/                (the whole tsc output — dist/cli plus the trees it imports)
 #   - node_modules/        (production dependencies only)
 #   - dist/agent-src/      (prompts + resources content; prebuilt in-repo)
 #   - docs/guidelines/     (guideline:// resource content)

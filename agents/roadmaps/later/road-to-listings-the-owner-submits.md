@@ -21,7 +21,7 @@ entry_condition:
     exists.
 review_by: 2026-12-24
 estate_offset_exempt: "split from road-to-listings-a-release-keeps-current in the same change: it holds only the acts that wait on an owner go, a repo secret or a future release, so the parent can close on the work the tree can carry"
-estate_growth_exempt: "open blockers that already existed as owner-act queues, plus cline-install-test (2026-10-24), which replaces the resolved tier-b-go at net zero: tier-b-go, topic-push-secret that already existed as owner-act queues in the stubs road-to-bus-factor-external-actions and road-to-a-visibility-sync-that-can-write; this file names them as decidable blockers rather than adding new work"
+estate_growth_exempt: "two open blockers, topic-push-secret and cline-install-test. topic-push-secret already existed as an owner-act queue in the stub road-to-a-visibility-sync-that-can-write; cline-install-test (2026-10-24) replaces tier-b-go, resolved in the same change, so the open count is unchanged; this file names them as decidable blockers rather than adding new work"
 ---
 # Road to listings the owner submits
 
