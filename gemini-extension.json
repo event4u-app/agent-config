@@ -1,13 +1,13 @@
 {
   "name": "agent-config",
-  "version": "17.2.1",
+  "version": "17.3.0",
   "description": "Read-only MCP server for the event4u agent-config suite of governed skills, rules and commands. Install the full suite with `npx -y @event4u/agent-config init`.",
   "mcpServers": {
     "agent-config": {
       "command": "npx",
       "args": [
         "-y",
-        "@event4u/agent-config@17.2.1",
+        "@event4u/agent-config@17.3.0",
         "mcp-server"
       ]
     }
