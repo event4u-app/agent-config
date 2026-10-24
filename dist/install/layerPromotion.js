@@ -132,8 +132,9 @@ function rerecord(rulesDir, files, env) {
     global_deploy_inventory.save_inventory(ledger.inventory, ledger.file);
 }
 /**
- * Files the thin pass must skip: user edits — bytes that differ from what the
- * install recorded — and every rule {@link ruleForm} keeps `full`.
+ * Files the thin pass must skip: any file the ledger does not record as this
+ * package's with exactly these bytes — unrecorded or edited — and every rule
+ * {@link ruleForm} keeps `full`.
  */
 function keptWhole(rulesDir, recorded, decision, never) {
     const out = new Set();
@@ -147,8 +148,9 @@ function keptWhole(rulesDir, recorded, decision, never) {
     for (const name of names) {
         const file = path.join(rulesDir, name);
         const rec = recorded.get(relOf(rulesDir, file));
-        const edited = rec !== undefined && global_deploy_inventory.file_sha256(file) !== rec.installed_sha256;
-        if (edited || ruleForm(name.slice(0, -3), decision, never) === 'full')
+        // No record means no proof the file is ours; a record that differs means the user edited it.
+        const notOurs = rec === undefined || global_deploy_inventory.file_sha256(file) !== rec.installed_sha256;
+        if (notOurs || ruleForm(name.slice(0, -3), decision, never) === 'full')
             out.add(path.resolve(file));
     }
     return out;
@@ -203,6 +205,22 @@ export function restoreStagedLayer(packageRoot, rulesDir) {
     }
     return written;
 }
+/**
+ * Where post-promotion evidence starts: the recorded promotion time, else the
+ * thinned marker's own mtime. Never "no boundary" — a record missing, torn or
+ * malformed must not let a session from before the promotion decide on it.
+ */
+function promotionBoundary(runtimeRoot) {
+    const record = readPromotionRecord(runtimeRoot);
+    if (record !== null && !Number.isNaN(Date.parse(record.promoted_at)))
+        return new Date(record.promoted_at).toISOString();
+    try {
+        return fs.statSync(path.join(runtimeRoot, THINNED_MARKER)).mtime.toISOString();
+    }
+    catch {
+        return null;
+    }
+}
 function thinnedDir(runtimeRoot) {
     try {
         const first = fs.readFileSync(path.join(runtimeRoot, THINNED_MARKER), 'utf8').split('\n')[0]?.trim() ?? '';
@@ -214,7 +232,7 @@ function thinnedDir(runtimeRoot) {
 }
 /** Does the arrival record taken after the promotion show a standing law missing? */
 function standingLawMissingSince(runtimeRoot, packageRoot, env, since) {
-    const lines = readObserverLines(arrivalsDirUnder(runtimeRoot)).filter((l) => since === null || l.ts > since);
+    const lines = readObserverLines(arrivalsDirUnder(runtimeRoot)).filter((l) => l.ts > since);
     const evidence = arrivalEvidence(latestArrivalRecord(lines), readMachineEvidence(packageRoot, env).standingLaws);
     return evidence !== null && !evidence.standingLawsLoaded;
 }
@@ -238,8 +256,8 @@ export function sessionLayerStep(opts = {}) {
         const home = env['HOME'] ?? os.homedir();
         const state = readCarrierState(runtimeRoot);
         if (state.layer === 'thinned') {
-            const record = readPromotionRecord(runtimeRoot);
-            if (!standingLawMissingSince(runtimeRoot, packageRoot, env, record?.promoted_at ?? null)) {
+            const since = promotionBoundary(runtimeRoot);
+            if (since === null || !standingLawMissingSince(runtimeRoot, packageRoot, env, since)) {
                 return { action: 'none', reason: 'thinned-holds' };
             }
             const rulesDir = thinnedDir(runtimeRoot) ?? opts.rulesDir ?? path.join(home, '.claude', 'rules');
@@ -264,22 +282,32 @@ export function sessionLayerStep(opts = {}) {
         const estimate = readPromotionRecord(runtimeRoot)?.last_thin_ms ?? DEFAULT_THIN_ESTIMATE_MS;
         if (now() - started + estimate > latencyBudgetMs(packageRoot))
             return { action: 'skipped', reason: 'over-latency-budget' };
+        // The marker goes first, so a pass interrupted part-way leaves a layer the
+        // shell branch and the demotion above both recognise as thinned.
+        markClaudeLayer(runtimeRoot, { thinned: true, rulesDir });
         const rewritten = [];
         const t0 = now();
-        const res = thinInstalledRuleLayer({
-            rulesDir,
-            packageRoot,
-            bodyLinkRoot: packageRoot,
-            preserved: keptWhole(rulesDir, ledger.recorded, decision, neverThinned(packageRoot)),
-            onWrite: (target) => rewritten.push(target),
-        });
-        const thinMs = Math.max(1, Math.round(now() - t0));
-        if (res.failed.length > 0) {
-            rerecord(rulesDir, restoreStagedLayer(packageRoot, rulesDir) ?? [], env);
-            return { action: 'none', reason: 'thin-failed' };
+        let failed = true;
+        try {
+            const res = thinInstalledRuleLayer({
+                rulesDir,
+                packageRoot,
+                bodyLinkRoot: packageRoot,
+                preserved: keptWhole(rulesDir, ledger.recorded, decision, neverThinned(packageRoot)),
+                onWrite: (target) => rewritten.push(target),
+            });
+            failed = res.failed.length > 0;
         }
+        finally {
+            if (failed) {
+                rerecord(rulesDir, restoreStagedLayer(packageRoot, rulesDir) ?? [], env);
+                markClaudeLayer(runtimeRoot, { thinned: false, rulesDir });
+            }
+        }
+        if (failed)
+            return { action: 'none', reason: 'thin-failed' };
+        const thinMs = Math.max(1, Math.round(now() - t0));
         rerecord(rulesDir, rewritten, env);
-        markClaudeLayer(runtimeRoot, { thinned: true, rulesDir });
         const record = {
             promoted_at: (opts.date ?? (() => new Date()))().toISOString(),
             version: versionOf(packageRoot) ?? 'unknown',

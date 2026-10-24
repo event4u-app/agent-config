@@ -251,6 +251,44 @@ describe('step 3.3 — promote after proof, never at install', () => {
         expect(is_thin_entry(fs.readFileSync(file, 'utf8'))).toBe(false);
     });
 
+    it('a rule file the ledger does not record is never thinned', () => {
+        // A rule a normal promotion DOES thin, so keeping it whole is the ledger's doing.
+        const probe = freshInstall();
+        arrive(probe, 'session-1', '2026-10-24T10:00:00Z', allRules(probe));
+        expect(step(probe).action).toBe('promoted');
+        const victim = allRules(probe).find((id) => is_thin_entry(fs.readFileSync(path.join(probe.rulesDir, `${id}.md`), 'utf8'))) as string;
+        const f = freshInstall();
+        arrive(f, 'session-1', '2026-10-24T10:00:00Z', allRules(f));
+        const inv = inventory.load_inventory(f.ledgerPath);
+        const entry = (inv['tools'] as Record<string, { digests: Record<string, unknown> }>)['claude-code'] as { digests: Record<string, unknown> };
+        delete entry.digests[`rules/${victim}.md`];
+        inventory.save_inventory(inv, f.ledgerPath);
+        expect(step(f).action).toBe('promoted');
+        expect(stubCount(f)).toBeGreaterThan(0);
+        expect(is_thin_entry(fs.readFileSync(path.join(f.rulesDir, `${victim}.md`), 'utf8'))).toBe(false);
+    });
+
+    it('without a readable promotion record the thinned marker sets the boundary', () => {
+        for (const record of [null, '{not json', JSON.stringify({ promoted_at: 'yesterday' })]) {
+            const f = freshInstall();
+            arrive(f, 'session-1', '2026-10-24T10:00:00Z', allRules(f));
+            expect(step(f).action).toBe('promoted');
+            const file = path.join(f.runtimeRoot, PROMOTION_RECORD);
+            if (record === null) fs.rmSync(file);
+            else fs.writeFileSync(file, record);
+            const marked = fs.statSync(path.join(f.runtimeRoot, 'thinned')).mtime.getTime();
+            const missing = LAWS.find((id) => allRules(f).includes(id)) as string;
+            const lawless = allRules(f).filter((id) => id !== missing);
+            // Before the marker: not evidence about this layer.
+            arrive(f, 'before', new Date(marked - 60_000).toISOString(), lawless);
+            fs.rmSync(path.join(f.runtimeRoot, 'arrivals', 'session-1.jsonl'));
+            expect(step(f)).toEqual({ action: 'none', reason: 'thinned-holds' });
+            // After it: the layer is contradicted.
+            arrive(f, 'after', new Date(marked + 60_000).toISOString(), lawless);
+            expect(step(f)).toEqual({ action: 'demoted', reason: 'arrival-standing-law-missing' });
+        }
+    });
+
     it('the concern honours its kill switch and never throws without a staged runtime', () => {
         const f = freshInstall();
         arrive(f, 'session-1', '2026-10-24T10:00:00Z', allRules(f));
