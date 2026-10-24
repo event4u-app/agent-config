@@ -16,7 +16,6 @@ triggers:
   - command: "implement-ticket"
 load_context:
   - contexts/execution/interrupt-examples.md
-  - contexts/execution/invocation-plan.md
 self_contained: true
 workspaces: [agent-config-maintainer, construction, engineering, finance, founder, gtm, legal-review-prep, ops, product, small-business]
 packs: [meta]
@@ -44,7 +43,7 @@ Holds regardless of `personal.autonomy`, standing directives or roadmaps — aut
 |---|---|---|
 | **Continuation** | Same deliverable, target, success criterion. "weiter", "next step". | Continue. |
 | **Clarification** | Question / correction, no new deliverable. | Answer, continue. |
-| **Amendment** | Same mission; a stage added, dropped or moved ("PR at the end"). | Re-plan (`invocation-plan`), state `Order`, continue. |
+| **Amendment** | Same mission; a stage added, dropped or moved. | Re-plan (`invocation-plan`), state `Order`, continue. |
 | **Interrupt** | Different deliverable, target or success criterion. Meta-tasks ("audit", "stop and analyze") count. | STOP. Run new task. ASK before resume. |
 
 In doubt → interrupt: a spurious ask costs one turn, a silent resume the rest of the unwanted work.
