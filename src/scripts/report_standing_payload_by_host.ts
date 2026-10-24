@@ -152,19 +152,19 @@ export type ByteSource =
 export const HOST_SURFACES: readonly HostSurface[] = [
     {
         host: 'augment', surface: '.augment/rules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:2476',
+        writer: 'src/scripts/condense.ts:2454',
         anchor: '\'.augment/rules\',',
         note: 'copies by default; symlinks under `augment.rules_use_symlinks`',
     },
     {
         host: 'claude-code', surface: '.claude/rules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:1180',
+        writer: 'src/scripts/condense.ts:1158',
         anchor: '_emit_claude_rule(',
         note: '`_emit_claude_rule` rewrites frontmatter to the host\'s own `paths:` key',
     },
     {
         host: 'cline', surface: '.clinerules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:1182',
+        writer: 'src/scripts/condense.ts:1160',
         anchor: 'fs.symlinkSync(',
         note: 'symlink per rule into the projection',
     },
@@ -192,13 +192,13 @@ export const HOST_SURFACES: readonly HostSurface[] = [
     },
     {
         host: 'cursor', surface: '.cursor/rules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:1182',
+        writer: 'src/scripts/condense.ts:1160',
         anchor: 'fs.symlinkSync(',
-        note: 'symlink per rule, plus `.mdc` companions at `condense.ts:1406`',
+        note: 'symlink per rule, plus `.mdc` companions at `condense.ts:1384`',
     },
     {
         host: 'gemini', surface: 'GEMINI.md', perRuleTree: false,
-        writer: 'src/scripts/condense.ts:1480',
+        writer: 'src/scripts/condense.ts:1458',
         anchor: '\'GEMINI.md\'',
         note: 'single file — a symlink to the tracked `AGENTS.md`, so the bytes are that file\'s',
         bytes: {
@@ -213,7 +213,7 @@ export const HOST_SURFACES: readonly HostSurface[] = [
     },
     {
         host: 'windsurf', surface: '.windsurfrules', perRuleTree: false,
-        writer: 'src/scripts/condense.ts:1224',
+        writer: 'src/scripts/condense.ts:1202',
         anchor: '\'.windsurfrules\'',
         note: 'single concatenated file, rendered here by `condense.render_windsurfrules` rather than read off disk',
         bytes: {

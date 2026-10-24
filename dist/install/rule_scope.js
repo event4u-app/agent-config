@@ -30,7 +30,7 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { consumerRuleWorkspaces, resolve_rule_pack_scope } from '../scripts/_lib/scoped_projection.js';
+import { RULE_PACKS_AUTO, consumerRuleWorkspaces, resolve_rule_pack_scope } from '../scripts/_lib/scoped_projection.js';
 import { rule_in_scope } from './ruleInScope.js';
 /**
  * Rules excluded from EVERY consumer install path regardless of scope —
@@ -39,7 +39,7 @@ import { rule_in_scope } from './ruleInScope.js';
 export const COMPAT_ALWAYS_EXCLUDED = ['source-of-truth.md'];
 export const LEGACY_ALL = { workspaces: null, packs: null };
 /** Non-empty string-array extraction; anything else → null (legacy-all). */
-function _list(value) {
+export function _list(value) {
     if (Array.isArray(value) && value.length > 0) {
         return value.map((v) => String(v));
     }
@@ -54,22 +54,21 @@ export function ruleScopeFromSettings(settings, packageRoot) {
     // The WORKSPACE axis is derived from the pack vocabulary since ADR-293 step
     // 4.6, so it no longer depends on a `projection` block existing at all — a
     // rule is not a setting, and a settings file that happens to omit a section
-    // cannot switch one off. The pack and role axes are still read, so a
-    // missing block leaves them inactive exactly as before.
+    // cannot switch one off. The role axis is still read, so a missing block
+    // leaves it inactive exactly as before.
     const derivedWorkspaces = packageRoot === undefined ? null : consumerRuleWorkspaces(packageRoot);
+    // The PACK axis is derived too since step 4.9 (owner directive 2026-10-24):
+    // the active-pack set, the same set the skill/command prune uses, whether or
+    // not a settings file says anything. For one release window an explicitly
+    // written legacy `projection.rule_packs` still wins — see `legacyRulePacks`.
     const proj = settings['projection'];
-    if (typeof proj !== 'object' || proj === null || Array.isArray(proj)) {
-        return { ...LEGACY_ALL, workspaces: derivedWorkspaces };
-    }
-    const p = proj;
-    // `rule_packs: auto` derives the active-pack set — the SAME set the
-    // skill/command prune uses — so the rule axis cannot drift from the
-    // artefact axis. Resolving it needs the package root (packs.yml lives
-    // there); without one the sentinel degrades to the inactive axis rather
-    // than to an empty set, which would prune every pack-tagged rule.
+    const p = typeof proj === 'object' && proj !== null && !Array.isArray(proj) ? proj : {};
+    const legacy = legacyRulePacks(p);
     const packs = packageRoot === undefined
-        ? _list(p['rule_packs'])
-        : resolve_rule_pack_scope(p['rule_packs'], packageRoot, _list(_runtimeActivePacks(settings)) ?? []);
+        ? legacy === undefined
+            ? null
+            : _list(legacy)
+        : resolve_rule_pack_scope(legacy === undefined ? RULE_PACKS_AUTO : legacy, packageRoot, _list(_runtimeActivePacks(settings)) ?? []);
     return {
         // DERIVED since ADR-293 step 4.6, not read. `projection.rule_workspaces`
         // carried this list as a settings default — the nine consumer workspace
@@ -87,8 +86,24 @@ export function ruleScopeFromSettings(settings, packageRoot) {
         roles: _list(p['rule_roles']),
     };
 }
+/**
+ * The release window in which an explicitly written `projection.rule_packs`
+ * still decides (step 4.9). When it closes, delete {@link legacyRulePacks} and
+ * its caller's branch; the tombstone in `REMOVED_KEYS` then names the key as
+ * ignored.
+ */
+export const RULE_PACKS_LEGACY_WINDOW = 'one release window after the 2026-10-24 retirement of projection.rule_packs';
+/**
+ * The legacy `projection.rule_packs` value while the window is open, or
+ * `undefined` when none was written. An explicitly written value wins over the
+ * derivation — a consumer who chose a scope does not lose it silently on the
+ * upgrade — and `doctor` names how it differs (`rulePacksLegacyCheck`).
+ */
+export function legacyRulePacks(projection) {
+    return Object.prototype.hasOwnProperty.call(projection, 'rule_packs') ? projection['rule_packs'] : undefined;
+}
 /** `runtime.active_packs` overlay from an already-parsed settings object. */
-function _runtimeActivePacks(settings) {
+export function _runtimeActivePacks(settings) {
     const rt = settings['runtime'];
     return typeof rt === 'object' && rt !== null && !Array.isArray(rt)
         ? rt['active_packs']

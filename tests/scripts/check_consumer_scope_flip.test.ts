@@ -25,8 +25,10 @@ test('verify_flip on the real tree: flip verified, only maintainer rules drop', 
     // the point of dormancy — so 15 is the correct count, not a lost exclusion.
     assert.equal(v.excluded.length, 15);
     assert.ok(v.excluded.includes('source-of-truth.md'));
-    // safety floors must survive the default scope
+    // safety floors must survive the WORKSPACE flip; the pack axis drops them where their pack is
+    // not active, by owner decision (D14 of road-to-a-setup-that-decides-itself), pinned in
+    // tests/install/rule_packs_auto.test.ts
     for (const floor of ['finance-safety-floor.md', 'legal-safety-floor.md', 'strategy-safety-floor.md']) {
-        assert.ok(!v.excluded.includes(floor), `${floor} must ship under the default scope`);
+        assert.ok(!v.excluded.includes(floor), `${floor} must survive the workspace flip`);
     }
 });

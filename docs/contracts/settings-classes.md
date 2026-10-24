@@ -249,10 +249,10 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 9 |
 | B — consent | 3 |
-| C — guarded | 104 |
-| **Total** | **116** |
+| C — guarded | 103 |
+| **Total** | **115** |
 
-It rose to 116 on 2026-10-21 when the advisories council round 3 added `advisories.kev` — one C, `policy`: it decides whether a refresh reads the CISA catalog, the independent switch both seats asked for beside the egress key (evidence `advisory-kev-epss-sources-20261021`).
+It fell to 115 on 2026-10-24 when step 4.9 of `road-to-a-setup-that-decides-itself` removed `projection.rule_packs` (owner directive, D14). It rose to 116 on 2026-10-21 when the advisories council round 3 added `advisories.kev` — one C, `policy`: it decides whether a refresh reads the CISA catalog, the independent switch both seats asked for beside the egress key (evidence `advisory-kev-epss-sources-20261021`).
 
 It rose to 115 on 2026-10-21 when `road-to-advisories-heard-the-same-day` step 4.3 added `advisories.mode` and `advisories.egress` — two C. `mode` is `consent`: it adds a line to the first session start of every day, which an install that never asked must not have switched on for it by an agent. `egress` is `policy`: it decides which package names leave the machine, the privacy boundary the roadmap's D4 fixes for private names and this key extends to all of them.
 
@@ -407,11 +407,11 @@ the template, which is the drift this contract exists to prevent.
 
 | Disposition | Keys |
 |---|---|
-| derivable | 35 |
+| derivable | 34 |
 | un-inferrable | 10 |
 | consent | 52 |
 | policy | 19 |
-| **Total** | **116** |
+| **Total** | **115** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -510,7 +510,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `agent_config_version` | C | `""` | installer-owned pin selecting which package code executes | derivable — the installed package's own `package.json` version; `check_template_pin_drift` already enforces pin == package.json |
 | `profile.id` | C | `developer` | master axis selecting the projected skill and command surface | un-inferrable |
 | `projection.mode` | C | `scoped` | governs which artefacts reach the host trees at all | derivable — the resolved active-profile + `runtime.active_packs` set `_resolve_scoped_projection` already computes |
-| `projection.rule_packs` | C | `[]` | second allowlist axis on rule projection | derivable — the `auto` derivation already implemented in `src/install/rule_scope.ts` |
 | `discipline_profile` | C | `__DISCIPLINE_PROFILE__` | master switch for the discipline rule tier | derivable — its own `auto` resolution against `src/config/host-capabilities.yml` |
 | `rule_loading_tier` | C | `__RULE_LOADING_TIER__` | legacy master switch for rule loading | derivable — `discipline_profile` supersedes it with a documented mapping (minimal→off, balanced→essential, full→full) |
 | `cost.budgets.daily` | C | `0` | rolling spend ceiling | consent |
