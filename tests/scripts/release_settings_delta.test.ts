@@ -32,6 +32,7 @@ import {
     type ReleasedSurface,
 } from '../../src/scripts/_lib/release_settings_surface.js';
 import { infer_bump } from '../../src/scripts/release.js';
+import { NO_IMPACT_TRAILERS, type ImpactTrailers } from '../../src/scripts/_lib/consumer_impact.js';
 import { REMOVED_KEYS } from '../../src/scripts/_lib/settings_removed_keys.js';
 import {
     _resetRenameWarnings,
@@ -49,6 +50,7 @@ const HISTORICAL_NON_CUT_WRITES = ['3a9b54d4c7e20bee6476b2ca83e38949b93c779e'] a
 interface Commitish {
     type: string;
     breaking: boolean;
+    trailers: ImpactTrailers;
 }
 
 type Classification = 'tombstoned' | 'renamed' | 'neither';
@@ -109,10 +111,11 @@ describe('release settings delta — control', () => {
         const key = 'quality.local_auto_run';
         const live = plantRemoval(released, key, '16.6.0');
 
-        // (a) The bump derivation sees commit SUBJECTS only. A `feat:` subject
-        //     over a settings removal proposes a minor, and would propose one
-        //     whatever the surface did.
-        const commits: Commitish[] = [{ type: 'feat', breaking: false }];
+        // (a) The bump derivation sees commit subjects, their Consumer-Impact
+        //     trailers and the surfaces of the span's diff (ADR-300) — never the
+        //     released settings surface. A `feat:` subject with no trailer over
+        //     a settings removal proposes a minor whatever that surface did.
+        const commits: Commitish[] = [{ type: 'feat', breaking: false, trailers: NO_IMPACT_TRAILERS }];
         expect(infer_bump(commits as never)).toBe('minor');
 
         // (b) Neither pre-existing assertion looks at settings. Both return
