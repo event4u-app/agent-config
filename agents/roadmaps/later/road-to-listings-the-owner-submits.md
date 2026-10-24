@@ -69,6 +69,13 @@ the act. Each opens a ledger row `submitted`, and only a live read moves it on.
       row records the ref as an `ENC1:` token. Precondition: the parent's 3.3
       is in a release. File the external-plugin issue form with repo, path
       `.github/plugin`, release tag and its 40-character SHA.
+      **Install test 2026-10-24 (Copilot CLI 1.0.95, empty profile):** 17.3.0's
+      `.github/plugin` installed the MCP server and no skill, because a
+      subdirectory install copies that directory alone and the manifest
+      pointed outside it; a root install loaded both but copied 235 MB. The
+      repair puts the pointer skill inside the plugin directory, and a clean
+      local install of it then loaded both (8 KB). Submit from the first
+      release that carries it.
       verify: the intake bot's comment on the issue is green; ledger row added.
 - [ ] **2.3 Docker MCP Catalog.** A PR adding `servers/agent-config/` in a
       fork of `docker/mcp-registry`, with `source.dockerfile:
