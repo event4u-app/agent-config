@@ -1,5 +1,5 @@
 {
- "note": "Disposition of each site the mechanical scanner finds outside every inventoried branch's `where`. A kind before the colon; the inventoried branch it belongs to after it, where there is one.",
+ "note": "Disposition of each site the mechanical scanner finds outside every inventoried branch's `where` range (exact containment, no tolerance). A kind before the colon; the inventoried branch it belongs to after it, where there is one.",
  "dispositions": {
   "lint_ticked_unmet_criteria:238": {
    "kind": "collector",
@@ -55,7 +55,7 @@
   },
   "check_knowledge_cards:589": {
    "kind": "silent-pass:c10-C5-git-missing",
-   "reason": "git spawn error rethrown and caught by the caller, which skips C5 silently"
+   "reason": "_git rethrows a spawn error (ENOENT etc.); its only caller, the C5 ancestry loop at lines 340-353, catches it at line 351 with an empty handler, so the ancestry half of C5 is skipped silently"
   },
   "check_knowledge_cards:641": {
    "kind": "collector",
@@ -100,6 +100,14 @@
   "lint_readme_serial_comma:111": {
    "kind": "aggregate:c15-serial-comma",
    "reason": "accumulates hits; c15-serial-comma reports them"
+  },
+  "check_council_layout:175": {
+   "kind": "could-not-run:c9-dead-scope",
+   "reason": "the DeadScopeError catch returns 1: the dead-scope exit inventoried as c9-dead-scope, one line before its recorded range"
+  },
+  "check_public_links:347": {
+   "kind": "aggregate:c11-beta-marker",
+   "reason": "the exit 1 when warnings exist and --strict is set: the strict half of c11-beta-marker (R11.f)"
   }
  }
 }

@@ -306,7 +306,7 @@ function renderBranchMatrix(lines, resolutions, t) {
         '',
         'A branch whose code serves two aspects in two modes is written as two rows, one per (mode, aspect), so every row is one assertion under one mode.',
         '',
-        '**Reproduce from a clean checkout** (node and git only, no install): `git worktree add --detach <dir> <commit> && cd <dir> && node agents/evidence/analysis/gate-ledger-reconcile.mjs && node agents/evidence/analysis/gate-branch-sites.mjs && node agents/evidence/analysis/gate-ledger-reconcile.mjs --branches | cmp - agents/evidence/analysis/gate-branch-reconciliation-20261024.md`.',
+        '**Reproduce from a clean checkout** (node and git only, no install), from inside any clone: `C=$(git log -1 --format=%H -- agents/evidence/analysis/gate-branch-reconciliation-20261024.md) && D=$(mktemp -d) && git worktree add --detach "$D" "$C" && cd "$D" && node agents/evidence/analysis/gate-ledger-reconcile.mjs && node agents/evidence/analysis/gate-branch-sites.mjs && node agents/evidence/analysis/gate-ledger-reconcile.mjs --branches | cmp - agents/evidence/analysis/gate-branch-reconciliation-20261024.md`. `C` is the commit that last wrote this file; the two independent reruns used `a91350838a72e555d569036fc4152e0b541344a1` and `907b83bd6678e4a6a03ae81591dc4f0e84da5cef`.',
         '',
         '**Invalidation.** The reconciler reports the verdict stale, and 7.1 reopens for the affected rows, when any pinned check, helper closure, invocation wiring, inventory, mapping, review, site disposition, reconciler, this artefact or the ledger table changes, or when a later finding shows an omitted or mis-destined branch (`agents/evidence/analysis/gate-7-2-reliance-rules-20261024.md`).',
         '',

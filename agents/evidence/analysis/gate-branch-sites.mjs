@@ -63,7 +63,7 @@ for (const c of inv.checks) {
         const hit = SITE.find((s) => s.re.test(t));
         if (hit === undefined) return;
         sites += 1;
-        const covering = ranges.filter((r) => r.file === rel && n >= r.from - 2 && n <= r.to + 2).map((r) => r.id);
+        const covering = ranges.filter((r) => r.file === rel && n >= r.from && n <= r.to).map((r) => r.id);
         if (covering.length === 0) uncovered += 1;
         report.push({ check: c.check, line: n, kind: hit.kind, covering: [...new Set(covering)], text: t.slice(0, 110) });
     });
