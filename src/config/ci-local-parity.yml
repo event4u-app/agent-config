@@ -109,6 +109,17 @@ ci_only:
   # self-test is the half that IS worth running locally, and it is reachable —
   # `classify_change_risk --self-test` — but the workflow invokes it as a step of
   # its own rather than through the aggregate, which is what this checker sees.
+  # road-to-listings-a-release-keeps-current Phase 5. The daily release-adjacent
+  # health job runs `adoption_status --check-upstream --fail-on-action`, which
+  # reads every ledger row's live upstream (gh for a pull request, curl for a
+  # listing or registry query). Its verdict is a property of third-party sites on
+  # the day it runs, not of a change, so it does not belong in `task ci`; the
+  # judging logic is covered offline by tests/scripts/adoption_status.test.ts.
+  # Reachable on demand: `./scripts-run src/scripts/adoption_status --check-upstream --fail-on-action`.
+  - id: adoption_status
+    class: network
+    reason: "reads live third-party upstreams (gh pr view, listing pages, the MCP registry); the verdict describes those sites on the day it runs, not the change, and the judging logic runs offline in the vitest suite"
+
   # road-to-npm-payload-reduction Phase 3.1. `report_pack_delta` measures the
   # BRANCH-vs-BASE packed payload, which has no meaning without a pull request:
   # locally `--base origin/main --head HEAD` on main reads +0.0 KB every time, and
