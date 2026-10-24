@@ -51,6 +51,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-agent-config-next | later | draft | When this roadmap is resumed, the reader can tell — from measurements that already exist rather than from this document's … |
 | road-to-an-intake-the-queue-can-carry | later | later | A finding that already has an owner lands as a step and an `Arrivals:` line on that owner instead of … |
 | road-to-an-obligation-row-that-names-its-writer-carried | later | later | Every step road-to-an-obligation-row-that-names-its-writer deferred is either done here or explicitly disposed of — a step that still cannot run is … |
+| road-to-authority-routing-7-1-closure | later | later | Road to closing step 7.1 — promote the live-tree check classification |
 | road-to-benchmark-obsolescence-lifecycle | later | later | Road to benchmark-obsolescence lifecycle — detect when the model outgrew the rule |
 | road-to-billing-cliff-detection | later | draft | An autonomous drain that crosses its Claude Code plan quota stops at the next clean boundary and asks, instead of … |
 | road-to-capability-native-execution | later | later | A domain skill states the semantic capability, evidence and policy constraints it needs. |
