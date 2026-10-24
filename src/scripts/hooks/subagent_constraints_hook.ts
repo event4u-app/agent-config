@@ -1,19 +1,32 @@
 /**
- * Carries a project's instruction files to a subagent whose definition skips
- * them (road-to-a-tick-the-shipped-path-earns 2.4).
+ * Carries a project's instruction files, and the user's own `~/.claude` layer,
+ * to a subagent whose definition skips them (road-to-a-tick-the-shipped-path-earns
+ * 2.4; the user layer by owner directive of 2026-10-24, road-to-a-cold-start-paid-once
+ * decision D16).
  *
  * A definition with `omitClaudeMd: true` starts without the project's CLAUDE.md
- * files; measured on Claude Code 2.1.306, it also loses the user-level rule
- * layer. The safety floor is baked into the definition body, so what such a
- * worker lacks is the consumer's own constraints. This concern fires on the
- * host's `SubagentStart`, whose `additionalContext` the host adds to the
- * subagent's context, and hands it a bounded digest of those files.
+ * files; measured on Claude Code 2.1.306, it also loses the user-level layer
+ * (`<config dir>/CLAUDE.md` and `<config dir>/rules/`). The kernel floor is baked
+ * into the definition body, so what such a worker lacks is the consumer's own
+ * constraints. This concern fires on the host's `SubagentStart`, whose
+ * `additionalContext` the host adds to the subagent's context, and hands it one
+ * bounded digest of both layers.
  *
- * This deliberately overrides part of `omitClaudeMd` for the project's own
- * instruction files, and a project file can permit as well as forbid, so the
- * concern changes what such a subagent may decide; it grants no tool or file
- * permission. Each injection lands in its own subagent's context; how many
- * subagents a turn may start is not bounded here.
+ * Room is handed out in a fixed priority, so a cut drops the least binding text
+ * first: the first Iron Law block of each safety-floor and consequence-class rule
+ * ({@link FLOOR_RULE_IDS}; its later blocks are listed as cut, decision D17), then
+ * the project's files nearest first, then the
+ * user's CLAUDE.md and the files it imports, then every other user rule's Iron
+ * Law blocks. A rule is carried by its law blocks only, never its whole body;
+ * every file found is named in an inventory with what became of it, or counted
+ * where a bounded inventory has no room for its name.
+ *
+ * This deliberately overrides part of `omitClaudeMd` for the instruction files,
+ * and a project or user file can permit as well as forbid, so the concern
+ * changes what such a subagent may decide; it grants no tool or file permission.
+ * A user file can contradict a floor law, and both are delivered as written; the
+ * digest carries no ruling between them. Each injection lands in its own
+ * subagent's context; how many subagents a turn may start is not bounded here.
  *
  * It reads the definition the host will run — `<project>/.claude/agents/<type>.md`,
  * then `<config dir>/agents/<type>.md` — rather than a list of agent names, so a
@@ -30,27 +43,76 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { parse as parseYaml } from 'yaml';
 
+import { lawSections, ruleBody } from '../_lib/rule_law_section.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 import { readHookStdin } from './hook_stdin.js';
 
 /**
  * The byte ceiling of the whole reply line this concern writes, JSON escaping
- * included; `hook-token-budget.json` registers the same number for it.
+ * included; `hook-token-budget.json` registers the same number for it. Below
+ * the host's 10,000-character line, past which Claude Code substitutes a path
+ * and a preview for the whole `additionalContext`.
  */
-export const EMISSION_MAX_BYTES = 4_096;
+export const EMISSION_MAX_BYTES = 9_728;
 
 /** The files the host loads per directory and `omitClaudeMd` skips, in load order. */
 export const INSTRUCTION_FILES: readonly string[] = ['CLAUDE.md', '.claude/CLAUDE.md', 'CLAUDE.local.md'];
 
+/**
+ * Rules whose law is handed room before anything else: the `tier: safety-floor`
+ * rules, then the members of `src/config/rule-consequence-class.json`. Kept as
+ * ids here so the chunk carries no config file; a test holds the list equal to
+ * both sources.
+ */
+export const FLOOR_RULE_IDS: readonly string[] = [
+    'non-destructive-by-default',
+    'scope-control',
+    'commit-policy',
+    'autonomous-execution',
+    'broken-access-control',
+    'command-suggestion-policy',
+    'decision-revisit-gate',
+    'doc-screenshot-hygiene',
+    'domain-safety-disclaimer',
+    'domain-safety-pii',
+    'domain-safety-retention',
+    'engineering-safety-floor',
+    'evaluator-independence',
+    'fast-path-marker-visibility',
+    'finance-safety-floor',
+    'git-history-discipline',
+    'image-likeness-and-rights',
+    'legal-safety-floor',
+    'lethal-trifecta-guard',
+    'low-impact-corpus-privacy-floor',
+    'question-not-instruction',
+    'runtime-safety',
+    'secret-vcs-guard',
+    'security-sensitive-stop',
+    'session-canary',
+    'settings-ask-protocol',
+    'source-confidentiality',
+    'strategy-safety-floor',
+    'tool-safety',
+    'untrusted-input-defense',
+    'user-interrupt-priority',
+];
+
 const AGENT_TYPE = /^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$/;
 const REPLY_OVERHEAD = Buffer.byteLength(`${JSON.stringify({ additional_context: '' })}\n`, 'utf-8');
 const CUT = '\n[cut here]';
+/** Closes a floor rule carried by its first law block (decision D17). */
+const LATER = '\n[later law blocks not carried]';
 /** A file with less room than this left is listed as omitted rather than shown as a stub. */
 const MIN_SHOWN = 120;
 /** Escaped-byte bounds on the fixed part, so bodies keep most of the room. */
+/** A directory longer than this is described rather than printed; a label is never shortened. */
 const ROOT_MAX = 400;
-const LABEL_MAX = 160;
 const INVENTORY_MAX = 1_200;
+const USER_INVENTORY_MAX = 400;
+const RULES_INVENTORY_MAX = 600;
+const MAX_RULE_FILES = 500;
+const IMPORT_LINE = /^@(\S+)\s*$/gm;
 
 type Obj = Record<string, unknown>;
 
@@ -122,58 +184,283 @@ function fitEscaped(s: string, budget: number): string {
     return nl > cut.length / 2 ? cut.slice(0, nl) : cut;
 }
 
-interface Found {
-    readonly label: string;
-    readonly body: string;
+function clean(text: string): string {
+    return text.replace(/<!--[\s\S]*?-->/g, '').replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+function readText(file: string): string | null {
+    try {
+        return fs.statSync(file).isFile() ? fs.readFileSync(file, 'utf-8') : null;
+    } catch {
+        return null;
+    }
 }
 
 /**
- * The project's instruction files as one block whose serialized reply fits in
- * `maxBytes`, or null when there are none.
- *
- * Room goes to the file nearest the project directory first, because it is the
- * most specific, and every file found is named in an inventory with what became
- * of it (`full`, `cut`, `omitted`, or `empty` when nothing is left once
- * comments are removed), so a cut never hides that a file exists.
- * Sections are then printed root-most first, the order the host loads them.
+ * A rule's law as the digest carries it: the fenced blocks inside its Iron Law
+ * sections (`rule_law_section`'s extent), else its first fenced block, else its
+ * first paragraph. The prose around a law is left for the file itself.
  */
-export function instructionDigest(projectDir: string, maxBytes: number = EMISSION_MAX_BYTES): string | null {
-    const dirs = instructionDirs(projectDir);
-    const root = dirs[0] as string;
+export function ruleLaw(text: string): string {
+    return ruleLawBlocks(text).join('\n\n').trim();
+}
+
+/** {@link ruleLaw} as its separate blocks, in document order. */
+export function ruleLawBlocks(text: string): string[] {
+    const body = ruleBody(text.replace(/\r\n/g, '\n'));
+    const fences = (s: string): string[] =>
+        [...s.matchAll(/^[ \t]*```[^\n]*\n([\s\S]*?)^[ \t]*```/gm)].map((m) => (m[1] as string).trimEnd());
+    let blocks = lawSections(body).flatMap((sec) => fences(sec.text));
+    if (blocks.length === 0) blocks = fences(body).slice(0, 1);
+    if (blocks.length === 0) blocks = [body.split(/\n\s*\n/).find((para) => !/^\s*#/.test(para))?.trim() ?? ''];
+    return blocks.filter((b) => b !== '');
+}
+
+interface Found {
+    readonly label: string;
+    readonly body: string;
+    /** Allocation rank: lower is handed room first. */
+    readonly rank: number;
+    /** Order within a rank, for room and for print alike. */
+    readonly sub: number;
+    /** A floor rule with law blocks after its first: shown as `first-block`, never `full`. */
+    readonly partial?: boolean;
+    readonly layer: 'project' | 'user' | 'rule';
+}
+
+/** Every `.md` under `dir`, recursively, sorted, at most {@link MAX_RULE_FILES}; `skip` names top-level files left out. */
+function ruleFiles(dir: string, skip: ReadonlySet<string> = new Set()): string[] {
+    const out: string[] = [];
+    const walk = (d: string): void => {
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(d, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+            if (out.length >= MAX_RULE_FILES) return;
+            const abs = path.join(d, e.name);
+            if (e.isDirectory()) walk(abs);
+            else if (e.isFile() && e.name.endsWith('.md') && !(d === dir && skip.has(e.name))) out.push(abs);
+        }
+    };
+    walk(dir);
+    return out;
+}
+
+/** `file` resolved through symlinks, or lexically when it cannot be. */
+function canonical(file: string): string {
+    try {
+        return fs.realpathSync(file);
+    } catch {
+        return path.resolve(file);
+    }
+}
+
+/**
+ * The user layer: `<config dir>/CLAUDE.md`, the files it imports one level deep
+ * (each read once, whatever path names it), and every rule's law.
+ *
+ * A floor rule is read from its canonical place, `<config dir>/rules/<id>.md`,
+ * before the walk and outside its file limit; a file elsewhere in the tree that
+ * shares its name is an ordinary rule under its own relative path.
+ */
+function userLayer(configDir: string): Found[] {
     const found: Found[] = [];
-    for (const dir of dirs) {
-        for (const rel of INSTRUCTION_FILES) {
-            let text: string;
-            try {
-                text = fs.readFileSync(path.join(dir, rel), 'utf-8');
-            } catch {
-                continue;
-            }
-            const body = text.replace(/<!--[\s\S]*?-->/g, '').replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-            found.push({ label: fitEscaped(path.relative(root, path.join(dir, rel)) || rel, LABEL_MAX), body });
+    const main = readText(path.join(configDir, 'CLAUDE.md'));
+    if (main !== null) {
+        found.push({ label: 'user:CLAUDE.md', body: clean(main), rank: 2, sub: 0, layer: 'user' });
+        const seen = new Set<string>([canonical(path.join(configDir, 'CLAUDE.md'))]);
+        for (const m of main.matchAll(IMPORT_LINE)) {
+            const ref = m[1] as string;
+            const abs = ref.startsWith('~/') ? path.join(os.homedir(), ref.slice(2)) : path.resolve(configDir, ref);
+            const key = canonical(abs);
+            if (seen.has(key)) continue;
+            const text = readText(abs);
+            if (text === null) continue;
+            seen.add(key);
+            const rel = path.relative(configDir, abs);
+            const label = rel.startsWith('..') || path.isAbsolute(rel) ? abs : rel;
+            found.push({ label: `user:${label}`, body: clean(text), rank: 2, sub: found.length, layer: 'user' });
         }
     }
+    const rulesDir = path.join(configDir, 'rules');
+    const floorIds = new Set(FLOOR_RULE_IDS);
+    FLOOR_RULE_IDS.forEach((id, pos) => {
+        const text = readText(path.join(rulesDir, `${id}.md`));
+        if (text === null) return;
+        const blocks = ruleLawBlocks(text);
+        const partial = blocks.length > 1;
+        found.push({ label: id, body: `${blocks[0] ?? ''}${partial ? LATER : ''}`, rank: 0, sub: pos, layer: 'rule', ...(partial ? { partial } : {}) });
+    });
+    for (const file of ruleFiles(rulesDir, new Set(FLOOR_RULE_IDS.map((id) => `${id}.md`)))) {
+        const id = path.relative(rulesDir, file).split(path.sep).join('/').replace(/\.md$/, '');
+        if (floorIds.has(id)) continue;
+        const text = readText(file);
+        if (text === null) continue;
+        found.push({ label: id, body: ruleLawBlocks(text).join('\n\n'), rank: 3, sub: found.length, layer: 'rule' });
+    }
+    return found;
+}
+
+/** `dir` as printed in the header, or a description of it when it is too long to print whole. */
+function dirName(dir: string, what: string): string {
+    return escBytes(dir) <= ROOT_MAX ? dir : `${what} (its path is over ${ROOT_MAX} bytes and not printed)`;
+}
+
+/**
+ * Both layers as one block whose serialized reply fits in `maxBytes`, or null
+ * when there is nothing to carry. `configDir` null leaves the user layer out.
+ *
+ * Room goes in rank order (see the file header); within the project files the
+ * one nearest the project directory comes first, because it is the most
+ * specific. Sections print floor laws first, then the user's files, then the
+ * project's root-most first (the order the host loads them), then the other laws.
+ */
+export function instructionDigest(
+    projectDir: string,
+    maxBytes: number = EMISSION_MAX_BYTES,
+    configDir: string | null = null,
+): string | null {
+    const dirs = instructionDirs(projectDir);
+    const root = dirs[0] as string;
+    const project: Found[] = [];
+    for (const dir of dirs) {
+        for (const rel of INSTRUCTION_FILES) {
+            const text = readText(path.join(dir, rel));
+            if (text === null) continue;
+            const label = path.relative(root, path.join(dir, rel)) || rel;
+            project.push({ label, body: clean(text), rank: 1, sub: 0, layer: 'project' });
+        }
+    }
+    const user = configDir === null ? [] : userLayer(configDir);
+    const found = [...project, ...user];
     if (found.every((f) => f.body === '')) return null;
+    const withUser = configDir !== null;
     const head =
-        "A bounded digest of this project's instruction files, which this subagent's definition omitted at " +
-        'startup (omitClaudeMd). It is not the files as the host loads them: comments are removed and a file ' +
-        `may be cut or omitted, as listed below; read a listed file before relying on its missing part. Paths are relative to ${fitEscaped(root, ROOT_MAX)}.`;
-    // Nearest files are listed by name first; the rest are counted when the names would not fit.
-    const inventory = (status: readonly string[]): string => {
-        const named = found.map((f, i) => `${f.label} (${status[i]})`);
+        `A bounded digest of ${withUser ? "this project's instruction files and the user's own instruction layer" : "this project's instruction files"}, ` +
+        'which this subagent\'s definition omitted at startup (omitClaudeMd). It is not the files as the host loads them: ' +
+        `comments are removed${withUser ? ', a user rule is carried by its Iron Law blocks only' : ''} and a file may be cut or omitted, as listed below; ` +
+        `read a listed file before relying on its missing part. Project paths are relative to ${dirName(root, 'the project root')}` +
+        `${withUser ? `; user: files and rules are under ${dirName(configDir, "the host's config directory")}` : ''}.`;
+    const status: string[] = found.map((f) => (f.body === '' ? 'empty' : 'omitted'));
+    const idx = (layer: Found['layer']): number[] => found.flatMap((f, i) => (f.layer === layer ? [i] : []));
+    // Nearest project files are listed by name first; the rest are counted when the names would not fit.
+    const projectInventory = (): string => {
+        const named = idx('project').map((i) => `${(found[i] as Found).label} (${status[i]})`);
+        if (named.length === 0) return '';
         let from = 0;
         const render = (): string =>
-            `Files, nearest last: ${from > 0 ? `${from} nearer the root not named, ` : ''}${named.slice(from).join(', ')}.`;
-        while (from < named.length - 1 && escBytes(render()) > INVENTORY_MAX) from += 1;
+            from === named.length
+                ? `Files: ${from} not named.`
+                : `Files, nearest last: ${from > 0 ? `${from} nearer the root not named, ` : ''}${named.slice(from).join(', ')}.`;
+        while (from < named.length && escBytes(render()) > INVENTORY_MAX) from += 1;
         return render();
     };
-    const status: string[] = found.map((f) => (f.body === '' ? 'empty' : 'omitted'));
+    // Whole entries in load order; the ones that do not fit are counted, never cut mid-name.
+    const userInventory = (): string => {
+        const named = idx('user').map((i) => `${(found[i] as Found).label} (${status[i]})`);
+        if (named.length === 0) return '';
+        let keep = named.length;
+        const render = (): string => {
+            const more = named.length - keep;
+            const tail = more === 0 ? '' : keep === 0 ? `${more} not named` : `, ${more} more not named`;
+            return `User files: ${named.slice(0, keep).join(', ')}${tail}.`;
+        };
+        while (keep > 0 && escBytes(render()) > USER_INVENTORY_MAX) keep -= 1;
+        return render();
+    };
+    // Rule names grouped by what became of them; omitted names give way to a count first.
+    // Shown rules carry their own heading below, so they are counted here and only omitted ones named.
+    const rulesInventory = (): string => {
+        const rules = idx('rule');
+        if (rules.length === 0) return '';
+        const count = (st: string): number => rules.filter((i) => status[i] === st).length;
+        const omitted = rules.filter((i) => status[i] === 'omitted').map((i) => (found[i] as Found).label);
+        let keep = omitted.length;
+        const render = (): string => {
+            const more = omitted.length - keep;
+            const names = `${omitted.slice(0, keep).join(', ')}${more > 0 ? `${keep > 0 ? ', ' : ''}${more} more not named` : ''}`;
+            return (
+                `User rules (Iron Law blocks): ${count('full')} full, ${count('first-block')} first block only, ${count('cut')} cut, as headed below; ` +
+                `${count('empty')} empty; ${omitted.length} omitted${omitted.length > 0 ? `: ${names}` : ''}.`
+            );
+        };
+        while (keep > 0 && escBytes(render()) > RULES_INVENTORY_MAX) keep -= 1;
+        return render();
+    };
+    const named = (): string => [projectInventory(), userInventory(), rulesInventory()].filter((l) => l !== '').join('\n');
+    // The count-only form is all that is reserved ahead of the floor laws: it reports every
+    // omission in a few dozen bytes. `all` sizes it with every count at its layer's total.
+    const counted = (all = false): string => {
+        const line = (layer: Found['layer'], name: string): string => {
+            const members = idx(layer);
+            if (members.length === 0) return '';
+            const n = (st: string): number => (all ? members.length : members.filter((i) => status[i] === st).length);
+            const first = layer === 'rule' ? `${n('first-block')} first block only, ` : '';
+            return `${name}: ${n('full')} full, ${first}${n('cut')} cut, ${n('empty')} empty, ${n('omitted')} omitted`;
+        };
+        const rules = line('rule', 'User rules (Iron Law blocks)');
+        const floorLeft = all ? '' : floorOmitted.length > 0 ? `; floor rules omitted: ${floorOmitted.join(', ')}` : '';
+        return [line('project', 'Files'), line('user', 'User files'), rules === '' ? '' : `${rules}${floorLeft}`]
+            .filter((l) => l !== '')
+            .map((l) => `${l}.`)
+            .join('\n');
+    };
+    // Floor rules that did not fit, named in the count-only form when the room after them allows.
+    let floorOmitted: string[] = [];
     const shown: string[] = found.map(() => '');
-    let room = maxBytes - REPLY_OVERHEAD - escBytes(`${head}\n${inventory(status)}`);
-    for (let i = found.length - 1; i >= 0; i--) {
+    let room = maxBytes - REPLY_OVERHEAD - escBytes(`${head}\n`) - escBytes(counted(true));
+    // The named form is upper-bounded with every not-yet-placed file as `omitted`, the longest status.
+    const namedBound = (): number => escBytes(named()) + (idx('rule').length > 0 ? RULES_INVENTORY_MAX - escBytes(rulesInventory()) : 0);
+    let useNamed = false;
+    const frameOf = (f: Found): string => `\n\n--- ${f.layer === 'rule' ? 'rule ' : ''}${f.label} ---\n`;
+    // Project files go nearest first; every other rank keeps its `sub` order.
+    const subOf = (i: number): number => ((found[i] as Found).layer === 'project' ? -i : (found[i] as Found).sub);
+    const allocation = found.map((_, i) => i).sort((x, y) => (found[x] as Found).rank - (found[y] as Found).rank || subOf(x) - subOf(y));
+    const floorQueue = allocation.filter((j) => (found[j] as Found).rank === 0 && (found[j] as Found).body !== '');
+    const namesCost = (names: string[]): number => (names.length === 0 ? 0 : escBytes(`; floor rules omitted: ${names.join(', ')}`));
+    let floorSettled = false;
+    const settleFloor = (): void => {
+        if (floorSettled) return;
+        floorSettled = true;
+        const left = found.flatMap((f, i) => (f.rank === 0 && status[i] === 'omitted' && f.body !== '' ? [f.label] : []));
+        for (let keep = left.length; keep > 0; keep -= 1) {
+            const names = [...left.slice(0, keep), ...(keep < left.length ? [`${left.length - keep} more`] : [])];
+            const cost = escBytes(`; floor rules omitted: ${names.join(', ')}`);
+            if (cost <= room) {
+                floorOmitted = names;
+                room -= cost;
+                return;
+            }
+        }
+    };
+    for (const i of allocation) {
         const f = found[i] as Found;
+        if (f.rank > 0 && !useNamed && i === allocation.find((j) => (found[j] as Found).rank > 0)) {
+            settleFloor();
+            const extra = namedBound() - escBytes(counted(true));
+            // An omitted floor rule keeps the count-only form, which names it; the named form may count it.
+            if (floorOmitted.length === 0 && extra <= room) {
+                useNamed = true;
+                room -= extra;
+            }
+        }
         if (f.body === '') continue;
-        const frame = escBytes(`\n\n--- ${f.label} ---\n`);
+        const frame = escBytes(frameOf(f));
+        // A floor law block is placed whole or not at all: a cut law reads as a different law.
+        // Placing one must leave room to name every floor rule not yet placed, so an omitted
+        // floor rule is named whenever the cap holds every floor name; below that, the names
+        // that fit are given and the rest counted.
+        if (f.rank === 0) {
+            const after = floorQueue.filter((j) => j !== i && status[j] === 'omitted').map((j) => (found[j] as Found).label);
+            if (frame + escBytes(f.body) + namesCost(after) > room) continue;
+            shown[i] = f.body;
+            status[i] = f.partial === true ? 'first-block' : 'full';
+            room -= frame + escBytes(f.body);
+            continue;
+        }
         if (room - frame < MIN_SHOWN) continue;
         if (escBytes(f.body) <= room - frame) {
             shown[i] = f.body;
@@ -184,9 +471,27 @@ export function instructionDigest(projectDir: string, maxBytes: number = EMISSIO
         }
         room -= frame + escBytes(shown[i] as string);
     }
-    const sections = found.map((f, i) => (status[i] === 'omitted' || status[i] === 'empty' ? '' : `\n\n--- ${f.label} ---\n${shown[i]}`));
+    const printRank = (i: number): number => {
+        const f = found[i] as Found;
+        return f.layer === 'rule' ? (f.rank === 0 ? 0 : 3) : f.layer === 'user' ? 1 : 2;
+    };
+    const printSub = (i: number): number => ((found[i] as Found).layer === 'project' ? i : (found[i] as Found).sub);
+    const printed = found.map((_, i) => i).sort((a, b) => printRank(a) - printRank(b) || printSub(a) - printSub(b));
+    const sections = printed.map((i) => (status[i] === 'full' || status[i] === 'cut' || status[i] === 'first-block' ? `${frameOf(found[i] as Found)}${shown[i] as string}` : ''));
     // The serialized line is the final authority: whatever the parts measured, the reply never exceeds maxBytes.
-    return fitEscaped(`${head}\n${inventory(status)}${sections.join('')}`, maxBytes - REPLY_OVERHEAD);
+    settleFloor();
+    if (!useNamed && floorOmitted.length === 0 && allocation.every((j) => (found[j] as Found).rank === 0)) {
+        useNamed = namedBound() - escBytes(counted(true)) <= room;
+    }
+    const fixed = `${head}\n${useNamed ? named() : counted()}`;
+    // Below the size of the header and its inventory, a short diagnostic replaces a truncated one.
+    if (escBytes(fixed) > maxBytes - REPLY_OVERHEAD) {
+        const note =
+            `The digest of the instruction files this subagent's definition omitted (omitClaudeMd) did not fit in ${maxBytes} bytes; ` +
+            "read the project's CLAUDE.md files and the user's CLAUDE.md and rules before relying on any instruction.";
+        return escBytes(note) <= maxBytes - REPLY_OVERHEAD ? note : null;
+    }
+    return fitEscaped(`${fixed}${sections.join('')}`, maxBytes - REPLY_OVERHEAD);
 }
 
 /** The reply line for one digest. */
@@ -205,7 +510,7 @@ export function digestFor(envelope: unknown, env: NodeJS.ProcessEnv = process.en
         str(envelope, 'workspace_root', 'project_root') ?? str(payload, 'cwd') ?? env['CLAUDE_PROJECT_DIR'] ?? process.cwd();
     const configDir = env['CLAUDE_CONFIG_DIR'] || path.join(os.homedir(), '.claude');
     if (!definitionSkipsInstructions(projectDir, agentType, configDir)) return null;
-    return instructionDigest(projectDir);
+    return instructionDigest(projectDir, EMISSION_MAX_BYTES, configDir);
 }
 
 export function main(): number {
