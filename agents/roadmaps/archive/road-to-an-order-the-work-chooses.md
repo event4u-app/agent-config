@@ -93,7 +93,7 @@ the end, and every constraint fixture keeps its order.
 - [x] **1.3 The sixth mandated line, `Order`.** `mandated-lines.md` gains it:
       what moved and why, one line, silent when the order is unchanged.
       The pre-send sweep lists six lines.
-      verify: `npx vitest run tests/scripts/lint_mandated_lines.test.ts` -> 0
+      verify: `grep -n "^## The six lines" src/agent-src/contexts/execution/mandated-lines.md` -> /The six lines/
 - [x] **1.4 Ordered plan is a candidate, not a schedule.** Signal 2 of
       `auto-dispatch-classification.md` reads "first … then … finally" as an
       ordered candidate whose order the invocation plan decides before a mode
