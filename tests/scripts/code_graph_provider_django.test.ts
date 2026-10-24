@@ -43,13 +43,27 @@ describe('django provider', () => {
         expect(routesTo('ANY /posts/<int:pk>')).toEqual(['blog/views.py#PostDetail']);
     });
 
-    it('declares a lambda route without a target and ignores include()', () => {
+    it('declares a lambda route without a target', () => {
         expect(routesTo('ANY /inline')).toEqual([]);
+    });
+
+    it('prefixes an included urls module with every path that includes it, nested includes joined', () => {
+        // include("blog.urls") and include(("blog.urls", "blog")) — string and tuple form, two prefixes.
+        expect(routesTo('ANY /blog/about')).toEqual(['blog/views.py#about']);
+        expect(routesTo('ANY /v2/about')).toEqual(['blog/views.py#about']);
+        // include(api_urls), a module the including file imports, nested under each prefix.
+        expect(routesTo('ANY /blog/api/gone')).toEqual(['blog/views.py#gone']);
+        expect(routesTo('ANY /v2/api/gone')).toEqual(['blog/views.py#gone']);
+        // An included module's routes never appear without the prefix that reaches them.
         expect(graph.nodes.filter((n) => n.kind === 'route').map((n) => n.label).sort()).toEqual([
             'ANY /',
             'ANY /archive/(?P<year>[0-9]{4})',
+            'ANY /blog/about',
+            'ANY /blog/api/gone',
             'ANY /inline',
             'ANY /posts/<int:pk>',
+            'ANY /v2/about',
+            'ANY /v2/api/gone',
         ]);
     });
 
@@ -94,7 +108,7 @@ describe('django provider', () => {
     it('stamps its edges and keeps the graph valid', () => {
         const rels = new Set(['routes-to', 'renders', 'persists', 'relates', 'migrates']);
         const mine = graph.edges.filter((e) => rels.has(e.relation));
-        expect(mine.length).toBe(14);
+        expect(mine.length).toBe(18);
         expect(mine.every((e) => e.provider_id === 'django')).toBe(true);
         expect(validateGraph(JSON.parse(JSON.stringify(graph))).ok).toBe(true);
     });

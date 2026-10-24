@@ -9,7 +9,9 @@
  *
  * A view is resolved the way the urls file names it: a same-file or imported
  * symbol, or `module.member` through a module the file imports. `include(...)`
- * is not followed, so routes of an included urls module carry no prefix; an
+ * of a dotted string, a `(module, namespace)` tuple or an imported module is
+ * followed: an included module's routes carry every prefix chain that reaches
+ * it from a URLconf nothing includes, and appear under no other path. An
  * inline lambda gets a route with no target. A template found in two template
  * folders, or built at runtime, draws nothing. The app label is the model file's
  * directory (its parent for a `models/` package) unless `Meta.app_label` says
@@ -21,7 +23,7 @@ import type { CodeNode } from '../types.js';
 import { markerRoots, pythonRoots, union } from './shared/detect.js';
 import { joinRoute, templateRoots } from './shared/extractors.js';
 import { lineIndex, makeKit } from './shared/kit.js';
-import { balanced, classBases, importedModules, kwargString, spanText, splitArgs, stringLiteral } from './shared/python.js';
+import { balanced, classBases, importedModules, kwargString, resolveModule, spanText, splitArgs, stringLiteral } from './shared/python.js';
 import type { ConventionProvider } from './types.js';
 
 const RELATION = /\b(?:models\.)?(?:ForeignKey|ManyToManyField|OneToOneField)\s*\(/g;
@@ -47,8 +49,14 @@ export const djangoProvider: ConventionProvider = {
         const inventory = new Set(kit.paths);
         const py = kit.filesWithExt('.py');
 
-        // Routes.
-        for (const f of py.filter((x) => path.posix.basename(x.path) === 'urls.py')) {
+        // Routes. Every URLconf is read once; `include()` links a parent to the
+        // module it names, and each route is emitted once per prefix chain that
+        // reaches its file from a URLconf nothing includes.
+        interface UrlRoute { path: string; view: string; line: number }
+        interface UrlConf { file: string; routes: UrlRoute[]; includes: Array<{ path: string; child: string }> }
+        const confs = new Map<string, UrlConf & { resolve: (expr: string) => string | null }>();
+        const pattern = (literal: string, re: boolean): string => (re ? literal.replace(/^\^/, '').replace(/\$$/, '') : literal);
+        for (const f of py.filter((x) => path.posix.basename(x.path) === 'urls.py' || /^urlpatterns\s*[:=]/m.test(x.source))) {
             const at = lineIndex(f.source);
             const modules = importedModules(f.path, f.source, kit.roots, inventory);
             const resolve = (expr: string): string | null => {
@@ -62,15 +70,50 @@ export const djangoProvider: ConventionProvider = {
                 const cls = kit.resolveName(f.path, head);
                 return cls ? kit.methodOf(cls, member) : null;
             };
+            /** The module an `include(...)` argument names: `"a.urls"`, `("a.urls", "ns")`, or an imported module. */
+            const includeTarget = (view: string): string | null => {
+                const open = view.indexOf('(');
+                let first = splitArgs(balanced(view, open))[0] ?? '';
+                if (first.startsWith('(') || first.startsWith('[')) first = splitArgs(balanced(first, 0))[0] ?? '';
+                const dotted = stringLiteral(first);
+                if (dotted !== null) return resolveModule(f.path, dotted, kit.roots, inventory);
+                return /^\w+$/.test(first) ? (modules.get(first) ?? null) : null;
+            };
+            const conf: UrlConf & { resolve: typeof resolve } = { file: f.path, routes: [], includes: [], resolve };
             for (const m of f.source.matchAll(/\b(path|re_path)\s*\(/g)) {
                 const args = splitArgs(balanced(f.source, (m.index as number) + m[0].length - 1));
                 const literal = stringLiteral(args[0] ?? '');
                 const view = args[1];
-                if (literal === null || view === undefined || /^include\s*\(/.test(view)) continue;
-                const routePath = m[1] === 're_path' ? literal.replace(/^\^/, '').replace(/\$$/, '') : literal;
-                const id = kit.route(f.path, 'ANY', joinRoute(routePath), at(m.index as number));
-                const target = resolve(view);
-                if (target) kit.emit(id, target, 'routes-to', 'route-table');
+                if (literal === null || view === undefined) continue;
+                const routePath = pattern(literal, m[1] === 're_path');
+                if (/^include\s*\(/.test(view)) {
+                    const child = includeTarget(view);
+                    if (child) conf.includes.push({ path: routePath, child });
+                    continue;
+                }
+                conf.routes.push({ path: routePath, view, line: at(m.index as number) });
+            }
+            confs.set(f.path, conf);
+        }
+        const included = new Set([...confs.values()].flatMap((c) => c.includes.map((i) => i.child)));
+        const prefixes = new Map<string, Set<string>>();
+        const walk = (file: string, prefix: string, stack: readonly string[]): void => {
+            const conf = confs.get(file);
+            if (!conf || stack.includes(file)) return;
+            const seen = prefixes.get(file) ?? new Set<string>();
+            if (seen.has(prefix)) return;
+            seen.add(prefix);
+            prefixes.set(file, seen);
+            for (const inc of conf.includes) walk(inc.child, joinRoute(prefix, inc.path), [...stack, file]);
+        };
+        for (const file of confs.keys()) if (!included.has(file)) walk(file, '', []);
+        for (const conf of confs.values()) {
+            for (const prefix of prefixes.get(conf.file) ?? []) {
+                for (const r of conf.routes) {
+                    const id = kit.route(conf.file, 'ANY', joinRoute(prefix, r.path), r.line);
+                    const target = conf.resolve(r.view);
+                    if (target) kit.emit(id, target, 'routes-to', 'route-table');
+                }
             }
         }
 

@@ -132,7 +132,7 @@ export const CATALOG: readonly CatalogRow[] = [
         status: 'partial',
         fixture: 'tests/fixtures/code-graph/django',
         usage: SO,
-        limits: 'include() prefixes and class-based view template_name are not followed.',
+        limits: 'Class-based view template_name and include() of an attribute (admin.site.urls) are not followed.',
     },
     {
         id: 'sqlalchemy',
