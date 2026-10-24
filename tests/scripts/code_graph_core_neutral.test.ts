@@ -94,4 +94,14 @@ describe('trust is an allowlist', () => {
         for (const via of [...STATED_RESOLVED_VIA, ...GUESS_RESOLVED_VIA]) expect(validateGraph(minimal(via)).ok, via).toBe(true);
         expect(validateGraph(minimal('from-a-plugin')).ok).toBe(false);
     });
+
+    it('an edge provider_id, when present, is a string', () => {
+        const withProvider = (provider_id: unknown): unknown => {
+            const g = minimal('import-specifier') as { edges: Record<string, unknown>[] };
+            return { ...g, edges: g.edges.map((e) => ({ ...e, provider_id })) };
+        };
+        expect(validateGraph(withProvider('laravel')).ok).toBe(true);
+        expect(validateGraph(minimal('import-specifier')).ok).toBe(true);
+        for (const bad of [42, null, { id: 'x' }]) expect(validateGraph(withProvider(bad)).ok, String(bad)).toBe(false);
+    });
 });

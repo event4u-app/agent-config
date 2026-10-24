@@ -70,6 +70,8 @@ export function validateGraph(g: unknown): ValidateResult {
         if (ee['provider'] === undefined) push(`edge[${i}].provider is required`);
         else if (!PROVIDERS.has(ee['provider'] as string))
             push(`edge[${i}].provider invalid: ${String(ee['provider'])}`);
+        if (ee['provider_id'] !== undefined && typeof ee['provider_id'] !== 'string')
+            push(`edge[${i}].provider_id must be a string`);
         // a source must be a known node; targets may be unresolved `symbol:` refs
         if (typeof ee['source'] === 'string' && !ids.has(ee['source'] as string))
             push(`edge[${i}].source is not a known node: ${String(ee['source'])}`);
