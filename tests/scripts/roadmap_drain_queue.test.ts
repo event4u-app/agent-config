@@ -417,4 +417,34 @@ describe('owner directive 2026-10-24 — timebox, WIP cap, session cap, owner sh
         expect(q.unsheeted.map((g) => g.blocker)).toEqual(['second-owner']);
         expect(buildQueue([s], NO_CLAIMS, TODAY).unsheeted).toEqual([]);
     });
+
+    it('an idle session holding no roadmap does not count toward the session cap', () => {
+        const a = screen('road-to-a', roadmap({ done: 1, open: ['- [ ] **2.1 Work.**'] }));
+        const claims: ClaimView = {
+            live: [
+                { session_id: 'x', roadmap_slug: 'road-to-x' },
+                { session_id: 'y', roadmap_slug: 'road-to-y' },
+                { session_id: 'idle', roadmap_slug: '' },
+            ],
+            dead: [],
+        };
+        const q = buildQueue([a], claims, TODAY, null);
+        expect(q.live_sessions).toBe(2);
+        expect(q.next?.slug).toBe('road-to-a');
+    });
+
+    it('a cross-file owner blocker is sheeted by roadmap#id or by its bare id', () => {
+        const owner = screen('road-to-o', roadmap({ done: 0, open: ['- [ ] x'], blockers: OWNER_BLOCKER }));
+        const s = screenRoadmap(
+            'road-to-a',
+            'agents/roadmaps/road-to-a.md',
+            roadmap({ done: 1, open: ['- [ ] **2.1 X.** <!-- blocked-by: road-to-o#needs-owner -->'] }),
+            TODAY,
+            (ref) => (ref === 'road-to-o#needs-owner' ? owner.blockers[0] : undefined),
+        );
+        expect(buildQueue([s], NO_CLAIMS, TODAY, null, { sheet: sheetIds('(`road-to-o#needs-owner`)') }).unsheeted).toEqual([]);
+        expect(buildQueue([s], NO_CLAIMS, TODAY, null, { sheet: sheetIds('(`needs-owner`)') }).unsheeted).toEqual([]);
+        expect(buildQueue([s], NO_CLAIMS, TODAY, null, { sheet: sheetIds('(`other`)') }).unsheeted).toHaveLength(1);
+    });
 });
+

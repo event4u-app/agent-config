@@ -5,7 +5,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { countSessionCalls, readDaily, renderDaily } from '../../src/scripts/_lib/estate_daily.js';
+import { countSessionCalls, currentTranscript, readDaily, renderDaily } from '../../src/scripts/_lib/estate_daily.js';
 
 let dir = '';
 beforeEach(() => {
@@ -33,11 +33,25 @@ describe('countSessionCalls', () => {
                 bash('npx vitest related src/x.ts --run'),
                 bash('npx vitest run', true),
                 bash('git status'),
+                bash('git grep -n vitest && cat vitest.config.ts'),
                 JSON.stringify({ type: 'assistant', message: { content: [{ type: 'tool_use', name: 'Read', input: { file_path: 'vitest' } }] } }),
                 'not json "tool_use"',
             ].join('\n'),
         );
-        expect(countSessionCalls(file)).toEqual({ transcript: file, bash: 7, council: 2, vitest: 3 });
+        expect(countSessionCalls(file)).toEqual({ transcript: file, bash: 8, council: 2, vitest: 3 });
+    });
+
+    it('finds the session transcript in a sibling project directory, and refuses to guess without an id', () => {
+        const projects = path.join(dir, 'projects');
+        const wt = path.join(projects, '-repo-wt-x');
+        const main = path.join(projects, '-repo');
+        fs.mkdirSync(wt, { recursive: true });
+        fs.mkdirSync(main, { recursive: true });
+        fs.writeFileSync(path.join(main, 'sid-1.jsonl'), '');
+        fs.writeFileSync(path.join(wt, 'other.jsonl'), '');
+        expect(currentTranscript(wt, 'sid-1')).toBe(path.join(main, 'sid-1.jsonl'));
+        expect(currentTranscript(wt, '')).toBeNull();
+        expect(currentTranscript(wt, 'absent')).toBeNull();
     });
 
     it('a missing transcript counts nothing', () => {
@@ -116,4 +130,20 @@ describe('readDaily', () => {
         expect(young.openBefore).toBeNull();
         expect(young.closed).toBe(0);
     });
+
+    it('an answered question does not cancel a new one, and a deleted roadmap closes nothing', () => {
+        const now = new Date('2026-10-24T20:00:00Z');
+        git(['init', '-q', '-b', 'main']);
+        write('agents/roadmaps/road-to-gone.md', roadmap([true, true, false]));
+        write('agents/owner-questions.md', '## Open\n\n### OQ-1 — a\n\n### OQ-2 — b\n\n## Answered\n');
+        commit('base', '2026-10-10T12:00:00Z');
+        fs.rmSync(path.join(dir, 'agents/roadmaps/road-to-gone.md'));
+        write('agents/roadmaps/road-to-keep.md', roadmap([false]));
+        write('agents/owner-questions.md', '## Open\n\n### OQ-3 — c\n\n## Answered\n\n| OQ-1 | x |\n| OQ-2 | y |\n');
+        commit('today', '2026-10-24T18:00:00Z');
+        const d = readDaily(dir, 'HEAD', now);
+        expect(d.ownerQuestionsAdded).toBe(1);
+        expect(d.closed).toBe(0);
+    });
 });
+

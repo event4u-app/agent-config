@@ -177,7 +177,7 @@ const ISO_DATE_RE = /\b(20\d\d-\d\d-\d\d)\b/g;
 const TIER_ORDER: Readonly<Record<string, number>> = { lightweight: 0, bounded: 1, structural: 2 };
 const PARTIAL_RE = /<!--[ \t]*partial:[ \t]*(\d+)/i;
 const STARTED_RE = /<!--[ \t]*started:[ \t]*(20\d\d-\d\d-\d\d)/i;
-const SHEET_ID_RE = /`([a-z0-9][a-z0-9-]*)`/g;
+const SHEET_ID_RE = /`([a-z0-9][a-z0-9-]*(?:#[a-z0-9-]+)?)`/g;
 
 export const WIP_CAP = 5;
 export const SESSION_CAP = 3;
@@ -469,7 +469,10 @@ export function buildQueue(
     for (const e of entries) {
         if (e.bucket === 'start') e.dispatchable = !startedCanMove && started < wipCap;
     }
-    const others = new Set(claims.live.map((r) => r.session_id).filter((id) => id !== ownSession));
+    // A session counts when it holds a roadmap; an idle interactive session does not.
+    const others = new Set(
+        claims.live.filter((r) => r.roadmap_slug).map((r) => r.session_id).filter((id) => id !== ownSession),
+    );
     const sessionHold = others.size >= sessionCap;
     let dispatch_hold: string | null = null;
     if (sessionHold && entries.some((e) => e.dispatchable)) {
@@ -507,7 +510,12 @@ export function buildQueue(
         owner_questions,
         council_questions,
         timeboxed,
-        unsheeted: sheet === null ? [] : owner_questions.filter((q) => !sheet.has(q.blocker)),
+        unsheeted:
+            sheet === null
+                ? []
+                : owner_questions.filter(
+                      (q) => !sheet.has(q.blocker) && !sheet.has(`${q.roadmap}#${q.blocker}`) && !sheet.has(q.blocker.split('#')[1] ?? ''),
+                  ),
         started,
         live_sessions: others.size,
         dispatch_hold,
@@ -652,7 +660,7 @@ export function renderText(q: DrainQueue): string {
         );
     }
     out.push(`next: ${q.next === null ? `none — ${q.dispatch_hold ?? 'nothing dispatchable'}` : `${q.next.slug} (${q.next.bucket})`}`);
-    out.push(`started ${String(q.started)}/${String(WIP_CAP)} · other live sessions ${String(q.live_sessions)}/${String(SESSION_CAP)}`);
+    out.push(`started ${String(q.started)} (cap ${String(WIP_CAP)}) · other sessions holding a roadmap ${String(q.live_sessions)} (cap ${String(SESSION_CAP)})`);
     out.push(`owner questions: ${q.owner_questions.length} · council questions: ${q.council_questions.length}`);
     for (const g of q.owner_questions) out.push(`  owner   ${g.roadmap}#${g.blocker}  (${g.steps} step(s))`);
     for (const g of q.council_questions) out.push(`  council ${g.roadmap}#${g.blocker}  (${g.steps} step(s))`);

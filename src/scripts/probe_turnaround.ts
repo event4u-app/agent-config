@@ -55,6 +55,7 @@
  * empty corpus under `--against-baseline`, or a class table whose rows do not
  * sum to its total · 2 = usage error.
  */
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -742,13 +743,22 @@ function reportSteps(files: readonly string[], store: string, json: boolean): nu
     return 0;
 }
 
+function tryRevParse(ref: string): boolean {
+    try {
+        execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', '--verify', '-q', ref], { stdio: 'ignore' });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
     const arg = (flag: string, dflt: string): string => {
         const i = argv.indexOf(flag);
         return i >= 0 && argv[i + 1] !== undefined ? (argv[i + 1] as string) : dflt;
     };
     for (const a of argv) {
-        if (a.startsWith('-') && !['--store', '--limit', '--json', '--against-baseline', '--include-current', '--workspace', '--git', '--ref', '--rules-dir', '--ci', '--queue-root', '--steps', '--daily', '--calls', '-h', '--help'].includes(a)) {
+        if (a.startsWith('-') && !['--store', '--limit', '--json', '--against-baseline', '--include-current', '--workspace', '--git', '--ref', '--rules-dir', '--ci', '--queue-root', '--steps', '--daily', '--calls', '--transcript', '-h', '--help'].includes(a)) {
             if (!argv.includes('--store') && !argv.includes('--limit')) {
                 process.stderr.write(`probe_turnaround: unrecognized argument: ${a}\n`);
                 return 2;
@@ -759,7 +769,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stdout.write(
             'usage: probe_turnaround [--store PATH] [--limit N] [--json] [--against-baseline] [--include-current]\n' +
                 '                        [--workspace PATH] [--git FROM..TO[,…]] [--ref REF] [--rules-dir PATH] [--ci FROM..TO[,…]]\n' +
-                '                        [--queue-root CHECKOUT] [--steps] [--daily] [--calls]\n',
+                '                        [--queue-root CHECKOUT] [--steps] [--daily] [--calls] [--transcript PATH]\n',
         );
         return 0;
     }
@@ -769,14 +779,18 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         const timeboxed = screenEstate(REPO_ROOT, now.toISOString().slice(0, 10))
             .flatMap((r) => r.steps)
             .filter((st) => st.blocker === 'timebox').length;
-        const d = readDaily(REPO_ROOT, arg('--ref', 'HEAD'), now, 24, timeboxed);
+        const ref = arg('--ref', tryRevParse('origin/main') ? 'origin/main' : 'HEAD');
+        const d = readDaily(REPO_ROOT, ref, now, 24, timeboxed);
         process.stdout.write(argv.includes('--json') ? `${JSON.stringify(d, null, 2)}\n` : renderDaily(d));
         return 0;
     }
     if (argv.includes('--calls')) {
-        const t = currentTranscript(store);
-        if (t === null) {
-            process.stdout.write(`probe:turnaround · no transcript at ${store} — no calls counted\n`);
+        const t = argv.includes('--transcript') ? arg('--transcript', '') : currentTranscript(store);
+        if (t === null || t === '' || !fs.existsSync(t)) {
+            process.stdout.write(
+                'probe:turnaround · no transcript for this session (CLAUDE_CODE_SESSION_ID unset or not found) — ' +
+                    'pass --transcript PATH; no calls counted\n',
+            );
             return 0;
         }
         const c = countSessionCalls(t);

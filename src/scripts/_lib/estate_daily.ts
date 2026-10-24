@@ -17,7 +17,7 @@ import { readEstateAtRef } from './turnaround_throughput.js';
 const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
 const TICK_ADDED = /^\+\s*- \[x\]/i;
 const TICK_REMOVED = /^-\s*- \[x\]/i;
-const OQ_HEADING = /^### OQ-\d+/gm;
+const OQ_HEADING = /^### (OQ-\d+)\b/gm;
 const OLD_DAYS = 7;
 export const OWNER_SHEET_REL = 'agents/owner-questions.md';
 
@@ -55,15 +55,20 @@ function tryGit(repoRoot: string, args: string[]): string | null {
 }
 
 function firstAdded(repoRoot: string, ref: string, rel: string): number | null {
-    const out = tryGit(repoRoot, ['log', ref, '--diff-filter=A', '--format=%ct', '--', rel]);
+    const out = tryGit(repoRoot, ['log', ref, '--follow', '--diff-filter=A', '--format=%ct', '--', rel]);
     const last = out?.trim().split('\n').filter((l) => l !== '').pop();
     return last === undefined ? null : Number(last) * 1000;
 }
 
-function ownerQuestions(repoRoot: string, rev: string | null): number {
-    if (rev === null) return 0;
-    const text = tryGit(repoRoot, ['show', `${rev}:${OWNER_SHEET_REL}`]);
-    return text === null ? 0 : (text.match(OQ_HEADING) ?? []).length;
+/**
+ * Open questions at `ref` whose id the sheet at `base` never mentioned. Answering
+ * a question moves it out of `## Open`, so a difference of heading counts would
+ * let an answer cancel an addition.
+ */
+function ownerQuestionsAdded(repoRoot: string, ref: string, base: string | null): number {
+    const now = tryGit(repoRoot, ['show', `${ref}:${OWNER_SHEET_REL}`]) ?? '';
+    const before = base === null ? '' : (tryGit(repoRoot, ['show', `${base}:${OWNER_SHEET_REL}`]) ?? '');
+    return [...now.matchAll(OQ_HEADING)].filter((m) => !new RegExp(`\\b${m[1] ?? ''}\\b`).test(before)).length;
 }
 
 /** The five evening figures over the last `hours` on `ref`. `timeboxed` is supplied by the caller. */
@@ -77,7 +82,8 @@ export function readDaily(repoRoot: string, ref = 'HEAD', now = new Date(), hour
     let closedOld = 0;
     const patch = git(repoRoot, ['diff', '-M', '-U0', '--no-color', from, ref, '--', 'agents/roadmaps']);
     for (const chunk of patch.split(/^diff --git /m).slice(1)) {
-        if (/^new file mode/m.test(chunk)) continue;
+        // A file created in the window is authoring; a deleted one closed nothing.
+        if (/^(?:new|deleted) file mode/m.test(chunk)) continue;
         const src = /^--- a\/(.+)$/m.exec(chunk)?.[1];
         let net = 0;
         for (const l of chunk.split('\n')) {
@@ -113,7 +119,7 @@ export function readDaily(repoRoot: string, ref = 'HEAD', now = new Date(), hour
         srcLines: lines.src,
         testLines: lines.tests,
         timeboxed,
-        ownerQuestionsAdded: Math.max(0, ownerQuestions(repoRoot, ref) - ownerQuestions(repoRoot, base)),
+        ownerQuestionsAdded: ownerQuestionsAdded(repoRoot, ref, base),
     };
 }
 
@@ -139,12 +145,13 @@ export interface SessionCalls {
 }
 
 const COUNCIL_RE = /\bcouncil_cli\s+(?:run|ask)\b|\bagent-config\s+council:(?!status\b)[a-z-]+/;
-const VITEST_RE = /\bvitest\b/;
+const VITEST_RE = /(?:\b(?:npx|pnpm|yarn|bunx)\s+vitest\b|(?:^|[;&|(]\s*)vitest\s|\bnpm\s+(?:run\s+)?test\b)/;
 
 /**
  * Bash calls in one transcript that ran the council or vitest, each call counted
- * once however many segments it chains. Subagent (sidechain) calls are counted:
- * they spend the same budget as the session that spawned them.
+ * once however many segments it chains. Subagent calls are counted when the host
+ * writes them into the same transcript (sidechain rows); a host that files
+ * subagents separately leaves them out.
  */
 export function countSessionCalls(transcript: string): SessionCalls {
     const out: SessionCalls = { transcript, bash: 0, council: 0, vitest: 0 };
@@ -176,20 +183,26 @@ export function countSessionCalls(transcript: string): SessionCalls {
     return out;
 }
 
-/** The current session's transcript: `CLAUDE_CODE_SESSION_ID` when exported, else the newest file. */
+/**
+ * The transcript of session `sessionId`: in `store` first, then in any sibling
+ * project directory — a session started in one checkout and working in a worktree
+ * files its transcript under the checkout's directory. Without a session id there
+ * is no answer: the newest file is another session's as often as this one's.
+ */
 export function currentTranscript(store: string, sessionId = process.env['CLAUDE_CODE_SESSION_ID']): string | null {
-    if (sessionId !== undefined && sessionId !== '') {
-        const p = path.join(store, `${sessionId}.jsonl`);
-        if (fs.existsSync(p)) return p;
-    }
-    let names: string[] = [];
+    if (sessionId === undefined || sessionId === '') return null;
+    const name = `${sessionId}.jsonl`;
+    if (fs.existsSync(path.join(store, name))) return path.join(store, name);
+    const projects = path.dirname(store);
+    let dirs: string[] = [];
     try {
-        names = fs.readdirSync(store).filter((f) => f.endsWith('.jsonl'));
+        dirs = fs.readdirSync(projects);
     } catch {
         return null;
     }
-    const newest = names
-        .map((f) => ({ f, m: fs.statSync(path.join(store, f)).mtimeMs }))
-        .sort((a, b) => b.m - a.m)[0];
-    return newest === undefined ? null : path.join(store, newest.f);
+    for (const d of dirs) {
+        const p = path.join(projects, d, name);
+        if (fs.existsSync(p)) return p;
+    }
+    return null;
 }

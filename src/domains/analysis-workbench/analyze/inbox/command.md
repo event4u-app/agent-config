@@ -1104,9 +1104,9 @@ the repetition tally in either direction.
 **Work in progress is capped at five** (owner directive 2026-10-24,
 `agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`). A
 surviving finding first lands on the roadmap that owns it (Phase 5). One with no
-owner is written to `agents/roadmaps/later/` while five or more roadmaps are
-active, and is pulled when an active one closes; an active file only when the
-operator asks for one in the invocation. `check_estate_count` refuses an
+owner is written to `agents/roadmaps/later/` and is pulled when an active roadmap
+closes — an inbox round creates no active roadmap. The one exception is an
+operator who asks for an active roadmap in the invocation itself. `check_estate_count` refuses an
 unrecorded exemption above the cap.
 
 Per surviving file: a roadmap in `agents/roadmaps/` (or `later/`, above) via
