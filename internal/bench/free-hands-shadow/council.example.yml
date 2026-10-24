@@ -4,6 +4,12 @@
 enabled: true
 cost_budget:
   max_total_usd: 0
+# The local paid-CLI counter defaults to 50 calls a day; one window (666 paid
+# calls) plus its audit (136) needs more. A count, not spend: the seat is a
+# subscription CLI and the budget above stays 0.
+cli_call_budget:
+  max_calls_per_day:
+    anthropic: 1000
 members:
   anthropic:
     enabled: true

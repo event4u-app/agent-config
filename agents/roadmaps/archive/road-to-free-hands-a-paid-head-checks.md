@@ -264,12 +264,13 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   verify: both claim rows exist in `docs/CLAIMS.md` with bars before the first free call, and
   `check_claims` is green.
   Done 2026-10-22 (commits 449f03cff0, 25df57a814): both claims in `docs/CLAIMS.md` with bars, `check_claims` exit 0; the ask line now writes `route_billing` and `verify_tokens` (3.3), so the axis has a source.
-- [ ] **6.2 Shadow:** a free route answers in parallel, the paid answer is used, both are
+- [x] **6.2 Shadow:** a free route answers in parallel, the paid answer is used, both are
   verified; the call budget recorded in decision A5, public-artifact corpus first.
   verify: the shadow ledger shows a free and a paid answer with a verify result for every call.
   Built 2026-10-22 (e7f38f239a): `free_hand_shadow.test.ts` ledgers both answers with a verify result.
   Wired and harnessed 2026-10-22, window not run: `ask_transport` calls `shadowAsk` (a45480aaf4, 32fc4978c8); the settings block now builds `base_url` members (e9312bad3d); PREREG 1bc9c41c5d (amended 6dc334d39c before any call); harness `internal/bench/free-hands-shadow/` (d1489529b8, 033fe5fbfb). The host's permission classifier refused sending repository content to the external route from this session. Closes when an operator runs the harness and files the evidence.
   Window running since 2026-10-23 (owner approval after a payload audit); two live-route defects fixed red-first first (A16; pacing from the reply).
+  Done 2026-10-24: 666 calls, each with a paid and a free answer and a deterministic verdict; classify meets both bars, extract misses the quality bar (free 7.8 %, 23 of its 26 failures are route 5xx). Evidence `agents/evidence/analysis/free-hands-shadow-window-20261023.md`, summary `internal/bench/reports/free-hands-shadow.md`.
 - [x] **6.3 Flip per kind**, only for kinds that clear both bars; a kind that later breaches the <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/continuity-surface.json -->
   escalation kill reverts automatically and the reversion is recorded in the claim row.
   verify: a seeded breach above the kill flips the kind back to the paid route.
@@ -361,9 +362,10 @@ at 0.3; the `llm-provider-knowledge` skill's route-don't-cache stance.
   Done 2026-10-22: 1.1, `ec9df20078`.
 - [x] AC-2 Bare `hf_` / `nvapi-` / `r8_` are masked 50/50 (1.2).
   Done 2026-10-22: 1.2, `06777113cc`, `9725442e47`.
-- [ ] AC-3 A free route serves a typed rung-0.5 call, chosen by kind, class and quota (3.2).
+- [x] AC-3 A free route serves a typed rung-0.5 call, chosen by kind, class and quota (3.2).
   Built 2026-10-22, open: served end to end by a loopback stub through `askOnce` → `chooseRoute` (3.2). No free route is configured on the maintainer's host — adding one needs an account or key outside this run — so no live free call has been served.
   2026-10-22, second pass: a keyless first-party route is catalogued and attested (2.3), the settings path now builds it (e9312bad3d), and `run.ts --ac3-demo` serves one typed classify ask on it through the production chooser and verifies it deterministically (tested against stubs). The live call was refused by the host's permission classifier for this session. Closes on the first live `--ac3-demo` run by an operator.
+  Done 2026-10-24: live `--ac3-demo`, one classify ask served by `hands` on `free-quota` (`gpt-oss-20b`), verdict pass; `agents/evidence/analysis/free-hands-shadow-window-20261023.md` § AC-3.
 - [x] AC-4 No free route holds a head role (4.1, K1).
   Done 2026-10-22: 4.1, `seat_policy_and_ceiling.test.ts`.
 - [x] AC-5 n_eff is reported beside κ on every jury run (4.3).

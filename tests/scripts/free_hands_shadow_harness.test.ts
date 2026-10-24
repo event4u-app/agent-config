@@ -24,6 +24,8 @@ import {
     extractSpec,
     frontmatterOf,
     inconsistencyOf,
+    MEASURED_KINDS,
+    PER_KIND,
     type Corpus,
     type CorpusItem,
 } from '../../internal/bench/free-hands-shadow/corpus.js';
@@ -504,5 +506,12 @@ describe('the paid arm is subscription-only', () => {
         expect(hands.route?.base_url).toBe('https://text.pollinations.ai/openai');
         const t = resolveRouteTransport({ name: 'hands', route: hands.route!, model: 'any', contentClass: 'public-artifact' });
         expect(t.billing).toBe('free-quota');
+    });
+
+    it('the documented run-local config lifts the daily paid-CLI cap above one full window plus its audit', () => {
+        const cfg = load_council_config(path.join(REPO, 'internal/bench/free-hands-shadow/council.example.yml'));
+        const window = MEASURED_KINDS.length * PER_KIND;
+        const audit = 2 * MEASURED_KINDS.length * Math.ceil(PER_KIND * 0.1);
+        expect(cfg.cli_call_budget.max_calls_per_day.get('anthropic')).toBeGreaterThan(window + audit);
     });
 });
