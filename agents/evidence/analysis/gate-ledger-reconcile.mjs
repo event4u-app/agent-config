@@ -75,6 +75,8 @@ function realIo() {
 export const BLOCKING_EFFECTS = ['error-exit-nonzero', 'throw', 'exit-code-only'];
 export const NON_BLOCKING_EFFECTS = ['warning-exit-zero'];
 export const FLAG_EFFECT = 'warning-exit-nonzero-only-with-flag';
+// Flags are compared as exact tokens, never as substrings.
+const flagTokens = (text) => new Set(text.match(/(?<![\w-])--[a-z][a-z0-9-]*(?![\w-])/g) ?? []);
 
 function section(text, heading) {
     const start = text.indexOf(heading);
@@ -256,10 +258,15 @@ export function reconcile(io) {
         for (const c of branchInv.checks.filter((x) => x.check === r.check)) {
             for (const b of c.branches) {
                 if (!String(mapping[c.check]?.[b.id] ?? '').split('+').includes(r.id)) continue;
-                const preds = (b.predicates ?? []).join(' ');
-                if (mode !== null && !preds.includes(mode)) failures.push(`mode: ${r.id} is the ${mode} mode but reaching branch ${b.id} names no ${mode} in its predicates`);
-                if (b.effect === FLAG_EFFECT && !/--[a-z]/.test(preds)) failures.push(`mode: flag-only branch ${b.id} names no flag in its predicates`);
-                if ((BLOCKING_EFFECTS.includes(b.effect) && !(b.effect === 'exit-code-only' && b.exit_code === 0)) || (b.effect === FLAG_EFFECT && mode !== null && preds.includes(mode))) blocking.push(b.id);
+                const tokens = flagTokens((b.predicates ?? []).join(' '));
+                if (mode !== null && !tokens.has(mode)) failures.push(`mode: ${r.id} is the ${mode} mode but reaching branch ${b.id} names no ${mode} token in its predicates`);
+                const flag = grounds.flag_branches?.[`${c.check} ${b.id}`];
+                if (b.effect === FLAG_EFFECT) {
+                    if (flag === undefined) failures.push(`mode: flag-only branch ${b.id} has no structured flag in ${FILES.grounds}`);
+                    else if (!tokens.has(flag)) failures.push(`mode: flag-only branch ${b.id} declares ${flag}, absent as a token from its predicates`);
+                    else if (!io.read(`src/scripts/${c.check}.ts`).includes(`'${flag}'`) && !io.read(`src/scripts/${c.check}.ts`).includes(`"${flag}"`)) failures.push(`mode: flag-only branch ${b.id} declares ${flag}, absent from ${c.check}`);
+                }
+                if ((BLOCKING_EFFECTS.includes(b.effect) && !(b.effect === 'exit-code-only' && b.exit_code === 0)) || (b.effect === FLAG_EFFECT && mode !== null && flag === mode)) blocking.push(b.id);
                 else if (NON_BLOCKING_EFFECTS.includes(b.effect) || b.effect === FLAG_EFFECT || (b.effect === 'exit-code-only' && b.exit_code === 0)) nonBlocking.push(b.id);
                 else failures.push(`class predicate: ${r.id} is reached by ${b.id} with unknown effect ${b.effect}`);
             }
@@ -301,6 +308,11 @@ export function reconcile(io) {
     }
     for (const id of Object.keys(grounds.waivers ?? {})) if (!aspects.some((a) => a.id === id && a.derived !== a.recorded)) failures.push(`stale waiver ${id}: the row no longer diverges`);
     for (const id of Object.keys(modes)) if (!binding.some((r) => r.id === id)) failures.push(`mode names ${id}, which is not a binding row`);
+    for (const key of Object.keys(grounds.flag_branches ?? {})) {
+        const [check, bid] = key.split(' ');
+        const b = branchInv.checks.find((c) => c.check === check)?.branches.find((x) => x.id === bid);
+        if (b === undefined || b.effect !== FLAG_EFFECT) failures.push(`stale flag branch ${key}: not a flag-only branch of the inventory`);
+    }
     for (const [check, m] of Object.entries(mapping)) {
         const known = new Set((branchInv.checks.find((c) => c.check === check)?.branches ?? []).map((b) => b.id));
         for (const bid of Object.keys(m)) if (!known.has(bid)) failures.push(`mapping names ${check} ${bid}, absent from the inventory`);
@@ -486,6 +498,9 @@ function selfTest() {
         ['an invariant row reached only by a non-blocking branch', json(FILES.branches, (j) => { j.checks.find((c) => c.check === 'check_augment_description_cap').branches.find((b) => b.id === 'c4-over-cap').effect = 'warning-exit-zero'; return j; }), /class predicate: R4\.a is recorded invariant but its reaching branches derive observation/],
         ['a flag-mode row loses its structured mode', json(FILES.grounds, (j) => { delete j.modes['R11.f']; return j; }), /mode: R11\.f says "in that mode" but has no structured mode/],
         ['a structured mode the class cell does not name', mutated(io, FILES.ledger, (t) => t.replace('| **invariant** in that mode | warnings fail with `--strict` |', '| **invariant** | warnings fail with `--strict` |')), /mode: R11\.f has structured mode --strict but its class cell names no mode/],
+        ['a mode matched only as a substring does not count', json(FILES.branches, (j) => { const b = j.checks.find((c) => c.check === 'check_public_links').branches.find((x) => x.id === 'c11-beta-marker'); b.predicates = b.predicates.map((p) => p.replaceAll('--strict', '--strictly')); return j; }), /mode: R11\.f is the --strict mode but reaching branch c11-beta-marker names no --strict token/],
+        ['a flag-only branch without a structured flag is refused', json(FILES.grounds, (j) => { delete j.flag_branches['check_public_links c11-beta-marker']; return j; }), /flag-only branch c11-beta-marker has no structured flag/],
+        ['a flag branch declaring another flag does not block the mode row', json(FILES.grounds, (j) => { j.flag_branches['check_public_links c11-beta-marker'] = '--list'; return j; }), /class predicate: R11\.f is recorded invariant but its reaching branches derive observation/],
         ['a mode the reaching branch does not name', json(FILES.grounds, (j) => { j.modes['R11.f'] = '--global'; return j; }), /mode: R11\.f is the --global mode but reaching branch c11-beta-marker names no --global/],
         ['a divergence without a waiver is refused', diverged(io), /class predicate: R10\.h is recorded observation but its reaching branches derive invariant/],
         ['an unapproved waiver is refused', diverged(withWaiver({ ...WAIVER, approver: null, directive: null, expiry: '2099-12-31' })), /R10\.h .* waiver is refused: no owner approval/],

@@ -837,6 +837,23 @@ together.
 
 aspects 49 · derived 49 · waived 0 · refused 0
 
+## Round 26's findings — revision 22
+
+Round 26 was the renewal round D38 allows
+(`agents/evidence/council/gate-classification-renewal-20261024.md`). It returned
+**do not renew** and **item 4 not met**, both 2/2. Revision 22 answers each
+named defect.
+
+| Finding | Revision 22 |
+|---|---|
+| Mode matched as a substring (`preds.includes(mode)`) and as any flag (`/--[a-z]/`) | Flags are compared as exact tokens. Each flag-only branch carries one structured flag in `flag_branches` (3 branches). The flag must be a token of its predicates and a literal in the check's source. The branch blocks only for a row whose mode is that flag. Three self-test cases cover a substring, a missing flag and a foreign flag; the substring case was seen red. |
+| Effects are trusted, not derived from code | The site scanner now refuses a hard exit site (non-zero return, exit or exit code) that lies only in branches declaring a non-blocking effect. There are 0 such contradictions, and a self-test case was seen red. It also reports how far the effects are code-confirmed: **63 of 167** blocking branches contain a hard exit or throw site. The other 104 report through an aggregated exit, which no syntactic scan can attribute. They rest on the independent session's reading, and the record says so rather than claiming a derivation. |
+| No operational state or rollback for D46 | The `⏳ NOT MEASURED YET` state is distinct, and two revert triggers are written into `gate-7-2-reliance-rules-20261024.md`. The `tests.yml` comment that still described exit 1 is corrected. |
+| The renewal unit carries the `--enforce` wiring change unexamined | The scope of those two wiring pins is stated: they attest that no Phase 7 invocation moved, and nothing about `check_step_production_reach`. |
+
+The pins are not renewed. That needs another council round on the cumulative
+diff.
+
 ## Source-to-record completeness, mechanically — revision 14
 
 Round 18 (D42) was 2/2 and convergent. Both seats said the rerun proves that

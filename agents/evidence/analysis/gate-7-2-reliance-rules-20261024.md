@@ -60,3 +60,24 @@ The invocation inventory, 7.2's first item, is done:
   consumable on its own reading. It goes through the re-attestation above.
   The files are the reconciler, the site scanner, the harness, the
   vocabulary, the dispositions, or a pin line.
+- *D46's operational state and rollback (round 26).* An absent composite
+  store exits 0 and prints `⏳ NOT MEASURED YET`, which is distinct from
+  `✅ ARMABLE` and from `⏳ NOT YET`. In CI the absent case cannot hide a
+  failed write. `bench_hook_latency --gate --record-composite`, the step
+  before it in `tests.yml`, fails the job when the bench fails. The arming
+  step is `continue-on-error` either way. D46 is reverted, back to exit 1 on an
+  absent store, when either of these holds:
+  1. a CI run's bench step passes and its composite store is still absent.
+     That is a silent write failure the absent-store exit 0 would mask;
+  2. the store stays absent across the 10 CI runs the arming floor needs,
+     which means "not measured yet" has become permanent rather than a
+     bootstrap state.
+
+  The accountable role is the one named under *Owner (D39)* above.
+- *Wiring pins (round 26).* `taskfiles/ci-fast.yml` and
+  `.github/workflows/rule-backstops.yml` are pinned because they wire Phase 7
+  checks. Their trunk change since revision 16 only switches
+  `check_step_production_reach` to `--enforce`. That script is outside the 16
+  checks, and no Phase 7 check's invocation changed. Renewing these pins attests
+  only that no Phase 7 invocation moved. It does not attest the
+  `check_step_production_reach` enforcement, which its own roadmap owns.

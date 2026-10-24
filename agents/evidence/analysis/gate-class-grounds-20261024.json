@@ -1,5 +1,5 @@
 {
-  "_doc": "Structured grounds the independent branch inventory cannot supply. `modes`: the invocation flag a row speaks of; each is checked against the check's source and against the predicates of every branch that reaches the row. `waivers`: a row whose semantic class differs from its derived behaviour; a waiver is reported as waived, never as satisfaction, and is refused unless: its milestone is an open step of a roadmap that exists (a ticked step lapses it); its issue text occurs in the named file; its approver is `owner` with a directive tracked in git that names the row; and its expiry is a real, unexpired date. `structured`: the baseline (snapshot) or bound, risk owner and expiry (tolerance) such a row carries in addition to blocking behaviour; no such row exists.",
+  "_doc": "Structured grounds the independent branch inventory cannot supply. `modes`: the invocation flag a row speaks of; each is checked against the check's source and against the predicates of every branch that reaches the row. `waivers`: a row whose semantic class differs from its derived behaviour; a waiver is reported as waived, never as satisfaction, and is refused unless: its milestone is an open step of a roadmap that exists (a ticked step lapses it); its issue text occurs in the named file; its approver is `owner` with a directive tracked in git that names the row; and its expiry is a real, unexpired date. `structured`: the baseline (snapshot) or bound, risk owner and expiry (tolerance) such a row carries in addition to blocking behaviour; no such row exists. `flag_branches`: for each branch whose effect is a failure only with a flag, the one flag that makes it fail; it must occur as an exact token in the branch's predicates and as a literal in the check's source, and the branch blocks only for a row whose mode is that flag.",
   "modes": {
     "R8.c": "--require-complete",
     "R10.d": "--check-urls",
@@ -12,6 +12,11 @@
     "R10.o": "--global",
     "R11.f": "--strict",
     "R12.d": "--strict"
+  },
+  "flag_branches": {
+    "check_token_quality_golden c8-require-complete": "--require-complete",
+    "check_public_links c11-beta-marker": "--strict",
+    "lint_agents_layout c12-consumer-warning": "--strict"
   },
   "waivers": {},
   "structured": {}
