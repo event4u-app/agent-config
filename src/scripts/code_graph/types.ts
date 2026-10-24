@@ -104,6 +104,8 @@ export type ResolvedVia =
     | 'fs-route'
     /** Stated by a compiler-grade SCIP index the project ships (`scip_reader.ts`). */
     | 'compiler-index'
+    /** C#: the one type of that name in the namespaces the file can see (its own, their parents, its `using`s). */
+    | 'namespace-scope'
     | 'test-import'
     | 'name-lookup'
     | 'dynamic'
@@ -159,7 +161,7 @@ export type EdgeProvider =
 // One space-separated string per list: this module ships in the hook bundle,
 // where an array literal costs a line per entry. `Words` splits it in the type.
 const STATED_WORDS =
-    'same-file import-specifier path-alias psr4 route-table directive-scan schema-call orm-relation di-binding compiler-index test-import literal-path literal-dotted fs-route' as const;
+    'same-file import-specifier path-alias psr4 route-table directive-scan schema-call orm-relation di-binding compiler-index namespace-scope test-import literal-path literal-dotted fs-route' as const;
 const GUESS_WORDS = 'name-lookup dynamic foreign' as const;
 type Words<S extends string> = S extends `${infer H} ${infer T}` ? H | Words<T> : S;
 /** Mechanisms in neither list; must be `never` (a test asserts it). */

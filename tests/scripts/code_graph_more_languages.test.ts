@@ -55,6 +55,18 @@ beforeAll(async () => {
     write('cs/Shared/A.cs', 'namespace App.Shared { public class Clock { } }\n');
     write('cs/Shared/B.cs', 'namespace App.Shared { public class Timer { } }\n');
     write('cs/Use.cs', 'using App.Shared;\nnamespace App { public class Use { public void Run() { var c = new Clock(); } } }\n');
+    // C# namespace scope (carried 2.2)
+    write('cs/Shared/C.cs', 'namespace App.Shared { public interface IClock { } }\n');
+    write('cs/Orders/Order.cs', 'namespace App.Orders;\n\npublic class Order { }\n');
+    write(
+        'cs/Orders/OrderService.cs',
+        'using App.Shared;\n\nnamespace App.Orders;\n\npublic class OrderService\n{\n    private readonly IClock _clock;\n    public OrderService(IClock clock, int retries) { _clock = clock; }\n    public List<Order> Recent { get; } = new();\n    public Order Make() => new Order();\n}\n',
+    );
+    write('cs/Dup/X1.cs', 'namespace App.Dup1 { public class Thing { } }\n');
+    write('cs/Dup/X2.cs', 'namespace App.Dup2 { public class Thing { } }\n');
+    write('cs/UseDup.cs', 'using App.Dup1;\nusing App.Dup2;\nnamespace App { public class UseDup { public void Run() { var t = new Thing(); } } }\n');
+    write('cs/Hidden/H.cs', 'namespace App.Hidden { public class Secret { } }\n');
+    write('cs/UseHidden.cs', 'namespace Other { public class UseHidden { public void Run() { var s = new Secret(); } } }\n');
     ({ graph } = await buildFromRepo(root, null));
 });
 
@@ -152,6 +164,31 @@ describe('module lookup refuses rather than guesses', () => {
         expect(resolveLangModule('java', 'z.java', 'a.b.C', files)).toEqual([]);
     });
     it('keeps the whole graph schema-valid', () => {
+        expect(validateGraph(JSON.parse(JSON.stringify(graph))).ok).toBe(true);
+    });
+});
+
+describe('csharp namespace scope (carried 2.2)', () => {
+    it('resolves a type through a using whose namespace several files declare', () => {
+        expect(edge('cs/Use.cs#Use::Run', 'calls', 'cs/Shared/A.cs#Clock')?.resolved_via).toBe('namespace-scope');
+    });
+    it('resolves a type declared by another file of the same namespace, without a using', () => {
+        expect(edge('cs/Orders/OrderService.cs#OrderService::Make', 'calls', 'cs/Orders/Order.cs#Order')?.resolved_via).toBe('namespace-scope');
+    });
+    it('records field, parameter and generic-argument types as uses', () => {
+        expect(edge('cs/Orders/OrderService.cs#OrderService', 'uses', 'cs/Shared/C.cs#IClock')?.resolved_via).toBe('namespace-scope');
+        expect(edge('cs/Orders/OrderService.cs#OrderService::OrderService', 'uses', 'cs/Shared/C.cs#IClock')?.resolved_via).toBe('namespace-scope');
+        expect(edge('cs/Orders/OrderService.cs#OrderService', 'uses', 'cs/Orders/Order.cs#Order')?.resolved_via).toBe('namespace-scope');
+        // A predefined type names no project file.
+        expect(graph.edges.some((e) => e.relation === 'uses' && e.target.includes('int'))).toBe(false);
+    });
+    it('claims nothing for a name two visible namespaces declare, or a namespace the file cannot see', () => {
+        const dup = graph.edges.find((e) => e.source === 'cs/UseDup.cs#UseDup::Run' && e.relation === 'calls');
+        expect(dup?.resolved_via).not.toBe('namespace-scope');
+        const hidden = graph.edges.find((e) => e.source === 'cs/UseHidden.cs#UseHidden::Run' && e.relation === 'calls');
+        expect(hidden?.resolved_via).not.toBe('namespace-scope');
+    });
+    it('keeps the graph valid', () => {
         expect(validateGraph(JSON.parse(JSON.stringify(graph))).ok).toBe(true);
     });
 });

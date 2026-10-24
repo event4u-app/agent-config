@@ -330,12 +330,25 @@ export function extractCSharp(root: TsNode, file: string, out: FileExtract): voi
         enum_declaration: 'enum',
     };
     const namespaces: string[] = [];
+    const typeNamespaces: Record<string, string> = {};
+    /** Every project-type name a type expression mentions: `List<Order>` names `List` and `Order`; `int` names none. */
+    const typeNames = (t: TsNode | null, acc: string[] = []): string[] => {
+        if (!t || t.type === 'predefined_type') return acc;
+        if (t.type === 'identifier' || t.type === 'qualified_name') return [...acc, csType(t)];
+        if (t.type === 'generic_name') acc.push(csType(t));
+        for (const c of namedChildren(t)) if (t.type !== 'generic_name' || c.type === 'type_argument_list') acc = typeNames(c, acc);
+        return acc;
+    };
+    const usesTypes = (sourceId: string, t: TsNode | null): void => {
+        for (const nm of new Set(typeNames(t))) out.rawEdges.push({ sourceId, relation: 'uses', targetName: nm, confidenceHint: 'EXTRACTED' });
+    };
     const walk = (n: TsNode, classId: string | null, scopeId: string, ns = ''): void => {
         const kind = TYPES[n.type];
         if (kind) {
             const nm = nameField(n) ?? '<anon>';
             const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
             out.nodes.push({ id, label: nm, kind, source_file: file, source_location: loc(n) });
+            if (!classId && ns) typeNamespaces[id] = ns;
             out.rawEdges.push({ sourceId: classId ?? file, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
             for (const c of namedChildren(n)) {
                 if (c.type !== 'base_list') continue;
@@ -376,12 +389,21 @@ export function extractCSharp(root: TsNode, file: string, out: FileExtract): voi
                 }
                 return;
             }
+            case 'field_declaration':
+            case 'property_declaration': {
+                const decl = n.type === 'field_declaration' ? namedChildren(n).find((c) => c.type === 'variable_declaration') : n;
+                if (classId) usesTypes(classId, decl?.childForFieldName('type') ?? null);
+                break;
+            }
             case 'method_declaration':
             case 'constructor_declaration': {
                 const nm = nameField(n) ?? '<anon>';
                 const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
                 out.nodes.push({ id, label: nm, kind: 'method', source_file: file, source_location: loc(n) });
                 out.rawEdges.push({ sourceId: classId ?? file, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
+                usesTypes(id, n.childForFieldName('returns') ?? n.childForFieldName('type'));
+                for (const c of namedChildren(n))
+                    if (c.type === 'parameter_list') for (const p of namedChildren(c)) if (p.type === 'parameter') usesTypes(id, p.childForFieldName('type'));
                 for (const c of namedChildren(n)) if (c.type === 'block' || c.type === 'arrow_expression_clause') walk(c, classId, id, ns);
                 return;
             }
@@ -415,4 +437,5 @@ export function extractCSharp(root: TsNode, file: string, out: FileExtract): voi
     };
     walk(root, null, file);
     out.namespaces = namespaces;
+    out.typeNamespaces = typeNamespaces;
 }
