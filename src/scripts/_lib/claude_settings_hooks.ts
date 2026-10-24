@@ -30,6 +30,7 @@
  * (condense.ts) uses for the plugin's hooks/hooks.json.
  */
 
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -89,9 +90,51 @@ export type ClaudeHookMatrix = Record<string, string>;
  * generate_plugin_hooks() uses, so settings-registered hooks and the plugin's
  * hooks.json can never drift from each other.
  */
-export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatrix {
+/** `2.1.308 (Claude Code)` → `[2, 1, 308]`; null for anything without a leading x.y.z. */
+export function parse_host_version(raw: string | null | undefined): number[] | null {
+    const m = /^\s*(\d+)\.(\d+)\.(\d+)/.exec(raw ?? '');
+    return m === null ? null : [Number(m[1]), Number(m[2]), Number(m[3])];
+}
+
+/** The installed host's `claude --version` line, or null when it cannot be read. */
+export function claude_host_version(): string | null {
+    const res = spawnSync('claude', ['--version'], { encoding: 'utf-8', timeout: 5_000, stdio: ['ignore', 'pipe', 'ignore'] });
+    return res.status === 0 && typeof res.stdout === 'string' && res.stdout.trim() !== '' ? res.stdout.trim() : null;
+}
+
+function _below(have: number[], need: number[]): boolean {
+    for (let i = 0; i < 3; i++) {
+        if ((have[i] ?? 0) !== (need[i] ?? 0)) return (have[i] ?? 0) < (need[i] ?? 0);
+    }
+    return false;
+}
+
+/** Claude native event → the oldest host version recorded as accepting it. */
+export function min_host_versions(manifest_path: string): Record<string, string> {
+    return _gates((_yaml_parse(fs.readFileSync(manifest_path, 'utf8')) ?? {}) as Record<string, unknown>);
+}
+
+function _gates(manifest: Record<string, unknown>): Record<string, string> {
+    const all = (manifest['native_event_min_host_version'] ?? {}) as Record<string, unknown>;
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries((all['claude'] ?? {}) as Record<string, unknown>)) out[k] = String(v);
+    return out;
+}
+
+/**
+ * `hostVersion` is the installed host's `--version` line. A gated event is left
+ * out only when that version is KNOWN to be older than the recorded one; an
+ * unknown version keeps it, because the static plugin `hooks.json` has no host
+ * to ask and the dispatcher treats an unfired event as nothing.
+ */
+export function build_claude_hook_matrix(
+    manifest_path: string,
+    opts: { hostVersion?: string | null } = {},
+): ClaudeHookMatrix {
     const raw = fs.readFileSync(manifest_path, 'utf8');
     const manifest = (_yaml_parse(raw) ?? {}) as Record<string, unknown>;
+    const have = parse_host_version(opts.hostVersion);
+    const gates = _gates(manifest);
     const hook_spec = (manifest['schema_version'] as unknown) ?? 1;
     const platforms = (manifest['platforms'] ?? {}) as Record<string, unknown>;
     const claude_events = ((platforms['claude'] ?? {}) as Record<string, unknown>) || {};
@@ -108,6 +151,8 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
     const matrix: ClaudeHookMatrix = {};
     for (const [native, ac_raw] of Object.entries(aliases)) {
         const ac_event = String(ac_raw);
+        const need = parse_host_version(gates[native]);
+        if (have !== null && need !== null && _below(have, need)) continue;
         const concerns = claude_events[ac_event];
         if (!concerns || (Array.isArray(concerns) && concerns.length === 0)) continue;
         // Only package-owned dispatchers are trusted (17.0.0 finding
@@ -298,6 +343,7 @@ export interface EnsureResult {
 export function ensure_managed_hooks(
     settings_path: string,
     matrix: ClaudeHookMatrix,
+    withheld: readonly string[] = [],
 ): EnsureResult {
     return _with_lock(settings_path, () => {
         const settings = _read_settings(settings_path);
@@ -315,6 +361,16 @@ export function ensure_managed_hooks(
             const next = [...user_groups, managed_group];
             if (JSON.stringify(next) !== JSON.stringify(existing)) touched.push(native);
             hooks[native] = next;
+        }
+
+        // A gated event withheld from this host loses an entry an earlier install wrote.
+        for (const native of withheld) {
+            if (native in matrix || !Array.isArray(hooks[native])) continue;
+            const user_groups = (hooks[native] as unknown[]).filter((g) => !_is_managed_group(g));
+            if (user_groups.length === (hooks[native] as unknown[]).length) continue;
+            touched.push(native);
+            if (user_groups.length > 0) hooks[native] = user_groups;
+            else delete hooks[native];
         }
 
         settings['hooks'] = hooks;

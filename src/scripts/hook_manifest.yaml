@@ -1897,3 +1897,14 @@ native_event_aliases:
     AfterAgent:    stop
     BeforeTool:    pre_tool_use
     AfterTool:     post_tool_use
+
+# The oldest host version recorded as ACCEPTING a native event, per platform.
+# `build_claude_hook_matrix` leaves the event out for a host whose `--version`
+# is known to be older; an unknown version keeps it (the static plugin
+# hooks.json has no host to ask). An event absent here is ungated. The version
+# is the earliest observation in this tree, not the host's first release with
+# the event: lowering it needs a recorded observation on that older version.
+native_event_min_host_version:
+  claude:
+    # StopFailure observed on 2.1.308 (`server_error`); see the alias above.
+    StopFailure: "2.1.308"
