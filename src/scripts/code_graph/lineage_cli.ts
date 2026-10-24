@@ -20,10 +20,12 @@ import {
     lineageDir,
     mergeIntoLedger,
     readLedger,
+    writeLedger,
     writePrivateFile,
 } from '../_lib/lineage_ledger.js';
 import { BACKFILL_DIR_REL, isIgnored, scanTree, writeBackfill } from '../_lib/lineage_backfill.js';
 import { LINEAGE_VIEW_REL, renderSourceLineage, renderTrackedLineage } from '../_lib/lineage_map.js';
+import { refuseUnderCi, renderWatchReport, renderWatchStub, runWatch, systemGit } from '../_lib/lineage_watch.js';
 import { gaps, lineageFrom, lineageOf, readDecisions, rejected } from '../_lib/lineage_query.js';
 import { buildLocalImport } from '../_lib/lineage_seed.js';
 import { resolve_keys } from '../_lib/link_crypto.js';
@@ -33,6 +35,7 @@ export interface LineageDeps {
     readonly env?: EnvMap;
     /** Link keys; resolved from settings when absent. Tests pass them explicitly. */
     readonly keys?: readonly string[];
+    readonly now?: () => Date;
     readonly stdout?: (s: string) => void;
     readonly stderr?: (s: string) => void;
 }
@@ -41,6 +44,7 @@ export interface Io {
     readonly env: EnvMap;
     readonly root: string;
     readonly keys: () => readonly string[];
+    readonly now: () => Date;
     readonly out: (s: string) => void;
     readonly err: (s: string) => void;
 }
@@ -220,7 +224,61 @@ function cmdBackfill(io: Io, argv: readonly string[]): number {
     return 0;
 }
 
-const USAGE = 'usage: code-graph lineage <check|import|of|gaps|rejected|from|map|backfill> [args] [--root P]\n';
+function cmdWatchFlag(io: Io, on: boolean, id: string | undefined): number {
+    const dir = lineageDir(io.env);
+    if (id === undefined || !hasLedger(dir)) {
+        io.err(`usage: code-graph lineage watch ${on ? 'enable' : 'disable'} <source-id> (needs the local ledger at ${dir})\n`);
+        return 2;
+    }
+    const ledger = readLedger(dir);
+    const hit = ledger.sources.find((s) => s.source_id === id);
+    if (hit === undefined) {
+        io.err(`code-graph lineage watch: no source ${id} in the local ledger\n`);
+        return 1;
+    }
+    writeLedger(dir, { sources: ledger.sources.map((s) => (s.source_id === id ? { ...s, watch: on } : s)), edges: ledger.edges });
+    io.out(`code-graph lineage watch: ${id} ${on ? 'on' : 'off'}\n`);
+    return 0;
+}
+
+function cmdWatch(io: Io, argv: readonly string[]): number {
+    if (argv[1] === 'enable' || argv[1] === 'disable') return cmdWatchFlag(io, argv[1] === 'enable', argv[2]);
+    refuseUnderCi(io.env);
+    const dir = lineageDir(io.env);
+    if (!hasLedger(dir)) {
+        io.err(`code-graph lineage watch: no local lineage ledger at ${dir}\n`);
+        return 2;
+    }
+    const keys = needKeys(io, 'watch');
+    if (keys === null) return 2;
+    const reports = runWatch({ dir, keys, rows: readDecisions(io.root), git: systemGit, env: io.env });
+    for (const r of reports) {
+        io.out(`${r.source_id}  ${r.status}${r.note ? `  ${r.note}` : ''}\n`);
+        for (const f of r.findings) io.out(`  ${f.class}  ${f.mechanism_id ?? '(no mechanism)'}  ${f.locator}\n`);
+    }
+    io.out(`code-graph lineage watch: ${String(reports.length)} watched source(s)\n`);
+    if (argv.includes('--dry-run')) return 0;
+
+    const date = io.now().toISOString().slice(0, 10);
+    if (reports.length > 0) {
+        const reportPath = path.join(dir, 'watch', `report-${date}.md`);
+        writePrivateFile(reportPath, renderWatchReport(reports, date));
+        io.out(`code-graph lineage watch: report written to ${reportPath}\n`);
+    }
+    const stub = renderWatchStub(reports, date, keys[0] as string);
+    if (stub === null) return 0;
+    const stubDir = path.join(io.root, 'agents', 'roadmaps', 'stubs');
+    if (!fs.existsSync(stubDir)) {
+        io.err(`code-graph lineage watch: ${io.root} has no agents/roadmaps/stubs/ — the stub was not written\n`);
+        return 2;
+    }
+    const stubPath = path.join(stubDir, `road-to-lineage-delta-${date}.md`);
+    fs.writeFileSync(stubPath, stub);
+    io.out(`code-graph lineage watch: stub written to ${stubPath}\n`);
+    return 0;
+}
+
+const USAGE = 'usage: code-graph lineage <check|import|of|gaps|rejected|from|map|backfill|watch> [args] [--root P]\n';
 
 export async function main(argv: readonly string[], deps: LineageDeps = {}): Promise<number> {
     const env = deps.env ?? process.env;
@@ -230,6 +288,7 @@ export async function main(argv: readonly string[], deps: LineageDeps = {}): Pro
         env,
         root,
         keys: () => (cached ??= deps.keys ?? resolve_keys(root)),
+        now: deps.now ?? (() => new Date()),
         out: deps.stdout ?? ((s) => void process.stdout.write(s)),
         err: deps.stderr ?? ((s) => void process.stderr.write(s)),
     };
@@ -243,6 +302,7 @@ export async function main(argv: readonly string[], deps: LineageDeps = {}): Pro
         if (verb === 'from') return cmdFrom(io, argv[1]);
         if (verb === 'map') return cmdMap(io, argv);
         if (verb === 'backfill') return cmdBackfill(io, argv);
+        if (verb === 'watch') return cmdWatch(io, argv);
     } catch (e) {
         if (e instanceof LineageError) {
             io.err(`code-graph lineage: ${e.message}\n`);

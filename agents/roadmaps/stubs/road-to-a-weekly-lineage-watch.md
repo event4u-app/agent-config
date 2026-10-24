@@ -18,8 +18,9 @@ of reports that led to at least one accepted verdict.
 
 ## Trigger
 
-Step 10.2 of `road-to-a-graph-that-follows-you` merged, and at least one source
-in `provenance/sources.jsonl` carries `watch: on`.
+Step 10.2 of `road-to-a-graph-that-follows-you` merged, and at least one source in
+the local ledger (`runtime/lineage/sources.jsonl` under the user-global home) was
+switched on with `code-graph lineage watch enable <source-id>`.
 
 ## Kill criteria
 
