@@ -395,6 +395,9 @@ A `/roadmap:process-full` pass built nothing and flipped no checkbox (D9).
       it emits no rewrite, raises the host's visible message and counts the event.
       A dropped replacement is a leak and is reported as one.
       verify: a forced shape mismatch produces the message and the counter, and the counter is what AC-1 reads.
+      The known values come from `src/scripts/_lib/egress_known_values.ts`
+      (built under `road-to-one-detector-and-the-senders-we-own` 2.4, which
+      archived with no sender reading it); this step is its first caller.
 - [ ] **3.4 Tell the model once what a token is** — one line of context at first
       use in a session. Whether it helps is part of the sibling's 0.3 measurement;
       if it does not, it is removed.
