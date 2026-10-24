@@ -152,7 +152,7 @@ export function runWatch(opts: WatchOptions): SourceReport[] {
                 return watchOne(s, opts);
             } catch (e) {
                 if (e instanceof LineageError) throw e;
-                return { source_id: s.source_id, identity: '', status: 'error' as const, pin: null, head: null, findings: [], mechanisms: [], note: (e as Error).message.split('\n')[0] };
+                return { source_id: s.source_id, identity: '', status: 'error' as const, pin: null, head: null, findings: [], mechanisms: [], note: (e as Error).message.split('\n')[0] ?? 'watch failed' };
             }
         });
 }
