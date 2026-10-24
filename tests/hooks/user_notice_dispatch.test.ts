@@ -16,7 +16,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { parse as parseYaml } from 'yaml';
 
-import { isBlockCapable, withUserNotice } from '../../src/scripts/hooks/host_semantics.js';
+import { isBlockCapable, withUserNotice, writeStdout } from '../../src/scripts/hooks/host_semantics.js';
 import { collectUserNotice, USER_NOTICE_KEY, type NoticeBatch } from '../../src/scripts/hooks/user_notice.js';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -190,6 +190,33 @@ describe('the user channel through the dispatcher', () => {
         const r = dispatch('claude', { 'notice-a': { effect: 'notification', args: ['echo-platform'] } });
         expect((JSON.parse(r.stdout) as Record<string, string>)['systemMessage']).toBe('platform=claude');
     }, 120_000);
+});
+
+describe('writeStdout', () => {
+    it('writes a receipt only after the output was written, and none when the write throws', () => {
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'user-notice-home-'));
+        tmpDirs.push(home);
+        const receipt = path.join(home, 'user-notice-n.delivered');
+        const prev = process.env['EVENT4U_CONFIG_HOME'];
+        process.env['EVENT4U_CONFIG_HOME'] = home;
+        try {
+            const batch: NoticeBatch = [{ concern: 'n', text: 'hi', id: 'i1' }];
+            const emission = { exit: 0, stdout: '', stderr: '' };
+            const seenAtWrite: boolean[] = [];
+            writeStdout('claude', 'session_start', '', emission, batch, 's1', () => void seenAtWrite.push(fs.existsSync(receipt)));
+            expect(seenAtWrite).toEqual([false]);
+            expect(JSON.parse(fs.readFileSync(receipt, 'utf-8'))).toMatchObject({ session_id: 's1', notice_id: 'i1' });
+            fs.rmSync(receipt);
+            const failing = (): never => {
+                throw new Error('EPIPE');
+            };
+            expect(() => writeStdout('claude', 'session_start', '', emission, batch, 's1', failing)).toThrow('EPIPE');
+            expect(fs.existsSync(receipt)).toBe(false);
+        } finally {
+            if (prev === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+            else process.env['EVENT4U_CONFIG_HOME'] = prev;
+        }
+    });
 });
 
 describe('collectUserNotice', () => {

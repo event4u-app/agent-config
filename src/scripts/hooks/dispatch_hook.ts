@@ -52,7 +52,7 @@ import {
   setHookStdinOverride,
   clearHookStdinOverride,
 } from "./hook_stdin.js";
-import { composeStdout, emitFor, type PermissionDecision, type Severity } from "./host_semantics.js";
+import { emitFor, writeStdout, type PermissionDecision, type Severity } from "./host_semantics.js";
 import { collectUserNotice, type NoticeBatch } from "./user_notice.js";
 import { _concern_permission_verdict, _payload_tool_name, _permission_for } from "./permission_gate.js";
 export { _concern_permission_verdict, _payload_tool_input, _payload_tool_name, _permission_for, _working_tree_root } from "./permission_gate.js";
@@ -1428,8 +1428,7 @@ export function main(argv?: string[]): number {
     _permission_for(args.event, envelope, final_rc, permission_verdicts),
   );
   const context_out = context_blocks.length > 0 && final_rc === EXIT_ALLOW ? context_blocks.join("\n\n") + "\n" : "";
-  const stdout_out = composeStdout(args.platform, args.event, context_out, emission, notices, session_id);
-  if (stdout_out) process.stdout.write(stdout_out);
+  writeStdout(args.platform, args.event, context_out, emission, notices, session_id, (s) => process.stdout.write(s));
   if (emission.stderr) {
     process.stderr.write(emission.stderr);
   }

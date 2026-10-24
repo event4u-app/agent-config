@@ -185,22 +185,24 @@ export function withUserNotice(
 }
 
 /**
- * The dispatcher's whole stdout: `withUserNotice` over its parts, and a receipt
- * for each notice that is actually in the result — a dropped notice leaves
- * none, so its concern says it again instead of counting it as shown. The
- * notice rides only on exit 0, because the host parses stdout only then.
+ * Write the dispatcher's whole stdout — `withUserNotice` over its parts — and
+ * only then a receipt for each notice that is actually in what was written: a
+ * write that throws leaves no receipt, and a dropped notice leaves none, so its
+ * concern says it again instead of counting it as shown. The notice rides only
+ * on exit 0, because the host parses stdout only then.
  */
-export function composeStdout(
+export function writeStdout(
     platform: string,
     event: string,
     context: string,
     emission: Emission,
     notices: NoticeBatch,
     sessionId: string,
-): string {
+    write: (text: string) => unknown,
+): void {
     const out = withUserNotice(platform, event, context, emission.stdout, emission.exit === 0 ? notices.map((n) => n.text).join("\n") : "");
+    if (out) write(out);
     if (notices.length > 0 && out !== context + emission.stdout) writeNoticeReceipts(notices, sessionId);
-    return out;
 }
 
 /**
