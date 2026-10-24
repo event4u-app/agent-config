@@ -9,7 +9,7 @@
 #   - `composer.lock` → exact match at repo root
 #
 # Levels:
-#   - high   → lockfiles, auth, migrations, secrets, CI, infra
+#   - high   → lockfiles, auth, migrations, secrets, CI, infra, agent tools
 #   - medium → queues, routes, controllers, models, manifests
 #   - anything not matched → low
 #
@@ -41,6 +41,18 @@ patterns:
     - "Gemfile.lock"
     - "**/migrations/*.py"
     - "**/db/migrate/**"
+
+    # --- what an AI agent can do (tools, MCP servers, bots, prompts) ---
+    - "**/mcp/**"
+    - "**/*mcp*"
+    - "**/agent/**"
+    - "**/bot/**"
+    - "**/bots/**"
+    - "**/ai-tools/**"
+    - "**/agent-tools/**"
+    - "**/prompts/**"
+    - "**/*.prompt*"
+    - "**/agent-actions.y*ml"
 
     # --- infra ---
     - "**/Dockerfile*"

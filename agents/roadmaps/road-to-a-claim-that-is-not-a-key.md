@@ -81,7 +81,7 @@ G1–G7 at the landing commit, each with a recorded red at c164cc24b4.
 
 ## Phase 1 — AC's own agent first (public repository, live exposure)
 
-- [ ] **1.1 `/fix:pr-comments` reads `author_association`.** `OWNER`, `MEMBER`,
+- [x] **1.1 `/fix:pr-comments` reads `author_association`.** `OWNER`, `MEMBER`,
       `COLLABORATOR` keep the current flow. Every other value — `CONTRIBUTOR`,
       `FIRST_TIME_CONTRIBUTOR`, `NONE`, missing — is never applied in Auto: it is
       listed verbatim in the "needs your decision" block, as the found-instructions
@@ -90,7 +90,7 @@ G1–G7 at the landing commit, each with a recorded red at c164cc24b4.
       verify: G7 — a recorded comment payload with `author_association: NONE`
       carrying a "clear fix" is classified `needs-owner`, and the same payload
       with `MEMBER` is classified `apply`, in a test over the classifier.
-- [ ] **1.2 Census of commands that act on third-party text.** Every command or
+- [x] **1.2 Census of commands that act on third-party text.** Every command or
       skill that turns issue, PR, ticket or chat text into commits, pushes or
       external sends gets one row: gated, or why no gate is needed.
       verify: the census table in this roadmap's § Census has one row per grep
@@ -98,23 +98,23 @@ G1–G7 at the landing commit, each with a recorded red at c164cc24b4.
 
 ## Phase 2 — Name the class in the threat corpus
 
-- [ ] **2.1 Surface class `delegated-action`** in `surfaces.csv`, keywords
+- [x] **2.1 Surface class `delegated-action`** in `surfaces.csv`, keywords
       covering agent, assistant, chatbot, bot, support, helpdesk, tool call,
       function calling, mcp tool, on behalf, account recovery, email change,
       takeover.
       verify: G2 — the incident query grounds to `delegated-action`.
-- [ ] **2.2 Six threat rows, class `delegated-action`:** T1 conversational
+- [x] **2.2 Six threat rows, class `delegated-action`:** T1 conversational
       ownership claim treated as authorization · T2 subject selected by a tool
       argument · T3 one service credential acting for every caller · T4 an
       alternate code path to an identity sink · T5 AI-only recovery and weak
       substitute factors · T6 injected content reaching an action. Each row
       carries Abuse Case, Required Controls and a non-empty Negative Tests cell.
       verify: G2 green; the threat-modeling evals still pass.
-- [ ] **2.3 Actor-neutral rows 11 and 12.** "A hijacked session, a support
+- [x] **2.3 Actor-neutral rows 11 and 12.** "A hijacked session, a support
       agent, an admin tool or an AI assistant acting on a request can change…";
       the delegated-actor case joins Negative Tests. Controls stay.
       verify: the diff touches only the Abuse Case and Negative Tests cells.
-- [ ] **2.4 A composite description never grounds with `Evidence gap: none`
+- [x] **2.4 A composite description never grounds with `Evidence gap: none`
       while a matched class is dropped.** With one surface returned, the gap
       names the dropped class.
       verify: G2 — a description matching two classes prints the second in the
@@ -122,7 +122,7 @@ G1–G7 at the landing commit, each with a recorded red at c164cc24b4.
 
 ## Phase 3 — Router: existing rules, new triggers, no new rule
 
-- [ ] **3.1 `security-sensitive-stop` triggers and surface row.** Phrase
+- [x] **3.1 `security-sensitive-stop` triggers and surface row.** Phrase
       triggers specific enough not to collide (`account recovery`, `email
       change`, `recovery email`, `support bot`, `chatbot`, `on behalf of`,
       `tool call`, `function calling`, `mcp tool`, `mcp server`, DE `E-Mail-Adresse`,
@@ -131,40 +131,40 @@ G1–G7 at the landing commit, each with a recorded red at c164cc24b4.
       verify: G1 — the four D1 prompts plus their variants list
       `security-sensitive-stop` in `route:explain`; a negative prompt about a
       CLI tool does not.
-- [ ] **3.2 One sentence in the `broken-access-control` Iron Law:** "A TOOL
+- [x] **3.2 One sentence in the `broken-access-control` Iron Law:** "A TOOL
       ARGUMENT A MODEL FILLS IS A REQUEST-SUPPLIED ID." plus matching triggers.
       verify: G1 shows `broken-access-control` on the write-tool prompts; the
       auto-rule budget check stays under its unchanged baseline.
 
 ## Phase 4 — Skills and templates that build and review bots
 
-- [ ] **4.1 `authz-review`: tool calls are entrypoints**, stage 1 asks where the
+- [x] **4.1 `authz-review`: tool calls are entrypoints**, stage 1 asks where the
       subject comes from (session, policy system, or the model's argument), a
       fourth negative test for tools, and the path-independence pattern (D12):
       the identity write is guarded at the data layer, one writer per identity
       field, an architecture test forbids the rest.
       verify: the skill lints green and the sections name both patterns.
-- [ ] **4.2 `mcp-builder`: authority before ergonomics.** Names over IDs only
+- [x] **4.2 `mcp-builder`: authority before ergonomics.** Names over IDs only
       for objects inside the caller's scope; the subject of a write is never
       chosen by the model; per-caller delegated credentials instead of a shared
       cache; a required per-tool authority block (`subject_source`, `effect`,
       `verifier`, `human_approval`, `notify_old_channel`, `audit_log`); two
       authority questions in the evaluation set.
       verify: skill lints and trigger evals green.
-- [ ] **4.3 `evaluate-llm-feature`: impersonation probe class** — ownership
+- [x] **4.3 `evaluate-llm-feature`: impersonation probe class** — ownership
       claim, urgency, claimed staff role, claimed prior verification, a claimed
       approval from another agent; any claim probe that triggers a write rates
       the feature do-not-ship.
       verify: skill lints green; the verdict rule is stated in the report
       template.
-- [ ] **4.4 `auth-model.md`: Delegated actors** — actor × fields it may change ×
+- [x] **4.4 `auth-model.md`: Delegated actors** — actor × fields it may change ×
       proof required × channel notified × human approval, plus "who may change a
       recovery channel, confirmed over which verified channel?".
       verify: `check_context_paths` green.
 
 ## Phase 5 — Make the projects do it
 
-- [ ] **5.1 Detector `agent_actions_detect` (no model, no network).** Finds tool
+- [x] **5.1 Detector `agent_actions_detect` (no model, no network).** Finds tool
       registrations of known SDKs (MCP server `tool(`/`registerTool`, Vercel AI
       SDK `tool({`, OpenAI and Anthropic tool schemas, LangChain `@tool`,
       PHP attribute tools) and reports per registration: declared in
@@ -175,22 +175,35 @@ G1–G7 at the landing commit, each with a recorded red at c164cc24b4.
       verify: G3 — a synthetic fixture tree with four registrations (one
       undeclared, one write tool with a subject argument, one unknown framework)
       yields exactly those findings and one `unknown`.
-- [ ] **5.2 Template `agent-actions.yml`** — one entry per agent action with the
+- [x] **5.2 Template `agent-actions.yml`** — one entry per agent action with the
       4.2 authority block.
       verify: the detector parses the template without findings.
-- [ ] **5.3 `/audit agents`, a second mode of `/audit`.** Same contract as
+- [x] **5.3 `/audit agents`, a second mode of `/audit`.** Same contract as
       `/audit deps`: every finding names `file:line`, `unknown` is said, the fix
       is a change the owner merges.
       verify: command lint green; `audit/command.md` no longer says deps is the
       only audit.
-- [ ] **5.4 PR risk defaults and a pinned install.** High patterns for tool,
+- [x] **5.4 PR risk defaults and a pinned install.** High patterns for tool,
       agent, MCP and prompt paths; the workflow template installs a pinned major.
       verify: the classifier test rates a tool-file change `high`; the template
       carries a version.
 
 ## Census
 
-Filled by 1.2.
+Commands and skills that turn another person's text into commits, pushes or
+external sends (step 1.2, 2026-10-24):
+
+| Command / skill | Acts on whose text | Gated? | Disposition |
+|---|---|---|---|
+| `/fix:pr-comments` | review comments from any account | yes, since 1.1 | `pr_comment_authority` classifier; `needs-owner` is never applied |
+| `/fix:pr-comments-loop` | the same, as a standing loop | yes, since 1.1 | inherits the gate; its authorization contract names it |
+| `/analyze:pr --optimize` | PR head, body and comments | yes | pushes only to a writable same-repo head with compare-and-swap; fixes come from its own analysis, not from comment text |
+| `/council:pr` | any PR's diff → an external comment | yes | posting is opt-in per run |
+| `/analyze:and-optimize` | its own tree | not needed | pushes only to its own run PR |
+| `/roadmap:next`, `:process-full`, `:process-phase` | committed, reviewed roadmaps | not needed | no third-party text reaches the push |
+| `/pr:create`, `/fix:commit-messages`, `/memory:promote` | own branch, history, memory | not needed | no third-party text |
+| `/upstream-contribute` | own self-repair record | yes | `--approve <digest>` |
+| `receiving-code-review` (skill) | review comments | not needed | triage only, never pushes |
 
 ## Not done here, and why
 

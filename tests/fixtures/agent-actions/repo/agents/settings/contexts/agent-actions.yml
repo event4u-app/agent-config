@@ -1,0 +1,16 @@
+version: 1
+actions:
+  - name: search_orders
+    subject_source: session
+    effect: read
+    verifier: "orders are filtered by the signed-in customer id"
+    human_approval: none
+    notify_old_channel: false
+    audit_log: "request log"
+  - name: change_recovery_email
+    subject_source: session
+    effect: write-identity
+    verifier: "fresh re-authentication of the account owner"
+    human_approval: required
+    notify_old_channel: true
+    audit_log: "identity_changes table"
