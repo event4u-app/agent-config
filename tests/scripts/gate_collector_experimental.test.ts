@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
+    MODE_CONTRACT,
     RESULT_VERSION,
     aspectResults,
     assessProducer,
@@ -15,6 +16,7 @@ import {
     initialCollector,
     parseStream,
     preflight,
+    requireMode,
     writeSummary,
     type Limits,
     type ProducerRow,
@@ -224,6 +226,7 @@ describe('assessRun — validator health is a separate dimension', () => {
         expect(runReport.producers.find((p) => p.id === 'good')?.status).toBe('complete');
         expect(runReport.status).not.toBe('complete');
         expect(runReport.evaluationExit).toBe(0);
+        expect(runReport.operationalExit).toBe(2);
     });
 
     it('marks a preflight refusal as not-attempted and never starts the producer', async () => {
@@ -282,5 +285,49 @@ describe('writeSummary — persistence is checked by reading it back', () => {
         expect(res.run.health).toBe('failed');
         expect(res.run.operationalExit).toBe(1);
         expect(res.run.evaluationExit).toBe(0);
+    });
+});
+
+describe('mode contract — report-only is explicit, and no incomplete state reads as complete', () => {
+    it('refuses an unknown or enforcing mode rather than defaulting', () => {
+        expect(requireMode('report-only')).toBe('report-only');
+        expect(() => requireMode('enforcing')).toThrow(/mode/);
+        expect(() => requireMode(undefined)).toThrow(/mode/);
+    });
+
+    it('carries the mode and contract version in every run report', () => {
+        const r = assessRun([]);
+        expect(r.mode).toBe('report-only');
+        expect(r.contract).toBe(MODE_CONTRACT);
+    });
+
+    it('reports complete only when every producer is complete and health is healthy, across every combination', () => {
+        const statuses = ['complete', 'incomplete', 'invalid', 'absent', 'not-attempted', 'unassessed'] as const;
+        const healths = ['healthy', 'degraded', 'failed'] as const;
+        let seen = 0;
+        for (const h of healths) {
+            for (const a of statuses) {
+                for (const b of statuses) {
+                    const r = assessRun(
+                        [
+                            { id: 'p1', status: a, reason: null },
+                            { id: 'p2', status: b, reason: null },
+                        ],
+                        h,
+                    );
+                    const allComplete = a === 'complete' && b === 'complete';
+                    expect(r.status === 'complete').toBe(allComplete && r.health === 'healthy');
+                    expect(r.evaluationExit).toBe(0);
+                    expect(r.operationalExit).toBe(r.health === 'failed' ? 1 : r.health === 'degraded' ? 2 : 0);
+                    if (a === 'unassessed' || b === 'unassessed') expect(r.health).not.toBe('healthy');
+                    seen++;
+                }
+            }
+        }
+        expect(seen).toBe(108);
+    });
+
+    it('rejects an unknown producer status instead of reading it as complete', () => {
+        expect(() => assessRun([{ id: 'p', status: 'passed' as never, reason: null }])).toThrow(/status/);
     });
 });

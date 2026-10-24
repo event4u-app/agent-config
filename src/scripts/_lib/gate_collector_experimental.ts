@@ -32,6 +32,22 @@ import * as fs from 'node:fs';
 
 export const RESULT_VERSION = 'experimental-1';
 
+/**
+ * The mode contract. Report-only is the only mode: it never produces an
+ * enforcement verdict, its evaluation exit is always 0, and its operational
+ * exit reports validator health alone (0 healthy, 2 degraded, 1 failed). An
+ * enforcing mode needs a new mode value, separately reviewed code, and its own
+ * contract version; {@link requireMode} refuses anything else instead of
+ * defaulting.
+ */
+export const MODE_CONTRACT = 'report-only/experimental-1';
+export type Mode = 'report-only';
+
+export function requireMode(mode: unknown): Mode {
+    if (mode === 'report-only') return mode;
+    throw new Error(`unsupported validator mode ${JSON.stringify(mode)}: only 'report-only' exists`);
+}
+
 export interface Limits {
     readonly wallMs: number;
     readonly maxBytes: number;
@@ -514,14 +530,18 @@ export type RunStatus = 'complete' | 'incomplete' | 'invalid' | 'degraded' | 'fa
 
 export interface RunReport {
     readonly version: typeof RESULT_VERSION;
-    readonly mode: 'report-only';
+    readonly mode: Mode;
+    readonly contract: typeof MODE_CONTRACT;
     readonly health: Health;
     readonly status: RunStatus;
     readonly producers: readonly ProducerReport[];
-    /** Always 0: this slice enforces nothing. */
+    /** Always 0: report-only enforces nothing. */
     readonly evaluationExit: 0;
-    readonly operationalExit: 0 | 1;
+    /** Validator health only: 0 healthy, 2 degraded, 1 failed. */
+    readonly operationalExit: 0 | 1 | 2;
 }
+
+const PRODUCER_STATUSES: readonly string[] = ['complete', 'incomplete', 'invalid', 'absent', 'not-attempted', 'unassessed'];
 
 function runStatus(health: Health, producers: readonly ProducerReport[]): RunStatus {
     if (health === 'failed') return 'failed';
@@ -531,16 +551,23 @@ function runStatus(health: Health, producers: readonly ProducerReport[]): RunSta
     return 'complete';
 }
 
-export function assessRun(producers: readonly ProducerReport[], health: Health = 'healthy'): RunReport {
+const OPERATIONAL_EXIT: Record<Health, 0 | 1 | 2> = { healthy: 0, degraded: 2, failed: 1 };
+
+export function assessRun(producers: readonly ProducerReport[], health: Health = 'healthy', mode: unknown = 'report-only'): RunReport {
+    const m = requireMode(mode);
+    for (const p of producers) {
+        if (!PRODUCER_STATUSES.includes(p.status)) throw new Error(`unknown producer status ${JSON.stringify(p.status)} for ${p.id}`);
+    }
     const h: Health = health === 'failed' ? 'failed' : producers.some((p) => p.status === 'unassessed') ? 'degraded' : health;
     return {
         version: RESULT_VERSION,
-        mode: 'report-only',
+        mode: m,
+        contract: MODE_CONTRACT,
         health: h,
         status: runStatus(h, producers),
         producers,
         evaluationExit: 0,
-        operationalExit: h === 'failed' ? 1 : 0,
+        operationalExit: OPERATIONAL_EXIT[h],
     };
 }
 
@@ -556,7 +583,7 @@ function summaryLines(run: RunReport): string[] {
             aspects: p.aspects ?? [],
         }),
     );
-    const runLine = JSON.stringify({ kind: 'run', version: run.version, mode: run.mode, health: run.health, status: run.status });
+    const runLine = JSON.stringify({ kind: 'run', version: run.version, mode: run.mode, contract: run.contract, health: run.health, status: run.status, operationalExit: run.operationalExit });
     return [...producerLines, runLine];
 }
 
@@ -572,6 +599,6 @@ export function writeSummary(file: string, run: RunReport): { ok: boolean; run: 
         if (fs.readFileSync(file, 'utf8') !== body) throw new Error('read-back mismatch');
         return { ok: true, run };
     } catch {
-        return { ok: false, run: assessRun(run.producers, 'failed') };
+        return { ok: false, run: assessRun(run.producers, 'failed', run.mode) };
     }
 }
