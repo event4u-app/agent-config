@@ -36,8 +36,9 @@ Range: `81949b9dba` (17.1.0) to `df10716455` (`origin/main`, which is 17.4.0 plu
 
 Two of three hits are false positives, and both are the same kind: a step whose named
 `src/` path is not where its shipped behaviour lives. They do not justify a global
-exemption. The check now accepts `reach exempt: <reason>` in one step block (reason at least
-12 characters; a bare marker is refused), and the step is recorded as a declared exemption in
+exemption. The check now accepts a line of its own in one step block starting `reach exempt: <reason>`
+(reason at least 12 characters; a bare marker is refused; the phrase in a sentence, in backticks
+or in fenced code is not a marker), and the step is recorded as a declared exemption in
 the gate ledger. All three hits are on an archived roadmap, and the enforcing check reads only
 a change's new ticks, so none of them reds a later change.
 

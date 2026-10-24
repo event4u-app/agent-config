@@ -122,10 +122,12 @@ function _gates(manifest: Record<string, unknown>): Record<string, string> {
 }
 
 /**
- * `hostVersion` is the installed host's `--version` line. A gated event is left
- * out only when that version is KNOWN to be older than the recorded one; an
- * unknown version keeps it, because the static plugin `hooks.json` has no host
- * to ask and the dispatcher treats an unfired event as nothing.
+ * `hostVersion` is the installed host's `--version` line, passed by a carrier
+ * that can ask the host. A gated event is written only when that version parses
+ * and is at least the recorded one: an older host, or one whose version could
+ * not be read (`null`), does not get it, because nothing here shows an older
+ * host accepts an unknown event key. Omitted entirely — the static plugin
+ * `hooks.json`, which has no host to ask — every gated event is kept.
  */
 export function build_claude_hook_matrix(
     manifest_path: string,
@@ -152,7 +154,7 @@ export function build_claude_hook_matrix(
     for (const [native, ac_raw] of Object.entries(aliases)) {
         const ac_event = String(ac_raw);
         const need = parse_host_version(gates[native]);
-        if (have !== null && need !== null && _below(have, need)) continue;
+        if (need !== null && opts.hostVersion !== undefined && (have === null || _below(have, need))) continue;
         const concerns = claude_events[ac_event];
         if (!concerns || (Array.isArray(concerns) && concerns.length === 0)) continue;
         // Only package-owned dispatchers are trusted (17.0.0 finding
@@ -343,7 +345,7 @@ export interface EnsureResult {
 export function ensure_managed_hooks(
     settings_path: string,
     matrix: ClaudeHookMatrix,
-    withheld: readonly string[] = [],
+    gated: readonly string[] = [],
 ): EnsureResult {
     return _with_lock(settings_path, () => {
         const settings = _read_settings(settings_path);
@@ -363,8 +365,8 @@ export function ensure_managed_hooks(
             hooks[native] = next;
         }
 
-        // A gated event withheld from this host loses an entry an earlier install wrote.
-        for (const native of withheld) {
+        // A gated event the matrix withholds from this host loses the entry an earlier install wrote.
+        for (const native of gated) {
             if (native in matrix || !Array.isArray(hooks[native])) continue;
             const user_groups = (hooks[native] as unknown[]).filter((g) => !_is_managed_group(g));
             if (user_groups.length === (hooks[native] as unknown[]).length) continue;

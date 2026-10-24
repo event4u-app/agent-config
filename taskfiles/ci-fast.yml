@@ -903,7 +903,7 @@ tasks:
 
   check-step-production-reach:
     silent: true
-    desc: "Report a roadmap step this diff ticks whose tested symbols no production entry reaches, or that is ticked while it says `built, not wired`. Enforcing since road-to-a-tick-the-shipped-path-earns 3.3; a false positive carries `reach exempt: <reason>` in its own step. Diff-scoped against origin/main"
+    desc: "Report a roadmap step this diff ticks whose tested symbols no production entry reaches, or that is ticked while it says `built, not wired`. Enforcing since road-to-a-tick-the-shipped-path-earns 3.3; a false positive carries a line `reach exempt: <reason>` in its own step block. Diff-scoped against origin/main"
     cmd: ./scripts-run src/scripts/check_step_production_reach --base origin/main --enforce
 
   lint-deferral-integrity:

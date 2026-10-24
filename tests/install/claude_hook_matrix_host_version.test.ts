@@ -31,10 +31,13 @@ describe('StopFailure binding gated on the oldest host version recorded as accep
         }
     });
 
-    it('keeps the binding when the version is unknown, as the static plugin carrier must', () => {
+    it('withholds it when the installer could not read the version', () => {
         for (const v of [null, 'unknown', 'not a version']) {
-            expect(Object.keys(build_claude_hook_matrix(MANIFEST, { hostVersion: v }))).toContain('StopFailure');
+            expect(Object.keys(build_claude_hook_matrix(MANIFEST, { hostVersion: v }))).not.toContain('StopFailure');
         }
+    });
+
+    it('keeps it for the static plugin carrier, which has no host to ask', () => {
         expect(Object.keys(build_claude_hook_matrix(MANIFEST))).toContain('StopFailure');
     });
 

@@ -43,6 +43,10 @@ The dispatch prompts are byte-identical and carry no codeword, and neither subag
 so the codeword reached the `on` subagent only through the `SubagentStart` additional context. The
 `off` reply confirms the definition really skips `CLAUDE.md` on this host version.
 
+Repeated after the council's round-1 fixes (nearest-first allocation, serialized cap, YAML
+frontmatter parsing), rebuilt with `npm run build:hooks`: `on` answered `QUARTZ-41`, `off` answered
+`NONE`, same prompts.
+
 ## Bound
 
 One host version, one run per arm, one fixture definition. It shows the host adds a

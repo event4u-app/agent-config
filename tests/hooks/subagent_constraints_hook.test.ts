@@ -11,8 +11,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     definitionSkipsInstructions,
     digestFor,
-    DIGEST_MAX_BYTES,
+    EMISSION_MAX_BYTES,
     instructionDigest,
+    replyLine,
 } from '../../src/scripts/hooks/subagent_constraints_hook.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -68,17 +69,56 @@ describe('subagent-constraints concern', () => {
         expect(digestFor({ event: 'subagent_stop', payload: { agent_type: 'ac-worker', cwd: root } }, env())).toBeNull();
     });
 
-    it('reads the instruction files from the repository root down, and bounds the digest', () => {
+    it('reads the definition flag as YAML, CRLF and comments included', () => {
+        const dir = path.join(root, '.claude', 'agents');
+        fs.writeFileSync(path.join(dir, 'crlf.md'), '---\r\nname: crlf\r\nomitClaudeMd: true\r\n---\r\nbody\r\n');
+        fs.writeFileSync(path.join(dir, 'commented.md'), '---\nname: c\nomitClaudeMd: true # skip\n---\n');
+        fs.writeFileSync(path.join(dir, 'quoted.md'), '---\nname: q\nomitClaudeMd: "true"\n---\n');
+        fs.writeFileSync(path.join(dir, 'broken.md'), '---\nname: [b\nomitClaudeMd: true\n---\n');
+        expect(definitionSkipsInstructions(root, 'crlf', config)).toBe(true);
+        expect(definitionSkipsInstructions(root, 'commented', config)).toBe(true);
+        expect(definitionSkipsInstructions(root, 'quoted', config)).toBe(false);
+        expect(definitionSkipsInstructions(root, 'broken', config)).toBe(false);
+    });
+
+    it('prints the files root-most first and names every one in the inventory', () => {
         const sub = path.join(root, 'pkg');
         fs.mkdirSync(path.join(sub, '.claude'), { recursive: true });
         fs.writeFileSync(path.join(sub, '.claude', 'CLAUDE.md'), 'inner rule\n');
         const digest = instructionDigest(sub) as string;
         expect(digest.indexOf(PLANTED)).toBeLessThan(digest.indexOf('inner rule'));
-        fs.writeFileSync(path.join(root, 'CLAUDE.md'), `${PLANTED}\n${'x'.repeat(80)}\n`.repeat(200));
-        const capped = instructionDigest(root) as string;
-        expect(Buffer.byteLength(capped, 'utf-8')).toBeLessThanOrEqual(DIGEST_MAX_BYTES);
-        expect(capped).toContain(PLANTED);
-        expect(capped).toMatch(/\[truncated: read the files named above/);
+        expect(digest).toContain('CLAUDE.md (full), pkg/.claude/CLAUDE.md (full)');
+    });
+
+    it('gives room to the nearest file first when a root file is too large', () => {
+        const sub = path.join(root, 'pkg');
+        fs.mkdirSync(sub);
+        fs.writeFileSync(path.join(root, 'CLAUDE.md'), `${'root filler line\n'.repeat(600)}`);
+        fs.writeFileSync(path.join(sub, 'CLAUDE.local.md'), `${PLANTED}\n`);
+        const digest = instructionDigest(sub) as string;
+        expect(digest).toContain(PLANTED);
+        expect(digest).toContain('CLAUDE.md (cut), pkg/CLAUDE.local.md (full)');
+        expect(digest).toContain('[cut here]');
+    });
+
+    it('names a file it had no room for as omitted', () => {
+        const sub = path.join(root, 'pkg');
+        fs.mkdirSync(sub);
+        fs.writeFileSync(path.join(root, 'CLAUDE.md'), 'root rule\n');
+        fs.writeFileSync(path.join(sub, 'CLAUDE.md'), `${'near filler line\n'.repeat(600)}`);
+        const digest = instructionDigest(sub) as string;
+        expect(digest).toContain('CLAUDE.md (omitted), pkg/CLAUDE.md (cut)');
+        expect(digest).not.toContain('root rule');
+    });
+
+    it('keeps the serialized reply under the registered ceiling under worst-case escaping', () => {
+        fs.writeFileSync(path.join(root, 'CLAUDE.md'), '"\\\u0001\t'.repeat(3_000));
+        const digest = instructionDigest(root) as string;
+        expect(Buffer.byteLength(replyLine(digest), 'utf-8')).toBeLessThanOrEqual(EMISSION_MAX_BYTES);
+        fs.writeFileSync(path.join(root, 'CLAUDE.md'), '\u{1F600}x'.repeat(3_000));
+        const emoji = instructionDigest(root) as string;
+        expect(Buffer.byteLength(replyLine(emoji), 'utf-8')).toBeLessThanOrEqual(EMISSION_MAX_BYTES);
+        expect(emoji.isWellFormed()).toBe(true);
     });
 
     it('reaches the subagent through the real dispatcher on SubagentStart', () => {

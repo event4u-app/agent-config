@@ -2837,7 +2837,8 @@ gates:
       shipped in 17.1.0 through 17.4.0, and its shadow over 17.1.0..17.4.0 read
       150 ticks with 3 hits (agents/evidence/analysis/
       reach-shadow-17.1.0-17.4.0-2026-10-24.md). A false positive is exempted
-      per step with `reach exempt: <reason>`, never globally.
+      per step with a line of its own reading `reach exempt: <reason>`, never
+      globally.
     status: enforced
     ci_invocation: .github/workflows/rule-backstops.yml
     no_canary_reason: >-

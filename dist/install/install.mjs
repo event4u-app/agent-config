@@ -11627,7 +11627,7 @@ function build_claude_hook_matrix(manifest_path2, opts = {}) {
   for (const [native, ac_raw] of Object.entries(aliases)) {
     const ac_event = String(ac_raw);
     const need = parse_host_version(gates[native]);
-    if (have !== null && need !== null && _below(have, need)) continue;
+    if (need !== null && opts.hostVersion !== void 0 && (have === null || _below(have, need))) continue;
     const concerns = claude_events[ac_event];
     if (!concerns || Array.isArray(concerns) && concerns.length === 0) continue;
     const dispatchArgs = `--platform claude --event ${ac_event} --native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;
@@ -11694,7 +11694,7 @@ function _with_lock(settings_path, fn) {
     fs19.rmSync(lockPath, { force: true });
   }
 }
-function ensure_managed_hooks(settings_path, matrix, withheld = []) {
+function ensure_managed_hooks(settings_path, matrix, gated = []) {
   return _with_lock(settings_path, () => {
     const settings = _read_settings(settings_path);
     const before = JSON.stringify(settings);
@@ -11710,7 +11710,7 @@ function ensure_managed_hooks(settings_path, matrix, withheld = []) {
       if (JSON.stringify(next) !== JSON.stringify(existing)) touched.push(native);
       hooks[native] = next;
     }
-    for (const native of withheld) {
+    for (const native of gated) {
       if (native in matrix || !Array.isArray(hooks[native])) continue;
       const user_groups = hooks[native].filter((g) => !_is_managed_group(g));
       if (user_groups.length === hooks[native].length) continue;

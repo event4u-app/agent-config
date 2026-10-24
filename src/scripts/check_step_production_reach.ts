@@ -13,8 +13,9 @@
  * A step whose code is built but not wired stays `[ ]` with `built, not wired`; a
  * ticked step carrying that phrase is refused outright. `production entry: <path>`
  * in the block adds an entry for that step. A false positive is exempted per
- * step, never globally: `reach exempt: <reason>` in the block, the reason at
- * least {@link MIN_EXEMPT_REASON} characters. Enforcing since 3.3, after report
+ * step, never globally: a line of its own in the block starting
+ * `reach exempt: <reason>`, the reason at least {@link MIN_EXEMPT_REASON}
+ * characters. Enforcing since 3.3, after report
  * mode shipped in 17.1.0 through 17.4.0; without `--enforce` it only reports.
  *
  * Usage:
@@ -124,9 +125,14 @@ export interface Finding {
 
 export const MIN_EXEMPT_REASON = 12;
 
-/** The reason after `reach exempt:` outside backticks, `''` when bare, undefined when absent. */
+/**
+ * The reason on a line of its own that starts `reach exempt:`, `''` when bare,
+ * undefined when absent. Fenced code and backticked text are not read, and the
+ * phrase inside a sentence is talk about the marker, not the marker.
+ */
 export function reachExemption(block: string): string | undefined {
-    const m = /reach exempt:[ \t]*([^\n]*)/i.exec(block.replace(/`[^`]*`/g, ''));
+    const text = block.replace(/^\s*(```|~~~)[\s\S]*?^\s*\1[^\n]*$/gm, '').replace(/`[^`\n]*`/g, '');
+    const m = /^[ \t]*reach exempt:[ \t]*([^\n]*)$/im.exec(text);
     return m === null ? undefined : (m[1] as string).trim();
 }
 
@@ -224,11 +230,17 @@ function selfTest(): number {
     }
     const declared = '- [x] **1.4 x** `src/lib.ts`, production entry: `src/cli.ts`\n  verify: `tests/lib.test.ts`';
     if (checkStep(tree, reach, 'r.md', '1.4', declared) !== null) failures.push('a declared production entry was not honoured');
-    const exempt = '- [x] **1.5 x** `src/lib.ts`, reach exempt: a maintainer bench, never shipped\n  verify: `tests/lib.test.ts`';
+    const exempt = '- [x] **1.5 x** `src/lib.ts`\n  reach exempt: a maintainer bench, never shipped\n  verify: `tests/lib.test.ts`';
     if (checkStep(tree, reach, 'r.md', '1.5', exempt) !== null) failures.push('a reasoned per-step exemption was not honoured');
-    if (checkStep(tree, reach, 'r.md', '1.6', '- [x] **1.6 x** `src/lib.ts`, reach exempt: fp\n  verify: `tests/lib.test.ts`') === null) {
+    if (checkStep(tree, reach, 'r.md', '1.6', '- [x] **1.6 x** `src/lib.ts`\n  reach exempt: fp\n  verify: `tests/lib.test.ts`') === null) {
         failures.push('an exemption without a reason did not red');
     }
+    const talk = [
+        '- [x] **1.7 x** `src/lib.ts`, so reach exempt: is not used here\n  verify: `tests/lib.test.ts`',
+        '- [x] **1.7 x** `src/lib.ts`\n  `reach exempt: quoted, not declared`\n  verify: `tests/lib.test.ts`',
+        '- [x] **1.7 x** `src/lib.ts`\n  ```\n  reach exempt: inside a fence, not declared\n  ```\n  verify: `tests/lib.test.ts`',
+    ];
+    for (const t of talk) if (checkStep(tree, reach, 'r.md', '1.7', t) === null) failures.push(`prose or code exempted a step: ${t}`);
     if (checkStep(tree, reach, 'r.md', '1.3', '- [x] **1.3 x** built, not wired') === null) {
         failures.push('a ticked built-not-wired step did not red');
     }
