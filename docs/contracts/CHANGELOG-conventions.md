@@ -417,8 +417,10 @@ A change is **breaking** (and MUST appear under `### BREAKING CHANGES`
    `.agent-settings.yml` that consumer projects may rely on. A settings
    key may be removed or renamed in a minor release only when no consumer
    project can rely on it — default-neutral and derivable, proven by a
-   named test; any other removal or rename ships only in a major, and a
-   renamed key's alias is dropped only in a major. Adding a new key with a
+   named test — or, for a rename, when its RENAMED_KEYS alias carries the
+   value and the release declares Consumer-Impact: automatic; any other
+   removal or rename ships only in a major, and a renamed key's alias is
+   dropped only in a major. Adding a new key with a
    default is **not** breaking.
 6. **AGENTS.md / kernel rules** — removing or renaming an Iron-Law
    rule, or changing the kernel-membership contract per

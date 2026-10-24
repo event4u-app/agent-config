@@ -39,6 +39,7 @@ import { settingsSchema } from '../../server/schemas/settings.js';
 import { computeSurfaceDelta, flattenSurface, type SettingsSurface, type SurfaceEntry } from '../../shared/settingsSurface.js';
 import { REPO_ROOT } from '../release_env.js';
 import { die } from '../release_publication.js';
+import type { ConsumerImpact } from './consumer_impact.js';
 import { MINOR_REMOVAL_PROOFS, REMOVED_KEYS } from './settings_removed_keys.js';
 import { RENAMED_KEYS, SETTINGS_REMOVAL_RULE } from './settings_renamed_keys.js';
 
@@ -239,6 +240,12 @@ export function proofHolds(proof: string | undefined, root: string = REPO_ROOT):
  * `MINOR_REMOVAL_PROOFS`, and an alias dropped from `RENAMED_KEYS`. At a major
  * it returns nothing — a carried removal is still reported by
  * {@link carriedLine}, never silent.
+ *
+ * ADR-300's migration exception, option (b) of blocker
+ * `adr-300-exception-at-the-cut`: a rename carried by `RENAMED_KEYS` needs no
+ * proof when the release declares `Consumer-Impact: automatic`, because the
+ * alias carries the consumer's value. A `REMOVED_KEYS` tombstone discards the
+ * value, so the trailer alone never licenses it.
  */
 export function belowMajorRefusalLines(
     released: ReleasedSurface,
@@ -247,10 +254,14 @@ export function belowMajorRefusalLines(
     target: string,
     proofs: ReadonlyMap<string, string> = MINOR_REMOVAL_PROOFS,
     root: string = REPO_ROOT,
+    impact: ConsumerImpact = 'none',
 ): string[] {
     if (isMajorBump(released.version, target)) return [];
     const out: string[] = [];
-    const unproven = f.carried_removals.map((r) => r.key).filter((k) => !proofHolds(proofs.get(k), root));
+    const unproven = f.carried_removals
+        .filter((r) => !(r.via === 'renamed' && impact === 'automatic'))
+        .map((r) => r.key)
+        .filter((k) => !proofHolds(proofs.get(k), root));
     if (unproven.length > 0) {
         out.push(`removed or renamed below a major with no consumer-neutral proof: ${unproven.join(', ')}`);
     }
@@ -278,6 +289,8 @@ export function assert_settings_surface_delta(
         read?: () => ReleasedSurface;
         write?: (line: string) => void;
         proofs?: ReadonlyMap<string, string>;
+        /** The release span's strongest declared `Consumer-Impact:` (ADR-300). */
+        impact?: ConsumerImpact;
     } = {},
 ): SettingsDeltaFindings | null {
     const write = opts.write ?? ((line: string): void => void process.stderr.write(line));
@@ -303,7 +316,7 @@ export function assert_settings_surface_delta(
 
     const lines = [
         ...refusalLines(findings),
-        ...belowMajorRefusalLines(released, live, findings, target, opts.proofs ?? MINOR_REMOVAL_PROOFS),
+        ...belowMajorRefusalLines(released, live, findings, target, opts.proofs ?? MINOR_REMOVAL_PROOFS, REPO_ROOT, opts.impact),
     ];
     if (lines.length === 0) return findings;
 

@@ -12480,7 +12480,7 @@ function carveOutKeys() {
 }
 
 // src/scripts/_lib/settings_renamed_keys.ts
-var SETTINGS_REMOVAL_RULE = "A settings key may be removed or renamed in a minor release only when no consumer project can rely on it \u2014 default-neutral and derivable, proven by a named test; any other removal or rename ships only in a major, and a renamed key's alias is dropped only in a major.";
+var SETTINGS_REMOVAL_RULE = "A settings key may be removed or renamed in a minor release only when no consumer project can rely on it \u2014 default-neutral and derivable, proven by a named test \u2014 or, for a rename, when its RENAMED_KEYS alias carries the value and the release declares Consumer-Impact: automatic; any other removal or rename ships only in a major, and a renamed key's alias is dropped only in a major.";
 var RENAMED_KEYS = /* @__PURE__ */ new Map([
   ["planning.challenge_on_create", "planning.closure_pass"]
 ]);

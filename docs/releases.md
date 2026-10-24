@@ -35,8 +35,10 @@ the migration note — except where a bullet states its own narrower rule:
   (`src/config/agent-settings.template.yml` is the schema of record).
   A settings key may be removed or renamed in a minor release only when no
   consumer project can rely on it — default-neutral and derivable, proven by
-  a named test; any other removal or rename ships only in a major, and a
-  renamed key's alias is dropped only in a major. The cut enforces this
+  a named test — or, for a rename, when its RENAMED_KEYS alias carries the
+  value and the release declares Consumer-Impact: automatic; any other
+  removal or rename ships only in a major, and a renamed key's alias is
+  dropped only in a major. The cut enforces this
   (`src/scripts/_lib/release_settings_surface.ts`).
 - **CLI verbs** — the public command set of `agent-config` (`--help`
   surface). Verb removal/rename is breaking; additive verbs are minor.
