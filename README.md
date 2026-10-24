@@ -1,4 +1,4 @@
-<p align="center"><a href="https://event4u.app"><img alt="event4u Agent Config" src=".github/assets/banner.png"></a></p>
+<p align="center"><a href="https://event4u.app"><img alt="event4u Agent Config" src=".github/assets/info-banner.png"></a></p>
 
 # Agent Config — every claim machine-checked, including the artifact counts in these badges
 
