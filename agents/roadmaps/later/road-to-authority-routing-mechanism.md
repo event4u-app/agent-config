@@ -426,8 +426,9 @@ what the gate attests."*
       per [`active-remediation`](../../../src/rules/active-remediation.md).
       **Basis (D48):** the provisional, revisable classes in
       `src/config/live-tree-check-classes.json`, read per invocation by
-      `src/scripts/_lib/gate_invocations.ts`; the test pins every
-      invocation's blocking to them.
+      `src/scripts/_lib/gate_invocations.ts` and enforced in CI by
+      `src/scripts/check_live_tree_check_classes.ts`, so an invariant whose
+      invocation stops blocking fails the run.
       verify: `npx vitest run tests/scripts/check_persistence_classification.test.ts` -> 0
 
 *Exit: every live-tree check pinned red at Phase 7 start carries a

@@ -3,6 +3,24 @@
   "provisional": true,
   "revisable": "Provisional default of D48 in road-to-authority-routing-mechanism: the classes are those of the 7.1 ledger at revision 22 (unchanged through revision 24), which is not promoted while step 7.1 is parked. When that ledger is promoted or a class changes, regenerate these entries from it.",
   "source": "agents/evidence/analysis/gate-classification-ledger-20261024.md",
+  "checks": [
+    "check_gate_completeness",
+    "lint_ticked_unmet_criteria",
+    "check_rule_invariants",
+    "check_augment_description_cap",
+    "check_trigger_evals",
+    "lint_subagent_determinism",
+    "lint_rule_enforcement_declaration",
+    "check_token_quality_golden",
+    "check_council_layout",
+    "check_knowledge_cards",
+    "check_public_links",
+    "lint_agents_layout",
+    "lint_eval_freshness",
+    "lint_readme_jargon",
+    "lint_readme_serial_comma",
+    "check_composite_arming"
+  ],
   "invocations": [
     {
       "check": "check_gate_completeness",

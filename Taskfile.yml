@@ -194,6 +194,7 @@ tasks:
       - task: lint-symptom-intake
       - task: lint-roadmap-blockers
       - task: lint-ticked-unmet-criteria
+      - task: check-live-tree-check-classes
       - task: lint-blocker-citations
       - task: lint-release-holds
       - task: lint-roadmap-later-disposition
