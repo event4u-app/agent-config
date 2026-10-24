@@ -44,7 +44,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { dump as yamlDump, load as yamlLoad } from 'js-yaml';
 
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { mergeIntoTemplate } from '../../server/io/yamlIO.js';
 import { settingsSchema } from '../../server/schemas/settings.js';
@@ -269,10 +269,11 @@ function _unwrap(schema: z.ZodTypeAny): z.ZodTypeAny {
     let current: z.ZodTypeAny = schema;
     while (
         current instanceof z.ZodDefault ||
+        current instanceof z.ZodPrefault ||
         current instanceof z.ZodOptional ||
         current instanceof z.ZodNullable
     ) {
-        current = (current._def as { innerType: z.ZodTypeAny }).innerType;
+        current = (current._def as unknown as { innerType: z.ZodTypeAny }).innerType;
     }
     return current;
 }

@@ -70,12 +70,6 @@ updates:
       # ignore when the package raises its Node floor (PR #1115).
       - dependency-name: execa
         update-types: ["version-update:semver-major"]
-      # zod 4 is a real migration: zod-to-json-schema call sites and the
-      # server route/wizard schemas break (26 typecheck errors), and the
-      # committed install bundle embeds zod. Migrate deliberately to zod 4's
-      # native z.toJSONSchema in its own PR, then lift this (PR #1131).
-      - dependency-name: zod
-        update-types: ["version-update:semver-major"]
       # Toolchain majors are migration projects, not dependency bumps —
       # each below broke the 2026-08-03 npm-majors group PR (#1141, 35 red
       # checks) and needs its own planned upgrade with config/API work.

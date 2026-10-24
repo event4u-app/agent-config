@@ -31,7 +31,7 @@ import * as os from 'node:os';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { load as parseYaml } from 'js-yaml';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import * as ags from '../../src/scripts/_lib/agent_settings.js';
 import { settingsSchema } from '../../src/server/schemas/settings.js';
@@ -78,16 +78,14 @@ function readDotted(root: unknown, dotted: string): unknown {
     return node;
 }
 
-/** Unwrap the modifiers Zod stacks around an object (default / optional / effects). */
+/** Unwrap the modifiers Zod stacks around an object (default / prefault / optional). */
 function unwrap(schema: z.ZodTypeAny): z.ZodTypeAny {
     let node = schema;
     for (;;) {
-        if (node instanceof z.ZodDefault) {
+        if (node instanceof z.ZodDefault || node instanceof z.ZodPrefault) {
             node = node._def.innerType as z.ZodTypeAny;
         } else if (node instanceof z.ZodOptional || node instanceof z.ZodNullable) {
             node = node.unwrap() as z.ZodTypeAny;
-        } else if (node instanceof z.ZodEffects) {
-            node = node.innerType() as z.ZodTypeAny;
         } else {
             return node;
         }

@@ -23,7 +23,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
-import { z } from 'zod';
+import * as z from 'zod';
 import { settingsSchema } from '../schemas/settings.js';
 import { userIdentitySchema } from '../../shared/userMd/schema.js';
 import { composeUserIdentity } from '../../shared/userMd/utils.js';
@@ -208,7 +208,7 @@ async function readInstalledPacks(
 const wizardStateSchema = z.object({
     step: z.number().int().min(0),
     totalSteps: z.number().int().min(1).optional(),
-    partial: z.record(z.unknown()).default({}),
+    partial: z.record(z.string(), z.unknown()).default({}),
     startedAt: z.string().nullable().default(null),
 });
 
@@ -222,7 +222,7 @@ type WizardState = z.infer<typeof wizardStateSchema>;
 const installerV1PayloadSchema = z.object({
     schema_version: z.literal('installer-v1'),
     ai_tools: z.array(z.string().min(1)).min(1),
-    configs: z.record(z.record(z.unknown())).default({}),
+    configs: z.record(z.string(), z.record(z.string(), z.unknown())).default({}),
     dry_run: z.boolean().optional(),
 });
 
@@ -230,7 +230,7 @@ const wizardV2PayloadSchema = z.object({
     schema_version: z.literal('wizard-v2'),
     tools: z.array(z.string().min(1)).min(1),
     packs: z.array(z.string().min(1)).default([]),
-    settings: z.record(z.unknown()).default({}),
+    settings: z.record(z.string(), z.unknown()).default({}),
     scope_to_project_only: z.boolean().optional(),
     dry_run: z.boolean().optional(),
 });
@@ -697,12 +697,12 @@ const aiCouncilPayloadSchema = z.object({
     defaultMode: z.enum(['manual', 'api', 'cli', 'auto']).optional(),
     minRounds: z.number().int().min(1).optional(),
     maxTotalUsd: z.number().min(0).optional(),
-    members: z.record(z.object({
+    members: z.record(z.string(), z.object({
         enabled: z.boolean().optional(),
         participateLowImpact: z.boolean().optional(),
     })).optional(),
     // keys ∈ {trivial, low_impact, medium_impact} — others ignored.
-    decision: z.record(z.enum(['agent', 'council', 'user'])).optional(),
+    decision: z.record(z.string(), z.enum(['agent', 'council', 'user'])).optional(),
     /**
      * Declared so the operator can flip the one BILLING-CLASS decision in the
      * fallback design without hand-editing — NOT to stop the GUI stripping it:

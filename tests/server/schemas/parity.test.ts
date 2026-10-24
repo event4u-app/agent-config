@@ -21,7 +21,7 @@ import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { load as parseYaml } from 'js-yaml';
-import { z } from 'zod';
+import * as z from 'zod';
 import { settingsSchema } from '../../../src/server/schemas/settings.js';
 
 type Json = string | number | boolean | null | Json[] | { [k: string]: Json };
@@ -67,13 +67,14 @@ function schemaPaths(schema: z.ZodTypeAny, prefix = ''): string[] {
 
 function unwrapOptional(schema: z.ZodTypeAny): z.ZodTypeAny {
     let current: z.ZodTypeAny = schema;
-    // ZodDefault and ZodOptional and ZodNullable all expose `_def.innerType`.
+    // ZodDefault, ZodPrefault, ZodOptional and ZodNullable all expose `_def.innerType`.
     while (
         current instanceof z.ZodDefault ||
+        current instanceof z.ZodPrefault ||
         current instanceof z.ZodOptional ||
         current instanceof z.ZodNullable
     ) {
-        current = (current._def as { innerType: z.ZodTypeAny }).innerType;
+        current = (current._def as unknown as { innerType: z.ZodTypeAny }).innerType;
     }
     return current;
 }

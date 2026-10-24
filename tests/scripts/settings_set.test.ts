@@ -99,7 +99,7 @@ describe('settings:set', () => {
     it('refuses a value the schema rejects, before touching disk', () => {
         const res = run({ rawValue: 'banana' });
         expect(res.code).toBe(1);
-        expect(res.err.join('\n')).toContain('Expected boolean');
+        expect(res.err.join('\n')).toMatch(/expected boolean/i);
         expect(fs.existsSync(settingsFilePath(root))).toBe(false);
     });
 

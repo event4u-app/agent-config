@@ -14,7 +14,7 @@
  */
 
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { z } from 'zod';
+import * as z from 'zod';
 import {
     loadManifest,
     ManifestNotFoundError,
