@@ -389,32 +389,14 @@ read cannot leak through any later bug.
       by a sender — 3.3 wires it.
 - [ ] **2.5 Invisible characters do not hide a value.** Reuse the strip-then- <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/confusables.ts -->
       rescan step and its fixtures (`src/scripts/_lib/knowledge_global_redaction.ts`,
-      `tests/fixtures/global-knowledge-redaction/`).
-      An evasion corpus beside them — inserted spaces, alternate casing, line
-      wrapping, code fences, Markdown links, a value repeated or overlapping
-      another — reports each miss as a counted miss.
+      `tests/fixtures/global-knowledge-redaction/`). An evasion corpus beside them —
+      inserted spaces, alternate casing, line wrapping, code fences, Markdown links,
+      a value repeated or overlapping another — reports each miss as a counted miss.
       verify: the zero-width and homoglyph fixtures are detected by the table, and the evasion corpus prints its miss count per mutation.
-      **Built 2026-10-19 on the 2.3 branch, held with it:** `_lib/egress_normalize.ts`
-      (hidden set defined once, confusables folded through a new `LATIN_TWIN`,
-      spans mapped back) with the evasion corpus pinned; its homoglyph fixture is
-      an e-mail, so it lands after 2.3.
-      **Done 2026-10-22:** landed with 2.3 (`2b758dcf56`); the zero-width and homoglyph fixtures are detected and the evasion corpus prints its miss count.
-      Reopened 2026-10-23: `detectNormalized` had no production importer (tick-the-shipped-path 1.4).
-      **Wired 2026-10-24:** `replaceValues` (`_lib/egress_token.ts`) and `tallyText`
-      (`_lib/egress_text.ts`) detect through it, so the egress stage and the injection
-      path read the engine chunk's normalised table; the council's `replace` and its
-      final `check` (`ai_council/council_egress.ts`) do too. `LATIN_TWIN` moved from
-      `confusables.ts` into `egress_normalize.ts` as a hex-encoded pair of strings, so
-      the chunk does not carry that module's script regexes. Four tests in
-      `egress_normalize.test.ts` › `the senders read through the normalisation` fail
-      with the three call sites reverted and pass with them. A council seat found in
-      round 1 of the ratification review that a rule's extent reader still ran on the
-      original text, so a key block with a zero-width character in both markers was
-      refused by `replaceValues` and left its body behind in the council's masking;
-      `detectWithExtent` now runs the reader on the normalised text and maps its end
-      back (two tests › `a key block whose markers are disguised leaves whole`, red
-      before, green after). The engine chunk measures 32,305 B; its ceiling is raised
-      32,000 → 33,000 with a `raise_log` entry.
+      **Done 2026-10-24:** `_lib/egress_normalize.ts` (`detectWithExtent`) is called by
+      `replaceValues`, `tallyText` and the council's `replace` and final `check`;
+      extents are read on the normalised text. Tests: `src/scripts/_lib/egress_normalize.test.ts`.
+      Ratified 2/2: `agents/evidence/ratifications/one-detector-20261024.md`.
 
 - [x] **2.6 A mutation suite kills the invariants.** Disabling the IBAN checksum, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/egress-mutations/iban-checksum-disabled.json -->
       changing class precedence, logging a raw value or letting a credential
