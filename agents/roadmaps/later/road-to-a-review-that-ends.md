@@ -1,6 +1,11 @@
 ---
 complexity: lightweight
-status: ready
+status: later
+review_by: 2026-12-15
+entry_condition:
+  what: the 20th completion review merges after the cap landed in #2557 (324969e7eb), so step 2.1 can be read
+  when: count `git diff --name-only --diff-filter=AM 324969e7eb origin/main -- agents/evidence/reviews` reaching 20 (11 on 2026-10-24)
+  who: none — reviews accrue from ordinary PR work; any session then runs step 2.1
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-u (third arrival of the slow-run subject) verified at 553e58dfb that the completion review has no round cap (docs/contracts/plan-review-gates.md:303-307, § 2.5; nothing in src/scripts/check_completion_review.ts counts rounds) while review artefacts reach round25 (agents/evidence/reviews, slug fix-release-shape-allows-its-own-census). No active, later/ or stub roadmap owns a completion-review round cap. Folding it into road-to-agent-throughput-recovery was rejected: that file owns night-level throughput and waits on two pre-registered 14-night windows until 2026-11-17, so a contract change it does not measure would sit behind a window it does not need. Folding into road-to-a-step-that-costs-what-it-changes was rejected because this file needs one owner ADR and nothing else, and must not wait on that file's Phase 0 baseline."
@@ -105,6 +110,8 @@ rounds 1..N.
 
 ## Phase 2 — Read it
 
+Resume when the 20th post-cap review has merged (parked 2026-10-24: 11 review artefacts touched since #2557, 4 new reviews with findings).
+
 - [ ] **2.1 Read the next 20 reviews.** Rounds per review, high+critical per
       review against 0.1's round-1 rate, and the owner-report rows produced.
       verify: a Decisions row with all three figures, written after the 20th
@@ -148,4 +155,4 @@ rounds 1..N.
 
 - [x] AC-1 — No completion-review artefact beyond round N is accepted by `check_completion_review` after 1.3 lands.
 - [x] AC-2 — Every high/critical row open after round N appears in an owner report; none is closed by the cap.
-- [ ] AC-3 — The severity-by-round table is re-derived from the tree before any decision cites it.
+- [x] AC-3 — The severity-by-round table is re-derived from the tree before any decision cites it. — 2026-10-24: re-run `./scripts-run src/scripts/probe_depth_shadow --rounds` (192 reviews, 2900 rows) reproduces 0.1's artefact within the moved window (curve 1.47/1.59/0.78/0.79/0.80/0.38/0.15); ADR-294 and 1.1 cited it after 0.1 derived it.
