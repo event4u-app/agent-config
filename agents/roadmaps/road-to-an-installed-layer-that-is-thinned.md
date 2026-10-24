@@ -501,7 +501,7 @@ rather than as a ninth roadmap.
 - **If you do nothing:** 2.1, 2.3 and 2.4 stay open and now read as blocked rather than as runnable, so an autonomous run stops re-entering them. The default flip stays opt-in indefinitely, every non-opted-in install keeps loading 338,225 characters, and the owner's (a) answer of 2026-10-06 keeps looking like a pending decision when it is in fact a decision waiting on an instrument.
 
 ### blocker: default-flip-of-the-installed-layer
-- **Status:** open — **not a question, and no longer unobtainable.** **Re-checked 2026-10-18, still unmet:** `ls agents/evidence/analysis/ | grep installed-arrival` returns nothing. The producer moved: steps 2.1 and 2.2 of `road-to-a-setup-that-decides-itself` landed on 2026-10-18 (`src/scripts/_lib/arrival_record.ts`, `./scripts-run src/scripts/arrival_report`), but its step 1.1 — the `InstructionsLoaded` binding that feeds them — is still open, so the report has no sessions to print. The wait is now on that one binding and then on real sessions. The owner
+- **Status:** open — **not a question, and no longer unobtainable.** **Re-checked 2026-10-24, still unmet, and the wait has moved again:** the `InstructionsLoaded` binding landed on 2026-10-23 and `arrival_report` now prints ten real sessions on host version 2.1.310 — but every one shows the FULL layer (104 user-layer rules at start), because no machine can be opted in any more: since ADR-293 `installerThinsHost` returns `false` unconditionally, and promotion to the thinned form is step 3.3 of `road-to-a-setup-that-decides-itself`, still open. An `installed-arrival-*.md` written from these sessions would describe a layer that was never thinned. See the 2026-10-24 dated reading. **Re-checked 2026-10-18, still unmet:** `ls agents/evidence/analysis/ | grep installed-arrival` returns nothing. The producer moved: steps 2.1 and 2.2 of `road-to-a-setup-that-decides-itself` landed on 2026-10-18 (`src/scripts/_lib/arrival_record.ts`, `./scripts-run src/scripts/arrival_report`), but its step 1.1 — the `InstructionsLoaded` binding that feeds them — is still open, so the report has no sessions to print. The wait is now on that one binding and then on real sessions. The owner
   answered (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D5). It closes when
   an ADR records (a) together with the arrival record it relied on.
   **Corrected 2026-10-16, and the correction reverses the previous reading.**
@@ -706,3 +706,34 @@ own bodies, for the reason this section's opening note gives.
   Bind `InstructionsLoaded`** of that file, which is the event that fills it.
   So AC-2's wait is no longer on an unscheduled instrument but on one open step
   in a named sibling roadmap, and it is still not work this file can do.
+
+**Re-screened 2026-10-24 at `main` @ `0a86c5b91` — the observer now has data,
+and the data cannot be the record this file asks for.** Every open step was
+re-tested against the tree:
+
+- **2.1 and AC-2 — the instrument is fed, the machine is not opted in, and
+  nothing can opt one in.** Step 1.1 of `road-to-a-setup-that-decides-itself`
+  landed on 2026-10-23, and `./scripts-run src/scripts/arrival_report` now
+  prints `scanned: 10` — ten real sessions, every one `host version 2.1.310 ·
+  launch sdk-cli`, `status: visible`, `user-layer rules loaded at start: 104 ·
+  after compaction: 0`. But `~/.claude/rules` on the same machine holds 106
+  files and 368,881 characters: the full layer, not the stub form. Step 2.1
+  asks for a record "on an opted-in machine" naming which **stubs** and standing
+  laws loaded, and no machine can be opted in today — since ADR-293 removed
+  `lean_projection.*`, `installerThinsHost` in `src/scripts/_lib/lean_projection_mode.ts`
+  returns `false` unconditionally, and the only route to a thinned layer is the
+  session-time promotion of that file's step 3.3, still open. The report also
+  carries none of 2.1's other claims (the four `paths:` edit shapes, every
+  matched delivery under 8,000). Writing `installed-arrival-*.md` from these
+  sessions would satisfy the grep while describing a layer that was never
+  thinned, so it is not written. The gate is now that file's step 3.3, not 1.1.
+- **2.3 — unchanged.** `~/.event4u/agent-config/state/rule-inject/` holds 44
+  project keys and `grep -vc '^injection-dispatch-'` over them returns 0: every
+  key is still the hook test suite's fixture. No `stub-use-*.md` exists.
+- **2.4 — unchanged**, for the reason recorded under it: its check greps 2.1's
+  record.
+- **3.1, 3.5 and AC-4** still wait on that file's 5.3. `check_host_tree_parity`
+  re-run exits 0 (`2 non-delivery host tree(s) byte-identical to eager-all ·
+  delivery hosts [claude-code]`).
+- **3.2 and AC-1** — not re-measured; they wait on the full-bodied set
+  shrinking, as recorded under 3.2, and nothing in this change moves the corpus.
