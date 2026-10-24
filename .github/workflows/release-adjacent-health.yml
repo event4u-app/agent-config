@@ -55,3 +55,16 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx tsx src/scripts/check_release_adjacent_health.ts --max-red-hours 48
+
+      # A submission is done only once its entry is live. This reds the job when a
+      # ledger row has fallen behind its upstream (row 1b read `submitted` for 39
+      # days after its PR closed), a review waits for an answer, or a listing went
+      # missing or stale. It fails the job rather than `continue-on-error`, which
+      # would leave the run green and the drift unseen; `!cancelled()` keeps it
+      # independent of the step above. An unreadable upstream is never an action,
+      # so a network outage cannot red it. `gh` reads GITHUB_TOKEN as its token.
+      - name: Check every listing submission is still live and the ledger current
+        if: ${{ !cancelled() }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts-run src/scripts/adoption_status --check-upstream --fail-on-action

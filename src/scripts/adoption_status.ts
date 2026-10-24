@@ -22,7 +22,7 @@
  *
  * CLI:
  *
- *   ./scripts-run src/scripts/adoption_status [--json] [--branch main] [--check-upstream]
+ *   ./scripts-run src/scripts/adoption_status [--json] [--branch main] [--check-upstream] [--fail-on-action]
  *
  * `--check-upstream` reads each ledger row's upstream (`gh pr view` for a pull
  * request, one `curl` for a listing page or registry query) and appends what it
@@ -30,10 +30,19 @@
  * report exactly as before, and stderr names that mode plus every row whose
  * `Last read` date is missing or older than the sheet's re-read threshold.
  *
+ * With `--check-upstream`, a row whose sheet and upstream disagree in a way that
+ * needs a person also carries an action (`sheet-behind`, `needs-response`,
+ * `listing-lost`, `listing-stale`) next to its unchanged verdict, and the report
+ * names the next act. A submission is done when its entry is live, not when it
+ * was sent, so `--fail-on-action` turns any action into a non-zero exit for the
+ * daily watcher. Without `--check-upstream` there is nothing to judge and the
+ * flag is reported on stderr and ignored.
+ *
  * Exit codes:
  *
  *   0 — printed successfully (status itself does not gate the exit).
  *   1 — IO error reading the registry-submissions sheet.
+ *   2 — `--check-upstream --fail-on-action` and at least one row needs an action.
  */
 
 import { spawnSync } from 'node:child_process';
@@ -243,25 +252,29 @@ interface Args {
     json: boolean;
     branch: string;
     checkUpstream: boolean;
+    failOnAction: boolean;
 }
 
 export function parse_args(argv: string[]): Args {
     let json = false;
     let branch = 'main';
     let checkUpstream = false;
+    let failOnAction = false;
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
         if (a === '--json') {
             json = true;
         } else if (a === '--check-upstream') {
             checkUpstream = true;
+        } else if (a === '--fail-on-action') {
+            failOnAction = true;
         } else if (a === '--branch') {
             branch = argv[++i] ?? '';
         } else if (a !== undefined && a.startsWith('--branch=')) {
             branch = a.slice('--branch='.length);
         }
     }
-    return { json, branch, checkUpstream };
+    return { json, branch, checkUpstream, failOnAction };
 }
 
 export function main(argv: string[] = process.argv.slice(2)): number {
@@ -293,10 +306,15 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         for (const u of unread) {
             process.stderr.write(`  row ${u.id} ${u.registry}: ${u.label}\n`);
         }
+        if (args.failOnAction) {
+            process.stderr.write(
+                '--fail-on-action ignored: actions are judged only with --check-upstream\n',
+            );
+        }
         return 0;
     }
 
-    const verdicts = judge_upstream(rows, live_upstream_reader, today);
+    const verdicts = judge_upstream(rows, live_upstream_reader, today, _releasedServer());
     if (args.json) {
         const base = JSON.parse(render_json(registryCounts, reports, ci, args.branch)) as Record<
             string,
@@ -308,7 +326,32 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stdout.write(render_text(registryCounts, reports, ci, args.branch) + '\n');
         process.stdout.write(render_upstream_text(verdicts, unread) + '\n');
     }
-    return 0;
+    const code = upstream_exit_code(verdicts, args.failOnAction);
+    if (code !== 0) {
+        // On a runner the `::error::` prefix turns each line into an annotation
+        // naming the row, so the red job says what to do without opening the log.
+        const prefix = process.env.GITHUB_ACTIONS === 'true' ? '::error title=adoption_status::' : 'action: ';
+        for (const line of action_lines(verdicts)) {
+            process.stderr.write(prefix + line + '\n');
+        }
+    }
+    return code;
+}
+
+/** `name` and `version` the registry should carry, from package.json. */
+function _releasedServer(): ReleasedServer | undefined {
+    try {
+        const pkg = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf-8')) as {
+            mcpName?: unknown;
+            version?: unknown;
+        };
+        if (typeof pkg.mcpName === 'string' && typeof pkg.version === 'string') {
+            return { name: pkg.mcpName, version: pkg.version };
+        }
+    } catch {
+        // Without a readable package.json there is nothing to compare against.
+    }
+    return undefined;
 }
 
 // --- upstream reading --------------------------------------------------------
@@ -325,7 +368,15 @@ export interface LedgerRow {
 }
 
 export type UpstreamReading =
-    | { ok: true; state: 'open' | 'closed' | 'merged' | 'listed' | 'not-listed'; at?: string }
+    | {
+          ok: true;
+          state: 'open' | 'closed' | 'merged' | 'listed' | 'not-listed';
+          at?: string;
+          /** `gh pr view` reviewDecision, e.g. `CHANGES_REQUESTED`; pull requests only. */
+          reviewDecision?: string;
+          /** Server name → the version the registry marks latest; registry queries only. */
+          latestVersions?: Record<string, string>;
+      }
     | { ok: false; reason: string };
 
 export type UpstreamReader = (row: LedgerRow) => UpstreamReading;
@@ -340,11 +391,25 @@ export type UpstreamVerdict =
     | 'unreachable'
     | 'no-upstream';
 
+/**
+ * Reported next to the verdict, never instead of it: the verdict says what the
+ * upstream reads, the action says the sheet and that reading disagree in a way a
+ * person has to resolve.
+ */
+export type ActionVerdict = 'sheet-behind' | 'needs-response' | 'listing-lost' | 'listing-stale';
+
 export interface RowVerdict {
     id: string;
     registry: string;
     verdict: UpstreamVerdict;
     detail: string;
+    action?: ActionVerdict;
+    next?: string;
+}
+
+export interface ReleasedServer {
+    name: string;
+    version: string;
 }
 
 export interface UnreadFinding {
@@ -451,6 +516,7 @@ export function judge_upstream(
     rows: LedgerRow[],
     reader: UpstreamReader,
     today: string,
+    released?: ReleasedServer,
 ): RowVerdict[] {
     return rows.map((row): RowVerdict => {
         const base = { id: row.id, registry: row.registry };
@@ -461,23 +527,100 @@ export function judge_upstream(
         if (!r.ok) {
             return { ...base, verdict: 'unreachable', detail: r.reason };
         }
-        switch (r.state) {
-            case 'closed':
-                return { ...base, verdict: 'answered-closed', detail: `closed ${r.at ?? 'date unknown'}` };
-            case 'merged':
-                return { ...base, verdict: 'answered-merged', detail: `merged ${r.at ?? 'date unknown'}` };
-            case 'listed':
-            case 'not-listed':
-                return { ...base, verdict: r.state, detail: row.ref };
-            case 'open': {
-                const age = row.date === '' ? null : _daysBetween(row.date, today);
-                if (row.status === 'submitted' && age !== null && age >= STALLED_AFTER_DAYS) {
-                    return { ...base, verdict: 'stalled', detail: `open ${age} days, no answer` };
-                }
-                return { ...base, verdict: 'open', detail: age === null ? 'open' : `open ${age} days` };
-            }
-        }
+        const out = { ...base, ..._verdictOf(row, r, today) };
+        const action = _actionFor(row, r, released);
+        // Spread only when present: the JSON writer prints an undefined value as `null`.
+        return action === null ? out : { ...out, ...action };
     });
+}
+
+function _verdictOf(
+    row: LedgerRow,
+    r: Extract<UpstreamReading, { ok: true }>,
+    today: string,
+): { verdict: UpstreamVerdict; detail: string } {
+    switch (r.state) {
+        case 'closed':
+            return { verdict: 'answered-closed', detail: `closed ${r.at ?? 'date unknown'}` };
+        case 'merged':
+            return { verdict: 'answered-merged', detail: `merged ${r.at ?? 'date unknown'}` };
+        case 'listed':
+        case 'not-listed':
+            return { verdict: r.state, detail: row.ref };
+        case 'open': {
+            const age = row.date === '' ? null : _daysBetween(row.date, today);
+            if (row.status === 'submitted' && age !== null && age >= STALLED_AFTER_DAYS) {
+                return { verdict: 'stalled', detail: `open ${age} days, no answer` };
+            }
+            return { verdict: 'open', detail: age === null ? 'open' : `open ${age} days` };
+        }
+    }
+}
+
+/**
+ * The cases where the sheet and the live upstream disagree in a way that needs a
+ * person. `rejected` and `stalled` rows are left alone: the sheet already says
+ * the attempt ended, and an unreadable upstream is never an action, so a network
+ * outage cannot red the watcher.
+ */
+function _actionFor(
+    row: LedgerRow,
+    r: Extract<UpstreamReading, { ok: true }>,
+    released: ReleasedServer | undefined,
+): { action: ActionVerdict; next: string } | null {
+    const awaiting = row.status === 'submitted' || row.status === 'pending';
+    if (awaiting && (r.state === 'closed' || r.state === 'merged')) {
+        return {
+            action: 'sheet-behind',
+            next: `update the ledger row: the upstream ${r.state} ${r.at ?? 'on an unknown date'} while the sheet says ${row.status}`,
+        };
+    }
+    // Row 4's path after its first CI publish: the entry went live, the sheet still waits.
+    if (awaiting && r.state === 'listed') {
+        return {
+            action: 'sheet-behind',
+            next: `update the ledger row: the listing reads listed while the sheet says ${row.status}`,
+        };
+    }
+    if (r.state === 'open' && r.reviewDecision === 'CHANGES_REQUESTED') {
+        return { action: 'needs-response', next: `answer the review on ${row.ref}` };
+    }
+    if (row.status === 'accepted' && r.state === 'not-listed') {
+        return { action: 'listing-lost', next: `re-check or re-submit the listing at ${row.ref}` };
+    }
+    if (
+        row.status === 'accepted' &&
+        row.kind === 'registry-query' &&
+        r.state === 'listed' &&
+        released !== undefined &&
+        r.latestVersions !== undefined
+    ) {
+        const live = r.latestVersions[released.name];
+        if (live === undefined) {
+            return {
+                action: 'listing-lost',
+                next: `re-check or re-submit the listing: the registry answer carries no ${released.name}`,
+            };
+        }
+        if (live !== released.version) {
+            return {
+                action: 'listing-stale',
+                next: `publish ${released.version} to the registry: it carries ${live} for ${released.name}`,
+            };
+        }
+    }
+    return null;
+}
+
+/** The rows `--fail-on-action` reds on, one line each: row, action, next act. */
+export function action_lines(verdicts: RowVerdict[]): string[] {
+    return verdicts
+        .filter((v) => v.action !== undefined)
+        .map((v) => `row ${v.id} ${v.action} (${v.registry}) — ${v.next ?? ''}`);
+}
+
+export function upstream_exit_code(verdicts: RowVerdict[], failOnAction: boolean): number {
+    return failOnAction && verdicts.some((v) => v.action !== undefined) ? 2 : 0;
 }
 
 export function upstream_mode_note(checked: boolean): string {
@@ -508,6 +651,14 @@ export function render_upstream_text(verdicts: RowVerdict[], unread: UnreadFindi
     for (const u of unread) {
         lines.push(`  row ${u.id.padEnd(3)} ${u.label} ${u.registry}`);
     }
+    const actions = action_lines(verdicts);
+    if (actions.length > 0) {
+        lines.push('');
+        lines.push('Actions needed (a submission is done only once it is live):');
+        for (const a of actions) {
+            lines.push(`  ${a}`);
+        }
+    }
     return lines.join('\n');
 }
 
@@ -521,14 +672,14 @@ function _readPullRequest(ref: string): UpstreamReading {
     }
     const proc = spawnSync(
         'gh',
-        ['pr', 'view', m[2] as string, '--repo', m[1] as string, '--json', 'state,closedAt,mergedAt'],
+        ['pr', 'view', m[2] as string, '--repo', m[1] as string, '--json', 'state,closedAt,mergedAt,reviewDecision'],
         { encoding: 'utf8', timeout: 20_000 },
     );
     if (proc.status !== 0) {
         const snip = sanitize_text(_pyStrip(proc.stderr ?? '')).slice(0, 80);
         return { ok: false, reason: `gh exit=${proc.status}: ${snip}` };
     }
-    let d: { state?: string; closedAt?: string; mergedAt?: string };
+    let d: { state?: string; closedAt?: string; mergedAt?: string; reviewDecision?: string };
     try {
         d = JSON.parse(proc.stdout) as typeof d;
     } catch {
@@ -536,7 +687,10 @@ function _readPullRequest(ref: string): UpstreamReading {
     }
     if (d.state === 'MERGED') return { ok: true, state: 'merged', at: sanitize_text(d.mergedAt ?? '').slice(0, 10) };
     if (d.state === 'CLOSED') return { ok: true, state: 'closed', at: sanitize_text(d.closedAt ?? '').slice(0, 10) };
-    if (d.state === 'OPEN') return { ok: true, state: 'open' };
+    if (d.state === 'OPEN') {
+        const review = sanitize_text(d.reviewDecision ?? '').slice(0, 40);
+        return review === '' ? { ok: true, state: 'open' } : { ok: true, state: 'open', reviewDecision: review };
+    }
     return { ok: false, reason: `unknown pull-request state ${sanitize_text(String(d.state)).slice(0, 40)}` };
 }
 
@@ -574,9 +728,21 @@ export function read_url(
         if (code === '404') return { ok: true, state: 'not-listed' };
         return { ok: false, reason: `HTTP ${code} from ${ref}` };
     }
-    let body: { metadata?: { count?: unknown } };
+    return read_registry_answer(out.slice(0, cut), ref);
+}
+
+const _REGISTRY_META_KEY = 'io.modelcontextprotocol.registry/official';
+
+/**
+ * Shape read live from `GET /v0/servers?search=` on 2026-10-24:
+ * `{servers: [{server: {name, version}, _meta: {"<key>": {isLatest}}}], metadata: {count}}`.
+ * A search returns every published version, so only the one flagged `isLatest`
+ * names what a client installs.
+ */
+export function read_registry_answer(text: string, ref: string): UpstreamReading {
+    let body: { metadata?: { count?: unknown }; servers?: unknown };
     try {
-        body = JSON.parse(out.slice(0, cut)) as typeof body;
+        body = JSON.parse(text) as typeof body;
     } catch {
         return { ok: false, reason: `registry answer from ${ref} not parseable as JSON` };
     }
@@ -584,7 +750,26 @@ export function read_url(
     if (typeof n !== 'number') {
         return { ok: false, reason: 'registry answer has no metadata.count' };
     }
-    return { ok: true, state: n > 0 ? 'listed' : 'not-listed' };
+    if (n === 0) {
+        return { ok: true, state: 'not-listed' };
+    }
+    const latestVersions: Record<string, string> = {};
+    let flagged = false;
+    for (const entry of Array.isArray(body.servers) ? body.servers : []) {
+        const e = entry as {
+            server?: { name?: unknown; version?: unknown };
+            _meta?: Record<string, { isLatest?: unknown } | undefined>;
+        };
+        const name = e.server?.name;
+        const version = e.server?.version;
+        if (typeof name !== 'string' || typeof version !== 'string') continue;
+        if (e._meta?.[_REGISTRY_META_KEY]?.isLatest !== true) continue;
+        flagged = true;
+        latestVersions[sanitize_text(name).slice(0, 200)] = sanitize_text(version).slice(0, 40);
+    }
+    // No `isLatest` flag anywhere means the answer is not the shape read above;
+    // comparing against an empty map would report a live listing as lost.
+    return flagged ? { ok: true, state: 'listed', latestVersions } : { ok: true, state: 'listed' };
 }
 
 /** Reads the real upstream: `gh` for a pull request, `curl` otherwise. */
