@@ -61,6 +61,66 @@ same 16 are re-listed in
 `agents/evidence/analysis/live-tree-check-remeasure-20261017.md`. That record is
 the Phase 7 start inventory openai asked to have cited.
 
+## Aggregation rule and mechanical reconciliation — revision 5
+
+The tenth round (D34) accepted the governing definition. It withheld closure
+because the prompt showed neither the rows nor a check-to-row mapping. anthropic
+also rejected *"at least one classified aspect per check"* as an invented
+aggregation rule. Revision 5 replaces it:
+
+> **A check is classified when every one of its binding aspects (every row
+> that is not a migration note) carries one of the four classes. One
+> classified aspect never covers a sibling.**
+
+`agents/evidence/analysis/gate-ledger-reconcile.mjs` checks the rule
+mechanically. It parses three things:
+
+- the Phase 7 start inventory table in
+  `agents/evidence/council/live-tree-check-classification-20261010.md`;
+- this ledger's table;
+- the invocation inventory.
+
+It exits 1 unless all of these hold:
+
+- the three name the same 16 checks;
+- every binding aspect carries a class;
+- every target row sits beside its current-scope row.
+
+It was shown to fail: with one class removed from a row it printed
+`unclassified binding aspect: check_knowledge_cards / C4 trust tag`.
+
+Output on this revision (`node agents/evidence/analysis/gate-ledger-reconcile.mjs`, exit 0):
+
+```text
+check | binding aspects | all classified | classes | migration notes
+check_gate_completeness | 3 | yes | invariant 3 | 0
+lint_ticked_unmet_criteria | 1 | yes | invariant 1 | 0
+check_rule_invariants | 1 | yes | invariant 1 | 0
+check_augment_description_cap | 1 | yes | invariant 1 | 0
+check_trigger_evals | 2 | yes | invariant 2 | 0
+lint_subagent_determinism | 1 | yes | invariant 1 | 0
+lint_rule_enforcement_declaration | 1 | yes | invariant 1 | 0
+check_token_quality_golden | 3 | yes | invariant 2, observation 1 | 0
+check_council_layout | 1 | yes | invariant 1 | 1
+check_knowledge_cards | 8 | yes | invariant 6, observation 2 | 0
+check_public_links | 6 | yes | invariant 5, observation 1 | 0
+lint_agents_layout | 1 | yes | invariant 1 | 1
+lint_eval_freshness | 1 | yes | invariant 1 | 0
+lint_readme_jargon | 1 | yes | invariant 1 | 0
+lint_readme_serial_comma | 1 | yes | invariant 1 | 0
+check_composite_arming | 3 | yes | invariant 1, observation 2 | 0
+
+rows 37 · binding 35 · migration 2 · {"invariant":29,"snapshot":0,"tolerance":0,"observation":6}
+
+OK: 16 phase-7 checks = 16 ledger checks = 16 inventoried checks; every binding aspect of every check carries one of the four classes; every target row sits beside its current-scope row.
+```
+
+What it does not establish: that row 16 is the only divergence between class
+and current exit behaviour. That finding comes from reading the inventory, not
+from running each check per mode. anthropic asks for a per-row schema with
+`expected_exit`, `current_exit`, `divergence` and `last_verified`, maintained
+by CI. That is a 7.2 item and is carried there.
+
 ## Current enforcement, recorded separately
 
 From `agents/evidence/analysis/gate-invocation-inventory-20261024.md`:
@@ -172,7 +232,7 @@ controls, and no independent party verifies it (openai's hardest pushback).
 - **snapshot 0**.
 - **tolerance 0**.
 
-No aspect carries a value outside the four classes. Runtime metadata such as `not-evaluated: evidence-missing` is stated next to a class, never in place of one. Every one of the 16 checks carries at least one classified aspect.
+No aspect carries a value outside the four classes. Runtime metadata such as `not-evaluated: evidence-missing` is stated next to a class, never in place of one. Every binding aspect of every one of the 16 checks carries a class (the aggregation rule above, checked mechanically).
 
 The three D14 abstentions are resolved as follows:
 
