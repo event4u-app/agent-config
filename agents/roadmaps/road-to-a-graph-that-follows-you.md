@@ -88,7 +88,7 @@ plan AC improvements automatically when a source repository updates.
       also records the sealed-lineage decision of Phase 7-9.
       verify: `./scripts-run src/scripts/adr/regenerate_index --dir docs/decisions --check` -> 0 and the ADR
       is listed.
-- [ ] **2.2 One `graphHome(root)` resolver.** A module under `src/scripts/code_graph/`
+- [x] **2.2 One `graphHome(root)` resolver.** A module under `src/scripts/code_graph/` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/graph_home.ts -->
       returning the state dir, map dir and lock dir for a root: `root/agents/` when that
       directory exists or a project install is present (today's paths, unchanged);
       otherwise `event4u_root()/runtime/graphs/` plus the repo id. It never creates
@@ -333,6 +333,8 @@ owner's machine; what the repository tracks is source-free.
 | O6 | contested-technical | council:graph-follows-you-closure | No tracked source view at all; the tracked lineage view shows mechanisms by verdict only | unanimous (2/2) — moot once O5 is local; a per-source list is more identifying than a count | O5 is reopened |
 | O7 | reversible-technical | council:graph-follows-you-closure | Watch is off per source until the owner runs `lineage watch enable` | unanimous (2/2); a remote check is observable network activity and needs per-source consent | the weekly-watch stub shows enabled sources produce signal |
 | A-2.1 | reversible-technical | agent | 2.1 verify names `--dir docs/decisions`: the generator defaults to `docs/adr/`, which does not exist here, and exits 2 for every argv; the CI step (`rule-backstops.yml`) runs the same command with `--dir docs/decisions` | `./scripts-run src/scripts/adr/regenerate_index --check` -> exit 2 `adr-dir not found: docs/adr` | the generator default moves to `docs/decisions` |
+| A-2.4a | reversible-technical | agent | Hooks in the dispatch bundle (context nudge, turn-end feeder, session-start refresh) resolve project homes only (`projectHome`), and `auto-refresh on` refuses a root without one; CLI and MCP use the full `graphHome` | routing the hooks through `graphHome` measured the dispatch bundle at 1,555,029 B against a 1,551,000 B ceiling and the refresh chunk at 21,569 B against 15,400 B (`check_hook_bundle_composition`); project-only routing measures 1,550,405 B and 15,260 B | a raise of the bundle ceiling is ratified, or a foreign-repository user asks for session-start nudges |
+| A-2.4b | reversible-technical | agent | Existing test fixtures that model a project gain an `agents/` directory instead of asserting the new user-global branch; the user-global branch is covered by the new graph_home and foreign-repository tests | the fixtures (map, refresh, refresh lock, consumer root, bench) are projects in intent; a bare temp dir is now a foreign root by definition (ADR-299) | — |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->

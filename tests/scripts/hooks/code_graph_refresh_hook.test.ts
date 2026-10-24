@@ -5,9 +5,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { AUTO_REFRESH_REL, LOCK_REL, readRefreshRecords } from '../../../src/scripts/code_graph/refresh_lock.js';
+import { AUTO_REFRESH_REL, LOCK_REL, NATIVE_CACHE_REL as CACHE_REL } from '../../../src/scripts/code_graph/graph_home.js';
+import { readRefreshRecords } from '../../../src/scripts/code_graph/refresh_lock.js';
 import {
-    CACHE_REL,
     REFRESH_ARGS,
     refreshFor,
     repoRoot,

@@ -29,8 +29,10 @@
  * completed temp output — on budget-exceeded, build failure, or the child
  * never producing output, the rename never happens and the OLD cache is left
  * byte-for-byte untouched. The cache itself (default
- * `agents/runtime/state/code-graph-v1.json`) is local-only and disposable —
- * gitignored, rebuildable from source at any time; never a source of truth.
+ * `agents/runtime/state/code-graph-v1.json`; for a root without `agents/` or a
+ * project install, the user-global `runtime/graphs/<repo id>/state/`, ADR-299)
+ * is local-only and disposable — gitignored, rebuildable from source at any
+ * time; never a source of truth.
  *
  *   impact    --diff <rev> [--depth N]      callers/dependents/test files
  *                                             reachable from the changed
@@ -52,7 +54,8 @@
  * 2 usage · 3 internal.
  *
  *   map      [--root P] [--out DIR] [--open]  draw the project map into
- *            [--no-verify] [--diff <rev>]      agents/map/ (ADR-297); renders it
+ *            [--no-verify] [--diff <rev>]      agents/map/ (ADR-297), or the
+ *                                               graph home's map/ (ADR-299); renders it
  *            [--prs]                           (open PRs by area, via gh)
  *                                               at three widths when Playwright
  *                                               is present
@@ -81,15 +84,13 @@ import {
     detectSources,
     type GraphState,
     graphState,
-    NATIVE_CACHE_REL,
     pickSource,
 } from './detect.js';
+import { graphHome } from './graph_home.js';
 import { suggestVerb } from './intent.js';
 import { buildMap, graphGeneration, mapGeneration, recordOutcome } from './map.js';
 import { cliPackage, usableCli } from './refresh_cli.js';
 import {
-    AUTO_REFRESH_REL,
-    LOCK_REL,
     STALE_LOCK_MS,
     acquire as acquireRefreshLock,
     pidAlive,
@@ -127,14 +128,20 @@ import {
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
 /**
- * The cache belongs to the project it describes: `<root>/agents/runtime/state/`,
- * the path MCP, the context hook and `detect` already read. Anchoring it to
+ * The cache belongs to the project it describes: `<root>/agents/runtime/state/`
+ * when the root has a project home, its user-global graph home otherwise
+ * (ADR-299) — the path MCP, the context hook and `detect` read. Anchoring it to
  * the package tree put a consumer's graph inside `node_modules`, where `npm ci`
  * deleted it, two projects sharing an install overwrote each other, and MCP
  * answered "no graph" right after the CLI reported a fresh one.
  */
 export function cacheFor(root: string): string {
-    return path.join(root, NATIVE_CACHE_REL);
+    return graphHome(root).cachePath;
+}
+/** A path relative to the root when it lies inside it; a graph home outside the root prints in full. */
+function shown(root: string, p: string): string {
+    const rel = path.relative(root, p);
+    return rel.startsWith('..') || path.isAbsolute(rel) ? p : rel;
 }
 /** Local `tsx` binary — `refresh` spawns `build` as a child of THIS file
  * through it, so a budget-exceeded kill only ever terminates the child. */
@@ -206,7 +213,7 @@ async function cmdBuild(argv: string[]): Promise<number> {
             `    edges: EXTRACTED ${c.EXTRACTED} · INFERRED ${c.INFERRED} · AMBIGUOUS ${c.AMBIGUOUS}\n` +
             `    resolved_via: ${resolvedViaHistogram(graph)}\n` +
             (update ? `    incremental: ${reExtracted} re-extracted · ${reused} reused\n` : '') +
-            (out ? `    cache: ${path.relative(root, out)}\n` : '') +
+            (out ? `    cache: ${shown(root, out)}\n` : '') +
             legacyCacheNotice(root),
     );
     return 0;
@@ -263,12 +270,12 @@ function cmdValidate(argv: string[]): number {
     // content-addressed cache key, so agreement here means the twin was emitted
     // from THIS graph and not merely from a graph.
     const twinState = twinChecksumState(p, (parsed as CodeGraph).source_checksum);
-    const rel = path.relative(root, p);
+    const rel = shown(root, p);
     if (twinState.kind === 'mismatch') {
         process.stderr.write(
             `❌  SQLite twin disagrees with the canonical JSON: twin ${twinState.twin} ≠ json ${twinState.json}\n` +
                 '    The twin is derived and disposable — delete it and re-run `code-graph build`.\n' +
-                `    ${path.relative(root, sqliteTwinPath(p))}\n`,
+                `    ${shown(root, sqliteTwinPath(p))}\n`,
         );
         return 1;
     }
@@ -311,7 +318,7 @@ function resolveGraph(argv: string[]): { g: LoadedGraph; note: string } | { err:
     if (!picked) return { err: 'no code-graph source found — run `code_graph build` or ship a graph.json' };
     if (picked.kind === 'scip') return { err: `${picked.note ?? 'SCIP detected'} — run \`code-graph build\` to merge it into the native graph` };
     const staleNote = picked.stale ? ` ⚠ index is ${picked.commits_behind ?? 'N'} commit(s) behind — rebuild before trusting` : '';
-    return { g: loadGraph(picked.path, `${picked.kind}:${path.relative(root, picked.path)}`), note: staleNote };
+    return { g: loadGraph(picked.path, `${picked.kind}:${shown(root, picked.path)}`), note: staleNote };
 }
 
 function render(r: QueryResult, staleNote: string): number {
@@ -431,7 +438,8 @@ function isFlagValue(argv: string[], token: string): boolean {
  */
 function stateOf(argv: string[], answeredBy?: string): GraphState {
     const explicit = flag(argv, '--graph');
-    return graphState(resolveRoot(argv), explicit ?? answeredBy);
+    const root = resolveRoot(argv);
+    return graphState(root, explicit ?? answeredBy ?? cacheFor(root));
 }
 
 /** The two histogram lines + the staleness line, in one place so the four
@@ -637,7 +645,7 @@ function cmdDetect(argv: string[]): number {
     }
     for (const v of verdicts) {
         const fresh = v.stale === undefined ? '' : v.stale ? ` · STALE${v.commits_behind !== undefined ? ` (${v.commits_behind} behind)` : ''}` : ' · fresh';
-        process.stdout.write(`${v.kind.padEnd(9)} ${path.relative(root, v.path)}${fresh}${v.note ? ` · ${v.note}` : ''}\n`);
+        process.stdout.write(`${v.kind.padEnd(9)} ${shown(root, v.path)}${fresh}${v.note ? ` · ${v.note}` : ''}\n`);
     }
     const picked = pickSource(verdicts);
     if (picked) process.stdout.write(`→ query would use: ${picked.kind}\n`);
@@ -837,7 +845,7 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
     const tmpTwin = sqliteTwinPath(tmpOut);
     if (fs.existsSync(tmpTwin)) fs.renameSync(tmpTwin, sqliteTwinPath(out));
     else fs.rmSync(sqliteTwinPath(out), { force: true });
-    process.stdout.write(`✅  code-graph refreshed — cache: ${path.relative(root, out)}\n`);
+    process.stdout.write(`✅  code-graph refreshed — cache: ${shown(root, out)}\n`);
     return 0;
 }
 
@@ -906,8 +914,18 @@ async function cmdRefresh(argv: string[]): Promise<number> {
 function cmdAutoRefresh(argv: string[]): number {
     const root = resolveRoot(argv);
     const action = argv.find((a) => !a.startsWith('--') && !isFlagValue(argv, a)) ?? 'status';
-    const marker = path.join(root, AUTO_REFRESH_REL);
+    const home = graphHome(root);
+    const marker = home.autoRefreshPath;
     if (action === 'on') {
+        if (home.kind === 'global') {
+            // The session concern serves project homes only; its chunk cannot carry the
+            // user-global resolver, so an opt-in here would be a promise nothing keeps.
+            process.stderr.write(
+                `code-graph: auto-refresh needs a project home (agents/ or a project install); ${root} has none.\n` +
+                    'Its graph lives in the user-global home — refresh it with `code-graph refresh`.\n',
+            );
+            return 1;
+        }
         fs.mkdirSync(path.dirname(marker), { recursive: true });
         fs.writeFileSync(marker, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`);
         const cli = usableCli(root);
@@ -938,10 +956,10 @@ function cmdAutoRefresh(argv: string[]): number {
     const cli = usableCli(root);
     const last = readRefreshRecords(root);
     const line = (r: (typeof last)['refresh']): string => (r ? `${r.outcome} at ${r.at}${r.detail ? ` (${r.detail})` : ''}` : 'never');
-    const mapDir = path.join(root, 'agents', 'map');
+    const mapDir = home.mapDir;
     const gen = graphGeneration(cacheFor(root));
     const drawnFrom = mapGeneration(mapDir);
-    const mutex = reclaimMutexPath(path.join(root, LOCK_REL));
+    const mutex = reclaimMutexPath(home.lockPath);
     process.stdout.write(
         `auto-refresh: ${fs.existsSync(marker) ? 'on' : 'off'}\n` +
             `cli: ${'reason' in cli ? (cli.reason === 'no-cli' ? 'none usable — nothing will run' : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'} — too old, nothing will run`) : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'}`}\n` +
@@ -950,7 +968,7 @@ function cmdAutoRefresh(argv: string[]): number {
             `graph: ${computeVerdict(root, cacheFor(root)).verdict}\n` +
             `map: ${!fs.existsSync(mapDir) ? 'absent' : drawnFrom === null ? 'present (generation unknown — redrawn on the next refresh)' : drawnFrom === gen ? 'present, drawn from the current graph' : 'present, drawn from an older graph'}\n` +
             (fs.existsSync(mutex) && mutexAgeMs(mutex) > 60_000
-                ? `reclaim mutex: ${path.relative(root, mutex)} left by a crash — stale locks stay held until it is removed by hand\n`
+                ? `reclaim mutex: ${shown(root, mutex)} left by a crash — stale locks stay held until it is removed by hand\n`
                 : ''),
     );
     return 0;
@@ -970,7 +988,7 @@ function mutexAgeMs(p: string): number {
  * copied or restored file carries wrongly. No map → never draw one unbidden.
  */
 function mapIsBehind(root: string, cache: string): boolean {
-    const mapDir = path.join(root, 'agents', 'map');
+    const mapDir = graphHome(root).mapDir;
     if (!fs.existsSync(mapDir)) return false;
     const gen = graphGeneration(cache);
     return gen !== null && mapGeneration(mapDir) !== gen;
@@ -1032,7 +1050,7 @@ async function drawMap(argv: string[]): Promise<number> {
                 ? `    diff ${r.model.diff.rev}: ${r.model.diff.changed.length} changed · ${r.model.diff.impacted.length} linked into them · ${r.model.diff.areas.length} area(s) touched\n`
                 : '') +
             `    wrote: ${r.written.length} files under ${rel}/ — open ${path.join(rel, 'index.html')}\n` +
-            (fs.existsSync(path.join(root, AUTO_REFRESH_REL))
+            (fs.existsSync(graphHome(root).autoRefreshPath)
                 ? ''
                 : '    keep it current at every agent session start: agent-config code-graph auto-refresh on\n'),
     );

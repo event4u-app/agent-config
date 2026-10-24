@@ -4,13 +4,16 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { acquire, isStale, LOCK_REL, MAX_LOCK_AGE_MS, STALE_LOCK_MS } from '../../src/scripts/code_graph/refresh_lock.js';
+import { LOCK_REL } from '../../src/scripts/code_graph/graph_home.js';
+import { acquire, isStale, MAX_LOCK_AGE_MS, STALE_LOCK_MS } from '../../src/scripts/code_graph/refresh_lock.js';
 
 let root: string;
 let lock: string;
 
 beforeEach(() => {
     root = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-refresh-lock-'));
+    // A project home (ADR-299): a root without `agents/` keeps its graph in the user-global home.
+    fs.mkdirSync(path.join(root, 'agents'));
     lock = path.join(root, LOCK_REL);
 });
 afterEach(() => {

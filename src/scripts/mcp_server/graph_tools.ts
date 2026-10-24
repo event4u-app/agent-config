@@ -42,7 +42,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { changedFiles } from '../code_graph/cli.js';
-import { detectSources, graphState, NATIVE_CACHE_REL, pickSource } from '../code_graph/detect.js';
+import { detectSources, graphState, pickSource } from '../code_graph/detect.js';
+import { graphHome } from '../code_graph/graph_home.js';
 import { resolvePath } from './path_util.js';
 import { isTestFile } from '../code_graph/build.js';
 import {
@@ -88,9 +89,9 @@ function withGraph<T extends Record<string, unknown>>(
     root: string,
     fn: (g: LoadedGraph) => T,
 ): Record<string, unknown> {
-    const picked = pickSource(detectSources(root, path.join(root, NATIVE_CACHE_REL)));
+    const picked = pickSource(detectSources(root, graphHome(root).cachePath));
     if (!picked || picked.kind === 'scip') return noGraph(root);
-    const g = loadGraph(picked.path, `${picked.kind}:${path.relative(root, picked.path)}`);
+    const g = loadGraph(picked.path, `${picked.kind}:${shown(root, picked.path)}`);
     try {
         const out = fn(g);
         // `status` is DERIVED from the answer, never prefixed onto it. An
@@ -105,6 +106,12 @@ function withGraph<T extends Record<string, unknown>>(
     } finally {
         g.close();
     }
+}
+
+/** Relative inside the root, absolute for a graph home outside it (ADR-299). */
+function shown(root: string, p: string): string {
+    const rel = path.relative(root, p);
+    return rel.startsWith('..') || path.isAbsolute(rel) ? p : rel;
 }
 
 function str(args: Record<string, unknown>, key: string): string {
@@ -170,7 +177,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
             if (rev === '') return { status: 'error', error: 'diff must be a non-empty git rev' };
             const files = changedFiles(root, rev);
             if (files === null) return { status: 'error', error: `cannot resolve rev '${rev}' in ${root}` };
-            const state = graphState(root);
+            const state = graphState(root, graphHome(root).cachePath);
             return withGraph(root, (g) =>
                 args['untested_only'] === true
                     ? { ...untested(g, files, state), changed_files: files.length }
@@ -196,7 +203,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
         handler: async (args, root) => {
             const symbol = str(args, 'symbol');
             if (symbol === '') return { status: 'error', error: 'symbol must be a non-empty string' };
-            const state = graphState(root);
+            const state = graphState(root, graphHome(root).cachePath);
             return withGraph(root, (g) => ({ ...testsFor(g, symbol, state) }));
         },
     },
@@ -225,7 +232,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
             additionalProperties: false,
         },
         handler: async (args, root) => {
-            const state = graphState(root);
+            const state = graphState(root, graphHome(root).cachePath);
             const listArg = str(args, 'entry_points');
             let sources = repoEntryPoints(root);
             if (listArg !== '') {
@@ -296,7 +303,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
         handler: async (args, root) => {
             const symbol = str(args, 'symbol');
             if (symbol === '') return { status: 'error', error: 'symbol must be a non-empty string' };
-            const staleness = graphState(root);
+            const staleness = graphState(root, graphHome(root).cachePath);
             return withGraph(root, (g) => ({
                 staleness,
                 ...graphQueryVerb(g, symbol, num(args, 'budget', 1500)),
@@ -335,7 +342,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
         handler: async (args, root) => {
             const id = str(args, 'id');
             if (id === '') return { status: 'error', error: 'id must be a non-empty string' };
-            const staleness = graphState(root);
+            const staleness = graphState(root, graphHome(root).cachePath);
             const opts: NodeOptions = {};
             const dir = str(args, 'direction');
             if (dir === 'in' || dir === 'out' || dir === 'both') opts.direction = dir;
@@ -370,7 +377,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
             const from = str(args, 'from');
             const to = str(args, 'to');
             if (from === '' || to === '') return { status: 'error', error: 'from and to must be non-empty strings' };
-            const staleness = graphState(root);
+            const staleness = graphState(root, graphHome(root).cachePath);
             return withGraph(root, (g) => ({
                 staleness,
                 ...graphPathVerb(g, from, to, num(args, 'budget', 1500)),
@@ -383,7 +390,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
         description: 'Is there a code map (agents/map/)? Its freshness, counts and MAP.md path.',
         input_schema: { type: 'object', properties: {}, additionalProperties: false },
         handler: async (_args, root) => {
-            const staleness = graphState(root);
+            const staleness = graphState(root, graphHome(root).cachePath);
             const map = readMap(root);
             if (!map) {
                 return {
@@ -394,6 +401,8 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
                 };
             }
             const m = map.model;
+            const home = graphHome(root);
+            const mapRel = home.kind === 'project' ? 'agents/map' : home.mapDir;
             return {
                 status: 'ok',
                 staleness,
@@ -401,7 +410,7 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
                 drawn_at_commit: map.meta.commit,
                 graph_state_when_drawn: map.meta.state,
                 // Same generation → the map shows exactly the graph the queries read.
-                map_matches_graph: map.meta.graph_generation !== undefined && map.meta.graph_generation === graphGeneration(path.join(root, NATIVE_CACHE_REL)),
+                map_matches_graph: map.meta.graph_generation !== undefined && map.meta.graph_generation === graphGeneration(home.cachePath),
                 files: m.files.length,
                 areas: m.areas.length,
                 trusted_links: m.analyses.trustedEdges,
@@ -409,8 +418,8 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
                 request_paths: m.analyses.requestPathsTotal,
                 providers: (m.providers ?? []).map((p) => `${p.id} (${p.status})`),
                 largest_areas: m.areas.slice(0, 5).map((a) => `${a.id} ${a.name} (${a.files.length})`),
-                map_md: 'agents/map/MAP.md',
-                index_html: 'agents/map/index.html',
+                map_md: `${mapRel}/MAP.md`,
+                index_html: `${mapRel}/index.html`,
             };
         },
     },
@@ -431,7 +440,8 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
             if (q === '') return { status: 'error', error: 'area must be a non-empty string' };
             const map = readMap(root);
             if (!map) return { status: 'unavailable', error: 'no map — run `agent-config code-graph map`' };
-            const r = areaReport(map.model, q);
+            const home = graphHome(root);
+            const r = areaReport(map.model, q, home.kind === 'project' ? undefined : home.mapDir);
             if ('refusal' in r) return { status: 'refused', refusal: r.refusal, candidates: r.candidates };
             return { status: 'ok', drawn_at_commit: map.meta.commit, ...r };
         },

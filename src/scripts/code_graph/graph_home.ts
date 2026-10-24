@@ -20,10 +20,6 @@ export const LOCK_REL = path.join(STATE_DIR_REL, 'code-graph-refresh.lock');
 /** Written by `code-graph auto-refresh on`; the session concern acts only while it exists. */
 export const AUTO_REFRESH_REL = path.join(STATE_DIR_REL, 'code-graph-auto-refresh.json');
 
-const STATE_FILE = path.basename(NATIVE_CACHE_REL);
-const LOCK_FILE = path.basename(LOCK_REL);
-const AUTO_REFRESH_FILE = path.basename(AUTO_REFRESH_REL);
-
 export interface GraphHome {
     kind: 'project' | 'global';
     root: string;
@@ -47,21 +43,24 @@ export function hasProjectHome(root: string): boolean {
     return fs.existsSync(path.join(root, 'agents')) || fs.existsSync(path.join(root, '.agent-settings.yml'));
 }
 
+/** Today's in-repository paths; callers that serve project homes only use this alone. */
+export function projectHome(root: string): GraphHome {
+    return {
+        kind: 'project',
+        root,
+        dir: path.join(root, 'agents'),
+        stateDir: path.join(root, STATE_DIR_REL),
+        cachePath: path.join(root, NATIVE_CACHE_REL),
+        mapDir: path.join(root, MAP_DIR_REL),
+        lockPath: path.join(root, LOCK_REL),
+        autoRefreshPath: path.join(root, AUTO_REFRESH_REL),
+        repoId: null,
+        instance: null,
+    };
+}
+
 export function graphHome(root: string, env?: EnvMap | null): GraphHome {
-    if (hasProjectHome(root)) {
-        return {
-            kind: 'project',
-            root,
-            dir: path.join(root, 'agents'),
-            stateDir: path.join(root, STATE_DIR_REL),
-            cachePath: path.join(root, NATIVE_CACHE_REL),
-            mapDir: path.join(root, MAP_DIR_REL),
-            lockPath: path.join(root, LOCK_REL),
-            autoRefreshPath: path.join(root, AUTO_REFRESH_REL),
-            repoId: null,
-            instance: null,
-        };
-    }
+    if (hasProjectHome(root)) return projectHome(root);
     const id = repoIdentity(root, env);
     const dir = path.join(graphsRoot(env), id.instance === null ? id.repoId : `${id.repoId}-${id.instance}`);
     const stateDir = path.join(dir, 'state');
@@ -70,10 +69,10 @@ export function graphHome(root: string, env?: EnvMap | null): GraphHome {
         root,
         dir,
         stateDir,
-        cachePath: path.join(stateDir, STATE_FILE),
+        cachePath: path.join(stateDir, path.basename(NATIVE_CACHE_REL)),
         mapDir: path.join(dir, 'map'),
-        lockPath: path.join(stateDir, LOCK_FILE),
-        autoRefreshPath: path.join(stateDir, AUTO_REFRESH_FILE),
+        lockPath: path.join(stateDir, path.basename(LOCK_REL)),
+        autoRefreshPath: path.join(stateDir, path.basename(AUTO_REFRESH_REL)),
         repoId: id.repoId,
         instance: id.instance,
     };

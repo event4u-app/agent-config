@@ -77,3 +77,40 @@ describe('graphHome — a root without one', () => {
         expect(path.basename(hw.dir).startsWith(`${hm.repoId}-`)).toBe(true);
     });
 });
+
+describe('graphHome — every reader and writer goes through it (2.4)', () => {
+    const repoRoot = path.resolve(__dirname, '..', '..', '..');
+
+    it('names the three path constants only in graph_home.ts', () => {
+        const hits = execFileSync('git', ['-C', repoRoot, 'grep', '-n', '-w', '-E', '(NATIVE_CACHE_REL|MAP_DIR_REL|LOCK_REL)', '--', 'src/scripts/*.ts'], {
+            encoding: 'utf-8',
+        })
+            .split('\n')
+            .filter(Boolean)
+            .map((l) => l.split(':')[0]);
+        expect([...new Set(hits)]).toEqual(['src/scripts/code_graph/graph_home.ts']);
+    });
+
+    it('keeps this repository\'s graph, map and lock exactly where they are today', async () => {
+        const { cacheFor } = await import('../../../src/scripts/code_graph/cli.js');
+        const h = graphHome(repoRoot, env);
+        expect(h.kind).toBe('project');
+        expect(cacheFor(repoRoot)).toBe(path.join(repoRoot, 'agents', 'runtime', 'state', 'code-graph-v1.json'));
+        expect(h.mapDir).toBe(path.join(repoRoot, 'agents', 'map'));
+        expect(h.lockPath).toBe(path.join(repoRoot, 'agents', 'runtime', 'state', 'code-graph-refresh.lock'));
+    });
+
+    it('sends a root without a project home to the user-global cache in every module', async () => {
+        const { cacheFor } = await import('../../../src/scripts/code_graph/cli.js');
+        const root = path.join(tmp, 'bare');
+        fs.mkdirSync(root, { recursive: true });
+        const saved = process.env.EVENT4U_CONFIG_HOME;
+        process.env.EVENT4U_CONFIG_HOME = env.EVENT4U_CONFIG_HOME;
+        try {
+            expect(cacheFor(root)).toBe(graphHome(root, env).cachePath);
+            expect(cacheFor(root).startsWith(graphsRoot(env))).toBe(true);
+        } finally {
+            process.env.EVENT4U_CONFIG_HOME = saved;
+        }
+    });
+});

@@ -66,7 +66,8 @@ import { gitEnv } from './_lib/git_env.js';
 import { graphUntestedVerdict } from './_lib/graph_feeder_record.js';
 import { LexicalIndex } from './_lib/lexical_index.js';
 import { buildFromRepo } from './code_graph/build.js';
-import { graphState, NATIVE_CACHE_REL } from './code_graph/detect.js';
+import { graphState } from './code_graph/detect.js';
+import { graphHome } from './code_graph/graph_home.js';
 import { loadGraph } from './code_graph/query.js';
 import { emitSqliteTwin, sqliteTwinPath } from './code_graph/sqlite_store.js';
 import type { CodeEdge, CodeGraph } from './code_graph/types.js';
@@ -159,7 +160,13 @@ export async function makeFixture(root: string, files: number, withGraph: boolea
     git(dir, ['init', '-q']);
     git(dir, ['add', '-A']);
     git(dir, ['commit', '-q', '-m', 'fixture']);
-    if (withGraph) await buildFromRepo(dir, path.join(dir, NATIVE_CACHE_REL));
+    if (withGraph) {
+        // A project home, as in every repository the feeder serves: the hooks the
+        // bench spawns run under their own user-global root, where a global
+        // graph home would not be found.
+        fs.mkdirSync(path.join(dir, 'agents'));
+        await buildFromRepo(dir, graphHome(dir).cachePath);
+    }
     fs.writeFileSync(path.join(dir, 'src', 'service.ts'), 'export function handle(x: string): string {\n    return x.trim();\n}\n');
     return dir;
 }
