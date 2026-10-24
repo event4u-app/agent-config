@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "provenance-mechanism.schema.json",
+  "title": "Provenance ledger mechanism decision",
+  "description": "One line of provenance/mechanisms.jsonl — a decision about one harvested mechanism: adopted, adapted, rejected, already present, missing, or deferred. Source-free by construction (council O5): no source id, no pin, no locator. What links a source to a mechanism lives in the local ledger under the user-global runtime/lineage/ and never in the tracked tree. Append-only; a later row for the same mechanism_id supersedes an earlier one. Contract: provenance/README.md. Enforced by src/scripts/lint_harvest_provenance.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["mechanism_id", "verdict", "decided_at"],
+  "properties": {
+    "mechanism_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "Kebab-case slug naming the mechanism. A harvest citation marker may cite it; for a mechanism seeded from harvests.jsonl it equals the harvest_id."
+    },
+    "verdict": {
+      "type": "string",
+      "enum": ["adopt", "adapt", "reject", "already", "gap", "deferred"],
+      "description": "adopt|adapt — realised in this repo; reject — decided against; already — present before the harvest; gap — wanted and missing; deferred — wanted, parked."
+    },
+    "realised_in": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Repo-relative paths where the mechanism lives, each optionally suffixed ':<line>'. Required for adopt and adapt; every path must exist."
+    },
+    "roadmap": {
+      "type": "string",
+      "description": "Repo-relative path of the roadmap that owns a gap or deferred mechanism, or the literal 'open' when nothing owns it yet."
+    },
+    "decided_at": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "ISO-8601 date (YYYY-MM-DD) of the decision."
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 3,
+      "description": "Why. Required for reject."
+    },
+    "reopen_if": {
+      "type": "string",
+      "minLength": 3,
+      "description": "The condition under which a rejection or deferral is reconsidered."
+    }
+  }
+}

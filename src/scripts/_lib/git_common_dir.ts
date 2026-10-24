@@ -208,6 +208,16 @@ function discover_root(start: string): string | null {
 }
 
 /**
+ * The work tree that contains `target`, or null when none does. `target` need
+ * not exist yet — an output path is judged by the directories above it. Used to
+ * refuse writing private, user-global data (a decrypted view, a machine index)
+ * into a repository.
+ */
+export function enclosingWorkTree(target: string): string | null {
+    return discover_root(target);
+}
+
+/**
  * Is `project_root`'s `.git` a linked-worktree pointer file rather than a
  * directory? Returns `null` when there is no `.git` entry at all.
  */

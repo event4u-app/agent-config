@@ -5,9 +5,9 @@
  * dynamic `import()` not followed. A symbol counts as reached when some module
  * in the closure imports it BY NAME from its defining module (or imports that
  * module whole), or when the defining module is itself an entry. Reaching the
- * module is not enough — `egress_normalize.ts` is in the closure for one regex
- * while `detectNormalized` has no production importer, and that is the case
- * this exists to see.
+ * module is not enough — `egress_normalize.ts` was in the closure for one regex
+ * while `detectNormalized` had no production importer (until one-detector 2.5
+ * wired it), and that is the case this exists to see.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';

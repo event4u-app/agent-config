@@ -23,7 +23,8 @@ import { write_atomic } from '../_lib/fs_atomic.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { buildFromRepo, readProjectProbe } from './build.js';
 import { acquire as acquireRefreshLock, heldByThisProcess } from './refresh_lock.js';
-import { computeVerdict, graphState, NATIVE_CACHE_REL } from './detect.js';
+import { computeVerdict, graphState } from './detect.js';
+import { graphHome } from './graph_home.js';
 import {
     areaDrift,
     buildMapModel,
@@ -39,7 +40,6 @@ import type { CodeGraph } from './types.js';
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const VIEWER_DIR = path.join(_HERE, 'map_viewer');
 
-export const MAP_DIR_REL = path.join('agents', 'map');
 /** Rough characters-per-token used to hold MAP.md to its budget. */
 const CHARS_PER_TOKEN = 4;
 export const MAP_TOKEN_BUDGET = 2000;
@@ -233,12 +233,14 @@ export function diffFiles(root: string, rev: string): string[] | null {
 }
 
 /** Where `code-graph outcome` records which files a session found useful — local, never sent anywhere. */
-export const OUTCOMES_REL = path.join('agents', 'runtime', 'state', 'map-outcomes.jsonl');
+export function outcomesPath(root: string): string {
+    return path.join(graphHome(root).stateDir, 'map-outcomes.jsonl');
+}
 
 export function readOutcomes(root: string): OutcomeEvent[] {
     let text: string;
     try {
-        text = fs.readFileSync(path.join(root, OUTCOMES_REL), 'utf-8');
+        text = fs.readFileSync(outcomesPath(root), 'utf-8');
     } catch {
         return [];
     }
@@ -259,7 +261,7 @@ export function readOutcomes(root: string): OutcomeEvent[] {
 }
 
 export function recordOutcome(root: string, file: string, outcome: OutcomeEvent['outcome'], at: Date = new Date()): void {
-    const p = path.join(root, OUTCOMES_REL);
+    const p = outcomesPath(root);
     fs.mkdirSync(path.dirname(p), { recursive: true });
     const rel = path.relative(fs.realpathSync(root), fs.realpathSync(path.resolve(file)));
     if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) throw new Error(`not a file inside ${root}: ${file}`);
@@ -310,7 +312,8 @@ export async function buildMap(
 let drawing = false;
 
 async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1] = {}): Promise<MapBuildResult> {
-    const outDir = opts.outDir ?? path.join(root, MAP_DIR_REL);
+    const home = graphHome(root);
+    const outDir = opts.outDir ?? home.mapDir;
     // A chosen --out directory is only ever written into when it is empty or
     // already holds a map: the writer clears stale area pages, and that must
     // never reach a directory of someone else's Markdown.
@@ -322,7 +325,7 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
     ) {
         throw new Error(`refusing to write a map into ${outDir}: it is not empty and holds no map.json`);
     }
-    const cachePath = opts.cachePath ?? path.join(root, NATIVE_CACHE_REL);
+    const cachePath = opts.cachePath ?? home.cachePath;
     const { graph, built } = await loadOrBuildGraph(root, cachePath, opts.noBuild === true);
     let diff: { rev: string; changed: string[] } | undefined;
     if (opts.diffRev !== undefined) {
@@ -364,7 +367,7 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
     // The default map stages under the gitignored runtime dir, so a killed redraw
     // leaves nothing in agents/ itself; a chosen --out stages beside itself.
     const suffix = `${process.pid}-${randomBytes(4).toString('hex')}`;
-    const stage = opts.outDir === undefined ? path.join(root, 'agents', 'runtime', 'state') : path.dirname(outDir);
+    const stage = opts.outDir === undefined ? home.stateDir : path.dirname(outDir);
     fs.mkdirSync(stage, { recursive: true });
     const next = path.join(stage, `.map-next-${suffix}`);
     const prev = path.join(stage, `.map-prev-${suffix}`);
@@ -874,7 +877,7 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
 
 /** The map a previous `code-graph map` wrote, or null when there is none. */
 export function readMap(root: string): { meta: MapMeta; model: MapModel } | null {
-    return readMapAt(path.join(root, MAP_DIR_REL));
+    return readMapAt(graphHome(root).mapDir);
 }
 
 function readMapAt(dir: string): { meta: MapMeta; model: MapModel } | null {
@@ -920,7 +923,11 @@ export interface AreaReport {
  * One area, found by id (`a3`), by exact name, or by a file it contains —
  * exact matches only, so the answer is always about the area that was named.
  */
-export function areaReport(m: MapModel, query: string): AreaReport | { refusal: string; candidates: string[] } {
+export function areaReport(
+    m: MapModel,
+    query: string,
+    pageDir: string = path.posix.join('agents', 'map'),
+): AreaReport | { refusal: string; candidates: string[] } {
     let i = m.areas.findIndex((a) => a.id === query || a.name === query);
     if (i < 0) {
         const f = m.files.findIndex((x) => x.path === query);
@@ -976,6 +983,6 @@ export function areaReport(m: MapModel, query: string): AreaReport | { refusal: 
             .sort((x, y) => y[1] - x[1] || x[0] - y[0])
             .slice(0, cap)
             .map(([ai, w]) => ({ area: `${m.areas[ai]?.id ?? ''} ${m.areas[ai]?.name ?? ''}`, links: w })),
-        page: a.files.length >= AREA_PAGE_MIN_FILES ? path.posix.join('agents', 'map', 'areas', `${a.id}.md`) : null,
+        page: a.files.length >= AREA_PAGE_MIN_FILES ? path.posix.join(pageDir, 'areas', `${a.id}.md`) : null,
     };
 }

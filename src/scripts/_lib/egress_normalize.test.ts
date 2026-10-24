@@ -12,9 +12,12 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { CONFUSABLE_FOREIGN, LATIN_TWIN } from './confusables.js';
-import { detectNormalized, HIDDEN_UNICODE_RE, normalizeForDetection } from './egress_normalize.js';
+import { CONFUSABLE_FOREIGN } from './confusables.js';
+import { detectNormalized, HIDDEN_UNICODE_RE, LATIN_TWIN, normalizeForDetection } from './egress_normalize.js';
 import { detect } from './egress_rules.js';
+import { tallyText } from './egress_text.js';
+import { parseTokens, replaceValues, TokenScope } from './egress_token.js';
+import { CouncilEgress } from '../ai_council/council_egress.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
 const FIXTURES = path.join(REPO, 'tests', 'fixtures', 'global-knowledge-redaction');
@@ -48,6 +51,85 @@ describe('the smuggling fixtures', () => {
         for (const cp of LATIN_TWIN.keys()) expect(CONFUSABLE_FOREIGN.has(cp), cp.toString(16)).toBe(true);
         const n = normalizeForDetection('a​bа');
         expect([n.text, n.hidden, n.folded]).toEqual(['aba', 1, 1]);
+    });
+});
+
+describe('the senders read through the normalisation', () => {
+    // The two fixtures each hide one value: a key broken by a zero-width space and
+    // an address with a Cyrillic letter. Plain `detect` sees neither (above).
+    const hiddenKey = read('zerowidth-secret.md');
+    const homoglyph = read('homoglyph-email.md');
+    const keyBytes = (text: string): string => {
+        const s = detectNormalized(text).find((x) => x.type === 'APIKEY');
+        return text.slice(s!.start, s!.end);
+    };
+
+    it('replaceValues removes the disguised key bytes and mints a token for them', () => {
+        const out = replaceValues(hiddenKey, new TokenScope());
+        expect(out.includes(keyBytes(hiddenKey))).toBe(false);
+        expect(parseTokens(out).some((t) => t.type === 'APIKEY')).toBe(true);
+    });
+
+    it('replaceValues replaces the homoglyph address', () => {
+        const out = replaceValues(homoglyph, new TokenScope());
+        expect(parseTokens(out).some((t) => t.type === 'EMAIL')).toBe(true);
+    });
+
+    it('tallyText counts both disguised values', () => {
+        expect(tallyText(hiddenKey).found.some((f) => f.type === 'APIKEY')).toBe(true);
+        expect(tallyText(homoglyph).found.some((f) => f.type === 'EMAIL')).toBe(true);
+    });
+
+    it('the council replaces both, and its final check refuses a body that still carries one', () => {
+        const egress = new CouncilEgress({ identifiers: true });
+        expect(egress.replace(hiddenKey).includes(keyBytes(hiddenKey))).toBe(false);
+        expect(parseTokens(egress.replace(homoglyph)).some((t) => t.type === 'EMAIL')).toBe(true);
+        expect(new CouncilEgress({ identifiers: true }).check(hiddenKey)?.reason).toBe('high-confidence-finding');
+        expect(new CouncilEgress({ identifiers: true }).check(homoglyph)?.reason).toBe('high-confidence-finding');
+    });
+});
+
+describe('a key block whose markers are disguised leaves whole', () => {
+    // Built at run time: an invisible character inside BEGIN and inside END, and a
+    // body no rule matches on its own, so only the block extent can remove it.
+    const ZW = String.fromCodePoint(0x200b);
+    const BODY = ['MIIEvQIBADANBgkqhkiG9w0BAQEFAASC', 'BKcwggSjAgEAAoIBAQC7'].join('');
+    const block = (label: string): string =>
+        [`-----BE${ZW}GIN ${label}PRIVATE KEY-----`, BODY, `-----E${ZW}ND ${label}PRIVATE KEY-----`].join('\n');
+    const text = `before\n${block('')}\nafter`;
+
+    it('replaceValues removes the body through the disguised END marker', () => {
+        const out = replaceValues(text, new TokenScope());
+        expect(out.includes(BODY)).toBe(false);
+        expect(out.startsWith('before\n') && out.endsWith('\nafter')).toBe(true);
+    });
+
+    it('the council masks the body too, and nothing of the block reaches the final check', () => {
+        const egress = new CouncilEgress({ identifiers: false });
+        const out = egress.replace(text);
+        expect(out.includes(BODY)).toBe(false);
+        expect(egress.check(out)).toBe(null);
+    });
+});
+
+describe('offsets around hidden and astral characters', () => {
+    const ZW = String.fromCodePoint(0x200b);
+    const ASTRAL = String.fromCodePoint(0x1f600);
+    const EMAIL = ['jane.doe', 'acme-kunde.de'].join('@');
+
+    it('a hidden character before, inside or after a value maps to an exact original slice', () => {
+        for (const text of [`${ASTRAL} ${ZW}${EMAIL} x`, `${ASTRAL} ${EMAIL.slice(0, 4)}${ZW}${EMAIL.slice(4)} x`, `${ASTRAL} ${EMAIL}${ZW} x`]) {
+            const spans = detectNormalized(text).filter((s) => s.type === 'EMAIL');
+            expect(spans.length, text).toBe(1);
+            const s = spans[0]!;
+            expect(0 <= s.start && s.start < s.end && s.end <= text.length).toBe(true);
+            expect(text.slice(s.start, s.end).replace(ZW, '')).toBe(EMAIL);
+        }
+    });
+
+    it('Greek and Cyrillic prose with no value in it detects nothing', () => {
+        const prose = ['Ελληνικά: αυτό είναι ένα κείμενο, όχι κλειδί.', 'Русский: это обычный текст — не пароль и не ключ.'];
+        for (const text of prose) expect(detectNormalized(text)).toEqual([]);
     });
 });
 

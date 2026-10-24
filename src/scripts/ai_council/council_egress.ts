@@ -17,8 +17,8 @@
  * decision D8, which this module does not take.
  */
 
+import { detectNormalized, detectWithExtent } from '../_lib/egress_normalize.js';
 import {
-    detect,
     EGRESS_RULES,
     type EgressRule,
     type EgressSpan,
@@ -26,8 +26,6 @@ import {
     prefixesOf,
     rawKeyPrefixPattern,
     replaceSpans,
-    resolveOverlaps,
-    findSpans,
     REVIEW_CREDENTIAL_ROWS,
 } from '../_lib/egress_rules.js';
 import { parseTokens, TokenScope } from '../_lib/egress_token.js';
@@ -88,9 +86,10 @@ export class CouncilEgress {
      * proven is replaced through the nearest END marker, as the line masks did.
      */
     replace(text: string): string {
-        const spans = resolveOverlaps(findSpans(text, BUNDLE_RULES))
+        const at = detectWithExtent(text, BUNDLE_RULES);
+        const spans = at.spans
             .filter((s) => s.class === 'credential' || this.opts.identifiers)
-            .map((s) => ({ ...s, end: maskingEnd(text, s) }));
+            .map((s) => ({ ...s, end: at.end(s, maskingEnd) ?? s.end }));
         spans.sort((a, b) => a.start - b.start);
         const merged: EgressSpan[] = [];
         for (const s of spans) {
@@ -124,7 +123,7 @@ export class CouncilEgress {
         for (const value of this.replaced) {
             if (body.includes(value)) return { reason: 'replaced-value-present', what: 'value replaced in this run' };
         }
-        for (const s of detect(body)) {
+        for (const s of detectNormalized(body)) {
             const high = s.class === 'credential' ? s.rule !== 'generic-assignment' : s.validated && this.opts.identifiers;
             if (high) return { reason: 'high-confidence-finding', what: s.rule };
         }

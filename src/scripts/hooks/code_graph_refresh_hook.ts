@@ -42,12 +42,12 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { usableCli } from '../code_graph/refresh_cli.js';
-import { AUTO_REFRESH_REL, LOCK_REL, isStale, recordRefresh } from '../code_graph/refresh_lock.js';
+import { hasProjectHome, projectHome } from '../code_graph/graph_home.js';
+import { isStale, recordRefreshIn } from '../code_graph/refresh_lock.js';
 import { EXIT_ALLOW } from './exit_codes.js';
 import { readHookStdin } from './hook_stdin.js';
 import { is_replay_mode } from './state_io.js';
 
-export const CACHE_REL = path.join('agents', 'runtime', 'state', 'code-graph-v1.json');
 export const REFRESH_ARGS = ['code-graph', 'refresh', '--single-flight', '--map', '--budget-seconds', '60'];
 
 export type RefreshOutcome =
@@ -109,15 +109,18 @@ export function refreshFor(cwd: string, spawnFn: typeof spawn = spawn): RefreshO
     if (process.platform === 'win32') return 'unsupported';
     if (is_replay_mode()) return 'replay';
     const root = repoRoot(cwd);
-    if (root === null || !fs.existsSync(path.join(root, AUTO_REFRESH_REL))) return 'not-opted-in';
+    // `auto-refresh on` refuses a root without a project home (ADR-299).
+    if (root === null || !hasProjectHome(root)) return 'not-opted-in';
+    const home = projectHome(root);
+    if (!fs.existsSync(home.autoRefreshPath)) return 'not-opted-in';
     // A repository-committed opt-in is refused before anything is written into the tree.
-    if (anyTracked(root, [AUTO_REFRESH_REL, CACHE_REL])) return 'tracked';
+    if (anyTracked(root, [home.autoRefreshPath, home.cachePath].map((p) => path.relative(root, p)))) return 'tracked';
     const done = (outcome: RefreshOutcome, detail?: string): RefreshOutcome => {
-        recordRefresh(root, { by: 'session-start', outcome, detail });
+        recordRefreshIn(home.stateDir, { by: 'session-start', outcome, detail });
         return outcome;
     };
-    if (!fs.existsSync(path.join(root, CACHE_REL))) return done('no-cache');
-    const lock = path.join(root, LOCK_REL);
+    if (!fs.existsSync(home.cachePath)) return done('no-cache');
+    const lock = home.lockPath;
     if (fs.existsSync(lock) && !isStale(lock)) return done('locked');
     const verdict = usableCli(root);
     if ('reason' in verdict) return done(verdict.reason, (verdict as { cli?: string }).cli);

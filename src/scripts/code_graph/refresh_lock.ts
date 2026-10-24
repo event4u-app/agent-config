@@ -20,9 +20,8 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-export const LOCK_REL = path.join('agents', 'runtime', 'state', 'code-graph-refresh.lock');
-/** Written by `code-graph auto-refresh on`; the session concern acts only while it exists. */
-export const AUTO_REFRESH_REL = path.join('agents', 'runtime', 'state', 'code-graph-auto-refresh.json');
+import { graphHome } from './graph_home.js';
+
 export const STALE_LOCK_MS = 5 * 60 * 1000;
 /**
  * How long an owner on ANOTHER host (a container sharing the checkout) is
@@ -54,12 +53,17 @@ export interface RefreshRecord {
 
 /** One file per side, so the session concern writes without reading or merging anything. */
 export const refreshRecordPath = (root: string, by: RefreshRecord['by']): string =>
-    path.join(root, path.dirname(LOCK_REL), `code-graph-refresh.${by}.json`);
+    path.join(path.dirname(graphHome(root).lockPath), `code-graph-refresh.${by}.json`);
 
 /** The last outcome of one side, so a refresh that never happens is visible. Best-effort. */
 export function recordRefresh(root: string, rec: Omit<RefreshRecord, 'at'>): void {
+    recordRefreshIn(path.dirname(graphHome(root).lockPath), rec);
+}
+
+/** For the session concern: its chunk must not carry the user-global resolver. */
+export function recordRefreshIn(stateDir: string, rec: Omit<RefreshRecord, 'at'>): void {
     try {
-        fs.writeFileSync(refreshRecordPath(root, rec.by), JSON.stringify({ at: new Date().toISOString(), ...rec }));
+        fs.writeFileSync(path.join(stateDir, `code-graph-refresh.${rec.by}.json`), JSON.stringify({ at: new Date().toISOString(), ...rec }));
     } catch {
         /* never fails a refresh */
     }
@@ -77,7 +81,7 @@ export function readRefreshRecords(root: string): Partial<Record<RefreshRecord['
     return out;
 }
 
-function pidAlive(pid: number): boolean {
+export function pidAlive(pid: number): boolean {
     try {
         process.kill(pid, 0);
         return true;
@@ -143,7 +147,7 @@ export const reclaimMutexPath = (lock: string): string => `${lock}.reclaim`;
 
 /** True when this process holds the lock (the CLI took it before calling in). */
 export function heldByThisProcess(root: string): boolean {
-    const owner = readOwner(path.join(root, LOCK_REL));
+    const owner = readOwner(graphHome(root).lockPath);
     return typeof owner !== 'string' && owner.pid === process.pid;
 }
 
@@ -162,7 +166,7 @@ export function heldByThisProcess(root: string): boolean {
  * `afterStaleCheck` exists for the interleaving test only.
  */
 export function acquire(root: string, afterStaleCheck?: () => void): (() => void) | null {
-    const lock = path.join(root, LOCK_REL);
+    const lock = graphHome(root).lockPath;
     fs.mkdirSync(path.dirname(lock), { recursive: true });
     try {
         fs.mkdirSync(lock);

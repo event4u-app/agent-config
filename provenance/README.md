@@ -1,16 +1,20 @@
 # Provenance ledgers
 
-Two append-only ledgers live here, and the split is the useful part: one records
-borrowed **code**, the other borrowed **ideas**.
+Three append-only ledgers live here. The first split is the useful part: one
+records borrowed **code**, the others borrowed **ideas**. The second split is
+about what may be tracked at all: `mechanisms.jsonl` records *decisions* and
+carries no source, while the links from a source to a mechanism live only on the
+owner's machine (§ Mechanism decisions).
 
 | Ledger | Records | Linter |
 |---|---|---|
 | `borrows.jsonl` | A conscious external-**code** borrow — an algorithm, a non-trivial structure, more than roughly ten lines of logic shape. | `lint_provenance.ts` |
 | `harvests.jsonl` | An externally-sourced **knowledge claim** — a heuristic, a number, a mechanism — asserted by a skill, rule, or roadmap in this repo. | `lint_harvest_provenance.ts` |
+| `mechanisms.jsonl` | A **decision** about a harvested mechanism — adopted, adapted, rejected, already present, missing, deferred. Source-free. | `lint_harvest_provenance.ts` |
 
 Neither is `docs/CLAIMS.md`, despite the overlapping vocabulary. That file and
 its gate (`check_claims.ts`) govern **public-facing claims about this package**
-— the anti-hype surface. These two ledgers govern what this package took **from
+— the anti-hype surface. These ledgers govern what this package took **from
 somewhere else**. A grep for "claim" hits all three; the distinction is
 direction of travel.
 
@@ -153,8 +157,9 @@ unclear. Only the first two enter this ledger, and the reason is mechanical
 rather than editorial: the ledger's integrity gate asserts that every row's
 `stated_in` artefact exists and that every cited id resolves. A `reject` row has
 no artefact to point at, because nothing in the tree cites it. Rejections live
-in the analysis document, which is where a future harvest goes to find out
-whether a question was already settled.
+in the analysis document and, as a decision without a source, in
+`mechanisms.jsonl` (§ Mechanism decisions) — which is where a future harvest
+goes to find out whether a question was already settled.
 
 ### Append-only convention
 
@@ -192,3 +197,62 @@ because `<` is not a legal id character. This surfaced on the gate's first run:
 the roadmap that introduced the ledger tripped its own orphan check by spelling
 the example out. Keeping the placeholder form is the whole fix; no ignore-marker
 mechanism is needed, and adding one would create a way to silence a real orphan.
+
+## Mechanism decisions — `mechanisms.jsonl`
+
+`harvests.jsonl` can only say *what we took*. It cannot say what we looked at and
+turned down, what we already had, or what is still missing — and it carries a
+source reference on every row. The decision ledger answers the first three and
+refuses the fourth by construction.
+
+One JSON object per line; a mechanism may appear more than once, and the latest
+row supersedes the earlier ones (a later `adopt` closes an earlier `gap`):
+
+```json
+{"mechanism_id": "recurrence-indicts-the-system", "verdict": "adapt", "realised_in": ["src/rules/recurring-criticism.md"], "decided_at": "2026-08-20"}
+```
+
+| Field | Meaning |
+|---|---|
+| `mechanism_id` | Kebab-case slug. A harvest citation may cite it. Rows seeded from `harvests.jsonl` reuse the `harvest_id`. |
+| `verdict` | `adopt`, `adapt`, `reject`, `already`, `gap` or `deferred`. |
+| `realised_in` | Repo-relative paths (optionally `:<line>`) where it lives. Required for `adopt` and `adapt`; every path must exist. |
+| `roadmap` | The roadmap that owns a `gap` or `deferred` mechanism, or the literal `open`. Required for those two. |
+| `decided_at` | ISO-8601 date. |
+| `reason` | Why. Required for `reject`. |
+| `reopen_if` | The condition under which a rejection or deferral is reconsidered. |
+
+There is **no source id, no pin and no locator**, and the linter rejects a row
+that carries one. Council decision O5 (`road-to-a-graph-that-follows-you`):
+encrypted ids, relations and commit timestamps in public history stay
+correlatable forever, so what links a source to a mechanism stays local. Schema:
+[`src/scripts/schemas/provenance-mechanism.schema.json`](../src/scripts/schemas/provenance-mechanism.schema.json).
+
+### The local half — never in this tree
+
+The source side lives under the user-global runtime, `runtime/lineage/` below
+`EVENT4U_CONFIG_HOME` (default `~/.event4u/agent-config/`):
+
+- `sources.jsonl` — source id (`src_` plus 10 hex of an HMAC keyed with
+  `secrets.link_encryption_key`, from `link_crypto source-id`), kind, sealed
+  identity, license, watch flag (off until `code-graph lineage watch enable`);
+- `edges.jsonl` — source id, mechanism id, sealed pin (or `unknown` — never a
+  guess), sealed locator.
+
+`code-graph lineage import` seeds it from `harvests.jsonl` and
+`agents/settings/contexts/skills-provenance.yml` (read, never written);
+`code-graph lineage check` validates it. Neither runs in CI — the key is local.
+Every write refuses a target inside a git work tree.
+
+### Reading both halves
+
+| Verb | Answers from | What it says |
+|---|---|---|
+| `lineage of <id\|path>` | tracked | the decision, and each `realised_in` as ok or BROKEN (moved or gone) |
+| `lineage gaps` | tracked | `gap` and `deferred` mechanisms nothing has closed since, with their owner |
+| `lineage rejected` | tracked | the latest rejections, with reason and reopen condition |
+| `lineage from <source>` | local + key | the mechanisms one source fed, pins and locators opened |
+| `map --lineage` | tracked | `agents/map/lineage.md`, mechanisms by verdict — never a source |
+| `map --lineage --sources` | local + key | the source view, written under the user-global home only |
+| `lineage backfill --draft` | tree tokens + key | drafts from Provenance blocks into the gitignored `agents/.harvest-local/`; no row written |
+| `lineage watch [--dry-run]` | local + key | for sources switched on with `watch enable`: an upstream delta as one local report and one stub of mechanism ids and sealed locators; refused under CI |

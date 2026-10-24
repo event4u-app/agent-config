@@ -38,7 +38,7 @@
     "character-consistency": 8555,
     "check-refs": 4188,
     "churn-prevention": 8014,
-    "code-intelligence": 16998,
+    "code-intelligence": 17182,
     "code-refactoring": 13717,
     "code-review": 16261,
     "command-routing": 6040,
@@ -687,6 +687,12 @@
       "old": 16492,
       "new": 16998,
       "reason": "road-to-a-map-that-draws-itself (ADR-297): step 0 sends an orientation question to agents/map/MAP.md before any graph query, and the MCP table gains rows for graph_map_status and graph_area. Both are the skill's routing surface for the new map; trimming them would hide the tools the roadmap added."
+    },
+    {
+      "skill": "code-intelligence",
+      "old": 16998,
+      "new": 17182,
+      "reason": "road-to-a-graph-that-follows-you (ADR-299): the MCP table gains a row for graph_estate and one line naming the new project parameter on every other graph tool. The ceiling sat 3 bytes above the body, so documenting the tool at all needs a raise; the wording was compressed first, from 262 to 184 bytes."
     }
   ]
 }
