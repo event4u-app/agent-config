@@ -32,8 +32,9 @@
  *
  * Exit codes:
  *   0 — the store was read and a verdict printed (armable OR not — "not yet" is
- *       a successful measurement, never a build failure)
- *   1 — the store is unreadable or malformed
+ *       a successful measurement, never a build failure), or there is no store
+ *       yet ("not measured yet", likewise never a build failure)
+ *   1 — the store exists but is unreadable, malformed or empty
  *   2 — bad args
  */
 import * as fs from 'node:fs';
@@ -249,9 +250,21 @@ export function selfTest(): number {
             run: () => (/p50_ci/.test(renderDistribution(ok, evaluate(ok))) && !/writes \*\*no `p50_ci`\*\*/.test(renderDistribution(ok, evaluate(ok))) ? 1 : 0),
         },
         {
-            name: 'rejects a missing store rather than reporting armable',
-            expect: 'reject',
+            name: 'a missing store is "not measured yet", not a build failure',
+            expect: 'accept',
             run: () => runGateCli(REPO_ROOT, SELF, ['--store', path.join(REPO_ROOT, 'no-such.jsonl')], REPO_ROOT),
+        },
+        {
+            name: 'rejects a store path that exists but is not a readable file',
+            expect: 'reject',
+            run: () => {
+                const d = fs.mkdtempSync(path.join(os.tmpdir(), 'arm-'));
+                try {
+                    return runGateCli(REPO_ROOT, SELF, ['--store', d], REPO_ROOT);
+                } finally {
+                    fs.rmSync(d, { recursive: true, force: true });
+                }
+            },
         },
         {
             name: 'rejects a malformed store rather than silently skipping every line',
@@ -280,16 +293,20 @@ function main(argv?: readonly string[]): number {
         process.stderr.write('check_composite_arming: --store requires a path\n');
         return 2;
     }
+    if (!fs.existsSync(store)) {
+        process.stdout.write(
+            `⏳  NOT MEASURED YET — no composite store at ${path.relative(REPO_ROOT, store)}.\n` +
+                `    The bench appends to it with \`--record-composite\`; until CI runs have\n` +
+                `    accumulated readings there is nothing to evaluate. That is not "armable",\n` +
+                `    and it is not a build failure.\n`,
+        );
+        return 0;
+    }
     let text: string;
     try {
         text = fs.readFileSync(store, 'utf-8');
     } catch {
-        process.stdout.write(
-            `❌  no composite store at ${path.relative(REPO_ROOT, store)}.\n` +
-                `    The bench appends to it with \`--record-composite\`; until CI runs have\n` +
-                `    accumulated readings there is nothing to evaluate. This is "not measured yet",\n` +
-                `    which is NOT the same as "armable".\n`,
-        );
+        process.stdout.write(`❌  composite store at ${path.relative(REPO_ROOT, store)} exists but cannot be read as a file.\n`);
         return 1;
     }
     const { readings, malformed } = parseStore(text);
@@ -337,7 +354,7 @@ function main(argv?: readonly string[]): number {
     // Scope assertion. The unit is a READING, and zero of them is a dead scope
     // rather than "nothing to report": a store that parsed to no records reads
     // identically to a store nobody has written, and the second must not pass as
-    // the first. The missing-file case above already exits 1; this catches the
+    // the first. A missing store is "not measured yet" above; this catches the
     // present-but-empty and parsed-to-nothing cases.
     try {
         reportScanned({
