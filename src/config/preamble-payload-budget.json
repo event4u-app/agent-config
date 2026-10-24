@@ -70,7 +70,7 @@
   "reference_measurements": {
     "measured_cold_start_median_tokens": 230930,
     "c3_scope_dedup_reduction_pct": 38,
-    "c3_condition": "FIXTURE-ONLY as of 2026-07-31: the 38% was measured on a byte-identical two-scope fixture, and that condition is currently unreachable for every consumer because install.ts:2723/2725 stamp package:/source_path: into every installed rule while the in-repo projection stamps nothing. Aligning versions yields 0/110 twins, not 110/110. The figure is the mechanism's ceiling, NOT a realised saving, and this baseline therefore assumes no dedup. Reachability is the subject of road-to-dedup-reachability; run measure_scope_dedup for the live split.",
+    "c3_condition": "FIXTURE-ONLY as of 2026-07-31: the 38% was measured on a byte-identical two-scope fixture, and that condition is currently unreachable for every consumer because install.ts:2722/2725 stamp package:/source_path: into every installed rule while the in-repo projection stamps nothing. Aligning versions yields 0/110 twins, not 110/110. The figure is the mechanism's ceiling, NOT a realised saving, and this baseline therefore assumes no dedup. Reachability is the subject of road-to-dedup-reachability; run measure_scope_dedup for the live split.",
     "_comment": "The measured median comes from Claude Code transcripts (deduped by message.id + requestId) and is context for the ratchet, never the gated number — it moves with the developer's own session history."
   },
   "ci_delivery": {

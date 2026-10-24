@@ -1060,7 +1060,7 @@ export interface KnownHostLimit {
      * SKILLS projected at that observation — the comparable quantity.
      * Absent on a record written before the skill-only count existed, and
      * absence is load-bearing: without it the observation is not comparable
-     * and yields no eligibility (see `migrationEligibility`).
+     * and yields no host limit to compare against.
      */
     projectedSkills: number | null;
     observedAt: string;
