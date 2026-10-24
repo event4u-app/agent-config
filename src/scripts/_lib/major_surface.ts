@@ -200,3 +200,12 @@ export function parse_name_status(raw: string): DiffEntry[] {
     }
     return out;
 }
+
+/** The surfaces the span `<tag>..HEAD` touched; `git` runs one git command and returns its stdout. */
+export function span_surfaces(tag: string | null, git: (args: string[]) => string): Set<MajorSurface> {
+    if (!tag) return new Set();
+    const entries = parse_name_status(git(['diff', '--name-status', `${tag}..HEAD`]));
+    const paths = settings_key_paths(entries);
+    const patch = paths.length > 0 ? git(['diff', `${tag}..HEAD`, '--', ...paths]) : '';
+    return classify_surfaces(entries, removed_setting_keys(patch));
+}

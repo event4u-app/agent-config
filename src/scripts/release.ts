@@ -129,7 +129,7 @@ import { canPrompt, promptLine } from './_lib/tty_prompt.js';
 import type { CommitRecord, ImpactTrailers } from './_lib/consumer_impact.js';
 import { COMMIT_LOG_FORMAT, NO_IMPACT_TRAILERS, is_breaking_commit, parse_commit_log, parse_impact_trailers, write_impact_map } from './_lib/consumer_impact.js';
 import { span_bump } from './_lib/impact_bump.js';
-import { classify_surfaces, parse_name_status, removed_setting_keys, settings_key_paths, type MajorSurface } from './_lib/major_surface.js';
+import { span_surfaces, type MajorSurface } from './_lib/major_surface.js';
 import { preflightPosition } from './_lib/release_position.js';
 import { TAG_TRIGGERED_WORKFLOWS, dispatchTagWorkflows } from './_lib/release_tag_dispatch.js';
 import {
@@ -461,15 +461,6 @@ function commit_from_record({ sha, subject, body }: CommitRecord): Commit {
     const breaking = is_breaking_commit(subject, body, Boolean(m.groups!['bang']));
     const scope = (m.groups!['scope'] ?? null) as string | null;
     return new Commit(sha, m.groups!['type'] as string, scope, m.groups!['subject'] as string, breaking, trailers);
-}
-
-/** The major surfaces (`CONTRIBUTING.md` § Versioning policy) the span since `tag` touched. */
-function span_surfaces(tag: string | null): Set<MajorSurface> {
-    if (!tag) return new Set();
-    const entries = parse_name_status(git(['diff', '--name-status', `${tag}..HEAD`], { capture: true }));
-    const paths = settings_key_paths(entries);
-    const patch = paths.length > 0 ? git(['diff', `${tag}..HEAD`, '--', ...paths], { capture: true }) : '';
-    return classify_surfaces(entries, removed_setting_keys(patch));
 }
 
 /** The semver bump: the span's `Consumer-Impact:` trailers and touched surfaces decide it (ADR-300). */
@@ -1305,11 +1296,7 @@ function _parse_args(argv: readonly string[]): Args {
 }
 
 /** Override wins; otherwise auto-detect from commits (or 'patch' if empty). */
-function resolve_bump(
-    override: string | null,
-    commits: readonly Commit[],
-    surfaces: ReadonlySet<MajorSurface> = new Set(),
-): string {
+function resolve_bump(override: string | null, commits: readonly Commit[], surfaces?: ReadonlySet<MajorSurface>): string {
     if (override) {
         return override;
     }
@@ -1493,7 +1480,7 @@ function main(argv: readonly string[] | null = null): number {
         return 0;
     }
 
-    const surfaces = span_surfaces(prev);
+    const surfaces = span_surfaces(prev, (args) => git(args, { capture: true }));
     const bump = resolve_bump(args.bump_override, commits, surfaces);
 
     // An in-flight release is a STATE, never a flag — so the probe runs

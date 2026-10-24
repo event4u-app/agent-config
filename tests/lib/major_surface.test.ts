@@ -8,6 +8,7 @@ import {
     parse_name_status,
     removed_setting_keys,
     settings_key_paths,
+    span_surfaces,
 } from '../../src/scripts/_lib/major_surface.js';
 
 describe('parse_name_status', () => {
@@ -223,5 +224,33 @@ describe('removed_setting_keys — a minus line is not a removal', () => {
     it('reads the real 11.0.0 removal shape', () => {
         const patch = ['@@', '-worktrees:', '-  mode: ask', ' memory:', '   cadence: auto'].join('\n');
         expect(removed_setting_keys(patch)).toEqual(['mode', 'worktrees']);
+    });
+});
+
+describe('span_surfaces — the span release.ts numbers by (ADR-300)', () => {
+    it('reads the name-status list and the settings patch of <tag>..HEAD', () => {
+        const calls: string[][] = [];
+        const git = (args: string[]): string => {
+            calls.push(args);
+            if (args[1] === '--name-status') return 'M\tsrc/config/agent-settings.template.yml\nD\tsrc/domains/meta/gone/command.md\n';
+            return '--- a/x\n+++ b/x\n-  memory_cadence: weekly\n';
+        };
+        expect([...span_surfaces('16.5.0', git)].sort()).toEqual(['command-removal', 'settings-keys']);
+        expect(calls).toEqual([
+            ['diff', '--name-status', '16.5.0..HEAD'],
+            ['diff', '16.5.0..HEAD', '--', 'src/config/agent-settings.template.yml'],
+        ]);
+    });
+
+    it('asks git for no patch when no settings file changed, and nothing at all without a tag', () => {
+        const calls: string[][] = [];
+        const git = (args: string[]): string => {
+            calls.push(args);
+            return 'M\tREADME.md\n';
+        };
+        expect([...span_surfaces('16.5.0', git)]).toEqual([]);
+        expect(calls.length).toBe(1);
+        expect([...span_surfaces(null, git)]).toEqual([]);
+        expect(calls.length).toBe(1);
     });
 });
