@@ -10,7 +10,9 @@
  *
  * A linked worktree keeps its parent's `repoId` and gets an `instance`, so its
  * writable caches never collide with the main checkout's while estate queries
- * still count one project.
+ * still count one project. Two separate clones of one origin share `repoId` too,
+ * so `checkout` — keyed over the main checkout's realpath — is what keeps their
+ * writable homes apart.
  *
  * File-based like `_lib/git_common_dir.ts`: an inherited `GIT_DIR` would
  * redirect a `git config` subprocess to the wrong repository.
@@ -26,6 +28,8 @@ export interface RepoIdentity {
     repoId: string;
     /** Set for a linked worktree only. */
     instance: string | null;
+    /** 8 hex over the main checkout's realpath: distinct per clone, shared by its worktrees. */
+    checkout: string;
     source: 'origin' | 'realpath';
 }
 
@@ -143,18 +147,19 @@ export function repoIdentity(root: string, env?: EnvMap | null, dir?: string): R
         linked = false;
     }
     const origin = remoteUrl(real);
+    const main = common !== null && path.basename(common) === '.git' ? path.dirname(common) : real;
     let source: RepoIdentity['source'] = 'origin';
     let canonical: string;
     if (origin !== null) {
         canonical = `origin:${canonicalOrigin(origin)}`;
     } else {
         source = 'realpath';
-        const main = common !== null && path.basename(common) === '.git' ? path.dirname(common) : real;
         canonical = `path:${main}`;
     }
     return {
         repoId: hmac(key, canonical).slice(0, 12),
         instance: linked ? hmac(key, `instance:${real}`).slice(0, 8) : null,
+        checkout: hmac(key, `checkout:${main}`).slice(0, 8),
         source,
     };
 }

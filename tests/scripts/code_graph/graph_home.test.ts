@@ -44,7 +44,7 @@ describe('graphHome — a root with a project home', () => {
 });
 
 describe('graphHome — a root without one', () => {
-    it('lives under runtime/graphs/<repo id> and never creates agents/', () => {
+    it('lives under runtime/graphs/<repo id>-<checkout> and never creates agents/', () => {
         const root = path.join(tmp, 'foreign');
         fs.mkdirSync(root, { recursive: true });
         execFileSync('git', ['-C', root, 'init', '-q']);
@@ -52,12 +52,29 @@ describe('graphHome — a root without one', () => {
         expect(h.kind).toBe('global');
         const id = repoIdentity(root, env).repoId;
         expect(h.repoId).toBe(id);
-        expect(h.dir).toBe(path.join(graphsRoot(env), id));
+        expect(path.dirname(h.dir)).toBe(graphsRoot(env));
+        expect(path.basename(h.dir)).toMatch(new RegExp(`^${id}-[0-9a-f]{8}$`));
         expect(graphsRoot(env)).toBe(path.join(env.EVENT4U_CONFIG_HOME!, 'runtime', 'graphs'));
         expect(h.cachePath).toBe(path.join(h.dir, 'state', 'code-graph-v1.json'));
         expect(h.mapDir).toBe(path.join(h.dir, 'map'));
         expect(h.lockPath).toBe(path.join(h.dir, 'state', 'code-graph-refresh.lock'));
         expect(fs.existsSync(path.join(root, 'agents'))).toBe(false);
+    });
+
+    it('gives two clones of one origin (https and ssh) one repo id and separate homes', () => {
+        const clone = (name: string, origin: string): string => {
+            const dir = path.join(tmp, name);
+            fs.mkdirSync(dir, { recursive: true });
+            execFileSync('git', ['-C', dir, 'init', '-q']);
+            execFileSync('git', ['-C', dir, 'remote', 'add', 'origin', origin]);
+            return dir;
+        };
+        const a = graphHome(clone('clone-a', 'https://github.com/Acme/widget.git'), env);
+        const b = graphHome(clone('clone-b', 'git@github.com:Acme/widget.git'), env);
+        expect(a.repoId).toBe(b.repoId);
+        expect(a.dir).not.toBe(b.dir);
+        expect(a.lockPath).not.toBe(b.lockPath);
+        expect(a.cachePath).not.toBe(b.cachePath);
     });
 
     it('gives a worktree its own writable home under the shared repo id', () => {

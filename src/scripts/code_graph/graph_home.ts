@@ -4,8 +4,9 @@
  * A root that has `agents/` or a project install keeps today's paths under
  * `<root>/agents/`, byte-identical, so a map shared through the repository is
  * unchanged. Every other root gets a home under the user-global
- * `runtime/graphs/<repo id>[-<instance>]/`, so building a graph of somebody
- * else's repository writes nothing into it. Resolving never creates `agents/`.
+ * `runtime/graphs/<repo id>-<checkout | instance>/`, so building a graph of
+ * somebody else's repository writes nothing into it, and two clones of one
+ * origin never share a cache, lock or budget slot. Resolving never creates `agents/`.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -62,7 +63,7 @@ export function projectHome(root: string): GraphHome {
 export function graphHome(root: string, env?: EnvMap | null): GraphHome {
     if (hasProjectHome(root)) return projectHome(root);
     const id = repoIdentity(root, env);
-    const dir = path.join(graphsRoot(env), id.instance === null ? id.repoId : `${id.repoId}-${id.instance}`);
+    const dir = path.join(graphsRoot(env), `${id.repoId}-${id.instance ?? id.checkout}`);
     const stateDir = path.join(dir, 'state');
     return {
         kind: 'global',
