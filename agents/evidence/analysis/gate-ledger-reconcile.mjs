@@ -66,6 +66,9 @@ function realIo() {
 }
 
 export const PREDICATE_ORDER = ['observation', 'tolerance', 'snapshot', 'invariant'];
+// An invariant's evidence names its fixed contract or the failing outcome that
+// enforces it. No predicate holding is unclassifiable, never invariant by default.
+export const INVARIANT_EVIDENCE = /\bfixed\b|\bfrozen\b|\bno baseline\b|\bcontract\b|\berrors?\b|\bfail|\bexit 1\b|returns? 1|may only (go down|shrink)|\bequality\b/i;
 
 function section(text, heading) {
     const start = text.indexOf(heading);
@@ -175,8 +178,9 @@ export function reconcile(io) {
             observation: /exit 0|exits 0|not a failure|never a build failure/i.test(evidence),
             tolerance: /bound/i.test(evidence) && /risk owner/i.test(evidence) && /expir/i.test(evidence),
             snapshot: /(?<![-\w])baseline\b/i.test(evidence.replace(/\bno baseline\b/gi, '')),
+            invariant: INVARIANT_EVIDENCE.test(evidence),
         };
-        const derived = PREDICATE_ORDER.find((c) => c === 'invariant' || held[c]);
+        const derived = PREDICATE_ORDER.find((c) => held[c]) ?? 'unclassifiable';
         aspects.push({ id: r.id, check: r.check, recorded: r.cls, derived, held: PREDICATE_ORDER.filter((c) => held[c]) });
         if (derived !== r.cls) failures.push(`class predicate: ${r.id} is recorded ${r.cls} but its evidence derives ${derived} (held: ${PREDICATE_ORDER.filter((c) => held[c]).join(', ') || 'none'})`);
     }
@@ -393,6 +397,7 @@ function selfTest() {
         ['a stale pin quarantines rather than invalidates', { ...io, blob: (rel) => (rel === 'src/scripts/lint_readme_jargon.ts' ? '0'.repeat(40) : io.blob(rel)) }, 'quarantined'],
         ['a laundered mapping invalidates', json(FILES.mapping, (j) => { j.mapping.check_knowledge_cards['c10-E1-required'] = 'op:informational'; return j; }), 'invalid'],
         ['an invariant row whose evidence states a permissive baseline', mutated(io, FILES.ledger, (t) => t.replace('| fixed fixture table (fixed-policy).', '| compared against a recorded baseline of known findings.')), /class predicate: R7\.b is recorded invariant but its evidence derives snapshot/],
+        ['an invariant row whose evidence states no fixed contract or failing outcome', mutated(io, FILES.ledger, (t) => t.replace('| fixed cap |', '| a cap |')), /class predicate: R4\.a is recorded invariant but its evidence derives unclassifiable/],
         ['an observation row without a non-blocking contract', mutated(io, FILES.ledger, (t) => t.replace('| warning severity, exit 0 |', '| warning severity |')), /class predicate: R11\.e/],
         ['an unknown flag appears in a check', mutated(io, 'src/scripts/lint_readme_jargon.ts', (t) => `${t}\nconst x = '--surprise';\n`), /unclassified invocation mode: lint_readme_jargon --surprise/],
     ];

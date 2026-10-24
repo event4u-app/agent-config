@@ -207,7 +207,7 @@ in revision 9. The withdrawal and its reason sit on the row itself.
 
 **Ledger table, pinned (revision 10).** A row edited after the independent
 review would otherwise pass silently. The reconciler hashes the table rows. The
-recorded value is the ledger table: sha256 `a36ea7fffc461b6c22ef98b663c7d7f97ba82b165e3c7e67412bd13d3f2d27a1`.
+recorded value is the ledger table: sha256 `50221733d4caac00e5a02a9f77dfa6978efb25e89c447a1ccab701e2a12b5630`.
 
 **Helpers, pinned as a closure (revision 9).** openai, round 13: the checks
 import helpers, and the per-file pins below covered none of them. The
@@ -246,7 +246,7 @@ than listed.
 | `agents/evidence/analysis/gate-branch-inventory-20261024.json` | `119214ea142393c7254cae40e080153728e10fb0` |
 | `agents/evidence/analysis/gate-branch-mapping-20261024.json` | `c296fd9f02c1f0e83688da3f596cbb19e079665e` |
 | `agents/evidence/analysis/gate-branch-mapping-review-20261024.json` | `46227ecdae464df420e5aec60910a1b7a497e686` |
-| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `906f66045927abfba9889d382ed123db5fe35f81` |
+| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `05e8a87a596cbe08bedc32c7d8beeb2a729e8ea5` |
 | `agents/evidence/analysis/gate-ledger-executions.mjs` | `b330f3e9671d4d9e58baf9e1a59e32bc473b3756` |
 | `agents/evidence/analysis/gate-branch-reconciliation-20261024.md` | `d25580a37bfe75418f0aa652fc9b31155f6c4356` |
 | `agents/evidence/analysis/gate-ledger-rerun-20261024.md` | `fc0c90dfbb56c2820e2669ad67fac1a969bd9782` |
@@ -538,61 +538,94 @@ An invariant now also proves that no earlier predicate holds.
 A new self-test case plants a permissive baseline in an invariant's evidence and
 requires the refusal: 17/17. The reconciler pin is renewed for the code change.
 
-**The per-aspect record**, reproduced by
-`node agents/evidence/analysis/gate-ledger-reconcile.mjs --aspects`, which exits
-non-zero on any mismatch or any reconciliation failure:
+**The per-aspect record** is now the one in revision 17 below.
+
+## Item 4, a positive invariant predicate — revision 17
+
+The twenty-second round (`agents/evidence/council/gate-classification-item4-20261024.md`)
+re-attested both pin renewals of revision 16 **2/2** (*renew*). It split on item 4
+again, this time the other way:
+
+- **openai: not met.** `invariant` had no predicate and was an unconditional
+  fallback.
+- **anthropic: met.** It named the same weakness: *"deriving invariant by
+  absence … inverts the fail-safe direction."*
+
+The stricter reading is taken.
+
+`invariant` now has a positive predicate, `INVARIANT_EVIDENCE`. The evidence
+must name its fixed contract (fixed, frozen, no baseline, contract, equality,
+may only go down or shrink) or the failing outcome that enforces it (error,
+fail, exit 1, returns 1).
+
+An aspect where no predicate holds now derives `unclassifiable`, and the
+reconciler refuses it. It is never an invariant by default.
+
+The first run found three invariant cells that stated no enforcing fact:
+
+- `R10.l` said *"errors"*, and the predicate is now plural-aware.
+- `R3.b` and `R14.a` each gained the verified fact:
+  - `check_rule_invariants.ts:204-208` returns 1 on an undetected removal;
+  - `lint_readme_jargon.ts:172-188` returns 1 above `MAX_HITS = 3`.
+
+No class changed. A new self-test case removes an invariant's stated contract
+and requires the refusal: 18/18. Reverting the fallback in a scratch run turns
+that case red. Both pins are renewed for this diff, and that renewal goes to
+round 23 per D38.
+
+`node agents/evidence/analysis/gate-ledger-reconcile.mjs --aspects`:
 
 | Row | Check | Recorded | Derived by decision order | Predicates that held |
 |---|---|---|---|---|
-| R1.a | `check_gate_completeness` | invariant | invariant | none |
-| R1.b | `check_gate_completeness` | invariant | invariant | none |
-| R2.a | `lint_ticked_unmet_criteria` | invariant | invariant | none |
-| R2.b | `lint_ticked_unmet_criteria` | invariant | invariant | none |
-| R3.a | `check_rule_invariants` | invariant | invariant | none |
-| R3.b | `check_rule_invariants` | invariant | invariant | none |
-| R4.a | `check_augment_description_cap` | invariant | invariant | none |
-| R5.a | `check_trigger_evals` | invariant | invariant | none |
-| R5.b | `check_trigger_evals` | invariant | invariant | none |
-| R6.a | `lint_subagent_determinism` | invariant | invariant | none |
-| R7.a | `lint_rule_enforcement_declaration` | invariant | invariant | none |
-| R7.b | `lint_rule_enforcement_declaration` | invariant | invariant | none |
-| R8.a | `check_token_quality_golden` | invariant | invariant | none |
-| R8.b | `check_token_quality_golden` | observation | observation | observation |
-| R8.c | `check_token_quality_golden` | invariant | invariant | none |
-| R9.a | `check_council_layout` | invariant | invariant | none |
-| R10.a | `check_knowledge_cards` | invariant | invariant | none |
-| R10.b | `check_knowledge_cards` | invariant | invariant | none |
-| R10.c | `check_knowledge_cards` | invariant | invariant | none |
-| R10.d | `check_knowledge_cards` | invariant | invariant | none |
-| R10.e | `check_knowledge_cards` | invariant | invariant | none |
-| R10.f | `check_knowledge_cards` | invariant | invariant | none |
-| R10.g | `check_knowledge_cards` | invariant | invariant | none |
-| R10.h | `check_knowledge_cards` | observation | observation | observation |
-| R10.i | `check_knowledge_cards` | invariant | invariant | none |
-| R10.k | `check_knowledge_cards` | invariant | invariant | none |
-| R10.l | `check_knowledge_cards` | invariant | invariant | none |
-| R10.m | `check_knowledge_cards` | invariant | invariant | none |
-| R10.n | `check_knowledge_cards` | invariant | invariant | none |
-| R10.o | `check_knowledge_cards` | invariant | invariant | none |
-| R10.j | `check_knowledge_cards` | invariant | invariant | none |
-| R11.a | `check_public_links` | invariant | invariant | none |
-| R11.b | `check_public_links` | invariant | invariant | none |
-| R11.c | `check_public_links` | invariant | invariant | none |
-| R11.d | `check_public_links` | invariant | invariant | none |
+| R1.a | `check_gate_completeness` | invariant | invariant | invariant |
+| R1.b | `check_gate_completeness` | invariant | invariant | invariant |
+| R2.a | `lint_ticked_unmet_criteria` | invariant | invariant | invariant |
+| R2.b | `lint_ticked_unmet_criteria` | invariant | invariant | invariant |
+| R3.a | `check_rule_invariants` | invariant | invariant | invariant |
+| R3.b | `check_rule_invariants` | invariant | invariant | invariant |
+| R4.a | `check_augment_description_cap` | invariant | invariant | invariant |
+| R5.a | `check_trigger_evals` | invariant | invariant | invariant |
+| R5.b | `check_trigger_evals` | invariant | invariant | invariant |
+| R6.a | `lint_subagent_determinism` | invariant | invariant | invariant |
+| R7.a | `lint_rule_enforcement_declaration` | invariant | invariant | invariant |
+| R7.b | `lint_rule_enforcement_declaration` | invariant | invariant | invariant |
+| R8.a | `check_token_quality_golden` | invariant | invariant | invariant |
+| R8.b | `check_token_quality_golden` | observation | observation | observation, invariant |
+| R8.c | `check_token_quality_golden` | invariant | invariant | invariant |
+| R9.a | `check_council_layout` | invariant | invariant | invariant |
+| R10.a | `check_knowledge_cards` | invariant | invariant | invariant |
+| R10.b | `check_knowledge_cards` | invariant | invariant | invariant |
+| R10.c | `check_knowledge_cards` | invariant | invariant | invariant |
+| R10.d | `check_knowledge_cards` | invariant | invariant | invariant |
+| R10.e | `check_knowledge_cards` | invariant | invariant | invariant |
+| R10.f | `check_knowledge_cards` | invariant | invariant | invariant |
+| R10.g | `check_knowledge_cards` | invariant | invariant | invariant |
+| R10.h | `check_knowledge_cards` | observation | observation | observation, invariant |
+| R10.i | `check_knowledge_cards` | invariant | invariant | invariant |
+| R10.k | `check_knowledge_cards` | invariant | invariant | invariant |
+| R10.l | `check_knowledge_cards` | invariant | invariant | invariant |
+| R10.m | `check_knowledge_cards` | invariant | invariant | invariant |
+| R10.n | `check_knowledge_cards` | invariant | invariant | invariant |
+| R10.o | `check_knowledge_cards` | invariant | invariant | invariant |
+| R10.j | `check_knowledge_cards` | invariant | invariant | invariant |
+| R11.a | `check_public_links` | invariant | invariant | invariant |
+| R11.b | `check_public_links` | invariant | invariant | invariant |
+| R11.c | `check_public_links` | invariant | invariant | invariant |
+| R11.d | `check_public_links` | invariant | invariant | invariant |
 | R11.e | `check_public_links` | observation | observation | observation |
-| R11.f | `check_public_links` | invariant | invariant | none |
-| R11.g | `check_public_links` | invariant | invariant | none |
-| R12.a | `lint_agents_layout` | invariant | invariant | none |
+| R11.f | `check_public_links` | invariant | invariant | invariant |
+| R11.g | `check_public_links` | invariant | invariant | invariant |
+| R12.a | `lint_agents_layout` | invariant | invariant | invariant |
 | R12.c | `lint_agents_layout` | observation | observation | observation |
-| R12.d | `lint_agents_layout` | invariant | invariant | none |
-| R13.a | `lint_eval_freshness` | invariant | invariant | none |
-| R14.a | `lint_readme_jargon` | invariant | invariant | none |
-| R15.a | `lint_readme_serial_comma` | invariant | invariant | none |
-| R16.a | `check_composite_arming` | observation | observation | observation |
-| R16.b | `check_composite_arming` | invariant | invariant | none |
+| R12.d | `lint_agents_layout` | invariant | invariant | invariant |
+| R13.a | `lint_eval_freshness` | invariant | invariant | invariant |
+| R14.a | `lint_readme_jargon` | invariant | invariant | invariant |
+| R15.a | `lint_readme_serial_comma` | invariant | invariant | invariant |
+| R16.a | `check_composite_arming` | observation | observation | observation, invariant |
+| R16.b | `check_composite_arming` | invariant | invariant | invariant |
 | R16.c | `check_composite_arming` | observation | observation | observation |
-| R16.d | `check_composite_arming` | observation | observation | observation |
-| R16.e | `check_composite_arming` | invariant | invariant | none |
+| R16.d | `check_composite_arming` | observation | observation | observation, invariant |
+| R16.e | `check_composite_arming` | invariant | invariant | invariant |
 
 aspects 49 · derived = recorded 49 · mismatches 0
 
@@ -838,7 +871,7 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 2 | `lint_ticked_unmet_criteria` | ticked-vs-NOT-met | no `[x] AC` whose own text says `NOT met`, and the in-source exemption list is well formed (no duplicate key, no entry that matches nothing) | roadmaps, frozen digest list in source (governed input) | always | roadmap edits | **invariant** | frozen, digest-pinned exemptions; an unmatched entry is an error, so the list only shrinks | `R2.a` |
 | 2 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | only with `--self-test`; no caller found | edits to the checker | **invariant** | a fixed fixture table, no baseline (fixed-policy) | `R2.b` |
 | 3 | `check_rule_invariants` | kernel strings present | each string of `tests/golden/invariants.json` is in the kernel rule's source and its `dist/` projection | `tests/golden/invariants.json` (governed input), `src/rules/`, `dist/agent-src/rules/` | needs the projection built | a rule reworded; the expectation file edited | **invariant** | no baseline; the expectation file is the contract and shares edit authority with the rules (weak independence) | `R3.a` |
-| 3 | | mutation self-test — `--mutation-selftest` | removing the first invariant string in memory makes the check fail | `tests/golden/invariants.json` | only with `--mutation-selftest`; no caller found | the expectation file | **invariant** | the header: guards the checker against a silently-green normalisation bug (repository-consistency) | `R3.b` |
+| 3 | | mutation self-test — `--mutation-selftest` | removing the first invariant string in memory makes the check fail | `tests/golden/invariants.json` | only with `--mutation-selftest`; no caller found | the expectation file | **invariant** | the header: guards the checker against a silently-green normalisation bug (repository-consistency); an undetected removal returns 1 (`check_rule_invariants.ts:204-208`) | `R3.b` |
 | 4 | `check_augment_description_cap` | description length | every `type: auto` rule description ≤ `DESC_CAP` | `src/rules/*.md` | when the scan root contains at least one `type: auto` rule; with none the check exits 0 having scanned nothing (`op:silent-pass`, a defect carried to 7.2) | rule edits | **invariant** | fixed cap | `R4.a` |
 | 5 | `check_trigger_evals` | freshness | `last_eval` present and not more than 90 days before the run date (a future date computes a negative age and is accepted) | `triggers.json`; clock `asOf()` (pinnable through `AC_AS_OF` or `--today`), local calendar date of the runner | always | the calendar | **invariant, time-qualified** | D24. Window 90 d. Day 90 passes, day 91 fails (`age > 90`). No grace. The runner's local time zone decides the date. The class covers the property as computed. Rejecting future dates is a possible tightening, recorded and not assumed | `R5.a` |
 | 5 | | structure | non-empty queries, each `q` and boolean `trigger`, both classes present | same | always | edits | **invariant** | fixed rule | `R5.b` |
@@ -877,7 +910,7 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 12 | | consumer shape — default mode | in **consumer mode only** (no source-repo markers in the working directory), entries outside the consumer-target shape are reported as warnings | `agents/` on disk | consumer mode, invocation without `--strict`; never in this repository, which is in source-repo mode | consumer layout | **observation** | warnings exit 0 without `--strict`. Corrected in revision 8: revision 6 described these as entries scheduled for migration in this repository | `R12.c` |
 | 12 | | consumer shape — `--strict` | no entry outside the consumer-target shape remains | same | consumer mode with `--strict`; in this repository's source-repo mode `--strict` changes nothing | consumer layout | **invariant** in that mode | `if (strict) return 1` after the consumer warnings | `R12.d` |
 | 13 | `lint_eval_freshness` | eval attached | `upstream.last_eval` present with `sha_at_eval == upstream.sha` | manifests | in scope when a skill ships triggers and a pinned corpus | corpus SHA bumps | **invariant** | SHA equality, no clock | `R13.a` |
-| 14 | `lint_readme_jargon` | above-fold density | ≤ 3 watchlist hits in README lines 1–120 | README.md | always | README edits | **invariant** (numeric bound) | no named risk owner, so not a tolerance | `R14.a` |
+| 14 | `lint_readme_jargon` | above-fold density | ≤ 3 watchlist hits in README lines 1–120 | README.md | always | README edits | **invariant** (numeric bound) | fixed cap `MAX_HITS = 3`, more hits return 1 (`lint_readme_jargon.ts:172-188`); no named risk owner, so not a tolerance | `R14.a` |
 | 15 | `lint_readme_serial_comma` | serial comma | no serial comma in README prose | README.md | always | README edits | **invariant** | fixed rule | `R15.a` |
 | 16 | `check_composite_arming` | arming verdict | ≥ 10 usable composite readings from ≥ 2 sessions | the composite store | a valid store exists | new readings | **observation** | "'not yet' is a successful measurement, never a build failure" | `R16.a` |
 | 16 | | store yields a usable record | a store with content parses to at least one usable reading (an empty store is `op:could-not-run`, not this row) (a line with a string `session` and a `composite_ms` key) | the composite store | the store exists | a corrupt append | **invariant** | exit 1 when malformed lines leave no usable record (`malformed > 0 && readings.length === 0`). Corrected in revision 6: revision 3 said "every line parses", which the code does not require | `R16.b` |
