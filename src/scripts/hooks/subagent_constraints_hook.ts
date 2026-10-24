@@ -103,8 +103,8 @@ const CUT = '\n[cut here]';
 /** A file with less room than this left is listed as omitted rather than shown as a stub. */
 const MIN_SHOWN = 120;
 /** Escaped-byte bounds on the fixed part, so bodies keep most of the room. */
+/** A directory longer than this is described rather than printed; a label is never shortened. */
 const ROOT_MAX = 400;
-const LABEL_MAX = 160;
 const INVENTORY_MAX = 1_200;
 const USER_INVENTORY_MAX = 400;
 const RULES_INVENTORY_MAX = 600;
@@ -282,7 +282,7 @@ function userLayer(configDir: string): Found[] {
             seen.add(key);
             const rel = path.relative(configDir, abs);
             const label = rel.startsWith('..') || path.isAbsolute(rel) ? abs : rel;
-            found.push({ label: fitEscaped(`user:${label}`, LABEL_MAX), body: clean(text), rank: 2, sub: found.length, layer: 'user' });
+            found.push({ label: `user:${label}`, body: clean(text), rank: 2, sub: found.length, layer: 'user' });
         }
     }
     const rulesDir = path.join(configDir, 'rules');
@@ -299,9 +299,14 @@ function userLayer(configDir: string): Found[] {
         if (floorIds.has(id)) continue;
         const text = readText(file);
         if (text === null) continue;
-        found.push({ label: fitEscaped(id, LABEL_MAX), body: ruleLawBlocks(text).join('\n\n'), rank: 3, sub: found.length, layer: 'rule' });
+        found.push({ label: id, body: ruleLawBlocks(text).join('\n\n'), rank: 3, sub: found.length, layer: 'rule' });
     }
     return found;
+}
+
+/** `dir` as printed in the header, or a description of it when it is too long to print whole. */
+function dirName(dir: string, what: string): string {
+    return escBytes(dir) <= ROOT_MAX ? dir : `${what} (its path is over ${ROOT_MAX} bytes and not printed)`;
 }
 
 /**
@@ -325,7 +330,7 @@ export function instructionDigest(
         for (const rel of INSTRUCTION_FILES) {
             const text = readText(path.join(dir, rel));
             if (text === null) continue;
-            const label = fitEscaped(path.relative(root, path.join(dir, rel)) || rel, LABEL_MAX);
+            const label = path.relative(root, path.join(dir, rel)) || rel;
             project.push({ label, body: clean(text), rank: 1, sub: 0, layer: 'project' });
         }
     }
@@ -337,8 +342,8 @@ export function instructionDigest(
         `A bounded digest of ${withUser ? "this project's instruction files and the user's own instruction layer" : "this project's instruction files"}, ` +
         'which this subagent\'s definition omitted at startup (omitClaudeMd). It is not the files as the host loads them: ' +
         `comments are removed${withUser ? ', a user rule is carried by its Iron Law blocks only' : ''} and a file may be cut or omitted, as listed below; ` +
-        `read a listed file before relying on its missing part. Project paths are relative to ${fitEscaped(root, ROOT_MAX)}` +
-        `${withUser ? `; user: files and rules are under ${fitEscaped(configDir, ROOT_MAX)}` : ''}.`;
+        `read a listed file before relying on its missing part. Project paths are relative to ${dirName(root, 'the project root')}` +
+        `${withUser ? `; user: files and rules are under ${dirName(configDir, "the host's config directory")}` : ''}.`;
     const status: string[] = found.map((f) => (f.body === '' ? 'empty' : 'omitted'));
     const idx = (layer: Found['layer']): number[] => found.flatMap((f, i) => (f.layer === layer ? [i] : []));
     // Nearest project files are listed by name first; the rest are counted when the names would not fit.
@@ -347,8 +352,10 @@ export function instructionDigest(
         if (named.length === 0) return '';
         let from = 0;
         const render = (): string =>
-            `Files, nearest last: ${from > 0 ? `${from} nearer the root not named, ` : ''}${named.slice(from).join(', ')}.`;
-        while (from < named.length - 1 && escBytes(render()) > INVENTORY_MAX) from += 1;
+            from === named.length
+                ? `Files: ${from} not named.`
+                : `Files, nearest last: ${from > 0 ? `${from} nearer the root not named, ` : ''}${named.slice(from).join(', ')}.`;
+        while (from < named.length && escBytes(render()) > INVENTORY_MAX) from += 1;
         return render();
     };
     // Whole entries in load order; the ones that do not fit are counted, never cut mid-name.
@@ -381,7 +388,7 @@ export function instructionDigest(
             );
         };
         while (keep > 0 && escBytes(render()) > RULES_INVENTORY_MAX) keep -= 1;
-        return fitEscaped(render(), RULES_INVENTORY_MAX);
+        return render();
     };
     const inventory = (): string => [projectInventory(), userInventory(), rulesInventory()].filter((l) => l !== '').join('\n');
     const reserve = Math.max(escBytes(inventory()), 0) + (idx('rule').length > 0 ? RULES_INVENTORY_MAX - escBytes(rulesInventory()) : 0);

@@ -305,4 +305,28 @@ describe('subagent-constraints concern — the user layer', () => {
         expect(named.length + Number(m?.[2] ?? 0)).toBe(25);
         expect(Number(m?.[2] ?? 0)).toBeGreaterThan(0);
     });
+
+    // Round-3 ratification finding: a label is never shortened, so two long paths stay distinct.
+    it('keeps long labels whole, so long paths sharing a prefix stay distinct or are counted', () => {
+        const prefix = `${'a-very-long-directory-name-'.repeat(7)}`;
+        const names = [`${prefix}one`, `${prefix}two`];
+        for (const n of names) {
+            fs.mkdirSync(path.join(config, 'rules', n), { recursive: true });
+            fs.writeFileSync(path.join(config, 'rules', n, 'rule.md'), lawRule(n, `LAW OF ${n.slice(-3)}`));
+            fs.writeFileSync(path.join(config, `${n}.md`), `import ${n.slice(-3)}\n`);
+        }
+        fs.writeFileSync(path.join(config, 'CLAUDE.md'), `${USER_LINE}\n${names.map((n) => `@${n}.md`).join('\n')}\n`);
+        const digest = reply();
+        for (const n of names) {
+            expect(digest).toContain(`--- rule ${n}/rule ---`);
+            expect(digest).toContain(`--- user:${n}.md ---`);
+        }
+        for (const heading of digest.split('\n').filter((l) => l.startsWith('--- '))) expect(heading).toMatch(/ ---$/);
+        // The bounded user-file inventory names a long file whole or counts it, never a shortened form.
+        const inv = digest.split('\n').find((l) => l.startsWith('User files:')) as string;
+        const listed = names.filter((n) => inv.includes(`user:${n}.md (full)`)).length;
+        const counted = Number(/(\d+) (?:more )?not named/.exec(inv)?.[1] ?? 0);
+        expect(listed + counted + 1).toBe(3);
+        expect(inv).not.toMatch(/a-very-long-directory-name-(?!a-very|one|two)/);
+    });
 });
