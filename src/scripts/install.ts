@@ -125,7 +125,7 @@ import { installerThinsHost } from './_lib/lean_projection_mode.js';
 import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL, dryRunTargetLines } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
 import { settingsSchema } from '../server/schemas/settings.js';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { toJsonSchema7 } from '../shared/zodJsonSchema.js';
 import { detect_module_roots } from './_lib/module_detection.js';
 import {
     TIER_TO_CLAUDE_MODEL,
@@ -3671,11 +3671,7 @@ const SETTINGS_SURFACE_REL = path.join('state', 'settings-surface.json');
 const SETTINGS_DELTA_REL = path.join('state', 'settings-delta.json');
 
 function _current_settings_surface(version: string): SettingsSurface {
-    const jsonSchema = zodToJsonSchema(settingsSchema, {
-        name: 'AgentSettings',
-        $refStrategy: 'none',
-        target: 'jsonSchema7',
-    }) as Parameters<typeof flattenSurface>[0];
+    const jsonSchema = toJsonSchema7(settingsSchema, 'AgentSettings') as Parameters<typeof flattenSurface>[0];
     return flattenSurface(jsonSchema, version);
 }
 

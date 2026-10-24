@@ -32,7 +32,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { sep } from 'node:path';
-import { z } from 'zod';
+import * as z from 'zod';
 import { logger } from '../log/logger.js';
 // Floors shared with the weekly canary rotation (ADR-118 §4) — values
 // unchanged, single source of truth.
