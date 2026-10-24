@@ -5,10 +5,13 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { resolveLeanProjection } from '../../src/scripts/_lib/lean_projection_mode.js';
 import {
+    KILL_SWITCH_ENV,
     PROJECT_TREE_FORM_REL,
     projectTreeForm,
     readProjectTreeForms,
+    shippedProjection,
 } from '../../src/scripts/_lib/project_tree_form.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -63,25 +66,64 @@ describe('the shipped project-tree form', () => {
     });
 });
 
-describe('precedence — an observed verdict supersedes the record', () => {
-    it('uses the record while the decision function can only say delivery-unobserved', () => {
-        expect(projectTreeForm(REPO, 'claude-code', { form: 'full', reason: 'delivery-unobserved' })).toBe('delivery');
+describe('precedence — only an observed PROJECT-TREE verdict supersedes the record', () => {
+    const NO_ENV = {};
+    const tree = (form: 'full' | 'thinned', reason: string) => ({ form, reason, scope: 'project-tree' });
+
+    it('uses the record while the verdict can only say delivery-unobserved', () => {
+        expect(projectTreeForm(REPO, 'claude-code', tree('full', 'delivery-unobserved'), NO_ENV)).toBe('delivery');
     });
 
     it('uses the record when there is no verdict at all', () => {
-        expect(projectTreeForm(REPO, 'claude-code', null)).toBe('delivery');
+        expect(projectTreeForm(REPO, 'claude-code', null, NO_ENV)).toBe('delivery');
     });
 
-    it('yields to an observed verdict, in both directions', () => {
-        // The direction that matters: an observed verdict of `full` must WIN
-        // over a record saying `delivery`, or the record is a bypass of 3.1
-        // rather than a stand-in for it.
-        expect(projectTreeForm(REPO, 'claude-code', { form: 'full', reason: 'demoted' })).toBe('eager-all');
-        expect(projectTreeForm(REPO, 'claude-code', { form: 'thinned', reason: 'all-conditions-hold' })).toBe('delivery');
+    it('yields to an observed project-tree verdict, in both directions', () => {
+        // The direction that matters: an observed `full` must WIN over a record
+        // saying `delivery`, or the record is a bypass rather than a stand-in.
+        expect(projectTreeForm(REPO, 'claude-code', tree('full', 'demoted'), NO_ENV)).toBe('eager-all');
+        expect(projectTreeForm(REPO, 'claude-code', tree('thinned', 'all-conditions-hold'), NO_ENV)).toBe('delivery');
+    });
+
+    it('refuses the installed layer verdict whatever its reason', () => {
+        // Council 2026-10-24: provenance is structural. The decision function's
+        // verdict describes ~/.claude/rules and carries no project-tree scope.
+        for (const scope of [undefined, 'installed-layer']) {
+            const v = { form: 'full' as const, reason: 'demoted', ...(scope ? { scope } : {}) };
+            expect(projectTreeForm(REPO, 'claude-code', v, NO_ENV)).toBe('delivery');
+        }
+    });
+
+    it('the kill switch forces the full form over the record and over any verdict', () => {
+        const off = { [KILL_SWITCH_ENV]: 'full' };
+        expect(projectTreeForm(REPO, 'claude-code', null, off)).toBe('eager-all');
+        expect(projectTreeForm(REPO, 'claude-code', tree('thinned', 'all-conditions-hold'), off)).toBe('eager-all');
+        expect(projectTreeForm(REPO, 'claude-code', null, { [KILL_SWITCH_ENV]: 'delivery' })).toBe('delivery');
     });
 
     it('gives a host with no row the full form', () => {
-        expect(projectTreeForm(REPO, 'windsurf', null)).toBe('eager-all');
-        expect(projectTreeForm(REPO, 'cursor', null)).toBe('eager-all');
+        expect(projectTreeForm(REPO, 'windsurf', null, NO_ENV)).toBe('eager-all');
+        expect(projectTreeForm(REPO, 'cursor', tree('thinned', 'all-conditions-hold'), NO_ENV)).toBe('eager-all');
+    });
+});
+
+describe('the live path runs the precedence rule', () => {
+    it('resolveLeanProjection reads the record through it: delivery on claude-code today', () => {
+        expect(resolveLeanProjection({ packageRoot: REPO })).toMatchObject({ mode: 'delivery', modeExplicit: false });
+        expect(resolveLeanProjection({ packageRoot: REPO }).hosts.hosts).toEqual(['claude-code']);
+    });
+
+    it('an observed project-tree full verdict turns the projection full', () => {
+        const full = shippedProjection(REPO, () => ({ form: 'full', reason: 'demoted', scope: 'project-tree' }), {});
+        expect(full).toEqual({ mode: 'eager-all', hosts: [] });
+    });
+
+    it('an installed-layer verdict leaves the projection unchanged', () => {
+        const same = shippedProjection(REPO, () => ({ form: 'full', reason: 'demoted' }), {});
+        expect(same).toEqual({ mode: 'delivery', hosts: ['claude-code'] });
+    });
+
+    it('the kill switch turns the projection full', () => {
+        expect(shippedProjection(REPO, undefined, { [KILL_SWITCH_ENV]: 'full' })).toEqual({ mode: 'eager-all', hosts: [] });
     });
 });
