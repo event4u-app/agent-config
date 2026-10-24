@@ -61,6 +61,20 @@ and the run that applies it links its PR.
   cheaper with the flip data in hand.
 - **Blocks:** step 4.2.
 
+### OQ-7 — Self-modification: how an owner act binds a split council
+
+- **Context:** `road-to-self-modification-that-a-council-must-pass` steps 3.4,
+  4.1, 4.2, 5.2 and 6.2 are built (commits `1f9ab5fca`, `5ecf60b10`,
+  `0e262c5c2`, `ec866ae5b`) but every review split: across ~25 rounds the openai
+  seat refuses because no authenticated owner mechanism exists, which ADR-281 § 5
+  deliberately leaves to the owner's forge act.
+- **Options:** (a) land the four commits through the D11 forge bypass as the
+  owner act; (b) reopen D11 / ADR-281 § 5 and build an in-tree authenticated
+  owner acknowledgment first; (c) park the roadmap.
+- **Recommendation:** (a) — the design already assigns this act to the owner,
+  and more council rounds on unchanged designs would be verdict shopping.
+- **Blocks:** steps 3.4, 4.1, 4.2, 5.2, 6.2 and AC-2, AC-3, AC-5.
+
 ## Answered
 
 | ID | Date | Question | Answer |
