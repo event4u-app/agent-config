@@ -82,7 +82,7 @@ function writeGraph(edgeCount: number): string {
     const graph = makeGraph(edgeCount);
     const serialized = JSON.stringify(graph);
     fs.writeFileSync(jsonPath, serialized);
-    expect(emitSqliteTwin(graph, serialized, jsonPath)).toBe(true);
+    expect(emitSqliteTwin(graph, jsonPath)).toBe(true);
     return jsonPath;
 }
 
@@ -191,20 +191,19 @@ describe.runIf(sqliteOk)('indexed reads above the threshold', () => {
             g.close();
         }
 
-        // MEASURED, and worth stating because the obvious discriminator does
-        // NOT work: below the threshold `loadGraph` still succeeds with the
-        // canonical JSON unreadable. `loadSerializedFromTwin` sources the bytes
-        // from the twin and only falls back to the file when the twin is
-        // absent or stale. So a FILE READ never separated the two paths — which
-        // is precisely D6's corrected finding, that the twin was a cheaper blob
-        // transport and not an index. The parse is the discriminator, and it is
-        // what the assertions above and in the sibling test measure.
-        const stillLoads = withUnreadableJson(jsonPath, () => {
-            const h = loadGraph(jsonPath);
-            h.close();
-            return 'loaded';
+        // Below the threshold the canonical JSON IS the read: the twin no longer
+        // carries a second copy of the graph to load instead (D2 of
+        // road-to-a-graph-that-follows-you). So an unreadable JSON now fails the
+        // load here, while the indexed path above never touches the file.
+        const outcome = withUnreadableJson(jsonPath, () => {
+            try {
+                loadGraph(jsonPath).close();
+                return 'loaded';
+            } catch {
+                return 'refused';
+            }
         });
-        if (stillLoads !== null) expect(stillLoads).toBe('loaded');
+        if (outcome !== null) expect(outcome).toBe('refused');
     }, 60_000);
 
     it('answers identically on both paths', () => {
@@ -271,7 +270,7 @@ describe.runIf(sqliteOk)('validate asserts twin ⇔ JSON by checksum', () => {
         const raw = fs.readFileSync(jsonPath, 'utf-8');
         const impostor = JSON.parse(raw) as CodeGraph;
         impostor.source_checksum = 'a-different-graph-entirely';
-        expect(emitSqliteTwin(impostor, raw, jsonPath)).toBe(true);
+        expect(emitSqliteTwin(impostor, jsonPath)).toBe(true);
 
         const r = runValidate(jsonPath);
         expect(r.status).toBe(1);

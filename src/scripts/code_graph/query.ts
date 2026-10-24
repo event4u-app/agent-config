@@ -13,7 +13,6 @@ import {
     emitSqliteTwin,
     type GraphIndex,
     INDEXED_READ_MIN_EDGES,
-    loadSerializedFromTwin,
     openGraphIndex,
 } from './sqlite_store.js';
 import type { CodeEdge, CodeGraph, CodeNode, Relation } from './types.js';
@@ -132,6 +131,9 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
     // used to be preferred and still returned the entire serialization, which
     // made it a cheaper blob transport rather than an index.
     const index = openGraphIndex(graphPath);
+    // `openGraphIndex` declines on exactly the conditions under which the twin
+    // is stale, absent or corrupt — so a handle here means it needs no re-emit.
+    const twinCurrent = index !== null;
     if (index) {
         if (index.edgeCount >= INDEXED_READ_MIN_EDGES) return indexBackedGraph(index, source, graphPath);
         // Small graph: the in-memory path is cheaper. Release the handle rather
@@ -139,12 +141,10 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
         index.close();
     }
 
-    // Prefer the derived SQLite twin (ADR-129): checksum/stat-verified against
-    // the canonical JSON, byte-identical content, ~1/90 the load cost at
-    // consumer scale. Fallback = parse the JSON — and best-effort re-emit the
-    // twin from it (zero-touch rebuild-on-drift, Phase 7).
-    const fromTwin = loadSerializedFromTwin(graphPath);
-    const raw = fromTwin ?? fs.readFileSync(graphPath, 'utf-8');
+    // Below the threshold the JSON is parsed. The twin no longer carries a
+    // second copy of it to read instead; a missing or stale twin is re-emitted
+    // below (zero-touch rebuild-on-drift, ADR-129 Phase 7).
+    const raw = fs.readFileSync(graphPath, 'utf-8');
     const parsed = JSON.parse(raw) as unknown;
     // A consumer's own graph file, written by another tool, is DETECTED by
     // `detect.ts` and used to throw here — detected-but-unloadable, the worst
@@ -166,8 +166,8 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
     // The twin is a cache of a file's bytes keyed on its own checksum. An
     // adapted graph's bytes are not the file's, so emitting one would cache a
     // derivation under the source's identity.
-    if (fromTwin === null && !foreignAdapted) {
-        emitSqliteTwin(graph, raw, graphPath);
+    if (!twinCurrent && !foreignAdapted) {
+        emitSqliteTwin(graph, graphPath);
     }
     const byId = new Map(graph.nodes.map((n) => [n.id, n]));
     const outM = new Map<string, CodeEdge[]>();

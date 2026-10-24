@@ -1172,7 +1172,7 @@ export async function buildFromRepo(
         write_atomic(sidecarPath(cachePath), JSON.stringify(nextSidecar));
         // Derived SQLite twin (ADR-129): best-effort accelerator beside the
         // canonical JSON — never fails the build, no-op on old Node.
-        emitSqliteTwin(graph, json, cachePath);
+        emitSqliteTwin(graph, cachePath);
     }
     return { graph, json, fileCount: files.length, reExtracted, reused };
 }

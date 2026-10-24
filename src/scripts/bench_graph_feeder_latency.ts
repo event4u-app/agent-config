@@ -404,7 +404,7 @@ export function benchLoadSplit(opts: { graph: string; runs?: number | undefined 
             if (!v.ok) throw new Error(`invalid graph at ${opts.graph}: ${v.errors.slice(0, 3).join('; ')}`);
             const graph = parsed as CodeGraph;
             const t3 = performance.now();
-            const wrote = emitSqliteTwin(graph, raw, copy);
+            const wrote = emitSqliteTwin(graph, copy);
             const t4 = performance.now();
             const byId = new Map(graph.nodes.map((n) => [n.id, n]));
             const outM = new Map<string, CodeEdge[]>();

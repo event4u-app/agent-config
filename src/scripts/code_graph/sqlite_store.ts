@@ -56,7 +56,7 @@ import type { CodeEdge, CodeGraph, CodeNode } from './types.js';
  * 4 → 5 (`road-to-graph-providers-for-every-stack` 2.1): `edges` gained
  * `provider_id`, the convention provider that drew a convention edge.
  */
-export const GRAPH_STORE_VERSION = 5;
+export const GRAPH_STORE_VERSION = 6;
 
 /**
  * Edge count at or above which the indexed read path replaces the blob path.
@@ -81,11 +81,10 @@ export function sqliteTwinPath(jsonPath: string): string {
  * JSON path remains the source of truth either way.
  *
  * Storage model: nodes/edges land in real tables (queryable, and the FTS-free
- * structure the rollback triggers measure), while `meta.graph_json` carries
- * the byte-exact canonical serialization so the loader can guarantee
- * byte-identical answers without re-deriving key order.
+ * structure the rollback triggers measure). The JSON is the only full copy;
+ * the twin is a disposable, rebuildable projection of it.
  */
-export function emitSqliteTwin(graph: CodeGraph, serialized: string, jsonPath: string): boolean {
+export function emitSqliteTwin(graph: CodeGraph, jsonPath: string): boolean {
     if (!isSqliteAvailableSync()) return false;
     const twin = sqliteTwinPath(jsonPath);
     const tmp = `${twin}.tmp-${process.pid}`;
@@ -120,7 +119,6 @@ export function emitSqliteTwin(graph: CodeGraph, serialized: string, jsonPath: s
             meta.run('source_checksum', graph.source_checksum);
             meta.run('json_size', String(stat.size));
             meta.run('json_mtime_ms', String(stat.mtimeMs));
-            meta.run('graph_json', serialized);
             // Counts live in meta so a reader can pick its path from one row
             // instead of a COUNT(*) over the table it is deciding whether to
             // read at all.
@@ -176,39 +174,38 @@ export function emitSqliteTwin(graph: CodeGraph, serialized: string, jsonPath: s
 }
 
 /**
- * Load the canonical serialization from a FRESH SQLite twin, or null when the
- * twin is absent / stale (JSON changed since emission) / corrupt /
- * version-mismatched / unsupported runtime. Callers fall back to reading the
- * JSON — and best-effort re-emit the twin from it (zero-touch rebuild).
+ * Whether the twin beside `jsonPath` mirrors it: present, the current store
+ * version, and recorded against the JSON's present size and mtime. A corrupt
+ * twin is a non-event — it is dropped so the next load re-emits it.
+ *
+ * The twin used to carry the whole serialized graph a second time and this
+ * returned it; that blob was the same bytes as the JSON and doubled the twin
+ * (road-to-a-graph-that-follows-you D2). The JSON is the only full copy now.
  */
-export function loadSerializedFromTwin(jsonPath: string): string | null {
-    if (!isSqliteAvailableSync()) return null;
+export function twinIsCurrent(jsonPath: string): boolean {
+    if (!isSqliteAvailableSync()) return false;
     const twin = sqliteTwinPath(jsonPath);
-    if (!fs.existsSync(twin)) return null;
+    if (!fs.existsSync(twin)) return false;
     let stat: fs.Stats;
     try {
         stat = fs.statSync(jsonPath);
     } catch {
-        return null; // canonical JSON gone — the twin has no truth to mirror
+        return false; // canonical JSON gone — the twin has no truth to mirror
     }
     try {
         const { DatabaseSync } = loadSqliteSync('code_graph.sqlite_store');
         const db = new DatabaseSync(twin, { readOnly: true });
         try {
-            if (readUserVersion(db) !== GRAPH_STORE_VERSION) return null;
+            if (readUserVersion(db) !== GRAPH_STORE_VERSION) return false;
             const rows = db.prepare('SELECT key, value FROM meta').all() as { key: string; value: string }[];
             const meta = new Map(rows.map((r) => [r.key, r.value]));
-            if (meta.get('json_size') !== String(stat.size)) return null;
-            if (meta.get('json_mtime_ms') !== String(stat.mtimeMs)) return null;
-            const serialized = meta.get('graph_json');
-            return serialized && serialized.length > 0 ? serialized : null;
+            return meta.get('json_size') === String(stat.size) && meta.get('json_mtime_ms') === String(stat.mtimeMs);
         } finally {
             db.close();
         }
     } catch {
-        // Corrupt twin is a non-event: drop it so the next build re-emits.
         fs.rmSync(twin, { force: true });
-        return null;
+        return false;
     }
 }
 
@@ -218,9 +215,9 @@ export function loadSerializedFromTwin(jsonPath: string): string | null {
  *
  * Every export it had took a PATH and returned the whole graph: the serialized
  * blob, or a pair of counts. So "the query path prefers SQLite" was true and
- * bought nothing — `loadSerializedFromTwin` hands back the entire
- * serialization, and the caller then parses it and builds a `Map` over every
- * node and every edge. The twin was a cheaper blob transport, never an index.
+ * bought nothing — the loader handed back the entire serialization, and the
+ * caller then parsed it and built a `Map` over every node and every edge. The
+ * twin was a cheaper blob transport, never an index.
  *
  * These reads take an id, a label, or a file, and touch only the rows that
  * answer. Statements are prepared once per handle because a BFS calls
@@ -315,7 +312,7 @@ function toEdge(r: EdgeRow): CodeEdge {
 /**
  * Open the twin for INDEXED reads, or null when it cannot serve them.
  *
- * Null on exactly the conditions `loadSerializedFromTwin` already refuses on —
+ * Null on exactly the conditions `twinIsCurrent` refuses on —
  * absent, stale against the JSON's size/mtime, corrupt, version-mismatched, no
  * `node:sqlite` — so the two paths agree about when the twin is trustworthy
  * and a caller never has to ask twice.
