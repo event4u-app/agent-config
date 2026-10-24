@@ -65,8 +65,11 @@ request with changes requested), `listing-lost` (an `accepted` listing that now
 reads `not-listed`) and `listing-stale` (the registry's latest version lags
 `package.json`). `--fail-on-action` exits 2 on any of them, and
 `release-adjacent-health.yml` runs it daily on `main`, so a drifted row turns
-red within a day without anyone opening a session. An unreachable upstream is
-never an action — an outage does not red the watcher.
+red within a day without anyone opening a session. One unreachable read is
+never an action — an outage does not red the watcher — but an `accepted` or
+`submitted` row whose `Last read` is older than the re-read threshold while its
+upstream stays unreachable is `read-overdue`: row 3, behind a bot check, reds
+once a month until someone reads it through a headless browser.
 
 ## Tracking rows
 

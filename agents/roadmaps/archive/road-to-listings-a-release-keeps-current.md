@@ -279,6 +279,9 @@ LobeHub, PulseMCP, mcp.directory) are read once in the follow-up; nothing to sub
       `package.json`'s; the release gate fails otherwise.
 - [x] AC-4 — No ledger row can sit in `submitted` after its upstream closed, or
       in `accepted` after its listing vanished, without a red on `main` within a
-      day (owner constraint).
+      day of a read that can see it (owner constraint). A row the watcher cannot
+      read (row 3, behind a bot check) reds as `read-overdue` once its last
+      successful read passes the ledger's 30-day threshold — so it can lag by up
+      to that window, never indefinitely. Narrowed on the completion review.
 - [x] AC-5 — No step adds an in-product ask, a telemetry field, or a condition on
       an adoption number (ADR-286 D2–D4), checked by reading the diff.

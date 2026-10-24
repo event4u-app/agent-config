@@ -321,6 +321,16 @@ describe('adoption_status — a submission is done only once it is live', () => 
         expect(v.get('I')?.action).toBeUndefined();
     });
 
+    it('reports read-overdue for a live row nobody could read past the threshold, never for a fresh outage', () => {
+        const rows = as_.parse_ledger_rows(ACTION_LEDGER);
+        const later = as_.judge_upstream(rows, actionReader, '2026-11-20', RELEASED, 30);
+        const j = later.find((v) => v.id === 'J');
+        expect(j).toMatchObject({ verdict: 'unreachable', action: 'read-overdue' });
+        expect(j?.next).toMatch(/headless browser.*for 41 days/);
+        const fresh = as_.judge_upstream(rows, actionReader, TODAY, RELEASED, 30).find((v) => v.id === 'J');
+        expect(fresh?.action).toBeUndefined();
+    });
+
     it('reports needs-response for an open pull request with changes requested, and only then', () => {
         const v = judgeActions();
         expect(v.get('D')).toMatchObject({ verdict: 'open', action: 'needs-response' });

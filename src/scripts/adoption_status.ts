@@ -314,7 +314,13 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return 0;
     }
 
-    const verdicts = judge_upstream(rows, live_upstream_reader, today, _releasedServer());
+    const verdicts = judge_upstream(
+        rows,
+        live_upstream_reader,
+        today,
+        _releasedServer(),
+        parse_reread_threshold(registryText),
+    );
     if (args.json) {
         const base = JSON.parse(render_json(registryCounts, reports, ci, args.branch)) as Record<
             string,
@@ -396,7 +402,7 @@ export type UpstreamVerdict =
  * upstream reads, the action says the sheet and that reading disagree in a way a
  * person has to resolve.
  */
-export type ActionVerdict = 'sheet-behind' | 'needs-response' | 'listing-lost' | 'listing-stale';
+export type ActionVerdict = 'sheet-behind' | 'needs-response' | 'listing-lost' | 'listing-stale' | 'read-overdue';
 
 export interface RowVerdict {
     id: string;
@@ -517,6 +523,7 @@ export function judge_upstream(
     reader: UpstreamReader,
     today: string,
     released?: ReleasedServer,
+    thresholdDays: number = DEFAULT_REREAD_THRESHOLD_DAYS,
 ): RowVerdict[] {
     return rows.map((row): RowVerdict => {
         const base = { id: row.id, registry: row.registry };
@@ -525,7 +532,19 @@ export function judge_upstream(
         }
         const r = reader(row);
         if (!r.ok) {
-            return { ...base, verdict: 'unreachable', detail: r.reason };
+            const out = { ...base, verdict: 'unreachable' as const, detail: r.reason };
+            // One outage never reds the watcher; a listing nobody has been able to read
+            // for longer than the sheet's own threshold does, or it could vanish unseen.
+            const age = row.lastRead === '' ? null : _daysBetween(row.lastRead, today);
+            const live = row.status === 'accepted' || row.status === 'submitted';
+            if (live && (age === null || age > thresholdDays)) {
+                return {
+                    ...out,
+                    action: 'read-overdue',
+                    next: `read the upstream another way (a headless browser) and set Last read; unread ${age === null ? 'ever' : `for ${age} days`}`,
+                };
+            }
+            return out;
         }
         const out = { ...base, ..._verdictOf(row, r, today) };
         const action = _actionFor(row, r, released);
