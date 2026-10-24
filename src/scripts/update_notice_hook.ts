@@ -109,7 +109,7 @@ export function readNoticeState(statePath: string | null): NoticeState {
 export function confirmDelivered(state: NoticeState, receipt: NoticeReceipt | null): NoticeState {
     const p = state.pending;
     if (p === undefined || receipt === null || !receipt.notice_id || receipt.notice_id !== p.notice_id || receipt.session_id !== p.session_id) return state;
-    return { staged: state.staged, last_seen_installed: state.pending.installed };
+    return { staged: state.staged, last_seen_installed: p.installed };
 }
 
 export function writeNoticeState(statePath: string, state: NoticeState): void {
