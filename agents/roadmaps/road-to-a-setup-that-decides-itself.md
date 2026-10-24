@@ -313,6 +313,7 @@ with that file.
   condition that binds this step: `projection.mode` stays until the reach
   mechanism and its tests exist.
   Routed to the owner 2026-10-24: the reach condition holds, but the removal is not default-neutral and both council seats classify it owner-reserved (`agents/evidence/council/setup-projection-mode-removal-20261024.md`).
+  **Owner answered 2026-10-24 (owner-questions OQ-1): option 1** — remove it in the next major and retire the full-surface guarantee on hosts without a listing lever; `use --profile=legacy-all` is removed or redefined. Ships with #2644 in the same major.
 - [x] **4.9 Retire `projection.rule_packs`.** Owner directive 2026-10-24 (D14): the rule
   layer's pack axis is derived from the active-pack set; tombstone; for one release window an
   explicitly written value wins; the eight rules the derivation drops are audited; `doctor` reports a

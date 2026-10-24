@@ -1,6 +1,11 @@
 ---
 complexity: structural
-status: ready
+status: later
+review_by: 2026-11-24
+entry_condition:
+  what: "a free slot among the five active roadmaps (owner WIP limit, 2026-10-24)"
+  when: "when one of the five active roadmaps completes"
+  who: owner
 execution:
   mode: phase-checkpoints
 depends: [road-to-a-setup-that-decides-itself]
@@ -372,7 +377,7 @@ Reproduced on 2026-10-01:
       step made an ADR that was fully writable today look impossible, which is the
       `## Blockers`-entry-as-verdict failure the capability screen exists to
       refuse. The marker is removed rather than re-dated.
-      [ADR-284](../../docs/decisions/ADR-284-installer-honours-the-host-axis-on-an-explicit-opt-in.md)
+      [ADR-284](../../../docs/decisions/ADR-284-installer-honours-the-host-axis-on-an-explicit-opt-in.md)
       discharges all three clauses: decision 1 extends ADR-267 decision 2 to the
       installer, decision 2 records D3, and the record performs a **scoped**
       supersession of ADR-228 — the verbatim-copy limb only, with the `paths:`
