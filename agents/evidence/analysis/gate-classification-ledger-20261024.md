@@ -216,6 +216,79 @@ any row.
 | `.github/workflows/tests.yml` | `0e1e0c9882919e10ff783780315a84b5e5f5dea3` |
 
 
+## Independent branch inventory — revision 8
+
+The twelfth round (D36) asked for an inventory of assertion-producing
+**branches**, not flags, *"reproduced independently of the ledger author"*. A
+separate agent session produced it. It was told to read only the 16 scripts and
+the helpers they import, to open nothing under `agents/`, and to enumerate
+without classifying. It never saw this ledger. The result is
+`agents/evidence/analysis/gate-branch-inventory-20261024.json`: 198 branches,
+each with its file and line, effect, exit code, and controlling predicates
+(flags, environment variables, file state, network, git, clock). The level of
+independence is another session of the same model. It is not another provider.
+
+The ledger author then mapped each branch, in
+`agents/evidence/analysis/gate-branch-mapping-20261024.json`, either to a
+binding row or to one of eight declared non-assertion categories:
+
+- usage;
+- could-not-run;
+- aggregate exit;
+- informational;
+- write mode;
+- presentation;
+- silent pass;
+- unreachable.
+
+The reconciler checks both directions. Every branch must land on a binding
+row of its own check or on a declared category. Every binding row must be
+reached by at least one branch, so the ledger has no phantom rows. It was seen
+red when the E1 row was removed.
+
+**What the inventory changed in the ledger:**
+
+- **New rows.**
+  - `R10.j`: E1, the required keys of an experience card.
+  - `R11.g`: no public link into `agents/contexts/`.
+- **`--global` made atomic.** The helper `R10.i` named is split into G1 to G6
+  (`R10.i`, `R10.k` to `R10.o`), as openai required.
+- **Rows corrected.**
+  - `R12.c` and `R12.d`: the warnings exist only in consumer mode, so in this
+    repository `--strict` changes nothing.
+  - `R1.a`: the ratchet fails on three verdicts, including staleness after 56
+    days.
+  - `R16.b`: an empty store also fails. Executed: a store of valid JSON lines
+    that are not usable readings exits 1 and is counted as malformed, so the
+    gap round 12 suspected does not exist.
+- **Self-tests executed.** The four self-test and mutation-test modes were run,
+  and each passed: 7/7, 7/7, 7/7, and the mutation test.
+
+**Defects the inventory found in the checks themselves.** None of these is a
+classification. They are recorded so they are not lost, and they are carried to
+7.2:
+
+- *Silent passes*:
+  - `check_augment_description_cap` exits 0 with zero rules scanned (no
+    dead-scope guard);
+  - `check_knowledge_cards` exits 0 with no card directory or no cards, and
+    skips C5 when git is missing;
+  - `check_public_links` skips a link that resolves outside the repository.
+- *Promised exit codes with no path*:
+  - `check_knowledge_cards` promises exit 3 for internal errors;
+  - `lint_rule_enforcement_declaration` promises exit 2 for usage errors and
+    ignores unknown flags.
+- *Working-directory scope*: checks 9, 12, 14 and 15 resolve their scope
+  against the working directory, not the repository root.
+
+Result:
+
+```text
+branches 198 · mapped to rows 106 · {"op:could-not-run":48,"op:informational":7,"op:usage":21,"op:unreachable":1,"op:silent-pass":5,"op:aggregate":7,"op:write":2,"op:presentation":1} · binding rows reached 50/50
+rows 52 · binding 50 · migration 2 · {"invariant":42,"snapshot":0,"tolerance":0,"observation":8}
+OK: 16 phase-7 checks = 16 ledger checks = 16 inventoried checks; every binding aspect of every check carries one of the four classes; every target row sits beside its current-scope row; every assertion-changing flag in each check's source is named by a binding row; every row has a unique id; 22 pinned files are unchanged; every branch of the independent inventory maps to a binding row or a declared category, and every binding row is reached.
+```
+
 ## Current enforcement, recorded separately
 
 From `agents/evidence/analysis/gate-invocation-inventory-20261024.md`:
@@ -242,8 +315,9 @@ guarantees (openai), so each invariant row carries one of these qualifiers:
   independently anchored invariants (anthropic).
 - **environment-dependent**:
   - row 5 freshness (runner clock and time zone);
-  - the current-scope rows of checks 9 and 12 (the disk);
-  - row 10 C5 (git history depth).
+  - the current-scope rows of checks 9 and 12 (the disk, read relative to the working directory);
+  - rows 14 and 15 (`README.md` relative to the working directory);
+  - row 10 C5 (git history depth, skipped without git).
 - **fixed-policy**: every other invariant row.
 
 ## The ledger — revision 3
@@ -271,7 +345,7 @@ controls, and no independent party verifies it (openai's hardest pushback).
 
 | # | Check | Aspect | Property measured (from source) | Inputs / trust dependencies | Applicability / invocation mode | What makes it vary | Class | Evidence for the class | Row id |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | `check_gate_completeness` | adoption ratchet | un-adopted gate count ≤ the recorded count | `src/config/gate-violation-baselines.json` (governed input), gate sources | always | new gates, adoption | **invariant** (shrink-only) | header: the count "may only go down". No authorised upward refresh is documented, and an edit's technical ability to raise the number is not authorisation | `R1.a` |
+| 1 | `check_gate_completeness` | adoption ratchet | un-adopted gate count ≤ the recorded count, the recorded count exists, and it was landed or reaffirmed within `STALE_AFTER_DAYS` (56); three verdicts fail: regressed, unbaselined, stale | `src/config/gate-violation-baselines.json` (governed input), gate sources | always | new gates, adoption | **invariant** (shrink-only) | header: the count "may only go down". No authorised upward refresh is documented, and an edit's technical ability to raise the number is not authorisation | `R1.a` |
 | 1 | | exemption marker | every `// ledger-exempt:` carries a reason of minimum length | gate sources | always | gate edits | **invariant** | "an empty or near-empty reason is a hard failure"; form only, the header says truth is a human read | `R1.b` |
 | 1 | | scan scope | the gate scanned a non-dead scope (the CI-registered gate estate) | `assertScanned` | always | tree layout | **invariant** | dead scope throws, no baseline | `R1.c` |
 | 2 | `lint_ticked_unmet_criteria` | ticked-vs-NOT-met | no `[x] AC` whose own text says `NOT met` | roadmaps, frozen digest list in source (governed input) | always | roadmap edits | **invariant** | frozen, digest-pinned exemptions; an unmatched entry is an error, so the list only shrinks | `R2.a` |
@@ -297,62 +371,65 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 10 | | C5 evidence consistency | distinct `source_version`s form a git-ancestry chain; `observed_at` span ≤ 7 days | same + git history | always | card edits, history | **invariant** | error. The span compares recorded timestamps, not the clock | `R10.f` |
 | 10 | | C6 strict sources | `source=<path:line>` references exist and are non-empty | same + the tree | only with `--strict` | tree edits | **invariant** in that mode | error when enabled | `R10.g` |
 | 10 | | freshness | newest `observed_at` older than `--freshness-days` | same + clock | only with the flag; default 0 = off | the calendar | **observation** | "Honest freshness signal (NOT a failure)" | `R10.h` |
-| 10 | | global-store cards — `--global` | the extra checks ADR-100 sets for the user-global card store (`_check_global_card`) | the global store | only with `--global`; no caller found | card edits | **invariant** | errors added to the same error list (fixed-policy) | `R10.i` |
+| 10 | | G1 tier — `--global` | a global-store card carries a valid `tier` | the user-global card store | only with `--global`; no caller found | card edits | **invariant** in that mode | `_check_global_card` error | `R10.i` |
+| 10 | | G2 provenance footer — `--global` | the provenance footer is present and carries `first_seen`, `promoted_at`, `last_verified`, `tier`, `seen_in` | same | only with `--global` | card edits | **invariant** in that mode | error per missing field | `R10.k` |
+| 10 | | G3 redaction — `--global` | no confidential pattern (secret, email, internal host, external-source name, hidden Unicode) in a global card | same | only with `--global` | card edits | **invariant** in that mode | `redaction_scan` violations are errors | `R10.l` |
+| 10 | | G4 sensitivity — `--global` | a global card carries a valid `sensitivity` | same | only with `--global` | card edits | **invariant** in that mode | error | `R10.m` |
+| 10 | | G5 ownership fields — `--global` | the footer carries `source_repo`, `owner`, `review_after`, `promotion_reason` | same | only with `--global` | card edits | **invariant** in that mode | error per missing field | `R10.n` |
+| 10 | | G6 no prohibited card — `--global` | no card with `sensitivity: prohibited` is in the global store | same | only with `--global` | card edits | **invariant** in that mode | error | `R10.o` |
+| 10 | | E1 experience-card keys | a card with `kind: experience` carries every key of `REQUIRED_CARD_FIELDS` | `agents/knowledge/*.md` (experience arm) | always, for experience cards | card edits | **invariant** | error; C1–C6 apply to the external arm only | `R10.j` |
 | 11 | `check_public_links` | link target exists | a link from the public surface into `docs/contracts/` resolves to a file | README, AGENTS.md, architecture doc, contract frontmatter | always | doc edits | **invariant** | error severity, exit 1 | `R11.a` |
 | 11 | | target declares stability | the linked contract carries `stability:` frontmatter | same | always | contract edits | **invariant** | error severity, exit 1 | `R11.b` |
 | 11 | | no experimental link | the public surface never links to an `experimental` contract | same | always | doc edits | **invariant** | error severity, exit 1 | `R11.c` |
 | 11 | | contract file declares stability | a contract file itself carries `stability:` frontmatter, as `STABILITY.md` requires | `docs/contracts/` | always | contract edits | **invariant** | error severity, exit 1 | `R11.d` |
 | 11 | | beta marker — default mode | a link to a `beta` contract carries a visible `(beta)` or `[beta]` marker | same | invocation without `--strict` | doc edits | **observation** | warning severity, exit 0 | `R11.e` |
 | 11 | | beta marker — `--strict` | same property | same | invocation with `--strict` | doc edits | **invariant** in that mode | warnings fail with `--strict` | `R11.f` |
-| 12 | `lint_agents_layout` | top-level allowlist — current | every top-level entry under `agents/` on disk is allowlisted (`fs.readdirSync`), untracked entries included | `agents/` on disk, `ALLOWED_SOURCE_DIRS` in source | always | untracked local entries as well as edits | **invariant** over the disk scope it measures today | fixed allowlist; the row 7.2 may rely on until the fix | `R12.a` |
+| 11 | | no link into agents contexts | the public surface does not link to an `agents/contexts/*.md` target | README, AGENTS.md, architecture doc | always | doc edits | **invariant** | error severity, exit 1 | `R11.g` |
+| 12 | `lint_agents_layout` | top-level allowlist — current | every regular file at the `agents/` root is in `ALLOWED_FLAT_FILES` (both modes), and in source-repo mode every top-level directory is in `ALLOWED_SOURCE_DIRS`; read from disk (`fs.readdirSync`), untracked entries included | `agents/` on disk, `ALLOWED_SOURCE_DIRS` in source | always | untracked local entries as well as edits | **invariant** over the disk scope it measures today | fixed allowlist; the row 7.2 may rely on until the fix | `R12.a` |
 | 12 | | top-level allowlist — target | the same property over the top-level entries of the paths `git ls-files -- agents/` lists (index scope, as row 9) | git index | after the scope fix | edits | **invariant** | no enforcement decision relies on it before the fix is verified | `R12.b` |
-| 12 | | legacy entries — default mode | entries scheduled for migration are reported as warnings | `agents/` on disk | invocation without `--strict` (`taskfiles/content.yml:342`) | migrations | **observation** | warnings exit 0 without `--strict` | `R12.c` |
-| 12 | | legacy entries — `--strict` | no entry scheduled for migration remains | same | invocation with `--strict` (`taskfiles/content.yml:347`) | migrations | **invariant** in that mode | `if (strict) return 1` after the warnings | `R12.d` |
+| 12 | | consumer shape — default mode | in **consumer mode only** (no source-repo markers in the working directory), entries outside the consumer-target shape are reported as warnings | `agents/` on disk | consumer mode, invocation without `--strict`; never in this repository, which is in source-repo mode | consumer layout | **observation** | warnings exit 0 without `--strict`. Corrected in revision 8: revision 6 described these as entries scheduled for migration in this repository | `R12.c` |
+| 12 | | consumer shape — `--strict` | no entry outside the consumer-target shape remains | same | consumer mode with `--strict`; in this repository's source-repo mode `--strict` changes nothing | consumer layout | **invariant** in that mode | `if (strict) return 1` after the consumer warnings | `R12.d` |
 | 13 | `lint_eval_freshness` | eval attached | `upstream.last_eval` present with `sha_at_eval == upstream.sha` | manifests | in scope when a skill ships triggers and a pinned corpus | corpus SHA bumps | **invariant** | SHA equality, no clock | `R13.a` |
 | 14 | `lint_readme_jargon` | above-fold density | ≤ 3 watchlist hits in README lines 1–120 | README.md | always | README edits | **invariant** (numeric bound) | no named risk owner, so not a tolerance | `R14.a` |
 | 15 | `lint_readme_serial_comma` | serial comma | no serial comma in README prose | README.md | always | README edits | **invariant** | fixed rule | `R15.a` |
 | 16 | `check_composite_arming` | arming verdict | ≥ 10 usable composite readings from ≥ 2 sessions | the composite store | a valid store exists | new readings | **observation** | "'not yet' is a successful measurement, never a build failure" | `R16.a` |
-| 16 | | store yields a usable record | a store with content parses to at least one usable reading (a line with a string `session` and a `composite_ms` key) | the composite store | the store exists | a corrupt append | **invariant** | exit 1 when malformed lines leave no usable record (`malformed > 0 && readings.length === 0`). Corrected in revision 6: revision 3 said "every line parses", which the code does not require | `R16.b` |
+| 16 | | store yields a usable record | a store that exists parses to at least one usable reading; an empty store also fails (dead scope) (a line with a string `session` and a `composite_ms` key) | the composite store | the store exists | a corrupt append | **invariant** | exit 1 when malformed lines leave no usable record (`malformed > 0 && readings.length === 0`). Corrected in revision 6: revision 3 said "every line parses", which the code does not require | `R16.b` |
 | 16 | | partial malformation | malformed lines next to usable ones are counted and named per line | same | the store exists | a corrupt append | **observation** | the gate ledger records each dropped line as `precondition_unmet` and the run continues | `R16.c` |
 | 16 | | store absent | the store file exists | same | no store file | bootstrap | **observation** | its own contract: no readings yet is "not measured yet" and never a build failure. Runtime metadata, not a class: `not-evaluated: evidence-missing`. Current behaviour diverges: the script exits 1, which is owed to 7.2. A future transition to invariant after a bootstrap deadline needs that deadline first (D31) and is not part of this verdict | `R16.d` |
 | 16 | | self-test — `--self-test` | the checker's own fixture table behaves as declared: each planted case is accepted or refused as its row says | fixtures in source | `taskfiles/content.yml:386`, `rule-backstops.yml:321` | edits to the checker | **invariant** | fixed fixture table (fixed-policy). `--publish` is a write mode that writes a distribution report and asserts nothing, so it carries no class | `R16.e` |
 
-## Totals — revision 6
+## Totals — revision 8
 
-45 aspect rows over 16 checks. Under the governing definition, the two
-target-scope rows are migration notes, so there are **43 classified aspects**,
-each in one of the four classes:
+52 aspect rows over 16 checks. Two target-scope rows are migration notes, so
+there are **50 classified aspects**, each in one of the four classes:
 
-- **invariant 35**:
+- **invariant 42**:
   - four self-test or mutation-test modes;
-  - five hold only in a named invocation mode: `--require-complete`, `--strict`
-    on three checks, and `--global`;
-  - one is time-qualified;
-  - the two target-scope rows of checks 9 and 12 are **not** counted.
+  - ten hold only in a named invocation mode: `--require-complete`, `--strict`
+    on three checks (one of them only in consumer mode), and `--global` for G1
+    to G6;
+  - one is time-qualified (trigger freshness);
+  - the adoption ratchet carries a staleness window.
 - **observation 8**:
   - token-golden default coverage;
   - C3 live URL;
   - card freshness;
   - the beta marker in default mode;
-  - the agents-layout legacy warning in default mode;
+  - the consumer-mode shape warning in default mode;
   - composite arming;
   - composite partial malformation;
   - composite store absent.
 - **snapshot 0**.
 - **tolerance 0**.
 
-No aspect carries a value outside the four classes. Every binding aspect of
-every one of the 16 checks carries a class, and every assertion-changing flag
-in each check's source is named by a binding row. Both are checked
-mechanically.
+Checked mechanically:
 
-The three D14 abstentions are resolved as follows:
-
-- `check_council_layout`: an invariant over the disk scope it measures today;
-- `check_knowledge_cards`: nine aspects, of which seven are invariants and two
-  are observations;
-- `check_composite_arming`: five aspects, of which two are invariants and three
-  are observations.
+- every binding aspect of every one of the 16 checks carries a class;
+- every assertion-changing flag in each check's source is named by a binding
+  row;
+- every one of the 198 independently inventoried branches maps to a binding row
+  of its check or to a declared non-assertion category;
+- every binding row is reached by at least one branch.
 
 ## What this ledger does not decide
 

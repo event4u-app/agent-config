@@ -14,6 +14,8 @@ const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const PHASE7 = 'agents/evidence/council/live-tree-check-classification-20261010.md';
 const LEDGER = 'agents/evidence/analysis/gate-classification-ledger-20261024.md';
 const INVENTORY = 'agents/evidence/analysis/gate-invocation-inventory-20261024.md';
+const BRANCHES = 'agents/evidence/analysis/gate-branch-inventory-20261024.json';
+const MAPPING = 'agents/evidence/analysis/gate-branch-mapping-20261024.json';
 const CLASSES = ['invariant', 'snapshot', 'tolerance', 'observation'];
 
 function section(text, heading) {
@@ -105,6 +107,44 @@ for (const check of phase7) {
     modeRows.push(`${check} | ${flags.join(' ') || '—'} | ${assertionFlags.join(' ') || '—'} | ${unmatched.length === 0 ? 'yes' : 'NO'}`);
 }
 
+// The branch population comes from an inventory produced without sight of the
+// ledger; this file only maps it. Both directions are checked: every branch
+// lands on a row or a declared non-assertion category, and every binding row
+// is reached by at least one branch.
+const branchInv = JSON.parse(read(BRANCHES));
+const { categories, mapping } = JSON.parse(read(MAPPING));
+const rowIds = new Set(binding.map((r) => r.id));
+const reached = new Set();
+const perCategory = {};
+let branchCount = 0;
+for (const c of branchInv.checks) {
+    if (!phase7.includes(c.check)) failures.push(`branch inventory names an unknown check ${c.check}`);
+    for (const b of c.branches) {
+        branchCount += 1;
+        const target = mapping[c.check]?.[b.id];
+        if (target === undefined) {
+            failures.push(`unmapped branch ${c.check} ${b.id}`);
+            continue;
+        }
+        if (target.startsWith('op:')) {
+            if (!(target in categories)) failures.push(`unknown category ${target} for ${c.check} ${b.id}`);
+            perCategory[target] = (perCategory[target] ?? 0) + 1;
+            continue;
+        }
+        for (const id of target.split('+')) {
+            const row = binding.find((r) => r.id === id);
+            if (row === undefined) failures.push(`branch ${c.check} ${b.id} maps to ${id}, which is not a binding row`);
+            else if (row.check !== c.check) failures.push(`branch ${c.check} ${b.id} maps to ${id} of another check`);
+            else reached.add(id);
+        }
+    }
+}
+for (const id of rowIds) if (!reached.has(id)) failures.push(`binding row ${id} is reached by no branch in the independent inventory`);
+for (const [check, m] of Object.entries(mapping)) {
+    const known = new Set((branchInv.checks.find((c) => c.check === check)?.branches ?? []).map((b) => b.id));
+    for (const bid of Object.keys(m)) if (!known.has(bid)) failures.push(`mapping names ${check} ${bid}, absent from the inventory`);
+}
+
 console.log('check | binding aspects | all classified | classes | migration notes');
 for (const check of phase7) {
     const rows = ledgerRows.filter((r) => r.check === check);
@@ -114,10 +154,11 @@ for (const check of phase7) {
 }
 console.log('\ncheck | flags in source | assertion-changing flags | each named by a binding row');
 for (const r of modeRows) console.log(r);
+console.log(`\nbranches ${branchCount} · mapped to rows ${branchCount - Object.values(perCategory).reduce((a, b) => a + b, 0)} · ${JSON.stringify(perCategory)} · binding rows reached ${reached.size}/${rowIds.size}`);
 const tally = Object.fromEntries(CLASSES.map((k) => [k, binding.filter((r) => r.cls === k).length]));
 console.log(`\nrows ${ledgerRows.length} · binding ${binding.length} · migration ${ledgerRows.length - binding.length} · ${JSON.stringify(tally)}`);
 if (failures.length > 0) {
     console.log(`\nFAILED (${failures.length}):\n- ${failures.join('\n- ')}`);
     process.exit(1);
 }
-console.log('\nOK: 16 phase-7 checks = 16 ledger checks = 16 inventoried checks; every binding aspect of every check carries one of the four classes; every target row sits beside its current-scope row; every assertion-changing flag in each check\'s source is named by a binding row; every row has a unique id; ' + pins.length + ' pinned files are unchanged.');
+console.log('\nOK: 16 phase-7 checks = 16 ledger checks = 16 inventoried checks; every binding aspect of every check carries one of the four classes; every target row sits beside its current-scope row; every assertion-changing flag in each check\'s source is named by a binding row; every row has a unique id; ' + pins.length + ' pinned files are unchanged; every branch of the independent inventory maps to a binding row or a declared category, and every binding row is reached.');
