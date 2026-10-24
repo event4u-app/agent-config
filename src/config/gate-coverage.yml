@@ -2820,7 +2820,7 @@ gates:
       `--self-test` (6 cases, 3 rejecting), which builds these shapes.
 
   - id: check_step_production_reach
-    argv: ["--base", "origin/main"]
+    argv: ["--base", "origin/main", "--enforce"]
     min_scanned: 0
     corpus: >
       the roadmap steps a change newly ticks, read from the same base-ref diff as
@@ -2832,8 +2832,13 @@ gates:
       step must RED; a wired symbol, a declared `production entry:` and a
       reworded older tick must stay GREEN. Sensitivity observed: counting an
       export as reached on its declaration alone turns three unit cases red.
-      Report-only for one release (road-to-a-tick-the-shipped-path-earns 3.3);
-      a replay of #2585 lists 15 ticks, the three D2 cases among them.
+      A replay of #2585 lists 15 ticks, the three D2 cases among them.
+      Enforcing since road-to-a-tick-the-shipped-path-earns 3.3: report mode
+      shipped in 17.1.0 through 17.4.0, and its shadow over 17.1.0..17.4.0 read
+      150 ticks with 3 hits (agents/evidence/analysis/
+      reach-shadow-17.1.0-17.4.0-2026-10-24.md). A false positive is exempted
+      per step with a line of its own reading `reach exempt: <reason>`, never
+      globally.
     status: enforced
     ci_invocation: .github/workflows/rule-backstops.yml
     no_canary_reason: >-
