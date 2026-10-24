@@ -20,7 +20,7 @@
     "mcp"
   ],
   "skills": [
-    "./.claude-plugin/skills/install-agent-config"
+    "./skills/install-agent-config"
   ],
   "mcpServers": {
     "agent-config": {
