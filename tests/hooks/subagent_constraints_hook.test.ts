@@ -12,8 +12,10 @@ import {
     definitionSkipsInstructions,
     digestFor,
     EMISSION_MAX_BYTES,
+    FLOOR_RULE_IDS,
     instructionDigest,
     replyLine,
+    ruleLaw,
 } from '../../src/scripts/hooks/subagent_constraints_hook.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -176,4 +178,84 @@ describe('subagent-constraints concern', () => {
         expect(loading.code).toBe(0);
         expect(loading.out).not.toContain(PLANTED);
     }, 240_000);
+
+});
+
+// road-to-a-cold-start-paid-once D16 (owner directive 2026-10-24): the user's own
+// `~/.claude` layer — CLAUDE.md, what it imports, and the rules — rides in the same digest.
+describe('subagent-constraints concern — the user layer', () => {
+    const USER_LINE = 'PLANTED-USER-LINE-91c2: reply in the user\'s language.';
+    const IMPORTED = 'PLANTED-IMPORT-5d0e: wrap verbose output.';
+    const lawRule = (id: string, law: string, prose = 'Why this rule exists, at length.'): string =>
+        `---\npackage: fixture\n---\n\n# ${id}\n\n## The Iron Law\n\n\`\`\`\n${law}\n\`\`\`\n\n${prose}\n`;
+    const writeRule = (id: string, law: string, prose?: string): void => {
+        fs.mkdirSync(path.join(config, 'rules'), { recursive: true });
+        fs.writeFileSync(path.join(config, 'rules', `${id}.md`), lawRule(id, law, prose));
+    };
+    const reply = (agent = 'ac-worker'): string =>
+        digestFor({ event: 'subagent_start', payload: { agent_type: agent, cwd: root } }, env()) as string;
+
+    it('carries a planted user rule, the user CLAUDE.md and what it imports', () => {
+        fs.writeFileSync(path.join(config, 'CLAUDE.md'), `${USER_LINE}\n\n@EXTRA.md\n`);
+        fs.writeFileSync(path.join(config, 'EXTRA.md'), `${IMPORTED}\n`);
+        writeRule('my-house-rule', 'PLANTED-RULE-LAW-3b7a: NEVER EDIT GENERATED FILES.', 'PROSE-NOT-CARRIED');
+        const digest = reply();
+        expect(digest).toContain(PLANTED);
+        expect(digest).toContain(USER_LINE);
+        expect(digest).toContain(IMPORTED);
+        expect(digest).toContain('PLANTED-RULE-LAW-3b7a');
+        expect(digest).not.toContain('PROSE-NOT-CARRIED');
+        expect(digest).toMatch(/User files: user:CLAUDE\.md \(full\), user:EXTRA\.md \(full\)\./);
+        expect(digest).toContain('User rules (Iron Law blocks): 1 full, 0 cut, as headed below; 0 empty; 0 omitted.');
+        expect(digest).toContain('--- rule my-house-rule ---');
+        expect(reply('ac-plain')).toBeNull();
+    });
+
+    it('keeps the floor and consequence-class laws whole when the rest must be cut', () => {
+        for (const id of FLOOR_RULE_IDS) writeRule(id, `FLOOR-LAW-${id}: ${'NEVER CROSS THIS LINE. '.repeat(6)}`);
+        for (let i = 0; i < 80; i++) writeRule(`zz-other-${String(i).padStart(2, '0')}`, `OTHER-LAW-${i}: ${'filler law text '.repeat(40)}`);
+        fs.writeFileSync(path.join(config, 'CLAUDE.md'), 'user filler line\n'.repeat(800));
+        fs.writeFileSync(path.join(root, 'CLAUDE.md'), `${PLANTED}\n${'project filler line\n'.repeat(800)}`);
+        const digest = reply();
+        expect(Buffer.byteLength(replyLine(digest), 'utf-8')).toBeLessThanOrEqual(EMISSION_MAX_BYTES);
+        for (const id of FLOOR_RULE_IDS) expect(digest).toContain(`FLOOR-LAW-${id}: ${'NEVER CROSS THIS LINE. '.repeat(6).trimEnd()}`);
+        // Floor laws lead the digest; the cut falls on what ranks below them.
+        expect(digest.indexOf(`--- rule ${FLOOR_RULE_IDS[0]} ---`)).toBeLessThan(digest.indexOf('--- CLAUDE.md ---'));
+        expect(digest).toMatch(/omitted: [^;.]*zz-other-/);
+        expect(digest).not.toContain('OTHER-LAW-79');
+    });
+
+    it('holds the registered ceiling for every cap, and names what it could not show', () => {
+        for (let i = 0; i < 300; i++) writeRule(`rule-with-a-long-name-${i}`, `LAW ${i} "\\\u0001\t ${'x'.repeat(200)}`);
+        fs.writeFileSync(path.join(config, 'CLAUDE.md'), '\u{1F600}"\\'.repeat(4_000));
+        for (const cap of [200, 400, 800, 4_096, EMISSION_MAX_BYTES]) {
+            const d = instructionDigest(root, cap, config) as string;
+            expect(Buffer.byteLength(replyLine(d), 'utf-8')).toBeLessThanOrEqual(cap);
+            expect(d.isWellFormed()).toBe(true);
+        }
+        expect(instructionDigest(root, EMISSION_MAX_BYTES, config)).toMatch(/\d+ more not named/);
+    });
+
+    it('carries a rule by its Iron Law blocks, falling back to its first fence and then its first paragraph', () => {
+        const multi = '---\na: b\n---\n# T\n\n## Iron Law 1\n\n```\nONE\n```\n\nprose\n\n## Iron Law 2\n\n```\nTWO\n```\n\n## Other\n\n```\nNOT-A-LAW\n```\n';
+        expect(ruleLaw(multi)).toBe('ONE\n\nTWO');
+        expect(ruleLaw('# T\n\nintro\n\n```\nFIRST\n```\n\n```\nSECOND\n```\n')).toBe('FIRST');
+        expect(ruleLaw('# T\n\nThe first paragraph.\n\nThe second.\n')).toBe('The first paragraph.');
+    });
+
+    it('lists the safety-floor rules first, then exactly the consequence class', () => {
+        const rulesDir = path.join(REPO, 'src', 'rules');
+        const floor = fs
+            .readdirSync(rulesDir)
+            .filter((f) => /^tier:\s*"?safety-floor"?\s*$/m.test(fs.readFileSync(path.join(rulesDir, f), 'utf-8')))
+            .map((f) => f.replace(/\.md$/, ''));
+        const members = Object.keys(
+            (JSON.parse(fs.readFileSync(path.join(REPO, 'src', 'config', 'rule-consequence-class.json'), 'utf-8')) as {
+                members: Record<string, unknown>;
+            }).members,
+        );
+        expect(new Set(FLOOR_RULE_IDS.slice(0, floor.length))).toEqual(new Set(floor));
+        expect(new Set(FLOOR_RULE_IDS.slice(floor.length))).toEqual(new Set(members));
+        expect(new Set(FLOOR_RULE_IDS).size).toBe(FLOOR_RULE_IDS.length);
+    });
 });

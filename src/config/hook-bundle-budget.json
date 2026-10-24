@@ -64,6 +64,16 @@
             "what_was_added": "The invisible-character normalisation of one-detector 2.5 wired into the engine: `replaceValues` and `tallyText` now detect through `egress_normalize.ts` (`detectWithExtent`), and a rule's extent reader (`through`) runs on the normalised text with its end mapped back, so a key block whose BEGIN and END markers both carry a zero-width character is removed whole instead of refused or left behind. Measured 30,511 bytes on origin/main, 31,907 with the wiring alone, 32,305 with the extent fix.",
             "why_it_could_not_be_avoided": "The 2026-10-18 derivation queued this rescan inside the 32,000 ceiling and the 2026-10-22 raise recorded it as not yet in the chunk. Room was taken first: `LATIN_TWIN` moved out of confusables.ts as a hex-encoded string pair so the chunk no longer carries that module's four script regexes, and the normaliser keeps one origin array instead of two (32,670 down to 31,907). The extent fix that a council seat found in round 1 of the ratification review adds about 400 bytes of mapping code no smaller form carries. The chunk loads only when a caller needs detection; the dispatch bundle is unchanged.",
             "what_would_have_caught_it": "Measuring the wired engine when 2.5 was first built rather than the unwired module, and a disguised-marker key block in the extent tests from the start."
+        },
+        {
+            "date": "2026-10-24",
+            "chunk": "src/scripts/hooks/subagent_constraints_hook.ts",
+            "from": 12500,
+            "to": 22000,
+            "by": "agent, drain/cold-start-20261024 (road-to-a-cold-start-paid-once 2.5, owner directive D16)",
+            "what_was_added": "The user's own instruction layer in the subagent-constraints digest: `<config dir>/CLAUDE.md`, the files it imports one level deep, and every rule under `<config dir>/rules/` carried by its Iron Law blocks, with a fixed priority (safety-floor and consequence-class laws first, their later law blocks after the project and user files), a grouped rules inventory, and the shared `_lib/rule_law_section` reader for where a law section ends. Measured 12,194 bytes on the base and 20,935 with the change.",
+            "why_it_could_not_be_avoided": "The owner kept #2639 open until a skipping worker also receives the user layer, so the code has to ship in this chunk, which is the only carrier on the host's SubagentStart path. Reusing `rule_law_section` instead of a second law-extent parser costs bytes but keeps one definition of a law section across the projector, the lint and this concern. The chunk loads only on claude `subagent_start`; the dispatch bundle is unchanged.",
+            "what_would_have_caught_it": "Scoping step 2.4's carrier against the 2026-10-22 probe, which already showed the skip dropping the user rule layer, instead of against the project CLAUDE.md files alone."
         }
     ],
     "chunks": [
@@ -105,9 +115,9 @@
         },
         {
             "entry": "src/scripts/hooks/subagent_constraints_hook.ts",
-            "max_bytes": 12500,
+            "max_bytes": 22000,
             "registered_at": "2026-10-24",
-            "derivation": "Measured 12,131 bytes on 2026-10-24 (the concern and the hook stdin reader, `yaml` external as for `chat_history`: the concern parses one definition's frontmatter with it). The ceiling is that reading plus about 3 %, rounded, with no growth queued. road-to-a-tick-the-shipped-path-earns 2.4 under decision A9 (council, 2026-10-23): the constraint carrier ships as a lazy chunk with its own ceiling, and the dispatch ceiling is not raised. Its LAZY_CONCERNS row measured +159 bytes in the dispatch bundle (1,553,363 to 1,553,522 B, same gate run on the base and with the row), under the existing 1,554,000 ceiling, so no loader stub raise was needed. Bound on claude `subagent_start` alone; a missing chunk falls back to the spawn path and costs latency, never the digest."
+            "derivation": "Measured 20,935 bytes on 2026-10-24 (the concern with the user layer of road-to-a-cold-start-paid-once D16, the shared `_lib/rule_law_section` law-extent reader, and the hook stdin reader; `yaml` external as for `chat_history`). The ceiling is that reading plus about 5 %, rounded, with no growth queued; the 2026-10-24 raise from 12,500 is the matching `raise_log` entry. road-to-a-tick-the-shipped-path-earns 2.4 under decision A9 (council, 2026-10-23): the constraint carrier ships as a lazy chunk with its own ceiling, and the dispatch ceiling is not raised. Its LAZY_CONCERNS row measured +159 bytes in the dispatch bundle (1,553,363 to 1,553,522 B, same gate run on the base and with the row), under the existing 1,554,000 ceiling, so no loader stub raise was needed. Bound on claude `subagent_start` alone; a missing chunk falls back to the spawn path and costs latency, never the digest."
         }
     ],
     "chunks_note": "A chunk is loaded only when a caller needs it, so its bytes are not paid by every dispatch; its ceiling exists so that the move out of dispatch.js stays a measured place rather than an unmeasured one. The gate builds each chunk with the exact esbuild segment `build:hook-chunks` uses for its entry.",
