@@ -419,7 +419,7 @@ what the gate attests."*
       `gate-renewal-suite.mjs --candidate`, have it reviewed by risk, then
       record the promotion line.
 
-- [ ] **7.2 Implement the classification**: an invariant stays a required
+- [x] **7.2 Implement the classification**: an invariant stays a required
       gate; a snapshot is refreshed by the agent per 7.1's rule, never
       silently; an observation is demoted to non-blocking. No check is
       silently weakened — a demotion is recorded with its reason, inline,
