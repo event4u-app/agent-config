@@ -14,7 +14,7 @@
  */
 
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import { computeConflicts } from '../../install/conflict.js';
 import { cpSync, existsSync, mkdirSync } from 'node:fs';
@@ -105,7 +105,7 @@ const FileEntrySchema: z.ZodType<FileEntry> = z.object({
 // Input type is `unknown` rather than `ConflictEntry`: `ownership` carries a
 // `.default()`, so the parsed OUTPUT always has the field while the accepted
 // INPUT may omit it (older clients on an apply round-trip).
-const ConflictEntrySchema: z.ZodType<ConflictEntry, z.ZodTypeDef, unknown> = z.object({
+const ConflictEntrySchema: z.ZodType<ConflictEntry, unknown> = z.object({
     path: z.string().min(1),
     kind: FileKindSchema,
     plannedSha256: z.string().nullable(),

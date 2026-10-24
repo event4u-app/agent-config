@@ -20,7 +20,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { dump as dumpYaml, load as parseYaml } from 'js-yaml';
-import { z } from 'zod';
+import * as z from 'zod';
 
 import * as ags from '../../src/scripts/_lib/agent_settings.js';
 import { REMOVED_KEYS } from '../../src/scripts/_lib/settings_removed_keys.js';
@@ -110,12 +110,10 @@ function nest(dotted: string, value: unknown): Record<string, unknown> {
 function unwrap(schema: z.ZodTypeAny): z.ZodTypeAny {
     let node = schema;
     for (;;) {
-        if (node instanceof z.ZodDefault) {
+        if (node instanceof z.ZodDefault || node instanceof z.ZodPrefault) {
             node = node._def.innerType as z.ZodTypeAny;
         } else if (node instanceof z.ZodOptional || node instanceof z.ZodNullable) {
             node = node.unwrap() as z.ZodTypeAny;
-        } else if (node instanceof z.ZodEffects) {
-            node = node.innerType() as z.ZodTypeAny;
         } else {
             return node;
         }

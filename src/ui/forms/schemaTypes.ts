@@ -4,8 +4,8 @@
  * The backend ships the schema via `GET /api/v1/settings.schema` (and
  * the `schema` field of the settings GET response). We don't pull
  * `@types/json-schema` into the UI bundle to keep gzip footprint low;
- * this hand-cut interface matches what `zod-to-json-schema` emits for
- * `settingsSchema` (target=jsonSchema7, no `$ref`s thanks to inlining).
+ * this hand-cut interface matches what `toJsonSchema7` emits for
+ * `settingsSchema` (draft-07, reused sub-schemas inlined).
  */
 
 export type JsonValue =

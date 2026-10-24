@@ -33,7 +33,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { toJsonSchema7 } from '../shared/zodJsonSchema.js';
 
 import { settingsSchema } from '../server/schemas/settings.js';
 import {
@@ -97,11 +97,7 @@ export function renderProse(value: string | undefined): string {
 }
 
 export function buildRows(contractMarkdown: string): ReferenceRow[] {
-    const jsonSchema = zodToJsonSchema(settingsSchema, {
-        name: 'AgentSettings',
-        $refStrategy: 'none',
-        target: 'jsonSchema7',
-    }) as Parameters<typeof flattenSurface>[0];
+    const jsonSchema = toJsonSchema7(settingsSchema, 'AgentSettings') as Parameters<typeof flattenSurface>[0];
     // The version is a required parameter of the shared flattener and is
     // discarded here on purpose — see the module header.
     const surface = flattenSurface(jsonSchema, 'unversioned');

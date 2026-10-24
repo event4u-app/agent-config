@@ -75,6 +75,13 @@ export const SECURITY_FLOOR_EXCEPTIONS: Readonly<Record<string, { required: stri
             'high-severity route-guard bypass via path traversal (CVSS 7.5) affects <=10.1.1; ' +
             '10.1.2 is the fix. Verified with npm audit on a clean 10.1.0 install, 2026-07-31.',
     },
+    zod: {
+        required: '^4.6.6',
+        reason:
+            'high-severity memory exhaustion while validating oversized constrained collections ' +
+            '(GHSA-mrhx-c7xc-m3w5) affects <4.6.6; 4.6.6 is the fix. Verified with npm audit on ' +
+            'clean 4.6.5 (1 high) and 4.6.6 (0) installs, 2026-10-24.',
+    },
 };
 
 /** A settled caret floor: `^X.Y.0`. */

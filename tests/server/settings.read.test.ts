@@ -38,7 +38,7 @@ describe('GET /api/v1/settings', () => {
         expect(typeof body.values).toBe('object');
         // Template placeholders survive parse — they're literal YAML strings.
         expect(body.values).toHaveProperty('rule_loading_tier');
-        // Schema is the zod-to-json-schema projection of `settingsSchema`.
+        // Schema is the toJsonSchema7 projection of `settingsSchema`.
         expect(body.schema).toBeDefined();
         const refOrDefs = '$ref' in body.schema || 'definitions' in body.schema;
         expect(refOrDefs).toBe(true);

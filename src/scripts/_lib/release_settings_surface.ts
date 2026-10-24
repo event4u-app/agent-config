@@ -33,7 +33,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { toJsonSchema7 } from '../../shared/zodJsonSchema.js';
 
 import { settingsSchema } from '../../server/schemas/settings.js';
 import { computeSurfaceDelta, flattenSurface, type SettingsSurface, type SurfaceEntry } from '../../shared/settingsSurface.js';
@@ -50,11 +50,7 @@ import { RENAMED_KEYS, SETTINGS_REMOVAL_RULE } from './settings_renamed_keys.js'
  * "keep a preview fast" rule was written about.
  */
 function _jsonSchema(): Parameters<typeof flattenSurface>[0] {
-    return zodToJsonSchema(settingsSchema, {
-        name: 'AgentSettings',
-        $refStrategy: 'none',
-        target: 'jsonSchema7',
-    }) as Parameters<typeof flattenSurface>[0];
+    return toJsonSchema7(settingsSchema, 'AgentSettings') as Parameters<typeof flattenSurface>[0];
 }
 
 /** The one committed copy of the last release's surface. */
