@@ -12,6 +12,9 @@
  *                                               is discarded and retried once
  *   auto-refresh on|off|status [--root P]      opt this project in to the
  *                                               session-start background refresh
+ *   projects list|add|remove|prune             the user-global registry of
+ *                                               projects this machine works in
+ *                                               (ADR-299, `projects_cli.ts`)
  *
  * `detect --format json` (Phase 2, road-to-reachable-code-memory) emits a
  * single-line, stable-key-order JSON verdict on stdout — no timestamps, safe
@@ -88,6 +91,7 @@ import {
 } from './detect.js';
 import { graphHome } from './graph_home.js';
 import { suggestVerb } from './intent.js';
+import { projectsMain, registerUse } from './projects_cli.js';
 import { buildMap, graphGeneration, mapGeneration, recordOutcome } from './map.js';
 import { cliPackage, usableCli } from './refresh_cli.js';
 import {
@@ -206,6 +210,7 @@ async function cmdBuild(argv: string[]): Promise<number> {
     }
     const update = argv.includes('--update');
     const { graph, fileCount, reExtracted, reused } = await buildFromRepo(root, out, { update });
+    if (out === cacheFor(root)) registerUse(root, graph, git(root, 'rev-parse', 'HEAD'));
     const c = graph.edge_confidence_counts;
     process.stdout.write(
         `✅  code-graph ${update ? 'updated' : 'built'} — ${fileCount} files · ${graph.nodes.length} nodes · ${graph.edges.length} edges\n` +
@@ -894,6 +899,7 @@ async function cmdRefresh(argv: string[]): Promise<number> {
             record('failed', `build exited ${rc}`);
             return rc;
         }
+        if (out === cacheFor(root)) registerUse(root, null, git(root, 'rev-parse', 'HEAD'));
         if (argv.includes('--map') && mapIsBehind(root, out)) {
             const mrc = await drawMap(['--root', root, '--no-build', '--no-verify']);
             record(mrc === 0 ? 'refreshed-with-map' : 'map-failed', mrc === 0 ? undefined : `map exited ${mrc}`);
@@ -1145,9 +1151,10 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         if (sub === 'map') return await cmdMap(argv.slice(1));
         if (sub === 'outcome') return cmdOutcome(argv.slice(1));
         if (sub === 'auto-refresh') return cmdAutoRefresh(argv.slice(1));
+        if (sub === 'projects') return projectsMain(argv.slice(1));
         process.stderr.write(
             'usage: code_graph/cli.ts <build|validate|detect|refresh|query|explain|affected|path|' +
-                'impact|tests-for|untested|dead|suggest-verb|map|outcome|auto-refresh> [options]\n',
+                'impact|tests-for|untested|dead|suggest-verb|map|outcome|auto-refresh|projects> [options]\n',
         );
         return 2;
     } catch (e) {

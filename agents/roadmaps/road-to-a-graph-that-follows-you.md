@@ -124,7 +124,7 @@ plan AC improvements automatically when a source repository updates.
       root, remote, fingerprint, last seen, graph home, graph commit, languages,
       providers, pinned. Writes are atomic.
       verify: unit tests for record, read, atomic write and a corrupt file read as empty.
-- [ ] **3.2 Advisories reads and writes through it.** `recordProjects`/`knownProjects`
+- [x] **3.2 Advisories reads and writes through it.** `recordProjects`/`knownProjects` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/advisories.ts -->
       in `advisories.ts:367-385` become wrappers; the old `runtime/advisories/projects.json`
       is read once as a fallback and migrated.
       verify: the advisories tests pass unchanged; a fixture with only the old file yields
