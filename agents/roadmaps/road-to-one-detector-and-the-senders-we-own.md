@@ -97,7 +97,7 @@ is open.
   rounds 5–6 and the branch ratification (2/2, three rounds); 3.3, 2.6, AC-1 and
   AC-2 closed with them. The identifier half of AC-6 (a) and (b) is published in
   `internal/bench/reports/egress-placeholders-detection-2026-10-19.md`.
-- **2026-10-24:** 2.5 wired into the senders (see 2.5).
+- **2026-10-24:** 2.5 wired into the senders (see 2.5); AC-6 (f) read on the CI runner class.
 - **Next in order:** AC-6's paired quality run (e) and the CI-runner reading of (f).
 
 ## What this roadmap deliberately does not do
@@ -670,6 +670,7 @@ stay green (93 files).
       `main`.)*
       *(2026-10-22: the identifier half of (a) and (b) is published — 100 % recall per type on the seeded corpus, 20 of 14,274 tracked files, 0 of 400 negatives — in `internal/bench/reports/egress-placeholders-detection-2026-10-19.md`. Still open: (c) on identifiers, the paired quality run (e), which needs model calls on real review tasks, and (f) on the CI runner class.)*
       *(2026-10-22, second run: (c) on identifiers **passes** — 0 restore and 0 idempotence mismatches in every type on the frozen W1 corpus and a seeded W1x corpus (SSN, North American phone, mixed documents, `_v2` variants), each scorer first rejecting a planted defect; `internal/bench/reports/egress-placeholders-identifier-roundtrip-2026-10-22.md`, commit 86e8f46788. (e) published as **underpowered**: 60 pairs, 120 subscription CLI calls, both arms 60/60, 0 discordant pairs against a derived floor of 5, so no regression and no pass; the rule of three caps an unseen loss rate at 5 pp; the tasks are synthetic and hit a ceiling; `internal/bench/reports/egress-placeholders-paired-quality-2026-10-22.md`, commit d5f7f453d9. (f) on the CI runner class is read by the warn-only Bench Drift step added in 7f23bb3813.)*
+      *(2026-10-24: (f) on the CI runner class **passes** — 18 Bench Drift readings, p95 4.152–9.241 ms against the 20 ms bar on linux-x64, 4 vCPU, five CPU models; `internal/bench/reports/egress-placeholders-engine-ci-2026-10-24.md`. Every endpoint of 0.3 now has a published result: (a)–(d) and (f) pass, (e) is published underpowered.)*
 
 ## Lineage
 
