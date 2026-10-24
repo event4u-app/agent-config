@@ -127,8 +127,10 @@ export const MIN_EXEMPT_REASON = 12;
 
 /**
  * The reason on a line of its own that starts `reach exempt:`, `''` when bare,
- * undefined when absent. Fenced code and backticked text are not read, and the
- * phrase inside a sentence is talk about the marker, not the marker.
+ * undefined when absent. Fenced code is not read and the phrase inside a
+ * sentence is talk about the marker, not the marker. Fences follow the opener's
+ * character and length, not full CommonMark: any indentation counts, because
+ * step blocks are list continuations, and an unclosed fence runs to the end.
  */
 export function reachExemption(block: string): string | undefined {
     let fence: { char: string; len: number } | null = null;

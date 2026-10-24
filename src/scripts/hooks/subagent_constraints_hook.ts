@@ -9,6 +9,12 @@
  * host's `SubagentStart`, whose `additionalContext` the host adds to the
  * subagent's context, and hands it a bounded digest of those files.
  *
+ * This deliberately overrides part of `omitClaudeMd` for the project's own
+ * instruction files, and a project file can permit as well as forbid, so the
+ * concern changes what such a subagent may decide; it grants no tool or file
+ * permission. Each injection lands in its own subagent's context; how many
+ * subagents a turn may start is not bounded here.
+ *
  * It reads the definition the host will run — `<project>/.claude/agents/<type>.md`,
  * then `<config dir>/agents/<type>.md` — rather than a list of agent names, so a
  * definition that stops skipping stops receiving the digest. A type that is not
@@ -149,8 +155,9 @@ export function instructionDigest(projectDir: string, maxBytes: number = EMISSIO
     }
     if (found.length === 0) return null;
     const head =
-        'Project instructions this subagent was started without (its definition sets omitClaudeMd). ' +
-        `They bind this subagent as if loaded. Paths are relative to ${fitEscaped(root, ROOT_MAX)}.`;
+        "A bounded digest of this project's instruction files, which this subagent's definition omitted at " +
+        'startup (omitClaudeMd). It is not the files as the host loads them: comments are removed and a file ' +
+        `may be cut or omitted, as listed below; read a listed file before relying on its missing part. Paths are relative to ${fitEscaped(root, ROOT_MAX)}.`;
     // Nearest files are listed by name first; the rest are counted when the names would not fit.
     const inventory = (status: readonly string[]): string => {
         const named = found.map((f, i) => `${f.label} (${status[i]})`);

@@ -1403,6 +1403,10 @@ concerns:
   # and, when that definition skips the instruction files, returns a bounded
   # digest of the project's CLAUDE.md files as `additional_context`, which the
   # host adds to the subagent's context. Silent for every other subagent.
+  # AUTHORITY: deliberately overrides part of `omitClaudeMd` for the project's
+  # own instruction files (the step's purpose), and a project file can permit as
+  # well as forbid, so this changes what such a subagent may decide; it grants no
+  # tool or file permission. Reviewed as authority-expanding, not as neutral.
   # Claude only: cowork's trampoline discards stdout. Loaded from its own chunk
   # (decision A9). Kill switch: `AGENT_CONFIG_SUBAGENT_CONSTRAINTS=off`.
   subagent-constraints:
