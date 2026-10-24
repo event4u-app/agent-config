@@ -33,7 +33,7 @@ keep-beta-until: 2026-08-14
 | `conformance_check` | `ro` | stdio | [`consumer_tool_catalog.json:162`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L162) | [`tools.ts:1655`](../../src/scripts/mcp_server/tools.ts#L1655) |
 | `council_estimate` | `ro` | stdio | [`consumer_tool_catalog.json:178`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L178) | [`tools.ts:1693`](../../src/scripts/mcp_server/tools.ts#L1693) |
 | `doctor_report` | `ro` | stdio | [`consumer_tool_catalog.json:210`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L210) | [`tools.ts:1640`](../../src/scripts/mcp_server/tools.ts#L1640) |
-| `graph_area` | `ro` | stdio | [`consumer_tool_catalog.json:226`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L226) | [`graph_tools.ts:415`](../../src/scripts/mcp_server/graph_tools.ts#L415) |
+| `graph_area` | `ro` | stdio | [`consumer_tool_catalog.json:226`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L226) | [`graph_tools.ts:417`](../../src/scripts/mcp_server/graph_tools.ts#L417) |
 | `graph_dead` | `ro` | stdio | [`consumer_tool_catalog.json:249`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L249) | [`graph_tools.ts:204`](../../src/scripts/mcp_server/graph_tools.ts#L204) |
 | `graph_impact` | `shell` | stdio | [`consumer_tool_catalog.json:275`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L275) | [`graph_tools.ts:147`](../../src/scripts/mcp_server/graph_tools.ts#L147) |
 | `graph_map_status` | `ro` | stdio | [`consumer_tool_catalog.json:310`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L310) | [`graph_tools.ts:380`](../../src/scripts/mcp_server/graph_tools.ts#L380) |
