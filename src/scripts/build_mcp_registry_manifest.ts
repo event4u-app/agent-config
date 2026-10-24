@@ -208,31 +208,40 @@ function _render_cf_json(m: JsonObject): string {
     return pyJsonDumps(payload, { indent: 2, sortKeys: true }) + '\n';
 }
 
+/** The registry schema the payload is validated against; its `description` caps at 100 characters. */
+export const SERVER_SCHEMA_URL = 'https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json';
+export const REGISTRY_DESCRIPTION_MAX = 100;
+
 /**
  * Official MCP Registry server.json (registry.modelcontextprotocol.io).
- * Minimal valid shape per the registry's server.schema.json: reverse-DNS
- * name (matches package.json `mcpName` + the README `mcp-name:` marker),
- * the npm package pointer, and the stdio transport. The version is asserted
- * equal to package.json.version by lint_mcp_registry_manifest (CI).
+ * The name matches package.json `mcpName` + the README `mcp-name:` marker; the
+ * description is `agentConfig.registryDescription`, because the npm description
+ * is longer than the registry accepts. The positional `mcp-server` argument is
+ * what makes a registry client start the server instead of the bare CLI.
+ * Version- and length-equality are asserted by lint_mcp_registry_manifest (CI).
  */
-function _render_server_json(m: JsonObject): string {
-    const pkg = m['package'] as JsonObject;
+export function renderServerJson(pkg: JsonObject): string {
     const version = pkg['version'] as string;
+    const agentConfig = (pkg['agentConfig'] as JsonObject | undefined) ?? {};
     const payload: JsonObject = {
-        $schema: 'https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json',
-        name: 'io.github.event4u-app/agent-config',
-        description: pkg['description'],
+        $schema: SERVER_SCHEMA_URL,
+        name: pkg['mcpName'] as string,
+        title: 'agent-config',
+        description: (agentConfig['registryDescription'] as string | undefined) ?? '',
+        websiteUrl: pkg['homepage'] as string,
         repository: {
-            url: pkg['repository'],
+            url: _repo_url(pkg),
             source: 'github',
         },
         version,
         packages: [
             {
                 registryType: 'npm',
-                identifier: '@event4u/agent-config',
+                identifier: pkg['name'] as string,
                 version,
+                runtimeHint: 'npx',
                 transport: { type: 'stdio' },
+                packageArguments: [{ type: 'positional', value: 'mcp-server' }],
             },
         ],
     };
@@ -280,7 +289,9 @@ export function main(argv: readonly string[]): number {
     const manifest_text = pyJsonDumps(manifest, { indent: 2, sortKeys: true }) + '\n';
     const row_md = _render_row_md(manifest);
     const cf_json = _render_cf_json(manifest);
-    const server_json = _render_server_json(manifest);
+    const server_json = renderServerJson(
+        JSON.parse(fs.readFileSync(_config.PKG_FILE, 'utf-8')) as JsonObject,
+    );
 
     const outputs: Array<[string, string]> = [
         [_config.OUT_MANIFEST, manifest_text],

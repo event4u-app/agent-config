@@ -72,24 +72,24 @@ value in the manifest. Do **not** silently drop entries.
   `last_verified` to the date of removal so the audit trail is
   intact.
 
-`scripts/lint_mcp_registry_manifest.py` exits non-zero if any
+`src/scripts/lint_mcp_registry_manifest.ts` exits non-zero if any
 registry entry uses a value outside the four-state enum.
 
 ## Submitting to a new registry
 
 The schema's `id` vocabulary is closed (`awesome-mcp-servers`,
-`mcp-cloudflare-catalogue`). Adding a third registry is a
-**schema-version bump**:
+`mcp-cloudflare-catalogue`, `mcp-official-registry`). Adding a fourth
+registry is a **schema-version bump**:
 
 1. Update `docs/contracts/mcp-registry-manifest.schema.json`:
    add the new `id` value, bump the top-level `version` const if
    the field shape changes.
-2. Update `scripts/build_mcp_registry_manifest.py`'s
+2. Update `src/scripts/build_mcp_registry_manifest.ts`'s
    `REGISTRIES_SEED` with the new entry (id, label,
    listing_format, submission_url, rendered_payload).
 3. Add a new renderer for the rendered payload (Markdown row,
    JSON entry, or whatever the new registry expects).
 4. Add a new payload-shape check to
-   `scripts/lint_mcp_registry_manifest.py`.
+   `src/scripts/lint_mcp_registry_manifest.ts`.
 5. Land it as its own PR so the schema change is reviewed
    independently of the submission itself.
