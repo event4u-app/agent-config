@@ -95,7 +95,7 @@ plan AC improvements automatically when a source repository updates.
       `agents/`.
       verify: unit tests for both branches, run with `EVENT4U_CONFIG_HOME` pointed at a
       temp dir.
-- [ ] **2.3 Repo identity.** The repo id is 12 hex of an HMAC, keyed by a random
+- [x] **2.3 Repo identity.** The repo id is 12 hex of an HMAC, keyed by a random <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/repo_identity.ts -->
       machine-local key created once under `runtime/projects/`, over the canonical origin
       URL: userinfo, tokens and query string removed, host lower-cased, default port, ssh
       and https forms and a trailing `.git` collapsed. No remote → the realpath. A git
