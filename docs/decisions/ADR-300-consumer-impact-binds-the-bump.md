@@ -20,6 +20,7 @@ evidence:
     - agents/evidence/council/owner-blocker-routing-20261016.md
     - agents/evidence/council/resolve-blockers-batch-20261019.md
     - agents/evidence/analysis/impact-bump-out-of-sample-20261020.md
+    - agents/evidence/council/adr-300-exception-at-the-cut-20261024.md
     - agents/roadmaps/road-to-a-release-that-says-whether-it-needs-you.md
     - CONTRIBUTING.md
     - BREAKING_CHANGES.md
@@ -83,11 +84,14 @@ closing the over-match recorded on it, because a deleted TypeScript property
 would otherwise number a release. The `BREAKING_CHANGES.md` disclaimer that
 called the column non-normative is replaced.
 
-The cut's settings rule (`SETTINGS_REMOVAL_RULE`, the owner's answer to
-blocker `what-a-minor-may-remove`) is not amended here. It still refuses a
-removal below a major without a named proof, so the migration exception
-reaches the proposed bump but not the cut; how the cut recognises an automatic
-migration is open as blocker `adr-300-exception-at-the-cut`.
+At the cut, the exception is carried by blocker `adr-300-exception-at-the-cut`,
+decided by the AI council on 2026-10-24 (2/2, option (b)): a rename whose
+`RENAMED_KEYS` alias carries the consumer's value needs no proof below a major
+when the release declares `Consumer-Impact: automatic`; a `REMOVED_KEYS`
+tombstone discards the value and still needs its proof or a major. The rule
+sentence (`SETTINGS_REMOVAL_RULE`) is amended in all eight places. A
+conversion-module migration that is not a rename counts only once a
+test-backed registry for it exists.
 
 ## Alternatives considered
 
