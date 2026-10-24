@@ -21,7 +21,8 @@ relates:
 A Ruby on Rails project gets the same treatment the parent roadmap gave the most common
 frameworks: Ruby is a parsed language, and a Rails provider draws routes, model tables,
 model relations and rendered views, proven by positive and negative oracles and listed in
-the coverage catalog as `partial`.
+the coverage catalog as `partial`. Phase 2 carries the accuracy residue the 2026-10-24
+review of PR #2603 measured on real projects and that the PR did not close.
 
 ## Phase 1 — Ruby and Rails
 
@@ -36,6 +37,26 @@ the coverage catalog as `partial`.
       `belongs_to` / `has_one` → `relates`; an action renders
       `app/views/<controller>/<action>.html.erb` when it exists. Catalog row `partial`.
       verify: the Rails fixture test passes its positive and negative oracles.
+
+## Phase 2 — Accuracy residue from the PR #2603 review
+
+Measured on real clones on 2026-10-24; Flask blueprints across files and tsconfig
+`baseUrl` imports were fixed in that PR, these four were not.
+
+- [ ] **2.1 Django `include()` prefixes.** A route in an included `urls.py` carries the
+      path of the `path("prefix/", include(...))` that includes it (djangoproject.com:
+      59 of 70 routes resolved, every included route without its prefix).
+      verify: a Django fixture with a nested `include()` shows the joined route path in the provider test.
+- [ ] **2.2 C# files join the graph.** `using` directives and namespace-qualified names
+      bind to the declaring file (eShopOnWeb: 64.5 % of C# files without an edge).
+      verify: a C# fixture with two namespaces produces cross-file import and call edges in the extractor test.
+- [ ] **2.3 Request paths reach tables through services and repositories.** A route
+      whose handler calls a service or repository that persists a model reaches that
+      model's table (BookStack, djangoproject.com: 0 tables on request paths).
+      verify: a fixture with handler → service → repository → model shows the table on the request path.
+- [ ] **2.4 `routes/web.php` joins the communities it routes to.** On BookStack it forms
+      a community of its own instead of sitting with the controllers it routes to.
+      verify: the map test over a Laravel fixture puts the route file in a controller's community.
 
 ## Blockers
 
@@ -63,3 +84,5 @@ the coverage catalog as `partial`.
 
 - [ ] AC-1 — Ruby files produce nodes and edges, and a Rails fixture's routes, tables,
       relations and views resolve with positive and negative oracles green.
+- [ ] AC-2 — The four Phase-2 residues each have a fixture oracle that was seen red
+      before its fix and is green after.
