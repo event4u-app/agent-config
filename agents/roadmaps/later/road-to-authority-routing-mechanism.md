@@ -1,6 +1,11 @@
 ---
 complexity: structural
-status: ready
+status: later
+review_by: 2026-11-24
+entry_condition:
+  what: "a second, qualified reviewer for the authority surface (owner-questions OQ-2), and a free slot among the five active roadmaps"
+  when: "when one of the five active roadmaps completes"
+  who: owner
 execution:
   mode: phase-checkpoints
 relates:
@@ -66,7 +71,7 @@ addressed to the owner.
       `~/.event4u/agent-config/settings/.ai-council.yml`, 2 enabled members
       (anthropic, openai), transport `cli · subscription`. Both rounds run that
       day concluded 2/2 at $0.00. —
-      [`council-availability`](../../src/rules/council-availability.md).
+      [`council-availability`](../../../src/rules/council-availability.md).
 
 ## Context
 
@@ -101,7 +106,7 @@ addressed to the owner.
 These four points are the record's own structural findings. They are
 preconditions, not optional context, and a later session must not
 re-derive or re-litigate them without the evidence that would justify it
-(per [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md)):
+(per [`decision-revisit-gate`](../../../src/rules/decision-revisit-gate.md)):
 
 1. **The collapsed verdict field is a precondition, not a refinement.**
    `verdict` conflates the technical review outcome, the authority
@@ -133,7 +138,7 @@ merges, or require an external bootstrap approval."*
       split require a stronger, separate hold (e.g. a temporary CI check
       scoped to the files Phases 2–3 will touch)? Record the verdict as a
       `## Decisions` row in this file.
-      verify: `grep -c '^## Decisions' agents/roadmaps/road-to-authority-routing-mechanism.md` -> /^1$/
+      verify: `grep -c '^## Decisions' agents/roadmaps/later/road-to-authority-routing-mechanism.md` -> /^1$/
 - [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — discovered mid-drain under `/roadmap:process-full --all`; turning on a forge-side protection is an owner act the run may not perform, and it is put to the owner in that run's end report rather than halting the queue --> **1.2 Implement whichever hold 1.1 selects**, before Phase 2.3 (the
       verdict-field split) lands its first commit. **1.1 selected neither of the
       two shapes this step anticipated.** Both seats rejected a doc-only sentence
@@ -396,41 +401,33 @@ behaviour, which is the status quo, not a regression.*
 "whether these are invariants, snapshots, tolerances or observations changes
 what the gate attests."*
 
-**7.1 — parked on 2026-10-24 (owner directive, throughput over ceremony).** The
-step, with its full history, now lives in
-[`road-to-authority-routing-7-1-closure`](later/road-to-authority-routing-7-1-closure.md).
-
-*Result so far.* The ledger classifies all 16 checks that were red on the trunk
-at Phase 7 start: 49 binding aspects, 42 invariant and 7 observation, each
-derived from structured fields. Those fields are:
-
-- the independently produced and reviewed branch inventory;
-- structured modes;
-- a precedence table for the two multi-mode branches.
-
-Items 1 and 5–8 of the owner's Option A were met 2/2 (D45). D46 corrected
-`check_composite_arming` so that an absent store exits 0. The council's closed
-renewal bar A1–A8 (D49) is implemented, with each check seen red.
-
-*Still to do.* The pin set has not been renewed as one attested candidate, so
-the ledger is **quarantined**, not consumable.
-
-*The smallest cut that unblocks 7.2 and Phase 8.* 7.2 proceeds on a
-**provisional, revisable** copy of the ledger's classes in
-`src/config/live-tree-check-classes.json`. Phase 8 is gated on its own blocker,
-not on 7.1. The parked step promotes the ledger when a consumer needs it, and
-the provisional file is then regenerated from it.
+- [~] **7.1 Classify each live-tree measurement check.** Parked 2026-10-24
+      by owner directive (timebox: eight partial PRs, D11–D47; D48). Result: 16
+      checks are red on the trunk; ledger revision 22
+      (`agents/evidence/analysis/gate-classification-ledger-20261024.md`)
+      derives 49 of 49 aspects under Option A (D44). Open: D47's renewal refused
+      to attest the pins; 63 of 167 blocking branches are code-confirmed. No
+      further council round. **Provisional default, revisable:** 7.2 consumes
+      revision 22, and an aspect without a code-confirmed effect counts as an
+      invariant and stays blocking, so the default weakens no gate. A
+      demonstrated misclassification reopens that row, not the step. The
+      experimental collector slice stays in `src/scripts/_lib/gate_collector_experimental.ts`. Phase 8
+      stays gated on `external-bootstrap-boundary-for-phases-2-3`. Prior text:
+      `git show ca807bba41:agents/roadmaps/later/road-to-authority-routing-mechanism.md`.
+      To close it: the closed bar A1–A8 (D50) is implemented at revision 24.
+      Renew the pin set as one candidate, run
+      `gate-renewal-suite.mjs --candidate`, have it reviewed by risk, then
+      record the promotion line.
 
 - [ ] **7.2 Implement the classification**: an invariant stays a required
       gate; a snapshot is refreshed by the agent per 7.1's rule, never
       silently; an observation is demoted to non-blocking. No check is
       silently weakened — a demotion is recorded with its reason, inline,
-      per [`active-remediation`](../../src/rules/active-remediation.md).
-      **Basis (owner directive 2026-10-24):** the provisional, revisable classes in
-      `src/config/live-tree-check-classes.json`. They are copied from the
-      parked 7.1 ledger and regenerated when it is promoted. The test pins
-      every invocation's blocking to them, read by
-      `src/scripts/_lib/gate_invocations.ts`.
+      per [`active-remediation`](../../../src/rules/active-remediation.md).
+      **Basis (D48):** the provisional, revisable classes in
+      `src/config/live-tree-check-classes.json`, read per invocation by
+      `src/scripts/_lib/gate_invocations.ts`; the test pins every
+      invocation's blocking to them.
       verify: `npx vitest run tests/scripts/check_persistence_classification.test.ts` -> 0
 
 *Exit: every live-tree check pinned red at Phase 7 start carries a
@@ -656,12 +653,12 @@ before 8.3 gates anything.*
 | D45 | contested-technical | council:2026-10-24 design, rounds 21–25, 2/2 present each, peer review | Under the owner's Option A, items 1, 5, 6, 7 and 8 are **met 2/2** (round 21). Item 4 stays open through four rounds, and each round's stricter reading is taken. The class predicates now derive from structured fields only: each reaching branch's `effect` in the independent, independently reviewed branch inventory; a structured `modes` map checked against source and branch predicates; snapshot and tolerance need fields **and** blocking behaviour. A mismatch reads `waived`, never derived, and only with an open milestone step, an issue found in its file, a tracked owner directive naming the row, and a real unexpired expiry. All pins are attested as **one set**. 48 of the 49 aspects derive their class; R16.d does not. Ledger revisions 16–20. Round 25: must-fixes 1 and 3–7 closed 2/2, must-fix 5 then closed in revision 20; *do not renew* until the owner answers D46. | AI council 2026-10-24, same seats, $0.00 each. Records and verbatim prompts: `agents/evidence/council/gate-classification-items-20261024.md`, `gate-classification-item4-20261024.md`, `gate-classification-item4-r2-20261024.md`, `gate-classification-item4-r3-20261024.md`, `gate-classification-item4-r4-20261024.md`. | a reaching branch's effect, a mode, a mapping or a waiver field changes; or an aspect derives mixed or unreached |
 | D46 | business-owned | owner | **Option 1: correct the behaviour now.** `check_composite_arming` exits 0 when the composite store is absent (*"not measured yet"*, never a build failure, as R16.d's contract says); a present store that fails its readings still exits non-zero. No waiver is approved. Directive: `agents/evidence/owner-directives/2026-10-24-7-1-r16d-behaviour.md`. Councils 24 and 25 routed the choice to the owner and both recommended this option over a time-bounded waiver (2) and a contract amendment to invariant (3). | AI council 2026-10-24, rounds 24–25, 2/2: `agents/evidence/council/gate-classification-item4-r3-20261024.md`, `gate-classification-item4-r4-20261024.md`. | R16.d's contract or `check_composite_arming`'s absent-store exit changes |
 | D47 | contested-technical | council:2026-10-24 design, twenty-sixth round, 2/2 present, peer review — convergent, **renewal refused** | After D46's fix (`check_composite_arming` exits 0 on an absent store, still 1 on an unreadable, malformed or empty one, with tests seen red), check 16 was re-inventoried by a separate session and its three new mappings reviewed 3/3 agree; 49 of 49 aspects derive their class. The renewal round D38 allows returned *do not renew* and item 4 *not met*, 2/2. Its findings were: substring mode matching, effects not checked against code, no operational state or rollback for D46, and an unexamined wiring change in the unit. Ledger revision 22 answers each: exact flag tokens with structured flags; effect-versus-code contradiction refusal with stated coverage (63 of 167 blocking branches code-confirmed); D46 revert triggers; scoped wiring pins. The pins stay unrenewed until a further renewal round. | AI council 2026-10-24, $0.00. Record and verbatim prompt: `agents/evidence/council/gate-classification-renewal-20261024.md` and its `.question.md`. | a renewal round attests the cumulative diff, or it names a further defect |
-| D48 | contested-technical | council:2026-10-24 design, twenty-seventh round, 2/2 present, peer review — convergent, **renewal refused again** | The second renewal round, on revision 22, returned *do not renew* and item 4 *not met*, 2/2. The decisive findings were these. Whole-file wiring hashes would attest the unexamined `check_step_production_reach --enforce` change. Only the derived labels were shown exclusive, not the runtime modes; openai would accept an explicit precedence table tested for every overlap. Revision 23 changes strategy and re-cuts the renewal unit: wiring files are pinned by their Phase 7 steps only (`Taskfile.yml` added); an `overlaps` precedence table is required and checked exactly (6 entries); five self-test and freshness rows gain the structured modes their cells already named; the contradiction rule reads the narrowest covering branch; the independence prompts are committed. 49 of 49 aspects are derived. | AI council 2026-10-24, $0.00. Record and verbatim prompt: `agents/evidence/council/gate-classification-renewal-r2-20261024.md` and its `.question.md`. | a renewal round attests revision 23, or names a further defect |
-| D49 | contested-technical | council:2026-10-24 design, twenty-ninth round, 2/2 present on the second run (the first run's anthropic answer was blocked by its safety classifier), peer review — **converged on a closed bar** | After three refused renewals (rounds 26–28; round 28 rejected step-scoped YAML pins as heuristic), attempt 4 changed strategy and asked for a closed acceptance list instead of a verdict. Converged: whole-file wiring pins, with a hashed review of non-Phase-7 changes; unit A may be reviewed alone, but renewal is atomic over A+B+C; a runtime truth table for the two multi-mode branches is required for 7.1; the 104 aggregated-exit branches are not a 7.1 requirement. The bar is openai's A1–A8, which covers anthropic's A1–A7: diff manifest, classifier partition without the recorded class as an oracle, grounds provenance, mode truth table, whole-file wiring, candidate promotion, mutation matrix, atomic rollback. Nothing else blocks absent a named error (item 7). Nothing is deferred, so nothing is owner-reserved. | AI council 2026-10-24, $0.00. Record and verbatim prompt: `agents/evidence/council/gate-classification-renewal-acceptance-20261024.md` and its `.question.md`. | A1–A8 change, or a named error or coverage defect is demonstrated |
-| D50 | business-owned | owner | **Park 7.1; continue 7.2 on provisional classes; ceremony by risk.** The owner's throughput directive of 2026-10-24, relayed by the orchestrating session. Step 7.1 moves to `agents/roadmaps/later/road-to-authority-routing-7-1-closure.md`, and this file keeps a short pointer. 7.2 implements the classification on a provisional, revisable copy of the 7.1 ledger's classes (`src/config/live-tree-check-classes.json`, pinned by `tests/scripts/check_persistence_classification.test.ts`). From now on the council is used only for irreversible, release- or security-relevant decisions; otherwise one reviewer or none. | owner directive 2026-10-24, relayed in the drain session; no council round | the parked 7.1 ledger is promoted, or a provisional class proves wrong |
+| D48 | business-owned | owner | **7.1 is parked, with a revisable fail-closed default.** Throughput over ceremony: eight partial PRs and 37 decisions on one step exceed the timebox. 7.2 consumes ledger revision 22; an aspect without a code-confirmed effect stays blocking. No further council round on 7.1. | Directive: `agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`. | a demonstrated misclassification in revision 22, or the owner reopens 7.1 |
+| D49 | contested-technical | council:2026-10-24 design, twenty-seventh round, 2/2 present, peer review — convergent, **renewal refused again** | The second renewal round, on revision 22, returned *do not renew* and item 4 *not met*, 2/2. Whole-file wiring hashes would attest the unexamined `check_step_production_reach --enforce` change, and only the derived labels were shown exclusive, not the runtime modes. Revision 23 answered with step-scoped wiring pins, an `overlaps` precedence table, structured modes for five more rows, a narrowest-branch contradiction rule and the independence prompts committed. Round 28 refused those step-scoped pins as heuristic. | AI council 2026-10-24, $0.00. Records and verbatim prompts: `agents/evidence/council/gate-classification-renewal-r2-20261024.md` and `gate-classification-renewal-r3-20261024.md`, each with its `.question.md`. | superseded by D50's closed bar |
+| D50 | contested-technical | council:2026-10-24 design, twenty-ninth round, 2/2 present on the second run (the first run's anthropic answer was blocked by its safety classifier), peer review — **converged on a closed bar** | Attempt 4 changed strategy and asked for a closed acceptance list instead of a verdict. Converged: whole-file wiring pins with a hashed review of non-Phase-7 changes; renewal atomic over the units; a runtime truth table for the two multi-mode branches required for 7.1; the 104 aggregated-exit branches not a 7.1 requirement. The bar is A1–A8: diff manifest, oracle-free classifier partition, grounds provenance, mode truth table, whole-file wiring, candidate promotion, mutation matrix, atomic rollback. Implemented at ledger revision 24, each check seen red; the pins are not renewed. | AI council 2026-10-24, $0.00. Record and verbatim prompt: `agents/evidence/council/gate-classification-renewal-acceptance-20261024.md` and its `.question.md`. | A1–A8 change, or a named error or coverage defect is demonstrated |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-21 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -772,7 +769,7 @@ before 8.3 gates anything.*
 - **Owner:** user
 - **Blocks:** Phase 2 — 2.4
 <!-- Class: 3 -->
-- **Recommendation:** State whether a `refused-escalate` verdict is provisional (a later council round may revisit it, per [`decision-revisit-gate`](../../src/rules/decision-revisit-gate.md)) or final once the owner rules on it — the record names this as open and owner-owned ("not an indefinite veto unless the user adopts it as final").
+- **Recommendation:** State whether a `refused-escalate` verdict is provisional (a later council round may revisit it, per [`decision-revisit-gate`](../../../src/rules/decision-revisit-gate.md)) or final once the owner rules on it — the record names this as open and owner-owned ("not an indefinite veto unless the user adopts it as final").
 - **If you do nothing:** Every owner-level refusal is treated as provisional by default (per the cited rule's general stance), which may not be the right default for every refusal class.
 - **What to do:**
   1. State the default (provisional / final) and any exception classes, and record it as a `refused-escalate` finality note in `docs/contracts/ratification-artifact.md`.

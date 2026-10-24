@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // The renewal suite for step 7.1: acceptance items A1, A3, A6, A7 and A8 of
-// the closed bar the council fixed in round 29 (D49). A2 and A5 live in the
+// the closed bar the council fixed in round 29 (D50). A2 and A5 live in the
 // reconciler, and A4 is tests/scripts/gate_multimode_truth_table.test.ts.
 //
 //   node gate-renewal-suite.mjs --manifest          A1  diff manifest + ledger-row diff

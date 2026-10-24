@@ -1416,12 +1416,15 @@ concerns:
   # subagent whose definition sets `omitClaudeMd`. On SubagentStart it reads the
   # definition the host runs (project, then user `.claude/agents/<type>.md`)
   # and, when that definition skips the instruction files, returns a bounded
-  # digest of the project's CLAUDE.md files as `additional_context`, which the
-  # host adds to the subagent's context. Silent for every other subagent.
+  # digest of the project's CLAUDE.md files and the user's own layer (CLAUDE.md,
+  # its imports, each rule's Iron Law blocks; road-to-a-cold-start-paid-once D16)
+  # as `additional_context`, which the host adds to the subagent's context.
+  # Safety-floor and consequence-class laws get room first. Silent for every
+  # other subagent.
   # AUTHORITY: deliberately overrides part of `omitClaudeMd` for the project's
-  # own instruction files (the step's purpose), and a project file can permit as
-  # well as forbid, so this changes what such a subagent may decide; it grants no
-  # tool or file permission. Reviewed as authority-expanding, not as neutral.
+  # and the user's instruction files (the step's purpose), and such a file can
+  # permit as well as forbid, so this changes what such a subagent may decide; it
+  # grants no tool or file permission. Reviewed as authority-expanding, not as neutral.
   # Claude only: cowork's trampoline discards stdout. Loaded from its own chunk
   # (decision A9). Kill switch: `AGENT_CONFIG_SUBAGENT_CONSTRAINTS=off`.
   subagent-constraints:

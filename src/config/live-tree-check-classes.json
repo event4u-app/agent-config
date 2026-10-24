@@ -1,7 +1,7 @@
 {
   "_doc": "Provisional classification of every invocation of the 16 live-tree checks Phase 7 of road-to-authority-routing-mechanism classifies (step 7.2). Each entry names the aspects active in that invocation mode with their class, whether a non-zero exit fails the caller, and, where an invariant does not block, the demotion and its reason. tests/scripts/check_persistence_classification.test.ts holds the workflows and taskfiles to it, so no invocation is weakened or added silently.",
   "provisional": true,
-  "revisable": "The classes come from the 7.1 ledger at revision 24, which is not promoted: step 7.1 is parked in the later roadmap road-to-authority-routing-7-1-closure. When that ledger is promoted or a class changes, regenerate these entries from it.",
+  "revisable": "Provisional default of D48 in road-to-authority-routing-mechanism: the classes are those of the 7.1 ledger at revision 22 (unchanged through revision 24), which is not promoted while step 7.1 is parked. When that ledger is promoted or a class changes, regenerate these entries from it.",
   "source": "agents/evidence/analysis/gate-classification-ledger-20261024.md",
   "invocations": [
     {

@@ -277,7 +277,7 @@ than listed.
 | `agents/evidence/analysis/gate-wiring-review-20261024.md` | `bcb96b497545a23bee48a25bc23ec6d388b418d6` |
 
 **Wiring, pinned as whole files (revision 24).** Round 28 rejected the
-step-scoped pins of revision 23 as heuristic. Round 29 (D49, A5) converged on
+step-scoped pins of revision 23 as heuristic. Round 29 (D50, A5) converged on
 whole-file pins. Those pins cover `Taskfile.yml`, every taskfile it includes and
 the three Phase 7 workflows, all at revision 16. A hashed review record covers
 every change since then:
@@ -898,7 +898,7 @@ is the clean baseline, which reports the unrenewed pins.
 
 ## The closed bar A1–A8 implemented — revision 24
 
-Round 29 (D49) fixed a closed bar of eight items. All eight are implemented,
+Round 29 (D50) fixed a closed bar of eight items. All eight are implemented,
 and each new check was seen red under sabotage:
 
 | Item | What implements it |

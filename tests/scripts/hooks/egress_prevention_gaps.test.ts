@@ -31,7 +31,7 @@ const FIXTURE_DIR = path.join(REPO_ROOT, 'tests', 'fixtures', 'egress-prevention
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'dispatch_hook.ts');
 const TSX_BIN = path.join(REPO_ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
 const REPORT_VIEW = 'tests/hooks/fixtures/concern_report_egress_view.ts';
-const CLOSING_ROADMAP = path.join(REPO_ROOT, 'agents', 'roadmaps', 'road-to-placeholders-on-the-wire.md');
+const CLOSING_ROADMAP = path.join(REPO_ROOT, 'agents', 'roadmaps', 'later', 'road-to-placeholders-on-the-wire.md');
 
 const ALNUM = 'Ab3Cd5Ef7Gh9Jk2Lm4Np6Qr8St1Uv3Wx5Yz7';
 

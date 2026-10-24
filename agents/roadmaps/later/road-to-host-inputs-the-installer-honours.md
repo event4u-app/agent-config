@@ -1,6 +1,11 @@
 ---
 complexity: structural
-status: ready
+status: later
+review_by: 2026-11-24
+entry_condition:
+  what: "a free slot among the five active roadmaps (owner WIP limit, 2026-10-24)"
+  when: "when one of the five active roadmaps completes"
+  who: owner
 execution:
   mode: phase-checkpoints
 owner: maintainer
@@ -39,7 +44,7 @@ Claude Code is talking to a foreign gateway.
 | H1 | The installer writes `skillOverrides` from `computeOverrides`, which calls `modelListingBudget` with a fixed `contextWindowTokens: 200_000` and the default fraction. `host_listing_model.ts` already accepts a `fraction` input; nothing passes one. The host computes with the real model window, the user's `skillListingBudgetFraction`, and lets `SLASH_COMMAND_TOOL_CHAR_BUDGET` replace the formula (0 matches for that variable under `src/` and `docs/`). A user who raises the fraction so descriptions stay visible has them taken away again as `name-only`. Two further fixed windows: `compute_skill_tiers.ts:134`, `report_skill_host_census.ts:67`. | `src/scripts/_lib/skill_listing_overrides.ts:107`, called from `install.ts`; `_lib/host_listing_model.ts` | live |
 | H2 | A managed policy can silence every hook unseen. `allowManagedHooksOnly` and `disableAllHooks` have 0 matches under `src/` and `docs/`. The host then skips unmanaged hooks, while `hook_effect_doctor` runs hooks synthetically and reports them bound — green where it should be red. | grep; `src/scripts/hook_effect_doctor.ts` | live, false green |
 | H3 | Host and model are one axis in the tree. `ANTHROPIC_BASE_URL` has 0 matches under `src/` and `docs/`; `doctor` cannot say Claude Code is behind a gateway, where the tier mapping means whatever the gateway makes of it; the capability matrix sets column = host = vendor. | grep; `_lib/model_tier.ts`; `agents/evidence/cross-model-capability-matrix.md` | live, visibility |
-| H4 | The 7.2 probe of the planned request gateway does not check four things the host already exposes: (a) start behaviour when `ANTHROPIC_BASE_URL` already points at a foreign gateway; (b) the request-class header (`main`, `subagent`, `workflow`, `compaction`, `auxiliary`, `side_reply`) that would make compaction recognisable without parsing bodies; (c) a terms-of-use axis for forwarding a subscription login; (d) a list of host features that switch off behind a foreign gateway. | `agents/roadmaps/road-to-placeholders-on-the-wire.md` 7.2 / 7.6 | live, before the build |
+| H4 | The 7.2 probe of the planned request gateway does not check four things the host already exposes: (a) start behaviour when `ANTHROPIC_BASE_URL` already points at a foreign gateway; (b) the request-class header (`main`, `subagent`, `workflow`, `compaction`, `auxiliary`, `side_reply`) that would make compaction recognisable without parsing bodies; (c) a terms-of-use axis for forwarding a subscription login; (d) a list of host features that switch off behind a foreign gateway. | `agents/roadmaps/later/road-to-placeholders-on-the-wire.md` 7.2 / 7.6 | live, before the build |
 
 ## Phase 1 — Red probes first
 

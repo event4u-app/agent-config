@@ -1,6 +1,12 @@
 ---
 complexity: lightweight
-status: draft
+status: later
+estate_growth_exempt: "Owner directive 2026-10-24 (WIP limit, owner-questions OQ-5): 18 active roadmaps are parked into later/ in this one change, so later_roadmaps rises by 18 while active_roadmaps falls by 12, and their open blockers now count under later/ (+5). Nothing is added: no new roadmap, no new blocker. Closing or archiving them instead was rejected because their open work remains wanted; it is pulled back when one of the five active roadmaps completes."
+review_by: 2026-11-24
+entry_condition:
+  what: "a free slot among the five active roadmaps (owner WIP limit, 2026-10-24)"
+  when: "when one of the five active roadmaps completes"
+  who: owner
 estate_offset_exempt: "Tracks the 37 findings the AI council ruled FOLLOW-UP in the 17.0.0 self-review plus ten residue items the fix agents reported. rg -F for the 37 finding ids over agents/roadmaps returned no hits, so no active, later/ or stub roadmap owns them. Merging into road-to-hook-guards-that-hold-17-findings was rejected because that file holds the release-blocking findings and closes with the cut, so folding accepted-for-release work into it would keep the cut gate open on items the council ruled acceptable. Archiving or parking an unrelated roadmap to make room would be a disposition taken for the gate rather than for its work."
 execution:
   mode: phase-checkpoints

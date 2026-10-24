@@ -2,7 +2,7 @@
 
 # Wiring changes since the attested base: the review record (A5)
 
-This is acceptance item A5 of the closed renewal bar (D49, round 29). The wiring
+This is acceptance item A5 of the closed renewal bar (D50, round 29). The wiring
 files are pinned as whole files:
 
 - `Taskfile.yml`;
