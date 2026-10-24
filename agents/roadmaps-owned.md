@@ -10,6 +10,7 @@ and keep the full search — this file only adds candidates to it.
 | slug | dir | status | owns |
 |---|---|---|---|
 | road-to-17-0-follow-ups | active | draft | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
+| road-to-a-backlog-that-shrinks | active | ready | The 2026-10-24 owner directive (throughput over ceremony) holds without anyone re-stating it: the drain queue parks a step that eats … |
 | road-to-a-cold-start-paid-once | active | ready | On a host where a re-task is observed to be cheaper than a fresh spawn, the orchestrator re-tasks a warm … |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | active | ready | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
