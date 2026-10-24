@@ -16,7 +16,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { findProjects, mainRoot, type ProjectEntry, readRegistry, recordProject, updateRegistry } from '../_lib/project_registry.js';
+import { findProjects, mainRoot, type ProjectEntry, readRegistry, recordProject, repoIdOf, updateRegistry } from '../_lib/project_registry.js';
 import { dropProjectRows, indexAfterRefresh, indexPath } from './estate_index.js';
 import { enforceBudget, homeUsage } from './graph_budget.js';
 import { graphHome, graphsRoot } from './graph_home.js';
@@ -59,7 +59,11 @@ export function registerUse(root: string, graph: CodeGraph | null, commit: strin
                       ...usedHome,
                   },
         );
-        if (!worktree) indexAfterRefresh(id, real, home.cachePath, graph);
+        if (!worktree) {
+            // A row the pre-checkout registry wrote under the bare repo id goes once that entry was re-keyed.
+            if (readRegistry().projects[repoIdOf(id)] === undefined) dropProjectRows(repoIdOf(id));
+            indexAfterRefresh(id, real, home.cachePath, graph);
+        }
         if (home.kind === 'global') enforceBudget(home.dir);
         return id;
     } catch {

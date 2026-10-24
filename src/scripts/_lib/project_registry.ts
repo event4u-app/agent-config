@@ -1,7 +1,11 @@
 /**
  * The one user-global list of projects this machine has worked in (ADR-299).
  *
- * `runtime/projects/registry.json`, keyed by repo id (`code_graph/repo_identity`).
+ * `runtime/projects/registry.json`, keyed by `<repo id>-<checkout>`
+ * (`code_graph/repo_identity`): two clones of one origin are one logical
+ * project but keep their own root, graph home and commit, so neither build
+ * overwrites the other's. A registry written before that, keyed by the bare
+ * repo id, still loads; the entry is re-keyed when its checkout next records.
  * A project enters by use — a graph build or refresh, an advisories refresh, or
  * an explicit `code-graph projects add` — never by a crawl. The file names
  * client projects by absolute path, so nothing that leaves the machine may read
@@ -162,15 +166,24 @@ export type ProjectFields = Partial<Pick<ProjectEntry, 'fingerprint' | 'graph_ho
     usedHome?: string;
 };
 
-/** Record `root` (by use, never by a crawl) and return its repo id. */
+/** The logical project an entry key belongs to: the repo id, for a new or a bare legacy key. */
+export function repoIdOf(key: string): string {
+    return key.split('-')[0] as string;
+}
+
+/** Record `root` (by use, never by a crawl) and return its entry key, `<repo id>-<checkout>`. */
 export function recordProject(root: string, fields: ProjectFields = {}, opts: RegistryOptions = {}): string {
     const dir = registryDir(opts);
-    const id = repoIdentity(root, opts.env, dir).repoId;
+    const ident = repoIdentity(root, opts.env, dir);
+    const id = `${ident.repoId}-${ident.checkout}`;
     const main = mainRoot(root);
     const origin = remoteUrl(main);
     const now = (opts.now ?? new Date()).toISOString();
     updateRegistry((reg) => {
-        const prev = reg.projects[id];
+        const legacy = reg.projects[ident.repoId];
+        const adopt = reg.projects[id] === undefined && legacy !== undefined && legacy.root === main;
+        const prev = reg.projects[id] ?? (adopt ? legacy : undefined);
+        if (adopt) delete reg.projects[ident.repoId];
         const { usedHome, ...rest } = fields;
         const next: ProjectEntry = {
             root: main,
@@ -192,13 +205,15 @@ export function recordProject(root: string, fields: ProjectFields = {}, opts: Re
 }
 
 /**
- * The entries a reference names: a repo id, a registered name (the root's
- * basename) or a path. A name two projects share returns both, so the caller
- * can refuse to guess.
+ * The entries a reference names: an entry key, a repo id (every checkout of
+ * it), a registered name (the root's basename) or a path. A name two projects
+ * share returns both, so the caller can refuse to guess.
  */
 export function findProjects(reg: Registry, ref: string): Array<[string, ProjectEntry]> {
     const all = Object.entries(reg.projects);
-    const byId = all.filter(([id]) => id === ref);
+    const byKey = all.filter(([id]) => id === ref);
+    if (byKey.length) return byKey;
+    const byId = all.filter(([id]) => repoIdOf(id) === ref);
     if (byId.length) return byId;
     let real: string | null = null;
     try {

@@ -17,7 +17,7 @@ import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-import { readRegistry, registryDir, type RegistryOptions } from '../_lib/project_registry.js';
+import { readRegistry, registryDir, type RegistryOptions, repoIdOf } from '../_lib/project_registry.js';
 import { isSqliteAvailableSync, loadSqliteSync } from '../_lib/sqlite_guard.js';
 import { isTestFile } from './build.js';
 import { type ManifestFacts, manifestFacts } from './estate_manifests.js';
@@ -295,6 +295,25 @@ export function openEstate(opts: RegistryOptions = {}): EstateReader | null {
     return new EstateReader(new DatabaseSync(file, { readOnly: true }));
 }
 
+type Answer = { id: string; root: string };
+
+/**
+ * One row per logical project: clones of one origin are indexed per checkout,
+ * so an answer folds them by repo id and lists every checkout root. `facet`
+ * keeps rows apart that differ in more than the project (an ecosystem, a kind).
+ */
+function byRepo<T extends Answer>(rows: T[], facet: (r: T) => string = () => '', merge: (a: T, b: T) => T = (a) => a): Array<T & { repo_id: string; roots: string[] }> {
+    const out = new Map<string, T & { repo_id: string; roots: string[] }>();
+    for (const r of rows) {
+        const repo_id = repoIdOf(r.id);
+        const k = `${repo_id}\0${facet(r)}`;
+        const prev = out.get(k);
+        if (prev === undefined) out.set(k, { ...r, repo_id, roots: [r.root] });
+        else out.set(k, { ...merge(prev, r), repo_id, roots: prev.roots.includes(r.root) ? prev.roots : [...prev.roots, r.root] });
+    }
+    return [...out.values()];
+}
+
 export class EstateReader {
     constructor(private readonly db: Db) {}
 
@@ -333,7 +352,7 @@ export class EstateReader {
     }
 
     /** Projects that declare `pkg` (any ecosystem) or import it in code. */
-    projectsUsing(pkg: string): Array<{ id: string; name: string; root: string; declared_in: string[]; imports: number }> {
+    projectsUsing(pkg: string): Array<{ id: string; name: string; root: string; declared_in: string[]; imports: number; repo_id: string; roots: string[] }> {
         const rows = this.db
             .prepare(
                 'SELECT p.id, p.name, p.root, ' +
@@ -343,28 +362,33 @@ export class EstateReader {
                     'OR EXISTS (SELECT 1 FROM imports WHERE project = p.key AND package = ?) ORDER BY p.name, p.id',
             )
             .all(pkg, pkg, pkg, pkg) as Array<{ id: string; name: string; root: string; declared_in: string | null; imports: number }>;
-        return rows.map((r) => ({ ...r, declared_in: r.declared_in ? r.declared_in.split('\n').sort() : [], imports: Number(r.imports) }));
+        return byRepo(
+            rows.map((r) => ({ ...r, declared_in: r.declared_in ? r.declared_in.split('\n').sort() : [], imports: Number(r.imports) })),
+            undefined,
+            // Two checkouts of one project count its imports once, not twice.
+            (a, b) => ({ ...a, declared_in: [...new Set([...a.declared_in, ...b.declared_in])].sort(), imports: Math.max(a.imports, b.imports) }),
+        );
     }
 
     /** Projects that reference `name` without resolving it — candidates for a symbol another project declares. */
-    referrers(name: string): Array<{ id: string; name: string; root: string }> {
-        return this.db
+    referrers(name: string): Array<{ id: string; name: string; root: string; repo_id: string; roots: string[] }> {
+        return byRepo(this.db
             .prepare('SELECT DISTINCT p.id, p.name, p.root FROM refs r JOIN projects p ON p.key = r.project WHERE r.name = ? ORDER BY p.name, p.id')
-            .all(name) as Array<{ id: string; name: string; root: string }>;
+            .all(name) as Array<{ id: string; name: string; root: string }>);
     }
 
     /** Projects that publish package `pkg`. */
-    publishers(pkg: string): Array<{ id: string; name: string; root: string; ecosystem: string }> {
-        return this.db
+    publishers(pkg: string): Array<{ id: string; name: string; root: string; ecosystem: string; repo_id: string; roots: string[] }> {
+        return byRepo(this.db
             .prepare('SELECT DISTINCT p.id, p.name, p.root, b.ecosystem FROM publishes b JOIN projects p ON p.key = b.project WHERE b.package = ? ORDER BY p.name, p.id')
-            .all(pkg) as Array<{ id: string; name: string; root: string; ecosystem: string }>;
+            .all(pkg) as Array<{ id: string; name: string; root: string; ecosystem: string }>, (r) => r.ecosystem);
     }
 
     /** Projects that declare a top-level symbol named `name`. */
-    exporters(name: string): Array<{ id: string; name: string; root: string; kind: string }> {
+    exporters(name: string): Array<{ id: string; name: string; root: string; kind: string; repo_id: string; roots: string[] }> {
         const rows = this.db
             .prepare('SELECT p.id, p.name, p.root, e.kind FROM exports e JOIN projects p ON p.key = e.project WHERE e.name = ? ORDER BY p.name, p.id')
             .all(name) as Array<{ id: string; name: string; root: string; kind: number }>;
-        return rows.map((r) => ({ ...r, kind: KINDS[r.kind] ?? 'unknown' }));
+        return byRepo(rows.map((r) => ({ ...r, kind: KINDS[r.kind] ?? 'unknown' })), (r) => r.kind);
     }
 }

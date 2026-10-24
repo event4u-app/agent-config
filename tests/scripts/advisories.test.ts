@@ -915,6 +915,16 @@ describe('the project list lives in the shared registry (road-to-a-graph-that-fo
         expect(knownProjects(machine).sort()).toEqual([fs.realpathSync(a), fs.realpathSync(b)].sort());
     });
 
+    it('--all-projects covers both clones of one origin', () => {
+        const a = project('F1-fastify-hono', 'clone-a');
+        const b = project('F1-fastify-hono', 'clone-b');
+        execFileSync('git', ['-C', a, 'remote', 'add', 'origin', 'https://github.com/Acme/widget.git']);
+        execFileSync('git', ['-C', b, 'remote', 'add', 'origin', 'git@github.com:Acme/widget.git']);
+        fs.mkdirSync(machine, { recursive: true });
+        fs.writeFileSync(path.join(machine, 'projects.json'), JSON.stringify({ [a]: { fingerprint: 'fa' }, [b]: { fingerprint: 'fb' } }));
+        expect(knownProjects(machine).sort()).toEqual([fs.realpathSync(a), fs.realpathSync(b)].sort());
+    });
+
     it('a machine with only the old projects.json yields the same root list, migrated once', () => {
         const a = project('F1-fastify-hono', 'a');
         const b = project('F1-fastify-hono', 'b');

@@ -94,6 +94,42 @@ describe('a worktree build never replaces the main checkout (3.3)', () => {
     }, 60_000);
 });
 
+describe('two clones of one origin (3.3)', () => {
+    function clone(name: string, origin: string): string {
+        const r = path.join(tmp, name);
+        fs.mkdirSync(path.join(r, 'src'), { recursive: true });
+        fs.writeFileSync(path.join(r, 'package.json'), JSON.stringify({ name: 'widget', dependencies: { leftpad: '1.0.0' } }));
+        fs.writeFileSync(path.join(r, 'src', 'a.ts'), "import leftpad from 'leftpad';\nexport const a = leftpad;\n");
+        execFileSync('git', ['-C', r, 'init', '-q']);
+        execFileSync('git', ['-C', r, 'remote', 'add', 'origin', origin]);
+        execFileSync('git', ['-C', r, 'add', '-A']);
+        execFileSync('git', ['-C', r, '-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-q', '-m', 'a']);
+        return r;
+    }
+
+    it('built in turn keep two entries with their own roots, and the estate counts one project', async () => {
+        const a = clone('widget-a', 'https://github.com/Acme/widget.git');
+        const b = clone('widget-b', 'git@github.com:Acme/widget.git');
+        expect((await cg('projects', 'index', 'on')).rc).toBe(0);
+        expect((await cg('build', '--root', a)).rc).toBe(0);
+        expect((await cg('build', '--root', b)).rc).toBe(0);
+        expect((await cg('build', '--root', a)).rc).toBe(0);
+
+        const reg = readRegistry().projects;
+        expect(Object.values(reg).map((e) => e.root).sort()).toEqual([a, b].sort());
+        for (const root of [a, b]) {
+            const e = Object.values(reg).find((x) => x.root === root)!;
+            expect(e.graph_home).toBe(graphHome(root).dir);
+        }
+
+        const { rc, stdout } = await cg('estate', 'projects-using', 'leftpad', '--json');
+        expect(rc).toBe(0);
+        const rows = JSON.parse(stdout) as Array<{ roots: string[] }>;
+        expect(rows).toHaveLength(1);
+        expect(rows[0]!.roots.sort()).toEqual([a, b].sort());
+    }, 60_000);
+});
+
 describe('code-graph projects list|add|remove|prune', () => {
     it('add registers a path by hand and list shows it', async () => {
         const r = repo('handmade');

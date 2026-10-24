@@ -49,7 +49,7 @@ import { openEstate } from '../code_graph/estate_index.js';
 import { touchHome } from '../code_graph/graph_budget.js';
 import { resolveProjectRef } from '../code_graph/project_ref.js';
 import { repoIdentity } from '../code_graph/repo_identity.js';
-import { readRegistry } from '../_lib/project_registry.js';
+import { readRegistry, repoIdOf } from '../_lib/project_registry.js';
 import { resolvePath } from './path_util.js';
 import { isTestFile } from '../code_graph/build.js';
 import {
@@ -92,7 +92,7 @@ function projectsWithGraph(root: string): Array<{ id: string; name: string; root
     }
     const out: Array<{ id: string; name: string; root?: string }> = [];
     for (const [id, e] of Object.entries(reg.projects)) {
-        const same = id === self;
+        const same = repoIdOf(id) === self;
         if (!same && !reg.index) continue;
         if (e.root === real || !fs.existsSync(e.root) || !fs.existsSync(graphHome(e.root).cachePath)) continue;
         out.push(same ? { id, name: path.basename(e.root), root: e.root } : { id, name: path.basename(e.root) });

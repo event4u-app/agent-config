@@ -6,7 +6,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     emptyRegistry,
+    findProjects,
     readRegistry,
+    repoIdOf,
     recordProject,
     registryPath,
     writeRegistry,
@@ -40,11 +42,11 @@ describe('project registry (3.1)', () => {
         );
     });
 
-    it('records a project keyed by repo id and reads it back', () => {
+    it('records a project keyed by repo id and checkout and reads it back', () => {
         const r = repo('widget', 'https://x-access-token:SECRET@github.com/Acme/widget.git');
         const now = new Date('2026-10-24T10:00:00Z');
         const id = recordProject(r, { languages: ['typescript'], providers: ['express'], graph_commit: 'abc123' }, { dir, now });
-        expect(id).toMatch(/^[0-9a-f]{12}$/);
+        expect(id).toMatch(/^[0-9a-f]{12}-[0-9a-f]{8}$/);
         const reg = readRegistry({ dir });
         const e = reg.projects[id];
         expect(e).toMatchObject({
@@ -89,6 +91,46 @@ describe('project registry (3.1)', () => {
             expect(readRegistry({ dir })).toEqual(emptyRegistry());
         }
         expect(readRegistry({ dir: path.join(tmp, 'absent') })).toEqual(emptyRegistry());
+    });
+
+    it('gives two clones of one origin their own entries under one repo id', () => {
+        const a = repo('clone-a', 'https://github.com/Acme/widget.git');
+        const b = repo('clone-b', 'git@github.com:Acme/widget.git');
+        const ia = recordProject(a, { graph_commit: 'aaa', languages: ['php'] }, { dir });
+        const ib = recordProject(b, { graph_commit: 'bbb', languages: ['go'] }, { dir });
+        expect(ia).not.toBe(ib);
+        expect(repoIdOf(ia)).toBe(repoIdOf(ib));
+        recordProject(a, { graph_commit: 'aaa2' }, { dir });
+        const reg = readRegistry({ dir });
+        expect(Object.keys(reg.projects).sort()).toEqual([ia, ib].sort());
+        expect(reg.projects[ia]).toMatchObject({ root: a, graph_commit: 'aaa2', languages: ['php'] });
+        expect(reg.projects[ib]).toMatchObject({ root: b, graph_commit: 'bbb', languages: ['go'] });
+        expect(findProjects(reg, repoIdOf(ia)).map(([id]) => id).sort()).toEqual([ia, ib].sort());
+    });
+
+    it('still loads a registry keyed by a bare repo id, as that repo\'s main checkout', () => {
+        const r = repo('legacy', 'https://github.com/Acme/legacy.git');
+        const bare = repoIdOf(recordProject(r, {}, { dir }));
+        const reg = emptyRegistry();
+        reg.projects[bare] = {
+            root: r,
+            remote: 'github.com/Acme/legacy',
+            fingerprint: 'fp',
+            last_seen: '2026-10-01T00:00:00.000Z',
+            graph_home: null,
+            graph_commit: 'old',
+            languages: ['ruby'],
+            providers: [],
+            pinned: true,
+            homes: {},
+        };
+        writeRegistry(reg, { dir });
+        expect(readRegistry({ dir }).projects[bare]?.root).toBe(r);
+        expect(findProjects(readRegistry({ dir }), bare).map(([, e]) => e.root)).toEqual([r]);
+        const id = recordProject(r, { graph_commit: 'new' }, { dir });
+        const after = readRegistry({ dir });
+        expect(Object.keys(after.projects)).toEqual([id]);
+        expect(after.projects[id]).toMatchObject({ root: r, fingerprint: 'fp', graph_commit: 'new', languages: ['ruby'], pinned: true });
     });
 
     it('defaults to the index off and a 2048 MB budget', () => {
