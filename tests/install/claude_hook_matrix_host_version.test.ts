@@ -1,5 +1,6 @@
 // road-to-a-tick-the-shipped-path-earns 5.7: a native event the host accepts only
 // from a recorded version on is not written for a host known to be older.
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -37,13 +38,15 @@ describe('StopFailure binding gated on the oldest host version recorded as accep
         }
     });
 
-    it('keeps it for the static plugin carrier, which has no host to ask', () => {
-        expect(Object.keys(build_claude_hook_matrix(MANIFEST))).toContain('StopFailure');
+    it('withholds it from the static plugin carrier, which has no host to ask', () => {
+        expect(Object.keys(build_claude_hook_matrix(MANIFEST))).not.toContain('StopFailure');
+        const plugin = JSON.parse(fs.readFileSync(path.resolve(HERE, '..', '..', 'hooks', 'hooks.json'), 'utf8'));
+        expect(Object.keys(plugin.hooks)).not.toContain('StopFailure');
     });
 
     it('leaves every ungated event alone below the gate', () => {
         const below = Object.keys(build_claude_hook_matrix(MANIFEST, { hostVersion: '2.1.0' }));
-        const all = Object.keys(build_claude_hook_matrix(MANIFEST)).filter((k) => !(k in min_host_versions(MANIFEST)));
+        const all = Object.keys(build_claude_hook_matrix(MANIFEST, { hostVersion: '9.9.9' })).filter((k) => !(k in min_host_versions(MANIFEST)));
         expect(below.sort()).toEqual(all.sort());
     });
 
@@ -56,7 +59,6 @@ describe('StopFailure binding gated on the oldest host version recorded as accep
 
 describe('a withheld event loses the managed entry an earlier install wrote', () => {
     it('strips only the managed group and keeps the user group', async () => {
-        const fs = await import('node:fs');
         const os = await import('node:os');
         const { ensure_managed_hooks } = await import('../../src/scripts/_lib/claude_settings_hooks.js');
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hook-gate-'));

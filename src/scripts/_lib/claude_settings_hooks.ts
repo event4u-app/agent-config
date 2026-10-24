@@ -122,12 +122,13 @@ function _gates(manifest: Record<string, unknown>): Record<string, string> {
 }
 
 /**
- * `hostVersion` is the installed host's `--version` line, passed by a carrier
- * that can ask the host. A gated event is written only when that version parses
- * and is at least the recorded one: an older host, or one whose version could
- * not be read (`null`), does not get it, because nothing here shows an older
- * host accepts an unknown event key. Omitted entirely — the static plugin
- * `hooks.json`, which has no host to ask — every gated event is kept.
+ * `hostVersion` is the installed host's `--version` line. A gated event is
+ * written only when that version parses and is at least the recorded one. An
+ * older host, an unreadable version (`null`) and a carrier that cannot ask (the
+ * static plugin `hooks.json`, which passes nothing) do not get it: nothing here
+ * shows an older host accepts an unknown event key, and the plugin runs only
+ * beside a global install whose settings carrier writes the event when the host
+ * is new enough.
  */
 export function build_claude_hook_matrix(
     manifest_path: string,
@@ -154,7 +155,7 @@ export function build_claude_hook_matrix(
     for (const [native, ac_raw] of Object.entries(aliases)) {
         const ac_event = String(ac_raw);
         const need = parse_host_version(gates[native]);
-        if (need !== null && opts.hostVersion !== undefined && (have === null || _below(have, need))) continue;
+        if (need !== null && (have === null || _below(have, need))) continue;
         const concerns = claude_events[ac_event];
         if (!concerns || (Array.isArray(concerns) && concerns.length === 0)) continue;
         // Only package-owned dispatchers are trusted (17.0.0 finding

@@ -121,6 +121,22 @@ describe('subagent-constraints concern', () => {
         expect(emoji.isWellFormed()).toBe(true);
     });
 
+    it('holds the ceiling when the header and inventory alone would not fit', () => {
+        let dir = root;
+        for (let i = 0; i < 30; i++) {
+            dir = path.join(dir, `longish-dir-name-${i}`);
+            fs.mkdirSync(dir);
+            fs.writeFileSync(path.join(dir, 'CLAUDE.md'), `rule ${i}\n`);
+        }
+        const deep = instructionDigest(dir) as string;
+        expect(Buffer.byteLength(replyLine(deep), 'utf-8')).toBeLessThanOrEqual(EMISSION_MAX_BYTES);
+        expect(deep).toMatch(/\d+ nearer the root not named/);
+        expect(deep).toContain('rule 29');
+        for (const cap of [200, 400, 800]) {
+            expect(Buffer.byteLength(replyLine(instructionDigest(dir, cap) as string), 'utf-8')).toBeLessThanOrEqual(cap);
+        }
+    });
+
     it('reaches the subagent through the real dispatcher on SubagentStart', () => {
         const run = (agent: string): { code: number; out: string } => {
             const r = spawnSync(

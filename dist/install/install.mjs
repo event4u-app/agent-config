@@ -11627,7 +11627,7 @@ function build_claude_hook_matrix(manifest_path2, opts = {}) {
   for (const [native, ac_raw] of Object.entries(aliases)) {
     const ac_event = String(ac_raw);
     const need = parse_host_version(gates[native]);
-    if (need !== null && opts.hostVersion !== void 0 && (have === null || _below(have, need))) continue;
+    if (need !== null && (have === null || _below(have, need))) continue;
     const concerns = claude_events[ac_event];
     if (!concerns || Array.isArray(concerns) && concerns.length === 0) continue;
     const dispatchArgs = `--platform claude --event ${ac_event} --native-event ${native} --project-dir "$CLAUDE_PROJECT_DIR" --min-version ${String(hook_spec)}`;

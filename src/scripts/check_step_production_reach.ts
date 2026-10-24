@@ -131,9 +131,24 @@ export const MIN_EXEMPT_REASON = 12;
  * phrase inside a sentence is talk about the marker, not the marker.
  */
 export function reachExemption(block: string): string | undefined {
-    const text = block.replace(/^\s*(```|~~~)[\s\S]*?^\s*\1[^\n]*$/gm, '').replace(/`[^`\n]*`/g, '');
-    const m = /^[ \t]*reach exempt:[ \t]*([^\n]*)$/im.exec(text);
-    return m === null ? undefined : (m[1] as string).trim();
+    let fence: { char: string; len: number } | null = null;
+    for (const line of block.split('\n')) {
+        const mark = /^\s*(`{3,}|~{3,})(.*)$/.exec(line);
+        if (fence !== null) {
+            // A closer is the same character, at least as long, and nothing after it.
+            if (mark !== null && mark[1]?.[0] === fence.char && (mark[1] as string).length >= fence.len && (mark[2] as string).trim() === '') {
+                fence = null;
+            }
+            continue;
+        }
+        if (mark !== null && !(mark[1]?.[0] === '`' && (mark[2] as string).includes('`'))) {
+            fence = { char: (mark[1] as string)[0] as string, len: (mark[1] as string).length };
+            continue;
+        }
+        const m = /^[ \t]*reach exempt:[ \t]*(.*)$/i.exec(line);
+        if (m !== null) return (m[1] as string).replace(/`[^`]*`/g, '').trim();
+    }
+    return undefined;
 }
 
 /** The unreached public symbols this block's tests take from its subjects. */
@@ -239,7 +254,12 @@ function selfTest(): number {
         '- [x] **1.7 x** `src/lib.ts`, so reach exempt: is not used here\n  verify: `tests/lib.test.ts`',
         '- [x] **1.7 x** `src/lib.ts`\n  `reach exempt: quoted, not declared`\n  verify: `tests/lib.test.ts`',
         '- [x] **1.7 x** `src/lib.ts`\n  ```\n  reach exempt: inside a fence, not declared\n  ```\n  verify: `tests/lib.test.ts`',
+        '- [x] **1.7 x** `src/lib.ts`\n  ````md\n  ```\n  reach exempt: still inside the four-tick fence\n  ````\n  verify: `tests/lib.test.ts`',
+        '- [x] **1.7 x** `src/lib.ts`\n  ~~~\n  reach exempt: inside an unclosed fence, not declared\n  verify: `tests/lib.test.ts`',
+        '- [x] **1.7 x** `src/lib.ts`\n  ```\n  ``` not a closer\n  reach exempt: still fenced\n  ```\n  verify: `tests/lib.test.ts`',
     ];
+    const afterFence = '- [x] **1.8 x** `src/lib.ts`\n  ```\n  code\n  `````\n  reach exempt: declared after a longer closer\n  verify: `tests/lib.test.ts`';
+    if (checkStep(tree, reach, 'r.md', '1.8', afterFence) !== null) failures.push('a marker after a closed fence was not honoured');
     for (const t of talk) if (checkStep(tree, reach, 'r.md', '1.7', t) === null) failures.push(`prose or code exempted a step: ${t}`);
     if (checkStep(tree, reach, 'r.md', '1.3', '- [x] **1.3 x** built, not wired') === null) {
         failures.push('a ticked built-not-wired step did not red');

@@ -41,6 +41,10 @@ const REPLY_OVERHEAD = Buffer.byteLength(`${JSON.stringify({ additional_context:
 const CUT = '\n[cut here]';
 /** A file with less room than this left is listed as omitted rather than shown as a stub. */
 const MIN_SHOWN = 120;
+/** Escaped-byte bounds on the fixed part, so bodies keep most of the room. */
+const ROOT_MAX = 400;
+const LABEL_MAX = 160;
+const INVENTORY_MAX = 1_200;
 
 type Obj = Record<string, unknown>;
 
@@ -139,15 +143,23 @@ export function instructionDigest(projectDir: string, maxBytes: number = EMISSIO
                 continue;
             }
             const body = text.replace(/<!--[\s\S]*?-->/g, '').replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-            if (body !== '') found.push({ label: path.relative(root, path.join(dir, rel)) || rel, body });
+            const label = fitEscaped(path.relative(root, path.join(dir, rel)) || rel, LABEL_MAX);
+            if (body !== '') found.push({ label, body });
         }
     }
     if (found.length === 0) return null;
     const head =
         'Project instructions this subagent was started without (its definition sets omitClaudeMd). ' +
-        `They bind this subagent as if loaded. Paths are relative to ${root}.`;
-    const inventory = (status: readonly string[]): string =>
-        `Files, nearest last: ${found.map((f, i) => `${f.label} (${status[i]})`).join(', ')}.`;
+        `They bind this subagent as if loaded. Paths are relative to ${fitEscaped(root, ROOT_MAX)}.`;
+    // Nearest files are listed by name first; the rest are counted when the names would not fit.
+    const inventory = (status: readonly string[]): string => {
+        const named = found.map((f, i) => `${f.label} (${status[i]})`);
+        let from = 0;
+        const render = (): string =>
+            `Files, nearest last: ${from > 0 ? `${from} nearer the root not named, ` : ''}${named.slice(from).join(', ')}.`;
+        while (from < named.length - 1 && escBytes(render()) > INVENTORY_MAX) from += 1;
+        return render();
+    };
     const status: string[] = found.map(() => 'omitted');
     const shown: string[] = found.map(() => '');
     let room = maxBytes - REPLY_OVERHEAD - escBytes(`${head}\n${inventory(status)}`);
@@ -165,7 +177,8 @@ export function instructionDigest(projectDir: string, maxBytes: number = EMISSIO
         room -= frame + escBytes(shown[i] as string);
     }
     const sections = found.map((f, i) => (status[i] === 'omitted' ? '' : `\n\n--- ${f.label} ---\n${shown[i]}`));
-    return `${head}\n${inventory(status)}${sections.join('')}`;
+    // The serialized line is the final authority: whatever the parts measured, the reply never exceeds maxBytes.
+    return fitEscaped(`${head}\n${inventory(status)}${sections.join('')}`, maxBytes - REPLY_OVERHEAD);
 }
 
 /** The reply line for one digest. */
