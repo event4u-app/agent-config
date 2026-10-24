@@ -405,10 +405,16 @@ read cannot leak through any later bug.
       path read the engine chunk's normalised table; the council's `replace` and its
       final `check` (`ai_council/council_egress.ts`) do too. `LATIN_TWIN` moved from
       `confusables.ts` into `egress_normalize.ts` as a hex-encoded pair of strings, so
-      the chunk does not carry that module's script regexes: the engine chunk measures
-      31,907 B under its 32,000 ceiling, no raise. Four tests in
+      the chunk does not carry that module's script regexes. Four tests in
       `egress_normalize.test.ts` › `the senders read through the normalisation` fail
-      with the three call sites reverted and pass with them.
+      with the three call sites reverted and pass with them. A council seat found in
+      round 1 of the ratification review that a rule's extent reader still ran on the
+      original text, so a key block with a zero-width character in both markers was
+      refused by `replaceValues` and left its body behind in the council's masking;
+      `detectWithExtent` now runs the reader on the normalised text and maps its end
+      back (two tests › `a key block whose markers are disguised leaves whole`, red
+      before, green after). The engine chunk measures 32,305 B; its ceiling is raised
+      32,000 → 33,000 with a `raise_log` entry.
 
 - [x] **2.6 A mutation suite kills the invariants.** Disabling the IBAN checksum, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/egress-mutations/iban-checksum-disabled.json -->
       changing class precedence, logging a raw value or letting a credential

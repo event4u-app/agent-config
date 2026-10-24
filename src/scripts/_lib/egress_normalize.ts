@@ -57,15 +57,41 @@ export function normalizeForDetection(text: string): Normalized {
     return { text: out, origin, hidden, folded };
 }
 
+export interface NormalizedDetection {
+    readonly spans: EgressSpan[];
+    /**
+     * An extent reader such as a rule's `through`, applied to the text the spans
+     * were found in, with its end in original offsets. A disguised END marker is
+     * then seen by the reader exactly as the disguised BEGIN was by the rule.
+     */
+    end<S extends EgressSpan>(span: S, read: (text: string, span: S) => number | null): number | null;
+}
+
 /**
  * `detect`, run on the normalised text with spans in original offsets. With no
  * invisible or confusable character the result is `detect(text)` exactly.
  */
-export function detectNormalized(text: string, rules: readonly EgressRule[] = EGRESS_RULES): EgressSpan[] {
+export function detectWithExtent(text: string, rules: readonly EgressRule[] = EGRESS_RULES): NormalizedDetection {
     const n = normalizeForDetection(text);
-    if (n.hidden === 0 && n.folded === 0) return detect(text, rules);
-    return detect(n.text, rules).map((s) => {
-        const last = n.origin[s.end - 1] as number;
-        return { ...s, start: n.origin[s.start] as number, end: last + ((text.codePointAt(last) as number) > 0xffff ? 2 : 1) };
-    });
+    if (n.hidden === 0 && n.folded === 0) return { spans: detect(text, rules), end: (s, read) => read(text, s) };
+    const back = (i: number): number => {
+        const o = n.origin[i - 1] as number;
+        return o + ((text.codePointAt(o) as number) > 0xffff ? 2 : 1);
+    };
+    const fwd = (o: number): number => {
+        let i = 0;
+        while (i < n.origin.length && (n.origin[i] as number) < o) i += 1;
+        return i;
+    };
+    return {
+        spans: detect(n.text, rules).map((s) => ({ ...s, start: n.origin[s.start] as number, end: back(s.end) })),
+        end: (s, read) => {
+            const e = read(n.text, { ...s, start: fwd(s.start), end: fwd(s.end) });
+            return e === null ? null : back(e);
+        },
+    };
+}
+
+export function detectNormalized(text: string, rules: readonly EgressRule[] = EGRESS_RULES): EgressSpan[] {
+    return detectWithExtent(text, rules).spans;
 }

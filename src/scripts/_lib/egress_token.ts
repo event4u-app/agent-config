@@ -5,7 +5,7 @@
 
 import { createHmac, randomBytes } from 'node:crypto';
 
-import { detectNormalized } from './egress_normalize.js';
+import { detectWithExtent, type NormalizedDetection } from './egress_normalize.js';
 import { EGRESS_RULES, type EgressClass, type EgressSpan, replaceSpans } from './egress_rules.js';
 
 export const TOKEN_FP_LENGTH = 6;
@@ -210,12 +210,12 @@ const RULE_BY_ID = new Map(EGRESS_RULES.map((r) => [r.rule, r]));
 const CLASS_RANK: Readonly<Record<EgressClass, number>> = { credential: 1, identifier: 0 };
 
 /** The bytes each detection obliges a replacement to remove; overlapping extents merge. */
-function replacementSpans(text: string, detected: readonly EgressSpan[]): EgressSpan[] {
+function replacementSpans(detected: readonly EgressSpan[], at: NormalizedDetection): EgressSpan[] {
     const extents = detected.map((s) => {
         const policy = RULE_BY_ID.get(s.rule)?.replacement;
         if (policy === undefined) throw new EgressRefusedError(s.rule);
         if (policy === 'detection') return s;
-        const end = policy.through(text, s);
+        const end = at.end(s, policy.through);
         if (end === null || end < s.end) throw new EgressRefusedError(s.rule);
         return { ...s, end };
     });
@@ -244,8 +244,9 @@ function replacementSpans(text: string, detected: readonly EgressSpan[]): Egress
  */
 export function replaceValues(text: string, scope: TokenScope): string {
     const owned = parseTokens(text).filter((t) => scope.owns(text.slice(t.start, t.end)));
-    const detected = detectNormalized(text).filter((s) => !owned.some((t) => t.start <= s.start && s.end <= t.end));
-    const spans = replacementSpans(text, detected);
+    const at = detectWithExtent(text);
+    const detected = at.spans.filter((s) => !owned.some((t) => t.start <= s.start && s.end <= t.end));
+    const spans = replacementSpans(detected, at);
     // Mint in text order first: replaceSpans substitutes right to left, and minting
     // inside its callback would number the last value 1.
     const tokens = spans.map((s) => scope.mint(s.type, s.class, text.slice(s.start, s.end)));

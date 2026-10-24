@@ -3,7 +3,7 @@
 // (`egress_engine.ts`, D9), so the stage keeps the field walk and the chunk
 // keeps everything that reads a rule.
 
-import { detectNormalized } from './egress_normalize.js';
+import { detectWithExtent } from './egress_normalize.js';
 import { EGRESS_RULES, type EgressClass } from './egress_rules.js';
 import { EgressRefusedError, replaceValues, type TokenScope } from './egress_token.js';
 
@@ -20,10 +20,11 @@ export interface TextTally {
 export function tallyText(text: string): TextTally {
     const found: Array<{ class: EgressClass; type: string }> = [];
     const refused: string[] = [];
-    for (const span of detectNormalized(text)) {
+    const at = detectWithExtent(text);
+    for (const span of at.spans) {
         const policy = RULE_BY_ID.get(span.rule)?.replacement;
         if (policy !== undefined && policy !== 'detection') {
-            const end = policy.through(text, span);
+            const end = at.end(span, policy.through);
             if (end === null || end < span.end) {
                 refused.push(span.rule);
                 continue;

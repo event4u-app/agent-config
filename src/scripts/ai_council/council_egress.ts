@@ -17,7 +17,7 @@
  * decision D8, which this module does not take.
  */
 
-import { detectNormalized } from '../_lib/egress_normalize.js';
+import { detectNormalized, detectWithExtent } from '../_lib/egress_normalize.js';
 import {
     EGRESS_RULES,
     type EgressRule,
@@ -86,9 +86,10 @@ export class CouncilEgress {
      * proven is replaced through the nearest END marker, as the line masks did.
      */
     replace(text: string): string {
-        const spans = detectNormalized(text, BUNDLE_RULES)
+        const at = detectWithExtent(text, BUNDLE_RULES);
+        const spans = at.spans
             .filter((s) => s.class === 'credential' || this.opts.identifiers)
-            .map((s) => ({ ...s, end: maskingEnd(text, s) }));
+            .map((s) => ({ ...s, end: at.end(s, maskingEnd) ?? s.end }));
         spans.sort((a, b) => a.start - b.start);
         const merged: EgressSpan[] = [];
         for (const s of spans) {

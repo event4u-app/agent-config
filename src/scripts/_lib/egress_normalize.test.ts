@@ -89,6 +89,29 @@ describe('the senders read through the normalisation', () => {
     });
 });
 
+describe('a key block whose markers are disguised leaves whole', () => {
+    // Built at run time: an invisible character inside BEGIN and inside END, and a
+    // body no rule matches on its own, so only the block extent can remove it.
+    const ZW = String.fromCodePoint(0x200b);
+    const BODY = ['MIIEvQIBADANBgkqhkiG9w0BAQEFAASC', 'BKcwggSjAgEAAoIBAQC7'].join('');
+    const block = (label: string): string =>
+        [`-----BE${ZW}GIN ${label}PRIVATE KEY-----`, BODY, `-----E${ZW}ND ${label}PRIVATE KEY-----`].join('\n');
+    const text = `before\n${block('')}\nafter`;
+
+    it('replaceValues removes the body through the disguised END marker', () => {
+        const out = replaceValues(text, new TokenScope());
+        expect(out.includes(BODY)).toBe(false);
+        expect(out.startsWith('before\n') && out.endsWith('\nafter')).toBe(true);
+    });
+
+    it('the council masks the body too, and nothing of the block reaches the final check', () => {
+        const egress = new CouncilEgress({ identifiers: false });
+        const out = egress.replace(text);
+        expect(out.includes(BODY)).toBe(false);
+        expect(egress.check(out)).toBe(null);
+    });
+});
+
 describe('evasion corpus — counted misses per mutation', () => {
     const EMAIL = j('jane.doe', '@acme-kunde.de');
     const IBAN = j('DE89', '3704', '0044', '0532', '0130', '00');
