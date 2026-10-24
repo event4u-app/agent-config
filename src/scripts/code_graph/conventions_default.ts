@@ -19,6 +19,9 @@ import type { SourceFile } from './build.js';
 import type { CodeEdge, CodeNode, ResolvedVia } from './types.js';
 import { EXT_LANG, MAX_FILE_BYTES } from './types.js';
 
+/** The text right before a JS/TS module specifier: `from`, `import`, `import(`, `require(`. */
+const IMPORT_POSITION = /(?:\bfrom|\bimport|\bimport\s*\(|\brequire\s*\()\s*$/;
+
 export type DefaultMechanism = 'literal-path' | 'literal-dotted' | 'fs-route';
 
 /**
@@ -171,10 +174,15 @@ export function conventionsDefault(input: DefaultInput): { nodes: CodeNode[]; ed
         const dir = path.posix.dirname(f.path);
         const lang = EXT_LANG[path.posix.extname(f.path).toLowerCase()];
         const infer = lang === 'php' ? ['.php'] : lang === 'python' ? ['.py'] : ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.vue'];
+        const jsLike = lang === 'typescript' || lang === 'javascript';
         if (on['literal-path']) {
             // Single and double quotes only: a backtick span is usually a mention in a comment.
             for (const m of f.source.matchAll(/(['"])([^'"`\s\\${}()<>|,;]{3,200})\1/g)) {
                 const lit = m[2] as string;
+                // A module specifier belongs to the import tier: resolved, it is an
+                // `imports` edge already; unresolved, it is an external module — a
+                // read in neither case.
+                if (jsLike && IMPORT_POSITION.test(f.source.slice(Math.max(0, (m.index as number) - 40), m.index as number))) continue;
                 if (lit.includes('://') || lit.startsWith('/') || lit.includes('*') || lit.endsWith('/')) continue;
                 const hasExt = /\.[A-Za-z0-9]{1,10}$/.test(path.posix.basename(lit));
                 if (!lit.includes('/') && !hasExt) continue;

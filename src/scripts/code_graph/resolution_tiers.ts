@@ -108,9 +108,10 @@ function isRecord(v: unknown): v is Record<string, unknown> {
     return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
-/** Normalise a repo-relative path fragment: no leading `./`, no trailing `/`. */
+/** Normalise a repo-relative path fragment: no leading `./`, no trailing `/`, and `.` is the root (`''`). */
 function normalizeFragment(p: string): string {
-    return p.replace(/^\.\//, '').replace(/\/+$/, '');
+    const s = p.replace(/^(\.\/)+/, '').replace(/\/+$/, '');
+    return s === '.' ? '' : s;
 }
 
 /**
@@ -119,14 +120,19 @@ function normalizeFragment(p: string): string {
  * `baseUrl` is resolved relative to the tsconfig's own directory, which for a
  * root tsconfig is the repo root — so `baseUrl: "./src"` plus `"@shared/*":
  * ["shared/*"]` yields the repo-relative prefix `src/shared/`.
+ *
+ * A `baseUrl` also resolves every other non-relative specifier against
+ * itself, which TypeScript does after the `paths` entries: `baseUrl: "."`
+ * makes `components/cart` the file `components/cart.tsx`. That fallback is the
+ * last rule, an empty wildcard prefix, so a `paths` entry always wins.
  */
 export function aliasRulesFrom(tsconfig: unknown): AliasRule[] {
     if (!isRecord(tsconfig)) return [];
     const co = tsconfig['compilerOptions'];
     if (!isRecord(co)) return [];
-    const paths = co['paths'];
-    if (!isRecord(paths)) return [];
-    const baseUrl = typeof co['baseUrl'] === 'string' ? normalizeFragment(co['baseUrl']) : '';
+    const paths = isRecord(co['paths']) ? co['paths'] : {};
+    const hasBaseUrl = typeof co['baseUrl'] === 'string';
+    const baseUrl = hasBaseUrl ? normalizeFragment(co['baseUrl'] as string) : '';
     const rules: AliasRule[] = [];
     for (const [pattern, valueRaw] of Object.entries(paths)) {
         if (!Array.isArray(valueRaw)) continue;
@@ -136,7 +142,8 @@ export function aliasRulesFrom(tsconfig: unknown): AliasRule[] {
         for (const v of valueRaw) {
             if (typeof v !== 'string') continue;
             const tgt = wildcard ? (v.endsWith('*') ? v.slice(0, -1) : v) : v;
-            const joined = baseUrl ? `${baseUrl}/${normalizeFragment(tgt)}` : normalizeFragment(tgt);
+            const frag = normalizeFragment(tgt);
+            const joined = baseUrl && frag ? `${baseUrl}/${frag}` : baseUrl || frag;
             targets.push(joined.replace(/\/+$/, ''));
         }
         if (targets.length) rules.push({ prefix, wildcard, targets });
@@ -144,6 +151,7 @@ export function aliasRulesFrom(tsconfig: unknown): AliasRule[] {
     // Longest prefix first: `@shared/deep/` must beat `@shared/` when both are
     // declared, which is TypeScript's own rule and not a preference.
     rules.sort((a, b) => b.prefix.length - a.prefix.length);
+    if (hasBaseUrl) rules.push({ prefix: '', wildcard: true, targets: [baseUrl] });
     return rules;
 }
 
@@ -196,9 +204,13 @@ export function resolveAlias(spec: string, config: ResolutionConfig, fileIds: Re
     for (const rule of config.aliases) {
         if (rule.wildcard) {
             if (!spec.startsWith(rule.prefix)) continue;
+            // The baseUrl fallback never claims a relative or absolute specifier.
+            if (rule.prefix === '' && /^[./]/.test(spec)) continue;
             const rest = spec.slice(rule.prefix.length);
             for (const t of rule.targets) {
-                const hit = firstExisting(rest ? `${t}/${rest}` : t, fileIds);
+                const candidate = rest && t ? `${t}/${rest}` : rest || t;
+                if (!candidate) continue;
+                const hit = firstExisting(candidate, fileIds);
                 if (hit) return hit;
             }
         } else {
