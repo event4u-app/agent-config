@@ -9,6 +9,8 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
+import { loadGraph } from '../../src/scripts/code_graph/query.js';
 import { lineageDir, mergeIntoLedger, PIN_UNKNOWN } from '../../src/scripts/_lib/lineage_ledger.js';
 import { gaps, latestDecisions, lineageOf, readDecisions } from '../../src/scripts/_lib/lineage_query.js';
 import { encrypt } from '../../src/scripts/_lib/link_crypto.js';
@@ -62,9 +64,32 @@ describe('lineage of', () => {
         const root = repo(ROWS);
         const [moved] = lineageOf(root, 'moved-mechanism');
         expect(moved?.realised).toEqual([
-            { path: 'src/kept.ts', status: 'ok' },
-            { path: 'src/moved-away.ts', status: 'broken' },
+            { path: 'src/kept.ts', status: 'ok', in_graph: null },
+            { path: 'src/moved-away.ts', status: 'broken', in_graph: null },
         ]);
+    });
+
+    it('resolves through the code graph when one is built, and still trusts the disk for breakage', async () => {
+        const root = repo(
+            [{ mechanism_id: 'docs-mechanism', verdict: 'adapt', realised_in: ['docs/guide.md', 'src/kept.ts', 'src/after.ts', 'src/gone.ts'], decided_at: '2026-08-01' }],
+            ['docs/guide.md', 'src/kept.ts', 'src/gone.ts'],
+        );
+        fs.writeFileSync(path.join(root, 'src', 'kept.ts'), 'export const kept = 1;\n');
+        fs.writeFileSync(path.join(root, 'src', 'gone.ts'), 'export const gone = 1;\n');
+        const graphPath = path.join(root, 'graph.json');
+        await buildFromRepo(root, graphPath);
+        fs.rmSync(path.join(root, 'src', 'gone.ts'));
+        fs.writeFileSync(path.join(root, 'src', 'after.ts'), 'export const after = 1;\n');
+        const [e] = lineageOf(root, 'docs-mechanism', loadGraph(graphPath).byId);
+        expect(e?.realised).toEqual([
+            { path: 'docs/guide.md', status: 'ok', in_graph: true },
+            { path: 'src/kept.ts', status: 'ok', in_graph: true },
+            { path: 'src/after.ts', status: 'ok', in_graph: false },
+            { path: 'src/gone.ts', status: 'broken', in_graph: true },
+        ]);
+        const res = await run(['of', 'docs-mechanism', '--root', root, '--graph', graphPath], { EVENT4U_CONFIG_HOME: tmp('lineage-query-home-') });
+        expect(res.out).toMatch(/src\/after\.ts\s+ok\s+graph: not indexed/);
+        expect(res.out).toMatch(/src\/gone\.ts\s+BROKEN\s+graph: indexed/);
     });
 
     it('answers by path as well as by id, with the line suffix stripped', () => {

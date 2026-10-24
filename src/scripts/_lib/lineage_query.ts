@@ -33,7 +33,10 @@ export function latestDecisions(rows: readonly MechanismRecord[]): Map<string, M
 
 export interface RealisedEdge {
     readonly path: string;
+    /** `broken` when the file is not in the working tree — moved or deleted. */
     readonly status: 'ok' | 'broken';
+    /** Whether the code graph has the file as a node; null when no graph was available. */
+    readonly in_graph: boolean | null;
 }
 
 export interface LineageEntry {
@@ -46,10 +49,11 @@ export interface LineageEntry {
 
 /**
  * The lineage of one mechanism id, or of every mechanism realised in one path. Each
- * `realised_in` is resolved against the working tree, so a moved or deleted file is a
- * broken edge rather than a silent stale claim.
+ * `realised_in` is resolved against the working tree — a moved or deleted file is a broken
+ * edge rather than a silent stale claim — and, given the code graph's node lookup, against
+ * the graph too, so an edge the graph has not indexed yet is visible as such.
  */
-export function lineageOf(root: string, query: string): LineageEntry[] {
+export function lineageOf(root: string, query: string, graph: { has(id: string): boolean } | null = null): LineageEntry[] {
     const rows = readDecisions(root);
     const latest = latestDecisions(rows);
     const q = stripLineSuffix(query.replace(/^\.\//, ''));
@@ -64,7 +68,11 @@ export function lineageOf(root: string, query: string): LineageEntry[] {
             decided_at: r.decided_at,
             realised: (r.realised_in ?? []).map((p) => {
                 const bare = stripLineSuffix(p);
-                return { path: bare, status: fs.existsSync(path.join(root, bare)) ? ('ok' as const) : ('broken' as const) };
+                return {
+                    path: bare,
+                    status: fs.existsSync(path.join(root, bare)) ? ('ok' as const) : ('broken' as const),
+                    in_graph: graph === null ? null : graph.has(bare),
+                };
             }),
             decisions: rows.filter((x) => x.mechanism_id === r.mechanism_id).length,
         }));

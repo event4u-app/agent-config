@@ -9,6 +9,7 @@
  * Exit codes: 0 ok · 1 findings · 2 usage or refused.
  */
 
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { checkLedger, hasLedger, LineageError, lineageDir, mergeIntoLedger, readLedger } from '../_lib/lineage_ledger.js';
@@ -80,12 +81,21 @@ function cmdImport(io: Io): number {
     return refused.length > 0 ? 1 : 0;
 }
 
-function cmdOf(io: Io, query: string | undefined): number {
+/** The graph's node lookup for `root`, or null when no graph has been built. */
+async function graphLookup(io: Io, explicit: string | undefined): Promise<{ has(id: string): boolean } | null> {
+    // Dynamic: cli.ts dispatches into this module, and the default cache path is its to own.
+    const graphPath = explicit ?? (await import('./cli.js')).cacheFor(io.root);
+    if (!fs.existsSync(graphPath)) return null;
+    const { loadGraph } = await import('./query.js');
+    return loadGraph(graphPath).byId;
+}
+
+async function cmdOf(io: Io, query: string | undefined, graphFlag: string | undefined): Promise<number> {
     if (query === undefined || query.startsWith('--')) {
-        io.err('usage: code-graph lineage of <mechanism-id|path> [--root P]\n');
+        io.err('usage: code-graph lineage of <mechanism-id|path> [--root P] [--graph P]\n');
         return 2;
     }
-    const entries = lineageOf(io.root, query);
+    const entries = lineageOf(io.root, query, await graphLookup(io, graphFlag));
     if (entries.length === 0) {
         io.err(`code-graph lineage of: no mechanism matches ${query} in provenance/mechanisms.jsonl\n`);
         return 1;
@@ -95,7 +105,8 @@ function cmdOf(io: Io, query: string | undefined): number {
         io.out(`${e.mechanism_id}  ${e.verdict}  ${e.decided_at}  (${String(e.decisions)} decision(s))\n`);
         for (const r of e.realised) {
             if (r.status === 'broken') broken += 1;
-            io.out(`  realised_in ${r.path}  ${r.status === 'ok' ? 'ok' : 'BROKEN'}\n`);
+            const g = r.in_graph === null ? 'no graph built' : r.in_graph ? 'indexed' : 'not indexed';
+            io.out(`  realised_in ${r.path}  ${r.status === 'ok' ? 'ok' : 'BROKEN'}  graph: ${g}\n`);
         }
     }
     if (broken > 0) io.err(`code-graph lineage of: ${String(broken)} broken edge(s) — the file moved or is gone\n`);
@@ -161,7 +172,7 @@ export async function main(argv: readonly string[], deps: LineageDeps = {}): Pro
     try {
         if (verb === 'check') return cmdCheck(io);
         if (verb === 'import') return cmdImport(io);
-        if (verb === 'of') return cmdOf(io, argv[1]);
+        if (verb === 'of') return await cmdOf(io, argv[1], flag(argv, '--graph'));
         if (verb === 'gaps') return cmdGaps(io);
         if (verb === 'rejected') return cmdRejected(io);
         if (verb === 'from') return cmdFrom(io, argv[1]);
