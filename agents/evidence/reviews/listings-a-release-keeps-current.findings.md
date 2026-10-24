@@ -1,14 +1,14 @@
 # Findings: listings-a-release-keeps-current
-<!-- completion-review: v1 | reviewed: 2026-10-24 | scope: fa07170cac2f1acc86ce9ec43be19a2804ef6f773283c9e6ea86a875fd1dad83 | diff: 6aae0444e7ff3481b986f4a5a4e27c8b54fa744c | reviewer: r2-fresh-subagent-listings-a-release-keeps-current | prompt_hash: c0df3cd4ebd804322755bdc701d3501fec1c13e5041b8400c36ef9f322a21557 | round: 1 -->
+<!-- completion-review: v1 | reviewed: 2026-10-24 | scope: 02900ea383298afdfe43edad33797ede7b2fc4816318566fd88e724652765984 | diff: 53551c7d1be5fcefb30e6996bd0d8c4846ae6314 | reviewer: r2-fresh-subagent-listings-a-release-keeps-current | prompt_hash: c0df3cd4ebd804322755bdc701d3501fec1c13e5041b8400c36ef9f322a21557 | round: 1 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-listings-a-release-keeps-current"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-24 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 6aae0444e7ff3481b986f4a5a4e27c8b54fa744c
-  scope_hash: fa07170cac2f1acc86ce9ec43be19a2804ef6f773283c9e6ea86a875fd1dad83
+  diff_sha: 53551c7d1be5fcefb30e6996bd0d8c4846ae6314
+  scope_hash: 02900ea383298afdfe43edad33797ede7b2fc4816318566fd88e724652765984
   roadmap: agents/roadmaps/archive/road-to-listings-a-release-keeps-current.md
-  roadmap_hash: 6e114258585ada807633f3e3e8dda921de80af476b480954a8c590bd34ac200d
+  roadmap_hash: 39ddd9a959cb738f2122d5e417c489d02113446c3003af6eab6e94d9baeb515e
   ac_hash: 6fd6074c5c7b55d6f01cf355d235bad33786a8f84deb8e23364052fe14bdf99e
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
