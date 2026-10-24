@@ -26,7 +26,7 @@ estate_growth_exempt: "two open blockers (tier-b-go, topic-push-secret) that alr
 # Road to listings the owner submits
 
 > **Source:** `agents/tmp.old/inbox-2026-10-ad/`, through the parent
-> [`road-to-listings-a-release-keeps-current`](../road-to-listings-a-release-keeps-current.md),
+> [`road-to-listings-a-release-keeps-current`](../archive/road-to-listings-a-release-keeps-current.md),
 > which ships the payload, the CI publish, the manifests and the watcher.
 
 ## Goal

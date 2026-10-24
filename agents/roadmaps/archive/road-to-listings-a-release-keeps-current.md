@@ -40,7 +40,7 @@ This roadmap ships everything the tree can carry: the registry payload, the CI
 publish, the manifests, the topics file, the ledger rows and the watcher. The
 acts that need an owner go, a repo secret or a release that has not happened
 yet are carried to
-[`road-to-listings-the-owner-submits`](later/road-to-listings-the-owner-submits.md).
+[`road-to-listings-the-owner-submits`](../later/road-to-listings-the-owner-submits.md).
 
 ## Context — verified at `main@4502d328`
 
