@@ -104,7 +104,8 @@ EOF
     cat <<'EOF'
 
 Tier 1 — power-user (release shape, audit, migration):
-  update                     Update the agent_config_version pin in .agent-settings.yml
+  update                     Pin agent_config_version in .agent-settings.yml; installs that
+                             version globally first when the global install is older
                              Flags: --check (read-only) | --to <version> (explicit pin)
   upgrade                    Install the latest @event4u/agent-config globally
                              (npm i -g) and refresh the global install + plugin.
@@ -1400,7 +1401,7 @@ cmd_use() {
 }
 
 # `agent-config update` — flip the agent_config_version pin in
-# .agent-settings.yml. See scripts/_cli/cmd_update.ts (P3.1 of
+# .agent-settings.yml, upgrading the global install first when it is older. See scripts/_cli/cmd_update.ts (P3.1 of
 # road-to-portable-runtime-and-update-check.md).
 cmd_update() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_update.ts" "$@"

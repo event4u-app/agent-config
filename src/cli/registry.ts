@@ -25,7 +25,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'validate', disposition: 'delegate', synopsis: 'Drift detection on the manifest.' },
     { name: 'work', disposition: 'delegate', synopsis: 'Drive the work_engine on a prompt.' },
     { name: 'implement-ticket', disposition: 'delegate', synopsis: 'Drive the work_engine on a ticket.' },
-    { name: 'update', disposition: 'delegate', synopsis: 'Update the agent_config_version pin in .agent-settings.yml.' },
+    { name: 'update', disposition: 'delegate', synopsis: 'Pin agent_config_version, installing that version globally first when the global install is older.' },
     { name: 'upgrade', disposition: 'delegate', synopsis: 'Install the latest package globally + refresh the global install.' },
     { name: 'refresh', disposition: 'delegate', synopsis: 'Idempotent re-install (no version change): --global or --project.' },
     { name: 'versions', disposition: 'native', synopsis: 'List @event4u/agent-config versions.' },
