@@ -220,7 +220,7 @@ Any changed, added or removed helper on the closure marks the verdict stale.
 **The pins as one attested set (revision 19).** Round 24 asked that the inputs
 be attested as one immutable unit, not pin by pin. The reconciler hashes the
 recorded pin lines, the recorded table digest and the recorded closure digest.
-The recorded value is the attested set: sha256 `38639fbb957eac6c5f18df79ee638fba8262c818680fe61046c504668145441e`.
+The recorded value is the attested set: sha256 `107500cc38617cd83381a283324b593ed5be0c28729e71731fe9f750ccbfc38c`.
 
 A pin line changed without this line is refused as a broken set, not as a stale
 pin. A renewal therefore replaces the whole set in one diff, and rollback
@@ -261,26 +261,28 @@ than listed.
 | `agents/evidence/analysis/gate-phase7-harness.mjs` | `672ce60e22f56fd483b31ed84b13266a90b821c0` |
 | `agents/evidence/analysis/gate-invocation-inventory-20261024.md` | `1f3ff61036ccbd9ba42f9acd4eec5b5c2697b4f9` |
 | `agents/evidence/analysis/gate-class-grounds-20261024.json` | `3ae580599ebaa4d88a1aa7145c7c9364165f61a1` |
+| `Taskfile.yml` | `42fb51998a3069fd9d78af2e0b94e016b9778372` |
+| `taskfiles/bench-ab.yml` | `4d4aee8eaba288f2ff2ecfd9f6afdb39c684a5c0` |
+| `taskfiles/bench-ui.yml` | `07c2a71d5e3568f760f9ec1da66f40b141008d30` |
+| `taskfiles/ci-fast.yml` | `aedb0b222ef39622a6dc66abe6d94f95eaad46b7` |
+| `taskfiles/content.yml` | `2c8f8c7528cef2d24f4085bb00757d90f9d85e99` |
+| `taskfiles/dev.yml` | `ecde3261b4c09b48991f1c3bd4fcdb28c272c92c` |
+| `taskfiles/engine.yml` | `be2c6e7b78ca288fd5f137037d29a83c04487786` |
+| `taskfiles/mcp.yml` | `8285c13dde4339de534a06cf080807d5e52046ee` |
+| `taskfiles/release.yml` | `598ff67a23516fd3daf73238dd93657e0e2bfc78` |
+| `taskfiles/value.yml` | `cd2ece6e510d1bad1e03bb54b1bafbb436587d1d` |
+| `.github/workflows/standing-payload-delta.yml` | `82eb039cd82226e642c24df634c7ee7ec3ad0cf5` |
+| `.github/workflows/rule-backstops.yml` | `015473465df2afb82e32ada7fce9d458d6c17055` |
+| `.github/workflows/tests.yml` | `0e1e0c9882919e10ff783780315a84b5e5f5dea3` |
+| `agents/evidence/analysis/gate-wiring-review-20261024.md` | `bcb96b497545a23bee48a25bc23ec6d388b418d6` |
 
-**Wiring, pinned by its Phase 7 steps (revision 23).** Rounds 26 and 27 both
-refused a renewal that hashed whole wiring files. In those files, a change
-outside the 16 checks, such as `check_step_production_reach --enforce`, would
-have been attested without being examined. Each wiring file is now pinned by the
-digest of its Phase 7 steps only. A step is the YAML block around a line that
-names one of the 16 checks, or names a task whose block names one: a workflow
-step item, or a taskfile task. `Taskfile.yml` is added, because it orders the
-Phase 7 tasks and was not pinned before. The values below are the steps as they
-stood at revision 16, the last attested set.
+**Wiring, pinned as whole files (revision 24).** Round 28 rejected the
+step-scoped pins of revision 23 as heuristic. Round 29 (D49, A5) converged on
+whole-file pins. Those pins cover `Taskfile.yml`, every taskfile it includes and
+the three Phase 7 workflows, all at revision 16. A hashed review record covers
+every change since then:
+`agents/evidence/analysis/gate-wiring-review-20261024.md`.
 
-| Wiring file | Phase 7 steps |
-|---|---|
-| `Taskfile.yml` | Phase 7 steps, sha256 `c81b2f54de006c4411d635896d2ccaadb0ff81cbc4f42a6fe4c8495441144853` |
-| `taskfiles/ci-fast.yml` | Phase 7 steps, sha256 `ac1b2425882de47f51306ac5ce188fc99f61e44f507e6f012bf341e96f67fbc0` |
-| `taskfiles/content.yml` | Phase 7 steps, sha256 `62d9617826752cb5d212e152bc43be4d3d091d66c75a9d727708293eac43216a` |
-| `taskfiles/engine.yml` | Phase 7 steps, sha256 `2b685c0c20ef0437738110f4646f0640edcca8305c66753ceae627bf1fb043c3` |
-| `.github/workflows/standing-payload-delta.yml` | Phase 7 steps, sha256 `f762acea85ddaecb086cab535f0524ba74bf32feac7d23ed7a6c208e3f0b2557` |
-| `.github/workflows/rule-backstops.yml` | Phase 7 steps, sha256 `f7b763b3a6634297223782f946bca0b44333e0694f8640a78d70bc501a9868fa` |
-| `.github/workflows/tests.yml` | Phase 7 steps, sha256 `b27eddc52d0604abdc9c5e892272d3e65c175348bd841a1d4da6b4082a760608` |
 
 
 ## Independent branch inventory — revision 8
@@ -893,6 +895,25 @@ Not changed, with reasons:
 
 `--aspects`: 49 derived, 0 waived, 0 refused. Self-test 43/44. The one red case
 is the clean baseline, which reports the unrenewed pins.
+
+## The closed bar A1–A8 implemented — revision 24
+
+Round 29 (D49) fixed a closed bar of eight items. All eight are implemented,
+and each new check was seen red under sabotage:
+
+| Item | What implements it |
+|---|---|
+| A1 | `gate-renewal-suite.mjs --manifest`: 43 pinned inputs, each assigned to unit A, B or C, with the exact ledger-row diff since revision 16 |
+| A2 | The reconciler evaluates every class predicate without the recorded class and takes exactly one winner by the declared precedence; 49 of 49 |
+| A3 | `--provenance`: every structured field changed since revision 16 links to its ledger row and source line, or to its review verdict |
+| A4 | `tests/scripts/gate_multimode_truth_table.test.ts`: 19 runtime cases across both multi-mode branches |
+| A5 | Whole-file wiring pins: `Taskfile.yml`, its 9 included taskfiles and 3 workflows; the review record is `gate-wiring-review-20261024.md` |
+| A6 | `--candidate <rev>` runs the suite on a clean HEAD. `--status` is consumable only with a promotion line, and an input changed after promotion breaks it |
+| A7 | `--matrix`: six isolated mutations, each must fail a gate that is green unmutated |
+| A8 | `--rollback-check`: one checkout restores all pinned inputs to revision 16, and the base reconciler then reports valid |
+
+The pins are not renewed. The record reads **quarantined** until a candidate
+with renewed pins passes `--candidate` and is promoted.
 
 ## Source-to-record completeness, mechanically — revision 14
 

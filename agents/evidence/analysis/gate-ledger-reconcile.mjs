@@ -12,7 +12,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 
-const FILES = {
+export const FILES = {
     phase7: 'agents/evidence/council/live-tree-check-classification-20261010.md',
     ledger: 'agents/evidence/analysis/gate-classification-ledger-20261024.md',
     inventory: 'agents/evidence/analysis/gate-invocation-inventory-20261024.md',
@@ -20,6 +20,7 @@ const FILES = {
     mapping: 'agents/evidence/analysis/gate-branch-mapping-20261024.json',
     review: 'agents/evidence/analysis/gate-branch-mapping-review-20261024.json',
     grounds: 'agents/evidence/analysis/gate-class-grounds-20261024.json',
+    wiringReview: 'agents/evidence/analysis/gate-wiring-review-20261024.md',
 };
 const BRANCH_MATRIX = 'agents/evidence/analysis/gate-branch-reconciliation-20261024.md';
 const MODE_FLAGS = ['--self-test', '--mutation-selftest', '--require-complete', '--strict', '--global', '--check-urls', '--freshness-days'];
@@ -34,11 +35,18 @@ const NO_ASSERTION = {
     notAFlag: ['--is-ancestor', '--record-composite'],
 };
 
-function realIo() {
+export function realIo() {
     const git = (args) => execFileSync('git', args, { cwd: ROOT, encoding: 'utf8' }).trim();
     return {
         read: (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8'),
         exists: (rel) => fs.existsSync(path.join(ROOT, rel)),
+        blobAt: (commit, rel) => {
+            try {
+                return execFileSync('git', ['rev-parse', `${commit}:${rel}`], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+            } catch {
+                return null;
+            }
+        },
         blob: (rel) => git(['hash-object', path.join(ROOT, rel)]),
         existsAt: (commit, rel) => {
             try {
@@ -58,7 +66,7 @@ function realIo() {
         },
         showAt: (commit, rel) => {
             try {
-                return execFileSync('git', ['show', `${commit}:${rel}`], { cwd: ROOT, encoding: 'utf8' });
+                return execFileSync('git', ['show', `${commit}:${rel}`], { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 1e9 });
             } catch {
                 return null;
             }
@@ -72,66 +80,36 @@ function realIo() {
 // run fails. A row in a flag mode ("in that mode") counts a flag-only failure as
 // blocking; a default-mode row counts it as non-blocking. `exit-code-only`
 // blocks only with a non-zero exit code.
+// The declared precedence of the class predicates (A2).
+export const PREDICATE_ORDER = ['observation', 'tolerance', 'snapshot', 'invariant'];
 export const BLOCKING_EFFECTS = ['error-exit-nonzero', 'throw', 'exit-code-only'];
 export const NON_BLOCKING_EFFECTS = ['warning-exit-zero'];
 export const FLAG_EFFECT = 'warning-exit-nonzero-only-with-flag';
 // Flags are compared as exact tokens, never as substrings.
 const flagTokens = (text) => new Set(text.match(/(?<![\w-])--[a-z][a-z0-9-]*(?![\w-])/g) ?? []);
 
-// The wiring files are pinned by the Phase 7 steps they contain, not by their
-// whole text: a change elsewhere in the file is outside the attestation, and a
-// change to a step that runs, names or orders one of the 16 checks is inside
-// it. A step is the YAML block around a line that names a check, or names a
-// task whose block names one; its header is the nearest list item or
-// top-level key above that line.
-export const WIRING = ['Taskfile.yml', 'taskfiles/ci-fast.yml', 'taskfiles/content.yml', 'taskfiles/engine.yml', '.github/workflows/standing-payload-delta.yml', '.github/workflows/rule-backstops.yml', '.github/workflows/tests.yml'];
-const indentOf = (l) => l.length - l.trimStart().length;
-function yamlBlocks(text, tokens, taskfile) {
-    const lines = text.split('\n');
-    const isHeader = (l) => {
-        const t = l.trimStart();
-        return t.startsWith('- ') || (taskfile && indentOf(l) === 2 && /^ {2}[\w:-]+:\s*$/.test(l));
-    };
-    const picked = new Map();
-    lines.forEach((l, i) => {
-        if (l.trimStart().startsWith('#')) return;
-        if (![...tokens].some((t) => new RegExp(`(?<![\\w-])${t.replace(/[-]/g, '\\-')}(?![\\w-])`).test(l))) return;
-        let h = i;
-        if (!isHeader(lines[i])) {
-            h = i - 1;
-            while (h >= 0 && !(lines[h].trim() !== '' && indentOf(lines[h]) < indentOf(lines[i]) && isHeader(lines[h]))) h -= 1;
-            if (h < 0) h = i;
-        }
-        let e = h + 1;
-        while (e < lines.length && (lines[e].trim() === '' || indentOf(lines[e]) > indentOf(lines[h]) || (lines[h].trimStart().startsWith('- ') && indentOf(lines[e]) === indentOf(lines[h]) && !lines[e].trimStart().startsWith('- ') && !lines[e].trimStart().startsWith('#')))) e += 1;
-        picked.set(h, lines.slice(h, e).join('\n').trimEnd());
-    });
-    return [...picked.entries()].sort((a, b) => a[0] - b[0]).map(([, b]) => b);
-}
-export function wiringScope(read, checks) {
-    const tokens = new Set(checks);
-    for (let pass = 0; pass < 2; pass += 1) {
-        for (const f of WIRING) {
-            for (const b of yamlBlocks(read(f), tokens, !f.startsWith('.github/'))) {
-                const head = b.split('\n')[0].match(/^ {2}([\w:-]+):\s*$/);
-                if (head !== null) tokens.add(head[1]);
-            }
-        }
-    }
-    return Object.fromEntries(WIRING.map((f) => [f, yamlBlocks(read(f), tokens, !f.startsWith('.github/')).join('\n---\n')]));
+// Wiring is pinned as whole files (round 29, A5): Taskfile.yml, every taskfile
+// it includes, and the workflows that run Phase 7 checks. A change to any of
+// them since the attested base needs a row in the wiring review record, whose
+// own blob is pinned like any other input.
+export const WIRING_WORKFLOWS = ['.github/workflows/standing-payload-delta.yml', '.github/workflows/rule-backstops.yml', '.github/workflows/tests.yml'];
+export const ATTESTED_BASE = 'a9a9ecd98d';
+export function wiringFiles(read) {
+    const included = [...read('Taskfile.yml').matchAll(/taskfile:\s*\.?\/?(taskfiles\/[\w-]+\.yml)/g)].map((m) => m[1]);
+    return ['Taskfile.yml', ...[...new Set(included)].sort(), ...WIRING_WORKFLOWS];
 }
 
-function section(text, heading) {
+export function section(text, heading) {
     const start = text.indexOf(heading);
     if (start < 0) throw new Error(`missing section ${heading}`);
     const next = text.indexOf('\n## ', start + heading.length);
     return text.slice(start, next < 0 ? undefined : next);
 }
-const cells = (line) => line.split('|').slice(1, -1).map((c) => c.trim());
+export const cells = (line) => line.split('|').slice(1, -1).map((c) => c.trim());
 const checkName = (cell) => (cell.match(/`([a-z_]+)`/) ?? [])[1] ?? null;
 const sha256 = (s) => createHash('sha256').update(s).digest('hex');
 
-function tableSection(ledger) {
+export function tableSection(ledger) {
     return section(ledger, '## The ledger — revision 3');
 }
 
@@ -207,18 +185,27 @@ export function reconcile(io) {
     for (const f of [...Object.values(FILES), 'agents/evidence/analysis/gate-ledger-reconcile.mjs']) {
         if (f !== FILES.ledger && f !== FILES.phase7 && !pinned.has(f)) failures.push(`unpinned input: ${f}`);
     }
-    // Wiring: the Phase 7 steps of each wiring file, not the whole file.
-    const wiringPins = pinSection
-        .split('\n')
-        .map((l) => l.match(/^\| `([^`]+)` \| Phase 7 steps, sha256 `([0-9a-f]{64})` \|$/))
-        .filter((m) => m !== null);
-    const scope = wiringScope((f) => io.read(f), phase7);
-    for (const f of WIRING) {
-        const pin = wiringPins.find((m) => m[1] === f);
-        const now = sha256(scope[f]);
-        if (pin === undefined) failures.push(`unpinned wiring file: ${f}`);
-        else if (pin[2] !== now) failures.push(`STALE: the Phase 7 steps of ${f} changed since the verdict was pinned (${pin[2].slice(0, 9)} → ${process.env.GATE_FULL_DIGEST ? now : now.slice(0, 9)})`);
-        if (pins.some((m) => m[1] === f)) failures.push(`wiring file ${f} is pinned by whole blob; it is pinned by its Phase 7 steps only`);
+    // Wiring (A5): every wiring file is blob-pinned, and every one that changed
+    // since the attested base has a review row naming that exact change.
+    const reviewRows = [...io.read(FILES.wiringReview).matchAll(/^\| `([^`]+)` \| `([0-9a-f]{40})` \| `([0-9a-f]{40})` \| (phase-7|non-phase-7|both) \|/gm)];
+    for (const f of wiringFiles((x) => io.read(x))) {
+        if (!pins.some((m) => m[1] === f)) failures.push(`unpinned wiring file: ${f}`);
+        if (!io.exists(f)) {
+            failures.push(`wiring file missing: ${f}`);
+            continue;
+        }
+        const base = io.blobAt(ATTESTED_BASE, f);
+        const now = io.blob(f);
+        if (base !== now && !reviewRows.some((m) => m[1] === f && m[2] === base && m[3] === now)) failures.push(`wiring review: ${f} changed since ${ATTESTED_BASE} (${String(base).slice(0, 9)} → ${now.slice(0, 9)}) with no review row for that change`);
+    }
+    // A6: once a candidate has been promoted, every pinned input must still be
+    // byte-identical to the candidate commit the renewal suite ran on.
+    const promoted = pinSection.match(/promoted candidate: commit `([0-9a-f]{40})`, tree `([0-9a-f]{40})`/);
+    if (promoted !== null) {
+        for (const f of [...pins.map((m) => m[1]), ...wiringFiles((x) => io.read(x))]) {
+            const at = io.blobAt(promoted[1], f);
+            if (at !== io.blob(f)) failures.push(`promotion broken: ${f} changed after candidate ${promoted[1].slice(0, 9)} was tested (${String(at).slice(0, 9)} → ${io.blob(f).slice(0, 9)})`);
+        }
     }
     const helperFiles = importClosure(io, phase7.map((c) => `src/scripts/${c}.ts`));
     const closureDigest = sha256(helperFiles.map((f) => `${f} ${io.blob(f)}`).join('\n'));
@@ -233,7 +220,7 @@ export function reconcile(io) {
     // digest, so no single pin can be renewed without renewing the set line in
     // the same diff; the individual pins still say which input is stale.
     // Rollback restores the last attested set, never selected pins.
-    const recordedSet = sha256([...pins.map((m) => `${m[1]} ${m[2]}`), ...wiringPins.map((m) => `wiring ${m[1]} ${m[2]}`)].sort().concat([ `table ${tablePin?.[1] ?? ''}`, `closure ${closurePin?.[1] ?? ''} ${closurePin?.[2] ?? ''}`]).join('\n'));
+    const recordedSet = sha256([...pins.map((m) => `${m[1]} ${m[2]}`)].sort().concat([ `table ${tablePin?.[1] ?? ''}`, `closure ${closurePin?.[1] ?? ''} ${closurePin?.[2] ?? ''}`]).join('\n'));
     const setPin = pinSection.match(/attested set: sha256 `([0-9a-f]{64})`/);
     if (setPin === null) failures.push('no attested-set pin found');
     else if (setPin[1] !== recordedSet) failures.push(`pin set broken: a pin line changed without its attested-set line (${setPin[1].slice(0, 9)} → ${process.env.GATE_FULL_DIGEST ? recordedSet : recordedSet.slice(0, 9)})`);
@@ -332,15 +319,26 @@ export function reconcile(io) {
                 else failures.push(`class predicate: ${r.id} is reached by ${b.id} with unknown effect ${b.effect}`);
             }
         }
-        const derived = blocking.length > 0 && nonBlocking.length === 0 ? 'invariant' : nonBlocking.length > 0 && blocking.length === 0 ? 'observation' : blocking.length > 0 ? 'mixed' : 'unreached';
+        // A2: every class predicate is evaluated without the recorded class.
+        // The winner is the first match in the declared precedence; zero
+        // matches (mixed or unreached behaviour) leaves the aspect
+        // unclassifiable, which is refused.
+        const f = grounds.structured?.[r.id] ?? {};
+        const blockingOnly = blocking.length > 0 && nonBlocking.length === 0;
+        const hasBaseline = typeof f.baseline === 'string' && io.exists(f.baseline);
+        const hasTolerance = typeof f.bound === 'string' && typeof f.risk_owner === 'string' && typeof f.expiry === 'string';
+        const matches = {
+            observation: nonBlocking.length > 0 && blocking.length === 0 && !hasBaseline && !hasTolerance,
+            tolerance: blockingOnly && hasTolerance,
+            snapshot: blockingOnly && hasBaseline,
+            invariant: blockingOnly && !hasBaseline && !hasTolerance,
+        };
+        const matched = PREDICATE_ORDER.filter((c) => matches[c]);
+        const derived = matched[0] ?? (blocking.length > 0 && nonBlocking.length > 0 ? 'mixed' : 'unreached');
         const waiver = grounds.waivers?.[r.id];
         let verdict = null;
-        if (r.cls === 'snapshot' || r.cls === 'tolerance') {
-            const f = grounds.structured?.[r.id] ?? {};
-            const fields = r.cls === 'snapshot' ? typeof f.baseline === 'string' && io.exists(f.baseline) : typeof f.bound === 'string' && typeof f.risk_owner === 'string' && typeof f.expiry === 'string';
-            if (!fields) failures.push(`class predicate: ${r.id} is recorded ${r.cls} without its structured fields in ${FILES.grounds}`);
-            else if (derived !== 'invariant') failures.push(`class predicate: ${r.id} is recorded ${r.cls} but its reaching branches derive ${derived}, not blocking behaviour`);
-            else verdict = 'derived';
+        if (matched.length === 0 && waiver === undefined) {
+            failures.push(`class predicate: ${r.id} matches no class predicate (${derived}; blocking: ${blocking.join(', ') || 'none'}; non-blocking: ${nonBlocking.join(', ') || 'none'})`);
         } else if (derived === r.cls) {
             verdict = 'derived';
         } else if (waiver !== undefined) {
@@ -365,7 +363,7 @@ export function reconcile(io) {
         } else {
             failures.push(`class predicate: ${r.id} is recorded ${r.cls} but its reaching branches derive ${derived} (blocking: ${blocking.join(', ') || 'none'}; non-blocking: ${nonBlocking.join(', ') || 'none'})`);
         }
-        aspects.push({ id: r.id, check: r.check, recorded: r.cls, mode: mode ?? 'default', derived, blocking, nonBlocking, verdict: verdict ?? 'REFUSED' });
+        aspects.push({ id: r.id, check: r.check, recorded: r.cls, mode: mode ?? 'default', derived, matched, blocking, nonBlocking, verdict: verdict ?? 'REFUSED' });
     }
     for (const id of Object.keys(grounds.waivers ?? {})) if (!aspects.some((a) => a.id === id && a.derived !== a.recorded)) failures.push(`stale waiver ${id}: the row no longer diverges`);
     for (const id of Object.keys(modes)) if (!binding.some((r) => r.id === id)) failures.push(`mode names ${id}, which is not a binding row`);
@@ -496,7 +494,10 @@ export function reconcile(io) {
         scope: { phase7Commit: manifest?.[1] ?? null, checks: phase7.length, bindingAspects: binding.length, branches: branchCount, classes: tally },
         state,
         reasons: failures,
-        consumable: state === 'valid',
+        promoted: promoted === null ? null : { commit: promoted[1], tree: promoted[2] },
+        // A valid candidate is not consumable until a council round has attested
+        // it and its promotion line is recorded (D38, A6).
+        consumable: state === 'valid' && promoted !== null,
     };
     return { failures, report, matrix, artefact, status, aspects };
 }
@@ -602,14 +603,16 @@ function selfTest() {
         ['a waiver whose issue text is absent is refused', approved((w) => ({ ...w, issue_ref: { ...w.issue_ref, text: 'a reconciliation nobody recorded anywhere' } })), /issue text not found in its file/],
         ['a mixed derivation is never waivable', (() => { const g = withDirective(withWaiver({ ...WAIVER, behaviour: 'mixed', approver: 'owner', directive: DIRECTIVE, expiry: '2099-12-31' })); return { ...g, read: (rel) => (rel === FILES.mapping ? JSON.stringify((() => { const j = JSON.parse(io.read(rel)); j.mapping.check_knowledge_cards['c10-E1-required'] = 'R10.h'; return j; })()) : g.read(rel)) }; })(), /derived mixed is never waivable/],
         ['a waiver for a row that does not diverge', json(FILES.grounds, (j) => { j.waivers['R4.a'] = { semantic: 'invariant', behaviour: 'observation', branch: 'c4-over-cap', owed_to: '7.2' }; return j; }), /stale waiver R4\.a/],
-        ['a wiring change outside the Phase 7 steps does not stale the pin', mutated(io, 'taskfiles/ci-fast.yml', (t) => t.replace('check_step_production_reach --base origin/main --enforce', 'check_step_production_reach --base origin/main')), { none: /Phase 7 steps of taskfiles\/ci-fast\.yml/ }],
-        ['a change inside a Phase 7 step stales the wiring pin', mutated(io, '.github/workflows/rule-backstops.yml', (t) => t.replace('check_composite_arming --self-test', 'check_composite_arming --self-test --quiet')), /STALE: the Phase 7 steps of \.github\/workflows\/rule-backstops\.yml changed/],
-        ['dropping a Phase 7 task from Taskfile.yml stales the wiring pin', mutated(io, 'Taskfile.yml', (t) => t.replace('      - task: lint-readme-jargon\n', '')), /STALE: the Phase 7 steps of Taskfile\.yml changed/],
         ['an overlapping branch without a precedence entry is refused', json(FILES.grounds, (j) => { delete j.overlaps['check_public_links c11-beta-marker']; return j; }), /overlap: check_public_links c11-beta-marker reaches R11\.e, R11\.f .* has no precedence entry/],
         ['a precedence entry that swaps the modes is refused', json(FILES.grounds, (j) => { j.overlaps['lint_agents_layout c12-consumer-warning'] = { default: 'R12.d', '--strict': 'R12.c', excluded: [] }; return j; }), /overlap: lint_agents_layout c12-consumer-warning's precedence entry does not cover/],
         ['an undeclared flag in an overlapping branch is refused', json(FILES.grounds, (j) => { j.overlaps['check_public_links c11-beta-marker'].excluded = []; return j; }), /overlap: check_public_links c11-beta-marker's precedence entry does not cover/],
+        ['a wiring change without a review row is refused', mutated(io, FILES.wiringReview, (t) => t.split('\n').filter((l) => !l.startsWith('| `taskfiles/ci-fast.yml`')).join('\n')), /wiring review: taskfiles\/ci-fast\.yml changed since/],
+        ['a new included taskfile must be pinned', mutated(io, 'Taskfile.yml', (t) => t.replace('includes:\n', 'includes:\n  extra:\n    taskfile: ./taskfiles/extra.yml\n')), /unpinned wiring file: taskfiles\/extra\.yml/],
+        ['structured fields for two classes resolve by the declared precedence', json(FILES.grounds, (j) => { j.structured['R4.a'] = { baseline: FILES.grounds, bound: '3', risk_owner: 'x', expiry: '2099-12-31' }; return j; }), /class predicate: R4\.a is recorded invariant but its reaching branches derive tolerance/],
+        ['an aspect that matches no class predicate is refused', json(FILES.mapping, (j) => { j.mapping.check_augment_description_cap['c4-over-cap'] = 'op:informational'; return j; }), /class predicate: R4\.a matches no class predicate|binding row R4\.a is reached by no branch/],
+        ['a pinned input changed after the promoted candidate breaks the promotion', mutated(io, FILES.ledger, (t) => t.replace('## Row ids and invalidation — revision 7\n', '## Row ids and invalidation — revision 7\n\npromoted candidate: commit `a9a9ecd98d3380ce50269fafac45f7b2ab4d8225`, tree `f4a60738c844a3e261fa588b466e29c0d34c46b7`.\n')), /promotion broken: src\/scripts\/check_composite_arming\.ts changed after candidate/],
         ['a pin line renewed without its attested-set line', mutated(io, FILES.ledger, (t) => t.replace('`672ce60e22f56fd483b31ed84b13266a90b821c0`', '`' + '1'.repeat(40) + '`')), /pin set broken/],
-        ['a snapshot without its structured baseline', mutated(io, FILES.ledger, (t) => t.replace(/(\| `check_augment_description_cap` \|[^\n]*?)\*\*invariant\*\*/, '$1**snapshot**')), /class predicate: R4\.a is recorded snapshot without its structured fields/],
+        ['a snapshot without its structured baseline', mutated(io, FILES.ledger, (t) => t.replace(/(\| `check_augment_description_cap` \|[^\n]*?)\*\*invariant\*\*/, '$1**snapshot**')), /class predicate: R4\.a is recorded snapshot but its reaching branches derive invariant/],
         ['negated prose in an evidence cell changes no class', mutated(io, FILES.ledger, (t) => t.replace('| fixed cap |', '| does not fail; errors are informational; no contract |')), { none: /class predicate: R4\.a/ }],
         ['an unknown flag appears in a check', mutated(io, 'src/scripts/lint_readme_jargon.ts', (t) => `${t}\nconst x = '--surprise';\n`), /unclassified invocation mode: lint_readme_jargon --surprise/],
     ];
@@ -654,7 +657,7 @@ if (isEntry) {
     } else if (process.argv.includes('--status')) {
         const { status } = reconcile(realIo());
         process.stdout.write(`${JSON.stringify(status, null, 2)}\n`);
-        process.exit(status.state === 'valid' ? 0 : status.state === 'quarantined' ? 3 : 1);
+        process.exit(status.consumable ? 0 : status.state === 'valid' ? 4 : status.state === 'quarantined' ? 3 : 1);
     }
     else {
         const { failures, report, status } = reconcile(realIo());
