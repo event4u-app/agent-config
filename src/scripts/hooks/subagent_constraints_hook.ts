@@ -133,7 +133,8 @@ interface Found {
  *
  * Room goes to the file nearest the project directory first, because it is the
  * most specific, and every file found is named in an inventory with what became
- * of it (`full`, `cut`, `omitted`), so a cut never hides that a file exists.
+ * of it (`full`, `cut`, `omitted`, or `empty` when nothing is left once
+ * comments are removed), so a cut never hides that a file exists.
  * Sections are then printed root-most first, the order the host loads them.
  */
 export function instructionDigest(projectDir: string, maxBytes: number = EMISSION_MAX_BYTES): string | null {
@@ -149,11 +150,10 @@ export function instructionDigest(projectDir: string, maxBytes: number = EMISSIO
                 continue;
             }
             const body = text.replace(/<!--[\s\S]*?-->/g, '').replace(/\r\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
-            const label = fitEscaped(path.relative(root, path.join(dir, rel)) || rel, LABEL_MAX);
-            if (body !== '') found.push({ label, body });
+            found.push({ label: fitEscaped(path.relative(root, path.join(dir, rel)) || rel, LABEL_MAX), body });
         }
     }
-    if (found.length === 0) return null;
+    if (found.every((f) => f.body === '')) return null;
     const head =
         "A bounded digest of this project's instruction files, which this subagent's definition omitted at " +
         'startup (omitClaudeMd). It is not the files as the host loads them: comments are removed and a file ' +
@@ -167,11 +167,12 @@ export function instructionDigest(projectDir: string, maxBytes: number = EMISSIO
         while (from < named.length - 1 && escBytes(render()) > INVENTORY_MAX) from += 1;
         return render();
     };
-    const status: string[] = found.map(() => 'omitted');
+    const status: string[] = found.map((f) => (f.body === '' ? 'empty' : 'omitted'));
     const shown: string[] = found.map(() => '');
     let room = maxBytes - REPLY_OVERHEAD - escBytes(`${head}\n${inventory(status)}`);
     for (let i = found.length - 1; i >= 0; i--) {
         const f = found[i] as Found;
+        if (f.body === '') continue;
         const frame = escBytes(`\n\n--- ${f.label} ---\n`);
         if (room - frame < MIN_SHOWN) continue;
         if (escBytes(f.body) <= room - frame) {
@@ -183,7 +184,7 @@ export function instructionDigest(projectDir: string, maxBytes: number = EMISSIO
         }
         room -= frame + escBytes(shown[i] as string);
     }
-    const sections = found.map((f, i) => (status[i] === 'omitted' ? '' : `\n\n--- ${f.label} ---\n${shown[i]}`));
+    const sections = found.map((f, i) => (status[i] === 'omitted' || status[i] === 'empty' ? '' : `\n\n--- ${f.label} ---\n${shown[i]}`));
     // The serialized line is the final authority: whatever the parts measured, the reply never exceeds maxBytes.
     return fitEscaped(`${head}\n${inventory(status)}${sections.join('')}`, maxBytes - REPLY_OVERHEAD);
 }

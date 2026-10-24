@@ -90,6 +90,13 @@ describe('subagent-constraints concern', () => {
         expect(digest).toContain('CLAUDE.md (full), pkg/.claude/CLAUDE.md (full)');
     });
 
+    it('names a file that is empty once comments are removed', () => {
+        fs.writeFileSync(path.join(root, 'CLAUDE.local.md'), '<!-- only a comment -->\n\n');
+        expect(instructionDigest(root)).toContain('CLAUDE.md (full), CLAUDE.local.md (empty)');
+        fs.writeFileSync(path.join(root, 'CLAUDE.md'), '<!-- nothing -->');
+        expect(instructionDigest(root)).toBeNull();
+    });
+
     it('gives room to the nearest file first when a root file is too large', () => {
         const sub = path.join(root, 'pkg');
         fs.mkdirSync(sub);
