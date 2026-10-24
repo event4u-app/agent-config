@@ -207,7 +207,7 @@ in revision 9. The withdrawal and its reason sit on the row itself.
 
 **Ledger table, pinned (revision 10).** A row edited after the independent
 review would otherwise pass silently. The reconciler hashes the table rows. The
-recorded value is the ledger table: sha256 `5d6fca5aa20eef9bdfad29fe56845631d2d87e31cfb18ee06cb196931938631e`.
+recorded value is the ledger table: sha256 `e7fe0f2adae19b1314bb0dffe123390426bbe65ad7541458b0ed408cc83a368d`.
 
 **Helpers, pinned as a closure (revision 9).** openai, round 13: the checks
 import helpers, and the per-file pins below covered none of them. The
@@ -246,8 +246,9 @@ than listed.
 | `agents/evidence/analysis/gate-branch-inventory-20261024.json` | `119214ea142393c7254cae40e080153728e10fb0` |
 | `agents/evidence/analysis/gate-branch-mapping-20261024.json` | `c296fd9f02c1f0e83688da3f596cbb19e079665e` |
 | `agents/evidence/analysis/gate-branch-mapping-review-20261024.json` | `46227ecdae464df420e5aec60910a1b7a497e686` |
-| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `6606902f92aa2fd92442628af856da16dac533a7` |
+| `agents/evidence/analysis/gate-ledger-reconcile.mjs` | `b834ff3aba3229a9a768bd76b951471eb99413e9` |
 | `agents/evidence/analysis/gate-ledger-executions.mjs` | `b330f3e9671d4d9e58baf9e1a59e32bc473b3756` |
+| `agents/evidence/analysis/gate-branch-reconciliation-20261024.md` | `aa8f785bfe9573a17b3b9bb734fc6b680db118d1` |
 
 
 ## Independent branch inventory — revision 8
@@ -392,6 +393,35 @@ when `node agents/evidence/analysis/gate-ledger-reconcile.mjs` exits 0 at
 the revision 7.2 changes. A stale, failed or absent reconciliation blocks
 reliance. That condition is written into step 7.2 itself, and 7.2's own test
 runs the reconciler first.
+
+## The branch-level reconciliation — revision 13
+
+Round 17 (D41) was 2/2 and convergent: the matrix above is an aggregate. Both
+seats asked for **every branch** to be inspectable, each with its mode, its
+exact destination (an aspect with its class, or a category) and its review
+verdict. They also asked for the reconciler's own blob, a clean-checkout
+reproduction command, and an independent rerun.
+
+- **The artefact.**
+  `agents/evidence/analysis/gate-branch-reconciliation-20261024.md` has 198
+  rows. Each row gives the check, the branch id, the source location, the mode
+  its destination aspect is classified under, the destination with its class
+  or category, and the independent review verdict. A branch whose destination
+  spans two aspects shows both, as with `c11-beta-marker`: default mode to
+  `R11.e` observation, and `--strict` to `R11.f` invariant.
+- **Generated, never hand-edited.**
+  `node agents/evidence/analysis/gate-ledger-reconcile.mjs --branches` writes
+  it, and the normal run fails if the committed copy differs byte for byte
+  from a fresh regeneration (self-test case 12).
+- **Revision ids.** The reconciler, the artefact and every input are in the
+  pin table above by git blob. `--matrix` prints HEAD and the input blobs.
+- **Reproduction.** In a fresh `git worktree add <dir> <commit>`, run
+  `node agents/evidence/analysis/gate-ledger-reconcile.mjs`, `--branches` and
+  `--self-test`. These need node and git only, with no install step. The
+  `--branches` output must equal the committed artefact.
+- **Modes made visible.** Each branch row names its mode. The mode comes from
+  the destination aspect's own row: a flag named in the aspect, *default
+  mode*, an *only with* flag, or *consumer mode*.
 
 ## The complete reconciliation, as a matrix — revision 12
 
@@ -571,7 +601,7 @@ controls, and no independent party verifies it (openai's hardest pushback).
 | 10 | | C4 trust tag | `trust` present; `type: anti-hallucination` | same | always | card edits | **invariant** | error | `R10.e` |
 | 10 | | C5 evidence consistency | distinct `source_version`s form a git-ancestry chain; `observed_at` span ≤ 7 days | same + git history | when git is runnable; without git the ancestry half is skipped silently (`op:silent-pass`) | card edits, history | **invariant** | error. The span compares recorded timestamps, not the clock | `R10.f` |
 | 10 | | C6 strict sources | `source=<path:line>` references exist and are non-empty | same + the tree | only with `--strict` | tree edits | **invariant** in that mode | error when enabled | `R10.g` |
-| 10 | | freshness | newest `observed_at` older than `--freshness-days` | same + clock | only with the flag; default 0 = off | the calendar | **observation** | "Honest freshness signal (NOT a failure)" | `R10.h` |
+| 10 | | freshness | newest `observed_at` older than `--freshness-days` | same + clock | only with `--freshness-days` > 0; default 0 = off | the calendar | **observation** | "Honest freshness signal (NOT a failure)" | `R10.h` |
 | 10 | | G1 tier — `--global` | a global-store card carries a valid `tier` | the user-global card store | only with `--global`; no caller found | card edits | **invariant** in that mode | `_check_global_card` error | `R10.i` |
 | 10 | | G2 provenance footer — `--global` | the provenance footer is present and carries `first_seen`, `promoted_at`, `last_verified`, `tier`, `seen_in` | same | only with `--global` | card edits | **invariant** in that mode | error per missing field | `R10.k` |
 | 10 | | G3 redaction — `--global` | no confidential pattern (secret, email, internal host, external-source name, hidden Unicode) in a global card | same | only with `--global` | card edits | **invariant** in that mode | `redaction_scan` violations are errors | `R10.l` |
