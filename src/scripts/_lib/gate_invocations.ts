@@ -38,7 +38,7 @@ function lineBlocks(run: string, check: string): { line: string; blocking: boole
 
 function flagsOf(line: string, check: string): string[] {
     const after = line.slice(line.indexOf(`src/scripts/${check}`) + `src/scripts/${check}`.length);
-    return [...after.split('||')[0].matchAll(FLAG)].map((m) => m[0]);
+    return [...(after.split('||')[0] ?? '').matchAll(FLAG)].map((m) => m[0]);
 }
 
 export function workflowInvocations(root: string, file: string, check: string): Invocation[] {
