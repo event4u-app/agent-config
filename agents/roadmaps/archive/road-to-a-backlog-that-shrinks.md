@@ -163,10 +163,10 @@ paperwork is cut.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The drain queue reports timeboxed steps, unsheeted owner questions,
+- [x] AC-1 — The drain queue reports timeboxed steps, unsheeted owner questions,
       the five-started cap and the three-session cap, each covered by a unit test.
-- [ ] AC-2 — The depth table and the run procedures carry the directive's council
+- [x] AC-2 — The depth table and the run procedures carry the directive's council
       and evidence wording; no test, CI check or R3 depth changed.
-- [ ] AC-3 — `probe_turnaround --daily` and `--calls` print their figures on
+- [x] AC-3 — `probe_turnaround --daily` and `--calls` print their figures on
       today's tree.
-- [ ] AC-4 — The owner sheet carries the WIP selection and the flip question.
+- [x] AC-4 — The owner sheet carries the WIP selection and the flip question.
