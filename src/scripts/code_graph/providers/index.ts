@@ -19,6 +19,7 @@ import { nuxtProvider } from './nuxt.js';
 import { reactRouterProvider } from './react-router.js';
 import { springProvider } from './spring.js';
 import { sqlalchemyProvider } from './sqlalchemy.js';
+import { railsProvider } from './rails.js';
 import { sveltekitProvider } from './sveltekit.js';
 import { symfonyProvider } from './symfony.js';
 import { typeormProvider } from './typeorm.js';
@@ -51,6 +52,7 @@ export const PROVIDERS: readonly ConventionProvider[] = [
     sveltekitProvider,
     typeormProvider,
     aspnetcoreProvider,
+    railsProvider,
 ];
 
 /** Every marker basename a registered provider asks the probe to record. */

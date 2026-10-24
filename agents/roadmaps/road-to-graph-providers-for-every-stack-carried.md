@@ -31,7 +31,7 @@ review of PR #2603 measured on real projects and that the PR did not close.
       `.rb` extension; extraction of classes, modules, `def`, `require` / `require_relative`
       imports, `<` inheritance and calls, in the shape `extract_more.ts` emits.
       verify: a Ruby fixture produces class, method, import and call edges in the extractor test.
-- [ ] **1.2 The Rails provider.** `config/routes.rb` `get '/x', to: 'users#index'` and
+- [x] **1.2 The Rails provider.** `config/routes.rb` `get '/x', to: 'users#index'` and
       `resources :users` (the actions the controller defines) → controller actions;
       `class User < ApplicationRecord` → `table:users` (`self.table_name` wins); `has_many` /
       `belongs_to` / `has_one` → `relates`; an action renders
@@ -94,7 +94,7 @@ catalog together with the numbers that justify it.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Ruby files produce nodes and edges, and a Rails fixture's routes, tables,
+- [x] AC-1 — Ruby files produce nodes and edges, and a Rails fixture's routes, tables,
       relations and views resolve with positive and negative oracles green.
 - [x] AC-2 — The four Phase-2 residues each have a fixture oracle that was seen red
       before its fix and is green after.

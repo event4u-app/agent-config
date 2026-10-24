@@ -244,10 +244,19 @@ export const CATALOG: readonly CatalogRow[] = [
         usage: SO,
         limits: 'MapControllerRoute tables, a view name held in a variable and primary constructors are not followed.',
     },
+    {
+        id: 'rails',
+        name: 'Ruby on Rails',
+        language: 'Ruby',
+        markers: 'a Gemfile declaring the rails gem',
+        relations: ['routes-to', 'persists', 'relates', 'migrates', 'renders'],
+        status: 'partial',
+        fixture: 'tests/fixtures/code-graph/rails',
+        usage: SO,
+        limits: 'resource (singular), nested resources, scope/concerns, an explicit render, config/initializers/inflections and models outside app/models are not followed.',
+    },
     ...(
         [
-            ['ruby', 'Ruby', 'Ruby'],
-            ['rails', 'Ruby on Rails', 'Ruby'],
             ['kotlin', 'Kotlin', 'Kotlin'],
             ['rust', 'Rust', 'Rust'],
             ['c-cpp', 'C / C++', 'C / C++'],
