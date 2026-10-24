@@ -71,11 +71,11 @@ paperwork is cut.
       and increments `partial:`; a timeboxed step is condensed to result, open
       question and split, never extended.
       verify: `process-full-all.md` names both markers.
-- [ ] **2.3 Decision cap.** `lint_roadmap_complexity` warns when one step cites
+- [x] **2.3 Decision cap.** `lint_roadmap_complexity` warns when one step cites
       more than 10 distinct decision ids (`D1`…): split, do not extend. Warning,
       never red.
       verify: `npx vitest run tests/scripts/roadmap_step_size.test.ts` -> 0
-- [ ] **2.4 Held steps get a ceiling.** The step-size baseline records each held
+- [x] **2.4 Held steps get a ceiling.** The step-size baseline records each held
       step's word count; a held step may shrink, never grow.
       verify: a unit test where a held step grows past its recorded count reports a problem.
 
