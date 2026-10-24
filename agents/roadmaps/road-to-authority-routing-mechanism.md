@@ -660,7 +660,7 @@ before 8.3 gates anything.*
 | D50 | business-owned | owner | **Park 7.1; continue 7.2 on provisional classes; ceremony by risk.** The owner's throughput directive of 2026-10-24, relayed by the orchestrating session. Step 7.1 moves to `agents/roadmaps/later/road-to-authority-routing-7-1-closure.md`, and this file keeps a short pointer. 7.2 implements the classification on a provisional, revisable copy of the 7.1 ledger's classes (`src/config/live-tree-check-classes.json`, pinned by `tests/scripts/check_persistence_classification.test.ts`). From now on the council is used only for irreversible, release- or security-relevant decisions; otherwise one reviewer or none. | owner directive 2026-10-24, relayed in the drain session; no council round | the parked 7.1 ledger is promoted, or a provisional class proves wrong |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-21 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
