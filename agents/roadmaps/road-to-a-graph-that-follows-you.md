@@ -81,21 +81,21 @@ plan AC improvements automatically when a source repository updates.
 
 ## Phase 2 — A graph home for folders without `agents/`
 
-- [ ] **2.1 Record the decision.** Write an ADR (via `adr-create`): the project graph
+- [x] **2.1 Record the decision.** Write an ADR (via `adr-create`): the project graph <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       stays the only truth; the user-global layer is a *home* for graphs that have no
       project home plus a local *index*, never a merged graph; nothing in it leaves the
       machine; it is lazy per ADR-124; ADR-297's map location gains a fallback. The ADR
       also records the sealed-lineage decision of Phase 7-9.
-      verify: `./scripts-run src/scripts/adr/regenerate_index --check` -> 0 and the ADR
+      verify: `./scripts-run src/scripts/adr/regenerate_index --dir docs/decisions --check` -> 0 and the ADR
       is listed.
-- [ ] **2.2 One `graphHome(root)` resolver.** A module under `src/scripts/code_graph/`
+- [x] **2.2 One `graphHome(root)` resolver.** A module under `src/scripts/code_graph/` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/graph_home.ts -->
       returning the state dir, map dir and lock dir for a root: `root/agents/` when that
       directory exists or a project install is present (today's paths, unchanged);
       otherwise `event4u_root()/runtime/graphs/` plus the repo id. It never creates
       `agents/`.
       verify: unit tests for both branches, run with `EVENT4U_CONFIG_HOME` pointed at a
       temp dir.
-- [ ] **2.3 Repo identity.** The repo id is 12 hex of an HMAC, keyed by a random
+- [x] **2.3 Repo identity.** The repo id is 12 hex of an HMAC, keyed by a random <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/repo_identity.ts -->
       machine-local key created once under `runtime/projects/`, over the canonical origin
       URL: userinfo, tokens and query string removed, host lower-cased, default port, ssh
       and https forms and a trailing `.git` collapsed. No remote → the realpath. A git
@@ -104,14 +104,14 @@ plan AC improvements automatically when a source repository updates.
       verify: tests — https, ssh and `.git` forms give one id; a URL with a token gives
       the same id as without; a moved clone keeps its id; a worktree shares the repo id
       and differs in instance.
-- [ ] **2.4 Route every reader and writer through it.** `cacheFor` in `cli.ts:135`,
+- [x] **2.4 Route every reader and writer through it.** `cacheFor` in `cli.ts:135`, <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/scripts/hooks/code_graph_refresh_hook.ts -->
       `map.ts:313`/`:325`, the refresh lock and marker in `refresh_lock.ts`, `detect.ts`
       and `mcp_server/graph_tools.ts` read their paths from `graphHome`.
       verify: `npx vitest run tests/scripts/code_graph/graph_home.test.ts` -> /passed/ — a case
       greps `src/scripts` for the three constants and finds them only in `graph_home.ts`
       and their definitions; a build in this repo yields
       byte-identical paths to today.
-- [ ] **2.5 Zero writes into a foreign repo.** End-to-end test: `git init` a fixture with
+- [x] **2.5 Zero writes into a foreign repo.** End-to-end test: `git init` a fixture with <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       one source file and no `agents/`, run `code-graph build` and `code-graph map`, then
       assert `git status --porcelain` is empty and the graph sits under the temp home.
       verify: the new test passes; it fails when `graphHome` is short-circuited to the
@@ -119,17 +119,17 @@ plan AC improvements automatically when a source repository updates.
 
 ## Phase 3 — One project registry
 
-- [ ] **3.1 A shared registry module.** `src/scripts/_lib/project_registry.ts` owns
+- [x] **3.1 A shared registry module.** `src/scripts/_lib/project_registry.ts` owns <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/project_registry.ts -->
       `event4u_root()/runtime/projects/registry.json`, keyed by repo id:
       root, remote, fingerprint, last seen, graph home, graph commit, languages,
       providers, pinned. Writes are atomic.
       verify: unit tests for record, read, atomic write and a corrupt file read as empty.
-- [ ] **3.2 Advisories reads and writes through it.** `recordProjects`/`knownProjects`
+- [x] **3.2 Advisories reads and writes through it.** `recordProjects`/`knownProjects` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/advisories.ts -->
       in `advisories.ts:367-385` become wrappers; the old `runtime/advisories/projects.json`
       is read once as a fallback and migrated.
       verify: the advisories tests pass unchanged; a fixture with only the old file yields
       the same `--all-projects` root list.
-- [ ] **3.3 Registration by use, never by crawl.** A `code-graph build` or `refresh`
+- [x] **3.3 Registration by use, never by crawl.** A `code-graph build` or `refresh` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/cli/registry.ts -->
       records its root. `code-graph projects list|add|remove|prune` manage the list by
       hand. No code path walks `$HOME`.
       verify: tests for the four verbs; a test asserts the registry module never calls
@@ -137,11 +137,11 @@ plan AC improvements automatically when a source repository updates.
 
 ## Phase 4 — An estate index, not a merged graph
 
-- [ ] **4.1 Opt in per machine.** `code-graph projects index on|off` stores the switch
+- [x] **4.1 Opt in per machine.** `code-graph projects index on|off` stores the switch <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/estate_index.ts -->
       in the registry; off is the default, because the index carries client project
       paths. With it off, nothing below runs.
       verify: a test asserts that with the switch off a refresh writes no index file.
-- [ ] **4.2 Packages and exports per project.** When a registered project's graph is
+- [x] **4.2 Packages and exports per project.** When a registered project's graph is <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/estate_index.ts -->
       refreshed and the switch is on, write its rows into
       `runtime/projects/index.sqlite3`: declared packages from the manifests the
       providers already recognise (`package.json`, `composer.json`, `pyproject.toml`,
@@ -149,14 +149,14 @@ plan AC improvements automatically when a source repository updates.
       publishes, and its top-level exported symbols only.
       verify: fixture repos for npm and composer produce the expected rows; a project's
       rows are replaced, not appended, on its next refresh.
-- [ ] **4.3 Cross-project edges, honestly labelled.** `xedges` with `via` one of
+- [x] **4.3 Cross-project edges, honestly labelled.** `xedges` with `via` one of <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/estate_index.ts -->
       `package` (declared dependency on a package another registered project publishes),
       `unique-name` (exactly one exporting symbol estate-wide), `mention` (a registered
       project's name in code). Only `package` is a solid edge; the other two carry the
       graph's existing guess semantics.
       verify: fixtures — a real path dependency yields `package`; two projects exporting
       the same name yield no `unique-name` edge.
-- [ ] **4.4 Size stays small.** The index stores packages and exports only, so it
+- [x] **4.4 Size stays small.** The index stores packages and exports only, so it <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/estate_index.ts -->
       must stay under 2 % of the summed project graph JSON sizes.
       verify: `npx vitest run tests/scripts/code_graph/estate_index.test.ts` -> /passed/ — a case builds
       the three-project fixture estate, divides `index.sqlite3` bytes by the summed graph
@@ -164,41 +164,41 @@ plan AC improvements automatically when a source repository updates.
 
 ## Phase 5 — Answering without a project
 
-- [ ] **5.1 A `project` parameter on graph tools.** MCP graph tools and the CLI accept
+- [x] **5.1 A `project` parameter on graph tools.** MCP graph tools and the CLI accept <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/cli.ts -->
       an optional project (repo id, registered name or path) and resolve it through the
       registry and `graphHome`. Default stays the server root.
       verify: a test under tests/scripts/mcp_server gains a case querying a second fixture project by
       id; every existing graph-tool test passes unchanged.
-- [ ] **5.2 `noGraph` points at what exists.** In a root without a graph, the answer
+- [x] **5.2 `noGraph` points at what exists.** In a root without a graph, the answer <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/mcp_server/graph_tools.ts -->
       lists matching registered projects instead of only "run build".
       verify: a test with a registry of two projects asserts both appear.
-- [ ] **5.3 Estate queries.** `code-graph estate where-used`, `projects-using`, and
+- [x] **5.3 Estate queries.** `code-graph estate where-used`, `projects-using`, and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/cli.ts -->
       `advisory-impact` (advisory package × index × import edges), plus the matching MCP
       tool. They read the index only, never a project graph JSON.
       verify: a fixture estate of three projects answers "who uses vitest" with the right
       two; a spy asserts no graph JSON is opened.
-- [ ] **5.4 Estate map page.** `code-graph map --estate` writes one page under the
+- [x] **5.4 Estate map page.** `code-graph map --estate` writes one page under the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/cli.ts -->
       user-global home: projects as nodes, `package` edges solid, guesses dashed. Refused
       when the output path is inside a git work tree.
       verify: render check via `map_verify`; a test asserts the in-repo refusal.
 
 ## Phase 6 — Limits and the first measurement
 
-- [ ] **6.1 Storage budget.** `code-graph projects` honours a budget (default 2048 MB,
+- [x] **6.1 Storage budget.** `code-graph projects` honours a budget (default 2048 MB, <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/code_graph/cli.ts -->
       stored in the registry) and evicts the least-recently-used global-home graphs —
       a query updates recency, a registry scan does not — never a graph under a repo's
       own `agents/`, never a pinned one, never one whose refresh lock is held (council O4).
       verify: a test fills a temp home past a tiny budget and asserts the oldest unpinned,
       unlocked entry goes and a locked older one stays.
-- [ ] **6.2 Stale roots are marked, never silently dropped.** A registered root missing
+- [x] **6.2 Stale roots are marked, never silently dropped.** A registered root missing <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       for 30 days is flagged by `list` and removed only by `prune`.
       verify: a test with a back-dated `last_seen` and a deleted root.
-- [ ] **6.3 Egress never reads the index.** A test greps the telemetry, council,
+- [x] **6.3 Egress never reads the index.** A test greps the telemetry, council, <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       self-repair release, advisories report and map export code paths for imports of the
       registry, the index and the local lineage ledger, and fails on a reader.
       verify: the test passes, and fails when a fixture import of the registry is added to
       one of those modules.
-- [ ] **6.4 Measure.** Record disk per project before and after Phase 1, refresh time
+- [x] **6.4 Measure.** Record disk per project before and after Phase 1, refresh time <!-- receipt: class=R0 · shadow · scope=safe · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       added by the index (target ≤ 3 %), `where-used` latency on the fixture estate
       (target < 200 ms), and zero writes into the foreign fixture, in an evidence file.
       verify: `agents/evidence/analysis/graph-home-measurement-2026-10.md` exists with an
@@ -332,6 +332,12 @@ owner's machine; what the repository tracks is source-free.
 | O5 | contested-technical | council:graph-follows-you-closure | Source-to-mechanism links, pins and locators stay in a local ledger; the repo tracks a source-free decision ledger (`provenance/mechanisms.jsonl`) | both members chose local-only: encrypted ids, relations and timestamps in public history stay correlatable forever. Dissent on routing only — one member classed it owner-reserved; the chosen option is the stricter one, so it strengthens the confidentiality floor | the owner wants source lineage auditable in CI |
 | O6 | contested-technical | council:graph-follows-you-closure | No tracked source view at all; the tracked lineage view shows mechanisms by verdict only | unanimous (2/2) — moot once O5 is local; a per-source list is more identifying than a count | O5 is reopened |
 | O7 | reversible-technical | council:graph-follows-you-closure | Watch is off per source until the owner runs `lineage watch enable` | unanimous (2/2); a remote check is observable network activity and needs per-source consent | the weekly-watch stub shows enabled sources produce signal |
+| A-2.1 | reversible-technical | agent | 2.1 verify names `--dir docs/decisions`: the generator defaults to `docs/adr/`, which does not exist here, and exits 2 for every argv; the CI step (`rule-backstops.yml`) runs the same command with `--dir docs/decisions` | `./scripts-run src/scripts/adr/regenerate_index --check` -> exit 2 `adr-dir not found: docs/adr` | the generator default moves to `docs/decisions` |
+| A-2.4a | reversible-technical | agent | Hooks in the dispatch bundle (context nudge, turn-end feeder, session-start refresh) resolve project homes only (`projectHome`), and `auto-refresh on` refuses a root without one; CLI and MCP use the full `graphHome` | routing the hooks through `graphHome` measured the dispatch bundle at 1,555,029 B against a 1,551,000 B ceiling and the refresh chunk at 21,569 B against 15,400 B (`check_hook_bundle_composition`); project-only routing measures 1,550,405 B and 15,260 B | a raise of the bundle ceiling is ratified, or a foreign-repository user asks for session-start nudges |
+| A-2.4b | reversible-technical | agent | Existing test fixtures that model a project gain an `agents/` directory instead of asserting the new user-global branch; the user-global branch is covered by the new graph_home and foreign-repository tests | the fixtures (map, refresh, refresh lock, consumer root, bench) are projects in intent; a bare temp dir is now a foreign root by definition (ADR-299) | — |
+| A-4.2 | reversible-technical | agent | "Exported symbols" are the top-level declarations outside test files (class, interface, trait, function, constant, type, enum — never a member): the graph records no exportedness. Rows key a project by an integer and an export kind by its index | `dead` refuses for the same missing exportedness; with text ids and kind names the 4.4 fixture estate measured 5.5 % of its graph JSON, with integer keys 1.35 % | the graph starts recording exportedness |
+| A-5.3 | reversible-technical | agent | `graph_estate` joins the MCP surface, and the kernel tools/list payload stays under its 4,900-token band by trimming, not widening: `project` carries no schema description (stated once in `graph_estate`), and the graph tool descriptions were tightened without dropping a claim | `tests/scripts/mcp_lite_tools.test.ts` read 5,208 tok untrimmed, 4,896 after | the band is re-derived, or a host is found ignoring an undescribed parameter |
+| A-6.4 | reversible-technical | agent | The ≤ 3 % refresh target is reported per project size, not as one pass/fail: met on this repository (124 ms of a 4.64 s refresh, 2.7 %), missed on the small fixture, where the index adds a fixed ~40 ms (sqlite load, one `git ls-files`) to a 0.4 s refresh (+9–11 %) | `agents/evidence/analysis/graph-home-measurement-2026-10.md` § 2 | a user reports the 40 ms on small projects, or the fixed cost grows |
 | B-7.1 | reversible-technical | agent | The keyed id lives in `src/scripts/_lib/source_id.ts` (HMAC domain-separated by a fixed context string); `link_crypto source-id` calls it. A non-repository URL canonicalizes to host, port, path and query with scheme, credentials, fragment and trailing slash dropped; a non-URL reference is used trimmed | `canonicalize` returns null for anything that is not a repository, and an article or a paper still needs one id per source | a second consumer needs a different canonical form for the same URL kind |
 | B-7.2 | reversible-technical | agent | `SourceCodebook` takes the id key as an explicit option (`{ idKey }`) rather than switching on the encryption key it already holds, so existing callers keep their `S1…` codes unchanged and a caller opts into stable ids by passing the link key | the ENC1 key is always present in the constructor, so keying on it would have silently changed every existing codebook | a round producer wants stable ids by default |
 | B-8.2 | reversible-technical | agent | A mechanism id may repeat in the decision ledger — it is append-only and the latest row supersedes — and the linter ships with an empty, required `provenance/mechanisms.jsonl`, so an absent ledger is a finding, not a green run over nothing | 9.2 needs a later `adopt` to close an earlier `gap`, which a uniqueness rule would forbid | supersession needs an explicit pointer rather than order |

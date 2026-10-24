@@ -51,6 +51,8 @@ function runCli(args: string[], env: NodeJS.ProcessEnv = {}): RunResult {
 
 beforeEach(() => {
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'code-graph-refresh-'));
+    // A project home (ADR-299): a root without `agents/` keeps its graph in the user-global home.
+    fs.mkdirSync(path.join(tmp, 'agents'));
     fs.mkdirSync(path.join(tmp, 'src'), { recursive: true });
     fs.writeFileSync(path.join(tmp, 'src', 'a.ts'), 'export function hi(): number { return 1; }\n', 'utf8');
 });

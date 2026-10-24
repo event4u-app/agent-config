@@ -15,7 +15,7 @@ import {
     parseArgs,
     percentile,
 } from '../../src/scripts/bench_graph_feeder_latency.js';
-import { NATIVE_CACHE_REL } from '../../src/scripts/code_graph/detect.js';
+import { graphHome } from '../../src/scripts/code_graph/graph_home.js';
 import { sqliteTwinPath } from '../../src/scripts/code_graph/sqlite_store.js';
 
 describe('bench_graph_feeder_latency — step 3.5 of road-to-a-graph-that-feeds-the-gate', () => {
@@ -93,7 +93,7 @@ describe('bench_graph_feeder_latency — step 3.5 of road-to-a-graph-that-feeds-
         const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'feeder-split-')));
         try {
             const dir = await makeFixture(root, 2, true);
-            const graph = path.join(dir, NATIVE_CACHE_REL);
+            const graph = graphHome(dir).cachePath;
             const twin = sqliteTwinPath(graph);
             fs.rmSync(twin, { force: true });
             const r = benchLoadSplit({ graph, runs: 2 });

@@ -79,6 +79,16 @@ const CODE_EXTS: ReadonlySet<string> = new Set(Object.keys(EXT_LANG));
 /** Generated output under the project root: the engine never reads its own artefacts back. */
 const GENERATED_DIRS: ReadonlySet<string> = new Set(['agents/map', 'agents/runtime']);
 
+/** Whether the discovery walk would enter every directory of repo-relative `rel` (posix). */
+export function walkedPath(rel: string): boolean {
+    const dirs = rel.split('/').slice(0, -1);
+    for (let i = 0; i < dirs.length; i++) {
+        const d = dirs[i] as string;
+        if (IGNORE_DIRS.has(d) || d.startsWith('.') || GENERATED_DIRS.has(dirs.slice(0, i + 1).join('/'))) return false;
+    }
+    return true;
+}
+
 export function discoverFiles(root: string, exts: ReadonlySet<string> = CODE_EXTS): string[] {
     return walkFiles(root, (name) => exts.has(path.extname(name).toLowerCase()));
 }
@@ -128,7 +138,7 @@ function walkFiles(root: string, accept: (name: string) => boolean): string[] {
 }
 
 /** Manifests a provider may read to detect a stack, by basename. */
-const MANIFEST_NAME = /^(?:composer\.json|package\.json|pyproject\.toml|requirements[\w.-]*\.txt|pom\.xml|build\.gradle(?:\.kts)?|go\.mod|[\w.-]+\.csproj|Gemfile)$/;
+export const MANIFEST_NAME = /^(?:composer\.json|package\.json|pyproject\.toml|requirements[\w.-]*\.txt|pom\.xml|build\.gradle(?:\.kts)?|go\.mod|[\w.-]+\.csproj|Gemfile)$/;
 
 /** The project's manifests and marker files, for provider detection (ADR-298). */
 export function readProjectProbe(root: string): ProjectProbe {
