@@ -30,7 +30,13 @@
  *   4. Pinning — `source_ref` carries a revision or is explicitly opaque; a
  *      bare URL is rejected because it cannot be re-verified later.
  *   5. Orphan citations — every `<!-- harvest:<id> -->` marker under the
- *      scanned roots resolves to a ledger row.
+ *      scanned roots resolves to a row in either ledger.
+ *   6. Mechanism decisions — `provenance/mechanisms.jsonl`, the source-free
+ *      decision ledger: a closed shape with no source id, pin or locator
+ *      (council O5), adopt|adapt carrying existing `realised_in` paths, reject
+ *      carrying a reason, gap|deferred carrying a roadmap or `open`. A
+ *      mechanism may repeat — the ledger is append-only and a later row
+ *      supersedes an earlier one.
  *
  * An EMPTY ledger with zero markers is a legitimate pass and is reported as
  * such on stdout. A gate that scans nothing and exits green silently is
@@ -57,6 +63,7 @@ const _HERE = path.dirname(_FILE);
 // src/scripts/lint_harvest_provenance.ts → two levels up is the repo root.
 const REPO = path.resolve(_HERE, '..', '..');
 const LEDGER_REL = 'provenance/harvests.jsonl';
+const MECHANISMS_REL = 'provenance/mechanisms.jsonl';
 
 /** Roots scanned for citation markers. Markdown-bearing authored surfaces. */
 export const CITATION_SCAN_ROOTS: readonly string[] = [
@@ -102,11 +109,23 @@ export interface HarvestRecord {
     readonly verdict: 'adopt' | 'adapt';
 }
 
+export interface MechanismRecord {
+    readonly mechanism_id: string;
+    readonly verdict: 'adopt' | 'adapt' | 'reject' | 'already' | 'gap' | 'deferred';
+    readonly realised_in?: readonly string[];
+    readonly roadmap?: string;
+    readonly decided_at: string;
+    readonly reason?: string;
+    readonly reopen_if?: string;
+}
+
 export interface Finding {
     /** Ledger line number, or 0 for findings that belong to no single row. */
     readonly line: number;
-    readonly rule: 'schema' | 'uniqueness' | 'dead-row' | 'pinning' | 'orphan-citation';
+    readonly rule: 'schema' | 'uniqueness' | 'dead-row' | 'pinning' | 'orphan-citation' | 'verdict-requirement';
     readonly message: string;
+    /** The ledger the line number refers to; absent means the harvest ledger. */
+    readonly ledger?: string;
 }
 
 function isValidCalendarDate(s: string): boolean {
@@ -225,6 +244,102 @@ export function validateRecord(raw: unknown, line: number, repoRoot: string): Fi
     }
 
     return findings;
+}
+
+// ─── mechanism decisions ─────────────────────────────────────────────────────
+
+const MECHANISM_FIELDS = ['mechanism_id', 'verdict', 'realised_in', 'roadmap', 'decided_at', 'reason', 'reopen_if'] as const;
+const MECHANISM_REQUIRED = ['mechanism_id', 'verdict', 'decided_at'] as const;
+const MECHANISM_VERDICTS: ReadonlySet<string> = new Set(['adopt', 'adapt', 'reject', 'already', 'gap', 'deferred']);
+
+/** `rel` (with an optional `:<line>`) is a repo-relative path that exists; else the finding. */
+function repoPathFinding(rel: string, field: string, line: number, repoRoot: string): Finding | null {
+    const bare = stripLineSuffix(rel);
+    const resolved = path.resolve(repoRoot, bare);
+    if (bare.trim() === '' || path.isAbsolute(bare) || !(resolved === repoRoot || resolved.startsWith(repoRoot + path.sep))) {
+        return { line, rule: 'schema', message: `${field} '${rel}' must be a repo-relative path inside the repo`, ledger: MECHANISMS_REL };
+    }
+    if (!fs.existsSync(resolved)) {
+        return { line, rule: 'dead-row', message: `${field} '${bare}' does not exist — the decision points at nothing`, ledger: MECHANISMS_REL };
+    }
+    return null;
+}
+
+/** Validate one `mechanisms.jsonl` row: closed and source-free, then the per-verdict requirement. */
+export function validateMechanismRecord(raw: unknown, line: number, repoRoot: string): Finding[] {
+    const at = (rule: Finding['rule'], message: string): Finding => ({ line, rule, message, ledger: MECHANISMS_REL });
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return [at('schema', 'record is not a JSON object')];
+    const rec = raw as Record<string, unknown>;
+    const findings: Finding[] = [];
+
+    for (const k of Object.keys(rec)) {
+        if ((MECHANISM_FIELDS as readonly string[]).includes(k)) continue;
+        findings.push(
+            at(
+                'schema',
+                /source|pin|locator/.test(k)
+                    ? `field '${k}' links a source to a mechanism — the tracked decision ledger is source-free (council O5); it belongs in the local lineage ledger`
+                    : `unexpected field '${k}' — the ledger schema is closed to [${MECHANISM_FIELDS.join(', ')}]`,
+            ),
+        );
+    }
+    for (const k of MECHANISM_REQUIRED) if (!(k in rec)) findings.push(at('schema', `missing required field '${k}'`));
+
+    if ('mechanism_id' in rec && (typeof rec.mechanism_id !== 'string' || !HARVEST_ID_RE.test(rec.mechanism_id))) {
+        findings.push(at('schema', `mechanism_id must be a kebab-case slug, got ${JSON.stringify(rec.mechanism_id)}`));
+    }
+    if ('decided_at' in rec && !(typeof rec.decided_at === 'string' && isValidCalendarDate(rec.decided_at))) {
+        findings.push(at('schema', `decided_at must be an ISO-8601 date (YYYY-MM-DD), got ${JSON.stringify(rec.decided_at)}`));
+    }
+    for (const k of ['reason', 'reopen_if'] as const) {
+        if (k in rec && (typeof rec[k] !== 'string' || (rec[k] as string).trim().length < EVIDENCE_MIN_LENGTH)) {
+            findings.push(at('schema', `${k} must be at least ${EVIDENCE_MIN_LENGTH} characters`));
+        }
+    }
+    const realised = rec.realised_in;
+    if (realised !== undefined && (!Array.isArray(realised) || realised.length === 0 || realised.some((r) => typeof r !== 'string'))) {
+        findings.push(at('schema', 'realised_in must be a non-empty list of repo-relative paths'));
+    } else if (Array.isArray(realised)) {
+        for (const r of realised as string[]) {
+            const f = repoPathFinding(r, 'realised_in', line, repoRoot);
+            if (f) findings.push(f);
+        }
+    }
+    if ('roadmap' in rec) {
+        if (typeof rec.roadmap !== 'string') findings.push(at('schema', "roadmap must be a repo-relative path or 'open'"));
+        else if (rec.roadmap !== 'open') {
+            const f = repoPathFinding(rec.roadmap, 'roadmap', line, repoRoot);
+            if (f) findings.push(f);
+        }
+    }
+
+    const verdict = rec.verdict;
+    if ('verdict' in rec && (typeof verdict !== 'string' || !MECHANISM_VERDICTS.has(verdict))) {
+        findings.push(at('schema', `verdict must be one of [${[...MECHANISM_VERDICTS].join(', ')}], got ${JSON.stringify(verdict)}`));
+    } else if ((verdict === 'adopt' || verdict === 'adapt') && realised === undefined) {
+        findings.push(at('verdict-requirement', `verdict '${verdict}' needs realised_in — an adoption that lives nowhere is not one`));
+    } else if (verdict === 'reject' && !('reason' in rec)) {
+        findings.push(at('verdict-requirement', "verdict 'reject' needs a reason — a rejection without one is re-litigated on every round"));
+    } else if ((verdict === 'gap' || verdict === 'deferred') && !('roadmap' in rec)) {
+        findings.push(at('verdict-requirement', `verdict '${verdict}' needs a roadmap that owns it, or 'open'`));
+    }
+    return findings;
+}
+
+/** Parse + validate every mechanism row. Repeats are allowed: a later row supersedes. */
+export function lintMechanismsText(
+    text: string,
+    repoRoot: string,
+): { readonly records: MechanismRecord[]; readonly findings: Finding[] } {
+    const { parsed, findings: parseFindings } = parseLedgerText(text);
+    const findings: Finding[] = parseFindings.map((f) => ({ ...f, ledger: MECHANISMS_REL }));
+    const records: MechanismRecord[] = [];
+    for (const { line, value } of parsed) {
+        const f = validateMechanismRecord(value, line, repoRoot);
+        findings.push(...f);
+        if (f.length === 0) records.push(value as MechanismRecord);
+    }
+    return { records, findings };
 }
 
 // ─── ledger parsing ──────────────────────────────────────────────────────────
@@ -371,18 +486,19 @@ export function collectPersonaSources(repoRoot: string, personaRoot = 'src/agent
     return citations;
 }
 
-/** Every citation must resolve to a ledger row. */
+/** Every citation must resolve to a row in either ledger. */
 export function findOrphanCitations(
     citations: readonly Citation[],
     records: readonly HarvestRecord[],
+    mechanisms: readonly MechanismRecord[] = [],
 ): Finding[] {
-    const known = new Set(records.map((r) => r.harvest_id));
+    const known = new Set([...records.map((r) => r.harvest_id), ...mechanisms.map((m) => m.mechanism_id)]);
     return citations
         .filter((c) => !known.has(c.id))
         .map((c) => ({
             line: 0,
             rule: 'orphan-citation' as const,
-            message: `${c.file} cites harvest '${c.id}', which has no row in ${LEDGER_REL}`,
+            message: `${c.file} cites harvest '${c.id}', which has no row in ${LEDGER_REL} or ${MECHANISMS_REL}`,
         }));
 }
 
@@ -422,6 +538,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     // the run would report a clean green over a file that no longer exists.
     try {
         assertWatchlistResolves({ gate: 'lint_harvest_provenance', candidates: [LEDGER_REL], repoRoot: REPO });
+        assertWatchlistResolves({ gate: 'lint_harvest_provenance', candidates: [MECHANISMS_REL], repoRoot: REPO });
     } catch (exc) {
         if (exc instanceof DeadScopeError) {
             process.stderr.write(`❌  ${exc.message}\n`);
@@ -432,9 +549,11 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     const text = fs.readFileSync(ledgerPath, 'utf-8');
     const { records, findings } = lintLedgerText(text, REPO);
+    const mechText = fs.readFileSync(path.join(REPO, MECHANISMS_REL), 'utf-8');
+    const { records: mechanisms, findings: mechFindings } = lintMechanismsText(mechText, REPO);
     const citations = [...collectCitations(REPO), ...collectPersonaSources(REPO)];
-    const orphans = findOrphanCitations(citations, records);
-    const allFindings = [...findings, ...orphans];
+    const orphans = findOrphanCitations(citations, records, mechanisms);
+    const allFindings = [...findings, ...mechFindings, ...orphans];
 
     // Per-target completeness accounting over the two populations this gate
     // reasons about: the ledger's own rows, and the citations that point at
@@ -444,7 +563,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     // failure the success message above already tries to talk its way out of in
     // prose. The ledger states it structurally instead.
     const ledger = new GateLedger('lint_harvest_provenance');
-    const known = new Set(records.map((r) => r.harvest_id));
+    const known = new Set([...records.map((r) => r.harvest_id), ...mechanisms.map((m) => m.mechanism_id)]);
     // The row population is every PARSED ledger line, not `records`: a row that
     // fails validation or uniqueness is `continue`d and never reaches `records`,
     // so planning `records` would plan exactly the rows that passed and account
@@ -452,13 +571,21 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     // 100 %. Lines are the stable key; a Finding already carries one.
     const { parsed } = parseLedgerText(text);
     const badLines = new Set(findings.filter((f) => f.line > 0).map((f) => f.line));
+    const { parsed: mechParsed } = parseLedgerText(mechText);
+    const badMechLines = new Set(mechFindings.filter((f) => f.line > 0).map((f) => f.line));
     ledger.plan([
         ...parsed.map((r) => `row:${String(r.line)}`),
+        ...mechParsed.map((r) => `mechanism:${String(r.line)}`),
         ...citations.map((c) => `citation:${c.id}@${c.file}`),
     ]);
     for (const r of parsed) {
         const id = `row:${String(r.line)}`;
         if (badLines.has(r.line)) ledger.fail(id, 'ledger-row finding');
+        else ledger.complete(id);
+    }
+    for (const r of mechParsed) {
+        const id = `mechanism:${String(r.line)}`;
+        if (badMechLines.has(r.line)) ledger.fail(id, 'mechanism-row finding');
         else ledger.complete(id);
     }
     for (const c of citations) {
@@ -470,7 +597,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
 
     if (allFindings.length > 0) {
         for (const f of allFindings) {
-            const at = f.line > 0 ? `${LEDGER_REL}:${f.line}` : LEDGER_REL;
+            const file = f.ledger ?? LEDGER_REL;
+            const at = f.line > 0 ? `${file}:${f.line}` : file;
             process.stderr.write(`❌  ${at}: [${f.rule}] ${f.message}\n`);
         }
         process.stderr.write(
@@ -484,7 +612,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         // that does not distinguish "nothing to check" from "everything checked"
         // is the failure mode this repo has already paid for once.
         process.stdout.write(
-            `✅  lint_harvest_provenance: ${records.length} ledger row(s) OK · ` +
+            `✅  lint_harvest_provenance: ${records.length} ledger row(s) OK · ${mechanisms.length} mechanism row(s) OK · ` +
             `${citations.length} citation(s) resolved across ${CITATION_SCAN_ROOTS.length} scanned root(s)` +
             `${records.length === 0 && citations.length === 0 ? ' — ledger is empty and nothing cites it, which is a legitimate pass' : ''}\n`,
         );
@@ -514,4 +642,4 @@ if (_isCliEntry()) {
     }
 }
 
-export { REPO, LEDGER_REL, ExitCode };
+export { REPO, LEDGER_REL, MECHANISMS_REL, ExitCode };

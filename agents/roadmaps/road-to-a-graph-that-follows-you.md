@@ -224,7 +224,7 @@ plan AC improvements automatically when a source repository updates.
 Council decision O5/O6: anything that links a source to a mechanism stays on the
 owner's machine; what the repository tracks is source-free.
 
-- [ ] **8.1 The tracked decision ledger.** `provenance/mechanisms.jsonl`: mechanism id,
+- [x] **8.1 The tracked decision ledger.** `provenance/mechanisms.jsonl`: mechanism id, <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       verdict (`adopt | adapt | reject | already | gap | deferred`), realised in,
       roadmap, decided at, reason, reopen if. No source id, no pin, no locator. JSON
       schema under `src/scripts/schemas/` with positive and negative fixtures.
