@@ -4,13 +4,46 @@
 
 | Field | Value |
 |---|---|
-| Ordered by | the repository owner |
+| Ordered by | the repository owner, in chat |
 | Date | 2026-10-24 |
-| Scope | how runs plan, review, record and parallelise work; standing until the owner changes it |
-| Source of the order | drafted in an external chat at the owner's request ("ja, gib mir eine"), issued by the owner to an AC session the same day, and re-supplied by the owner in inbox round `inbox-2026-10-af` with the request to make it durable |
-| Grants by itself | the working rules quoted below, nothing else |
+| Scope | every roadmap run, until the owner changes it |
+| Grants by itself | the working rules below; it lowers no test, CI gate or Hard-Floor obligation |
+
+Progress is measured in closed steps, not merged PRs. Tests and CI are unchanged; only
+justification paperwork is cut.
+
+## Immediate
+
+1. `road-to-authority-routing-mechanism` step 7.1 is parked with a revisable
+   fail-closed default (D48). No further council round on 7.1.
+2. Every open question to the owner lives in `agents/owner-questions.md` (ID, one line
+   of context, options, recommendation, what it blocks). A PR whose only content is a
+   question to the owner is not opened: the question goes into the list and the run
+   takes the next step.
+3. At most five active roadmaps. A new inbox round creates no active roadmap; it lands
+   in `later/` or as an addition to an existing roadmap. A new roadmap is pulled only
+   when an active one completes.
+
+## Working rules
+
+4. **Timebox per step.** At the third `(partial)` PR, or after two days open, the step
+   is parked with a result note. More than about ten decisions in one step means it is
+   cut wrong: split it.
+5. **Ceremony by risk.** The council runs only for irreversible, release- or
+   security-relevant decisions; otherwise one reviewer or none. Files under
+   `agents/evidence/` only where someone must read them later (release, security,
+   owner-reserved); a normal step's PR description is enough. Target: evidence lines
+   well below `src/` lines.
+6. **Parallelism.** At most three sessions at once, on separate areas, never two on the
+   same roadmap. During work, vitest runs only the affected tests; the full suite runs
+   before merge. Each session reports its council and vitest call counts at the end.
+7. **Daily report.** Closed steps (of those, from roadmaps older than seven days), open
+   steps with the trend against yesterday, evidence lines against `src/` lines, steps
+   parked by the timebox, new owner questions.
 
 ## The instruction, verbatim
+
+As issued, drafted in an external chat at the owner's request and re-supplied in inbox round `inbox-2026-10-af`.
 
 > Owner-Direktive (24.10.2026): Durchsatz vor Zeremonie. Gemessen wird an geschlossenen Schritten, nicht an gemergten PRs. Tests und CI bleiben unverändert; gespart wird nur an Begründungspapier.
 >
@@ -55,15 +88,3 @@
 >    - Evidence-Zeilen vs. src/-Zeilen
 >    - Geparkte Schritte (Timebox)
 >    - Neue Owner-Fragen
-
-## What it does not grant
-
-- No change to tests, required CI checks, the Hard Floor or the R3 depth — the
-  directive says so in its first paragraph.
-- It does not reverse the 2026-10-21 decision that R0/R1 depth is lowered only
-  after a committed shadow reading
-  (`2026-10-21-review-cap-and-depth-flip.md`); that question is on
-  `agents/owner-questions.md`.
-- It does not choose which five roadmaps stay active — item 3 asks for a
-  proposal, and the choice is the owner's.
-- A CI gate that requires a ratification artifact still requires one.
