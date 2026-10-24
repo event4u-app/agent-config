@@ -81,7 +81,7 @@ plan AC improvements automatically when a source repository updates.
 
 ## Phase 2 — A graph home for folders without `agents/`
 
-- [ ] **2.1 Record the decision.** Write an ADR (via `adr-create`): the project graph
+- [x] **2.1 Record the decision.** Write an ADR (via `adr-create`): the project graph <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
       stays the only truth; the user-global layer is a *home* for graphs that have no
       project home plus a local *index*, never a merged graph; nothing in it leaves the
       machine; it is lazy per ADR-124; ADR-297's map location gains a fallback. The ADR
