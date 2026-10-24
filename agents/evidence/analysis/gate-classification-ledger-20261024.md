@@ -213,7 +213,7 @@ recorded value is the ledger table: sha256 `e7fe0f2adae19b1314bb0dffe123390426bb
 import helpers, and the per-file pins below covered none of them. The
 reconciler recomputes the transitive closure of relative imports from the 16
 checks on every run, and hashes the sorted list of path and git blob pairs. The
-recorded value is the helper closure: 51 files, sha256 `a47d2a77555657f3dcdab372d1f950fad0b4f320b6703ac9c281a9d860683b48`.
+recorded value is the helper closure: 51 files, sha256 `9243c1a7c1881c00581a25e5290d6eb8eaa0ecf8a2ea619209c69ae9137eae87`. Renewed once, on 2026-10-24, after a trunk merge changed `_lib/settings_removed_keys.ts` and `_lib/settings_renamed_keys.ts`. The re-attestation round answered 2/2 *no change* to any classified assertion: `agents/evidence/council/gate-ledger-pin-reattest-20261024.md`. The previous value was `a47d2a77…3b48`.
 
 Any changed, added or removed helper on the closure marks the verdict stale.
 A new dependency is caught as well, because the closure is recomputed rather
