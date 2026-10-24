@@ -87,6 +87,19 @@ closes, a `Run:` succeeds, a peer merges, a setting the run itself changed). If
 any remaining step is one the agent could execute, `blocked` is refused and the
 loop continues.
 
+### Halt under an accepted contract
+
+The council-off halt of the core's halt list, under an **accepted execution
+contract** ([§ 3](roadmap-process-loop.md#3-pre-scan--execution-contract-or-commit-step-ask)),
+exists only when neither rung is available: the contract auto-enables council
+for the run, so in-run open questions resolve silently (`high_impact` /
+`user_required` classifications still escalate per
+[`ask-when-uncertain`](../../rules/ask-when-uncertain.md)); with a
+class-declared `second_model` the local rung runs first. With neither, true
+ambiguity halts — never silent guessing, and never a self-adversarial monologue
+in place of the missing observer (the open-question handling in § 5 states that
+rung by rung).
+
 ### Non-halt — gating notes, "optional" tags
 
 The following are **authoring annotations**, never halt conditions. Do
