@@ -206,14 +206,14 @@ plan AC improvements automatically when a source repository updates.
 
 ## Phase 7 — A stable source identity
 
-- [ ] **7.1 Keyed source ids.** `link_crypto source-id` returns `src_` plus 10 hex of
+- [x] **7.1 Keyed source ids.** `link_crypto source-id` returns `src_` plus 10 hex of <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/link_crypto.ts -->
       `HMAC-SHA256(link_encryption_key, canonical identity)`. Canonicalization reuses
       `harvest_reference_tokens.canonicalize` so URL variants collapse. The recoverable
       `ENC1` token stays randomized. Without the key the command refuses rather than
       inventing a fresh identity — key loss fails closed (council note on O5).
       verify: tests — same URL twice gives one id; https and `.git` forms give one id;
       without the key the command exits non-zero; the id is not `sha256(url)`.
-- [ ] **7.2 Rounds use the stable id.** `SourceCodebook` in `network_sources.ts:209`
+- [x] **7.2 Rounds use the stable id.** `SourceCodebook` in `network_sources.ts:209` <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/network_sources.ts -->
       emits `src_…` codes when a key is available; the round's `intake.md` keeps the
       `ENC1` rows. Without a key it keeps today's `S1…` numbering, labelled per-round.
       verify: the network_sources tests pass; a new case asserts two codebooks with one
@@ -332,6 +332,8 @@ owner's machine; what the repository tracks is source-free.
 | O5 | contested-technical | council:graph-follows-you-closure | Source-to-mechanism links, pins and locators stay in a local ledger; the repo tracks a source-free decision ledger (`provenance/mechanisms.jsonl`) | both members chose local-only: encrypted ids, relations and timestamps in public history stay correlatable forever. Dissent on routing only — one member classed it owner-reserved; the chosen option is the stricter one, so it strengthens the confidentiality floor | the owner wants source lineage auditable in CI |
 | O6 | contested-technical | council:graph-follows-you-closure | No tracked source view at all; the tracked lineage view shows mechanisms by verdict only | unanimous (2/2) — moot once O5 is local; a per-source list is more identifying than a count | O5 is reopened |
 | O7 | reversible-technical | council:graph-follows-you-closure | Watch is off per source until the owner runs `lineage watch enable` | unanimous (2/2); a remote check is observable network activity and needs per-source consent | the weekly-watch stub shows enabled sources produce signal |
+| B-7.1 | reversible-technical | agent | The keyed id lives in `src/scripts/_lib/source_id.ts` (HMAC domain-separated by a fixed context string); `link_crypto source-id` calls it. A non-repository URL canonicalizes to host, port, path and query with scheme, credentials, fragment and trailing slash dropped; a non-URL reference is used trimmed | `canonicalize` returns null for anything that is not a repository, and an article or a paper still needs one id per source | a second consumer needs a different canonical form for the same URL kind |
+| B-7.2 | reversible-technical | agent | `SourceCodebook` takes the id key as an explicit option (`{ idKey }`) rather than switching on the encryption key it already holds, so existing callers keep their `S1…` codes unchanged and a caller opts into stable ids by passing the link key | the ENC1 key is always present in the constructor, so keying on it would have silently changed every existing codebook | a round producer wants stable ids by default |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->
