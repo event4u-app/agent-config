@@ -223,6 +223,31 @@ describe('1.3 — the version axis is a three-way comparison', () => {
         expect(readVersionPins(root)[0]?.legacy).toBe(false);
     });
 
+    // The axis this check missed until 2026-10-24: `agent-config update` moved
+    // the pin to 17.3.0 while the global install stayed on 17.2.1, so every
+    // session ran a version the project did not name, and doctor said nothing.
+    it('warns when the pin is ahead of the global install the sessions run', () => {
+        const root = tree({
+            'agents/settings/.agent-settings.yml': 'agent_config_version: "17.3.0"\n',
+            'agents/installed-tools.lock': 'agent_config_version: "17.3.0"\n',
+        });
+        const c = checkVersionAxis(root, '17.3.0', '17.2.1');
+        expect(c.status).toBe('warn');
+        expect(c.message).toContain('global: 17.2.1');
+        expect(c.message).toContain('the pin names 17.3.0');
+        expect(c.remedy).toContain('agent-config update');
+    });
+
+    it('is quiet when the global install is at or past the pin, or absent', () => {
+        const root = tree({
+            'agents/settings/.agent-settings.yml': 'agent_config_version: "17.3.0"\n',
+            'agents/installed-tools.lock': 'agent_config_version: "17.3.0"\n',
+        });
+        for (const global of ['17.3.0', '17.4.0', null]) {
+            expect(checkVersionAxis(root, '17.3.0', global).status).toBe('ok');
+        }
+    });
+
     it('skips a tree with no pin and no lockfile', () => {
         expect(checkVersionAxis(tree({}), '14.12.0').status).toBe('skipped');
     });

@@ -34,6 +34,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { ROADMAP_ROOT_REL, scan as scanArtifactLocation } from './agent_artifact_location.js';
+import * as installed_lock from './installed_lock.js';
+import { compare_versions } from './version_order.js';
 import type { WiringCheck } from './runtime_wiring_checks.js';
 import { TOOL_TO_HOST, residualReport } from './mcp_consent_residual.js';
 import { checkSkillReach } from './skill_reach.js';
@@ -353,7 +355,19 @@ export function readInstalledVersion(projectRoot: string): string | null {
  * such a filename, and a checker that skipped the file would have called that
  * tree clean.
  */
-export function checkVersionAxis(projectRoot: string, resolvableNow: string | null): WiringCheck {
+/** The version the GLOBAL install recorded — what every session's hooks, rules and skills run. */
+export function readGlobalVersion(): string | null {
+    const recorded = (installed_lock.read_lockfile(installed_lock.lockfile_path()) as unknown as Record<string, unknown> | null)?.[
+        'agent_config_version'
+    ];
+    return typeof recorded === 'string' && recorded.trim() !== '' ? recorded.trim().replace(/^v+/, '') : null;
+}
+
+export function checkVersionAxis(
+    projectRoot: string,
+    resolvableNow: string | null,
+    globalVersion: string | null = readGlobalVersion(),
+): WiringCheck {
     const id = 'version-axis';
     const pins = readVersionPins(projectRoot);
     const installed = readInstalledVersion(projectRoot);
@@ -364,7 +378,23 @@ export function checkVersionAxis(projectRoot: string, resolvableNow: string | nu
         pins.length === 0
             ? 'pinned: none'
             : `pinned: ${pins.map((p) => `${p.version} (${p.file}${p.legacy ? ', LEGACY filename' : ''})`).join(' · ')}`;
-    const line = `${pinText} · installed: ${installed ?? 'unknown'} · resolvable now: ${resolvableNow ?? 'unknown'}`;
+    const line =
+        `${pinText} · installed: ${installed ?? 'unknown'} · global: ${globalVersion ?? 'none'} · ` +
+        `resolvable now: ${resolvableNow ?? 'unknown'}`;
+    // Only the CLI follows a pin; hooks, rules and skills run from the global
+    // install. A pin ahead of it is a project naming a version no session runs,
+    // and nothing else in this tree compares the two.
+    const ahead = pins.filter((p) => globalVersion !== null && compare_versions(p.version, globalVersion) === 1);
+    if (ahead.length > 0) {
+        return {
+            id,
+            status: 'warn',
+            message:
+                `${line} — the pin names ${ahead.map((p) => p.version).join(', ')} but the global install, which ` +
+                `every session's hooks, rules and skills run from, is ${globalVersion as string}.`,
+            remedy: 'run `agent-config update` (it installs the pinned version globally) or `agent-config upgrade`',
+        };
+    }
     const divergent = pins.filter((p) => installed !== null && p.version !== installed);
     if (divergent.length === 0) {
         return { id, status: 'ok', message: line, remedy: '' };
