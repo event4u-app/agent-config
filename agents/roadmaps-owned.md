@@ -13,7 +13,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
-| road-to-hook-guards-that-hold-17-findings | active | draft | 17.0.0 is cut only when the three `fail_closed` hook guards (`block-no-verify`, `block-kernel-rule-writes`, `block-plumbing-writes`) refuse what they claim on every install … |
+| road-to-self-modification-that-a-council-must-pass | active | ready | A change the package makes to what governs it lands on a council's verdict about that exact change. |
 | domain-pack-extraction-when-triggered | later | later | Domain-Pack Extraction (when triggered) |
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
 | road-to-a-byte-bound-and-a-public-figure | later | later | Two numbers this tree can now produce and cannot yet bound. |
@@ -79,6 +79,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-grounding-corpus-catalog-parity | later | later | Road to grounding-corpus / catalog parity |
 | road-to-guided-journeys | later | later | Road to guided journeys & router family — dock the journey pattern onto the existing Flow layer (Source C) |
 | road-to-harvest-second-sweep-proposals | later | later | Second-Sweep surfaced proposals (parked) |
+| road-to-hook-guards-that-hold-17-findings | later | later | 17.0.0 is cut only when the three `fail_closed` hook guards (`block-no-verify`, `block-kernel-rule-writes`, `block-plumbing-writes`) refuse what they claim on every install … |
 | road-to-host-catalogue-contract | later | later | State, from a measurement rather than from this package's model of a host, what projection rule satisfies both: total payload … |
 | road-to-host-claims-the-tree-contradicts-carried | later | later | Every step road-to-host-claims-the-tree-contradicts deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-host-inputs-the-installer-honours | later | later | What the installer writes and what `doctor` reports about the host is computed from the inputs the host itself uses. |
@@ -117,7 +118,6 @@ and keep the full search — this file only adds candidates to it.
 | road-to-routing-assurance-live-floors | later | later | Road to routing assurance — the live-harness floors |
 | road-to-rule-triggers-and-links-that-hold | later | later | What an installed rule file declares and links to is true on the host that loads it. |
 | road-to-seats-that-know-why-they-failed | later | later | Every failure of a council seat carries a class before it gets a reaction, and the class picks the reaction: … |
-| road-to-self-modification-that-a-council-must-pass | later | later | A change the package makes to what governs it lands on a council's verdict about that exact change. |
 | road-to-skill-ecosystem-capability-queue | later | later | Road to the capability queue — everything capability-shaped, waiting on a capacity slot |
 | road-to-skill-ecosystem-executable-payloads | later | later | Road to executable skill payloads — a skill that only describes work cannot be measured doing it |
 | road-to-skill-ecosystem-security-and-conformance | later | later | Road to security and conformance surface — make three unenforced rules detectable |

@@ -98,7 +98,7 @@ files as there were findings without an owner.
       the two archived targets from the installed-layer file and depend on
       `road-to-a-setup-that-decides-itself`; turn the hard-floor and danger-gate
       `extends` rows into `depends` where a step is gated on the other file.
-      verify: `grep -c 'road-to-authority-routing-mechanism' agents/roadmaps/later/road-to-self-modification-that-a-council-must-pass.md` -> /^[1-9]/
+      verify: `grep -c 'road-to-authority-routing-mechanism' agents/roadmaps/road-to-self-modification-that-a-council-must-pass.md` -> /^[1-9]/
       > **Landed 2026-10-16, re-read at `origin/main@fe7a22c6d`.** The 13
       > inline markers in the self-modification file are gone (removed with
       > #2325); its gate on `road-to-authority-routing-mechanism` survives as
