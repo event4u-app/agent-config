@@ -340,7 +340,7 @@ owner's machine; what the repository tracks is source-free.
 | 1 | Path parity break | implementation | Routing every reader through `graphHome` changes where this repo's own graph lives, breaking the shared `agents/map/` | 2.4 asserts byte-identical paths for a root with `agents/`; 2.5 tests the other branch | Phase 2 — A graph home for folders without `agents/` |
 | 2 | Index leaks client paths | product | The registry holds absolute paths of client projects; a later egress path reads it | 4.1 default off; 6.3 egress test fails on any reader | Phase 6 — Limits and the first measurement |
 | 3 | Source fingerprinting | product | A stable id plus per-source counts lets a reader match sources across files | HMAC keyed ids (7.1); source links stay local and the tracked view carries no source id (O5, O6) | Phase 7 — A stable source identity |
-| 4 | Fabricated provenance | implementation | Migration or backfill invents pins or verdicts to look complete | 8.3 marks `pin: unknown`; 9.4 writes drafts only | Phase 8 — One lineage ledger |
+| 4 | Fabricated provenance | implementation | Migration or backfill invents pins or verdicts to look complete | 8.3 marks `pin: unknown`; 9.4 writes drafts only | Phase 8 — Two ledgers: decisions tracked, sources local |
 | 5 | Twin rename race | implementation | A concurrent reader opens the twin between JSON and twin rename and sees a mismatch | The size/mtime guard rejects a mismatched twin, falling back to JSON — a miss, never a wrong answer | Phase 1 — Stop the twin leak |
 
 ## Acceptance Criteria
