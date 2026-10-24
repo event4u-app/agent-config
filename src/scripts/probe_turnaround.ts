@@ -42,6 +42,8 @@
  *       change · verify · ceremony · wait · refusal · unknown, and minutes per change class)
  *   ./scripts-run src/scripts/probe_turnaround --workspace PATH --git 2026-09-28..2026-10-13 [--ref main]
  *   ./scripts-run src/scripts/probe_turnaround --store PATH --against-baseline --queue-root CHECKOUT
+ *   ./scripts-run src/scripts/probe_turnaround --daily [--ref REF] [--json]   (the evening report)
+ *   ./scripts-run src/scripts/probe_turnaround --calls [--store PATH] [--json] (this session's council + vitest calls)
  *
  * `--queue-root` gives an exit 1 of the gating mode a reader: it upserts one
  * record into CHECKOUT's self-repair store, which the prompt-time hook injects
@@ -53,6 +55,7 @@
  * empty corpus under `--against-baseline`, or a class table whose rows do not
  * sum to its total · 2 = usage error.
  */
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -79,6 +82,8 @@ import {
 import { defaultStore, isInjectedBody, userText } from './conformance_scan.js';
 import { upsertFinding } from './_lib/self_repair_store.js';
 import { readSteps, STEP_CLASSES, storeTranscripts, summariseSteps } from './_lib/step_anatomy.js';
+import { countSessionCalls, currentTranscript, readDaily, renderDaily } from './_lib/estate_daily.js';
+import { screenEstate } from './roadmap_drain_queue.js';
 
 const _FILE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_FILE), '..', '..');
@@ -738,13 +743,22 @@ function reportSteps(files: readonly string[], store: string, json: boolean): nu
     return 0;
 }
 
+function tryRevParse(ref: string): boolean {
+    try {
+        execFileSync('git', ['-C', REPO_ROOT, 'rev-parse', '--verify', '-q', ref], { stdio: 'ignore' });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
     const arg = (flag: string, dflt: string): string => {
         const i = argv.indexOf(flag);
         return i >= 0 && argv[i + 1] !== undefined ? (argv[i + 1] as string) : dflt;
     };
     for (const a of argv) {
-        if (a.startsWith('-') && !['--store', '--limit', '--json', '--against-baseline', '--include-current', '--workspace', '--git', '--ref', '--rules-dir', '--ci', '--queue-root', '--steps', '-h', '--help'].includes(a)) {
+        if (a.startsWith('-') && !['--store', '--limit', '--json', '--against-baseline', '--include-current', '--workspace', '--git', '--ref', '--rules-dir', '--ci', '--queue-root', '--steps', '--daily', '--calls', '--transcript', '-h', '--help'].includes(a)) {
             if (!argv.includes('--store') && !argv.includes('--limit')) {
                 process.stderr.write(`probe_turnaround: unrecognized argument: ${a}\n`);
                 return 2;
@@ -755,11 +769,38 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         process.stdout.write(
             'usage: probe_turnaround [--store PATH] [--limit N] [--json] [--against-baseline] [--include-current]\n' +
                 '                        [--workspace PATH] [--git FROM..TO[,…]] [--ref REF] [--rules-dir PATH] [--ci FROM..TO[,…]]\n' +
-                '                        [--queue-root CHECKOUT] [--steps]\n',
+                '                        [--queue-root CHECKOUT] [--steps] [--daily] [--calls] [--transcript PATH]\n',
         );
         return 0;
     }
     const store = arg('--store', defaultStore(process.cwd()));
+    if (argv.includes('--daily')) {
+        const now = new Date();
+        const timeboxed = screenEstate(REPO_ROOT, now.toISOString().slice(0, 10))
+            .flatMap((r) => r.steps)
+            .filter((st) => st.blocker === 'timebox').length;
+        const ref = arg('--ref', tryRevParse('origin/main') ? 'origin/main' : 'HEAD');
+        const d = readDaily(REPO_ROOT, ref, now, 24, timeboxed);
+        process.stdout.write(argv.includes('--json') ? `${JSON.stringify(d, null, 2)}\n` : renderDaily(d));
+        return 0;
+    }
+    if (argv.includes('--calls')) {
+        const t = argv.includes('--transcript') ? arg('--transcript', '') : currentTranscript(store);
+        if (t === null || t === '' || !fs.existsSync(t)) {
+            process.stdout.write(
+                'probe:turnaround · no transcript for this session (CLAUDE_CODE_SESSION_ID unset or not found) — ' +
+                    'pass --transcript PATH; no calls counted\n',
+            );
+            return 0;
+        }
+        const c = countSessionCalls(t);
+        process.stdout.write(
+            argv.includes('--json')
+                ? `${JSON.stringify(c, null, 2)}\n`
+                : `session calls · ${path.basename(t)} · council ${String(c.council)} · vitest ${String(c.vitest)} · bash ${String(c.bash)}\n`,
+        );
+        return 0;
+    }
     const qi = argv.indexOf('--queue-root');
     const queueRoot = qi >= 0 ? argv[qi + 1] : undefined;
     if (qi >= 0 && (queueRoot === undefined || queueRoot.startsWith('-'))) {

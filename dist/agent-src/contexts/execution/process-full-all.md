@@ -39,6 +39,12 @@ command already does.
    still holds — under a total drain the order decides only what finishes first,
    never what gets done.
 
+   **Three limits from the owner directive of 2026-10-24** come out of the same
+   command: a `start` entry stays undispatchable while five roadmaps are started
+   (pull, not push); `next` is empty while three other sessions are live, and
+   `dispatch_hold` names which cap held it; a step under `timeboxed` is split,
+   never dispatched as it stands (§ Timebox).
+
    **An owner's quantity word widens how many roadmaps are FINISHED, never how
    many are STARTED.** "As many roadmaps as possible" reads as "as many to
    completion", in queue order.
@@ -116,12 +122,18 @@ The queue classifies every open step as runnable, council, owner or time
 `Status`, and a dated wait). What it cannot run, the orchestrator settles before
 the roadmap is dispatched again:
 
-1. **Owner questions are asked once, at run start.** The queue's
-   `owner_questions` become ONE numbered block, one decision per number, before
-   any lane spawns. Each answer is recorded at its step. An unanswered step keeps
-   its roadmap in `decide` — it never licenses starting an unstarted roadmap in
-   its place.
-2. **Council questions run in the run.** A lane's `gated:` return or a
+1. **Owner questions live on one sheet, `agents/owner-questions.md`.** Each is a
+   row — ID, one line of context, options, recommendation, what it blocks — and
+   cites its blocker id in backticks; the queue lists every owner question the
+   sheet does not cite under `not on the sheet`. The sheet is shown once, at run
+   start, as ONE numbered block before any lane spawns, and each answer moves to
+   its `## Answered` table and is recorded at its step. A pull request whose only
+   change registers a question is not opened: the question goes on the sheet and
+   the run takes the next runnable step. An unanswered step keeps its roadmap in
+   `decide` — it never licenses starting an unstarted roadmap in its place.
+2. **Council questions run in the run — and only the ones that need it.** The
+   council takes an irreversible, release- or security-relevant question; the run
+   decides the rest and records it in `## Decisions`. A lane's `gated:` return or a
    `council_questions` entry goes to the council by the orchestrator, and the
    verdict goes back to the SAME lane via its message channel. Ending the lane and
    dispatching a fresh one later is how one roadmap received nine lanes in eight
@@ -133,6 +145,25 @@ the roadmap is dispatched again:
    into a named `-carried` follow-up in the same change (the council-routed
    disposition of `roadmap-progress-sync` Iron Law 3), then archived. Never `[~]`
    or `[-]` to reach zero.
+
+### Timebox, test cost and the evening report
+
+Owner directive 2026-10-24
+(`agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`):
+
+- **Timebox markers.** A delivery that lands work on a step without ticking it
+  writes `<!-- started: YYYY-MM-DD -->` on the step once and increments
+  `<!-- partial: N -->`. At `partial: 3`, or two days after `started`, the queue
+  reads the step as `timeboxed`: condense it to the result, the open question
+  and a split into steps of at most 150 words — never extend it.
+  `lint_roadmap_complexity` warns on a step citing more than ten decisions.
+- **Related tests during work, the full suite at the gate.** While a step is
+  open, run `npx vitest related <changed files> --run`; the full suite runs in
+  the pre-merge check and in CI, unchanged.
+- **Calls per session.** The delivery summary carries the session's council and
+  vitest call counts: `./scripts-run src/scripts/probe_turnaround --calls`.
+- **The evening report.** `./scripts-run src/scripts/probe_turnaround --daily`
+  prints the five figures the directive asks for; a drain's close prints it.
 
 ### The orchestrator closes the boxes
 
