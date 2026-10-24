@@ -238,6 +238,16 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         expect(fs.existsSync(out)).toBe(false);
     });
 
+    it('status names a reclaim mutex a crash left behind, for a human to remove', () => {
+        const mutex = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock.reclaim');
+        fs.mkdirSync(mutex, { recursive: true });
+        const old = (Date.now() - 10 * 60 * 1000) / 1000;
+        fs.utimesSync(mutex, old, old);
+        expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/reclaim mutex: .* left by a crash/);
+        fs.rmSync(mutex, { recursive: true });
+        expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).not.toMatch(/reclaim mutex/);
+    });
+
     it('auto-refresh on / status / off writes and removes the local opt-in', () => {
         const marker = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-auto-refresh.json');
         expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/auto-refresh: off/);

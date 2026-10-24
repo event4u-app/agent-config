@@ -87,7 +87,14 @@ import {
 import { suggestVerb } from './intent.js';
 import { buildMap, graphGeneration, mapGeneration, recordOutcome } from './map.js';
 import { cliPackage, usableCli } from './refresh_cli.js';
-import { AUTO_REFRESH_REL, acquire as acquireRefreshLock, readRefreshRecords, recordRefresh } from './refresh_lock.js';
+import {
+    AUTO_REFRESH_REL,
+    LOCK_REL,
+    acquire as acquireRefreshLock,
+    readRefreshRecords,
+    reclaimMutexPath,
+    recordRefresh,
+} from './refresh_lock.js';
 import { verifyMap } from './map_verify.js';
 import {
     affected,
@@ -700,7 +707,9 @@ function headOf(root: string): string | null {
  * A stamp of the files a build reads — path, size and modification time of every
  * source and document file. HEAD alone misses an edit to the working tree made
  * while the build ran (a second agent saving a file), which leaves a graph of
- * content that never existed together.
+ * content that never existed together. Best-effort, not definitive: an edit
+ * that keeps the size and lands within the filesystem's mtime resolution (or
+ * restores the mtime) is not seen; hashing every file's content would be.
  */
 function treeStamp(root: string): string {
     const h = createHash('sha256');
@@ -890,15 +899,27 @@ function cmdAutoRefresh(argv: string[]): number {
     const mapDir = path.join(root, 'agents', 'map');
     const gen = graphGeneration(cacheFor(root));
     const drawnFrom = mapGeneration(mapDir);
+    const mutex = reclaimMutexPath(path.join(root, LOCK_REL));
     process.stdout.write(
         `auto-refresh: ${fs.existsSync(marker) ? 'on' : 'off'}\n` +
             `cli: ${'reason' in cli ? (cli.reason === 'no-cli' ? 'none usable — nothing will run' : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'} — too old, nothing will run`) : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'}`}\n` +
             `last session start: ${line(last['session-start'])}\n` +
             `last refresh: ${line(last.refresh)}\n` +
             `graph: ${computeVerdict(root, cacheFor(root)).verdict}\n` +
-            `map: ${!fs.existsSync(mapDir) ? 'absent' : drawnFrom === null ? 'present (generation unknown — redrawn on the next refresh)' : drawnFrom === gen ? 'present, drawn from the current graph' : 'present, drawn from an older graph'}\n`,
+            `map: ${!fs.existsSync(mapDir) ? 'absent' : drawnFrom === null ? 'present (generation unknown — redrawn on the next refresh)' : drawnFrom === gen ? 'present, drawn from the current graph' : 'present, drawn from an older graph'}\n` +
+            (fs.existsSync(mutex) && mutexAgeMs(mutex) > 60_000
+                ? `reclaim mutex: ${path.relative(root, mutex)} left by a crash — stale locks stay held until it is removed by hand\n`
+                : ''),
     );
     return 0;
+}
+
+function mutexAgeMs(p: string): number {
+    try {
+        return Date.now() - fs.statSync(p).mtimeMs;
+    } catch {
+        return 0;
+    }
 }
 
 /**

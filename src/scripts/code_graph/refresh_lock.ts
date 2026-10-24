@@ -25,10 +25,12 @@ export const LOCK_REL = path.join('agents', 'runtime', 'state', 'code-graph-refr
 export const AUTO_REFRESH_REL = path.join('agents', 'runtime', 'state', 'code-graph-auto-refresh.json');
 export const STALE_LOCK_MS = 5 * 60 * 1000;
 /**
- * The oldest a held lock may be before its owner is no longer believed: a
- * refresh runs inside a 60 s build budget plus one map redraw, so an owner
- * still "alive" after this is a reused PID, or a process on another host
- * (a container sharing the checkout) whose liveness this host cannot probe.
+ * How long an owner on ANOTHER host (a container sharing the checkout) is
+ * believed: this host cannot probe its PID, so age is the only signal. An
+ * availability compromise, not proof — it reads the owner's own wall clock, so
+ * clock skew between hosts shifts it. A same-host owner whose PID is alive is
+ * never reclaimed on age (ratification, 2026-10-24, two of two seats): a paused,
+ * debugged or overloaded refresh is still a refresh.
  */
 export const MAX_LOCK_AGE_MS = 30 * 60 * 1000;
 
@@ -41,7 +43,6 @@ interface Owner {
 }
 
 const ownerPath = (lock: string): string => `${lock}.owner.json`;
-export const STALE_RECLAIM_MS = 60 * 1000;
 
 export interface RefreshRecord {
     at: string;
@@ -114,9 +115,8 @@ export function isStale(lock: string, now: number = Date.now()): boolean {
     const owner = readOwner(lock);
     if (owner === 'unreadable') return false;
     if (owner !== 'none') {
-        if (now - owner.started_at > MAX_LOCK_AGE_MS) return true;
-        // Another host's PID means nothing here: only the age rule above applies.
-        if (owner.host && owner.host !== os.hostname()) return false;
+        // Another host's PID means nothing here: only age applies (see MAX_LOCK_AGE_MS).
+        if (owner.host && owner.host !== os.hostname()) return now - owner.started_at > MAX_LOCK_AGE_MS;
         return !pidAlive(owner.pid);
     }
     try {
@@ -137,6 +137,8 @@ function take(lock: string): () => void {
     };
 }
 
+export const reclaimMutexPath = (lock: string): string => `${lock}.reclaim`;
+
 /** True when this process holds the lock (the CLI took it before calling in). */
 export function heldByThisProcess(root: string): boolean {
     const owner = readOwner(path.join(root, LOCK_REL));
@@ -150,9 +152,11 @@ export function heldByThisProcess(root: string): boolean {
  * after staleness is checked AGAIN under it. A reclaimer that judged the lock
  * stale and was then overtaken finds the successor's live lock on that second
  * check and declines, so it can never delete a lock created after it looked.
- * A reclaim mutex is held for a few file operations; one older than
- * {@link STALE_RECLAIM_MS} was left by a crash inside that section and is
- * cleared, or every later stale lock would stay held for good.
+ * A reclaim mutex left by a crash inside that short section is never removed
+ * automatically: no check before a removal can prove which mutex instance it
+ * removes, and removing a successor's would let two reclaimers in (ratification,
+ * 2026-10-24). Stale locks then stay held — lost freshness, never lost exclusion
+ * — and `code-graph auto-refresh status` names the leftover for a human to remove.
  * `afterStaleCheck` exists for the interleaving test only.
  */
 export function acquire(root: string, afterStaleCheck?: () => void): (() => void) | null {
@@ -165,12 +169,7 @@ export function acquire(root: string, afterStaleCheck?: () => void): (() => void
         if (errno(e) !== 'EEXIST' || !isStale(lock)) return null;
     }
     afterStaleCheck?.();
-    const mutex = `${lock}.reclaim`;
-    try {
-        if (Date.now() - fs.statSync(mutex).mtimeMs > STALE_RECLAIM_MS) fs.rmSync(mutex, { recursive: true, force: true });
-    } catch {
-        /* no leftover mutex */
-    }
+    const mutex = reclaimMutexPath(lock);
     try {
         fs.mkdirSync(mutex);
     } catch {

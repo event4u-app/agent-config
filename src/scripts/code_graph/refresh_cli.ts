@@ -65,12 +65,10 @@ export function cliPackage(cli: string): { root: string; version: string } | nul
  * presence of a file only such a package ships, so nothing is executed.
  */
 export function cliIsCapable(cli: string): boolean {
-    try {
-        const pkg = path.resolve(path.dirname(fs.realpathSync(cli)), '..', '..');
-        return fs.existsSync(path.join(pkg, CAPABILITY_FILE));
-    } catch {
-        return false;
-    }
+    // The same package root the version report uses, so a symlinked or hoisted
+    // layout cannot make one call see a package the other does not.
+    const pkg = cliPackage(cli);
+    return pkg !== null && fs.existsSync(path.join(pkg.root, CAPABILITY_FILE));
 }
 
 export type CliVerdict = { cli: string } | { reason: 'no-cli' } | { reason: 'cli-too-old'; cli: string };
