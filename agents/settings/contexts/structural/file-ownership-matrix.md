@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
-- Files indexed: **631**
-- Edges (incl. self-WRITE): **2403**
+- Files indexed: **632**
+- Edges (incl. self-WRITE): **2411**
 
 ## READ_ONLY edges
 
@@ -53,6 +53,7 @@
 | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `.agent-src.uncondensed/rules/token-efficiency.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/contracts/frugality-charter.md` | `.agent-src.uncondensed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/auto-dispatch-classification.md` | `.agent-src.uncondensed/contexts/execution/auto-orchestration-activation.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/auto-dispatch-classification.md` | `.agent-src.uncondensed/contexts/execution/invocation-plan.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/auto-dispatch-classification.md` | `.agent-src.uncondensed/contexts/execution/orchestration-telemetry.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/auto-dispatch-classification.md` | `.agent-src.uncondensed/contexts/execution/subagent-modes-detail.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/auto-dispatch-classification.md` | `.agent-src.uncondensed/contexts/execution/subagent-routing.md` | `body_link` | 1 |
@@ -117,6 +118,12 @@
 | `.agent-src.uncondensed/contexts/execution/host-capability-manifest.md` | `.agent-src.uncondensed/contexts/subagent-configuration.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/interrupt-examples.md` | `.agent-src.uncondensed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/interrupt-examples.md` | `.agent-src.uncondensed/rules/user-interrupt-priority.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/invocation-plan.md` | `.agent-src.uncondensed/contexts/execution/auto-dispatch-classification.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/invocation-plan.md` | `.agent-src.uncondensed/contexts/execution/mandated-lines.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/invocation-plan.md` | `.agent-src.uncondensed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/invocation-plan.md` | `.agent-src.uncondensed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/invocation-plan.md` | `.agent-src.uncondensed/rules/user-interrupt-priority.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/contexts/execution/mandated-lines.md` | `.agent-src.uncondensed/contexts/execution/invocation-plan.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/mandated-lines.md` | `.agent-src.uncondensed/rules/commit-policy.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/mandated-lines.md` | `.agent-src.uncondensed/rules/decision-revisit-gate.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/contexts/execution/mandated-lines.md` | `.agent-src.uncondensed/rules/direct-answers.md` | `body_link` | 1 |
@@ -1789,7 +1796,7 @@
 
 | Kind | Count |
 |---|---:|
-| `context` | 78 |
+| `context` | 79 |
 | `persona` | 36 |
 | `rule` | 122 |
 | `skill` | 395 |

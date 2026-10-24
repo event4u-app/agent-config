@@ -160,7 +160,7 @@ G1–G7 at the landing commit, each with a recorded red at c164cc24b4.
 - [x] **4.4 `auth-model.md`: Delegated actors** — actor × fields it may change ×
       proof required × channel notified × human approval, plus "who may change a
       recovery channel, confirmed over which verified channel?".
-      verify: `check_context_paths` green.
+      verify: `./scripts-run src/scripts/check_context_paths` -> 0.
 
 ## Phase 5 — Make the projects do it
 
