@@ -403,6 +403,158 @@ An entry belongs under a dated release section, not here — see
 > that forces a new era split (`# Era: 17.2.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [17.3.0](https://github.com/event4u-app/agent-config/compare/17.2.1...17.3.0) (2026-10-24)
+
+### Release highlights
+
+- **Behaviour changes:** _none_
+- **Default changes + migration:** carry the default pass's trust classification (4a35ec7); table mapping stops at the class above; the default leaves provider-routed modules (45cfa32); providers, the default pass and the parsed languages (f83b2e8); the default pass leaves a page a provider already drew (ccd3714); a default convention pass for every project (30b1aa5). Breaking, pending in `BREAKING_CHANGES.md` and shipped by this release: **Three `fail_closed` hook guards run where they were silent.** The installed claude hook command now reaches a dispatcher staged under `~/.event4u/agent-config/runtime/` after a project-local install and before `PATH` ([`3f8c98e`](https://github.com/event4u-app/agent-config/commit/3f8c98e74), #2455). On machines installed through `npx`, or hosts launched with a bare `PATH`, every hook command used to end in a silent `exit 0`; there `block-no-verify` (refuses `git … --no-verify` and `core.hooksPath` overrides), `block-kernel-rule-writes` and `block-plumbing-writes` (refuse agent writes to this package's kernel rules and hook plumbing) now run and may refuse a tool call for the first time. Classed breaking by the AI council, 2026-10-19 (`agents/evidence/council/hook-carrier-release-note-class-20261019.md`). **`uninstall --global --purge` stops being a recursive delete of the host anchor.** Old scope: `fs.rmSync(anchor, { recursive: true })` on whole host configuration roots — `~/.claude/`, `~/.codex/`, `~/.config/zed/` — so everything under them went, whoever wrote it. New scope: only the anchor-relative paths this package's own deploy inventory recorded writing; the anchor itself is never removed, directories are pruned only when left empty, a recorded symlink is unlinked rather than followed, and a purge with no readable inventory for that anchor exits 1 having deleted nothing. A second change in the same area: a plain `uninstall --global` now keeps the lockfile while recorded content is still on disk, where it used to delete it.
+- **Security and correctness:** resolve imports against tsconfig baseUrl, never as reads (6f07aba); route a Flask blueprint imported from another module (81c752b); an unreadable live row cannot stay green forever (2034929); make the install pointer true for every plugin that ships it (54c771b); move zod to 4 to clear GHSA-mrhx-c7xc-m3w5 (6a488a2); emit a server.json the official registry accepts (3f53b83); +22 more.
+- **Honest nulls:** _none_
+- **Known limitations:** route a Flask blueprint imported from another module (src/scripts/code_graph/providers/catalog.ts declares a residual) (81c752b); move zod to 4 to clear GHSA-mrhx-c7xc-m3w5 (src/scripts/install.ts declares a residual) (6a488a2); catalog rows for spring and go-http (src/scripts/code_graph/providers/catalog.ts declares a residual) (72ff3e6); coverage catalog; the map and MCP name the active providers (src/scripts/code_graph/providers/catalog.ts declares a residual) (296691e).
+
+> **Governance mix:** governance-only 34 vs consumer-only 11 (mixed 59, maintenance 11; taxonomy 1.1.0; range 4502d328ff64..b28ca0681c00).
+
+### Features
+
+* **code-graph:** show the map as a turnable 3D orb ([79a5676](https://github.com/event4u-app/agent-config/commit/79a56761ef5d0dbdb9aad6670a60c5c1b99e38b4))
+* **distribution:** watch every submission until it is live ([3124668](https://github.com/event4u-app/agent-config/commit/3124668312c170bf9234e44e0a0432d400a80d75))
+* **distribution:** listing manifests a release keeps current ([c45b0bc](https://github.com/event4u-app/agent-config/commit/c45b0bcbcaea8cbdb7401fb474ee49459e3db666))
+* **code-graph:** the aspnetcore convention provider ([7fb5937](https://github.com/event4u-app/agent-config/commit/7fb5937dd6d0d423f20c1064a84bccea5364d868))
+* **code-graph:** the typeorm provider ([fc32cdc](https://github.com/event4u-app/agent-config/commit/fc32cdc9b46a73c3382346483cd7f5a2bec39e4a))
+* **code-graph:** the sqlalchemy provider ([dcadc0b](https://github.com/event4u-app/agent-config/commit/dcadc0bc07110791c3700081cc4933da18f200d3))
+* **code-graph:** the django provider ([bab64c2](https://github.com/event4u-app/agent-config/commit/bab64c2a6fb04a491e6450a2423f1beac2f660f9))
+* **code-graph:** the flask provider ([e610957](https://github.com/event4u-app/agent-config/commit/e610957a3cd7d771a65af34cf9ba16f0a6e4b940))
+* **code-graph:** the fastapi provider ([0eb6b26](https://github.com/event4u-app/agent-config/commit/0eb6b265705cf3a1fe5383513708275056ea7e25))
+* **code-graph:** python source helpers and per-file template folders for providers ([723c84b](https://github.com/event4u-app/agent-config/commit/723c84b9a57372fce850094e2efaaa2711484946))
+* **code-graph:** the sveltekit provider ([e7eedf7](https://github.com/event4u-app/agent-config/commit/e7eedf7e0ce839a6b8b5980c220c3f5725948b60))
+* **code-graph:** the nuxt provider ([2c45ab3](https://github.com/event4u-app/agent-config/commit/2c45ab380124144f80616bfaef8815dba71868c7))
+* **code-graph:** the vue-router provider ([27a2165](https://github.com/event4u-app/agent-config/commit/27a2165f5e7b8e36877fceb79127843538d13c04))
+* **code-graph:** C# in the native engine ([9777865](https://github.com/event4u-app/agent-config/commit/9777865df43663c1cedb80b1ca3972c0c773788e))
+* **code-graph:** the angular provider ([a77a5a1](https://github.com/event4u-app/agent-config/commit/a77a5a1a098c54476fd56cab162912838d184b79))
+* **code-graph:** catalog rows for spring and go-http ([72ff3e6](https://github.com/event4u-app/agent-config/commit/72ff3e68d3949f17dcdb83005eb2e456880aa3ed))
+* **code-graph:** the wordpress provider ([664ad36](https://github.com/event4u-app/agent-config/commit/664ad3666db7051e4c3895f006400daac0d96ae3))
+* **code-graph:** the symfony provider and a shared PHP name resolver ([7988b71](https://github.com/event4u-app/agent-config/commit/7988b7187f4881ee5da1a4872c4b17ae78377c5a))
+* **code-graph:** the nestjs provider ([0a51cf7](https://github.com/event4u-app/agent-config/commit/0a51cf74308a6914d6f770c6932c09ff549cfae6))
+* **code-graph:** add Go HTTP router convention provider ([c93a3bc](https://github.com/event4u-app/agent-config/commit/c93a3bc5516ba6f84dd9661bcd35c31df1f36f50))
+* **code-graph:** add Spring Boot convention provider ([8584101](https://github.com/event4u-app/agent-config/commit/85841018f15f4bf6a1fda149256515349aca1d9b))
+* **code-graph:** the nextjs provider ([e407eb8](https://github.com/event4u-app/agent-config/commit/e407eb8754f6f64b4b6a558a2315f2833f622b3c))
+* **code-graph:** coverage catalog; the map and MCP name the active providers ([296691e](https://github.com/event4u-app/agent-config/commit/296691e8325657d75f0919a9d769fc5aee72c777))
+* **code-graph:** shared JS provider helpers; the react-router provider ([b02702f](https://github.com/event4u-app/agent-config/commit/b02702fd0289676d13e5dc5cfec3e545021d2a2d))
+* **code-graph:** shared provider kit and extractors; the express provider ([0581df8](https://github.com/event4u-app/agent-config/commit/0581df855a2f233db053b652caa2294284e1f31e))
+* **hooks:** refresh a consumer's code graph at session start ([f5f573c](https://github.com/event4u-app/agent-config/commit/f5f573cf6a817b580d2536b3302790bf38fda3db))
+* **code-graph:** single-flight refresh that also redraws the map ([725e9df](https://github.com/event4u-app/agent-config/commit/725e9dfae2bcb0c89e52abafe20cb7ad28a5db0e))
+* **code-graph:** a default convention pass for every project ([30b1aa5](https://github.com/event4u-app/agent-config/commit/30b1aa50483bdb52015619219c7e04b3e326b449))
+* **code-graph:** schema 6 — generic names, provider ids, trust allowlist, per-handler request paths ([3890a2b](https://github.com/event4u-app/agent-config/commit/3890a2bf6bbb6a8b1991a4fff92f1513a65a457d))
+* **code-graph:** ordered pass list and a convention-provider registry ([fdd1f69](https://github.com/event4u-app/agent-config/commit/fdd1f69ab4f514226ec129b871ea80794c3be4cd))
+
+### Bug Fixes
+
+* **distribution:** state the blocker swap plainly and the image contents truly ([70797c0](https://github.com/event4u-app/agent-config/commit/70797c0f7833fed3397214589fd11483e60c3a3e))
+* **docker:** ship the whole build output in the stdio MCP server image ([e324128](https://github.com/event4u-app/agent-config/commit/e3241282c713df27451d2f33ad3610501aa1c62d))
+* **ci:** classify the listing files, tighten the size baseline, drop two emails ([c835083](https://github.com/event4u-app/agent-config/commit/c835083e16ef00e2f42fdf5cf5a696bf83239712))
+* **code-graph:** resolve imports against tsconfig baseUrl, never as reads ([6f07aba](https://github.com/event4u-app/agent-config/commit/6f07abad79c4f4212b9e27604d015689f659858d))
+* **code-graph:** route a Flask blueprint imported from another module ([81c752b](https://github.com/event4u-app/agent-config/commit/81c752b2f08113882b2ad66340295a9e463829a6))
+* **distribution:** an unreadable live row cannot stay green forever ([2034929](https://github.com/event4u-app/agent-config/commit/2034929c581d97e71e352d76f5c16614ddde74e7))
+* **distribution:** make the install pointer true for every plugin that ships it ([54c771b](https://github.com/event4u-app/agent-config/commit/54c771bbfe8b1aa5a8ba8df8fb57a4ef1eaf9f12))
+* **deps:** move zod to 4 to clear GHSA-mrhx-c7xc-m3w5 ([6a488a2](https://github.com/event4u-app/agent-config/commit/6a488a22b625cdacff819c2559f9d5b786adeecd))
+* **mcp:** emit a server.json the official registry accepts ([3f53b83](https://github.com/event4u-app/agent-config/commit/3f53b83b3ebf5dcdb8a5968708334e3cabec0330))
+* **code-graph:** judge an owner record without a host by age alone ([4a3fa82](https://github.com/event4u-app/agent-config/commit/4a3fa82f87a0ce925c183d0334210fd99bc440b7))
+* **code-graph:** restore the ratified lock rules over the review follow-up ([1fb0854](https://github.com/event4u-app/agent-config/commit/1fb085425389d50c54735aa22007e9a57a041a60))
+* **code-graph:** validate an edge's provider_id as a string ([3b15b60](https://github.com/event4u-app/agent-config/commit/3b15b60bd6d276fd77ba7e99e23a6322489ed3b5))
+* **code-graph:** buildMap enforces a single writer itself ([345787b](https://github.com/event4u-app/agent-config/commit/345787b1198864bcf0232930cef4c3de30788d24))
+* **egress,code-graph:** keep the shell name==value form; pin the map swap contract ([2b51b78](https://github.com/event4u-app/agent-config/commit/2b51b7817caf5752aa35c2e0d1de3e4c9aa079b9))
+* **deps:** lift body-parser and its siblings past GHSA-27r3-jxmh-p828 ([31cc425](https://github.com/event4u-app/agent-config/commit/31cc4256c3d68d925025482c4aeaad58873b504f))
+* **code-graph:** one generation for graph and map; working-tree changes discard a build ([5133163](https://github.com/event4u-app/agent-config/commit/5133163677eec6cc82866a4ac7e2dfed3de66038))
+* **code-graph:** refresh only with a capable CLI, record every outcome, harden the lock ([74531d4](https://github.com/event4u-app/agent-config/commit/74531d44d1dac2f9d2759a710cd490caaead7547))
+* **hooks:** install the development hooks only into this package's checkout ([7e3c185](https://github.com/event4u-app/agent-config/commit/7e3c185530c557bae93c69c42032bbda5931c431))
+* **code-graph:** publish agents/map/ as one generation ([7b23eb4](https://github.com/event4u-app/agent-config/commit/7b23eb4ad576f8ec4e27a88e73d1026219feac2d))
+* **egress:** a comparison or an arrow is never a credential assignment ([c915ed8](https://github.com/event4u-app/agent-config/commit/c915ed85ebb013364ea7aef4888122a72986455e))
+* **code-graph:** drop a duplicated set in the docs pass ([336857d](https://github.com/event4u-app/agent-config/commit/336857d82052a7b24ce91244c2a48414800dd627))
+* **code-graph:** one lock protocol, with a reclaim that cannot hit a successor ([0c39b05](https://github.com/event4u-app/agent-config/commit/0c39b0563876ed9b3093060ab45330119f2fdb8f))
+* **code-graph:** review findings — per-root Laravel, deepest root, indexed lookups, identity, comments ([3c4e39d](https://github.com/event4u-app/agent-config/commit/3c4e39df6d448bfd524f54aa130c924607c465e2))
+* **code-graph:** reclaim a refresh lock only on positive evidence ([d4857e4](https://github.com/event4u-app/agent-config/commit/d4857e46b1ad46c6c1592a7f932f748b597f429e))
+* **hooks:** an uninspectable inner .git ends the repository search ([366c1a8](https://github.com/event4u-app/agent-config/commit/366c1a81b130fa3ffe84ebd43cc28584f0a3f264))
+* **code-graph:** walk the canonical root when deciding "not a repository" ([4d36a87](https://github.com/event4u-app/agent-config/commit/4d36a87ee2571ff28dbf34556200ae6354a48631))
+* **code-graph:** a failing git probe can never pass the HEAD guard ([3a9ad97](https://github.com/event4u-app/agent-config/commit/3a9ad97afae1419ced7a6baf909b9f99cc215b93))
+* **code-graph:** restore the fsRoutes guard a probe restore overwrote ([62e00b7](https://github.com/event4u-app/agent-config/commit/62e00b7d982c37975750d39a8d4802d5d503e847))
+* **code-graph:** table mapping stops at the class above; the default leaves provider-routed modules ([45cfa32](https://github.com/event4u-app/agent-config/commit/45cfa32bb428adcf635b7c186ca2c4b0155dc6ec))
+* **code-graph:** make the session refresh opt-in and repository-proof ([061bd6f](https://github.com/event4u-app/agent-config/commit/061bd6fd099de9a9ab9b294be05ed42c615c4fef))
+* **code-graph:** the default pass leaves a page a provider already drew ([ccd3714](https://github.com/event4u-app/agent-config/commit/ccd3714ba683766af538f0604d36877f93e49af5))
+* **hooks:** refresh the code graph after merge and rebase too ([02bd720](https://github.com/event4u-app/agent-config/commit/02bd72047bd0644a817f375526cab130aaf6e998))
+
+### Documentation
+
+* **evidence:** close both batch-review findings and re-bind the round ([cb3fdac](https://github.com/event4u-app/agent-config/commit/cb3fdac231451a5668cbbf72ae89c70f31a71379))
+* **evidence:** completion review of the Tier B batch PR ([933859b](https://github.com/event4u-app/agent-config/commit/933859b0c68d61e8b691cc683b9ab2fdcd97c30d))
+* **distribution:** record awesome-mcp-servers attempt 1c and the Tier B go ([7c2dcb0](https://github.com/event4u-app/agent-config/commit/7c2dcb0f47735efc204f9da8ad092e151577c354))
+* **roadmaps:** bring carried step 2.4 under the 150-word step cap ([c246574](https://github.com/event4u-app/agent-config/commit/c246574ba4a332f2b89916073b76945817a8d3b4))
+* **roadmaps:** carry the default pass's trust classification ([4a35ec7](https://github.com/event4u-app/agent-config/commit/4a35ec711092e07e0178e1752f37ff5366a21a94))
+* **roadmaps:** fold the last review findings into the carried Phase 2 ([aa3087b](https://github.com/event4u-app/agent-config/commit/aa3087b3ee8e1a32a6159ac2f49e119ddd5d1de4))
+* **evidence:** re-bind the completion review after merging main ([409cfec](https://github.com/event4u-app/agent-config/commit/409cfecade69a74eff951bf792dcb754d04fd808))
+* **evidence:** re-bind the completion review after the CI fixes ([bd0a59f](https://github.com/event4u-app/agent-config/commit/bd0a59f114f62fff3fd5941ca1f57dc149dbd15f))
+* **roadmaps:** give every command-leading verify clause a prose lead ([53551c7](https://github.com/event4u-app/agent-config/commit/53551c7d1be5fcefb30e6996bd0d8c4846ae6314))
+* **roadmaps:** re-review the carried plan's risks after Phase 2 ([153315b](https://github.com/event4u-app/agent-config/commit/153315b20c85c7b8eff96942f2b51f0c97b83d6d))
+* **evidence:** re-bind the completion review after the parity declaration ([004444e](https://github.com/event4u-app/agent-config/commit/004444e8b70a956d0d5223daad633068432c2934))
+* **roadmaps:** carry the remaining PR #2603 review residue ([ef41128](https://github.com/event4u-app/agent-config/commit/ef4112840e7f363c3564f33053271fda903b0a46))
+* **evidence:** close both completion-review findings and re-bind the round ([703940a](https://github.com/event4u-app/agent-config/commit/703940af4eb3976ab21f44dc21fcbc69582eb63b))
+* **evidence:** completion review of listings-a-release-keeps-current ([493cce0](https://github.com/event4u-app/agent-config/commit/493cce098231e2bb8c9a1b363731886324a56269))
+* **settings-api:** the schema comes from z.toJSONSchema now ([f50548b](https://github.com/event4u-app/agent-config/commit/f50548b55fc181e21e2f720f92ac16512e83d74b))
+* **distribution:** describe denylisted list names instead of naming them ([e99d6bb](https://github.com/event4u-app/agent-config/commit/e99d6bbad5c7e50d83a8ad7c5d26c7e6f7f8d73d))
+* **roadmaps:** point the archived and parked listings roadmaps at each other ([3bbc2f2](https://github.com/event4u-app/agent-config/commit/3bbc2f20053ce12cacc909966c6562084f7fcc1b))
+* **roadmaps:** archive listings-a-release-keeps-current ([1eb156d](https://github.com/event4u-app/agent-config/commit/1eb156d6ce4d77c4328b48cbac4ae7c89adffa47))
+* **roadmaps:** listings a release keeps current, and what the owner submits ([6f1354b](https://github.com/event4u-app/agent-config/commit/6f1354b58bea18bd73d2a9551f83834c5b4fefe2))
+* **distribution:** planned targets, owner packets, the watcher ([f15e8c2](https://github.com/event4u-app/agent-config/commit/f15e8c2436f354280d75b3c2f39cf97a79c5262e))
+* **roadmaps:** give the follow-up roadmap's verify clauses an expectation ([c7c47d5](https://github.com/event4u-app/agent-config/commit/c7c47d55a07311fcfe9364a41fccddf88a6266fd))
+* **evidence:** ratification rounds 14-16 — ratified 2/2 ([2ec253a](https://github.com/event4u-app/agent-config/commit/2ec253adc2ed655fd10e5c0ff7d1f3dcc715b992))
+* **evidence:** ratification rounds 9-13 — ratified 2/2 against PR #2603's branch ([e5f8107](https://github.com/event4u-app/agent-config/commit/e5f81073ffd63a55ca9e68f38a66cbb96495fffd))
+* **roadmaps:** archive road-to-code-graph-refresh-follow-ups — all steps done ([79f5ad1](https://github.com/event4u-app/agent-config/commit/79f5ad1c8ac2a5587379f3274a05e09cc660eef1))
+* **roadmaps:** the three follow-ups of the code-graph auto-refresh ratification ([4f2dd8a](https://github.com/event4u-app/agent-config/commit/4f2dd8afe08cc2e7930cf2d0f6c3173ee3c26d2a))
+* **code-graph:** name auto-refresh in the agents-layout map row, not the skill ([23480c8](https://github.com/event4u-app/agent-config/commit/23480c8ea849d773bffa31418a7fd561c5346d3c))
+* **adr:** ADR-298 discloses its evidence ([2c06e78](https://github.com/event4u-app/agent-config/commit/2c06e7881a4bf8a2a366d9d27ef987fcd0052336))
+* **evidence:** ratification record for the code-graph auto-refresh ([8bdd7bb](https://github.com/event4u-app/agent-config/commit/8bdd7bb38e504a3f0406d8c5cdd3e4eafa5d9182))
+* **roadmap:** close phases 6-7 and the acceptance criteria; record the Ruby payload decision ([578778f](https://github.com/event4u-app/agent-config/commit/578778f9840de25e15d0ae883474b55c019d7a7c))
+* **code-intelligence:** providers, the default pass and the parsed languages ([f83b2e8](https://github.com/event4u-app/agent-config/commit/f83b2e8a436eb46aae201cea883ce80f840bc9f5))
+* **adr:** ADR-298 framework-neutral graph core; record the provider baseline ([5aefb74](https://github.com/event4u-app/agent-config/commit/5aefb74f6f563a534a073f7e2b1e9d59bfcafebe))
+* **roadmap:** road-to-graph-providers-for-every-stack from inbox-2026-10-ac ([a67cd07](https://github.com/event4u-app/agent-config/commit/a67cd0770597ef22cb0b8c6ac60d38a2e8bf0d0e))
+
+### Refactoring
+
+* **code-graph:** call the lock owner's random value a nonce ([c5cf577](https://github.com/event4u-app/agent-config/commit/c5cf5775faa96eea7cbd5a374e75c0d77e6e8f30))
+* **code-graph:** trust lists as type-checked word strings ([cfeaeae](https://github.com/event4u-app/agent-config/commit/cfeaeaebdbc18fe28c01fcebcf9b1c5bb965ca9b))
+
+### Tests
+
+* **mcp:** drop an unused os import the changed-file lint now sees ([bdb512c](https://github.com/event4u-app/agent-config/commit/bdb512c015160fbf41a71fca0137d17314c22895))
+* **code-graph:** render-check the orb, opened and half-turned ([580dbfc](https://github.com/event4u-app/agent-config/commit/580dbfcfd53e9e3c3caa0b8ecca12d4ec39cde2a))
+* **code-graph:** move HEAD deterministically in the refresh HEAD-guard tests ([060e673](https://github.com/event4u-app/agent-config/commit/060e673e57c7c0bebd083bae0c704ebb014ba26b))
+* **code-graph:** exercise inspection errors without skips or chmod ([49de553](https://github.com/event4u-app/agent-config/commit/49de553fedc019e10c67527718bc082bec2561c6))
+* **hooks:** a slow, failing refresh never holds up a git operation ([3ab56a5](https://github.com/event4u-app/agent-config/commit/3ab56a58da0628cfb312dc386945e4d2303e64ea))
+
+### CI
+
+* **parity:** declare adoption_status as a CI-only network gate ([6aae044](https://github.com/event4u-app/agent-config/commit/6aae0444e7ff3481b986f4a5a4e27c8b54fa744c))
+* **release:** publish the official MCP Registry entry on release ([1ea5175](https://github.com/event4u-app/agent-config/commit/1ea51751fbdde192f1f476a5a9c79f3837851889))
+
+### Chores
+
+* **deps:** bump the site group in /site with 2 updates ([e024969](https://github.com/event4u-app/agent-config/commit/e02496944f219ff98901a7cd7890be11458b1d33))
+* **deps-dev:** bump @cloudflare/workers-types ([ffbbb68](https://github.com/event4u-app/agent-config/commit/ffbbb68b3b0c5c99674d59c85b303e65b3811e76))
+* **config:** lower the source-size baseline to 17,333 ([7563292](https://github.com/event4u-app/agent-config/commit/756329299a855fa7dec38822fd15dd19e3941c38))
+* **dist:** rebuild the install bundle on zod 4 ([00fb46c](https://github.com/event4u-app/agent-config/commit/00fb46c9cdd4af92262ee562014dd9afdd794997))
+* **roadmaps:** regenerate the owned digest ([ece8127](https://github.com/event4u-app/agent-config/commit/ece8127e1812112e490d34d3b0395eaf7abdb464))
+* **visibility:** add the gemini-cli-extension topic ([1f4b199](https://github.com/event4u-app/agent-config/commit/1f4b199009bf05c060e0b959c9d57f13d73bef02))
+* **dist:** project the check_memory template's assignment head ([af7a6a1](https://github.com/event4u-app/agent-config/commit/af7a6a18f92aed389dee7f3e403e35635e04693a))
+* regenerate the MCP inventory; lift body-parser past GHSA-27r3-jxmh-p828 ([1148d56](https://github.com/event4u-app/agent-config/commit/1148d563994879e4a6281794f7b69fb73535849f))
+* **roadmap:** regenerate the owned digest ([5552793](https://github.com/event4u-app/agent-config/commit/5552793f1d6f149b40877c21a5898fa117a87bc3))
+* **budget:** re-anchor the built pack figure for the C# grammar ([11f745d](https://github.com/event4u-app/agent-config/commit/11f745d5880cf8feb540d1198bdb905e0ab058fc))
+* **hooks:** record the admission of the code-graph-refresh concern ([74376a4](https://github.com/event4u-app/agent-config/commit/74376a4614e356afe3af065fe60b227242bc0264))
+* **roadmaps:** claim the one-concern estate growth of the code-graph auto-refresh ([1794c48](https://github.com/event4u-app/agent-config/commit/1794c4898dff4930eb6437ced36c068c8fcc5bc8))
+* **adr:** regenerate the evidence census after the ADR-298 edit ([e523a65](https://github.com/event4u-app/agent-config/commit/e523a65abcee867a394ccdbed8f389946d81b41f))
+* **roadmap:** carry Ruby and Rails, archive the provider roadmap; fix the CI reds ([d4ac6be](https://github.com/event4u-app/agent-config/commit/d4ac6be2a8b8405d89ddb1f8ce919c777c0bcb4a))
+
+Tests: 32651 (+354 since 17.2.1)
+
 ## [17.2.1](https://github.com/event4u-app/agent-config/compare/17.2.0...17.2.1) (2026-10-23)
 
 ### Release highlights

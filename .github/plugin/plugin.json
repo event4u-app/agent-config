@@ -1,7 +1,7 @@
 {
   "name": "agent-config",
   "description": "Discovery plugin for the event4u agent-config suite: a read-only MCP server plus one install-pointer skill. It is not the full suite and registers no hooks. Install the full suite (governed skills, rules, commands and hooks) with `npx -y @event4u/agent-config init`.",
-  "version": "17.2.1",
+  "version": "17.3.0",
   "author": {
     "name": "event4u",
     "email": "dev@event4u.app"
@@ -27,7 +27,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@event4u/agent-config@17.2.1",
+        "@event4u/agent-config@17.3.0",
         "mcp-server"
       ]
     }
