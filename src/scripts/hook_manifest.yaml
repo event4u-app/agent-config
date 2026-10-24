@@ -1397,6 +1397,21 @@ concerns:
     fail_closed: false
     severity: advisory
     effect: execution
+  # road-to-a-setup-that-decides-itself step 3.3 — promote the claude rule layer
+  # after proof, never at install. On session_start: demote a thinned layer the
+  # latest arrival record (taken after the promotion) shows missing a standing
+  # law, or — only while `src/config/layer-form-promotion.json` is enabled, which
+  # step 5.3 decides — thin a full one for the FOLLOWING sessions when the
+  # layer-form decision returns `thinned`. Silent, exit 0 on every path, no
+  # hook-token-budget row — it emits nothing. claude alone: the arrival record
+  # and the carrier describe the claude layer only. Loaded from its own chunk.
+  # Kill switch: `AGENT_CONFIG_LAYER_PROMOTE=off`.
+  layer-promote:
+    script: src/scripts/hooks/layer_promotion_hook.ts
+    args: []
+    fail_closed: false
+    severity: advisory
+    effect: execution
   # road-to-a-tick-the-shipped-path-earns 2.4 — the constraint carrier for a
   # subagent whose definition sets `omitClaudeMd`. On SubagentStart it reads the
   # definition the host runs (project, then user `.claude/agents/<type>.md`)
@@ -1637,7 +1652,7 @@ platforms:
 
   claude:
     ask:              native
-    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, update-notice, surface-probe, session-register, review-baseline, journal-record, rule-inject, code-graph-refresh]
+    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, update-notice, surface-probe, session-register, review-baseline, journal-record, rule-inject, code-graph-refresh, layer-promote]
     # `rule-inject` is bound here for ONE source: `compact`
     # (road-to-a-rule-carrier-that-works-outside-the-repo step 1.6). The concern
     # returns before reading anything on `startup`, `resume`, `clear` and

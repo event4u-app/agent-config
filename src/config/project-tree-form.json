@@ -4,7 +4,7 @@
     "registered_at": "2026-10-20",
     "owner": "maintainer",
     "superseded_by": "a valid observed layer-form verdict for the same host — see projectTreeForm() in src/scripts/_lib/project_tree_form.ts",
-    "retire_when": "step 3.6 of road-to-a-setup-that-decides-itself routes the project tree through the decision function on an observed effect row; this file goes with it, and until then its absence would be a silent default change rather than a simplification",
+    "retire_when": "a project-tree observer feeds shippedProjection() a verdict scoped `project-tree` for every host listed here; until then its absence would be a silent default change rather than a simplification. Confirmed as the source by the AI council at full quorum on 2026-10-24 (agents/evidence/council/setup-project-tree-form-source-20261024.md), with the precedence rule on the live path and AGENT_CONFIG_PROJECT_TREE_FORM=full as the operator rollback",
     "hosts": {
         "claude-code": {
             "form": "delivery",

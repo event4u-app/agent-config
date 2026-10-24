@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-n carries the owner's directive of 2026-10-12 — remove the lean settings and make loading default and dynamic, but only if the package gets no worse and stays as reliable as today. road-to-an-installed-layer-that-is-thinned plans the opposite form (its step 3.1 keeps the rollback as one setting) and is blocked on an instrument no scheduled file owns; folding six phases into it would turn a three-phase opt-in file into the largest active roadmap and bury its own owner answer. Archiving or parking it is wrong because its opt-in phases stay valid; this file replaces only its 3.1 form."
-estate_growth_exempt: "+1 concern_count on 2026-10-23 for step 1.1: `instructions-observer` is the concern the step exists to bind — the observe-only capture that feeds the arrival record 3.1 reads; it is one concern on one event on one host, and the same change closes blocker `instructions-loaded-binding-needs-a-ratification-quorum` (-1 open_blockers). Earlier entry: +3 open_blockers on 2026-10-20, each registering a stop the Phase 4 drain lane MET rather than one it introduced: `instructions-loaded-binding-needs-a-ratification-quorum` (the byte half of 1.1's stop is gone — the lane freed 1,148 B — and what remains is a two-provider ratification the `anthropic` seat could not supply that day), `project-tree-form-source-needs-a-full-quorum` (one seat of two answered 3.6), and `projection-mode-removal-waits-on-second-host-reach` (ADR-289 point 3, falsified in the skills roadmap the same week). Each closes no box, changes no behaviour, and names the venue that resolves it; between them they close out eight steps' worth of re-derivation for the next lane. The original entry read: +1 open_blockers for `instruction-load-observer-has-no-scheduled-owner`, the question this round raised for the seventh time — resolved 2026-10-15 by owner answer (a)."
+estate_growth_exempt: "+1 concern_count on 2026-10-24 for step 3.3: `layer-promote` is the concern the step exists to bind — the claude-only session_start carrier of promote-after-proof, shipped with promotion switched off and ratified 2/2 (agents/evidence/ratifications/layer-promote-binding-20261024.md); the same change resolves two blockers (`project-tree-form-source-needs-a-full-quorum`, `surface-snapshot-waits-on-the-release-cut`). Earlier entry: +1 concern_count on 2026-10-23 for step 1.1: `instructions-observer` is the concern the step exists to bind — the observe-only capture that feeds the arrival record 3.1 reads; it is one concern on one event on one host, and the same change closes blocker `instructions-loaded-binding-needs-a-ratification-quorum` (-1 open_blockers). Earlier entry: +3 open_blockers on 2026-10-20, each registering a stop the Phase 4 drain lane MET rather than one it introduced: `instructions-loaded-binding-needs-a-ratification-quorum` (the byte half of 1.1's stop is gone — the lane freed 1,148 B — and what remains is a two-provider ratification the `anthropic` seat could not supply that day), `project-tree-form-source-needs-a-full-quorum` (one seat of two answered 3.6), and `projection-mode-removal-waits-on-second-host-reach` (ADR-289 point 3, falsified in the skills roadmap the same week). Each closes no box, changes no behaviour, and names the venue that resolves it; between them they close out eight steps' worth of re-derivation for the next lane. The original entry read: +1 open_blockers for `instruction-load-observer-has-no-scheduled-owner`, the question this round raised for the seventh time — resolved 2026-10-15 by owner answer (a)."
 relates:
   - slug: road-to-a-hook-carrier-that-is-never-silent
     relation: extends
@@ -196,7 +196,7 @@ with that file.
   verify: fixture where every condition holds — the layer on disk is unchanged
   and doctor prints `would-be: thinned`.
   Landed 2026-10-16: `agent-config doctor --check layer-form` prints the per-host shadow decision; live it reads `would-be: full (delivery-unobserved)` for all three thinnable hosts.
-- [ ] **3.3 Promote after proof, never at install.** A fresh install writes the
+- [x] **3.3 Promote after proof, never at install.** A fresh install writes the
   full layer, exactly as today. A later session whose arrival record satisfies
   3.1 promotes the layer for following sessions, in the `session_start` concern
   under a latency budget fixed from 0.1's measurement; a promotion that would
@@ -208,6 +208,7 @@ with that file.
   Open 2026-10-20: 0.1 has landed, but it records no latency figure (the step names none), so the budget source is the shipped `src/config/hook-latency-budget.json`, which binds this concern either way. Stop (2) is the one that holds this step open: no room in the bundle and no council record to make some, see 1.1.
   Open 2026-10-18, screened: two independent stops. (1) Its latency budget is "fixed from 0.1's measurement", and 0.1 is open. (2) The promotion runs in the `session_start` concern, inside the dispatcher bundle, whose ceiling 1.1's binding alone already exhausts (1,549,991 B of 1,550,000 with it in, see 1.1). A thin pass in that concern needs either a raised `max_bytes` (a ratchet move recorded in `hook-bundle-budget.json`'s `raise_log`, an owner decision) or bytes removed elsewhere first. Nothing promotes before 5.3 in any case, so leaving it open costs no behaviour.
   Stop (2) is now governed by D8: room is made before any raise.
+  Landed 2026-10-24: `src/install/layerPromotion.ts` (`sessionLayerStep`), run by the new claude-only `session_start` concern `layer-promote` (`src/scripts/hooks/layer_promotion_hook.ts`, own 54,058-B chunk, kill switch `AGENT_CONFIG_LAYER_PROMOTE=off`). A full layer is promoted only when the shipped switch `src/config/layer-form-promotion.json` is on — it ships OFF, and 5.3 is what turns it on — the 3.1 decision returns `thinned` (payload version from the staged runtime, layer version from `installed.lock`, both now fed), the ownership ledger holds the anchor, and the time spent plus the last measured thin pass fits the `any_hook_event` p95 of `hook-latency-budget.json` (the budget source the 2026-10-20 note named; the thin pass measured 11 ms over 121 rules). A thinned layer whose arrival record taken AFTER the promotion misses a standing law is restored from the staged snapshot and demoted, whatever the switch says. Two things the step did not name and the build needed: the ledger digests follow every rewrite, or the next install would preserve every stub as a user edit; and the thin pass alone reduces consequence-class rules to stub-plus-law, so they and the safety-floor tier are skipped through `ruleForm`, which honours 3.1's "never thinned". The thinned marker the promotion writes is the one the shell branch reads, so a dead carrier on a promoted layer warns and restores — the warning path 4.4 said returns with this step. Five ratification rounds hardened the write path (record: `agents/evidence/ratifications/layer-promote-binding-20261024.md`, 2/2 in round 5): only ledger-proven files are rewritten, an exclusive owner-naming `promoting` lock spans the pass, a live owner is never recovered, an interrupted pass is restored by the next session, a pass that lost its lock cleans nothing. Verify: `npx vitest run tests/install/layer_promotion.test.ts` -> 14/14, fresh-`HOME` fixture: session 1 `no-arrival-record` and full, session 2 `promoted` with the record, a later record missing a standing law `demoted` with the full layer and the ledger restored; sabotage of the ledger rewrite, the post-promotion filter and the switch each reds one case. Bundle: `max_bytes` 1,554,000 -> 1,554,800 (D10's anticipated raise, `raise_log`), ratification record `agents/evidence/ratifications/layer-promote-binding-20261024.md`.
 - [x] **3.4 A release brake the maintainer owns.** A shipped table row forces
   `full` for a host version or a package version. It is the operator rollback,
   not a consumer surface.
@@ -219,13 +220,13 @@ with that file.
   verify: receipt fixture with the field forces `full`; the settings schema has
   no matching key.
   Landed 2026-10-18: `src/install/userPin.ts` writes `user_pin` into `runtime/carrier.json` (the receipt the carrier probe already writes, which now keeps fields it does not own); `prepareClaudeCarrier` refuses to thin while it is there, and `withMachineEvidence` hands it to 3.1 for every host. Sticky across a plain `install` and upgrades; `uninstall` removes it with the runtime directory. Tests: `hook_carrier_never_silent.test.ts` (pin on a reached carrier, survives a probe rewrite and a plain install) and `layer_form_evidence.test.ts` (`user-pin` on all three thinnable hosts). `grep -c user_pin src/server/schemas/settings.ts` reads 0. Documented in `docs/installation.md`.
-<!-- blocked-by: project-tree-form-source-needs-a-full-quorum -->
-- [ ] **3.6 The project tree uses the same function**, with the project's own
+- [x] **3.6 The project tree uses the same function**, with the project's own
   dispatcher as its carrier.
   verify: ADR-267's three corpus figures reproduce, and
   `./scripts-run src/scripts/check_host_tree_parity` -> 0
   Open 2026-10-18, screened: the project tree on the first host runs `delivery` today (ADR-267). Routed through 3.1 as it stands, it would read `delivery-unobserved` and fall back to full — a default change for every project tree on that host that is not a "no worse" move and has no consent behind it. The step needs either a project-tree effect row the function can read as observed, or a decision that the project tree keeps ADR-267's evidence as its proof; neither is in the tree.
   Open 2026-10-20, advanced but not closed. Phase 4 reached this question from the other side: removing `lean_projection.*` from the template took away the last cascade layer the resolver read, so the tree would have flipped to full and the delivery mechanism's only live gate would have closed — the exact default change the 2026-10-18 screening names, arriving as a side effect rather than as a decision. Of the two things the step says it needs, the SECOND now exists in a shipped form: `src/config/project-tree-form.json` carries ADR-267's `delivery` for `claude-code` with the measurement behind it, read by `shippedProjection()` and superseded by any observed layer-form verdict in both directions (`projectTreeForm()`, `project_tree_form.test.ts`). What it does NOT have is a full-quorum decision — one seat of two answered on 2026-10-20 — so the step stays open under blocker `project-tree-form-source-needs-a-full-quorum`. Its verify is already met in the state that landed: `check_host_tree_parity` -> 0 and the first host's tree is byte-identical to what the template produced, which is why acting on one seat was safe and closing the step on it would not be.
+  Landed 2026-10-24 on the full quorum: AI council 2/2 (anthropic + openai) chose (c) — keep the record, but only with its precedence rule on the live path and scoped by type (`agents/evidence/council/setup-project-tree-form-source-20261024.md`, D11). `shippedProjection()` now resolves every row through `projectTreeForm()`; a verdict counts only with `scope: 'project-tree'`, so the installed layer's verdict is refused whatever its reason; `AGENT_CONFIG_PROJECT_TREE_FORM=full` is the operator rollback. No project-tree observer exists, so the record stands and nothing changed on disk. Verify, both halves: `./scripts-run src/scripts/model_rule_injection --endpoints` -> 4/4 hold — 574/574 deliveries byte-equal, 103/103 rules reachable, 0 of 255 near-misses fired (the corpus grew since ADR-267's 616/101/212; the bars are unchanged) — and `./scripts-run src/scripts/check_host_tree_parity` -> 0. The first figure was RED on `main` (0 of 574): the census compared the raw rule file with a payload that carries `ruleBody()` or a law section since the carrier's step 1.4; fixed in the instrument and pinned by a test.
 - [x] **3.7 Declare it.** `doctor` and the receipt print form, reason code, last
   arrival record and demotion state per layer and host.
   verify: snapshot per reason code.
@@ -300,26 +301,8 @@ with that file.
   verify: `npx vitest run tests/scripts/_cli/cmd_doctor_rule_scope_drift.test.ts` -> 0
   — 4 passed, red before the fix on the drift case and red before the
   strengthening on the legacy-all case.
-- [ ] <!-- blocked-by: surface-snapshot-waits-on-the-release-cut --> **4.6c The settings-surface snapshot waits on the cut.**
-  `tests/scripts/consumer_matrix_settings_delta.test.ts` is red on this branch
-  and green on `main`, and the cause is the phase title rather than a defect.
-  TWO cases, not one — corrected 2026-10-20 after reading the CI output rather
-  than the earlier note: `an identical pair produces no delta and no
-  disagreement` and `the leg itself throws on a disagreement, and returns on
-  agreement`. They are one cause, because the second asserts that
-  `assertUpgradeDelta` THROWS exactly when the first finds a disagreement, so a
-  real delta reds both by construction. The cases compare the committed
-  snapshot of the LAST released surface against a surface flattened from the
-  LIVE schema; removing three keys makes those two genuinely different, so the
-  comparison correctly reports a delta the installer fixture does not carry.
-  Checked rather than assumed: all three keys ARE registered in
-  `_lib/settings_removed_keys.ts:157-159`, so they classify as
-  `carried_removals` — the ALLOWED class — not as `untombstoned_removals`,
-  which is the one that refuses. A release cut would accept them.
-  The snapshot may not be refreshed here: its own contract says `release.ts`
-  "rewrites it inside the cut, which is its only writer", and
-  `check_release_pr_shape` allows the file only on a release PR. Editing it on
-  this branch would be the silent surface change Phase 4 exists to prevent.
+- [x] **4.6c The settings-surface snapshot waits on the cut.**
+  Two cases of `tests/scripts/consumer_matrix_settings_delta.test.ts` were red until the next cut wrote the released surface; the snapshot's only writer is `release.ts`. Landed 2026-10-24: `release: 17.0.0` (`14bd7c7db3`) carries the three removed keys under `removedKeys`; `npx vitest run tests/scripts/consumer_matrix_settings_delta.test.ts` -> 10/10 at `fb54c2052b`. Reasoning and the one test edit made before the cut: `agents/evidence/analysis/setup-4-6c-surface-snapshot.md`.
   verify: after the next cut, the case is green with no change to the test.
 <!-- blocked-by: projection-mode-removal-waits-on-second-host-reach -->
 - [ ] **4.7 `projection.mode` last.** Removed only after the skills roadmap's
@@ -370,7 +353,7 @@ with that file.
 
 ### blocker: surface-snapshot-waits-on-the-release-cut
 
-- **Status:** open — raised 2026-10-20, and open by design rather than by omission.
+- **Status:** resolved — 2026-10-24: `release: 17.0.0` (`14bd7c7db3`) cut the snapshot with all three removed keys under `removedKeys`, and both cases are green. Was: open — raised 2026-10-20, and open by design rather than by omission.
 - **Class:** 1 — the condition is mechanical and resolves itself at the next cut; no decision is owed by anyone.
 - **Run:** `task release` — the cut is the command, and it is the only writer of the snapshot this blocker waits on.
 - **Owner:** release
@@ -411,7 +394,7 @@ with that file.
 
 <!-- asked: 2026-10-20 | record: agents/evidence/council/setup-project-tree-form-source-20261020.md -->
 
-- **Status:** open — one seat of two answered on 2026-10-20; `anthropic` returned `cli_quota_exhausted`
+- **Status:** resolved — 2026-10-24, a two-seat record (anthropic + openai, 2/2) confirmed the record with option (c): its precedence rule on the live path and scoped by type, built in the same change (`agents/evidence/council/setup-project-tree-form-source-20261024.md`). Was: open — one seat of two answered on 2026-10-20; `anthropic` returned `cli_quota_exhausted`
 - **Owner:** council
 - **Class:** 2
 - **Blocks:** step 3.6. Nothing else — Phase 4 shipped on the reading, and the thing it shipped changes no behaviour.
@@ -447,17 +430,19 @@ with that file.
 | D8 | reversible-technical | council:agents/evidence/council/hook-bundle-ceiling-20261018.md | The hook-bundle ceiling is not raised for 1.1 or 3.3: room is made first (per-module byte ranking, then the largest narrow-event module behind a conditional import, latency proven inside `hook-latency-budget.json`); a raise only as the evidence-backed fallback, sized from all blocked work | AI council 2026-10-18, `anthropic` + `openai`, prompt mode, one round, 2/2, $0.00, under the owner's delegation of 2026-10-18 ("versuche die offenen entscheidungen im ai council zu lösen"); no sibling roadmap schedules a move out of the bundle | no extraction frees meaningful room within the latency and reliability budgets |
 | D10 | reversible-technical | council:agents/evidence/ratifications/instructions-loaded-binding-20261023.md | D8's fallback taken for 1.1: `max_bytes` 1,550,000 → 1,550,500 for the 237-B binding; the observer body ships in its own chunk | Room-first measured and refused on cost (29,948 B freed for a 259,330-B chunk on every `stop`); council round 4, 2026-10-23, 2/2 ratified, $0.00 | 3.3's promotion needs more than the 314 B left — size the next raise or extraction from all blocked work then |
 | D9 | reversible-technical | agent | 0.1's fixture is taken from a scratch-`HOME` global install, the only consumer scope (ADR-020). It excludes the install receipt, lock and log (each carries an install time), the scratch root (recorded as `<HOME>`) and the host's own version (a machine property, not a commit property) | Two full runs at `89e094819` compared byte-equal; at `d760ecbde` the same reader reproduces the step's 106 / 369,415 claude-code row | a field outside the exclusion set is found to vary between runs at one commit |
+| D11 | reversible-technical | council:agents/evidence/council/setup-project-tree-form-source-20261024.md | The project tree keeps `project-tree-form.json` as its source, with `projectTreeForm()` on the live path, verdict provenance carried as `scope: 'project-tree'` rather than read from a reason string, and `AGENT_CONFIG_PROJECT_TREE_FORM=full` as the rollback | AI council 2026-10-24, anthropic + openai, design mode, two rounds, 2/2 for (c), $0.00; supersedes the one-seat reading of 2026-10-20 | a project-tree observer exists and contradicts ADR-267, or parity, reachability or near-miss results regress |
+| D12 | reversible-technical | agent | 3.3's promotion is gated by a shipped switch (`layer-form-promotion.json`, off) that 5.3 flips, not by the absence of evidence alone; demotion is never gated; the ownership ledger is re-recorded on every rewrite | 5.3 enables promotion "on the record", which a decision function that could already return `thinned` on a fresh observed row would pre-empt; an un-re-recorded rewrite reads as a user edit to the next install (`decideDeployWrite`) | 5.3 lands, or the installer gains its own recognition of package-written stubs |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-20 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-24 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Arrival without adherence | product | A record shows a law loaded, not that the model followed it. | 3.1 names the rung it relies on; 5.1 is the behavioural reading and gates enablement. | Phase 5 — Prove "not worse" once, then enable |
 | 2 | Users who set a key on purpose | product | Removing a key could silently override a deliberate choice. | 4.3 reads and reports every prior value; 3.5 keeps the intent without a setting. | Phase 4 — Remove the keys through the release, loudly |
-| 3 | Launch contexts differ | implementation | A layer promoted under one launch is read under another where the carrier is dead. | 3.1 requires the carrier probe; 3.3 promotes only on a matching record; the carrier roadmap's visible line covers the rest. | Phase 3 — The package decides; no key does |
+| 3 | Launch contexts differ | implementation | A layer promoted under one launch is read under another where the carrier is dead. | 3.1 requires the carrier probe; 3.3 promotes only on a matching record; the carrier roadmap's visible line covers the rest. A promotion interrupted or raced by a concurrent session is restored, never left half-thinned (3.3's owned lock). | Phase 3 — The package decides; no key does |
 | 4 | Host contracts move | implementation | A host version changes load semantics. | Rows expire per host version; 3.4's brake forces full for a host version. | Phase 3 — The package decides; no key does |
-| 5 | A shipped record outlives its evidence | implementation | `project-tree-form.json` carries the project tree's form while the decision function can only answer `delivery-unobserved`. A record meant as a stand-in can become a permanent bypass of the function it stands in for — the one risk the reviewing seat named against it. | The precedence rule is in the reader, not in prose: an observed verdict wins in both directions, including an observed `full` over a record saying `delivery`, and `project_tree_form.test.ts` pins that direction. The record also refuses a row with no `measured` block, so it cannot become a place to write a form someone merely wants. | Phase 3 — The package decides; no key does |
+| 5 | A shipped record outlives its evidence | implementation | `project-tree-form.json` carries the project tree's form while the decision function can only answer `delivery-unobserved`. A record meant as a stand-in can become a permanent bypass of the function it stands in for — the one risk the reviewing seat named against it. | The precedence rule is in the reader and, since 2026-10-24 (D11), on the live path: an observed project-tree verdict wins in both directions, including an observed `full` over a record saying `delivery`; an installed-layer verdict is refused by type; `AGENT_CONFIG_PROJECT_TREE_FORM=full` rolls back. `project_tree_form.test.ts` pins all three. The record also refuses a row with no `measured` block, so it cannot become a place to write a form someone merely wants. | Phase 3 — The package decides; no key does |
 
 ## Acceptance Criteria
 
@@ -485,3 +470,4 @@ with that file.
   2 non-delivery host trees byte-identical to `eager-all`, delivery hosts
   `[claude-code]`. Left open because the criterion is about EVERY step and four
   are not taken — a tick here would claim a reading for steps nobody has run.
+  Re-run 2026-10-24 after 3.6 (`d20610310c`) and after 3.3 (`ff276c482a`): `./scripts-run src/scripts/check_host_tree_parity` -> 0 both times, same reading. Still open for the steps not taken: 4.6c, 4.7 and Phase 5.

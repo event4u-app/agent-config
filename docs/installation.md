@@ -486,6 +486,16 @@ when the outcome holds. A thinned rule layer is only written on a carrier that
 probe reached. If a session still starts with no dispatcher on a thinned layer,
 it prints one line saying so, restores the full layer for the next session, and
 the machine stays full until an install, upgrade or doctor run passes the probe.
+An install always writes the full layer. Thinning it is a later session's
+decision, made by the `layer-promote` `SessionStart` concern from the package's
+own evidence (`agent-config doctor --check layer-form` prints the decision), and
+that promotion ships switched off until the package's pre-registered comparison
+enables it; a session whose rule arrivals contradict a thinned layer restores it
+and demotes the machine, whatever the switch says. `AGENT_CONFIG_LAYER_PROMOTE=off`
+stops the concern. A promotion holds the lock file
+`~/.event4u/agent-config/runtime/promoting`, naming its process; if that process
+is gone but its id was reused by another, the concern does nothing until that
+process exits, and deleting the file releases it at once.
 `agent-config uninstall --global --purge` removes the staged runtime; a plain
 uninstall keeps it, because the preserved stubs under `~/.claude` point into it.
 
