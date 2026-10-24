@@ -62,7 +62,7 @@ import {
     testsFor,
     untested,
 } from '../code_graph/verbs.js';
-import { areaReport, readMap } from '../code_graph/map.js';
+import { areaReport, graphGeneration, readMap } from '../code_graph/map.js';
 import type { BuiltinTool } from './tools.js';
 
 /** The `no graph here` answer, in one place so all five agree on its shape. */
@@ -134,6 +134,7 @@ const RELATIONS = [
     'migrates',
     'persists',
     'relates',
+    'injects',
     'documents',
 ] as const;
 
@@ -399,11 +400,14 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
                 map: 'present',
                 drawn_at_commit: map.meta.commit,
                 graph_state_when_drawn: map.meta.state,
+                // Same generation → the map shows exactly the graph the queries read.
+                map_matches_graph: map.meta.graph_generation !== undefined && map.meta.graph_generation === graphGeneration(path.join(root, NATIVE_CACHE_REL)),
                 files: m.files.length,
                 areas: m.areas.length,
                 trusted_links: m.analyses.trustedEdges,
                 guess_share: m.analyses.guessShare,
                 request_paths: m.analyses.requestPathsTotal,
+                providers: (m.providers ?? []).map((p) => `${p.id} (${p.status})`),
                 largest_areas: m.areas.slice(0, 5).map((a) => `${a.id} ${a.name} (${a.files.length})`),
                 map_md: 'agents/map/MAP.md',
                 index_html: 'agents/map/index.html',

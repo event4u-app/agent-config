@@ -1262,6 +1262,7 @@ configuration. `orphan` — the name survives only in prose; nothing reads it.
 |---|---|---|---|
 | `AGENT_CONFIG_ALLOW_SPEAKING_INBOX` | maintainer | Lets a write into the speaking-inbox directory through the PreToolUse block | `hooks/block_speaking_inbox_dir.ts:79` |
 | `AGENT_CONFIG_ALLOW_CREDENTIAL_READS` | maintainer | Lets a read of a credential-class file, or a command that prints the environment, through the PreToolUse block | `hooks/block_credential_reads.ts:52` |
+| `AGENT_CONFIG_CODE_GRAPH_REFRESH` | maintainer | `=off` stops the `code-graph-refresh` session concern spawning its background `code-graph refresh --single-flight --map`, even in a project that ran `code-graph auto-refresh on`; the git-hook refresh in this package's own checkout is unaffected | `hooks/code_graph_refresh_hook.ts:108` |
 | `AGENT_CONFIG_DEPLOY_INVENTORY` | harness | Path override for the global deploy inventory | `_lib/global_deploy_inventory.ts:61` |
 | `AGENT_CONFIG_DEV_MODE` | maintainer | Maintainer dev mode; forces `--scope=project` and is captured into the corpus manifest | `_lib/corpus_manifest.ts:89` |
 | `AGENT_CONFIG_DISABLE_HOOKS` | maintainer | Bypasses every shim for one command | `_lib/runtime_wiring_checks.ts:315` |

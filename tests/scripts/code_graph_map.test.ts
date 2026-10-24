@@ -1,11 +1,20 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
-import { buildMap, diffFiles, embedJson, MAP_TOKEN_BUDGET, readMap, readOutcomes, recordOutcome } from '../../src/scripts/code_graph/map.js';
+import {
+    buildMap,
+    diffFiles,
+    embedJson,
+    MAP_TOKEN_BUDGET,
+    readMap,
+    readOutcomes,
+    recordOutcome,
+    swapIn,
+} from '../../src/scripts/code_graph/map.js';
 import { areaDrift, buildMapModel, outcomeScores, prOverlap, staticRole } from '../../src/scripts/code_graph/map_model.js';
 import { labelProblems } from '../../src/scripts/code_graph/map_verify.js';
 
@@ -123,6 +132,99 @@ describe('agents/map/ artefacts (Phase 3)', () => {
         expect(r.written.some((w) => w.startsWith('areas/'))).toBe(true);
     });
 
+    it('a redraw that fails part-way leaves the previous generation whole', async () => {
+        await buildMap(root);
+        const dir = path.join(root, 'agents', 'map');
+        const before = fs.readFileSync(path.join(dir, 'map.json'), 'utf-8');
+        write('src/added.ts', 'export const added = 1;\n');
+        let n = 0;
+        await expect(
+            buildMap(root, {
+                _afterWrite: () => {
+                    n += 1;
+                    if (n === 1) throw new Error('interrupted after the first file');
+                },
+            }),
+        ).rejects.toThrow(/interrupted/);
+        expect(fs.readFileSync(path.join(dir, 'map.json'), 'utf-8')).toBe(before);
+        // Nothing staged is left behind, in agents/ or in the runtime dir it stages under.
+        expect(fs.readdirSync(path.dirname(dir)).filter((e) => e !== 'map' && e.includes('map'))).toEqual([]);
+        expect(fs.readdirSync(path.join(root, 'agents', 'runtime', 'state')).filter((e) => e.startsWith('.map-'))).toEqual([]);
+    });
+
+    it('a failed second rename puts the previous generation back', () => {
+        const live = path.join(root, 'live');
+        const next = path.join(root, 'next');
+        const prev = path.join(root, 'prev');
+        fs.mkdirSync(live);
+        fs.writeFileSync(path.join(live, 'map.json'), 'old\n');
+        fs.mkdirSync(next);
+        fs.writeFileSync(path.join(next, 'map.json'), 'new\n');
+        let calls = 0;
+        const flaky = ((from: fs.PathLike, to: fs.PathLike): void => {
+            calls += 1;
+            if (calls === 2) throw new Error('rename failed');
+            fs.renameSync(from, to);
+        }) as typeof fs.renameSync;
+        expect(() => swapIn(next, live, prev, flaky)).toThrow(/rename failed/);
+        expect(fs.readFileSync(path.join(live, 'map.json'), 'utf-8')).toBe('old\n');
+        expect(fs.existsSync(prev)).toBe(false);
+    });
+
+    it('names where the old generation is when the restore fails too', () => {
+        const live = path.join(root, 'live');
+        const next = path.join(root, 'next');
+        const prev = path.join(root, 'prev');
+        fs.mkdirSync(live);
+        fs.mkdirSync(next);
+        let calls = 0;
+        const failing = ((from: fs.PathLike, to: fs.PathLike): void => {
+            calls += 1;
+            if (calls >= 2) throw new Error('rename failed');
+            fs.renameSync(from, to);
+        }) as typeof fs.renameSync;
+        expect(() => swapIn(next, live, prev, failing)).toThrow(/restore failed too; the previous generation is at .*prev/);
+        expect(fs.existsSync(prev)).toBe(true);
+    });
+
+    it('two redraws in one process never interleave: the second is refused', async () => {
+        await buildMap(root);
+        const results = await Promise.allSettled([buildMap(root), buildMap(root)]);
+        expect(results.map((r) => r.status).sort()).toEqual(['fulfilled', 'rejected']);
+        const rejected = results.find((r) => r.status === 'rejected') as PromiseRejectedResult;
+        expect(String(rejected.reason)).toMatch(/already running in this process/);
+        expect(JSON.parse(fs.readFileSync(path.join(root, 'agents', 'map', 'map.json'), 'utf-8')).meta).toBeTruthy();
+    });
+
+    it('refuses to redraw while another process holds the refresh lock', async () => {
+        const lock = path.join(root, 'agents', 'runtime', 'state', 'code-graph-refresh.lock');
+        fs.mkdirSync(lock, { recursive: true });
+        const other = spawn(process.execPath, ['-e', 'setTimeout(() => {}, 30000)'], { stdio: 'ignore' });
+        try {
+            fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: other.pid, started_at: Date.now(), nonce: 'n' }));
+            await expect(buildMap(root)).rejects.toThrow(/another process holds the code-graph refresh lock/);
+            expect(fs.existsSync(path.join(root, 'agents', 'map'))).toBe(false);
+        } finally {
+            other.kill('SIGKILL');
+        }
+    });
+
+    it('drops the previous render check, which described the previous generation', async () => {
+        await buildMap(root);
+        const check = path.join(root, 'agents', 'map', 'map-render.json');
+        fs.writeFileSync(check, '{"verification":"verified"}\n');
+        await buildMap(root);
+        expect(fs.existsSync(check)).toBe(false);
+    });
+
+    it('a redraw keeps files in the map directory that it did not write', async () => {
+        await buildMap(root);
+        const note = path.join(root, 'agents', 'map', 'NOTES.md');
+        fs.writeFileSync(note, 'kept\n');
+        await buildMap(root);
+        expect(fs.readFileSync(note, 'utf-8')).toBe('kept\n');
+    });
+
     it('two builds of the same tree are byte-identical', async () => {
         await buildMap(root);
         const read = (): string[] =>
@@ -138,6 +240,13 @@ describe('agents/map/ artefacts (Phase 3)', () => {
         expect(html).not.toMatch(/\b(src|href)\s*=\s*["']?https?:/i);
         expect(html).not.toMatch(/@import|url\(\s*["']?https?:/i);
         expect(html).toMatch(/Content-Security-Policy" content="default-src 'none'; script-src 'sha256-/);
+    });
+
+    it('offers the 3D view as a toggle that starts off, so the flat map stays the default', async () => {
+        await buildMap(root);
+        const html = fs.readFileSync(path.join(root, 'agents', 'map', 'index.html'), 'utf-8');
+        expect(html).toContain('<button type="button" id="dim" aria-pressed="false">');
+        expect(html).toContain('function orbPoint(');
     });
 
     it('renders a hostile file name as data, never as markup', async () => {

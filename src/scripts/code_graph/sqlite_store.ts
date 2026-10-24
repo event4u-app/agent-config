@@ -52,8 +52,11 @@ import type { CodeEdge, CodeGraph, CodeNode } from './types.js';
  * back cleanly, answer `tests-for` with the empty set, and the caller could not
  * tell "nothing tests this" from "this twin predates the relation". An index
  * that answers a question it cannot answer is worse than one that refuses.
+ *
+ * 4 → 5 (`road-to-graph-providers-for-every-stack` 2.1): `edges` gained
+ * `provider_id`, the convention provider that drew a convention edge.
  */
-export const GRAPH_STORE_VERSION = 4;
+export const GRAPH_STORE_VERSION = 5;
 
 /**
  * Edge count at or above which the indexed read path replaces the blob path.
@@ -101,7 +104,7 @@ export function emitSqliteTwin(graph: CodeGraph, serialized: string, jsonPath: s
             db.exec(
                 'CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);' +
                     'CREATE TABLE nodes (id TEXT PRIMARY KEY, label TEXT NOT NULL, kind TEXT, source_file TEXT, l0 INTEGER, l1 INTEGER, l2 INTEGER, l3 INTEGER);' +
-                    'CREATE TABLE edges (source TEXT NOT NULL, target TEXT NOT NULL, relation TEXT NOT NULL, confidence TEXT NOT NULL, candidates TEXT, ambiguity_reason TEXT, resolved_via TEXT, provider TEXT);' +
+                    'CREATE TABLE edges (source TEXT NOT NULL, target TEXT NOT NULL, relation TEXT NOT NULL, confidence TEXT NOT NULL, candidates TEXT, ambiguity_reason TEXT, resolved_via TEXT, provider TEXT, provider_id TEXT);' +
                     'CREATE INDEX edges_source ON edges(source);' +
                     'CREATE INDEX edges_target ON edges(target);' +
                     // Seed resolution and the changed-file seed set are the two
@@ -140,8 +143,8 @@ export function emitSqliteTwin(graph: CodeGraph, serialized: string, jsonPath: s
                 );
             }
             const insEdge = db.prepare(
-                'INSERT INTO edges (source, target, relation, confidence, candidates, ambiguity_reason, resolved_via, provider) ' +
-                    'VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                'INSERT INTO edges (source, target, relation, confidence, candidates, ambiguity_reason, resolved_via, provider, provider_id) ' +
+                    'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
             );
             for (const e of graph.edges) {
                 insEdge.run(
@@ -153,6 +156,7 @@ export function emitSqliteTwin(graph: CodeGraph, serialized: string, jsonPath: s
                     e.ambiguity_reason ?? null,
                     e.resolved_via,
                     e.provider,
+                    e.provider_id ?? null,
                 );
             }
             db.exec('COMMIT');
@@ -271,6 +275,7 @@ interface EdgeRow {
     ambiguity_reason: string | null;
     resolved_via: string | null;
     provider: string | null;
+    provider_id: string | null;
 }
 
 function toNode(r: NodeRow): CodeNode {
@@ -303,6 +308,7 @@ function toEdge(r: EdgeRow): CodeEdge {
     if (r.ambiguity_reason === 'receiver-unknown' || r.ambiguity_reason === 'hierarchy-unresolved') {
         e.ambiguity_reason = r.ambiguity_reason;
     }
+    if (r.provider_id) e.provider_id = r.provider_id;
     return e;
 }
 

@@ -2,7 +2,7 @@
  * Schema gate — validate a graph.json (native cache or consumer-shipped)
  * before any consumer trusts it. Pure, no IO.
  */
-import type { CodeGraph } from './types.js';
+import { type CodeGraph, GUESS_RESOLVED_VIA, STATED_RESOLVED_VIA } from './types.js';
 
 /** One space-separated string per vocabulary: this module ships in the hook bundle, paid on every dispatch. */
 const words = (s: string): ReadonlySet<string> => new Set(s.split(' '));
@@ -10,15 +10,11 @@ const words = (s: string): ReadonlySet<string> => new Set(s.split(' '));
 /** Mirrors `Relation` in types.ts. `tests` is derived by the build pass (3.2),
  * not extracted, and is validated on exactly the same terms as the rest. */
 const RELATIONS = words(
-    'calls imports uses inherits member tests routes-to renders includes reads migrates persists relates documents',
+    'calls imports uses inherits member tests routes-to renders includes reads migrates persists relates injects documents',
 );
 const CONFIDENCES = new Set(['EXTRACTED', 'INFERRED', 'AMBIGUOUS']);
-/** Mirrors `ResolvedVia` in types.ts — the full union, including the four
- * values no build emits yet (2.3 and Phase 3 add them). */
-// `foreign`: adapted from a consumer's own graph file; see `foreign.ts`.
-const RESOLVED_VIA = words(
-    'same-file import-specifier path-alias psr4 route-table directive-scan schema-call eloquent-relation compiler-index test-import name-lookup dynamic foreign',
-);
+/** Every `ResolvedVia` member: the trust lists in types.ts, so the two cannot drift. */
+const RESOLVED_VIA: ReadonlySet<string> = new Set([...STATED_RESOLVED_VIA, ...GUESS_RESOLVED_VIA]);
 const PROVIDERS = new Set(['native', 'foreign', 'scip']);
 const KINDS = words('file class interface trait function method constant type enum skipped route table');
 
@@ -74,6 +70,8 @@ export function validateGraph(g: unknown): ValidateResult {
         if (ee['provider'] === undefined) push(`edge[${i}].provider is required`);
         else if (!PROVIDERS.has(ee['provider'] as string))
             push(`edge[${i}].provider invalid: ${String(ee['provider'])}`);
+        if (ee['provider_id'] !== undefined && typeof ee['provider_id'] !== 'string')
+            push(`edge[${i}].provider_id must be a string`);
         // a source must be a known node; targets may be unresolved `symbol:` refs
         if (typeof ee['source'] === 'string' && !ids.has(ee['source'] as string))
             push(`edge[${i}].source is not a known node: ${String(ee['source'])}`);

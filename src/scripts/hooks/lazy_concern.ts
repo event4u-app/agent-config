@@ -72,6 +72,10 @@ export const LAZY_CONCERNS: Readonly<Record<string, { readonly chunk: string; re
             chunk: 'instructions_observer.chunk.cjs',
             source: 'instructions_observer_hook',
         }),
+        'src/scripts/hooks/code_graph_refresh_hook.ts': Object.freeze({
+            chunk: 'code_graph_refresh.chunk.cjs',
+            source: 'code_graph_refresh_hook',
+        }),
     });
 
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;

@@ -22,10 +22,12 @@ and keep the full search — this file only adds candidates to it.
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
 | road-to-authority-routing-mechanism | active | ready | A passing authorisation record always means the authority that produced it was the authority entitled to produce it: three authorities … |
 | road-to-breadth-with-depth | active | ready | The next release ships with the directive in the tree; with no rule, gate or analysis lens left that rejects … |
+| road-to-code-graph-refresh-during-a-session | active | — | The code graph and `agents/map/` stay current for the whole length of an agent session, on every host the suite … |
 | road-to-consumer-invocations-that-install | active | draft | Every executable instruction in shipped text that runs one of this package's scripts uses a form that works from a … |
 | road-to-corpus-refresh-cadence-shape | active | draft | The maintainer has answered whether four grounding corpora sharing one `last_checked` stamp is a deliberate cadence or an accident of … |
 | road-to-decision-closure | active | draft | Every roadmap enters execution as an execution contract: every foreseeable decision closed, the closing done council-first, the owner reached only … |
 | road-to-free-hands-a-paid-head-checks | active | ready | The paid host model stays the head: it plans, cuts slices, chooses the route, verifies every return and decides. |
+| road-to-graph-providers-for-every-stack-carried | active | — | A Ruby on Rails project gets the same treatment the parent roadmap gave the most common frameworks: Ruby is a … |
 | road-to-hook-guards-that-hold-17-findings | active | draft | 17.0.0 is cut only when the three `fail_closed` hook guards (`block-no-verify`, `block-kernel-rule-writes`, `block-plumbing-writes`) refuse what they claim on every install … |
 | road-to-host-inputs-the-installer-honours | active | ready | What the installer writes and what `doctor` reports about the host is computed from the inputs the host itself uses. |
 | road-to-one-detector-and-the-senders-we-own | active | ready | On every request this package writes to a model provider itself, no value of a listed type leaves in plaintext, … |

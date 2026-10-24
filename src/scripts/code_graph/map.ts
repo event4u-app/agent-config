@@ -14,14 +14,15 @@
  * host path or anything else that differs between two builds of one commit.
  */
 import { execFileSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { write_atomic } from '../_lib/fs_atomic.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
-import { buildFromRepo } from './build.js';
+import { buildFromRepo, readProjectProbe } from './build.js';
+import { acquire as acquireRefreshLock, heldByThisProcess } from './refresh_lock.js';
 import { computeVerdict, graphState, NATIVE_CACHE_REL } from './detect.js';
 import {
     areaDrift,
@@ -49,6 +50,33 @@ export interface MapMeta {
     commit: string;
     state: string;
     summary: string;
+    /**
+     * The graph this map was drawn from: the first 16 hex of the SHA-256 of the
+     * graph cache's bytes (or of the serialized graph when there is no cache).
+     * `graph.json`, `map.json` and `index.html` agree exactly when this matches
+     * {@link graphGeneration} of the current cache — the test a reader runs
+     * instead of comparing modification times.
+     */
+    graph_generation?: string;
+}
+
+/** The generation of a graph cache: the first 16 hex of the SHA-256 of its bytes; null when unreadable. */
+export function graphGeneration(cachePath: string): string | null {
+    try {
+        return createHash('sha256').update(fs.readFileSync(cachePath)).digest('hex').slice(0, 16);
+    } catch {
+        return null;
+    }
+}
+
+/** The generation a drawn map records, or null when it records none (an older map) or cannot be read. */
+export function mapGeneration(outDir: string): string | null {
+    try {
+        const doc = JSON.parse(fs.readFileSync(path.join(outDir, 'map.json'), 'utf-8')) as { meta?: { graph_generation?: unknown } };
+        return typeof doc.meta?.graph_generation === 'string' ? doc.meta.graph_generation : null;
+    } catch {
+        return null;
+    }
 }
 
 export interface MapBuildResult {
@@ -72,32 +100,48 @@ function gitHead(root: string): string {
 }
 
 /**
- * Entry points a manifest declares: `package.json` `bin` / `main` / `module`,
- * `composer.json` `bin`. Route files and `public/index.php` are recognised by
- * path in `staticRole`; this only adds what a manifest names explicitly.
+ * Entry points the project's manifests declare, in every package root:
+ * `package.json` `bin` / `main` / `module` / `exports`, `composer.json` `bin`,
+ * `pyproject.toml` `[project.scripts]`, a Maven `<mainClass>`. Framework entry
+ * files are a provider's role (`roleOf`); this only adds what a manifest names.
  */
 export function declaredEntryFiles(root: string): string[] {
     const out = new Set<string>();
-    const add = (v: unknown): void => {
-        if (typeof v !== 'string') return;
-        out.add(path.posix.normalize(v.replace(/^\.\//, '')));
-    };
-    try {
-        const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf-8')) as Record<string, unknown>;
-        const bin = pkg['bin'];
-        if (typeof bin === 'string') add(bin);
-        else if (bin && typeof bin === 'object') for (const v of Object.values(bin)) add(v);
-        add(pkg['main']);
-        add(pkg['module']);
-    } catch {
-        /* no package.json */
-    }
-    try {
-        const composer = JSON.parse(fs.readFileSync(path.join(root, 'composer.json'), 'utf-8')) as Record<string, unknown>;
-        const bin = composer['bin'];
-        if (Array.isArray(bin)) for (const v of bin) add(v);
-    } catch {
-        /* no composer.json */
+    for (const [rel, text] of readProjectProbe(root).manifests) {
+        const dir = path.posix.dirname(rel);
+        const add = (v: unknown): void => {
+            if (typeof v !== 'string' || v.includes('*') || /^[a-z]+:/i.test(v)) return;
+            out.add(path.posix.normalize(path.posix.join(dir, v.replace(/^\.\//, ''))));
+        };
+        const base = path.posix.basename(rel);
+        try {
+            if (base === 'package.json') {
+                const pkg = JSON.parse(text) as Record<string, unknown>;
+                const leaves = (v: unknown): void => {
+                    if (typeof v === 'string') add(v);
+                    else if (v && typeof v === 'object') for (const x of Object.values(v)) leaves(x);
+                };
+                leaves(pkg['bin']);
+                add(pkg['main']);
+                add(pkg['module']);
+                leaves(pkg['exports']);
+            } else if (base === 'composer.json') {
+                const bin = (JSON.parse(text) as Record<string, unknown>)['bin'];
+                if (Array.isArray(bin)) for (const v of bin) add(v);
+            } else if (base === 'pyproject.toml') {
+                const section = /^\[project\.scripts\]\s*$([\s\S]*?)(?=^\[|(?![\s\S]))/m.exec(text)?.[1] ?? '';
+                for (const m of section.matchAll(/=\s*["']([\w.]+):[\w.]+["']/g)) {
+                    const mod = (m[1] as string).replace(/\./g, '/');
+                    add(`${mod}.py`);
+                    add(`src/${mod}.py`);
+                }
+            } else if (base === 'pom.xml') {
+                const main = /<mainClass>\s*([\w.]+)\s*<\/mainClass>/.exec(text)?.[1];
+                if (main) add(`src/main/java/${main.replace(/\./g, '/')}.java`);
+            }
+        } catch {
+            /* an unreadable manifest declares nothing */
+        }
     }
     return [...out].sort();
 }
@@ -239,8 +283,33 @@ export function openPrs(root: string): Array<{ number: number; title: string; fi
 
 export async function buildMap(
     root: string,
-    opts: { outDir?: string; cachePath?: string; diffRev?: string; prs?: boolean; noBuild?: boolean } = {},
+    opts: {
+        outDir?: string;
+        cachePath?: string;
+        diffRev?: string;
+        prs?: boolean;
+        noBuild?: boolean;
+        /** Test seam: called after each artefact lands in the new generation. */
+        _afterWrite?: (rel: string) => void;
+    } = {},
 ): Promise<MapBuildResult> {
+    // Single writer, enforced here rather than trusted to callers: one redraw per
+    // process at a time, and none while another process holds the refresh lock.
+    if (drawing) throw new Error('a map redraw is already running in this process');
+    const release = heldByThisProcess(root) ? (): void => {} : acquireRefreshLock(root);
+    if (release === null) throw new Error('another process holds the code-graph refresh lock');
+    drawing = true;
+    try {
+        return await drawGeneration(root, opts);
+    } finally {
+        drawing = false;
+        release();
+    }
+}
+
+let drawing = false;
+
+async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1] = {}): Promise<MapBuildResult> {
     const outDir = opts.outDir ?? path.join(root, MAP_DIR_REL);
     // A chosen --out directory is only ever written into when it is empty or
     // already holds a map: the writer clears stale area pages, and that must
@@ -283,29 +352,86 @@ export async function buildMap(
         commit: gitHead(root),
         state: graphState(root, cachePath),
         summary: '',
+        graph_generation: graphGeneration(cachePath) ?? createHash('sha256').update(JSON.stringify(graph)).digest('hex').slice(0, 16),
     };
     meta.summary =
         `${model.files.length} files · ${model.areas.length} areas · ` +
         `${model.analyses.trustedEdges} trusted links · guess share ${pct(model.analyses.guessShare)}`;
 
+    // One generation at a time: everything is written into a sibling directory,
+    // which then replaces the live one, so a reader never sees `map.json` of one
+    // build beside pages of another, and a failed redraw leaves the last one whole.
+    // The default map stages under the gitignored runtime dir, so a killed redraw
+    // leaves nothing in agents/ itself; a chosen --out stages beside itself.
+    const suffix = `${process.pid}-${randomBytes(4).toString('hex')}`;
+    const stage = opts.outDir === undefined ? path.join(root, 'agents', 'runtime', 'state') : path.dirname(outDir);
+    fs.mkdirSync(stage, { recursive: true });
+    const next = path.join(stage, `.map-next-${suffix}`);
+    const prev = path.join(stage, `.map-prev-${suffix}`);
     const written: string[] = [];
-    const write = (rel: string, content: string): void => {
-        const p = path.join(outDir, rel);
-        fs.mkdirSync(path.dirname(p), { recursive: true });
-        write_atomic(p, content);
-        written.push(rel);
-    };
-    const areasDir = path.join(outDir, 'areas');
-    if (fs.existsSync(areasDir)) {
-        for (const f of fs.readdirSync(areasDir)) if (f.endsWith('.md')) fs.rmSync(path.join(areasDir, f));
+    try {
+        const write = (rel: string, content: string): void => {
+            const p = path.join(next, rel);
+            fs.mkdirSync(path.dirname(p), { recursive: true });
+            write_atomic(p, content);
+            written.push(rel);
+            opts._afterWrite?.(rel);
+        };
+        write('map.json', `${JSON.stringify({ meta, model })}\n`);
+        write('MAP.md', renderMapMd(model, meta));
+        for (const [i, a] of model.areas.entries()) {
+            if (a.files.length >= AREA_PAGE_MIN_FILES) write(path.join('areas', `${a.id}.md`), renderAreaMd(model, i, meta));
+        }
+        write('index.html', renderHtml(model, meta));
+        carryForeignEntries(outDir, next);
+        swapIn(next, outDir, prev);
+    } finally {
+        fs.rmSync(next, { recursive: true, force: true });
     }
-    write('map.json', `${JSON.stringify({ meta, model })}\n`);
-    write('MAP.md', renderMapMd(model, meta));
-    for (const [i, a] of model.areas.entries()) {
-        if (a.files.length >= AREA_PAGE_MIN_FILES) write(path.join('areas', `${a.id}.md`), renderAreaMd(model, i, meta));
-    }
-    write('index.html', renderHtml(model, meta));
     return { outDir, model, meta, written, graphBuilt: built };
+}
+
+/**
+ * What a map generation consists of; anything else in the directory is someone else's and is
+ * carried over. `map-render.json` belongs to a generation although `buildMap` does not write it:
+ * it is `code-graph map`'s render check OF that generation, written after the swap, so the
+ * previous one's is dropped rather than left describing pages it never saw.
+ */
+const GENERATION_ENTRIES = new Set(['map.json', 'MAP.md', 'index.html', 'areas', 'map-render.json']);
+
+/** Copy entries the writer does not produce into the new generation, so the swap drops nothing. */
+function carryForeignEntries(live: string, next: string): void {
+    if (!fs.existsSync(live)) return;
+    for (const entry of fs.readdirSync(live)) {
+        if (GENERATION_ENTRIES.has(entry)) continue;
+        fs.cpSync(path.join(live, entry), path.join(next, entry), { recursive: true, verbatimSymlinks: true });
+    }
+}
+
+/**
+ * Replace `live` by `next` with two renames; on a failed second rename the old generation goes
+ * back. Consistent, not atomic: between the renames `live` is briefly absent, and a process
+ * killed there leaves the old generation at `prev` (under the gitignored runtime dir for the
+ * default map) — a reader sees no map, never a mixed one.
+ */
+export function swapIn(next: string, live: string, prev: string, rename: typeof fs.renameSync = fs.renameSync): void {
+    fs.mkdirSync(path.dirname(live), { recursive: true });
+    const hadLive = fs.existsSync(live);
+    if (hadLive) rename(live, prev);
+    try {
+        rename(next, live);
+    } catch (e) {
+        if (!hadLive) throw e;
+        try {
+            rename(prev, live);
+        } catch {
+            throw new Error(`map swap failed and the restore failed too; the previous generation is at ${prev}`, {
+                cause: e,
+            });
+        }
+        throw e;
+    }
+    if (hadLive) fs.rmSync(prev, { recursive: true, force: true });
 }
 
 function pct(x: number): string {
@@ -362,6 +488,12 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
         `Thresholds: seed ${m.thresholds.seed} · infrastructure above in-degree ${m.thresholds.infraInDegree} · ` +
             `areas under ${m.thresholds.smallArea} files fold into "small parts" · an area above ` +
             `${Math.round(m.thresholds.maxAreaShare * 100)} % is split once · lists capped at ${m.thresholds.listCap}.`,
+        '',
+        m.providers && m.providers.length > 0
+            ? `Convention providers: ${m.providers
+                  .map((p) => `${md(p.name)} (${p.status}${p.roots.some((r) => r !== '') ? `, ${p.roots.map((r) => code(r || '.')).join(', ')}` : ''})`)
+                  .join(' · ')} — plus the framework-neutral default.`
+            : 'Convention providers: none detected — only the framework-neutral default ran.',
         '',
         '',
     ].join('\n');
@@ -721,6 +853,7 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '<button type="button" id="z-out">−</button>',
         '<button type="button" id="z-in">+</button>',
         '<button type="button" id="z-fit"></button>',
+        '<button type="button" id="dim" aria-pressed="false"></button>',
         '<button type="button" id="theme"></button>',
         '<button type="button" id="lang"></button>',
         '</div>',

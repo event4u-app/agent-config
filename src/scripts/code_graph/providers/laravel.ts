@@ -15,9 +15,13 @@
  * rule cannot settle — a closure handler, a view name built at runtime — is
  * counted in `stats`, never guessed.
  */
-import type { SourceFile } from './build.js';
-import { resolvePsr4, type ResolutionConfig } from './resolution_tiers.js';
-import type { CodeEdge, CodeNode } from './types.js';
+import * as path from 'node:path';
+
+import type { SourceFile } from '../build.js';
+import type { FileRole } from '../map_model.js';
+import { psr4RulesFrom, resolvePsr4, type ResolutionConfig } from '../resolution_tiers.js';
+import type { CodeEdge, CodeNode } from '../types.js';
+import type { ConventionProvider, ProjectProbe } from './types.js';
 
 export interface LaravelOverlayStats {
     routes: number;
@@ -172,6 +176,8 @@ export function buildLaravelOverlay(
     files: readonly SourceFile[],
     baseNodes: readonly CodeNode[],
     resolution: ResolutionConfig,
+    /** The package root with a trailing slash (`''` at the repository root). */
+    prefix = '',
 ): LaravelOverlay {
     const stats: LaravelOverlayStats = {
         routes: 0,
@@ -225,7 +231,8 @@ export function buildLaravelOverlay(
     const viewFile = (name: string): string | null => {
         if (name.includes('::')) return null;
         const rel = name.replace(/\./g, '/');
-        for (const c of [`resources/views/${rel}.blade.php`, `resources/views/${rel}.php`, `resources/views/${rel}/index.blade.php`]) {
+        const views = `${prefix}resources/views/`;
+        for (const c of [`${views}${rel}.blade.php`, `${views}${rel}.php`, `${views}${rel}/index.blade.php`]) {
             if (fileIds.has(c)) return c;
         }
         return null;
@@ -234,7 +241,7 @@ export function buildLaravelOverlay(
 
     // Routes.
     let routeOrdinal = new Map<string, number>();
-    for (const f of php.filter((x) => x.path.startsWith('routes/'))) {
+    for (const f of php.filter((x) => x.path.startsWith(`${prefix}routes/`))) {
         const src = f.source;
         const at = lineIndex(src);
         const scope = phpScope(src);
@@ -433,12 +440,47 @@ export function buildLaravelOverlay(
             const file = classFile(fq);
             const target = file ? `${file}#${shortName(fq)}` : null;
             if (!target || !nodeById.has(target)) continue;
-            emit(enclosing(d.file.path, at(m.index as number)), target, 'relates', 'eloquent-relation');
+            emit(enclosing(d.file.path, at(m.index as number)), target, 'relates', 'orm-relation');
             stats.relations += 1;
         }
     }
 
-    const routesFiles = new Set(php.filter((x) => x.path.startsWith('routes/')).map((x) => x.path));
+    // Which models a method names. A controller imports its models once per
+    // file, so a route's tables are read per handler from these edges rather
+    // than from the file's `use` lines (which attribute every model of the file
+    // to every route the file serves).
+    const modelIds = new Set<string>();
+    for (const [id, d] of classDecl) {
+        const name = id.split('#')[1] as string;
+        if (modelNames.has(d.parent) && !MODEL_BASES.has(name) && nodeById.has(id)) modelIds.add(id);
+    }
+    if (modelIds.size > 0) {
+        for (const f of php) {
+            if (blade(f.path)) continue;
+            const scope = phpScope(f.source);
+            const lines = f.source.split('\n');
+            for (const n of symbolsByFile.get(f.path) ?? []) {
+                if (n.kind !== 'method') continue;
+                const [s0, , e0] = n.source_location as [number, number, number, number];
+                // Strings and comments name words, not classes: `'User not found'` is no reference.
+                const body = lines
+                    .slice(s0 - 1, e0)
+                    .join('\n')
+                    .replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*|#[^\n[]*$/gm, ' ')
+                    .replace(/'(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*"/g, "''");
+                const own = n.id.split('::')[0];
+                for (const token of new Set([...body.matchAll(/\b([A-Z]\w*)\b/g)].map((m) => m[1] as string))) {
+                    const fq = qualify(token, scope);
+                    const file = classFile(fq);
+                    const target = file ? `${file}#${shortName(fq)}` : null;
+                    if (!target || target === own || !modelIds.has(target)) continue;
+                    emit(n.id, target, 'uses', scope.uses.has(token) ? 'import-specifier' : 'psr4');
+                }
+            }
+        }
+    }
+
+    const routesFiles = new Set(php.filter((x) => x.path.startsWith(`${prefix}routes/`)).map((x) => x.path));
     const dropEdge = (e: CodeEdge): boolean => {
         if (e.relation !== 'calls' || e.resolved_via === 'same-file') return false;
         const src = nodeById.get(e.source);
@@ -452,3 +494,67 @@ export function buildLaravelOverlay(
 
     return { nodes, edges, dropEdge, stats };
 }
+
+/** A composer manifest that pulls in the framework or any of its components. */
+function requiresLaravel(manifest: string): boolean {
+    try {
+        const j = JSON.parse(manifest) as { require?: Record<string, string>; 'require-dev'?: Record<string, string> };
+        const names = [...Object.keys(j.require ?? {}), ...Object.keys(j['require-dev'] ?? {})];
+        return names.some((n) => n === 'laravel/framework' || n.startsWith('illuminate/'));
+    } catch {
+        return false;
+    }
+}
+
+function detectLaravel(probe: ProjectProbe): string[] {
+    const roots = new Set<string>();
+    const dirOf = (p: string): string => {
+        const d = path.posix.dirname(p);
+        return d === '.' ? '' : d;
+    };
+    for (const [p, text] of probe.manifests) {
+        if (path.posix.basename(p) === 'composer.json' && requiresLaravel(text)) roots.add(dirOf(p));
+    }
+    for (const p of probe.markers) if (path.posix.basename(p) === 'artisan') roots.add(dirOf(p));
+    return [...roots].sort();
+}
+
+function laravelRole(p: string): FileRole | undefined {
+    if (path.posix.basename(p).endsWith('.blade.php') || p.startsWith('resources/views/') || p.includes('/resources/views/')) return 'view';
+    if (p.startsWith('routes/') || p === 'public/index.php' || p === 'artisan') return 'entry';
+    return undefined;
+}
+
+export const laravelProvider: ConventionProvider = {
+    id: 'laravel',
+    markers: ['artisan'],
+    detect: detectLaravel,
+    build: ({ files, baseNodes, resolution, roots, manifests }) => {
+        // One overlay per package root: a Laravel app under `backend/` keeps its
+        // routes, views and PSR-4 map there, not at the repository root.
+        const nodes = new Map<string, CodeNode>();
+        const edges = new Map<string, CodeEdge>();
+        const contests: Array<(e: CodeEdge) => boolean> = [];
+        for (const root of roots) {
+            const prefix = root === '' ? '' : `${root}/`;
+            let config = resolution;
+            if (root !== '') {
+                let composer: unknown = null;
+                try {
+                    composer = JSON.parse(manifests.get(`${prefix}composer.json`) ?? 'null');
+                } catch {
+                    composer = null;
+                }
+                const own = psr4RulesFrom(composer).map((r) => ({ ...r, dirs: r.dirs.map((d) => `${prefix}${d}`) }));
+                config = { ...resolution, psr4: [...own, ...resolution.psr4] };
+            }
+            const scoped = root === '' ? files : files.filter((f) => f.path.startsWith(prefix));
+            const o = buildLaravelOverlay(scoped, baseNodes, config, prefix);
+            for (const n of o.nodes) if (!nodes.has(n.id)) nodes.set(n.id, n);
+            for (const e of o.edges) edges.set(`${e.source}\0${e.relation}\0${e.target}`, e);
+            contests.push(o.dropEdge);
+        }
+        return { nodes: [...nodes.values()], edges: [...edges.values()], contest: (e) => contests.some((c) => c(e)) };
+    },
+    roleOf: laravelRole,
+};

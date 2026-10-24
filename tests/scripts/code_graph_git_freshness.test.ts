@@ -4,10 +4,15 @@
  *
  * These run the REAL rendered hooks, not a reimplementation of them: the
  * installer is rendered into a scratch directory through its documented
- * `AGENT_CONFIG_HOOKS_DIR` seam, and the resulting `post-commit` /
- * `post-checkout` are executed inside a throwaway git repository. A test that
- * re-implemented the shell would pass while the shipped hook was broken, which
- * is the failure mode the seam exists to prevent.
+ * `AGENT_CONFIG_HOOKS_DIR` seam, and the resulting hooks are executed inside a
+ * throwaway directory. A test that re-implemented the shell would pass while
+ * the shipped hook was broken, which is the failure mode the seam exists to
+ * prevent.
+ *
+ * Single-flight is the engine's job since the hook stopped holding its own
+ * shell lock (one lock protocol, not two): it is tested where it lives, in
+ * `code_graph_refresh.test.ts` and `code_graph_refresh_lock.test.ts`. Here the
+ * hook is held to calling `refresh --single-flight --map` on the right events.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -18,7 +23,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const CACHE_REL = path.join('agents', 'runtime', 'state', 'code-graph-v1.json');
-const LOCK_REL = path.join('agents', 'runtime', 'state', 'code-graph-refresh.lock');
+const EXPECTED = 'code-graph refresh --single-flight --map --budget-seconds 60';
 
 let stage: string;
 
@@ -33,8 +38,10 @@ beforeAll(() => {
 }, 120_000);
 
 /**
- * A throwaway repo carrying a fake `./agent-config` that records each refresh
- * as one line. Counting lines is how "exactly one refresh" is measured.
+ * A throwaway directory carrying a fake `./agent-config` that records each
+ * code-graph call as one line. These hooks call `./agent-config` for more than
+ * one thing — the chat-history checkpoint block runs first, unconditionally —
+ * so only code-graph calls are recorded.
  */
 function rig(withCache: boolean): string {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-rig-'));
@@ -42,100 +49,98 @@ function rig(withCache: boolean): string {
     if (withCache) fs.writeFileSync(path.join(dir, CACHE_REL), '{}');
     fs.writeFileSync(
         path.join(dir, 'agent-config'),
-        '#!/bin/sh\n' +
-            // These hooks call `./agent-config` for more than one thing — the
-            // chat-history checkpoint block runs first, unconditionally. Only
-            // the refresh is under test, so only the refresh is counted; a
-            // counter that logged every invocation measured the checkpoint too
-            // and reported 4 where the answer was 1.
-            'if [ "$1" != "code-graph" ]; then exit 0; fi\n' +
-            // Hold the lock long enough that a concurrent hook must observe it.
-            'sleep 0.4\n' +
-            'echo refresh >> "$PWD/refreshes.log"\n',
+        '#!/bin/sh\nif [ "$1" != "code-graph" ]; then exit 0; fi\necho "$*" >> "$PWD/calls.log"\n',
         { mode: 0o755 },
     );
     return dir;
 }
 
-function runHook(hookPath: string, cwd: string, args: string[] = []): void {
-    spawnSync('bash', [hookPath, ...args], { cwd, encoding: 'utf-8' });
+function runHook(hook: string, cwd: string, args: string[] = []): void {
+    spawnSync('bash', [path.join(stage, hook), ...args], { cwd, encoding: 'utf-8' });
 }
 
-function refreshCount(dir: string): number {
-    const log = path.join(dir, 'refreshes.log');
-    if (!fs.existsSync(log)) return 0;
-    return fs.readFileSync(log, 'utf-8').split('\n').filter(Boolean).length;
+/** The detached call is not awaited by the hook; give it a moment to land. */
+function calls(dir: string): string[] {
+    const log = path.join(dir, 'calls.log');
+    const deadline = Date.now() + 1500;
+    while (Date.now() < deadline && !fs.existsSync(log)) spawnSync('sleep', ['0.05']);
+    spawnSync('sleep', ['0.1']);
+    return fs.existsSync(log) ? fs.readFileSync(log, 'utf-8').split('\n').filter(Boolean) : [];
 }
 
-/** Wait for the detached child to finish; it is deliberately not awaited by git. */
-function settle(dir: string, ms = 2500): void {
-    const deadline = Date.now() + ms;
-    while (Date.now() < deadline) {
-        if (!fs.existsSync(path.join(dir, LOCK_REL))) return;
-        spawnSync('sleep', ['0.05']);
-    }
-}
-
-describe('post-commit refresh — single-flight', () => {
-    it('two concurrent commits produce exactly one refresh', () => {
+describe('the refresh block', () => {
+    it('post-commit asks the engine for a single-flight refresh that also redraws the map', () => {
         const dir = rig(true);
-        const hook = path.join(stage, 'post-commit');
-
-        // Both hooks fire before either child finishes: the first creates the
-        // lock directory, the second must find it and do nothing. `mkdir` is
-        // the atomicity primitive under test — a lock written with `>` would
-        // let both through, and this assertion is what would catch that.
-        runHook(hook, dir);
-        runHook(hook, dir);
-        settle(dir);
-
-        expect(refreshCount(dir)).toBe(1);
-    }, 30_000);
-
-    it('is SENSITIVE — with the lock removed the same two calls produce two refreshes', () => {
-        // A single-flight test that never sees the un-locked count proves
-        // nothing: it could pass because the second call failed for an
-        // unrelated reason. Neutralising the mechanism must change the answer.
-        const dir = rig(true);
-        const hook = path.join(stage, 'post-commit');
-        const body = fs.readFileSync(hook, 'utf-8').replace(
-            'if mkdir "$cg_lock" 2>/dev/null; then',
-            'if true; then',
-        );
-        const unlocked = path.join(dir, 'post-commit-unlocked');
-        fs.writeFileSync(unlocked, body, { mode: 0o755 });
-
-        runHook(unlocked, dir);
-        runHook(unlocked, dir);
-        spawnSync('sleep', ['1.5']);
-
-        expect(refreshCount(dir)).toBe(2);
+        runHook('post-commit', dir);
+        expect(calls(dir)).toEqual([EXPECTED]);
     }, 30_000);
 
     it('never builds a graph that does not exist yet', () => {
         // Refreshing a graph the developer built is a service; building one
         // they never asked for is the pure install cost Risk 1 names.
         const dir = rig(false);
-        runHook(path.join(stage, 'post-commit'), dir);
-        settle(dir, 800);
-        expect(refreshCount(dir)).toBe(0);
+        runHook('post-commit', dir);
+        expect(calls(dir)).toEqual([]);
     }, 30_000);
+
+    it('holds no shell lock of its own — one lock protocol, the engine’s', () => {
+        const body = fs.readFileSync(path.join(stage, 'post-commit'), 'utf-8');
+        expect(body).not.toMatch(/code-graph-refresh\.lock/);
+        expect(body).toContain(EXPECTED);
+    });
 });
 
 describe('post-checkout refresh', () => {
     it('skips a file-checkout, which moves no commits', () => {
         const dir = rig(true);
         // git passes post-checkout: $1 prev, $2 new, $3 is-branch-checkout.
-        runHook(path.join(stage, 'post-checkout'), dir, ['abc', 'def', '0']);
-        settle(dir, 800);
-        expect(refreshCount(dir)).toBe(0);
+        runHook('post-checkout', dir, ['abc', 'def', '0']);
+        expect(calls(dir)).toEqual([]);
     }, 30_000);
 
     it('refreshes on a branch checkout', () => {
         const dir = rig(true);
-        runHook(path.join(stage, 'post-checkout'), dir, ['abc', 'def', '1']);
-        settle(dir);
-        expect(refreshCount(dir)).toBe(1);
+        runHook('post-checkout', dir, ['abc', 'def', '1']);
+        expect(calls(dir)).toEqual([EXPECTED]);
+    }, 30_000);
+});
+
+describe('post-merge and post-rewrite refresh', () => {
+    it('refreshes after a merge — a fast-forward `git pull` fires post-merge and nothing else', () => {
+        const dir = rig(true);
+        runHook('post-merge', dir, ['0']);
+        expect(calls(dir)).toEqual([EXPECTED]);
+    }, 30_000);
+
+    it('refreshes after a finished rebase', () => {
+        const dir = rig(true);
+        runHook('post-rewrite', dir, ['rebase']);
+        expect(calls(dir)).toEqual([EXPECTED]);
+    }, 30_000);
+
+    it.each(['post-commit', 'post-checkout', 'post-merge', 'post-rewrite'])(
+        '%s never holds up git: a slow, failing refresh leaves the hook exiting 0 at once',
+        (hook) => {
+            const dir = rig(true);
+            // Only the refresh hangs; the chat-history checkpoint ahead of it is synchronous by design.
+            fs.writeFileSync(
+                path.join(dir, 'agent-config'),
+                '#!/bin/sh\nif [ "$1" = "code-graph" ]; then sleep 5; exit 7; fi\nexit 0\n',
+                { mode: 0o755 },
+            );
+            const args = hook === 'post-checkout' ? ['a', 'b', '1'] : hook === 'post-rewrite' ? ['rebase'] : ['0'];
+            const t0 = Date.now();
+            const r = spawnSync('bash', [path.join(stage, hook), ...args], { cwd: dir, encoding: 'utf-8' });
+            expect(r.status).toBe(0);
+            expect(Date.now() - t0).toBeLessThan(3000);
+        },
+        30_000,
+    );
+
+    it('skips an amend, which post-commit already covered', () => {
+        const dir = rig(true);
+        runHook('post-rewrite', dir, ['amend']);
+        expect(calls(dir)).toEqual([]);
     }, 30_000);
 });
 
@@ -186,40 +191,4 @@ describe('the index across a two-branch merge', () => {
         const tracked = String(git('ls-files', CACHE_REL).stdout ?? '').trim();
         expect(tracked).toBe('');
     }, 60_000);
-});
-
-describe('the map follows the index (road-to-a-map-that-draws-itself 5.1)', () => {
-    /** Like `rig`, but the fake records WHICH code-graph verb ran. */
-    function verbRig(withMap: boolean): string {
-        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-map-rig-'));
-        fs.mkdirSync(path.join(dir, 'agents', 'runtime', 'state'), { recursive: true });
-        fs.writeFileSync(path.join(dir, CACHE_REL), '{}');
-        if (withMap) fs.mkdirSync(path.join(dir, 'agents', 'map'));
-        fs.writeFileSync(
-            path.join(dir, 'agent-config'),
-            '#!/bin/sh\nif [ "$1" != "code-graph" ]; then exit 0; fi\necho "$2" >> "$PWD/verbs.log"\n',
-            { mode: 0o755 },
-        );
-        return dir;
-    }
-    const verbs = (dir: string): string[] => {
-        const log = path.join(dir, 'verbs.log');
-        return fs.existsSync(log) ? fs.readFileSync(log, 'utf-8').split('\n').filter(Boolean) : [];
-    };
-
-    it('redraws the map after the refresh when the project has one', () => {
-        const dir = verbRig(true);
-        runHook(path.join(stage, 'post-commit'), dir);
-        settle(dir);
-        spawnSync('sleep', ['0.3']);
-        expect(verbs(dir)).toEqual(['refresh', 'map']);
-    }, 30_000);
-
-    it('never draws a map nobody asked for', () => {
-        const dir = verbRig(false);
-        runHook(path.join(stage, 'post-commit'), dir);
-        settle(dir);
-        spawnSync('sleep', ['0.3']);
-        expect(verbs(dir)).toEqual(['refresh']);
-    }, 30_000);
 });

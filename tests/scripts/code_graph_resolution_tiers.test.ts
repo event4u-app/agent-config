@@ -173,3 +173,53 @@ describe('the tier primitives', () => {
         expect(resolvePsr4('\\App\\Here', { aliases: [], psr4: rules }, new Set(['app/Here.php']))).toBe('app/Here.php');
     });
 });
+
+describe('tsconfig baseUrl', () => {
+    it('resolves a paths target against baseUrl "." without a leading ./', () => {
+        const rules = aliasRulesFrom({ compilerOptions: { baseUrl: '.', paths: { '@/*': ['./src/*'] } } });
+        expect(rules.find((r) => r.prefix === '@/')?.targets).toEqual(['src']);
+        expect(resolveAlias('@/lib/cart', { aliases: rules, psr4: [] }, new Set(['src/lib/cart.ts']))).toBe('src/lib/cart.ts');
+    });
+
+    it('resolves a bare specifier against baseUrl when no paths entry matches, as TypeScript does', () => {
+        const rules = aliasRulesFrom({ compilerOptions: { baseUrl: '.' } });
+        const files = new Set(['components/cart/index.tsx', 'lib/shopify.ts']);
+        expect(resolveAlias('components/cart', { aliases: rules, psr4: [] }, files)).toBe('components/cart/index.tsx');
+        expect(resolveAlias('lib/shopify', { aliases: rules, psr4: [] }, files)).toBe('lib/shopify.ts');
+        // A package name that is no project file stays unresolved.
+        expect(resolveAlias('react', { aliases: rules, psr4: [] }, files)).toBeNull();
+    });
+
+    it('lets a paths entry win over the baseUrl fallback', () => {
+        const rules = aliasRulesFrom({ compilerOptions: { baseUrl: './src', paths: { 'lib/*': ['override/*'] } } });
+        const files = new Set(['src/override/x.ts', 'src/lib/x.ts', 'src/util/y.ts']);
+        expect(resolveAlias('lib/x', { aliases: rules, psr4: [] }, files)).toBe('src/override/x.ts');
+        expect(resolveAlias('util/y', { aliases: rules, psr4: [] }, files)).toBe('src/util/y.ts');
+    });
+
+    it('resolves nothing bare without a baseUrl', () => {
+        const rules = aliasRulesFrom({ compilerOptions: { paths: { '@/*': ['src/*'] } } });
+        expect(resolveAlias('lib/x', { aliases: rules, psr4: [] }, new Set(['lib/x.ts']))).toBeNull();
+    });
+
+    const BASEURL_SOURCE = {
+        'components/cart.tsx': 'export function Cart(): string { return "cart"; }\n',
+        'app/page.tsx': "import { Cart } from 'components/cart';\nexport function Page(): string { return Cart(); }\n",
+    };
+
+    it('binds a baseUrl import as an import, never as a literal-path read', async () => {
+        const dir = rig({ ...BASEURL_SOURCE, 'tsconfig.json': JSON.stringify({ compilerOptions: { baseUrl: '.' } }) });
+        const edges = await edgesOf(dir);
+        const imported = edges.find((e) => e.relation === 'imports' && e.source === 'app/page.tsx');
+        expect(imported?.target).toBe('components/cart.tsx#Cart');
+        expect(imported?.resolved_via).toBe('path-alias');
+        expect(edges.some((e) => e.relation === 'reads' && e.source === 'app/page.tsx')).toBe(false);
+    }, 60_000);
+
+    it('counts an unresolved import specifier as no read either', async () => {
+        const dir = rig(BASEURL_SOURCE); // no tsconfig.json: the import goes external
+        const edges = await edgesOf(dir);
+        expect(edges.find((e) => e.relation === 'imports' && e.source === 'app/page.tsx')?.target).toContain('external:components/cart');
+        expect(edges.some((e) => e.relation === 'reads' && e.source === 'app/page.tsx')).toBe(false);
+    }, 60_000);
+});

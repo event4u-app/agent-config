@@ -1,5 +1,5 @@
 /**
- * Python, Go and Java extraction — the same shape `extract.ts` emits for
+ * Python, Go, Java and C# extraction — the same shape `extract.ts` emits for
  * PHP / TS / JS, so the build pass resolves them with no language branch
  * beyond module lookup.
  *
@@ -311,4 +311,108 @@ export function extractGo(root: TsNode, file: string, out: FileExtract): void {
         for (const c of namedChildren(n)) walk(c, scopeId);
     };
     walk(root, file);
+}
+
+/** The name a C# type expression names: `List<User>` → `List`, `A.B` → `B`. */
+function csType(n: TsNode): string {
+    if (n.type === 'generic_name') return text(namedChildren(n).find((c) => c.type === 'identifier'));
+    if (n.type === 'qualified_name') return lastSegment(n.text.replace(/<.*$/, ''));
+    return n.text.replace(/<.*$/, '');
+}
+
+export function extractCSharp(root: TsNode, file: string, out: FileExtract): void {
+    out.nodes.push({ id: file, label: file, kind: 'file', source_file: file, source_location: [] });
+    const TYPES: Record<string, 'class' | 'interface' | 'enum'> = {
+        class_declaration: 'class',
+        record_declaration: 'class',
+        struct_declaration: 'class',
+        interface_declaration: 'interface',
+        enum_declaration: 'enum',
+    };
+    const namespaces: string[] = [];
+    const walk = (n: TsNode, classId: string | null, scopeId: string, ns = ''): void => {
+        const kind = TYPES[n.type];
+        if (kind) {
+            const nm = nameField(n) ?? '<anon>';
+            const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
+            out.nodes.push({ id, label: nm, kind, source_file: file, source_location: loc(n) });
+            out.rawEdges.push({ sourceId: classId ?? file, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
+            for (const c of namedChildren(n)) {
+                if (c.type !== 'base_list') continue;
+                for (const t of namedChildren(c)) {
+                    if (t.type === 'identifier' || t.type === 'generic_name' || t.type === 'qualified_name') {
+                        out.inherits.push({ classId: id, parentName: csType(t) });
+                    }
+                }
+            }
+            for (const c of namedChildren(n)) if (c.type === 'declaration_list') for (const d of namedChildren(c)) walk(d, id, id, ns);
+            return;
+        }
+        switch (n.type) {
+            case 'namespace_declaration':
+            case 'file_scoped_namespace_declaration': {
+                const name = n.childForFieldName('name');
+                const inner = ns ? `${ns}.${text(name)}` : text(name);
+                if (name && !namespaces.includes(inner)) namespaces.push(inner);
+                const body = n.childForFieldName('body') ?? n;
+                for (const c of namedChildren(body)) if (!same(c, name)) walk(c, classId, scopeId, inner);
+                return;
+            }
+            case 'using_directive': {
+                const parts = namedChildren(n);
+                const spec = parts.find((c) => c.type === 'qualified_name' || c.type === 'identifier');
+                const target = parts.filter((c) => c.type === 'qualified_name' || c.type === 'identifier').pop();
+                if (spec && target) {
+                    const aliased = parts.some((c) => c.type === 'name_equals') || n.text.includes('=');
+                    out.rawEdges.push({
+                        sourceId: file,
+                        relation: 'imports',
+                        targetName: lastSegment(target.text),
+                        confidenceHint: 'EXTRACTED',
+                        moduleSpecifier: target.text,
+                        importKind: 'namespace',
+                        ...(aliased && spec !== target ? { localName: spec.text } : {}),
+                    });
+                }
+                return;
+            }
+            case 'method_declaration':
+            case 'constructor_declaration': {
+                const nm = nameField(n) ?? '<anon>';
+                const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
+                out.nodes.push({ id, label: nm, kind: 'method', source_file: file, source_location: loc(n) });
+                out.rawEdges.push({ sourceId: classId ?? file, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
+                for (const c of namedChildren(n)) if (c.type === 'block' || c.type === 'arrow_expression_clause') walk(c, classId, id, ns);
+                return;
+            }
+            case 'invocation_expression': {
+                const fn = n.childForFieldName('function');
+                const ctx = classId ? { enclosingClassId: classId } : {};
+                if (fn && (fn.type === 'identifier' || fn.type === 'generic_name')) {
+                    out.rawEdges.push({ sourceId: scopeId, relation: 'calls', targetName: csType(fn), confidenceHint: classId ? 'INFERRED' : 'AMBIGUOUS', callStyle: 'this', ...ctx });
+                } else if (fn && fn.type === 'member_access_expression') {
+                    const obj = fn.childForFieldName('expression');
+                    const nm = csType(fn.childForFieldName('name') ?? fn);
+                    if (obj && (obj.type === 'this_expression' || obj.type === 'base_expression')) {
+                        out.rawEdges.push({ sourceId: scopeId, relation: 'calls', targetName: nm, confidenceHint: classId ? 'INFERRED' : 'AMBIGUOUS', callStyle: obj.type === 'base_expression' ? 'parent' : 'this', ...ctx });
+                    } else if (obj && obj.type === 'identifier' && /^[A-Z]/.test(obj.text)) {
+                        out.rawEdges.push({ sourceId: scopeId, relation: 'calls', targetName: nm, confidenceHint: 'AMBIGUOUS', callStyle: 'scoped', scopeName: obj.text, ...ctx });
+                    } else {
+                        out.rawEdges.push({ sourceId: scopeId, relation: 'calls', targetName: nm, confidenceHint: 'AMBIGUOUS', callStyle: 'dynamic', ...ctx });
+                    }
+                }
+                break;
+            }
+            case 'object_creation_expression': {
+                const t = n.childForFieldName('type');
+                if (t) out.rawEdges.push({ sourceId: scopeId, relation: 'calls', targetName: csType(t), confidenceHint: 'EXTRACTED', callStyle: 'new' });
+                break;
+            }
+            default:
+                break;
+        }
+        for (const c of namedChildren(n)) walk(c, classId, scopeId, ns);
+    };
+    walk(root, null, file);
+    out.namespaces = namespaces;
 }

@@ -20,7 +20,7 @@ import type { BuiltinTool } from '../../src/scripts/mcp_server/tools.js';
 import { buildFromRepo, buildGraph, serializeGraph, type SourceFile } from '../../src/scripts/code_graph/build.js';
 import { pickSource, type SourceVerdict } from '../../src/scripts/code_graph/detect.js';
 import { extractFile } from '../../src/scripts/code_graph/extract.js';
-import { loadLanguage } from '../../src/scripts/code_graph/loader.js';
+import { GRAMMAR_ABI_PIN, loadLanguage } from '../../src/scripts/code_graph/loader.js';
 import {
     affected,
     loadGraph,
@@ -86,6 +86,10 @@ describe('ABI smoke — pinned grammars load + parse', () => {
             expect(L.version).toBe(EXPECTED_GRAMMAR_ABI);
         });
     }
+    it('loads csharp at its own pinned ABI, the one grammar upstream ships at 13', async () => {
+        expect(GRAMMAR_ABI_PIN.csharp).toBe(13);
+        expect((await loadLanguage('csharp')).version).toBe(13);
+    });
     it('parses each launch language without a parse error', async () => {
         const php = await extractFile('a.php', '<?php class A { function m(){} }', 'php');
         const ts = await extractFile('a.ts', 'class A { m(){} }', 'typescript');

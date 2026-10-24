@@ -9,7 +9,7 @@
  */
 
 /** Launch set — the stacks this suite's consumers actually run. */
-export type Lang = 'php' | 'typescript' | 'javascript' | 'python' | 'go' | 'java';
+export type Lang = 'php' | 'typescript' | 'javascript' | 'python' | 'go' | 'java' | 'csharp';
 
 /** Same scale as `discovery_graph.ts::EdgeConfidence` (reused, not forked). */
 export type EdgeConfidence = 'EXTRACTED' | 'INFERRED' | 'AMBIGUOUS';
@@ -29,11 +29,12 @@ export type EdgeConfidence = 'EXTRACTED' | 'INFERRED' | 'AMBIGUOUS';
  * grammar can see whether a file is a test.
  */
 /**
- * The last seven are the framework links the Laravel overlay reads by rule
- * (`laravel_overlay.ts`): a route to its handler, a method to the view it
- * renders, a view to the view it includes, code to the translation or config
- * file it reads, a migration to its table, a model to its table, a model to
- * the model an Eloquent relation names.
+ * `routes-to` … `injects` are the convention links a registered provider reads
+ * by rule (`providers/`, ADR-298): a route to its handler, code to the template
+ * it renders, a template to the template it includes, code to the translation
+ * or config file it reads, a migration to its table, a model to its table, a
+ * model to the model a relation names, a class to the service a container
+ * injects into it. The vocabulary is fixed and names no framework.
  */
 export type Relation =
     | 'calls'
@@ -49,6 +50,7 @@ export type Relation =
     | 'migrates'
     | 'persists'
     | 'relates'
+    | 'injects'
     /** A Markdown document links to, or names, the file (`docs_layer.ts`). */
     | 'documents';
 
@@ -86,12 +88,20 @@ export type ResolvedVia =
     | 'path-alias'
     | 'psr4'
     | 'route-table'
-    /** A Blade directive, a `view()` / `__()` / `config()` call, or a Markdown link naming a file. */
+    /** A template directive, a render / translation / config call naming a file, or a Markdown link. */
     | 'directive-scan'
-    /** A `Schema::create|table` call, or a model whose table one of them creates. */
+    /** A schema or migration call creating a table, or a model mapped to such a table. */
     | 'schema-call'
-    /** `$this->hasMany(Other::class)` and its siblings inside a model. */
-    | 'eloquent-relation'
+    /** An ORM relation declared inside a model, naming the related model. */
+    | 'orm-relation'
+    /** A dependency-injection declaration naming the injected class. */
+    | 'di-binding'
+    /** A string literal equal to exactly one file's path (the default pass). */
+    | 'literal-path'
+    /** A dotted name equal to exactly one template's path (the default pass). */
+    | 'literal-dotted'
+    /** A page module whose path is its route (the default pass). */
+    | 'fs-route'
     /** Stated by a compiler-grade SCIP index the project ships (`scip_reader.ts`). */
     | 'compiler-index'
     | 'test-import'
@@ -131,33 +141,40 @@ export type EdgeProvider =
     | 'scip';
 
 /**
- * The two mechanisms that are GUESSES rather than statements.
+ * Every mechanism, classified as a statement (the source names the target) or
+ * a guess. Trust is this ALLOWLIST (ADR-298): it replaced a denylist of guesses,
+ * under which a new mechanism was trusted merely because nobody had listed it —
+ * wrong once several providers emit edges. A string that is no member at all
+ * (an older or foreign graph) is a guess. The type below fails to compile when a
+ * `ResolvedVia` member is in neither list.
  *
- * `name-lookup` is the repo-wide same-name table (or a lookup that found
- * nothing); `dynamic` is a receiver the extractor cannot type. Everything else
- * names where the target came from.
- *
- * Declared HERE, beside `ResolvedVia`, rather than in the query tier that first
- * needed it — because the BUILD pass needs it too, and the reason is a defect an
- * independent review demonstrated: a derived edge stamped with a trustworthy
- * mechanism while its own evidence was a guess LAUNDERS the guess. A PHP
- * `use Two\Mailer` with no `composer.json` binds by base name, so the `imports`
- * edge is `name-lookup` and may point at `One\Mailer`; deriving a `tests` edge
- * from it and tagging that `test-import` made a wrong target trustworthy to
- * every consumer of the filter. One set, two readers, and the build pass can no
- * longer disagree with the query tier about what a guess is.
- *
- * The accepted-edge filter is a DENYLIST, so a new value is accepted by
- * default — which is exactly backwards for `foreign`. It must be listed here
- * or a consumer's graph would silently answer the gate verbs as if this
- * package had resolved its edges. (Kept out of the literal: esbuild carries a
- * comment inside an expression into the hook bundle.)
+ * The guesses: `name-lookup` is the repo-wide same-name table (or a lookup that
+ * found nothing); `dynamic` is a receiver the extractor cannot type; `foreign`
+ * was read from another tool's graph and only mapped. The BUILD pass needs the
+ * split as much as the query tier: a derived edge stamped with a trustworthy
+ * mechanism while its own evidence was a guess LAUNDERS the guess — a PHP
+ * `use Two\Mailer` with no `composer.json` binds by base name, and a `tests`
+ * edge derived from it made a wrong target trustworthy to every consumer.
  */
-export const GUESS_RESOLVED_VIA: ReadonlySet<ResolvedVia> = new Set<ResolvedVia>(['name-lookup', 'dynamic', 'foreign']);
+// One space-separated string per list: this module ships in the hook bundle,
+// where an array literal costs a line per entry. `Words` splits it in the type.
+const STATED_WORDS =
+    'same-file import-specifier path-alias psr4 route-table directive-scan schema-call orm-relation di-binding compiler-index test-import literal-path literal-dotted fs-route' as const;
+const GUESS_WORDS = 'name-lookup dynamic foreign' as const;
+type Words<S extends string> = S extends `${infer H} ${infer T}` ? H | Words<T> : S;
+/** Mechanisms in neither list; must be `never` (a test asserts it). */
+export type UnclassifiedResolvedVia = Exclude<ResolvedVia, Words<typeof STATED_WORDS> | Words<typeof GUESS_WORDS>>;
+/** Words that are no mechanism at all; must be `never` too. */
+export type UnknownTrustWord = Exclude<Words<typeof STATED_WORDS> | Words<typeof GUESS_WORDS>, ResolvedVia>;
+/** Fails to compile while either list is incomplete or carries a stray word. */
+export type TrustListsComplete = [UnclassifiedResolvedVia | UnknownTrustWord] extends [never] ? true : never;
+export const TRUST_LISTS_COMPLETE: TrustListsComplete = true;
+export const STATED_RESOLVED_VIA: ReadonlySet<string> = new Set(STATED_WORDS.split(' '));
+export const GUESS_RESOLVED_VIA: ReadonlySet<ResolvedVia> = new Set(GUESS_WORDS.split(' ') as ResolvedVia[]);
 
-/** Does this edge's target rest on a stated fact rather than a guess? */
+/** Does this edge's target rest on a stated fact? Anything not listed as stated is a guess. */
 export function isStatedResolution(resolved_via: ResolvedVia): boolean {
-    return !GUESS_RESOLVED_VIA.has(resolved_via);
+    return STATED_RESOLVED_VIA.has(resolved_via);
 }
 
 export interface CodeNode {
@@ -188,9 +205,9 @@ export interface CodeNode {
         | 'type'
         | 'enum'
         | 'skipped'
-        /** A declared route, `<VERB> <path>` (Laravel overlay). */
+        /** A declared route or dispatched entry, `<VERB> <path>` (a convention provider). */
         | 'route'
-        /** A database table a migration creates (Laravel overlay). */
+        /** A database table a migration or schema creates (a convention provider). */
         | 'table';
     source_file: string;
     /** 1-based [startLine, startCol, endLine, endCol]; [] for synthetic nodes. */
@@ -240,6 +257,14 @@ export interface CodeEdge {
      * target.
      */
     ambiguity_reason?: 'receiver-unknown' | 'hierarchy-unresolved';
+    /** The convention provider that drew this edge (ADR-298); absent on every other edge. */
+    provider_id?: string;
+}
+
+/** A convention provider active in this build, with the package roots it applied to. */
+export interface ActiveProviderRecord {
+    id: string;
+    roots: string[];
 }
 
 export interface CodeGraph {
@@ -267,13 +292,15 @@ export interface CodeGraph {
     suppressed_edge_counts: {
         dynamic_no_candidate: number;
         /**
-         * A fluent call on Laravel's route builder (`->middleware()`,
-         * `->prefix()`) that name lookup had bound to an unrelated in-repo
-         * method of the same name. Present only when it is non-zero, so a
-         * graph without routes keeps its bytes.
+         * Base edges a convention provider proved false and removed, per
+         * provider id — e.g. a fluent route-builder call that name lookup had
+         * bound to an unrelated in-repo method of the same name. Present only
+         * when some count is non-zero.
          */
-        route_builder_call?: number;
+        contested_by_provider?: Record<string, number>;
     };
+    /** Convention providers active in this build; present only when one was. */
+    providers?: ActiveProviderRecord[];
     nodes: CodeNode[];
     edges: CodeEdge[];
 }
@@ -307,8 +334,13 @@ export interface CodeGraph {
  * Bumped 4 → 5 by `road-to-a-map-that-draws-itself` 1.3: same-file
  * same-name declarations now carry `@2`, `@3` suffixes, so a cache written
  * at v4 holds ids a v5 build would not produce.
+ *
+ * Bumped 5 → 6 by `road-to-graph-providers-for-every-stack` 2.1: framework
+ * names left the schema (`orm-relation`, `contested_by_provider`), provider
+ * edges carry `provider_id`, the graph records its active providers, and the
+ * vocabulary gained `injects` / `di-binding`.
  */
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 /** Deterministic per-file byte cap — files above this become a SKIPPED node. */
 export const MAX_FILE_BYTES = 1_000_000;
@@ -329,6 +361,7 @@ export const EXT_LANG: Readonly<Record<string, Lang>> = {
     '.py': 'python',
     '.go': 'go',
     '.java': 'java',
+    '.cs': 'csharp',
     '.vue': 'typescript',
 };
 
@@ -340,6 +373,7 @@ export const GRAMMAR_WASM: Readonly<Record<Lang, string>> = {
     python: 'tree-sitter-python.wasm',
     go: 'tree-sitter-go.wasm',
     java: 'tree-sitter-java.wasm',
+    csharp: 'tree-sitter-c_sharp.wasm',
 };
 
 /** The single ABI version the pinned grammar set is built against. */

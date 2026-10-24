@@ -4,7 +4,7 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { buildFromRepo, resolveLangModule } from '../../src/scripts/code_graph/build.js';
-import { vueScript } from '../../src/scripts/code_graph/extract.js';
+import { extractFile, vueScript } from '../../src/scripts/code_graph/extract.js';
 import type { CodeGraph } from '../../src/scripts/code_graph/types.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
 
@@ -46,6 +46,15 @@ beforeAll(async () => {
         'components/Card.vue',
         '<template>\n  <div>{{ x }}</div>\n</template>\n<script setup lang="ts">\nimport { helper } from \'../lib/helper\';\nconst x = helper();\n</script>\n<style>\n.card { color: red; }\n</style>\n',
     );
+    // C#
+    write('cs/Models/User.cs', 'namespace App.Models;\n\npublic class User\n{\n    public void Touch() { }\n}\n');
+    write(
+        'cs/Services/UserService.cs',
+        'using System;\nusing App.Models;\n\nnamespace App.Services\n{\n    public interface IUserService { User Find(int id); }\n    public class BaseService { protected void Log() { } }\n    public class UserService : BaseService, IUserService\n    {\n        public UserService() { }\n        public User Find(int id) { base.Log(); Audit(); var u = new User(); u.Touch(); return u; }\n        private void Audit() { }\n    }\n    public record Point(int X);\n    public struct Pair { }\n    public enum Kind { A }\n}\n',
+    );
+    write('cs/Shared/A.cs', 'namespace App.Shared { public class Clock { } }\n');
+    write('cs/Shared/B.cs', 'namespace App.Shared { public class Timer { } }\n');
+    write('cs/Use.cs', 'using App.Shared;\nnamespace App { public class Use { public void Run() { var c = new Clock(); } } }\n');
     ({ graph } = await buildFromRepo(root, null));
 });
 
@@ -88,6 +97,40 @@ describe('go (6.1)', () => {
     it('declares a method on its receiver type', () => {
         expect(graph.nodes.find((n) => n.id === 'mod/more.go#S::Run')?.kind).toBe('method');
         expect(edge('mod/more.go', 'member', 'mod/more.go#S::Run')?.resolved_via).toBe('same-file');
+    });
+});
+
+describe('csharp (5.2)', () => {
+    it('declares classes, interfaces, records, structs, enums and methods incl. constructors', () => {
+        const kind = (id: string) => graph.nodes.find((n) => n.id === id)?.kind;
+        expect(kind('cs/Services/UserService.cs#UserService')).toBe('class');
+        expect(kind('cs/Services/UserService.cs#IUserService')).toBe('interface');
+        expect(kind('cs/Services/UserService.cs#Point')).toBe('class');
+        expect(kind('cs/Services/UserService.cs#Pair')).toBe('class');
+        expect(kind('cs/Services/UserService.cs#Kind')).toBe('enum');
+        expect(kind('cs/Services/UserService.cs#UserService::UserService')).toBe('method');
+        expect(kind('cs/Services/UserService.cs#UserService::Find')).toBe('method');
+    });
+    it('reads a file-scoped namespace without a parse error', async () => {
+        expect(graph.nodes.find((n) => n.id === 'cs/Models/User.cs#User::Touch')?.kind).toBe('method');
+        expect((await extractFile('a.cs', 'namespace A.B;\n\nclass C { }\n', 'csharp')).parseError).toBe(false);
+    });
+    it('binds `using` to the one file declaring the namespace, and a framework namespace as external', () => {
+        expect(edge('cs/Services/UserService.cs', 'imports', 'cs/Models/User.cs')?.resolved_via).toBe('import-specifier');
+        expect(graph.edges.some((e) => e.source === 'cs/Services/UserService.cs' && e.target === 'external:System')).toBe(true);
+    });
+    it('binds no file for a namespace two files declare', () => {
+        expect(graph.edges.some((e) => e.source === 'cs/Use.cs' && e.relation === 'imports' && e.target.startsWith('cs/Shared/'))).toBe(false);
+        expect(resolveLangModule('csharp', 'x.cs', 'N', [], new Map([['N', ['a.cs']]]))).toEqual(['a.cs']);
+    });
+    it('links the base list as inherits', () => {
+        expect(edge('cs/Services/UserService.cs#UserService', 'inherits', 'cs/Services/UserService.cs#BaseService')).toBeDefined();
+        expect(edge('cs/Services/UserService.cs#UserService', 'inherits', 'cs/Services/UserService.cs#IUserService')).toBeDefined();
+    });
+    it('resolves unqualified, base. and new X() calls', () => {
+        expect(edge('cs/Services/UserService.cs#UserService::Find', 'calls', 'cs/Services/UserService.cs#UserService::Audit')).toBeDefined();
+        expect(edge('cs/Services/UserService.cs#UserService::Find', 'calls', 'cs/Services/UserService.cs#BaseService::Log')).toBeDefined();
+        expect(edge('cs/Services/UserService.cs#UserService::Find', 'calls', 'cs/Models/User.cs#User')).toBeDefined();
     });
 });
 

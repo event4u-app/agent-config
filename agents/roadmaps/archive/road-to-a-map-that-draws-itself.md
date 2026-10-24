@@ -3,7 +3,7 @@ complexity: structural
 execution:
   mode: phase-checkpoints
 owner: maintainer
-estate_growth_exempt: "One active roadmap, no new blocker. It delivers the owner's 2026-10-23 request for a project map in agents/ and fixes four live consumer-path defects of the shipped code-graph engine (wrong root, cache in node_modules, silently unwritten index, version-blind cache)."
+estate_growth_exempt: "feat/code-graph-auto-refresh (2026-10-23) adds one hook concern, concern_count 65 → 66: `code-graph-refresh`, the session-start carrier that keeps this roadmap's map and graph fresh in consumer projects, which the git-hook refresh of step 5.1 never reached; owner-requested the same day, carrier chosen and ratified by the AI council. The text after this sentence authorised this roadmap's own original change. One active roadmap, no new blocker. It delivers the owner's 2026-10-23 request for a project map in agents/ and fixes four live consumer-path defects of the shipped code-graph engine (wrong root, cache in node_modules, silently unwritten index, version-blind cache)."
 estate_offset_exempt: "grep -rlE 'code-graph|code_graph|graph_query' over agents/roadmaps/*.md, later/ and stubs/ (2026-10-23): no active roadmap owns the consumer path or a map; the two later/ graph roadmaps own benchmarks and a gate feeder and stay parked for those. Archiving an unrelated file to buy the slot would hide the growth this key exists to show."
 relates:
   - slug: road-to-breadth-with-depth

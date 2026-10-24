@@ -312,6 +312,51 @@ describe('a credential keyword is a key, not a suffix (council A1)', () => {
     });
 });
 
+/**
+ * Ratification of the code-graph auto-refresh, 2026-10-23, round 2: the bundle
+ * read `typeof o.token === 'string'` as an assignment of the value `==`,
+ * replaced it, and then refused every payload containing `==`. A comparison
+ * and an arrow are never an assignment.
+ */
+describe('a comparison is not an assignment', () => {
+    beforeEach(() => {
+        resetCouncilEgress({ identifiers: false });
+    });
+
+    it('leaves comparisons and arrows alone', () => {
+        for (const line of [
+            "return typeof o.token === 'string' ? 1 : 0;",
+            'if (secret == other) return;',
+            'const f = (token) => token;',
+            'items.map(password => password.length)',
+        ]) {
+            expect(redact(line)).toBe(line);
+        }
+    });
+
+    it('still replaces a real assignment next to one', () => {
+        const value = `pw${run(12, 5)}`;
+        for (const line of [`token = "${value}"`, `token: ${value}`, `api_key=${value}`, `password =${value}`]) {
+            expect(redact(line)).not.toContain(value);
+        }
+    });
+
+    it('still reads a shell `name==value` as an assignment — the variable receives `=value`', () => {
+        const value = `pw${run(12, 6)}`;
+        for (const line of [`password==${value}`, `export TOKEN=="${value}"`]) {
+            expect(redact(line)).not.toContain(value);
+        }
+    });
+
+    it('lets the line that blocked the round reach a seat', () => {
+        const eg = new CouncilEgress({ identifiers: false });
+        const body = "return typeof o.pid === 'number' && typeof o.token === 'string'\nif (a === b) return;\n";
+        const out = eg.replace(body);
+        expect(out).toBe(body);
+        expect(eg.check(`${out}\nconst same = x === y;`)).toBeNull();
+    });
+});
+
 describe('CouncilEgress.replace — a value detected once is replaced everywhere', () => {
     const PASSWORD = ['hun', 'ter2-fixture-', 'Xy9'].join('');
 

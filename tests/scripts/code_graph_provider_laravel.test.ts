@@ -4,6 +4,7 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
+import { renderMapMd } from '../../src/scripts/code_graph/map.js';
 import { buildMapModel } from '../../src/scripts/code_graph/map_model.js';
 import type { CodeGraph } from '../../src/scripts/code_graph/types.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
@@ -22,7 +23,10 @@ const has = (source: string, relation: string, target: string): boolean =>
 
 beforeAll(async () => {
     root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-laravel-')));
-    write('composer.json', JSON.stringify({ autoload: { 'psr-4': { 'App\\': 'app/' } } }));
+    write(
+        'composer.json',
+        JSON.stringify({ require: { 'laravel/framework': '^11.0' }, autoload: { 'psr-4': { 'App\\': 'app/' } } }),
+    );
     write(
         'routes/web.php',
         [
@@ -36,6 +40,8 @@ beforeAll(async () => {
             "Route::get('/ping', function () { return 'pong'; });",
             "Route::get('/legacy', 'LegacyController@show');",
             "Route::resource('photos', C\\PhotoController::class);",
+            "Route::get('/library/books', [C\\LibraryController::class, 'books']);",
+            "Route::get('/library/chapters', [C\\LibraryController::class, 'chapters']);",
             '',
         ].join('\n'),
     );
@@ -55,6 +61,11 @@ beforeAll(async () => {
     write(
         'app/Http/Controllers/PhotoController.php',
         "<?php\nnamespace App\\Http\\Controllers;\nclass PhotoController {\n    public function index() { return 1; }\n    public function store() { return 2; }\n}\n",
+    );
+    // Two actions, two models: each route must carry only its own table.
+    write(
+        'app/Http/Controllers/LibraryController.php',
+        "<?php\nnamespace App\\Http\\Controllers;\nuse App\\Models\\Book;\nuse App\\Models\\Chapter;\nclass LibraryController {\n    public function books() {\n        return Book::all();\n    }\n    public function chapters() {\n        return Chapter::all();\n    }\n}\n",
     );
     // An unrelated in-repo `middleware()`: name lookup used to bind the
     // routes file's fluent `->middleware()` to it.
@@ -129,7 +140,7 @@ describe('routes (4.1)', () => {
             (e) => e.target === 'app/Support/Permission.php#Permission::middleware' && e.relation === 'calls',
         );
         expect(bad).toEqual([]);
-        expect(graph.suppressed_edge_counts.route_builder_call ?? 0).toBeGreaterThan(0);
+        expect(graph.suppressed_edge_counts.contested_by_provider?.['laravel'] ?? 0).toBeGreaterThan(0);
     });
 });
 
@@ -169,6 +180,14 @@ describe('data (4.3)', () => {
         expect(has('app/Models/Book.php#Book::chapters', 'relates', 'app/Models/Chapter.php#Chapter')).toBe(true);
     });
 
+    it('stamps every edge it draws with its provider id and records itself on the graph', () => {
+        const routed = graph.edges.filter((e) => e.relation === 'routes-to');
+        expect(routed.length).toBeGreaterThan(0);
+        expect(routed.every((e) => e.provider_id === 'laravel')).toBe(true);
+        expect(graph.edges.some((e) => e.relation === 'calls' && e.provider_id)).toBe(false);
+        expect(graph.providers).toEqual([{ id: 'laravel', roots: [''] }]);
+    });
+
     it('keeps the graph schema-valid with the new relations and kinds', () => {
         expect(validateGraph(JSON.parse(JSON.stringify(graph))).ok).toBe(true);
     });
@@ -182,5 +201,54 @@ describe('the request path on the map (4.4)', () => {
         expect(m.files[r?.handler ?? -1]?.path).toBe('app/Http/Controllers/BookController.php');
         expect(r?.views.map((v) => m.files[v]?.path)).toEqual(['resources/views/books/index.blade.php']);
         expect(r?.tables).toEqual(['books']);
+    });
+
+    it('gives each route of one controller only the tables its own handler names', () => {
+        const m = buildMapModel(graph);
+        const tablesOf = (route: string): string[] | undefined => m.analyses.requestPaths.find((x) => x.route === route)?.tables;
+        expect(tablesOf('GET /library/books')).toEqual(['books']);
+        expect(tablesOf('GET /library/chapters')).toEqual(['book_chapters']);
+    });
+});
+
+describe('the map names the provider (6.2)', () => {
+    it('lists the active provider with its catalog status and marks the files it linked', () => {
+        const m = buildMapModel(graph);
+        expect(m.providers).toEqual([{ id: 'laravel', name: 'Laravel', status: 'verified', roots: [''] }]);
+        const routes = m.files.find((f) => f.path === 'routes/web.php');
+        expect(routes?.linkedBy).toEqual(['laravel']);
+        expect(m.files.find((f) => f.path === 'app/Support/Permission.php')?.linkedBy).toBeUndefined();
+        const md = renderMapMd(m, { title: 'Map', commit: 'x', state: 'fresh', summary: '' });
+        expect(md).toContain('Convention providers: Laravel (verified) — plus the framework-neutral default.');
+    });
+});
+
+describe('per package root (review fix)', () => {
+    it('draws a Laravel app under a subdirectory with its own PSR-4 map', async () => {
+        const mono = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'cg-laravel-mono-')));
+        const put = (rel: string, body: string): void => {
+            fs.mkdirSync(path.dirname(path.join(mono, rel)), { recursive: true });
+            fs.writeFileSync(path.join(mono, rel), body);
+        };
+        try {
+            put('backend/composer.json', JSON.stringify({ require: { 'laravel/framework': '^11.0' }, autoload: { 'psr-4': { 'App\\': 'app/' } } }));
+            put('backend/routes/web.php', "<?php\nuse App\\Http\\BookController;\nRoute::get('/books', [BookController::class, 'index']);\n");
+            put(
+                'backend/app/Http/BookController.php',
+                "<?php\nnamespace App\\Http;\nclass BookController {\n    public function index() {\n        throw new \\Exception('Book not found');\n        return view('books.index');\n    }\n}\n",
+            );
+            put('backend/resources/views/books/index.blade.php', '<ul></ul>\n');
+            put('backend/app/Book.php', '<?php\nnamespace App;\nclass Book extends Model {}\n');
+            const g = (await buildFromRepo(mono, null)).graph;
+            expect(g.providers).toEqual([{ id: 'laravel', roots: ['backend'] }]);
+            const route = 'backend/routes/web.php#route:GET /books';
+            const handler = 'backend/app/Http/BookController.php#BookController::index';
+            expect(g.edges.some((e) => e.source === route && e.relation === 'routes-to' && e.target === handler)).toBe(true);
+            expect(g.edges.some((e) => e.source === handler && e.relation === 'renders' && e.target === 'backend/resources/views/books/index.blade.php')).toBe(true);
+            // 'Book not found' is a string, not a reference to the Book model.
+            expect(g.edges.some((e) => e.source === handler && e.relation === 'uses' && e.target === 'backend/app/Book.php#Book')).toBe(false);
+        } finally {
+            fs.rmSync(mono, { recursive: true, force: true });
+        }
     });
 });

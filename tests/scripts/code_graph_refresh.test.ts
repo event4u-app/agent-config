@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -16,9 +16,30 @@ interface RunResult {
     stderr: string;
 }
 
-function runCli(args: string[]): RunResult {
+/**
+ * An environment whose `git` reports a new HEAD on every `rev-parse HEAD` and
+ * passes everything else to the real git: HEAD "moves" during every build,
+ * deterministically, instead of racing a commit loop that load can starve.
+ */
+function movingHeadEnv(): NodeJS.ProcessEnv {
+    const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'moving-head-'));
+    const real = execFileSync('sh', ['-c', 'command -v git'], { encoding: 'utf8' }).trim();
+    fs.writeFileSync(
+        path.join(bin, 'git'),
+        '#!/bin/sh\n' +
+            'for a in "$@"; do if [ "$a" = "HEAD" ]; then\n' +
+            `  n=$(cat "${bin}/n" 2>/dev/null || echo 0); n=$((n + 1)); echo "$n" > "${bin}/n"\n` +
+            '  printf "%040d\\n" "$n"; exit 0\n' +
+            'fi; done\n' +
+            `exec "${real}" "$@"\n`,
+        { mode: 0o755 },
+    );
+    return { ...process.env, PATH: `${bin}${path.delimiter}${process.env['PATH'] ?? ''}` };
+}
+
+function runCli(args: string[], env: NodeJS.ProcessEnv = {}): RunResult {
     try {
-        const stdout = execFileSync('npx', ['tsx', CLI, ...args], { encoding: 'utf8' });
+        const stdout = execFileSync('npx', ['tsx', CLI, ...args], { encoding: 'utf8', env: { ...process.env, ...env } });
         return { status: 0, stdout, stderr: '' };
     } catch (e) {
         const err = e as { status?: number; stdout?: string; stderr?: string };
@@ -85,6 +106,157 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         expect(fs.existsSync(out)).toBe(false);
         const leftovers = fs.readdirSync(tmp).filter((f) => f.includes('refresh-tmp'));
         expect(leftovers).toEqual([]);
+    });
+
+    it('--single-flight backs off while another refresh holds the lock', () => {
+        const out = path.join(tmp, 'graph.json');
+        const lock = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock');
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: process.pid, started_at: Date.now(), nonce: 't' }));
+        const r = runCli(['refresh', '--root', tmp, '--out', out, '--single-flight']);
+        expect(r.status).toBe(0);
+        expect(r.stdout).toMatch(/another refresh is running/);
+        expect(fs.existsSync(out)).toBe(false);
+        // Without the flag the same call builds — the lock, not something else, held it back.
+        expect(runCli(['refresh', '--root', tmp, '--out', out]).status).toBe(0);
+        expect(fs.existsSync(out)).toBe(true);
+    });
+
+    it('--single-flight releases the lock when it is done', () => {
+        const out = path.join(tmp, 'graph.json');
+        expect(runCli(['refresh', '--root', tmp, '--out', out, '--single-flight']).status).toBe(0);
+        expect(fs.existsSync(path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock'))).toBe(false);
+    });
+
+    it('a manual `map` waits its turn instead of writing beside a running refresh', () => {
+        const lock = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock');
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: process.pid, started_at: Date.now(), nonce: 't' }));
+        const r = runCli(['map', '--root', tmp, '--no-verify'], { AGENT_CONFIG_MAP_LOCK_WAIT_MS: '1500' });
+        expect(r.status).toBe(1);
+        expect(r.stderr).toMatch(/waiting for a background refresh/);
+        expect(r.stderr).toMatch(/a refresh is still redrawing the map/);
+        expect(fs.existsSync(path.join(tmp, 'agents', 'map'))).toBe(false);
+    });
+
+    it('a manual `map` draws as soon as the background refresh ends, instead of failing', () => {
+        const lock = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock');
+        fs.mkdirSync(lock, { recursive: true });
+        // A grandchild re-parented to init: when it exits init reaps it, so no zombie keeps its PID alive.
+        const holder = Number(execFileSync('sh', ['-c', 'sleep 1 >/dev/null 2>&1 & echo $!'], { encoding: 'utf8' }).trim());
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: holder, started_at: Date.now(), nonce: 't', host: os.hostname() }));
+        const r = runCli(['map', '--root', tmp, '--no-verify'], { AGENT_CONFIG_MAP_LOCK_WAIT_MS: '20000' });
+        expect(r.status, r.stderr).toBe(0);
+        expect(fs.existsSync(path.join(tmp, 'agents', 'map', 'map.json'))).toBe(true);
+    }, 60_000);
+
+    it('redraws the map by graph generation, not by modification time', () => {
+        expect(runCli(['refresh', '--root', tmp]).status).toBe(0);
+        expect(runCli(['map', '--root', tmp, '--no-verify', '--no-build']).status).toBe(0);
+        const mapJson = path.join(tmp, 'agents', 'map', 'map.json');
+        const cache = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-v1.json');
+        const drawn = JSON.parse(fs.readFileSync(mapJson, 'utf-8')).meta.graph_generation;
+        expect(drawn).toMatch(/^[0-9a-f]{16}$/);
+        // A map that LOOKS newer than its cache but was drawn from another graph is redrawn.
+        fs.writeFileSync(cache, fs.readFileSync(cache, 'utf-8').replace(/"source_checksum": "[0-9a-f]+"/, '"source_checksum": "0000"'));
+        const future = Date.now() / 1000 + 3600;
+        fs.utimesSync(mapJson, future, future);
+        expect(runCli(['refresh', '--root', tmp, '--map', '--single-flight']).status).toBe(0);
+        expect(JSON.parse(fs.readFileSync(mapJson, 'utf-8')).meta.graph_generation).not.toBe(drawn);
+    });
+
+    it('discards a graph built while files changed under an unchanged HEAD', () => {
+        const out = path.join(tmp, 'graph.json');
+        const file = path.join(tmp, 'src', 'touched.ts');
+        const writer = spawn('sh', ['-c', `i=0; while true; do i=$((i+1)); echo "export const v = $i;" > "${file}"; sleep 0.02; done`], { stdio: 'ignore' });
+        try {
+            const r = runCli(['refresh', '--root', tmp, '--out', out]);
+            expect(r.status).toBe(1);
+            expect(r.stderr).toMatch(/files changed during the refresh — result discarded/);
+            expect(fs.existsSync(out)).toBe(false);
+        } finally {
+            writer.kill('SIGKILL');
+        }
+    }, 60_000);
+
+    it('--map draws no map for a project that never asked for one', () => {
+        const out = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-v1.json');
+        expect(runCli(['refresh', '--root', tmp, '--map']).status).toBe(0);
+        expect(fs.existsSync(out)).toBe(true);
+        expect(fs.existsSync(path.join(tmp, 'agents', 'map'))).toBe(false);
+    });
+
+    it('--map redraws an existing map that is older than the cache', () => {
+        fs.mkdirSync(path.join(tmp, 'agents', 'map'), { recursive: true });
+        const r = runCli(['refresh', '--root', tmp, '--map']);
+        expect(r.status, r.stderr).toBe(0);
+        expect(fs.existsSync(path.join(tmp, 'agents', 'map', 'map.json'))).toBe(true);
+    });
+
+    it('discards a graph built while HEAD moved, and keeps the old cache', () => {
+        const git = (...a: string[]): void => {
+            execFileSync('git', ['-C', tmp, ...a], { stdio: 'ignore' });
+        };
+        git('init', '-q');
+        git('config', 'user.email', 't@example.com');
+        git('config', 'user.name', 't');
+        git('add', '-A');
+        git('commit', '-qm', 'seed');
+        const out = path.join(tmp, 'graph.json');
+        const r = runCli(['refresh', '--root', tmp, '--out', out], movingHeadEnv());
+        expect(r.status).toBe(1);
+        expect(r.stderr).toMatch(/HEAD moved \(or could not be read\) during the refresh — result discarded/);
+        expect(fs.existsSync(out)).toBe(false);
+    }, 60_000);
+
+    it('guards HEAD through a --root symlinked into a repository subdirectory', () => {
+        execFileSync('git', ['-C', tmp, 'init', '-q'], { stdio: 'ignore' });
+        execFileSync('git', ['-C', tmp, '-c', 'user.email=t@example.com', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 's'], {
+            stdio: 'ignore',
+        });
+        // Neither the link nor any lexical ancestor of it holds `.git`; only its target's parent does.
+        const link = `${tmp}-link`;
+        fs.symlinkSync(path.join(tmp, 'src'), link);
+        const out = path.join(tmp, 'graph.json');
+        try {
+            const r = runCli(['refresh', '--root', link, '--out', out], movingHeadEnv());
+            expect(r.status).toBe(1);
+            expect(r.stderr).toMatch(/HEAD moved/);
+            expect(fs.existsSync(out)).toBe(false);
+        } finally {
+            fs.rmSync(link, { force: true });
+        }
+    }, 60_000);
+
+    it('discards a build when the repository HEAD cannot be read on either side', () => {
+        // A `.git` that git cannot read: every HEAD probe fails, before and after.
+        fs.writeFileSync(path.join(tmp, '.git'), 'gitdir: /nonexistent/never\n');
+        const out = path.join(tmp, 'graph.json');
+        const r = runCli(['refresh', '--root', tmp, '--out', out]);
+        expect(r.status).toBe(1);
+        expect(r.stderr).toMatch(/could not be read/);
+        expect(fs.existsSync(out)).toBe(false);
+    });
+
+    it('status names a reclaim mutex a crash left behind, for a human to remove', () => {
+        const mutex = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock.reclaim');
+        fs.mkdirSync(mutex, { recursive: true });
+        const old = (Date.now() - 10 * 60 * 1000) / 1000;
+        fs.utimesSync(mutex, old, old);
+        expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/reclaim mutex: .* left by a crash/);
+        fs.rmSync(mutex, { recursive: true });
+        expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).not.toMatch(/reclaim mutex/);
+    });
+
+    it('auto-refresh on / status / off writes and removes the local opt-in', () => {
+        const marker = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-auto-refresh.json');
+        expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/auto-refresh: off/);
+        expect(runCli(['auto-refresh', 'on', '--root', tmp]).status).toBe(0);
+        expect(fs.existsSync(marker)).toBe(true);
+        expect(runCli(['auto-refresh', 'status', '--root', tmp]).stdout).toMatch(/auto-refresh: on/);
+        expect(runCli(['auto-refresh', 'off', '--root', tmp]).status).toBe(0);
+        expect(fs.existsSync(marker)).toBe(false);
+        expect(runCli(['auto-refresh', 'sideways', '--root', tmp]).status).toBe(2);
     });
 
     it('budget exceeded with an EXISTING cache → old cache byte-identical', () => {
