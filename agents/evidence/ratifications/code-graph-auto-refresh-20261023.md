@@ -1,21 +1,21 @@
 ---
 proposed_by: claude-opus-5.5 session ab54e45a (feat/code-graph-auto-refresh), on the owner's request of 2026-10-23
 implemented_by: claude-opus-5.5 session ab54e45a (feat/code-graph-auto-refresh)
-reviewed_by: AI council, 2 seats, provider-diverse (anthropic + openai), thirteen rounds of 2026-10-23/24
+reviewed_by: AI council, 2 seats, provider-diverse (anthropic + openai), sixteen rounds of 2026-10-23/24
 providers: [anthropic, openai]
 verdict: ratified
 seats:
   anthropic: ratified
   openai: ratified
 effective_after: merge
-subject: 9257ae14ce72bcf05061afd16aba79687bd9cfa100e608980163fec635d2f712
+subject: c55ba2cb2162eb09b24712b6fe644b4dc2df49685491d57dbf42840bc7cc34b1
 ---
 
 <!-- evidence-type: ratification -->
 
-# Code-graph auto-refresh — ratified 2/2 after thirteen rounds
+# Code-graph auto-refresh — ratified 2/2 after sixteen rounds
 
-**Final state (rounds 9–13, 2026-10-24).** The header now answers for the change as it
+**Final state (rounds 9–16, 2026-10-24).** The header now answers for the change as it
 merges into PR #2603's branch: the auto-refresh (rounds 1–8 below), the three follow-ups,
 and a hook-bundle ceiling raise. The gated set against that base is
 `hook-bundle-budget.json`, `hook_manifest.yaml` + its compiled twin, and
@@ -28,6 +28,12 @@ and a hook-bundle ceiling raise. The gated set against that base is
 | 11 | ratified | ratified | head `(?::|=(?!==|=\s|>)=?)`; `buildMap` enforces a single writer (in-process and across processes via the refresh lock); a failed restore names the old generation's path |
 | 12 | ratified | ratified | raise 1,550,500 → 1,551,000 after the merge onto #2603 (each branch fit alone, together 117 B over; moving `handoff-context` out was measured at a 319–581 KB chunk per `session_start` and refused) — on the condition that #2603's dropped `provider_id` check comes back and the final size is recorded |
 | 13 | ratified | ratified | the condition carried out: the check restored, final 1,550,751 / 1,551,000 B in the raise_log |
+| 14 | refused | refused | a review follow-up another session pushed to the branch (merged in whole): its CLI probe, outcome records, graph-generation map freshness and working-tree discard kept; its 30-minute reclaim of a live same-host owner and its automatic clearing of a leftover reclaim mutex both refused |
+| 15 | ratified | refused | age cap only for another host's owner (documented availability compromise), mutex clearing reverted (status names a leftover), real four-process contention test, capability check via `cliPackage()` — refused only because a record without `host` was judged as local |
+| 16 | ratified | ratified | a host-less owner is judged by age alone; the contention test asserts clean exits and no remaining holder |
+
+The concern's chunk ceiling, new in this PR, was re-derived to 15,400 B after the follow-up
+grew the chunk (14,284 B measured); round 14's prompt carried that change.
 
 The three items the round-8 record left open are resolved in this PR
 (roadmap `road-to-code-graph-refresh-follow-ups`, archived): the egress false positive,
