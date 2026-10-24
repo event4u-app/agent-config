@@ -34,6 +34,13 @@ when a run reaches that branch; the Iron-Law fences stay in the core.
      path, and a guessed read is worse than a round-trip. Dependent
      calls stay serial; only the independent remainder batches.
 
+   - **Ceremony by risk first** (owner directive 2026-10-24,
+     `agents/evidence/owner-directives/2026-10-24-throughput-over-ceremony.md`):
+     the council takes only an irreversible, release- or security-relevant
+     question; the run decides the rest and appends it to `## Decisions`. An
+     owner-owned question becomes a row on `agents/owner-questions.md` and the
+     run takes the next step — never a pull request whose only change is the
+     question.
    - **Council on** (toggled manually, or auto-enabled for the run by
      an accepted execution contract — § 3) → invoke per
      [`ai-council`](../../skills/ai-council/SKILL.md), integrate

@@ -54,8 +54,8 @@ paperwork is cut.
       `not on the sheet`, with the count.
       verify: a unit test with one sheeted and one unsheeted owner blocker reports exactly the second.
 - [x] **1.3 Runs put questions on the sheet, never in a question-only PR.** <!-- receipt: class=R0 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=every touched path is non-behavioural -->
-      `process-full-all.md` § Gated residue and `roadmap-process-loop` § 5
-      step 4: an owner-owned question becomes a row on the sheet, the run takes
+      `process-full-all.md` § Gated residue and `roadmap-process-loop-run` § 5
+      (step 4's branch file): an owner-owned question becomes a row on the sheet, the run takes
       the next step; a PR whose only change registers a question is not opened.
       verify: both files name `agents/owner-questions.md`.
 

@@ -154,8 +154,8 @@ Owner directive 2026-10-24
 - **Timebox markers.** A delivery that lands work on a step without ticking it
   writes `<!-- started: YYYY-MM-DD -->` on the step once and increments
   `<!-- partial: N -->`. At `partial: 3`, or two days after `started`, the queue
-  reads the step as `timeboxed`: condense it to the result so far, the open
-  question and a split into steps of at most 150 words — never extend it.
+  reads the step as `timeboxed`: condense it to the result, the open question
+  and a split into steps of at most 150 words — never extend it.
   `lint_roadmap_complexity` warns on a step citing more than ten decisions.
 - **Related tests during work, the full suite at the gate.** While a step is
   open, run `npx vitest related <changed files> --run`; the full suite runs in
