@@ -54,6 +54,16 @@
             "what_was_added": "A user-addressed channel in the dispatcher: a `notification` concern may reply `user_notice`, and on claude the dispatcher emits it as `systemMessage`, the field the host documents as shown to the user and not added to model context (hooks/user_notice.ts: collectUserNotice; host_semantics: withUserNotice, which merges context, the native emission and the notice as structures and falls back to the old output whenever a field it would extend has the wrong type, and writeStdout, which writes the output and only then a small user-global receipt naming the session and the notice id for each notice actually in the output, so a concern counts a notice as shown only on that receipt). Plus one LAZY_CONCERNS row for `update-notice`, whose body ships in its own chunk. Measured with one esbuild invocation over origin/main and over this branch after merging it: +2,945 bytes of own source (host_semantics +1,582, user_notice +1,095, dispatch_hook +116, lazy_concern +152; identifier renames elsewhere net 0), so 1,553,708 B against 1,551,000, the base reading 1,550,763. The logic sits in the two helper modules rather than in dispatch_hook.ts because that file is at the 1,500-line source cap. The first measurement, +1,391 B, predated the structural merge, the type guards and the delivery receipt that council rounds asked for.",
             "why_it_could_not_be_avoided": "The channel is what step 3.1 was reopened for: every host runs the dispatcher on pipes, so a notice on stderr reached nobody, and a council round refused the registration for exactly that. The bytes are dispatcher code on the emission path of every event, so a chunk cannot carry them; the concern body is already in one. Room was not re-tried: the 2026-10-23 and 2026-10-24 entries measured the two narrow-event chunk candidates (`session-eol`, `handoff-context`) as buying a few hundred bytes for a quarter-megabyte require on every event, and nothing in this tree has changed that trade. Own code was compacted first (1,545 -> 1,391 B).",
             "what_would_have_caught_it": "Nothing earlier: the base sat about 240 bytes under the ceiling. Sized to this change plus 292 bytes."
+        },
+        {
+            "date": "2026-10-24",
+            "chunk": "src/scripts/_lib/egress_engine.ts",
+            "from": 32000,
+            "to": 33000,
+            "by": "agent, drain/one-detector-20261024 (road-to-one-detector-and-the-senders-we-own 2.5)",
+            "what_was_added": "The invisible-character normalisation of one-detector 2.5 wired into the engine: `replaceValues` and `tallyText` now detect through `egress_normalize.ts` (`detectWithExtent`), and a rule's extent reader (`through`) runs on the normalised text with its end mapped back, so a key block whose BEGIN and END markers both carry a zero-width character is removed whole instead of refused or left behind. Measured 30,511 bytes on origin/main, 31,907 with the wiring alone, 32,305 with the extent fix.",
+            "why_it_could_not_be_avoided": "The 2026-10-18 derivation queued this rescan inside the 32,000 ceiling and the 2026-10-22 raise recorded it as not yet in the chunk. Room was taken first: `LATIN_TWIN` moved out of confusables.ts as a hex-encoded string pair so the chunk no longer carries that module's four script regexes, and the normaliser keeps one origin array instead of two (32,670 down to 31,907). The extent fix that a council seat found in round 1 of the ratification review adds about 400 bytes of mapping code no smaller form carries. The chunk loads only when a caller needs detection; the dispatch bundle is unchanged.",
+            "what_would_have_caught_it": "Measuring the wired engine when 2.5 was first built rather than the unwired module, and a disguised-marker key block in the extent tests from the start."
         }
     ],
     "chunks": [
@@ -65,7 +75,7 @@
         },
         {
             "entry": "src/scripts/_lib/egress_engine.ts",
-            "max_bytes": 32000,
+            "max_bytes": 33000,
             "registered_at": "2026-10-18",
             "derivation": "Measured 18,478 bytes on 2026-10-18 (the rule table, the token grammar and the commit scanner, with the per-rule linearity prose moved to a test-only module). The ceiling is that reading plus the queued engine work of road-to-one-detector-and-the-senders-we-own (validated identifier rules about 4.3 KB, known values, the invisible-character rescan and the variant suffix about 1-2 KB each), rounded up. An AI council of two providers chose on 2026-10-18 to move the engine out of the dispatch bundle into this conditional chunk rather than raise the dispatch ceiling, and asked that the chunk carry a measured budget of its own so the move does not just relocate uncontrolled growth. A raise follows the same rule as max_bytes: a raise_log entry naming the chunk (`chunk`: this entry) and what was added."
         },
