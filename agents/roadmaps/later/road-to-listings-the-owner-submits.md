@@ -21,7 +21,7 @@ entry_condition:
     exists.
 review_by: 2026-12-24
 estate_offset_exempt: "split from road-to-listings-a-release-keeps-current in the same change: it holds only the acts that wait on an owner go, a repo secret or a future release, so the parent can close on the work the tree can carry"
-estate_growth_exempt: "two open blockers (tier-b-go, topic-push-secret) that already existed as owner-act queues in the stubs road-to-bus-factor-external-actions and road-to-a-visibility-sync-that-can-write; this file names them as decidable blockers rather than adding new work"
+estate_growth_exempt: "open blockers that already existed as owner-act queues, plus cline-install-test (2026-10-24), which replaces the resolved tier-b-go at net zero: tier-b-go, topic-push-secret that already existed as owner-act queues in the stubs road-to-bus-factor-external-actions and road-to-a-visibility-sync-that-can-write; this file names them as decidable blockers rather than adding new work"
 ---
 # Road to listings the owner submits
 
@@ -58,6 +58,8 @@ the act. Each opens a ledger row `submitted`, and only a live read moves it on.
       renders a grade. Fork, add one alphabetical line in Developer Tools with
       the badge and the legend's language and scope markers, open a PR whose
       title ends `🤖🤖🤖`, answer review inside that PR until it closes.
+      **Submitted 2026-10-24** as `punkpeye/awesome-mcp-servers#17444` (ledger
+      row `1c`); open until the upstream merges or closes it.
       verify: ledger row `1c` carries the PR number and a live state.
 - [ ] **2.2 The Copilot CLI's default plugin list.** Its repository name is on
       the source-confidentiality denylist as a past idea source, so its ledger
@@ -66,10 +68,19 @@ the act. Each opens a ledger row `submitted`, and only a live read moves it on.
       `.github/plugin`, release tag and its 40-character SHA.
       verify: the intake bot's comment on the issue is green; ledger row added.
 - [ ] **2.3 Docker MCP Catalog.** A PR adding `servers/agent-config/` in a
-      fork of `docker/mcp-registry`, built from `internal/glama/Dockerfile`.
+      fork of `docker/mcp-registry`, with `source.dockerfile:
+      internal/docker/mcp-server/Dockerfile` (stdio, non-root) pinned to a
+      `main` commit that carries the repaired image. The Glama Dockerfile this
+      step first named wraps the server in an HTTP proxy, which the catalog's
+      stdio contract does not take. `task create` takes no Dockerfile flag, so
+      generate with `--build=false --tools=false`, set `source.dockerfile` and
+      the commit, then validate with `task build -- --tools agent-config`.
       verify: the PR's CI is green; ledger row added.
 - [ ] **2.4 Cline MCP Marketplace.** An issue with the
-      `mcp-server-submission` template and `assets/logo-400.png`.
+      `mcp-server-submission` template and `assets/logo-400.png`. Blocked on
+      `cline-install-test`: the template's required checkbox states that Cline
+      set the server up from the README alone, which only a real Cline run can
+      make true.
       verify: issue number in the ledger.
 
 ## Phase 3 — Tier C: the owner submits from the packet
@@ -90,7 +101,11 @@ the act. Each opens a ledger row `submitted`, and only a live read moves it on.
 ## Blockers
 
 ### blocker: tier-b-go
-- **Status:** open — no go recorded yet.
+- **Status:** resolved — the owner gave a go on 2026-10-24 in two parts: (b)
+  for 2.1 at once, then (a) for the batch 2.1–2.4 with follow-up replies,
+  started after the parent's PR merged. 2.1 is submitted; 2.2 waits on a
+  release, 2.3 on the repaired image reaching `main`, 2.4 on
+  `cline-install-test`.
 - **Owner:** user — every Tier B act is an irreversible external publish
   under the owner's identity (`non-destructive-by-default`).
 - **Blocks:** steps 2.1–2.4.
@@ -103,6 +118,21 @@ the act. Each opens a ledger row `submitted`, and only a live read moves it on.
   2.1 is ready today; 2.2 needs a release first.
 - **If you do nothing:** the awesome-list attempt stays at two closed PRs,
   and the three other Tier B targets are never filed.
+
+### blocker: cline-install-test
+- **Status:** open — no Cline run recorded.
+- **Owner:** user — the agent session has no Cline, and the template's
+  checkbox is a statement about a run, which may not be ticked without one.
+- **Blocks:** step 2.4.
+- **What to do:** pick exactly one — (a) give Cline only the repository's
+  `README.md`, confirm it sets the server up, and say so here; (b) add an
+  `llms-install.md` first and run (a) against it; (c) drop the Cline listing
+  and record why.
+- **Resolved when:** this entry records the run with its date and result, or
+  the decision to drop the listing.
+- **Recommendation:** (a) — the README already carries the one-line `npx`
+  start, so the run is a few minutes.
+- **If you do nothing:** the Cline marketplace never lists the server.
 
 ### blocker: topic-push-secret
 - **Status:** open — the visibility channel answers HTTP 403.
