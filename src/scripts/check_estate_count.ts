@@ -74,9 +74,12 @@
  * to authorise every later change — the banking failure a stored baseline had.
  * WORK IN PROGRESS IS CAPPED AT FIVE (owner directive of 2026-10-24).
  * While more than `WIP_CAP` roadmaps are active, an added roadmap's
- * `estate_offset_exempt` counts only when its reason cites an existing file under
- * `agents/evidence/owner-directives/` (an owner record): the agent may still propose growth, it can  code-comment-allow provenance-comment -- the path is this check's operand, not where the code came from
- * no longer authorise it. Only added files are read, so nothing in the tree goes red.
+ * `estate_offset_exempt` counts only when its reason cites a file under
+ * `agents/evidence/owner-directives/` that already exists at the base ref and  code-comment-allow provenance-comment -- the path is this check's operand, not where the code came from
+ * names the added roadmap's slug. A record written in the same change, or a
+ * general directive that names no roadmap, authorises nothing: the agent may
+ * still propose growth, it can no longer authorise it. Only added files are read,
+ * so nothing in the tree goes red.
  *
  * And it is deliberately **unbounded**, which the stored baseline could not
  * afford: a raise there had to land exactly on the measurement or the surplus was
@@ -166,10 +169,18 @@ import { classifyDiff, growthClaims, type GrowthClaim, type OffsetLedger } from 
 export const WIP_CAP = 5;
 const OWNER_RECORD_RE = /agents\/evidence\/owner-directives\/([A-Za-z0-9._-]+\.md)/g;
 
-/** The reason cites an owner-directive file that exists in this tree. */
-export function citesOwnerRecord(reason: string, repoRoot: string): boolean {
+/**
+ * The reason cites an owner-directive file that exists at `baseRef` — so this
+ * change did not write it — and whose text names `slug`.
+ */
+export function citesOwnerRecord(reason: string, repoRoot: string, baseRef: string | null, slug: string): boolean {
+    if (baseRef === null) return false;
     for (const m of reason.matchAll(OWNER_RECORD_RE)) {
-        if (fs.existsSync(path.join(repoRoot, 'agents/evidence/owner-directives', m[1] ?? ''))) return true;
+        const r = spawnSync('git', ['show', `${baseRef}:agents/evidence/owner-directives/${m[1] ?? ''}`], {
+            cwd: repoRoot,
+            encoding: 'utf-8',
+        });
+        if (r.status === 0 && r.stdout.includes(slug)) return true;
     }
     return false;
 }
@@ -733,7 +744,9 @@ export function evaluate(
     const threshold = budget.one_in_one_out?.applies_above_active ?? null;
     const lintApplies = threshold === null || counts.active_roadmaps > threshold;
     const overWip = counts.active_roadmaps > WIP_CAP;
-    const honoured = (offsets?.exempt ?? []).filter((e) => !overWip || citesOwnerRecord(e.reason, repoRoot));
+    const honoured = (offsets?.exempt ?? []).filter(
+        (e) => !overWip || citesOwnerRecord(e.reason, repoRoot, baseRef ?? null, path.basename(e.file, '.md')),
+    );
     const wipUnrecorded = (offsets?.exempt ?? []).filter((e) => !honoured.includes(e));
     let unpaid = 0;
     if (offsets !== null && lintApplies) {
@@ -1063,14 +1076,15 @@ function selfTest(): number {
                 }),
         },
         {
-            name: 'exemption above the WIP cap citing an owner record → accept',
+            name: 'exemption above the WIP cap citing a base-ref owner record that names it → accept',
             expect: 'accept',
             run: () =>
                 fixture({
                     roadmaps: 6,
                     base: 'main',
+                    before: (dir) =>
+                        write(dir, 'agents/evidence/owner-directives/2026-10-24-fixture.md', '# Owner directive\n\nAdd road-to-new.\n'),
                     after: (dir) => {
-                        write(dir, 'agents/evidence/owner-directives/2026-10-24-fixture.md', '# Owner directive\n');
                         write(
                             dir,
                             'agents/roadmaps/road-to-new.md',
@@ -1079,6 +1093,60 @@ function selfTest(): number {
                                 roadmap('N'),
                         );
                     },
+                }),
+        },
+        {
+            name: 'exemption above the WIP cap citing a record written in the same change → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 6,
+                    base: 'main',
+                    after: (dir) => {
+                        write(dir, 'agents/evidence/owner-directives/2026-10-24-fixture.md', '# Owner directive\n\nAdd road-to-new.\n');
+                        write(
+                            dir,
+                            'agents/roadmaps/road-to-new.md',
+                            '---\nestate_offset_exempt: fixture — archiving road-to-0 was rejected, it is mid-flight; ' +
+                                'authorised by agents/evidence/owner-directives/2026-10-24-fixture.md\n---\n\n' +
+                                roadmap('N'),
+                        );
+                    },
+                }),
+        },
+        {
+            name: 'exemption above the WIP cap citing a record that names no roadmap → reject',
+            expect: 'reject',
+            run: () =>
+                fixture({
+                    roadmaps: 6,
+                    base: 'main',
+                    before: (dir) =>
+                        write(dir, 'agents/evidence/owner-directives/2026-10-24-fixture.md', '# Owner directive\n\nThroughput over ceremony.\n'),
+                    after: (dir) =>
+                        write(
+                            dir,
+                            'agents/roadmaps/road-to-new.md',
+                            '---\nestate_offset_exempt: fixture — archiving road-to-0 was rejected, it is mid-flight; ' +
+                                'authorised by agents/evidence/owner-directives/2026-10-24-fixture.md\n---\n\n' +
+                                roadmap('N'),
+                        ),
+                }),
+        },
+        {
+            name: 'exemption at exactly five active roadmaps needs no record → accept',
+            expect: 'accept',
+            run: () =>
+                fixture({
+                    roadmaps: 4,
+                    base: 'main',
+                    after: (dir) =>
+                        write(
+                            dir,
+                            'agents/roadmaps/road-to-new.md',
+                            '---\nestate_offset_exempt: fixture — archiving road-to-0 was rejected, it is mid-flight\n---\n\n' +
+                                roadmap('N'),
+                        ),
                 }),
         },
         {
@@ -1457,8 +1525,8 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             `❌  ${f.file}: estate_offset_exempt not honoured — ${String(verdict.counts.active_roadmaps)} roadmaps are active, the cap is ${String(WIP_CAP)}.\n` +
                 '    Owner directive 2026-10-24: above the cap a new roadmap is pulled only when an\n' +
                 '    active one closes. Archive or park one in this change, write the finding to\n' +
-                '    `agents/roadmaps/later/`, or cite the owner record that authorises it\n' +
-                '    (`agents/evidence/owner-directives/<file>.md`) in the exemption reason.\n',
+                '    `agents/roadmaps/later/`, or ask the owner: only an owner record that already\n' +
+                '    exists on the base ref and names this roadmap authorises it.\n',
         );
     }
 
