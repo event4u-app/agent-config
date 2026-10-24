@@ -20,7 +20,7 @@
 | npm package | `@event4u/agent-config` |
 | Full install | `npx -y @event4u/agent-config init` |
 | MCP server start | `npx -y @event4u/agent-config mcp-server` (read-only, stdio, no API key) |
-| Contact | `dev@event4u.app` |
+| Contact | the `author.email` in `package.json` |
 | License | MIT |
 | Logo (square) | `assets/logo-400.png` (400×400) |
 | Short description | Governed skills, rules and commands for AI coding agents, served by a read-only MCP server. |
@@ -62,7 +62,7 @@ manifest is in a release: submit the public repository link at
 Only after the official MCP Registry lists the package (ledger row 4
 `accepted`) and a search of `github.com/mcp` a week later does not find it:
 
-- To: `partnerships@github.com`
+- To: the partnerships address GitHub's MCP Registry announcement names
 - Subject: Inclusion request — `io.github.event4u-app/agent-config`
 - Body: The server is published in the official MCP Registry as
   `io.github.event4u-app/agent-config` (npm `@event4u/agent-config`, stdio,
