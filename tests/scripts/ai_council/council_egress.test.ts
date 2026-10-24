@@ -341,6 +341,13 @@ describe('a comparison is not an assignment', () => {
         }
     });
 
+    it('still reads a shell `name==value` as an assignment — the variable receives `=value`', () => {
+        const value = `pw${run(12, 6)}`;
+        for (const line of [`password==${value}`, `export TOKEN=="${value}"`]) {
+            expect(redact(line)).not.toContain(value);
+        }
+    });
+
     it('lets the line that blocked the round reach a seat', () => {
         const eg = new CouncilEgress({ identifiers: false });
         const body = "return typeof o.pid === 'number' && typeof o.token === 'string'\nif (a === b) return;\n";

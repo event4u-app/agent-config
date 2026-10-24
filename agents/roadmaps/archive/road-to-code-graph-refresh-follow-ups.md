@@ -40,8 +40,11 @@ written down where the hooks are generated.
       verify: `npx vitest run tests/scripts/_lib` with new cases — `token === 'x'`,
       `token == x`, `token => x` yield no span; `token = "abc"`, `token: abc`,
       `api_key=abc` still do; red with the old head restored.
-      *Done 2026-10-24:* head is `(?::|=(?![=>]))`; the comparison cases were red
-      before the fix, the assignment cases green before and after. The four
+      *Done 2026-10-24:* head is `(?::|=(?!==|=\s|>)=?)` — `===`, a spaced `==` and
+      `=>` are not assignments; a shell `name==value` still is, with the second `=`
+      read as operator (refined after ratification round 9, where one seat refused
+      the first head `=(?![=>])` for losing that shell form). The comparison cases
+      were red before the fix, the shell case red under the first head. The four
       exposed legacy spellings pinned in `egress_legacy_superset.test.ts` and the
       consumer template literal in `check_memory.ts` follow the same head — the
       pin is the change, not a loosening. Defect-pattern search: `[:=]` heads
@@ -66,7 +69,10 @@ written down where the hooks are generated.
       `agents/runtime/state/` (beside a chosen `--out`), swapped in by two renames
       with the old generation restored if the second fails, and the stage is
       removed on every path. The interruption test is red with in-place writes,
-      the foreign-file test red with the carry-over removed.
+      the foreign-file test red with the carry-over removed. After round 9: a
+      failed second rename restores the old generation (tested with an injected
+      rename), `map-render.json` is defined as part of a generation and dropped
+      on redraw, and the brief absent-directory window is documented.
 
 ## Phase 3 — The development hooks stay in the development checkout
 

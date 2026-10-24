@@ -5,7 +5,16 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
-import { buildMap, diffFiles, embedJson, MAP_TOKEN_BUDGET, readMap, readOutcomes, recordOutcome } from '../../src/scripts/code_graph/map.js';
+import {
+    buildMap,
+    diffFiles,
+    embedJson,
+    MAP_TOKEN_BUDGET,
+    readMap,
+    readOutcomes,
+    recordOutcome,
+    swapIn,
+} from '../../src/scripts/code_graph/map.js';
 import { areaDrift, buildMapModel, outcomeScores, prOverlap, staticRole } from '../../src/scripts/code_graph/map_model.js';
 import { labelProblems } from '../../src/scripts/code_graph/map_verify.js';
 
@@ -141,6 +150,33 @@ describe('agents/map/ artefacts (Phase 3)', () => {
         // Nothing staged is left behind, in agents/ or in the runtime dir it stages under.
         expect(fs.readdirSync(path.dirname(dir)).filter((e) => e !== 'map' && e.includes('map'))).toEqual([]);
         expect(fs.readdirSync(path.join(root, 'agents', 'runtime', 'state')).filter((e) => e.startsWith('.map-'))).toEqual([]);
+    });
+
+    it('a failed second rename puts the previous generation back', () => {
+        const live = path.join(root, 'live');
+        const next = path.join(root, 'next');
+        const prev = path.join(root, 'prev');
+        fs.mkdirSync(live);
+        fs.writeFileSync(path.join(live, 'map.json'), 'old\n');
+        fs.mkdirSync(next);
+        fs.writeFileSync(path.join(next, 'map.json'), 'new\n');
+        let calls = 0;
+        const flaky = ((from: fs.PathLike, to: fs.PathLike): void => {
+            calls += 1;
+            if (calls === 2) throw new Error('rename failed');
+            fs.renameSync(from, to);
+        }) as typeof fs.renameSync;
+        expect(() => swapIn(next, live, prev, flaky)).toThrow(/rename failed/);
+        expect(fs.readFileSync(path.join(live, 'map.json'), 'utf-8')).toBe('old\n');
+        expect(fs.existsSync(prev)).toBe(false);
+    });
+
+    it('drops the previous render check, which described the previous generation', async () => {
+        await buildMap(root);
+        const check = path.join(root, 'agents', 'map', 'map-render.json');
+        fs.writeFileSync(check, '{"verification":"verified"}\n');
+        await buildMap(root);
+        expect(fs.existsSync(check)).toBe(false);
     });
 
     it('a redraw keeps files in the map directory that it did not write', async () => {

@@ -172,15 +172,15 @@ describe('legacy superset: no consumer misses what it caught before the move', (
 // them before they read the table. A regex the consumer exposes must be the
 // frozen one byte for byte; one it keeps private is held to the frozen
 // behaviour over an assignment corpus. The four assignment-headed spellings
-// follow one deliberate change of 2026-10-24: `=` before `=` or `>` is a
-// comparison or an arrow, not an assignment (road-to-code-graph-refresh-follow-ups 1.1).
+// follow one deliberate change of 2026-10-24: `===`, a spaced `==` and `=>` are
+// not assignments; a shell `name==value` still is (road-to-code-graph-refresh-follow-ups 1.1).
 const UW = '[\\p{L}\\p{N}_]';
 const OLD_SHAPES = {
     rowGeneric:
-        /(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*(?::|=(?![=>]))\s*['"]?([^'"\s]{8,})['"]?/dgi,
-    workspaceFuzzy: /(?:api[_-]?key|secret|token|password|passwd|bearer)\s*(?::|=(?![=>]))\s*['"]?[A-Za-z0-9_\-+/=]{12,}['"]?/i,
-    memory: /\b(api[_-]?key|auth[_-]?token|access[_-]?token|bearer|secret|password|passwd|private[_-]?key)\b\s*(?::|=(?![=>]))\s*[A-Za-z0-9+/=_\-]{8,}(?![/.\w])/i,
-    fences: /\b(api[_-]?key|apikey|password|passwd|secret|access[_-]?token|client[_-]?secret)\b\s*(?::|=(?![=>]))\s*["'][^"']{8,}["']/i,
+        /(?:password|passwd|pwd|secret|api[_-]?key|access[_-]?token|auth[_-]?token)\s*(?::|=(?!==|=\s|>)=?)\s*['"]?([^'"\s]{8,})['"]?/dgi,
+    workspaceFuzzy: /(?:api[_-]?key|secret|token|password|passwd|bearer)\s*(?::|=(?!==|=\s|>)=?)\s*['"]?[A-Za-z0-9_\-+/=]{12,}['"]?/i,
+    memory: /\b(api[_-]?key|auth[_-]?token|access[_-]?token|bearer|secret|password|passwd|private[_-]?key)\b\s*(?::|=(?!==|=\s|>)=?)\s*[A-Za-z0-9+/=_\-]{8,}(?![/.\w])/i,
+    fences: /\b(api[_-]?key|apikey|password|passwd|secret|access[_-]?token|client[_-]?secret)\b\s*(?::|=(?!==|=\s|>)=?)\s*["'][^"']{8,}["']/i,
     reachAuthorization: /(\bauthorization\s*:\s*)(\S.*)$/gi,
     reachDashKeys: /\b(sk|pk|rk)-[A-Za-z0-9_-]{8,}/gi,
     reachTokens: /\b(gh[pousr]|github_pat|xox[baprs])[-_][A-Za-z0-9_-]{8,}/gi,

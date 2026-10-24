@@ -329,7 +329,12 @@ export async function buildMap(
     return { outDir, model, meta, written, graphBuilt: built };
 }
 
-/** What a map generation consists of; anything else in the directory is someone else's. */
+/**
+ * What a map generation consists of; anything else in the directory is someone else's and is
+ * carried over. `map-render.json` belongs to a generation although `buildMap` does not write it:
+ * it is `code-graph map`'s render check OF that generation, written after the swap, so the
+ * previous one's is dropped rather than left describing pages it never saw.
+ */
 const GENERATION_ENTRIES = new Set(['map.json', 'MAP.md', 'index.html', 'areas', 'map-render.json']);
 
 /** Copy entries the writer does not produce into the new generation, so the swap drops nothing. */
@@ -341,15 +346,20 @@ function carryForeignEntries(live: string, next: string): void {
     }
 }
 
-/** Replace `live` by `next` with two renames; on a failed second rename the old generation goes back. */
-function swapIn(next: string, live: string, prev: string): void {
+/**
+ * Replace `live` by `next` with two renames; on a failed second rename the old generation goes
+ * back. Consistent, not atomic: between the renames `live` is briefly absent, and a process
+ * killed there leaves the old generation at `prev` (under the gitignored runtime dir for the
+ * default map) — a reader sees no map, never a mixed one.
+ */
+export function swapIn(next: string, live: string, prev: string, rename: typeof fs.renameSync = fs.renameSync): void {
     fs.mkdirSync(path.dirname(live), { recursive: true });
     const hadLive = fs.existsSync(live);
-    if (hadLive) fs.renameSync(live, prev);
+    if (hadLive) rename(live, prev);
     try {
-        fs.renameSync(next, live);
+        rename(next, live);
     } catch (e) {
-        if (hadLive) fs.renameSync(prev, live);
+        if (hadLive) rename(prev, live);
         throw e;
     }
     if (hadLive) fs.rmSync(prev, { recursive: true, force: true });
