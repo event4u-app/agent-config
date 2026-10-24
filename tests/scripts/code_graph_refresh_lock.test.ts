@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { LOCK_REL, STALE_LOCK_MS, acquire, isStale } from '../../src/scripts/code_graph/refresh_lock.js';
+import { acquire, isStale, LOCK_REL, MAX_LOCK_AGE_MS, STALE_LOCK_MS, STALE_RECLAIM_MS } from '../../src/scripts/code_graph/refresh_lock.js';
 
 let root: string;
 let lock: string;
@@ -48,14 +48,42 @@ describe('refresh lock — single flight', () => {
         expect(acquire(root)).not.toBeNull();
     });
 
-    it('never reclaims a live owner, however old its lock', () => {
+    it('never reclaims a live owner inside the age cap', () => {
         fs.mkdirSync(lock, { recursive: true });
         fs.writeFileSync(
             `${lock}.owner.json`,
-            JSON.stringify({ pid: process.pid, started_at: Date.now() - 10 * STALE_LOCK_MS, nonce: 't' }),
+            JSON.stringify({ pid: process.pid, started_at: Date.now() - 2 * STALE_LOCK_MS, nonce: 't' }),
         );
         expect(isStale(lock)).toBe(false);
         expect(acquire(root)).toBeNull();
+    });
+
+    it('stops believing a "live" owner past the age cap — a reused PID', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: process.pid, started_at: Date.now() - MAX_LOCK_AGE_MS - 1000, nonce: 't' }));
+        expect(isStale(lock)).toBe(true);
+    });
+
+    it('never judges another host\'s owner by a local PID', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: Date.now(), nonce: 't', host: 'some-container' }));
+        expect(isStale(lock)).toBe(false);
+    });
+
+    it('records this host on the lock it takes', () => {
+        const release = acquire(root);
+        expect(JSON.parse(fs.readFileSync(`${lock}.owner.json`, 'utf-8')).host).toBe(os.hostname());
+        release?.();
+    });
+
+    it('clears a reclaim mutex a crash left behind, so stale locks are not held for good', () => {
+        fs.mkdirSync(lock, { recursive: true });
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: deadPid(), started_at: Date.now(), nonce: 't' }));
+        const mutex = `${lock}.reclaim`;
+        fs.mkdirSync(mutex);
+        const old = (Date.now() - STALE_RECLAIM_MS - 5000) / 1000;
+        fs.utimesSync(mutex, old, old);
+        expect(acquire(root)).not.toBeNull();
     });
 
     it('a reclaimer overtaken after its stale check never deletes the successor’s lock', () => {

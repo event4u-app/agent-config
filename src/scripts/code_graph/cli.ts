@@ -66,7 +66,7 @@
  *                                               graph.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
@@ -74,7 +74,8 @@ import { fileURLToPath } from 'node:url';
 
 import { resolve_project_root } from '../_lib/agent_settings.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
-import { buildFromRepo, isTestFile, sidecarPath } from './build.js';
+import { buildFromRepo, discoverFiles, isTestFile, sidecarPath } from './build.js';
+import { DOC_EXTS } from './docs_layer.js';
 import {
     computeVerdict,
     detectSources,
@@ -84,8 +85,9 @@ import {
     pickSource,
 } from './detect.js';
 import { suggestVerb } from './intent.js';
-import { buildMap, recordOutcome } from './map.js';
-import { AUTO_REFRESH_REL, acquire as acquireRefreshLock } from './refresh_lock.js';
+import { buildMap, graphGeneration, mapGeneration, recordOutcome } from './map.js';
+import { cliPackage, usableCli } from './refresh_cli.js';
+import { AUTO_REFRESH_REL, acquire as acquireRefreshLock, readRefreshRecords, recordRefresh } from './refresh_lock.js';
 import { verifyMap } from './map_verify.js';
 import {
     affected,
@@ -694,7 +696,26 @@ function headOf(root: string): string | null {
     }
 }
 
-/** Returned by {@link runBudgetedBuild} when HEAD moved while the child built. */
+/**
+ * A stamp of the files a build reads — path, size and modification time of every
+ * source and document file. HEAD alone misses an edit to the working tree made
+ * while the build ran (a second agent saving a file), which leaves a graph of
+ * content that never existed together.
+ */
+function treeStamp(root: string): string {
+    const h = createHash('sha256');
+    for (const full of [...discoverFiles(root), ...discoverFiles(root, DOC_EXTS)]) {
+        try {
+            const st = fs.statSync(full);
+            h.update(`${full}\0${st.size}\0${st.mtimeMs}\n`);
+        } catch {
+            h.update(`${full}\0gone\n`);
+        }
+    }
+    return h.digest('hex');
+}
+
+/** Returned by {@link runBudgetedBuild} when HEAD or the working tree moved while the child built. */
 const HEAD_MOVED = -1;
 
 function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeconds: number): number {
@@ -725,6 +746,7 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
         ? [TSX_BIN, [_HERE, ...args]]
         : [process.execPath, [...process.execArgv, _HERE, ...args]];
     const headBefore = headOf(root);
+    const treeBefore = treeStamp(root);
     const res = spawnSync(cmd, cmdArgs, {
         env: hardenedSpawnEnv(),
         stdio: 'ignore',
@@ -756,6 +778,11 @@ function runBudgetedBuild(root: string, out: string, update: boolean, budgetSeco
         process.stderr.write('code-graph: HEAD moved (or could not be read) during the refresh — result discarded\n');
         return HEAD_MOVED;
     }
+    if (treeStamp(root) !== treeBefore) {
+        cleanupTemp(tmpOut);
+        process.stderr.write('code-graph: files changed during the refresh — result discarded\n');
+        return HEAD_MOVED;
+    }
     fs.renameSync(tmpOut, out); // same-dir → atomic; real cache only ever changes here
     const tmpSidecar = sidecarPath(tmpOut);
     if (fs.existsSync(tmpSidecar)) fs.renameSync(tmpSidecar, sidecarPath(out));
@@ -779,8 +806,12 @@ async function cmdRefresh(argv: string[]): Promise<number> {
     // `--map` writes the same files a manual `map` does, so it is never drawn unlocked.
     const locked = argv.includes('--single-flight') || argv.includes('--map');
     const release = locked ? acquireRefreshLock(root) : () => {};
+    const record = (outcome: string, detail?: string): void => {
+        if (locked) recordRefresh(root, { by: 'refresh', outcome, ...(detail ? { detail } : {}) });
+    };
     if (release === null) {
         process.stdout.write('another refresh is running — nothing to do\n');
+        record('locked');
         return 0;
     }
     try {
@@ -796,10 +827,20 @@ async function cmdRefresh(argv: string[]): Promise<number> {
             }
             rc = runBudgetedBuild(root, out, v.verdict === 'STALE', budgetSeconds);
         }
-        if (rc === HEAD_MOVED) return 1;
-        if (rc === 0 && argv.includes('--map') && mapIsBehind(root, out)) {
-            return await drawMap(['--root', root, '--no-build', '--no-verify']);
+        if (rc === HEAD_MOVED) {
+            record('tree-moved', 'HEAD or files changed during both attempts; the next refresh retries');
+            return 1;
         }
+        if (rc !== 0) {
+            record('failed', `build exited ${rc}`);
+            return rc;
+        }
+        if (argv.includes('--map') && mapIsBehind(root, out)) {
+            const mrc = await drawMap(['--root', root, '--no-build', '--no-verify']);
+            record(mrc === 0 ? 'refreshed-with-map' : 'map-failed', mrc === 0 ? undefined : `map exited ${mrc}`);
+            return mrc;
+        }
+        record('refreshed');
         return rc;
     } finally {
         release();
@@ -818,11 +859,20 @@ function cmdAutoRefresh(argv: string[]): number {
     if (action === 'on') {
         fs.mkdirSync(path.dirname(marker), { recursive: true });
         fs.writeFileSync(marker, `${JSON.stringify({ enabled_at: new Date().toISOString() })}\n`);
+        const cli = usableCli(root);
         process.stdout.write(
             'auto-refresh on — each agent session start refreshes the graph, and agents/map/ when it exists,\n' +
                 'in the background (POSIX hosts). `code-graph auto-refresh off` stops it.\n' +
+                'The opt-in is per working tree: run it again in each new git worktree.\n' +
                 (fs.existsSync(cacheFor(root)) ? '' : 'No graph yet: `code-graph build` or `code-graph map` creates one.\n'),
         );
+        if ('reason' in cli) {
+            process.stderr.write(
+                cli.reason === 'no-cli'
+                    ? 'warning: no agent-config outside this repository is on PATH, so nothing will run yet — install it globally (npm i -g @event4u/agent-config).\n'
+                    : `warning: ${cli.cli} (version ${cliPackage(cli.cli)?.version ?? 'unknown'}) is too old for the single-flight refresh, so nothing will run yet — update it (npm i -g @event4u/agent-config).\n`,
+            );
+        }
         return 0;
     }
     if (action === 'off') {
@@ -834,21 +884,33 @@ function cmdAutoRefresh(argv: string[]): number {
         process.stderr.write('usage: code_graph/cli.ts auto-refresh on|off|status [--root P]\n');
         return 2;
     }
+    const cli = usableCli(root);
+    const last = readRefreshRecords(root);
+    const line = (r: (typeof last)['refresh']): string => (r ? `${r.outcome} at ${r.at}${r.detail ? ` (${r.detail})` : ''}` : 'never');
+    const mapDir = path.join(root, 'agents', 'map');
+    const gen = graphGeneration(cacheFor(root));
+    const drawnFrom = mapGeneration(mapDir);
     process.stdout.write(
         `auto-refresh: ${fs.existsSync(marker) ? 'on' : 'off'}\n` +
+            `cli: ${'reason' in cli ? (cli.reason === 'no-cli' ? 'none usable — nothing will run' : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'} — too old, nothing will run`) : `${cli.cli} ${cliPackage(cli.cli)?.version ?? '?'}`}\n` +
+            `last session start: ${line(last['session-start'])}\n` +
+            `last refresh: ${line(last.refresh)}\n` +
             `graph: ${computeVerdict(root, cacheFor(root)).verdict}\n` +
-            `map: ${fs.existsSync(path.join(root, 'agents', 'map')) ? 'present' : 'absent'}\n`,
+            `map: ${!fs.existsSync(mapDir) ? 'absent' : drawnFrom === null ? 'present (generation unknown — redrawn on the next refresh)' : drawnFrom === gen ? 'present, drawn from the current graph' : 'present, drawn from an older graph'}\n`,
     );
     return 0;
 }
 
+/**
+ * Whether the map was drawn from a different graph than the cache now holds —
+ * decided by the generation both record, never by modification times, which a
+ * copied or restored file carries wrongly. No map → never draw one unbidden.
+ */
 function mapIsBehind(root: string, cache: string): boolean {
-    try {
-        return fs.statSync(path.join(root, 'agents', 'map', 'map.json')).mtimeMs < fs.statSync(cache).mtimeMs;
-    } catch {
-        // No map → never draw one unbidden; a map dir without map.json → redraw.
-        return fs.existsSync(path.join(root, 'agents', 'map')) && fs.existsSync(cache);
-    }
+    const mapDir = path.join(root, 'agents', 'map');
+    if (!fs.existsSync(mapDir)) return false;
+    const gen = graphGeneration(cache);
+    return gen !== null && mapGeneration(mapDir) !== gen;
 }
 
 /**
@@ -862,10 +924,18 @@ async function cmdMap(argv: string[]): Promise<number> {
         process.stderr.write(`code-graph: root not found: ${root}\n`);
         return 1;
     }
-    // A background refresh may be redrawing the same files; two writers would interleave them.
-    const release = acquireRefreshLock(root);
+    // A background refresh may be redrawing the same files; two writers would
+    // interleave them. Wait for it — a session start is exactly when someone asks
+    // for the map — but not beyond one refresh budget plus a redraw.
+    let release = acquireRefreshLock(root);
+    const deadline = Date.now() + MAP_LOCK_WAIT_MS;
+    if (release === null) process.stderr.write('code-graph: waiting for a background refresh to finish…\n');
+    while (release === null && Date.now() < deadline) {
+        await new Promise((r) => setTimeout(r, 250));
+        release = acquireRefreshLock(root);
+    }
     if (release === null) {
-        process.stderr.write('code-graph: a refresh is redrawing the map right now — try again in a moment\n');
+        process.stderr.write('code-graph: a refresh is still redrawing the map — try again in a moment\n');
         return 1;
     }
     try {
@@ -874,6 +944,9 @@ async function cmdMap(argv: string[]): Promise<number> {
         release();
     }
 }
+
+/** How long `map` waits for a background refresh to release the lock. */
+const MAP_LOCK_WAIT_MS = Number(process.env['AGENT_CONFIG_MAP_LOCK_WAIT_MS'] ?? 90 * 1000);
 
 /** The map itself; callers hold the refresh lock. */
 async function drawMap(argv: string[]): Promise<number> {
@@ -901,12 +974,19 @@ async function drawMap(argv: string[]): Promise<number> {
                 : '    keep it current at every agent session start: agent-config code-graph auto-refresh on\n'),
     );
     let rc = 0;
+    const renderFile = path.join(r.outDir, 'map-render.json');
     if (argv.includes('--no-verify')) {
-        // A check from an earlier map must not sit beside this one as if it were about it.
-        fs.rmSync(path.join(r.outDir, 'map-render.json'), { force: true });
+        // A check that names the generation it checked can stay beside a newer
+        // map without being read as about it; one that names none cannot.
+        try {
+            const prev = JSON.parse(fs.readFileSync(renderFile, 'utf-8')) as { graph_generation?: unknown };
+            if (typeof prev.graph_generation !== 'string') fs.rmSync(renderFile, { force: true });
+        } catch {
+            fs.rmSync(renderFile, { force: true });
+        }
     } else {
         const check = await verifyMap(path.join(r.outDir, 'index.html'));
-        fs.writeFileSync(path.join(r.outDir, 'map-render.json'), `${JSON.stringify(check, null, 2)}\n`);
+        fs.writeFileSync(renderFile, `${JSON.stringify({ ...check, graph_generation: r.meta.graph_generation }, null, 2)}\n`);
         const problems = check.viewports
             .flatMap((v) => [
                 ...(v.pageErrors ? [`${v.name}: ${v.pageErrors} page error(s)`] : []),

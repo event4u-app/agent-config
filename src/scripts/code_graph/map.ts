@@ -50,6 +50,33 @@ export interface MapMeta {
     commit: string;
     state: string;
     summary: string;
+    /**
+     * The graph this map was drawn from: the first 16 hex of the SHA-256 of the
+     * graph cache's bytes (or of the serialized graph when there is no cache).
+     * `graph.json`, `map.json` and `index.html` agree exactly when this matches
+     * {@link graphGeneration} of the current cache — the test a reader runs
+     * instead of comparing modification times.
+     */
+    graph_generation?: string;
+}
+
+/** The generation of a graph cache: the first 16 hex of the SHA-256 of its bytes; null when unreadable. */
+export function graphGeneration(cachePath: string): string | null {
+    try {
+        return createHash('sha256').update(fs.readFileSync(cachePath)).digest('hex').slice(0, 16);
+    } catch {
+        return null;
+    }
+}
+
+/** The generation a drawn map records, or null when it records none (an older map) or cannot be read. */
+export function mapGeneration(outDir: string): string | null {
+    try {
+        const doc = JSON.parse(fs.readFileSync(path.join(outDir, 'map.json'), 'utf-8')) as { meta?: { graph_generation?: unknown } };
+        return typeof doc.meta?.graph_generation === 'string' ? doc.meta.graph_generation : null;
+    } catch {
+        return null;
+    }
 }
 
 export interface MapBuildResult {
@@ -325,6 +352,7 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
         commit: gitHead(root),
         state: graphState(root, cachePath),
         summary: '',
+        graph_generation: graphGeneration(cachePath) ?? createHash('sha256').update(JSON.stringify(graph)).digest('hex').slice(0, 16),
     };
     meta.summary =
         `${model.files.length} files · ${model.areas.length} areas · ` +
