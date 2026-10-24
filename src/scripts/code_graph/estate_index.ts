@@ -6,7 +6,7 @@
  * from them. Off by default (council O1): with the registry switch off nothing
  * here runs and no file is written.
  *
- * `runtime/projects/index.sqlite3`. A project's rows are replaced, never
+ * `runtime/projects/index-v1.sqlite3`. A project's rows are replaced, never
  * appended, on its next refresh. Edges are labelled by how they are known:
  *
  *   package      A declares a dependency on a package B publishes — a stated fact
@@ -44,7 +44,7 @@ const KINDS = ['class', 'interface', 'trait', 'function', 'constant', 'type', 'e
 const EXPORT_KINDS: ReadonlySet<string> = new Set(KINDS);
 
 export function indexPath(opts: RegistryOptions = {}): string {
-    return path.join(registryDir(opts), 'index.sqlite3');
+    return path.join(registryDir(opts), 'index-v1.sqlite3');
 }
 
 /**

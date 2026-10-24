@@ -246,8 +246,6 @@ export function validateRecord(raw: unknown, line: number, repoRoot: string): Fi
     return findings;
 }
 
-// ─── mechanism decisions ─────────────────────────────────────────────────────
-
 const MECHANISM_FIELDS = ['mechanism_id', 'verdict', 'realised_in', 'roadmap', 'decided_at', 'reason', 'reopen_if'] as const;
 const MECHANISM_REQUIRED = ['mechanism_id', 'verdict', 'decided_at'] as const;
 const MECHANISM_VERDICTS: ReadonlySet<string> = new Set(['adopt', 'adapt', 'reject', 'already', 'gap', 'deferred']);

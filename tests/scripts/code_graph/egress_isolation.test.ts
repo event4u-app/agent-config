@@ -28,7 +28,7 @@ const FORBIDDEN = [
     /lineage[^/]*\.ts$/,
 ];
 /** File names whose literal mention marks a direct read without an import. */
-const FORBIDDEN_LITERALS = ["'registry.json'", "'index.sqlite3'", "'lineage'"];
+const FORBIDDEN_LITERALS = ["'registry.json'", "'index-v1.sqlite3'", "'lineage'"];
 
 function list(dir: string, pred: (f: string) => boolean): string[] {
     return fs

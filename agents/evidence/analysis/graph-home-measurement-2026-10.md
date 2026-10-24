@@ -151,7 +151,7 @@ for mode in off on; do
     echo "build-edited index=$mode run=$i real_s=$(t "$TSX" "$CLI" build --root "$H/r")"
   done
 done
-echo "index_bytes=$(stat -f %z "$H/home/runtime/projects/index.sqlite3") graph_json_bytes=$("$TSX" -e "process.stdout.write(String(require(\"fs\").statSync(process.argv[1]).size))" "$("$TSX" "$CLI" detect --root "$H/r" --format json | sed -E "s/.*\"source\":\{[^}]*\"path\":\"([^\"]+)\".*/\1/")")"
+echo "index_bytes=$(stat -f %z "$H/home/runtime/projects/index-v1.sqlite3") graph_json_bytes=$("$TSX" -e "process.stdout.write(String(require(\"fs\").statSync(process.argv[1]).size))" "$("$TSX" "$CLI" detect --root "$H/r" --format json | sed -E "s/.*\"source\":\{[^}]*\"path\":\"([^\"]+)\".*/\1/")")"
 rm -rf "$H"
 ```
 
