@@ -94,6 +94,12 @@ describe('verify_release_provenance', () => {
         expect(await verify(doc)).toMatch(/does not verify/);
     });
 
+    it('refuses a certificate that cannot be parsed', async () => {
+        const doc = real();
+        slsa(doc).bundle.verificationMaterial.certificate.rawBytes = Buffer.from('not a certificate').toString('base64');
+        expect(await verify(doc)).toMatch(/does not verify/);
+    });
+
     it('requires both attestations', async () => {
         for (const missing of [SLSA_PROVENANCE_V1, NPM_PUBLISH_V01]) {
             const doc = real();
