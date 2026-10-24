@@ -190,7 +190,7 @@ plan AC improvements automatically when a source repository updates.
       own `agents/`, never a pinned one, never one whose refresh lock is held (council O4).
       verify: a test fills a temp home past a tiny budget and asserts the oldest unpinned,
       unlocked entry goes and a locked older one stays.
-- [ ] **6.2 Stale roots are marked, never silently dropped.** A registered root missing
+- [x] **6.2 Stale roots are marked, never silently dropped.** A registered root missing <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       for 30 days is flagged by `list` and removed only by `prune`.
       verify: a test with a back-dated `last_seen` and a deleted root.
 - [ ] **6.3 Egress never reads the index.** A test greps the telemetry, council,
