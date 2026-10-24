@@ -52,7 +52,8 @@ import {
   setHookStdinOverride,
   clearHookStdinOverride,
 } from "./hook_stdin.js";
-import { emitFor, type PermissionDecision, type Severity } from "./host_semantics.js";
+import { emitFor, writeStdout, type PermissionDecision, type Severity } from "./host_semantics.js";
+import { collectUserNotice, type NoticeBatch } from "./user_notice.js";
 import { _concern_permission_verdict, _payload_tool_name, _permission_for } from "./permission_gate.js";
 export { _concern_permission_verdict, _payload_tool_input, _payload_tool_name, _permission_for, _working_tree_root } from "./permission_gate.js";
 import { _concern_body_classes, applyPayloadFields, planPayloadShapes } from "./payload_stub.js";
@@ -1264,6 +1265,7 @@ export function main(argv?: string[]): number {
   // stdout-injection; harmless surfacing elsewhere). All other events keep
   // the swallow-stdout contract unchanged.
   const context_blocks: string[] = [];
+  const notices: NoticeBatch = []; // `hooks/user_notice.ts`, never model context
   // Per-concern message for the host emission (P0.1). Kept OUT of
   // feedback_entries on purpose: that record is written to disk with a
   // fixed-field schema (PII-exclusion-by-construction), and a concern's raw
@@ -1376,6 +1378,7 @@ export function main(argv?: string[]): number {
     ) {
       context_blocks.push(injected((reply["context"] as string).trim()));
     }
+    collectUserNotice(notices, concern, reply, injected);
     feedback_entries.push({
       concern: String(concern["name"]),
       exit_code: rc,
@@ -1402,9 +1405,6 @@ export function main(argv?: string[]): number {
   writeConcernTimings(String(envelope["event"] ?? ""), String(envelope["platform"] ?? ""), timing_samples);
   _write_feedback(envelope, session_id, feedback_entries, final_rc, started_at);
   _record_rule_trips(envelope, feedback_entries);
-  if (context_blocks.length > 0 && final_rc === EXIT_ALLOW) {
-    process.stdout.write(context_blocks.join("\n\n") + "\n");
-  }
 
   // P0.1 host-semantics translation. The internal ladder (0/1/2) is written to
   // the feedback dir verbatim above — that record is unchanged. What leaves the
@@ -1427,9 +1427,8 @@ export function main(argv?: string[]): number {
     final_rc,
     _permission_for(args.event, envelope, final_rc, permission_verdicts),
   );
-  if (emission.stdout) {
-    process.stdout.write(emission.stdout);
-  }
+  const context_out = context_blocks.length > 0 && final_rc === EXIT_ALLOW ? context_blocks.join("\n\n") + "\n" : "";
+  writeStdout(args.platform, args.event, context_out, emission, notices, session_id, (s) => process.stdout.write(s));
   if (emission.stderr) {
     process.stderr.write(emission.stderr);
   }

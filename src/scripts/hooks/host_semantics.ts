@@ -35,6 +35,7 @@
  */
 
 import { blockExitFor, DEFAULT_SURFACE, loadHostLowering, surfaceRow, verifiedPlatforms } from "./host_lowering.js";
+import { hostShowsUserNotice, writeNoticeReceipts, type NoticeBatch } from "./user_notice.js";
 
 /** Internal severity, mirroring dispatch_hook's EXIT_ALLOW / BLOCK / WARN. */
 export type Severity = "allow" | "warn" | "block";
@@ -131,6 +132,77 @@ export function claudeAdditionalContext(event: string, text: string): string {
     return `${JSON.stringify({
         hookSpecificOutput: { hookEventName, additionalContext: text },
     })}\n`;
+}
+
+function isObject(v: unknown): v is Record<string, unknown> {
+    return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+/**
+ * Compose the dispatcher's stdout from its three parts: plain `session_start`
+ * context, the native emission, and a user-addressed notice.
+ *
+ * Without a notice — or on a host with no verified user field — this is the
+ * old output byte for byte: context, then emission. With one, the host parses
+ * stdout as JSON only when the whole of it is one object, so the parts are
+ * MERGED as structures, never concatenated as text: the emission's object is
+ * kept, context joins its `hookSpecificOutput.additionalContext`, and the
+ * notice joins `systemMessage`. Plain context is accepted on `session_start`
+ * only, and an emission that is not one JSON object is never reinterpreted —
+ * in either case the notice is dropped and the old output stands.
+ */
+export function withUserNotice(
+    platform: string,
+    event: string,
+    context: string,
+    emission: string,
+    notice: string,
+): string {
+    const legacy = context + emission;
+    const text = notice.trim();
+    if (!text || !hostShowsUserNotice(platform) || !usesNativeEmission(platform)) return legacy;
+    if (context.trim() && event !== "session_start") return legacy;
+    let reply: Record<string, unknown> = {};
+    if (emission.trim()) {
+        try {
+            reply = JSON.parse(emission) as Record<string, unknown>;
+        } catch {
+            return legacy;
+        }
+        if (!isObject(reply)) return legacy;
+    }
+    // A field this merge would extend must already have the type it extends.
+    const hsoIn = reply["hookSpecificOutput"];
+    if (hsoIn !== undefined && !isObject(hsoIn)) return legacy;
+    if (![reply["systemMessage"], hsoIn?.["additionalContext"]].every((v) => v === undefined || typeof v === "string")) return legacy;
+    const join = (a: unknown, b: string, sep: string): string => (typeof a === "string" && a ? `${a}${sep}${b}` : b);
+    if (context.trim()) {
+        const hso = hsoIn ?? { hookEventName: nativeEventName(platform, event) };
+        reply["hookSpecificOutput"] = { ...hso, additionalContext: join(hso["additionalContext"], context.trim(), "\n\n") };
+    }
+    reply["systemMessage"] = join(reply["systemMessage"], text, "\n");
+    return `${JSON.stringify(reply)}\n`;
+}
+
+/**
+ * Write the dispatcher's whole stdout — `withUserNotice` over its parts — and
+ * only then a receipt for each notice that is actually in what was written: a
+ * write that throws leaves no receipt, and a dropped notice leaves none, so its
+ * concern says it again instead of counting it as shown. The notice rides only
+ * on exit 0, because the host parses stdout only then.
+ */
+export function writeStdout(
+    platform: string,
+    event: string,
+    context: string,
+    emission: Emission,
+    notices: NoticeBatch,
+    sessionId: string,
+    write: (text: string) => unknown,
+): void {
+    const out = withUserNotice(platform, event, context, emission.stdout, emission.exit === 0 ? notices.map((n) => n.text).join("\n") : "");
+    if (out) write(out);
+    if (notices.length > 0 && out !== context + emission.stdout) writeNoticeReceipts(notices, sessionId);
 }
 
 /**

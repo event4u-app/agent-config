@@ -1,0 +1,105 @@
+/**
+ * The user-addressed channel: text a concern hands the dispatcher for the HUMAN,
+ * which the host shows in its own UI and never adds to model context.
+ *
+ * WHY IT EXISTS. Every channel the dispatcher had addressed the model
+ * (`additional_context`, `context`) or went to stderr, and every host runs the
+ * dispatcher on pipes — so a concern with something to tell the user had no
+ * path that reached them. `update-notice` was refused registration for exactly
+ * that: bound, it would have said nothing anywhere.
+ *
+ * Claude Code documents a `systemMessage` field on every hook event, "Display a
+ * message to the user", read off the 2.1.310 binary on 2026-10-24. It is the
+ * only host this package has verified a user-addressed field on, so the set
+ * below is one host wide; an unlisted host gets nothing rather than a guess.
+ *
+ * loss_class: ephemeral-lossy
+ *
+ * A notice longer than USER_NOTICE_MAX_CHARS loses its tail, deliberately: the
+ * text is for the user's UI and never reaches the model, and a notice is a few
+ * lines by contract, so nothing recovers the cut part.
+ */
+
+import * as fs from 'node:fs';
+
+import { write_atomic } from '../_lib/fs_atomic.js';
+import { write_target } from '../_lib/user_global_paths.js';
+
+/** The concern reply key a notification concern puts its user-facing text under. */
+export const USER_NOTICE_KEY = 'user_notice';
+
+/** The reply key naming this one notice, echoed into its receipt and never shown. */
+export const USER_NOTICE_ID_KEY = 'notice_id';
+
+/** Longest notice the dispatcher forwards, in Unicode code points; a notice is a few lines, never a document. */
+export const USER_NOTICE_MAX_CHARS = 1000;
+
+/** Hosts with a verified field that shows text to the user and not to the model. */
+export const USER_NOTICE_HOSTS: ReadonlySet<string> = new Set(['claude']);
+
+export function hostShowsUserNotice(platform: unknown): boolean {
+    return typeof platform === 'string' && USER_NOTICE_HOSTS.has(platform);
+}
+
+/**
+ * The notices one dispatch kept, each with the concern it came from, in
+ * manifest order. One entry carries both, so the text that is emitted and the
+ * concern that gets a receipt can never come apart.
+ */
+export type NoticeBatch = Array<{ readonly concern: string; readonly text: string; readonly id: string }>;
+
+/**
+ * Only a `notification` concern may address the user: no other effect was
+ * reviewed for it. The text is cleaned, then capped by code point so a pair is
+ * never split, and kept only if something is left to show.
+ */
+export function collectUserNotice(
+    batch: NoticeBatch,
+    concern: Record<string, unknown>,
+    reply: Record<string, unknown>,
+    clean: (text: string) => string,
+): void {
+    const notice = reply[USER_NOTICE_KEY];
+    if (concern['effect'] !== 'notification' || typeof notice !== 'string') return;
+    const text = Array.from(clean(notice.trim())).slice(0, USER_NOTICE_MAX_CHARS).join('').trim();
+    const id = reply[USER_NOTICE_ID_KEY];
+    if (text) batch.push({ concern: String(concern['name']), text, id: typeof id === 'string' ? id.slice(0, 64) : '' });
+}
+
+/**
+ * A delivery receipt: the dispatcher writes one per concern whose notice it
+ * actually put into host output, naming the session and the notice's own id.
+ * A concern that must not count a notice as shown until it was handed to the
+ * host reads it on its next run and matches the id it handed over; anything the
+ * dispatcher dropped leaves no receipt for that id, so the concern says it again.
+ */
+export interface NoticeReceipt {
+    readonly session_id: string;
+    readonly notice_id: string;
+    readonly at: string;
+}
+
+function receiptPath(concern: string): string {
+    return write_target(`user-notice-${concern}.delivered`);
+}
+
+export function writeNoticeReceipts(batch: NoticeBatch, sessionId: string): void {
+    for (const { concern, id } of batch) {
+        try {
+            write_atomic(receiptPath(concern), JSON.stringify({ session_id: sessionId, notice_id: id, at: new Date().toISOString() }));
+        } catch {
+            // no receipt → the concern repeats its notice, which is the safe direction
+        }
+    }
+}
+
+export function readNoticeReceipt(concern: string): NoticeReceipt | null {
+    try {
+        const o = JSON.parse(fs.readFileSync(receiptPath(concern), 'utf-8')) as Record<string, unknown>;
+        return typeof o['session_id'] === 'string' && typeof o['notice_id'] === 'string' && typeof o['at'] === 'string'
+            ? { session_id: o['session_id'], notice_id: o['notice_id'], at: o['at'] }
+            : null;
+    } catch {
+        return null;
+    }
+}

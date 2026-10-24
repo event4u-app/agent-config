@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-t verified at 5fa963cec that `upgrade` runs only on explicit invocation, that `update_check.enabled` is the only settings key on the whole surface (agent-settings.template.yml:1529), that the notice is emitted solely by the CLI dispatcher and suppressed on non-TTY (update_check.ts:239-255, sole caller check_update_banner.ts:149) while consumption is global-only through hosts (README.md:188), and that SECURITY.md:21-22 backports nothing — so an install that is not current is unsupported and nothing tells its user. No active, parked or stub roadmap owns this: a grep over agents/roadmaps/{*,later,stubs} for cmd_upgrade, update_check, unattended and probe_throttle returns nothing. Archiving or parking costs more because the support consequence is live on every install today; merging into road-to-a-release-that-says-whether-it-needs-you would put an install transaction behind a release-numbering decision the owner has not taken."
-estate_growth_exempt: "Grows concern_count 63 -> 65: `update-notice` and `update-auto-invite`, registered on 2026-10-20 under a council ratification of 2/2 that declared them authority expansions and named the two effect terms they take. They are not new work the estate acquired — they are work it already carried, reverted out of the manifest in the same week by the refusal this ratification lifts, so the growth is a restoration rather than an accretion. open_blockers moves the other way in the same diff (71 -> 70, `concerns-refused-as-authority-expansion` resolved). PRIOR CLAIM, still live for the blockers it covers: Adds three blockers above the open_blockers floor measured at origin/main. Two are owner blockers (`node-floor-raise`, `auto-default-for-existing-installs`) above the open_blockers floor measured at origin/main. Both are consumer-facing commitments — a minimum-runtime raise and a default flip on installs that already exist — which template rule 27 records as structured blockers rather than as decisions the agent takes. Measure the delta with `./scripts-run src/scripts/check_estate_count` on the landed commit rather than reading this sentence. The third, `dsse-trust-root`, is Class 2 and council-decidable: step 2.1 closed the half of the provenance gate that could be closed without a dependency decision, and the half that remains — pinning a sigstore trust root, or shelling out to the npm client, or recording the certificate-bound check as the floor — trades bytes against bandwidth against coverage with no measurement in this tree to separate them. Recording it as a structured blocker is what keeps the gate's real limit readable; the alternative was a docstring nobody greps."
+estate_growth_exempt: "THIS CHANGE (2026-10-24) grows concern_count 66 -> 67: `update-notice` is registered again, on claude session_start only, through the user channel D16 adds, ratified 2/2 by the AI council in round 6 (agents/evidence/ratifications/update-notice-user-channel-20261024.md). It is not new work the estate acquired: the concern, its tests and its admission row existed and were unregistered on 2026-10-21 for want of a delivery path, so this is a restoration. open_blockers moves the other way in the same diff (`dsse-trust-root` resolved, D15). EARLIER CLAIM, 2026-10-20: grows concern_count 63 -> 65: `update-notice` and `update-auto-invite`, registered on 2026-10-20 under a council ratification of 2/2 that declared them authority expansions and named the two effect terms they take. They are not new work the estate acquired — they are work it already carried, reverted out of the manifest in the same week by the refusal this ratification lifts, so the growth is a restoration rather than an accretion. open_blockers moves the other way in the same diff (71 -> 70, `concerns-refused-as-authority-expansion` resolved). PRIOR CLAIM, still live for the blockers it covers: Adds three blockers above the open_blockers floor measured at origin/main. Two are owner blockers (`node-floor-raise`, `auto-default-for-existing-installs`) above the open_blockers floor measured at origin/main. Both are consumer-facing commitments — a minimum-runtime raise and a default flip on installs that already exist — which template rule 27 records as structured blockers rather than as decisions the agent takes. Measure the delta with `./scripts-run src/scripts/check_estate_count` on the landed commit rather than reading this sentence. The third, `dsse-trust-root`, is Class 2 and council-decidable: step 2.1 closed the half of the provenance gate that could be closed without a dependency decision, and the half that remains — pinning a sigstore trust root, or shelling out to the npm client, or recording the certificate-bound check as the floor — trades bytes against bandwidth against coverage with no measurement in this tree to separate them. Recording it as a structured blocker is what keeps the gate's real limit readable; the alternative was a docstring nobody greps."
 relates:
   - slug: road-to-a-release-that-says-whether-it-needs-you
     relation: depends
@@ -150,8 +150,7 @@ None of this is rebuilt here.
       rather than quietly dropped: `upgrade_unattended.ts` claimed the
       signature half was `npm audit signatures` "in the install step", and
       `install_steps` never ran an audit.
-      **This step stays open on `dsse-trust-root`.**
-<!-- blocked-by: dsse-trust-root -->
+      **Open: D15 chose (a) on 2026-10-24; its implementation is next.**
 - [x] **2.2 Single-flight.** A lock with a TTL and an owner PID under
       `~/.event4u/agent-config/`; the previous version read from
       `installed_lock.ts:42-45`.
@@ -174,14 +173,16 @@ None of this is rebuilt here.
 
 ## Phase 3 — Delivery into the session, without entering the model
 
-- [ ] **3.1 A `session_start` concern beside `wrapper-freshness`.**
+- [x] **3.1 A `session_start` concern beside `wrapper-freshness`.** <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: src/config/hook-bundle-budget.json -->
       Registered in `src/scripts/hook_manifest.yaml`, day-throttled through
       `probe_throttle.ts:50`, a 1 s budget, fail-open, effect `notification`,
       addressed to the **user**.
       verify: p95 hook latency stays inside the Phase 1.3 baseline.
-      **Reopened 2026-10-21:** the concern reports on stderr and is silent
-      without a TTY, and every host runs the dispatcher on pipes, so bound it
-      says nothing. It closes with a delivery path a review can verify.
+      **Reopened 2026-10-21:** the concern reported on stderr, which no host
+      shows. **Closed 2026-10-24 (D16):** a `user_notice` reply the dispatcher
+      emits as `systemMessage`, bound on claude `session_start` only;
+      asserted end to end through the real dispatcher
+      (`tests/hooks/user_notice_dispatch.test.ts`), each check seen red.
       Done note: `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § 3.1.
 - [x] **3.2 Stage and verify only; activate at a boundary.** The concern never
       swaps files mid-session; activation happens at the next `session_start`
@@ -303,6 +304,8 @@ None of this is rebuilt here.
   2026-10-20 registration and its two effect terms were taken out with them;
   the concerns' code, its fixes and its tests stay. A return needs the terms
   and the registration ratified again.
+- **2026-10-24:** `update-notice` is registered again, on claude `session_start`
+  only, through the user channel of D16; `update-auto-invite` stays out.
 - **Round 3 and the lifecycle contract (2026-10-21):** `agents/evidence/analysis/update-concerns-lifecycle-2026-10-21.md` § Round 3.
 - **Class:** 2 — council. The seats named what the next round has to carry, so
   the question is what they asked for, not who owns it.
@@ -361,7 +364,7 @@ None of this is rebuilt here.
 
 ### blocker: dsse-trust-root
 
-- **Status:** open
+- **Status:** resolved — D15, `agents/evidence/council/dsse-trust-root-20261024.md`: (a), in-process sigstore verification against release-pinned roots, fail-closed, with nine conditions. Decided by: AI council (2/2, 2026-10-24) on measurements of all three options against the real 17.3.0 attestation. Was: open, no measurement in the tree to separate the options.
 - **Class:** 2
 - **Owner:** council
 - **Blocks:** step 2.1 only. Phases 3 and 4 run without it, and the gate it
@@ -467,6 +470,8 @@ None of this is rebuilt here.
 | D12 | critical-technical | agent | Close the half of 2.1's provenance signature that needs no dependency, and register the trust root as a blocker instead of asserting it | the DSSE signature against the bundle's own certificate and that certificate's SAN are checkable with `node:crypto` alone and stop an edited payload, a borrowed signature and a mismatched identity. A Fulcio issuer check and a Rekor proof are not, and the three ways to get them trade bytes, bandwidth and coverage with no measurement in this tree to separate them — so the choice is the council's, recorded as `dsse-trust-root` | the blocker resolves, or a measurement of the pack-budget cost of a sigstore dependency appears |
 | D13 | critical-technical | evidence | `update-notice` stages and reports; it never installs. The activation seam it first shipped was removed rather than the `effect:` vocabulary widened | an independent provider review (openai, 2026-10-20, direct CLI, `refused`) held that `effect: notification` means "tells the human something and changes nothing else" and that `fail_closed`/`severity` describe failure handling rather than permitted effects. Widening a closed vocabulary to fit one concern is how the vocabulary stops meaning anything | a future step genuinely needs a hook-triggered install, in which case it needs its own effect value and its own review |
 | D14 | reversible-technical | agent | Split the lazy-concern chunk out of this change, and gate `update-auto-invite` on `update.mode: ask` | the chunk touches four ratification-watched files (`hook_manifest.{yaml,json}`, `dispatch_hook.ts`, `hook-bundle-budget.json`) and only made room for two concerns the council refused; the round to ratify it alone could not run, both seats being quota-exhausted. Without it the rest fits the unchanged ceiling — 1,549,984 of 1,550,000 B, base 1,549,699 B. The `ask` gate is the council's (d) taken literally: a value only a human can write stands in front of the rollout switch | the next council round reads ADR-291's "an existing install is asked once" as requiring the question without an opt-in, in which case the gate moves back behind ring-0 |
+| D15 | critical-technical | council:agents/evidence/council/dsse-trust-root-20261024.md | Blocker `dsse-trust-root` → (a): `@sigstore/verify` in process, exact `trusted_root.json` and npm `keys.json` embedded per release with recorded digests, no online refresh, full issuer/repository/workflow/predicate policy, certificate time at signing, the tarball SHA-512 as the binding, fail closed with no fallback | AI council 2026-10-24, `anthropic` + `openai`, prompt mode, two rounds, 2/2, $0.00; measured: 948 KB installed and 0.3–9 ms pinned for (a), a 16 MB second download and 5.8 s plus no identity policy for (b) | npm's attestation format or sigstore's bundle format changes incompatibly |
+| D16 | reversible-technical | agent | 3.1's delivery path is a user-addressed dispatcher field, `user_notice`, emitted as Claude Code's `systemMessage` and only from `effect: notification` concerns; `update-notice` binds on claude `session_start` alone | the host documents `systemMessage` as "Display a message to the user" (2.1.310 binary); it is the one verified field that reaches the user and adds nothing to model context, and binding only where it exists answers round 10's "says nothing anywhere" by construction; reproduced on the real host (`agents/evidence/analysis/system-message-probe-2026-10-24.md`). Costs 2,945 B in the dispatch bundle (raise_log 2026-10-24) | a second host documents a user-only field, or claude stops honouring `systemMessage` |
 
 D6 closes a deferral, not a design: what was decided is that the register
 question is settled by the Phase 1.1 probe's error count rather than by
