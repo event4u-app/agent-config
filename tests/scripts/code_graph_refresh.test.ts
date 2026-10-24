@@ -16,9 +16,9 @@ interface RunResult {
     stderr: string;
 }
 
-function runCli(args: string[]): RunResult {
+function runCli(args: string[], env: Record<string, string> = {}): RunResult {
     try {
-        const stdout = execFileSync('npx', ['tsx', CLI, ...args], { encoding: 'utf8' });
+        const stdout = execFileSync('npx', ['tsx', CLI, ...args], { encoding: 'utf8', env: { ...process.env, ...env } });
         return { status: 0, stdout, stderr: '' };
     } catch (e) {
         const err = e as { status?: number; stdout?: string; stderr?: string };
@@ -111,11 +111,52 @@ describe('refresh — build/update/no-op with a hard wall-clock budget', () => {
         const lock = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock');
         fs.mkdirSync(lock, { recursive: true });
         fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: process.pid, started_at: Date.now(), nonce: 't' }));
-        const r = runCli(['map', '--root', tmp, '--no-verify']);
+        const r = runCli(['map', '--root', tmp, '--no-verify'], { AGENT_CONFIG_MAP_LOCK_WAIT_MS: '1500' });
         expect(r.status).toBe(1);
-        expect(r.stderr).toMatch(/a refresh is redrawing the map/);
+        expect(r.stderr).toMatch(/waiting for a background refresh/);
+        expect(r.stderr).toMatch(/a refresh is still redrawing the map/);
         expect(fs.existsSync(path.join(tmp, 'agents', 'map'))).toBe(false);
     });
+
+    it('a manual `map` draws as soon as the background refresh ends, instead of failing', () => {
+        const lock = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-refresh.lock');
+        fs.mkdirSync(lock, { recursive: true });
+        // A grandchild re-parented to init: when it exits init reaps it, so no zombie keeps its PID alive.
+        const holder = Number(execFileSync('sh', ['-c', 'sleep 1 >/dev/null 2>&1 & echo $!'], { encoding: 'utf8' }).trim());
+        fs.writeFileSync(`${lock}.owner.json`, JSON.stringify({ pid: holder, started_at: Date.now(), nonce: 't' }));
+        const r = runCli(['map', '--root', tmp, '--no-verify'], { AGENT_CONFIG_MAP_LOCK_WAIT_MS: '20000' });
+        expect(r.status, r.stderr).toBe(0);
+        expect(fs.existsSync(path.join(tmp, 'agents', 'map', 'map.json'))).toBe(true);
+    }, 60_000);
+
+    it('redraws the map by graph generation, not by modification time', () => {
+        expect(runCli(['refresh', '--root', tmp]).status).toBe(0);
+        expect(runCli(['map', '--root', tmp, '--no-verify', '--no-build']).status).toBe(0);
+        const mapJson = path.join(tmp, 'agents', 'map', 'map.json');
+        const cache = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-v1.json');
+        const drawn = JSON.parse(fs.readFileSync(mapJson, 'utf-8')).meta.graph_generation;
+        expect(drawn).toMatch(/^[0-9a-f]{16}$/);
+        // A map that LOOKS newer than its cache but was drawn from another graph is redrawn.
+        fs.writeFileSync(cache, fs.readFileSync(cache, 'utf-8').replace(/"source_checksum": "[0-9a-f]+"/, '"source_checksum": "0000"'));
+        const future = Date.now() / 1000 + 3600;
+        fs.utimesSync(mapJson, future, future);
+        expect(runCli(['refresh', '--root', tmp, '--map', '--single-flight']).status).toBe(0);
+        expect(JSON.parse(fs.readFileSync(mapJson, 'utf-8')).meta.graph_generation).not.toBe(drawn);
+    });
+
+    it('discards a graph built while files changed under an unchanged HEAD', () => {
+        const out = path.join(tmp, 'graph.json');
+        const file = path.join(tmp, 'src', 'touched.ts');
+        const writer = spawn('sh', ['-c', `i=0; while true; do i=$((i+1)); echo "export const v = $i;" > "${file}"; sleep 0.02; done`], { stdio: 'ignore' });
+        try {
+            const r = runCli(['refresh', '--root', tmp, '--out', out]);
+            expect(r.status).toBe(1);
+            expect(r.stderr).toMatch(/files changed during the refresh — result discarded/);
+            expect(fs.existsSync(out)).toBe(false);
+        } finally {
+            writer.kill('SIGKILL');
+        }
+    }, 60_000);
 
     it('--map draws no map for a project that never asked for one', () => {
         const out = path.join(tmp, 'agents', 'runtime', 'state', 'code-graph-v1.json');
