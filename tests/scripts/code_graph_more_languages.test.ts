@@ -67,6 +67,16 @@ beforeAll(async () => {
     write('cs/UseDup.cs', 'using App.Dup1;\nusing App.Dup2;\nnamespace App { public class UseDup { public void Run() { var t = new Thing(); } } }\n');
     write('cs/Hidden/H.cs', 'namespace App.Hidden { public class Secret { } }\n');
     write('cs/UseHidden.cs', 'namespace Other { public class UseHidden { public void Run() { var s = new Secret(); } } }\n');
+    // Ruby (carried 1.1)
+    write('rb/lib/shop/auditable.rb', 'module Auditable\n  def audit; end\nend\n');
+    write('rb/lib/shop/base_record.rb', 'class BaseRecord\n  def save; end\nend\n');
+    write('rb/lib/shop/helper.rb', 'class Helper\n  def self.tidy(x)\n    x\n  end\nend\n');
+    write(
+        'rb/lib/shop/user.rb',
+        "require_relative 'base_record'\nrequire_relative 'auditable'\nrequire 'json'\n\nmodule Shop\n  class User < BaseRecord\n    include Auditable\n\n" +
+            '    def full_name\n      audit\n      format_name\n      BaseRecord.new\n      Helper.tidy(1)\n    end\n\n    def format_name; end\n\n' +
+            '    def self.build\n      new\n    end\n  end\nend\n',
+    );
     ({ graph } = await buildFromRepo(root, null));
 });
 
@@ -190,5 +200,30 @@ describe('csharp namespace scope (carried 2.2)', () => {
     });
     it('keeps the graph valid', () => {
         expect(validateGraph(JSON.parse(JSON.stringify(graph))).ok).toBe(true);
+    });
+});
+
+describe('ruby (carried 1.1)', () => {
+    const U = 'rb/lib/shop/user.rb';
+    it('declares modules, nested classes, instance and singleton methods', () => {
+        const kind = (id: string) => graph.nodes.find((n) => n.id === id)?.kind;
+        expect(kind(`${U}#Shop`)).toBe('trait');
+        expect(kind(`${U}#Shop::User`)).toBe('class');
+        expect(kind(`${U}#Shop::User::full_name`)).toBe('method');
+        expect(kind(`${U}#Shop::User::build`)).toBe('method');
+    });
+    it('binds require_relative to the file beside it and names a library require as external', () => {
+        expect(graph.edges.some((e) => e.source === U && e.relation === 'imports' && e.target.startsWith('rb/lib/shop/base_record.rb'))).toBe(true);
+        expect(graph.edges.some((e) => e.source === U && e.target === 'external:json')).toBe(true);
+    });
+    it('links the superclass and an included module as inherits', () => {
+        expect(edge(`${U}#Shop::User`, 'inherits', 'rb/lib/shop/base_record.rb#BaseRecord')).toBeDefined();
+        expect(edge(`${U}#Shop::User`, 'inherits', 'rb/lib/shop/auditable.rb#Auditable')).toBeDefined();
+    });
+    it('resolves implicit-self calls through the class and its mixin, Foo.new and Foo.bar', () => {
+        expect(edge(`${U}#Shop::User::full_name`, 'calls', `${U}#Shop::User::format_name`)).toBeDefined();
+        expect(edge(`${U}#Shop::User::full_name`, 'calls', 'rb/lib/shop/auditable.rb#Auditable::audit')).toBeDefined();
+        expect(edge(`${U}#Shop::User::full_name`, 'calls', 'rb/lib/shop/base_record.rb#BaseRecord')).toBeDefined();
+        expect(edge(`${U}#Shop::User::full_name`, 'calls', 'rb/lib/shop/helper.rb#Helper::tidy')).toBeDefined();
     });
 });

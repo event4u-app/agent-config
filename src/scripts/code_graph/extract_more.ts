@@ -1,5 +1,5 @@
 /**
- * Python, Go, Java and C# extraction — the same shape `extract.ts` emits for
+ * Python, Go, Java, C# and Ruby extraction — the same shape `extract.ts` emits for
  * PHP / TS / JS, so the build pass resolves them with no language branch
  * beyond module lookup.
  *
@@ -446,4 +446,108 @@ export function extractCSharp(root: TsNode, file: string, out: FileExtract): voi
     walk(root, null, file);
     out.namespaces = namespaces;
     out.typeNamespaces = typeNamespaces;
+}
+
+/** The last segment of a Ruby constant path: `Admin::User` → `User`. */
+function rbConst(n: TsNode | null): string {
+    return n ? (n.text.split('::').pop() ?? n.text).trim() : '';
+}
+
+/**
+ * Ruby: classes, modules (as `trait` — a mixin is what PHP calls a trait),
+ * instance and singleton methods, `require` / `require_relative`, the
+ * superclass and every `include` / `extend` / `prepend` as `inherits`, and
+ * calls: implicit-self and `self.` calls on the enclosing class, `Foo.new`,
+ * `Foo.bar` scoped calls (plus a `uses` of `Foo`), and dynamic receivers.
+ */
+export function extractRuby(root: TsNode, file: string, out: FileExtract): void {
+    out.nodes.push({ id: file, label: file, kind: 'file', source_file: file, source_location: [] });
+    const MIXINS = new Set(['include', 'extend', 'prepend']);
+    const walk = (n: TsNode, classId: string | null, scopeId: string): void => {
+        switch (n.type) {
+            case 'class':
+            case 'module': {
+                const nm = rbConst(n.childForFieldName('name')) || '<anon>';
+                const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
+                out.nodes.push({ id, label: nm, kind: n.type === 'class' ? 'class' : 'trait', source_file: file, source_location: loc(n) });
+                out.rawEdges.push({ sourceId: classId ?? file, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
+                const sup = n.childForFieldName('superclass');
+                const parent = sup ? namedChildren(sup)[0] : undefined;
+                if (parent && (parent.type === 'constant' || parent.type === 'scope_resolution')) out.inherits.push({ classId: id, parentName: rbConst(parent) });
+                const body = n.childForFieldName('body');
+                if (body) for (const c of namedChildren(body)) walk(c, id, id);
+                return;
+            }
+            case 'method':
+            case 'singleton_method': {
+                const nm = nameField(n) ?? '<anon>';
+                const id = uniq(out, classId ? `${classId}::${nm}` : `${file}#${nm}`);
+                out.nodes.push({ id, label: nm, kind: classId ? 'method' : 'function', source_file: file, source_location: loc(n) });
+                out.rawEdges.push({ sourceId: classId ?? file, relation: 'member', targetName: nm, confidenceHint: 'EXTRACTED' });
+                const body = n.childForFieldName('body');
+                for (const c of body ? namedChildren(body) : []) {
+                    // A bare identifier statement is an argument-less implicit-self
+                    // call (`audit`); a local read looks the same and resolves to
+                    // nothing, which is what an unresolved call records.
+                    if (c.type === 'identifier' && classId)
+                        out.rawEdges.push({ sourceId: id, relation: 'calls', targetName: c.text, confidenceHint: 'INFERRED', callStyle: 'this', enclosingClassId: classId });
+                    else walk(c, classId, id);
+                }
+                return;
+            }
+            case 'call': {
+                const recv = n.childForFieldName('receiver');
+                const nm = text(n.childForFieldName('method'));
+                const args = n.childForFieldName('arguments');
+                const first = args ? namedChildren(args)[0] : undefined;
+                if (!recv && (nm === 'require' || nm === 'require_relative') && first?.type === 'string') {
+                    const raw = text(namedChildren(first).find((c) => c.type === 'string_content'));
+                    if (raw) {
+                        const spec = nm === 'require_relative' && !raw.startsWith('.') ? `./${raw}` : raw;
+                        out.rawEdges.push({
+                            sourceId: file,
+                            relation: 'imports',
+                            targetName: lastSegment(raw),
+                            confidenceHint: 'EXTRACTED',
+                            moduleSpecifier: spec,
+                            importKind: 'namespace',
+                            // A require binds no name; a local that cannot be written keeps it from shadowing one.
+                            localName: `require:${spec}`,
+                        });
+                    }
+                    return;
+                }
+                if (!recv && classId && MIXINS.has(nm) && args) {
+                    for (const c of namedChildren(args))
+                        if (c.type === 'constant' || c.type === 'scope_resolution') out.inherits.push({ classId, parentName: rbConst(c) });
+                    return;
+                }
+                const ctx = classId ? { enclosingClassId: classId } : {};
+                if (recv && (recv.type === 'constant' || recv.type === 'scope_resolution')) {
+                    const cls = rbConst(recv);
+                    if (nm === 'new') out.rawEdges.push({ sourceId: scopeId, relation: 'calls', targetName: cls, confidenceHint: 'EXTRACTED', callStyle: 'new' });
+                    else {
+                        out.rawEdges.push({ sourceId: scopeId, relation: 'uses', targetName: cls, confidenceHint: 'EXTRACTED' });
+                        out.rawEdges.push({ sourceId: scopeId, relation: 'calls', targetName: nm, confidenceHint: 'AMBIGUOUS', callStyle: 'scoped', scopeName: cls, ...ctx });
+                    }
+                } else if (!recv || recv.type === 'self') {
+                    out.rawEdges.push({
+                        sourceId: scopeId,
+                        relation: 'calls',
+                        targetName: nm,
+                        confidenceHint: classId ? 'INFERRED' : 'AMBIGUOUS',
+                        callStyle: classId ? 'this' : 'free',
+                        ...ctx,
+                    });
+                } else if (nm) {
+                    out.rawEdges.push({ sourceId: scopeId, relation: 'calls', targetName: nm, confidenceHint: 'AMBIGUOUS', callStyle: 'dynamic', ...ctx });
+                }
+                break;
+            }
+            default:
+                break;
+        }
+        for (const c of namedChildren(n)) walk(c, classId, scopeId);
+    };
+    walk(root, null, file);
 }

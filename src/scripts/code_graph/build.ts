@@ -266,6 +266,8 @@ function resolveSpecifier(fromFile: string, spec: string, fileIds: ReadonlySet<s
  *   go      `example.com/x/mod` → every non-test `.go` file of the most specific
  *           directory whose path ends the import path — a Go import names a
  *           package, and a package is all of its files.
+ *   ruby    `require_relative 'x'` → `x.rb` beside the importer; `require 'a/b'`
+ *           → the one `a/b.rb` under any directory (a load-path root).
  *   csharp  `using A.B` → the one file declaring namespace `A.B` (`namespaces`).
  *           A namespace declared by several files is left to name lookup: it
  *           binds no file, since a `using` names no single one.
@@ -304,6 +306,15 @@ export function resolveLangModule(
             if ((spec === d || spec.endsWith(`/${d}`)) && d.length > best.length) best = d;
         }
         return best ? goFiles.filter((f) => idDirname(f) === best).sort() : [];
+    }
+    if (lang === 'ruby') {
+        if (spec.startsWith('.')) {
+            const dir = idDirname(fromFile);
+            const joined = path.posix.normalize(dir && dir !== '.' ? `${dir}/${spec}` : spec);
+            const c = joined.endsWith('.rb') ? joined : `${joined}.rb`;
+            return fileIds.includes(c) ? [c] : [];
+        }
+        return unique([spec.endsWith('.rb') ? spec : `${spec}.rb`]);
     }
     if (lang === 'csharp') return [...(namespaces.get(spec) ?? [])];
     return [];
@@ -479,7 +490,7 @@ export function buildGraph(
                 continue;
             }
             if (ex.lang === 'csharp' && (namespaceFiles.get(spec)?.length ?? 0) > 1) continue;
-            if (ex.lang === 'python' || ex.lang === 'java' || ex.lang === 'go' || ex.lang === 'csharp') {
+            if (ex.lang === 'python' || ex.lang === 'java' || ex.lang === 'go' || ex.lang === 'csharp' || ex.lang === 'ruby') {
                 const hits = resolveLangModule(ex.lang, ex.file, spec, fileIdList, namespaceFiles);
                 const first = hits[0];
                 if (first === undefined) {
