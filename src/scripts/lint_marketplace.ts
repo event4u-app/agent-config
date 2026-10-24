@@ -17,6 +17,8 @@
  *   - metadata.version must match package.json (single source of truth)
  *   - every version field in BOTH .augment-plugin/ manifests matches
  *     package.json too — see check_augment_manifests()
+ *   - the Copilot plugin and Gemini extension match it in `version` and in the
+ *     pinned `npx` argument — see check_listing_manifests()
  *   - the union of plugins[].skills[] must be EXACTLY the pointer skill
  *     (./.claude-plugin/skills/install-agent-config) — a repopulated
  *     content-skill list FAILS by design
@@ -29,6 +31,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import { LISTING_MANIFESTS, listingVersionFindings } from "./_lib/listing_manifests.js";
 import { assertWatchlistResolves, DeadScopeError } from "./_lib/scan_scope.js";
 
 const ROOT = ".";
@@ -149,6 +152,34 @@ export function check_augment_manifests(
   }
 }
 
+/**
+ * The Copilot discovery plugin and the Gemini extension carry the package
+ * version AND pin it inside their `npx` arguments; a crawler installs from the
+ * default branch, so either copy drifting ships a stale server to every new
+ * install. Same sync rule as the Augment twins, plus the pin.
+ */
+export function check_listing_manifests(
+  pkgVersion: string,
+  errors: string[],
+  base: string = ROOT,
+): void {
+  for (const rel of LISTING_MANIFESTS) {
+    const file = path.join(base, rel);
+    if (!_exists(file)) {
+      errors.push(`${file} not found (a listing manifest the release version-syncs)`);
+      continue;
+    }
+    let data: unknown;
+    try {
+      data = JSON.parse(fs.readFileSync(file, "utf-8"));
+    } catch (e) {
+      errors.push(`${file} is not valid JSON: ${e instanceof Error ? e.message : String(e)}`);
+      continue;
+    }
+    errors.push(...listingVersionFindings(file, data, pkgVersion));
+  }
+}
+
 /** Resolve a key path, expanding `*` over array indices. Returns [label, value]. */
 function _resolveVersionField(
   data: JsonValue,
@@ -185,6 +216,7 @@ export function main(): number {
         ".claude-plugin/marketplace.json",
         ".augment-plugin/plugin.json",
         ".augment-plugin/marketplace.json",
+        ...LISTING_MANIFESTS,
         "package.json",
         `${POINTER_SKILL_ENTRY.replace(/^\.\//, "")}/SKILL.md`,
       ],
@@ -248,6 +280,7 @@ export function main(): number {
       }
       if (typeof pkgVersion === "string") {
         check_augment_manifests(pkgVersion, errors);
+        check_listing_manifests(pkgVersion, errors);
       }
     }
   } else {

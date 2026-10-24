@@ -149,6 +149,7 @@
         "@hono/node-server": "^2.0.5"
     },
     "agentConfig": {
+        "registryDescription": "Governed skills, rules and commands for AI coding agents, served by a read-only MCP server.",
         "impact": {
             "17.0.0": {
                 "impact": "notice"

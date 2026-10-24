@@ -259,3 +259,178 @@ describe('adoption_status — an upstream read waits as long as a slow registry 
         20_000,
     );
 });
+
+// One row per action verdict, plus the quiet neighbour of each. The ledger is
+// read through a fake reader, so no row here touches the network.
+const ACTION_LEDGER = `${'#'} Registry Submissions — tracking sheet
+
+${H2} Tracking rows
+
+| # | Registry | Submission shape | Status | Upstream kind | Upstream ref | Last read | Date | Maintainer notes |
+|---|---|---|---|---|---|---|---|---|
+| A | sheet-behind-closed | pr | \`submitted\` | \`github-pr\` | \`o/r#10\` | 2026-10-10 | 2026-08-01 | closed, sheet never told |
+| B | sheet-behind-pending | pr | \`pending\` | \`github-pr\` | \`o/r#11\` | 2026-10-10 | — | merged, sheet says pending |
+| C | rejected-closed | pr | \`rejected\` | \`github-pr\` | \`o/r#10\` | 2026-10-10 | 2026-08-01 | the sheet already knows |
+| D | changes-requested | pr | \`submitted\` | \`github-pr\` | \`o/r#12\` | 2026-10-10 | 2026-10-01 | review asks for changes |
+| E | open-plain | pr | \`submitted\` | \`github-pr\` | \`o/r#13\` | 2026-10-10 | 2026-10-01 | open, nothing asked |
+| F | listing-lost | form | \`accepted\` | \`listing-page\` | <https://example.invalid/gone> | 2026-10-10 | 2026-06 | page vanished |
+| G | listing-live | form | \`accepted\` | \`listing-page\` | <https://example.invalid/here> | 2026-10-10 | 2026-06 | page live |
+| H | registry-stale | publish | \`accepted\` | \`registry-query\` | <https://example.invalid/reg-old> | 2026-10-10 | 2026-06 | old version latest |
+| I | registry-current | publish | \`accepted\` | \`registry-query\` | <https://example.invalid/reg-new> | 2026-10-10 | 2026-06 | current version latest |
+| J | unreadable-accepted | form | \`accepted\` | \`listing-page\` | <https://example.invalid/down> | 2026-10-10 | 2026-06 | network down |
+
+${H2} How to update a row
+`;
+
+const RELEASED: as_.ReleasedServer = { name: 'io.github.o/srv', version: '17.2.1' };
+
+const ACTION_READINGS: Record<string, as_.UpstreamReading> = {
+    'o/r#10': { ok: true, state: 'closed', at: '2026-09-07' },
+    'o/r#11': { ok: true, state: 'merged', at: '2026-10-05' },
+    'o/r#12': { ok: true, state: 'open', reviewDecision: 'CHANGES_REQUESTED' },
+    'o/r#13': { ok: true, state: 'open', reviewDecision: 'REVIEW_REQUIRED' },
+    'https://example.invalid/gone': { ok: true, state: 'not-listed' },
+    'https://example.invalid/here': { ok: true, state: 'listed' },
+    'https://example.invalid/reg-old': { ok: true, state: 'listed', latestVersions: { 'io.github.o/srv': '17.1.0' } },
+    'https://example.invalid/reg-new': { ok: true, state: 'listed', latestVersions: { 'io.github.o/srv': '17.2.1' } },
+};
+const actionReader: as_.UpstreamReader = (row) =>
+    ACTION_READINGS[row.ref] ?? { ok: false, reason: 'no network in this test' };
+
+function judgeActions(ledger: string = ACTION_LEDGER): Map<string, as_.RowVerdict> {
+    const verdicts = as_.judge_upstream(as_.parse_ledger_rows(ledger), actionReader, TODAY, RELEASED);
+    return new Map(verdicts.map((v) => [v.id, v]));
+}
+
+describe('adoption_status — a submission is done only once it is live', () => {
+    it('reports sheet-behind for a submitted or pending row whose upstream answered, keeping the verdict', () => {
+        const v = judgeActions();
+        expect(v.get('A')).toMatchObject({ verdict: 'answered-closed', action: 'sheet-behind' });
+        expect(v.get('A')?.next).toMatch(/^update the ledger row/);
+        expect(v.get('B')).toMatchObject({ verdict: 'answered-merged', action: 'sheet-behind' });
+    });
+
+    it('reports sheet-behind for a pending row whose listing went live (row 4 after its first CI publish)', () => {
+        const ledger = ACTION_LEDGER.replace(
+            /\| A \|[^\n]*\n/,
+            '| K | registry-first-publish | publish | `pending` | `registry-query` | <https://example.invalid/reg-new> | 2026-10-10 | — | first CI publish |\n',
+        );
+        const v = judgeActions(ledger);
+        expect(v.get('K')).toMatchObject({ verdict: 'listed', action: 'sheet-behind' });
+        expect(v.get('K')?.next).toMatch(/listing reads listed while the sheet says pending/);
+        expect(v.get('I')?.action).toBeUndefined();
+    });
+
+    it('reports read-overdue for a live row nobody could read past the threshold, never for a fresh outage', () => {
+        const rows = as_.parse_ledger_rows(ACTION_LEDGER);
+        const later = as_.judge_upstream(rows, actionReader, '2026-11-20', RELEASED, 30);
+        const j = later.find((v) => v.id === 'J');
+        expect(j).toMatchObject({ verdict: 'unreachable', action: 'read-overdue' });
+        expect(j?.next).toMatch(/headless browser.*for 41 days/);
+        const fresh = as_.judge_upstream(rows, actionReader, TODAY, RELEASED, 30).find((v) => v.id === 'J');
+        expect(fresh?.action).toBeUndefined();
+    });
+
+    it('reports needs-response for an open pull request with changes requested, and only then', () => {
+        const v = judgeActions();
+        expect(v.get('D')).toMatchObject({ verdict: 'open', action: 'needs-response' });
+        expect(v.get('D')?.next).toBe('answer the review on o/r#12');
+        expect(v.get('E')?.action).toBeUndefined();
+    });
+
+    it('reports listing-lost for an accepted listing that now reads not-listed', () => {
+        const v = judgeActions();
+        expect(v.get('F')).toMatchObject({ verdict: 'not-listed', action: 'listing-lost' });
+        expect(v.get('F')?.next).toMatch(/^re-check or re-submit the listing/);
+        expect(v.get('G')?.action).toBeUndefined();
+    });
+
+    it('reports listing-stale when the registry latest lags package.json, quiet when it matches', () => {
+        const v = judgeActions();
+        expect(v.get('H')).toMatchObject({ verdict: 'listed', action: 'listing-stale' });
+        expect(v.get('H')?.next).toContain('17.2.1');
+        expect(v.get('H')?.next).toContain('17.1.0');
+        expect(v.get('I')?.action).toBeUndefined();
+    });
+
+    it('stays quiet for a row whose sheet already records the end, and for an unreadable upstream', () => {
+        const v = judgeActions();
+        expect(v.get('C')).toMatchObject({ verdict: 'answered-closed' });
+        expect(v.get('C')?.action).toBeUndefined();
+        expect(v.get('J')).toMatchObject({ verdict: 'unreachable' });
+        expect(v.get('J')?.action).toBeUndefined();
+    });
+
+    it('keeps the JSON row shape for a quiet row: no action or next key, not even null', () => {
+        const v = judgeActions();
+        expect(Object.keys(v.get('E') as object).sort()).toEqual(['detail', 'id', 'registry', 'verdict']);
+    });
+
+    it('--fail-on-action exits 2 with an action and 0 without, naming the row and the next act', () => {
+        const verdicts = [...judgeActions().values()];
+        expect(as_.upstream_exit_code(verdicts, true)).toBe(2);
+        expect(as_.upstream_exit_code(verdicts, false)).toBe(0);
+        const quiet = verdicts.filter((x) => x.action === undefined);
+        expect(quiet.length).toBeGreaterThan(0);
+        expect(as_.upstream_exit_code(quiet, true)).toBe(0);
+        expect(as_.action_lines(verdicts)).toContain(
+            'row D needs-response (changes-requested) — answer the review on o/r#12',
+        );
+        expect(as_.parse_args(['--check-upstream', '--fail-on-action']).failOnAction).toBe(true);
+        expect(as_.parse_args(['--check-upstream']).failOnAction).toBe(false);
+    });
+
+    it('prints an actions section only when an action exists', () => {
+        const verdicts = [...judgeActions().values()];
+        expect(as_.render_upstream_text(verdicts, [])).toContain('Actions needed');
+        const quiet = verdicts.filter((x) => x.action === undefined);
+        expect(as_.render_upstream_text(quiet, [])).not.toContain('Actions needed');
+    });
+});
+
+describe('adoption_status — reading the registry answer', () => {
+    const entry = (name: string, version: string, isLatest: boolean): unknown => ({
+        server: { name, version },
+        _meta: { 'io.modelcontextprotocol.registry/official': { isLatest } },
+    });
+
+    it('takes the version flagged isLatest, not the last or highest listed', () => {
+        const body = JSON.stringify({
+            servers: [entry('io.github.o/srv', '17.2.1', false), entry('io.github.o/srv', '17.1.0', true)],
+            metadata: { count: 2 },
+        });
+        expect(as_.read_registry_answer(body, 'ref')).toEqual({
+            ok: true,
+            state: 'listed',
+            latestVersions: { 'io.github.o/srv': '17.1.0' },
+        });
+    });
+
+    it('reads a zero count as not-listed', () => {
+        expect(as_.read_registry_answer('{"servers":[],"metadata":{"count":0}}', 'ref')).toEqual({
+            ok: true,
+            state: 'not-listed',
+        });
+    });
+
+    it('carries no version map when no entry is flagged, so a shape change cannot fake a lost listing', () => {
+        const body = JSON.stringify({ servers: [{ server: { name: 'io.github.o/srv', version: '1.0.0' } }], metadata: { count: 1 } });
+        const r = as_.read_registry_answer(body, 'ref');
+        expect(r).toEqual({ ok: true, state: 'listed' });
+        const row: as_.LedgerRow = {
+            id: 'R', registry: 'reg', status: 'accepted', kind: 'registry-query', ref: 'https://x.invalid', lastRead: '', date: '',
+        };
+        expect(as_.judge_upstream([row], () => r, TODAY, RELEASED)[0]?.action).toBeUndefined();
+    });
+
+    it('reports listing-lost when the registry answer carries other servers but not this one', () => {
+        const r = as_.read_registry_answer(
+            JSON.stringify({ servers: [entry('io.github.o/other', '1.0.0', true)], metadata: { count: 1 } }),
+            'ref',
+        );
+        const row: as_.LedgerRow = {
+            id: 'R', registry: 'reg', status: 'accepted', kind: 'registry-query', ref: 'https://x.invalid', lastRead: '', date: '',
+        };
+        expect(as_.judge_upstream([row], () => r, TODAY, RELEASED)[0]?.action).toBe('listing-lost');
+    });
+});

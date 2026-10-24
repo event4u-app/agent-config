@@ -117,6 +117,9 @@
     { "prefix": "LICENSE", "category": "consumer" },
     { "prefix": "NOTICE", "category": "consumer" },
     { "prefix": "llms.txt", "category": "consumer" },
+    { "prefix": "gemini-extension.json", "category": "consumer" },
+    { "prefix": "gemini-extension-context.md", "category": "consumer" },
+    { "prefix": "assets/", "category": "consumer" },
 
     { "prefix": "AGENTS.md", "category": "governance" },
     { "prefix": "CLAUDE.md", "category": "governance" },

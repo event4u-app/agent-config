@@ -11,7 +11,6 @@
 //      python3 is absent.
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -127,5 +126,38 @@ describe.skipIf(!buildable)('build_mcp_registry_manifest — writer contract', (
         for (const f of FILES) {
             expect(fs.readFileSync(path.join(MCP_DIR, f), 'utf-8'), f).toBe(first[f]);
         }
+    });
+});
+
+describe('build_mcp_registry_manifest.renderServerJson (road-to-listings-a-release-keeps-current Phase 1)', () => {
+    const pkg = {
+        name: '@scope/pkg',
+        version: '9.9.9',
+        mcpName: 'io.github.scope/pkg',
+        homepage: 'https://example.com/docs',
+        description: 'x'.repeat(174),
+        repository: { type: 'git', url: 'git+https://github.com/scope/pkg.git' },
+        agentConfig: { registryDescription: 'Short enough.' },
+    };
+
+    it('takes the registry description, not the npm one', () => {
+        const out = JSON.parse(mcp.renderServerJson(pkg));
+        expect(out.description).toBe('Short enough.');
+    });
+
+    it('makes a client start the server subcommand', () => {
+        const out = JSON.parse(mcp.renderServerJson(pkg));
+        const entry = out.packages[0];
+        const argv = [entry.runtimeHint, '-y', `${entry.identifier}@${entry.version}`,
+            ...entry.packageArguments.map((a: { value: string }) => a.value)];
+        expect(argv).toEqual(['npx', '-y', '@scope/pkg@9.9.9', 'mcp-server']);
+    });
+
+    it('pins the 2025-12-11 schema and carries title and website', () => {
+        const out = JSON.parse(mcp.renderServerJson(pkg));
+        expect(out.$schema).toContain('/2025-12-11/');
+        expect(out.title).toBe('agent-config');
+        expect(out.websiteUrl).toBe('https://example.com/docs');
+        expect(out.repository.url).toBe('https://github.com/scope/pkg');
     });
 });

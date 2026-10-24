@@ -111,3 +111,36 @@ describe('lint_mcp_registry_manifest — schema validator (subset)', () => {
 
 // --- Golden parity on the REAL REPO -----------------------------------------
 
+
+describe('lint_mcp_registry_manifest — registry payload (road-to-listings-a-release-keeps-current Phase 1)', () => {
+    function payload(description: string, args: unknown[] = [{ type: 'positional', value: 'mcp-server' }]) {
+        return {
+            $schema: 'https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json',
+            name: 'io.github.example/pkg',
+            description,
+            version: '1.0.0',
+            packages: [{ registryType: 'npm', identifier: 'pkg', version: '1.0.0', transport: { type: 'stdio' }, packageArguments: args }],
+        };
+    }
+
+    it('accepts a description of exactly 100 characters', () => {
+        expect(mod.checkRegistryPayload(payload('x'.repeat(100)))).toBeNull();
+    });
+
+    it('rejects a description of 101 characters', () => {
+        expect(mod.checkRegistryPayload(payload('x'.repeat(101)))).toMatch(/101 characters/);
+    });
+
+    it('rejects a missing description', () => {
+        expect(mod.checkRegistryPayload(payload(''))).toMatch(/registryDescription/);
+    });
+
+    it('rejects a package entry that would start the bare CLI', () => {
+        expect(mod.checkRegistryPayload(payload('ok', []))).toMatch(/mcp-server/);
+    });
+
+    it('rejects the old schema pin', () => {
+        const p = { ...payload('ok'), $schema: 'https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json' };
+        expect(mod.checkRegistryPayload(p)).toMatch(/\$schema/);
+    });
+});

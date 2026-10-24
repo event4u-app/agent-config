@@ -36,6 +36,11 @@ const ALLOWLIST_GLOBS = [
     // the tarball (publish-surface.json roots), so a release PR must carry them.
     '.augment-plugin/plugin.json',
     '.augment-plugin/marketplace.json',
+    // Listing manifests — version and the `npx` pin rewritten by release.ts
+    // set_plugin_manifest_versions; neither ships in the tarball, but a crawler
+    // reads them from the default branch.
+    '.github/plugin/plugin.json',
+    'gemini-extension.json',
     'src/packs/*/pack.yaml',
     'src/packs/*/README.md',
     'src/domains/*/pack.yaml',

@@ -5,7 +5,10 @@ review_by: 2026-12-15
 
 # Stub: road to a visibility sync that can actually write
 
-> **Arrivals:** 3 — latest `inbox-2026-10-t` (2026-10-16): a round reading the
+> **Arrivals:** 4 — latest `inbox-2026-10-ad` (2026-10-24): the Gemini gallery
+> crawler keys on a topic this channel cannot push; the owner question is now a
+> decidable blocker, `topic-push-secret`, in
+> `later/road-to-listings-the-owner-submits`. The count before it read: 3 — latest `inbox-2026-10-t` (2026-10-16): a round reading the
 > update, badge and metadata surfaces found the About homepage, the repository
 > description and the topic list all needing a push this channel cannot make.
 > Third arrival, so the owner question is now live rather than latent. Earlier:
