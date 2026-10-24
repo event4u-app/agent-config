@@ -8,7 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { readRegistry } from '../../../src/scripts/_lib/project_registry.js';
+import { readRegistry, updateRegistry } from '../../../src/scripts/_lib/project_registry.js';
 import { main } from '../../../src/scripts/code_graph/cli.js';
 import { GRAPH_TOOLS } from '../../../src/scripts/mcp_server/graph_tools.js';
 import { ToolCache } from '../../../src/scripts/mcp_server/tools.js';
@@ -114,7 +114,19 @@ describe('a project parameter on the graph tools (5.1)', () => {
 });
 
 describe('noGraph points at what exists (5.2)', () => {
-    it('a root without a graph lists the registered projects that have one', async () => {
+    it('a root without a graph lists another checkout of the same repository', async () => {
+        const main = repo('alpha', 'export const a = 1;\n', false);
+        await build(main);
+        const wt = path.join(tmp, 'alpha-wt');
+        execFileSync('git', ['-C', main, 'worktree', 'add', '-q', wt]);
+        const r = await new ToolCache().dispatch('graph_query', { symbol: 'a' }, wt);
+        expect(r['status']).toBe('unavailable');
+        const listed = r['registered_projects'] as Array<{ id: string; name: string; root?: string }>;
+        expect(listed).toEqual([{ id: idOf(main), name: 'alpha', root: main }]);
+        expect(String(r['error'])).toMatch(/project/);
+    }, 60_000);
+
+    it('an unrelated root never learns another project exists while the estate index is off (O1)', async () => {
         const a = repo('alpha', 'export const a = 1;\n', false);
         const b = repo('beta', 'export const b = 2;\n', true);
         await build(a);
@@ -123,10 +135,29 @@ describe('noGraph points at what exists (5.2)', () => {
         fs.mkdirSync(empty);
         const r = await new ToolCache().dispatch('graph_query', { symbol: 'a' }, empty);
         expect(r['status']).toBe('unavailable');
-        const listed = r['registered_projects'] as Array<{ id: string; name: string; root: string }>;
-        expect(listed.map((p) => p.root).sort()).toEqual([a, b].sort());
+        expect(r['registered_projects']).toBeUndefined();
+        const wire = JSON.stringify(r);
+        expect(wire).not.toContain(a);
+        expect(wire).not.toContain(b);
+    }, 60_000);
+
+    it('with the estate index on, other projects are named by id only, never by path', async () => {
+        const a = repo('alpha', 'export const a = 1;\n', false);
+        const b = repo('beta', 'export const b = 2;\n', true);
+        await build(a);
+        await build(b);
+        updateRegistry((reg) => {
+            reg.index = true;
+        });
+        const empty = path.join(tmp, 'empty');
+        fs.mkdirSync(empty);
+        const r = await new ToolCache().dispatch('graph_query', { symbol: 'a' }, empty);
+        const listed = r['registered_projects'] as Array<{ id: string; name: string; root?: string }>;
         expect(listed.map((p) => p.id).sort()).toEqual([idOf(a), idOf(b)].sort());
-        expect(String(r['error'])).toMatch(/project/);
+        expect(listed.every((p) => p.root === undefined)).toBe(true);
+        const wire = JSON.stringify(r);
+        expect(wire).not.toContain(a);
+        expect(wire).not.toContain(b);
     }, 60_000);
 
     it('with an empty registry the answer is unchanged', async () => {

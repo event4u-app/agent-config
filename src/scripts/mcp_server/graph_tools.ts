@@ -48,6 +48,7 @@ import { advisoryImpact, whereUsed } from '../code_graph/estate_cli.js';
 import { openEstate } from '../code_graph/estate_index.js';
 import { touchHome } from '../code_graph/graph_budget.js';
 import { resolveProjectRef } from '../code_graph/project_ref.js';
+import { repoIdentity } from '../code_graph/repo_identity.js';
 import { readRegistry } from '../_lib/project_registry.js';
 import { resolvePath } from './path_util.js';
 import { isTestFile } from '../code_graph/build.js';
@@ -74,12 +75,27 @@ import type { BuiltinTool } from './tools.js';
 /**
  * Registered projects whose graph exists, for a root that has none (5.2). Read
  * from the local registry only; the graph files themselves are not opened.
+ *
+ * Any MCP caller can reach this answer, so it never names another repository's
+ * path: only another checkout of the server root's own repository is listed
+ * with its root, and other projects appear — by id and name — only while the
+ * owner has switched the estate index on (O1).
  */
-function projectsWithGraph(): Array<{ id: string; name: string; root: string }> {
-    const out: Array<{ id: string; name: string; root: string }> = [];
-    for (const [id, e] of Object.entries(readRegistry().projects)) {
-        if (!fs.existsSync(e.root) || !fs.existsSync(graphHome(e.root).cachePath)) continue;
-        out.push({ id, name: path.basename(e.root), root: e.root });
+function projectsWithGraph(root: string): Array<{ id: string; name: string; root?: string }> {
+    const reg = readRegistry();
+    const self = repoIdentity(root).repoId;
+    let real: string;
+    try {
+        real = fs.realpathSync(root);
+    } catch {
+        real = path.resolve(root);
+    }
+    const out: Array<{ id: string; name: string; root?: string }> = [];
+    for (const [id, e] of Object.entries(reg.projects)) {
+        const same = id === self;
+        if (!same && !reg.index) continue;
+        if (e.root === real || !fs.existsSync(e.root) || !fs.existsSync(graphHome(e.root).cachePath)) continue;
+        out.push(same ? { id, name: path.basename(e.root), root: e.root } : { id, name: path.basename(e.root) });
         if (out.length === 20) break;
     }
     return out;
@@ -87,13 +103,13 @@ function projectsWithGraph(): Array<{ id: string; name: string; root: string }> 
 
 /** The `no graph here` answer, in one place so all the tools agree on its shape. */
 function noGraph(root: string): Record<string, unknown> {
-    const registered = projectsWithGraph();
+    const registered = projectsWithGraph(root);
     if (registered.length) {
         return {
             status: 'unavailable',
             staleness: 'absent',
             error:
-                'no code-graph source under this root — pass `project` to ask one of the registered projects below, ' +
+                'no code-graph source under this root — pass `project` to ask a registered project below, ' +
                 'or run `agent-config code-graph build` here',
             root,
             registered_projects: registered,
