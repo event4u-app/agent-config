@@ -56,7 +56,7 @@ same way; a mod only reads and shows what the dispatcher already wrote.
       concern lands in `agents/runtime/state/` "so you can replay it"; the journal
       is off by default (`src/scripts/hook_manifest.yaml:1568`). Say that the
       record is opt-in and name how it is switched on.
-      verify: `grep -n "so you can replay it" README.md` returns nothing, and the
+      verify: `grep -c "so you can replay it" README.md` -> /^0$/ (nothing found), and the
       new sentence names the opt-in; `task check-claims` (or the claims gate the
       README is bound to) is green.
 - [x] **1.2 Narrow the non-goal (`README.md:218`).** "Runtime GUI / web dashboard" <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: dist/install/install.mjs -->
@@ -76,8 +76,7 @@ same way; a mod only reads and shows what the dispatcher already wrote.
       prompt (I2, ADR-285), declares only `$.fs.read`, `$.fs.exists`, `$.ui.*` (I3),
       reads only, so a throw is a skip (I4), and every value it shows is also
       reachable as text on other hosts (I5). Add the amendment pointer to ADR-124.
-      verify: `grep -c 'Class H' docs/decisions/ADR-124-embedded-engine-doctrine.md`
-      returns at least 1; `./scripts-run src/scripts/check_new_adr_evidence` exits 0;
+      verify: `grep -c 'Class H' docs/decisions/ADR-124-embedded-engine-doctrine.md` -> /^[1-9]/; `./scripts-run src/scripts/check_new_adr_evidence` exits 0;
       the ADR index lists the new record.
 
 ## Phase 3 — Mods in the neighbour census
@@ -112,8 +111,7 @@ same way; a mod only reads and shows what the dispatcher already wrote.
       manifest field was verified to work in `validate` and `test`. One hook: `turn.complete` awaits `next(e)`, then sets
       the status line from `context-fill.json` when it exists with
       `schema_version: 1`; silent otherwise. No other hook.
-      verify: `claude plugin validate src/templates/claude-mod` passes with
-      `calls: $.fs.exists, $.fs.read, $.ui.status`.
+      verify: `claude plugin validate src/templates/claude-mod` -> /calls: \$\.fs\.exists, \$\.fs\.read, \$\.ui\.status/
 - [x] **4.2 Pin the call surface in CI without needing the host.** A vitest test <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: dist/install/install.mjs -->
       reads `register.ts` and fails on any of `$.process`, `$.http`, `$.model`,
       `$.fs.write`, `engine.create`, and on any hooked event outside

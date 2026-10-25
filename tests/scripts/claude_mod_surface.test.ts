@@ -3,9 +3,7 @@
  * (road-to-a-mod-that-decides-nothing-new step 4.2).
  *
  * Reads the module source, so it runs on CI runners, which have no Claude Code
- * CLI. The host's own `claude plugin validate` and `claude plugin test` are run
- * by hand; their 2.1.310 results are recorded in
- * agents/evidence/analysis/claude-code-mod-harness-probes-2026-10-25.md.
+ * CLI; the host's own `claude plugin validate` and `claude plugin test` run by hand.
  */
 
 import * as fs from 'node:fs';
