@@ -88,7 +88,7 @@ win, and no headline number is taken from it beyond what it measured.
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| D1 | owner-reserved | owner (OQ-17, 2026-10-25) | A $150-capped pilot on existing corpora and one host. Rejected alternative: the eight-class corpus the source plans. | OQ-17 answered "1"; the full corpus is owned by `stubs/road-to-assurance-benchmark`. | The pilot shows a lift worth confirming at a larger n. |
+| D1 | owner-reserved | owner | A $150-capped pilot on existing corpora and one host. Rejected alternative: the eight-class corpus the source plans. | OQ-17 answered "1"; the full corpus is owned by `stubs/road-to-assurance-benchmark`. | The pilot shows a lift worth confirming at a larger n. |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
