@@ -102,11 +102,15 @@ orientation-map `TIE` — so the 17.1.0 and 17.2.0 heads read `Honest nulls: non
       `agent-config refresh --global` run; no `postinstall` exists. The two rows
       deleted in 1.3 took their migration text with them, so it moved here too.
       verify: `grep -c 'agent-config refresh --global' docs/MIGRATION.md` -> /^[1-9]/
-- [x] **4.2 Stop the credential-read guard's header from promising a backstop
-      that ships off.** `block_credential_reads.ts` says the forms it misses
-      reach the egress stage; that stage ships `mode: off`.
-      verify: the header names the egress default and says the residue is
-      uncaught while it stays off.
+- [x] **4.2 Hand the credential-read guard's header to its owner.**
+      `block_credential_reads.ts` says the forms it misses reach the egress
+      stage; that stage ships `mode: off`. The one-sentence fix was written and
+      reverted in this change: `check_kernel_edit_ratified` gates every edit to a
+      governance hook, a comment included, and a council round for one sentence
+      is not what the owner's 2026-10-24 directive spends one on. Carried as step
+      1.9 of `road-to-17-0-follow-ups`, beside 1.8, which already needs a
+      ratification round on the same file.
+      verify: `grep -c '1.9 Arrival — the credential-read guard' agents/roadmaps/later/road-to-17-0-follow-ups.md` -> /^1$/
 - [x] **4.3 Hand ADR-284's status to the roadmap that owns ADR-293.** ADR-284
       reads `accepted` with `superseded_by: —` although both keys it acts on
       (`lean_projection.hosts`, `mode: delivery`) were removed by ADR-293, whose

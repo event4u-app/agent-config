@@ -23,7 +23,7 @@ execution:
 > finding id. The release-blocking findings themselves live in
 > `road-to-hook-guards-that-hold-17-findings` and are not repeated here.
 >
-> **Arrivals:** 1 — latest `inbox-2026-10-aj` (2026-10-25): two external review rounds over 17.0.0–17.2.0 re-verified at `d2ec783d95` add seven still-true findings no roadmap owned — steps 3.10–3.13, 4.9–4.10 and 6.5.
+> **Arrivals:** 1 — latest `inbox-2026-10-aj` (2026-10-25): two external review rounds over 17.0.0–17.2.0 re-verified at `d2ec783d95` add eight still-true findings no roadmap owned — steps 1.9, 3.10–3.13, 4.9–4.10 and 6.5.
 
 ## Goal
 
@@ -91,6 +91,14 @@ release ledger. The residue items are closed the same way.
       and a ratification round.
       verify: a test where `.key` appears only inside a jq filter or a grep
       pattern is allowed, and reading an actual `*.key` file is still refused.
+- [ ] **1.9 Arrival — the credential-read guard's header promises a backstop
+      that ships off.** `src/scripts/hooks/block_credential_reads.ts` says the
+      forms it misses reach the egress stage; that stage ships
+      `egress.placeholders.mode: "off"` and no mode yet changes what reaches the
+      model, so the residue is uncaught. A comment-only edit to a governance hook
+      still needs a ratification record, so it rides with 1.8's round.
+      verify: the header names the egress default and says the residue is
+      uncaught while it stays off.
 
 ## Phase 2 — council, review and billing
 
