@@ -426,23 +426,54 @@ export interface LedgerEntry {
      * separate from its ratchet.
      */
     retires_phrasings_present: boolean;
+    /**
+     * Optional on an open entry: the date by which it must be measured
+     * (road-to-a-policy-the-measurements-write 2.1). Past-due is reported,
+     * never failed — an overdue date nobody can satisfy inside a PR would block
+     * unrelated work; a malformed one is a finding.
+     */
+    review_by: string;
 }
 
 interface Args {
     quiet: boolean;
+    status: boolean;
+}
+
+const OPEN_STATUSES = new Set(['unbacked', 'measured-in-repo']);
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Open entries whose `review_by` lies before `today` (both ISO dates). */
+export function overdue_entries(ledger: Map<string, LedgerEntry>, today: string): LedgerEntry[] {
+    return [...ledger.values()].filter(
+        (e) => OPEN_STATUSES.has(e.status) && ISO_DATE_RE.test(e.review_by) && e.review_by < today,
+    );
+}
+
+function render_status(ledger: Map<string, LedgerEntry>, today: string): string {
+    const open = [...ledger.values()].filter((e) => OPEN_STATUSES.has(e.status));
+    const lines = [`open claims: ${open.length} (today ${today})`];
+    for (const e of open) {
+        const due = e.review_by || '-';
+        const mark = ISO_DATE_RE.test(e.review_by) && e.review_by < today ? '  OVERDUE' : '';
+        lines.push(`  ${e.id}  ${e.status}  last_verified ${e.last_verified || '-'}  review_by ${due}${mark}`);
+    }
+    return `${lines.join('\n')}\n`;
 }
 
 function parse_args(argv: string[]): Args {
-    const out: Args = { quiet: false };
+    const out: Args = { quiet: false, status: false };
     for (const a of argv) {
         if (a === '--quiet') {
             out.quiet = true;
+        } else if (a === '--status') {
+            out.status = true;
         } else if (a === '--self-test') {
             // Handled in main() before parse_args is reached; accepted here so
             // a stray ordering never turns the flag into a usage error.
             continue;
         } else if (a === '-h' || a === '--help') {
-            process.stdout.write('usage: check_claims [--quiet]\n');
+            process.stdout.write('usage: check_claims [--quiet] [--status]\n');
             throw new ExitCode(0);
         } else {
             process.stderr.write(`❌  check_claims: unrecognized argument: ${a}\n`);
@@ -477,6 +508,7 @@ function load_ledger(): Map<string, LedgerEntry> {
                 retires_phrasings: cur.retires_phrasings ?? '',
                 promotion_evidence: cur.promotion_evidence ?? '',
                 retires_phrasings_present: cur.retires_phrasings_present ?? false,
+                review_by: cur.review_by ?? '',
             });
         }
         cur = {};
@@ -494,7 +526,7 @@ function load_ledger(): Map<string, LedgerEntry> {
         // would have silently ignored the second and dropped whichever field
         // came from the other branch. One union, both fields.
         const field = line.match(
-            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|retired_by|measured_on|non_inference|retires_phrasings|promotion_evidence):\s*(.*)$/,
+            /^-\s+(claim|kind|evidence|status|last_verified|superseded_by|retired_by|measured_on|non_inference|retires_phrasings|promotion_evidence|review_by):\s*(.*)$/,
         );
         if (field) {
             const key = field[1] as keyof LedgerEntry;
@@ -622,8 +654,23 @@ function main(argv: string[] = process.argv.slice(2)): number {
         }
         throw exc;
     }
+    const today = new Date().toISOString().slice(0, 10);
+    if (args.status) {
+        process.stdout.write(render_status(ledger, today));
+        return 0;
+    }
     const markers = scan_markers();
     const findings: Finding[] = [];
+
+    for (const entry of ledger.values()) {
+        if (entry.review_by !== '' && !ISO_DATE_RE.test(entry.review_by)) {
+            findings.push({
+                id: entry.id,
+                file: LEDGER_REL,
+                reason: `review_by '${entry.review_by}' is not an ISO date (YYYY-MM-DD)`,
+            });
+        }
+    }
 
     // 1. Every markered claim must map to a backed, resolvable ledger entry.
     for (const { id, file } of markers) {
@@ -1094,6 +1141,13 @@ function main(argv: string[] = process.argv.slice(2)): number {
         process.stdout.write(
             `✅  check_claims: ${markers.length} markered claim(s) bound · ledger ${ledger.size} entries (${backed} backed, ${unbacked} unbacked inventory)\n`,
         );
+        const overdue = overdue_entries(ledger, today);
+        if (overdue.length > 0) {
+            process.stdout.write(`    Overdue: ${overdue.length} open claim(s) past review_by (reported, not failed)\n`);
+            for (const e of overdue) {
+                process.stdout.write(`      ${e.id} — review_by ${e.review_by}\n`);
+            }
+        }
         if (execEntries.length > 0) {
             const detail = execVerified.length > 0 ? ` (${execVerified.length} re-verified)` : '';
             process.stdout.write(
@@ -1183,6 +1237,19 @@ function selfTest(): number {
 
     const CLEAN_README = '# Agent Config\n\nGoverned skills, rules and commands.\n';
 
+    const openClaim = (reviewBy: string): string =>
+        [
+            closed(null),
+            '### claim: tier-held',
+            '- claim: A lower tier holds quality on lookups.',
+            '- kind: comparative',
+            '- evidence: docs/evidence.md#ANCHOR',
+            '- status: unbacked',
+            '- last_verified:',
+            `- review_by: ${reviewBy}`,
+            '',
+        ].join('\n');
+
     /** A registry carrying exactly one byte-unit metric, for the 4.1 cases. */
     const BYTE_REGISTRY = [
         'metrics:',
@@ -1269,6 +1336,18 @@ function selfTest(): number {
                     'src/config/metric-registry.yml': BYTE_REGISTRY,
                     'README.md': `${CLEAN_README}\nThe example payload below is 2048 bytes long.\n`,
                 }),
+        },
+        // road-to-a-policy-the-measurements-write 2.1: an overdue date is
+        // reported, never failed; a date nobody can read is a finding.
+        {
+            name: 'an unbacked entry past its review_by → accept (reported as overdue)',
+            expect: 'accept',
+            run: () => fixture({ 'docs/CLAIMS.md': openClaim('2000-01-01'), 'README.md': CLEAN_README }),
+        },
+        {
+            name: 'a malformed review_by → reject',
+            expect: 'reject',
+            run: () => fixture({ 'docs/CLAIMS.md': openClaim('soon'), 'README.md': CLEAN_README }),
         },
         {
             name: 'the never-published sentinel with a stated reason → accept',

@@ -48,8 +48,9 @@ tracked is written by the learner, and floors never move.
 - [ ] **1.2 Council rows:** `council-vs-solo-baseline` (pre-registered) and a
       `min_rounds` 2-vs-1 pair; light-seat (`--safe-mode`) verdict agreement.
       verify: three claims decided or dated; the council rows cite them.
-- [ ] **1.3 Windows:** read `warm-worker-cold-start-relief`, `resume-non-inferiority`,
-      `rate-limit-stops-per-drain`, `fresh-spawns-per-drain` at their `review_by`.
+- [ ] **1.3 Windows:** read `rate-limit-stops-per-drain` and `fresh-spawns-per-drain`
+      at their `review_by` (`warm-worker-cold-start-relief` and `resume-non-inferiority`
+      are backed on one manufactured window; a real drain window re-reads them).
       verify: each claim names its window and read date.
 - [ ] **1.4 Tier rerun above the cap:** reopen the 60-pair cap (decision A2 of the
       archived tier roadmap) or record why not; the bound needs about 93 pairs at one

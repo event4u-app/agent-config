@@ -75,23 +75,24 @@ egress (c) and (f) pass (`internal/bench/reports/egress-placeholders-identifier-
 
 ## Phase 2 — The ledger says when a measurement is owed (M3)
 
-- [ ] **2.1 `check_claims` reads `review_by:`.** Parsed beside `last_verified`; a
+- [x] **2.1 `check_claims` reads `review_by:`.** Parsed beside `last_verified`; a
       malformed date is a finding; an `unbacked` entry past its `review_by` is printed
       under an `Overdue` heading without changing the exit code (report mode, decision
       A3).
       verify: the self-test covers a past-due entry (reported, exit 0) and a malformed
       date (exit 2).
-- [ ] **2.2 `check_claims --status`.** Prints every open entry (`unbacked`,
+- [x] **2.2 `check_claims --status`.** Prints every open entry (`unbacked`,
       `measured-in-repo`) with status, `last_verified`, `review_by` and an overdue mark,
       one line each — the claim status listing the second reviewer asked for, without a
       new command.
       verify: `./scripts-run src/scripts/check_claims --status` lists the dispatch claims
       of 2.3 with their dates.
-- [ ] **2.3 Date the open dispatch measurements.** Every open claim a policy row or
+- [x] **2.3 Date the open dispatch measurements.** Every open claim a policy row or
       `later/road-to-a-learner-the-measurements-gate` waits on gets a `review_by`:
       the two tier claims, `council-vs-solo-baseline`, the four free-hands and
-      free-jury claims, `warm-worker-cold-start-relief`, `resume-non-inferiority`,
-      `rate-limit-stops-per-drain` and `fresh-spawns-per-drain`.
+      free-jury claims, `rate-limit-stops-per-drain` and `fresh-spawns-per-drain`.
+      (`warm-worker-cold-start-relief` and `resume-non-inferiority` are already
+      `backed` on the 2026-10-23 window and need no date.)
       verify: `check_claims --status` shows a date on each of them.
 
 ## Phase 3 — Release notes and PRs carry the measurement (M2)
