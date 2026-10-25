@@ -17,6 +17,8 @@ estate_offset_exempt: >
 estate_growth_exempt: >
   +1 later_roadmaps: parks the four items road-to-security-answer-that-names-what-it-checked
   did not build, so they are carried instead of dropped.
+  Also +11 skill_description_tokens: the security-audit description names the casual
+  whole-app question so it routes (6/6 probe prompts; tests/scripts/security_audit_route_probe.test.ts).
 relates:
   - slug: road-to-security-answer-that-names-what-it-checked
     relation: extends
