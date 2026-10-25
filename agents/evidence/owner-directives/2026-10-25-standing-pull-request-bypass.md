@@ -13,6 +13,8 @@ Owner, verbatim: "ich will den bypass behalten" ("I want to keep the bypass"),
 after being shown that the actor was added for #2657 and #2678 and would
 otherwise have to be removed by 2026-11-01.
 
+<!-- standing-bypass: ruleset_version=54668684 -->
+
 ## What it means
 
 - The actor added at ruleset version `54668684` is standing configuration,
