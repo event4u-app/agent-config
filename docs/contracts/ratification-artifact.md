@@ -382,7 +382,7 @@ the owner chose on 2026-10-07 (decision D3 of
 | `ruleset_version_before` | the ruleset version id the forge reports before the bypass |
 | `ruleset_version_after` | the version id after it — the forge's own trace of the edit |
 | `restore_by` | the instant by which the control must be back, ISO-8601 with a timezone |
-| `restored_at` | the instant it was restored, or `pending` |
+| `restored_at` | the instant it was restored, `pending`, or `superseded-by-owner-ruling <path>` when the owner keeps the bypass standing (`<path>` a committed file under `agents/evidence/owner-directives/`) |
 | `council_review` | the path of the after-the-fact council review, or `pending` |
 
 The ruleset version ids stand in for the forge's audit event: reading that
@@ -420,6 +420,8 @@ closed. Each record is opened once without following a link, and
 checked and read through that one descriptor; the committed reviews are read
 from one `HEAD` tree listing per run; a record's name and values reach a finding
 with control and line-separator characters replaced.
+
+A record closed by `superseded-by-owner-ruling` is not reported as unrestored; its council review is still owed, cites the record's `subject`, must be committed at or after `time`, and is overdue seven days after `restore_by`. The ruling must be committed at `HEAD`; a missing one, or a path outside `agents/evidence/owner-directives/`, is malformed. A standing actor with `bypass_mode: always` is still an unconditional bypass and still fails the anchor; no ruling closes that.
 
 **What that check does not establish.** The records are files in the branch it
 runs on, so a branch can rewrite one to look closed, and the values it checks
