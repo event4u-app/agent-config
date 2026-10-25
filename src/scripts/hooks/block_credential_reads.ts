@@ -34,7 +34,9 @@
  * a running process, a secret typed by the user — and a search or glob that
  * never names the file (`Grep path=.`, `grep -r KEY .`, `rg KEY`, `cat .e*`).
  * The last returns the file's lines as tool output, which is the
- * `program-output` fixture's channel: the stage sees it, this guard does not.
+ * `program-output` fixture's channel. That residue is uncaught: the egress
+ * stage ships `egress.placeholders.mode: "off"`, and no mode yet changes what
+ * reaches the model.
  *
  * Kill switch: `AGENT_CONFIG_ALLOW_CREDENTIAL_READS=1`.
  *
