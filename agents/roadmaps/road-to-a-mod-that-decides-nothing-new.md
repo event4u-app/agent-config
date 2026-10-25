@@ -67,7 +67,7 @@ same way; a mod only reads and shows what the dispatcher already wrote.
 
 ## Phase 2 — A recorded class for a host-owned module
 
-- [ ] **2.1 Write the ADR amending ADR-124 with Class H "host-owned module".**
+- [x] **2.1 Write the ADR amending ADR-124 with Class H "host-owned module".**
       A module that runs inside the host's worker for the session, started and
       stopped by the host, holding state only in the host's stores and never
       authoritative, is neither Class A (AC process per command) nor Class B
