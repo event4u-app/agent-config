@@ -22,6 +22,8 @@ execution:
 > agents reported while closing the release-blocking findings; they carry no
 > finding id. The release-blocking findings themselves live in
 > `road-to-hook-guards-that-hold-17-findings` and are not repeated here.
+>
+> **Arrivals:** 1 — latest `inbox-2026-10-aj` (2026-10-25): two external review rounds over 17.0.0–17.2.0 re-verified at `d2ec783d95` add seven still-true findings no roadmap owned — steps 3.10–3.13, 4.9–4.10 and 6.5.
 
 ## Goal
 
@@ -200,6 +202,23 @@ release ledger. The residue items are closed the same way.
       verify: unattended upgrade runs only when the trust-root-pinned check
       passes, and a self-signed certificate is refused by a test.
       Closed 2026-10-24 by D15 of that roadmap: `tests/lib/sigstore_provenance.test.ts`.
+- [ ] **3.10 Arrival — make the staged-runtime swap atomic on Windows.**
+      `src/install/stagedRuntime.ts:194` renames over an existing directory,
+      which is not atomic on Windows; a crash mid-swap leaves no runtime.
+      verify: a test that interrupts the swap on a win32 code path leaves either
+      the old or the new runtime resolvable.
+- [ ] **3.11 Arrival — test the Node floor at exactly 22.6.0.** `engines.node`
+      is `>=22.6.0`, the CI matrix runs `'22'` (latest 22.x) only, so the floor
+      itself is never exercised.
+      verify: one consumer-matrix leg pins Node 22.6.0 and passes.
+- [ ] **3.12 Arrival — trigger the consumer matrix on installer changes.**
+      `.github/workflows/consumer-matrix.yml` `paths:` omits `src/install/**`.
+      verify: a change under `src/install/` alone starts the consumer matrix.
+- [ ] **3.13 Arrival — stop reading the keys ADR-293 removed.**
+      `src/scripts/_cli/cmd_conformance.ts:417` and
+      `src/scripts/_cli/cmd_route_explain.ts:96` still read retired projection
+      keys.
+      verify: `grep -nE 'lean_projection|rule_workspaces' src/scripts/_cli/cmd_conformance.ts src/scripts/_cli/cmd_route_explain.ts` -> 1
 
 ## Phase 4 — gates and lints
 
@@ -247,6 +266,14 @@ release ledger. The residue items are closed the same way.
       override.
       verify: a subject describing a temp-directory fix passes, while a bare
       `tmp` placeholder subject still fails.
+- [ ] **4.9 Arrival — the evidence-temperature report claims a check it does
+      not run.** `src/scripts/report_evidence_temperature.ts:159-162` names a
+      ledger-presence check that no code performs.
+      verify: either the check exists with a test, or the sentence is gone.
+- [ ] **4.10 Arrival — put the release job's token behind an environment.**
+      The job reading `RELEASE_PR_TOKEN` declares no `environment:`.
+      verify: every workflow job reading `RELEASE_PR_TOKEN` declares an
+      environment restricted to `main`.
 
 ## Phase 5 — test hermeticity and coverage
 
@@ -325,6 +352,10 @@ release ledger. The residue items are closed the same way.
       `site/src/content/docs/architecture/overview.md` still say "zero runtime",
       and `check_claims` does not scan `site/`.
       verify: the claims gate scans `site/`, and the phrase appears there zero times.
+- [ ] **6.5 Arrival — redact the home path in the command-surface report.**
+      `agents/evidence/reports/command-surface.json:11` holds an absolute home
+      path; step 5.2 of the 17.0.0 cut redacted the `.md` reports only.
+      verify: the regenerated JSON report holds no absolute home path.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-22 | reviewer: claude/host -->
