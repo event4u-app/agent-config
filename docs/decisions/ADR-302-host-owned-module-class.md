@@ -13,7 +13,7 @@ protected_dimensions: none
 provenance:
   kind: agentic
   decision_makers: [agent]
-  human_directed: true
+  human_directed: false
 evidence:
   strength: E1
   basis:
