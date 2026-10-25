@@ -8,7 +8,7 @@ and the run that applies it links its PR.
 
 ## Open
 
-### OQ-11 — Self-modification AC-5: a proposal that passed, or one that landed
+### OQ-14 — Self-modification AC-5: a proposal that passed, or one that landed
 
 - **Context:** AC-5 of `road-to-self-modification-that-a-council-must-pass` asks
   for one proposal whose change passes the gate on a passing record. The only

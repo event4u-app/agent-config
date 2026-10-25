@@ -158,16 +158,17 @@ Evidence (executed): `src/scripts/optimize_skill_description.ts:128`
       exists. Fix the wording and the link; recapture the golden packs that
       record the old string.
       verify: `grep -rn 'four-judge\|five-judge' src docs tests/golden/baseline` -> 0
-- [ ] **5.2 One selection rule.** `optimize_skill_description` reports the paired
+- [x] **5.2 One selection rule.** `optimize_skill_description` reports the paired
       verdict on the test split per candidate instead of picking by raw `>`;
       `underpowered` is printed, never overwritten.
       verify: `npx vitest run tests/scripts/optimize_skill_description.test.ts`
-- [ ] **5.3 Multiple-comparison correction.** A Holm step-down over the
+- [x] **5.3 Multiple-comparison correction.** A Holm step-down over the
       candidates of one run, next to the sign test in `_lib/paired_verdict.ts`,
       used by 5.2.
       verify: `npx vitest run tests/scripts/paired_verdict.test.ts` — five candidates each just under α alone are not significant after correction
-- [ ] **5.4 One id per owner question.** `agents/owner-questions.md` carries
-      `OQ-11` twice; the second becomes the next free id.
+- [x] **5.4 One id per owner question.** `agents/owner-questions.md` carries
+      `OQ-11` twice; the self-modification one, which nothing cites, becomes
+      the next free id (the archived memory roadmap cites the teardown one).
       verify: `grep -c '^### OQ-11 ' agents/owner-questions.md` -> 1
 
 ## What this roadmap does not do
