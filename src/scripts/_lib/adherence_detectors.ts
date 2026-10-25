@@ -21,6 +21,7 @@
  */
 
 import type { ActivationState } from './activation_states.js';
+import { isTestPath } from './test_path.js';
 
 /** The subset of {@link ActivationState} a detector may return. */
 export type Adherence = Extract<
@@ -57,12 +58,7 @@ export interface ClauseDetector {
     detect(input: DetectorInput): Adherence;
 }
 
-/** A path is a test path when it sits under a `tests/` segment or is named `*.test.*` / `*.spec.*`. */
-export function isTestPath(p: string): boolean {
-    const normalized = p.replace(/\\/g, '/');
-    if (/(^|\/)tests?(\/|$)/.test(normalized)) return true;
-    return /\.(test|spec)\.[cm]?[jt]sx?$/.test(normalized);
-}
+export { isTestPath };
 
 /**
  * `think-before-action` § "When behavior can be defined → prefer test-first /
