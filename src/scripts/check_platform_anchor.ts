@@ -51,6 +51,7 @@ import {
     checkAnchorIdentity,
     evaluateAnchor,
     evaluateBypassRecords,
+    standingBypassVersions,
     printable,
     type BypassFinding,
     type BypassRecordInput,
@@ -362,6 +363,20 @@ export function reviewCommitted(root: string, rel: string, index: ReadonlySet<st
  * per run from one tree snapshot. A tree that cannot be read is an empty set,
  * so every non-pending review then fails closed.
  */
+/**
+ * Whether `rel` is an owner directive committed at `HEAD` that keeps
+ * `rulesetVersion` standing ({@link standingBypassVersions}). Read from Git,
+ * never from the working tree, and at most 64 KiB.
+ */
+export function rulingReader(root: string, index: ReadonlySet<string>): (rel: string, rulesetVersion: string) => boolean {
+    return (rel, rulesetVersion) => {
+        if (!index.has(rel)) return false;
+        const shown = spawnSync('git', ['-C', root, 'show', `HEAD:${rel}`], { maxBuffer: 64 * 1024 });
+        if (shown.status !== 0 || !Buffer.isBuffer(shown.stdout)) return false;
+        return standingBypassVersions(shown.stdout.toString('utf8')).includes(rulesetVersion);
+    };
+}
+
 export function committedEvidence(root: string): Set<string> {
     const r = spawnSync('git', ['-C', root, 'ls-tree', '-r', '-z', 'HEAD', '--', 'agents/evidence/'], {
         encoding: 'utf8',
@@ -599,7 +614,7 @@ export function main(argv: readonly string[] = process.argv.slice(2), source = l
 
     const result = evaluateGate(changed, policyText, source, repo);
     const open = [
-        ...((index) => evaluateBypassRecords(readBypassRecords(root), asOf(), reviewReader(root, index), (rel) => index.has(rel)))(
+        ...((index) => evaluateBypassRecords(readBypassRecords(root), asOf(), reviewReader(root, index), rulingReader(root, index)))(
             committedEvidence(root),
         ),
         ...removedBypassRecords(root, resolveBaseRef(baseRef, root)),

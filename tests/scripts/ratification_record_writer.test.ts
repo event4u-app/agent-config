@@ -29,7 +29,7 @@ const SUBJECT = 'a'.repeat(64);
 const PROMPT = `${PROMPT_DIR}/sample.question.md`;
 const stance = (label: string): string => `Findings.\n\nSTANCE: ${label} | CONFIDENCE: high | DEALBREAKER: no`;
 
-function commitPrompt(body = `Review this. The subject is ${SUBJECT}.\n`): string {
+function commitPrompt(body = `Review this.\n\nsubject: ${SUBJECT}\n`): string {
     fs.mkdirSync(path.join(root, PROMPT_DIR), { recursive: true });
     fs.writeFileSync(path.join(root, PROMPT), body);
     return commitAll(root);
@@ -135,6 +135,26 @@ describe('renderRecord — provenance refusals', () => {
         refusal(() => renderRecord(input(session({ openai: stance('ratified') }, other), commit), 1));
     });
 
+    it('refuses a prompt that mentions the digest but does not declare it as the subject', () => {
+        const commit = commitPrompt(`Historical subject, not reviewed: ${SUBJECT}\n`);
+        refusal(() => renderRecord(input(session({ openai: stance('ratified') }), commit), 1));
+    });
+
+    it('refuses a prompt that declares a second, different subject', () => {
+        const commit = commitPrompt(`subject: ${SUBJECT}\nsubject: ${'b'.repeat(64)}\n`);
+        refusal(() => renderRecord(input(session({ openai: stance('ratified') }), commit), 1));
+    });
+
+    it('accepts the declaration in backticks, as committed prompts write it', () => {
+        const commit = commitPrompt(`Review.\n\n\`subject: ${SUBJECT}\`\n`);
+        expect(renderRecord(input(session({ openai: stance('ratified') }), commit), 1)).toContain(`subject: ${SUBJECT}`);
+    });
+
+    it('refuses a JSON null session with the controlled refusal, not a TypeError', () => {
+        const commit = commitPrompt();
+        refusal(() => renderRecord(input(null, commit), 1));
+    });
+
     it('refuses a prompt that does not name the subject', () => {
         const commit = commitPrompt('A prompt about something else.\n');
         refusal(() => renderRecord(input(session({ openai: stance('ratified') }), commit), 1));
@@ -208,7 +228,7 @@ describe('ratification_record CLI — the writer through its entry point', () =>
         commitAll(root);
         const digest = proposalSubjectOf(root, [target]);
         fs.mkdirSync(path.join(root, PROMPT_DIR), { recursive: true });
-        fs.writeFileSync(path.join(root, PROMPT), promptNamesSubject ? `subject ${digest}\n` : 'nothing\n');
+        fs.writeFileSync(path.join(root, PROMPT), promptNamesSubject ? `subject: ${digest}\n` : 'nothing\n');
         commitAll(root);
         const sessionPath = path.join(root, 'session.json');
         fs.writeFileSync(

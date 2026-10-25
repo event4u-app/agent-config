@@ -246,6 +246,14 @@ describe('evaluate — when the user decides, the gate says so', () => {
         expect(text(r)).toContain('verdict: non-convergent');
     });
 
+    it('a one-seat refused record names the refusal as well as the diversity gap', () => {
+        const rel = writeRecord('dr.md', { ...GOOD, verdict: 'refused' }, { anthropic: 'refused' });
+        const r = evaluate([KERNEL, rel]);
+        expect(r.exitCode).toBe(1);
+        expect(text(r)).toContain('provider diversity');
+        expect(text(r)).toContain('a seat refused the change');
+    });
+
     it('diversity short of the required count escalates and still fails', () => {
         const rel = writeRecord('d.md', GOOD, { anthropic: 'ratified' });
         const r = evaluate([KERNEL, rel]);
