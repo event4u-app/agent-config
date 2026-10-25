@@ -1,0 +1,156 @@
+---
+complexity: lightweight
+status: ready
+tree_pin: c073ca2e5a
+execution:
+  mode: phase-checkpoints
+estate_offset_exempt: "Round inbox-2026-10-aw, searched 2026-10-25 with `grep -rlF` over agents/roadmaps/*.md, agents/roadmaps/later and agents/roadmaps/stubs for release_impact_entry, parse_impact_trailers, classifyUpdate major floor, orderStages, warnRemovedKeys, RULE_PACKS_LEGACY_WINDOW, check_new_adr_evidence and legal-safety-floor shipping with its skills: no roadmap owns any of them (road-to-an-update-that-installs-itself-only-when-it-is-safe consumes the impact map but owns neither its parser nor its writer; road-to-a-setup-that-decides-itself closed rule_packs at 4.9 and records D14's revisit-if without a step). The owner asked this run to process what it writes, so the roadmap is active; active count goes 3 -> 4, inside the WIP cap of 5."
+estate_growth_exempt: "THIS CHANGE (2026-10-25) grows active_roadmaps 3 -> 4 by adding this roadmap at the owner's request to process it in the same run (`/analyze:inbox` round inbox-2026-10-aw, then `/roadmap:process-full`). No finished roadmap exists to offset it, the count stays inside the WIP cap of 5 from the 2026-10-24 owner directive, and this roadmap archives itself when its steps close in the same PR."
+relates:
+  - slug: road-to-an-update-that-installs-itself-only-when-it-is-safe
+    relation: disjoint
+    note: "Owns the update classifier's consent path and the ring-0 exit. Phase 1 here corrects the impact map the classifier reads and adds one floor for a major the map does not describe; nothing here touches 4.3 or the ask."
+  - slug: road-to-a-setup-that-decides-itself
+    relation: disjoint
+    note: "Retired projection.rule_packs (4.9) and recorded D14's revisit-if (a rule that applies regardless of its pack). Phase 3 here is that revisit, routed to the council; Phase 5 schedules the window it left open."
+---
+# Road to records that agree after eighteen
+
+> **Source:** `agents/tmp.old/inbox-2026-10-aw/` — 17 external reviews of
+> release 18.0.0 and four planning files, verified against `c073ca2e5a`
+> (18.2.0). Every step below is a claim reproduced in that tree.
+
+## Goal
+
+The consumer-impact class a release publishes agrees with the bump it takes and
+with `BREAKING_CHANGES.md`. A major the impact map does not describe can never be
+installed silently. A guard runs where its header says it runs. A safety-floor
+rule ships wherever a skill that obeys it ships. A legacy window has a recorded
+end. Each of these is a test or a lint that can go red.
+
+## Phase 1 — The impact class agrees with the bump
+
+- [ ] **1.1 Read the trailing trailer run of a paragraph.** `parse_trailer_paragraph`
+      (`src/scripts/_lib/consumer_impact.ts:89-97`) discards the whole paragraph
+      when one line is not a trailer. Both 18.0.0 breaking commits
+      (`79cb86c0dd`, `a3d4596078`) end with a wrapped `BREAKING CHANGE:` footer in
+      the same paragraph as `Consumer-Impact: action`, so the parse returns
+      `none, recorded: false`. Take the maximal trailing run of trailer lines
+      (indented continuations allowed) instead of all-or-nothing.
+      verify: a red-first test in `tests/lib/consumer_impact.test.ts` with the
+      `79cb86c0dd` body shape yields `action, recorded: true`; the existing cases
+      stay green.
+- [ ] **1.2 An unrecorded breaking commit classes as `action`.** `span_bump`
+      (`impact_bump.ts:88`) already reads a breaking commit with no valid trailer
+      as a major (ADR-300); `release_impact_entry`
+      (`consumer_impact.ts:168-176`) ignores it, so one span produced a major bump
+      and a `notice` class. Apply the same reading there.
+      verify: a test where a span holds one `breaking: true, recorded: false`
+      commit yields `{ impact: 'action' }`.
+- [ ] **1.3 Correct the 18.0.0 entry of the impact map.** `package.json`
+      `agentConfig.impact["18.0.0"]` reads `notice`; `BREAKING_CHANGES.md` and
+      `docs/MIGRATION.md` say `action`. Set it to `action`, so an installed
+      pre-18 updater is asked rather than notified.
+      verify: `node -p "require('./package.json').agentConfig.impact['18.0.0'].impact"`
+      prints `action`, and a test in `tests/lib/consumer_impact.test.ts` over the
+      `17.4.0..18.0.0` span computes the same value.
+- [ ] **1.4 A major the map does not describe is never `auto`.**
+      `classifyUpdate` (`src/scripts/_lib/classify_update.ts:131-170`) returns
+      `auto` when the range crosses a major whose map entry is missing. Treat a
+      crossed major without an entry as at least `notice`.
+      verify: `npx vitest run tests/lib/classify_update.test.ts` passes a case
+      with `mode: auto`, installed `17.4.0`, candidate `19.0.0` and an empty map
+      that expects `notify`.
+
+## Phase 2 — Guards that run where they say they run
+
+- [ ] **2.1 Run the shipped-Pending-row check with history in CI.** The
+      real-index test (`tests/scripts/release_head_prefill.test.ts:253-270`) skips
+      in `node-tests`, whose checkout is shallow, and no full-history job runs it.
+      Run it in a job with full history and tags, where a skip fails.
+      verify: the workflow step exists in a full-history job; locally, forcing
+      the skip condition under the require-history switch fails the test.
+- [ ] **2.2 A dependency cycle is a plan error, not a crash.** `orderStages`
+      (`src/scripts/_lib/invocation_plan.ts:211-215`) takes `ready[0]` unguarded;
+      a hard-edge cycle (including `A dependsOn A`) throws a TypeError. Detect it
+      in `validate` and throw `InvocationPlanError` naming the cycle.
+      verify: red-first case G15 in `tests/scripts/invocation_plan.test.ts`
+      (self-loop and two-stage cycle) expects `InvocationPlanError`.
+- [ ] **2.3 A key honoured during a window does not print "ignored".**
+      `warnRemovedKeys` (`src/scripts/_lib/settings_removed_keys.ts:207`) appends
+      `; ignored.` to every removed key, including `projection.rule_packs`, whose
+      own reason says an explicit value is still honoured. Print the window
+      instead of "ignored" for that key.
+      verify: a test captures stderr for `projection.rule_packs` and finds no
+      "ignored".
+- [ ] **2.4 The star-ask unwritable-state test holds as root.**
+      `tests/scripts/star_ask_hook.test.ts:158-176` relies on `chmod`, which root
+      ignores. Skip it when `process.getuid?.() === 0`, as
+      `classify_merge_risk_base_revision.test.ts` does.
+      verify: the test file contains the guard and passes.
+- [ ] **2.5 Drop the stale "stays on 20" comments.** `.github/workflows/tests.yml:310,645`
+      says other jobs stay on Node 20; `engines.node` is `>=22` and no job pins 20.
+      verify: `grep -c 'stays on 20' .github/workflows/tests.yml` is 0.
+
+## Phase 3 — A floor ships where its skills ship
+
+- [ ] **3.1 Put D14's revisit-if to the council.** On claude-code and codex every
+      skill ships (`src/install/scoped_projection.ts:480-488`), but
+      `legal-safety-floor` (`packs: [legal-review-prep]`) and
+      `finance-safety-floor` ship only with their pack, while `contract-review`
+      says it obeys the first. Question: does a pack-scoped safety-floor rule
+      ship whenever a skill that names it ships?
+      verify: a council record under `agents/evidence/council/` and a row in
+      `## Decisions`.
+- [ ] **3.2 Implement the verdict with an install test.** If the council says
+      yes: the rule scope adds a pack-scoped rule tagged a safety floor when any
+      projected skill names it. Either way, the test pins the outcome.
+      verify: an install test asserts the chosen behaviour for `contract-review`
+      on claude-code with no active pack.
+- [ ] **3.3 Name the lost coverage in the 18.0.0 migration.** `docs/MIGRATION.md`
+      § 18.0.0 lists the eight rules but not what stops firing (contract, NDA,
+      valuation, likeness triggers) or the one-line restore.
+      verify: the section names the four floor rules, their trigger class and
+      `runtime.active_packs` as the restore.
+
+## Phase 4 — Records census and the open window
+
+- [ ] **4.1 Run the owner-claim predicate once over existing ADRs.**
+      `check_new_adr_evidence` checks only added records. Apply
+      `claimsOwnerDecision` + `citesOwnerDirective` to every accepted ADR since
+      ADR-282 and append each miss to `agents/owner-questions.md` as a question,
+      not a fix.
+      verify: the census output is committed under `agents/evidence/analysis/`
+      with its count, and every miss has a question.
+- [ ] **4.2 Schedule the `rule_packs` legacy window.** `RULE_PACKS_LEGACY_WINDOW`
+      (`src/install/rule_scope.ts:122`) is prose with no end; 18.1.0 and 18.2.0
+      shipped since. Add a `docs/MIGRATION.md` § Scheduled deprecations row for
+      the legacy honouring and the `ProjectionMode` residue in `mcp_bridge.ts`,
+      with removal due at the next major (not pinned).
+      verify: `lint_scheduled_deprecations` passes with the row present.
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-10-25 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Parser widening reads prose as a trailer | implementation | A body paragraph ending in `Key: value` lines is read as a trailer block | Only the trailing run counts, keys must match the existing pattern, and a test covers a prose paragraph with a colon line | Phase 1 — The impact class agrees with the bump |
+| 2 | Map correction shifts consumer prompts | product | Pre-18 installs see `ask` instead of `notify` for 18.x | That is the recorded class; the classifier change only makes it stricter, never laxer | Phase 1 — The impact class agrees with the bump |
+| 3 | Floor shipping grows the standing layer | implementation | Extra rules on lever hosts cost tokens per spawn | The council weighs it in 3.1; the install test pins whichever side wins | Phase 3 — A floor ships where its skills ship |
+
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | reversible-technical | agent | A fully encrypted lineage vault and "Evolution Graph 2.0" are not planned here | No observed failure: private views are local, `0600` and refused inside a git tree (`src/scripts/_lib/lineage_ledger.ts:72-76`); field sealing is by design | a private lineage view or ledger is found in a backup, a git tree or a log |
+| D2 | product-owned | owner | Star-ask default stays as shipped | ADR-301 carries `reopen_policy: owner`; `star_ask.mode: off` and `AGENT_CONFIG_NO_STAR_ASK=1` exist | the owner reopens ADR-301 |
+
+## Acceptance Criteria
+
+- [ ] AC-1 — For every release in the impact map, the class equals what the fixed
+      parser computes over its span, and an unrecorded breaking commit yields
+      `action`.
+- [ ] AC-2 — No update path returns `auto` across a major without a map entry.
+- [ ] AC-3 — The guards in Phase 2 each have a test that was seen red.
+- [ ] AC-4 — Whether a safety floor ships with its skills is decided, recorded,
+      and pinned by an install test.
