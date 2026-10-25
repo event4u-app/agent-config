@@ -1659,8 +1659,11 @@ suite in the bundle this time.
       in both directions rather than once. Seen red for the intended reason:
       neutralising the binding drops 5 of the 9 cases and leaves the 4 that should
       stay green.
-- [ ] AC-2 — A modification review with one provider concluding produces a
+- [x] AC-2 — A modification review with one provider concluding produces a
       record that does not pass.
+      **Re-measured on `main` 2026-10-25 at `c9a30eb31b`, after #2657 landed the writer:**
+      `ratification_record_writer.test.ts` 18/18, including "a seat with no stance
+      line is kept as no-final-verdict and the record fails diversity".
       **MET 2026-10-12, and the council changed WHICH rule refuses it.** The writer
       exists (3.4) and the one-concluding-seat case runs end to end in
       `ratification_record_writer.test.ts`: the record IS written, it says
@@ -1677,8 +1680,15 @@ suite in the bundle this time.
       criterion is open until that code lands on a branch of its own. See
       § Staged, not abandoned.
 
-- [ ] AC-3 — A change to the question list, the verdict rule or the writer is
+- [x] AC-3 — A change to the question list, the verdict rule or the writer is
       refused without a passing record.
+      **Re-measured on `main` 2026-10-25 at `c9a30eb31b`, after #2678 landed 4.1:**
+      `check_kernel_edit_ratified --files` over `modification_review_questions.ts`,
+      `modification_review.ts` and `_lib/ratification_record_writer.ts` exits 1 and
+      names the ratification mechanism. Polarity: `prompts.ts`, `quorum.ts` and
+      `council_cli.ts` exit 0. `stance_tally.ts` now exits 1, by 4.1's design: it is
+      the stance parser the verdict rule imports, so it joined `REVIEWER_PATHS`.
+      The 2026-10-12 polarity list below predates that.
       **MET 2026-10-12, measured with the real CLI rather than from the test.**
       `check_kernel_edit_ratified --files src/scripts/ai_council/modification_review_questions.ts
       src/scripts/_lib/ratification_record_writer.ts` exits 1, names "the review
