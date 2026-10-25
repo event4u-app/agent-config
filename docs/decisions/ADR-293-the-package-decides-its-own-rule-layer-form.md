@@ -3,9 +3,12 @@ adr: 293
 status: accepted
 date: 2026-10-20
 decision: the-package-decides-its-own-rule-layer-form
-supersedes: ADR-267, ADR-278
+supersedes: ADR-267, ADR-278, ADR-284
 supersedes_scope: >-
   ADR-267 decision 3 only — the rollback is one setting. ADR-278 in full.
+  ADR-284 decisions 2, 3, 4 and 6, and the installer-writes-stubs half of its
+  decision 1 (named 2026-10-25, Amendment 1); its decision 5 and the
+  host-outside-the-axis-is-eager-all half of decision 1 still bind.
 superseded_by: —
 phase: road-to-a-setup-that-decides-itself · Phase 4
 type: structural
@@ -128,6 +131,42 @@ the reading a safety floor cannot survive.
 - **No consent floor moves.** `settings-ask-protocol`'s class contract, the
   `consentVerdict` reader and the B-class provenance requirement are untouched:
   removing a key removes a question, never a permission.
+
+## Amendment 1 (2026-10-25) — ADR-284 was superseded in part and not named
+
+Scope, stated first: this amendment adds a predecessor this record already
+superseded in fact. It changes no decision above, no behaviour and no default.
+
+ADR-284 (*the installer honours the host axis, on an explicit opt-in only*)
+acts on `lean_projection.hosts` and `lean_projection.mode: delivery`, both
+removed by this record, yet it read `accepted` with `superseded_by: —`, and
+this record's `supersedes` named only ADR-267 and ADR-278. A reader citing
+ADR-284 for how the installer decides to thin got no reason to look here. Per
+limb, measured against the tree on 2026-10-25:
+
+- **Decision 1, installer-writes-stubs half — superseded.** `installerThinsHost`
+  is a constant `false`; a fresh install writes the full layer, and the only
+  writer of a thinned installed layer is the `session_start` promotion of
+  step 3.3 of `road-to-a-setup-that-decides-itself`, gated by the decision
+  function and by a shipped switch that ships off.
+- **Decision 1, the other half — still binds.** A host outside the thinnable set
+  receives exactly what `eager-all` writes; `check_host_tree_parity` asserts it
+  and is unchanged.
+- **Decisions 2, 3 and 4 — superseded.** Each governs a key this record removed:
+  the template value is not consent, the user-global layer carries the opt-in,
+  the rollback is one setting. Their subjects are gone, as with ADR-278.
+- **Decision 5 — still binds the computed form.** Every rule file is written,
+  every body is delivered on match, and a consequence-class rule keeps its law
+  standing. The promotion is stricter than the record asked: it skips the
+  consequence class and the `safety-floor` tier entirely (`ruleForm`).
+- **Decision 6 — superseded.** It declined to change the default and named the
+  owner's condition (an arrival record for the current host version). The
+  default is now the decision function's output, whose arrival-record condition
+  is that same condition made executable.
+
+ADR-284 keeps `status: accepted`, on the precedent of its own scoped
+supersession of ADR-228: a record with a limb that still binds is narrowed, not
+retired.
 
 ## Consequences
 

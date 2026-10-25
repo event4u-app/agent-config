@@ -10,7 +10,7 @@ supersedes_scope: >-
   `lean_projection.hosts` on an install whose consumer-controlled layer sets
   `mode: delivery`. The `paths:` limb of the same sentence is NOT superseded and
   is named in `## Not reopened`.
-superseded_by: —
+superseded_by: ADR-293
 phase: road-to-an-installed-layer-that-is-thinned · Phase 3
 type: structural
 reopen_policy: unclassified
@@ -54,6 +54,11 @@ evidence:
 behaviour this record describes. It performs a **scoped** supersession of
 ADR-228 and **changes no default**: the default flip is a separate decision,
 reserved to the owner, and is deliberately absent from this record.
+
+**Superseded in part by ADR-293** (named 2026-10-25, its Amendment 1): decisions
+2, 3, 4 and 6 and the installer-writes-stubs half of decision 1 act on keys
+ADR-293 removed. Decision 5 and the host-outside-the-axis-is-eager-all half of
+decision 1 still bind the computed form.
 
 ## Context
 
