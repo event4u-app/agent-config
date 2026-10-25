@@ -21,7 +21,8 @@
  * waits for the next interval rather than being repeated, because a cadence
  * gated on a delivery receipt asks every session whenever the receipt is lost.
  *
- * WHAT STOPS IT. `star_ask.starred: true`, `star_ask.mode: off`,
+ * WHAT STOPS IT. `star_ask.starred: true`, `star_ask.mode: off`, a user-global
+ * settings layer that exists but cannot be read (it may hold the opt-out),
  * `AGENT_CONFIG_NO_STAR_ASK=1`, CI, replay mode, and any host without a
  * verified user channel (it never writes to stderr, which every host discards).
  * Settings are read from the USER-GLOBAL layers only: a repository cannot ask
@@ -55,6 +56,8 @@ export type StarAskMode = 'monthly' | 'off';
 export interface StarAskSettings {
     readonly mode: StarAskMode;
     readonly starred: boolean;
+    /** A layer exists but could not be read or parsed; the opt-out it may hold is unknown. */
+    readonly unreadable?: boolean;
 }
 
 /**
@@ -95,13 +98,21 @@ export function writeStarAskState(statePath: string, state: StarAskState): boole
     }
 }
 
-/** `star_ask.*` from the USER-GLOBAL settings layers only; later layers win. */
+/** `star_ask.*` from the USER-GLOBAL settings layers only; later layers win. Only an ABSENT layer sets nothing. */
 export function readStarAskSettings(paths: readonly string[] = user_global_settings_paths()): StarAskSettings {
     let mode: StarAskMode = 'monthly';
     let starred = false;
+    let unreadable = false;
     for (const p of paths) {
+        let raw: string;
         try {
-            const doc = parseYaml(fs.readFileSync(p, 'utf-8'), { version: '1.1' }) as Record<string, unknown> | null;
+            raw = fs.readFileSync(p, 'utf-8');
+        } catch (e) {
+            if ((e as NodeJS.ErrnoException).code !== 'ENOENT') unreadable = true;
+            continue;
+        }
+        try {
+            const doc = parseYaml(raw, { version: '1.1' }) as Record<string, unknown> | null;
             const block = doc?.['star_ask'];
             if (block === null || typeof block !== 'object' || Array.isArray(block)) continue;
             const b = block as Record<string, unknown>;
@@ -110,10 +121,10 @@ export function readStarAskSettings(paths: readonly string[] = user_global_setti
             else if (b['mode'] === 'off' || b['mode'] === false) mode = 'off';
             if (typeof b['starred'] === 'boolean') starred = b['starred'];
         } catch {
-            /* absent or malformed layer → it sets nothing */
+            unreadable = true;
         }
     }
-    return { mode, starred };
+    return { mode, starred, ...(unreadable ? { unreadable: true } : {}) };
 }
 
 export function starAskText(): string {
@@ -144,6 +155,7 @@ export function suppression(deps: Pick<StarAskDeps, 'sessionId' | 'viaHost' | 'e
     if (deps.env['AGENT_CONFIG_NO_STAR_ASK'] === '1') return 'kill switch';
     if (deps.settings.starred) return 'starred';
     if (deps.settings.mode === 'off') return 'mode off';
+    if (deps.settings.unreadable === true) return 'settings unreadable';
     if (!deps.viaHost || deps.sessionId === null) return 'no user channel';
     return null;
 }

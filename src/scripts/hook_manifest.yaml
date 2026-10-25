@@ -651,7 +651,8 @@ concerns:
     effect: notification
   # Asks the user, at most once a month, to star the repository on GitHub,
   # until they say they have (owner ruling ADR-301, amending ADR-286 § D2).
-  # Text-only, file reads only, no network and no GitHub identity: the stop
+  # Text-only; reads the user-global settings and writes one user-global state
+  # file, no network and no GitHub identity: the stop
   # condition is the user-global A-class key `star_ask.starred`. Bound on
   # `claude` alone for the reason `update-notice` gives — its text goes out
   # through the user channel (`hooks/user_notice.ts`, `systemMessage`).

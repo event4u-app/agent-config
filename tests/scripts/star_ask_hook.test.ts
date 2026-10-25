@@ -231,10 +231,28 @@ describe('settings', () => {
         expect(readStarAskSettings([quoted]).mode).toBe('off');
     });
 
-    it('ignores values outside the schema and malformed layers', () => {
+    it('ignores values outside the schema', () => {
         const a = layer('a.yml', 'star_ask:\n  mode: weekly\n  starred: "yes"\n');
-        const b = layer('b.yml', ':::not yaml');
-        expect(readStarAskSettings([a, b])).toEqual({ mode: 'monthly', starred: false });
+        expect(readStarAskSettings([a])).toEqual({ mode: 'monthly', starred: false });
+    });
+
+    it('a layer that exists but cannot be parsed is unreadable, never "sets nothing"', () => {
+        // The council's second refusal: an opt-out in a corrupted file must not
+        // turn back into an ask.
+        const a = layer('a.yml', 'star_ask:\n  starred: true\n');
+        const b = layer('b.yml', 'star_ask: [unclosed\n');
+        expect(readStarAskSettings([a, b]).unreadable).toBe(true);
+    });
+
+    it('an unreadable settings layer suppresses the ask', () => {
+        writeStarAskState(path.join(tmp, 'star-ask.json'), { first_seen_at: T0.toISOString(), last_asked_at: null });
+        const h = harness();
+        const due = new Date(T0.getTime() + 365 * DAY);
+        expect(h.run({ now: due, settings: { mode: 'monthly', starred: false, unreadable: true } })).toEqual({
+            asked: false,
+            reason: 'settings unreadable',
+        });
+        expect(h.out).toEqual([]);
     });
 });
 
