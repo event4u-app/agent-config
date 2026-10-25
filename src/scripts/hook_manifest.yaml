@@ -683,9 +683,9 @@ concerns:
   # tool_use_id) pending, and only that call's own post_tool_use approves the
   # session — a "no", or a spawn that ran without an ask, approves nothing. Never a
   # deny, never an amount. `effect: confirmation` is the only effect whose `ask`
-  # the dispatcher hands to the host. In a headless session nobody can answer,
-  # so a paid fan-out there does not start without a billing grant — the
-  # conservative outcome. Kill switch: `AGENT_CONFIG_NO_SPAWN_ASK=1`. Same
+  # the dispatcher hands to the host. CI and print mode do not silence it: an
+  # unanswered ask keeps the spawn from running (observed on 2.1.310), so a
+  # headless paid fan-out needs a billing grant. Kill switch: `AGENT_CONFIG_NO_SPAWN_ASK=1`. Same
   # script as `quota-notice`.
   metered-spawn-ask:
     script: src/scripts/quota_notice_hook.ts

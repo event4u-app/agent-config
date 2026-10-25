@@ -843,7 +843,10 @@ that may bill per token until the user has allowed one. The ask marks that call 
 hashed `tool_use_id`) pending, and only that call's own `post_tool_use` approves the
 session, so a "no", a spawn that ran under a billing grant or with its ask suppressed, and
 a call with no id approve nothing. Markers expire after eight days, and the approval's age
-is checked when it is read, not only when a new marker is written. `effect: confirmation`
+is checked when it is read, not only when a new marker is written. Only `AGENT_CONFIG_NO_SPAWN_ASK=1` or a billing
+grant silences the ask; CI and print mode do not, and an unanswered ask keeps the spawn
+from running (observed on Claude Code 2.1.310 in print mode, with a control run that
+executed the same allowed call), so a headless paid fan-out needs a billing grant. `effect: confirmation`
 is privileged: `lint_hook_manifest` admits it only for the concerns named in
 `CONFIRMATION_CONCERNS`, so adding one is a reviewed edit of the linter. The rewrite half is
 answered separately by ADR-285 (one stage writes, no concern does), and no

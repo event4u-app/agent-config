@@ -137,6 +137,19 @@ describe('spawn ask', () => {
         expect(spawnAsk(askDeps({ toolUseId: 'call-2' }))).toMatch(/may bill per token/);
     });
 
+    it('CI, no user channel or no session id do not silence the ask; a billing grant does', () => {
+        for (const over of [{ env: { CI: 'true' } }, { viaHost: false }, { sessionId: null }, { env: { GITHUB_ACTIONS: 'true' } }]) {
+            expect(spawnAsk(askDeps(over)), JSON.stringify(over)).toMatch(/may bill per token/);
+        }
+        grant();
+        expect(spawnAsk(askDeps({ env: { CI: 'true', AC_BILLING_GRANT: 'run-1' } }))).toBeNull();
+    });
+
+    it('a call asked about without a session id can never approve a session', () => {
+        spawnAsk(askDeps({ sessionId: null }));
+        expect(recordSpawnRan({ sessionId: null, stateEnv, toolName: 'Agent', toolUseId: 'call-1', now: NOW })).toBe(false);
+    });
+
     it('a spawn whose ask was suppressed approves nothing', () => {
         expect(spawnAsk(askDeps({ env: { AGENT_CONFIG_NO_SPAWN_ASK: '1' } }))).toBeNull();
         expect(ran()).toBe(false);

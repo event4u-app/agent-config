@@ -27,9 +27,10 @@
  * race for the same notice cannot both print it. Claims older than eight days
  * are removed when a new one is taken.
  *
- * WHAT STOPS IT. `AGENT_CONFIG_NO_QUOTA_NOTICE=1` (notices) or
- * `AGENT_CONFIG_NO_SPAWN_ASK=1` (the ask), CI, replay mode, and any host
- * without a verified user channel. Fail-open on every path: exit 0.
+ * WHAT STOPS IT. The notices: `AGENT_CONFIG_NO_QUOTA_NOTICE=1`, CI, replay
+ * mode, and any host without a verified user channel. The ask: only
+ * `AGENT_CONFIG_NO_SPAWN_ASK=1` or a billing grant — in CI or print mode an
+ * unanswered ask keeps the spawn from running. Fail-open on every path: exit 0.
  */
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
@@ -95,13 +96,10 @@ export function claimOnce(key: string, stateEnv?: EnvMap | null, now: number = D
     }
 }
 
-export function suppression(
-    deps: Pick<QuotaNoticeDeps, 'sessionId' | 'viaHost' | 'env'>,
-    killSwitch = 'AGENT_CONFIG_NO_QUOTA_NOTICE',
-): string | null {
+export function suppression(deps: Pick<QuotaNoticeDeps, 'sessionId' | 'viaHost' | 'env'>): string | null {
     const ci = ['1', 'true'].includes((deps.env['CI'] ?? '').trim().toLowerCase()) || deps.env['GITHUB_ACTIONS'] === 'true';
     if (ci) return 'ci';
-    if (deps.env[killSwitch] === '1') return 'kill switch';
+    if (deps.env['AGENT_CONFIG_NO_QUOTA_NOTICE'] === '1') return 'kill switch';
     if (!deps.viaHost || deps.sessionId === null) return 'no user channel';
     return null;
 }
@@ -165,7 +163,11 @@ function touch(p: string, now: number): void {
  */
 export function spawnAsk(deps: AskDeps): string | null {
     if (deps.toolName === null || !SPAWN_TOOLS.has(deps.toolName)) return null;
-    if (suppression(deps, 'AGENT_CONFIG_NO_SPAWN_ASK') !== null) return null;
+    // Only the explicit opt-out silences the ask. CI, a missing user channel or
+    // a missing session id suppress the notices, never this: an unanswerable ask
+    // keeps the spawn from running (observed on Claude Code 2.1.310 in print
+    // mode), so a headless paid fan-out needs a billing grant, as stated.
+    if (deps.env['AGENT_CONFIG_NO_SPAWN_ASK'] === '1') return null;
     if (deps.billing.billing_class !== 'metered') return null;
     if (hasBillingGrant(deps.repoRoot, deps.env)) return null;
     if (spawnApproved(deps.sessionId, deps.stateEnv, deps.now)) return null;
