@@ -20,7 +20,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-export type ModCapability = 'verdict-capable' | 'prompt-capable' | 'process-net' | 'display-only' | 'unreadable';
+export type ModCapability = 'verdict-capable' | 'prompt-capable' | 'side-effects' | 'display-only' | 'unreadable';
 
 export interface InstalledMod {
     /** The registry key, `<plugin>@<marketplace>`. */
@@ -39,7 +39,7 @@ export interface ModCensus {
 const CLASSES: ReadonlyArray<readonly [ModCapability, RegExp]> = [
     ['verdict-capable', /['"](tool\.check|tool\.call|plugin\.register)['"]/],
     ['prompt-capable', /['"](prompt\.[a-z.]+|session\.append)['"]/],
-    ['process-net', /\$\.(process|http)\b/],
+    ['side-effects', /\$\.(process|http|model)\b|\$\.fs\.write\b/],
 ];
 
 export function classifyModuleSource(source: string): ModCapability {
@@ -62,16 +62,35 @@ function rank(c: ModCapability): number {
     return c === 'unreadable' ? -1 : i === -1 ? CLASSES.length : i;
 }
 
+/**
+ * Where a plugin's hooks config lives, and the directory its module paths are
+ * relative to. The manifest's `hooks` field wins — a path, or the config inline,
+ * as this package's own module uses — and `hooks/hooks.json` is the default.
+ */
+function hooksConfig(installPath: string): { config: unknown; base: string } {
+    const manifest = readJson(path.join(installPath, '.claude-plugin', 'plugin.json')) as
+        | { hooks?: unknown }
+        | undefined;
+    const declared = manifest?.hooks;
+    if (typeof declared === 'string') {
+        const file = path.resolve(installPath, declared);
+        return { config: readJson(file), base: path.dirname(file) };
+    }
+    if (declared !== null && typeof declared === 'object') return { config: declared, base: installPath };
+    const file = path.join(installPath, 'hooks', 'hooks.json');
+    return { config: readJson(file), base: path.dirname(file) };
+}
+
 function modFor(id: string, installPath: string): InstalledMod | null {
-    const hooks = readJson(path.join(installPath, 'hooks', 'hooks.json'));
-    const modules = (hooks as { modules?: unknown } | undefined)?.modules;
+    const { config, base } = hooksConfig(installPath);
+    const modules = (config as { modules?: unknown } | undefined)?.modules;
     if (!Array.isArray(modules) || modules.length === 0) return null;
     const rels = modules.filter((m): m is string => typeof m === 'string');
     let capability: ModCapability | null = null;
     for (const rel of rels) {
         let source: string;
         try {
-            source = fs.readFileSync(path.resolve(installPath, 'hooks', rel), 'utf-8');
+            source = fs.readFileSync(path.resolve(base, rel), 'utf-8');
         } catch {
             return { id, capability: 'unreadable', modules: rels };
         }
@@ -102,6 +121,22 @@ export function installedMods(home: string): ModCensus {
     }
     mods.sort((a, b) => a.id.localeCompare(b.id));
     return { registry: 'read', mods };
+}
+
+/**
+ * The context fill as text — the same file and figure the shipped module shows,
+ * so the value is reachable on every host (ADR-302 condition I5). Null when the
+ * file is absent or carries a schema this reader does not know.
+ */
+export function contextFillLine(projectRoot: string): string | null {
+    const fill = readJson(path.join(projectRoot, 'agents', 'runtime', 'state', 'context-fill.json')) as
+        | { schema_version?: unknown; final_context_tokens?: unknown; recycle_threshold_tokens?: unknown }
+        | undefined;
+    if (fill?.schema_version !== 1) return null;
+    const tokens = fill.final_context_tokens;
+    const threshold = fill.recycle_threshold_tokens;
+    if (typeof tokens !== 'number' || typeof threshold !== 'number' || threshold <= 0) return null;
+    return `  context fill: ${Math.round((tokens / threshold) * 100)}% of recycle threshold (${tokens} / ${threshold} tokens, last stop)`;
 }
 
 /** The opt-in command for this package's own read-only module (ADR-302). */

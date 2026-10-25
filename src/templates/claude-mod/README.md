@@ -22,7 +22,7 @@ Then, at a Claude Code prompt: `/plugin install agent-config-status@agent-config
   `$.ui.status`. A CI test holds it to that set.
 - Reads relative to the session's working directory: a session started below the
   project root shows nothing. Silence is the failure, never a wrong number.
-- Everything it shows is also available without mods: the same file, and
-  `agent-config doctor`.
+- Everything it shows is also available without mods: the same file, and the
+  `context fill` line of `agent-config doctor neighbours`.
 
 The class it belongs to is recorded in ADR-302 of the agent-config repository.

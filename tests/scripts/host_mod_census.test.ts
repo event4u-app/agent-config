@@ -14,7 +14,7 @@ import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { main } from '../../src/scripts/_cli/cmd_doctor_neighbours.js';
-import { classifyModuleSource, installedMods, renderMods } from '../../src/scripts/_lib/host_mod_census.js';
+import { classifyModuleSource, contextFillLine, installedMods, renderMods } from '../../src/scripts/_lib/host_mod_census.js';
 
 const dirs: string[] = [];
 
@@ -60,7 +60,9 @@ describe('classifyModuleSource', () => {
     it('names the strongest capability a module hooks or calls', () => {
         expect(classifyModuleSource(VERDICT)).toBe('verdict-capable');
         expect(classifyModuleSource(PROMPT)).toBe('prompt-capable');
-        expect(classifyModuleSource(NET)).toBe('process-net');
+        expect(classifyModuleSource(NET)).toBe('side-effects');
+        expect(classifyModuleSource("$.fs.write('a', 'b')")).toBe('side-effects');
+        expect(classifyModuleSource("await $.model.call({})")).toBe('side-effects');
         expect(classifyModuleSource(DISPLAY)).toBe('display-only');
     });
 
@@ -88,6 +90,31 @@ describe('installedMods', () => {
         ]);
     });
 
+    it('follows a hooks config the manifest names outside hooks/hooks.json', () => {
+        const home = tmp();
+        const p = path.join(home, '.claude', 'plugins', 'cache', 'moved', '0.1.0');
+        write(p, '.claude-plugin/plugin.json', JSON.stringify({ name: 'moved', hooks: './module/hooks.json' }));
+        write(p, 'module/hooks.json', JSON.stringify({ modules: ['./register.ts'] }));
+        write(p, 'module/register.ts', VERDICT);
+        const inline = path.join(home, '.claude', 'plugins', 'cache', 'inline', '0.1.0');
+        write(inline, '.claude-plugin/plugin.json', JSON.stringify({ name: 'inline', hooks: { modules: ['./m.ts'] } }));
+        write(inline, 'm.ts', PROMPT);
+        plantRegistry(home, { 'moved@m': p, 'inline@m': inline });
+        expect(installedMods(home).mods.map((m) => [m.id, m.capability])).toEqual([
+            ['inline@m', 'prompt-capable'],
+            ['moved@m', 'verdict-capable'],
+        ]);
+    });
+
+    it('finds the module this package ships, laid out as it is staged', () => {
+        const home = tmp();
+        const own = path.resolve(__dirname, '..', '..', 'src', 'templates', 'claude-mod');
+        plantRegistry(home, { 'agent-config-status@agent-config-local': own });
+        expect(installedMods(home).mods).toEqual([
+            expect.objectContaining({ id: 'agent-config-status@agent-config-local', capability: 'display-only' }),
+        ]);
+    });
+
     it('reports an unreadable module instead of guessing a class', () => {
         const home = tmp();
         const p = plantPlugin(home, 'gone', DISPLAY);
@@ -106,6 +133,23 @@ describe('installedMods', () => {
 
     it('is absent on a home with no plugin registry', () => {
         expect(installedMods(tmp())).toEqual({ registry: 'absent', mods: [] });
+    });
+});
+
+describe('contextFillLine', () => {
+    it('prints the same figure the module shows, from the same file', () => {
+        const project = tmp();
+        write(project, 'agents/runtime/state/context-fill.json', JSON.stringify({
+            schema_version: 1, final_context_tokens: 150000, recycle_threshold_tokens: 160000,
+        }));
+        expect(contextFillLine(project)).toBe('  context fill: 94% of recycle threshold (150000 / 160000 tokens, last stop)');
+    });
+
+    it('is absent without the file or with an unknown schema', () => {
+        const project = tmp();
+        expect(contextFillLine(project)).toBeNull();
+        write(project, 'agents/runtime/state/context-fill.json', JSON.stringify({ schema_version: 2 }));
+        expect(contextFillLine(project)).toBeNull();
     });
 });
 

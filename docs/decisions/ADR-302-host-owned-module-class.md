@@ -67,7 +67,7 @@ this class only when all five conditions hold:
 | I2 | It rewrites no tool input, prompt, prompt section or session row, and adds no context (ADR-285; prompt-cache prefix stability). |
 | I3 | It declares only `$.fs.read`, `$.fs.exists` and `$.ui.*` host calls — no `$.process`, `$.http`, `$.model`, `$.fs.write` or `engine.create`. |
 | I4 | It only reads, so a hook that throws is skipped by the host and nothing is let through; a guarding hook is not admissible under this class. |
-| I5 | Every value it shows is also reachable as text on hosts without modules (`doctor`, receipt). The module is a display surface, never a source of truth. |
+| I5 | Every value it shows is also reachable as text on hosts without modules (`doctor neighbours` prints the context fill). The module is a display surface, never a source of truth. |
 
 A module that needs to guard (hold a verdict) is outside Class H and needs its own
 record; this ADR admits readers only.
@@ -76,8 +76,9 @@ record; this ADR admits readers only.
 
 - One module ships under this class (`src/templates/claude-mod/`), opt-in, with
   I3 pinned by a test that reads its source and runs without the Claude CLI.
-- `doctor neighbours` reports other installed modules and what they hook, because
-  a foreign module is not bound by this class.
+- `doctor neighbours` reports other installed modules with a capability class
+  (verdict-capable, prompt-capable, side-effects, display-only) read from their
+  source, because a foreign module is not bound by this class.
 - A future holder or sensor that changes or records verdicts is a new decision,
   not an extension of this one.
 
