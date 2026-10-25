@@ -227,7 +227,7 @@ pre-registration in place, settings lint green with the new key.*
       `skill_plan_usage` block of `road-to-a-plan-that-stays-true` 4.2 for a PR or
       session unit: planned, applied, waived (reason), missing, unplanned; rules
       `not-observable`. Waiver reasons are `UntrustedDatum`, like review text.
-      verify: `npx vitest run tests/scripts/retro_facts.test.ts -t plan-versus-use` -> exit 0 — a fixture block with one missing skill appears in the unit's facts and `missing` is never read as 0
+      verify: `npx vitest run tests/scripts/retro_facts.test.ts -t plan-versus-use` -> 0 — a fixture block with one missing skill appears in the unit's facts and `missing` is never read as 0
 
 ## Phase 2 — `/retro` by hand
 
@@ -270,7 +270,7 @@ pre-registration in place, settings lint green with the new key.*
       skill-insufficient | discovery-gap` (`discovery-gap`: an unplanned skill was
       needed). A miss whose cause cannot be read from the facts is `undecided`,
       never guessed.
-      verify: `npx vitest run tests/scripts/retro.test.ts -t miss-cause` -> exit 0 — each cause has a fixture; a fixture with no deciding fact yields `undecided`
+      verify: `npx vitest run tests/scripts/retro.test.ts -t miss-cause` -> 0 — each cause has a fixture; a fixture with no deciding fact yields `undecided`
 
 ## Phase 3 — Three paths, one queue
 
@@ -391,7 +391,7 @@ pre-registration in place, settings lint green with the new key.*
       classification fix; `not-reachable` a package record on the delivery path;
       `ignored` an intake signal; `skill-insufficient` an override proposal;
       `waived-justified` nothing. Nothing is written into a skill, rule or corpus.
-      verify: `npx vitest run tests/scripts/retro.test.ts -t miss-cause-target` -> exit 0 — each cause maps to its one target and none writes under `src/`
+      verify: `npx vitest run tests/scripts/retro.test.ts -t miss-cause-target` -> 0 — each cause maps to its one target and none writes under `src/`
 
 ## Phase 5 — Effect, not volume
 
@@ -448,7 +448,7 @@ pre-registration in place, settings lint green with the new key.*
 - [ ] **5.5 Held or recurred per skill and cause.** The held/recurred reading of
       5.1 also counts per `(skill, miss_cause)`, so a fix to a skill's routing is
       seen to hold or not.
-      verify: `npx vitest run tests/scripts/retro.test.ts -t held-per-skill-cause` -> exit 0
+      verify: `npx vitest run tests/scripts/retro.test.ts -t held-per-skill-cause` -> 0
 
 ## Blockers
 

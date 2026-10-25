@@ -65,18 +65,18 @@ Evidence (read): `src/scripts/roadmap_context.ts:470`
       per re-verified statement the intake labels `still-true | already-fixed |
       never-true | unverifiable`. Never blocking (drift is not falsity). Council
       only on decision drift; a degraded council is never consent.
-      verify: `grep -c 'still-true' docs/contracts/roadmap-revalidation-v1.md` -> ≥ 1
+      verify: `grep -c 'still-true' docs/contracts/roadmap-revalidation-v1.md` -> /^[1-9]/
 - [x] **1.2 `tree_pin:` on every new roadmap.** `new_roadmap` writes <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/git_drift.ts -->
       `tree_pin: <short HEAD>` into the skeleton; the template documents it. A
       reader `readPin` accepts the field and the two older forms
       (`drafted-against:`, a `read at \`main@<sha>\`` context line); no mass
       migration.
-      verify: `npx vitest run tests/scripts/roadmap_revalidation.test.ts` -> exit 0 — covers all three forms and the skeleton
+      verify: `npx vitest run tests/scripts/roadmap_revalidation.test.ts` -> 0 — covers all three forms and the skeleton
 - [x] **1.3 Shared drift and citation parsing in `_lib/`.** `driftedPaths` moves <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/git_drift.ts -->
       to `src/scripts/_lib/git_drift.ts` and both callers use it; the citation
       parser reads `` `path` `` and `` `path:line` `` / `` `path:a-b` `` and
       reports `beyond-end` when a cited line no longer exists.
-      verify: `npx vitest run tests/scripts/roadmap_revalidation.test.ts tests/scripts/report_memory_pointers.test.ts` -> exit 0
+      verify: `npx vitest run tests/scripts/roadmap_revalidation.test.ts tests/scripts/report_memory_pointers.test.ts` -> 0
 - [x] **1.4 `roadmap:context --revalidate <slug|path>`.** No new verb. Prints the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/git_drift.ts -->
       roadmap verdict, each non-`unchanged` citation, and each `## Decisions` row
       whose evidence or `revisit if` cell cites a drifted or missing path.
@@ -84,7 +84,7 @@ Evidence (read): `src/scripts/roadmap_context.ts:470`
       without reading line ranges. `staleArtefactVerdict` gets its first
       production caller here. `--advance` rewrites `tree_pin` to HEAD and the
       `revalidated:` line, and refuses while the verdict is `broken`.
-      verify: `npx vitest run tests/scripts/roadmap_revalidation.test.ts` -> exit 0 — a fixture repo with one drifted, one deleted and one unchanged citation yields drifted/missing/unchanged and verdict `broken`
+      verify: `npx vitest run tests/scripts/roadmap_revalidation.test.ts` -> 0 — a fixture repo with one drifted, one deleted and one unchanged citation yields drifted/missing/unchanged and verdict `broken`
 
 ## Phase 2 — The moments, bound to carriers that already run
 
@@ -94,21 +94,21 @@ Evidence (read): `src/scripts/roadmap_drain_queue.ts:103`
       emitted roadmap without a readable pin as a content failure, so a run that
       skips the pin stays in `emitted`; `/analyze:inbox` Phase 6 says the pin is
       the emit-time HEAD.
-      verify: `npx vitest run tests/scripts/analysis_validate.test.ts` -> exit 0 — reds on a fixture without `tree_pin:`
+      verify: `npx vitest run tests/scripts/analysis_validate.test.ts` -> 0 — reds on a fixture without `tree_pin:`
 - [x] **2.2 Execution start sees freshness.** Each drain-queue entry carries <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
       `freshness: fresh | drifted | broken | unpinned` from the cheap path; the
       text render shows it; no fifth step class. On `drifted` or `broken` the
       loop revalidates at run start before the first mutation; every lane runs
       that loop, so the brief does not repeat it. <!-- corrected-from-reproduction: the brief sentence put process-full-all.md over the 16,000-char depth ceiling (2 chars of headroom) -->
-      verify: `npx vitest run tests/scripts/roadmap_drain_queue.test.ts tests/scripts/process_full_lane_brief.test.ts` -> exit 0
+      verify: `npx vitest run tests/scripts/roadmap_drain_queue.test.ts tests/scripts/process_full_lane_brief.test.ts` -> 0
 - [x] **2.3 Phase boundary and resume.** The context-refresh subsection of <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
       `roadmap-process-loop-set.md` runs `--revalidate` when the fingerprint
       differs, and the agent re-verifies each drifted statement, labels it and
       corrects it in place (`corrected-from-reproduction`), then `--advance`.
-      verify: `grep -n 'revalidate' src/agent-src/contexts/execution/roadmap-process-loop-set.md` -> ≥ 1
+      verify: `grep -n 'revalidate' src/agent-src/contexts/execution/roadmap-process-loop-set.md` -> /^[1-9]/
 - [x] **2.4 Closure.** The close procedure runs `--revalidate` before archiving; <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
       a `broken` verdict at closure is named in the closing summary.
-      verify: `grep -n 'revalidate' src/agent-src/contexts/execution/roadmap-process-loop-close.md` -> ≥ 1
+      verify: `grep -n 'revalidate' src/agent-src/contexts/execution/roadmap-process-loop-close.md` -> /^[1-9]/
 
 ## Phase 3 — The council only where a decision moved
 
@@ -119,13 +119,13 @@ Evidence (read): `src/scripts/ai_council/prompts.ts:58`
       mode: the row, its evidence, the diff of its drifted paths since the pin,
       and the closed answer set `holds | holds-changed | falls`. Numbers moving
       never produce a question.
-      verify: `npx vitest run tests/scripts/roadmap_revalidation.test.ts` -> exit 0 — a decision citing a drifted path yields one question; a step citing it yields none
+      verify: `npx vitest run tests/scripts/roadmap_revalidation.test.ts` -> 0 — a decision citing a drifted path yields one question; a step citing it yields none
 - [x] **3.2 Routing and the degraded case, in the procedure.** The process loop <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/roadmap_drain_queue.ts -->
       sends rendered questions through `council_cli` and records the answer as a
       `## Decisions` row `resolved by: council:<date>`; one seat or a split is
       `provisional` for technical classes and an `agents/owner-questions.md`
       row for owner-reserved ones — never consent.
-      verify: `grep -n 'holds-changed' src/agent-src/contexts/execution/roadmap-process-loop-set.md` -> ≥ 1
+      verify: `grep -n 'holds-changed' src/agent-src/contexts/execution/roadmap-process-loop-set.md` -> /^[1-9]/
 
 ## Phase 4 — Planned skills, read back at review and closure
 
@@ -136,18 +136,18 @@ Evidence (read): `src/scripts/report_skill_activation.ts:188`
       `waived: <skill> — <reason>` with reason from the closed set
       `not-applicable-scope | superseded-by:<skill> | unavailable-on-host |
       already-satisfied`. The template documents both.
-      verify: `npx vitest run tests/scripts/skill_plan_usage.test.ts` -> exit 0 — parses both lines and rejects a reason outside the set
+      verify: `npx vitest run tests/scripts/skill_plan_usage.test.ts` -> 0 — parses both lines and rejects a reason outside the set
 - [x] **4.2 `skill_plan_usage` reads plan against transcript.** For a roadmap and <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/skill_plan_usage.ts -->
       one or more session transcripts: per planned skill `applied | waived |
       missing`, plus `unplanned` skills that were applied; applied means a
       `Skill` tool call or a read of that skill's `SKILL.md` — a tool event,
       never transcript prose. Rules report `not-observable` here.
-      verify: `npx vitest run tests/scripts/skill_plan_usage.test.ts` -> exit 0 — a fixture transcript with one Skill call, one SKILL.md read and one prose mention yields two applied and one missing
+      verify: `npx vitest run tests/scripts/skill_plan_usage.test.ts` -> 0 — a fixture transcript with one Skill call, one SKILL.md read and one prose mention yields two applied and one missing
 - [x] **4.3 Review and closure consume it.** `/review-changes` puts the block in <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/skill_plan_usage.ts -->
       the input of `judge-synthesis` when it runs inside a roadmap run, and
       `missing` is a process finding; the close procedure prints it before the
       archive.
-      verify: `grep -n 'skill_plan_usage' src/domains/engineering-base/review/changes/command.md src/agent-src/contexts/execution/roadmap-process-loop-close.md` -> 2 files
+      verify: `grep -n 'skill_plan_usage' src/domains/engineering-base/review/changes/command.md src/agent-src/contexts/execution/roadmap-process-loop-close.md` -> 0
 
 ## Phase 5 — Defects the intake found
 
@@ -158,19 +158,19 @@ Evidence (executed): `src/scripts/optimize_skill_description.ts:128`
       `docs/contracts/review-lens-schema.md:62` links a path that no longer
       exists. Fix the wording and the link; recapture the golden packs that
       record the old string.
-      verify: `grep -rn 'four-judge\|five-judge' src docs tests/golden/baseline` -> 0
+      verify: `grep -rn 'four-judge\|five-judge' src docs tests/golden/baseline` -> /^$/
 - [x] **5.2 One selection rule.** `optimize_skill_description` reports the paired <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/paired_verdict.ts -->
       verdict on the test split per candidate instead of picking by raw `>`;
       `underpowered` is printed, never overwritten.
-      verify: `npx vitest run tests/scripts/optimize_skill_description.test.ts` -> exit 0
+      verify: `npx vitest run tests/scripts/optimize_skill_description.test.ts` -> 0
 - [x] **5.3 Multiple-comparison correction.** A Holm step-down over the <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/paired_verdict.ts -->
       candidates of one run, next to the sign test in `_lib/paired_verdict.ts`,
       used by 5.2.
-      verify: `npx vitest run tests/scripts/paired_verdict.test.ts` -> exit 0 — five candidates each just under α alone are not significant after correction
+      verify: `npx vitest run tests/scripts/paired_verdict.test.ts` -> 0 — five candidates each just under α alone are not significant after correction
 - [x] **5.4 One id per owner question.** `agents/owner-questions.md` carries <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: src/scripts/_lib/paired_verdict.ts -->
       `OQ-11` twice; the self-modification one, which nothing cites, becomes
       the next free id (the archived memory roadmap cites the teardown one).
-      verify: `grep -c '^### OQ-11 ' agents/owner-questions.md` -> 1 <!-- merged with main: #2683 renumbered and answered the self-modification question as OQ-12 the same day; this branch took main's numbering and filed its two questions as OQ-14 and OQ-15 -->
+      verify: `grep -c '^### OQ-11 ' agents/owner-questions.md` -> /^1$/ <!-- merged with main: #2683 renumbered and answered the self-modification question as OQ-12 the same day; this branch took main's numbering and filed its two questions as OQ-14 and OQ-15 -->
 
 ## What this roadmap does not do
 
