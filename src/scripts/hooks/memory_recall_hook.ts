@@ -151,6 +151,18 @@ export function nodeModulesIsSymlink(root: string): boolean {
     }
 }
 
+/** True when `<root>/package.json` names this package. */
+export function rootIsPackageSelf(root: string): boolean {
+    try {
+        return JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8')).name === '@event4u/agent-config';
+    } catch {
+        return false;
+    }
+}
+
+/** The memory lives in this package's maintainer store; a consumer has neither it nor the reason. */
+const inPkg = (ctx: RuleContext): boolean => ctx.roots.some(rootIsPackageSelf);
+
 /** True when ANY candidate root carries a symlinked `node_modules`. */
 export function anyRootHasSymlinkedNodeModules(ctx: RuleContext): boolean {
     return ctx.roots.some(nodeModulesIsSymlink);
@@ -171,39 +183,32 @@ export const RECALL_RULES: readonly RecallRule[] = [
         slug: 'worktree-build-poisons-install-bundle',
         tools: COMMAND_TOOLS,
         test: (call) => BUILD_COMMAND_RE.test(call.command),
-        requires: anyRootHasSymlinkedNodeModules,
-        why:
-            'node_modules here is a SYMLINK, so esbuild resolves every dependency ' +
-            'outside the repo root and bakes ../../../node_modules/ paths into the ' +
-            'TRACKED dist/install/install.mjs',
+        requires: (c) => inPkg(c) && anyRootHasSymlinkedNodeModules(c),
+        why: 'SYMLINK node_modules: esbuild bakes ../../../node_modules/ into tracked dist/install/install.mjs',
     },
     {
         id: 'adr-edit',
         slug: 'adding-an-adr-downstream-surface',
+        requires: inPkg,
         tools: EDIT_TOOLS,
         test: (call) => call.paths.some((p) => ADR_PATH_RE.test(p)),
-        why:
-            'an ADR has TWO generated consumers — the INDEX and the evidence census; ' +
-            'census staleness reds the Rule-backstops CI job and no local preflight ' +
-            'gate catches it',
+        why: 'an ADR feeds the INDEX and evidence census; a stale census reds Rule-backstops',
     },
     {
         id: 'install-source-edit',
         slug: 'adding-a-src-install-module-needs-two-builds',
+        requires: inPkg,
         tools: EDIT_TOOLS,
         test: (call) => call.paths.some((p) => INSTALL_SOURCE_RE.test(p)),
-        why:
-            'this source is committed twice — build:cli AND build:install-bundle are ' +
-            'both required, and neither freshness gate is in task preflight',
+        why: 'committed twice: run build:cli and build:install-bundle',
     },
     {
         id: 'hook-latency-bench',
         slug: 'hook-latency-gate-has-runner-variance',
+        requires: inPkg,
         tools: COMMAND_TOOLS,
         test: (call) => LATENCY_BENCH_RE.test(call.command),
-        why:
-            "reading main's own most recent run of the same job is step ONE, not the " +
-            'fallback — measuring locally first answered nothing and cost a CI cycle',
+        why: "read main's latest run of this job as step ONE",
     },
 ];
 

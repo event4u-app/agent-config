@@ -336,3 +336,14 @@ On or after **2026-10-31**, with ≥ 20 lines in the ledger: state in this page
 the p95 of `wall_ms`, the `preferred` count from
 `agent-config memory:learn --format status`, and the command each figure came
 from. Then — and only then — step 2.3 becomes decidable.
+
+**Second measure, added 2026-10-25** (road-to-a-memory-that-names-its-moment
+1.5). `wall_ms` covers read + aggregate only; the host gives ALL SessionEnd
+hooks together **1.5 s** and AC writes no `timeout` that would raise it. So the
+closing statement also gives the p95 of the whole `session_end` dispatch,
+measured with `./scripts-run src/scripts/bench_hook_latency --runs 20` (row
+`session_end`, via the bundle), against **1.5 s**. Baseline on 2026-10-25, one
+machine: p50 60 ms · p95 61 ms · max 61 ms (n=20), with defaults — about 4 % of
+the budget. A drafted analysis measured 0.26–0.29 s p95 in a 2-vCPU container
+with `learn_on_session_end: true` and 2,000 signals; either reading leaves the
+slot far under 1.5 s, so moving the learning run to another slot is not needed.

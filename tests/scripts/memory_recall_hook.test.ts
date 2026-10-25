@@ -36,10 +36,12 @@ import {
     nodeModulesIsSymlink,
     readMemoryDescription,
     resolveMemoryDir,
+    rootIsPackageSelf,
     ruleRoots,
     truncateBytes,
 } from '../../src/scripts/hooks/memory_recall_hook.js';
 
+const PACKAGE_NAME = '@event4u/agent-config';
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const HOOK = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'memory_recall_hook.ts');
 const TSX = path.join(
@@ -96,21 +98,35 @@ function makeStore(): string {
  * A workspace whose `node_modules` is a SYMLINK — the condition that separates
  * a poisoning build from an ordinary one.
  */
-function makeSymlinkedWorktree(): string {
+function makeSymlinkedWorktree(packageName = PACKAGE_NAME): string {
     const base = mkTmp('memory-recall-ws-');
     const real = path.join(base, 'checkout', 'node_modules');
     fs.mkdirSync(real, { recursive: true });
     const wt = path.join(base, 'worktree');
     fs.mkdirSync(wt, { recursive: true });
     fs.symlinkSync(real, path.join(wt, 'node_modules'), 'dir');
+    writePackageJson(wt, packageName);
     return wt;
 }
 
-/** A workspace with a real `node_modules` directory. */
+/** A checkout of this package with a real `node_modules` directory. */
 function makeRealCheckout(): string {
     const root = mkTmp('memory-recall-main-');
     fs.mkdirSync(path.join(root, 'node_modules'), { recursive: true });
+    writePackageJson(root, PACKAGE_NAME);
     return root;
+}
+
+/** Some other project that installed this package. */
+function makeConsumer(): string {
+    const root = mkTmp('memory-recall-consumer-');
+    fs.mkdirSync(path.join(root, 'node_modules'), { recursive: true });
+    writePackageJson(root, 'consumer-shop');
+    return root;
+}
+
+function writePackageJson(root: string, name: string): void {
+    fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name }));
 }
 
 /** The dispatcher envelope, shaped as `src/scripts/hooks/envelope.ts` documents it. */
@@ -297,6 +313,68 @@ describe('incident replay: each seeded rule fires on the real tool call', () => 
     });
 });
 
+describe('a consumer repo never receives the maintainer rows', () => {
+    // The four rows are seeded from this package's own incidents, and the hook
+    // ships to every consumer install. In a repo that is not this package the
+    // memory does not exist and its reason is false, so every row stays silent.
+    it('ADR and install-source edits in a consumer root are silent', () => {
+        const ws = makeConsumer();
+        const store = makeStore();
+        const adr = run(
+            envelope(ws, editPayload(path.join(ws, 'docs/adr/ADR-0007-use-postgres.md'), ws), 's-adr'),
+            ws,
+            store,
+        );
+        expect(adr.status).toBe(0);
+        expect(adr.stdout).toBe('');
+        const install = run(
+            envelope(ws, editPayload(path.join(ws, 'src/install/seed.ts'), ws), 's-inst'),
+            ws,
+            store,
+        );
+        expect(install.status).toBe(0);
+        expect(install.stdout).toBe('');
+    });
+
+    it('a symlinked consumer worktree building is silent', () => {
+        const wt = makeSymlinkedWorktree('consumer-shop');
+        const r = run(envelope(wt, bashPayload('npm run build', wt)), wt, makeStore());
+        expect(r.status).toBe(0);
+        expect(r.stdout).toBe('');
+    });
+
+    it('the silent path never reads the roots — the package check runs after `test`', () => {
+        const untouchable = {
+            some: () => {
+                throw new Error('roots read on the silent path');
+            },
+        } as unknown as readonly string[];
+        const call = { tool: 'Edit', paths: ['README.md'], command: '', cwd: '' };
+        expect(matchRule(call, { roots: untouchable })).toBeNull();
+    });
+
+    it('a row without the package check still fires in a consumer root', () => {
+        const consumerRow = {
+            id: 'consumer-migration',
+            slug: 'consumer-migration-note',
+            tools: new Set(['Edit']),
+            test: (c: { paths: readonly string[] }) => c.paths.some((p) => p.startsWith('migrations/')),
+            why: 'consumer-authored',
+        };
+        const call = { tool: 'Edit', paths: ['migrations/001.sql'], command: '', cwd: '' };
+        expect(matchRule(call, { roots: [makeConsumer()] }, [consumerRow])?.slug).toBe(
+            'consumer-migration-note',
+        );
+    });
+
+    it('a root without package.json is not the package', () => {
+        const root = mkTmp('memory-recall-bare-');
+        expect(rootIsPackageSelf(root)).toBe(false);
+        expect(rootIsPackageSelf(makeConsumer())).toBe(false);
+        expect(rootIsPackageSelf(makeRealCheckout())).toBe(true);
+    });
+});
+
 describe('the silent path', () => {
     it('an ordinary command, an ordinary edit and a Read all stay silent', () => {
         const ws = makeRealCheckout();
@@ -473,7 +551,7 @@ describe('extractCall', () => {
 });
 
 describe('matchRule', () => {
-    const ctx = { roots: ['/nope'] };
+    const ctx = { roots: [REPO_ROOT] };
     it('returns the first matching row and null otherwise', () => {
         const hit = matchRule(
             { tool: 'Edit', paths: ['docs/decisions/ADR-1-x.md'], command: '', cwd: '' },

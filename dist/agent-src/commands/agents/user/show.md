@@ -128,8 +128,10 @@ Do NOT chain to other `/agents user *` commands. Do NOT commit.
 
 Road-to-global-user-memory Phase 4. Renders what the GLOBAL layer
 currently holds — `profile.md`'s fields, the observation buffer's entry
-count and per-field counts, promotion candidates, and the revocation
-ledger's tombstone count — without the user reading raw JSONL. This is
+count and per-field counts, promotion candidates, the revocation
+ledger's tombstone count, and the ADR-138 promotion gate (proposed and
+accepted counts, accept rate, the day of its 90-day window and its due
+date) — without the user reading raw JSONL. This is
 the global layer only; the project-local `.agent-user.md` never leaves
 the project it lives in, so there is nothing to audit for it here.
 

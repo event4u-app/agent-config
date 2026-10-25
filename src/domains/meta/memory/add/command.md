@@ -5,7 +5,7 @@ pack: memory
 visibility: internal
 cluster: memory
 sub: add
-description: Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, product-rules, ownership, historical-patterns)
+description: Interactively add a validated entry to an engineering-memory file (domain-invariants, incident-learnings, product-rules)
 skills: [file-editor]
 suggestion:
   eligible: false
@@ -17,8 +17,11 @@ packs:
 ---
 
 # /memory add
-Creates or updates a single entry in one of the four engineering-memory
-YAML files under `agents/memory/` in the consumer project. The entry
+Creates or updates a single entry in one of the three engineering-memory
+YAML files under `agents/memory/` in the consumer project. `ownership` and
+`historical-patterns` are review-routing data with their own format
+([`review-routing-data-format`](../../docs/guidelines/agent-infra/review-routing-data-format.md))
+and are not written here. The entry
 is validated against the schema in
 [`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md)
 before the file is written.
@@ -64,7 +67,7 @@ sharded layout: `agents/memory/<type>/*.yml`). For each existing
 
 ### 3. Collect the required fields
 
-All four types share the frontmatter in
+All three types share the frontmatter in
 [`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md#shared-frontmatter-fields).
 Collect in this order, one numbered question at a time:
 

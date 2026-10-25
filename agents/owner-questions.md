@@ -84,6 +84,26 @@ and the run that applies it links its PR.
   that answers the question that keeps arriving.
 - **Blocks:** the stub's promotion; nothing active.
 
+### OQ-11 — The ADR-138 teardown review opens on 2026-10-28
+
+- **Context:** the global user-profile layer reaches day 90 on 2026-10-28 with
+  0 observations proposed (none even on the maintainer's machine; proposals come
+  only from the manual `/memory mine-session`). The council's amendment of
+  2026-10-25 makes that a no-adoption signal that opens the teardown review, and
+  bounds the review: non-destructive, user data inventoried and preserved,
+  nothing deleted without consent. `/agents user show --audit` shows the reading.
+- **Options:** (a) archive-first deprecation — deprecate the commands for one
+  release, keep the code and any user data in an archive; (b) redesign activation
+  — e.g. offer mining at a natural moment instead of only on request, then read
+  the gate again; (c) one bounded trial — fixed exposure, expiry and a minimum
+  sample, decided in advance.
+- **Recommendation:** (b) scoped as (c) — the layer was never offered, so its
+  value is untested; one bounded trial with a fixed end answers that, and (a)
+  stays the default if the trial does not reach its sample.
+- **Blocks:** nothing executable; the review's outcome can deprecate a
+  user-data layer, which is the owner's call
+  (`road-to-a-memory-that-names-its-moment` § Decisions E12).
+
 ## Answered
 
 | ID | Date | Question | Answer |
