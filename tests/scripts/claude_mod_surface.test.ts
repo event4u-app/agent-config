@@ -2,13 +2,12 @@
  * The shipped Claude Code module stays a Class H reader (ADR-302)
  * (road-to-a-mod-that-decides-nothing-new step 4.2).
  *
- * The first block reads the module source and runs everywhere — it is the pin
- * CI actually enforces, because CI runners have no Claude Code CLI. The second
- * block runs the host's own validator and harness when `claude` is on PATH and
- * is skipped, never passed, when it is not.
+ * Reads the module source, so it runs on CI runners, which have no Claude Code
+ * CLI. The host's own `claude plugin validate` and `claude plugin test` are run
+ * by hand; their 2.1.310 results are recorded in
+ * agents/evidence/analysis/claude-code-mod-harness-probes-2026-10-25.md.
  */
 
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -53,21 +52,4 @@ describe('the shipped module source', () => {
         expect(violations(`${source}\non('tool.check', h)`)).toContain('event tool.check');
         expect(violations(`${source}\non('prompt.submit', h)`)).toContain('event prompt.submit');
     });
-});
-
-const hasClaude = spawnSync('claude', ['--version'], { encoding: 'utf-8' }).status === 0;
-
-describe.skipIf(!hasClaude)('the host validator and harness (skipped: Claude Code CLI not on PATH)', () => {
-    it('declares exactly the pinned call surface', () => {
-        const r = spawnSync('claude', ['plugin', 'validate', MOD], { encoding: 'utf-8' });
-        expect(r.status).toBe(0);
-        expect(r.stdout).toContain('hooks: turn.complete');
-        expect(r.stdout).toContain('calls: $.fs.exists, $.fs.read, $.ui.status');
-    }, 60_000);
-
-    it('passes its own harness tests', () => {
-        const r = spawnSync('claude', ['plugin', 'test', MOD], { encoding: 'utf-8' });
-        expect(r.status).toBe(0);
-        expect(`${r.stdout}${r.stderr}`).toMatch(/3 pass/);
-    }, 60_000);
 });

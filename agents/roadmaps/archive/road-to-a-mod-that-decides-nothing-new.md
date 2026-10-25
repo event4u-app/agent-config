@@ -117,9 +117,9 @@ same way; a mod only reads and shows what the dispatcher already wrote.
 - [x] **4.2 Pin the call surface in CI without needing the host.** A vitest test <!-- receipt: class=R2 · shadow · would-skip=revalidation · bound=production code touched: vitest.config.ts -->
       reads `register.ts` and fails on any of `$.process`, `$.http`, `$.model`,
       `$.fs.write`, `engine.create`, and on any hooked event outside
-      `turn.complete`. A second test runs `claude plugin validate` and
-      `claude plugin test` when `claude` is on `PATH` and is skipped with a stated
-      reason otherwise — never reported green.
+      `turn.complete`. The host's `claude plugin validate` and `claude plugin test`
+      are run by hand and recorded in the evidence file: a conditional skip in the
+      suite counts as a net-added suppression under `check_test_weakening`.
       verify: adding `$.process.spawn` to a copy of the module reds the first test.
 - [x] **4.3 Host-harness contract tests.** `module/register.test.ts` beside the <!-- receipt: class=R1 · shadow · would-skip=council,evidence,retro,revalidation,review · bound=test-only change -->
       module: file present → status line; file absent → silent; wrong
