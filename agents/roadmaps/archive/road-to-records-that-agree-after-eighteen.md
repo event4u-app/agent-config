@@ -59,8 +59,7 @@ end. Each of these is a test or a lint that can go red.
       installed pre-17 or pre-18 updater is asked rather than notified.
       `corrected-from-reproduction`: re-running the fixed code over
       `16.5.0..17.0.0` showed 17.0.0 carries the same disagreement.
-      verify: `node -p "JSON.stringify(require('./package.json').agentConfig.impact)"`
-      prints `action` for both versions; the fixed `release_impact_entry` over
+      verify: `node -p "JSON.stringify(require('./package.json').agentConfig.impact)"` -> /"17\.0\.0":\{"impact":"action"\},"18\.0\.0":\{"impact":"action"\}/; the fixed `release_impact_entry` over
       `git log 17.4.0..18.0.0` and `16.5.0..17.0.0` returns `action` for each, and
       `18.0.0..18.1.0`, `18.1.0..18.2.0` return `none`, matching their absence.
       Landed 2026-10-25: all four spans reproduced with the shipped readers.
@@ -72,7 +71,7 @@ end. Each of these is a test or a lint that can go red.
       which are absent BY DESIGN because `with_release_impact` omits a `none`
       span. The defect was the writer producing that absence for an undeclared
       break, which 1.2 closes; this step pins it at the writer instead.
-      verify: `npx vitest run tests/lib/consumer_impact.test.ts` passes "never
+      verify: `npx vitest run tests/lib/consumer_impact.test.ts` -> 0, including "never
       omits a span carrying an undeclared break", and neutralising the 1.2 line
       turns it red.
       Landed 2026-10-25: red with the 1.2 line neutralised, green restored; the
@@ -115,7 +114,7 @@ end. Each of these is a test or a lint that can go red.
       revisit if a root runner is added.
 - [x] **2.5 Drop the stale "stays on 20" comments.** `.github/workflows/tests.yml:310,645` <!-- receipt: class=R3 · shadow · would-skip=none · bound=override-list path: .github/workflows/tests.yml -->
       says other jobs stay on Node 20; `engines.node` is `>=22` and no job pins 20.
-      verify: `grep -c 'stays on 20' .github/workflows/tests.yml` is 0.
+      verify: `grep -c 'stays on 20' .github/workflows/tests.yml` -> /^0$/
       Landed 2026-10-25: three blocks replaced; the count is 0.
 
 ## Phase 3 — A floor ships where its skills ship
@@ -173,7 +172,7 @@ end. Each of these is a test or a lint that can go red.
       shipped since. Add a `docs/MIGRATION.md` § Scheduled deprecations row for
       the legacy honouring and the `ProjectionMode` residue in `mcp_bridge.ts`,
       with removal due at the next major (not pinned).
-      verify: `lint_scheduled_deprecations` passes with the row present.
+      verify: `./scripts-run src/scripts/lint_scheduled_deprecations` -> 0 with the row present.
       `corrected-from-reproduction`: the row reads "next major after 18.x", which the lint resolves to 19, so the window gets teeth instead of staying unpinned.
       Landed 2026-10-25: 4 rows parsed, none due.
 
