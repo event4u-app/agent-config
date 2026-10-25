@@ -9,6 +9,7 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
+| road-to-a-policy-the-measurements-write | active | ready | Every dispatch default AC ships — subagent tier and instruction skip per definition, `max_parallel`, council rounds, the adversarial council — … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
@@ -22,6 +23,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-graph-that-wins | later | later | Register before measuring; measure on repositories in the owner's stack that this repository does not own; publish both directions; and … |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | later | later | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
 | road-to-a-knowledge-atlas | later | later | The Workbench page answers four questions about one selection, not one: how the code is built (done by the parent), … |
+| road-to-a-learner-the-measurements-gate | later | later | The open dispatch measurements are run or dated; a PR that moves a policy row without a measurement pinned to … |
 | road-to-a-memory-the-consumer-owns | later | later | A consumer's own memories and knowledge pages decide when they are recalled, the profile lives in one file per layer … |
 | road-to-a-menu-whose-precision-is-measured | later | later | Routing precision is a number with an interval on a labelled corpus large enough to carry one (≥ 100 prompts, … |
 | road-to-a-ranker-whose-ties-break-on-signal | later | later | When two skills score the same, the order between them comes from something the ranker measured, not from their names … |

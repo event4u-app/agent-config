@@ -70,6 +70,17 @@ because this stays a report. Step 6.3's test enforces the import boundary over
 twelve enumerated routing paths. Resolving 9.6 the other way is what would
 require that test to change, which is the visible act the boundary deserves.
 
+**Owner turn of 2026-10-23, recorded as a pointer, not as a resolution.** The
+owner said "ac soll lokal lernen im laufe der zeit. damit soll sich das
+nutzungsverhalten verbessern und auch optimieren" (round `inbox-2026-10-ar`).
+That answers runtime consumption for **dispatch records** inside the bounds of
+`later/road-to-a-learner-the-measurements-gate.md` (decision A5 there). It does
+not lift the boundary over **this** report: the learner reads orchestration
+records, never the experience report, so AC-7 and step 6.3's import test stand
+until 9.6 itself is put to the owner. `docs/contracts/no-runtime-boundary.md` is
+superseded by `docs/contracts/resident-process-governance.md`, whose state-store
+test (`:80`) carries the same prohibition.
+
 **Promotion probe, in two conjuncts (the blocker's own `revisit-if`):** step 9.4
 demonstrates a reproducible efficacy gain **measured externally**, AND a proposal
 exists naming an observed/derived-only filter with rollback criteria. At that
