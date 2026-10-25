@@ -46,6 +46,17 @@ import {
 } from './user_global_observations.js';
 import type { ObservationField } from './user_global_observations.js';
 import type * as user_global_paths from './user_global_paths.js';
+import {
+    REVIEW_ACCEPT_RATE_FLOOR,
+    evaluateKillCriterion,
+    readGateCounters,
+} from './user_memory_gate_counters.js';
+import type { PromotionGateCounters } from './user_memory_gate_counters.js';
+
+/** ADR-138's layer went live at fa7b8e0381; its kill criterion is read 90 days later. */
+export const GATE_LIVE_SINCE = '2026-07-30';
+export const GATE_WINDOW_DAYS = 90;
+const DAY_MS = 86_400_000;
 
 const REDACTED_MARKER = '[redacted]';
 
@@ -83,6 +94,15 @@ export interface AuditPromotionCandidate {
     readonly projects: readonly string[];
 }
 
+export interface AuditGate {
+    readonly counters: PromotionGateCounters;
+    /** `null` until something was proposed — the rate is undefined, not zero. */
+    readonly acceptRate: number | null;
+    /** Whole days since {@link GATE_LIVE_SINCE}. */
+    readonly day: number;
+    readonly dueDate: string;
+}
+
 export interface GlobalMemoryAuditRender {
     readonly profilePath: string | null;
     readonly profileExists: boolean;
@@ -93,6 +113,7 @@ export interface GlobalMemoryAuditRender {
     readonly bufferFieldCounts: readonly AuditBufferFieldCount[];
     readonly promotionCandidates: readonly AuditPromotionCandidate[];
     readonly revocationCount: number;
+    readonly gate: AuditGate;
     /** Pre-formatted, print-ready block — every value already passed the redaction gate above. */
     readonly text: string;
 }
@@ -104,7 +125,7 @@ export interface GlobalMemoryAuditRender {
  * than touch the real `~/.event4u/`.
  */
 export function renderGlobalMemoryAudit(
-    options: { env?: user_global_paths.EnvMap | null } = {},
+    options: { env?: user_global_paths.EnvMap | null; now?: Date } = {},
 ): GlobalMemoryAuditRender {
     const env = options.env ?? null;
 
@@ -172,6 +193,18 @@ export function renderGlobalMemoryAudit(
     lines.push('');
     lines.push(`Revocation ledger: ${revocationCount} tombstone(s)`);
 
+    const gate = auditGate(env, options.now ?? new Date());
+    const dueState = gate.day > GATE_WINDOW_DAYS ? 'past due' : `day ${gate.day} of ${GATE_WINDOW_DAYS}`;
+    const rate =
+        gate.acceptRate === null
+            ? 'accept rate n/a (no proposals)'
+            : `accept rate ${Math.round(gate.acceptRate * 100)} % (floor ${REVIEW_ACCEPT_RATE_FLOOR * 100} %)`;
+    lines.push('');
+    lines.push(`ADR-138 promotion gate: ${dueState} (live since ${GATE_LIVE_SINCE}, due ${gate.dueDate})`);
+    lines.push(
+        `  proposed ${gate.counters.observations_proposed} · accepted ${gate.counters.observations_accepted} · ${rate}`,
+    );
+
     return {
         profilePath,
         profileExists: profileLayer !== null,
@@ -182,6 +215,18 @@ export function renderGlobalMemoryAudit(
         bufferFieldCounts,
         promotionCandidates,
         revocationCount,
+        gate,
         text: lines.join('\n'),
+    };
+}
+
+function auditGate(env: user_global_paths.EnvMap | null, now: Date): AuditGate {
+    const counters = readGateCounters({ env });
+    const start = Date.parse(`${GATE_LIVE_SINCE}T00:00:00Z`);
+    return {
+        counters,
+        acceptRate: evaluateKillCriterion(counters).review_accept_rate,
+        day: Math.floor((now.getTime() - start) / DAY_MS),
+        dueDate: new Date(start + GATE_WINDOW_DAYS * DAY_MS).toISOString().slice(0, 10),
     };
 }

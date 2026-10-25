@@ -79,7 +79,7 @@ reachable by consumers or kept internal by a recorded decision.
       with a consumer root (its own `package.json`, a `docs/adr/ADR-0007-x.md` edit, a
       `src/install/a.ts` edit) stays silent; the existing package-root replays still
       fire.
-- [ ] **1.2 Make the ADR-138 gate readable before 2026-10-28.** `renderGlobalMemoryAudit`
+- [x] **1.2 Make the ADR-138 gate readable before 2026-10-28.** `renderGlobalMemoryAudit`
       adds a gate block: the four counters, the accept rate (or "no proposals yet"),
       live-since 2026-07-30, day N of 90 and the due date, from `readGateCounters`.
       verify: `npx vitest run tests/lib/user_global_memory_audit.test.ts` — a counter

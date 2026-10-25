@@ -260,3 +260,33 @@ describe('renderGlobalMemoryAudit — privacy floor (no secret, no path outside 
         }
     });
 });
+
+describe('renderGlobalMemoryAudit — the ADR-138 promotion gate', () => {
+    function seedCounters(home: string, counters: Record<string, number>): void {
+        const target = path.join(home, 'user', 'promotion-gate-counters.json');
+        fs.mkdirSync(path.dirname(target), { recursive: true });
+        fs.writeFileSync(target, JSON.stringify(counters), 'utf-8');
+    }
+
+    it('shows the counters, the accept rate and the day of the 90-day window', () => {
+        const { home, env } = fakeConfigHome();
+        seedCounters(home, { observations_proposed: 3, observations_accepted: 1 });
+        const render = renderGlobalMemoryAudit({ env, now: new Date('2026-10-25T12:00:00Z') });
+
+        expect(render.gate.day).toBe(87);
+        expect(render.gate.dueDate).toBe('2026-10-28');
+        expect(render.gate.counters.observations_proposed).toBe(3);
+        expect(render.text).toContain('day 87 of 90');
+        expect(render.text).toContain('due 2026-10-28');
+        expect(render.text).toContain('accept rate 33 %');
+    });
+
+    it('renders zeros and no rate without a counter file, and never throws', () => {
+        const { env } = fakeConfigHome();
+        const render = renderGlobalMemoryAudit({ env, now: new Date('2026-10-29T00:00:00Z') });
+
+        expect(render.gate.counters.observations_proposed).toBe(0);
+        expect(render.text).toContain('accept rate n/a (no proposals)');
+        expect(render.text).toContain('past due');
+    });
+});
