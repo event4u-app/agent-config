@@ -91,6 +91,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { classify, isSyntheticPrompt } from './language_mirror_hook.js';
 import { assistantText, scanSession } from './conformance_scan.js';
 import { entryText, isSidechain } from './_lib/transcript_entry.js';
+import { isTestPath } from './_lib/test_path.js';
 import {
     detectDroppedDecision,
     detectLanguage,
@@ -201,21 +202,19 @@ interface Counts {
 const _EDIT_TOOL_NAMES = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 
 /**
- * The path shapes detector F reads, restated here for the CUMULATIVE-CONDITION
- * breakdown only — never for a scored rate, which always goes through
- * `detectUntestedChange` itself.
+ * The source-file shape detector F reads, restated here for the
+ * CUMULATIVE-CONDITION breakdown only — never for a scored rate, which always
+ * goes through `detectUntestedChange` itself. The test-path half is the shared
+ * `_lib/test_path` predicate, so only this half can drift.
  *
- * Restating them is the lesser of two bad options. The alternative is exporting
- * two more internals from the hook purely so a diagnostic line can be printed,
- * which widens the gate's public surface for a number that is context. If these
- * drift from the hook's own, the breakdown stops adding to F's fire count and
+ * Restating it is the lesser of two bad options. The alternative is exporting
+ * another internal from the hook purely so a diagnostic line can be printed,
+ * which widens the gate's public surface for a number that is context. If it
+ * drifts from the hook's own, the breakdown stops adding to F's fire count and
  * the discrepancy is visible in the same output.
  */
 const _SOURCE_EXT_RE =
     /\.(?:ts|tsx|js|jsx|mjs|cjs|vue|svelte|php|py|rb|go|rs|java|kt|swift|cs|scala|ex|exs)$/i;
-const _TEST_DIR_RE = /(?:^|\/)(?:tests?|specs?|__tests__|__specs__|e2e|cypress|playwright|features)\//i;
-const _TEST_FILE_RE =
-    /(?:\.(?:test|spec)\.[a-z]+$)|(?:_test\.[a-z]+$)|(?:(?:^|\/)test_[^/]+$)|(?:Test\.php$)|(?:Spec\.php$)|(?:\.feature$)/i;
 
 export const EDIT_PATH_CLASSES = ['docs-md', 'code', 'mixed', 'unknown'] as const;
 export type EditPathClass = (typeof EDIT_PATH_CLASSES)[number];
@@ -242,9 +241,7 @@ export function editPathClass(paths: readonly string[], root?: string): EditPath
     return docs === 0 ? 'code' : 'mixed';
 }
 
-function _looksTestPath(p: string): boolean {
-    return _TEST_DIR_RE.test(p) || _TEST_FILE_RE.test(p);
-}
+const _looksTestPath = isTestPath;
 
 function _looksProductionSource(p: string): boolean {
     return _SOURCE_EXT_RE.test(p) && !_looksTestPath(p);

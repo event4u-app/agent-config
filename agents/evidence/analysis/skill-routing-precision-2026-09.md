@@ -108,3 +108,32 @@ directories in `src/packs/`, and the difference is not cosmetic: four of those
 (`catalog_tokens: 0` in their generated manifests), so a floor stated over that
 set could never be met by any corpus. The frontmatter set is the one a labelled
 prompt can be attributed to.
+
+## The pointer hook's gate, measured (2026-10-25)
+
+Everything above scores `keyword-v1` with nothing in front of it. The
+`skill-route` hook injects a pointer only past `MIN_TASK_TERMS = 3` and
+`MIN_TOP_SCORE = 31`, through `routeDecision`. Measured at `69deff1c56` over
+301 skills, without the installed-catalogue bare-name filter (it depends on the
+machine), and with no host and no model:
+
+```
+./scripts-run src/scripts/measure_skill_ranker_baseline --arm hook-gate --commit 69deff1c56
+```
+
+| Reading | k / n | rate | 95 % CI |
+|---|---:|---:|---|
+| fires on labelled rows | 59 / 390 | 0.151 | 0.119 – 0.190 |
+| precision@1 among fires | 25 / 59 | 0.424 | 0.306 – 0.551 |
+| precision@3 among fires | 35 / 59 | 0.593 | 0.466 – 0.709 |
+| recall@3 over all labelled rows | 35 / 390 | 0.090 | 0.065 – 0.122 |
+| false fires on `expected_skills: []` rows | 8 / 203 | 0.039 | 0.020 – 0.076 |
+
+The ungated arm at the same commit reads top-1 0.213 and top-3 0.349 on the
+same 390 rows. So the gate roughly doubles top-1 precision on what it shows and
+stays silent on 85 % of labelled prompts; when it does speak on a prompt that
+should get no skill, it does so about one time in 25. The no-skill set has grown
+from 198 to 203 since September. This is what the pointer injects, not what the
+host's own skill selection does — that reading stays with the parked
+`later/road-to-routing-assurance-live-floors`, for which this is the no-model
+baseline of its hook arm.

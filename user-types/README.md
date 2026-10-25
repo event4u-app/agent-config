@@ -7,12 +7,14 @@ kind: user-type-axis
 
 This directory defines the **install-time** user-type axis. A user-type
 is the *kind of work* a maintainer does (`consultant`, `creator`,
-`developer`, `finance`, `founder`, `gtm`, `ops`). The flag is read by
-`scripts/install.sh --user-type=<id>` and written to
-`personal.user_type` in the consumer's `.agent-settings.yml`. At skill
-discovery time the runtime intersects `recommended_for_user_types`
-frontmatter against the configured `personal.user_type` and surfaces
-the matching subset first.
+`developer`, `finance`, `founder`, `gtm`, `ops`). It is written to
+`personal.user_type` in the consumer's `.agent-settings.yml` by the setup
+wizard (`agent-config setup`) or by `src/scripts/install.ts --user-type=<id>`.
+One runtime reader exists: the MCP server's prompt list
+(`src/scripts/mcp_server/prompts.ts`) intersects
+`recommended_for_user_types` frontmatter with the configured value and sorts
+the matching prompts first. The host's own skill selection does not read it,
+so the value orders a menu and filters nothing.
 
 This axis is **distinct** from `.agent-src.uncondensed/user-types/`
 (refine-ticket review-lens axis, owned by `step-6-user-types-axis.md`).
@@ -23,8 +25,8 @@ Same word, different layer:
 | Install filter (this dir) | onboarding | `step-9-user-types-axis.md` | `consultant`, `creator`, `developer` |
 | Review lens | runtime / refine-ticket | `step-6-user-types-axis.md` | `galabau-field-crew`, `truck-driver` |
 
-The two never collide: install filter narrows *which skills load by
-default*; review lens narrows *whose viewpoint a refine-ticket review
+The two never collide: the install axis orders *which MCP prompts come
+first*; review lens narrows *whose viewpoint a refine-ticket review
 adopts*. Authors can use both, neither, or just one.
 
 ## Seed user-types (7)
@@ -59,23 +61,22 @@ default_skill_priority:
 notes: <optional one-line caveat>
 ```
 
-`primary_workflows` are *what this user-type does most days* — they
-inform which skills surface first. `default_skill_priority` is a
-hand-curated short-list of 3–6 skills that should auto-load on
-`install.sh --user-type=<id>`. The full filter (every skill whose
-`recommended_for_user_types` contains `<id>`) is computed from
-frontmatter at runtime.
+`primary_workflows` are *what this user-type does most days*.
+`default_skill_priority` is a hand-curated short-list of 3–6 skills; the
+schema validates it and no code reads it yet. The MCP prompt ordering is
+computed from `recommended_for_user_types` frontmatter at runtime.
 
-## CLI flag (post step-9 Phase 2 ship)
+## Setting it
+
+The setup wizard offers the field. For a scripted install:
 
 ```bash
-agent-config install --user-type=consultant
+./scripts-run src/scripts/install --user-type=consultant
 # writes personal.user_type: consultant into .agent-settings.yml
 ```
 
-`--user-type` is optional; omitting it leaves the field unset and the
-runtime falls back to "show all skills" (today's behavior). The flag
-is additive — no existing install flow breaks.
+`--user-type` is optional; omitting it leaves the field empty and the MCP
+prompt list keeps its unsorted order.
 
 ## Maintenance
 

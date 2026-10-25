@@ -198,6 +198,7 @@ import {
 } from '../_lib/graph_feeder_record.js';
 import { type GraphState, graphState } from '../code_graph/detect.js';
 import { isVerificationAttempt, isVerificationCommand } from '../_lib/verification_command.js';
+import { isTestPath as _isTestPath } from '../_lib/test_path.js';
 import { openSvgObligation } from './svg_obligation.js';
 // Round 8 — the record path detector C prefers over its own regex. The regex
 // reads a command's TEXT and `echo test` matches it; these read what the run
@@ -825,22 +826,6 @@ export function detectUnverifiedEdit(
 
 /** Extensions that carry behaviour a test can be owed for. */
 const _SOURCE_RE = /\.(?:ts|tsx|js|jsx|mjs|cjs|vue|svelte|php|py|rb|go|rs|java|kt|swift|cs|scala|ex|exs)$/i;
-
-/**
- * Paths that ARE tests, across the conventions this suite's stacks use.
- *
- * Deliberately generous: a false NEGATIVE here (calling a test file a test) only
- * silences the detector, while a false positive would refuse a turn that did
- * write its tests — the direction that gets a guard disabled.
- */
-const _TEST_PATH_RE =
-    /(?:^|\/)(?:tests?|specs?|__tests__|__specs__|e2e|cypress|playwright|features)\//i;
-const _TEST_FILE_RE =
-    /(?:\.(?:test|spec)\.[a-z]+$)|(?:_test\.[a-z]+$)|(?:(?:^|\/)test_[^/]+$)|(?:Test\.php$)|(?:Spec\.php$)|(?:\.feature$)/i;
-
-function _isTestPath(p: string): boolean {
-    return _TEST_PATH_RE.test(p) || _TEST_FILE_RE.test(p);
-}
 
 function _isProductionSource(p: string): boolean {
     return _SOURCE_RE.test(p) && !_isTestPath(p);

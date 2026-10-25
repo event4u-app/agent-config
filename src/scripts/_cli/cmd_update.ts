@@ -77,6 +77,7 @@ import * as installed_lock from '../_lib/installed_lock.js';
 import * as update_check from '../_lib/update_check.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
 import { pin_advice_lines } from '../_lib/pin_advice.js';
+import { installCompleted } from '../../install/preserve.js';
 import {
     DEFAULT_PROJECT_FILE,
     LOCAL_PROJECT_FILE,
@@ -553,7 +554,7 @@ export async function main(argv: string[] | null = null, options: MainOptions = 
         _print(out, `→ The global install is ${global}; installing ${latest} first so the pin matches what runs.`);
         const upgrader = options.upgrader ?? _upgrade_global;
         const rc = await upgrader(latest, out, err);
-        if (rc !== 0) {
+        if (!installCompleted(rc)) {
             _print(err, `❌  agent-config: the global upgrade to ${latest} failed (exit ${rc}); the pin is unchanged.`);
             return 1;
         }

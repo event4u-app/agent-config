@@ -288,6 +288,27 @@ describe('uninstall --purge — containment', () => {
         }
     });
 
+    it('keeps a recorded file the user edited since install, and says so', () => {
+        // The ledger records the bytes it wrote (schema 2 `digests`); reaping
+        // already keeps a file whose bytes moved. Purge consulted only the file
+        // list, so a user's edit to a deployed rule went with the rest.
+        const fx = makeFixture({ record: true });
+        const [edited, untouched] = fx.ours as [string, string];
+        const doc = JSON.parse(fs.readFileSync(fx.inventory, 'utf-8'));
+        doc.schema_version = 2;
+        doc.tools['claude-code'].digests = Object.fromEntries(
+            fx.ours.map((f) => [path.relative(fx.anchor, f), { installed_sha256: digest(f), packaged_sha256: digest(f) }]),
+        );
+        fs.writeFileSync(fx.inventory, `${JSON.stringify(doc, null, 2)}\n`);
+        fs.writeFileSync(edited, 'the user changed this\n');
+
+        const res = purge(fx);
+
+        expect(fs.readFileSync(edited, 'utf-8')).toBe('the user changed this\n');
+        expect(fs.existsSync(untouched)).toBe(false);
+        expect(res.stdout).toMatch(/purged 1 recorded file\(s\).*kept 1 edited since install/);
+    });
+
     it('reports a purge it performed', () => {
         const fx = makeFixture({ record: true });
 

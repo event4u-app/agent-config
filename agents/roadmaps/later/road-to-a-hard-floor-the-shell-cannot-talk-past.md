@@ -38,6 +38,8 @@ estate_offset_exempt: "Adds one active roadmap with nothing to offset: the host-
 > in the window touch the SVG engine, `verification_command.ts`, `verify_clause.ts`,
 > `design_pass_hook.ts` and `turn_end_gate_hook.ts`). Every *(executed)* reading below was
 > re-run offline under `tsx` against the tree's own exported functions.
+>
+> **Arrivals:** 1 — latest `inbox-2026-10-aj` (2026-10-25): the `block-no-verify` bypass forms (`sh -c`, `eval`, `--config-env`, `GIT_CONFIG_*`) still pass at `d2ec783d95`, and `src/scripts/_lib/claude_settings_hooks.ts` plus `hooks/hooks.json` — the generator of the hook carrier — sit outside `check_kernel_edit_ratified`'s plumbing pattern. Widening that pattern is a governance edit and needs a ratification record.
 
 ## Goal
 

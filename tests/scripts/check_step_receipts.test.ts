@@ -53,8 +53,9 @@ describe('check_step_receipts — missingReceipts', () => {
 });
 
 describe('check_step_receipts — a lowered-depth claim is checked against the diff', () => {
-    const table = loadDepthTable();
-    const active: DepthTable = { ...table, mode: 'active' };
+    const real = loadDepthTable();
+    const table: DepthTable = { ...real, mode: 'shadow', flip: { ...real.flip, reading: null } };
+    const active: DepthTable = { ...real, mode: 'active' };
 
     it('a newly ticked receipt reading active is collected for the check', () => {
         const res = missingReceipts(

@@ -27,6 +27,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { pendingRows } from './breaking_pending.js';
 import { assuranceOverrideLimitation } from './release_findings_ingest.js';
 import { CURATED_HEAD_INSTRUCTION } from './release_material.js';
 
@@ -201,6 +202,13 @@ const _NULL_FORMS: readonly RegExp[] = [
     /\b(?:publish(?:es|ed|ing)?|record(?:s|ed|ing)?|report(?:s|ed|ing)?) (?:the |an |a |its )?(?:honest )?null\b(?![ \t]+`?[a-z][a-z0-9]*_[a-z0-9_]*)/iu,
     /\bnull(?: result)? (?:stands|is the answer)\b/iu,
     /\bon (?:its|the) own falsifier\b/iu,
+    // Bound to a verdict noun, and not after "leaves/makes the": the 17.x spans
+    // carry "underpowered data is not ready", "40 clean pairs are underpowered"
+    // and "a refused leg leaves the cost verdict underpowered" — each a rule, not
+    // a result. Over 16.5.0..17.4.0 this form then derives 479bcf0 and d5f7f45,
+    // both recorded nulls.
+    /(?<!\b(?:leaves|leave|makes|make|keeps|keep) (?:the |a |its )?(?:[a-z-]+ )?)\b(?:claims?|verdicts?|benchmarks?|results?) (?:is |are |stays? |remains? )?underpowered\b/iu,
+    /\b(?:benchmark|verdict|result)(?: is| was)?:? (?:an? )?tie\b(?!-)/iu,
 ];
 
 /**
@@ -793,7 +801,7 @@ export function derive_head_prefill(
     // Same shape for the breaking-changes index: a Pending row has landed, so
     // whatever this release is, it ships it — and no commit subject carries the
     // row's wording, so the span classifier above cannot derive it.
-    const pending = pendingBreakingLine(readIndex(cwd));
+    const pending = pendingBreakingLine(readIndex(cwd), (sha) => from !== null && commitInTag(sha, from, cwd));
     if (pending !== null) {
         const existing = out[MIGRATION_LABEL];
         out[MIGRATION_LABEL] = existing ? `${existing} ${pending}` : pending;
@@ -819,21 +827,21 @@ function readIndex(cwd: string): string {
  * hook-carrier guards of #2455, named in an inner bullet of a squash body —
  * reaches no released changelog unless an operator copies it by hand.
  */
-export function pendingBreakingLine(index: string): string | null {
-    const cells: string[] = [];
-    let inPending = false;
-    for (const line of index.split('\n')) {
-        if (line.startsWith('## ')) {
-            inPending = line.startsWith('## Pending');
-            continue;
-        }
-        if (!inPending || !line.startsWith('|')) continue;
-        const cell = (line.split('|')[2] ?? '').trim();
-        if (cell === '' || cell === 'What changes' || /^-+$/u.test(cell)) continue;
-        cells.push(cell);
-    }
+export { pendingRowCommits } from './breaking_pending.js';
+
+export function pendingBreakingLine(index: string, isShipped: (sha: string) => boolean = () => false): string | null {
+    // A row an earlier tag already carries was announced by that release; the
+    // table is only cleaned by hand, so without this every later cut repeats it.
+    const cells = pendingRows(index)
+        .filter((r) => r.commit === null || !isShipped(r.commit))
+        .map((r) => r.changes);
     if (cells.length === 0) return null;
     return `Breaking, pending in \`BREAKING_CHANGES.md\` and shipped by this release: ${cells.join(' ')}`;
+}
+
+/** True when `sha` is an ancestor of `tag`; false when either is unknown. */
+export function commitInTag(sha: string, tag: string, cwd: string): boolean {
+    return spawnSync('git', ['merge-base', '--is-ancestor', sha, tag], { cwd }).status === 0;
 }
 
 /** Latest reachable release tag before `ref`, or null when there is none. */

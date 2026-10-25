@@ -6,7 +6,10 @@ probe: none
 
 # Stub: road to the owner-reserved authority decisions
 
-> **Arrivals:** 6 (at least) — latest `inbox-2026-10-t` (2026-10-16): the owner-queue
+> **Arrivals:** 7 (at least) — latest `inbox-2026-10-am` (2026-10-25): an external audit
+> found Decision 6 answered by ADR-249 but recorded open here, and this header contradicting
+> itself; both corrected in that round, and the open residue is now OQ-8 of
+> `agents/owner-questions.md`. Before it: 6 — `inbox-2026-10-t` (2026-10-16): the owner-queue
 > load is named again as the constraint behind the governance-versus-consumer split.
 > The count before it read: 5 (at least) — latest `inbox-2026-09-w` (2026-09-08); earlier: `inbox-2026-09-m`
 > (2026-09-05), agents/roadmaps/archive/road-to-gate-autonomy.md,
@@ -15,8 +18,9 @@ probe: none
 > Decisions 2 and 3**, and the owner then directed acceptance of the transcription in the same
 > session. Both are recorded in
 > [`ADR-268`](../../../docs/decisions/ADR-268-mission-scoped-authority-persistence-and-ratified-self-amendment.md),
-> `status: accepted`. **The counter stops at five**: the sixth arrival is what the acceptance
-> prevented, and the two entries below now carry the ruling rather than the question.
+> `status: accepted`. The two entries below carry that ruling rather than the question. (This
+> paragraph once said the counter stopped at five; the sixth and seventh arrivals above
+> show it did not, so the sentence is withdrawn rather than left beside them.)
 
 > **Stub — not active work.** A **drain-run transfer**, created 2026-08-22 when
 > [`road-to-evidence-based-adr-governance.md`](../archive/road-to-evidence-based-adr-governance.md)
@@ -218,6 +222,13 @@ gaining the slot. Self-certification of an estate constraint is the same
 authority shape as the grade-derived-authority question in Decision 3.
 
 ## Unresolved decision 6 — the Class-B resident-service prohibition
+
+> **ANSWERED — owner ruling, 2026-08-27, accepted** (recorded here 2026-10-25). The owner
+> answered *yes*: [`ADR-249`](../../../docs/decisions/ADR-249-supervised-resident-process-permitted-under-governance.md)
+> (`authority_basis: owner_intent`, `human_directed: true`) reverses ADR-124's Class-B row for a
+> supervised, default-off collector, ADR-124 now carries that pointer, and
+> `claim:no-runtime-daemon` is withdrawn. The "if the owner says yes" paragraph below is what
+> happened. Kept as the question it was so the history stays readable.
 
 **Added 2026-08-26** by the same step. **Surfaced, not decided** — an AI council
 (2026-08-26, 2/2) was explicit that this is *established policy being preserved*,

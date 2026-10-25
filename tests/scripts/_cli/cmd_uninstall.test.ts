@@ -31,7 +31,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { main } from '../../../src/scripts/_cli/cmd_uninstall.js';
+import { _delete_tool_files, main } from '../../../src/scripts/_cli/cmd_uninstall.js';
 import { runInProc } from '../../_lib/run_in_process.js';
 
 
@@ -227,5 +227,38 @@ describe('cmd_uninstall — project scope, a global entry still carrying $HOME f
         expect(fs.existsSync(deployed)).toBe(true);
         expect(fs.existsSync(marker)).toBe(true);
         expect(fs.readFileSync(lock, 'utf8')).not.toContain('name: cursor');
+    });
+});
+
+describe('cmd_uninstall — project scope --purge holds recorded paths to the project root', () => {
+    // The lock is committed, so anyone can edit it: an absolute path outside
+    // the project, or one reached through a symlinked parent, is refused.
+    // Called directly: the manifest reader drops files[] today, so the CLI
+    // never reaches this path — the guard is what holds when it does.
+    it('refuses a recorded directory outside the project and deletes nothing there', () => {
+        const root = freshRoot();
+        const outside = freshRoot();
+        const victim = path.join(outside, 'keep');
+        fs.mkdirSync(victim, { recursive: true });
+        fs.writeFileSync(path.join(victim, 'f.txt'), 'theirs\n');
+        const inside = path.join(root, '.augment', 'skills');
+        fs.mkdirSync(inside, { recursive: true });
+        fs.writeFileSync(path.join(inside, 's.md'), 'ours\n');
+        fs.symlinkSync(outside, path.join(root, 'link'));
+        const viaLink = path.join(root, 'link', 'keep');
+        const entry = {
+            files: [victim, viaLink, inside, root].map((p) => ({ path: p, kind: 'deployed', sha256: null })),
+        };
+        const [deleted, skipped] = _delete_tool_files(entry, root, {
+            dry_run: false,
+            purge: true,
+            emptied_files: new Set(),
+            touched_files: new Set(),
+        });
+        expect(skipped.filter((l) => l.includes('refused — recorded path is outside the project root'))).toHaveLength(3);
+        expect(fs.readFileSync(path.join(victim, 'f.txt'), 'utf8')).toBe('theirs\n');
+        expect(fs.existsSync(root)).toBe(true);
+        expect(fs.existsSync(inside)).toBe(false);
+        expect(deleted).toEqual([`purged deployed ${inside}`]);
     });
 });

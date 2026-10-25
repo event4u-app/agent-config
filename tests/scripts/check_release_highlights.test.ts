@@ -302,6 +302,33 @@ describe('derive_categories — recorded-null forms beyond the literal marker', 
         expect(highlight_contradictions(curated, derive_categories(span))).toEqual([]);
     });
 
+    it('derives the 17.x bench verdicts: an underpowered claim and a benchmark tie', () => {
+        const derived = derive_categories([
+            // 479bcf0c24, span 17.0.0..17.1.0
+            commit({ subject: 'feat(bench): rerun the tier pair on a pinned tree; both tier claims underpowered' }),
+            // 84c24216f4, span 17.1.0..17.2.0 — the verdict is in the body
+            commit({
+                subject: "bench(code-graph): record the map's costs and the orientation benchmark",
+                body: 'The pre-registered orientation benchmark: a tie (6/6 correct in both arms).',
+            }),
+            commit({ subject: 'docs(bench): the paired verdict is TIE on tool calls' }),
+        ]);
+        expect(derived['Honest nulls']).toHaveLength(3);
+    });
+
+    it('does not read gate mechanics or a tie-break as a recorded null', () => {
+        const derived = derive_categories([
+            // real 17.x bodies that describe a rule, not a result
+            commit({ subject: 'feat(ask): flip a hand kind on cleared bars', body: 'missing or underpowered data is not ready.' }),
+            commit({ subject: 'fix(bench): bound the difference', body: 'so 40 clean pairs are underpowered and 60 sit on the margin.' }),
+            // fe4fa4bcd7 — what a refused leg does, not what a run found
+            commit({ subject: 'feat(bench): refuse to price with a stale price row', body: 'a refused leg leaves the cost verdict underpowered instead of being priced.' }),
+            commit({ subject: 'fix(ranker): break a score tie on signal, not on name' }),
+            commit({ subject: 'chore: untie the release from the review ledger' }),
+        ]);
+        expect(derived['Honest nulls']).toEqual([]);
+    });
+
     it('does not fire on a commit that merely mentions a soak or a nullable field', () => {
         const derived = derive_categories([
             commit({ subject: 'chore(kernel): start the 24h soak for the rule edit' }),

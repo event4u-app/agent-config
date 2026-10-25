@@ -316,8 +316,10 @@ export function _remove_global_content(
     }
 
     let recorded: ReadonlySet<string>;
+    let inventory: global_deploy_inventory.Inventory;
     try {
-        recorded = global_deploy_inventory.recorded_rel_files(tool, target);
+        inventory = global_deploy_inventory.load_inventory();
+        recorded = global_deploy_inventory.recorded_rel_files(tool, target, inventory);
     } catch (exc) {
         return [
             `${tool}: ❌ refusing to purge ${anchor} — deploy inventory unreadable (${_osErr(exc)})`,
@@ -355,6 +357,8 @@ export function _remove_global_content(
         }
     };
     let deleted = 0;
+    let kept_edited = 0;
+    let failed = 0;
     const touched_dirs = new Set<string>();
     for (const rel of recorded) {
         const abs = path.resolve(resolved_anchor, rel);
@@ -373,11 +377,17 @@ export function _remove_global_content(
             // recursed into.
             const st = fs.lstatSync(abs);
             if (st.isDirectory()) continue;
+            // A deployed file the user changed is theirs now; reaping keeps it too.
+            if (global_deploy_inventory.recorded_file_edited(tool, target, rel, inventory)) {
+                kept_edited += 1;
+                continue;
+            }
             fs.unlinkSync(abs);
             deleted += 1;
             touched_dirs.add(path.dirname(abs));
-        } catch {
-            // Already gone is success; anything else is reported by the count.
+        } catch (exc) {
+            // Already gone is success; anything else is counted and reported.
+            if ((exc as NodeJS.ErrnoException).code !== 'ENOENT') failed += 1;
         }
     }
 
@@ -397,7 +407,9 @@ export function _remove_global_content(
         }
     }
 
-    return [`${tool}: purged ${deleted} recorded file(s) under ${anchor}`, deleted > 0];
+    const kept = kept_edited > 0 ? `; kept ${kept_edited} edited since install` : '';
+    const errs = failed > 0 ? `; ${failed} could not be removed` : '';
+    return [`${tool}: purged ${deleted} recorded file(s) under ${anchor}${kept}${errs}`, deleted > 0];
 }
 
 /** Render an OSError-shaped message: Python `str(OSError)` is the strerror. */
@@ -439,6 +451,20 @@ function _resolve_recorded_path(project_root: string, recorded: string): string 
         return recorded;
     }
     return path.resolve(project_root, recorded);
+}
+
+/** Strictly below `root` (never the root itself), lexically and by resolved parent. */
+function _inside_project(target: string, root: string, real_root: string | null): boolean {
+    if (!target.startsWith(root + path.sep)) return false;
+    if (real_root === null) return false;
+    try {
+        const real_parent = fs.realpathSync(path.dirname(target));
+        return real_parent === real_root || real_parent.startsWith(real_root + path.sep);
+    } catch {
+        // A parent that does not resolve holds nothing to delete; the caller
+        // then reports the path as already absent.
+        return !_exists(target);
+    }
 }
 
 /**
@@ -551,7 +577,7 @@ function _jsonExc(exc: unknown, _target: string): string {
  * neighbour tools) AND subtraction left foreign keys behind. Untouched JSON
  * bridges are owned solely by this tool and removed with the rest.
  */
-function _delete_tool_files(
+export function _delete_tool_files(
     entry: AnyDict,
     project_root: string,
     opts: {
@@ -563,10 +589,24 @@ function _delete_tool_files(
 ): [string[], string[]] {
     const deleted: string[] = [];
     const skipped: string[] = [];
+    const root = path.resolve(project_root);
+    let real_root: string | null;
+    try {
+        real_root = fs.realpathSync(root);
+    } catch {
+        real_root = null;
+    }
     for (const record of _listOf(entry['files']) as AnyDict[]) {
         const target = _resolve_recorded_path(project_root, String(record['path']));
         const kind = record['kind'];
         const label = target;
+        // The lockfile is committed and therefore editable by anyone, so a
+        // recorded path is held to the project root lexically and through a
+        // resolved parent, the way the global purge holds its anchor.
+        if (!_inside_project(target, root, real_root)) {
+            skipped.push(`${String(kind)} ${label}: ❌ refused — recorded path is outside the project root`);
+            continue;
+        }
         if (kind === 'bridge') {
             const is_shared_json =
                 _exists(label) &&
@@ -620,7 +660,8 @@ function _delete_tool_files(
                 continue;
             }
             try {
-                if (_isDir(label)) {
+                // lstat: a recorded symlink is removed as a link, never followed.
+                if (!fs.lstatSync(label).isSymbolicLink() && _isDir(label)) {
                     fs.rmSync(label, { recursive: true, force: false });
                 } else {
                     fs.unlinkSync(label);

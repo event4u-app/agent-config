@@ -156,9 +156,12 @@ function selfTest(repoRoot: string): number {
                 name: 'a hand-written receipt claiming a lowered depth the diff does not allow',
                 expect: 'reject',
                 run: () =>
-                    caseOn(() =>
-                        roadmap(base.replace('- [ ] **1.1 New step.**', `- [x] **1.1 New step.** Done. ${receipt.replace('· shadow ·', '· active ·')}`)),
-                    ),
+                    caseOn(() => {
+                        roadmap(base.replace('- [ ] **1.1 New step.**', `- [x] **1.1 New step.** Done. ${receipt.replace('· shadow ·', '· active ·')}`));
+                        // A behavioural path in the same diff keeps the claim unallowed whatever mode the real table is in.
+                        fs.mkdirSync(path.join(dir, 'src/scripts'), { recursive: true });
+                        fs.writeFileSync(path.join(dir, 'src/scripts/x.ts'), 'export {};\n');
+                    }),
             },
             {
                 name: 'a step ticked with its receipt',

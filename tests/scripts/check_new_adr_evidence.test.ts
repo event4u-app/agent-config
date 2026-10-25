@@ -152,6 +152,62 @@ describe('checkRecords — what an added ACCEPTED record must disclose', () => {
     });
 });
 
+describe('checkRecords — an owner claim cites the owner', () => {
+    const OWNER = FULL.replace('  kind: mixed', '  kind: human\n  decision_makers: [owner]\n  human_directed: true');
+    const DIRECTIVE = 'agents/evidence/owner-directives/2026-10-16-probe.md';
+
+    it('reconstructs 2026-10-16: an owner-claimed refusal with no directive file reds', () => {
+        // ADR-286 recorded the star ask as refused by the owner when the owner had
+        // only picked between bundled options. Nothing in the record pointed at
+        // his own words, and no gate asked for them.
+        write('docs/decisions/ADR-901-probe.md', record(OWNER, '## Evidence\n\nThe owner chose the narrow option.'));
+        const r = checkRecords(tmp, ['docs/decisions/ADR-901-probe.md']);
+        expect(r.findings).toHaveLength(1);
+        expect(r.findings[0]?.reason).toMatch(/owner-directives/);
+    });
+
+    it('`human_directed: true` alone triggers it, without `decision_makers`', () => {
+        const fm = FULL.replace('  kind: mixed', '  kind: human\n  human_directed: true');
+        write('docs/decisions/ADR-901-probe.md', record(fm, '## Evidence\n\nSaid so.'));
+        expect(checkRecords(tmp, ['docs/decisions/ADR-901-probe.md']).findings[0]?.reason).toMatch(
+            /owner-directives/,
+        );
+    });
+
+    it('a basis entry naming an existing directive file passes', () => {
+        write(DIRECTIVE, '<!-- evidence-type: analysis -->\n\n# Owner directive\n');
+        write(
+            'docs/decisions/ADR-901-probe.md',
+            record(`${OWNER}\n  basis:\n    - ${DIRECTIVE}`, '## Evidence\n\nVerbatim.'),
+        );
+        const r = checkRecords(tmp, ['docs/decisions/ADR-901-probe.md']);
+        expect(r.findings).toEqual([]);
+        expect(r.checked).toEqual(['docs/decisions/ADR-901-probe.md']);
+    });
+
+    it('a basis entry naming a directive file that does not exist still reds', () => {
+        write(
+            'docs/decisions/ADR-901-probe.md',
+            record(`${OWNER}\n  basis:\n    - ${DIRECTIVE}`, '## Evidence\n\nVerbatim.'),
+        );
+        expect(checkRecords(tmp, ['docs/decisions/ADR-901-probe.md']).findings).toHaveLength(1);
+    });
+
+    it('a basis outside the directive directory does not count as the owner\'s words', () => {
+        write('agents/evidence/analysis/round.md', 'x');
+        write(
+            'docs/decisions/ADR-901-probe.md',
+            record(`${OWNER}\n  basis:\n    - agents/evidence/analysis/round.md`, '## Evidence\n\nRound.'),
+        );
+        expect(checkRecords(tmp, ['docs/decisions/ADR-901-probe.md']).findings).toHaveLength(1);
+    });
+
+    it('a record that claims no owner decision is untouched', () => {
+        write('docs/decisions/ADR-901-probe.md', record(FULL, '## Evidence\n\nMeasured.'));
+        expect(checkRecords(tmp, ['docs/decisions/ADR-901-probe.md']).findings).toEqual([]);
+    });
+});
+
 describe('checkRecords — scope', () => {
     it('a non-accepted record is OUT OF SCOPE and reported as such, not skipped silently', () => {
         write(

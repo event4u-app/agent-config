@@ -21456,6 +21456,14 @@ var settingsSchema = object({
       "Once per day the agent checks the npm registry for a newer agent-config release and surfaces a one-line banner if one exists. Turn off in air-gapped environments or to silence the banner."
     )
   }),
+  star_ask: object({
+    mode: _enum(["monthly", "off"]).default("monthly").describe(
+      "Whether a session start asks you to star the agent-config repository on GitHub. monthly (default) asks at most once per 30 days, the first time 7 days after the first session; off never asks. Text only, no network. Read from the user-global layer only."
+    ),
+    starred: boolean2().default(false).describe(
+      "Set to true once you have starred the repository; the ask then stops for good. The agent may set it when you tell it you have starred."
+    )
+  }).prefault({ mode: "monthly", starred: false }),
   advisories: object({
     mode: _enum(["off", "notify"]).default("notify").describe(
       "Whether the first session start of a day prints the advisory findings that need action today. notify (default) reads the local cache only \u2014 a session start never touches the network; off prints nothing, and agent-config audit:deps show still works."

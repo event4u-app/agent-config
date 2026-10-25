@@ -23,7 +23,8 @@ releases are not backported.
 
 | Version | Supported |
 |---|---|
-| Latest (`main`) | ✅ |
+| Latest published version | ✅ |
+| Unreleased `main` | ❌ — fixes land here first and ship in the next release |
 | Older releases | ❌ |
 
 ## Reporting a vulnerability

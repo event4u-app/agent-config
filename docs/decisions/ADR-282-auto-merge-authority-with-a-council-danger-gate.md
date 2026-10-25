@@ -40,6 +40,13 @@ Accepted 2026-10-07. **Owner ruling**, recorded verbatim in
 It settles the half of ADR-239 § Disposition that ADR-266 left `owner` / `open`:
 whether `/roadmap:process-full` may merge.
 
+> **Note, 2026-10-25 — not a reopening.** The gate this record describes was later repaired
+> without rewriting it: #2375 (`85d00e56a7`) and #2381 (`73eb69439b`) gave
+> `src/scripts/classify_merge_risk.ts` a third verdict, `needs-owner`, for
+> owner-reserved surfaces that are never sent for clearance, and runs the
+> classifier from the base revision. Read § Decision for the authority the owner
+> granted; read the classifier for the verdicts it returns today.
+
 ## Context
 
 `/roadmap:process-full` said *"THIS COMMAND NEVER MERGES. THERE IS NO FLAG THAT

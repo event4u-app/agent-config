@@ -1,3 +1,8 @@
+> **This file covers migrations up to 9.8.** Every later release — including
+> 17.0.0's Node 22.6 floor and the hook guards that now run where they were
+> silent — is in [`docs/MIGRATION.md`](docs/MIGRATION.md), and the per-major
+> index of breaking changes is [`BREAKING_CHANGES.md`](BREAKING_CHANGES.md).
+
 # Migrating past 9.8 — scoped projection is the default for NEW installs
 
 `projection.mode` in the settings template flipped from `legacy-all` to
