@@ -1017,7 +1017,17 @@ async function ground(manifest, query, context = null, dials = null) {
       q = `${query} ${priority.slice(0, 2).join(" ")}`;
     }
     const result = search_domain(manifest, q, domain_name, _int(max_results));
-    const results = result.results || [];
+    const results = [...result.results || []];
+    const floor_col = reasoning.category_floor?.[domain_name];
+    if (floor_col && category !== manifest.default_category && !results.some((r) => pyStr2(r[floor_col] ?? "") === category)) {
+      const pool = search_domain(manifest, `${query} ${category.replace(/-/g, " ")}`, domain_name, null, { [floor_col]: category }).results || [];
+      const hit = pool.find((r) => pyStr2(r[floor_col] ?? "") === category);
+      if (hit) {
+        if (results.length >= _int(max_results)) results.pop();
+        results.push(hit);
+        gaps.push(`no '${category}' row ranked in '${domain_name}'; its best row was added by the category floor`);
+      }
+    }
     let best;
     if (domain_name === priority_domain) {
       best = _select_best_match(results, selection_priority, name_cols[domain_name]);

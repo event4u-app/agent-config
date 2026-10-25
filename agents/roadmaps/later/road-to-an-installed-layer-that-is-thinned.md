@@ -481,6 +481,17 @@ rather than as a ninth roadmap.
       **Done 2026-10-18:** the fixture's header names codex as the only host
       covered, and every assertion reads the codex row by its `~/.codex/` anchor.
 
+## Phase 5 — Arrivals from inbox-2026-10-as
+
+> **Arrivals:** 1 — `inbox-2026-10-as` (2026-10-25).
+
+- [ ] **5.1 Publish the 2026-11-10 payload reading.** Measured 135,865 tokens
+      against the 102,520 milestone, and `committed_reduction_mechanism` reads
+      `"NONE"` in `src/config/preamble-payload-budget.json`. On the date, publish
+      the reading, then either name a mechanism or re-set the target with its
+      reason.
+      verify: the step note quotes the output of `./scripts-run src/scripts/check_preamble_payload_budget` taken on or after 2026-11-10.
+
 ## What this roadmap deliberately does not do
 
 - No thinning of any other host (ADR-267).

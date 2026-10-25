@@ -112,6 +112,20 @@ export function coverage(ledger: SecurityLedger): { reviewed: number; total: num
     return { reviewed, total: counted.length, percent: counted.length === 0 ? 0 : Math.round((reviewed / counted.length) * 100) };
 }
 
+export type RunStatus = 'complete' | 'partial' | 'not_enumerated';
+
+/**
+ * `complete` only when something was enumerated deterministically, every such
+ * row was reviewed and no finding is still `needs_validation`. Zero counted rows
+ * is `not_enumerated`, never `complete`: an empty ledger is not a clean one.
+ */
+export function runStatus(ledger: SecurityLedger): RunStatus {
+    const cov = coverage(ledger);
+    if (cov.total === 0) return 'not_enumerated';
+    if (cov.reviewed < cov.total || ledger.findings.some((f) => f.status === 'needs_validation')) return 'partial';
+    return 'complete';
+}
+
 /** The report, derived from the record — open findings, then coverage, then rejected. */
 export function renderLedger(ledger: SecurityLedger | null): string {
     if (ledger === null) return 'Security: not checked — no `/audit code` ledger in agents/runtime/state/security/.\n';
@@ -121,6 +135,7 @@ export function renderLedger(ledger: SecurityLedger | null): string {
     const covText = cov.total === 0 ? 'coverage: not enumerated' : `coverage ${cov.percent} % (${cov.reviewed}/${cov.total} enumerated rows)`;
     const lines: string[] = [
         `Security ledger ${ledger.run} (${ledger.at})`,
+        `status: ${runStatus(ledger)}`,
         `open: ${confirmed.length} confirmed · ${open.length - confirmed.length} needs_validation · ${covText}`,
         '',
         '## Open findings',

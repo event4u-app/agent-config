@@ -118,7 +118,7 @@ Framework-neutral engineering hygiene — git, tests, reviews.
 - **`risk-officer`** — Use when surfacing and prioritising risk before commit — blast-radius framing, mitigations, residual-risk verdict — even if the user just says 'what could go wrong here?'.
 - **`secrets-management`** — When picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI and Kubernetes — decision framework, provider deep-dives externalized.
 - **`security`** — Use when applying security best practices — authentication, authorization, CSRF protection, input sanitization, rate limiting, or secure coding — stack-agnostic.
-- **`security-audit`** — Security audit — vulnerability scan, pentest review, attack-surface sweep; explicit request only, not regular feature work. Pre-implementation threat pass → threat-modeling.
+- **`security-audit`** — Security audit — is my app secure, security vulnerabilities before launch (Sicherheit, Sicherheitslücken, Schwachstellen), pentest. Threat pass first → threat-modeling.
 - **`security-maturity-assessment`** — Use when the user wants a security-maturity scorecard / posture assessment of a module — category ratings with evidence, not a vulnerability hunt. Also on 'wie sicher ist dieses Modul aufgestellt?'
 - **`sentry-integration`** — Use when the user shares a Sentry URL, says "check Sentry", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis.
 - **`server-hardening`** — Use when hardening a Linux host you operate — SSH posture, a default-deny firewall baseline, and unattended security upgrades, each verified on the box rather than assumed from a config file.

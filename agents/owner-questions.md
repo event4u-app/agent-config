@@ -8,6 +8,22 @@ and the run that applies it links its PR.
 
 ## Open
 
+### OQ-13 — Restore the kernel literal in non-destructive-by-default
+
+- **Context:** `check_rule_invariants` exits 1 on main because
+  `src/rules/non-destructive-by-default.md` no longer carries the clause "The
+  ask and the action are strictly sequential … WAIT for the answer"; the rule was
+  reworded. It is the one red in `task ci` an agent may not fix: a kernel-rule
+  edit is owner-gated, and the edit itself is written out in
+  `agents/roadmaps/stubs/road-to-kernel-clause-1-restore.md`. Arrived in four
+  earlier rounds and again in `inbox-2026-10-as`.
+- **Options:** (a) restore the literal sentence as the stub writes it; (b)
+  update the invariant to the current wording and record why; (c) leave it red.
+- **Recommendation:** (a) — the stub's edit is ready and keeps the rule's text
+  and its invariant saying the same thing.
+- **Blocks:** a green `check_rule_invariants`, and with it the last owner-red in
+  `task ci`.
+
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its

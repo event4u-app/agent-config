@@ -120,6 +120,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-routing-assurance-live-floors | later | later | Road to routing assurance — the live-harness floors |
 | road-to-rule-triggers-and-links-that-hold | later | later | What an installed rule file declares and links to is true on the host that loads it. |
 | road-to-seats-that-know-why-they-failed | later | later | Every failure of a council seat carries a class before it gets a reaction, and the class picks the reaction: … |
+| road-to-security-guards-that-hold-at-turn-end | later | later | The skill-level fixes are in: a casual security question now gets a scoped answer. |
 | road-to-skill-ecosystem-capability-queue | later | later | Road to the capability queue — everything capability-shaped, waiting on a capacity slot |
 | road-to-skill-ecosystem-executable-payloads | later | later | Road to executable skill payloads — a skill that only describes work cannot be measured doing it |
 | road-to-skill-ecosystem-security-and-conformance | later | later | Road to security and conformance surface — make three unenforced rules detectable |

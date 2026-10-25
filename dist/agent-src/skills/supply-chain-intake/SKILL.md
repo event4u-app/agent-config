@@ -19,6 +19,7 @@ An LLM generates a plausible-sounding package name token-by-token with no lookup
 - Reviewing an AI-authored diff that touches a dependency manifest or lockfile.
 - An install command was suggested (especially a `curl … | bash` one-liner).
 - About to add or connect an **MCP server** (an `npx`/`uvx`-launched package or a remote endpoint) to the agent config (`.mcp.json` / equivalent) — an MCP server is a dependency plus a tool-grant, so it runs the intake gate too.
+- A Dockerfile, base image or system package install (`apt`, `apk`, `brew`) adds a **file processor** — an image converter, metadata reader, document converter or virus scanner. It parses attacker-supplied uploads, so it is a dependency with an attack surface even though no manifest names it. Check it as a class against the package's advisory database; never pin a version from memory.
 
 Do NOT use when: no dependency is being added and no manifest/lockfile is touched.
 

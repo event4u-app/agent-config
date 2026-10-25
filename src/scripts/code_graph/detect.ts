@@ -13,12 +13,11 @@
  * the artifact embeds a SHA (→ commits_behind), else artifact mtime vs the
  * repo's last commit time. No guessing.
  */
-import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { load_agent_settings } from '../_lib/agent_settings.js';
-import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { gitProbe } from '../_lib/spawn_env.js';
 import { projectHome } from './graph_home.js';
 import { EXT_LANG } from './types.js';
 import { validateGraph } from './validate.js';
@@ -76,11 +75,7 @@ export function consumerCandidates(root: string): string[] {
 
 function gitLastCommitEpoch(root: string): number | null {
     try {
-        const out = execFileSync('git', ['-C', root, 'log', '-1', '--format=%ct'], {
-            env: hardenedSpawnEnv(),
-            encoding: 'utf-8',
-            stdio: ['ignore', 'pipe', 'ignore'],
-        }).trim();
+        const out = gitProbe(root, ['log', '-1', '--format=%ct']).trim();
         const n = Number(out);
         return Number.isFinite(n) ? n : null;
     } catch {
@@ -90,11 +85,7 @@ function gitLastCommitEpoch(root: string): number | null {
 
 function commitsBehind(root: string, sha: string): number | null {
     try {
-        const out = execFileSync('git', ['-C', root, 'rev-list', '--count', `${sha}..HEAD`], {
-            env: hardenedSpawnEnv(),
-            encoding: 'utf-8',
-            stdio: ['ignore', 'pipe', 'ignore'],
-        }).trim();
+        const out = gitProbe(root, ['rev-list', '--count', `${sha}..HEAD`]).trim();
         const n = Number(out);
         return Number.isFinite(n) ? n : null;
     } catch {
@@ -277,10 +268,7 @@ export type GraphState = 'absent' | 'fresh' | 'edited' | `behind:${number}`;
 function hasUncommittedIndexedEdit(root: string): boolean {
     let out: string;
     try {
-        out = execFileSync('git', ['-C', root, 'status', '--porcelain', '--untracked-files=all'], {
-            env: hardenedSpawnEnv(),
-            encoding: 'utf-8',
-            stdio: ['ignore', 'pipe', 'ignore'],
+        out = gitProbe(root, ['status', '--porcelain', '--untracked-files=all'], {
             // Both bounds are the review's: Node's 1 MB default would throw
             // ENOBUFS on a large working tree, the catch below would return
             // false, and the state would read `fresh` — a second silent

@@ -728,7 +728,21 @@ export async function ground(
             q = `${query} ${priority.slice(0, 2).join(' ')}`;
         }
         const result = search_domain(manifest, q, domain_name, _int(max_results));
-        const results = (result.results as Row[] | null) || [];
+        const results = [...((result.results as Row[] | null) || [])];
+        // Opt-in category floor: when the category lookup grounded the request
+        // but no row of that class reached this domain's top rows, the class's
+        // best row takes the last slot. Without it a correctly grounded upload
+        // surface could carry only IDOR or tenancy threats.
+        const floor_col = (reasoning.category_floor as Record<string, string> | undefined)?.[domain_name];
+        if (floor_col && category !== manifest.default_category && !results.some((r) => pyStr(r[floor_col] ?? '') === category)) {
+            const pool = (search_domain(manifest, `${query} ${category.replace(/-/g, ' ')}`, domain_name, null, { [floor_col]: category }).results as Row[] | null) || [];
+            const hit = pool.find((r) => pyStr(r[floor_col] ?? '') === category);
+            if (hit) {
+                if (results.length >= _int(max_results)) results.pop();
+                results.push(hit);
+                gaps.push(`no '${category}' row ranked in '${domain_name}'; its best row was added by the category floor`);
+            }
+        }
         let best: Row;
         if (domain_name === priority_domain) {
             best = _select_best_match(results, selection_priority, name_cols[domain_name]);
