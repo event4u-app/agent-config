@@ -16,6 +16,7 @@ import * as fs from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { EVIDENCE_TIERS } from './analysis_ledger.js';
+import { isMediaAnchor } from './_lib/media_anchor.js';
 import { RunError, loadRun, transition, type RunRecord } from './analysis_run.js';
 
 export const VALIDATION_GATES = [
@@ -37,6 +38,7 @@ const PACKAGE_TREE_GATES: ReadonlySet<ValidationGate> = new Set(['lint_roadmap_b
 
 const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const EVIDENCE_RE = new RegExp(`Evidence \\((${EVIDENCE_TIERS.join('|')})\\): \`[^\`]+\``);
+const EVIDENCE_ANCHORS_RE = new RegExp(`Evidence \\((?:${EVIDENCE_TIERS.join('|')})\\): \`([^\`]+)\``, 'g');
 
 export const scriptGateRunner: GateRunner = (gate, ctx) => {
     const args =
@@ -57,6 +59,12 @@ export function contentFailures(body: string, name: string, opts: { councilDisse
         const heading = section.split('\n', 1)[0] as string;
         if (!heading.startsWith('Phase ')) continue;
         if (!EVIDENCE_RE.test(section)) out.push(`${name}: claim of "${heading}" carries no anchor and tier`);
+        for (const m of section.matchAll(EVIDENCE_ANCHORS_RE)) {
+            const anchor = m[1] as string;
+            if (/^S\d+@/.test(anchor) && !isMediaAnchor(anchor)) {
+                out.push(`${name}: claim of "${heading}" carries a malformed media anchor \`${anchor}\` (expected S<n>@mm:ss #tile)`);
+            }
+        }
         const lines = section.split('\n');
         for (let i = 0; i < lines.length; i++) {
             const m = /^- \[[ x~-]\] \*\*(\d+\.\d+)/.exec(lines[i] as string);

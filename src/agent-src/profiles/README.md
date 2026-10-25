@@ -22,8 +22,18 @@ Adding a seventh seed profile requires an ADR. User-defined project-local
 profiles (any `<id>.yml` not in the seed list above) are allowed without
 an ADR but MUST match the schema enforced by `task lint-config-schema`.
 
+## Not the command views
+
+`src/profiles/*.yaml` carries the same six ids as **command views** — the
+curated command set `agent-config commands ls --profile <id>` renders. Its
+`packs:` list names the packs whose commands `--expanded` adds; the `packs:`
+list here names capability packs for scoped projection. Same key, different
+vocabulary, so the two lists are not expected to match. Which tree owns the
+"who" axis is an open maintainer decision.
+
 ## See also
 
+- [`src/profiles/README.md`](../../profiles/README.md) — the command views.
 - [`docs/contracts/profile-system.md`](../../docs/contracts/profile-system.md) — schema and loader contract.
 - [`docs/contracts/config-presets.md`](../../docs/contracts/config-presets.md) — preset axis.
 - [`scripts/config/profiles.ts`](../../scripts/config/profiles.ts) — loader.

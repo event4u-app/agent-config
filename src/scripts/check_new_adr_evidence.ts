@@ -31,6 +31,10 @@
  *   2. an `evidence:` map carrying a `strength:`
  *   3. an `## Evidence` section in the body (heading at any level)
  *
+ * and, when its provenance claims the OWNER decided (`human_directed: true` or
+ * `owner` in `decision_makers`), a fourth: an existing owner-directive file
+ * (`OWNER_DIRECTIVE_DIR`) named in `evidence.basis`.
+ *
  * `authority_basis: owner_intent` does NOT excuse the section. That field
  * governs where a record's AUTHORITY comes from — an owner purpose statement is
  * legitimately E0 and its alternatives are foreclosed by ownership — and it says
@@ -72,7 +76,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { evidenceOf, provenanceOf, readAdrFrontmatter } from './_lib/adr_frontmatter.js';
+import { type AdrProvenance, evidenceOf, provenanceOf, readAdrFrontmatter } from './_lib/adr_frontmatter.js';
 import { GateLedger } from './_lib/gate_ledger.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
@@ -184,6 +188,35 @@ const REMEDY =
     '`authority_basis: owner_intent` governs authority, never disclosure, and ' +
     'does not exempt any of the three.';
 
+/**
+ * Where the owner's own recorded words live, one dated file per directive.
+ *
+ * ADR-286 recorded a refusal as the owner's when he had only chosen between
+ * bundled options, and nothing in the record pointed at what he actually said.
+ * Requiring the citation cannot prove the words are his — the deciding evidence
+ * is a chat no gate reads — but it makes the claim checkable by a reader and
+ * puts the forgery in a file of its own instead of in a frontmatter flag.
+ */
+export const OWNER_DIRECTIVE_DIR = 'agents/evidence/owner-directives';
+
+const OWNER_REMEDY =
+    'the record claims an owner decision: cite the owner\'s verbatim words, or record it as `agentic`/`mixed`';
+
+/** Does the provenance say the OWNER decided, rather than an agent or a council? */
+export function claimsOwnerDecision(provenance: AdrProvenance | null): boolean {
+    if (provenance === null) return false;
+    return provenance.humanDirected === 'true' || provenance.decisionMakers.includes('owner');
+}
+
+/** Does one basis entry name an existing owner-directive file? */
+export function citesOwnerDirective(root: string, basis: readonly string[]): boolean {
+    return basis.some((entry) => {
+        const rel = entry.trim();
+        if (!rel.startsWith(`${OWNER_DIRECTIVE_DIR}/`) || !rel.endsWith('.md') || rel.includes('..')) return false;
+        return fs.existsSync(path.join(root, rel));
+    });
+}
+
 export function checkRecords(root: string, files: readonly string[], ledger?: GateLedger): CheckResult {
     const findings: Finding[] = [];
     const outOfScope: { file: string; status: string }[] = [];
@@ -223,9 +256,14 @@ export function checkRecords(root: string, files: readonly string[], ledger?: Ga
         }
 
         const missing: string[] = [];
-        if (provenanceOf(fm)?.kind == null) missing.push('`provenance.kind`');
-        if (evidenceOf(fm)?.strength == null) missing.push('`evidence.strength`');
+        const provenance = provenanceOf(fm);
+        const evidence = evidenceOf(fm);
+        if (provenance?.kind == null) missing.push('`provenance.kind`');
+        if (evidence?.strength == null) missing.push('`evidence.strength`');
         if (!hasEvidenceSection(text)) missing.push('an `## Evidence` section');
+        if (claimsOwnerDecision(provenance) && !citesOwnerDirective(root, evidence?.basis ?? [])) {
+            missing.push(`an existing \`${OWNER_DIRECTIVE_DIR}/*.md\` in \`evidence.basis\` (${OWNER_REMEDY})`);
+        }
 
         if (missing.length > 0) {
             ledger?.fail(rel, `missing ${missing.join(', ')}`);
@@ -400,6 +438,7 @@ function _repo(parent: string, record: FixtureOpts | null): { root: string; base
     const root = fs.mkdtempSync(path.join(parent, 'repo-'));
     _gitQuiet(root, ['init', '-q']);
     _write(root, 'README.md', '# base\n');
+    _write(root, SELF_TEST_DIRECTIVE, '# Owner directive\n');
     _gitQuiet(root, ['add', '-A']);
     _gitQuiet(root, ['commit', '-q', '-m', 'base']);
     const base = _git(root, ['rev-parse', 'HEAD']).trim();
@@ -423,11 +462,15 @@ const FULL_FRONTMATTER = [
     'review_trigger: Reopen when the probe stops probing.',
     'provenance:',
     '  kind: mixed',
-    '  decision_makers: [owner]',
+    '  decision_makers: [council]',
     'evidence:',
     '  strength: E3',
     '  discovery: complete',
 ].join('\n');
+
+const SELF_TEST_DIRECTIVE = `${OWNER_DIRECTIVE_DIR}/probe.md`;
+
+const OWNER_FRONTMATTER = FULL_FRONTMATTER.replace('[council]', '[owner]');
 
 export function selfTest(): number {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cnae-'));
@@ -445,8 +488,8 @@ export function selfTest(): number {
     try {
         return runSelfTest({
             gate: 'check_new_adr_evidence',
-            minCases: 7,
-            minRejectCases: 4,
+            minCases: 9,
+            minRejectCases: 5,
             cases: [
                 {
                     name: 'a branch that adds no record passes — the normal case must stay green',
@@ -489,6 +532,20 @@ export function selfTest(): number {
                         run({
                             frontmatter: `${FULL_FRONTMATTER}\nauthority_basis: owner_intent`,
                             body: '## Context\n\nOwner says so.\n',
+                        }),
+                },
+                {
+                    name: 'an owner-claimed record citing no owner directive is rejected',
+                    expect: 'reject',
+                    run: () => run({ frontmatter: OWNER_FRONTMATTER, body: '## Evidence\n\nThe owner chose.\n' }),
+                },
+                {
+                    name: 'an owner-claimed record citing an existing owner directive passes',
+                    expect: 'accept',
+                    run: () =>
+                        run({
+                            frontmatter: `${OWNER_FRONTMATTER}\n  basis:\n    - ${SELF_TEST_DIRECTIVE}`,
+                            body: '## Evidence\n\nVerbatim.\n',
                         }),
                 },
                 {

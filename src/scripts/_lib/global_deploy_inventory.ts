@@ -859,6 +859,23 @@ export function recorded_rel_files(
 }
 
 /**
+ * True when a file `recorded_rel_files` returned was changed since this package
+ * wrote it, judged by the digest the deploy recorded. A file with no recorded
+ * digest (a schema-1 entry) reads as unedited, which is the behaviour it had.
+ */
+export function recorded_file_edited(
+  tool_id: string,
+  anchor: string,
+  rel: string,
+  inventory?: Inventory | null,
+): boolean {
+  const inv = inventory ?? load_inventory();
+  const entry = ((inv["tools"] as Record<string, unknown> | undefined) ?? {})[tool_id];
+  if (typeof entry !== "object" || entry === null || Array.isArray(entry)) return false;
+  return edited_since_install(path.resolve(expanduser(anchor), rel), digests_of_entry(entry as Record<string, unknown>).get(rel));
+}
+
+/**
  * Every file a previous deploy recorded, as ABSOLUTE paths, across all tools.
  *
  * `recorded_rel_files` answers "did this package write that file" for one tool

@@ -69,6 +69,10 @@
     {
       "prompt": "analyse PR #42 in depth and report findings with file:line",
       "expected": "analyze-pr"
+    },
+    {
+      "prompt": "analyse this TikTok video and tell me what we can adopt: https://www.tiktok.com/@creator/video/123",
+      "expected": "analyze-post"
     }
   ]
 }

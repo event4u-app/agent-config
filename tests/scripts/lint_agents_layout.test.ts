@@ -202,6 +202,12 @@ describe('lint_agents_layout — real-repo regression', () => {
         const unknown = mod.find_violations(path.join(REPO_ROOT, 'agents'));
         expect(unknown).toEqual([]);
     });
+
+    it('test_real_repo_tracked_dirs_are_known_in_source_mode', () => {
+        const agents = path.join(REPO_ROOT, 'agents');
+        expect(mod.is_source_repo(REPO_ROOT)).toBe(true);
+        expect(mod.find_violations(agents, true)).toEqual([]);
+    });
 });
 
 // --- CLI golden parity on the REAL REPO -------------------------------------

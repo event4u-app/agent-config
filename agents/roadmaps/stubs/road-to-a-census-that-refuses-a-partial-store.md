@@ -69,3 +69,15 @@ Promote when either fires:
 Until then the mitigation is what this stub is: the failure mode is written
 down, and `road-to-the-14-22-0-disposition-residuals` step 1.3 records the one
 run that met it and declined.
+
+## Also held here — a second census column
+
+Round `inbox-2026-10-an` (2026-10-25) found the census counts only a `tool_use`
+named `Skill` (`report_skill_activation.ts`, the `p['name'] !== 'Skill'` skip),
+so a session that opens a `SKILL.md` with `Read` counts as no activation. A
+second column for `Read` of `**/skills/*/SKILL.md` would separate "never
+loaded" from "loaded by reading". It is held with this stub because both touch
+the same reader and the same published record: building the column on a store
+this stub says may be partial would publish a second number with the first
+number's defect. It does not reopen ADR-263, whose falsifier is a second store,
+not a second column.

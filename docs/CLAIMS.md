@@ -331,7 +331,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-10-18
 
 ### claim: uninstall-purge-inventory-bounded
-- claim: `uninstall --global --purge` deletes only the anchor-relative paths this package's own deploy inventory recorded writing, never the host anchor itself — a file nothing recorded is byte-identical afterwards, a recorded path that is a symlink is unlinked rather than followed, and an absent or unreadable inventory refuses with exit 1 having deleted nothing.
+- claim: `uninstall --global --purge` deletes only the anchor-relative paths this package's own deploy inventory recorded writing, never the host anchor itself — a file nothing recorded is byte-identical afterwards, a recorded path that is a symlink is unlinked rather than followed, a recorded file whose bytes differ from the digest the deploy recorded is kept and counted, and an absent or unreadable inventory refuses with exit 1 having deleted nothing.
 - kind: qual
 - evidence: exec:vitest run tests/install/uninstall_purge_containment.test.ts tests/install/uninstall_lockfile_retention.test.ts -> 0
 - note: Separate from `surgical-uninstall` because the two properties fail independently and share no mechanism: that one is JSON-pointer plus SHA-256 ownership of KEYS inside a shared config file, this one is inventory-bounded deletion of FILES under a shared directory. The purge half was the weaker of the two until 2026-10-16: `_remove_global_content` ran `fs.rmSync(anchor, { recursive: true })` on whole host configuration roots — `~/.claude/`, `~/.codex/`, `~/.config/zed/` — so everything under them went, a host's own credentials file included, while the README line above already advertised a surgical uninstall. Zero of the 47 files in `tests/install/` touched the surface, so the behaviour had never been pinned in either direction. The containment suite was observed RED against `26c06aef7` (`.credentials.json was deleted`) and carries a refusal arm, so the fix cannot satisfy it by deleting nothing at all. The retention suite is the CLI-level half added 2026-10-17: the lockfile is the only route to the inventory, and deleting it while recorded content was still on disk stranded 892 measured files behind a command that would no longer run.
@@ -458,7 +458,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-08
 
 ### claim: command-count
-- claim: 210 commands.
+- claim: 211 commands.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed

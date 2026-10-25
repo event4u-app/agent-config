@@ -42,6 +42,41 @@ reason, which no arithmetic can.
 or that promises a future breaking removal, gets a row here in the same commit
 that makes the promise. A promise with no row is not tracked and will be missed.
 
+## 18.0.0 — two projection keys are removed, and the surface is derived
+
+✋ manual on hosts without a listing lever · 🔄 automatic everywhere else.
+
+### `projection.mode` is removed
+
+Skill and command scope is decided per host (`79cb86c0dd`). claude-code and
+codex receive every skill and command and scope them by visibility
+(`skillOverrides`, the codex finder index). Every other host receives the
+active profile's packs plus `runtime.active_packs` — no longer every skill,
+which is what an install without the key, or with `legacy-all`, used to get.
+
+- **On claude-code or codex:** nothing to do.
+- **On any other host:** add the packs you need to `runtime.active_packs`.
+- **Set the key:** a leftover `projection.mode` is named as removed and
+  ignored. An explicit `legacy-all` is converted once into the install
+  receipt's rule-layer pin (ADR-293 point 5).
+- `agent-config use --profile=legacy-all` is removed and exits 2.
+
+### `projection.rule_packs` is removed
+
+The rule layer's pack axis is derived from the active packs (`a3d4596078`). A
+consumer install ships a non-kernel rule only when its `packs:` meet the
+active-pack set. A default install therefore stops receiving the eight
+pack-scoped rules whose packs it lacks: `finance-safety-floor`,
+`legal-safety-floor`, `strategy-safety-floor`, `image-likeness-and-rights`,
+`media-governance-routing`, `media-sync-ground-truth`,
+`provider-lifecycle-discipline`, `spreadsheet-source-quality`.
+
+- **Accept the derived scope:** nothing to do.
+- **Want one of those rules:** activate its pack in `runtime.active_packs`.
+- **Set the key:** for one release window an explicitly written value still
+  decides; `agent-config doctor --check rule-packs-legacy` names how it
+  differs from the derived set. Delete the key before the window closes.
+
 ## 17.0.0 — Node 22 is the floor, and the rule-layer form is no longer a setting
 
 ✋ manual on Node 20 · 🔄 automatic for the removed settings keys.
@@ -87,11 +122,33 @@ returns the full layer whenever any of its conditions is missing.
 
 ### Also in 17.0.0 — changes that landed after 16.5.0
 
-The two rows of the `BREAKING_CHANGES.md` pending table ship in this release:
-three `fail_closed` hook guards now run on installs where the hook command
-used to end silently, and `uninstall --global --purge` deletes only what this
-package recorded writing rather than whole host configuration roots. The
-migration for each is in that row.
+Two breaking changes that were pending since 16.5.0 ship in this release. Their
+rows left the `BREAKING_CHANGES.md` pending table once it was clear they had
+shipped, so their migration lives here.
+
+**Three `fail_closed` hook guards run where they were silent** (`3f8c98e74`,
+#2455). `block-no-verify`, `block-kernel-rule-writes` and `block-plumbing-writes`
+now reach a dispatcher staged under `~/.event4u/agent-config/runtime/` and may
+refuse a tool call for the first time.
+
+- **An existing install gets them only on its next global deploy.** The hook
+  command lives in `~/.claude/settings.json` and is rewritten only when the
+  global deploy runs (`ensure_managed_hooks`, `src/scripts/install.ts`). Run
+  `agent-config upgrade` — its second step is `install --global` — or, without a
+  version change, `agent-config refresh --global`. Until then the old command
+  stays in place and ends silently where it did before.
+- A workflow that relied on an agent committing with `--no-verify`, or editing
+  this package's kernel rules or hook plumbing, now meets a refusal: run the
+  hooks, or make that edit by hand. `agent-config doctor` prints the carrier
+  state (`hook-carrier`).
+
+**`uninstall --global --purge` deletes only what this package recorded writing**
+(`b352d9ab8d`, #2399). It used to remove whole host configuration roots
+(`~/.claude/`, `~/.codex/`, `~/.config/zed/`). Anyone who used `--purge` as a
+host-configuration reset must now delete the rest with the host's own tooling;
+anyone who used it to uninstall this package needs to do nothing. A plain
+`uninstall --global` keeps the lockfile while recorded content is still on disk;
+the `--purge` run that follows removes it.
 
 ## 16.2.0 — `doctor --json` reads the forge, and `--no-forge` opts out
 

@@ -25,6 +25,7 @@ import { buildFromRepo, readProjectProbe } from './build.js';
 import { acquire as acquireRefreshLock, heldByThisProcess } from './refresh_lock.js';
 import { computeVerdict, graphState } from './detect.js';
 import { graphHome } from './graph_home.js';
+import { BLAST_SCOPE_ROLES, SOLE_OWNER_MIN_CHURN, SOLE_OWNER_SHARE, finishAnswers, layerOf, readFileFacts, readGitHistory, readLayerRules } from './map_answers.js';
 import {
     areaDrift,
     buildMapModel,
@@ -35,7 +36,9 @@ import {
     outcomeScores,
     prOverlap,
 } from './map_model.js';
+import { loadGraph } from './query.js';
 import type { CodeGraph } from './types.js';
+import { dead, repoEntryPoints } from './verbs.js';
 
 const _HERE = path.dirname(fileURLToPath(import.meta.url));
 const VIEWER_DIR = path.join(_HERE, 'map_viewer');
@@ -357,6 +360,7 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
         summary: '',
         graph_generation: graphGeneration(cachePath) ?? createHash('sha256').update(JSON.stringify(graph)).digest('hex').slice(0, 16),
     };
+    answerQuestions(root, outDir, cachePath, graph, model, meta);
     meta.summary =
         `${model.files.length} files · ${model.areas.length} areas · ` +
         `${model.analyses.trustedEdges} trusted links · guess share ${pct(model.analyses.guessShare)}`;
@@ -392,6 +396,104 @@ async function drawGeneration(root: string, opts: Parameters<typeof buildMap>[1]
         fs.rmSync(next, { recursive: true, force: true });
     }
     return { outDir, model, meta, written, graphBuilt: built };
+}
+
+/**
+ * The per-file and repo-level answers that need the tree, git or the dead verb:
+ * written onto the model before it is serialised, so `map.json`, `MAP.md` and
+ * `index.html` read the same values.
+ */
+function answerQuestions(root: string, outDir: string, cachePath: string, graph: CodeGraph, model: MapModel, meta: MapMeta): void {
+    const paths = model.files.map((f) => f.path);
+    readFileFacts(root, paths).forEach((facts, i) => {
+        const f = model.files[i] as MapModel['files'][number];
+        f.lang = facts.lang;
+        if (facts.loc !== undefined) f.loc = facts.loc;
+    });
+    const history = readGitHistory(root);
+    if (history) {
+        for (const f of model.files) {
+            const h = history.get(f.path);
+            f.churn = h?.churn ?? 0;
+            if (h) {
+                f.owners = h.owners;
+                f.lastChange = h.lastChange;
+                if (h.churn >= SOLE_OWNER_MIN_CHURN && (h.owners[0]?.[1] ?? 0) > SOLE_OWNER_SHARE) f.soleOwner = true;
+            }
+        }
+    }
+    markDead(root, cachePath, graph, model);
+    const rules = readLayerRules(path.join(outDir, 'layers.yaml'));
+    if (rules) {
+        for (const f of model.files) {
+            const layer = layerOf(f.path, rules);
+            if (layer) f.layer = layer;
+        }
+    }
+    finishAnswers(model, rules);
+    model.pin = {
+        commit: meta.commit,
+        date: history ? headDate(root) : '',
+        freshness: meta.state,
+        generation: meta.graph_generation ?? '',
+    };
+}
+
+function headDate(root: string): string {
+    try {
+        return execFileSync('git', ['-C', root, 'log', '-1', '--format=%cs'], {
+            env: hardenedSpawnEnv(),
+            encoding: 'utf-8',
+            stdio: ['ignore', 'pipe', 'ignore'],
+        }).trim();
+    } catch {
+        return '';
+    }
+}
+
+/**
+ * A scope file is dead when the `dead` verb lists every symbol it declares and
+ * no trusted edge enters it. The verb runs with the exports gap accepted — the
+ * extractor records no exportedness — and `deadBasis` says so on the map.
+ */
+function markDead(root: string, cachePath: string, graph: CodeGraph, model: MapModel): void {
+    let g: ReturnType<typeof loadGraph>;
+    try {
+        g = loadGraph(cachePath);
+    } catch {
+        model.analyses.deadBasis = 'no graph cache to run the dead verb on';
+        return;
+    }
+    try {
+        const res = dead(g, repoEntryPoints(root), 'fresh', { acceptMissingExports: true });
+        if (res.refusal !== null) {
+            model.analyses.deadBasis = res.refusal;
+            return;
+        }
+        const deadIds = new Set(res.dead);
+        const symbolsOf = new Map<string, string[]>();
+        for (const n of graph.nodes) {
+            if (n.kind === 'file' || n.kind === 'skipped') continue;
+            const list = symbolsOf.get(n.source_file) ?? [];
+            list.push(n.id);
+            symbolsOf.set(n.source_file, list);
+        }
+        // A guessed link (name lookup, dynamic call) may be the only way a file is reached.
+        const guessedInto = new Set(model.guessEdges.map(([, t]) => t));
+        let count = 0;
+        for (const [i, f] of model.files.entries()) {
+            if (!BLAST_SCOPE_ROLES.has(f.role) || f.role === 'entry' || f.inFiles > 0 || guessedInto.has(i)) continue;
+            const syms = symbolsOf.get(f.path) ?? [];
+            if (syms.length === 0 || !syms.every((id) => deadIds.has(id))) continue;
+            f.dead = true;
+            count++;
+        }
+        model.analyses.deadFiles = count;
+        model.analyses.deadBasis =
+            'exports unchecked: the extractor records no exportedness, so an exported but unimported file counts as dead; entry files and files reached by a guessed link are never counted';
+    } finally {
+        g.close?.();
+    }
 }
 
 /**
@@ -503,6 +605,39 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
 
     const sections: Array<[string, string]> = [];
     const areaLabel = (i: number): string => `${m.areas[i]?.id ?? ''} ${md(m.areas[i]?.name ?? '')}`;
+
+    if (m.health) {
+        const h = m.health;
+        const row = (label: string, v: { value: number; points: number } | undefined, shown: (x: number) => string): string =>
+            v ? `| ${label} | ${shown(v.value)} | ${v.points} / 25 |` : `| ${label} | missing | — |`;
+        const findings = [
+            `${m.analyses.cyclesTotal} file cycles`,
+            m.analyses.layerBreaches !== undefined ? `${m.analyses.layerBreaches} layer breaches` : 'no layers.yaml, so no layer breaches checked',
+            m.analyses.deadFiles !== undefined ? `${m.analyses.deadFiles} dead files (${m.analyses.deadBasis ?? ''})` : `dead files unknown: ${m.analyses.deadBasis ?? 'not computed'}`,
+            ...(m.hotspots ?? []).slice(0, 3).map(([i, c, l]) => `hotspot ${code(f[i]?.path ?? '')}: ${c} commits × ${l} lines`),
+            ...m.analyses.surprises.slice(0, 1).map(([s, t]) => `surprising edge ${code(f[s]?.path ?? '')} → ${code(f[t]?.path ?? '')}`),
+        ].slice(0, 5);
+        sections.push([
+            'Health',
+            [
+                `## Health — ${h.grade ? `${h.grade}, ${h.score} of 100` : 'no grade while a part is missing'}`,
+                '',
+                '| Part | Value | Points |',
+                '|---|---|---|',
+                row('Dead code files', h.parts.dead, pct),
+                row('File cycles', h.parts.cycles, String),
+                row('Guessed edges', h.parts.guesses, pct),
+                row('Hotspot files', h.parts.hotspots, pct),
+                '',
+                'Formula: `health.formula` in `map.json`.',
+                '',
+                'Top findings:',
+                '',
+                ...findings.map((x) => `- ${x}`),
+                '',
+            ].join('\n'),
+        ]);
+    }
 
     if (m.drift) {
         const d = m.drift;
@@ -835,7 +970,7 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
     ].join('; ');
     return [
         '<!doctype html>',
-        '<html lang="en">',
+        '<html lang="en" data-resolved-theme="dark">',
         '<head>',
         '<meta charset="utf-8">',
         '<meta name="viewport" content="width=device-width, initial-scale=1">',
@@ -844,29 +979,66 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         `<style>${css}</style>`,
         '</head>',
         '<body>',
-        '<header>',
-        `<h1>${htmlText(meta.title)}</h1>`,
-        '<nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>',
-        '<div class="search"><input id="search" type="search" autocomplete="off"><ul class="results" id="results"></ul></div>',
-        '<div class="toolbar">',
-        '<button type="button" id="lens-areas" aria-pressed="true"></button>',
-        '<button type="button" id="lens-folders" aria-pressed="false"></button>',
-        '<button type="button" id="lens-artefacts" aria-pressed="false" hidden></button>',
-        '<button type="button" id="t-infra" aria-pressed="true"></button>',
-        '<button type="button" id="t-guess" aria-pressed="false"></button>',
-        '<button type="button" id="t-tests" aria-pressed="true"></button>',
-        '<button type="button" id="z-out">−</button>',
-        '<button type="button" id="z-in">+</button>',
-        '<button type="button" id="z-fit"></button>',
-        '<button type="button" id="dim" aria-pressed="false"></button>',
-        '<button type="button" id="theme"></button>',
-        '<button type="button" id="lang"></button>',
+        '<header class="top">',
+        '<div class="brand">',
+        '<svg width="40" height="40" role="img" aria-label="AC"><rect x="1.5" y="1.5" width="37" height="37" rx="9"></rect>' +
+            '<path d="M8 10 L14 7 L21 9 M21 9 L30 7 M30 7 L33 13" fill="none" stroke="#3ec5ff" stroke-width="1" opacity="0.8"></path>' +
+            '<circle cx="8" cy="10" r="1.8" fill="#ff8c2a"></circle><circle cx="21" cy="9" r="1.8" fill="#3ec5ff"></circle>' +
+            '<circle cx="30" cy="7" r="1.8" fill="#3ec5ff"></circle><circle cx="33" cy="13" r="1.8" fill="#ff8c2a"></circle>' +
+            '<text x="20" y="31">AC</text></svg>',
+        '<div class="brand-name"><b>AGENT CONFIG</b><span>CODE MAP</span></div>',
+        '</div>',
+        '<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span><span class="chip gen" id="pin-gen"></span></div>',
+        '<div class="search"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="5"></circle><path d="M11 11l3.5 3.5"></path></svg>' +
+            '<input id="search" type="search" autocomplete="off"><span class="kbd mono">/</span><ul class="results" id="results"></ul></div>',
+        '<div class="actions">',
+        '<button type="button" class="btn" id="export"></button>',
+        '<button type="button" class="btn icon" id="theme"><svg id="theme-sun" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="3"></circle><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1 1M11.6 11.6l1 1M3.4 12.6l1-1M11.6 4.4l1-1"></path></svg>' +
+            '<svg id="theme-moon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true" hidden><path d="M13.5 9.5A6 6 0 0 1 6.5 2.5a6 6 0 1 0 7 7z"></path></svg></button>',
+        '<button type="button" class="btn mono" id="lang" aria-label="Language"></button>',
         '</div>',
         '</header>',
-        '<main>',
-        '<div class="stage"><canvas id="stage" role="img" aria-label="Project map"></canvas></div>',
-        '<aside id="panel" aria-live="polite"></aside>',
+        '<div class="wb" id="wb">',
+        '<aside class="rail" aria-label="Repository">',
+        '<section id="health"></section>',
+        '<section id="kpis"></section>',
+        '<section id="colorby"></section>',
+        '<section id="explorer"></section>',
+        '</aside>',
+        '<main class="center">',
+        '<div class="bar-top">',
+        '<div class="lenses" role="tablist" aria-label="View" id="lenses"></div>',
+        '<div class="filters"><span id="edges-label"></span>' +
+            '<button type="button" class="fbtn" id="t-sure" aria-pressed="true"></button>' +
+            '<button type="button" class="fbtn dash" id="t-guess" aria-pressed="false"></button>' +
+            '<button type="button" class="fbtn" id="t-tests" aria-pressed="true"></button>' +
+            '<button type="button" class="fbtn" id="t-infra" aria-pressed="false"></button>' +
+            '<button type="button" class="fullbtn" id="full" aria-pressed="false"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M1 5V1h4M13 5V1H9M1 9v4h4M13 9v4H9"></path></svg><span id="full-label"></span></button></div>',
+        '</div>',
+        '<nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>',
+        '<div class="view">',
+        '<div id="graphwrap">',
+        '<div class="stage">',
+        '<canvas id="stage" role="img" aria-label="Project map"></canvas>',
+        '<div class="overlay">',
+        '<div class="seg" role="group" aria-label="2D / 3D"><button type="button" id="dim2d" aria-pressed="true"></button><button type="button" id="dim" aria-pressed="false"></button></div>',
+        '<div class="seg"><button type="button" class="z" id="z-out">−</button><button type="button" class="z" id="z-in">+</button><button type="button" class="fit" id="z-fit"></button></div>',
+        '<button type="button" class="backbtn" id="back" hidden></button>',
+        '</div>',
+        '<div class="hintbar"><span id="hint"></span><span id="zoomtxt"></span></div>',
+        '<div class="fullcard" id="fullcard" hidden></div>',
+        '</div>',
+        '<div class="legend" id="legend"></div>',
+        '</div>',
+        '<div id="lensview" hidden></div>',
+        '</div>',
+        '<footer class="foot" id="foot"></footer>',
         '</main>',
+        '<aside class="rail side" aria-label="Detail">',
+        '<div class="tabs" role="tablist" aria-label="Detail" id="tabs"></div>',
+        '<div id="panel" aria-live="polite"></div>',
+        '</aside>',
+        '</div>',
         `<script type="application/json" id="map-data">${data}</script>`,
         `<script>${js}</script>`,
         '</body>',

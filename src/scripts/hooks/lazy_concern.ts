@@ -84,6 +84,10 @@ export const LAZY_CONCERNS: Readonly<Record<string, { readonly chunk: string; re
             chunk: 'update_notice.chunk.cjs',
             source: path.join('..', 'update_notice_hook'),
         }),
+        'src/scripts/star_ask_hook.ts': Object.freeze({
+            chunk: 'star_ask.chunk.cjs',
+            source: path.join('..', 'star_ask_hook'),
+        }),
         'src/scripts/hooks/layer_promotion_hook.ts': Object.freeze({
             chunk: 'layer_promotion.chunk.cjs',
             source: 'layer_promotion_hook',

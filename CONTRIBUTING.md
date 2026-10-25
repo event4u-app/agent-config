@@ -328,7 +328,7 @@ the policy is interpreted as follows:
 
 | Bump | Triggers |
 |---|---|
-| **Major** (X.0.0) | A commit in the release carries `Consumer-Impact: action`. Installer layout changes (files created/removed), breaking changes to `.agent-settings.yml` keys (a key removed or renamed with an automatic migration is not one — see below), removal of rules, skills or commands that downstream projects relied on, breaking changes to the condensed content format. |
+| **Major** (X.0.0) | A commit in the release carries `Consumer-Impact: action`. Installer layout changes (files created/removed), breaking changes to `.agent-settings.yml` keys (a key removed or renamed with an automatic migration is not one — see below), removal of rules, skills or commands that downstream projects relied on, breaking changes to the condensed content format, a row of `BREAKING_CHANGES.md` § Pending that the release ships. |
 | **Minor** (x.X.0) | New skills, rules, commands, or guidelines. New tool support. New installer flags. New `.agent-settings.yml` keys with safe defaults. |
 | **Patch** (x.x.X) | Wording fixes and improvements in existing skills, linter fixes, CI changes, documentation updates, internal refactors with no user-visible effect. |
 

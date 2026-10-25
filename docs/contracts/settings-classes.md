@@ -247,12 +247,12 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 
 | Class | Keys |
 |---|---|
-| A — preference | 9 |
+| A — preference | 11 |
 | B — consent | 3 |
 | C — guarded | 102 |
-| **Total** | **114** |
+| **Total** | **116** |
 
-It fell to 114 on 2026-10-24 when step 4.7 removed `projection.mode` (owner answer OQ-1), and to 115 the same day when step 4.9 of `road-to-a-setup-that-decides-itself` removed `projection.rule_packs` (owner directive, D14). It rose to 116 on 2026-10-21 when the advisories council round 3 added `advisories.kev` — one C, `policy`: it decides whether a refresh reads the CISA catalog, the independent switch both seats asked for beside the egress key (evidence `advisory-kev-epss-sources-20261021`).
+It rose to 116 on 2026-10-25 when ADR-301 added `star_ask.mode` and `star_ask.starred` — two A, `consent`: the user's own choice whether a monthly star ask reaches them, and their own statement that they starred. It fell to 114 on 2026-10-24 when step 4.7 removed `projection.mode` (owner answer OQ-1), and to 115 the same day when step 4.9 of `road-to-a-setup-that-decides-itself` removed `projection.rule_packs` (owner directive, D14). It rose to 116 on 2026-10-21 when the advisories council round 3 added `advisories.kev` — one C, `policy`: it decides whether a refresh reads the CISA catalog, the independent switch both seats asked for beside the egress key (evidence `advisory-kev-epss-sources-20261021`).
 
 It rose to 115 on 2026-10-21 when `road-to-advisories-heard-the-same-day` step 4.3 added `advisories.mode` and `advisories.egress` — two C. `mode` is `consent`: it adds a line to the first session start of every day, which an install that never asked must not have switched on for it by an agent. `egress` is `policy`: it decides which package names leave the machine, the privacy boundary the roadmap's D4 fixes for private names and this key extends to all of them.
 
@@ -409,9 +409,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 33 |
 | un-inferrable | 10 |
-| consent | 52 |
+| consent | 54 |
 | policy | 19 |
-| **Total** | **114** |
+| **Total** | **116** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -614,6 +614,8 @@ Rows follow template order, so a diff against the template reads straight down.
 | `decision_engine.on_block` | C | `stop` | `warn` advances past a gate that fired | derivable — the non-interactive probe decides ask-versus-stop, and the fired gate's own action decides the rest |
 | `decision_engine.ask_timeout_seconds` | C | `30` | how long a fired gate waits before falling back | derivable — the same non-interactive probe: where nobody can answer there is nothing to wait for |
 | `update_check.enabled` | C | `true` | a background safety check; disabling it pins the user to known-vulnerable code | consent |
+| `star_ask.mode` | A | `monthly` | a once-a-month line asking for a GitHub star; it changes nothing, reads nothing remote and costs one file read, so no C test fires | consent |
+| `star_ask.starred` | A | `false` | the user's own statement that they starred; the agent writes it when told, which is the stop condition ADR-301 relies on | consent |
 | `advisories.mode` | C | `notify` | a notice at every first session start of a day; turning it on for an install that never asked is a flip the agent may not make | consent |
 | `advisories.egress` | C | `query` | decides which package names and versions leave the machine on a refresh | policy |
 | `advisories.kev` | C | `on` | decides whether a refresh reads the CISA known-exploited catalog that raises a tier | policy |

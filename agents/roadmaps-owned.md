@@ -9,7 +9,6 @@ and keep the full search — this file only adds candidates to it.
 
 | slug | dir | status | owns |
 |---|---|---|---|
-| road-to-a-cold-start-paid-once | active | ready | On a host where a re-task is observed to be cheaper than a fresh spawn, the orchestrator re-tasks a warm … |
 | road-to-a-setup-that-decides-itself | active | ready | A consumer never sets, reads or reasons about how the package loads its rule layer. |
 | road-to-a-step-that-costs-what-it-changes | active | ready | A roadmap step costs in proportion to its change, and nothing a step needs is skipped. |
 | road-to-an-update-that-installs-itself-only-when-it-is-safe | active | ready | A global install stays on a supported, patched release without ever mutating a running session, moving a team's pin, or … |
@@ -18,9 +17,11 @@ and keep the full search — this file only adds candidates to it.
 | road-to-17-0-follow-ups | later | later | Every FOLLOW-UP finding of the 17.0.0 self-review is either fixed with a test or recorded decision that shows the council's … |
 | road-to-a-byte-bound-and-a-public-figure | later | later | Two numbers this tree can now produce and cannot yet bound. |
 | road-to-a-canvas-the-code-owns | later | later | The repository is the only store of the design system. |
+| road-to-a-cold-start-paid-once-carried | later | later | Every step road-to-a-cold-start-paid-once deferred is either done here or explicitly disposed of — a step that still cannot run is … |
 | road-to-a-graph-that-feeds-the-gate | later | later | The code graph reaches the searches an agent actually runs and feeds a gate decision in shadow. |
 | road-to-a-graph-that-wins | later | later | Register before measuring; measure on repositories in the owner's stack that this repository does not own; publish both directions; and … |
 | road-to-a-hard-floor-the-shell-cannot-talk-past | later | later | The one floor the owner kept — irreversible, external, production and out-of-scope destructive actions — gets a mechanism at tool-call … |
+| road-to-a-knowledge-atlas | later | later | The Workbench page answers four questions about one selection, not one: how the code is built (done by the parent), … |
 | road-to-a-menu-whose-precision-is-measured | later | later | Routing precision is a number with an interval on a labelled corpus large enough to carry one (≥ 100 prompts, … |
 | road-to-a-ranker-whose-ties-break-on-signal | later | later | When two skills score the same, the order between them comes from something the ranker measured, not from their names … |
 | road-to-a-release-record-that-says-what-it-reviewed-carried | later | later | Every step road-to-a-release-record-that-says-what-it-reviewed deferred is either done here or explicitly disposed of — a step that still cannot run is … |
@@ -149,6 +150,8 @@ and keep the full search — this file only adds candidates to it.
 | road-to-a-path-route-under-delivery | stubs | — | road to a path-activation route under `delivery` |
 | road-to-a-primary-goal-that-is-asked-for | stubs | — | road to a primary goal that is asked for |
 | road-to-a-proposal-that-can-be-adopted | stubs | — | eleven prepared proposals arrived and none was adoptable as written |
+| road-to-a-route-that-names-its-guard | stubs | — | a route that names its guard |
+| road-to-a-security-chain-measured | stubs | — | a security chain that is measured, not asserted |
 | road-to-a-visibility-sync-that-can-write | stubs | — | road to a visibility sync that can actually write |
 | road-to-a-weekly-lineage-watch | stubs | — | a weekly lineage watch on the maintainer's machine |
 | road-to-adopt-and-reset-flags-with-a-specification | stubs | — | `adopt` and `reset` have a routing and no behaviour |
@@ -214,6 +217,7 @@ and keep the full search — this file only adds candidates to it.
 | road-to-main-protection-ruleset-changes | stubs | — | road to the `main` protection-ruleset changes (required checks + merge queue) |
 | road-to-make-it-stick-telemetry | stubs | — | "make it stick" needs telemetry that does not exist |
 | road-to-mcp-fingerprint-slot-binding | stubs | — | road to binding the MCP tool-fingerprint store to a hook slot |
+| road-to-media-channels-measured | stubs | — | media channels measured one by one |
 | road-to-merge-confirmation-doctrine | stubs | — | road to the direct-order merge-confirmation doctrine |
 | road-to-multi-host-screenshot-census | stubs | — | road to the multi-host screenshot census |
 | road-to-obligation-exposure-instrumentation | stubs | — | Road to obligation-exposure instrumentation |

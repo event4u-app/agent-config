@@ -34,6 +34,7 @@ import {
     allPacks,
     main,
     measureAccuracy,
+    measureHookGate,
     measureRecallAtDepth,
     packCensus,
     packsBelow,
@@ -49,6 +50,7 @@ import {
     sliceSizes,
 } from '../../src/scripts/measure_skill_ranker_baseline';
 import { type Partition, partitionOf } from '../../src/scripts/_lib/routing_corpus';
+import { MIN_TASK_TERMS, MIN_TOP_SCORE } from '../../src/scripts/hooks/skill_route_hook';
 
 const REPO = path.resolve(__dirname, '..', '..');
 
@@ -639,5 +641,72 @@ describe('recall-at-depth arm over the trigger corpus train slice', () => {
         // The refusal message must offer the new value, or a caller reading it
         // concludes the corpus does not exist.
         expect(() => parseCorpus(['--corpus', 'nope'])).toThrow(/triggers-train/);
+    });
+});
+
+describe('the hook-gate arm measures what the pointer lets through', () => {
+    beforeEach(() => {
+        skill('docker', ['engineering-base'], 'Docker containers images compose volumes.');
+        skill('git-flow', ['engineering-base'], 'Git branches rebase merge commits history.');
+        write(
+            'tests/eval/routing-matrix/alpha.yaml',
+            [
+                'rule: alpha',
+                'positives:',
+                // fires, right skill on top
+                '  - prompt: "docker containers images compose"',
+                '    expected_skills: [docker]',
+                // fires, wrong skill: the gate lets a miss through
+                '  - prompt: "git branches rebase merge"',
+                '    expected_skills: [docker]',
+                // two task terms: under MIN_TASK_TERMS, silent
+                '  - prompt: "docker images"',
+                '    expected_skills: [docker]',
+                'near_misses:',
+                // no skill expected, but it reads like one: a false fire
+                '  - prompt: "git branches rebase history"',
+                '    expected_skills: []',
+                // no skill expected and nothing matches: silent
+                '  - prompt: "what a lovely sunny afternoon outside"',
+                '    expected_skills: []',
+                // matches, but two terms: only the gate keeps this silent
+                '  - prompt: "git rebase"',
+                '    expected_skills: []',
+                // key absent: a defect row, counted nowhere
+                '  - prompt: "docker containers images volumes"',
+            ].join('\n') + '\n',
+        );
+    });
+
+    const arm = (): ReturnType<typeof measureHookGate> =>
+        measureHookGate({ repo: root, skillsDir: path.join(root, 'src', 'skills'), commit: 'abc' });
+
+    it('counts fires over labelled rows and precision only among fires', () => {
+        const a = arm();
+        expect(a.labelled_prompts).toBe(3);
+        expect(a.fires).toBe(2);
+        expect(a.precision_at_1).toBe(0.5);
+        expect(a.precision_at_3).toBe(0.5);
+        expect(a.recall_at_3).toBe(Math.round((1 / 3) * 1000) / 1000);
+    });
+
+    it('reads the deliberate no-skill rows as a false-fire rate, and skips a missing key', () => {
+        const a = arm();
+        expect(a.no_skill_prompts).toBe(3);
+        expect(a.false_fires).toBe(1);
+        expect(a.false_fire_rate).toBe(Math.round((1 / 3) * 1000) / 1000);
+    });
+
+    it('states the gate constants it measured and an interval beside every rate', () => {
+        const a = arm();
+        expect(a.min_task_terms).toBe(MIN_TASK_TERMS);
+        expect(a.min_top_score).toBe(MIN_TOP_SCORE);
+        expect(a.false_fire_rate_ci95.lower).toBeLessThanOrEqual(a.false_fire_rate);
+        expect(a.false_fire_rate_ci95.upper).toBeGreaterThanOrEqual(a.false_fire_rate);
+    });
+
+    it('the CLI refuses an unknown arm and a bare flag', () => {
+        expect(main(['--arm', 'the-flattering-one'])).toBe(2);
+        expect(main(['--arm'])).toBe(2);
     });
 });

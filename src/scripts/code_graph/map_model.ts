@@ -16,6 +16,20 @@ import Graph from 'graphology';
 import louvain from 'graphology-communities-louvain';
 import forceAtlas2 from 'graphology-layout-forceatlas2';
 
+import {
+    type BlastRecord,
+    blastOf,
+    callCounts,
+    duplicateBasenames,
+    type KnowledgeKind,
+    knowledgeKind,
+    knowledgeOf,
+    type KnowledgeList,
+    type LegendEntry,
+    type MapHealth,
+    type MapPin,
+    type Violation,
+} from './map_answers.js';
 import { catalogRow, type CoverageStatus, providerRole } from './providers/index.js';
 import type { ActiveProviderRecord, CodeGraph, ResolvedVia } from './types.js';
 import { isStatedResolution } from './types.js';
@@ -39,8 +53,8 @@ const CLUSTER_ROLES: ReadonlySet<FileRole> = new Set(['code', 'test', 'entry', '
 /** Directories of including views at which a view counts as a shared partial. */
 const SHARED_PARTIAL_DIRS = 3;
 
-/** Compact symbol: [name, kind, line]. */
-export type MapSymbol = [string, string, number];
+/** Compact symbol: [name, kind, line], then accepted calls/uses from the same file and from other files. */
+export type MapSymbol = [string, string, number] | [string, string, number, number, number];
 
 export interface MapFile {
     path: string;
@@ -62,6 +76,28 @@ export interface MapFile {
     tests: number[];
     /** Convention providers that drew an edge into or out of this file; absent when none did. */
     linkedBy?: string[];
+    /** Lines; absent when the file could not be read as text. */
+    loc?: number;
+    lang?: string;
+    /** Commits touching the file in the git window; absent without git. */
+    churn?: number;
+    /** Top authors by name with their share of the window's commits; never an e-mail. */
+    owners?: Array<[string, number]>;
+    lastChange?: string;
+    /** One author holds most of the window's commits: a bus-factor finding. */
+    soleOwner?: true;
+    /** Every symbol has no accepted in-edge and the file has no trusted in-edge. */
+    dead?: true;
+    /** From `layers.yaml`; absent without one. */
+    layer?: string;
+    /** Scope files only (code roles). */
+    blast?: BlastRecord;
+    /** What this file is as knowledge, when it is one. */
+    knowledge?: KnowledgeKind;
+    /** The same basename sits in a roadmap folder and in an inbox folder. */
+    duplicate?: true;
+    /** Knowledge files linked to this file by any edge, ranked by kind. */
+    knows?: KnowledgeList;
 }
 
 /** A convention provider active in the graph, with its catalog status. */
@@ -139,6 +175,17 @@ export interface MapModel {
     drift?: AreaDrift;
     prOverlap?: PrOverlap;
     outcomes?: Array<[number, number]>;
+    /** `[lang, files, lines]`, most lines first. */
+    languages?: Array<[string, number, number]>;
+    violations?: Violation[];
+    /** `[file, churn, lines, churn × lines]`, top 20. */
+    hotspots?: Array<[number, number, number, number]>;
+    health?: MapHealth;
+    legend?: LegendEntry[];
+    pin?: MapPin;
+    /** The depth the blast numbers were computed to; the viewer's walk uses the same. */
+    blastDepth?: number;
+    gitWindowDays?: number;
     analyses: {
         hubs: number[];
         surprises: Array<[number, number, number]>;
@@ -152,6 +199,12 @@ export interface MapModel {
         requestPaths: RequestPath[];
         requestPathsTotal: number;
         requestPathsResolved: number;
+        /** Scope files flagged `dead`; absent when the dead verb could not answer. */
+        deadFiles?: number;
+        /** Why the dead flag is absent, or the gap it was computed under. */
+        deadBasis?: string;
+        /** Edges that cross layers `layers.yaml` does not allow; absent without one. */
+        layerBreaches?: number;
     };
 }
 
@@ -267,9 +320,21 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
     for (const n of graph.nodes) {
         fileOfNode.set(n.id, n.source_file);
         filePaths.add(n.source_file);
+    }
+    const calls = callCounts(
+        graph.edges.map((e) => ({
+            source: e.source,
+            target: e.target,
+            relation: e.relation,
+            accepted: isStatedResolution(e.resolved_via as ResolvedVia),
+        })),
+        fileOfNode,
+    );
+    for (const n of graph.nodes) {
         if (n.kind === 'file' || n.kind === 'skipped') continue;
         const list = symbolsOf.get(n.source_file) ?? [];
-        list.push([n.label, n.kind, (n.source_location[0] as number | undefined) ?? 0]);
+        const [int, ext] = calls.get(n.id) ?? [0, 0];
+        list.push([n.label, n.kind, (n.source_location[0] as number | undefined) ?? 0, int, ext]);
         symbolsOf.set(n.source_file, list);
     }
     const paths = [...filePaths].sort(byPath);
@@ -572,8 +637,14 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
         }
     }
 
+    const blast = blastOf(roles, edges);
+    const kinds = paths.map((p, i) => knowledgeKind(p, roles[i] as FileRole));
+    const knows = knowledgeOf(kinds, paths, edges, guessEdges);
+    const dupes = duplicateBasenames(paths);
+
     const symbolsPerFile = 40;
     const files: MapFile[] = paths.map((p, i) => {
+        const kind = kinds[i];
         const syms = (symbolsOf.get(p) ?? []).sort((a, b) => a[2] - b[2] || byPath(a[0], b[0]));
         return {
             path: p,
@@ -587,6 +658,10 @@ export function buildMapModel(graph: CodeGraph, inputs: MapInputs = {}): MapMode
             externals: [...(externals.get(i) ?? [])].sort(byPath),
             tests: [...(testsOf.get(i) ?? [])].sort((a, b) => a - b),
             ...(linkedBy.has(i) ? { linkedBy: [...(linkedBy.get(i) as Set<string>)].sort() } : {}),
+            ...(blast[i] ? { blast: blast[i] as BlastRecord } : {}),
+            ...(kind ? { knowledge: kind } : {}),
+            ...(kind && dupes.has(path.posix.basename(p)) && (kind === 'draft' || kind.startsWith('roadmap')) ? { duplicate: true as const } : {}),
+            ...(knows[i] ? { knows: knows[i] } : {}),
         };
     });
     const providers: MapProvider[] = (graph.providers ?? []).map((p) => {

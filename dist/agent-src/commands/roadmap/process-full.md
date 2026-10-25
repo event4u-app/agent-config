@@ -127,9 +127,9 @@ A `needs-owner` PR IS NEVER SENT FOR CLEARANCE — THE OWNER DECIDES.
 ### Ceremony depth — the row each ceremony here reads
 
 `src/config/step-depth-table.json` holds one depth per change class
-(`classify_change_risk`, raise-only). Its `mode` is `shadow`: every ceremony
-below runs at full depth, and `step_receipt` records what the class's row
-would have skipped. Lowering depth is the owner's call, never this run's.
+(`classify_change_risk`, raise-only). Its `mode` is `active`: a ceremony
+runs at its row's depth only where `step_receipt` reads `active` (safe R0/R1
+paths); everywhere else at full depth. Lowering depth is the owner's call.
 
 | Ceremony in this run | Table row |
 |---|---|

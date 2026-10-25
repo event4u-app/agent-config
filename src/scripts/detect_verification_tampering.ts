@@ -51,6 +51,7 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
+import { isTestPath } from './_lib/test_path.js';
 import { parseUnifiedDiff, type DiffFile, type DiffHunk, type DiffLine } from './_lib/unified_diff.js';
 import {
     assertWellFormed,
@@ -110,14 +111,6 @@ const MOCK_API_WORDS = new Set([
     'Mockery', 'createMock', 'shouldReceive', 'return', 'const', 'function',
 ]);
 
-const TEST_PATH_RE =
-    /(^|\/)(?:tests?|spec|specs|__tests__)\//i;
-const TEST_FILE_RE =
-    /(?:[._-](?:test|spec)\.[A-Za-z]+$|(?:^|\/)test_[^/]+\.py$|Test\.php$|_test\.go$)/;
-
-function isTestPath(p: string): boolean {
-    return TEST_PATH_RE.test(p) || TEST_FILE_RE.test(p);
-}
 
 function isAssertion(text: string): boolean {
     return ASSERTION_RE.test(text);

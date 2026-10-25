@@ -397,6 +397,29 @@ describe('skill_trigger_eval — pre-estimate + summary', () => {
     });
 });
 
+// -- default triggers path ------------------------------------------------
+
+describe('skill_trigger_eval — default triggers path', () => {
+    it('reports an unknown skill under src/skills, not a retired tree', () => {
+        const errs: string[] = [];
+        const origErr = process.stderr.write.bind(process.stderr);
+        (process.stderr.write as unknown) = (s: string): boolean => {
+            errs.push(s);
+            return true;
+        };
+        let code: number;
+        try {
+            code = ste.main(['--skill', 'no-such-skill-for-this-test', '--dry-run']);
+        } finally {
+            (process.stderr.write as unknown) = origErr;
+        }
+        expect(code).toBe(2);
+        const out = errs.join('');
+        expect(out).toContain(path.join('src', 'skills', 'no-such-skill-for-this-test', 'evals', 'triggers.json'));
+        expect(out).not.toContain('.agent-src.uncondensed');
+    });
+});
+
 // -- main live-path gate --------------------------------------------------
 
 describe('skill_trigger_eval — main live gate', () => {

@@ -63,6 +63,13 @@ export const HOOK_CHUNKS = Object.freeze([
         outfile: 'dist/hooks/update_notice.chunk.cjs',
         external: Object.freeze(['yaml']),
     }),
+    // `yaml` external for the reason given at `update_notice`: the concern
+    // reads the user-global settings layers with it.
+    Object.freeze({
+        entry: 'src/scripts/star_ask_hook.ts',
+        outfile: 'dist/hooks/star_ask.chunk.cjs',
+        external: Object.freeze(['yaml']),
+    }),
     // `session_start` on claude alone; the thin pass and the ownership ledger
     // it reads stay off every other dispatch's parse. `yaml` external for the
     // reason given at `chat_history`, which `require`s the same copy earlier on

@@ -1,5 +1,5 @@
 {
-  "version": "17.4.0",
+  "version": "18.1.0",
   "entries": {
     "advisories.egress": {
       "type": "string",
@@ -510,18 +510,6 @@
       "type": "string",
       "default": ""
     },
-    "projection.mode": {
-      "type": "string",
-      "default": "legacy-all",
-      "enum": [
-        "legacy-all",
-        "scoped"
-      ]
-    },
-    "projection.rule_packs": {
-      "type": "unknown",
-      "default": []
-    },
     "quality.local_auto_run": {
       "type": "boolean",
       "default": false
@@ -584,6 +572,18 @@
     "screenshots.identity_allowlist": {
       "type": "array",
       "default": []
+    },
+    "star_ask.mode": {
+      "type": "string",
+      "default": "monthly",
+      "enum": [
+        "monthly",
+        "off"
+      ]
+    },
+    "star_ask.starred": {
+      "type": "boolean",
+      "default": false
     },
     "subagents.adversarial_council": {
       "type": "string",
@@ -692,6 +692,8 @@
     "personal.pr_comment_bot_icon",
     "pipelines.skill_improvement",
     "project.pr_template",
+    "projection.mode",
+    "projection.rule_packs",
     "projection.rule_workspaces",
     "quality.wait_for_remote_ci",
     "reasoning.auto_gate",

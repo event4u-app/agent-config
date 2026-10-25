@@ -35,6 +35,7 @@ import {
   type EgressMode,
 } from "../../../src/scripts/hooks/egress_stage.js";
 import { planPayloadShapes, type JsonObject } from "../../../src/scripts/hooks/payload_stub.js";
+import { load_agent_settings } from "../../../src/scripts/_lib/agent_settings.js";
 import { feedback_dir } from "../../../src/scripts/hooks/state_io.js";
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), "..", "..", "..", "..");
@@ -114,6 +115,79 @@ describe("mode resolution", () => {
     expect(readEgressMode(tmp)).toBe("off");
     fs.writeFileSync(file, "egress:\n  placeholders:\n    mode: protect\n");
     expect(readEgressMode(tmp)).toBe("protect");
+  });
+
+  it("detects and resolves from one read, so the disk cannot answer differently afterwards", () => {
+    const template = fs.readFileSync(path.join(REPO_ROOT, "src", "config", "agent-settings.template.yml"), "utf8");
+    expect(template).toMatch(/^egress:\n  placeholders:\n    mode: "off"$/m);
+    // The disk says protect; the injected reader is the only read there is.
+    fs.writeFileSync(path.join(tmp, ".agent-settings.yml"), "egress:\n  placeholders:\n    mode: protect\n");
+    const view = (text: string) => (p: string): string => {
+      if (p === path.join(tmp, ".agent-settings.yml")) return text;
+      throw Object.assign(new Error("absent"), { code: "ENOENT" });
+    };
+    expect(readEgressMode(tmp, view(template))).toBe("off");
+    expect(readEgressMode(tmp, view(template.replace('mode: "off"', "mode: observe")))).toBe("observe");
+    expect(readEgressMode(tmp, view(template + "\negress: [unclosed\n"))).toBe("protect");
+  });
+
+  it("reads every layer at most once, even the one the cascade lists twice", () => {
+    fs.mkdirSync(path.join(tmp, ".git"));
+    const sub = path.join(tmp, "agents", "settings");
+    fs.mkdirSync(sub, { recursive: true });
+    const reads = new Map<string, number>();
+    const count = (p: string): string => {
+      reads.set(p, (reads.get(p) ?? 0) + 1);
+      if (p === path.join(sub, ".agent-settings.yml")) return "egress:\n  placeholders:\n    mode: protect\n";
+      throw Object.assign(new Error("absent"), { code: "ENOENT" });
+    };
+    expect(readEgressMode(sub, count)).toBe("protect");
+    expect(reads.get(path.join(sub, ".agent-settings.yml"))).toBe(1);
+    expect(Math.max(...reads.values())).toBe(1);
+  });
+
+  it("merges every layer the way the settings cascade does", () => {
+    // The project root anchors the chain; a nested cwd adds a deeper layer.
+    // Under agents/settings the canonical layer is ALSO in the directory chain,
+    // so the cascade merges it twice; the stage must read it once and agree.
+    fs.mkdirSync(path.join(tmp, ".git"));
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), "egress-home-"));
+    const savedHome = process.env["EVENT4U_CONFIG_HOME"];
+    process.env["EVENT4U_CONFIG_HOME"] = home;
+    fs.mkdirSync(path.join(home, "settings"), { recursive: true });
+    // A user-global egress is filtered out by the cascade; the stage never reads it.
+    fs.writeFileSync(path.join(home, "settings", ".agent-settings.yml"), "egress:\n  placeholders:\n    mode: strict\n");
+    try {
+      for (const sub of [path.join(tmp, "pkg"), path.join(tmp, "agents", "settings")]) {
+        fs.mkdirSync(sub, { recursive: true });
+    const shapes = [
+      undefined,
+      "egress:\n  placeholders:\n    mode: protect\n",
+      'egress:\n  placeholders:\n    mode: "off"\n',
+      "egress:\n  placeholders: {}\n",
+      "egress: on\n",
+      "egress:\n  placeholders:\n    mode: observe\n    other: 1\n",
+      "# names egress only in a comment\nscreenshots: {}\n",
+      "egress:\n  placeholders:\n    mode: Protect\n",
+    ];
+    for (const outer of shapes) {
+      for (const inner of shapes) {
+        for (const [dir, text] of [[tmp, outer], [sub, inner]] as const) {
+          const f = path.join(dir, ".agent-settings.yml");
+          if (text === undefined) fs.rmSync(f, { force: true });
+          else fs.writeFileSync(f, text);
+        }
+        const viaCascade = resolveEgressMode(load_agent_settings({ cwd: sub }));
+        expect(readEgressMode(sub), JSON.stringify({ sub, outer, inner })).toBe(viaCascade);
+      }
+    }
+        for (const dir of [tmp, sub]) fs.rmSync(path.join(dir, ".agent-settings.yml"), { force: true });
+      }
+    } finally {
+      if (savedHome === undefined) delete process.env["EVENT4U_CONFIG_HOME"];
+      else process.env["EVENT4U_CONFIG_HOME"] = savedHome;
+      fs.rmSync(home, { recursive: true, force: true });
+    }
   });
 
   it("a thrown kill switch is off whatever the settings say", () => {

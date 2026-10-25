@@ -16,6 +16,8 @@ review_by: 2026-09-25
 > the parent: **transferred** — chosen so that "archived" can never read as
 > "achieved". The channel is still unexercised and still `experimental`.
 
+> **Arrivals:** 1 — `inbox-2026-10-ao` (2026-10-25): `road-to-a-post-the-analysis-can-watch` 2.6 adds a `video` channel on the same `yt-dlp` pin; the install this stub waits on now unblocks two channels.
+
 ## The criterion, verbatim from the parent
 
 > condition described above clears

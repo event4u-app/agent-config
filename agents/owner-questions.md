@@ -23,22 +23,6 @@ and the run that applies it links its PR.
 
 ## Open
 
-### OQ-1 — Lower R0/R1 ceremony now, before 30 shadow steps
-
-- **Context:** the 2026-10-21 decision
-  (`agents/evidence/owner-directives/2026-10-21-review-cap-and-depth-flip.md`)
-  lowers R0/R1 depth on structurally safe paths only after a committed reading of
-  30 shadow steps; the reading stood at 0 on 2026-10-21. The 2026-10-24 directive
-  already cut council and evidence in the `full` row; review rounds and retro
-  stay full.
-- **Options:** (a) set the depth table `active` for R0/R1 on safe paths now,
-  relying on the sampled full-depth audit (1 in 4) and its automatic return to
-  full depth; (b) keep waiting for the 30-step reading.
-- **Recommendation:** (a) — reversible in one commit, and the audit rolls a
-  class back on its own.
-- **Blocks:** `road-to-a-step-that-costs-what-it-changes` steps 4.1 and 4.2
-  (blocker `class-depth-flip-reopens-the-risk-null`).
-
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its
@@ -48,47 +32,57 @@ and the run that applies it links its PR.
   observation and states itself "not a question".
 - `four-dated-re-checks-are-calendar-bound` (corpus cadence): waits on calendar dates.
 
-### OQ-4 — Cancel step-that-costs 1.1 (async telemetry concerns)
+### OQ-8 — The owner-authority register sits outside this list
 
-- **Context:** the seven telemetry concerns cost 1.2 ms of ~68 ms dispatch;
-  running them async adds a second Node start per call.
-- **Options:** (a) cancel 1.1 as `[-]`; (b) keep it open.
-- **Recommendation:** (a) — the measured gain is below the added start cost.
-- **Blocks:** step 1.1 of `road-to-a-step-that-costs-what-it-changes`.
+- **Context:** `agents/roadmaps/stubs/road-to-owner-authority-decisions.md` holds
+  owner-reserved decisions 1, 4, 5, 7, 8 and 9-12 plus the open halves of 2 and
+  3, under `## Unresolved decision N` headings that neither this list nor
+  `/roadmap:resolve-blockers` reads. Its `review_by` lapsed on 2026-09-25, and it
+  has now arrived seven times; the seventh arrival found Decision 6 answered
+  (ADR-249) but recorded open, corrected on 2026-10-25.
+- **Options:** (a) the agent lifts each open decision into its own OQ row here,
+  one per decision, and marks the register entries as moved; (b) the owner
+  answers or retires the register in one pass; (c) leave it as a parked record.
+- **Recommendation:** (a) — one list of every owner decision is what this file
+  says it is, and lifting rows decides nothing in the owner's name.
+- **Blocks:** nothing executable; the cost is that the decisions are unseen.
 
-### OQ-5 — Cancel step-that-costs 1.2 (stop ordinal from stored state)
+### OQ-9 — Which tree owns "who is the user", and what "profile" and "pack" mean
 
-- **Context:** saves ~15 ms per turn but moves risk into the turn-end gate.
-- **Options:** (a) cancel 1.2 as `[-]`; (b) keep it open.
-- **Recommendation:** (a) — 15 ms per turn does not pay for a new failure mode
-  in the gate that refuses unfinished turns.
-- **Blocks:** step 1.2.
+- **Context:** ADR-010 gives the "who" question to one axis, `profile.id`, and
+  calls duplication across axes a contract violation. Three trees answer it:
+  `src/profiles/*.yaml` (command views), `src/agent-src/profiles/*.yml` (seed
+  identity) — six shared ids, different `packs` vocabularies — and
+  `user-types/` (seven other ids, read only to order MCP prompts). "Profile"
+  also names the install scope, `discipline_profile` and session overlays;
+  "pack" names `src/packs`, `src/domains/*/pack.yaml` and
+  `src/agent-src/packs`. Raised by round `inbox-2026-10-an`; both of its plans
+  recommended the seed tree.
+- **Options:** (a) the seed tree owns the axis, `src/profiles` is generated
+  from it as the command view, `user-types` folds into a seed-profile field
+  with an id mapping, and the extra meanings get prefixed names with aliases
+  for one release; (b) keep three trees and document the split (done in
+  `road-to-a-measured-pointer-gate-and-true-records` 1.3); (c) (a) without the
+  renames.
+- **Recommendation:** (c) first — it removes the duplicated axis without
+  touching public names; the renames can follow once the ids are single.
+- **Blocks:** nothing executable; settings key `personal.user_type` and the
+  profile ids are public surface, so no run changes them unasked.
 
-### OQ-6 — How step-that-costs 4.2 narrows the rule load, and its paid A/B
+### OQ-10 — Measure per-skill uplift against a no-skill arm
 
-- **Context:** an R0/R1 step should load only the kernel plus path-matching
-  rules, but `~/.claude/rules` always loads, the roadmap forbids changing the
-  installed layer, and a settings key is excluded. The A/B (Haiku, 2 tasks ×
-  12 seeds) costs up to $3.5 per run.
-- **Options:** (a) wait until 4.1 reads READY (R0 7 of 30) and decide then;
-  (b) allow a narrowing mechanism outside those exclusions now and fund the A/B.
-- **Recommendation:** (a) — 4.1 gates it anyway, and the mechanism question is
-  cheaper with the flip data in hand.
-- **Blocks:** step 4.2.
-
-### OQ-7 — Self-modification: how an owner act binds a split council
-
-- **Context:** `road-to-self-modification-that-a-council-must-pass` steps 3.4,
-  4.1, 4.2, 5.2 and 6.2 are built (commits `1f9ab5fca`, `5ecf60b10`,
-  `0e262c5c2`, `ec866ae5b`) but every review split: across ~25 rounds the openai
-  seat refuses because no authenticated owner mechanism exists, which ADR-281 § 5
-  deliberately leaves to the owner's forge act.
-- **Options:** (a) land the four commits through the D11 forge bypass as the
-  owner act; (b) reopen D11 / ADR-281 § 5 and build an in-tree authenticated
-  owner acknowledgment first; (c) park the roadmap.
-- **Recommendation:** (a) — the design already assigns this act to the owner,
-  and more council rounds on unchanged designs would be verdict shopping.
-- **Blocks:** steps 3.4, 4.1, 4.2, 5.2, 6.2 and AC-2, AC-3, AC-5.
+- **Context:** `agents/roadmaps/stubs/road-to-skill-uplift-against-a-no-skill-arm.md`
+  poses this and has now arrived six times, the latest in round
+  `inbox-2026-10-an`. `run_skill_evals.ts` still throws from
+  `_spawn_subagent` and grades every rubric `pass: null`, so no skill has a
+  measured outcome delta.
+- **Options:** (1) fund a pilot — one host, three skills with a deterministic
+  outcome check, published either way; (2) fold a per-skill outcome column into
+  the tiering live arm; (3) decline and record that per-skill uplift is not
+  measured.
+- **Recommendation:** (1) — the stub's own recommendation, and the only option
+  that answers the question that keeps arriving.
+- **Blocks:** the stub's promotion; nothing active.
 
 ## Answered
 
@@ -107,3 +101,8 @@ and the run that applies it links its PR.
 | ratification-platform-anchor | 2026-10-24 | Repository PAT for the ratification platform anchor? | b — defer; `road-to-typed-grants-that-persist` and `road-to-decision-closure` parked |
 | request-gateway-probe | 2026-10-24 | Run the 7.2 gateway probe? | b — defer; `road-to-placeholders-on-the-wire` parked |
 | wip-five-active | 2026-10-24 | Which five roadmaps stay active? | a — cold-start, update-installs-itself, setup-decides-itself, step-that-costs, hook-guards-17; 18 parked with `entry_condition` and `review_by: 2026-11-24` |
+| OQ-1 | 2026-10-25 | Lower R0/R1 ceremony now, before 30 shadow steps? | a — flip now on the audit (`agents/evidence/owner-directives/2026-10-25-step-costs-oq-1-4-5-6.md`) |
+| OQ-4 | 2026-10-25 | Cancel step-that-costs 1.1? | a — cancelled |
+| OQ-5 | 2026-10-25 | Cancel step-that-costs 1.2? | a — cancelled |
+| OQ-6 | 2026-10-25 | How 4.2 narrows the rule load, and its A/B | a — wait for the flip data |
+| OQ-7 self-modification owner act | 2026-10-25 | Land the split-council self-modification work? | 1 — land through the D11 forge bypass; 3.4, 5.2 and 6.2 ride one PR the owner merges with bypass, 4.1 and 4.2 follow in their own change after the writer is on main |

@@ -146,7 +146,7 @@ describe('one-detector risk 7 — the injection path never silences a concern', 
     const CONTEXTS = [
         `handoff: continue the roadmap for ${['max.mustermann', 'example.com'].join('@')} at +49 170 1234567`,
         'session canary: address the user as Matze',
-        'roadmap pointer: agents/roadmaps/road-to-a-cold-start-paid-once.md step 5.2',
+        'roadmap pointer: agents/roadmaps/archive/road-to-a-cold-start-paid-once.md step 5.2',
     ];
 
     it('off and observe deliver every concern context byte-identical', () => {

@@ -44,6 +44,7 @@
  *     ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus all
  *     ./scripts-run src/scripts/measure_skill_ranker_baseline --ranker keyword-v2
  *     ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus routing-matrix --slice sealed
+ *     ./scripts-run src/scripts/measure_skill_ranker_baseline --arm hook-gate --commit <sha>
  */
 
 import * as fs from 'node:fs';
@@ -53,6 +54,7 @@ import { fileURLToPath } from 'node:url';
 import { wilsonInterval } from './_lib/capture_rate.js';
 import { fnv1a } from './_lib/fnv.js';
 import { corpusSkills, loadTrainCases } from './_lib/routing_corpus.js';
+import { MIN_TASK_TERMS, MIN_TOP_SCORE, routeDecision } from './hooks/skill_route_hook.js';
 import { rank } from './skill_tools/score_skill_relevance.js';
 import type { RankRow } from './skill_tools/score_skill_relevance.js';
 import type { RankOptions } from '../shared/skillRanking.js';
@@ -472,6 +474,99 @@ export function measureAccuracy(opts: {
     };
 }
 
+export interface HookGateArm {
+    arm: 'hook-gate';
+    commit: string;
+    min_task_terms: number;
+    min_top_score: number;
+    labelled_prompts: number;
+    fires: number;
+    fire_rate: number;
+    fire_rate_ci95: Interval;
+    /** Among the labelled prompts the gate FIRED on — what a reader of the pointer sees. */
+    precision_at_1: number;
+    precision_at_1_ci95: Interval;
+    precision_at_3: number;
+    precision_at_3_ci95: Interval;
+    /** Over ALL labelled prompts: a silent gate is a miss here. */
+    recall_at_3: number;
+    recall_at_3_ci95: Interval;
+    no_skill_prompts: number;
+    false_fires: number;
+    false_fire_rate: number;
+    false_fire_rate_ci95: Interval;
+    note: string;
+}
+
+/**
+ * The `skill-route` hook's own gate over the routing matrix.
+ *
+ * `measureAccuracy` scores the ranker with nothing in front of it; the hook
+ * speaks only past `MIN_TASK_TERMS` and `MIN_TOP_SCORE`, through the same
+ * `routeDecision` it ships. The bare-name filter is left out on purpose: it
+ * reads the machine's installed catalogue, so including it would make the
+ * number a property of whoever ran it.
+ */
+export function measureHookGate(opts: { repo: string; skillsDir: string; commit: string }): HookGateArm {
+    const cases = readMatrixCases(opts.repo);
+    let labelled = 0;
+    let fires = 0;
+    let p1 = 0;
+    let p3 = 0;
+    let noSkill = 0;
+    let falseFires = 0;
+    for (const c of cases) {
+        if (c.expected === undefined) continue;
+        const rows = routeDecision(c.prompt, opts.skillsDir).rows;
+        if (c.expected.length === 0) {
+            noSkill++;
+            if (rows.length > 0) falseFires++;
+            continue;
+        }
+        labelled++;
+        if (rows.length === 0) continue;
+        fires++;
+        if (hitAt(rows, 1, c.expected)) p1++;
+        if (hitAt(rows, 3, c.expected)) p3++;
+    }
+    const rate = (k: number, n: number): number => (n ? round3(k / n) : 0);
+    return {
+        arm: 'hook-gate',
+        commit: opts.commit,
+        min_task_terms: MIN_TASK_TERMS,
+        min_top_score: MIN_TOP_SCORE,
+        labelled_prompts: labelled,
+        fires,
+        fire_rate: rate(fires, labelled),
+        fire_rate_ci95: ci(fires, labelled),
+        precision_at_1: rate(p1, fires),
+        precision_at_1_ci95: ci(p1, fires),
+        precision_at_3: rate(p3, fires),
+        precision_at_3_ci95: ci(p3, fires),
+        recall_at_3: rate(p3, labelled),
+        recall_at_3_ci95: ci(p3, labelled),
+        no_skill_prompts: noSkill,
+        false_fires: falseFires,
+        false_fire_rate: rate(falseFires, noSkill),
+        false_fire_rate_ci95: ci(falseFires, noSkill),
+        note:
+            'keyword-v1 behind the skill-route gate, routing matrix only, no host and no ' +
+            'installed-catalogue filter. A no-model reading of what the pointer injects, ' +
+            "not of the host's own skill selection.",
+    };
+}
+
+/** `--arm`, absent = the accuracy arm the script has always printed. */
+export function parseArm(argv: readonly string[]): 'ranker' | 'hook-gate' {
+    const i = argv.indexOf('--arm');
+    if (i === -1) return 'ranker';
+    const raw = argv[i + 1];
+    if (raw !== 'ranker' && raw !== 'hook-gate') {
+        throw new Error(`--arm expects one of ranker | hook-gate, got ${raw ?? '(nothing)'}`);
+    }
+    return raw;
+}
+
 /**
  * The ranker label → the options it means.
  *
@@ -846,8 +941,17 @@ export function main(argv: readonly string[]): number {
     let slice: SliceName;
     let ranker: string;
     let commit: string;
-    let out: RankerBaseline | RecallReport;
+    let out: RankerBaseline | RecallReport | HookGateArm;
     try {
+        if (parseArm(argv) === 'hook-gate') {
+            out = measureHookGate({
+                repo: REPO,
+                skillsDir: SKILLS_DIR,
+                commit: parseFlagValue(argv, '--commit', 'unknown'),
+            });
+            process.stdout.write(`${JSON.stringify(out, null, 2)}\n`);
+            return 0;
+        }
         corpus = parseCorpus(argv);
         slice = parseSlice(argv);
         ranker = parseRanker(argv);
