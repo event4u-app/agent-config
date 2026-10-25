@@ -65,7 +65,7 @@ Evidence (claimed): `src/scripts/hooks/skill_route_hook.ts:14`
 - [ ] **1.2 Generated `required | related` classification per declared skill.**
       A skill referenced in the command body is `required`; the artefact is
       generated and drift-checked like the other generated files.
-      verify: the generator's `--check` exits 0 and prints the unclassified share; a share above 20 % exits 1 and the step stops
+      verify: `./scripts-run src/scripts/classify_command_skills --check` -> exit 0 with the unclassified share printed; above 20 % it exits 1 and the step stops
 
 ## Phase 2 — The run basis
 
