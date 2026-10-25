@@ -39,6 +39,15 @@ check reads `unverified`, which is not a pass.
 `--root <path>` maps another checkout; `--open` opens the page; `--no-verify`
 skips the render check.
 
+To look at a map that is already drawn without redrawing it:
+
+```bash
+agent-config code-graph open
+```
+
+It resolves the page where `map` writes it (`--root` and `--out` work the same) and
+exits 1, opening nothing, when no map has been drawn yet.
+
 ### 2. Report
 
 Quote the command's summary lines (files, areas, largest area, graph state, render

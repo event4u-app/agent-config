@@ -464,3 +464,24 @@ describe('review findings, pinned', () => {
         expect(readOutcomes(root)).toEqual([{ path: 'src/a.ts', outcome: 'useful', at: '2026-01-01T00:00:00Z' }]);
     });
 });
+
+describe('cycles and the guess share measure code, not docs', () => {
+    it('reports a cycle at its true size, and a ring of Markdown links is not a cycle', async () => {
+        for (let i = 0; i < 10; i++)
+            write(`src/ring/r${i}.ts`, `import { v${(i + 1) % 10} } from './r${(i + 1) % 10}.js';\nexport const v${i} = (): unknown => v${(i + 1) % 10};\n`);
+        write('docs/a.md', '# A\n\nSee [b](b.md).\n');
+        write('docs/b.md', '# B\n\nSee [a](a.md).\n');
+        const { graph } = await buildFromRepo(root, null);
+        const m = buildMapModel(graph);
+        const ring = m.analyses.cycles.findIndex((c) => c.some((i) => m.files[i]?.path.startsWith('src/ring/')));
+        expect(ring).toBeGreaterThanOrEqual(0);
+        expect(m.analyses.cycles[ring]).toHaveLength(8);
+        expect(m.analyses.cycleSizes[ring]).toBe(10);
+        const docInCycle = m.analyses.cycles.flat().some((i) => m.files[i]?.path.startsWith('docs/'));
+        expect(docInCycle).toBe(false);
+        // The doc ring is real (both links resolve), it just does not count.
+        const a = m.files.findIndex((f) => f.path === 'docs/a.md');
+        const b = m.files.findIndex((f) => f.path === 'docs/b.md');
+        expect(m.edges.some(([s, t]) => s === a && t === b) && m.edges.some(([s, t]) => s === b && t === a)).toBe(true);
+    });
+});

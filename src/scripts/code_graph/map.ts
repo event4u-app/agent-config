@@ -756,10 +756,13 @@ export function renderMapMd(m: MapModel, meta: MapMeta): string {
         [
             '## Import cycles',
             '',
-            `${m.analyses.cyclesTotal} file-level cycle(s); the largest ${m.analyses.cycles.length} shown, up to 8 files each.`,
+            `${m.analyses.cyclesTotal} file-level cycle(s) between code files (doc links excluded); the largest ${m.analyses.cycles.length} shown, the first 8 files of each.`,
             '',
             ...(m.analyses.cycles.length
-                ? m.analyses.cycles.map((c) => `- ${c.map((x) => `${code(f[x]?.path ?? '')}`).join(' · ')}`)
+                ? m.analyses.cycles.map((c, k) => {
+                      const size = m.analyses.cycleSizes?.[k] ?? c.length;
+                      return `- ${size} files: ${c.map((x) => `${code(f[x]?.path ?? '')}`).join(' · ')}${size > c.length ? ' · …' : ''}`;
+                  })
                 : ['- none']),
             '',
         ].join('\n'),
@@ -981,11 +984,15 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '<body>',
         '<header class="top">',
         '<div class="brand">',
-        '<svg width="40" height="40" role="img" aria-label="AC"><rect x="1.5" y="1.5" width="37" height="37" rx="9"></rect>' +
-            '<path d="M8 10 L14 7 L21 9 M21 9 L30 7 M30 7 L33 13" fill="none" stroke="#3ec5ff" stroke-width="1" opacity="0.8"></path>' +
-            '<circle cx="8" cy="10" r="1.8" fill="#ff8c2a"></circle><circle cx="21" cy="9" r="1.8" fill="#3ec5ff"></circle>' +
-            '<circle cx="30" cy="7" r="1.8" fill="#3ec5ff"></circle><circle cx="33" cy="13" r="1.8" fill="#ff8c2a"></circle>' +
-            '<text x="20" y="31">AC</text></svg>',
+        // The AC mark from .github/assets/info-banner.png, redrawn as vectors: the
+        // published package carries no images.
+        '<svg class="logo" width="40" height="40" viewBox="0 0 96 96" role="img" aria-label="AC"><defs><linearGradient id="acRim" x1="0" y1="0" x2="0.35" y2="1"><stop offset="0" stop-color="#ff8c2a"/><stop offset="0.5" stop-color="#ff6a1f"/><stop offset="0.78" stop-color="#9a7bff"/><stop offset="1" stop-color="#3ec5ff"/></linearGradient><linearGradient id="acA" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#aab6c8"/></linearGradient><linearGradient id="acC" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe0c2"/><stop offset="1" stop-color="#ff8c2a"/></linearGradient><filter id="acGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
+            '<rect x="7" y="7" width="82" height="82" rx="17" fill="#05080f" stroke="url(#acRim)" stroke-width="2.6" filter="url(#acGlow)"/>' +
+            '<g fill="none" stroke="#3ec5ff" stroke-width="1.4" opacity="0.8"><path d="M15 35 L27 22 L43 26 L60 15 L81 31"/><path d="M27 22 L22 49"/><path d="M60 15 L66 30"/><path d="M80 50 L86 46 M80 58 L86 63 L86 70"/></g>' +
+            '<circle cx="15" cy="35" r="4" fill="#ff8c2a"/><circle cx="27" cy="22" r="3" fill="#ff8c2a"/><circle cx="22" cy="49" r="3.4" fill="#ff8c2a"/><circle cx="43" cy="26" r="2.2" fill="#3ec5ff"/><circle cx="60" cy="15" r="3.4" fill="#3ec5ff"/><circle cx="81" cy="31" r="4" fill="#3ec5ff"/><circle cx="86" cy="46" r="2.2" fill="none" stroke="#ff8c2a" stroke-width="1.4"/><circle cx="86" cy="70" r="2.2" fill="none" stroke="#ff8c2a" stroke-width="1.4"/>' +
+            '<path d="M19 70 L41 22 L54 22 L77 70 L63 70 L47.5 35 L33 70 Z" fill="url(#acA)"/>' +
+            '<path d="M76 45 A12.5 12.5 0 1 0 76 63" fill="none" stroke="url(#acC)" stroke-width="8.5" stroke-linecap="round"/>' +
+            '<rect x="15" y="71" width="38" height="14" rx="2.5" fill="#05080f" stroke="#f5b23c" stroke-width="1.5"/><path d="M20 75 L24 78 L20 81 M27 81 L33 81" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round"/></svg>',
         '<div class="brand-name"><b>AGENT CONFIG</b><span>CODE MAP</span></div>',
         '</div>',
         '<div class="pins mono"><span class="chip" id="pin-commit"></span><span class="chip fresh" id="pin-fresh"></span><span class="chip gen" id="pin-gen"></span></div>',
@@ -999,7 +1006,9 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '</div>',
         '</header>',
         '<div class="wb" id="wb">',
-        '<aside class="rail" aria-label="Repository">',
+        '<div class="scrim" id="scrim" hidden></div>',
+        '<aside class="rail" id="pane-left" aria-label="Repository">',
+        '<div class="pane-head"><button type="button" class="pane-pin" id="pin-left" aria-pressed="false"></button><button type="button" class="pane-close" id="close-left">×</button></div>',
         '<section id="health"></section>',
         '<section id="kpis"></section>',
         '<section id="colorby"></section>',
@@ -1007,6 +1016,7 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '</aside>',
         '<main class="center">',
         '<div class="bar-top">',
+        '<button type="button" class="pane-open" id="open-left" aria-controls="pane-left"></button>',
         '<div class="lenses" role="tablist" aria-label="View" id="lenses"></div>',
         '<div class="filters"><span id="edges-label"></span>' +
             '<button type="button" class="fbtn" id="t-sure" aria-pressed="true"></button>' +
@@ -1014,6 +1024,7 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
             '<button type="button" class="fbtn" id="t-tests" aria-pressed="true"></button>' +
             '<button type="button" class="fbtn" id="t-infra" aria-pressed="false"></button>' +
             '<button type="button" class="fullbtn" id="full" aria-pressed="false"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M1 5V1h4M13 5V1H9M1 9v4h4M13 9v4H9"></path></svg><span id="full-label"></span></button></div>',
+        '<button type="button" class="pane-open" id="open-right" aria-controls="pane-right"></button>',
         '</div>',
         '<nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>',
         '<div class="view">',
@@ -1021,7 +1032,8 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '<div class="stage">',
         '<canvas id="stage" role="img" aria-label="Project map"></canvas>',
         '<div class="overlay">',
-        '<div class="seg" role="group" aria-label="2D / 3D"><button type="button" id="dim2d" aria-pressed="true"></button><button type="button" id="dim" aria-pressed="false"></button></div>',
+        '<div class="seg" role="group" aria-label="Areas"><button type="button" id="lim-top" aria-pressed="false"></button><button type="button" id="lim-all" aria-pressed="true"></button></div>' +
+            '<div class="seg" role="group" aria-label="2D / 3D"><button type="button" id="dim2d" aria-pressed="true"></button><button type="button" id="dim" aria-pressed="false"></button></div>',
         '<div class="seg"><button type="button" class="z" id="z-out">−</button><button type="button" class="z" id="z-in">+</button><button type="button" class="fit" id="z-fit"></button></div>',
         '<button type="button" class="backbtn" id="back" hidden></button>',
         '</div>',
@@ -1034,7 +1046,8 @@ export function renderHtml(m: MapModel, meta: MapMeta): string {
         '</div>',
         '<footer class="foot" id="foot"></footer>',
         '</main>',
-        '<aside class="rail side" aria-label="Detail">',
+        '<aside class="rail side" id="pane-right" aria-label="Detail">',
+        '<div class="pane-head"><button type="button" class="pane-pin" id="pin-right" aria-pressed="false"></button><button type="button" class="pane-close" id="close-right">×</button></div>',
         '<div class="tabs" role="tablist" aria-label="Detail" id="tabs"></div>',
         '<div id="panel" aria-live="polite"></div>',
         '</aside>',

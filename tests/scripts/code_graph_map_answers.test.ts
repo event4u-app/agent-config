@@ -66,6 +66,7 @@ function model(files: MapFile[], edges: Array<[number, number, number]> = []): M
             hubs: [],
             surprises: [],
             cycles: [],
+            cycleSizes: [],
             cyclesTotal: 0,
             roleCounts: {} as MapModel['analyses']['roleCounts'],
             externals: [],
