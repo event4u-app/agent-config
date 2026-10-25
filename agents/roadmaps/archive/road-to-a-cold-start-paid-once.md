@@ -342,7 +342,7 @@ waits:
       which every reuse was refused is a valid null.
       verify: `ls agents/evidence/analysis/` -> /worker-reuse-shadow-window/
       Done 2026-10-23: `agents/evidence/analysis/worker-reuse-shadow-window-2026-10-22.md` — 107 spawns, 85 complete joins, **0 `would_resume`** (reconstructed at report time, D14). A valid null for the policy as implemented; condition (c) waits for a later window by owner decision (D15).
-- [ ] **3.6 Flip only under the policy's four conditions**
+- [~] **3.6 Flip only under the policy's four conditions** <!-- blocked-by: worker-reuse-window-not-ready --> <!-- deferred-resolution: carried-to=road-to-a-cold-start-paid-once-carried -->
       (`concern-activation-policy.md:67-85`), with a council ratification
       artefact and the reverse trigger shipped in the same change. Blocking form:
       deny the `Agent` call with a reason naming the eligible worker. The resume
@@ -351,6 +351,7 @@ waits:
       enforced.
       verify: `ls agents/evidence/ratifications/` -> /worker-reuse-guard-flip/
       Evaluated 2026-10-23, not flipped: `flipReadiness` misses all four conditions (no would-resume; 85 complete calls over 0.02 days). The 1 MiB tail read is indexed (40786bb420). Closes when a window under a decided (c) returns `ready: true`; blocking form, ratification and reverse trigger then land together.
+      Re-evaluated 2026-10-25, still not flipped: the live ledger window reads 96 `Agent` calls over 2.4 days, 0 `would_resume`, every call refused `host_resume_unobserved`, `ready: false` on all four conditions. Deferred, not done — see blocker `worker-reuse-window-not-ready`.
 
 ## Phase 4 — Rate pressure that waits instead of spawning
 
@@ -464,7 +465,7 @@ waits:
 - **Question:** The recycling roadmap's posed question — keep the parking, manufacture the sample, lower the floor, or close as an unmeasured null — now has a candidate replacement for its Phase 2: re-task a warm worker at task boundaries and brief a successor from the capsule (3.1, 3.4). Which option does the owner take?
 - **Recommendation:** (d) — its option 4: close Phase 2 as an unmeasured null superseded in form by Phase 3 here, keeping the Phase 0–1 schema and capsule standing as this plan's handoff format. Mid-task respawn waits on a primitive no host offers; task-boundary handoff uses one the host documents.
 - **If you do nothing:** step 6.4 stays open, every other step proceeds, and the recycling roadmap keeps its parking condition unchanged.
-- **What to do:** pick exactly one — (a) keep the parking in `agents/roadmaps/later/road-to-worker-generation-recycling.md` unchanged; or (b) manufacture the Phase 1 sample by running long tasks, recorded as manufactured; or (c) lower its exit-gate floor to the real sample, with the confidence it costs; or (d) close its Phase 2 as an unmeasured null under its step 3.3 and point it at `agents/roadmaps/road-to-a-cold-start-paid-once.md` Phase 3.
+- **What to do:** pick exactly one — (a) keep the parking in `agents/roadmaps/later/road-to-worker-generation-recycling.md` unchanged; or (b) manufacture the Phase 1 sample by running long tasks, recorded as manufactured; or (c) lower its exit-gate floor to the real sample, with the confidence it costs; or (d) close its Phase 2 as an unmeasured null under its step 3.3 and point it at `agents/roadmaps/archive/road-to-a-cold-start-paid-once.md` Phase 3.
 - **Resolved when:** the chosen option is written under that file's posed question and this entry's Status reads resolved.
 
 ### blocker: third-writable-host-env-row
@@ -477,6 +478,18 @@ waits:
 - **If you do nothing:** concurrency stays prose the model reads; the shadow guard keeps counting it; nothing else in this plan waits.
 - **What to do:** pick exactly one — (a) approve the third row: an ADR addendum next to the 2026-09-30 decision, then step 4.1 adds `{ variable: 'CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS', settingsKey: 'subagents.max_parallel' }`; or (b) refuse it: step 4.1 is cancelled and 4.2 documents that the host default applies.
 - **Resolved when:** the chosen option is recorded in `docs/decisions/` or in this entry, and this entry's Status reads resolved.
+
+### blocker: worker-reuse-window-not-ready
+- **Status:** resolved — carried, still open, to `road-to-a-cold-start-paid-once-carried` with the steps it blocks (was: open — raised 2026-10-25; the flip's evidence does not exist yet and cannot be produced inside a run)
+- **Class:** 1 — mechanical: the window fills with time and traffic; no decision is owed until it reads ready
+- **Run:** `./scripts-run src/scripts/worker_reuse_shadow_report <checkout-root>` — prints the window and `flipReadiness`
+- **Owner:** implementer
+- **Blocks:** step 3.6 only
+- **Question:** none. Two preconditions are missing, both outside a single run: (1) a shadow window under a decided condition (c) (D15) that contains at least one `would_resume` — 2026-10-25 reading: 96 calls, 2.4 days, 0 `would_resume`, all refused `host_resume_unobserved`; (2) the report's `main()` and reconstruct path call `flipReadiness` with `false_positive_rate`, `cost_avoided` and `friction` all `null`, so `ready: true` is unreachable from the shipped report until those three measurements are wired in from the 6.2 claims evidence.
+- **What to do:** (1) let the window fill and re-run `./scripts-run src/scripts/worker_reuse_shadow_report`; (2) wire the three measurements in `src/scripts/worker_reuse_shadow_report.ts` from `agents/evidence/analysis/warm-worker-claims-2026-10-22.md`'s successor reading; (3) once `ready: true`, land the blocking form, a ratification under `agents/evidence/ratifications/worker-reuse-guard-flip*` and the reverse trigger in one change.
+- **Recommendation:** wait; flipping on a null window would deny `Agent` calls on a threshold that never caught a failure.
+- **If you do nothing:** the guard stays in shadow, which is the safe state; nothing else waits on it.
+- **Resolved when:** the report returns `ready: true` on a window not used to choose condition (c).
 
 ## Decisions
 

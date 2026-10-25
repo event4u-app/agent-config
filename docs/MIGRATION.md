@@ -42,6 +42,41 @@ reason, which no arithmetic can.
 or that promises a future breaking removal, gets a row here in the same commit
 that makes the promise. A promise with no row is not tracked and will be missed.
 
+## 18.0.0 — two projection keys are removed, and the surface is derived
+
+✋ manual on hosts without a listing lever · 🔄 automatic everywhere else.
+
+### `projection.mode` is removed
+
+Skill and command scope is decided per host (`79cb86c0dd`). claude-code and
+codex receive every skill and command and scope them by visibility
+(`skillOverrides`, the codex finder index). Every other host receives the
+active profile's packs plus `runtime.active_packs` — no longer every skill,
+which is what an install without the key, or with `legacy-all`, used to get.
+
+- **On claude-code or codex:** nothing to do.
+- **On any other host:** add the packs you need to `runtime.active_packs`.
+- **Set the key:** a leftover `projection.mode` is named as removed and
+  ignored. An explicit `legacy-all` is converted once into the install
+  receipt's rule-layer pin (ADR-293 point 5).
+- `agent-config use --profile=legacy-all` is removed and exits 2.
+
+### `projection.rule_packs` is removed
+
+The rule layer's pack axis is derived from the active packs (`a3d4596078`). A
+consumer install ships a non-kernel rule only when its `packs:` meet the
+active-pack set. A default install therefore stops receiving the eight
+pack-scoped rules whose packs it lacks: `finance-safety-floor`,
+`legal-safety-floor`, `strategy-safety-floor`, `image-likeness-and-rights`,
+`media-governance-routing`, `media-sync-ground-truth`,
+`provider-lifecycle-discipline`, `spreadsheet-source-quality`.
+
+- **Accept the derived scope:** nothing to do.
+- **Want one of those rules:** activate its pack in `runtime.active_packs`.
+- **Set the key:** for one release window an explicitly written value still
+  decides; `agent-config doctor --check rule-packs-legacy` names how it
+  differs from the derived set. Delete the key before the window closes.
+
 ## 17.0.0 — Node 22 is the floor, and the rule-layer form is no longer a setting
 
 ✋ manual on Node 20 · 🔄 automatic for the removed settings keys.
