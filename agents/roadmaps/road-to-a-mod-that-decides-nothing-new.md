@@ -103,31 +103,35 @@ same way; a mod only reads and shows what the dispatcher already wrote.
 
 ## Phase 4 — One read-only module, opt-in, pinned
 
-- [ ] **4.1 Ship the module.** `src/templates/claude-mod/` with
-      `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (source `./`),
-      `hooks/hooks.json` (`{"modules":["./register.ts"]}`), `hooks/register.ts`,
-      `README.md`, `LICENSE`. One hook: `turn.complete` awaits `next(e)`, then sets
+- [x] **4.1 Ship the module.** `src/templates/claude-mod/` with
+      `.claude-plugin/plugin.json` (with `"hooks": "./module/hooks.json"`),
+      `.claude-plugin/marketplace.json` (source `./`), `module/hooks.json`
+      (`{"modules":["./register.ts"]}`), `module/register.ts`, `README.md`, `LICENSE`.
+      `corrected-from-reproduction`: the plan put the config at `hooks/hooks.json`,
+      a path the `block-plumbing-writes` guard reserves for generated output; the
+      manifest field was verified to work in `validate` and `test`. One hook: `turn.complete` awaits `next(e)`, then sets
       the status line from `context-fill.json` when it exists with
       `schema_version: 1`; silent otherwise. No other hook.
       verify: `claude plugin validate src/templates/claude-mod` passes with
       `calls: $.fs.exists, $.fs.read, $.ui.status`.
-- [ ] **4.2 Pin the call surface in CI without needing the host.** A vitest test
+- [x] **4.2 Pin the call surface in CI without needing the host.** A vitest test
       reads `register.ts` and fails on any of `$.process`, `$.http`, `$.model`,
       `$.fs.write`, `engine.create`, and on any hooked event outside
       `turn.complete`. A second test runs `claude plugin validate` and
       `claude plugin test` when `claude` is on `PATH` and is skipped with a stated
       reason otherwise — never reported green.
       verify: adding `$.process.spawn` to a copy of the module reds the first test.
-- [ ] **4.3 Host-harness contract tests.** `hooks/register.test.ts` beside the
+- [x] **4.3 Host-harness contract tests.** `module/register.test.ts` beside the
       module: file present → status line; file absent → silent; wrong
       `schema_version` → silent.
       verify: `claude plugin test src/templates/claude-mod` → 3 pass.
-- [ ] **4.4 Stage it with the runtime and document the opt-in.** Add the module to
+- [x] **4.4 Stage it with the runtime and document the opt-in.** Add the module to
       `STAGED_ENTRIES` in `src/install/stagedRuntime.ts`, so it lands under the
       versioned runtime. Document the one opt-in command
       (`claude plugin marketplace add <runtime>/src/templates/claude-mod` then
       `/plugin install`) in the module README and in the doctor section from 3.2.
-      Nothing is registered automatically.
+      Nothing is registered automatically. The module's TypeScript is exempted from
+      the stage's no-source filter (its test file is not).
       verify: the staged-runtime test lists the module path; the doctor output
       names the opt-in command.
 
@@ -154,12 +158,12 @@ same way; a mod only reads and shows what the dispatcher already wrote.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `README.md` no longer promises a replay a default install cannot give,
+- [x] AC-1 — `README.md` no longer promises a replay a default install cannot give,
       and no longer lists a read-only host status surface as a non-goal.
-- [ ] AC-2 — A recorded ADR classifies a host-owned module and binds it to the
+- [x] AC-2 — A recorded ADR classifies a host-owned module and binds it to the
       five class conditions; ADR-124 points to it.
-- [ ] AC-3 — `doctor neighbours` lists installed mods with a class on a fixture home
+- [x] AC-3 — `doctor neighbours` lists installed mods with a class on a fixture home
       and says nothing about mods on an empty one.
-- [ ] AC-4 — The package ships a module whose only hook is `turn.complete` and whose
+- [x] AC-4 — The package ships a module whose only hook is `turn.complete` and whose
       call surface is held to the read/ui set by a CI test that runs without the
       Claude CLI.

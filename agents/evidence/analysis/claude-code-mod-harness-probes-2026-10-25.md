@@ -10,7 +10,9 @@
 
 ## What was run
 
-A probe plugin with one hooks module carrying two hooks:
+A probe plugin with one hooks module carrying two hooks (and a second finding the
+shipped module depends on: the manifest's `"hooks": "./module/hooks.json"` field
+lets the hooks config live outside `hooks/hooks.json`; validate and test both read it):
 
 - `turn.complete` — awaits `next(e)`, then, when
   `agents/runtime/state/context-fill.json` exists with `schema_version: 1`, sets
@@ -28,7 +30,7 @@ A probe plugin with one hooks module carrying two hooks:
 | H4 | A read-only module declares exactly `$.fs.exists`, `$.fs.read`, `$.ui.*`; the call surface is CI-pinnable | `claude plugin validate .` printed `hooks: turn.complete, tool.check` and `calls: $.fs.exists, $.fs.read, $.ui.status, $.ui.toast` | **reproduced** | — |
 | G3 | File present → status line; file absent → silent | `claude plugin test`: 150000/160000 tokens → status contains `94% of recycle threshold`; `fs.exists` false → zero `ui.status` calls. 3 tests, 0.15 s | **reproduced** | — |
 | I4 | Every hook needs `try/catch` and passes `next(e)` through on failure, because three worker crashes unload all mods | `validate` reports `gating hook without .catch: tool.check`; the host reference states a hook that throws is **skipped** and the chain continues, unless its `.catch` answers | **diverged** | A display or sensor hook needs no `.catch`: when it throws it is skipped, which is the correct failure for a reader. A hook that *guards* (the opt-in holder) must register `.catch(($, e, next) => ({ decision: 'deny' }))`, or a throw lets the call through. The worker-crash rule concerns the shared thread, not a hook's own exception. |
-| W0.1(c) | A local directory marketplace can be registered | `claude plugin marketplace add --help`: `<source>` accepts "a URL, path, or GitHub repo"; `--scope user|project|local` | **reproduced (partly)** | Whether a path behind the `runtime/current` link is recorded resolved or literal is still open — a resolved path would pin the module to one version directory. |
+| W0.1(c) | A local directory marketplace can be registered, version-bound | In a scratch project: `claude plugin marketplace add <dir>/rt/current --scope local --json` with `rt/current` a symlink to `v-1`; then `marketplace remove` | **reproduced** | The host records the path **literally** (`source: directory`, `path: …/rt/current`), so a marketplace on `runtime/current` follows each re-stage. Side effect worth knowing: even `--scope local` also writes the entry into the user-global `~/.claude/plugins/known_marketplaces.json`; `marketplace remove` cleared both. |
 | W0.1(d) | Which base `$.fs.read` resolves a relative path against | Type contract for `$.fs.read`: "relative to the working directory, or absolute" | **reproduced** | Relative paths resolve against the session's working directory, not the project root. A module reading `agents/runtime/state/…` is silent when the session starts in a subdirectory. |
 | W0.1(a,b,e) | Settings-hook vs mod order on a real arm; skip line for a settings hook; real hook latency | — | **out-of-bound** | Needs a live interactive session on a managed and an unmanaged account; the harness simulates neither settings hooks nor arms. |
 

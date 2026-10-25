@@ -91,8 +91,9 @@ hosts without mods.
 - [ ] **3.1 Live-session probes the harness cannot make.** On a real 2.1.310+
       session, managed and unmanaged: do AC's settings PreToolUse hooks run before or
       after a user mod's `tool.check`; does the host's skip line appear when a mod
-      skips a settings hook; is a marketplace path behind `runtime/current` kept
-      literal; real hook latency of the read-only module.
+      skips a settings hook; real hook latency of the read-only module. (Whether a
+      marketplace path behind `runtime/current` is kept literal was measured on
+      2026-10-25: it is.)
       verify: protocol with host version, arm and command under `agents/evidence/analysis/`.
 - [ ] **3.2 Sensor.** `tool.check` reads `next.trace`; when the final verdict differs
       from the dispatcher's, write one audit line (which mod, tier, from → to) and a
@@ -105,8 +106,9 @@ hosts without mods.
       only for calls the dispatcher itself denied; everything else fails open. Never
       suggest a block where the host cannot block.
       verify: harness test with a downstream `allow`; 3.1 confirms it on a live arm.
-- [ ] **3.4 Init registration.** Only if 3.1 shows the literal path is kept: `init`
-      asks once whether to register the local marketplace.
+- [ ] **3.4 Init registration.** The literal-path precondition is met (measured
+      2026-10-25). `init` asks once whether to register the local marketplace; note
+      that registration also writes the user-global marketplace list.
       verify: init test with a fixture home.
 
 ## Phase 4 — Learning and second opinion, through neighbours
