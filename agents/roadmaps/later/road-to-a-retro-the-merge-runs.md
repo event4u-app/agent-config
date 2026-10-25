@@ -48,6 +48,11 @@ relates:
 > **Arrivals:** `road-to-an-analysis-family-that-deepens-itself` step 6.4
 > (2026-10-18, directive (h) of inbox round `inbox-2026-10-s`): the unit kind
 > `analysis-run`, landed owner-first as step 1.5.
+> Round `inbox-2026-10-at` (2026-10-25): the owner asked that the automatic
+> review checks whether the planned skills and rules were used, all of them, and
+> if not why not and what to improve. Landed as steps 1.6, 2.6, 4.5 and 5.5; they
+> read the plan-versus-use block of `road-to-a-plan-that-stays-true` Phase 4 and
+> start once that phase is on main.
 
 ## Goal
 
@@ -218,6 +223,12 @@ pre-registration in place, settings lint green with the new key.*
       the unit kind and both limits. Sensitivity: neutralising the archived gate
       reds the named case.*
 
+- [ ] **1.6 Plan-versus-use facts for a unit.** The fact reader takes the
+      `skill_plan_usage` block of `road-to-a-plan-that-stays-true` 4.2 for a PR or
+      session unit: planned, applied, waived (reason), missing, unplanned; rules
+      `not-observable`. Waiver reasons are `UntrustedDatum`, like review text.
+      verify: `npx vitest run tests/scripts/retro_facts.test.ts -t plan-versus-use` — a fixture block with one missing skill appears in the unit's facts and `missing` is never read as 0
+
 ## Phase 2 — `/retro` by hand
 
 - [x] **2.1 Composition.** Facts → one synthesis step → at most one durable
@@ -252,6 +263,14 @@ pre-registration in place, settings lint green with the new key.*
       `enqueue-merged`, `sweep`, and `--dry-run` on each. `planManualRetro`
       reads no setting and writes nothing, so a paused or disabled sweep does
       not stop it. The cluster row sits in `command-clusters.md`.*
+
+- [ ] **2.6 Why not — one cause per miss.** Triage signal `plan-not-used`
+      (`missing > 0` analyses the unit). Each miss gets exactly one cause from the
+      closed set `waived-justified | basis-wrong | not-reachable | ignored |
+      skill-insufficient | discovery-gap` (`discovery-gap`: an unplanned skill was
+      needed). A miss whose cause cannot be read from the facts is `undecided`,
+      never guessed.
+      verify: `npx vitest run tests/scripts/retro.test.ts -t miss-cause` — each cause has a fixture; a fixture with no deciding fact yields `undecided`
 
 ## Phase 3 — Three paths, one queue
 
@@ -367,6 +386,13 @@ pre-registration in place, settings lint green with the new key.*
       the fingerprint ignores, so it widens nothing that can leave; at most one
       per run.*
 
+- [ ] **4.5 What to improve — one target per cause.** `basis-wrong` and
+      `discovery-gap` become a package record proposing a routing-matrix row or a
+      classification fix; `not-reachable` a package record on the delivery path;
+      `ignored` an intake signal; `skill-insufficient` an override proposal;
+      `waived-justified` nothing. Nothing is written into a skill, rule or corpus.
+      verify: `npx vitest run tests/scripts/retro.test.ts -t miss-cause-target` — each cause maps to its one target and none writes under `src/`
+
 ## Phase 5 — Effect, not volume
 
 - [x] **5.1 Held or recurred.** Every retro reports "held / recurred" for earlier
@@ -418,6 +444,11 @@ pre-registration in place, settings lint green with the new key.*
       window expires, so the pause ends by itself. The figures come from the
       sweep the probe calls; until the probe is wired (3.4) they come from
       `retro sweep`. Since 2026-10-21 the probe runs at session start.*
+
+- [ ] **5.5 Held or recurred per skill and cause.** The held/recurred reading of
+      5.1 also counts per `(skill, miss_cause)`, so a fix to a skill's routing is
+      seen to hold or not.
+      verify: `npx vitest run tests/scripts/retro.test.ts -t held-per-skill-cause`
 
 ## Blockers
 

@@ -23,6 +23,35 @@ and the run that applies it links its PR.
   pass, which is what the criterion is for; (b) weakens it and is yours alone.
 - **Blocks:** AC-5 and the archive of the roadmap.
 
+### OQ-12 — Reopen ADR-263 for a package-side run basis
+
+- **Context:** round `inbox-2026-10-at` asks that every run determines its base
+  skills once and closes them out (`later/road-to-a-run-that-knows-its-skills`).
+  ADR-263 (`reopen_policy: owner`) rejected a package-side routing claim because
+  no host routing contract exists; a run basis needs none — it uses the
+  documented hook contract only. Its zero is read from one store slug
+  (`stubs/road-to-a-census-that-refuses-a-partial-store`).
+- **Options:** (a) reopen now, narrowly: a package-side run basis is not a host
+  routing claim; the rest of ADR-263 stands; (b) reopen only after a census over
+  every store slug (that roadmap's step 1.1) is recorded; (c) do not reopen.
+- **Recommendation:** (b) — the census is cheap, and it decides whether the
+  ADR's own review trigger has already fired, which would make this a supersede
+  rather than an owner reopen.
+- **Blocks:** Phase 2 of `later/road-to-a-run-that-knows-its-skills`.
+
+### OQ-13 — Un-park the live selection floors and fund one pilot
+
+- **Context:** `later/road-to-routing-assurance-live-floors` now has 5 arrivals;
+  each recommends its option (1): a protocol frozen by a session that did not
+  author the corpus, then one pilot on the host's evaluator, natural against
+  explicit invocation. The question itself is council-decidable; the pilot is
+  metered spend, and the file can only start in a free active slot.
+- **Options:** (a) yes, with a cap of 25 USD for the pilot, started in the next
+  free slot; (b) yes, with a different cap you name; (c) keep it parked.
+- **Recommendation:** (a) — five rounds have asked the same question, and one
+  bounded run answers whether the package hides its own skills.
+- **Blocks:** every step of `later/road-to-routing-assurance-live-floors`.
+
 ## Not owner questions — waits, or already settled in the tree
 
 - `openai-council-seat-oauth-grant-rejected` (agent-throughput-recovery): its

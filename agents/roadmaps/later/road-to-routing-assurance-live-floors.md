@@ -10,7 +10,7 @@ estate_offset_exempt: "Not a new plan. This is the live-harness SUFFIX of road-t
 ---
 # Road to routing assurance — the live-harness floors
 
-> **Arrivals:** 4 (at least) — latest `inbox-2026-10-an` (2026-10-25): two parallel plans both open with this file's question and recommend option (1); new inputs are listed under § Inputs for the protocol session. Not un-parked by that round: the active estate was at its five-roadmap cap. The count before it read: 3 (at least) — latest `inbox-2026-10-i` (2026-10-11): an audit names the host's own skill evaluator (with/without delta, ablation) as the independent grader this file was parked for. The count before it read: 2 (at least) — latest `inbox-2026-09-l` (2026-09-05); earlier: agents/roadmaps/archive/road-to-routing-assurance.md.
+> **Arrivals:** 5 (at least) — latest `inbox-2026-10-at` (2026-10-25): a plan built on a third party's advice — compare automatic selection with explicit invocation on identical tasks, and investigate loading before adding review agents — reaches this file's question again and recommends option (1); its inputs are under § Inputs for the protocol session. Not un-parked: the active estate is at its cap, and the pilot spend is the owner's (`agents/owner-questions.md` OQ-13). The count before it read: 4 (at least) — latest `inbox-2026-10-an` (2026-10-25): two parallel plans both open with this file's question and recommend option (1); new inputs are listed under § Inputs for the protocol session. Not un-parked by that round: the active estate was at its five-roadmap cap. The count before it read: 3 (at least) — latest `inbox-2026-10-i` (2026-10-11): an audit names the host's own skill evaluator (with/without delta, ablation) as the independent grader this file was parked for. The count before it read: 2 (at least) — latest `inbox-2026-09-l` (2026-09-05); earlier: agents/roadmaps/archive/road-to-routing-assurance.md.
 
 > **The posed question — 3 arrivals, council-decidable per this file's own Authority paragraph.**
 > Does a scored run on the host's own skill evaluator, with the execution protocol
@@ -206,6 +206,26 @@ condition.
   with an infrastructure failure reported `UNKNOWN`, never green.
 - **The gate reading** of `road-to-a-measured-pointer-gate-and-true-records`
   2.2 is the no-model baseline for the hook arm.
+
+Offered by round `inbox-2026-10-at`, same terms:
+
+- **Natural and explicit as a pair.** Every `trigger: true` query is emitted
+  twice — the corpus text unchanged, and the same task prefixed with the explicit
+  invocation form (whether `/name` loads the skill in print mode is checked once
+  first). Per skill the run then yields one of four cells: `healthy` (both fire
+  and pass), `load-defect` (explicit passes, natural does not fire),
+  `content-defect` (explicit fails too), `over-fire` (fires on a near-miss).
+- **Three listing arms.** As shipped (alphabetical, fixed window); priority order
+  at the real window; no override at all. Selection is read on the consumer path
+  (throwaway HOME, real install, `skillOverrides` active), because the host's
+  evaluator loads skills as a plugin and plugin skills ignore `skillOverrides`.
+- **A fingerprint per row.** Skill byte hash, case hash, listing snapshot hash,
+  settings hash, host version, model, scoring version and partition; a compare
+  refuses a score delta across differing fingerprints and still shows a verdict
+  change.
+- **A fail-closed start guard.** The harness refuses to start when HOME is not
+  throwaway, settings are inherited or `--no-publish` is missing — before any
+  credential is read.
 
 ## Blockers
 
