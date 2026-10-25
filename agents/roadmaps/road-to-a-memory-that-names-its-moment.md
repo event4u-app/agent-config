@@ -85,7 +85,7 @@ reachable by consumers or kept internal by a recorded decision.
       verify: `npx vitest run tests/lib/user_global_memory_audit.test.ts` — a counter
       file with 3 proposed / 1 accepted renders 33 % and the day count; an absent file
       renders zeros without throwing.
-- [ ] **1.3 Decide how the gate counts (E1), before it falls due.** The council
+- [x] **1.3 Decide how the gate counts (E1), before it falls due.** The council
       decides, in one batched question with E2: evaluate on 2026-10-28 as written, or
       restart the 90 days from the day consumers can reach `/agents user accept`.
       The verdict lands in § Decisions and, if the window moves, as a dated amendment
@@ -126,8 +126,8 @@ reachable by consumers or kept internal by a recorded decision.
 
 | ID | Question | Route | Verdict | Record |
 |---|---|---|---|---|
-| E1 | ADR-138 gate: evaluate on 2026-10-28, or restart the window at consumer reachability? | council (reopens an ADR; personal-data layer) | open | — |
-| E2 | `/agents user` + `/team-knowledge`: `advanced` or `internal`? | council (exposes a personal-profile capture path to consumers) | open | — |
+| E1 | ADR-138 gate: evaluate on 2026-10-28, or restart the window at consumer reachability? | council (reopens an ADR; personal-data layer) | option 2: 2026-10-28 is a non-binding baseline and a recorded rollout failure; the binding window starts at tested consumer reachability, on a fresh cohort, read at ≥ 20 proposals, threshold unchanged | council: 2026-10-25, anthropic + openai 2/2 convergent; ADR-138 Amendment 2026-10-25 |
+| E2 | `/agents user` + `/team-knowledge`: `advanced` or `internal`? | council (exposes a personal-profile capture path to consumers) | option 4: `show`, `review`, `accept`, `delete` advanced with a preview and confirmation before any deletion; `init`, `update` internal; of `/team-knowledge` only the contested-entry resolution, split out if `consolidate` mutates more; non-developer profiles added | council: 2026-10-25, same round as E1 |
 | E8 | Add the slot p95 against 1.5 s to the dogfood closing condition? | run (strengthens a measurement, reversible) | yes | step 1.5 |
 | E6 | Receiver? | run | this roadmap for the dated work; the structural rest parked as `later/road-to-a-memory-the-consumer-owns` | Source search in frontmatter |
 

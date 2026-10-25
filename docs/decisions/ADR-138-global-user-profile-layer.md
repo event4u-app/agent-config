@@ -185,6 +185,33 @@ the remedy: it outsources the automated gate's job and merely defers the same
 enumeration by 90 days.
 
 
+### Amendment 2026-10-25 — the window restarts at consumer reachability
+
+Decided by the AI council (anthropic + openai, 2/2 convergent, 2026-10-25) under
+`road-to-a-memory-that-names-its-moment` step 1.3, before day 90 fell due.
+
+**Why.** For the whole first window every `/agents user` command was
+`visibility: internal`, so no consumer could review, accept or delete an
+observation. The numerator of the accept rate depended on an action only the
+maintainer could take: the window measured the rollout, not the layer.
+
+**What changes.**
+
+1. The reading on **2026-10-28** is recorded as a **non-binding baseline** and
+   classified as a rollout failure (the layer was not operationally delivered),
+   never erased.
+2. The binding 90-day window starts on the day `/agents user review` and
+   `accept` are installed for consumers **and** a clean consumer install has
+   passed propose → review → accept → present in `profile.md` end to end. A
+   visibility change alone does not start it.
+3. The binding window counts a **fresh cohort**: the counters at its start are
+   recorded and subtracted, so proposals no consumer could act on do not
+   contaminate the rate.
+4. The rate is read only once **≥ 20 proposals** sit in that cohort; below that
+   the raw counts are reported and the gate waits.
+5. The threshold is **unchanged**: accept rate < 30 % → mandatory teardown
+   review, default outcome deprecation-with-archive.
+
 ## Consequences
 
 - A fresh session in a project with no `.agent-user.md` now addresses the

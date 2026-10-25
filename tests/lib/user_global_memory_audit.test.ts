@@ -279,6 +279,7 @@ describe('renderGlobalMemoryAudit — the ADR-138 promotion gate', () => {
         expect(render.text).toContain('day 87 of 90');
         expect(render.text).toContain('due 2026-10-28');
         expect(render.text).toContain('accept rate 33 %');
+        expect(render.text).toContain('non-binding');
     });
 
     it('renders zeros and no rate without a counter file, and never throws', () => {
