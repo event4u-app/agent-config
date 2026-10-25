@@ -127,4 +127,4 @@ comment**. It does **NOT**:
 
 - `/council default` — base orchestration entry point.
 - `ai-council` skill — neutrality guidelines.
-- `/review-changes` — internal four-judge variant for local diffs.
+- `/review-changes` — internal seven-judge variant for local diffs.

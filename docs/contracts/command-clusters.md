@@ -83,7 +83,7 @@ collapses 26 atomics → 11 sub-command clusters. Phase 4 (2026-07-08,
 into 6 new + 4 extended clusters — 15 of them slug-neutral (path
 hyphen-joining keeps the invoked name), 4 slug reorders carried by
 `replaces:` aliases (`fix-quality`, `tests-e2e-plan`, `tests-e2e-heal`,
-`cost-profile`). The five-judge self-review formerly at
+`cost-profile`). The multi-judge self-review formerly at
 `review-changes` is now the `changes` sub of the `review` cluster.
 
 ## Bare invocation — deterministic, never guessed

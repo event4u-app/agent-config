@@ -86,7 +86,7 @@ the route it calls, switched off until measured.
 ## Not taken from this round
 
 - Head-to-head benchmark against S4 and every KPI in the master plan — owner
-  question OQ-14; the assurance-benchmark stub carries the arrival.
+  question OQ-17; the assurance-benchmark stub carries the arrival.
 - Language-server resolution, a task-DAG coordinator, per-provider queues, a
   unified explain view, a worktree-boundary write guard, non-PHP stack reviewers
   — each is owned in `later/` or `stubs/` or needs spend or a host session.

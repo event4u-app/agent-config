@@ -34,7 +34,7 @@ reviewer selection.
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
-| `/review changes` | `commands/review/changes.md` | Self-review local changes before creating a PR — five specialized judges (bug, security, tests, quality, architecture), consolidated verdicts |
+| `/review changes` | `commands/review/changes.md` | Self-review local changes before creating a PR — seven specialized judges (bug, security, tests, quality, architecture, spec, overbuild), consolidated verdicts |
 | `/review routing` | `commands/review/routing.md` | Compute reviewer roles + matched historical bug patterns for the current diff (ownership-map.yml, historical-bug-patterns.yml) |
 
 Sub-command names match the locked contract in

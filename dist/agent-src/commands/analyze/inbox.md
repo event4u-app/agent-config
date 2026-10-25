@@ -1146,6 +1146,11 @@ window, a soak, a reading after the next release — is written as a `stubs/`
 entry with its trigger, never as a step of the emitted roadmap (template rule
 17c), so the roadmap can close when its work is done.
 
+**Every emitted roadmap carries `tree_pin:` — the HEAD the Phase 4 claims were
+verified at.** `analysis_validate` keeps an unpinned roadmap in `emitted`; the
+pin is what later lets `roadmap:context --revalidate` tell a stale claim from a
+fresh one ([`roadmap-revalidation-v1`](../../docs/contracts/roadmap-revalidation-v1.md)).
+
 **A roadmap item built on a corrected step carries the correction, and says so.**
 Write the Phase 4b wording, not the file's original, and tag the item
 `corrected-from-reproduction` so a reader can tell an improvement from a

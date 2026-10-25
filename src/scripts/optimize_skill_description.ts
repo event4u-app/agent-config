@@ -22,12 +22,18 @@
  *   npx tsx src/scripts/optimize_skill_description.ts --skill fe-design \
  *     [--candidate "alt description …"]... [--live] [--max-usd 1]
  *
- * Output: per-candidate train/test trigger-accuracy table; the pick is the
- * best TEST accuracy. Exit 0 always (authoring tool, not a gate).
+ * Output: per-candidate train/test trigger-accuracy table plus the paired verdict
+ * of each candidate against the current description on the held-out queries. A
+ * candidate is picked only on a `pass` that survives Holm correction across the
+ * run's candidates — the same rule `_lib/paired_verdict.ts` imposes everywhere
+ * else; a raw higher accuracy on ~5 held-out queries is one flipped query.
+ * Exit 0 always (authoring tool, not a gate).
  */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+
+import { correctForMultiplicity, decidePairedVerdict, type PairedVerdict } from './_lib/paired_verdict.js';
 
 export interface TriggerQuery {
     q: string;
@@ -76,6 +82,32 @@ export function accuracy(
     return ok / queries.length;
 }
 
+/**
+ * Each candidate against the current description on the same queries: per query
+ * +1 when only the candidate judges it right, -1 when only the current one does.
+ * Verdicts are corrected together; the pick is the strongest surviving `pass`,
+ * else the current description.
+ */
+export function pairedPick(
+    fires: (desc: string, q: string) => boolean,
+    current: string,
+    candidates: readonly string[],
+    queries: readonly TriggerQuery[],
+): { verdicts: PairedVerdict[]; pick: number } {
+    const right = (desc: string, q: TriggerQuery): number => (fires(desc, q.q) === q.trigger ? 1 : 0);
+    const raw = candidates.map((c) => decidePairedVerdict({ deltas: queries.map((q) => right(c, q) - right(current, q)) }));
+    const verdicts = correctForMultiplicity(raw);
+    let pick = 0;
+    let bestP = Infinity;
+    verdicts.forEach((v, i) => {
+        if (v.kind === 'pass' && v.p < bestP) {
+            bestP = v.p;
+            pick = i + 1;
+        }
+    });
+    return { verdicts, pick };
+}
+
 async function live_judge_factory(maxUsd: number): Promise<(desc: string, q: string) => boolean> {
     const c = await import('./ai_council/clients.js');
     const client = new c.AnthropicClient({ api_key: c.load_anthropic_key(), model: 'claude-haiku-4-5-20251001' });
@@ -118,16 +150,16 @@ export async function main(argv: string[]): Promise<number> {
 
     const judge = live ? await live_judge_factory(maxUsd) : proxy_fires;
     const all = [current, ...candidates];
-    process.stdout.write('| # | description (first 70 chars) | train | TEST (held-out) |\n|---|---|---:|---:|\n');
-    let best = 0;
-    let bestAcc = -1;
+    const { verdicts, pick } = pairedPick(judge, current, candidates, test);
+    process.stdout.write('| # | description (first 70 chars) | train | TEST (held-out) | paired vs current |\n|---|---|---:|---:|---|\n');
     all.forEach((desc, i) => {
         const tr = accuracy(judge, desc, train);
         const te = accuracy(judge, desc, test);
-        process.stdout.write(`| ${i === 0 ? 'current' : i} | ${desc.slice(0, 70)} | ${(tr * 100).toFixed(0)}% | ${(te * 100).toFixed(0)}% |\n`);
-        if (te > bestAcc) { bestAcc = te; best = i; }
+        const v = i === 0 ? '—' : (verdicts[i - 1]?.kind ?? '—');
+        process.stdout.write(`| ${i === 0 ? 'current' : i} | ${desc.slice(0, 70)} | ${(tr * 100).toFixed(0)}% | ${(te * 100).toFixed(0)}% | ${v} |\n`);
     });
-    process.stdout.write(`\npick (best held-out): ${best === 0 ? 'current description' : `candidate ${best}`} (${(bestAcc * 100).toFixed(0)}% test)\n`);
+    for (const [i, v] of verdicts.entries()) process.stdout.write(`candidate ${String(i + 1)}: ${v.kind} — ${v.reason}\n`);
+    process.stdout.write(`\npick: ${pick === 0 ? 'current description (no candidate passed after correction)' : `candidate ${String(pick)}`}\n`);
     return 0;
 }
 

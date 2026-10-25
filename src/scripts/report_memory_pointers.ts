@@ -61,6 +61,7 @@ import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
 
 import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+import { anchorResolves, driftedPaths } from './_lib/git_drift.js';
 
 const PROG = 'report_memory_pointers.ts';
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -363,32 +364,6 @@ export function resolvePointer(
     return { raw, kind, state: 'live', target: relPath };
 }
 
-/**
- * Paths cited by the entry that changed between its anchor and HEAD.
- *
- * The anchor means "the revision this entry was semantically verified
- * against", so drift is a re-verification prompt, never a staleness verdict —
- * a file can change a hundred times without touching the claim.
- */
-function driftedPaths(anchor: string, targets: readonly string[]): string[] {
-    if (targets.length === 0) return [];
-    const res = spawnSync(
-        'git',
-        ['diff', '--name-only', `${anchor}..HEAD`, '--', ...targets],
-        { cwd: REPO_ROOT, encoding: 'utf-8' },
-    );
-    if (res.status !== 0 || typeof res.stdout !== 'string') return [];
-    return res.stdout.split('\n').map((s) => s.trim()).filter(Boolean).sort();
-}
-
-function anchorResolves(anchor: string): boolean {
-    const res = spawnSync('git', ['cat-file', '-e', `${anchor}^{commit}`], {
-        cwd: REPO_ROOT,
-        encoding: 'utf-8',
-    });
-    return res.status === 0;
-}
-
 function readStore(storeDir: string): Array<{ file: string; type: string; entries: Array<Record<string, unknown>> }> {
     const abs = path.isAbsolute(storeDir) ? storeDir : path.join(REPO_ROOT, storeDir);
     let names: string[];
@@ -487,7 +462,7 @@ export function sweep(storeDir: string): SweepResult {
             let drifted: string[] = [];
             if (isCommitish(anchorRaw)) {
                 verified_at_commit = anchorRaw;
-                if (anchorResolves(anchorRaw)) {
+                if (anchorResolves(REPO_ROOT, anchorRaw)) {
                     anchor_state = 'present';
                     const targets = [
                         ...new Set(
@@ -496,7 +471,7 @@ export function sweep(storeDir: string): SweepResult {
                                 .map((p) => p.target as string),
                         ),
                     ].sort();
-                    drifted = driftedPaths(anchorRaw, targets);
+                    drifted = driftedPaths(REPO_ROOT, anchorRaw, targets);
                 } else {
                     anchor_state = 'unresolvable';
                 }

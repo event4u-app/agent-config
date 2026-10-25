@@ -224,3 +224,42 @@ export function passRate(verdicts: readonly PairedVerdict[]): { rate: number; de
         excluded,
     };
 }
+
+/**
+ * Holm step-down: which of `ps` stay significant when they are tested together.
+ *
+ * A run that tries several candidates and keeps the best one has made several
+ * comparisons; five candidates each at p = 0.03 would each pass alone and
+ * together carry a far larger chance that one passed by noise. Holm controls
+ * that family-wise error without Bonferroni's loss of power. Returned in the
+ * input order.
+ */
+export function holmSignificant(ps: readonly number[], alpha: number = ALPHA): boolean[] {
+    const m = ps.length;
+    const order = ps.map((p, i) => ({ p, i })).sort((a, b) => a.p - b.p);
+    const out: boolean[] = new Array<boolean>(m).fill(false);
+    for (let k = 0; k < m; k += 1) {
+        const cur = order[k] as { p: number; i: number };
+        if (cur.p > alpha / (m - k)) break;
+        out[cur.i] = true;
+    }
+    return out;
+}
+
+/**
+ * The verdicts of one run's candidates after Holm. A `pass` or `regression` that
+ * does not survive becomes `no-change` with the reason saying so; `underpowered`
+ * and `no-change` are left as they are. Every candidate counts toward the family,
+ * underpowered ones included — they were compared too.
+ */
+export function correctForMultiplicity(verdicts: readonly PairedVerdict[], alpha: number = ALPHA): PairedVerdict[] {
+    const keep = holmSignificant(verdicts.map((v) => v.p), alpha);
+    return verdicts.map((v, i) => {
+        if ((v.kind !== 'pass' && v.kind !== 'regression') || keep[i] === true) return v;
+        return {
+            ...v,
+            kind: 'no-change',
+            reason: `${v.reason} Not significant after Holm correction over ${String(verdicts.length)} candidates of this run.`,
+        };
+    });
+}
