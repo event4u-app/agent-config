@@ -1,3 +1,5 @@
+import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -130,6 +132,30 @@ describe('local source adapters', () => {
     it('fails a URL argument with a diagnostic naming the fetch blocker', () => {
         for (const url of ['https://example.org/repo', 'git@example.org:o/r.git']) {
             expect(() => resolveSource(url)).toThrow(/source-fetch-authorization/);
+        }
+    });
+
+    const hasFfmpeg = spawnSync('ffmpeg', ['-version']).status === 0;
+    // skip-reason: ffmpeg generates the clip; the extension test below covers classification everywhere
+    it.skipIf(!hasFfmpeg)('pins a generated media clip by the sha256 of its bytes, as kind media', () => {
+        const clip = path.join(root, 'clip.mp4');
+        const gen = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'lavfi', '-i', 'testsrc2=s=160x90:d=1', '-c:v', 'mpeg4', clip]);
+        expect(gen.status).toBe(0);
+        const ref = resolveSource(clip);
+        const expected = `sha256:${createHash('sha256').update(fs.readFileSync(clip)).digest('hex')}`;
+        expect(ref.kind).toBe('media');
+        expect(ref.pin).toBe(expected);
+        expect(ref.digest).toBe(expected);
+        expect(ref.files).toEqual({ 'clip.mp4': expected });
+    });
+
+    it('classifies every media extension by name and never reads it as an archive or as text', () => {
+        for (const ext of ['.mp4', '.MOV', '.webm', '.mkv', '.m4a', '.mp3', '.wav']) {
+            const file = write(`m/a${ext}`, Buffer.from([0x00, 0xff, 0x1f, 0x8b, 0x00]));
+            const ref = resolveSource(file);
+            expect(ref.kind, ext).toBe('media');
+            expect(ref.license).toBe('unknown');
+            expect(Object.keys(ref.files)).toEqual([`a${ext}`]);
         }
     });
 

@@ -18649,6 +18649,13 @@
     },
     {
       "source": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/rules/untrusted-input-defense.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
       "target": ".agent-src.uncondensed/skills/authz-review/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -18692,6 +18699,13 @@
     {
       "source": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
       "target": ".agent-src.uncondensed/skills/threat-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncondensed/skills/security-audit/SKILL.md",
+      "target": ".agent-src.uncondensed/skills/verify-repair-loop/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

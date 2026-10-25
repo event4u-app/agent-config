@@ -64,6 +64,8 @@ Walk the diff with the following gates:
 - Doc / changelog / release notes present (hand off to
   [`release-comms`](../release-comms/SKILL.md) for the prose).
 - Rollback path tested at least mentally; named in step 4.
+- Security: `agent-config audit:code show` — open confirmed, needs_validation,
+  coverage % and last run. No ledger reads "not checked", never "no findings".
 
 Cells without evidence block the launch — surface the gap, do not hand-wave.
 

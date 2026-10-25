@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncondensed/`
 - Files indexed: **632**
-- Edges (incl. self-WRITE): **2411**
+- Edges (incl. self-WRITE): **2413**
 
 ## READ_ONLY edges
 
@@ -1565,12 +1565,14 @@
 | `.agent-src.uncondensed/skills/secrets-management/SKILL.md` | `.agent-src.uncondensed/skills/security-audit/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/secrets-management/SKILL.md` | `.agent-src.uncondensed/skills/security/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/secrets-management/SKILL.md` | `.agent-src.uncondensed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/security-audit/SKILL.md` | `.agent-src.uncondensed/rules/untrusted-input-defense.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/security-audit/SKILL.md` | `.agent-src.uncondensed/skills/authz-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/security-audit/SKILL.md` | `.agent-src.uncondensed/skills/bug-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/security-audit/SKILL.md` | `.agent-src.uncondensed/skills/laravel/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/security-audit/SKILL.md` | `.agent-src.uncondensed/skills/performance-analysis/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/security-audit/SKILL.md` | `.agent-src.uncondensed/skills/security/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/security-audit/SKILL.md` | `.agent-src.uncondensed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncondensed/skills/security-audit/SKILL.md` | `.agent-src.uncondensed/skills/verify-repair-loop/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md` | `.agent-src.uncondensed/skills/agent-security-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md` | `.agent-src.uncondensed/skills/ai-code-blindspots/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncondensed/skills/security-maturity-assessment/SKILL.md` | `.agent-src.uncondensed/skills/authz-review/SKILL.md` | `body_link` | 1 |

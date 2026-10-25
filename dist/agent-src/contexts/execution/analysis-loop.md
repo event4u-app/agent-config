@@ -107,6 +107,11 @@ whose tree those gates do not read.
 A loop with no `executed` or `read` evidence tied to a changed conclusion is
 `no-external-signal` and does not count as a loop.
 
+A media source (`analyze:post`) anchors as `S1@01:05 #3` — source, timestamp,
+contact-sheet tile — with at most a 15-word quote; `isMediaAnchor()` in
+`src/scripts/_lib/media_anchor.ts` checks the grammar. A tile the run looked at
+is `read`; what the creator says is `claimed`.
+
 ## Council roles
 
 - **seat** — answers a question; never edits, runs or fetches.

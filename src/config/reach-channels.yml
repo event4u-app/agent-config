@@ -106,6 +106,37 @@ channels:
           win32: py -m pipx install yt-dlp==2026.7.4
           default: pipx install yt-dlp==2026.7.4
 
+  # Local media: frames, contact sheets and audio for the media evidence
+  # bundle. ffmpeg first — the frame path is the channel's job, and its probe
+  # is a CAPABILITY probe in reach_doctor.ts (a generated 1-s clip pushed
+  # through that path), because `ffmpeg -version` exits 0 on a build that
+  # cannot do it. yt-dlp is the acquisition candidate for a public URL, same
+  # pin as the youtube row. `experimental`: no maintainer has run a real post
+  # through it yet.
+  - id: video
+    description: Frame sampling, contact sheets and transcript inputs for a local media file or a public video URL.
+    tier: zero-config
+    lifecycle: experimental
+    override_key: reach.channels.video.backend
+    last_verified: "2026-10-25"
+    backends:
+      - id: ffmpeg
+        probe_cmd: ffmpeg
+        probe_args: ["-version"]
+        install:
+          darwin: "os-baseline: Homebrew ffmpeg formula (8.1.1 observed 2026-10-25) — no versioned formula pinned here"
+          linux: "os-baseline: distro-provided ffmpeg package (apt / dnf / apk) — version tracks the distro, no pin meaningful"
+          win32: "os-baseline: an ffmpeg build from the platform package manager (winget / scoop) — no pin verified here"
+          default: "os-baseline: an ffmpeg with ffprobe on PATH, from the platform package manager — never a piped remote installer"
+      - id: yt-dlp
+        probe_cmd: yt-dlp
+        probe_args: ["--version"]
+        install:
+          darwin: pipx install yt-dlp==2026.7.4
+          linux: pipx install yt-dlp==2026.7.4
+          win32: py -m pipx install yt-dlp==2026.7.4
+          default: pipx install yt-dlp==2026.7.4
+
   # Feed retrieval. Two independent candidates: fetch the feed with curl, or
   # fetch-and-parse it in a Node one-liner. Either satisfies the channel.
   - id: rss
