@@ -54,10 +54,15 @@ describe('a default global install reaches the skills it did not write', () => {
         expect(r.status, `install failed:\n${r.stdout}\n${r.stderr}`).toBe(0);
 
         const hostRoot = path.join(home, '.claude', 'skills');
+        // Since step 4.7 of road-to-a-setup-that-decides-itself claude-code
+        // receives every skill and scopes by visibility, so a default install
+        // leaves nothing out there. The search path's labelling is still the
+        // subject: one skill is taken out of the host root to make it uninstalled.
+        expect(skillDirs(PROJECTION).filter((n) => !skillDirs(hostRoot).includes(n))).toEqual([]);
+        fs.rmSync(path.join(hostRoot, skillDirs(PROJECTION).sort()[0] as string), { recursive: true, force: true });
         const installed = new Set(skillDirs(hostRoot));
         const missing = skillDirs(PROJECTION).filter((n) => !installed.has(n)).sort();
-        // The defect only exists while the default install is a subset.
-        expect(missing.length, 'a default install wrote every skill').toBeGreaterThan(0);
+        expect(missing.length).toBe(1);
 
         const target = missing[0] as string;
         const [fm] = parse_frontmatter(fs.readFileSync(path.join(PROJECTION, target, 'SKILL.md'), 'utf-8'));

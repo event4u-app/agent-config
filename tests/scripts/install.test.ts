@@ -429,7 +429,7 @@ describe('install — scoped-projection prune (road-to-credible-install Phase 2)
         });
     });
 
-    describe('_resolve_scoped_projection — mode resolution', () => {
+    describe('_resolve_scoped_projection — the active-pack overlay', () => {
         function withHome(fn: (home: string) => void): void {
             const base = fs.mkdtempSync(path.join(os.tmpdir(), 'scoped-mode-'));
             const home = path.join(base, 'e4u-home');
@@ -444,62 +444,39 @@ describe('install — scoped-projection prune (road-to-credible-install Phase 2)
             }
         }
 
-        it('no global settings file yet → falls back to the packaged template default (scoped)', () => {
+        // Scope is per host since step 4.7 of road-to-a-setup-that-decides-itself
+        // (owner answer 2026-10-24): this reads only the active-pack overlay, and a
+        // leftover `projection.mode` changes nothing.
+        it('no global settings file yet → the packaged template overlay (none)', () => {
             withHome(() => {
-                const { mode } = inst._resolve_scoped_projection(REPO_ROOT);
-                expect(mode).toBe('scoped');
+                expect(inst._resolve_scoped_projection(REPO_ROOT)).toEqual({ active_packs: [] });
             });
         });
 
-        it('existing settings file missing projection.mode → legacy-all (upgrade-compat)', () => {
-            withHome((home) => {
-                fs.mkdirSync(path.join(home, 'settings'), { recursive: true });
-                fs.writeFileSync(path.join(home, 'settings', '.agent-settings.yml'), 'rule_loading_tier: minimal\n');
-                const { mode } = inst._resolve_scoped_projection(REPO_ROOT);
-                expect(mode).toBe('legacy-all');
-            });
-        });
-
-        it('existing settings file with projection.mode: legacy-all → legacy-all', () => {
+        it('honors runtime.active_packs and ignores a leftover projection.mode', () => {
             withHome((home) => {
                 fs.mkdirSync(path.join(home, 'settings'), { recursive: true });
                 fs.writeFileSync(
                     path.join(home, 'settings', '.agent-settings.yml'),
-                    'projection:\n  mode: legacy-all\n',
+                    'projection:\n  mode: legacy-all\nruntime:\n  active_packs:\n    - ai-video\n',
                 );
-                const { mode } = inst._resolve_scoped_projection(REPO_ROOT);
-                expect(mode).toBe('legacy-all');
-            });
-        });
-
-        it('existing settings file with projection.mode: scoped → scoped, honors runtime.active_packs', () => {
-            withHome((home) => {
-                fs.mkdirSync(path.join(home, 'settings'), { recursive: true });
-                fs.writeFileSync(
-                    path.join(home, 'settings', '.agent-settings.yml'),
-                    'projection:\n  mode: scoped\nruntime:\n  active_packs:\n    - ai-video\n',
-                );
-                const { mode, active_packs } = inst._resolve_scoped_projection(REPO_ROOT);
-                expect(mode).toBe('scoped');
-                expect(active_packs).toEqual(['ai-video']);
+                expect(inst._resolve_scoped_projection(REPO_ROOT)).toEqual({ active_packs: ['ai-video'] });
             });
         });
 
         it('legacy flat global settings file (no settings/ subdir) is honored as a fallback', () => {
             withHome((home) => {
                 fs.mkdirSync(home, { recursive: true });
-                fs.writeFileSync(path.join(home, '.agent-settings.yml'), 'projection:\n  mode: legacy-all\n');
-                const { mode } = inst._resolve_scoped_projection(REPO_ROOT);
-                expect(mode).toBe('legacy-all');
+                fs.writeFileSync(path.join(home, '.agent-settings.yml'), 'runtime:\n  active_packs: [brand]\n');
+                expect(inst._resolve_scoped_projection(REPO_ROOT)).toEqual({ active_packs: ['brand'] });
             });
         });
 
-        it('unreadable/corrupt settings YAML → legacy-all (fail-safe, never crash)', () => {
+        it('unreadable/corrupt settings YAML → no overlay (fail-safe, never crash)', () => {
             withHome((home) => {
                 fs.mkdirSync(path.join(home, 'settings'), { recursive: true });
                 fs.writeFileSync(path.join(home, 'settings', '.agent-settings.yml'), 'foo: [1, 2\n');
-                const { mode } = inst._resolve_scoped_projection(REPO_ROOT);
-                expect(mode).toBe('legacy-all');
+                expect(inst._resolve_scoped_projection(REPO_ROOT)).toEqual({ active_packs: [] });
             });
         });
     });

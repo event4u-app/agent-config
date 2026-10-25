@@ -42,14 +42,14 @@ describe('settings carve-out set', () => {
         // key entirely and derived the axis from the pack vocabulary instead
         // (`consumerRuleWorkspaces`). A key that does not exist cannot have an
         // absent-vs-default divergence, so this is a removed SUBJECT, not a
-        // dropped obligation. `projection.mode` stays: 4.7 has not landed.
+        // dropped obligation. `projection.mode` left on 2026-10-24 for the same
+        // reason: step 4.7 removed the key and decides skill scope per host.
         expect([...carveOutKeys()].sort()).toEqual([
             'chat_history.enabled',
             'chat_history.frequency',
             'discipline_profile',
             'onboarding.onboarded',
             'profile.id',
-            'projection.mode',
             'quality.local_auto_run',
         ]);
     });

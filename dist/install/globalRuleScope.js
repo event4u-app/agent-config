@@ -32,7 +32,7 @@ function isPlainObject(v) {
  * does (`src/server/routes/install.ts::_resolveRuleScope`), so the two global
  * paths cannot ship different rule sets for the same settings.
  *
- * Settings resolution mirrors `_resolve_scoped_projection` above: an existing
+ * Settings resolution: an existing
  * global settings doc is authoritative, and only a genuinely fresh machine falls
  * through to the packaged template. Any read or parse failure resolves to
  * `LEGACY_ALL` — over-shipping is the safe direction, and the compat exclusion

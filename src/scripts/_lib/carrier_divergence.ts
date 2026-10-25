@@ -44,7 +44,7 @@ import * as path from 'node:path';
 
 /**
  * The keys `install.ts` adds to every installed rule (`_set_key(fm_lines,
- * 'package', …)` and `source_path` at install.ts:2733). Removing them is what
+ * 'package', …)` and `source_path` at install.ts:2732). Removing them is what
  * separates an installer stamp from a content change.
  */
 export const OWNERSHIP_KEYS = ['package', 'source_path'] as const;

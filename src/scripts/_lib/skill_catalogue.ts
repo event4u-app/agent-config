@@ -1060,7 +1060,7 @@ export interface KnownHostLimit {
      * SKILLS projected at that observation — the comparable quantity.
      * Absent on a record written before the skill-only count existed, and
      * absence is load-bearing: without it the observation is not comparable
-     * and yields no eligibility (see `migrationEligibility`).
+     * and yields no host limit to compare against.
      */
     projectedSkills: number | null;
     observedAt: string;
@@ -1152,107 +1152,6 @@ export function catalogueLimitWarning(
         `${limit.projectedSkills} skills) — that much never reaches the model. ` +
         'Explain: `agent-config exec capture_skill_catalogue --limits`'
     );
-}
-
-/* ------------------------------------------------------------------ *
- * Migration eligibility — AI council, 2026-08-15, 2/2 converged.
- * ------------------------------------------------------------------ */
-
-/**
- * Why an install is (not) eligible to be ASKED about scoped projection.
- *
- * Eligibility is deliberately separate from whether a prompt can be shown.
- * The council's refinement: an install can qualify while the session is
- * non-interactive, and collapsing the two would make "not asked because CI"
- * indistinguishable from "not asked because it does not qualify".
- */
-export interface MigrationEligibility {
-    eligible: boolean;
-    /** Machine-readable reason, always set — including on the eligible path. */
-    reason:
-        | 'eligible'
-        | 'no-observation-for-host'
-        | 'observation-not-comparable'
-        | 'no-truncation-observed'
-        | 'already-scoped'
-        | 'below-observed-skill-volume';
-    /** Populated only when eligible, for the message. */
-    droppedEntries?: number;
-    observedAt?: string;
-}
-
-/**
- * Is this install worth asking about?
- *
- * `currentSkillCount` is the SKILL population only, and that is the whole
- * correction the council made to the original predicate. A controlled probe
- * (2026-08-15) moved the host's dropped count by 0 when 60 command files were
- * added and by +53 when 60 skills were, so a comparison over total artefacts
- * would fire on command growth that truncates nothing.
- *
- * An observation with no recorded skill count is NOT comparable — the two
- * numbers would be counted by different rules — and returns
- * `observation-not-comparable` rather than being coerced into a verdict.
- * Never extrapolate from another host.
- */
-export function migrationEligibility(
-    host: string,
-    resolvedMode: 'scoped' | 'legacy-all',
-    currentSkillCount: number,
-    limits: ReadonlyMap<string, KnownHostLimit>,
-): MigrationEligibility {
-    if (resolvedMode === 'scoped') return { eligible: false, reason: 'already-scoped' };
-    // There were three modes until 2026-10-20. `tiered` carried its own
-    // `already-tiered` reason because it narrowed on a different axis — the
-    // host's listing budget rather than the pack set. It was retired at
-    // `measured-null` (ADR-293, step 4.5) and a leftover value now resolves to
-    // `legacy-all`, so such an install reaches the real eligibility test below
-    // instead of being told it is already narrowed.
-    const limit = limits.get(host);
-    if (limit === undefined) return { eligible: false, reason: 'no-observation-for-host' };
-    if (limit.projectedSkills === null) return { eligible: false, reason: 'observation-not-comparable' };
-    if (limit.droppedEntries <= 0) return { eligible: false, reason: 'no-truncation-observed' };
-    if (currentSkillCount < limit.projectedSkills) {
-        return { eligible: false, reason: 'below-observed-skill-volume' };
-    }
-    return {
-        eligible: true,
-        reason: 'eligible',
-        droppedEntries: limit.droppedEntries,
-        observedAt: limit.observedAt,
-    };
-}
-
-/**
- * The prompt body. Returns lines; WRITES NOTHING, by contract.
- *
- * `projection.mode` is settings class C, so `settings:set` refuses it by
- * construction and only a human edit or the GUI write route may set it. The
- * message therefore never offers a CLI write — suggesting one would send the
- * reader to a command guaranteed to reject them, which the council caught in
- * the first draft of this text.
- */
-export function migrationPromptLines(
-    host: string,
-    eligibility: MigrationEligibility,
-    settingsPath: string,
-): string[] {
-    return [
-        `${host}: ${eligibility.droppedEntries} catalogue entries never reach the model.`,
-        `Measured on this machine (${eligibility.observedAt}). This install is on \`legacy-all\`,`,
-        'which ships everything and lets the host drop what does not fit — silently.',
-        '',
-        'Scoping the projection to your active packs is the alternative. Nothing here',
-        'changes it for you: `projection.mode` is yours to set, by hand or in the GUI.',
-        '',
-        `  edit  ${settingsPath}`,
-        '        projection:',
-        '          mode: scoped',
-        '',
-        '  or    agent-config config      (Settings → projection)',
-        '',
-        'Keeping `legacy-all` is a legitimate choice — this is a notification, not a gate.',
-    ];
 }
 
 /** Read the append-only observation log; a missing or broken line is skipped. */

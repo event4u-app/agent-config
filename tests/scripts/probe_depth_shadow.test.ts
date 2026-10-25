@@ -80,6 +80,16 @@ describe('probe_depth_shadow', () => {
         expect(c.missing).toBe(1);
     });
 
+    it('an undated tick whose receipt carries scope=safe is inside the window — the marker dates it', () => {
+        const undated = [
+            '- [x] **6.5 A.** <!-- receipt: class=R0 · shadow · scope=safe · would-skip=review · bound=a -->',
+            '- [x] **6.6 B.** <!-- receipt: class=R0 · shadow · would-skip=review · bound=a -->',
+        ].join('\n');
+        const c = receiptCoverage([undated], '2026-10-21');
+        expect(c.ticked).toBe(1);
+        expect(c.safeByClass.R0).toBe(1);
+    });
+
     it('a would-have-escape is a high/critical row the class row would not have reviewed', () => {
         const rows: ReviewRow[] = [
             { cls: 'R0', round: 1, sev: 'high' },

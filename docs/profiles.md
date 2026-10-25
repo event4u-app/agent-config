@@ -16,10 +16,10 @@ examples) lives under [`docs/experiences/`](experiences/); the multi-command
 **Switching experience.** `agent-config setup` writes `profile.id` on first run
 (it is the wizard's first question). To switch later, run
 `agent-config use --profile=<id>` (one of `developer` · `content_creator` ·
-`founder` · `agency` · `finance` · `ops`). In 6.0.0-A this records the choice
-only; pack-scoped surfacing (projection-time filtering,
-[`ADR-040`](decisions/ADR-040-execution-model-projection-time-filtering.md))
-activates in 6.0.0-B behind a staged, opt-in rollout.
+`founder` · `agency` · `finance` · `ops`). The profile's packs decide what a
+host without a listing lever receives; claude-code and codex receive every
+skill and scope by visibility. The `legacy-all` pseudo-profile and
+`projection.mode` are removed.
 
 <a id="profile-developer"></a>
 ## 👩‍💻 `developer` — IC engineer

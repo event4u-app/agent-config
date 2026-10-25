@@ -152,7 +152,7 @@ export type ByteSource =
 export const HOST_SURFACES: readonly HostSurface[] = [
     {
         host: 'augment', surface: '.augment/rules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:2454',
+        writer: 'src/scripts/condense.ts:2435',
         anchor: '\'.augment/rules\',',
         note: 'copies by default; symlinks under `augment.rules_use_symlinks`',
     },
@@ -229,7 +229,7 @@ export const HOST_SURFACES: readonly HostSurface[] = [
     },
     {
         host: 'codex', surface: '.codex/agent-config.md', perRuleTree: false,
-        writer: 'src/scripts/install.ts:1377',
+        writer: 'src/scripts/install.ts:1376',
         // Scoped to `.codex` rather than the bare filename: nine other lines in
         // `install.ts` write an `agent-config.md` for some other host, so the
         // unscoped anchor would have accepted a drift onto any of them — the

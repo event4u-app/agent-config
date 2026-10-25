@@ -60,7 +60,10 @@ export function receiptCoverage(texts: readonly string[], since: string | null =
             if (!TICKED.test(line)) continue;
             if (since !== null) {
                 const done = DONE_DATE.exec(line)?.[1];
-                if (done === undefined || done < since) continue;
+                // `scope=safe` was first written on RECEIPTS_SINCE, so it dates an
+                // undated tick; most ticks carry no "Done <date>" prose at all.
+                const datedByScope = done === undefined && parseReceipt(line)?.safe === true && since <= RECEIPTS_SINCE;
+                if (!datedByScope && (done === undefined || done < since)) continue;
             }
             ticked += 1;
             const m = RECEIPT.exec(line);
