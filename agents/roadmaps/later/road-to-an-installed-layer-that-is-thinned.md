@@ -490,7 +490,7 @@ rather than as a ninth roadmap.
       `"NONE"` in `src/config/preamble-payload-budget.json`. On the date, publish
       the reading, then either name a mechanism or re-set the target with its
       reason.
-      verify: `./scripts-run src/scripts/check_preamble_payload_budget` output quoted in the step note.
+      verify: the step note quotes the output of `./scripts-run src/scripts/check_preamble_payload_budget` taken on or after 2026-11-10.
 
 ## What this roadmap deliberately does not do
 

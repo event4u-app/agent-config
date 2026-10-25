@@ -502,7 +502,7 @@ it.
 - [ ] **6.1 Cancel in progress on PRs only.** `.github/workflows/tests.yml`
       cancels in-progress runs on main too, so a push can cancel the run that
       verifies the previous merge.
-      verify: `grep -n "cancel-in-progress" .github/workflows/tests.yml` shows a ref condition.
+      verify: `grep -n "cancel-in-progress" .github/workflows/tests.yml` -> /github\.ref/
 
 ## Blockers
 

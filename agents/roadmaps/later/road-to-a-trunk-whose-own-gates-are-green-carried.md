@@ -56,7 +56,7 @@ left to read as finished.
       verify: the workflow file exists and its dry run lists the gates it runs.
 - [ ] **2.4 Root instructions match the PR workflow.** `CLAUDE.md` says "green
       before PR" for a pipeline that is red on main and runs in no workflow.
-      verify: `grep -n "task ci" CLAUDE.md` names what CI actually runs.
+      verify: CLAUDE.md names the pipeline CI actually runs, checked against `.github/workflows/`.
 
 ## Blockers
 
